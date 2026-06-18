@@ -126,8 +126,11 @@ export function stabilizeRecognitionEvent(state = createRecognitionState(), even
 }
 
 export function buildQuranAlignment(targetText = '', recognitionWords = [], options = {}) {
-  const displayWords = tokenizeRecitationDisplayWords(targetText)
-  const targetWords = displayWords.map(word => tokenizeRecitationWords(word)[0] || '').filter(Boolean)
+  const targetAyahs = normalizeTargetAyahs(options.targetAyahs || options.ayahs || [], targetText)
+  const targetUnits = buildTargetWordUnits(targetAyahs, targetText)
+  const displayWords = targetUnits.map(unit => unit.display)
+  const targetWords = targetUnits.map(unit => unit.word)
+  const rawHeardWords = normaliseCommittedRecognitionWords(recognitionWords, { suppressDuplicates: false })
   const heardWords = normaliseCommittedRecognitionWords(recognitionWords)
   const transcriptWords = heardWords.map(word => word.word)
   const targetCount = targetWords.length
@@ -171,7 +174,11 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     actual: '',
     confidence: 0,
     similarity: 0,
-    targetIndex: index
+    targetIndex: index,
+    ayahKey: targetUnits[index]?.ayahKey || '',
+    ayahNumber: targetUnits[index]?.ayahNumber ?? null,
+    ayahIndex: Number.isFinite(Number(targetUnits[index]?.ayahIndex)) ? Number(targetUnits[index].ayahIndex) : 0,
+    ayahWordIndex: Number.isFinite(Number(targetUnits[index]?.ayahWordIndex)) ? Number(targetUnits[index].ayahWordIndex) : index
   }))
   const extraWords = []
   const operations = []
@@ -192,7 +199,8 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
         heardWord,
         similarity: cell.similarity,
         outOfOrderIndex: laterIndex,
-        targetIndex: targetIndex - 1
+        targetIndex: targetIndex - 1,
+        targetUnit: targetUnits[targetIndex - 1] || null
       })
       operations.unshift({ op: 'match', targetIndex: targetIndex - 1, heardIndex: heardIndex - 1, similarity: cell.similarity })
     } else if (cell.op === 'extra') {
@@ -214,16 +222,28 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
 
   applyWrongOrderGuard(statuses, targetWords, transcriptWords)
   const progression = buildStableProgression(statuses, extraWords, options)
-  const mistakes = buildMistakesFromStatuses(statuses, extraWords)
+  const structural = buildStructuralRecitationAnalysis({
+    statuses,
+    heardWords: rawHeardWords,
+    extraWords,
+    targetAyahs,
+    targetUnits,
+    operations
+  })
+  const mistakes = buildMistakesFromStatuses(statuses, extraWords, structural)
   const analysis = buildAnalysis({
     statuses,
     heardWords,
+    rawHeardWords,
     extraWords,
     mistakes,
     targetWords,
+    targetAyahs,
+    targetUnits,
     targetText,
     operations,
     progression,
+    structural,
     metadata: options.metadata || {}
   })
 
@@ -233,6 +253,7 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     displayWords,
     targetWords,
     committedWords: heardWords,
+    rawCommittedWords: rawHeardWords,
     transcript: wordsToTranscript(heardWords),
     statuses,
     wordStatuses: statuses,
@@ -240,6 +261,7 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     operations,
     mistakes,
     mistakeBreakdown: mistakes,
+    structural,
     progression,
     analysis
   }
@@ -257,7 +279,16 @@ export function buildDeterministicRecitationResult(targetText = '', recognitionW
   }, 0)
   const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * 0.35
   const extraPenalty = (mistakes.extra.length || 0) * 0.35
-  const accuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - wrongOrderPenalty - extraPenalty) / targetCount) * 100)))
+  const baseAccuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - wrongOrderPenalty - extraPenalty) / targetCount) * 100)))
+  const structuralPenalty = getStructuralScorePenalty(alignment.structural || {})
+  const accuracyScore = Math.max(0, Math.min(100, baseAccuracyScore - structuralPenalty))
+  const confidence = getEvaluationConfidence({
+    statuses,
+    committedWords: alignment.committedWords,
+    structural: alignment.structural,
+    accuracyScore
+  })
+  const memoryStrength = getMemoryStrength(accuracyScore)
   const recommendation = getRecitationRecommendation(accuracyScore, mistakes)
   const reviewMetadata = buildReviewMetadata(accuracyScore, mistakes, {
     timestamp: options.timestamp || options.metadata?.timestamp || DEFAULT_ANALYSIS_TIMESTAMP
@@ -270,16 +301,30 @@ export function buildDeterministicRecitationResult(targetText = '', recognitionW
     transcript: alignment.transcript,
     targetText,
     ayahRange: options.ayahRange || null,
+    score: accuracyScore,
     accuracyScore,
+    confidence,
+    memoryStrength,
     completion: alignment.analysis.completionPercentage,
     completionPercentage: alignment.analysis.completionPercentage,
     mistakes,
     mistakeBreakdown: mistakes,
     deterministicAnalysis: alignment.analysis,
+    missingWords: alignment.analysis.omissions,
+    extraWords: alignment.extraWords,
+    incorrectWords: alignment.analysis.substitutions,
+    repeatedWords: alignment.analysis.repeatedWords,
+    repeatedPhrases: alignment.analysis.repeatedPhrases,
     omissions: alignment.analysis.omissions,
     substitutions: alignment.analysis.substitutions,
     repetitions: alignment.analysis.repetitions,
     skippedWords: alignment.analysis.skippedWords,
+    wordSkips: alignment.analysis.skippedWords,
+    skippedAyahs: alignment.analysis.skippedAyahs,
+    verseJumpDetected: alignment.analysis.verseJumpDetected,
+    verseJumps: alignment.analysis.verseJumps,
+    sequenceErrors: alignment.analysis.sequenceErrors,
+    feedback: alignment.analysis.feedback,
     weakWords: alignment.analysis.weakWords,
     reviewRecommendations: alignment.analysis.reviewRecommendations,
     retentionSignals: alignment.analysis.retentionSignals,
@@ -297,6 +342,47 @@ export function replayRecognitionSession(events = [], targetText = '', options =
     state = stabilizeRecognitionEvent(state, event, options)
   }
   return buildDeterministicRecitationResult(targetText, state.committedWords, options)
+}
+
+function normalizeTargetAyahs(ayahs = [], targetText = '') {
+  const list = (Array.isArray(ayahs) ? ayahs : [])
+    .map((ayah, index) => {
+      const text = cleanRecitationDisplayText(ayah?.text || ayah?.arabic || ayah?.arabicText || ayah?.targetText || '')
+      if (!text) return null
+      return {
+        key: ayah?.key || ayah?.ayahKey || '',
+        number: Number.isFinite(Number(ayah?.number ?? ayah?.ayahNumber)) ? Number(ayah?.number ?? ayah?.ayahNumber) : null,
+        index,
+        text
+      }
+    })
+    .filter(Boolean)
+
+  if (list.length) return list
+  const text = cleanRecitationDisplayText(targetText)
+  return text ? [{ key: '', number: null, index: 0, text }] : []
+}
+
+function buildTargetWordUnits(targetAyahs = [], targetText = '') {
+  const ayahs = targetAyahs.length ? targetAyahs : normalizeTargetAyahs([], targetText)
+  const units = []
+  ayahs.forEach((ayah, ayahIndex) => {
+    const displayWords = tokenizeRecitationDisplayWords(ayah.text)
+    displayWords.forEach((display, ayahWordIndex) => {
+      const word = tokenizeRecitationWords(display)[0] || ''
+      if (!word) return
+      units.push({
+        display,
+        word,
+        targetIndex: units.length,
+        ayahKey: ayah.key || '',
+        ayahNumber: ayah.number ?? null,
+        ayahIndex,
+        ayahWordIndex
+      })
+    })
+  })
+  return units
 }
 
 function cloneRecognitionState(state) {
@@ -455,22 +541,21 @@ function suppressDuplicateRecognitionWords(words = []) {
   return stable
 }
 
-function normaliseCommittedRecognitionWords(words = []) {
-  return suppressDuplicateRecognitionWords(
-    (Array.isArray(words) ? words : [])
-      .map((entry, index) => {
-        const word = entry?.word || tokenizeRecitationWords(entry?.text || '')[0] || ''
-        if (!word) return null
-        return {
-          ...entry,
-          word,
-          display: entry?.display || entry?.text || word,
-          confidence: Number.isFinite(Number(entry?.confidence)) ? Number(entry.confidence) : 1,
-          commitIndex: Number.isFinite(Number(entry?.commitIndex)) ? Number(entry.commitIndex) : index
-        }
-      })
-      .filter(Boolean)
-  )
+function normaliseCommittedRecognitionWords(words = [], options = {}) {
+  const normalized = (Array.isArray(words) ? words : [])
+    .map((entry, index) => {
+      const word = entry?.word || tokenizeRecitationWords(entry?.text || '')[0] || ''
+      if (!word) return null
+      return {
+        ...entry,
+        word,
+        display: entry?.display || entry?.text || word,
+        confidence: Number.isFinite(Number(entry?.confidence)) ? Number(entry.confidence) : 1,
+        commitIndex: Number.isFinite(Number(entry?.commitIndex)) ? Number(entry.commitIndex) : index
+      }
+    })
+    .filter(Boolean)
+  return options.suppressDuplicates === false ? normalized : suppressDuplicateRecognitionWords(normalized)
 }
 
 function isNearbyWord(left = {}, right = {}) {
@@ -525,10 +610,16 @@ export function getRecitationWordSimilarity(left, right) {
   return 1 - (matrix[a.length][b.length] / Math.max(a.length, b.length))
 }
 
-function classifyWordMatch({ displayText, targetWord, heardWord = {}, similarity = 0, outOfOrderIndex = -1, targetIndex = 0 }) {
+function classifyWordMatch({ displayText, targetWord, heardWord = {}, similarity = 0, outOfOrderIndex = -1, targetIndex = 0, targetUnit = null }) {
   const expected = String(targetWord || '')
   const actual = String(heardWord.word || '')
   const confidence = Number.isFinite(Number(heardWord.confidence)) ? Number(heardWord.confidence) : 1
+  const location = {
+    ayahKey: targetUnit?.ayahKey || '',
+    ayahNumber: targetUnit?.ayahNumber ?? null,
+    ayahIndex: Number.isFinite(Number(targetUnit?.ayahIndex)) ? Number(targetUnit.ayahIndex) : 0,
+    ayahWordIndex: Number.isFinite(Number(targetUnit?.ayahWordIndex)) ? Number(targetUnit.ayahWordIndex) : targetIndex
+  }
   if (expected && (expected === actual || similarity >= 0.9)) {
     return {
       text: displayText,
@@ -539,7 +630,8 @@ function classifyWordMatch({ displayText, targetWord, heardWord = {}, similarity
       confidence,
       similarity: 1,
       targetIndex,
-      heardIndex: heardWord.commitIndex
+      heardIndex: heardWord.commitIndex,
+      ...location
     }
   }
   if (expected && actual && similarity >= 0.35) {
@@ -552,7 +644,8 @@ function classifyWordMatch({ displayText, targetWord, heardWord = {}, similarity
       confidence,
       similarity,
       targetIndex,
-      heardIndex: heardWord.commitIndex
+      heardIndex: heardWord.commitIndex,
+      ...location
     }
   }
   return {
@@ -567,7 +660,8 @@ function classifyWordMatch({ displayText, targetWord, heardWord = {}, similarity
     similarity,
     outOfOrder: outOfOrderIndex >= 0,
     targetIndex,
-    heardIndex: heardWord.commitIndex
+    heardIndex: heardWord.commitIndex,
+    ...location
   }
 }
 
@@ -619,7 +713,219 @@ function buildStableProgression(statuses = [], extraWords = [], options = {}) {
   }
 }
 
-function buildMistakesFromStatuses(statuses = [], extraWords = []) {
+function buildStructuralRecitationAnalysis({ statuses = [], heardWords = [], extraWords = [], targetAyahs = [], targetUnits = [], operations = [] } = {}) {
+  const repeatedWords = detectRepeatedWords(heardWords, extraWords)
+  const repeatedPhrases = detectRepeatedPhrases(heardWords)
+  const skippedAyahs = detectSkippedAyahs(statuses, targetAyahs)
+  const sequence = detectAyahSequenceErrors(statuses, heardWords, targetAyahs, targetUnits)
+  const verseJumps = detectVerseJumps(statuses, targetAyahs, sequence.recitedAyahs)
+  return {
+    repeatedWords,
+    repeatedPhrases,
+    skippedAyahs,
+    verseJumpDetected: verseJumps.length > 0,
+    verseJumps,
+    sequenceErrors: sequence.sequenceErrors,
+    recitedAyahs: sequence.recitedAyahs,
+    operationSummary: summarizeOperations(operations)
+  }
+}
+
+function detectRepeatedWords(heardWords = [], extraWords = []) {
+  const repeated = []
+  const seen = new Set()
+  for (let index = 1; index < heardWords.length; index += 1) {
+    const current = heardWords[index]
+    const previous = heardWords[index - 1]
+    if (!current?.word || current.word !== previous?.word) continue
+    const key = `${current.word}:${index - 1}:${index}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    repeated.push({
+      word: current.display || current.word,
+      normalizedWord: current.word,
+      heardIndex: index,
+      previousHeardIndex: index - 1,
+      confidence: Number(current.confidence ?? 1)
+    })
+  }
+  for (const item of extraWords) {
+    if (item?.type !== 'repetition' || !item.word) continue
+    const key = `${item.word}:${item.heardIndex - 1}:${item.heardIndex}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    repeated.push({
+      word: item.display || item.word,
+      normalizedWord: item.word,
+      heardIndex: item.heardIndex,
+      previousHeardIndex: item.heardIndex - 1,
+      confidence: Number(item.confidence ?? 1)
+    })
+  }
+  return repeated
+}
+
+function detectRepeatedPhrases(heardWords = []) {
+  const words = heardWords.map(word => word?.word || '').filter(Boolean)
+  const phrases = []
+  const seen = new Set()
+  for (let size = Math.min(5, Math.floor(words.length / 2)); size >= 2; size -= 1) {
+    for (let index = 0; index + (size * 2) <= words.length; index += 1) {
+      const phrase = words.slice(index, index + size)
+      const next = words.slice(index + size, index + (size * 2))
+      if (phrase.join('|') !== next.join('|')) continue
+      const key = `${index}:${size}:${phrase.join('|')}`
+      if (seen.has(key) || phrases.some(item => index >= item.startHeardIndex && index < item.startHeardIndex + item.wordCount)) continue
+      seen.add(key)
+      phrases.push({
+        phrase: phrase.join(' '),
+        startHeardIndex: index,
+        repeatedAtHeardIndex: index + size,
+        wordCount: size,
+        count: 2
+      })
+    }
+  }
+  return phrases
+}
+
+function detectSkippedAyahs(statuses = [], targetAyahs = []) {
+  if (!Array.isArray(targetAyahs) || targetAyahs.length <= 1) return []
+  return targetAyahs
+    .map((ayah, ayahIndex) => {
+      const words = statuses.filter(word => Number(word.ayahIndex || 0) === ayahIndex)
+      const heardCount = words.filter(word => word.status !== 'pending' && word.actual).length
+      if (!words.length || heardCount > 0) return null
+      return {
+        ayahKey: ayah.key || '',
+        ayahNumber: ayah.number ?? null,
+        ayahIndex,
+        wordCount: words.length,
+        words: words.map(word => word.text)
+      }
+    })
+    .filter(Boolean)
+}
+
+function detectAyahSequenceErrors(statuses = [], heardWords = [], targetAyahs = [], targetUnits = []) {
+  if (!Array.isArray(targetAyahs) || targetAyahs.length <= 1) return { recitedAyahs: [], sequenceErrors: [] }
+  const heardTokens = heardWords.map(word => word?.word || '').filter(Boolean)
+  const recitedAyahs = targetAyahs
+    .map((ayah, ayahIndex) => {
+      const ayahUnits = targetUnits.filter(unit => Number(unit.ayahIndex || 0) === ayahIndex)
+      const positions = findSequentialPositions(ayahUnits.map(unit => unit.word), heardTokens)
+      const statusWords = statuses.filter(word => Number(word.ayahIndex || 0) === ayahIndex)
+      const alignedPositions = statusWords
+        .map(word => Number(word.heardIndex))
+        .filter(index => Number.isFinite(index) && index >= 0)
+      const allPositions = [...positions, ...alignedPositions].sort((left, right) => left - right)
+      const uniquePositions = [...new Set(allPositions)]
+      const coverage = ayahUnits.length ? uniquePositions.length / ayahUnits.length : 0
+      const hasStrongCoverage = coverage >= Math.min(0.6, ayahUnits.length <= 3 ? 1 / ayahUnits.length : 0.45)
+      if (!uniquePositions.length || !hasStrongCoverage) return null
+      return {
+        ayahKey: ayah.key || '',
+        ayahNumber: ayah.number ?? null,
+        ayahIndex,
+        firstHeardIndex: uniquePositions[0],
+        lastHeardIndex: uniquePositions[uniquePositions.length - 1],
+        matchedWords: uniquePositions.length,
+        wordCount: ayahUnits.length,
+        coverage
+      }
+    })
+    .filter(Boolean)
+    .sort((left, right) => left.firstHeardIndex - right.firstHeardIndex || left.ayahIndex - right.ayahIndex)
+
+  const sequenceErrors = []
+  let highestAyahIndex = -1
+  for (const item of recitedAyahs) {
+    if (item.ayahIndex < highestAyahIndex) {
+      const expectedAfter = targetAyahs[highestAyahIndex]
+      sequenceErrors.push({
+        type: 'ayah-out-of-order',
+        ayahKey: item.ayahKey,
+        ayahNumber: item.ayahNumber,
+        ayahIndex: item.ayahIndex,
+        heardIndex: item.firstHeardIndex,
+        message: `Ayah ${item.ayahNumber ?? item.ayahIndex + 1} was recited after a later ayah.`,
+        expectedAfterAyah: expectedAfter?.number ?? highestAyahIndex + 1
+      })
+    }
+    highestAyahIndex = Math.max(highestAyahIndex, item.ayahIndex)
+  }
+
+  return { recitedAyahs, sequenceErrors }
+}
+
+function detectVerseJumps(statuses = [], targetAyahs = [], recitedAyahs = []) {
+  if (!Array.isArray(targetAyahs) || targetAyahs.length <= 1) return []
+  const jumps = []
+  for (const ayah of recitedAyahs) {
+    for (let ayahIndex = 0; ayahIndex < ayah.ayahIndex; ayahIndex += 1) {
+      const earlierWords = statuses.filter(word => Number(word.ayahIndex || 0) === ayahIndex)
+      if (!earlierWords.length) continue
+      const firstMissing = earlierWords.find(word => word.status === 'pending')
+      if (!firstMissing) continue
+      const sameAyahRecoveredAfterMissing = earlierWords
+        .some(word => Number(word.targetIndex) > Number(firstMissing.targetIndex) && word.status !== 'pending')
+      if (sameAyahRecoveredAfterMissing) continue
+      const previousAyah = targetAyahs[ayahIndex] || {}
+      jumps.push({
+        fromAyahKey: previousAyah.key || '',
+        fromAyahNumber: previousAyah.number ?? null,
+        toAyahKey: ayah.ayahKey,
+        toAyahNumber: ayah.ayahNumber,
+        skippedFromWordIndex: firstMissing.ayahWordIndex,
+        skippedFromWord: firstMissing.text,
+        heardIndex: ayah.firstHeardIndex,
+        message: `Jumped to ayah ${ayah.ayahNumber ?? ayah.ayahIndex + 1} before completing ayah ${previousAyah.number ?? ayahIndex + 1}.`
+      })
+      break
+    }
+  }
+  return jumps
+}
+
+function findSequentialPositions(targetWords = [], heardWords = [], threshold = 0.9) {
+  const positions = []
+  let heardIndex = 0
+  for (const targetWord of targetWords) {
+    while (heardIndex < heardWords.length) {
+      const heardWord = heardWords[heardIndex]
+      const matches = targetWord === heardWord || getRecitationWordSimilarity(targetWord, heardWord) >= threshold
+      const currentIndex = heardIndex
+      heardIndex += 1
+      if (matches) {
+        positions.push(currentIndex)
+        break
+      }
+    }
+    if (heardIndex >= heardWords.length) break
+  }
+  return positions
+}
+
+function summarizeOperations(operations = []) {
+  return operations.reduce((summary, operation) => {
+    const key = operation?.op || 'unknown'
+    summary[key] = Number(summary[key] || 0) + 1
+    return summary
+  }, {})
+}
+
+function buildMistakesFromStatuses(statuses = [], extraWords = [], structural = {}) {
+  const skippedWords = buildSkippedWordGroups(
+    statuses
+      .filter(word => word.status === 'pending')
+      .map(word => ({
+        word: word.text,
+        expectedIndex: word.targetIndex,
+        ayahKey: word.ayahKey || '',
+        ayahNumber: word.ayahNumber ?? null,
+        ayahWordIndex: word.ayahWordIndex
+      }))
+  )
   return {
     correct: statuses.filter(word => word.status === 'correct').map(word => word.text),
     missing: statuses.filter(word => word.status === 'pending').map(word => word.text),
@@ -629,20 +935,36 @@ function buildMistakesFromStatuses(statuses = [], extraWords = []) {
       .map(word => ({ expected: word.text, actual: word.actual || '', confidence: Number(word.confidence || 0), similarity: Number(word.similarity || 0) })),
     incorrect: statuses
       .filter(word => word.status === 'incorrect')
-      .map(word => ({ expected: word.text, actual: word.actual || '', confidence: Number(word.confidence || 0), similarity: Number(word.similarity || 0), outOfOrder: !!word.outOfOrder }))
+      .map(word => ({ expected: word.text, actual: word.actual || '', confidence: Number(word.confidence || 0), similarity: Number(word.similarity || 0), outOfOrder: !!word.outOfOrder })),
+    repeated: (structural.repeatedWords || []).map(item => item.word).filter(Boolean),
+    repeatedPhrases: (structural.repeatedPhrases || []).map(item => item.phrase).filter(Boolean),
+    skippedWords,
+    wordSkips: skippedWords,
+    skippedAyahs: structural.skippedAyahs || [],
+    verseJumps: structural.verseJumps || [],
+    sequenceErrors: structural.sequenceErrors || []
   }
 }
 
-function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistakes = {}, targetWords = [], targetText = '', operations = [], progression = {}, metadata = {} }) {
+function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistakes = {}, targetWords = [], targetAyahs = [], targetUnits = [], targetText = '', operations = [], progression = {}, structural = {}, metadata = {} }) {
   const omissions = statuses
     .filter(word => word.status === 'pending')
-    .map(word => ({ word: word.text, expectedIndex: word.targetIndex }))
+    .map(word => ({
+      word: word.text,
+      expectedIndex: word.targetIndex,
+      ayahKey: word.ayahKey || '',
+      ayahNumber: word.ayahNumber ?? null,
+      ayahWordIndex: word.ayahWordIndex
+    }))
   const substitutions = statuses
     .filter(word => ['partial', 'incorrect'].includes(word.status))
     .map(word => ({
       expected: word.text,
       actual: word.actual || '',
       expectedIndex: word.targetIndex,
+      ayahKey: word.ayahKey || '',
+      ayahNumber: word.ayahNumber ?? null,
+      ayahWordIndex: word.ayahWordIndex,
       confidence: Number(word.confidence || 0),
       similarity: Number(word.similarity || 0),
       outOfOrder: !!word.outOfOrder
@@ -650,22 +972,38 @@ function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistak
   const repetitions = extraWords
     .filter(item => item.type === 'repetition')
     .map(item => ({ word: item.display || item.word, heardIndex: item.heardIndex, confidence: Number(item.confidence || 0) }))
-  const skippedWords = omissions.map(item => ({ ...item }))
+  const repeatedWords = structural.repeatedWords?.length ? structural.repeatedWords : repetitions
+  const repeatedPhrases = structural.repeatedPhrases || []
+  const skippedWords = buildSkippedWordGroups(omissions)
   const weakWords = statuses
     .filter(word => word.status !== 'correct' || Number(word.confidence || 1) < 0.78)
     .map(word => ({
       word: word.text,
       index: word.targetIndex,
+      ayahKey: word.ayahKey || '',
+      ayahNumber: word.ayahNumber ?? null,
+      ayahWordIndex: word.ayahWordIndex,
       status: word.status === 'pending' ? 'omission' : word.status,
       confidence: Number(word.confidence || 0),
       similarity: Number(word.similarity || 0)
     }))
   const matchedCount = statuses.filter(word => ['correct', 'partial'].includes(word.status)).length
-  const reviewRecommendations = buildReviewRecommendations({ mistakes, weakWords, repetitions })
+  const reviewRecommendations = buildReviewRecommendations({ mistakes, weakWords, repetitions: repeatedWords, structural })
+  const feedback = buildDetailedFeedback({
+    omissions,
+    substitutions,
+    extraWords,
+    repeatedWords,
+    repeatedPhrases,
+    skippedAyahs: structural.skippedAyahs || [],
+    sequenceErrors: structural.sequenceErrors || [],
+    verseJumpDetected: !!structural.verseJumpDetected
+  })
   return {
     sourceOfTruth: 'selected-ayah',
     quranTokenCount: targetWords.length,
     committedWordCount: heardWords.length,
+    targetAyahCount: targetAyahs.length || (targetUnits.length ? 1 : 0),
     targetText,
     alignmentOutput: statuses,
     operations,
@@ -684,16 +1022,28 @@ function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistak
     substitutionCount: substitutions.length,
     repetitions,
     repetitionCount: repetitions.length,
+    repeatedWords,
+    repeatedWordCount: repeatedWords.length,
+    repeatedPhrases,
+    repeatedPhraseCount: repeatedPhrases.length,
     skippedWords,
+    skippedWordCount: skippedWords.reduce((sum, group) => sum + Number(group.count || 1), 0),
+    skippedAyahs: structural.skippedAyahs || [],
+    skippedAyahCount: structural.skippedAyahs?.length || 0,
+    verseJumpDetected: !!structural.verseJumpDetected,
+    verseJumps: structural.verseJumps || [],
+    sequenceErrors: structural.sequenceErrors || [],
+    sequenceErrorCount: structural.sequenceErrors?.length || 0,
     weakWords,
     weakWordIndicators: weakWords,
+    feedback,
     reviewRecommendations,
     retentionSignals: {
-      needsReview: weakWords.length > 0 || repetitions.length > 0 || extraWords.length > 0,
-      priority: weakWords.length >= 3 || omissions.length ? 'high' : substitutions.length || repetitions.length || extraWords.length ? 'medium' : 'low',
+      needsReview: weakWords.length > 0 || repeatedWords.length > 0 || repeatedPhrases.length > 0 || extraWords.length > 0 || !!structural.verseJumpDetected || !!structural.sequenceErrors?.length,
+      priority: weakWords.length >= 3 || omissions.length || structural.skippedAyahs?.length || structural.sequenceErrors?.length || structural.verseJumpDetected ? 'high' : substitutions.length || repeatedWords.length || repeatedPhrases.length || extraWords.length ? 'medium' : 'low',
       weakWordCount: weakWords.length,
       recommendedIntervalDays: weakWords.length ? 1 : 7,
-      reason: weakWords.length ? 'alignment-weak-words' : repetitions.length || extraWords.length ? 'alignment-repetition-or-extra' : 'clean-alignment'
+      reason: structural.sequenceErrors?.length ? 'ayah-sequence-error' : structural.verseJumpDetected ? 'verse-jump' : structural.skippedAyahs?.length ? 'skipped-ayah' : weakWords.length ? 'alignment-weak-words' : repeatedWords.length || repeatedPhrases.length || extraWords.length ? 'alignment-repetition-or-extra' : 'clean-alignment'
     },
     metadata: {
       sessionId: metadata.sessionId || '',
@@ -703,11 +1053,105 @@ function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistak
   }
 }
 
+function buildSkippedWordGroups(omissions = []) {
+  const groups = []
+  for (const item of omissions) {
+    const last = groups[groups.length - 1]
+    const sameAyah = last && (last.ayahKey || '') === (item.ayahKey || '') && (last.ayahNumber ?? null) === (item.ayahNumber ?? null)
+    const contiguous = last && Number(last.endIndex) + 1 === Number(item.expectedIndex)
+    if (sameAyah && contiguous) {
+      last.words.push(item.word)
+      last.endIndex = item.expectedIndex
+      last.count = last.words.length
+      continue
+    }
+    groups.push({
+      ayahKey: item.ayahKey || '',
+      ayahNumber: item.ayahNumber ?? null,
+      startIndex: item.expectedIndex,
+      endIndex: item.expectedIndex,
+      ayahWordIndex: item.ayahWordIndex,
+      count: 1,
+      words: [item.word]
+    })
+  }
+  return groups
+}
+
+function buildDetailedFeedback({ omissions = [], substitutions = [], extraWords = [], repeatedWords = [], repeatedPhrases = [], skippedAyahs = [], sequenceErrors = [], verseJumpDetected = false } = {}) {
+  const feedback = []
+  if (skippedAyahs.length) {
+    feedback.push(`Skipped ${skippedAyahs.length} complete ayah${skippedAyahs.length === 1 ? '' : 's'}: ${skippedAyahs.slice(0, 3).map(formatAyahLabel).join(', ')}.`)
+  }
+  if (verseJumpDetected) feedback.push('Verse jump detected: recitation moved to a later ayah before the current ayah was complete.')
+  if (sequenceErrors.length) feedback.push(`Ayah sequence error detected: ${sequenceErrors[0]?.message || 'ayahs were recited out of order'}`)
+  if (omissions.length) feedback.push(`Missing words: ${omissions.slice(0, 6).map(item => item.word).join('، ')}${omissions.length > 6 ? '...' : ''}.`)
+  if (substitutions.length) {
+    feedback.push(`Changed words: ${substitutions.slice(0, 4).map(item => `${item.expected} -> ${item.actual || '?'}`).join('، ')}${substitutions.length > 4 ? '...' : ''}.`)
+  }
+  if (extraWords.length) feedback.push(`Extra words heard: ${extraWords.slice(0, 6).map(item => item.display || item.word).join('، ')}${extraWords.length > 6 ? '...' : ''}.`)
+  if (repeatedWords.length) feedback.push(`Repeated words: ${repeatedWords.slice(0, 5).map(item => item.word).join('، ')}${repeatedWords.length > 5 ? '...' : ''}.`)
+  if (repeatedPhrases.length) feedback.push(`Repeated phrase: ${repeatedPhrases[0].phrase}.`)
+  if (!feedback.length) feedback.push('Clean word order and wording match.')
+  return feedback
+}
+
+function formatAyahLabel(item = {}) {
+  if (item.ayahNumber !== null && item.ayahNumber !== undefined) return `ayah ${item.ayahNumber}`
+  return item.ayahKey ? `ayah ${item.ayahKey}` : `ayah ${Number(item.ayahIndex || 0) + 1}`
+}
+
+function getStructuralScorePenalty(structural = {}) {
+  const skippedAyahPenalty = (structural.skippedAyahs?.length || 0) * 25
+  const sequencePenalty = (structural.sequenceErrors?.length || 0) * 20
+  const jumpPenalty = structural.verseJumpDetected ? 15 : 0
+  const repeatedPhrasePenalty = (structural.repeatedPhrases?.length || 0) * 6
+  const repeatedWordPenalty = (structural.repeatedWords?.length || 0) * 3
+  return Math.min(70, skippedAyahPenalty + sequencePenalty + jumpPenalty + repeatedPhrasePenalty + repeatedWordPenalty)
+}
+
+function getEvaluationConfidence({ statuses = [], committedWords = [], structural = {}, accuracyScore = 0 } = {}) {
+  const confidences = committedWords
+    .map(word => Number(word?.confidence))
+    .filter(value => Number.isFinite(value))
+  const averageConfidence = confidences.length
+    ? confidences.reduce((sum, value) => sum + value, 0) / confidences.length
+    : 0.75
+  const matchedRatio = statuses.length
+    ? statuses.filter(word => ['correct', 'partial'].includes(word.status)).length / statuses.length
+    : 0
+  const structuralPenalty = Math.min(0.35, (
+    (structural.skippedAyahs?.length || 0) * 0.12
+    + (structural.sequenceErrors?.length || 0) * 0.1
+    + (structural.verseJumpDetected ? 0.08 : 0)
+    + (structural.repeatedPhrases?.length || 0) * 0.03
+  ))
+  const scoreConfidence = Math.max(0.25, Math.min(1, Number(accuracyScore || 0) / 100))
+  const confidence = (averageConfidence * 0.5) + (matchedRatio * 0.3) + (scoreConfidence * 0.2) - structuralPenalty
+  return Math.max(0, Math.min(1, Number(confidence.toFixed(2))))
+}
+
+function getMemoryStrength(score = 0) {
+  const value = Number(score || 0)
+  if (value >= 90) return 'strong'
+  if (value >= 80) return 'mostlyStrong'
+  if (value >= 60) return 'moderate'
+  return 'weak'
+}
+
 function getRecitationRecommendation(score, mistakes) {
+  const verseJumps = mistakes.verseJumps?.length || 0
+  const skippedAyahs = mistakes.skippedAyahs?.length || 0
+  const wordSkips = mistakes.wordSkips?.reduce((sum, group) => sum + Number(group.count || 1), 0) || 0
+  const sequenceErrors = mistakes.sequenceErrors?.length || 0
   const missing = mistakes.missing?.length || 0
   const incorrect = mistakes.incorrect?.length || 0
   const partial = mistakes.partial?.length || 0
   const extra = mistakes.extra?.length || 0
+  if (skippedAyahs) return `Skipped ${skippedAyahs} ayah${skippedAyahs === 1 ? '' : 's'}. Review the selected range in order.`
+  if (verseJumps) return `Verse jump detected ${verseJumps === 1 ? 'once' : `${verseJumps} times`}. Restart from the last complete ayah.`
+  if (sequenceErrors) return 'Ayahs were recited out of order. Restart from the first selected ayah.'
+  if (wordSkips) return `Skipped ${wordSkips} word${wordSkips === 1 ? '' : 's'}. Slow down and complete each ayah before moving on.`
   if (missing) return `Missing ${missing} word${missing === 1 ? '' : 's'}. Recite that section slowly before retrying.`
   if (partial) return `Clarify ${partial} close word${partial === 1 ? '' : 's'}, then check again.`
   if (incorrect) return `Review ${incorrect} changed word${incorrect === 1 ? '' : 's'} and compare with the displayed ayah.`
@@ -717,8 +1161,12 @@ function getRecitationRecommendation(score, mistakes) {
   return 'Replay the ayah once, recite without looking, then run another Recite Check.'
 }
 
-function buildReviewRecommendations({ mistakes = {}, weakWords = [], repetitions = [] }) {
+function buildReviewRecommendations({ mistakes = {}, weakWords = [], repetitions = [], structural = {} }) {
   const recommendations = []
+  if (structural.skippedAyahs?.length) recommendations.push({ type: 'skipped-ayah', text: `Return to ${structural.skippedAyahs.slice(0, 3).map(formatAyahLabel).join(', ')} before retrying the range.` })
+  if (structural.verseJumpDetected) recommendations.push({ type: 'verse-jump', text: 'Slow down at ayah boundaries and complete each ayah before moving to the next.' })
+  if (structural.sequenceErrors?.length) recommendations.push({ type: 'sequence-error', text: 'Recite the selected ayahs in order, then run another check.' })
+  if (mistakes.wordSkips?.length) recommendations.push({ type: 'word-skip', text: `Return to the skipped words: ${mistakes.wordSkips.slice(0, 3).flatMap(item => item.words || []).slice(0, 4).join('، ')}` })
   if (mistakes.missing?.length) recommendations.push({ type: 'omission', text: `Repeat the missing section: ${mistakes.missing.slice(0, 4).join('، ')}` })
   if (mistakes.incorrect?.length) recommendations.push({ type: 'substitution', text: `Compare changed words with the Mushaf: ${mistakes.incorrect.slice(0, 4).map(item => item.expected).join('، ')}` })
   if (mistakes.partial?.length) recommendations.push({ type: 'weak-word', text: `Slow down on close words: ${mistakes.partial.slice(0, 4).map(item => item.expected).join('، ')}` })
@@ -732,6 +1180,12 @@ function buildReviewMetadata(score, mistakes, options = {}) {
     + (mistakes.extra?.length || 0)
     + (mistakes.incorrect?.length || 0)
     + (mistakes.partial?.length || 0)
+    + (mistakes.repeated?.length || 0)
+    + (mistakes.repeatedPhrases?.length || 0)
+    + (mistakes.wordSkips?.reduce((sum, group) => sum + Number(group.count || 1), 0) || 0)
+    + (mistakes.skippedAyahs?.length || 0)
+    + (mistakes.verseJumps?.length || 0)
+    + (mistakes.sequenceErrors?.length || 0)
   const intervalDays = score >= 100 && issueCount === 0 ? 7 : score >= 85 ? 3 : 1
   return {
     priority: score >= 100 && issueCount === 0 ? 'low' : score >= 85 ? 'medium' : 'high',

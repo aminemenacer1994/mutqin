@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
 const source = readFileSync(new URL('../../resources/js/components/Memorisation.vue', import.meta.url), 'utf8')
+const hifzPlanModalSource = readFileSync(new URL('../../resources/js/components/HifzPlanCreatorModal.vue', import.meta.url), 'utf8')
 
 function includesAll(label, patterns) {
   for (const pattern of patterns) {
@@ -117,6 +118,12 @@ includesAll('ai recitation speechmatics stability', [
 ])
 
 includesAll('ai recitation full-session recording', [
+  /getActiveSessionQueueForCheck\(\)/,
+  /buildSelectedSessionRangeCheckTargets\(\)/,
+  /dedupeSessionCheckTargets\(targets = \[\]\)/,
+  /resolveSessionQueueTarget\(queueItem = null, sessionIndex = 0\)/,
+  /sessionTargetKey: `\$\{ayahKey\}::\$\{sessionIndex\}`/,
+  /syncSessionEvaluationMaps\(kind = 'recitation', targetVerses = \[\], wordStatuses = \[\], finalised = false\)/,
   /isSessionRecitationCheckActive\(\)/,
   /shouldAutoStopRecitationCheckFromAlignment\(alignment = null\)/,
   /shouldAutoStopRecitationCheckFromSilence\(\)/,
@@ -133,8 +140,40 @@ includesAll('ai memorisation mirrors recitation modal', [
   /v-if="isAiMemorisationCheckerReviewActive \|\| aiMemorisationCheckerError"/,
   /Memorisation review/,
   /showMarkers \|\| this\.aiMemorisationCheckerScope === 'session' \|\| this\.aiMemorisationCheckerTargets\.length > 1/,
+  /saveAiMemorisationCheckerAssessment\(\)/,
+  /pruneAiCheckRecordingForStorage\(recording = \{\}\)/,
   /AI Memorisation uses the same modal structure and spacing as AI Recite/
 ])
+
+includesAll('living hifz planner dashboard', [
+  /class="hifz-planner-dashboard"/,
+  /hifzPlanHealth\(\) \{/,
+  /hifzMemorySchedule\(\) \{/,
+  /hifzPlannerDetailedAnalytics\(\) \{/,
+  /applyHifzRecovery\(strategy\)/,
+  /pauseHifzPlan\(\)/,
+  /startOrResumeHifzPlan\(\)/,
+  /deleteHifzPlan\(\)/,
+  /HIFZ_PLAN_ARCHIVE_STORAGE_KEY/,
+  /calculatePlanForecast\(this\.hifzPlan/
+])
+
+for (const pattern of [
+  /Hifz Journey Forecast/,
+  /forecastItems\(\) \{/,
+  /calculatePlanForecast/,
+  /detail: 'Maintain a steady pace with enough revision to strengthen long-term memory\.'/,
+  /class="hifz-forecast-grid"/,
+  /status: lifecycleStatus === 'draft' \? 'active' : lifecycleStatus/
+]) {
+  assert.match(hifzPlanModalSource, pattern, `hifz plan modal: missing ${pattern}`)
+}
+
+assert.doesNotMatch(
+  hifzPlanModalSource,
+  /Speak your plan|Voice plan input/,
+  'planner setup modal should not render the voice speak section'
+)
 
 assert.doesNotMatch(
   source,
@@ -145,8 +184,8 @@ assert.doesNotMatch(
 includesAll('ai recitation simplified workspace', [
   /class="self-check-header-tools"/,
   /aria-label="Play ayah once"/,
-  /key: 'pending', label: 'Grey'/,
-  /tone: 'tone-grey'/,
+  /key: 'word-skips', label: 'Word skips'/,
+  /key: 'verse-jumps', label: 'Verse jumps'/,
   /const status = word\.status === 'pending' \? 'pending' : word\.status/,
   /recitation-review-ayah \.wbw-word/,
   /recitation-result-stats,[\s\S]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/

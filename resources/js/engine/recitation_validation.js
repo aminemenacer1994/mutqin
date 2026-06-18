@@ -37,13 +37,15 @@ export function buildRecognitionValidationReport(input = {}) {
   const rawEvents = Array.isArray(input.rawEvents) ? input.rawEvents.filter(Boolean) : []
   const targetText = String(input.targetText || '')
   const stabilizedWords = Array.isArray(input.stabilizedWords) ? input.stabilizedWords : []
+  const targetAyahs = Array.isArray(input.targetAyahs) ? input.targetAyahs : []
   const metadata = input.metadata || {}
   const replayCount = Math.max(1, Number(input.replays || DEFAULT_REPLAY_VALIDATION_COUNT))
   const timestamp = input.timestamp || metadata.timestamp || DEFAULT_ANALYSIS_TIMESTAMP
 
   const baselineResult = input.analysisResult || replayRecognitionSession(rawEvents, targetText, {
     timestamp,
-    metadata
+    metadata,
+    targetAyahs
   })
   const baselineSnapshot = comparableRecitationResult(baselineResult)
   const baselineHash = hashString(stableStringify(baselineSnapshot))
@@ -51,10 +53,11 @@ export function buildRecognitionValidationReport(input = {}) {
   let firstReplayFailure = null
 
   for (let attempt = 0; attempt < replayCount; attempt += 1) {
-    const result = replayRecognitionSession(rawEvents, targetText, {
-      timestamp,
-      metadata
-    })
+      const result = replayRecognitionSession(rawEvents, targetText, {
+        timestamp,
+        metadata,
+        targetAyahs
+      })
     const snapshot = comparableRecitationResult(result)
     const matches = stableStringify(snapshot) === stableStringify(baselineSnapshot)
     if (!matches && !firstReplayFailure) {
@@ -74,7 +77,8 @@ export function buildRecognitionValidationReport(input = {}) {
     .map(variant => {
       const result = replayRecognitionSession(variant.events, targetText, {
         timestamp,
-        metadata
+        metadata,
+        targetAyahs
       })
       const snapshot = comparableRecitationResult(result)
       const matches = stableStringify(snapshot) === stableStringify(baselineSnapshot)

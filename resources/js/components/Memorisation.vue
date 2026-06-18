@@ -128,255 +128,328 @@
           <i class="bi bi-hourglass-split"></i>
           <span>{{ t('common.loading') }}</span>
         </div>
-        <div v-else-if="hasVerses" class="workspace" style="border: 2px solid var(--color-text-secondary);">
-          <section class="workspace-shell" style="border: 1px solid #b5723c; background-color:#d8c1a8;" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
-            <div class="workspace-shell-head">
-              <div class="workspace-shell-copy">
-                <span class="workspace-shell-kicker">
-                  {{ isSessionCompleted ? t('sessionStatus.completed') : (hasSessionStarted ? t('sessionStatus.active') : t('sessionStatus.ready'))
-                  }}
-                </span>
-                <div class="workspace-shell-title-row">
-                  <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
-                </div>
-                <div v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
-                  <span v-if="reviewPriorityLabel">{{ reviewPriorityLabel }}</span>
-                </div>
-              </div>
-              <div class="workspace-shell-actions">
-                <!-- <div v-if="isSessionCompleted" class="session-completed-indicator" aria-live="polite">
-                  <i class="bi bi-check2-circle"></i>
-                  <span>Session Completed</span>
-                </div> -->
-                <div class="action-buttons-group">
-                  <button type="button" class="action-btn verse-ai-check-btn  pr-2"
-                    @click="openAiMemorisationCheckerForSession"
-                    :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
-                    title="Check memorisation across the selected session">
-                    <i class="bi bi-eye-slash"></i>
-                    <span>Session Memory</span>
-                  </button>
-                  <button type="button" class="action-btn verse-ai-check-btn pr-2"
-                    @click="openAiRecitationCheckForSession"
-                    :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()"
-                    title="Check recitation across the whole selected session">
-                    <i class="bi bi-stars"></i>
-                    <span>AI Recite</span>
-                  </button>
-                  <button class="action-btn action-btn-primary" type="button" @click="handlePrimaryAction"
-                    :disabled="!isPlaying && !canStartSession">
-                    <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
-                    <span>{{ isPlaying ? t('common.pause') : t('common.startSession') }}</span>
-                  </button>
-                  <!-- <button class="action-btn action-btn-secondary action-btn-recitation-check" type="button" @click="toggleRecitationCheck"
-                    :disabled="recitationCheckPreparing || !activeVerseRef || !supportsSelfCheckRecording()"
-                    title="Record and assess the current ayah" aria-label="Start recitation check">
-                    <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-mic-fill'" aria-hidden="true"></i>
-                    <span>{{ recitationCheckRecording ? 'Stop Recitation Check' : (recitationCheckPreparing ? 'Checking...' : 'Start Recitation Check') }}</span>
-                  </button> -->
-                  <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button"
-                    @click="openSessionExitModal" title="End session" aria-label="End session">
-                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                    <span>{{ t('sessionStatus.end') }}</span>
-                  </button>
-                  <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
-                    title="Open session controls" aria-label="Open session controls">
-                    <i class="bi bi-sliders" aria-hidden="true"></i>
-                    <span>{{ t('common.controls') }}</span>
-                  </button>
-                  <div class="top-card-menu-wrap" @click.stop>
-                    <button class="top-card-ellipsis" type="button" @click="toggleTopCardMenu"
-                      aria-label="Open reading options">
-                      <i class="bi bi-three-dots-vertical"></i>
-                    </button>
-                    <transition name="dropdown-fade">
-                      <div v-if="topCardMenuOpen" class="top-card-menu">
-                        <button type="button" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')">
-                          <i class="bi bi-translate"></i><span>Translation</span>
-                        </button>
-                        <button type="button" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')">
-                          <i class="bi bi-type"></i><span>Transliteration</span>
-                        </button>
-                        <button type="button" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
-                          <i class="bi bi-palette"></i><span>Tajweed</span>
-                        </button>
-                        <!-- <button type="button" @click="cycleQuranFont">
-                          <i class="bi bi-fonts"></i><span>Font: {{ getCurrentFontLabel() }}</span>
-                        </button> -->
-                        <button type="button" @click="openRecordingsLibrary">
-                          <i class="bi bi-collection-play"></i><span>View Recording</span>
-                        </button>
-                        <button type="button" @click="openOnboardingFromTopMenu">
-                          <i class="bi bi-compass"></i><span>Onboarding</span>
-                        </button>
-                        <button  @click="toggleKeyboardShortcuts"
-                          type="button" >
-                          <i class="bi bi-keyboard" ></i><span>Keyboard Shortcuts</span>
-                        </button>
-                        <button @click="toggleFullScreen" type="button">
-                          <i class="bi bi-arrows-fullscreen"></i><span>Full Screen</span>
-                        </button>
-                      </div>
-                    </transition>
-                  </div>
-                  <!--
-                    <div class="workspace-shell-icon-actions">
-                      <button class="action-icon-btn" @click="toggleKeyboardShortcuts" title="Keyboard shortcuts"
-                        type="button" aria-label="Open keyboard shortcuts">
-                        <i class="bi bi-keyboard" aria-hidden="true"></i>
-                      </button>
-                      <button class="action-icon-btn" @click="openOnboardingModal(true)" title="How Mutqin works"
-                        type="button" aria-label="Open help">
-                        <i class="bi bi-question-circle" aria-hidden="true"></i>
-                      </button>
-                      <button class="action-icon-btn" @click="toggleFullScreen" title="Full screen mode" type="button"
-                        aria-label="Toggle full screen mode">
-                        <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
-                      </button>
-                    </div>
-                  -->
-                </div>
-                
-              </div>
+        <div v-else-if="hasVerses" class="workspace">
+
+          <!-- In your template, replace the workspace-shell section -->
+<section class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
+  <!-- Hide the entire top card when session is completed -->
+  <div v-if="!isSessionCompleted" class="workspace-shell-head">
+    <div class="workspace-shell-copy">
+      <span class="workspace-shell-kicker">
+        {{ isSessionCompleted ? t('sessionStatus.completed') : (hasSessionStarted ? t('sessionStatus.active') : t('sessionStatus.ready'))
+        }}
+      </span>
+      <div class="workspace-shell-title-row">
+        <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
+      </div>
+      <div v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
+        <span v-if="reviewPriorityLabel">{{ reviewPriorityLabel }}</span>
+      </div>
+    </div>
+    <div class="workspace-shell-actions">
+      <div class="action-buttons-group">
+        <button type="button" class="action-btn verse-ai-check-btn pr-2"
+          @click="openAiMemorisationCheckerForSession"
+          :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
+          title="Check memorisation across the selected session">
+          <i class="bi bi-eye-slash"></i>
+          <span>Session Memory</span>
+        </button>
+        <button type="button" class="action-btn verse-ai-check-btn pr-2"
+          @click="openAiRecitationCheckForSession"
+          :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()"
+          title="Check recitation across the whole selected session">
+          <i class="bi bi-stars"></i>
+          <span>AI Recite</span>
+        </button>
+        <button class="action-btn action-btn-primary" type="button" @click="handlePrimaryAction"
+          :disabled="!isPlaying && !canStartSession">
+          <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+          <span>{{ isPlaying ? t('common.pause') : t('common.startSession') }}</span>
+        </button>
+        <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button"
+          @click="openSessionExitModal" title="End session" aria-label="End session">
+          <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+          <span>{{ t('sessionStatus.end') }}</span>
+        </button>
+        <button class="action-btn action-btn-secondary hifz-plan-action-btn" type="button" @click="openHifzPlanModal"
+          :aria-label="hifzPlanExists ? 'Edit Hifz Plan' : 'Create Hifz Plan'">
+          <span aria-hidden="true">📖</span>
+          <span>{{ hifzPlanExists ? 'Edit Hifz Plan' : 'Hifz Plan' }}</span>
+        </button>
+        <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
+          title="Open session controls" aria-label="Open session controls">
+          <i class="bi bi-sliders" aria-hidden="true"></i>
+          <span>{{ t('common.controls') }}</span>
+        </button>
+        <div class="top-card-menu-wrap" @click.stop>
+          <button class="top-card-ellipsis" type="button" @click="toggleTopCardMenu"
+            aria-label="Open reading options">
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+          <transition name="dropdown-fade">
+            <div v-if="topCardMenuOpen" class="top-card-menu">
+              <button type="button" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')">
+                <i class="bi bi-translate"></i><span>Translation</span>
+              </button>
+              <button type="button" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')">
+                <i class="bi bi-type"></i><span>Transliteration</span>
+              </button>
+              <button type="button" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
+                <i class="bi bi-palette"></i><span>Tajweed</span>
+              </button>
+              <button type="button" @click="openRecordingsLibrary">
+                <i class="bi bi-collection-play"></i><span>View Recording</span>
+              </button>
+              <button type="button" @click="openOnboardingFromTopMenu">
+                <i class="bi bi-compass"></i><span>Onboarding</span>
+              </button>
+              <button @click="toggleKeyboardShortcuts" type="button">
+                <i class="bi bi-keyboard"></i><span>Keyboard Shortcuts</span>
+              </button>
+              <button @click="toggleFullScreen" type="button">
+                <i class="bi bi-arrows-fullscreen"></i><span>Full Screen</span>
+              </button>
             </div>
-            <!-- Keyboard Shortcuts Modal -->
-            <div v-if="showKeyboardShortcuts" class="keyboard-shortcuts-modal" role="presentation"
-              @click.self="showKeyboardShortcuts = false">
-              <div class="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="keyboardShortcutsTitle"
-                @keydown.esc.prevent="showKeyboardShortcuts = false" tabindex="-1">
-                <div class="shortcuts-modal-header">
-                  <h3 id="keyboardShortcutsTitle">
-                    <i class="bi bi-keyboard" aria-hidden="true"></i>
-                    <span>{{ t('shortcuts.title') }}</span>
-                  </h3>
-                  <button class="shortcuts-modal-close" @click="showKeyboardShortcuts = false" type="button"
-                    aria-label="Close keyboard shortcuts">
-                    <i class="bi bi-x-lg" aria-hidden="true"></i>
-                  </button>
-                </div>
-                <div class="shortcuts-modal-body">
-                  <div class="shortcuts-grid">
-                    <div class="shortcut-card">
-                      <div class="shortcut-card-title">{{ t('shortcuts.navigation') }}</div>
-                      <div class="shortcut-row">
-                        <div class="shortcut-keys"><kbd>↑</kbd></div>
-                        <span>Previous verse</span>
-                      </div>
-                      <div class="shortcut-row">
-                        <div class="shortcut-keys"><kbd>↓</kbd></div>
-                        <span>Next verse</span>
-                      </div>
-                      <div class="shortcut-row">
-                        <div class="shortcut-keys"><kbd>←</kbd> / <kbd>J</kbd></div>
-                        <span>Previous in queue</span>
-                      </div>
-                      <div class="shortcut-row">
-                        <div class="shortcut-keys"><kbd>→</kbd> / <kbd>K</kbd></div>
-                        <span>Next in queue</span>
-                      </div>
-                      <div class="shortcut-row">
-                        <div class="shortcut-keys"><kbd>Home</kbd></div>
-                        <span>First verse</span>
-                      </div>
-                      <div class="shortcut-row">
-                        <div class="shortcut-keys"><kbd>End</kbd></div>
-                        <span>Last verse</span>
-                      </div>
-                    </div>
-                    <div class="shortcut-card">
-                      <div class="shortcut-card-title">Playback</div>
-                      <div class="shortcut-row">
-                        <div class="shortcut-keys"><kbd>Hold</kbd> <kbd>Space</kbd></div>
-                        <span>Peek blurred upcoming ayahs</span>
-                      </div>
-                      <div class="shortcut-row">
-                        <div class="shortcut-keys"><kbd>Enter</kbd></div>
-                        <span>Play current verse</span>
-                      </div>
-                      <div class="shortcut-row">
-                        <div class="shortcut-keys"><kbd>P</kbd></div>
-                        <span>Play / Pause audio</span>
-                      </div>
-                    </div>
-                    <div class="shortcut-card">
-                      <div class="shortcut-card-title">Session</div>
-                      <div class="shortcut-row">
-                        <div class="shortcut-keys"><kbd>Ctrl</kbd> + <kbd>S</kbd></div>
-                        <span>Save session</span>
-                      </div>
-                      <div class="shortcut-row">
-                        <div class="shortcut-keys"><kbd>Esc</kbd></div>
-                        <span>Close modals</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          </transition>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section v-if="!isSessionCompleted" class="hifz-planner-dashboard" aria-label="Hifz Planner Dashboard">
+    <div v-if="hifzPlanExists" class="hifz-planner-shell">
+      <div class="hifz-planner-head">
+        <div>
+          <span class="hifz-planner-kicker">Hifz Planner</span>
+          <h2>Your Hifz Journey</h2>
+          <p>{{ hifzPlannerStatusMessage }}</p>
+        </div>
+        <div class="hifz-planner-actions">
+          <span class="hifz-plan-health" :class="`health-${hifzPlanHealth.status}`">
+            <i class="bi" :class="hifzPlanHealth.icon" aria-hidden="true"></i>
+            {{ hifzPlanHealth.label }}
+          </span>
+          <button v-if="hifzPlanLifecycleStatus !== 'active'" type="button" class="btn btn-sm btn-success" @click="startOrResumeHifzPlan">
+            <i class="bi" :class="hifzPlanLifecycleStatus === 'paused' ? 'bi-play-circle' : 'bi-play-fill'" aria-hidden="true"></i>
+            {{ hifzPlanLifecycleStatus === 'paused' ? 'Resume Plan' : 'Start Plan' }}
+          </button>
+          <button v-if="hifzPlanLifecycleStatus === 'active'" type="button" class="btn btn-sm btn-outline-secondary" @click="pauseHifzPlan">
+            <i class="bi bi-pause-circle" aria-hidden="true"></i>
+            Pause Plan
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="openHifzPlanModal">
+            <i class="bi bi-pencil-square" aria-hidden="true"></i>
+            Edit Plan
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="createNewHifzPlan">
+            <i class="bi bi-plus-circle" aria-hidden="true"></i>
+            New Plan
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-danger" @click="deleteHifzPlan">
+            <i class="bi bi-trash" aria-hidden="true"></i>
+            Delete
+          </button>
+        </div>
+      </div>
+
+      <div class="hifz-planner-metrics" aria-label="Planner progress">
+        <span v-for="item in hifzPlannerMetricCards" :key="item.key" class="hifz-planner-metric">
+          <i class="bi" :class="item.icon" aria-hidden="true"></i>
+          <strong>{{ item.value }}</strong>
+          <small>{{ item.label }}</small>
+        </span>
+      </div>
+
+      <div v-if="hifzRecoveryRequired" class="hifz-recovery-card" aria-label="Recovery options">
+        <div>
+          <strong>You missed {{ hifzPlanHealth.missedDays }} day{{ hifzPlanHealth.missedDays === 1 ? '' : 's' }}.</strong>
+          <span>{{ hifzPlanHealth.detail }}</span>
+        </div>
+        <div class="hifz-recovery-actions">
+          <button type="button" class="btn btn-sm btn-success" @click="applyHifzRecovery('catchUp')">
+            <i class="bi bi-lightning-charge" aria-hidden="true"></i>
+            Catch Up Faster
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="applyHifzRecovery('extend')">
+            <i class="bi bi-calendar-plus" aria-hidden="true"></i>
+            Extend Completion Date
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="applyHifzRecovery('reduce')">
+            <i class="bi bi-bullseye" aria-hidden="true"></i>
+            Reduce Daily Target
+          </button>
+        </div>
+      </div>
+
+      <div class="hifz-planner-grid">
+        <div class="hifz-planner-panel">
+          <div class="hifz-panel-title">
+            <i class="bi bi-gem" aria-hidden="true"></i>
+            <span>Memory Schedule</span>
+          </div>
+          <div class="hifz-memory-stats">
+            <span v-for="item in hifzMemoryScheduleCards" :key="item.key">
+              <strong>{{ item.value }}</strong>
+              <small>{{ item.label }}</small>
+            </span>
+          </div>
+          <div class="hifz-next-reviews">
+            <span v-for="item in hifzNextReviewDates" :key="item.key">
+              <strong>{{ item.label }}</strong>
+              <small>{{ item.date }}</small>
+            </span>
+          </div>
+        </div>
+
+        <div class="hifz-planner-panel">
+          <div class="hifz-panel-title">
+            <i class="bi bi-lightbulb" aria-hidden="true"></i>
+            <span>Retention Insights</span>
+          </div>
+          <ul class="hifz-retention-insights">
+            <li v-for="insight in hifzRetentionInsights" :key="insight">{{ insight }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="hifz-analytics-layer">
+        <div class="hifz-analytics-head">
+          <div class="hifz-panel-title">
+            <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
+            <span>Planner Analytics</span>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="hifzPlannerAnalyticsOpen = !hifzPlannerAnalyticsOpen">
+            <i class="bi" :class="hifzPlannerAnalyticsOpen ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+            {{ hifzPlannerAnalyticsOpen ? 'Simple View' : 'Detailed View' }}
+          </button>
+        </div>
+        <div class="hifz-simple-analytics" aria-label="Simple planner analytics">
+          <span v-for="item in hifzPlannerSimpleAnalytics" :key="item.key" class="hifz-simple-analytics-item">
+            <i class="bi" :class="item.icon" aria-hidden="true"></i>
+            <strong>{{ item.value }}</strong>
+            <small>{{ item.label }} · {{ item.detail }}</small>
+          </span>
+        </div>
+        <div v-if="hifzPlannerAnalyticsOpen" class="hifz-detailed-planner-analytics">
+          <div v-for="section in hifzPlannerDetailedAnalytics" :key="section.key" class="hifz-detailed-section">
+            <strong><i class="bi" :class="section.icon" aria-hidden="true"></i>{{ section.title }}</strong>
+            <span v-for="row in section.rows" :key="row.label">
+              <small>{{ row.label }}</small>
+              <b>{{ row.value }}</b>
+              <em>{{ row.detail }}</em>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-else class="hifz-planner-empty">
+      <div>
+        <span class="hifz-planner-kicker">Hifz Planner</span>
+        <h2>Create a living Hifz plan</h2>
+        <p>Set a daily target and Mutqin will forecast completion, schedule reviews, and track retention.</p>
+      </div>
+      <button type="button" class="btn btn-success" @click="openHifzPlanModal">
+        <i class="bi bi-plus-circle" aria-hidden="true"></i>
+        Create New Plan
+      </button>
+    </div>
+  </section>
+  
+  <!-- Quick controls - also hidden when session is completed -->
+  <div v-if="!isSessionCompleted" v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
+    <div class="quick-pill-group-list">
+      <div class="quick-left-pills">
+        <div class="workspace-applied-pills" aria-label="Live session settings">
+          <span v-for="item in topCardAppliedPills" :key="item.key" class="workspace-applied-pill"
+            :class="{ muted: item.muted }">
+            <i class="bi" :class="item.icon" aria-hidden="true"></i>
+            <span>{{ item.label }}</span>
+          </span>
+        </div>
+      </div>
+      <div class="quick-right-controls" aria-label="View and font controls">
+        <button type="button" class="view-mode-switch" :class="{ 'is-mushaf': readingViewMode === 'mushaf' }"
+          @click="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
+          :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'" aria-label="Toggle mushaf mode">
+          <span class="view-mode-switch-label">Stacked</span>
+          <span class="view-mode-switch-track" aria-hidden="true">
+            <span class="view-mode-switch-thumb">
+              <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-book' : 'bi-view-stacked'"></i>
+            </span>
+          </span>
+          <span class="view-mode-switch-label">Mushaf</span>
+        </button>
+        <div class="font-dropdown quick-font-dropdown" @click.stop>
+          <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
+            <i class="bi bi-text-paragraph" aria-hidden="true"></i>
+            <span>{{ getCurrentFontLabel() }}</span>
+            <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }" aria-hidden="true"></i>
+          </button>
+          <transition name="dropdown-fade">
+            <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
+              <button v-for="font in quranFontOptions" :key="font.value" type="button" class="font-option"
+                :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
+                <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
+                <span>{{ font.label }}</span>
+                <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+              </button>
             </div>
-            
-            <div v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
-                <div class="quick-pill-group-list">
-                <div class="quick-left-pills">
-                  <div class="workspace-applied-pills" aria-label="Live session settings">
-                    <span v-for="item in topCardAppliedPills" :key="item.key" class="workspace-applied-pill"
-                      :class="{ muted: item.muted }">
-                      <i class="bi" :class="item.icon" aria-hidden="true"></i>
-                      <span>{{ item.label }}</span>
-                    </span>
-                  </div>
-                </div>
-                <div class="quick-right-controls" aria-label="View and font controls">
-                  <button type="button" class="view-mode-switch" :class="{ 'is-mushaf': readingViewMode === 'mushaf' }"
-                    @click="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
-                    :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'" aria-label="Toggle mushaf mode">
-                    <span class="view-mode-switch-label">Stacked</span>
-                    <span class="view-mode-switch-track" aria-hidden="true">
-                      <span class="view-mode-switch-thumb">
-                        <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-book' : 'bi-view-stacked'"></i>
-                      </span>
-                    </span>
-                    <span class="view-mode-switch-label">Mushaf</span>
-                  </button>
-                  <div class="font-dropdown quick-font-dropdown" @click.stop>
-                    <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
-                      <i class="bi bi-text-paragraph" aria-hidden="true"></i>
-                      <span>{{ getCurrentFontLabel() }}</span>
-                      <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }" aria-hidden="true"></i>
-                    </button>
-                    <transition name="dropdown-fade">
-                      <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
-                        <button v-for="font in quranFontOptions" :key="font.value" type="button" class="font-option"
-                          :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
-                          <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
-                          <span>{{ font.label }}</span>
-                          <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                        </button>
-                      </div>
-                    </transition>
-                  </div>
-                </div>
-                <!-- <div class="quick-ai-actions" aria-label="AI practice tools">
-                  <button type="button" class="quick-ai-action quick-ai-memory"
-                    @click="openAiMemorisationCheckerForSession"
-                    :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
-                    title="Check memorisation across the selected session">
-                    <i class="bi bi-eye-slash"></i>
-                    <span>Session Memory</span>
-                    <small>Recall the selected ayah range</small>
-                  </button>
-                  <button type="button" class="quick-ai-action quick-ai-recite"
-                    @click="openAiRecitationCheckForSession"
-                    :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()"
-                    title="Check recitation across the whole selected session">
-                    <i class="bi bi-stars"></i>
-                    <span>AI Recite</span>
-                    <small>Friendly recitation check and review</small>
-                  </button>
-                </div> -->
-              </div>
-            </div>
-            
-          </section>
+          </transition>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Session Complete - Only shows when session is fully done -->
+<div v-if="isSessionCompleted" class="session-complete-wrapper">
+  <!-- Status Header -->
+  <div class="completion-header">
+    <div class="completion-icon">
+      <i class="bi bi-check-circle-fill"></i>
+    </div>
+    <div class="completion-text">
+      <h3>Session Complete</h3>
+      <p>You've completed all {{ totalVerses }} ayahs</p>
+    </div>
+  </div>
+
+  <!-- Stats Summary -->
+  <div class="completion-stats">
+    <div class="stat-box">
+      <span class="stat-number">{{ progressPercent }}%</span>
+      <span class="stat-label">Progress</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-box">
+      <span class="stat-number">{{ totalVerses }}</span>
+      <span class="stat-label">Ayahs Completed</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-box">
+      <span class="stat-number">{{ currentChapter?.name_simple || 'Done' }}</span>
+      <span class="stat-label">Surah</span>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="completion-actions">
+    <button class="action-btn primary" @click="openNewSessionSetup">
+      <i class="bi bi-plus-circle"></i>
+      New Session
+    </button>
+    <button class="action-btn" @click="startSessionWithCountdown">
+      <i class="bi bi-arrow-repeat"></i>
+      Repeat Range
+    </button>
+    <button class="action-btn" @click="openInsightsPanel">
+      <i class="bi bi-graph-up"></i>
+      Insights
+    </button>
+  </div>
+
+</div>
 
           <main id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             aria-label="Memorisation workspace">
@@ -456,6 +529,10 @@
                         <span v-for="verse in page.verses" :key="verse.key" role="button" tabindex="0"
                           :data-verse-key="verse.key" class="mushaf-ayah" :class="{
                             active: isVerseVisuallyActive(verse.key),
+                            'hifz-ayah-new': isNewHifzAyah(verse.key),
+                            'hifz-ayah-due': isDueHifzAyah(verse.key),
+                            'hifz-ayah-weak': isWeakAyah(verse.key),
+                            'hifz-ayah-mastered': isMasteredAyah(verse.key),
                             'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key),
                             'peek-revealed': isVersePeekRevealed(verse.key),
                             'review-priority': isReviewPriorityAyah(verse.key),
@@ -510,6 +587,10 @@
               <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{
                 active: isVerseVisuallyActive(verse.key),
                 'serious-training': false,
+                'hifz-ayah-new': isNewHifzAyah(verse.key),
+                'hifz-ayah-due': isDueHifzAyah(verse.key),
+                'hifz-ayah-weak': isWeakAyah(verse.key),
+                'hifz-ayah-mastered': isMasteredAyah(verse.key),
                 'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key),
                 'peek-revealed': isVersePeekRevealed(verse.key),
                 'ai-recitation-active': shouldShowRecitationReviewHighlights(verse.key)
@@ -522,7 +603,11 @@
                 <div class="verse-header">
                   <div class="verse-badges">
                     <span class="verse-number">Ayah {{ verse.number }}</span>
-                    <span v-if="isReviewPriorityAyah(verse.key)"
+                    <span v-if="isNewHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-new">New</span>
+                    <span v-if="isDueHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-due">Due</span>
+                    <span v-if="isWeakAyah(verse.key)" class="verse-status-badge verse-status-badge-weak">Needs Review</span>
+                    <span v-if="isMasteredAyah(verse.key)" class="verse-status-badge verse-status-badge-mastered">Steady</span>
+                    <span v-if="isReviewPriorityAyah(verse.key) && !isDueHifzAyah(verse.key)"
                       class="verse-status-badge verse-status-badge-review">Review Due</span>
                     <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge">Active Ayah</span>
                   </div>
@@ -1054,38 +1139,92 @@
 
           <!-- SAVED TAB -->
           <div v-else-if="tab === 'saved'" class="sheet">
-            <div class="saved-sessions-container saved-sessions-v2">
+            <div class="saved-sessions-container">
+              <!-- Header -->
               <div class="saved-header">
-                <h3><i class="bi bi-bookmark-check"></i> Saved Sessions</h3>
+                <h3><i class="bi bi-clock-history"></i> Saved Sessions</h3>
                 <p>Your memorisation sessions, ready to resume</p>
               </div>
-              <div v-if="hasContinueSession" class="saved-continue-banner">
-                <div class="saved-continue-copy">
-                  <span class="saved-continue-kicker">Resume previous session</span>
-                  <strong>{{ continueSessionLabel }}</strong>
-                  <small>{{ continueSessionMeta }}</small>
-                </div>
 
+              <!-- CONTINUE SESSION -->
+              <div v-if="hasContinueSession" class="continue-session-card">
+                <div class="continue-session-inner">
+                  <div class="continue-icon-wrapper">
+                    <i class="bi bi-arrow-clockwise"></i>
+                  </div>
+                  <div class="continue-content">
+                    <div class="continue-label">Continue This Session</div>
+                    <div class="continue-title">{{ continueSessionLabel }}</div>
+                    <div class="continue-meta">{{ continueSessionMeta }}</div>
+                  </div>
+                  <button class="btn-continue-session" @click="continueLastSession">
+                    <i class="bi bi-play-fill"></i> Resume
+                  </button>
+                </div>
               </div>
-              <div v-if="savedSessions.length === 0" class="empty-state">
-                <i class="bi bi-journal-bookmark"></i>
-                <p>No saved sessions yet</p>
-                <span>Save your current session to get started</span>
+
+              <!-- SELECT CUSTOM SESSION - CUSTOM DROPDOWN -->
+              <div class="custom-session-selector">
+                <div class="selector-header">
+                  <i class="bi bi-bookmark"></i>
+                  <span>Select Custom Session</span>
+                </div>
+                
+                <div class="selector-row">
+                  <!-- Custom Dropdown (no Bootstrap JS needed) -->
+                  <div class="custom-dropdown" :class="{ 'is-open': dropdownOpen }">
+                    <button class="btn btn-session-dropdown w-100" type="button" 
+                            @click="dropdownOpen = !dropdownOpen">
+                      <span v-if="selectedSessionId && getSelectedSessionLabel">
+                        <i class="bi bi-journal-text"></i> {{ getSelectedSessionLabel }}
+                      </span>
+                      <span v-else class="placeholder-text">
+                        <i class="bi bi-search"></i> Choose a saved session...
+                      </span>
+                      <i class="bi bi-chevron-down dropdown-arrow" :class="{ rotated: dropdownOpen }"></i>
+                    </button>
+                    
+                    <div v-if="dropdownOpen" class="custom-dropdown-menu">
+                      <div v-for="session in sortedSavedSessions" :key="session.id"
+                          class="dropdown-item" 
+                          :class="{ active: selectedSessionId === session.id }"
+                          @click="selectSessionFromDropdown(session.id)">
+                        <div class="session-option">
+                          <div class="session-option-main">
+                            <i class="bi bi-bookmark-fill"></i>
+                            <span class="session-option-name">{{ getSessionPrimaryLabel(session) }}</span>
+                          </div>
+                          <div class="session-option-meta">
+                            <span><i class="bi bi-clock"></i> {{ formatDate(session.savedAt) }}</span>
+                            <span><i class="bi bi-arrow-repeat"></i> {{ buildSessionResumeSummary(session) }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-if="!sortedSavedSessions.length" class="dropdown-item text-center text-muted py-3">
+                        <i class="bi bi-inbox"></i> No saved sessions
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button class="btn btn-load-selected" @click="loadSelectedSession" 
+                          :disabled="!selectedSessionId">
+                    <i class="bi bi-play-fill"></i> Load Session
+                  </button>
+                </div>
               </div>
-              <div v-else class="sessions-list">
-                <div v-for="session in savedSessions" :key="session.id" class="session-item" :class="{ 'session-item-active': sessionMatchesCurrentLiveConfig(session) }">
+
+              <!-- SAVED SESSIONS LIST -->
+              <div v-if="savedSessions.length > 0" class="sessions-list">
+                <div v-for="session in sortedSavedSessions" :key="session.id" class="session-item"
+                    :class="{ 'session-item-active': sessionMatchesCurrentLiveConfig(session) }">
                   <div class="session-info" @click="loadSavedSession(session.id)">
                     <div class="session-name">
                       <i class="bi bi-bookmark-fill"></i>
                       <span>{{ getSessionPrimaryLabel(session) }}</span>
                       <span v-if="session.archived" class="session-archive-badge">Archived</span>
-                      <span v-if="sessionMatchesCurrentLiveConfig(session)" class="session-live-badge">Active now</span>
-                      <span class="session-status-badge"
-                        :class="`session-status-${getSavedSessionState(session).tone}`">{{
-                        getSavedSessionState(session).label }}</span>
+                      <span v-if="sessionMatchesCurrentLiveConfig(session)" class="session-live-badge">Active</span>
                     </div>
-                    <div v-if="session.name && session.name !== getSessionPrimaryLabel(session)"
-                      class="session-subtitle">
+                    <div v-if="session.name && session.name !== getSessionPrimaryLabel(session)" class="session-subtitle">
                       {{ session.name }}
                     </div>
                     <div class="session-details">
@@ -1094,24 +1233,25 @@
                     </div>
                   </div>
                   <div class="session-actions">
-                    <div class="session-primary-action">
-                      <button class="session-resume-btn" @click="loadSavedSession(session.id)" type="button"
-                        :disabled="isLoadingSession(session.id)">
-                        <i class="bi"
-                          :class="isLoadingSession(session.id) ? 'bi-arrow-repeat spin' : 'bi-play-fill'"></i>
-                        <span>{{ isLoadingSession(session.id) ? 'Opening...' : 'Open Session' }}</span>
-                      </button>
-                    </div>
-                    <div class="session-secondary-actions">
-                      <button class="delete-btn session-delete-btn" @click.stop="deleteSavedSession(session.id)"
-                        title="Remove saved session">
-                        <i class="bi bi-trash3"></i>
-                        <span>Remove</span>
-                      </button>
-                    </div>
+                    <button class="session-resume-btn" @click="loadSavedSession(session.id)" type="button">
+                      <i class="bi bi-play-fill"></i>
+                      <span>Open</span>
+                    </button>
+                    <button class="session-delete-btn" @click.stop="deleteSavedSession(session.id)" title="Remove">
+                      <i class="bi bi-trash3"></i>
+                    </button>
                   </div>
                 </div>
               </div>
+
+              <!-- EMPTY STATE -->
+              <div v-if="savedSessions.length === 0 && !hasContinueSession" class="empty-state">
+                <i class="bi bi-journal-bookmark"></i>
+                <p>No saved sessions yet</p>
+                <span>Save your current session to get started</span>
+              </div>
+
+              <!-- Save Current Session -->
               <div v-if="hasVerses" class="save-section">
                 <div class="current-info">
                   <i class="bi bi-play-circle"></i>
@@ -1157,6 +1297,35 @@
                     <small>{{ item.description }}</small>
                   </article>
                 </div>
+                <section class="analytics-insight-layer" aria-label="AI insights">
+                  <div class="analytics-section-head">
+                    <i class="bi bi-stars" aria-hidden="true"></i>
+                    <div>
+                      <strong>Insight layer</strong>
+                      <small>Short signals from your recent memorisation pattern.</small>
+                    </div>
+                  </div>
+                  <div class="analytics-insight-list">
+                    <span v-for="insight in hifzInsightSummaries" :key="insight">
+                      <i class="bi bi-check2" aria-hidden="true"></i>{{ insight }}
+                    </span>
+                  </div>
+                </section>
+                <section class="detailed-analytics-system" aria-label="Detailed analytics">
+                  <article v-for="section in detailedAnalyticsSections" :key="section.key" class="detailed-analytics-section">
+                    <div class="analytics-section-head">
+                      <i class="bi" :class="section.icon" aria-hidden="true"></i>
+                      <strong>{{ section.title }}</strong>
+                    </div>
+                    <div class="detailed-analytics-rows">
+                      <div v-for="row in section.rows" :key="`${section.key}-${row.label}`" class="detailed-analytics-row">
+                        <span>{{ row.label }}</span>
+                        <strong>{{ row.value }}</strong>
+                        <small>{{ row.detail }}</small>
+                      </div>
+                    </div>
+                  </article>
+                </section>
                 <div v-if="savedSessions.length === 0" class="empty-state">
                   <i class="bi bi-activity"></i>
                   <p>No insights yet</p>
@@ -1665,10 +1834,9 @@
                 </div>
               </article>
             </section>
-            <!-- Add this inside your session-analytics-modal template, after the existing analytics content -->
-            <!-- Confidence Heatmap inside Analytics Modal -->
+            
             <section class="session-analytics-section" v-if="analyticsModalData">
-              <div class="confidence-heatmap-inline">
+              <!-- <div class="confidence-heatmap-inline">
                 <div class="heatmap-header">
                   <h3><i class="bi bi-grid-3x3-gap-fill"></i> Recitation Confidence Heatmap</h3>
                   <div class="heatmap-legend">
@@ -1695,7 +1863,7 @@
                   </div>
                 </div>
 
-                <!-- Tooltip -->
+                -- Tooltip --
                 <div 
                   v-if="heatmapTooltip?.visible" 
                   class="heatmap-tooltip" 
@@ -1709,7 +1877,7 @@
                   <div>Attempts: {{ heatmapTooltip?.data?.attemptCount }}</div>
                 </div>
 
-                <!-- Trend Summary -->
+                -- Trend Summary --
                 <div v-if="heatmapTrends.improved.length || heatmapTrends.declined.length" class="heatmap-trends">
                   <div class="trend-improved" v-if="heatmapTrends.improved.length">
                     <i class="bi bi-arrow-up-circle-fill"></i> Most Improved: 
@@ -1721,7 +1889,7 @@
                   </div>
                 </div>
 
-                <!-- Focus Alert -->
+                -- Focus Alert --
                 <div v-if="heatmapFocusAreas.length" class="heatmap-focus">
                   <i class="bi bi-exclamation-triangle-fill"></i>
                   <span>Priority: {{ heatmapFocusAreas.length }} ayah{{ heatmapFocusAreas.length > 1 ? 's' : '' }} below 60% confidence</span>
@@ -1731,7 +1899,7 @@
                     </span>
                   </div>
                 </div>
-              </div>
+              </div> -->
             </section>
             <section class="session-analytics-section session-analytics-two-col">
               <article class="session-analytics-panel">
@@ -1862,6 +2030,14 @@
                   <i class="bi" :class="activeSelfCheckAyahPlaybackKey === aiMemorisationCheckerVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                   <span>{{ activeSelfCheckAyahPlaybackKey === aiMemorisationCheckerVerse.key ? 'Pause' : 'Play' }}</span>
                 </button>
+                <button class="self-check-toolbar-btn active-recall-toggle" type="button"
+                  @click.stop="toggleActiveRecallMode('memorisation')"
+                  :class="{ active: hiddenRevealModeEnabled }"
+                  :aria-pressed="hiddenRevealModeEnabled ? 'true' : 'false'"
+                  title="Active recall mode" aria-label="Active recall mode">
+                  <i class="bi" :class="hiddenRevealModeEnabled ? 'bi-lock-fill' : 'bi-unlock'"></i>
+                  <span>Active Recall</span>
+                </button>
                 <button class="self-check-toolbar-btn" type="button" @click.stop="toggleAiMemorisationCheckerBlur"
                   :class="{ active: aiMemorisationCheckerBlurEnabled }"
                   :aria-pressed="aiMemorisationCheckerBlurEnabled ? 'true' : 'false'"
@@ -1886,13 +2062,18 @@
               @touchend="stopAiMemorisationCheckerPeek" @touchcancel="stopAiMemorisationCheckerPeek">
               <div class="self-check-modal-ayah memorisation-checker-ayah" dir="rtl"
                 :class="{
-                  'self-check-session-ayat': aiMemorisationCheckerScope === 'session' && aiMemorisationCheckerTargets.length > 1,
-                  'recitation-word-review-active': isAiMemorisationCheckerReviewActive
-                }"
-                :style="getAiMemorisationCheckerAyahStyle(aiMemorisationCheckerVerse)"
-                v-html="getAiMemorisationCheckerArabic(aiMemorisationCheckerVerse)"></div>
-            </div>
-          </section>
+	                  'self-check-session-ayat': aiMemorisationCheckerScope === 'session' && aiMemorisationCheckerTargets.length > 1,
+	                  'recitation-word-review-active': isAiMemorisationCheckerReviewActive,
+	                  'active-recall-display': hiddenRevealModeEnabled
+	                }"
+	                :style="getAiMemorisationCheckerAyahStyle(aiMemorisationCheckerVerse)"
+	                v-html="getAiMemorisationCheckerArabic(aiMemorisationCheckerVerse)"></div>
+	            </div>
+	              <div v-if="getActiveRecallHint('memorisation')" class="active-recall-hint" aria-live="polite">
+	                <i class="bi bi-lightbulb"></i>
+	                <span>{{ getActiveRecallHint('memorisation') }}</span>
+	              </div>
+		          </section>
 
           <section v-if="aiMemorisationCheckerRecording || aiMemorisationCheckerPreparing || aiMemorisationCheckerResult || aiMemorisationCheckerError"
             class="self-check-modal-recorder-grid memorisation-checker-recorder-grid">
@@ -1933,14 +2114,14 @@
                 <div v-if="aiMemorisationCheckerRecording" class="recitation-live-review recitation-live-review-compact"
                   aria-label="Live memorisation word check">
                   <div class="recitation-live-head">
-                    <span>{{ aiMemorisationCheckerLiveSummary }}</span>
-                    <strong>Live</strong>
-                  </div>
-                  <div class="recitation-word-stream recitation-live-word-stream memorisation-checker-word-stream" dir="rtl">
-                    <span v-for="word in aiMemorisationCheckerVisibleLiveWords" :key="word.key"
-                      class="recitation-word-chip word-live" :class="`word-${word.status || 'pending'}`" :title="word.note">
-                      {{ word.text }}
-                    </span>
+	                    <span>{{ hiddenRevealModeEnabled ? getActiveRecallSummary('memorisation') : aiMemorisationCheckerLiveSummary }}</span>
+	                    <strong>Live</strong>
+	                  </div>
+	                  <div class="recitation-word-stream recitation-live-word-stream memorisation-checker-word-stream" dir="rtl">
+	                    <span v-for="word in getActiveRecallLiveWords('memorisation')" :key="word.key"
+	                      class="recitation-word-chip word-live" :class="`word-${word.visualStatus || word.status || 'notAttempted'}`" :title="word.note">
+	                      {{ word.text }}
+	                    </span>
                   </div>
                 </div>
                 <div v-if="aiMemorisationCheckerRecording" class="recitation-check-actions">
@@ -1979,7 +2160,7 @@
                   </div>
                   <div class="recitation-word-stream memorisation-checker-final-words" dir="rtl">
                     <span v-for="(word, index) in getRecitationWordStatuses(aiMemorisationCheckerResult)" :key="`memory-final-${index}`"
-                      class="recitation-word-chip" :class="[`word-${word.status || 'pending'}`, { 'can-correct-ai': word.status && word.status !== 'correct' }]"
+                      class="recitation-word-chip" :class="[`word-${getWordVisualStatus(word, false, true)}`, { 'can-correct-ai': word.status && word.status !== 'correct' }]"
                       :title="word.status && word.status !== 'correct' ? `${word.note || ''} Mark as AI mistake.` : word.note"
                       @click="markAiRecitationWordAsCorrect(aiMemorisationCheckerResult, index)">
                       {{ word.text }}
@@ -2063,6 +2244,14 @@
                   <i class="bi bi-arrow-counterclockwise"></i>
                   <span>Reset</span>
                 </button>
+                <button class="self-check-toolbar-btn active-recall-toggle" type="button"
+                  @click.stop="toggleActiveRecallMode('recitation')"
+                  :class="{ active: hiddenRevealModeEnabled }"
+                  :aria-pressed="hiddenRevealModeEnabled ? 'true' : 'false'"
+                  title="Active recall mode" aria-label="Active recall mode">
+                  <i class="bi" :class="hiddenRevealModeEnabled ? 'bi-lock-fill' : 'bi-unlock'"></i>
+                  <span>Active Recall</span>
+                </button>
                 <button class="self-check-toolbar-btn" type="button"
                   @click.stop="toggleSelfCheckAyahPlayback(selfCheckModalVerse)"
                   :title="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'Pause ayah' : 'Play ayah once'"
@@ -2087,15 +2276,19 @@
               :class="{ 'is-blurred': selfCheckBlurEnabled && !selfCheckPeekActive && !recitationCheckVisible, 'is-peekable': selfCheckBlurEnabled && !recitationCheckVisible }"
               @mousedown="startSelfCheckPeek" @mouseup="stopSelfCheckPeek" @mouseleave="stopSelfCheckPeek"
               @touchstart.prevent="startSelfCheckPeek" @touchend="stopSelfCheckPeek" @touchcancel="stopSelfCheckPeek">
-              <div class="self-check-modal-ayah" dir="rtl" :style="getSelfCheckAyahDisplayStyle()"
-              :class="{
-                'self-check-session-ayat': recitationCheckScope === 'session' && recitationCheckPendingTargets.length > 1,
-                'recitation-word-review-active': selfCheckModalVerse && shouldShowRecitationReviewHighlights(selfCheckModalVerse.key)
-              }"
-                v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"></div>
-            </div>
-
-          </section>
+	              <div class="self-check-modal-ayah" dir="rtl" :style="getSelfCheckAyahDisplayStyle()"
+	              :class="{
+	                'self-check-session-ayat': recitationCheckScope === 'session' && recitationCheckPendingTargets.length > 1,
+	                'recitation-word-review-active': selfCheckModalVerse && shouldShowRecitationReviewHighlights(selfCheckModalVerse.key),
+	                'active-recall-display': hiddenRevealModeEnabled
+	              }"
+	                v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"></div>
+	            </div>
+	              <div v-if="getActiveRecallHint('recitation')" class="active-recall-hint" aria-live="polite">
+	                <i class="bi bi-lightbulb"></i>
+	                <span>{{ getActiveRecallHint('recitation') }}</span>
+	              </div>
+		          </section>
 
           <section v-if="selfCheckReviewVisible" class="self-check-modal-recorder-grid"
             :class="{ 'saved-attempts-open': selfCheckSavedAttemptsVisible }">
@@ -2164,14 +2357,14 @@
                 <div v-if="recitationCheckRecording" class="recitation-live-review recitation-live-review-compact"
                   aria-label="Live recitation word check">
                   <div class="recitation-live-head">
-                    <span>{{ recitationLiveSummary }}</span>
-                    <strong>{{ recitationCheckRecording ? 'Live' : 'Ready' }}</strong>
-                  </div>
-                  <div class="recitation-word-stream recitation-live-word-stream" dir="rtl">
-                    <span v-for="word in getVisibleRecitationLiveWords()" :key="word.key"
-                      class="recitation-word-chip word-live" :class="`word-${word.status || 'pending'}`" :title="word.note">
-                      {{ word.text }}
-                    </span>
+	                    <span>{{ hiddenRevealModeEnabled ? getActiveRecallSummary('recitation') : recitationLiveSummary }}</span>
+	                    <strong>{{ recitationCheckRecording ? 'Live' : 'Ready' }}</strong>
+	                  </div>
+	                  <div class="recitation-word-stream recitation-live-word-stream" dir="rtl">
+	                    <span v-for="word in getActiveRecallLiveWords('recitation')" :key="word.key"
+	                      class="recitation-word-chip word-live" :class="`word-${word.visualStatus || word.status || 'notAttempted'}`" :title="word.note">
+	                      {{ word.text }}
+	                    </span>
                   </div>
                 </div>
                 <div v-if="recitationCheckRecording" class="recitation-check-actions">
@@ -2598,6 +2791,12 @@
       </div>
     </div>
 
+    <HifzPlanCreatorModal
+      :visible="showHifzPlanModal"
+      @close="closeHifzPlanModal"
+      @saved="handleHifzPlanSaved"
+    />
+
     <!-- Global Audio Player - Updated with Speed Controls -->
     <transition name="slide-up">
       <div v-if="appReady && playerVisible" class="player-bar" :class="{ collapsed: playerCollapsed }" role="region"
@@ -2766,6 +2965,19 @@ import { buildSessionQueue, startMutqinSession, moveMutqinSession, completeMutqi
 import { createDailyPlan } from '../composables/useDailyPlanner'
 import { hideAyah, completeTakrarStep, getTakrarStep } from '../composables/useTakrarLadder'
 import { scoreRetention } from '../composables/useRetentionZones'
+import { updateAyahProgress } from '../engine/spaced_repetition_memory'
+import HifzPlanCreatorModal from './HifzPlanCreatorModal.vue'
+import {
+  generateTodaySession,
+  HIFZ_PLAN_STORAGE_KEY,
+  AYAH_PROGRESS_STORAGE_KEY,
+  HIFZ_PLAN_ARCHIVE_STORAGE_KEY,
+  calculatePlanForecast,
+  normalizeDailyNewAyahCount,
+  getProgressEntries,
+  QURAN_TOTALS
+} from '../engine/hifz_session_engine'
+import { buildHifzAnalyticsSnapshot } from '../engine/hifz_analytics'
 import {
   DEFAULT_RECITATION_CONFIDENCE_THRESHOLD,
   buildDeterministicRecitationResult,
@@ -3490,12 +3702,63 @@ function createSpeechmaticsRealtimeProvider(options = {}) {
 
 export default {
   name: 'TelawaApp',
+  components: {
+    HifzPlanCreatorModal
+  },
   props: {
     auth: { type: Object, default: () => ({ check: false, id: null }) }
   },
   data() {
     return {  
-      heatmapTooltip: { visible: false, x: 0, y: 0, data: null },
+      quickSurahs: [
+        { id: 1, name: 'Al-Fatihah', nameArabic: 'الْفَاتِحَة' },
+        { id: 18, name: 'Al-Kahf', nameArabic: 'الْكَهْف' },
+        { id: 36, name: 'Ya-Sin', nameArabic: 'يٰس' },
+        { id: 55, name: 'Ar-Rahman', nameArabic: 'الرَّحْمَٰن' },
+        { id: 56, name: 'Al-Waqiah', nameArabic: 'الْوَاقِعَة' },
+        { id: 67, name: 'Al-Mulk', nameArabic: 'الْمُلْك' },
+        { id: 73, name: 'Al-Muzzammil', nameArabic: 'الْمُزَّمِّل' },
+        { id: 78, name: 'An-Naba', nameArabic: 'النَّبَأ' }
+      ],
+      dropdownOpen: false,
+      continueSessionLabel: '',
+      continueSessionMeta: '',
+      selectedSessionId: null,
+      showContinueSession: false,
+      showSelectSession: false,
+      savedSessions: [], // Make sure this exists
+      continueSessionPayload: null, // Make sure this exists
+      hasContinueSession: false,
+      showHifzPlanModal: false,
+      hifzPlanExists: false,
+      hifzPlan: null,
+      hifzAyahProgress: {},
+      hifzTodayQueue: [],
+      hifzPlannerAnalyticsOpen: false,
+      // Hidden Reveal Mode State
+      hiddenRevealModeEnabled: false,
+      hiddenRevealSession: {
+        revealedWordIndexes: new Set(), // Track which words have been revealed
+        currentWordIndex: 0,
+        lastCorrectWordTime: null,
+        errorCount: 0,
+        sessionStarted: false
+      },
+      wordElementsMap: new Map(), // Track DOM elements for each word
+      // Luqmah Assistance State
+	      luqmahState: {
+	        active: false,
+	        currentLevel: 0, // 0=none, 1=soft, 2=guided, 3=strong
+	        failCount: 0,
+	        lastFailTime: null,
+	        failWindow: [], // Track recent failures for debouncing
+	        hintTimeout: null
+	      },
+	      activeRecallFeedbackState: {
+	        recitation: { issueKey: '', failCount: 0, hint: '' },
+	        memorisation: { issueKey: '', failCount: 0, hint: '' }
+	      },
+	      heatmapTooltip: { visible: false, x: 0, y: 0, data: null },
       analyticsHeatmapData: [],
       heatmapTrends: { improved: [], declined: [] },
       heatmapFocusAreas: [],
@@ -3758,6 +4021,8 @@ export default {
       recitationCheckStartedAt: 0,
       recitationCheckResult: null,
       recitationCheckPendingTargets: [],
+      recitationSessionEvaluationMap: {},
+      recitationSessionHighlightMap: {},
       recitationCheckTargetVerseKey: '',
       recitationCheckScope: 'ayah',
       recitationCheckPanelOpen: false,
@@ -3927,6 +4192,8 @@ export default {
       aiMemorisationCheckerStartedAt: 0,
       aiMemorisationCheckerResult: null,
       aiMemorisationCheckerLiveWords: [],
+      aiMemorisationCheckerEvaluationMap: {},
+      aiMemorisationCheckerHighlightMap: {},
       aiMemorisationCheckerHiddenIndexes: [],
       aiMemorisationCheckerSpeechRecognition: null,
       aiMemorisationCheckerSpeechTranscript: '',
@@ -4085,6 +4352,23 @@ export default {
   },
 
   computed: {
+    sortedSavedSessions() {
+      return [...this.savedSessions].sort((a, b) => {
+        return new Date(b.savedAt) - new Date(a.savedAt);
+      });
+    },
+    continueSessionMeta() {
+      if (!this.continueSessionPayload) return '';
+      const minutesAgo = Math.floor((Date.now() - this.continueSessionPayload.timestamp) / 60000);
+      const timeLabel = minutesAgo < 1 ? 'just now' : `${minutesAgo} min ago`;
+      return `Last active ${timeLabel} · Resume where you left off`;
+    },
+    isSessionFullyCompleted() {
+    // Check if all verses in the range have been completed
+    return this.currentPosition >= this.totalVerses && 
+        this.progressPercent >= 100 &&
+        this.queueIndex >= this.queue.length - 1;
+    },
     quranSearchWordCount() {
       return this.normalizeQuranSearchText(this.quranSearchQuery)
         .split(/\s+/)
@@ -4277,6 +4561,401 @@ export default {
         })
       }
       return items
+    },
+    hifzJourneyDailyTarget() {
+      const dailyNewAyahs = this.hifzPlan?.goalSettings?.dailyNewAyahs || {}
+      const label = dailyNewAyahs.label || ''
+      if (label) return label
+      const min = Number(dailyNewAyahs.min)
+      const max = Number(dailyNewAyahs.max)
+      if (Number.isFinite(min) && Number.isFinite(max)) return `${min}-${max} ayahs/day`
+      if (Number.isFinite(max)) return `${max} ayahs/day`
+      return 'Set your target'
+    },
+    hifzJourneyLearningStyle() {
+      const labels = {
+        light: 'Light',
+        balanced: 'Balanced',
+        intensive: 'Intensive'
+      }
+      return labels[this.hifzPlan?.learningStyle] || 'Balanced'
+    },
+    hifzJourneyMode() {
+      const labels = {
+        newPriority: 'New first',
+        revisionPriority: 'Review first',
+        mixed: 'Mixed',
+        weakAyahFocus: 'Strengthen weak ayahs'
+      }
+      return labels[this.hifzPlan?.focusMode] || 'Mixed'
+    },
+    hifzJourneyFeatureIcons() {
+      const features = []
+      const ai = this.hifzPlan?.aiEvaluation || {}
+      const retention = this.hifzPlan?.spacedRetention || {}
+      if (ai.recitationChecker) features.push({ key: 'recitation', icon: 'bi-soundwave', label: 'Gentle recitation feedback' })
+      if (ai.memorisationChecker) features.push({ key: 'memory', icon: 'bi-gem', label: 'Memory strength feedback' })
+      if (retention.enabled !== false) features.push({ key: 'review', icon: 'bi-calendar-check', label: 'Review reminders' })
+      if (ai.precisionMode) features.push({ key: 'precision', icon: 'bi-shield-check', label: 'Careful checking' })
+      if (this.blurModeEnabled) features.push({ key: 'blur', icon: 'bi-cloud-haze2', label: 'Recall view' })
+      if (this.chainingEnabled) features.push({ key: 'chain', icon: 'bi-link-45deg', label: 'Ayah linking' })
+      if (this.anchorModeEnabled) features.push({ key: 'anchor', icon: 'bi-pin-angle-fill', label: 'Memory anchors' })
+      if (!features.length) features.push({ key: 'standard', icon: 'bi-stars', label: 'Standard support' })
+      return features.slice(0, 7)
+    },
+    hifzLastSilentEvaluation() {
+      return this.mutqinState?.sessionState?.lastSilentEvaluation || null
+    },
+    hifzRecitationFeedback() {
+      return this.hifzLastSilentEvaluation?.recitation?.feedback || 'Recite calmly when ready.'
+    },
+    hifzMemoryStrengthTone() {
+      const strength = this.hifzLastSilentEvaluation?.memorisation?.strength || ''
+      if (strength === 'strong') return 'strong'
+      if (strength === 'steady') return 'steady'
+      if (strength === 'needsPractice') return 'review'
+      return 'idle'
+    },
+    hifzMemoryStrengthLabel() {
+      const labels = {
+        strong: 'Strong memory',
+        steady: 'Steady memory',
+        needsPractice: 'Needs gentle review'
+      }
+      return labels[this.hifzLastSilentEvaluation?.memorisation?.strength] || 'Memory strength ready'
+    },
+    hifzAnalyticsSnapshot() {
+      return buildHifzAnalyticsSnapshot({
+        hifzPlan: this.hifzPlan,
+        ayahProgress: this.hifzAyahProgress,
+        todayQueue: this.hifzTodayQueue,
+        savedSessions: this.savedSessions,
+        recordingsLibrary: this.recordingsLibrary,
+        mutqinState: this.mutqinState,
+        analytics: this.analytics,
+        currentSession: {
+          currentPosition: this.currentPosition,
+          queueIndex: this.queueIndex,
+          totalVerses: this.totalVerses,
+          completedAyahs: Math.max(0, Number(this.currentPosition || 0) - 1)
+        }
+      })
+    },
+    simpleAnalyticsCards() {
+      const simple = this.hifzAnalyticsSnapshot.simple || {}
+      return [
+        { key: 'today', icon: 'bi-calendar2-check', ...simple.todayProgress },
+        { key: 'memory', icon: 'bi-gem', ...simple.memoryStrength },
+        { key: 'streak', icon: 'bi-fire', ...simple.streak },
+        { key: 'completed', icon: 'bi-check2-circle', ...simple.completedAyahs }
+      ]
+    },
+    detailedAnalyticsSections() {
+      const detailed = this.hifzAnalyticsSnapshot.detailed || {}
+      const memory = detailed.memoryBreakdown || {}
+      const spaced = detailed.spacedHealth || {}
+      const recitation = detailed.recitationQuality || {}
+      return [
+        {
+          key: 'surah',
+          title: 'Surah performance',
+          icon: 'bi-book-half',
+          rows: (detailed.surahPerformance || []).slice(0, 5).map(item => ({
+            label: item.label,
+            value: `${Math.round(item.averageMastery * 100)}%`,
+            detail: `${item.ayahsTracked} ayahs tracked`
+          }))
+        },
+        {
+          key: 'memory',
+          title: 'Memory breakdown',
+          icon: 'bi-grid-3x3-gap',
+          rows: [
+            { label: 'New', value: memory.new || 0, detail: 'queued today' },
+            { label: 'Due', value: memory.due || 0, detail: 'review now' },
+            { label: 'Weak', value: memory.weak || 0, detail: 'needs care' },
+            { label: 'Mastered', value: memory.mastered || 0, detail: 'steady ayahs' }
+          ]
+        },
+        {
+          key: 'spaced',
+          title: 'Spaced repetition health',
+          icon: 'bi-calendar-heart',
+          rows: [
+            { label: 'Due now', value: spaced.dueNow || 0, detail: 'reviews' },
+            { label: 'Upcoming', value: spaced.upcoming || 0, detail: 'scheduled' },
+            { label: 'Average retention', value: `${Math.round((spaced.averageMastery || 0) * 100)}%`, detail: `${spaced.reviewLoad || 'light'} load` }
+          ]
+        },
+        {
+          key: 'recitation',
+          title: 'Recitation quality',
+          icon: 'bi-soundwave',
+          rows: [
+            { label: 'Average quality', value: recitation.label || 'Ready', detail: recitation.summary || '' },
+            { label: 'Checks', value: recitation.checksCompleted || 0, detail: 'completed' }
+          ]
+        },
+        {
+          key: 'weekly',
+          title: 'Weekly trends',
+          icon: 'bi-graph-up',
+          rows: (detailed.weeklyTrends || []).map(day => ({
+            label: day.label,
+            value: day.reviews,
+            detail: `${day.sessions} session${day.sessions === 1 ? '' : 's'}`
+          }))
+        }
+      ].map(section => ({
+        ...section,
+        rows: section.rows?.length ? section.rows : [{ label: 'No data yet', value: '-', detail: 'Start a session to build analytics' }]
+      }))
+    },
+    hifzInsightSummaries() {
+      return this.hifzAnalyticsSnapshot.insights || ['Keep today small and consistent']
+    },
+    hifzPlanLifecycleStatus() {
+      return this.hifzPlan?.lifecycle?.status || this.hifzPlan?.status || 'draft'
+    },
+    hifzProgressEntries() {
+      return getProgressEntries(this.hifzAyahProgress || {})
+    },
+    hifzCompletedAyahCount() {
+      return this.hifzProgressEntries.length
+    },
+    hifzPlannerForecast() {
+      if (!this.hifzPlan) return calculatePlanForecast({}, { completedAyahs: 0 })
+      return calculatePlanForecast(this.hifzPlan, { completedAyahs: this.hifzCompletedAyahCount })
+    },
+    hifzPlannerProgressPercent() {
+      const total = Math.max(1, Number(this.hifzPlannerForecast.totalAyahs || QURAN_TOTALS.ayahs))
+      return Math.min(100, Math.round((this.hifzCompletedAyahCount / total) * 100))
+    },
+    hifzDaysActive() {
+      if (!this.hifzPlan) return 0
+      const startedAt = this.hifzPlan.lifecycle?.startedAt || this.hifzPlan.startedAt || this.hifzPlan.createdAt
+      const start = new Date(startedAt || Date.now())
+      if (Number.isNaN(start.getTime())) return 0
+      const end = this.hifzPlanLifecycleStatus === 'paused'
+        ? new Date(this.hifzPlan.lifecycle?.pausedAt || this.hifzPlan.pausedAt || Date.now())
+        : new Date()
+      const diff = Math.max(0, end.getTime() - start.getTime())
+      return Math.max(1, Math.floor(diff / 86400000) + 1)
+    },
+    hifzCurrentPlanPosition() {
+      const forecast = this.hifzPlannerForecast
+      const progressRatio = Math.min(1, this.hifzCompletedAyahCount / Math.max(1, forecast.totalAyahs || 1))
+      const rangeFrom = Number(this.hifzPlan?.selectedRange?.from || this.hifzPlan?.range?.from || 1)
+      const nextAyah = Math.min(
+        Number(this.hifzPlan?.selectedRange?.to || rangeFrom + forecast.totalAyahs - 1 || forecast.totalAyahs),
+        Math.max(rangeFrom, rangeFrom + this.hifzCompletedAyahCount)
+      )
+      return {
+        juz: Math.max(1, Math.ceil(progressRatio * (forecast.totalJuz || QURAN_TOTALS.juz))),
+        hizb: Math.max(1, Math.ceil(progressRatio * (forecast.totalHizb || QURAN_TOTALS.hizb))),
+        page: Math.max(1, Math.ceil(progressRatio * (forecast.totalPages || QURAN_TOTALS.pages))),
+        ayah: nextAyah,
+        label: this.hifzPlan?.selectedSurah ? `${this.hifzPlan.selectedSurah} ${nextAyah}` : `Ayah ${this.hifzCompletedAyahCount + 1}`
+      }
+    },
+    hifzMemorySchedule() {
+      const today = new Date()
+      const todayToken = this.getHifzDateToken(today)
+      const tomorrow = new Date(today)
+      tomorrow.setDate(today.getDate() + 1)
+      const tomorrowToken = this.getHifzDateToken(tomorrow)
+      const week = new Date(today)
+      week.setDate(today.getDate() + 7)
+      const weekToken = this.getHifzDateToken(week)
+      const recent = new Date(today)
+      recent.setDate(today.getDate() - 14)
+
+      const entries = this.hifzProgressEntries
+      const withReview = entries
+        .map(entry => ({
+          ...entry,
+          nextToken: this.getHifzDateToken(entry.progress?.nextReview),
+          lastReviewedTime: Date.parse(entry.progress?.lastReviewed || '')
+        }))
+      const dueToday = withReview.filter(entry => entry.nextToken && entry.nextToken <= todayToken)
+      const overdue = withReview.filter(entry => entry.nextToken && entry.nextToken < todayToken)
+      const tomorrowDue = withReview.filter(entry => entry.nextToken === tomorrowToken)
+      const thisWeek = withReview.filter(entry => entry.nextToken && entry.nextToken > todayToken && entry.nextToken <= weekToken)
+      const recentlyMastered = withReview.filter(entry => {
+        const mastery = Number(entry.progress?.masteryScore || 0)
+        return mastery >= 0.85 && Number.isFinite(entry.lastReviewedTime) && entry.lastReviewedTime >= recent.getTime()
+      })
+      return {
+        dueToday,
+        overdue,
+        tomorrow: tomorrowDue,
+        thisWeek,
+        recentlyMastered,
+        upcoming: withReview
+          .filter(entry => entry.nextToken)
+          .sort((a, b) => String(a.nextToken).localeCompare(String(b.nextToken)))
+      }
+    },
+    hifzMemoryScheduleCards() {
+      const schedule = this.hifzMemorySchedule
+      return [
+        { key: 'due', label: 'Due Today', value: schedule.dueToday.length },
+        { key: 'tomorrow', label: 'Tomorrow', value: schedule.tomorrow.length },
+        { key: 'week', label: 'This Week', value: schedule.thisWeek.length },
+        { key: 'overdue', label: 'Overdue Reviews', value: schedule.overdue.length },
+        { key: 'mastered', label: 'Recently Mastered', value: schedule.recentlyMastered.length }
+      ]
+    },
+    hifzNextReviewDates() {
+      const upcoming = this.hifzMemorySchedule.upcoming.slice(0, 4).map(entry => ({
+        key: entry.key,
+        label: `${entry.surah}:${entry.ayah}`,
+        date: entry.nextToken ? entry.nextToken.replaceAll('-', '/') : 'Not scheduled'
+      }))
+      return upcoming.length ? upcoming : [{ key: 'empty', label: 'Next review', date: 'After today’s new ayahs' }]
+    },
+    hifzPlanHealth() {
+      if (!this.hifzPlanExists) {
+        return { status: 'onTrack', label: 'On Track', icon: 'bi-check-circle', missedDays: 0, detail: 'Create a plan to begin tracking.' }
+      }
+      if (this.hifzPlanLifecycleStatus === 'paused') {
+        return { status: 'paused', label: 'Paused', icon: 'bi-pause-circle', missedDays: 0, detail: 'Progress calculations are paused until you resume.' }
+      }
+
+      const dailyTarget = normalizeDailyNewAyahCount(this.hifzPlan)
+      const plannedAyahs = this.hifzDaysActive * dailyTarget
+      const behindAyahs = Math.max(0, plannedAyahs - this.hifzCompletedAyahCount)
+      const missedDays = Math.max(0, Math.ceil(behindAyahs / Math.max(1, dailyTarget)))
+      const overdueCount = this.hifzMemorySchedule.overdue.length
+      const revisionPressure = overdueCount >= dailyTarget ? 'high' : (overdueCount > 0 ? 'medium' : 'clear')
+
+      if (missedDays >= 3 || revisionPressure === 'high') {
+        return {
+          status: 'fallingBehind',
+          label: 'Falling Behind',
+          icon: 'bi-exclamation-triangle',
+          missedDays,
+          detail: overdueCount ? `${overdueCount} reviews are overdue.` : 'Planned memorisation is ahead of completed progress.'
+        }
+      }
+      if (missedDays >= 1 || revisionPressure === 'medium') {
+        return {
+          status: 'slightlyBehind',
+          label: 'Slightly Behind',
+          icon: 'bi-dash-circle',
+          missedDays,
+          detail: overdueCount ? `${overdueCount} review${overdueCount === 1 ? ' is' : 's are'} overdue.` : 'A small adjustment will bring the plan back on track.'
+        }
+      }
+      return {
+        status: 'onTrack',
+        label: 'On Track',
+        icon: 'bi-check-circle',
+        missedDays: 0,
+        detail: 'Progress and revision are matching the plan.'
+      }
+    },
+    hifzRecoveryRequired() {
+      return ['slightlyBehind', 'fallingBehind'].includes(this.hifzPlanHealth.status)
+    },
+    hifzPlannerStatusMessage() {
+      if (this.hifzPlanLifecycleStatus === 'paused') return 'Your plan is paused. Resume when you are ready to continue.'
+      return `${this.hifzPlannerProgressPercent}% complete. Forecast finish: ${this.hifzPlannerForecast.estimatedCompletionDate}.`
+    },
+    hifzPlannerMetricCards() {
+      const forecast = this.hifzPlannerForecast
+      const position = this.hifzCurrentPlanPosition
+      return [
+        { key: 'streak', icon: 'bi-fire', value: this.analytics?.currentStreak || 0, label: 'Current Streak' },
+        { key: 'active', icon: 'bi-calendar2-check', value: this.hifzDaysActive, label: 'Days Active' },
+        { key: 'remaining', icon: 'bi-hourglass-split', value: forecast.estimatedDays, label: 'Days Remaining' },
+        { key: 'progress', icon: 'bi-pie-chart', value: `${this.hifzPlannerProgressPercent}%`, label: 'Current Progress' },
+        { key: 'juz', icon: 'bi-journal-bookmark', value: position.juz, label: 'Current Juz' },
+        { key: 'hizb', icon: 'bi-bookmarks', value: position.hizb, label: 'Current Hizb' },
+        { key: 'page', icon: 'bi-file-earmark-text', value: position.page, label: 'Current Page' },
+        { key: 'ayah', icon: 'bi-book', value: position.label, label: 'Current Ayah' },
+        { key: 'forecast', icon: 'bi-calendar-check', value: forecast.estimatedCompletionDate, label: 'Completion Forecast' }
+      ]
+    },
+    hifzRetentionInsights() {
+      const entries = this.hifzProgressEntries
+      if (!entries.length) return ['Your memory schedule will begin after the first completed ayah.']
+      const averageMastery = entries.reduce((sum, entry) => sum + Number(entry.progress?.masteryScore || 0), 0) / entries.length
+      const weakCount = entries.filter(entry => Number(entry.progress?.masteryScore || 0) < 0.55).length
+      const strongCount = entries.filter(entry => Number(entry.progress?.masteryScore || 0) >= 0.85).length
+      const insights = []
+      insights.push(averageMastery >= 0.75 ? 'Your retention strength is improving.' : 'Your retention needs more steady review.')
+      if (strongCount) insights.push(`You consistently remember ${strongCount} recently learned ayah${strongCount === 1 ? '' : 's'}.`)
+      if (weakCount) insights.push(`${weakCount} ayah${weakCount === 1 ? ' requires' : 's require'} additional revision.`)
+      if (this.hifzMemorySchedule.overdue.length) insights.push('Revision backlog detected. Clearing overdue reviews will stabilise the plan.')
+      else insights.push('Spaced repetition is active and reviews are staying under control.')
+      return insights.slice(0, 4)
+    },
+    hifzPlannerSimpleAnalytics() {
+      const dueCount = this.hifzMemorySchedule.dueToday.length
+      const overdueCount = this.hifzMemorySchedule.overdue.length
+      const target = normalizeDailyNewAyahCount(this.hifzPlan || {})
+      const todayCompleted = Math.min(target, (this.hifzTodayQueue || []).filter(item => item.type === 'new').length)
+      return [
+        { key: 'progress', icon: 'bi-pie-chart', value: `${this.hifzPlannerProgressPercent}%`, label: 'Progress', detail: `${this.hifzCompletedAyahCount}/${this.hifzPlannerForecast.totalAyahs} ayahs` },
+        { key: 'streak', icon: 'bi-fire', value: this.analytics?.currentStreak || 0, label: 'Streak', detail: 'active days' },
+        { key: 'target', icon: 'bi-bullseye', value: `${todayCompleted}/${target}`, label: 'Daily Target', detail: 'queued today' },
+        { key: 'retention', icon: 'bi-gem', value: overdueCount ? 'Needs Review' : 'Steady', label: 'Retention', detail: dueCount ? `${dueCount} due today` : 'clear today' }
+      ]
+    },
+    hifzPlannerDetailedAnalytics() {
+      const entries = this.hifzProgressEntries
+      const weak = entries.filter(entry => Number(entry.progress?.masteryScore || 0) < 0.55)
+      const strong = entries.filter(entry => Number(entry.progress?.masteryScore || 0) >= 0.85)
+      const forecast = this.hifzPlannerForecast
+      return [
+        {
+          key: 'surah',
+          title: 'Surah Progress',
+          icon: 'bi-book-half',
+          rows: [
+            { label: this.hifzPlan?.selectedSurah || 'Current plan', value: `${this.hifzPlannerProgressPercent}%`, detail: `${this.hifzCompletedAyahCount} ayahs completed` }
+          ]
+        },
+        {
+          key: 'juz-hizb',
+          title: 'Juz and Hizb Progress',
+          icon: 'bi-bookmarks',
+          rows: [
+            { label: 'Juz', value: this.hifzCurrentPlanPosition.juz, detail: `${forecast.totalJuz} total in plan` },
+            { label: 'Hizb', value: this.hifzCurrentPlanPosition.hizb, detail: `${forecast.totalHizb} total in plan` }
+          ]
+        },
+        {
+          key: 'memory',
+          title: 'Weak and Strong Ayahs',
+          icon: 'bi-gem',
+          rows: [
+            { label: 'Weak Ayahs', value: weak.length, detail: weak.slice(0, 4).map(entry => entry.key).join(', ') || 'None flagged' },
+            { label: 'Strong Ayahs', value: strong.length, detail: strong.slice(0, 4).map(entry => entry.key).join(', ') || 'Build through reviews' }
+          ]
+        },
+        {
+          key: 'revision',
+          title: 'Revision Performance',
+          icon: 'bi-calendar-heart',
+          rows: [
+            { label: 'Due Today', value: this.hifzMemorySchedule.dueToday.length, detail: 'scheduled reviews' },
+            { label: 'Overdue', value: this.hifzMemorySchedule.overdue.length, detail: 'needs attention' },
+            { label: 'This Week', value: this.hifzMemorySchedule.thisWeek.length, detail: 'upcoming reviews' }
+          ]
+        },
+        {
+          key: 'completion',
+          title: 'Completion Trends',
+          icon: 'bi-graph-up',
+          rows: [
+            { label: 'Daily Target', value: `${forecast.dailyTarget}/day`, detail: 'current pace' },
+            { label: 'Days Remaining', value: forecast.estimatedDays, detail: forecast.estimatedDuration },
+            { label: 'Missed Day History', value: this.hifzPlanHealth.missedDays, detail: this.hifzPlanHealth.detail }
+          ]
+        }
+      ]
     },
     topCardAppliedPills() {
       const pills = [
@@ -4543,7 +5222,7 @@ export default {
     selfCheckModalTitle() {
       const targets = this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
         ? this.recitationCheckPendingTargets
-        : [this.selfCheckModalVerse].filter(Boolean)
+        : (this.selfCheckModalVerse ? [this.selfCheckModalVerse] : [])
       const prefix = this.recitationCheckPanelOpen || this.recitationCheckRecording || this.recitationCheckPreparing || this.recitationCheckResult
         ? 'AI Recite'
         : 'Self-Check'
@@ -4604,9 +5283,18 @@ export default {
         || !!this.aiMemorisationCheckerResult
     },
     aiMemorisationCheckerVisibleLiveWords() {
-      return this.aiMemorisationCheckerLiveWords
-        .map((word, index) => ({ ...word, index, key: `memory-live-${index}-${word.status || 'pending'}` }))
-        .filter(word => word.status && word.status !== 'pending')
+      const words = Array.isArray(this.aiMemorisationCheckerLiveWords) ? this.aiMemorisationCheckerLiveWords : []
+      const visible = []
+      for (let index = 0; index < words.length; index += 1) {
+        const word = words[index]
+        visible.push({
+          ...word,
+          index,
+          visualStatus: this.getWordVisualStatus(word, true, false),
+          key: `memory-live-${index}-${word.status || 'pending'}`
+        })
+      }
+      return visible
     },
     aiMemorisationCheckerLiveSummary() {
       const total = this.aiMemorisationCheckerLiveWords.length
@@ -5561,6 +6249,8 @@ export default {
   },
 
   async mounted() {
+    document.addEventListener('click', this.handleClickOutside);
+    this.loadSavedSessions();
     this.activeLocale = this.$i18n?.locale?.value || 'en'
     this.handleLocaleChange = (event) => {
       this.activeLocale = event?.detail?.locale || this.$i18n?.locale?.value || 'en'
@@ -5570,6 +6260,10 @@ export default {
       this.theme = nextTheme
     }
     this.handleThemeStorageSync = (event) => {
+      if (event?.key === HIFZ_PLAN_STORAGE_KEY || event?.key === AYAH_PROGRESS_STORAGE_KEY) {
+        this.refreshHifzJourneyState()
+        return
+      }
       if (event?.key && event.key !== 'mutqin-theme') return
       const nextTheme = event?.newValue || document.documentElement.getAttribute('data-theme') || 'light'
       this.theme = nextTheme
@@ -5610,6 +6304,7 @@ export default {
       this.syncMushafPageToActiveVerse()
     })
     this.unwatchMutqinState = watchMutqinState(this.mutqinState)
+    this.refreshHifzJourneyState()
     this.loadVerseFontSizes()
     this.migrateLocalStorage()
     this.loadUiState()
@@ -5771,6 +6466,15 @@ export default {
     showTools(newVal) {
       this.syncBodyScrollLock(newVal)
       this.persistUiState()
+    },
+    showHifzPlanModal(newVal) {
+      this.syncBodyScrollLock(newVal)
+    },
+    'mutqinState.sessionState.lastSilentEvaluation': {
+      handler() {
+        this.refreshHifzJourneyState()
+      },
+      deep: true
     },
     '$route'() {
       if (this.showTools) {
@@ -5939,6 +6643,456 @@ export default {
   },
 
   methods: {
+
+    selectSessionFromDropdown(sessionId) {
+      this.selectedSessionId = sessionId;
+      this.dropdownOpen = false; // Close dropdown
+    },
+
+    getSelectedSessionLabel() {
+      if (!this.selectedSessionId) return '';
+      const session = this.savedSessions.find(s => s.id === this.selectedSessionId);
+      return session ? this.getSessionPrimaryLabel(session) : '';
+    },
+
+    async loadSelectedSession() {
+      if (!this.selectedSessionId) {
+        this.showBanner('Please select a session first', 'info', 2000);
+        return;
+      }
+      await this.loadSavedSession(this.selectedSessionId);
+      this.showBanner('Session loaded successfully', 'success', 2000);
+    },
+    
+    // Close dropdown when clicking outside
+    handleClickOutside(event) {
+      const dropdown = event.target.closest('.custom-dropdown');
+      if (!dropdown && this.dropdownOpen) {
+        this.dropdownOpen = false;
+      }
+    },
+  
+    getSelectedSessionLabel() {
+      if (!this.selectedSessionId) return '';
+      const session = this.savedSessions.find(s => s.id === this.selectedSessionId);
+      return session ? this.getSessionPrimaryLabel(session) : '';
+    },
+
+    async loadSelectedSession() {
+      if (!this.selectedSessionId) {
+        this.showBanner('Please select a session first', 'info', 2000);
+        return;
+      }
+      await this.loadSavedSession(this.selectedSessionId);
+      this.showBanner('Session loaded successfully', 'success', 2000);
+    },
+    selectSessionFromDropdown(sessionId) {
+      this.selectedSessionId = sessionId;
+      // Close dropdown
+      const dropdown = document.querySelector('.btn-select-session');
+      if (dropdown) dropdown.click();
+    },
+
+    getSelectedSessionLabel() {
+      const session = this.savedSessions.find(s => s.id === this.selectedSessionId);
+      return session ? this.getSessionPrimaryLabel(session) : '';
+    },
+
+	    async loadSelectedSession() {
+	      if (!this.selectedSessionId) return;
+	      await this.loadSavedSession(this.selectedSessionId);
+	      // Show success feedback
+	      this.showBanner('Session loaded successfully', 'success', 2000);
+	    },
+	    toggleActiveRecallMode(kind = 'recitation') {
+	      this.hiddenRevealModeEnabled = !this.hiddenRevealModeEnabled
+	      this.resetActiveRecallFeedback(kind)
+	      if (this.hiddenRevealModeEnabled) {
+	        this.aiRecitationStrictProgression = true
+	        this.hiddenRevealSession = {
+	          revealedWordIndexes: new Set(),
+	          currentWordIndex: 0,
+	          lastCorrectWordTime: null,
+	          errorCount: 0,
+	          sessionStarted: true
+	        }
+	        if (kind === 'memorisation') this.prepareAiMemorisationCheckerWords()
+	        else this.seedRecitationLiveWords(this.getRecitationCheckTargetVerses(this.selfCheckModalVerse || null))
+	        this.showBanner('Active Recall Mode on. The ayah is hidden until each word is recited correctly.', 'info', 2200)
+	      } else {
+	        this.hiddenRevealSession.sessionStarted = false
+	        this.showBanner('Active Recall Mode off.', 'info', 1400)
+	      }
+	      this.persistUiState()
+	    },
+	    resetActiveRecallFeedback(kind = 'all') {
+	      const emptyState = () => ({ issueKey: '', failCount: 0, hint: '' })
+	      if (kind === 'all') {
+	        this.activeRecallFeedbackState = {
+	          recitation: emptyState(),
+	          memorisation: emptyState()
+	        }
+	        return
+	      }
+	      this.activeRecallFeedbackState = {
+	        ...this.activeRecallFeedbackState,
+	        [kind]: emptyState()
+	      }
+	    },
+	    getActiveRecallTargets(kind = 'recitation', fallbackVerse = null) {
+	      if (kind === 'memorisation') {
+	        return this.aiMemorisationCheckerTargets.length ? this.aiMemorisationCheckerTargets : (fallbackVerse ? [fallbackVerse] : [])
+	      }
+	      return this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
+	        ? this.recitationCheckPendingTargets
+	        : (fallbackVerse ? [fallbackVerse] : this.getRecitationCheckTargetVerses(this.selfCheckModalVerse || null))
+	    },
+	    getActiveRecallBaseWords(kind = 'recitation', targets = []) {
+	      const words = this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(targets))
+	      return words.map((text, index) => ({
+	        text,
+	        status: 'pending',
+	        note: index === 0 ? 'Recite this word from memory.' : 'Locked until the previous word is green.'
+	      }))
+	    },
+	    getActiveRecallStatusWords(kind = 'recitation', targets = []) {
+	      const source = kind === 'memorisation' ? this.aiMemorisationCheckerLiveWords : this.recitationLiveWords
+	      const baseWords = this.getActiveRecallBaseWords(kind, targets)
+	      if (!Array.isArray(source) || !source.length) return baseWords
+	      return baseWords.map((word, index) => ({
+	        ...word,
+	        ...(source[index] || {}),
+	        text: word.text
+	      }))
+	    },
+	    getActiveRecallPlaceholder(word = {}) {
+	      const length = Math.max(3, Math.min(8, Array.from(String(word?.text || '')).filter(char => char.trim()).length || 4))
+	      return '█'.repeat(length)
+	    },
+	    getActiveRecallVisualWord(word = {}, index = 0, kind = 'recitation') {
+	      const status = String(word?.status || 'pending')
+	      const visualStatus = this.getWordVisualStatus(word, true, false)
+	      const revealed = status === 'correct'
+	      const blocked = ['partial', 'incorrect'].includes(status)
+	      return {
+	        ...word,
+	        text: revealed ? word.text : this.getActiveRecallPlaceholder(word),
+	        visualStatus: blocked ? 'incorrect' : (revealed ? 'correct' : 'notAttempted'),
+	        status: blocked ? 'incorrect' : (revealed ? 'correct' : visualStatus),
+	        key: `active-recall-${kind}-${index}-${status}-${revealed ? 'open' : 'locked'}`,
+	        note: revealed
+	          ? 'Correct. Word unlocked.'
+	          : blocked
+	            ? (word.note || 'Incorrect. Recite this word correctly before continuing.')
+	            : (word.note || 'Hidden until the previous word is correct.')
+	      }
+	    },
+	    getActiveRecallLiveWords(kind = 'recitation') {
+	      if (!this.hiddenRevealModeEnabled) {
+	        return kind === 'memorisation' ? this.aiMemorisationCheckerVisibleLiveWords : this.getVisibleRecitationLiveWords()
+	      }
+	      const targets = this.getActiveRecallTargets(kind, kind === 'memorisation' ? this.aiMemorisationCheckerVerse : this.selfCheckModalVerse)
+	      return this.getActiveRecallStatusWords(kind, targets).map((word, index) => this.getActiveRecallVisualWord(word, index, kind))
+	    },
+	    renderActiveRecallWord(word = {}, index = 0, kind = 'recitation') {
+	      const visual = this.getActiveRecallVisualWord(word, index, kind)
+	      const status = this.escapeHtml(visual.visualStatus || visual.status || 'notAttempted')
+	      const lockedClass = visual.status === 'correct' ? 'active-recall-unlocked' : 'active-recall-locked'
+	      return `<word class="wbw-word active-recall-word ${lockedClass} recitation-word-${status}" data-active-recall-index="${index}" title="${this.escapeHtml(visual.note || '')}">${this.escapeHtml(visual.text)}</word>`
+	    },
+	    getActiveRecallArabic(kind = 'recitation', targets = []) {
+	      const list = Array.isArray(targets) ? targets : []
+	      if (!list.length) return ''
+	      const statuses = this.getActiveRecallStatusWords(kind, list)
+	      const showMarkers = list.length > 1
+	      const rendered = []
+	      let offset = 0
+	      for (let index = 0; index < list.length; index += 1) {
+	        const verse = list[index]
+	        const wordCount = this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse)).length
+	        const words = statuses.slice(offset, offset + wordCount)
+	        const marker = showMarkers ? `<span class="self-check-ayah-number-marker" dir="ltr">(${this.escapeHtml(verse?.number || String(verse?.key || '').split(':')[1] || '')})</span> ` : ''
+	        const body = words.map((word, wordIndex) => this.renderActiveRecallWord(word, offset + wordIndex, kind)).join(' ')
+	        const state = this.getSessionAyahHighlightState(kind === 'memorisation' ? 'memorisation' : 'recitation', verse, index)
+	        rendered.push(`<span class="session-evaluation-ayah session-evaluation-${this.escapeHtml(state)}" data-session-target-key="${this.escapeHtml(this.getSessionTargetKey(verse, index))}" data-ayah-key="${this.escapeHtml(verse?.key || '')}">${marker}${body}</span>`)
+	        offset += wordCount
+	      }
+	      return rendered.join(' ')
+	    },
+	    getActiveRecallSummary(kind = 'recitation') {
+	      const targets = this.getActiveRecallTargets(kind, kind === 'memorisation' ? this.aiMemorisationCheckerVerse : this.selfCheckModalVerse)
+	      const words = this.getActiveRecallStatusWords(kind, targets)
+	      const total = words.length
+	      if (!total) return 'Preparing hidden ayah...'
+	      const unlocked = words.filter(word => word.status === 'correct').length
+	      const blocked = words.find(word => ['partial', 'incorrect'].includes(word.status))
+	      if (blocked) return `${unlocked} of ${total} unlocked. Correct the red word to continue.`
+	      return unlocked ? `${unlocked} of ${total} words unlocked` : 'Ayah hidden. Recite the first word from memory.'
+	    },
+	    getActiveRecallHint(kind = 'recitation') {
+	      if (!this.hiddenRevealModeEnabled) return ''
+	      return this.activeRecallFeedbackState?.[kind]?.hint || ''
+	    },
+	    handleActiveRecallStatusFeedback(kind = 'recitation', statuses = []) {
+	      if (!this.hiddenRevealModeEnabled || !Array.isArray(statuses) || !statuses.length) return
+	      const issueIndex = statuses.findIndex(word => ['partial', 'incorrect'].includes(word?.status))
+	      if (issueIndex < 0) {
+	        const correctCount = statuses.filter(word => word?.status === 'correct').length
+	        this.hiddenRevealSession.currentWordIndex = correctCount
+	        this.hiddenRevealSession.revealedWordIndexes = new Set(statuses.map((word, index) => word?.status === 'correct' ? index : -1).filter(index => index >= 0))
+	        this.resetActiveRecallFeedback(kind)
+	        return
+	      }
+	      const issue = statuses[issueIndex] || {}
+	      const issueKey = `${issueIndex}:${issue.status}:${issue.actual || ''}:${issue.note || ''}`
+	      const previous = this.activeRecallFeedbackState?.[kind] || { issueKey: '', failCount: 0, hint: '' }
+	      if (previous.issueKey === issueKey) return
+	      const failCount = previous.issueKey && previous.issueKey.startsWith(`${issueIndex}:`) ? previous.failCount + 1 : 1
+	      const hint = this.buildActiveRecallHint(issue, failCount)
+	      this.activeRecallFeedbackState = {
+	        ...this.activeRecallFeedbackState,
+	        [kind]: { issueKey, failCount, hint }
+	      }
+	      this.hiddenRevealSession.currentWordIndex = issueIndex
+	      this.hiddenRevealSession.errorCount = failCount
+	      this.playUiTone('error')
+	    },
+	    buildActiveRecallHint(issue = {}, failCount = 1) {
+	      if (failCount < 2) return 'Pause, breathe, and repeat the red word slowly.'
+	      const expected = String(issue.text || '').trim()
+	      if (!expected) return 'Use the previous green word as your anchor, then try the hidden word again.'
+	      if (failCount < 4) {
+	        const prefix = Array.from(expected).slice(0, 2).join('')
+	        return `Smart Luqmah: the next word begins with "${prefix}".`
+	      }
+	      return `Smart Luqmah: first word of the next phrase is "${expected}".`
+	    },
+	    // Modify your existing recitation check to respect hidden reveal mode
+	    checkRecitationWithHiddenReveal(recitedWords, targetVerse) {
+      if (!this.hiddenRevealModeEnabled) {
+        // Use existing recitation check
+        return this.assessRecitationRecognitionWords(recitedWords, [targetVerse]);
+      }
+      
+      // Get current expected word
+      const currentIdx = this.hiddenRevealSession.currentWordIndex;
+      const expectedWords = this.tokenizeRecitationDisplayWords(
+        this.getPlainVerseArabicForCheck(targetVerse)
+      );
+      const expectedWord = expectedWords[currentIdx];
+      const recitedWord = recitedWords[0] || '';
+      
+      // Check only the current word
+      const similarity = this.getRecitationWordSimilarity(recitedWord, expectedWord);
+      const isCorrect = similarity >= 0.85;
+      
+      if (isCorrect) {
+        // Reveal and move to next
+        this.revealNextWord(targetVerse.key);
+        return {
+          accuracyScore: 100,
+          wordStatuses: [{ status: 'correct', text: expectedWord }],
+          recommendation: 'Correct! Moving to next word.'
+        };
+      } else {
+        // Trigger error and Luqmah
+        this.playErrorFeedback();
+        return {
+          accuracyScore: 0,
+          wordStatuses: [{ status: 'incorrect', text: expectedWord, actual: recitedWord }],
+          recommendation: `Try again. Focus on "${expectedWord}"`
+        };
+      }
+    },
+    async revealNextWord(verseKey) {
+      if (!this.hiddenRevealModeEnabled) return false;
+      
+      const verse = this.verses.find(v => v.key === verseKey);
+      if (!verse) return false;
+      
+      const words = this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse));
+      const revealed = this.hiddenRevealSession.revealedWordIndexes;
+      const nextIndex = revealed.size;
+      
+      if (nextIndex >= words.length) {
+        // Complete verse revealed
+        this.playUiTone('complete');
+        this.showBanner('Ayah completed! Moving to next...', 'success', 1500);
+        return true;
+      }
+      
+      // Reveal the next word with animation
+      revealed.add(nextIndex);
+      this.hiddenRevealSession.currentWordIndex = nextIndex;
+      this.hiddenRevealSession.lastCorrectWordTime = Date.now();
+      this.hiddenRevealSession.errorCount = 0;
+      
+      // Reset Luqmah state on success
+      this.resetLuqmahState();
+      
+      // Apply visual reveal
+      this.$nextTick(() => {
+        this.applyWordRevealAnimation(verseKey, nextIndex);
+      });
+      
+      return true;
+    },
+    checkWordRecitation(wordText, expectedWord, wordIndex, verseKey) {
+      if (!this.hiddenRevealModeEnabled) return { correct: false, locked: true };
+      
+      const expectedIndex = this.hiddenRevealSession.currentWordIndex;
+      
+      // Strict sequential: can only attempt current word
+      if (wordIndex !== expectedIndex) {
+        return { 
+          correct: false, 
+          locked: true, 
+          message: `Please recite the highlighted word first.` 
+        };
+      }
+      
+      // Check similarity (reuse existing recitation matching)
+      const similarity = this.getRecitationWordSimilarity(wordText, expectedWord);
+      const isCorrect = similarity >= 0.85;
+      
+      if (isCorrect) {
+        return { correct: true, locked: false, message: 'Correct!' };
+      }
+      
+      // Track failure for Luqmah
+      this.trackLuqmahFailure(wordText, expectedWord, wordIndex);
+      
+      return { 
+        correct: false, 
+        locked: true, 
+        message: 'Incorrect. Try again.',
+        similarity 
+      };
+    },
+    trackLuqmahFailure(recitedWord, expectedWord, wordIndex) {
+      const now = Date.now();
+      const { failWindow, failCount, currentLevel } = this.luqmahState;
+      
+      // Clean old failures (within 30 second window)
+      const recentFails = failWindow.filter(t => now - t < 30000);
+      recentFails.push(now);
+      this.luqmahState.failWindow = recentFails;
+      this.luqmahState.failCount = recentFails.length;
+      this.luqmahState.lastFailTime = now;
+      
+      // Debounce: don't trigger on every single failure
+      if (recentFails.length < 2) return;
+      
+      // Determine escalation level
+      let newLevel = currentLevel;
+      if (recentFails.length >= 5 && currentLevel < 3) newLevel = 3;
+      else if (recentFails.length >= 3 && currentLevel < 2) newLevel = 2;
+      else if (recentFails.length >= 2 && currentLevel < 1) newLevel = 1;
+      
+      if (newLevel > currentLevel) {
+        this.showLuqmahHint(newLevel, expectedWord);
+        this.luqmahState.currentLevel = newLevel;
+      }
+    },
+
+    showLuqmahHint(level, targetWord) {
+      // Clear any pending timeout
+      if (this.luqmahState.hintTimeout) {
+        clearTimeout(this.luqmahState.hintTimeout);
+      }
+      
+      let message = '';
+      let duration = 3000;
+      
+      switch(level) {
+        case 1:
+          message = '🌙 Take a breath and try again slowly.';
+          break;
+        case 2:
+          const firstLetters = targetWord.slice(0, 3);
+          message = `💡 Hint: The word starts with "${firstLetters}". Focus on the beginning.`;
+          break;
+        case 3:
+          message = `📖 Full word: "${targetWord}". Listen and repeat carefully.`;
+          duration = 5000;
+          break;
+      }
+      
+      this.showBanner(message, 'info', duration);
+      
+      // Auto-reset Luqmah after 10 seconds of no activity
+      this.luqmahState.hintTimeout = setTimeout(() => {
+        this.resetLuqmahState();
+      }, 10000);
+    },
+
+    resetLuqmahState() {
+      this.luqmahState = {
+        active: false,
+        currentLevel: 0,
+        failCount: 0,
+        lastFailTime: null,
+        failWindow: [],
+        hintTimeout: null
+      };
+    },
+    getHiddenRevealArabic(verse) {
+      if (!this.hiddenRevealModeEnabled || !this.hiddenRevealSession.sessionStarted) {
+        return this.getDisplayArabic(verse);
+      }
+      
+      const words = this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse));
+      const revealed = this.hiddenRevealSession.revealedWordIndexes;
+      
+      return words.map((word, idx) => {
+        if (revealed.has(idx)) {
+          // Revealed word with green highlight
+          const isCurrent = idx === this.hiddenRevealSession.currentWordIndex;
+          const correctClass = isCurrent ? 'word-current' : 'word-revealed';
+          return `<word class="wbw-word ${correctClass} word-correct-revealed" data-word-index="${idx}">${this.escapeHtml(word)}</word>`;
+        } else {
+          // Hidden word
+          const hiddenLength = Math.max(4, Math.min(12, word.length));
+          const hiddenPlaceholder = '█'.repeat(hiddenLength);
+          return `<word class="wbw-word word-hidden" data-word-index="${idx}" data-hidden="true">${this.escapeHtml(hiddenPlaceholder)}</word>`;
+        }
+      }).join(' ');
+    },
+    playErrorFeedback() {
+      // Play error sound
+      this.playUiTone('error');
+      
+      // Highlight current word in red
+      const verseKey = this.effectiveActiveVerseKey;
+      const currentIdx = this.hiddenRevealSession.currentWordIndex;
+      
+      const selector = `.verse-card[data-verse-key="${verseKey}"] .wbw-word[data-word-index="${currentIdx}"]`;
+      const element = document.querySelector(selector);
+      
+      if (element) {
+        element.classList.add('word-error-flash');
+        setTimeout(() => {
+          element.classList.remove('word-error-flash');
+        }, 500);
+      }
+      
+      // Increment error count
+      this.hiddenRevealSession.errorCount++;
+    },
+    applyWordRevealAnimation(verseKey, wordIndex) {
+      const selector = `.verse-card[data-verse-key="${verseKey}"] .wbw-word[data-word-index="${wordIndex}"]`;
+      const element = document.querySelector(selector);
+      if (!element) return;
+      
+      // Smooth fade-in animation
+      element.classList.add('word-reveal-animate');
+      element.classList.remove('word-hidden');
+      
+      // Remove animation class after completion
+      setTimeout(() => {
+        element.classList.remove('word-reveal-animate');
+      }, 400);
+    },
     // FIX: Update the loadAnalyticsHeatmapData method to handle missing data
     async loadAnalyticsHeatmapData() {
       const session = this.analyticsModalRecord
@@ -6277,6 +7431,7 @@ export default {
         || this.showPlannerModal
         || this.showSessionAnalyticsModal
         || this.showPostLoginOnboarding
+        || this.showHifzPlanModal
         || this.showAiMemorisationCheckerModal
       const shouldMarkPanelOpen = !!locked
         || this.showTools
@@ -6289,6 +7444,7 @@ export default {
         || this.showPlannerModal
         || this.showSessionAnalyticsModal
         || this.showPostLoginOnboarding
+        || this.showHifzPlanModal
         || this.showAiMemorisationCheckerModal
       document.body.classList.toggle('tools-panel-open', shouldMarkPanelOpen)
       document.body.style.overflow = hasBlockingOverlay ? 'hidden' : ''
@@ -8003,7 +9159,13 @@ export default {
     normalizeRecordingEntry(entry, index = 0) {
       if (!entry || typeof entry !== 'object') return null
 
-      const directAyahKey = entry.ayahKey || entry.verseKey || entry.key || ''
+      const rawAyahRange = entry.ayahRange || entry.ayah_range || {}
+      const rangeKeys = Array.isArray(rawAyahRange?.keys)
+        ? rawAyahRange.keys.filter(Boolean)
+        : Array.isArray(entry.ayahKeys)
+          ? entry.ayahKeys.filter(Boolean)
+          : []
+      const directAyahKey = entry.ayahKey || entry.verseKey || entry.key || rangeKeys[0] || ''
       const keyParts = String(directAyahKey).match(/^(\d+):(\d+)$/)
       const chapterId = Number(
         entry.chapterId ||
@@ -8055,6 +9217,11 @@ export default {
         entry.length_seconds ??
         entry.length
       )
+      const ayahRange = {
+        start: Number(rawAyahRange?.start || entry.sessionRangeStart || entry.session_range_start || ayahNumber || 0),
+        end: Number(rawAyahRange?.end || entry.sessionRangeEnd || entry.session_range_end || ayahNumber || 0),
+        keys: rangeKeys.length ? rangeKeys : (ayahKey ? [ayahKey] : [])
+      }
 
       return {
         id: String(entry.id || `${ayahKey}-${Date.parse(recordedAt) || Date.now()}-${index}`),
@@ -8078,14 +9245,35 @@ export default {
         validationReport: entry.validationReport || entry.validation_report || null,
         analysisVersion: String(entry.analysisVersion || entry.analysis_version || ''),
         sessionId: String(entry.sessionId || entry.session_id || ''),
-        audioHash: String(entry.audioHash || entry.audio_hash || '')
+        audioHash: String(entry.audioHash || entry.audio_hash || ''),
+        ayahRange,
+        sessionRangeStart: Number(entry.sessionRangeStart || entry.session_range_start || ayahRange.start || ayahNumber || 0),
+        sessionRangeEnd: Number(entry.sessionRangeEnd || entry.session_range_end || ayahRange.end || ayahNumber || 0)
       }
     },
     persistRecordingsLibrary() {
       try {
         localStorage.setItem(this.recordingsLibraryStorageKey(), JSON.stringify(this.recordingsLibrary))
+        return true
       } catch (error) {
-        console.error('Failed to persist recordings library:', error)
+        try {
+          const compact = this.recordingsLibrary.map(recording => this.pruneAiCheckRecordingForStorage(recording))
+          localStorage.setItem(this.recordingsLibraryStorageKey(), JSON.stringify(compact))
+          this.recordingsLibrary = compact
+          console.warn('Persisted compact recordings library after storage pressure:', error)
+          return true
+        } catch (compactError) {
+          console.error('Failed to persist recordings library:', compactError)
+          return false
+        }
+      }
+    },
+    pruneAiCheckRecordingForStorage(recording = {}) {
+      if (!this.isAiCheckRecording(recording)) return recording
+      return {
+        ...recording,
+        audioSrc: '',
+        transcript: String(recording.transcript || '').slice(0, 2400)
       }
     },
     ensureSelectedRecordingsAyah() {
@@ -8418,11 +9606,16 @@ export default {
       const missing = Array.isArray(mistakes?.missing) ? mistakes.missing.length : 0
       const extra = Array.isArray(mistakes?.extra) ? mistakes.extra.length : 0
       const incorrect = Array.isArray(mistakes?.incorrect) ? mistakes.incorrect.length : 0
-      const total = missing + extra + incorrect
-      return total ? `${total} word issue${total === 1 ? '' : 's'}` : 'No word issues'
+      const wordSkips = Array.isArray(mistakes?.wordSkips || mistakes?.skippedWords)
+        ? (mistakes.wordSkips || mistakes.skippedWords).reduce((sum, group) => sum + Number(group?.count || 1), 0)
+        : 0
+      const ayahSkips = Array.isArray(mistakes?.skippedAyahs) ? mistakes.skippedAyahs.length : 0
+      const verseJumps = Array.isArray(mistakes?.verseJumps) ? mistakes.verseJumps.length : 0
+      const total = missing + extra + incorrect + wordSkips + ayahSkips + verseJumps
+      return total ? `${total} detected issue${total === 1 ? '' : 's'}` : 'No word issues'
     },
     saveAiCheckToRecordingsLibrary(attempt, result) {
-      if (!attempt || !result) return
+      if (!attempt || !result) return false
       this.loadRecordingsLibrary()
       const savedEntry = {
         id: attempt.id,
@@ -8455,8 +9648,9 @@ export default {
         savedEntry,
         ...this.recordingsLibrary.filter(recording => recording.id !== savedEntry.id)
       ]
-      this.persistRecordingsLibrary()
+      const persisted = this.persistRecordingsLibrary()
       this.ensureSelectedRecordingsAyah()
+      return persisted
     },
     getRecordingResultTone(result) {
       if (result === 'Excellent') return 'tone-excellent'
@@ -8632,27 +9826,29 @@ export default {
       }
       return this.cleanRecitationDisplayText(verse.arabic)
     },
-    getSelfCheckDisplayArabic(verse) {
-      const targets = this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
-        ? this.recitationCheckPendingTargets
-        : [verse].filter(Boolean)
-      const showMarkers = targets.length > 1
-      return targets
-        .map(item => {
-          const canonical = this.getCanonicalVerseForCheck(item) || item
-          const html = this.getSelfCheckModalArabic(canonical)
-          if (!html) return ''
-          if (!showMarkers) return html
-          const number = canonical?.number || String(canonical?.key || '').split(':')[1] || ''
-          return `<span class="self-check-ayah-number-marker" dir="ltr">(${this.escapeHtml(number)})</span> ${html}`
-        })
-        .filter(Boolean)
-        .join(' ')
+	    getSelfCheckDisplayArabic(verse) {
+	      const targets = this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
+	        ? this.recitationCheckPendingTargets
+	        : (verse ? [verse] : [])
+	      if (this.hiddenRevealModeEnabled) return this.getActiveRecallArabic('recitation', targets)
+	      const showMarkers = targets.length > 1
+	      const rendered = []
+      for (let index = 0; index < targets.length; index += 1) {
+        const item = targets[index]
+        const canonical = { ...(this.getCanonicalVerseForCheck(item) || item), ...item }
+        const html = this.getSelfCheckModalArabic(canonical)
+        if (!html) continue
+        const number = canonical?.number || String(canonical?.key || '').split(':')[1] || ''
+        const marker = showMarkers ? `<span class="self-check-ayah-number-marker" dir="ltr">(${this.escapeHtml(number)})</span> ` : ''
+        const state = this.getSessionAyahHighlightState('recitation', canonical, index)
+        rendered.push(`<span class="session-evaluation-ayah session-evaluation-${this.escapeHtml(state)}" data-session-target-key="${this.escapeHtml(this.getSessionTargetKey(canonical, index))}" data-ayah-key="${this.escapeHtml(canonical?.key || '')}">${marker}${html}</span>`)
+      }
+      return rendered.join(' ')
     },
     getSelfCheckDisplayTargets() {
       return this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
         ? this.recitationCheckPendingTargets
-        : [this.selfCheckModalVerse || this.selfCheckVerseRef].filter(Boolean)
+        : (this.selfCheckModalVerse || this.selfCheckVerseRef ? [this.selfCheckModalVerse || this.selfCheckVerseRef] : [])
     },
     getSelfCheckTargetWordCount() {
       return this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(this.getSelfCheckDisplayTargets())).length
@@ -8721,12 +9917,79 @@ export default {
     },
     getAyahRecordingHistory(ayahKey) {
       return this.recordingsLibrary
-        .filter(recording => recording.ayahKey === ayahKey)
+        .filter(recording => recording.ayahKey === ayahKey || recording?.ayahRange?.keys?.includes(ayahKey))
         .sort((left, right) => Date.parse(right.recordedAt) - Date.parse(left.recordedAt))
     },
     getAyahRecordingCount(ayahKey) {
       if (!ayahKey) return 0
-      return this.recordingsLibrary.filter(recording => recording.ayahKey === ayahKey).length
+      return this.recordingsLibrary.filter(recording => recording.ayahKey === ayahKey || recording?.ayahRange?.keys?.includes(ayahKey)).length
+    },
+    getSessionTargetKey(verse = {}, fallbackIndex = 0) {
+      return verse?.sessionTargetKey || (verse?.key ? `${verse.key}::${Number.isFinite(Number(verse.sessionQueueIndex)) ? Number(verse.sessionQueueIndex) : fallbackIndex}` : `session-target::${fallbackIndex}`)
+    },
+    getEvaluationStateFromWords(words = [], finalised = false) {
+      const list = Array.isArray(words) ? words : []
+      if (!list.length) return finalised ? 'skipped' : 'notAttempted'
+      let correct = 0
+      let partial = 0
+      let incorrect = 0
+      let pending = 0
+      for (const word of list) {
+        const status = String(word?.status || 'pending')
+        if (status === 'correct') correct += 1
+        else if (status === 'partial') partial += 1
+        else if (status === 'incorrect') incorrect += 1
+        else pending += 1
+      }
+      if (correct === list.length) return 'correct'
+      if (incorrect > 0) return 'incorrect'
+      if (partial > 0 || correct > 0) return 'partial'
+      return finalised ? 'skipped' : 'notAttempted'
+    },
+    syncSessionEvaluationMaps(kind = 'recitation', targetVerses = [], wordStatuses = [], finalised = false) {
+      const targets = Array.isArray(targetVerses) ? targetVerses : []
+      const statuses = Array.isArray(wordStatuses) ? wordStatuses : []
+      const evaluationMap = {}
+      const highlightMap = {}
+      let offset = 0
+      for (let index = 0; index < targets.length; index += 1) {
+        const verse = targets[index]
+        const key = this.getSessionTargetKey(verse, index)
+        const wordCount = this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse)).length
+        const words = []
+        for (let wordIndex = 0; wordIndex < wordCount; wordIndex += 1) {
+          words.push(statuses[offset + wordIndex] || { status: 'pending' })
+        }
+        const state = this.getEvaluationStateFromWords(words, finalised)
+        evaluationMap[key] = {
+          state,
+          ayahKey: verse?.key || '',
+          sessionTargetKey: key,
+          sessionQueueIndex: Number.isFinite(Number(verse?.sessionQueueIndex)) ? Number(verse.sessionQueueIndex) : index,
+          wordOffset: offset,
+          wordCount
+        }
+        highlightMap[key] = state
+        offset += wordCount
+      }
+      if (kind === 'memorisation') {
+        this.aiMemorisationCheckerEvaluationMap = evaluationMap
+        this.aiMemorisationCheckerHighlightMap = highlightMap
+        return
+      }
+      this.recitationSessionEvaluationMap = evaluationMap
+      this.recitationSessionHighlightMap = highlightMap
+    },
+    getSessionAyahHighlightState(kind = 'recitation', verse = {}, fallbackIndex = 0) {
+      const key = this.getSessionTargetKey(verse, fallbackIndex)
+      const map = kind === 'memorisation' ? this.aiMemorisationCheckerHighlightMap : this.recitationSessionHighlightMap
+      return map?.[key] || 'notAttempted'
+    },
+    getWordVisualStatus(word = {}, active = false, finalised = false) {
+      const status = String(word?.status || 'pending')
+      if (['correct', 'partial', 'incorrect', 'skipped', 'notAttempted'].includes(status)) return status
+      if (status === 'pending') return finalised ? 'skipped' : (active ? 'notAttempted' : 'notAttempted')
+      return 'notAttempted'
     },
     shouldShowRecitationReviewHighlights(ayahKey) {
       if (!this.isRecitationCheckTargetVerse(ayahKey)) return false
@@ -8741,21 +10004,27 @@ export default {
       return (this.recitationCheckPendingTargets || []).some(verse => verse?.key === ayahKey)
         || (this.aiMemorisationCheckerTargets || []).some(verse => verse?.key === ayahKey)
     },
-    getRecitationWordOffsetForVerse(ayahKey, targets = null) {
+    getRecitationWordOffsetForVerse(ayahKey, targets = null, sessionTargetKey = '') {
       const list = Array.isArray(targets) && targets.length
         ? targets
         : (this.recitationCheckPendingTargets?.length ? this.recitationCheckPendingTargets : this.aiMemorisationCheckerTargets)
       if (!ayahKey || !list?.length) return 0
       let offset = 0
-      for (const verse of list) {
-        if (verse?.key === ayahKey) return offset
+      for (let index = 0; index < list.length; index += 1) {
+        const verse = list[index]
+        const targetKey = this.getSessionTargetKey(verse, index)
+        if (sessionTargetKey && targetKey === sessionTargetKey) return offset
+        if (!sessionTargetKey && verse?.key === ayahKey) return offset
         offset += this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse)).length
       }
       return 0
     },
-    getRecitationWordStatusForVerse(ayahKey, index) {
+    getRecitationWordStatusForVerse(ayahKey, index, sessionTargetKey = '') {
       if (!this.isRecitationCheckTargetVerse(ayahKey)) return ''
-      const isMemoryTarget = (this.aiMemorisationCheckerTargets || []).some(verse => verse?.key === ayahKey)
+      const isMemoryTarget = (this.aiMemorisationCheckerTargets || []).some((verse, targetIndex) => {
+        const targetKey = this.getSessionTargetKey(verse, targetIndex)
+        return sessionTargetKey ? targetKey === sessionTargetKey : verse?.key === ayahKey
+      })
       const liveSource = isMemoryTarget
         ? this.aiMemorisationCheckerLiveWords
         : this.recitationLiveWords
@@ -8770,9 +10039,12 @@ export default {
         : (result ? this.getRecitationWordStatuses(result) : [])
       if (!source?.length) return ''
       const offsetTargets = isMemoryTarget ? this.aiMemorisationCheckerTargets : this.recitationCheckPendingTargets
-      const offset = this.getRecitationWordOffsetForVerse(ayahKey, offsetTargets)
+      const offset = this.getRecitationWordOffsetForVerse(ayahKey, offsetTargets, sessionTargetKey)
       const status = source?.[offset + index]?.status || ''
-      return ['pending', 'correct', 'partial', 'incorrect'].includes(status) ? status : ''
+      if (['correct', 'partial', 'incorrect'].includes(status)) return status
+      if (status === 'pending') return modeActive ? 'notAttempted' : 'skipped'
+      if (['skipped', 'notAttempted'].includes(status)) return status
+      return modeActive ? 'notAttempted' : ''
     },
     toggleAiRecitationStrictProgression() {
       this.aiRecitationStrictProgression = !this.aiRecitationStrictProgression
@@ -8805,7 +10077,8 @@ export default {
         statuses,
         this.tokenizeRecitationWords(result.transcript || ''),
         statuses.map(word => this.tokenizeRecitationWords(word.text)[0] || ''),
-        result?.mistakeBreakdown?.extra || result?.mistakes?.extra || []
+        result?.mistakeBreakdown?.extra || result?.mistakes?.extra || [],
+        result?.mistakeBreakdown || result?.mistakes || {}
       )
       const total = Math.max(1, statuses.length)
       const correctScore = statuses.filter(word => word.status === 'correct').length
@@ -8823,6 +10096,12 @@ export default {
       result.accuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - wrongOrderPenalty - extraPenalty) / total) * 100)))
       result.recommendation = this.getRecitationRecommendation(result.accuracyScore, mistakes)
       result.reviewMetadata = this.buildRecitationReviewMetadata(result.accuracyScore, mistakes, result.tajweedRules || [])
+      result.skippedWords = mistakes.skippedWords || []
+      result.wordSkips = mistakes.wordSkips || []
+      result.skippedAyahs = mistakes.skippedAyahs || []
+      result.verseJumps = mistakes.verseJumps || []
+      result.verseJumpDetected = (mistakes.verseJumps?.length || 0) > 0
+      result.sequenceErrors = mistakes.sequenceErrors || []
       return result
     },
     markAiRecitationWordAsCorrect(result = null, index = -1) {
@@ -8839,6 +10118,8 @@ export default {
       this.rebuildRecitationResultFromStatuses(result)
       this.recitationLiveWords = this.recitationCheckResult === result ? statuses : this.recitationLiveWords
       this.aiMemorisationCheckerLiveWords = this.aiMemorisationCheckerResult === result ? statuses : this.aiMemorisationCheckerLiveWords
+      if (this.recitationCheckResult === result) this.syncSessionEvaluationMaps('recitation', this.recitationCheckPendingTargets, statuses, true)
+      if (this.aiMemorisationCheckerResult === result) this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargets, statuses, true)
       this.persistAiRecitationReviewHighlights(result, this.getRecitationTargetVersesForResult(result))
       this.persistAiMemorisationCheckerSession()
       this.showBanner('AI highlight marked correct. Results updated.', 'success', 1400)
@@ -8890,12 +10171,14 @@ export default {
       if (!verse?.key) return
       this.recitationCheckScope = 'ayah'
       this.openSelfCheckModal(verse)
-      this.recitationCheckPendingTargets = [this.buildSelfCheckVerseRef(verse)].filter(Boolean)
+      const target = this.buildSelfCheckVerseRef(verse)
+      this.recitationCheckPendingTargets = target ? [target] : []
       this.selfCheckBlurEnabled = false
       this.recitationCheckPanelOpen = true
       this.recitationCheckError = ''
       this.recitationCheckResult = null
-      this.seedRecitationLiveWords([verse])
+      this.syncSessionEvaluationMaps('recitation', this.recitationCheckPendingTargets, [], false)
+      this.seedRecitationLiveWords(this.recitationCheckPendingTargets)
     },
     openAiRecitationCheckForSession() {
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return
@@ -8908,12 +10191,13 @@ export default {
       this.selfCheckModeChoiceVisible = false
       this.selfCheckVerseRef = this.buildSelfCheckVerseRef(targets[0])
       this.selfCheckVerseKey = targets[0].key
-      this.recitationCheckPendingTargets = targets.map(verse => this.buildSelfCheckVerseRef(verse)).filter(Boolean)
+      this.recitationCheckPendingTargets = targets
       this.selfCheckBlurEnabled = false
       this.selfCheckSavedAttemptsVisible = false
       this.recitationCheckPanelOpen = true
       this.recitationCheckError = ''
       this.recitationCheckResult = null
+      this.syncSessionEvaluationMaps('recitation', this.recitationCheckPendingTargets, [], false)
       this.seedRecitationLiveWords(this.recitationCheckPendingTargets)
       this.showSelfCheckModal = true
       this.syncBodyScrollLock(true)
@@ -8928,7 +10212,7 @@ export default {
       this.aiMemorisationCheckerScope = 'ayah'
       this.aiMemorisationCheckerVerseRef = this.buildSelfCheckVerseRef(verse)
       this.aiMemorisationCheckerVerseKey = verse.key
-      this.aiMemorisationCheckerTargetVerses = [this.aiMemorisationCheckerVerseRef]
+      this.aiMemorisationCheckerTargetVerses = this.aiMemorisationCheckerVerseRef ? [this.aiMemorisationCheckerVerseRef] : []
       this.aiMemorisationCheckerMode = 'ayah'
       this.aiMemorisationCheckerTajweedEnabled = false
       this.aiMemorisationCheckerBlurEnabled = true
@@ -8938,6 +10222,7 @@ export default {
       this.aiMemorisationCheckerSavedNotice = false
       this.aiMemorisationCheckerDiscardOnStop = false
       this.selfCheckFontSize = this.getSelfCheckInitialFontSize(verse)
+      this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargetVerses, [], false)
       this.prepareAiMemorisationCheckerWords()
       this.loadAiMemorisationCheckerHistory()
       this.showAiMemorisationCheckerModal = true
@@ -8952,14 +10237,14 @@ export default {
         this.showBanner('Choose a session range before opening the memorisation checker.', 'info', 2200)
         return
       }
-      const builtTargets = targets.map(verse => this.buildSelfCheckVerseRef(verse))
+      const builtTargets = targets
       const first = builtTargets[0]
       this.showTools = false
       this.aiMemorisationCheckerScope = builtTargets.length > 1 ? 'session' : 'ayah'
       this.aiMemorisationCheckerVerseRef = first
       this.aiMemorisationCheckerVerseKey = first.key
       this.aiMemorisationCheckerTargetVerses = builtTargets
-      this.aiMemorisationCheckerMode = 'ayah'
+      this.aiMemorisationCheckerMode = builtTargets.length > 1 ? 'session' : 'ayah'
       this.aiMemorisationCheckerTajweedEnabled = false
       this.aiMemorisationCheckerBlurEnabled = true
       this.aiMemorisationCheckerPeekActive = false
@@ -8968,6 +10253,7 @@ export default {
       this.aiMemorisationCheckerSavedNotice = false
       this.aiMemorisationCheckerDiscardOnStop = false
       this.selfCheckFontSize = this.getSelfCheckInitialFontSize(first)
+      this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargetVerses, [], false)
       this.prepareAiMemorisationCheckerWords()
       this.loadAiMemorisationCheckerHistory()
       this.showAiMemorisationCheckerModal = true
@@ -8989,6 +10275,8 @@ export default {
       this.aiMemorisationCheckerPeekActive = false
       this.aiMemorisationCheckerError = ''
       if (!this.aiRecitationPersistMistakes) this.aiMemorisationCheckerTargetVerses = []
+      this.aiMemorisationCheckerEvaluationMap = {}
+      this.aiMemorisationCheckerHighlightMap = {}
       this.aiMemorisationCheckerScope = 'ayah'
       this.stopRecordingsPlayback({ clearSource: true })
       this.syncBodyScrollLock(false)
@@ -8996,9 +10284,14 @@ export default {
     },
     prepareAiMemorisationCheckerWords() {
       const words = this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(this.aiMemorisationCheckerTargets))
-      this.aiMemorisationCheckerLiveWords = words.map(text => ({ text, status: 'pending', note: 'Waiting for this word.' }))
+      const liveWords = []
+      for (const text of words) {
+        liveWords.push({ text, status: 'pending', note: 'Waiting for this word.' })
+      }
+      this.aiMemorisationCheckerLiveWords = liveWords
       this.aiMemorisationCheckerHiddenIndexes = []
       this.aiMemorisationCheckerLiveAlignmentSignature = ''
+      this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargets, this.aiMemorisationCheckerLiveWords, false)
     },
     toggleAiMemorisationCheckerTajweed() {
       this.aiMemorisationCheckerTajweedEnabled = !this.aiMemorisationCheckerTajweedEnabled
@@ -9022,26 +10315,33 @@ export default {
     stopAiMemorisationCheckerPeek() {
       this.aiMemorisationCheckerPeekActive = false
     },
-    getAiMemorisationCheckerArabic(verse) {
-      const targets = this.aiMemorisationCheckerTargets.length ? this.aiMemorisationCheckerTargets : (verse ? [verse] : [])
-      if (!targets.length) return ''
-      const showMarkers = targets.length > 1
-      return targets.map(item => {
-        const liveVerse = (this.mushafDisplayVerses || this.verses || []).find(candidate => candidate?.key === item?.key) || item
+	    getAiMemorisationCheckerArabic(verse) {
+	      const targets = this.aiMemorisationCheckerTargets.length ? this.aiMemorisationCheckerTargets : (verse ? [verse] : [])
+	      if (!targets.length) return ''
+	      if (this.hiddenRevealModeEnabled) return this.getActiveRecallArabic('memorisation', targets)
+	      const showMarkers = targets.length > 1
+      const rendered = []
+      for (let index = 0; index < targets.length; index += 1) {
+        const item = targets[index]
+        const liveVerse = { ...(this.getCanonicalVerseForCheck(item) || item), ...item }
         const marker = showMarkers
           ? `<span class="self-check-ayah-number-marker" dir="ltr">(${this.escapeHtml(liveVerse?.number || String(liveVerse?.key || '').split(':')[1] || '')})</span> `
           : ''
+        let html = ''
         if (showMarkers || this.aiMemorisationCheckerScope === 'session' || this.aiMemorisationCheckerTargets.length > 1) {
-          return `${marker}${this.getSelfCheckDisplayArabic(liveVerse)}`
+          html = this.splitRecitationDisplayIntoWords(liveVerse)
+        } else if (this.isAiMemorisationCheckerReviewActive) {
+          html = this.splitRecitationDisplayIntoWords(liveVerse)
+        } else if (this.aiMemorisationCheckerTajweedEnabled && liveVerse.arabic_tajweed) {
+          html = this.wrapTajweedWithWordHighlighting(liveVerse, this.normalizeTajweedMarkup(liveVerse.arabic_tajweed))
+        } else {
+          html = this.cleanRecitationDisplayText(liveVerse.arabic || liveVerse.arabic_tajweed || '')
         }
-        if (this.isAiMemorisationCheckerReviewActive) {
-          return `${marker}${this.splitRecitationDisplayIntoWords(liveVerse)}`
-        }
-        if (this.aiMemorisationCheckerTajweedEnabled && liveVerse.arabic_tajweed) {
-          return `${marker}${this.wrapTajweedWithWordHighlighting(liveVerse, this.normalizeTajweedMarkup(liveVerse.arabic_tajweed))}`
-        }
-        return `${marker}${this.cleanRecitationDisplayText(liveVerse.arabic || liveVerse.arabic_tajweed || '')}`
-      }).filter(Boolean).join(' ')
+        if (!html) continue
+        const state = this.getSessionAyahHighlightState('memorisation', liveVerse, index)
+        rendered.push(`<span class="session-evaluation-ayah session-evaluation-${this.escapeHtml(state)}" data-session-target-key="${this.escapeHtml(this.getSessionTargetKey(liveVerse, index))}" data-ayah-key="${this.escapeHtml(liveVerse?.key || '')}">${marker}${html}</span>`)
+      }
+      return rendered.join(' ')
     },
     getAiMemorisationCheckerAyahStyle(verse) {
       const targets = this.aiMemorisationCheckerTargets.length ? this.aiMemorisationCheckerTargets : (verse ? [verse] : [])
@@ -9139,11 +10439,12 @@ export default {
         return
       }
       if (this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing) return
-      this.aiMemorisationCheckerError = ''
-      this.aiMemorisationCheckerResult = null
-      this.prepareAiMemorisationCheckerWords()
-      this.resetAiMemorisationCheckerLiveTranscription()
-      this.resetRecognitionPipelineState('memorisation')
+	      this.aiMemorisationCheckerError = ''
+	      this.aiMemorisationCheckerResult = null
+	      this.prepareAiMemorisationCheckerWords()
+	      this.resetActiveRecallFeedback('memorisation')
+	      this.resetAiMemorisationCheckerLiveTranscription()
+	      this.resetRecognitionPipelineState('memorisation')
       this.aiMemorisationCheckerPreparing = true
       this.stopRecordingsPlayback({ clearSource: true })
       if (this.audioElement && !this.audioElement.paused) {
@@ -9275,13 +10576,15 @@ export default {
         analysisResult: result,
         validationReport,
         targetText: this.getRecitationTargetText(targetVerses),
+        targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses),
         metadata: {
           kind: 'memorisation',
           provider,
           sessionId,
           audioHash,
           analysisVersion: RECITATION_ANALYSIS_VERSION,
-          targetVerses: this.buildRecitationAyahRangePayload(targetVerses)
+          targetVerses: this.buildRecitationAyahRangePayload(targetVerses),
+          targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses)
         },
         provider
       }
@@ -9302,6 +10605,7 @@ export default {
       }
       this.aiMemorisationCheckerResult = result
       this.aiMemorisationCheckerLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
+      this.syncSessionEvaluationMaps('memorisation', targetVerses, this.aiMemorisationCheckerLiveWords, true)
       this.persistAiRecitationReviewHighlights(result, targetVerses)
       this.aiMemorisationCheckerError = ''
       this.aiMemorisationCheckerSavedNotice = false
@@ -9328,6 +10632,7 @@ export default {
       }
       this.aiMemorisationCheckerResult = result
       this.aiMemorisationCheckerLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
+      this.syncSessionEvaluationMaps('memorisation', targetVerses, this.aiMemorisationCheckerLiveWords, true)
       this.persistAiRecitationReviewHighlights(result, targetVerses)
       this.aiMemorisationCheckerError = ''
       this.aiMemorisationCheckerSavedNotice = false
@@ -9370,6 +10675,72 @@ export default {
       const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * 0.35
       const extraPenalty = (Array.isArray(mistakes.extra) ? mistakes.extra.length : 0) * 0.35
       return Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - wrongOrderPenalty - extraPenalty) / total) * 100)))
+    },
+    getAiMemorisationScoreFromPercent(score = 0) {
+      const value = Math.max(0, Math.min(100, Number(score || 0)))
+      if (value >= 90) return 1
+      if (value >= 65) return 0.5
+      return 0
+    },
+    getAiMemorisationVerseProgressScore(result = null, verse = null, targetIndex = 0, targets = []) {
+      if (!result || !verse) return 0
+      const statuses = this.getRecitationWordStatuses(result)
+      if (!statuses.length) return this.getAiMemorisationScoreFromPercent(result.accuracyScore)
+
+      let offset = 0
+      for (let index = 0; index < targetIndex; index += 1) {
+        offset += this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(targets[index])).length
+      }
+
+      const count = this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse)).length
+      const verseStatuses = statuses.slice(offset, offset + count)
+      if (!verseStatuses.length) return this.getAiMemorisationScoreFromPercent(result.accuracyScore)
+
+      const correctScore = verseStatuses.filter(word => word.status === 'correct').length
+      const partialScore = verseStatuses
+        .filter(word => word.status === 'partial')
+        .reduce((sum, word) => {
+          const confidence = Number.isFinite(Number(word?.confidence)) ? Number(word.confidence) : 1
+          return sum + (0.45 * Math.max(0.35, Math.min(1, confidence)))
+        }, 0)
+      const wrongOrderPenalty = verseStatuses.filter(word => word.outOfOrder).length * 0.35
+      const percent = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - wrongOrderPenalty) / Math.max(1, verseStatuses.length)) * 100)))
+      return this.getAiMemorisationScoreFromPercent(percent)
+    },
+    parseAiMemorisationProgressTarget(verse = null) {
+      const key = String(verse?.key || '').trim()
+      const match = key.match(/^(\d+):(\d+)$/)
+      if (match) {
+        return {
+          surah: Number(match[1]),
+          ayah: Number(match[2])
+        }
+      }
+      const surah = Number(verse?.chapterId || this.chapterId || this.currentChapter?.id)
+      const ayah = Number(verse?.number || verse?.ayahNumber)
+      if (!Number.isFinite(surah) || !Number.isFinite(ayah) || surah <= 0 || ayah <= 0) return null
+      return { surah, ayah }
+    },
+    persistAiMemorisationAyahProgress(result = null, targetVerses = []) {
+      if (!result) return []
+      const targets = Array.isArray(targetVerses) && targetVerses.length
+        ? targetVerses
+        : this.aiMemorisationCheckerTargets
+      const updates = []
+
+      targets.forEach((verse, index) => {
+        const ref = this.parseAiMemorisationProgressTarget(verse)
+        if (!ref) return
+        const lastScore = this.getAiMemorisationVerseProgressScore(result, verse, index, targets)
+        const progress = updateAyahProgress(ref.surah, ref.ayah, lastScore)
+        updates.push({
+          key: `${ref.surah}:${ref.ayah}`,
+          ...progress
+        })
+      })
+
+      if (updates.length) this.refreshHifzJourneyState()
+      return updates
     },
     getAiMemorisationCheckerScoreLabel(result) {
       const score = this.getResolvedRecitationScore(result)
@@ -9450,8 +10821,21 @@ export default {
         entry,
         ...this.aiMemorisationCheckerHistory.filter(item => item.id !== entry.id)
       ]
+      const progressUpdates = this.persistAiMemorisationAyahProgress(entry, targets)
+      if (progressUpdates.length) {
+        entry.ayahProgressUpdates = progressUpdates
+        this.aiMemorisationCheckerHistory = [
+          entry,
+          ...this.aiMemorisationCheckerHistory.filter(item => item.id !== entry.id)
+        ]
+      }
       this.persistAiMemorisationCheckerSession(this.aiMemorisationCheckerHistory)
-      this.saveAiMemorisationCheckToRecordingsLibrary(entry, targets)
+      const saved = this.saveAiMemorisationCheckToRecordingsLibrary(entry, targets)
+      if (!saved) {
+        this.aiMemorisationCheckerSavedNotice = false
+        this.showBanner('Memorisation assessment could not be saved on this device right now.', 'error', 2600)
+        return
+      }
       this.aiMemorisationCheckerSavedNotice = true
       this.playUiTone('save')
       this.showBanner('Memorisation assessment saved to recordings library.', 'success', 1800)
@@ -9474,7 +10858,7 @@ export default {
       }
     },
     saveAiMemorisationCheckToRecordingsLibrary(result, targetVerses = this.aiMemorisationCheckerTargets) {
-      if (!result) return
+      if (!result) return false
       this.loadRecordingsLibrary()
       const targets = targetVerses?.length ? targetVerses : this.aiMemorisationCheckerTargets
       const first = targets[0] || this.aiMemorisationCheckerVerse
@@ -9516,9 +10900,10 @@ export default {
         savedEntry,
         ...this.recordingsLibrary.filter(recording => recording.id !== savedEntry.id)
       ]
-      this.persistRecordingsLibrary()
+      const persisted = this.persistRecordingsLibrary()
       this.selectedRecordingsAyahKey = savedEntry.ayahKey
       this.ensureSelectedRecordingsAyah()
+      return persisted
     },
     deleteAiMemorisationCheckerAssessment() {
       const id = this.aiMemorisationCheckerResult?.id
@@ -9530,6 +10915,7 @@ export default {
       this.aiMemorisationCheckerSavedNotice = false
       this.resetRecognitionPipelineState('memorisation')
       this.prepareAiMemorisationCheckerWords()
+      this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargets, this.aiMemorisationCheckerLiveWords, false)
       this.persistAiMemorisationCheckerSession(this.aiMemorisationCheckerHistory)
       this.showBanner('Memorisation assessment deleted.', 'info', 1400)
     },
@@ -9541,6 +10927,7 @@ export default {
       this.aiMemorisationCheckerSpeechInterim = ''
       this.resetRecognitionPipelineState('memorisation')
       this.prepareAiMemorisationCheckerWords()
+      this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargets, this.aiMemorisationCheckerLiveWords, false)
       this.resetAiMemorisationCheckerLiveTranscription()
       this.persistAiMemorisationCheckerSession()
       this.showBanner('Memorisation checker reset.', 'info', 1400)
@@ -9549,6 +10936,7 @@ export default {
       this.aiMemorisationCheckerResult = null
       this.aiMemorisationCheckerSavedNotice = false
       this.prepareAiMemorisationCheckerWords()
+      this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargets, this.aiMemorisationCheckerLiveWords, false)
       this.persistAiMemorisationCheckerSession()
       this.showBanner('Memorisation assessment discarded.', 'info', 1400)
     },
@@ -9571,18 +10959,26 @@ export default {
     getVisibleRecitationLiveWords(limit = 36) {
       const words = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
       if (!words.length) return []
-      const lastActiveIndex = words.reduce((latest, word, index) => word.status && word.status !== 'pending' ? index : latest, -1)
-      const end = Math.min(words.length, Math.max(limit, lastActiveIndex + 6))
-      const start = Math.max(0, end - limit)
-      return words.slice(start, end).map((word, index) => ({
-        ...word,
-        key: `recitation-live-${start + index}-${word.status || 'pending'}`
-      }))
+      const visible = []
+      for (let index = 0; index < words.length; index += 1) {
+        const word = words[index]
+        visible.push({
+          ...word,
+          visualStatus: this.getWordVisualStatus(word, true, false),
+          key: `recitation-live-${index}-${word.status || 'pending'}`
+        })
+      }
+      return visible
     },
     seedRecitationLiveWords(targetVerses = this.getRecitationCheckTargetVerses()) {
       const targetWords = this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(targetVerses))
-      this.recitationLiveWords = targetWords.map(text => ({ text, status: 'pending', note: 'Waiting for this word.' }))
+      const liveWords = []
+      for (const text of targetWords) {
+        liveWords.push({ text, status: 'pending', note: 'Waiting for this word.' })
+      }
+      this.recitationLiveWords = liveWords
       this.recitationLiveAlignmentSignature = ''
+      this.syncSessionEvaluationMaps('recitation', targetVerses, this.recitationLiveWords, false)
     },
     getRecognitionWordsForLiveAlignment(kind = 'recitation', targetText = '') {
       const state = this.getRecognitionPipelineState(kind)
@@ -9644,37 +11040,46 @@ export default {
       if (this[signatureKey] === signature) return
       this[signatureKey] = signature
       const liveAlignmentOptions = {
-        strictProgression: true,
+        strictProgression: kind === 'memorisation' || this.isAiTutorModeActive(),
         metadata: {
           sessionId: this.getCurrentRecitationSessionId(),
           audioHash: kind === 'recitation' ? this.recitationInputAudioHash : ''
         }
       }
+      if (this.hiddenRevealModeEnabled) {
+        liveAlignmentOptions.strictProgression = true
+      }
       const committedAlignment = buildQuranAlignment(targetText, committedWords, {
-        ...liveAlignmentOptions
+        ...liveAlignmentOptions,
+        targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses)
       })
       const liveAlignment = displayWords === committedWords || displayWords.length === committedWords.length
         ? committedAlignment
         : buildQuranAlignment(targetText, displayWords, {
-          ...liveAlignmentOptions
+          ...liveAlignmentOptions,
+          targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses)
         })
       const statuses = this.mergeLiveRecitationStatuses(
         committedAlignment.progression?.visibleStatuses || committedAlignment.wordStatuses || [],
         liveAlignment.progression?.visibleStatuses || liveAlignment.wordStatuses || []
       )
       if (kind === 'memorisation') {
-        this.aiMemorisationCheckerAlignmentState = committedAlignment.progression
-        this.applyLiveStatusUpdate('aiMemorisationCheckerLiveWords', statuses)
-        if (this.aiMemorisationCheckerRecording && committedAlignment.progression?.complete) {
-          this.stopAiMemorisationCheckerRecording()
-        }
+	        this.aiMemorisationCheckerAlignmentState = committedAlignment.progression
+	        this.applyLiveStatusUpdate('aiMemorisationCheckerLiveWords', statuses)
+	        this.syncSessionEvaluationMaps('memorisation', targetVerses, this.aiMemorisationCheckerLiveWords, false)
+	        this.handleActiveRecallStatusFeedback('memorisation', this.aiMemorisationCheckerLiveWords)
+	        if (this.aiMemorisationCheckerRecording && committedAlignment.progression?.complete) {
+	          this.stopAiMemorisationCheckerRecording()
+	        }
         return
       }
-      this.recitationAlignmentState = committedAlignment.progression
-      this.applyLiveStatusUpdate('recitationLiveWords', statuses)
-      if (this.shouldAutoStopRecitationCheckFromAlignment(committedAlignment)) {
-        this.stopRecitationCheckRecording()
-      }
+	      this.recitationAlignmentState = committedAlignment.progression
+	      this.applyLiveStatusUpdate('recitationLiveWords', statuses)
+	      this.syncSessionEvaluationMaps('recitation', targetVerses, this.recitationLiveWords, false)
+	      this.handleActiveRecallStatusFeedback('recitation', this.recitationLiveWords)
+	      if (this.shouldAutoStopRecitationCheckFromAlignment(committedAlignment)) {
+	        this.stopRecitationCheckRecording()
+	      }
     },
     handleAiRecitationSilenceAutoStop() {
       const recitationReadyToStop = this.shouldAutoStopRecitationCheckFromSilence()
@@ -9809,6 +11214,7 @@ export default {
       return buildRecognitionValidationReport({
         rawEvents,
         targetText: this.getRecitationTargetText(targetVerses),
+        targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses),
         stabilizedWords,
         analysisResult: result,
         replays: DEFAULT_REPLAY_VALIDATION_COUNT,
@@ -9841,6 +11247,7 @@ export default {
         const report = buildRecognitionValidationReport({
           rawEvents: cached.rawTranscriptStream,
           targetText: cached.targetText || recording.targetText || '',
+          targetAyahs: cached.targetAyahs || cached.metadata?.targetAyahs || [],
           stabilizedWords: cached.stabilizedWords || [],
           analysisResult: cached.analysisResult,
           replays: DEFAULT_REPLAY_VALIDATION_COUNT,
@@ -10414,6 +11821,7 @@ export default {
       }
       this.recitationCheckResult = result
       this.recitationLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
+      this.syncSessionEvaluationMaps('recitation', targetVerses, this.recitationLiveWords, true)
       this.persistAiRecitationReviewHighlights(result, targetVerses)
       this.recitationCheckAutoStopArmed = false
       this.recitationCheckError = ''
@@ -10437,6 +11845,7 @@ export default {
       this.recitationSpeechStableWords = []
       this.resetRecognitionPipelineState('recitation')
       this.seedRecitationLiveWords(targets)
+      this.syncSessionEvaluationMaps('recitation', targets, this.recitationLiveWords, false)
       this.showBanner('Displayed ayah review reset.', 'info', 1400)
     },
     clearRecitationReviewState() {
@@ -10449,12 +11858,18 @@ export default {
       this.recitationSpeechInterim = ''
       this.resetRecognitionPipelineState('recitation')
       this.recitationCheckPendingTargets = []
+      this.recitationSessionEvaluationMap = {}
+      this.recitationSessionHighlightMap = {}
       this.recitationCheckTargetVerseKey = ''
       this.recitationCheckScope = 'ayah'
     },
     savePendingRecitationCheckAttempt() {
       if (!this.recitationCheckResult) return
-      this.saveRecitationCheckAttempt(this.recitationCheckResult, this.recitationCheckPendingTargets)
+      const saved = this.saveRecitationCheckAttempt(this.recitationCheckResult, this.recitationCheckPendingTargets)
+      if (!saved) {
+        this.showBanner('Recite Check could not be saved on this device right now.', 'error', 2600)
+        return
+      }
       const ayahKey = this.recitationCheckTargetVerseKey || this.selfCheckVerseKey
       if (ayahKey) this.selectedRecordingsAyahKey = ayahKey
       this.playUiTone('save')
@@ -10537,9 +11952,10 @@ export default {
       this.recitationCheckTargetVerseKey = targets[0]?.key || ''
       this.recitationCheckAutoStopArmed = false
       this.recitationCheckPanelOpen = true
-      this.selfCheckSavedAttemptsVisible = false
-      this.seedRecitationLiveWords(targets)
-      this.resetRecognitionPipelineState('recitation')
+	      this.selfCheckSavedAttemptsVisible = false
+	      this.seedRecitationLiveWords(targets)
+	      this.resetActiveRecallFeedback('recitation')
+	      this.resetRecognitionPipelineState('recitation')
       this.recitationCheckPreparing = true
       this.stopRecordingsPlayback({ clearSource: true })
       if (this.audioElement && !this.audioElement.paused) {
@@ -10655,6 +12071,7 @@ export default {
         }
         this.recitationCheckResult = cachedResult
         this.recitationLiveWords = Array.isArray(cachedResult.wordStatuses) ? cachedResult.wordStatuses : []
+        this.syncSessionEvaluationMaps('recitation', targetVerses, this.recitationLiveWords, true)
         this.persistAiRecitationReviewHighlights(cachedResult, targetVerses)
         this.recitationCheckAutoStopArmed = false
         this.playUiTone('complete')
@@ -10685,6 +12102,7 @@ export default {
       result.audioHash = audioHash
       this.recitationCheckResult = result
       this.recitationLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
+      this.syncSessionEvaluationMaps('recitation', targetVerses, this.recitationLiveWords, true)
       this.persistAiRecitationReviewHighlights(result, targetVerses)
       this.recitationCheckAutoStopArmed = false
       this.playUiTone('complete')
@@ -10706,13 +12124,15 @@ export default {
         analysisResult: result,
         validationReport: result.validationReport,
         targetText: this.getRecitationTargetText(targetVerses),
+        targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses),
         metadata: {
           kind: 'recitation',
           provider,
           sessionId,
           audioHash,
           analysisVersion: RECITATION_ANALYSIS_VERSION,
-          targetVerses: this.buildRecitationAyahRangePayload(targetVerses)
+          targetVerses: this.buildRecitationAyahRangePayload(targetVerses),
+          targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses)
         },
         provider
       }
@@ -10731,14 +12151,86 @@ export default {
       if (this.activeVerseRef?.key) return [this.activeVerseRef]
       return this.getSessionCheckTargetVerses()
     },
-    getSessionCheckTargetVerses() {
-      const start = Number(this.rangeStart || 0)
-      const end = Number(this.rangeEnd || start)
-      const source = (this.mushafDisplayVerses?.length ? this.mushafDisplayVerses : this.verses) || []
-      return source.filter(verse => {
-        const number = Number(verse?.number || String(verse?.key || '').split(':')[1] || 0)
-        return number >= start && number <= end
+    getActiveSessionQueueForCheck() {
+      if (Array.isArray(this.queue) && this.queue.length) return this.queue
+      const centralQueue = this.mutqinState?.sessionState?.queue
+      if (Array.isArray(centralQueue) && centralQueue.length) return centralQueue
+      return []
+    },
+    buildSelectedSessionRangeCheckTargets() {
+      const chapterId = Number(this.chapterId || this.currentChapter?.id || 0)
+      const rangeStart = Number(this.rangeStart || 0)
+      const rangeEnd = Number(this.rangeEnd || rangeStart || 0)
+      const source = (this.mushafDisplayVerses?.length ? this.mushafDisplayVerses : this.verses || [])
+        .filter(verse => {
+          const verseNumber = Number(verse?.number || 0)
+          if (!verse?.key || !verseNumber) return false
+          if (chapterId && Number(verse?.chapterId || chapterId) !== chapterId) return false
+          if (rangeStart && verseNumber < rangeStart) return false
+          if (rangeEnd && verseNumber > rangeEnd) return false
+          return true
+        })
+        .sort((left, right) => Number(left?.number || 0) - Number(right?.number || 0))
+
+      return source.map((verse, index) => {
+        const canonical = this.getCanonicalVerseForCheck(verse) || verse
+        return {
+          ...this.buildSelfCheckVerseRef(canonical || verse),
+          ...canonical,
+          key: canonical?.key || verse?.key || '',
+          sessionQueueIndex: index,
+          sessionTargetKey: `${canonical?.key || verse?.key || `session-target-${index}`}::${index}`
+        }
+      }).filter(verse => verse?.key)
+    },
+    dedupeSessionCheckTargets(targets = []) {
+      const seen = new Set()
+      const deduped = []
+      targets.forEach((target, index) => {
+        const canonical = this.getCanonicalVerseForCheck(target) || target
+        const key = canonical?.key || target?.key || ''
+        if (!key || seen.has(key)) return
+        seen.add(key)
+        deduped.push({
+          ...this.buildSelfCheckVerseRef(canonical || target),
+          ...canonical,
+          key,
+          sessionQueueIndex: deduped.length,
+          sessionTargetKey: `${key}::${deduped.length}`
+        })
       })
+      return deduped
+    },
+    resolveSessionQueueTarget(queueItem = null, sessionIndex = 0) {
+      const sourceVerse = queueItem?.verse || queueItem || null
+      const ayahKey = sourceVerse?.key || queueItem?.ayahId || queueItem?.key || ''
+      if (!ayahKey) return null
+      const canonical = this.getCanonicalVerseForCheck(sourceVerse?.key ? sourceVerse : { key: ayahKey }) || sourceVerse
+      if (!canonical?.key && !ayahKey) return null
+      const verse = {
+        ...this.buildSelfCheckVerseRef(canonical || { key: ayahKey }),
+        ...canonical,
+        key: canonical?.key || ayahKey,
+        sessionQueueIndex: sessionIndex,
+        sessionTargetKey: `${ayahKey}::${sessionIndex}`,
+        sessionPhase: queueItem?.phase || '',
+        sessionChainKey: queueItem?.chainKey || '',
+        sessionSequencePosition: Number(queueItem?.sequencePosition || 1),
+        sessionSequenceTotal: Number(queueItem?.sequenceTotal || 1),
+        sessionRepeatCount: Number(queueItem?.repeatCount || 1)
+      }
+      return verse.key ? verse : null
+    },
+    getSessionCheckTargetVerses() {
+      const selectedRangeTargets = this.buildSelectedSessionRangeCheckTargets()
+      if (selectedRangeTargets.length) return selectedRangeTargets
+      const sourceQueue = this.getActiveSessionQueueForCheck()
+      const targets = []
+      for (let index = 0; index < sourceQueue.length; index += 1) {
+        const target = this.resolveSessionQueueTarget(sourceQueue[index], index)
+        if (target) targets.push(target)
+      }
+      return this.dedupeSessionCheckTargets(targets)
     },
     getCanonicalVerseForCheck(verse) {
       if (!verse?.key) return verse || null
@@ -10751,10 +12243,31 @@ export default {
       return this.cleanRecitationDisplayText(source?.arabic || source?.arabic_tajweed || '')
     },
     getRecitationTargetText(targetVerses = this.getRecitationCheckTargetVerses()) {
-      return targetVerses
-        .map(verse => this.getPlainVerseArabicForCheck(verse))
-        .filter(Boolean)
-        .join(' ')
+      const parts = []
+      const targets = Array.isArray(targetVerses) ? targetVerses : []
+      for (const verse of targets) {
+        const text = this.getPlainVerseArabicForCheck(verse)
+        if (text) parts.push(text)
+      }
+      return parts.join(' ')
+    },
+    buildRecitationTargetAyahMetadata(targetVerses = this.getRecitationCheckTargetVerses()) {
+      const metadata = []
+      const targets = Array.isArray(targetVerses) ? targetVerses : []
+      for (let index = 0; index < targets.length; index += 1) {
+        const verse = targets[index]
+        const text = this.getPlainVerseArabicForCheck(verse)
+        if (!text) continue
+        metadata.push({
+          key: verse?.sessionTargetKey || verse?.key || '',
+          ayahKey: verse?.key || '',
+          number: Number.isFinite(Number(verse?.number)) ? Number(verse.number) : index + 1,
+          sessionTargetKey: verse?.sessionTargetKey || '',
+          sessionQueueIndex: Number.isFinite(Number(verse?.sessionQueueIndex)) ? Number(verse.sessionQueueIndex) : index,
+          text
+        })
+      }
+      return metadata
     },
     normalizeArabicForRecitation(text) {
       return normalizeArabicForRecitationEngine(text)
@@ -11015,7 +12528,63 @@ export default {
         return { ...word, status: 'pending', note: 'Locked until the previous word is green.' }
       })
     },
-    buildRecitationMistakesFromStatuses(statuses, transcriptWords, normalizedTargetWords, extraWords = []) {
+    buildSkippedWordGroupsFromStatuses(statuses = []) {
+      const groups = []
+      statuses
+        .map((word, index) => ({ word, index }))
+        .filter(item => item.word?.status === 'pending')
+        .forEach(item => {
+          const last = groups[groups.length - 1]
+          const sameAyah = last
+            && (last.ayahKey || '') === (item.word?.ayahKey || '')
+            && Number(last.ayahNumber ?? -1) === Number(item.word?.ayahNumber ?? -1)
+          const contiguous = last && Number(last.endIndex) + 1 === Number(item.index)
+          if (sameAyah && contiguous) {
+            last.words.push(item.word.text)
+            last.endIndex = item.index
+            last.count = last.words.length
+            return
+          }
+          groups.push({
+            ayahKey: item.word?.ayahKey || '',
+            ayahNumber: item.word?.ayahNumber ?? null,
+            startIndex: item.index,
+            endIndex: item.index,
+            ayahWordIndex: item.word?.ayahWordIndex ?? null,
+            count: 1,
+            words: [item.word?.text || '']
+          })
+        })
+      return groups
+    },
+    buildSkippedAyahsFromStatuses(statuses = []) {
+      const grouped = new Map()
+      statuses.forEach((word, index) => {
+        const ayahKey = word?.ayahKey || ''
+        const ayahNumber = Number.isFinite(Number(word?.ayahNumber)) ? Number(word.ayahNumber) : null
+        const key = ayahKey || `ayah-${ayahNumber ?? index}`
+        if (!grouped.has(key)) {
+          grouped.set(key, {
+            ayahKey,
+            ayahNumber,
+            ayahIndex: Number.isFinite(Number(word?.ayahIndex)) ? Number(word.ayahIndex) : grouped.size,
+            wordCount: 0,
+            heardCount: 0,
+            words: []
+          })
+        }
+        const entry = grouped.get(key)
+        entry.wordCount += 1
+        if (word?.status !== 'pending') entry.heardCount += 1
+        if (word?.text) entry.words.push(word.text)
+      })
+      return Array.from(grouped.values())
+        .filter(item => item.wordCount > 0 && item.heardCount === 0)
+        .map(({ heardCount, ...item }) => item)
+    },
+    buildRecitationMistakesFromStatuses(statuses, transcriptWords, normalizedTargetWords, extraWords = [], previousMistakes = {}) {
+      const skippedWords = this.buildSkippedWordGroupsFromStatuses(statuses)
+      const skippedAyahs = this.buildSkippedAyahsFromStatuses(statuses)
       return {
         correct: statuses.filter(word => word.status === 'correct').map(word => word.text),
         missing: statuses.filter(word => word.status === 'pending').map(word => word.text),
@@ -11033,7 +12602,12 @@ export default {
           .map(item => ({
             expected: item.word.text,
             actual: item.word.actual || transcriptWords[item.index] || normalizedTargetWords[item.index] || ''
-          }))
+          })),
+        skippedWords,
+        wordSkips: skippedWords,
+        skippedAyahs,
+        verseJumps: Array.isArray(previousMistakes?.verseJumps) ? previousMistakes.verseJumps : [],
+        sequenceErrors: Array.isArray(previousMistakes?.sequenceErrors) ? previousMistakes.sequenceErrors : []
       }
     },
     buildDeterministicRecitationAnalysis(wordStatuses = [], transcriptWords = [], extraWords = []) {
@@ -11116,7 +12690,8 @@ export default {
       const statuses = this.getRecitationWordStatuses(result || {})
       if (!words.length) return ''
       return words.map((word, index) => {
-        const status = statuses[index]?.status || 'pending'
+        const rawStatus = statuses[index]?.status || 'pending'
+        const status = this.getWordVisualStatus(statuses[index] || { status: rawStatus }, false, !!result)
         const note = statuses[index]?.note || ''
         const canCorrect = status && status !== 'correct' ? ' can-correct-ai' : ''
         const title = status && status !== 'correct' ? `${note} Mark as AI mistake.` : note
@@ -11135,20 +12710,36 @@ export default {
       if (issueWords.length) return issueWords.join(' ')
       return '<span class="recitation-review-clean">No incorrect section detected.</span>'
     },
-    getRecitationResultStats(result) {
-      const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
+    getRecitationDetectionCounts(result = null) {
       const statuses = this.getRecitationWordStatuses(result)
-      const correct = statuses.filter(word => word.status === 'correct').length
-      const partial = statuses.filter(word => word.status === 'partial').length
-      const incorrect = statuses.filter(word => word.status === 'incorrect').length
-      const missing = statuses.filter(word => word.status === 'pending').length
-      const extra = Array.isArray(mistakes.extra) ? mistakes.extra.length : 0
-      const total = Math.max(1, statuses.length)
+      const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
+      const missingWords = Array.isArray(mistakes.missing) ? mistakes.missing.length : statuses.filter(word => word.status === 'pending').length
+      const extraWords = Array.isArray(mistakes.extra) ? mistakes.extra.length : 0
+      const incorrectWords = Array.isArray(mistakes.incorrect) ? mistakes.incorrect.length : statuses.filter(word => word.status === 'incorrect').length
+      const wordSkipGroups = mistakes.wordSkips || mistakes.skippedWords || result?.wordSkips || result?.skippedWords || []
+      const wordSkips = wordSkipGroups.reduce((sum, group) => sum + Number(group?.count || 1), 0)
+      const ayahSkips = Array.isArray(mistakes.skippedAyahs) ? mistakes.skippedAyahs.length : Array.isArray(result?.skippedAyahs) ? result.skippedAyahs.length : 0
+      const verseJumps = Array.isArray(mistakes.verseJumps) ? mistakes.verseJumps.length : Array.isArray(result?.verseJumps) ? result.verseJumps.length : (result?.verseJumpDetected ? 1 : 0)
+      return {
+        accuracy: this.getResolvedRecitationScore(result),
+        missingWords,
+        extraWords,
+        incorrectWords,
+        wordSkips,
+        ayahSkips,
+        verseJumps
+      }
+    },
+    getRecitationResultStats(result) {
+      const counts = this.getRecitationDetectionCounts(result)
       return [
-        { key: 'correct', label: 'Green', value: `${correct}/${total}`, description: 'Exact words.', tone: 'tone-green' },
-        { key: 'partial', label: 'Amber', value: `${partial}/${total}`, description: 'Close words to review.', tone: 'tone-amber' },
-        { key: 'incorrect', label: 'Red', value: `${incorrect}/${total}`, description: extra ? `Changed or wrong-order words. ${extra} extra word${extra === 1 ? '' : 's'} heard.` : 'Changed or wrong-order words.', tone: 'tone-red' },
-        { key: 'pending', label: 'Grey', value: `${missing}/${total}`, description: 'Not heard or not confirmed.', tone: 'tone-grey' }
+        { key: 'accuracy', label: 'Accuracy', value: `${counts.accuracy}%`, description: 'Overall session match.', tone: counts.accuracy >= 90 ? 'tone-green' : counts.accuracy >= 70 ? 'tone-amber' : 'tone-red' },
+        { key: 'missing', label: 'Missing words', value: `${counts.missingWords}`, description: 'Words not heard in the target range.', tone: counts.missingWords ? 'tone-red' : 'tone-green' },
+        { key: 'extra', label: 'Extra words', value: `${counts.extraWords}`, description: 'Words heard outside the target wording.', tone: counts.extraWords ? 'tone-red' : 'tone-green' },
+        { key: 'incorrect', label: 'Incorrect words', value: `${counts.incorrectWords}`, description: 'Changed or wrong-order words.', tone: counts.incorrectWords ? 'tone-red' : 'tone-green' },
+        { key: 'word-skips', label: 'Word skips', value: `${counts.wordSkips}`, description: 'Skipped word positions inside ayahs.', tone: counts.wordSkips ? 'tone-amber' : 'tone-green' },
+        { key: 'ayah-skips', label: 'Ayah skips', value: `${counts.ayahSkips}`, description: 'Complete ayahs that were not covered.', tone: counts.ayahSkips ? 'tone-red' : 'tone-green' },
+        { key: 'verse-jumps', label: 'Verse jumps', value: `${counts.verseJumps}`, description: 'Moved to a later ayah before finishing the current one.', tone: counts.verseJumps ? 'tone-red' : 'tone-green' }
       ]
     },
     getTajweedRuleCatalog() {
@@ -11405,11 +12996,12 @@ export default {
     assessRecitationRecognitionWords(recognitionWords = [], targetVerses = this.getRecitationCheckTargetVerses(), options = {}) {
       const targetText = this.getRecitationTargetText(targetVerses)
       const timestamp = options.timestamp || new Date().toISOString()
-      const result = buildDeterministicRecitationResult(targetText, recognitionWords, {
-        strictProgression: this.aiRecitationStrictProgression,
+	      const result = buildDeterministicRecitationResult(targetText, recognitionWords, {
+	        strictProgression: this.aiRecitationStrictProgression || this.hiddenRevealModeEnabled,
         id: options.id,
         timestamp,
         ayahRange: this.buildRecitationAyahRangePayload(targetVerses),
+        targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses),
         metadata: {
           sessionId: options.sessionId || this.getCurrentRecitationSessionId(),
           audioHash: options.audioHash || '',
@@ -11437,10 +13029,18 @@ export default {
       }
     },
     getRecitationRecommendation(score, mistakes) {
+      const verseJumps = mistakes.verseJumps?.length || 0
+      const wordSkips = mistakes.wordSkips?.reduce((sum, group) => sum + Number(group.count || 1), 0) || 0
+      const skippedAyahs = mistakes.skippedAyahs?.length || 0
+      const sequenceErrors = mistakes.sequenceErrors?.length || 0
       const missing = mistakes.missing?.length || 0
       const incorrect = mistakes.incorrect?.length || 0
       const partial = mistakes.partial?.length || 0
       const extra = mistakes.extra?.length || 0
+      if (skippedAyahs) return `Skipped ${skippedAyahs} ayah${skippedAyahs === 1 ? '' : 's'}. Review the selected range in order.`
+      if (verseJumps) return `Verse jump detected ${verseJumps === 1 ? 'once' : `${verseJumps} times`}. Restart from the last complete ayah.`
+      if (sequenceErrors) return 'Ayahs were recited out of order. Restart from the first selected ayah.'
+      if (wordSkips) return `Skipped ${wordSkips} word${wordSkips === 1 ? '' : 's'}. Slow down and complete each ayah before moving on.`
       if (missing) return `Missing ${missing} word${missing === 1 ? '' : 's'}. Recite that section slowly before retrying.`
       if (partial) return `Clarify ${partial} close word${partial === 1 ? '' : 's'}, then check again.`
       if (incorrect) return `Review ${incorrect} changed word${incorrect === 1 ? '' : 's'} and compare with the displayed ayah.`
@@ -11450,7 +13050,11 @@ export default {
       return 'Replay the ayah once, recite without looking, then run another Recite Check.'
     },
     buildRecitationReviewMetadata(score, mistakes, tajweedRules = [], baseIso = '') {
-      const issueCount = mistakes.missing.length + mistakes.extra.length + mistakes.incorrect.length + (mistakes.partial?.length || 0)
+      const issueCount = (mistakes.missing?.length || 0) + (mistakes.extra?.length || 0) + (mistakes.incorrect?.length || 0) + (mistakes.partial?.length || 0)
+        + (mistakes.wordSkips?.reduce((sum, group) => sum + Number(group.count || 1), 0) || 0)
+        + (mistakes.skippedAyahs?.length || 0)
+        + (mistakes.verseJumps?.length || 0)
+        + (mistakes.sequenceErrors?.length || 0)
       const tajweedIssueCount = Array.isArray(tajweedRules)
         ? tajweedRules.reduce((sum, rule) => sum + Number(rule.issueCount || 0), 0)
         : 0
@@ -11487,7 +13091,7 @@ export default {
       }
     },
     saveRecitationCheckAttempt(result, targetVerses = this.getRecitationCheckTargetVerses()) {
-      if (!result) return
+      if (!result) return false
       const targets = targetVerses?.length ? targetVerses : this.getRecitationCheckTargetVerses()
       const sessionId = this.getCurrentRecitationSessionId()
       const chapterId = Number(this.chapterId || this.currentChapter?.id || targets[0]?.chapterId || 0)
@@ -11536,7 +13140,7 @@ export default {
       session.attempts = Array.isArray(session.attempts) ? session.attempts : []
       session.attempts.push(attempt)
       localStorage.setItem(this.mutqinSessionsStorageKey(), JSON.stringify(sessions))
-      this.saveAiCheckToRecordingsLibrary(attempt, result)
+      return this.saveAiCheckToRecordingsLibrary(attempt, result)
     },
     cleanupSelfCheckMedia() {
       if (this.selfCheckMediaStream) {
@@ -11838,6 +13442,174 @@ export default {
       return this.blurPeekHoldingSpace || this.hoverPeekVerseKey === verseKey || this.touchPeekVerseKey === verseKey
     },
 
+    refreshHifzPlanState() {
+      try {
+        const raw = localStorage.getItem(HIFZ_PLAN_STORAGE_KEY)
+        this.hifzPlan = raw ? JSON.parse(raw) : null
+        this.hifzPlanExists = !!this.hifzPlan
+      } catch {
+        this.hifzPlan = null
+        this.hifzPlanExists = false
+      }
+    },
+
+    refreshHifzJourneyState() {
+      this.refreshHifzPlanState()
+      try {
+        const rawProgress = localStorage.getItem(AYAH_PROGRESS_STORAGE_KEY)
+        const parsedProgress = rawProgress ? JSON.parse(rawProgress) : {}
+        this.hifzAyahProgress = parsedProgress && typeof parsedProgress === 'object' && !Array.isArray(parsedProgress)
+          ? parsedProgress
+          : {}
+      } catch {
+        this.hifzAyahProgress = {}
+      }
+      try {
+        this.hifzTodayQueue = generateTodaySession()
+      } catch {
+        this.hifzTodayQueue = []
+      }
+    },
+
+    openHifzPlanModal() {
+      this.refreshHifzJourneyState()
+      this.showHifzPlanModal = true
+    },
+
+    closeHifzPlanModal() {
+      this.showHifzPlanModal = false
+    },
+
+    handleHifzPlanSaved() {
+      this.refreshHifzJourneyState()
+      this.showBanner('Hifz plan saved', 'success', 1800)
+    },
+
+    persistHifzPlan(nextPlan, message = '') {
+      if (!nextPlan || typeof nextPlan !== 'object') return
+      const now = new Date().toISOString()
+      const forecast = calculatePlanForecast(nextPlan, { completedAyahs: this.hifzCompletedAyahCount })
+      const payload = {
+        ...nextPlan,
+        status: nextPlan.lifecycle?.status || nextPlan.status || 'active',
+        lifecycle: {
+          ...(nextPlan.lifecycle || {}),
+          status: nextPlan.lifecycle?.status || nextPlan.status || 'active',
+          updatedAt: now
+        },
+        forecast,
+        updatedAt: now
+      }
+      localStorage.setItem(HIFZ_PLAN_STORAGE_KEY, JSON.stringify(payload))
+      this.refreshHifzJourneyState()
+      if (message) this.showBanner(message, 'success', 1600)
+    },
+
+    startOrResumeHifzPlan() {
+      const now = new Date().toISOString()
+      const basePlan = this.hifzPlan || {}
+      this.persistHifzPlan({
+        ...basePlan,
+        status: 'active',
+        lifecycle: {
+          ...(basePlan.lifecycle || {}),
+          status: 'active',
+          startedAt: basePlan.lifecycle?.startedAt || basePlan.startedAt || basePlan.createdAt || now,
+          resumedAt: now,
+          pausedAt: null
+        }
+      }, this.hifzPlanLifecycleStatus === 'paused' ? 'Hifz plan resumed' : 'Hifz plan started')
+    },
+
+    pauseHifzPlan() {
+      if (!this.hifzPlan) return
+      const now = new Date().toISOString()
+      this.persistHifzPlan({
+        ...this.hifzPlan,
+        status: 'paused',
+        lifecycle: {
+          ...(this.hifzPlan.lifecycle || {}),
+          status: 'paused',
+          pausedAt: now
+        }
+      }, 'Hifz plan paused')
+    },
+
+    createNewHifzPlan() {
+      if (this.hifzPlan) {
+        try {
+          const rawArchives = localStorage.getItem(HIFZ_PLAN_ARCHIVE_STORAGE_KEY)
+          const archives = rawArchives ? JSON.parse(rawArchives) : []
+          const nextArchives = Array.isArray(archives) ? archives : []
+          nextArchives.unshift({
+            ...this.hifzPlan,
+            archivedAt: new Date().toISOString(),
+            archivedProgress: {
+              completedAyahs: this.hifzCompletedAyahCount,
+              progressPercent: this.hifzPlannerProgressPercent,
+              planHealth: this.hifzPlanHealth.label
+            }
+          })
+          localStorage.setItem(HIFZ_PLAN_ARCHIVE_STORAGE_KEY, JSON.stringify(nextArchives.slice(0, 12)))
+        } catch {}
+      }
+      localStorage.removeItem(HIFZ_PLAN_STORAGE_KEY)
+      this.refreshHifzJourneyState()
+      this.openHifzPlanModal()
+    },
+
+    deleteHifzPlan() {
+      if (typeof window !== 'undefined' && !window.confirm('Delete this Hifz plan and its planner progress from this browser?')) return
+      localStorage.removeItem(HIFZ_PLAN_STORAGE_KEY)
+      localStorage.removeItem(AYAH_PROGRESS_STORAGE_KEY)
+      this.hifzPlannerAnalyticsOpen = false
+      this.refreshHifzJourneyState()
+      this.showBanner('Hifz plan deleted', 'info', 1600)
+    },
+
+    applyHifzRecovery(strategy) {
+      if (!this.hifzPlan) return
+      const dailyTarget = normalizeDailyNewAyahCount(this.hifzPlan)
+      const nextPlan = {
+        ...this.hifzPlan,
+        recovery: {
+          strategy,
+          appliedAt: new Date().toISOString(),
+          previousDailyTarget: dailyTarget,
+          missedDays: this.hifzPlanHealth.missedDays
+        }
+      }
+
+      if (strategy === 'catchUp') {
+        const nextTarget = Math.min(10, dailyTarget + Math.max(1, Math.ceil(this.hifzPlanHealth.missedDays / 2)))
+        nextPlan.goalSettings = {
+          ...(nextPlan.goalSettings || {}),
+          dailyNewAyahs: {
+            min: nextTarget,
+            max: nextTarget,
+            exact: nextTarget,
+            label: `${nextTarget} ayahs/day`
+          }
+        }
+      } else if (strategy === 'reduce') {
+        const nextTarget = Math.max(1, dailyTarget - 1)
+        nextPlan.goalSettings = {
+          ...(nextPlan.goalSettings || {}),
+          dailyNewAyahs: {
+            min: nextTarget,
+            max: nextTarget,
+            exact: nextTarget,
+            label: `${nextTarget} ayahs/day`
+          }
+        }
+      } else if (strategy === 'extend') {
+        nextPlan.recovery.extendedByDays = Math.max(1, this.hifzPlanHealth.missedDays)
+        nextPlan.completionAdjustmentDays = Number(nextPlan.completionAdjustmentDays || 0) + nextPlan.recovery.extendedByDays
+      }
+
+      this.persistHifzPlan(nextPlan, 'Recovery plan applied')
+    },
+
     focusLinkedAyah(verseKey, options = {}) {
       if (!verseKey) return null
       return this.setActiveVerse(verseKey, options)
@@ -11909,6 +13681,7 @@ export default {
     },
     isReviewPriorityAyah(verseKey) {
       if (!verseKey) return false
+      if (this.isDueHifzAyah(verseKey)) return true
       const currentEntry = this.activeQueueEntry
       if (currentEntry?.phase === 'Retention' && (currentEntry?.ayahId === verseKey || currentEntry?.verse?.key === verseKey || currentEntry?.key === verseKey)) {
         return true
@@ -11917,6 +13690,32 @@ export default {
       if (retentionDue) return true
       const ayah = this.mutqinState?.ayahs?.[verseKey]
       return ayah?.status === 'weak'
+    },
+    getHifzQueueType(verseKey) {
+      const item = (this.hifzTodayQueue || []).find(entry => entry?.key === verseKey)
+      return item?.type || ''
+    },
+    getHifzAyahProgress(verseKey) {
+      return this.hifzAyahProgress?.[verseKey] || null
+    },
+    getHifzDateToken(value) {
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return ''
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    },
+    isDueHifzAyah(verseKey) {
+      if (this.getHifzQueueType(verseKey) === 'due') return true
+      const progress = this.getHifzAyahProgress(verseKey)
+      if (!progress?.nextReview) return false
+      const reviewDate = this.getHifzDateToken(progress.nextReview)
+      return !!reviewDate && reviewDate <= this.getHifzDateToken(new Date())
+    },
+    isNewHifzAyah(verseKey) {
+      if (this.getHifzQueueType(verseKey) === 'new') return true
+      return !this.getHifzAyahProgress(verseKey)
     },
     onVersePeekEnter(verseKey) {
       if (!this.blurModeEnabled || !this.isVerseBlurred(verseKey)) return
@@ -12465,6 +14264,11 @@ export default {
         if (this.showRecordingsLibrary) {
           event.preventDefault()
           this.closeRecordingsLibrary()
+          return
+        }
+        if (this.showHifzPlanModal) {
+          event.preventDefault()
+          this.closeHifzPlanModal()
           return
         }
         if (this.showTools) {
@@ -13627,7 +15431,7 @@ export default {
       const activeClass = isActive ? ' highlighted phrase-highlighted' : ''
       const weakClass = this.isWeakAyah(verse.key) ? ' weak-word' : ''
       const masteredClass = this.isMasteredAyah(verse.key) ? ' mastered-word' : ''
-      const recitationStatus = this.getRecitationWordStatusForVerse(verse.key, idx)
+      const recitationStatus = this.getRecitationWordStatusForVerse(verse.key, idx, verse.sessionTargetKey || '')
       const recitationClass = recitationStatus ? ` recitation-word-${recitationStatus}` : ''
       const wordAudio = this.wordByWordAudioEnabled && wordData.audio
         ? `<button class="word-audio-btn" data-word-index="${idx}" data-word-audio="${this.escapeHtml(wordData.audio)}"><i class="bi bi-volume-up"></i></button>`
@@ -15231,11 +17035,15 @@ export default {
 
     isWeakAyah(key) {
       const ayah = this.mutqinState?.ayahs?.[key]
-      return Number(ayah?.weak_count || 0) > 0
+      const hifzProgress = this.getHifzAyahProgress(key)
+      const hifzWeak = !!hifzProgress && Number(hifzProgress.masteryScore || 0) < 0.65
+      return Number(ayah?.weak_count || 0) > 0 || ayah?.status === 'weak' || hifzWeak
     },
     isMasteredAyah(key) {
       const ayah = this.mutqinState?.ayahs?.[key]
-      return Number(ayah?.mastery_level || 0) >= 5 || ayah?.status === 'mastered'
+      const hifzProgress = this.getHifzAyahProgress(key)
+      const hifzMastered = !!hifzProgress && Number(hifzProgress.masteryScore || 0) >= 0.9 && Number(hifzProgress.repetitionCount || 0) >= 3
+      return Number(ayah?.mastery_level || 0) >= 5 || ayah?.status === 'mastered' || hifzMastered
     },
     markTakrarHide(verse) {
       this.syncMutqinAyahs([verse])
@@ -15450,7 +17258,7 @@ export default {
     updateDefaultFontSize() {
       // Clamp the value
       this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, this.defaultFontSize))
-      // Save to localStorage
+      // Save font preference through the central browser storage adapter.
       try {
         localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize))
       } catch (e) { }
@@ -15561,10 +17369,11 @@ export default {
               ? state.readingViewMode
               : 'stacked'
             this.mushafPageIndex = 0
-            this.aiRecitationStrictProgression = state.aiRecitationStrictProgression !== false
-            this.aiRecitationPersistMistakes = false
-            this.persistentAiRecitationReviews = {}
-          this.mushafBackground = ['warm', 'paper', 'contrast', 'mist', 'night'].includes(state.mushafBackground) ? state.mushafBackground : this.mushafBackground
+	            this.aiRecitationStrictProgression = state.aiRecitationStrictProgression !== false
+	            this.aiRecitationPersistMistakes = false
+	            this.persistentAiRecitationReviews = {}
+	            this.hiddenRevealModeEnabled = !!state.hiddenRevealModeEnabled
+	          this.mushafBackground = ['warm', 'paper', 'contrast', 'mist', 'night'].includes(state.mushafBackground) ? state.mushafBackground : this.mushafBackground
           this.mushafBorder = ['classic', 'fine', 'layered', 'emerald', 'ink'].includes(state.mushafBorder) ? state.mushafBorder : this.mushafBorder
             this.focusModeEnabled = !!state.focusModeEnabled
             this.blurModeEnabled = !!state.blurModeEnabled
@@ -15642,10 +17451,11 @@ export default {
           showTransliteration: this.showTransliteration,
           showWordByWord: this.showWordByWord,
           wordByWordAudioEnabled: this.wordByWordAudioEnabled,
-          aiRecitationStrictProgression: this.aiRecitationStrictProgression,
-          aiRecitationPersistMistakes: this.aiRecitationPersistMistakes,
-          persistentAiRecitationReviews: this.persistentAiRecitationReviews,
-        readingViewMode: this.readingViewMode,
+	          aiRecitationStrictProgression: this.aiRecitationStrictProgression,
+	          aiRecitationPersistMistakes: this.aiRecitationPersistMistakes,
+	          persistentAiRecitationReviews: this.persistentAiRecitationReviews,
+	          hiddenRevealModeEnabled: this.hiddenRevealModeEnabled,
+	        readingViewMode: this.readingViewMode,
         mushafBackground: this.mushafBackground,
         mushafBorder: this.mushafBorder,
           focusModeEnabled: this.focusModeEnabled,
@@ -16253,6 +18063,1949 @@ export default {
 </script>
 
 <style>
+/* Custom Dropdown */
+.custom-dropdown {
+  position: relative;
+  flex: 1;
+}
+
+.btn-session-dropdown {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-weight: 500;
+  padding: 10px 16px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-session-dropdown:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.btn-session-dropdown.has-selection {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.btn-session-dropdown .placeholder-text {
+  color: var(--text-muted);
+}
+
+.dropdown-arrow {
+  transition: transform 0.2s ease;
+  margin-left: 8px;
+}
+
+.dropdown-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+}
+
+.custom-dropdown-menu .dropdown-item {
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.custom-dropdown-menu .dropdown-item:hover {
+  background: var(--accent-light);
+}
+
+.custom-dropdown-menu .dropdown-item.active {
+  background: var(--accent-light);
+  border-left: 3px solid var(--accent);
+}
+
+/* Continue Session Card */
+.continue-session-card {
+  background: linear-gradient(135deg, rgba(154, 103, 56, 0.08), rgba(154, 103, 56, 0.02));
+  border: 1px solid rgba(154, 103, 56, 0.2);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 18px;
+}
+
+.continue-session-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.continue-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.continue-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.continue-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.continue-title {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.continue-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.btn-continue-session {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  color: white;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.btn-continue-session:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+}
+
+/* Custom Session Selector */
+.custom-session-selector {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 18px;
+}
+
+.selector-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.selector-header i {
+  color: var(--accent);
+}
+
+.selector-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.session-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.session-option-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-option-main i {
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+.session-option-name {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.session-option-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  padding-left: 24px;
+}
+
+.session-option-meta i {
+  font-size: 0.65rem;
+}
+
+.btn-load-selected {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  min-height: 48px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.btn-load-selected:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+}
+
+.btn-load-selected:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Dark theme */
+[data-theme="dark"] .continue-session-card {
+  background: rgba(255, 236, 216, 0.05);
+  border-color: rgba(255, 236, 216, 0.12);
+}
+
+[data-theme="dark"] .custom-session-selector {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .btn-session-dropdown {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .custom-dropdown-menu {
+  background: #1e1a17;
+  border-color: rgba(255, 236, 216, 0.1);
+}
+
+[data-theme="dark"] .custom-dropdown-menu .dropdown-item:hover {
+  background: rgba(255, 236, 216, 0.06);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .continue-session-inner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .btn-continue-session {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .selector-row {
+    flex-direction: column;
+  }
+  
+  .btn-load-selected {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .session-option-meta {
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 0;
+  }
+}
+/* Continue Session Card */
+.continue-session-card {
+  background: linear-gradient(135deg, rgba(154, 103, 56, 0.08), rgba(154, 103, 56, 0.02));
+  border: 1px solid rgba(154, 103, 56, 0.2);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 18px;
+}
+
+.continue-session-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.continue-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.continue-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.continue-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.continue-title {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.continue-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.btn-continue-session {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  color: white;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.btn-continue-session:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+}
+
+/* Custom Session Selector */
+.custom-session-selector {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 18px;
+}
+
+.selector-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.selector-header i {
+  color: var(--accent);
+}
+
+.selector-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.selector-row .dropdown {
+  flex: 1;
+}
+
+.btn-session-dropdown {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-weight: 500;
+  padding: 10px 16px;
+  text-align: left;
+  height: 100%;
+  min-height: 48px;
+}
+
+.btn-session-dropdown:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.btn-session-dropdown.has-selection {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.btn-session-dropdown .placeholder-text {
+  color: var(--text-muted);
+}
+
+.session-dropdown-menu {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.session-dropdown-menu .dropdown-item {
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.session-dropdown-menu .dropdown-item:hover {
+  background: var(--accent-light);
+}
+
+.session-dropdown-menu .dropdown-item.active {
+  background: var(--accent-light);
+  border-left: 3px solid var(--accent);
+}
+
+.session-option-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-option-main i {
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+.session-option-name {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.session-option-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  padding-left: 24px;
+}
+
+.session-option-meta i {
+  font-size: 0.65rem;
+}
+
+.btn-load-selected {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  min-height: 48px;
+}
+
+.btn-load-selected:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+}
+
+.btn-load-selected:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Dark theme */
+[data-theme="dark"] .continue-session-card {
+  background: rgba(255, 236, 216, 0.05);
+  border-color: rgba(255, 236, 216, 0.12);
+}
+
+[data-theme="dark"] .custom-session-selector {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .btn-session-dropdown {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .session-dropdown-menu {
+  background: #1e1a17;
+  border-color: rgba(255, 236, 216, 0.1);
+}
+
+[data-theme="dark"] .session-dropdown-menu .dropdown-item:hover {
+  background: rgba(255, 236, 216, 0.06);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .continue-session-inner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .btn-continue-session {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .selector-row {
+    flex-direction: column;
+  }
+  
+  .btn-load-selected {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .session-option-meta {
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 0;
+  }
+}
+
+.btn-load-selected {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-height: 48px;
+}
+
+.btn-load-selected:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+}
+
+.btn-load-selected:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Dark theme */
+[data-theme="dark"] .continue-session-card {
+  background: rgba(255, 236, 216, 0.05);
+  border-color: rgba(255, 236, 216, 0.12);
+}
+
+[data-theme="dark"] .custom-session-selector {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .btn-session-dropdown {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .session-dropdown-menu {
+  background: #1e1a17;
+  border-color: rgba(255, 236, 216, 0.1);
+}
+
+[data-theme="dark"] .session-dropdown-menu .dropdown-item:hover {
+  background: rgba(255, 236, 216, 0.06);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .continue-session-inner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .btn-continue-session {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .selector-row {
+    flex-direction: column;
+  }
+  
+  .btn-load-selected {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .session-option-meta {
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 0;
+  }
+}
+/* Premium Session Selector Styles */
+.continue-session-card {
+  background: linear-gradient(135deg, rgba(154, 103, 56, 0.08), rgba(154, 103, 56, 0.02));
+  border: 1px solid rgba(154, 103, 56, 0.2);
+  border-radius: 16px;
+  padding: 16px 20px;
+  transition: all 0.2s ease;
+}
+
+.continue-session-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(154, 103, 56, 0.1);
+}
+
+.continue-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.continue-label {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.continue-meta {
+  font-weight: 500;
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+.continue-submeta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.btn-continue {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  color: white;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-continue:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+}
+
+.session-selector-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 20px;
+  transition: all 0.2s ease;
+}
+
+.selector-label {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.selector-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.btn-select-session {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-weight: 500;
+  padding: 10px 16px;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.btn-select-session:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.btn-load-session {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-load-session:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(154, 103, 56, 0.3);
+}
+
+.btn-load-session:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dropdown-menu {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.dropdown-item {
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: all 0.15s ease;
+}
+
+.dropdown-item:hover {
+  background: var(--accent-light);
+}
+
+.dropdown-item .badge {
+  background: rgba(154, 103, 56, 0.12);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Dark theme support */
+[data-theme="dark"] .continue-session-card {
+  background: rgba(255, 236, 216, 0.05);
+  border-color: rgba(255, 236, 216, 0.12);
+}
+
+[data-theme="dark"] .session-selector-card {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .btn-select-session {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .dropdown-menu {
+  background: #1e1a17;
+  border-color: rgba(255, 236, 216, 0.1);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+  background: rgba(255, 236, 216, 0.06);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .continue-session-card .d-flex {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .btn-continue {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .session-selector-card .d-flex {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn-load-session {
+    width: 100%;
+    justify-content: center;
+  }
+}
+/* ========================================
+   SESSION COMPLETE - CLEAN & COMPACT
+   ======================================== */
+
+   .session-complete-wrapper {
+  padding: 8px 0;
+  animation: fadeSlideUp 0.3s ease;
+}
+
+/* Header */
+.completion-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+[data-theme="light"] .completion-header {
+  background: rgba(46, 125, 50, 0.04);
+  border-color: rgba(46, 125, 50, 0.15);
+}
+
+[data-theme="dark"] .completion-header {
+  background: rgba(76, 175, 80, 0.06);
+  border-color: rgba(76, 175, 80, 0.15);
+}
+
+.completion-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.2rem;
+}
+
+[data-theme="light"] .completion-icon {
+  background: rgba(46, 125, 50, 0.12);
+  color: #2e7d32;
+}
+
+[data-theme="dark"] .completion-icon {
+  background: rgba(76, 175, 80, 0.15);
+  color: #81c784;
+}
+
+.completion-text {
+  flex: 1;
+}
+
+.completion-text h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+}
+
+.completion-text p {
+  font-size: 0.8rem;
+  margin: 2px 0 0;
+  color: var(--text-muted);
+}
+
+/* Stats */
+.completion-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stat-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 30px;
+  background: var(--border);
+}
+
+/* Actions */
+.completion-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  min-height: 40px;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+
+.action-btn:active {
+  transform: scale(0.97);
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: transparent;
+  color: white;
+}
+
+.action-btn.primary:hover {
+  box-shadow: 0 4px 16px rgba(154, 103, 56, 0.25);
+}
+
+[data-theme="dark"] .action-btn.primary {
+  background: linear-gradient(135deg, #2f8b66, #74d99e);
+  color: #07150f;
+}
+
+[data-theme="dark"] .action-btn.primary:hover {
+  box-shadow: 0 4px 16px rgba(46, 125, 50, 0.25);
+}
+
+/* Quick Surah Grid */
+.quick-surah-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 4px;
+}
+
+.surah-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.72rem;
+  color: var(--text);
+}
+
+.surah-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  transform: translateY(-1px);
+}
+
+.surah-btn:active {
+  transform: scale(0.97);
+}
+
+.surah-id {
+  font-weight: 600;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  opacity: 0.5;
+  min-width: 20px;
+}
+
+.surah-name {
+  font-weight: 500;
+}
+
+/* Dark theme overrides */
+[data-theme="dark"] .surah-btn {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .surah-btn:hover {
+  background: rgba(208, 160, 107, 0.06);
+  border-color: rgba(208, 160, 107, 0.25);
+}
+
+/* Animations */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .completion-actions {
+    grid-template-columns: 1fr;
+  }
+  
+  .completion-stats {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .stat-divider {
+    display: none;
+  }
+  
+  .stat-box {
+    flex: 1;
+    min-width: 60px;
+  }
+  
+  .quick-surah-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+  
+  .surah-btn {
+    font-size: 0.65rem;
+    padding: 4px 8px;
+  }
+  
+  .surah-id {
+    min-width: 16px;
+    font-size: 0.55rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .completion-stats {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .stat-box {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  
+  .quick-surah-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  }
+}
+/* ========================================
+   SESSION COMPLETE - ISLAMIC ELEGANCE
+   ======================================== */
+
+   .session-complete-wrapper {
+  padding: 4px 0 8px;
+  animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ===== DECORATIVE HEADER ===== */
+.session-complete-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.decorative-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.decorative-line {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  position: relative;
+}
+
+.decorative-diamond {
+  color: var(--accent);
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+.bismillah-calligraphy {
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  line-height: 1.6;
+  color: var(--accent);
+  opacity: 0.7;
+  font-family: 'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif;
+  letter-spacing: 2px;
+}
+
+/* ===== STATUS CARD ===== */
+.status-card {
+  position: relative;
+  border-radius: 20px;
+  padding: 24px 28px 22px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: all 0.4s ease;
+}
+
+.status-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong), var(--accent));
+  opacity: 0.3;
+}
+
+.status-completed {
+  border-color: rgba(46, 125, 50, 0.3);
+  background: linear-gradient(135deg, rgba(46, 125, 50, 0.04), var(--surface));
+}
+
+.status-completed::before {
+  background: linear-gradient(90deg, #2e7d32, #43a047, #2e7d32);
+  opacity: 0.6;
+}
+
+.status-resume {
+  border-color: rgba(255, 152, 0, 0.3);
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.04), var(--surface));
+}
+
+.status-resume::before {
+  background: linear-gradient(90deg, #f57c00, #ffb300, #f57c00);
+  opacity: 0.6;
+}
+
+/* Corner Decorations */
+.corner-decoration {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  opacity: 0.15;
+  border: 2px solid var(--accent);
+}
+
+.corner-tl {
+  top: 12px;
+  left: 12px;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 4px 0 0 0;
+}
+
+.corner-tr {
+  top: 12px;
+  right: 12px;
+  border-left: none;
+  border-bottom: none;
+  border-radius: 0 4px 0 0;
+}
+
+.corner-bl {
+  bottom: 12px;
+  left: 12px;
+  border-right: none;
+  border-top: none;
+  border-radius: 0 0 0 4px;
+}
+
+.corner-br {
+  bottom: 12px;
+  right: 12px;
+  border-left: none;
+  border-top: none;
+  border-radius: 0 0 4px 0;
+}
+
+.status-card-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Status Head */
+.status-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.status-icon-wrapper {
+  flex-shrink: 0;
+}
+
+.status-icon-ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  transition: all 0.4s ease;
+}
+
+.status-completed .status-icon-ring {
+  background: linear-gradient(135deg, rgba(46, 125, 50, 0.15), rgba(46, 125, 50, 0.05));
+  color: #2e7d32;
+  box-shadow: 0 0 30px rgba(46, 125, 50, 0.15);
+}
+
+.status-resume .status-icon-ring {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 152, 0, 0.05));
+  color: #f57c00;
+  box-shadow: 0 0 30px rgba(255, 152, 0, 0.15);
+}
+
+.status-head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.status-title-arabic {
+  font-family: 'Amiri', 'Scheherazade New', serif;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: var(--accent);
+  opacity: 0.7;
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+
+.status-title {
+  font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.status-dua {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dua-text {
+  font-family: 'Amiri', 'Scheherazade New', serif;
+  font-size: clamp(0.85rem, 1.2vw, 1rem);
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.dua-translation {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+  font-style: italic;
+}
+
+/* Progress Section */
+.status-progress-section {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.progress-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.stat-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stat-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+}
+
+.status-badge-complete {
+  color: #2e7d32;
+}
+
+.status-badge-resume {
+  color: #f57c00;
+}
+
+/* Ornate Progress Bar */
+.progress-bar-ornate {
+  position: relative;
+}
+
+.progress-track-ornate {
+  height: 6px;
+  background: var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill-ornate {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.progress-glow {
+  position: absolute;
+  top: -2px;
+  right: 0;
+  width: 40px;
+  height: 10px;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.3), transparent);
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+.progress-markers {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding: 0 2px;
+}
+
+.marker-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.3s ease;
+}
+
+.marker-dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(154, 103, 56, 0.3);
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.5; transform: scaleX(1); }
+  50% { opacity: 1; transform: scaleX(1.4); }
+}
+
+/* ===== ACTION GRID ===== */
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.action-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  min-height: 64px;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 50%, rgba(154, 103, 56, 0.02));
+  pointer-events: none;
+}
+
+.action-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.action-card:active {
+  transform: scale(0.97);
+}
+
+.action-card .action-arrow {
+  margin-left: auto;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  opacity: 0.3;
+  transition: all 0.3s ease;
+}
+
+.action-card:hover .action-arrow {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+.action-card.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: transparent;
+  color: white;
+}
+
+.action-card.primary .action-title,
+.action-card.primary .action-desc {
+  color: white;
+}
+
+.action-card.primary .action-arrow {
+  color: rgba(255,255,255,0.6);
+}
+
+.action-card.primary:hover {
+  box-shadow: 0 8px 30px rgba(154, 103, 56, 0.3);
+  transform: translateY(-3px);
+}
+
+.action-card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.action-card-icon.insights {
+  background: rgba(33, 150, 243, 0.12);
+  color: #1976d2;
+}
+
+.action-card-icon.save {
+  background: rgba(46, 125, 50, 0.12);
+  color: #2e7d32;
+}
+
+.action-card-icon.reset {
+  background: rgba(255, 152, 0, 0.12);
+  color: #f57c00;
+}
+
+.action-card-icon.new {
+  background: rgba(156, 39, 176, 0.12);
+  color: #7b1fa2;
+}
+
+.action-card.primary .action-card-icon {
+  background: rgba(255,255,255,0.18);
+  color: white;
+}
+
+.action-card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.action-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.action-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+/* ===== QUICK SESSION SELECTOR ===== */
+.quick-session-selector {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+
+.selector-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.selector-header i {
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.selector-header span {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.selector-hint {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.surah-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+.surah-chip:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  transform: translateY(-1px);
+}
+
+.surah-chip:active {
+  transform: scale(0.97);
+}
+
+.surah-number {
+  color: var(--text-muted);
+  font-weight: 600;
+  opacity: 0.6;
+  font-size: 0.7rem;
+}
+
+.surah-name {
+  font-weight: 500;
+}
+
+.surah-name-arabic {
+  font-family: 'Amiri', 'Scheherazade New', serif;
+  font-size: 0.75rem;
+  color: var(--accent);
+  opacity: 0.7;
+  margin-left: auto;
+}
+
+/* ===== FOOTER DUA ===== */
+.session-footer-dua {
+  text-align: center;
+  padding: 12px 16px 4px;
+}
+
+.footer-dua-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footer-dua-arabic {
+  font-family: 'Amiri', 'Scheherazade New', serif;
+  font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+  color: var(--text-muted);
+  opacity: 0.6;
+  line-height: 1.6;
+}
+
+.footer-dua-translation {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.4;
+  font-style: italic;
+}
+
+/* ===== DARK THEME ===== */
+[data-theme="dark"] .status-card {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .action-card {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .action-card:hover {
+  border-color: rgba(208, 160, 107, 0.3);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .action-card.primary {
+  background: linear-gradient(135deg, #2f8b66, #74d99e);
+  color: #07150f;
+}
+
+[data-theme="dark"] .action-card.primary .action-title,
+[data-theme="dark"] .action-card.primary .action-desc {
+  color: #07150f;
+}
+
+[data-theme="dark"] .quick-session-selector {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .surah-chip {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .surah-chip:hover {
+  border-color: rgba(208, 160, 107, 0.3);
+  background: rgba(208, 160, 107, 0.08);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .status-card {
+    padding: 18px 16px 16px;
+  }
+  
+  .status-head {
+    gap: 14px;
+  }
+  
+  .status-icon-ring {
+    width: 52px;
+    height: 52px;
+    font-size: 1.4rem;
+  }
+  
+  .progress-stats {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .stat-divider {
+    display: none;
+  }
+  
+  .action-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .selector-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  
+  .corner-decoration {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .status-head {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .status-dua {
+    align-items: center;
+  }
+  
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .selector-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .surah-chip {
+    font-size: 0.7rem;
+    padding: 6px 10px;
+  }
+  
+  .decorative-line {
+    width: 30px;
+  }
+}
+/* Hidden Reveal Mode Styles */
+.active-recall-toggle.active {
+  border-color: rgba(46, 125, 100, 0.7) !important;
+  background: rgba(46, 125, 100, 0.18) !important;
+  color: #dff8ea !important;
+}
+
+.active-recall-display {
+  letter-spacing: 0;
+}
+
+.active-recall-word {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75ch;
+  margin-inline: 0.08em;
+  padding: 0.04em 0.22em;
+  border-radius: 8px;
+  transition: background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease, transform 0.22s ease;
+}
+
+.active-recall-word.active-recall-locked {
+  color: rgba(255, 250, 242, 0.78) !important;
+  background: rgba(255, 250, 242, 0.08);
+  border: 1px solid rgba(255, 250, 242, 0.13);
+  user-select: none;
+}
+
+.active-recall-word.active-recall-unlocked,
+.recitation-word-chip.word-live.word-correct {
+  animation: wordRevealPop 0.34s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.active-recall-display .recitation-word-correct {
+  background: rgba(46, 125, 100, 0.22) !important;
+  border-color: rgba(46, 125, 100, 0.68) !important;
+  color: #dff8ea !important;
+}
+
+.active-recall-display .recitation-word-incorrect {
+  background: rgba(194, 87, 58, 0.24) !important;
+  border-color: rgba(194, 87, 58, 0.72) !important;
+  color: #ffd9ce !important;
+  animation: wordErrorFlash 0.34s ease-in-out;
+}
+
+.active-recall-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-start;
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(224, 157, 50, 0.42);
+  background: rgba(224, 157, 50, 0.12);
+  color: #ffe3a6;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+[data-theme="light"] .active-recall-toggle.active {
+  color: #1f5f4b !important;
+  background: rgba(46, 125, 100, 0.12) !important;
+}
+
+[data-theme="light"] .active-recall-word.active-recall-locked {
+  color: rgba(35, 31, 28, 0.58) !important;
+  background: rgba(35, 31, 28, 0.06);
+  border-color: rgba(35, 31, 28, 0.12);
+}
+
+[data-theme="light"] .active-recall-display .recitation-word-correct {
+  color: #1f5f4b !important;
+}
+
+[data-theme="light"] .active-recall-display .recitation-word-incorrect {
+  color: #9d341f !important;
+}
+
+[data-theme="light"] .active-recall-hint {
+  color: #6c4610;
+  background: rgba(224, 157, 50, 0.14);
+}
+
+.word-hidden {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(108, 92, 82, 0.15),
+    rgba(108, 92, 82, 0.15) 10px,
+    rgba(108, 92, 82, 0.25) 10px,
+    rgba(108, 92, 82, 0.25) 20px
+  );
+  border-radius: 4px;
+  padding: 0 4px;
+  color: transparent !important;
+  user-select: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.word-revealed {
+  background: rgba(46, 125, 50, 0.15);
+  border-bottom: 2px solid #2e7d32;
+  animation: wordRevealFadeIn 0.4s ease-out;
+}
+
+.word-current {
+  background: rgba(46, 125, 50, 0.3);
+  border-bottom: 3px solid #2e7d32;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+}
+
+.word-reveal-animate {
+  animation: wordRevealPop 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.word-error-flash {
+  animation: wordErrorFlash 0.3s ease-in-out;
+  background: rgba(220, 53, 69, 0.3) !important;
+  border-bottom: 2px solid #dc3545 !important;
+}
+
+@keyframes wordRevealFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wordRevealPop {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes wordErrorFlash {
+  0%, 100% {
+    background: rgba(220, 53, 69, 0);
+  }
+  50% {
+    background: rgba(220, 53, 69, 0.5);
+  }
+}
+
+.word-correct-revealed {
+  background: linear-gradient(135deg, rgba(46, 125, 50, 0.2), rgba(46, 125, 50, 0.05));
+  border-bottom: 2px solid #2e7d32;
+}
+
+/* Luqmah Hint Styles */
+.luqmah-hint-overlay {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--surface-strong), var(--surface));
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  padding: 12px 20px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  animation: luqmahSlideUp 0.3s ease;
+  max-width: 90vw;
+}
+
+@keyframes luqmahSlideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
 /* Add to your style section */
 .confidence-heatmap-inline {
   background: var(--surface);
@@ -16571,7 +20324,8 @@ export default {
   }
 }
 .session-complete-empty {
-  background: linear-gradient(145deg, #ffffff, #fefaf5) !important;
+  border: 2px solid rgb(181, 114, 60);
+  /* background:rgb(216, 193, 168); */
   border-radius: 28px;
   padding: 2rem 1.5rem;
   box-shadow: 0 20px 35px -12px rgba(0,0,0,0.08);
@@ -27096,9 +30850,6 @@ html {
 }
 
 .hero-title {
-  margin-top: 6px;
-  font-size: 1.24rem;
-  font-weight: 500;
   letter-spacing: -0.03em;
 }
 
@@ -40511,7 +44262,7 @@ button:active {
   gap: 0.45rem !important;
   border: 1px solid var(--border) !important;
   border-radius: 12px !important;
-  background: var(--surface-strong) !important;
+  /* background: var(--surface-strong) !important; */
   color: var(--text-muted) !important;
   text-align: center !important;
 }
@@ -44549,6 +48300,1244 @@ button:active {
   text-align: center !important;
   order: 0 !important;
   animation: none !important;
+}
+
+/* Hifz journey integration: visible plan context and ayah memory states. */
+.hifz-planner-dashboard {
+  margin-top: 0.9rem !important;
+}
+
+.hifz-planner-shell,
+.hifz-planner-empty {
+  display: grid !important;
+  gap: 0.95rem !important;
+  padding: 1rem !important;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+  border-radius: 8px !important;
+  background: color-mix(in srgb, var(--surface) 95%, #f4fbf7 5%) !important;
+}
+
+.hifz-planner-empty {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+}
+
+.hifz-planner-head,
+.hifz-analytics-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 1rem !important;
+}
+
+.hifz-planner-kicker {
+  color: var(--accent) !important;
+  font-size: 0.72rem !important;
+  font-weight: 850 !important;
+  text-transform: uppercase !important;
+}
+
+.hifz-planner-head h2,
+.hifz-planner-empty h2 {
+  margin: 0.12rem 0 !important;
+  color: var(--text) !important;
+  font-size: 1.15rem !important;
+  font-weight: 850 !important;
+}
+
+.hifz-planner-head p,
+.hifz-planner-empty p {
+  margin: 0 !important;
+  color: var(--text-muted) !important;
+  font-size: 0.84rem !important;
+}
+
+.hifz-planner-actions,
+.hifz-recovery-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  gap: 0.45rem !important;
+}
+
+.hifz-plan-health {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  min-height: 32px !important;
+  padding: 0 0.7rem !important;
+  border-radius: 999px !important;
+  border: 1px solid transparent !important;
+  font-size: 0.78rem !important;
+  font-weight: 850 !important;
+  white-space: nowrap !important;
+}
+
+.health-onTrack {
+  color: #17623f !important;
+  background: rgba(37, 148, 91, 0.12) !important;
+  border-color: rgba(37, 148, 91, 0.3) !important;
+}
+
+.health-slightlyBehind {
+  color: #805810 !important;
+  background: rgba(218, 165, 32, 0.16) !important;
+  border-color: rgba(218, 165, 32, 0.34) !important;
+}
+
+.health-fallingBehind {
+  color: #9b3528 !important;
+  background: rgba(202, 84, 62, 0.14) !important;
+  border-color: rgba(202, 84, 62, 0.34) !important;
+}
+
+.health-paused {
+  color: #58616a !important;
+  background: rgba(108, 117, 125, 0.12) !important;
+  border-color: rgba(108, 117, 125, 0.28) !important;
+}
+
+.hifz-planner-metrics {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 0.55rem !important;
+}
+
+.hifz-planner-metric,
+.hifz-memory-stats span,
+.hifz-next-reviews span,
+.hifz-detailed-section span {
+  min-width: 0 !important;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+  border-radius: 8px !important;
+  background: color-mix(in srgb, var(--surface) 94%, white 6%) !important;
+}
+
+.hifz-planner-metric {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  gap: 0.18rem 0.45rem !important;
+  align-items: center !important;
+  padding: 0.62rem !important;
+}
+
+.hifz-planner-metric i {
+  grid-row: span 2 !important;
+  color: var(--accent) !important;
+}
+
+.hifz-planner-metric strong,
+.hifz-memory-stats strong {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: var(--text) !important;
+  font-size: 0.94rem !important;
+}
+
+.hifz-planner-metric small,
+.hifz-memory-stats small,
+.hifz-next-reviews small,
+.hifz-detailed-section small,
+.hifz-detailed-section em {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: var(--text-muted) !important;
+  font-size: 0.72rem !important;
+  font-style: normal !important;
+}
+
+.hifz-recovery-card {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1rem !important;
+  padding: 0.85rem !important;
+  border: 1px solid rgba(218, 165, 32, 0.38) !important;
+  border-radius: 8px !important;
+  background: rgba(255, 248, 226, 0.78) !important;
+}
+
+.hifz-recovery-card strong,
+.hifz-recovery-card span {
+  display: block !important;
+}
+
+.hifz-recovery-card strong {
+  color: #805810 !important;
+  font-weight: 850 !important;
+}
+
+.hifz-recovery-card span {
+  color: #7b6a45 !important;
+  font-size: 0.8rem !important;
+}
+
+.hifz-planner-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) !important;
+  gap: 0.75rem !important;
+}
+
+.hifz-planner-panel,
+.hifz-analytics-layer,
+.hifz-detailed-section {
+  display: grid !important;
+  gap: 0.75rem !important;
+  padding: 0.85rem !important;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+  border-radius: 8px !important;
+  background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
+}
+
+.hifz-panel-title {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  color: var(--text) !important;
+  font-weight: 850 !important;
+}
+
+.hifz-panel-title i {
+  color: var(--accent) !important;
+}
+
+.hifz-memory-stats,
+.hifz-next-reviews {
+  display: grid !important;
+  gap: 0.45rem !important;
+}
+
+.hifz-memory-stats {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+.hifz-memory-stats span,
+.hifz-next-reviews span {
+  display: grid !important;
+  gap: 0.15rem !important;
+  padding: 0.55rem !important;
+}
+
+.hifz-next-reviews {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.hifz-next-reviews strong {
+  color: var(--text) !important;
+  font-size: 0.8rem !important;
+}
+
+.hifz-retention-insights {
+  display: grid !important;
+  gap: 0.45rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.hifz-retention-insights li {
+  padding: 0.55rem 0.65rem !important;
+  border-radius: 8px !important;
+  background: color-mix(in srgb, var(--surface) 90%, var(--accent) 10%) !important;
+  color: var(--text) !important;
+  font-size: 0.8rem !important;
+}
+
+.hifz-detailed-planner-analytics {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.65rem !important;
+}
+
+.hifz-detailed-section strong {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  color: var(--text) !important;
+}
+
+.hifz-detailed-section strong i {
+  color: var(--accent) !important;
+}
+
+.hifz-detailed-section span {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 0.15rem 0.45rem !important;
+  padding: 0.5rem !important;
+}
+
+.hifz-detailed-section b {
+  color: var(--accent) !important;
+}
+
+.hifz-detailed-section em {
+  grid-column: 1 / -1 !important;
+}
+
+.hifz-journey-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto minmax(220px, 0.55fr) !important;
+  gap: 0.85rem !important;
+  align-items: center !important;
+  margin-top: 0.9rem !important;
+  padding: 0.85rem 1rem !important;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--surface) 94%, var(--accent) 6%) !important;
+  box-shadow: none !important;
+}
+
+.hifz-journey-main,
+.hifz-journey-feedback {
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 0.5rem !important;
+}
+
+.hifz-journey-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  min-width: 0 !important;
+  font-weight: 800 !important;
+  color: var(--text) !important;
+}
+
+.hifz-journey-title span {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.hifz-journey-edit {
+  width: 30px !important;
+  height: 30px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  flex: 0 0 auto !important;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent) !important;
+  border-radius: 8px !important;
+  background: color-mix(in srgb, var(--surface) 90%, white 10%) !important;
+  color: var(--text-muted) !important;
+}
+
+.hifz-journey-stats,
+.hifz-journey-feedback span {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  min-width: 0 !important;
+}
+
+.hifz-journey-stats {
+  flex-wrap: wrap !important;
+  color: var(--text-muted) !important;
+  font-size: 0.78rem !important;
+}
+
+.hifz-journey-stats span,
+.hifz-journey-feedback span {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.hifz-journey-stats i,
+.hifz-journey-feedback i {
+  color: var(--accent) !important;
+  flex: 0 0 auto !important;
+}
+
+.hifz-journey-features {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.42rem !important;
+}
+
+.hifz-feature-icon {
+  width: 34px !important;
+  height: 34px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border-radius: 10px !important;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent) !important;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface) 90%) !important;
+  color: color-mix(in srgb, var(--accent) 80%, var(--text) 20%) !important;
+}
+
+.hifz-journey-feedback {
+  font-size: 0.76rem !important;
+  color: var(--text-muted) !important;
+}
+
+.hifz-simple-analytics {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0.55rem !important;
+  padding-top: 0.65rem !important;
+  border-top: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+}
+
+.hifz-simple-analytics-item {
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, auto) minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 0.38rem !important;
+  padding: 0.5rem 0.6rem !important;
+  border-radius: 10px !important;
+  background: color-mix(in srgb, var(--surface) 88%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent) !important;
+}
+
+.hifz-simple-analytics-item i {
+  color: var(--accent) !important;
+}
+
+.hifz-simple-analytics-item strong {
+  color: var(--text) !important;
+  font-size: 0.95rem !important;
+  line-height: 1 !important;
+}
+
+.hifz-simple-analytics-item small {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: var(--text-muted) !important;
+  font-size: 0.72rem !important;
+}
+
+.hifz-journey-feedback .strength-strong {
+  color: #2f6f58 !important;
+}
+
+.hifz-journey-feedback .strength-steady {
+  color: #8a661f !important;
+}
+
+.hifz-journey-feedback .strength-review {
+  color: #a44a34 !important;
+}
+
+.verse-card.hifz-ayah-due {
+  border-color: color-mix(in srgb, #c78a2f 46%, var(--border)) !important;
+  box-shadow: inset 4px 0 0 #c78a2f, 0 14px 32px rgba(139, 94, 60, 0.1) !important;
+}
+
+.verse-card.hifz-ayah-weak {
+  background: color-mix(in srgb, var(--surface) 88%, #fff2df 12%) !important;
+}
+
+.verse-card.hifz-ayah-mastered {
+  opacity: 0.94 !important;
+  border-color: color-mix(in srgb, #4d9b73 24%, var(--border)) !important;
+}
+
+.mushaf-ayah.hifz-ayah-due .mushaf-ayah-text,
+.mushaf-ayah.hifz-ayah-weak .mushaf-ayah-text {
+  box-shadow: inset 0 -0.12em 0 rgba(199, 138, 47, 0.42) !important;
+}
+
+.mushaf-ayah.hifz-ayah-mastered .mushaf-ayah-text {
+  opacity: 0.78 !important;
+}
+
+.verse-status-badge-new {
+  background: rgba(47, 111, 88, 0.1) !important;
+  border-color: rgba(47, 111, 88, 0.22) !important;
+  color: #2f6f58 !important;
+}
+
+.verse-status-badge-due {
+  background: rgba(199, 138, 47, 0.13) !important;
+  border-color: rgba(199, 138, 47, 0.28) !important;
+  color: #8a661f !important;
+}
+
+.verse-status-badge-weak {
+  background: rgba(194, 91, 63, 0.12) !important;
+  border-color: rgba(194, 91, 63, 0.24) !important;
+  color: #9b432f !important;
+}
+
+.verse-status-badge-mastered {
+  background: rgba(77, 155, 115, 0.11) !important;
+  border-color: rgba(77, 155, 115, 0.24) !important;
+  color: #2f6f58 !important;
+}
+
+.analytics-insight-layer,
+.detailed-analytics-system {
+  margin-top: 1rem !important;
+}
+
+.analytics-insight-layer,
+.detailed-analytics-section {
+  display: grid !important;
+  gap: 0.75rem !important;
+  padding: 0.95rem !important;
+  border-radius: 12px !important;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+  background: color-mix(in srgb, var(--surface) 94%, var(--accent) 6%) !important;
+}
+
+.analytics-section-head {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.65rem !important;
+  min-width: 0 !important;
+}
+
+.analytics-section-head > i {
+  width: 34px !important;
+  height: 34px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  flex: 0 0 auto !important;
+  border-radius: 10px !important;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface) 88%) !important;
+  color: var(--accent) !important;
+}
+
+.analytics-section-head strong {
+  display: block !important;
+  color: var(--text) !important;
+  line-height: 1.15 !important;
+}
+
+.analytics-section-head small {
+  display: block !important;
+  color: var(--text-muted) !important;
+  margin-top: 0.15rem !important;
+}
+
+.analytics-insight-list {
+  display: grid !important;
+  gap: 0.5rem !important;
+}
+
+.analytics-insight-list span {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  min-width: 0 !important;
+  color: var(--text) !important;
+  font-size: 0.86rem !important;
+}
+
+.analytics-insight-list i {
+  color: #2f6f58 !important;
+}
+
+.detailed-analytics-system {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0.85rem !important;
+}
+
+.detailed-analytics-rows {
+  display: grid !important;
+  gap: 0.52rem !important;
+}
+
+.detailed-analytics-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 0.25rem 0.75rem !important;
+  align-items: baseline !important;
+  padding: 0.62rem 0.7rem !important;
+  border-radius: 9px !important;
+  background: color-mix(in srgb, var(--surface) 92%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent) !important;
+}
+
+.detailed-analytics-row span {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: var(--text) !important;
+  font-weight: 650 !important;
+}
+
+.detailed-analytics-row strong {
+  color: var(--accent) !important;
+}
+
+.detailed-analytics-row small {
+  grid-column: 1 / -1 !important;
+  color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .hifz-journey-card {
+  background: rgba(255, 255, 255, 0.055) !important;
+  border-color: rgba(255, 236, 216, 0.14) !important;
+}
+
+[data-theme="dark"] .hifz-planner-shell,
+[data-theme="dark"] .hifz-planner-empty,
+[data-theme="dark"] .hifz-planner-panel,
+[data-theme="dark"] .hifz-analytics-layer,
+[data-theme="dark"] .hifz-planner-metric,
+[data-theme="dark"] .hifz-memory-stats span,
+[data-theme="dark"] .hifz-next-reviews span,
+[data-theme="dark"] .hifz-detailed-section,
+[data-theme="dark"] .hifz-detailed-section span,
+[data-theme="dark"] .hifz-retention-insights li {
+  background: rgba(255, 255, 255, 0.055) !important;
+  border-color: rgba(255, 236, 216, 0.13) !important;
+}
+
+[data-theme="dark"] .hifz-recovery-card {
+  background: rgba(115, 82, 28, 0.22) !important;
+  border-color: rgba(242, 208, 154, 0.22) !important;
+}
+
+[data-theme="dark"] .hifz-journey-edit,
+[data-theme="dark"] .hifz-feature-icon,
+[data-theme="dark"] .hifz-simple-analytics-item,
+[data-theme="dark"] .analytics-insight-layer,
+[data-theme="dark"] .detailed-analytics-section,
+[data-theme="dark"] .detailed-analytics-row {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 236, 216, 0.13) !important;
+}
+
+[data-theme="dark"] .hifz-journey-feedback .strength-strong,
+[data-theme="dark"] .verse-status-badge-mastered {
+  color: #a8f0c9 !important;
+}
+
+[data-theme="dark"] .hifz-journey-feedback .strength-steady,
+[data-theme="dark"] .verse-status-badge-due {
+  color: #f2d09a !important;
+}
+
+[data-theme="dark"] .hifz-journey-feedback .strength-review,
+[data-theme="dark"] .verse-status-badge-weak {
+  color: #f2b0a6 !important;
+}
+
+.session-evaluation-ayah {
+  display: inline;
+  border-radius: 8px;
+  padding: 0.08em 0.12em;
+}
+
+.session-evaluation-correct {
+  background: rgba(47, 111, 88, 0.08);
+}
+
+.session-evaluation-partial {
+  background: rgba(199, 138, 47, 0.1);
+}
+
+.session-evaluation-incorrect {
+  background: rgba(194, 91, 63, 0.1);
+}
+
+.session-evaluation-skipped {
+  background: rgba(108, 117, 125, 0.12);
+}
+
+.session-evaluation-notAttempted {
+  background: transparent;
+}
+
+.recitation-word-skipped,
+.recitation-word-chip.word-skipped {
+  background: rgba(108, 117, 125, 0.16) !important;
+  border-color: rgba(108, 117, 125, 0.3) !important;
+  color: #5f676f !important;
+}
+
+.recitation-word-notAttempted,
+.recitation-word-chip.word-notAttempted {
+  background: transparent !important;
+  border-color: rgba(108, 117, 125, 0.18) !important;
+  color: var(--text-muted) !important;
+}
+
+@media (max-width: 900px) {
+  .hifz-planner-head,
+  .hifz-analytics-head,
+  .hifz-recovery-card,
+  .hifz-planner-empty {
+    align-items: stretch !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .hifz-planner-actions,
+  .hifz-recovery-actions {
+    justify-content: flex-start !important;
+  }
+
+  .hifz-planner-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .hifz-planner-grid,
+  .hifz-detailed-planner-analytics {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hifz-memory-stats,
+  .hifz-next-reviews {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .hifz-journey-card {
+    grid-template-columns: 1fr !important;
+    align-items: stretch !important;
+  }
+
+  .hifz-simple-analytics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .hifz-journey-features {
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .hifz-planner-metrics,
+  .hifz-memory-stats,
+  .hifz-next-reviews {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hifz-planner-actions .btn,
+  .hifz-recovery-actions .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .hifz-simple-analytics {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* App-wide responsive hardening: final layer after legacy session styles. */
+.app,
+.main,
+.content,
+.workspace,
+.workspace-main,
+.workspace-shell,
+.workspace-quick-controls,
+.tools,
+.modal-content,
+.verse-card,
+.hifz-planner-shell,
+.hifz-planner-empty,
+.hifz-planner-panel,
+.hifz-analytics-layer,
+.recordings-library-modal,
+.memorisation-checker-modal,
+.self-check-modal {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.app {
+  overflow-x: clip !important;
+}
+
+.main.container {
+  width: min(100%, 1440px) !important;
+  padding-inline: clamp(0.75rem, 2vw, 1.5rem) !important;
+}
+
+.content,
+.workspace {
+  overflow-x: clip !important;
+}
+
+.workspace {
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+  border-radius: 16px !important;
+  background: color-mix(in srgb, var(--surface) 84%, transparent) !important;
+}
+
+.workspace-shell,
+.workspace-quick-controls,
+.verse-card,
+.hifz-planner-shell,
+.hifz-planner-empty,
+.hifz-planner-panel,
+.hifz-analytics-layer {
+  border-radius: 12px !important;
+}
+
+.workspace-shell-head,
+.workspace-shell-actions,
+.action-buttons-group,
+.session-complete-actions,
+.continue-session-card,
+.continue-session-actions,
+.offcanvas-launcher-card,
+.hifz-planner-head,
+.hifz-analytics-head,
+.hifz-planner-actions,
+.hifz-recovery-actions,
+.workspace-applied-pills,
+.mushaf-pill-toolbar,
+.reading-toolbar-group {
+  min-width: 0 !important;
+}
+
+.workspace-shell-head,
+.continue-session-card,
+.offcanvas-launcher-card,
+.hifz-planner-head,
+.hifz-analytics-head,
+.hifz-recovery-card,
+.hifz-planner-empty {
+  gap: clamp(0.75rem, 2vw, 1.25rem) !important;
+}
+
+.action-buttons-group,
+.workspace-shell-actions,
+.hifz-planner-actions,
+.hifz-recovery-actions,
+.session-complete-actions,
+.continue-session-actions,
+.workspace-applied-pills,
+.mushaf-pill-toolbar,
+.reading-toolbar-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+}
+
+.action-btn,
+.cta,
+.tools-btn,
+.toolbar-chip,
+.font-dropdown-trigger,
+.mushaf-toolbar-trigger,
+.mushaf-pill,
+.session-resume-btn,
+.session-delete-btn,
+.session-export-btn,
+.top-card-ellipsis,
+.workspace-applied-pill,
+.btn {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  max-width: 100% !important;
+}
+
+.action-btn,
+.cta,
+.tools-btn,
+.toolbar-chip,
+.font-dropdown-trigger,
+.mushaf-toolbar-trigger,
+.mushaf-pill,
+.session-resume-btn,
+.session-delete-btn,
+.session-export-btn,
+.top-card-menu button,
+.custom-dropdown-menu .dropdown-item {
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.45rem !important;
+}
+
+.action-btn span,
+.cta span,
+.tools-btn span,
+.toolbar-chip span,
+.font-dropdown-trigger span,
+.mushaf-toolbar-trigger span,
+.mushaf-pill span,
+.session-resume-btn span,
+.session-delete-btn span {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.top-card-menu,
+.font-dropdown-menu,
+.mushaf-toolbar-menu,
+.custom-dropdown-menu {
+  max-width: min(92vw, 360px) !important;
+  overflow-wrap: anywhere !important;
+}
+
+.hifz-planner-metrics,
+.hifz-planner-grid,
+.hifz-memory-stats,
+.hifz-next-reviews,
+.hifz-detailed-planner-analytics,
+.hifz-simple-analytics,
+.controls-analytics-grid,
+.recitation-result-stats,
+.recitation-insights-grid,
+.stats-grid,
+.analytics-grid {
+  min-width: 0 !important;
+}
+
+.verse-card {
+  padding: clamp(0.9rem, 2vw, 1.25rem) !important;
+  overflow-wrap: anywhere !important;
+}
+
+.verse-arabic,
+.mushaf-ayah-text,
+.recitation-live-word-stream,
+.recitation-word-stream {
+  max-width: 100% !important;
+  overflow-wrap: anywhere !important;
+}
+
+.verse-arabic,
+.mushaf-ayah-text {
+  font-size: clamp(1.85rem, 6vw, var(--quran-font-size, 2.5rem)) !important;
+  line-height: 2.05 !important;
+}
+
+.recitation-word-chip,
+.wbw-word,
+.tajweed-mark,
+word {
+  max-width: 100% !important;
+}
+
+.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: max(1rem, env(safe-area-inset-top, 0px)) 1rem max(1rem, env(safe-area-inset-bottom, 0px)) !important;
+  overflow: auto !important;
+  overscroll-behavior: contain !important;
+}
+
+.modal-content,
+.save-name-modal,
+.session-exit-modal,
+.memorisation-checker-modal,
+.recordings-library-modal,
+.keyboard-shortcuts-modal {
+  width: min(100%, 960px) !important;
+  max-height: calc(100dvh - 2rem) !important;
+  overflow: hidden auto !important;
+}
+
+.modal-header,
+.modal-footer,
+.memorisation-checker-footer,
+.recordings-library-footer {
+  flex-wrap: wrap !important;
+  gap: 0.65rem !important;
+}
+
+.modal-footer,
+.memorisation-checker-footer,
+.recordings-library-footer {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 2 !important;
+  background: var(--surface-strong) !important;
+}
+
+.tools {
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+.tools-body {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.tools-footer {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 3 !important;
+  background: var(--surface-strong) !important;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.field,
+.field-stack,
+.sheet-content,
+.range-row,
+.range-inputs,
+.setting-row,
+.setup-grid,
+.controls-grid {
+  min-width: 0 !important;
+}
+
+.input,
+.select,
+input,
+select,
+textarea {
+  max-width: 100% !important;
+  min-height: 44px !important;
+}
+
+textarea {
+  min-height: 112px !important;
+}
+
+.comparison-table-wrap,
+.table-responsive,
+.analytics-table-wrap {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+@media (min-width: 1200px) {
+  .main.container {
+    padding-inline: clamp(1.25rem, 3vw, 2.25rem) !important;
+  }
+
+  .workspace-main {
+    max-width: 1180px !important;
+    margin-inline: auto !important;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .main.container {
+    padding-inline: 0.85rem !important;
+  }
+
+  .workspace {
+    border-radius: 12px !important;
+  }
+
+  .workspace-shell-head,
+  .continue-session-card,
+  .offcanvas-launcher-card,
+  .hifz-planner-head,
+  .hifz-analytics-head,
+  .hifz-recovery-card,
+  .hifz-planner-empty {
+    align-items: stretch !important;
+    grid-template-columns: 1fr !important;
+    flex-direction: column !important;
+  }
+
+  .workspace-shell-actions,
+  .action-buttons-group,
+  .hifz-planner-actions,
+  .hifz-recovery-actions,
+  .continue-session-actions,
+  .session-complete-actions {
+    width: 100% !important;
+    justify-content: stretch !important;
+  }
+
+  .action-buttons-group,
+  .mushaf-pill-toolbar,
+  .workspace-applied-pills {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overscroll-behavior-inline: contain !important;
+    scroll-snap-type: x proximity !important;
+    padding-bottom: 0.25rem !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .action-buttons-group > *,
+  .mushaf-pill-toolbar > *,
+  .workspace-applied-pills > * {
+    flex: 0 0 auto !important;
+    scroll-snap-align: start !important;
+  }
+
+  .workspace-shell-copy h1 {
+    font-size: clamp(1.45rem, 7vw, 2.1rem) !important;
+  }
+
+  .hifz-planner-metrics,
+  .hifz-memory-stats,
+  .hifz-next-reviews,
+  .hifz-simple-analytics,
+  .controls-analytics-grid,
+  .recitation-result-stats,
+  .recitation-insights-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .main.container {
+    padding-inline: 0.5rem !important;
+  }
+
+  .workspace {
+    border-inline: 0 !important;
+    border-radius: 0 !important;
+    margin-inline: -0.5rem !important;
+  }
+
+  .workspace-shell,
+  .workspace-quick-controls,
+  .hifz-planner-shell,
+  .hifz-planner-empty,
+  .hifz-planner-panel,
+  .hifz-analytics-layer,
+  .verse-card {
+    border-radius: 8px !important;
+  }
+
+  .action-buttons-group {
+    margin-inline: -0.25rem !important;
+    padding-inline: 0.25rem !important;
+  }
+
+  .action-btn {
+    flex: 0 0 min(82vw, 260px) !important;
+    padding-inline: 0.8rem !important;
+  }
+
+  .top-card-ellipsis {
+    flex: 0 0 44px !important;
+  }
+
+  .workspace-quick-controls,
+  .hifz-planner-shell,
+  .hifz-planner-empty {
+    padding: 0.85rem !important;
+  }
+
+  .hifz-planner-metrics,
+  .hifz-memory-stats,
+  .hifz-next-reviews,
+  .hifz-simple-analytics,
+  .controls-analytics-grid,
+  .recitation-result-stats,
+  .recitation-insights-grid,
+  .stats-grid,
+  .analytics-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hifz-planner-actions .btn,
+  .hifz-recovery-actions .btn,
+  .continue-session-actions .cta,
+  .session-complete-actions .cta,
+  .tools-footer .tools-btn {
+    width: 100% !important;
+  }
+
+  .verse-arabic,
+  .mushaf-ayah-text {
+    font-size: clamp(1.65rem, 9vw, 2.3rem) !important;
+    line-height: 2.15 !important;
+  }
+
+  .modal-overlay {
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+
+  .modal-content,
+  .save-name-modal,
+  .session-exit-modal,
+  .memorisation-checker-modal,
+  .recordings-library-modal,
+  .keyboard-shortcuts-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    border-inline: 0 !important;
+  }
+
+  .modal-footer,
+  .memorisation-checker-footer,
+  .recordings-library-footer {
+    padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .modal-footer > *,
+  .memorisation-checker-footer > *,
+  .recordings-library-footer > * {
+    flex: 1 1 100% !important;
+  }
+
+  .tools {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 0 !important;
+  }
+
+  .tools-top,
+  .tools-body,
+  .tools-footer {
+    padding-inline: max(0.85rem, env(safe-area-inset-left, 0px)) max(0.85rem, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  .tools-tabs {
+    overflow-x: auto !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(112px, 1fr) !important;
+    grid-template-columns: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .range-row,
+  .range-inputs,
+  .setting-row,
+  .setup-grid,
+  .controls-grid,
+  .memorisation-checker-recorder-grid,
+  .recitation-check-idle {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 359.98px) {
+  .main.container {
+    padding-inline: 0.35rem !important;
+  }
+
+  .workspace {
+    margin-inline: -0.35rem !important;
+  }
+
+  .workspace-shell,
+  .workspace-quick-controls,
+  .hifz-planner-shell,
+  .hifz-planner-empty,
+  .hifz-planner-panel,
+  .hifz-analytics-layer,
+  .verse-card {
+    padding-inline: 0.7rem !important;
+  }
+
+  .action-btn {
+    flex-basis: min(88vw, 240px) !important;
+  }
 }
 
 </style>

@@ -59,6 +59,8 @@ const chaining = await loadModule('resources/js/composables/useChaining.js')
 const retention = await loadModule('resources/js/composables/useRetentionZones.js')
 const planner = await loadModule('resources/js/composables/useDailyPlanner.js')
 const session = await loadModule('resources/js/composables/useSessionEngine.js')
+const spacedRepetition = await loadModule('resources/js/engine/spaced_repetition_memory.js')
+const hifzSessionEngine = await loadModule('resources/js/engine/hifz_session_engine.js')
 const memorisationSource = await fs.readFile(path.join(root, 'resources/js/components/Memorisation.vue'), 'utf8')
 
 const { loadMutqinState, saveMutqinState, useMutqinPersistence, watchMutqinState } = persistence.namespace
@@ -68,6 +70,8 @@ const { buildChainQueue, recordChainResult } = chaining.namespace
 const { getDueReviews, scoreRetention } = retention.namespace
 const { createDailyPlan } = planner.namespace
 const { startMutqinSession, moveMutqinSession, completeMutqinSession } = session.namespace
+const { updateAyahProgress, AYAH_PROGRESS_STORAGE_KEY } = spacedRepetition.namespace
+const { loadAyahProgress } = hifzSessionEngine.namespace
 
 function resetStorage() {
   localStore.clear()
@@ -80,6 +84,38 @@ const verses = [
   { key: '110:3', number: 3, arabic: 'c' },
   { key: '110:4', number: 4, arabic: 'd' }
 ]
+
+assert.equal(AYAH_PROGRESS_STORAGE_KEY, 'mutqin_ayah_progress')
+updateAyahProgress(112, 1, 1)
+updateAyahProgress(112, 1, 0.5)
+const savedAyahProgress = JSON.parse(localStore.get('mutqin_ayah_progress'))
+assert.deepEqual(
+  Object.keys(savedAyahProgress['112:1']).sort(),
+  ['attempts', 'ayah', 'lastReviewed', 'lastScore', 'masteryScore', 'nextReview', 'repetitionCount', 'surah'].sort()
+)
+assert.equal(savedAyahProgress['112:1'].surah, 112)
+assert.equal(savedAyahProgress['112:1'].ayah, 1)
+assert.equal(savedAyahProgress['112:1'].attempts, 2)
+assert.equal(savedAyahProgress['112:1'].lastScore, 0.5)
+localStore.set('mutqin_spaced_repetition_memory', JSON.stringify({
+  '112:2': {
+    masteryScore: 0.25,
+    repetitionCount: 1,
+    lastReviewed: '2026-06-01T00:00:00.000Z',
+    nextReview: '2026-06-02T00:00:00.000Z'
+  }
+}))
+const mergedAyahProgress = loadAyahProgress()
+assert.equal(mergedAyahProgress['112:1'].attempts, 2)
+assert.equal(mergedAyahProgress['112:2'].masteryScore, 0.25)
+updateAyahProgress(112, 3, 0)
+const migratedAyahProgress = JSON.parse(localStore.get('mutqin_ayah_progress'))
+assert.deepEqual(
+  Object.keys(migratedAyahProgress['112:2']).sort(),
+  ['attempts', 'ayah', 'lastReviewed', 'lastScore', 'masteryScore', 'nextReview', 'repetitionCount', 'surah'].sort()
+)
+assert.equal(migratedAyahProgress['112:2'].surah, 112)
+assert.equal(migratedAyahProgress['112:2'].ayah, 2)
 
 const state = loadMutqinState()
 const store = useMutqinPersistence()

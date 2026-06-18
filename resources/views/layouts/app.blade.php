@@ -126,16 +126,22 @@
             margin: 0 auto;
             padding: 14px var(--gutter);
             min-height: var(--nav-h);
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            column-gap: 24px;
         }
 
         .navbar-brand {
             padding: 0;
-            margin-inline-end: 48px;
+            margin-inline-end: 0;
         }
 
         .app-navbar-logo {
             height: 56px;
             width: auto;
+            filter: none !important;
+            mix-blend-mode: normal;
         }
 
         .navbar-toggler {
@@ -161,6 +167,27 @@
         .nav-links-desktop {
             display: flex;
             gap: 12px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .navbar-collapse {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        .navbar-nav-shell {
+            flex: 1 1 auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-auth-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .nav-link {
@@ -371,6 +398,7 @@
             .navbar-shell {
                 padding: 12px var(--gutter-tight);
                 min-height: auto;
+                display: flex;
             }
 
             .app-navbar-logo {
@@ -411,6 +439,11 @@
                 flex-direction: column;
                 width: 100%;
                 gap: 8px;
+                align-items: stretch;
+            }
+
+            .navbar-nav-shell {
+                width: 100%;
             }
             
             .nav-link {
@@ -419,6 +452,7 @@
                 min-height: var(--tap);
                 display: flex;
                 align-items: center;
+                overflow-wrap: anywhere;
             }
             
             .app-navbar-actions {
@@ -467,6 +501,7 @@
             
             .dropdown-item {
                 padding: 12px 16px;
+                min-height: var(--tap);
             }
         }
 
@@ -509,13 +544,34 @@
                 width: 54px;
                 height: 54px;
                 padding: 0;
-                border-radius: 16px;
+                border-radius: 8px;
             }
 
             .navbar-collapse {
                 top: calc(env(safe-area-inset-top, 0px) + 74px);
                 height: calc(100dvh - (env(safe-area-inset-top, 0px) + 74px));
                 padding: 16px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .navbar-shell {
+                padding-inline: 10px;
+            }
+
+            .app-navbar-logo {
+                height: 38px;
+            }
+
+            .navbar-toggler {
+                width: 48px;
+                height: 48px;
+            }
+
+            .navbar-collapse {
+                top: calc(env(safe-area-inset-top, 0px) + 64px);
+                height: calc(100dvh - (env(safe-area-inset-top, 0px) + 64px));
+                padding: 12px;
             }
         }
 
@@ -798,6 +854,7 @@
             display: flex;
             flex-direction: column;
             min-height: 430px;
+            min-width: 0;
         }
 
         .billing-card-featured {
@@ -931,6 +988,53 @@
                 min-height: auto;
             }
         }
+
+        @media (max-width: 575.98px) {
+            .billing-page {
+                padding-block: 24px 42px;
+            }
+
+            .billing-hero {
+                gap: 16px;
+            }
+
+            .billing-hero h1 {
+                font-size: clamp(28px, 11vw, 38px);
+                line-height: 1.08;
+                overflow-wrap: anywhere;
+            }
+
+            .billing-status-panel,
+            .billing-card,
+            .billing-confirmation {
+                padding: 18px;
+                border-radius: 8px;
+            }
+
+            .billing-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .billing-price {
+                font-size: 30px;
+            }
+
+            .billing-primary-btn,
+            .billing-secondary-btn,
+            .billing-link-btn {
+                min-height: 48px;
+                white-space: normal;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .billing-status-panel,
+            .billing-card,
+            .billing-confirmation {
+                padding: 14px;
+            }
+        }
     </style>
 
 
@@ -944,7 +1048,7 @@
                     id="appNavbarLogo"
                     src="/images/logo.png"
                     data-logo-light="/images/logo.png"
-                    data-logo-dark="/images/dark_logo.png"
+                    data-logo-dark="/images/logo.png"
                     alt="Mutqin"
                     class="app-navbar-logo"
                 >
@@ -955,11 +1059,14 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <div class="navbar-nav nav-links-desktop me-auto">
-                    <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
+                <div class="navbar-nav-shell">
+                    <div class="navbar-nav nav-links-desktop">
+                        <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
+                        <a class="nav-link {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}">Memorisation</a>
+                    </div>
                 </div>
 
-                <div class="d-flex align-items-center gap-3 ms-auto app-navbar-actions">
+                <div class="d-flex align-items-center gap-3 app-navbar-actions">
                     <!-- <div class="lang-switcher" id="globalLangSwitcher" role="group" aria-label="{{ __('ui.language_switcher') }}">
                         <button type="button" class="lang-btn" data-locale="en" aria-label="{{ __('ui.switch_language', ['language' => __('ui.english')]) }}">EN</button>
                         <button type="button" class="lang-btn" data-locale="ar" aria-label="{{ __('ui.switch_language', ['language' => __('ui.arabic')]) }}">AR</button>
@@ -988,6 +1095,12 @@
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li> -->
+                                <button type="submit" class="dropdown-item" role="menuitem">
+                                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>Profile
+                                </button>
+                                <button type="submit" class="dropdown-item" role="menuitem">
+                                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>Billing
+                                </button>
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                                         @csrf
@@ -999,7 +1112,7 @@
                             </ul>
                         </div>
                     @else
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="app-auth-links">
                             <a class="nav-link" href="{{ route('login') }}" data-i18n="login">{{ __('ui.login') }}</a>
                             <a class="nav-link" href="{{ route('register') }}" data-i18n="register">{{ __('ui.register') }}</a>
                         </div>
@@ -1060,7 +1173,7 @@
                 const logo = document.getElementById('appNavbarLogo');
                 if (logo) {
                     const lightSrc = logo.getAttribute('data-logo-light') || '/images/logo.png';
-                    const darkSrc = logo.getAttribute('data-logo-dark') || '/images/dark_logo.png';
+                    const darkSrc = logo.getAttribute('data-logo-dark') || '/images/logo.png';
                     logo.src = theme === 'dark' ? darkSrc : lightSrc;
                 }
             }

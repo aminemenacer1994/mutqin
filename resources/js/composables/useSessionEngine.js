@@ -1,4 +1,5 @@
 import { mutateMutqinState } from './useMutqinPersistence'
+import { runSilentAiEvaluation } from '../engine/silent_ai_evaluation'
 
 function queueKey(item = {}) {
   return [
@@ -104,8 +105,27 @@ export function startMutqinSession(state, { mode = 'beginner', queue = [], confi
   })
 }
 
-export function moveMutqinSession(state, index) {
+function runSessionEvaluation(queueItem = {}, evaluation = null) {
+  if (!evaluation || typeof evaluation !== 'object') return null
+  return runSilentAiEvaluation({
+    ...evaluation,
+    ayahId: evaluation.ayahId || queueItem.ayahId,
+    verse: evaluation.verse || queueItem.verse,
+    mode: evaluation.mode || queueItem.phase
+  })
+}
+
+export function moveMutqinSession(state, index, options = {}) {
   return mutateMutqinState(state, draft => {
+    const currentItem = draft.sessionState.queue?.[draft.sessionState.current_index || 0] || null
+    const silentEvaluation = runSessionEvaluation(currentItem, options.evaluation)
+    if (silentEvaluation) {
+      draft.sessionState.lastSilentEvaluation = {
+        ...silentEvaluation,
+        ayahId: currentItem?.ayahId || options.evaluation?.ayahId || null,
+        evaluated_at: new Date().toISOString()
+      }
+    }
     const nextIndex = Math.max(0, Math.min(Number(index || 0), Math.max((draft.sessionState.queue || []).length - 1, 0)))
     draft.sessionState.current_index = nextIndex
     draft.sessionState.phase = draft.sessionState.queue?.[nextIndex]?.phase || draft.sessionState.phase
@@ -113,9 +133,18 @@ export function moveMutqinSession(state, index) {
   })
 }
 
-export function completeMutqinSession(state) {
+export function completeMutqinSession(state, options = {}) {
   return mutateMutqinState(state, draft => {
     if (!draft.sessionState.active) return draft.sessionState
+    const currentItem = draft.sessionState.queue?.[draft.sessionState.current_index || 0] || null
+    const silentEvaluation = runSessionEvaluation(currentItem, options.evaluation)
+    if (silentEvaluation) {
+      draft.sessionState.lastSilentEvaluation = {
+        ...silentEvaluation,
+        ayahId: currentItem?.ayahId || options.evaluation?.ayahId || null,
+        evaluated_at: new Date().toISOString()
+      }
+    }
     draft.sessionState.active = false
     draft.stats.sessions_completed = Number(draft.stats.sessions_completed || 0) + 1
     const startedAt = Date.parse(draft.sessionState.started_at || '')

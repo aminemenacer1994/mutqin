@@ -20,7 +20,7 @@
           </div>
           
           <div class="hero-buttons">
-            <a href="/register" class="btn-primary"><i class="bi bi-book-half"></i> Start Free</a>
+            <a href="/memorisation" class="btn-primary"><i class="bi bi-book-half"></i> Start Free</a>
             <button @click="scrollToFeatures" class="btn-secondary"><i class="bi bi-arrow-down"></i> See Features</button>
           </div>
           
@@ -44,7 +44,7 @@
       </div>
     </section>
 
-    <div class="divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
+    <div class="divider section-divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
 
     <!-- Features Section -->
     <section id="features" class="features-section" ref="featuresSection">
@@ -66,7 +66,7 @@
       </div>
     </section>
 
-    <div class="divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
+    <div class="divider section-divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
 
     <!-- How It Works -->
     <section id="how-it-works" class="steps-section">
@@ -88,7 +88,7 @@
       </div>
     </section>
 
-    <div class="divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
+    <div class="divider section-divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
 
     <!-- Testimonials -->
     <section id="testimonials" class="testimonials-section">
@@ -118,7 +118,7 @@
       </div>
     </section>
 
-    <div class="divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
+    <div class="divider section-divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
 
     <!-- Pricing Section -->
     <section id="pricing" class="pricing-section" ref="pricingSection">
@@ -209,6 +209,109 @@
       </div>
     </section>
 
+    <div class="divider section-divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
+
+    <section id="faq" class="faq-section">
+      <div class="section-container">
+        <div class="section-kicker"><i class="bi bi-question-circle"></i> Common questions</div>
+        <h2 class="section-title">Answers before you start</h2>
+        <p class="section-subtitle">A quick overview of how Mutqin supports recitation, memorisation, and long-term retention.</p>
+        <div class="faq-shell" data-aos="fade-up">
+          <div class="accordion faq-accordion" id="homepageFaq">
+            <div class="accordion-item" v-for="(item, idx) in faqItems" :key="item.question">
+              <h3 class="accordion-header" :id="`faq-heading-${idx}`">
+                <button
+                  class="accordion-button"
+                  :class="{ collapsed: idx !== 0 }"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  :data-bs-target="`#faq-panel-${idx}`"
+                  :aria-expanded="idx === 0 ? 'true' : 'false'"
+                  :aria-controls="`faq-panel-${idx}`"
+                >
+                  {{ item.question }}
+                </button>
+              </h3>
+              <div
+                :id="`faq-panel-${idx}`"
+                class="accordion-collapse collapse"
+                :class="{ show: idx === 0 }"
+                :aria-labelledby="`faq-heading-${idx}`"
+                data-bs-parent="#homepageFaq"
+              >
+                <div class="accordion-body">
+                  {{ item.answer }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider section-divider"><i class="bi bi-star-fill"></i> ۞ <i class="bi bi-star-fill"></i></div>
+
+    <section id="contact" class="contact-section">
+      <div class="section-container">
+        <div class="contact-grid">
+          <div class="contact-copy" data-aos="fade-up">
+            <div class="section-kicker section-kicker-inline"><i class="bi bi-envelope-paper"></i> Contact us</div>
+            <h2 class="section-title section-title-left">Tell us what you need help with</h2>
+            <p class="section-subtitle section-subtitle-left">Questions about billing, memorisation workflows, or product feedback can come through here. We will keep the response simple and actionable.</p>
+            <div class="contact-points">
+              <div class="contact-point">
+                <i class="bi bi-shield-check"></i>
+                <div>
+                  <strong>Clear follow-up</strong>
+                  <p>Use the subject line for context so we can route your message quickly.</p>
+                </div>
+              </div>
+              <div class="contact-point">
+                <i class="bi bi-stars"></i>
+                <div>
+                  <strong>Product feedback welcome</strong>
+                  <p>Share memorisation pain points, feature requests, or UX issues directly from the homepage.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="contact-card" data-aos="fade-up">
+            <div v-if="contactStatus.message" class="contact-alert" :class="contactStatus.type === 'success' ? 'contact-alert-success' : 'contact-alert-error'" role="alert">
+              {{ contactStatus.message }}
+            </div>
+            <form class="contact-form" @submit.prevent="submitContact">
+              <div class="contact-form-grid">
+                <div>
+                  <label class="form-label" for="contactName">Name</label>
+                  <input id="contactName" v-model.trim="contactForm.name" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.name }" autocomplete="name">
+                  <div v-if="contactErrors.name" class="invalid-feedback d-block">{{ contactErrors.name }}</div>
+                </div>
+                <div>
+                  <label class="form-label" for="contactEmail">Email</label>
+                  <input id="contactEmail" v-model.trim="contactForm.email" type="email" class="form-control" :class="{ 'is-invalid': contactErrors.email }" autocomplete="email">
+                  <div v-if="contactErrors.email" class="invalid-feedback d-block">{{ contactErrors.email }}</div>
+                </div>
+              </div>
+              <div>
+                <label class="form-label" for="contactSubject">Subject</label>
+                <input id="contactSubject" v-model.trim="contactForm.subject" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.subject }" autocomplete="off">
+                <div v-if="contactErrors.subject" class="invalid-feedback d-block">{{ contactErrors.subject }}</div>
+              </div>
+              <div>
+                <label class="form-label" for="contactMessage">Message</label>
+                <textarea id="contactMessage" v-model.trim="contactForm.message" class="form-control contact-textarea" :class="{ 'is-invalid': contactErrors.message }" rows="6"></textarea>
+                <div v-if="contactErrors.message" class="invalid-feedback d-block">{{ contactErrors.message }}</div>
+              </div>
+              <button type="submit" class="btn-primary contact-submit" :disabled="contactSubmitting">
+                <i class="bi" :class="contactSubmitting ? 'bi-arrow-repeat spin-icon' : 'bi-send'"></i>
+                {{ contactSubmitting ? 'Sending...' : 'Send Message' }}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- CTA Section -->
     <div class="cta-block">
       <div class="cta-copy">
@@ -243,13 +346,13 @@
             <h4><i class="bi bi-book-half"></i> Resources</h4>
             <a href="#"><i class="bi bi-pen-fill"></i> Tajweed Guide</a>
             <a href="#"><i class="bi bi-lightbulb-fill"></i> Memorization Tips</a>
-            <a href="#"><i class="bi bi-journal-bookmark-fill"></i> Blog</a>
+            <a href="#"><i class="bi bi-question-circle"></i> Help Center</a>
           </div>
           <div class="footer-links">
             <h4><i class="bi bi-building"></i> Company</h4>
             <a href="#"><i class="bi bi-info-circle-fill"></i> About Us</a>
             <a href="#"><i class="bi bi-chat-dots-fill"></i> Contact</a>
-            <a href="#"><i class="bi bi-shield-check"></i> Islamic Scholars</a>
+            <a href="#"><i class="bi bi-heart"></i> Our Mission</a>
           </div>
           <div class="footer-social">
             <h4><i class="bi bi-share-fill"></i> Connect</h4>
@@ -257,13 +360,17 @@
               <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
               <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
               <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
-              <a href="#" aria-label="Telegram"><i class="bi bi-telegram"></i></a>
               <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
             </div>
           </div>
         </div>
         <div class="footer-bottom">
-          <p><i class="bi bi-c-circle"></i> 2025 Mutqin · "And recite the Quran with measured recitation." 🤍</p>
+          <p><i class="bi bi-c-circle"></i> 2026 Mutqin · "And recite the Quran with measured recitation." 🤍</p>
+          <div class="footer-legal">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">© All Rights Reserved</a>
+          </div>
         </div>
       </div>
     </footer>
@@ -271,7 +378,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 
 export default {
   name: 'OnboardingPage',
@@ -312,9 +419,76 @@ export default {
 
     const comparisonValueClass = (value) => {
       const text = String(value || '').toLowerCase();
-      if (text.includes('not included')) return 'comparison-value comparison-value-muted';
-      if (text.includes('unlimited') || text.includes('included')) return 'comparison-value comparison-value-included';
+      if (text.includes('not included') || text.includes('✖')) return 'comparison-value comparison-value-muted';
+      if (text.includes('unlimited') || text.includes('included') || text.includes('✔')) return 'comparison-value comparison-value-included';
       return 'comparison-value comparison-value-limited';
+    };
+
+    const contactForm = reactive({
+      name: '',
+      email: '',
+      subject: '',
+      message: ''
+    });
+    const contactErrors = reactive({});
+    const contactStatus = reactive({
+      type: '',
+      message: ''
+    });
+    const contactSubmitting = ref(false);
+
+    const resetContactFeedback = () => {
+      Object.keys(contactErrors).forEach((key) => delete contactErrors[key]);
+      contactStatus.type = '';
+      contactStatus.message = '';
+    };
+
+    const validateContact = () => {
+      resetContactFeedback();
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!contactForm.name) contactErrors.name = 'Please enter your name.';
+      if (!contactForm.email) {
+        contactErrors.email = 'Please enter your email address.';
+      } else if (!emailPattern.test(contactForm.email)) {
+        contactErrors.email = 'Please enter a valid email address.';
+      }
+      if (!contactForm.message) contactErrors.message = 'Please enter a message.';
+
+      return Object.keys(contactErrors).length === 0;
+    };
+
+    const submitContact = async () => {
+      if (!validateContact()) return;
+
+      contactSubmitting.value = true;
+
+      try {
+        await window.axios.post('/api/contact', {
+          name: contactForm.name,
+          email: contactForm.email,
+          subject: contactForm.subject,
+          message: contactForm.message
+        });
+
+        contactStatus.type = 'success';
+        contactStatus.message = 'Your message has been sent successfully.';
+        contactForm.name = '';
+        contactForm.email = '';
+        contactForm.subject = '';
+        contactForm.message = '';
+      } catch (error) {
+        const validationErrors = error?.response?.data?.errors || {};
+        Object.entries(validationErrors).forEach(([field, messages]) => {
+          contactErrors[field] = Array.isArray(messages) ? messages[0] : messages;
+        });
+        contactStatus.type = 'error';
+        contactStatus.message = Object.keys(validationErrors).length
+          ? 'Please review the highlighted fields and try again.'
+          : 'Unable to send message. Please try again.';
+      } finally {
+        contactSubmitting.value = false;
+      }
     };
     
     // Data
@@ -344,6 +518,15 @@ export default {
       { quote: "Spaced repetition saved my hifdh. I don't forget anymore. Essential for every hafidh.", proof: 'Daily weak-verse review', author: "Fatima El-Sayed", role: "Hafidha in Progress", initials: "FE" },
       { quote: "As a tajweed teacher, I use Mutqin to track students' weak spots instantly.", proof: 'Teacher visibility', author: "Ustadh Hisham", role: "Certified Qari", initials: "UH" }
     ]);
+
+    const faqItems = ref([
+      { question: 'What is Mutqin?', answer: 'Mutqin is a Quran memorisation and recitation workspace that combines practice tools, recordings, review signals, and progress tracking in one place.' },
+      { question: 'How does AI Recitation work?', answer: 'You record an ayah, then Mutqin compares your recitation against the text and highlights likely pronunciation or word-level issues so your next repetition is focused.' },
+      { question: 'How does AI Memorisation work?', answer: 'The memorisation checker helps you test recall, identify omissions or hesitation points, and bring weak ayahs back into a structured review loop.' },
+      { question: 'What is a Structured Hifz Plan?', answer: 'It is a personalised memorisation plan that balances new ayahs, revision blocks, and review frequency so your sessions remain sustainable over time.' },
+      { question: 'How does spaced repetition work?', answer: 'Mutqin surfaces weaker ayahs more often and stronger ayahs less often, so review time is spent where retention is most at risk.' },
+      { question: 'What is included in Pro?', answer: 'Pro includes AI recitation review, AI memorisation checks, advanced analysis, unlimited saved sessions, offline listening support, and the full structured Hifz planning toolkit.' }
+    ]);
     
     const freeFeatures = ref([
       'Full basic session setup',
@@ -360,7 +543,11 @@ export default {
       'Chaining method',
       'Anchor mode',
       'Basic analytics',
-      'Manual self-assessment recording'
+      'Manual self-assessment recording',
+      'Structured Custom Hifz Plan',
+      'Spaced Session Retention',
+      'Adaptive Revision Scheduling',
+      'Progress Tracking'
     ]);
     
     const proFeatures = ref([
@@ -371,22 +558,32 @@ export default {
       'AI memorisation checker',
       'Manual self-assessment recording + self recording',
       'Advanced analysis',
-      'Download for offline listening'
+      'Download for offline listening',
+      'Structured Custom Hifz Plan',
+      'Spaced Session Retention',
+      'Voice Hifz Plan Builder',
+      'Adaptive Revision Scheduling',
+      'Progress Tracking'
     ]);
 
     const comparisonRows = ref([
-      { feature: 'Session setup and ayah range tools', free: 'Included', premium: 'Included', pro: 'Included' },
+      { feature: 'Session setup and ayah range tools', free: '✔ Included', premium: '✔ Included', pro: '✔ Included' },
       { feature: 'Saved sessions', free: '3', premium: '5', pro: 'Unlimited' },
-      { feature: 'Stacked and Mushaf layouts', free: 'Included', premium: 'Included', pro: 'Included' },
-      { feature: 'Focus mode', free: 'Included', premium: 'Included', pro: 'Included' },
-      { feature: 'Blur memorisation method', free: 'Not included', premium: 'Included', pro: 'Included' },
-      { feature: 'Chaining and transition practice', free: 'Not included', premium: 'Included', pro: 'Included' },
-      { feature: 'Anchor mode', free: 'Not included', premium: 'Included', pro: 'Included' },
-      { feature: 'Manual self-assessment recording', free: 'Not included', premium: 'Included', pro: 'Included' },
-      { feature: 'AI recitation review', free: 'Not included', premium: 'Not included', pro: 'Included' },
-      { feature: 'AI memorisation checker', free: 'Not included', premium: 'Not included', pro: 'Included' },
-      { feature: 'Advanced review analytics', free: 'Not included', premium: 'Not included', pro: 'Included' },
-      { feature: 'Offline audio downloads', free: 'Not included', premium: 'Not included', pro: 'Included' }
+      { feature: 'Stacked and Mushaf layouts', free: '✔ Included', premium: '✔ Included', pro: '✔ Included' },
+      { feature: 'Focus mode', free: '✔ Included', premium: '✔ Included', pro: '✔ Included' },
+      { feature: 'Blur memorisation method', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
+      { feature: 'Chaining and transition practice', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
+      { feature: 'Anchor mode', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
+      { feature: 'Manual self-assessment recording', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
+      { feature: 'AI recitation review', free: '✖ Not Included', premium: '✖ Not Included', pro: '✔ Included' },
+      { feature: 'AI memorisation checker', free: '✖ Not Included', premium: '✖ Not Included', pro: '✔ Included' },
+      { feature: 'Structured Custom Hifz Plan', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
+      { feature: 'Spaced Session Retention', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
+      { feature: 'Voice Hifz Plan Builder', free: '✖ Not Included', premium: '✖ Not Included', pro: '✔ Included' },
+      { feature: 'Adaptive Revision Scheduling', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
+      { feature: 'Progress Tracking', free: '✔ Included', premium: '✔ Included', pro: '✔ Included' },
+      { feature: 'Advanced review analytics', free: '✖ Not Included', premium: '✖ Not Included', pro: '✔ Included' },
+      { feature: 'Offline audio downloads', free: '✖ Not Included', premium: '✖ Not Included', pro: '✔ Included' },
     ]);
     
     // Intersection Observer for animations
@@ -421,10 +618,16 @@ export default {
       features,
       steps,
       testimonials,
+      faqItems,
       freeFeatures,
       premiumFeatures,
       proFeatures,
-      comparisonRows
+      comparisonRows,
+      contactForm,
+      contactErrors,
+      contactStatus,
+      contactSubmitting,
+      submitContact
     };
   }
 };
@@ -539,12 +742,12 @@ body {
   100% { transform: translateX(-50%); }
 }
 
-/* Hero Section */
+/* Hero Section - Smaller & Refined */
 .hero {
-  min-height: 100vh;
+  min-height: 82vh;
   display: flex;
   align-items: center;
-  padding: 6.5rem 2.75rem 4rem;
+  padding: 5rem 2.75rem 3.5rem;
   position: relative;
   overflow: hidden;
   color: var(--text);
@@ -553,13 +756,13 @@ body {
 .hero::before {
   content: '۞';
   position: absolute;
-  font-size: 30rem;
+  font-size: 26rem;
   opacity: 0.03;
-  right: -10%;
-  top: 50%;
+  right: -8%;
+  top: 52%;
   transform: translateY(-50%);
   pointer-events: none;
-  animation: rotate 60s linear infinite;
+  animation: rotate 70s linear infinite;
   color: var(--accent);
 }
 
@@ -570,10 +773,11 @@ body {
 
 .hero-container {
   max-width: 1320px;
+  width: 100%;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4rem;
+  gap: 3.8rem;
   align-items: center;
   position: relative;
   z-index: 1;
@@ -587,17 +791,16 @@ body {
   color: var(--accent);
   padding: 0.3rem 1rem;
   border-radius: 40px;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 750;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.4rem;
 }
 
 .hero-title {
-  font-size: clamp(2.8rem, 4.8vw, 4.4rem);
+  font-size: clamp(2.45rem, 4.2vw, 3.85rem);
   font-weight: 780;
-  line-height: 0.9;
-  /* margin-bottom: 1.35rem; */
-  letter-spacing: -0.065em;
+  line-height: 0.92;
+  letter-spacing: 0;
 }
 
 .hero-title span {
@@ -608,11 +811,11 @@ body {
 }
 
 .hero-desc {
-  font-size: clamp(1rem, 2vw, 1.48rem);
+  font-size: clamp(1rem, 1.9vw, 1.32rem);
   color: color-mix(in srgb, var(--text) 78%, var(--text-muted));
-  margin-bottom: 1.8rem;
-  line-height: 1.75;
-  max-width: 820px;
+  margin-bottom: 1.6rem;
+  line-height: 1.72;
+  max-width: 780px;
   font-weight: 200;
 }
 
@@ -625,14 +828,14 @@ body {
 .problem-solution {
   background: var(--surface);
   border-radius: var(--radius);
-  padding: 1.25rem;
-  margin: 1.15rem 0 1.25rem;
+  padding: 1.15rem;
+  margin: 1rem 0 1.1rem;
   border: 1px solid var(--border);
   backdrop-filter: blur(10px);
 }
 
 .problem-text, .solution-text {
-  font-size: 0.95rem;
+  font-size: 0.93rem;
   color: var(--text-muted);
   display: flex;
   align-items: flex-start;
@@ -664,11 +867,14 @@ body {
 /* Hero Image */
 .hero-image {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .demo-card {
+  max-width: 100%;
   background: linear-gradient(180deg, var(--surface-strong), var(--surface));
-  border-radius: 28px;
+  border-radius: 12px;
   padding: 2rem;
   text-align: center;
   box-shadow: var(--shadow-lg);
@@ -704,6 +910,7 @@ body {
 
 .floating-card {
   position: absolute;
+  max-width: min(220px, 40vw);
   background: var(--surface-strong);
   backdrop-filter: blur(12px);
   border-radius: 60px;
@@ -744,6 +951,11 @@ body {
   gap: 12px;
 }
 
+.section-divider {
+  margin: 0 auto;
+  padding: clamp(1.25rem, 2.6vw, 2rem) 0;
+}
+
 .divider i {
   font-size: 0.8rem;
   opacity: 0.6;
@@ -752,7 +964,9 @@ body {
 /* Section Styles */
 .features-section,
 .steps-section,
-.pricing-section {
+.pricing-section,
+.faq-section,
+.contact-section {
   position: relative;
   overflow: hidden;
 }
@@ -773,9 +987,21 @@ body {
 .section-container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 4.8rem 2.75rem;
+  padding: clamp(3.6rem, 7vw, 6.25rem) 2.75rem;
   position: relative;
   z-index: 1;
+}
+
+.section-title-left,
+.section-subtitle-left {
+  text-align: left;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.section-kicker-inline {
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .section-kicker {
@@ -1091,7 +1317,7 @@ body {
 
 .pricing-comparison {
   max-width: 1180px;
-  margin: 2.5rem auto 0;
+  margin: 3rem auto 0;
   background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
   border: 1px solid var(--border);
   border-radius: 28px;
@@ -1117,6 +1343,7 @@ body {
 
 .comparison-table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--border);
   border-radius: 18px;
   background: color-mix(in srgb, var(--surface) 70%, transparent);
@@ -1126,7 +1353,7 @@ body {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 720px;
+  min-width: 640px;
 }
 
 .comparison-table thead th {
@@ -1196,6 +1423,185 @@ body {
 .comparison-value-muted {
   color: var(--text-muted);
   background: transparent;
+}
+
+.faq-shell,
+.contact-card {
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  box-shadow: var(--shadow-sm);
+}
+
+.faq-shell {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.1rem;
+}
+
+.faq-accordion .accordion-item {
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+  border-radius: 20px;
+  margin-bottom: 0.85rem;
+}
+
+.faq-accordion .accordion-item:last-child {
+  margin-bottom: 0;
+}
+
+.faq-accordion .accordion-button {
+  background: var(--surface-strong);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: none;
+  font-weight: 700;
+  padding: 1.15rem 1.25rem;
+}
+
+.faq-accordion .accordion-button:not(.collapsed) {
+  color: var(--accent-strong);
+  background: var(--accent-light);
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+}
+
+.faq-accordion .accordion-button:focus {
+  box-shadow: 0 0 0 0.2rem rgba(154, 103, 56, 0.15);
+}
+
+.faq-accordion .accordion-button::after {
+  filter: saturate(0.4);
+}
+
+.faq-accordion .accordion-body {
+  color: var(--text-muted);
+  line-height: 1.75;
+  padding: 1rem 1.25rem 1.35rem;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1fr);
+  gap: 1.75rem;
+  align-items: start;
+}
+
+.contact-copy {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.contact-points {
+  display: grid;
+  gap: 1rem;
+}
+
+.contact-point {
+  display: flex;
+  gap: 1rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--border);
+}
+
+.contact-point i {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 1.3rem;
+}
+
+.contact-point strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.contact-point p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+.contact-card {
+  padding: 1.4rem;
+}
+
+.contact-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.contact-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.contact-form .form-label {
+  margin-bottom: 0.45rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.contact-form .form-control {
+  min-height: 52px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  color: var(--text);
+  padding: 0.85rem 1rem;
+}
+
+.contact-form .form-control:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.2rem rgba(154, 103, 56, 0.14);
+}
+
+.contact-textarea {
+  min-height: 160px;
+  resize: vertical;
+}
+
+.contact-submit {
+  width: 100%;
+  min-height: 54px;
+}
+
+.contact-alert {
+  border-radius: 18px;
+  padding: 0.95rem 1rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.contact-alert-success {
+  background: rgba(24, 128, 86, 0.11);
+  color: #146c46;
+  border: 1px solid rgba(24, 128, 86, 0.2);
+}
+
+.contact-alert-error {
+  background: rgba(178, 59, 59, 0.1);
+  color: #913232;
+  border: 1px solid rgba(178, 59, 59, 0.2);
+}
+
+.spin-icon {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .pricing-card {
@@ -1361,6 +1767,38 @@ body {
   border-color: rgba(255, 236, 216, 0.14);
 }
 
+[data-theme="dark"] .faq-shell,
+[data-theme="dark"] .contact-card,
+[data-theme="dark"] .faq-accordion .accordion-button,
+[data-theme="dark"] .contact-point,
+[data-theme="dark"] .contact-form .form-control {
+  background: rgba(31, 27, 24, 0.96);
+  border-color: rgba(255, 236, 216, 0.14);
+}
+
+[data-theme="dark"] .faq-accordion .accordion-button:not(.collapsed) {
+  background: rgba(224, 173, 114, 0.14);
+  color: #ffd19b;
+}
+
+[data-theme="dark"] .faq-accordion .accordion-body,
+[data-theme="dark"] .contact-point p {
+  color: #d8cabb;
+}
+
+[data-theme="dark"] .contact-form .form-label,
+[data-theme="dark"] .contact-point strong {
+  color: #f8efe3;
+}
+
+[data-theme="dark"] .contact-alert-success {
+  color: #b7f0d7;
+}
+
+[data-theme="dark"] .contact-alert-error {
+  color: #ffcdc6;
+}
+
 [data-theme="dark"] .comparison-table thead th,
 [data-theme="dark"] .comparison-header p {
   color: #d8cabb;
@@ -1512,6 +1950,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 100%;
   padding: 0.85rem 2rem;
   border-radius: 60px;
   font-weight: 600;
@@ -1520,6 +1961,8 @@ body {
   text-decoration: none;
   cursor: pointer;
   border: none;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .btn-primary {
@@ -1544,11 +1987,11 @@ body {
   transform: translateY(-1px);
 }
 
-/* Footer - Full Width, Bottom Fixed */
+/* Footer - Updated */
 .footer {
   background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 3rem 2rem 1.5rem;
+  padding: 3.5rem 2rem 2rem;
   margin-top: auto;
   width: 100%;
   bottom: 0;
@@ -1564,8 +2007,8 @@ body {
 .footer-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
+  gap: 2.2rem;
+  margin-bottom: 2.2rem;
 }
 
 .footer-brand {
@@ -1659,10 +2102,31 @@ body {
   border-top: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  align-items: center;
 }
 
 .footer-bottom i {
   margin-right: 4px;
+}
+
+.footer-legal {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.footer-legal a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.78rem;
+}
+
+.footer-legal a:hover {
+  color: var(--accent);
 }
 
 /* AOS Animations */
@@ -1688,14 +2152,71 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .vue-onboarding {
+    overflow-x: clip;
+  }
+
+  [data-aos],
+  [data-aos="fade-left"],
+  [data-aos="fade-up"],
+  [data-aos="zoom-in"],
+  [data-aos="flip-up"],
+  [data-aos="flip-right"],
+  [data-aos="flip-left"] {
+    transform: none;
+  }
+
   .hero-container {
     grid-template-columns: 1fr;
     text-align: center;
     gap: 2rem;
   }
-  .hero-title { font-size: clamp(3.6rem, 15vw, 5rem); }
-  .hero { padding: 5rem 1.2rem 2.5rem; }
-  .steps-grid, .testimonials-grid, .pricing-grid { grid-template-columns: 1fr; }
+
+  .hero-image {
+    width: 100%;
+    max-width: min(100%, 420px);
+    margin-inline: auto;
+  }
+
+  .demo-card {
+    width: 100%;
+  }
+
+  .hero-title {
+    font-size: clamp(2.2rem, 10vw, 3.25rem);
+    line-height: 1;
+  }
+
+  .hero {
+    padding: 4.5rem 1.2rem 2.5rem;
+    min-height: auto;
+  }
+
+  .hero-buttons,
+  .pricing-actions,
+  .cta-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .hero-buttons .btn-primary,
+  .hero-buttons .btn-secondary,
+  .pricing-actions .btn-primary,
+  .pricing-actions .btn-secondary,
+  .cta-actions .btn-primary,
+  .cta-actions .btn-secondary {
+    width: 100%;
+  }
+
+  .features-grid,
+  .steps-grid,
+  .testimonials-grid,
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
   .pricing-card.featured { transform: scale(1); }
   .pricing-card { min-height: auto; }
   .floating-card { display: none; }
@@ -1705,19 +2226,99 @@ body {
   .section-container { padding: 3rem 1.2rem; }
   .feature-card, .step-card, .testimonial-card { min-height: auto; }
   .steps-section { background: var(--bg); }
+  .contact-grid,
+  .contact-form-grid { grid-template-columns: 1fr; }
+  .section-title-left,
+  .section-subtitle-left,
+  .section-kicker-inline { text-align: center; margin-left: auto; margin-right: auto; }
+  .contact-copy { text-align: center; }
+  .contact-point { text-align: left; }
   .cta-block {
     grid-template-columns: 1fr;
     margin: 1rem 1.2rem 2rem;
     padding: 2rem;
     border-radius: 30px;
   }
-  .pricing-actions { grid-template-columns: 1fr; }
   .pricing-comparison { margin-top: 1.6rem; padding: 1rem; border-radius: 24px; }
+  .comparison-table {
+    min-width: 560px;
+  }
+
   .footer-grid { grid-template-columns: 1fr; text-align: center; }
   .footer-brand { max-width: 100%; text-align: center; }
   .footer-logo { justify-content: center; }
   .footer-links a { justify-content: center; }
   .social-icons { justify-content: center; }
   .problem-text, .solution-text { flex-direction: column; text-align: left; }
+}
+
+@media (max-width: 575.98px) {
+  .hero {
+    padding-inline: 1rem;
+  }
+
+  .hero-badge,
+  .section-kicker,
+  .featured-tag,
+  .plan-label,
+  .comparison-value {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .demo-card,
+  .problem-solution,
+  .feature-card,
+  .step-card,
+  .testimonial-card,
+  .pricing-card,
+  .faq-shell,
+  .contact-card,
+  .cta-block {
+    border-radius: 12px;
+  }
+
+  .section-container {
+    padding-inline: 1rem;
+  }
+
+  .contact-card {
+    padding: 1rem;
+  }
+
+  .contact-form-grid,
+  .contact-grid {
+    gap: 1rem;
+  }
+
+  .comparison-table {
+    min-width: 500px;
+  }
+
+  .comparison-table thead th,
+  .comparison-table tbody th,
+  .comparison-table tbody td {
+    padding: 0.75rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .floating-card {
+    transform: translateX(-6px);
+  }
+}
+
+@media (max-width: 359.98px) {
+  .hero {
+    padding-inline: 0.8rem;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .section-container {
+    padding-inline: 0.8rem;
+  }
 }
 </style>

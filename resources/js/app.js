@@ -3,6 +3,7 @@ require('./bootstrap.js');
 import { createApp } from 'vue';
 import Homepage from './components/Homepage.vue';
 import Memorisation from './components/Memorisation.vue';
+import About from './components/About.vue';
 import { setupI18n, setLocale } from './i18n';
 
 async function bootstrapApp() {
@@ -17,7 +18,7 @@ async function bootstrapApp() {
 
     app.component('homepage', Homepage);
     app.component('memorisation', Memorisation);
-
+    app.component('about', About);
     app.mount('#app');
 }
 

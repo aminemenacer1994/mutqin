@@ -77,6 +77,66 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   scrollbar-gutter: stable both-edges;
+  overflow-x: clip;
+}
+
+html,
+body,
+#app,
+main {
+  min-width: 0;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+:where(.container, .container-fluid, .row, [class*="col-"], .card, .modal-content, .dropdown-menu, .offcanvas, .navbar-collapse) {
+  min-width: 0;
+}
+
+:where(.btn, button, .dropdown-item, .nav-link) {
+  overflow-wrap: anywhere;
+}
+
+:where(.modal-dialog) {
+  max-width: calc(100vw - 1rem);
+}
+
+:where(.modal-content) {
+  max-height: calc(100dvh - 1rem);
+}
+
+:where(.modal-body, .offcanvas-body) {
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 575.98px) {
+  :where(.modal-dialog) {
+    margin: 0.5rem auto;
+  }
+
+  :where(.modal-fullscreen-sm-down) {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    margin: 0;
+  }
+
+  :where(.modal-fullscreen-sm-down .modal-content) {
+    min-height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  :where(.btn-group, .btn-group-vertical) {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
 }
 
 /* Consistent focus and press feedback across the app */

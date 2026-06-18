@@ -137,4 +137,67 @@ assert.equal(tutorProgression.alignmentState.visibleStatuses[1].status, 'incorre
 assert.equal(tutorProgression.alignmentState.visibleStatuses[2].status, 'pending')
 assert.notEqual(reviewProgression.alignmentState.visibleStatuses[2].status, 'pending')
 
+const rangeAyahs = [
+  { key: '112:1', number: 1, text: 'قل هو الله أحد' },
+  { key: '112:2', number: 2, text: 'الله الصمد' },
+  { key: '112:3', number: 3, text: 'لم يلد ولم يولد' }
+]
+const rangeText = rangeAyahs.map(ayah => ayah.text).join(' ')
+
+const omissionResult = buildDeterministicRecitationResult(
+  rangeText,
+  createWordsFromTranscript('قل الله أحد الله الصمد لم يلد ولم يولد'),
+  { targetAyahs: rangeAyahs, timestamp: '2026-06-11T00:00:00.000Z' }
+)
+assert.ok(omissionResult.missingWords.some(item => item.word === 'هو'))
+assert.ok(omissionResult.skippedWords.some(group => group.words.includes('هو')))
+assert.ok(omissionResult.mistakes.wordSkips.some(group => group.words.includes('هو')))
+assert.equal(omissionResult.verseJumpDetected, false)
+
+const extraResult = buildDeterministicRecitationResult(
+  rangeText,
+  createWordsFromTranscript('قل هو الله أحد الرحمن الله الصمد لم يلد ولم يولد'),
+  { targetAyahs: rangeAyahs, timestamp: '2026-06-11T00:00:00.000Z' }
+)
+assert.ok(extraResult.extraWords.some(item => item.word === 'الرحمن'))
+
+const substitutionResult = buildDeterministicRecitationResult(
+  rangeText,
+  createWordsFromTranscript('قل هو الله واحد الله الصمد لم يلد ولم يولد'),
+  { targetAyahs: rangeAyahs, timestamp: '2026-06-11T00:00:00.000Z' }
+)
+assert.ok(substitutionResult.incorrectWords.some(item => item.expected === 'أحد' && item.actual === 'واحد'))
+
+const repeatedResult = buildDeterministicRecitationResult(
+  rangeAyahs[0].text,
+  createWordsFromTranscript('قل هو هو الله أحد قل هو قل هو'),
+  { targetAyahs: [rangeAyahs[0]], timestamp: '2026-06-11T00:00:00.000Z' }
+)
+assert.ok(repeatedResult.repeatedWords.some(item => item.normalizedWord === 'هو'))
+assert.ok(repeatedResult.repeatedPhrases.some(item => item.phrase === 'قل هو'))
+
+const skippedAyahResult = buildDeterministicRecitationResult(
+  rangeText,
+  createWordsFromTranscript('قل هو الله أحد لم يلد ولم يولد'),
+  { targetAyahs: rangeAyahs, timestamp: '2026-06-11T00:00:00.000Z' }
+)
+assert.ok(skippedAyahResult.skippedAyahs.some(item => item.ayahKey === '112:2'))
+assert.ok(skippedAyahResult.mistakes.skippedAyahs.some(item => item.ayahKey === '112:2'))
+assert.equal(skippedAyahResult.verseJumpDetected, true)
+assert.ok(skippedAyahResult.verseJumps.length > 0)
+assert.ok(skippedAyahResult.mistakes.verseJumps.length > 0)
+assert.ok(skippedAyahResult.score < 80)
+
+const sequenceResult = buildDeterministicRecitationResult(
+  rangeText,
+  createWordsFromTranscript('الله الصمد قل هو الله أحد لم يلد ولم يولد'),
+  { targetAyahs: rangeAyahs, timestamp: '2026-06-11T00:00:00.000Z' }
+)
+assert.ok(sequenceResult.sequenceErrors.length > 0)
+assert.ok(sequenceResult.feedback.some(item => /sequence/i.test(item) || /order/i.test(item)))
+
+assert.equal(typeof sequenceResult.score, 'number')
+assert.equal(typeof sequenceResult.confidence, 'number')
+assert.equal(typeof sequenceResult.memoryStrength, 'string')
+
 console.log('Recitation replay determinism tests passed')

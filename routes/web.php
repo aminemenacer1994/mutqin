@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\AboutUsController;
+
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MemorisationSyncController;
@@ -82,6 +84,10 @@ Route::get('/billing/success', [BillingController::class, 'success'])->name('bil
 Route::get('/memorisation', function () {
     return view('memorisation');
 })->name('memorisation');
+
+Route::get('/about', function () {
+    return view('about');
+})->name('about');
 
 Route::get('/memorisation/audio-download', function (Request $request) {
     $url = (string) $request->query('url', '');
