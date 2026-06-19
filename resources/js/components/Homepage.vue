@@ -20,8 +20,8 @@
           </div>
           
           <div class="hero-buttons">
-            <a href="/memorisation" class="btn-primary"><i class="bi bi-book-half"></i> Start Free</a>
-            <button @click="scrollToFeatures" class="btn-secondary"><i class="bi bi-arrow-down"></i> See Features</button>
+            <a href="/memorisation" class="btn-secondary hero-action-btn"><i class="bi bi-book-half"></i> Start Free</a>
+            <button @click="scrollToFeatures" class="btn-secondary hero-action-btn"><i class="bi bi-arrow-down"></i> See Features</button>
           </div>
           
         </div>
@@ -140,7 +140,7 @@
                 {{ feature }}
               </li>
             </ul>
-            <a href="/billing?plan=free" class="btn-secondary">Start Free <i class="bi bi-arrow-right"></i></a>
+            <a href="/register" class="btn-secondary">Start Free <i class="bi bi-arrow-right"></i></a>
           </div>
           <!-- Premium Plan -->
           <div class="pricing-card featured" data-aos="flip-left">
@@ -156,8 +156,16 @@
               </li>
             </ul>
             <div class="pricing-actions">
-              <a href="/billing?plan=premium_monthly" class="btn-primary">Monthly <i class="bi bi-gift-fill"></i></a>
-              <a href="/billing?plan=premium_yearly" class="btn-secondary">Yearly <i class="bi bi-calendar-check"></i></a>
+              <form method="POST" action="/checkout">
+                <input type="hidden" name="_token" :value="csrfToken">
+                <input type="hidden" name="plan" value="premium_monthly">
+                <button type="submit" class="btn-primary">Monthly <i class="bi bi-gift-fill"></i></button>
+              </form>
+              <form method="POST" action="/checkout">
+                <input type="hidden" name="_token" :value="csrfToken">
+                <input type="hidden" name="plan" value="premium_yearly">
+                <button type="submit" class="btn-secondary">Yearly <i class="bi bi-calendar-check"></i></button>
+              </form>
             </div>
           </div>
           <!-- Pro Plan -->
@@ -174,8 +182,16 @@
               </li>
             </ul>
             <div class="pricing-actions">
-              <a href="/billing?plan=pro_monthly" class="btn-primary">Monthly <i class="bi bi-gem"></i></a>
-              <a href="/billing?plan=pro_yearly" class="btn-secondary">Yearly <i class="bi bi-calendar-check"></i></a>
+              <form method="POST" action="/checkout">
+                <input type="hidden" name="_token" :value="csrfToken">
+                <input type="hidden" name="plan" value="pro_monthly">
+                <button type="submit" class="btn-primary">Monthly <i class="bi bi-gem"></i></button>
+              </form>
+              <form method="POST" action="/checkout">
+                <input type="hidden" name="_token" :value="csrfToken">
+                <input type="hidden" name="plan" value="pro_yearly">
+                <button type="submit" class="btn-secondary">Yearly <i class="bi bi-calendar-check"></i></button>
+              </form>
             </div>
           </div>
         </div>
@@ -198,9 +214,24 @@
               <tbody>
                 <tr v-for="row in comparisonRows" :key="row.feature">
                   <th scope="row">{{ row.feature }}</th>
-                  <td><span :class="comparisonValueClass(row.free)">{{ row.free }}</span></td>
-                  <td><span :class="comparisonValueClass(row.premium)">{{ row.premium }}</span></td>
-                  <td><span :class="comparisonValueClass(row.pro)">{{ row.pro }}</span></td>
+                  <td>
+                    <span :class="comparisonValueClass(row.free)">
+                      <i v-if="comparisonCell(row.free).icon" class="bi" :class="comparisonCell(row.free).icon" aria-hidden="true"></i>
+                      <span v-if="comparisonCell(row.free).label">{{ comparisonCell(row.free).label }}</span>
+                    </span>
+                  </td>
+                  <td>
+                    <span :class="comparisonValueClass(row.premium)">
+                      <i v-if="comparisonCell(row.premium).icon" class="bi" :class="comparisonCell(row.premium).icon" aria-hidden="true"></i>
+                      <span v-if="comparisonCell(row.premium).label">{{ comparisonCell(row.premium).label }}</span>
+                    </span>
+                  </td>
+                  <td>
+                    <span :class="comparisonValueClass(row.pro)">
+                      <i v-if="comparisonCell(row.pro).icon" class="bi" :class="comparisonCell(row.pro).icon" aria-hidden="true"></i>
+                      <span v-if="comparisonCell(row.pro).label">{{ comparisonCell(row.pro).label }}</span>
+                    </span>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -255,25 +286,8 @@
       <div class="section-container">
         <div class="contact-grid">
           <div class="contact-copy" data-aos="fade-up">
-            <div class="section-kicker section-kicker-inline"><i class="bi bi-envelope-paper"></i> Contact us</div>
             <h2 class="section-title section-title-left">Tell us what you need help with</h2>
             <p class="section-subtitle section-subtitle-left">Questions about billing, memorisation workflows, or product feedback can come through here. We will keep the response simple and actionable.</p>
-            <div class="contact-points">
-              <div class="contact-point">
-                <i class="bi bi-shield-check"></i>
-                <div>
-                  <strong>Clear follow-up</strong>
-                  <p>Use the subject line for context so we can route your message quickly.</p>
-                </div>
-              </div>
-              <div class="contact-point">
-                <i class="bi bi-stars"></i>
-                <div>
-                  <strong>Product feedback welcome</strong>
-                  <p>Share memorisation pain points, feature requests, or UX issues directly from the homepage.</p>
-                </div>
-              </div>
-            </div>
           </div>
           <div class="contact-card" data-aos="fade-up">
             <div v-if="contactStatus.message" class="contact-alert" :class="contactStatus.type === 'success' ? 'contact-alert-success' : 'contact-alert-error'" role="alert">
@@ -294,7 +308,7 @@
               </div>
               <div>
                 <label class="form-label" for="contactSubject">Subject</label>
-                <input id="contactSubject" v-model.trim="contactForm.subject" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.subject }" autocomplete="off">
+                <input id="contactSubject" v-model.trim="contactForm.subject" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.subject }" autocomplete="off" required>
                 <div v-if="contactErrors.subject" class="invalid-feedback d-block">{{ contactErrors.subject }}</div>
               </div>
               <div>
@@ -350,9 +364,9 @@
           </div>
           <div class="footer-links">
             <h4><i class="bi bi-building"></i> Company</h4>
-            <a href="#"><i class="bi bi-info-circle-fill"></i> About Us</a>
-            <a href="#"><i class="bi bi-chat-dots-fill"></i> Contact</a>
-            <a href="#"><i class="bi bi-heart"></i> Our Mission</a>
+            <a href="/about-us"><i class="bi bi-info-circle-fill"></i> About Us</a>
+            <a href="#contact" @click.prevent="document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' })"><i class="bi bi-chat-dots-fill"></i> Contact</a>
+            <a href="/our-mission"><i class="bi bi-heart"></i> Our Mission</a>
           </div>
           <div class="footer-social">
             <h4><i class="bi bi-share-fill"></i> Connect</h4>
@@ -417,11 +431,18 @@ export default {
       pricingSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
+    const csrfToken = ref(document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+
     const comparisonValueClass = (value) => {
-      const text = String(value || '').toLowerCase();
-      if (text.includes('not included') || text.includes('✖')) return 'comparison-value comparison-value-muted';
-      if (text.includes('unlimited') || text.includes('included') || text.includes('✔')) return 'comparison-value comparison-value-included';
+      if (value === true) return 'comparison-value comparison-value-included comparison-value-icon';
+      if (value === false) return 'comparison-value comparison-value-excluded comparison-value-icon';
       return 'comparison-value comparison-value-limited';
+    };
+
+    const comparisonCell = (value) => {
+      if (value === true) return { icon: 'bi-check-lg', label: '' };
+      if (value === false) return { icon: 'bi-x-lg', label: '' };
+      return { icon: '', label: String(value ?? '') };
     };
 
     const contactForm = reactive({
@@ -453,6 +474,7 @@ export default {
       } else if (!emailPattern.test(contactForm.email)) {
         contactErrors.email = 'Please enter a valid email address.';
       }
+      if (!contactForm.subject) contactErrors.subject = 'Please enter a subject.';
       if (!contactForm.message) contactErrors.message = 'Please enter a message.';
 
       return Object.keys(contactErrors).length === 0;
@@ -521,11 +543,10 @@ export default {
 
     const faqItems = ref([
       { question: 'What is Mutqin?', answer: 'Mutqin is a Quran memorisation and recitation workspace that combines practice tools, recordings, review signals, and progress tracking in one place.' },
-      { question: 'How does AI Recitation work?', answer: 'You record an ayah, then Mutqin compares your recitation against the text and highlights likely pronunciation or word-level issues so your next repetition is focused.' },
-      { question: 'How does AI Memorisation work?', answer: 'The memorisation checker helps you test recall, identify omissions or hesitation points, and bring weak ayahs back into a structured review loop.' },
-      { question: 'What is a Structured Hifz Plan?', answer: 'It is a personalised memorisation plan that balances new ayahs, revision blocks, and review frequency so your sessions remain sustainable over time.' },
-      { question: 'How does spaced repetition work?', answer: 'Mutqin surfaces weaker ayahs more often and stronger ayahs less often, so review time is spent where retention is most at risk.' },
-      { question: 'What is included in Pro?', answer: 'Pro includes AI recitation review, AI memorisation checks, advanced analysis, unlimited saved sessions, offline listening support, and the full structured Hifz planning toolkit.' }
+      { question: 'How does memorisation work?', answer: 'You choose a surah and ayah range, repeat in small blocks, and use practice tools like blur, chaining, and saved sessions to strengthen recall gradually.' },
+      { question: 'How does AI feedback work?', answer: 'AI feedback listens after you practise, highlights likely weak or missed words, and gives you a clearer next repetition instead of a vague overall score.' },
+      { question: 'What is Pro?', answer: 'Pro is the full Mutqin plan for students who want AI recitation review, AI memorisation checks, advanced analytics, unlimited saved sessions, and deeper planning tools.' },
+      { question: 'How does revision work?', answer: 'Mutqin tracks weak ayahs, recent practice, and due reviews so you can revisit what is most likely to slip before it turns into a larger backlog.' }
     ]);
     
     const freeFeatures = ref([
@@ -567,23 +588,23 @@ export default {
     ]);
 
     const comparisonRows = ref([
-      { feature: 'Session setup and ayah range tools', free: '✔ Included', premium: '✔ Included', pro: '✔ Included' },
+      { feature: 'Session setup and ayah range tools', free: true, premium: true, pro: true },
       { feature: 'Saved sessions', free: '3', premium: '5', pro: 'Unlimited' },
-      { feature: 'Stacked and Mushaf layouts', free: '✔ Included', premium: '✔ Included', pro: '✔ Included' },
-      { feature: 'Focus mode', free: '✔ Included', premium: '✔ Included', pro: '✔ Included' },
-      { feature: 'Blur memorisation method', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
-      { feature: 'Chaining and transition practice', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
-      { feature: 'Anchor mode', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
-      { feature: 'Manual self-assessment recording', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
-      { feature: 'AI recitation review', free: '✖ Not Included', premium: '✖ Not Included', pro: '✔ Included' },
-      { feature: 'AI memorisation checker', free: '✖ Not Included', premium: '✖ Not Included', pro: '✔ Included' },
-      { feature: 'Structured Custom Hifz Plan', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
-      { feature: 'Spaced Session Retention', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
-      { feature: 'Voice Hifz Plan Builder', free: '✖ Not Included', premium: '✖ Not Included', pro: '✔ Included' },
-      { feature: 'Adaptive Revision Scheduling', free: '✖ Not Included', premium: '✔ Included', pro: '✔ Included' },
-      { feature: 'Progress Tracking', free: '✔ Included', premium: '✔ Included', pro: '✔ Included' },
-      { feature: 'Advanced review analytics', free: '✖ Not Included', premium: '✖ Not Included', pro: '✔ Included' },
-      { feature: 'Offline audio downloads', free: '✖ Not Included', premium: '✖ Not Included', pro: '✔ Included' },
+      { feature: 'Stacked and Mushaf layouts', free: true, premium: true, pro: true },
+      { feature: 'Focus mode', free: true, premium: true, pro: true },
+      { feature: 'Blur memorisation method', free: false, premium: true, pro: true },
+      { feature: 'Chaining and transition practice', free: false, premium: true, pro: true },
+      { feature: 'Anchor mode', free: false, premium: true, pro: true },
+      { feature: 'Manual self-assessment recording', free: false, premium: true, pro: true },
+      { feature: 'AI recitation review', free: false, premium: false, pro: true },
+      { feature: 'AI memorisation checker', free: false, premium: false, pro: true },
+      { feature: 'Structured Custom Hifz Plan', free: false, premium: true, pro: true },
+      { feature: 'Spaced Session Retention', free: false, premium: true, pro: true },
+      { feature: 'Voice Hifz Plan Builder', free: false, premium: false, pro: true },
+      { feature: 'Adaptive Revision Scheduling', free: false, premium: true, pro: true },
+      { feature: 'Progress Tracking', free: true, premium: true, pro: true },
+      { feature: 'Advanced review analytics', free: false, premium: false, pro: true },
+      { feature: 'Offline audio downloads', free: false, premium: false, pro: true },
     ]);
     
     // Intersection Observer for animations
@@ -608,12 +629,14 @@ export default {
     
     return {
       currentTheme,
+      csrfToken,
       setTheme,
       featuresSection,
       pricingSection,
       scrollToFeatures,
       scrollToPricing,
       comparisonValueClass,
+      comparisonCell,
       floatingBadges,
       features,
       steps,
@@ -744,10 +767,10 @@ body {
 
 /* Hero Section - Smaller & Refined */
 .hero {
-  min-height: 82vh;
+  min-height: calc(100vh - 70px);
   display: flex;
   align-items: center;
-  padding: 5rem 2.75rem 3.5rem;
+  padding: calc(70px + clamp(2.6rem, 5vw, 4.4rem)) 2.5rem clamp(3.2rem, 5vw, 4.8rem);
   position: relative;
   overflow: hidden;
   color: var(--text);
@@ -777,7 +800,7 @@ body {
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3.8rem;
+  gap: clamp(2.2rem, 4vw, 3.8rem);
   align-items: center;
   position: relative;
   z-index: 1;
@@ -799,8 +822,9 @@ body {
 .hero-title {
   font-size: clamp(2.45rem, 4.2vw, 3.85rem);
   font-weight: 780;
-  line-height: 0.92;
+  line-height: 1.02;
   letter-spacing: 0;
+  margin-bottom: 1.1rem;
 }
 
 .hero-title span {
@@ -814,8 +838,8 @@ body {
   font-size: clamp(1rem, 1.9vw, 1.32rem);
   color: color-mix(in srgb, var(--text) 78%, var(--text-muted));
   margin-bottom: 1.6rem;
-  line-height: 1.72;
-  max-width: 780px;
+  line-height: 1.8;
+  max-width: 700px;
   font-weight: 200;
 }
 
@@ -829,17 +853,18 @@ body {
   background: var(--surface);
   border-radius: var(--radius);
   padding: 1.15rem;
-  margin: 1rem 0 1.1rem;
+  margin: 1rem 0 1.2rem;
   border: 1px solid var(--border);
   backdrop-filter: blur(10px);
 }
 
 .problem-text, .solution-text {
-  font-size: 0.93rem;
+  font-size: 0.98rem;
   color: var(--text-muted);
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  line-height: 1.8;
 }
 
 .problem-text i, .solution-text i {
@@ -859,9 +884,16 @@ body {
 
 .hero-buttons {
   display: flex;
-  gap: 1rem;
+  gap: 0.85rem;
   flex-wrap: wrap;
-  margin-top: 0.2rem;
+  margin-top: 0.8rem;
+}
+
+.hero-action-btn {
+  min-width: 150px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 14px;
 }
 
 /* Hero Image */
@@ -875,7 +907,7 @@ body {
   max-width: 100%;
   background: linear-gradient(180deg, var(--surface-strong), var(--surface));
   border-radius: 12px;
-  padding: 2rem;
+  padding: 1.6rem;
   text-align: center;
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
@@ -941,7 +973,7 @@ body {
 /* Divider */
 .divider {
   text-align: center;
-  padding: 2rem 0;
+  padding: 1.35rem 0;
   color: var(--accent);
   font-size: 1rem;
   letter-spacing: 4px;
@@ -953,7 +985,7 @@ body {
 
 .section-divider {
   margin: 0 auto;
-  padding: clamp(1.25rem, 2.6vw, 2rem) 0;
+  padding: clamp(0.8rem, 1.8vw, 1.3rem) 0;
 }
 
 .divider i {
@@ -987,7 +1019,7 @@ body {
 .section-container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: clamp(3.6rem, 7vw, 6.25rem) 2.75rem;
+  padding: clamp(2.7rem, 4.4vw, 3.8rem) 2.2rem;
   position: relative;
   z-index: 1;
 }
@@ -1025,10 +1057,10 @@ body {
   text-align: center;
   font-size: clamp(2rem, 3vw, 3.1rem);
   font-weight: 760;
-  margin-bottom: 0.85rem;
+  margin-bottom: 1rem;
   color: var(--text);
   letter-spacing: -0.04em;
-  line-height: 1.08;
+  line-height: 1.14;
 }
 
 .section-title::before,
@@ -1044,29 +1076,29 @@ body {
 .section-subtitle {
   text-align: center;
   color: var(--text-muted);
-  margin-bottom: 2.6rem;
+  margin-bottom: 3rem;
   font-size: 1.1rem;
   max-width: 680px;
   margin-left: auto;
   margin-right: auto;
-  line-height: 1.65;
+  line-height: 1.88;
 }
 
 /* Features Grid */
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
-  gap: 1.6rem;
+  gap: 1.2rem;
 }
 
 .feature-card {
   background: linear-gradient(145deg, var(--surface-strong), var(--surface));
   backdrop-filter: blur(8px);
   border-radius: 30px;
-  padding: 2rem;
+  padding: 1.65rem;
   border: 1px solid var(--border);
   transition: all 0.3s ease;
-  min-height: 300px;
+  min-height: 280px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -1094,7 +1126,7 @@ body {
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  margin-bottom: 1.7rem;
+  margin-bottom: 1.2rem;
 }
 
 .feature-icon {
@@ -1153,18 +1185,18 @@ body {
 .steps-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.6rem;
-  margin-top: 2rem;
+  gap: 1.2rem;
+  margin-top: 1.4rem;
 }
 
 .step-card {
   text-align: left;
-  padding: 2rem;
+  padding: 1.65rem;
   background: var(--surface-strong);
   border-radius: 30px;
   border: 1px solid var(--border);
   transition: all 0.3s ease;
-  min-height: 260px;
+  min-height: 236px;
   box-shadow: var(--shadow-sm);
 }
 
@@ -1178,7 +1210,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 2rem;
+  margin-bottom: 1.4rem;
 }
 
 .step-number {
@@ -1231,13 +1263,13 @@ body {
 .testimonials-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.6rem;
+  gap: 1.2rem;
 }
 
 .testimonial-card {
   background: var(--surface-strong);
   border-radius: 30px;
-  padding: 2rem;
+  padding: 1.65rem;
   border: 1px solid var(--border);
   transition: all 0.3s ease;
   box-shadow: var(--shadow-sm);
@@ -1401,6 +1433,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.45rem;
   border-radius: 999px;
   padding: 0.38rem 0.7rem;
   border: 1px solid var(--border);
@@ -1415,6 +1448,12 @@ body {
   border-color: color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
+.comparison-value-excluded {
+  color: #b23b3b;
+  background: rgba(178, 59, 59, 0.08);
+  border-color: rgba(178, 59, 59, 0.18);
+}
+
 .comparison-value-limited {
   color: var(--text);
   background: var(--surface-strong);
@@ -1423,6 +1462,15 @@ body {
 .comparison-value-muted {
   color: var(--text-muted);
   background: transparent;
+}
+
+.comparison-value-icon {
+  min-width: 2.5rem;
+  padding-inline: 0.6rem;
+}
+
+.comparison-value i {
+  font-size: 1rem;
 }
 
 .faq-shell,
@@ -1493,44 +1541,6 @@ body {
   gap: 1.35rem;
 }
 
-.contact-points {
-  display: grid;
-  gap: 1rem;
-}
-
-.contact-point {
-  display: flex;
-  gap: 1rem;
-  padding: 1.1rem 1.2rem;
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  border: 1px solid var(--border);
-}
-
-.contact-point i {
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 16px;
-  background: var(--accent-light);
-  color: var(--accent);
-  font-size: 1.3rem;
-}
-
-.contact-point strong {
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.contact-point p {
-  margin: 0;
-  color: var(--text-muted);
-  line-height: 1.65;
-}
-
 .contact-card {
   padding: 1.4rem;
 }
@@ -1584,15 +1594,15 @@ body {
 }
 
 .contact-alert-success {
-  background: rgba(24, 128, 86, 0.11);
-  color: #146c46;
-  border: 1px solid rgba(24, 128, 86, 0.2);
+  background: var(--success-bg, rgba(24, 128, 86, 0.11));
+  color: var(--success-text, #146c46);
+  border: 1px solid color-mix(in srgb, var(--success-text, #146c46) 22%, var(--border));
 }
 
 .contact-alert-error {
-  background: rgba(178, 59, 59, 0.1);
-  color: #913232;
-  border: 1px solid rgba(178, 59, 59, 0.2);
+  background: var(--danger-bg, rgba(178, 59, 59, 0.1));
+  color: var(--danger-text, #913232);
+  border: 1px solid color-mix(in srgb, var(--danger-text, #913232) 20%, var(--border));
 }
 
 .spin-icon {
@@ -1607,14 +1617,14 @@ body {
 .pricing-card {
   background: var(--surface-strong);
   border-radius: 28px;
-  padding: 2rem;
+  padding: 1.7rem;
   border: 1px solid var(--border);
   transition: all 0.3s ease;
   position: relative;
   text-align: left;
   display: flex;
   flex-direction: column;
-  min-height: 560px;
+  min-height: 520px;
 }
 
 .pricing-card:hover {
@@ -1694,7 +1704,7 @@ body {
 
 .pricing-features {
   list-style: none;
-  margin: 1.5rem 0;
+  margin: 1.25rem 0;
   text-align: left;
   flex: 1;
 }
@@ -1824,6 +1834,12 @@ body {
   border-color: rgba(224, 173, 114, 0.28);
 }
 
+[data-theme="dark"] .comparison-value-excluded {
+  color: #ffcdc6;
+  background: rgba(178, 59, 59, 0.16);
+  border-color: rgba(255, 205, 198, 0.15);
+}
+
 [data-theme="dark"] .comparison-value-limited {
   color: #fff7ee;
   background: rgba(255, 255, 255, 0.06);
@@ -1840,9 +1856,17 @@ body {
   gap: 0.75rem;
 }
 
+.pricing-actions form {
+  min-width: 0;
+}
+
+.pricing-actions button {
+  width: 100%;
+}
+
 .pricing-actions .btn-secondary,
 .pricing-card > .btn-secondary {
-  background: color-mix(in srgb, var(--surface-strong) 88%, white);
+  background: color-mix(in srgb, var(--surface-strong) 88%, var(--surface));
   color: var(--text);
   border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
 }
@@ -1871,31 +1895,31 @@ body {
 /* CTA Block */
 .cta-block {
   max-width: 1000px;
-  margin: 2rem auto 3rem;
+  margin: 1.4rem auto 2.2rem;
   background:
     radial-gradient(circle at 12% 20%, rgba(255,255,255,0.3), transparent 24%),
     linear-gradient(135deg, #6e4726, #b97c44);
   border-radius: 40px;
   color: #fffaf4;
-  padding: 3rem;
+  padding: 2.35rem;
   border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow: var(--shadow-lg);
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .cta-icon {
   width: 58px;
   height: 58px;
   border-radius: 20px;
-  background: rgba(255,255,255,0.16);
+  background: color-mix(in srgb, #ffffff 16%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.7rem;
-  color: white;
+  color: #fffaf4;
   margin-bottom: 1rem;
 }
 
@@ -1920,7 +1944,7 @@ body {
 }
 
 .cta-actions .btn-primary {
-  background: white;
+  background: color-mix(in srgb, var(--surface-strong) 92%, #ffffff);
   color: var(--accent-strong);
   height: 52px;
   min-height: 52px;
@@ -1953,14 +1977,14 @@ body {
   min-width: 44px;
   min-height: 44px;
   max-width: 100%;
-  padding: 0.85rem 2rem;
-  border-radius: 60px;
+  padding: 0.85rem 1.35rem;
+  border-radius: 14px;
   font-weight: 600;
   font-size: 0.95rem;
   transition: all 0.3s ease;
   text-decoration: none;
   cursor: pointer;
-  border: none;
+  border: 1px solid transparent;
   text-align: center;
   overflow-wrap: anywhere;
 }
@@ -1991,7 +2015,7 @@ body {
 .footer {
   background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 3.5rem 2rem 2rem;
+  padding: 2.8rem 1.6rem 1.6rem;
   margin-top: auto;
   width: 100%;
   bottom: 0;
@@ -2188,7 +2212,7 @@ body {
   }
 
   .hero {
-    padding: 4.5rem 1.2rem 2.5rem;
+    padding: calc(70px + 2.2rem) 1.1rem 2.4rem;
     min-height: auto;
   }
 
@@ -2223,7 +2247,7 @@ body {
   .section-title { font-size: 1.8rem; }
   .section-title::before,
   .section-title::after { display: none; }
-  .section-container { padding: 3rem 1.2rem; }
+  .section-container { padding: 2.55rem 1.1rem; }
   .feature-card, .step-card, .testimonial-card { min-height: auto; }
   .steps-section { background: var(--bg); }
   .contact-grid,
@@ -2232,11 +2256,10 @@ body {
   .section-subtitle-left,
   .section-kicker-inline { text-align: center; margin-left: auto; margin-right: auto; }
   .contact-copy { text-align: center; }
-  .contact-point { text-align: left; }
   .cta-block {
     grid-template-columns: 1fr;
     margin: 1rem 1.2rem 2rem;
-    padding: 2rem;
+    padding: 1.7rem;
     border-radius: 30px;
   }
   .pricing-comparison { margin-top: 1.6rem; padding: 1rem; border-radius: 24px; }
@@ -2254,7 +2277,7 @@ body {
 
 @media (max-width: 575.98px) {
   .hero {
-    padding-inline: 1rem;
+    padding: calc(70px + 1.8rem) 0.95rem 2.2rem;
   }
 
   .hero-badge,
@@ -2279,7 +2302,7 @@ body {
   }
 
   .section-container {
-    padding-inline: 1rem;
+    padding: 2.25rem 0.95rem;
   }
 
   .contact-card {
@@ -2310,7 +2333,7 @@ body {
 
 @media (max-width: 359.98px) {
   .hero {
-    padding-inline: 0.8rem;
+    padding: calc(70px + 1.9rem) 0.8rem 2.4rem;
   }
 
   .hero-title {

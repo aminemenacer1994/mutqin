@@ -8,16 +8,14 @@ use Illuminate\Http\Request;
 
 class ContactSubmissionController extends Controller
 {
-    public function index(): JsonResponse
-    {
-        return response()->json(ContactSubmission::query()->latest()->get());
-    }
-
     public function store(Request $request): JsonResponse
     {
         $validated = $this->validateSubmission($request);
 
-        $submission = ContactSubmission::query()->create($validated);
+        $submission = ContactSubmission::query()->create([
+            ...$validated,
+            'status' => 'pending',
+        ]);
 
         return response()->json([
             'message' => 'Your message has been sent successfully.',
@@ -25,43 +23,18 @@ class ContactSubmissionController extends Controller
         ], 201);
     }
 
-    public function show(ContactSubmission $contact): JsonResponse
-    {
-        return response()->json($contact);
-    }
-
-    public function update(Request $request, ContactSubmission $contact): JsonResponse
-    {
-        $validated = $this->validateSubmission($request);
-
-        $contact->update($validated);
-
-        return response()->json([
-            'message' => 'Contact submission updated successfully.',
-            'data' => $contact->fresh(),
-        ]);
-    }
-
-    public function destroy(ContactSubmission $contact): JsonResponse
-    {
-        $contact->delete();
-
-        return response()->json([
-            'message' => 'Contact submission deleted successfully.',
-        ]);
-    }
-
     private function validateSubmission(Request $request): array
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
-            'subject' => ['nullable', 'string', 'max:255'],
+            'subject' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:5000'],
         ], [
             'name.required' => 'Please enter your name.',
             'email.required' => 'Please enter your email address.',
             'email.email' => 'Please enter a valid email address.',
+            'subject.required' => 'Please enter a subject.',
             'message.required' => 'Please enter a message.',
         ]);
     }

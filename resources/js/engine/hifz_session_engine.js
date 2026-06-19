@@ -3,6 +3,7 @@ const HIFZ_PLAN_STORAGE_KEY = 'mutqin_hifz_plan'
 const AYAH_PROGRESS_STORAGE_KEY = 'mutqin_ayah_progress'
 const LEGACY_AYAH_PROGRESS_STORAGE_KEY = 'mutqin_spaced_repetition_memory'
 const HIFZ_PLAN_ARCHIVE_STORAGE_KEY = 'mutqin_hifz_plan_archives'
+const HIFZ_APP_STATE_STORAGE_KEY = 'mutqin_hifz_app_state'
 
 const QURAN_TOTALS = {
   ayahs: 6236,
@@ -183,7 +184,30 @@ function getSurahIndexByName(name = '') {
   })
 }
 
+function getSurahIdByName(name = '') {
+  const index = getSurahIndexByName(name)
+  return index >= 0 ? index + 1 : 0
+}
+
+function resolvePlanScope(plan = DEFAULT_PLAN) {
+  const surah = Number(plan.selectedSurahId || getSurahIdByName(plan.selectedSurah || plan.surah || ''))
+  if (!surah) return null
+  const maxAyah = Number(SURAH_AYAH_COUNTS[surah - 1] || 0)
+  const selectedFrom = Number(plan.selectedRange?.from || plan.range?.from || 0)
+  const selectedTo = Number(plan.selectedRange?.to || plan.range?.to || 0)
+  const startAyah = Number.isFinite(selectedFrom) && selectedFrom > 0 ? selectedFrom : 1
+  const endAyah = Number.isFinite(selectedTo) && selectedTo >= startAyah ? Math.min(selectedTo, maxAyah) : maxAyah
+  return {
+    surah,
+    startAyah,
+    endAyah,
+    totalAyahs: Math.max(1, endAyah - startAyah + 1)
+  }
+}
+
 function getPlanAyahTotal(plan = DEFAULT_PLAN) {
+  const scope = resolvePlanScope(plan)
+  if (scope) return scope.totalAyahs
   const from = Number(plan.selectedRange?.from || plan.range?.from || 0)
   const to = Number(plan.selectedRange?.to || plan.range?.to || 0)
   if (Number.isFinite(from) && Number.isFinite(to) && from > 0 && to >= from) {
@@ -290,12 +314,28 @@ function buildQueueItem(entry, type) {
     surah: entry.surah,
     ayah: entry.ayah,
     type,
+    chapterId: entry.surah,
+    number: entry.ayah,
     progress: entry.progress || null
   }
 }
 
-function getNewAyahEntries(progressEntries = [], count = 3) {
+function getNewAyahEntries(progressEntries = [], count = 3, scope = null) {
   const knownKeys = new Set(progressEntries.map(entry => entry.key))
+  if (scope?.surah) {
+    const newAyahs = []
+    for (let ayah = scope.startAyah; ayah <= scope.endAyah && newAyahs.length < count; ayah += 1) {
+      const key = `${scope.surah}:${ayah}`
+      if (knownKeys.has(key)) continue
+      newAyahs.push({
+        surah: scope.surah,
+        ayah,
+        key
+      })
+    }
+    return newAyahs
+  }
+
   const newAyahs = []
   let nextRef = getNextAyahRef(getHighestKnownAyah(progressEntries))
 
@@ -330,7 +370,12 @@ export function generateTodaySession() {
   const plan = loadHifzPlan()
   if (plan.status === 'paused' || plan.lifecycle?.status === 'paused') return []
 
+  const scope = resolvePlanScope(plan)
   const progressEntries = getProgressEntries(loadAyahProgress())
+    .filter(entry => {
+      if (!scope) return true
+      return entry.surah === scope.surah && entry.ayah >= scope.startAyah && entry.ayah <= scope.endAyah
+    })
   const todayToken = getTodayDateToken()
 
   const dueAyahs = progressEntries
@@ -349,7 +394,7 @@ export function generateTodaySession() {
 
   const existingQueueKeys = new Set([...dueAyahs, ...revisionAyahs].map(item => item.key))
   const newAyahLimit = normalizeDailyNewAyahCount(plan)
-  const newAyahs = getNewAyahEntries(progressEntries, newAyahLimit)
+  const newAyahs = getNewAyahEntries(progressEntries, newAyahLimit, scope)
     .filter(entry => !existingQueueKeys.has(entry.key))
     .map(entry => buildQueueItem(entry, 'new'))
 
@@ -360,11 +405,87 @@ export function generateTodaySession() {
   ]
 }
 
+export function createHifzAppState() {
+  return {
+    mode: 'none',
+    sessionActive: false,
+    activePlanId: null,
+    todaySession: [],
+    progress: {},
+    plannerReady: false,
+    lastEvent: '',
+    updatedAt: null
+  }
+}
+
+export function buildHifzPlannerSessionState(options = {}) {
+  const plan = options.plan || loadHifzPlan()
+  const progress = options.progress || loadAyahProgress()
+  const appState = options.appState || createHifzAppState()
+  const todaySession = Array.isArray(options.todaySession) ? options.todaySession : generateTodaySession()
+  const progressEntries = getProgressEntries(progress)
+  const scope = resolvePlanScope(plan)
+  const scopeEntries = scope
+    ? progressEntries.filter(entry => entry.surah === scope.surah && entry.ayah >= scope.startAyah && entry.ayah <= scope.endAyah)
+    : progressEntries
+  const dueToday = todaySession.filter(item => item.type === 'due' || item.type === 'revision')
+  const newToday = todaySession.filter(item => item.type === 'new')
+  const firstItem = todaySession[0] || null
+  const lastItem = todaySession[todaySession.length - 1] || firstItem
+  const confidenceAverage = scopeEntries.length
+    ? scopeEntries.reduce((sum, entry) => sum + Number(entry.progress?.masteryScore || 0), 0) / scopeEntries.length
+    : 0
+  const memoryConfidence = confidenceAverage >= 0.8 ? 'High' : confidenceAverage >= 0.45 ? 'Medium' : 'Low'
+  const nextReviewDate = dueToday[0]?.progress?.nextReview || scopeEntries
+    .map(entry => entry.progress?.nextReview || '')
+    .filter(Boolean)
+    .sort()[0] || ''
+
+  let nextAction = 'Today: Memorise your next ayahs'
+  let why = 'We will guide today’s memorisation one ayah at a time.'
+  if (dueToday.length) {
+    nextAction = `Next: Revise ${dueToday.length} ayah${dueToday.length === 1 ? '' : 's'}`
+    why = 'Because these ayahs are scheduled for review today.'
+  } else if (newToday.length) {
+    nextAction = `Today: Memorise ${newToday.length} ayah${newToday.length === 1 ? '' : 's'}`
+    why = 'Because this is your daily Hifz goal.'
+  }
+
+  return {
+    mode: 'planner',
+    sessionActive: !!appState.sessionActive,
+    activePlanId: plan.id || null,
+    todaySession,
+    plannerReady: !!todaySession.length && !!firstItem,
+    sessionRange: firstItem
+      ? {
+          chapterId: firstItem.surah,
+          rangeStart: firstItem.ayah,
+          rangeEnd: lastItem?.ayah || firstItem.ayah
+        }
+      : null,
+    todayGoalLabel: newToday.length
+      ? `${newToday.length} new ayah${newToday.length === 1 ? '' : 's'}`
+      : `${Math.max(1, dueToday.length)} ayah${Math.max(1, dueToday.length) === 1 ? '' : 's'} to review`,
+    dueCount: dueToday.length,
+    newCount: newToday.length,
+    completedAyahs: scopeEntries.length,
+    memoryConfidence,
+    nextAction,
+    why,
+    nextReviewLabel: nextReviewDate ? formatDateToken(new Date(nextReviewDate)) : 'Tomorrow',
+    retentionLabel: dueToday.length
+      ? `${dueToday.length} ayah${dueToday.length === 1 ? '' : 's'} scheduled for revision today`
+      : 'Retention system active'
+  }
+}
+
 export {
   HIFZ_PLAN_STORAGE_KEY,
   AYAH_PROGRESS_STORAGE_KEY,
   LEGACY_AYAH_PROGRESS_STORAGE_KEY,
   HIFZ_PLAN_ARCHIVE_STORAGE_KEY,
+  HIFZ_APP_STATE_STORAGE_KEY,
   QURAN_TOTALS,
   SURAH_AYAH_COUNTS,
   SURAH_NAMES,
@@ -373,7 +494,8 @@ export {
   getPlanAyahTotal,
   calculatePlanForecast,
   formatDuration,
-  formatDateToken
+  formatDateToken,
+  resolvePlanScope
 }
 
 export default {
@@ -384,6 +506,8 @@ export default {
   AYAH_PROGRESS_STORAGE_KEY,
   LEGACY_AYAH_PROGRESS_STORAGE_KEY,
   HIFZ_PLAN_ARCHIVE_STORAGE_KEY,
+  HIFZ_APP_STATE_STORAGE_KEY,
   QURAN_TOTALS,
-  calculatePlanForecast
+  calculatePlanForecast,
+  buildHifzPlannerSessionState
 }

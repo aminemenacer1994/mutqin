@@ -4,8 +4,25 @@
 <div class="auth-shell">
     <div class="auth-card">
         <div class="auth-copy">
+            <div class="auth-eyebrow"><i class="bi bi-chat-square-heart"></i> Start simply</div>
             <h1 class="auth-title" data-i18n="register">{{ __('ui.register') }}</h1>
-            <p class="auth-subtitle" data-i18n="authRegisterSubtitle">{{ __('ui.auth_register_subtitle') }}</p>
+            <p class="auth-subtitle" data-i18n="authRegisterSubtitle">Create your account in a minute, then move straight into focused Quran learning with clear next steps.</p>
+            <div class="auth-note-list">
+                <div class="auth-note">
+                    <i class="bi bi-compass"></i>
+                    <div>
+                        <strong>Guided start</strong>
+                        <span>Begin with a short sample path before you build a longer routine.</span>
+                    </div>
+                </div>
+                <div class="auth-note">
+                    <i class="bi bi-cloud-check"></i>
+                    <div>
+                        <strong>Progress stays synced</strong>
+                        <span>Saved sessions, subscription state, and practice history remain attached to one account.</span>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="auth-form-wrap">
                     @error('google')
@@ -71,12 +88,12 @@
 
                         <div class="auth-actions">
                                 <button type="submit" class="btn auth-btn-primary">
-                                    <span data-i18n="register">{{ __('ui.register') }}</span>
+                                    <span data-i18n="register">Create account</span>
                                 </button>
                         </div>
                     </form>
                     <p class="auth-switch">
-                        {{ __('ui.auth_already_account') }}
+                        Already have an account?
                         <a href="{{ route('login') }}" data-i18n="login">{{ __('ui.login') }}</a>
                     </p>
         </div>

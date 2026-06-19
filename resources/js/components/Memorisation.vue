@@ -10,7 +10,7 @@
     </div>
 
     <!-- Main Content -->
-    <div v-if="appReady && isLoggedIn" class="main container" :class="{
+    <div v-if="appReady && isLoggedIn" class="main container-fluid" :class="{
       'tools-open': showTools,
       'player-visible': playerVisible,
       'mushaf-mode-active': readingViewMode === 'mushaf',
@@ -54,24 +54,44 @@
               </button>
             </div>
           </div>
-          <div class="offcanvas-launcher-card">
-            <div class="offcanvas-launcher-head">
+          <div v-if="!hasContinueSession" class="idle-action-shell">
+            <div class="idle-action-head">
               <span class="offcanvas-launcher-kicker"><i class="bi bi-compass"></i> {{ t('home.startKicker') }}</span>
               <strong class="offcanvas-launcher-title">{{ t('home.startTitle') }}</strong>
+              <p class="offcanvas-launcher-copy">{{ t('home.controlsHint') }}</p>
             </div>
-            <div class="offcanvas-launcher-steps" aria-label="Session setup steps">
-              <span><i class="bi bi-journal-text"></i> {{ t('home.selectSurah') }}</span>
-              <span><i class="bi bi-bounding-box"></i> {{ t('home.pickRange') }}</span>
-              <span><i class="bi bi-arrow-repeat"></i> {{ t('home.setRepeats') }}</span>
+            <div class="container-fluid idle-action-grid-shell">
+              <div class="row g-3 idle-action-grid">
+                <div class="col-12 col-md-6 col-xl-3">
+                  <button class="idle-action-card idle-action-card-primary" type="button" @click="openNewSessionSetup">
+                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                    <strong>Create New Session</strong>
+                    <small>Choose a surah, range, and start fresh.</small>
+                  </button>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                  <button class="idle-action-card" type="button" @click="openSavedSessionsPanel">
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                    <strong>Repeat Session</strong>
+                    <small>Reopen a saved range and run it again.</small>
+                  </button>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                  <button class="idle-action-card" type="button" @click="openSavedSessionsPanel">
+                    <i class="bi bi-save" aria-hidden="true"></i>
+                    <strong>Save Session</strong>
+                    <small>Open saved sessions and manage your ranges.</small>
+                  </button>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                  <button class="idle-action-card idle-action-card-accent" type="button" @click="openHifzPlanModal">
+                    <i class="bi bi-journal-plus" aria-hidden="true"></i>
+                    <strong>Create a Hifz Plan</strong>
+                    <small>Build a guided daily Hifz journey.</small>
+                  </button>
+                </div>
+              </div>
             </div>
-            <button class="cta cta-primary setup-primary" type="button" aria-controls="memorisationToolsPanel"
-              :aria-expanded="showTools ? 'true' : 'false'" @click="openToolsPanel()" title="Open controls"
-              aria-label="Open session setup controls">
-              <i class="bi bi-toggles2" aria-hidden="true"></i>
-            </button>
-            <p class="offcanvas-launcher-copy">
-              {{ t('home.controlsHint') }}
-            </p>
           </div>
         </section>
 
@@ -129,55 +149,95 @@
           <span>{{ t('common.loading') }}</span>
         </div>
         <div v-else-if="hasVerses" class="workspace">
+          <div v-if="!hasSessionStarted && !isSessionCompleted" class="idle-action-shell workspace-idle-shell">
+            <div class="idle-action-head">
+              <span class="offcanvas-launcher-kicker"><i class="bi bi-compass"></i> {{ t('home.startKicker') }}</span>
+              <strong class="offcanvas-launcher-title">{{ t('home.startTitle') }}</strong>
+              <p class="offcanvas-launcher-copy">{{ t('home.controlsHint') }}</p>
+            </div>
+            <div class="container-fluid idle-action-grid-shell">
+              <div class="row g-3 idle-action-grid">
+                <div class="col-12 col-md-6 col-xl-3">
+                  <button class="idle-action-card idle-action-card-primary" type="button" @click="openNewSessionSetup">
+                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                    <strong>Create New Session</strong>
+                    <small>Choose a surah, range, and start fresh.</small>
+                  </button>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                  <button class="idle-action-card" type="button" @click="openSavedSessionsPanel">
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                    <strong>Repeat Session</strong>
+                    <small>Reopen a saved range and run it again.</small>
+                  </button>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                  <button class="idle-action-card" type="button" @click="openSavedSessionsPanel">
+                    <i class="bi bi-save" aria-hidden="true"></i>
+                    <strong>Save Session</strong>
+                    <small>Open saved sessions and manage your ranges.</small>
+                  </button>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3">
+                  <button class="idle-action-card idle-action-card-accent" type="button" @click="openHifzPlanModal">
+                    <i class="bi bi-journal-plus" aria-hidden="true"></i>
+                    <strong>Create a Hifz Plan</strong>
+                    <small>Build a guided daily Hifz journey.</small>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- In your template, replace the workspace-shell section -->
 <section class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
   <!-- Hide the entire top card when session is completed -->
   <div v-if="!isSessionCompleted" class="workspace-shell-head">
     <div class="workspace-shell-copy">
-      <span class="workspace-shell-kicker">
-        {{ isSessionCompleted ? t('sessionStatus.completed') : (hasSessionStarted ? t('sessionStatus.active') : t('sessionStatus.ready'))
-        }}
-      </span>
-      <div class="workspace-shell-title-row">
-        <h1>{{ currentChapter ? currentChapter.name_simple : activeChapterName }}</h1>
-      </div>
-      <div v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
-        <span v-if="reviewPriorityLabel">{{ reviewPriorityLabel }}</span>
+      <span class="workspace-shell-kicker">{{ isPlannerModeActive ? 'Hifz Planner' : 'Casual Session' }}</span>
+      <h1 class="workspace-shell-main-title">{{ topCardSessionLabel }}</h1>
+      <p v-if="isPlannerModeActive" class="workspace-shell-helper-copy">
+        {{ plannerBeginnerGuidance }}
+      </p>
+      <div v-else-if="reviewPriorityLabel" v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
+        <span>{{ reviewPriorityLabel }}</span>
       </div>
     </div>
     <div class="workspace-shell-actions">
       <div class="action-buttons-group">
-        <button type="button" class="action-btn verse-ai-check-btn pr-2"
-          @click="openAiMemorisationCheckerForSession"
-          :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
-          title="Check memorisation across the selected session">
-          <i class="bi bi-eye-slash"></i>
-          <span>Session Memory</span>
+        <template v-if="isPlannerModeActive">
+          <button type="button" class="action-btn action-btn-primary" @click="startPlannerPrimaryAction">
+            <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+            <span>{{ plannerPrimaryActionLabel }}</span>
+          </button>
+          <button
+            v-if="hasSessionStarted"
+            class="action-btn action-btn-secondary action-btn-exit"
+            type="button"
+            @click="openSessionExitModal"
+            title="End session"
+            aria-label="End session"
+          >
+            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+            <span>End Session</span>
+          </button>
+          <button class="action-btn action-btn-secondary hifz-plan-action-btn" type="button" @click="openHifzPlanModal"
+            aria-label="Edit Hifz Plan">
+            <i class="bi bi-pencil-square" aria-hidden="true"></i>
+            <span>Edit Plan</span>
+          </button>
+        </template>
+        <button v-if="!isPlannerModeActive" class="action-btn action-btn-secondary hifz-plan-action-btn" type="button" @click="openHifzPlanModal"
+          :aria-label="hifzPlanExists ? 'Edit Hifz Plan' : 'Create Hifz Plan'">
+          <span aria-hidden="true">📖</span>
+          <span>{{ hifzPlanExists ? 'Edit Plan' : 'Create Hifz Plan' }}</span>
         </button>
-        <button type="button" class="action-btn verse-ai-check-btn pr-2"
-          @click="openAiRecitationCheckForSession"
-          :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()"
-          title="Check recitation across the whole selected session">
-          <i class="bi bi-stars"></i>
-          <span>AI Recite</span>
-        </button>
-        <button class="action-btn action-btn-primary" type="button" @click="handlePrimaryAction"
-          :disabled="!isPlaying && !canStartSession">
-          <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
-          <span>{{ isPlaying ? t('common.pause') : t('common.startSession') }}</span>
-        </button>
-        <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button"
+        <button v-if="!isPlannerModeActive && hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button"
           @click="openSessionExitModal" title="End session" aria-label="End session">
           <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
           <span>{{ t('sessionStatus.end') }}</span>
         </button>
-        <button class="action-btn action-btn-secondary hifz-plan-action-btn" type="button" @click="openHifzPlanModal"
-          :aria-label="hifzPlanExists ? 'Edit Hifz Plan' : 'Create Hifz Plan'">
-          <span aria-hidden="true">📖</span>
-          <span>{{ hifzPlanExists ? 'Edit Hifz Plan' : 'Hifz Plan' }}</span>
-        </button>
-        <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
+        <button v-if="!isPlannerModeActive" class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
           title="Open session controls" aria-label="Open session controls">
           <i class="bi bi-sliders" aria-hidden="true"></i>
           <span>{{ t('common.controls') }}</span>
@@ -198,6 +258,9 @@
               <button type="button" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
                 <i class="bi bi-palette"></i><span>Tajweed</span>
               </button>
+              <button type="button" @click="openAdvancedControls">
+                <i class="bi bi-sliders"></i><span>Controls</span>
+              </button>
               <button type="button" @click="openRecordingsLibrary">
                 <i class="bi bi-collection-play"></i><span>View Recording</span>
               </button>
@@ -217,150 +280,11 @@
     </div>
   </div>
 
-  <section v-if="!isSessionCompleted" class="hifz-planner-dashboard" aria-label="Hifz Planner Dashboard">
-    <div v-if="hifzPlanExists" class="hifz-planner-shell">
-      <div class="hifz-planner-head">
-        <div>
-          <span class="hifz-planner-kicker">Hifz Planner</span>
-          <h2>Your Hifz Journey</h2>
-          <p>{{ hifzPlannerStatusMessage }}</p>
-        </div>
-        <div class="hifz-planner-actions">
-          <span class="hifz-plan-health" :class="`health-${hifzPlanHealth.status}`">
-            <i class="bi" :class="hifzPlanHealth.icon" aria-hidden="true"></i>
-            {{ hifzPlanHealth.label }}
-          </span>
-          <button v-if="hifzPlanLifecycleStatus !== 'active'" type="button" class="btn btn-sm btn-success" @click="startOrResumeHifzPlan">
-            <i class="bi" :class="hifzPlanLifecycleStatus === 'paused' ? 'bi-play-circle' : 'bi-play-fill'" aria-hidden="true"></i>
-            {{ hifzPlanLifecycleStatus === 'paused' ? 'Resume Plan' : 'Start Plan' }}
-          </button>
-          <button v-if="hifzPlanLifecycleStatus === 'active'" type="button" class="btn btn-sm btn-outline-secondary" @click="pauseHifzPlan">
-            <i class="bi bi-pause-circle" aria-hidden="true"></i>
-            Pause Plan
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="openHifzPlanModal">
-            <i class="bi bi-pencil-square" aria-hidden="true"></i>
-            Edit Plan
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="createNewHifzPlan">
-            <i class="bi bi-plus-circle" aria-hidden="true"></i>
-            New Plan
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-danger" @click="deleteHifzPlan">
-            <i class="bi bi-trash" aria-hidden="true"></i>
-            Delete
-          </button>
-        </div>
-      </div>
-
-      <div class="hifz-planner-metrics" aria-label="Planner progress">
-        <span v-for="item in hifzPlannerMetricCards" :key="item.key" class="hifz-planner-metric">
-          <i class="bi" :class="item.icon" aria-hidden="true"></i>
-          <strong>{{ item.value }}</strong>
-          <small>{{ item.label }}</small>
-        </span>
-      </div>
-
-      <div v-if="hifzRecoveryRequired" class="hifz-recovery-card" aria-label="Recovery options">
-        <div>
-          <strong>You missed {{ hifzPlanHealth.missedDays }} day{{ hifzPlanHealth.missedDays === 1 ? '' : 's' }}.</strong>
-          <span>{{ hifzPlanHealth.detail }}</span>
-        </div>
-        <div class="hifz-recovery-actions">
-          <button type="button" class="btn btn-sm btn-success" @click="applyHifzRecovery('catchUp')">
-            <i class="bi bi-lightning-charge" aria-hidden="true"></i>
-            Catch Up Faster
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="applyHifzRecovery('extend')">
-            <i class="bi bi-calendar-plus" aria-hidden="true"></i>
-            Extend Completion Date
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="applyHifzRecovery('reduce')">
-            <i class="bi bi-bullseye" aria-hidden="true"></i>
-            Reduce Daily Target
-          </button>
-        </div>
-      </div>
-
-      <div class="hifz-planner-grid">
-        <div class="hifz-planner-panel">
-          <div class="hifz-panel-title">
-            <i class="bi bi-gem" aria-hidden="true"></i>
-            <span>Memory Schedule</span>
-          </div>
-          <div class="hifz-memory-stats">
-            <span v-for="item in hifzMemoryScheduleCards" :key="item.key">
-              <strong>{{ item.value }}</strong>
-              <small>{{ item.label }}</small>
-            </span>
-          </div>
-          <div class="hifz-next-reviews">
-            <span v-for="item in hifzNextReviewDates" :key="item.key">
-              <strong>{{ item.label }}</strong>
-              <small>{{ item.date }}</small>
-            </span>
-          </div>
-        </div>
-
-        <div class="hifz-planner-panel">
-          <div class="hifz-panel-title">
-            <i class="bi bi-lightbulb" aria-hidden="true"></i>
-            <span>Retention Insights</span>
-          </div>
-          <ul class="hifz-retention-insights">
-            <li v-for="insight in hifzRetentionInsights" :key="insight">{{ insight }}</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="hifz-analytics-layer">
-        <div class="hifz-analytics-head">
-          <div class="hifz-panel-title">
-            <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
-            <span>Planner Analytics</span>
-          </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="hifzPlannerAnalyticsOpen = !hifzPlannerAnalyticsOpen">
-            <i class="bi" :class="hifzPlannerAnalyticsOpen ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
-            {{ hifzPlannerAnalyticsOpen ? 'Simple View' : 'Detailed View' }}
-          </button>
-        </div>
-        <div class="hifz-simple-analytics" aria-label="Simple planner analytics">
-          <span v-for="item in hifzPlannerSimpleAnalytics" :key="item.key" class="hifz-simple-analytics-item">
-            <i class="bi" :class="item.icon" aria-hidden="true"></i>
-            <strong>{{ item.value }}</strong>
-            <small>{{ item.label }} · {{ item.detail }}</small>
-          </span>
-        </div>
-        <div v-if="hifzPlannerAnalyticsOpen" class="hifz-detailed-planner-analytics">
-          <div v-for="section in hifzPlannerDetailedAnalytics" :key="section.key" class="hifz-detailed-section">
-            <strong><i class="bi" :class="section.icon" aria-hidden="true"></i>{{ section.title }}</strong>
-            <span v-for="row in section.rows" :key="row.label">
-              <small>{{ row.label }}</small>
-              <b>{{ row.value }}</b>
-              <em>{{ row.detail }}</em>
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div v-else class="hifz-planner-empty">
-      <div>
-        <span class="hifz-planner-kicker">Hifz Planner</span>
-        <h2>Create a living Hifz plan</h2>
-        <p>Set a daily target and Mutqin will forecast completion, schedule reviews, and track retention.</p>
-      </div>
-      <button type="button" class="btn btn-success" @click="openHifzPlanModal">
-        <i class="bi bi-plus-circle" aria-hidden="true"></i>
-        Create New Plan
-      </button>
-    </div>
-  </section>
-  
   <!-- Quick controls - also hidden when session is completed -->
-  <div v-if="!isSessionCompleted" v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
+  <div v-if="!isSessionCompleted && hasSessionStarted" v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
     <div class="quick-pill-group-list">
       <div class="quick-left-pills">
-        <div class="workspace-applied-pills" aria-label="Live session settings">
+        <div v-if="!isPlannerModeActive" class="workspace-applied-pills" aria-label="Live session settings">
           <span v-for="item in topCardAppliedPills" :key="item.key" class="workspace-applied-pill"
             :class="{ muted: item.muted }">
             <i class="bi" :class="item.icon" aria-hidden="true"></i>
@@ -403,7 +327,7 @@
 </section>
 
 <!-- Session Complete - Only shows when session is fully done -->
-<div v-if="isSessionCompleted" class="session-complete-wrapper">
+<div v-if="isSessionCompleted && !isPlannerModeActive" class="session-complete-wrapper">
   <!-- Status Header -->
   <div class="completion-header">
     <div class="completion-icon">
@@ -411,7 +335,7 @@
     </div>
     <div class="completion-text">
       <h3>Session Complete</h3>
-      <p>You've completed all {{ totalVerses }} ayahs</p>
+      <p>{{ isPlannerModeActive ? "Today's Hifz session has been recorded." : "You've completed all " + totalVerses + " ayahs" }}</p>
     </div>
   </div>
 
@@ -435,17 +359,13 @@
 
   <!-- Action Buttons -->
   <div class="completion-actions">
-    <button class="action-btn primary" @click="openNewSessionSetup">
-      <i class="bi bi-plus-circle"></i>
-      New Session
+    <button class="action-btn primary" @click="isPlannerModeActive ? openHifzPlanModal() : openNewSessionSetup()">
+      <i class="bi" :class="isPlannerModeActive ? 'bi-journal-text' : 'bi-plus-circle'"></i>
+      {{ isPlannerModeActive ? 'Hifz Plan' : 'New Session' }}
     </button>
     <button class="action-btn" @click="startSessionWithCountdown">
       <i class="bi bi-arrow-repeat"></i>
       Repeat Range
-    </button>
-    <button class="action-btn" @click="openInsightsPanel">
-      <i class="bi bi-graph-up"></i>
-      Insights
     </button>
   </div>
 
@@ -707,74 +627,6 @@
                 </div>
               </div>
             </div>
-            <!-- Session Complete Empty State with Clean Action Cards -->
-          <div v-else class="session-complete-empty">
-            <div class="session-complete-actions">
-              <!-- Review Insights Card -->
-              <button
-                type="button"
-                class="action-card"
-                @click="openInsightsPanel"
-              >
-                <div class="card-icon insights">
-                  <i class="bi bi-bar-chart-line"></i>
-                </div>
-                <div class="action-content">
-                  <strong>Review insights</strong>
-                  <small>See your session analytics</small>
-                </div>
-                <span class="card-arrow">→</span>
-              </button>
-
-              <!-- Save Session Card -->
-              <button
-                type="button"
-                class="action-card"
-                @click="saveCurrentSessionWithName"
-              >
-                <div class="card-icon save">
-                  <i class="bi bi-save"></i>
-                </div>
-                <div class="action-content">
-                  <strong>Save session</strong>
-                  <small>Keep this completed range</small>
-                </div>
-                <span class="card-arrow">→</span>
-              </button>
-
-              <!-- Reset Range Card -->
-              <button
-                type="button"
-                class="action-card"
-                @click="startSessionWithCountdown"
-              >
-                <div class="card-icon reset">
-                  <i class="bi bi-arrow-repeat"></i>
-                </div>
-                <div class="action-content">
-                  <strong>Reset range</strong>
-                  <small>Play same range again</small>
-                </div>
-                <span class="card-arrow">→</span>
-              </button>
-
-              <!-- New Session Card - Primary -->
-              <button
-                type="button"
-                class="action-card primary"
-                @click="openNewSessionSetup"
-              >
-                <div class="card-icon new">
-                  <i class="bi bi-plus-square"></i>
-                </div>
-                <div class="action-content">
-                  <strong>Create new session</strong>
-                  <small>Choose different surah or range</small>
-                </div>
-                <span class="card-arrow">→</span>
-              </button>
-            </div>
-          </div>
           </main>
         </div>
       </div>
@@ -793,7 +645,7 @@
               <span class="tools-x-glyph" aria-hidden="true">&times;</span>
             </button>
           </div>
-          <div class="tools-tabs" role="tablist" aria-label="Controls tabs">
+          <div v-if="!isPlannerModeActive" class="tools-tabs" role="tablist" aria-label="Controls tabs">
             <button role="tab" :aria-selected="tab === 'tools' ? 'true' : 'false'" :class="{ active: tab === 'tools' }"
               @click.prevent="setActiveTab('tools')" title="Session tools" type="button">
               <i class="bi bi-sliders"></i> Session
@@ -819,8 +671,68 @@
         </div>
 
         <div ref="toolsBody" class="tools-body compact">
+          <div v-if="isPlannerModeActive" class="sheet planner-controls-sheet">
+            <section class="sheet-section sheet-section-compact">
+              <div class="sheet-content planner-controls-content">
+                <div class="field-stack field-stack-compact">
+                  <div class="field">
+                    <label><i class="bi bi-book"></i> Hifz Plan</label>
+                    <strong>{{ hifzPlan?.selectedSurah || 'Current plan' }} · {{ plannerSessionState.sessionRange?.rangeStart || 1 }}-{{ plannerSessionState.sessionRange?.rangeEnd || 1 }}</strong>
+                    <small class="field-hint">{{ plannerGuidanceTitle }}</small>
+                  </div>
+                  <div class="field">
+                    <label><i class="bi bi-bullseye"></i> Today's Goal</label>
+                    <strong>{{ plannerSessionState.todayGoalLabel }}</strong>
+                    <small class="field-hint">{{ plannerGuidanceWhy }}</small>
+                  </div>
+                  <div class="field">
+                    <label><i class="bi bi-gem"></i> Memory Review</label>
+                    <strong>{{ plannerMemoryReviewLine }}</strong>
+                    <small class="field-hint">Next review: {{ plannerSessionState.nextReviewLabel }} · {{ plannerConfidenceLine }}</small>
+                  </div>
+                  <div v-if="hasSessionStarted" class="field">
+                    <label><i class="bi bi-layout-text-window-reverse"></i> Session View</label>
+                    <div class="planner-controls-inline">
+                      <button
+                        type="button"
+                        class="planner-inline-btn"
+                        :class="{ active: readingViewMode === 'mushaf' }"
+                        @click="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
+                      >
+                        <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-book' : 'bi-view-stacked'"></i>
+                        {{ readingViewMode === 'mushaf' ? 'Mushaf view' : 'Stacked view' }}
+                      </button>
+                      <div class="font-dropdown quick-font-dropdown planner-font-dropdown" @click.stop>
+                        <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
+                          <i class="bi bi-text-paragraph" aria-hidden="true"></i>
+                          <span>{{ getCurrentFontLabel() }}</span>
+                          <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }" aria-hidden="true"></i>
+                        </button>
+                        <transition name="dropdown-fade">
+                          <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
+                            <button v-for="font in quranFontOptions" :key="font.value" type="button" class="font-option"
+                              :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
+                              <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
+                              <span>{{ font.label }}</span>
+                              <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                            </button>
+                          </div>
+                        </transition>
+                      </div>
+                    </div>
+                    <small class="field-hint">View and font controls stay here while planner mode is active.</small>
+                  </div>
+                  <div v-else class="field">
+                    <label><i class="bi bi-layout-text-window-reverse"></i> Session View</label>
+                    <strong>Available after you start today&apos;s session</strong>
+                    <small class="field-hint">Mushaf view and font options stay hidden until the session begins.</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
           <!-- TOOLS TAB -->
-          <div v-if="tab === 'tools'" class="sheet">
+          <div v-else-if="tab === 'tools'" class="sheet">
             <section class="sheet-section sheet-section-compact">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
@@ -842,14 +754,6 @@
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.name_simple }}</option>
                     </select>
                     <small class="field-hint">{{ t('sessionSetup.surahHint') }}</small>
-                    <div v-if="!isSessionCompleted" class="setup-metric-list" aria-label="Verse play counts">
-                      <div v-if="sessionVersePlaySummary.length" v-for="item in sessionVersePlaySummary" :key="item.key"
-                        class="setup-metric-list-row">
-                        <span>{{ item.label }}</span>
-                        <strong>{{ item.count }} play{{ item.count === 1 ? '' : 's' }}</strong>
-                      </div>
-                      <div v-else class="setup-metric-list-empty">{{ t('sessionSetup.noAudioPlayed') }}</div>
-                    </div>
                   </div>
                   <div class="field">
                     <label><i class="bi bi-bounding-box"></i> {{ t('sessionSetup.ayahRange') }}</label>
@@ -1139,78 +1043,11 @@
 
           <!-- SAVED TAB -->
           <div v-else-if="tab === 'saved'" class="sheet">
-            <div class="saved-sessions-container">
+            <div class="saved-sessions-container saved-sessions-v2">
               <!-- Header -->
               <div class="saved-header">
                 <h3><i class="bi bi-clock-history"></i> Saved Sessions</h3>
-                <p>Your memorisation sessions, ready to resume</p>
-              </div>
-
-              <!-- CONTINUE SESSION -->
-              <div v-if="hasContinueSession" class="continue-session-card">
-                <div class="continue-session-inner">
-                  <div class="continue-icon-wrapper">
-                    <i class="bi bi-arrow-clockwise"></i>
-                  </div>
-                  <div class="continue-content">
-                    <div class="continue-label">Continue This Session</div>
-                    <div class="continue-title">{{ continueSessionLabel }}</div>
-                    <div class="continue-meta">{{ continueSessionMeta }}</div>
-                  </div>
-                  <button class="btn-continue-session" @click="continueLastSession">
-                    <i class="bi bi-play-fill"></i> Resume
-                  </button>
-                </div>
-              </div>
-
-              <!-- SELECT CUSTOM SESSION - CUSTOM DROPDOWN -->
-              <div class="custom-session-selector">
-                <div class="selector-header">
-                  <i class="bi bi-bookmark"></i>
-                  <span>Select Custom Session</span>
-                </div>
-                
-                <div class="selector-row">
-                  <!-- Custom Dropdown (no Bootstrap JS needed) -->
-                  <div class="custom-dropdown" :class="{ 'is-open': dropdownOpen }">
-                    <button class="btn btn-session-dropdown w-100" type="button" 
-                            @click="dropdownOpen = !dropdownOpen">
-                      <span v-if="selectedSessionId && getSelectedSessionLabel">
-                        <i class="bi bi-journal-text"></i> {{ getSelectedSessionLabel }}
-                      </span>
-                      <span v-else class="placeholder-text">
-                        <i class="bi bi-search"></i> Choose a saved session...
-                      </span>
-                      <i class="bi bi-chevron-down dropdown-arrow" :class="{ rotated: dropdownOpen }"></i>
-                    </button>
-                    
-                    <div v-if="dropdownOpen" class="custom-dropdown-menu">
-                      <div v-for="session in sortedSavedSessions" :key="session.id"
-                          class="dropdown-item" 
-                          :class="{ active: selectedSessionId === session.id }"
-                          @click="selectSessionFromDropdown(session.id)">
-                        <div class="session-option">
-                          <div class="session-option-main">
-                            <i class="bi bi-bookmark-fill"></i>
-                            <span class="session-option-name">{{ getSessionPrimaryLabel(session) }}</span>
-                          </div>
-                          <div class="session-option-meta">
-                            <span><i class="bi bi-clock"></i> {{ formatDate(session.savedAt) }}</span>
-                            <span><i class="bi bi-arrow-repeat"></i> {{ buildSessionResumeSummary(session) }}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div v-if="!sortedSavedSessions.length" class="dropdown-item text-center text-muted py-3">
-                        <i class="bi bi-inbox"></i> No saved sessions
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <button class="btn btn-load-selected" @click="loadSelectedSession" 
-                          :disabled="!selectedSessionId">
-                    <i class="bi bi-play-fill"></i> Load Session
-                  </button>
-                </div>
+                <p>Each session keeps only the essentials: what it is, where it is, and how to get back in.</p>
               </div>
 
               <!-- SAVED SESSIONS LIST -->
@@ -1220,32 +1057,28 @@
                   <div class="session-info" @click="loadSavedSession(session.id)">
                     <div class="session-name">
                       <i class="bi bi-bookmark-fill"></i>
-                      <span>{{ getSessionPrimaryLabel(session) }}</span>
-                      <span v-if="session.archived" class="session-archive-badge">Archived</span>
-                      <span v-if="sessionMatchesCurrentLiveConfig(session)" class="session-live-badge">Active</span>
-                    </div>
-                    <div v-if="session.name && session.name !== getSessionPrimaryLabel(session)" class="session-subtitle">
-                      {{ session.name }}
+                      <span>{{ getSavedSessionName(session) }}</span>
                     </div>
                     <div class="session-details">
-                      <span><i class="bi bi-clock"></i> Saved {{ formatDate(session.savedAt) }}</span>
-                      <span><i class="bi bi-arrow-repeat"></i> {{ buildSessionResumeSummary(session) }}</span>
+                      <span><i class="bi bi-book-half"></i> {{ getSavedSessionSurah(session) }}</span>
+                      <span><i class="bi bi-clock-history"></i> Last opened {{ formatDate(session.savedAt) }}</span>
                     </div>
                   </div>
                   <div class="session-actions">
                     <button class="session-resume-btn" @click="loadSavedSession(session.id)" type="button">
                       <i class="bi bi-play-fill"></i>
-                      <span>Open</span>
+                      <span>Resume</span>
                     </button>
-                    <button class="session-delete-btn" @click.stop="deleteSavedSession(session.id)" title="Remove">
+                    <button class="session-delete-btn" @click.stop="deleteSavedSession(session.id)" title="Delete">
                       <i class="bi bi-trash3"></i>
+                      <span>Delete</span>
                     </button>
                   </div>
                 </div>
               </div>
 
               <!-- EMPTY STATE -->
-              <div v-if="savedSessions.length === 0 && !hasContinueSession" class="empty-state">
+              <div v-if="savedSessions.length === 0" class="empty-state">
                 <i class="bi bi-journal-bookmark"></i>
                 <p>No saved sessions yet</p>
                 <span>Save your current session to get started</span>
@@ -1272,26 +1105,11 @@
               <div class="stats-sessions-container">
                 <div class="saved-header">
                   <h3><i class="bi bi-bar-chart-line"></i> Insights</h3>
-                  <p>Simple session signals first, detailed analytics when you need them.</p>
+                  <p>Today first. Advanced analytics stay tucked away until you ask for them.</p>
                 </div>
-                <div class="controls-insight-chart" aria-label="Current session progress chart">
-                  <div class="controls-insight-chart-head">
-                    <span>Session progress</span>
-                    <strong>{{ progressPercent }}%</strong>
-                  </div>
-                  <div class="controls-insight-ring" :style="{ '--insight-progress': `${progressPercent}%` }">
-                    <span>{{ currentPosition }}/{{ totalVerses }}</span>
-                  </div>
-                  <div class="controls-insight-bars">
-                    <div v-for="item in controlsAnalyticsCards" :key="`bar-${item.key}`" class="controls-insight-bar">
-                      <span>{{ item.label }}</span>
-                      <div><em :style="{ width: `${getControlsInsightPercent(item)}%` }"></em></div>
-                      <strong>{{ item.value }}</strong>
-                    </div>
-                  </div>
-                </div>
-                <div class="controls-analytics-grid" aria-label="Current session analytics">
-                  <article v-for="item in controlsAnalyticsCards" :key="item.key" class="controls-analytics-card">
+                <div class="hifz-simple-analytics" aria-label="Current session analytics">
+                  <article v-for="item in controlsAnalyticsCards" :key="item.key" class="hifz-simple-analytics-item">
+                    <i class="bi" :class="item.icon" aria-hidden="true"></i>
                     <span>{{ item.label }}</span>
                     <strong>{{ item.value }}</strong>
                     <small>{{ item.description }}</small>
@@ -1311,66 +1129,68 @@
                     </span>
                   </div>
                 </section>
-                <section class="detailed-analytics-system" aria-label="Detailed analytics">
-                  <article v-for="section in detailedAnalyticsSections" :key="section.key" class="detailed-analytics-section">
-                    <div class="analytics-section-head">
-                      <i class="bi" :class="section.icon" aria-hidden="true"></i>
-                      <strong>{{ section.title }}</strong>
-                    </div>
-                    <div class="detailed-analytics-rows">
-                      <div v-for="row in section.rows" :key="`${section.key}-${row.label}`" class="detailed-analytics-row">
-                        <span>{{ row.label }}</span>
-                        <strong>{{ row.value }}</strong>
-                        <small>{{ row.detail }}</small>
+                <button type="button" class="analytics-toggle-btn" @click="showAdvancedAnalytics = !showAdvancedAnalytics">
+                  <i class="bi" :class="showAdvancedAnalytics ? 'bi-dash-circle' : 'bi-plus-circle'"></i>
+                  <span>{{ showAdvancedAnalytics ? 'Hide advanced metrics' : 'Show advanced metrics' }}</span>
+                </button>
+                <div v-if="showAdvancedAnalytics">
+                  <section class="detailed-analytics-system" aria-label="Detailed analytics">
+                    <article v-for="section in detailedAnalyticsSections" :key="section.key" class="detailed-analytics-section">
+                      <div class="analytics-section-head">
+                        <i class="bi" :class="section.icon" aria-hidden="true"></i>
+                        <strong>{{ section.title }}</strong>
                       </div>
-                    </div>
-                  </article>
-                </section>
-                <div v-if="savedSessions.length === 0" class="empty-state">
-                  <i class="bi bi-activity"></i>
-                  <p>No insights yet</p>
-                  <span>Save a session and you’ll see a simple summary here.</span>
-                </div>
-                <div v-else class="stats-panel">
-                  <div v-if="selectedStatsSessionRecord" class="stats-detail">
-                    <div class="stats-detail-head stats-detail-head-hero">
-                      <div>
-                        <h4>{{ getSessionPrimaryLabel(selectedStatsSessionRecord) }}</h4>
-                        <p
-                          v-if="selectedStatsSessionRecord.name && selectedStatsSessionRecord.name !== getSessionPrimaryLabel(selectedStatsSessionRecord)">
-                          {{ selectedStatsSessionRecord.name }}</p>
-                        <div class="stats-summary">{{ buildStatsSummary(selectedStatsSessionRecord) }}</div>
-                        <div v-if="sortedSavedSessions.length > 1" class="stats-session-select-wrap">
-                          <label class="stats-session-select-label" for="statsSessionSelect">Saved sessions</label>
-                          <select id="statsSessionSelect" class="stats-session-select"
-                            :value="selectedStatsSessionRecord.id" @change="selectStatsSession($event.target.value)">
-                            <option v-for="session in sortedSavedSessions" :key="`stats-${session.id}`"
-                              :value="session.id">
-                              {{ getSessionPrimaryLabel(session) }} · {{ formatDate(session.savedAt) }}
-                            </option>
-                          </select>
+                      <div class="detailed-analytics-rows">
+                        <div v-for="row in section.rows" :key="`${section.key}-${row.label}`" class="detailed-analytics-row">
+                          <span>{{ row.label }}</span>
+                          <strong>{{ row.value }}</strong>
+                          <small>{{ row.detail }}</small>
                         </div>
                       </div>
-                    </div>
-                    <div class="stats-detail-actions stats-detail-actions-prominent">
-                      <button type="button" class="session-export-btn stats-full-analytics-btn"
-                        @click="openSessionAnalyticsModal(selectedStatsSessionRecord)">
-                        <i class="bi bi-graph-up-arrow"></i>
-                        <span>View Full Analytics</span>
-                      </button>
-                    </div>
-                    <div class="stats-grid stats-grid-hero">
-                      <div v-for="item in buildStatsBreakdown(selectedStatsSessionRecord)" :key="item.key"
-                        class="stats-card">
-                        <i class="bi stats-card-icon" :class="item.icon"></i>
-                        <em class="stats-card-value">{{ item.value }}</em>
-                        <span>{{ item.label }}</span>
+                    </article>
+                  </section>
+                  <div v-if="savedSessions.length === 0" class="empty-state">
+                    <i class="bi bi-activity"></i>
+                    <p>No advanced insights yet</p>
+                    <span>Save a session and you’ll unlock the deeper breakdown here.</span>
+                  </div>
+                  <div v-else class="stats-panel">
+                    <div v-if="selectedStatsSessionRecord" class="stats-detail">
+                      <div class="stats-detail-head stats-detail-head-hero">
+                        <div>
+                          <h4>{{ getSavedSessionName(selectedStatsSessionRecord) }}</h4>
+                          <div class="stats-summary">{{ buildStatsSummary(selectedStatsSessionRecord) }}</div>
+                          <div v-if="sortedSavedSessions.length > 1" class="stats-session-select-wrap">
+                            <label class="stats-session-select-label" for="statsSessionSelect">Saved sessions</label>
+                            <select id="statsSessionSelect" class="stats-session-select"
+                              :value="selectedStatsSessionRecord.id" @change="selectStatsSession($event.target.value)">
+                              <option v-for="session in sortedSavedSessions" :key="`stats-${session.id}`"
+                                :value="session.id">
+                                {{ getSavedSessionName(session) }} · {{ formatDate(session.savedAt) }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="stats-detail-actions stats-detail-actions-prominent">
+                          <button type="button" class="session-export-btn stats-full-analytics-btn"
+                            @click="openSessionAnalyticsModal(selectedStatsSessionRecord)">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <span>View Full Analytics</span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <div class="stats-detail-footer">
-                      <span>Saved {{ formatDate(selectedStatsSessionRecord.savedAt) }}</span>
-                      <span v-if="selectedStatsSessionRecord.archived">Archived auto-save</span>
-                      <span v-else>Manual save</span>
+                      <div class="stats-grid stats-grid-hero">
+                        <div v-for="item in buildStatsBreakdown(selectedStatsSessionRecord)" :key="item.key"
+                          class="stats-card">
+                          <i class="bi stats-card-icon" :class="item.icon"></i>
+                          <em class="stats-card-value">{{ item.value }}</em>
+                          <span>{{ item.label }}</span>
+                        </div>
+                      </div>
+                      <div class="stats-detail-footer">
+                        <span>Saved {{ formatDate(selectedStatsSessionRecord.savedAt) }}</span>
+                        <span>{{ getSavedSessionSurah(selectedStatsSessionRecord) }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1497,17 +1317,27 @@
         </div>
 
         <div class="tools-footer" :class="{ 'settings-footer': tab === 'settings' }">
-          <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls">
-            <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
-          </button>
-          <button class="tools-btn tools-btn-primary tools-btn-soft" @click="startSessionAndClose">
-            <i class="bi bi-play-fill"></i><span>{{ t('common.startSession') }}</span>
-          </button>
+          <template v-if="isPlannerModeActive">
+            <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="openHifzPlanModal">
+              <i class="bi bi-pencil-square"></i><span>Edit Plan</span>
+            </button>
+            <button class="tools-btn tools-btn-primary tools-btn-soft" @click="startPlannerPrimaryAction">
+              <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i><span>{{ plannerPrimaryActionLabel }}</span>
+            </button>
+          </template>
+          <template v-else>
+            <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls">
+              <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
+            </button>
+            <button class="tools-btn tools-btn-primary tools-btn-soft" @click="startSessionAndClose">
+              <i class="bi bi-play-fill"></i><span>{{ t('common.startSession') }}</span>
+            </button>
+          </template>
         </div>
       </aside>
     </div>
 
-    <div v-else-if="appReady && !isLoggedIn" class="main container">
+    <div v-else-if="appReady && !isLoggedIn" class="main container-fluid">
       <div class="login-hero">
         <div class="guest-shell">
           <section class="guest-hero">
@@ -1746,18 +1576,11 @@
             <span><i class="bi bi-text-paragraph"></i> Ayah {{ currentPosition }}/{{ totalVerses }}</span>
             <span><i class="bi bi-clock"></i> {{ formatTime(currentTime || 0) }}</span>
           </div>
-          <p class="confirm-copy">You can leave now, or save this session before exiting. Continuing will restore the
-            exact ayah, playback position, and blur state.</p>
-          <label class="session-exit-autosave">
-            <input type="checkbox" v-model="sessionExitAutoSave">
-            <span>Auto-save before exit</span>
-          </label>
+          <p class="confirm-copy">End this session now?</p>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeSessionExitModal">Continue</button>
-          <button class="btn-secondary" @click="exitSessionAnyway">Exit Anyway</button>
-          <button class="btn-primary" @click="confirmSessionExit">{{ sessionExitAutoSave ? 'Save & Exit' : 'End Session'
-            }}</button>
+          <button class="btn-secondary" @click="closeSessionExitModal">Close</button>
+          <button class="btn-primary" @click="confirmSessionExit">End Session</button>
         </div>
       </div>
     </div>
@@ -1769,6 +1592,149 @@
       <div class="countdown-modal">
         <div class="countdown-number">{{ countdownValue }}</div>
         <div class="countdown-text">Prepare yourself</div>
+      </div>
+    </div>
+
+    <transition name="fade">
+      <div v-if="showPlannerCompletionConfetti" class="planner-confetti-layer" aria-hidden="true">
+        <span
+          v-for="piece in plannerCompletionConfettiPieces"
+          :key="piece.id"
+          class="planner-confetti-piece"
+          :style="piece.style"
+        ></span>
+      </div>
+    </transition>
+
+    <div v-if="showPlannerCompletionModal" class="modal-overlay planner-completion-overlay"
+      @click.self="closePlannerCompletionModal">
+      <div class="modal-content planner-completion-modal" role="dialog" aria-modal="true"
+        aria-labelledby="plannerCompletionTitle">
+        <div class="modal-header planner-completion-header">
+          <div class="planner-completion-head-copy">
+            <span class="planner-completion-kicker"><i class="bi bi-stars"></i> Session Finished</span>
+            <h2 id="plannerCompletionTitle">Congratulations. Today&apos;s Hifz session is complete.</h2>
+            <p>{{ plannerCompletionSummaryMessage }}</p>
+          </div>
+          <button class="modal-close-btn" @click="closePlannerCompletionModal" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div class="modal-body planner-completion-body">
+          <div class="container-fluid planner-completion-shell px-0">
+            <div class="row g-3 planner-completion-stats-row">
+              <div class="col-12 col-md-6 col-xl-3 planner-completion-stat-col">
+                <article class="planner-completion-stat">
+                  <span>Memorised today</span>
+                  <strong>{{ plannerCompletionStats.memorised }}</strong>
+                  <small>{{ plannerCompletionStats.memorisedLabel }}</small>
+                </article>
+              </div>
+              <div class="col-12 col-md-6 col-xl-3 planner-completion-stat-col">
+                <article class="planner-completion-stat">
+                  <span>New ayahs</span>
+                  <strong>{{ plannerCompletionStats.newAyahs }}</strong>
+                  <small>{{ plannerCompletionStats.newAyahsLabel }}</small>
+                </article>
+              </div>
+              <div class="col-12 col-md-6 col-xl-3 planner-completion-stat-col">
+                <article class="planner-completion-stat">
+                  <span>Today&apos;s goal</span>
+                  <strong>{{ plannerCompletionStats.goalProgress }}</strong>
+                  <small>{{ plannerCompletionStats.goalStatus }}</small>
+                </article>
+              </div>
+              <div class="col-12 col-md-6 col-xl-3 planner-completion-stat-col">
+                <article class="planner-completion-stat">
+                  <span>Next review</span>
+                  <strong>{{ plannerCompletionStats.nextReview }}</strong>
+                  <small>{{ plannerCompletionStats.nextReviewHint }}</small>
+                </article>
+              </div>
+            </div>
+            <div class="planner-completion-timeline" v-if="plannerCompletionTimelineItems.length">
+              <button
+                v-for="item in plannerCompletionTimelineItems"
+                :key="item.key"
+                class="planner-completion-timeline-btn"
+                type="button"
+              >
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer planner-completion-footer">
+          <button class="btn btn-success" type="button" @click="openHifzPlanFromCompletionModal">
+            <i class="bi bi-pencil-square" aria-hidden="true"></i>
+            View Plan
+          </button>
+          <button class="btn btn-outline-secondary" type="button" @click="closePlannerCompletionModal">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showSessionEndedModal" class="modal-overlay planner-completion-overlay"
+      @click.self="closeSessionEndedModal">
+      <div class="modal-content planner-completion-modal session-ended-modal" role="dialog" aria-modal="true"
+        aria-labelledby="sessionEndedTitle">
+        <div class="modal-header planner-completion-header">
+          <div class="planner-completion-head-copy">
+            <span class="planner-completion-kicker">Session Ended</span>
+            <h2 id="sessionEndedTitle">Your session has ended.</h2>
+            <p>{{ sessionEndedSummaryMessage }}</p>
+          </div>
+          <button class="modal-close-btn" @click="closeSessionEndedModal" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div class="modal-body planner-completion-body">
+          <div class="planner-completion-stats">
+            <article class="planner-completion-stat">
+              <span>Surah</span>
+              <strong>{{ sessionEndedStats.surah }}</strong>
+              <small>{{ sessionEndedStats.range }}</small>
+            </article>
+            <article class="planner-completion-stat">
+              <span>Progress</span>
+              <strong>{{ sessionEndedStats.progress }}</strong>
+              <small>{{ sessionEndedStats.duration }}</small>
+            </article>
+          </div>
+        </div>
+        <div class="modal-footer planner-completion-footer">
+          <div class="container-fluid session-ended-grid-shell">
+            <div class="row g-3 session-ended-grid">
+              <div class="col-12 col-md-6 col-xl-3">
+                <button class="btn btn-outline-secondary session-ended-grid-btn" type="button" @click="openNewSessionFromEndedModal">
+                  <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                  <span>Create New Session</span>
+                </button>
+              </div>
+              <div class="col-12 col-md-6 col-xl-3">
+                <button class="btn btn-outline-secondary session-ended-grid-btn" type="button" @click="repeatSessionFromEndedModal">
+                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                  <span>Repeat Session</span>
+                </button>
+              </div>
+              <div class="col-12 col-md-6 col-xl-3">
+                <button class="btn btn-outline-secondary session-ended-grid-btn" type="button" @click="saveSessionFromEndedModal">
+                  <i class="bi bi-save" aria-hidden="true"></i>
+                  <span>Save Session</span>
+                </button>
+              </div>
+              <div class="col-12 col-md-6 col-xl-3">
+                <button class="btn btn-success session-ended-grid-btn" type="button" @click="openHifzPlanFromEndedModal">
+                  <i class="bi bi-journal-plus" aria-hidden="true"></i>
+                  <span>Create a Hifz Plan</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2753,6 +2719,19 @@
           <ul v-if="onboardingStepContent.points?.length" class="post-onboarding-points">
             <li v-for="item in onboardingStepContent.points" :key="item">{{ item }}</li>
           </ul>
+          <div v-if="onboardingStepContent.choices?.length" class="onboarding-choice-grid">
+            <button
+              v-for="choice in onboardingStepContent.choices"
+              :key="choice.value"
+              type="button"
+              class="onboarding-choice-card"
+              :class="{ active: getOnboardingChoiceValue(onboardingStepContent.choiceKey) === choice.value }"
+              @click="setOnboardingChoice(onboardingStepContent.choiceKey, choice.value)"
+            >
+              <strong>{{ choice.label }}</strong>
+              <span>{{ choice.description }}</span>
+            </button>
+          </div>
           <div v-if="onboardingStepContent.preview" class="post-onboarding-preview">
             <div class="post-onboarding-preview-head">
               <span class="post-onboarding-preview-icon"><i class="bi" :class="onboardingStepContent.preview.icon"></i></span>
@@ -2793,6 +2772,8 @@
 
     <HifzPlanCreatorModal
       :visible="showHifzPlanModal"
+      :reciters="reciters"
+      :speed-options="speedOptions"
       @close="closeHifzPlanModal"
       @saved="handleHifzPlanSaved"
     />
@@ -2972,10 +2953,14 @@ import {
   HIFZ_PLAN_STORAGE_KEY,
   AYAH_PROGRESS_STORAGE_KEY,
   HIFZ_PLAN_ARCHIVE_STORAGE_KEY,
+  HIFZ_APP_STATE_STORAGE_KEY,
   calculatePlanForecast,
   normalizeDailyNewAyahCount,
   getProgressEntries,
-  QURAN_TOTALS
+  QURAN_TOTALS,
+  buildHifzPlannerSessionState,
+  createHifzAppState,
+  resolvePlanScope
 } from '../engine/hifz_session_engine'
 import { buildHifzAnalyticsSnapshot } from '../engine/hifz_analytics'
 import {
@@ -2999,12 +2984,14 @@ import {
 
 const MODE_STORAGE_KEYS = {
   beginner: 'telawa.mode.beginner',
-  advanced: 'telawa.mode.advanced'
+  advanced: 'telawa.mode.advanced',
+  planner: 'mutqin.mode.planner'
 }
 
 const SESSION_STORAGE_KEYS = {
   beginner: 'telawa.sessionState.beginner',
-  advanced: 'telawa.sessionState.advanced'
+  advanced: 'telawa.sessionState.advanced',
+  planner: 'mutqin.sessionState.planner'
 }
 
 const CENTRAL_SESSION_STORAGE_KEY = 'mutqin.sessionState'
@@ -3308,6 +3295,25 @@ function createAdvancedState() {
     chapterId: 0,
     rangeStart: 1,
     rangeEnd: 7,
+    reciterId: DEFAULT_ALQURAN_RECITER,
+    speed: 1,
+    delay: 2,
+    playMode: 'auto',
+    order: 'seq',
+    loadedConfig: null,
+    verses: [],
+    activeKey: null,
+    queue: [],
+    queueIndex: 0,
+    sessionActive: false
+  }
+}
+
+function createPlannerState() {
+  return {
+    chapterId: 0,
+    rangeStart: 1,
+    rangeEnd: 1,
     reciterId: DEFAULT_ALQURAN_RECITER,
     speed: 1,
     delay: 2,
@@ -3801,6 +3807,7 @@ export default {
       tajweedEnabled: false,
       beginner: createBeginnerState(),
       advanced: createAdvancedState(),
+      planner: createPlannerState(),
       mutqinState: loadMutqinState(),
       centralSession: createCentralSessionState(),
       unwatchMutqinState: null,
@@ -3830,6 +3837,7 @@ export default {
 
       // UI State
       currentMode: 'beginner',
+      appState: createHifzAppState(),
       theme: 'light',
       activeLocale: 'en',
       languageOptions: [
@@ -3874,92 +3882,70 @@ export default {
       onboardingDemoSnapshot: null,
       onboardingDemoActive: false,
       onboardingManualLaunch: false,
+      onboardingPath: 'structured',
+      onboardingGoal: 'small',
       onboardingSteps: [
         {
-          title: 'Set up your first short session',
-          stepLabel: 'Session basics',
-          body: 'Start with a small range so the controls make sense. Mutqin has prepared a sample session with Surah Al-Ikhlas, ayahs 1-4.',
-          points: ['Surah Al-Ikhlas selected', 'Ayahs 1-4 keeps the first session focused', 'Alafasy recitation is ready'],
+          title: 'Welcome to Mutqin',
+          stepLabel: 'Welcome',
+          body: 'You can understand the core workflow in under a minute: choose a path, set a simple goal, and start with a short session.',
+          points: ['Short ranges are easier to retain', 'You can revise weak ayahs later without rebuilding the session', 'The layout stays mobile friendly from the start'],
           preview: {
             icon: 'bi-book-half',
-            title: 'Sample session',
-            subtitle: 'A short range is easier to repeat, test, and review.',
-            items: ['Surah 112', 'Ayahs 1-4', 'One clean reciter']
+            title: 'What Mutqin helps with',
+            subtitle: 'Memorise, review, and return to weak ayahs without extra setup.',
+            items: ['Short sessions', 'Saved progress', 'Clear review loop']
           }
         },
         {
-          title: 'Choose how the ayahs appear',
-          stepLabel: 'Reading layout',
-          body: 'Use Stacked for focused ayah cards or Mushaf for page-style reading with the tools still nearby.',
-          points: ['Stacked is easiest for learning one ayah at a time', 'Mushaf helps when reviewing flow', 'Translation and transliteration can stay hidden until needed'],
+          title: 'Choose your path',
+          stepLabel: 'Choose Path',
+          body: 'Pick the path that matches how you want to begin. You can change this later.',
+          choiceKey: 'path',
+          choices: [
+            { value: 'structured', label: 'Structured Hifz Plan', description: 'Best if you want guided planning, scheduled revision, and a clearer long-term route.' },
+            { value: 'casual', label: 'Casual Learning', description: 'Best if you want to open a short range, practise quickly, and keep things lightweight.' }
+          ],
+          points: ['Structured keeps planning visible', 'Casual starts practice faster'],
           preview: {
-            icon: 'bi-layout-text-window-reverse',
-            title: 'Clean reading modes',
-            subtitle: 'The same memorisation tools follow you across each layout.',
-            items: ['Stacked', 'Mushaf']
+            icon: 'bi-signpost-split',
+            title: 'Two clear starts',
+            subtitle: 'One path for planning, one for lightweight daily practice.',
+            items: ['Structured', 'Casual']
           }
         },
         {
-          title: 'Set a simple repetition rhythm',
-          stepLabel: 'Playback',
-          body: 'Start at normal speed, keep repeats realistic, and avoid rushing. The goal is consistency before intensity.',
-          points: ['Speed set to 1x', 'Five repetitions gives a clear first rhythm', 'Auto playback keeps the session moving'],
+          title: 'Set your first goal',
+          stepLabel: 'Set Goal',
+          body: 'Keep the first goal small enough that you can actually finish it today.',
+          choiceKey: 'goal',
+          choices: [
+            { value: 'small', label: '1 to 3 ayahs', description: 'Recommended for first-time users and for building confidence.' },
+            { value: 'steady', label: '4 to 6 ayahs', description: 'A balanced daily goal if you already know the workflow.' },
+            { value: 'revision', label: 'Revision first', description: 'Use Mutqin mainly to revisit and strengthen ayahs you already know.' }
+          ],
+          points: ['Small goals are easier to repeat well', 'You can always extend later'],
           preview: {
-            icon: 'bi-arrow-repeat',
-            title: 'Recommended first rhythm',
-            subtitle: 'Simple settings make the first session predictable.',
-            items: ['1x speed', '5 repeats', 'Auto play']
+            icon: 'bi-bullseye',
+            title: 'A good first target',
+            subtitle: 'Start small, finish cleanly, then scale up.',
+            items: ['Short range', 'Clear finish line']
           }
         },
         {
-          title: 'Add one memorisation technique',
-          stepLabel: 'Practice tools',
-          body: 'Turn on one method at a time. Blur hides support for recall, chaining trains transitions, and anchors give difficult passages a memory hook.',
-          points: ['Blur for reciting from memory', 'Chaining for connecting neighbouring ayahs', 'Anchors for difficult starts or endings'],
-          preview: {
-            icon: 'bi-tools',
-            title: 'Technique rule',
-            subtitle: 'One method at a time keeps practice clean.',
-            items: ['Blur', 'Chaining', 'Anchors']
-          }
-        },
-        {
-          title: 'Use AI Recite after practice',
-          stepLabel: 'AI recitation',
-          body: 'After listening and repeating, record the ayah. AI Recite marks strong, close, and missed words so you know what to repeat.',
-          points: ['Record only when you are ready', 'Green means strong match', 'Amber and red become review targets'],
-          preview: {
-            icon: 'bi-stars',
-            title: 'AI Recite',
-            subtitle: 'Use it as a review aid, not as a replacement for a teacher.',
-            items: ['Word review', 'Clear next step', 'Saved attempts']
-          }
-        },
-        {
-          title: 'Use AI Memory for recall',
-          stepLabel: 'AI memorisation',
-          body: 'AI Memory is for reciting without looking. It helps you check order, missing words, and whether the ayah is ready to move forward.',
-          points: ['Use after you have repeated the ayah', 'Keep strict progression on if you want no skipping', 'Review mistakes before moving on'],
-          preview: {
-            icon: 'bi-eye-slash',
-            title: 'AI Memory',
-            subtitle: 'A recall check for selected ayahs or the full session.',
-            items: ['Wrong order detection', 'Missing words', 'Post-recitation review']
-          }
-        },
-        {
-          title: 'Begin the session',
-          stepLabel: 'Ready',
-          body: 'Your sample session is ready. Finish this guide to close the panel and begin with a short countdown. No memorisation technique is applied by default.',
-          points: ['Surah Al-Ikhlas, ayahs 1-4', 'Plain playback with techniques off', 'You can reopen onboarding from the top-card menu'],
+          title: 'Start learning',
+          stepLabel: 'Start Learning',
+          body: 'Mutqin has prepared a simple starting point. Finish this guide and begin with a short, low-friction session.',
+          points: ['Surah Al-Ikhlas is loaded as a friendly sample', 'No advanced technique is forced on you', 'You can reopen onboarding from the menu any time'],
           preview: {
             icon: 'bi-play-circle',
-            title: 'Start clean',
-            subtitle: 'A focused first run starts after the countdown.',
-            items: ['Finish guide', 'Countdown starts', 'Recite and review']
+            title: 'Ready to begin',
+            subtitle: 'Start with a clean session, then review what feels weak.',
+            items: ['Finish guide', 'Start session', 'Review and repeat']
           }
         }
       ],
+      showAdvancedAnalytics: false,
       showConfirmModal: false,
       showSessionExitModal: false,
       sessionExitAutoSave: true,
@@ -4126,6 +4112,11 @@ export default {
         errorMessage: ''
       },
       loadingSessionId: '',
+      showPlannerCompletionModal: false,
+      showPlannerCompletionConfetti: false,
+      plannerCompletionSnapshot: null,
+      showSessionEndedModal: false,
+      sessionEndedSnapshot: null,
       showSessionAnalyticsModal: false,
       analyticsModalLoaded: false,
       analyticsModalRecordId: '',
@@ -4496,13 +4487,15 @@ export default {
     },
     // In computed section - modify controlsAnalyticsCards to show/hide based on data
     controlsAnalyticsCards() {
-      const hasData = this.savedSessions.length > 0 || this.totalVersePlayCountValue > 0;
+      const hasData = this.savedSessions.length > 0 || this.totalVersePlayCountValue > 0 || this.totalVerses > 0;
       if (!hasData) return [];
+      const sessionsCompleted = Number(this.analytics?.sessionsCompleted || this.mutqinState?.stats?.sessions_completed || 0)
       return [
-        { key: 'progress', label: 'Progress', value: `${this.currentPosition}/${this.totalVerses}`, description: `${this.progressPercent}% through selected ayahs.` },
-        { key: 'plays', label: 'Audio plays', value: this.totalVersePlayCountValue, description: 'Total ayah playback starts.' },
-        { key: 'time', label: 'Session time', value: this.liveSessionStats.session_time, description: 'Focused time since start.' },
-        { key: 'checks', label: 'AI checks', value: this.recordingsLibrary.filter(i => this.isAiCheckRecording(i)).length, description: 'Saved AI recitation checks.' }
+        { key: 'today', icon: 'bi-calendar2-check', label: "Today's progress", value: `${this.progressPercent}%`, description: `${Math.max(0, this.currentPosition - 1)}/${this.totalVerses || 0} ayahs covered.` },
+        { key: 'streak', icon: 'bi-fire', label: 'Streak', value: this.analytics?.currentStreak || 0, description: 'Active study days in a row.' },
+        { key: 'memory', icon: 'bi-gem', label: 'Memory strength', value: this.hifzMemoryStrengthLabel, description: this.hifzRecitationFeedback || 'Build consistency before speed.' },
+        { key: 'completed', icon: 'bi-check2-circle', label: 'Sessions completed', value: sessionsCompleted, description: 'Completed sessions recorded.' },
+        { key: 'revision', icon: 'bi-arrow-repeat', label: 'Revision due', value: this.dueCount, description: this.dueCount ? 'Ayahs that need review now.' : 'No overdue revision right now.' }
       ];
     },
     dueCount() {
@@ -4714,6 +4707,172 @@ export default {
     hifzInsightSummaries() {
       return this.hifzAnalyticsSnapshot.insights || ['Keep today small and consistent']
     },
+    isPlannerModeActive() {
+      return this.appState?.mode === 'planner' || this.currentMode === 'planner'
+    },
+    plannerSessionState() {
+      return buildHifzPlannerSessionState({
+        plan: this.hifzPlan,
+        progress: this.hifzAyahProgress,
+        appState: this.appState,
+        todaySession: this.hifzTodayQueue
+      })
+    },
+    plannerWorkspaceReady() {
+      return this.currentMode === 'planner' && this.hasVerses && Array.isArray(this.queue) && this.queue.length > 0
+    },
+    plannerGuidanceTitle() {
+      return this.plannerSessionState.nextAction || 'Today: Memorise your ayahs'
+    },
+    plannerGuidanceWhy() {
+      return this.plannerSessionState.why || 'We will guide today’s session step by step.'
+    },
+    plannerMemoryReviewLine() {
+      return this.plannerSessionState.retentionLabel || 'Retention system active'
+    },
+    plannerConfidenceLine() {
+      return `${this.plannerSessionState.memoryConfidence || 'Low'} confidence`
+    },
+    plannerNextReviewHumanLabel() {
+      return this.toFriendlyReviewLabel(this.plannerSessionState.nextReviewLabel)
+    },
+    plannerTopCardSummary() {
+      return `${this.plannerActiveGuidance.title} ${this.plannerActiveGuidance.body}`.trim()
+    },
+    plannerProgressLine() {
+      if (!this.plannerSessionState.todaySession?.length) return 'No ayahs scheduled yet'
+      const total = this.plannerSessionState.todaySession.length
+      const current = this.hasVerses ? Math.min(total, Math.max(1, this.currentPosition || 1)) : 0
+      return `${current}/${total} ayahs`
+    },
+    plannerPrimaryActionLabel() {
+      if (!this.hifzPlanExists) return 'Create Plan'
+      if (this.isPlaying) return 'Pause Session'
+      if (this.hasSessionStarted) return 'Continue Session'
+      return 'Start Session'
+    },
+    plannerGuidanceBadge() {
+      if (!this.hasSessionStarted) return 'Before you begin'
+      if (this.guidedUiStep === 'recall') return 'During the session'
+      if (this.guidedUiStep === 'practice') return 'During the session'
+      if (this.guidedUiStep === 'review') return 'After each ayah'
+      if (this.isPlaying) return 'During the session'
+      return 'Keep going'
+    },
+    plannerGuidanceTone() {
+      if (!this.hasSessionStarted) return 'start'
+      if (this.guidedUiStep === 'review') return 'after'
+      if (this.guidedUiStep === 'recall' || this.guidedUiStep === 'practice') return 'during'
+      if (this.isPlaying) return 'start'
+      return 'after'
+    },
+    plannerActiveGuidance() {
+      if (!this.hasSessionStarted) {
+        return {
+          title: 'Listen carefully and follow along.',
+          body: 'Mutqin will start the timer, audio, and ayah highlighting together.'
+        }
+      }
+      if (this.guidedUiStep === 'recall') {
+        return {
+          title: 'Try reciting without looking.',
+          body: 'Say the ayah first from memory, then check only what you need.'
+        }
+      }
+      if (this.guidedUiStep === 'practice' || this.isPlaying) {
+        return {
+          title: 'Listen carefully and follow along.',
+          body: 'Watch the highlighted words and keep a steady rhythm before the next ayah.'
+        }
+      }
+      if (this.guidedUiStep === 'review') {
+        return {
+          title: 'Great job. Continue to the next ayah.',
+          body: 'Refresh what is due today, then move forward while the memory is still warm.'
+        }
+      }
+      return {
+        title: 'Great job. Continue to the next ayah.',
+        body: 'Stay calm, keep the pace light, and move on when the current ayah feels steady.'
+      }
+    },
+    plannerBeginnerGuidance() {
+      if (!this.hasSessionStarted) {
+        return 'Press start and Mutqin will begin with a countdown, then play the audio automatically.'
+      }
+      if (this.guidedUiStep === 'recall') {
+        return 'Try the ayah from memory first, then check the text only when you need it.'
+      }
+      if (this.guidedUiStep === 'practice' || this.isPlaying) {
+        return 'Listen and follow the highlighted words. Move on when the ayah feels steady.'
+      }
+      return 'Mutqin is guiding the order for you. Keep going one ayah at a time.'
+    },
+    topCardSessionLabel() {
+      if (this.isPlannerModeActive) {
+        const plannerRange = this.plannerSessionState.sessionRange
+        const surah = this.hifzPlan?.selectedSurah || this.currentChapter?.name_simple || this.activeChapterName || 'Hifz Session'
+        const start = Number(plannerRange?.rangeStart || this.rangeStart || 1)
+        const end = Number(plannerRange?.rangeEnd || this.rangeEnd || start)
+        return `${surah} · Ayahs ${start}-${end}`
+      }
+      const surah = this.currentChapter?.name_simple || this.activeChapterName || 'Casual Session'
+      const start = Math.max(1, Number(this.rangeStart || 1))
+      const end = Math.max(start, Number(this.rangeEnd || start))
+      return `${surah} · Ayahs ${start}-${end}`
+    },
+    plannerCompletionStats() {
+      const snapshot = this.plannerCompletionSnapshot || {}
+      const memorisedAyahs = Math.max(0, Number(snapshot.memorisedAyahs || 0))
+      const newAyahs = Math.max(0, Number(snapshot.newAyahs || memorisedAyahs || 0))
+      const todayGoalCompleted = Math.max(0, Number(snapshot.todayGoalCompleted || 0))
+      const todayGoalTarget = Math.max(1, Number(snapshot.todayGoalTarget || 1))
+      return {
+        memorised: memorisedAyahs,
+        memorisedLabel: memorisedAyahs === 1 ? 'ayah memorised today' : 'ayahs memorised today',
+        newAyahs,
+        newAyahsLabel: newAyahs === 1 ? 'new ayah added' : 'new ayahs added',
+        goalProgress: `${todayGoalCompleted}/${todayGoalTarget}`,
+        goalStatus: 'Progress',
+        nextReview: snapshot.nextReview || 'Tomorrow',
+        nextReviewHint: snapshot.nextReviewHint || 'Your next review is already scheduled.'
+      }
+    },
+    plannerCompletionTimelineItems() {
+      return [
+        ...this.buildPlannerReviewSchedule(),
+        ...this.buildPlannerFutureSessions()
+      ].slice(0, 6)
+    },
+    plannerCompletionSummaryMessage() {
+      return this.plannerCompletionSnapshot?.summaryMessage
+        || 'Your plan is ready and your next review has already been scheduled.'
+    },
+    plannerCompletionConfettiPieces() {
+      return Array.from({ length: 90 }, (_, index) => ({
+        id: `planner-confetti-${index}`,
+        style: {
+          '--planner-confetti-left': `${(index * 1.1) % 100}%`,
+          '--planner-confetti-delay': `${(index % 18) * 28}ms`,
+          '--planner-confetti-duration': `${2200 + ((index % 7) * 120)}ms`,
+          '--planner-confetti-rotate': `${(index % 2 === 0 ? 1 : -1) * (24 + (index * 7))}deg`,
+          '--planner-confetti-color': ['#2f6f58', '#d4a24f', '#ef8d62', '#7aa7ff'][index % 4]
+        }
+      }))
+    },
+    sessionEndedStats() {
+      const snapshot = this.sessionEndedSnapshot || {}
+      return {
+        surah: snapshot.chapterName || 'Session',
+        range: snapshot.rangeLabel || 'Range saved',
+        progress: snapshot.progressLabel || '0%',
+        duration: snapshot.durationLabel || '0:00'
+      }
+    },
+    sessionEndedSummaryMessage() {
+      const snapshot = this.sessionEndedSnapshot || {}
+      return snapshot.summaryMessage || 'You can start a new range, save this one, or repeat it now.'
+    },
     hifzPlanLifecycleStatus() {
       return this.hifzPlan?.lifecycle?.status || this.hifzPlan?.status || 'draft'
     },
@@ -4820,6 +4979,9 @@ export default {
       }
       if (this.hifzPlanLifecycleStatus === 'paused') {
         return { status: 'paused', label: 'Paused', icon: 'bi-pause-circle', missedDays: 0, detail: 'Progress calculations are paused until you resume.' }
+      }
+      if (!this.hifzCompletedAyahCount && !this.hifzPlan?.progressSummary?.firstSessionCompletedAt) {
+        return { status: 'onTrack', label: 'Ready to begin', icon: 'bi-check-circle', missedDays: 0, detail: 'Your plan is ready. Missed days start after your first completed session.' }
       }
 
       const dailyTarget = normalizeDailyNewAyahCount(this.hifzPlan)
@@ -5045,7 +5207,7 @@ export default {
         : `Linking flow: repeat the current ayah, the next ayah, then both together. Each step repeats ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
     },
     currentConfig() {
-      return this.currentMode === 'beginner' ? this.beginner : this.advanced
+      return this.getModeStore(this.currentMode)
     },
     activeAyahNumber() {
       const key = this.activeVerseKey
@@ -5807,35 +5969,32 @@ export default {
       get() { return this.currentConfig.chapterId || 0 },
       set(val) {
         const numVal = Number(val) || 0
-        if (this.currentMode === 'beginner') {
-          this.beginner.chapterId = numVal
-        } else {
-          this.advanced.chapterId = numVal
-        }
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.chapterId = numVal
       }
     },
 
     rangeStart: {
       get() { return this.currentConfig.rangeStart },
       set(val) {
-        if (this.currentMode === 'beginner') this.beginner.rangeStart = val
-        else this.advanced.rangeStart = val
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.rangeStart = val
       }
     },
 
     rangeEnd: {
       get() { return this.currentConfig.rangeEnd },
       set(val) {
-        if (this.currentMode === 'beginner') this.beginner.rangeEnd = val
-        else this.advanced.rangeEnd = val
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.rangeEnd = val
       }
     },
 
     reciterId: {
       get() { return this.currentConfig.reciterId },
       set(val) {
-        if (this.currentMode === 'beginner') this.beginner.reciterId = val
-        else this.advanced.reciterId = val
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.reciterId = val
       }
     },
 
@@ -5843,8 +6002,8 @@ export default {
       get() { return this.currentConfig.speed },
       set(val) {
         const safeSpeed = this.normalizePlaybackSpeed(val)
-        if (this.currentMode === 'beginner') this.beginner.speed = safeSpeed
-        else this.advanced.speed = safeSpeed
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.speed = safeSpeed
       }
     },
 
@@ -5852,8 +6011,8 @@ export default {
       get() { return this.currentConfig.delay },
       set(val) {
         const safeDelay = Math.max(0, Number.isFinite(Number(val)) ? Number(val) : 0)
-        if (this.currentMode === 'beginner') this.beginner.delay = safeDelay
-        else this.advanced.delay = safeDelay
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.delay = safeDelay
       }
     },
 
@@ -5861,16 +6020,16 @@ export default {
       get() { return this.currentConfig.playMode },
       set(val) {
         const safeMode = val === 'manual' ? 'manual' : 'auto'
-        if (this.currentMode === 'beginner') this.beginner.playMode = safeMode
-        else this.advanced.playMode = safeMode
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.playMode = safeMode
       }
     },
 
     order: {
       get() { return this.currentConfig.order },
       set(val) {
-        if (this.currentMode === 'beginner') this.beginner.order = val
-        else this.advanced.order = val
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.order = val
       }
     },
 
@@ -5881,32 +6040,32 @@ export default {
     verses: {
       get() { return this.currentConfig.verses },
       set(val) {
-        if (this.currentMode === 'beginner') this.beginner.verses = val
-        else this.advanced.verses = val
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.verses = val
       }
     },
 
     activeKey: {
       get() { return this.currentConfig.activeKey },
       set(val) {
-        if (this.currentMode === 'beginner') this.beginner.activeKey = val
-        else this.advanced.activeKey = val
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.activeKey = val
       }
     },
 
     queue: {
       get() { return this.currentConfig.queue },
       set(val) {
-        if (this.currentMode === 'beginner') this.beginner.queue = val
-        else this.advanced.queue = val
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.queue = val
       }
     },
 
     queueIndex: {
       get() { return this.currentConfig.queueIndex },
       set(val) {
-        if (this.currentMode === 'beginner') this.beginner.queueIndex = val
-        else this.advanced.queueIndex = val
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.queueIndex = val
       }
     },
 
@@ -6468,6 +6627,12 @@ export default {
       this.persistUiState()
     },
     showHifzPlanModal(newVal) {
+      this.syncBodyScrollLock(newVal)
+    },
+    showPlannerCompletionModal(newVal) {
+      this.syncBodyScrollLock(newVal)
+    },
+    showSessionEndedModal(newVal) {
       this.syncBodyScrollLock(newVal)
     },
     'mutqinState.sessionState.lastSilentEvaluation': {
@@ -7427,6 +7592,8 @@ export default {
         || this.showQuranSearchModal
         || this.showConfirmModal
         || this.showSessionExitModal
+        || this.showPlannerCompletionModal
+        || this.showSessionEndedModal
         || this.showResumeModal
         || this.showPlannerModal
         || this.showSessionAnalyticsModal
@@ -7440,6 +7607,8 @@ export default {
         || this.showQuranSearchModal
         || this.showConfirmModal
         || this.showSessionExitModal
+        || this.showPlannerCompletionModal
+        || this.showSessionEndedModal
         || this.showResumeModal
         || this.showPlannerModal
         || this.showSessionAnalyticsModal
@@ -8028,6 +8197,9 @@ export default {
         return
       }
 
+      this.showPlannerCompletionModal = false
+      this.showPlannerCompletionConfetti = false
+      this.showSessionEndedModal = false
       const self = this
       this.showCountdown(function () {
         self.startSession()
@@ -8146,13 +8318,13 @@ export default {
     async hydrateSessionFromPayload(payload, options = {}) {
       if (!payload?.config?.chapterId) return false
       const mode = payload.mode || this.currentMode || 'beginner'
-      const target = mode === 'beginner' ? 'beginner' : 'advanced'
+      const target = mode === 'planner' ? 'planner' : (mode === 'beginner' ? 'beginner' : 'advanced')
 
       this.currentMode = mode
       this.tab = 'tools'
       this.applySessionConfig({ ...(payload.config || {}), mode })
       this[target] = {
-        ...(target === 'beginner' ? createBeginnerState() : createAdvancedState()),
+        ...(target === 'planner' ? createPlannerState() : (target === 'beginner' ? createBeginnerState() : createAdvancedState())),
         ...this.cloneModeState(payload.config || {})
       }
 
@@ -8431,6 +8603,44 @@ export default {
     selectStatsSession(sessionId) {
       this.selectedStatsSessionId = sessionId
     },
+    getSavedSessionName(session) {
+      return String(session?.name || this.getSessionPrimaryLabel(session) || 'Saved session')
+    },
+    getSavedSessionSurah(session) {
+      if (session?.config?.chapterName) return `Surah ${session.config.chapterName}`
+      if (session?.chapterName) return `Surah ${session.chapterName}`
+      if (session?.config?.chapterId) return `Surah ${session.config.chapterId}`
+      return 'Surah not set'
+    },
+    getOnboardingChoiceValue(choiceKey) {
+      if (choiceKey === 'path') return this.onboardingPath
+      if (choiceKey === 'goal') return this.onboardingGoal
+      return ''
+    },
+    setOnboardingChoice(choiceKey, value) {
+      if (choiceKey === 'path') this.onboardingPath = value
+      if (choiceKey === 'goal') this.onboardingGoal = value
+      this.applyOnboardingStep(this.onboardingStepIndex)
+    },
+    applyOnboardingGoalPreset() {
+      if (this.onboardingGoal === 'steady') {
+        this.rangeStart = 1
+        this.rangeEnd = 5
+        this.repetitionsPerStep = 4
+        return
+      }
+      if (this.onboardingGoal === 'revision') {
+        this.rangeStart = 1
+        this.rangeEnd = 4
+        this.repetitionsPerStep = 3
+        this.showTranslation = false
+        return
+      }
+
+      this.rangeStart = 1
+      this.rangeEnd = 3
+      this.repetitionsPerStep = 5
+    },
     getOnboardingStorageKey() {
       const userId = this.auth?.id ? String(this.auth.id) : 'guest'
       return `mutqin.onboardingCompleted.${userId}`
@@ -8487,9 +8697,16 @@ export default {
       }
       this.restoreOnboardingDemo({ keepCurrentSession: true })
       this.onboardingManualLaunch = false
-      this.currentMode = 'advanced'
+      this.applyOnboardingGoalPreset()
+      this.currentMode = this.onboardingPath === 'structured' ? 'planner' : 'advanced'
       this.tab = 'tools'
       this.showTools = false
+      if (this.onboardingPath === 'structured') {
+        this.$nextTick(() => {
+          this.openHifzPlanModal()
+        })
+        return
+      }
       if (this.chapterId) {
         this.focusModeEnabled = false
         this.blurModeEnabled = false
@@ -8542,7 +8759,7 @@ export default {
       this.speed = 1
       this.playMode = 'auto'
       this.repetitionsPerStep = 5
-      this.chainingEnabled = true
+      this.chainingEnabled = false
       this.chainingMethod = 'linking'
       this.chainingRepetitions = 1
       this.focusModeEnabled = false
@@ -8592,14 +8809,12 @@ export default {
     applyOnboardingStep(stepIndex) {
       if (!this.onboardingDemoActive) return
       const step = Math.max(0, Math.min(this.onboardingSteps.length - 1, Number(stepIndex || 0)))
+      this.applyOnboardingGoalPreset()
       const stepConfig = [
-        { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: true, anchor: false },
-        { tab: 'settings', section: 'display_settings', mode: 'mushaf', blur: false, chaining: true, anchor: false },
-        { tab: 'tools', section: 'advanced_playback', mode: 'stacked', blur: false, chaining: true, anchor: false },
-        { tab: 'techniques', section: 'blur_mode', mode: 'stacked', blur: true, chaining: true, anchor: true },
-        { tab: 'tools', section: null, mode: 'stacked', blur: false, chaining: true, anchor: false },
-        { tab: 'tools', section: null, mode: 'stacked', blur: true, chaining: true, anchor: false },
-        { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: true, anchor: false }
+        { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
+        { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
+        { tab: 'tools', section: 'advanced_playback', mode: 'stacked', blur: false, chaining: false, anchor: false },
+        { tab: this.onboardingPath === 'structured' ? 'tools' : 'settings', section: this.onboardingPath === 'structured' ? 'advanced_setup' : 'display_settings', mode: this.onboardingPath === 'structured' ? 'stacked' : 'mushaf', blur: false, chaining: false, anchor: false }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
       this.tab = stepConfig.tab
       this.showTools = true
@@ -13453,8 +13668,34 @@ export default {
       }
     },
 
+    loadHifzAppState() {
+      try {
+        const raw = localStorage.getItem(HIFZ_APP_STATE_STORAGE_KEY)
+        const parsed = raw ? JSON.parse(raw) : null
+        const defaults = createHifzAppState()
+        this.appState = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+          ? { ...defaults, ...parsed }
+          : defaults
+      } catch {
+        this.appState = createHifzAppState()
+      }
+    },
+
+    persistHifzAppState(updates = {}) {
+      const nextState = {
+        ...createHifzAppState(),
+        ...(this.appState || {}),
+        ...(updates || {}),
+        updatedAt: new Date().toISOString()
+      }
+      this.appState = nextState
+      localStorage.setItem(HIFZ_APP_STATE_STORAGE_KEY, JSON.stringify(nextState))
+      return nextState
+    },
+
     refreshHifzJourneyState() {
       this.refreshHifzPlanState()
+      this.loadHifzAppState()
       try {
         const rawProgress = localStorage.getItem(AYAH_PROGRESS_STORAGE_KEY)
         const parsedProgress = rawProgress ? JSON.parse(rawProgress) : {}
@@ -13480,9 +13721,102 @@ export default {
       this.showHifzPlanModal = false
     },
 
-    handleHifzPlanSaved() {
+    async handleHifzPlanSaved() {
       this.refreshHifzJourneyState()
-      this.showBanner('Hifz plan saved', 'success', 1800)
+      this.wordByWordAudioEnabled = true
+      this.persistUiState()
+      await this.activatePlannerMode({ startPlayback: true })
+    },
+
+    async activatePlannerMode(options = {}) {
+      if (!this.hifzPlan) return false
+      const plannerState = this.plannerSessionState
+      const sessionRange = plannerState.sessionRange
+      if (!plannerState.plannerReady || !sessionRange?.chapterId) {
+        this.persistHifzAppState({
+          mode: 'planner',
+          sessionActive: false,
+          activePlanId: this.hifzPlan.id || null,
+          todaySession: plannerState.todaySession,
+          plannerReady: false,
+          lastEvent: 'PLAN_READY_EMPTY'
+        })
+        return false
+      }
+
+      this.currentMode = 'planner'
+      this.persistHifzAppState({
+        mode: 'planner',
+        sessionActive: false,
+        activePlanId: this.hifzPlan.id || null,
+        todaySession: plannerState.todaySession,
+        progress: {
+          completedAyahs: this.hifzCompletedAyahCount,
+          dueCount: plannerState.dueCount
+        },
+        plannerReady: true,
+        lastEvent: 'SESSION_READY'
+      })
+
+      this.applySessionConfig({
+        ...this.buildSessionConfig('planner'),
+        mode: 'planner',
+        chapterId: sessionRange.chapterId,
+        rangeStart: sessionRange.rangeStart,
+        rangeEnd: sessionRange.rangeEnd,
+        reciterId: String(this.hifzPlan?.playback?.reciterId || this.reciterId || DEFAULT_ALQURAN_RECITER),
+        speed: Number(this.hifzPlan?.playback?.speed || 1),
+        repetitionsPerStep: Math.max(1, Math.min(10, Number(this.hifzPlan?.playback?.repetitionsPerAyah || 5))),
+        selectedLoopCount: Math.max(1, Math.min(10, Number(this.hifzPlan?.playback?.repetitionsPerAyah || 5))),
+        showTranslation: false,
+        showTransliteration: false,
+        showWordByWord: false,
+        wordByWordAudioEnabled: true,
+        tajweedEnabled: true,
+        focusModeEnabled: false,
+        blurModeEnabled: false,
+        anchorModeEnabled: false,
+        chainingEnabled: false
+      })
+
+      await this.loadChapter('planner')
+      this.buildQueue('planner')
+      this.syncMutqinAyahs(this.planner.verses || [])
+      this.syncMutqinSession(this.planner.queue || [], 'planner')
+      this.syncActiveVerseState('planner')
+      this.showTools = false
+      this.topCardMenuOpen = false
+      this.persistUiState()
+      this.persistModeState('planner')
+      this.persistSessionState()
+
+      if (options.startPlayback) {
+        this.startSessionWithCountdown()
+      } else if (options.bannerText) {
+        this.showBanner(options.bannerText, 'success', 1800)
+      }
+      return true
+    },
+
+    async startPlannerPrimaryAction() {
+      if (!this.hifzPlanExists) {
+        this.openHifzPlanModal()
+        return
+      }
+      if (!this.plannerWorkspaceReady) {
+        this.wordByWordAudioEnabled = true
+        await this.activatePlannerMode({ startPlayback: true })
+        return
+      }
+      if (this.isPlaying) {
+        this.togglePlay()
+        return
+      }
+      if (this.hasSessionStarted && this.audioElement?.src) {
+        this.togglePlay()
+        return
+      }
+      this.startSessionWithCountdown()
     },
 
     persistHifzPlan(nextPlan, message = '') {
@@ -13505,7 +13839,7 @@ export default {
       if (message) this.showBanner(message, 'success', 1600)
     },
 
-    startOrResumeHifzPlan() {
+    async startOrResumeHifzPlan() {
       const now = new Date().toISOString()
       const basePlan = this.hifzPlan || {}
       this.persistHifzPlan({
@@ -13519,6 +13853,7 @@ export default {
           pausedAt: null
         }
       }, this.hifzPlanLifecycleStatus === 'paused' ? 'Hifz plan resumed' : 'Hifz plan started')
+      await this.activatePlannerMode({ startPlayback: false })
     },
 
     pauseHifzPlan() {
@@ -13533,6 +13868,14 @@ export default {
           pausedAt: now
         }
       }, 'Hifz plan paused')
+      this.persistHifzAppState({
+        mode: 'planner',
+        sessionActive: false,
+        activePlanId: this.hifzPlan?.id || null,
+        todaySession: this.hifzTodayQueue,
+        plannerReady: true,
+        lastEvent: 'SESSION_PAUSED'
+      })
     },
 
     createNewHifzPlan() {
@@ -13554,6 +13897,7 @@ export default {
         } catch {}
       }
       localStorage.removeItem(HIFZ_PLAN_STORAGE_KEY)
+      localStorage.removeItem(HIFZ_APP_STATE_STORAGE_KEY)
       this.refreshHifzJourneyState()
       this.openHifzPlanModal()
     },
@@ -13562,7 +13906,9 @@ export default {
       if (typeof window !== 'undefined' && !window.confirm('Delete this Hifz plan and its planner progress from this browser?')) return
       localStorage.removeItem(HIFZ_PLAN_STORAGE_KEY)
       localStorage.removeItem(AYAH_PROGRESS_STORAGE_KEY)
+      localStorage.removeItem(HIFZ_APP_STATE_STORAGE_KEY)
       this.hifzPlannerAnalyticsOpen = false
+      this.currentMode = 'beginner'
       this.refreshHifzJourneyState()
       this.showBanner('Hifz plan deleted', 'info', 1600)
     },
@@ -13661,6 +14007,9 @@ export default {
     openNewSessionSetup() {
       this.openToolsPanel({ tab: 'tools' })
     },
+    openSavedSessionsPanel() {
+      this.openToolsPanel({ tab: 'saved' })
+    },
     setLoopCount(value) {
       const nextValue = value === 'infinite' ? 'infinite' : Math.max(1, Number(value || 1))
       this.selectedLoopCount = nextValue
@@ -13705,6 +14054,114 @@ export default {
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')
       return `${year}-${month}-${day}`
+    },
+    toFriendlyReviewLabel(value) {
+      const token = String(value || '').replaceAll('/', '-')
+      if (!token) return 'Tomorrow'
+      const today = new Date()
+      const todayToken = this.getHifzDateToken(today)
+      const tomorrow = new Date(today)
+      tomorrow.setDate(today.getDate() + 1)
+      const tomorrowToken = this.getHifzDateToken(tomorrow)
+      if (token === todayToken) return 'Today'
+      if (token === tomorrowToken) return 'Tomorrow'
+      const parsed = new Date(token)
+      if (Number.isNaN(parsed.getTime())) return String(value || '')
+      return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    },
+    buildPlannerReviewSchedule() {
+      const grouped = new Map()
+      this.hifzMemorySchedule.upcoming.forEach(entry => {
+        if (!entry.nextToken) return
+        grouped.set(entry.nextToken, (grouped.get(entry.nextToken) || 0) + 1)
+      })
+      const schedule = Array.from(grouped.entries())
+        .sort((left, right) => left[0].localeCompare(right[0]))
+        .slice(0, 3)
+        .map(([token, count], index) => ({
+          key: `planner-review-${token}-${index}`,
+          label: this.toFriendlyReviewLabel(token),
+          value: `${count} ayah${count === 1 ? '' : 's'}`
+        }))
+      return schedule.length
+        ? schedule
+        : [{ key: 'planner-review-fallback', label: 'Tomorrow', value: 'Your first review is ready.' }]
+    },
+    buildPlannerFutureSessions() {
+      const plan = this.hifzPlan || {}
+      const scope = resolvePlanScope(plan)
+      const dailyTarget = Math.max(1, normalizeDailyNewAyahCount(plan))
+      const completedAyahs = Math.max(0, Number(this.hifzCompletedAyahCount || 0))
+      const sessionLabels = ['Tomorrow', 'After that', 'Later this week']
+      if (!scope?.surah) {
+        return sessionLabels.map((label, index) => ({
+          key: `planner-future-generic-${index}`,
+          label,
+          value: `${dailyTarget} new ayah${dailyTarget === 1 ? '' : 's'}`
+        }))
+      }
+
+      const sessions = []
+      let cursor = scope.startAyah + completedAyahs
+      for (let index = 0; index < sessionLabels.length && cursor <= scope.endAyah; index += 1) {
+        const startAyah = cursor
+        const endAyah = Math.min(scope.endAyah, startAyah + dailyTarget - 1)
+        sessions.push({
+          key: `planner-future-${index}-${startAyah}-${endAyah}`,
+          label: sessionLabels[index],
+          value: startAyah === endAyah ? `Ayah ${startAyah}` : `Ayahs ${startAyah}-${endAyah}`
+        })
+        cursor = endAyah + 1
+      }
+
+      return sessions.length
+        ? sessions
+        : [{ key: 'planner-future-maintenance', label: 'Next session', value: 'Revision only until the next ayahs are due.' }]
+    },
+    buildPlannerCompletionSnapshot(options = {}) {
+      const todayGoalTarget = Math.max(1, normalizeDailyNewAyahCount(this.hifzPlan || {}))
+      const memorisedAyahs = Math.max(0, Number(options.memorisedAyahs || 0))
+      const todayGoalCompleted = Math.min(todayGoalTarget, memorisedAyahs)
+      const reviewSchedule = this.buildPlannerReviewSchedule()
+      const nextReview = reviewSchedule[0]?.label || 'Tomorrow'
+      return {
+        memorisedAyahs,
+        newAyahs: memorisedAyahs,
+        todayGoalCompleted,
+        todayGoalTarget,
+        nextReview,
+        nextReviewHint: nextReview === 'Tomorrow'
+          ? 'Due tomorrow'
+          : 'Already scheduled',
+        summaryMessage: todayGoalCompleted >= todayGoalTarget
+          ? `Today you memorised ${memorisedAyahs} ayah${memorisedAyahs === 1 ? '' : 's'}.`
+          : `Today you memorised ${todayGoalCompleted} of ${todayGoalTarget} planned ayah${todayGoalTarget === 1 ? '' : 's'}.`
+      }
+    },
+    getPlannerCompletionCounts() {
+      const todaySession = Array.isArray(this.appState?.todaySession) ? this.appState.todaySession : []
+      const coveredCount = Math.max(0, Math.min(todaySession.length, Number(this.currentPosition || 0)))
+      const coveredItems = todaySession.slice(0, coveredCount)
+      const memorisedAyahs = coveredItems.filter(item => item?.type === 'new').length
+      return {
+        coveredAyahs: coveredCount,
+        memorisedAyahs: memorisedAyahs || coveredCount
+      }
+    },
+    showPlannerCompletionCelebration(snapshot = null) {
+      this.plannerCompletionSnapshot = snapshot || this.buildPlannerCompletionSnapshot()
+      this.showPlannerCompletionModal = true
+      this.showPlannerCompletionConfetti = true
+      window.setTimeout(() => {
+        this.showPlannerCompletionConfetti = false
+      }, 3000)
+    },
+    closePlannerCompletionModal() {
+      this.showPlannerCompletionModal = false
+    },
+    openHifzPlanFromCompletionModal() {
+      this.closePlannerCompletionModal()
+      this.openHifzPlanModal()
     },
     isDueHifzAyah(verseKey) {
       if (this.getHifzQueueType(verseKey) === 'due') return true
@@ -13905,6 +14362,9 @@ export default {
     },
     setModeAndExplain(mode) {
       this.currentMode = mode
+      if (mode !== 'planner') {
+        this.persistHifzAppState({ mode: 'casual', sessionActive: false, lastEvent: 'CASUAL_MODE' })
+      }
 
       const store = this.getModeStore(mode)
       const isFreshMode = !store.chapterId && !store.verses?.length
@@ -13923,6 +14383,7 @@ export default {
     },
 
     getModeStore(mode = this.currentMode) {
+      if (mode === 'planner') return this.planner
       return mode === 'beginner' ? this.beginner : this.advanced
     },
 
@@ -14120,7 +14581,7 @@ export default {
     },
 
     buildSessionConfig(mode = this.currentMode) {
-      const config = mode === 'beginner' ? this.beginner : this.advanced
+      const config = this.getModeStore(mode)
       return this.cloneModeState({
         ...config,
         mode,
@@ -14197,7 +14658,9 @@ export default {
     },
 
     loadModeState(mode) {
-      const defaults = mode === 'beginner' ? createBeginnerState() : createAdvancedState()
+      const defaults = mode === 'planner'
+        ? createPlannerState()
+        : (mode === 'beginner' ? createBeginnerState() : createAdvancedState())
       try {
         const raw = localStorage.getItem(MODE_STORAGE_KEYS[mode])
         if (!raw) return this.cloneModeState(defaults)
@@ -14284,6 +14747,11 @@ export default {
         if (this.showSessionExitModal) {
           event.preventDefault()
           this.closeSessionExitModal()
+          return
+        }
+        if (this.showSessionEndedModal) {
+          event.preventDefault()
+          this.closeSessionEndedModal()
           return
         }
         if (this.showPlannerModal) {
@@ -14569,16 +15037,11 @@ export default {
     openSessionExitModal() {
       if (!this.hasVerses && !this.playerVisible) return
       this.flushPlaybackTime()
-      this.sessionExitSnapshot = this.buildSessionExitSnapshot()
-      this.sessionExitAutoSave = true
-      this.showTools = false
-      this.showConfirmModal = false
-      this.showResumeModal = false
-      this.showSessionExitModal = true
       if (this.audioElement && !this.audioElement.paused) {
         this.audioElement.pause()
       }
       this.isPlaying = false
+      this.confirmSessionExit()
     },
 
     restoreSessionExitSnapshot() {
@@ -14637,8 +15100,81 @@ export default {
       this.continueSessionPayload = null
       this.continueSessionLabel = ''
     },
+    buildSessionEndedSnapshot() {
+      const chapterName = this.currentChapter?.name_simple || this.activeChapterName || 'Session'
+      const rangeStart = Math.max(1, Number(this.rangeStart || 1))
+      const rangeEnd = Math.max(rangeStart, Number(this.rangeEnd || rangeStart))
+      const coveredAyah = Math.max(1, Number(this.currentPosition || 1))
+      const progressPercent = Math.max(0, Math.min(100, Number(this.progressPercent || 0)))
+      const durationSeconds = this.sessionStartedAt
+        ? Math.max(0, Math.round((Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt)) / 1000))
+        : Math.max(0, Math.round(Number(this.currentTime || 0)))
+      return {
+        chapterName,
+        rangeLabel: `Ayahs ${rangeStart}-${rangeEnd}`,
+        progressLabel: `${coveredAyah}/${Math.max(1, Number(this.totalVerses || 1))}`,
+        durationLabel: this.formatTime(durationSeconds),
+        summaryMessage: `You reached ayah ${coveredAyah} and completed ${progressPercent}% of this session.`
+      }
+    },
+    showSessionEndedSummary(snapshot = null) {
+      this.sessionEndedSnapshot = snapshot || this.buildSessionEndedSnapshot()
+      this.showSessionEndedModal = true
+    },
+    closeSessionEndedModal() {
+      this.showSessionEndedModal = false
+    },
+
+    finalizePlannerSessionProgress() {
+      if (this.currentMode !== 'planner' || !this.hifzPlan || !Array.isArray(this.appState?.todaySession) || !this.appState.todaySession.length) {
+        return
+      }
+      const coveredCount = Math.max(0, Math.min(this.appState.todaySession.length, Number(this.currentPosition || 0)))
+      const coveredItems = this.appState.todaySession.slice(0, coveredCount)
+      if (!coveredCount) {
+        this.persistHifzAppState({
+          mode: 'planner',
+          sessionActive: false,
+          activePlanId: this.hifzPlan?.id || null,
+          todaySession: this.appState.todaySession,
+          plannerReady: true,
+          lastEvent: 'SESSION_ENDED'
+        })
+        return
+      }
+
+      const score = this.queueIndex >= Math.max((this.queue?.length || 1) - 1, 0) ? 1 : 0.5
+      coveredItems.forEach(item => {
+        updateAyahProgress(item.surah, item.ayah, score)
+      })
+      const completedNewAyahs = coveredItems.filter(item => item?.type === 'new').length
+
+      const summary = {
+        ...(this.hifzPlan.progressSummary || {}),
+        firstSessionCompletedAt: this.hifzPlan.progressSummary?.firstSessionCompletedAt || new Date().toISOString(),
+        lastSessionCompletedAt: new Date().toISOString(),
+        completedSessions: Number(this.hifzPlan.progressSummary?.completedSessions || 0) + 1
+      }
+      this.persistHifzPlan({
+        ...this.hifzPlan,
+        progressSummary: summary
+      })
+      this.persistHifzAppState({
+        mode: 'planner',
+        sessionActive: false,
+        activePlanId: this.hifzPlan?.id || null,
+        todaySession: this.appState.todaySession,
+        progress: {
+          completedAyahs: this.hifzCompletedAyahCount + completedNewAyahs
+        },
+        plannerReady: true,
+        lastEvent: 'SESSION_ENDED'
+      })
+      this.refreshHifzJourneyState()
+    },
 
     finishSessionCleanup() {
+      this.finalizePlannerSessionProgress()
       this.closePlayer()
       this.clearTouchPeek()
       this.blurPeekHoldingSpace = false
@@ -14682,23 +15218,41 @@ export default {
     exitSessionAnyway() {
       this.closeSessionExitModal({ restore: false })
       this.finishSessionCleanup()
-      this.showBanner('Session ended. You can start again from the current setup.', 'info', 2200)
+      this.showSessionEndedSummary()
     },
 
     confirmSessionExit() {
-      const recapAyah = Math.max(1, Number(this.currentPosition || 1))
-      const recapTotal = Math.max(1, Number(this.totalVerses || 1))
-      let savedName = ''
-      if (this.sessionExitAutoSave) {
-        const savedSession = this.saveCurrentSessionSilently()
-        savedName = savedSession?.name || ''
-      }
+      const plannerCounts = this.currentMode === 'planner' ? this.getPlannerCompletionCounts() : null
+      const endedSnapshot = this.buildSessionEndedSnapshot()
       this.closeSessionExitModal({ restore: false })
+      this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
+      this.centralSession.sessionStatus = 'completed'
+      this.centralSession.sessionCompletedAt = new Date().toISOString()
+      completeMutqinSession(this.mutqinState)
+      this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+      this.recomputeAnalytics()
       this.finishSessionCleanup()
-      const recap = savedName
-        ? `Session ended. Auto-saved as "${savedName}".`
-        : `Session ended at ayah ${recapAyah}/${recapTotal}.`
-      this.showBanner(recap, 'success', 2600)
+      if (plannerCounts) {
+        this.showPlannerCompletionCelebration(this.buildPlannerCompletionSnapshot(plannerCounts))
+        return
+      }
+      this.showSessionEndedSummary(endedSnapshot)
+    },
+    openNewSessionFromEndedModal() {
+      this.closeSessionEndedModal()
+      this.openNewSessionSetup()
+    },
+    openHifzPlanFromEndedModal() {
+      this.closeSessionEndedModal()
+      this.openHifzPlanModal()
+    },
+    saveSessionFromEndedModal() {
+      this.closeSessionEndedModal()
+      this.saveCurrentSessionWithName()
+    },
+    repeatSessionFromEndedModal() {
+      this.closeSessionEndedModal()
+      this.startSessionWithCountdown()
     },
 
     openConfirmModal(options) {
@@ -14981,14 +15535,24 @@ export default {
     },
 
     performToggleMode() {
+      if (this.currentMode === 'planner') {
+        this.currentMode = 'beginner'
+        this.persistHifzAppState({ mode: 'casual', sessionActive: false, lastEvent: 'CASUAL_MODE' })
+        this.tab = 'tools'
+        this.persistUiState()
+        this.showBanner('Switched to Casual Mode', 'success', 2000)
+        return
+      }
       const newMode = this.currentMode === 'beginner' ? 'advanced' : 'beginner'
       this.currentMode = newMode
+      this.persistHifzAppState({ mode: 'casual', sessionActive: false, lastEvent: 'CASUAL_MODE' })
       this.tab = 'tools'
       this.persistUiState()
       this.showBanner(`Switched to ${newMode === 'beginner' ? 'Beginner' : 'Advanced'} Mode`, 'success', 2000)
     },
     updateTabAndSync(tabName) {
       this.currentMode = tabName === 'advanced' ? 'advanced' : 'beginner'
+      this.persistHifzAppState({ mode: 'casual', sessionActive: false, lastEvent: 'CASUAL_MODE' })
       this.tab = 'tools'
       this.persistUiState()
       this.$forceUpdate()
@@ -16396,7 +16960,7 @@ export default {
     },
 
     async loadVerses(mode = this.currentMode) {
-      const target = mode === 'beginner' ? this.beginner : this.advanced
+      const target = this.getModeStore(mode)
       const chapterId = Number(target.chapterId || 0)
       if (!chapterId) return
 
@@ -16411,13 +16975,8 @@ export default {
       try {
         const cached = this.getCachedVerses(mode, targetConfig)
         if (cached?.verses?.length) {
-          if (mode === 'beginner') {
-            this.beginner.verses = cached.verses
-            this.beginner.loadedConfig = cached.loadedConfig
-          } else {
-            this.advanced.verses = cached.verses
-            this.advanced.loadedConfig = cached.loadedConfig
-          }
+          target.verses = cached.verses
+          target.loadedConfig = cached.loadedConfig
           this.buildQueue(mode)
           this.syncActiveVerseState(mode)
           this.syncMutqinAyahs(cached.verses)
@@ -16486,32 +17045,20 @@ export default {
             }
           })
 
-        if (mode === 'beginner') {
-          this.beginner.verses = mappedVerses
-          this.beginner.loadedConfig = {
-            chapterId,
-            rangeStart: start,
-            rangeEnd: end,
-            reciterId,
-            showWordByWord: this.showWordByWord,
-            tajweedEnabled: this.tajweedEnabled
-          }
-        } else {
-          this.advanced.verses = mappedVerses
-          this.advanced.loadedConfig = {
-            chapterId,
-            rangeStart: start,
-            rangeEnd: end,
-            reciterId,
-            showWordByWord: this.showWordByWord,
-            tajweedEnabled: this.tajweedEnabled
-          }
+        target.verses = mappedVerses
+        target.loadedConfig = {
+          chapterId,
+          rangeStart: start,
+          rangeEnd: end,
+          reciterId,
+          showWordByWord: this.showWordByWord,
+          tajweedEnabled: this.tajweedEnabled
         }
         this.syncMutqinAyahs(mappedVerses)
 
         this.setCachedVerses(mode, targetConfig, {
           verses: mappedVerses,
-          loadedConfig: mode === 'beginner' ? this.beginner.loadedConfig : this.advanced.loadedConfig
+          loadedConfig: target.loadedConfig
         })
 
         this.buildQueue(mode)
@@ -16539,7 +17086,7 @@ export default {
     },
 
     buildQueue(mode = this.currentMode) {
-      const config = mode === 'beginner' ? this.beginner : this.advanced
+      const config = this.getModeStore(mode)
       const verses = config.verses
       const previousActiveKey = config.activeKey
       const previousEntry = Array.isArray(config.queue) ? config.queue[Math.max(0, Number(config.queueIndex || 0))] : null
@@ -16550,18 +17097,40 @@ export default {
           this.queue = []
           this.queueIndex = 0
         }
-        if (mode === 'beginner') {
-          this.beginner.queue = []
-          this.beginner.queueIndex = 0
-        } else {
-          this.advanced.queue = []
-          this.advanced.queueIndex = 0
-        }
+        config.queue = []
+        config.queueIndex = 0
         return
       }
 
       const q = []
       const safePreviousQueueIndex = Math.max(0, Number(config.queueIndex || 0))
+
+      if (mode === 'planner') {
+        const todayMap = new Map((this.appState?.todaySession || []).map(item => [item.key, item]))
+        verses.forEach((verse, index) => {
+          const sessionItem = todayMap.get(verse.key) || {}
+          q.push({
+            verse,
+            phase: sessionItem.type === 'new' ? 'Memorise' : 'Retention',
+            chainKey: `planner:${sessionItem.type || 'memorise'}:${verse.key}`,
+            sequencePosition: index + 1,
+            sequenceTotal: verses.length,
+            repeatCount: 1,
+            totalRepeats: 1,
+            plannerType: sessionItem.type || 'new'
+          })
+        })
+
+        const restoredQueueIndex = Math.min(safePreviousQueueIndex, Math.max(q.length - 1, 0))
+        if (mode === this.currentMode) {
+          this.queue = q
+          this.queueIndex = restoredQueueIndex
+        }
+        config.queue = q
+        config.queueIndex = restoredQueueIndex
+        this.syncActiveVerseState(mode, previousActiveKey)
+        return
+      }
 
       const chainingEnabled = this.chainingEnabled
       const chainingMethod = this.chainingMethod
@@ -16672,13 +17241,8 @@ export default {
         this.queueIndex = previousQueueIndex
       }
 
-      if (mode === 'beginner') {
-        this.beginner.queue = q
-        this.beginner.queueIndex = previousQueueIndex
-      } else {
-        this.advanced.queue = q
-        this.advanced.queueIndex = previousQueueIndex
-      }
+      config.queue = q
+      config.queueIndex = previousQueueIndex
 
       this.syncActiveVerseState(mode, previousActiveKey)
     },
@@ -16764,7 +17328,7 @@ export default {
     },
 
     persistModeState(mode) {
-      const source = mode === 'beginner' ? this.beginner : this.advanced
+      const source = this.getModeStore(mode)
       try {
         localStorage.setItem(MODE_STORAGE_KEYS[mode], JSON.stringify(this.cloneModeState(source)))
       } catch (e) {
@@ -16798,16 +17362,15 @@ export default {
       this.centralSession.sessionStatus = 'active'
       this.centralSession.sessionCompletedAt = null
 
-      const currentVerses = mode === 'beginner' ? this.beginner.verses : this.advanced.verses
+      const currentStore = this.getModeStore(mode)
+      const currentVerses = currentStore?.verses || []
       const modeNeedsReload = !currentVerses || !currentVerses.length || !this.modeDataMatchesConfig(mode, config)
 
       if (modeNeedsReload) {
         await this.loadVerses(mode)
       }
 
-      const updatedVerses = mode === 'beginner'
-        ? this.beginner.verses
-        : this.advanced.verses
+      const updatedVerses = this.getModeStore(mode)?.verses || []
 
       if (!updatedVerses || updatedVerses.length === 0) {
         this.showBanner('No verses loaded. Check your network connection.', 'error')
@@ -16827,9 +17390,7 @@ export default {
 
       this.buildQueue(mode)
 
-      const builtQueue = mode === 'beginner'
-        ? this.beginner.queue
-        : this.advanced.queue
+      const builtQueue = this.getModeStore(mode)?.queue || []
 
       if (!builtQueue || builtQueue.length === 0) {
         this.showBanner('Nothing to play. Check the selected range.', 'error')
@@ -16866,13 +17427,29 @@ export default {
 
       this.showTools = false
       this.flowStep = 'learn'
+      if (mode === 'planner') {
+        this.persistHifzAppState({
+          mode: 'planner',
+          sessionActive: true,
+          activePlanId: this.hifzPlan?.id || null,
+          todaySession: this.hifzTodayQueue,
+          progress: {
+            completedAyahs: this.hifzCompletedAyahCount,
+            dueCount: this.plannerSessionState.dueCount
+          },
+          plannerReady: true,
+          lastEvent: 'SESSION_STARTED'
+        })
+      }
 
       const chainingStatus = this.chainingEnabled
         ? `${this.chainingMethod} chaining (${this.chainingRepetitions}x)`
         : 'no chaining'
 
       this.showBanner(
-        `Session started with ${builtQueue.length} guided repetitions using ${chainingStatus}`,
+        mode === 'planner'
+          ? `Hifz session started. Follow the highlighted words and move one ayah at a time.`
+          : `Session started with ${builtQueue.length} guided repetitions using ${chainingStatus}`,
         'success',
         3000
       )
@@ -17196,6 +17773,8 @@ export default {
     handleSessionComplete() {
       if (!this.verses.length) return
 
+      const plannerCounts = this.currentMode === 'planner' ? this.getPlannerCompletionCounts() : null
+      const endedSnapshot = this.buildSessionEndedSnapshot()
       this.sessionCompleted = true
       this.sessionCompletedAt = new Date().toISOString()
       this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
@@ -17204,18 +17783,13 @@ export default {
       completeMutqinSession(this.mutqinState)
       this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
       this.recomputeAnalytics()
-      this.persistCentralSessionState()
+      this.finishSessionCleanup()
 
-      const chainingStatus = this.chainingEnabled
-        ? `${this.chainingMethod} chaining completed`
-        : 'session completed'
-
-      this.showBanner(
-        `${chainingStatus}! Great work! 🎉`,
-        'success',
-        6500,
-        { key: 'restart-session', label: 'Start new session' }
-      )
+      if (plannerCounts) {
+        this.showPlannerCompletionCelebration(this.buildPlannerCompletionSnapshot(plannerCounts))
+        return
+      }
+      this.showSessionEndedSummary(endedSnapshot)
     },
 
     handlePrimaryAction() {
@@ -17430,6 +18004,7 @@ export default {
       this.showTools = false
       this.beginner = this.loadModeState('beginner')
       this.advanced = this.loadModeState('advanced')
+      this.planner = this.loadModeState('planner')
       if (this.readingViewMode === 'mushaf') this.applyMushafThemeDefault(this.theme)
       document.documentElement.setAttribute('data-theme', this.theme)
     },
@@ -17486,6 +18061,7 @@ export default {
       this.persistCentralSessionState()
       this.persistModeState('beginner')
       this.persistModeState('advanced')
+      this.persistModeState('planner')
     },
 
     persistSessionState() {
@@ -17504,14 +18080,14 @@ export default {
     },
 
     restoreSessionState() {
-      ;['beginner', 'advanced'].forEach(mode => {
+      ;['beginner', 'advanced', 'planner'].forEach(mode => {
         const saved = localStorage.getItem(SESSION_STORAGE_KEYS[mode])
         if (!saved) return
         try {
           const state = JSON.parse(saved)
           if (state.completed) return
           if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
-            const target = mode === 'beginner' ? this.beginner : this.advanced
+            const target = this.getModeStore(mode)
             const restoredKey = state.activeVerseKey || state.activeKey || null
             target.activeKey = restoredKey
             target.queueIndex = Number(state.queueIndex || 0)
@@ -17567,7 +18143,7 @@ export default {
     },
 
     async loadChapter(mode = this.currentMode) {
-      const target = mode === 'beginner' ? this.beginner : this.advanced
+      const target = this.getModeStore(mode)
       const chapterId = Number(target.chapterId || 0)
       if (!chapterId) {
         this.currentChapter = null
@@ -17576,13 +18152,8 @@ export default {
       this.currentChapter = this.chapters.find(c => c.id === chapterId)
       const max = this.currentChapter?.verses_count || 286
 
-      if (mode === 'beginner') {
-        this.beginner.rangeEnd = Math.min(this.beginner.rangeEnd, max)
-        this.beginner.rangeStart = Math.max(1, this.beginner.rangeStart)
-      } else {
-        this.advanced.rangeEnd = Math.min(this.advanced.rangeEnd, max)
-        this.advanced.rangeStart = Math.max(1, this.advanced.rangeStart)
-      }
+      target.rangeEnd = Math.min(target.rangeEnd, max)
+      target.rangeStart = Math.max(1, target.rangeStart)
       await this.loadVerses(mode)
     },
 
@@ -18964,7 +19535,7 @@ export default {
 /* Actions */
 .completion-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 14px;
 }
@@ -31021,6 +31592,22 @@ html {
   min-width: 0;
 }
 
+.workspace-shell-main-title {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.05rem, 1.5vw, 1.35rem);
+  line-height: 1.18;
+  font-weight: 750;
+}
+
+.workspace-shell-helper-copy {
+  margin: 0.15rem 0 0 !important;
+  max-width: 64ch;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
 .workspace-shell-kicker {
   display: inline-flex;
   width: fit-content;
@@ -34279,6 +34866,76 @@ html {
   flex-direction: column;
   gap: 16px;
   min-height: 160px;
+}
+
+.idle-action-shell {
+  display: grid;
+  gap: 1.15rem;
+  padding: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+.idle-action-head {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.idle-action-grid-shell {
+  padding-inline: 0;
+}
+
+.workspace-idle-shell {
+  margin-bottom: 1rem;
+}
+
+.idle-action-card {
+  width: 100%;
+  min-height: 180px;
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  padding: 1.15rem;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface) 98%, transparent);
+  color: var(--text);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.idle-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 38px rgba(20, 18, 16, 0.08);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+.idle-action-card i {
+  font-size: 1.45rem;
+  color: var(--accent);
+}
+
+.idle-action-card strong {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.idle-action-card small {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.idle-action-card-primary {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, var(--surface) 88%), color-mix(in srgb, var(--surface) 98%, transparent));
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+}
+
+.idle-action-card-accent {
+  background: linear-gradient(180deg, color-mix(in srgb, #2f6f58 12%, var(--surface) 88%), color-mix(in srgb, var(--surface) 98%, transparent));
+  border-color: color-mix(in srgb, #2f6f58 28%, var(--border));
 }
 
 .offcanvas {
@@ -48352,6 +49009,35 @@ button:active {
   font-size: 0.84rem !important;
 }
 
+.hifz-guided-stats {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.55rem !important;
+}
+
+.hifz-guided-trust strong,
+.hifz-guided-trust span,
+.hifz-guided-trust small {
+  display: block !important;
+}
+
+.hifz-guided-trust strong {
+  color: var(--text) !important;
+  font-size: 0.92rem !important;
+}
+
+.hifz-guided-trust span,
+.hifz-guided-trust small,
+.hifz-guided-why small {
+  color: var(--text-muted) !important;
+  font-size: 0.76rem !important;
+}
+
+.hifz-guided-why {
+  display: grid !important;
+  gap: 0.22rem !important;
+}
+
 .hifz-planner-actions,
 .hifz-recovery-actions {
   display: flex !important;
@@ -48504,6 +49190,49 @@ button:active {
 
 .hifz-panel-title i {
   color: var(--accent) !important;
+}
+
+.planner-controls-sheet .sheet-content {
+  display: grid !important;
+}
+
+.planner-controls-inline {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.55rem !important;
+  align-items: center !important;
+}
+
+.planner-inline-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.45rem !important;
+  min-height: 40px !important;
+  padding: 0 0.9rem !important;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent) !important;
+  border-radius: 10px !important;
+  background: color-mix(in srgb, var(--surface) 95%, white 5%) !important;
+  color: var(--text) !important;
+  font-weight: 700 !important;
+  transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease !important;
+}
+
+.planner-inline-btn.active,
+.planner-inline-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border)) !important;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface) 88%) !important;
+  box-shadow: 0 10px 24px rgba(34, 116, 82, 0.12) !important;
+}
+
+.planner-font-dropdown {
+  min-width: 0 !important;
+}
+
+.planner-controls-content strong {
+  display: block !important;
+  color: var(--text) !important;
+  font-size: 0.96rem !important;
 }
 
 .hifz-memory-stats,
@@ -48989,6 +49718,7 @@ button:active {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
+  .hifz-guided-stats,
   .hifz-planner-grid,
   .hifz-detailed-planner-analytics {
     grid-template-columns: 1fr !important;
@@ -49016,6 +49746,7 @@ button:active {
 
 @media (max-width: 560px) {
   .hifz-planner-metrics,
+  .hifz-guided-stats,
   .hifz-memory-stats,
   .hifz-next-reviews {
     grid-template-columns: 1fr !important;
@@ -49059,7 +49790,8 @@ button:active {
   overflow-x: clip !important;
 }
 
-.main.container {
+.main.container,
+.main.container-fluid {
   width: min(100%, 1440px) !important;
   padding-inline: clamp(0.75rem, 2vw, 1.5rem) !important;
 }
@@ -49070,9 +49802,9 @@ button:active {
 }
 
 .workspace {
-  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
-  border-radius: 16px !important;
-  background: color-mix(in srgb, var(--surface) 84%, transparent) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
 }
 
 .workspace-shell,
@@ -49215,6 +49947,321 @@ button:active {
   line-height: 2.05 !important;
 }
 
+.workspace-shell-planner-summary {
+  margin: 0.45rem 0 0 !important;
+  max-width: 60ch !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.98rem !important;
+  line-height: 1.5 !important;
+}
+
+.workspace-shell-compact-meta i {
+  margin-inline-end: 0.35rem !important;
+}
+
+.hifz-guidance-banner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1rem !important;
+  margin-top: 1rem !important;
+  padding: 1rem 1.1rem !important;
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent) !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--surface-elevated, var(--surface)) 88%, transparent), color-mix(in srgb, var(--surface) 96%, transparent)) !important;
+}
+
+.hifz-guidance-banner.tone-start {
+  box-shadow: 0 16px 34px color-mix(in srgb, #2f6f58 16%, transparent) !important;
+}
+
+.hifz-guidance-banner.tone-during {
+  box-shadow: 0 16px 34px color-mix(in srgb, #d4a24f 16%, transparent) !important;
+}
+
+.hifz-guidance-banner.tone-after {
+  box-shadow: 0 16px 34px color-mix(in srgb, #4f86f7 16%, transparent) !important;
+}
+
+.hifz-guidance-copy {
+  min-width: 0 !important;
+}
+
+.hifz-guidance-kicker {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  margin-bottom: 0.45rem !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.03em !important;
+  text-transform: uppercase !important;
+}
+
+.hifz-guidance-copy strong {
+  display: block !important;
+  color: var(--text-primary) !important;
+  font-size: 1.02rem !important;
+}
+
+.hifz-guidance-copy p,
+.hifz-guidance-side small {
+  margin: 0.25rem 0 0 !important;
+  color: var(--text-secondary) !important;
+  line-height: 1.5 !important;
+}
+
+.hifz-guidance-side {
+  display: grid !important;
+  gap: 0.45rem !important;
+  justify-items: end !important;
+  min-width: 220px !important;
+}
+
+.hifz-guidance-health {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  padding: 0.55rem 0.8rem !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+}
+
+.hifz-guidance-health.health-onTrack,
+.hifz-guidance-health.health-paused {
+  background: color-mix(in srgb, #2f6f58 12%, var(--surface)) !important;
+  color: color-mix(in srgb, #2f6f58 76%, var(--text-primary)) !important;
+}
+
+.hifz-guidance-health.health-slightlyBehind,
+.hifz-guidance-health.health-fallingBehind {
+  background: color-mix(in srgb, #d4a24f 16%, var(--surface)) !important;
+  color: color-mix(in srgb, #8a5f0a 78%, var(--text-primary)) !important;
+}
+
+.planner-confetti-layer {
+  position: fixed !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 14050 !important;
+  overflow: hidden !important;
+}
+
+.planner-confetti-piece {
+  position: absolute !important;
+  top: -8vh !important;
+  left: var(--planner-confetti-left) !important;
+  width: 12px !important;
+  height: 20px !important;
+  border-radius: 999px !important;
+  background: var(--planner-confetti-color) !important;
+  opacity: 0.92 !important;
+  transform: rotate(var(--planner-confetti-rotate)) !important;
+  animation: planner-confetti-fall var(--planner-confetti-duration) ease-in forwards !important;
+  animation-delay: var(--planner-confetti-delay) !important;
+}
+
+.planner-completion-overlay {
+  z-index: 14040 !important;
+  background: color-mix(in srgb, #0f1110 52%, transparent) !important;
+}
+
+.planner-completion-modal {
+  width: min(100%, 1120px) !important;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+  border-radius: 22px !important;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-elevated, var(--surface)) 95%, transparent), color-mix(in srgb, var(--surface) 98%, transparent)) !important;
+  box-shadow: 0 30px 80px color-mix(in srgb, #0f1110 18%, transparent) !important;
+}
+
+.planner-completion-header,
+.planner-completion-footer {
+  background: transparent !important;
+}
+
+.planner-completion-head-copy {
+  min-width: 0 !important;
+}
+
+.planner-completion-kicker {
+  display: inline-block !important;
+  margin-bottom: 0.45rem !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.03em !important;
+  text-transform: uppercase !important;
+}
+
+.planner-completion-head-copy h2 {
+  margin: 0 !important;
+  color: var(--text-primary) !important;
+  font-size: clamp(1.5rem, 4vw, 2rem) !important;
+}
+
+.planner-completion-head-copy p {
+  margin: 0.45rem 0 0 !important;
+  color: var(--text-secondary) !important;
+  line-height: 1.6 !important;
+}
+
+.planner-completion-body {
+  display: grid !important;
+  gap: 1rem !important;
+}
+
+.planner-completion-shell {
+  width: 100% !important;
+  padding-inline: 0 !important;
+}
+
+.planner-completion-stats-row {
+  margin-inline: 0 !important;
+}
+
+.planner-completion-stat-col {
+  display: block !important;
+}
+
+.planner-completion-stat,
+.planner-completion-panel {
+  height: 100% !important;
+  padding: 1rem !important;
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent) !important;
+  border-radius: 16px !important;
+  background: color-mix(in srgb, var(--surface) 94%, transparent) !important;
+}
+
+.planner-completion-stat span,
+.planner-completion-panel-head small,
+.planner-completion-list span {
+  color: var(--text-secondary) !important;
+}
+
+.planner-completion-stat strong {
+  display: block !important;
+  margin-top: 0.45rem !important;
+  color: var(--text-primary) !important;
+  font-size: clamp(1.55rem, 4vw, 2rem) !important;
+}
+
+.planner-completion-stat small {
+  display: block !important;
+  margin-top: 0.3rem !important;
+  color: var(--text-secondary) !important;
+}
+
+.planner-completion-timeline {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+  padding-bottom: 0.2rem !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.planner-completion-timeline-btn {
+  display: grid !important;
+  gap: 0.2rem !important;
+  flex: 0 0 calc((100% - 3.75rem) / 6) !important;
+  min-width: 160px !important;
+  padding: 0.85rem 0.9rem !important;
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent) !important;
+  border-radius: 14px !important;
+  background: color-mix(in srgb, var(--surface) 94%, transparent) !important;
+  text-align: left !important;
+}
+
+.planner-completion-timeline-btn span {
+  color: var(--text-secondary) !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+}
+
+.planner-completion-timeline-btn strong {
+  color: var(--text-primary) !important;
+  font-size: 0.98rem !important;
+  line-height: 1.3 !important;
+}
+
+.planner-completion-panel-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.75rem !important;
+  margin-bottom: 0.85rem !important;
+}
+
+.planner-completion-panel-head i {
+  color: #2f6f58 !important;
+  font-size: 1.15rem !important;
+}
+
+.planner-completion-panel-head strong {
+  display: block !important;
+  color: var(--text-primary) !important;
+}
+
+.planner-completion-list {
+  display: grid !important;
+  gap: 0.65rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.planner-completion-list li {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.75rem !important;
+  padding: 0.8rem 0.9rem !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--surface-strong, var(--surface)) 92%, transparent) !important;
+}
+
+.planner-completion-list li strong {
+  color: var(--text-primary) !important;
+  font-size: 0.96rem !important;
+  text-align: right !important;
+}
+
+.session-ended-footer {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0.75rem !important;
+}
+
+.session-ended-footer .btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  min-height: 48px !important;
+}
+
+.session-ended-grid-shell {
+  padding-inline: 0 !important;
+}
+
+.session-ended-grid-btn {
+  width: 100% !important;
+  min-height: 84px !important;
+  padding: 1rem 1.1rem !important;
+  border-radius: 16px !important;
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.55rem !important;
+  text-align: center !important;
+}
+
+.session-ended-grid-btn i {
+  font-size: 1.2rem !important;
+}
+
 .recitation-word-chip,
 .wbw-word,
 .tajweed-mark,
@@ -49313,7 +50360,8 @@ textarea {
 }
 
 @media (min-width: 1200px) {
-  .main.container {
+  .main.container,
+  .main.container-fluid {
     padding-inline: clamp(1.25rem, 3vw, 2.25rem) !important;
   }
 
@@ -49323,8 +50371,92 @@ textarea {
   }
 }
 
+.onboarding-choice-grid {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.onboarding-choice-card {
+  display: grid;
+  gap: 0.35rem;
+  text-align: left;
+  padding: 1rem 1.05rem;
+  border-radius: 16px;
+  border: 1px solid rgba(154, 103, 56, 0.16);
+  background: rgba(255, 255, 255, 0.82);
+  color: inherit;
+}
+
+.onboarding-choice-card strong {
+  color: var(--text);
+}
+
+.onboarding-choice-card span {
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.onboarding-choice-card.active {
+  border-color: color-mix(in srgb, var(--accent) 56%, transparent);
+  background: color-mix(in srgb, var(--accent-light) 90%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-light) 78%, transparent);
+}
+
+.analytics-toggle-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 46px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
+  background: color-mix(in srgb, var(--surface) 92%, white);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.saved-sessions-v2 .session-item-active {
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-light) 78%, transparent) !important;
+}
+
+.mushaf-workspace {
+  display: grid !important;
+  justify-items: center !important;
+  padding: clamp(0.8rem, 2vw, 1.4rem) !important;
+}
+
+.mushaf-frame {
+  width: min(100%, 960px) !important;
+  margin-inline: auto !important;
+  padding: clamp(0.8rem, 2vw, 1.3rem) !important;
+  border-radius: 24px !important;
+}
+
+.mushaf-page {
+  width: min(100%, 860px) !important;
+  min-height: min(78vh, 980px) !important;
+  padding: clamp(1.2rem, 2vw, 2rem) !important;
+  border-radius: 22px !important;
+}
+
+.mushaf-page-body {
+  gap: 0.9rem !important;
+  align-content: start !important;
+}
+
+.mushaf-ayah-text {
+  font-size: clamp(1.95rem, 2.8vw, 3rem) !important;
+  line-height: 2.02 !important;
+  letter-spacing: 0 !important;
+  text-align: right !important;
+}
+
 @media (max-width: 991.98px) {
-  .main.container {
+  .main.container,
+  .main.container-fluid {
     padding-inline: 0.85rem !important;
   }
 
@@ -49376,6 +50508,16 @@ textarea {
     font-size: clamp(1.45rem, 7vw, 2.1rem) !important;
   }
 
+  .hifz-guidance-banner {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .hifz-guidance-side {
+    justify-items: start !important;
+    min-width: 0 !important;
+  }
+
   .hifz-planner-metrics,
   .hifz-memory-stats,
   .hifz-next-reviews,
@@ -49385,10 +50527,15 @@ textarea {
   .recitation-insights-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
+
+  .mushaf-page {
+    min-height: auto !important;
+  }
 }
 
 @media (max-width: 575.98px) {
-  .main.container {
+  .main.container,
+  .main.container-fluid {
     padding-inline: 0.5rem !important;
   }
 
@@ -49406,6 +50553,18 @@ textarea {
   .hifz-analytics-layer,
   .verse-card {
     border-radius: 8px !important;
+  }
+
+  .planner-completion-timeline {
+    gap: 0.65rem !important;
+  }
+
+  .planner-completion-timeline-btn {
+    flex-basis: 170px !important;
+  }
+
+  .session-ended-footer {
+    grid-template-columns: 1fr !important;
   }
 
   .action-buttons-group {
@@ -49452,6 +50611,12 @@ textarea {
   .mushaf-ayah-text {
     font-size: clamp(1.65rem, 9vw, 2.3rem) !important;
     line-height: 2.15 !important;
+  }
+
+  .mushaf-frame,
+  .mushaf-page {
+    border-radius: 16px !important;
+    padding: 0.9rem !important;
   }
 
   .modal-overlay {
@@ -49516,8 +50681,25 @@ textarea {
   }
 }
 
+@keyframes planner-confetti-fall {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(0, 118vh, 0) rotate(var(--planner-confetti-rotate));
+    opacity: 0;
+  }
+}
+
 @media (max-width: 359.98px) {
-  .main.container {
+  .main.container,
+  .main.container-fluid {
     padding-inline: 0.35rem !important;
   }
 

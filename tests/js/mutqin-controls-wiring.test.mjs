@@ -146,33 +146,58 @@ includesAll('ai memorisation mirrors recitation modal', [
 ])
 
 includesAll('living hifz planner dashboard', [
-  /class="hifz-planner-dashboard"/,
+  /isPlannerModeActive\(\) \{/,
+  /plannerSessionState\(\) \{/,
+  /startPlannerPrimaryAction\(\)/,
+  /activatePlannerMode\(options = \{\}\)/,
+  /HIFZ_APP_STATE_STORAGE_KEY/,
+  /workspace-shell-main-title/,
+  /plannerBeginnerGuidance/,
+  /topCardSessionLabel\(\) \{/,
+  /class="sheet planner-controls-sheet"/,
+  /Session View/,
+  /Mushaf view|Stacked view/,
+  /v-if="!isSessionCompleted && hasSessionStarted" v-show="!mainCardCollapsed" class="workspace-quick-controls"/,
   /hifzPlanHealth\(\) \{/,
   /hifzMemorySchedule\(\) \{/,
-  /hifzPlannerDetailedAnalytics\(\) \{/,
-  /applyHifzRecovery\(strategy\)/,
   /pauseHifzPlan\(\)/,
   /startOrResumeHifzPlan\(\)/,
   /deleteHifzPlan\(\)/,
   /HIFZ_PLAN_ARCHIVE_STORAGE_KEY/,
-  /calculatePlanForecast\(this\.hifzPlan/
+  /calculatePlanForecast\(this\.hifzPlan/,
+  /tajweedEnabled: true/,
+  /showPlannerCompletionModal: false/,
+  /showPlannerCompletionConfetti: false/,
+  /showPlannerCompletionCelebration\(snapshot = null\)/,
+  /plannerCompletionStats\(\) \{/,
+  /plannerActiveGuidance\(\) \{/,
+  /await this\.activatePlannerMode\(\{ startPlayback: true \}\)/
 ])
 
 for (const pattern of [
-  /Hifz Journey Forecast/,
+  /Your Hifz Journey Is Ready/,
   /forecastItems\(\) \{/,
   /calculatePlanForecast/,
   /detail: 'Maintain a steady pace with enough revision to strengthen long-term memory\.'/,
   /class="hifz-forecast-grid"/,
-  /status: lifecycleStatus === 'draft' \? 'active' : lifecycleStatus/
+  /status: lifecycleStatus === 'draft' \? 'active' : lifecycleStatus/,
+  /wizardProgressPercent\(\) \{/,
+  /canProceedFromCurrentStep\(\) \{/,
+  /isStepAccessible\(index\) \{/
 ]) {
   assert.match(hifzPlanModalSource, pattern, `hifz plan modal: missing ${pattern}`)
 }
 
 assert.doesNotMatch(
   hifzPlanModalSource,
-  /Speak your plan|Voice plan input/,
+  /Speak your plan|Voice plan input|voiceState:|startVoiceInput\(|stopVoiceInput\(|hifz-voice-panel/,
   'planner setup modal should not render the voice speak section'
+)
+
+assert.doesNotMatch(
+  source,
+  /class="session-complete-empty"|>\s*Review insights\s*<|>\s*Save session\s*<|>\s*Create new session\s*</,
+  'session complete view should not render the old completion action grid'
 )
 
 assert.doesNotMatch(

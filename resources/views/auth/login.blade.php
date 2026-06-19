@@ -4,14 +4,32 @@
 <div class="auth-shell">
     <div class="auth-card">
         <div class="auth-copy">
+            <div class="auth-eyebrow"><i class="bi bi-stars"></i> Mutqin access</div>
             <h1 class="auth-title" data-i18n="login">{{ __('ui.login') }}</h1>
-            <p class="auth-subtitle" data-i18n="authLoginSubtitle">{{ __('ui.auth_login_subtitle') }}</p>
+            <p class="auth-subtitle" data-i18n="authLoginSubtitle">Continue your memorisation with a clean workspace, saved progress, and subscription syncing across devices.</p>
+            <div class="auth-note-list">
+                <div class="auth-note">
+                    <i class="bi bi-journal-check"></i>
+                    <div>
+                        <strong>Resume quickly</strong>
+                        <span>Pick up your last session without digging through extra screens.</span>
+                    </div>
+                </div>
+                <div class="auth-note">
+                    <i class="bi bi-shield-check"></i>
+                    <div>
+                        <strong>Secure account access</strong>
+                        <span>Your existing Mutqin account, subscription, and session data stay exactly where they are.</span>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="auth-form-wrap">
+                    @if (session('error'))
+                        <div class="alert alert-danger auth-alert" role="alert">{{ session('error') }}</div>
+                    @endif
                     @error('google')
-                        <div class="alert alert-danger auth-alert" role="alert">
-                            {{ $message }}
-                        </div>
+                        <div class="alert alert-danger auth-alert" role="alert">{{ $message }}</div>
                     @enderror
 
                     <a href="{{ route('auth.google.redirect') }}" class="auth-google-btn" aria-label="{{ __('ui.continue_google') }}">
@@ -65,7 +83,7 @@
 
                         <div class="auth-actions">
                                 <button type="submit" class="btn auth-btn-primary">
-                                    <span data-i18n="login">{{ __('ui.login') }}</span>
+                                    <span data-i18n="login">Continue</span>
                                 </button>
 
                                 @if (Route::has('password.request'))
@@ -77,7 +95,7 @@
                     </form>
                     @if (Route::has('register'))
                         <p class="auth-switch">
-                            {{ __('ui.auth_new_to_mutqin') }}
+                            New to Mutqin?
                             <a href="{{ route('register') }}" data-i18n="register">{{ __('ui.register') }}</a>
                         </p>
                     @endif

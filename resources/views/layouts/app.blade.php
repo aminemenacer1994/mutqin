@@ -34,12 +34,23 @@
             --bg: #fdf9f2;
             --surface: rgba(255, 255, 255, 0.96);
             --surface-strong: #ffffff;
+            --surface-elevated: #fffaf4;
+            --surface-soft: rgba(249, 242, 233, 0.78);
             --border: rgba(160, 120, 76, 0.12);
             --text: #1a2e24;
             --text-muted: #6b7f76;
             --accent: #a0784c;
             --accent-strong: #8b653b;
             --accent-light: rgba(160, 120, 76, 0.1);
+            --field-bg: rgba(255, 255, 255, 0.9);
+            --field-bg-strong: rgba(255, 255, 255, 0.97);
+            --overlay: rgba(17, 13, 10, 0.34);
+            --success-bg: rgba(24, 128, 86, 0.11);
+            --success-text: #146c46;
+            --danger-bg: rgba(178, 59, 59, 0.1);
+            --danger-text: #913232;
+            --warning-bg: rgba(196, 154, 108, 0.16);
+            --warning-text: #8b653b;
             --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
             --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
@@ -57,27 +68,52 @@
 
         [data-theme="dark"] {
             color-scheme: dark;
-            --bg: #1a1a1a;
-            --surface: rgba(30, 30, 30, 0.96);
-            --surface-strong: #2a2a2a;
-            --border: rgba(160, 120, 76, 0.2);
-            --text: #e8e2d9;
-            --text-muted: #a8b5aa;
+            --bg: #111315;
+            --surface: rgba(24, 22, 20, 0.96);
+            --surface-strong: #1b1a18;
+            --surface-elevated: #24211d;
+            --surface-soft: rgba(48, 40, 33, 0.42);
+            --border: rgba(230, 207, 181, 0.14);
+            --text: #f4ede4;
+            --text-muted: #c9bbac;
             --accent: #c49a6c;
             --accent-strong: #d4aa7c;
             --accent-light: rgba(196, 154, 108, 0.15);
+            --field-bg: rgba(34, 30, 27, 0.96);
+            --field-bg-strong: rgba(39, 34, 30, 0.98);
+            --overlay: rgba(4, 4, 4, 0.52);
+            --success-bg: rgba(63, 154, 114, 0.18);
+            --success-text: #b8f0d5;
+            --danger-bg: rgba(175, 82, 82, 0.18);
+            --danger-text: #ffd1ca;
+            --warning-bg: rgba(196, 154, 108, 0.18);
+            --warning-text: #ffd6a7;
+            --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.24);
+            --shadow-md: 0 16px 34px rgba(0, 0, 0, 0.32);
+            --shadow-lg: 0 28px 62px rgba(0, 0, 0, 0.42);
         }
 
         [data-theme="sepia"] {
             --bg: #f4ecd8;
             --surface: rgba(255, 248, 235, 0.96);
             --surface-strong: #fff8eb;
+            --surface-elevated: #fff4e3;
+            --surface-soft: rgba(239, 223, 200, 0.62);
             --border: rgba(139, 94, 60, 0.15);
             --text: #3d2b1f;
             --text-muted: #8b7355;
             --accent: #b87333;
             --accent-strong: #9a5a2a;
             --accent-light: rgba(184, 115, 51, 0.1);
+            --field-bg: rgba(255, 250, 241, 0.95);
+            --field-bg-strong: rgba(255, 250, 241, 0.98);
+            --overlay: rgba(44, 31, 20, 0.24);
+            --success-bg: rgba(38, 133, 88, 0.12);
+            --success-text: #1f7b50;
+            --danger-bg: rgba(173, 76, 62, 0.12);
+            --danger-text: #984336;
+            --warning-bg: rgba(184, 115, 51, 0.12);
+            --warning-text: #9a5a2a;
         }
 
         * {
@@ -95,6 +131,132 @@
             text-rendering: geometricPrecision;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+        }
+
+        body,
+        .form-control,
+        .form-select,
+        .form-check-input,
+        .accordion-button,
+        .dropdown-menu,
+        .offcanvas,
+        .offcanvas-header,
+        .offcanvas-body,
+        .modal-content,
+        .table,
+        .card,
+        .alert {
+            color: var(--text);
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .form-control,
+        .form-select,
+        textarea.form-control,
+        input.form-control {
+            background: var(--field-bg);
+            border-color: color-mix(in srgb, var(--border) 92%, transparent);
+            color: var(--text);
+        }
+
+        .form-control::placeholder,
+        .form-select::placeholder,
+        textarea.form-control::placeholder,
+        input.form-control::placeholder {
+            color: color-mix(in srgb, var(--text-muted) 86%, transparent);
+        }
+
+        .form-control:focus,
+        .form-select:focus,
+        .form-check-input:focus {
+            background: var(--field-bg-strong);
+            border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
+            color: var(--text);
+            box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent-light) 78%, transparent);
+        }
+
+        .form-check-input {
+            background-color: var(--field-bg);
+            border-color: color-mix(in srgb, var(--border) 90%, transparent);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .btn-close {
+            filter: none;
+        }
+
+        [data-theme="dark"] .btn-close {
+            filter: invert(1) grayscale(1) brightness(1.6);
+        }
+
+        .modal-content,
+        .offcanvas,
+        .card,
+        .accordion-item,
+        .table,
+        .table-responsive,
+        .list-group-item {
+            background: var(--surface-strong);
+            border-color: var(--border);
+        }
+
+        .modal-header,
+        .modal-footer,
+        .offcanvas-header,
+        .accordion-button,
+        .table > :not(caption) > * > * {
+            border-color: var(--border);
+        }
+
+        .offcanvas {
+            color: var(--text);
+        }
+
+        .accordion-button,
+        .accordion-button:not(.collapsed) {
+            background: var(--surface-strong);
+            color: var(--text);
+            box-shadow: none;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background: color-mix(in srgb, var(--accent-light) 84%, var(--surface-strong));
+            color: var(--accent-strong);
+        }
+
+        .dropdown-item:active,
+        .list-group-item {
+            background: transparent;
+            color: var(--text);
+        }
+
+        .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: var(--text);
+            --bs-table-border-color: var(--border);
+            --bs-table-striped-bg: color-mix(in srgb, var(--surface-soft) 72%, transparent);
+            --bs-table-striped-color: var(--text);
+            --bs-table-hover-bg: color-mix(in srgb, var(--accent-light) 55%, transparent);
+            --bs-table-hover-color: var(--text);
+        }
+
+        .alert-success {
+            background: var(--success-bg);
+            border-color: color-mix(in srgb, var(--success-text) 22%, var(--border));
+            color: var(--success-text);
+        }
+
+        .alert-danger {
+            background: var(--danger-bg);
+            border-color: color-mix(in srgb, var(--danger-text) 20%, var(--border));
+            color: var(--danger-text);
         }
 
         html[dir="rtl"] body {
@@ -124,7 +286,7 @@
         .navbar-shell {
             max-width: var(--shell-max);
             margin: 0 auto;
-            padding: 14px var(--gutter);
+            padding: 12px var(--gutter);
             min-height: var(--nav-h);
             display: grid;
             grid-template-columns: auto 1fr auto;
@@ -169,6 +331,7 @@
             gap: 12px;
             justify-content: center;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .navbar-collapse {
@@ -191,7 +354,7 @@
         }
 
         .nav-link {
-            padding: 10px 20px;
+            padding: 9px 16px;
             border-radius: 0;
             font-weight: 500;
             font-size: var(--text-sm);
@@ -599,7 +762,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: clamp(32px, 6vw, 72px) var(--gutter) clamp(42px, 7vw, 84px);
+            padding: calc(var(--nav-h) + clamp(20px, 4vw, 42px)) var(--gutter) clamp(28px, 5vw, 56px);
+            position: relative;
         }
 
         .auth-card {
@@ -608,22 +772,72 @@
             grid-template-columns: minmax(0, 0.9fr) minmax(340px, 1fr);
             gap: clamp(24px, 4vw, 48px);
             align-items: start;
-            padding: clamp(24px, 4vw, 44px);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--surface-strong);
-            box-shadow: var(--shadow-md);
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
         }
 
         .auth-card-sm {
-            max-width: 720px;
+            max-width: 640px;
             grid-template-columns: 1fr;
         }
 
         .auth-copy {
             display: grid;
-            gap: 12px;
+            gap: 16px;
             padding-top: 4px;
+            align-content: start;
+        }
+
+        .auth-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: var(--accent-light);
+            color: var(--accent-strong);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .auth-note-list {
+            display: grid;
+            gap: 12px;
+            margin: 6px 0 0;
+        }
+
+        .auth-note {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+        }
+
+        .auth-note i {
+            color: var(--accent);
+            font-size: 18px;
+            margin-top: 1px;
+        }
+
+        .auth-note strong {
+            display: block;
+            margin-bottom: 2px;
+            color: var(--text);
+        }
+
+        .auth-note span {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.55;
         }
 
         .auth-title {
@@ -645,10 +859,10 @@
 
         .auth-form-wrap {
             min-width: 0;
-            padding: clamp(18px, 3vw, 28px);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--surface);
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
         }
 
         .auth-form-wrap .form-label {
@@ -657,23 +871,23 @@
         }
 
         .auth-form-wrap .form-control {
-            min-height: 46px;
-            border-radius: 8px;
-            border-color: var(--border);
-            background: var(--surface-strong);
+            min-height: 50px;
+            border-radius: 16px;
+            border-color: color-mix(in srgb, var(--border) 92%, transparent);
+            background: var(--field-bg);
             color: var(--text);
+            padding-inline: 15px;
         }
 
         .auth-google-btn,
         .auth-btn-primary {
-            min-height: 46px;
-            border-radius: 8px;
+            min-height: 50px;
+            border-radius: 16px;
         }
 
         @media (max-width: 860px) {
             .auth-shell {
                 align-items: flex-start;
-                padding-top: calc(var(--nav-h) + clamp(20px, 5vw, 42px));
             }
 
             .auth-card {
@@ -687,16 +901,347 @@
             }
 
             .auth-card {
-                padding: 18px;
+                padding: 14px;
             }
 
             .auth-form-wrap {
-                padding: 16px;
+                padding: 12px;
             }
         }
 
         .billing-page {
             padding-block: 42px 64px;
+        }
+
+        .profile-page,
+        .admin-page {
+            padding-block: calc(var(--nav-h) + 20px) 54px;
+        }
+
+        .profile-stage {
+            display: grid;
+            gap: 20px;
+        }
+
+        .profile-hero-card {
+            display: grid;
+            gap: 24px;
+            align-items: stretch;
+            position: relative;
+            grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+            padding: clamp(20px, 3.5vw, 30px);
+            border-radius: 32px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top left, color-mix(in srgb, var(--field-bg-strong) 68%, transparent), transparent 34%),
+                linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--surface-strong)) 0%, color-mix(in srgb, var(--surface-strong) 88%, var(--surface-elevated)) 100%);
+            border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+            box-shadow: var(--shadow-lg);
+        }
+
+        .admin-page-head {
+            display: flex;
+            gap: 18px;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .profile-hero-card::after {
+            content: "";
+            position: absolute;
+            right: -38px;
+            bottom: -68px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, color-mix(in srgb, var(--accent) 20%, transparent), transparent 68%);
+            pointer-events: none;
+        }
+
+        .profile-hero-copy,
+        .profile-hero-summary {
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-hero-copy {
+            display: grid;
+            gap: 12px;
+            align-content: start;
+        }
+
+        .profile-hero-summary {
+            display: grid;
+            gap: 12px;
+            align-content: start;
+            padding: 18px;
+            border-radius: 24px;
+            background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
+            border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+            box-shadow: 0 18px 36px rgba(72, 54, 36, 0.08);
+            backdrop-filter: blur(14px);
+        }
+
+        .profile-kicker {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(154, 103, 56, 0.1);
+            color: var(--accent-strong);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .profile-hero-copy h1,
+        .admin-page-head h1 {
+            margin: 0;
+            font-size: clamp(34px, 4.4vw, 56px);
+            line-height: 0.98;
+            letter-spacing: -0.05em;
+        }
+
+        .profile-hero-copy p,
+        .admin-page-head p {
+            max-width: 62ch;
+            margin-bottom: 0;
+            color: var(--text-muted);
+            line-height: 1.75;
+        }
+
+        .profile-summary-label,
+        .profile-inline-badge {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: rgba(154, 103, 56, 0.1);
+            color: var(--accent-strong);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .profile-summary-plan {
+            font-size: clamp(24px, 2.4vw, 34px);
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            color: var(--text);
+        }
+
+        .profile-summary-meta {
+            margin: 0;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .profile-hero-actions,
+        .profile-subscription-actions,
+        .admin-filter-tabs,
+        .admin-message-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .profile-hero-actions form,
+        .profile-subscription-actions form,
+        .admin-message-actions form {
+            margin: 0;
+        }
+
+        .profile-action-btn,
+        .profile-submit-btn {
+            width: auto;
+            min-width: 170px;
+            padding-inline: 18px;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .profile-card {
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .profile-pane {
+            padding: 22px;
+            border-radius: 28px;
+            background: color-mix(in srgb, var(--surface-strong) 92%, var(--surface-elevated));
+            border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
+            box-shadow: 0 22px 40px rgba(72, 54, 36, 0.07);
+        }
+
+        .profile-card-wide {
+            width: 100%;
+        }
+
+        .profile-card-head {
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+        }
+
+        .profile-card-head-split {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .profile-card-head h2,
+        .admin-message-title-row h2 {
+            margin-bottom: 6px;
+            font-size: 25px;
+            letter-spacing: -0.02em;
+        }
+
+        .profile-card-head p,
+        .admin-message-head p {
+            margin: 0;
+            color: var(--text-muted);
+            line-height: 1.75;
+        }
+
+        .profile-form {
+            display: grid;
+            gap: 18px;
+        }
+
+        .profile-form .form-label {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .profile-form .form-control {
+            min-height: 50px;
+            border-radius: 16px;
+            border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+            background: var(--field-bg);
+            color: var(--text);
+            padding-inline: 15px;
+            box-shadow: inset 0 1px 0 color-mix(in srgb, var(--field-bg-strong) 75%, transparent);
+        }
+
+        .profile-form .form-control:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 0.2rem rgba(154, 103, 56, 0.12);
+        }
+
+        .profile-subscription-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .profile-subscription-item {
+            padding: 16px;
+            border-radius: 20px;
+            background:
+                linear-gradient(180deg, color-mix(in srgb, var(--surface-elevated) 92%, transparent), color-mix(in srgb, var(--surface-soft) 72%, var(--surface)));
+            border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
+            box-shadow: inset 0 1px 0 color-mix(in srgb, var(--field-bg-strong) 62%, transparent);
+        }
+
+        .profile-subscription-item span {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .profile-subscription-item strong {
+            font-size: 20px;
+            line-height: 1.2;
+        }
+
+        .profile-subscription-note {
+            margin: 16px 0 0;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: var(--accent-light);
+            border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+            color: var(--accent-strong);
+        }
+
+        .profile-subscription-actions {
+            margin-top: 22px;
+        }
+
+        .admin-message-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .admin-message-card {
+            display: grid;
+            gap: 18px;
+        }
+
+        .admin-message-head {
+            display: flex;
+            gap: 14px;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .admin-message-title-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .admin-message-status {
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .admin-message-status-pending {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+        }
+
+        .admin-message-status-resolved {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .admin-message-body {
+            padding: 18px;
+            border-radius: 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .admin-filter-active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .admin-pagination {
+            margin-top: 20px;
         }
 
         .billing-debug {
@@ -706,7 +1251,7 @@
             padding: 14px 16px;
             border-radius: 8px;
             border: 1px dashed var(--border);
-            background: rgba(255, 255, 255, 0.6);
+            background: color-mix(in srgb, var(--surface-elevated) 84%, transparent);
             color: var(--text-muted);
             font-size: 12px;
         }
@@ -789,9 +1334,9 @@
             border-radius: 8px;
             padding: 20px 22px;
             margin-bottom: 18px;
-            background: rgba(24, 128, 86, 0.11);
-            color: #146c46;
-            border: 1px solid rgba(24, 128, 86, 0.2);
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid color-mix(in srgb, var(--success-text) 22%, var(--border));
         }
 
         .billing-confirmation h2 {
@@ -825,15 +1370,15 @@
         }
 
         .billing-alert-success {
-            background: rgba(24, 128, 86, 0.11);
-            color: #146c46;
-            border: 1px solid rgba(24, 128, 86, 0.2);
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid color-mix(in srgb, var(--success-text) 22%, var(--border));
         }
 
         .billing-alert-error {
-            background: rgba(178, 59, 59, 0.1);
-            color: #913232;
-            border: 1px solid rgba(178, 59, 59, 0.2);
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            border: 1px solid color-mix(in srgb, var(--danger-text) 20%, var(--border));
         }
 
         .billing-alert-info {
@@ -980,12 +1525,33 @@
             }
 
             .billing-hero,
-            .billing-grid {
+            .billing-grid,
+            .profile-grid,
+            .profile-subscription-grid {
                 grid-template-columns: 1fr;
             }
 
             .billing-card {
                 min-height: auto;
+            }
+
+            .profile-hero-card {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-card-head-split,
+            .profile-hero-actions,
+            .profile-subscription-actions,
+            .admin-page-head,
+            .admin-message-head {
+                flex-direction: column;
+            }
+
+            .profile-action-btn,
+            .profile-submit-btn,
+            .profile-hero-actions form,
+            .profile-subscription-actions form {
+                width: 100%;
             }
         }
 
@@ -1006,9 +1572,10 @@
 
             .billing-status-panel,
             .billing-card,
-            .billing-confirmation {
+            .billing-confirmation,
+            .profile-pane {
                 padding: 18px;
-                border-radius: 8px;
+                border-radius: 20px;
             }
 
             .billing-actions {
@@ -1025,6 +1592,32 @@
                 min-height: 48px;
                 white-space: normal;
                 text-align: center;
+            }
+
+            .profile-page {
+                padding-block: calc(var(--nav-h) + 14px) 40px;
+            }
+
+            .profile-hero-card {
+                padding: 18px;
+                border-radius: 22px;
+            }
+
+            .profile-hero-summary,
+            .profile-subscription-item {
+                padding: 14px;
+                border-radius: 18px;
+            }
+
+            .profile-subscription-actions,
+            .admin-filter-tabs,
+            .admin-message-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .auth-card {
+                padding: 0;
             }
         }
 
@@ -1063,6 +1656,9 @@
                     <div class="navbar-nav nav-links-desktop">
                         <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
                         <a class="nav-link {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}">Memorisation</a>
+                        <a class="nav-link {{ request()->routeIs('about') || request()->routeIs('about-us') ? 'active' : '' }}" href="{{ route('about-us') }}">About Us</a>
+                        <a class="nav-link {{ request()->routeIs('our-mission') ? 'active' : '' }}" href="{{ route('our-mission') }}">Our Mission</a>
+                        <a class="nav-link {{ request()->routeIs('donate') ? 'active' : '' }}" href="{{ route('donate') }}">Donate</a>
                     </div>
                 </div>
 
@@ -1084,23 +1680,29 @@
                                 <i class="bi bi-chevron-down" aria-hidden="true"></i>
                             </button>
                             <ul class="dropdown-menu" id="dropdownMenu" role="menu">
-                                <!-- <li>
-                                    <a class="dropdown-item" href="/profile">
-                                        <i class="bi bi-person"></i> Profile
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('profile.show') }}">
+                                        <i class="bi bi-person-circle"></i> Profile
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="/dashboard">
-                                        <i class="bi bi-speedometer2"></i> Dashboard
+                                    <a class="dropdown-item" href="{{ route('profile.show') }}#subscription">
+                                        <i class="bi bi-credit-card-2-front"></i> Subscription
                                     </a>
                                 </li>
-                                <li><hr class="dropdown-divider"></li> -->
-                                <button type="submit" class="dropdown-item" role="menuitem">
-                                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>Profile
-                                </button>
-                                <button type="submit" class="dropdown-item" role="menuitem">
-                                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>Billing
-                                </button>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('profile.show') }}#settings">
+                                        <i class="bi bi-gear"></i> Settings
+                                    </a>
+                                </li>
+                                @if (Auth::user()->isAdmin())
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('admin.contact-messages.index') }}">
+                                            <i class="bi bi-inbox"></i> Contact Inbox
+                                        </a>
+                                    </li>
+                                @endif
+                                <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                                         @csrf

@@ -4,6 +4,9 @@ import { createApp } from 'vue';
 import Homepage from './components/Homepage.vue';
 import Memorisation from './components/Memorisation.vue';
 import About from './components/About.vue';
+import AboutUsPage from './components/AboutUs.vue';
+import OurMissionPage from './components/OurMission.vue';
+import DonationPage from './components/DonationPage.vue';
 import { setupI18n, setLocale } from './i18n';
 
 async function bootstrapApp() {
@@ -19,6 +22,9 @@ async function bootstrapApp() {
     app.component('homepage', Homepage);
     app.component('memorisation', Memorisation);
     app.component('about', About);
+    app.component('about-us-page', AboutUsPage);
+    app.component('our-mission-page', OurMissionPage);
+    app.component('donation-page', DonationPage);
     app.mount('#app');
 }
 

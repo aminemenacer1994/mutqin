@@ -13,14 +13,7 @@ class BillingController extends Controller
 {
     public function index(Request $request)
     {
-        $selectedPlan = (string) $request->query('plan', '');
-        $availablePlans = array_keys(config('billing.plans'));
-
-        return view('billing', [
-            'plans' => config('billing.plans'),
-            'stripePublishableKey' => config('services.stripe.publishable_key'),
-            'selectedPlan' => in_array($selectedPlan, $availablePlans, true) ? $selectedPlan : null,
-        ]);
+        return redirect()->to(route('home') . '#pricing');
     }
 
     public function checkout(Request $request)
@@ -72,7 +65,11 @@ class BillingController extends Controller
             }
         }
 
-        return redirect()->route('billing.index')->with('billing_status', 'Your Mutqin subscription is being activated.');
+        if ($request->user()) {
+            return redirect()->to(route('profile.show') . '#subscription')->with('billing_status', 'Your Mutqin subscription is being activated.');
+        }
+
+        return redirect()->route('login')->with('status', 'Your checkout completed. Sign in with the same email to sync your subscription.');
     }
 
     public function portal(Request $request)
@@ -80,12 +77,12 @@ class BillingController extends Controller
         $user = $request->user();
 
         if (!$user->stripe_customer_id) {
-            return redirect()->route('billing.index')->with('billing_error', 'No Stripe customer exists for this account yet.');
+            return redirect()->to(route('profile.show') . '#subscription')->with('billing_error', 'No Stripe customer exists for this account yet.');
         }
 
         $session = $this->stripePost('billing_portal/sessions', [
             'customer' => $user->stripe_customer_id,
-            'return_url' => route('billing.index'),
+            'return_url' => route('profile.show') . '#subscription',
         ]);
 
         return redirect()->away($session['url']);

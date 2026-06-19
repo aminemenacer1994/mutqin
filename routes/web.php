@@ -6,8 +6,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BillingController;
-use App\Http\Controllers\AboutUsController;
+use App\Http\Controllers\Admin\ContactMessageController;
 
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HomeController;
@@ -78,6 +79,7 @@ Route::get('/onboarding', function () {
 })->name('onboarding.page');
 
 Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+Route::post('/checkout', [BillingController::class, 'checkout'])->name('checkout');
 Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
 Route::get('/billing/success', [BillingController::class, 'success'])->name('billing.success');
 
@@ -85,9 +87,10 @@ Route::get('/memorisation', function () {
     return view('memorisation');
 })->name('memorisation');
 
-Route::get('/about', function () {
-    return view('about');
-})->name('about');
+Route::view('/about', 'content.about-us')->name('about');
+Route::view('/about-us', 'content.about-us')->name('about-us');
+Route::view('/our-mission', 'content.our-mission')->name('our-mission');
+Route::view('/donate', 'content.donate')->name('donate');
 
 Route::get('/memorisation/audio-download', function (Request $request) {
     $url = (string) $request->query('url', '');
@@ -126,6 +129,9 @@ Route::get('/memorisation/audio-download', function (Request $request) {
 // Protected routes (require authentication)
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
     Route::post('/memorisation/transcription-token', function () {
         $apiKey = trim((string) config('services.speechmatics.api_key', ''));
@@ -223,6 +229,12 @@ Route::middleware(['auth'])->group(function () {
     })->name('memorisation.transcription-token');
     Route::get('/memorisation/sync-state', [MemorisationSyncController::class, 'show'])->name('memorisation.sync.show');
     Route::put('/memorisation/sync-state', [MemorisationSyncController::class, 'update'])->name('memorisation.sync.update');
+});
+
+Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/contact-messages', [ContactMessageController::class, 'index'])->name('contact-messages.index');
+    Route::patch('/contact-messages/{contactMessage}/resolve', [ContactMessageController::class, 'resolve'])->name('contact-messages.resolve');
+    Route::delete('/contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
 });
 
 Route::get('/home', function () {

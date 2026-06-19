@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Arr;
 
 class User extends Authenticatable
 {
@@ -67,5 +68,10 @@ class User extends Authenticatable
     public function hasPaidAccess(): bool
     {
         return in_array($this->subscription_status, ['trialing', 'active'], true);
+    }
+
+    public function isAdmin(): bool
+    {
+        return in_array(strtolower((string) $this->email), Arr::wrap(config('mutqin.admin_emails')), true);
     }
 }

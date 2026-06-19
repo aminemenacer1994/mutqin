@@ -50,24 +50,24 @@
   width:min(100%, 1100px);
   margin:auto;
   min-height:100dvh;
-  padding:clamp(48px, 8vw, 90px) clamp(16px, 4vw, 24px);
-  color:#e5e7eb;
-  background:#070b14;
+  padding:clamp(34px, 6vw, 64px) clamp(16px, 4vw, 24px);
+  color:var(--text, #1f1a17);
+  background:transparent;
   overflow-x:clip;
 }
 
 /* HERO */
 .hero{
   text-align:center;
-  margin-bottom:70px;
+  margin-bottom:48px;
 }
 
 .tag{
   display:inline-block;
   padding:6px 12px;
   border-radius:999px;
-  background:rgba(16,185,129,0.1);
-  color:#10b981;
+  background:var(--accent-light, rgba(160, 120, 76, 0.1));
+  color:var(--accent, #a0784c);
   font-size:12px;
   margin-bottom:16px;
 }
@@ -83,7 +83,7 @@
 .hero p{
   max-width:650px;
   margin:auto;
-  opacity:0.7;
+  color:var(--text-muted, #6c6258);
   line-height:1.7;
 }
 
@@ -108,15 +108,15 @@ button{
 }
 
 .primary{
-  background:#10b981;
-  color:#04130d;
+  background:var(--accent, #a0784c);
+  color:#fff;
   font-weight:600;
 }
 
 .secondary{
-  background:rgba(255,255,255,0.05);
-  color:#e5e7eb;
-  border:1px solid rgba(255,255,255,0.08);
+  background:var(--surface, rgba(255,255,255,0.96));
+  color:var(--text, #1f1a17);
+  border:1px solid var(--border, rgba(160, 120, 76, 0.12));
 }
 
 /* GRID */
@@ -124,32 +124,33 @@ button{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:16px;
-  margin-top:40px;
+  margin-top:28px;
 }
 
 .card{
-  padding:22px;
+  padding:18px;
   min-width:0;
-  border-radius:8px;
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.06);
+  border-radius:16px;
+  background:color-mix(in srgb, var(--surface-strong, #fff) 92%, var(--surface-elevated, #fffaf4));
+  border:1px solid color-mix(in srgb, var(--accent, #a0784c) 12%, var(--border, rgba(160, 120, 76, 0.12)));
   backdrop-filter:blur(12px);
   transition:0.25s ease;
+  box-shadow:var(--shadow-sm, 0 8px 24px rgba(0,0,0,0.06));
 }
 
 .card:hover{
   transform:translateY(-6px);
-  border-color:rgba(16,185,129,0.4);
+  border-color:color-mix(in srgb, var(--accent, #a0784c) 34%, var(--border, rgba(160, 120, 76, 0.12)));
 }
 
 .highlight{
-  border-color:rgba(16,185,129,0.5);
+  border-color:color-mix(in srgb, var(--accent, #a0784c) 44%, var(--border, rgba(160, 120, 76, 0.12)));
 }
 
 .verse{
   text-align:center;
-  margin-top:60px;
-  opacity:0.5;
+  margin-top:40px;
+  color:var(--text-muted, #6c6258);
   font-style:italic;
 }
 

@@ -4,9 +4,9 @@
 <div class="auth-shell">
     <div class="auth-card auth-card-sm">
         <div class="auth-copy">
-            <div class="auth-kicker" data-i18n="resetKicker">Need a reset?</div>
-            <h1 class="auth-title" data-i18n="resetTitle">{{ __('Reset your password') }}</h1>
-            <p class="auth-subtitle" data-i18n="resetSubtitle">Enter your email and we will send a reset link.</p>
+            <div class="auth-eyebrow" data-i18n="resetKicker"><i class="bi bi-envelope-check"></i> Password reset</div>
+            <h1 class="auth-title" data-i18n="resetTitle">Reset your password</h1>
+            <p class="auth-subtitle" data-i18n="resetSubtitle">Enter your account email and Mutqin will send you a secure reset link.</p>
         </div>
         <div class="auth-form-wrap">
             @if (session('status'))
@@ -37,10 +37,14 @@
 
                 <div class="auth-actions">
                     <button type="submit" class="btn auth-btn-primary">
-                        <span data-i18n="sendResetLink">{{ __('Send Password Reset Link') }}</span>
+                        <span data-i18n="sendResetLink">Send reset link</span>
                     </button>
                 </div>
             </form>
+            <p class="auth-switch">
+                Remembered it?
+                <a href="{{ route('login') }}">Back to login</a>
+            </p>
         </div>
     </div>
 </div>

@@ -4,9 +4,9 @@
 <div class="auth-shell">
     <div class="auth-card auth-card-sm">
         <div class="auth-copy">
-            <div class="auth-kicker" data-i18n="newPasswordKicker">Set a new one</div>
-            <h1 class="auth-title" data-i18n="newPasswordTitle">{{ __('Choose a new password') }}</h1>
-            <p class="auth-subtitle" data-i18n="newPasswordSubtitle">Keep it simple. You can get back to your session after this.</p>
+            <div class="auth-eyebrow" data-i18n="newPasswordKicker"><i class="bi bi-shield-lock"></i> Choose a new password</div>
+            <h1 class="auth-title" data-i18n="newPasswordTitle">Set a fresh password</h1>
+            <p class="auth-subtitle" data-i18n="newPasswordSubtitle">Use a strong password, then continue back into Mutqin without losing your session state.</p>
         </div>
         <div class="auth-form-wrap">
             @if (session('status'))
@@ -55,10 +55,14 @@
 
                 <div class="auth-actions">
                     <button type="submit" class="btn auth-btn-primary">
-                        <span data-i18n="resetPassword">{{ __('Reset Password') }}</span>
+                        <span data-i18n="resetPassword">Update password</span>
                     </button>
                 </div>
             </form>
+            <p class="auth-switch">
+                Need a new link?
+                <a href="{{ route('password.request') }}">Request another reset email</a>
+            </p>
         </div>
     </div>
 </div>

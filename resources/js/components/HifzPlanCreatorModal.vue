@@ -10,7 +10,7 @@
       @click.self="close"
       @keydown.esc.prevent="close"
     >
-      <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
         <div class="modal-content">
           <div class="modal-header">
             <div>
@@ -22,24 +22,41 @@
 
           <div class="modal-body">
             <div class="hifz-plan-progress" aria-label="Plan setup progress">
+              <div class="hifz-plan-progress-head">
+                <div>
+                  <span class="hifz-plan-progress-kicker">Step {{ currentStep + 1 }} of {{ steps.length }}</span>
+                  <strong>{{ steps[currentStep]?.headline || 'Your plan' }}</strong>
+                </div>
+                <span class="hifz-plan-progress-percent">{{ wizardProgressPercent }}%</span>
+              </div>
+              <div class="hifz-plan-progress-bar" aria-hidden="true">
+                <span :style="{ width: `${wizardProgressPercent}%` }"></span>
+              </div>
+              <div class="hifz-plan-progress-steps">
               <button
                 v-for="(item, index) in steps"
                 :key="item.key"
                 type="button"
                 class="hifz-plan-step-dot"
-                :class="{ active: currentStep === index, complete: currentStep > index }"
+                :class="{
+                  active: currentStep === index,
+                  complete: isStepComplete(index),
+                  locked: index !== currentStep
+                }"
                 :aria-current="currentStep === index ? 'step' : null"
-                @click="goToStep(index)"
+                :disabled="true"
               >
                 <span>{{ index + 1 }}</span>
                 <small>{{ item.label }}</small>
               </button>
             </div>
+            <p v-if="stepValidationMessage" class="hifz-plan-validation-hint">{{ stepValidationMessage }}</p>
+            </div>
 
             <section v-if="currentStep === 0" class="hifz-plan-step">
               <div class="hifz-plan-step-head">
                 <h3>Choose Your Daily Goal</h3>
-                <p>Select the amount of new memorisation you want Mutqin to structure each day.</p>
+                <p>Choose how many new ayahs you want to learn each day.</p>
               </div>
               <div class="row g-3">
                 <div v-for="option in goalOptions" :key="option.value" class="col-md-4">
@@ -65,7 +82,7 @@
                       class="form-control"
                       list="hifzPlanSurahOptions"
                       :value="draft.selectedSurah"
-                      placeholder="Choose or speak a Surah"
+                      placeholder="Choose a Surah"
                       @input="setManualSurah($event.target.value)"
                     >
                     <datalist id="hifzPlanSurahOptions">
@@ -114,7 +131,7 @@
             <section v-else-if="currentStep === 1" class="hifz-plan-step">
               <div class="hifz-plan-step-head">
                 <h3>Pick Your Learning Style</h3>
-                <p>Set the pace and intensity of your daily learning rhythm.</p>
+                <p>Pick the pace that feels realistic for your daily routine.</p>
               </div>
               <div class="row g-3">
                 <div v-for="option in learningStyleOptions" :key="option.value" class="col-md-4">
@@ -136,7 +153,7 @@
             <section v-else-if="currentStep === 2" class="hifz-plan-step">
               <div class="hifz-plan-step-head">
                 <h3>Set Your Study Flow</h3>
-                <p>Choose what Mutqin should prioritise when shaping your plan.</p>
+                <p>Tell Mutqin what to focus on first during each session.</p>
               </div>
               <div class="row g-3">
                 <div v-for="option in focusOptions" :key="option.value" class="col-md-6">
@@ -158,7 +175,7 @@
             <section v-else-if="currentStep === 3" class="hifz-plan-step">
               <div class="hifz-plan-step-head">
                 <h3>Choose Your Support Level</h3>
-                <p>Decide how much checking and guidance you want during practice.</p>
+                <p>Choose how much checking and guidance you want during practice.</p>
               </div>
               <div class="row g-3">
                 <div v-for="option in supportOptions" :key="option.value" class="col-md-4">
@@ -177,10 +194,53 @@
               </div>
             </section>
 
+            <section v-else-if="currentStep === 4" class="hifz-plan-step">
+              <div class="hifz-plan-step-head">
+                <h3>Set Your Playback</h3>
+                <p>Choose how many repeats, which reciter, and the playback speed for each ayah.</p>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label" for="hifzPlanRepeats">Repeats per ayah</label>
+                  <input
+                    id="hifzPlanRepeats"
+                    type="number"
+                    min="1"
+                    max="10"
+                    class="form-control"
+                    :value="draft.repetitionsPerAyah"
+                    @input="setPlaybackField('repetitionsPerAyah', $event.target.value)"
+                  >
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="hifzPlanReciter">Reciter</label>
+                  <select
+                    id="hifzPlanReciter"
+                    class="form-select"
+                    :value="draft.reciterId"
+                    @change="setPlaybackField('reciterId', $event.target.value)"
+                  >
+                    <option v-for="reciter in reciterChoices" :key="reciter.id" :value="reciter.id">{{ reciter.name }}</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="hifzPlanSpeed">Playback speed</label>
+                  <select
+                    id="hifzPlanSpeed"
+                    class="form-select"
+                    :value="draft.playbackSpeed"
+                    @change="setPlaybackField('playbackSpeed', $event.target.value)"
+                  >
+                    <option v-for="option in speedOptions" :key="`speed-${option}`" :value="option">{{ option }}x</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
             <section v-else class="hifz-plan-step">
               <div class="hifz-plan-step-head">
-                <h3>Hifz Journey Forecast</h3>
-                <p>See the full route, daily pace, and expected finish date before saving.</p>
+                <h3>Your Hifz Journey Is Ready</h3>
+                <p>Review today&apos;s pace, then start and let Mutqin guide the first session automatically.</p>
               </div>
               <div class="hifz-forecast-grid" aria-label="Hifz Journey Forecast">
                 <div v-for="item in forecastItems" :key="item.label" class="hifz-forecast-card">
@@ -195,6 +255,7 @@
                   <strong>{{ item.value }}</strong>
                 </div>
               </div>
+              <p class="hifz-plan-summary-note">When you start, the timer, audio, and ayah highlighting all begin automatically.</p>
             </section>
           </div>
 
@@ -202,11 +263,23 @@
             <button type="button" class="btn btn-outline-secondary" :disabled="currentStep === 0" @click="previousStep">
               Back
             </button>
-            <button v-if="currentStep < steps.length - 1" type="button" class="btn btn-success" @click="nextStep">
+            <button
+              v-if="currentStep < steps.length - 1"
+              type="button"
+              class="btn btn-success"
+              :disabled="!canProceedFromCurrentStep"
+              @click="nextStep"
+            >
               Continue
             </button>
-            <button v-else type="button" class="btn btn-success hifz-plan-save-btn" @click="savePlan">
-              {{ existingPlan ? 'Save Hifz Plan' : 'Start My Hifz Journey' }}
+            <button
+              v-else
+              type="button"
+              class="btn btn-success hifz-plan-save-btn"
+              :disabled="!canSavePlan"
+              @click="savePlan"
+            >
+              {{ existingPlan ? 'Save Hifz Plan' : 'Start Hifz Journey' }}
             </button>
           </div>
         </div>
@@ -228,14 +301,19 @@ function createDefaultHifzDraft() {
     selectedRange: { from: null, to: null },
     learningStyle: 'balanced',
     focusMode: 'mixed',
-    supportLevel: 'standard'
+    supportLevel: 'standard',
+    repetitionsPerAyah: 5,
+    reciterId: '',
+    playbackSpeed: 1
   }
 }
 
 export default {
   name: 'HifzPlanCreatorModal',
   props: {
-    visible: { type: Boolean, default: false }
+    visible: { type: Boolean, default: false },
+    reciters: { type: Array, default: () => [] },
+    speedOptions: { type: Array, default: () => [0.5, 1, 1.25, 1.5, 2] }
   },
   emits: ['close', 'saved'],
   data() {
@@ -243,35 +321,22 @@ export default {
       currentStep: 0,
       existingPlan: null,
       draft: createDefaultHifzDraft(),
-      recognition: null,
-      voiceFinalTranscript: '',
-      voiceProcessingTimer: null,
-      voiceDetected: {
-        surah: '',
-        dailyAyahs: null,
-        range: null,
-        learningStyle: ''
-      },
-      voiceState: {
-        isListening: false,
-        status: 'stopped',
-        transcript: ''
-      },
-      manualMode: false,
       manualTouched: {
         surah: false,
         dailyAyahs: false,
         range: false,
         learningStyle: false,
         focusMode: false,
-        supportLevel: false
+        supportLevel: false,
+        playback: false
       },
       steps: [
-        { key: 'goal', label: 'Goal' },
-        { key: 'style', label: 'Style' },
-        { key: 'flow', label: 'Flow' },
-        { key: 'support', label: 'Support' },
-        { key: 'summary', label: 'Summary' }
+        { key: 'goal', label: 'Goal', headline: "Choose today's goal" },
+        { key: 'style', label: 'Style', headline: 'Pick your daily pace' },
+        { key: 'flow', label: 'Flow', headline: 'Choose your study flow' },
+        { key: 'support', label: 'Support', headline: 'Set your support level' },
+        { key: 'playback', label: 'Playback', headline: 'Choose your recitation setup' },
+        { key: 'summary', label: 'Summary', headline: 'Start your Hifz journey' }
       ],
       goalOptions: [
         { value: 'light', title: 'Light', subtitle: '1-3 ayahs/day', detail: 'A lighter workload for busy days, with more time for careful revision and steady confidence.', range: { min: 1, max: 3 }, icon: 'bi bi-sunrise' },
@@ -290,9 +355,9 @@ export default {
         { value: 'weakAyahFocus', title: 'Weak Ayah Focus', subtitle: 'Repair fragile memorisation.', detail: 'Gives extra attention to ayahs that need reinforcement before they become backlog.', icon: 'bi bi-bullseye' }
       ],
       supportOptions: [
-        { value: 'gentle', title: 'Gentle Guidance', subtitle: 'Light checking and softer feedback.', detail: 'Good for building confidence while keeping the plan easy to complete.', icon: 'bi bi-hand-thumbs-up' },
-        { value: 'standard', title: 'Standard Support', subtitle: 'Balanced checking and practical feedback.', detail: 'Catches common mistakes while keeping daily practice focused and manageable.', icon: 'bi bi-check2-circle' },
-        { value: 'highPrecision', title: 'High Precision Mode', subtitle: 'Closer checking for stricter mastery.', detail: 'Best when accuracy matters most and you can handle more correction.', icon: 'bi bi-shield-check' }
+        { value: 'gentle', title: 'Gentle Guidance', subtitle: 'Light checking and softer feedback.', detail: 'Best if you want a lighter workload while building confidence and consistency.', icon: 'bi bi-hand-thumbs-up' },
+        { value: 'standard', title: 'Standard Support', subtitle: 'Balanced checking and practical feedback.', detail: 'Best for most learners who want useful correction without slowing the session down.', icon: 'bi bi-check2-circle' },
+        { value: 'highPrecision', title: 'High Precision Mode', subtitle: 'Closer checking for stricter mastery.', detail: 'Best when you want tighter correction and can handle a more demanding session.', icon: 'bi bi-shield-check' }
       ],
       surahList: [
         'Al-Fatiha', 'Al-Baqarah', 'Aal-Imran', 'An-Nisa', 'Al-Maidah', 'Al-Anam', 'Al-Araf', 'Al-Anfal', 'At-Tawbah', 'Yunus',
@@ -323,22 +388,16 @@ export default {
     selectedSupportOption() {
       return this.supportOptions.find(option => option.value === this.draft.supportLevel) || this.supportOptions[1]
     },
-    speechRecognitionSupported() {
-      return typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition)
-    },
-    voiceStatusLabel() {
-      if (!this.speechRecognitionSupported) return 'Manual setup available'
-      if (this.voiceState.status === 'processing') return 'Processing...'
-      if (this.voiceState.isListening) return 'Listening...'
-      return 'Stopped'
-    },
-    hasVoiceDetections() {
-      return !!(
-        this.voiceDetected.surah
-        || this.voiceDetected.dailyAyahs
-        || this.voiceDetected.range
-        || this.voiceDetected.learningStyle
-      )
+    reciterChoices() {
+      const normalized = (this.reciters || [])
+        .map(reciter => {
+          if (typeof reciter === 'string') return { id: reciter, name: reciter }
+          const id = String(reciter?.id ?? '')
+          const name = String(reciter?.name || reciter?.label || id)
+          return id ? { id, name } : null
+        })
+        .filter(Boolean)
+      return normalized.length ? normalized : [{ id: 'ar.alafasy', name: 'Alafasy' }]
     },
     dailyGoalLabel() {
       const exact = Number(this.draft.dailyNewAyahs?.exact)
@@ -376,6 +435,9 @@ export default {
         { label: 'Learning Style', value: this.selectedLearningStyleOption.title },
         { label: 'Study Flow', value: this.selectedFocusOption.title },
         { label: 'Support Level', value: this.selectedSupportOption.title },
+        { label: 'Repeats per Ayah', value: `${this.draft.repetitionsPerAyah}x` },
+        { label: 'Reciter', value: this.reciterChoices.find(reciter => reciter.id === this.draft.reciterId)?.name || 'Alafasy' },
+        { label: 'Playback Speed', value: `${this.draft.playbackSpeed}x` },
         { label: 'Retention Reviews', value: '1, 3, 7, 14, 30, 60 days' }
       ]
       if (this.draft.selectedSurah) items.splice(1, 0, { label: 'Surah', value: this.draft.selectedSurah })
@@ -386,6 +448,48 @@ export default {
         })
       }
       return items
+    },
+    hasValidDailyTarget() {
+      const exact = Number(this.draft.dailyNewAyahs?.exact)
+      const min = Number(this.draft.dailyNewAyahs?.min)
+      const max = Number(this.draft.dailyNewAyahs?.max)
+      return (Number.isFinite(exact) && exact > 0) || (Number.isFinite(min) && min > 0) || (Number.isFinite(max) && max > 0)
+    },
+    hasValidRange() {
+      const from = Number(this.draft.selectedRange?.from || 0)
+      const to = Number(this.draft.selectedRange?.to || 0)
+      if (!from && !to) return true
+      if (!from || !to) return false
+      return to >= from
+    },
+    canProceedFromCurrentStep() {
+      return this.isStepComplete(this.currentStep)
+    },
+    canSavePlan() {
+      return this.isStepComplete(this.steps.length - 1)
+    },
+    maxAccessibleStep() {
+      const firstIncomplete = this.steps.findIndex((_, index) => !this.isStepComplete(index))
+      if (firstIncomplete === -1) return this.steps.length - 1
+      return Math.min(this.steps.length - 1, firstIncomplete)
+    },
+    wizardProgressPercent() {
+      const base = ((this.currentStep + 1) / this.steps.length) * 100
+      const bonus = this.canProceedFromCurrentStep ? (100 / this.steps.length) * 0.35 : 0
+      return Math.max(20, Math.min(100, Math.round(base + bonus)))
+    },
+    stepValidationMessage() {
+      const stepKey = this.steps[this.currentStep]?.key
+      if (stepKey === 'goal') {
+        if (!String(this.draft.selectedSurah || '').trim()) return ''
+        if (!this.hasValidDailyTarget) return 'Set a realistic number of new ayahs for each day.'
+        if (!this.hasValidRange) return 'Enter a valid ayah range or leave both range fields blank.'
+      }
+      if (stepKey === 'playback') {
+        if (!Number(this.draft.repetitionsPerAyah)) return 'Choose how many times each ayah should repeat.'
+        if (!String(this.draft.reciterId || '').trim()) return 'Choose a reciter before you continue.'
+      }
+      return ''
     }
   },
   watch: {
@@ -396,10 +500,6 @@ export default {
   mounted() {
     if (this.visible) this.prepareModal()
   },
-  beforeUnmount() {
-    this.stopVoiceInput()
-    if (this.voiceProcessingTimer) clearTimeout(this.voiceProcessingTimer)
-  },
   methods: {
     createDefaultDraft() {
       return createDefaultHifzDraft()
@@ -408,16 +508,21 @@ export default {
       this.currentStep = 0
       this.existingPlan = this.loadExistingPlan()
       this.draft = this.planToDraft(this.existingPlan)
-      this.manualMode = false
+      if (!String(this.draft.reciterId || '').trim()) {
+        this.draft.reciterId = this.reciterChoices[0]?.id || 'ar.alafasy'
+      }
+      if (!this.speedOptions.includes(Number(this.draft.playbackSpeed))) {
+        this.draft.playbackSpeed = 1
+      }
       this.manualTouched = {
         surah: false,
         dailyAyahs: false,
         range: false,
         learningStyle: false,
         focusMode: false,
-        supportLevel: false
+        supportLevel: false,
+        playback: false
       }
-      this.clearVoiceInput()
       this.$nextTick(() => {
         const dialog = this.$el?.querySelector?.('.hifz-plan-modal')
         if (dialog) dialog.focus({ preventScroll: true })
@@ -460,7 +565,10 @@ export default {
         },
         learningStyle: this.learningStyleOptions.some(option => option.value === plan.learningStyle) ? plan.learningStyle : 'balanced',
         focusMode: this.focusOptions.some(option => option.value === plan.focusMode) ? plan.focusMode : 'mixed',
-        supportLevel: this.supportOptions.some(option => option.value === plan.aiEvaluation?.supportLevel) ? plan.aiEvaluation.supportLevel : 'standard'
+        supportLevel: this.supportOptions.some(option => option.value === plan.aiEvaluation?.supportLevel) ? plan.aiEvaluation.supportLevel : 'standard',
+        repetitionsPerAyah: Math.max(1, Math.min(10, Number(plan.playback?.repetitionsPerAyah || 5))),
+        reciterId: String(plan.playback?.reciterId || this.reciterChoices[0]?.id || 'ar.alafasy'),
+        playbackSpeed: this.speedOptions.includes(Number(plan.playback?.speed)) ? Number(plan.playback.speed) : 1
       }
     },
     selectGoal(value) {
@@ -505,175 +613,19 @@ export default {
       this.manualTouched.supportLevel = true
       this.draft.supportLevel = value
     },
-    getSpeechRecognitionConstructor() {
-      if (typeof window === 'undefined') return null
-      return window.SpeechRecognition || window.webkitSpeechRecognition || null
-    },
-    startVoiceInput() {
-      const SpeechRecognition = this.getSpeechRecognitionConstructor()
-      if (!SpeechRecognition) {
-        this.voiceState.status = 'stopped'
+    setPlaybackField(field, value) {
+      this.manualTouched.playback = true
+      if (field === 'repetitionsPerAyah') {
+        this.draft.repetitionsPerAyah = Math.max(1, Math.min(10, Number(value || 1)))
         return
       }
-
-      this.stopVoiceInput()
-      const recognition = new SpeechRecognition()
-      recognition.continuous = true
-      recognition.interimResults = true
-      recognition.lang = 'en-US'
-
-      recognition.onstart = () => {
-        this.voiceState.isListening = true
-        this.voiceState.status = 'listening'
+      if (field === 'playbackSpeed') {
+        const numeric = Number(value)
+        this.draft.playbackSpeed = this.speedOptions.includes(numeric) ? numeric : 1
+        return
       }
-      recognition.onresult = event => {
-        let interimTranscript = ''
-        for (let index = event.resultIndex; index < event.results.length; index += 1) {
-          const transcript = event.results[index][0]?.transcript || ''
-          if (event.results[index].isFinal) this.voiceFinalTranscript += `${transcript} `
-          else interimTranscript += transcript
-        }
-        this.voiceState.transcript = `${this.voiceFinalTranscript}${interimTranscript}`.trim()
-        this.voiceState.status = 'processing'
-        this.applyVoicePlan(this.parseVoice(this.voiceState.transcript))
-        if (this.voiceProcessingTimer) clearTimeout(this.voiceProcessingTimer)
-        this.voiceProcessingTimer = setTimeout(() => {
-          if (this.voiceState.isListening) this.voiceState.status = 'listening'
-        }, 450)
-      }
-      recognition.onerror = () => {
-        this.voiceState.status = this.voiceState.isListening ? 'listening' : 'stopped'
-      }
-      recognition.onend = () => {
-        this.voiceState.isListening = false
-        this.voiceState.status = 'stopped'
-      }
-
-      this.recognition = recognition
-      recognition.start()
-    },
-    stopVoiceInput() {
-      if (this.recognition) {
-        try {
-          this.recognition.onend = null
-          this.recognition.stop()
-        } catch {}
-      }
-      this.recognition = null
-      this.voiceState.isListening = false
-      this.voiceState.status = 'stopped'
-    },
-    clearVoiceInput() {
-      this.voiceFinalTranscript = ''
-      this.voiceDetected = {
-        surah: '',
-        dailyAyahs: null,
-        range: null,
-        learningStyle: ''
-      }
-      this.voiceState.transcript = ''
-      if (!this.voiceState.isListening) this.voiceState.status = 'stopped'
-    },
-    normalizeVoiceText(text = '') {
-      return String(text || '')
-        .toLowerCase()
-        .replace(/\b(um|uh|like|maybe|i think|i want|please|can you|kind of|sort of)\b/g, ' ')
-        .replace(/[-_]/g, ' ')
-        .replace(/[^\w\s]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-    },
-    normalizeSurahName(value = '') {
-      return String(value || '')
-        .toLowerCase()
-        .replace(/[-_]/g, ' ')
-        .replace(/\bsurah\s+/g, ' ')
-        .replace(/^al\s+/, '')
-        .replace(/[^a-z0-9\s]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-    },
-    extractDailyAyahs(text = '') {
-      const dailyPatterns = [
-        /(\d+)\s*(?:or\s*(\d+)\s*)?(?:ayahs?|verses?)\s*(?:per\s*day|daily|a\s*day)?/,
-        /(?:daily|per\s*day|a\s*day)\s*(?:of\s*)?(\d+)\s*(?:ayahs?|verses?)?/,
-        /(?:memorise|memorize|learn|read)\s*(\d+)\s*(?:ayahs?|verses?)/
-      ]
-      for (const pattern of dailyPatterns) {
-        const match = text.match(pattern)
-        if (match) return Math.max(1, Math.min(10, Number(match[2] || match[1]) || 0)) || null
-      }
-      return null
-    },
-    extractRange(text = '') {
-      const patterns = [
-        /(?:from|ayahs?|verses?|range)\s*(\d+)\s*(?:to|through|until|-)\s*(\d+)/,
-        /\b(\d+)\s*(?:to|through|until|-)\s*(\d+)\b/
-      ]
-      for (const pattern of patterns) {
-        const match = text.match(pattern)
-        if (!match) continue
-        const from = Number(match[1])
-        const to = Number(match[2])
-        if (Number.isFinite(from) && Number.isFinite(to) && from > 0 && to >= from) return { from, to }
-      }
-      return null
-    },
-    extractSurah(text = '') {
-      const normalizedText = this.normalizeSurahName(text)
-      let bestMatch = ''
-      let bestLength = 0
-      this.surahList.forEach(surah => {
-        const normalizedSurah = this.normalizeSurahName(surah)
-        const compactSurah = normalizedSurah.replace(/\s+/g, '')
-        const aliases = [
-          normalizedSurah,
-          compactSurah,
-          compactSurah === 'yasin' ? 'yaseen' : '',
-          normalizedSurah === 'baqarah' ? 'al baqarah' : ''
-        ].filter(Boolean)
-        const matchedAlias = aliases.find(alias => normalizedText.includes(alias) || alias.includes(normalizedText))
-        if (matchedAlias && matchedAlias.length > bestLength) {
-          bestMatch = surah
-          bestLength = matchedAlias.length
-        }
-      })
-      return bestMatch || ''
-    },
-    extractLearningStyle(text = '') {
-      if (/\b(light|easy|gentle|slow)\b/.test(text)) return 'light'
-      if (/\b(intensive|hard|strong|strict|heavy|fast)\b/.test(text)) return 'intensive'
-      if (/\b(balanced|normal|standard|medium|regular)\b/.test(text)) return 'balanced'
-      return ''
-    },
-    parseVoice(text) {
-      const cleanText = this.normalizeVoiceText(text)
-      return {
-        surah: this.extractSurah(cleanText),
-        dailyAyahs: this.extractDailyAyahs(cleanText),
-        range: this.extractRange(cleanText),
-        learningStyle: this.extractLearningStyle(cleanText)
-      }
-    },
-    applyVoicePlan(parsed = {}) {
-      this.voiceDetected = {
-        surah: parsed.surah || this.voiceDetected.surah || '',
-        dailyAyahs: parsed.dailyAyahs || this.voiceDetected.dailyAyahs || null,
-        range: parsed.range || this.voiceDetected.range || null,
-        learningStyle: parsed.learningStyle || this.voiceDetected.learningStyle || ''
-      }
-
-      if (parsed.surah && !this.manualTouched.surah && !this.draft.selectedSurah) {
-        this.draft.selectedSurah = parsed.surah
-      }
-      if (parsed.dailyAyahs && !this.manualTouched.dailyAyahs) {
-        this.applyDailyAyahCount(parsed.dailyAyahs)
-      }
-      if (parsed.range && !this.manualTouched.range && !this.draft.selectedRange?.from && !this.draft.selectedRange?.to) {
-        this.draft.selectedRange = { ...parsed.range }
-      }
-      if (parsed.learningStyle && !this.manualTouched.learningStyle) {
-        this.draft.learningStyle = parsed.learningStyle
+      if (field === 'reciterId') {
+        this.draft.reciterId = String(value || this.reciterChoices[0]?.id || 'ar.alafasy')
       }
     },
     applyDailyAyahCount(count) {
@@ -689,14 +641,29 @@ export default {
       else if (safeCount <= 5) this.draft.goal = 'balanced'
       else this.draft.goal = 'intensive'
     },
-    formatLearningStyle(value = '') {
-      const option = this.learningStyleOptions.find(item => item.value === value)
-      return option?.title || value
+    isStepComplete(index) {
+      const step = this.steps[index]
+      if (!step) return false
+      if (step.key === 'goal') {
+        return !!String(this.draft.selectedSurah || '').trim() && this.hasValidDailyTarget && this.hasValidRange
+      }
+      if (step.key === 'style') return this.isStepComplete(0) && !!this.draft.learningStyle
+      if (step.key === 'flow') return this.isStepComplete(1) && !!this.draft.focusMode
+      if (step.key === 'support') return this.isStepComplete(2) && !!this.draft.supportLevel
+      if (step.key === 'playback') return this.isStepComplete(3) && Number(this.draft.repetitionsPerAyah) > 0 && !!String(this.draft.reciterId || '').trim()
+      if (step.key === 'summary') return this.isStepComplete(4)
+      return false
+    },
+    isStepAccessible(index) {
+      return Number(index) <= this.maxAccessibleStep
     },
     goToStep(index) {
-      this.currentStep = Math.max(0, Math.min(this.steps.length - 1, Number(index || 0)))
+      const nextIndex = Math.max(0, Math.min(this.steps.length - 1, Number(index || 0)))
+      if (!this.isStepAccessible(nextIndex)) return
+      this.currentStep = nextIndex
     },
     nextStep() {
+      if (!this.canProceedFromCurrentStep) return
       this.goToStep(this.currentStep + 1)
     },
     previousStep() {
@@ -762,6 +729,11 @@ export default {
         learningStyle: this.draft.learningStyle,
         focusMode: this.draft.focusMode,
         aiEvaluation: this.buildAiEvaluation(),
+        playback: {
+          repetitionsPerAyah: Math.max(1, Math.min(10, Number(this.draft.repetitionsPerAyah || 5))),
+          reciterId: String(this.draft.reciterId || this.reciterChoices[0]?.id || 'ar.alafasy'),
+          speed: Number(this.draft.playbackSpeed || 1)
+        },
         spacedRetention: {
           enabled: true,
           intervalsDays: [1, 3, 7, 14, 30, 60],
@@ -786,13 +758,13 @@ export default {
       }
     },
     savePlan() {
+      if (!this.canSavePlan) return
       const payload = this.buildPlanPayload()
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
       this.$emit('saved', payload)
       this.close()
     },
     close() {
-      this.stopVoiceInput()
       this.$emit('close')
     }
   }
@@ -804,31 +776,43 @@ export default {
   position: fixed;
   inset: 0;
   z-index: 13000;
+  --plan-border: color-mix(in srgb, var(--accent) 18%, var(--border));
+  --plan-border-strong: color-mix(in srgb, var(--accent) 32%, var(--border));
+  --plan-surface: color-mix(in srgb, var(--surface-strong, #fff) 92%, var(--surface-elevated, var(--surface)));
+  --plan-surface-soft: color-mix(in srgb, var(--surface-soft, var(--surface)) 72%, var(--surface));
+  --plan-field: var(--field-bg, rgba(255, 255, 255, 0.9));
+  --plan-text: var(--text, #1f1a17);
+  --plan-muted: var(--text-muted, #6c6258);
+  --plan-accent: var(--accent, #2f6f58);
+  --plan-accent-strong: var(--accent-strong, #1d7a55);
+  --plan-accent-soft: var(--accent-light, rgba(47, 111, 88, 0.1));
+  --plan-overlay: var(--overlay, rgba(14, 12, 10, 0.32));
 }
 
 .hifz-plan-modal {
-  background: rgba(14, 12, 10, 0.32);
+  background: var(--plan-overlay);
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: max(0.75rem, env(safe-area-inset-top, 0px)) 0.75rem max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
 .modal-dialog {
-  width: min(100%, 920px);
+  width: min(100%, 1240px);
   margin-inline: auto;
 }
 
 .modal-content {
-  border: 1px solid rgba(47, 111, 88, 0.18);
+  border: 1px solid var(--plan-border);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 28px 70px rgba(16, 14, 12, 0.28);
+  background: var(--plan-surface);
+  box-shadow: var(--shadow-lg);
   max-height: calc(100dvh - 1.5rem);
 }
 
 .modal-header,
 .modal-footer {
-  border-color: rgba(47, 111, 88, 0.14);
+  border-color: color-mix(in srgb, var(--plan-border) 88%, transparent);
   gap: 0.75rem;
 }
 
@@ -845,14 +829,14 @@ export default {
   position: sticky;
   bottom: 0;
   z-index: 2;
-  background: #fff;
+  background: var(--plan-surface);
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
 .hifz-plan-kicker {
   display: block;
   margin-bottom: 0.15rem;
-  color: #2f6f58;
+  color: var(--plan-accent);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -863,133 +847,95 @@ export default {
   font-weight: 750;
 }
 
-.hifz-voice-panel {
-  display: grid;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding: 0.95rem;
-  border: 1px solid rgba(47, 111, 88, 0.16);
-  border-radius: 12px;
-  background: linear-gradient(180deg, rgba(248, 253, 250, 0.98), rgba(255, 255, 255, 0.98));
-}
-
-.hifz-voice-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.85rem;
-}
-
-.hifz-voice-head strong,
-.hifz-voice-head small {
-  display: block;
-}
-
-.hifz-voice-head strong {
-  color: #1e2b24;
-  font-size: 0.98rem;
-}
-
-.hifz-voice-head small {
-  margin-top: 0.12rem;
-  color: #687268;
-  font-size: 0.78rem;
-}
-
-.hifz-voice-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.hifz-manual-toggle {
-  color: #2f6f58;
-  text-decoration: none;
-}
-
-.hifz-voice-alert {
-  margin: 0;
-  border-color: rgba(47, 111, 88, 0.14);
-  color: #687268;
-}
-
-.hifz-voice-transcript {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.75rem;
-  border-radius: 10px;
-  border: 1px solid rgba(47, 111, 88, 0.14);
-  background: #fff;
-}
-
-.hifz-voice-transcript span {
-  color: #2f6f58;
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.hifz-voice-transcript p {
-  min-height: 42px;
-  max-height: 110px;
-  margin: 0;
-  overflow-y: auto;
-  color: #1e2b24;
-  line-height: 1.45;
-}
-
-.hifz-voice-detected {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.hifz-voice-detected span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 32px;
-  padding: 0 0.65rem;
-  border-radius: 999px;
-  background: rgba(47, 111, 88, 0.09);
-  border: 1px solid rgba(47, 111, 88, 0.16);
-  color: #2f6f58;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
 .hifz-plan-manual-fields {
   margin-top: 1rem;
   padding: 0.95rem;
-  border: 1px solid rgba(47, 111, 88, 0.14);
+  border: 1px solid color-mix(in srgb, var(--plan-border) 88%, transparent);
   border-radius: 12px;
-  background: #fff;
+  background: var(--plan-field);
 }
 
 .hifz-plan-manual-fields .form-label {
-  color: #566158;
+  color: var(--plan-muted);
   font-size: 0.76rem;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .hifz-plan-manual-fields .form-control {
-  border-color: rgba(47, 111, 88, 0.22);
+  border-color: var(--plan-border-strong);
+  background: var(--field-bg-strong, var(--plan-field));
+  color: var(--plan-text);
   border-radius: 10px;
 }
 
 .hifz-plan-manual-fields .form-control:focus {
-  border-color: #2f6f58;
-  box-shadow: 0 0 0 0.18rem rgba(47, 111, 88, 0.12);
+  border-color: var(--plan-accent);
+  box-shadow: 0 0 0 0.18rem color-mix(in srgb, var(--plan-accent-soft) 76%, transparent);
 }
 
 .hifz-plan-progress {
   display: grid;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.hifz-plan-progress-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.hifz-plan-progress-head strong {
+  display: block;
+  color: var(--plan-text);
+  font-size: 1rem;
+  font-weight: 760;
+}
+
+.hifz-plan-progress-kicker,
+.hifz-plan-progress-percent {
+  color: var(--plan-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.hifz-plan-progress-bar {
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--plan-accent-soft);
+}
+
+.hifz-plan-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--plan-accent-strong), color-mix(in srgb, var(--plan-accent) 46%, #ffffff));
+  transition: width 180ms ease;
+}
+
+.hifz-plan-progress-steps {
+  display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.5rem;
-  margin-bottom: 1.25rem;
+}
+
+.hifz-plan-progress-note,
+.hifz-plan-summary-note {
+  margin: 0.4rem 0 0;
+  color: var(--plan-muted);
+  font-size: 0.82rem;
+}
+
+.hifz-plan-validation-hint {
+  margin: -0.2rem 0 0;
+  color: color-mix(in srgb, var(--plan-accent) 62%, #b77722);
+  font-size: 0.84rem;
+  font-weight: 700;
 }
 
 .hifz-plan-step-dot {
@@ -1000,8 +946,9 @@ export default {
   min-height: 44px;
   border: 0;
   background: transparent;
-  color: #6f766f;
+  color: var(--plan-muted);
   font-size: 0.75rem;
+  transition: opacity 160ms ease, transform 160ms ease;
 }
 
 .hifz-plan-step-dot span {
@@ -1010,8 +957,8 @@ export default {
   display: inline-grid;
   place-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(47, 111, 88, 0.22);
-  background: #f7faf7;
+  border: 1px solid var(--plan-border-strong);
+  background: var(--plan-surface-soft);
   font-weight: 700;
 }
 
@@ -1024,9 +971,21 @@ export default {
 
 .hifz-plan-step-dot.active span,
 .hifz-plan-step-dot.complete span {
-  background: #2f6f58;
+  background: var(--plan-accent);
   color: #fff;
-  border-color: #2f6f58;
+  border-color: var(--plan-accent);
+}
+
+.hifz-plan-step-dot.active {
+  color: var(--plan-accent-strong);
+}
+
+.hifz-plan-step-dot.locked {
+  opacity: 0.55;
+}
+
+.hifz-plan-step-dot:disabled {
+  cursor: not-allowed;
 }
 
 .hifz-plan-step-head {
@@ -1041,7 +1000,7 @@ export default {
 
 .hifz-plan-step-head p {
   margin: 0.28rem 0 0;
-  color: #687268;
+  color: var(--plan-muted);
 }
 
 .hifz-plan-choice {
@@ -1050,24 +1009,24 @@ export default {
   padding: 1.15rem;
   align-items: flex-start;
   text-align: left;
-  border: 2px solid rgba(47, 111, 88, 0.16);
+  border: 2px solid color-mix(in srgb, var(--plan-accent) 16%, var(--border));
   border-radius: 12px;
-  background: #fff;
-  color: #1e2b24;
+  background: var(--plan-field);
+  color: var(--plan-text);
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
 .hifz-plan-choice:hover {
   transform: translateY(-3px);
-  border-color: rgba(47, 111, 88, 0.42);
-  box-shadow: 0 16px 36px rgba(47, 111, 88, 0.14);
+  border-color: color-mix(in srgb, var(--plan-accent) 42%, var(--border));
+  box-shadow: var(--shadow-md);
 }
 
 .hifz-plan-choice.selected {
   transform: translateY(-4px) scale(1.01);
-  border-color: #1d7a55;
-  background: linear-gradient(180deg, rgba(226, 247, 237, 0.98), #fff 72%);
-  box-shadow: 0 22px 48px rgba(34, 116, 82, 0.22), inset 0 0 0 1px rgba(29, 122, 85, 0.28);
+  border-color: var(--plan-accent-strong);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--plan-accent-soft) 44%, var(--plan-field)) 0%, var(--plan-field) 72%);
+  box-shadow: var(--shadow-lg), inset 0 0 0 1px color-mix(in srgb, var(--plan-accent) 28%, transparent);
 }
 
 .hifz-plan-choice-icon {
@@ -1077,13 +1036,13 @@ export default {
   place-items: center;
   margin-bottom: 0.75rem;
   border-radius: 10px;
-  background: rgba(47, 111, 88, 0.1);
-  color: #2f6f58;
+  background: var(--plan-accent-soft);
+  color: var(--plan-accent);
   font-size: 1.35rem;
 }
 
 .hifz-plan-choice.selected .hifz-plan-choice-icon {
-  background: #1d7a55;
+  background: var(--plan-accent-strong);
   color: #fff;
 }
 
@@ -1094,7 +1053,7 @@ export default {
 
 .hifz-plan-choice small {
   margin-top: 0.35rem;
-  color: #4f5f55;
+  color: var(--plan-text);
   font-weight: 700;
   line-height: 1.35;
 }
@@ -1102,7 +1061,7 @@ export default {
 .hifz-plan-choice em {
   display: block;
   margin-top: 0.55rem;
-  color: #687268;
+  color: var(--plan-muted);
   font-size: 0.82rem;
   font-style: normal;
   line-height: 1.45;
@@ -1125,9 +1084,9 @@ export default {
   align-items: center;
   min-height: 84px;
   padding: 0.9rem;
-  border: 1px solid rgba(47, 111, 88, 0.18);
+  border: 1px solid var(--plan-border);
   border-radius: 10px;
-  background: linear-gradient(180deg, rgba(248, 253, 250, 0.98), #fff);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--plan-surface-soft) 88%, transparent), var(--plan-field));
 }
 
 .hifz-forecast-icon {
@@ -1137,13 +1096,13 @@ export default {
   display: inline-grid;
   place-items: center;
   border-radius: 10px;
-  background: rgba(47, 111, 88, 0.1);
-  color: #2f6f58;
+  background: var(--plan-accent-soft);
+  color: var(--plan-accent);
   font-size: 1.15rem;
 }
 
 .hifz-forecast-card span:not(.hifz-forecast-icon) {
-  color: #687268;
+  color: var(--plan-muted);
   font-size: 0.78rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -1152,7 +1111,7 @@ export default {
 .hifz-forecast-card strong {
   min-width: 0;
   overflow-wrap: anywhere;
-  color: #1e2b24;
+  color: var(--plan-text);
   font-size: 1rem;
   line-height: 1.22;
 }
@@ -1168,13 +1127,13 @@ export default {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.9rem 1rem;
-  border: 1px solid rgba(47, 111, 88, 0.14);
+  border: 1px solid color-mix(in srgb, var(--plan-border) 88%, transparent);
   border-radius: 10px;
-  background: #f8fbf8;
+  background: color-mix(in srgb, var(--plan-surface-soft) 88%, transparent);
 }
 
 .hifz-plan-summary-row span {
-  color: #687268;
+  color: var(--plan-muted);
 }
 
 .hifz-plan-summary-row strong {
@@ -1229,20 +1188,16 @@ export default {
     line-height: 1.2;
   }
 
-  .hifz-voice-head {
-    align-items: stretch;
+  .hifz-plan-progress {
+    gap: 0.65rem;
+  }
+
+  .hifz-plan-progress-head {
+    align-items: flex-start;
     flex-direction: column;
   }
 
-  .hifz-voice-actions {
-    justify-content: stretch;
-  }
-
-  .hifz-voice-actions .btn {
-    flex: 1 1 100%;
-  }
-
-  .hifz-plan-progress {
+  .hifz-plan-progress-steps {
     grid-template-columns: repeat(5, 1fr);
     gap: 0.25rem;
   }
@@ -1279,7 +1234,7 @@ export default {
 }
 
 @media (max-width: 360px) {
-  .hifz-plan-progress {
+  .hifz-plan-progress-steps {
     gap: 0.15rem;
   }
 
