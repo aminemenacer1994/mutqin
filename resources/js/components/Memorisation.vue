@@ -331,7 +331,7 @@
                           @touchstart.passive="onVerseTouchStart($event, verse.key)"
                           @touchmove.passive="clearTouchPeek"
                           @touchend.passive="onVerseTouchEnd($event, verse.key)" @touchcancel.passive="clearTouchPeek">
-                          <span class="mushaf-ayah-text" v-html="getDisplayArabic(verse)" :class="{
+                          <span class="mushaf-ayah-text" dir="rtl" lang="ar" v-html="getDisplayArabic(verse)" :class="{
                             'tajweed-enabled': tajweedEnabled,
                             'word-highlight-enabled': true,
                             'verse-weak': isWeakAyah(verse.key),
@@ -451,7 +451,7 @@
                   </div>
                 </div>
 
-                <div class="verse-arabic verse-arabic-primary" dir="rtl" v-if="verse.arabic && isDataReady"
+                <div class="verse-arabic verse-arabic-primary" dir="rtl" lang="ar" v-if="verse.arabic && isDataReady"
                   v-html="getDisplayArabic(verse)" :class="{
                     'tajweed-enabled': tajweedEnabled,
                     'word-highlight-enabled': true,
@@ -465,15 +465,15 @@
                 </div>
 
                 <!-- Keep in-workspace aids available, but visually quieter -->
-                <div v-if="showTransliteration && verse.transliteration" class="verse-aid-block">
-                  <div class="verse-aid-title">Transliteration</div>
-                  <div class="verse-transliteration verse-aid">
+                <div v-if="showTransliteration && verse.transliteration" class="verse-aid-block" dir="ltr" lang="en">
+                  <div class="verse-aid-title" dir="ltr" lang="en">Transliteration</div>
+                  <div class="verse-transliteration verse-aid" dir="ltr" lang="en">
                     {{ verse.transliteration }}
                   </div>
                 </div>
-                <div v-if="showTranslation && verse.translation" class="verse-aid-block">
-                  <div class="verse-aid-title">Translation</div>
-                  <div class="verse-translation verse-aid">
+                <div v-if="showTranslation && verse.translation" class="verse-aid-block" dir="ltr" lang="en">
+                  <div class="verse-aid-title" dir="ltr" lang="en">Translation</div>
+                  <div class="verse-translation verse-aid" dir="ltr" lang="en">
                     {{ verse.translation }}
                   </div>
                 </div>
@@ -482,7 +482,7 @@
                   <div v-for="(word, wi) in verse.words" :key="wi" class="word-item"
                     :class="{ highlighted: currentHighlightedVerseKey === verse.key && currentWordIndex === wi, 'phrase-highlighted': currentHighlightedVerseKey === verse.key && currentPhraseIndex === wi }"
                     tabindex="-1">
-                    <span class="word-arabic" dir="rtl">{{ word.ar }}</span>
+                    <span class="word-arabic" dir="rtl" lang="ar">{{ word.ar }}</span>
                     <span class="word-meaning">{{ word.en }}</span>
                     <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn" type="button"
                       @click.stop="playWordAudio(word.audio, verse, wi)"
@@ -511,7 +511,7 @@
               <span class="tools-x-glyph" aria-hidden="true">&times;</span>
             </button>
           </div>
-          <div v-if="!isPlannerModeActive && hasSessionStarted" class="tools-tabs" role="tablist" aria-label="Controls tabs">
+          <div v-if="shouldShowOffcanvasTabs" class="tools-tabs" role="tablist" aria-label="Controls tabs">
             <button role="tab" :aria-selected="tab === 'tools' ? 'true' : 'false'" :class="{ active: tab === 'tools' }"
               @click.prevent="setActiveTab('tools')" title="Session tools" type="button">
               <i class="bi bi-sliders"></i> Session
@@ -995,11 +995,11 @@
                     </span>
                   </div>
                 </section>
-                <button type="button" class="analytics-toggle-btn" @click="showAdvancedAnalytics = !showAdvancedAnalytics">
-                  <i class="bi" :class="showAdvancedAnalytics ? 'bi-dash-circle' : 'bi-plus-circle'"></i>
-                  <span>{{ showAdvancedAnalytics ? 'Hide advanced metrics' : 'Show advanced metrics' }}</span>
+                <button type="button" class="analytics-toggle-btn" @click="openAdvancedMetricsModal">
+                  <i class="bi bi-plus-circle"></i>
+                  <span>Show advanced metrics</span>
                 </button>
-                <div v-if="showAdvancedAnalytics">
+                <div v-if="false">
                   <section class="detailed-analytics-system" aria-label="Detailed analytics">
                     <article v-for="section in detailedAnalyticsSections" :key="section.key" class="detailed-analytics-section">
                       <div class="analytics-section-head">
@@ -1763,6 +1763,86 @@
       </div>
     </div>
 
+    <div v-if="showAdvancedMetricsModal" class="modal-overlay session-analytics-overlay advanced-metrics-overlay"
+      @click.self="closeAdvancedMetricsModal">
+      <div class="modal-content session-analytics-modal advanced-metrics-modal" role="dialog" aria-modal="true"
+        aria-labelledby="advancedMetricsTitle">
+        <div class="modal-header session-analytics-header">
+          <div class="session-analytics-head-copy">
+            <h2 id="advancedMetricsTitle">Advanced Metrics</h2>
+            <p>Session signals, review health, cards, graphs, and charts.</p>
+            <small>Save a session to unlock full per-session analytics.</small>
+          </div>
+          <button class="modal-close-btn" @click="closeAdvancedMetricsModal" aria-label="Close advanced metrics">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div class="modal-body session-analytics-body advanced-metrics-body">
+          <section class="session-analytics-section">
+            <div class="session-analytics-summary-grid">
+              <article v-for="item in controlsAnalyticsCards" :key="`advanced-${item.key}`"
+                class="session-analytics-summary-card">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+                <small>{{ item.description }}</small>
+              </article>
+            </div>
+          </section>
+          <section class="session-analytics-section advanced-metrics-grid" aria-label="Advanced analytics cards">
+            <article v-for="section in detailedAnalyticsSections" :key="`advanced-section-${section.key}`"
+              class="session-analytics-panel detailed-analytics-section">
+              <header>
+                <h3><i class="bi" :class="section.icon" aria-hidden="true"></i> {{ section.title }}</h3>
+                <p>Compact breakdown for this metric group.</p>
+              </header>
+              <div class="detailed-analytics-rows">
+                <div v-for="row in section.rows" :key="`advanced-${section.key}-${row.label}`"
+                  class="detailed-analytics-row">
+                  <span>{{ row.label }}</span>
+                  <strong>{{ row.value }}</strong>
+                  <small>{{ row.detail }}</small>
+                </div>
+              </div>
+            </article>
+          </section>
+          <section class="session-analytics-section session-analytics-two-col">
+            <article class="session-analytics-panel">
+              <header>
+                <h3>Progress Chart</h3>
+                <p>Current range completion.</p>
+              </header>
+              <div class="analytics-progress-split">
+                <div class="analytics-progress-stat">
+                  <strong>{{ progressPercent }}%</strong>
+                  <span>Current progress</span>
+                  <small>{{ Math.max(0, currentPosition - 1) }}/{{ totalVerses || 0 }} ayahs covered</small>
+                </div>
+                <div class="analytics-progress-stat">
+                  <strong>{{ Math.max(0, 100 - progressPercent) }}%</strong>
+                  <span>Remaining</span>
+                  <small>{{ Math.max(0, (totalVerses || 0) - Math.max(0, currentPosition - 1)) }} ayahs left</small>
+                </div>
+              </div>
+              <div class="analytics-progress-bar">
+                <div class="analytics-progress-bar-fill" :style="{ width: `${progressPercent}%` }"></div>
+              </div>
+            </article>
+            <article class="session-analytics-panel">
+              <header>
+                <h3>Review Signals</h3>
+                <p>Short signals from recent memorisation pattern.</p>
+              </header>
+              <div class="analytics-insight-list advanced-metrics-insights">
+                <span v-for="insight in hifzInsightSummaries" :key="`advanced-insight-${insight}`">
+                  <i class="bi bi-check2" aria-hidden="true"></i>{{ insight }}
+                </span>
+              </div>
+            </article>
+          </section>
+        </div>
+      </div>
+    </div>
+
     <div v-if="showAiMemorisationCheckerModal && aiMemorisationCheckerVerse" class="modal-overlay memorisation-checker-overlay"
       @click.self="closeAiMemorisationCheckerModal">
       <div class="modal-content self-check-modal memorisation-checker-modal" :class="`speed-${memorisationSpeedReview.tone}`" role="dialog" aria-modal="true"
@@ -1834,7 +1914,7 @@
               @mousedown="startAiMemorisationCheckerPeek" @mouseup="stopAiMemorisationCheckerPeek"
               @mouseleave="stopAiMemorisationCheckerPeek" @touchstart.prevent="startAiMemorisationCheckerPeek"
               @touchend="stopAiMemorisationCheckerPeek" @touchcancel="stopAiMemorisationCheckerPeek">
-              <div class="self-check-modal-ayah memorisation-checker-ayah" dir="rtl"
+              <div class="self-check-modal-ayah memorisation-checker-ayah" dir="rtl" lang="ar"
                 :class="{
 	                  'self-check-session-ayat': aiMemorisationCheckerScope === 'session' && aiMemorisationCheckerTargets.length > 1,
 	                  'recitation-word-review-active': isAiMemorisationCheckerReviewActive,
@@ -1891,7 +1971,7 @@
 	                    <span>{{ hiddenRevealModeEnabled ? getActiveRecallSummary('memorisation') : aiMemorisationCheckerLiveSummary }}</span>
 	                    <strong>Live</strong>
 	                  </div>
-	                  <div class="recitation-word-stream recitation-live-word-stream memorisation-checker-word-stream" dir="rtl">
+	                  <div class="recitation-word-stream recitation-live-word-stream memorisation-checker-word-stream" dir="rtl" lang="ar">
 	                    <span v-for="word in getActiveRecallLiveWords('memorisation')" :key="word.key"
 	                      class="recitation-word-chip word-live" :class="`word-${word.visualStatus || word.status || 'notAttempted'}`" :title="word.note">
 	                      {{ word.text }}
@@ -1932,7 +2012,7 @@
                       <p>{{ getAiRecitationPostReviewMessage(aiMemorisationCheckerResult) }}</p>
                     </div>
                   </div>
-                  <div class="recitation-word-stream memorisation-checker-final-words" dir="rtl">
+                  <div class="recitation-word-stream memorisation-checker-final-words" dir="rtl" lang="ar">
                     <span v-for="(word, index) in getRecitationWordStatuses(aiMemorisationCheckerResult)" :key="`memory-final-${index}`"
                       class="recitation-word-chip" :class="[`word-${getWordVisualStatus(word, false, true)}`, { 'can-correct-ai': word.status && word.status !== 'correct' }]"
                       :title="word.status && word.status !== 'correct' ? `${word.note || ''} Mark as AI mistake.` : word.note"
@@ -2053,7 +2133,7 @@
               :class="{ 'is-blurred': selfCheckBlurEnabled && !selfCheckPeekActive && !recitationCheckVisible, 'is-peekable': selfCheckBlurEnabled && !recitationCheckVisible }"
               @mousedown="startSelfCheckPeek" @mouseup="stopSelfCheckPeek" @mouseleave="stopSelfCheckPeek"
               @touchstart.prevent="startSelfCheckPeek" @touchend="stopSelfCheckPeek" @touchcancel="stopSelfCheckPeek">
-	              <div class="self-check-modal-ayah" dir="rtl" :style="getSelfCheckAyahDisplayStyle()"
+	              <div class="self-check-modal-ayah" dir="rtl" lang="ar" :style="getSelfCheckAyahDisplayStyle()"
 	              :class="{
 	                'self-check-session-ayat': recitationCheckScope === 'session' && recitationCheckPendingTargets.length > 1,
 	                'recitation-word-review-active': selfCheckModalVerse && shouldShowRecitationReviewHighlights(selfCheckModalVerse.key),
@@ -2812,17 +2892,17 @@ const RECITATION_IDB_NAME = 'mutqin-recitation-sessions'
 const RECITATION_IDB_VERSION = 2
 const RECITATION_IDB_STORE = 'sessions'
 const RECITATION_HISTORY_IDB_STORE = 'sessionHistory'
-const RECITATION_ANALYSIS_VERSION = '2026-06-11-deterministic-live-v1'
-const RECITATION_CONFIDENCE_THRESHOLD = DEFAULT_RECITATION_CONFIDENCE_THRESHOLD
+const RECITATION_ANALYSIS_VERSION = '2026-06-27-live-rtl-v2'
+const RECITATION_CONFIDENCE_THRESHOLD = Math.min(DEFAULT_RECITATION_CONFIDENCE_THRESHOLD, 0.45)
 const RECITATION_SILENCE_THROTTLE_MS = 1400
-const RECITATION_CHUNK_TIMESLICE_MS = 80
+const RECITATION_CHUNK_TIMESLICE_MS = 40
 const RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS = 4000
 const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 1200
-const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.72
+const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.82
 const SPEECHMATICS_AUDIO_BUFFER_SIZE = 2048
-const SPEECHMATICS_MAX_DELAY_SECONDS = 0.08
-const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.25
-const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0.35
+const SPEECHMATICS_MAX_DELAY_SECONDS = 0.02
+const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.12
+const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0.2
 
 function tokenizeArabicText(text) {
   const raw = String(text || '').trim()
@@ -3693,70 +3773,60 @@ export default {
       onboardingDemoSnapshot: null,
       onboardingDemoActive: false,
       onboardingManualLaunch: false,
-      onboardingPath: 'structured',
+      onboardingPath: 'casual',
       onboardingGoal: 'small',
       onboardingSteps: [
         {
-          title: 'Welcome to Mutqin',
-          stepLabel: 'Welcome',
-          body: 'You can understand the core workflow in under a minute: choose a path, set a simple goal, and start with a short session.',
-          points: ['Short ranges are easier to retain', 'You can revise weak ayahs later without rebuilding the session', 'The layout stays mobile friendly from the start'],
+          title: 'Set up a session',
+          stepLabel: 'Session setup',
+          body: 'Choose a surah, set the ayah range, and pick a reciter from the session controls before you begin.',
+          points: ['The sample session starts with a short range', 'Repeat counts and playback speed stay in the controls', 'You can reopen setup at any time'],
           preview: {
-            icon: 'bi-book-half',
-            title: 'What Mutqin helps with',
-            subtitle: 'Memorise, review, and return to weak ayahs without extra setup.',
-            items: ['Short sessions', 'Saved progress', 'Clear review loop']
+            icon: 'bi-journal-text',
+            title: 'Real session inputs',
+            subtitle: 'Session setup already exists in the tools panel.',
+            items: ['Surah', 'Range', 'Reciter']
           }
         },
         {
-          title: 'Choose your path',
-          stepLabel: 'Choose Path',
-          body: 'Pick the path that matches how you want to begin. You can change this later.',
-          choiceKey: 'path',
-          choices: [
-            { value: 'structured', label: 'Structured Hifz Plan', description: 'Best if you want guided planning, scheduled revision, and a clearer long-term route.' },
-            { value: 'casual', label: 'Casual Learning', description: 'Best if you want to open a short range, practise quickly, and keep things lightweight.' }
-          ],
-          points: ['Structured keeps planning visible', 'Casual starts practice faster'],
+          title: 'Pick a reading view',
+          stepLabel: 'Reading view',
+          body: 'Switch between stacked and mushaf layouts, then use translation, transliteration, tajweed, and font controls when needed.',
+          points: ['Keep the main text clean when you do not need extra aids', 'Mushaf mode keeps the page layout close to the Quran view', 'Fonts stay available from the toolbar'],
           preview: {
-            icon: 'bi-signpost-split',
-            title: 'Two clear starts',
-            subtitle: 'One path for planning, one for lightweight daily practice.',
-            items: ['Structured', 'Casual']
+            icon: 'bi-layout-text-window-reverse',
+            title: 'Reading controls',
+            subtitle: 'The view toggle and reading aids are built in.',
+            items: ['Stacked', 'Mushaf', 'Tajweed']
           }
         },
         {
-          title: 'Set your first goal',
-          stepLabel: 'Set Goal',
-          body: 'Keep the first goal small enough that you can actually finish it today.',
-          choiceKey: 'goal',
-          choices: [
-            { value: 'small', label: '1 to 3 ayahs', description: 'Recommended for first-time users and for building confidence.' },
-            { value: 'steady', label: '4 to 6 ayahs', description: 'A balanced daily goal if you already know the workflow.' },
-            { value: 'revision', label: 'Revision first', description: 'Use Mutqin mainly to revisit and strengthen ayahs you already know.' }
-          ],
-          points: ['Small goals are easier to repeat well', 'You can always extend later'],
+          title: 'Practice with built-in tools',
+          stepLabel: 'Practice tools',
+          body: 'Use focus mode, blur mode, chaining, and anchor mode when you want more structure around the active ayah.',
+          points: ['Focus mode narrows attention to the active ayah', 'Blur mode hides the next ayahs until you are ready', 'Chaining and anchor mode support harder passages'],
           preview: {
-            icon: 'bi-bullseye',
-            title: 'A good first target',
-            subtitle: 'Start small, finish cleanly, then scale up.',
-            items: ['Short range', 'Clear finish line']
+            icon: 'bi-stars',
+            title: 'Technique controls',
+            subtitle: 'The techniques tab is already part of the workspace.',
+            items: ['Focus', 'Blur', 'Anchor']
           }
         },
         {
-          title: 'Start learning',
-          stepLabel: 'Start Learning',
-          body: 'Mutqin has prepared a simple starting point. Finish this guide and begin with a short, low-friction session.',
-          points: ['Surah Al-Ikhlas is loaded as a friendly sample', 'No advanced technique is forced on you', 'You can reopen onboarding from the menu any time'],
+          title: 'Review and return',
+          stepLabel: 'Review & return',
+          body: 'Saved sessions, recordings, and insights keep the next session close to the exact ayahs that need work.',
+          points: ['Saved sessions let you resume where you left off', 'Recording history keeps prior attempts visible', 'AI recite and AI memory checks are always available from the workspace'],
           preview: {
-            icon: 'bi-play-circle',
-            title: 'Ready to begin',
-            subtitle: 'Start with a clean session, then review what feels weak.',
-            items: ['Finish guide', 'Start session', 'Review and repeat']
+            icon: 'bi-clock-history',
+            title: 'What you can return to',
+            subtitle: 'Review and resume are already built into the system.',
+            items: ['Saved sessions', 'Recordings', 'Insights']
           }
         }
       ],
       showAdvancedAnalytics: false,
+      showAdvancedMetricsModal: false,
       showConfirmModal: false,
       showSessionExitModal: false,
       sessionExitAutoSave: true,
@@ -3855,6 +3925,7 @@ export default {
       aiRecitationStrictProgression: true,
       aiRecitationPersistMistakes: false,
       persistentAiRecitationReviews: {},
+      liveRecitationRenderTick: 0,
       selfCheckSavedAttemptsVisible: false,
       selfCheckSavedAttemptsFilter: 'all',
       themeObserver: null,
@@ -4156,6 +4227,9 @@ export default {
   computed: {
     shouldRenderWorkspaceShell() {
       return !!this.hasSessionStarted && !this.isSessionCompleted
+    },
+    shouldShowOffcanvasTabs() {
+      return !this.isSessionCompleted && (this.hasSessionStarted || this.hasVerses)
     },
     showHifzPlannerUi() {
       return false
@@ -5056,15 +5130,13 @@ export default {
       return this.mushafDisplayVerses.find(v => v.key === this.effectiveActiveVerseKey) || null
     },
     recitationCheckVisible() {
-      return this.recitationCheckPanelOpen
-        || this.recitationCheckRecording
-        || this.recitationCheckPreparing
+      return (this.recitationCheckPreparing && !!this.recitationCheckStartedAt && !this.recitationCheckRecording)
         || !!this.recitationCheckError
         || !!this.recitationCheckResult
     },
     selfCheckReviewVisible() {
-      return this.recitationCheckRecording
-        || this.recitationCheckPreparing
+      if (this.recitationCheckRecording) return false
+      return (this.recitationCheckPreparing && !!this.recitationCheckStartedAt)
         || !!this.recitationCheckResult
         || !!this.recitationCheckError
         || this.isSelfCheckRecording
@@ -6351,7 +6423,6 @@ export default {
         this.isSelfCheckRecording ||
         this.recitationCheckRecording ||
         this.aiMemorisationCheckerRecording ||
-        this.showSelfCheckModal ||
         this.showRecordingsLibrary
       ) {
         this.statsTick = Date.now()
@@ -6797,7 +6868,7 @@ export default {
 	        const marker = showMarkers ? `<span class="self-check-ayah-number-marker" dir="ltr">(${this.escapeHtml(verse?.number || String(verse?.key || '').split(':')[1] || '')})</span> ` : ''
 	        const body = words.map((word, wordIndex) => this.renderActiveRecallWord(word, offset + wordIndex, kind)).join(' ')
 	        const state = this.getSessionAyahHighlightState(kind === 'memorisation' ? 'memorisation' : 'recitation', verse, index)
-	        rendered.push(`<span class="session-evaluation-ayah session-evaluation-${this.escapeHtml(state)}" data-session-target-key="${this.escapeHtml(this.getSessionTargetKey(verse, index))}" data-ayah-key="${this.escapeHtml(verse?.key || '')}">${marker}${body}</span>`)
+	        rendered.push(`<span class="session-evaluation-ayah session-evaluation-${this.escapeHtml(state)}" dir="rtl" lang="ar" data-session-target-key="${this.escapeHtml(this.getSessionTargetKey(verse, index))}" data-ayah-key="${this.escapeHtml(verse?.key || '')}">${marker}${body}</span>`)
 	        offset += wordCount
 	      }
 	      return rendered.join(' ')
@@ -8066,7 +8137,7 @@ export default {
       if (!verse || !verse.arabic) return ''
 
       // Word-aware rendering supports both plain and tajweed-marked Arabic.
-      if (this.wordByWordAudioEnabled || this.tajweedEnabled) {
+      if (this.showWordByWord || this.anchorModeEnabled) {
         return this.splitArabicIntoWords(verse)
       }
 
@@ -8516,15 +8587,9 @@ export default {
       this.restoreOnboardingDemo({ keepCurrentSession: true })
       this.onboardingManualLaunch = false
       this.applyOnboardingGoalPreset()
-      this.currentMode = this.onboardingPath === 'structured' ? 'planner' : 'advanced'
+      this.currentMode = 'advanced'
       this.tab = 'tools'
       this.showTools = false
-      if (this.onboardingPath === 'structured') {
-        this.$nextTick(() => {
-          this.openHifzPlanModal()
-        })
-        return
-      }
       if (this.chapterId) {
         this.focusModeEnabled = false
         this.blurModeEnabled = false
@@ -8630,9 +8695,9 @@ export default {
       this.applyOnboardingGoalPreset()
       const stepConfig = [
         { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
-        { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
-        { tab: 'tools', section: 'advanced_playback', mode: 'stacked', blur: false, chaining: false, anchor: false },
-        { tab: this.onboardingPath === 'structured' ? 'tools' : 'settings', section: this.onboardingPath === 'structured' ? 'advanced_setup' : 'display_settings', mode: this.onboardingPath === 'structured' ? 'stacked' : 'mushaf', blur: false, chaining: false, anchor: false }
+        { tab: 'settings', section: 'reading_settings', mode: 'mushaf', blur: false, chaining: false, anchor: false },
+        { tab: 'techniques', section: 'focus_mode', mode: 'stacked', blur: false, chaining: false, anchor: false },
+        { tab: 'saved', section: null, mode: 'stacked', blur: false, chaining: false, anchor: false }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
       this.tab = stepConfig.tab
       this.showTools = true
@@ -8644,6 +8709,7 @@ export default {
         const openMap = {
           advanced_setup: true,
           advanced_playback: false,
+          reading_settings: true,
           display_settings: false,
           focus_mode: false,
           blur_mode: false,
@@ -9852,6 +9918,7 @@ export default {
     getSelfCheckModalArabic(verse) {
       if (!verse?.arabic) return ''
       if (this.shouldShowRecitationReviewHighlights(verse.key)) {
+        void this.liveRecitationRenderTick
         return this.splitRecitationDisplayIntoWords(verse)
       }
       if (this.selfCheckTajweedEnabled && verse.arabic_tajweed) {
@@ -9859,13 +9926,13 @@ export default {
       }
       return this.cleanRecitationDisplayText(verse.arabic)
     },
-	    getSelfCheckDisplayArabic(verse) {
-	      const targets = this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
-	        ? this.recitationCheckPendingTargets
-	        : (verse ? [verse] : [])
-	      if (this.hiddenRevealModeEnabled) return this.getActiveRecallArabic('recitation', targets)
-	      const showMarkers = targets.length > 1
-	      const rendered = []
+    getSelfCheckDisplayArabic(verse) {
+      const targets = this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
+        ? this.recitationCheckPendingTargets
+        : (verse ? [verse] : [])
+      if (this.hiddenRevealModeEnabled) return this.getActiveRecallArabic('recitation', targets)
+      const showMarkers = targets.length > 1
+      const rendered = []
       for (let index = 0; index < targets.length; index += 1) {
         const item = targets[index]
         const canonical = { ...(this.getCanonicalVerseForCheck(item) || item), ...item }
@@ -9874,7 +9941,7 @@ export default {
         const number = canonical?.number || String(canonical?.key || '').split(':')[1] || ''
         const marker = showMarkers ? `<span class="self-check-ayah-number-marker" dir="ltr">(${this.escapeHtml(number)})</span> ` : ''
         const state = this.getSessionAyahHighlightState('recitation', canonical, index)
-        rendered.push(`<span class="session-evaluation-ayah session-evaluation-${this.escapeHtml(state)}" data-session-target-key="${this.escapeHtml(this.getSessionTargetKey(canonical, index))}" data-ayah-key="${this.escapeHtml(canonical?.key || '')}">${marker}${html}</span>`)
+        rendered.push(`<span class="session-evaluation-ayah session-evaluation-${this.escapeHtml(state)}" dir="rtl" lang="ar" data-session-target-key="${this.escapeHtml(this.getSessionTargetKey(canonical, index))}" data-ayah-key="${this.escapeHtml(canonical?.key || '')}">${marker}${html}</span>`)
       }
       return rendered.join(' ')
     },
@@ -10348,11 +10415,11 @@ export default {
     stopAiMemorisationCheckerPeek() {
       this.aiMemorisationCheckerPeekActive = false
     },
-	    getAiMemorisationCheckerArabic(verse) {
-	      const targets = this.aiMemorisationCheckerTargets.length ? this.aiMemorisationCheckerTargets : (verse ? [verse] : [])
-	      if (!targets.length) return ''
-	      if (this.hiddenRevealModeEnabled) return this.getActiveRecallArabic('memorisation', targets)
-	      const showMarkers = targets.length > 1
+    getAiMemorisationCheckerArabic(verse) {
+      const targets = this.aiMemorisationCheckerTargets.length ? this.aiMemorisationCheckerTargets : (verse ? [verse] : [])
+      if (!targets.length) return ''
+      if (this.hiddenRevealModeEnabled) return this.getActiveRecallArabic('memorisation', targets)
+      const showMarkers = targets.length > 1
       const rendered = []
       for (let index = 0; index < targets.length; index += 1) {
         const item = targets[index]
@@ -10372,7 +10439,7 @@ export default {
         }
         if (!html) continue
         const state = this.getSessionAyahHighlightState('memorisation', liveVerse, index)
-        rendered.push(`<span class="session-evaluation-ayah session-evaluation-${this.escapeHtml(state)}" data-session-target-key="${this.escapeHtml(this.getSessionTargetKey(liveVerse, index))}" data-ayah-key="${this.escapeHtml(liveVerse?.key || '')}">${marker}${html}</span>`)
+        rendered.push(`<span class="session-evaluation-ayah session-evaluation-${this.escapeHtml(state)}" dir="rtl" lang="ar" data-session-target-key="${this.escapeHtml(this.getSessionTargetKey(liveVerse, index))}" data-ayah-key="${this.escapeHtml(liveVerse?.key || '')}">${marker}${html}</span>`)
       }
       return rendered.join(' ')
     },
@@ -10381,16 +10448,18 @@ export default {
       const text = this.getRecitationTargetText(targets)
       const wordCount = this.tokenizeRecitationDisplayWords(text).length
       const charCount = Array.from(this.cleanRecitationDisplayText(text)).filter(char => char.trim()).length
-      let size = 4.15
-      if (wordCount > 24 || charCount > 145) size = 1.85
-      else if (wordCount > 18 || charCount > 110) size = 2.15
-      else if (wordCount > 13 || charCount > 82) size = 2.55
-      else if (wordCount > 9 || charCount > 58) size = 3.05
-      else if (wordCount > 5 || charCount > 34) size = 3.45
+      let size = 2.95
+      if (wordCount > 24 || charCount > 145) size = 1.6
+      else if (wordCount > 18 || charCount > 110) size = 1.78
+      else if (wordCount > 13 || charCount > 82) size = 2.05
+      else if (wordCount > 9 || charCount > 58) size = 2.35
+      else if (wordCount > 5 || charCount > 34) size = 2.7
       return {
         'font-family': this.quranFontFamily,
-        '--ai-ayah-font-size': `clamp(1.55rem, ${size}vw, ${size}rem)`,
-        'font-size': `clamp(1.55rem, ${size}vw, ${size}rem)`
+        '--ai-ayah-font-size': `clamp(1.45rem, ${size}vw, ${size}rem)`,
+        'font-size': `clamp(1.45rem, ${size}vw, ${size}rem)`,
+        'line-height': 1.9,
+        'letter-spacing': 0
       }
     },
     isAiMemorisationCheckerLiveComplete() {
@@ -11046,10 +11115,15 @@ export default {
         ...word,
         status: statuses[index]?.status || 'pending',
         note: statuses[index]?.note || 'Waiting for this word.',
-        confidence: statuses[index]?.confidence ?? word.confidence
+        confidence: statuses[index]?.confidence ?? word.confidence,
+        actual: statuses[index]?.actual ?? word.actual,
+        similarity: statuses[index]?.similarity ?? word.similarity
       }))
       if (this.getLiveStatusSignature(current) === this.getLiveStatusSignature(next)) return false
       this[targetKey] = next
+      if (targetKey === 'recitationLiveWords' || targetKey === 'aiMemorisationCheckerLiveWords') {
+        this.liveRecitationRenderTick += 1
+      }
       return true
     },
     getLiveAlignmentInputSignature(kind = 'recitation', targetVerses = [], committedWords = [], displayWords = []) {
@@ -11073,7 +11147,7 @@ export default {
       if (this[signatureKey] === signature) return
       this[signatureKey] = signature
       const liveAlignmentOptions = {
-        strictProgression: kind === 'memorisation' || this.isAiTutorModeActive(),
+        strictProgression: true,
         metadata: {
           sessionId: this.getCurrentRecitationSessionId(),
           audioHash: kind === 'recitation' ? this.recitationInputAudioHash : ''
@@ -12769,7 +12843,7 @@ export default {
       const greenCount = statuses.filter(word => word.status === 'correct').length
       const amberCount = statuses.filter(word => word.status === 'partial').length
       const greyCount = statuses.filter(word => word.status === 'pending').length
-      const redCount = Math.max(0, statuses.filter(word => word.status === 'incorrect').length + Number(counts.extraWords || 0))
+      const redCount = Math.max(0, statuses.filter(word => word.status === 'incorrect').length)
       return [
         { key: 'green', label: 'Green', value: `${greenCount}`, description: 'Clear words heard correctly.', tone: 'tone-green' },
         { key: 'amber', label: 'Amber', value: `${amberCount}`, description: 'Close words to repeat slowly.', tone: 'tone-amber' },
@@ -13032,7 +13106,7 @@ export default {
       const targetText = this.getRecitationTargetText(targetVerses)
       const timestamp = options.timestamp || new Date().toISOString()
 	      const result = buildDeterministicRecitationResult(targetText, recognitionWords, {
-	        strictProgression: this.aiRecitationStrictProgression || this.hiddenRevealModeEnabled,
+	        strictProgression: true,
         id: options.id,
         timestamp,
         ayahRange: this.buildRecitationAyahRangePayload(targetVerses),
@@ -13822,6 +13896,16 @@ export default {
     },
     openInsightsPanel() {
       this.openToolsPanel({ tab: 'stats' })
+    },
+    openAdvancedMetricsModal() {
+      if (this.selectedStatsSessionRecord) {
+        this.openSessionAnalyticsModal(this.selectedStatsSessionRecord)
+        return
+      }
+      this.showAdvancedMetricsModal = true
+    },
+    closeAdvancedMetricsModal() {
+      this.showAdvancedMetricsModal = false
     },
     saveSessionFromHomeCard() {
       if (this.hasVerses) {
@@ -15822,9 +15906,12 @@ export default {
 
     getDisplayArabic(verse) {
       if (!verse?.arabic) return ''
-      if (this.shouldShowRecitationReviewHighlights(verse.key)) return this.splitRecitationDisplayIntoWords(verse)
+      if (this.shouldShowRecitationReviewHighlights(verse.key)) {
+        void this.liveRecitationRenderTick
+        return this.splitRecitationDisplayIntoWords(verse)
+      }
       if (this.tajweedEnabled && verse.arabic_tajweed) return this.wrapTajweedWithWordHighlighting(verse, this.normalizeTajweedMarkup(verse.arabic_tajweed))
-      if (this.wordByWordAudioEnabled || this.anchorModeEnabled) return this.splitArabicIntoWords(verse)
+      if (this.showWordByWord || this.anchorModeEnabled) return this.splitArabicIntoWords(verse)
       return this.stripTajweedMarkup(verse.arabic)
     },
 
@@ -31956,6 +32043,8 @@ html {
   z-index: 1;
   font-family: 'Outfit', sans-serif;
   direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
 }
 
 .verse-aid-title {
@@ -32535,10 +32624,15 @@ html {
   display: block;
   opacity: 0.92;
   font-family: 'Outfit', sans-serif;
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
 }
 
 .verse-aid-block {
   margin-top: 10px;
+  direction: ltr;
+  text-align: left;
 }
 
 .verse-aid-title {
@@ -32562,6 +32656,9 @@ html {
   line-height: 1.5;
   opacity: 0.98;
   font-family: 'Outfit', sans-serif;
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
 }
 
 .verse-words {
@@ -33707,29 +33804,44 @@ html {
   width: min(640px, 94vw);
   border-radius: 18px;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(32, 38, 35, 0.98), rgba(24, 30, 27, 0.96));
-  border: 1px solid rgba(104, 160, 143, 0.2);
-  color: #e7efeb;
+  --onboarding-bg: linear-gradient(180deg, rgba(32, 38, 35, 0.98), rgba(24, 30, 27, 0.96));
+  --onboarding-border: rgba(104, 160, 143, 0.2);
+  --onboarding-text: #e7efeb;
+  --onboarding-muted: #c2d0cb;
+  --onboarding-kicker-bg: rgba(79, 157, 138, 0.16);
+  --onboarding-kicker-text: #97c9ba;
+  --onboarding-panel-bg: rgba(255, 255, 255, 0.035);
+  --onboarding-panel-border: rgba(104, 160, 143, 0.18);
+  --onboarding-panel-text: #d7e3de;
+  --onboarding-preview-title: #f1f7f4;
+  --onboarding-preview-subtitle: #b9cbc4;
+  --onboarding-preview-icon-bg: rgba(90, 165, 143, 0.16);
+  --onboarding-preview-icon: #9dd7c5;
+  --onboarding-progress-idle: rgba(104, 160, 143, 0.28);
+  --onboarding-progress-active: #5aa58f;
+  background: var(--onboarding-bg);
+  border: 1px solid var(--onboarding-border);
+  color: var(--onboarding-text);
   animation: onboardingScaleIn 220ms ease;
 }
 
 .post-onboarding-header {
   background: transparent;
-  border-bottom: 1px solid rgba(104, 160, 143, 0.16);
+  border-bottom: 1px solid var(--onboarding-border);
 }
 
 .post-onboarding-header h2 {
   margin: 0;
   font-size: 1.28rem;
   font-weight: 500;
-  color: #f1f7f4;
+  color: var(--onboarding-text);
 }
 
 .post-onboarding-body p {
   margin: 0;
   font-size: 1.08rem;
   line-height: 1.62;
-  color: #c2d0cb;
+  color: var(--onboarding-muted);
 }
 
 .post-onboarding-kicker {
@@ -33737,8 +33849,8 @@ html {
   margin-bottom: 10px;
   padding: 5px 9px;
   border-radius: 999px;
-  background: rgba(79, 157, 138, 0.16);
-  color: #97c9ba;
+  background: var(--onboarding-kicker-bg);
+  color: var(--onboarding-kicker-text);
   font-size: 0.7rem;
   font-weight: 750;
   text-transform: uppercase;
@@ -33750,19 +33862,18 @@ html {
   padding-left: 18px;
   display: grid;
   gap: 8px;
-  color: #d7e3de;
+  color: var(--onboarding-text);
   font-size: 1rem;
   line-height: 1.45;
 }
 
 .post-onboarding-preview {
   margin-top: 16px;
-  border: 1px solid rgba(104, 160, 143, 0.18);
+  border: 1px solid var(--onboarding-panel-border);
   border-radius: 16px;
   padding: 14px;
-  background:
-    radial-gradient(circle at 12% 10%, rgba(90, 165, 143, 0.18), transparent 38%),
-    rgba(255, 255, 255, 0.035);
+  background: var(--onboarding-panel-bg);
+  backdrop-filter: blur(10px);
 }
 
 .post-onboarding-preview-head {
@@ -33779,21 +33890,21 @@ html {
   align-items: center;
   justify-content: center;
   border-radius: 14px;
-  background: rgba(90, 165, 143, 0.16);
-  color: #9dd7c5;
+  background: var(--onboarding-preview-icon-bg);
+  color: var(--onboarding-preview-icon);
   font-size: 1.18rem;
 }
 
 .post-onboarding-preview-head strong {
   display: block;
-  color: #f1f7f4;
+  color: var(--onboarding-preview-title);
   font-size: 1rem;
 }
 
 .post-onboarding-preview-head small {
   display: block;
   margin-top: 2px;
-  color: #b9cbc4;
+  color: var(--onboarding-preview-subtitle);
   line-height: 1.45;
 }
 
@@ -33809,17 +33920,17 @@ html {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid rgba(104, 160, 143, 0.18);
+  border: 1px solid var(--onboarding-panel-border);
   border-radius: 999px;
   padding: 5px 10px;
-  background: rgba(90, 165, 143, 0.1);
-  color: #d7e3de;
+  background: color-mix(in srgb, var(--onboarding-preview-icon-bg) 70%, transparent);
+  color: var(--onboarding-panel-text);
   font-size: 0.82rem;
   font-weight: 700;
 }
 
 .post-onboarding-preview-grid i {
-  color: #9dd7c5;
+  color: var(--onboarding-preview-icon);
 }
 
 .post-onboarding-progress {
@@ -33832,11 +33943,11 @@ html {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgba(104, 160, 143, 0.28);
+  background: var(--onboarding-progress-idle);
 }
 
 .post-onboarding-progress span.active {
-  background: #5aa58f;
+  background: var(--onboarding-progress-active);
 }
 
 .post-onboarding-footer {
@@ -36974,55 +37085,67 @@ html {
 
 [data-theme="light"] .post-onboarding-modal,
 [data-theme="sepia"] .post-onboarding-modal {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 245, 238, 0.96));
-  border-color: rgba(160, 120, 76, 0.16);
-  color: var(--text);
+  --onboarding-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 245, 238, 0.96));
+  --onboarding-border: rgba(160, 120, 76, 0.16);
+  --onboarding-text: var(--text);
+  --onboarding-muted: var(--text-muted);
+  --onboarding-kicker-bg: rgba(139, 90, 44, 0.12);
+  --onboarding-kicker-text: #8b5a2c;
+  --onboarding-panel-bg:
+    radial-gradient(circle at 12% 10%, rgba(112, 78, 43, 0.12), transparent 38%),
+    rgba(255, 248, 239, 0.72);
+  --onboarding-panel-border: rgba(160, 120, 76, 0.16);
+  --onboarding-panel-text: var(--text-muted);
+  --onboarding-preview-title: var(--text);
+  --onboarding-preview-subtitle: var(--text-muted);
+  --onboarding-preview-icon-bg: var(--accent-light);
+  --onboarding-preview-icon: var(--accent-strong);
+  --onboarding-progress-idle: color-mix(in srgb, var(--accent) 24%, transparent);
+  --onboarding-progress-active: var(--accent);
 }
 
 [data-theme="light"] .post-onboarding-header,
 [data-theme="sepia"] .post-onboarding-header,
 [data-theme="light"] .post-onboarding-footer,
 [data-theme="sepia"] .post-onboarding-footer {
-  border-color: rgba(160, 120, 76, 0.14);
+  border-color: var(--onboarding-border);
 }
 
 [data-theme="light"] .post-onboarding-header h2,
 [data-theme="sepia"] .post-onboarding-header h2 {
-  color: var(--text);
+  color: var(--onboarding-text);
 }
 
 [data-theme="light"] .post-onboarding-body p,
 [data-theme="sepia"] .post-onboarding-body p,
 [data-theme="light"] .post-onboarding-points,
 [data-theme="sepia"] .post-onboarding-points {
-  color: var(--text-muted);
+  color: var(--onboarding-muted);
 }
 
 [data-theme="light"] .post-onboarding-preview,
 [data-theme="sepia"] .post-onboarding-preview {
-  background:
-    radial-gradient(circle at 12% 10%, rgba(112, 78, 43, 0.12), transparent 38%),
-    rgba(255, 248, 239, 0.72);
-  border-color: rgba(160, 120, 76, 0.16);
+  background: var(--onboarding-panel-bg);
+  border-color: var(--onboarding-panel-border);
 }
 
 [data-theme="light"] .post-onboarding-preview-icon,
 [data-theme="sepia"] .post-onboarding-preview-icon,
 [data-theme="light"] .post-onboarding-preview-grid span,
 [data-theme="sepia"] .post-onboarding-preview-grid span {
-  background: var(--accent-light);
-  border-color: rgba(160, 120, 76, 0.14);
-  color: var(--accent-strong);
+  background: var(--onboarding-preview-icon-bg);
+  border-color: var(--onboarding-panel-border);
+  color: var(--onboarding-preview-icon);
 }
 
 [data-theme="light"] .post-onboarding-preview-head strong,
 [data-theme="sepia"] .post-onboarding-preview-head strong {
-  color: var(--text);
+  color: var(--onboarding-preview-title);
 }
 
 [data-theme="light"] .post-onboarding-preview-head small,
 [data-theme="sepia"] .post-onboarding-preview-head small {
-  color: var(--text-muted);
+  color: var(--onboarding-preview-subtitle);
 }
 
 [data-theme="light"] .session-analytics-summary-card,
@@ -45143,12 +45266,17 @@ button:active {
   color: var(--accent-strong) !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
+  direction: ltr !important;
+  text-align: left !important;
 }
 
 .verse-translation,
 .verse-transliteration {
   font-size: calc(0.9rem * var(--en-scale, 1)) !important;
   line-height: 1.55 !important;
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate !important;
 }
 
 .memorisation-checker-modal .recitation-word-chip.word-incorrect,
@@ -45551,16 +45679,16 @@ button:active {
 .post-onboarding-step-label,
 .dua-onboarding-title,
 .dua-onboarding-source {
-  color: #8b5a2c !important;
+  color: var(--onboarding-kicker-text) !important;
 }
 
 .post-onboarding-kicker {
-  background: rgba(139, 90, 44, 0.12) !important;
+  background: var(--onboarding-kicker-bg) !important;
 }
 
 .post-onboarding-preview-icon,
 .post-onboarding-preview-grid i {
-  color: #8b5a2c !important;
+  color: var(--onboarding-preview-icon) !important;
 }
 
 @media (max-width: 900px) {
@@ -48867,9 +48995,9 @@ button:active {
 
 .modal-content.self-check-modal,
 .modal-content.memorisation-checker-modal {
-  background: linear-gradient(180deg, #fffdf8, #fcf7ef) !important;
+  background: #fff !important;
   border: 1px solid rgba(168, 127, 85, 0.14) !important;
-  box-shadow: 0 28px 80px rgba(55, 38, 23, 0.18) !important;
+  box-shadow: none !important;
 }
 
 .modal-content.self-check-modal.speed-steady,
@@ -48965,7 +49093,16 @@ button:active {
 .modal-content.memorisation-checker-modal .recitation-check-panel {
   background: #fff !important;
   border: 1px solid rgba(168, 127, 85, 0.12) !important;
-  box-shadow: 0 14px 34px rgba(55, 38, 23, 0.08) !important;
+  box-shadow: none !important;
+}
+
+.modal-content.self-check-modal .self-check-toolbar-btn,
+.modal-content.memorisation-checker-modal .self-check-toolbar-btn,
+.modal-content.self-check-modal .modal-close-btn,
+.modal-content.memorisation-checker-modal .modal-close-btn,
+.modal-content.self-check-modal .self-check-library-link,
+.modal-content.memorisation-checker-modal .self-check-library-link {
+  box-shadow: none !important;
 }
 
 .modal-content.self-check-modal .recitation-result-stats,
@@ -50077,7 +50214,8 @@ button:active {
 
 .main.container,
 .main.container-fluid {
-  width: min(100%, 1440px) !important;
+  width: 100% !important;
+  max-width: 100% !important;
   padding-inline: clamp(0.75rem, 2vw, 1.5rem) !important;
 }
 
@@ -50668,24 +50806,24 @@ textarea {
   text-align: left;
   padding: 1rem 1.05rem;
   border-radius: 16px;
-  border: 1px solid rgba(154, 103, 56, 0.16);
-  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--onboarding-panel-border);
+  background: var(--onboarding-panel-bg);
   color: inherit;
 }
 
 .onboarding-choice-card strong {
-  color: var(--text);
+  color: var(--onboarding-text);
 }
 
 .onboarding-choice-card span {
-  color: var(--text-muted);
+  color: var(--onboarding-muted);
   line-height: 1.55;
 }
 
 .onboarding-choice-card.active {
-  border-color: color-mix(in srgb, var(--accent) 56%, transparent);
-  background: color-mix(in srgb, var(--accent-light) 90%, white);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-light) 78%, transparent);
+  border-color: color-mix(in srgb, var(--onboarding-preview-icon) 50%, transparent);
+  background: var(--onboarding-panel-bg);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--onboarding-preview-icon-bg) 78%, transparent);
 }
 
 .analytics-toggle-btn {
@@ -51194,6 +51332,909 @@ textarea {
 [data-theme="dark"] .memorisation-checker-modal .recitation-result-stat strong,
 [data-theme="dark"] .memorisation-checker-modal .recitation-next-card strong {
   color: #fff6ea !important;
+}
+
+/* Critical stability pass: no clipping, no decorative shadows, live ayah coloring without review panel. */
+.workspace,
+.workspace-main,
+.verses-grid,
+.mushaf-workspace,
+.self-check-modal-body {
+  min-width: 0 !important;
+  overflow-x: clip !important;
+}
+
+.verses-grid,
+.mushaf-workspace,
+.self-check-modal-stage,
+.recitation-check-panel-inline {
+  padding-inline: clamp(0.9rem, 2vw, 1.5rem) !important;
+}
+
+.verse-card,
+.mushaf-page,
+.self-check-modal-stage,
+.self-check-modal-ayah-shell,
+.recitation-check-panel,
+.recitation-check-results,
+.recitation-result-stat,
+.recitation-next-card,
+.completion-header,
+.completion-stats,
+.action-btn,
+.tools,
+.sheet,
+.sheet-section,
+.modal-content,
+.self-check-toolbar-btn,
+.mushaf-pill,
+.verse-self-check-btn {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.verse-card {
+  padding: clamp(1rem, 2vw, 1.35rem) clamp(1.15rem, 3vw, 1.9rem) !important;
+  overflow: visible !important;
+}
+
+.verse-header,
+.verse-actions {
+  min-width: 0 !important;
+}
+
+.verse-actions {
+  flex-shrink: 0 !important;
+}
+
+.verse-arabic,
+.self-check-modal-ayah,
+.mushaf-ayah-text {
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  padding-inline: clamp(0.25rem, 1.5vw, 0.75rem) !important;
+  white-space: normal !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  letter-spacing: 0 !important;
+  font-variant-ligatures: normal !important;
+  font-feature-settings: "liga" 1, "calt" 1, "rlig" 1, "ccmp" 1, "mark" 1, "mkmk" 1 !important;
+  text-rendering: optimizeLegibility !important;
+}
+
+.self-check-modal-ayah,
+.memorisation-checker-ayah {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  align-items: baseline !important;
+  gap: 0.14em 0.2em !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  direction: rtl !important;
+  unicode-bidi: isolate-override !important;
+  line-height: 1.95 !important;
+  text-align: right !important;
+}
+
+.self-check-modal-ayah .session-evaluation-ayah,
+.memorisation-checker-ayah .session-evaluation-ayah {
+  display: inline-flex !important;
+  flex-wrap: wrap !important;
+  align-items: baseline !important;
+  gap: 0.12em !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.verse-arabic.recitation-word-review-active,
+.self-check-modal-ayah.recitation-word-review-active {
+  direction: rtl !important;
+  text-align: right !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.verse-arabic.recitation-word-review-active .wbw-word,
+.verse-arabic.recitation-word-review-active word,
+.self-check-modal-ayah.recitation-word-review-active .wbw-word,
+.self-check-modal-ayah.recitation-word-review-active word {
+  display: inline-flex !important;
+  margin-inline: 0.04em !important;
+  padding: 0 0.08em !important;
+  border-radius: 0.12em !important;
+  line-height: inherit !important;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  letter-spacing: 0 !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
+  font-variant-ligatures: inherit !important;
+  font-feature-settings: inherit !important;
+  opacity: 1 !important;
+  transform: none !important;
+  box-decoration-break: clone !important;
+  -webkit-box-decoration-break: clone !important;
+  transition: color 24ms linear, background-color 24ms linear, border-color 24ms linear !important;
+  will-change: color, background-color, border-color !important;
+}
+
+.verse-arabic.recitation-word-review-active .recitation-word-correct,
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-correct {
+  color: #11643f !important;
+  background: rgba(29, 126, 78, 0.12) !important;
+  border-color: rgba(29, 126, 78, 0.24) !important;
+}
+
+.verse-arabic.recitation-word-review-active .recitation-word-partial,
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-partial {
+  color: #8a5207 !important;
+  background: rgba(197, 126, 18, 0.12) !important;
+  border-color: rgba(197, 126, 18, 0.24) !important;
+}
+
+.verse-arabic.recitation-word-review-active .recitation-word-incorrect,
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-incorrect {
+  color: #8f2b22 !important;
+  background: rgba(184, 56, 45, 0.12) !important;
+  border-color: rgba(184, 56, 45, 0.24) !important;
+}
+
+.verse-arabic.recitation-word-review-active .recitation-word-pending,
+.verse-arabic.recitation-word-review-active .recitation-word-notAttempted,
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-pending,
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-notAttempted {
+  color: var(--text, #241f1a) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  opacity: 1 !important;
+}
+
+.self-check-modal-ayah .wbw-word,
+.memorisation-checker-ayah .wbw-word,
+.self-check-modal-ayah word,
+.memorisation-checker-ayah word {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  white-space: nowrap !important;
+}
+
+/* Final pass: prevent Arabic clipping and rebuild Insights/Saved as readable card systems. */
+.workspace-main,
+.verses-grid {
+  overflow-x: visible !important;
+}
+
+.verse-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: clamp(260px, 36vw, 520px) !important;
+  padding: clamp(1.15rem, 2.5vw, 2rem) !important;
+}
+
+.verse-card .verse-body,
+.verse-card .verse-content,
+.verse-card .verse-arabic-wrap {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.verse-arabic,
+.mushaf-ayah-text {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  overscroll-behavior-x: contain !important;
+  scrollbar-width: thin !important;
+  padding-block: clamp(1rem, 3vw, 2rem) !important;
+  padding-inline: clamp(1.25rem, 4vw, 3rem) !important;
+  text-align: right !important;
+  direction: rtl !important;
+  line-height: 2.45 !important;
+  white-space: normal !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  text-overflow: clip !important;
+}
+
+.verse-arabic .wbw-word,
+.verse-arabic word,
+.mushaf-ayah-text .wbw-word,
+.mushaf-ayah-text word,
+.verse-arabic .tajweed-mark,
+.mushaf-ayah-text .tajweed-mark {
+  max-width: none !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.stats-sessions-container,
+.saved-sessions-v2 {
+  padding: clamp(1rem, 2vw, 1.4rem) !important;
+}
+
+.stats-sessions-container .saved-header h3,
+.saved-sessions-v2 .saved-header h3,
+.stats-sessions-container strong,
+.saved-sessions-v2 strong,
+.stats-sessions-container h4,
+.saved-sessions-v2 .session-name > span:first-of-type,
+.analytics-toggle-btn span {
+  font-weight: 500 !important;
+}
+
+.stats-sessions-container .saved-header p,
+.saved-sessions-v2 .saved-header p {
+  font-weight: 400 !important;
+  line-height: 1.45 !important;
+}
+
+.hifz-simple-analytics {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)) !important;
+  gap: 0.8rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.hifz-simple-analytics-item {
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 136px !important;
+  padding: 1rem !important;
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  grid-template-areas:
+    "icon label"
+    "value value"
+    "desc desc" !important;
+  gap: 0.45rem 0.7rem !important;
+  align-items: start !important;
+  overflow: hidden !important;
+}
+
+.hifz-simple-analytics-item > i {
+  grid-area: icon !important;
+  align-self: start !important;
+}
+
+.hifz-simple-analytics-item > span {
+  grid-area: label !important;
+  min-width: 0 !important;
+  color: var(--text) !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.hifz-simple-analytics-item > strong {
+  grid-area: value !important;
+  min-width: 0 !important;
+  font-size: clamp(1.55rem, 4vw, 2.15rem) !important;
+  line-height: 1.05 !important;
+  color: var(--text) !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+.hifz-simple-analytics-item > small {
+  grid-area: desc !important;
+  min-width: 0 !important;
+  color: var(--text-muted) !important;
+  line-height: 1.35 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.analytics-insight-layer {
+  padding: 1.2rem !important;
+}
+
+.analytics-toggle-btn {
+  margin-top: 1rem !important;
+  min-height: 52px !important;
+  padding: 0.85rem 1rem !important;
+  font-weight: 500 !important;
+}
+
+.saved-sessions-v2 .session-item {
+  padding: 1.1rem !important;
+  gap: 1rem !important;
+}
+
+.saved-sessions-v2 .session-name > span:first-of-type,
+.saved-sessions-v2 .session-details span {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  line-height: 1.35 !important;
+}
+
+.saved-sessions-v2 .session-details {
+  gap: 0.45rem !important;
+}
+
+.saved-sessions-v2 .save-section {
+  padding: 1.05rem !important;
+  gap: 0.8rem !important;
+}
+
+.advanced-metrics-modal {
+  width: min(1360px, calc(100vw - 28px)) !important;
+}
+
+.advanced-metrics-body {
+  display: grid !important;
+  gap: 1rem !important;
+}
+
+.advanced-metrics-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+  gap: 1rem !important;
+}
+
+.advanced-metrics-grid .detailed-analytics-section {
+  margin: 0 !important;
+  min-width: 0 !important;
+}
+
+.advanced-metrics-grid .detailed-analytics-section header h3 {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  font-weight: 500 !important;
+}
+
+.detailed-analytics-row span,
+.detailed-analytics-row strong,
+.detailed-analytics-row small {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  font-weight: 500 !important;
+}
+
+.advanced-metrics-insights span {
+  white-space: normal !important;
+  line-height: 1.4 !important;
+}
+
+@media (max-width: 720px) {
+  .hifz-simple-analytics {
+    grid-template-columns: 1fr !important;
+  }
+
+  .verse-card {
+    min-height: 240px !important;
+  }
+
+  .verse-arabic,
+  .mushaf-ayah-text {
+    padding-inline: 0.9rem !important;
+    font-size: clamp(2rem, 11vw, 3.2rem) !important;
+  }
+}
+
+/* Final AI surface override: flatten legacy chrome and keep the AI recite surfaces fluid. */
+.memorisation-checker-modal,
+.memorisation-checker-modal.self-check-modal,
+.self-check-modal {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-header,
+.memorisation-checker-modal .memorisation-checker-body,
+.memorisation-checker-modal .memorisation-checker-stage,
+.memorisation-checker-modal .self-check-recorder-card,
+.memorisation-checker-modal .memorisation-checker-ayah-panel,
+.memorisation-checker-modal .memorisation-checker-workspace,
+.memorisation-checker-modal .memorisation-checker-live,
+.memorisation-checker-modal .memorisation-checker-results,
+.memorisation-checker-modal .recitation-check-panel,
+.memorisation-checker-modal .recitation-check-results,
+.self-check-modal .self-check-modal-header,
+.self-check-modal .self-check-modal-body,
+.self-check-modal .self-check-modal-stage,
+.self-check-modal .self-check-recorder-card,
+.self-check-modal .self-check-modal-ayah-shell,
+.self-check-modal .self-check-modal-ayah,
+.self-check-modal .recitation-check-panel,
+.self-check-modal .recitation-check-results,
+.modal-content.memorisation-checker-modal .recitation-next-card,
+.modal-content.self-check-modal .recitation-next-card,
+.modal-content.memorisation-checker-modal .recitation-result-stat,
+.modal-content.self-check-modal .recitation-result-stat {
+  box-shadow: none !important;
+  filter: none !important;
+  background-image: none !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-ayah,
+.self-check-modal .self-check-modal-ayah {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-workspace,
+.memorisation-checker-modal .memorisation-checker-ayah-panel,
+.self-check-modal .self-check-modal-stage,
+.self-check-modal .self-check-modal-recorder-grid {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.mushaf-frame,
+.mushaf-page,
+.workspace-shell,
+.verse-card {
+  box-shadow: none !important;
+}
+
+.mushaf-frame,
+.mushaf-page {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.mushaf-pill,
+.mushaf-toolbar-trigger,
+.mushaf-toolbar-option,
+.verse-ai-check-btn,
+.self-check-toolbar-btn,
+.session-analytics-download,
+.session-resume-btn,
+.session-delete-btn,
+.modal-close-btn {
+  box-shadow: none !important;
+}
+
+.verse-card.ai-recitation-active,
+.verse-card.ai-recitation-active .verse-arabic,
+.verse-card.ai-recitation-active .verse-aid,
+.verse-card.ai-recitation-active .wbw-word {
+  transition: color 24ms linear, background-color 24ms linear, border-color 24ms linear !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-final-words.recitation-word-stream,
+.self-check-modal .recitation-live-word-stream.recitation-word-stream {
+  gap: 0.25rem !important;
+}
+
+/* Global flat-surface override for the main workspace and legacy dark wrappers. */
+.verse-card,
+.workspace-shell,
+.session-rail,
+.saved-sessions-container,
+.saved-sessions-v2,
+.saved-header,
+.save-section,
+.hero-card,
+.empty-card,
+.continue-session-card,
+.offcanvas-launcher-card,
+.setup-start-card,
+.home-dashboard-card,
+.session-item,
+.empty-state,
+.session-quickstart-card,
+.player-bar,
+.setting-section,
+.settings-group,
+.stats-card,
+.stats-detail,
+.smart-resume-card,
+.recordings-library-recording-item,
+.recording-history-card,
+.recordings-library-nav,
+.recordings-library-detail,
+.recordings-library-search,
+.recordings-library-history,
+.recording-history-ai-detail,
+.workspace-fab,
+.workspace-fab-live,
+.verse-arabic,
+.mushaf-frame,
+.mushaf-page,
+.mushaf-pill-toolbar,
+.mushaf-toolbar-trigger,
+.mushaf-toolbar-option,
+.verse-ai-check-btn,
+.action-btn,
+.toolbar-chip,
+.font-dropdown-trigger,
+.font-option,
+.mode-radio,
+.active-technique-card,
+.active-techniques-count {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.verse-card.active,
+.verse-card:hover,
+.workspace-shell:hover,
+.session-item:hover,
+.recordings-library-recording-item:hover,
+.recording-history-card:hover {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+[data-theme="dark"] .verse-card,
+[data-theme="dark"] .workspace-shell,
+[data-theme="dark"] .session-rail,
+[data-theme="dark"] .saved-sessions-container,
+[data-theme="dark"] .saved-sessions-v2,
+[data-theme="dark"] .saved-header,
+[data-theme="dark"] .save-section,
+[data-theme="dark"] .hero-card,
+[data-theme="dark"] .empty-card,
+[data-theme="dark"] .continue-session-card,
+[data-theme="dark"] .offcanvas-launcher-card,
+[data-theme="dark"] .setup-start-card,
+[data-theme="dark"] .home-dashboard-card,
+[data-theme="dark"] .session-item,
+[data-theme="dark"] .empty-state,
+[data-theme="dark"] .session-quickstart-card,
+[data-theme="dark"] .player-bar,
+[data-theme="dark"] .setting-section,
+[data-theme="dark"] .settings-group,
+[data-theme="dark"] .stats-card,
+[data-theme="dark"] .stats-detail,
+[data-theme="dark"] .smart-resume-card,
+[data-theme="dark"] .recordings-library-recording-item,
+[data-theme="dark"] .recording-history-card,
+[data-theme="dark"] .recordings-library-nav,
+[data-theme="dark"] .recordings-library-detail,
+[data-theme="dark"] .recordings-library-search,
+[data-theme="dark"] .recordings-library-history,
+[data-theme="dark"] .recording-history-ai-detail,
+[data-theme="dark"] .workspace-fab,
+[data-theme="dark"] .workspace-fab-live,
+[data-theme="dark"] .verse-arabic,
+[data-theme="dark"] .mushaf-frame,
+[data-theme="dark"] .mushaf-page,
+[data-theme="dark"] .mushaf-pill-toolbar,
+[data-theme="dark"] .mushaf-toolbar-trigger,
+[data-theme="dark"] .mushaf-toolbar-option,
+[data-theme="dark"] .verse-ai-check-btn,
+[data-theme="dark"] .action-btn,
+[data-theme="dark"] .toolbar-chip,
+[data-theme="dark"] .font-dropdown-trigger,
+[data-theme="dark"] .font-option,
+[data-theme="dark"] .mode-radio,
+[data-theme="dark"] .active-technique-card,
+[data-theme="dark"] .active-techniques-count {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* Final ayah container fix: remove forced blank shells, clipping, and horizontal overflow. */
+.verse-card,
+.verses-grid .verse-card {
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+  align-content: start !important;
+}
+
+.verse-card .verse-body,
+.verse-card .verse-content,
+.verse-card .verse-arabic-wrap {
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.verse-arabic,
+.mushaf-ayah-text {
+  min-height: 0 !important;
+  height: auto !important;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+  white-space: normal !important;
+}
+
+.self-check-modal .self-check-modal-ayah-shell,
+.memorisation-checker-modal .self-check-modal-ayah-shell,
+.memorisation-checker-modal .memorisation-checker-ayah,
+.memorisation-checker-modal .memorisation-checker-ayah-panel {
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.self-check-modal .self-check-modal-ayah-shell,
+.memorisation-checker-modal .self-check-modal-ayah-panel,
+.memorisation-checker-modal .self-check-modal-ayah-shell {
+  display: block !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.self-check-modal .self-check-modal-ayah,
+.memorisation-checker-modal .memorisation-checker-ayah {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  line-height: 1.9 !important;
+}
+
+.memorisation-checker-modal .memorisation-checker-word-stream.recitation-word-stream,
+.memorisation-checker-modal .memorisation-checker-final-words.recitation-word-stream,
+.self-check-modal .recitation-live-word-stream.recitation-word-stream {
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.verses-grid .verse-card,
+.sessions-list .session-item {
+  content-visibility: visible !important;
+  contain: none !important;
+  contain-intrinsic-size: auto !important;
+}
+
+.verse-card,
+.verse-card.active,
+.verse-card:hover {
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
+.verse-arabic {
+  display: block !important;
+  width: 100% !important;
+  text-align: right !important;
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  padding-block: clamp(0.9rem, 2.2vw, 1.35rem) !important;
+  line-height: 1.95 !important;
+}
+
+.verse-arabic .wbw-word,
+.verse-arabic word {
+  display: inline !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
+}
+
+.mushaf-ayah-text,
+.self-check-modal .self-check-modal-ayah,
+.memorisation-checker-modal .memorisation-checker-ayah {
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
+  text-align: right !important;
+}
+
+.mushaf-ayah-text .wbw-word,
+.mushaf-ayah-text word,
+.self-check-modal .self-check-modal-ayah .wbw-word,
+.self-check-modal .self-check-modal-ayah word,
+.memorisation-checker-modal .memorisation-checker-ayah .wbw-word,
+.memorisation-checker-modal .memorisation-checker-ayah word {
+  display: inline !important;
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
+}
+
+.verse-arabic[lang="ar"],
+.mushaf-ayah-text[lang="ar"],
+.self-check-modal .self-check-modal-ayah[lang="ar"],
+.memorisation-checker-modal .memorisation-checker-ayah[lang="ar"],
+.session-evaluation-ayah[lang="ar"],
+.word-arabic[lang="ar"] {
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
+  text-align: right !important;
+}
+
+.self-check-modal .self-check-modal-ayah[lang="ar"],
+.memorisation-checker-modal .memorisation-checker-ayah[lang="ar"] {
+  display: block !important;
+  justify-content: normal !important;
+}
+
+.session-evaluation-ayah[lang="ar"] {
+  display: block !important;
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
+  text-align: right !important;
+}
+
+.self-check-ayah-number-marker {
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+}
+
+.verse-aid-block[lang="en"],
+.verse-aid-title[lang="en"],
+.verse-transliteration[lang="en"],
+.verse-translation[lang="en"] {
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  text-align: left !important;
+}
+
+/* Final Arabic shaping reset: no flex boxes inside Quran text. Flex breaks joining in active/tajweed states. */
+.verse-arabic,
+.mushaf-ayah-text,
+.self-check-modal-ayah,
+.memorisation-checker-ayah,
+.verse-arabic.recitation-word-review-active,
+.self-check-modal-ayah.recitation-word-review-active,
+.memorisation-checker-ayah.recitation-word-review-active {
+  display: block !important;
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
+  text-align: right !important;
+  letter-spacing: 0 !important;
+  word-spacing: normal !important;
+  font-variant-ligatures: normal !important;
+  font-feature-settings: "liga" 1, "calt" 1, "rlig" 1, "ccmp" 1, "mark" 1, "mkmk" 1 !important;
+}
+
+.verse-arabic .wbw-word,
+.verse-arabic word,
+.verse-arabic .tajweed-mark,
+.verse-arabic [class*="tajweed-"],
+.mushaf-ayah-text .wbw-word,
+.mushaf-ayah-text word,
+.mushaf-ayah-text .tajweed-mark,
+.mushaf-ayah-text [class*="tajweed-"],
+.self-check-modal-ayah .wbw-word,
+.self-check-modal-ayah word,
+.self-check-modal-ayah .tajweed-mark,
+.self-check-modal-ayah [class*="tajweed-"],
+.memorisation-checker-ayah .wbw-word,
+.memorisation-checker-ayah word,
+.memorisation-checker-ayah .tajweed-mark,
+.memorisation-checker-ayah [class*="tajweed-"],
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word,
+.verse-arabic.tajweed-enabled .wbw-word[data-tajweed-word="true"],
+.mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word,
+.mushaf-ayah-text.tajweed-enabled .wbw-word[data-tajweed-word="true"],
+.self-check-modal-ayah.tajweed-enabled .wbw-word[data-tajweed-word="true"],
+.memorisation-checker-ayah.tajweed-enabled .wbw-word[data-tajweed-word="true"],
+.verse-arabic.tajweed-enabled word,
+.mushaf-ayah-text.tajweed-enabled word,
+.verse-arabic.recitation-word-review-active .wbw-word,
+.verse-arabic.recitation-word-review-active word,
+.self-check-modal-ayah.recitation-word-review-active .wbw-word,
+.self-check-modal-ayah.recitation-word-review-active word,
+.memorisation-checker-ayah.recitation-word-review-active .wbw-word,
+.memorisation-checker-ayah.recitation-word-review-active word,
+.self-check-modal-ayah .session-evaluation-ayah,
+.memorisation-checker-ayah .session-evaluation-ayah,
+.session-evaluation-ayah[lang="ar"] {
+  display: inline !important;
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  letter-spacing: 0 !important;
+  word-spacing: normal !important;
+  white-space: normal !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-variant-ligatures: inherit !important;
+  font-feature-settings: inherit !important;
+}
+
+.verse-card .verse-badges {
+  display: flex !important;
+}
+
+/* Mushaf pages must stay inline like a page of Quran, never full-width ayah cards. */
+.main.mushaf-mode-active .mushaf-page-body {
+  direction: rtl !important;
+  text-align: justify !important;
+  white-space: normal !important;
+}
+
+.main.mushaf-mode-active .mushaf-ayah {
+  display: inline !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 0.04em !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  vertical-align: baseline !important;
+}
+
+.main.mushaf-mode-active .mushaf-ayah-text,
+.main.mushaf-mode-active .mushaf-ayah.active .mushaf-ayah-text,
+.main.mushaf-mode-active .mushaf-ayah:hover .mushaf-ayah-text,
+.main.mushaf-mode-active .mushaf-ayah.hifz-ayah-due .mushaf-ayah-text,
+.main.mushaf-mode-active .mushaf-ayah.hifz-ayah-weak .mushaf-ayah-text,
+.main.mushaf-mode-active .mushaf-ayah.hifz-ayah-mastered .mushaf-ayah-text {
+  display: inline !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  vertical-align: baseline !important;
+}
+
+.main.mushaf-mode-active .mushaf-ayah-number {
+  display: inline-grid !important;
+  vertical-align: middle !important;
+}
+
+/* Final Arabic readability pass: keep the main text flowing as connected script. */
+.verse-arabic,
+.mushaf-ayah-text {
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+}
+
+.verse-arabic .wbw-word,
+.verse-arabic word,
+.mushaf-ayah-text .wbw-word,
+.mushaf-ayah-text word {
+  display: inline !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  white-space: normal !important;
+  font: inherit !important;
+  line-height: inherit !important;
+  letter-spacing: inherit !important;
+  word-spacing: inherit !important;
+}
+
+.verse-arabic .wbw-word.highlighted,
+.verse-arabic word.highlighted,
+.mushaf-ayah-text .wbw-word.highlighted,
+.mushaf-ayah-text word.highlighted {
+  background: color-mix(in srgb, var(--accent) 20%, transparent) !important;
+  color: inherit !important;
+  box-shadow: inset 0 -0.08em 0 var(--accent) !important;
+  transform: none !important;
 }
 
 </style>

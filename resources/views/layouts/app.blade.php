@@ -1656,9 +1656,6 @@
                     <div class="navbar-nav nav-links-desktop">
                         <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
                         <a class="nav-link {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}">Memorisation</a>
-                        <a class="nav-link {{ request()->routeIs('about') || request()->routeIs('about-us') ? 'active' : '' }}" href="{{ route('about-us') }}">About Us</a>
-                        <a class="nav-link {{ request()->routeIs('our-mission') ? 'active' : '' }}" href="{{ route('our-mission') }}">Our Mission</a>
-                        <a class="nav-link {{ request()->routeIs('donate') ? 'active' : '' }}" href="{{ route('donate') }}">Donate</a>
                     </div>
                 </div>
 

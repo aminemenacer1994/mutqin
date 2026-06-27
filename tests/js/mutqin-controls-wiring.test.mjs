@@ -71,9 +71,34 @@ includesAll('reading settings controls', [
   /updateSettingsValue\(key, value\)/
 ])
 
+const onboardingStepsBlock = (() => {
+  const match = source.match(/onboardingSteps:\s*\[([\s\S]*?)\n\s*],\n\s*showAdvancedAnalytics:/)
+  assert.ok(match, 'onboarding steps block not found')
+  return match[1]
+})()
+
+assert.equal((onboardingStepsBlock.match(/^\s{10}title:/gm) || []).length, 4, 'onboarding must stay at four steps or fewer')
+
+includesAll('onboarding system steps', [
+  /title: 'Set up a session'/,
+  /stepLabel: 'Session setup'/,
+  /title: 'Pick a reading view'/,
+  /stepLabel: 'Reading view'/,
+  /title: 'Practice with built-in tools'/,
+  /stepLabel: 'Practice tools'/,
+  /title: 'Review and return'/,
+  /stepLabel: 'Review & return'/
+])
+
+assert.doesNotMatch(
+  onboardingStepsBlock,
+  /Choose your start|Set your first goal|Start learning/,
+  'old onboarding copy should be removed'
+)
+
 includesAll('tajweed independence', [
   /title="Show tajweed colouring from the Quran API" @click="toggleTajweed"/,
-  /if \(this\.wordByWordAudioEnabled \|\| this\.tajweedEnabled\) \{\s*return this\.splitArabicIntoWords\(verse\)\s*\}/s,
+  /if \(this\.showWordByWord \|\| this\.anchorModeEnabled\) \{\s*return this\.splitArabicIntoWords\(verse\)\s*\}/s,
   /toggleTajweed\(\) \{/,
   /this\.tajweedEnabled = !this\.tajweedEnabled/,
   /this\.showBanner\(\s*this\.tajweedEnabled \? 'Tajweed colors enabled' : 'Tajweed colors disabled'/s
@@ -101,12 +126,12 @@ includesAll('offcanvas main-card linkage', [
 ])
 
 includesAll('ai recitation speechmatics stability', [
-  /const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0\.35/,
+  /const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0\.2/,
   /confidence: Number\.isFinite\(confidence\) \? confidence : \(isPartial \? SPEECHMATICS_PARTIAL_CONFIDENCE : 1\)/,
   /const words = extractSpeechmaticsTranscriptWords\(message, \{ isPartial: !isFinal \}\)/,
   /const transcript = String\(message\?\.metadata\?\.transcript \|\| ''\)\.trim\(\) \|\| words\.map\(item => item\.word\)\.join\(' '\)/,
   /displayWords: Array\.isArray\(state\?\.interimWords\) && state\.interimWords\.length \? state\.interimWords : committedWords/,
-  /const liveAlignmentOptions = \{\s*strictProgression: kind === 'memorisation' \|\| this\.isAiTutorModeActive\(\),/,
+  /const liveAlignmentOptions = \{\s*strictProgression: true,/,
   /@click\.stop="toggleVerseActionMenu\(verse\.key\)"/
 ])
 
@@ -221,8 +246,10 @@ assert.doesNotMatch(
 includesAll('ai recitation simplified workspace', [
   /class="self-check-header-tools"/,
   /aria-label="Play ayah once"/,
-  /v-if="!isPlannerModeActive && hasSessionStarted"/,
+  /v-if="shouldShowOffcanvasTabs"/,
+  /shouldShowOffcanvasTabs\(\) \{\s*return !this\.isSessionCompleted && \(this\.hasSessionStarted \|\| this\.hasVerses\)\s*\}/s,
   /class="recitation-word-stream recitation-live-word-stream" dir="rtl"/,
+  /if \(this\.recitationCheckRecording\) return false/,
   /key: 'green', label: 'Green'/,
   /key: 'amber', label: 'Amber'/,
   /key: 'red', label: 'Red'/,
@@ -242,6 +269,7 @@ assert.doesNotMatch(source, /key: 'jumps', label: 'Big jumps'/, 'jumps card shou
 assert.doesNotMatch(source, /getRecitationResultStats\(buildLiveRecitationReviewResult\('recitation'\)\)/, 'live review stats should not render while recording')
 assert.doesNotMatch(source, /class="verse-status-badge verse-status-badge-review">Review Due<\/span>/, 'per-ayah review due badge should be removed')
 assert.doesNotMatch(source, /<div v-if="showSessionEndedModal" class="modal-overlay planner-completion-overlay"/, 'session ended modal should not render')
+assert.doesNotMatch(source, /this\.showSelfCheckModal \|\|\s*this\.showRecordingsLibrary/, 'open self-check modal should not force periodic rerenders')
 
 includesAll('offcanvas workspace sync', [
   /syncWorkspaceFromControls\(options = \{\}\)/,
