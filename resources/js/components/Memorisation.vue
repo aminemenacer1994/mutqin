@@ -20,81 +20,6 @@
       'flow-recall': guidedUiStep === 'recall'
     }">
       <div class="content">
-        <section v-if="!hasVerses" class="home-dashboard home-dashboard-minimal">
-          <div v-if="hasContinueSession" class="continue-session-card smart-resume-card">
-            <div class="smart-resume-icon" aria-hidden="true">
-              <i class="bi bi-arrow-clockwise"></i>
-            </div>
-            <div class="continue-session-copy smart-resume-copy">
-              <span class="continue-session-kicker">{{ t('resume.kicker') }}</span>
-              <strong>{{ t('resume.title') }}</strong>
-              <small>{{ continueSessionMeta }}</small>
-              <div class="smart-resume-context" aria-label="Last session details">
-                <span><i class="bi bi-book"></i> {{ continueSessionLabel }}</span>
-                <span><i class="bi bi-crosshair"></i> {{ smartResumeDetails.focus }}</span>
-                <span><i class="bi bi-clock-history"></i> {{ smartResumeDetails.saved }}</span>
-              </div>
-              <div class="smart-resume-progress" aria-label="Last session progress">
-                <div class="smart-resume-progress-head">
-                  <span>{{ smartResumeDetails.progressLabel }}</span>
-                  <strong>{{ smartResumeDetails.progressPercent }}%</strong>
-                </div>
-                <div class="smart-resume-progress-track">
-                  <span :style="{ width: `${smartResumeDetails.progressPercent}%` }"></span>
-                </div>
-              </div>
-            </div>
-            <div class="continue-session-actions">
-              <button class="cta cta-primary continue-session-btn" @click="continueLastSession">
-                <i class="bi bi-play-fill"></i> {{ t('resume.resumeNow') }}
-              </button>
-              <button class="cta cta-ghost continue-session-dismiss" @click="confirmDiscardContinueSession"
-                type="button" aria-label="Discard saved session">
-                <i class="bi bi-x-lg" aria-hidden="true"></i>
-              </button>
-            </div>
-          </div>
-          <div v-if="!hasContinueSession" class="idle-action-shell">
-            <div class="idle-action-head">
-              <span class="offcanvas-launcher-kicker"><i class="bi bi-compass"></i> {{ t('home.startKicker') }}</span>
-              <strong class="offcanvas-launcher-title">{{ t('home.startTitle') }}</strong>
-              <p class="offcanvas-launcher-copy">{{ t('home.controlsHint') }}</p>
-            </div>
-            <div class="container-fluid idle-action-grid-shell">
-              <div class="row g-3 idle-action-grid">
-                <div class="col-12 col-md-6 col-xl-3">
-                  <button class="idle-action-card idle-action-card-primary" type="button" @click="openNewSessionSetup">
-                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                    <strong>Create New Session</strong>
-                    <small>Choose a surah, range, and start fresh.</small>
-                  </button>
-                </div>
-                <div class="col-12 col-md-6 col-xl-3">
-                  <button class="idle-action-card" type="button" @click="openSavedSessionsPanel">
-                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                    <strong>Repeat Session</strong>
-                    <small>Reopen a saved range and run it again.</small>
-                  </button>
-                </div>
-                <div class="col-12 col-md-6 col-xl-3">
-                  <button class="idle-action-card" type="button" @click="openSavedSessionsPanel">
-                    <i class="bi bi-save" aria-hidden="true"></i>
-                    <strong>Save Session</strong>
-                    <small>Open saved sessions and manage your ranges.</small>
-                  </button>
-                </div>
-                <div class="col-12 col-md-6 col-xl-3">
-                  <button class="idle-action-card idle-action-card-accent" type="button" @click="openHifzPlanModal">
-                    <i class="bi bi-journal-plus" aria-hidden="true"></i>
-                    <strong>Create a Hifz Plan</strong>
-                    <small>Build a guided daily Hifz journey.</small>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <div v-if="false" class="reading-toolbar">
           <hr class="reading-toolbar-sep" aria-hidden="true" />
           <div class="reading-toolbar-group">
@@ -148,96 +73,25 @@
           <i class="bi bi-hourglass-split"></i>
           <span>{{ t('common.loading') }}</span>
         </div>
-        <div v-else-if="hasVerses" class="workspace">
-          <div v-if="!hasSessionStarted && !isSessionCompleted" class="idle-action-shell workspace-idle-shell">
-            <div class="idle-action-head">
-              <span class="offcanvas-launcher-kicker"><i class="bi bi-compass"></i> {{ t('home.startKicker') }}</span>
-              <strong class="offcanvas-launcher-title">{{ t('home.startTitle') }}</strong>
-              <p class="offcanvas-launcher-copy">{{ t('home.controlsHint') }}</p>
-            </div>
-            <div class="container-fluid idle-action-grid-shell">
-              <div class="row g-3 idle-action-grid">
-                <div class="col-12 col-md-6 col-xl-3">
-                  <button class="idle-action-card idle-action-card-primary" type="button" @click="openNewSessionSetup">
-                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                    <strong>Create New Session</strong>
-                    <small>Choose a surah, range, and start fresh.</small>
-                  </button>
-                </div>
-                <div class="col-12 col-md-6 col-xl-3">
-                  <button class="idle-action-card" type="button" @click="openSavedSessionsPanel">
-                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                    <strong>Repeat Session</strong>
-                    <small>Reopen a saved range and run it again.</small>
-                  </button>
-                </div>
-                <div class="col-12 col-md-6 col-xl-3">
-                  <button class="idle-action-card" type="button" @click="openSavedSessionsPanel">
-                    <i class="bi bi-save" aria-hidden="true"></i>
-                    <strong>Save Session</strong>
-                    <small>Open saved sessions and manage your ranges.</small>
-                  </button>
-                </div>
-                <div class="col-12 col-md-6 col-xl-3">
-                  <button class="idle-action-card idle-action-card-accent" type="button" @click="openHifzPlanModal">
-                    <i class="bi bi-journal-plus" aria-hidden="true"></i>
-                    <strong>Create a Hifz Plan</strong>
-                    <small>Build a guided daily Hifz journey.</small>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <div v-else class="workspace">
           <!-- In your template, replace the workspace-shell section -->
-<section class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
-  <!-- Hide the entire top card when session is completed -->
-  <div v-if="!isSessionCompleted" class="workspace-shell-head">
+<section v-if="shouldRenderWorkspaceShell" class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
+  <div class="workspace-shell-head">
     <div class="workspace-shell-copy">
-      <span class="workspace-shell-kicker">{{ isPlannerModeActive ? 'Hifz Planner' : 'Casual Session' }}</span>
+      <span class="workspace-shell-kicker">Session Overview</span>
       <h1 class="workspace-shell-main-title">{{ topCardSessionLabel }}</h1>
-      <p v-if="isPlannerModeActive" class="workspace-shell-helper-copy">
-        {{ plannerBeginnerGuidance }}
-      </p>
-      <div v-else-if="reviewPriorityLabel" v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
+      <div v-if="reviewPriorityLabel" v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
         <span>{{ reviewPriorityLabel }}</span>
       </div>
     </div>
     <div class="workspace-shell-actions">
       <div class="action-buttons-group">
-        <template v-if="isPlannerModeActive">
-          <button type="button" class="action-btn action-btn-primary" @click="startPlannerPrimaryAction">
-            <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
-            <span>{{ plannerPrimaryActionLabel }}</span>
-          </button>
-          <button
-            v-if="hasSessionStarted"
-            class="action-btn action-btn-secondary action-btn-exit"
-            type="button"
-            @click="openSessionExitModal"
-            title="End session"
-            aria-label="End session"
-          >
-            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-            <span>End Session</span>
-          </button>
-          <button class="action-btn action-btn-secondary hifz-plan-action-btn" type="button" @click="openHifzPlanModal"
-            aria-label="Edit Hifz Plan">
-            <i class="bi bi-pencil-square" aria-hidden="true"></i>
-            <span>Edit Plan</span>
-          </button>
-        </template>
-        <button v-if="!isPlannerModeActive" class="action-btn action-btn-secondary hifz-plan-action-btn" type="button" @click="openHifzPlanModal"
-          :aria-label="hifzPlanExists ? 'Edit Hifz Plan' : 'Create Hifz Plan'">
-          <span aria-hidden="true">📖</span>
-          <span>{{ hifzPlanExists ? 'Edit Plan' : 'Create Hifz Plan' }}</span>
-        </button>
-        <button v-if="!isPlannerModeActive && hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button"
+        <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button"
           @click="openSessionExitModal" title="End session" aria-label="End session">
           <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
           <span>{{ t('sessionStatus.end') }}</span>
         </button>
-        <button v-if="!isPlannerModeActive" class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
+        <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
           title="Open session controls" aria-label="Open session controls">
           <i class="bi bi-sliders" aria-hidden="true"></i>
           <span>{{ t('common.controls') }}</span>
@@ -282,9 +136,9 @@
 
   <!-- Quick controls - also hidden when session is completed -->
   <div v-if="!isSessionCompleted && hasSessionStarted" v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
-    <div class="quick-pill-group-list">
-      <div class="quick-left-pills">
-        <div v-if="!isPlannerModeActive" class="workspace-applied-pills" aria-label="Live session settings">
+    <div class="quick-pill-group-list" :class="{ 'quick-pill-group-list-compact': !topCardAppliedPills.length }">
+      <div v-if="topCardAppliedPills.length" class="quick-left-pills">
+        <div class="workspace-applied-pills" aria-label="Live session settings">
           <span v-for="item in topCardAppliedPills" :key="item.key" class="workspace-applied-pill"
             :class="{ muted: item.muted }">
             <i class="bi" :class="item.icon" aria-hidden="true"></i>
@@ -327,41 +181,40 @@
 </section>
 
 <!-- Session Complete - Only shows when session is fully done -->
-<div v-if="isSessionCompleted && !isPlannerModeActive" class="session-complete-wrapper">
+<div v-if="isSessionCompleted" class="session-complete-wrapper">
   <!-- Status Header -->
   <div class="completion-header">
     <div class="completion-icon">
       <i class="bi bi-check-circle-fill"></i>
     </div>
     <div class="completion-text">
-      <h3>Session Complete</h3>
-      <p>{{ isPlannerModeActive ? "Today's Hifz session has been recorded." : "You've completed all " + totalVerses + " ayahs" }}</p>
+      <h3>{{ sessionEndedSnapshot ? (sessionEndedSnapshot.completedAll ? 'Session Complete' : 'Session Ended') : 'Session Complete' }}</h3>
+      <p>{{ sessionEndedSnapshot ? (sessionEndedSnapshot.completedAll ? `You've completed all ${totalVerses} ayahs` : sessionEndedSummaryMessage) : `You've completed all ${totalVerses} ayahs` }}</p>
     </div>
   </div>
 
-  <!-- Stats Summary -->
-  <div class="completion-stats">
+  <div v-if="sessionEndedSnapshot" class="completion-stats">
     <div class="stat-box">
-      <span class="stat-number">{{ progressPercent }}%</span>
+      <span class="stat-number">{{ sessionEndedStats.surah }}</span>
+      <span class="stat-label">{{ sessionEndedStats.range }}</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-box">
+      <span class="stat-number">{{ sessionEndedStats.progress }}</span>
       <span class="stat-label">Progress</span>
     </div>
     <div class="stat-divider"></div>
     <div class="stat-box">
-      <span class="stat-number">{{ totalVerses }}</span>
-      <span class="stat-label">Ayahs Completed</span>
-    </div>
-    <div class="stat-divider"></div>
-    <div class="stat-box">
-      <span class="stat-number">{{ currentChapter?.name_simple || 'Done' }}</span>
-      <span class="stat-label">Surah</span>
+      <span class="stat-number">{{ sessionEndedStats.duration }}</span>
+      <span class="stat-label">Duration</span>
     </div>
   </div>
 
   <!-- Action Buttons -->
   <div class="completion-actions">
-    <button class="action-btn primary" @click="isPlannerModeActive ? openHifzPlanModal() : openNewSessionSetup()">
-      <i class="bi" :class="isPlannerModeActive ? 'bi-journal-text' : 'bi-plus-circle'"></i>
-      {{ isPlannerModeActive ? 'Hifz Plan' : 'New Session' }}
+    <button class="action-btn primary" @click="openNewSessionSetup()">
+      <i class="bi bi-plus-circle"></i>
+      New Session
     </button>
     <button class="action-btn" @click="startSessionWithCountdown">
       <i class="bi bi-arrow-repeat"></i>
@@ -373,6 +226,21 @@
 
           <main id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             aria-label="Memorisation workspace">
+            <section v-if="!hasVerses" class="workspace-empty-state" aria-label="Session setup">
+              <div class="workspace-empty-card">
+                <span class="workspace-empty-kicker">Ready to begin</span>
+                <h2>Choose a surah and range</h2>
+                <p>Use session controls to set up a new range. The main workspace will stay in view once you start.</p>
+                <div class="workspace-empty-actions">
+                  <button class="action-btn primary" type="button" @click="openNewSessionSetup">
+                    Open session setup
+                  </button>
+                  <button class="action-btn" type="button" @click="openAdvancedControls">
+                    Open controls
+                  </button>
+                </div>
+              </div>
+            </section>
             <div v-if="!isSessionCompleted && readingViewMode === 'mushaf'" class="mushaf-workspace">
               <div class="mushaf-frame">
                 <div v-if="activeVerseRef" class="mushaf-pill-bar mushaf-pill-toolbar">
@@ -410,7 +278,7 @@
                     </div>
                   </div>
 
-                  <button class="mushaf-pill mushaf-ai-pill mushaf-ai-memory" type="button" @click.stop="openAiMemorisationCheckerForVerse(activeVerseRef)"
+                <button v-if="showAiMemorisationButton" class="mushaf-pill mushaf-ai-pill mushaf-ai-memory" type="button" @click.stop="openAiMemorisationCheckerForVerse(activeVerseRef)"
                     :class="{ active: aiMemorisationCheckerRecording }"
                     :disabled="aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()">
                     <i class="bi" :class="aiMemorisationCheckerRecording ? 'bi-stop-circle' : 'bi-eye-slash'"></i>
@@ -527,13 +395,11 @@
                     <span v-if="isDueHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-due">Due</span>
                     <span v-if="isWeakAyah(verse.key)" class="verse-status-badge verse-status-badge-weak">Needs Review</span>
                     <span v-if="isMasteredAyah(verse.key)" class="verse-status-badge verse-status-badge-mastered">Steady</span>
-                    <span v-if="isReviewPriorityAyah(verse.key) && !isDueHifzAyah(verse.key)"
-                      class="verse-status-badge verse-status-badge-review">Review Due</span>
                     <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge">Active Ayah</span>
                   </div>
                   <div class="verse-actions">
                     
-                    <button class="verse-self-check-btn verse-ai-check-btn"
+                    <button v-if="showAiMemorisationButton" class="verse-self-check-btn verse-ai-check-btn"
                       :class="{ active: shouldShowRecitationReviewHighlights(verse.key) && aiMemorisationCheckerVerseKey === verse.key }"
                       @click.stop="openAiMemorisationCheckerForVerse(verse)"
                       :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
@@ -645,7 +511,7 @@
               <span class="tools-x-glyph" aria-hidden="true">&times;</span>
             </button>
           </div>
-          <div v-if="!isPlannerModeActive" class="tools-tabs" role="tablist" aria-label="Controls tabs">
+          <div v-if="!isPlannerModeActive && hasSessionStarted" class="tools-tabs" role="tablist" aria-label="Controls tabs">
             <button role="tab" :aria-selected="tab === 'tools' ? 'true' : 'false'" :class="{ active: tab === 'tools' }"
               @click.prevent="setActiveTab('tools')" title="Session tools" type="button">
               <i class="bi bi-sliders"></i> Session
@@ -671,7 +537,7 @@
         </div>
 
         <div ref="toolsBody" class="tools-body compact">
-          <div v-if="isPlannerModeActive" class="sheet planner-controls-sheet">
+          <div v-if="showHifzPlannerUi" class="sheet planner-controls-sheet">
             <section class="sheet-section sheet-section-compact">
               <div class="sheet-content planner-controls-content">
                 <div class="field-stack field-stack-compact">
@@ -1317,7 +1183,7 @@
         </div>
 
         <div class="tools-footer" :class="{ 'settings-footer': tab === 'settings' }">
-          <template v-if="isPlannerModeActive">
+          <template v-if="showHifzPlannerUi">
             <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="openHifzPlanModal">
               <i class="bi bi-pencil-square"></i><span>Edit Plan</span>
             </button>
@@ -1596,7 +1462,7 @@
     </div>
 
     <transition name="fade">
-      <div v-if="showPlannerCompletionConfetti" class="planner-confetti-layer" aria-hidden="true">
+      <div v-if="showHifzPlannerUi && showPlannerCompletionConfetti" class="planner-confetti-layer" aria-hidden="true">
         <span
           v-for="piece in plannerCompletionConfettiPieces"
           :key="piece.id"
@@ -1606,7 +1472,7 @@
       </div>
     </transition>
 
-    <div v-if="showPlannerCompletionModal" class="modal-overlay planner-completion-overlay"
+    <div v-if="showHifzPlannerUi && showPlannerCompletionModal" class="modal-overlay planner-completion-overlay"
       @click.self="closePlannerCompletionModal">
       <div class="modal-content planner-completion-modal" role="dialog" aria-modal="true"
         aria-labelledby="plannerCompletionTitle">
@@ -1673,67 +1539,6 @@
           <button class="btn btn-outline-secondary" type="button" @click="closePlannerCompletionModal">
             Close
           </button>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="showSessionEndedModal" class="modal-overlay planner-completion-overlay"
-      @click.self="closeSessionEndedModal">
-      <div class="modal-content planner-completion-modal session-ended-modal" role="dialog" aria-modal="true"
-        aria-labelledby="sessionEndedTitle">
-        <div class="modal-header planner-completion-header">
-          <div class="planner-completion-head-copy">
-            <span class="planner-completion-kicker">Session Ended</span>
-            <h2 id="sessionEndedTitle">Your session has ended.</h2>
-            <p>{{ sessionEndedSummaryMessage }}</p>
-          </div>
-          <button class="modal-close-btn" @click="closeSessionEndedModal" aria-label="Close">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
-        <div class="modal-body planner-completion-body">
-          <div class="planner-completion-stats">
-            <article class="planner-completion-stat">
-              <span>Surah</span>
-              <strong>{{ sessionEndedStats.surah }}</strong>
-              <small>{{ sessionEndedStats.range }}</small>
-            </article>
-            <article class="planner-completion-stat">
-              <span>Progress</span>
-              <strong>{{ sessionEndedStats.progress }}</strong>
-              <small>{{ sessionEndedStats.duration }}</small>
-            </article>
-          </div>
-        </div>
-        <div class="modal-footer planner-completion-footer">
-          <div class="container-fluid session-ended-grid-shell">
-            <div class="row g-3 session-ended-grid">
-              <div class="col-12 col-md-6 col-xl-3">
-                <button class="btn btn-outline-secondary session-ended-grid-btn" type="button" @click="openNewSessionFromEndedModal">
-                  <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                  <span>Create New Session</span>
-                </button>
-              </div>
-              <div class="col-12 col-md-6 col-xl-3">
-                <button class="btn btn-outline-secondary session-ended-grid-btn" type="button" @click="repeatSessionFromEndedModal">
-                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                  <span>Repeat Session</span>
-                </button>
-              </div>
-              <div class="col-12 col-md-6 col-xl-3">
-                <button class="btn btn-outline-secondary session-ended-grid-btn" type="button" @click="saveSessionFromEndedModal">
-                  <i class="bi bi-save" aria-hidden="true"></i>
-                  <span>Save Session</span>
-                </button>
-              </div>
-              <div class="col-12 col-md-6 col-xl-3">
-                <button class="btn btn-success session-ended-grid-btn" type="button" @click="openHifzPlanFromEndedModal">
-                  <i class="bi bi-journal-plus" aria-hidden="true"></i>
-                  <span>Create a Hifz Plan</span>
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -1960,11 +1765,14 @@
 
     <div v-if="showAiMemorisationCheckerModal && aiMemorisationCheckerVerse" class="modal-overlay memorisation-checker-overlay"
       @click.self="closeAiMemorisationCheckerModal">
-      <div class="modal-content self-check-modal memorisation-checker-modal" role="dialog" aria-modal="true"
+      <div class="modal-content self-check-modal memorisation-checker-modal" :class="`speed-${memorisationSpeedReview.tone}`" role="dialog" aria-modal="true"
         aria-labelledby="aiMemorisationCheckerTitle">
         <div class="modal-header self-check-modal-header memorisation-checker-header">
           <div class="self-check-modal-head-copy">
-            <div class="modal-context-badge">AI memorisation review</div>
+            <div class="modal-context-badges">
+              <div class="modal-context-badge">AI memorisation review</div>
+              <div class="modal-speed-badge" :class="`speed-${memorisationSpeedReview.tone}`">{{ memorisationSpeedReview.label }}</div>
+            </div>
             <h2 id="aiMemorisationCheckerTitle">{{ aiMemorisationCheckerTitle }}</h2>
           </div>
           <button class="modal-close-btn" @click="closeAiMemorisationCheckerModal" aria-label="Close AI memorisation checker">
@@ -2166,10 +1974,13 @@
 
     <div v-if="showSelfCheckModal && selfCheckModalVerse" class="modal-overlay self-check-modal-overlay"
       @click.self="closeSelfCheckModal">
-      <div class="modal-content self-check-modal" role="dialog" aria-modal="true" aria-labelledby="selfCheckModalTitle">
+      <div class="modal-content self-check-modal" :class="`speed-${recitationSpeedReview.tone}`" role="dialog" aria-modal="true" aria-labelledby="selfCheckModalTitle">
         <div class="modal-header self-check-modal-header">
           <div class="self-check-modal-head-copy">
-            <div class="modal-context-badge">{{ recitationCheckPanelOpen || recitationCheckRecording || recitationCheckPreparing || recitationCheckResult ? recitationCheckPromptLabel : 'Per-ayah recorder' }}</div>
+            <div class="modal-context-badges">
+              <div class="modal-context-badge">{{ recitationCheckPanelOpen || recitationCheckRecording || recitationCheckPreparing || recitationCheckResult ? recitationCheckPromptLabel : 'Per-ayah recorder' }}</div>
+              <div class="modal-speed-badge" :class="`speed-${recitationSpeedReview.tone}`">{{ recitationSpeedReview.label }}</div>
+            </div>
             <h2 id="selfCheckModalTitle">{{ selfCheckModalTitle }}</h2>
           </div>
           <button class="modal-close-btn" @click="closeSelfCheckModal" aria-label="Close self-check">
@@ -2365,12 +2176,12 @@
                   </div>
                   <div class="recitation-insights-grid">
                     <div class="recitation-next-card">
-                      <span>What next?</span>
+                      <span>What to do next?</span>
                       <strong>{{ getRecitationRecommendationDisplay(recitationCheckResult) }}</strong>
                       <p>{{ getRecitationNextStep(recitationCheckResult) }}</p>
                     </div>
                     <div class="recitation-next-card ai-review-card">
-                      <span>Metadata</span>
+                      <span>AI review check</span>
                       <p>{{ getAiRecitationPostReviewMessage(recitationCheckResult) }}</p>
                     </div>
                   </div>
@@ -2771,7 +2582,7 @@
     </div>
 
     <HifzPlanCreatorModal
-      :visible="showHifzPlanModal"
+      :visible="showHifzPlannerUi && showHifzPlanModal"
       :reciters="reciters"
       :speed-options="speedOptions"
       @close="closeHifzPlanModal"
@@ -4343,6 +4154,78 @@ export default {
   },
 
   computed: {
+    shouldRenderWorkspaceShell() {
+      return !!this.hasSessionStarted && !this.isSessionCompleted
+    },
+    showHifzPlannerUi() {
+      return false
+    },
+    showAiMemorisationButton() {
+      return false
+    },
+    recitationSpeedReview() {
+      const liveResult = this.recitationCheckRecording || this.recitationCheckPreparing
+        ? {
+          wordStatuses: this.recitationLiveWords,
+          startedAt: this.recitationCheckStartedAt
+        }
+        : null
+      return this.getRecitationSpeedReview(this.recitationCheckResult || liveResult)
+    },
+    memorisationSpeedReview() {
+      const liveResult = this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing
+        ? {
+          wordStatuses: this.aiMemorisationCheckerLiveWords,
+          startedAt: this.aiMemorisationCheckerStartedAt
+        }
+        : null
+      return this.getRecitationSpeedReview(this.aiMemorisationCheckerResult || liveResult)
+    },
+    buildLiveRecitationReviewResult(kind = 'recitation') {
+      const liveWords = kind === 'memorisation' ? this.aiMemorisationCheckerLiveWords : this.recitationLiveWords
+      const wordStatuses = (Array.isArray(liveWords) ? liveWords : []).map(word => ({ ...word }))
+      const startedAt = kind === 'memorisation' ? this.aiMemorisationCheckerStartedAt : this.recitationCheckStartedAt
+      const endedAt = Date.now()
+      return {
+        wordStatuses,
+        startedAt,
+        endedAt,
+        durationSeconds: this.getRecitationElapsedSeconds({ startedAt, endedAt }),
+        speedReview: this.getRecitationSpeedReview({ wordStatuses, startedAt, endedAt })
+      }
+    },
+    sessionEndedActionCards() {
+      return [
+        {
+          key: 'review-insights',
+          label: 'Review insights',
+          description: 'See your session analytics',
+          icon: 'bi-bar-chart-line',
+          tone: 'default'
+        },
+        {
+          key: 'save-session',
+          label: 'Save session',
+          description: 'Keep this completed range',
+          icon: 'bi-download',
+          tone: 'default'
+        },
+        {
+          key: 'reset-range',
+          label: 'Reset range',
+          description: 'Play same range again',
+          icon: 'bi-arrow-repeat',
+          tone: 'default'
+        },
+        {
+          key: 'create-session',
+          label: 'Create new session',
+          description: 'Choose different surah or range',
+          icon: 'bi-plus-circle',
+          tone: 'accent'
+        }
+      ]
+    },
     sortedSavedSessions() {
       return [...this.savedSessions].sort((a, b) => {
         return new Date(b.savedAt) - new Date(a.savedAt);
@@ -4809,13 +4692,6 @@ export default {
       return 'Mutqin is guiding the order for you. Keep going one ayah at a time.'
     },
     topCardSessionLabel() {
-      if (this.isPlannerModeActive) {
-        const plannerRange = this.plannerSessionState.sessionRange
-        const surah = this.hifzPlan?.selectedSurah || this.currentChapter?.name_simple || this.activeChapterName || 'Hifz Session'
-        const start = Number(plannerRange?.rangeStart || this.rangeStart || 1)
-        const end = Number(plannerRange?.rangeEnd || this.rangeEnd || start)
-        return `${surah} · Ayahs ${start}-${end}`
-      }
       const surah = this.currentChapter?.name_simple || this.activeChapterName || 'Casual Session'
       const start = Math.max(1, Number(this.rangeStart || 1))
       const end = Math.max(start, Number(this.rangeEnd || start))
@@ -5120,60 +4996,7 @@ export default {
       ]
     },
     topCardAppliedPills() {
-      const pills = [
-        {
-          key: 'progress',
-          icon: 'bi-activity',
-          label: `${this.currentPosition} of ${this.totalVerses} ayahs`
-        },
-        {
-          key: 'percent',
-          icon: 'bi-pie-chart',
-          label: `${this.progressPercent}% complete`
-        }
-      ]
-      if (this.tajweedEnabled) {
-        pills.push({ key: 'tajweed', icon: 'bi-palette', label: 'Tajweed' })
-      }
-      if (this.showTranslation) {
-        pills.push({ key: 'translation', icon: 'bi-translate', label: 'Translation' })
-      }
-      if (this.showTransliteration) {
-        pills.push({ key: 'transliteration', icon: 'bi-type', label: 'Transliteration' })
-      }
-      if (this.showWordByWord) {
-        pills.push({ key: 'wbw', icon: 'bi-grid-3x2-gap', label: 'Word by word' })
-      }
-      if (this.wordByWordAudioEnabled) {
-        pills.push({ key: 'word-audio', icon: 'bi-volume-up', label: 'Word audio' })
-      }
-      if (this.blurModeEnabled) {
-        pills.push({ key: 'blur', icon: 'bi-cloud-haze2', label: `Blur ${this.blurIntensity}px` })
-      }
-      if (this.chainingEnabled) {
-        const method = this.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking'
-        pills.push({ key: 'chaining', icon: 'bi-link-45deg', label: `${method} chaining · ${this.chainingRepetitions}x` })
-      }
-      if (this.focusModeEnabled) {
-        pills.push({ key: 'focus', icon: 'bi-bullseye', label: `Focus ${this.focusDimPercent}%` })
-      }
-      if (this.anchorModeEnabled) {
-        pills.push({ key: 'anchor', icon: 'bi-pin-angle-fill', label: `Anchors ${this.anchorCount}` })
-      }
-      if (
-        !this.tajweedEnabled
-        && !this.showTranslation
-        && !this.showTransliteration
-        && !this.showWordByWord
-        && !this.wordByWordAudioEnabled
-        && !this.blurModeEnabled
-        && !this.chainingEnabled
-        && !this.focusModeEnabled
-        && !this.anchorModeEnabled
-      ) {
-        pills.push({ key: 'fallback', icon: 'bi-sliders', label: 'Standard aids', muted: true })
-      }
-      return pills
+      return []
     },
     appStyleVars() {
       return {
@@ -5806,9 +5629,7 @@ export default {
       return 'Press play, then recite and repeat at your pace.'
     },
     reviewPriorityLabel() {
-      if (this.guidedUiStep !== 'review') return ''
-      if (this.dueCount > 0) return `${this.dueCount} review${this.dueCount === 1 ? '' : 's'} due now`
-      return 'Review due now'
+      return ''
     },
     feedbackCounts() {
       const ayahs = Object.values(this.mutqinState?.ayahs || {})
@@ -6480,11 +6301,8 @@ export default {
     this.loadAnalytics()
     this.initAudio()
     this.restoreAudioState()
-    this.theme = document.documentElement.getAttribute('data-theme') || this.theme
-    if (!this.isLoggedIn) {
-      this.theme = 'dark'
-      document.documentElement.setAttribute('data-theme', 'dark')
-    }
+    this.theme = document.documentElement.getAttribute('data-theme') || this.theme || 'light'
+    document.documentElement.setAttribute('data-theme', this.theme)
     this.loadBookmarksPins(),
       this.setupWordClickHandler()
     this.loadContinueSessionPrompt()
@@ -12946,15 +12764,17 @@ export default {
       }
     },
     getRecitationResultStats(result) {
+      const statuses = this.getRecitationWordStatuses(result)
       const counts = this.getRecitationDetectionCounts(result)
+      const greenCount = statuses.filter(word => word.status === 'correct').length
+      const amberCount = statuses.filter(word => word.status === 'partial').length
+      const greyCount = statuses.filter(word => word.status === 'pending').length
+      const redCount = Math.max(0, statuses.filter(word => word.status === 'incorrect').length + Number(counts.extraWords || 0))
       return [
-        { key: 'accuracy', label: 'Accuracy', value: `${counts.accuracy}%`, description: 'Overall session match.', tone: counts.accuracy >= 90 ? 'tone-green' : counts.accuracy >= 70 ? 'tone-amber' : 'tone-red' },
-        { key: 'missing', label: 'Missing words', value: `${counts.missingWords}`, description: 'Words not heard in the target range.', tone: counts.missingWords ? 'tone-red' : 'tone-green' },
-        { key: 'extra', label: 'Extra words', value: `${counts.extraWords}`, description: 'Words heard outside the target wording.', tone: counts.extraWords ? 'tone-red' : 'tone-green' },
-        { key: 'incorrect', label: 'Incorrect words', value: `${counts.incorrectWords}`, description: 'Changed or wrong-order words.', tone: counts.incorrectWords ? 'tone-red' : 'tone-green' },
-        { key: 'word-skips', label: 'Word skips', value: `${counts.wordSkips}`, description: 'Skipped word positions inside ayahs.', tone: counts.wordSkips ? 'tone-amber' : 'tone-green' },
-        { key: 'ayah-skips', label: 'Ayah skips', value: `${counts.ayahSkips}`, description: 'Complete ayahs that were not covered.', tone: counts.ayahSkips ? 'tone-red' : 'tone-green' },
-        { key: 'verse-jumps', label: 'Verse jumps', value: `${counts.verseJumps}`, description: 'Moved to a later ayah before finishing the current one.', tone: counts.verseJumps ? 'tone-red' : 'tone-green' }
+        { key: 'green', label: 'Green', value: `${greenCount}`, description: 'Clear words heard correctly.', tone: 'tone-green' },
+        { key: 'amber', label: 'Amber', value: `${amberCount}`, description: 'Close words to repeat slowly.', tone: 'tone-amber' },
+        { key: 'red', label: 'Red', value: `${redCount}`, description: 'Words to stop and fix.', tone: 'tone-red' },
+        { key: 'grey', label: 'Grey', value: `${greyCount}`, description: 'Words not heard yet.', tone: 'tone-grey' }
       ]
     },
     getTajweedRuleCatalog() {
@@ -13713,8 +13533,7 @@ export default {
     },
 
     openHifzPlanModal() {
-      this.refreshHifzJourneyState()
-      this.showHifzPlanModal = true
+      this.showHifzPlanModal = false
     },
 
     closeHifzPlanModal() {
@@ -14004,6 +13823,20 @@ export default {
     openInsightsPanel() {
       this.openToolsPanel({ tab: 'stats' })
     },
+    saveSessionFromHomeCard() {
+      if (this.hasVerses) {
+        this.saveCurrentSessionWithName()
+        return
+      }
+      this.openSavedSessionsPanel()
+    },
+    resetRangeFromHomeCard() {
+      if (this.hasVerses) {
+        this.performResetControls()
+        return
+      }
+      this.openNewSessionSetup()
+    },
     openNewSessionSetup() {
       this.openToolsPanel({ tab: 'tools' })
     },
@@ -14149,19 +13982,15 @@ export default {
       }
     },
     showPlannerCompletionCelebration(snapshot = null) {
-      this.plannerCompletionSnapshot = snapshot || this.buildPlannerCompletionSnapshot()
-      this.showPlannerCompletionModal = true
-      this.showPlannerCompletionConfetti = true
-      window.setTimeout(() => {
-        this.showPlannerCompletionConfetti = false
-      }, 3000)
+      void snapshot
+      this.showPlannerCompletionModal = false
+      this.showPlannerCompletionConfetti = false
     },
     closePlannerCompletionModal() {
       this.showPlannerCompletionModal = false
     },
     openHifzPlanFromCompletionModal() {
       this.closePlannerCompletionModal()
-      this.openHifzPlanModal()
     },
     isDueHifzAyah(verseKey) {
       if (this.getHifzQueueType(verseKey) === 'due') return true
@@ -15105,6 +14934,7 @@ export default {
       const rangeStart = Math.max(1, Number(this.rangeStart || 1))
       const rangeEnd = Math.max(rangeStart, Number(this.rangeEnd || rangeStart))
       const coveredAyah = Math.max(1, Number(this.currentPosition || 1))
+      const totalAyahs = Math.max(1, Number(this.totalVerses || 1))
       const progressPercent = Math.max(0, Math.min(100, Number(this.progressPercent || 0)))
       const durationSeconds = this.sessionStartedAt
         ? Math.max(0, Math.round((Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt)) / 1000))
@@ -15112,14 +14942,17 @@ export default {
       return {
         chapterName,
         rangeLabel: `Ayahs ${rangeStart}-${rangeEnd}`,
-        progressLabel: `${coveredAyah}/${Math.max(1, Number(this.totalVerses || 1))}`,
+        progressLabel: `${coveredAyah}/${totalAyahs}`,
+        progressPercent,
+        completedAll: coveredAyah >= totalAyahs && progressPercent >= 100,
         durationLabel: this.formatTime(durationSeconds),
         summaryMessage: `You reached ayah ${coveredAyah} and completed ${progressPercent}% of this session.`
       }
     },
     showSessionEndedSummary(snapshot = null) {
       this.sessionEndedSnapshot = snapshot || this.buildSessionEndedSnapshot()
-      this.showSessionEndedModal = true
+      this.showSessionEndedModal = false
+      this.showTools = false
     },
     closeSessionEndedModal() {
       this.showSessionEndedModal = false
@@ -15222,7 +15055,6 @@ export default {
     },
 
     confirmSessionExit() {
-      const plannerCounts = this.currentMode === 'planner' ? this.getPlannerCompletionCounts() : null
       const endedSnapshot = this.buildSessionEndedSnapshot()
       this.closeSessionExitModal({ restore: false })
       this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
@@ -15232,23 +15064,40 @@ export default {
       this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
       this.recomputeAnalytics()
       this.finishSessionCleanup()
-      if (plannerCounts) {
-        this.showPlannerCompletionCelebration(this.buildPlannerCompletionSnapshot(plannerCounts))
-        return
-      }
       this.showSessionEndedSummary(endedSnapshot)
     },
     openNewSessionFromEndedModal() {
       this.closeSessionEndedModal()
       this.openNewSessionSetup()
     },
-    openHifzPlanFromEndedModal() {
-      this.closeSessionEndedModal()
-      this.openHifzPlanModal()
-    },
     saveSessionFromEndedModal() {
       this.closeSessionEndedModal()
       this.saveCurrentSessionWithName()
+    },
+    reviewInsightsFromEndedModal() {
+      this.closeSessionEndedModal()
+      this.openInsightsPanel()
+    },
+    resetRangeFromEndedModal() {
+      this.closeSessionEndedModal()
+      this.repeatSessionFromEndedModal()
+    },
+    runSessionEndedCard(cardKey) {
+      if (cardKey === 'review-insights') {
+        this.reviewInsightsFromEndedModal()
+        return
+      }
+      if (cardKey === 'save-session') {
+        this.saveSessionFromEndedModal()
+        return
+      }
+      if (cardKey === 'reset-range') {
+        this.resetRangeFromEndedModal()
+        return
+      }
+      if (cardKey === 'create-session') {
+        this.openNewSessionFromEndedModal()
+      }
     },
     repeatSessionFromEndedModal() {
       this.closeSessionEndedModal()
@@ -17773,7 +17622,6 @@ export default {
     handleSessionComplete() {
       if (!this.verses.length) return
 
-      const plannerCounts = this.currentMode === 'planner' ? this.getPlannerCompletionCounts() : null
       const endedSnapshot = this.buildSessionEndedSnapshot()
       this.sessionCompleted = true
       this.sessionCompletedAt = new Date().toISOString()
@@ -17785,10 +17633,6 @@ export default {
       this.recomputeAnalytics()
       this.finishSessionCleanup()
 
-      if (plannerCounts) {
-        this.showPlannerCompletionCelebration(this.buildPlannerCompletionSnapshot(plannerCounts))
-        return
-      }
       this.showSessionEndedSummary(endedSnapshot)
     },
 
@@ -34938,6 +34782,94 @@ html {
   border-color: color-mix(in srgb, #2f6f58 28%, var(--border));
 }
 
+[data-theme="dark"] .idle-action-shell {
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.34);
+}
+
+[data-theme="dark"] .idle-action-card {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+}
+
+[data-theme="dark"] .idle-action-card:hover {
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.38);
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+}
+
+[data-theme="dark"] .idle-action-card-primary {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 18%, var(--surface) 82%), color-mix(in srgb, var(--surface) 96%, transparent));
+}
+
+.workspace-empty-state {
+  display: grid;
+  place-items: center;
+  min-height: min(42vh, 420px);
+  padding: 1rem 0 2rem;
+}
+
+.workspace-empty-card {
+  width: min(100%, 760px);
+  display: grid;
+  gap: 0.9rem;
+  padding: clamp(1.25rem, 2.4vw, 2rem);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 24px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 98%, transparent), color-mix(in srgb, var(--surface) 92%, transparent));
+  box-shadow: var(--shadow-sm);
+}
+
+.workspace-empty-kicker {
+  display: inline-flex;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.workspace-empty-card h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.3rem, 2.8vw, 1.95rem);
+  line-height: 1.1;
+}
+
+.workspace-empty-card p {
+  margin: 0;
+  max-width: 56ch;
+  color: var(--text-muted);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.workspace-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+[data-theme="dark"] .workspace-empty-card {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, transparent), color-mix(in srgb, var(--surface) 84%, transparent));
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .session-ended-grid-shell,
+[data-theme="dark"] .session-ended-grid-btn {
+  background: transparent;
+}
+
+[data-theme="dark"] .session-ended-grid-btn.btn-outline-secondary {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--border) 92%, transparent);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+}
+
+[data-theme="dark"] .session-ended-grid-btn.btn-success {
+  color: #1a140f;
+  border-color: color-mix(in srgb, #d4aa7c 68%, transparent);
+  background: linear-gradient(135deg, #d4aa7c, #b98654);
+}
+
 .offcanvas {
   position: fixed;
   top: 0;
@@ -48926,6 +48858,202 @@ button:active {
   border-color: rgba(224, 171, 102, 0.18) !important;
 }
 
+.modal-content.self-check-modal,
+.modal-content.memorisation-checker-modal,
+.modal-content.session-ended-modal,
+.modal-content.planner-completion-modal {
+  width: min(1280px, calc(100vw - 2rem)) !important;
+}
+
+.modal-content.self-check-modal,
+.modal-content.memorisation-checker-modal {
+  background: linear-gradient(180deg, #fffdf8, #fcf7ef) !important;
+  border: 1px solid rgba(168, 127, 85, 0.14) !important;
+  box-shadow: 0 28px 80px rgba(55, 38, 23, 0.18) !important;
+}
+
+.modal-content.self-check-modal.speed-steady,
+.modal-content.memorisation-checker-modal.speed-steady {
+  --recitation-speed-accent: #2f6f58;
+  --recitation-speed-soft: rgba(47, 111, 88, 0.12);
+}
+
+.modal-content.self-check-modal.speed-fast,
+.modal-content.memorisation-checker-modal.speed-fast {
+  --recitation-speed-accent: #c9842b;
+  --recitation-speed-soft: rgba(201, 132, 43, 0.12);
+}
+
+.modal-content.self-check-modal.speed-slow,
+.modal-content.memorisation-checker-modal.speed-slow {
+  --recitation-speed-accent: #4f76b8;
+  --recitation-speed-soft: rgba(79, 118, 184, 0.12);
+}
+
+.modal-content.self-check-modal.speed-unknown,
+.modal-content.memorisation-checker-modal.speed-unknown,
+.modal-content.self-check-modal.speed-neutral,
+.modal-content.memorisation-checker-modal.speed-neutral {
+  --recitation-speed-accent: #8a6b4e;
+  --recitation-speed-soft: rgba(138, 107, 78, 0.1);
+}
+
+.modal-content.self-check-modal .modal-header,
+.modal-content.memorisation-checker-modal .modal-header {
+  border-bottom: 1px solid rgba(168, 127, 85, 0.12) !important;
+  background: color-mix(in srgb, var(--surface) 96%, white) !important;
+}
+
+.modal-context-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.45rem;
+}
+
+.modal-speed-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--recitation-speed-accent, #2f6f58);
+  background: var(--recitation-speed-soft, rgba(47, 111, 88, 0.12));
+}
+
+.modal-speed-badge.speed-fast {
+  color: #9c6114;
+  background: rgba(201, 132, 43, 0.14);
+}
+
+.modal-speed-badge.speed-slow {
+  color: #31579c;
+  background: rgba(79, 118, 184, 0.14);
+}
+
+.modal-speed-badge.speed-steady {
+  color: #2f6f58;
+  background: rgba(47, 111, 88, 0.12);
+}
+
+.modal-speed-badge.speed-unknown,
+.modal-speed-badge.speed-neutral {
+  color: #7d5d43;
+  background: rgba(138, 107, 78, 0.1);
+}
+
+.modal-content.self-check-modal .self-check-modal-stage,
+.modal-content.memorisation-checker-modal .memorisation-checker-stage,
+.modal-content.self-check-modal .self-check-recorder-card,
+.modal-content.memorisation-checker-modal .self-check-recorder-card,
+.modal-content.self-check-modal .recitation-check-panel,
+.modal-content.memorisation-checker-modal .recitation-check-panel,
+.modal-content.session-ended-modal .planner-completion-stat,
+.modal-content.session-ended-modal .session-ended-grid-btn {
+  border-radius: 18px !important;
+}
+
+.modal-content.self-check-modal .self-check-modal-stage,
+.modal-content.memorisation-checker-modal .memorisation-checker-stage,
+.modal-content.self-check-modal .self-check-recorder-card,
+.modal-content.memorisation-checker-modal .self-check-recorder-card,
+.modal-content.self-check-modal .recitation-check-panel,
+.modal-content.memorisation-checker-modal .recitation-check-panel {
+  background: #fff !important;
+  border: 1px solid rgba(168, 127, 85, 0.12) !important;
+  box-shadow: 0 14px 34px rgba(55, 38, 23, 0.08) !important;
+}
+
+.modal-content.self-check-modal .recitation-result-stats,
+.modal-content.memorisation-checker-modal .recitation-result-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.modal-content.self-check-modal .recitation-result-stat,
+.modal-content.memorisation-checker-modal .recitation-result-stat {
+  min-height: 122px !important;
+  padding: 0.9rem 1rem !important;
+  border: 1px solid rgba(168, 127, 85, 0.12) !important;
+  background: linear-gradient(180deg, #ffffff, #fbf7f0) !important;
+  box-shadow: none !important;
+}
+
+.modal-content.self-check-modal .recitation-result-stat.tone-green,
+.modal-content.memorisation-checker-modal .recitation-result-stat.tone-green {
+  background: linear-gradient(180deg, rgba(239, 250, 244, 0.98), rgba(228, 245, 236, 0.96)) !important;
+  border-color: rgba(47, 111, 88, 0.22) !important;
+  color: #245d4a !important;
+}
+
+.modal-content.self-check-modal .recitation-result-stat.tone-amber,
+.modal-content.memorisation-checker-modal .recitation-result-stat.tone-amber {
+  background: linear-gradient(180deg, rgba(255, 248, 235, 0.98), rgba(253, 240, 213, 0.96)) !important;
+  border-color: rgba(188, 132, 39, 0.22) !important;
+  color: #946118 !important;
+}
+
+.modal-content.self-check-modal .recitation-result-stat.tone-red,
+.modal-content.memorisation-checker-modal .recitation-result-stat.tone-red {
+  background: linear-gradient(180deg, rgba(255, 241, 238, 0.98), rgba(252, 229, 224, 0.96)) !important;
+  border-color: rgba(177, 63, 50, 0.22) !important;
+  color: #982f22 !important;
+}
+
+.modal-content.self-check-modal .recitation-result-stat.tone-blue,
+.modal-content.memorisation-checker-modal .recitation-result-stat.tone-blue {
+  background: linear-gradient(180deg, rgba(240, 246, 255, 0.98), rgba(228, 239, 255, 0.96)) !important;
+  border-color: rgba(79, 118, 184, 0.22) !important;
+  color: #31579c !important;
+}
+
+.modal-content.self-check-modal .recitation-next-card,
+.modal-content.memorisation-checker-modal .recitation-next-card {
+  background: linear-gradient(180deg, #ffffff, #fbf7f0) !important;
+  border: 1px solid rgba(168, 127, 85, 0.12) !important;
+  box-shadow: none !important;
+}
+
+.session-ended-modal {
+  width: min(1180px, calc(100vw - 2rem)) !important;
+  background: linear-gradient(180deg, #fffdf8, #f7f1e7) !important;
+  border: 1px solid rgba(168, 127, 85, 0.14) !important;
+  box-shadow: 0 30px 90px rgba(55, 38, 23, 0.18) !important;
+}
+
+.session-ended-modal .planner-completion-header,
+.session-ended-modal .planner-completion-body,
+.session-ended-modal .planner-completion-footer {
+  background: transparent !important;
+}
+
+.session-ended-modal .planner-completion-stat,
+.session-ended-modal .session-ended-grid-btn {
+  background: #fff !important;
+  border: 1px solid rgba(168, 127, 85, 0.12) !important;
+  box-shadow: 0 12px 26px rgba(55, 38, 23, 0.08) !important;
+}
+
+.session-ended-modal .session-ended-grid-btn.btn-success {
+  background: linear-gradient(135deg, #58b68e, #79d39e) !important;
+  color: #123824 !important;
+}
+
+.session-ended-modal .session-ended-grid-btn.btn-outline-secondary {
+  color: var(--text) !important;
+}
+
+.session-ended-modal .planner-completion-kicker {
+  color: var(--recitation-speed-accent, #2f6f58) !important;
+}
+
+.session-ended-modal .session-ended-grid-btn span {
+  font-weight: 700 !important;
+}
+
 @media (max-width: 760px) {
   .saved-sessions-v2 .session-actions {
     grid-template-columns: 1fr !important;
@@ -48934,6 +49062,163 @@ button:active {
   .memorisation-checker-modal .memorisation-checker-header-tools {
     grid-template-columns: 1fr 1fr !important;
   }
+
+  .modal-content.self-check-modal .recitation-result-stats,
+  .modal-content.memorisation-checker-modal .recitation-result-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .session-ended-modal {
+    width: min(100vw - 1rem, 1180px) !important;
+  }
+}
+
+/* Tajweed should color the script, not paint the background. Keep word flow connected. */
+.verse-arabic.tajweed-enabled .tajweed-mark,
+.mushaf-ayah-text.tajweed-enabled .tajweed-mark,
+.self-check-modal-ayah.tajweed-enabled .tajweed-mark,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-mark {
+  display: inline !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  line-height: inherit !important;
+}
+
+.verse-arabic.tajweed-enabled .tajweed-mark[class*="tajweed-"],
+.mushaf-ayah-text.tajweed-enabled .tajweed-mark[class*="tajweed-"],
+.self-check-modal-ayah.tajweed-enabled .tajweed-mark[class*="tajweed-"],
+.memorisation-checker-ayah.tajweed-enabled .tajweed-mark[class*="tajweed-"] {
+  background: transparent !important;
+}
+
+.verse-arabic.tajweed-enabled .tajweed-ham_wasl,
+.verse-arabic.tajweed-enabled .tajweed-slnt,
+.mushaf-ayah-text.tajweed-enabled .tajweed-ham_wasl,
+.mushaf-ayah-text.tajweed-enabled .tajweed-slnt,
+.self-check-modal-ayah.tajweed-enabled .tajweed-ham_wasl,
+.self-check-modal-ayah.tajweed-enabled .tajweed-slnt,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-ham_wasl,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-slnt {
+  color: #7e8a97 !important;
+  background: transparent !important;
+}
+
+.verse-arabic.tajweed-enabled .tajweed-ghn,
+.verse-arabic.tajweed-enabled .tajweed-idgh_ghn,
+.verse-arabic.tajweed-enabled .tajweed-iqlb,
+.mushaf-ayah-text.tajweed-enabled .tajweed-ghn,
+.mushaf-ayah-text.tajweed-enabled .tajweed-idgh_ghn,
+.mushaf-ayah-text.tajweed-enabled .tajweed-iqlb,
+.self-check-modal-ayah.tajweed-enabled .tajweed-ghn,
+.self-check-modal-ayah.tajweed-enabled .tajweed-idgh_ghn,
+.self-check-modal-ayah.tajweed-enabled .tajweed-iqlb,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-ghn,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-idgh_ghn,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-iqlb {
+  color: #2e9d62 !important;
+  background: transparent !important;
+}
+
+.verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn,
+.verse-arabic.tajweed-enabled .tajweed-ikhf,
+.verse-arabic.tajweed-enabled .tajweed-ikhf_shfw,
+.mushaf-ayah-text.tajweed-enabled .tajweed-idgh_w_ghn,
+.mushaf-ayah-text.tajweed-enabled .tajweed-ikhf,
+.mushaf-ayah-text.tajweed-enabled .tajweed-ikhf_shfw,
+.self-check-modal-ayah.tajweed-enabled .tajweed-idgh_w_ghn,
+.self-check-modal-ayah.tajweed-enabled .tajweed-ikhf,
+.self-check-modal-ayah.tajweed-enabled .tajweed-ikhf_shfw,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-idgh_w_ghn,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-ikhf,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-ikhf_shfw {
+  color: #9b59b6 !important;
+  background: transparent !important;
+}
+
+.verse-arabic.tajweed-enabled .tajweed-qlq,
+.verse-arabic.tajweed-enabled .tajweed-lqlq,
+.mushaf-ayah-text.tajweed-enabled .tajweed-qlq,
+.mushaf-ayah-text.tajweed-enabled .tajweed-lqlq,
+.self-check-modal-ayah.tajweed-enabled .tajweed-qlq,
+.self-check-modal-ayah.tajweed-enabled .tajweed-lqlq,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-qlq,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-lqlq {
+  color: #d98824 !important;
+  background: transparent !important;
+}
+
+.verse-arabic.tajweed-enabled .tajweed-madda_normal,
+.verse-arabic.tajweed-enabled .tajweed-madda_permissible,
+.verse-arabic.tajweed-enabled .tajweed-madda_necessary,
+.verse-arabic.tajweed-enabled .tajweed-madda_obligatory,
+.verse-arabic.tajweed-enabled .tajweed-madda_pbligatory,
+.mushaf-ayah-text.tajweed-enabled .tajweed-madda_normal,
+.mushaf-ayah-text.tajweed-enabled .tajweed-madda_permissible,
+.mushaf-ayah-text.tajweed-enabled .tajweed-madda_necessary,
+.mushaf-ayah-text.tajweed-enabled .tajweed-madda_obligatory,
+.mushaf-ayah-text.tajweed-enabled .tajweed-madda_pbligatory,
+.self-check-modal-ayah.tajweed-enabled .tajweed-madda_normal,
+.self-check-modal-ayah.tajweed-enabled .tajweed-madda_permissible,
+.self-check-modal-ayah.tajweed-enabled .tajweed-madda_necessary,
+.self-check-modal-ayah.tajweed-enabled .tajweed-madda_obligatory,
+.self-check-modal-ayah.tajweed-enabled .tajweed-madda_pbligatory,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-madda_normal,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-madda_permissible,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-madda_necessary,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-madda_obligatory,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-madda_pbligatory {
+  color: #d55245 !important;
+  background: transparent !important;
+}
+
+.verse-arabic.tajweed-enabled .tajweed-idgh_mus,
+.verse-arabic.tajweed-enabled .tajweed-idghm_shfw,
+.verse-arabic.tajweed-enabled .tajweed-idgh_shfw,
+.verse-arabic.tajweed-enabled .tajweed-ghn + .tajweed-mark,
+.mushaf-ayah-text.tajweed-enabled .tajweed-idgh_mus,
+.mushaf-ayah-text.tajweed-enabled .tajweed-idghm_shfw,
+.mushaf-ayah-text.tajweed-enabled .tajweed-idgh_shfw,
+.mushaf-ayah-text.tajweed-enabled .tajweed-ghn + .tajweed-mark,
+.self-check-modal-ayah.tajweed-enabled .tajweed-idgh_mus,
+.self-check-modal-ayah.tajweed-enabled .tajweed-idghm_shfw,
+.self-check-modal-ayah.tajweed-enabled .tajweed-idgh_shfw,
+.self-check-modal-ayah.tajweed-enabled .tajweed-ghn + .tajweed-mark,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-idgh_mus,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-idghm_shfw,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-idgh_shfw,
+.memorisation-checker-ayah.tajweed-enabled .tajweed-ghn + .tajweed-mark {
+  color: #2b7bbb !important;
+  background: transparent !important;
+}
+
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word,
+.verse-arabic.tajweed-enabled .wbw-word[data-tajweed-word="true"],
+.mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word,
+.mushaf-ayah-text.tajweed-enabled .wbw-word[data-tajweed-word="true"],
+.self-check-modal-ayah.tajweed-enabled .wbw-word[data-tajweed-word="true"],
+.memorisation-checker-ayah.tajweed-enabled .wbw-word[data-tajweed-word="true"],
+.verse-arabic.tajweed-enabled word,
+.mushaf-ayah-text.tajweed-enabled word {
+  display: inline !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  transform: none !important;
+}
+
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+.mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 /* RTL-only live recitation colour stream: committed words only in script order. */
@@ -50720,6 +51005,195 @@ textarea {
   .action-btn {
     flex-basis: min(88vw, 240px) !important;
   }
+}
+
+/* Forced AI review cleanup: one-row tools, active font trigger, strong contrast, live RTL colours. */
+.self-check-modal .self-check-section-head,
+.memorisation-checker-modal .self-check-section-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1rem !important;
+}
+
+.self-check-modal .self-check-section-head > div:first-child,
+.memorisation-checker-modal .self-check-section-head > div:first-child {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.self-check-modal .self-check-header-tools,
+.memorisation-checker-modal .self-check-header-tools {
+  width: auto !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 0.55rem !important;
+  margin-left: auto !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding-bottom: 0.1rem !important;
+}
+
+.self-check-modal .self-check-toolbar-btn,
+.memorisation-checker-modal .self-check-toolbar-btn {
+  flex: 0 0 auto !important;
+}
+
+.quick-font-dropdown .font-dropdown-trigger {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid rgba(160, 120, 76, 0.24) !important;
+  color: var(--text) !important;
+  box-shadow: 0 12px 28px rgba(47, 31, 18, 0.08) !important;
+  opacity: 1 !important;
+}
+
+.quick-font-dropdown .font-dropdown-trigger span,
+.quick-font-dropdown .font-dropdown-trigger i,
+.top-card-menu button span,
+.top-card-menu button i {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+.quick-font-dropdown .font-dropdown-trigger span,
+.top-card-menu button span {
+  flex: 1 1 auto !important;
+  text-align: left !important;
+}
+
+.top-card-menu button,
+.verse-action-menu button {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+.self-check-modal .recitation-check-panel,
+.self-check-modal .recitation-check-panel-inline,
+.self-check-modal .recitation-check-idle,
+.self-check-modal .recitation-result-stat,
+.self-check-modal .recitation-next-card,
+.self-check-modal .recitation-review-ayah,
+.memorisation-checker-modal .recitation-result-stat,
+.memorisation-checker-modal .recitation-next-card {
+  color: #241b14 !important;
+}
+
+.self-check-modal .recitation-result-stat span,
+.self-check-modal .recitation-result-stat small,
+.self-check-modal .recitation-next-card span,
+.self-check-modal .recitation-next-card p,
+.self-check-modal .recitation-check-idle-copy p,
+.memorisation-checker-modal .recitation-result-stat span,
+.memorisation-checker-modal .recitation-result-stat small,
+.memorisation-checker-modal .recitation-next-card span,
+.memorisation-checker-modal .recitation-next-card p {
+  color: #5f4836 !important;
+}
+
+.self-check-modal .recitation-result-stat strong,
+.self-check-modal .recitation-next-card strong,
+.self-check-modal .recitation-check-head h2,
+.memorisation-checker-modal .recitation-result-stat strong,
+.memorisation-checker-modal .recitation-next-card strong {
+  color: #241b14 !important;
+}
+
+.recitation-live-word-stream,
+.self-check-modal .recitation-live-word-stream.recitation-word-stream,
+.memorisation-checker-modal .recitation-live-word-stream.recitation-word-stream {
+  direction: rtl !important;
+  justify-content: flex-end !important;
+  text-align: right !important;
+}
+
+.recitation-live-word-stream .recitation-word-chip,
+.recitation-review-ayah .wbw-word,
+.recitation-review-ayah word {
+  background: transparent !important;
+}
+
+.recitation-result-stat.tone-green,
+.recitation-word-chip.word-correct,
+.recitation-review-ayah .recitation-word-correct,
+.recitation-review-ayah .wbw-word.recitation-word-correct,
+.recitation-review-ayah word.recitation-word-correct {
+  background: rgba(34, 130, 82, 0.14) !important;
+  border-color: rgba(34, 130, 82, 0.3) !important;
+  color: #17603c !important;
+}
+
+.recitation-result-stat.tone-amber,
+.recitation-word-chip.word-partial,
+.recitation-review-ayah .recitation-word-partial,
+.recitation-review-ayah .wbw-word.recitation-word-partial,
+.recitation-review-ayah word.recitation-word-partial {
+  background: rgba(198, 129, 18, 0.14) !important;
+  border-color: rgba(198, 129, 18, 0.3) !important;
+  color: #8b5608 !important;
+}
+
+.recitation-result-stat.tone-red,
+.recitation-word-chip.word-incorrect,
+.recitation-review-ayah .recitation-word-incorrect,
+.recitation-review-ayah .wbw-word.recitation-word-incorrect,
+.recitation-review-ayah word.recitation-word-incorrect {
+  background: rgba(184, 56, 45, 0.14) !important;
+  border-color: rgba(184, 56, 45, 0.3) !important;
+  color: #942f25 !important;
+}
+
+.recitation-result-stat.tone-grey,
+.recitation-word-chip.word-pending,
+.recitation-word-chip.word-notAttempted,
+.recitation-review-ayah .recitation-word-pending,
+.recitation-review-ayah .wbw-word.recitation-word-pending,
+.recitation-review-ayah word.recitation-word-pending {
+  background: rgba(111, 118, 128, 0.14) !important;
+  border-color: rgba(111, 118, 128, 0.28) !important;
+  color: #4e535c !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .quick-font-dropdown .font-dropdown-trigger {
+  background: rgba(34, 31, 27, 0.96) !important;
+  border-color: rgba(255, 233, 205, 0.18) !important;
+  color: #f5eee4 !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28) !important;
+}
+
+[data-theme="dark"] .self-check-modal .recitation-check-panel,
+[data-theme="dark"] .self-check-modal .recitation-check-panel-inline,
+[data-theme="dark"] .self-check-modal .recitation-check-idle,
+[data-theme="dark"] .self-check-modal .recitation-result-stat,
+[data-theme="dark"] .self-check-modal .recitation-next-card,
+[data-theme="dark"] .self-check-modal .recitation-review-ayah,
+[data-theme="dark"] .memorisation-checker-modal .recitation-result-stat,
+[data-theme="dark"] .memorisation-checker-modal .recitation-next-card {
+  color: #f5eee4 !important;
+}
+
+[data-theme="dark"] .self-check-modal .recitation-result-stat span,
+[data-theme="dark"] .self-check-modal .recitation-result-stat small,
+[data-theme="dark"] .self-check-modal .recitation-next-card span,
+[data-theme="dark"] .self-check-modal .recitation-next-card p,
+[data-theme="dark"] .self-check-modal .recitation-check-idle-copy p,
+[data-theme="dark"] .memorisation-checker-modal .recitation-result-stat span,
+[data-theme="dark"] .memorisation-checker-modal .recitation-result-stat small,
+[data-theme="dark"] .memorisation-checker-modal .recitation-next-card span,
+[data-theme="dark"] .memorisation-checker-modal .recitation-next-card p {
+  color: #ddccb5 !important;
+}
+
+[data-theme="dark"] .self-check-modal .recitation-result-stat strong,
+[data-theme="dark"] .self-check-modal .recitation-next-card strong,
+[data-theme="dark"] .self-check-modal .recitation-check-head h2,
+[data-theme="dark"] .memorisation-checker-modal .recitation-result-stat strong,
+[data-theme="dark"] .memorisation-checker-modal .recitation-next-card strong {
+  color: #fff6ea !important;
 }
 
 </style>

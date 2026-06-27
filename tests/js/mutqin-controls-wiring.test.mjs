@@ -91,15 +91,8 @@ includesAll('workspace application', [
 ])
 
 includesAll('offcanvas main-card linkage', [
-  /topCardAppliedPills\(\) \{/,
-  /key: 'progress'/,
-  /key: 'percent'/,
-  /key: 'tajweed'/,
-  /key: 'translation'/,
-  /key: 'transliteration'/,
-  /key: 'wbw'/,
-  /key: 'word-audio'/,
-  /key: 'fallback'/,
+  /topCardAppliedPills\(\) \{\s*return \[\]\s*\}/s,
+  /reviewPriorityLabel\(\) \{\s*return ''\s*\}/s,
   /this\.syncSettingsDraft\(\)\s*this\.persistUiState\(\)/,
   /toggleTajweed\(\) \{\s*this\.tajweedEnabled = !this\.tajweedEnabled\s*this\.syncSettingsDraft\(\)/s,
   /selectFont\(fontValue\) \{\s*this\.quranFont = fontValue\s*this\.fontDropdownOpen = false\s*this\.syncSettingsDraft\(\)/s,
@@ -145,34 +138,59 @@ includesAll('ai memorisation mirrors recitation modal', [
   /AI Memorisation uses the same modal structure and spacing as AI Recite/
 ])
 
-includesAll('living hifz planner dashboard', [
-  /isPlannerModeActive\(\) \{/,
-  /plannerSessionState\(\) \{/,
-  /startPlannerPrimaryAction\(\)/,
-  /activatePlannerMode\(options = \{\}\)/,
-  /HIFZ_APP_STATE_STORAGE_KEY/,
-  /workspace-shell-main-title/,
-  /plannerBeginnerGuidance/,
-  /topCardSessionLabel\(\) \{/,
-  /class="sheet planner-controls-sheet"/,
-  /Session View/,
-  /Mushaf view|Stacked view/,
-  /v-if="!isSessionCompleted && hasSessionStarted" v-show="!mainCardCollapsed" class="workspace-quick-controls"/,
-  /hifzPlanHealth\(\) \{/,
-  /hifzMemorySchedule\(\) \{/,
-  /pauseHifzPlan\(\)/,
-  /startOrResumeHifzPlan\(\)/,
-  /deleteHifzPlan\(\)/,
-  /HIFZ_PLAN_ARCHIVE_STORAGE_KEY/,
-  /calculatePlanForecast\(this\.hifzPlan/,
-  /tajweedEnabled: true/,
-  /showPlannerCompletionModal: false/,
-  /showPlannerCompletionConfetti: false/,
-  /showPlannerCompletionCelebration\(snapshot = null\)/,
-  /plannerCompletionStats\(\) \{/,
-  /plannerActiveGuidance\(\) \{/,
-  /await this\.activatePlannerMode\(\{ startPlayback: true \}\)/
+includesAll('planner ui hidden', [
+  /showHifzPlannerUi\(\) \{\s*return false\s*\}/s,
+  /showAiMemorisationButton\(\) \{\s*return false\s*\}/s,
+  /v-if="showHifzPlannerUi" class="sheet planner-controls-sheet"/,
+  /v-if="showHifzPlannerUi && showPlannerCompletionConfetti"/,
+  /v-if="showHifzPlannerUi && showPlannerCompletionModal"/,
+  /:visible="showHifzPlannerUi && showHifzPlanModal"/,
+  /<span class="workspace-shell-kicker">Session Overview<\/span>/,
+  /v-if="showAiMemorisationButton" class="mushaf-pill mushaf-ai-pill mushaf-ai-memory"/,
+  /v-if="showAiMemorisationButton" class="verse-self-check-btn verse-ai-check-btn"/,
+  /<button class="action-btn primary" @click="openNewSessionSetup\(\)">/,
+  /<section v-if="!hasVerses" class="workspace-empty-state" aria-label="Session setup">/,
+  /Open session setup/,
+  /Open controls/,
+  /v-if="!isSessionCompleted && hasSessionStarted" v-show="!mainCardCollapsed" class="workspace-quick-controls"/
 ])
+
+includesAll('light theme default', [
+  /theme: 'light'/,
+  /this\.theme = document\.documentElement\.getAttribute\('data-theme'\) \|\| this\.theme \|\| 'light'/,
+  /document\.documentElement\.setAttribute\('data-theme', this\.theme\)/
+])
+
+assert.doesNotMatch(
+  source,
+  /this\.theme = 'dark'[\s\S]*setAttribute\('data-theme', 'dark'\)/,
+  'logged-out flow should not force dark mode'
+)
+
+includesAll('ai recitation live review signals', [
+  /recitationSpeedReview\(\) \{/,
+  /memorisationSpeedReview\(\) \{/,
+  /buildLiveRecitationReviewResult\(kind = 'recitation'\)/,
+  /modal-speed-badge/,
+  /:class="`speed-\$\{recitationSpeedReview\.tone\}`"/,
+  /:class="`speed-\$\{memorisationSpeedReview\.tone\}`"/,
+  /key: 'green', label: 'Green'/,
+  /key: 'amber', label: 'Amber'/,
+  /key: 'red', label: 'Red'/,
+  /key: 'grey', label: 'Grey'/
+])
+
+assert.doesNotMatch(
+  source,
+  /<span class="workspace-shell-kicker">\{\{ isPlannerModeActive \? 'Hifz Planner' : 'Casual Session' \}\}<\/span>|<p v-if="isPlannerModeActive" class="workspace-shell-helper-copy">|<template v-if="isPlannerModeActive">/,
+  'planner text should not render in the active workspace'
+)
+
+assert.doesNotMatch(
+  source,
+  /<section v-if="!hasVerses" class="home-dashboard home-dashboard-minimal">/,
+  'old home dashboard should not render'
+)
 
 for (const pattern of [
   /Your Hifz Journey Is Ready/,
@@ -196,12 +214,6 @@ assert.doesNotMatch(
 
 assert.doesNotMatch(
   source,
-  /class="session-complete-empty"|>\s*Review insights\s*<|>\s*Save session\s*<|>\s*Create new session\s*</,
-  'session complete view should not render the old completion action grid'
-)
-
-assert.doesNotMatch(
-  source,
   /<span class="recitation-check-section-label">AI memorisation check<\/span>/,
   'AI memorisation idle check container should not render'
 )
@@ -209,14 +221,27 @@ assert.doesNotMatch(
 includesAll('ai recitation simplified workspace', [
   /class="self-check-header-tools"/,
   /aria-label="Play ayah once"/,
-  /key: 'word-skips', label: 'Word skips'/,
-  /key: 'verse-jumps', label: 'Verse jumps'/,
+  /v-if="!isPlannerModeActive && hasSessionStarted"/,
+  /class="recitation-word-stream recitation-live-word-stream" dir="rtl"/,
+  /key: 'green', label: 'Green'/,
+  /key: 'amber', label: 'Amber'/,
+  /key: 'red', label: 'Red'/,
+  /key: 'grey', label: 'Grey'/,
+  /<span>What to do next\?<\/span>/,
+  /<span>AI review check<\/span>/,
   /const status = word\.status === 'pending' \? 'pending' : word\.status/,
   /recitation-review-ayah \.wbw-word/,
   /recitation-result-stats,[\s\S]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/
 ])
 
 assert.doesNotMatch(source, /Grey means the word was not heard yet/, 'obsolete grey description card should be removed')
+assert.doesNotMatch(source, /key: 'accuracy', label: 'Accuracy'/, 'accuracy card should be removed')
+assert.doesNotMatch(source, /key: 'pace', label: 'Pace'/, 'pace card should be removed')
+assert.doesNotMatch(source, /key: 'fixes', label: 'Words to fix'/, 'fixes card should be removed')
+assert.doesNotMatch(source, /key: 'jumps', label: 'Big jumps'/, 'jumps card should be removed')
+assert.doesNotMatch(source, /getRecitationResultStats\(buildLiveRecitationReviewResult\('recitation'\)\)/, 'live review stats should not render while recording')
+assert.doesNotMatch(source, /class="verse-status-badge verse-status-badge-review">Review Due<\/span>/, 'per-ayah review due badge should be removed')
+assert.doesNotMatch(source, /<div v-if="showSessionEndedModal" class="modal-overlay planner-completion-overlay"/, 'session ended modal should not render')
 
 includesAll('offcanvas workspace sync', [
   /syncWorkspaceFromControls\(options = \{\}\)/,
