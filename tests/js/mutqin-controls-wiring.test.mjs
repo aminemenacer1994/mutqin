@@ -97,11 +97,23 @@ assert.doesNotMatch(
 )
 
 includesAll('tajweed independence', [
-  /title="Show tajweed colouring from the Quran API" @click="toggleTajweed"/,
+  /title="Use connected Tajweed text from the Quran API" @click="toggleTajweed"/,
+  /if \(this\.tajweedEnabled && verse\.arabic_tajweed\) return this\.renderWordLevelTajweedMarkup\(verse\)/,
+  /if \(this\.selfCheckTajweedEnabled && verse\.arabic_tajweed\) \{\s*return this\.renderWordLevelTajweedMarkup\(verse\)\s*\}/s,
+  /else if \(this\.aiMemorisationCheckerTajweedEnabled && liveVerse\.arabic_tajweed\) \{\s*html = this\.renderWordLevelTajweedMarkup\(liveVerse\)\s*\}/s,
   /if \(this\.showWordByWord \|\| this\.anchorModeEnabled\) \{\s*return this\.splitArabicIntoWords\(verse\)\s*\}/s,
+  /renderWordLevelTajweedMarkup\(verse = \{\}, options = \{\}\) \{/,
+  /const className = \['tajweed-word', tajweedClass\]\.filter\(Boolean\)\.join\(' '\)/,
+  /\.session-evaluation-ayah \.tajweed-mark,[\s\S]*display: contents !important;/,
   /toggleTajweed\(\) \{/,
   /this\.tajweedEnabled = !this\.tajweedEnabled/,
-  /this\.showBanner\(\s*this\.tajweedEnabled \? 'Tajweed colors enabled' : 'Tajweed colors disabled'/s
+  /this\.showBanner\(\s*this\.tajweedEnabled \? 'Tajweed text enabled' : 'Tajweed text disabled'/s
+])
+
+includesAll('arabic grapheme safety', [
+  /function splitArabicGraphemes\(text\) \{/,
+  /splitArabicGraphemes\(node\.textContent \|\| ''\)\.map\(char => \(\{/,
+  /splitArabicGraphemes\(this\.normalizeArabicForRecitation\(word\)\)\.filter\(char => this\.isArabicBaseLetterForTajweed\(char\)\)/
 ])
 
 includesAll('workspace application', [
@@ -122,7 +134,7 @@ includesAll('offcanvas main-card linkage', [
   /toggleTajweed\(\) \{\s*this\.tajweedEnabled = !this\.tajweedEnabled\s*this\.syncSettingsDraft\(\)/s,
   /selectFont\(fontValue\) \{\s*this\.quranFont = fontValue\s*this\.fontDropdownOpen = false\s*this\.syncSettingsDraft\(\)/s,
   /updateDefaultFontSize\(\) \{[\s\S]*this\.syncSettingsDraft\(\)/,
-  /class="quick-right-controls"/
+  /class="workspace-header-view-controls quick-right-controls"/
 ])
 
 includesAll('ai recitation speechmatics stability', [
@@ -130,8 +142,10 @@ includesAll('ai recitation speechmatics stability', [
   /confidence: Number\.isFinite\(confidence\) \? confidence : \(isPartial \? SPEECHMATICS_PARTIAL_CONFIDENCE : 1\)/,
   /const words = extractSpeechmaticsTranscriptWords\(message, \{ isPartial: !isFinal \}\)/,
   /const transcript = String\(message\?\.metadata\?\.transcript \|\| ''\)\.trim\(\) \|\| words\.map\(item => item\.word\)\.join\(' '\)/,
-  /displayWords: Array\.isArray\(state\?\.interimWords\) && state\.interimWords\.length \? state\.interimWords : committedWords/,
+  /const displayWords = getRecognitionDisplayWords\(state\)/,
+  /displayWords: Array\.isArray\(displayWords\) && displayWords\.length \? displayWords : committedWords/,
   /const liveAlignmentOptions = \{\s*strictProgression: true,/,
+  /const verseSelector = `\[data-verse-key="\$\{this\.escapeCssAttributeValue\(patch\.verseKey\)\}"\]\[data-word-index="\$\{Number\(patch\.localIndex\)\}"\]`/,
   /@click\.stop="toggleVerseActionMenu\(verse\.key\)"/
 ])
 
@@ -193,16 +207,56 @@ assert.doesNotMatch(
 )
 
 includesAll('ai recitation live review signals', [
-  /recitationSpeedReview\(\) \{/,
-  /memorisationSpeedReview\(\) \{/,
   /buildLiveRecitationReviewResult\(kind = 'recitation'\)/,
-  /modal-speed-badge/,
-  /:class="`speed-\$\{recitationSpeedReview\.tone\}`"/,
-  /:class="`speed-\$\{memorisationSpeedReview\.tone\}`"/,
   /key: 'green', label: 'Green'/,
   /key: 'amber', label: 'Amber'/,
   /key: 'red', label: 'Red'/,
   /key: 'grey', label: 'Grey'/
+])
+
+assert.doesNotMatch(source, /modal-speed-badge|recitationSpeedReview\(\) \{|memorisationSpeedReview\(\) \{|STEADY PACE|PACE NOT MEASURED|WPM/, 'pace badges should not render in AI review modals')
+
+assert.doesNotMatch(
+  source,
+  /Progress Chart|<h3>Progress<\/h3>|analytics-progress-bar|analytics-progress-bar-fill/,
+  'progress chart markup and CSS should be removed'
+)
+
+assert.doesNotMatch(
+  source,
+  /\$forceUpdate|wrapTajweedWithWordHighlighting|buildTajweedWordTokens|extractTajweedCharUnits|memorisation-checker-modal-blank/,
+  'forced refreshes, dead tajweed wrappers, and blank AI fallback shells should stay removed'
+)
+
+assert.doesNotMatch(
+  source,
+  /<button[^>]*active-recall-toggle|Active Recall|active-recall|toggleActiveRecallMode|getActiveRecall|handleActiveRecallStatusFeedback|resetActiveRecallFeedback|return this\.getActiveRecallArabic/,
+  'active recall tool should not render or control the ayah display'
+)
+
+includesAll('header controls compact ordering', [
+  /class="workspace-header-view-controls quick-right-controls"/,
+  /\.workspace-shell-actions \{[\s\S]*direction: ltr !important;[\s\S]*gap: 0\.55rem !important;/,
+  /\.workspace-header-view-controls \{[\s\S]*order: -1 !important;/,
+  /\.workspace-header-view-controls \.view-mode-switch \{[\s\S]*min-height: 40px !important;/,
+  /\.workspace-shell-actions \.action-btn\[aria-label="Open session controls"\] \{[\s\S]*width: 42px !important;/
+])
+
+includesAll('urgent ayah layout fixes', [
+  /\.tools-tabs \{[\s\S]*display: flex !important;[\s\S]*width: 100% !important;/,
+  /\.tools-tabs > button \{[\s\S]*flex: 1 1 0 !important;[\s\S]*justify-content: center !important;/,
+  /\.verse-menu-font-row button i \{[\s\S]*place-items: center !important;[\s\S]*width: 100% !important;[\s\S]*height: 100% !important;/,
+  /\.verse-card \.verse-arabic-wrap,[\s\S]*overflow-x: visible !important;/,
+  /unicode-bidi: plaintext !important;/,
+  /\.self-check-recorder-card\.recording,[\s\S]*border: 0 !important;/
+])
+
+includesAll('anchor visual updates are scheduled', [
+  /anchorHighlightFrame: null/,
+  /scheduleAnchorHighlights\(\) \{/,
+  /requestAnimationFrame/,
+  /cancelAnchorHighlightFrame\(\) \{/,
+  /activeTargets = document\.querySelectorAll\('\.verse-card\.active, \.mushaf-ayah\.active'\)/
 ])
 
 assert.doesNotMatch(
@@ -291,9 +345,14 @@ includesAll('offcanvas stability hooks', [
 
 includesAll('word audio sync stability', [
   /wordHighlightRequestId:\s*0/,
+  /lastHighlightedWordNodes:\s*\[\]/,
+  /queueStatsVisualTick\(\)/,
+  /cancelStatsVisualTick\(\)/,
   /findWordTimingIndex\(currentTime, timestamps = this\.wordHighlightTimestamps\)/,
   /queueWordHighlightFrame\(verse = this\.activeVerseRef\)/,
   /ensureWordHighlightTrack\(verse, options = \{\}\)/,
+  /const previousNodes = Array\.isArray\(this\.lastHighlightedWordNodes\) \? this\.lastHighlightedWordNodes : \[\]/,
+  /this\.lastHighlightedWordNodes = Array\.from\(nextNodes\)/,
   /this\.audioElement\.removeEventListener\('playing', this\.audioPlaying\)/,
   /this\.audioElement\.removeEventListener\('ratechange', this\.audioRateChange\)/,
   /this\.audioElement\.addEventListener\('playing', this\.audioPlaying\)/,
@@ -301,6 +360,37 @@ includesAll('word audio sync stability', [
   /this\.ensureWordHighlightTrack\(verse\)\.then\(\(\) => \{/,
   /this\.syncWordHighlightFromAudio\(this\.activeVerseRef\)/,
   /if \(this\.isPlaying\) this\.queueWordHighlightFrame\(this\.activeVerseRef\)/
+])
+
+assert.doesNotMatch(source, /statsInterval|querySelectorAll\('\\.verse-arabic \\.wbw-word\\.highlighted|this\.showSelfCheckModal \|\|\s*this\.showRecordingsLibrary/, 'idle stats intervals and global highlight sweeps should not return')
+
+assert.doesNotMatch(
+  source,
+  /liveRecitationRenderTick|getLiveStatusSignature|recitation-live-\$\{index\}-|memory-live-\$\{index\}-/,
+  'live recitation colouring should not force full ayah renders or recreate live word nodes'
+)
+
+includesAll('live word colouring patch queue', [
+  /liveWordDomPatchFrame: null/,
+  /pendingLiveWordDomPatches: \{\}/,
+  /recitationDisplayHtmlCache: markRaw\(new Map\(\)\)/,
+  /liveWordVerseNodeRegistry: markRaw\(new Map\(\)\)/,
+  /liveWordChipNodeRegistry: markRaw\(new Map\(\)\)/,
+  /queueLiveWordDomPatches\(targetKey = '', changedWords = \[\]\) \{/,
+  /scheduleLiveWordDomPatchFlush\(\) \{/,
+  /requestAnimationFrame/,
+  /flushLiveWordDomPatches\(\) \{/,
+  /buildVisibleLiveWordWindow\(sourceWords = \[\], limit = 36, keyPrefix = 'live'\) \{/,
+  /setLiveWordNodeStatus\(node, status = 'notAttempted', title = ''\)/,
+  /getRenderedRecitationWordStatusForVerse\(ayahKey, index, sessionTargetKey = ''\)/,
+  /if \(this\.isLiveRecitationDomPatchModeForVerse\(ayahKey\)\) return 'notAttempted'/,
+  /this\.queueLiveWordDomPatches\(targetKey, changedWords\)/,
+  /return this\.buildVisibleLiveWordWindow\(this\.recitationLiveWords, limit, 'recitation-live'\)/,
+  /return this\.buildVisibleLiveWordWindow\(this\.aiMemorisationCheckerLiveWords, 42, 'memory-live'\)/,
+  /key: `\$\{keyPrefix\}-\$\{index\}`/,
+  /data-live-kind="recitation" :data-live-word-index="word\.index"/,
+  /data-live-kind="memorisation" :data-live-word-index="word\.index"/,
+  /this\.recitationDisplayHtmlCache\.set\(cacheKey, html\)/
 ])
 
 includesAll('chaining runtime application', [

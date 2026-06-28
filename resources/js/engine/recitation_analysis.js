@@ -7,6 +7,7 @@ export function createRecognitionState() {
     bufferedSegments: {},
     committedWords: [],
     interimWords: [],
+    interimSegment: null,
     rejectedWords: [],
     sequence: 0
   }
@@ -103,6 +104,17 @@ export function stabilizeRecognitionEvent(state = createRecognitionState(), even
   next.rejectedWords.push(...collectRejectedRecognitionWords(event.words || [], threshold, event.provider || 'unknown', rawEvent.segmentId))
 
   if (!rawEvent.isFinal) {
+    next.interimSegment = normalizedWords.length
+      ? {
+          segmentId: rawEvent.segmentId,
+          provider: rawEvent.provider,
+          sequence,
+          start: rawEvent.start,
+          duration: rawEvent.duration,
+          speechFinal: false,
+          words: normalizedWords.map(word => ({ ...word, segmentId: rawEvent.segmentId }))
+        }
+      : null
     next.interimWords = suppressDuplicateRecognitionWords(normalizedWords)
     return next
   }
@@ -121,8 +133,18 @@ export function stabilizeRecognitionEvent(state = createRecognitionState(), even
   const currentSegment = next.bufferedSegments[segmentKey]
   next.bufferedSegments[segmentKey] = selectPreferredRecognitionSegment(currentSegment, incomingSegment)
   next.interimWords = []
+  next.interimSegment = null
   next.committedWords = reconcileBufferedSegments(next.bufferedSegments)
   return next
+}
+
+export function getRecognitionDisplayWords(state = createRecognitionState()) {
+  const projectedSegments = projectRecognitionSegments(state?.bufferedSegments || {}, state?.interimSegment || null)
+  if (!projectedSegments.length) {
+    return Array.isArray(state?.committedWords) ? state.committedWords : []
+  }
+  return suppressDuplicateRecognitionWords(projectedSegments.flatMap(segment => segment.words || []))
+    .map((word, index) => ({ ...word, displayIndex: index }))
 }
 
 export function buildQuranAlignment(targetText = '', recognitionWords = [], options = {}) {
@@ -394,9 +416,47 @@ function cloneRecognitionState(state) {
     }, {}),
     committedWords: Array.isArray(state?.committedWords) ? state.committedWords.map(word => ({ ...word })) : [],
     interimWords: Array.isArray(state?.interimWords) ? state.interimWords.map(word => ({ ...word })) : [],
+    interimSegment: state?.interimSegment
+      ? {
+          ...state.interimSegment,
+          words: (state.interimSegment.words || []).map(word => ({ ...word }))
+        }
+      : null,
     rejectedWords: Array.isArray(state?.rejectedWords) ? state.rejectedWords.map(word => ({ ...word })) : [],
     sequence: Number(state?.sequence || 0)
   }
+}
+
+function projectRecognitionSegments(segments = {}, interimSegment = null) {
+  const projected = Object.entries(segments || {}).reduce((carry, [key, segment]) => {
+    carry[key] = {
+      ...segment,
+      words: (segment?.words || []).map(word => ({ ...word }))
+    }
+    return carry
+  }, {})
+
+  if (interimSegment?.words?.length) {
+    const existingKey = findSupersededSegmentKey(projected, interimSegment)
+    const segmentKey = existingKey || interimSegment.segmentId || `interim:${interimSegment.provider || 'unknown'}:${interimSegment.sequence || 0}`
+    const candidate = {
+      ...interimSegment,
+      segmentId: segmentKey,
+      words: (interimSegment.words || []).map(word => ({ ...word, segmentId: segmentKey }))
+    }
+    projected[segmentKey] = selectPreferredRecognitionSegment(projected[segmentKey], candidate)
+  }
+
+  return Object.values(projected)
+    .filter(segment => Array.isArray(segment.words) && segment.words.length)
+    .sort((left, right) => {
+      const leftStart = finiteOrNull(left.start)
+      const rightStart = finiteOrNull(right.start)
+      if (leftStart !== null && rightStart !== null && leftStart !== rightStart) return leftStart - rightStart
+      if (leftStart !== null && rightStart === null) return -1
+      if (leftStart === null && rightStart !== null) return 1
+      return Number(left.sequence || 0) - Number(right.sequence || 0)
+    })
 }
 
 function normalizeRecognitionWords(words = [], options = {}) {

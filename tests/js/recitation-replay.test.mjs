@@ -22,7 +22,14 @@ async function loadModule(specifier, referrer = path.join(root, 'tests/js/recita
 }
 
 const recitation = await loadModule('resources/js/engine/recitation_analysis.js')
-const { buildDeterministicRecitationResult, createWordsFromTranscript, replayRecognitionSession } = recitation.namespace
+const {
+  buildDeterministicRecitationResult,
+  createRecognitionState,
+  createWordsFromTranscript,
+  getRecognitionDisplayWords,
+  replayRecognitionSession,
+  stabilizeRecognitionEvent
+} = recitation.namespace
 
 const targetText = 'قل هو الله أحد'
 const finalEvents = [
@@ -136,6 +143,46 @@ assert.equal(reviewProgression.accuracyScore, tutorProgression.accuracyScore)
 assert.equal(tutorProgression.alignmentState.visibleStatuses[1].status, 'incorrect')
 assert.equal(tutorProgression.alignmentState.visibleStatuses[2].status, 'pending')
 assert.notEqual(reviewProgression.alignmentState.visibleStatuses[2].status, 'pending')
+
+let liveDisplayState = createRecognitionState()
+liveDisplayState = stabilizeRecognitionEvent(liveDisplayState, {
+  provider: 'speechmatics',
+  isFinal: true,
+  start: 0,
+  duration: 0.42,
+  words: [
+    { word: 'قل', confidence: 0.96, start: 0.02, end: 0.14 },
+    { word: 'هو', confidence: 0.95, start: 0.16, end: 0.28 }
+  ]
+})
+liveDisplayState = stabilizeRecognitionEvent(liveDisplayState, {
+  provider: 'speechmatics',
+  isFinal: false,
+  start: 0.43,
+  duration: 0.46,
+  words: [
+    { word: 'الله', confidence: 0.88, start: 0.46, end: 0.62 },
+    { word: 'غلط', confidence: 0.87, start: 0.64, end: 0.79 }
+  ]
+})
+assert.equal(
+  Array.from(getRecognitionDisplayWords(liveDisplayState), word => word.word).join('|'),
+  'قل|هو|الله|غلط'
+)
+liveDisplayState = stabilizeRecognitionEvent(liveDisplayState, {
+  provider: 'speechmatics',
+  isFinal: false,
+  start: 0.43,
+  duration: 0.46,
+  words: [
+    { word: 'الله', confidence: 0.92, start: 0.46, end: 0.62 },
+    { word: 'أحد', confidence: 0.91, start: 0.64, end: 0.79 }
+  ]
+})
+assert.equal(
+  Array.from(getRecognitionDisplayWords(liveDisplayState), word => word.word).join('|'),
+  'قل|هو|الله|احد'
+)
 
 const rangeAyahs = [
   { key: '112:1', number: 1, text: 'قل هو الله أحد' },
