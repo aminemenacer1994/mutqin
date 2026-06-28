@@ -11034,6 +11034,7 @@ export default {
       if (!node?.classList) return
       RECITATION_WORD_STATUS_CLASSES.forEach(className => node.classList.remove(className))
       node.classList.add(`recitation-word-${status || 'notAttempted'}`)
+      this.applyLiveWordPresentation(node, status, 'verse')
       if (title) node.setAttribute('title', title)
       else node.removeAttribute('title')
     },
@@ -11043,8 +11044,84 @@ export default {
         if (className.startsWith('word-')) node.classList.remove(className)
       })
       node.classList.add(`word-${status || 'notAttempted'}`)
+      this.applyLiveWordPresentation(node, status, 'chip')
       if (title) node.setAttribute('title', title)
       else node.removeAttribute('title')
+    },
+    getLiveWordPresentation(status = 'notAttempted', mode = 'verse') {
+      const palette = {
+        correct: {
+          color: '#0f5132',
+          background: 'rgba(34, 166, 98, 0.22)',
+          borderColor: 'rgba(26, 133, 79, 0.34)',
+          boxShadow: 'inset 0 -0.28em 0 rgba(26, 133, 79, 0.55), 0 0 0 1px rgba(26, 133, 79, 0.12)',
+          opacity: '1'
+        },
+        partial: {
+          color: '#8a5200',
+          background: 'rgba(237, 179, 71, 0.24)',
+          borderColor: 'rgba(204, 138, 11, 0.34)',
+          boxShadow: 'inset 0 -0.28em 0 rgba(204, 138, 11, 0.58), 0 0 0 1px rgba(204, 138, 11, 0.12)',
+          opacity: '1'
+        },
+        incorrect: {
+          color: '#8f2d23',
+          background: 'rgba(226, 96, 77, 0.22)',
+          borderColor: 'rgba(193, 63, 45, 0.34)',
+          boxShadow: 'inset 0 -0.28em 0 rgba(193, 63, 45, 0.58), 0 0 0 1px rgba(193, 63, 45, 0.12)',
+          opacity: '1'
+        },
+        pending: {
+          color: 'inherit',
+          background: 'rgba(116, 126, 141, 0.10)',
+          borderColor: 'rgba(116, 126, 141, 0.18)',
+          boxShadow: 'none',
+          opacity: '0.9'
+        },
+        notAttempted: {
+          color: 'inherit',
+          background: 'transparent',
+          borderColor: 'transparent',
+          boxShadow: 'none',
+          opacity: '0.76'
+        },
+        skipped: {
+          color: 'inherit',
+          background: 'rgba(116, 126, 141, 0.12)',
+          borderColor: 'rgba(116, 126, 141, 0.2)',
+          boxShadow: 'none',
+          opacity: '0.86'
+        }
+      }
+      const resolved = palette[status] || palette.notAttempted
+      if (mode === 'chip') {
+        return {
+          ...resolved,
+          borderRadius: '999px',
+          paddingInline: '0.72rem',
+          paddingBlock: '0.42rem'
+        }
+      }
+      return {
+        ...resolved,
+        borderRadius: '0.24em',
+        paddingInline: '0.08em',
+        paddingBlock: '0.02em'
+      }
+    },
+    applyLiveWordPresentation(node, status = 'notAttempted', mode = 'verse') {
+      if (!node?.style?.setProperty) return
+      const presentation = this.getLiveWordPresentation(status, mode)
+      node.dataset.liveWordStatus = status || 'notAttempted'
+      node.style.setProperty('color', presentation.color, 'important')
+      node.style.setProperty('background', presentation.background, 'important')
+      node.style.setProperty('border-color', presentation.borderColor, 'important')
+      node.style.setProperty('box-shadow', presentation.boxShadow, 'important')
+      node.style.setProperty('opacity', presentation.opacity, 'important')
+      node.style.setProperty('border-radius', presentation.borderRadius, 'important')
+      node.style.setProperty('padding-inline', presentation.paddingInline, 'important')
+      node.style.setProperty('padding-block', presentation.paddingBlock, 'important')
+      node.style.setProperty('transition', 'background-color 45ms linear, color 45ms linear, border-color 45ms linear, box-shadow 45ms linear, opacity 45ms linear', 'important')
     },
     hasLiveWordChanged(currentWord = {}, nextWord = {}) {
       return currentWord.status !== nextWord.status
@@ -11423,7 +11500,9 @@ export default {
     },
     applyRecognitionEvent(kind = 'recitation', event = {}) {
       const nextState = stabilizeRecognitionEvent(this.getRecognitionPipelineState(kind), event, {
-        confidenceThreshold: RECITATION_CONFIDENCE_THRESHOLD
+        confidenceThreshold: Number.isFinite(Number(event?.confidenceThreshold))
+          ? Number(event.confidenceThreshold)
+          : RECITATION_CONFIDENCE_THRESHOLD
       })
       this.setRecognitionPipelineState(kind, nextState)
       this.scheduleLiveWordsUpdate(kind)
@@ -11718,6 +11797,7 @@ export default {
         start: metadata.start,
         duration: metadata.duration,
         segmentId: metadata.segmentId,
+        confidenceThreshold: isFinal ? RECITATION_CONFIDENCE_THRESHOLD : RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD,
         receivedAt: metadata.receivedAt || null,
         raw: metadata.raw || null
       })
