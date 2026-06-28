@@ -23,6 +23,7 @@ async function loadModule(specifier, referrer = path.join(root, 'tests/js/recita
 
 const recitation = await loadModule('resources/js/engine/recitation_analysis.js')
 const {
+  buildRealtimePreviewAlignment,
   buildDeterministicRecitationResult,
   createRecognitionState,
   createWordsFromTranscript,
@@ -138,11 +139,19 @@ const tutorProgression = buildDeterministicRecitationResult(targetText, tutorRec
   strictProgression: true,
   timestamp: '2026-06-11T00:00:00.000Z'
 })
+const livePreview = buildRealtimePreviewAlignment(targetText, createWordsFromTranscript('قل هو الله'), {
+  strictProgression: true,
+  timestamp: '2026-06-11T00:00:00.000Z'
+})
 
 assert.equal(reviewProgression.accuracyScore, tutorProgression.accuracyScore)
 assert.equal(tutorProgression.alignmentState.visibleStatuses[1].status, 'incorrect')
 assert.equal(tutorProgression.alignmentState.visibleStatuses[2].status, 'pending')
 assert.notEqual(reviewProgression.alignmentState.visibleStatuses[2].status, 'pending')
+assert.equal(livePreview.progression.visibleStatuses[0].status, 'correct')
+assert.equal(livePreview.progression.visibleStatuses[1].status, 'correct')
+assert.equal(livePreview.progression.visibleStatuses[2].status, 'correct')
+assert.equal(livePreview.progression.visibleStatuses[3].status, 'pending')
 
 let liveDisplayState = createRecognitionState()
 liveDisplayState = stabilizeRecognitionEvent(liveDisplayState, {

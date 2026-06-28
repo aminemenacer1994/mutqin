@@ -1,16 +1,16 @@
 <template>
   <div class="app" :data-theme="theme" :dir="activeLocale === 'ar' ? 'rtl' : 'ltr'" :class="{ 'is-rtl': activeLocale === 'ar' }" :style="appStyleVars" v-cloak>
     <div v-if="appReady && banner" class="banner" :class="banner.kind" role="status" aria-live="polite">
-      <span>{{ banner.message }}</span>
+      <span class="banner-message">{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
-          }}</button>
+        }}</button>
         <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
 
     <!-- Main Content -->
-    <div v-if="appReady && isLoggedIn" class="main container-fluid" :class="{
+    <div v-if="appReady && isLoggedIn" class="main container" :class="{
       'tools-open': showTools,
       'player-visible': playerVisible,
       'mushaf-mode-active': readingViewMode === 'mushaf',
@@ -1190,7 +1190,7 @@
       </aside>
     </div>
 
-    <div v-else-if="appReady && !isLoggedIn" class="main container-fluid">
+    <div v-else-if="appReady && !isLoggedIn" class="main container">
       <div class="login-hero">
         <div class="guest-shell">
           <section class="guest-hero">
@@ -2178,9 +2178,15 @@
                     @click="handleRecitationReviewWordClick($event, recitationCheckResult)"></div>
                   <div class="recitation-check-footnotes">
                     <div v-if="selfCheckLastSavedAyahKey === selfCheckModalVerse.key"
-                      class="self-check-status self-check-status-success recitation-check-footnote">
-                      <i class="bi bi-check2-circle"></i>
-                      <span>Saved to your recordings library for this ayah.</span>
+                      class="self-check-status self-check-status-success recitation-check-footnote recitation-saved-footnote">
+                      <div class="recitation-saved-footnote-copy">
+                        <i class="bi bi-check2-circle"></i>
+                        <span>Saved to your recordings library for this ayah.</span>
+                      </div>
+                      <button class="banner-action recitation-saved-footnote-action" type="button"
+                        @click="openRecordingsLibraryFromSelfCheck">
+                        Go to recording library
+                      </button>
                     </div>
                     <div class="self-check-status self-check-status-warning ai-recitation-disclaimer recitation-check-footnote">
                       <i class="bi bi-info-circle"></i>
@@ -2761,6 +2767,7 @@ import {
 } from '../engine/hifz_session_engine'
 import { buildHifzAnalyticsSnapshot } from '../engine/hifz_analytics'
 import {
+  buildRealtimePreviewAlignment,
   DEFAULT_RECITATION_CONFIDENCE_THRESHOLD,
   buildDeterministicRecitationResult,
   buildQuranAlignment,
@@ -2809,7 +2816,7 @@ const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.82
 const SPEECHMATICS_AUDIO_BUFFER_SIZE = 2048
 const SPEECHMATICS_MAX_DELAY_SECONDS = 0.02
 const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.12
-const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0.2
+const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0
 const RECITATION_WORD_STATUS_CLASSES = [
   'recitation-word-pending',
   'recitation-word-correct',
@@ -3656,6 +3663,10 @@ export default {
       recitationDisplayHtmlCache: markRaw(new Map()),
       liveWordVerseNodeRegistry: markRaw(new Map()),
       liveWordChipNodeRegistry: markRaw(new Map()),
+      recitationCommittedAlignmentSignature: '',
+      recitationCommittedAlignmentCache: null,
+      aiMemorisationCheckerCommittedAlignmentSignature: '',
+      aiMemorisationCheckerCommittedAlignmentCache: null,
       statsTick: Date.now(),
       sessionStartedAt: 0,
       sessionErrorCount: 0,
@@ -9714,11 +9725,8 @@ export default {
       return 3.35
     },
     getSelfCheckAyahDisplayStyle() {
-      const fontSize = this.getSelfCheckDisplayFontRem()
       return {
-        'font-family': this.quranFontFamily,
-        'font-size': `${fontSize}rem`,
-        '--self-check-display-font-size': `${fontSize}rem`
+        'font-family': this.quranFontFamily
       }
     },
     async toggleSelfCheckAyahPlayback(verse) {
@@ -10205,20 +10213,8 @@ export default {
       return rendered.join(' ')
     },
     getAiMemorisationCheckerAyahStyle(verse) {
-      const targets = this.aiMemorisationCheckerTargets.length ? this.aiMemorisationCheckerTargets : (verse ? [verse] : [])
-      const text = this.getRecitationTargetText(targets)
-      const wordCount = this.tokenizeRecitationDisplayWords(text).length
-      const charCount = Array.from(this.cleanRecitationDisplayText(text)).filter(char => char.trim()).length
-      let size = 2.95
-      if (wordCount > 24 || charCount > 145) size = 1.6
-      else if (wordCount > 18 || charCount > 110) size = 1.78
-      else if (wordCount > 13 || charCount > 82) size = 2.05
-      else if (wordCount > 9 || charCount > 58) size = 2.35
-      else if (wordCount > 5 || charCount > 34) size = 2.7
       return {
         'font-family': this.quranFontFamily,
-        '--ai-ayah-font-size': `clamp(1.45rem, ${size}vw, ${size}rem)`,
-        'font-size': `clamp(1.45rem, ${size}vw, ${size}rem)`,
         'line-height': 1.9,
         'letter-spacing': 0
       }
@@ -10704,7 +10700,14 @@ export default {
       }
       this.aiMemorisationCheckerSavedNotice = true
       this.playUiTone('save')
-      this.showBanner('Memorisation assessment saved to recordings library.', 'success', 1800)
+      this.showBanner('Memorisation assessment saved to recordings library.', 'success', 2800, {
+        key: 'open-recordings-library',
+        label: 'Go to recording library',
+        payload: {
+          ayahKey: this.aiMemorisationCheckerVerseKey || this.aiMemorisationCheckerTargets?.[0]?.key || '',
+          returnToSelfCheck: false
+        }
+      })
     },
     openAiMemorisationCheckerRecordingsLibrary() {
       const ayahKey = this.aiMemorisationCheckerVerseKey || this.aiMemorisationCheckerVerse?.key || ''
@@ -10967,7 +10970,28 @@ export default {
       this.liveWordDomPatchFrame = null
       this.pendingLiveWordDomPatches = {}
     },
+    resetLiveWordPresentation(node) {
+      if (!node?.style?.removeProperty) return
+      delete node.dataset.liveWordStatus
+      node.style.removeProperty('color')
+      node.style.removeProperty('background')
+      node.style.removeProperty('border-color')
+      node.style.removeProperty('box-shadow')
+      node.style.removeProperty('opacity')
+      node.style.removeProperty('border-radius')
+      node.style.removeProperty('padding-inline')
+      node.style.removeProperty('padding-block')
+      node.style.removeProperty('transition')
+    },
     clearLiveWordDomRegistry() {
+      const resetRegistryNodes = registry => {
+        if (!registry?.values) return
+        for (const nodes of registry.values()) {
+          ;(Array.isArray(nodes) ? nodes : []).forEach(node => this.resetLiveWordPresentation(node))
+        }
+      }
+      resetRegistryNodes(this.liveWordVerseNodeRegistry)
+      resetRegistryNodes(this.liveWordChipNodeRegistry)
       if (this.liveWordVerseNodeRegistry?.clear) this.liveWordVerseNodeRegistry.clear()
       if (this.liveWordChipNodeRegistry?.clear) this.liveWordChipNodeRegistry.clear()
     },
@@ -11165,6 +11189,25 @@ export default {
         .join(' ')
       return `${kind}|${targetKeys}|${wordKey(committedWords)}|${wordKey(displayWords)}`
     },
+    getCommittedAlignmentCacheKey(kind = 'recitation') {
+      return kind === 'memorisation'
+        ? 'aiMemorisationCheckerCommittedAlignment'
+        : 'recitationCommittedAlignment'
+    },
+    getCachedCommittedAlignment(kind = 'recitation', signature = '', targetText = '', committedWords = [], targetVerses = [], options = {}) {
+      const signatureField = `${this.getCommittedAlignmentCacheKey(kind)}Signature`
+      const cacheField = `${this.getCommittedAlignmentCacheKey(kind)}Cache`
+      if (this[signatureField] === signature && this[cacheField]) {
+        return this[cacheField]
+      }
+      const alignment = buildQuranAlignment(targetText, committedWords, {
+        ...options,
+        targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses)
+      })
+      this[signatureField] = signature
+      this[cacheField] = alignment
+      return alignment
+    },
     areRecognitionWordListsEquivalent(left = [], right = []) {
       if (!Array.isArray(left) || !Array.isArray(right)) return false
       if (left.length !== right.length) return false
@@ -11197,13 +11240,18 @@ export default {
       if (this.hiddenRevealModeEnabled) {
         liveAlignmentOptions.strictProgression = true
       }
-      const committedAlignment = buildQuranAlignment(targetText, committedWords, {
-        ...liveAlignmentOptions,
-        targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses)
-      })
+      const committedSignature = this.getLiveAlignmentInputSignature(kind, targetVerses, committedWords, committedWords)
+      const committedAlignment = this.getCachedCommittedAlignment(
+        kind,
+        committedSignature,
+        targetText,
+        committedWords,
+        targetVerses,
+        liveAlignmentOptions
+      )
       const liveAlignment = this.areRecognitionWordListsEquivalent(displayWords, committedWords)
         ? committedAlignment
-        : buildQuranAlignment(targetText, displayWords, {
+        : buildRealtimePreviewAlignment(targetText, displayWords, {
           ...liveAlignmentOptions,
           targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses)
         })
@@ -11494,8 +11542,12 @@ export default {
       this.setRecognitionPipelineState(kind, createRecognitionState())
       if (kind === 'memorisation') {
         this.aiMemorisationCheckerAlignmentState = null
+        this.aiMemorisationCheckerCommittedAlignmentSignature = ''
+        this.aiMemorisationCheckerCommittedAlignmentCache = null
       } else {
         this.recitationAlignmentState = null
+        this.recitationCommittedAlignmentSignature = ''
+        this.recitationCommittedAlignmentCache = null
       }
     },
     applyRecognitionEvent(kind = 'recitation', event = {}) {
@@ -11511,9 +11563,7 @@ export default {
     scheduleLiveWordsUpdate(kind = 'recitation') {
       const timerKey = kind === 'memorisation' ? 'aiMemorisationCheckerLiveUpdateTimer' : 'recitationLiveUpdateTimer'
       if (this[timerKey]) return
-      const schedule = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
-        ? window.requestAnimationFrame.bind(window)
-        : callback => window.setTimeout(callback, 16)
+      const schedule = callback => window.setTimeout(callback, 16)
       const run = () => {
         this[timerKey] = null
         this.updateLiveWordsFromCommittedRecognition(kind)
@@ -11525,9 +11575,6 @@ export default {
       if (!this[timerKey]) {
         this[timerKey] = null
         return
-      }
-      if (typeof window !== 'undefined' && typeof window.cancelAnimationFrame === 'function') {
-        window.cancelAnimationFrame(this[timerKey])
       }
       if (typeof window !== 'undefined') window.clearTimeout(this[timerKey])
       this[timerKey] = null
@@ -11543,7 +11590,7 @@ export default {
       const entries = []
       for (let index = event.resultIndex; index < event.results.length; index += 1) {
         const result = event.results[index]
-        const alternatives = Array.from(result || []).slice(0, 3)
+        const alternatives = Array.from(result || []).slice(0, 1)
         alternatives.forEach(item => {
           const words = this.tokenizeRecitationWords(item?.transcript || '')
           words.forEach(word => entries.push({
@@ -12024,7 +12071,11 @@ export default {
       const ayahKey = this.recitationCheckTargetVerseKey || this.selfCheckVerseKey
       if (ayahKey) this.selectedRecordingsAyahKey = ayahKey
       this.playUiTone('save')
-      this.showBanner('Recite Check saved to Saved Attempts.', 'success', 1800)
+      this.showBanner('Recite Check saved to Saved Attempts.', 'success', 2800, {
+        key: 'open-recordings-library',
+        label: 'Go to recording library',
+        payload: { ayahKey, returnToSelfCheck: true }
+      })
       this.selfCheckLastSavedAyahKey = ayahKey || this.selfCheckVerseKey
       this.selfCheckSavedAttemptsVisible = false
     },
@@ -17490,7 +17541,8 @@ export default {
         kind,
         at: Date.now(),
         actionKey: action?.key || '',
-        actionLabel: action?.label || ''
+        actionLabel: action?.label || '',
+        actionPayload: action?.payload || null
       }
       this.bannerTimer = setTimeout(() => {
         if (this.banner && Date.now() - this.banner.at >= ttlMs) this.banner = null
@@ -17499,6 +17551,7 @@ export default {
 
     runBannerAction() {
       const actionKey = this.banner?.actionKey
+      const actionPayload = this.banner?.actionPayload || null
       this.banner = null
       if (actionKey === 'restart-session') {
         this.startSessionWithCountdown()
@@ -17506,6 +17559,10 @@ export default {
       }
       if (actionKey === 'open-setup') {
         this.openModeSettings()
+        return
+      }
+      if (actionKey === 'open-recordings-library') {
+        this.openRecordingsLibrary(actionPayload || {})
       }
     },
 
@@ -33048,6 +33105,12 @@ html {
   animation: riseSoft 220ms ease-out;
 }
 
+.banner-message {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-inline-end: 0.35rem;
+}
+
 .navbar {
   position: fixed;
   top: 0;
@@ -33083,7 +33146,10 @@ html {
 .banner-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
+  margin-inline-start: auto;
+  flex-wrap: nowrap;
 }
 
 .banner-action {
@@ -33096,6 +33162,7 @@ html {
   font-weight: 500;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
+  white-space: nowrap;
 }
 
 .banner-x {
@@ -53078,6 +53145,334 @@ textarea {
   .self-check-result-group {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* Shared Quran text polish: subtle warmth and restrained motion across Arabic surfaces. */
+@keyframes mutqinArabicGlow {
+  0% {
+    text-shadow: 0 0 0 rgba(181, 134, 58, 0);
+    opacity: 0.99;
+  }
+
+  50% {
+    text-shadow:
+      0 0 0.22rem rgba(181, 134, 58, 0.06),
+      0 0 0.05rem rgba(34, 93, 67, 0.05);
+    opacity: 1;
+  }
+
+  100% {
+    text-shadow: 0 0 0 rgba(181, 134, 58, 0);
+    opacity: 0.99;
+  }
+}
+
+.verse-arabic:not(.tajweed-enabled) .wbw-word,
+.verse-arabic:not(.tajweed-enabled) word,
+.mushaf-ayah-text:not(.tajweed-enabled) .wbw-word,
+.mushaf-ayah-text:not(.tajweed-enabled) word,
+.self-check-modal-ayah:not(.tajweed-enabled) .wbw-word,
+.self-check-modal-ayah:not(.tajweed-enabled) word,
+.memorisation-checker-ayah:not(.tajweed-enabled) .wbw-word,
+.memorisation-checker-ayah:not(.tajweed-enabled) word,
+.session-evaluation-ayah[lang="ar"] .wbw-word,
+.session-evaluation-ayah[lang="ar"] word {
+  transition:
+    color 180ms ease,
+    text-shadow 180ms ease,
+    opacity 180ms ease !important;
+}
+
+[data-theme="dark"] .verse-arabic:not(.tajweed-enabled),
+[data-theme="dark"] .mushaf-ayah-text:not(.tajweed-enabled),
+[data-theme="dark"] .self-check-modal-ayah:not(.tajweed-enabled),
+[data-theme="dark"] .memorisation-checker-ayah:not(.tajweed-enabled),
+[data-theme="dark"] .session-evaluation-ayah[lang="ar"],
+[data-theme="dark"] .word-arabic[lang="ar"],
+[data-theme="dark"] .quran-search-arabic,
+[data-theme="dark"] .dua-onboarding-arabic {
+  color: color-mix(in srgb, currentColor 88%, #b78a43 12%) !important;
+  text-shadow: 0 0 0 rgba(181, 134, 58, 0);
+  animation: mutqinArabicGlow 10s ease-in-out infinite;
+  will-change: text-shadow, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="dark"] .verse-arabic:not(.tajweed-enabled),
+  [data-theme="dark"] .mushaf-ayah-text:not(.tajweed-enabled),
+  [data-theme="dark"] .self-check-modal-ayah:not(.tajweed-enabled),
+  [data-theme="dark"] .memorisation-checker-ayah:not(.tajweed-enabled),
+  [data-theme="dark"] .session-evaluation-ayah[lang="ar"],
+  [data-theme="dark"] .word-arabic[lang="ar"],
+  [data-theme="dark"] .quran-search-arabic,
+  [data-theme="dark"] .dua-onboarding-arabic {
+    animation: none !important;
+  }
+}
+
+/* Clean container layout and restrained workspace styling. */
+.main.container,
+.main.container .content,
+.main.container .workspace,
+.main.container .workspace-main,
+.main.container .workspace-shell,
+.main.container .workspace-shell-body {
+  width: 100% !important;
+}
+
+.main.container {
+  max-width: 1320px !important;
+  padding-inline: clamp(0.9rem, 2vw, 1.5rem) !important;
+}
+
+.main.container .content,
+.main.container .workspace,
+.main.container .workspace-main {
+  margin: 0 !important;
+}
+
+.main.container .workspace-shell,
+.main.container .workspace-shell-body {
+  margin-inline: auto !important;
+}
+
+.workspace-shell-main-title {
+  cursor: pointer !important;
+  transition:
+    color 120ms ease,
+    opacity 120ms ease,
+    text-decoration-color 120ms ease !important;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.14em;
+}
+
+.workspace-shell-main-title:hover,
+.workspace-shell-main-title:focus-visible {
+  color: var(--accent-strong) !important;
+  text-decoration-color: currentColor !important;
+}
+
+.workspace-shell-main-title:active {
+  opacity: 0.82 !important;
+}
+
+.workspace-header-view-controls {
+  border-inline-end: 0 !important;
+  padding-inline-end: 0 !important;
+  margin-inline-end: 0 !important;
+}
+
+.workspace-shell {
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+  border-radius: 24px !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 95%, white 5%), color-mix(in srgb, var(--surface) 98%, transparent)) !important;
+  box-shadow: 0 16px 40px rgba(22, 25, 24, 0.06) !important;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease !important;
+}
+
+.workspace-shell:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 20px 44px rgba(22, 25, 24, 0.08) !important;
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border)) !important;
+}
+
+[data-theme="dark"] .workspace-shell {
+  background:
+    linear-gradient(180deg, rgba(19, 23, 22, 0.92), rgba(16, 20, 19, 0.88)) !important;
+  border-color: rgba(201, 167, 112, 0.16) !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34) !important;
+}
+
+.self-check-modal .self-check-modal-ayah-shell,
+.memorisation-checker-modal .self-check-modal-ayah-shell,
+.self-check-modal .self-check-modal-stage,
+.memorisation-checker-modal .memorisation-checker-stage,
+.self-check-modal .self-check-recorder-card,
+.memorisation-checker-modal .self-check-recorder-card,
+.self-check-modal .recitation-check-panel,
+.memorisation-checker-modal .recitation-check-panel,
+.memorisation-checker-modal .memorisation-checker-target-panel,
+.memorisation-checker-modal .memorisation-checker-body,
+.memorisation-checker-modal .memorisation-checker-live,
+.memorisation-checker-modal .memorisation-checker-results,
+.recitation-live-review {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.self-check-modal .recitation-check-panel-inline,
+.memorisation-checker-modal .recitation-check-panel-inline,
+.self-check-modal .recitation-live-review,
+.memorisation-checker-modal .recitation-live-review,
+.self-check-modal .recitation-check-body,
+.memorisation-checker-modal .recitation-check-body {
+  padding: 1rem !important;
+}
+
+.self-check-modal .self-check-modal-ayah-shell,
+.memorisation-checker-modal .self-check-modal-ayah-shell,
+.self-check-modal .self-check-modal-stage,
+.memorisation-checker-modal .memorisation-checker-stage,
+.self-check-modal .self-check-recorder-card,
+.memorisation-checker-modal .self-check-recorder-card,
+.self-check-modal .recitation-check-panel,
+.memorisation-checker-modal .recitation-check-panel,
+.memorisation-checker-modal .memorisation-checker-body {
+  padding: 0 !important;
+}
+
+.verse-card .verse-arabic-wrap,
+.verse-arabic,
+.mushaf-ayah-text,
+.self-check-modal-ayah,
+.memorisation-checker-ayah,
+.recitation-review-ayah,
+.session-evaluation-ayah {
+  background: transparent !important;
+}
+
+.verse-arabic,
+.mushaf-ayah-text,
+.self-check-modal .self-check-modal-ayah,
+.memorisation-checker-modal .memorisation-checker-ayah,
+.recitation-review-ayah,
+.session-evaluation-ayah {
+  padding-inline: 0 !important;
+  padding-block: 0 !important;
+}
+
+.verse-arabic.recitation-word-review-active .wbw-word,
+.verse-arabic.recitation-word-review-active word,
+.self-check-modal-ayah.recitation-word-review-active .wbw-word,
+.self-check-modal-ayah.recitation-word-review-active word,
+.memorisation-checker-ayah.recitation-word-review-active .wbw-word,
+.memorisation-checker-ayah.recitation-word-review-active word {
+  border-radius: 0 !important;
+  transition:
+    background-color 36ms linear,
+    box-shadow 36ms linear,
+    color 36ms linear !important;
+}
+
+.verse-arabic.recitation-word-review-active .recitation-word-correct,
+.verse-arabic.recitation-word-review-active .wbw-word.recitation-word-correct,
+.verse-arabic.recitation-word-review-active word.recitation-word-correct,
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-correct,
+.self-check-modal-ayah.recitation-word-review-active .wbw-word.recitation-word-correct,
+.self-check-modal-ayah.recitation-word-review-active word.recitation-word-correct,
+.memorisation-checker-ayah.recitation-word-review-active .recitation-word-correct,
+.memorisation-checker-ayah.recitation-word-review-active .wbw-word.recitation-word-correct,
+.memorisation-checker-ayah.recitation-word-review-active word.recitation-word-correct {
+  color: inherit !important;
+  background: rgba(27, 152, 89, 0.08) !important;
+  box-shadow: inset 0 -0.16em 0 rgba(27, 152, 89, 0.65) !important;
+}
+
+.verse-arabic.recitation-word-review-active .recitation-word-partial,
+.verse-arabic.recitation-word-review-active .wbw-word.recitation-word-partial,
+.verse-arabic.recitation-word-review-active word.recitation-word-partial,
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-partial,
+.self-check-modal-ayah.recitation-word-review-active .wbw-word.recitation-word-partial,
+.self-check-modal-ayah.recitation-word-review-active word.recitation-word-partial,
+.memorisation-checker-ayah.recitation-word-review-active .recitation-word-partial,
+.memorisation-checker-ayah.recitation-word-review-active .wbw-word.recitation-word-partial,
+.memorisation-checker-ayah.recitation-word-review-active word.recitation-word-partial {
+  color: inherit !important;
+  background: rgba(218, 146, 23, 0.08) !important;
+  box-shadow: inset 0 -0.16em 0 rgba(218, 146, 23, 0.68) !important;
+}
+
+.verse-arabic.recitation-word-review-active .recitation-word-incorrect,
+.verse-arabic.recitation-word-review-active .wbw-word.recitation-word-incorrect,
+.verse-arabic.recitation-word-review-active word.recitation-word-incorrect,
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-incorrect,
+.self-check-modal-ayah.recitation-word-review-active .wbw-word.recitation-word-incorrect,
+.self-check-modal-ayah.recitation-word-review-active word.recitation-word-incorrect,
+.memorisation-checker-ayah.recitation-word-review-active .recitation-word-incorrect,
+.memorisation-checker-ayah.recitation-word-review-active .wbw-word.recitation-word-incorrect,
+.memorisation-checker-ayah.recitation-word-review-active word.recitation-word-incorrect {
+  color: inherit !important;
+  background: rgba(204, 68, 52, 0.08) !important;
+  box-shadow: inset 0 -0.16em 0 rgba(204, 68, 52, 0.7) !important;
+}
+
+.recitation-live-word-stream,
+.self-check-modal .recitation-live-word-stream.recitation-word-stream,
+.memorisation-checker-modal .recitation-live-word-stream.recitation-word-stream {
+  contain: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 0.22rem !important;
+  background: transparent !important;
+}
+
+.recitation-live-word-stream .recitation-word-chip,
+.recitation-live-word-stream .recitation-word-chip.word-live,
+.memorisation-checker-modal .recitation-word-chip.word-live,
+.self-check-modal .recitation-word-chip.word-live {
+  min-height: 0 !important;
+  padding: 0 0.04em !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition:
+    color 36ms linear,
+    background-color 36ms linear,
+    box-shadow 36ms linear !important;
+}
+
+.recitation-live-word-stream .recitation-word-chip.word-live.word-correct {
+  color: #176b43 !important;
+  background: rgba(27, 152, 89, 0.08) !important;
+  box-shadow: inset 0 -0.15em 0 rgba(27, 152, 89, 0.64) !important;
+}
+
+.recitation-live-word-stream .recitation-word-chip.word-live.word-partial {
+  color: #8c5903 !important;
+  background: rgba(218, 146, 23, 0.08) !important;
+  box-shadow: inset 0 -0.15em 0 rgba(218, 146, 23, 0.66) !important;
+}
+
+.recitation-live-word-stream .recitation-word-chip.word-live.word-incorrect {
+  color: #922f22 !important;
+  background: rgba(204, 68, 52, 0.08) !important;
+  box-shadow: inset 0 -0.15em 0 rgba(204, 68, 52, 0.68) !important;
+}
+
+.recitation-live-word-stream .recitation-word-chip.word-live.word-pending,
+.recitation-live-word-stream .recitation-word-chip.word-live.word-notAttempted {
+  color: var(--text-muted) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.recitation-saved-footnote {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1rem !important;
+  padding: 0.95rem 1rem !important;
+}
+
+.recitation-saved-footnote-copy {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.recitation-saved-footnote-action {
+  margin-inline-start: auto;
+  flex: 0 0 auto;
 }
 
 </style>

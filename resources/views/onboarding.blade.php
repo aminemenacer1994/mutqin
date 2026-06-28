@@ -736,6 +736,18 @@
             margin-right: 8px;
         }
 
+        .pricing-card > .btn-secondary,
+        .pricing-card > .btn-primary {
+            width: 220px;
+            min-width: 220px;
+            height: 56px;
+            min-height: 56px;
+            padding: 0 1.5rem;
+            justify-content: center;
+            margin: 0 auto;
+            border-radius: 18px;
+        }
+
         /* CTA Section */
         .cta {
             padding: 5rem 2rem;

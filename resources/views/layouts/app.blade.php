@@ -304,6 +304,8 @@
             width: auto;
             filter: none !important;
             mix-blend-mode: normal;
+            opacity: 0.98;
+            image-rendering: auto;
         }
 
         .navbar-toggler {
@@ -1641,7 +1643,7 @@
                     id="appNavbarLogo"
                     src="/images/logo.png"
                     data-logo-light="/images/logo.png"
-                    data-logo-dark="/images/logo.png"
+                    data-logo-dark="/images/dark_logo.png"
                     alt="Mutqin"
                     class="app-navbar-logo"
                 >

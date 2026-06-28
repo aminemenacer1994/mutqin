@@ -147,6 +147,109 @@ export function getRecognitionDisplayWords(state = createRecognitionState()) {
     .map((word, index) => ({ ...word, displayIndex: index }))
 }
 
+export function buildRealtimePreviewAlignment(targetText = '', recognitionWords = [], options = {}) {
+  const targetAyahs = normalizeTargetAyahs(options.targetAyahs || options.ayahs || [], targetText)
+  const targetUnits = buildTargetWordUnits(targetAyahs, targetText)
+  const displayWords = targetUnits.map(unit => unit.display)
+  const targetWords = targetUnits.map(unit => unit.word)
+  const heardWords = normaliseCommittedRecognitionWords(recognitionWords)
+  const statuses = displayWords.map((text, index) => ({
+    text,
+    targetWord: targetWords[index] || '',
+    status: 'pending',
+    note: 'Not heard yet.',
+    actual: '',
+    confidence: 0,
+    similarity: 0,
+    targetIndex: index,
+    ayahKey: targetUnits[index]?.ayahKey || '',
+    ayahNumber: targetUnits[index]?.ayahNumber ?? null,
+    ayahIndex: Number.isFinite(Number(targetUnits[index]?.ayahIndex)) ? Number(targetUnits[index].ayahIndex) : 0,
+    ayahWordIndex: Number.isFinite(Number(targetUnits[index]?.ayahWordIndex)) ? Number(targetUnits[index].ayahWordIndex) : index
+  }))
+  const strict = options.strictProgression !== false
+  const lookahead = Math.max(1, Math.min(8, Number(options.lookahead || 5)))
+  const extraWords = []
+  let cursor = 0
+  let firstBlockingIndex = -1
+
+  for (let heardIndex = 0; heardIndex < heardWords.length; heardIndex += 1) {
+    const heardWord = heardWords[heardIndex] || {}
+    if (cursor >= targetWords.length) {
+      extraWords.push({
+        word: heardWord.word || '',
+        display: heardWord.display || heardWord.word || '',
+        heardIndex,
+        confidence: Number(heardWord.confidence ?? 1),
+        type: isRepeatedHeardWord(heardWords, heardIndex) ? 'repetition' : 'extra'
+      })
+      continue
+    }
+
+    const targetWord = targetWords[cursor] || ''
+    const targetUnit = targetUnits[cursor] || null
+    const similarity = getRecitationWordSimilarity(targetWord, heardWord.word)
+    const classified = classifyWordMatch({
+      displayText: displayWords[cursor] || targetWord,
+      targetWord,
+      heardWord,
+      similarity,
+      outOfOrderIndex: -1,
+      targetIndex: cursor,
+      targetUnit
+    })
+
+    if (classified.status === 'correct' || classified.status === 'partial') {
+      statuses[cursor] = classified
+      cursor += 1
+      continue
+    }
+
+    const exactAheadIndex = findExactWordIndexWithinWindow(targetWords, heardWord.word, cursor + 1, lookahead)
+    if (exactAheadIndex >= 0) {
+      statuses[cursor] = {
+        ...classified,
+        note: `Expected ${displayWords[cursor] || targetWord} before ${heardWord.display || heardWord.word || 'this word'}.`,
+        outOfOrder: true
+      }
+      firstBlockingIndex = cursor
+      if (strict) break
+      const aheadUnit = targetUnits[exactAheadIndex] || null
+      statuses[exactAheadIndex] = classifyWordMatch({
+        displayText: displayWords[exactAheadIndex] || targetWords[exactAheadIndex] || '',
+        targetWord: targetWords[exactAheadIndex] || '',
+        heardWord,
+        similarity: 1,
+        outOfOrderIndex: exactAheadIndex,
+        targetIndex: exactAheadIndex,
+        targetUnit: aheadUnit
+      })
+      cursor = exactAheadIndex + 1
+      continue
+    }
+
+    statuses[cursor] = classified
+    firstBlockingIndex = cursor
+    if (strict) break
+    cursor += 1
+  }
+
+  const progression = buildStableProgression(statuses, extraWords, options)
+  return {
+    sourceOfTruth: 'selected-ayah-live-preview',
+    targetText,
+    displayWords,
+    targetWords,
+    committedWords: heardWords,
+    transcript: wordsToTranscript(heardWords),
+    statuses,
+    wordStatuses: statuses,
+    extraWords,
+    progression,
+    firstBlockingIndex
+  }
+}
+
 export function buildQuranAlignment(targetText = '', recognitionWords = [], options = {}) {
   const targetAyahs = normalizeTargetAyahs(options.targetAyahs || options.ayahs || [], targetText)
   const targetUnits = buildTargetWordUnits(targetAyahs, targetText)
@@ -457,6 +560,15 @@ function projectRecognitionSegments(segments = {}, interimSegment = null) {
       if (leftStart === null && rightStart !== null) return 1
       return Number(left.sequence || 0) - Number(right.sequence || 0)
     })
+}
+
+function findExactWordIndexWithinWindow(words = [], word = '', fromIndex = 0, lookahead = 5) {
+  if (!word) return -1
+  const end = Math.min(words.length, Math.max(fromIndex, 0) + Math.max(1, lookahead))
+  for (let index = Math.max(0, fromIndex); index < end; index += 1) {
+    if (words[index] === word) return index
+  }
+  return -1
 }
 
 function normalizeRecognitionWords(words = [], options = {}) {
