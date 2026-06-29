@@ -405,34 +405,6 @@
                     </article>
                   </div>
                 </div>
-                <nav v-if="mushafPages.length" class="mushaf-pagination" aria-label="Quran pages">
-                  <button class="mushaf-nav-arrow" type="button" :disabled="!canGoPreviousMushafPage"
-                    @click="goToPreviousMushafPage" aria-label="Previous page">
-                    <i class="bi bi-chevron-left"></i>
-                  </button>
-                  <div class="mushaf-pagination-center">
-                    <div class="mushaf-pagination-meta">
-                      <span class="mushaf-pagination-page">Page {{ safeMushafPageIndex + 1 }} <span class="mushaf-pagination-page-total">/ {{ mushafPages.length }}</span></span>
-                      <span v-if="mushafPages[safeMushafPageIndex]" class="mushaf-pagination-ayahs">
-                        Ayahs {{ mushafPages[safeMushafPageIndex].startNumber }}–{{ mushafPages[safeMushafPageIndex].endNumber }}
-                      </span>
-                    </div>
-                    <div class="mushaf-progress-track" role="progressbar" :aria-valuenow="safeMushafPageIndex + 1"
-                      aria-valuemin="1" :aria-valuemax="mushafPages.length">
-                      <span class="mushaf-progress-fill" :style="{ width: mushafProgressPercent + '%' }"></span>
-                    </div>
-                    <div v-if="mushafPages.length > 1 && mushafPages.length <= 12" class="mushaf-page-dots">
-                      <button v-for="(page, pageIndex) in mushafPages" :key="`mushaf-dot-${page.id}`" type="button"
-                        class="mushaf-page-dot" :class="{ active: pageIndex === safeMushafPageIndex }"
-                        @click="goToMushafPage(pageIndex)" :aria-label="`Go to page ${pageIndex + 1}`"
-                        :aria-current="pageIndex === safeMushafPageIndex ? 'true' : 'false'"></button>
-                    </div>
-                  </div>
-                  <button class="mushaf-nav-arrow" type="button" :disabled="!canGoNextMushafPage"
-                    @click="goToNextMushafPage" aria-label="Next page">
-                    <i class="bi bi-chevron-right"></i>
-                  </button>
-                </nav>
               </div>
             </div>
             <div v-else-if="!isSessionCompleted" class="verses-grid">
@@ -3570,10 +3542,17 @@ export default {
     dbg.keys[key] = (dbg.keys[key] || 0) + 1
     dbg.last = `${event && event.type} ${key}`
     if (dbg.count === 60) {
-      console.error('[RENDER LOOP] suspected. Trigger keys (key -> count):',
-        Object.entries(dbg.keys).sort((a, b) => b[1] - a[1]).slice(0, 10))
+      const ranked = Object.entries(dbg.keys).sort((a, b) => b[1] - a[1]).slice(0, 10)
+      console.error('[RENDER LOOP] suspected. Trigger keys (key -> count):', ranked)
       console.error('[RENDER LOOP] last trigger:', dbg.last, event && event.target)
       console.trace('[RENDER LOOP] stack')
+      if (typeof window !== 'undefined' && typeof window.__showLoopBanner === 'function') {
+        window.__showLoopBanner(
+          'RENDER LOOP suspected.\nTop trigger keys (key -> count):\n'
+          + ranked.map(([k, c]) => `   ${k}  ->  ${c}`).join('\n')
+          + '\nLast trigger: ' + dbg.last
+        )
+      }
     }
   },
   data() {
@@ -6304,12 +6283,6 @@ export default {
 
     canGoNextMushafPage() {
       return this.safeMushafPageIndex < this.mushafPages.length - 1
-    },
-
-    mushafProgressPercent() {
-      const total = this.mushafPages.length
-      if (!total) return 0
-      return Math.round(((this.safeMushafPageIndex + 1) / total) * 100)
     },
 
     quizAccuracy() {
@@ -54547,140 +54520,10 @@ textarea {
   background: color-mix(in srgb, var(--mushaf-border, #8b5a2c) 55%, transparent) !important;
 }
 
-/* Bottom pagination: arrows + page meta + progress + dots. */
-.mushaf-pagination {
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.85rem !important;
-  width: min(100%, 540px) !important;
-  margin: 1.1rem auto 0 !important;
-}
-
-.mushaf-nav-arrow {
-  flex: 0 0 auto !important;
-  display: inline-grid !important;
-  place-items: center !important;
-  width: 2.6rem !important;
-  height: 2.6rem !important;
-  border: 0 !important;
-  border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.86) !important;
-  color: #241c16 !important;
-  box-shadow: 0 10px 24px rgba(74, 53, 31, 0.14) !important;
-  font-size: 1.05rem !important;
-  cursor: pointer !important;
-  transition: transform 160ms ease, background 160ms ease, opacity 160ms ease !important;
-}
-
-.mushaf-nav-arrow:hover:not(:disabled) {
-  transform: translateY(-1px) !important;
-  background: #fff !important;
-}
-
-.mushaf-nav-arrow:active:not(:disabled) {
-  transform: scale(0.94) !important;
-}
-
-.mushaf-nav-arrow:disabled {
-  opacity: 0.34 !important;
-  cursor: not-allowed !important;
-}
-
-.mushaf-pagination-center {
-  flex: 1 1 auto !important;
-  display: grid !important;
-  gap: 0.45rem !important;
-  justify-items: center !important;
-  min-width: 0 !important;
-}
-
-.mushaf-pagination-meta {
-  display: flex !important;
-  align-items: baseline !important;
-  gap: 0.6rem !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-}
-
-.mushaf-pagination-page {
-  color: var(--text, #241c16) !important;
-  font-weight: 800 !important;
-  font-size: 0.92rem !important;
-}
-
-.mushaf-pagination-page-total {
-  color: var(--muted, #8a7d6e) !important;
-  font-weight: 700 !important;
-}
-
-.mushaf-pagination-ayahs {
-  color: var(--muted, #8a7d6e) !important;
-  font-weight: 700 !important;
-  font-size: 0.8rem !important;
-}
-
-.mushaf-progress-track {
-  width: 100% !important;
-  height: 5px !important;
-  border-radius: 999px !important;
-  background: color-mix(in srgb, var(--text, #241c16) 12%, transparent) !important;
-  overflow: hidden !important;
-}
-
-.mushaf-progress-fill {
-  display: block !important;
-  height: 100% !important;
-  border-radius: 999px !important;
-  background: linear-gradient(90deg, #2f8f6b, #c79a4b) !important;
-  transition: width 320ms cubic-bezier(0.22, 1, 0.36, 1) !important;
-}
-
-.mushaf-page-dots {
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.4rem !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-}
-
-.mushaf-page-dot {
-  width: 8px !important;
-  height: 8px !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 999px !important;
-  background: color-mix(in srgb, var(--text, #241c16) 24%, transparent) !important;
-  cursor: pointer !important;
-  transition: transform 160ms ease, background 160ms ease, width 160ms ease !important;
-}
-
-.mushaf-page-dot:hover {
-  background: color-mix(in srgb, var(--text, #241c16) 45%, transparent) !important;
-}
-
-.mushaf-page-dot.active {
-  width: 22px !important;
-  background: linear-gradient(90deg, #2f8f6b, #c79a4b) !important;
-}
-
 /* Active ayah affordance: a soft underline accent that reads in every theme. */
 .mushaf-ayah.active .mushaf-ayah-text {
   box-shadow: 0 0.12em 0 -0.02em color-mix(in srgb, var(--accent, #2f8f6b) 60%, transparent) !important;
   border-radius: 0.16em !important;
-}
-
-[data-theme="dark"] .mushaf-nav-arrow {
-  background: rgba(34, 27, 20, 0.92) !important;
-  color: #f3e7d2 !important;
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.34) !important;
-}
-
-[data-theme="dark"] .mushaf-progress-track {
-  background: rgba(248, 250, 252, 0.14) !important;
-}
-
-[data-theme="dark"] .mushaf-page-dot {
-  background: rgba(248, 250, 252, 0.26) !important;
 }
 
 [data-theme="dark"] .mushaf-ai-pill:disabled {
@@ -54709,10 +54552,6 @@ textarea {
 
   .mushaf-toolbar-trigger-label {
     display: none !important;
-  }
-
-  .mushaf-pagination {
-    gap: 0.55rem !important;
   }
 }
 

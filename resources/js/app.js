@@ -18,16 +18,36 @@ async function bootstrapApp() {
 
     // [TEMP DIAGNOSTIC] Surface the exact reactive property behind a
     // "Maximum recursive updates exceeded" loop. Remove once the bug is fixed.
+    window.__showLoopBanner = (lines) => {
+        try {
+            let el = document.getElementById('__loop_banner');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = '__loop_banner';
+                el.style.cssText = [
+                    'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:2147483647',
+                    'background:#b00020', 'color:#fff', 'font:13px/1.4 monospace',
+                    'padding:10px 14px', 'white-space:pre-wrap', 'word-break:break-word',
+                    'box-shadow:0 2px 8px rgba(0,0,0,.4)'
+                ].join(';');
+                document.body.appendChild(el);
+            }
+            el.textContent = '[RENDER/RECURSION DIAGNOSTIC]\n' + lines;
+        } catch (e) { /* noop */ }
+    };
+
     app.config.warnHandler = (msg, instance, trace) => {
         if (typeof msg === 'string' && msg.includes('recursive')) {
             const dbg = window.__renderDbg || {};
-            // Show which reactive keys fired most in the last render burst.
             const ranked = Object.entries(dbg.keys || {})
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 10);
-            console.error('[RECURSION] ' + msg);
-            console.error('[RECURSION] top trigger keys (key -> count):', ranked);
-            console.error('[RECURSION] last trigger:', dbg.last || '(none captured)');
+            const text = 'Maximum recursive updates exceeded.\n'
+                + 'Top trigger keys (key -> count):\n'
+                + (ranked.length ? ranked.map(([k, c]) => `   ${k}  ->  ${c}`).join('\n') : '   (none captured -> likely a WATCHER loop, not render)')
+                + '\nLast trigger: ' + (dbg.last || '(none)');
+            console.error('[RECURSION] ' + text);
+            window.__showLoopBanner(text);
         }
         console.warn('[Vue warn]', msg, trace);
     };
