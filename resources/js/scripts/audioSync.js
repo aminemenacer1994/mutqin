@@ -499,4 +499,59 @@ export function createWordSyncEngine(config) {
   return new WordSyncEngine(config)
 }
 
+// -------------------------------------------------------------------------
+// Simple framework-agnostic facade
+// -------------------------------------------------------------------------
+// A minimal functional wrapper around a single shared WordSyncEngine instance.
+// It owns no DOM and no Vue reactivity: callers wire it to an audio element via
+// `configureAudioSync({ getClock, onRender, ... })` and then drive it with the
+// four simple verbs below. Components that need the full engine can keep using
+// `WordSyncEngine` directly.
+
+let defaultEngine = null
+
+/**
+ * Create (or replace) the shared audio-sync engine. Pass the same config shape
+ * accepted by WordSyncEngine: { getClock, onRender, options }.
+ * @returns {WordSyncEngine} the shared engine instance.
+ */
+export function configureAudioSync(config = {}) {
+  if (defaultEngine) defaultEngine.destroy()
+  defaultEngine = new WordSyncEngine(config)
+  return defaultEngine
+}
+
+/** Optionally (re)load the active word timeline on the shared engine. */
+export function setAudioSyncTimeline(timeline, context = null) {
+  return defaultEngine ? defaultEngine.setTimeline(timeline, context) : []
+}
+
+/** Begin the playback-observer loop. No-op until configured. */
+export function startSync() {
+  if (defaultEngine) defaultEngine.start()
+}
+
+/** Stop the loop, retaining the current word. No-op until configured. */
+export function stopSync() {
+  if (defaultEngine) defaultEngine.stop()
+}
+
+/** Snap to the true word for the current clock time (use after a seek). */
+export function seek() {
+  if (defaultEngine) defaultEngine.seek()
+}
+
+/** Read the currently highlighted word index (-1 when none / unconfigured). */
+export function getCurrentWord() {
+  return defaultEngine ? defaultEngine.activeIndex : -1
+}
+
+/** Tear down the shared engine and release listeners. */
+export function destroyAudioSync() {
+  if (defaultEngine) {
+    defaultEngine.destroy()
+    defaultEngine = null
+  }
+}
+
 export default WordSyncEngine

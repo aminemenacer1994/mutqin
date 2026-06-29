@@ -1,8 +1,26 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
-const source = readFileSync(new URL('../../resources/js/components/Memorisation.vue', import.meta.url), 'utf8')
+// Memorisation's code is split across four files for readability:
+//   - Memorisation.vue         markup (template) + <script src>/<style src> refs
+//   - Memorisation.js          the reactive component (options object)
+//   - Memorisation.css         the (non-scoped) styles
+//   - scripts/memorisationRuntime.js  framework-agnostic constants + helpers
+// This guard asserts on all of them, so read them together as the full source.
+const source = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
+  + '\n'
+  + readFileSync(new URL('../../resources/js/views/Memorisation.js', import.meta.url), 'utf8')
+  + '\n'
+  + readFileSync(new URL('../../resources/js/views/Memorisation.css', import.meta.url), 'utf8')
+  + '\n'
+  + readFileSync(new URL('../../resources/js/scripts/memorisationRuntime.js', import.meta.url), 'utf8')
 const hifzPlanModalSource = readFileSync(new URL('../../resources/js/components/HifzPlanCreatorModal.vue', import.meta.url), 'utf8')
+
+const memorisationDataBlock = (() => {
+  const match = source.match(/data\(\)\s*\{\s*return\s*\{([\s\S]*?)\n\s*}\s*\n\s*},\n\s*computed:/)
+  assert.ok(match, 'memorisation data block not found')
+  return match[1]
+})()
 
 function includesAll(label, patterns) {
   for (const pattern of patterns) {
@@ -126,6 +144,14 @@ includesAll('workspace application', [
   /'blur-mode-active': blurModeEnabled/,
   /'blur-upcoming': blurModeEnabled && isVerseBlurred\(verse\.key\)/
 ])
+
+for (const key of ['verses', 'activeKey', 'queue', 'queueIndex', 'playMode', 'speed', 'delay', 'order']) {
+  assert.doesNotMatch(
+    memorisationDataBlock,
+    new RegExp(`^\\s*${key}:`, 'm'),
+    `data() should not shadow computed store proxy "${key}"`
+  )
+}
 
 includesAll('offcanvas main-card linkage', [
   /topCardAppliedPills\(\) \{\s*return \[\]\s*\}/s,

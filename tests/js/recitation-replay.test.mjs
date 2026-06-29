@@ -21,7 +21,7 @@ async function loadModule(specifier, referrer = path.join(root, 'tests/js/recita
   return mod
 }
 
-const recitation = await loadModule('resources/js/engine/recitation_analysis.js')
+const recitation = await loadModule('resources/js/scripts/engine/recitation_analysis.js')
 const {
   buildRealtimePreviewAlignment,
   buildDeterministicRecitationResult,

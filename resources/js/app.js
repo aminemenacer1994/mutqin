@@ -1,17 +1,17 @@
 require('./bootstrap.js');
 
 import { createApp, defineAsyncComponent } from 'vue';
-import Homepage from './components/Homepage.vue';
-import About from './components/About.vue';
-import AboutUsPage from './components/AboutUs.vue';
-import OurMissionPage from './components/OurMission.vue';
-import DonationPage from './components/DonationPage.vue';
+import Homepage from './views/Homepage.vue';
+import About from './views/About.vue';
+import AboutUsPage from './views/AboutUs.vue';
+import OurMissionPage from './views/OurMission.vue';
+import DonationPage from './views/DonationPage.vue';
 import { setupI18n, setLocale } from './i18n';
 
 // The memorisation workspace is by far the heaviest component. It is only used
 // on the memorisation page, so load it as a separate async chunk to keep the
 // main bundle (and every other page) lean.
-const Memorisation = defineAsyncComponent(() => import('./components/Memorisation.vue'));
+const Memorisation = defineAsyncComponent(() => import('./views/Memorisation.vue'));
 
 async function bootstrapApp() {
     const app = createApp({});

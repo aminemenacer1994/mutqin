@@ -52,16 +52,18 @@ async function loadModule(specifier, referrer = path.join(root, 'tests/js/mutqin
   return mod
 }
 
-const persistence = await loadModule('resources/js/composables/useMutqinPersistence.js')
-const ayahState = await loadModule('resources/js/composables/useAyahState.js')
-const takrar = await loadModule('resources/js/composables/useTakrarLadder.js')
-const chaining = await loadModule('resources/js/composables/useChaining.js')
-const retention = await loadModule('resources/js/composables/useRetentionZones.js')
-const planner = await loadModule('resources/js/composables/useDailyPlanner.js')
-const session = await loadModule('resources/js/composables/useSessionEngine.js')
-const spacedRepetition = await loadModule('resources/js/engine/spaced_repetition_memory.js')
-const hifzSessionEngine = await loadModule('resources/js/engine/hifz_session_engine.js')
-const memorisationSource = await fs.readFile(path.join(root, 'resources/js/components/Memorisation.vue'), 'utf8')
+const persistence = await loadModule('resources/js/scripts/composables/useMutqinPersistence.js')
+const ayahState = await loadModule('resources/js/scripts/composables/useAyahState.js')
+const takrar = await loadModule('resources/js/scripts/composables/useTakrarLadder.js')
+const chaining = await loadModule('resources/js/scripts/composables/useChaining.js')
+const retention = await loadModule('resources/js/scripts/composables/useRetentionZones.js')
+const planner = await loadModule('resources/js/scripts/composables/useDailyPlanner.js')
+const session = await loadModule('resources/js/scripts/composables/useSessionEngine.js')
+const spacedRepetition = await loadModule('resources/js/scripts/engine/spaced_repetition_memory.js')
+const hifzSessionEngine = await loadModule('resources/js/scripts/engine/hifz_session_engine.js')
+const memorisationSource = (await fs.readFile(path.join(root, 'resources/js/views/Memorisation.vue'), 'utf8'))
+  + '\n'
+  + (await fs.readFile(path.join(root, 'resources/js/views/Memorisation.js'), 'utf8'))
 
 const { loadMutqinState, saveMutqinState, useMutqinPersistence, watchMutqinState } = persistence.namespace
 const { seedAyahs, updateAyah } = ayahState.namespace
@@ -75,7 +77,7 @@ const { loadAyahProgress } = hifzSessionEngine.namespace
 
 function resetStorage() {
   localStore.clear()
-  moduleCache.delete(path.resolve(root, 'resources/js/composables/useMutqinPersistence.js'))
+  moduleCache.delete(path.resolve(root, 'resources/js/scripts/composables/useMutqinPersistence.js'))
 }
 
 const verses = [

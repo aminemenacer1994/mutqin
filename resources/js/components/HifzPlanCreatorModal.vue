@@ -289,7 +289,7 @@
 </template>
 
 <script>
-import { HIFZ_PLAN_STORAGE_KEY, calculatePlanForecast } from '../engine/hifz_session_engine'
+import { HIFZ_PLAN_STORAGE_KEY, calculatePlanForecast } from '../scripts/engine/hifz_session_engine'
 
 const STORAGE_KEY = HIFZ_PLAN_STORAGE_KEY
 
