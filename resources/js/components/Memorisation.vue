@@ -274,58 +274,81 @@
             </section>
             <div v-if="!isSessionCompleted && readingViewMode === 'mushaf'" class="mushaf-workspace">
               <div class="mushaf-frame">
-                <div v-if="activeVerseRef" class="mushaf-pill-bar mushaf-pill-toolbar">
-                  <div class="mushaf-toolbar-dropdown font-dropdown-region">
-                    <button @click.stop="fontOpen = !fontOpen; bgOpen = false" type="button" class="mushaf-toolbar-trigger"
-                      :aria-expanded="fontOpen ? 'true' : 'false'" aria-label="Choose Mushaf text style">
-                      <i class="bi bi-type"></i>
-                      <span>{{ getCurrentFontLabel() }}</span>
-                      <i class="bi bi-chevron-down" :class="{ rotated: fontOpen }"></i>
-                    </button>
-                    <div v-if="fontOpen" @click.stop class="mushaf-toolbar-menu">
-                      <button v-for="f in quranFontOptions" :key="f.value" @click="selectFont(f.value); fontOpen = false"
-                        class="mushaf-toolbar-option" :class="{ active: quranFont === f.value }">
-                        <i class="bi" :class="getFontIcon(f.value)" aria-hidden="true"></i>
-                        <span>{{ f.label }}</span>
-                        <i v-if="quranFont === f.value" class="bi bi-check2 mushaf-toolbar-check" aria-hidden="true"></i>
+                <div class="mushaf-pill-bar mushaf-pill-toolbar">
+                  <div class="mushaf-toolbar-cluster mushaf-toolbar-cluster-start">
+                    <div class="mushaf-toolbar-dropdown font-dropdown-region">
+                      <button @click.stop="fontOpen = !fontOpen; bgOpen = false; borderOpen = false" type="button" class="mushaf-toolbar-trigger"
+                        :aria-expanded="fontOpen ? 'true' : 'false'" aria-label="Choose Mushaf text style">
+                        <i class="bi bi-type"></i>
+                        <span class="mushaf-toolbar-trigger-label">{{ getCurrentFontLabel() }}</span>
+                        <i class="bi bi-chevron-down" :class="{ rotated: fontOpen }"></i>
                       </button>
+                      <div v-if="fontOpen" @click.stop class="mushaf-toolbar-menu">
+                        <button v-for="f in quranFontOptions" :key="f.value" @click="selectFont(f.value); fontOpen = false"
+                          class="mushaf-toolbar-option" :class="{ active: quranFont === f.value }">
+                          <i class="bi" :class="getFontIcon(f.value)" aria-hidden="true"></i>
+                          <span>{{ f.label }}</span>
+                          <i v-if="quranFont === f.value" class="bi bi-check2 mushaf-toolbar-check" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="mushaf-toolbar-dropdown bg-dropdown-region">
+                      <button @click.stop="bgOpen = !bgOpen; fontOpen = false; borderOpen = false" type="button" class="mushaf-toolbar-trigger"
+                        :aria-expanded="bgOpen ? 'true' : 'false'" aria-label="Choose Mushaf page theme">
+                        <span class="mushaf-toolbar-theme-swatch mushaf-toolbar-trigger-swatch" :class="`theme-${mushafBackground}`"></span>
+                        <span class="mushaf-toolbar-trigger-label">Theme</span>
+                        <i class="bi bi-chevron-down" :class="{ rotated: bgOpen }"></i>
+                      </button>
+                      <div v-if="bgOpen" @click.stop class="mushaf-toolbar-menu">
+                        <button v-for="b in mushafBackgroundOptions" :key="b.value" @click="setMushafBackground(b.value); bgOpen = false"
+                          class="mushaf-toolbar-option mushaf-toolbar-option-theme" :class="{ active: mushafBackground === b.value }">
+                          <span class="mushaf-toolbar-theme-swatch" :class="`theme-${b.value}`"></span>
+                          <span>{{ b.label }}</span>
+                          <i v-if="mushafBackground === b.value" class="bi bi-check2 mushaf-toolbar-check" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="mushaf-toolbar-dropdown border-dropdown-region">
+                      <button @click.stop="borderOpen = !borderOpen; fontOpen = false; bgOpen = false" type="button" class="mushaf-toolbar-trigger"
+                        :aria-expanded="borderOpen ? 'true' : 'false'" aria-label="Choose Mushaf border style">
+                        <i class="bi bi-border-outer"></i>
+                        <span class="mushaf-toolbar-trigger-label">Border</span>
+                        <i class="bi bi-chevron-down" :class="{ rotated: borderOpen }"></i>
+                      </button>
+                      <div v-if="borderOpen" @click.stop class="mushaf-toolbar-menu">
+                        <button v-for="b in mushafBorderOptions" :key="b.value" @click="setMushafBorder(b.value); borderOpen = false"
+                          class="mushaf-toolbar-option" :class="{ active: mushafBorder === b.value }">
+                          <span class="mushaf-toolbar-border-swatch" :class="`border-${b.value}`"></span>
+                          <span>{{ b.label }}</span>
+                          <i v-if="mushafBorder === b.value" class="bi bi-check2 mushaf-toolbar-check" aria-hidden="true"></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <div class="mushaf-toolbar-dropdown bg-dropdown-region">
-                    <button @click.stop="bgOpen = !bgOpen; fontOpen = false" type="button" class="mushaf-toolbar-trigger"
-                      :aria-expanded="bgOpen ? 'true' : 'false'" aria-label="Choose Mushaf page theme">
-                      <i class="bi bi-palette"></i>
-                      <span>Theme</span>
-                      <i class="bi bi-chevron-down" :class="{ rotated: bgOpen }"></i>
+                  <div class="mushaf-toolbar-cluster mushaf-toolbar-cluster-end">
+                    <button v-if="showAiMemorisationButton" class="mushaf-pill mushaf-ai-pill mushaf-ai-memory" type="button" @click.stop="openAiMemorisationCheckerForVerse(activeVerseRef)"
+                      :class="{ active: aiMemorisationCheckerRecording }"
+                      :disabled="!activeVerseRef || aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()"
+                      :title="activeVerseRef ? 'Hide the ayah and recite from memory' : 'Tap an ayah first'">
+                      <i class="bi" :class="aiMemorisationCheckerRecording ? 'bi-stop-circle' : 'bi-eye-slash'"></i>
+                      <span class="mushaf-pill-label">{{ aiMemorisationCheckerRecording ? 'Stop' : 'AI Memory' }}</span>
                     </button>
-                    <div v-if="bgOpen" @click.stop class="mushaf-toolbar-menu">
-                      <button v-for="b in mushafBackgroundOptions" :key="b.value" @click="setMushafBackground(b.value); bgOpen = false"
-                        class="mushaf-toolbar-option mushaf-toolbar-option-theme" :class="{ active: mushafBackground === b.value }">
-                        <span class="mushaf-toolbar-theme-swatch" :class="`theme-${b.value}`"></span>
-                        <span>{{ b.label }}</span>
-                        <i v-if="mushafBackground === b.value" class="bi bi-check2 mushaf-toolbar-check" aria-hidden="true"></i>
-                      </button>
-                    </div>
+
+                    <button class="mushaf-pill mushaf-ai-pill mushaf-ai-recite" type="button" @click.stop="openAiRecitationCheckForVerse(activeVerseRef)"
+                      :class="{ active: recitationCheckRecording }"
+                      :disabled="!activeVerseRef || recitationCheckPreparing || !supportsSelfCheckRecording()"
+                      :title="activeVerseRef ? 'Recite this ayah for instant AI feedback' : 'Tap an ayah first'">
+                      <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
+                      <span class="mushaf-pill-label">{{ recitationCheckRecording ? 'Stop' : 'AI Recite' }}</span>
+                    </button>
+
+                    <button type="button" class="mushaf-pill mushaf-controls-pill" @click="openAdvancedControls" aria-label="Open controls" title="Session controls">
+                      <i class="bi bi-sliders2"></i>
+                    </button>
                   </div>
-
-                <button v-if="showAiMemorisationButton" class="mushaf-pill mushaf-ai-pill mushaf-ai-memory" type="button" @click.stop="openAiMemorisationCheckerForVerse(activeVerseRef)"
-                    :class="{ active: aiMemorisationCheckerRecording }"
-                    :disabled="aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()">
-                    <i class="bi" :class="aiMemorisationCheckerRecording ? 'bi-stop-circle' : 'bi-eye-slash'"></i>
-                    <span>{{ aiMemorisationCheckerRecording ? 'Stop' : 'AI Memory' }}</span>
-                  </button>
-
-                  <button class="mushaf-pill mushaf-ai-pill mushaf-ai-recite" type="button" @click.stop="openAiRecitationCheckForVerse(activeVerseRef)"
-                    :class="{ active: recitationCheckRecording }"
-                    :disabled="recitationCheckPreparing || !supportsSelfCheckRecording()">
-                    <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
-                    <span>{{ recitationCheckRecording ? 'Stop' : 'AI Recite' }}</span>
-                  </button>
-
-                  <button type="button" class="mushaf-pill mushaf-controls-pill" @click="openAdvancedControls" aria-label="Open controls">
-                    <i class="bi bi-sliders2"></i>
-                  </button>
                 </div>
                 <div ref="mushafViewport" class="mushaf-viewport" :class="[`mushaf-bg-${mushafBackground}`]">
                   <div v-if="!mushafPages.length" class="mushaf-empty-page">
@@ -377,26 +400,36 @@
                         </span>
                       </div>
                       <footer class="mushaf-page-footer">
-                        <span>Page {{ pageIndex + 1 }} / {{ mushafPages.length }}</span>
-                        <span>Ayahs {{ page.startNumber }}-{{ page.endNumber }}</span>
+                        <span class="mushaf-page-folio">{{ pageIndex + 1 }}</span>
                       </footer>
                     </article>
                   </div>
                 </div>
-                <nav v-if="mushafPages.length > 1" class="mushaf-page-pills" aria-label="Quran pages">
-                  <button class="mushaf-page-pill" type="button" :disabled="!canGoPreviousMushafPage"
-                    @click="goToPreviousMushafPage">
+                <nav v-if="mushafPages.length" class="mushaf-pagination" aria-label="Quran pages">
+                  <button class="mushaf-nav-arrow" type="button" :disabled="!canGoPreviousMushafPage"
+                    @click="goToPreviousMushafPage" aria-label="Previous page">
                     <i class="bi bi-chevron-left"></i>
-                    <span>Prev</span>
                   </button>
-                  <button v-for="(page, pageIndex) in mushafPages" :key="`mushaf-page-pill-${page.id}`"
-                    class="mushaf-page-pill" type="button" :class="{ active: pageIndex === safeMushafPageIndex }"
-                    @click="goToMushafPage(pageIndex)">
-                    <span>{{ pageIndex + 1 }}</span>
-                  </button>
-                  <button class="mushaf-page-pill" type="button" :disabled="!canGoNextMushafPage"
-                    @click="goToNextMushafPage">
-                    <span>Next</span>
+                  <div class="mushaf-pagination-center">
+                    <div class="mushaf-pagination-meta">
+                      <span class="mushaf-pagination-page">Page {{ safeMushafPageIndex + 1 }} <span class="mushaf-pagination-page-total">/ {{ mushafPages.length }}</span></span>
+                      <span v-if="mushafPages[safeMushafPageIndex]" class="mushaf-pagination-ayahs">
+                        Ayahs {{ mushafPages[safeMushafPageIndex].startNumber }}–{{ mushafPages[safeMushafPageIndex].endNumber }}
+                      </span>
+                    </div>
+                    <div class="mushaf-progress-track" role="progressbar" :aria-valuenow="safeMushafPageIndex + 1"
+                      aria-valuemin="1" :aria-valuemax="mushafPages.length">
+                      <span class="mushaf-progress-fill" :style="{ width: mushafProgressPercent + '%' }"></span>
+                    </div>
+                    <div v-if="mushafPages.length > 1 && mushafPages.length <= 12" class="mushaf-page-dots">
+                      <button v-for="(page, pageIndex) in mushafPages" :key="`mushaf-dot-${page.id}`" type="button"
+                        class="mushaf-page-dot" :class="{ active: pageIndex === safeMushafPageIndex }"
+                        @click="goToMushafPage(pageIndex)" :aria-label="`Go to page ${pageIndex + 1}`"
+                        :aria-current="pageIndex === safeMushafPageIndex ? 'true' : 'false'"></button>
+                    </div>
+                  </div>
+                  <button class="mushaf-nav-arrow" type="button" :disabled="!canGoNextMushafPage"
+                    @click="goToNextMushafPage" aria-label="Next page">
                     <i class="bi bi-chevron-right"></i>
                   </button>
                 </nav>
@@ -3523,6 +3556,26 @@ export default {
   props: {
     auth: { type: Object, default: () => ({ check: false, id: null }) }
   },
+  // [TEMP DIAGNOSTIC] Detect a runaway re-render loop and report the exact
+  // reactive property that keeps re-triggering it. Remove once the bug is fixed.
+  renderTriggered(event) {
+    if (typeof window === 'undefined') return
+    const now = (typeof performance !== 'undefined' ? performance.now() : Date.now())
+    let dbg = window.__renderDbg
+    if (!dbg || now - dbg.t > 1000) {
+      dbg = window.__renderDbg = { t: now, count: 0, keys: {}, last: '' }
+    }
+    dbg.count += 1
+    const key = String(event && event.key)
+    dbg.keys[key] = (dbg.keys[key] || 0) + 1
+    dbg.last = `${event && event.type} ${key}`
+    if (dbg.count === 60) {
+      console.error('[RENDER LOOP] suspected. Trigger keys (key -> count):',
+        Object.entries(dbg.keys).sort((a, b) => b[1] - a[1]).slice(0, 10))
+      console.error('[RENDER LOOP] last trigger:', dbg.last, event && event.target)
+      console.trace('[RENDER LOOP] stack')
+    }
+  },
   data() {
     return {  
       quickSurahs: [
@@ -3589,6 +3642,7 @@ export default {
       selectedLoopCount: 5,
       fontOpen: false,
       bgOpen: false,
+      borderOpen: false,
       
       // Feature 2: Gap between verses
       gapBetweenVerses: "1x", // Options: 'none', '1x', '3s', '5s', 'custom'
@@ -6252,6 +6306,12 @@ export default {
       return this.safeMushafPageIndex < this.mushafPages.length - 1
     },
 
+    mushafProgressPercent() {
+      const total = this.mushafPages.length
+      if (!total) return 0
+      return Math.round(((this.safeMushafPageIndex + 1) / total) * 100)
+    },
+
     quizAccuracy() {
       if (!this.quizQueue.length) return 0
       return Math.round((this.quizScore / this.quizQueue.length) * 100)
@@ -6391,6 +6451,9 @@ export default {
       }
       if (this.bgOpen && !e.target.closest('.bg-dropdown-region')) {
         this.bgOpen = false
+      }
+      if (this.borderOpen && !e.target.closest('.border-dropdown-region')) {
+        this.borderOpen = false
       }
     }
     document.addEventListener('click', this.handleMushafToolbarDocumentClick)
@@ -14880,6 +14943,18 @@ export default {
       if (event.key === 'End') {
         event.preventDefault()
         this.jumpToVerseIndex(this.verses.length - 1)
+        return
+      }
+
+      if (this.readingViewMode === 'mushaf' && (event.key === 'PageDown' || event.key === ']')) {
+        event.preventDefault()
+        this.goToNextMushafPage()
+        return
+      }
+
+      if (this.readingViewMode === 'mushaf' && (event.key === 'PageUp' || event.key === '[')) {
+        event.preventDefault()
+        this.goToPreviousMushafPage()
         return
       }
 
@@ -54349,6 +54424,296 @@ textarea {
 [data-theme="dark"] .memorisation-checker-ayah.recitation-word-review-active .recitation-word-incorrect,
 [data-theme="dark"] .recitation-review-ayah .recitation-word-incorrect {
   color: #f0938a !important;
+}
+
+/* ============================================================
+   Mushaf reading view — layout, toolbar, pagination refinements
+   (Appended last so it wins the cascade over earlier passes.)
+   ============================================================ */
+
+/* Toolbar: split into a settings cluster (left) and actions cluster (right). */
+.mushaf-pill-toolbar {
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 0.6rem !important;
+  margin-bottom: 0.85rem !important;
+}
+
+.mushaf-toolbar-cluster {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.55rem !important;
+  flex-wrap: wrap !important;
+  min-width: 0 !important;
+}
+
+.mushaf-toolbar-cluster-end {
+  margin-inline-start: auto !important;
+}
+
+/* Make the settings triggers compact and even, AI pills shrink-friendly. */
+.mushaf-pill-toolbar .mushaf-pill {
+  min-width: 0 !important;
+  padding: 0 1.05rem !important;
+}
+
+.mushaf-toolbar-trigger {
+  min-width: 0 !important;
+}
+
+.mushaf-toolbar-trigger-swatch {
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 5px !important;
+  flex: 0 0 auto !important;
+}
+
+.mushaf-ai-pill {
+  background: linear-gradient(135deg, #2f8f6b, #1f6b50) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 26px rgba(31, 107, 80, 0.26) !important;
+}
+
+.mushaf-ai-pill .bi {
+  color: #fff !important;
+}
+
+.mushaf-ai-pill:disabled {
+  background: rgba(36, 28, 22, 0.1) !important;
+  color: rgba(36, 28, 22, 0.5) !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+
+.mushaf-ai-pill:disabled .bi {
+  color: rgba(36, 28, 22, 0.5) !important;
+}
+
+.mushaf-ai-pill.active {
+  background: linear-gradient(135deg, #d9534f, #b83a36) !important;
+  box-shadow: 0 14px 30px rgba(184, 58, 54, 0.3) !important;
+}
+
+/* Border-style picker swatches inside the toolbar menu. */
+.mushaf-toolbar-border-swatch {
+  width: 22px !important;
+  height: 16px !important;
+  border-radius: 4px !important;
+  flex: 0 0 auto !important;
+  background: #fffaf0 !important;
+}
+
+.mushaf-toolbar-border-swatch.border-classic { border: 3px double #8b5a2c !important; }
+.mushaf-toolbar-border-swatch.border-fine { border: 1.5px solid #8b5a2c !important; }
+.mushaf-toolbar-border-swatch.border-layered { border: 1px solid #8b5a2c !important; box-shadow: inset 0 0 0 2px rgba(139, 90, 44, 0.4) !important; }
+.mushaf-toolbar-border-swatch.border-emerald { border: 3px double #236f5b !important; }
+.mushaf-toolbar-border-swatch.border-ink { border: 2px solid #111827 !important; }
+
+/* Page: vertically center the surah block so short ranges read as a real page
+   instead of leaving a large empty canvas, while still growing for long ayahs. */
+.mushaf-page {
+  grid-template-rows: auto auto auto !important;
+  align-content: center !important;
+  min-height: clamp(360px, 56vh, 660px) !important;
+  height: auto !important;
+}
+
+.mushaf-page-body {
+  align-content: center !important;
+}
+
+/* Footer reduced to a single, subtle centered folio number with side rules. */
+.mushaf-page-footer {
+  justify-content: center !important;
+  padding-top: 0.4rem !important;
+}
+
+.mushaf-page-folio {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.6rem !important;
+  color: var(--mushaf-muted, #6f6258) !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: 0.04em !important;
+}
+
+.mushaf-page-folio::before,
+.mushaf-page-folio::after {
+  content: "" !important;
+  width: 1.6rem !important;
+  height: 1px !important;
+  background: color-mix(in srgb, var(--mushaf-border, #8b5a2c) 55%, transparent) !important;
+}
+
+/* Bottom pagination: arrows + page meta + progress + dots. */
+.mushaf-pagination {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.85rem !important;
+  width: min(100%, 540px) !important;
+  margin: 1.1rem auto 0 !important;
+}
+
+.mushaf-nav-arrow {
+  flex: 0 0 auto !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 2.6rem !important;
+  height: 2.6rem !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.86) !important;
+  color: #241c16 !important;
+  box-shadow: 0 10px 24px rgba(74, 53, 31, 0.14) !important;
+  font-size: 1.05rem !important;
+  cursor: pointer !important;
+  transition: transform 160ms ease, background 160ms ease, opacity 160ms ease !important;
+}
+
+.mushaf-nav-arrow:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  background: #fff !important;
+}
+
+.mushaf-nav-arrow:active:not(:disabled) {
+  transform: scale(0.94) !important;
+}
+
+.mushaf-nav-arrow:disabled {
+  opacity: 0.34 !important;
+  cursor: not-allowed !important;
+}
+
+.mushaf-pagination-center {
+  flex: 1 1 auto !important;
+  display: grid !important;
+  gap: 0.45rem !important;
+  justify-items: center !important;
+  min-width: 0 !important;
+}
+
+.mushaf-pagination-meta {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 0.6rem !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+}
+
+.mushaf-pagination-page {
+  color: var(--text, #241c16) !important;
+  font-weight: 800 !important;
+  font-size: 0.92rem !important;
+}
+
+.mushaf-pagination-page-total {
+  color: var(--muted, #8a7d6e) !important;
+  font-weight: 700 !important;
+}
+
+.mushaf-pagination-ayahs {
+  color: var(--muted, #8a7d6e) !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important;
+}
+
+.mushaf-progress-track {
+  width: 100% !important;
+  height: 5px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--text, #241c16) 12%, transparent) !important;
+  overflow: hidden !important;
+}
+
+.mushaf-progress-fill {
+  display: block !important;
+  height: 100% !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, #2f8f6b, #c79a4b) !important;
+  transition: width 320ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.mushaf-page-dots {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+}
+
+.mushaf-page-dot {
+  width: 8px !important;
+  height: 8px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--text, #241c16) 24%, transparent) !important;
+  cursor: pointer !important;
+  transition: transform 160ms ease, background 160ms ease, width 160ms ease !important;
+}
+
+.mushaf-page-dot:hover {
+  background: color-mix(in srgb, var(--text, #241c16) 45%, transparent) !important;
+}
+
+.mushaf-page-dot.active {
+  width: 22px !important;
+  background: linear-gradient(90deg, #2f8f6b, #c79a4b) !important;
+}
+
+/* Active ayah affordance: a soft underline accent that reads in every theme. */
+.mushaf-ayah.active .mushaf-ayah-text {
+  box-shadow: 0 0.12em 0 -0.02em color-mix(in srgb, var(--accent, #2f8f6b) 60%, transparent) !important;
+  border-radius: 0.16em !important;
+}
+
+[data-theme="dark"] .mushaf-nav-arrow {
+  background: rgba(34, 27, 20, 0.92) !important;
+  color: #f3e7d2 !important;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.34) !important;
+}
+
+[data-theme="dark"] .mushaf-progress-track {
+  background: rgba(248, 250, 252, 0.14) !important;
+}
+
+[data-theme="dark"] .mushaf-page-dot {
+  background: rgba(248, 250, 252, 0.26) !important;
+}
+
+[data-theme="dark"] .mushaf-ai-pill:disabled {
+  background: rgba(248, 250, 252, 0.1) !important;
+  color: rgba(248, 250, 252, 0.4) !important;
+}
+
+[data-theme="dark"] .mushaf-ai-pill:disabled .bi {
+  color: rgba(248, 250, 252, 0.4) !important;
+}
+
+@media (max-width: 640px) {
+  .mushaf-pill-toolbar {
+    gap: 0.5rem !important;
+  }
+
+  .mushaf-toolbar-cluster-start,
+  .mushaf-toolbar-cluster-end {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .mushaf-toolbar-cluster-end {
+    margin-inline-start: 0 !important;
+  }
+
+  .mushaf-toolbar-trigger-label {
+    display: none !important;
+  }
+
+  .mushaf-pagination {
+    gap: 0.55rem !important;
+  }
 }
 
 </style>

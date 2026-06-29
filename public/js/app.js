@@ -26690,7 +26690,21 @@ function _bootstrapApp() {
     return _regenerator().w(function (_context) {
       while (1) switch (_context.n) {
         case 0:
-          app = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createApp)({});
+          app = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createApp)({}); // [TEMP DIAGNOSTIC] Surface the exact reactive property behind a
+          // "Maximum recursive updates exceeded" loop. Remove once the bug is fixed.
+          app.config.warnHandler = function (msg, instance, trace) {
+            if (typeof msg === 'string' && msg.includes('recursive')) {
+              var dbg = window.__renderDbg || {};
+              // Show which reactive keys fired most in the last render burst.
+              var ranked = Object.entries(dbg.keys || {}).sort(function (a, b) {
+                return b[1] - a[1];
+              }).slice(0, 10);
+              console.error('[RECURSION] ' + msg);
+              console.error('[RECURSION] top trigger keys (key -> count):', ranked);
+              console.error('[RECURSION] last trigger:', dbg.last || '(none captured)');
+            }
+            console.warn('[Vue warn]', msg, trace);
+          };
           _context.n = 1;
           return (0,_i18n__WEBPACK_IMPORTED_MODULE_6__.setupI18n)();
         case 1:

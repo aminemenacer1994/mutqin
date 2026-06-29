@@ -15,6 +15,23 @@ const Memorisation = defineAsyncComponent(() => import('./components/Memorisatio
 
 async function bootstrapApp() {
     const app = createApp({});
+
+    // [TEMP DIAGNOSTIC] Surface the exact reactive property behind a
+    // "Maximum recursive updates exceeded" loop. Remove once the bug is fixed.
+    app.config.warnHandler = (msg, instance, trace) => {
+        if (typeof msg === 'string' && msg.includes('recursive')) {
+            const dbg = window.__renderDbg || {};
+            // Show which reactive keys fired most in the last render burst.
+            const ranked = Object.entries(dbg.keys || {})
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            console.error('[RECURSION] ' + msg);
+            console.error('[RECURSION] top trigger keys (key -> count):', ranked);
+            console.error('[RECURSION] last trigger:', dbg.last || '(none captured)');
+        }
+        console.warn('[Vue warn]', msg, trace);
+    };
+
     const i18n = await setupI18n();
 
     app.use(i18n);
