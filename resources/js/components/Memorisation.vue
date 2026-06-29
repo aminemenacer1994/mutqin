@@ -2731,6 +2731,7 @@ import { createDailyPlan } from '../composables/useDailyPlanner'
 import { hideAyah, completeTakrarStep, getTakrarStep } from '../composables/useTakrarLadder'
 import { scoreRetention } from '../composables/useRetentionZones'
 import { updateAyahProgress } from '../engine/spaced_repetition_memory'
+import { WordSyncEngine } from '../engine/wordSync'
 import HifzPlanCreatorModal from './HifzPlanCreatorModal.vue'
 import {
   generateTodaySession,
@@ -3645,6 +3646,7 @@ export default {
       wordHighlightTimestamps: [],
       wordHighlightLoading: false,
       wordHighlightRequestId: 0,
+      wordSyncEngine: null,
       currentPhraseIndex: -1,
       lastHighlightedWordNodes: [],
       wordClickHandler: null,
@@ -6424,6 +6426,10 @@ export default {
     if (this.segmentPlaybackTimer) clearTimeout(this.segmentPlaybackTimer)
     this.flushPlaybackTime()
     this.stopWordHighlighting()
+    if (this.wordSyncEngine) {
+      this.wordSyncEngine.destroy()
+      this.wordSyncEngine = null
+    }
     this.stopRecordingsPlayback({ clearSource: true })
     if (this.selfCheckMediaRecorder && ['recording', 'paused'].includes(this.selfCheckMediaRecorder.state)) {
       this.selfCheckDiscardOnStop = true
@@ -11143,79 +11149,54 @@ export default {
       else node.removeAttribute('title')
     },
     getLiveWordPresentation(status = 'notAttempted', mode = 'verse') {
+      // Subtle palette: coloured text + a thin underline. No background fills,
+      // borders, padding or opacity changes on the ayah words, so a status
+      // update is paint-only and never reflows the RTL line (this is what keeps
+      // the live colouring in lock-step with the voice instead of lagging).
       const palette = {
-        correct: {
-          color: '#0f5132',
-          background: 'rgba(34, 166, 98, 0.22)',
-          borderColor: 'rgba(26, 133, 79, 0.34)',
-          boxShadow: 'inset 0 -0.28em 0 rgba(26, 133, 79, 0.55), 0 0 0 1px rgba(26, 133, 79, 0.12)',
-          opacity: '1'
-        },
-        partial: {
-          color: '#8a5200',
-          background: 'rgba(237, 179, 71, 0.24)',
-          borderColor: 'rgba(204, 138, 11, 0.34)',
-          boxShadow: 'inset 0 -0.28em 0 rgba(204, 138, 11, 0.58), 0 0 0 1px rgba(204, 138, 11, 0.12)',
-          opacity: '1'
-        },
-        incorrect: {
-          color: '#8f2d23',
-          background: 'rgba(226, 96, 77, 0.22)',
-          borderColor: 'rgba(193, 63, 45, 0.34)',
-          boxShadow: 'inset 0 -0.28em 0 rgba(193, 63, 45, 0.58), 0 0 0 1px rgba(193, 63, 45, 0.12)',
-          opacity: '1'
-        },
-        pending: {
-          color: 'inherit',
-          background: 'rgba(116, 126, 141, 0.10)',
-          borderColor: 'rgba(116, 126, 141, 0.18)',
-          boxShadow: 'none',
-          opacity: '0.9'
-        },
-        notAttempted: {
-          color: 'inherit',
-          background: 'transparent',
-          borderColor: 'transparent',
-          boxShadow: 'none',
-          opacity: '0.76'
-        },
-        skipped: {
-          color: 'inherit',
-          background: 'rgba(116, 126, 141, 0.12)',
-          borderColor: 'rgba(116, 126, 141, 0.2)',
-          boxShadow: 'none',
-          opacity: '0.86'
-        }
+        correct: { color: '#15724c', underline: 'rgba(26, 133, 79, 0.85)' },
+        partial: { color: '#9a6207', underline: 'rgba(204, 138, 11, 0.85)' },
+        incorrect: { color: '#a83327', underline: 'rgba(193, 63, 45, 0.85)' },
+        pending: { color: 'inherit', underline: 'rgba(116, 126, 141, 0.42)' },
+        skipped: { color: 'inherit', underline: 'rgba(116, 126, 141, 0.32)' },
+        notAttempted: { color: 'inherit', underline: 'transparent' }
       }
       const resolved = palette[status] || palette.notAttempted
       if (mode === 'chip') {
-        return {
-          ...resolved,
-          borderRadius: '999px',
-          paddingInline: '0.72rem',
-          paddingBlock: '0.42rem'
+        // The live word-stream chips are standalone pills; a light tint reads
+        // better there than an underline.
+        const chipTint = {
+          correct: 'rgba(34, 166, 98, 0.16)',
+          partial: 'rgba(237, 179, 71, 0.18)',
+          incorrect: 'rgba(226, 96, 77, 0.16)',
+          pending: 'rgba(116, 126, 141, 0.10)',
+          skipped: 'rgba(116, 126, 141, 0.10)',
+          notAttempted: 'transparent'
         }
+        return { color: resolved.color, background: chipTint[status] || 'transparent' }
       }
-      return {
-        ...resolved,
-        borderRadius: '0.24em',
-        paddingInline: '0.08em',
-        paddingBlock: '0.02em'
-      }
+      return resolved
     },
     applyLiveWordPresentation(node, status = 'notAttempted', mode = 'verse') {
       if (!node?.style?.setProperty) return
       const presentation = this.getLiveWordPresentation(status, mode)
       node.dataset.liveWordStatus = status || 'notAttempted'
+      if (mode === 'chip') {
+        node.style.setProperty('color', presentation.color, 'important')
+        node.style.setProperty('background', presentation.background, 'important')
+        node.style.setProperty('transition', 'background-color 90ms ease, color 90ms ease', 'important')
+        return
+      }
+      // Verse words: only colour + underline change → compositor-friendly,
+      // zero layout reflow.
+      const underline = presentation.underline === 'transparent'
+        ? 'none'
+        : `inset 0 -0.085em 0 ${presentation.underline}`
       node.style.setProperty('color', presentation.color, 'important')
-      node.style.setProperty('background', presentation.background, 'important')
-      node.style.setProperty('border-color', presentation.borderColor, 'important')
-      node.style.setProperty('box-shadow', presentation.boxShadow, 'important')
-      node.style.setProperty('opacity', presentation.opacity, 'important')
-      node.style.setProperty('border-radius', presentation.borderRadius, 'important')
-      node.style.setProperty('padding-inline', presentation.paddingInline, 'important')
-      node.style.setProperty('padding-block', presentation.paddingBlock, 'important')
-      node.style.setProperty('transition', 'background-color 45ms linear, color 45ms linear, border-color 45ms linear, box-shadow 45ms linear, opacity 45ms linear', 'important')
+      node.style.setProperty('box-shadow', underline, 'important')
+      node.style.setProperty('background', 'transparent', 'important')
+      node.style.setProperty('border-color', 'transparent', 'important')
+      node.style.setProperty('transition', 'color 90ms linear, box-shadow 90ms linear', 'important')
     },
     hasLiveWordChanged(currentWord = {}, nextWord = {}) {
       return currentWord.status !== nextWord.status
@@ -16510,6 +16491,28 @@ export default {
       return baseDuration
     },
 
+    ensureWordSyncEngine() {
+      if (this.wordSyncEngine) return this.wordSyncEngine
+      this.wordSyncEngine = markRaw(new WordSyncEngine({
+        getClock: () => {
+          const el = this.audioElement
+          if (!el) return null
+          return {
+            time: el.currentTime,
+            paused: el.paused,
+            ended: el.ended,
+            seeking: el.seeking,
+            rate: el.playbackRate
+          }
+        },
+        onRender: ({ index, context }) => {
+          const verseKey = context || this.currentHighlightedVerseKey
+          this.updateWordHighlight(verseKey, index)
+        }
+      }))
+      return this.wordSyncEngine
+    },
+
     async startWordHighlighting(verse, options = {}) {
       if (!verse?.key || !this.wordByWordAudioEnabled) return
       const timestamps = await this.ensureWordHighlightTrack(verse, options)
@@ -16580,21 +16583,17 @@ export default {
     },
 
     queueWordHighlightFrame(verse = this.activeVerseRef) {
-      if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame)
-      this.wordHighlightFrame = null
-
+      // Legacy entry point retained for the audio event handlers. The rAF loop,
+      // interpolation, and drift correction are now owned by WordSyncEngine.
       if (!verse?.key || !this.audioElement || this.audioElement.paused || this.audioElement.ended) return
-
-      const tick = () => {
-        if (!this.audioElement || this.audioElement.paused || this.audioElement.ended) {
-          this.wordHighlightFrame = null
-          return
-        }
-        this.syncWordHighlightFromAudio(verse)
-        this.wordHighlightFrame = window.requestAnimationFrame(tick)
+      const engine = this.ensureWordSyncEngine()
+      if (this.currentHighlightedVerseKey !== verse.key || !engine.hasTimeline()) {
+        engine.setTimeline(this.wordHighlightTimestamps, verse.key)
       }
-
-      this.wordHighlightFrame = window.requestAnimationFrame(tick)
+      // Re-sync from currentTime before resuming the loop so a resume after a
+      // pause/buffering stall never starts from a stale word.
+      engine.resync()
+      engine.start()
     },
 
     async ensureWordHighlightTrack(verse, options = {}) {
@@ -16616,18 +16615,18 @@ export default {
 
       this.wordHighlightLoading = false
       this.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : []
+      // Feed the normalised timeline into the sync engine (Timestamp Map Layer).
+      this.ensureWordSyncEngine().setTimeline(this.wordHighlightTimestamps, verse.key)
       this.syncWordHighlightFromAudio(verse)
       return this.wordHighlightTimestamps
     },
 
     syncWordHighlightFromAudio(verse = this.activeVerseRef) {
       if (!verse || !verse.key || this.currentHighlightedVerseKey !== verse.key || !this.wordHighlightTimestamps?.length || !this.audioElement) return
-
-      const currentTime = Number(this.audioElement.currentTime || 0)
-      const activeIndex = this.findWordTimingIndex(currentTime, this.wordHighlightTimestamps)
-      if (this.currentWordIndex !== activeIndex || this.currentHighlightedVerseKey !== verse.key) {
-        this.updateWordHighlight(verse.key, activeIndex)
-      }
+      const engine = this.ensureWordSyncEngine()
+      if (!engine.hasTimeline()) engine.setTimeline(this.wordHighlightTimestamps, verse.key)
+      // Immediate authoritative re-sync from currentTime (no hysteresis delay).
+      engine.resync()
     },
 
     restoreWordScroll(verseKey) {
@@ -16659,6 +16658,7 @@ export default {
       this.wordHighlightRequestId += 1
       if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame)
       this.wordHighlightFrame = null
+      if (this.wordSyncEngine) this.wordSyncEngine.reset()
       this.wordHighlightHandler = null
       this.wordHighlightLoading = false
       this.applyWordHighlightClasses(null, -1)
@@ -16700,7 +16700,14 @@ export default {
             if ((!this.wordHighlightTimestamps?.length || this.currentHighlightedVerseKey !== verse.key) && !this.wordHighlightLoading) {
               this.startWordHighlighting(verse)
             } else if (!this.wordHighlightLoading) {
-              this.syncWordHighlightFromAudio(verse)
+              // Safety net: the WordSyncEngine owns the rAF loop + drift loop, so
+              // we do NOT resync here every timeupdate (that would bypass
+              // hysteresis). We only revive the loop if it parked unexpectedly
+              // while audio is still playing (buffering stall / rAF throttle).
+              const engine = this.wordSyncEngine
+              if (engine && engine.hasTimeline() && !engine.running && this.audioElement && !this.audioElement.paused) {
+                engine.resume()
+              }
             }
           }
         }
@@ -16753,8 +16760,9 @@ export default {
       }
 
       this.audioSeeking = () => {
-        if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame)
-        this.wordHighlightFrame = null
+        // Park the engine loop while scrubbing; clear the stale highlight so no
+        // wrong word lingers during a long/scrubbed seek.
+        if (this.wordSyncEngine) this.wordSyncEngine.pause()
         if (this.currentHighlightedVerseKey) this.updateWordHighlight(this.currentHighlightedVerseKey, -1)
       }
 
@@ -16763,7 +16771,8 @@ export default {
         if (!verse) return
         if (this.wordByWordAudioEnabled) {
           this.ensureWordHighlightTrack(verse).then(() => {
-            this.syncWordHighlightFromAudio(verse)
+            // Snap instantly to the word at the new position (no hysteresis lag).
+            if (this.wordSyncEngine) this.wordSyncEngine.seek()
             if (!this.audioElement?.paused) this.queueWordHighlightFrame(verse)
           })
         }
@@ -16771,8 +16780,8 @@ export default {
 
       this.audioPaused = () => {
         this.isPlaying = false
-        if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame)
-        this.wordHighlightFrame = null
+        // Freeze state: stop the loop but retain the active word.
+        if (this.wordSyncEngine) this.wordSyncEngine.pause()
       }
 
       this.audioPlaying = () => {
@@ -32653,6 +32662,21 @@ html {
   flex-direction: column;
   gap: 24px;
   margin-top: 0;
+}
+
+/*
+ * Let the browser skip rendering/layout/paint for off-screen verse cards in long
+ * sessions (e.g. large ayah ranges). This keeps scrolling smooth on mobile while
+ * leaving every card in the DOM, so refs, data-verse-key lookups, anchor/word
+ * highlighting and scroll-to-verse all keep working. Scoped to non-active cards:
+ * only `.verse-card.active` has an outer box-shadow (which paint containment
+ * would clip); base cards have none and their decorations are `inset: 0`, so
+ * there is no visual change. `contain-intrinsic-size: auto` remembers the real
+ * size once rendered to avoid scrollbar jump / layout shift.
+ */
+.verses-grid .verse-card:not(.active) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 360px;
 }
 
 .verse-arabic-primary {
@@ -54175,6 +54199,156 @@ textarea {
     width: 48px !important;
     height: 48px !important;
   }
+}
+
+/* ============================================================
+   Recitation self-check: cleaner toolbar + subtle word colours
+   (appended last so these win the cascade)
+   ============================================================ */
+
+/* Group the ayah tools into a tight, calm icon cluster. */
+.self-check-modal .self-check-header-tools,
+.memorisation-checker-modal .self-check-header-tools {
+  gap: 0.28rem !important;
+  padding: 0.22rem !important;
+  border-radius: 999px !important;
+  background: rgba(120, 90, 60, 0.06) !important;
+  overflow: visible !important;
+  flex-wrap: nowrap !important;
+}
+
+.self-check-modal .self-check-toolbar-btn,
+.memorisation-checker-modal .self-check-toolbar-btn {
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #5b4a39 !important;
+  transition: background-color 120ms ease, color 120ms ease !important;
+}
+
+.self-check-modal .self-check-toolbar-btn i,
+.memorisation-checker-modal .self-check-toolbar-btn i {
+  font-size: 1.04rem !important;
+}
+
+.self-check-modal .self-check-toolbar-btn:hover:not(:disabled),
+.memorisation-checker-modal .self-check-toolbar-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #1f6a4c !important;
+}
+
+.self-check-modal .self-check-toolbar-btn:disabled,
+.memorisation-checker-modal .self-check-toolbar-btn:disabled {
+  opacity: 0.4 !important;
+}
+
+/* AI Recite is the single primary action. */
+.self-check-modal .self-check-toolbar-btn.self-check-ayah-action-ai,
+.memorisation-checker-modal .self-check-toolbar-btn.self-check-ayah-action-ai {
+  background: linear-gradient(135deg, #23624e, #2f7d62) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(47, 111, 88, 0.22) !important;
+}
+
+.self-check-modal .self-check-toolbar-btn.recording,
+.memorisation-checker-modal .self-check-toolbar-btn.recording {
+  background: #b13f32 !important;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(177, 63, 50, 0.26) !important;
+}
+
+[data-theme="dark"] .self-check-modal .self-check-header-tools,
+[data-theme="dark"] .memorisation-checker-modal .self-check-header-tools {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme="dark"] .self-check-modal .self-check-toolbar-btn,
+[data-theme="dark"] .memorisation-checker-modal .self-check-toolbar-btn {
+  color: #d6ded9 !important;
+  background: transparent !important;
+}
+
+[data-theme="dark"] .self-check-modal .self-check-toolbar-btn:hover:not(:disabled),
+[data-theme="dark"] .memorisation-checker-modal .self-check-toolbar-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #7fe0b4 !important;
+}
+
+/* Subtle word colouring for the FINAL review (live words use inline styles).
+   Underline + coloured text only — no boxes, borders or padding shifts. */
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-correct,
+.self-check-modal-ayah.recitation-word-review-active word.recitation-word-correct,
+.self-check-modal-ayah.recitation-word-review-active .wbw-word.recitation-word-correct,
+.memorisation-checker-ayah.recitation-word-review-active .recitation-word-correct,
+.memorisation-checker-ayah.recitation-word-review-active word.recitation-word-correct,
+.recitation-review-ayah .recitation-word-correct,
+.recitation-review-ayah word.recitation-word-correct {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: inset 0 -0.085em 0 rgba(26, 133, 79, 0.85) !important;
+  color: #15724c !important;
+  padding-inline: 0 !important;
+}
+
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-partial,
+.self-check-modal-ayah.recitation-word-review-active word.recitation-word-partial,
+.self-check-modal-ayah.recitation-word-review-active .wbw-word.recitation-word-partial,
+.memorisation-checker-ayah.recitation-word-review-active .recitation-word-partial,
+.memorisation-checker-ayah.recitation-word-review-active word.recitation-word-partial,
+.recitation-review-ayah .recitation-word-partial,
+.recitation-review-ayah word.recitation-word-partial {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: inset 0 -0.085em 0 rgba(204, 138, 11, 0.85) !important;
+  color: #9a6207 !important;
+  padding-inline: 0 !important;
+}
+
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-incorrect,
+.self-check-modal-ayah.recitation-word-review-active word.recitation-word-incorrect,
+.self-check-modal-ayah.recitation-word-review-active .wbw-word.recitation-word-incorrect,
+.memorisation-checker-ayah.recitation-word-review-active .recitation-word-incorrect,
+.memorisation-checker-ayah.recitation-word-review-active word.recitation-word-incorrect,
+.recitation-review-ayah .recitation-word-incorrect,
+.recitation-review-ayah word.recitation-word-incorrect {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: inset 0 -0.085em 0 rgba(193, 63, 45, 0.85) !important;
+  color: #a83327 !important;
+  padding-inline: 0 !important;
+}
+
+.self-check-modal-ayah.recitation-word-review-active .recitation-word-pending,
+.self-check-modal-ayah.recitation-word-review-active word.recitation-word-pending,
+.memorisation-checker-ayah.recitation-word-review-active .recitation-word-pending,
+.recitation-review-ayah .recitation-word-pending {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .self-check-modal-ayah.recitation-word-review-active .recitation-word-correct,
+[data-theme="dark"] .memorisation-checker-ayah.recitation-word-review-active .recitation-word-correct,
+[data-theme="dark"] .recitation-review-ayah .recitation-word-correct {
+  color: #7fd6aa !important;
+}
+
+[data-theme="dark"] .self-check-modal-ayah.recitation-word-review-active .recitation-word-partial,
+[data-theme="dark"] .memorisation-checker-ayah.recitation-word-review-active .recitation-word-partial,
+[data-theme="dark"] .recitation-review-ayah .recitation-word-partial {
+  color: #f0c46a !important;
+}
+
+[data-theme="dark"] .self-check-modal-ayah.recitation-word-review-active .recitation-word-incorrect,
+[data-theme="dark"] .memorisation-checker-ayah.recitation-word-review-active .recitation-word-incorrect,
+[data-theme="dark"] .recitation-review-ayah .recitation-word-incorrect {
+  color: #f0938a !important;
 }
 
 </style>

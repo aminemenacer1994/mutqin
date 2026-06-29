@@ -1,13 +1,17 @@
 require('./bootstrap.js');
 
-import { createApp } from 'vue';
+import { createApp, defineAsyncComponent } from 'vue';
 import Homepage from './components/Homepage.vue';
-import Memorisation from './components/Memorisation.vue';
 import About from './components/About.vue';
 import AboutUsPage from './components/AboutUs.vue';
 import OurMissionPage from './components/OurMission.vue';
 import DonationPage from './components/DonationPage.vue';
 import { setupI18n, setLocale } from './i18n';
+
+// The memorisation workspace is by far the heaviest component. It is only used
+// on the memorisation page, so load it as a separate async chunk to keep the
+// main bundle (and every other page) lean.
+const Memorisation = defineAsyncComponent(() => import('./components/Memorisation.vue'));
 
 async function bootstrapApp() {
     const app = createApp({});
