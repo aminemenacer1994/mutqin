@@ -349,39 +349,4 @@ export default {
   }
 }
 
-@media (max-width: 899.98px) {
-  .story-page {
-    padding-bottom: 60px;
-  }
-
-  .story-hero {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 575.98px) {
-  .story-shell {
-    width: min(100%, calc(100% - 20px));
-    gap: 18px;
-  }
-
-  .story-copy,
-  .story-panel,
-  .story-columns article,
-  .story-band {
-    padding: 18px;
-    border-radius: 22px;
-  }
-
-  .story-copy h1 {
-    font-size: clamp(2.1rem, 12vw, 3rem);
-  }
-
-  .story-lead,
-  .story-columns p,
-  .story-panel li,
-  .story-band p {
-    line-height: 1.75;
-  }
-}
 </style>

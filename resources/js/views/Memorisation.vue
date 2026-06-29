@@ -1461,28 +1461,28 @@
         <div class="modal-body planner-completion-body">
           <div class="container-fluid planner-completion-shell px-0">
             <div class="row g-3 planner-completion-stats-row">
-              <div class="col-12 col-md-6 col-xl-3 planner-completion-stat-col">
+              <div class="col-3 planner-completion-stat-col">
                 <article class="planner-completion-stat">
                   <span>Memorised today</span>
                   <strong>{{ plannerCompletionStats.memorised }}</strong>
                   <small>{{ plannerCompletionStats.memorisedLabel }}</small>
                 </article>
               </div>
-              <div class="col-12 col-md-6 col-xl-3 planner-completion-stat-col">
+              <div class="col-3 planner-completion-stat-col">
                 <article class="planner-completion-stat">
                   <span>New ayahs</span>
                   <strong>{{ plannerCompletionStats.newAyahs }}</strong>
                   <small>{{ plannerCompletionStats.newAyahsLabel }}</small>
                 </article>
               </div>
-              <div class="col-12 col-md-6 col-xl-3 planner-completion-stat-col">
+              <div class="col-3 planner-completion-stat-col">
                 <article class="planner-completion-stat">
                   <span>Today&apos;s goal</span>
                   <strong>{{ plannerCompletionStats.goalProgress }}</strong>
                   <small>{{ plannerCompletionStats.goalStatus }}</small>
                 </article>
               </div>
-              <div class="col-12 col-md-6 col-xl-3 planner-completion-stat-col">
+              <div class="col-3 planner-completion-stat-col">
                 <article class="planner-completion-stat">
                   <span>Next review</span>
                   <strong>{{ plannerCompletionStats.nextReview }}</strong>

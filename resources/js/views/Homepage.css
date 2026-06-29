@@ -49,20 +49,6 @@
   --accent-wash: rgba(221, 194, 162, 0.35);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: var(--font-ui);
-  background: var(--bg);
-  color: var(--text);
-  overflow-x: hidden;
-  transition: background 0.3s ease, color 0.3s ease;
-}
-
 .vue-onboarding {
   min-height: 100vh;
   display: flex;
@@ -77,33 +63,6 @@ body {
   background:
     radial-gradient(circle at 18% 8%, rgba(224, 173, 114, 0.12), transparent 28%),
     linear-gradient(180deg, #101114 0%, #15120f 100%);
-}
-
-/* Verse Ticker */
-.verse-ticker {
-  background: var(--accent-wash);
-  padding: 1rem 0;
-  overflow: hidden;
-  white-space: nowrap;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-
-.ticker-track {
-  display: inline-block;
-  animation: ticker 60s linear infinite;
-}
-
-.ticker-track span {
-  margin: 0 2rem;
-  font-family: var(--font-ar);
-  font-size: 1.2rem;
-  color: var(--accent);
-}
-
-@keyframes ticker {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
 }
 
 /* Hero Section - Smaller & Refined */
@@ -136,13 +95,6 @@ body {
 }
 
 .hero-container {
-  max-width: 1320px;
-  width: 100%;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(2.2rem, 4vw, 3.8rem);
-  align-items: center;
   position: relative;
   z-index: 1;
 }
@@ -372,11 +324,6 @@ body {
   margin-right: 0;
 }
 
-.section-kicker-inline {
-  margin-left: 0;
-  margin-right: 0;
-}
-
 .section-kicker {
   width: fit-content;
   margin: 0 auto 1rem;
@@ -427,9 +374,7 @@ body {
 
 /* Features Grid */
 .features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
-  gap: 1.2rem;
+  margin-top: 0;
 }
 
 .feature-card {
@@ -524,9 +469,6 @@ body {
 }
 
 .steps-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.2rem;
   margin-top: 1.4rem;
 }
 
@@ -602,9 +544,7 @@ body {
 }
 
 .testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.2rem;
+  margin-top: 0;
 }
 
 .testimonial-card {
@@ -680,12 +620,8 @@ body {
 
 /* Pricing */
 .pricing-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.6rem;
   max-width: 1180px;
   margin: 0 auto;
-  align-items: stretch;
 }
 
 .pricing-comparison {
@@ -800,11 +736,6 @@ body {
   background: var(--surface-strong);
 }
 
-.comparison-value-muted {
-  color: var(--text-muted);
-  background: transparent;
-}
-
 .comparison-value-icon {
   min-width: 2.5rem;
   padding-inline: 0.6rem;
@@ -871,10 +802,7 @@ body {
 }
 
 .contact-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1fr);
-  gap: 1.75rem;
-  align-items: start;
+  margin-top: 0;
 }
 
 .contact-copy {
@@ -892,9 +820,7 @@ body {
 }
 
 .contact-form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  margin-top: 0;
 }
 
 .contact-form .form-label {
@@ -1060,7 +986,6 @@ body {
 }
 
 .pricing-features i.bi-check-circle-fill { color: var(--accent); font-size: 1rem; }
-.pricing-features i.bi-x-circle { color: #c9b6a0; font-size: 1rem; }
 
 .pricing-card .btn-primary,
 .pricing-card .btn-secondary {
@@ -1121,7 +1046,6 @@ body {
 [data-theme="dark"] .faq-shell,
 [data-theme="dark"] .contact-card,
 [data-theme="dark"] .faq-accordion .accordion-button,
-[data-theme="dark"] .contact-point,
 [data-theme="dark"] .contact-form .form-control {
   background: rgba(31, 27, 24, 0.96);
   border-color: rgba(255, 236, 216, 0.14);
@@ -1132,13 +1056,11 @@ body {
   color: #ffd19b;
 }
 
-[data-theme="dark"] .faq-accordion .accordion-body,
-[data-theme="dark"] .contact-point p {
+[data-theme="dark"] .faq-accordion .accordion-body {
   color: #d8cabb;
 }
 
-[data-theme="dark"] .contact-form .form-label,
-[data-theme="dark"] .contact-point strong {
+[data-theme="dark"] .contact-form .form-label {
   color: #f8efe3;
 }
 
@@ -1184,11 +1106,6 @@ body {
 [data-theme="dark"] .comparison-value-limited {
   color: #fff7ee;
   background: rgba(255, 255, 255, 0.06);
-}
-
-[data-theme="dark"] .comparison-value-muted {
-  color: #a99c8e;
-  border-color: rgba(255, 236, 216, 0.1);
 }
 
 .pricing-actions {
@@ -1245,10 +1162,6 @@ body {
   padding: 2.35rem;
   border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow: var(--shadow-lg);
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 1.5rem;
 }
 
 .cta-icon {
@@ -1370,9 +1283,6 @@ body {
 }
 
 .footer-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 2.2rem;
   margin-bottom: 2.2rem;
 }
 
@@ -1514,174 +1424,3 @@ body {
 [data-aos="flip-right"].aos-animate { transform: rotateY(0); }
 [data-aos="flip-left"] { transform: rotateY(-90deg); }
 [data-aos="flip-left"].aos-animate { transform: rotateY(0); }
-
-/* Responsive */
-@media (max-width: 768px) {
-  .vue-onboarding {
-    overflow-x: clip;
-  }
-
-  [data-aos],
-  [data-aos="fade-left"],
-  [data-aos="fade-up"],
-  [data-aos="zoom-in"],
-  [data-aos="flip-up"],
-  [data-aos="flip-right"],
-  [data-aos="flip-left"] {
-    transform: none;
-  }
-
-  .hero-container {
-    grid-template-columns: 1fr;
-    text-align: center;
-    gap: 2rem;
-  }
-
-  .hero-image {
-    width: 100%;
-    max-width: min(100%, 420px);
-    margin-inline: auto;
-  }
-
-  .demo-card {
-    width: 100%;
-  }
-
-  .hero-title {
-    font-size: clamp(2.2rem, 10vw, 3.25rem);
-    line-height: 1;
-  }
-
-  .hero {
-    padding: calc(70px + 2.2rem) 1.1rem 2.4rem;
-    min-height: auto;
-  }
-
-  .hero-buttons,
-  .pricing-actions,
-  .cta-actions {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-    width: 100%;
-  }
-
-  .hero-buttons .btn-primary,
-  .hero-buttons .btn-secondary,
-  .pricing-actions .btn-primary,
-  .pricing-actions .btn-secondary,
-  .cta-actions .btn-primary,
-  .cta-actions .btn-secondary {
-    width: 100%;
-  }
-
-  .features-grid,
-  .steps-grid,
-  .testimonials-grid,
-  .pricing-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .pricing-card.featured { transform: scale(1); }
-  .pricing-card { min-height: auto; }
-  .floating-card { display: none; }
-  .section-title { font-size: 1.8rem; }
-  .section-title::before,
-  .section-title::after { display: none; }
-  .section-container { padding: 2.55rem 1.1rem; }
-  .feature-card, .step-card, .testimonial-card { min-height: auto; }
-  .steps-section { background: var(--bg); }
-  .contact-grid,
-  .contact-form-grid { grid-template-columns: 1fr; }
-  .section-title-left,
-  .section-subtitle-left,
-  .section-kicker-inline { text-align: center; margin-left: auto; margin-right: auto; }
-  .contact-copy { text-align: center; }
-  .cta-block {
-    grid-template-columns: 1fr;
-    margin: 1rem 1.2rem 2rem;
-    padding: 1.7rem;
-    border-radius: 30px;
-  }
-  .pricing-comparison { margin-top: 1.6rem; padding: 1rem; border-radius: 24px; }
-  .comparison-table {
-    min-width: 560px;
-  }
-
-  .footer-grid { grid-template-columns: 1fr; text-align: center; }
-  .footer-brand { max-width: 100%; text-align: center; }
-  .footer-logo { justify-content: center; }
-  .footer-links a { justify-content: center; }
-  .social-icons { justify-content: center; }
-  .problem-text, .solution-text { flex-direction: column; text-align: left; }
-}
-
-@media (max-width: 575.98px) {
-  .hero {
-    padding: calc(70px + 1.8rem) 0.95rem 2.2rem;
-  }
-
-  .hero-badge,
-  .section-kicker,
-  .featured-tag,
-  .plan-label,
-  .comparison-value {
-    max-width: 100%;
-    white-space: normal;
-  }
-
-  .demo-card,
-  .problem-solution,
-  .feature-card,
-  .step-card,
-  .testimonial-card,
-  .pricing-card,
-  .faq-shell,
-  .contact-card,
-  .cta-block {
-    border-radius: 12px;
-  }
-
-  .section-container {
-    padding: 2.25rem 0.95rem;
-  }
-
-  .contact-card {
-    padding: 1rem;
-  }
-
-  .contact-form-grid,
-  .contact-grid {
-    gap: 1rem;
-  }
-
-  .comparison-table {
-    min-width: 500px;
-  }
-
-  .comparison-table thead th,
-  .comparison-table tbody th,
-  .comparison-table tbody td {
-    padding: 0.75rem;
-  }
-}
-
-@media (min-width: 769px) {
-  .floating-card {
-    transform: translateX(-6px);
-  }
-}
-
-@media (max-width: 359.98px) {
-  .hero {
-    padding: calc(70px + 1.9rem) 0.8rem 2.4rem;
-  }
-
-  .hero-title {
-    font-size: 2rem;
-  }
-
-  .section-container {
-    padding-inline: 0.8rem;
-  }
-}

@@ -105,6 +105,7 @@ canvas {
 
 :where(.modal-dialog) {
   max-width: calc(100vw - 1rem);
+  margin: 0.5rem auto;
 }
 
 :where(.modal-content) {
@@ -113,30 +114,6 @@ canvas {
 
 :where(.modal-body, .offcanvas-body) {
   -webkit-overflow-scrolling: touch;
-}
-
-@media (max-width: 575.98px) {
-  :where(.modal-dialog) {
-    margin: 0.5rem auto;
-  }
-
-  :where(.modal-fullscreen-sm-down) {
-    width: 100vw;
-    max-width: none;
-    height: 100dvh;
-    margin: 0;
-  }
-
-  :where(.modal-fullscreen-sm-down .modal-content) {
-    min-height: 100dvh;
-    max-height: 100dvh;
-    border-radius: 0;
-  }
-
-  :where(.btn-group, .btn-group-vertical) {
-    max-width: 100%;
-    flex-wrap: wrap;
-  }
 }
 
 /* Consistent focus and press feedback across the app */
@@ -554,25 +531,4 @@ html[data-theme="dark"] .app-navbar {
 [data-theme="dark"] .form-check-input:checked {
   background-color: var(--accent);
   border-color: var(--accent);
-}
-
-@media (max-width: 767.98px) {
-  .app-navbar .navbar-collapse {
-    margin-top: 1rem;
-    padding: 1rem;
-    border-radius: 20px;
-    background: var(--surface-strong);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .auth-card {
-    width: 100%;
-  }
-
-  .auth-shell {
-    min-height: calc(100dvh - var(--navbar-height, 64px));
-    place-items: start center;
-    padding-top: calc(var(--navbar-height, 64px) + env(safe-area-inset-top, 0px) + 1.75rem);
-    align-content: start;
-  }
 }

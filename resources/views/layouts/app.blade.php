@@ -288,10 +288,6 @@
             margin: 0 auto;
             padding: 12px var(--gutter);
             min-height: var(--nav-h);
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            align-items: center;
-            column-gap: 24px;
         }
 
         .navbar-brand {
@@ -306,6 +302,10 @@
             mix-blend-mode: normal;
             opacity: 0.98;
             image-rendering: auto;
+        }
+
+        .navbar-quick-actions {
+            margin-inline-start: auto;
         }
 
         .navbar-toggler {
@@ -331,22 +331,22 @@
         .nav-links-desktop {
             display: flex;
             gap: 12px;
-            justify-content: center;
             align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .navbar-collapse {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 0;
         }
 
         .navbar-nav-shell {
             flex: 1 1 auto;
-            display: flex;
-            justify-content: center;
+            min-width: 0;
+        }
+
+        .app-navbar .offcanvas-lg {
+            border-color: var(--border);
+            background: var(--surface-strong);
+            --bs-offcanvas-width: min(360px, 100vw);
+        }
+
+        .app-navbar .offcanvas-header {
+            border-bottom: 1px solid var(--border);
         }
 
         .app-auth-links {
@@ -391,12 +391,6 @@
             opacity: 0.7;
         }
 
-        .app-navbar-actions {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
         .app-theme-toggle {
             width: 42px;
             height: 42px;
@@ -419,33 +413,6 @@
             transform: rotate(15deg);
         }
 
-        .lang-switcher {
-            display: inline-flex;
-            align-items: center;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            background: var(--surface);
-        }
-
-        .lang-btn {
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            padding: 8px 10px;
-            min-width: 42px;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-
-        .lang-btn.active {
-            color: var(--text);
-            background: var(--accent-light);
-        }
-
         /* Dropdown Styles */
         .dropdown {
             position: relative;
@@ -465,11 +432,19 @@
             font-size: 14px;
             cursor: pointer;
             transition: all 0.2s ease;
+            max-width: 100%;
         }
 
         .app-user-toggle:hover {
             border-color: var(--accent);
             background: var(--accent-light);
+        }
+
+        .app-user-toggle > span:last-of-type {
+            max-width: 10rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         html[dir="rtl"] .dropdown-menu {
@@ -558,189 +533,7 @@
             left: 0px;
         }
 
-        /* Mobile styles */
-        @media (max-width: 992px) {
-            .navbar-shell {
-                padding: 12px var(--gutter-tight);
-                min-height: auto;
-                display: flex;
-            }
-
-            .app-navbar-logo {
-                height: clamp(42px, 10vw, 52px);
-            }
-
-            .navbar-brand {
-                margin-inline-end: 0;
-                min-width: 0;
-            }
-            
-            .navbar-collapse {
-                position: fixed;
-                top: calc(env(safe-area-inset-top, 0px) + 76px);
-                inset-inline: 0;
-                width: 100%;
-                height: calc(100dvh - (env(safe-area-inset-top, 0px) + 76px));
-                background: var(--surface-strong);
-                transition: opacity 0.22s ease, visibility 0.22s ease, transform 0.22s ease;
-                padding: 18px var(--gutter);
-                z-index: 999;
-                overflow-y: auto;
-                overscroll-behavior: contain;
-                -webkit-overflow-scrolling: touch;
-                opacity: 0;
-                visibility: hidden;
-                transform: translateY(-8px);
-                border-top: 1px solid var(--border);
-            }
-            
-            .navbar-collapse.show {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-            }
-            
-            .nav-links-desktop {
-                flex-direction: column;
-                width: 100%;
-                gap: 8px;
-                align-items: stretch;
-            }
-
-            .navbar-nav-shell {
-                width: 100%;
-            }
-            
-            .nav-link {
-                padding: 14px 20px;
-                font-size: 16px;
-                min-height: var(--tap);
-                display: flex;
-                align-items: center;
-                overflow-wrap: anywhere;
-            }
-            
-            .app-navbar-actions {
-                margin-inline-start: 0;
-                width: 100%;
-                display: grid;
-                grid-template-columns: 1fr;
-                align-items: stretch;
-                gap: 12px;
-                padding-top: 8px;
-            }
-
-            .app-navbar-actions > *,
-            .app-navbar-actions .dropdown,
-            .app-theme-toggle,
-            .lang-switcher,
-            .app-user-toggle {
-                width: 100%;
-            }
-
-            .app-theme-toggle,
-            .app-user-toggle {
-                justify-content: center;
-            }
-
-            .lang-switcher {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-            
-            .dropdown-menu {
-                position: static;
-                box-shadow: none;
-                background: transparent;
-                padding-inline-start: 20px;
-                margin-top: 8px;
-                transform: none;
-                border: none;
-            }
-            
-            .dropdown-menu.show {
-                opacity: 1;
-                visibility: visible;
-                transform: none;
-            }
-            
-            .dropdown-item {
-                padding: 12px 16px;
-                min-height: var(--tap);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .shell {
-                padding: 0 var(--gutter-tight);
-            }
-            
-            main.shell {
-                padding-top: 24px;
-                padding-bottom: 24px;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .navbar-shell {
-                padding: 10px 14px;
-            }
-
-            .app-user-toggle {
-                padding: 10px 12px;
-            }
-            
-            .app-user-avatar {
-                width: 32px;
-                height: 32px;
-                font-size: 13px;
-            }
-            
-            .shell {
-                padding: 0 16px;
-            }
-            
-            main.shell {
-                padding-top: 20px;
-                padding-bottom: 20px;
-            }
-
-            .navbar-toggler {
-                width: 54px;
-                height: 54px;
-                padding: 0;
-                border-radius: 8px;
-            }
-
-            .navbar-collapse {
-                top: calc(env(safe-area-inset-top, 0px) + 74px);
-                height: calc(100dvh - (env(safe-area-inset-top, 0px) + 74px));
-                padding: 16px;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .navbar-shell {
-                padding-inline: 10px;
-            }
-
-            .app-navbar-logo {
-                height: 38px;
-            }
-
-            .navbar-toggler {
-                width: 48px;
-                height: 48px;
-            }
-
-            .navbar-collapse {
-                top: calc(env(safe-area-inset-top, 0px) + 64px);
-                height: calc(100dvh - (env(safe-area-inset-top, 0px) + 64px));
-                padding: 12px;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 scroll-behavior: auto !important;
                 transition-duration: 0.01ms !important;
@@ -770,10 +563,6 @@
 
         .auth-card {
             width: min(100%, 980px);
-            display: grid;
-            grid-template-columns: minmax(0, 0.9fr) minmax(340px, 1fr);
-            gap: clamp(24px, 4vw, 48px);
-            align-items: start;
             padding: 0;
             border: 0;
             border-radius: 0;
@@ -783,7 +572,7 @@
 
         .auth-card-sm {
             max-width: 640px;
-            grid-template-columns: 1fr;
+            margin-inline: auto;
         }
 
         .auth-copy {
@@ -815,7 +604,8 @@
         }
 
         .auth-note {
-            display: flex;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
             gap: 12px;
             align-items: flex-start;
             padding: 0;
@@ -852,7 +642,7 @@
         }
 
         .auth-subtitle {
-            max-width: 42ch;
+            max-width: 34rem;
             margin: 0;
             color: var(--text-muted);
             font-size: clamp(15px, 1.4vw, 18px);
@@ -861,10 +651,12 @@
 
         .auth-form-wrap {
             min-width: 0;
-            padding: 0;
-            border: 0;
-            border-radius: 0;
-            background: transparent;
+            padding: clamp(1.25rem, 2vw, 1.75rem);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(18px);
         }
 
         .auth-form-wrap .form-label {
@@ -887,31 +679,7 @@
             border-radius: 16px;
         }
 
-        @media (max-width: 860px) {
-            .auth-shell {
-                align-items: flex-start;
-            }
-
-            .auth-card {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 520px) {
-            .auth-shell {
-                padding-inline: 14px;
-            }
-
-            .auth-card {
-                padding: 14px;
-            }
-
-            .auth-form-wrap {
-                padding: 12px;
-            }
-        }
-
-        .billing-page {
+.billing-page {
             padding-block: 42px 64px;
         }
 
@@ -1515,123 +1283,7 @@
             box-shadow: 0 0 0 3px var(--accent-light);
         }
 
-        @media (max-width: 900px) {
-            .billing-confirmation {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .billing-confirmation-actions {
-                min-width: 0;
-                width: 100%;
-            }
-
-            .billing-hero,
-            .billing-grid,
-            .profile-grid,
-            .profile-subscription-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .billing-card {
-                min-height: auto;
-            }
-
-            .profile-hero-card {
-                grid-template-columns: 1fr;
-            }
-
-            .profile-card-head-split,
-            .profile-hero-actions,
-            .profile-subscription-actions,
-            .admin-page-head,
-            .admin-message-head {
-                flex-direction: column;
-            }
-
-            .profile-action-btn,
-            .profile-submit-btn,
-            .profile-hero-actions form,
-            .profile-subscription-actions form {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            .billing-page {
-                padding-block: 24px 42px;
-            }
-
-            .billing-hero {
-                gap: 16px;
-            }
-
-            .billing-hero h1 {
-                font-size: clamp(28px, 11vw, 38px);
-                line-height: 1.08;
-                overflow-wrap: anywhere;
-            }
-
-            .billing-status-panel,
-            .billing-card,
-            .billing-confirmation,
-            .profile-pane {
-                padding: 18px;
-                border-radius: 20px;
-            }
-
-            .billing-actions {
-                grid-template-columns: 1fr;
-            }
-
-            .billing-price {
-                font-size: 30px;
-            }
-
-            .billing-primary-btn,
-            .billing-secondary-btn,
-            .billing-link-btn {
-                min-height: 48px;
-                white-space: normal;
-                text-align: center;
-            }
-
-            .profile-page {
-                padding-block: calc(var(--nav-h) + 14px) 40px;
-            }
-
-            .profile-hero-card {
-                padding: 18px;
-                border-radius: 22px;
-            }
-
-            .profile-hero-summary,
-            .profile-subscription-item {
-                padding: 14px;
-                border-radius: 18px;
-            }
-
-            .profile-subscription-actions,
-            .admin-filter-tabs,
-            .admin-message-actions {
-                display: grid;
-                grid-template-columns: 1fr;
-            }
-
-            .auth-card {
-                padding: 0;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .billing-status-panel,
-            .billing-card,
-            .billing-confirmation {
-                padding: 14px;
-            }
-        }
-    </style>
-
+</style>
 
 </head>
 <body dir="{{ $appDirection }}">
@@ -1649,75 +1301,78 @@
                 >
             </a>
 
-            <button class="navbar-toggler" type="button" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('ui.open_navigation') }}">
-                <i class="bi bi-list"></i>
-            </button>
+            <div class="d-flex align-items-center gap-2 navbar-quick-actions">
+                <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="{{ __('ui.switch_dark') }}">
+                    <i class="bi bi-sun"></i>
+                </button>
 
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <div class="navbar-nav-shell">
-                    <div class="navbar-nav nav-links-desktop">
-                        <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
-                        <a class="nav-link {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}">Memorisation</a>
+                @auth
+                    <div class="dropdown" id="userDropdown">
+                        <button class="btn app-user-toggle" type="button" id="dropdownToggle" aria-expanded="false" aria-haspopup="menu" aria-controls="dropdownMenu">
+                            <span class="app-user-avatar" aria-hidden="true">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
+                            <span class="d-none d-lg-inline">{{ Auth::user()->name ?? __('ui.user') }}</span>
+                            <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <ul class="dropdown-menu" id="dropdownMenu" role="menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ route('profile.show') }}">
+                                    <i class="bi bi-person-circle"></i> Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('profile.show') }}#subscription">
+                                    <i class="bi bi-credit-card-2-front"></i> Subscription
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('profile.show') }}#settings">
+                                    <i class="bi bi-gear"></i> Settings
+                                </a>
+                            </li>
+                            @if (Auth::user()->isAdmin())
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('admin.contact-messages.index') }}">
+                                        <i class="bi bi-inbox"></i> Contact Inbox
+                                    </a>
+                                </li>
+                            @endif
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}" id="logoutForm">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item" role="menuitem">
+                                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i> <span data-i18n="logout">{{ __('ui.logout') }}</span>
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
                     </div>
+                @endauth
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#primaryNavbar" aria-controls="primaryNavbar" aria-label="{{ __('ui.open_navigation') }}">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+
+            <div class="offcanvas offcanvas-end offcanvas-lg" tabindex="-1" id="primaryNavbar" aria-labelledby="primaryNavbarLabel">
+                <div class="offcanvas-header">
+                    <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ __('ui.primary_navigation') }}</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#primaryNavbar" aria-label="{{ __('ui.close_navigation') }}"></button>
                 </div>
-
-                <div class="d-flex align-items-center gap-3 app-navbar-actions">
-                    <!-- <div class="lang-switcher" id="globalLangSwitcher" role="group" aria-label="{{ __('ui.language_switcher') }}">
-                        <button type="button" class="lang-btn" data-locale="en" aria-label="{{ __('ui.switch_language', ['language' => __('ui.english')]) }}">EN</button>
-                        <button type="button" class="lang-btn" data-locale="ar" aria-label="{{ __('ui.switch_language', ['language' => __('ui.arabic')]) }}">AR</button>
-                        <button type="button" class="lang-btn" data-locale="fr" aria-label="{{ __('ui.switch_language', ['language' => __('ui.french')]) }}">FR</button>
-                    </div> -->
-                    <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="{{ __('ui.switch_dark') }}">
-                        <i class="bi bi-sun"></i>
-                    </button>
-
-                    @auth
-                        <div class="dropdown" id="userDropdown">
-                            <button class="btn app-user-toggle" type="button" id="dropdownToggle" aria-expanded="false" aria-haspopup="menu" aria-controls="dropdownMenu">
-                                <span class="app-user-avatar" aria-hidden="true">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
-                                <span>{{ Auth::user()->name ?? __('ui.user') }}</span>
-                                <i class="bi bi-chevron-down" aria-hidden="true"></i>
-                            </button>
-                            <ul class="dropdown-menu" id="dropdownMenu" role="menu">
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('profile.show') }}">
-                                        <i class="bi bi-person-circle"></i> Profile
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('profile.show') }}#subscription">
-                                        <i class="bi bi-credit-card-2-front"></i> Subscription
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('profile.show') }}#settings">
-                                        <i class="bi bi-gear"></i> Settings
-                                    </a>
-                                </li>
-                                @if (Auth::user()->isAdmin())
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('admin.contact-messages.index') }}">
-                                            <i class="bi bi-inbox"></i> Contact Inbox
-                                        </a>
-                                    </li>
-                                @endif
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form method="POST" action="{{ route('logout') }}" id="logoutForm">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item" role="menuitem">
-                                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i> <span data-i18n="logout">{{ __('ui.logout') }}</span>
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
+                <div class="offcanvas-body d-flex flex-column flex-lg-row align-items-lg-center gap-3 pt-3 pt-lg-0">
+                    <div class="navbar-nav-shell d-flex justify-content-lg-center">
+                        <div class="navbar-nav nav-links-desktop gap-2 gap-lg-3 justify-content-lg-center">
+                            <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
+                            <a class="nav-link {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}">Memorisation</a>
                         </div>
-                    @else
-                        <div class="app-auth-links">
+                    </div>
+
+                    @guest
+                        <div class="app-auth-links d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 gap-lg-0">
                             <a class="nav-link" href="{{ route('login') }}" data-i18n="login">{{ __('ui.login') }}</a>
                             <a class="nav-link" href="{{ route('register') }}" data-i18n="register">{{ __('ui.register') }}</a>
                         </div>
-                    @endauth
+                    @endguest
                 </div>
             </div>
         </div>
@@ -1860,33 +1515,21 @@
                 });
             });
         })();
-        
-        // Handle mobile menu toggle
+
         (function() {
             runWhenReady(function() {
-                const toggler = document.querySelector('.navbar-toggler');
-                const collapse = document.querySelector('.navbar-collapse');
-                
-                if (toggler && collapse) {
-                    toggler.addEventListener('click', function() {
-                        collapse.classList.toggle('show');
-                        const expanded = collapse.classList.contains('show');
-                        toggler.setAttribute('aria-expanded', expanded);
-                        toggler.setAttribute('aria-label', expanded ? @json(__('ui.close_navigation')) : @json(__('ui.open_navigation')));
+                const panel = document.getElementById('primaryNavbar');
+                if (!panel || !window.bootstrap) return;
+
+                panel.querySelectorAll('a[href]').forEach((link) => {
+                    link.addEventListener('click', function() {
+                        if (!panel.classList.contains('show')) return;
+                        window.bootstrap.Offcanvas.getOrCreateInstance(panel).hide();
                     });
-                    
-                    const links = collapse.querySelectorAll('a');
-                    links.forEach(link => {
-                        link.addEventListener('click', function() {
-                            collapse.classList.remove('show');
-                            toggler.setAttribute('aria-expanded', 'false');
-                            toggler.setAttribute('aria-label', @json(__('ui.open_navigation')));
-                        });
-                    });
-                }
+                });
             });
         })();
-
+        
         // Global language switcher for all pages
         (function() {
             const supported = ['en', 'ar', 'fr'];

@@ -333,44 +333,4 @@ export default {
   }
 }
 
-@media (max-width: 899.98px) {
-  .donation-page {
-    padding-bottom: 60px;
-  }
-
-  .donation-hero,
-  .donation-cta {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 575.98px) {
-  .donation-shell {
-    width: min(100%, calc(100% - 20px));
-    gap: 18px;
-  }
-
-  .donation-copy,
-  .donation-focus,
-  .donation-tier,
-  .donation-cta {
-    padding: 18px;
-    border-radius: 22px;
-  }
-
-  .donation-copy h1 {
-    font-size: clamp(2.1rem, 12vw, 3rem);
-  }
-
-  .donation-lead,
-  .donation-tier p,
-  .donation-focus p,
-  .donation-cta p {
-    line-height: 1.75;
-  }
-
-  .donation-cta a {
-    width: 100%;
-  }
-}
 </style>

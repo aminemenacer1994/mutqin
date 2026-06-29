@@ -3,28 +3,37 @@
 @section('content')
 <div class="auth-shell">
     <div class="auth-card">
-        <div class="auth-copy">
-            <div class="auth-eyebrow"><i class="bi bi-stars"></i> Mutqin access</div>
-            <h1 class="auth-title" data-i18n="login">{{ __('ui.login') }}</h1>
-            <p class="auth-subtitle" data-i18n="authLoginSubtitle">Continue your memorisation with a clean workspace, saved progress, and subscription syncing across devices.</p>
-            <div class="auth-note-list">
-                <div class="auth-note">
-                    <i class="bi bi-journal-check"></i>
-                    <div>
-                        <strong>Resume quickly</strong>
-                        <span>Pick up your last session without digging through extra screens.</span>
-                    </div>
-                </div>
-                <div class="auth-note">
-                    <i class="bi bi-shield-check"></i>
-                    <div>
-                        <strong>Secure account access</strong>
-                        <span>Your existing Mutqin account, subscription, and session data stay exactly where they are.</span>
+        <div class="row g-4 g-xl-5 align-items-start">
+            <div class="col-lg-5 d-none d-lg-block">
+                <div class="auth-copy">
+                    <div class="auth-eyebrow"><i class="bi bi-stars"></i> Mutqin access</div>
+                    <h1 class="auth-title" data-i18n="login">{{ __('ui.login') }}</h1>
+                    <p class="auth-subtitle" data-i18n="authLoginSubtitle">Continue your memorisation with a clean workspace, saved progress, and subscription syncing across devices.</p>
+                    <div class="auth-note-list">
+                        <div class="auth-note">
+                            <i class="bi bi-journal-check"></i>
+                            <div>
+                                <strong>Resume quickly</strong>
+                                <span>Pick up your last session without digging through extra screens.</span>
+                            </div>
+                        </div>
+                        <div class="auth-note">
+                            <i class="bi bi-shield-check"></i>
+                            <div>
+                                <strong>Secure account access</strong>
+                                <span>Your existing Mutqin account, subscription, and session data stay exactly where they are.</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="auth-form-wrap">
+            <div class="col-12 col-lg-7">
+                <div class="auth-form-wrap">
+                    <div class="auth-copy d-grid d-lg-none gap-3 mb-4">
+                        <div class="auth-eyebrow"><i class="bi bi-stars"></i> Mutqin access</div>
+                        <h1 class="auth-title mb-0" data-i18n="login">{{ __('ui.login') }}</h1>
+                        <p class="auth-subtitle mb-0" data-i18n="authLoginSubtitle">Continue your memorisation with a clean workspace, saved progress, and subscription syncing across devices.</p>
+                    </div>
                     @if (session('error'))
                         <div class="alert alert-danger auth-alert" role="alert">{{ session('error') }}</div>
                     @endif
@@ -99,6 +108,8 @@
                             <a href="{{ route('register') }}" data-i18n="register">{{ __('ui.register') }}</a>
                         </p>
                     @endif
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -154,32 +154,4 @@ button{
   font-style:italic;
 }
 
-@media(max-width:900px){
-  .grid{
-    grid-template-columns:1fr;
-  }
-
-  .hero h1{
-    font-size:clamp(30px, 8vw, 38px);
-  }
-}
-
-@media(max-width:575.98px){
-  .page{
-    padding-inline:14px;
-  }
-
-  .cta{
-    display:grid;
-    grid-template-columns:1fr;
-  }
-
-  .cta button{
-    width:100%;
-  }
-
-  .card{
-    padding:18px;
-  }
-}
 </style>

@@ -312,39 +312,4 @@ export default {
   }
 }
 
-@media (max-width: 899.98px) {
-  .mission-page {
-    padding-bottom: 60px;
-  }
-
-  .mission-hero {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 575.98px) {
-  .mission-shell {
-    width: min(100%, calc(100% - 20px));
-    gap: 18px;
-  }
-
-  .mission-copy,
-  .mission-side-panel,
-  .mission-step,
-  .mission-band {
-    padding: 18px;
-    border-radius: 22px;
-  }
-
-  .mission-copy h1 {
-    font-size: clamp(2.1rem, 12vw, 3rem);
-  }
-
-  .mission-lead,
-  .mission-side-list p,
-  .mission-step p,
-  .mission-band p {
-    line-height: 1.75;
-  }
-}
 </style>

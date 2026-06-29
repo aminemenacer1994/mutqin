@@ -10,7 +10,7 @@
       @click.self="close"
       @keydown.esc.prevent="close"
     >
-      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
             <div>
@@ -59,7 +59,7 @@
                 <p>Choose how many new ayahs you want to learn each day.</p>
               </div>
               <div class="row g-3">
-                <div v-for="option in goalOptions" :key="option.value" class="col-md-4">
+                <div v-for="option in goalOptions" :key="option.value" class="col-4">
                   <button
                     type="button"
                     class="card h-100 hifz-plan-choice"
@@ -75,7 +75,7 @@
               </div>
               <div class="hifz-plan-manual-fields">
                 <div class="row g-3">
-                  <div class="col-md-5">
+                  <div class="col-5">
                     <label class="form-label" for="hifzPlanSurah">Surah</label>
                     <input
                       id="hifzPlanSurah"
@@ -89,7 +89,7 @@
                       <option v-for="surah in surahList" :key="surah" :value="surah"></option>
                     </datalist>
                   </div>
-                  <div class="col-md-3">
+                  <div class="col-3">
                     <label class="form-label" for="hifzPlanDailyAyahs">Daily ayahs</label>
                     <input
                       id="hifzPlanDailyAyahs"
@@ -102,7 +102,7 @@
                       @input="setManualDailyAyahs($event.target.value)"
                     >
                   </div>
-                  <div class="col-6 col-md-2">
+                  <div class="col-2">
                     <label class="form-label" for="hifzPlanRangeFrom">From</label>
                     <input
                       id="hifzPlanRangeFrom"
@@ -113,7 +113,7 @@
                       @input="setManualRangeBound('from', $event.target.value)"
                     >
                   </div>
-                  <div class="col-6 col-md-2">
+                  <div class="col-2">
                     <label class="form-label" for="hifzPlanRangeTo">To</label>
                     <input
                       id="hifzPlanRangeTo"
@@ -134,7 +134,7 @@
                 <p>Pick the pace that feels realistic for your daily routine.</p>
               </div>
               <div class="row g-3">
-                <div v-for="option in learningStyleOptions" :key="option.value" class="col-md-4">
+                <div v-for="option in learningStyleOptions" :key="option.value" class="col-4">
                   <button
                     type="button"
                     class="card h-100 hifz-plan-choice"
@@ -156,7 +156,7 @@
                 <p>Tell Mutqin what to focus on first during each session.</p>
               </div>
               <div class="row g-3">
-                <div v-for="option in focusOptions" :key="option.value" class="col-md-6">
+                <div v-for="option in focusOptions" :key="option.value" class="col-6">
                   <button
                     type="button"
                     class="card h-100 hifz-plan-choice hifz-plan-choice-wide"
@@ -178,7 +178,7 @@
                 <p>Choose how much checking and guidance you want during practice.</p>
               </div>
               <div class="row g-3">
-                <div v-for="option in supportOptions" :key="option.value" class="col-md-4">
+                <div v-for="option in supportOptions" :key="option.value" class="col-4">
                   <button
                     type="button"
                     class="card h-100 hifz-plan-choice"
@@ -200,7 +200,7 @@
                 <p>Choose how many repeats, which reciter, and the playback speed for each ayah.</p>
               </div>
               <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-4">
                   <label class="form-label" for="hifzPlanRepeats">Repeats per ayah</label>
                   <input
                     id="hifzPlanRepeats"
@@ -212,7 +212,7 @@
                     @input="setPlaybackField('repetitionsPerAyah', $event.target.value)"
                   >
                 </div>
-                <div class="col-md-4">
+                <div class="col-4">
                   <label class="form-label" for="hifzPlanReciter">Reciter</label>
                   <select
                     id="hifzPlanReciter"
@@ -223,7 +223,7 @@
                     <option v-for="reciter in reciterChoices" :key="reciter.id" :value="reciter.id">{{ reciter.name }}</option>
                   </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-4">
                   <label class="form-label" for="hifzPlanSpeed">Playback speed</label>
                   <select
                     id="hifzPlanSpeed"
@@ -1159,88 +1159,4 @@ export default {
   gap: 0.4rem;
 }
 
-@media (max-width: 640px) {
-  .hifz-plan-modal {
-    padding: 0;
-  }
-
-  .modal-dialog {
-    width: 100%;
-    min-height: 100dvh;
-    margin: 0;
-  }
-
-  .modal-content {
-    min-height: 100dvh;
-    max-height: 100dvh;
-    border: 0;
-    border-radius: 0;
-  }
-
-  .modal-header,
-  .modal-body,
-  .modal-footer {
-    padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px));
-  }
-
-  .modal-title {
-    font-size: 1.08rem;
-    line-height: 1.2;
-  }
-
-  .hifz-plan-progress {
-    gap: 0.65rem;
-  }
-
-  .hifz-plan-progress-head {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .hifz-plan-progress-steps {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0.25rem;
-  }
-
-  .hifz-plan-step-dot small {
-    display: none;
-  }
-
-  .hifz-plan-summary-row {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .hifz-plan-summary-row strong {
-    text-align: left;
-  }
-
-  .hifz-forecast-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .hifz-plan-choice {
-    min-height: auto;
-  }
-
-  .modal-footer {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .modal-footer .btn {
-    width: 100%;
-  }
-}
-
-@media (max-width: 360px) {
-  .hifz-plan-progress-steps {
-    gap: 0.15rem;
-  }
-
-  .hifz-plan-step-dot span {
-    width: 28px;
-    height: 28px;
-  }
-}
 </style>

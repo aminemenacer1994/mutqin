@@ -4,41 +4,45 @@
 
     <!-- Hero Section -->
     <section class="hero">
-      <div class="hero-container">
-        <div class="hero-content" data-aos="fade-up">
-          <div class="hero-badge">
-            <i class="bi bi-moon-stars"></i> AI-Powered Quran Learning
-          </div>
-          <h1 class="hero-title"><span>Memorise the Quran with a calmer, sharper practice loop.</span></h1>
-          <p class="hero-desc">Mutqin brings your ayahs, recordings, AI checks, revision flow, and weak-spot insights into one focused workspace so every session ends with a clear next step.</p>
-          
-          <div class="problem-solution">
-            <p class="problem-text"><i class="bi bi-exclamation-triangle-fill"></i> <strong>The problem:</strong> Memorisation breaks down when weak ayahs, recordings, and review plans live in separate places.</p>
-            <div class="solution-highlight">
-              <p class="solution-text"><i class="bi bi-check-lg"></i> <strong>The solution:</strong> Practise in small ranges, check recitation and recall, then review the exact ayahs that need attention.</p>
+      <div class="container-xl hero-container">
+        <div class="row g-4 g-xl-5 align-items-center">
+          <div class="col-12 col-lg-7">
+            <div class="hero-content" data-aos="fade-up">
+              <div class="hero-badge">
+                <i class="bi bi-moon-stars"></i> AI-Powered Quran Learning
+              </div>
+              <h1 class="hero-title"><span>Memorise the Quran with a calmer, sharper practice loop.</span></h1>
+              <p class="hero-desc">Mutqin brings your ayahs, recordings, AI checks, revision flow, and weak-spot insights into one focused workspace so every session ends with a clear next step.</p>
+              
+              <div class="card problem-solution">
+                <p class="problem-text"><i class="bi bi-exclamation-triangle-fill"></i> <strong>The problem:</strong> Memorisation breaks down when weak ayahs, recordings, and review plans live in separate places.</p>
+                <div class="solution-highlight">
+                  <p class="solution-text"><i class="bi bi-check-lg"></i> <strong>The solution:</strong> Practise in small ranges, check recitation and recall, then review the exact ayahs that need attention.</p>
+                </div>
+              </div>
+              
+              <div class="hero-buttons">
+                <a href="/memorisation" class="btn-secondary hero-action-btn"><i class="bi bi-book-half"></i> Start Free</a>
+                <button @click="scrollToFeatures" class="btn-secondary hero-action-btn"><i class="bi bi-arrow-down"></i> See Features</button>
+              </div>
             </div>
           </div>
-          
-          <div class="hero-buttons">
-            <a href="/memorisation" class="btn-secondary hero-action-btn"><i class="bi bi-book-half"></i> Start Free</a>
-            <button @click="scrollToFeatures" class="btn-secondary hero-action-btn"><i class="bi bi-arrow-down"></i> See Features</button>
-          </div>
-          
-        </div>
-        
-        <div class="hero-image" data-aos="fade-left">
-          <div class="demo-card">
-            <i class="bi bi-mic"></i>
-            <h3>Live AI Analysis</h3>
-            <p>"Ikhfa' weak — hold nasalization 2 beats."</p>
-            <div class="demo-wave">
-              <i class="bi bi-soundwave"></i>
-              <span>Recording... → 96% accuracy</span>
+          <div class="col-12 col-lg-5">
+            <div class="hero-image" data-aos="fade-left">
+              <div class="card demo-card">
+                <i class="bi bi-mic"></i>
+                <h3>Live AI Analysis</h3>
+                <p>"Ikhfa' weak — hold nasalization 2 beats."</p>
+                <div class="demo-wave">
+                  <i class="bi bi-soundwave"></i>
+                  <span>Recording... → 96% accuracy</span>
+                </div>
+              </div>
+              <div class="floating-card" v-for="(badge, idx) in floatingBadges" :key="idx" :style="{ animationDelay: `${idx * 0.8}s` }">
+                <i :class="badge.icon"></i>
+                <span>{{ badge.text }}</span>
+              </div>
             </div>
-          </div>
-          <div class="floating-card" v-for="(badge, idx) in floatingBadges" :key="idx" :style="{ animationDelay: `${idx * 0.8}s` }">
-            <i :class="badge.icon"></i>
-            <span>{{ badge.text }}</span>
           </div>
         </div>
       </div>
@@ -52,15 +56,17 @@
         <div class="section-kicker"><i class="bi bi-soundwave"></i> Built for daily recitation</div>
         <h2 class="section-title">Everything you need to master recitation</h2>
         <p class="section-subtitle">From first recording to long-term revision, each tool closes a real feedback gap.</p>
-        <div class="features-grid">
-          <div class="feature-card" v-for="feature in features" :key="feature.title" data-aos="zoom-in">
-            <div class="feature-topline">
-              <div class="feature-icon"><i :class="feature.icon"></i></div>
-              <span :class="['feature-badge', feature.badgeType]">{{ feature.badge }}</span>
+        <div class="row g-4 features-grid">
+          <div class="col-md-6 col-xl-4" v-for="feature in features" :key="feature.title" data-aos="zoom-in">
+            <div class="feature-card h-100">
+              <div class="feature-topline">
+                <div class="feature-icon"><i :class="feature.icon"></i></div>
+                <span :class="['feature-badge', feature.badgeType]">{{ feature.badge }}</span>
+              </div>
+              <h3>{{ feature.title }}</h3>
+              <p>{{ feature.description }}</p>
+              <strong>{{ feature.result }}</strong>
             </div>
-            <h3>{{ feature.title }}</h3>
-            <p>{{ feature.description }}</p>
-            <strong>{{ feature.result }}</strong>
           </div>
         </div>
       </div>
@@ -74,15 +80,17 @@
         <div class="section-kicker"><i class="bi bi-route"></i> The practice loop</div>
         <h2 class="section-title">Three steps to fluent recitation</h2>
         <p class="section-subtitle">A short loop you can repeat every day: recite, diagnose, review exactly what needs work.</p>
-        <div class="steps-grid">
-          <div class="step-card" v-for="(step, idx) in steps" :key="idx" data-aos="flip-up" :data-aos-delay="idx * 100">
-            <div class="step-head">
-              <div class="step-number">0{{ idx + 1 }}</div>
-              <i :class="step.icon" class="step-icon"></i>
+        <div class="row g-4 steps-grid">
+          <div class="col-md-4" v-for="(step, idx) in steps" :key="idx" data-aos="flip-up" :data-aos-delay="idx * 100">
+            <div class="step-card h-100">
+              <div class="step-head">
+                <div class="step-number">0{{ idx + 1 }}</div>
+                <i :class="step.icon" class="step-icon"></i>
+              </div>
+              <h3>{{ step.title }}</h3>
+              <p>{{ step.description }}</p>
+              <span>{{ step.microcopy }}</span>
             </div>
-            <h3>{{ step.title }}</h3>
-            <p>{{ step.description }}</p>
-            <span>{{ step.microcopy }}</span>
           </div>
         </div>
       </div>
@@ -95,22 +103,24 @@
       <div class="section-container">
         <div class="section-kicker"><i class="bi bi-chat-heart"></i> Real learning signals</div>
         <h2 class="section-title">Trusted by focused students and teachers</h2>
-        <div class="testimonials-grid">
-          <div class="testimonial-card" v-for="(testimonial, idx) in testimonials" :key="idx" data-aos="fade-up" :data-aos-delay="idx * 100">
-            <div class="testimonial-rating">
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-            </div>
-            <p>"{{ testimonial.quote }}"</p>
-            <div class="testimonial-proof">{{ testimonial.proof }}</div>
-            <div class="testimonial-author">
-              <div class="author-avatar">{{ testimonial.initials }}</div>
-              <div class="author-info">
-                <h4>{{ testimonial.author }}</h4>
-                <p>{{ testimonial.role }}</p>
+        <div class="row g-4 testimonials-grid">
+          <div class="col-md-6 col-xl-4" v-for="(testimonial, idx) in testimonials" :key="idx" data-aos="fade-up" :data-aos-delay="idx * 100">
+            <div class="testimonial-card h-100">
+              <div class="testimonial-rating">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+              </div>
+              <p>"{{ testimonial.quote }}"</p>
+              <div class="testimonial-proof">{{ testimonial.proof }}</div>
+              <div class="testimonial-author">
+                <div class="author-avatar">{{ testimonial.initials }}</div>
+                <div class="author-info">
+                  <h4>{{ testimonial.author }}</h4>
+                  <p>{{ testimonial.role }}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -126,72 +136,78 @@
         <div class="section-kicker"><i class="bi bi-credit-card-2-front"></i> Pricing that scales with practice</div>
         <h2 class="section-title">Simple, transparent pricing</h2>
         <p class="section-subtitle">Start free. Upgrade only when you need deeper recitation feedback, history, and coaching tools.</p>
-        <div class="pricing-grid">
+        <div class="row g-4 pricing-grid">
           <!-- Freemium Plan -->
-          <div class="pricing-card" data-aos="flip-right">
-            <div class="plan-label">Starter</div>
-            <div class="pricing-icon"><i class="bi bi-flower1"></i></div>
-            <h3>Free</h3>
-            <div class="price">£0</div>
-            <p class="pricing-alt">For trying the workflow</p>
-            <ul class="pricing-features">
-              <li v-for="feature in freeFeatures" :key="feature">
-                <i class="bi bi-check-circle-fill"></i>
-                {{ feature }}
-              </li>
-            </ul>
-            <a href="/register" class="btn-secondary">Start Free <i class="bi bi-arrow-right"></i></a>
+          <div class="col-lg-4" data-aos="flip-right">
+            <div class="pricing-card h-100">
+              <div class="plan-label">Starter</div>
+              <div class="pricing-icon"><i class="bi bi-flower1"></i></div>
+              <h3>Free</h3>
+              <div class="price">£0</div>
+              <p class="pricing-alt">For trying the workflow</p>
+              <ul class="pricing-features">
+                <li v-for="feature in freeFeatures" :key="feature">
+                  <i class="bi bi-check-circle-fill"></i>
+                  {{ feature }}
+                </li>
+              </ul>
+              <a href="/register" class="btn-secondary">Start Free <i class="bi bi-arrow-right"></i></a>
+            </div>
           </div>
           <!-- Premium Plan -->
-          <div class="pricing-card featured" data-aos="flip-left">
-            <div class="featured-tag"><i class="bi bi-gift-fill"></i> 7-DAY FREE TRIAL</div>
-            <div class="plan-label">Most useful</div>
-            <div class="pricing-icon"><i class="bi bi-stars"></i></div>
-            <h3>Premium</h3>
-            <div class="price">£2.99 <span>/month</span></div>
-            <p class="pricing-alt">or £17.99 yearly</p>
-            <ul class="pricing-features">
-              <li v-for="feature in premiumFeatures" :key="feature">
-                <i class="bi bi-check-circle-fill"></i> {{ feature }}
-              </li>
-            </ul>
-            <div class="pricing-actions">
-              <form method="POST" action="/checkout">
-                <input type="hidden" name="_token" :value="csrfToken">
-                <input type="hidden" name="plan" value="premium_monthly">
-                <button type="submit" class="btn-primary">Monthly <i class="bi bi-gift-fill"></i></button>
-              </form>
-              <form method="POST" action="/checkout">
-                <input type="hidden" name="_token" :value="csrfToken">
-                <input type="hidden" name="plan" value="premium_yearly">
-                <button type="submit" class="btn-secondary">Yearly <i class="bi bi-calendar-check"></i></button>
-              </form>
+          <div class="col-lg-4" data-aos="flip-left">
+            <div class="pricing-card featured h-100">
+              <div class="featured-tag"><i class="bi bi-gift-fill"></i> 7-DAY FREE TRIAL</div>
+              <div class="plan-label">Most useful</div>
+              <div class="pricing-icon"><i class="bi bi-stars"></i></div>
+              <h3>Premium</h3>
+              <div class="price">£2.99 <span>/month</span></div>
+              <p class="pricing-alt">or £17.99 yearly</p>
+              <ul class="pricing-features">
+                <li v-for="feature in premiumFeatures" :key="feature">
+                  <i class="bi bi-check-circle-fill"></i> {{ feature }}
+                </li>
+              </ul>
+              <div class="pricing-actions">
+                <form method="POST" action="/checkout">
+                  <input type="hidden" name="_token" :value="csrfToken">
+                  <input type="hidden" name="plan" value="premium_monthly">
+                  <button type="submit" class="btn-primary">Monthly <i class="bi bi-gift-fill"></i></button>
+                </form>
+                <form method="POST" action="/checkout">
+                  <input type="hidden" name="_token" :value="csrfToken">
+                  <input type="hidden" name="plan" value="premium_yearly">
+                  <button type="submit" class="btn-secondary">Yearly <i class="bi bi-calendar-check"></i></button>
+                </form>
+              </div>
             </div>
           </div>
           <!-- Pro Plan -->
-          <div class="pricing-card" data-aos="flip-left">
-            <div class="featured-tag"><i class="bi bi-gift-fill"></i> 7-DAY FREE TRIAL</div>
-            <div class="plan-label">Teacher-ready</div>
-            <div class="pricing-icon"><i class="bi bi-gem"></i></div>
-            <h3>Pro</h3>
-            <div class="price">£5.99 <span>/month</span></div>
-            <p class="pricing-alt">or £49.99 yearly</p>
-            <ul class="pricing-features">
-              <li v-for="feature in proFeatures" :key="feature">
-                <i class="bi bi-check-circle-fill"></i> {{ feature }}
-              </li>
-            </ul>
-            <div class="pricing-actions">
-              <form method="POST" action="/checkout">
-                <input type="hidden" name="_token" :value="csrfToken">
-                <input type="hidden" name="plan" value="pro_monthly">
-                <button type="submit" class="btn-primary">Monthly <i class="bi bi-gem"></i></button>
-              </form>
-              <form method="POST" action="/checkout">
-                <input type="hidden" name="_token" :value="csrfToken">
-                <input type="hidden" name="plan" value="pro_yearly">
-                <button type="submit" class="btn-secondary">Yearly <i class="bi bi-calendar-check"></i></button>
-              </form>
+          <div class="col-lg-4" data-aos="flip-left">
+            <div class="pricing-card h-100">
+              <div class="featured-tag"><i class="bi bi-gift-fill"></i> 7-DAY FREE TRIAL</div>
+              <div class="plan-label">Teacher-ready</div>
+              <div class="pricing-icon"><i class="bi bi-gem"></i></div>
+              <h3>Pro</h3>
+              <div class="price">£5.99 <span>/month</span></div>
+              <p class="pricing-alt">or £49.99 yearly</p>
+              <ul class="pricing-features">
+                <li v-for="feature in proFeatures" :key="feature">
+                  <i class="bi bi-check-circle-fill"></i> {{ feature }}
+                </li>
+              </ul>
+              <div class="pricing-actions">
+                <form method="POST" action="/checkout">
+                  <input type="hidden" name="_token" :value="csrfToken">
+                  <input type="hidden" name="plan" value="pro_monthly">
+                  <button type="submit" class="btn-primary">Monthly <i class="bi bi-gem"></i></button>
+                </form>
+                <form method="POST" action="/checkout">
+                  <input type="hidden" name="_token" :value="csrfToken">
+                  <input type="hidden" name="plan" value="pro_yearly">
+                  <button type="submit" class="btn-secondary">Yearly <i class="bi bi-calendar-check"></i></button>
+                </form>
+              </div>
             </div>
           </div>
         </div>
@@ -284,43 +300,47 @@
 
     <section id="contact" class="contact-section">
       <div class="section-container">
-        <div class="contact-grid">
-          <div class="contact-copy" data-aos="fade-up">
-            <h2 class="section-title section-title-left">Tell us what you need help with</h2>
-            <p class="section-subtitle section-subtitle-left">Questions about billing, memorisation workflows, or product feedback can come through here. We will keep the response simple and actionable.</p>
-          </div>
-          <div class="contact-card" data-aos="fade-up">
-            <div v-if="contactStatus.message" class="contact-alert" :class="contactStatus.type === 'success' ? 'contact-alert-success' : 'contact-alert-error'" role="alert">
-              {{ contactStatus.message }}
+        <div class="row g-4 align-items-start contact-grid">
+          <div class="col-lg-5">
+            <div class="contact-copy" data-aos="fade-up">
+              <h2 class="section-title section-title-left">Tell us what you need help with</h2>
+              <p class="section-subtitle section-subtitle-left">Questions about billing, memorisation workflows, or product feedback can come through here. We will keep the response simple and actionable.</p>
             </div>
-            <form class="contact-form" @submit.prevent="submitContact">
-              <div class="contact-form-grid">
-                <div>
-                  <label class="form-label" for="contactName">Name</label>
-                  <input id="contactName" v-model.trim="contactForm.name" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.name }" autocomplete="name">
-                  <div v-if="contactErrors.name" class="invalid-feedback d-block">{{ contactErrors.name }}</div>
+          </div>
+          <div class="col-lg-7">
+            <div class="contact-card" data-aos="fade-up">
+              <div v-if="contactStatus.message" class="contact-alert" :class="contactStatus.type === 'success' ? 'contact-alert-success' : 'contact-alert-error'" role="alert">
+                {{ contactStatus.message }}
+              </div>
+              <form class="contact-form" @submit.prevent="submitContact">
+                <div class="row g-3 contact-form-grid">
+                  <div class="col-md-6">
+                    <label class="form-label" for="contactName">Name</label>
+                    <input id="contactName" v-model.trim="contactForm.name" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.name }" autocomplete="name">
+                    <div v-if="contactErrors.name" class="invalid-feedback d-block">{{ contactErrors.name }}</div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="contactEmail">Email</label>
+                    <input id="contactEmail" v-model.trim="contactForm.email" type="email" class="form-control" :class="{ 'is-invalid': contactErrors.email }" autocomplete="email">
+                    <div v-if="contactErrors.email" class="invalid-feedback d-block">{{ contactErrors.email }}</div>
+                  </div>
                 </div>
                 <div>
-                  <label class="form-label" for="contactEmail">Email</label>
-                  <input id="contactEmail" v-model.trim="contactForm.email" type="email" class="form-control" :class="{ 'is-invalid': contactErrors.email }" autocomplete="email">
-                  <div v-if="contactErrors.email" class="invalid-feedback d-block">{{ contactErrors.email }}</div>
+                  <label class="form-label" for="contactSubject">Subject</label>
+                  <input id="contactSubject" v-model.trim="contactForm.subject" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.subject }" autocomplete="off" required>
+                  <div v-if="contactErrors.subject" class="invalid-feedback d-block">{{ contactErrors.subject }}</div>
                 </div>
-              </div>
-              <div>
-                <label class="form-label" for="contactSubject">Subject</label>
-                <input id="contactSubject" v-model.trim="contactForm.subject" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.subject }" autocomplete="off" required>
-                <div v-if="contactErrors.subject" class="invalid-feedback d-block">{{ contactErrors.subject }}</div>
-              </div>
-              <div>
-                <label class="form-label" for="contactMessage">Message</label>
-                <textarea id="contactMessage" v-model.trim="contactForm.message" class="form-control contact-textarea" :class="{ 'is-invalid': contactErrors.message }" rows="6"></textarea>
-                <div v-if="contactErrors.message" class="invalid-feedback d-block">{{ contactErrors.message }}</div>
-              </div>
-              <button type="submit" class="btn-primary contact-submit" :disabled="contactSubmitting">
-                <i class="bi" :class="contactSubmitting ? 'bi-arrow-repeat spin-icon' : 'bi-send'"></i>
-                {{ contactSubmitting ? 'Sending...' : 'Send Message' }}
-              </button>
-            </form>
+                <div>
+                  <label class="form-label" for="contactMessage">Message</label>
+                  <textarea id="contactMessage" v-model.trim="contactForm.message" class="form-control contact-textarea" :class="{ 'is-invalid': contactErrors.message }" rows="6"></textarea>
+                  <div v-if="contactErrors.message" class="invalid-feedback d-block">{{ contactErrors.message }}</div>
+                </div>
+                <button type="submit" class="btn-primary contact-submit" :disabled="contactSubmitting">
+                  <i class="bi" :class="contactSubmitting ? 'bi-arrow-repeat spin-icon' : 'bi-send'"></i>
+                  {{ contactSubmitting ? 'Sending...' : 'Send Message' }}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -328,53 +348,69 @@
 
     <!-- CTA Section -->
     <div class="cta-block">
-      <div class="cta-copy">
-        <div class="cta-icon"><i class="bi bi-heart-fill"></i></div>
-        <h2>Turn weak ayahs into a clear review path.</h2>
-        <p>Record a verse, review the highlighted issues, and keep the next session focused on what actually needs work.</p>
-      </div>
-      <div class="cta-actions">
-        <a href="/register" class="btn-primary"><i class="bi bi-person-badge"></i> Create Free Account</a>
-        <span>No card needed for Free.</span>
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-8">
+          <div class="cta-copy">
+            <div class="cta-icon"><i class="bi bi-heart-fill"></i></div>
+            <h2>Turn weak ayahs into a clear review path.</h2>
+            <p>Record a verse, review the highlighted issues, and keep the next session focused on what actually needs work.</p>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="cta-actions">
+            <a href="/register" class="btn-primary"><i class="bi bi-person-badge"></i> Create Free Account</a>
+            <span>No card needed for Free.</span>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Footer - full width, bottom fixed position -->
     <footer class="footer">
       <div class="footer-container">
-        <div class="footer-grid">
-          <div class="footer-brand">
-            <div class="footer-logo">
-              <i class="bi bi-moon-stars"></i>
-              <h3>Mutqin</h3>
+        <div class="row g-4 footer-grid">
+          <div class="col-lg-4">
+            <div class="footer-brand">
+              <div class="footer-logo">
+                <i class="bi bi-moon-stars"></i>
+                <h3>Mutqin</h3>
+              </div>
+              <p>Focused Quran memorisation tools for recitation checks, review planning, and steady daily practice.</p>
             </div>
-            <p>Focused Quran memorisation tools for recitation checks, review planning, and steady daily practice.</p>
           </div>
-          <div class="footer-links">
-            <h4><i class="bi bi-grid-3x3-gap-fill"></i> Product</h4>
-            <a href="#features" @click.prevent="scrollToFeatures"><i class="bi bi-mic"></i> Features</a>
-            <a href="#pricing" @click.prevent="scrollToPricing"><i class="bi bi-tag-fill"></i> Pricing</a>
-            <a href="#"><i class="bi bi-compass"></i> Roadmap</a>
+          <div class="col-sm-6 col-lg-2">
+            <div class="footer-links">
+              <h4><i class="bi bi-grid-3x3-gap-fill"></i> Product</h4>
+              <a href="#features" @click.prevent="scrollToFeatures"><i class="bi bi-mic"></i> Features</a>
+              <a href="#pricing" @click.prevent="scrollToPricing"><i class="bi bi-tag-fill"></i> Pricing</a>
+              <a href="#"><i class="bi bi-compass"></i> Roadmap</a>
+            </div>
           </div>
-          <div class="footer-links">
-            <h4><i class="bi bi-book-half"></i> Resources</h4>
-            <a href="#"><i class="bi bi-pen-fill"></i> Tajweed Guide</a>
-            <a href="#"><i class="bi bi-lightbulb-fill"></i> Memorization Tips</a>
-            <a href="#"><i class="bi bi-question-circle"></i> Help Center</a>
+          <div class="col-sm-6 col-lg-2">
+            <div class="footer-links">
+              <h4><i class="bi bi-book-half"></i> Resources</h4>
+              <a href="#"><i class="bi bi-pen-fill"></i> Tajweed Guide</a>
+              <a href="#"><i class="bi bi-lightbulb-fill"></i> Memorization Tips</a>
+              <a href="#"><i class="bi bi-question-circle"></i> Help Center</a>
+            </div>
           </div>
-          <div class="footer-links">
-            <h4><i class="bi bi-building"></i> Company</h4>
-            <a href="/about-us"><i class="bi bi-info-circle-fill"></i> About Us</a>
-            <a href="#contact" @click.prevent="document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' })"><i class="bi bi-chat-dots-fill"></i> Contact</a>
-            <a href="/our-mission"><i class="bi bi-heart"></i> Our Mission</a>
+          <div class="col-sm-6 col-lg-2">
+            <div class="footer-links">
+              <h4><i class="bi bi-building"></i> Company</h4>
+              <a href="/about-us"><i class="bi bi-info-circle-fill"></i> About Us</a>
+              <a href="#contact" @click.prevent="document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' })"><i class="bi bi-chat-dots-fill"></i> Contact</a>
+              <a href="/our-mission"><i class="bi bi-heart"></i> Our Mission</a>
+            </div>
           </div>
-          <div class="footer-social">
-            <h4><i class="bi bi-share-fill"></i> Connect</h4>
-            <div class="social-icons">
-              <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
-              <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-              <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
-              <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+          <div class="col-sm-6 col-lg-2">
+            <div class="footer-social">
+              <h4><i class="bi bi-share-fill"></i> Connect</h4>
+              <div class="social-icons">
+                <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+                <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+              </div>
             </div>
           </div>
         </div>
