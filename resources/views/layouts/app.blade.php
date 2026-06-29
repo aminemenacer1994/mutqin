@@ -9,13 +9,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ __('ui.app_title') }}</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon-light.svg" media="(prefers-color-scheme: light)">
-    <link rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link id="appFaviconLight" rel="icon" type="image/svg+xml" href="/favicon-light.svg" media="(prefers-color-scheme: light)">
+    <link id="appFaviconDark" rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)">
+    <link id="appThemeFavicon" rel="icon" type="image/svg+xml" href="/favicon-light.svg">
+    <link id="appThemeFaviconIco" rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
     <!-- Google tag (gtag.js) -->
@@ -1729,7 +1729,7 @@
         </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="{{ mix('js/app.js') }}" defer></script>
     
     <script>
@@ -1776,6 +1776,11 @@
                     const lightSrc = logo.getAttribute('data-logo-light') || '/images/logo.png';
                     const darkSrc = logo.getAttribute('data-logo-dark') || '/images/logo.png';
                     logo.src = theme === 'dark' ? darkSrc : lightSrc;
+                }
+
+                const favicon = document.getElementById('appThemeFavicon');
+                if (favicon) {
+                    favicon.setAttribute('href', theme === 'dark' ? '/favicon-dark.svg' : '/favicon-light.svg');
                 }
             }
             

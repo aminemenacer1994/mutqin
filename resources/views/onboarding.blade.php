@@ -738,14 +738,21 @@
 
         .pricing-card > .btn-secondary,
         .pricing-card > .btn-primary {
-            width: 220px;
-            min-width: 220px;
-            height: 56px;
-            min-height: 56px;
-            padding: 0 1.5rem;
-            justify-content: center;
+            width: 220px !important;
+            min-width: 220px !important;
+            max-width: 220px !important;
+            height: 56px !important;
+            min-height: 56px !important;
+            max-height: 56px !important;
+            padding: 0 1.5rem !important;
+            display: inline-grid !important;
+            place-items: center !important;
+            justify-content: center !important;
             margin: 0 auto;
-            border-radius: 18px;
+            border-radius: 16px !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* CTA Section */

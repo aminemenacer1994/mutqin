@@ -75,7 +75,7 @@
         </div>
         <div v-else class="workspace">
           <!-- In your template, replace the workspace-shell section -->
-<section v-if="shouldRenderWorkspaceShell" class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
+<section v-if="shouldRenderWorkspaceShell && !isOnboardingExperienceActive" class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
   <div class="workspace-shell-head">
     <div class="workspace-shell-copy">
       <span class="workspace-shell-kicker">Session Overview</span>
@@ -182,19 +182,19 @@
 </section>
 
 <!-- Session Complete - Only shows when session is fully done -->
-<div v-if="isSessionCompleted" class="session-complete-wrapper">
+<div v-if="showSessionCompletedState" class="session-complete-wrapper">
   <!-- Status Header -->
   <div class="completion-header">
     <div class="completion-icon">
       <i class="bi bi-check-circle-fill"></i>
     </div>
     <div class="completion-text">
-      <h3>{{ sessionEndedSnapshot ? (sessionEndedSnapshot.completedAll ? 'Session Complete' : 'Session Ended') : 'Session Complete' }}</h3>
-      <p>{{ sessionEndedSnapshot ? (sessionEndedSnapshot.completedAll ? `You've completed all ${totalVerses} ayahs` : sessionEndedSummaryMessage) : `You've completed all ${totalVerses} ayahs` }}</p>
+      <h3>{{ sessionCompletionSnapshot?.completedAll ? 'Session Complete' : 'Session Ended' }}</h3>
+      <p>{{ sessionCompletionSnapshot?.completedAll ? `You've completed all ${totalVerses} ayahs` : sessionEndedSummaryMessage }}</p>
     </div>
   </div>
 
-  <div v-if="sessionEndedSnapshot" class="completion-stats">
+  <div v-if="sessionCompletionSnapshot" class="completion-stats">
     <div class="stat-box">
       <span class="stat-number">{{ sessionEndedStats.surah }}</span>
       <span class="stat-label">{{ sessionEndedStats.range }}</span>
@@ -209,6 +209,11 @@
       <span class="stat-number">{{ sessionEndedStats.duration }}</span>
       <span class="stat-label">Duration</span>
     </div>
+    <div class="stat-divider"></div>
+    <div class="stat-box">
+      <span class="stat-number">{{ sessionEndedStats.repeats }}</span>
+      <span class="stat-label">Repeats</span>
+    </div>
   </div>
 
   <!-- Action Buttons -->
@@ -221,11 +226,36 @@
       <i class="bi bi-arrow-repeat"></i>
       Repeat Range
     </button>
+    <button class="action-btn" @click="saveCurrentSessionWithName()">
+      <i class="bi bi-save2"></i>
+      Save This Session?
+    </button>
+    <button class="action-btn" @click="continueLastSession()" :disabled="!hasContinueSession">
+      <i class="bi bi-play-circle"></i>
+      Resume Previous Played Session?
+    </button>
+  </div>
+
+  <div v-if="sessionCompletionSnapshot" class="completion-meta-grid">
+    <article class="completion-meta-card" :class="{ collapsed: isSessionEndedMetaCardCollapsed(card.key) }" v-for="card in sessionEndedMetaCards" :key="card.key">
+      <div class="completion-meta-head">
+        <span class="completion-meta-kicker">{{ card.kicker }}</span>
+        <button class="completion-meta-toggle" type="button" @click="toggleSessionEndedMetaCard(card.key)" :aria-expanded="isSessionEndedMetaCardCollapsed(card.key) ? 'false' : 'true'" :aria-label="`${isSessionEndedMetaCardCollapsed(card.key) ? 'Expand' : 'Collapse'} ${card.kicker}`">
+          <i class="bi" :class="isSessionEndedMetaCardCollapsed(card.key) ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
+        </button>
+      </div>
+      <div class="completion-meta-calligraphy" dir="rtl" lang="ar">{{ card.calligraphy }}</div>
+      <strong>{{ card.title }}</strong>
+      <p v-if="!isSessionEndedMetaCardCollapsed(card.key)">{{ card.body }}</p>
+      <ul v-if="!isSessionEndedMetaCardCollapsed(card.key) && card.points && card.points.length" class="completion-meta-points">
+        <li v-for="point in card.points" :key="point">{{ point }}</li>
+      </ul>
+    </article>
   </div>
 
 </div>
 
-          <main id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
+          <main v-if="!isOnboardingExperienceActive" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             aria-label="Memorisation workspace">
             <section v-if="!hasVerses" class="workspace-empty-state" aria-label="Session setup">
               <div class="workspace-empty-card">
@@ -1300,13 +1330,9 @@
     <div class="modal-overlay" v-if="showSaveNameModal" @click.self="closeSaveModal">
       <div class="modal-content save-name-modal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
         <div class="modal-header">
-          <div class="modal-header-icon">
-            <i class="bi bi-bookmark-plus-fill"></i>
-          </div>
           <div class="modal-header-text">
-            <div class="modal-context-badge">{{ sessionContextBadge }}</div>
             <h2 id="saveModalTitle">Save Memorisation Session</h2>
-            <p>Name your session to easily find and resume it later</p>
+            <p>Name this session so you can find it again later.</p>
           </div>
           <button class="modal-close-btn" @click="closeSaveModal" aria-label="Close">
             <i class="bi bi-x-lg"></i>
@@ -1314,66 +1340,20 @@
         </div>
 
         <div class="modal-body">
-          <!-- Session Preview Card -->
-          <div class="session-preview-card">
-            <div class="preview-surah">
-              <i class="bi bi-book"></i>
-              <span>{{ currentChapter?.name_simple || 'No surah selected' }}</span>
-            </div>
-            <div class="preview-range">
-              <i class="bi bi-text-paragraph"></i>
-              <span>Ayahs {{ rangeStart }} – {{ rangeEnd }}</span>
-            </div>
-            <div class="preview-stats">
-              <span class="preview-stat">
-                <i class="bi bi-files"></i>
-                {{ rangeEnd - rangeStart + 1 }} verses
-              </span>
-              <span class="preview-stat">
-                <i class="bi bi-mic"></i>
-                {{ getReciterName() }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Name Input Field -->
           <div class="name-input-group" :class="{ 'has-error': nameError }">
             <label for="sessionName">
-              <i class="bi bi-pencil-square"></i>
               Session Name
             </label>
             <input id="sessionName" type="text" v-model="saveSessionName" class="name-input"
-              :class="{ 'error': nameError }" placeholder="e.g., Al-Fatihah Focus, Evening Review, Week 1 Progress"
+              :class="{ 'error': nameError }" :placeholder="`${currentChapter?.name_simple || 'Session'} ${rangeStart}-${rangeEnd}`"
               @keyup.enter="confirmSaveSession" @input="clearNameError" autofocus maxlength="50" />
             <div class="input-hint">
               <span class="char-count">{{ saveSessionName.length }}/50</span>
-              <span class="hint-text">Give it a memorable name</span>
+              <span class="hint-text">{{ currentChapter?.name_simple || 'Current session' }} · Ayahs {{ rangeStart }}-{{ rangeEnd }}</span>
             </div>
             <div v-if="nameError" class="error-message">
               <i class="bi bi-exclamation-circle-fill"></i>
               {{ nameError }}
-            </div>
-          </div>
-
-          <!-- Quick Name Suggestions -->
-          <div class="quick-suggestions">
-            <span class="suggestions-label">Quick suggestions:</span>
-            <div class="suggestion-chips">
-              <button v-for="suggestion in nameSuggestions" :key="suggestion" class="suggestion-chip"
-                @click="saveSessionName = suggestion" type="button">
-                {{ suggestion }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Session Info Note -->
-          <div class="info-note">
-            <i class="bi bi-info-circle-fill"></i>
-            <div class="info-text">
-              <strong>Saved with current settings:</strong>
-              <span>{{ chainingEnabled ? `${chainingMethod} chaining (${chainingRepetitions}x)` : 'Standard mode'
-                }}</span>
-              <span>{{ tajweedEnabled ? '· Tajweed enabled' : '' }}</span>
             </div>
           </div>
         </div>
@@ -2743,7 +2723,8 @@ import axios from 'axios'
 import diff from 'fast-diff'
 import { markRaw, toRaw } from 'vue'
 import { getEditions, getQuranEdition, getSurahEdition, getSurahEditions } from '../lib/quranApis'
-import { loadMutqinState, saveMutqinState, watchMutqinState } from '../composables/useMutqinPersistence'
+import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../composables/useMutqinPersistence'
+import learningApi, { createDebouncer, withRetry } from '../api/learning'
 import { seedAyahs } from '../composables/useAyahState'
 import { buildSessionQueue, startMutqinSession, moveMutqinSession, completeMutqinSession } from '../composables/useSessionEngine'
 import { createDailyPlan } from '../composables/useDailyPlanner'
@@ -3639,6 +3620,17 @@ export default {
       mutqinState: loadMutqinState(),
       centralSession: createCentralSessionState(),
       unwatchMutqinState: null,
+      // Backend-driven learning persistence (authenticated users only). For guests
+      // localStorage remains the source of truth; for authenticated users the
+      // backend is authoritative and localStorage acts only as an offline cache.
+      learningSync: {
+        scheduler: null,
+        applyingRemote: false,
+        lastPushedHash: '',
+        pushing: false,
+        retryScheduled: false,
+        ready: false,
+      },
       currentWaveVerseKey: null,
       showKeyboardShortcuts: false,
       // chaining removed
@@ -3948,6 +3940,7 @@ export default {
       plannerCompletionSnapshot: null,
       showSessionEndedModal: false,
       sessionEndedSnapshot: null,
+      sessionEndedMetaCollapsed: {},
       showSessionAnalyticsModal: false,
       analyticsModalLoaded: false,
       analyticsModalRecordId: '',
@@ -4717,17 +4710,88 @@ export default {
         }
       }))
     },
+    sessionCompletionSnapshot() {
+      if (this.isOnboardingExperienceActive) return null
+      if (this.sessionEndedSnapshot && Object.keys(this.sessionEndedSnapshot).length) {
+        return this.sessionEndedSnapshot
+      }
+      return null
+    },
+    isOnboardingExperienceActive() {
+      return !!this.showPostLoginOnboarding || !!this.onboardingDemoActive
+    },
+    hasMeaningfulSessionCompletionData() {
+      if (!this.isSessionCompleted || !this.hasVerses) return false
+      if (this.sessionEndedSnapshot && Object.keys(this.sessionEndedSnapshot).length) return true
+
+      const hasCompletedAt = !!(this.sessionCompletedAt || this.centralSession?.sessionCompletedAt || this.mutqinState?.sessionState?.completed_at)
+      const hasPlaybackEvidence = Number(this.duration || 0) > 0 || Number(this.currentTime || 0) > 0 || Number(this.sessionStartedAt || 0) > 0
+      const hasQueueEvidence = Number(this.queueIndex || 0) > 0 || Number(this.currentPosition || 0) > 0
+      const hasMutqinCompletion = !!this.mutqinState?.sessionState?.completed
+      const hasCentralCompletion = this.centralSession?.sessionStatus === 'completed'
+
+      return hasCompletedAt && (hasPlaybackEvidence || hasQueueEvidence || hasMutqinCompletion || hasCentralCompletion)
+    },
     sessionEndedStats() {
-      const snapshot = this.sessionEndedSnapshot || {}
+      const snapshot = this.sessionCompletionSnapshot || {}
       return {
-        surah: snapshot.chapterName || 'Session',
-        range: snapshot.rangeLabel || 'Range saved',
-        progress: snapshot.progressLabel || '0%',
-        duration: snapshot.durationLabel || '0:00'
+        surah: snapshot.chapterName || '',
+        range: snapshot.rangeLabel || '',
+        progress: snapshot.progressLabel || '',
+        duration: snapshot.durationLabel || '',
+        repeats: snapshot.repeatShortLabel || ''
       }
     },
+    sessionEndedMetaCards() {
+      const snapshot = this.sessionCompletionSnapshot || {}
+      if (!snapshot || !Object.keys(snapshot).length) return []
+      const coveredAyahs = Number(snapshot.coveredAyahCount || 0)
+      const totalAyahs = Number(snapshot.totalAyahs || 0)
+      const nextSteps = Array.isArray(snapshot.nextSteps) ? snapshot.nextSteps : []
+      return [
+        {
+          key: 'happened',
+          kicker: 'By The Grace Of Allah',
+          calligraphy: 'الحمد لله على التمام',
+          title: snapshot.completedAll ? 'This range was completed.' : 'This range moved forward.',
+          body: snapshot.completedAll
+            ? `${coveredAyahs}/${totalAyahs} ayahs completed in ${snapshot.durationLabel || 'this session'}.`
+            : `Reached ayah ${snapshot.lastAyahLabel || coveredAyahs || 1} with ${snapshot.progressPercent || 0}% completed.`,
+          points: [
+            snapshot.rangeLabel && snapshot.chapterName ? `${snapshot.chapterName} · ${snapshot.rangeLabel}` : '',
+            snapshot.modeSummary || ''
+          ].filter(Boolean)
+        },
+        {
+          key: 'done',
+          kicker: 'With Steadiness',
+          calligraphy: 'زادك الله ثباتا',
+          title: 'This is how you studied.',
+          body: snapshot.repeatSummary || 'Current session settings were applied.',
+          points: [
+            snapshot.displaySummary || '',
+            snapshot.pacingSummary || ''
+          ].filter(Boolean)
+        },
+        {
+          key: 'next',
+          kicker: 'For The Next Step',
+          calligraphy: 'اللهم زدني علما',
+          title: snapshot.completedAll ? 'Advance or reinforce.' : 'Continue or begin again.',
+          body: snapshot.completedAll
+            ? 'Start a new session if this range felt stable, or repeat the same range once more to strengthen recall.'
+            : 'Repeat this range now if recall felt weak, or start a fresh session when you are ready to continue.',
+          points: (nextSteps.length
+            ? nextSteps
+            : [
+                'Use Repeat Range for another clean pass.',
+                'Use New Session to move into the next selected range.'
+              ]).slice(0, 2)
+        }
+      ]
+    },
     sessionEndedSummaryMessage() {
-      const snapshot = this.sessionEndedSnapshot || {}
+      const snapshot = this.sessionCompletionSnapshot || {}
       return snapshot.summaryMessage || 'You can start a new range, save this one, or repeat it now.'
     },
     hifzPlanLifecycleStatus() {
@@ -5637,7 +5701,7 @@ export default {
       return !!this.sessionCompleted || this.centralSession?.sessionStatus === 'completed'
     },
     showSessionCompletedState() {
-      return this.isSessionCompleted && !this.hasSessionStarted
+      return !this.isOnboardingExperienceActive && !!this.sessionCompletionSnapshot && this.isSessionCompleted && !this.hasSessionStarted
     },
     resumeFeedback() {
       const payload = this.continueSessionPayload
@@ -6251,7 +6315,7 @@ export default {
     this.$watch(() => this.mushafPages.length, () => {
       this.syncMushafPageToActiveVerse()
     })
-    this.unwatchMutqinState = watchMutqinState(this.mutqinState)
+    this.unwatchMutqinState = watchMutqinState(this.mutqinState, undefined, () => this.scheduleLearningSync())
     this.refreshHifzJourneyState()
     this.loadVerseFontSizes()
     this.migrateLocalStorage()
@@ -6260,7 +6324,6 @@ export default {
     this.restoreSessionState()
     await this.loadChapters()
     await this.loadReciters()
-    this.loadSavedSessions()
     this.loadOfflineCatalog()
     this.loadSm2()
     this.loadEvents()
@@ -6275,7 +6338,6 @@ export default {
       this.setupWordClickHandler()
     this.loadContinueSessionPrompt()
     this.updateMasteredWeekly()
-    this.loadSavedSessions()
     this.loadRecordingsLibrary()
 
     if (this.isLoggedIn && this.hasContinueSession) {
@@ -6301,6 +6363,11 @@ export default {
 
     this.isBootstrapping = false
     this.appReady = true
+
+    // Reconcile with the backend (authenticated users only). Fire-and-forget so
+    // it never blocks first paint, login, or any interaction.
+    this.initLearningBackend()
+
     this.$nextTick(() => {
       if (this.isLoggedIn && !this.hasCompletedOnboarding()) {
         this.openOnboardingModal(false)
@@ -8316,6 +8383,7 @@ export default {
       this.onboardingManualLaunch = !!force
       this.onboardingStepIndex = 0
       if (!force && this.hasCompletedOnboarding()) return
+      this.sessionEndedSnapshot = null
       if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
       this.showTools = true
       this.tab = 'tools'
@@ -8336,6 +8404,7 @@ export default {
       this.markOnboardingCompleted()
       this.showPostLoginOnboarding = false
       this.onboardingStepIndex = 0
+      this.sessionEndedSnapshot = null
       this.restoreOnboardingDemo()
       this.onboardingManualLaunch = false
     },
@@ -8343,6 +8412,7 @@ export default {
       this.markOnboardingCompleted()
       this.showPostLoginOnboarding = false
       this.onboardingStepIndex = 0
+      this.sessionEndedSnapshot = null
       this.applyOnboardingStep(this.onboardingSteps.length - 1)
       if (this.onboardingManualLaunch) {
         this.restoreOnboardingDemo()
@@ -14986,6 +15056,16 @@ export default {
         }
       })
     },
+    toggleSessionEndedMetaCard(key = '') {
+      if (!key) return
+      this.sessionEndedMetaCollapsed = {
+        ...(this.sessionEndedMetaCollapsed || {}),
+        [key]: !this.sessionEndedMetaCollapsed?.[key]
+      }
+    },
+    isSessionEndedMetaCardCollapsed(key = '') {
+      return !!this.sessionEndedMetaCollapsed?.[key]
+    },
 
     restoreAudioState() {
       try {
@@ -15107,28 +15187,68 @@ export default {
       this.continueSessionPayload = null
       this.continueSessionLabel = ''
     },
-    buildSessionEndedSnapshot() {
-      const chapterName = this.currentChapter?.name_simple || this.activeChapterName || 'Session'
+    buildSessionEndedSnapshot(options = {}) {
+      const { force = false } = options
+      if (!force && !this.hasMeaningfulSessionCompletionData) return null
+
+      const chapterName = this.currentChapter?.name_simple || this.activeChapterName || ''
       const rangeStart = Math.max(1, Number(this.rangeStart || 1))
       const rangeEnd = Math.max(rangeStart, Number(this.rangeEnd || rangeStart))
-      const coveredAyah = Math.max(1, Number(this.currentPosition || 1))
+      const coveredAyah = Math.max(1, Number(this.currentPosition || this.queueIndex || 1))
       const totalAyahs = Math.max(1, Number(this.totalVerses || 1))
       const progressPercent = Math.max(0, Math.min(100, Number(this.progressPercent || 0)))
       const durationSeconds = this.sessionStartedAt
         ? Math.max(0, Math.round((Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt)) / 1000))
         : Math.max(0, Math.round(Number(this.currentTime || 0)))
+      const activeAids = []
+      if (this.tajweedEnabled) activeAids.push('Tajweed')
+      if (this.showTranslation) activeAids.push('Translation')
+      if (this.showTransliteration) activeAids.push('Transliteration')
+      if (this.showWordByWord) activeAids.push('Word-by-word')
+      if (this.wordByWordAudioEnabled) activeAids.push('Word audio')
+      const activeMethods = []
+      if (this.focusModeEnabled) activeMethods.push('Focus mode')
+      if (this.blurModeEnabled) activeMethods.push('Blur mode')
+      if (this.chainingEnabled) activeMethods.push(`${this.chainingMethod || 'Standard'} chaining`)
+      const repeatSummary = `${this.repeatCount || 1} repeat${Number(this.repeatCount || 1) === 1 ? '' : 's'} per step`
+      const repeatShortLabel = `${this.repeatCount || 1}x`
+      const displaySummary = activeAids.length ? `Reading aids: ${activeAids.join(', ')}` : ''
+      const pacingSummary = activeMethods.length ? `Session flow: ${activeMethods.join(', ')}` : ''
+      const completedAll = coveredAyah >= totalAyahs && progressPercent >= 100
       return {
         chapterName,
-        rangeLabel: `Ayahs ${rangeStart}-${rangeEnd}`,
+        rangeLabel: chapterName ? `Ayahs ${rangeStart}-${rangeEnd}` : '',
         progressLabel: `${coveredAyah}/${totalAyahs}`,
         progressPercent,
-        completedAll: coveredAyah >= totalAyahs && progressPercent >= 100,
+        completedAll,
         durationLabel: this.formatTime(durationSeconds),
-        summaryMessage: `You reached ayah ${coveredAyah} and completed ${progressPercent}% of this session.`
+        summaryMessage: `You reached ayah ${coveredAyah} and completed ${progressPercent}% of this session.`,
+        coveredAyahCount: coveredAyah,
+        totalAyahs,
+        lastAyahLabel: coveredAyah,
+        modeSummary: this.sessionTypeInfo?.label ? `Mode: ${this.sessionTypeInfo.label}` : '',
+        repeatSummary,
+        repeatShortLabel,
+        displaySummary,
+        pacingSummary,
+        activeAids,
+        activeMethods,
+        nextSteps: completedAll
+          ? [
+              'Start a new session if this range now feels easy from memory.',
+              'Repeat the same range once to reinforce speed, confidence, and consistency.',
+              'If one ayah still felt weak, review that ayah before advancing.'
+            ]
+          : [
+              'Repeat this range now to lock in the ayahs already covered.',
+              'Resume later if you want to continue from the same memorisation setup.',
+              'Reduce aids on the next pass if recall already felt comfortable.'
+            ]
       }
     },
     showSessionEndedSummary(snapshot = null) {
       this.sessionEndedSnapshot = snapshot || this.buildSessionEndedSnapshot()
+      if (!this.sessionEndedSnapshot) return
       this.showSessionEndedModal = false
       this.showTools = false
     },
@@ -15229,11 +15349,11 @@ export default {
     exitSessionAnyway() {
       this.closeSessionExitModal({ restore: false })
       this.finishSessionCleanup()
-      this.showSessionEndedSummary()
+      this.showSessionEndedSummary(this.buildSessionEndedSnapshot({ force: true }))
     },
 
     confirmSessionExit() {
-      const endedSnapshot = this.buildSessionEndedSnapshot()
+      const endedSnapshot = this.buildSessionEndedSnapshot({ force: true })
       this.closeSessionExitModal({ restore: false })
       this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
       this.centralSession.sessionStatus = 'completed'
@@ -17760,6 +17880,8 @@ export default {
     handleOnline() {
       this.networkOnline = true
       this.showBanner('Back online. Live APIs are available again.', 'success', 2400)
+      // Push any changes that could not be saved while offline.
+      if (this.learningBackendEnabled()) this.pushLearningState(true)
     },
 
     handleOffline() {
@@ -18045,6 +18167,17 @@ export default {
     },
 
     persistUiState() {
+      // Coalesce the many UI mutations (toggles, scrubbing, theme, tabs, etc.)
+      // into a single debounced localStorage write instead of writing on every
+      // change. The synchronous writer is still used directly on teardown/unload.
+      if (this.isBootstrapping) return
+      if (!this._uiPersistDebouncer) {
+        this._uiPersistDebouncer = createDebouncer(() => this._persistUiStateNow(), 700)
+      }
+      this._uiPersistDebouncer()
+    },
+
+    _persistUiStateNow() {
 
       if (this.isBootstrapping) return
       try {
@@ -18139,6 +18272,16 @@ export default {
     },
 
     persistAudioState() {
+      // The currentTime watcher fires several times per second during playback;
+      // debounce so we are not hammering localStorage on every audio tick.
+      if (this.isBootstrapping) return
+      if (!this._audioPersistDebouncer) {
+        this._audioPersistDebouncer = createDebouncer(() => this._persistAudioStateNow(), 1000)
+      }
+      this._audioPersistDebouncer()
+    },
+
+    _persistAudioStateNow() {
       if (this.isBootstrapping) return
       try {
         localStorage.setItem('telawa.audioState', JSON.stringify({
@@ -18155,21 +18298,224 @@ export default {
     },
 
     persistAllState() {
-      this.persistUiState()
+      // Used on teardown / beforeunload: write everything synchronously and
+      // drop any pending debounced writes so nothing is lost.
+      this._uiPersistDebouncer?.cancel?.()
+      this._audioPersistDebouncer?.cancel?.()
+      this._persistUiStateNow()
       this.persistSessionState()
       this.persistCentralSessionState()
-      this.persistAudioState()
+      this._persistAudioStateNow()
       this.persistContinueSession()
       this.persistPlanner()
       this.persistTodayPlan()
       this.persistSm2()
       saveMutqinState(this.mutqinState)
+      this.flushLearningSync()
+    },
+
+    // ---- Backend-driven learning persistence -----------------------------
+    // For authenticated users the Laravel backend is the source of truth for the
+    // core learning state (sessions, progress, continue position, analytics).
+    // localStorage keeps acting as an offline cache so progress is never lost on
+    // flaky networks. Guests are unaffected and remain fully localStorage-based.
+
+    learningBackendEnabled() {
+      return !!this.auth?.check
+    },
+
+    getOrCreateDeviceId() {
+      try {
+        let id = localStorage.getItem('mutqin.deviceId')
+        if (!id) {
+          id = `web-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`
+          localStorage.setItem('mutqin.deviceId', id)
+        }
+        return id
+      } catch {
+        return null
+      }
+    },
+
+    buildLearningStatePayload() {
+      let continuePayload = null
+      try {
+        continuePayload = this.buildContinueSessionPayload?.() || null
+      } catch {
+        continuePayload = null
+      }
+      return {
+        state: deepClone(this.mutqinState),
+        continue: continuePayload,
+        meta: {
+          device_id: this.getOrCreateDeviceId(),
+          device_label: typeof navigator !== 'undefined' ? (navigator.userAgent || '').slice(0, 200) : null,
+          local_updated_at: new Date().toISOString(),
+        },
+      }
+    },
+
+    learningPayloadHash(payload) {
+      try {
+        return `${JSON.stringify(payload.state)}|${JSON.stringify(payload.continue)}`
+      } catch {
+        return String(Date.now())
+      }
+    },
+
+    scheduleLearningSync() {
+      if (!this.learningBackendEnabled()) return
+      if (this.isBootstrapping) return
+      if (this.learningSync.applyingRemote) return
+      if (!this.learningSync.scheduler) {
+        this.learningSync.scheduler = createDebouncer(() => this.pushLearningState(), 1500)
+      }
+      this.learningSync.scheduler()
+    },
+
+    flushLearningSync() {
+      if (!this.learningBackendEnabled()) return
+      const scheduler = this.learningSync.scheduler
+      if (scheduler && scheduler.pending && scheduler.pending()) {
+        scheduler.flush()
+      }
+    },
+
+    scheduleLearningRetry() {
+      if (this.learningSync.retryScheduled) return
+      this.learningSync.retryScheduled = true
+      setTimeout(() => {
+        this.learningSync.retryScheduled = false
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) return
+        this.pushLearningState(true)
+      }, 8000)
+    },
+
+    async pushLearningState(force = false) {
+      if (!this.learningBackendEnabled()) return
+      if (this.learningSync.pushing) {
+        // A push is already in flight; queue a follow-up so we don't lose changes.
+        this.scheduleLearningSync()
+        return
+      }
+      const payload = this.buildLearningStatePayload()
+      const hash = this.learningPayloadHash(payload)
+      if (!force && hash === this.learningSync.lastPushedHash) return
+
+      this.learningSync.pushing = true
+      try {
+        await withRetry(() => learningApi.saveState(payload), { retries: 3, baseDelay: 1000 })
+        this.learningSync.lastPushedHash = hash
+      } catch (error) {
+        const status = error?.response?.status
+        // Auth/session/CSRF errors: stop silently (e.g. logged out in another tab).
+        if (![401, 403, 419].includes(status)) {
+          this.scheduleLearningRetry()
+        }
+      } finally {
+        this.learningSync.pushing = false
+      }
+    },
+
+    async pullLearningState() {
+      if (!this.learningBackendEnabled()) return false
+      const result = await learningApi.getState()
+      if (!result?.meta?.has_state || !result.state) return false
+
+      this.learningSync.applyingRemote = true
+      try {
+        replaceMutqinState(this.mutqinState, result.state)
+        // Mark the freshly pulled state as already-synced to avoid an echo push.
+        this.learningSync.lastPushedHash = this.learningPayloadHash(this.buildLearningStatePayload())
+        this.loadContinueSessionPrompt()
+        if (typeof this.refreshHifzJourneyState === 'function') this.refreshHifzJourneyState()
+      } finally {
+        this.$nextTick(() => {
+          this.learningSync.applyingRemote = false
+        })
+      }
+      return true
+    },
+
+    async runLearningMigration() {
+      if (!this.learningBackendEnabled()) return
+      try {
+        if (localStorage.getItem('migration_complete') === 'true') return
+      } catch {
+        return
+      }
+
+      const payload = this.buildLearningStatePayload()
+      const state = payload.state || {}
+      const hasLocalData =
+        (state.ayahs && Object.keys(state.ayahs).length > 0) ||
+        !!state.sessionState?.active ||
+        Number(state.stats?.sessions_completed || 0) > 0
+
+      if (!hasLocalData) {
+        try { localStorage.setItem('migration_complete', 'true') } catch {}
+        return
+      }
+
+      try {
+        const res = await withRetry(() => learningApi.migrateLocalStorage(payload), { retries: 2, baseDelay: 1500 })
+        if (res?.migrated || res?.already_migrated) {
+          try { localStorage.setItem('migration_complete', 'true') } catch {}
+          this.learningSync.lastPushedHash = this.learningPayloadHash(payload)
+        }
+      } catch {
+        // Migration must never block the UI; it will be retried on the next load.
+      }
+    },
+
+    async initLearningBackend() {
+      if (!this.learningBackendEnabled()) return
+      try {
+        const hasRemote = await this.pullLearningState()
+        if (hasRemote) {
+          try { localStorage.setItem('migration_complete', 'true') } catch {}
+        } else {
+          await this.runLearningMigration()
+        }
+        this.learningSync.ready = true
+      } catch {
+        // Backend unreachable: keep using the local cache and retry when online.
+        this.scheduleLearningRetry()
+      }
+    },
+
+    readApiCache(key, maxAgeMs = 7 * 24 * 60 * 60 * 1000) {
+      try {
+        const raw = localStorage.getItem(`mutqin.apiCache.${key}`)
+        if (!raw) return null
+        const parsed = JSON.parse(raw)
+        if (!parsed || typeof parsed.t !== 'number') return null
+        if (Date.now() - parsed.t > maxAgeMs) return null
+        return parsed.v
+      } catch {
+        return null
+      }
+    },
+
+    writeApiCache(key, value) {
+      try {
+        localStorage.setItem(`mutqin.apiCache.${key}`, JSON.stringify({ t: Date.now(), v: value }))
+      } catch { /* storage full / disabled: non-critical */ }
     },
 
     async loadChapters() {
+      // The chapter list is effectively static; serve it from a short-lived
+      // cache so startup does not block on a network round-trip every visit.
+      const cached = this.readApiCache('chapters.en')
+      if (Array.isArray(cached) && cached.length) {
+        this.chapters = cached
+        if (this.chapterId) await this.loadChapter()
+        return
+      }
       try {
         const res = await axios.get('https://api.quran.com/api/v4/chapters', { params: { language: 'en' } })
         this.chapters = res.data?.chapters || []
+        if (this.chapters.length) this.writeApiCache('chapters.en', this.chapters)
         if (this.chapterId) await this.loadChapter()
       } catch (e) {
         console.error('Failed to load chapters:', e)
@@ -18193,6 +18539,14 @@ export default {
     },
 
     async loadReciters() {
+      const cachedReciters = this.readApiCache('reciters')
+      if (Array.isArray(cachedReciters) && cachedReciters.length) {
+        this.reciters = cachedReciters
+        if (!this.reciters.some(reciter => reciter.id === this.reciterId)) {
+          this.reciterId = this.reciters[0]?.id || DEFAULT_ALQURAN_RECITER
+        }
+        return
+      }
       try {
         const res = await getEditions({ format: 'audio' })
         const list = res.data?.data || []
@@ -18221,6 +18575,8 @@ export default {
               id: edition.identifier,
               name: edition.englishName || edition.name || edition.identifier
             }))
+
+        if (this.reciters.length) this.writeApiCache('reciters', this.reciters)
 
         if (!this.reciters.some(reciter => reciter.id === this.reciterId)) {
           this.reciterId = this.reciters[0]?.id || DEFAULT_ALQURAN_RECITER
@@ -19477,6 +19833,9 @@ export default {
   margin-bottom: 14px;
   background: var(--surface);
   border: 1px solid var(--border);
+  box-shadow:
+    0 10px 24px rgba(31, 24, 18, 0.04),
+    0 1px 0 rgba(255, 255, 255, 0.55) inset;
 }
 
 [data-theme="light"] .completion-header {
@@ -19537,6 +19896,225 @@ export default {
   margin-bottom: 14px;
   background: var(--surface);
   border: 1px solid var(--border);
+  box-shadow:
+    0 12px 26px rgba(31, 24, 18, 0.045),
+    0 1px 0 rgba(255, 255, 255, 0.52) inset;
+  animation: completionCardBreath 8.4s ease-in-out infinite;
+}
+
+.completion-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.completion-meta-card {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 97%, white 3%), color-mix(in srgb, var(--surface) 99%, transparent));
+  padding: 16px 18px;
+  display: grid;
+  gap: 0.45rem;
+  overflow: hidden;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease !important;
+  animation: completionCardBreath 7.2s ease-in-out infinite;
+}
+
+.completion-meta-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(201, 132, 58, 0.08), transparent 34%),
+    linear-gradient(135deg, rgba(201, 132, 58, 0.03), transparent 42%);
+  pointer-events: none;
+}
+
+.completion-meta-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 26%, var(--border));
+  box-shadow: 0 18px 38px rgba(29, 22, 16, 0.08);
+}
+
+.completion-meta-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.completion-meta-kicker {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.86;
+}
+
+.completion-meta-toggle {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 !important;
+  flex: 0 0 28px;
+  aspect-ratio: 1 / 1;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  display: inline-grid;
+  place-items: center;
+  line-height: 1;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease !important;
+}
+
+.completion-meta-toggle:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
+  color: var(--accent-strong);
+}
+
+.completion-meta-toggle i {
+  font-size: 0.82rem;
+}
+
+.completion-meta-calligraphy {
+  position: relative;
+  z-index: 1;
+  font-family: 'Amiri', serif;
+  font-size: 1.26rem;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--accent-strong) 82%, var(--text));
+}
+
+.completion-meta-card strong {
+  position: relative;
+  z-index: 1;
+  font-size: 0.98rem;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.completion-meta-card p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.completion-meta-points {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.38rem;
+}
+
+.completion-meta-points li {
+  position: relative;
+  padding-inline-start: 1rem;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.completion-meta-points li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.52rem;
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+.completion-meta-card.collapsed {
+  gap: 0.2rem;
+}
+
+[data-theme="dark"] .completion-meta-card {
+  background:
+    linear-gradient(180deg, rgba(35, 29, 24, 0.96), rgba(28, 24, 21, 0.94));
+  border-color: rgba(204, 161, 110, 0.16);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+[data-theme="dark"] .completion-header,
+[data-theme="dark"] .completion-stats {
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.22),
+    0 1px 0 rgba(255, 255, 255, 0.03) inset;
+}
+
+[data-theme="dark"] .action-btn {
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.18),
+    0 1px 0 rgba(255, 255, 255, 0.03) inset;
+}
+
+[data-theme="dark"] .action-btn:hover {
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.24),
+    0 1px 0 rgba(255, 255, 255, 0.03) inset;
+}
+
+[data-theme="dark"] .completion-meta-card::before {
+  background:
+    radial-gradient(circle at top right, rgba(220, 170, 109, 0.12), transparent 36%),
+    linear-gradient(135deg, rgba(220, 170, 109, 0.05), transparent 44%);
+}
+
+[data-theme="dark"] .completion-meta-calligraphy {
+  color: #e2b06d;
+}
+
+.save-name-modal {
+  width: min(620px, calc(100vw - 32px)) !important;
+}
+
+.save-name-modal .modal-header {
+  padding: 1.2rem 1.35rem !important;
+}
+
+.save-name-modal .modal-header-text h2 {
+  margin: 0 !important;
+}
+
+.save-name-modal .modal-header-text p {
+  margin: 0.35rem 0 0 !important;
+}
+
+.save-name-modal .modal-body {
+  padding: 1.15rem 1.35rem 1rem !important;
+}
+
+.save-name-modal .name-input-group {
+  gap: 0.7rem !important;
+}
+
+.save-name-modal .name-input-group label {
+  display: block !important;
+  margin: 0 !important;
+}
+
+.save-name-modal .modal-footer {
+  padding: 1rem 1.35rem 1.35rem !important;
 }
 
 .stat-box {
@@ -19570,7 +20148,7 @@ export default {
 /* Actions */
 .completion-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 14px;
 }
@@ -19590,15 +20168,27 @@ export default {
   background: var(--surface);
   color: var(--text);
   min-height: 40px;
+  box-shadow:
+    0 8px 18px rgba(31, 24, 18, 0.035),
+    0 1px 0 rgba(255, 255, 255, 0.48) inset;
 }
 
 .action-btn:hover {
   transform: translateY(-1px);
   border-color: var(--accent);
+  box-shadow:
+    0 12px 24px rgba(31, 24, 18, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.48) inset;
 }
 
 .action-btn:active {
   transform: scale(0.97);
+}
+
+.action-btn:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+  transform: none !important;
 }
 
 .action-btn.primary {
@@ -19685,9 +20275,23 @@ export default {
   }
 }
 
+@keyframes completionCardBreath {
+  0%, 100% {
+    box-shadow: 0 10px 24px rgba(29, 22, 16, 0.04);
+  }
+
+  50% {
+    box-shadow: 0 16px 34px rgba(29, 22, 16, 0.07);
+  }
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .completion-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .completion-meta-grid {
     grid-template-columns: 1fr;
   }
   
@@ -19717,6 +20321,12 @@ export default {
   .surah-id {
     min-width: 16px;
     font-size: 0.55rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .completion-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -50762,19 +51372,31 @@ textarea {
 
 .mushaf-workspace {
   display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
   justify-items: center !important;
   padding: clamp(0.8rem, 2vw, 1.4rem) !important;
 }
 
 .mushaf-frame {
   width: min(100%, 960px) !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
   margin-inline: auto !important;
   padding: clamp(0.8rem, 2vw, 1.3rem) !important;
   border-radius: 24px !important;
 }
 
+.mushaf-viewport,
+.mushaf-track,
+.mushaf-page-body {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
 .mushaf-page {
   width: min(100%, 860px) !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
   min-height: min(78vh, 980px) !important;
   padding: clamp(1.2rem, 2vw, 2rem) !important;
   border-radius: 22px !important;
@@ -50824,8 +51446,6 @@ textarea {
     justify-content: stretch !important;
   }
 
-  .action-buttons-group,
-  .mushaf-pill-toolbar,
   .workspace-applied-pills {
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
@@ -50835,11 +51455,36 @@ textarea {
     -webkit-overflow-scrolling: touch !important;
   }
 
-  .action-buttons-group > *,
-  .mushaf-pill-toolbar > *,
   .workspace-applied-pills > * {
     flex: 0 0 auto !important;
     scroll-snap-align: start !important;
+  }
+
+  .action-buttons-group,
+  .mushaf-pill-toolbar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    gap: 0.5rem !important;
+  }
+
+  .action-buttons-group > *,
+  .mushaf-pill-toolbar > * {
+    flex: 0 1 auto !important;
+    scroll-snap-align: none !important;
+  }
+
+  .action-buttons-group .action-btn {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .action-buttons-group .action-btn-exit {
+    flex: 1 1 100% !important;
+  }
+
+  .action-buttons-group .top-card-ellipsis {
+    flex: 0 0 auto !important;
   }
 
   .workspace-shell-copy h1 {
@@ -50906,12 +51551,13 @@ textarea {
   }
 
   .action-buttons-group {
-    margin-inline: -0.25rem !important;
-    padding-inline: 0.25rem !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
   }
 
   .action-btn {
-    flex: 0 0 min(82vw, 260px) !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     padding-inline: 0.8rem !important;
   }
 
@@ -50980,12 +51626,16 @@ textarea {
   .memorisation-checker-footer,
   .recordings-library-footer {
     padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0px)) !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
   }
 
   .modal-footer > *,
   .memorisation-checker-footer > *,
   .recordings-library-footer > * {
-    flex: 1 1 100% !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-height: 48px !important;
   }
 
   .tools {
@@ -51056,7 +51706,7 @@ textarea {
   }
 
   .action-btn {
-    flex-basis: min(88vw, 240px) !important;
+    flex: 1 1 auto !important;
   }
 }
 
@@ -53473,6 +54123,58 @@ textarea {
 .recitation-saved-footnote-action {
   margin-inline-start: auto;
   flex: 0 0 auto;
+}
+
+/* Responsive audio player: on phones, keep title + transport controls on one row
+   and give the progress bar its own full-width row so nothing overflows or shrinks
+   to an unusable size. Controls stay large and thumb-friendly. */
+@media (max-width: 480px) {
+  .player-main {
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 8px !important;
+    row-gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .player-main > .player-info {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .player-main > .player-controls {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-content: flex-end !important;
+  }
+
+  .player-main > .player-btn {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+  }
+
+  .player-main > .player-progress-wrap {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .player-main > .player-controls {
+    gap: 4px !important;
+  }
+
+  .player-btn {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .player-play {
+    width: 48px !important;
+    height: 48px !important;
+  }
 }
 
 </style>
