@@ -83,6 +83,68 @@ import {
   createSpeechmaticsRealtimeProvider
 } from '../scripts/memorisationRuntime'
 
+const HELP_LEARNING_FALLBACKS = {
+  title: 'Help & Learning',
+  subtitle: 'Learn how to use Mutqin\'s tools to memorise more effectively.',
+  bestFor: 'Best for',
+  sections: {
+    tajweed: {
+      title: 'Tajweed Rules',
+      description: 'Tajweed is the set of rules that helps you recite the Quran correctly and beautifully. Mutqin highlights these rules so you can recognise and practise them while memorising.',
+      bestFor: 'Students improving pronunciation and recitation quality.'
+    },
+    srs: {
+      title: 'Smart Revision (SRS)',
+      description: 'Mutqin automatically reminds you to review verses at the right time so they stay strong in your memory. Difficult verses appear more often, while stronger verses are reviewed less frequently.',
+      bestFor: 'Long-term retention and preventing memorisation loss.'
+    },
+    techniques: {
+      title: 'Memorisation Techniques',
+      description: 'Choose the method that helps you stay steady, then adjust it as your range becomes more familiar.',
+      bestFor: 'Students discovering which learning style works best for them.',
+      details: {
+        repetition: {
+          label: 'Repetition Method',
+          text: 'Repeat the same verse multiple times before moving on.'
+        },
+        linking: {
+          label: 'Linking Method',
+          text: 'Connect each verse to the next to improve flow and continuity.'
+        },
+        cumulative: {
+          label: 'Cumulative Method',
+          text: 'Continuously add new verses while revising previous ones.'
+        }
+      }
+    },
+    layouts: {
+      title: 'Reading Layouts',
+      description: 'Switch between stacked cards and a Mushaf-style page depending on the device and the kind of memorisation you want to do.',
+      bestFor: 'Choosing the reading experience that feels most natural to you.',
+      details: {
+        stacked: {
+          label: 'Stacked Layout',
+          text: 'Displays each ayah in a clear vertical format that is easier to follow on smaller screens.'
+        },
+        mushaf: {
+          label: 'Mushaf Layout',
+          text: 'Displays ayahs in a traditional page-inspired style for students who prefer familiar page memorisation.'
+        }
+      }
+    },
+    aiRecitation: {
+      title: 'AI Recitation',
+      description: 'AI Recitation listens to your recitation and gives instant feedback so you can identify mistakes and improve accuracy while memorising.',
+      bestFor: 'Students who want guided practice and immediate feedback.'
+    },
+    manualAssessment: {
+      title: 'Manual Assessment',
+      description: 'Manual Assessment lets you evaluate your own memorisation after each session and track confidence over time.',
+      bestFor: 'Students who prefer self-reflection and independent revision.'
+    }
+  }
+}
+
 export default {
   name: 'TelawaApp',
   components: {
@@ -410,6 +472,8 @@ export default {
       aiRecitationStrictProgression: true,
       aiRecitationPersistMistakes: false,
       persistentAiRecitationReviews: {},
+      aiRecallModeEnabled: false,
+      recallRevealCurrentIndex: -1,
       selfCheckSavedAttemptsVisible: false,
       selfCheckSavedAttemptsFilter: 'all',
       themeObserver: null,
@@ -628,7 +692,11 @@ export default {
       // Options
       speedOptions: [0.5, 1, 1.25, 1.5, 2],
       delayOptions: [0, 0.5, 1, 2, 3, 5, 7, 10],
+      recitationWindowOptions: [5, 8, 10, 12, 15, 20, 30],
       rangeLoopDelay: 1,
+      recitationWindowActive: false,
+      recitationWindowRemaining: 0,
+      recitationWindowTimer: null,
 
       // Section open state - Expanded for consistency
       sectionOpen: {
@@ -681,68 +749,6 @@ export default {
       quranSearchFontSize: 34,
       quranSearchRecognition: null,
       quranSearchVoiceActive: false,
-      quranSearchFilterOptions: [
-        { value: 'all', label: 'Full Quran' },
-        { value: 'juz', label: 'Juz' },
-        { value: 'hizb', label: 'Hizb' },
-        { value: 'page', label: 'Page' },
-        { value: 'surah', label: 'Surah' },
-        { value: 'ayah', label: 'Ayah' },
-        { value: 'word', label: 'Word' }
-      ],
-      helpLearningSections: [
-        {
-          key: 'tajweed',
-          icon: 'bi-book-half',
-          title: 'Tajweed Rules',
-          description: 'Tajweed is the set of rules that helps you recite the Quran correctly and beautifully. Mutqin highlights these rules so you can recognise and practise them while memorising.',
-          bestFor: 'Students improving pronunciation and recitation quality.'
-        },
-        {
-          key: 'srs',
-          icon: 'bi-arrow-repeat',
-          title: 'Smart Revision (SRS)',
-          description: 'Mutqin automatically reminds you to review verses at the right time so they stay strong in your memory. Difficult verses appear more often, while stronger verses are reviewed less frequently.',
-          bestFor: 'Long-term retention and preventing memorisation loss.'
-        },
-        {
-          key: 'techniques',
-          icon: 'bi-lightbulb',
-          title: 'Memorisation Techniques',
-          description: 'Choose the method that helps you stay steady, then adjust it as your range becomes more familiar.',
-          bestFor: 'Students discovering which learning style works best for them.',
-          details: [
-            { label: 'Repetition Method', text: 'Repeat the same verse multiple times before moving on.' },
-            { label: 'Linking Method', text: 'Connect each verse to the next to improve flow and continuity.' },
-            { label: 'Cumulative Method', text: 'Continuously add new verses while revising previous ones.' }
-          ]
-        },
-        {
-          key: 'layouts',
-          icon: 'bi-columns-gap',
-          title: 'Reading Layouts',
-          description: 'Switch between two reading styles depending on the device and the kind of memorisation you want to do.',
-          bestFor: 'Choosing the reading experience that feels most natural to you.',
-          details: [
-            { label: 'Stacked Layout', text: 'Displays each verse in a simple vertical format that is easier to follow on mobile devices.' },
-            { label: 'Mushaf Layout', text: 'Displays verses in a traditional Mushaf-inspired style for students who prefer familiar page memorisation.' }
-          ]
-        },
-        {
-          key: 'ai-recitation',
-          icon: 'bi-mic',
-          title: 'AI Recitation',
-          description: 'AI Recitation listens to your recitation and provides instant feedback to help you identify mistakes and improve accuracy while memorising.',
-          bestFor: 'Students who want guided practice and immediate feedback.'
-        },
-        {
-          key: 'manual-assessment',
-          icon: 'bi-check2-square',
-          title: 'Manual Assessment',
-          description: 'Manual Assessment allows you to evaluate your own memorisation after each session and track your confidence and progress over time.',
-          bestFor: 'Students who prefer self-reflection and independent revision.'
-        }
-      ],
 
       // Misc
       currentVerseIndex: 0,
@@ -761,13 +767,104 @@ export default {
   },
 
   computed: {
+    rangeFilterOptions() {
+      return [
+        { value: 'all', label: this.t('memorisation.rangeOptions.all') },
+        { value: 'juz', label: this.t('memorisation.rangeOptions.juz') },
+        { value: 'hizb', label: this.t('memorisation.rangeOptions.hizb') },
+        { value: 'page', label: this.t('memorisation.rangeOptions.page') },
+        { value: 'surah', label: this.t('memorisation.rangeOptions.surah') },
+        { value: 'ayah', label: this.t('memorisation.rangeOptions.ayah') },
+        { value: 'word', label: this.t('memorisation.rangeOptions.word') }
+      ]
+    },
+    quranSearchFilterOptions() {
+      return this.rangeFilterOptions
+    },
+    helpLearningUi() {
+      return {
+        title: this.translateOrFallback('memorisation.helpLearning.title', HELP_LEARNING_FALLBACKS.title),
+        subtitle: this.translateOrFallback('memorisation.helpLearning.subtitle', HELP_LEARNING_FALLBACKS.subtitle),
+        bestFor: this.translateOrFallback('memorisation.helpLearning.bestFor', HELP_LEARNING_FALLBACKS.bestFor)
+      }
+    },
+    helpLearningSections() {
+      return [
+        {
+          key: 'tajweed',
+          icon: 'bi-book-half',
+          title: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.title', HELP_LEARNING_FALLBACKS.sections.tajweed.title),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.description', HELP_LEARNING_FALLBACKS.sections.tajweed.description),
+          bestFor: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.bestFor', HELP_LEARNING_FALLBACKS.sections.tajweed.bestFor)
+        },
+        {
+          key: 'srs',
+          icon: 'bi-arrow-repeat',
+          title: this.translateOrFallback('memorisation.helpLearning.sections.srs.title', HELP_LEARNING_FALLBACKS.sections.srs.title),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.srs.description', HELP_LEARNING_FALLBACKS.sections.srs.description),
+          bestFor: this.translateOrFallback('memorisation.helpLearning.sections.srs.bestFor', HELP_LEARNING_FALLBACKS.sections.srs.bestFor)
+        },
+        {
+          key: 'techniques',
+          icon: 'bi-lightbulb',
+          title: this.translateOrFallback('memorisation.helpLearning.sections.techniques.title', HELP_LEARNING_FALLBACKS.sections.techniques.title),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.techniques.description', HELP_LEARNING_FALLBACKS.sections.techniques.description),
+          bestFor: this.translateOrFallback('memorisation.helpLearning.sections.techniques.bestFor', HELP_LEARNING_FALLBACKS.sections.techniques.bestFor),
+          details: [
+            {
+              label: this.translateOrFallback('memorisation.helpLearning.sections.techniques.details.repetition.label', HELP_LEARNING_FALLBACKS.sections.techniques.details.repetition.label),
+              text: this.translateOrFallback('memorisation.helpLearning.sections.techniques.details.repetition.text', HELP_LEARNING_FALLBACKS.sections.techniques.details.repetition.text)
+            },
+            {
+              label: this.translateOrFallback('memorisation.helpLearning.sections.techniques.details.linking.label', HELP_LEARNING_FALLBACKS.sections.techniques.details.linking.label),
+              text: this.translateOrFallback('memorisation.helpLearning.sections.techniques.details.linking.text', HELP_LEARNING_FALLBACKS.sections.techniques.details.linking.text)
+            },
+            {
+              label: this.translateOrFallback('memorisation.helpLearning.sections.techniques.details.cumulative.label', HELP_LEARNING_FALLBACKS.sections.techniques.details.cumulative.label),
+              text: this.translateOrFallback('memorisation.helpLearning.sections.techniques.details.cumulative.text', HELP_LEARNING_FALLBACKS.sections.techniques.details.cumulative.text)
+            }
+          ]
+        },
+        {
+          key: 'layouts',
+          icon: 'bi-columns-gap',
+          title: this.translateOrFallback('memorisation.helpLearning.sections.layouts.title', HELP_LEARNING_FALLBACKS.sections.layouts.title),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.layouts.description', HELP_LEARNING_FALLBACKS.sections.layouts.description),
+          bestFor: this.translateOrFallback('memorisation.helpLearning.sections.layouts.bestFor', HELP_LEARNING_FALLBACKS.sections.layouts.bestFor),
+          details: [
+            {
+              label: this.translateOrFallback('memorisation.helpLearning.sections.layouts.details.stacked.label', HELP_LEARNING_FALLBACKS.sections.layouts.details.stacked.label),
+              text: this.translateOrFallback('memorisation.helpLearning.sections.layouts.details.stacked.text', HELP_LEARNING_FALLBACKS.sections.layouts.details.stacked.text)
+            },
+            {
+              label: this.translateOrFallback('memorisation.helpLearning.sections.layouts.details.mushaf.label', HELP_LEARNING_FALLBACKS.sections.layouts.details.mushaf.label),
+              text: this.translateOrFallback('memorisation.helpLearning.sections.layouts.details.mushaf.text', HELP_LEARNING_FALLBACKS.sections.layouts.details.mushaf.text)
+            }
+          ]
+        },
+        {
+          key: 'ai-recitation',
+          icon: 'bi-mic',
+          title: this.translateOrFallback('memorisation.helpLearning.sections.aiRecitation.title', HELP_LEARNING_FALLBACKS.sections.aiRecitation.title),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.aiRecitation.description', HELP_LEARNING_FALLBACKS.sections.aiRecitation.description),
+          bestFor: this.translateOrFallback('memorisation.helpLearning.sections.aiRecitation.bestFor', HELP_LEARNING_FALLBACKS.sections.aiRecitation.bestFor)
+        },
+        {
+          key: 'manual-assessment',
+          icon: 'bi-check2-square',
+          title: this.translateOrFallback('memorisation.helpLearning.sections.manualAssessment.title', HELP_LEARNING_FALLBACKS.sections.manualAssessment.title),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.manualAssessment.description', HELP_LEARNING_FALLBACKS.sections.manualAssessment.description),
+          bestFor: this.translateOrFallback('memorisation.helpLearning.sections.manualAssessment.bestFor', HELP_LEARNING_FALLBACKS.sections.manualAssessment.bestFor)
+        }
+      ]
+    },
     activeHelpLearningSection() {
       return this.helpLearningSections.find(section => section.key === this.helpLearningActiveKey)
         || this.helpLearningSections[0]
         || null
     },
     shouldRenderWorkspaceShell() {
-      return !!this.hasSessionStarted && !this.isSessionCompleted
+      return !this.isOnboardingExperienceActive
     },
     shouldShowOffcanvasTabs() {
       return !this.isSessionCompleted && (this.hasSessionStarted || this.hasVerses)
@@ -993,13 +1090,15 @@ export default {
     },
     setupSummary() {
       const repeatCount = Math.max(1, Number(this.repetitionsPerStep || 1))
-      const playModeLabel = this.playMode === 'manual'
-        ? this.t('memorisation.common.manualAdvance')
-        : this.t('memorisation.common.autoAdvance')
       const chaining = this.chainingEnabled
         ? this.t('memorisation.common.chainingLabel', { method: this.chainingMethod })
         : this.t('memorisation.common.plainSequence')
-      return this.t('memorisation.common.setupSummary', { count: repeatCount, mode: playModeLabel, chaining })
+      return this.t('memorisation.common.setupSummary', { count: repeatCount, mode: this.playModeSummaryLabel, chaining })
+    },
+    playModeSummaryLabel() {
+      if (this.playMode === 'manual') return this.t('memorisation.common.manualAdvance')
+      if (this.playMode === 'follow') return this.t('memorisation.common.reciterFollowAdvance')
+      return this.t('memorisation.common.autoAdvance')
     },
     activePracticeTechniques() {
       const items = []
@@ -1278,6 +1377,9 @@ export default {
       return 'Mutqin is guiding the order for you. Keep going one ayah at a time.'
     },
     topCardSessionLabel() {
+      if (!this.hasVerses && !this.showSessionCompletedState) {
+        return this.t('memorisation.workspaceEmpty.title')
+      }
       const surah = this.currentChapter?.name_simple || this.activeChapterName || 'Casual Session'
       const start = Math.max(1, Number(this.rangeStart || 1))
       const end = Math.max(start, Number(this.rangeEnd || start))
@@ -1405,6 +1507,14 @@ export default {
     sessionEndedSummaryMessage() {
       const snapshot = this.sessionCompletionSnapshot || {}
       return snapshot.summaryMessage || this.t('memorisation.summary.default')
+    },
+    sessionEndedDetailMessage() {
+      const snapshot = this.sessionCompletionSnapshot || {}
+      return snapshot.detailMessage || ''
+    },
+    sessionEndedNextStepMessage() {
+      const snapshot = this.sessionCompletionSnapshot || {}
+      return Array.isArray(snapshot.nextSteps) && snapshot.nextSteps.length ? snapshot.nextSteps[0] : ''
     },
     hifzPlanLifecycleStatus() {
       return this.hifzPlan?.lifecycle?.status || this.hifzPlan?.status || 'draft'
@@ -2103,6 +2213,99 @@ export default {
       const checked = this.recitationLiveWords.filter(word => word.status !== 'pending').length
       return checked ? `${checked} of ${total} spoken words matched` : 'Waiting for your first recognized word'
     },
+    recallCurrentWordIndex() {
+      // The committed (finalized) alignment lags the user's voice because it
+      // waits for end-of-utterance finals. recitationLiveWords already merges
+      // the interim/preview alignment, so deriving the cursor from it lets the
+      // reveal keep pace with what the reciter is actually saying. We take the
+      // furthest-forward of the two so the cursor never rewinds when a final
+      // transcript arrives slightly behind the live preview.
+      const live = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
+      const committedRaw = Number(this.recitationAlignmentState?.currentIndex)
+      const committed = Number.isFinite(committedRaw) && committedRaw >= 0 ? committedRaw : 0
+      if (!live.length) return committed
+      let liveIndex = live.findIndex(word => word?.status !== 'correct')
+      if (liveIndex < 0) liveIndex = live.length
+      return Math.max(committed, liveIndex)
+    },
+    aiRecallModeStatus() {
+      if (!this.recitationCheckPanelOpen) {
+        return { tone: 'idle', icon: 'bi-eye-fill', title: '', message: '' }
+      }
+      if (!this.aiRecallModeEnabled) {
+        return {
+          tone: 'setup',
+          icon: 'bi-eye-fill',
+          title: this.t('memorisation.recall_mode'),
+          message: this.t('memorisation.recall_mode_enable_hint'),
+        }
+      }
+      if (this.recitationCheckResult) {
+        return {
+          tone: 'complete',
+          icon: 'bi-check-circle-fill',
+          title: this.t('memorisation.recall_mode_complete_title'),
+          message: this.t('memorisation.recall_mode_complete_message'),
+        }
+      }
+      if (this.recitationCheckPreparing) {
+        return {
+          tone: 'preparing',
+          icon: 'bi-arrow-repeat',
+          title: this.t('memorisation.recall_mode_preparing_title'),
+          message: this.t('memorisation.recall_mode_preparing_message'),
+        }
+      }
+      if (this.recitationCheckRecording) {
+        const total = this.recitationLiveWords.length
+        const revealed = Math.max(0, this.recallCurrentWordIndex)
+        const issue = (this.recitationLiveWords || []).find(word => ['incorrect', 'partial'].includes(word?.status))
+        if (issue && this.aiRecitationStrictProgression) {
+          return {
+            tone: 'mistake',
+            icon: 'bi-exclamation-triangle-fill',
+            title: this.t('memorisation.recall_mode_mistake_title'),
+            message: this.t('memorisation.recall_mode_mistake_message'),
+          }
+        }
+        if (this.recallRevealCurrentIndex >= 0 && this.recallRevealCurrentIndex === this.recallCurrentWordIndex) {
+          return {
+            tone: 'peek',
+            icon: 'bi-eye-fill',
+            title: this.t('memorisation.recall_mode_peek_title'),
+            message: this.t('memorisation.recall_mode_peek_message'),
+          }
+        }
+        if (this.recitationAlignmentState?.complete) {
+          return {
+            tone: 'complete',
+            icon: 'bi-check-circle-fill',
+            title: this.t('memorisation.recall_mode_complete_title'),
+            message: this.t('memorisation.recall_mode_complete_message'),
+          }
+        }
+        if (revealed > 0 && total) {
+          return {
+            tone: 'progress',
+            icon: 'bi-mic-fill',
+            title: this.t('memorisation.recall_mode_listening_title'),
+            message: this.t('memorisation.recall_mode_progress_message', { revealed, total }),
+          }
+        }
+        return {
+          tone: 'listening',
+          icon: 'bi-mic-fill',
+          title: this.t('memorisation.recall_mode_listening_title'),
+          message: this.t('memorisation.recall_mode_listening_message'),
+        }
+      }
+      return {
+        tone: 'ready',
+        icon: 'bi-eye-slash-fill',
+        title: this.t('memorisation.recall_mode_ready_title'),
+        message: this.t('memorisation.recall_mode_ready_message'),
+      }
+    },
     analyticsTotalAyahs() {
       return Math.max(1, Number(this.analyticsModalData?.metrics?.total_ayahs || 1))
     },
@@ -2347,6 +2550,13 @@ export default {
       if (item?.phase === 'Retention') return 'review'
       return 'learn'
     },
+    reciterFollowModeActive() {
+      return this.playMode === 'follow' && this.recitationWindowActive
+    },
+    reciterFollowPrompt() {
+      if (!this.reciterFollowModeActive) return ''
+      return this.t('memorisation.recite_now_window', { seconds: Math.max(0, Number(this.recitationWindowRemaining || 0)) })
+    },
 
     sessionConfig() {
       return this.buildSessionConfig(this.currentMode)
@@ -2496,9 +2706,17 @@ export default {
     playMode: {
       get() { return this.currentConfig.playMode },
       set(val) {
-        const safeMode = val === 'manual' ? 'manual' : 'auto'
+        const safeMode = ['auto', 'manual', 'follow'].includes(val) ? val : 'auto'
         const store = this.getModeStore(this.currentMode)
         if (store) store.playMode = safeMode
+      }
+    },
+    recitationWindowSeconds: {
+      get() { return this.currentConfig.recitationWindowSeconds },
+      set(val) {
+        const safeSeconds = Math.max(5, Math.min(30, Number.isFinite(Number(val)) ? Number(val) : 8))
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.recitationWindowSeconds = safeSeconds
       }
     },
 
@@ -2951,6 +3169,9 @@ export default {
       this.loadVerseFontSizes()
       this.migrateLocalStorage()
       this.loadUiState()
+      if (this.auth?.check && this.auth.ai_recall_mode_enabled !== undefined) {
+        this.aiRecallModeEnabled = !!this.auth.ai_recall_mode_enabled
+      }
       this.loadCentralSessionState()
       this.restoreSessionState()
       await this.loadChapters()
@@ -2998,7 +3219,7 @@ export default {
       this.tab = 'tools'
       this.showTools = false
       this.isDataReady = true
-      this.showBanner('The memorisation workspace recovered from a startup error.', 'error', 5000)
+      this.showBanner(this.t('toasts.theMemorisationWorkspaceRecoveredFromA'), 'error', 5000)
     } finally {
       this.isBootstrapping = false
     }
@@ -3065,6 +3286,7 @@ export default {
     if (this.workspaceSyncTimer) clearTimeout(this.workspaceSyncTimer)
     if (this.playbackAdvanceTimer) clearTimeout(this.playbackAdvanceTimer)
     if (this.segmentPlaybackTimer) clearTimeout(this.segmentPlaybackTimer)
+    this.clearRecitationWindowTimer()
     this.flushPlaybackTime()
     this.stopWordHighlighting()
     if (this.wordSyncEngine) {
@@ -3161,19 +3383,19 @@ export default {
     fadingVerseEnabled(newVal) {
       if (newVal && this.showWordByWord) {
         this.showWordByWord = false;
-        this.showBanner('Fading Mode: Word-by-Word disabled', 'info', 2000);
+        this.showBanner(this.t('toasts.fadingModeWordByWordDisabled'), 'info', 2000);
       }
     },
     showWordByWord(newVal) {
       if (newVal && this.fadingVerseEnabled) {
         this.fadingVerseEnabled = false;
-        this.showBanner('Word-by-Word Mode: Fading disabled', 'info', 2000);
+        this.showBanner(this.t('toasts.wordByWordModeFadingDisabled'), 'info', 2000);
       }
     },
     focusModeEnabled(newVal) {
       if (newVal && this.blurModeEnabled) {
         this.blurModeEnabled = false;
-        this.showBanner('🎯 Focus Mode: On | 🌫️ Blur Mode: Off (cannot use together)', 'info', 2000);
+        this.showBanner(this.t('toasts.focusModeOnBlurModeOff'), 'info', 2000);
       }
       this.persistUiState();
     },
@@ -3181,12 +3403,12 @@ export default {
     blurModeEnabled(newVal) {
       if (newVal && this.focusModeEnabled) {
         this.focusModeEnabled = false;
-        this.showBanner('🌫️ Blur Mode: On | 🎯 Focus Mode: Off (cannot use together)', 'info', 2000);
+        this.showBanner(this.t('toasts.blurModeOnFocusModeOff'), 'info', 2000);
       }
       // 🔥 NEW: Auto-disable Chaining when Blur turns on
       if (newVal && this.chainingEnabled) {
         this.chainingEnabled = false;
-        this.showBanner('🌫️ Blur Mode: On | 🔗 Chaining: Off — Blur hides upcoming verses needed for chaining', 'warning', 3000);
+        this.showBanner(this.t('toasts.blurModeOnChainingOffBlur'), 'warning', 3000);
       }
       this.persistUiState();
     },
@@ -3195,10 +3417,10 @@ export default {
     chainingEnabled(newVal) {
       if (newVal && this.blurModeEnabled) {
         this.blurModeEnabled = false;
-        this.showBanner('🔗 Chaining: On | 🌫️ Blur Mode: Off — You need to see upcoming verses for chaining to work', 'warning', 3000);
+        this.showBanner(this.t('toasts.chainingOnBlurModeOffYou'), 'warning', 3000);
       }
       if (newVal && !this.anchorModeEnabled) {
-        this.showBanner('💡 Tip: Enable Anchor Mode with Chaining for better recall', 'info', 2000);
+        this.showBanner(this.t('toasts.tipEnableAnchorModeWithChaining'), 'info', 2000);
       }
       this.persistUiState();
       this.persistCentralSessionState();
@@ -3224,7 +3446,11 @@ export default {
       this.persistCentralSessionState()
     },
     delay: 'persistUiState',
-    playMode: 'persistUiState',
+    playMode(newVal) {
+      if (newVal !== 'follow') this.clearRecitationWindowTimer()
+      this.persistUiState()
+    },
+    recitationWindowSeconds: 'persistUiState',
     order: 'persistUiState',
     chainingEnabled() {
       this.persistUiState()
@@ -3251,6 +3477,7 @@ export default {
     showWordByWord: 'persistUiState',
     defaultFontSize: 'persistUiState',
     tajweedEnabled: 'persistUiState',
+    aiRecallModeEnabled: 'persistUiState',
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
     showWordByWord(newVal) {
@@ -3284,12 +3511,33 @@ export default {
     sectionOpen: { handler: 'persistUiState', deep: true },
     isSelfCheckRecording: 'handleStatsVisualTickerStateChange',
     selfCheckPreparing: 'handleStatsVisualTickerStateChange',
-    recitationCheckRecording: 'handleStatsVisualTickerStateChange',
+    recitationCheckRecording(val) {
+      this.handleStatsVisualTickerStateChange()
+      this.handleRecallModeRecordingChange(val)
+    },
     recitationCheckPreparing: 'handleStatsVisualTickerStateChange',
     aiMemorisationCheckerRecording: 'handleStatsVisualTickerStateChange',
     aiMemorisationCheckerPreparing: 'handleStatsVisualTickerStateChange',
     showSessionAnalyticsModal: 'handleStatsVisualTickerStateChange',
     analyticsModalRecordId: 'handleStatsVisualTickerStateChange',
+    recallCurrentWordIndex(newVal, oldVal) {
+      if (newVal !== oldVal && this.recallRevealCurrentIndex >= 0 && newVal !== this.recallRevealCurrentIndex) {
+        this.recallRevealCurrentIndex = -1
+      }
+      this.$nextTick(() => {
+        if (this.aiRecallModeEnabled && this.recitationCheckRecording) this.applyRecallVisibility()
+      })
+    },
+    aiRecallModeEnabled(newVal) {
+      if (!newVal) {
+        this.recallRevealCurrentIndex = -1
+        this.$nextTick(() => this.clearRecallVisibility())
+        return
+      }
+      this.$nextTick(() => {
+        if (this.recitationCheckRecording) this.applyRecallVisibility()
+      })
+    },
     statsTick() {
       if (!this.showSessionAnalyticsModal) return
       const now = Date.now()
@@ -3315,6 +3563,11 @@ export default {
   },
 
   methods: {
+    translateOrFallback(key, fallback, params = {}) {
+      const translated = this.t(key, params)
+      return translated && translated !== key ? translated : fallback
+    },
+
     buildOnboardingStep(key, icon) {
       const base = `memorisation.onboarding.steps.${key}`
       const tm = typeof this.$tm === 'function' ? this.$tm.bind(this) : (path) => this.t(path)
@@ -3349,11 +3602,11 @@ export default {
 
     async loadSelectedSession() {
       if (!this.selectedSessionId) {
-        this.showBanner('Please select a session first', 'info', 2000);
+        this.showBanner(this.t('toasts.pleaseSelectASessionFirst'), 'info', 2000);
         return;
       }
       await this.loadSavedSession(this.selectedSessionId);
-      this.showBanner('Session loaded successfully', 'success', 2000);
+      this.showBanner(this.t('toasts.sessionLoadedSuccessfully'), 'success', 2000);
     },
     
     // Close dropdown when clicking outside
@@ -3372,11 +3625,11 @@ export default {
 
     async loadSelectedSession() {
       if (!this.selectedSessionId) {
-        this.showBanner('Please select a session first', 'info', 2000);
+        this.showBanner(this.t('toasts.pleaseSelectASessionFirst'), 'info', 2000);
         return;
       }
       await this.loadSavedSession(this.selectedSessionId);
-      this.showBanner('Session loaded successfully', 'success', 2000);
+      this.showBanner(this.t('toasts.sessionLoadedSuccessfully'), 'success', 2000);
     },
     selectSessionFromDropdown(sessionId) {
       this.selectedSessionId = sessionId;
@@ -3394,7 +3647,7 @@ export default {
 	      if (!this.selectedSessionId) return;
 	      await this.loadSavedSession(this.selectedSessionId);
 	      // Show success feedback
-	      this.showBanner('Session loaded successfully', 'success', 2000);
+	      this.showBanner(this.t('toasts.sessionLoadedSuccessfully'), 'success', 2000);
 	    },
 	    // Modify your existing recitation check to respect hidden reveal mode
 	    checkRecitationWithHiddenReveal(recitedWords, targetVerse) {
@@ -3446,7 +3699,7 @@ export default {
       if (nextIndex >= words.length) {
         // Complete verse revealed
         this.playUiTone('complete');
-        this.showBanner('Ayah completed! Moving to next...', 'success', 1500);
+        this.showBanner(this.t('toasts.ayahCompletedMovingToNext'), 'success', 1500);
         return true;
       }
       
@@ -4021,6 +4274,27 @@ export default {
       }
       return Math.max(0, Number(this.actualGapDelay || 0))
     },
+    clearRecitationWindowTimer() {
+      if (this.recitationWindowTimer) {
+        window.clearInterval(this.recitationWindowTimer)
+        this.recitationWindowTimer = null
+      }
+      this.recitationWindowActive = false
+      this.recitationWindowRemaining = 0
+    },
+    startRecitationWindow(onComplete = null) {
+      this.clearRecitationWindowTimer()
+      const seconds = Math.max(5, Math.min(30, Number(this.recitationWindowSeconds || 8)))
+      this.recitationWindowActive = true
+      this.recitationWindowRemaining = seconds
+      this.recitationWindowTimer = window.setInterval(() => {
+        const nextRemaining = Math.max(0, Number(this.recitationWindowRemaining || 0) - 1)
+        this.recitationWindowRemaining = nextRemaining
+        if (nextRemaining > 0) return
+        this.clearRecitationWindowTimer()
+        if (typeof onComplete === 'function') onComplete()
+      }, 1000)
+    },
 
     // Example method showing how to use repetitions in playback
     playVerseWithRepetitions(verseIndex, verseDuration) {
@@ -4145,6 +4419,7 @@ export default {
           reciterId: this.reciterId,
           speed: this.speed,
           playMode: this.playMode,
+          recitationWindowSeconds: this.recitationWindowSeconds,
           repetitionsPerStep: this.repetitionsPerStep,
           selectedLoopCount: this.selectedLoopCount,
           gapBetweenVerses: this.gapBetweenVerses,
@@ -4232,7 +4507,7 @@ export default {
 
       const session = this.addSavedSession(this.buildSessionRecord(trimmedName))
 
-      this.showBanner(`✓ Session "${session.name}" saved`, 'success', 2000)
+      this.showBanner(this.t('toasts.sessionSaved', { name: session.name }), 'success', 2000)
       this.closeSaveModal()
     },
     toggleWordAudio() {
@@ -4257,7 +4532,7 @@ export default {
       this.sectionOpen.repetitions = false
       this.sectionOpen.gap_between = false
       this.persistUiState()
-      this.showBanner('Recommended setup applied', 'success', 1500)
+      this.showBanner(this.t('toasts.recommendedSetupApplied'), 'success', 1500)
     },
     addToggleRipple(event) {
       const button = event.currentTarget;
@@ -4293,23 +4568,23 @@ export default {
           this.chainingEnabled = true;
           this.chainingMethod = 'linking';
           this.chainingRepetitions = 1;
-          this.showBanner('Preset: Guided Start', 'success', 2000);
+          this.showBanner(this.t('toasts.presetGuidedStart'), 'success', 2000);
           break;
         case 'chain':
           this.chainingEnabled = true;
           this.anchorModeEnabled = true;
           this.focusModeEnabled = true;
-          this.showBanner('Preset: Chaining + Anchor Mode (with Focus)', 'success', 2000);
+          this.showBanner(this.t('toasts.presetChainingAnchorModeWithFocus'), 'success', 2000);
           break;
         case 'blur':
           this.blurModeEnabled = true;
           this.chainingEnabled = false;
-          this.showBanner('Preset: Pure Recall with Blur Mode', 'success', 2000);
+          this.showBanner(this.t('toasts.presetPureRecallWithBlurMode'), 'success', 2000);
           break;
         case 'focus':
           this.focusModeEnabled = true;
           this.anchorModeEnabled = true;
-          this.showBanner('Preset: Focus Mode + Anchor Hooks', 'success', 2000);
+          this.showBanner(this.t('toasts.presetFocusModeAnchorHooks'), 'success', 2000);
           break;
       }
 
@@ -4323,11 +4598,11 @@ export default {
       }
       if (this.blurModeEnabled && this.chainingEnabled) {
         this.chainingEnabled = false;
-        this.showBanner('Blur Mode works best without chaining, so chaining was turned off.', 'info', 2500);
+        this.showBanner(this.t('toasts.blurModeWorksBestWithoutChaining'), 'info', 2500);
       }
       if (this.fadingVerseEnabled && this.showWordByWord) {
         this.showWordByWord = false;
-        this.showBanner('Fading Mode: Word-by-Word disabled', 'info', 2000);
+        this.showBanner(this.t('toasts.fadingModeWordByWordDisabled'), 'info', 2000);
       }
     },
     removeBasmala(arabicText) {
@@ -4352,7 +4627,7 @@ export default {
 
       if (this.anchorModeEnabled) {
         this.scheduleAnchorHighlights()
-        this.showBanner('Anchor Mode: Key words will be highlighted as memory hooks', 'info', 3000)
+        this.showBanner(this.t('toasts.anchorModeKeyWordsWillBe'), 'info', 3000)
         // Watch for verse changes
         this.setupAnchorObserver()
       } else {
@@ -4362,7 +4637,7 @@ export default {
           this.anchorHighlightObserver.disconnect()
           this.anchorHighlightObserver = null
         }
-        this.showBanner('Anchor Mode disabled', 'info', 1500)
+        this.showBanner(this.t('toasts.anchorModeDisabled'), 'info', 1500)
       }
 
       this.persistUiState()
@@ -4374,7 +4649,7 @@ export default {
       if (this.anchorModeEnabled) {
         this.scheduleAnchorHighlights()
         const anchorText = { 1: '1 anchor (center)', 2: '2 anchors (start+end)', 3: '3 anchors (strategic)' }
-        this.showBanner(`Anchor Mode: Using ${anchorText[this.anchorCount]}`, 'info', 2000)
+        this.showBanner(this.t('toasts.anchorModeUsing', { anchorCount: anchorText[this.anchorCount] }), 'info', 2000)
       }
       this.persistUiState()
       this.persistCentralSessionState()
@@ -4586,7 +4861,7 @@ export default {
     startSessionWithCountdown() {
       if (!this.canStartSession) {
         this.showTools = true
-        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600)
+        this.showBanner(this.t('toasts.chooseAValidSurahAndAyah'), 'info', 3600)
         return
       }
 
@@ -4601,7 +4876,7 @@ export default {
     async startSessionAndClose() {
       if (!this.canStartSession) {
         this.showTools = true
-        this.showBanner('Please select a valid surah and ayah range first', 'info', 3600)
+        this.showBanner(this.t('toasts.pleaseSelectAValidSurahAnd'), 'info', 3600)
         return
       }
       this.applySessionConfig(this.buildSessionConfig(this.currentMode))
@@ -4659,12 +4934,12 @@ export default {
 
     saveCurrentSession() {
       if (!this.hasVerses) {
-        this.showBanner('No active session to save', 'warning', 2000)
+        this.showBanner(this.t('toasts.noActiveSessionToSave'), 'warning', 2000)
         return
       }
 
       this.addSavedSession(this.buildSessionRecord(`${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`))
-      this.showBanner('Session saved', 'success', 1500)
+      this.showBanner(this.t('toasts.sessionSaved2'), 'success', 1500)
     },
 
     setRepetitionsFromSlider(value) {
@@ -4819,7 +5094,7 @@ export default {
         this.selectedStatsSessionId = this.savedSessions[0]?.id || ''
       }
       this.persistSavedSessions()
-      this.showBanner('Session deleted', 'info', 1500)
+      this.showBanner(this.t('toasts.sessionDeleted'), 'info', 1500)
     },
 
     savedSessionsStorageKey() {
@@ -4842,6 +5117,7 @@ export default {
           reciterId: DEFAULT_ALQURAN_RECITER,
           speed: 1,
           playMode: 'auto',
+          recitationWindowSeconds: 8,
           chainingEnabled: true,
           chainingMethod: 'linking',
           chainingRepetitions: 1,
@@ -5119,6 +5395,7 @@ export default {
         reciterId: this.reciterId,
         speed: this.speed,
         playMode: this.playMode,
+        recitationWindowSeconds: this.recitationWindowSeconds,
         repetitionsPerStep: this.repetitionsPerStep,
         selectedLoopCount: this.selectedLoopCount,
         gapBetweenVerses: this.gapBetweenVerses,
@@ -5177,6 +5454,7 @@ export default {
       this.reciterId = snapshot.reciterId
       this.speed = snapshot.speed
       this.playMode = snapshot.playMode
+      this.recitationWindowSeconds = snapshot.recitationWindowSeconds || this.recitationWindowSeconds
       this.repetitionsPerStep = snapshot.repetitionsPerStep || this.repetitionsPerStep
       this.selectedLoopCount = snapshot.selectedLoopCount ?? this.selectedLoopCount
       this.gapBetweenVerses = snapshot.gapBetweenVerses || this.gapBetweenVerses
@@ -5684,7 +5962,7 @@ export default {
           errorFormat: format,
           errorMessage: validation.message
         }
-        this.showBanner('Session export blocked: incomplete session data.', 'error', 2600)
+        this.showBanner(this.t('toasts.sessionExportBlockedIncompleteSessionData'), 'error', 2600)
         return
       }
 
@@ -5717,7 +5995,7 @@ export default {
           errorFormat: '',
           errorMessage: ''
         }
-        this.showBanner('Download ready ✓', 'success', 1800)
+        this.showBanner(this.t('toasts.downloadReady'), 'success', 1800)
       } catch (error) {
         console.error('Failed to export session:', error)
         this.exportSessionState = {
@@ -5729,7 +6007,7 @@ export default {
           errorFormat: format,
           errorMessage: 'Something went wrong. Please retry.'
         }
-        this.showBanner('Export failed, retry', 'error', 2600)
+        this.showBanner(this.t('toasts.exportFailedRetry'), 'error', 2600)
       }
     },
 
@@ -5945,7 +6223,7 @@ export default {
     async rerunAiMemorisationCheckerAudit() {
       const recording = this.getAiMemorisationCheckerAuditRecording()
       if (!recording) {
-        this.showBanner('This result does not have enough stored metadata to re-run the audit.', 'info', 2200)
+        this.showBanner(this.t('toasts.thisResultDoesNotHaveEnough'), 'info', 2200)
         return null
       }
       return this.rerunRecordingValidationAudit(recording)
@@ -5981,9 +6259,6 @@ export default {
         || (this.showSelfCheckModal ? this.selfCheckVerseKey : '')
         || this.effectiveActiveVerseKey
         || ''
-      const isCompactViewport = typeof window !== 'undefined'
-        && typeof window.matchMedia === 'function'
-        && window.matchMedia('(max-width: 768px)').matches
       const schedule = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
         ? window.requestAnimationFrame.bind(window)
         : callback => callback()
@@ -6001,7 +6276,7 @@ export default {
       }
       this.recordingsLibrarySearch = ''
       this.pendingRecordingDeleteId = ''
-      this.recordingsNavExpanded = !isCompactViewport
+      this.recordingsNavExpanded = true
       this.showRecordingsLibrary = true
       this.isRecordingsLibraryLoading = true
       this.syncBodyScrollLock(true)
@@ -6043,9 +6318,6 @@ export default {
     selectRecordingsAyah(ayahKey) {
       this.selectedRecordingsAyahKey = ayahKey
       this.pendingRecordingDeleteId = ''
-      if (typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 768px)').matches) {
-        this.recordingsNavExpanded = false
-      }
     },
     initRecordingsAudio() {
       if (this.recordingsAudioBound || !this.recordingsAudioElement) return
@@ -6066,7 +6338,7 @@ export default {
         this.activeRecordingPlaybackId = ''
         this.activeSelfCheckPreviewKey = ''
         this.activeSelfCheckAyahPlaybackKey = ''
-        this.showBanner('Unable to play this recording right now.', 'error', 2200)
+        this.showBanner(this.t('toasts.unableToPlayThisRecordingRight'), 'error', 2200)
       })
       this.recordingsAudioBound = true
     },
@@ -6099,7 +6371,7 @@ export default {
 
       const audio = this.ensureRecordingsAudioElement()
       if (!audio) {
-        this.showBanner('Audio system not ready', 'error', 2200)
+        this.showBanner(this.t('toasts.audioSystemNotReady'), 'error', 2200)
         return
       }
 
@@ -6128,7 +6400,7 @@ export default {
       } catch (error) {
         console.error('Failed to play recording:', error)
         this.activeRecordingPlaybackId = ''
-        this.showBanner('Unable to play this recording right now.', 'error', 2200)
+        this.showBanner(this.t('toasts.unableToPlayThisRecordingRight'), 'error', 2200)
       }
     },
     promptDeleteRecording(recordingId) {
@@ -6344,11 +6616,11 @@ export default {
       if (!verse?.key) return
       
       if (this.isSelfCheckRecording && this.selfCheckVerseKey && this.selfCheckVerseKey !== verse.key) {
-        this.showBanner('Stop the current self-check before moving to another ayah.', 'info', 2200)
+        this.showBanner(this.t('toasts.stopTheCurrentSelfCheckBefore'), 'info', 2200)
         return
       }
       if (this.selfCheckDraft?.ayahKey && this.selfCheckDraft.ayahKey !== verse.key) {
-        this.showBanner('Save or discard the current self-check attempt before switching ayahs.', 'info', 2400)
+        this.showBanner(this.t('toasts.saveOrDiscardTheCurrentSelf'), 'info', 2400)
         return
       }
 
@@ -6370,7 +6642,7 @@ export default {
     },
     closeSelfCheckModal() {
       if (this.isSelfCheckRecording) {
-        this.showBanner('Stop or discard the current recording before closing Self-Check.', 'info', 2200)
+        this.showBanner(this.t('toasts.stopOrDiscardTheCurrentRecording'), 'info', 2200)
         return
       }
       this.showSelfCheckModal = false
@@ -6388,11 +6660,11 @@ export default {
     openRecordingsLibraryFromSelfCheck() {
       const ayahKey = this.selfCheckVerseKey || this.selfCheckModalVerse?.key || ''
       if (!ayahKey && !this.hasRecordingsLibraryEntries) {
-        this.showBanner('Select an ayah before opening the recordings library.', 'info', 2200)
+        this.showBanner(this.t('toasts.selectAnAyahBeforeOpeningThe'), 'info', 2200)
         return
       }
       if (this.isSelfCheckRecording) {
-        this.showBanner('Stop the current recording before opening the recordings library.', 'info', 2200)
+        this.showBanner(this.t('toasts.stopTheCurrentRecordingBeforeOpening'), 'info', 2200)
         return
       }
       this.showSelfCheckModal = false
@@ -6485,13 +6757,13 @@ export default {
     },
     async toggleSelfCheckAyahPlayback(verse) {
       if (!verse?.audio) {
-        this.showBanner(`Audio not available for verse ${verse?.number || ''}`.trim(), 'info', 2000)
+        this.showBanner(this.t('toasts.audioNotAvailableForVerse', { number: verse?.number || '' }).trim(), 'info', 2000)
         return
       }
 
       const audio = this.ensureRecordingsAudioElement()
       if (!audio) {
-        this.showBanner('Audio system not ready', 'error', 2200)
+        this.showBanner(this.t('toasts.audioSystemNotReady'), 'error', 2200)
         return
       }
 
@@ -6519,7 +6791,7 @@ export default {
       } catch (error) {
         console.error('Failed to play self-check ayah audio:', error)
         this.activeSelfCheckAyahPlaybackKey = ''
-        this.showBanner('Unable to play this ayah right now.', 'error', 2200)
+        this.showBanner(this.t('toasts.unableToPlayAyahNow'), 'error', 2200)
       }
     },
     supportsSelfCheckRecording() {
@@ -6681,6 +6953,181 @@ export default {
       if (!this.aiRecitationPersistMistakes) this.persistentAiRecitationReviews = {}
       this.persistUiState()
     },
+    toggleAiRecallMode() {
+      this.aiRecallModeEnabled = !this.aiRecallModeEnabled
+      this.persistUiState()
+      this.persistAiRecallModeToServer()
+      if (!this.aiRecallModeEnabled) {
+        this.recallRevealCurrentIndex = -1
+        this.$nextTick(() => this.clearRecallVisibility())
+      } else {
+        this.$nextTick(() => {
+          if (this.recitationCheckRecording) this.applyRecallVisibility()
+        })
+      }
+    },
+    async persistAiRecallModeToServer() {
+      if (typeof window === 'undefined' || !window.mutqinAuthCheck) return
+      try {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+        await fetch('/api/profile/ai-recall-mode', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({ ai_recall_mode_enabled: this.aiRecallModeEnabled }),
+        })
+      } catch (e) {
+        // non-blocking: local preference still persists
+      }
+    },
+    revealCurrentRecallWord() {
+      const idx = this.recallCurrentWordIndex
+      if (!Number.isFinite(idx) || idx < 0) return
+      this.recallRevealCurrentIndex = idx
+      this.$nextTick(() => this.applyRecallVisibility(true))
+    },
+    handleRecallModeRecordingChange(isRecording) {
+      // Force a fresh node cache: the ayah HTML is re-rendered when recording
+      // starts/stops, so any previously cached word nodes are now stale.
+      this._recallContainerEl = null
+      this._recallNodeCache = null
+      this._lastRecallIndex = -2
+      this._lastRecallRevealIndex = -2
+      if (!isRecording) {
+        this.recallRevealCurrentIndex = -1
+        this.$nextTick(() => this.clearRecallVisibility())
+        return
+      }
+      this.recallRevealCurrentIndex = -1
+      this.$nextTick(() => {
+        if (this.aiRecallModeEnabled) this.applyRecallVisibility(true)
+      })
+    },
+    getRecallGlobalWordIndexFromNode(node) {
+      if (!node?.getAttribute) return -1
+      const localIndex = Number(node.getAttribute('data-word-index'))
+      if (!Number.isFinite(localIndex)) return -1
+      const verseKey = node.getAttribute('data-verse-key')
+        || node.closest('[data-ayah-key]')?.getAttribute('data-ayah-key')
+        || ''
+      const sessionTargetKey = node.getAttribute('data-session-target-key')
+        || node.closest('[data-session-target-key]')?.getAttribute('data-session-target-key')
+        || ''
+      const offset = this.getRecitationWordOffsetForVerse(
+        verseKey,
+        this.recitationCheckPendingTargets,
+        sessionTargetKey
+      )
+      return offset + localIndex
+    },
+    applyRecallWordHidden(node, isCurrent = false) {
+      if (!node?.classList) return
+      node.classList.add('recall-hidden')
+      node.classList.toggle('recall-current', !!isCurrent)
+      node.dataset.recallHidden = 'true'
+      if (node.style?.setProperty) {
+        node.style.setProperty('color', 'transparent', 'important')
+        node.style.setProperty('box-shadow', 'none', 'important')
+        node.style.setProperty('text-shadow', 'none', 'important')
+      }
+    },
+    clearRecallWordNode(node) {
+      if (!node?.classList) return
+      node.classList.remove('recall-hidden', 'recall-current')
+      if (node.dataset.recallHidden === 'true') {
+        delete node.dataset.recallHidden
+        node.style?.removeProperty('color')
+        node.style?.removeProperty('box-shadow')
+        node.style?.removeProperty('text-shadow')
+      }
+    },
+    getRecallWordEntries() {
+      // Cache the ayah word nodes so the per-frame recall pass does not run a
+      // fresh querySelector + querySelectorAll on every recognition tick. The
+      // cache is invalidated when the ayah HTML is re-rendered (v-html replaces
+      // the nodes, so the previously cached nodes become disconnected).
+      let container = this._recallContainerEl
+      if (!container || !container.isConnected) {
+        container = document.querySelector('.self-check-modal-ayah')
+        this._recallContainerEl = container
+        this._recallNodeCache = null
+      }
+      if (!container) {
+        this._recallCacheRebuilt = false
+        return []
+      }
+      const nodes = container.querySelectorAll('.wbw-word, word')
+      const cache = this._recallNodeCache
+      const stale = !cache
+        || cache.length !== nodes.length
+        || (cache[0] && !cache[0].node.isConnected)
+      if (!stale) {
+        this._recallCacheRebuilt = false
+        return cache
+      }
+      const entries = []
+      nodes.forEach(node => {
+        const globalIndex = this.getRecallGlobalWordIndexFromNode(node)
+        if (Number.isFinite(globalIndex) && globalIndex >= 0) entries.push({ node, globalIndex })
+      })
+      this._recallNodeCache = entries
+      this._recallCacheRebuilt = true
+      return entries
+    },
+    applyRecallVisibility(force = false) {
+      if (typeof document === 'undefined') return
+      if (!this.aiRecallModeEnabled || !this.recitationCheckRecording) {
+        this.clearRecallVisibility()
+        return
+      }
+      const currentIndex = this.recallCurrentWordIndex
+      const revealedIndex = this.recallRevealCurrentIndex
+      const entries = this.getRecallWordEntries()
+      if (!entries.length) return
+      // Skip the whole pass when nothing changed (cheap guard for the rAF loop),
+      // unless the node cache was just rebuilt (fresh nodes need styling).
+      if (!force && !this._recallCacheRebuilt
+        && currentIndex === this._lastRecallIndex
+        && revealedIndex === this._lastRecallRevealIndex) {
+        return
+      }
+      this._recallCacheRebuilt = false
+      this._lastRecallIndex = currentIndex
+      this._lastRecallRevealIndex = revealedIndex
+      for (let i = 0; i < entries.length; i += 1) {
+        const { node, globalIndex } = entries[i]
+        const hide = globalIndex >= currentIndex && globalIndex !== revealedIndex
+        const isCurrent = hide && globalIndex === currentIndex
+        const state = hide ? (isCurrent ? 'current' : 'hidden') : 'visible'
+        // Only touch the DOM for nodes whose recall state actually changed.
+        if (node.dataset.recallState === state) continue
+        node.dataset.recallState = state
+        if (hide) this.applyRecallWordHidden(node, isCurrent)
+        else this.clearRecallWordNode(node)
+      }
+    },
+    clearRecallVisibility() {
+      if (typeof document === 'undefined') return
+      this._lastRecallIndex = -2
+      this._lastRecallRevealIndex = -2
+      this._recallCacheRebuilt = false
+      const container = this._recallContainerEl && this._recallContainerEl.isConnected
+        ? this._recallContainerEl
+        : document.querySelector('.self-check-modal-ayah')
+      if (!container) return
+      container.querySelectorAll('.wbw-word, word').forEach(node => {
+        this.clearRecallWordNode(node)
+        if (node.dataset) delete node.dataset.recallState
+      })
+      if (this.recitationCheckRecording && Array.isArray(this.recitationLiveWords) && this.recitationLiveWords.length) {
+        const changedWords = this.recitationLiveWords.map((word, index) => ({ index, word }))
+        this.queueLiveWordDomPatches('recitationLiveWords', changedWords)
+      }
+    },
     getAiRecitationLiveGuidance(words = []) {
       const list = Array.isArray(words) ? words : []
       const issue = list.find(word => ['incorrect', 'partial'].includes(word.status))
@@ -6744,7 +7191,7 @@ export default {
       if (this.aiMemorisationCheckerResult === result) this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargets, statuses, true)
       this.persistAiRecitationReviewHighlights(result, this.getRecitationTargetVersesForResult(result))
       this.persistAiMemorisationCheckerSession()
-      this.showBanner('AI highlight marked correct. Results updated.', 'success', 1400)
+      this.showBanner(this.t('toasts.aiHighlightMarkedCorrectResultsUpdated'), 'success', 1400)
     },
     handleRecitationReviewWordClick(event, result = null) {
       const target = event?.target?.closest?.('[data-recitation-word-index]')
@@ -6786,7 +7233,7 @@ export default {
         if (panel?.scrollIntoView) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
       })
       if (kind === 'ai' && !this.selfCheckModalAiChecks.length) {
-        this.showBanner('No saved Recite Checks for this ayah yet.', 'info', 1600)
+        this.showBanner(this.t('toasts.noSavedReciteChecksForThis'), 'info', 1600)
       }
     },
     openAiRecitationCheckForVerse(verse) {
@@ -6806,7 +7253,7 @@ export default {
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return
       const targets = this.getSessionCheckTargetVerses()
       if (!targets.length) {
-        this.showBanner('Choose a session range before starting a session Recite Check.', 'info', 2200)
+        this.showBanner(this.t('toasts.chooseASessionRangeBeforeStarting'), 'info', 2200)
         return
       }
       this.recitationCheckScope = 'session'
@@ -6827,7 +7274,7 @@ export default {
     openAiMemorisationCheckerForVerse(verse) {
       if (!verse?.key) return
       if (this.aiMemorisationCheckerRecording) {
-        this.showBanner('Stop the current memorisation check before switching ayahs.', 'info', 2200)
+        this.showBanner(this.t('toasts.stopTheCurrentMemorisationCheckBefore'), 'info', 2200)
         return
       }
       this.showTools = false
@@ -6856,7 +7303,7 @@ export default {
       if (this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing) return
       const targets = this.getSessionCheckTargetVerses()
       if (!targets.length) {
-        this.showBanner('Choose a session range before opening the memorisation checker.', 'info', 2200)
+        this.showBanner(this.t('toasts.chooseASessionRangeBeforeOpening'), 'info', 2200)
         return
       }
       const builtTargets = targets
@@ -7226,7 +7673,7 @@ export default {
       this.playUiTone('complete')
       this.persistAiMemorisationCheckerSession()
       this.scrollToAiMemorisationCheckerResults()
-      this.showBanner('Loaded cached memorisation analysis.', 'success', 1800)
+      this.showBanner(this.t('toasts.loadedCachedMemorisationAnalysis'), 'success', 1800)
       return result
     },
     completeAiMemorisationCheckerFromRecognitionWords(recognitionWords = [], targetVerses, source = 'stabilised speech input', audioSrc = '', options = {}) {
@@ -7449,12 +7896,12 @@ export default {
       const saved = this.saveAiMemorisationCheckToRecordingsLibrary(entry, targets)
       if (!saved) {
         this.aiMemorisationCheckerSavedNotice = false
-        this.showBanner('Memorisation assessment could not be saved on this device right now.', 'error', 2600)
+        this.showBanner(this.t('toasts.memorisationAssessmentCouldNotBeSaved'), 'error', 2600)
         return
       }
       this.aiMemorisationCheckerSavedNotice = true
       this.playUiTone('save')
-      this.showBanner('Memorisation assessment saved to recordings library.', 'success', 2800, {
+      this.showBanner(this.t('toasts.memorisationAssessmentSavedToRecordingsLibrary'), 'success', 2800, {
         key: 'open-recordings-library',
         label: 'Go to recording library',
         payload: {
@@ -7540,7 +7987,7 @@ export default {
       this.prepareAiMemorisationCheckerWords()
       this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargets, this.aiMemorisationCheckerLiveWords, false)
       this.persistAiMemorisationCheckerSession(this.aiMemorisationCheckerHistory)
-      this.showBanner('Memorisation assessment deleted.', 'info', 1400)
+      this.showBanner(this.t('toasts.memorisationAssessmentDeleted'), 'info', 1400)
     },
     resetAiMemorisationCheckerAssessment() {
       this.aiMemorisationCheckerResult = null
@@ -7553,7 +8000,7 @@ export default {
       this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargets, this.aiMemorisationCheckerLiveWords, false)
       this.resetAiMemorisationCheckerLiveTranscription()
       this.persistAiMemorisationCheckerSession()
-      this.showBanner('Memorisation checker reset.', 'info', 1400)
+      this.showBanner(this.t('toasts.memorisationCheckerReset'), 'info', 1400)
     },
     discardAiMemorisationCheckerAssessment() {
       this.aiMemorisationCheckerResult = null
@@ -7561,7 +8008,7 @@ export default {
       this.prepareAiMemorisationCheckerWords()
       this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargets, this.aiMemorisationCheckerLiveWords, false)
       this.persistAiMemorisationCheckerSession()
-      this.showBanner('Memorisation assessment discarded.', 'info', 1400)
+      this.showBanner(this.t('toasts.memorisationAssessmentDiscarded'), 'info', 1400)
     },
     getLatestRecordingForAyah(ayahKey) {
       return this.getAyahRecordingHistory(ayahKey)[0] || null
@@ -7781,6 +8228,9 @@ export default {
       const patches = Object.values(this.pendingLiveWordDomPatches || {})
       this.pendingLiveWordDomPatches = {}
       patches.forEach(patch => this.applyLiveWordDomPatch(patch))
+      if (this.aiRecallModeEnabled && this.recitationCheckRecording) {
+        this.applyRecallVisibility()
+      }
     },
     applyLiveWordDomPatch(patch = {}) {
       const status = patch.status || 'notAttempted'
@@ -8154,7 +8604,7 @@ export default {
     },
     async rerunRecordingValidationAudit(recording = null) {
       if (!this.canRerunRecordingValidationAudit(recording)) {
-        this.showBanner('This recording does not have enough metadata to re-run the deterministic audit.', 'info', 2200)
+        this.showBanner(this.t('toasts.thisRecordingDoesNotHaveEnough'), 'info', 2200)
         return null
       }
       const recordingId = String(recording.id || '')
@@ -8753,7 +9203,7 @@ export default {
       this.recitationCheckAutoStopArmed = false
       this.recitationCheckError = ''
       this.playUiTone('complete')
-      this.showBanner('Recite Check complete.', 'success', 2200)
+      this.showBanner(this.t('toasts.reciteCheckComplete'), 'success', 2200)
       this.scrollToRecitationResults()
       return result
     },
@@ -8773,7 +9223,7 @@ export default {
       this.resetRecognitionPipelineState('recitation')
       this.seedRecitationLiveWords(targets)
       this.syncSessionEvaluationMaps('recitation', targets, this.recitationLiveWords, false)
-      this.showBanner('Displayed ayah review reset.', 'info', 1400)
+      this.showBanner(this.t('toasts.displayedAyahReviewReset'), 'info', 1400)
     },
     clearRecitationReviewState() {
       this.recitationCheckResult = null
@@ -8794,13 +9244,13 @@ export default {
       if (!this.recitationCheckResult) return
       const saved = this.saveRecitationCheckAttempt(this.recitationCheckResult, this.recitationCheckPendingTargets)
       if (!saved) {
-        this.showBanner('Recite Check could not be saved on this device right now.', 'error', 2600)
+        this.showBanner(this.t('toasts.reciteCheckCouldNotBeSaved'), 'error', 2600)
         return
       }
       const ayahKey = this.recitationCheckTargetVerseKey || this.selfCheckVerseKey
       if (ayahKey) this.selectedRecordingsAyahKey = ayahKey
       this.playUiTone('save')
-      this.showBanner('Recite Check saved to Saved Attempts.', 'success', 2800, {
+      this.showBanner(this.t('toasts.reciteCheckSavedToSavedAttempts'), 'success', 2800, {
         key: 'open-recordings-library',
         label: 'Go to recording library',
         payload: { ayahKey, returnToSelfCheck: true }
@@ -8811,7 +9261,7 @@ export default {
     discardRecitationCheckAttempt() {
       this.dismissRecitationCheckResult()
       this.selfCheckSavedAttemptsVisible = false
-      this.showBanner('Recite Check discarded.', 'info', 1400)
+      this.showBanner(this.t('toasts.reciteCheckDiscarded'), 'info', 1400)
     },
     deleteRecitationCheckAttempt() {
       if (!this.recitationCheckResult) return
@@ -8829,7 +9279,7 @@ export default {
       const id = attemptId || this.recitationCheckResult?.id
       if (id) this.deleteAiCheckFromMutqinSessions(id)
       this.dismissRecitationCheckResult()
-      this.showBanner('Recite Check deleted.', 'info', 1400)
+      this.showBanner(this.t('toasts.reciteCheckDeleted'), 'info', 1400)
     },
     async toggleRecitationCheck() {
       if (this.recitationCheckRecording) {
@@ -9005,7 +9455,7 @@ export default {
         this.persistAiRecitationReviewHighlights(cachedResult, targetVerses)
         this.recitationCheckAutoStopArmed = false
         this.playUiTone('complete')
-        this.showBanner('Loaded cached Recite Check.', 'success', 2200)
+        this.showBanner(this.t('toasts.loadedCachedReciteCheck'), 'success', 2200)
         this.scrollToRecitationResults()
         return
       }
@@ -9036,7 +9486,7 @@ export default {
       this.persistAiRecitationReviewHighlights(result, targetVerses)
       this.recitationCheckAutoStopArmed = false
       this.playUiTone('complete')
-      this.showBanner('Recite Check complete.', 'success', 2200)
+      this.showBanner(this.t('toasts.reciteCheckComplete'), 'success', 2200)
       this.scrollToRecitationResults()
       const cachePayload = {
         analysisVersion: RECITATION_ANALYSIS_VERSION,
@@ -10162,7 +10612,7 @@ export default {
                 audioSrc: dataUrl
               }
               this.selfCheckSavedAttemptsVisible = false
-              this.showBanner(`Recording ready for Ayah ${verse.number}`, 'success', 1800)
+              this.showBanner(this.t('toasts.recordingReadyForAyah', { number: verse.number }), 'success', 1800)
             }
           } catch (error) {
             console.error('Failed to process self-check recording:', error)
@@ -10230,7 +10680,7 @@ export default {
 
       const audio = this.ensureRecordingsAudioElement()
       if (!audio) {
-        this.showBanner('Audio system not ready', 'error', 2200)
+        this.showBanner(this.t('toasts.audioSystemNotReady'), 'error', 2200)
         return
       }
 
@@ -10255,7 +10705,7 @@ export default {
       } catch (error) {
         console.error('Failed to preview self-check recording:', error)
         this.activeSelfCheckPreviewKey = ''
-        this.showBanner('Unable to play this recording right now.', 'error', 2200)
+        this.showBanner(this.t('toasts.unableToPlayThisRecordingRight'), 'error', 2200)
       }
     },
     saveSelfCheckRecording(verse) {
@@ -10281,7 +10731,7 @@ export default {
       this.selfCheckDraft = null
       this.ensureSelectedRecordingsAyah()
       this.selfCheckSavedAttemptsVisible = false
-      this.showBanner(`Saved self-check for Ayah ${savedEntry.ayahNumber}`, 'success', 1800)
+      this.showBanner(this.t('toasts.savedSelfCheckForAyah', { ayahNumber: savedEntry.ayahNumber }), 'success', 1800)
     },
 
     runConfirmAction() {
@@ -10302,7 +10752,7 @@ export default {
     async downloadVerseAudio(verse) {
       const audioUrl = this.normalizeAudioUrl(verse?.audio || '')
       if (!audioUrl) {
-        this.showBanner('Audio not available for this ayah', 'info', 2200)
+        this.showBanner(this.t('toasts.audioNotAvailableForThisAyah'), 'info', 2200)
         return
       }
 
@@ -10315,10 +10765,10 @@ export default {
         document.body.appendChild(anchor)
         anchor.click()
         anchor.remove()
-        this.showBanner(`Downloaded ayah ${verse.number} audio`, 'success', 1800)
+        this.showBanner(this.t('toasts.downloadedAyahAudio', { number: verse.number }), 'success', 1800)
       } catch (error) {
         console.error('Verse download failed:', error)
-        this.showBanner('Failed to download ayah audio', 'error', 2600)
+        this.showBanner(this.t('toasts.failedToDownloadAyahAudio'), 'error', 2600)
       }
     },
     syncSettingsDraft() {
@@ -10626,7 +11076,7 @@ export default {
       this.hifzPlannerAnalyticsOpen = false
       this.currentMode = 'beginner'
       this.refreshHifzJourneyState()
-      this.showBanner('Hifz plan deleted', 'info', 1600)
+      this.showBanner(this.t('toasts.hifzPlanDeleted'), 'info', 1600)
     },
 
     applyHifzRecovery(strategy) {
@@ -11323,6 +11773,7 @@ export default {
         mode,
         repetitionsPerStep: Math.max(1, Math.min(50, Number(this.repetitionsPerStep || 1))),
         selectedLoopCount: this.selectedLoopCount,
+        recitationWindowSeconds: Math.max(5, Math.min(30, Number(this.recitationWindowSeconds || 8))),
         gapBetweenVerses: this.gapBetweenVerses,
         customGapSeconds: Math.max(0.5, Math.min(10, Number(this.customGapSeconds || 2))),
         tajweedEnabled: this.tajweedEnabled,
@@ -11360,7 +11811,8 @@ export default {
       this.speed = Number(config.speed || 1)
       const parsedDelay = Number(config.delay)
       this.delay = Number.isFinite(parsedDelay) && parsedDelay >= 0 ? parsedDelay : 2
-      this.playMode = config.playMode || 'auto'
+      this.playMode = ['auto', 'manual', 'follow'].includes(config.playMode) ? config.playMode : 'auto'
+      this.recitationWindowSeconds = Math.max(5, Math.min(30, Number(config.recitationWindowSeconds || this.recitationWindowSeconds || 8)))
       this.order = 'seq'
       this.repetitionsPerStep = Math.max(1, Math.min(50, Number(config.repetitionsPerStep || this.repetitionsPerStep || 5)))
       this.selectedLoopCount = config.selectedLoopCount === 'infinite'
@@ -11408,7 +11860,8 @@ export default {
         }
         merged.speed = [0.5, 1, 1.25, 1.5, 2].includes(Number(merged.speed)) ? Number(merged.speed) : 1
         merged.delay = Math.max(0, Number.isFinite(Number(merged.delay)) ? Number(merged.delay) : 2)
-        merged.playMode = merged.playMode === 'manual' ? 'manual' : 'auto'
+        merged.playMode = ['auto', 'manual', 'follow'].includes(merged.playMode) ? merged.playMode : 'auto'
+        merged.recitationWindowSeconds = Math.max(5, Math.min(30, Number(merged.recitationWindowSeconds || 8)))
 
         if (mode === 'advanced') {
           if (merged.order === 'rand') merged.order = 'seq'
@@ -11583,7 +12036,7 @@ export default {
         event.preventDefault()
         if (this.hasVerses) {
           this.saveCurrentSession()
-          this.showBanner('Session saved with Ctrl+S', 'success', 1500)
+          this.showBanner(this.t('toasts.sessionSavedWithCtrlS'), 'success', 1500)
         }
         return
       }
@@ -11877,32 +12330,44 @@ export default {
         ? Math.max(0, Math.round((Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt)) / 1000))
         : Math.max(0, Math.round(Number(this.currentTime || 0)))
       const activeAids = []
-      if (this.tajweedEnabled) activeAids.push('Tajweed')
-      if (this.showTranslation) activeAids.push('Translation')
-      if (this.showTransliteration) activeAids.push('Transliteration')
-      if (this.showWordByWord) activeAids.push('Word-by-word')
-      if (this.wordByWordAudioEnabled) activeAids.push('Word audio')
+      if (this.tajweedEnabled) activeAids.push(this.t('memorisation.common.tajweedOn'))
+      if (this.showTranslation) activeAids.push(this.t('memorisation.common.translationOn'))
+      if (this.showTransliteration) activeAids.push(this.t('memorisation.common.transliterationOn'))
+      if (this.showWordByWord) activeAids.push(this.t('memorisation.common.wordByWordOn'))
+      if (this.wordByWordAudioEnabled) activeAids.push(this.t('memorisation.common.wordAudioOn'))
       const activeMethods = []
       if (this.focusModeEnabled) activeMethods.push('Focus mode')
       if (this.blurModeEnabled) activeMethods.push('Blur mode')
-      if (this.chainingEnabled) activeMethods.push(`${this.chainingMethod || 'Standard'} chaining`)
-      const repeatSummary = `${this.repeatCount || 1} repeat${Number(this.repeatCount || 1) === 1 ? '' : 's'} per step`
+      if (this.chainingEnabled) activeMethods.push(this.t('memorisation.common.chainingLabel', { method: this.chainingMethod || 'Standard' }))
+      const repeatCount = Number(this.repeatCount || 1)
+      const repeatSummary = `${repeatCount}x`
       const repeatShortLabel = `${this.repeatCount || 1}x`
-      const displaySummary = activeAids.length ? `Reading aids: ${activeAids.join(', ')}` : ''
-      const pacingSummary = activeMethods.length ? `Session flow: ${activeMethods.join(', ')}` : ''
+      const displaySummary = activeAids.join(', ')
+      const pacingSummary = activeMethods.join(', ')
       const completedAll = coveredAyah >= totalAyahs && progressPercent >= 100
+      const durationLabel = this.formatTime(durationSeconds)
+      const rangeLabel = chapterName
+        ? this.t('memorisation.common.rangeLabel', { start: rangeStart, end: rangeEnd })
+        : ''
+      const summaryMessage = completedAll
+        ? this.t('memorisation.summary.completedAll', { count: totalAyahs })
+        : this.t('memorisation.summary.endedPartial', { ayah: coveredAyah, percent: progressPercent })
+      const detailMessage = completedAll
+        ? this.t('memorisation.summary.completedRangeDetail', { covered: coveredAyah, total: totalAyahs, duration: durationLabel })
+        : this.t('memorisation.summary.endedProgress', { covered: coveredAyah, total: totalAyahs })
       return {
         chapterName,
-        rangeLabel: chapterName ? `Ayahs ${rangeStart}-${rangeEnd}` : '',
+        rangeLabel,
         progressLabel: `${coveredAyah}/${totalAyahs}`,
         progressPercent,
         completedAll,
-        durationLabel: this.formatTime(durationSeconds),
-        summaryMessage: `You reached ayah ${coveredAyah} and completed ${progressPercent}% of this session.`,
+        durationLabel,
+        summaryMessage,
+        detailMessage,
         coveredAyahCount: coveredAyah,
         totalAyahs,
         lastAyahLabel: coveredAyah,
-        modeSummary: this.sessionTypeInfo?.label ? `Mode: ${this.sessionTypeInfo.label}` : '',
+        modeSummary: this.sessionTypeInfo?.label ? this.t('memorisation.common.modeLabel', { label: this.sessionTypeInfo.label }) : '',
         repeatSummary,
         repeatShortLabel,
         displaySummary,
@@ -11911,14 +12376,14 @@ export default {
         activeMethods,
         nextSteps: completedAll
           ? [
-              'Start a new session if this range now feels easy from memory.',
-              'Repeat the same range once to reinforce speed, confidence, and consistency.',
-              'If one ayah still felt weak, review that ayah before advancing.'
+              this.t('memorisation.summary.nextAdvance'),
+              this.t('memorisation.summary.nextRepeat'),
+              this.t('memorisation.summary.nextReviewWeak')
             ]
           : [
-              'Repeat this range now to lock in the ayahs already covered.',
-              'Resume later if you want to continue from the same memorisation setup.',
-              'Reduce aids on the next pass if recall already felt comfortable.'
+              this.t('memorisation.summary.nextContinue'),
+              this.t('memorisation.summary.nextRepeat'),
+              this.t('memorisation.summary.nextReduceAids')
             ]
       }
     },
@@ -12132,7 +12597,7 @@ export default {
       try {
         localStorage.removeItem('telawa.continueSession')
       } catch (e) { console.error(e) }
-      this.showBanner('Saved session dismissed', 'info', 1800)
+      this.showBanner(this.t('toasts.savedSessionDismissed'), 'info', 1800)
     },
 
     renderMiniTrend(values = []) {
@@ -12196,7 +12661,7 @@ export default {
       }
       this.persistUiState()
       this.persistCentralSessionState()
-      this.showBanner(`Speed changed to ${safeSpeed}x`, 'info', 1000)
+      this.showBanner(this.t('toasts.speedChangedToX', { p0: safeSpeed }), 'info', 1000)
     },
 
     setActiveTab(tabName) {
@@ -12360,7 +12825,7 @@ export default {
         this.persistHifzAppState({ mode: 'casual', sessionActive: false, lastEvent: 'CASUAL_MODE' })
         this.tab = 'tools'
         this.persistUiState()
-        this.showBanner('Switched to Casual Mode', 'success', 2000)
+        this.showBanner(this.t('toasts.switchedToCasualMode'), 'success', 2000)
         return
       }
       const newMode = this.currentMode === 'beginner' ? 'advanced' : 'beginner'
@@ -12368,7 +12833,7 @@ export default {
       this.persistHifzAppState({ mode: 'casual', sessionActive: false, lastEvent: 'CASUAL_MODE' })
       this.tab = 'tools'
       this.persistUiState()
-      this.showBanner(`Switched to ${newMode === 'beginner' ? 'Beginner' : 'Advanced'} Mode`, 'success', 2000)
+      this.showBanner(this.t('toasts.switchedToMode', { p0: newMode === 'beginner' ? 'Beginner' : 'Advanced' }), 'success', 2000)
     },
     updateTabAndSync(tabName) {
       this.currentMode = tabName === 'advanced' ? 'advanced' : 'beginner'
@@ -12522,7 +12987,7 @@ export default {
       this.fontScale = nextScale
       this.enScale = nextScale
       this.persistUiState()
-      this.showBanner(`Text size: ${this.getTextScalePercent()}%`, 'info', 800)
+      this.showBanner(this.t('toasts.textSizePercent', { percent: this.getTextScalePercent() }), 'info', 800)
     },
 
     decreaseTextScale(event) {
@@ -12531,7 +12996,7 @@ export default {
       this.fontScale = nextScale
       this.enScale = nextScale
       this.persistUiState()
-      this.showBanner(`Text size: ${this.getTextScalePercent()}%`, 'info', 800)
+      this.showBanner(this.t('toasts.textSizePercent', { percent: this.getTextScalePercent() }), 'info', 800)
     },
 
     resetTextScale(event) {
@@ -12539,7 +13004,7 @@ export default {
       this.fontScale = 1
       this.enScale = 1
       this.persistUiState()
-      this.showBanner('Text size reset', 'info', 800)
+      this.showBanner(this.t('toasts.textSizeReset'), 'info', 800)
     },
 
     resetDefaultFontSize() {
@@ -12586,7 +13051,7 @@ export default {
 
     submitPlanner() {
       if (!this.plannerConfig.surahId || this.plannerConfig.surahId === 0) {
-        this.showBanner('Please select a surah', 'warning', 2000)
+        this.showBanner(this.t('toasts.pleaseSelectASurah'), 'warning', 2000)
         return
       }
 
@@ -12693,7 +13158,7 @@ export default {
 
     async downloadOfflineVerses() {
       if (!this.verses || !this.verses.length) {
-        this.showBanner('Load a surah first before downloading', 'info', 3000)
+        this.showBanner(this.t('toasts.loadASurahFirstBeforeDownloading'), 'info', 3000)
         this.showTools = true
         return
       }
@@ -12709,7 +13174,7 @@ export default {
         }
 
         if (!surahId) {
-          this.showBanner('Could not identify surah', 'error', 3000)
+          this.showBanner(this.t('toasts.couldNotIdentifySurah'), 'error', 3000)
           return
         }
 
@@ -12750,10 +13215,10 @@ export default {
         localStorage.setItem(catalogKey, JSON.stringify(filtered))
         this.offlineSurahs = filtered
 
-        this.showBanner(`Saved ${this.verses.length} verses from ${surahName} for offline reading.`, 'success', 3000)
+        this.showBanner(this.t('toasts.savedVersesFromForOfflineReading', { length: this.verses.length, p0: surahName }), 'success', 3000)
       } catch (err) {
         console.error('Download failed:', err)
-        this.showBanner('Failed to download verses', 'error', 3000)
+        this.showBanner(this.t('toasts.failedToDownloadVerses'), 'error', 3000)
       }
     },
 
@@ -12786,11 +13251,11 @@ export default {
 
         this.currentChapter = this.chapters.find(c => c.id === data.metadata.surahId)
         this.showTools = false
-        this.showBanner(`Loaded ${data.metadata.surah} from offline storage`, 'success', 2000)
+        this.showBanner(this.t('toasts.loadedFromOfflineStorage', { surah: data.metadata.surah }), 'success', 2000)
         this.buildQueue()
       } catch (e) {
         console.error('Offline load error:', e)
-        this.showBanner('Failed to load offline surah', 'error', 3000)
+        this.showBanner(this.t('toasts.failedToLoadOfflineSurah'), 'error', 3000)
       }
     },
 
@@ -12812,13 +13277,13 @@ export default {
       localStorage.setItem('offline_surah_catalog', JSON.stringify(catalog))
       this.offlineSurahs = catalog
       this.pendingDeleteId = ''
-      this.showBanner('Offline surah removed', 'info', 2000)
+      this.showBanner(this.t('toasts.offlineSurahRemoved'), 'info', 2000)
     },
 
     async downloadVerseAudio(verse) {
       const audioUrl = this.normalizeAudioUrl(verse?.audio || '')
       if (!audioUrl) {
-        this.showBanner('Audio not available for this ayah', 'info', 2200)
+        this.showBanner(this.t('toasts.audioNotAvailableForThisAyah'), 'info', 2200)
         return
       }
 
@@ -12831,10 +13296,10 @@ export default {
         document.body.appendChild(anchor)
         anchor.click()
         anchor.remove()
-        this.showBanner(`Downloaded ayah ${verse.number} audio`, 'success', 1800)
+        this.showBanner(this.t('toasts.downloadedAyahAudio', { number: verse.number }), 'success', 1800)
       } catch (error) {
         console.error('Verse download failed:', error)
-        this.showBanner('Failed to download ayah audio', 'error', 2600)
+        this.showBanner(this.t('toasts.failedToDownloadAyahAudio'), 'error', 2600)
       }
     },
 
@@ -13432,6 +13897,17 @@ export default {
         const gapDelayMs = Math.max(0, gapSeconds * 1000)
         if (this.playbackAdvanceTimer) clearTimeout(this.playbackAdvanceTimer)
         this.playbackAdvanceTimer = null
+        if (this.playMode === 'follow') {
+          this.advanceLocked = false
+          this.startRecitationWindow(() => {
+            if (this.canNext) {
+              this.next()
+              return
+            }
+            this.handleSessionComplete()
+          })
+          return
+        }
         if (this.playMode === 'auto') {
           if (!this.chainingEnabled && this.selectedLoopCount === 'infinite' && this.activeQueueEntry) {
             this.playbackAdvanceTimer = window.setTimeout(() => {
@@ -13510,7 +13986,7 @@ export default {
         this.isPlaying = false
         this.sessionErrorCount += 1
         this.stopWordHighlighting()
-        this.showBanner('Audio playback error', 'error', 3000)
+        this.showBanner(this.t('toasts.audioPlaybackError'), 'error', 3000)
       }
 
       this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate)
@@ -13527,6 +14003,7 @@ export default {
     async playVerse(verse, options = {}) {
       if (this.playRequestLocked && !options.force) return
       this.playRequestLocked = true
+      this.clearRecitationWindowTimer()
       this.stopRecordingsPlayback({ clearSource: true })
       if (this.segmentPlaybackTimer) {
         clearTimeout(this.segmentPlaybackTimer)
@@ -13546,7 +14023,7 @@ export default {
       }
 
       if (!verse.audio) {
-        this.showBanner(`Audio not available for verse ${verse.number}`, 'info', 2000)
+        this.showBanner(this.t('toasts.audioNotAvailableForVerse', { number: verse.number }), 'info', 2000)
         this.playRequestLocked = false
         return
       }
@@ -13581,7 +14058,7 @@ export default {
       if (!this.audioElement) {
         this.audioElement = this.$refs.audio
         if (!this.audioElement) {
-          this.showBanner('Audio system not ready', 'error', 3000)
+          this.showBanner(this.t('toasts.audioSystemNotReady'), 'error', 3000)
           this.playRequestLocked = false
           return
         }
@@ -13663,7 +14140,7 @@ export default {
         console.error('playVerse failed:', err)
         this.isPlaying = false
         this.playRequestLocked = false
-        this.showBanner('Failed to play audio', 'error', 3000)
+        this.showBanner(this.t('toasts.failedToPlayAudio'), 'error', 3000)
       })
     },
 
@@ -13690,6 +14167,10 @@ export default {
     },
 
     togglePlay() {
+      if (this.recitationWindowActive && this.activeQueueEntry) {
+        this.playQueueEntry(this.activeQueueEntry, { force: true, queueIndex: this.queueIndex })
+        return
+      }
       if (!this.audioElement?.src) return
 
       if (this.audioElement.paused) {
@@ -13711,7 +14192,7 @@ export default {
           })
           .catch(err => {
             console.error('Failed to play:', err)
-            this.showBanner('Playback failed', 'error', 2000)
+            this.showBanner(this.t('toasts.playbackFailed'), 'error', 2000)
           })
       } else {
         this.audioElement.pause()
@@ -13730,6 +14211,7 @@ export default {
 
     next() {
       if (this.advanceLocked) return
+      this.clearRecitationWindowTimer()
       this.advanceLocked = true
 
       if (this.canNext) {
@@ -13767,6 +14249,7 @@ export default {
       if (!this.canPrev) return
       if (this.advanceLocked) return
 
+      this.clearRecitationWindowTimer()
       this.advanceLocked = true
       this.sessionCompleted = false
       this.queueIndex--
@@ -13796,6 +14279,7 @@ export default {
     closePlayer() {
       this.flushPlaybackTime()
       this.stopWordHighlighting()
+      this.clearRecitationWindowTimer()
       if (this.segmentPlaybackTimer) {
         clearTimeout(this.segmentPlaybackTimer)
         this.segmentPlaybackTimer = null
@@ -13928,7 +14412,7 @@ export default {
 
       } catch (e) {
         console.error('Error loading verses:', e)
-        this.showBanner('Failed to load verses', 'error', 3000)
+        this.showBanner(this.t('toasts.failedToLoadVerses'), 'error', 3000)
         this.isDataReady = true
       }
     },
@@ -14201,7 +14685,7 @@ export default {
 
       if (!config.chapterId || config.chapterId === 0) {
         this.showTools = true
-        this.showBanner('Please select a surah first', 'info', 3600)
+        this.showBanner(this.t('toasts.pleaseSelectASurahFirst'), 'info', 3600)
         return
       }
 
@@ -14232,7 +14716,7 @@ export default {
       const updatedVerses = this.getModeStore(mode)?.verses || []
 
       if (!updatedVerses || updatedVerses.length === 0) {
-        this.showBanner('No verses loaded. Check your network connection.', 'error')
+        this.showBanner(this.t('toasts.noVersesLoadedCheckYourNetwork'), 'error')
         return
       }
 
@@ -14252,7 +14736,7 @@ export default {
       const builtQueue = this.getModeStore(mode)?.queue || []
 
       if (!builtQueue || builtQueue.length === 0) {
-        this.showBanner('Nothing to play. Check the selected range.', 'error')
+        this.showBanner(this.t('toasts.nothingToPlayCheckTheSelected'), 'error')
         return
       }
 
@@ -14304,11 +14788,14 @@ export default {
       const chainingStatus = this.chainingEnabled
         ? `${this.chainingMethod} chaining (${this.chainingRepetitions}x)`
         : 'no chaining'
+      const sessionStartedMessage = this.playMode === 'follow'
+        ? `Session started with ${builtQueue.length} guided repetitions. Listen to the reciter, then use your recitation window before the next ayah begins.`
+        : mode === 'planner'
+          ? `Hifz session started. Follow the highlighted words and move one ayah at a time.`
+          : `Session started with ${builtQueue.length} guided repetitions using ${chainingStatus}`
 
       this.showBanner(
-        mode === 'planner'
-          ? `Hifz session started. Follow the highlighted words and move one ayah at a time.`
-          : `Session started with ${builtQueue.length} guided repetitions using ${chainingStatus}`,
+        sessionStartedMessage,
         'success',
         3000
       )
@@ -14583,14 +15070,14 @@ export default {
 
     handleOnline() {
       this.networkOnline = true
-      this.showBanner('Back online. Live APIs are available again.', 'success', 2400)
+      this.showBanner(this.t('toasts.backOnlineLiveApisAreAvailable'), 'success', 2400)
       // Push any changes that could not be saved while offline.
       if (this.learningBackendEnabled()) this.pushLearningState(true)
     },
 
     handleOffline() {
       this.networkOnline = false
-      this.showBanner('Offline mode active. Reading falls back to cached ranges.', 'info', 3200)
+      this.showBanner(this.t('toasts.offlineModeActiveReadingFallsBack'), 'info', 3200)
     },
 
     markPlaybackStart() {
@@ -14662,7 +15149,7 @@ export default {
       }
       if (!this.canStartSession) {
         this.showTools = true
-        this.showBanner('Choose a valid surah and ayah range before starting.', 'info', 3600, { key: 'open-setup', label: 'Open setup' })
+        this.showBanner(this.t('toasts.chooseAValidSurahAndAyah'), 'info', 3600, { key: 'open-setup', label: 'Open setup' })
         return
       }
       this.startSessionWithCountdown()
@@ -14684,8 +15171,15 @@ export default {
         errors.push('Invalid verse range')
       }
 
+      if (
+        config.playMode === 'follow'
+        && !Number.isFinite(Number(config.recitationWindowSeconds))
+      ) {
+        errors.push('Recitation window must be numeric')
+      }
+
       if (errors.length > 0) {
-        this.showBanner(`Settings issue: ${errors.join(', ')}`, 'warning', 3000)
+        this.showBanner(this.t('toasts.settingsIssue', { join: errors.join(', ') }), 'warning', 3000)
         return false
       }
 
@@ -14701,7 +15195,7 @@ export default {
       this.syncSettingsDraft()
       // Update all verses
       // Show feedback
-      this.showBanner(`Font size: ${this.defaultFontSize}%`, 'info', 600)
+      this.showBanner(this.t('toasts.fontSize', { defaultFontSize: this.defaultFontSize }), 'info', 600)
     },
 
     // UI methods
@@ -14722,7 +15216,7 @@ export default {
       this.syncSettingsDraft()
       this.persistUiState()
       // Show feedback that change was applied
-      this.showBanner(`${kind} ${nextState ? 'enabled' : 'disabled'}`, 'info', 800)
+      this.showBanner(this.t('toasts.message', { p0: kind, p1: nextState ? 'enabled' : 'disabled' }), 'info', 800)
     },
 
     setScriptMode(mode) {
@@ -14777,7 +15271,7 @@ export default {
       this.persistUiState()
       this.persistCentralSessionState()
       this.syncSettingsDraft()
-      if (!silent) this.showBanner('Settings saved', 'success', 1400)
+      if (!silent) this.showBanner(this.t('toasts.settingsSaved'), 'success', 1400)
     },
 
     // Persistence methods
@@ -14808,6 +15302,7 @@ export default {
 	            this.aiRecitationPersistMistakes = false
 	            this.persistentAiRecitationReviews = {}
 	            this.hiddenRevealModeEnabled = false
+	            this.aiRecallModeEnabled = !!state.aiRecallModeEnabled
 	          this.mushafBackground = ['warm', 'paper', 'contrast', 'mist', 'night'].includes(state.mushafBackground) ? state.mushafBackground : this.mushafBackground
           this.mushafBorder = ['classic', 'fine', 'layered', 'emerald', 'ink'].includes(state.mushafBorder) ? state.mushafBorder : this.mushafBorder
             this.focusModeEnabled = !!state.focusModeEnabled
@@ -14902,6 +15397,7 @@ export default {
 	          aiRecitationPersistMistakes: this.aiRecitationPersistMistakes,
 	          persistentAiRecitationReviews: this.persistentAiRecitationReviews,
 	          hiddenRevealModeEnabled: false,
+	          aiRecallModeEnabled: this.aiRecallModeEnabled,
 	        readingViewMode: this.readingViewMode,
         mushafBackground: this.mushafBackground,
         mushafBorder: this.mushafBorder,
@@ -15223,7 +15719,7 @@ export default {
         if (this.chapterId) await this.loadChapter()
       } catch (e) {
         console.error('Failed to load chapters:', e)
-        this.showBanner('Failed to load surah list', 'error', 3000)
+        this.showBanner(this.t('toasts.failedToLoadSurahList'), 'error', 3000)
       }
     },
 
@@ -15505,6 +16001,7 @@ export default {
       this.rangeEnd = 7
       this.speed = 1
       this.delay = 2
+      this.recitationWindowSeconds = 8
       this.chainingEnabled = true
       this.chainingMethod = 'linking'
       this.chainingRepetitions = 1
@@ -15520,7 +16017,7 @@ export default {
       this.persistAllState()
 
       // Show feedback and keep panel open if needed
-      this.showBanner('Session controls reset to defaults', 'success', 2000)
+      this.showBanner(this.t('toasts.sessionControlsResetToDefaults'), 'success', 2000)
 
       // Don't close panel automatically - let user decide
     },
@@ -15566,13 +16063,13 @@ export default {
         }
       }
       this.activeSelfCheckAyahPlaybackKey = ''
-      this.showBanner('Reciter updated for this session.', 'success', 1400)
+      this.showBanner(this.t('toasts.reciterUpdatedForThisSession'), 'success', 1400)
     },
 
     // Quiz methods
     startQuiz() {
       if (!this.verses.length) {
-        this.showBanner('No verses to quiz on', 'info', 3000)
+        this.showBanner(this.t('toasts.noVersesToQuizOn'), 'info', 3000)
         return
       }
       this.quizQueue = this.verses.slice(0, 5).map(v => ({ ...v, type: 'flashcard' }))
@@ -15621,7 +16118,7 @@ export default {
       const targetIndex = Number.isFinite(Number(wordIndex)) ? Number(wordIndex) : -1
 
       if (!this.wordByWordAudioEnabled) {
-        this.showBanner('Enable Word audio to preview individual words.', 'info', 1600)
+        this.showBanner(this.t('toasts.enableWordAudioToPreviewIndividual'), 'info', 1600)
         return
       }
 
@@ -15657,13 +16154,13 @@ export default {
       }
 
       if (!targetVerse?.audio || targetIndex < 0) {
-        this.showBanner('Word audio is not available for this word.', 'info', 1800)
+        this.showBanner(this.t('toasts.wordAudioIsNotAvailableFor'), 'info', 1800)
         return
       }
 
       const verseAudioUrl = this.normalizeAudioUrl(targetVerse.audio)
       if (!verseAudioUrl || !this.audioElement) {
-        this.showBanner('Audio system not ready', 'error', 2200)
+        this.showBanner(this.t('toasts.audioSystemNotReady'), 'error', 2200)
         return
       }
 
@@ -15699,7 +16196,7 @@ export default {
         const timestamps = await this.ensureWordHighlightTrack(targetVerse, { force: true })
         const timing = Array.isArray(timestamps) ? timestamps[targetIndex] : null
         if (!timing) {
-          this.showBanner('Word timing unavailable for this ayah.', 'info', 1800)
+          this.showBanner(this.t('toasts.wordTimingUnavailableForThisAyah'), 'info', 1800)
           return
         }
 
@@ -15720,7 +16217,7 @@ export default {
         console.error('Word playback failed:', error)
         this.segmentEndTime = 0
         this.segmentPlaybackKind = ''
-        this.showBanner('Unable to play this word right now.', 'error', 2200)
+        this.showBanner(this.t('toasts.unableToPlayThisWordRight'), 'error', 2200)
       }
     },
     

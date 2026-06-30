@@ -11,6 +11,7 @@
             'subscription_status' => Auth::user()?->subscription_status ?? 'free',
             'has_paid_access' => Auth::user()?->hasPaidAccess() ?? false,
             'locale' => Auth::user()?->locale ?? 'en',
+            'ai_recall_mode_enabled' => Auth::user()?->ai_recall_mode_enabled ?? false,
         ];
     @endphp
 

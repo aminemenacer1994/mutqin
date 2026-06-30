@@ -43,23 +43,42 @@ function loadPhpKeys(file) {
 }
 
 const phpLocales = ['en', 'fr', 'ar']
-/** @type {Record<string, string[]>} */
-const phpKeys = {}
-for (const locale of phpLocales) {
-  phpKeys[locale] = loadPhpKeys(path.resolve(`lang/${locale}/ui.php`))
-}
+const phpGroups = ['ui', 'profile', 'billing', 'onboarding']
 
-const phpBase = phpKeys.en
-for (const locale of ['fr', 'ar']) {
-  const missing = phpBase.filter(k => !phpKeys[locale].includes(k))
-  const extra = phpKeys[locale].filter(k => !phpBase.includes(k))
-  if (missing.length || extra.length) {
-    ok = false
-    console.error(`PHP ui ${locale}: missing ${missing.length}, extra ${extra.length}`)
+/** @type {Record<string, Record<string, string[]>>} */
+const phpKeysByGroup = {}
+for (const group of phpGroups) {
+  phpKeysByGroup[group] = {}
+  for (const locale of phpLocales) {
+    const file = path.resolve(`lang/${locale}/${group}.php`)
+    if (!fs.existsSync(file)) continue
+    phpKeysByGroup[group][locale] = loadPhpKeys(file)
   }
 }
 
-console.log(`JSON keys: ${base.length} per locale`)
-console.log(`PHP ui keys: ${phpBase.length} per locale`)
+for (const group of phpGroups) {
+  const base = phpKeysByGroup[group].en
+  if (!base) continue
+  for (const locale of ['fr', 'ar']) {
+    const keys = phpKeysByGroup[group][locale]
+    if (!keys) {
+      ok = false
+      console.error(`PHP ${group} ${locale}: file missing`)
+      continue
+    }
+    const missing = base.filter(k => !keys.includes(k))
+    const extra = keys.filter(k => !base.includes(k))
+    if (missing.length || extra.length) {
+      ok = false
+      console.error(`PHP ${group} ${locale}: missing ${missing.length}, extra ${extra.length}`)
+    }
+  }
+}
+
+console.log(`JSON keys: ${jsonKeys.en.length} per locale`)
+for (const group of phpGroups) {
+  const count = phpKeysByGroup[group].en?.length
+  if (count) console.log(`PHP ${group} keys: ${count} per locale`)
+}
 if (ok) console.log('i18n key parity OK')
 else process.exit(1)

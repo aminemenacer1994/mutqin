@@ -401,7 +401,16 @@
       "continueTitle": "تابع أو ابدأ من جديد."
     },
     "summary": {
-      "default": "يمكنك بدء نطاق جديد أو حفظ هذا أو تكراره الآن."
+      "default": "يمكنك بدء نطاق جديد أو حفظ هذا أو تكراره الآن.",
+      "completedAll": "أكملت جميع آيات هذا النطاق وعددها {count}.",
+      "completedRangeDetail": "غطّيت {covered} من أصل {total} آية خلال {duration}.",
+      "endedPartial": "وصلت إلى الآية {ayah} وأكملت {percent}% من هذه الجلسة.",
+      "endedProgress": "غطّيت {covered} من أصل {total} آية قبل إنهاء الجلسة.",
+      "nextAdvance": "ابدأ نطاقاً جديداً عندما تشعر أن هذا النطاق صار ثابتاً.",
+      "nextRepeat": "كرّر هذا النطاق الآن لمرورٍ أنظف وأكثر ثباتاً.",
+      "nextReviewWeak": "راجع أي آية ما زالت ضعيفة قبل أن تنتقل.",
+      "nextContinue": "كرّر هذا النطاق الآن أو عُد لاحقاً من نقطة التوقف نفسها.",
+      "nextReduceAids": "خفّف وسائل المساندة في المرور القادم إذا كان الاسترجاع مريحاً بالفعل."
     },
     "reading": {
       "translation": "الترجمة",
@@ -538,7 +547,12 @@
     "speed": "السرعة",
     "use_slower_speed_for_early_memorisation": "استخدم سرعة أبطأ في بداية الحفظ.",
     "auto_advance": "التقدّم التلقائي",
+    "listen_then_recite": "استمع ثم اقرأ",
+    "auto_advance_mode_hint": "التلقائي ينتقل مباشرة، واستمع ثم اقرأ يوقف لك وقتاً للترديد، و\"لا\" يترك الانتقال لك يدوياً.",
     "auto_moves_to_the_next_queue_item_when_audio_ends": "ينتقل تلقائياً إلى العنصر التالي في الطابور عند انتهاء الصوت.",
+    "recitation_window_secs": "مهلة التلاوة (ثوانٍ)",
+    "recitation_window_hint": "المدة التي يتوقف فيها بعد القارئ حتى تردد قبل بدء الآية التالية.",
+    "recite_now_window": "دورك الآن في التلاوة · متبقٍ {seconds}ث",
     "delay_between_recitations_secs": "التأخير بين التلاوات (ثوانٍ)",
     "pause_before_each_next_repetition_recitation_in_au": "توقّف قبل كل تكرار/تلاوة تالية في الوضع التلقائي.",
     "focus_mode": "وضع التركيز",
@@ -651,6 +665,25 @@
     "recording_is_not_available_in_this_browser": "التسجيل غير متاح في هذا المتصفح.",
     "recite_check": "فحص التلاوة",
     "use_the_ai_recite_tool_in_the_header_when_you_want": "استخدم أداة التلاوة بالذكاء الاصطناعي في الشريط العلوي عندما تريد البدء.",
+    "recall_mode": "وضع الاسترجاع",
+    "recall_mode_hint": "أخفِ الكلمات القادمة واكشفها أثناء تلاوتك.",
+    "recall_mode_off_hint": "أخفِ الكلمات القادمة واكشفها عندما تتلوها بشكل صحيح.",
+    "recall_mode_on_hint": "وضع الاسترجاع مفعّل. تبقى الكلمات مخفية حتى تتلوها بشكل صحيح.",
+    "recall_mode_enable_hint": "اضغط أيقونة وضع الاسترجاع لإخفاء الكلمات قبل التلاوة، مثل ترتيل.",
+    "recall_mode_ready_title": "جاهز للتلاوة من الحفظ",
+    "recall_mode_ready_message": "ابدأ التلاوة بالذكاء الاصطناعي عندما تكون مستعداً. تبقى الكلمات القادمة مخفية حتى تنطقها بشكل صحيح.",
+    "recall_mode_preparing_title": "جاري التحضير",
+    "recall_mode_preparing_message": "جاري تهيئة الميكروفون. ستُخفى الكلمات بمجرد بدء الاستماع.",
+    "recall_mode_listening_title": "جاري الاستماع…",
+    "recall_mode_listening_message": "تلِ من الحفظ. كل كلمة صحيحة تكشف الكلمة التالية.",
+    "recall_mode_progress_message": "تم كشف {revealed} من {total} كلمة. واصل.",
+    "recall_mode_mistake_title": "أعد هذه الكلمة",
+    "recall_mode_mistake_message": "تبقى الكلمة الحالية مخفية حتى تتلوها بشكل صحيح.",
+    "recall_mode_peek_title": "تم كشف الكلمة الحالية",
+    "recall_mode_peek_message": "استخدم المعاينة فقط عند التعثر. تلُ هذه الكلمة بشكل صحيح للمتابعة.",
+    "recall_mode_complete_title": "اكتملت الآية",
+    "recall_mode_complete_message": "عمل ممتاز. كل كلمة ظهرت من خلال تلاوتك.",
+    "reveal_current_word": "إظهار الكلمة الحالية",
     "what_to_do_next": "ماذا تفعل بعد ذلك؟",
     "ai_review_check": "فحص مراجعة الذكاء الاصطناعي",
     "saved_to_your_recordings_library_for_this_ayah": "حُفظ في مكتبة تسجيلاتك لهذه الآية.",
@@ -805,6 +838,7 @@
       "rangeLabel": "نطاق {start}-{end}",
       "manualAdvance": "تقدم يدوي",
       "autoAdvance": "تقدم تلقائي",
+      "reciterFollowAdvance": "استمع ثم اقرأ",
       "plainSequence": "تسلسل عادي",
       "chainingLabel": "سلسلة {method}",
       "setupSummary": "{count}x تكرار، {mode}، {chaining}",
@@ -836,7 +870,108 @@
   },
   "toasts": {
     "saved": "تم الحفظ بنجاح.",
-    "error": "حدث خطأ. يرجى المحاولة مرة أخرى."
+    "error": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+    "theMemorisationWorkspaceRecoveredFromA": "The memorisation workspace recovered from a startup error.",
+    "fadingModeWordByWordDisabled": "Fading Mode: Word-by-Word disabled",
+    "wordByWordModeFadingDisabled": "Word-by-Word Mode: Fading disabled",
+    "focusModeOnBlurModeOff": "🎯 Focus Mode: On | 🌫️ Blur Mode: Off (cannot use together)",
+    "blurModeOnFocusModeOff": "🌫️ Blur Mode: On | 🎯 Focus Mode: Off (cannot use together)",
+    "blurModeOnChainingOffBlur": "🌫️ Blur Mode: On | 🔗 Chaining: Off — Blur hides upcoming verses needed for chaining",
+    "chainingOnBlurModeOffYou": "🔗 Chaining: On | 🌫️ Blur Mode: Off — You need to see upcoming verses for chaining to work",
+    "tipEnableAnchorModeWithChaining": "💡 Tip: Enable Anchor Mode with Chaining for better recall",
+    "pleaseSelectASessionFirst": "Please select a session first",
+    "sessionLoadedSuccessfully": "Session loaded successfully",
+    "ayahCompletedMovingToNext": "Ayah completed! Moving to next...",
+    "sessionSaved": "✓ Session \"{name}\" saved",
+    "recommendedSetupApplied": "Recommended setup applied",
+    "presetGuidedStart": "Preset: Guided Start",
+    "presetChainingAnchorModeWithFocus": "Preset: Chaining + Anchor Mode (with Focus)",
+    "presetPureRecallWithBlurMode": "Preset: Pure Recall with Blur Mode",
+    "presetFocusModeAnchorHooks": "Preset: Focus Mode + Anchor Hooks",
+    "blurModeWorksBestWithoutChaining": "Blur Mode works best without chaining, so chaining was turned off.",
+    "anchorModeKeyWordsWillBe": "Anchor Mode: Key words will be highlighted as memory hooks",
+    "anchorModeDisabled": "Anchor Mode disabled",
+    "anchorModeUsing": "Anchor Mode: Using {anchorCount}",
+    "chooseAValidSurahAndAyah": "Choose a valid surah and ayah range before starting.",
+    "pleaseSelectAValidSurahAnd": "Please select a valid surah and ayah range first",
+    "noActiveSessionToSave": "No active session to save",
+    "sessionSaved2": "Session saved",
+    "sessionDeleted": "Session deleted",
+    "sessionExportBlockedIncompleteSessionData": "Session export blocked: incomplete session data.",
+    "downloadReady": "Download ready ✓",
+    "exportFailedRetry": "Export failed, retry",
+    "thisResultDoesNotHaveEnough": "This result does not have enough stored metadata to re-run the audit.",
+    "unableToPlayThisRecordingRight": "Unable to play this recording right now.",
+    "audioSystemNotReady": "Audio system not ready",
+    "stopTheCurrentSelfCheckBefore": "Stop the current self-check before moving to another ayah.",
+    "saveOrDiscardTheCurrentSelf": "Save or discard the current self-check attempt before switching ayahs.",
+    "stopOrDiscardTheCurrentRecording": "Stop or discard the current recording before closing Self-Check.",
+    "selectAnAyahBeforeOpeningThe": "Select an ayah before opening the recordings library.",
+    "stopTheCurrentRecordingBeforeOpening": "Stop the current recording before opening the recordings library.",
+    "aiHighlightMarkedCorrectResultsUpdated": "AI highlight marked correct. Results updated.",
+    "noSavedReciteChecksForThis": "No saved Recite Checks for this ayah yet.",
+    "chooseASessionRangeBeforeStarting": "Choose a session range before starting a session Recite Check.",
+    "stopTheCurrentMemorisationCheckBefore": "Stop the current memorisation check before switching ayahs.",
+    "chooseASessionRangeBeforeOpening": "Choose a session range before opening the memorisation checker.",
+    "loadedCachedMemorisationAnalysis": "Loaded cached memorisation analysis.",
+    "memorisationAssessmentCouldNotBeSaved": "Memorisation assessment could not be saved on this device right now.",
+    "memorisationAssessmentSavedToRecordingsLibrary": "Memorisation assessment saved to recordings library.",
+    "memorisationAssessmentDeleted": "Memorisation assessment deleted.",
+    "memorisationCheckerReset": "Memorisation checker reset.",
+    "memorisationAssessmentDiscarded": "Memorisation assessment discarded.",
+    "thisRecordingDoesNotHaveEnough": "This recording does not have enough metadata to re-run the deterministic audit.",
+    "reciteCheckComplete": "Recite Check complete.",
+    "displayedAyahReviewReset": "Displayed ayah review reset.",
+    "reciteCheckCouldNotBeSaved": "Recite Check could not be saved on this device right now.",
+    "reciteCheckSavedToSavedAttempts": "Recite Check saved to Saved Attempts.",
+    "reciteCheckDiscarded": "Recite Check discarded.",
+    "reciteCheckDeleted": "Recite Check deleted.",
+    "loadedCachedReciteCheck": "Loaded cached Recite Check.",
+    "recordingReadyForAyah": "Recording ready for Ayah {number}",
+    "savedSelfCheckForAyah": "Saved self-check for Ayah {ayahNumber}",
+    "audioNotAvailableForThisAyah": "Audio not available for this ayah",
+    "downloadedAyahAudio": "Downloaded ayah {number} audio",
+    "failedToDownloadAyahAudio": "Failed to download ayah audio",
+    "hifzPlanDeleted": "Hifz plan deleted",
+    "sessionSavedWithCtrlS": "Session saved with Ctrl+S",
+    "savedSessionDismissed": "Saved session dismissed",
+    "speedChangedToX": "Speed changed to {p0}x",
+    "switchedToCasualMode": "Switched to Casual Mode",
+    "switchedToMode": "Switched to {p0} Mode",
+    "textSizeReset": "Text size reset",
+    "pleaseSelectASurah": "Please select a surah",
+    "planCreatedVersesDayForDays": "Plan created: {versesPerDay} verses/day for {plannerEstimatedDays} days",
+    "loadASurahFirstBeforeDownloading": "Load a surah first before downloading",
+    "couldNotIdentifySurah": "Could not identify surah",
+    "savedVersesFromForOfflineReading": "Saved {length} verses from {p0} for offline reading.",
+    "failedToDownloadVerses": "Failed to download verses",
+    "loadedFromOfflineStorage": "Loaded {surah} from offline storage",
+    "failedToLoadOfflineSurah": "Failed to load offline surah",
+    "offlineSurahRemoved": "Offline surah removed",
+    "audioPlaybackError": "Audio playback error",
+    "audioNotAvailableForVerse": "Audio not available for verse {number}",
+    "failedToPlayAudio": "Failed to play audio",
+    "playbackFailed": "Playback failed",
+    "failedToLoadVerses": "Failed to load verses",
+    "pleaseSelectASurahFirst": "Please select a surah first",
+    "noVersesLoadedCheckYourNetwork": "No verses loaded. Check your network connection.",
+    "nothingToPlayCheckTheSelected": "Nothing to play. Check the selected range.",
+    "backOnlineLiveApisAreAvailable": "Back online. Live APIs are available again.",
+    "offlineModeActiveReadingFallsBack": "Offline mode active. Reading falls back to cached ranges.",
+    "settingsIssue": "Settings issue: {join}",
+    "fontSize": "Font size: {defaultFontSize}%",
+    "message": "{p0} {p1}",
+    "settingsSaved": "Settings saved",
+    "failedToLoadSurahList": "Failed to load surah list",
+    "sessionControlsResetToDefaults": "Session controls reset to defaults",
+    "reciterUpdatedForThisSession": "Reciter updated for this session.",
+    "noVersesToQuizOn": "No verses to quiz on",
+    "enableWordAudioToPreviewIndividual": "Enable Word audio to preview individual words.",
+    "wordAudioIsNotAvailableFor": "Word audio is not available for this word.",
+    "wordTimingUnavailableForThisAyah": "Word timing unavailable for this ayah.",
+    "unableToPlayThisWordRight": "Unable to play this word right now.",
+    "unableToPlayAyahNow": "Unable to play this ayah right now.",
+    "textSizePercent": "Text size: {percent}%"
   },
   "errors": {
     "network": "خطأ في الشبكة. تحقق من اتصالك."
@@ -1074,6 +1209,76 @@
         "repeatsRequired": "اختر عدد مرات تكرار كل آية.",
         "reciterRequired": "اختر قارئاً قبل المتابعة."
       }
+    },
+    "helpLearning": {
+      "title": "المساعدة والتعلّم",
+      "subtitle": "تعرّف على أدوات متقن للحفظ بفعالية أكبر.",
+      "bestFor": "الأفضل لـ:",
+      "sections": {
+        "tajweed": {
+          "title": "قواعد التجويد",
+          "description": "التجويد مجموعة القواعد التي تساعدك على تلاوة القرآن بشكل صحيح وجميل. يبرز متقن هذه القواعد لتتعرّف عليها وتتدرّب عليها أثناء الحفظ.",
+          "bestFor": "الطلاب الذين يحسّنون النطق وجودة التلاوة."
+        },
+        "srs": {
+          "title": "المراجعة الذكية (SRS)",
+          "description": "يذكّرك متقن تلقائياً بمراجعة الآيات في الوقت المناسب لتبقى قوية في ذاكرتك. تظهر الآيات الصعبة أكثر، بينما تُراجع الأقوى بوتيرة أقل.",
+          "bestFor": "الاحتفاظ طويل الأمد ومنع فقدان الحفظ."
+        },
+        "techniques": {
+          "title": "تقنيات الحفظ",
+          "description": "اختر الطريقة التي تساعدك على الاستمرار، ثم عدّلها مع تعرّفك على النطاق.",
+          "bestFor": "الطلاب الذين يكتشفون أسلوب التعلّم الأنسب لهم.",
+          "details": {
+            "repetition": {
+              "label": "طريقة التكرار",
+              "text": "كرّر الآية نفسها عدة مرات قبل الانتقال."
+            },
+            "linking": {
+              "label": "طريقة الربط",
+              "text": "اربط كل آية بالتالية لتحسين التدفق والاستمرارية."
+            },
+            "cumulative": {
+              "label": "الطريقة التراكمية",
+              "text": "أضف آيات جديدة باستمرار مع مراجعة السابقة."
+            }
+          }
+        },
+        "layouts": {
+          "title": "تخطيطات القراءة",
+          "description": "بدّل بين أسلوبي قراءة حسب الجهاز ونوع الحفظ الذي تريده.",
+          "bestFor": "اختيار تجربة القراءة الأكثر طبيعية لك.",
+          "details": {
+            "stacked": {
+              "label": "التخطيط العمودي",
+              "text": "يعرض كل آية بشكل عمودي بسيط يسهل متابعته على الجوال."
+            },
+            "mushaf": {
+              "label": "تخطيط المصحف",
+              "text": "يعرض الآيات بأسلوب مصحف تقليدي للطلاب المعتادين على حفظ الصفحات."
+            }
+          }
+        },
+        "aiRecitation": {
+          "title": "التلاوة بالذكاء الاصطناعي",
+          "description": "يستمع إلى تلاوتك ويقدّم تغذية راجعة فورية لمساعدتك على تحديد الأخطاء وتحسين الدقة أثناء الحفظ.",
+          "bestFor": "الطلاب الذين يريدون تدريباً موجّهاً وتغذية راجعة فورية."
+        },
+        "manualAssessment": {
+          "title": "التقييم اليدوي",
+          "description": "يتيح لك تقييم حفظك بنفسك بعد كل جلسة وتتبّع ثقتك وتقدّمك مع الوقت.",
+          "bestFor": "الطلاب الذين يفضّلون التأمل الذاتي والمراجعة المستقلة."
+        }
+      }
+    },
+    "rangeOptions": {
+      "all": "القرآن كاملاً",
+      "juz": "جزء",
+      "hizb": "حزب",
+      "page": "صفحة",
+      "surah": "سورة",
+      "ayah": "آية",
+      "word": "كلمة"
     }
   }
 }

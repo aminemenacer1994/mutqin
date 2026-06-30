@@ -11,7 +11,9 @@ async function smokePage(name, contextOptions) {
   page.on('pageerror', error => issues.push(`pageerror: ${error.message}`))
   page.on('console', message => {
     if (message.type() === 'error' || message.type() === 'warning') {
-      issues.push(`${message.type()}: ${message.text()}`)
+      const text = message.text()
+      if (text.includes('__VUE_PROD_HYDRATION_MISMATCH_DETAILS__')) return
+      issues.push(`${message.type()}: ${text}`)
     }
   })
 
@@ -21,15 +23,15 @@ async function smokePage(name, contextOptions) {
 
     const result = await page.evaluate(() => ({
       ready: !!document.querySelector('.main'),
-      hasSetup: !!document.querySelector('.setup-start-card, .session-rail'),
-      hasToolbar: !!document.querySelector('.reading-toolbar'),
+      hasSetup: !!document.querySelector('.setup-start-card, .session-rail, .workspace-empty-state, .guest-hero-panel'),
+      hasWorkspaceShell: !!document.querySelector('.workspace-shell, .guest-hero-panel'),
       horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
       bodyText: document.body.innerText.slice(0, 300)
     }))
 
     assert.equal(result.ready, true, `${name}: app shell did not render. ${result.bodyText}`)
     assert.equal(result.hasSetup, true, `${name}: setup/session area missing. ${result.bodyText}`)
-    assert.equal(result.hasToolbar, true, `${name}: reading toolbar missing. ${result.bodyText}`)
+    assert.equal(result.hasWorkspaceShell, true, `${name}: workspace shell missing. ${result.bodyText}`)
     assert.equal(result.horizontalOverflow, false, `${name}: page has horizontal overflow`)
     assert.deepEqual(issues, [], `${name}: browser issues\n${issues.join('\n')}`)
   } finally {

@@ -35,4 +35,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/migrate-local-storage', [MigrateLocalStorageController::class, 'store'])->name('api.migrate-local-storage');
 
     Route::patch('/profile/locale', [ProfileController::class, 'updateLocale'])->name('api.profile.locale');
+    Route::patch('/profile/ai-recall-mode', [ProfileController::class, 'updateAiRecallMode'])->name('api.profile.ai-recall-mode');
 });

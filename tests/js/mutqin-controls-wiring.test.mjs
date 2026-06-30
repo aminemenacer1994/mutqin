@@ -44,7 +44,10 @@ includesAll('session setup controls', [
   /<select v-model="reciterId" @change="refreshVerses"/,
   /@change="setPlaybackSpeed\(option\)"/,
   /value="auto" v-model="playMode"/,
+  /value="follow" v-model="playMode"/,
   /value="manual" v-model="playMode"/,
+  /v-model\.number="recitationWindowSeconds"/,
+  /option in recitationWindowOptions/,
   /t\('memorisation\.delay_between_recitations_secs'\)/,
   /<select v-model\.number="delay" class="select">/,
   /option in delayOptions/
@@ -143,7 +146,7 @@ includesAll('workspace application', [
   /'blur-upcoming': blurModeEnabled && isVerseBlurred\(verse\.key\)/
 ])
 
-for (const key of ['verses', 'activeKey', 'queue', 'queueIndex', 'playMode', 'speed', 'delay', 'order']) {
+for (const key of ['verses', 'activeKey', 'queue', 'queueIndex', 'playMode', 'recitationWindowSeconds', 'speed', 'delay', 'order']) {
   assert.doesNotMatch(
     memorisationDataBlock,
     new RegExp(`^\\s*${key}:`, 'm'),

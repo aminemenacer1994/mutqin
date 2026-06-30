@@ -4,9 +4,9 @@
 
     <!-- Hero Section -->
     <section class="hero">
-      <div class="container-xl hero-container">
-        <div class="row g-4 g-xl-5 align-items-center">
-          <div class="col-12 col-lg-7">
+      <div class="hero-container">
+        <div class="hero-layout">
+          <div class="hero-copy-column">
             <div class="hero-content" data-aos="fade-up">
               <div class="hero-badge">
                 <i class="bi bi-moon-stars"></i> {{ t('homepage.hero.badge') }}
@@ -27,7 +27,7 @@
               </div>
             </div>
           </div>
-          <div class="col-12 col-lg-5">
+          <div class="hero-visual-column">
             <div class="hero-image" data-aos="fade-left">
               <div class="card demo-card">
                 <i class="bi bi-mic"></i>
@@ -38,7 +38,7 @@
                   <span>{{ t('homepage.demo.recording') }}</span>
                 </div>
               </div>
-              <div class="floating-card d-none d-md-flex" v-for="(badge, idx) in floatingBadges" :key="idx" :style="{ animationDelay: `${idx * 0.8}s` }">
+              <div class="floating-card" v-for="(badge, idx) in floatingBadges" :key="idx" :style="{ animationDelay: `${idx * 0.8}s` }">
                 <i :class="badge.icon"></i>
                 <span>{{ badge.text }}</span>
               </div>
@@ -56,8 +56,8 @@
         <div class="section-kicker"><i class="bi bi-soundwave"></i> {{ t('homepage.features.kicker') }}</div>
         <h2 class="section-title">{{ t('homepage.features.title') }}</h2>
         <p class="section-subtitle">{{ t('homepage.features.subtitle') }}</p>
-        <div class="row g-4 features-grid">
-          <div class="col-md-6 col-xl-4" v-for="feature in features" :key="feature.id" data-aos="zoom-in">
+        <div class="features-grid">
+          <div class="feature-grid-item" v-for="feature in features" :key="feature.id" data-aos="zoom-in">
             <div class="feature-card h-100">
               <div class="feature-topline">
                 <div class="feature-icon"><i :class="feature.icon"></i></div>
@@ -80,8 +80,8 @@
         <div class="section-kicker"><i class="bi bi-route"></i> {{ t('homepage.steps.kicker') }}</div>
         <h2 class="section-title">{{ t('homepage.steps.title') }}</h2>
         <p class="section-subtitle">{{ t('homepage.steps.subtitle') }}</p>
-        <div class="row g-4 steps-grid">
-          <div class="col-md-4" v-for="(step, idx) in steps" :key="step.id" data-aos="flip-up" :data-aos-delay="idx * 100">
+        <div class="steps-grid">
+          <div class="step-grid-item" v-for="(step, idx) in steps" :key="step.id" data-aos="flip-up" :data-aos-delay="idx * 100">
             <div class="step-card h-100">
               <div class="step-head">
                 <div class="step-number">0{{ idx + 1 }}</div>
@@ -103,8 +103,8 @@
       <div class="section-container">
         <div class="section-kicker"><i class="bi bi-chat-heart"></i> {{ t('homepage.testimonials.kicker') }}</div>
         <h2 class="section-title">{{ t('homepage.testimonials.title') }}</h2>
-        <div class="row g-4 testimonials-grid">
-          <div class="col-md-6 col-xl-4" v-for="(testimonial, idx) in testimonials" :key="testimonial.id" data-aos="fade-up" :data-aos-delay="idx * 100">
+        <div class="testimonials-grid">
+          <div class="testimonial-grid-item" v-for="(testimonial, idx) in testimonials" :key="testimonial.id" data-aos="fade-up" :data-aos-delay="idx * 100">
             <div class="testimonial-card h-100">
               <div class="testimonial-rating">
                 <i class="bi bi-star-fill"></i>
@@ -136,9 +136,9 @@
         <div class="section-kicker"><i class="bi bi-credit-card-2-front"></i> {{ t('homepage.pricing.kicker') }}</div>
         <h2 class="section-title">{{ t('homepage.pricing.title') }}</h2>
         <p class="section-subtitle">{{ t('homepage.start_free_upgrade_only_when_you_need_deeper_recit') }}</p>
-        <div class="row g-4 pricing-grid">
+        <div class="pricing-grid">
           <!-- Freemium Plan -->
-          <div class="col-lg-4" data-aos="flip-right">
+          <div class="pricing-grid-item" data-aos="flip-right">
             <div class="pricing-card h-100">
               <div class="plan-label">{{ t('homepage.pricing.starter') }}</div>
               <div class="pricing-icon"><i class="bi bi-flower1"></i></div>
@@ -155,7 +155,7 @@
             </div>
           </div>
           <!-- Premium Plan -->
-          <div class="col-lg-4" data-aos="flip-left">
+          <div class="pricing-grid-item" data-aos="flip-left">
             <div class="pricing-card featured h-100">
               <div class="featured-tag"><i class="bi bi-gift-fill"></i> {{ t('homepage.pricing.freeTrial') }}</div>
               <div class="plan-label">{{ t('homepage.most_useful') }}</div>
@@ -183,7 +183,7 @@
             </div>
           </div>
           <!-- Pro Plan -->
-          <div class="col-lg-4" data-aos="flip-left">
+          <div class="pricing-grid-item" data-aos="flip-left">
             <div class="pricing-card h-100">
               <div class="featured-tag"><i class="bi bi-gift-fill"></i> {{ t('homepage.pricing.freeTrial') }}</div>
               <div class="plan-label">{{ t('homepage.teacher_ready') }}</div>
@@ -300,26 +300,26 @@
 
     <section id="contact" class="contact-section">
       <div class="section-container">
-        <div class="row g-4 align-items-start contact-grid">
-          <div class="col-lg-5">
+        <div class="contact-grid">
+          <div class="contact-copy-column">
             <div class="contact-copy" data-aos="fade-up">
               <h2 class="section-title section-title-left">{{ t('homepage.contact.title') }}</h2>
               <p class="section-subtitle section-subtitle-left">{{ t('homepage.contact.extendedSubtitle') }}</p>
             </div>
           </div>
-          <div class="col-lg-7">
+          <div class="contact-form-column">
             <div class="contact-card" data-aos="fade-up">
               <div v-if="contactStatus.message" class="contact-alert" :class="contactStatus.type === 'success' ? 'contact-alert-success' : 'contact-alert-error'" role="alert">
                 {{ contactStatus.message }}
               </div>
               <form class="contact-form" @submit.prevent="submitContact">
-                <div class="row g-3 contact-form-grid">
-                  <div class="col-md-6">
+                <div class="contact-form-grid">
+                  <div class="contact-field">
                     <label class="form-label" for="contactName">{{ t('homepage.name') }}</label>
                     <input id="contactName" v-model.trim="contactForm.name" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.name }" autocomplete="name">
                     <div v-if="contactErrors.name" class="invalid-feedback d-block">{{ contactErrors.name }}</div>
                   </div>
-                  <div class="col-md-6">
+                  <div class="contact-field">
                     <label class="form-label" for="contactEmail">{{ t('homepage.contact.email') }}</label>
                     <input id="contactEmail" v-model.trim="contactForm.email" type="email" class="form-control" :class="{ 'is-invalid': contactErrors.email }" autocomplete="email">
                     <div v-if="contactErrors.email" class="invalid-feedback d-block">{{ contactErrors.email }}</div>
@@ -348,15 +348,15 @@
 
     <!-- CTA Section -->
     <div class="cta-block">
-      <div class="row g-4 align-items-center">
-        <div class="col-lg-8">
+      <div class="cta-layout">
+        <div class="cta-copy-column">
           <div class="cta-copy">
             <div class="cta-icon"><i class="bi bi-heart-fill"></i></div>
             <h2>{{ t('homepage.cta.title') }}</h2>
             <p>{{ t('homepage.record_a_verse_review_the_highlighted_issues_and_k') }}</p>
           </div>
         </div>
-        <div class="col-lg-4">
+        <div class="cta-actions-column">
           <div class="cta-actions">
             <a href="/register" class="btn-primary"><i class="bi bi-person-badge"></i> {{ t('homepage.cta.button') }}</a>
             <span>{{ t('homepage.cta.note') }}</span>
@@ -368,8 +368,8 @@
     <!-- Footer - full width, bottom fixed position -->
     <footer class="footer">
       <div class="footer-container">
-        <div class="row g-4 footer-grid">
-          <div class="col-lg-4">
+        <div class="footer-grid">
+          <div class="footer-brand-column">
             <div class="footer-brand">
               <div class="footer-logo">
                 <i class="bi bi-moon-stars"></i>
@@ -378,7 +378,7 @@
               <p>{{ t('homepage.focused_quran_memorisation_tools_for_recitation_ch') }}</p>
             </div>
           </div>
-          <div class="col-sm-6 col-lg-2">
+          <div class="footer-link-column">
             <div class="footer-links">
               <h4><i class="bi bi-grid-3x3-gap-fill"></i> {{ t('homepage.footer.product') }}</h4>
               <a href="#features" @click.prevent="scrollToFeatures"><i class="bi bi-mic"></i> {{ t('homepage.footer.features') }}</a>
@@ -386,7 +386,7 @@
               <a href="#"><i class="bi bi-compass"></i> {{ t('homepage.roadmap') }}</a>
             </div>
           </div>
-          <div class="col-sm-6 col-lg-2">
+          <div class="footer-link-column">
             <div class="footer-links">
               <h4><i class="bi bi-book-half"></i> {{ t('homepage.footer.resources') }}</h4>
               <a href="#"><i class="bi bi-pen-fill"></i> {{ t('homepage.tajweed_guide') }}</a>
@@ -394,7 +394,7 @@
               <a href="#"><i class="bi bi-question-circle"></i> {{ t('homepage.help_center') }}</a>
             </div>
           </div>
-          <div class="col-sm-6 col-lg-2">
+          <div class="footer-link-column">
             <div class="footer-links">
               <h4><i class="bi bi-building"></i> {{ t('homepage.footer.company') }}</h4>
               <a href="/about-us"><i class="bi bi-info-circle-fill"></i> {{ t('homepage.footer.aboutUs') }}</a>
@@ -402,7 +402,7 @@
               <a href="/our-mission"><i class="bi bi-heart"></i> {{ t('mission.kicker') }}</a>
             </div>
           </div>
-          <div class="col-sm-6 col-lg-2">
+          <div class="footer-social-column">
             <div class="footer-social">
               <h4><i class="bi bi-share-fill"></i> {{ t('homepage.footer.connect') }}</h4>
               <div class="social-icons">

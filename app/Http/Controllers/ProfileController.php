@@ -34,7 +34,7 @@ class ProfileController extends Controller
             'email_verified_at' => $emailChanged ? null : $user->email_verified_at,
         ])->save();
 
-        return back()->with('profile_status', 'Profile updated successfully.');
+        return back()->with('profile_status', __('profile.saved_success'));
     }
 
     public function updateLocale(Request $request): JsonResponse
@@ -49,6 +49,21 @@ class ProfileController extends Controller
 
         return response()->json([
             'locale' => $validated['locale'],
+        ]);
+    }
+
+    public function updateAiRecallMode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ai_recall_mode_enabled' => ['required', 'boolean'],
+        ]);
+
+        $request->user()->forceFill([
+            'ai_recall_mode_enabled' => $validated['ai_recall_mode_enabled'],
+        ])->save();
+
+        return response()->json([
+            'ai_recall_mode_enabled' => (bool) $validated['ai_recall_mode_enabled'],
         ]);
     }
 
@@ -74,17 +89,17 @@ class ProfileController extends Controller
             'password' => $validated['password'],
         ])->save();
 
-        return back()->with('password_status', 'Password updated successfully.');
+        return back()->with('password_status', __('profile.password_updated'));
     }
 
     private function planLabels(): array
     {
         return [
-            'free' => 'Free access',
-            'premium_monthly' => 'Premium monthly',
-            'premium_yearly' => 'Premium yearly',
-            'pro_monthly' => 'Pro monthly',
-            'pro_yearly' => 'Pro yearly',
+            'free' => __('billing.free_access'),
+            'premium_monthly' => __('billing.premium_monthly'),
+            'premium_yearly' => __('billing.premium_yearly'),
+            'pro_monthly' => __('billing.pro_monthly'),
+            'pro_yearly' => __('billing.pro_yearly'),
         ];
     }
 }

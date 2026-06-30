@@ -1,8 +1,13 @@
 /* Memorisation view styles — consolidated 2026-06-29 */
 
 .session-complete-wrapper {
-  padding: 8px 0;
+  padding: 8px 0 18px;
   animation: fadeSlideUp 0.3s ease;
+}
+
+.completion-surface {
+  display: grid;
+  gap: 14px;
 }
 
 .completion-header {
@@ -67,12 +72,11 @@
 }
 
 .completion-stats {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
   padding: 12px 16px;
   border-radius: 12px;
-  margin-bottom: 14px;
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: 0 12px 26px rgba(31, 24, 18, 0.045),
@@ -80,154 +84,78 @@
   animation: completionCardBreath 8.4s ease-in-out infinite;
 }
 
-.completion-meta-grid {
-  margin-bottom: 14px;
-}
-
-.completion-meta-card {
-  position: relative;
+.completion-followup {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
-  border-radius: 22px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 97%, white 3%), color-mix(in srgb, var(--surface) 99%, transparent));
-  padding: 16px 18px;
-  display: grid;
-  gap: 0.45rem;
-  overflow: hidden;
-  transition: transform 180ms ease,
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-  animation: completionCardBreath 7.2s ease-in-out infinite;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 98%, white 2%), color-mix(in srgb, var(--surface) 94%, transparent));
 }
 
-.completion-meta-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top right, rgba(201, 132, 58, 0.08), transparent 34%),
-    linear-gradient(135deg, rgba(201, 132, 58, 0.03), transparent 42%);
-  pointer-events: none;
-}
-
-.completion-meta-card:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--accent) 26%, var(--border));
-  box-shadow: 0 18px 38px rgba(29, 22, 16, 0.08);
-}
-
-.completion-meta-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.completion-meta-kicker {
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  opacity: 0.86;
-}
-
-.completion-meta-toggle {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
-  padding: 0;
-  flex: 0 0 28px;
-  aspect-ratio: 1 / 1;
-  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-  border-radius: 50%;
-  background: transparent;
-  color: var(--text-muted);
-  display: inline-grid;
-  place-items: center;
-  line-height: 1;
-  transition: background-color 140ms ease,
-    border-color 140ms ease,
-    color 140ms ease;
-}
-
-.completion-meta-toggle:hover {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
-  color: var(--accent-strong);
-}
-
-.completion-meta-toggle i {
-  font-size: 0.82rem;
-}
-
-.completion-meta-calligraphy {
-  position: relative;
-  z-index: 1;
-  font-family: 'Amiri', serif;
-  font-size: 1.26rem;
-  line-height: 1.2;
-  color: color-mix(in srgb, var(--accent-strong) 82%, var(--text));
-}
-
-.completion-meta-card strong {
-  position: relative;
-  z-index: 1;
-  font-size: 0.98rem;
-  line-height: 1.35;
-  color: var(--text);
-}
-
-.completion-meta-card p {
-  position: relative;
-  z-index: 1;
+.completion-detail {
   margin: 0;
-  font-size: 0.82rem;
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.completion-next-step {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  color: var(--text-muted);
+  font-size: 0.84rem;
   line-height: 1.45;
-  color: var(--text-muted);
 }
 
-.completion-meta-points {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.completion-next-step i {
+  color: var(--accent);
+  margin-top: 0.08rem;
+}
+
+.completion-actions-inline {
   display: grid;
-  gap: 0.38rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.completion-meta-points li {
-  position: relative;
-  padding-inline-start: 1rem;
-  font-size: 0.76rem;
-  line-height: 1.4;
-  color: var(--text);
+.completion-utility-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.completion-meta-points li::before {
-  content: '';
-  position: absolute;
-  inset-inline-start: 0;
-  top: 0.52rem;
-  width: 0.38rem;
-  height: 0.38rem;
+.completion-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 14px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 650;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
-.completion-meta-card.collapsed {
-  gap: 0.2rem;
-}
-
-[data-theme="dark"] .completion-meta-card {
-  background: linear-gradient(180deg, rgba(35, 29, 24, 0.96), rgba(28, 24, 21, 0.94));
-  border-color: rgba(204, 161, 110, 0.16);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+.completion-link-btn:hover {
+  background: var(--accent-light);
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+  color: var(--accent);
 }
 
 [data-theme="dark"] .completion-header, [data-theme="dark"] .completion-stats {
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22),
     0 1px 0 rgba(255, 255, 255, 0.03) inset;
+}
+
+[data-theme="dark"] .completion-followup,
+[data-theme="dark"] .completion-link-btn {
+  background: rgba(255, 247, 236, 0.06);
+  border-color: rgba(255, 236, 216, 0.16);
 }
 
 [data-theme="dark"] .action-btn {
@@ -238,15 +166,6 @@
 [data-theme="dark"] .action-btn:hover {
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.24),
     0 1px 0 rgba(255, 255, 255, 0.03) inset;
-}
-
-[data-theme="dark"] .completion-meta-card::before {
-  background: radial-gradient(circle at top right, rgba(220, 170, 109, 0.12), transparent 36%),
-    linear-gradient(135deg, rgba(220, 170, 109, 0.05), transparent 44%);
-}
-
-[data-theme="dark"] .completion-meta-calligraphy {
-  color: #e2b06d;
 }
 
 .save-name-modal {
@@ -305,9 +224,7 @@
 }
 
 .stat-divider {
-  width: 1px;
-  height: 30px;
-  background: var(--border);
+  display: none;
 }
 
 .completion-actions {
@@ -7059,6 +6976,19 @@ html {
   text-overflow: ellipsis;
 }
 
+.player-recitation-window {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(154, 103, 56, 0.12);
+  color: #6f431d;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .player-eta {
   color: var(--accent);
   font-weight: 500;
@@ -7729,6 +7659,11 @@ html {
 
 [data-theme="dark"] .verse-number, [data-theme="dark"] .verse-status-badge, [data-theme="dark"] .player-chapter, [data-theme="dark"] .player-verse, [data-theme="dark"] .preview-stat, [data-theme="dark"] .preview-surah, [data-theme="dark"] .preview-range {
   color: var(--text);
+}
+
+[data-theme="dark"] .player-recitation-window {
+  background: rgba(223, 167, 98, 0.16);
+  color: #f0cfab;
 }
 
 [data-theme="dark"] .player-progress-bg, [data-theme="dark"] .progress-bar-track, [data-theme="dark"] .form-range {
@@ -8868,18 +8803,6 @@ html {
   margin-inline: auto;
   width: min(100%, 1040px);
   transition: width 220ms ease, max-width 220ms ease, margin 220ms ease, transform 220ms ease;
-}
-
-@media (min-width: 1025px) {
-  .main.mushaf-mode-active.tools-open .content {
-    padding-right: min(var(--tools-width, 520px), 32vw);
-    transition: padding-right 220ms ease;
-  }
-
-  .main.mushaf-mode-active.tools-open .mushaf-frame {
-    width: min(100%, 900px);
-    margin-inline: 0 auto;
-  }
 }
 
 .mushaf-viewport {
@@ -10437,7 +10360,7 @@ html {
 
 .app.is-rtl .main.tools-open {
   padding-right: 0;
-  padding-left: min(var(--tools-width, 520px), 32vw);
+  padding-left: 0;
 }
 
 .app.is-rtl .font-dropdown-menu, .app.is-rtl .quick-font-menu {
@@ -14776,6 +14699,182 @@ button:active {
   line-height: 1.5;
   color: inherit;
   opacity: 0.72;
+}
+
+.recall-mode-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+.recall-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.recall-mode-toggle input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+}
+
+.recall-mode-hint {
+  display: block;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.recall-mode-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0.75rem 0 0.35rem;
+  padding: 0.72rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+}
+
+.recall-mode-status > .bi {
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+  font-size: 1rem;
+}
+
+.recall-mode-status-copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.recall-mode-status-copy strong {
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.recall-mode-status-copy span {
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.recall-mode-status--setup {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+
+.recall-mode-status--setup > .bi {
+  color: var(--accent);
+}
+
+.recall-mode-status--ready {
+  border-color: color-mix(in srgb, #2f6f58 24%, var(--border));
+  background: linear-gradient(135deg, rgba(239, 248, 244, 0.92), rgba(248, 252, 250, 0.96));
+}
+
+.recall-mode-status--ready > .bi,
+.recall-mode-status--listening > .bi,
+.recall-mode-status--progress > .bi {
+  color: #2f6f58;
+}
+
+.recall-mode-status--listening,
+.recall-mode-status--progress,
+.recall-mode-status--preparing {
+  border-color: color-mix(in srgb, #2f6f58 22%, var(--border));
+}
+
+.recall-mode-status--listening > .bi,
+.recall-mode-status--preparing > .bi {
+  animation: recallModePulse 1.4s ease-in-out infinite;
+}
+
+.recall-mode-status--mistake {
+  border-color: color-mix(in srgb, #c13f2d 28%, var(--border));
+  background: color-mix(in srgb, #c13f2d 7%, var(--surface));
+}
+
+.recall-mode-status--mistake > .bi {
+  color: #c13f2d;
+}
+
+.recall-mode-status--mistake .recall-mode-status-copy span {
+  color: color-mix(in srgb, #8f2f22 72%, var(--muted));
+}
+
+.recall-mode-status--peek {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+
+.recall-mode-status--peek > .bi {
+  color: var(--accent);
+}
+
+.recall-mode-status--complete {
+  border-color: color-mix(in srgb, #15724c 28%, var(--border));
+  background: color-mix(in srgb, #15724c 8%, var(--surface));
+}
+
+.recall-mode-status--complete > .bi {
+  color: #15724c;
+}
+
+.self-check-ayah-action-recall.active {
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+.self-check-ayah-action-recall.active > .bi {
+  color: var(--accent);
+}
+
+@keyframes recallModePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+[data-theme="dark"] .recall-mode-status--ready {
+  background: linear-gradient(135deg, rgba(36, 58, 48, 0.72), rgba(28, 36, 32, 0.88));
+}
+
+[data-theme="dark"] .recall-mode-status--ready > .bi,
+[data-theme="dark"] .recall-mode-status--listening > .bi,
+[data-theme="dark"] .recall-mode-status--progress > .bi {
+  color: #6fcf97;
+}
+
+.self-check-modal-ayah.recall-mode-active .wbw-word.recall-hidden,
+.self-check-modal-ayah.recall-mode-active word.recall-hidden {
+  color: transparent !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.self-check-modal-ayah.recall-mode-active .wbw-word.recall-hidden [class*="tajweed-"],
+.self-check-modal-ayah.recall-mode-active word.recall-hidden [class*="tajweed-"] {
+  color: transparent !important;
+  background: transparent !important;
+}
+
+.self-check-modal-ayah.recall-mode-active .wbw-word.recall-current,
+.self-check-modal-ayah.recall-mode-active word.recall-current {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  border-radius: 6px;
 }
 
 .recitation-check-results, .memorisation-checker-modal .memorisation-checker-results {
@@ -19324,11 +19423,6 @@ textarea {
   will-change: text-shadow, opacity;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  
-
-}
-
 .main.container, .main.container .content, .main.container .workspace, .main.container .workspace-main, .main.container .workspace-shell, .main.container .workspace-shell-body {
   width: 100%;
 }
@@ -19924,237 +20018,1222 @@ textarea {
   border-color: rgba(239, 193, 141, 0.16);
 }
 
-/* ========================================
-   Responsive breakpoints (mobile-first overrides)
-   sm ≤480 | md ≤768 | lg ≤1024 | xl ≤1280
-   ======================================== */
+/* ----------------------------------------------------------------------------
+   Responsive layer (breakpoint-free).
+   Replaces the former max-width media queries: layout now adapts purely through
+   intrinsic CSS — auto-fit grids, flex-wrap and fluid clamp() sizing — so the
+   top card, ayah cards and the mushaf scale from phone to desktop without any
+   viewport breakpoints.
+   ---------------------------------------------------------------------------- */
+
+/* Button / control clusters wrap instead of overflowing on narrow screens. */
+.completion-header,
+.session-overview-card,
+.session-overview-top,
+.session-overview-controls,
+.session-overview-actions,
+.completion-actions,
+.action-buttons-row,
+.action-buttons-group,
+.reading-toolbar-controls,
+.toolbar-dropdown-row,
+.font-theme-border-row {
+  flex-wrap: wrap;
+}
+
+/* Fixed-count grids collapse automatically as the available width shrinks. */
+.completion-actions-inline {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+}
+
+.recitation-result-actions,
+.self-check-result-group,
+.self-check-review-actions {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+}
+
+.recitation-result-stats {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.25rem), 1fr));
+}
+
+.recitation-insights-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.75rem), 1fr));
+}
+
+/* Mushaf page padding scales down on small viewports without a breakpoint. */
+.mushaf-page {
+  padding: clamp(1.1rem, 4vw, 4.5rem) clamp(0.85rem, 6vw, 5.25rem) clamp(1rem, 3vw, 3rem);
+}
+
+/* Keep the top session card in a two-track grid instead of stacking. */
+.workspace-shell {
+  overflow: visible !important;
+  z-index: 12000;
+}
+
+.workspace-shell-head {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(8.75rem, min(54vw, 34rem));
+  align-items: start !important;
+  column-gap: clamp(0.4rem, 1.6vw, 0.85rem);
+  row-gap: 0.5rem;
+  min-width: 0;
+}
+
+.workspace-shell-copy {
+  min-width: 0;
+}
+
+.workspace-shell-main-title,
+.workspace-shell-copy h1 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-shell-actions {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start !important;
+  justify-content: stretch !important;
+  gap: clamp(0.3rem, 1.3vw, 0.55rem) !important;
+  min-width: 0;
+  width: 100%;
+}
+
+.workspace-header-view-controls,
+.quick-right-controls {
+  display: grid !important;
+  grid-template-columns: minmax(4.8rem, 1fr) minmax(3.2rem, 0.72fr);
+  align-items: center !important;
+  justify-content: stretch !important;
+  gap: clamp(0.25rem, 1vw, 0.5rem) !important;
+  min-width: 0;
+  width: 100%;
+}
+
+.view-mode-switch,
+.quick-font-dropdown .font-dropdown-trigger,
+.workspace-shell-actions .action-btn,
+.workspace-shell-actions .top-card-ellipsis {
+  min-width: 0 !important;
+}
+
+.workspace-header-view-controls .view-mode-switch {
+  width: 100%;
+  padding-inline: clamp(0.35rem, 1.4vw, 0.55rem) !important;
+  gap: clamp(0.28rem, 1vw, 0.5rem) !important;
+}
+
+.view-mode-switch-label,
+.workspace-header-view-controls .font-dropdown-trigger span,
+.mushaf-toolbar-trigger-label,
+.mushaf-pill-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.view-mode-switch-label {
+  max-width: clamp(2.1rem, 9vw, 4.4rem);
+}
+
+.workspace-header-view-controls .font-dropdown-trigger {
+  width: 100%;
+  padding-inline: clamp(0.35rem, 1.4vw, 0.72rem);
+}
+
+.workspace-shell-actions .action-buttons-group {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: end !important;
+  gap: clamp(0.25rem, 1vw, 0.5rem);
+  min-width: 0;
+}
+
+.workspace-shell-actions .action-btn,
+.workspace-shell-actions .top-card-ellipsis {
+  width: clamp(2.35rem, 8vw, 2.65rem) !important;
+  min-width: clamp(2.35rem, 8vw, 2.65rem) !important;
+  padding-inline: 0 !important;
+  justify-content: center;
+}
+
+.workspace-shell-actions .action-btn span {
+  display: none;
+}
+
+/* Keep the mushaf controls in grid tracks that compress rather than stack. */
+.mushaf-workspace,
+.mushaf-frame {
+  overflow: visible !important;
+}
+
+.mushaf-frame {
+  width: min(100%, 1040px);
+}
+
+.mushaf-pill-toolbar {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center !important;
+  gap: clamp(0.3rem, 1.2vw, 0.65rem) !important;
+  overflow: visible !important;
+  position: relative;
+  z-index: 14000;
+}
+
+.mushaf-toolbar-cluster {
+  min-width: 0;
+  width: 100%;
+  overflow: visible !important;
+}
+
+.mushaf-toolbar-cluster-start {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(2.55rem, 1fr));
+  gap: clamp(0.25rem, 1vw, 0.55rem);
+}
+
+.mushaf-toolbar-cluster-end {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(2.35rem, auto));
+  justify-content: end !important;
+  gap: clamp(0.25rem, 1vw, 0.55rem);
+  margin-inline-start: 0;
+}
+
+.mushaf-toolbar-dropdown {
+  position: relative;
+  min-width: 0;
+}
+
+.mushaf-toolbar-trigger,
+.mushaf-pill-toolbar .mushaf-pill {
+  width: 100%;
+  min-width: 0 !important;
+  justify-content: center;
+  padding-inline: clamp(0.35rem, 1.4vw, 0.75rem);
+}
+
+.mushaf-toolbar-trigger-label {
+  max-width: clamp(2.4rem, 12vw, 7rem);
+}
+
+.mushaf-pill-toolbar .mushaf-pill {
+  width: clamp(2.35rem, 8vw, 2.65rem);
+  min-width: clamp(2.35rem, 8vw, 2.65rem) !important;
+  padding-inline: 0;
+}
+
+.mushaf-viewport {
+  position: relative;
+  z-index: 1;
+}
+
+/* Menus must sit above ayah containers and mushaf pages. */
+.font-dropdown,
+.quick-font-dropdown,
+.top-card-menu-wrap,
+.mushaf-toolbar-dropdown,
+.mushaf-pill-toolbar {
+  position: relative;
+  z-index: 15000 !important;
+}
+
+.font-dropdown-menu,
+.quick-font-menu,
+.top-card-menu,
+.mushaf-toolbar-menu,
+.verse-action-menu {
+  z-index: 16000 !important;
+}
+
+.mushaf-toolbar-menu {
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 2rem));
+}
+
+/* -------------------------------------------------------------------------
+   UI stabilisation layer
+   Consolidates the memorisation shell, mushaf toolbar/page flow, and review
+   surfaces so they stop fighting the older responsive overrides above.
+   ------------------------------------------------------------------------- */
+
+.workspace-shell {
+  width: min(100%, 1420px);
+  margin: 0 auto 18px;
+  padding: clamp(14px, 2vw, 20px);
+  border-radius: 24px;
+  overflow: visible !important;
+  z-index: 12;
+}
+
+.workspace-shell-head {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: flex-start !important;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.workspace-shell-copy {
+  flex: 1 1 18rem;
+  min-width: min(100%, 18rem);
+}
+
+.workspace-shell-main-title,
+.workspace-shell-copy h1 {
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.16;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.workspace-shell-actions {
+  flex: 1 1 30rem;
+  min-width: min(100%, 18rem);
+  width: auto;
+  display: grid !important;
+  justify-items: end;
+  gap: 10px !important;
+}
+
+.workspace-header-view-controls,
+.quick-right-controls {
+  width: min(100%, 34rem);
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(10.5rem, auto);
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  gap: 8px !important;
+}
+
+.workspace-header-view-controls .view-mode-switch {
+  width: 100%;
+  min-width: 0 !important;
+  justify-content: space-between;
+  padding-inline: 0.8rem !important;
+  gap: 0.65rem !important;
+}
+
+.workspace-header-view-controls .font-dropdown-trigger {
+  width: 100%;
+  min-width: 0;
+  justify-content: space-between;
+  padding-inline: 0.8rem;
+}
+
+.workspace-shell-actions .action-buttons-group {
+  width: 100%;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  gap: 8px;
+}
+
+.workspace-shell-actions .action-btn,
+.workspace-shell-actions .top-card-ellipsis {
+  width: auto !important;
+  min-width: 44px !important;
+  height: 44px;
+  padding-inline: 0.9rem !important;
+}
+
+.workspace-shell-actions .action-btn[aria-label="Open session controls"],
+.workspace-shell-actions .top-card-ellipsis {
+  width: 44px !important;
+  padding-inline: 0 !important;
+}
+
+.workspace-shell-actions .action-btn.primary,
+.workspace-shell-actions .action-btn-exit {
+  min-width: max-content !important;
+}
+
+.workspace-shell-actions .action-btn.primary span,
+.workspace-shell-actions .action-btn-exit span {
+  display: inline;
+}
+
+.workspace-shell-actions .action-btn.primary i,
+.workspace-shell-actions .action-btn-exit i {
+  margin: 0;
+}
+
+.workspace-quick-controls {
+  display: none;
+}
+
+.top-card-menu {
+  width: min(19rem, calc(100vw - 28px));
+  max-width: min(19rem, calc(100vw - 28px));
+  padding: 8px;
+}
+
+.top-card-menu button,
+.verse-action-menu button {
+  min-height: 44px;
+  justify-content: flex-start !important;
+  text-align: left;
+  padding-inline: 12px;
+}
+
+.top-card-menu button span,
+.verse-action-menu button span,
+.quick-font-dropdown .font-dropdown-trigger span,
+.workspace-header-view-controls .font-dropdown-trigger span,
+.view-mode-switch-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mushaf-workspace {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  padding: clamp(10px, 2vw, 20px);
+}
+
+.mushaf-frame {
+  width: min(100%, 1120px);
+  margin-inline: auto;
+  padding: clamp(10px, 1.6vw, 18px);
+  overflow: visible !important;
+}
+
+.mushaf-pill-toolbar {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center !important;
+  justify-content: space-between;
+  gap: 10px !important;
+  padding: 0;
+}
+
+.mushaf-toolbar-cluster {
+  width: auto;
+  min-width: 0;
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mushaf-toolbar-cluster-start {
+  flex: 1 1 30rem;
+}
+
+.mushaf-toolbar-cluster-end {
+  flex: 0 1 auto;
+  justify-content: flex-end !important;
+}
+
+.mushaf-toolbar-dropdown {
+  min-width: min(100%, 10rem);
+}
+
+.mushaf-toolbar-trigger {
+  width: auto;
+  min-width: 0 !important;
+  justify-content: space-between;
+  padding-inline: 0.85rem;
+}
+
+.mushaf-toolbar-trigger-label {
+  max-width: 8.5rem;
+}
+
+.mushaf-pill-toolbar .mushaf-pill {
+  width: auto;
+  min-width: 44px !important;
+  padding-inline: 0.85rem;
+}
+
+.mushaf-pill-toolbar .mushaf-controls-pill {
+  padding-inline: 0 !important;
+  width: 44px;
+}
+
+.mushaf-viewport,
+.mushaf-track,
+.mushaf-page-body {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.mushaf-page {
+  width: 100%;
+  min-height: min(74vh, 900px);
+  padding: clamp(1.25rem, 2.5vw, 2.4rem) clamp(1rem, 3.8vw, 2.8rem) clamp(1.15rem, 2.6vw, 2rem);
+  border-radius: 24px;
+}
+
+.mushaf-page-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: flex-start;
+  row-gap: 0.8rem;
+  column-gap: 0.36em;
+  padding-block: 0.9rem 1.1rem;
+  text-align: right;
+  text-align-last: auto;
+  line-height: 2.08;
+}
+
+.mushaf-ayah {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+.mushaf-ayah-text {
+  font-size: clamp(1.9rem, 3vw, 3rem);
+  line-height: 1.95;
+  text-align: right;
+}
+
+.mushaf-ayah-number {
+  margin-inline: 0.12em 0.22em;
+}
+
+.verse-arabic,
+.mushaf-ayah-text,
+.self-check-modal-ayah,
+.memorisation-checker-ayah,
+.recitation-review-ayah,
+.session-evaluation-ayah {
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+  text-wrap: auto !important;
+}
+
+.verse-arabic .wbw-word,
+.verse-arabic word,
+.mushaf-ayah-text .wbw-word,
+.mushaf-ayah-text word,
+.self-check-modal-ayah .wbw-word,
+.self-check-modal-ayah word,
+.memorisation-checker-ayah .wbw-word,
+.memorisation-checker-ayah word,
+.recitation-review-ayah .wbw-word,
+.recitation-review-ayah word {
+  display: inline !important;
+  white-space: normal !important;
+  overflow-wrap: normal !important;
+  word-break: keep-all !important;
+}
+
+.self-check-modal {
+  width: min(1320px, calc(100vw - 24px));
+  max-height: min(92dvh, 920px);
+}
+
+.self-check-modal .self-check-modal-body {
+  gap: 14px !important;
+}
+
+.self-check-modal .self-check-modal-stage,
+.self-check-modal .self-check-recorder-card,
+.self-check-modal .self-check-review-card,
+.self-check-modal .recitation-check-panel-inline,
+.memorisation-checker-modal .memorisation-checker-stage,
+.memorisation-checker-modal .self-check-recorder-card {
+  background: color-mix(in srgb, var(--surface) 98%, white 2%);
+  border-color: color-mix(in srgb, var(--border) 88%, transparent);
+}
+
+.self-check-modal .self-check-review-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  align-items: center;
+}
+
+.self-check-review-audio {
+  width: 100%;
+  height: 42px;
+}
+
+.self-check-result-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 12px;
+}
+
+.self-check-result-btn {
+  min-height: 124px;
+  align-content: start;
+  justify-items: start;
+  text-align: left;
+  padding: 18px 20px;
+}
+
+.self-check-result-btn-label {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.self-check-result-btn-hint {
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.self-check-review-actions,
+.recitation-result-actions,
+.memorisation-checker-modal .recitation-result-actions {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+}
+
+.recitation-result-stats,
+.recitation-insights-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+}
+
+.recitation-review-ayah {
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 94%, var(--accent-light) 6%);
+  line-height: 2.1;
+}
+
+.recitation-check-footnotes {
+  display: grid;
+  gap: 10px;
+}
+
+.recordings-library-modal {
+  width: min(1180px, calc(100vw - 24px)) !important;
+}
 
 @media (max-width: 1024px) {
-  .tools-panel {
-    position: static;
-    max-height: none;
+  .workspace-shell-actions {
+    flex-basis: 100%;
+  }
+
+  .workspace-header-view-controls,
+  .quick-right-controls {
     width: 100%;
-  }
-
-  .workspace-shell-head {
-    grid-template-columns: 1fr;
-  }
-
-  .workspace-shell-actions,
-  .workspace-quick-controls,
-  .reading-toolbar,
-  .reading-toolbar-group {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .session-overview-card,
-  .completion-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .session-overview-actions,
-  .completion-actions,
-  .action-buttons-row,
-  .action-buttons-group {
-    flex-wrap: wrap;
-    width: 100%;
-  }
-
-  .action-btn,
-  .quick-ai-action,
-  .mushaf-pill {
-    min-width: 0;
-    flex: 1 1 auto;
-  }
-
-  .mushaf-page {
-    padding: clamp(1.5rem, 3vw, 2.5rem) clamp(0.75rem, 4vw, 2.5rem) clamp(1rem, 2vw, 2rem);
   }
 }
 
 @media (max-width: 768px) {
-  .main.container {
-    padding-inline: 0.75rem;
-  }
-
   .workspace-shell {
-    padding: 12px 14px;
-    border-radius: 16px;
+    padding: 14px;
+    border-radius: 20px;
   }
 
-  .verse-card {
-    min-height: auto;
-    padding: 1rem;
-    border-radius: 16px;
+  .workspace-shell-head {
+    gap: 12px;
   }
 
-  .reading-toolbar-controls,
-  .toolbar-dropdown-row,
-  .font-theme-border-row,
-  .workspace-shell-head,
-  .workspace-quick-controls {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
+  .workspace-shell-copy,
+  .workspace-shell-actions {
+    flex-basis: 100%;
+    min-width: 100%;
   }
 
-  .offcanvas.tools-offcanvas,
-  .offcanvas-end {
-    width: min(100vw, 420px);
+  .workspace-shell-main-title,
+  .workspace-shell-copy h1 {
+    font-size: 1.05rem;
+    -webkit-line-clamp: 3;
   }
 
-  .completion-stats {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .completion-stats-grid,
-  .summary-cards-row {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .saved-sessions-container {
-    padding: 1rem;
-  }
-
-  .memorisation-checker-modal .modal-dialog,
-  .self-check-modal .modal-dialog {
-    margin: 0.5rem;
-    max-width: calc(100vw - 1rem);
-  }
-
-  .session-overview-top {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  .session-overview-controls {
-    width: 100%;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-  }
-
-  .workspace-shell-actions .action-btn,
-  .action-buttons-group .action-btn {
-    flex: 1 1 calc(50% - 0.35rem);
-    min-width: 0;
-  }
-
-  .hifz-planner-shell,
-  .hifz-analytics-layer {
-    padding: 1rem;
-  }
-
-  .self-check-result-group {
+  .workspace-header-view-controls,
+  .quick-right-controls {
     grid-template-columns: 1fr;
   }
 
-  .self-check-review-actions {
-    grid-template-columns: 1fr;
+  .workspace-header-view-controls .view-mode-switch {
+    padding-inline: 0.7rem !important;
+    gap: 0.45rem !important;
   }
 
-  .recitation-result-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .view-mode-switch-label {
+    max-width: none;
+    font-size: 0.84rem;
   }
 
-  .recitation-insights-grid {
-    grid-template-columns: 1fr;
+  .workspace-shell-actions {
+    justify-items: stretch;
   }
 
-  .recitation-result-actions {
-    grid-template-columns: 1fr 1fr;
+  .workspace-shell-actions .action-buttons-group {
+    justify-content: flex-start !important;
   }
 
-  .recitation-result-actions .btn-primary {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 480px) {
-  .header-actions,
-  .workspace-header-row,
-  .workspace-shell-actions,
-  .action-buttons-group {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .action-btn span,
-  .quick-ai-action span {
-    font-size: 0.8125rem;
-  }
-
-  .verse-arabic,
-  .mushaf-ayah-text,
-  .self-check-modal-ayah,
-  .memorisation-checker-ayah {
-    font-size: clamp(1.25rem, 6vw, 1.75rem);
-    line-height: 1.85;
-  }
-
-  .completion-actions .action-btn,
-  .session-end-actions .action-btn,
-  .session-complete-actions .action-btn {
-    flex: 1 1 100%;
-    width: 100%;
+  .workspace-shell-actions .action-btn.primary,
+  .workspace-shell-actions .action-btn-exit {
+    flex: 1 1 calc(50% - 4px);
     justify-content: center;
   }
 
-  .summary-cards-row {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .tools-offcanvas .offcanvas-body {
-    padding: 0.75rem;
-  }
-
-  .memorisation-checker-modal,
-  .self-check-modal {
+  .mushaf-frame {
     padding: 0;
   }
 
-  .memorisation-checker-modal .modal-content,
-  .self-check-modal .modal-content {
-    border-radius: 12px;
+  .mushaf-pill-toolbar {
+    align-items: stretch !important;
+  }
+
+  .mushaf-toolbar-cluster-start,
+  .mushaf-toolbar-cluster-end {
+    flex: 1 1 100%;
+    justify-content: flex-start !important;
+  }
+
+  .mushaf-toolbar-dropdown,
+  .mushaf-pill-toolbar .mushaf-pill {
+    flex: 1 1 calc(50% - 4px);
+  }
+
+  .mushaf-pill-toolbar .mushaf-controls-pill {
+    flex: 0 0 44px;
+  }
+
+  .mushaf-page {
+    min-height: min(70vh, 760px);
+    padding: 1rem 0.9rem 1.1rem;
+    border-radius: 18px;
+  }
+
+  .mushaf-page-header h2 {
+    font-size: clamp(1.5rem, 7vw, 2.1rem);
+  }
+
+  .mushaf-bismillah {
+    font-size: clamp(1.25rem, 6vw, 1.8rem);
+  }
+
+  .mushaf-page-body {
+    row-gap: 0.65rem;
+    line-height: 1.95;
+  }
+
+  .mushaf-ayah-text {
+    font-size: clamp(1.55rem, 7vw, 2.2rem);
+    line-height: 1.82;
+  }
+
+  .self-check-modal .self-check-review-head {
+    grid-template-columns: 1fr;
+  }
+
+  .self-check-modal .self-check-modal-ayah-shell {
+    min-height: clamp(220px, 30dvh, 320px);
+  }
+
+  .self-check-modal .self-check-modal-ayah {
     min-height: auto;
+    padding: 12px;
+    font-size: clamp(1.65rem, 7vw, 2.6rem);
+  }
+
+  .self-check-review-actions,
+  .recitation-result-actions,
+  .memorisation-checker-modal .recitation-result-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .top-card-menu {
+    width: min(18rem, calc(100vw - 20px));
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Final memorisation UX overrides
+   Targets the remaining mobile mushaf compression issues and decouples the
+   help modal from Bootstrap nav/card defaults.
+   ------------------------------------------------------------------------- */
+
+.help-learning-dialog {
+  width: min(100%, 1040px);
+  max-width: 1040px;
+}
+
+.help-learning-modal {
+  width: min(100%, 1040px);
+  max-width: 1040px;
+  height: min(84vh, 760px);
+  border-radius: 30px;
+}
+
+.help-learning-body {
+  padding: 1.25rem;
+}
+
+.help-learning-shell {
+  display: grid;
+  grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr);
+  gap: 1.25rem;
+  min-height: 0;
+  height: 100%;
+}
+
+.help-learning-nav {
+  display: grid;
+  align-content: start;
+  gap: 0.7rem;
+  padding: 0.35rem;
+  border-radius: 1.4rem;
+  background: linear-gradient(180deg, rgba(255, 251, 245, 0.92), rgba(247, 240, 230, 0.78));
+  border: 1px solid rgba(154, 103, 56, 0.12);
+  overflow: auto;
+}
+
+.help-learning-nav-link {
+  appearance: none;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 4rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid transparent !important;
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.68) !important;
+  color: var(--accent) !important;
+  font-weight: 700;
+  box-shadow: none !important;
+  text-align: left;
+}
+
+.help-learning-nav-link span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.help-learning-nav-link i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.9rem;
+  background: rgba(154, 103, 56, 0.1);
+}
+
+.help-learning-nav-link:hover,
+.help-learning-nav-link:focus-visible,
+.help-learning-nav-link.active {
+  background: linear-gradient(180deg, rgba(191, 128, 69, 0.16), rgba(191, 128, 69, 0.12)) !important;
+  border-color: rgba(191, 128, 69, 0.32) !important;
+  color: color-mix(in srgb, var(--accent) 90%, #24160d) !important;
+}
+
+.help-learning-nav-link.active i,
+.help-learning-nav-link:hover i,
+.help-learning-nav-link:focus-visible i {
+  background: rgba(191, 128, 69, 0.16);
+}
+
+.help-learning-content-col {
+  min-width: 0;
+  min-height: 0;
+}
+
+.help-learning-card {
+  height: 100%;
+  min-height: 0;
+  border-radius: 1.6rem;
+}
+
+.help-learning-card-body {
+  gap: 1rem;
+  padding: 1.35rem;
+}
+
+.help-learning-copy h3 {
+  font-size: clamp(1.2rem, 2vw, 1.65rem);
+}
+
+.help-learning-copy p,
+.help-learning-detail-item span,
+.help-learning-best-for p {
+  font-size: 1rem;
+}
+
+.help-learning-detail-list {
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+.help-learning-detail-item,
+.help-learning-best-for {
+  min-height: 0;
+  padding: 1rem 1.05rem;
+}
+
+[data-theme="dark"] .help-learning-nav {
+  background: linear-gradient(180deg, rgba(45, 38, 31, 0.96), rgba(28, 24, 20, 0.92));
+  border-color: rgba(239, 193, 141, 0.12);
+}
+
+[data-theme="dark"] .help-learning-nav-link {
+  background: rgba(255, 247, 236, 0.04) !important;
+  color: #f4dcc1 !important;
+}
+
+[data-theme="dark"] .help-learning-nav-link i {
+  background: rgba(208, 160, 107, 0.12);
+}
+
+[data-theme="dark"] .help-learning-nav-link:hover,
+[data-theme="dark"] .help-learning-nav-link:focus-visible,
+[data-theme="dark"] .help-learning-nav-link.active {
+  background: rgba(208, 160, 107, 0.16) !important;
+  border-color: rgba(239, 193, 141, 0.26) !important;
+  color: #fff0db !important;
+}
+
+@media (max-width: 768px) {
+  .workspace-shell {
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .workspace-shell-head {
+    gap: 10px;
+  }
+
+  .workspace-shell-copy {
+    min-width: 0;
   }
 
   .workspace-shell-main-title,
   .workspace-shell-copy h1 {
     font-size: 1rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .workspace-shell-actions {
+    gap: 8px !important;
+  }
+
+  .workspace-header-view-controls,
+  .quick-right-controls {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 7px !important;
+  }
+
+  .workspace-header-view-controls .view-mode-switch,
+  .workspace-header-view-controls .font-dropdown-trigger {
+    min-height: 42px;
+    padding-inline: 0.75rem !important;
+  }
+
+  .workspace-shell[data-reading-mode="mushaf"] .quick-font-dropdown {
+    display: none;
+  }
+
+  .workspace-shell[data-reading-mode="mushaf"] .workspace-header-view-controls,
+  .workspace-shell[data-reading-mode="mushaf"] .quick-right-controls {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .view-mode-switch-label,
+  .workspace-header-view-controls .font-dropdown-trigger span {
+    font-size: 0.8rem;
+  }
+
+  .workspace-shell-actions .action-buttons-group {
+    justify-content: stretch !important;
+  }
+
+  .workspace-shell-actions .action-btn,
+  .workspace-shell-actions .top-card-ellipsis {
+    min-height: 42px;
+    height: 42px;
+  }
+
+  .top-card-menu {
+    width: min(17rem, calc(100vw - 18px));
+    padding: 7px;
+  }
+
+  .top-card-menu button {
+    min-height: 42px;
+  }
+
+  .mushaf-workspace {
+    padding: 8px 0 0;
+  }
+
+  .mushaf-frame {
+    width: 100%;
+    padding: 0;
+  }
+
+  .mushaf-pill-toolbar {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    padding: 2px 2px 6px;
+    margin-inline: -2px;
+    scrollbar-width: none;
+  }
+
+  .mushaf-pill-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mushaf-toolbar-cluster,
+  .mushaf-toolbar-cluster-start,
+  .mushaf-toolbar-cluster-end {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    min-width: max-content !important;
+    gap: 8px;
+  }
+
+  .mushaf-toolbar-dropdown {
+    flex: 0 0 auto !important;
+    min-width: auto;
+  }
+
+  .mushaf-toolbar-trigger,
+  .mushaf-pill-toolbar .mushaf-pill {
+    width: auto !important;
+    min-width: 42px !important;
+    min-height: 42px;
+    padding-inline: 0.7rem !important;
+    white-space: nowrap;
+    flex: 0 0 auto !important;
+  }
+
+  .mushaf-toolbar-trigger-label,
+  .mushaf-pill-label {
+    max-width: 4.8rem;
+    font-size: 0.78rem;
+  }
+
+  .mushaf-pill-toolbar .mushaf-controls-pill {
+    width: 42px !important;
+    padding-inline: 0 !important;
+  }
+
+  .mushaf-toolbar-menu {
+    max-width: min(16rem, calc(100vw - 20px));
   }
 
   .mushaf-page {
-    min-height: min(62vh, 640px);
-    border-width: 4px;
+    min-height: min(68vh, 720px);
+    padding: 0.95rem 0.8rem 1rem;
+    border-radius: 18px;
   }
 
-  .self-check-result-group {
+  .mushaf-page-body {
+    row-gap: 0.55rem;
+    column-gap: 0.28em;
+    line-height: 1.88;
+    padding-block: 0.75rem 0.9rem;
+  }
+
+  .mushaf-ayah-text {
+    font-size: clamp(1.45rem, 6.8vw, 2rem);
+    line-height: 1.72;
+  }
+
+  .help-learning-dialog,
+  .help-learning-modal {
+    width: min(100%, calc(100vw - 16px));
+    max-width: calc(100vw - 16px);
+  }
+
+  .help-learning-modal {
+    height: min(88vh, 820px);
+    border-radius: 24px;
+  }
+
+  .help-learning-header {
+    padding: 1rem;
+  }
+
+  .help-learning-header h2 {
+    font-size: clamp(1.2rem, 7vw, 1.9rem);
+  }
+
+  .help-learning-header p {
+    font-size: 0.95rem;
+  }
+
+  .help-learning-body {
+    padding: 1rem;
+  }
+
+  .help-learning-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .help-learning-nav {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(13rem, 1fr);
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.3rem;
+  }
+
+  .help-learning-nav-link {
+    min-height: 3.5rem;
+    padding: 0.85rem 0.9rem;
+  }
+
+  .help-learning-card-body {
+    padding: 1rem;
+  }
+
+  .help-learning-card-head {
     grid-template-columns: 1fr;
+    gap: 0.8rem;
   }
 
-  .self-check-review-actions {
-    grid-template-columns: 1fr;
+  .help-learning-icon {
+    width: 3rem;
+    height: 3rem;
   }
 
-  .recitation-result-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .help-learning-detail-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ============================================================
+   AI Recitation / Self-Check modal — responsiveness + perf
+   Placed at end of file so these rules win by source order over
+   the desktop-first layout defined earlier.
+   ============================================================ */
+@media (max-width: 1024px) {
+  .modal-content.self-check-modal {
+    width: min(100%, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px);
   }
 
-  .recitation-insights-grid {
-    grid-template-columns: 1fr;
+  .self-check-modal .self-check-section-head {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
   }
 
-  .recitation-result-actions {
-    grid-template-columns: 1fr 1fr;
+  .self-check-modal .self-check-header-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    grid-template-columns: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .self-check-modal-overlay {
+    padding: 0;
+    align-items: stretch;
+    /* backdrop blur is GPU-expensive on phones and contributes to jank */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
-  .recitation-result-actions .btn-primary {
-    grid-column: 1 / -1;
+  .modal-content.self-check-modal {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    overflow: hidden;
+  }
+
+  .self-check-modal .self-check-modal-body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.85rem;
+    gap: 0.85rem;
+  }
+
+  .self-check-modal .self-check-modal-stage {
+    padding: 0.6rem;
+    gap: 0.6rem;
+  }
+
+  /* Toolbar: horizontal scroll instead of a clipped fixed grid */
+  .self-check-modal .self-check-header-tools {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    grid-template-columns: none;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .self-check-modal .self-check-header-tools::-webkit-scrollbar {
+    display: none;
+  }
+
+  .self-check-modal .self-check-toolbar-btn {
+    flex: 0 0 auto;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .self-check-modal .self-check-modal-ayah-shell {
+    min-height: 0;
+    max-height: none;
+    padding: 0.5rem;
+  }
+
+  .self-check-modal .self-check-modal-ayah {
+    width: 100%;
+    font-size: clamp(1.6rem, 7.4vw, 2.6rem) !important;
+    line-height: 2.05 !important;
+  }
+
+  .self-check-modal .self-check-modal-recorder-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+
+  .self-check-modal .recitation-result-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .self-check-modal .recall-mode-status {
+    margin: 0.6rem 0;
+  }
+
+  /* Trim continuous compositing work on touch devices */
+  .self-check-modal .self-check-recorder-card.recording {
+    animation: none !important;
+  }
+
+  .self-check-modal .self-check-modal-ayah .wbw-word,
+  .self-check-modal .self-check-modal-ayah word {
+    will-change: auto !important;
+    animation: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .self-check-modal .self-check-recorder-card.recording,
+  .self-check-modal .self-check-modal-ayah .wbw-word,
+  .self-check-modal .self-check-modal-ayah word,
+  .self-check-modal .recall-mode-status > .bi {
+    animation: none !important;
   }
 }
