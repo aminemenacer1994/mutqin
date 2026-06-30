@@ -3,23 +3,23 @@
     <div class="donation-shell">
       <div class="donation-hero">
         <div class="donation-copy">
-          <span class="donation-kicker">Donate</span>
-          <h1>Support a simpler memorisation experience.</h1>
+          <span class="donation-kicker">{{ t('donate.donate') }}</span>
+          <h1>{{ t('donate.support_a_simpler_memorisation_experience') }}</h1>
           <p class="donation-lead">
             Support helps improve the product, refine the learning flow, and keep Mutqin easier to use for
             students returning every day. The goal is thoughtful iteration that makes study feel calmer.
           </p>
 
           <div class="donation-signals">
-            <span><i class="bi bi-tools"></i> Product maintenance</span>
-            <span><i class="bi bi-lightning-charge"></i> Faster iteration</span>
-            <span><i class="bi bi-heart"></i> Better student experience</span>
+            <span><i class="bi bi-tools"></i> {{ t('donate.product_maintenance') }}</span>
+            <span><i class="bi bi-lightning-charge"></i> {{ t('donate.faster_iteration') }}</span>
+            <span><i class="bi bi-heart"></i> {{ t('donate.better_student_experience') }}</span>
           </div>
         </div>
 
         <aside class="donation-focus">
-          <span class="donation-focus-label">Support focus</span>
-          <strong>Fund the next practical improvements students feel immediately.</strong>
+          <span class="donation-focus-label">{{ t('donate.support_focus') }}</span>
+          <strong>{{ t('donate.fund_the_next_practical_improvements_students_feel') }}</strong>
           <p>
             Contributions help shape onboarding, revision clarity, and the everyday usability details that
             make Mutqin easier to return to.
@@ -29,28 +29,28 @@
 
       <div class="donation-grid">
         <article class="donation-tier">
-          <span class="donation-tier-badge">Flexible</span>
-          <strong>One-time support</strong>
-          <p>Help with ongoing improvements, maintenance, and careful polishing across the platform.</p>
+          <span class="donation-tier-badge">{{ t('donate.flexible') }}</span>
+          <strong>{{ t('donate.one_time_support') }}</strong>
+          <p>{{ t('donate.help_with_ongoing_improvements_maintenance_and_car') }}</p>
         </article>
         <article class="donation-tier donation-tier-featured">
-          <span class="donation-tier-badge">Steady</span>
-          <strong>Monthly support</strong>
-          <p>Support steady iteration on onboarding, revision, and usability with a predictable contribution.</p>
+          <span class="donation-tier-badge">{{ t('memorisation.badges.steady') }}</span>
+          <strong>{{ t('donate.monthly_support') }}</strong>
+          <p>{{ t('donate.support_steady_iteration_on_onboarding_revision_an') }}</p>
         </article>
         <article class="donation-tier">
-          <span class="donation-tier-badge">Targeted</span>
-          <strong>Project support</strong>
-          <p>Back focused improvements for a specific part of the Mutqin experience that needs extra attention.</p>
+          <span class="donation-tier-badge">{{ t('donate.targeted') }}</span>
+          <strong>{{ t('donate.project_support') }}</strong>
+          <p>{{ t('donate.back_focused_improvements_for_a_specific_part_of_t') }}</p>
         </article>
       </div>
 
       <div class="donation-cta">
         <div>
-          <span class="donation-cta-label">Start the conversation</span>
-          <p>If you want to support Mutqin, contact us with the subject "Donation".</p>
+          <span class="donation-cta-label">{{ t('donate.start_the_conversation') }}</span>
+          <p>{{ t('donate.if_you_want_to_support_mutqin_contact_us_with_the_') }}</p>
         </div>
-        <a href="/#contact">Contact Us</a>
+        <a href="/#contact">{{ t('donate.contact_us') }}</a>
       </div>
     </div>
   </section>
@@ -327,7 +327,21 @@ export default {
   }
 }
 
-@media (min-width: 900px) {
+@media (max-width: 768px) {
+  .donation-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .donation-cta {
+    grid-template-columns: 1fr;
+  }
+
+  .donation-cta a {
+    width: 100%;
+  }
+}
+
+@media (min-width: 769px) {
   .donation-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

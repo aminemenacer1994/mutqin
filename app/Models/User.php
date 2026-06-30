@@ -35,6 +35,7 @@ class User extends Authenticatable
         'subscription_status',
         'subscription_trial_ends_at',
         'subscription_current_period_ends_at',
+        'locale',
     ];
 
     /**

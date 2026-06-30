@@ -2,48 +2,47 @@
   <div class="page">
 
     <section class="hero">
-      <span class="tag">Mutqin • Hifz Companion</span>
+      <span class="tag">{{ t('about.tag') }}</span>
 
-      <h1>
-        A structured path to mastering the Qur’an
-      </h1>
+      <h1>{{ t('about.heroTitle') }}</h1>
 
-      <p>
-        Mutqin is designed to help you memorise, revise, and retain the Qur’an with clarity and consistency —
-        supported by intelligent guidance and gentle correction.
-      </p>
+      <p>{{ t('about.heroDesc') }}</p>
 
       <div class="cta">
-        <button class="primary">Begin Your Journey</button>
-        <button class="secondary">Learn More</button>
+        <button class="primary">{{ t('about.ctaPrimary') }}</button>
+        <button class="secondary">{{ t('about.ctaSecondary') }}</button>
       </div>
     </section>
 
     <section class="grid">
 
       <div class="card">
-        <h3>Purpose</h3>
-        <p>To make Qur’an memorisation structured, sustainable, and deeply personal.</p>
+        <h3>{{ t('about.purposeTitle') }}</h3>
+        <p>{{ t('about.purposeDesc') }}</p>
       </div>
 
       <div class="card">
-        <h3>Approach</h3>
-        <p>AI-supported learning that respects traditional teaching methods.</p>
+        <h3>{{ t('about.approachTitle') }}</h3>
+        <p>{{ t('about.approachDesc') }}</p>
       </div>
 
       <div class="card highlight">
-        <h3>Outcome</h3>
-        <p>Stronger retention, consistent revision, and improved accuracy.</p>
+        <h3>{{ t('about.outcomeTitle') }}</h3>
+        <p>{{ t('about.outcomeDesc') }}</p>
       </div>
 
     </section>
 
-    <section class="verse">
-      “Indeed, We have made the Qur’an easy to remember.” — 54:17
-    </section>
+    <section class="verse">{{ t('about.verse') }}</section>
 
   </div>
 </template>
+
+<script>
+export default {
+  name: 'AboutPage',
+}
+</script>
 
 <style scoped>
 .page{
@@ -152,6 +151,36 @@ button{
   margin-top:40px;
   color:var(--text-muted, #6c6258);
   font-style:italic;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page {
+    padding: clamp(24px, 5vw, 40px) var(--page-gutter, clamp(12px, 4vw, 20px));
+  }
+
+  .cta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: clamp(28px, 8vw, 34px);
+  }
+}
+
+html[dir="rtl"] .hero,
+html[dir="rtl"] .verse {
+  text-align: center;
 }
 
 </style>

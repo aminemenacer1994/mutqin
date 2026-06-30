@@ -7,11 +7,43 @@ import AboutUsPage from './views/AboutUs.vue';
 import OurMissionPage from './views/OurMission.vue';
 import DonationPage from './views/DonationPage.vue';
 import { setupI18n, setLocale } from './i18n';
+import { i18nMixin } from './mixins/i18nMixin';
 
 // The memorisation workspace is by far the heaviest component. It is only used
 // on the memorisation page, so load it as a separate async chunk to keep the
 // main bundle (and every other page) lean.
-const Memorisation = defineAsyncComponent(() => import('./views/Memorisation.vue'));
+const MemorisationBootFallback = {
+    template: `
+        <div class="memorisation-boot-fallback" role="status" aria-live="polite">
+            <div class="memorisation-boot-card">
+                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                <strong>Loading memorisation workspace…</strong>
+                <span>Preparing your session tools.</span>
+            </div>
+        </div>
+    `,
+};
+
+const MemorisationLoadError = {
+    props: { error: { type: Object, default: null } },
+    template: `
+        <div class="memorisation-boot-fallback memorisation-boot-fallback-error" role="alert">
+            <div class="memorisation-boot-card">
+                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                <strong>Memorisation workspace failed to load</strong>
+                <span>Refresh the page. If this keeps happening, run <code>npm run dev</code> and hard-refresh.</span>
+            </div>
+        </div>
+    `,
+};
+
+const Memorisation = defineAsyncComponent({
+    loader: () => import('./views/Memorisation.vue'),
+    loadingComponent: MemorisationBootFallback,
+    errorComponent: MemorisationLoadError,
+    delay: 0,
+    timeout: 120000,
+});
 
 async function bootstrapApp() {
     const app = createApp({});
@@ -55,6 +87,7 @@ async function bootstrapApp() {
     const i18n = await setupI18n();
 
     app.use(i18n);
+    app.mixin(i18nMixin);
     app.config.globalProperties.$setLocale = (locale) => setLocale(i18n, locale);
     window.mutqinSetLocale = (locale) => setLocale(i18n, locale);
     window.mutqinGetLocale = () => i18n.global.locale.value;
@@ -69,7 +102,23 @@ async function bootstrapApp() {
     app.mount('#app');
 }
 
-bootstrapApp();
+function showBootstrapFailure(error) {
+    console.error('Mutqin app bootstrap failed:', error);
+    const mountTarget = document.getElementById('app');
+    if (!mountTarget) return;
+    mountTarget.innerHTML = `
+        <main id="mainContent" tabindex="-1">
+            <div class="memorisation-boot-fallback memorisation-boot-fallback-error" role="alert">
+                <div class="memorisation-boot-card">
+                    <strong>Mutqin failed to start</strong>
+                    <span>Refresh the page. If this continues, rebuild frontend assets with <code>npm run dev</code>.</span>
+                </div>
+            </div>
+        </main>
+    `;
+}
+
+bootstrapApp().catch(showBootstrapFailure);
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

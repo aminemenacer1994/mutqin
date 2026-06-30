@@ -1,0 +1,289 @@
+{
+  "memorisation": {
+    "techniques": {
+      "focusDescription": "Focus Mode dims all non-active verses, helping you concentrate on the current ayah without distractions.",
+      "chainingOffDescription": "Play the selected ayahs in order without chaining.",
+      "chainingCumulativeDescription": "Build longer runs by adding one ayah at a time.",
+      "chainingLinkingDescription": "Strengthen transitions between neighbouring ayahs.",
+      "chainingLinkingHint": "Practice ayahs individually, then in pairs.",
+      "chainingCumulativeHint": "Start with first ayah, then add one more each time.",
+      "chainingOffSub": "Play the selected ayahs in order without chaining.",
+      "chainingCumulativeSub": "Build longer connected runs from the first ayah outward.",
+      "chainingLinkingSub": "Train the transition between neighbouring ayahs.",
+      "chainingOffPreview": "Flow: selected ayahs in order, each ayah repeated {count} time(s).",
+      "chainingCumulativePreview": "Cumulative flow: repeat 1, then 1-2, then 1-2-3. Each block repeats {count} time(s).",
+      "chainingLinkingPreview": "Linking flow: repeat the current ayah, the next ayah, then both together. Each step repeats {count} time(s).",
+      "chainingOffLabel": "Chaining off · {count} repeats",
+      "chainingCumulativeLabel": "Cumulative · {count} repeats",
+      "chainingLinkingLabel": "Linking · {count} repeats",
+      "focusActiveDescription": "Non-active verses are softened so the current ayah stays central.",
+      "blurActiveDescription": "Upcoming verses are hidden with {px}px blur for active recall.",
+      "chainingActiveDescription": "{count} repeat(s) per chaining step.",
+      "cumulativeChaining": "Cumulative Chaining",
+      "linkingChaining": "Linking Chaining",
+      "anchorOffDescription": "Anchor mode off · use key words as memory hooks",
+      "anchorUsingDescription": "Using {anchors} as mental anchors for each ayah",
+      "anchorFirstLast": "first/last word",
+      "anchorKeyPairs": "key word pairs",
+      "chainingWhyCumulative": "Use when you want to build longer runs by adding one ayah at a time.",
+      "chainingWhyLinking": "Use when you want to strengthen transitions between neighboring ayahs.",
+      "chainingNextCumulative": "Next: add one ayah to the block",
+      "chainingNextLinking": "Next: single -> next -> pair"
+    },
+    "onboarding": {
+      "stepCounter": "Step {current} of {total}",
+      "finish": "Finish",
+      "useSampleSession": "Use sample session",
+      "steps": {
+        "setup": {
+          "title": "Set up a session",
+          "stepLabel": "Session setup",
+          "body": "Choose a surah, set the ayah range, and pick a reciter from the session controls before you begin.",
+          "points": [
+            "The sample session starts with a short range",
+            "Repeat counts and playback speed stay in the controls",
+            "You can reopen setup at any time"
+          ],
+          "previewTitle": "Real session inputs",
+          "previewSubtitle": "Session setup already exists in the tools panel.",
+          "previewItems": ["Surah", "Range", "Reciter"]
+        },
+        "reading": {
+          "title": "Pick a reading view",
+          "stepLabel": "Reading view",
+          "body": "Switch between stacked and mushaf layouts, then use translation, transliteration, tajweed, and font controls when needed.",
+          "points": [
+            "Keep the main text clean when you do not need extra aids",
+            "Mushaf mode keeps the page layout close to the Quran view",
+            "Fonts stay available from the toolbar"
+          ],
+          "previewTitle": "Reading controls",
+          "previewSubtitle": "The view toggle and reading aids are built in.",
+          "previewItems": ["Stacked", "Mushaf", "Tajweed"]
+        },
+        "practice": {
+          "title": "Practice with built-in tools",
+          "stepLabel": "Practice tools",
+          "body": "Use focus mode, blur mode, chaining, and anchor mode when you want more structure around the active ayah.",
+          "points": [
+            "Focus mode narrows attention to the active ayah",
+            "Blur mode hides the next ayahs until you are ready",
+            "Chaining and anchor mode support harder passages"
+          ],
+          "previewTitle": "Technique controls",
+          "previewSubtitle": "The techniques tab is already part of the workspace.",
+          "previewItems": ["Focus", "Blur", "Anchor"]
+        },
+        "review": {
+          "title": "Review and return",
+          "stepLabel": "Review & return",
+          "body": "Saved sessions, recordings, and insights keep the next session close to the exact ayahs that need work.",
+          "points": [
+            "Saved sessions let you resume where you left off",
+            "Recording history keeps prior attempts visible",
+            "AI recite and AI memory checks are always available from the workspace"
+          ],
+          "previewTitle": "What you can return to",
+          "previewSubtitle": "Review and resume are already built into the system.",
+          "previewItems": ["Saved sessions", "Recordings", "Insights"]
+        }
+      }
+    },
+    "analytics": {
+      "todayProgress": "Today's progress",
+      "todayProgressDesc": "{covered}/{total} ayahs covered.",
+      "streak": "Streak",
+      "streakDesc": "Active study days in a row.",
+      "memoryBreakdown": "Memory breakdown",
+      "spacedHealth": "Spaced repetition health",
+      "recitationQuality": "Recitation quality",
+      "rowNew": "New",
+      "rowDue": "Due",
+      "rowWeak": "Weak",
+      "rowMastered": "Mastered",
+      "rowQueuedToday": "queued today",
+      "rowReviewNow": "review now",
+      "rowNeedsCare": "needs care",
+      "rowSteadyAyahs": "steady ayahs",
+      "rowDueNow": "Due now",
+      "rowUpcoming": "Upcoming",
+      "rowReviews": "reviews",
+      "rowScheduled": "scheduled",
+      "rowAvgRetention": "Average retention",
+      "rowLoad": "{load} load",
+      "rowAvgQuality": "Average quality",
+      "rowChecks": "Checks",
+      "rowCompleted": "completed",
+      "rowReady": "Ready",
+      "noDataYet": "No data yet",
+      "noDataDetail": "Start a session to build analytics",
+      "defaultInsight": "Keep today small and consistent"
+    },
+    "guided": {
+      "learn": "Learn",
+      "practice": "Practice",
+      "recall": "Recall",
+      "review": "Review",
+      "listenFollow": "Listen & Follow",
+      "tryReciting": "Try Reciting",
+      "continue": "Continue",
+      "learnInstruction": "Listen and follow the recitation.",
+      "practiceInstruction": "Try reciting with the ayah still partially visible.",
+      "recallInstruction": "Recall the ayah before moving forward.",
+      "reviewInstruction": "Review the verses due now.",
+      "defaultInstruction": "Continue your session.",
+      "start": "Start",
+      "play": "Play",
+      "chooseSurahHint": "Choose a surah and range, then start.",
+      "versesToReview": "You have {count} verses to review.",
+      "reviewDueHint": "Review what is due.",
+      "playActiveHint": "Play the active ayah. Use Tools for translation and word-by-word.",
+      "kickerReview": "✨ Time to refresh",
+      "kickerPlaying": "🌙 Keeping the rhythm steady",
+      "kickerDefault": "🌿 Begin with Bismillah, keep your heart with the ayah",
+      "reviewBodyDue": "You have {count} ayahs awaiting review. Revisit them gently and keep the chain strong.",
+      "reviewBodyDefault": "Return to this ayah with a calm review before moving ahead.",
+      "reviewBodySuffix": "Keep your tongue, eyes, and heart together on this ayah.",
+      "beforeBegin": "Before you begin",
+      "duringSession": "During the session",
+      "afterEachAyah": "After each ayah",
+      "keepGoing": "Keep going",
+      "listenAndFollow": "Listen and follow.",
+      "reciteFirstReveal": "Recite first, then reveal.",
+      "tryRecitingMinimal": "Try reciting with minimal support.",
+      "reviewVersesDue": "Review what is due.",
+      "versesDueCount": "{count} verses to review."
+    },
+    "sessionEnd": {
+      "reviewInsights": "Review insights",
+      "reviewInsightsDesc": "See your session analytics",
+      "saveSession": "Save session",
+      "saveSessionDesc": "Keep this completed range",
+      "resetRange": "Reset range",
+      "resetRangeDesc": "Play same range again",
+      "createSession": "Create new session",
+      "createSessionDesc": "Choose different surah or range"
+    },
+    "sessionType": {
+      "label": "Memorisation",
+      "nowPlaying": "Now playing",
+      "session": "Session",
+      "ayah": "Ayah {n}",
+      "ayahLabel": "Ayah",
+      "pause": "Pause",
+      "startSession": "Start session",
+      "advanced": "Advanced",
+      "beginner": "Beginner",
+      "sessionExplanation": "{mode} session using {chaining}."
+    },
+    "common": {
+      "mushafSyncMessage": "Ayahs are loaded, but the mushaf page list has not synced yet. Switch back to Stacked or reopen this session.",
+      "fullQuran": "Full Quran",
+      "filterValue": "Filter value",
+      "noSurah": "No surah",
+      "currentSession": "Current session",
+      "confirm": "Confirm",
+      "stop": "Stop",
+      "savedAt": "Saved {date}",
+      "lastOpened": "Last opened {date}",
+      "rangeLabel": "Range {start}-{end}",
+      "manualAdvance": "manual advance",
+      "autoAdvance": "auto advance",
+      "plainSequence": "plain sequence",
+      "chainingLabel": "{method} chaining",
+      "setupSummary": "{count}x repeats, {mode}, {chaining}",
+      "noReadingAids": "No reading aids active",
+      "translationOn": "Translation on",
+      "transliterationOn": "Transliteration on",
+      "wordByWordOn": "Word-by-word on",
+      "wordAudioOn": "Word audio on",
+      "tajweedOn": "Tajweed on",
+      "fontLabel": "Font {font}",
+      "modeLabel": "{label} mode"
+    },
+    "search": {
+      "juzNumber": "Juz number",
+      "hizbNumber": "Hizb number",
+      "pageNumber": "Page number",
+      "surah": "Surah",
+      "ayahNumber": "Ayah number",
+      "wordPosition": "Word position",
+      "wordNumber": "Word number"
+    },
+    "fonts": {
+      "uthmanic": "Uthmanic Hafs",
+      "amiri": "Amiri Quran",
+      "naskh": "Noto Naskh Arabic",
+      "scheherazade": "Scheherazade New",
+      "lateef": "Lateef"
+    }
+  },
+  "hifzPlan": {
+    "wizard": {
+      "editTitle": "Edit Hifz Plan",
+      "createTitle": "Create Your Hifz Plan",
+      "savePlan": "Save Hifz Plan",
+      "startJourney": "Start Hifz Journey",
+      "createPlan": "Create Plan",
+      "chooseSurahPlaceholder": "Choose a Surah",
+      "stepCounter": "Step {current} of {total}",
+      "yourPlan": "Your plan",
+      "to": "To",
+      "ayahRange": "Ayah Range",
+      "studyFlow": "Study Flow",
+      "reciterLabel": "Reciter",
+      "steps": {
+        "goal": { "label": "Goal", "headline": "Choose today's goal" },
+        "style": { "label": "Style", "headline": "Pick your daily pace" },
+        "flow": { "label": "Flow", "headline": "Choose your study flow" },
+        "support": { "label": "Support", "headline": "Set your support level" },
+        "playback": { "label": "Playback", "headline": "Choose your recitation setup" },
+        "summary": { "label": "Summary", "headline": "Start your Hifz journey" }
+      },
+      "goals": {
+        "light": { "title": "Light", "subtitle": "1-3 ayahs/day", "detail": "A lighter workload for busy days, with more time for careful revision and steady confidence." },
+        "balanced": { "title": "Balanced", "subtitle": "3-5 ayahs/day", "detail": "Maintain a steady pace with enough revision to strengthen long-term memory." },
+        "intensive": { "title": "Intensive", "subtitle": "5-10 ayahs/day", "detail": "Move faster through memorisation while accepting a heavier daily revision load." }
+      },
+      "styles": {
+        "light": { "title": "Light", "subtitle": "Low pressure, easy to maintain.", "detail": "Best for a calm routine where consistency matters more than speed." },
+        "balanced": { "title": "Balanced", "subtitle": "Moderate pace and revision.", "detail": "A practical daily rhythm for new ayahs, review, and long-term retention." },
+        "intensive": { "title": "Intensive", "subtitle": "Higher pace, stronger commitment.", "detail": "Designed for faster progress with tighter daily structure and more review." }
+      },
+      "focus": {
+        "newPriority": { "title": "New Memorisation First", "subtitle": "Start with fresh ayahs.", "detail": "Keeps momentum high while still scheduling reviews after new work." },
+        "revisionPriority": { "title": "Revision First", "subtitle": "Protect what you already know.", "detail": "Places older memorisation first so retention stays strong before adding more." },
+        "mixed": { "title": "Mixed Flow", "subtitle": "Balanced new and review work.", "detail": "Blends new memorisation and revision into one manageable daily plan." },
+        "weakAyahFocus": { "title": "Weak Ayah Focus", "subtitle": "Repair fragile memorisation.", "detail": "Gives extra attention to ayahs that need reinforcement before they become backlog." }
+      },
+      "support": {
+        "gentle": { "title": "Gentle Guidance", "subtitle": "Light checking and softer feedback.", "detail": "Best if you want a lighter workload while building confidence and consistency." },
+        "standard": { "title": "Standard Support", "subtitle": "Balanced checking and practical feedback.", "detail": "Best for most learners who want useful correction without slowing the session down." },
+        "highPrecision": { "title": "High Precision Mode", "subtitle": "Closer checking for stricter mastery.", "detail": "Best when you want tighter correction and can handle a more demanding session." }
+      },
+      "forecast": {
+        "totalAyahs": "Total Ayahs",
+        "totalPages": "Total Pages",
+        "totalHizb": "Total Hizb",
+        "totalJuz": "Total Juz",
+        "dailyTarget": "Daily Target",
+        "dailyTargetValue": "{count} Ayahs / Day",
+        "estimatedDuration": "Estimated Duration",
+        "estimatedCompletion": "Estimated Completion",
+        "learningStyle": "Learning Style",
+        "supportLevel": "Support Level",
+        "repeatsPerAyah": "Repeats per Ayah",
+        "playbackSpeed": "Playback Speed",
+        "retentionReviews": "Retention Reviews",
+        "retentionSchedule": "1, 3, 7, 14, 30, 60 days",
+        "firstReview": "First review"
+      },
+      "validation": {
+        "dailyTarget": "Set a realistic number of new ayahs for each day.",
+        "validRange": "Enter a valid ayah range or leave both range fields blank.",
+        "repeatsRequired": "Choose how many times each ayah should repeat.",
+        "reciterRequired": "Choose a reciter before you continue."
+      }
+    }
+  }
+}

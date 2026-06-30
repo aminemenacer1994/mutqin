@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ContactSubmissionController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Api\Learning\AnalyticsController;
 use App\Http\Controllers\Api\Learning\ContinueController;
 use App\Http\Controllers\Api\Learning\MigrateLocalStorageController;
@@ -32,4 +33,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/state', [StateSyncController::class, 'store'])->name('api.state.store');
 
     Route::post('/migrate-local-storage', [MigrateLocalStorageController::class, 'store'])->name('api.migrate-local-storage');
+
+    Route::patch('/profile/locale', [ProfileController::class, 'updateLocale'])->name('api.profile.locale');
 });

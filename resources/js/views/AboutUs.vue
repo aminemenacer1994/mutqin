@@ -3,27 +3,27 @@
     <div class="story-shell">
       <div class="story-hero">
         <div class="story-copy">
-          <span class="story-kicker">About Mutqin</span>
-          <h1>Built for focused Quran practice.</h1>
+          <span class="story-kicker">{{ t('aboutUs.kicker') }}</span>
+          <h1>{{ t('aboutUs.built_for_focused_quran_practice') }}</h1>
           <p class="story-lead">
             Mutqin helps students memorise, revise, and return to weak ayahs without getting lost in clutter.
             The experience is designed to feel calm, direct, and supportive from the first session onward.
           </p>
 
           <div class="story-signals">
-            <span><i class="bi bi-stars"></i> Calm study flow</span>
-            <span><i class="bi bi-arrow-repeat"></i> Revision-led learning</span>
-            <span><i class="bi bi-shield-check"></i> Built around consistency</span>
+            <span><i class="bi bi-stars"></i> {{ t('aboutUs.calm_study_flow') }}</span>
+            <span><i class="bi bi-arrow-repeat"></i> {{ t('aboutUs.revision_led_learning') }}</span>
+            <span><i class="bi bi-shield-check"></i> {{ t('aboutUs.built_around_consistency') }}</span>
           </div>
         </div>
 
         <aside class="story-panel" aria-label="Mutqin summary">
-          <span class="story-panel-label">Why people stay</span>
-          <strong>Less friction, clearer progress, better return points.</strong>
+          <span class="story-panel-label">{{ t('aboutUs.why_people_stay') }}</span>
+          <strong>{{ t('aboutUs.less_friction_clearer_progress_better_return_point') }}</strong>
           <ul>
-            <li><i class="bi bi-check2-circle"></i> Session setup is simple enough for daily use.</li>
-            <li><i class="bi bi-check2-circle"></i> Revision signals help learners revisit what needs attention.</li>
-            <li><i class="bi bi-check2-circle"></i> The interface stays focused instead of overwhelming.</li>
+            <li><i class="bi bi-check2-circle"></i> {{ t('aboutUs.session_setup_is_simple_enough_for_daily_use') }}</li>
+            <li><i class="bi bi-check2-circle"></i> {{ t('aboutUs.revision_signals_help_learners_revisit_what_needs_') }}</li>
+            <li><i class="bi bi-check2-circle"></i> {{ t('aboutUs.the_interface_stays_focused_instead_of_overwhelmin') }}</li>
           </ul>
         </aside>
       </div>
@@ -31,7 +31,7 @@
       <div class="story-columns">
         <article>
           <span class="story-icon"><i class="bi bi-compass"></i></span>
-          <h2>Why it exists</h2>
+          <h2>{{ t('aboutUs.why_it_exists') }}</h2>
           <p>
             Many learners can repeat well in one sitting but struggle to keep review organised over time.
             Mutqin reduces that uncertainty and makes the next useful step easier to spot.
@@ -39,7 +39,7 @@
         </article>
         <article>
           <span class="story-icon"><i class="bi bi-journal-text"></i></span>
-          <h2>What it does</h2>
+          <h2>{{ t('aboutUs.what_it_does') }}</h2>
           <p>
             It brings session setup, saved progress, recitation checks, and revision signals into one
             calmer workspace that supports everyday memorisation.
@@ -47,7 +47,7 @@
         </article>
         <article>
           <span class="story-icon"><i class="bi bi-people"></i></span>
-          <h2>What it respects</h2>
+          <h2>{{ t('aboutUs.what_it_respects') }}</h2>
           <p>
             It supports real study, teacher guidance, and consistent revision. The product is there to
             clarify the routine, not replace it.
@@ -57,16 +57,16 @@
 
       <div class="story-band">
         <div>
-          <span class="story-band-label">The product principle</span>
+          <span class="story-band-label">{{ t('aboutUs.the_product_principle') }}</span>
           <p>
             Every part of Mutqin is shaped around one question: does this make the student more likely to
             return tomorrow with confidence?
           </p>
         </div>
         <div class="story-band-metrics">
-          <span>Focused workflow</span>
-          <span>Reliable revision</span>
-          <span>Cleaner decisions</span>
+          <span>{{ t('aboutUs.focused_workflow') }}</span>
+          <span>{{ t('aboutUs.reliable_revision') }}</span>
+          <span>{{ t('aboutUs.cleaner_decisions') }}</span>
         </div>
       </div>
     </div>
@@ -343,7 +343,23 @@ export default {
   }
 }
 
-@media (min-width: 900px) {
+@media (max-width: 768px) {
+  .story-hero,
+  .donation-hero,
+  .mission-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .donation-cta {
+    grid-template-columns: 1fr;
+  }
+
+  .donation-cta a {
+    width: 100%;
+  }
+}
+
+@media (min-width: 769px) {
   .story-columns {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

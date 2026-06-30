@@ -1,5 +1,10 @@
 <template>
   <div class="app" :data-theme="theme" :dir="activeLocale === 'ar' ? 'rtl' : 'ltr'" :class="{ 'is-rtl': activeLocale === 'ar' }" :style="appStyleVars" v-cloak>
+    <div v-if="!appReady" class="app-boot-loading" role="status" aria-live="polite">
+      <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+      <span>{{ t('common.loading') }}</span>
+    </div>
+
     <div v-if="appReady && banner" class="banner" :class="banner.kind" role="status" aria-live="polite">
       <span class="banner-message">{{ banner.message }}</span>
       <div class="banner-actions">
@@ -25,25 +30,25 @@
           <div class="reading-toolbar-group">
             <button class="toolbar-chip" :class="{ active: showTranslation }"
               title="Show or hide the English translation" @click="toggleReadingOption('translation')">
-              <i class="bi bi-translate"></i><span>Translation</span>
+              <i class="bi bi-translate"></i><span>{{ t('memorisation.reading.translation') }}</span>
             </button>
             <button class="toolbar-chip" :class="{ active: showTransliteration }" title="Show or hide transliteration"
               @click="toggleReadingOption('transliteration')">
-              <i class="bi bi-type"></i><span>Transliteration</span>
+              <i class="bi bi-type"></i><span>{{ t('memorisation.reading.transliteration') }}</span>
             </button>
             <!-- <button class="toolbar-chip" :class="{ active: showWordByWord }" title="Show word-by-word meaning chips"
               @click="toggleReadingOption('wbw')">
-              <i class="bi bi-grid-3x2-gap"></i><span>Word by word</span>
+              <i class="bi bi-grid-3x2-gap"></i><span>{{ t('memorisation.reading.wordByWord') }}</span>
             </button> -->
             <!-- <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }"
               title="Enable audio for individual word chips" @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
-              <i class="bi bi-volume-up"></i><span>Word audio</span>
+              <i class="bi bi-volume-up"></i><span>{{ t('memorisation.reading.wordAudio') }}</span>
             </button> -->
 
             <!-- ADD TAJWEED PILL HERE -->
             <button class="toolbar-chip" :class="{ active: tajweedEnabled }"
               title="Use connected Tajweed text from the Quran API" @click="toggleTajweed">
-              <i class="bi bi-palette"></i><span>Tajweed</span>
+              <i class="bi bi-palette"></i><span>{{ t('memorisation.reading.tajweed') }}</span>
             </button>
           </div>
 
@@ -78,7 +83,7 @@
 <section v-if="shouldRenderWorkspaceShell && !isOnboardingExperienceActive" class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
   <div class="workspace-shell-head">
     <div class="workspace-shell-copy">
-      <span class="workspace-shell-kicker">Session Overview</span>
+      <span class="workspace-shell-kicker">{{ t('memorisation.sessionOverview.kicker') }}</span>
       <h1 class="workspace-shell-main-title">{{ topCardSessionLabel }}</h1>
       <div v-if="reviewPriorityLabel" v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
         <span>{{ reviewPriorityLabel }}</span>
@@ -89,18 +94,19 @@
         <button type="button" class="view-mode-switch" :class="{ 'is-mushaf': readingViewMode === 'mushaf' }"
           @click="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
           :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'" aria-label="Toggle mushaf mode">
-          <span class="view-mode-switch-label">Stacked</span>
+          <span class="view-mode-switch-label">{{ t('memorisation.view.stacked') }}</span>
           <span class="view-mode-switch-track" aria-hidden="true">
             <span class="view-mode-switch-thumb">
               <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-book' : 'bi-view-stacked'"></i>
             </span>
           </span>
-          <span class="view-mode-switch-label">Mushaf</span>
+          <span class="view-mode-switch-label">{{ t('memorisation.view.mushaf') }}</span>
         </button>
         <div class="font-dropdown quick-font-dropdown" @click.stop>
           <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
             <i class="bi bi-text-paragraph" aria-hidden="true"></i>
-            <span>{{ getCurrentFontLabel() }}</span>
+            <span class="d-none d-sm-inline">{{ getCurrentFontLabel() }}</span>
+            <span class="d-sm-none">{{ t('memorisation.reading.font') }}</span>
             <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }" aria-hidden="true"></i>
           </button>
           <transition name="dropdown-fade">
@@ -119,7 +125,7 @@
         <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button"
           @click="openSessionExitModal" title="End session" aria-label="End session">
           <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-          <span>{{ t('sessionStatus.end') }}</span>
+          <span class="d-none d-sm-inline">{{ t('sessionStatus.end') }}</span>
         </button>
         <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
           title="Open session controls" aria-label="Open session controls">
@@ -133,30 +139,33 @@
           <transition name="dropdown-fade">
             <div v-if="topCardMenuOpen" class="top-card-menu">
               <button type="button" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')">
-                <i class="bi bi-translate"></i><span>Translation</span>
+                <i class="bi bi-translate"></i><span>{{ t('memorisation.reading.translation') }}</span>
               </button>
               <button type="button" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')">
-                <i class="bi bi-type"></i><span>Transliteration</span>
+                <i class="bi bi-type"></i><span>{{ t('memorisation.reading.transliteration') }}</span>
               </button>
               <button type="button" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
-                <i class="bi bi-palette"></i><span>Tajweed</span>
+                <i class="bi bi-palette"></i><span>{{ t('memorisation.reading.tajweed') }}</span>
+              </button>
+              <button type="button" @click="openHelpLearningModal">
+                <i class="bi bi-question-circle"></i><span>Help &amp; Learning</span>
               </button>
               <!--
                 <button type="button" @click="openAdvancedControls">
-                  <i class="bi bi-sliders"></i><span>Controls</span>
+                  <i class="bi bi-sliders"></i><span>{{ t('common.controls') }}</span>
                 </button>
                 <button type="button" @click="openRecordingsLibrary">
-                  <i class="bi bi-collection-play"></i><span>View Recording</span>
+                  <i class="bi bi-collection-play"></i><span>{{ t('memorisation.view_recording') }}</span>
                 </button>
                 <button type="button" @click="openOnboardingFromTopMenu">
-                  <i class="bi bi-compass"></i><span>Onboarding</span>
+                  <i class="bi bi-compass"></i><span>{{ t('memorisation.onboarding') }}</span>
                 </button>
                 <button @click="toggleKeyboardShortcuts" type="button">
-                  <i class="bi bi-keyboard"></i><span>Keyboard Shortcuts</span>
+                  <i class="bi bi-keyboard"></i><span>{{ t('shortcuts.title') }}</span>
                 </button>
               -->
               <button @click="toggleFullScreen" type="button">
-                <i class="bi bi-arrows-fullscreen"></i><span>Full Screen</span>
+                <i class="bi bi-arrows-fullscreen"></i><span>{{ t('memorisation.reading.fullScreen') }}</span>
               </button>
             </div>
           </transition>
@@ -189,7 +198,7 @@
       <i class="bi bi-check-circle-fill"></i>
     </div>
     <div class="completion-text">
-      <h3>{{ sessionCompletionSnapshot?.completedAll ? 'Session Complete' : 'Session Ended' }}</h3>
+      <h3>{{ sessionCompletionSnapshot?.completedAll ? t('memorisation.sessionComplete.title') : t('memorisation.sessionEnded.title') }}</h3>
       <p>{{ sessionCompletionSnapshot?.completedAll ? `You've completed all ${totalVerses} ayahs` : sessionEndedSummaryMessage }}</p>
     </div>
   </div>
@@ -202,55 +211,65 @@
     <div class="stat-divider"></div>
     <div class="stat-box">
       <span class="stat-number">{{ sessionEndedStats.progress }}</span>
-      <span class="stat-label">Progress</span>
+      <span class="stat-label">{{ t('memorisation.stats.progress') }}</span>
     </div>
     <div class="stat-divider"></div>
     <div class="stat-box">
       <span class="stat-number">{{ sessionEndedStats.duration }}</span>
-      <span class="stat-label">Duration</span>
+      <span class="stat-label">{{ t('memorisation.stats.duration') }}</span>
     </div>
     <div class="stat-divider"></div>
     <div class="stat-box">
       <span class="stat-number">{{ sessionEndedStats.repeats }}</span>
-      <span class="stat-label">Repeats</span>
+      <span class="stat-label">{{ t('memorisation.stats.repeats') }}</span>
     </div>
   </div>
 
   <!-- Action Buttons -->
-  <div class="completion-actions">
-    <button class="action-btn primary" @click="openNewSessionSetup()">
-      <i class="bi bi-plus-circle"></i>
-      New Session
-    </button>
-    <button class="action-btn" @click="startSessionWithCountdown">
-      <i class="bi bi-arrow-repeat"></i>
-      Repeat Range
-    </button>
-    <button class="action-btn" @click="saveCurrentSessionWithName()">
-      <i class="bi bi-save2"></i>
-      Save This Session?
-    </button>
-    <button class="action-btn" @click="continueLastSession()" :disabled="!hasContinueSession">
-      <i class="bi bi-play-circle"></i>
-      Resume Previous Played Session?
-    </button>
+  <div class="row g-2 completion-actions">
+    <div class="col-12 col-sm-6 col-xl-3 d-grid">
+      <button class="action-btn primary" @click="openNewSessionSetup()">
+        <i class="bi bi-plus-circle"></i>
+        {{ t('memorisation.actions.newSession') }}
+      </button>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3 d-grid">
+      <button class="action-btn" @click="startSessionWithCountdown">
+        <i class="bi bi-arrow-repeat"></i>
+        {{ t('memorisation.actions.repeatRange') }}
+      </button>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3 d-grid">
+      <button class="action-btn" @click="saveCurrentSessionWithName()">
+        <i class="bi bi-save2"></i>
+        {{ t('memorisation.actions.saveSession') }}
+      </button>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3 d-grid">
+      <button class="action-btn" @click="continueLastSession()" :disabled="!hasContinueSession">
+        <i class="bi bi-play-circle"></i>
+        {{ t('memorisation.actions.resumeSession') }}
+      </button>
+    </div>
   </div>
 
-  <div v-if="sessionCompletionSnapshot" class="completion-meta-grid">
-    <article class="completion-meta-card" :class="{ collapsed: isSessionEndedMetaCardCollapsed(card.key) }" v-for="card in sessionEndedMetaCards" :key="card.key">
-      <div class="completion-meta-head">
-        <span class="completion-meta-kicker">{{ card.kicker }}</span>
-        <button class="completion-meta-toggle" type="button" @click="toggleSessionEndedMetaCard(card.key)" :aria-expanded="isSessionEndedMetaCardCollapsed(card.key) ? 'false' : 'true'" :aria-label="`${isSessionEndedMetaCardCollapsed(card.key) ? 'Expand' : 'Collapse'} ${card.kicker}`">
-          <i class="bi" :class="isSessionEndedMetaCardCollapsed(card.key) ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
-        </button>
-      </div>
-      <div class="completion-meta-calligraphy" dir="rtl" lang="ar">{{ card.calligraphy }}</div>
-      <strong>{{ card.title }}</strong>
-      <p v-if="!isSessionEndedMetaCardCollapsed(card.key)">{{ card.body }}</p>
-      <ul v-if="!isSessionEndedMetaCardCollapsed(card.key) && card.points && card.points.length" class="completion-meta-points">
-        <li v-for="point in card.points" :key="point">{{ point }}</li>
-      </ul>
-    </article>
+  <div v-if="sessionCompletionSnapshot" class="row g-3 completion-meta-grid">
+    <div class="col-12 col-lg-4" v-for="card in sessionEndedMetaCards" :key="card.key">
+      <article class="completion-meta-card h-100" :class="{ collapsed: isSessionEndedMetaCardCollapsed(card.key) }">
+        <div class="completion-meta-head">
+          <span class="completion-meta-kicker">{{ card.kicker }}</span>
+          <button class="completion-meta-toggle" type="button" @click="toggleSessionEndedMetaCard(card.key)" :aria-expanded="isSessionEndedMetaCardCollapsed(card.key) ? 'false' : 'true'" :aria-label="`${isSessionEndedMetaCardCollapsed(card.key) ? 'Expand' : 'Collapse'} ${card.kicker}`">
+            <i class="bi" :class="isSessionEndedMetaCardCollapsed(card.key) ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
+          </button>
+        </div>
+        <div class="completion-meta-calligraphy" dir="rtl" lang="ar">{{ card.calligraphy }}</div>
+        <strong>{{ card.title }}</strong>
+        <p v-if="!isSessionEndedMetaCardCollapsed(card.key)">{{ card.body }}</p>
+        <ul v-if="!isSessionEndedMetaCardCollapsed(card.key) && card.points && card.points.length" class="completion-meta-points">
+          <li v-for="point in card.points" :key="point">{{ point }}</li>
+        </ul>
+      </article>
+    </div>
   </div>
 
 </div>
@@ -259,15 +278,15 @@
             aria-label="Memorisation workspace">
             <section v-if="!hasVerses" class="workspace-empty-state" aria-label="Session setup">
               <div class="workspace-empty-card">
-                <span class="workspace-empty-kicker">Ready to begin</span>
-                <h2>Choose a surah and range</h2>
-                <p>Use session controls to set up a new range. The main workspace will stay in view once you start.</p>
+                <span class="workspace-empty-kicker">{{ t('memorisation.workspaceEmpty.kicker') }}</span>
+                <h2>{{ t('memorisation.workspaceEmpty.title') }}</h2>
+                <p>{{ t('memorisation.workspaceEmpty.desc') }}</p>
                 <div class="workspace-empty-actions">
                   <button class="action-btn primary" type="button" @click="openNewSessionSetup">
-                    Open session setup
+                    {{ t('memorisation.open_session_setup') }}
                   </button>
                   <button class="action-btn" type="button" @click="openAdvancedControls">
-                    Open controls
+                    {{ t('memorisation.open_controls') }}
                   </button>
                 </div>
               </div>
@@ -280,7 +299,8 @@
                       <button @click.stop="fontOpen = !fontOpen; bgOpen = false; borderOpen = false" type="button" class="mushaf-toolbar-trigger"
                         :aria-expanded="fontOpen ? 'true' : 'false'" aria-label="Choose Mushaf text style">
                         <i class="bi bi-type"></i>
-                        <span class="mushaf-toolbar-trigger-label">{{ getCurrentFontLabel() }}</span>
+                        <span class="mushaf-toolbar-trigger-label d-none d-sm-inline">{{ getCurrentFontLabel() }}</span>
+                        <span class="mushaf-toolbar-trigger-label d-sm-none">{{ t('memorisation.reading.font') }}</span>
                         <i class="bi bi-chevron-down" :class="{ rotated: fontOpen }"></i>
                       </button>
                       <div v-if="fontOpen" @click.stop class="mushaf-toolbar-menu">
@@ -297,7 +317,7 @@
                       <button @click.stop="bgOpen = !bgOpen; fontOpen = false; borderOpen = false" type="button" class="mushaf-toolbar-trigger"
                         :aria-expanded="bgOpen ? 'true' : 'false'" aria-label="Choose Mushaf page theme">
                         <span class="mushaf-toolbar-theme-swatch mushaf-toolbar-trigger-swatch" :class="`theme-${mushafBackground}`"></span>
-                        <span class="mushaf-toolbar-trigger-label">Theme</span>
+                        <span class="mushaf-toolbar-trigger-label">{{ t('memorisation.reading.theme') }}</span>
                         <i class="bi bi-chevron-down" :class="{ rotated: bgOpen }"></i>
                       </button>
                       <div v-if="bgOpen" @click.stop class="mushaf-toolbar-menu">
@@ -314,7 +334,7 @@
                       <button @click.stop="borderOpen = !borderOpen; fontOpen = false; bgOpen = false" type="button" class="mushaf-toolbar-trigger"
                         :aria-expanded="borderOpen ? 'true' : 'false'" aria-label="Choose Mushaf border style">
                         <i class="bi bi-border-outer"></i>
-                        <span class="mushaf-toolbar-trigger-label">Border</span>
+                        <span class="mushaf-toolbar-trigger-label">{{ t('memorisation.reading.border') }}</span>
                         <i class="bi bi-chevron-down" :class="{ rotated: borderOpen }"></i>
                       </button>
                       <div v-if="borderOpen" @click.stop class="mushaf-toolbar-menu">
@@ -334,7 +354,7 @@
                       :disabled="!activeVerseRef || aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()"
                       :title="activeVerseRef ? 'Hide the ayah and recite from memory' : 'Tap an ayah first'">
                       <i class="bi" :class="aiMemorisationCheckerRecording ? 'bi-stop-circle' : 'bi-eye-slash'"></i>
-                      <span class="mushaf-pill-label">{{ aiMemorisationCheckerRecording ? 'Stop' : 'AI Memory' }}</span>
+                      <span class="mushaf-pill-label d-none d-sm-inline">{{ aiMemorisationCheckerRecording ? 'Stop' : 'AI Memory' }}</span>
                     </button>
 
                     <button class="mushaf-pill mushaf-ai-pill mushaf-ai-recite" type="button" @click.stop="openAiRecitationCheckForVerse(activeVerseRef)"
@@ -342,7 +362,7 @@
                       :disabled="!activeVerseRef || recitationCheckPreparing || !supportsSelfCheckRecording()"
                       :title="activeVerseRef ? 'Recite this ayah for instant AI feedback' : 'Tap an ayah first'">
                       <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
-                      <span class="mushaf-pill-label">{{ recitationCheckRecording ? 'Stop' : 'AI Recite' }}</span>
+                      <span class="mushaf-pill-label d-none d-sm-inline">{{ recitationCheckRecording ? 'Stop' : 'AI Recite' }}</span>
                     </button>
 
                     <button type="button" class="mushaf-pill mushaf-controls-pill" @click="openAdvancedControls" aria-label="Open controls" title="Session controls">
@@ -353,9 +373,8 @@
                 <div ref="mushafViewport" class="mushaf-viewport" :class="[`mushaf-bg-${mushafBackground}`]">
                   <div v-if="!mushafPages.length" class="mushaf-empty-page">
                     <i class="bi bi-book"></i>
-                    <strong>Mushaf page is preparing</strong>
-                    <span>Ayahs are loaded, but the mushaf page list has not synced yet. Switch back to Stacked or
-                      reopen this session.</span>
+                    <strong>{{ t('memorisation.mushaf_page_is_preparing') }}</strong>
+                    <span>{{ t('memorisation.common.mushafSyncMessage') }}</span>
                   </div>
                   <div class="mushaf-track" :style="mushafTrackStyle">
                     <article v-for="(page, pageIndex) in mushafPages" :key="page.id" class="mushaf-page"
@@ -427,11 +446,11 @@
                 <div class="verse-header">
                   <div class="verse-badges">
                     <span class="verse-number">Ayah {{ verse.number }}</span>
-                    <span v-if="isNewHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-new">New</span>
-                    <span v-if="isDueHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-due">Due</span>
-                    <span v-if="isWeakAyah(verse.key)" class="verse-status-badge verse-status-badge-weak">Needs Review</span>
-                    <span v-if="isMasteredAyah(verse.key)" class="verse-status-badge verse-status-badge-mastered">Steady</span>
-                    <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge">Active Ayah</span>
+                    <span v-if="isNewHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-new">{{ t('memorisation.badges.new') }}</span>
+                    <span v-if="isDueHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-due">{{ t('memorisation.due') }}</span>
+                    <span v-if="isWeakAyah(verse.key)" class="verse-status-badge verse-status-badge-weak">{{ t('memorisation.badges.weak') }}</span>
+                    <span v-if="isMasteredAyah(verse.key)" class="verse-status-badge verse-status-badge-mastered">{{ t('memorisation.badges.steady') }}</span>
+                    <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge">{{ t('memorisation.badges.active') }}</span>
                   </div>
                   <div class="verse-actions">
                     
@@ -441,7 +460,7 @@
                       :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
                       title="Open AI memorisation checker for this ayah">
                       <i class="bi bi-eye-slash" aria-hidden="true"></i>
-                      <span>AI Memory</span>
+                      <span>{{ t('memorisation.reading.aiMemory') }}</span>
                     </button>
 
                     <button class="verse-self-check-btn verse-ai-check-btn"
@@ -450,7 +469,7 @@
                       :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()"
                       :title="isRecitationCheckTargetVerse(verse.key) ? 'AI recitation check is active' : 'Open AI recitation check for this ayah'">
                       <i class="bi bi-stars" aria-hidden="true"></i>
-                      <span>AI Recite</span>
+                      <span>{{ t('memorisation.reading.aiRecite') }}</span>
                       <em v-if="getAyahRecordingCount(verse.key)">{{ getAyahRecordingCount(verse.key) }}</em>
                     </button>
                     <button class="verse-ellipsis-btn" type="button" @click.stop="toggleVerseActionMenu(verse.key)"
@@ -467,10 +486,10 @@
                           </button>
                           <button type="button" @click="downloadVerseAudio(verse)" :disabled="!verse.audio">
                             <i class="bi bi-download"></i>
-                            <span>Download</span>
+                            <span>{{ t('common.download') }}</span>
                           </button>
                           <!-- <div class="verse-menu-font-row">
-                            <span class="verse-menu-font-label">Text</span>
+                            <span class="verse-menu-font-label">{{ t('memorisation.text') }}</span>
                             <div class="verse-menu-font-stepper" role="group" aria-label="Ayah text size">
                               <button type="button" @click="decreaseTextScale($event)" aria-label="Decrease ayah text size">
                                 <i class="bi bi-dash-lg"></i>
@@ -502,13 +521,13 @@
 
                 <!-- Keep in-workspace aids available, but visually quieter -->
                 <div v-if="showTransliteration && verse.transliteration" class="verse-aid-block" dir="ltr" lang="en">
-                  <div class="verse-aid-title" dir="ltr" lang="en">Transliteration</div>
+                  <div class="verse-aid-title" dir="ltr" lang="en">{{ t('memorisation.reading.transliteration') }}</div>
                   <div class="verse-transliteration verse-aid" dir="ltr" lang="en">
                     {{ verse.transliteration }}
                   </div>
                 </div>
                 <div v-if="showTranslation && verse.translation" class="verse-aid-block" dir="ltr" lang="en">
-                  <div class="verse-aid-title" dir="ltr" lang="en">Translation</div>
+                  <div class="verse-aid-title" dir="ltr" lang="en">{{ t('memorisation.reading.translation') }}</div>
                   <div class="verse-translation verse-aid" dir="ltr" lang="en">
                     {{ verse.translation }}
                   </div>
@@ -541,7 +560,7 @@
         <div class="tools-top">
           <div class="tools-topbar">
             <div id="memorisationToolsTitle" class="tools-title">
-              <h3><b>Controls</b></h3>
+              <h3><b>{{ t('common.controls') }}</b></h3>
             </div>
             <button class="tools-x" @click="closeToolsPanel" aria-label="Close panel" type="button">
               <span class="tools-x-glyph" aria-hidden="true">&times;</span>
@@ -550,24 +569,24 @@
           <div v-if="shouldShowOffcanvasTabs" class="tools-tabs" role="tablist" aria-label="Controls tabs">
             <button role="tab" :aria-selected="tab === 'tools' ? 'true' : 'false'" :class="{ active: tab === 'tools' }"
               @click.prevent="setActiveTab('tools')" title="Session tools" type="button">
-              <i class="bi bi-sliders"></i> Session
+              <i class="bi bi-sliders"></i> {{ t('memorisation.session') }}
             </button>
             <button role="tab" :aria-selected="tab === 'techniques' ? 'true' : 'false'"
               :class="{ active: tab === 'techniques' }" @click.prevent="setActiveTab('techniques')"
               title="Practice presets" type="button">
-              <i class="bi bi-stars"></i> Practice
+              <i class="bi bi-stars"></i> {{ t('memorisation.practice') }}
             </button>
             <button role="tab" :aria-selected="tab === 'saved' ? 'true' : 'false'" :class="{ active: tab === 'saved' }"
               @click.prevent="setActiveTab('saved')" title="Saved sessions" type="button">
-              <i class="bi bi-clock-history"></i> Saved
+              <i class="bi bi-clock-history"></i> {{ t('memorisation.saved') }}
             </button>
             <!-- <button v-if="isLoggedIn" role="tab" :aria-selected="tab === 'stats' ? 'true' : 'false'"
               :class="{ active: tab === 'stats' }" @click.prevent="setActiveTab('stats')" title="Session insights"
               type="button">
-              <i class="bi bi-bar-chart-line"></i> Insights
+              <i class="bi bi-bar-chart-line"></i> {{ t('memorisation.insights') }}
             </button> -->
             <!-- <button :class="{ active: tab === 'settings' }" @click.prevent="setActiveTab('settings')" type="button">
-              <i class="bi bi-gear"></i> Settings
+              <i class="bi bi-gear"></i> {{ t('common.settings') }}
             </button> -->
           </div>
         </div>
@@ -578,22 +597,22 @@
               <div class="sheet-content planner-controls-content">
                 <div class="field-stack field-stack-compact">
                   <div class="field">
-                    <label><i class="bi bi-book"></i> Hifz Plan</label>
+                    <label><i class="bi bi-book"></i> {{ t('memorisation.planner.hifzPlan') }}</label>
                     <strong>{{ hifzPlan?.selectedSurah || 'Current plan' }} · {{ plannerSessionState.sessionRange?.rangeStart || 1 }}-{{ plannerSessionState.sessionRange?.rangeEnd || 1 }}</strong>
                     <small class="field-hint">{{ plannerGuidanceTitle }}</small>
                   </div>
                   <div class="field">
-                    <label><i class="bi bi-bullseye"></i> Today's Goal</label>
+                    <label><i class="bi bi-bullseye"></i> {{ t('memorisation.planner.todaysGoal') }}</label>
                     <strong>{{ plannerSessionState.todayGoalLabel }}</strong>
                     <small class="field-hint">{{ plannerGuidanceWhy }}</small>
                   </div>
                   <div class="field">
-                    <label><i class="bi bi-gem"></i> Memory Review</label>
+                    <label><i class="bi bi-gem"></i> {{ t('memorisation.planner.memoryReview') }}</label>
                     <strong>{{ plannerMemoryReviewLine }}</strong>
                     <small class="field-hint">Next review: {{ plannerSessionState.nextReviewLabel }} · {{ plannerConfidenceLine }}</small>
                   </div>
                   <div v-if="hasSessionStarted" class="field">
-                    <label><i class="bi bi-layout-text-window-reverse"></i> Session View</label>
+                    <label><i class="bi bi-layout-text-window-reverse"></i> {{ t('memorisation.planner.sessionView') }}</label>
                     <div class="planner-controls-inline">
                       <button
                         type="button"
@@ -622,12 +641,12 @@
                         </transition>
                       </div>
                     </div>
-                    <small class="field-hint">View and font controls stay here while planner mode is active.</small>
+                    <small class="field-hint">{{ t('memorisation.view_and_font_controls_stay_here_while_planner_mod') }}</small>
                   </div>
                   <div v-else class="field">
-                    <label><i class="bi bi-layout-text-window-reverse"></i> Session View</label>
-                    <strong>Available after you start today&apos;s session</strong>
-                    <small class="field-hint">Mushaf view and font options stay hidden until the session begins.</small>
+                    <label><i class="bi bi-layout-text-window-reverse"></i> {{ t('memorisation.planner.sessionView') }}</label>
+                    <strong>{{ t('memorisation.available_after_you_start_todays_session') }}</strong>
+                    <small class="field-hint">{{ t('memorisation.mushaf_view_and_font_options_stay_hidden_until_the') }}</small>
                   </div>
                 </div>
               </div>
@@ -696,8 +715,8 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-mic"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Audio</span>
-                    <span class="st-sub">Playback settings</span>
+                    <span class="st-title">{{ t('memorisation.audio.title') }}</span>
+                    <span class="st-sub">{{ t('memorisation.playback_settings') }}</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i
@@ -706,30 +725,30 @@
               <div class="sheet-content" v-show="sectionOpen.advanced_playback">
                 <div class="field-stack field-stack-compact">
                   <div class="field">
-                    <label>Speed</label>
+                    <label>{{ t('memorisation.speed') }}</label>
                     <div class="radio-group radio-group-tight">
                       <label class="radio" v-for="option in speedOptions" :key="`tool-speed-${option}`">
                         <input type="radio" name="session-playback-speed" :value="option" v-model.number="speed"
                           @change="setPlaybackSpeed(option)"> {{ option }}x
                       </label>
                     </div>
-                    <small class="field-hint">Use slower speed for early memorisation.</small>
+                    <small class="field-hint">{{ t('memorisation.use_slower_speed_for_early_memorisation') }}</small>
                   </div>
                   <div class="field">
-                    <label>Auto-advance</label>
+                    <label>{{ t('memorisation.auto_advance') }}</label>
                     <div class="radio-group radio-group-tight">
-                      <label class="radio"><input type="radio" name="session-auto-advance" value="auto" v-model="playMode"> Yes</label>
-                      <label class="radio"><input type="radio" name="session-auto-advance" value="manual" v-model="playMode"> No</label>
+                      <label class="radio"><input type="radio" name="session-auto-advance" value="auto" v-model="playMode"> {{ t('common.yes') }}</label>
+                      <label class="radio"><input type="radio" name="session-auto-advance" value="manual" v-model="playMode"> {{ t('common.no') }}</label>
                     </div>
-                    <small class="field-hint">Auto moves to the next queue item when audio ends.</small>
+                    <small class="field-hint">{{ t('memorisation.auto_moves_to_the_next_queue_item_when_audio_ends') }}</small>
                   </div>
                   <div class="field">
-                    <label><i class="bi bi-hourglass-split"></i> Delay between recitations (secs)</label>
+                    <label><i class="bi bi-hourglass-split"></i> {{ t('memorisation.delay_between_recitations_secs') }}</label>
                     <select v-model.number="delay" class="select">
                       <option v-for="option in delayOptions" :key="`tool-delay-${option}`" :value="option">{{ option }}s
                       </option>
                     </select>
-                    <small class="field-hint">Pause before each next repetition/recitation in auto mode.</small>
+                    <small class="field-hint">{{ t('memorisation.pause_before_each_next_repetition_recitation_in_au') }}</small>
                   </div>
                 </div>
               </div>
@@ -743,8 +762,8 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-bullseye"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Focus Mode</span>
-                    <span class="st-sub">Reduce distractions around the active ayah</span>
+                    <span class="st-title">{{ t('memorisation.focus_mode') }}</span>
+                    <span class="st-sub">{{ t('memorisation.reduce_distractions_around_the_active_ayah') }}</span>
                   </span>
                 </span>
                 <div class="st-right-group">
@@ -765,21 +784,20 @@
                   <div class="field">
                     <div class="technique-description">
                       <i class="bi bi-info-circle-fill"></i>
-                      <span>Focus Mode dims all non-active verses, helping you concentrate on the current ayah without
-                        distractions.</span>
+                      <span>{{ t('memorisation.techniques.focusDescription') }}</span>
                     </div>
                     <div class="technique-best">
                       <i class="bi bi-check-circle-fill"></i>
-                      <span>Best for: Deep memorisation sessions</span>
+                      <span>{{ t('memorisation.best_for_deep_memorisation_sessions') }}</span>
                     </div>
                   </div>
                   <div v-if="focusModeEnabled" class="field">
-                    <label>Focus strength</label>
+                    <label>{{ t('memorisation.focus_strength') }}</label>
                     <div class="range-control">
                       <input type="range" min="30" max="75" step="5" v-model.number="focusDimPercent" class="input">
                       <span class="inline-setting-pill">{{ focusDimPercent }}%</span>
                     </div>
-                    <small class="field-hint">Higher values dim non-active verses more aggressively.</small>
+                    <small class="field-hint">{{ t('memorisation.higher_values_dim_non_active_verses_more_aggressiv') }}</small>
                   </div>
                 </div>
               </div>
@@ -790,8 +808,8 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-cloud-haze2"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Blur Mode</span>
-                    <span class="st-sub">Progressive concealment for active recall</span>
+                    <span class="st-title">{{ t('memorisation.blur_mode') }}</span>
+                    <span class="st-sub">{{ t('memorisation.progressive_concealment_for_active_recall') }}</span>
                   </span>
                 </span>
                 <div class="st-right-group">
@@ -811,20 +829,20 @@
                   <div class="field">
                     <div class="technique-description">
                       <i class="bi bi-info-circle-fill"></i>
-                      <span>Blurs upcoming verses, requiring you to recall them before revealing.</span>
+                      <span>{{ t('memorisation.blurs_upcoming_verses_requiring_you_to_recall_them') }}</span>
                     </div>
                     <div class="technique-best">
                       <i class="bi bi-check-circle-fill"></i>
-                      <span>Best for: Active recall testing</span>
+                      <span>{{ t('memorisation.best_for_active_recall_testing') }}</span>
                     </div>
                   </div>
                   <div v-if="blurModeEnabled" class="field">
-                    <label>Blur Intensity</label>
+                    <label>{{ t('memorisation.blur_intensity') }}</label>
                     <div class="range-control">
                       <input type="range" min="4" max="18" step="1" v-model.number="blurIntensity" class="input">
                       <span class="inline-setting-pill">{{ blurIntensity }}px</span>
                     </div>
-                    <small class="field-hint">Hold <kbd>Space</kbd>, hover, or long-press to peek temporarily</small>
+                    <small class="field-hint">{{ t('memorisation.hold') }} <kbd>Space</kbd>{{ t('memorisation.hover_or_long_press_to_peek_temporarily') }}</small>
                   </div>
                 </div>
               </div>
@@ -835,7 +853,7 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-link-45deg"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Chaining</span>
+                    <span class="st-title">{{ t('memorisation.chaining') }}</span>
                     <span class="st-sub">{{ chainingMethodDescription }}</span>
                   </span>
                 </span>
@@ -856,38 +874,38 @@
                   <div class="field">
                     <div class="technique-description">
                       <i class="bi bi-info-circle-fill"></i>
-                      <span>{{ chainingMethod === 'cumulative' ? 'Build longer runs by adding one ayah at a time.' :
-                        'Strengthen transitions between neighbouring ayahs.' }}</span>
+                      <span>{{ chainingMethod === 'cumulative' ? t('memorisation.techniques.chainingCumulativeDescription') :
+                        t('memorisation.techniques.chainingLinkingDescription') }}</span>
                     </div>
                     <div class="technique-best">
                       <i class="bi bi-check-circle-fill"></i>
-                      <span>Best for: Building long passages</span>
+                      <span>{{ t('memorisation.best_for_building_long_passages') }}</span>
                     </div>
                   </div>
                   <div v-if="chainingEnabled" class="field">
-                    <label>Method</label>
+                    <label>{{ t('common.method') }}</label>
                     <div class="radio-group">
                       <label class="radio">
                         <input type="radio" value="linking" v-model="chainingMethod"
                           @change="setChainingMethod('linking')">
-                        Linking
+                        {{ t('memorisation.linking') }}
                       </label>
                       <label class="radio">
                         <input type="radio" value="cumulative" v-model="chainingMethod"
                           @change="setChainingMethod('cumulative')">
-                        Cumulative
+                        {{ t('memorisation.cumulative') }}
                       </label>
                     </div>
-                    <small class="field-hint">{{ chainingMethod === 'linking' ? 'Practice ayahs individually, then in pairs.' : 'Start with first ayah, then add one more each time.' }}</small>
+                    <small class="field-hint">{{ chainingMethod === 'linking' ? t('memorisation.techniques.chainingLinkingHint') : t('memorisation.techniques.chainingCumulativeHint') }}</small>
                   </div>
                   <div v-if="chainingEnabled" class="field">
-                    <label>Repeats per step</label>
+                    <label>{{ t('memorisation.repeats_per_step') }}</label>
                     <div class="range-control">
                       <input type="range" min="1" max="5" step="1" :value="chainingRepetitions"
                         @input="setChainingRepetitions(Number($event.target.value))" class="input">
                       <span class="inline-setting-pill">{{ chainingRepetitions }}</span>
                     </div>
-                    <small class="field-hint">Number of times to repeat each chaining step</small>
+                    <small class="field-hint">{{ t('memorisation.number_of_times_to_repeat_each_chaining_step') }}</small>
                   </div>
                   <div v-if="chainingEnabled" class="technique-preview-block">
                     <i class="bi bi-eye"></i>
@@ -902,8 +920,8 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-pin-angle-fill"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">Anchor Mode</span>
-                    <span class="st-sub">Mental hooks using key words</span>
+                    <span class="st-title">{{ t('memorisation.anchor_mode') }}</span>
+                    <span class="st-sub">{{ t('memorisation.mental_hooks_using_key_words') }}</span>
                   </span>
                 </span>
                 <div class="st-right-group">
@@ -923,15 +941,15 @@
                   <div class="field">
                     <div class="technique-description">
                       <i class="bi bi-info-circle-fill"></i>
-                      <span>Highlights key words as memory anchors to help recall the entire ayah.</span>
+                      <span>{{ t('memorisation.highlights_key_words_as_memory_anchors_to_help_rec') }}</span>
                     </div>
                     <div class="technique-best">
                       <i class="bi bi-check-circle-fill"></i>
-                      <span>Best for: Memorising key vocabulary</span>
+                      <span>{{ t('memorisation.best_for_memorising_key_vocabulary') }}</span>
                     </div>
                   </div>
                   <div v-if="anchorModeEnabled" class="field">
-                    <label>Anchor points per ayah</label>
+                    <label>{{ t('memorisation.anchor_points_per_ayah') }}</label>
                     <select v-model.number="anchorCount" @change="onAnchorCountChange" class="select">
                       <option :value="1">1 anchor (center word)</option>
                       <option :value="2">2 anchors (first + last)</option>
@@ -948,8 +966,8 @@
             <div class="saved-sessions-container saved-sessions-v2">
               <!-- Header -->
               <div class="saved-header">
-                <h3><i class="bi bi-clock-history"></i> Saved Sessions</h3>
-                <p>Each session keeps only the essentials: what it is, where it is, and how to get back in.</p>
+                <h3><i class="bi bi-clock-history"></i> {{ t('memorisation.saved_sessions') }}</h3>
+                <p>{{ t('memorisation.each_session_keeps_only_the_essentials_what_it_is_') }}</p>
               </div>
 
               <!-- SAVED SESSIONS LIST -->
@@ -969,11 +987,11 @@
                   <div class="session-actions">
                     <button class="session-resume-btn" @click="loadSavedSession(session.id)" type="button">
                       <i class="bi bi-play-fill"></i>
-                      <span>Resume</span>
+                      <span>{{ t('common.resume') }}</span>
                     </button>
                     <button class="session-delete-btn" @click.stop="deleteSavedSession(session.id)" title="Delete">
                       <i class="bi bi-trash3"></i>
-                      <span>Delete</span>
+                      <span>{{ t('common.delete') }}</span>
                     </button>
                   </div>
                 </div>
@@ -982,8 +1000,8 @@
               <!-- EMPTY STATE -->
               <div v-if="savedSessions.length === 0" class="empty-state">
                 <i class="bi bi-journal-bookmark"></i>
-                <p>No saved sessions yet</p>
-                <span>Save your current session to get started</span>
+                <p>{{ t('memorisation.no_saved_sessions_yet') }}</p>
+                <span>{{ t('memorisation.save_your_current_session_to_get_started') }}</span>
               </div>
 
               <!-- Save Current Session -->
@@ -991,12 +1009,12 @@
                 <div class="current-info">
                   <i class="bi bi-play-circle"></i>
                   <div>
-                    <strong>Current Session</strong>
+                    <strong>{{ t('memorisation.current_session') }}</strong>
                     <small>{{ currentChapter?.name_simple || 'No surah' }} · {{ rangeStart }}-{{ rangeEnd }}</small>
                   </div>
                 </div>
                 <button class="save-btn" @click="saveCurrentSessionWithName()">
-                  <i class="bi bi-save"></i> Save
+                  <i class="bi bi-save"></i> {{ t('common.save') }}
                 </button>
               </div>
             </div>
@@ -1006,8 +1024,8 @@
             <div v-if="tab === 'stats'" class="sheet">
               <div class="stats-sessions-container">
                 <div class="saved-header">
-                  <h3><i class="bi bi-bar-chart-line"></i> Insights</h3>
-                  <p>Today first. Advanced analytics stay tucked away until you ask for them.</p>
+                  <h3><i class="bi bi-bar-chart-line"></i> {{ t('memorisation.insights') }}</h3>
+                  <p>{{ t('memorisation.today_first_advanced_analytics_stay_tucked_away_un') }}</p>
                 </div>
                 <div class="hifz-simple-analytics" aria-label="Current session analytics">
                   <article v-for="item in controlsAnalyticsCards" :key="item.key" class="hifz-simple-analytics-item">
@@ -1019,7 +1037,7 @@
                 </div>
                 <button type="button" class="analytics-toggle-btn" @click="openAdvancedMetricsModal">
                   <i class="bi bi-plus-circle"></i>
-                  <span>Show advanced metrics</span>
+                  <span>{{ t('memorisation.show_advanced_metrics') }}</span>
                 </button>
                 <div v-if="false">
                   <section class="detailed-analytics-system" aria-label="Detailed analytics">
@@ -1039,8 +1057,8 @@
                   </section>
                   <div v-if="savedSessions.length === 0" class="empty-state">
                     <i class="bi bi-activity"></i>
-                    <p>No advanced insights yet</p>
-                    <span>Save a session and you’ll unlock the deeper breakdown here.</span>
+                    <p>{{ t('memorisation.no_advanced_insights_yet') }}</p>
+                    <span>{{ t('memorisation.save_a_session_and_you_ll_unlock_the_deeper_breakd') }}</span>
                   </div>
                   <div v-else class="stats-panel">
                     <div v-if="selectedStatsSessionRecord" class="stats-detail">
@@ -1049,7 +1067,7 @@
                           <h4>{{ getSavedSessionName(selectedStatsSessionRecord) }}</h4>
                           <div class="stats-summary">{{ buildStatsSummary(selectedStatsSessionRecord) }}</div>
                           <div v-if="sortedSavedSessions.length > 1" class="stats-session-select-wrap">
-                            <label class="stats-session-select-label" for="statsSessionSelect">Saved sessions</label>
+                            <label class="stats-session-select-label" for="statsSessionSelect">{{ t('memorisation.saved_sessions') }}</label>
                             <select id="statsSessionSelect" class="stats-session-select"
                               :value="selectedStatsSessionRecord.id" @change="selectStatsSession($event.target.value)">
                               <option v-for="session in sortedSavedSessions" :key="`stats-${session.id}`"
@@ -1063,7 +1081,7 @@
                           <button type="button" class="session-export-btn stats-full-analytics-btn"
                             @click="openSessionAnalyticsModal(selectedStatsSessionRecord)">
                             <i class="bi bi-graph-up-arrow"></i>
-                            <span>View Full Analytics</span>
+                            <span>{{ t('memorisation.view_full_analytics') }}</span>
                           </button>
                         </div>
                       </div>
@@ -1127,7 +1145,7 @@
                 <div class="setting-item">
                   <div class="setting-info">
                     <div class="setting-label">{{ t('common.language') }}</div>
-                    <div class="setting-description">English, Arabic, or French UI</div>
+                    <div class="setting-description">{{ t('memorisation.english_arabic_or_french_ui') }}</div>
                   </div>
                   <select class="select language-select" :value="activeLocale"
                     @change="onLanguageChange($event.target.value)">
@@ -1156,7 +1174,7 @@
                 <!-- Translation -->
                 <div class="setting-item">
                   <div class="setting-info">
-                    <div class="setting-label">Translation</div>
+                    <div class="setting-label">{{ t('memorisation.reading.translation') }}</div>
                     <div class="setting-description">{{ t('sessionSetup.translationDesc') }}</div>
                   </div>
                   <button class="toggle-chip" :class="{ active: showTranslation }"
@@ -1207,7 +1225,7 @@
         <div class="tools-footer" :class="{ 'settings-footer': tab === 'settings' }">
           <template v-if="showHifzPlannerUi">
             <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="openHifzPlanModal">
-              <i class="bi bi-pencil-square"></i><span>Edit Plan</span>
+              <i class="bi bi-pencil-square"></i><span>{{ t('memorisation.edit_plan') }}</span>
             </button>
             <button class="tools-btn tools-btn-primary tools-btn-soft" @click="startPlannerPrimaryAction">
               <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i><span>{{ plannerPrimaryActionLabel }}</span>
@@ -1228,103 +1246,117 @@
     <div v-else-if="appReady && !isLoggedIn" class="main container">
       <div class="login-hero">
         <div class="guest-shell">
-          <section class="guest-hero">
-            <div class="guest-hero-copy">
-              <span class="guest-kicker">{{ t('home.guestKicker') }}</span>
-              <h1>{{ t('home.guestTitle') }}</h1>
-              <div class="guest-copy-stack">
-                <p class="guest-subtitle">
-                  {{ t('home.guestSubtitle') }}
-                </p>
-                <p class="guest-copy-support">
-                  {{ t('home.guestSupport') }}
-                </p>
-              </div>
-
-              <div class="guest-action-row">
-                <a href="/login" class="login-btn guest-primary-btn" style="text-decoration: none;">
-                  <i class="bi bi-box-arrow-in-right"></i>
-                  <span>{{ t('common.login') }}</span>
-                </a>
-                <a href="/register" class="guest-secondary-btn" style="text-decoration: none;">
-                  <i class="bi bi-person-plus"></i>
-                  <span>{{ t('common.register') }}</span>
-                </a>
-              </div>
-              <p class="guest-cta-note">{{ t('home.guestNote') }}</p>
-
-              <div class="guest-proof-row">
-                <span><i class="bi bi-cloud-check"></i> Sync progress</span>
-                <span><i class="bi bi-arrow-repeat"></i> Structured repetition</span>
-                <span><i class="bi bi-clock-history"></i> Resume exactly</span>
-              </div>
-            </div>
-
-            <aside class="guest-hero-panel">
-              <div class="guest-preview-card">
-                <div class="guest-preview-icon">
-                  <i class="bi bi-book-half"></i>
-                </div>
-                <div class="guest-preview-copy">
-                  <strong>What a Mutqin session feels like</strong>
-                  <p>Short enough to stay focused. Structured enough to make long-term memorisation easier to revisit.
+          <section class="guest-hero row g-4 align-items-stretch">
+            <div class="col-12 col-xl-7">
+              <div class="guest-hero-copy h-100">
+                <span class="guest-kicker">{{ t('home.guestKicker') }}</span>
+                <h1>{{ t('home.guestTitle') }}</h1>
+                <div class="guest-copy-stack">
+                  <p class="guest-subtitle">
+                    {{ t('home.guestSubtitle') }}
+                  </p>
+                  <p class="guest-copy-support">
+                    {{ t('home.guestSupport') }}
                   </p>
                 </div>
-                <div class="guest-preview-steps">
-                  <div class="guest-preview-step">
-                    <span>1</span>
-                    <div>
-                      <strong>Choose your ayahs</strong>
-                      <small>Pick the surah, range, and reciter.</small>
-                    </div>
+
+                <div class="guest-action-row">
+                  <a href="/login" class="login-btn guest-primary-btn text-decoration-none">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span>{{ t('common.login') }}</span>
+                  </a>
+                  <a href="/register" class="guest-secondary-btn text-decoration-none">
+                    <i class="bi bi-person-plus"></i>
+                    <span>{{ t('common.register') }}</span>
+                  </a>
+                </div>
+                <p class="guest-cta-note">{{ t('home.guestNote') }}</p>
+
+                <div class="guest-proof-row">
+                  <span><i class="bi bi-cloud-check"></i> {{ t('memorisation.sync_progress') }}</span>
+                  <span><i class="bi bi-arrow-repeat"></i> {{ t('memorisation.structured_repetition') }}</span>
+                  <span><i class="bi bi-clock-history"></i> {{ t('memorisation.resume_exactly') }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-xl-5">
+              <aside class="guest-hero-panel h-100">
+                <div class="guest-preview-card">
+                  <div class="guest-preview-icon">
+                    <i class="bi bi-book-half"></i>
                   </div>
-                  <div class="guest-preview-step">
-                    <span>2</span>
-                    <div>
-                      <strong>Repeat with structure</strong>
-                      <small>Use playback, chaining, focus, and blur tools.</small>
-                    </div>
+                  <div class="guest-preview-copy">
+                    <strong>{{ t('memorisation.what_a_mutqin_session_feels_like') }}</strong>
+                    <p>{{ t('memorisation.short_enough_to_stay_focused_structured_enough_to_') }}</p>
                   </div>
-                  <div class="guest-preview-step">
-                    <span>3</span>
-                    <div>
-                      <strong>Recall and review</strong>
-                      <small>Track what was covered and return later with clarity.</small>
+                  <div class="guest-preview-steps">
+                    <div class="guest-preview-step">
+                      <span>1</span>
+                      <div>
+                        <strong>{{ t('memorisation.choose_your_ayahs') }}</strong>
+                        <small>{{ t('memorisation.pick_the_surah_range_and_reciter') }}</small>
+                      </div>
+                    </div>
+                    <div class="guest-preview-step">
+                      <span>2</span>
+                      <div>
+                        <strong>{{ t('memorisation.repeat_with_structure') }}</strong>
+                        <small>{{ t('memorisation.use_playback_chaining_focus_and_blur_tools') }}</small>
+                      </div>
+                    </div>
+                    <div class="guest-preview-step">
+                      <span>3</span>
+                      <div>
+                        <strong>{{ t('memorisation.recall_and_review') }}</strong>
+                        <small>{{ t('memorisation.track_what_was_covered_and_return_later_with_clari') }}</small>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </aside>
+              </aside>
+            </div>
           </section>
 
-          <section class="guest-section guest-section-row guest-section-row-simplified">
-            <div class="guest-section-head guest-section-head-side">
-              <span class="guest-section-kicker">How Mutqin stays focused</span>
-              <h2>Everything centres on one calm memorisation session at a time</h2>
-              <p>Choose a small range, repeat with structure, then return for recall and review without dashboard
-                clutter.</p>
+          <section class="guest-section guest-section-row guest-section-row-simplified row g-4 align-items-start">
+            <div class="col-12 col-xl-4">
+              <div class="guest-section-head guest-section-head-side">
+                <span class="guest-section-kicker">{{ t('memorisation.how_mutqin_stays_focused') }}</span>
+                <h2>{{ t('memorisation.everything_centres_on_one_calm_memorisation_sessio') }}</h2>
+                <p>{{ t('memorisation.choose_a_small_range_repeat_with_structure_then_re') }}</p>
+              </div>
             </div>
-            <div class="guest-feature-grid">
-              <article class="guest-feature-card">
-                <i class="bi bi-layers"></i>
-                <strong>Focused ayah ranges</strong>
-                <p>Work in smaller sections that are easier to repeat well.</p>
-              </article>
-              <article class="guest-feature-card">
-                <i class="bi bi-arrow-repeat"></i>
-                <strong>Clear repetition</strong>
-                <p>Keep your session steady instead of guessing how many times to repeat.</p>
-              </article>
-              <article class="guest-feature-card">
-                <i class="bi bi-ear"></i>
-                <strong>Recall with less clutter</strong>
-                <p>Use only the aids and techniques that support the current passage.</p>
-              </article>
-              <article class="guest-feature-card">
-                <i class="bi bi-graph-up-arrow"></i>
-                <strong>Progress you can revisit</strong>
-                <p>Saved sessions and compact insights stay ready when you come back.</p>
-              </article>
+            <div class="col-12 col-xl-8">
+              <div class="row g-3 guest-feature-grid">
+                <div class="col-12 col-sm-6">
+                  <article class="guest-feature-card h-100">
+                    <i class="bi bi-layers"></i>
+                    <strong>{{ t('memorisation.focused_ayah_ranges') }}</strong>
+                    <p>{{ t('memorisation.work_in_smaller_sections_that_are_easier_to_repeat') }}</p>
+                  </article>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <article class="guest-feature-card h-100">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <strong>{{ t('memorisation.clear_repetition') }}</strong>
+                    <p>{{ t('memorisation.keep_your_session_steady_instead_of_guessing_how_m') }}</p>
+                  </article>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <article class="guest-feature-card h-100">
+                    <i class="bi bi-ear"></i>
+                    <strong>{{ t('memorisation.recall_with_less_clutter') }}</strong>
+                    <p>{{ t('memorisation.use_only_the_aids_and_techniques_that_support_the_') }}</p>
+                  </article>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <article class="guest-feature-card h-100">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <strong>{{ t('memorisation.progress_you_can_revisit') }}</strong>
+                    <p>{{ t('memorisation.saved_sessions_and_compact_insights_stay_ready_whe') }}</p>
+                  </article>
+                </div>
+              </div>
             </div>
           </section>
         </div>
@@ -1336,8 +1368,8 @@
       <div class="modal-content save-name-modal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
         <div class="modal-header">
           <div class="modal-header-text">
-            <h2 id="saveModalTitle">Save Memorisation Session</h2>
-            <p>Name this session so you can find it again later.</p>
+            <h2 id="saveModalTitle">{{ t('memorisation.save_memorisation_session') }}</h2>
+            <p>{{ t('memorisation.name_this_session_so_you_can_find_it_again_later') }}</p>
           </div>
           <button class="modal-close-btn" @click="closeSaveModal" aria-label="Close">
             <i class="bi bi-x-lg"></i>
@@ -1347,7 +1379,7 @@
         <div class="modal-body">
           <div class="name-input-group" :class="{ 'has-error': nameError }">
             <label for="sessionName">
-              Session Name
+              {{ t('memorisation.session_name') }}
             </label>
             <input id="sessionName" type="text" v-model="saveSessionName" class="name-input"
               :class="{ 'error': nameError }" :placeholder="`${currentChapter?.name_simple || 'Session'} ${rangeStart}-${rangeEnd}`"
@@ -1366,11 +1398,11 @@
         <div class="modal-footer">
           <button class="btn-secondary" @click="closeSaveModal">
             <i class="bi bi-x-lg"></i>
-            Cancel
+            {{ t('common.cancel') }}
           </button>
           <button class="btn-primary" @click="confirmSaveSession" :disabled="!isValidSessionName">
             <i class="bi bi-save"></i>
-            Save Session
+            {{ t('memorisation.save_session') }}
           </button>
         </div>
       </div>
@@ -1403,7 +1435,7 @@
         <div class="modal-header">
           <div class="modal-header-text">
             <div class="modal-context-badge">{{ sessionContextBadge }}</div>
-            <h2 id="sessionExitTitle">End Session</h2>
+            <h2 id="sessionExitTitle">{{ t('sessionStatus.end') }}</h2>
           </div>
           <button class="btn-icon" @click="closeSessionExitModal" type="button" aria-label="Close end session dialog"><i
               class="bi bi-x-lg" aria-hidden="true"></i></button>
@@ -1414,11 +1446,82 @@
             <span><i class="bi bi-text-paragraph"></i> Ayah {{ currentPosition }}/{{ totalVerses }}</span>
             <span><i class="bi bi-clock"></i> {{ formatTime(currentTime || 0) }}</span>
           </div>
-          <p class="confirm-copy">End this session now?</p>
+          <p class="confirm-copy">{{ t('memorisation.end_this_session_now') }}</p>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeSessionExitModal">Close</button>
-          <button class="btn-primary" @click="confirmSessionExit">End Session</button>
+          <button class="btn-secondary" @click="closeSessionExitModal">{{ t('common.close') }}</button>
+          <button class="btn-primary" @click="confirmSessionExit">{{ t('sessionStatus.end') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showHelpLearningModal" class="modal-overlay help-learning-overlay" @click.self="closeHelpLearningModal">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable help-learning-dialog">
+        <div class="modal-content help-learning-modal" role="dialog" aria-modal="true"
+          aria-labelledby="helpLearningTitle" aria-describedby="helpLearningSubtitle">
+          <div class="modal-header help-learning-header">
+            <div class="modal-header-text">
+              <h2 id="helpLearningTitle">Help &amp; Learning</h2>
+              <p id="helpLearningSubtitle">Learn how to use Mutqin's tools to memorise more effectively.</p>
+            </div>
+            <button class="modal-close-btn" @click="closeHelpLearningModal" aria-label="Close help and learning">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="modal-body help-learning-body">
+            <div class="help-learning-shell container-fluid px-0">
+              <div class="row g-3 g-lg-4 align-items-start">
+                <div class="col-12 col-md-4 col-lg-3 help-learning-nav-col">
+                  <div class="nav flex-md-column nav-pills help-learning-nav" role="tablist" aria-label="Help topics">
+                    <button
+                      v-for="section in helpLearningSections"
+                      :key="section.key"
+                      type="button"
+                      class="nav-link help-learning-nav-link"
+                      :class="{ active: activeHelpLearningSection?.key === section.key }"
+                      :aria-selected="activeHelpLearningSection?.key === section.key ? 'true' : 'false'"
+                      @click="selectHelpLearningSection(section.key)"
+                    >
+                      <i class="bi" :class="section.icon" aria-hidden="true"></i>
+                      <span>{{ section.title }}</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-12 col-md-8 col-lg-9 help-learning-content-col">
+                  <article v-if="activeHelpLearningSection" class="card help-learning-card h-100 border-0">
+                    <div class="card-body help-learning-card-body">
+                      <div class="help-learning-card-head">
+                        <span class="help-learning-icon" aria-hidden="true">
+                          <i class="bi" :class="activeHelpLearningSection.icon"></i>
+                        </span>
+                        <div class="help-learning-copy">
+                          <h3>{{ activeHelpLearningSection.title }}</h3>
+                          <p>{{ activeHelpLearningSection.description }}</p>
+                        </div>
+                      </div>
+                      <div v-if="activeHelpLearningSection.details?.length" class="help-learning-detail-list">
+                        <div
+                          v-for="detail in activeHelpLearningSection.details"
+                          :key="`${activeHelpLearningSection.key}-${detail.label}`"
+                          class="help-learning-detail-item"
+                        >
+                          <strong>{{ detail.label }}</strong>
+                          <span>{{ detail.text }}</span>
+                        </div>
+                      </div>
+                      <div class="help-learning-best-for">
+                        <span class="help-learning-best-for-label">Best for</span>
+                        <p>{{ activeHelpLearningSection.bestFor }}</p>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer help-learning-footer">
+            <button class="btn-secondary" @click="closeHelpLearningModal">{{ t('common.close') }}</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1429,7 +1532,7 @@
     <div v-if="showCountdownOverlay" class="countdown-overlay">
       <div class="countdown-modal">
         <div class="countdown-number">{{ countdownValue }}</div>
-        <div class="countdown-text">Prepare yourself</div>
+        <div class="countdown-text">{{ t('memorisation.prepare_yourself') }}</div>
       </div>
     </div>
 
@@ -1450,8 +1553,8 @@
         aria-labelledby="plannerCompletionTitle">
         <div class="modal-header planner-completion-header">
           <div class="planner-completion-head-copy">
-            <span class="planner-completion-kicker"><i class="bi bi-stars"></i> Session Finished</span>
-            <h2 id="plannerCompletionTitle">Congratulations. Today&apos;s Hifz session is complete.</h2>
+            <span class="planner-completion-kicker"><i class="bi bi-stars"></i> {{ t('memorisation.session_finished') }}</span>
+            <h2 id="plannerCompletionTitle">{{ t('memorisation.congratulations_todays_hifz_session_is_complete') }}</h2>
             <p>{{ plannerCompletionSummaryMessage }}</p>
           </div>
           <button class="modal-close-btn" @click="closePlannerCompletionModal" aria-label="Close">
@@ -1463,28 +1566,28 @@
             <div class="row g-3 planner-completion-stats-row">
               <div class="col-3 planner-completion-stat-col">
                 <article class="planner-completion-stat">
-                  <span>Memorised today</span>
+                  <span>{{ t('memorisation.memorised_today') }}</span>
                   <strong>{{ plannerCompletionStats.memorised }}</strong>
                   <small>{{ plannerCompletionStats.memorisedLabel }}</small>
                 </article>
               </div>
               <div class="col-3 planner-completion-stat-col">
                 <article class="planner-completion-stat">
-                  <span>New ayahs</span>
+                  <span>{{ t('memorisation.new_ayahs') }}</span>
                   <strong>{{ plannerCompletionStats.newAyahs }}</strong>
                   <small>{{ plannerCompletionStats.newAyahsLabel }}</small>
                 </article>
               </div>
               <div class="col-3 planner-completion-stat-col">
                 <article class="planner-completion-stat">
-                  <span>Today&apos;s goal</span>
+                  <span>{{ t('memorisation.todays_goal') }}</span>
                   <strong>{{ plannerCompletionStats.goalProgress }}</strong>
                   <small>{{ plannerCompletionStats.goalStatus }}</small>
                 </article>
               </div>
               <div class="col-3 planner-completion-stat-col">
                 <article class="planner-completion-stat">
-                  <span>Next review</span>
+                  <span>{{ t('memorisation.next_review') }}</span>
                   <strong>{{ plannerCompletionStats.nextReview }}</strong>
                   <small>{{ plannerCompletionStats.nextReviewHint }}</small>
                 </article>
@@ -1506,10 +1609,10 @@
         <div class="modal-footer planner-completion-footer">
           <button class="btn btn-success" type="button" @click="openHifzPlanFromCompletionModal">
             <i class="bi bi-pencil-square" aria-hidden="true"></i>
-            View Plan
+            {{ t('memorisation.view_plan') }}
           </button>
           <button class="btn btn-outline-secondary" type="button" @click="closePlannerCompletionModal">
-            Close
+            {{ t('common.close') }}
           </button>
         </div>
       </div>
@@ -1521,7 +1624,7 @@
         aria-labelledby="sessionAnalyticsTitle">
         <div class="modal-header session-analytics-header">
           <div class="session-analytics-head-copy">
-            <h2 id="sessionAnalyticsTitle">Session Analytics Overview</h2>
+            <h2 id="sessionAnalyticsTitle">{{ t('memorisation.session_analytics_overview') }}</h2>
             <p v-if="analyticsModalSessionLabel">{{ analyticsModalSessionLabel }}</p>
             <small v-if="analyticsModalSessionMeta">{{ analyticsModalSessionMeta }}</small>
           </div>
@@ -1539,7 +1642,7 @@
         <div class="modal-body session-analytics-body">
           <div v-if="!analyticsModalLoaded" class="analytics-loading">
             <i class="bi bi-hourglass-split"></i>
-            <span>Preparing analytics...</span>
+            <span>{{ t('memorisation.preparing_analytics') }}</span>
           </div>
           <template v-else-if="analyticsModalData">
             <section class="session-analytics-section">
@@ -1554,8 +1657,8 @@
             <section v-if="analyticsAiCheckSummary" class="session-analytics-section">
               <article class="session-analytics-panel analytics-ai-report">
                 <header>
-                  <h3>Recite Check Results</h3>
-                  <p>Saved word checks for this session range.</p>
+                  <h3>{{ t('memorisation.recite_check_results') }}</h3>
+                  <p>{{ t('memorisation.saved_word_checks_for_this_session_range') }}</p>
                 </header>
                 <div class="recitation-result-stats">
                   <article v-for="stat in analyticsAiCheckSummary.stats" :key="stat.key" class="recitation-result-stat"
@@ -1566,12 +1669,12 @@
                   </article>
                 </div>
                 <div class="recitation-next-card">
-                  <span>What next?</span>
+                  <span>{{ t('memorisation.what_next') }}</span>
                   <strong>{{ analyticsAiCheckSummary.recommendation }}</strong>
                   <p>{{ analyticsAiCheckSummary.nextStep }}</p>
                 </div>
                 <div v-if="analyticsAiCheckSummary.validation" class="recitation-next-card">
-                  <span>Deterministic replay</span>
+                  <span>{{ t('memorisation.deterministic_replay') }}</span>
                   <strong :class="analyticsAiCheckSummary.validation.tone">{{ analyticsAiCheckSummary.validation.label }}</strong>
                   <p>{{ analyticsAiCheckSummary.validation.summary }}</p>
                 </div>
@@ -1581,7 +1684,7 @@
             <section class="session-analytics-section" v-if="analyticsModalData">
               <!-- <div class="confidence-heatmap-inline">
                 <div class="heatmap-header">
-                  <h3><i class="bi bi-grid-3x3-gap-fill"></i> Recitation Confidence Heatmap</h3>
+                  <h3><i class="bi bi-grid-3x3-gap-fill"></i> {{ t('memorisation.recitation_confidence_heatmap') }}</h3>
                   <div class="heatmap-legend">
                     <span class="legend-dot excellent"></span><span>90-100</span>
                     <span class="legend-dot strong"></span><span>75-89</span>
@@ -1606,7 +1709,6 @@
                   </div>
                 </div>
 
-                -- Tooltip --
                 <div 
                   v-if="heatmapTooltip?.visible" 
                   class="heatmap-tooltip" 
@@ -1620,19 +1722,17 @@
                   <div>Attempts: {{ heatmapTooltip?.data?.attemptCount }}</div>
                 </div>
 
-                -- Trend Summary --
                 <div v-if="heatmapTrends.improved.length || heatmapTrends.declined.length" class="heatmap-trends">
                   <div class="trend-improved" v-if="heatmapTrends.improved.length">
-                    <i class="bi bi-arrow-up-circle-fill"></i> Most Improved: 
+                    <i class="bi bi-arrow-up-circle-fill"></i> {{ t('memorisation.most_improved') }} 
                     <strong>Ayah {{ heatmapTrends.improved[0].ayahNumber }}</strong> (+{{ heatmapTrends.improved[0].change }}%)
                   </div>
                   <div class="trend-declined" v-if="heatmapTrends.declined.length">
-                    <i class="bi bi-arrow-down-circle-fill"></i> Needs Focus: 
+                    <i class="bi bi-arrow-down-circle-fill"></i> {{ t('memorisation.needs_focus') }} 
                     <strong>Ayah {{ heatmapTrends.declined[0].ayahNumber }}</strong> ({{ heatmapTrends.declined[0].change }}% decline)
                   </div>
                 </div>
 
-                -- Focus Alert --
                 <div v-if="heatmapFocusAreas.length" class="heatmap-focus">
                   <i class="bi bi-exclamation-triangle-fill"></i>
                   <span>Priority: {{ heatmapFocusAreas.length }} ayah{{ heatmapFocusAreas.length > 1 ? 's' : '' }} below 60% confidence</span>
@@ -1647,8 +1747,8 @@
             <section class="session-analytics-section session-analytics-two-col">
               <article class="session-analytics-panel analytics-detail-extra">
                 <header>
-                  <h3>Ayah activity</h3>
-                  <p>Verse plays across the selected range.</p>
+                  <h3>{{ t('memorisation.ayah_activity') }}</h3>
+                  <p>{{ t('memorisation.verse_plays_across_the_selected_range') }}</p>
                 </header>
                 <div v-if="analyticsVerseSeries.length" class="analytics-line-chart">
                   <svg viewBox="0 0 320 160" role="img" aria-label="Ayah activity chart">
@@ -1673,14 +1773,14 @@
                     <span v-for="item in analyticsVerseSeries" :key="`label-${item.key}`">{{ item.shortLabel }}</span>
                   </div>
                 </div>
-                <div v-else class="analytics-empty-panel">Play ayah audio to populate the activity chart.</div>
+                <div v-else class="analytics-empty-panel">{{ t('memorisation.play_ayah_audio_to_populate_the_activity_chart') }}</div>
               </article>
             </section>
             <section class="session-analytics-section session-analytics-two-col analytics-extra-section">
               <article class="session-analytics-panel">
                 <header>
-                  <h3>Most Replayed Ayahs</h3>
-                  <p>Quick view of where repetition is concentrating.</p>
+                  <h3>{{ t('memorisation.most_replayed_ayahs') }}</h3>
+                  <p>{{ t('memorisation.quick_view_of_where_repetition_is_concentrating') }}</p>
                 </header>
                 <div v-if="analyticsReplayLeaders.length" class="analytics-bar-list">
                   <div v-for="item in analyticsReplayLeaders" :key="item.key" class="analytics-bar-row">
@@ -1691,12 +1791,12 @@
                     <strong>{{ item.value }}</strong>
                   </div>
                 </div>
-                <div v-else class="analytics-empty-panel">No ayah replay data available yet.</div>
+                <div v-else class="analytics-empty-panel">{{ t('memorisation.no_ayah_replay_data_available_yet') }}</div>
               </article>
               <article class="session-analytics-panel">
                 <header>
-                  <h3>Session Playback Balance</h3>
-                  <p>See how evenly audio attention is spread across the selected range.</p>
+                  <h3>{{ t('memorisation.session_playback_balance') }}</h3>
+                  <p>{{ t('memorisation.see_how_evenly_audio_attention_is_spread_across_th') }}</p>
                 </header>
                 <div v-if="analyticsPlaybackBuckets.length" class="analytics-bucket-grid">
                   <div v-for="bucket in analyticsPlaybackBuckets" :key="bucket.key" class="analytics-bucket-card">
@@ -1705,7 +1805,7 @@
                     <small>{{ bucket.description }}</small>
                   </div>
                 </div>
-                <div v-else class="analytics-empty-panel">Playback balance appears after ayah audio starts.</div>
+                <div v-else class="analytics-empty-panel">{{ t('memorisation.playback_balance_appears_after_ayah_audio_starts') }}</div>
               </article>
             </section>
           </template>
@@ -1719,9 +1819,9 @@
         aria-labelledby="advancedMetricsTitle">
         <div class="modal-header session-analytics-header">
           <div class="session-analytics-head-copy">
-            <h2 id="advancedMetricsTitle">Advanced Metrics</h2>
-            <p>Session signals, review health, cards, graphs, and charts.</p>
-            <small>Save a session to unlock full per-session analytics.</small>
+            <h2 id="advancedMetricsTitle">{{ t('memorisation.advanced_metrics') }}</h2>
+            <p>{{ t('memorisation.session_signals_review_health_cards_graphs_and_cha') }}</p>
+            <small>{{ t('memorisation.save_a_session_to_unlock_full_per_session_analytic') }}</small>
           </div>
           <button class="modal-close-btn" @click="closeAdvancedMetricsModal" aria-label="Close advanced metrics">
             <i class="bi bi-x-lg"></i>
@@ -1743,7 +1843,7 @@
               class="session-analytics-panel detailed-analytics-section">
               <header>
                 <h3><i class="bi" :class="section.icon" aria-hidden="true"></i> {{ section.title }}</h3>
-                <p>Compact breakdown for this metric group.</p>
+                <p>{{ t('memorisation.compact_breakdown_for_this_metric_group') }}</p>
               </header>
               <div class="detailed-analytics-rows">
                 <div v-for="row in section.rows" :key="`advanced-${section.key}-${row.label}`"
@@ -1766,7 +1866,7 @@
         <div class="modal-header self-check-modal-header memorisation-checker-header">
           <div class="self-check-modal-head-copy">
             <div class="modal-context-badges">
-              <div class="modal-context-badge">AI memorisation review</div>
+              <div class="modal-context-badge">{{ t('memorisation.ai_memorisation_review') }}</div>
             </div>
             <h2 id="aiMemorisationCheckerTitle">{{ aiMemorisationCheckerTitle }}</h2>
           </div>
@@ -1779,8 +1879,8 @@
           <section class="self-check-modal-stage memorisation-checker-stage">
             <header class="self-check-section-head">
               <div>
-                <span class="self-check-kicker">Ayah display</span>
-                <strong class="self-check-section-title">Recite from memory</strong>
+                <span class="self-check-kicker">{{ t('memorisation.ayah_display') }}</span>
+                <strong class="self-check-section-title">{{ t('memorisation.recite_from_memory') }}</strong>
               </div>
               <div class="self-check-header-tools memorisation-checker-header-tools" aria-label="AI memorisation tools">
                 <button class="self-check-toolbar-btn self-check-ayah-action-ai" type="button"
@@ -1804,14 +1904,14 @@
                   :aria-pressed="aiMemorisationCheckerBlurEnabled ? 'true' : 'false'"
                   title="Blur everything" aria-label="Blur everything">
                   <i class="bi" :class="aiMemorisationCheckerBlurEnabled ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
-                  <span>Blur Everything</span>
+                  <span>{{ t('memorisation.blur_everything') }}</span>
                 </button>
                 <button class="self-check-toolbar-btn" type="button" @mousedown="startAiMemorisationCheckerPeek"
                   @mouseup="stopAiMemorisationCheckerPeek" @mouseleave="stopAiMemorisationCheckerPeek"
                   @touchstart.prevent="startAiMemorisationCheckerPeek" @touchend="stopAiMemorisationCheckerPeek"
                   @touchcancel="stopAiMemorisationCheckerPeek" title="Peek ayah" aria-label="Peek ayah">
                   <i class="bi bi-eye"></i>
-                  <span>Peek</span>
+                  <span>{{ t('memorisation.peek') }}</span>
                 </button>
               </div>
             </header>
@@ -1838,7 +1938,7 @@
               :class="{ recording: aiMemorisationCheckerRecording, reviewing: !!aiMemorisationCheckerResult }">
               <div class="self-check-recorder-head">
                 <div>
-                  <span class="self-check-kicker">Memorisation review</span>
+                  <span class="self-check-kicker">{{ t('memorisation.memorisation_review') }}</span>
                   <strong>{{ aiMemorisationCheckerRecording ? 'AI memorisation listening' : aiMemorisationCheckerResult ? 'Review before saving' : 'AI memorisation review' }}</strong>
                   <p class="self-check-card-desc">{{ aiMemorisationCheckerStageDescription }}</p>
                 </div>
@@ -1848,7 +1948,7 @@
                 aria-live="polite">
                 <div class="recitation-check-head">
                   <div>
-                    <span class="recitation-check-kicker">AI Memory</span>
+                    <span class="recitation-check-kicker">{{ t('memorisation.reading.aiMemory') }}</span>
                     <h2>{{ aiMemorisationCheckerResult ? 'Memorisation review' : aiMemorisationCheckerRecording ? 'AI memorisation listening' : 'AI memorisation check' }}</h2>
                   </div>
                   <div class="recitation-check-head-actions">
@@ -1872,7 +1972,7 @@
                   aria-label="Live memorisation word check">
                   <div class="recitation-live-head">
 	                    <span>{{ aiMemorisationCheckerLiveSummary }}</span>
-	                    <strong>Live</strong>
+	                    <strong>{{ t('memorisation.live') }}</strong>
 	                  </div>
 	                  <div class="recitation-word-stream recitation-live-word-stream memorisation-checker-word-stream" dir="rtl" lang="ar">
 	                    <span v-for="word in aiMemorisationCheckerVisibleLiveWords" :key="word.key"
@@ -1885,12 +1985,12 @@
                 <div v-if="aiMemorisationCheckerRecording" class="recitation-check-actions">
                   <button class="btn-primary self-check-action-btn" type="button" @click="stopAiMemorisationCheckerRecording">
                     <i class="bi bi-stop-circle"></i>
-                    <span>Stop Check</span>
+                    <span>{{ t('memorisation.stop_check') }}</span>
                   </button>
                 </div>
                 <div v-else-if="aiMemorisationCheckerPreparing" class="recitation-check-status">
                   <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
-                  <span>Checking the recording...</span>
+                  <span>{{ t('memorisation.checking_the_recording') }}</span>
                 </div>
                 <div v-if="aiMemorisationCheckerError" class="recitation-check-error">
                   {{ aiMemorisationCheckerError }}
@@ -1907,12 +2007,12 @@
                   </div>
                   <div class="recitation-insights-grid">
                     <div class="recitation-next-card">
-                      <span>What next?</span>
+                      <span>{{ t('memorisation.what_next') }}</span>
                       <strong>{{ getRecitationRecommendationDisplay(aiMemorisationCheckerResult) }}</strong>
                       <p>{{ getAiMemorisationCheckerNextStep(aiMemorisationCheckerResult) }}</p>
                     </div>
                     <div class="recitation-next-card ai-review-card">
-                      <span>Metadata</span>
+                      <span>{{ t('common.metadata') }}</span>
                       <p>{{ getAiRecitationPostReviewMessage(aiMemorisationCheckerResult) }}</p>
                     </div>
                   </div>
@@ -1927,25 +2027,25 @@
                   <div class="recitation-check-footnotes">
                     <div class="self-check-status self-check-status-warning ai-recitation-disclaimer recitation-check-footnote">
                       <i class="bi bi-info-circle"></i>
-                      <span>AI memorisation feedback is a guide. Verify important mistakes against the ayah before you save or reset.</span>
+                      <span>{{ t('memorisation.ai_memorisation_feedback_is_a_guide_verify_importa') }}</span>
                     </div>
                   </div>
                   <div class="recitation-result-actions">
                     <button class="btn-secondary self-check-action-btn" type="button" @click="discardAiMemorisationCheckerAssessment">
                       <i class="bi bi-x-circle"></i>
-                      <span>Discard</span>
+                      <span>{{ t('common.discard') }}</span>
                     </button>
                     <button class="btn-secondary self-check-action-btn" type="button" @click="resetAiMemorisationCheckerAssessment">
                       <i class="bi bi-arrow-counterclockwise"></i>
-                      <span>Reset Ayah</span>
+                      <span>{{ t('memorisation.reset_ayah') }}</span>
                     </button>
                     <button class="btn-secondary self-check-action-btn recitation-delete-btn" type="button" @click="deleteAiMemorisationCheckerAssessment">
                       <i class="bi bi-trash3"></i>
-                      <span>Delete</span>
+                      <span>{{ t('common.delete') }}</span>
                     </button>
                     <button class="btn-primary self-check-action-btn" type="button" @click="saveAiMemorisationCheckerAssessment">
                       <i class="bi bi-save2"></i>
-                      <span>Save Attempt</span>
+                      <span>{{ t('memorisation.save_attempt') }}</span>
                     </button>
                   </div>
                 </div>
@@ -1975,8 +2075,8 @@
           <section class="self-check-modal-stage">
             <header class="self-check-section-head">
               <div>
-                <span class="self-check-kicker">Ayah display</span>
-                <strong class="self-check-section-title">Recite from memory</strong>
+                <span class="self-check-kicker">{{ t('memorisation.ayah_display') }}</span>
+                <strong class="self-check-section-title">{{ t('memorisation.recite_from_memory') }}</strong>
               </div>
               <div class="self-check-header-tools" aria-label="Ayah tools">
                 <button class="self-check-toolbar-btn self-check-ayah-action-ai" type="button"
@@ -2002,7 +2102,7 @@
                   :disabled="recitationCheckRecording || recitationCheckPreparing"
                   title="Reset displayed ayah review" aria-label="Reset displayed ayah review">
                   <i class="bi bi-arrow-counterclockwise"></i>
-                  <span>Reset</span>
+                  <span>{{ t('common.reset') }}</span>
                 </button>
                 <button class="self-check-toolbar-btn" type="button"
                   @click.stop="toggleSelfCheckAyahPlayback(selfCheckModalVerse)"
@@ -2021,7 +2121,7 @@
               @mouseup="stopSelfCheckPeek" @mouseleave="stopSelfCheckPeek" @touchstart.prevent="startSelfCheckPeek"
               @touchend="stopSelfCheckPeek" @touchcancel="stopSelfCheckPeek">
               <i class="bi bi-hand-index"></i>
-              <span>Press and hold the ayah below to peek · release to hide again</span>
+              <span>{{ t('memorisation.press_and_hold_the_ayah_below_to_peek_release_to_h') }}</span>
             </div>
 
             <div class="self-check-modal-ayah-shell"
@@ -2044,7 +2144,7 @@
               :class="{ recording: isSelfCheckRecording, reviewing: !!selfCheckActiveDraft }">
               <div class="self-check-recorder-head">
                 <div>
-                  <span class="self-check-kicker">Recitation review</span>
+                  <span class="self-check-kicker">{{ t('memorisation.recitation_review') }}</span>
                   <strong>{{ recitationCheckRecording ? 'AI recitation listening' : selfCheckActiveDraft ? 'Review before saving': 'AI recitation review' }}</strong>
                   <p class="self-check-card-desc">{{ getSelfCheckRecorderDescription() }}</p>
                 </div>
@@ -2063,7 +2163,7 @@
                 <button class="self-check-library-link self-check-library-link-inline" type="button"
                   @click="openRecordingsLibraryFromSelfCheck">
                   <i class="bi bi-collection-play"></i>
-                  <span>Open recordings</span>
+                  <span>{{ t('memorisation.open_recordings') }}</span>
                 </button>
               </div>
 
@@ -2075,14 +2175,14 @@
 
               <div v-if="!supportsSelfCheckRecording()" class="self-check-status self-check-status-warning">
                 <i class="bi bi-mic-mute"></i>
-                <span>Recording is not available in this browser.</span>
+                <span>{{ t('memorisation.recording_is_not_available_in_this_browser') }}</span>
               </div>
 
               <section v-if="recitationCheckVisible" class="recitation-check-panel recitation-check-panel-inline"
                 aria-live="polite">
                 <div class="recitation-check-head">
                   <div>
-                    <span class="recitation-check-kicker">Recite Check</span>
+                    <span class="recitation-check-kicker">{{ t('memorisation.recite_check') }}</span>
                     <h2>{{ recitationCheckTitle }}</h2>
                   </div>
                   <div class="recitation-check-head-actions">
@@ -2119,12 +2219,12 @@
                 <div v-if="recitationCheckRecording" class="recitation-check-actions">
                   <button class="btn-primary self-check-action-btn" type="button" @click="stopRecitationCheckRecording">
                     <i class="bi bi-stop-circle"></i>
-                    <span>Stop Check</span>
+                    <span>{{ t('memorisation.stop_check') }}</span>
                   </button>
                 </div>
                 <div v-else-if="recitationCheckPreparing" class="recitation-check-status">
                   <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
-                  <span>Checking the recording...</span>
+                  <span>{{ t('memorisation.checking_the_recording') }}</span>
                 </div>
                 <div v-if="recitationCheckError" class="recitation-check-error">
                   {{ recitationCheckError }}
@@ -2134,7 +2234,7 @@
                   <div class="recitation-check-idle-copy">
                     <span class="recitation-check-section-label">{{ recitationCheckPromptLabel }}</span>
                     <strong>{{ recitationCheckScope === 'session' ? 'Ready for the selected range.' : 'Ready for this ayah.' }}</strong>
-                    <p>Use the AI recite tool in the header when you want to begin.</p>
+                    <p>{{ t('memorisation.use_the_ai_recite_tool_in_the_header_when_you_want') }}</p>
                   </div>
                 </div>
                 <div v-if="recitationCheckResult" class="recitation-check-body recitation-check-results">
@@ -2148,12 +2248,12 @@
                   </div>
                   <div class="recitation-insights-grid">
                     <div class="recitation-next-card">
-                      <span>What to do next?</span>
+                      <span>{{ t('memorisation.what_to_do_next') }}</span>
                       <strong>{{ getRecitationRecommendationDisplay(recitationCheckResult) }}</strong>
                       <p>{{ getRecitationNextStep(recitationCheckResult) }}</p>
                     </div>
                     <div class="recitation-next-card ai-review-card">
-                      <span>AI review check</span>
+                      <span>{{ t('memorisation.ai_review_check') }}</span>
                       <p>{{ getAiRecitationPostReviewMessage(recitationCheckResult) }}</p>
                     </div>
                   </div>
@@ -2166,34 +2266,34 @@
                       class="self-check-status self-check-status-success recitation-check-footnote recitation-saved-footnote">
                       <div class="recitation-saved-footnote-copy">
                         <i class="bi bi-check2-circle"></i>
-                        <span>Saved to your recordings library for this ayah.</span>
+                        <span>{{ t('memorisation.saved_to_your_recordings_library_for_this_ayah') }}</span>
                       </div>
                       <button class="banner-action recitation-saved-footnote-action" type="button"
                         @click="openRecordingsLibraryFromSelfCheck">
-                        Go to recording library
+                        {{ t('memorisation.go_to_recording_library') }}
                       </button>
                     </div>
                     <div class="self-check-status self-check-status-warning ai-recitation-disclaimer recitation-check-footnote">
                       <i class="bi bi-info-circle"></i>
-                      <span>AI recitation feedback is a guide. Verify important mistakes against the ayah before you save or reset.</span>
+                      <span>{{ t('memorisation.ai_recitation_feedback_is_a_guide_verify_important') }}</span>
                     </div>
                   </div>
                   <div class="recitation-result-actions">
                     <button class="btn-secondary self-check-action-btn" type="button" @click="discardRecitationCheckAttempt">
                       <i class="bi bi-x-circle"></i>
-                      <span>Discard</span>
+                      <span>{{ t('common.discard') }}</span>
                     </button>
                     <button class="btn-secondary self-check-action-btn" type="button" @click="resetDisplayedRecitationAyah">
                       <i class="bi bi-arrow-counterclockwise"></i>
-                      <span>Reset Ayah</span>
+                      <span>{{ t('memorisation.reset_ayah') }}</span>
                     </button>
                     <button class="btn-secondary self-check-action-btn recitation-delete-btn" type="button" @click="deleteRecitationCheckAttempt">
                       <i class="bi bi-trash3"></i>
-                      <span>Delete</span>
+                      <span>{{ t('common.delete') }}</span>
                     </button>
                     <button class="btn-primary self-check-action-btn" type="button" @click="savePendingRecitationCheckAttempt">
                       <i class="bi bi-save2"></i>
-                      <span>Save Attempt</span>
+                      <span>{{ t('memorisation.save_attempt') }}</span>
                     </button>
                   </div>
                 </div>
@@ -2202,7 +2302,7 @@
               <div v-else-if="isSelfCheckRecording" class="self-check-live-card">
                 <div class="self-check-live-stage">
                   <div class="self-check-live-copy">
-                    <strong>Recording now</strong>
+                    <strong>{{ t('memorisation.recording_now') }}</strong>
                     <span>{{ getSelfCheckLiveDurationLabel() }} elapsed · speak clearly, then tap stop when
                       finished</span>
                   </div>
@@ -2213,11 +2313,11 @@
                 <div class="self-check-live-actions">
                   <button class="btn-secondary self-check-action-btn" type="button" @click="discardSelfCheckRecording">
                     <i class="bi bi-x-circle"></i>
-                    <span>Discard</span>
+                    <span>{{ t('common.discard') }}</span>
                   </button>
                   <button class="btn-primary self-check-action-btn" type="button" @click="stopSelfCheckRecording">
                     <i class="bi bi-stop-circle"></i>
-                    <span>Stop Recording</span>
+                    <span>{{ t('memorisation.stop_recording') }}</span>
                   </button>
                 </div>
               </div>
@@ -2230,22 +2330,16 @@
               <div v-else-if="selfCheckActiveDraft" class="self-check-review-card">
                 <div class="self-check-review-head">
                   <div>
-                    <strong>Review this attempt</strong>
+                    <strong>{{ t('memorisation.review_this_attempt') }}</strong>
                     <span>{{ formatRecordingDate(selfCheckActiveDraft.recordedAt) }} · {{
                       formatRecordingDuration(selfCheckActiveDraft.durationSeconds) }}</span>
                   </div>
                   <audio class="self-check-review-audio" :src="selfCheckActiveDraft.audioSrc" controls preload="metadata"></audio>
-                  <button class="player-btn self-check-preview-btn" type="button"
-                    @click="toggleSelfCheckPreview(selfCheckModalVerse.key)">
-                    <i class="bi"
-                      :class="activeSelfCheckPreviewKey === selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                    <span>{{ activeSelfCheckPreviewKey === selfCheckModalVerse.key ? 'Pause' : 'Play' }}</span>
-                  </button>
                 </div>
 
                 <div class="self-check-result-block">
                   <div class="self-check-result-label">
-                    <span class="self-check-kicker">Self-rating</span>
+                    <span class="self-check-kicker">{{ t('memorisation.self_rating') }}</span>
                   </div>
                   <div class="self-check-result-group" role="group" aria-label="Choose self-check result">
                     <button v-for="option in ['Excellent', 'Good', 'Needs Review']" :key="option" type="button"
@@ -2261,17 +2355,17 @@
                 <div class="self-check-review-actions">
                   <button class="btn-secondary self-check-action-btn" type="button" @click="discardSelfCheckRecording">
                     <i class="bi bi-trash3"></i>
-                    <span>Discard</span>
+                    <span>{{ t('common.discard') }}</span>
                   </button>
                   <button class="btn-secondary self-check-action-btn" type="button"
                     @click="restartSelfCheckRecording(selfCheckModalVerse)">
                     <i class="bi bi-arrow-repeat"></i>
-                    <span>Record Again</span>
+                    <span>{{ t('memorisation.record_again') }}</span>
                   </button>
                   <button class="btn-primary self-check-action-btn" type="button"
                     @click="saveSelfCheckRecording(selfCheckModalVerse)">
                     <i class="bi bi-save2"></i>
-                    <span>Save Attempt</span>
+                    <span>{{ t('memorisation.save_attempt') }}</span>
                   </button>
                 </div>
               </div>
@@ -2289,7 +2383,7 @@
         aria-labelledby="recordingsLibraryTitle">
         <div class="modal-header recordings-library-header">
           <div class="recordings-library-head-copy">
-            <h2 id="recordingsLibraryTitle">Recordings Library</h2>
+            <h2 id="recordingsLibraryTitle">{{ t('memorisation.recordings_library') }}</h2>
             <div class="recordings-library-hierarchy">
               <span>{{ currentChapter?.name_simple || 'Saved session' }}</span>
               <span>{{ rangeStart }}-{{ rangeEnd }}</span>
@@ -2302,7 +2396,7 @@
             <button v-if="recordingsLibraryReturnToSelfCheckKey" class="recordings-library-back-btn" type="button"
               @click="backToSelfCheckFromLibrary" aria-label="Back to self-check">
               <i class="bi bi-arrow-left"></i>
-              <span>Back to Self-Check</span>
+              <span>{{ t('memorisation.back_to_self_check') }}</span>
             </button>
             <button class="modal-close-btn" @click="closeRecordingsLibrary" aria-label="Close recordings library">
               <i class="bi bi-x-lg"></i>
@@ -2313,14 +2407,14 @@
         <div class="modal-body recordings-library-body">
           <div v-if="isRecordingsLibraryLoading" class="recordings-library-loading">
             <i class="bi bi-hourglass-split"></i>
-            <span>Loading recordings…</span>
+            <span>{{ t('memorisation.loading_recordings') }}</span>
           </div>
 
           <div v-else-if="!hasRecordingsLibraryEntries" class="recordings-library-empty">
             <div class="recordings-library-empty-icon">
               <i class="bi bi-mic"></i>
             </div>
-            <h3>No recordings yet</h3>
+            <h3>{{ t('memorisation.no_recordings_yet') }}</h3>
             <p>Open Self-Check on any ayah in your session, record your recitation, and save the attempt. Every saved
               recording will appear here, grouped by surah and ayah.</p>
           </div>
@@ -2329,7 +2423,7 @@
             <aside class="recordings-library-nav">
               <div class="recordings-library-nav-head">
                 <div>
-                  <span class="recordings-library-nav-kicker">Saved session</span>
+                  <span class="recordings-library-nav-kicker">{{ t('memorisation.saved_session') }}</span>
                   <strong>{{ currentChapter?.name_simple || 'Session recordings' }}</strong>
                   <div class="recordings-library-nav-meta">
                     <span>Range {{ rangeStart }}-{{ rangeEnd }}</span>
@@ -2391,7 +2485,7 @@
             <section class="recordings-library-detail">
               <div v-if="selectedRecordingsAyahGroup" class="recordings-library-detail-head">
                 <div>
-                  <span class="recordings-library-detail-kicker">Selected ayah</span>
+                  <span class="recordings-library-detail-kicker">{{ t('memorisation.selected_ayah') }}</span>
                   <span class="recordings-library-detail-kicker">{{ selectedRecordingsAyahGroup.chapterName }}</span>
                   <h3>Ayah {{ selectedRecordingsAyahGroup.ayahNumber }}</h3>
                   <div class="recordings-library-detail-meta">
@@ -2422,7 +2516,7 @@
                     </div>
                     <span v-if="isAiCheckRecording(recording)" class="recording-result-pill recording-result-pill-ai"
                       :class="getRecitationScoreTone(null)">
-                      AI check
+                      {{ t('memorisation.ai_check') }}
                     </span>
                     <span v-else class="recording-result-pill" :class="getRecordingResultTone(recording.result)">
                       {{ recording.result }}
@@ -2448,12 +2542,12 @@
                       </article>
                     </div>
                     <div class="recitation-next-card">
-                      <span>What next?</span>
+                      <span>{{ t('memorisation.what_next') }}</span>
                       <strong>{{ getRecitationRecommendationDisplay(recording) }}</strong>
                       <p>{{ getRecitationNextStep(recording) }}</p>
                     </div>
                     <div class="recitation-next-card">
-                      <span>Deterministic replay</span>
+                      <span>{{ t('memorisation.deterministic_replay') }}</span>
                       <strong :class="getRecitationValidationTone(recording)">{{ getRecitationValidationLabel(recording) }}</strong>
                       <p>{{ getRecitationValidationSummary(recording) }}</p>
                     </div>
@@ -2471,7 +2565,7 @@
                     <button class="player-btn recording-history-action recording-history-action-delete" type="button"
                       @click="promptDeleteRecording(recording.id)">
                       <i class="bi bi-trash3"></i>
-                      <span>Delete</span>
+                      <span>{{ t('common.delete') }}</span>
                     </button>
                   </div>
 
@@ -2548,9 +2642,9 @@
           </div>
         </div>
         <div class="modal-footer post-onboarding-footer">
-          <button class="btn-secondary" @click="skipOnboarding">Skip</button>
+          <button class="btn-secondary" @click="skipOnboarding">{{ t('memorisation.skip') }}</button>
           <button v-if="onboardingStepIndex < onboardingSteps.length - 1" class="btn-primary"
-            @click="nextOnboardingStep">Next</button>
+            @click="nextOnboardingStep">{{ t('memorisation.next') }}</button>
           <button v-else class="btn-primary" @click="completeOnboardingAndStart">
             {{ onboardingManualLaunch ? 'Finish' : 'Use sample session' }}
           </button>
@@ -2648,13 +2742,13 @@
         </div>
 
         <p class="quran-search-hint" :class="{ warning: quranSearchQuery && quranSearchWordCount < 3 }">
-          Enter a minimum of 3 words. Results match the same passage in Arabic text or translation.
+          {{ t('memorisation.enter_a_minimum_of_3_words_results_match_the_same_') }}
         </p>
 
         <div class="quran-search-controls">
           <div class="quran-search-filter-grid">
             <label>
-              <span>Filter</span>
+              <span>{{ t('common.filter') }}</span>
               <select v-model="quranSearchFilterType" class="quran-search-select">
                 <option v-for="filter in quranSearchFilterOptions" :key="filter.value" :value="filter.value">
                   {{ filter.label }}
@@ -2667,7 +2761,7 @@
                 class="quran-search-filter-input" type="number" min="1" :max="quranSearchFilterMax"
                 :placeholder="quranSearchFilterPlaceholder" />
               <select v-else v-model.number="quranSearchFilterValue" class="quran-search-select">
-                <option value="">Any surah</option>
+                <option value="">{{ t('memorisation.any_surah') }}</option>
                 <option v-for="chapter in chapters" :key="chapter.id" :value="chapter.id">
                   {{ chapter.name_simple }}
                 </option>
@@ -2682,12 +2776,12 @@
             </button>
             <button class="pill-control" type="button" @click="adjustQuranSearchFont(-4)">
               <i class="bi bi-dash-lg" aria-hidden="true"></i>
-              <span>Font</span>
+              <span>{{ t('memorisation.reading.font') }}</span>
             </button>
             <span class="quran-search-font-pill">{{ quranSearchFontSize }}px</span>
             <button class="pill-control" type="button" @click="adjustQuranSearchFont(4)">
               <i class="bi bi-plus-lg" aria-hidden="true"></i>
-              <span>Font</span>
+              <span>{{ t('memorisation.reading.font') }}</span>
             </button>
           </div>
         </div>
@@ -2695,10 +2789,10 @@
         <div v-if="quranSearchError" class="quran-search-status error">{{ quranSearchError }}</div>
         <div v-else-if="quranSearchLoading" class="quran-search-status">
           <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-          <span>Loading Quran search index...</span>
+          <span>{{ t('memorisation.loading_quran_search_index') }}</span>
         </div>
         <div v-else-if="quranSearchHasRun && !filteredQuranSearchResults.length" class="quran-search-status">
-          No matching ayahs found for this passage and filter.
+          {{ t('memorisation.no_matching_ayahs_found_for_this_passage_and_filte') }}
         </div>
 
         <div v-if="filteredQuranSearchResults.length" class="quran-search-results" aria-live="polite">

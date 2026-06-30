@@ -532,3 +532,130 @@ html[data-theme="dark"] .app-navbar {
   background-color: var(--accent);
   border-color: var(--accent);
 }
+
+.memorisation-boot-fallback {
+  display: grid;
+  place-items: center;
+  min-height: calc(100dvh - var(--nav-h, 70px));
+  padding: 2rem 1.25rem;
+}
+
+.memorisation-boot-card {
+  display: grid;
+  gap: 0.65rem;
+  justify-items: center;
+  max-width: 28rem;
+  padding: 1.5rem 1.75rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-strong);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.memorisation-boot-card strong {
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.memorisation-boot-card i {
+  font-size: 1.5rem;
+  color: var(--accent);
+}
+
+.memorisation-boot-fallback-error .memorisation-boot-card {
+  border-color: color-mix(in srgb, var(--danger-text, #913232) 24%, var(--border));
+  background: color-mix(in srgb, var(--danger-bg, rgba(178, 59, 59, 0.1)) 72%, var(--surface-strong));
+}
+
+.memorisation-boot-fallback-error .memorisation-boot-card i {
+  color: var(--danger-text, #913232);
+}
+
+/* ========================================
+   Global responsive system
+   Breakpoints: sm ≤480 | md ≤768 | lg ≤1024 | xl ≤1280
+   ======================================== */
+
+:root {
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+  --page-gutter: clamp(0.75rem, 2.5vw, 1.25rem);
+  --page-gutter-tight: clamp(0.625rem, 2vw, 1rem);
+}
+
+@media (max-width: 1280px) {
+  .auth-card-sm {
+    width: min(100%, 640px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .app-navbar-logo {
+    height: 44px;
+  }
+
+  .app-navbar .nav-link {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .auth-shell {
+    padding-inline: var(--page-gutter);
+  }
+
+  .auth-title {
+    font-size: clamp(1.65rem, 4vw, 2rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .app-navbar-logo {
+    height: 40px;
+  }
+
+  .app-user-toggle span:not(.app-user-avatar) {
+    max-width: 8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .auth-shell {
+    padding-top: max(1.5rem, env(safe-area-inset-top));
+    align-content: start;
+  }
+
+  .auth-form-wrap {
+    margin-top: 1.25rem;
+  }
+
+  .auth-divider {
+    margin: 1rem 0;
+  }
+
+  .memorisation-boot-fallback {
+    padding: 1.5rem var(--page-gutter);
+  }
+}
+
+@media (max-width: 480px) {
+  .skip-link {
+    inset-inline-start: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+  }
+
+  .auth-btn-primary,
+  .auth-btn-ghost,
+  .auth-google-btn {
+    min-height: 48px;
+  }
+
+  .auth-form-wrap .form-control {
+    min-height: 48px;
+    font-size: 16px;
+  }
+}

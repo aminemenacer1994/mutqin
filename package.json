@@ -20,6 +20,7 @@
         "@popperjs/core": "^2.11.0",
         "laravel-mix": "6.0.43",
         "playwright": "^1.59.1",
+        "postcss-rtlcss": "^6.0.0",
         "resolve-url-loader": "5.0.0",
         "sass": "1.69.0",
         "sass-loader": "12.6.0",

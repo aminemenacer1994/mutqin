@@ -3,8 +3,8 @@
     <div class="mission-shell">
       <div class="mission-hero">
         <div class="mission-copy">
-          <span class="mission-kicker">Our Mission</span>
-          <h1>Make consistent Quran practice easier to understand.</h1>
+          <span class="mission-kicker">{{ t('mission.kicker') }}</span>
+          <h1>{{ t('mission.make_consistent_quran_practice_easier_to_understan') }}</h1>
           <p class="mission-lead">
             Mutqin is designed to reduce friction so students can start quickly, revise calmly, and keep
             returning without confusion. The aim is a smoother routine, not a busier one.
@@ -12,19 +12,19 @@
         </div>
 
         <aside class="mission-side-panel" aria-label="Mission summary">
-          <span class="mission-side-label">What that means</span>
+          <span class="mission-side-label">{{ t('mission.what_that_means') }}</span>
           <div class="mission-side-list">
             <div>
-              <strong>Clear entry point</strong>
-              <p>Beginners should know what to do in the first minute.</p>
+              <strong>{{ t('mission.clear_entry_point') }}</strong>
+              <p>{{ t('mission.beginners_should_know_what_to_do_in_the_first_minu') }}</p>
             </div>
             <div>
-              <strong>Reliable revision loop</strong>
-              <p>Weak ayahs should surface before they become larger gaps.</p>
+              <strong>{{ t('mission.reliable_revision_loop') }}</strong>
+              <p>{{ t('mission.weak_ayahs_should_surface_before_they_become_large') }}</p>
             </div>
             <div>
-              <strong>Respect for real study</strong>
-              <p>The product should support teachers, halaqah, and personal routines.</p>
+              <strong>{{ t('mission.respect_for_real_study') }}</strong>
+              <p>{{ t('mission.the_product_should_support_teachers_halaqah_and_pe') }}</p>
             </div>
           </div>
         </aside>
@@ -33,33 +33,33 @@
       <div class="mission-roadmap">
         <article class="mission-step">
           <span class="mission-step-number">01</span>
-          <strong>Lower the barrier</strong>
-          <p>Make the first minute simple enough for beginners and steady enough for returning learners.</p>
+          <strong>{{ t('mission.lower_the_barrier') }}</strong>
+          <p>{{ t('mission.make_the_first_minute_simple_enough_for_beginners_') }}</p>
         </article>
         <article class="mission-step">
           <span class="mission-step-number">02</span>
-          <strong>Improve retention</strong>
-          <p>Surface weak ayahs before they turn into larger review gaps that are harder to recover from.</p>
+          <strong>{{ t('mission.improve_retention') }}</strong>
+          <p>{{ t('mission.surface_weak_ayahs_before_they_turn_into_larger_re') }}</p>
         </article>
         <article class="mission-step">
           <span class="mission-step-number">03</span>
-          <strong>Respect real study</strong>
-          <p>Fit naturally alongside a teacher, halaqah, or personal routine without creating unnecessary noise.</p>
+          <strong>{{ t('mission.respect_real_study') }}</strong>
+          <p>{{ t('mission.fit_naturally_alongside_a_teacher_halaqah_or_perso') }}</p>
         </article>
       </div>
 
       <div class="mission-band">
         <div>
-          <span class="mission-band-label">How success looks</span>
+          <span class="mission-band-label">{{ t('mission.how_success_looks') }}</span>
           <p>
             Students should leave every session with better clarity about what was memorised well, what needs
             revision, and what to return to next.
           </p>
         </div>
         <div class="mission-band-points">
-          <span><i class="bi bi-book-half"></i> Simpler starts</span>
-          <span><i class="bi bi-activity"></i> Stronger retention</span>
-          <span><i class="bi bi-heart"></i> More confidence</span>
+          <span><i class="bi bi-book-half"></i> {{ t('mission.simpler_starts') }}</span>
+          <span><i class="bi bi-activity"></i> {{ t('mission.stronger_retention') }}</span>
+          <span><i class="bi bi-heart"></i> {{ t('mission.more_confidence') }}</span>
         </div>
       </div>
     </div>
@@ -306,7 +306,13 @@ export default {
   }
 }
 
-@media (min-width: 900px) {
+@media (max-width: 768px) {
+  .mission-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 769px) {
   .mission-roadmap {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

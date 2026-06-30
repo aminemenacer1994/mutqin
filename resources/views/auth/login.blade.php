@@ -6,22 +6,22 @@
         <div class="row g-4 g-xl-5 align-items-start">
             <div class="col-lg-5 d-none d-lg-block">
                 <div class="auth-copy">
-                    <div class="auth-eyebrow"><i class="bi bi-stars"></i> Mutqin access</div>
+                    <div class="auth-eyebrow"><i class="bi bi-stars"></i> <span data-i18n="auth_access_eyebrow">{{ __('ui.auth_access_eyebrow') }}</span></div>
                     <h1 class="auth-title" data-i18n="login">{{ __('ui.login') }}</h1>
-                    <p class="auth-subtitle" data-i18n="authLoginSubtitle">Continue your memorisation with a clean workspace, saved progress, and subscription syncing across devices.</p>
+                    <p class="auth-subtitle" data-i18n="authLoginSubtitle">{{ __('ui.auth_login_subtitle') }}</p>
                     <div class="auth-note-list">
                         <div class="auth-note">
                             <i class="bi bi-journal-check"></i>
                             <div>
-                                <strong>Resume quickly</strong>
-                                <span>Pick up your last session without digging through extra screens.</span>
+                                <strong data-i18n="auth_resume_title">{{ __('ui.auth_resume_title') }}</strong>
+                                <span data-i18n="auth_resume_desc">{{ __('ui.auth_resume_desc') }}</span>
                             </div>
                         </div>
                         <div class="auth-note">
                             <i class="bi bi-shield-check"></i>
                             <div>
-                                <strong>Secure account access</strong>
-                                <span>Your existing Mutqin account, subscription, and session data stay exactly where they are.</span>
+                                <strong data-i18n="auth_secure_title">{{ __('ui.auth_secure_title') }}</strong>
+                                <span data-i18n="auth_secure_desc">{{ __('ui.auth_secure_desc') }}</span>
                             </div>
                         </div>
                     </div>

@@ -14,8 +14,8 @@
         <div class="modal-content">
           <div class="modal-header">
             <div>
-              <span class="hifz-plan-kicker">Hifz Plan</span>
-              <h2 id="hifzPlanCreatorTitle" class="modal-title">{{ existingPlan ? 'Edit Hifz Plan' : 'Create Your Hifz Plan' }}</h2>
+              <span class="hifz-plan-kicker">{{ t('memorisation.planner.hifzPlan') }}</span>
+              <h2 id="hifzPlanCreatorTitle" class="modal-title">{{ existingPlan ? t('hifzPlan.wizard.editTitle') : t('hifzPlan.wizard.createTitle') }}</h2>
             </div>
             <button type="button" class="btn-close" aria-label="Close" @click="close"></button>
           </div>
@@ -24,8 +24,8 @@
             <div class="hifz-plan-progress" aria-label="Plan setup progress">
               <div class="hifz-plan-progress-head">
                 <div>
-                  <span class="hifz-plan-progress-kicker">Step {{ currentStep + 1 }} of {{ steps.length }}</span>
-                  <strong>{{ steps[currentStep]?.headline || 'Your plan' }}</strong>
+                  <span class="hifz-plan-progress-kicker">{{ t('hifzPlan.wizard.stepCounter', { current: currentStep + 1, total: steps.length }) }}</span>
+                  <strong>{{ steps[currentStep]?.headline || t('hifzPlan.wizard.yourPlan') }}</strong>
                 </div>
                 <span class="hifz-plan-progress-percent">{{ wizardProgressPercent }}%</span>
               </div>
@@ -55,8 +55,8 @@
 
             <section v-if="currentStep === 0" class="hifz-plan-step">
               <div class="hifz-plan-step-head">
-                <h3>Choose Your Daily Goal</h3>
-                <p>Choose how many new ayahs you want to learn each day.</p>
+                <h3>{{ t('hifzPlan.choose_your_daily_goal') }}</h3>
+                <p>{{ t('hifzPlan.choose_how_many_new_ayahs_you_want_to_learn_each_d') }}</p>
               </div>
               <div class="row g-3">
                 <div v-for="option in goalOptions" :key="option.value" class="col-4">
@@ -76,13 +76,13 @@
               <div class="hifz-plan-manual-fields">
                 <div class="row g-3">
                   <div class="col-5">
-                    <label class="form-label" for="hifzPlanSurah">Surah</label>
+                    <label class="form-label" for="hifzPlanSurah">{{ t('hifzPlan.surah') }}</label>
                     <input
                       id="hifzPlanSurah"
                       class="form-control"
                       list="hifzPlanSurahOptions"
                       :value="draft.selectedSurah"
-                      placeholder="Choose a Surah"
+                      :placeholder="t('hifzPlan.wizard.chooseSurahPlaceholder')"
                       @input="setManualSurah($event.target.value)"
                     >
                     <datalist id="hifzPlanSurahOptions">
@@ -90,7 +90,7 @@
                     </datalist>
                   </div>
                   <div class="col-3">
-                    <label class="form-label" for="hifzPlanDailyAyahs">Daily ayahs</label>
+                    <label class="form-label" for="hifzPlanDailyAyahs">{{ t('hifzPlan.daily_ayahs') }}</label>
                     <input
                       id="hifzPlanDailyAyahs"
                       type="number"
@@ -103,7 +103,7 @@
                     >
                   </div>
                   <div class="col-2">
-                    <label class="form-label" for="hifzPlanRangeFrom">From</label>
+                    <label class="form-label" for="hifzPlanRangeFrom">{{ t('hifzPlan.from') }}</label>
                     <input
                       id="hifzPlanRangeFrom"
                       type="number"
@@ -114,7 +114,7 @@
                     >
                   </div>
                   <div class="col-2">
-                    <label class="form-label" for="hifzPlanRangeTo">To</label>
+                    <label class="form-label" for="hifzPlanRangeTo">{{ t('hifzPlan.wizard.to') }}</label>
                     <input
                       id="hifzPlanRangeTo"
                       type="number"
@@ -130,8 +130,8 @@
 
             <section v-else-if="currentStep === 1" class="hifz-plan-step">
               <div class="hifz-plan-step-head">
-                <h3>Pick Your Learning Style</h3>
-                <p>Pick the pace that feels realistic for your daily routine.</p>
+                <h3>{{ t('hifzPlan.pick_your_learning_style') }}</h3>
+                <p>{{ t('hifzPlan.pick_the_pace_that_feels_realistic_for_your_daily_') }}</p>
               </div>
               <div class="row g-3">
                 <div v-for="option in learningStyleOptions" :key="option.value" class="col-4">
@@ -152,8 +152,8 @@
 
             <section v-else-if="currentStep === 2" class="hifz-plan-step">
               <div class="hifz-plan-step-head">
-                <h3>Set Your Study Flow</h3>
-                <p>Tell Mutqin what to focus on first during each session.</p>
+                <h3>{{ t('hifzPlan.set_your_study_flow') }}</h3>
+                <p>{{ t('hifzPlan.tell_mutqin_what_to_focus_on_first_during_each_ses') }}</p>
               </div>
               <div class="row g-3">
                 <div v-for="option in focusOptions" :key="option.value" class="col-6">
@@ -174,8 +174,8 @@
 
             <section v-else-if="currentStep === 3" class="hifz-plan-step">
               <div class="hifz-plan-step-head">
-                <h3>Choose Your Support Level</h3>
-                <p>Choose how much checking and guidance you want during practice.</p>
+                <h3>{{ t('hifzPlan.choose_your_support_level') }}</h3>
+                <p>{{ t('hifzPlan.choose_how_much_checking_and_guidance_you_want_dur') }}</p>
               </div>
               <div class="row g-3">
                 <div v-for="option in supportOptions" :key="option.value" class="col-4">
@@ -196,12 +196,12 @@
 
             <section v-else-if="currentStep === 4" class="hifz-plan-step">
               <div class="hifz-plan-step-head">
-                <h3>Set Your Playback</h3>
-                <p>Choose how many repeats, which reciter, and the playback speed for each ayah.</p>
+                <h3>{{ t('hifzPlan.set_your_playback') }}</h3>
+                <p>{{ t('hifzPlan.choose_how_many_repeats_which_reciter_and_the_play') }}</p>
               </div>
               <div class="row g-3">
                 <div class="col-4">
-                  <label class="form-label" for="hifzPlanRepeats">Repeats per ayah</label>
+                  <label class="form-label" for="hifzPlanRepeats">{{ t('hifzPlan.repeats_per_ayah') }}</label>
                   <input
                     id="hifzPlanRepeats"
                     type="number"
@@ -213,7 +213,7 @@
                   >
                 </div>
                 <div class="col-4">
-                  <label class="form-label" for="hifzPlanReciter">Reciter</label>
+                  <label class="form-label" for="hifzPlanReciter">{{ t('hifzPlan.reciter') }}</label>
                   <select
                     id="hifzPlanReciter"
                     class="form-select"
@@ -224,7 +224,7 @@
                   </select>
                 </div>
                 <div class="col-4">
-                  <label class="form-label" for="hifzPlanSpeed">Playback speed</label>
+                  <label class="form-label" for="hifzPlanSpeed">{{ t('hifzPlan.playback_speed') }}</label>
                   <select
                     id="hifzPlanSpeed"
                     class="form-select"
@@ -239,8 +239,8 @@
 
             <section v-else class="hifz-plan-step">
               <div class="hifz-plan-step-head">
-                <h3>Your Hifz Journey Is Ready</h3>
-                <p>Review today&apos;s pace, then start and let Mutqin guide the first session automatically.</p>
+                <h3>{{ t('hifzPlan.your_hifz_journey_is_ready') }}</h3>
+                <p>{{ t('hifzPlan.review_todays_pace_then_start_and_let_mutqin_guide') }}</p>
               </div>
               <div class="hifz-forecast-grid" aria-label="Hifz Journey Forecast">
                 <div v-for="item in forecastItems" :key="item.label" class="hifz-forecast-card">
@@ -255,13 +255,13 @@
                   <strong>{{ item.value }}</strong>
                 </div>
               </div>
-              <p class="hifz-plan-summary-note">When you start, the timer, audio, and ayah highlighting all begin automatically.</p>
+              <p class="hifz-plan-summary-note">{{ t('hifzPlan.when_you_start_the_timer_audio_and_ayah_highlighti') }}</p>
             </section>
           </div>
 
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" :disabled="currentStep === 0" @click="previousStep">
-              Back
+              {{ t('common.back') }}
             </button>
             <button
               v-if="currentStep < steps.length - 1"
@@ -270,7 +270,7 @@
               :disabled="!canProceedFromCurrentStep"
               @click="nextStep"
             >
-              Continue
+              {{ t('common.continue') }}
             </button>
             <button
               v-else
@@ -279,7 +279,7 @@
               :disabled="!canSavePlan"
               @click="savePlan"
             >
-              {{ existingPlan ? 'Save Hifz Plan' : 'Start Hifz Journey' }}
+              {{ existingPlan ? t('hifzPlan.wizard.savePlan') : t('hifzPlan.wizard.startJourney') }}
             </button>
           </div>
         </div>
@@ -330,35 +330,28 @@ export default {
         supportLevel: false,
         playback: false
       },
-      steps: [
-        { key: 'goal', label: 'Goal', headline: "Choose today's goal" },
-        { key: 'style', label: 'Style', headline: 'Pick your daily pace' },
-        { key: 'flow', label: 'Flow', headline: 'Choose your study flow' },
-        { key: 'support', label: 'Support', headline: 'Set your support level' },
-        { key: 'playback', label: 'Playback', headline: 'Choose your recitation setup' },
-        { key: 'summary', label: 'Summary', headline: 'Start your Hifz journey' }
+      goalOptionDefs: [
+        { value: 'light', range: { min: 1, max: 3 }, icon: 'bi bi-sunrise' },
+        { value: 'balanced', range: { min: 3, max: 5 }, icon: 'bi bi-compass' },
+        { value: 'intensive', range: { min: 5, max: 10 }, icon: 'bi bi-lightning-charge' }
       ],
-      goalOptions: [
-        { value: 'light', title: 'Light', subtitle: '1-3 ayahs/day', detail: 'A lighter workload for busy days, with more time for careful revision and steady confidence.', range: { min: 1, max: 3 }, icon: 'bi bi-sunrise' },
-        { value: 'balanced', title: 'Balanced', subtitle: '3-5 ayahs/day', detail: 'Maintain a steady pace with enough revision to strengthen long-term memory.', range: { min: 3, max: 5 }, icon: 'bi bi-compass' },
-        { value: 'intensive', title: 'Intensive', subtitle: '5-10 ayahs/day', detail: 'Move faster through memorisation while accepting a heavier daily revision load.', range: { min: 5, max: 10 }, icon: 'bi bi-lightning-charge' }
+      learningStyleOptionDefs: [
+        { value: 'light', icon: 'bi bi-feather' },
+        { value: 'balanced', icon: 'bi bi-sliders' },
+        { value: 'intensive', icon: 'bi bi-speedometer2' }
       ],
-      learningStyleOptions: [
-        { value: 'light', title: 'Light', subtitle: 'Low pressure, easy to maintain.', detail: 'Best for a calm routine where consistency matters more than speed.', icon: 'bi bi-feather' },
-        { value: 'balanced', title: 'Balanced', subtitle: 'Moderate pace and revision.', detail: 'A practical daily rhythm for new ayahs, review, and long-term retention.', icon: 'bi bi-sliders' },
-        { value: 'intensive', title: 'Intensive', subtitle: 'Higher pace, stronger commitment.', detail: 'Designed for faster progress with tighter daily structure and more review.', icon: 'bi bi-speedometer2' }
+      focusOptionDefs: [
+        { value: 'newPriority', icon: 'bi bi-plus-circle' },
+        { value: 'revisionPriority', icon: 'bi bi-arrow-repeat' },
+        { value: 'mixed', icon: 'bi bi-shuffle' },
+        { value: 'weakAyahFocus', icon: 'bi bi-bullseye' }
       ],
-      focusOptions: [
-        { value: 'newPriority', title: 'New Memorisation First', subtitle: 'Start with fresh ayahs.', detail: 'Keeps momentum high while still scheduling reviews after new work.', icon: 'bi bi-plus-circle' },
-        { value: 'revisionPriority', title: 'Revision First', subtitle: 'Protect what you already know.', detail: 'Places older memorisation first so retention stays strong before adding more.', icon: 'bi bi-arrow-repeat' },
-        { value: 'mixed', title: 'Mixed Flow', subtitle: 'Balanced new and review work.', detail: 'Blends new memorisation and revision into one manageable daily plan.', icon: 'bi bi-shuffle' },
-        { value: 'weakAyahFocus', title: 'Weak Ayah Focus', subtitle: 'Repair fragile memorisation.', detail: 'Gives extra attention to ayahs that need reinforcement before they become backlog.', icon: 'bi bi-bullseye' }
+      supportOptionDefs: [
+        { value: 'gentle', icon: 'bi bi-hand-thumbs-up' },
+        { value: 'standard', icon: 'bi bi-check2-circle' },
+        { value: 'highPrecision', icon: 'bi bi-shield-check' }
       ],
-      supportOptions: [
-        { value: 'gentle', title: 'Gentle Guidance', subtitle: 'Light checking and softer feedback.', detail: 'Best if you want a lighter workload while building confidence and consistency.', icon: 'bi bi-hand-thumbs-up' },
-        { value: 'standard', title: 'Standard Support', subtitle: 'Balanced checking and practical feedback.', detail: 'Best for most learners who want useful correction without slowing the session down.', icon: 'bi bi-check2-circle' },
-        { value: 'highPrecision', title: 'High Precision Mode', subtitle: 'Closer checking for stricter mastery.', detail: 'Best when you want tighter correction and can handle a more demanding session.', icon: 'bi bi-shield-check' }
-      ],
+      wizardStepKeys: ['goal', 'style', 'flow', 'support', 'playback', 'summary'],
       surahList: [
         'Al-Fatiha', 'Al-Baqarah', 'Aal-Imran', 'An-Nisa', 'Al-Maidah', 'Al-Anam', 'Al-Araf', 'Al-Anfal', 'At-Tawbah', 'Yunus',
         'Hud', 'Yusuf', 'Ar-Rad', 'Ibrahim', 'Al-Hijr', 'An-Nahl', 'Al-Isra', 'Al-Kahf', 'Maryam', 'Ta-Ha',
@@ -376,6 +369,45 @@ export default {
     }
   },
   computed: {
+    steps() {
+      return this.wizardStepKeys.map(key => ({
+        key,
+        label: this.t(`hifzPlan.wizard.steps.${key}.label`),
+        headline: this.t(`hifzPlan.wizard.steps.${key}.headline`)
+      }))
+    },
+    goalOptions() {
+      return this.goalOptionDefs.map(def => ({
+        ...def,
+        title: this.t(`hifzPlan.wizard.goals.${def.value}.title`),
+        subtitle: this.t(`hifzPlan.wizard.goals.${def.value}.subtitle`),
+        detail: this.t(`hifzPlan.wizard.goals.${def.value}.detail`)
+      }))
+    },
+    learningStyleOptions() {
+      return this.learningStyleOptionDefs.map(def => ({
+        ...def,
+        title: this.t(`hifzPlan.wizard.styles.${def.value}.title`),
+        subtitle: this.t(`hifzPlan.wizard.styles.${def.value}.subtitle`),
+        detail: this.t(`hifzPlan.wizard.styles.${def.value}.detail`)
+      }))
+    },
+    focusOptions() {
+      return this.focusOptionDefs.map(def => ({
+        ...def,
+        title: this.t(`hifzPlan.wizard.focus.${def.value}.title`),
+        subtitle: this.t(`hifzPlan.wizard.focus.${def.value}.subtitle`),
+        detail: this.t(`hifzPlan.wizard.focus.${def.value}.detail`)
+      }))
+    },
+    supportOptions() {
+      return this.supportOptionDefs.map(def => ({
+        ...def,
+        title: this.t(`hifzPlan.wizard.support.${def.value}.title`),
+        subtitle: this.t(`hifzPlan.wizard.support.${def.value}.subtitle`),
+        detail: this.t(`hifzPlan.wizard.support.${def.value}.detail`)
+      }))
+    },
     selectedGoalOption() {
       return this.goalOptions.find(option => option.value === this.draft.goal) || this.goalOptions[1]
     },
@@ -420,30 +452,30 @@ export default {
     forecastItems() {
       const forecast = this.journeyForecast
       return [
-        { label: 'Total Ayahs', value: forecast.totalAyahs.toLocaleString(), icon: 'bi-book' },
-        { label: 'Total Pages', value: forecast.totalPages.toLocaleString(), icon: 'bi-file-earmark-text' },
-        { label: 'Total Hizb', value: forecast.totalHizb.toLocaleString(), icon: 'bi-bookmarks' },
-        { label: 'Total Juz', value: forecast.totalJuz.toLocaleString(), icon: 'bi-journal-bookmark' },
-        { label: 'Daily Target', value: `${forecast.dailyTarget} Ayahs / Day`, icon: 'bi-bullseye' },
-        { label: 'Estimated Duration', value: forecast.estimatedDuration, icon: 'bi-hourglass-split' },
-        { label: 'Estimated Completion', value: forecast.estimatedCompletionDate, icon: 'bi-calendar-check' }
+        { label: this.t('hifzPlan.wizard.forecast.totalAyahs'), value: forecast.totalAyahs.toLocaleString(), icon: 'bi-book' },
+        { label: this.t('hifzPlan.wizard.forecast.totalPages'), value: forecast.totalPages.toLocaleString(), icon: 'bi-file-earmark-text' },
+        { label: this.t('hifzPlan.wizard.forecast.totalHizb'), value: forecast.totalHizb.toLocaleString(), icon: 'bi-bookmarks' },
+        { label: this.t('hifzPlan.wizard.forecast.totalJuz'), value: forecast.totalJuz.toLocaleString(), icon: 'bi-journal-bookmark' },
+        { label: this.t('hifzPlan.wizard.forecast.dailyTarget'), value: this.t('hifzPlan.wizard.forecast.dailyTargetValue', { count: forecast.dailyTarget }), icon: 'bi-bullseye' },
+        { label: this.t('hifzPlan.wizard.forecast.estimatedDuration'), value: forecast.estimatedDuration, icon: 'bi-hourglass-split' },
+        { label: this.t('hifzPlan.wizard.forecast.estimatedCompletion'), value: forecast.estimatedCompletionDate, icon: 'bi-calendar-check' }
       ]
     },
     summaryItems() {
       const items = [
-        { label: 'Daily Target', value: this.dailyGoalLabel },
-        { label: 'Learning Style', value: this.selectedLearningStyleOption.title },
-        { label: 'Study Flow', value: this.selectedFocusOption.title },
-        { label: 'Support Level', value: this.selectedSupportOption.title },
-        { label: 'Repeats per Ayah', value: `${this.draft.repetitionsPerAyah}x` },
-        { label: 'Reciter', value: this.reciterChoices.find(reciter => reciter.id === this.draft.reciterId)?.name || 'Alafasy' },
-        { label: 'Playback Speed', value: `${this.draft.playbackSpeed}x` },
-        { label: 'Retention Reviews', value: '1, 3, 7, 14, 30, 60 days' }
+        { label: this.t('hifzPlan.wizard.forecast.dailyTarget'), value: this.dailyGoalLabel },
+        { label: this.t('hifzPlan.wizard.forecast.learningStyle'), value: this.selectedLearningStyleOption.title },
+        { label: this.t('hifzPlan.wizard.studyFlow'), value: this.selectedFocusOption.title },
+        { label: this.t('hifzPlan.wizard.forecast.supportLevel'), value: this.selectedSupportOption.title },
+        { label: this.t('hifzPlan.wizard.forecast.repeatsPerAyah'), value: `${this.draft.repetitionsPerAyah}x` },
+        { label: this.t('hifzPlan.wizard.reciterLabel'), value: this.reciterChoices.find(reciter => reciter.id === this.draft.reciterId)?.name || 'Alafasy' },
+        { label: this.t('hifzPlan.wizard.forecast.playbackSpeed'), value: `${this.draft.playbackSpeed}x` },
+        { label: this.t('hifzPlan.wizard.forecast.retentionReviews'), value: this.t('hifzPlan.wizard.forecast.retentionSchedule') }
       ]
-      if (this.draft.selectedSurah) items.splice(1, 0, { label: 'Surah', value: this.draft.selectedSurah })
+      if (this.draft.selectedSurah) items.splice(1, 0, { label: this.t('hifzPlan.surah'), value: this.draft.selectedSurah })
       if (this.draft.selectedRange?.from && this.draft.selectedRange?.to) {
         items.splice(this.draft.selectedSurah ? 2 : 1, 0, {
-          label: 'Ayah Range',
+          label: this.t('hifzPlan.wizard.ayahRange'),
           value: `${this.draft.selectedRange.from}-${this.draft.selectedRange.to}`
         })
       }
@@ -482,12 +514,12 @@ export default {
       const stepKey = this.steps[this.currentStep]?.key
       if (stepKey === 'goal') {
         if (!String(this.draft.selectedSurah || '').trim()) return ''
-        if (!this.hasValidDailyTarget) return 'Set a realistic number of new ayahs for each day.'
-        if (!this.hasValidRange) return 'Enter a valid ayah range or leave both range fields blank.'
+        if (!this.hasValidDailyTarget) return this.t('hifzPlan.wizard.validation.dailyTarget')
+        if (!this.hasValidRange) return this.t('hifzPlan.wizard.validation.validRange')
       }
       if (stepKey === 'playback') {
-        if (!Number(this.draft.repetitionsPerAyah)) return 'Choose how many times each ayah should repeat.'
-        if (!String(this.draft.reciterId || '').trim()) return 'Choose a reciter before you continue.'
+        if (!Number(this.draft.repetitionsPerAyah)) return this.t('hifzPlan.wizard.validation.repeatsRequired')
+        if (!String(this.draft.reciterId || '').trim()) return this.t('hifzPlan.wizard.validation.reciterRequired')
       }
       return ''
     }

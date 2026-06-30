@@ -45,7 +45,7 @@ includesAll('session setup controls', [
   /@change="setPlaybackSpeed\(option\)"/,
   /value="auto" v-model="playMode"/,
   /value="manual" v-model="playMode"/,
-  /Delay between recitations \(secs\)/,
+  /t\('memorisation\.delay_between_recitations_secs'\)/,
   /<select v-model\.number="delay" class="select">/,
   /option in delayOptions/
 ])
@@ -90,22 +90,20 @@ includesAll('reading settings controls', [
 ])
 
 const onboardingStepsBlock = (() => {
-  const match = source.match(/onboardingSteps:\s*\[([\s\S]*?)\n\s*],\n\s*showAdvancedAnalytics:/)
-  assert.ok(match, 'onboarding steps block not found')
+  const match = source.match(/onboardingSteps\(\)\s*\{([\s\S]*?)\n\s*\},/)
+  assert.ok(match, 'onboardingSteps computed not found')
   return match[1]
 })()
 
-assert.equal((onboardingStepsBlock.match(/^\s{10}title:/gm) || []).length, 4, 'onboarding must stay at four steps or fewer')
+assert.equal((onboardingStepsBlock.match(/buildOnboardingStep/g) || []).length, 1, 'onboarding must build steps from locale keys')
 
 includesAll('onboarding system steps', [
-  /title: 'Set up a session'/,
-  /stepLabel: 'Session setup'/,
-  /title: 'Pick a reading view'/,
-  /stepLabel: 'Reading view'/,
-  /title: 'Practice with built-in tools'/,
-  /stepLabel: 'Practice tools'/,
-  /title: 'Review and return'/,
-  /stepLabel: 'Review & return'/
+  /memorisation\.onboarding\.steps\.\$\{key\}/,
+  /buildOnboardingStep\(key, icon\)/,
+  /key: 'setup'/,
+  /key: 'reading'/,
+  /key: 'practice'/,
+  /key: 'review'/
 ])
 
 assert.doesNotMatch(
@@ -192,7 +190,7 @@ includesAll('ai recitation full-session recording', [
 includesAll('ai memorisation mirrors recitation modal', [
   /aria-label="AI memorisation tools"/,
   /Play Memorisation/,
-  /Blur Everything/,
+  /t\('memorisation\.blur_everything'\)/,
   /class="recitation-check-panel recitation-check-panel-inline memorisation-checker-panel"/,
   /ref="aiMemorisationCheckerResults"/,
   /v-if="isAiMemorisationCheckerReviewActive \|\| aiMemorisationCheckerError"/,
@@ -210,13 +208,13 @@ includesAll('planner ui hidden', [
   /v-if="showHifzPlannerUi && showPlannerCompletionConfetti"/,
   /v-if="showHifzPlannerUi && showPlannerCompletionModal"/,
   /:visible="showHifzPlannerUi && showHifzPlanModal"/,
-  /<span class="workspace-shell-kicker">Session Overview<\/span>/,
+  /<span class="workspace-shell-kicker">\{\{ t\('memorisation\.sessionOverview\.kicker'\) \}\}<\/span>/,
   /v-if="showAiMemorisationButton" class="mushaf-pill mushaf-ai-pill mushaf-ai-memory"/,
   /v-if="showAiMemorisationButton" class="verse-self-check-btn verse-ai-check-btn"/,
   /<button class="action-btn primary" @click="openNewSessionSetup\(\)">/,
   /<section v-if="!hasVerses" class="workspace-empty-state" aria-label="Session setup">/,
-  /Open session setup/,
-  /Open controls/,
+  /t\('memorisation\.open_session_setup'\)/,
+  /aria-label="Open controls"/,
   /v-if="!isSessionCompleted && hasSessionStarted" v-show="!mainCardCollapsed" class="workspace-quick-controls"/
 ])
 
@@ -298,10 +296,10 @@ assert.doesNotMatch(
 )
 
 for (const pattern of [
-  /Your Hifz Journey Is Ready/,
+  /t\('hifzPlan\.your_hifz_journey_is_ready'\)/,
   /forecastItems\(\) \{/,
   /calculatePlanForecast/,
-  /detail: 'Maintain a steady pace with enough revision to strengthen long-term memory\.'/,
+  /hifzPlan\.wizard\.goals\.\$\{def\.value\}\.detail/,
   /class="hifz-forecast-grid"/,
   /status: lifecycleStatus === 'draft' \? 'active' : lifecycleStatus/,
   /wizardProgressPercent\(\) \{/,
@@ -334,8 +332,8 @@ includesAll('ai recitation simplified workspace', [
   /key: 'amber', label: 'Amber'/,
   /key: 'red', label: 'Red'/,
   /key: 'grey', label: 'Grey'/,
-  /<span>What to do next\?<\/span>/,
-  /<span>AI review check<\/span>/,
+  /<span>\{\{ t\('memorisation\.what_next'\) \}\}<\/span>/,
+  /<span>\{\{ t\('memorisation\.ai_review_check'\) \}\}<\/span>/,
   /const status = word\.status === 'pending' \? 'pending' : word\.status/,
   /recitation-review-ayah \.wbw-word/,
   /recitation-result-stats,[\s\S]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/

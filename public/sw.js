@@ -1,9 +1,8 @@
-const SHELL_CACHE = 'mutqin-shell-v5';
-const RUNTIME_CACHE = 'mutqin-runtime-v5';
+const SHELL_CACHE = 'mutqin-shell-v9';
+const RUNTIME_CACHE = 'mutqin-runtime-v9';
 const AUDIO_CACHE = 'mutqin-audio-v1';
 const SHELL_URLS = [
   '/',
-  '/memorisation',
   '/login',
   '/register',
   '/favicon.ico',

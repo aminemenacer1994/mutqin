@@ -32,10 +32,14 @@ class SetLocale
 
     private function resolveLocale(Request $request): string
     {
-        $candidate = $request->query('lang')
+        $userLocale = $request->user()?->locale;
+
+        $candidate = ($userLocale && in_array($userLocale, self::SUPPORTED_LOCALES, true))
+            ? $userLocale
+            : ($request->query('lang')
             ?: $request->cookie('mutqin_locale')
             ?: $request->getPreferredLanguage(self::SUPPORTED_LOCALES)
-            ?: config('app.locale', 'en');
+            ?: config('app.locale', 'en'));
 
         $locale = strtolower(substr((string) $candidate, 0, 2));
 

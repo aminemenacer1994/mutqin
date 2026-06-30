@@ -1424,3 +1424,143 @@
 [data-aos="flip-right"].aos-animate { transform: rotateY(0); }
 [data-aos="flip-left"] { transform: rotateY(-90deg); }
 [data-aos="flip-left"].aos-animate { transform: rotateY(0); }
+
+/* ========================================
+   Responsive breakpoints
+   sm ≤480 | md ≤768 | lg ≤1024 | xl ≤1280
+   ======================================== */
+
+@media (max-width: 1024px) {
+  .hero {
+    padding-inline: 1.5rem;
+  }
+
+  .section-container {
+    padding-inline: 1.5rem;
+  }
+
+  .floating-card {
+    display: none;
+  }
+
+  .steps-section {
+    background: var(--bg);
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    min-height: auto;
+    padding: calc(64px + 2rem) 1rem 2.5rem;
+    text-align: center;
+  }
+
+  .hero-desc,
+  .section-subtitle {
+    margin-inline: auto;
+  }
+
+  .hero-buttons {
+    justify-content: center;
+  }
+
+  .hero-action-btn {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 0;
+  }
+
+  .problem-text,
+  .solution-text {
+    text-align: left;
+  }
+
+  .section-container {
+    padding: 2rem 1rem;
+  }
+
+  .section-title::before,
+  .section-title::after {
+    display: none;
+  }
+
+  .section-title-left,
+  .section-subtitle-left {
+    text-align: center;
+  }
+
+  .feature-card,
+  .step-card {
+    min-height: auto;
+  }
+
+  .pricing-comparison {
+    padding: 1rem;
+    margin-top: 2rem;
+  }
+
+  .pricing-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .cta-block {
+    padding: 1.75rem 1.25rem;
+    border-radius: 28px;
+  }
+
+  .cta-actions {
+    width: 100%;
+  }
+
+  .cta-actions .btn-primary {
+    width: 100%;
+  }
+
+  .contact-card {
+    padding: 1rem;
+  }
+
+  .footer-container {
+    padding-inline: 0.5rem;
+  }
+
+  .footer-brand {
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: clamp(1.85rem, 8vw, 2.45rem);
+  }
+
+  .hero-action-btn {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .hero-badge {
+    font-size: 0.75rem;
+  }
+
+  .section-title {
+    font-size: clamp(1.65rem, 7vw, 2rem);
+  }
+
+  .feature-icon {
+    width: 52px;
+    height: 52px;
+    font-size: 1.6rem;
+  }
+
+  .step-number {
+    font-size: 2.25rem;
+  }
+
+  .comparison-table {
+    min-width: 520px;
+  }
+
+  .pricing-card {
+    padding: 1.25rem;
+  }
+}

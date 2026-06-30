@@ -288,6 +288,7 @@
             margin: 0 auto;
             padding: 12px var(--gutter);
             min-height: var(--nav-h);
+            gap: 12px;
         }
 
         .navbar-brand {
@@ -340,6 +341,7 @@
         }
 
         .app-navbar .offcanvas-lg {
+            flex: 1 1 auto;
             border-color: var(--border);
             background: var(--surface-strong);
             --bs-offcanvas-width: min(360px, 100vw);
@@ -411,6 +413,41 @@
             background: var(--accent-light);
             color: var(--accent);
             transform: rotate(15deg);
+        }
+
+        .app-lang-toggle {
+            min-height: 42px;
+            border-radius: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .app-lang-toggle:hover,
+        .global-lang-switcher .lang-btn.active {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        html[dir="rtl"] .navbar-shell,
+        html[dir="rtl"] .offcanvas-body,
+        html[dir="rtl"] .app-auth-links {
+            text-align: right;
+        }
+
+        html[dir="rtl"] .navbar-quick-actions {
+            flex-direction: row-reverse;
+        }
+
+        html[dir="rtl"] .dropdown-menu-end {
+            right: auto;
+            left: 0;
         }
 
         /* Dropdown Styles */
@@ -531,6 +568,48 @@
             bottom: 0px;
             right: 0px;
             left: 0px;
+        }
+
+        @media (max-width: 1024px) {
+            :root {
+                --shell-max: 100%;
+            }
+
+            .navbar-shell {
+                padding: 10px var(--gutter-tight);
+            }
+
+            .app-navbar-logo {
+                height: 48px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --nav-h: 64px;
+            }
+
+            .navbar-shell {
+                gap: 8px;
+            }
+
+            .auth-shell {
+                padding-inline: var(--gutter-tight);
+            }
+
+            .auth-card {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app-navbar-logo {
+                height: 42px;
+            }
+
+            .nav-link {
+                padding: 10px 14px;
+            }
         }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1301,7 +1380,54 @@
                 >
             </a>
 
+            <div class="offcanvas offcanvas-end offcanvas-lg" tabindex="-1" id="primaryNavbar" aria-labelledby="primaryNavbarLabel">
+                <div class="offcanvas-header">
+                    <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ __('ui.primary_navigation') }}</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#primaryNavbar" aria-label="{{ __('ui.close_navigation') }}"></button>
+                </div>
+                <div class="offcanvas-body d-flex flex-column flex-lg-row align-items-lg-center gap-3 pt-3 pt-lg-0">
+                    <div class="navbar-nav-shell d-flex justify-content-lg-center">
+                        <div class="navbar-nav nav-links-desktop gap-2 gap-lg-3 justify-content-lg-center">
+                            <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}" data-i18n="home">{{ __('ui.home') }}</a>
+                            <a class="nav-link {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}" data-i18n="memorisation">{{ __('ui.memorisation') }}</a>
+                        </div>
+                    </div>
+
+                    <div class="global-lang-switcher dropdown d-lg-none w-100" aria-label="{{ __('ui.language_switcher') }}">
+                        <button class="btn app-lang-toggle w-100 justify-content-between lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span><i class="bi bi-translate" aria-hidden="true"></i> {{ __('ui.language_switcher') }}</span>
+                            <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <ul class="dropdown-menu w-100">
+                            <li><button type="button" class="dropdown-item lang-btn" data-locale="en">🇬🇧 {{ __('ui.english') }}</button></li>
+                            <li><button type="button" class="dropdown-item lang-btn" data-locale="fr">🇫🇷 {{ __('ui.french') }}</button></li>
+                            <li><button type="button" class="dropdown-item lang-btn" data-locale="ar">🇸🇦 {{ __('ui.arabic') }}</button></li>
+                        </ul>
+                    </div>
+
+                    @guest
+                        <div class="app-auth-links d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 gap-lg-0">
+                            <a class="nav-link" href="{{ route('login') }}" data-i18n="login">{{ __('ui.login') }}</a>
+                            <a class="nav-link" href="{{ route('register') }}" data-i18n="register">{{ __('ui.register') }}</a>
+                        </div>
+                    @endguest
+                </div>
+            </div>
+
             <div class="d-flex align-items-center gap-2 navbar-quick-actions">
+                <div class="global-lang-switcher dropdown d-none d-lg-block" aria-label="{{ __('ui.language_switcher') }}">
+                    <button class="btn app-lang-toggle lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('ui.language_switcher') }}">
+                        <i class="bi bi-translate" aria-hidden="true"></i>
+                        <span class="d-none d-xl-inline">{{ __('ui.language_switcher') }}</span>
+                        <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><button type="button" class="dropdown-item lang-btn" data-locale="en">🇬🇧 {{ __('ui.english') }}</button></li>
+                        <li><button type="button" class="dropdown-item lang-btn" data-locale="fr">🇫🇷 {{ __('ui.french') }}</button></li>
+                        <li><button type="button" class="dropdown-item lang-btn" data-locale="ar">🇸🇦 {{ __('ui.arabic') }}</button></li>
+                    </ul>
+                </div>
+
                 <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="{{ __('ui.switch_dark') }}">
                     <i class="bi bi-sun"></i>
                 </button>
@@ -1316,23 +1442,23 @@
                         <ul class="dropdown-menu" id="dropdownMenu" role="menu">
                             <li>
                                 <a class="dropdown-item" href="{{ route('profile.show') }}">
-                                    <i class="bi bi-person-circle"></i> Profile
+                                    <i class="bi bi-person-circle"></i> <span data-i18n="profile">{{ __('ui.profile') }}</span>
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{{ route('profile.show') }}#subscription">
-                                    <i class="bi bi-credit-card-2-front"></i> Subscription
+                                    <i class="bi bi-credit-card-2-front"></i> <span data-i18n="subscription">{{ __('ui.subscription') }}</span>
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{{ route('profile.show') }}#settings">
-                                    <i class="bi bi-gear"></i> Settings
+                                    <i class="bi bi-gear"></i> <span data-i18n="settings">{{ __('ui.settings') }}</span>
                                 </a>
                             </li>
                             @if (Auth::user()->isAdmin())
                                 <li>
                                     <a class="dropdown-item" href="{{ route('admin.contact-messages.index') }}">
-                                        <i class="bi bi-inbox"></i> Contact Inbox
+                                        <i class="bi bi-inbox"></i> <span data-i18n="contact_inbox">{{ __('ui.contact_inbox') }}</span>
                                     </a>
                                 </li>
                             @endif
@@ -1353,28 +1479,6 @@
                     <i class="bi bi-list"></i>
                 </button>
             </div>
-
-            <div class="offcanvas offcanvas-end offcanvas-lg" tabindex="-1" id="primaryNavbar" aria-labelledby="primaryNavbarLabel">
-                <div class="offcanvas-header">
-                    <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ __('ui.primary_navigation') }}</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#primaryNavbar" aria-label="{{ __('ui.close_navigation') }}"></button>
-                </div>
-                <div class="offcanvas-body d-flex flex-column flex-lg-row align-items-lg-center gap-3 pt-3 pt-lg-0">
-                    <div class="navbar-nav-shell d-flex justify-content-lg-center">
-                        <div class="navbar-nav nav-links-desktop gap-2 gap-lg-3 justify-content-lg-center">
-                            <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
-                            <a class="nav-link {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}">Memorisation</a>
-                        </div>
-                    </div>
-
-                    @guest
-                        <div class="app-auth-links d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 gap-lg-0">
-                            <a class="nav-link" href="{{ route('login') }}" data-i18n="login">{{ __('ui.login') }}</a>
-                            <a class="nav-link" href="{{ route('register') }}" data-i18n="register">{{ __('ui.register') }}</a>
-                        </div>
-                    @endguest
-                </div>
-            </div>
         </div>
     </nav>
 
@@ -1384,13 +1488,18 @@
         </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="{{ mix('js/app.js') }}" defer></script>
     
     <script>
         window.mutqinInitialLocale = @json($appLocale);
         window.mutqinInitialDirection = @json($appDirection);
         window.mutqinForceInitialLocale = @json(request()->query('lang') ? true : false);
+        window.mutqinAuthCheck = @json(Auth::check());
+        window.mutqinUiLabels = {
+            en: @json(trans('ui', [], 'en')),
+            fr: @json(trans('ui', [], 'fr')),
+            ar: @json(trans('ui', [], 'ar')),
+        };
 
         function runWhenReady(fn) {
             if (document.readyState === 'loading') {
@@ -1533,101 +1642,7 @@
         // Global language switcher for all pages
         (function() {
             const supported = ['en', 'ar', 'fr'];
-            const labels = {
-                en: {
-                    login: 'Login',
-                    register: 'Register',
-                    logout: 'Logout',
-                    authLoginKicker: 'Welcome back',
-                    authLoginSubtitle: 'Simple sign in. Your memorisation setup stays ready.',
-                    authRegisterKicker: 'Start here',
-                    authRegisterSubtitle: 'A clean setup for memorisation, revision, and tracking.',
-                    emailAddress: 'Email Address',
-                    password: 'Password',
-                    confirmPassword: 'Confirm Password',
-                    rememberMe: 'Remember Me',
-                    continueGoogle: 'Continue with Google',
-                    forgotPassword: 'Forgot Your Password?',
-                    name: 'Name',
-                    resetKicker: 'Need a reset?',
-                    resetTitle: 'Reset your password',
-                    resetSubtitle: 'Enter your email and we will send a reset link.',
-                    sendResetLink: 'Send Password Reset Link',
-                    newPasswordKicker: 'Set a new one',
-                    newPasswordTitle: 'Choose a new password',
-                    newPasswordSubtitle: 'Keep it simple. You can get back to your session after this.',
-                    resetPassword: 'Reset Password',
-                    verifyKicker: 'One last step',
-                    verifyTitle: 'Verify your email',
-                    verifySubtitle: 'Open the link in your inbox to unlock full access.',
-                    verifyMessage: 'Before proceeding, please check your email for a verification link.',
-                    verifyNoEmail: 'If you did not receive the email',
-                    verifyResend: 'click here to request another',
-                    verifySpam: "Check your spam folder if you don't see it within 5 minutes"
-                },
-                ar: {
-                    login: 'تسجيل الدخول',
-                    register: 'إنشاء حساب',
-                    logout: 'تسجيل الخروج',
-                    authLoginKicker: 'مرحبا بعودتك',
-                    authLoginSubtitle: 'تسجيل دخول بسيط. تبقى إعدادات الحفظ جاهزة.',
-                    authRegisterKicker: 'ابدأ من هنا',
-                    authRegisterSubtitle: 'إعداد واضح للحفظ والمراجعة والمتابعة.',
-                    emailAddress: 'البريد الإلكتروني',
-                    password: 'كلمة المرور',
-                    confirmPassword: 'تأكيد كلمة المرور',
-                    rememberMe: 'تذكرني',
-                    continueGoogle: 'المتابعة باستخدام Google',
-                    forgotPassword: 'هل نسيت كلمة المرور؟',
-                    name: 'الاسم',
-                    resetKicker: 'تحتاج إلى إعادة تعيين؟',
-                    resetTitle: 'إعادة تعيين كلمة المرور',
-                    resetSubtitle: 'أدخل بريدك الإلكتروني وسنرسل رابط إعادة التعيين.',
-                    sendResetLink: 'إرسال رابط إعادة التعيين',
-                    newPasswordKicker: 'عيّن كلمة مرور جديدة',
-                    newPasswordTitle: 'اختر كلمة مرور جديدة',
-                    newPasswordSubtitle: 'اجعلها بسيطة. يمكنك العودة إلى جلستك بعد ذلك.',
-                    resetPassword: 'إعادة تعيين كلمة المرور',
-                    verifyKicker: 'خطوة أخيرة',
-                    verifyTitle: 'تحقق من بريدك الإلكتروني',
-                    verifySubtitle: 'افتح الرابط في بريدك للوصول الكامل.',
-                    verifyMessage: 'قبل المتابعة، يرجى التحقق من بريدك الإلكتروني للحصول على رابط التحقق.',
-                    verifyNoEmail: 'إذا لم تستلم البريد الإلكتروني',
-                    verifyResend: 'اضغط هنا لطلب رابط آخر',
-                    verifySpam: 'تحقق من مجلد الرسائل غير المرغوب فيها إذا لم تجده خلال 5 دقائق'
-                },
-                fr: {
-                    login: 'Connexion',
-                    register: 'Inscription',
-                    logout: 'Déconnexion',
-                    authLoginKicker: 'Bon retour',
-                    authLoginSubtitle: 'Connexion simple. Votre configuration de mémorisation reste prête.',
-                    authRegisterKicker: 'Commencez ici',
-                    authRegisterSubtitle: 'Une configuration claire pour la mémorisation, la révision et le suivi.',
-                    emailAddress: 'Adresse e-mail',
-                    password: 'Mot de passe',
-                    confirmPassword: 'Confirmer le mot de passe',
-                    rememberMe: 'Se souvenir de moi',
-                    continueGoogle: 'Continuer avec Google',
-                    forgotPassword: 'Mot de passe oublié ?',
-                    name: 'Nom',
-                    resetKicker: 'Besoin de réinitialiser ?',
-                    resetTitle: 'Réinitialiser votre mot de passe',
-                    resetSubtitle: 'Entrez votre e-mail et nous vous enverrons un lien de réinitialisation.',
-                    sendResetLink: 'Envoyer le lien de réinitialisation',
-                    newPasswordKicker: 'Définir un nouveau mot de passe',
-                    newPasswordTitle: 'Choisissez un nouveau mot de passe',
-                    newPasswordSubtitle: 'Restez simple. Vous pourrez revenir à votre session ensuite.',
-                    resetPassword: 'Réinitialiser le mot de passe',
-                    verifyKicker: 'Dernière étape',
-                    verifyTitle: 'Vérifiez votre e-mail',
-                    verifySubtitle: 'Ouvrez le lien dans votre boîte de réception pour débloquer l’accès complet.',
-                    verifyMessage: 'Avant de continuer, veuillez vérifier votre e-mail pour le lien de vérification.',
-                    verifyNoEmail: "Si vous n'avez pas reçu l'e-mail",
-                    verifyResend: 'cliquez ici pour en demander un autre',
-                    verifySpam: 'Vérifiez votre dossier spam si vous ne le voyez pas dans les 5 minutes'
-                }
-            };
+            const labels = window.mutqinUiLabels || { en: {}, fr: {}, ar: {} };
 
             function safeGet(key) {
                 try { return localStorage.getItem(key); } catch (e) { return null; }
@@ -1640,6 +1655,15 @@
                 return supported.includes(locale) ? locale : 'en';
             }
 
+            function toSnake(key) {
+                return String(key).replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+            }
+
+            function getLabel(locale, key) {
+                const pack = labels[locale] || {};
+                return pack[key] || pack[toSnake(key)] || null;
+            }
+
             function setDocumentLocale(locale) {
                 const next = normalize(locale);
                 const rtl = next === 'ar';
@@ -1648,30 +1672,80 @@
                 if (document.body) document.body.setAttribute('dir', rtl ? 'rtl' : 'ltr');
                 safeSet('mutqin.locale', next);
                 document.cookie = `mutqin_locale=${next};path=/;max-age=31536000;samesite=lax`;
-                document.querySelectorAll('#globalLangSwitcher .lang-btn').forEach((btn) => {
+                document.querySelectorAll('.global-lang-switcher .lang-btn').forEach((btn) => {
                     btn.classList.toggle('active', btn.dataset.locale === next);
                 });
                 document.querySelectorAll('[data-i18n]').forEach((el) => {
                     const key = el.getAttribute('data-i18n');
-                    if (labels[next] && labels[next][key]) el.textContent = labels[next][key];
+                    const text = getLabel(next, key);
+                    if (text) el.textContent = text;
                 });
                 window.dispatchEvent(new CustomEvent('mutqin:locale-change', { detail: { locale: next } }));
                 return next;
             }
 
             async function applyLocale(locale) {
-                const next = setDocumentLocale(locale);
+                const next = normalize(locale);
                 if (window.mutqinSetLocale) {
                     await window.mutqinSetLocale(next);
                 }
+                setDocumentLocale(next);
             }
 
-            runWhenReady(function() {
-                const saved = window.mutqinForceInitialLocale ? window.mutqinInitialLocale : (safeGet('mutqin.locale') || window.mutqinInitialLocale || 'en');
-                setDocumentLocale(saved);
-                document.querySelectorAll('#globalLangSwitcher .lang-btn').forEach((btn) => {
-                    btn.addEventListener('click', () => applyLocale(btn.dataset.locale));
+            function bindLangDropdowns() {
+                if (!window.bootstrap?.Dropdown) return false;
+                document.querySelectorAll('.global-lang-switcher').forEach((wrap) => {
+                    const toggle = wrap.querySelector('.app-lang-toggle');
+                    if (!toggle || toggle.dataset.langDropdownBound) return;
+                    toggle.dataset.langDropdownBound = '1';
+                    window.bootstrap.Dropdown.getOrCreateInstance(toggle);
                 });
+                return true;
+            }
+
+            function bindLangButtons() {
+                document.querySelectorAll('.global-lang-switcher .lang-btn[data-locale]').forEach((btn) => {
+                    if (btn.dataset.langBound) return;
+                    btn.dataset.langBound = '1';
+                    btn.addEventListener('click', async (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        const locale = btn.dataset.locale;
+                        if (!locale) return;
+                        await applyLocale(locale);
+                        const wrap = btn.closest('.global-lang-switcher');
+                        const toggle = wrap?.querySelector('.app-lang-toggle');
+                        if (toggle && window.bootstrap?.Dropdown) {
+                            window.bootstrap.Dropdown.getOrCreateInstance(toggle).hide();
+                        }
+                        const panel = document.getElementById('primaryNavbar');
+                        if (panel?.classList.contains('show') && window.bootstrap?.Offcanvas) {
+                            window.bootstrap.Offcanvas.getOrCreateInstance(panel).hide();
+                        }
+                    });
+                });
+            }
+
+            function initLangSwitcher() {
+                bindLangButtons();
+                if (!bindLangDropdowns()) {
+                    window.addEventListener('load', () => {
+                        bindLangDropdowns();
+                    }, { once: true });
+                }
+                const saved = window.mutqinForceInitialLocale
+                    ? window.mutqinInitialLocale
+                    : (safeGet('mutqin.locale') || window.mutqinInitialLocale || 'en');
+                setDocumentLocale(saved);
+                if (window.mutqinSetLocale && window.mutqinGetLocale?.() !== normalize(saved)) {
+                    window.mutqinSetLocale(normalize(saved));
+                }
+            }
+
+            runWhenReady(initLangSwitcher);
+            window.addEventListener('mutqin:i18n-ready', () => {
+                const current = window.mutqinGetLocale?.() || safeGet('mutqin.locale') || 'en';
+                setDocumentLocale(current);
             });
         })();
     </script>

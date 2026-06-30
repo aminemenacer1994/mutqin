@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -34,6 +35,21 @@ class ProfileController extends Controller
         ])->save();
 
         return back()->with('profile_status', 'Profile updated successfully.');
+    }
+
+    public function updateLocale(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'locale' => ['required', 'string', Rule::in(['en', 'ar', 'fr'])],
+        ]);
+
+        $request->user()->forceFill([
+            'locale' => $validated['locale'],
+        ])->save();
+
+        return response()->json([
+            'locale' => $validated['locale'],
+        ]);
     }
 
     public function updatePassword(Request $request): RedirectResponse

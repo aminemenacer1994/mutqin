@@ -132,7 +132,6 @@ export default {
       ],
       dropdownOpen: false,
       continueSessionLabel: '',
-      continueSessionMeta: '',
       selectedSessionId: null,
       showContinueSession: false,
       showSelectSession: false,
@@ -315,56 +314,6 @@ export default {
       onboardingManualLaunch: false,
       onboardingPath: 'casual',
       onboardingGoal: 'small',
-      onboardingSteps: [
-        {
-          title: 'Set up a session',
-          stepLabel: 'Session setup',
-          body: 'Choose a surah, set the ayah range, and pick a reciter from the session controls before you begin.',
-          points: ['The sample session starts with a short range', 'Repeat counts and playback speed stay in the controls', 'You can reopen setup at any time'],
-          preview: {
-            icon: 'bi-journal-text',
-            title: 'Real session inputs',
-            subtitle: 'Session setup already exists in the tools panel.',
-            items: ['Surah', 'Range', 'Reciter']
-          }
-        },
-        {
-          title: 'Pick a reading view',
-          stepLabel: 'Reading view',
-          body: 'Switch between stacked and mushaf layouts, then use translation, transliteration, tajweed, and font controls when needed.',
-          points: ['Keep the main text clean when you do not need extra aids', 'Mushaf mode keeps the page layout close to the Quran view', 'Fonts stay available from the toolbar'],
-          preview: {
-            icon: 'bi-layout-text-window-reverse',
-            title: 'Reading controls',
-            subtitle: 'The view toggle and reading aids are built in.',
-            items: ['Stacked', 'Mushaf', 'Tajweed']
-          }
-        },
-        {
-          title: 'Practice with built-in tools',
-          stepLabel: 'Practice tools',
-          body: 'Use focus mode, blur mode, chaining, and anchor mode when you want more structure around the active ayah.',
-          points: ['Focus mode narrows attention to the active ayah', 'Blur mode hides the next ayahs until you are ready', 'Chaining and anchor mode support harder passages'],
-          preview: {
-            icon: 'bi-stars',
-            title: 'Technique controls',
-            subtitle: 'The techniques tab is already part of the workspace.',
-            items: ['Focus', 'Blur', 'Anchor']
-          }
-        },
-        {
-          title: 'Review and return',
-          stepLabel: 'Review & return',
-          body: 'Saved sessions, recordings, and insights keep the next session close to the exact ayahs that need work.',
-          points: ['Saved sessions let you resume where you left off', 'Recording history keeps prior attempts visible', 'AI recite and AI memory checks are always available from the workspace'],
-          preview: {
-            icon: 'bi-clock-history',
-            title: 'What you can return to',
-            subtitle: 'Review and resume are already built into the system.',
-            items: ['Saved sessions', 'Recordings', 'Insights']
-          }
-        }
-      ],
       showAdvancedAnalytics: false,
       showAdvancedMetricsModal: false,
       showConfirmModal: false,
@@ -469,12 +418,12 @@ export default {
       script: 'uthmani',
       quranFont: 'uthmanic',
       fontPickerOpen: false,
-      quranFontOptions: [
-        { value: 'uthmanic', label: 'Uthmanic Hafs', icon: 'bi-book' },
-        { value: 'amiri', label: 'Amiri Quran', icon: 'bi-type' },
-        { value: 'naskh', label: 'Noto Naskh Arabic', icon: 'bi-text-paragraph' },
-        { value: 'scheherazade', label: 'Scheherazade New', icon: 'bi-fonts' },
-        { value: 'lateef', label: 'Lateef', icon: 'bi-pencil' }
+      quranFontOptionDefs: [
+        { value: 'uthmanic', icon: 'bi-book' },
+        { value: 'amiri', icon: 'bi-type' },
+        { value: 'naskh', icon: 'bi-text-paragraph' },
+        { value: 'scheherazade', icon: 'bi-fonts' },
+        { value: 'lateef', icon: 'bi-pencil' }
       ],
       showTranslation: true,
       showTransliteration: false,
@@ -532,6 +481,8 @@ export default {
       sessionEndedSnapshot: null,
       sessionEndedMetaCollapsed: {},
       showSessionAnalyticsModal: false,
+      showHelpLearningModal: false,
+      helpLearningActiveKey: 'tajweed',
       analyticsModalLoaded: false,
       analyticsModalRecordId: '',
       analyticsModalData: null,
@@ -739,6 +690,59 @@ export default {
         { value: 'ayah', label: 'Ayah' },
         { value: 'word', label: 'Word' }
       ],
+      helpLearningSections: [
+        {
+          key: 'tajweed',
+          icon: 'bi-book-half',
+          title: 'Tajweed Rules',
+          description: 'Tajweed is the set of rules that helps you recite the Quran correctly and beautifully. Mutqin highlights these rules so you can recognise and practise them while memorising.',
+          bestFor: 'Students improving pronunciation and recitation quality.'
+        },
+        {
+          key: 'srs',
+          icon: 'bi-arrow-repeat',
+          title: 'Smart Revision (SRS)',
+          description: 'Mutqin automatically reminds you to review verses at the right time so they stay strong in your memory. Difficult verses appear more often, while stronger verses are reviewed less frequently.',
+          bestFor: 'Long-term retention and preventing memorisation loss.'
+        },
+        {
+          key: 'techniques',
+          icon: 'bi-lightbulb',
+          title: 'Memorisation Techniques',
+          description: 'Choose the method that helps you stay steady, then adjust it as your range becomes more familiar.',
+          bestFor: 'Students discovering which learning style works best for them.',
+          details: [
+            { label: 'Repetition Method', text: 'Repeat the same verse multiple times before moving on.' },
+            { label: 'Linking Method', text: 'Connect each verse to the next to improve flow and continuity.' },
+            { label: 'Cumulative Method', text: 'Continuously add new verses while revising previous ones.' }
+          ]
+        },
+        {
+          key: 'layouts',
+          icon: 'bi-columns-gap',
+          title: 'Reading Layouts',
+          description: 'Switch between two reading styles depending on the device and the kind of memorisation you want to do.',
+          bestFor: 'Choosing the reading experience that feels most natural to you.',
+          details: [
+            { label: 'Stacked Layout', text: 'Displays each verse in a simple vertical format that is easier to follow on mobile devices.' },
+            { label: 'Mushaf Layout', text: 'Displays verses in a traditional Mushaf-inspired style for students who prefer familiar page memorisation.' }
+          ]
+        },
+        {
+          key: 'ai-recitation',
+          icon: 'bi-mic',
+          title: 'AI Recitation',
+          description: 'AI Recitation listens to your recitation and provides instant feedback to help you identify mistakes and improve accuracy while memorising.',
+          bestFor: 'Students who want guided practice and immediate feedback.'
+        },
+        {
+          key: 'manual-assessment',
+          icon: 'bi-check2-square',
+          title: 'Manual Assessment',
+          description: 'Manual Assessment allows you to evaluate your own memorisation after each session and track your confidence and progress over time.',
+          bestFor: 'Students who prefer self-reflection and independent revision.'
+        }
+      ],
 
       // Misc
       currentVerseIndex: 0,
@@ -757,6 +761,11 @@ export default {
   },
 
   computed: {
+    activeHelpLearningSection() {
+      return this.helpLearningSections.find(section => section.key === this.helpLearningActiveKey)
+        || this.helpLearningSections[0]
+        || null
+    },
     shouldRenderWorkspaceShell() {
       return !!this.hasSessionStarted && !this.isSessionCompleted
     },
@@ -786,29 +795,29 @@ export default {
       return [
         {
           key: 'review-insights',
-          label: 'Review insights',
-          description: 'See your session analytics',
+          label: this.t('memorisation.sessionEnd.reviewInsights'),
+          description: this.t('memorisation.sessionEnd.reviewInsightsDesc'),
           icon: 'bi-bar-chart-line',
           tone: 'default'
         },
         {
           key: 'save-session',
-          label: 'Save session',
-          description: 'Keep this completed range',
+          label: this.t('memorisation.sessionEnd.saveSession'),
+          description: this.t('memorisation.sessionEnd.saveSessionDesc'),
           icon: 'bi-download',
           tone: 'default'
         },
         {
           key: 'reset-range',
-          label: 'Reset range',
-          description: 'Play same range again',
+          label: this.t('memorisation.sessionEnd.resetRange'),
+          description: this.t('memorisation.sessionEnd.resetRangeDesc'),
           icon: 'bi-arrow-repeat',
           tone: 'default'
         },
         {
           key: 'create-session',
-          label: 'Create new session',
-          description: 'Choose different surah or range',
+          label: this.t('memorisation.sessionEnd.createSession'),
+          description: this.t('memorisation.sessionEnd.createSessionDesc'),
           icon: 'bi-plus-circle',
           tone: 'accent'
         }
@@ -818,12 +827,6 @@ export default {
       return [...this.savedSessions].sort((a, b) => {
         return new Date(b.savedAt) - new Date(a.savedAt);
       });
-    },
-    continueSessionMeta() {
-      if (!this.continueSessionPayload) return '';
-      const minutesAgo = Math.floor((Date.now() - this.continueSessionPayload.timestamp) / 60000);
-      const timeLabel = minutesAgo < 1 ? 'just now' : `${minutesAgo} min ago`;
-      return `Last active ${timeLabel} · Resume where you left off`;
     },
     isSessionFullyCompleted() {
     // Check if all verses in the range have been completed
@@ -842,22 +845,22 @@ export default {
     },
     quranSearchFilterLabel() {
       const labels = {
-        juz: 'Juz number',
-        hizb: 'Hizb number',
-        page: 'Page number',
-        surah: 'Surah',
-        ayah: 'Ayah number',
-        word: 'Word position'
+        juz: this.t('memorisation.search.juzNumber'),
+        hizb: this.t('memorisation.search.hizbNumber'),
+        page: this.t('memorisation.search.pageNumber'),
+        surah: this.t('memorisation.search.surah'),
+        ayah: this.t('memorisation.search.ayahNumber'),
+        word: this.t('memorisation.search.wordPosition')
       }
-      return labels[this.quranSearchFilterType] || 'Filter value'
+      return labels[this.quranSearchFilterType] || this.t('memorisation.common.filterValue')
     },
     quranSearchFilterPlaceholder() {
       const placeholders = {
         juz: '1-30',
         hizb: '1-60',
         page: '1-604',
-        ayah: 'Ayah number',
-        word: 'Word number'
+        ayah: this.t('memorisation.search.ayahNumber'),
+        word: this.t('memorisation.search.wordNumber')
       }
       return placeholders[this.quranSearchFilterType] || ''
     },
@@ -890,9 +893,9 @@ export default {
       })
     },
     quranSearchFilterSummary() {
-      if (this.quranSearchFilterType === 'all' || !this.quranSearchFilterValue) return 'Full Quran'
+      if (this.quranSearchFilterType === 'all' || !this.quranSearchFilterValue) return this.t('memorisation.common.fullQuran')
       const option = this.quranSearchFilterOptions.find(item => item.value === this.quranSearchFilterType)
-      return `${option?.label || 'Filter'} ${this.quranSearchFilterValue}`
+      return `${option?.label || this.t('common.filter')} ${this.quranSearchFilterValue}`
     },
     actualGapDelay() {
       if (this.gapBetweenVerses === "none") return 0;
@@ -906,33 +909,22 @@ export default {
     },
 
     anchorModeDescription() {
-      if (!this.anchorModeEnabled) return 'Anchor mode off · use key words as memory hooks'
-      const anchors = { 1: 'first/last word', 2: 'key word pairs', 3: 'complete structure' }
-      return `Using ${anchors[this.anchorCount]} as mental anchors for each ayah`
+      if (!this.anchorModeEnabled) return this.t('memorisation.techniques.anchorOffDescription')
+      const anchors = {
+        1: this.t('memorisation.techniques.anchorFirstLast'),
+        2: this.t('memorisation.techniques.anchorKeyPairs'),
+        3: this.t('memorisation.techniques.anchorComplete')
+      }
+      return this.t('memorisation.techniques.anchorUsingDescription', { anchors: anchors[this.anchorCount] || anchors[2] })
     },
     getChainingMethodLabel() {
-      if (!this.chainingEnabled) return `Chaining off · ${this.chainingRepetitions} repeats`
-      const label = this.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking'
-      return `${label} · ${this.chainingRepetitions} repeats`
+      return this.chainingMethodLabel
     },
-
     getChainingMethodDescription() {
-      if (!this.chainingEnabled) {
-        return 'Play the selected ayahs in order without chaining.'
-      }
-      if (this.chainingMethod === 'cumulative') {
-        return 'Build recall progressively across memorised ayahs.'
-      }
-      return 'Connect ayahs sequentially during memorisation.'
+      return this.chainingMethodDescription
     },
-
     getChainingMethodPreview() {
-      if (!this.chainingEnabled) {
-        return `Flow: selected ayahs in order, each ayah repeated ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
-      }
-      return this.chainingMethod === 'cumulative'
-        ? `Cumulative flow: repeat 1, then 1-2, then 1-2-3. Each block repeats ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
-        : `Linking flow: repeat the current ayah, the next ayah, then both together. Each step repeats ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
+      return this.chainingMethodPreview
     },
     liveSessionStats() {
       const currentIndex = Math.max(0, Number(this.queueIndex || 0))
@@ -958,12 +950,26 @@ export default {
     },
     // In computed section - modify controlsAnalyticsCards to show/hide based on data
     controlsAnalyticsCards() {
-      const hasData = this.savedSessions.length > 0 || this.totalVersePlayCountValue > 0 || this.totalVerses > 0;
-      if (!hasData) return [];
+      const hasData = this.savedSessions.length > 0 || this.totalVersePlayCountValue > 0 || this.totalVerses > 0
+      if (!hasData) return []
+      const covered = Math.max(0, this.currentPosition - 1)
+      const total = this.totalVerses || 0
       return [
-        { key: 'today', icon: 'bi-calendar2-check', label: "Today's progress", value: `${this.progressPercent}%`, description: `${Math.max(0, this.currentPosition - 1)}/${this.totalVerses || 0} ayahs covered.` },
-        { key: 'streak', icon: 'bi-fire', label: 'Streak', value: this.analytics?.currentStreak || 0, description: 'Active study days in a row.' }
-      ];
+        {
+          key: 'today',
+          icon: 'bi-calendar2-check',
+          label: this.t('memorisation.analytics.todayProgress'),
+          value: `${this.progressPercent}%`,
+          description: this.t('memorisation.analytics.todayProgressDesc', { covered, total })
+        },
+        {
+          key: 'streak',
+          icon: 'bi-fire',
+          label: this.t('memorisation.analytics.streak'),
+          value: this.analytics?.currentStreak || 0,
+          description: this.t('memorisation.analytics.streakDesc')
+        }
+      ]
     },
     dueCount() {
       // "Due" is surfaced only as a count; scheduling/intervals remain invisible.
@@ -972,19 +978,28 @@ export default {
       return Number.isFinite(count) && count > 0 ? count : 0
     },
     flowCtaLabel() {
-      if (!this.hasVerses) return 'Start'
-      if (this.guidedUiStep === 'review') return 'Review'
-      return 'Play'
+      if (!this.hasVerses) return this.t('memorisation.guided.start')
+      if (this.guidedUiStep === 'review') return this.t('memorisation.guided.review')
+      return this.t('memorisation.guided.play')
     },
     flowHint() {
-      if (!this.hasVerses) return 'Choose a surah and range, then start.'
-      if (this.guidedUiStep === 'review') return this.dueCount ? `You have ${this.dueCount} verses to review.` : 'Review what is due.'
-      return 'Play the active ayah. Use Tools for translation and word-by-word.'
+      if (!this.hasVerses) return this.t('memorisation.guided.chooseSurahHint')
+      if (this.guidedUiStep === 'review') {
+        return this.dueCount
+          ? this.t('memorisation.guided.versesToReview', { count: this.dueCount })
+          : this.t('memorisation.guided.reviewDueHint')
+      }
+      return this.t('memorisation.guided.playActiveHint')
     },
     setupSummary() {
       const repeatCount = Math.max(1, Number(this.repetitionsPerStep || 1))
-      const playModeLabel = this.playMode === 'manual' ? 'manual advance' : 'auto advance'
-      return `${repeatCount}x repeats, ${playModeLabel}, ${this.chainingEnabled ? `${this.chainingMethod} chaining` : 'plain sequence'}`
+      const playModeLabel = this.playMode === 'manual'
+        ? this.t('memorisation.common.manualAdvance')
+        : this.t('memorisation.common.autoAdvance')
+      const chaining = this.chainingEnabled
+        ? this.t('memorisation.common.chainingLabel', { method: this.chainingMethod })
+        : this.t('memorisation.common.plainSequence')
+      return this.t('memorisation.common.setupSummary', { count: repeatCount, mode: playModeLabel, chaining })
     },
     activePracticeTechniques() {
       const items = []
@@ -992,31 +1007,33 @@ export default {
         items.push({
           key: 'focus',
           icon: 'bi bi-bullseye',
-          label: 'Focus Mode',
-          description: 'Non-active verses are softened so the current ayah stays central.'
+          label: this.t('memorisation.focus_mode'),
+          description: this.t('memorisation.techniques.focusActiveDescription')
         })
       }
       if (this.blurModeEnabled) {
         items.push({
           key: 'blur',
           icon: 'bi bi-cloud-haze2',
-          label: 'Blur Mode',
-          description: `Upcoming verses are hidden with ${this.blurIntensity}px blur for active recall.`
+          label: this.t('memorisation.blur_mode'),
+          description: this.t('memorisation.techniques.blurActiveDescription', { px: this.blurIntensity })
         })
       }
       if (this.chainingEnabled) {
         items.push({
           key: 'chaining',
           icon: 'bi bi-link-45deg',
-          label: this.chainingMethod === 'cumulative' ? 'Cumulative Chaining' : 'Linking Chaining',
-          description: `${this.chainingRepetitions} repeat${this.chainingRepetitions === 1 ? '' : 's'} per chaining step.`
+          label: this.chainingMethod === 'cumulative'
+            ? this.t('memorisation.techniques.cumulativeChaining')
+            : this.t('memorisation.techniques.linkingChaining'),
+          description: this.t('memorisation.techniques.chainingActiveDescription', { count: this.chainingRepetitions })
         })
       }
       if (this.anchorModeEnabled) {
         items.push({
           key: 'anchor',
           icon: 'bi bi-pin-angle-fill',
-          label: 'Anchor Mode',
+          label: this.t('memorisation.anchor_mode'),
           description: this.anchorModeDescription
         })
       }
@@ -1115,44 +1132,49 @@ export default {
       const memory = detailed.memoryBreakdown || {}
       const spaced = detailed.spacedHealth || {}
       const recitation = detailed.recitationQuality || {}
+      const load = spaced.reviewLoad || 'light'
       return [
         {
           key: 'memory',
-          title: 'Memory breakdown',
+          title: this.t('memorisation.analytics.memoryBreakdown'),
           icon: 'bi-grid-3x3-gap',
           rows: [
-            { label: 'New', value: memory.new || 0, detail: 'queued today' },
-            { label: 'Due', value: memory.due || 0, detail: 'review now' },
-            { label: 'Weak', value: memory.weak || 0, detail: 'needs care' },
-            { label: 'Mastered', value: memory.mastered || 0, detail: 'steady ayahs' }
+            { label: this.t('memorisation.analytics.rowNew'), value: memory.new || 0, detail: this.t('memorisation.analytics.rowQueuedToday') },
+            { label: this.t('memorisation.analytics.rowDue'), value: memory.due || 0, detail: this.t('memorisation.analytics.rowReviewNow') },
+            { label: this.t('memorisation.analytics.rowWeak'), value: memory.weak || 0, detail: this.t('memorisation.analytics.rowNeedsCare') },
+            { label: this.t('memorisation.analytics.rowMastered'), value: memory.mastered || 0, detail: this.t('memorisation.analytics.rowSteadyAyahs') }
           ]
         },
         {
           key: 'spaced',
-          title: 'Spaced repetition health',
+          title: this.t('memorisation.analytics.spacedHealth'),
           icon: 'bi-calendar-heart',
           rows: [
-            { label: 'Due now', value: spaced.dueNow || 0, detail: 'reviews' },
-            { label: 'Upcoming', value: spaced.upcoming || 0, detail: 'scheduled' },
-            { label: 'Average retention', value: `${Math.round((spaced.averageMastery || 0) * 100)}%`, detail: `${spaced.reviewLoad || 'light'} load` }
+            { label: this.t('memorisation.analytics.rowDueNow'), value: spaced.dueNow || 0, detail: this.t('memorisation.analytics.rowReviews') },
+            { label: this.t('memorisation.analytics.rowUpcoming'), value: spaced.upcoming || 0, detail: this.t('memorisation.analytics.rowScheduled') },
+            { label: this.t('memorisation.analytics.rowAvgRetention'), value: `${Math.round((spaced.averageMastery || 0) * 100)}%`, detail: this.t('memorisation.analytics.rowLoad', { load }) }
           ]
         },
         {
           key: 'recitation',
-          title: 'Recitation quality',
+          title: this.t('memorisation.analytics.recitationQuality'),
           icon: 'bi-soundwave',
           rows: [
-            { label: 'Average quality', value: recitation.label || 'Ready', detail: recitation.summary || '' },
-            { label: 'Checks', value: recitation.checksCompleted || 0, detail: 'completed' }
+            { label: this.t('memorisation.analytics.rowAvgQuality'), value: recitation.label || this.t('memorisation.analytics.rowReady'), detail: recitation.summary || '' },
+            { label: this.t('memorisation.analytics.rowChecks'), value: recitation.checksCompleted || 0, detail: this.t('memorisation.analytics.rowCompleted') }
           ]
         }
       ].map(section => ({
         ...section,
-        rows: section.rows?.length ? section.rows : [{ label: 'No data yet', value: '-', detail: 'Start a session to build analytics' }]
+        rows: section.rows?.length ? section.rows : [{
+          label: this.t('memorisation.analytics.noDataYet'),
+          value: '-',
+          detail: this.t('memorisation.analytics.noDataDetail')
+        }]
       }))
     },
     hifzInsightSummaries() {
-      return this.hifzAnalyticsSnapshot.insights || ['Keep today small and consistent']
+      return this.hifzAnalyticsSnapshot.insights || [this.t('memorisation.analytics.defaultInsight')]
     },
     isPlannerModeActive() {
       return this.appState?.mode === 'planner' || this.currentMode === 'planner'
@@ -1193,18 +1215,18 @@ export default {
       return `${current}/${total} ayahs`
     },
     plannerPrimaryActionLabel() {
-      if (!this.hifzPlanExists) return 'Create Plan'
-      if (this.isPlaying) return 'Pause Session'
-      if (this.hasSessionStarted) return 'Continue Session'
-      return 'Start Session'
+      if (!this.hifzPlanExists) return this.t('hifzPlan.wizard.createPlan')
+      if (this.isPlaying) return this.t('memorisation.sessionType.pause')
+      if (this.hasSessionStarted) return this.t('common.continue')
+      return this.t('common.startSession')
     },
     plannerGuidanceBadge() {
-      if (!this.hasSessionStarted) return 'Before you begin'
-      if (this.guidedUiStep === 'recall') return 'During the session'
-      if (this.guidedUiStep === 'practice') return 'During the session'
-      if (this.guidedUiStep === 'review') return 'After each ayah'
-      if (this.isPlaying) return 'During the session'
-      return 'Keep going'
+      if (!this.hasSessionStarted) return this.t('memorisation.guided.beforeBegin')
+      if (this.guidedUiStep === 'recall') return this.t('memorisation.guided.duringSession')
+      if (this.guidedUiStep === 'practice') return this.t('memorisation.guided.duringSession')
+      if (this.guidedUiStep === 'review') return this.t('memorisation.guided.afterEachAyah')
+      if (this.isPlaying) return this.t('memorisation.guided.duringSession')
+      return this.t('memorisation.guided.keepGoing')
     },
     plannerGuidanceTone() {
       if (!this.hasSessionStarted) return 'start'
@@ -1308,7 +1330,7 @@ export default {
       return null
     },
     isOnboardingExperienceActive() {
-      return !!this.showPostLoginOnboarding || !!this.onboardingDemoActive
+      return !!this.showPostLoginOnboarding
     },
     hasMeaningfulSessionCompletionData() {
       if (!this.isSessionCompleted || !this.hasVerses) return false
@@ -1341,9 +1363,9 @@ export default {
       return [
         {
           key: 'happened',
-          kicker: 'By The Grace Of Allah',
+          kicker: this.t('memorisation.meta.graceKicker'),
           calligraphy: 'الحمد لله على التمام',
-          title: snapshot.completedAll ? 'This range was completed.' : 'This range moved forward.',
+          title: snapshot.completedAll ? this.t('memorisation.meta.completedTitle') : this.t('memorisation.meta.forwardTitle'),
           body: snapshot.completedAll
             ? `${coveredAyahs}/${totalAyahs} ayahs completed in ${snapshot.durationLabel || 'this session'}.`
             : `Reached ayah ${snapshot.lastAyahLabel || coveredAyahs || 1} with ${snapshot.progressPercent || 0}% completed.`,
@@ -1354,9 +1376,9 @@ export default {
         },
         {
           key: 'done',
-          kicker: 'With Steadiness',
+          kicker: this.t('memorisation.meta.steadinessKicker'),
           calligraphy: 'زادك الله ثباتا',
-          title: 'This is how you studied.',
+          title: this.t('memorisation.meta.studiedTitle'),
           body: snapshot.repeatSummary || 'Current session settings were applied.',
           points: [
             snapshot.displaySummary || '',
@@ -1365,9 +1387,9 @@ export default {
         },
         {
           key: 'next',
-          kicker: 'For The Next Step',
+          kicker: this.t('memorisation.meta.nextKicker'),
           calligraphy: 'اللهم زدني علما',
-          title: snapshot.completedAll ? 'Advance or reinforce.' : 'Continue or begin again.',
+          title: snapshot.completedAll ? this.t('memorisation.meta.advanceTitle') : this.t('memorisation.meta.continueTitle'),
           body: snapshot.completedAll
             ? 'Start a new session if this range felt stable, or repeat the same range once more to strengthen recall.'
             : 'Repeat this range now if recall felt weak, or start a fresh session when you are ready to continue.',
@@ -1382,7 +1404,7 @@ export default {
     },
     sessionEndedSummaryMessage() {
       const snapshot = this.sessionCompletionSnapshot || {}
-      return snapshot.summaryMessage || 'You can start a new range, save this one, or repeat it now.'
+      return snapshot.summaryMessage || this.t('memorisation.summary.default')
     },
     hifzPlanLifecycleStatus() {
       return this.hifzPlan?.lifecycle?.status || this.hifzPlan?.status || 'draft'
@@ -1643,26 +1665,36 @@ export default {
       }
     },
     chainingMethodDescription() {
-      if (!this.chainingEnabled) {
-        return 'Play the selected ayahs in order without chaining.'
-      }
-      if (this.chainingMethod === 'cumulative') {
-        return 'Build longer connected runs from the first ayah outward.'
-      }
-      return 'Train the transition between neighbouring ayahs.'
+      if (!this.chainingEnabled) return this.t('memorisation.techniques.chainingOffSub')
+      if (this.chainingMethod === 'cumulative') return this.t('memorisation.techniques.chainingCumulativeSub')
+      return this.t('memorisation.techniques.chainingLinkingSub')
     },
     chainingMethodLabel() {
-      if (!this.chainingEnabled) return `Chaining off · ${this.chainingRepetitions} repeats`
-      const label = this.chainingMethod === 'cumulative' ? 'Cumulative' : 'Linking'
-      return `${label} · ${this.chainingRepetitions} repeats`
+      const count = this.chainingRepetitions
+      if (!this.chainingEnabled) return this.t('memorisation.techniques.chainingOffLabel', { count })
+      if (this.chainingMethod === 'cumulative') return this.t('memorisation.techniques.chainingCumulativeLabel', { count })
+      return this.t('memorisation.techniques.chainingLinkingLabel', { count })
     },
     chainingMethodPreview() {
-      if (!this.chainingEnabled) {
-        return `Flow: selected ayahs in order, each ayah repeated ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
-      }
-      return this.chainingMethod === 'cumulative'
-        ? `Cumulative flow: repeat 1, then 1-2, then 1-2-3. Each block repeats ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
-        : `Linking flow: repeat the current ayah, the next ayah, then both together. Each step repeats ${this.chainingRepetitions} time${this.chainingRepetitions === 1 ? '' : 's'}.`
+      const count = this.chainingRepetitions
+      if (!this.chainingEnabled) return this.t('memorisation.techniques.chainingOffPreview', { count })
+      if (this.chainingMethod === 'cumulative') return this.t('memorisation.techniques.chainingCumulativePreview', { count })
+      return this.t('memorisation.techniques.chainingLinkingPreview', { count })
+    },
+    quranFontOptions() {
+      return (this.quranFontOptionDefs || []).map(font => ({
+        ...font,
+        label: this.t(`memorisation.fonts.${font.value}`)
+      }))
+    },
+    onboardingSteps() {
+      const defs = [
+        { key: 'setup', icon: 'bi-journal-text' },
+        { key: 'reading', icon: 'bi-layout-text-window-reverse' },
+        { key: 'practice', icon: 'bi-stars' },
+        { key: 'review', icon: 'bi-clock-history' }
+      ]
+      return defs.map(({ key, icon }) => this.buildOnboardingStep(key, icon))
     },
     currentConfig() {
       return this.getModeStore(this.currentMode)
@@ -1678,7 +1710,7 @@ export default {
     },
     activeAyahLabel() {
       const n = this.activeAyahNumber
-      return n ? `Ayah ${n}` : 'Ayah'
+      return n ? this.t('memorisation.sessionType.ayah', { n }) : this.t('memorisation.sessionType.ayahLabel')
     },
     effectiveActiveVerseKey() {
       if (this.activeVerseKey) return this.activeVerseKey
@@ -1725,11 +1757,15 @@ export default {
 
     currentLearningPrompt() {
       const item = this.mutqinState?.sessionState?.queue?.[this.mutqinState?.sessionState?.current_index || 0]
-      if (!item) return 'Listen and follow.'
-      if (item.phase === 'Retention') return this.dueCount ? `${this.dueCount} verses to review.` : 'Review what is due.'
-      if (this.guidedUiStep === 'recall') return 'Recite first, then reveal.'
-      if (this.guidedUiStep === 'practice') return 'Try reciting with minimal support.'
-      return 'Listen and follow.'
+      if (!item) return this.t('memorisation.guided.listenAndFollow')
+      if (item.phase === 'Retention') {
+        return this.dueCount
+          ? this.t('memorisation.guided.versesDueCount', { count: this.dueCount })
+          : this.t('memorisation.guided.reviewVersesDue')
+      }
+      if (this.guidedUiStep === 'recall') return this.t('memorisation.guided.reciteFirstReveal')
+      if (this.guidedUiStep === 'practice') return this.t('memorisation.guided.tryRecitingMinimal')
+      return this.t('memorisation.guided.listenAndFollow')
     },
 
     activeQueueEntry() {
@@ -2232,15 +2268,13 @@ export default {
     },
     chainingNextStepLabel() {
       if (!this.chainingEnabled) return ''
-      if (this.chainingMethod === 'cumulative') {
-        return 'Next: add one ayah to the block'
-      }
-      return 'Next: single -> next -> pair'
+      if (this.chainingMethod === 'cumulative') return this.t('memorisation.techniques.chainingNextCumulative')
+      return this.t('memorisation.techniques.chainingNextLinking')
     },
     chainingWhyHint() {
       if (!this.chainingEnabled) return ''
-      if (this.chainingMethod === 'cumulative') return 'Use when you want to build longer runs by adding one ayah at a time.'
-      return 'Use when you want to strengthen transitions between neighboring ayahs.'
+      if (this.chainingMethod === 'cumulative') return this.t('memorisation.techniques.chainingWhyCumulative')
+      return this.t('memorisation.techniques.chainingWhyLinking')
     },
     currentActionLabel() {
       if (!this.hasVerses) return 'Choose a surah and ayah range to begin.'
@@ -2593,7 +2627,7 @@ export default {
     },
 
     sessionTypeInfo() {
-      return { key: 'memorisation', label: 'Memorisation', tone: 'memorisation' }
+      return { key: 'memorisation', label: this.t('memorisation.sessionType.label'), tone: 'memorisation' }
     },
 
     quranFontFamily() {
@@ -2609,8 +2643,8 @@ export default {
 
     collapsedPlayerTitle() {
       const verse = this.verses.find(v => v.key === this.activeKey)
-      if (!verse) return this.currentChapter?.name_simple || 'Now playing'
-      return `${this.currentChapter?.name_simple || 'Session'} · Ayah ${verse.number}`
+      if (!verse) return this.currentChapter?.name_simple || this.t('memorisation.sessionType.nowPlaying')
+      return `${this.currentChapter?.name_simple || this.t('memorisation.sessionType.session')} · ${this.t('memorisation.sessionType.ayah', { n: verse.number })}`
     },
 
     collapsedPlayerSubtitle() {
@@ -2619,41 +2653,38 @@ export default {
     },
 
     railPrimaryLabel() {
-      return this.isPlaying ? 'Pause' : 'Start session'
+      return this.isPlaying ? this.t('memorisation.sessionType.pause') : this.t('memorisation.sessionType.startSession')
     },
     guidedPhaseLabel() {
-      if (this.guidedUiStep === 'review') return 'Review'
-      if (this.guidedUiStep === 'recall') return 'Recall'
-      if (this.guidedUiStep === 'practice') return 'Practice'
-      return 'Learn'
+      if (this.guidedUiStep === 'review') return this.t('memorisation.guided.review')
+      if (this.guidedUiStep === 'recall') return this.t('memorisation.guided.recall')
+      if (this.guidedUiStep === 'practice') return this.t('memorisation.guided.practice')
+      return this.t('memorisation.guided.learn')
     },
-
     guidedPrimaryCta() {
-      if (this.guidedPhaseLabel === 'Learn') return 'Listen & Follow'
-      if (this.guidedPhaseLabel === 'Practice') return 'Try Reciting'
-      if (this.guidedPhaseLabel === 'Recall') return 'Continue'
-      if (this.guidedPhaseLabel === 'Review') return 'Continue'
-      return 'Continue'
+      if (this.guidedUiStep === 'learn') return this.t('memorisation.guided.listenFollow')
+      if (this.guidedUiStep === 'practice') return this.t('memorisation.guided.tryReciting')
+      return this.t('memorisation.guided.continue')
     },
     guidedInstruction() {
-      if (this.guidedPhaseLabel === 'Learn') return 'Listen and follow the recitation.'
-      if (this.guidedPhaseLabel === 'Practice') return 'Try reciting with the ayah still partially visible.'
-      if (this.guidedPhaseLabel === 'Recall') return 'Recall the ayah before moving forward.'
-      if (this.guidedPhaseLabel === 'Review') return 'Review the verses due now.'
-      return 'Continue your session.'
+      if (this.guidedUiStep === 'learn') return this.t('memorisation.guided.learnInstruction')
+      if (this.guidedUiStep === 'practice') return this.t('memorisation.guided.practiceInstruction')
+      if (this.guidedUiStep === 'recall') return this.t('memorisation.guided.recallInstruction')
+      if (this.guidedUiStep === 'review') return this.t('memorisation.guided.reviewInstruction')
+      return this.t('memorisation.guided.defaultInstruction')
     },
-
     activeCardKicker() {
-      if (this.guidedUiStep === 'review') return '✨ Time to refresh';
-      if (this.isPlaying) return '🌙 Keeping the rhythm steady';
-      return '🌿 Begin with Bismillah, keep your heart with the ayah';
+      if (this.guidedUiStep === 'review') return this.t('memorisation.guided.kickerReview')
+      if (this.isPlaying) return this.t('memorisation.guided.kickerPlaying')
+      return this.t('memorisation.guided.kickerDefault')
     },
-
     activeCardBody() {
-      if (this.guidedUiStep === 'review') return this.dueCount
-        ? `You have ${this.dueCount} ayahs awaiting review. Revisit them gently and keep the chain strong.`
-        : 'Return to this ayah with a calm review before moving ahead.'
-      return `${this.currentLearningPrompt} Keep your tongue, eyes, and heart together on this ayah.`
+      if (this.guidedUiStep === 'review') {
+        return this.dueCount
+          ? this.t('memorisation.guided.reviewBodyDue', { count: this.dueCount })
+          : this.t('memorisation.guided.reviewBodyDefault')
+      }
+      return `${this.currentLearningPrompt} ${this.t('memorisation.guided.reviewBodySuffix')}`
     },
 
     plannerKeyboardActive() {
@@ -2672,18 +2703,21 @@ export default {
     },
 
     currentSessionExplanation() {
-      const modeLabel = this.currentMode === 'advanced' ? 'Advanced' : 'Beginner'
-      return `${modeLabel} session using ${this.chainingMethodLabel.toLowerCase()}.`
+      const modeLabel = this.currentMode === 'advanced'
+        ? this.t('memorisation.sessionType.advanced')
+        : this.t('memorisation.sessionType.beginner')
+      const chaining = this.chainingMethodLabel.toLowerCase()
+      return this.t('memorisation.sessionType.sessionExplanation', { mode: modeLabel, chaining })
     },
     currentControlInfo() {
       const labels = []
-      labels.push(`Font ${this.getCurrentFontLabel()}`)
-      if (this.showTranslation) labels.push('Translation on')
-      if (this.showTransliteration) labels.push('Transliteration on')
-      if (this.showWordByWord) labels.push('Word-by-word on')
-      if (this.wordByWordAudioEnabled) labels.push('Word audio on')
-      if (this.tajweedEnabled) labels.push('Tajweed on')
-      return labels.length ? labels.join(' • ') : 'No reading aids active'
+      labels.push(this.t('memorisation.common.fontLabel', { font: this.getCurrentFontLabel() }))
+      if (this.showTranslation) labels.push(this.t('memorisation.common.translationOn'))
+      if (this.showTransliteration) labels.push(this.t('memorisation.common.transliterationOn'))
+      if (this.showWordByWord) labels.push(this.t('memorisation.common.wordByWordOn'))
+      if (this.wordByWordAudioEnabled) labels.push(this.t('memorisation.common.wordAudioOn'))
+      if (this.tajweedEnabled) labels.push(this.t('memorisation.common.tajweedOn'))
+      return labels.length ? labels.join(' • ') : this.t('memorisation.common.noReadingAids')
     },
     appliedFeaturePills() {
       const pills = [`${this.guidedPhaseLabel} mode`, `Font: ${this.getCurrentFontLabel()}`]
@@ -2852,116 +2886,127 @@ export default {
 
   async mounted() {
     document.addEventListener('click', this.handleClickOutside);
-    this.loadSavedSessions();
     this.activeLocale = this.$i18n?.locale?.value || 'en'
-    this.handleLocaleChange = (event) => {
-      this.activeLocale = event?.detail?.locale || this.$i18n?.locale?.value || 'en'
-    }
-    this.handleGlobalThemeChange = (event) => {
-      const nextTheme = event?.detail?.theme || document.documentElement.getAttribute('data-theme') || 'light'
-      this.theme = nextTheme
-    }
-    this.handleThemeStorageSync = (event) => {
-      if (event?.key === HIFZ_PLAN_STORAGE_KEY || event?.key === AYAH_PROGRESS_STORAGE_KEY) {
-        this.refreshHifzJourneyState()
-        return
-      }
-      if (event?.key && event.key !== 'mutqin-theme') return
-      const nextTheme = event?.newValue || document.documentElement.getAttribute('data-theme') || 'light'
-      this.theme = nextTheme
-    }
-    window.addEventListener('mutqin:theme-change', this.handleGlobalThemeChange)
-    window.addEventListener('mutqin:locale-change', this.handleLocaleChange)
-    window.addEventListener('storage', this.handleThemeStorageSync)
-    this.themeObserver = new MutationObserver(() => {
-      const nextTheme = document.documentElement.getAttribute('data-theme') || 'light'
-      if (nextTheme !== this.theme) this.theme = nextTheme
-    })
-    this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
-    this.watchActiveVerse()
-    this.$nextTick(() => {
-      const navbar = document.querySelector('.navbar')
-      if (navbar) {
-        const navbarHeight = navbar.offsetHeight
-        document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`)
-      }
-    })
-    // Re-apply highlights when word-by-word toggles
-    this.$watch('showWordByWord', () => {
-      if (this.anchorModeEnabled) {
-        this.scheduleAnchorHighlights()
-      }
-    })
-
-    // Re-apply when tajweed toggles
-    this.$watch('tajweedEnabled', () => {
-      if (this.anchorModeEnabled) {
-        this.scheduleAnchorHighlights()
-      }
-    })
-    this.$watch('effectiveActiveVerseKey', () => {
-      if (this.readingViewMode === 'mushaf') this.syncMushafPageToActiveVerse()
-    })
-    this.$watch(() => this.mushafPages.length, () => {
-      this.syncMushafPageToActiveVerse()
-    })
-    this.unwatchMutqinState = watchMutqinState(this.mutqinState, undefined, () => this.scheduleLearningSync())
-    this.refreshHifzJourneyState()
-    this.loadVerseFontSizes()
-    this.migrateLocalStorage()
-    this.loadUiState()
-    this.loadCentralSessionState()
-    this.restoreSessionState()
-    await this.loadChapters()
-    await this.loadReciters()
-    this.loadOfflineCatalog()
-    this.loadSm2()
-    this.loadEvents()
-    this.loadPlanner()
-    this.loadMetrics()
-    this.loadAnalytics()
-    this.initAudio()
-    this.restoreAudioState()
-    this.theme = document.documentElement.getAttribute('data-theme') || this.theme || 'light'
-    document.documentElement.setAttribute('data-theme', this.theme)
-    this.loadBookmarksPins(),
-      this.setupWordClickHandler()
-    this.loadContinueSessionPrompt()
-    this.updateMasteredWeekly()
-    this.loadRecordingsLibrary()
-
-    if (this.isLoggedIn && this.hasContinueSession) {
-      // One clear entry point for returning users.
-      this.showResumeModal = true
-    }
-
-
-    if (this.currentMode === 'advanced' && this.advanced.chapterId) {
-      this.currentMode = 'advanced'
-      this.tab = 'tools'
-      this.showTools = false
-      await this.loadVerses()
-    } else if (this.beginner.chapterId) {
-      this.currentMode = 'beginner'
-      this.tab = 'tools'
-      this.showTools = false
-      await this.loadVerses()
-    } else {
-      this.tab = 'tools'
-      this.showTools = false
-    }
-
-    this.isBootstrapping = false
     this.appReady = true
+
+    try {
+      this.loadSavedSessions();
+      if (this.auth?.locale && this.$setLocale) {
+        await this.$setLocale(this.auth.locale)
+        this.activeLocale = this.auth.locale
+      }
+      this.handleLocaleChange = (event) => {
+        this.activeLocale = event?.detail?.locale || this.$i18n?.locale?.value || 'en'
+      }
+      this.handleGlobalThemeChange = (event) => {
+        const nextTheme = event?.detail?.theme || document.documentElement.getAttribute('data-theme') || 'light'
+        this.theme = nextTheme
+      }
+      this.handleThemeStorageSync = (event) => {
+        if (event?.key === HIFZ_PLAN_STORAGE_KEY || event?.key === AYAH_PROGRESS_STORAGE_KEY) {
+          this.refreshHifzJourneyState()
+          return
+        }
+        if (event?.key && event.key !== 'mutqin-theme') return
+        const nextTheme = event?.newValue || document.documentElement.getAttribute('data-theme') || 'light'
+        this.theme = nextTheme
+      }
+      window.addEventListener('mutqin:theme-change', this.handleGlobalThemeChange)
+      window.addEventListener('mutqin:locale-change', this.handleLocaleChange)
+      window.addEventListener('storage', this.handleThemeStorageSync)
+      this.themeObserver = new MutationObserver(() => {
+        const nextTheme = document.documentElement.getAttribute('data-theme') || 'light'
+        if (nextTheme !== this.theme) this.theme = nextTheme
+      })
+      this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+      this.watchActiveVerse()
+      this.$nextTick(() => {
+        const navbar = document.querySelector('.navbar')
+        if (navbar) {
+          const navbarHeight = navbar.offsetHeight
+          document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`)
+        }
+      })
+      // Re-apply highlights when word-by-word toggles
+      this.$watch('showWordByWord', () => {
+        if (this.anchorModeEnabled) {
+          this.scheduleAnchorHighlights()
+        }
+      })
+
+      // Re-apply when tajweed toggles
+      this.$watch('tajweedEnabled', () => {
+        if (this.anchorModeEnabled) {
+          this.scheduleAnchorHighlights()
+        }
+      })
+      this.$watch('effectiveActiveVerseKey', () => {
+        if (this.readingViewMode === 'mushaf') this.syncMushafPageToActiveVerse()
+      })
+      this.$watch(() => this.mushafPages.length, () => {
+        this.syncMushafPageToActiveVerse()
+      })
+      this.unwatchMutqinState = watchMutqinState(this.mutqinState, undefined, () => this.scheduleLearningSync())
+      this.refreshHifzJourneyState()
+      this.loadVerseFontSizes()
+      this.migrateLocalStorage()
+      this.loadUiState()
+      this.loadCentralSessionState()
+      this.restoreSessionState()
+      await this.loadChapters()
+      await this.loadReciters()
+      this.loadOfflineCatalog()
+      this.loadSm2()
+      this.loadEvents()
+      this.loadPlanner()
+      this.loadMetrics()
+      this.loadAnalytics()
+      this.initAudio()
+      this.restoreAudioState()
+      this.theme = document.documentElement.getAttribute('data-theme') || this.theme || 'light'
+      document.documentElement.setAttribute('data-theme', this.theme)
+      this.loadBookmarksPins()
+      this.setupWordClickHandler()
+      this.loadContinueSessionPrompt()
+      this.updateMasteredWeekly()
+      this.loadRecordingsLibrary()
+
+      if (this.isLoggedIn && this.hasContinueSession) {
+        // One clear entry point for returning users.
+        this.showResumeModal = true
+      }
+
+      if (this.currentMode === 'advanced' && this.advanced.chapterId) {
+        this.currentMode = 'advanced'
+        this.tab = 'tools'
+        this.showTools = false
+        await this.loadVerses()
+      } else if (this.beginner.chapterId) {
+        this.currentMode = 'beginner'
+        this.tab = 'tools'
+        this.showTools = false
+        await this.loadVerses()
+      } else {
+        this.tab = 'tools'
+        // Fail open into session setup for authenticated users so the
+        // memorisation route never looks blank or inaccessible.
+        this.showTools = !!this.isLoggedIn
+        this.isDataReady = true
+      }
+    } catch (error) {
+      console.error('Memorisation bootstrap failed:', error)
+      this.tab = 'tools'
+      this.showTools = false
+      this.isDataReady = true
+      this.showBanner('The memorisation workspace recovered from a startup error.', 'error', 5000)
+    } finally {
+      this.isBootstrapping = false
+    }
 
     // Reconcile with the backend (authenticated users only). Fire-and-forget so
     // it never blocks first paint, login, or any interaction.
-    this.initLearningBackend()
-
-    this.$nextTick(() => {
-      if (this.isLoggedIn && !this.hasCompletedOnboarding()) {
-        this.openOnboardingModal(false)
-      }
+    this.initLearningBackend().catch(error => {
+      console.error('Memorisation backend sync init failed:', error)
     })
 
     window.addEventListener('online', this.handleOnline)
@@ -2972,6 +3017,11 @@ export default {
     window.addEventListener('scroll', this.handleWindowScroll, { passive: true })
     document.addEventListener('click', this.handleClickOutside)
     this.queueStatsVisualTick()
+    if (this.showTools) {
+      this.$nextTick(() => {
+        this.focusToolsPanel()
+      })
+    }
     // Close Mushaf toolbar dropdowns from one removable document listener.
     this.handleMushafToolbarDocumentClick = (e) => {
       if (this.fontOpen && !e.target.closest('.font-dropdown-region')) {
@@ -3079,6 +3129,9 @@ export default {
       this.syncBodyScrollLock(newVal)
     },
     showSessionEndedModal(newVal) {
+      this.syncBodyScrollLock(newVal)
+    },
+    showHelpLearningModal(newVal) {
       this.syncBodyScrollLock(newVal)
     },
     'mutqinState.sessionState.lastSilentEvaluation': {
@@ -3262,6 +3315,26 @@ export default {
   },
 
   methods: {
+    buildOnboardingStep(key, icon) {
+      const base = `memorisation.onboarding.steps.${key}`
+      const tm = typeof this.$tm === 'function' ? this.$tm.bind(this) : (path) => this.t(path)
+      const points = tm(`${base}.points`)
+      const previewItems = tm(`${base}.previewItems`)
+      return {
+        key,
+        icon,
+        title: this.t(`${base}.title`),
+        stepLabel: this.t(`${base}.stepLabel`),
+        body: this.t(`${base}.body`),
+        points: Array.isArray(points) ? points : [],
+        preview: {
+          icon,
+          title: this.t(`${base}.previewTitle`),
+          subtitle: this.t(`${base}.previewSubtitle`),
+          items: Array.isArray(previewItems) ? previewItems : []
+        }
+      }
+    },
 
     selectSessionFromDropdown(sessionId) {
       this.selectedSessionId = sessionId;
@@ -3888,6 +3961,7 @@ export default {
         || this.showResumeModal
         || this.showPlannerModal
         || this.showSessionAnalyticsModal
+        || this.showHelpLearningModal
         || this.showPostLoginOnboarding
         || this.showHifzPlanModal
         || this.showAiMemorisationCheckerModal
@@ -3903,6 +3977,7 @@ export default {
         || this.showResumeModal
         || this.showPlannerModal
         || this.showSessionAnalyticsModal
+        || this.showHelpLearningModal
         || this.showPostLoginOnboarding
         || this.showHifzPlanModal
         || this.showAiMemorisationCheckerModal
@@ -5169,6 +5244,18 @@ export default {
       window.requestAnimationFrame(() => {
         this.refreshAnalyticsModalData(session)
       })
+    },
+    openHelpLearningModal() {
+      this.topCardMenuOpen = false
+      this.helpLearningActiveKey = this.helpLearningSections[0]?.key || 'tajweed'
+      this.showHelpLearningModal = true
+    },
+    closeHelpLearningModal() {
+      this.showHelpLearningModal = false
+    },
+    selectHelpLearningSection(sectionKey) {
+      if (!this.helpLearningSections.some(section => section.key === sectionKey)) return
+      this.helpLearningActiveKey = sectionKey
     },
     closeSessionAnalyticsModal() {
       this.showSessionAnalyticsModal = false
@@ -11381,6 +11468,11 @@ export default {
         if (this.showHifzPlanModal) {
           event.preventDefault()
           this.closeHifzPlanModal()
+          return
+        }
+        if (this.showHelpLearningModal) {
+          event.preventDefault()
+          this.closeHelpLearningModal()
           return
         }
         if (this.showTools) {
