@@ -401,16 +401,7 @@
       "continueTitle": "Continue or begin again."
     },
     "summary": {
-      "default": "You can start a new range, save this one, or repeat it now.",
-      "completedAll": "You completed all {count} ayahs in this range.",
-      "completedRangeDetail": "You covered {covered} of {total} ayahs in {duration}.",
-      "endedPartial": "You reached ayah {ayah} and completed {percent}% of this session.",
-      "endedProgress": "You covered {covered} of {total} ayahs before ending.",
-      "nextAdvance": "Start a new range when this one feels stable.",
-      "nextRepeat": "Repeat this range now for a cleaner, steadier pass.",
-      "nextReviewWeak": "Review any ayah that still felt weak before moving on.",
-      "nextContinue": "Repeat this range now or come back later from the same stopping point.",
-      "nextReduceAids": "Reduce reading aids on the next pass if recall already felt comfortable."
+      "default": "You can start a new range, save this one, or repeat it now."
     },
     "reading": {
       "translation": "Translation",
@@ -547,12 +538,7 @@
     "speed": "Speed",
     "use_slower_speed_for_early_memorisation": "Use slower speed for early memorisation.",
     "auto_advance": "Auto-advance",
-    "listen_then_recite": "Listen then recite",
-    "auto_advance_mode_hint": "Auto moves on immediately, Listen then recite pauses for your turn, and No waits for manual control.",
     "auto_moves_to_the_next_queue_item_when_audio_ends": "Auto moves to the next queue item when audio ends.",
-    "recitation_window_secs": "Recitation window (secs)",
-    "recitation_window_hint": "How long to pause after the reciter so you can repeat before the next ayah starts.",
-    "recite_now_window": "Your turn to recite now · {seconds}s left",
     "delay_between_recitations_secs": "Delay between recitations (secs)",
     "pause_before_each_next_repetition_recitation_in_au": "Pause before each next repetition/recitation in auto mode.",
     "focus_mode": "Focus Mode",
@@ -665,25 +651,6 @@
     "recording_is_not_available_in_this_browser": "Recording is not available in this browser.",
     "recite_check": "Recite Check",
     "use_the_ai_recite_tool_in_the_header_when_you_want": "Use the AI recite tool in the header when you want to begin.",
-    "recall_mode": "Recall Mode",
-    "recall_mode_hint": "Hide future words and reveal them as you recite.",
-    "recall_mode_off_hint": "Hide future words and reveal them as you recite correctly.",
-    "recall_mode_on_hint": "Recall mode is on. Words hide until you recite them correctly.",
-    "recall_mode_enable_hint": "Tap the Recall Mode icon to hide words before you recite, like Tarteel.",
-    "recall_mode_ready_title": "Ready to recite from memory",
-    "recall_mode_ready_message": "Start AI Recite when you are ready. Future words stay hidden until you say them correctly.",
-    "recall_mode_preparing_title": "Getting ready",
-    "recall_mode_preparing_message": "Preparing the microphone. Words will hide as soon as listening starts.",
-    "recall_mode_listening_title": "Listening…",
-    "recall_mode_listening_message": "Recite from memory. Each correct word reveals the next one.",
-    "recall_mode_progress_message": "{revealed} of {total} words revealed. Keep going.",
-    "recall_mode_mistake_title": "Try that word again",
-    "recall_mode_mistake_message": "The current word stays hidden until you recite it correctly.",
-    "recall_mode_peek_title": "Current word revealed",
-    "recall_mode_peek_message": "Use Peek only when you are stuck. Recite this word correctly to continue.",
-    "recall_mode_complete_title": "Ayah complete",
-    "recall_mode_complete_message": "Excellent work. Every word was revealed through your recitation.",
-    "reveal_current_word": "Reveal Current Word",
     "what_to_do_next": "What to do next?",
     "ai_review_check": "AI review check",
     "saved_to_your_recordings_library_for_this_ayah": "Saved to your recordings library for this ayah.",
@@ -838,7 +805,6 @@
       "rangeLabel": "Range {start}-{end}",
       "manualAdvance": "manual advance",
       "autoAdvance": "auto advance",
-      "reciterFollowAdvance": "listen then recite",
       "plainSequence": "plain sequence",
       "chainingLabel": "{method} chaining",
       "setupSummary": "{count}x repeats, {mode}, {chaining}",
@@ -870,108 +836,7 @@
   },
   "toasts": {
     "saved": "Saved successfully.",
-    "error": "Something went wrong. Please try again.",
-    "theMemorisationWorkspaceRecoveredFromA": "The memorisation workspace recovered from a startup error.",
-    "fadingModeWordByWordDisabled": "Fading Mode: Word-by-Word disabled",
-    "wordByWordModeFadingDisabled": "Word-by-Word Mode: Fading disabled",
-    "focusModeOnBlurModeOff": "🎯 Focus Mode: On | 🌫️ Blur Mode: Off (cannot use together)",
-    "blurModeOnFocusModeOff": "🌫️ Blur Mode: On | 🎯 Focus Mode: Off (cannot use together)",
-    "blurModeOnChainingOffBlur": "🌫️ Blur Mode: On | 🔗 Chaining: Off — Blur hides upcoming verses needed for chaining",
-    "chainingOnBlurModeOffYou": "🔗 Chaining: On | 🌫️ Blur Mode: Off — You need to see upcoming verses for chaining to work",
-    "tipEnableAnchorModeWithChaining": "💡 Tip: Enable Anchor Mode with Chaining for better recall",
-    "pleaseSelectASessionFirst": "Please select a session first",
-    "sessionLoadedSuccessfully": "Session loaded successfully",
-    "ayahCompletedMovingToNext": "Ayah completed! Moving to next...",
-    "sessionSaved": "✓ Session \"{name}\" saved",
-    "recommendedSetupApplied": "Recommended setup applied",
-    "presetGuidedStart": "Preset: Guided Start",
-    "presetChainingAnchorModeWithFocus": "Preset: Chaining + Anchor Mode (with Focus)",
-    "presetPureRecallWithBlurMode": "Preset: Pure Recall with Blur Mode",
-    "presetFocusModeAnchorHooks": "Preset: Focus Mode + Anchor Hooks",
-    "blurModeWorksBestWithoutChaining": "Blur Mode works best without chaining, so chaining was turned off.",
-    "anchorModeKeyWordsWillBe": "Anchor Mode: Key words will be highlighted as memory hooks",
-    "anchorModeDisabled": "Anchor Mode disabled",
-    "anchorModeUsing": "Anchor Mode: Using {anchorCount}",
-    "chooseAValidSurahAndAyah": "Choose a valid surah and ayah range before starting.",
-    "pleaseSelectAValidSurahAnd": "Please select a valid surah and ayah range first",
-    "noActiveSessionToSave": "No active session to save",
-    "sessionSaved2": "Session saved",
-    "sessionDeleted": "Session deleted",
-    "sessionExportBlockedIncompleteSessionData": "Session export blocked: incomplete session data.",
-    "downloadReady": "Download ready ✓",
-    "exportFailedRetry": "Export failed, retry",
-    "thisResultDoesNotHaveEnough": "This result does not have enough stored metadata to re-run the audit.",
-    "unableToPlayThisRecordingRight": "Unable to play this recording right now.",
-    "audioSystemNotReady": "Audio system not ready",
-    "stopTheCurrentSelfCheckBefore": "Stop the current self-check before moving to another ayah.",
-    "saveOrDiscardTheCurrentSelf": "Save or discard the current self-check attempt before switching ayahs.",
-    "stopOrDiscardTheCurrentRecording": "Stop or discard the current recording before closing Self-Check.",
-    "selectAnAyahBeforeOpeningThe": "Select an ayah before opening the recordings library.",
-    "stopTheCurrentRecordingBeforeOpening": "Stop the current recording before opening the recordings library.",
-    "aiHighlightMarkedCorrectResultsUpdated": "AI highlight marked correct. Results updated.",
-    "noSavedReciteChecksForThis": "No saved Recite Checks for this ayah yet.",
-    "chooseASessionRangeBeforeStarting": "Choose a session range before starting a session Recite Check.",
-    "stopTheCurrentMemorisationCheckBefore": "Stop the current memorisation check before switching ayahs.",
-    "chooseASessionRangeBeforeOpening": "Choose a session range before opening the memorisation checker.",
-    "loadedCachedMemorisationAnalysis": "Loaded cached memorisation analysis.",
-    "memorisationAssessmentCouldNotBeSaved": "Memorisation assessment could not be saved on this device right now.",
-    "memorisationAssessmentSavedToRecordingsLibrary": "Memorisation assessment saved to recordings library.",
-    "memorisationAssessmentDeleted": "Memorisation assessment deleted.",
-    "memorisationCheckerReset": "Memorisation checker reset.",
-    "memorisationAssessmentDiscarded": "Memorisation assessment discarded.",
-    "thisRecordingDoesNotHaveEnough": "This recording does not have enough metadata to re-run the deterministic audit.",
-    "reciteCheckComplete": "Recite Check complete.",
-    "displayedAyahReviewReset": "Displayed ayah review reset.",
-    "reciteCheckCouldNotBeSaved": "Recite Check could not be saved on this device right now.",
-    "reciteCheckSavedToSavedAttempts": "Recite Check saved to Saved Attempts.",
-    "reciteCheckDiscarded": "Recite Check discarded.",
-    "reciteCheckDeleted": "Recite Check deleted.",
-    "loadedCachedReciteCheck": "Loaded cached Recite Check.",
-    "recordingReadyForAyah": "Recording ready for Ayah {number}",
-    "savedSelfCheckForAyah": "Saved self-check for Ayah {ayahNumber}",
-    "audioNotAvailableForThisAyah": "Audio not available for this ayah",
-    "downloadedAyahAudio": "Downloaded ayah {number} audio",
-    "failedToDownloadAyahAudio": "Failed to download ayah audio",
-    "hifzPlanDeleted": "Hifz plan deleted",
-    "sessionSavedWithCtrlS": "Session saved with Ctrl+S",
-    "savedSessionDismissed": "Saved session dismissed",
-    "speedChangedToX": "Speed changed to {p0}x",
-    "switchedToCasualMode": "Switched to Casual Mode",
-    "switchedToMode": "Switched to {p0} Mode",
-    "textSizeReset": "Text size reset",
-    "pleaseSelectASurah": "Please select a surah",
-    "planCreatedVersesDayForDays": "Plan created: {versesPerDay} verses/day for {plannerEstimatedDays} days",
-    "loadASurahFirstBeforeDownloading": "Load a surah first before downloading",
-    "couldNotIdentifySurah": "Could not identify surah",
-    "savedVersesFromForOfflineReading": "Saved {length} verses from {p0} for offline reading.",
-    "failedToDownloadVerses": "Failed to download verses",
-    "loadedFromOfflineStorage": "Loaded {surah} from offline storage",
-    "failedToLoadOfflineSurah": "Failed to load offline surah",
-    "offlineSurahRemoved": "Offline surah removed",
-    "audioPlaybackError": "Audio playback error",
-    "audioNotAvailableForVerse": "Audio not available for verse {number}",
-    "failedToPlayAudio": "Failed to play audio",
-    "playbackFailed": "Playback failed",
-    "failedToLoadVerses": "Failed to load verses",
-    "pleaseSelectASurahFirst": "Please select a surah first",
-    "noVersesLoadedCheckYourNetwork": "No verses loaded. Check your network connection.",
-    "nothingToPlayCheckTheSelected": "Nothing to play. Check the selected range.",
-    "backOnlineLiveApisAreAvailable": "Back online. Live APIs are available again.",
-    "offlineModeActiveReadingFallsBack": "Offline mode active. Reading falls back to cached ranges.",
-    "settingsIssue": "Settings issue: {join}",
-    "fontSize": "Font size: {defaultFontSize}%",
-    "message": "{p0} {p1}",
-    "settingsSaved": "Settings saved",
-    "failedToLoadSurahList": "Failed to load surah list",
-    "sessionControlsResetToDefaults": "Session controls reset to defaults",
-    "reciterUpdatedForThisSession": "Reciter updated for this session.",
-    "noVersesToQuizOn": "No verses to quiz on",
-    "enableWordAudioToPreviewIndividual": "Enable Word audio to preview individual words.",
-    "wordAudioIsNotAvailableFor": "Word audio is not available for this word.",
-    "wordTimingUnavailableForThisAyah": "Word timing unavailable for this ayah.",
-    "unableToPlayThisWordRight": "Unable to play this word right now.",
-    "unableToPlayAyahNow": "Unable to play this ayah right now.",
-    "textSizePercent": "Text size: {percent}%"
+    "error": "Something went wrong. Please try again."
   },
   "errors": {
     "network": "Network error. Check your connection."
@@ -1209,76 +1074,6 @@
         "repeatsRequired": "Choose how many times each ayah should repeat.",
         "reciterRequired": "Choose a reciter before you continue."
       }
-    },
-    "helpLearning": {
-      "title": "Help & Learning",
-      "subtitle": "Learn how to use Mutqin's tools to memorise more effectively.",
-      "bestFor": "Best for:",
-      "sections": {
-        "tajweed": {
-          "title": "Tajweed Rules",
-          "description": "Tajweed is the set of rules that helps you recite the Quran correctly and beautifully. Mutqin highlights these rules so you can recognise and practise them while memorising.",
-          "bestFor": "Students improving pronunciation and recitation quality."
-        },
-        "srs": {
-          "title": "Smart Revision (SRS)",
-          "description": "Mutqin automatically reminds you to review verses at the right time so they stay strong in your memory. Difficult verses appear more often, while stronger verses are reviewed less frequently.",
-          "bestFor": "Long-term retention and preventing memorisation loss."
-        },
-        "techniques": {
-          "title": "Memorisation Techniques",
-          "description": "Choose the method that helps you stay steady, then adjust it as your range becomes more familiar.",
-          "bestFor": "Students discovering which learning style works best for them.",
-          "details": {
-            "repetition": {
-              "label": "Repetition Method",
-              "text": "Repeat the same verse multiple times before moving on."
-            },
-            "linking": {
-              "label": "Linking Method",
-              "text": "Connect each verse to the next to improve flow and continuity."
-            },
-            "cumulative": {
-              "label": "Cumulative Method",
-              "text": "Continuously add new verses while revising previous ones."
-            }
-          }
-        },
-        "layouts": {
-          "title": "Reading Layouts",
-          "description": "Switch between two reading styles depending on the device and the kind of memorisation you want to do.",
-          "bestFor": "Choosing the reading experience that feels most natural to you.",
-          "details": {
-            "stacked": {
-              "label": "Stacked Layout",
-              "text": "Displays each verse in a simple vertical format that is easier to follow on mobile devices."
-            },
-            "mushaf": {
-              "label": "Mushaf Layout",
-              "text": "Displays verses in a traditional Mushaf-inspired style for students who prefer familiar page memorisation."
-            }
-          }
-        },
-        "aiRecitation": {
-          "title": "AI Recitation",
-          "description": "AI Recitation listens to your recitation and provides instant feedback to help you identify mistakes and improve accuracy while memorising.",
-          "bestFor": "Students who want guided practice and immediate feedback."
-        },
-        "manualAssessment": {
-          "title": "Manual Assessment",
-          "description": "Manual Assessment allows you to evaluate your own memorisation after each session and track your confidence and progress over time.",
-          "bestFor": "Students who prefer self-reflection and independent revision."
-        }
-      }
-    },
-    "rangeOptions": {
-      "all": "Full Quran",
-      "juz": "Juz",
-      "hizb": "Hizb",
-      "page": "Page",
-      "surah": "Surah",
-      "ayah": "Ayah",
-      "word": "Word"
     }
   }
 }

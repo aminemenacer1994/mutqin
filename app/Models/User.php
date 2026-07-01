@@ -36,7 +36,6 @@ class User extends Authenticatable
         'subscription_trial_ends_at',
         'subscription_current_period_ends_at',
         'locale',
-        'ai_recall_mode_enabled',
     ];
 
     /**
@@ -61,7 +60,6 @@ class User extends Authenticatable
             'password' => 'hashed',
             'subscription_trial_ends_at' => 'datetime',
             'subscription_current_period_ends_at' => 'datetime',
-            'ai_recall_mode_enabled' => 'boolean',
         ];
     }
 

@@ -271,7 +271,7 @@
             padding: 3px;
             position: sticky;
             top: 0;
-            z-index: 5000;
+            z-index: 1000;
             padding-top: env(safe-area-inset-top, 0px);
         }
 
@@ -289,9 +289,6 @@
             padding: 12px var(--gutter);
             min-height: var(--nav-h);
             gap: 12px;
-            position: relative;
-            z-index: 2;
-            overflow: visible;
         }
 
         .navbar-brand {
@@ -310,8 +307,6 @@
 
         .navbar-quick-actions {
             margin-inline-start: auto;
-            position: relative;
-            z-index: 3;
         }
 
         .navbar-toggler {
@@ -434,17 +429,6 @@
             transition: all 0.2s ease;
         }
 
-        .app-lang-toggle.icon-only {
-            width: 42px;
-            min-width: 42px;
-            padding: 0;
-            justify-content: center;
-        }
-
-        .global-lang-switcher.d-lg-none .app-lang-toggle.icon-only {
-            width: 100%;
-        }
-
         .app-lang-toggle:hover,
         .global-lang-switcher .lang-btn.active {
             background: var(--accent-light);
@@ -467,7 +451,7 @@
         }
 
         /* Dropdown Styles */
-        .app-user-dropdown {
+        .dropdown {
             position: relative;
             display: inline-block;
         }
@@ -500,8 +484,7 @@
             white-space: nowrap;
         }
 
-        html[dir="rtl"] .app-user-menu,
-        html[dir="rtl"] .app-lang-menu {
+        html[dir="rtl"] .dropdown-menu {
             text-align: right;
         }
 
@@ -518,7 +501,7 @@
             font-size: 15px;
         }
 
-        .app-user-menu {
+        .dropdown-menu {
             position: absolute;
             top: calc(100% + 12px);
             inset-inline-end: 0;
@@ -532,30 +515,14 @@
             visibility: hidden;
             transform: translateY(-10px);
             transition: all 0.2s ease;
-            z-index: 5200;
+            z-index: 1050;
             max-width: min(92vw, 340px);
         }
 
-        .app-user-menu.show {
+        .dropdown-menu.show {
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
-        }
-
-        .global-lang-switcher {
-            position: relative;
-            z-index: 4;
-        }
-
-        .app-lang-menu {
-            margin-top: 12px !important;
-            min-width: 188px;
-            padding: 8px;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            background: var(--surface-strong);
-            box-shadow: var(--shadow-lg);
-            z-index: 5200;
         }
 
         .dropdown-item {
@@ -1427,10 +1394,11 @@
                     </div>
 
                     <div class="global-lang-switcher dropdown d-lg-none w-100" aria-label="{{ __('ui.language_switcher') }}">
-                        <button class="btn app-lang-toggle icon-only w-100 lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('ui.language_switcher') }}">
-                            <i class="bi bi-translate" aria-hidden="true"></i>
+                        <button class="btn app-lang-toggle w-100 justify-content-between lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span><i class="bi bi-translate" aria-hidden="true"></i> {{ __('ui.language_switcher') }}</span>
+                            <i class="bi bi-chevron-down" aria-hidden="true"></i>
                         </button>
-                        <ul class="dropdown-menu w-100 app-lang-menu">
+                        <ul class="dropdown-menu w-100">
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="en">🇬🇧 {{ __('ui.english') }}</button></li>
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="fr">🇫🇷 {{ __('ui.french') }}</button></li>
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="ar">🇸🇦 {{ __('ui.arabic') }}</button></li>
@@ -1448,10 +1416,12 @@
 
             <div class="d-flex align-items-center gap-2 navbar-quick-actions">
                 <div class="global-lang-switcher dropdown d-none d-lg-block" aria-label="{{ __('ui.language_switcher') }}">
-                    <button class="btn app-lang-toggle icon-only lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('ui.language_switcher') }}">
+                    <button class="btn app-lang-toggle lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('ui.language_switcher') }}">
                         <i class="bi bi-translate" aria-hidden="true"></i>
+                        <span class="d-none d-xl-inline">{{ __('ui.language_switcher') }}</span>
+                        <i class="bi bi-chevron-down" aria-hidden="true"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end app-lang-menu">
+                    <ul class="dropdown-menu dropdown-menu-end">
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="en">🇬🇧 {{ __('ui.english') }}</button></li>
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="fr">🇫🇷 {{ __('ui.french') }}</button></li>
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="ar">🇸🇦 {{ __('ui.arabic') }}</button></li>
@@ -1463,13 +1433,13 @@
                 </button>
 
                 @auth
-                    <div class="dropdown app-user-dropdown" id="userDropdown">
+                    <div class="dropdown" id="userDropdown">
                         <button class="btn app-user-toggle" type="button" id="dropdownToggle" aria-expanded="false" aria-haspopup="menu" aria-controls="dropdownMenu">
                             <span class="app-user-avatar" aria-hidden="true">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
                             <span class="d-none d-lg-inline">{{ Auth::user()->name ?? __('ui.user') }}</span>
                             <i class="bi bi-chevron-down" aria-hidden="true"></i>
                         </button>
-                        <ul class="dropdown-menu app-user-menu" id="dropdownMenu" role="menu">
+                        <ul class="dropdown-menu" id="dropdownMenu" role="menu">
                             <li>
                                 <a class="dropdown-item" href="{{ route('profile.show') }}">
                                     <i class="bi bi-person-circle"></i> <span data-i18n="profile">{{ __('ui.profile') }}</span>
@@ -1610,7 +1580,7 @@
             runWhenReady(function() {
                 const dropdown = document.getElementById('userDropdown');
                 const toggle = document.getElementById('dropdownToggle');
-                const menu = dropdown?.querySelector('.app-user-menu');
+                const menu = document.getElementById('dropdownMenu');
                 
                 if (!dropdown || !toggle || !menu) return;
                 

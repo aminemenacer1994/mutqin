@@ -106,7 +106,7 @@ export default {
 
 .donation-hero {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
   gap: 20px;
   align-items: stretch;
 }
@@ -211,7 +211,6 @@ export default {
 
 .donation-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 16px;
 }
 
@@ -268,7 +267,7 @@ export default {
 
 .donation-cta {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 16px;
   align-items: center;
   padding: 20px 22px;
@@ -288,7 +287,6 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
   min-width: 152px;
   min-height: 48px;
   padding: 0 18px;
@@ -326,6 +324,26 @@ export default {
 
   50% {
     transform: translate3d(0, 16px, 0);
+  }
+}
+
+@media (max-width: 768px) {
+  .donation-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .donation-cta {
+    grid-template-columns: 1fr;
+  }
+
+  .donation-cta a {
+    width: 100%;
+  }
+}
+
+@media (min-width: 769px) {
+  .donation-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

@@ -80,13 +80,7 @@
         </div>
         <div v-else class="workspace">
           <!-- In your template, replace the workspace-shell section -->
-<section
-  v-if="shouldRenderWorkspaceShell && !isOnboardingExperienceActive"
-  class="workspace-shell"
-  :class="{ collapsed: mainCardCollapsed }"
-  :data-reading-mode="readingViewMode"
-  aria-label="Session overview"
->
+<section v-if="shouldRenderWorkspaceShell && !isOnboardingExperienceActive" class="workspace-shell" :class="{ collapsed: mainCardCollapsed }" aria-label="Session overview">
   <div class="workspace-shell-head">
     <div class="workspace-shell-copy">
       <span class="workspace-shell-kicker">{{ t('memorisation.sessionOverview.kicker') }}</span>
@@ -96,7 +90,7 @@
       </div>
     </div>
     <div class="workspace-shell-actions">
-      <div v-if="hasVerses" class="workspace-header-view-controls quick-right-controls" aria-label="View and font controls">
+      <div class="workspace-header-view-controls quick-right-controls" aria-label="View and font controls">
         <button type="button" class="view-mode-switch" :class="{ 'is-mushaf': readingViewMode === 'mushaf' }"
           @click="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
           :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'" aria-label="Toggle mushaf mode">
@@ -128,11 +122,6 @@
         </div>
       </div>
       <div class="action-buttons-group">
-        <button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls"
-          :title="t('memorisation.open_session_setup')" :aria-label="t('memorisation.open_session_setup')">
-          <i class="bi bi-plus-circle" aria-hidden="true"></i>
-          <span>{{ t('memorisation.open_session_setup') }}</span>
-        </button>
         <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button"
           @click="openSessionExitModal" title="End session" aria-label="End session">
           <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
@@ -141,9 +130,8 @@
         <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
           title="Open session controls" aria-label="Open session controls">
           <i class="bi bi-sliders" aria-hidden="true"></i>
-          <span v-if="!hasVerses">{{ t('memorisation.open_controls') }}</span>
         </button>
-        <div v-if="hasVerses" class="top-card-menu-wrap" @click.stop>
+        <div class="top-card-menu-wrap" @click.stop>
           <button class="top-card-ellipsis" type="button" @click="toggleTopCardMenu"
             aria-label="Open reading options">
             <i class="bi bi-three-dots-vertical"></i>
@@ -160,7 +148,7 @@
                 <i class="bi bi-palette"></i><span>{{ t('memorisation.reading.tajweed') }}</span>
               </button>
               <button type="button" @click="openHelpLearningModal">
-                <i class="bi bi-question-circle"></i><span>{{ helpLearningUi.title }}</span>
+                <i class="bi bi-question-circle"></i><span>Help &amp; Learning</span>
               </button>
               <!--
                 <button type="button" @click="openAdvancedControls">
@@ -187,7 +175,7 @@
   </div>
 
   <!-- Quick controls - also hidden when session is completed -->
-  <div v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills.length" v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
+  <div v-if="!isSessionCompleted && hasSessionStarted" v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
     <div class="quick-pill-group-list" :class="{ 'quick-pill-group-list-compact': !topCardAppliedPills.length }">
       <div v-if="topCardAppliedPills.length" class="quick-left-pills">
         <div class="workspace-applied-pills" aria-label="Live session settings">
@@ -204,55 +192,86 @@
 
 <!-- Session Complete - Only shows when session is fully done -->
 <div v-if="showSessionCompletedState" class="session-complete-wrapper">
-  <section class="completion-surface" aria-label="Session summary">
-    <div class="completion-header">
-      <div class="completion-icon">
-        <i class="bi bi-check-circle-fill"></i>
-      </div>
-      <div class="completion-text">
-        <h3>{{ sessionCompletionSnapshot?.completedAll ? t('memorisation.sessionComplete.title') : t('memorisation.sessionEnded.title') }}</h3>
-        <p>{{ sessionEndedSummaryMessage }}</p>
-      </div>
+  <!-- Status Header -->
+  <div class="completion-header">
+    <div class="completion-icon">
+      <i class="bi bi-check-circle-fill"></i>
     </div>
-
-    <div v-if="sessionCompletionSnapshot" class="completion-stats">
-      <div class="stat-box">
-        <span class="stat-number">{{ sessionEndedStats.surah }}</span>
-        <span class="stat-label">{{ sessionEndedStats.range }}</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-number">{{ sessionEndedStats.progress }}</span>
-        <span class="stat-label">{{ t('memorisation.stats.progress') }}</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-number">{{ sessionEndedStats.duration }}</span>
-        <span class="stat-label">{{ t('memorisation.stats.duration') }}</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-number">{{ sessionEndedStats.repeats }}</span>
-        <span class="stat-label">{{ t('memorisation.stats.repeats') }}</span>
-      </div>
+    <div class="completion-text">
+      <h3>{{ sessionCompletionSnapshot?.completedAll ? t('memorisation.sessionComplete.title') : t('memorisation.sessionEnded.title') }}</h3>
+      <p>{{ sessionCompletionSnapshot?.completedAll ? `You've completed all ${totalVerses} ayahs` : sessionEndedSummaryMessage }}</p>
     </div>
+  </div>
 
-    <div v-if="sessionEndedDetailMessage || sessionEndedNextStepMessage" class="completion-followup">
-      <p v-if="sessionEndedDetailMessage" class="completion-detail">{{ sessionEndedDetailMessage }}</p>
-      <div v-if="sessionEndedNextStepMessage" class="completion-next-step">
-        <i class="bi bi-arrow-up-right-circle" aria-hidden="true"></i>
-        <span>{{ sessionEndedNextStepMessage }}</span>
-      </div>
+  <div v-if="sessionCompletionSnapshot" class="completion-stats">
+    <div class="stat-box">
+      <span class="stat-number">{{ sessionEndedStats.surah }}</span>
+      <span class="stat-label">{{ sessionEndedStats.range }}</span>
     </div>
+    <div class="stat-divider"></div>
+    <div class="stat-box">
+      <span class="stat-number">{{ sessionEndedStats.progress }}</span>
+      <span class="stat-label">{{ t('memorisation.stats.progress') }}</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-box">
+      <span class="stat-number">{{ sessionEndedStats.duration }}</span>
+      <span class="stat-label">{{ t('memorisation.stats.duration') }}</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-box">
+      <span class="stat-number">{{ sessionEndedStats.repeats }}</span>
+      <span class="stat-label">{{ t('memorisation.stats.repeats') }}</span>
+    </div>
+  </div>
 
-    <div class="completion-actions-inline">
+  <!-- Action Buttons -->
+  <div class="row g-2 completion-actions">
+    <div class="col-12 col-sm-6 col-xl-3 d-grid">
       <button class="action-btn primary" @click="openNewSessionSetup()">
         <i class="bi bi-plus-circle"></i>
         {{ t('memorisation.actions.newSession') }}
       </button>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3 d-grid">
       <button class="action-btn" @click="startSessionWithCountdown">
         <i class="bi bi-arrow-repeat"></i>
         {{ t('memorisation.actions.repeatRange') }}
       </button>
     </div>
-  </section>
+    <div class="col-12 col-sm-6 col-xl-3 d-grid">
+      <button class="action-btn" @click="saveCurrentSessionWithName()">
+        <i class="bi bi-save2"></i>
+        {{ t('memorisation.actions.saveSession') }}
+      </button>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3 d-grid">
+      <button class="action-btn" @click="continueLastSession()" :disabled="!hasContinueSession">
+        <i class="bi bi-play-circle"></i>
+        {{ t('memorisation.actions.resumeSession') }}
+      </button>
+    </div>
+  </div>
+
+  <div v-if="sessionCompletionSnapshot" class="row g-3 completion-meta-grid">
+    <div class="col-12 col-lg-4" v-for="card in sessionEndedMetaCards" :key="card.key">
+      <article class="completion-meta-card h-100" :class="{ collapsed: isSessionEndedMetaCardCollapsed(card.key) }">
+        <div class="completion-meta-head">
+          <span class="completion-meta-kicker">{{ card.kicker }}</span>
+          <button class="completion-meta-toggle" type="button" @click="toggleSessionEndedMetaCard(card.key)" :aria-expanded="isSessionEndedMetaCardCollapsed(card.key) ? 'false' : 'true'" :aria-label="`${isSessionEndedMetaCardCollapsed(card.key) ? 'Expand' : 'Collapse'} ${card.kicker}`">
+            <i class="bi" :class="isSessionEndedMetaCardCollapsed(card.key) ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
+          </button>
+        </div>
+        <div class="completion-meta-calligraphy" dir="rtl" lang="ar">{{ card.calligraphy }}</div>
+        <strong>{{ card.title }}</strong>
+        <p v-if="!isSessionEndedMetaCardCollapsed(card.key)">{{ card.body }}</p>
+        <ul v-if="!isSessionEndedMetaCardCollapsed(card.key) && card.points && card.points.length" class="completion-meta-points">
+          <li v-for="point in card.points" :key="point">{{ point }}</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+
 </div>
 
           <main v-if="!isOnboardingExperienceActive" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
@@ -272,7 +291,7 @@
                 </div>
               </div>
             </section>
-            <div v-if="!isSessionCompleted && readingViewMode === 'mushaf'" class="mushaf-workspace container-fluid px-0">
+            <div v-if="!isSessionCompleted && readingViewMode === 'mushaf'" class="mushaf-workspace">
               <div class="mushaf-frame">
                 <div class="mushaf-pill-bar mushaf-pill-toolbar">
                   <div class="mushaf-toolbar-cluster mushaf-toolbar-cluster-start">
@@ -719,17 +738,9 @@
                     <label>{{ t('memorisation.auto_advance') }}</label>
                     <div class="radio-group radio-group-tight">
                       <label class="radio"><input type="radio" name="session-auto-advance" value="auto" v-model="playMode"> {{ t('common.yes') }}</label>
-                      <label class="radio"><input type="radio" name="session-auto-advance" value="follow" v-model="playMode"> {{ t('memorisation.listen_then_recite') }}</label>
                       <label class="radio"><input type="radio" name="session-auto-advance" value="manual" v-model="playMode"> {{ t('common.no') }}</label>
                     </div>
-                    <small class="field-hint">{{ t('memorisation.auto_advance_mode_hint') }}</small>
-                  </div>
-                  <div v-if="playMode === 'follow'" class="field">
-                    <label><i class="bi bi-person-raised-hand"></i> {{ t('memorisation.recitation_window_secs') }}</label>
-                    <select v-model.number="recitationWindowSeconds" class="select">
-                      <option v-for="option in recitationWindowOptions" :key="`tool-recitation-window-${option}`" :value="option">{{ option }}s</option>
-                    </select>
-                    <small class="field-hint">{{ t('memorisation.recitation_window_hint') }}</small>
+                    <small class="field-hint">{{ t('memorisation.auto_moves_to_the_next_queue_item_when_audio_ends') }}</small>
                   </div>
                   <div class="field">
                     <label><i class="bi bi-hourglass-split"></i> {{ t('memorisation.delay_between_recitations_secs') }}</label>
@@ -1450,57 +1461,61 @@
           aria-labelledby="helpLearningTitle" aria-describedby="helpLearningSubtitle">
           <div class="modal-header help-learning-header">
             <div class="modal-header-text">
-              <h2 id="helpLearningTitle">{{ helpLearningUi.title }}</h2>
-              <p id="helpLearningSubtitle">{{ helpLearningUi.subtitle }}</p>
+              <h2 id="helpLearningTitle">Help &amp; Learning</h2>
+              <p id="helpLearningSubtitle">Learn how to use Mutqin's tools to memorise more effectively.</p>
             </div>
             <button class="modal-close-btn" @click="closeHelpLearningModal" aria-label="Close help and learning">
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
           <div class="modal-body help-learning-body">
-            <div class="help-learning-shell">
-              <nav class="help-learning-nav" role="tablist" aria-label="Help topics">
-                <button
-                  v-for="section in helpLearningSections"
-                  :key="section.key"
-                  type="button"
-                  class="help-learning-nav-link"
-                  :class="{ active: activeHelpLearningSection?.key === section.key }"
-                  :aria-selected="activeHelpLearningSection?.key === section.key ? 'true' : 'false'"
-                  @click="selectHelpLearningSection(section.key)"
-                >
-                  <i class="bi" :class="section.icon" aria-hidden="true"></i>
-                  <span>{{ section.title }}</span>
-                </button>
-              </nav>
-              <div class="help-learning-content-col">
-                <article v-if="activeHelpLearningSection" class="help-learning-card">
-                  <div class="help-learning-card-body">
-                    <div class="help-learning-card-head">
-                      <span class="help-learning-icon" aria-hidden="true">
-                        <i class="bi" :class="activeHelpLearningSection.icon"></i>
-                      </span>
-                      <div class="help-learning-copy">
-                        <h3>{{ activeHelpLearningSection.title }}</h3>
-                        <p>{{ activeHelpLearningSection.description }}</p>
-                      </div>
-                    </div>
-                    <div v-if="activeHelpLearningSection.details?.length" class="help-learning-detail-list">
-                      <div
-                        v-for="detail in activeHelpLearningSection.details"
-                        :key="`${activeHelpLearningSection.key}-${detail.label}`"
-                        class="help-learning-detail-item"
-                      >
-                        <strong>{{ detail.label }}</strong>
-                        <span>{{ detail.text }}</span>
-                      </div>
-                    </div>
-                    <div class="help-learning-best-for">
-                      <span class="help-learning-best-for-label">{{ helpLearningUi.bestFor }}</span>
-                      <p>{{ activeHelpLearningSection.bestFor }}</p>
-                    </div>
+            <div class="help-learning-shell container-fluid px-0">
+              <div class="row g-3 g-lg-4 align-items-start">
+                <div class="col-12 col-md-4 col-lg-3 help-learning-nav-col">
+                  <div class="nav flex-md-column nav-pills help-learning-nav" role="tablist" aria-label="Help topics">
+                    <button
+                      v-for="section in helpLearningSections"
+                      :key="section.key"
+                      type="button"
+                      class="nav-link help-learning-nav-link"
+                      :class="{ active: activeHelpLearningSection?.key === section.key }"
+                      :aria-selected="activeHelpLearningSection?.key === section.key ? 'true' : 'false'"
+                      @click="selectHelpLearningSection(section.key)"
+                    >
+                      <i class="bi" :class="section.icon" aria-hidden="true"></i>
+                      <span>{{ section.title }}</span>
+                    </button>
                   </div>
-                </article>
+                </div>
+                <div class="col-12 col-md-8 col-lg-9 help-learning-content-col">
+                  <article v-if="activeHelpLearningSection" class="card help-learning-card h-100 border-0">
+                    <div class="card-body help-learning-card-body">
+                      <div class="help-learning-card-head">
+                        <span class="help-learning-icon" aria-hidden="true">
+                          <i class="bi" :class="activeHelpLearningSection.icon"></i>
+                        </span>
+                        <div class="help-learning-copy">
+                          <h3>{{ activeHelpLearningSection.title }}</h3>
+                          <p>{{ activeHelpLearningSection.description }}</p>
+                        </div>
+                      </div>
+                      <div v-if="activeHelpLearningSection.details?.length" class="help-learning-detail-list">
+                        <div
+                          v-for="detail in activeHelpLearningSection.details"
+                          :key="`${activeHelpLearningSection.key}-${detail.label}`"
+                          class="help-learning-detail-item"
+                        >
+                          <strong>{{ detail.label }}</strong>
+                          <span>{{ detail.text }}</span>
+                        </div>
+                      </div>
+                      <div class="help-learning-best-for">
+                        <span class="help-learning-best-for-label">Best for</span>
+                        <p>{{ activeHelpLearningSection.bestFor }}</p>
+                      </div>
+                    </div>
+                  </article>
+                </div>
               </div>
             </div>
           </div>
@@ -2073,23 +2088,6 @@
                   <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
                   <span>{{ recitationCheckRecording ? 'Stop AI' : 'AI Recite' }}</span>
                 </button>
-                <button v-if="recitationCheckPanelOpen" class="self-check-toolbar-btn self-check-ayah-action-recall" type="button"
-                  @click.stop="toggleAiRecallMode"
-                  :class="{ active: aiRecallModeEnabled }"
-                  :aria-pressed="aiRecallModeEnabled ? 'true' : 'false'"
-                  :disabled="isSelfCheckRecording || recitationCheckPreparing"
-                  :title="aiRecallModeEnabled ? t('memorisation.recall_mode_on_hint') : t('memorisation.recall_mode_off_hint')"
-                  :aria-label="t('memorisation.recall_mode')">
-                  <i class="bi" :class="aiRecallModeEnabled ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
-                  <span>{{ t('memorisation.recall_mode') }}</span>
-                </button>
-                <button v-if="aiRecallModeEnabled && recitationCheckRecording" class="self-check-toolbar-btn self-check-ayah-action-recall-peek" type="button"
-                  @click.stop="revealCurrentRecallWord"
-                  :title="t('memorisation.reveal_current_word')"
-                  :aria-label="t('memorisation.reveal_current_word')">
-                  <i class="bi bi-eye"></i>
-                  <span>{{ t('memorisation.peek') }}</span>
-                </button>
                 <button class="self-check-toolbar-btn self-check-ayah-action-manual" type="button"
                   @click.stop="toggleManualSelfCheckRecording(selfCheckModalVerse)"
                   :disabled="recitationCheckRecording || recitationCheckPreparing"
@@ -2117,14 +2115,7 @@
               </div>
             </header>
 
-            <div v-if="recitationCheckPanelOpen && aiRecallModeEnabled && aiRecallModeStatus.message" class="recall-mode-status"
-              :class="`recall-mode-status--${aiRecallModeStatus.tone}`" aria-live="polite">
-              <i class="bi" :class="aiRecallModeStatus.icon" aria-hidden="true"></i>
-              <div class="recall-mode-status-copy">
-                <strong v-if="aiRecallModeStatus.title">{{ aiRecallModeStatus.title }}</strong>
-                <span>{{ aiRecallModeStatus.message }}</span>
-              </div>
-            </div>
+
 
             <div v-if="selfCheckBlurEnabled && !recitationCheckVisible" class="technique-peek-hint" @mousedown="startSelfCheckPeek"
               @mouseup="stopSelfCheckPeek" @mouseleave="stopSelfCheckPeek" @touchstart.prevent="startSelfCheckPeek"
@@ -2141,8 +2132,7 @@
 	              :class="{
 	                'tajweed-enabled': selfCheckTajweedEnabled,
 	                'self-check-session-ayat': recitationCheckScope === 'session' && recitationCheckPendingTargets.length > 1,
-	                'recitation-word-review-active': selfCheckModalVerse && shouldShowRecitationReviewHighlights(selfCheckModalVerse.key),
-	                'recall-mode-active': aiRecallModeEnabled && recitationCheckRecording
+	                'recitation-word-review-active': selfCheckModalVerse && shouldShowRecitationReviewHighlights(selfCheckModalVerse.key)
 	              }"
 	                v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"></div>
 	            </div>
@@ -2682,10 +2672,6 @@
               <span v-if="etaLabel && isPlaying" class="player-eta" :title="getEtaTooltip()">
                 &bull; {{ etaLabel }} remaining
               </span>
-            </div>
-            <div v-if="reciterFollowModeActive" class="player-recitation-window" aria-live="polite">
-              <i class="bi bi-mic" aria-hidden="true"></i>
-              <span>{{ reciterFollowPrompt }}</span>
             </div>
           </div>
 

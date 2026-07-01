@@ -909,12 +909,12 @@
     <section class="hero">
         <div class="hero-container">
             <div class="hero-content">
-                <h1>{{ __('onboarding.title') }}</h1>
-                <p>{{ __('onboarding.intro') }}</p>
-                <p>{{ __('onboarding.feature1') }}</p>
+                <h1>Master Quran Recitation with AI-Powered Precision</h1>
+                <p>"And recite the Qur'an with measured recitation." (Surah Al-Muzzammil, 73:4)</p>
+                <p>Join thousands of students perfecting their Tajweed and memorization with real-time AI feedback, personalized learning paths, and interactive tools designed to help you connect with the Word of Allah.</p>
                 <div class="hero-buttons">
                     <a href="{{ route('onboarding') }}" class="btn-primary">
-                        <i class="bi bi-rocket-takeoff"></i> {{ __('onboarding.get_started') }}
+                        <i class="bi bi-rocket-takeoff"></i> Begin Your Journey
                     </a>
                     <a href="#features" class="btn-secondary">
                         <i class="bi bi-play-circle"></i> Watch Demo

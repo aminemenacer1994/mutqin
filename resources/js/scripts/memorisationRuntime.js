@@ -325,7 +325,6 @@ export function createBeginnerState() {
     speed: 1,
     delay: 2,
     playMode: 'auto',
-    recitationWindowSeconds: 8,
     order: 'seq',
     loadedConfig: null,
     verses: [],
@@ -345,7 +344,6 @@ export function createAdvancedState() {
     speed: 1,
     delay: 2,
     playMode: 'auto',
-    recitationWindowSeconds: 8,
     order: 'seq',
     loadedConfig: null,
     verses: [],
@@ -365,7 +363,6 @@ export function createPlannerState() {
     speed: 1,
     delay: 2,
     playMode: 'auto',
-    recitationWindowSeconds: 8,
     order: 'seq',
     loadedConfig: null,
     verses: [],
@@ -753,3 +750,4 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
     }
   }
 }
+

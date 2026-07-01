@@ -301,61 +301,6 @@ const arStructured = {
         repeatsRequired: 'اختر عدد مرات تكرار كل آية.',
         reciterRequired: 'اختر قارئاً قبل المتابعة.'
       }
-    },
-    helpLearning: {
-      title: 'المساعدة والتعلّم',
-      subtitle: 'تعرّف على أدوات متقن للحفظ بفعالية أكبر.',
-      bestFor: 'الأفضل لـ:',
-      sections: {
-        tajweed: {
-          title: 'قواعد التجويد',
-          description: 'التجويد مجموعة القواعد التي تساعدك على تلاوة القرآن بشكل صحيح وجميل. يبرز متقن هذه القواعد لتتعرّف عليها وتتدرّب عليها أثناء الحفظ.',
-          bestFor: 'الطلاب الذين يحسّنون النطق وجودة التلاوة.'
-        },
-        srs: {
-          title: 'المراجعة الذكية (SRS)',
-          description: 'يذكّرك متقن تلقائياً بمراجعة الآيات في الوقت المناسب لتبقى قوية في ذاكرتك. تظهر الآيات الصعبة أكثر، بينما تُراجع الأقوى بوتيرة أقل.',
-          bestFor: 'الاحتفاظ طويل الأمد ومنع فقدان الحفظ.'
-        },
-        techniques: {
-          title: 'تقنيات الحفظ',
-          description: 'اختر الطريقة التي تساعدك على الاستمرار، ثم عدّلها مع تعرّفك على النطاق.',
-          bestFor: 'الطلاب الذين يكتشفون أسلوب التعلّم الأنسب لهم.',
-          details: {
-            repetition: { label: 'طريقة التكرار', text: 'كرّر الآية نفسها عدة مرات قبل الانتقال.' },
-            linking: { label: 'طريقة الربط', text: 'اربط كل آية بالتالية لتحسين التدفق والاستمرارية.' },
-            cumulative: { label: 'الطريقة التراكمية', text: 'أضف آيات جديدة باستمرار مع مراجعة السابقة.' }
-          }
-        },
-        layouts: {
-          title: 'تخطيطات القراءة',
-          description: 'بدّل بين أسلوبي قراءة حسب الجهاز ونوع الحفظ الذي تريده.',
-          bestFor: 'اختيار تجربة القراءة الأكثر طبيعية لك.',
-          details: {
-            stacked: { label: 'التخطيط العمودي', text: 'يعرض كل آية بشكل عمودي بسيط يسهل متابعته على الجوال.' },
-            mushaf: { label: 'تخطيط المصحف', text: 'يعرض الآيات بأسلوب مصحف تقليدي للطلاب المعتادين على حفظ الصفحات.' }
-          }
-        },
-        aiRecitation: {
-          title: 'التلاوة بالذكاء الاصطناعي',
-          description: 'يستمع إلى تلاوتك ويقدّم تغذية راجعة فورية لمساعدتك على تحديد الأخطاء وتحسين الدقة أثناء الحفظ.',
-          bestFor: 'الطلاب الذين يريدون تدريباً موجّهاً وتغذية راجعة فورية.'
-        },
-        manualAssessment: {
-          title: 'التقييم اليدوي',
-          description: 'يتيح لك تقييم حفظك بنفسك بعد كل جلسة وتتبّع ثقتك وتقدّمك مع الوقت.',
-          bestFor: 'الطلاب الذين يفضّلون التأمل الذاتي والمراجعة المستقلة.'
-        }
-      }
-    },
-    rangeOptions: {
-      all: 'القرآن كاملاً',
-      juz: 'جزء',
-      hizb: 'حزب',
-      page: 'صفحة',
-      surah: 'سورة',
-      ayah: 'آية',
-      word: 'كلمة'
     }
   }
 }
@@ -632,61 +577,6 @@ const frStructured = {
         repeatsRequired: 'Choisissez combien de fois chaque ayah doit être répétée.',
         reciterRequired: 'Choisissez un récitateur avant de continuer.'
       }
-    },
-    helpLearning: {
-      title: 'Aide et apprentissage',
-      subtitle: 'Apprenez à utiliser les outils Mutqin pour mieux mémoriser.',
-      bestFor: 'Idéal pour :',
-      sections: {
-        tajweed: {
-          title: 'Règles de tajweed',
-          description: 'Le tajweed est l\'ensemble des règles qui vous aident à réciter le Coran correctement et avec beauté. Mutqin met en évidence ces règles pour que vous les reconnaissiez et les pratiquiez pendant la mémorisation.',
-          bestFor: 'Les étudiants qui améliorent la prononciation et la qualité de récitation.'
-        },
-        srs: {
-          title: 'Révision intelligente (SRS)',
-          description: 'Mutqin vous rappelle automatiquement de réviser les versets au bon moment pour qu\'ils restent solides en mémoire. Les versets difficiles apparaissent plus souvent, les plus solides moins.',
-          bestFor: 'La rétention à long terme et la prévention des oublis.'
-        },
-        techniques: {
-          title: 'Techniques de mémorisation',
-          description: 'Choisissez la méthode qui vous aide à rester régulier, puis ajustez-la à mesure que la plage devient familière.',
-          bestFor: 'Les étudiants qui découvrent leur style d\'apprentissage.',
-          details: {
-            repetition: { label: 'Méthode de répétition', text: 'Répétez le même verset plusieurs fois avant de passer au suivant.' },
-            linking: { label: 'Méthode de liaison', text: 'Reliez chaque verset au suivant pour améliorer le flux et la continuité.' },
-            cumulative: { label: 'Méthode cumulative', text: 'Ajoutez continuellement de nouveaux versets tout en révisant les précédents.' }
-          }
-        },
-        layouts: {
-          title: 'Dispositions de lecture',
-          description: 'Basculez entre deux styles de lecture selon l\'appareil et le type de mémorisation.',
-          bestFor: 'Choisir l\'expérience de lecture la plus naturelle.',
-          details: {
-            stacked: { label: 'Disposition empilée', text: 'Affiche chaque verset verticalement, plus facile à suivre sur mobile.' },
-            mushaf: { label: 'Disposition mushaf', text: 'Affiche les versets dans un style mushaf traditionnel pour ceux qui préfèrent la mémorisation par page.' }
-          }
-        },
-        aiRecitation: {
-          title: 'Récitation IA',
-          description: 'La récitation IA écoute votre récitation et fournit un retour instantané pour identifier les erreurs et améliorer la précision.',
-          bestFor: 'Les étudiants qui veulent une pratique guidée et un retour immédiat.'
-        },
-        manualAssessment: {
-          title: 'Évaluation manuelle',
-          description: 'Permet d\'évaluer votre propre mémorisation après chaque session et de suivre votre confiance et vos progrès.',
-          bestFor: 'Les étudiants qui préfèrent l\'auto-réflexion et la révision indépendante.'
-        }
-      }
-    },
-    rangeOptions: {
-      all: 'Coran entier',
-      juz: 'Juz',
-      hizb: 'Hizb',
-      page: 'Page',
-      surah: 'Sourate',
-      ayah: 'Ayah',
-      word: 'Mot'
     }
   }
 }
@@ -697,12 +587,10 @@ saveLocale(enLocale.file, enLocale.data)
 
 const arLocale = loadLocale('ar')
 deepMerge(arLocale.data, arStructured)
-if (structured.toasts) deepMerge(arLocale.data, { toasts: structured.toasts })
 saveLocale(arLocale.file, arLocale.data)
 
 const frLocale = loadLocale('fr')
 deepMerge(frLocale.data, frStructured)
-if (structured.toasts) deepMerge(frLocale.data, { toasts: structured.toasts })
 saveLocale(frLocale.file, frLocale.data)
 
 console.log('Merged structured i18n keys into en, ar, fr')

@@ -89,13 +89,13 @@ export default {
 /* CTA */
 .cta{
   margin-top:25px;
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  display:flex;
+  flex-wrap:wrap;
   gap:12px;
+  justify-content:center;
 }
 
 button{
-  width:100%;
   min-width:44px;
   min-height:44px;
   padding:12px 18px;
@@ -121,7 +121,7 @@ button{
 /* GRID */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(min(100%, 220px),1fr));
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:16px;
   margin-top:28px;
 }
@@ -151,6 +151,31 @@ button{
   margin-top:40px;
   color:var(--text-muted, #6c6258);
   font-style:italic;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page {
+    padding: clamp(24px, 5vw, 40px) var(--page-gutter, clamp(12px, 4vw, 20px));
+  }
+
+  .cta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: clamp(28px, 8vw, 34px);
+  }
 }
 
 html[dir="rtl"] .hero,
