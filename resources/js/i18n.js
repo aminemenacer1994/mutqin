@@ -1,7 +1,7 @@
 import { createI18n } from 'vue-i18n'
 import enMessages from './locales/en.json'
 
-export const SUPPORT_LOCALES = ['en', 'ar', 'fr']
+export const SUPPORT_LOCALES = ['en', 'ar', 'fr', 'id', 'tr']
 const STORAGE_KEY = 'mutqin.locale'
 
 function normalizeLocale(locale) {

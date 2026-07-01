@@ -9,6 +9,8 @@ return [
     'english' => 'English',
     'arabic' => 'العربية',
     'french' => 'Français',
+    'indonesian' => 'Bahasa Indonesia',
+    'turkish' => 'Türkçe',
     'login' => 'Connexion',
     'register' => 'Inscription',
     'logout' => 'Déconnexion',

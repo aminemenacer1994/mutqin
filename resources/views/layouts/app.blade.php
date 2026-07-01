@@ -429,6 +429,17 @@
             transition: all 0.2s ease;
         }
 
+        .app-lang-toggle.icon-only {
+            width: 42px;
+            min-width: 42px;
+            padding: 0;
+            justify-content: center;
+        }
+
+        .global-lang-switcher.d-lg-none .app-lang-toggle.icon-only {
+            width: 100%;
+        }
+
         .app-lang-toggle:hover,
         .global-lang-switcher .lang-btn.active {
             background: var(--accent-light);
@@ -448,6 +459,22 @@
         html[dir="rtl"] .dropdown-menu-end {
             right: auto;
             left: 0;
+        }
+
+        html[dir="rtl"] .app-user-menu,
+        html[dir="rtl"] .app-lang-menu {
+            text-align: right;
+        }
+
+        .app-lang-menu {
+            margin-top: 12px !important;
+            min-width: 188px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface-strong);
+            box-shadow: var(--shadow-lg);
+            z-index: 5200;
         }
 
         /* Dropdown Styles */
@@ -1394,14 +1421,15 @@
                     </div>
 
                     <div class="global-lang-switcher dropdown d-lg-none w-100" aria-label="{{ __('ui.language_switcher') }}">
-                        <button class="btn app-lang-toggle w-100 justify-content-between lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span><i class="bi bi-translate" aria-hidden="true"></i> {{ __('ui.language_switcher') }}</span>
-                            <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                        <button class="btn app-lang-toggle icon-only w-100 lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('ui.language_switcher') }}">
+                            <i class="bi bi-translate" aria-hidden="true"></i>
                         </button>
-                        <ul class="dropdown-menu w-100">
+                        <ul class="dropdown-menu w-100 app-lang-menu">
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="en">🇬🇧 {{ __('ui.english') }}</button></li>
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="fr">🇫🇷 {{ __('ui.french') }}</button></li>
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="ar">🇸🇦 {{ __('ui.arabic') }}</button></li>
+                            <li><button type="button" class="dropdown-item lang-btn" data-locale="id">🇮🇩 {{ __('ui.indonesian') }}</button></li>
+                            <li><button type="button" class="dropdown-item lang-btn" data-locale="tr">🇹🇷 {{ __('ui.turkish') }}</button></li>
                         </ul>
                     </div>
 
@@ -1416,15 +1444,15 @@
 
             <div class="d-flex align-items-center gap-2 navbar-quick-actions">
                 <div class="global-lang-switcher dropdown d-none d-lg-block" aria-label="{{ __('ui.language_switcher') }}">
-                    <button class="btn app-lang-toggle lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('ui.language_switcher') }}">
+                    <button class="btn app-lang-toggle icon-only lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('ui.language_switcher') }}">
                         <i class="bi bi-translate" aria-hidden="true"></i>
-                        <span class="d-none d-xl-inline">{{ __('ui.language_switcher') }}</span>
-                        <i class="bi bi-chevron-down" aria-hidden="true"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
+                    <ul class="dropdown-menu dropdown-menu-end app-lang-menu">
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="en">🇬🇧 {{ __('ui.english') }}</button></li>
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="fr">🇫🇷 {{ __('ui.french') }}</button></li>
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="ar">🇸🇦 {{ __('ui.arabic') }}</button></li>
+                        <li><button type="button" class="dropdown-item lang-btn" data-locale="id">🇮🇩 {{ __('ui.indonesian') }}</button></li>
+                        <li><button type="button" class="dropdown-item lang-btn" data-locale="tr">🇹🇷 {{ __('ui.turkish') }}</button></li>
                     </ul>
                 </div>
 
@@ -1499,6 +1527,8 @@
             en: @json(trans('ui', [], 'en')),
             fr: @json(trans('ui', [], 'fr')),
             ar: @json(trans('ui', [], 'ar')),
+            id: @json(trans('ui', [], 'id')),
+            tr: @json(trans('ui', [], 'tr')),
         };
 
         function runWhenReady(fn) {
@@ -1641,8 +1671,8 @@
         
         // Global language switcher for all pages
         (function() {
-            const supported = ['en', 'ar', 'fr'];
-            const labels = window.mutqinUiLabels || { en: {}, fr: {}, ar: {} };
+            const supported = ['en', 'ar', 'fr', 'id', 'tr'];
+            const labels = window.mutqinUiLabels || { en: {}, fr: {}, ar: {}, id: {}, tr: {} };
 
             function safeGet(key) {
                 try { return localStorage.getItem(key); } catch (e) { return null; }

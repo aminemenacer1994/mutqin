@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SetLocale
 {
-    private const SUPPORTED_LOCALES = ['en', 'ar', 'fr'];
+    private const SUPPORTED_LOCALES = ['en', 'ar', 'fr', 'id', 'tr'];
 
     public function handle(Request $request, Closure $next): Response
     {
