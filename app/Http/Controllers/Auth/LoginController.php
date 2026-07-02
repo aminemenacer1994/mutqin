@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\RedirectResponse;
 
 class LoginController extends Controller
 {
@@ -27,12 +28,17 @@ class LoginController extends Controller
      */
     protected $redirectTo = '/memorisation';
 
+    public function showLoginForm(): RedirectResponse
+    {
+        return redirect()->route('memorisation');
+    }
+
     /**
      * Where to redirect users after logout.
      */
-    protected function loggedOut($request)
+    protected function loggedOut($request): RedirectResponse
     {
-        return redirect('/memorisation');
+        return redirect()->route('memorisation');
     }
 
     /**

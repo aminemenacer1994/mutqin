@@ -38,6 +38,7 @@ return [
     'auth_guided_desc' => 'Commencez avec une plage de sourate claire.',
     'auth_sync_title' => 'Progression synchronisée',
     'auth_sync_desc' => 'Vos sessions vous suivent sur tous vos appareils.',
+    'auth_workspace_label' => 'Espace de mémorisation',
     'email_address' => 'Adresse e-mail',
     'password' => 'Mot de passe',
     'confirm_password' => 'Confirmer le mot de passe',

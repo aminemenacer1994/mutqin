@@ -752,6 +752,14 @@
     "stop_recording": "إيقاف التسجيل",
     "review_this_attempt": "مراجعة هذه المحاولة",
     "self_rating": "تقييم ذاتي",
+    "selfCheckRatings": {
+      "excellent": "ممتاز",
+      "good": "جيد",
+      "review": "يحتاج مراجعة",
+      "excellentHint": "واثق ودقيق من الحفظ",
+      "goodHint": "صحيح في الغالب مع تردد بسيط",
+      "reviewHint": "راجع هذه الآية قبل المتابعة"
+    },
     "record_again": "تسجيل مجدداً",
     "recordings_library": "مكتبة التسجيلات",
     "back_to_self_check": "العودة للفحص الذاتي",

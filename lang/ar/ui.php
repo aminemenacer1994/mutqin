@@ -38,6 +38,7 @@ return [
     'auth_guided_desc' => 'ابدأ بنطاق سورة واضح.',
     'auth_sync_title' => 'تزامن التقدم',
     'auth_sync_desc' => 'جلساتك تتبعك على جميع أجهزتك.',
+    'auth_workspace_label' => 'مساحة الحفظ',
     'email_address' => 'البريد الإلكتروني',
     'password' => 'كلمة المرور',
     'confirm_password' => 'تأكيد كلمة المرور',

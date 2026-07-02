@@ -117,10 +117,10 @@ assert.doesNotMatch(
 
 includesAll('tajweed independence', [
   /title="Use connected Tajweed text from the Quran API" @click="toggleTajweed"/,
-  /if \(this\.tajweedEnabled && verse\.arabic_tajweed\) return this\.renderWordLevelTajweedMarkup\(verse\)/,
+  /if \(this\.tajweedEnabled && verse\.arabic_tajweed\) \{\s*return this\.renderWordLevelTajweedMarkup\(verse,\s*\{\s*wrapWords: this\.wordByWordAudioEnabled \|\| this\.showWordByWord \|\| this\.anchorModeEnabled\s*\}\s*\)\s*\}/s,
   /if \(this\.selfCheckTajweedEnabled && verse\.arabic_tajweed\) \{\s*return this\.renderWordLevelTajweedMarkup\(verse\)\s*\}/s,
   /else if \(this\.aiMemorisationCheckerTajweedEnabled && liveVerse\.arabic_tajweed\) \{\s*html = this\.renderWordLevelTajweedMarkup\(liveVerse\)\s*\}/s,
-  /if \(this\.showWordByWord \|\| this\.anchorModeEnabled\) \{\s*return this\.splitArabicIntoWords\(verse\)\s*\}/s,
+  /if \(this\.showWordByWord \|\| this\.anchorModeEnabled \|\| this\.wordByWordAudioEnabled\) \{\s*return this\.splitArabicIntoWords\(verse\)\s*\}/s,
   /renderWordLevelTajweedMarkup\(verse = \{\}, options = \{\}\) \{/,
   /const className = \['tajweed-word', tajweedClass\]\.filter\(Boolean\)\.join\(' '\)/,
   /\.session-evaluation-ayah \.tajweed-mark,[\s\S]*display: contents !important;/,
@@ -173,7 +173,8 @@ includesAll('ai recitation speechmatics stability', [
   /displayWords: Array\.isArray\(displayWords\) && displayWords\.length \? displayWords : committedWords/,
   /const liveAlignmentOptions = \{\s*strictProgression: true,/,
   /const verseSelector = `\[data-verse-key="\$\{this\.escapeCssAttributeValue\(patch\.verseKey\)\}"\]\[data-word-index="\$\{Number\(patch\.localIndex\)\}"\]`/,
-  /@click\.stop="toggleVerseActionMenu\(verse\.key\)"/
+  /class="verse-inline-action-btn verse-inline-play-btn"/,
+  /class="verse-inline-action-btn verse-inline-download-btn"/
 ])
 
 includesAll('ai recitation full-session recording', [

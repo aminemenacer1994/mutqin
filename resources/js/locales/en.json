@@ -752,6 +752,14 @@
     "stop_recording": "Stop Recording",
     "review_this_attempt": "Review this attempt",
     "self_rating": "Self-rating",
+    "selfCheckRatings": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "review": "Needs Review",
+      "excellentHint": "Confident and accurate from memory",
+      "goodHint": "Mostly correct with minor hesitation",
+      "reviewHint": "Revisit this ayah before moving on"
+    },
     "record_again": "Record Again",
     "recordings_library": "Recordings Library",
     "back_to_self_check": "Back to Self-Check",

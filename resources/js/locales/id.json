@@ -752,6 +752,14 @@
     "stop_recording": "Hentikan Rekaman",
     "review_this_attempt": "Muraja'ah usaha ini",
     "self_rating": "Penilaian diri",
+    "selfCheckRatings": {
+      "excellent": "Sangat baik",
+      "good": "Baik",
+      "review": "Perlu Muraja'ah",
+      "excellentHint": "Yakin dan akurat dari hafalan",
+      "goodHint": "Sebagian besar benar dengan sedikit jeda",
+      "reviewHint": "Muraja'ah ayah ini sebelum lanjut"
+    },
     "record_again": "Rekam Lagi",
     "recordings_library": "Perpustakaan Rekaman",
     "back_to_self_check": "Kembali ke Pemeriksaan Diri",

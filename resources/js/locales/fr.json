@@ -752,6 +752,14 @@
     "stop_recording": "Arrêter l'enregistrement",
     "review_this_attempt": "Revoir cette tentative",
     "self_rating": "Auto-évaluation",
+    "selfCheckRatings": {
+      "excellent": "Excellent",
+      "good": "Bien",
+      "review": "À revoir",
+      "excellentHint": "Confiant et précis de mémoire",
+      "goodHint": "Globalement correct avec une légère hésitation",
+      "reviewHint": "Revenez sur cette ayah avant de continuer"
+    },
     "record_again": "Enregistrer à nouveau",
     "recordings_library": "Bibliothèque d'enregistrements",
     "back_to_self_check": "Retour à l'auto-contrôle",

@@ -384,6 +384,7 @@ export default {
       showSessionExitModal: false,
       sessionExitAutoSave: true,
       sessionExitSnapshot: null,
+      sessionExitPreviewSnapshot: null,
       confirmModal: {
         title: '',
         message: '',
@@ -1386,6 +1387,17 @@ export default {
       const start = Math.max(1, Number(this.rangeStart || 1))
       const end = Math.max(start, Number(this.rangeEnd || start))
       return `${surah} · Ayahs ${start}-${end}`
+    },
+    showHeaderSessionAction() {
+      return this.hasVerses && !this.isSessionCompleted
+    },
+    headerSessionActionLabel() {
+      if (this.isPlaying) return this.t('memorisation.sessionType.pause')
+      if (this.hasSessionStarted) return this.t('common.resume')
+      return this.t('common.startSession')
+    },
+    headerSessionActionIcon() {
+      return this.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'
     },
     plannerCompletionStats() {
       const snapshot = this.plannerCompletionSnapshot || {}
@@ -4991,7 +5003,7 @@ export default {
       if (!verse || !verse.arabic) return ''
 
       // Word-aware rendering supports both plain and tajweed-marked Arabic.
-      if (this.showWordByWord || this.anchorModeEnabled) {
+      if (this.showWordByWord || this.anchorModeEnabled || this.wordByWordAudioEnabled) {
         return this.splitArabicIntoWords(verse)
       }
 
@@ -6620,11 +6632,19 @@ export default {
       if (result === 'Good') return 'tone-good'
       return 'tone-review'
     },
+    getSelfCheckResultLabel(option) {
+      const labels = {
+        Excellent: this.t('memorisation.selfCheckRatings.excellent'),
+        Good: this.t('memorisation.selfCheckRatings.good'),
+        'Needs Review': this.t('memorisation.selfCheckRatings.review')
+      }
+      return labels[option] || option
+    },
     getSelfCheckResultHint(option) {
       const hints = {
-        Excellent: 'Confident and accurate from memory',
-        Good: 'Mostly correct with minor hesitation',
-        'Needs Review': 'Revisit this ayah before moving on'
+        Excellent: this.t('memorisation.selfCheckRatings.excellentHint'),
+        Good: this.t('memorisation.selfCheckRatings.goodHint'),
+        'Needs Review': this.t('memorisation.selfCheckRatings.reviewHint')
       }
       return hints[option] || ''
     },
@@ -11242,6 +11262,18 @@ export default {
       // Keep power features accessible, but behind a tertiary surface.
       this.openToolsPanel()
     },
+    handleHeaderSessionAction() {
+      if (!this.hasVerses || this.isSessionCompleted) return
+      if (this.isPlaying) {
+        this.togglePlay()
+        return
+      }
+      if (this.hasSessionStarted && this.audioElement?.src) {
+        this.togglePlay()
+        return
+      }
+      this.startSessionWithCountdown()
+    },
     openInsightsPanel() {
       this.openToolsPanel({ tab: 'stats' })
     },
@@ -12328,11 +12360,13 @@ export default {
     openSessionExitModal() {
       if (!this.hasVerses && !this.playerVisible) return
       this.flushPlaybackTime()
+      this.sessionExitSnapshot = this.buildSessionExitSnapshot()
+      this.sessionExitPreviewSnapshot = this.buildSessionEndedSnapshot({ force: true })
       if (this.audioElement && !this.audioElement.paused) {
         this.audioElement.pause()
       }
       this.isPlaying = false
-      this.confirmSessionExit()
+      this.showSessionExitModal = true
     },
 
     restoreSessionExitSnapshot() {
@@ -12378,6 +12412,7 @@ export default {
       } else {
         this.sessionExitSnapshot = null
       }
+      this.sessionExitPreviewSnapshot = null
     },
 
     clearExitSessionStorage() {
@@ -12568,8 +12603,9 @@ export default {
       this.showSessionEndedSummary(this.buildSessionEndedSnapshot({ force: true }))
     },
 
-    confirmSessionExit() {
-      const endedSnapshot = this.buildSessionEndedSnapshot({ force: true })
+    confirmSessionExit(options = {}) {
+      const { showSummary = true } = options
+      const endedSnapshot = this.sessionExitPreviewSnapshot || this.buildSessionEndedSnapshot({ force: true })
       this.closeSessionExitModal({ restore: false })
       this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
       this.centralSession.sessionStatus = 'completed'
@@ -12578,7 +12614,28 @@ export default {
       this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
       this.recomputeAnalytics()
       this.finishSessionCleanup()
-      this.showSessionEndedSummary(endedSnapshot)
+      if (showSummary) {
+        this.showSessionEndedSummary(endedSnapshot)
+      } else {
+        this.sessionEndedSnapshot = endedSnapshot
+      }
+      return endedSnapshot
+    },
+    exitSessionToNewSession() {
+      this.confirmSessionExit({ showSummary: false })
+      this.openNewSessionSetup()
+    },
+    exitSessionToRepeatRange() {
+      this.confirmSessionExit({ showSummary: false })
+      this.startSessionWithCountdown()
+    },
+    exitSessionToSaveSession() {
+      this.confirmSessionExit({ showSummary: false })
+      this.saveCurrentSessionWithName()
+    },
+    exitSessionToRetentionCheck() {
+      this.confirmSessionExit({ showSummary: false })
+      this.openRetentionQuiz()
     },
     openNewSessionFromEndedModal() {
       this.closeSessionEndedModal()
@@ -13403,8 +13460,12 @@ export default {
       if (this.shouldShowRecitationReviewHighlights(verse.key)) {
         return this.splitRecitationDisplayIntoWords(verse)
       }
-      if (this.tajweedEnabled && verse.arabic_tajweed) return this.renderWordLevelTajweedMarkup(verse)
-      if (this.showWordByWord || this.anchorModeEnabled) return this.splitArabicIntoWords(verse)
+      if (this.tajweedEnabled && verse.arabic_tajweed) {
+        return this.renderWordLevelTajweedMarkup(verse, {
+          wrapWords: this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled
+        })
+      }
+      if (this.showWordByWord || this.anchorModeEnabled || this.wordByWordAudioEnabled) return this.splitArabicIntoWords(verse)
       return this.stripTajweedMarkup(verse.arabic)
     },
 
@@ -16413,6 +16474,11 @@ export default {
           if (this.audioElement) {
             this.segmentEndTime = 0
             this.segmentPlaybackKind = ''
+            this.stopWordHighlighting()
+            if (targetVerse?.key) {
+              this.setActiveVerse(targetVerse.key, { scroll: false })
+              if (targetIndex >= 0) this.updateWordHighlight(targetVerse.key, targetIndex)
+            }
             this.audioElement.pause()
             this.audioElement.src = directUrl
             this.audioElement.currentTime = 0
@@ -16420,6 +16486,9 @@ export default {
             this.audioElement.defaultPlaybackRate = safeSpeed
             this.audioElement.playbackRate = safeSpeed
             await this.audioElement.play()
+            if (targetVerse?.key && targetIndex >= 0) {
+              this.updateWordHighlight(targetVerse.key, targetIndex)
+            }
             this.playerVisible = true
             this.isPlaying = true
             this.markPlaybackStart()

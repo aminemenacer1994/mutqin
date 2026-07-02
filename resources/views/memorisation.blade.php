@@ -12,6 +12,15 @@
             'has_paid_access' => Auth::user()?->hasPaidAccess() ?? false,
             'locale' => Auth::user()?->locale ?? 'en',
             'ai_recall_mode_enabled' => Auth::user()?->ai_recall_mode_enabled ?? false,
+            'csrf_token' => csrf_token(),
+            'login_url' => route('login'),
+            'google_login_url' => route('auth.google.redirect'),
+            'register_url' => route('register'),
+            'forgot_password_url' => Route::has('password.request') ? route('password.request') : null,
+            'login_error' => $errors->first('email') ?: $errors->first('password'),
+            'google_error' => $errors->first('google'),
+            'old_email' => old('email'),
+            'old_remember' => old('remember') ? true : false,
         ];
     @endphp
 

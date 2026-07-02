@@ -133,7 +133,12 @@
           <i class="bi bi-plus-circle" aria-hidden="true"></i>
           <span>{{ t('memorisation.open_session_setup') }}</span>
         </button>
-        <button v-if="hasSessionStarted" class="action-btn action-btn-secondary action-btn-exit" type="button"
+        <button v-if="showHeaderSessionAction" class="action-btn action-btn-session" type="button"
+          @click="handleHeaderSessionAction" :title="headerSessionActionLabel" :aria-label="headerSessionActionLabel">
+          <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
+          <span>{{ headerSessionActionLabel }}</span>
+        </button>
+        <button v-if="hasSessionStarted && !isSessionCompleted" class="action-btn action-btn-secondary action-btn-exit" type="button"
           @click="openSessionExitModal" title="End session" aria-label="End session">
           <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
           <span class="d-none d-sm-inline">{{ t('sessionStatus.end') }}</span>
@@ -460,37 +465,18 @@
                       <span>{{ t('memorisation.reading.aiRecite') }}</span>
                       <em v-if="getAyahRecordingCount(verse.key)">{{ getAyahRecordingCount(verse.key) }}</em>
                     </button>
-                    <button class="verse-ellipsis-btn" type="button" @click.stop="toggleVerseActionMenu(verse.key)"
-                        aria-label="Open ayah actions">
-                        <i class="bi bi-three-dots-vertical"></i>
-                      </button>
-                    <div class="verse-menu-wrap" @click.stop>
-                      
-                      <transition name="dropdown-fade">
-                        <div v-if="openVerseActionKey === verse.key" class="verse-action-menu">
-                          <button type="button" @click="playVerse(verse)">
-                            <i class="bi" :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                            <span>{{ activeVerseKey === verse.key && isPlaying ? 'Pause' : 'Play' }}</span>
-                          </button>
-                          <button type="button" @click="downloadVerseAudio(verse)" :disabled="!verse.audio">
-                            <i class="bi bi-download"></i>
-                            <span>{{ t('common.download') }}</span>
-                          </button>
-                          <!-- <div class="verse-menu-font-row">
-                            <span class="verse-menu-font-label">{{ t('memorisation.text') }}</span>
-                            <div class="verse-menu-font-stepper" role="group" aria-label="Ayah text size">
-                              <button type="button" @click="decreaseTextScale($event)" aria-label="Decrease ayah text size">
-                                <i class="bi bi-dash-lg"></i>
-                              </button>
-                              <output class="verse-menu-font-value">{{ getTextScalePercent() }}%</output>
-                              <button type="button" @click="increaseTextScale($event)" aria-label="Increase ayah text size">
-                                <i class="bi bi-plus-lg"></i>
-                              </button>
-                            </div>
-                          </div> -->
-                        </div>
-                      </transition>
-                    </div>
+                    <button class="verse-inline-action-btn verse-inline-play-btn" type="button"
+                      @click.stop="playVerse(verse)"
+                      :disabled="!verse.audio"
+                      :title="activeVerseKey === verse.key && isPlaying ? 'Pause ayah audio' : 'Play ayah audio'"
+                      :aria-label="activeVerseKey === verse.key && isPlaying ? 'Pause ayah audio' : 'Play ayah audio'">
+                      <i class="bi" :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                    </button>
+                    <button class="verse-inline-action-btn verse-inline-download-btn" type="button"
+                      @click.stop="downloadVerseAudio(verse)" :disabled="!verse.audio"
+                      :title="t('common.download')" :aria-label="t('common.download')">
+                      <i class="bi bi-download" aria-hidden="true"></i>
+                    </button>
                   </div>
                 </div>
 
@@ -1240,123 +1226,79 @@
     </div>
 
     <div v-else-if="appReady && !isLoggedIn" class="main container">
-      <div class="login-hero">
-        <div class="guest-shell">
-          <section class="guest-hero row g-4 align-items-stretch">
-            <div class="col-12 col-xl-7">
-              <div class="guest-hero-copy h-100">
-                <span class="guest-kicker">{{ t('home.guestKicker') }}</span>
-                <h1>{{ t('home.guestTitle') }}</h1>
-                <div class="guest-copy-stack">
-                  <p class="guest-subtitle">
-                    {{ t('home.guestSubtitle') }}
-                  </p>
-                  <p class="guest-copy-support">
-                    {{ t('home.guestSupport') }}
-                  </p>
-                </div>
+      <section class="guest-auth-shell" aria-label="Login">
+        <div class="guest-auth-card">
+          <span class="guest-auth-kicker">{{ t('ui.memorisation') }}</span>
+          <h1 class="guest-auth-title">{{ t('ui.login') }}</h1>
 
-                <div class="guest-action-row">
-                  <a href="/login" class="login-btn guest-primary-btn text-decoration-none">
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    <span>{{ t('common.login') }}</span>
-                  </a>
-                  <a href="/register" class="guest-secondary-btn text-decoration-none">
-                    <i class="bi bi-person-plus"></i>
-                    <span>{{ t('common.register') }}</span>
-                  </a>
-                </div>
-                <p class="guest-cta-note">{{ t('home.guestNote') }}</p>
+          <div v-if="auth.google_error" class="alert alert-danger guest-auth-alert" role="alert">
+            {{ auth.google_error }}
+          </div>
+          <div v-else-if="auth.login_error" class="alert alert-danger guest-auth-alert" role="alert">
+            {{ auth.login_error }}
+          </div>
 
-                <div class="guest-proof-row">
-                  <span><i class="bi bi-cloud-check"></i> {{ t('memorisation.sync_progress') }}</span>
-                  <span><i class="bi bi-arrow-repeat"></i> {{ t('memorisation.structured_repetition') }}</span>
-                  <span><i class="bi bi-clock-history"></i> {{ t('memorisation.resume_exactly') }}</span>
-                </div>
-              </div>
+          <a :href="auth.google_login_url || '/auth/redirect'" class="guest-auth-google text-decoration-none">
+            <span class="guest-auth-google-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.24 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#fbbc05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z"/>
+                <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.31 9.14 5.38 12 5.38z"/>
+              </svg>
+            </span>
+            <span>Continue with Google</span>
+          </a>
+
+          <div class="guest-auth-divider"><span>or</span></div>
+
+          <form class="guest-auth-form" method="POST" :action="auth.login_url || '/login'">
+            <input type="hidden" name="_token" :value="auth.csrf_token || ''">
+
+            <div class="guest-auth-field">
+              <label for="guestLoginEmail">Email Address</label>
+              <input
+                id="guestLoginEmail"
+                type="email"
+                name="email"
+                :value="auth.old_email || ''"
+                autocomplete="email"
+                required
+              >
             </div>
 
-            <div class="col-12 col-xl-5">
-              <aside class="guest-hero-panel h-100">
-                <div class="guest-preview-card">
-                  <div class="guest-preview-icon">
-                    <i class="bi bi-book-half"></i>
-                  </div>
-                  <div class="guest-preview-copy">
-                    <strong>{{ t('memorisation.what_a_mutqin_session_feels_like') }}</strong>
-                    <p>{{ t('memorisation.short_enough_to_stay_focused_structured_enough_to_') }}</p>
-                  </div>
-                  <div class="guest-preview-steps">
-                    <div class="guest-preview-step">
-                      <span>1</span>
-                      <div>
-                        <strong>{{ t('memorisation.choose_your_ayahs') }}</strong>
-                        <small>{{ t('memorisation.pick_the_surah_range_and_reciter') }}</small>
-                      </div>
-                    </div>
-                    <div class="guest-preview-step">
-                      <span>2</span>
-                      <div>
-                        <strong>{{ t('memorisation.repeat_with_structure') }}</strong>
-                        <small>{{ t('memorisation.use_playback_chaining_focus_and_blur_tools') }}</small>
-                      </div>
-                    </div>
-                    <div class="guest-preview-step">
-                      <span>3</span>
-                      <div>
-                        <strong>{{ t('memorisation.recall_and_review') }}</strong>
-                        <small>{{ t('memorisation.track_what_was_covered_and_return_later_with_clari') }}</small>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </aside>
+            <div class="guest-auth-field">
+              <label for="guestLoginPassword">Password</label>
+              <input
+                id="guestLoginPassword"
+                type="password"
+                name="password"
+                autocomplete="current-password"
+                required
+              >
             </div>
-          </section>
 
-          <section class="guest-section guest-section-row guest-section-row-simplified row g-4 align-items-start">
-            <div class="col-12 col-xl-4">
-              <div class="guest-section-head guest-section-head-side">
-                <span class="guest-section-kicker">{{ t('memorisation.how_mutqin_stays_focused') }}</span>
-                <h2>{{ t('memorisation.everything_centres_on_one_calm_memorisation_sessio') }}</h2>
-                <p>{{ t('memorisation.choose_a_small_range_repeat_with_structure_then_re') }}</p>
-              </div>
+            <div class="guest-auth-meta">
+              <label class="guest-auth-check" for="guestRemember">
+                <input id="guestRemember" type="checkbox" name="remember" :checked="!!auth.old_remember">
+                <span>Remember me</span>
+              </label>
+
+              <a v-if="auth.forgot_password_url" :href="auth.forgot_password_url" class="guest-auth-link">
+                Forgot password?
+              </a>
             </div>
-            <div class="col-12 col-xl-8">
-              <div class="row g-3 guest-feature-grid">
-                <div class="col-12 col-sm-6">
-                  <article class="guest-feature-card h-100">
-                    <i class="bi bi-layers"></i>
-                    <strong>{{ t('memorisation.focused_ayah_ranges') }}</strong>
-                    <p>{{ t('memorisation.work_in_smaller_sections_that_are_easier_to_repeat') }}</p>
-                  </article>
-                </div>
-                <div class="col-12 col-sm-6">
-                  <article class="guest-feature-card h-100">
-                    <i class="bi bi-arrow-repeat"></i>
-                    <strong>{{ t('memorisation.clear_repetition') }}</strong>
-                    <p>{{ t('memorisation.keep_your_session_steady_instead_of_guessing_how_m') }}</p>
-                  </article>
-                </div>
-                <div class="col-12 col-sm-6">
-                  <article class="guest-feature-card h-100">
-                    <i class="bi bi-ear"></i>
-                    <strong>{{ t('memorisation.recall_with_less_clutter') }}</strong>
-                    <p>{{ t('memorisation.use_only_the_aids_and_techniques_that_support_the_') }}</p>
-                  </article>
-                </div>
-                <div class="col-12 col-sm-6">
-                  <article class="guest-feature-card h-100">
-                    <i class="bi bi-graph-up-arrow"></i>
-                    <strong>{{ t('memorisation.progress_you_can_revisit') }}</strong>
-                    <p>{{ t('memorisation.saved_sessions_and_compact_insights_stay_ready_whe') }}</p>
-                  </article>
-                </div>
-              </div>
-            </div>
-          </section>
+
+            <button type="submit" class="guest-auth-submit">
+              {{ t('ui.login') }}
+            </button>
+          </form>
+
+          <p class="guest-auth-register">
+            <a :href="auth.register_url || '/register'" class="guest-auth-link">{{ t('ui.register') }}</a>
+          </p>
         </div>
-      </div>
+      </section>
     </div>
 
     <!-- Save Session Name Modal - Clean & Updated Version -->
@@ -1426,7 +1368,7 @@
     </div>
 
     <div class="modal-overlay" v-if="showSessionExitModal" @click.self="closeSessionExitModal">
-      <div class="modal-content confirm-modal session-exit-modal" role="dialog" aria-modal="true"
+      <div class="modal-content confirm-modal session-exit-modal session-exit-summary-modal" role="dialog" aria-modal="true"
         aria-labelledby="sessionExitTitle">
         <div class="modal-header">
           <div class="modal-header-text">
@@ -1436,17 +1378,32 @@
           <button class="btn-icon" @click="closeSessionExitModal" type="button" aria-label="Close end session dialog"><i
               class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body session-exit-summary-body">
           <div class="session-exit-recap">
             <span><i class="bi bi-book"></i> {{ currentChapter?.name_simple || 'No surah' }}</span>
-            <span><i class="bi bi-text-paragraph"></i> Ayah {{ currentPosition }}/{{ totalVerses }}</span>
+            <span><i class="bi bi-text-paragraph"></i> {{ sessionExitPreviewSnapshot?.progressLabel || `Ayah ${currentPosition}/${totalVerses}` }}</span>
             <span><i class="bi bi-clock"></i> {{ formatTime(currentTime || 0) }}</span>
           </div>
-          <p class="confirm-copy">{{ t('memorisation.end_this_session_now') }}</p>
+          <p class="confirm-copy session-exit-summary-copy">
+            You covered {{ sessionExitPreviewSnapshot?.coveredAyahCount || 0 }} of {{ sessionExitPreviewSnapshot?.totalAyahs || 0 }} ayahs before ending.
+          </p>
+          <div class="session-exit-summary-actions">
+            <button class="btn-primary" type="button" @click="exitSessionToNewSession">
+              {{ t('memorisation.actions.newSession') }}
+            </button>
+            <button class="btn-secondary" type="button" @click="exitSessionToRepeatRange">
+              {{ t('memorisation.actions.repeatRange') }}
+            </button>
+            <button class="btn-secondary" type="button" @click="exitSessionToSaveSession">
+              {{ t('memorisation.save_session') }}
+            </button>
+            <button class="btn-secondary" type="button" @click="exitSessionToRetentionCheck">
+              {{ t('memorisation.actions.retentionCheck') }}
+            </button>
+          </div>
         </div>
-        <div class="modal-footer">
-          <button class="btn-secondary" @click="closeSessionExitModal">{{ t('common.close') }}</button>
-          <button class="btn-primary" @click="confirmSessionExit">{{ t('sessionStatus.end') }}</button>
+        <div class="modal-footer session-exit-summary-footer">
+          <button class="btn-secondary" @click="closeSessionExitModal">{{ t('common.continue') }}</button>
         </div>
       </div>
     </div>
@@ -2363,7 +2320,7 @@
                       class="self-check-result-btn"
                       :class="[getRecordingResultTone(option), { active: selfCheckActiveDraft.result === option }]"
                       :title="getSelfCheckResultHint(option)" @click="setSelfCheckDraftResult(option)">
-                      <span class="self-check-result-btn-label">{{ option }}</span>
+                      <span class="self-check-result-btn-label">{{ getSelfCheckResultLabel(option) }}</span>
                       <span class="self-check-result-btn-hint">{{ getSelfCheckResultHint(option) }}</span>
                     </button>
                   </div>
@@ -2529,14 +2486,14 @@
                       <div class="recording-history-kicker">{{ getRecordingAttemptLabel(recording) }}</div>
                       <span>{{ formatRecordingTimestamp(recording.recordedAt) }}</span>
                       <p class="recording-history-note">{{ isAiCheckRecording(recording) ? `${getRecordingTypeLabel(recording)} result` :
-                        `Self-rated · ${recording.result}` }}</p>
+                        `${t('memorisation.self_rating')} · ${getSelfCheckResultLabel(recording.result)}` }}</p>
                     </div>
                     <span v-if="isAiCheckRecording(recording)" class="recording-result-pill recording-result-pill-ai"
                       :class="getRecitationScoreTone(null)">
                       {{ t('memorisation.ai_check') }}
                     </span>
                     <span v-else class="recording-result-pill" :class="getRecordingResultTone(recording.result)">
-                      {{ recording.result }}
+                      {{ getSelfCheckResultLabel(recording.result) }}
                     </span>
                   </div>
 

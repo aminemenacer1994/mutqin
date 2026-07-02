@@ -38,6 +38,7 @@ return [
     'auth_guided_desc' => 'Start with a clear surah range and build from there.',
     'auth_sync_title' => 'Progress stays synced',
     'auth_sync_desc' => 'Your sessions and memorisation position follow you across devices.',
+    'auth_workspace_label' => 'Memorisation workspace',
     'email_address' => 'Email Address',
     'password' => 'Password',
     'confirm_password' => 'Confirm Password',
