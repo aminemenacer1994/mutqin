@@ -17,13 +17,14 @@ class MemorisationRoutingTest extends TestCase
             ->assertSee('homepage');
     }
 
-    public function test_authenticated_users_are_sent_to_memorisation_from_root(): void
+    public function test_authenticated_users_can_open_the_landing_page_from_root(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
             ->get('/')
-            ->assertRedirect(route('memorisation'));
+            ->assertOk()
+            ->assertSee('homepage');
     }
 
     public function test_authenticated_users_visiting_guest_auth_pages_redirect_to_memorisation(): void
@@ -56,8 +57,8 @@ class MemorisationRoutingTest extends TestCase
             ->assertRedirect(route('memorisation'));
     }
 
-    public function test_legacy_home_route_redirects_to_memorisation(): void
+    public function test_legacy_home_route_redirects_to_the_landing_page(): void
     {
-        $this->get('/home')->assertRedirect(route('memorisation'));
+        $this->get('/home')->assertRedirect(route('home'));
     }
 }

@@ -167,9 +167,6 @@
               <button type="button" @click="openHelpLearningModal">
                 <i class="bi bi-question-circle"></i><span>{{ helpLearningUi.title }}</span>
               </button>
-              <button v-if="hasVerses" type="button" @click="openRetentionQuiz">
-                <i class="bi bi-ui-checks-grid"></i><span>{{ t('memorisation.actions.retentionCheck') }}</span>
-              </button>
               <!--
                 <button type="button" @click="openAdvancedControls">
                   <i class="bi bi-sliders"></i><span>{{ t('common.controls') }}</span>

@@ -20,10 +20,6 @@ Route::get('/auth/callback', [GoogleAuthController::class, 'callback'])->name('a
 
 // Public routes
 Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect()->route('memorisation');
-    }
-
     return view('home');
 })->name('home');
 
@@ -191,5 +187,5 @@ Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')
 });
 
 Route::get('/home', function () {
-    return redirect()->route('memorisation');
+    return redirect()->route('home');
 })->name('home.legacy');

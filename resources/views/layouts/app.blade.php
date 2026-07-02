@@ -1804,21 +1804,6 @@
                             <i class="bi bi-chevron-down" aria-hidden="true"></i>
                         </button>
                         <ul class="dropdown-menu" id="dropdownMenu" role="menu">
-                            <li>
-                                <a class="dropdown-item" href="{{ route('profile.show') }}">
-                                    <i class="bi bi-person-circle"></i> <span data-i18n="profile">{{ __('ui.profile') }}</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('profile.show') }}#subscription">
-                                    <i class="bi bi-credit-card-2-front"></i> <span data-i18n="subscription">{{ __('ui.subscription') }}</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('profile.show') }}#settings">
-                                    <i class="bi bi-gear"></i> <span data-i18n="settings">{{ __('ui.settings') }}</span>
-                                </a>
-                            </li>
                             @if (Auth::user()->isAdmin())
                                 <li>
                                     <a class="dropdown-item" href="{{ route('admin.contact-messages.index') }}">
