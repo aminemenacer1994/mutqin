@@ -509,6 +509,7 @@
     },
     "tools": {
       "tabs": {
+        "setup": "Atur",
         "session": "Sesi",
         "practice": "Latihan",
         "saved": "Tersimpan",

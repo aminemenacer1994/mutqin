@@ -509,6 +509,7 @@
     },
     "tools": {
       "tabs": {
+        "setup": "Setup",
         "session": "Session",
         "practice": "Practice",
         "saved": "Saved",

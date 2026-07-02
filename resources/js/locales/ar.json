@@ -509,6 +509,7 @@
     },
     "tools": {
       "tabs": {
+        "setup": "الإعداد",
         "session": "الجلسة",
         "practice": "التدريب",
         "saved": "محفوظ",

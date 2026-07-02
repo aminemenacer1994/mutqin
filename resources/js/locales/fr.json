@@ -509,6 +509,7 @@
     },
     "tools": {
       "tabs": {
+        "setup": "Réglage",
         "session": "Session",
         "practice": "Pratique",
         "saved": "Enregistré",

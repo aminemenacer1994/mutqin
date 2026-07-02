@@ -523,6 +523,8 @@ export default {
       quizRevealed: false,
       studyMode: 'recite',
       quizType: 'mixed',
+      quizFocus: 'adaptive',
+      quizLength: 6,
 
       // Data
       chapters: [],
@@ -544,6 +546,7 @@ export default {
       showPlannerCompletionModal: false,
       showPlannerCompletionConfetti: false,
       plannerCompletionSnapshot: null,
+      showSessionQuizConfetti: false,
       showSessionEndedModal: false,
       sessionEndedSnapshot: null,
       sessionEndedMetaCollapsed: {},
@@ -721,6 +724,7 @@ export default {
         blur_mode: false,
         chaining: false,
         anchor_mode: false,
+        quiz_lab: false,
         presets: true,
         repetitions: false,
         gap_between: false,
@@ -1380,7 +1384,7 @@ export default {
       return 'Mutqin is guiding the order for you. Keep going one ayah at a time.'
     },
     topCardSessionLabel() {
-      if (!this.hasVerses && !this.showSessionCompletedState) {
+      if (!this.hasVerses) {
         return this.t('memorisation.workspaceEmpty.title')
       }
       const surah = this.currentChapter?.name_simple || this.activeChapterName || 'Casual Session'
@@ -1388,8 +1392,121 @@ export default {
       const end = Math.max(start, Number(this.rangeEnd || start))
       return `${surah} · Ayahs ${start}-${end}`
     },
+    workspaceProgressSummary() {
+      const sessionTotal = Math.max(0, Number(this.totalVerses || 0))
+      const sessionCovered = this.hasVerses
+        ? Math.max(0, Math.min(sessionTotal || 0, Number(this.currentPosition || 0)))
+        : 0
+      const sessionPercent = sessionTotal
+        ? Math.min(100, Math.round((sessionCovered / sessionTotal) * 100))
+        : 0
+
+      if (this.hasVerses && sessionTotal) {
+        const remaining = Math.max(0, sessionTotal - sessionCovered)
+        return {
+          kicker: 'Progress',
+          title: 'Session progress',
+          badge: sessionPercent >= 100 ? 'Complete' : `${remaining} left`,
+          value: `${sessionPercent}%`,
+          meter: sessionPercent,
+          detail: `${sessionCovered} of ${sessionTotal} ayahs covered in this range.`,
+          meta: [
+            { key: 'covered', label: 'Covered', value: `${sessionCovered}/${sessionTotal}` },
+            { key: 'remaining', label: 'Remaining', value: `${remaining} ayah${remaining === 1 ? '' : 's'}` }
+          ]
+        }
+      }
+
+      if (this.hifzPlanExists) {
+        const totalPlan = Math.max(1, Number(this.hifzPlannerForecast.totalAyahs || 1))
+        const completed = Math.max(0, Number(this.hifzCompletedAyahCount || 0))
+        return {
+          kicker: 'Progress',
+          title: 'Plan progress',
+          badge: this.hifzPlanHealth.label,
+          value: `${this.hifzPlannerProgressPercent}%`,
+          meter: this.hifzPlannerProgressPercent,
+          detail: `${completed} of ${totalPlan} ayahs completed in the current plan.`,
+          meta: [
+            { key: 'forecast', label: 'Forecast', value: this.hifzPlannerForecast.estimatedCompletionDate || 'Pending' },
+            { key: 'active', label: 'Days active', value: this.hifzDaysActive || 0 }
+          ]
+        }
+      }
+
+      return {
+        kicker: 'Progress',
+        title: 'Session progress',
+        badge: 'Ready',
+        value: '0%',
+        meter: 0,
+        detail: 'Start a session to see live memorisation progress here.',
+        meta: [
+          { key: 'covered', label: 'Covered', value: '0/0' },
+          { key: 'remaining', label: 'Remaining', value: 'Choose a range' }
+        ]
+      }
+    },
+    workspaceTargetSummary() {
+      if (this.hifzPlanExists) {
+        const plannerTotal = Math.max(
+          1,
+          Number(this.plannerSessionState.todaySession?.length || this.plannerSessionState.newCount || this.plannerSessionState.dueCount || 1)
+        )
+        const plannerCovered = this.hasVerses
+          ? Math.max(0, Math.min(plannerTotal, Number(this.currentPosition || 0)))
+          : 0
+        const plannerMeter = this.hasVerses
+          ? Math.min(100, Math.round((plannerCovered / plannerTotal) * 100))
+          : 0
+        const nextReview = this.plannerNextReviewHumanLabel || this.plannerSessionState.nextReviewLabel || 'Tomorrow'
+        return {
+          kicker: 'Target',
+          title: 'Today\'s target',
+          badge: this.hifzPlanHealth.label,
+          headline: this.plannerSessionState.todayGoalLabel || this.hifzJourneyDailyTarget,
+          subline: this.plannerGuidanceTitle,
+          note: `Next review ${nextReview}. ${this.plannerGuidanceWhy}`,
+          meter: plannerMeter,
+          meta: [
+            { key: 'review', label: 'Review load', value: this.plannerMemoryReviewLine },
+            { key: 'confidence', label: 'Confidence', value: this.plannerConfidenceLine }
+          ]
+        }
+      }
+
+      const total = Math.max(0, Number(this.totalVerses || 0))
+      const current = this.hasVerses
+        ? Math.max(0, Math.min(total || 0, Number(this.currentPosition || 0)))
+        : 0
+      const meter = total
+        ? Math.min(100, Math.round((current / total) * 100))
+        : 0
+      const start = Math.max(1, Number(this.rangeStart || 1))
+      const end = Math.max(start, Number(this.rangeEnd || start))
+      const rangeLabel = this.hasVerses
+        ? (start === end ? `Ayah ${start}` : `Ayahs ${start}-${end}`)
+        : 'Select a range'
+      return {
+        kicker: 'Target',
+        title: 'Current target',
+        badge: this.hasVerses && total ? `${total} ayahs` : 'Pending',
+        headline: rangeLabel,
+        subline: this.hasVerses && total
+          ? `${Math.max(0, total - current)} ayahs left in this range`
+          : 'No active session yet',
+        note: this.hasVerses
+          ? 'Use the selected range as the session target and move through it at a steady pace.'
+          : 'Open session setup to choose a target range and start tracking it live.',
+        meter,
+        meta: [
+          { key: 'mode', label: 'Mode', value: this.playModeSummaryLabel },
+          { key: 'repeat', label: 'Repeats', value: `${Math.max(1, Number(this.repetitionsPerStep || 1))}x per ayah` }
+        ]
+      }
+    },
     showHeaderSessionAction() {
-      return this.hasVerses && !this.isSessionCompleted
+      return this.hasVerses
     },
     headerSessionActionLabel() {
       if (this.isPlaying) return this.t('memorisation.sessionType.pause')
@@ -1398,6 +1515,36 @@ export default {
     },
     headerSessionActionIcon() {
       return this.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'
+    },
+    sessionExitModalTitle() {
+      if (this.showSessionExitModal && !this.hasSessionStarted && this.sessionExitPreviewSnapshot) {
+        return this.sessionExitPreviewSnapshot.completedAll
+          ? this.t('memorisation.sessionComplete.title')
+          : this.t('memorisation.sessionEnded.title')
+      }
+      return this.t('sessionStatus.end')
+    },
+    sessionExitModalBadge() {
+      if (this.showSessionExitModal && !this.hasSessionStarted && this.sessionExitPreviewSnapshot) {
+        const chapter = this.sessionExitPreviewSnapshot.chapterName || this.currentChapter?.name_simple || this.activeChapterName || 'Session'
+        const range = this.sessionExitPreviewSnapshot.rangeLabel || ''
+        return range ? `${chapter} · ${range}` : chapter
+      }
+      return this.sessionContextBadge
+    },
+    sessionExitSummaryCopy() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      if (snapshot.detailMessage) return snapshot.detailMessage
+      if (snapshot.summaryMessage) return snapshot.summaryMessage
+      if (!this.hasSessionStarted && this.isSessionCompleted) {
+        return this.t('memorisation.summary.default')
+      }
+      return `You covered ${snapshot.coveredAyahCount || 0} of ${snapshot.totalAyahs || 0} ayahs before ending.`
+    },
+    sessionExitDismissLabel() {
+      return this.showSessionExitModal && this.hasSessionStarted
+        ? this.t('common.continue')
+        : this.t('common.close')
     },
     plannerCompletionStats() {
       const snapshot = this.plannerCompletionSnapshot || {}
@@ -1435,6 +1582,18 @@ export default {
           '--planner-confetti-duration': `${2200 + ((index % 7) * 120)}ms`,
           '--planner-confetti-rotate': `${(index % 2 === 0 ? 1 : -1) * (24 + (index * 7))}deg`,
           '--planner-confetti-color': ['#2f6f58', '#d4a24f', '#ef8d62', '#7aa7ff'][index % 4]
+        }
+      }))
+    },
+    sessionQuizConfettiPieces() {
+      return Array.from({ length: 54 }, (_, index) => ({
+        id: `session-quiz-confetti-${index}`,
+        style: {
+          '--session-quiz-confetti-left': `${(index * 1.85) % 100}%`,
+          '--session-quiz-confetti-delay': `${(index % 14) * 24}ms`,
+          '--session-quiz-confetti-duration': `${1400 + ((index % 6) * 90)}ms`,
+          '--session-quiz-confetti-rotate': `${(index % 2 === 0 ? 1 : -1) * (18 + (index * 6))}deg`,
+          '--session-quiz-confetti-color': ['rgba(244, 206, 157, 0.9)', 'rgba(255, 241, 220, 0.92)', 'rgba(194, 235, 214, 0.88)', 'rgba(255, 255, 255, 0.94)'][index % 4]
         }
       }))
     },
@@ -2541,11 +2700,8 @@ export default {
     isSessionCompleted() {
       return !!this.sessionCompleted || this.centralSession?.sessionStatus === 'completed'
     },
-    showSessionCompletedState() {
-      return !this.isOnboardingExperienceActive && !!this.sessionCompletionSnapshot && this.isSessionCompleted && !this.hasSessionStarted
-    },
     shouldShowReadingWorkspace() {
-      return this.hasVerses && !this.showSessionCompletedState
+      return this.hasVerses
     },
     resumeFeedback() {
       const payload = this.continueSessionPayload
@@ -3183,6 +3339,29 @@ export default {
       return translated === key ? this.t('memorisation.quiz.types.question') : translated
     },
 
+    quizModeOptions() {
+      return [
+        { value: 'mixed', label: this.t('memorisation.quiz.types.mixed') },
+        { value: 'flashcard', label: this.t('memorisation.quiz.types.flashcard') },
+        { value: 'mcq', label: this.t('memorisation.quiz.types.mcq') },
+        { value: 'audio_mcq', label: this.t('memorisation.quiz.types.audio_mcq') },
+        { value: 'blank', label: this.t('memorisation.quiz.types.blank') }
+      ]
+    },
+
+    quizFocusOptions() {
+      return [
+        { value: 'adaptive', label: this.t('memorisation.quiz.skills.adaptive') },
+        { value: 'recite_text', label: this.t('memorisation.quiz.skills.recite_text') },
+        { value: 'audio_recall', label: this.t('memorisation.quiz.skills.audio_recall') },
+        { value: 'meaning', label: this.t('memorisation.quiz.skills.meaning') }
+      ]
+    },
+
+    quizLengthOptions() {
+      return [4, 6, 8, 10, 12]
+    },
+
     nextActionDescription() {
       return 'Select a surah and verses to start memorising'
     }
@@ -3373,6 +3552,7 @@ export default {
     if (this.workspaceSyncTimer) clearTimeout(this.workspaceSyncTimer)
     if (this.playbackAdvanceTimer) clearTimeout(this.playbackAdvanceTimer)
     if (this.segmentPlaybackTimer) clearTimeout(this.segmentPlaybackTimer)
+    if (this.sessionQuizConfettiTimer) clearTimeout(this.sessionQuizConfettiTimer)
     this.clearRecitationWindowTimer()
     this.flushPlaybackTime()
     this.stopWordHighlighting()
@@ -11263,7 +11443,7 @@ export default {
       this.openToolsPanel()
     },
     handleHeaderSessionAction() {
-      if (!this.hasVerses || this.isSessionCompleted) return
+      if (!this.hasVerses) return
       if (this.isPlaying) {
         this.togglePlay()
         return
@@ -12498,10 +12678,13 @@ export default {
       }
     },
     showSessionEndedSummary(snapshot = null) {
-      this.sessionEndedSnapshot = snapshot || this.buildSessionEndedSnapshot()
-      if (!this.sessionEndedSnapshot) return
+      this.sessionEndedSnapshot = null
+      this.sessionExitSnapshot = null
+      this.sessionExitPreviewSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
+      if (!this.sessionExitPreviewSnapshot) return
       this.showSessionEndedModal = false
       this.showTools = false
+      this.showSessionExitModal = true
     },
     closeSessionEndedModal() {
       this.showSessionEndedModal = false
@@ -12616,24 +12799,42 @@ export default {
       this.finishSessionCleanup()
       if (showSummary) {
         this.showSessionEndedSummary(endedSnapshot)
-      } else {
-        this.sessionEndedSnapshot = endedSnapshot
       }
       return endedSnapshot
     },
     exitSessionToNewSession() {
+      if (!this.hasSessionStarted && this.isSessionCompleted) {
+        this.closeSessionExitModal({ restore: false })
+        this.openNewSessionSetup()
+        return
+      }
       this.confirmSessionExit({ showSummary: false })
       this.openNewSessionSetup()
     },
     exitSessionToRepeatRange() {
+      if (!this.hasSessionStarted && this.isSessionCompleted) {
+        this.closeSessionExitModal({ restore: false })
+        this.startSessionWithCountdown()
+        return
+      }
       this.confirmSessionExit({ showSummary: false })
       this.startSessionWithCountdown()
     },
     exitSessionToSaveSession() {
+      if (!this.hasSessionStarted && this.isSessionCompleted) {
+        this.closeSessionExitModal({ restore: false })
+        this.saveCurrentSessionWithName()
+        return
+      }
       this.confirmSessionExit({ showSummary: false })
       this.saveCurrentSessionWithName()
     },
     exitSessionToRetentionCheck() {
+      if (!this.hasSessionStarted && this.isSessionCompleted) {
+        this.closeSessionExitModal({ restore: false })
+        this.openRetentionQuiz()
+        return
+      }
       this.confirmSessionExit({ showSummary: false })
       this.openRetentionQuiz()
     },
@@ -15287,6 +15488,7 @@ export default {
       if (!this.verses.length) return
 
       const endedSnapshot = this.buildSessionEndedSnapshot()
+      this.sessionEndedSnapshot = endedSnapshot
       this.sessionCompleted = true
       this.sessionCompletedAt = new Date().toISOString()
       this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
@@ -15296,8 +15498,7 @@ export default {
       this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
       this.recomputeAnalytics()
       this.finishSessionCleanup()
-
-      this.showSessionEndedSummary(endedSnapshot)
+      this.triggerSessionCompletionQuiz()
     },
 
     handlePrimaryAction() {
@@ -15487,6 +15688,15 @@ export default {
             this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
             this.fontScale = Math.max(0.9, Math.min(1.2, Number(state.fontScale ?? this.fontScale ?? 1)))
             this.enScale = this.fontScale
+            this.quizType = ['mixed', 'flashcard', 'mcq', 'audio_mcq', 'blank'].includes(state.quizType)
+              ? state.quizType
+              : this.quizType
+            this.quizFocus = ['adaptive', 'recite_text', 'audio_recall', 'meaning'].includes(state.quizFocus)
+              ? state.quizFocus
+              : this.quizFocus
+            this.quizLength = [4, 6, 8, 10, 12].includes(Number(state.quizLength))
+              ? Number(state.quizLength)
+              : this.quizLength
 
             // Anchor Mode settings
             this.anchorModeEnabled = state.anchorModeEnabled ?? false
@@ -15576,6 +15786,9 @@ export default {
           enScale: this.enScale,
           quranFont: this.quranFont,
           script: this.script,
+          quizType: this.quizType,
+          quizFocus: this.quizFocus,
+          quizLength: this.quizLength,
           sectionOpen: this.sectionOpen,
           tajweedEnabled: this.tajweedEnabled,
           mainCardCollapsed: this.mainCardCollapsed,
@@ -16231,6 +16444,37 @@ export default {
       this.startQuiz()
     },
 
+    triggerSessionCompletionQuiz() {
+      this.showTools = false
+      this.topCardMenuOpen = false
+      this.showSessionExitModal = false
+      this.showSessionEndedModal = false
+      this.showSessionQuizConfetti = true
+      if (this.sessionQuizConfettiTimer) clearTimeout(this.sessionQuizConfettiTimer)
+      this.sessionQuizConfettiTimer = setTimeout(() => {
+        this.showSessionQuizConfetti = false
+        this.sessionQuizConfettiTimer = null
+      }, 2000)
+      this.openRetentionQuiz()
+    },
+
+    resolveQuizPoolSkill() {
+      if (['recite_text', 'audio_recall', 'meaning'].includes(this.quizFocus)) {
+        return this.quizFocus
+      }
+      if (this.quizType === 'audio_mcq') return 'audio_recall'
+      if (this.quizType === 'blank') return 'meaning'
+      return 'recite_text'
+    },
+
+    resolveQuizTypeSequence() {
+      if (this.quizType !== 'mixed') return [this.quizType]
+      if (this.quizFocus === 'audio_recall') return ['audio_mcq', 'mcq']
+      if (this.quizFocus === 'meaning') return ['blank', 'mcq']
+      if (this.quizFocus === 'recite_text') return ['flashcard', 'mcq']
+      return ['flashcard', 'mcq', 'blank', 'audio_mcq']
+    },
+
     normalizeTextForQuiz(text) {
       return String(text || '')
         .replace(/<[^>]+>/g, ' ')
@@ -16303,7 +16547,9 @@ export default {
         return
       }
       this.sessionCompleted = false
-      const skill = this.quizSkill || 'recite_text'
+      const skill = this.resolveQuizPoolSkill()
+      this.quizSkill = skill
+      const targetCount = [4, 6, 8, 10, 12].includes(Number(this.quizLength)) ? Number(this.quizLength) : 6
       const source = this.getQuizSourceVerses()
       const now = Date.now()
       const due = source.filter(verse => Number(this.sm2?.[this.sm2CardKey(verse.key, skill)]?.due || 0) <= now)
@@ -16314,7 +16560,7 @@ export default {
         if (seen.has(verse.key)) continue
         seen.add(verse.key)
         pool.push(verse)
-        if (pool.length >= 6) break
+        if (pool.length >= targetCount) break
       }
       if (!pool.length) {
         this.showBanner(this.t('toasts.noVersesToQuizOn'), 'info', 3000)
@@ -16353,9 +16599,8 @@ export default {
         this.quizCard = null
         return
       }
-      const type = this.quizType === 'mixed'
-        ? (['flashcard', 'mcq', 'blank', 'audio_mcq'][this.quizIndex % 4])
-        : this.quizType
+      const typeSequence = this.resolveQuizTypeSequence()
+      const type = typeSequence[this.quizIndex % typeSequence.length] || 'flashcard'
       const skill = type === 'audio_mcq'
         ? 'audio_recall'
         : type === 'blank'

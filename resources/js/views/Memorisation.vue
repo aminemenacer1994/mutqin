@@ -96,7 +96,7 @@
       </div>
     </div>
     <div class="workspace-shell-actions">
-      <div v-if="hasVerses" class="workspace-header-view-controls quick-right-controls" aria-label="View and font controls">
+      <div v-if="hasVerses" class="workspace-header-view-controls quick-right-controls" aria-label="View controls">
         <button type="button" class="view-mode-switch" :class="{ 'is-mushaf': readingViewMode === 'mushaf' }"
           @click="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
           :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'" aria-label="Toggle mushaf mode">
@@ -108,7 +108,7 @@
           </span>
           <span class="view-mode-switch-label">{{ t('memorisation.view.mushaf') }}</span>
         </button>
-        <div class="font-dropdown quick-font-dropdown" @click.stop>
+        <div v-if="readingViewMode !== 'mushaf'" class="font-dropdown quick-font-dropdown" @click.stop>
           <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
             <i class="bi bi-text-paragraph" aria-hidden="true"></i>
             <span class="d-none d-sm-inline">{{ getCurrentFontLabel() }}</span>
@@ -191,6 +191,8 @@
     </div>
   </div>
 
+  
+
   <!-- Quick controls - also hidden when session is completed -->
   <div v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills.length" v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
     <div class="quick-pill-group-list" :class="{ 'quick-pill-group-list-compact': !topCardAppliedPills.length }">
@@ -206,63 +208,6 @@
     </div>
   </div>
 </section>
-
-<!-- Session Complete - Only shows when session is fully done -->
-<div v-if="showSessionCompletedState" class="session-complete-wrapper">
-  <section class="completion-surface" aria-label="Session summary">
-    <div class="completion-header">
-      <div class="completion-icon">
-        <i class="bi bi-check-circle-fill"></i>
-      </div>
-      <div class="completion-text">
-        <h3>{{ sessionCompletionSnapshot?.completedAll ? t('memorisation.sessionComplete.title') : t('memorisation.sessionEnded.title') }}</h3>
-        <p>{{ sessionEndedSummaryMessage }}</p>
-      </div>
-    </div>
-
-    <div v-if="sessionCompletionSnapshot" class="completion-stats">
-      <div class="stat-box">
-        <span class="stat-number">{{ sessionEndedStats.surah }}</span>
-        <span class="stat-label">{{ sessionEndedStats.range }}</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-number">{{ sessionEndedStats.progress }}</span>
-        <span class="stat-label">{{ t('memorisation.stats.progress') }}</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-number">{{ sessionEndedStats.duration }}</span>
-        <span class="stat-label">{{ t('memorisation.stats.duration') }}</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-number">{{ sessionEndedStats.repeats }}</span>
-        <span class="stat-label">{{ t('memorisation.stats.repeats') }}</span>
-      </div>
-    </div>
-
-    <div v-if="sessionEndedDetailMessage || sessionEndedNextStepMessage" class="completion-followup">
-      <p v-if="sessionEndedDetailMessage" class="completion-detail">{{ sessionEndedDetailMessage }}</p>
-      <div v-if="sessionEndedNextStepMessage" class="completion-next-step">
-        <i class="bi bi-arrow-up-right-circle" aria-hidden="true"></i>
-        <span>{{ sessionEndedNextStepMessage }}</span>
-      </div>
-    </div>
-
-    <div class="completion-actions-inline">
-      <button class="action-btn primary" @click="openNewSessionSetup()">
-        <i class="bi bi-plus-circle"></i>
-        {{ t('memorisation.actions.newSession') }}
-      </button>
-      <button class="action-btn" @click="startSessionWithCountdown">
-        <i class="bi bi-arrow-repeat"></i>
-        {{ t('memorisation.actions.repeatRange') }}
-      </button>
-      <button class="action-btn" @click="openRetentionQuiz">
-        <i class="bi bi-ui-checks-grid"></i>
-        {{ t('memorisation.actions.retentionCheck') }}
-      </button>
-    </div>
-  </section>
-</div>
 
           <main v-if="!isOnboardingExperienceActive" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             aria-label="Memorisation workspace">
@@ -529,18 +474,18 @@
         @click.stop role="dialog" aria-modal="true" aria-labelledby="memorisationToolsTitle"
         :aria-hidden="showTools ? 'false' : 'true'" tabindex="-1" @keydown.esc.prevent="closeToolsPanel">
         <div class="tools-top">
-          <div class="tools-topbar">
-            <div id="memorisationToolsTitle" class="tools-title">
-              <h3><b>{{ t('common.controls') }}</b></h3>
-            </div>
+        <div class="tools-topbar">
+          <div id="memorisationToolsTitle" class="tools-title">
+            <h3><b>{{ t('common.controls') }}</b></h3>
+          </div>
             <button class="tools-x" @click="closeToolsPanel" aria-label="Close panel" type="button">
               <span class="tools-x-glyph" aria-hidden="true">&times;</span>
             </button>
           </div>
           <div v-if="shouldShowOffcanvasTabs" class="tools-tabs" role="tablist" aria-label="Controls tabs">
             <button role="tab" :aria-selected="tab === 'tools' ? 'true' : 'false'" :class="{ active: tab === 'tools' }"
-              @click.prevent="setActiveTab('tools')" title="Session tools" type="button">
-              <i class="bi bi-sliders"></i> {{ t('memorisation.session') }}
+              @click.prevent="setActiveTab('tools')" title="Session setup" type="button">
+              <i class="bi bi-sliders"></i> {{ t('memorisation.tools.tabs.setup') }}
             </button>
             <button role="tab" :aria-selected="tab === 'techniques' ? 'true' : 'false'"
               :class="{ active: tab === 'techniques' }" @click.prevent="setActiveTab('techniques')"
@@ -935,6 +880,62 @@
                     </select>
                     <small class="field-hint">{{ anchorModeDescription }}</small>
                   </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('quiz_lab')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-ui-checks-grid"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">{{ t('memorisation.quiz.title') }}</span>
+                    <span class="st-sub">{{ t('memorisation.quiz.builderSubtitle') }}</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.quiz_lab }"><i
+                    class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.quiz_lab">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="technique-description">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>{{ t('memorisation.quiz.setupHint') }}</span>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>{{ t('common.method') }}</label>
+                    <div class="radio-group">
+                      <label class="radio" v-for="option in quizModeOptions" :key="`quiz-mode-${option.value}`">
+                        <input type="radio" name="quiz-mode" :value="option.value" v-model="quizType">
+                        {{ option.label }}
+                      </label>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>{{ t('memorisation.quiz.focus') }}</label>
+                    <div class="radio-group">
+                      <label class="radio" v-for="option in quizFocusOptions" :key="`quiz-focus-${option.value}`">
+                        <input type="radio" name="quiz-focus" :value="option.value" v-model="quizFocus">
+                        {{ option.label }}
+                      </label>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>{{ t('memorisation.quiz.questionCount') }}</label>
+                    <div class="radio-group radio-group-tight">
+                      <label class="radio" v-for="count in quizLengthOptions" :key="`quiz-count-${count}`">
+                        <input type="radio" name="quiz-count" :value="count" v-model.number="quizLength">
+                        {{ count }}
+                      </label>
+                    </div>
+                    <small v-if="!hasVerses" class="field-hint">{{ t('toasts.noVersesToQuizOn') }}</small>
+                  </div>
+                  <button class="tools-btn tools-btn-primary quiz-launch-btn" type="button" :disabled="!hasVerses"
+                    @click="openRetentionQuiz">
+                    <i class="bi bi-ui-checks-grid"></i><span>{{ t('memorisation.quiz.launch') }}</span>
+                  </button>
                 </div>
               </div>
             </section>
@@ -1369,8 +1370,8 @@
         aria-labelledby="sessionExitTitle">
         <div class="modal-header">
           <div class="modal-header-text">
-            <div class="modal-context-badge">{{ sessionContextBadge }}</div>
-            <h2 id="sessionExitTitle">{{ t('sessionStatus.end') }}</h2>
+            <div class="modal-context-badge">{{ sessionExitModalBadge }}</div>
+            <h2 id="sessionExitTitle">{{ sessionExitModalTitle }}</h2>
           </div>
           <button class="btn-icon" @click="closeSessionExitModal" type="button" aria-label="Close end session dialog"><i
               class="bi bi-x-lg" aria-hidden="true"></i></button>
@@ -1379,11 +1380,9 @@
           <div class="session-exit-recap">
             <span><i class="bi bi-book"></i> {{ currentChapter?.name_simple || 'No surah' }}</span>
             <span><i class="bi bi-text-paragraph"></i> {{ sessionExitPreviewSnapshot?.progressLabel || `Ayah ${currentPosition}/${totalVerses}` }}</span>
-            <span><i class="bi bi-clock"></i> {{ formatTime(currentTime || 0) }}</span>
+            <span><i class="bi bi-clock"></i> {{ sessionExitPreviewSnapshot?.durationLabel || formatTime(currentTime || 0) }}</span>
           </div>
-          <p class="confirm-copy session-exit-summary-copy">
-            You covered {{ sessionExitPreviewSnapshot?.coveredAyahCount || 0 }} of {{ sessionExitPreviewSnapshot?.totalAyahs || 0 }} ayahs before ending.
-          </p>
+          <p class="confirm-copy session-exit-summary-copy">{{ sessionExitSummaryCopy }}</p>
           <div class="session-exit-summary-actions">
             <button class="btn-primary" type="button" @click="exitSessionToNewSession">
               {{ t('memorisation.actions.newSession') }}
@@ -1400,7 +1399,7 @@
           </div>
         </div>
         <div class="modal-footer session-exit-summary-footer">
-          <button class="btn-secondary" @click="closeSessionExitModal">{{ t('common.continue') }}</button>
+          <button class="btn-secondary" @click="closeSessionExitModal">{{ sessionExitDismissLabel }}</button>
         </div>
       </div>
     </div>
@@ -1488,6 +1487,17 @@
           v-for="piece in plannerCompletionConfettiPieces"
           :key="piece.id"
           class="planner-confetti-piece"
+          :style="piece.style"
+        ></span>
+      </div>
+    </transition>
+
+    <transition name="fade">
+      <div v-if="showSessionQuizConfetti" class="session-quiz-confetti-layer" aria-hidden="true">
+        <span
+          v-for="piece in sessionQuizConfettiPieces"
+          :key="piece.id"
+          class="session-quiz-confetti-piece"
           :style="piece.style"
         ></span>
       </div>
@@ -2792,7 +2802,7 @@
   </div>
 
   <div v-if="quizActive" class="quiz-overlay" @click.self="stopQuiz">
-    <div class="quiz-card" role="dialog" aria-modal="true" :aria-labelledby="'quizModalTitle'">
+    <div class="quiz-card modal-lg" role="dialog" aria-modal="true" :aria-labelledby="'quizModalTitle'">
       <div class="quiz-top">
         <div class="quiz-title-wrap">
           <div id="quizModalTitle" class="quiz-title">{{ t('memorisation.quiz.title') }}</div>
