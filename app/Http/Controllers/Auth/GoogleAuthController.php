@@ -14,13 +14,25 @@ class GoogleAuthController extends Controller
 {
     public function redirect(): RedirectResponse
     {
-        return Socialite::driver('google')->redirect();
+        $provider = Socialite::driver('google');
+
+        if (method_exists($provider, 'stateless')) {
+            $provider = $provider->stateless();
+        }
+
+        return $provider->redirect();
     }
 
     public function callback(): RedirectResponse
     {
         try {
-            $googleUser = Socialite::driver('google')->user();
+            $provider = Socialite::driver('google');
+
+            if (method_exists($provider, 'stateless')) {
+                $provider = $provider->stateless();
+            }
+
+            $googleUser = $provider->user();
         } catch (Throwable) {
             return redirect()
                 ->route('login')

@@ -44,7 +44,10 @@ includesAll('session setup controls', [
   /<select v-model="reciterId" @change="refreshVerses"/,
   /@change="setPlaybackSpeed\(option\)"/,
   /value="auto" v-model="playMode"/,
+  /value="follow" v-model="playMode"/,
   /value="manual" v-model="playMode"/,
+  /v-model\.number="recitationWindowSeconds"/,
+  /option in recitationWindowOptions/,
   /t\('memorisation\.delay_between_recitations_secs'\)/,
   /<select v-model\.number="delay" class="select">/,
   /option in delayOptions/
@@ -143,7 +146,7 @@ includesAll('workspace application', [
   /'blur-upcoming': blurModeEnabled && isVerseBlurred\(verse\.key\)/
 ])
 
-for (const key of ['verses', 'activeKey', 'queue', 'queueIndex', 'playMode', 'speed', 'delay', 'order']) {
+for (const key of ['verses', 'activeKey', 'queue', 'queueIndex', 'playMode', 'recitationWindowSeconds', 'speed', 'delay', 'order']) {
   assert.doesNotMatch(
     memorisationDataBlock,
     new RegExp(`^\\s*${key}:`, 'm'),
@@ -211,11 +214,11 @@ includesAll('planner ui hidden', [
   /<span class="workspace-shell-kicker">\{\{ t\('memorisation\.sessionOverview\.kicker'\) \}\}<\/span>/,
   /v-if="showAiMemorisationButton" class="mushaf-pill mushaf-ai-pill mushaf-ai-memory"/,
   /v-if="showAiMemorisationButton" class="verse-self-check-btn verse-ai-check-btn"/,
-  /<button class="action-btn primary" @click="openNewSessionSetup\(\)">/,
+  /<button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls"/,
   /<section v-if="!hasVerses" class="workspace-empty-state" aria-label="Session setup">/,
   /t\('memorisation\.open_session_setup'\)/,
   /aria-label="Open controls"/,
-  /v-if="!isSessionCompleted && hasSessionStarted" v-show="!mainCardCollapsed" class="workspace-quick-controls"/
+  /v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills\.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"/
 ])
 
 includesAll('light theme default', [

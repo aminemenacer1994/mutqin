@@ -2532,6 +2532,9 @@ export default {
     showSessionCompletedState() {
       return !this.isOnboardingExperienceActive && !!this.sessionCompletionSnapshot && this.isSessionCompleted && !this.hasSessionStarted
     },
+    shouldShowReadingWorkspace() {
+      return this.hasVerses && !this.showSessionCompletedState
+    },
     resumeFeedback() {
       const payload = this.continueSessionPayload
       const queue = payload?.queue || this.queue || []
@@ -3095,8 +3098,77 @@ export default {
     },
 
     quizAccuracy() {
+      const stats = this.quizSessionStats
+      if (stats?.total) {
+        return Math.round((Number(stats.correct || 0) / Number(stats.total)) * 100)
+      }
       if (!this.quizQueue.length) return 0
       return Math.round((this.quizScore / this.quizQueue.length) * 100)
+    },
+
+    quizSummary() {
+      const stats = this.quizSessionStats || { total: 0, correct: 0, qualitySum: 0, mistakes: [] }
+      const total = Math.max(0, Number(stats.total || 0))
+      const correct = Math.max(0, Number(stats.correct || 0))
+      const accuracy = total ? Math.round((correct / total) * 100) : 0
+      const avgQuality = total ? Math.round((Number(stats.qualitySum || 0) / total) * 10) / 10 : 0
+      const durationMs = Math.max(0, Number(stats.durationMs || 0))
+      const timeSpent = this.formatTime(Math.round(durationMs / 1000))
+      const perSkill = Object.entries(stats.skillTotals || {}).map(([key, value]) => {
+        const totalAnswers = Math.max(0, Number(value?.total || 0))
+        const skillCorrect = Math.max(0, Number(value?.correct || 0))
+        const skillAccuracy = totalAnswers ? Math.round((skillCorrect / totalAnswers) * 100) : 0
+        const labels = {
+          recite_text: this.t('memorisation.quiz.skills.recite_text'),
+          audio_recall: this.t('memorisation.quiz.skills.audio_recall'),
+          meaning: this.t('memorisation.quiz.skills.meaning')
+        }
+        return { key, label: labels[key] || key, total: totalAnswers, correct: skillCorrect, accuracy: skillAccuracy }
+      })
+      const bestSkill = perSkill.slice().sort((a, b) => b.accuracy - a.accuracy || b.correct - a.correct)[0]?.label
+        || this.t('memorisation.quiz.skills.none')
+      const planTarget = this.todayPlan?.quizKeys?.length || this.todayPlan?.reviewKeys?.length || total
+      const planProgress = `${Math.min(total, planTarget)} / ${planTarget}`
+      const explanation = accuracy >= 85
+        ? this.t('memorisation.quiz.summary.strong')
+        : accuracy >= 60
+          ? this.t('memorisation.quiz.summary.moderate')
+          : this.t('memorisation.quiz.summary.weak')
+      const engineLink = this.todayPlan
+        ? this.t('memorisation.quiz.summary.enginePlan')
+        : (this.chainingEnabled || this.order === 'chain')
+          ? this.t('memorisation.quiz.summary.engineChain')
+          : this.t('memorisation.quiz.summary.engineDefault')
+      return {
+        total,
+        correct,
+        accuracy,
+        avgQuality,
+        mistakes: stats.mistakes || [],
+        skills: perSkill,
+        bestSkill,
+        timeSpent,
+        planProgress,
+        explanation,
+        engineLink
+      }
+    },
+
+    quizContextLabel() {
+      if (this.todayPlan) {
+        return this.t('memorisation.quiz.contextPlan', { mode: this.sessionTypeInfo.label })
+      }
+      if (this.chainingEnabled || this.order === 'chain') {
+        return this.t('memorisation.quiz.contextChain')
+      }
+      return this.t('memorisation.quiz.contextFocused')
+    },
+
+    quizCardTypeLabel() {
+      const type = this.quizCard?.type || 'question'
+      const key = `memorisation.quiz.types.${type}`
+      const translated = this.t(key)
+      return translated === key ? this.t('memorisation.quiz.types.question') : translated
     },
 
     nextActionDescription() {
@@ -3224,6 +3296,7 @@ export default {
       this.showBanner(this.t('toasts.theMemorisationWorkspaceRecoveredFromA'), 'error', 5000)
     } finally {
       this.isBootstrapping = false
+      this.reconcilePersistedSessionCompletion()
     }
 
     // Reconcile with the backend (authenticated users only). Fire-and-forget so
@@ -12709,6 +12782,25 @@ export default {
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
     },
 
+    reconcilePersistedSessionCompletion() {
+      if (!this.isSessionCompleted) return
+      const hasSnapshot = !!(this.sessionEndedSnapshot && Object.keys(this.sessionEndedSnapshot).length)
+      if (hasSnapshot) return
+
+      // A completed flag can survive in localStorage without the in-memory
+      // summary that powers the completion screen, which leaves the workspace blank.
+      this.sessionCompleted = false
+      this.sessionCompletedAt = null
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'idle'
+        this.centralSession.sessionCompletedAt = null
+      }
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.completed = false
+        this.mutqinState.sessionState.completed_at = null
+      }
+    },
+
     loadCentralSessionState() {
       try {
         const raw = localStorage.getItem(CENTRAL_SESSION_STORAGE_KEY)
@@ -12757,6 +12849,7 @@ export default {
         this.applySpeed()
         this.sessionCompleted = this.centralSession.sessionStatus === 'completed'
         this.sessionCompletedAt = this.centralSession.sessionCompletedAt || null
+        this.reconcilePersistedSessionCompletion()
       } catch (e) {
         console.error('Failed to load central session state:', e)
       }
@@ -14877,6 +14970,9 @@ export default {
       if (actionKey === 'open-recordings-library') {
         this.openRecordingsLibrary(actionPayload || {})
       }
+      if (actionKey === 'start-quiz') {
+        this.openRetentionQuiz()
+      }
     },
 
     syncMutqinAyahs(verses = this.verses) {
@@ -16068,50 +16164,234 @@ export default {
       this.showBanner(this.t('toasts.reciterUpdatedForThisSession'), 'success', 1400)
     },
 
+    openRetentionQuiz() {
+      this.sessionCompleted = false
+      this.studyMode = 'quiz'
+      this.startQuiz()
+    },
+
+    normalizeTextForQuiz(text) {
+      return String(text || '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/[\u064B-\u065F\u0610-\u061A\u06D6-\u06ED]/g, '')
+        .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    },
+
+    quizMakePrompt(verse) {
+      const src = this.normalizeTextForQuiz(verse.translation || verse.arabic)
+      const words = src.split(' ').filter(Boolean)
+      if (words.length < 4) return { prompt: src, missing: '' }
+      const idx = Math.max(1, Math.min(words.length - 2, Math.floor(Math.random() * (words.length - 2)) + 1))
+      const missing = words[idx] || ''
+      const prompt = words.map((word, index) => (index === idx ? '____' : word)).join(' ')
+      return { prompt, missing }
+    },
+
+    getQuizSourceVerses() {
+      const byKey = new Map((this.verses || []).map(verse => [verse.key, verse]))
+      const orderedQueue = []
+      for (const item of this.queue || []) {
+        if (!item?.key || !byKey.has(item.key) || orderedQueue.some(verse => verse.key === item.key)) continue
+        orderedQueue.push(byKey.get(item.key))
+      }
+      if (this.planRun && this.todayPlan?.segments?.length) {
+        const segment = this.todayPlan.segments[this.planRun.segmentIndex || 0]
+        const segmentVerses = (segment?.keys || []).map(key => byKey.get(key)).filter(Boolean)
+        if (segmentVerses.length) return segmentVerses
+      }
+      if (this.todayPlan?.quizKeys?.length) {
+        const planned = this.todayPlan.quizKeys.map(key => byKey.get(key)).filter(Boolean)
+        if (planned.length) return planned
+      }
+      if ((this.chainingEnabled || this.order === 'chain') && orderedQueue.length) return orderedQueue
+      return orderedQueue.length ? orderedQueue : [...this.verses]
+    },
+
+    buildQuizOptions(verse, { audioLabels = false } = {}) {
+      const options = new Set([verse.key])
+      const idx = this.verses.findIndex(item => item.key === verse.key)
+      const nearby = []
+      for (let i = Math.max(0, idx - 6); i <= Math.min(this.verses.length - 1, idx + 6); i += 1) {
+        if (i !== idx) nearby.push(this.verses[i].key)
+      }
+      while (options.size < 4 && nearby.length) {
+        const pick = nearby.splice(Math.floor(Math.random() * nearby.length), 1)[0]
+        options.add(pick)
+      }
+      while (options.size < 4 && this.verses.length > 3) {
+        const pick = this.verses[Math.floor(Math.random() * this.verses.length)]
+        options.add(pick.key)
+      }
+      return [...options].sort(() => Math.random() - 0.5).map((key) => {
+        const item = this.verses.find(entry => entry.key === key)
+        const number = item ? item.number : parseInt(String(key).split(':')[1], 10)
+        if (audioLabels) {
+          return { key, label: `${key} • ${this.t('memorisation.quiz.ayahLabel', { number })}` }
+        }
+        const snippet = this.normalizeTextForQuiz((item?.arabic || '').replace(/<[^>]+>/g, '')).slice(0, 36)
+        return { key, label: `${key} • ${number} • ${snippet}`.trim() }
+      })
+    },
+
     // Quiz methods
     startQuiz() {
       if (!this.verses.length) {
         this.showBanner(this.t('toasts.noVersesToQuizOn'), 'info', 3000)
         return
       }
-      this.quizQueue = this.verses.slice(0, 5).map(v => ({ ...v, type: 'flashcard' }))
+      this.sessionCompleted = false
+      const skill = this.quizSkill || 'recite_text'
+      const source = this.getQuizSourceVerses()
+      const now = Date.now()
+      const due = source.filter(verse => Number(this.sm2?.[this.sm2CardKey(verse.key, skill)]?.due || 0) <= now)
+      const rest = source.filter(verse => !due.includes(verse))
+      const seen = new Set()
+      const pool = []
+      for (const verse of [...due, ...rest]) {
+        if (seen.has(verse.key)) continue
+        seen.add(verse.key)
+        pool.push(verse)
+        if (pool.length >= 6) break
+      }
+      if (!pool.length) {
+        this.showBanner(this.t('toasts.noVersesToQuizOn'), 'info', 3000)
+        return
+      }
+      this.quizQueue = pool
       this.quizIndex = 0
       this.quizScore = 0
       this.quizMistakes = []
       this.quizComplete = false
       this.quizActive = true
+      this.quizRevealed = false
+      this.quizLastResult = null
+      this.quizSummaryActive = false
+      this.quizSessionStats = {
+        total: pool.length,
+        correct: 0,
+        qualitySum: 0,
+        answers: [],
+        mistakes: [],
+        skillTotals: {},
+        startedAt: Date.now(),
+        durationMs: 0
+      }
       this.nextQuizCard()
     },
 
     nextQuizCard() {
-      if (this.quizIndex >= this.quizQueue.length) {
+      const verse = this.quizQueue[this.quizIndex]
+      if (!verse) {
+        if (this.quizSessionStats) {
+          this.quizSessionStats.durationMs = Math.max(0, Date.now() - Number(this.quizSessionStats.startedAt || Date.now()))
+        }
         this.quizComplete = true
+        this.quizSummaryActive = true
+        this.quizCard = null
         return
       }
-      this.quizCard = this.quizQueue[this.quizIndex]
-      this.quizRevealed = false
+      const type = this.quizType === 'mixed'
+        ? (['flashcard', 'mcq', 'blank', 'audio_mcq'][this.quizIndex % 4])
+        : this.quizType
+      const skill = type === 'audio_mcq'
+        ? 'audio_recall'
+        : type === 'blank'
+          ? 'meaning'
+          : 'recite_text'
+      this.quizSkill = skill
+      this.quizCard = { ...verse, type, skill }
+      this.quizAnswer = ''
+      this.quizOptions = []
+      this.quizRevealed = type === 'flashcard' ? false : true
+      this.quizLastResult = null
+      if (type === 'mcq') {
+        this.quizOptions = this.buildQuizOptions(verse)
+      }
+      if (type === 'audio_mcq') {
+        this.quizOptions = this.buildQuizOptions(verse, { audioLabels: true })
+        setTimeout(() => this.playVerse(verse), 50)
+      }
+      if (type === 'blank') {
+        const { prompt, missing } = this.quizMakePrompt(verse)
+        this.quizCard.prompt = prompt
+        this.quizCard.missing = missing
+      }
     },
 
-    submitQuiz(quality = 4) {
-      if (quality >= 4) this.quizScore++
-      else this.quizMistakes.push(`Ayah ${this.quizCard.number}`)
-      this.quizIndex++
+    submitQuiz(qualityOverride = null) {
+      const card = this.quizCard
+      if (!card) return
+      let quality = 4
+      if (typeof qualityOverride === 'number') quality = qualityOverride
+      else if (card.type === 'mcq' || card.type === 'audio_mcq') quality = this.quizAnswer === card.key ? 4 : 2
+      else if (card.type === 'blank') {
+        const answer = this.normalizeTextForQuiz(this.quizAnswer).toLowerCase()
+        const missing = this.normalizeTextForQuiz(card.missing).toLowerCase()
+        if (answer && missing && answer === missing) quality = 4
+        else if (answer && missing && (missing.startsWith(answer) || answer.startsWith(missing))) quality = 3
+        else quality = 2
+      }
+      if (this.quizSessionStats) {
+        const skillKey = card.skill || this.quizSkill || 'recite_text'
+        const skillTotals = { ...(this.quizSessionStats.skillTotals || {}) }
+        const currentSkill = skillTotals[skillKey] || { total: 0, correct: 0 }
+        this.quizSessionStats.qualitySum += quality
+        const isCorrect = quality >= 4
+        if (isCorrect) this.quizSessionStats.correct += 1
+        else this.quizSessionStats.mistakes.push(card.key)
+        this.quizSessionStats.answers.push({ key: card.key, quality, type: card.type })
+        currentSkill.total += 1
+        if (isCorrect) currentSkill.correct += 1
+        skillTotals[skillKey] = currentSkill
+        this.quizSessionStats.skillTotals = skillTotals
+        this.quizSessionStats.durationMs = Math.max(0, Date.now() - Number(this.quizSessionStats.startedAt || Date.now()))
+      }
+      if (quality >= 4) this.quizScore += 1
+      else this.quizMistakes.push(this.t('memorisation.quiz.mistakeAyah', { number: card.number }))
+      this.quizLastResult = { at: Date.now(), key: card.key, quality, skill: card.skill }
+      this.quizIndex += 1
       this.nextQuizCard()
+      if (this.studyMode === 'hybrid' && this.hybridPendingKey) {
+        this.hybridPendingKey = null
+        this.quizActive = false
+        this.quizCard = null
+        this.quizQueue = []
+        this.quizIndex = 0
+        setTimeout(() => {
+          if (this.playMode === 'auto') this.next()
+        }, (this.delay || 0) * 1000)
+      }
     },
 
     stopQuiz() {
       this.quizActive = false
       this.quizCard = null
       this.quizQueue = []
+      this.quizIndex = 0
+      this.quizAnswer = ''
+      this.quizOptions = []
+      this.quizRevealed = false
+      this.quizLastResult = null
+      this.quizSummaryActive = false
+      this.quizSessionStats = null
       this.quizComplete = false
+      this.hybridPendingKey = null
     },
 
     restartQuiz() {
+      this.quizSummaryActive = false
+      this.quizIndex = 0
+      this.quizSessionStats = null
       this.quizScore = 0
       this.quizMistakes = []
       this.quizComplete = false
-      this.quizIndex = 0
-      this.nextQuizCard()
+      this.startQuiz()
+    },
+
+    sm2CardKey(verseKey, skill = 'recite_text') {
+      return `${verseKey}:${skill}`
     },
 
     async playWordAudio(url, verse = null, wordIndex = null) {

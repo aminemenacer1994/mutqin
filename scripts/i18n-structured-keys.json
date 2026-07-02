@@ -46,7 +46,11 @@
           ],
           "previewTitle": "Real session inputs",
           "previewSubtitle": "Session setup already exists in the tools panel.",
-          "previewItems": ["Surah", "Range", "Reciter"]
+          "previewItems": [
+            "Surah",
+            "Range",
+            "Reciter"
+          ]
         },
         "reading": {
           "title": "Pick a reading view",
@@ -59,7 +63,11 @@
           ],
           "previewTitle": "Reading controls",
           "previewSubtitle": "The view toggle and reading aids are built in.",
-          "previewItems": ["Stacked", "Mushaf", "Tajweed"]
+          "previewItems": [
+            "Stacked",
+            "Mushaf",
+            "Tajweed"
+          ]
         },
         "practice": {
           "title": "Practice with built-in tools",
@@ -72,7 +80,11 @@
           ],
           "previewTitle": "Technique controls",
           "previewSubtitle": "The techniques tab is already part of the workspace.",
-          "previewItems": ["Focus", "Blur", "Anchor"]
+          "previewItems": [
+            "Focus",
+            "Blur",
+            "Anchor"
+          ]
         },
         "review": {
           "title": "Review and return",
@@ -85,7 +97,11 @@
           ],
           "previewTitle": "What you can return to",
           "previewSubtitle": "Review and resume are already built into the system.",
-          "previewItems": ["Saved sessions", "Recordings", "Insights"]
+          "previewItems": [
+            "Saved sessions",
+            "Recordings",
+            "Insights"
+          ]
         }
       }
     },
@@ -233,33 +249,103 @@
       "studyFlow": "Study Flow",
       "reciterLabel": "Reciter",
       "steps": {
-        "goal": { "label": "Goal", "headline": "Choose today's goal" },
-        "style": { "label": "Style", "headline": "Pick your daily pace" },
-        "flow": { "label": "Flow", "headline": "Choose your study flow" },
-        "support": { "label": "Support", "headline": "Set your support level" },
-        "playback": { "label": "Playback", "headline": "Choose your recitation setup" },
-        "summary": { "label": "Summary", "headline": "Start your Hifz journey" }
+        "goal": {
+          "label": "Goal",
+          "headline": "Choose today's goal"
+        },
+        "style": {
+          "label": "Style",
+          "headline": "Pick your daily pace"
+        },
+        "flow": {
+          "label": "Flow",
+          "headline": "Choose your study flow"
+        },
+        "support": {
+          "label": "Support",
+          "headline": "Set your support level"
+        },
+        "playback": {
+          "label": "Playback",
+          "headline": "Choose your recitation setup"
+        },
+        "summary": {
+          "label": "Summary",
+          "headline": "Start your Hifz journey"
+        }
       },
       "goals": {
-        "light": { "title": "Light", "subtitle": "1-3 ayahs/day", "detail": "A lighter workload for busy days, with more time for careful revision and steady confidence." },
-        "balanced": { "title": "Balanced", "subtitle": "3-5 ayahs/day", "detail": "Maintain a steady pace with enough revision to strengthen long-term memory." },
-        "intensive": { "title": "Intensive", "subtitle": "5-10 ayahs/day", "detail": "Move faster through memorisation while accepting a heavier daily revision load." }
+        "light": {
+          "title": "Light",
+          "subtitle": "1-3 ayahs/day",
+          "detail": "A lighter workload for busy days, with more time for careful revision and steady confidence."
+        },
+        "balanced": {
+          "title": "Balanced",
+          "subtitle": "3-5 ayahs/day",
+          "detail": "Maintain a steady pace with enough revision to strengthen long-term memory."
+        },
+        "intensive": {
+          "title": "Intensive",
+          "subtitle": "5-10 ayahs/day",
+          "detail": "Move faster through memorisation while accepting a heavier daily revision load."
+        }
       },
       "styles": {
-        "light": { "title": "Light", "subtitle": "Low pressure, easy to maintain.", "detail": "Best for a calm routine where consistency matters more than speed." },
-        "balanced": { "title": "Balanced", "subtitle": "Moderate pace and revision.", "detail": "A practical daily rhythm for new ayahs, review, and long-term retention." },
-        "intensive": { "title": "Intensive", "subtitle": "Higher pace, stronger commitment.", "detail": "Designed for faster progress with tighter daily structure and more review." }
+        "light": {
+          "title": "Light",
+          "subtitle": "Low pressure, easy to maintain.",
+          "detail": "Best for a calm routine where consistency matters more than speed."
+        },
+        "balanced": {
+          "title": "Balanced",
+          "subtitle": "Moderate pace and revision.",
+          "detail": "A practical daily rhythm for new ayahs, review, and long-term retention."
+        },
+        "intensive": {
+          "title": "Intensive",
+          "subtitle": "Higher pace, stronger commitment.",
+          "detail": "Designed for faster progress with tighter daily structure and more review."
+        }
       },
       "focus": {
-        "newPriority": { "title": "New Memorisation First", "subtitle": "Start with fresh ayahs.", "detail": "Keeps momentum high while still scheduling reviews after new work." },
-        "revisionPriority": { "title": "Revision First", "subtitle": "Protect what you already know.", "detail": "Places older memorisation first so retention stays strong before adding more." },
-        "mixed": { "title": "Mixed Flow", "subtitle": "Balanced new and review work.", "detail": "Blends new memorisation and revision into one manageable daily plan." },
-        "weakAyahFocus": { "title": "Weak Ayah Focus", "subtitle": "Repair fragile memorisation.", "detail": "Gives extra attention to ayahs that need reinforcement before they become backlog." }
+        "newPriority": {
+          "title": "New Memorisation First",
+          "subtitle": "Start with fresh ayahs.",
+          "detail": "Keeps momentum high while still scheduling reviews after new work."
+        },
+        "revisionPriority": {
+          "title": "Revision First",
+          "subtitle": "Protect what you already know.",
+          "detail": "Places older memorisation first so retention stays strong before adding more."
+        },
+        "mixed": {
+          "title": "Mixed Flow",
+          "subtitle": "Balanced new and review work.",
+          "detail": "Blends new memorisation and revision into one manageable daily plan."
+        },
+        "weakAyahFocus": {
+          "title": "Weak Ayah Focus",
+          "subtitle": "Repair fragile memorisation.",
+          "detail": "Gives extra attention to ayahs that need reinforcement before they become backlog."
+        }
       },
       "support": {
-        "gentle": { "title": "Gentle Guidance", "subtitle": "Light checking and softer feedback.", "detail": "Best if you want a lighter workload while building confidence and consistency." },
-        "standard": { "title": "Standard Support", "subtitle": "Balanced checking and practical feedback.", "detail": "Best for most learners who want useful correction without slowing the session down." },
-        "highPrecision": { "title": "High Precision Mode", "subtitle": "Closer checking for stricter mastery.", "detail": "Best when you want tighter correction and can handle a more demanding session." }
+        "gentle": {
+          "title": "Gentle Guidance",
+          "subtitle": "Light checking and softer feedback.",
+          "detail": "Best if you want a lighter workload while building confidence and consistency."
+        },
+        "standard": {
+          "title": "Standard Support",
+          "subtitle": "Balanced checking and practical feedback.",
+          "detail": "Best for most learners who want useful correction without slowing the session down."
+        },
+        "highPrecision": {
+          "title": "High Precision Mode",
+          "subtitle": "Closer checking for stricter mastery.",
+          "detail": "Best when you want tighter correction and can handle a more demanding session."
+        }
       },
       "forecast": {
         "totalAyahs": "Total Ayahs",
@@ -284,6 +370,164 @@
         "repeatsRequired": "Choose how many times each ayah should repeat.",
         "reciterRequired": "Choose a reciter before you continue."
       }
+    },
+    "helpLearning": {
+      "title": "Help & Learning",
+      "subtitle": "Learn how to use Mutqin's tools to memorise more effectively.",
+      "bestFor": "Best for:",
+      "sections": {
+        "tajweed": {
+          "title": "Tajweed Rules",
+          "description": "Tajweed is the set of rules that helps you recite the Quran correctly and beautifully. Mutqin highlights these rules so you can recognise and practise them while memorising.",
+          "bestFor": "Students improving pronunciation and recitation quality."
+        },
+        "srs": {
+          "title": "Smart Revision (SRS)",
+          "description": "Mutqin automatically reminds you to review verses at the right time so they stay strong in your memory. Difficult verses appear more often, while stronger verses are reviewed less frequently.",
+          "bestFor": "Long-term retention and preventing memorisation loss."
+        },
+        "techniques": {
+          "title": "Memorisation Techniques",
+          "description": "Choose the method that helps you stay steady, then adjust it as your range becomes more familiar.",
+          "bestFor": "Students discovering which learning style works best for them.",
+          "details": {
+            "repetition": { "label": "Repetition Method", "text": "Repeat the same verse multiple times before moving on." },
+            "linking": { "label": "Linking Method", "text": "Connect each verse to the next to improve flow and continuity." },
+            "cumulative": { "label": "Cumulative Method", "text": "Continuously add new verses while revising previous ones." }
+          }
+        },
+        "layouts": {
+          "title": "Reading Layouts",
+          "description": "Switch between two reading styles depending on the device and the kind of memorisation you want to do.",
+          "bestFor": "Choosing the reading experience that feels most natural to you.",
+          "details": {
+            "stacked": { "label": "Stacked Layout", "text": "Displays each verse in a simple vertical format that is easier to follow on mobile devices." },
+            "mushaf": { "label": "Mushaf Layout", "text": "Displays verses in a traditional Mushaf-inspired style for students who prefer familiar page memorisation." }
+          }
+        },
+        "aiRecitation": {
+          "title": "AI Recitation",
+          "description": "AI Recitation listens to your recitation and provides instant feedback to help you identify mistakes and improve accuracy while memorising.",
+          "bestFor": "Students who want guided practice and immediate feedback."
+        },
+        "manualAssessment": {
+          "title": "Manual Assessment",
+          "description": "Manual Assessment allows you to evaluate your own memorisation after each session and track your confidence and progress over time.",
+          "bestFor": "Students who prefer self-reflection and independent revision."
+        }
+      }
+    },
+    "rangeOptions": {
+      "all": "Full Quran",
+      "juz": "Juz",
+      "hizb": "Hizb",
+      "page": "Page",
+      "surah": "Surah",
+      "ayah": "Ayah",
+      "word": "Word"
     }
+  },
+  "toasts": {
+    "theMemorisationWorkspaceRecoveredFromA": "The memorisation workspace recovered from a startup error.",
+    "fadingModeWordByWordDisabled": "Fading Mode: Word-by-Word disabled",
+    "wordByWordModeFadingDisabled": "Word-by-Word Mode: Fading disabled",
+    "focusModeOnBlurModeOff": "🎯 Focus Mode: On | 🌫️ Blur Mode: Off (cannot use together)",
+    "blurModeOnFocusModeOff": "🌫️ Blur Mode: On | 🎯 Focus Mode: Off (cannot use together)",
+    "blurModeOnChainingOffBlur": "🌫️ Blur Mode: On | 🔗 Chaining: Off — Blur hides upcoming verses needed for chaining",
+    "chainingOnBlurModeOffYou": "🔗 Chaining: On | 🌫️ Blur Mode: Off — You need to see upcoming verses for chaining to work",
+    "tipEnableAnchorModeWithChaining": "💡 Tip: Enable Anchor Mode with Chaining for better recall",
+    "pleaseSelectASessionFirst": "Please select a session first",
+    "sessionLoadedSuccessfully": "Session loaded successfully",
+    "ayahCompletedMovingToNext": "Ayah completed! Moving to next...",
+    "sessionSaved": "✓ Session \"{name}\" saved",
+    "recommendedSetupApplied": "Recommended setup applied",
+    "presetGuidedStart": "Preset: Guided Start",
+    "presetChainingAnchorModeWithFocus": "Preset: Chaining + Anchor Mode (with Focus)",
+    "presetPureRecallWithBlurMode": "Preset: Pure Recall with Blur Mode",
+    "presetFocusModeAnchorHooks": "Preset: Focus Mode + Anchor Hooks",
+    "blurModeWorksBestWithoutChaining": "Blur Mode works best without chaining, so chaining was turned off.",
+    "anchorModeKeyWordsWillBe": "Anchor Mode: Key words will be highlighted as memory hooks",
+    "anchorModeDisabled": "Anchor Mode disabled",
+    "anchorModeUsing": "Anchor Mode: Using {anchorCount}",
+    "chooseAValidSurahAndAyah": "Choose a valid surah and ayah range before starting.",
+    "pleaseSelectAValidSurahAnd": "Please select a valid surah and ayah range first",
+    "noActiveSessionToSave": "No active session to save",
+    "sessionSaved2": "Session saved",
+    "sessionDeleted": "Session deleted",
+    "sessionExportBlockedIncompleteSessionData": "Session export blocked: incomplete session data.",
+    "downloadReady": "Download ready ✓",
+    "exportFailedRetry": "Export failed, retry",
+    "thisResultDoesNotHaveEnough": "This result does not have enough stored metadata to re-run the audit.",
+    "unableToPlayThisRecordingRight": "Unable to play this recording right now.",
+    "audioSystemNotReady": "Audio system not ready",
+    "stopTheCurrentSelfCheckBefore": "Stop the current self-check before moving to another ayah.",
+    "saveOrDiscardTheCurrentSelf": "Save or discard the current self-check attempt before switching ayahs.",
+    "stopOrDiscardTheCurrentRecording": "Stop or discard the current recording before closing Self-Check.",
+    "selectAnAyahBeforeOpeningThe": "Select an ayah before opening the recordings library.",
+    "stopTheCurrentRecordingBeforeOpening": "Stop the current recording before opening the recordings library.",
+    "aiHighlightMarkedCorrectResultsUpdated": "AI highlight marked correct. Results updated.",
+    "noSavedReciteChecksForThis": "No saved Recite Checks for this ayah yet.",
+    "chooseASessionRangeBeforeStarting": "Choose a session range before starting a session Recite Check.",
+    "stopTheCurrentMemorisationCheckBefore": "Stop the current memorisation check before switching ayahs.",
+    "chooseASessionRangeBeforeOpening": "Choose a session range before opening the memorisation checker.",
+    "loadedCachedMemorisationAnalysis": "Loaded cached memorisation analysis.",
+    "memorisationAssessmentCouldNotBeSaved": "Memorisation assessment could not be saved on this device right now.",
+    "memorisationAssessmentSavedToRecordingsLibrary": "Memorisation assessment saved to recordings library.",
+    "memorisationAssessmentDeleted": "Memorisation assessment deleted.",
+    "memorisationCheckerReset": "Memorisation checker reset.",
+    "memorisationAssessmentDiscarded": "Memorisation assessment discarded.",
+    "thisRecordingDoesNotHaveEnough": "This recording does not have enough metadata to re-run the deterministic audit.",
+    "reciteCheckComplete": "Recite Check complete.",
+    "displayedAyahReviewReset": "Displayed ayah review reset.",
+    "reciteCheckCouldNotBeSaved": "Recite Check could not be saved on this device right now.",
+    "reciteCheckSavedToSavedAttempts": "Recite Check saved to Saved Attempts.",
+    "reciteCheckDiscarded": "Recite Check discarded.",
+    "reciteCheckDeleted": "Recite Check deleted.",
+    "loadedCachedReciteCheck": "Loaded cached Recite Check.",
+    "recordingReadyForAyah": "Recording ready for Ayah {number}",
+    "savedSelfCheckForAyah": "Saved self-check for Ayah {ayahNumber}",
+    "audioNotAvailableForThisAyah": "Audio not available for this ayah",
+    "downloadedAyahAudio": "Downloaded ayah {number} audio",
+    "failedToDownloadAyahAudio": "Failed to download ayah audio",
+    "hifzPlanDeleted": "Hifz plan deleted",
+    "sessionSavedWithCtrlS": "Session saved with Ctrl+S",
+    "savedSessionDismissed": "Saved session dismissed",
+    "speedChangedToX": "Speed changed to {p0}x",
+    "switchedToCasualMode": "Switched to Casual Mode",
+    "switchedToMode": "Switched to {p0} Mode",
+    "textSizeReset": "Text size reset",
+    "pleaseSelectASurah": "Please select a surah",
+    "planCreatedVersesDayForDays": "Plan created: {versesPerDay} verses/day for {plannerEstimatedDays} days",
+    "loadASurahFirstBeforeDownloading": "Load a surah first before downloading",
+    "couldNotIdentifySurah": "Could not identify surah",
+    "savedVersesFromForOfflineReading": "Saved {length} verses from {p0} for offline reading.",
+    "failedToDownloadVerses": "Failed to download verses",
+    "loadedFromOfflineStorage": "Loaded {surah} from offline storage",
+    "failedToLoadOfflineSurah": "Failed to load offline surah",
+    "offlineSurahRemoved": "Offline surah removed",
+    "audioPlaybackError": "Audio playback error",
+    "audioNotAvailableForVerse": "Audio not available for verse {number}",
+    "failedToPlayAudio": "Failed to play audio",
+    "playbackFailed": "Playback failed",
+    "failedToLoadVerses": "Failed to load verses",
+    "pleaseSelectASurahFirst": "Please select a surah first",
+    "noVersesLoadedCheckYourNetwork": "No verses loaded. Check your network connection.",
+    "nothingToPlayCheckTheSelected": "Nothing to play. Check the selected range.",
+    "backOnlineLiveApisAreAvailable": "Back online. Live APIs are available again.",
+    "offlineModeActiveReadingFallsBack": "Offline mode active. Reading falls back to cached ranges.",
+    "settingsIssue": "Settings issue: {join}",
+    "fontSize": "Font size: {defaultFontSize}%",
+    "message": "{p0} {p1}",
+    "settingsSaved": "Settings saved",
+    "failedToLoadSurahList": "Failed to load surah list",
+    "sessionControlsResetToDefaults": "Session controls reset to defaults",
+    "reciterUpdatedForThisSession": "Reciter updated for this session.",
+    "noVersesToQuizOn": "No verses to quiz on",
+    "enableWordAudioToPreviewIndividual": "Enable Word audio to preview individual words.",
+    "wordAudioIsNotAvailableFor": "Word audio is not available for this word.",
+    "wordTimingUnavailableForThisAyah": "Word timing unavailable for this ayah.",
+    "unableToPlayThisWordRight": "Unable to play this word right now.",
+    "unableToPlayAyahNow": "Unable to play this ayah right now.",
+    "textSizePercent": "Text size: {percent}%"
   }
 }

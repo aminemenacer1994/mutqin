@@ -116,7 +116,7 @@ export default {
 
 .mission-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.9fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 20px;
   align-items: stretch;
 }
@@ -204,6 +204,7 @@ export default {
 
 .mission-roadmap {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 16px;
 }
 
@@ -303,18 +304,6 @@ export default {
 
   50% {
     transform: translate3d(0, 16px, 0);
-  }
-}
-
-@media (max-width: 768px) {
-  .mission-hero {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (min-width: 769px) {
-  .mission-roadmap {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

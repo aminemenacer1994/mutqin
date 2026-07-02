@@ -162,6 +162,9 @@
               <button type="button" @click="openHelpLearningModal">
                 <i class="bi bi-question-circle"></i><span>{{ helpLearningUi.title }}</span>
               </button>
+              <button v-if="hasVerses" type="button" @click="openRetentionQuiz">
+                <i class="bi bi-ui-checks-grid"></i><span>{{ t('memorisation.actions.retentionCheck') }}</span>
+              </button>
               <!--
                 <button type="button" @click="openAdvancedControls">
                   <i class="bi bi-sliders"></i><span>{{ t('common.controls') }}</span>
@@ -251,6 +254,10 @@
         <i class="bi bi-arrow-repeat"></i>
         {{ t('memorisation.actions.repeatRange') }}
       </button>
+      <button class="action-btn" @click="openRetentionQuiz">
+        <i class="bi bi-ui-checks-grid"></i>
+        {{ t('memorisation.actions.retentionCheck') }}
+      </button>
     </div>
   </section>
 </div>
@@ -272,7 +279,7 @@
                 </div>
               </div>
             </section>
-            <div v-if="!isSessionCompleted && readingViewMode === 'mushaf'" class="mushaf-workspace container-fluid px-0">
+            <div v-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace container-fluid px-0">
               <div class="mushaf-frame">
                 <div class="mushaf-pill-bar mushaf-pill-toolbar">
                   <div class="mushaf-toolbar-cluster mushaf-toolbar-cluster-start">
@@ -407,7 +414,7 @@
                 </div>
               </div>
             </div>
-            <div v-else-if="!isSessionCompleted" class="verses-grid">
+            <div v-else-if="shouldShowReadingWorkspace" class="verses-grid">
               <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{
                 active: isVerseVisuallyActive(verse.key),
                 'serious-training': false,
@@ -2828,6 +2835,181 @@
       </section>
     </div>
 
+  </div>
+
+  <div v-if="quizActive" class="quiz-overlay" @click.self="stopQuiz">
+    <div class="quiz-card" role="dialog" aria-modal="true" :aria-labelledby="'quizModalTitle'">
+      <div class="quiz-top">
+        <div class="quiz-title-wrap">
+          <div id="quizModalTitle" class="quiz-title">{{ t('memorisation.quiz.title') }}</div>
+          <div class="quiz-title-sub">{{ quizContextLabel }}</div>
+        </div>
+        <button type="button" class="quiz-x" :aria-label="t('common.close')" @click="stopQuiz">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div v-if="!quizSummaryActive" class="quiz-meta">
+        <span class="quiz-chip">
+          <i class="bi bi-ui-checks-grid"></i>
+          {{ t('memorisation.quiz.progress', { current: quizIndex + 1, total: quizQueue.length }) }}
+        </span>
+        <span v-if="quizCard" class="quiz-chip">
+          <i class="bi bi-diagram-3"></i>
+          {{ quizCardTypeLabel }}
+        </span>
+        <span v-if="quizCard?.key" class="quiz-chip">
+          <i class="bi bi-bookmark"></i>
+          {{ quizCard.key }}
+        </span>
+      </div>
+
+      <div v-if="quizSummaryActive" class="quiz-body">
+        <div class="quiz-summary-title">{{ t('memorisation.quiz.summaryTitle') }}</div>
+        <div class="quiz-summary-grid">
+          <div class="quiz-summary-item">
+            <div class="quiz-summary-k">{{ t('memorisation.quiz.score') }}</div>
+            <div class="quiz-summary-v">{{ quizSummary.correct }} / {{ quizSummary.total }}</div>
+          </div>
+          <div class="quiz-summary-item">
+            <div class="quiz-summary-k">{{ t('memorisation.quiz.accuracy') }}</div>
+            <div class="quiz-summary-v">{{ quizSummary.accuracy }}%</div>
+          </div>
+          <div class="quiz-summary-item">
+            <div class="quiz-summary-k">{{ t('memorisation.quiz.avgGrade') }}</div>
+            <div class="quiz-summary-v">{{ quizSummary.avgQuality }}</div>
+          </div>
+          <div class="quiz-summary-item">
+            <div class="quiz-summary-k">{{ t('memorisation.quiz.time') }}</div>
+            <div class="quiz-summary-v">{{ quizSummary.timeSpent }}</div>
+          </div>
+          <div class="quiz-summary-item">
+            <div class="quiz-summary-k">{{ t('memorisation.quiz.planProgress') }}</div>
+            <div class="quiz-summary-v">{{ quizSummary.planProgress }}</div>
+          </div>
+          <div class="quiz-summary-item">
+            <div class="quiz-summary-k">{{ t('memorisation.quiz.bestSkill') }}</div>
+            <div class="quiz-summary-v">{{ quizSummary.bestSkill }}</div>
+          </div>
+        </div>
+        <div v-if="quizSummary.skills.length" class="quiz-summary-skill-grid">
+          <div v-for="skill in quizSummary.skills" :key="skill.key" class="quiz-summary-skill">
+            <div class="quiz-summary-k">{{ skill.label }}</div>
+            <div class="quiz-summary-v">{{ skill.correct }}/{{ skill.total }}</div>
+            <div class="quiz-summary-s">{{ t('memorisation.quiz.accuracySuffix', { value: skill.accuracy }) }}</div>
+          </div>
+        </div>
+        <div class="quiz-summary-explain">
+          <div class="quiz-summary-k">{{ t('memorisation.quiz.whatNext') }}</div>
+          <div class="quiz-summary-s">{{ quizSummary.explanation }}</div>
+        </div>
+        <div class="quiz-summary-explain">
+          <div class="quiz-summary-k">{{ t('memorisation.quiz.engineSync') }}</div>
+          <div class="quiz-summary-s">{{ quizSummary.engineLink }}</div>
+        </div>
+        <div v-if="quizSummary.mistakes?.length" class="quiz-summary-mistakes">
+          <div class="quiz-summary-k">{{ t('memorisation.quiz.mistakes') }}</div>
+          <div class="quiz-summary-tags">
+            <span v-for="mistake in quizSummary.mistakes.slice(0, 6)" :key="mistake" class="quiz-tag">{{ mistake }}</span>
+          </div>
+        </div>
+        <div class="quiz-actions">
+          <button type="button" class="tools-btn tools-btn-ghost" @click="stopQuiz">{{ t('memorisation.quiz.close') }}</button>
+          <button type="button" class="tools-btn tools-btn-primary" @click="restartQuiz">{{ t('memorisation.quiz.startAgain') }}</button>
+        </div>
+      </div>
+
+      <div v-else-if="quizCard" class="quiz-body">
+        <div v-if="quizCard.type === 'flashcard'">
+          <div class="quiz-section-label">
+            <i class="bi bi-layers"></i>
+            <span>{{ t('memorisation.quiz.flashcardPrompt') }}</span>
+          </div>
+          <div class="quiz-prompt" dir="rtl" v-html="quizCard.arabic"></div>
+          <button v-if="!quizRevealed" type="button" class="quiz-reveal" @click="quizRevealed = true">
+            <i class="bi bi-eye"></i>
+            <span>{{ t('memorisation.quiz.showAnswer') }}</span>
+          </button>
+          <div v-if="quizRevealed" class="quiz-hint">{{ quizCard.translation || t('memorisation.quiz.gradeYourself') }}</div>
+        </div>
+
+        <div v-else-if="quizCard.type === 'mcq'">
+          <div class="quiz-section-label">
+            <i class="bi bi-list-check"></i>
+            <span>{{ t('memorisation.quiz.mcqPrompt') }}</span>
+          </div>
+          <div class="quiz-prompt" dir="rtl" v-html="quizCard.arabic"></div>
+          <div class="quiz-options">
+            <label v-for="opt in quizOptions" :key="opt.key" class="quiz-opt">
+              <input type="radio" name="quiz-mcq" :value="opt.key" v-model="quizAnswer">
+              <span>{{ opt.label }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div v-else-if="quizCard.type === 'audio_mcq'">
+          <div class="quiz-section-label">
+            <i class="bi bi-ear"></i>
+            <span>{{ t('memorisation.quiz.audioPrompt') }}</span>
+          </div>
+          <button type="button" class="quiz-reveal" @click="playVerse(quizCard)">
+            <i class="bi bi-arrow-repeat"></i>
+            <span>{{ t('memorisation.quiz.replayAudio') }}</span>
+          </button>
+          <div class="quiz-options">
+            <label v-for="opt in quizOptions" :key="opt.key" class="quiz-opt">
+              <input type="radio" name="quiz-audio-mcq" :value="opt.key" v-model="quizAnswer">
+              <span>{{ opt.label }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div v-else>
+          <div class="quiz-section-label">
+            <i class="bi bi-pencil-square"></i>
+            <span>{{ t('memorisation.quiz.blankPrompt') }}</span>
+          </div>
+          <div class="quiz-prompt">{{ quizCard.prompt }}</div>
+          <input class="input quiz-input" v-model="quizAnswer" :placeholder="t('memorisation.quiz.blankPlaceholder')"
+            @keyup.enter="submitQuiz()">
+        </div>
+      </div>
+
+      <div v-if="!quizSummaryActive" class="quiz-actions">
+        <button type="button" class="quiz-action quiz-action-ghost" @click="stopQuiz">
+          <i class="bi bi-stop-circle"></i>
+          <span>{{ t('memorisation.quiz.stop') }}</span>
+        </button>
+        <button v-if="quizCard?.type === 'flashcard' && !quizRevealed" type="button" class="tools-btn tools-btn-ghost"
+          @click="quizRevealed = true">
+          <i class="bi bi-eye"></i>
+          <span>{{ t('memorisation.quiz.reveal') }}</span>
+        </button>
+        <button v-if="quizCard && quizCard.type !== 'flashcard'" type="button" class="quiz-action quiz-action-primary"
+          @click="submitQuiz()">
+          <i class="bi bi-arrow-right-circle"></i>
+          <span>{{ t('memorisation.quiz.next') }}</span>
+        </button>
+        <div v-else-if="quizCard?.type === 'flashcard' && quizRevealed" class="quiz-grade">
+          <button type="button" class="qg" @click="submitQuiz(2)">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            <span>{{ t('memorisation.quiz.again') }}</span>
+          </button>
+          <button type="button" class="qg" @click="submitQuiz(3)">
+            <i class="bi bi-slash-circle"></i>
+            <span>{{ t('memorisation.quiz.hard') }}</span>
+          </button>
+          <button type="button" class="qg primary" @click="submitQuiz(4)">
+            <i class="bi bi-check2-circle"></i>
+            <span>{{ t('memorisation.quiz.good') }}</span>
+          </button>
+          <button type="button" class="qg" @click="submitQuiz(5)">
+            <i class="bi bi-stars"></i>
+            <span>{{ t('memorisation.quiz.easy') }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 

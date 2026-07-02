@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
@@ -9,73 +8,27 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Admin\ContactMessageController;
-
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MemorisationSyncController;
-use Laravel\Socialite\Facades\Socialite;
-
-
 
 // Authentication routes (from laravel/ui)
 Auth::routes();
 
-Route::get('/auth/redirect', function () {
-    $provider = Socialite::driver('google');
-
-    if (method_exists($provider, 'stateless')) {
-        $provider = $provider->stateless();
-    }
-
-    return $provider->redirect();
-})->name('auth.google.redirect');
-
-Route::get('/auth/callback', function () {
-    try {
-        $provider = Socialite::driver('google');
-
-        if (method_exists($provider, 'stateless')) {
-            $provider = $provider->stateless();
-        }
-
-        $googleUser = $provider->user();
-        
-        $user = User::updateOrCreate(
-            ['email' => $googleUser->email],
-            [
-                'name' => $googleUser->name,
-                'google_id' => $googleUser->id,
-                'avatar' => $googleUser->avatar,
-                'password' => bcrypt(uniqid()), // ← ADD THIS LINE
-                'email_verified_at' => now(),
-            ]
-        );
-        
-        Auth::login($user);
-        
-        return redirect()->route('memorisation');
-        
-    } catch (\Exception $e) {
-        return redirect()->route('login')->with('error', 'Google login failed: ' . $e->getMessage());
-    }
-})->name('auth.google.callback');
-
-// Logout Route
-Route::post('/logout', function () {
-    Auth::logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-
-    return redirect()->route('home');
-})->name('logout');
+Route::get('/auth/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+Route::get('/auth/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
 // Public routes
 Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('memorisation');
+    }
+
     return view('home');
 })->name('home');
 
 Route::get('/onboarding', function () {
-    return redirect()->route('home');
+    return redirect()->route('memorisation');
 })->name('onboarding.page');
 
 Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
@@ -128,7 +81,7 @@ Route::get('/memorisation/audio-download', function (Request $request) {
 
 // Protected routes (require authentication)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
@@ -238,5 +191,5 @@ Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')
 });
 
 Route::get('/home', function () {
-    return redirect('/');
+    return redirect()->route('memorisation');
 })->name('home.legacy');
