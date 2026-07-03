@@ -70,7 +70,7 @@
   min-height: calc(100vh - 70px);
   display: flex;
   align-items: center;
-  padding: calc(70px + clamp(2.6rem, 5vw, 4.4rem)) 2.5rem clamp(3.2rem, 5vw, 4.8rem);
+  padding: 2.5rem 2.5rem clamp(3.2rem, 5vw, 4.8rem);
   position: relative;
   overflow: hidden;
   color: var(--text);
@@ -405,10 +405,12 @@
 
 /* Features Grid */
 .features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-  gap: 1rem;
   margin-top: 0;
+}
+
+.features-grid .feature-grid-item {
+  padding: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .feature-card {
@@ -1103,7 +1105,7 @@
 
 [data-theme="dark"] .faq-accordion .accordion-button:not(.collapsed) {
   background: rgba(224, 173, 114, 0.14);
-  color: #ffd19b;
+  color: var(--text);
 }
 
 [data-theme="dark"] .faq-accordion .accordion-body {

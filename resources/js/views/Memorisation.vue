@@ -884,7 +884,7 @@
               </div>
             </section>
 
-            <section class="sheet-section">
+            <section class="sheet-section retention-check-section">
               <button class="sheet-toggle" @click="toggleSection('quiz_lab')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-ui-checks-grid"></i></span>

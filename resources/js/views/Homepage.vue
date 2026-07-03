@@ -56,8 +56,8 @@
         <div class="section-kicker"><i class="bi bi-soundwave"></i> {{ t('homepage.features.kicker') }}</div>
         <h2 class="section-title">{{ t('homepage.features.title') }}</h2>
         <p class="section-subtitle">{{ t('homepage.features.subtitle') }}</p>
-        <div class="features-grid">
-          <div class="feature-grid-item" v-for="feature in features" :key="feature.id" data-aos="zoom-in">
+        <div class="features-grid row">
+          <div class="feature-grid-item col-md-4" v-for="feature in features" :key="feature.id" data-aos="zoom-in">
             <div class="feature-card h-100">
               <div class="feature-topline">
                 <div class="feature-icon"><i :class="feature.icon"></i></div>

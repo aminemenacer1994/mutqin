@@ -5244,6 +5244,17 @@ html {
 .font-dropdown-trigger:hover {
   background: var(--accent-light);
   border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.font-dropdown-trigger:active,
+.font-dropdown-trigger.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
 .font-dropdown-trigger .bi-chevron-down {
@@ -11374,7 +11385,7 @@ html {
 
 .memorisation-checker-modal .memorisation-checker-ayah-actions .self-check-ayah-action.active, .memorisation-checker-modal .memorisation-checker-ayah-actions .self-check-ayah-action:hover {
   background: rgba(181, 130, 74, 0.22);
-  color: #ffe0a6;
+  color: var(--text);
 }
 
 .memorisation-checker-modal .recitation-result-stat, .memorisation-checker-modal .recitation-next-card {
@@ -15591,7 +15602,7 @@ button:active {
 [data-theme="dark"] .recitation-result-stat.tone-amber, [data-theme="dark"] .recitation-word-chip.word-partial {
   border-color: rgba(246, 199, 107, 0.36);
   background: rgba(246, 199, 107, 0.14);
-  color: #ffd986;
+  color: var(--text-secondary);
 }
 
 [data-theme="dark"] .recitation-result-stat.tone-red, [data-theme="dark"] .recitation-word-chip.word-incorrect {
@@ -16236,7 +16247,7 @@ button:active {
 [data-theme="dark"] .recitation-review-ayah .recitation-word-partial, [data-theme="dark"] .recitation-review-ayah .wbw-word.recitation-word-partial, [data-theme="dark"] .recitation-review-ayah word.recitation-word-partial {
   border-color: rgba(246, 199, 107, 0.36);
   background: rgba(246, 199, 107, 0.14);
-  color: #ffd986;
+  color: var(--text-secondary);
 }
 
 [data-theme="dark"] .recitation-review-ayah .recitation-word-incorrect, [data-theme="dark"] .recitation-review-ayah .wbw-word.recitation-word-incorrect, [data-theme="dark"] .recitation-review-ayah word.recitation-word-incorrect {
@@ -18396,6 +18407,32 @@ textarea {
   color: var(--text);
   box-shadow: 0 12px 28px rgba(47, 31, 18, 0.08);
   opacity: 1;
+  transition: all 0.2s ease;
+}
+
+.quick-font-dropdown .font-dropdown-trigger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px rgba(47, 31, 18, 0.12);
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 1);
+}
+
+@media (max-width: 768px) {
+  .font-dropdown-trigger {
+    font-weight: 600;
+    border-width: 2px;
+    background: var(--accent-light);
+  }
+  
+  .quick-font-dropdown .font-dropdown-trigger {
+    font-weight: 600;
+    border-width: 2px;
+  }
+  
+  /* Hide retention check (quiz lab) section on mobile */
+  .retention-check-section {
+    display: none !important;
+  }
 }
 
 .quick-font-dropdown .font-dropdown-trigger span, .quick-font-dropdown .font-dropdown-trigger i, .top-card-menu button span, .top-card-menu button i {
