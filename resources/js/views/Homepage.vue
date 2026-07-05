@@ -608,10 +608,10 @@ export default {
       t('homepage.planFeatures.anchorMode'),
       t('homepage.planFeatures.basicAnalytics'),
       t('homepage.planFeatures.manualSelfAssessment'),
-      t('homepage.planFeatures.hifzPlan'),
-      t('homepage.planFeatures.spacedRetention'),
-      t('homepage.planFeatures.adaptiveRevision'),
-      t('homepage.planFeatures.progressTracking')
+      // t('homepage.planFeatures.hifzPlan'),
+      // t('homepage.planFeatures.spacedRetention'),
+      // t('homepage.planFeatures.adaptiveRevision'),
+      // t('homepage.planFeatures.progressTracking')
     ]);
 
     const proFeatures = computed(() => [
@@ -623,11 +623,11 @@ export default {
       t('homepage.planFeatures.manualSelfAssessmentPlus'),
       t('homepage.planFeatures.advancedAnalysis'),
       t('homepage.planFeatures.offlineDownloads'),
-      t('homepage.planFeatures.hifzPlan'),
-      t('homepage.planFeatures.spacedRetention'),
-      t('homepage.planFeatures.voiceHifzBuilder'),
-      t('homepage.planFeatures.adaptiveRevision'),
-      t('homepage.planFeatures.progressTracking')
+      // t('homepage.planFeatures.hifzPlan'),
+      // t('homepage.planFeatures.spacedRetention'),
+      // t('homepage.planFeatures.voiceHifzBuilder'),
+      // t('homepage.planFeatures.adaptiveRevision'),
+      // t('homepage.planFeatures.progressTracking')
     ]);
 
     const comparisonRows = computed(() => [
@@ -640,13 +640,13 @@ export default {
       { id: 'anchorMode', feature: t('homepage.comparison.anchorMode'), free: false, premium: true, pro: true },
       { id: 'manualRecording', feature: t('homepage.comparison.manualRecording'), free: false, premium: true, pro: true },
       { id: 'aiRecitationReview', feature: t('homepage.comparison.aiRecitationReview'), free: false, premium: false, pro: true },
-      { id: 'aiMemorisationChecker', feature: t('homepage.comparison.aiMemorisationChecker'), free: false, premium: false, pro: true },
-      { id: 'hifzPlan', feature: t('homepage.comparison.hifzPlan'), free: false, premium: true, pro: true },
-      { id: 'spacedRetention', feature: t('homepage.comparison.spacedRetention'), free: false, premium: true, pro: true },
-      { id: 'voiceHifzBuilder', feature: t('homepage.comparison.voiceHifzBuilder'), free: false, premium: false, pro: true },
-      { id: 'adaptiveRevision', feature: t('homepage.comparison.adaptiveRevision'), free: false, premium: true, pro: true },
-      { id: 'progressTracking', feature: t('homepage.comparison.progressTracking'), free: true, premium: true, pro: true },
-      { id: 'advancedAnalytics', feature: t('homepage.comparison.advancedAnalytics'), free: false, premium: false, pro: true },
+      // { id: 'aiMemorisationChecker', feature: t('homepage.comparison.aiMemorisationChecker'), free: false, premium: false, pro: true },
+      // { id: 'hifzPlan', feature: t('homepage.comparison.hifzPlan'), free: false, premium: true, pro: true },
+      // { id: 'spacedRetention', feature: t('homepage.comparison.spacedRetention'), free: false, premium: true, pro: true },
+      // { id: 'voiceHifzBuilder', feature: t('homepage.comparison.voiceHifzBuilder'), free: false, premium: false, pro: true },
+      // { id: 'adaptiveRevision', feature: t('homepage.comparison.adaptiveRevision'), free: false, premium: true, pro: true },
+      // { id: 'progressTracking', feature: t('homepage.comparison.progressTracking'), free: true, premium: true, pro: true },
+      // { id: 'advancedAnalytics', feature: t('homepage.comparison.advancedAnalytics'), free: false, premium: false, pro: true },
       { id: 'offlineDownloads', feature: t('homepage.comparison.offlineDownloads'), free: false, premium: false, pro: true }
     ]);
     

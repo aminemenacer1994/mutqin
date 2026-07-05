@@ -11498,8 +11498,7 @@ html {
   --bg-body: #f7f3ef;
   --surface: #ffffff;
   --surface-elevated: #fffbf7;
-  --border-light: rgba(100, 70, 40, 0.12);
-  --border-medium: rgba(100, 70, 40, 0.2);
+
   --text-primary: #231f1c;
   --text-secondary: #6b5e52;
   --text-muted: #9b8e82;
@@ -11512,8 +11511,6 @@ html {
   --error: #c2573a;
   --radius-card: 20px;
   --radius-element: 14px;
-  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
   --transition: all 0.2s ease;
 }
 

@@ -25797,10 +25797,21 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       return [t('homepage.planFeatures.sessionSetup'), t('homepage.planFeatures.savedSessions3'), t('homepage.planFeatures.basicAnalytics'), t('homepage.planFeatures.focusMode')];
     });
     var premiumFeatures = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
-      return [t('homepage.planFeatures.sessionSetup'), t('homepage.planFeatures.savedSessions5'), t('homepage.planFeatures.focusMode'), t('homepage.planFeatures.blurringMethod'), t('homepage.planFeatures.chainingMethod'), t('homepage.planFeatures.anchorMode'), t('homepage.planFeatures.basicAnalytics'), t('homepage.planFeatures.manualSelfAssessment'), t('homepage.planFeatures.hifzPlan'), t('homepage.planFeatures.spacedRetention'), t('homepage.planFeatures.adaptiveRevision'), t('homepage.planFeatures.progressTracking')];
+      return [t('homepage.planFeatures.sessionSetup'), t('homepage.planFeatures.savedSessions5'), t('homepage.planFeatures.focusMode'), t('homepage.planFeatures.blurringMethod'), t('homepage.planFeatures.chainingMethod'), t('homepage.planFeatures.anchorMode'), t('homepage.planFeatures.basicAnalytics'), t('homepage.planFeatures.manualSelfAssessment')
+      // t('homepage.planFeatures.hifzPlan'),
+      // t('homepage.planFeatures.spacedRetention'),
+      // t('homepage.planFeatures.adaptiveRevision'),
+      // t('homepage.planFeatures.progressTracking')
+      ];
     });
     var proFeatures = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
-      return [t('homepage.planFeatures.sessionSetup'), t('homepage.planFeatures.savedSessionsUnlimited'), t('homepage.planFeatures.allTechniques'), t('homepage.planFeatures.aiRecitation'), t('homepage.planFeatures.aiMemorisationChecker'), t('homepage.planFeatures.manualSelfAssessmentPlus'), t('homepage.planFeatures.advancedAnalysis'), t('homepage.planFeatures.offlineDownloads'), t('homepage.planFeatures.hifzPlan'), t('homepage.planFeatures.spacedRetention'), t('homepage.planFeatures.voiceHifzBuilder'), t('homepage.planFeatures.adaptiveRevision'), t('homepage.planFeatures.progressTracking')];
+      return [t('homepage.planFeatures.sessionSetup'), t('homepage.planFeatures.savedSessionsUnlimited'), t('homepage.planFeatures.allTechniques'), t('homepage.planFeatures.aiRecitation'), t('homepage.planFeatures.aiMemorisationChecker'), t('homepage.planFeatures.manualSelfAssessmentPlus'), t('homepage.planFeatures.advancedAnalysis'), t('homepage.planFeatures.offlineDownloads')
+      // t('homepage.planFeatures.hifzPlan'),
+      // t('homepage.planFeatures.spacedRetention'),
+      // t('homepage.planFeatures.voiceHifzBuilder'),
+      // t('homepage.planFeatures.adaptiveRevision'),
+      // t('homepage.planFeatures.progressTracking')
+      ];
     });
     var comparisonRows = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
       return [{
@@ -25857,49 +25868,15 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
         free: false,
         premium: false,
         pro: true
-      }, {
-        id: 'aiMemorisationChecker',
-        feature: t('homepage.comparison.aiMemorisationChecker'),
-        free: false,
-        premium: false,
-        pro: true
-      }, {
-        id: 'hifzPlan',
-        feature: t('homepage.comparison.hifzPlan'),
-        free: false,
-        premium: true,
-        pro: true
-      }, {
-        id: 'spacedRetention',
-        feature: t('homepage.comparison.spacedRetention'),
-        free: false,
-        premium: true,
-        pro: true
-      }, {
-        id: 'voiceHifzBuilder',
-        feature: t('homepage.comparison.voiceHifzBuilder'),
-        free: false,
-        premium: false,
-        pro: true
-      }, {
-        id: 'adaptiveRevision',
-        feature: t('homepage.comparison.adaptiveRevision'),
-        free: false,
-        premium: true,
-        pro: true
-      }, {
-        id: 'progressTracking',
-        feature: t('homepage.comparison.progressTracking'),
-        free: true,
-        premium: true,
-        pro: true
-      }, {
-        id: 'advancedAnalytics',
-        feature: t('homepage.comparison.advancedAnalytics'),
-        free: false,
-        premium: false,
-        pro: true
-      }, {
+      },
+      // { id: 'aiMemorisationChecker', feature: t('homepage.comparison.aiMemorisationChecker'), free: false, premium: false, pro: true },
+      // { id: 'hifzPlan', feature: t('homepage.comparison.hifzPlan'), free: false, premium: true, pro: true },
+      // { id: 'spacedRetention', feature: t('homepage.comparison.spacedRetention'), free: false, premium: true, pro: true },
+      // { id: 'voiceHifzBuilder', feature: t('homepage.comparison.voiceHifzBuilder'), free: false, premium: false, pro: true },
+      // { id: 'adaptiveRevision', feature: t('homepage.comparison.adaptiveRevision'), free: false, premium: true, pro: true },
+      // { id: 'progressTracking', feature: t('homepage.comparison.progressTracking'), free: true, premium: true, pro: true },
+      // { id: 'advancedAnalytics', feature: t('homepage.comparison.advancedAnalytics'), free: false, premium: false, pro: true },
+      {
         id: 'offlineDownloads',
         feature: t('homepage.comparison.offlineDownloads'),
         free: false,

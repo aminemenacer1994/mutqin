@@ -24,11 +24,10 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-W4K8J2T0SG');
     </script>
     <style>
-        /* Theme Variables */
+        /* Theme Variables - NO SHADOWS */
         :root {
             color-scheme: light;
             --bg: #fdf9f2;
@@ -51,10 +50,7 @@
             --danger-text: #913232;
             --warning-bg: rgba(196, 154, 108, 0.16);
             --warning-text: #8b653b;
-            --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
-            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
-
+            
             /* Responsive system tokens */
             --nav-h: 70px;
             --shell-max: 1400px;
@@ -88,9 +84,6 @@
             --danger-text: #ffd1ca;
             --warning-bg: rgba(196, 154, 108, 0.18);
             --warning-text: #ffd6a7;
-            --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.24);
-            --shadow-md: 0 16px 34px rgba(0, 0, 0, 0.32);
-            --shadow-lg: 0 28px 62px rgba(0, 0, 0, 0.42);
         }
 
         [data-theme="sepia"] {
@@ -223,7 +216,7 @@
         .accordion-button:not(.collapsed) {
             background: var(--surface-strong);
             color: var(--text);
-            box-shadow: none;
+            box-shadow: none !important;
         }
 
         .accordion-button:not(.collapsed) {
@@ -263,7 +256,7 @@
             text-align: right;
         }
 
-        /* App Navbar */
+        /* App Navbar - NO SHADOWS */
         .app-navbar {
             background: var(--surface-strong);
             backdrop-filter: blur(12px);
@@ -473,11 +466,10 @@
             border: 1px solid var(--border);
             border-radius: 16px;
             background: var(--surface-strong);
-            box-shadow: var(--shadow-lg);
             z-index: 5200;
         }
 
-        /* Dropdown Styles */
+        /* Dropdown Styles - NO SHADOWS */
         .dropdown {
             position: relative;
             display: inline-block;
@@ -535,7 +527,6 @@
             background: var(--surface-strong);
             border: 1px solid var(--border);
             border-radius: 16px;
-            box-shadow: var(--shadow-lg);
             padding: 8px;
             min-width: 220px;
             opacity: 0;
@@ -639,7 +630,7 @@
             }
         }
 
-@media (prefers-reduced-motion: reduce) {
+        @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 scroll-behavior: auto !important;
                 transition-duration: 0.01ms !important;
@@ -975,7 +966,7 @@
             background: color-mix(in srgb, var(--surface) 88%, var(--field-bg));
             color: var(--text);
             padding-inline: 16px;
-            box-shadow: none;
+            box-shadow: none !important;
         }
 
         .auth-form-wrap .form-control:focus {
@@ -1121,7 +1112,7 @@
             }
         }
 
-.billing-page {
+        .billing-page {
             padding-block: 42px 64px;
         }
 
@@ -1148,7 +1139,6 @@
                 radial-gradient(circle at top left, color-mix(in srgb, var(--field-bg-strong) 68%, transparent), transparent 34%),
                 linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--surface-strong)) 0%, color-mix(in srgb, var(--surface-strong) 88%, var(--surface-elevated)) 100%);
             border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
-            box-shadow: var(--shadow-lg);
         }
 
         .admin-page-head {
@@ -1191,7 +1181,6 @@
             border-radius: 24px;
             background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
             border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
-            box-shadow: 0 18px 36px rgba(72, 54, 36, 0.08);
             backdrop-filter: blur(14px);
         }
 
@@ -1287,7 +1276,6 @@
             border: 0;
             border-radius: 0;
             background: transparent;
-            box-shadow: none;
         }
 
         .profile-pane {
@@ -1295,7 +1283,6 @@
             border-radius: 28px;
             background: color-mix(in srgb, var(--surface-strong) 92%, var(--surface-elevated));
             border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
-            box-shadow: 0 22px 40px rgba(72, 54, 36, 0.07);
         }
 
         .profile-card-wide {
@@ -1509,7 +1496,6 @@
             background: var(--surface-strong);
             border: 1px solid var(--border);
             border-radius: 8px;
-            box-shadow: var(--shadow-sm);
         }
 
         .billing-status-panel {
@@ -1616,12 +1602,11 @@
 
         .billing-card-featured {
             border-color: var(--accent);
-            box-shadow: var(--shadow-md);
         }
 
         .billing-card-selected {
             border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-light), var(--shadow-md);
+            box-shadow: 0 0 0 3px var(--accent-light);
         }
 
         .billing-pill {
@@ -1724,9 +1709,7 @@
         .billing-plan-selected-action {
             box-shadow: 0 0 0 3px var(--accent-light);
         }
-
-</style>
-
+    </style>
 </head>
 <body dir="{{ $appDirection }}">
     <a class="skip-link" href="#mainContent">{{ __('ui.skip_main') }}</a>
@@ -1786,7 +1769,7 @@
                     <ul class="dropdown-menu dropdown-menu-end app-lang-menu">
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="en">🇬🇧 {{ __('ui.english') }}</button></li>
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="fr">🇫🇷 {{ __('ui.french') }}</button></li>
-                        <li><button type="button" class="dropdown-item lang-btn" data-locale="ar">🇸🇦 {{ __('ui.arabic') }}</button></li>
+                        <!-- <li><button type="button" class="dropdown-item lang-btn" data-locale="ar">🇸🇦 {{ __('ui.arabic') }}</button></li> -->
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="id">🇮🇩 {{ __('ui.indonesian') }}</button></li>
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="tr">🇹🇷 {{ __('ui.turkish') }}</button></li>
                     </ul>
@@ -1811,7 +1794,6 @@
                                     </a>
                                 </li>
                             @endif
-                            <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                                     @csrf

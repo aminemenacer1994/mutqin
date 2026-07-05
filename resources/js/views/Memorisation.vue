@@ -80,116 +80,116 @@
         </div>
         <div v-else class="workspace">
           <!-- In your template, replace the workspace-shell section -->
-<section
-  v-if="shouldRenderWorkspaceShell && !isOnboardingExperienceActive"
-  class="workspace-shell"
-  :class="{ collapsed: mainCardCollapsed }"
-  :data-reading-mode="readingViewMode"
-  aria-label="Session overview"
->
-  <div class="workspace-shell-head">
-    <div class="workspace-shell-copy">
-      <span class="workspace-shell-kicker">{{ t('memorisation.sessionOverview.kicker') }}</span>
-      <h1 class="workspace-shell-main-title">{{ topCardSessionLabel }}</h1>
-      <div v-if="reviewPriorityLabel" v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
-        <span>{{ reviewPriorityLabel }}</span>
-      </div>
-    </div>
-    <div class="workspace-shell-actions">
-      <div v-if="hasVerses" class="workspace-header-view-controls quick-right-controls" aria-label="View controls">
-        <button type="button" class="view-mode-switch" :class="{ 'is-mushaf': readingViewMode === 'mushaf' }"
-          @click="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
-          :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'" aria-label="Toggle mushaf mode">
-          <span class="view-mode-switch-label">{{ t('memorisation.view.stacked') }}</span>
-          <span class="view-mode-switch-track" aria-hidden="true">
-            <span class="view-mode-switch-thumb">
-              <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-book' : 'bi-view-stacked'"></i>
-            </span>
-          </span>
-          <span class="view-mode-switch-label">{{ t('memorisation.view.mushaf') }}</span>
-        </button>
-        <div v-if="readingViewMode !== 'mushaf'" class="font-dropdown quick-font-dropdown" @click.stop>
-          <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
-            <i class="bi bi-text-paragraph" aria-hidden="true"></i>
-            <span class="d-none d-sm-inline">{{ getCurrentFontLabel() }}</span>
-            <span class="d-sm-none">{{ t('memorisation.reading.font') }}</span>
-            <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }" aria-hidden="true"></i>
-          </button>
-          <transition name="dropdown-fade">
-            <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
-              <button v-for="font in quranFontOptions" :key="font.value" type="button" class="font-option"
-                :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
-                <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
-                <span>{{ font.label }}</span>
-                <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-              </button>
+        <section
+          v-if="shouldRenderWorkspaceShell && !isOnboardingExperienceActive"
+          class="workspace-shell"
+          :class="{ collapsed: mainCardCollapsed }"
+          :data-reading-mode="readingViewMode"
+          aria-label="Session overview"
+        >
+        <div class="workspace-shell-head">
+          <div class="workspace-shell-copy">
+            <span class="workspace-shell-kicker">{{ t('memorisation.sessionOverview.kicker') }}</span>
+            <h1 class="workspace-shell-main-title">{{ topCardSessionLabel }}</h1>
+            <div v-if="reviewPriorityLabel" v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
+              <span>{{ reviewPriorityLabel }}</span>
             </div>
-          </transition>
-        </div>
-      </div>
-      <div class="action-buttons-group">
-        <button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls"
-          :title="t('memorisation.open_session_setup')" :aria-label="t('memorisation.open_session_setup')">
-          <i class="bi bi-plus-circle" aria-hidden="true"></i>
-          <span>{{ t('memorisation.open_session_setup') }}</span>
-        </button>
-        <button v-if="showHeaderSessionAction" class="action-btn action-btn-session" type="button"
-          @click="handleHeaderSessionAction" :title="headerSessionActionLabel" :aria-label="headerSessionActionLabel">
-          <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
-          <span>{{ headerSessionActionLabel }}</span>
-        </button>
-        <button v-if="hasSessionStarted && !isSessionCompleted" class="action-btn action-btn-secondary action-btn-exit" type="button"
-          @click="openSessionExitModal" title="End session" aria-label="End session">
-          <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-          <span class="d-none d-sm-inline">{{ t('sessionStatus.end') }}</span>
-        </button>
-        <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
-          title="Open session controls" aria-label="Open session controls">
-          <i class="bi bi-sliders" aria-hidden="true"></i>
-          <span v-if="!hasVerses">{{ t('memorisation.open_controls') }}</span>
-        </button>
-        <div v-if="hasVerses" class="top-card-menu-wrap" @click.stop>
-          <button class="top-card-ellipsis" type="button" @click="toggleTopCardMenu"
-            aria-label="Open reading options">
-            <i class="bi bi-three-dots-vertical"></i>
-          </button>
-          <transition name="dropdown-fade">
-            <div v-if="topCardMenuOpen" class="top-card-menu">
-              <button type="button" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')">
-                <i class="bi bi-translate"></i><span>{{ t('memorisation.reading.translation') }}</span>
+          </div>
+          <div class="workspace-shell-actions">
+            <div v-if="hasVerses" class="workspace-header-view-controls quick-right-controls" aria-label="View controls">
+              <button type="button" class="view-mode-switch" :class="{ 'is-mushaf': readingViewMode === 'mushaf' }"
+                @click="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
+                :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'" aria-label="Toggle mushaf mode">
+                <span class="view-mode-switch-label">{{ t('memorisation.view.stacked') }}</span>
+                <span class="view-mode-switch-track" aria-hidden="true">
+                  <span class="view-mode-switch-thumb">
+                    <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-book' : 'bi-view-stacked'"></i>
+                  </span>
+                </span>
+                <span class="view-mode-switch-label">{{ t('memorisation.view.mushaf') }}</span>
               </button>
-              <button type="button" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')">
-                <i class="bi bi-type"></i><span>{{ t('memorisation.reading.transliteration') }}</span>
-              </button>
-              <button type="button" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
-                <i class="bi bi-palette"></i><span>{{ t('memorisation.reading.tajweed') }}</span>
-              </button>
-              <button type="button" @click="openHelpLearningModal">
-                <i class="bi bi-question-circle"></i><span>{{ helpLearningUi.title }}</span>
-              </button>
-              <!--
-                <button type="button" @click="openAdvancedControls">
-                  <i class="bi bi-sliders"></i><span>{{ t('common.controls') }}</span>
+              <div v-if="readingViewMode !== 'mushaf'" class="font-dropdown quick-font-dropdown" @click.stop>
+                <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
+                  <i class="bi bi-text-paragraph" aria-hidden="true"></i>
+                  <span class="d-none d-sm-inline">{{ getCurrentFontLabel() }}</span>
+                  <span class="d-sm-none">{{ t('memorisation.reading.font') }}</span>
+                  <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }" aria-hidden="true"></i>
                 </button>
-                <button type="button" @click="openRecordingsLibrary">
-                  <i class="bi bi-collection-play"></i><span>{{ t('memorisation.view_recording') }}</span>
-                </button>
-                <button type="button" @click="openOnboardingFromTopMenu">
-                  <i class="bi bi-compass"></i><span>{{ t('memorisation.onboarding') }}</span>
-                </button>
-                <button @click="toggleKeyboardShortcuts" type="button">
-                  <i class="bi bi-keyboard"></i><span>{{ t('shortcuts.title') }}</span>
-                </button>
-              -->
-              <button @click="toggleFullScreen" type="button">
-                <i class="bi bi-arrows-fullscreen"></i><span>{{ t('memorisation.reading.fullScreen') }}</span>
-              </button>
+                <transition name="dropdown-fade">
+                  <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
+                    <button v-for="font in quranFontOptions" :key="font.value" type="button" class="font-option"
+                      :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
+                      <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
+                      <span>{{ font.label }}</span>
+                      <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </transition>
+              </div>
             </div>
-          </transition>
+            <div class="action-buttons-group">
+              <button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls"
+                :title="t('memorisation.open_session_setup')" :aria-label="t('memorisation.open_session_setup')">
+                <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                <span>{{ t('memorisation.open_session_setup') }}</span>
+              </button>
+              <button v-if="showHeaderSessionAction" class="action-btn action-btn-session" type="button"
+                @click="handleHeaderSessionAction" :title="headerSessionActionLabel" :aria-label="headerSessionActionLabel">
+                <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
+                <span>{{ headerSessionActionLabel }}</span>
+              </button>
+              <button v-if="hasSessionStarted && !isSessionCompleted" class="action-btn action-btn-secondary action-btn-exit" type="button"
+                @click="openSessionExitModal" title="End session" aria-label="End session">
+                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                <span class="d-none d-sm-inline">{{ t('sessionStatus.end') }}</span>
+              </button>
+              <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
+                title="Open session controls" aria-label="Open session controls">
+                <i class="bi bi-sliders" aria-hidden="true"></i>
+                <span v-if="!hasVerses">{{ t('memorisation.open_controls') }}</span>
+              </button>
+              <div v-if="hasVerses" class="top-card-menu-wrap" @click.stop>
+                <button class="top-card-ellipsis" type="button" @click="toggleTopCardMenu"
+                  aria-label="Open reading options">
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <transition name="dropdown-fade">
+                  <div v-if="topCardMenuOpen" class="top-card-menu">
+                    <button type="button" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')">
+                      <i class="bi bi-translate"></i><span>{{ t('memorisation.reading.translation') }}</span>
+                    </button>
+                    <button type="button" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')">
+                      <i class="bi bi-type"></i><span>{{ t('memorisation.reading.transliteration') }}</span>
+                    </button>
+                    <button type="button" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
+                      <i class="bi bi-palette"></i><span>{{ t('memorisation.reading.tajweed') }}</span>
+                    </button>
+                    <button type="button" @click="openHelpLearningModal">
+                      <i class="bi bi-question-circle"></i><span>{{ helpLearningUi.title }}</span>
+                    </button>
+                    <!--
+                      <button type="button" @click="openAdvancedControls">
+                        <i class="bi bi-sliders"></i><span>{{ t('common.controls') }}</span>
+                      </button>
+                      <button type="button" @click="openRecordingsLibrary">
+                        <i class="bi bi-collection-play"></i><span>{{ t('memorisation.view_recording') }}</span>
+                      </button>
+                      <button type="button" @click="openOnboardingFromTopMenu">
+                        <i class="bi bi-compass"></i><span>{{ t('memorisation.onboarding') }}</span>
+                      </button>
+                      <button @click="toggleKeyboardShortcuts" type="button">
+                        <i class="bi bi-keyboard"></i><span>{{ t('shortcuts.title') }}</span>
+                      </button>
+                    -->
+                    <button @click="toggleFullScreen" type="button">
+                      <i class="bi bi-arrows-fullscreen"></i><span>{{ t('memorisation.reading.fullScreen') }}</span>
+                    </button>
+                  </div>
+                </transition>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
 
   
 
@@ -884,7 +884,7 @@
               </div>
             </section>
 
-            <section class="sheet-section retention-check-section">
+            <!-- <section class="sheet-section retention-check-section">
               <button class="sheet-toggle" @click="toggleSection('quiz_lab')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-ui-checks-grid"></i></span>
@@ -938,7 +938,7 @@
                   </button>
                 </div>
               </div>
-            </section>
+            </section> -->
           </div>
 
           <!-- SAVED TAB -->
@@ -1393,9 +1393,9 @@
             <button class="btn-secondary" type="button" @click="exitSessionToSaveSession">
               {{ t('memorisation.save_session') }}
             </button>
-            <button class="btn-secondary" type="button" @click="exitSessionToRetentionCheck">
+            <!-- <button class="btn-secondary" type="button" @click="exitSessionToRetentionCheck">
               {{ t('memorisation.actions.retentionCheck') }}
-            </button>
+            </button> -->
           </div>
         </div>
         <div class="modal-footer session-exit-summary-footer">
@@ -2044,7 +2044,7 @@
                   <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
                   <span>{{ recitationCheckRecording ? 'Stop AI' : 'AI Recite' }}</span>
                 </button>
-                <button v-if="recitationCheckPanelOpen" class="self-check-toolbar-btn self-check-ayah-action-recall" type="button"
+                <!-- <button v-if="recitationCheckPanelOpen" class="self-check-toolbar-btn self-check-ayah-action-recall" type="button"
                   @click.stop="toggleAiRecallMode"
                   :class="{ active: aiRecallModeEnabled }"
                   :aria-pressed="aiRecallModeEnabled ? 'true' : 'false'"
@@ -2053,7 +2053,7 @@
                   :aria-label="t('memorisation.recall_mode')">
                   <i class="bi" :class="aiRecallModeEnabled ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
                   <span>{{ t('memorisation.recall_mode') }}</span>
-                </button>
+                </button> -->
                 <button v-if="aiRecallModeEnabled && recitationCheckRecording" class="self-check-toolbar-btn self-check-ayah-action-recall-peek" type="button"
                   @click.stop="revealCurrentRecallWord"
                   :title="t('memorisation.reveal_current_word')"
