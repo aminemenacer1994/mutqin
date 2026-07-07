@@ -29,6 +29,14 @@
     "download": "Download",
     "method": "Method"
   },
+  "auth": {
+    "continueGoogle": "Continue with Google",
+    "or": "or",
+    "emailAddress": "Email Address",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?"
+  },
   "nav": {
     "home": "Home",
     "memorisation": "Memorisation",

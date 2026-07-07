@@ -29,6 +29,14 @@
     "download": "Unduh",
     "method": "Metode"
   },
+  "auth": {
+    "continueGoogle": "Lanjutkan dengan Google",
+    "or": "atau",
+    "emailAddress": "Alamat Email",
+    "password": "Kata Sandi",
+    "rememberMe": "Ingat Saya",
+    "forgotPassword": "Lupa Kata Sandi?"
+  },
   "nav": {
     "home": "Beranda",
     "memorisation": "Hafalan",

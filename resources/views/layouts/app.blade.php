@@ -1,9 +1,11 @@
 @php
     $appLocale = $appLocale ?? app()->getLocale();
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
+    $appThemePreference = $appThemePreference ?? session('mutqin_theme', 'light-mode');
+    $appTheme = $appTheme ?? (str_starts_with($appThemePreference, 'dark') ? 'dark' : (str_starts_with($appThemePreference, 'sepia') ? 'sepia' : 'light'));
 @endphp
 <!doctype html>
-<html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="light">
+<html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="{{ $appTheme }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -361,7 +363,6 @@
             text-decoration: none;
             background: transparent;
             position: relative;
-            box-shadow: none !important;
         }
 
         .nav-link:hover {
@@ -386,6 +387,10 @@
             background: var(--accent);
             border-radius: 999px;
             opacity: 0.7;
+        }
+
+        .nav-link-home,
+        .nav-link-memorisation {
             box-shadow: none !important;
         }
 
@@ -630,7 +635,6 @@
 
             .nav-link {
                 padding: 10px 14px;
-                box-shadow: none !important;
             }
         }
 
@@ -655,6 +659,11 @@
         }
 
         .auth-shell {
+            --auth-form-max-width: 560px;
+            --auth-form-min-height: 640px;
+            --auth-form-title-size: clamp(2rem, 1.4vw + 1.65rem, 2.4rem);
+            --auth-form-copy-size: 1rem;
+            --auth-form-label-size: 0.95rem;
             min-height: calc(100dvh - var(--nav-h));
             display: flex;
             align-items: center;
@@ -712,7 +721,7 @@
         }
 
         .auth-stage-single {
-            width: min(100%, 640px);
+            width: min(100%, var(--auth-form-max-width));
             grid-template-columns: minmax(0, 1fr);
             margin-inline: auto;
         }
@@ -737,6 +746,7 @@
 
         .auth-panel-form {
             display: flex;
+            justify-content: center;
         }
 
         .auth-copy {
@@ -876,7 +886,7 @@
         .auth-form-subtitle {
             margin: 0;
             color: var(--text-muted);
-            font-size: 15px;
+            font-size: var(--auth-form-copy-size);
             line-height: 1.65;
         }
 
@@ -887,7 +897,7 @@
 
         .auth-form-title {
             margin: 0;
-            font-size: clamp(30px, 3vw, 40px);
+            font-size: var(--auth-form-title-size);
             line-height: 1.02;
             letter-spacing: -0.03em;
             color: var(--text);
@@ -895,8 +905,11 @@
 
         .auth-form-wrap {
             min-width: 0;
-            width: 100%;
+            width: min(100%, var(--auth-form-max-width));
+            max-width: var(--auth-form-max-width);
+            min-height: var(--auth-form-min-height);
             display: grid;
+            align-content: start;
             gap: 18px;
             padding: clamp(22px, 3vw, 34px);
             border-radius: 32px;
@@ -908,7 +921,6 @@
         }
 
         .auth-stage-single .auth-form-wrap {
-            max-width: 640px;
             margin-inline: auto;
         }
 
@@ -961,7 +973,7 @@
         .auth-form-wrap .form-label {
             color: var(--text);
             font-weight: 700;
-            font-size: 14px;
+            font-size: var(--auth-form-label-size);
         }
 
         .auth-form-wrap .form-control {
@@ -996,6 +1008,7 @@
             background: color-mix(in srgb, var(--surface) 88%, var(--surface-strong));
             color: var(--text);
             font-weight: 700;
+            font-size: var(--auth-form-label-size);
             text-decoration: none;
         }
 
@@ -1029,6 +1042,7 @@
             gap: 10px;
             color: var(--text-muted);
             font-weight: 600;
+            font-size: var(--auth-form-label-size);
             cursor: pointer;
         }
 
@@ -1059,6 +1073,7 @@
             background: color-mix(in srgb, var(--text) 94%, #140f0a);
             color: #fff;
             font-weight: 800;
+            font-size: var(--auth-form-label-size);
             letter-spacing: 0.01em;
         }
 
@@ -1072,7 +1087,7 @@
             margin: 0;
             text-align: center;
             color: var(--text-muted);
-            font-size: 15px;
+            font-size: var(--auth-form-copy-size);
         }
 
         @media (max-width: 991.98px) {
@@ -1740,7 +1755,7 @@
                     <div class="navbar-nav-shell d-flex justify-content-lg-center">
                         <div class="navbar-nav nav-links-desktop gap-2 gap-lg-3 justify-content-lg-center">
                             <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}" data-i18n="home">{{ __('ui.home') }}</a>
-                            <a class="nav-link {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}" data-i18n="memorisation">{{ __('ui.memorisation') }}</a>
+                            <a class="nav-link nav-link-memorisation {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}" data-i18n="memorisation">{{ __('ui.memorisation') }}</a>
                         </div>
                     </div>
 
@@ -1838,6 +1853,8 @@
             id: @json(trans('ui', [], 'id')),
             tr: @json(trans('ui', [], 'tr')),
         };
+        window.mutqinInitialThemePreference = @json($appThemePreference);
+        window.mutqinInitialTheme = @json($appTheme);
 
         function runWhenReady(fn) {
             if (document.readyState === 'loading') {
@@ -1855,6 +1872,17 @@
             function safeSet(key, value) {
                 try { localStorage.setItem(key, value); } catch (e) {}
             }
+            function normalizeTheme(value) {
+                if (value === 'dark' || value === 'dark-mode') return 'dark';
+                if (value === 'sepia' || value === 'sepia-mode') return 'sepia';
+                return 'light';
+            }
+            function toThemePreference(value) {
+                const theme = normalizeTheme(value);
+                if (theme === 'dark') return 'dark-mode';
+                if (theme === 'sepia') return 'sepia-mode';
+                return 'light-mode';
+            }
             const themes = ['light', 'dark'];
             const themeIcons = {
                 light: 'bi-sun',
@@ -1862,27 +1890,32 @@
             };
             
             function setTheme(theme) {
-                document.documentElement.setAttribute('data-theme', theme);
-                safeSet('mutqin-theme', theme);
-                window.dispatchEvent(new CustomEvent('mutqin:theme-change', { detail: { theme } }));
+                const normalizedTheme = normalizeTheme(theme);
+                const themePreference = toThemePreference(normalizedTheme);
+
+                document.documentElement.setAttribute('data-theme', normalizedTheme);
+                safeSet('mutqin-theme', normalizedTheme);
+                safeSet('mutqin-theme-preference', themePreference);
+                document.cookie = `mutqin_theme=${themePreference};path=/;max-age=31536000;samesite=lax`;
+                window.dispatchEvent(new CustomEvent('mutqin:theme-change', { detail: { theme: normalizedTheme } }));
                 
                 const button = document.getElementById('globalThemeToggle');
                 if (button) {
                     const icon = button.querySelector('i');
-                    icon.className = `bi ${themeIcons[theme] || themeIcons.light}`;
-                    button.setAttribute('aria-label', theme === 'dark' ? @json(__('ui.switch_light')) : @json(__('ui.switch_dark')));
+                    icon.className = `bi ${themeIcons[normalizedTheme] || themeIcons.light}`;
+                    button.setAttribute('aria-label', normalizedTheme === 'dark' ? @json(__('ui.switch_light')) : @json(__('ui.switch_dark')));
                 }
 
                 const logo = document.getElementById('appNavbarLogo');
                 if (logo) {
                     const lightSrc = logo.getAttribute('data-logo-light') || '/images/logo.png';
                     const darkSrc = logo.getAttribute('data-logo-dark') || '/images/logo.png';
-                    logo.src = theme === 'dark' ? darkSrc : lightSrc;
+                    logo.src = normalizedTheme === 'dark' ? darkSrc : lightSrc;
                 }
 
                 const favicon = document.getElementById('appThemeFavicon');
                 if (favicon) {
-                    favicon.setAttribute('href', theme === 'dark' ? '/favicon-dark.svg' : '/favicon-light.svg');
+                    favicon.setAttribute('href', normalizedTheme === 'dark' ? '/favicon-dark.svg' : '/favicon-light.svg');
                 }
             }
             
@@ -1894,16 +1927,9 @@
             }
             
             // Load saved theme
+            const savedThemePreference = safeGet('mutqin-theme-preference');
             const savedTheme = safeGet('mutqin-theme');
-            if (savedTheme && themes.includes(savedTheme)) {
-                setTheme(savedTheme);
-            } else {
-                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    setTheme('dark');
-                } else {
-                    setTheme('light');
-                }
-            }
+            setTheme(window.mutqinInitialThemePreference || savedThemePreference || savedTheme || window.mutqinInitialTheme || 'light-mode');
             
             runWhenReady(function() {
                 const themeButton = document.getElementById('globalThemeToggle');

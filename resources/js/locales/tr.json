@@ -29,6 +29,14 @@
     "download": "Download",
     "method": "Method"
   },
+  "auth": {
+    "continueGoogle": "Google ile devam et",
+    "or": "veya",
+    "emailAddress": "E-posta Adresi",
+    "password": "Şifre",
+    "rememberMe": "Beni Hatırla",
+    "forgotPassword": "Şifrenizi mi unuttunuz?"
+  },
   "nav": {
     "home": "Home",
     "memorisation": "Memorisation",

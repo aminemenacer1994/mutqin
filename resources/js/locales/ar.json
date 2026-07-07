@@ -29,6 +29,14 @@
     "download": "تنزيل",
     "method": "الطريقة"
   },
+  "auth": {
+    "continueGoogle": "المتابعة باستخدام Google",
+    "or": "أو",
+    "emailAddress": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "rememberMe": "تذكرني",
+    "forgotPassword": "هل نسيت كلمة المرور؟"
+  },
   "nav": {
     "home": "الرئيسية",
     "memorisation": "الحفظ",
