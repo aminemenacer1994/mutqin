@@ -216,7 +216,7 @@ includesAll('planner ui hidden', [
   /v-if="showAiMemorisationButton" class="mushaf-pill mushaf-ai-pill mushaf-ai-memory"/,
   /v-if="showAiMemorisationButton" class="verse-self-check-btn verse-ai-check-btn"/,
   /<button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls"/,
-  /<section v-if="!hasVerses" class="workspace-empty-state" aria-label="Session setup">/,
+  /<section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" aria-label="Session setup">/,
   /t\('memorisation\.open_session_setup'\)/,
   /aria-label="Open controls"/,
   /v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills\.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"/
@@ -329,7 +329,7 @@ includesAll('ai recitation simplified workspace', [
   /class="self-check-header-tools"/,
   /aria-label="Play ayah once"/,
   /v-if="shouldShowOffcanvasTabs"/,
-  /shouldShowOffcanvasTabs\(\) \{\s*return !this\.isSessionCompleted && \(this\.hasSessionStarted \|\| this\.hasVerses\)\s*\}/s,
+  /shouldShowOffcanvasTabs\(\) \{\s*return true\s*\}/s,
   /class="recitation-word-stream recitation-live-word-stream" dir="rtl"/,
   /if \(this\.recitationCheckRecording\) return false/,
   /key: 'green', label: 'Green'/,

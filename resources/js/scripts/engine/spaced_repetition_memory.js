@@ -14,6 +14,15 @@ function hasLocalStorage() {
   return typeof localStorage !== 'undefined'
 }
 
+function getStorageAdapter() {
+  const bridge = typeof globalThis !== 'undefined' ? globalThis.__MUTQIN_STORAGE_BRIDGE__ : null
+  if (bridge && typeof bridge.getItem === 'function' && typeof bridge.setItem === 'function') {
+    return bridge
+  }
+  if (hasLocalStorage()) return localStorage
+  return null
+}
+
 function clampMasteryScore(value) {
   const score = Number(value)
   if (!Number.isFinite(score)) return 0
@@ -93,11 +102,12 @@ function normalizeAyahProgress(progress, nowIso = new Date().toISOString(), ref 
 }
 
 export function loadMemoryState() {
-  if (!hasLocalStorage()) return {}
+  const storage = getStorageAdapter()
+  if (!storage) return {}
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY)
+    const raw = storage.getItem(STORAGE_KEY)
+    const legacyRaw = storage.getItem(LEGACY_STORAGE_KEY)
     const parsed = raw ? JSON.parse(raw) : {}
     const legacyParsed = legacyRaw ? JSON.parse(legacyRaw) : {}
     const current = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
@@ -120,8 +130,9 @@ export function saveMemoryState(state) {
     next[key] = normalizeAyahProgress(progress, nowIso, ref)
     return next
   }, {})
-  if (hasLocalStorage()) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(safeState))
+  const storage = getStorageAdapter()
+  if (storage) {
+    storage.setItem(STORAGE_KEY, JSON.stringify(safeState))
   }
   return safeState
 }
@@ -182,7 +193,8 @@ export function updateAyahProgress(surah, ayah, score) {
 }
 
 export function clearMemoryProgress() {
-  if (hasLocalStorage()) localStorage.removeItem(STORAGE_KEY)
+  const storage = getStorageAdapter()
+  if (storage) storage.removeItem(STORAGE_KEY)
 }
 
 export { STORAGE_KEY as SPACED_REPETITION_MEMORY_STORAGE_KEY }

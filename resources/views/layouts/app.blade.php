@@ -168,7 +168,7 @@
             background: var(--field-bg-strong);
             border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
             color: var(--text);
-            box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent-light) 78%, transparent);
+            box-shadow: none !important;
         }
 
         .form-check-input {
@@ -331,6 +331,7 @@
         .navbar-nav-shell {
             flex: 1 1 auto;
             min-width: 0;
+            box-shadow: none !important;
         }
 
         .app-navbar .offcanvas-lg {
@@ -360,6 +361,7 @@
             text-decoration: none;
             background: transparent;
             position: relative;
+            box-shadow: none !important;
         }
 
         .nav-link:hover {
@@ -384,6 +386,7 @@
             background: var(--accent);
             border-radius: 999px;
             opacity: 0.7;
+            box-shadow: none !important;
         }
 
         .app-theme-toggle {
@@ -627,6 +630,7 @@
 
             .nav-link {
                 padding: 10px 14px;
+                box-shadow: none !important;
             }
         }
 
@@ -636,6 +640,7 @@
                 transition-duration: 0.01ms !important;
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
+                box-shadow: none !important;
             }
         }
 

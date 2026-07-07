@@ -12,6 +12,8 @@
             'has_paid_access' => Auth::user()?->hasPaidAccess() ?? false,
             'locale' => Auth::user()?->locale ?? 'en',
             'ai_recall_mode_enabled' => Auth::user()?->ai_recall_mode_enabled ?? false,
+            'created_at' => Auth::user()?->created_at?->toIso8601String(),
+            'just_registered' => session('mutqin_just_registered', false),
             'csrf_token' => csrf_token(),
             'login_url' => route('login'),
             'google_login_url' => route('auth.google.redirect'),

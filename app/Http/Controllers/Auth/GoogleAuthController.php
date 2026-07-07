@@ -25,6 +25,8 @@ class GoogleAuthController extends Controller
 
     public function callback(): RedirectResponse
     {
+        $created = false;
+
         try {
             $provider = Socialite::driver('google');
 
@@ -65,6 +67,7 @@ class GoogleAuthController extends Controller
                     'avatar' => $googleUser->getAvatar(),
                     'password' => Str::random(32),
                 ]);
+                $created = true;
             }
         } elseif ($googleUser->getAvatar() !== $user->avatar) {
             $user->forceFill([
@@ -74,6 +77,9 @@ class GoogleAuthController extends Controller
 
         Auth::login($user, true);
         request()->session()->regenerate();
+        if ($created) {
+            request()->session()->flash('mutqin_just_registered', true);
+        }
 
         return redirect()->intended(route('memorisation'));
     }

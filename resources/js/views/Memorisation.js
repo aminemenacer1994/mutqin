@@ -417,6 +417,10 @@ export default {
       continueSessionLabel: '',
       continueSessionPayload: null,
       showResumeModal: false,
+      showRenameRecordingModal: false,
+      renameRecordingId: '',
+      renameRecordingName: '',
+      renameRecordingError: '',
       lastScrollY: 0,
       scrollFrame: null,
       pendingDeleteId: '',
@@ -872,9 +876,14 @@ export default {
     },
     shouldRenderWorkspaceShell() {
       return !this.isOnboardingExperienceActive
+        && !this.showResumeModal
+        && !(this.isLoggedIn && !this.hasVerses && !this.showTools)
+    },
+    shouldShowWorkspaceEmptyState() {
+      return !this.hasVerses && !this.isLoggedIn
     },
     shouldShowOffcanvasTabs() {
-      return !this.isSessionCompleted && (this.hasSessionStarted || this.hasVerses)
+      return true
     },
     showHifzPlannerUi() {
       return false
@@ -1388,9 +1397,7 @@ export default {
         return this.t('memorisation.workspaceEmpty.title')
       }
       const surah = this.currentChapter?.name_simple || this.activeChapterName || 'Casual Session'
-      const start = Math.max(1, Number(this.rangeStart || 1))
-      const end = Math.max(start, Number(this.rangeEnd || start))
-      return `${surah} · Ayahs ${start}-${end}`
+      return surah
     },
     workspaceProgressSummary() {
       const sessionTotal = Math.max(0, Number(this.totalVerses || 0))
@@ -1532,6 +1539,28 @@ export default {
       }
       return this.sessionContextBadge
     },
+    canContinueCurrentSession() {
+      return !!(this.showSessionExitModal && this.hasSessionStarted && this.sessionExitSnapshot?.activeVerseKey)
+    },
+    sessionExitStatusPills() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      const pills = []
+      pills.push({
+        key: 'status',
+        tone: this.canContinueCurrentSession ? 'active' : (snapshot.completedAll ? 'complete' : 'paused'),
+        label: this.canContinueCurrentSession ? 'In progress' : (snapshot.completedAll ? 'Completed' : 'Stopped')
+      })
+      if (snapshot.progressLabel) {
+        pills.push({ key: 'progress', tone: 'neutral', label: snapshot.progressLabel })
+      }
+      if (snapshot.durationLabel) {
+        pills.push({ key: 'duration', tone: 'neutral', label: snapshot.durationLabel })
+      }
+      if (snapshot.repeatShortLabel) {
+        pills.push({ key: 'repeat', tone: 'neutral', label: `${snapshot.repeatShortLabel} repeats` })
+      }
+      return pills
+    },
     sessionExitSummaryCopy() {
       const snapshot = this.sessionExitPreviewSnapshot || {}
       if (snapshot.detailMessage) return snapshot.detailMessage
@@ -1545,6 +1574,44 @@ export default {
       return this.showSessionExitModal && this.hasSessionStarted
         ? this.t('common.continue')
         : this.t('common.close')
+    },
+    canResumePreviousSession() {
+      return !!(this.hasContinueSession && this.continueSessionPayload?.config?.chapterId)
+    },
+    resumeSessionDetailItems() {
+      if (!this.canResumePreviousSession) return []
+      const payload = this.continueSessionPayload || {}
+      const config = payload.config || {}
+      const chapter = this.chapters.find(item => Number(item.id) === Number(config.chapterId))
+      const reciter = this.reciters.find(item => String(item.id) === String(config.reciterId || ''))
+      const activeAyah = payload.activeVerseKey
+        ? String(payload.activeVerseKey).split(':')[1]
+        : String(config.rangeStart || 1)
+      return [
+        { key: 'surah', label: 'Surah', value: chapter?.name_simple || `Surah ${config.chapterId || ''}`.trim() },
+        { key: 'range', label: 'Range', value: `Ayahs ${config.rangeStart || 1}-${config.rangeEnd || config.rangeStart || 1}` },
+        { key: 'stopped', label: 'Stopped at', value: `Ayah ${activeAyah}` },
+        { key: 'reciter', label: 'Reciter', value: reciter?.name || 'Alafasy' },
+        { key: 'speed', label: 'Speed', value: `${Number(config.speed || 1)}x` },
+        { key: 'repeats', label: 'Repeats', value: `${Math.max(1, Number(config.repetitionsPerStep || 1))}x per ayah` }
+      ]
+    },
+    readyToBeginSummary() {
+      if (!this.canResumePreviousSession) return null
+      const payload = this.continueSessionPayload || {}
+      const config = payload.config || {}
+      const chapter = this.chapters.find(item => Number(item.id) === Number(config.chapterId))
+      const chapterName = chapter?.name_simple || this.currentChapter?.name_simple || 'Previous session'
+      const start = Number(config.rangeStart || 1)
+      const end = Number(config.rangeEnd || start)
+      const ayah = payload.activeVerseKey ? String(payload.activeVerseKey).split(':')[1] : start
+      return {
+        chapterName,
+        rangeLabel: `Ayahs ${start}-${end}`,
+        resumeLabel: `Stopped near ayah ${ayah}`,
+        summary: this.continueSessionMeta,
+        savedAt: this.resumeSavedAtLabel || this.smartResumeDetails.saved
+      }
     },
     plannerCompletionStats() {
       const snapshot = this.plannerCompletionSnapshot || {}
@@ -2776,13 +2843,16 @@ export default {
     },
 
     resumeModalTitle() {
-      if (!this.continueSessionPayload?.config?.chapterId) return 'Resume last session'
+      if (!this.canResumePreviousSession) return 'Ready to begin'
       const c = this.continueSessionPayload.config
       const chapter = this.chapters.find(item => Number(item.id) === Number(c.chapterId))
-      return `${chapter?.name_simple || 'Saved session'} · Ayahs ${c.rangeStart}-${c.rangeEnd}`
+      return chapter?.name_simple || 'Previous session'
     },
 
     resumeWhatNext() {
+      if (!this.canResumePreviousSession) {
+        return 'Choose how you want to begin. You can start a new session or open your saved sessions.'
+      }
       if (this.dueCount) return `You have ${this.dueCount} verses due for review. Continue to pick up where you left off.`
       return 'Continue from your last saved ayah and keep building consistency.'
     },
@@ -2816,8 +2886,7 @@ export default {
 
     versesMasteredDeltaThisWeek() {
       try {
-        const raw = localStorage.getItem('telawa.masteredWeekly') || 'null'
-        const data = JSON.parse(raw)
+        const data = this.readScopedStorageValue('masteredWeekly', 'telawa.masteredWeekly', null)
         if (!data || !Array.isArray(data.series)) return 0
         return data.series.reduce((a, b) => a + Number(b || 0), 0)
       } catch {
@@ -3373,7 +3442,10 @@ export default {
     this.appReady = true
 
     try {
-      this.loadSavedSessions();
+      const authenticatedWorkspace = this.learningBackendEnabled()
+      const justRegistered = authenticatedWorkspace && !!this.auth?.just_registered
+      this.syncWorkspaceStorageBridge()
+
       if (this.auth?.locale && this.$setLocale) {
         await this.$setLocale(this.auth.locale)
         this.activeLocale = this.auth.locale
@@ -3432,7 +3504,12 @@ export default {
       this.unwatchMutqinState = watchMutqinState(this.mutqinState, undefined, () => this.scheduleLearningSync())
       this.refreshHifzJourneyState()
       this.loadVerseFontSizes()
-      this.migrateLocalStorage()
+      if (authenticatedWorkspace) {
+        await this.initLearningBackend()
+      } else {
+        this.loadSavedSessions()
+        this.migrateLocalStorage()
+      }
       this.loadUiState()
       if (this.auth?.check && this.auth.ai_recall_mode_enabled !== undefined) {
         this.aiRecallModeEnabled = !!this.auth.ai_recall_mode_enabled
@@ -3453,16 +3530,20 @@ export default {
       document.documentElement.setAttribute('data-theme', this.theme)
       this.loadBookmarksPins()
       this.setupWordClickHandler()
+      this.loadSavedSessions()
       this.loadContinueSessionPrompt()
       this.updateMasteredWeekly()
       this.loadRecordingsLibrary()
 
-      if (this.isLoggedIn && this.hasContinueSession) {
-        // One clear entry point for returning users.
+      if (this.isLoggedIn && !justRegistered) {
         this.showResumeModal = true
       }
 
-      if (this.currentMode === 'advanced' && this.advanced.chapterId) {
+      if (justRegistered) {
+        this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
+        this.openOnboardingModal()
+        this.isDataReady = true
+      } else if (this.currentMode === 'advanced' && this.advanced.chapterId) {
         this.currentMode = 'advanced'
         this.tab = 'tools'
         this.showTools = false
@@ -3474,9 +3555,7 @@ export default {
         await this.loadVerses()
       } else {
         this.tab = 'tools'
-        // Fail open into session setup for authenticated users so the
-        // memorisation route never looks blank or inaccessible.
-        this.showTools = !!this.isLoggedIn
+        this.showTools = false
         this.isDataReady = true
       }
     } catch (error) {
@@ -3489,12 +3568,6 @@ export default {
       this.isBootstrapping = false
       this.reconcilePersistedSessionCompletion()
     }
-
-    // Reconcile with the backend (authenticated users only). Fire-and-forget so
-    // it never blocks first paint, login, or any interaction.
-    this.initLearningBackend().catch(error => {
-      console.error('Memorisation backend sync init failed:', error)
-    })
 
     window.addEventListener('online', this.handleOnline)
     window.addEventListener('offline', this.handleOffline)
@@ -3587,6 +3660,10 @@ export default {
     if (this.wordClickHandler) {
       document.removeEventListener('click', this.wordClickHandler)
       this.wordClickHandler = null
+    }
+    if (typeof globalThis !== 'undefined' && globalThis.__MUTQIN_STORAGE_BRIDGE_OWNER__ === this) {
+      delete globalThis.__MUTQIN_STORAGE_BRIDGE__
+      delete globalThis.__MUTQIN_STORAGE_BRIDGE_OWNER__
     }
   },
 
@@ -3833,6 +3910,186 @@ export default {
     translateOrFallback(key, fallback, params = {}) {
       const translated = this.t(key, params)
       return translated && translated !== key ? translated : fallback
+    },
+
+    getWorkspacePersistenceBucket() {
+      if (!this.learningBackendEnabled() || !this.mutqinState || typeof this.mutqinState !== 'object') return null
+      if (!this.mutqinState.workspaceState || typeof this.mutqinState.workspaceState !== 'object') {
+        this.mutqinState.workspaceState = {}
+      }
+      return this.mutqinState.workspaceState
+    },
+
+    readWorkspaceStateValue(key, fallback = null) {
+      const bucket = this.getWorkspacePersistenceBucket()
+      if (!bucket || !Object.prototype.hasOwnProperty.call(bucket, key)) return fallback
+      return deepClone(bucket[key])
+    },
+
+    writeWorkspaceStateValue(key, value) {
+      const bucket = this.getWorkspacePersistenceBucket()
+      if (!bucket) return false
+      bucket[key] = deepClone(value)
+      bucket.updatedAt = new Date().toISOString()
+      return true
+    },
+
+    deleteWorkspaceStateValue(key) {
+      const bucket = this.getWorkspacePersistenceBucket()
+      if (!bucket || !Object.prototype.hasOwnProperty.call(bucket, key)) return false
+      delete bucket[key]
+      bucket.updatedAt = new Date().toISOString()
+      return true
+    },
+
+    readScopedStorageValue(workspaceKey, localKey, fallback = null) {
+      if (this.learningBackendEnabled()) {
+        return this.readWorkspaceStateValue(workspaceKey, fallback)
+      }
+      try {
+        const raw = localStorage.getItem(localKey)
+        return raw ? JSON.parse(raw) : fallback
+      } catch {
+        return fallback
+      }
+    },
+
+    writeScopedStorageValue(workspaceKey, localKey, value) {
+      if (this.learningBackendEnabled()) {
+        return this.writeWorkspaceStateValue(workspaceKey, value)
+      }
+      try {
+        localStorage.setItem(localKey, JSON.stringify(value))
+        return true
+      } catch {
+        return false
+      }
+    },
+
+    deleteScopedStorageValue(workspaceKey, localKey) {
+      if (this.learningBackendEnabled()) {
+        return this.deleteWorkspaceStateValue(workspaceKey)
+      }
+      try {
+        localStorage.removeItem(localKey)
+        return true
+      } catch {
+        return false
+      }
+    },
+
+    getWorkspaceBridgeKey(storageKey = '') {
+      const keyMap = {
+        [HIFZ_PLAN_STORAGE_KEY]: 'hifzPlan',
+        [HIFZ_APP_STATE_STORAGE_KEY]: 'hifzAppState',
+        [HIFZ_PLAN_ARCHIVE_STORAGE_KEY]: 'hifzPlanArchives',
+        [AYAH_PROGRESS_STORAGE_KEY]: 'ayahProgress',
+        mutqin_spaced_repetition_memory: 'ayahProgressLegacy'
+      }
+      return keyMap[storageKey] || ''
+    },
+
+    syncWorkspaceStorageBridge() {
+      if (typeof globalThis === 'undefined') return
+      if (!this.learningBackendEnabled()) {
+        if (globalThis.__MUTQIN_STORAGE_BRIDGE_OWNER__ === this) {
+          delete globalThis.__MUTQIN_STORAGE_BRIDGE__
+          delete globalThis.__MUTQIN_STORAGE_BRIDGE_OWNER__
+        }
+        return
+      }
+      globalThis.__MUTQIN_STORAGE_BRIDGE_OWNER__ = this
+      globalThis.__MUTQIN_STORAGE_BRIDGE__ = {
+        getItem: (storageKey) => {
+          const workspaceKey = this.getWorkspaceBridgeKey(storageKey)
+          if (!workspaceKey) return null
+          const value = this.readWorkspaceStateValue(workspaceKey, null)
+          return value === null || typeof value === 'undefined' ? null : JSON.stringify(value)
+        },
+        setItem: (storageKey, rawValue) => {
+          const workspaceKey = this.getWorkspaceBridgeKey(storageKey)
+          if (!workspaceKey) return
+          try {
+            this.writeWorkspaceStateValue(workspaceKey, JSON.parse(rawValue))
+          } catch {
+            this.writeWorkspaceStateValue(workspaceKey, rawValue)
+          }
+        },
+        removeItem: (storageKey) => {
+          const workspaceKey = this.getWorkspaceBridgeKey(storageKey)
+          if (!workspaceKey) return
+          this.deleteWorkspaceStateValue(workspaceKey)
+        }
+      }
+    },
+
+    buildDefaultWorkspaceSessionConfig() {
+      return {
+        chapterId: 1,
+        rangeStart: 1,
+        rangeEnd: 7,
+        reciterId: DEFAULT_ALQURAN_RECITER,
+        speed: 1,
+        repetitionsPerStep: 3,
+        selectedLoopCount: 3,
+        playMode: 'auto',
+        gapBetweenVerses: '1x',
+        customGapSeconds: 2,
+        recitationWindowSeconds: 8,
+        chainingEnabled: false,
+        chainingMethod: 'linking',
+        chainingRepetitions: 1,
+        focusModeEnabled: false,
+        blurModeEnabled: false,
+        blurIntensity: 10,
+        anchorModeEnabled: false,
+        anchorCount: 2,
+        tajweedEnabled: false,
+        showTranslation: false,
+        showTransliteration: false,
+        showWordByWord: false,
+        wordByWordAudioEnabled: false,
+        readingViewMode: 'stacked'
+      }
+    },
+
+    applyDefaultWorkspaceSessionConfig(options = {}) {
+      const { openSetup = true, silent = false } = options
+      const defaults = this.buildDefaultWorkspaceSessionConfig()
+      this.currentMode = 'advanced'
+      this.chapterId = defaults.chapterId
+      this.rangeStart = defaults.rangeStart
+      this.rangeEnd = defaults.rangeEnd
+      this.reciterId = defaults.reciterId
+      this.speed = defaults.speed
+      this.repetitionsPerStep = defaults.repetitionsPerStep
+      this.selectedLoopCount = defaults.selectedLoopCount
+      this.playMode = defaults.playMode
+      this.gapBetweenVerses = defaults.gapBetweenVerses
+      this.customGapSeconds = defaults.customGapSeconds
+      this.recitationWindowSeconds = defaults.recitationWindowSeconds
+      this.chainingEnabled = defaults.chainingEnabled
+      this.chainingMethod = defaults.chainingMethod
+      this.chainingRepetitions = defaults.chainingRepetitions
+      this.focusModeEnabled = defaults.focusModeEnabled
+      this.blurModeEnabled = defaults.blurModeEnabled
+      this.blurIntensity = defaults.blurIntensity
+      this.anchorModeEnabled = defaults.anchorModeEnabled
+      this.anchorCount = defaults.anchorCount
+      this.tajweedEnabled = defaults.tajweedEnabled
+      this.showTranslation = defaults.showTranslation
+      this.showTransliteration = defaults.showTransliteration
+      this.showWordByWord = defaults.showWordByWord
+      this.wordByWordAudioEnabled = defaults.wordByWordAudioEnabled
+      this.readingViewMode = defaults.readingViewMode
+      this.tab = 'tools'
+      this.showTools = !!openSetup
+      this.syncSettingsDraft()
+      this.persistUiState()
+      this.persistCentralSessionState()
+      if (!silent) {
+        this.showBanner('Default session loaded: Al-Fatihah 1-7, Alafasy, standard speed, 3 repeats, no memorisation techniques.', 'info', 3200)
+      }
     },
 
     buildOnboardingStep(key, icon) {
@@ -5513,7 +5770,11 @@ export default {
 
     persistSavedSessions() {
       try {
-        localStorage.setItem(this.savedSessionsStorageKey(), JSON.stringify(this.savedSessions))
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue('savedSessions', this.savedSessions)
+        } else {
+          localStorage.setItem(this.savedSessionsStorageKey(), JSON.stringify(this.savedSessions))
+        }
       } catch (e) {
         console.error('Failed to save sessions:', e)
       }
@@ -5582,6 +5843,9 @@ export default {
       return `mutqin.onboardingCompleted.${userId}`
     },
     hasCompletedOnboarding() {
+      if (this.learningBackendEnabled()) {
+        return !!this.readWorkspaceStateValue('onboardingCompleted', false)
+      }
       try {
         return localStorage.getItem(this.getOnboardingStorageKey()) === 'true'
       } catch {
@@ -5589,6 +5853,10 @@ export default {
       }
     },
     markOnboardingCompleted() {
+      if (this.learningBackendEnabled()) {
+        this.writeWorkspaceStateValue('onboardingCompleted', true)
+        return
+      }
       try {
         localStorage.setItem(this.getOnboardingStorageKey(), 'true')
       } catch { }
@@ -5597,10 +5865,10 @@ export default {
       if (!this.isLoggedIn && !force) return
       this.onboardingManualLaunch = !!force
       this.onboardingStepIndex = 0
-      if (!force && this.hasCompletedOnboarding()) return
+      if (!force && !this.auth?.just_registered && this.hasCompletedOnboarding()) return
       this.sessionEndedSnapshot = null
       if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
-      this.showTools = true
+      this.showTools = false
       this.tab = 'tools'
       window.setTimeout(() => {
         this.showPostLoginOnboarding = true
@@ -5621,6 +5889,9 @@ export default {
       this.onboardingStepIndex = 0
       this.sessionEndedSnapshot = null
       this.restoreOnboardingDemo()
+      if (!this.onboardingManualLaunch && this.auth?.just_registered) {
+        this.applyDefaultWorkspaceSessionConfig({ openSetup: false })
+      }
       this.onboardingManualLaunch = false
     },
     async completeOnboardingAndStart() {
@@ -5650,6 +5921,17 @@ export default {
           this.startSessionWithCountdown()
         })
       }
+    },
+    async completeOnboardingWithDefaultSession() {
+      this.markOnboardingCompleted()
+      this.showPostLoginOnboarding = false
+      this.onboardingStepIndex = 0
+      this.sessionEndedSnapshot = null
+      this.restoreOnboardingDemo({ keepCurrentSession: true })
+      this.onboardingManualLaunch = false
+      this.applyDefaultWorkspaceSessionConfig({ openSetup: false })
+      await this.loadChapter(this.currentMode)
+      this.isDataReady = true
     },
     prepareOnboardingDemo() {
       const snapshot = {
@@ -6386,6 +6668,7 @@ export default {
 
       return {
         id: String(entry.id || `${ayahKey}-${Date.parse(recordedAt) || Date.now()}-${index}`),
+        title: String(entry.title || entry.name || entry.label || '').trim(),
         chapterId,
         chapterName,
         ayahNumber,
@@ -6414,9 +6697,17 @@ export default {
     },
     persistRecordingsLibrary() {
       try {
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue('recordingsLibrary', this.recordingsLibrary)
+          return true
+        }
         localStorage.setItem(this.recordingsLibraryStorageKey(), JSON.stringify(this.recordingsLibrary))
         return true
       } catch (error) {
+        if (this.learningBackendEnabled()) {
+          console.error('Failed to persist recordings library:', error)
+          return false
+        }
         try {
           const compact = this.recordingsLibrary.map(recording => this.pruneAiCheckRecordingForStorage(recording))
           localStorage.setItem(this.recordingsLibraryStorageKey(), JSON.stringify(compact))
@@ -6496,6 +6787,16 @@ export default {
       return this.rerunRecordingValidationAudit(recording)
     },
     loadRecordingsLibrary() {
+      if (this.learningBackendEnabled()) {
+        const persisted = this.readWorkspaceStateValue('recordingsLibrary', [])
+        this.recordingsLibrary = (Array.isArray(persisted) ? persisted : [])
+          .map((item, index) => this.normalizeRecordingEntry(item, index))
+          .filter(Boolean)
+          .sort((left, right) => Date.parse(right.recordedAt) - Date.parse(left.recordedAt))
+        this.ensureSelectedRecordingsAyah()
+        return
+      }
+
       const entries = []
       const seen = new Set()
 
@@ -6685,6 +6986,35 @@ export default {
         data: { recordingId }
       })
     },
+    openRenameRecordingModal(recordingId) {
+      const target = this.recordingsLibrary.find(recording => recording.id === recordingId) || null
+      if (!target) return
+      this.renameRecordingId = recordingId
+      this.renameRecordingName = String(target.title || this.getRecordingAttemptLabel(target) || '').trim()
+      this.renameRecordingError = ''
+      this.showRenameRecordingModal = true
+    },
+    closeRenameRecordingModal() {
+      this.showRenameRecordingModal = false
+      this.renameRecordingId = ''
+      this.renameRecordingName = ''
+      this.renameRecordingError = ''
+    },
+    confirmRenameRecording() {
+      const trimmedName = String(this.renameRecordingName || '').trim()
+      if (!trimmedName) {
+        this.renameRecordingError = 'Enter a recording name.'
+        return
+      }
+      this.recordingsLibrary = this.recordingsLibrary.map(recording => (
+        recording.id === this.renameRecordingId
+          ? { ...recording, title: trimmedName }
+          : recording
+      ))
+      this.persistRecordingsLibrary()
+      this.closeRenameRecordingModal()
+      this.showBanner(`Recording renamed to "${trimmedName}".`, 'success', 1800)
+    },
     cancelDeleteRecording() {
       this.pendingRecordingDeleteId = ''
     },
@@ -6722,9 +7052,10 @@ export default {
             : []
         }))
         .filter(session => session.attempts.length)
-      localStorage.setItem(this.mutqinSessionsStorageKey(), JSON.stringify(sessions))
+      this.writeScopedStorageValue('mutqinSessions', this.mutqinSessionsStorageKey(), sessions)
     },
     getRecordingAttemptLabel(recording) {
+      if (recording?.title) return recording.title
       if (this.isAiCheckRecording(recording)) {
         const attempt = Number(recording?.attemptNumber || 0)
         const label = this.getRecordingTypeLabel(recording)
@@ -8109,8 +8440,7 @@ export default {
     },
     loadAiMemorisationCheckerHistory() {
       try {
-        const raw = localStorage.getItem(this.aiMemorisationCheckerStorageKey())
-        const parsed = raw ? JSON.parse(raw) : {}
+        const parsed = this.readScopedStorageValue('aiMemorisationChecker', this.aiMemorisationCheckerStorageKey(), {})
         this.aiMemorisationCheckerHistory = Array.isArray(parsed?.savedAssessments) ? parsed.savedAssessments : []
       } catch {
         this.aiMemorisationCheckerHistory = []
@@ -8135,7 +8465,7 @@ export default {
           },
           savedAssessments
         }
-        localStorage.setItem(this.aiMemorisationCheckerStorageKey(), JSON.stringify(payload))
+        this.writeScopedStorageValue('aiMemorisationChecker', this.aiMemorisationCheckerStorageKey(), payload)
       } catch (error) {
         console.warn('Failed to persist memorisation checker state:', error)
       }
@@ -10741,7 +11071,7 @@ export default {
     },
     loadMutqinSessionsForRecitation() {
       try {
-        const parsed = JSON.parse(localStorage.getItem(this.mutqinSessionsStorageKey()) || '[]')
+        const parsed = this.readScopedStorageValue('mutqinSessions', this.mutqinSessionsStorageKey(), [])
         return Array.isArray(parsed) ? parsed : []
       } catch {
         return []
@@ -10796,7 +11126,7 @@ export default {
       session.reviewMetadata = result.reviewMetadata
       session.attempts = Array.isArray(session.attempts) ? session.attempts : []
       session.attempts.push(attempt)
-      localStorage.setItem(this.mutqinSessionsStorageKey(), JSON.stringify(sessions))
+      this.writeScopedStorageValue('mutqinSessions', this.mutqinSessionsStorageKey(), sessions)
       return this.saveAiCheckToRecordingsLibrary(attempt, result)
     },
     cleanupSelfCheckMedia() {
@@ -11101,8 +11431,7 @@ export default {
 
     refreshHifzPlanState() {
       try {
-        const raw = localStorage.getItem(HIFZ_PLAN_STORAGE_KEY)
-        this.hifzPlan = raw ? JSON.parse(raw) : null
+        this.hifzPlan = this.readScopedStorageValue('hifzPlan', HIFZ_PLAN_STORAGE_KEY, null)
         this.hifzPlanExists = !!this.hifzPlan
       } catch {
         this.hifzPlan = null
@@ -11112,8 +11441,7 @@ export default {
 
     loadHifzAppState() {
       try {
-        const raw = localStorage.getItem(HIFZ_APP_STATE_STORAGE_KEY)
-        const parsed = raw ? JSON.parse(raw) : null
+        const parsed = this.readScopedStorageValue('hifzAppState', HIFZ_APP_STATE_STORAGE_KEY, null)
         const defaults = createHifzAppState()
         this.appState = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
           ? { ...defaults, ...parsed }
@@ -11131,7 +11459,7 @@ export default {
         updatedAt: new Date().toISOString()
       }
       this.appState = nextState
-      localStorage.setItem(HIFZ_APP_STATE_STORAGE_KEY, JSON.stringify(nextState))
+      this.writeScopedStorageValue('hifzAppState', HIFZ_APP_STATE_STORAGE_KEY, nextState)
       return nextState
     },
 
@@ -11139,8 +11467,7 @@ export default {
       this.refreshHifzPlanState()
       this.loadHifzAppState()
       try {
-        const rawProgress = localStorage.getItem(AYAH_PROGRESS_STORAGE_KEY)
-        const parsedProgress = rawProgress ? JSON.parse(rawProgress) : {}
+        const parsedProgress = this.readScopedStorageValue('ayahProgress', AYAH_PROGRESS_STORAGE_KEY, {})
         this.hifzAyahProgress = parsedProgress && typeof parsedProgress === 'object' && !Array.isArray(parsedProgress)
           ? parsedProgress
           : {}
@@ -11275,7 +11602,7 @@ export default {
         forecast,
         updatedAt: now
       }
-      localStorage.setItem(HIFZ_PLAN_STORAGE_KEY, JSON.stringify(payload))
+      this.writeScopedStorageValue('hifzPlan', HIFZ_PLAN_STORAGE_KEY, payload)
       this.refreshHifzJourneyState()
       if (message) this.showBanner(message, 'success', 1600)
     },
@@ -11322,8 +11649,7 @@ export default {
     createNewHifzPlan() {
       if (this.hifzPlan) {
         try {
-          const rawArchives = localStorage.getItem(HIFZ_PLAN_ARCHIVE_STORAGE_KEY)
-          const archives = rawArchives ? JSON.parse(rawArchives) : []
+          const archives = this.readScopedStorageValue('hifzPlanArchives', HIFZ_PLAN_ARCHIVE_STORAGE_KEY, [])
           const nextArchives = Array.isArray(archives) ? archives : []
           nextArchives.unshift({
             ...this.hifzPlan,
@@ -11334,20 +11660,20 @@ export default {
               planHealth: this.hifzPlanHealth.label
             }
           })
-          localStorage.setItem(HIFZ_PLAN_ARCHIVE_STORAGE_KEY, JSON.stringify(nextArchives.slice(0, 12)))
+          this.writeScopedStorageValue('hifzPlanArchives', HIFZ_PLAN_ARCHIVE_STORAGE_KEY, nextArchives.slice(0, 12))
         } catch {}
       }
-      localStorage.removeItem(HIFZ_PLAN_STORAGE_KEY)
-      localStorage.removeItem(HIFZ_APP_STATE_STORAGE_KEY)
+      this.deleteScopedStorageValue('hifzPlan', HIFZ_PLAN_STORAGE_KEY)
+      this.deleteScopedStorageValue('hifzAppState', HIFZ_APP_STATE_STORAGE_KEY)
       this.refreshHifzJourneyState()
       this.openHifzPlanModal()
     },
 
     deleteHifzPlan() {
       if (typeof window !== 'undefined' && !window.confirm('Delete this Hifz plan and its planner progress from this browser?')) return
-      localStorage.removeItem(HIFZ_PLAN_STORAGE_KEY)
-      localStorage.removeItem(AYAH_PROGRESS_STORAGE_KEY)
-      localStorage.removeItem(HIFZ_APP_STATE_STORAGE_KEY)
+      this.deleteScopedStorageValue('hifzPlan', HIFZ_PLAN_STORAGE_KEY)
+      this.deleteScopedStorageValue('ayahProgress', AYAH_PROGRESS_STORAGE_KEY)
+      this.deleteScopedStorageValue('hifzAppState', HIFZ_APP_STATE_STORAGE_KEY)
       this.hifzPlannerAnalyticsOpen = false
       this.currentMode = 'beginner'
       this.refreshHifzJourneyState()
@@ -11436,6 +11762,41 @@ export default {
       this.showTools = false
       this.persistUiState()
       this.restoreToolsFocus()
+    },
+
+    closeResumeModal() {
+      this.showResumeModal = false
+    },
+
+    openResumeNewSession() {
+      this.showResumeModal = false
+      this.openToolsPanel({ tab: 'tools' })
+    },
+
+    openResumeSavedSessions() {
+      this.showResumeModal = false
+      this.openToolsPanel({ tab: 'saved' })
+    },
+
+    async repeatPreviousSession() {
+      const payload = this.continueSessionPayload
+      if (!payload?.config?.chapterId) return
+      this.showResumeModal = false
+      await this.hydrateSessionFromPayload(payload, {
+        bannerText: 'Session restarted',
+        forcePlayback: false
+      })
+      this.prepareRangeRestart()
+      this.$nextTick(() => {
+        const firstVerseKey = this.verses?.[0]?.key || this.effectiveActiveVerseKey
+        if (firstVerseKey) {
+          const el = document.querySelector(`.verse-card[data-verse-key="${firstVerseKey}"]`)
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      })
+      this.showCountdown(() => {
+        this.resumePlaybackFromRestoredState()
+      })
     },
 
     openAdvancedControls() {
@@ -12137,10 +12498,15 @@ export default {
         ? createPlannerState()
         : (mode === 'beginner' ? createBeginnerState() : createAdvancedState())
       try {
-        const raw = localStorage.getItem(MODE_STORAGE_KEYS[mode])
-        if (!raw) return this.cloneModeState(defaults)
+        const saved = this.learningBackendEnabled()
+          ? this.readWorkspaceStateValue(`modeState:${mode}`, null)
+          : (() => {
+            const raw = localStorage.getItem(MODE_STORAGE_KEYS[mode])
+            return raw ? JSON.parse(raw) : null
+          })()
+        if (!saved) return this.cloneModeState(defaults)
 
-        const merged = { ...defaults, ...this.cloneModeState(JSON.parse(raw)) }
+        const merged = { ...defaults, ...this.cloneModeState(saved) }
 
         if (typeof merged.reciterId !== 'string' || !merged.reciterId) {
           merged.reciterId = DEFAULT_ALQURAN_RECITER
@@ -12167,12 +12533,17 @@ export default {
       if (this.isBootstrapping) return
       const mode = this.currentMode
       try {
-        localStorage.setItem(SESSION_STORAGE_KEYS[mode], JSON.stringify({
+        const nextState = {
           activeKey: this.activeKey,
           activeVerseKey: this.activeVerseKey,
           queueIndex: this.queueIndex,
           timestamp: Date.now()
-        }))
+        }
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue(`sessionState:${mode}`, nextState)
+        } else {
+          localStorage.setItem(SESSION_STORAGE_KEYS[mode], JSON.stringify(nextState))
+        }
       } catch (e) {
         console.error('Failed to persist session state:', e)
       }
@@ -12412,13 +12783,89 @@ export default {
           this.clearExitSessionStorage()
           return
         }
-        localStorage.setItem('telawa.continueSession', JSON.stringify(payload))
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue('continueSession', payload)
+        } else {
+          localStorage.setItem('telawa.continueSession', JSON.stringify(payload))
+        }
       } catch (e) { console.error(e) }
+    },
+
+    readPersistedSessionStateForMode(mode) {
+      try {
+        return this.learningBackendEnabled()
+          ? this.readWorkspaceStateValue(`sessionState:${mode}`, null)
+          : (() => {
+            const raw = localStorage.getItem(SESSION_STORAGE_KEYS[mode])
+            return raw ? JSON.parse(raw) : null
+          })()
+      } catch {
+        return null
+      }
+    },
+
+    buildFallbackContinueSessionPayload() {
+      const audioState = this.learningBackendEnabled()
+        ? this.readWorkspaceStateValue('audioState', null)
+        : (() => {
+          try {
+            return JSON.parse(localStorage.getItem('telawa.audioState') || 'null')
+          } catch {
+            return null
+          }
+        })()
+      const modeOrder = ['planner', 'beginner', 'advanced']
+      const candidates = modeOrder.map(mode => {
+        const config = this.cloneModeState(this.getModeStore(mode) || {})
+        if (!config?.chapterId) return null
+        const sessionState = this.readPersistedSessionStateForMode(mode)
+        const rangeStart = Math.max(1, Number(config.rangeStart || 1))
+        const rangeEnd = Math.max(rangeStart, Number(config.rangeEnd || rangeStart))
+        const queueIndex = Math.max(0, Number(sessionState?.queueIndex ?? config.queueIndex ?? 0))
+        const fallbackAyah = Math.min(rangeEnd, rangeStart + queueIndex)
+        const activeVerseKey = sessionState?.activeVerseKey
+          || sessionState?.activeKey
+          || config.activeKey
+          || `${config.chapterId}:${fallbackAyah}`
+        const hasRecoverableProgress = queueIndex > 0
+          || !!activeVerseKey
+          || Number(audioState?.currentTime || 0) > 0
+        if (!hasRecoverableProgress) return null
+        return {
+          timestamp: Number(sessionState?.timestamp || Date.now()),
+          mode,
+          tab: 'tools',
+          activeKey: activeVerseKey,
+          activeVerseKey,
+          queueIndex,
+          currentTime: Number(audioState?.currentTime || 0),
+          duration: Number(this.duration || 0),
+          isPlaying: false,
+          playerVisible: !!audioState?.playerVisible,
+          audioSrc: audioState?.src || '',
+          config: {
+            ...config,
+            chapterId: Number(config.chapterId || 0),
+            rangeStart,
+            rangeEnd,
+            speed: Number(config.speed || audioState?.speed || 1)
+          }
+        }
+      }).filter(Boolean)
+
+      if (!candidates.length) return null
+      candidates.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0))
+      return candidates[0]
     },
 
     loadContinueSessionPrompt() {
       try {
-        const raw = localStorage.getItem('telawa.continueSession')
+        const persistedContinue = this.learningBackendEnabled()
+          ? this.readWorkspaceStateValue('continueSession', null)
+          : (() => {
+            const raw = localStorage.getItem('telawa.continueSession')
+            return raw ? JSON.parse(raw) : null
+          })()
         const mutqinSession = this.mutqinState?.sessionState
         if (mutqinSession?.completed || this.sessionCompleted || this.centralSession?.sessionStatus === 'completed') {
           this.clearExitSessionStorage()
@@ -12443,8 +12890,8 @@ export default {
           this.continueSessionLabel = `${chapterName} · Ayahs ${mutqinSession.config.rangeStart}-${mutqinSession.config.rangeEnd}`
           return
         }
-        if (!raw) return
-        const payload = JSON.parse(raw)
+        const payload = persistedContinue || this.buildFallbackContinueSessionPayload()
+        if (!payload) return
         if (!payload?.config?.chapterId || payload.completed || payload.sessionStatus === 'completed') {
           this.clearExitSessionStorage()
           return
@@ -12460,16 +12907,23 @@ export default {
       const payload = this.continueSessionPayload
       if (!payload) return
       this.hasContinueSession = false
+      this.showResumeModal = false
       if (!payload.config?.chapterId) {
         this.clearContinueSession()
         return
       }
-      await this.hydrateSessionFromPayload(payload, { bannerText: 'Session restored' })
+      await this.hydrateSessionFromPayload(payload, {
+        bannerText: 'Session restored',
+        forcePlayback: false
+      })
       this.$nextTick(() => {
         if (this.effectiveActiveVerseKey) {
           const el = document.querySelector(`.verse-card[data-verse-key="${this.effectiveActiveVerseKey}"]`)
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
         }
+      })
+      this.showCountdown(() => {
+        this.resumePlaybackFromRestoredState()
       })
     },
     toggleSessionEndedMetaCard(key = '') {
@@ -12485,13 +12939,16 @@ export default {
 
     restoreAudioState() {
       try {
-        this.restoredAudioState = JSON.parse(localStorage.getItem('telawa.audioState') || 'null')
+        this.restoredAudioState = this.learningBackendEnabled()
+          ? this.readWorkspaceStateValue('audioState', null)
+          : JSON.parse(localStorage.getItem('telawa.audioState') || 'null')
       } catch (e) { console.error(e) }
     },
 
-    applyRestoredAudioState() {
+    applyRestoredAudioState(options = {}) {
       const state = this.restoredAudioState
       if (!state || !this.audioElement || !state.src) return
+      const autoplay = typeof options.autoplay === 'boolean' ? options.autoplay : !!state.isPlaying
       const activeAudio = this.activeVerseRef?.audio ? this.normalizeAudioUrl(this.activeVerseRef.audio) : ''
       const restoredAudio = this.normalizeAudioUrl(state.src)
       if (activeAudio && restoredAudio && activeAudio !== restoredAudio) return
@@ -12506,7 +12963,7 @@ export default {
           this.audioElement.currentTime = Number(state.currentTime || 0)
           this.audioElement.defaultPlaybackRate = restoredSpeed
           this.audioElement.playbackRate = restoredSpeed
-          if (state.isPlaying) {
+          if (autoplay) {
             this.audioElement.play().then(() => {
               this.isPlaying = true
             }).catch(() => { })
@@ -12549,10 +13006,9 @@ export default {
       this.showSessionExitModal = true
     },
 
-    restoreSessionExitSnapshot() {
-      const snapshot = this.sessionExitSnapshot
+    restoreSessionFromSnapshot(snapshot, options = {}) {
       if (!snapshot) return
-
+      const { autoplay = true } = options
       this.currentMode = snapshot.mode || this.currentMode
       this.tab = snapshot.tab || this.tab
       this.blurModeEnabled = !!snapshot.blurModeEnabled
@@ -12580,8 +13036,61 @@ export default {
         isPlaying: !!snapshot.isPlaying
       }
       this.$nextTick(() => {
-        this.applyRestoredAudioState()
+        this.applyRestoredAudioState({ autoplay })
       })
+    },
+
+    restoreSessionExitSnapshot(options = {}) {
+      const snapshot = this.sessionExitSnapshot
+      if (!snapshot) return
+      this.restoreSessionFromSnapshot(snapshot, options)
+    },
+
+    resumePlaybackFromRestoredState() {
+      if (this.restoredAudioState?.src) {
+        this.applyRestoredAudioState({ autoplay: true })
+        return
+      }
+      const entry = this.queue?.[this.queueIndex]
+      if (entry) this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
+    },
+
+    continueSessionFromExitModal() {
+      const snapshot = this.sessionExitSnapshot
+      this.showSessionExitModal = false
+      this.sessionExitPreviewSnapshot = null
+      if (!snapshot) return
+      this.restoreSessionFromSnapshot(snapshot, { autoplay: false })
+      this.showCountdown(() => {
+        this.resumePlaybackFromRestoredState()
+      })
+    },
+
+    prepareRangeRestart() {
+      const mode = this.currentMode
+      const store = this.getModeStore(mode)
+      const firstVerseKey = store?.verses?.[0]?.key || this.verses?.[0]?.key || null
+      if (store) {
+        store.queueIndex = 0
+        store.activeKey = firstVerseKey
+      }
+      this.queueIndex = 0
+      this.activeVerseKey = firstVerseKey
+      this.activeKey = firstVerseKey
+      this.currentTime = 0
+      this.duration = 0
+      this.restoredAudioState = null
+      if (this.audioElement) {
+        try {
+          this.audioElement.pause()
+          this.audioElement.currentTime = 0
+          this.audioElement.removeAttribute('src')
+          this.audioElement.load()
+        } catch {}
+      }
+      if (firstVerseKey) {
+        this.setActiveVerse(firstVerseKey, { mode, queueIndex: 0, scroll: false })
+      }
     },
 
     closeSessionExitModal(options = {}) {
@@ -12597,8 +13106,13 @@ export default {
 
     clearExitSessionStorage() {
       try {
-        localStorage.removeItem('telawa.continueSession')
-        localStorage.removeItem('telawa.audioState')
+        if (this.learningBackendEnabled()) {
+          this.deleteWorkspaceStateValue('continueSession')
+          this.deleteWorkspaceStateValue('audioState')
+        } else {
+          localStorage.removeItem('telawa.continueSession')
+          localStorage.removeItem('telawa.audioState')
+        }
       } catch (error) {
         console.error('Failed to clear exit-session storage:', error)
       }
@@ -12814,10 +13328,12 @@ export default {
     exitSessionToRepeatRange() {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
         this.closeSessionExitModal({ restore: false })
+        this.prepareRangeRestart()
         this.startSessionWithCountdown()
         return
       }
       this.confirmSessionExit({ showSummary: false })
+      this.prepareRangeRestart()
       this.startSessionWithCountdown()
     },
     exitSessionToSaveSession() {
@@ -12873,6 +13389,7 @@ export default {
     },
     repeatSessionFromEndedModal() {
       this.closeSessionEndedModal()
+      this.prepareRangeRestart()
       this.startSessionWithCountdown()
     },
 
@@ -12928,7 +13445,11 @@ export default {
       this.continueSessionPayload = null
       this.continueSessionLabel = ''
       try {
-        localStorage.removeItem('telawa.continueSession')
+        if (this.learningBackendEnabled()) {
+          this.deleteWorkspaceStateValue('continueSession')
+        } else {
+          localStorage.removeItem('telawa.continueSession')
+        }
       } catch (e) { console.error(e) }
       this.showBanner(this.t('toasts.savedSessionDismissed'), 'info', 1800)
     },
@@ -12948,11 +13469,9 @@ export default {
     },
 
     updateMasteredWeekly() {
-      // Device-local lightweight weekly delta tracker for the "Mastered" metric.
       const today = new Date()
       const dayKey = today.toISOString().slice(0, 10)
-      let state = null
-      try { state = JSON.parse(localStorage.getItem('telawa.masteredWeekly') || 'null') } catch { state = null }
+      let state = this.readScopedStorageValue('masteredWeekly', 'telawa.masteredWeekly', null)
       if (!state || !Array.isArray(state.series) || state.series.length !== 7) {
         state = { dayKey, lastTotal: Number(this.analytics.versesMastered || 0), series: [0, 0, 0, 0, 0, 0, 0] }
       }
@@ -12968,7 +13487,7 @@ export default {
         state.series[state.series.length - 1] += delta
         state.lastTotal = current
       }
-      try { localStorage.setItem('telawa.masteredWeekly', JSON.stringify(state)) } catch { }
+      this.writeScopedStorageValue('masteredWeekly', 'telawa.masteredWeekly', state)
     },
 
     normalizePlaybackSpeed(value = this.speed) {
@@ -13061,12 +13580,18 @@ export default {
 
     loadCentralSessionState() {
       try {
-        const raw = localStorage.getItem(CENTRAL_SESSION_STORAGE_KEY)
-        if (!raw) return
-        const saved = JSON.parse(raw)
+        const saved = this.learningBackendEnabled()
+          ? this.readWorkspaceStateValue('centralSession', null)
+          : (() => {
+            const raw = localStorage.getItem(CENTRAL_SESSION_STORAGE_KEY)
+            return raw ? JSON.parse(raw) : null
+          })()
+        if (!saved) return
         let uiChaining = null
         try {
-          const uiState = JSON.parse(localStorage.getItem('telawa.uiState') || 'null')
+          const uiState = this.learningBackendEnabled()
+            ? this.readWorkspaceStateValue('uiState', null)
+            : JSON.parse(localStorage.getItem('telawa.uiState') || 'null')
           if (uiState && ['linking', 'cumulative'].includes(uiState.chainingMethod)) {
             uiChaining = {
               enabled: uiState.chainingEnabled ?? this.chainingEnabled,
@@ -13140,7 +13665,11 @@ export default {
             currentTime: Number(this.audioElement?.currentTime || this.currentTime || 0)
           }
         }
-        localStorage.setItem(CENTRAL_SESSION_STORAGE_KEY, JSON.stringify(this.centralSession))
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue('centralSession', this.centralSession)
+        } else {
+          localStorage.setItem(CENTRAL_SESSION_STORAGE_KEY, JSON.stringify(this.centralSession))
+        }
       } catch (e) {
         console.error('Failed to persist central session state:', e)
       }
@@ -13468,7 +13997,8 @@ export default {
 
     persistVerseFontSizes() {
       try {
-        localStorage.setItem('telawa.verseFontSizes', JSON.stringify(this.verseFontSizes))
+        this.writeScopedStorageValue('verseFontSizes', 'telawa.verseFontSizes', this.verseFontSizes)
+        this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', this.defaultFontSize)
       } catch (e) {
         console.error('Failed to save font sizes:', e)
       }
@@ -13476,19 +14006,19 @@ export default {
 
     loadVerseFontSizes() {
       try {
-        const savedSizes = localStorage.getItem('telawa.verseFontSizes')
-        if (savedSizes) {
-          this.verseFontSizes = JSON.parse(savedSizes)
+        const savedSizes = this.readScopedStorageValue('verseFontSizes', 'telawa.verseFontSizes', null)
+        if (savedSizes && typeof savedSizes === 'object') {
+          this.verseFontSizes = savedSizes
         }
-        const savedDefault = localStorage.getItem('telawa.defaultFontSize')
-        if (savedDefault) {
-          const parsed = Number(JSON.parse(savedDefault))
+        const savedDefault = this.readScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', null)
+        if (savedDefault !== null && typeof savedDefault !== 'undefined') {
+          const parsed = Number(savedDefault)
           if (Number.isFinite(parsed) && parsed > 0) {
             this.defaultFontSize = parsed
           }
         } else {
           this.defaultFontSize = 120
-          localStorage.setItem('telawa.defaultFontSize', JSON.stringify(120))
+          this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', 120)
         }
       } catch (e) {
         console.error('Failed to load font sizes:', e)
@@ -13545,14 +14075,12 @@ export default {
           verses: this.verses
         }
 
-        localStorage.setItem(storageKey, JSON.stringify(offlineData))
+        this.writeScopedStorageValue(`offlineSurah:${storageKey}`, storageKey, offlineData)
 
         // Update catalog
         const catalogKey = 'offline_surah_catalog'
-        let catalog = []
-        try {
-          catalog = JSON.parse(localStorage.getItem(catalogKey) || '[]')
-        } catch (e) { catalog = [] }
+        let catalog = this.readScopedStorageValue('offlineSurahCatalog', catalogKey, [])
+        if (!Array.isArray(catalog)) catalog = []
 
         const entry = {
           id: storageKey,
@@ -13565,7 +14093,7 @@ export default {
 
         const filtered = catalog.filter(c => c.id !== storageKey)
         filtered.push(entry)
-        localStorage.setItem(catalogKey, JSON.stringify(filtered))
+        this.writeScopedStorageValue('offlineSurahCatalog', catalogKey, filtered)
         this.offlineSurahs = filtered
 
         this.showBanner(this.t('toasts.savedVersesFromForOfflineReading', { length: this.verses.length, p0: surahName }), 'success', 3000)
@@ -13577,8 +14105,8 @@ export default {
 
     loadOfflineCatalog() {
       try {
-        const catalog = JSON.parse(localStorage.getItem('offline_surah_catalog') || '[]')
-        this.offlineSurahs = catalog
+        const catalog = this.readScopedStorageValue('offlineSurahCatalog', 'offline_surah_catalog', [])
+        this.offlineSurahs = Array.isArray(catalog) ? catalog : []
       } catch (e) {
         this.offlineSurahs = []
       }
@@ -13586,7 +14114,7 @@ export default {
 
     loadOfflineSurah(entry) {
       try {
-        const data = JSON.parse(localStorage.getItem(entry.id))
+        const data = this.readScopedStorageValue(`offlineSurah:${entry.id}`, entry.id, null)
         if (!data) throw new Error('No data')
 
         // Load into current view
@@ -13625,9 +14153,9 @@ export default {
 
     performDeleteOffline() {
       const id = this.pendingDeleteId
-      localStorage.removeItem(id)
+      this.deleteScopedStorageValue(`offlineSurah:${id}`, id)
       const catalog = this.offlineSurahs.filter(s => s.id !== id)
-      localStorage.setItem('offline_surah_catalog', JSON.stringify(catalog))
+      this.writeScopedStorageValue('offlineSurahCatalog', 'offline_surah_catalog', catalog)
       this.offlineSurahs = catalog
       this.pendingDeleteId = ''
       this.showBanner(this.t('toasts.offlineSurahRemoved'), 'info', 2000)
@@ -15030,7 +15558,12 @@ export default {
     persistModeState(mode) {
       const source = this.getModeStore(mode)
       try {
-        localStorage.setItem(MODE_STORAGE_KEYS[mode], JSON.stringify(this.cloneModeState(source)))
+        const snapshot = this.cloneModeState(source)
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue(`modeState:${mode}`, snapshot)
+        } else {
+          localStorage.setItem(MODE_STORAGE_KEYS[mode], JSON.stringify(snapshot))
+        }
       } catch (e) {
         console.error(`Failed to persist ${mode} mode state:`, e)
       }
@@ -15548,11 +16081,10 @@ export default {
     updateDefaultFontSize() {
       // Clamp the value
       this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, this.defaultFontSize))
-      // Save font preference through the central browser storage adapter.
-      try {
-        localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize))
-      } catch (e) { }
+      this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', this.defaultFontSize)
       this.syncSettingsDraft()
+      this.persistVerseFontSizes()
+      this.persistUiState()
       // Update all verses
       // Show feedback
       this.showBanner(this.t('toasts.fontSize', { defaultFontSize: this.defaultFontSize }), 'info', 600)
@@ -15627,7 +16159,8 @@ export default {
       this.showWordByWord = !!next.showWordByWord
       this.wordByWordAudioEnabled = !!next.wordByWordAudioEnabled
       this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(next.defaultFontSize || 100)))
-      try { localStorage.setItem('telawa.defaultFontSize', JSON.stringify(this.defaultFontSize)) } catch { }
+      this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', this.defaultFontSize)
+      this.persistVerseFontSizes()
       this.persistUiState()
       this.persistCentralSessionState()
       this.syncSettingsDraft()
@@ -15636,88 +16169,87 @@ export default {
 
     // Persistence methods
     loadUiState() {
+      let state = null
       try {
-        const raw = localStorage.getItem('telawa.uiState')
-        if (raw) {
-          const state = JSON.parse(raw)
+        if (this.learningBackendEnabled()) {
+          state = this.readWorkspaceStateValue('uiState', null)
+        } else {
+          const raw = localStorage.getItem('telawa.uiState')
+          state = raw ? JSON.parse(raw) : null
+        }
 
-          // Only apply if state exists
-          if (state) {
-            this.theme = state.theme || this.theme
-            this.tab = ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(state.tab) ? state.tab : 'tools'
-            this.currentMode = state.currentMode || 'beginner'
-            this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep)
-              ? state.flowStep
-              : (state.flowStep === 'read' ? 'learn' : state.flowStep === 'listen' ? 'practice' : 'learn')
-            this.flowListenPlays = Math.max(0, Number(state.flowListenPlays || 0))
-            this.showTranslation = state.showTranslation ?? this.showTranslation
-            this.showTransliteration = state.showTransliteration ?? this.showTransliteration
-            this.showWordByWord = state.showWordByWord ?? this.showWordByWord
-            this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
-            this.readingViewMode = ['stacked', 'mushaf'].includes(state.readingViewMode)
-              ? state.readingViewMode
-              : 'stacked'
-            this.mushafPageIndex = 0
-	            this.aiRecitationStrictProgression = state.aiRecitationStrictProgression !== false
-	            this.aiRecitationPersistMistakes = false
-	            this.persistentAiRecitationReviews = {}
-	            this.hiddenRevealModeEnabled = false
-	            this.aiRecallModeEnabled = !!state.aiRecallModeEnabled
-	          this.mushafBackground = ['warm', 'paper', 'contrast', 'mist', 'night'].includes(state.mushafBackground) ? state.mushafBackground : this.mushafBackground
+        if (state) {
+          this.theme = state.theme || this.theme
+          this.tab = ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(state.tab) ? state.tab : 'tools'
+          this.currentMode = state.currentMode || 'beginner'
+          this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep)
+            ? state.flowStep
+            : (state.flowStep === 'read' ? 'learn' : state.flowStep === 'listen' ? 'practice' : 'learn')
+          this.flowListenPlays = Math.max(0, Number(state.flowListenPlays || 0))
+          this.showTranslation = state.showTranslation ?? this.showTranslation
+          this.showTransliteration = state.showTransliteration ?? this.showTransliteration
+          this.showWordByWord = state.showWordByWord ?? this.showWordByWord
+          this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+          this.readingViewMode = ['stacked', 'mushaf'].includes(state.readingViewMode)
+            ? state.readingViewMode
+            : 'stacked'
+          this.mushafPageIndex = 0
+          this.aiRecitationStrictProgression = state.aiRecitationStrictProgression !== false
+          this.aiRecitationPersistMistakes = false
+          this.persistentAiRecitationReviews = {}
+          this.hiddenRevealModeEnabled = false
+          this.aiRecallModeEnabled = !!state.aiRecallModeEnabled
+          this.mushafBackground = ['warm', 'paper', 'contrast', 'mist', 'night'].includes(state.mushafBackground) ? state.mushafBackground : this.mushafBackground
           this.mushafBorder = ['classic', 'fine', 'layered', 'emerald', 'ink'].includes(state.mushafBorder) ? state.mushafBorder : this.mushafBorder
-            this.focusModeEnabled = !!state.focusModeEnabled
-            this.blurModeEnabled = !!state.blurModeEnabled
-            this.blurIntensity = Math.max(4, Math.min(18, Number(state.blurIntensity ?? this.blurIntensity ?? 10)))
-            this.chainingEnabled = state.chainingEnabled ?? this.chainingEnabled
-            this.chainingMethod = ['linking', 'cumulative'].includes(state.chainingMethod)
-              ? state.chainingMethod
-              : this.chainingMethod
-            this.chainingRepetitions = Math.max(1, Math.min(5, Number(state.chainingRepetitions || this.chainingRepetitions || 1)))
-            this.selectedLoopCount = state.selectedLoopCount === 'infinite'
-              ? 'infinite'
-              : [1, 3, 5, 10].includes(Number(state.selectedLoopCount))
-                ? Number(state.selectedLoopCount)
-                : this.selectedLoopCount
-            this.repetitionsPerStep = this.selectedLoopCount === 'infinite'
-              ? 10
-              : Math.max(1, Math.min(50, Number(state.repetitionsPerStep || this.selectedLoopCount || this.repetitionsPerStep || 5)))
-            this.gapBetweenVerses = ['none', '1x', '3s', '5s', 'custom'].includes(state.gapBetweenVerses)
-              ? state.gapBetweenVerses
-              : this.gapBetweenVerses
-            this.customGapSeconds = Math.max(0.5, Math.min(10, Number(state.customGapSeconds || this.customGapSeconds || 2)))
-            this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
-            this.fontScale = Math.max(0.9, Math.min(1.2, Number(state.fontScale ?? this.fontScale ?? 1)))
-            this.enScale = this.fontScale
-            this.quizType = ['mixed', 'flashcard', 'mcq', 'audio_mcq', 'blank'].includes(state.quizType)
-              ? state.quizType
-              : this.quizType
-            this.quizFocus = ['adaptive', 'recite_text', 'audio_recall', 'meaning'].includes(state.quizFocus)
-              ? state.quizFocus
-              : this.quizFocus
-            this.quizLength = [4, 6, 8, 10, 12].includes(Number(state.quizLength))
-              ? Number(state.quizLength)
-              : this.quizLength
-
-            // Anchor Mode settings
-            this.anchorModeEnabled = state.anchorModeEnabled ?? false
-            this.anchorCount = state.anchorCount ?? 2
-
-            this.settingsDraft = {
-              tajweedEnabled: state.tajweedEnabled ?? this.tajweedEnabled ?? false,
-              showTranslation: state.showTranslation ?? this.showTranslation,
-              showTransliteration: state.showTransliteration ?? this.showTransliteration,
-              showWordByWord: state.showWordByWord ?? this.showWordByWord,
-              wordByWordAudioEnabled: state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled,
-              defaultFontSize: Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
-            }
-            this.uiScale = Number(state.uiScale ?? this.uiScale)
-            this.quranFont = state.quranFont || this.quranFont
-            this.script = state.script || this.script
-            this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
-            this.tajweedEnabled = state.tajweedEnabled ?? false
-            this.mainCardCollapsed = !!state.mainCardCollapsed
-            this.feedbackCollapsed = !!state.feedbackCollapsed
+          this.focusModeEnabled = !!state.focusModeEnabled
+          this.blurModeEnabled = !!state.blurModeEnabled
+          this.blurIntensity = Math.max(4, Math.min(18, Number(state.blurIntensity ?? this.blurIntensity ?? 10)))
+          this.chainingEnabled = state.chainingEnabled ?? this.chainingEnabled
+          this.chainingMethod = ['linking', 'cumulative'].includes(state.chainingMethod)
+            ? state.chainingMethod
+            : this.chainingMethod
+          this.chainingRepetitions = Math.max(1, Math.min(5, Number(state.chainingRepetitions || this.chainingRepetitions || 1)))
+          this.selectedLoopCount = state.selectedLoopCount === 'infinite'
+            ? 'infinite'
+            : [1, 3, 5, 10].includes(Number(state.selectedLoopCount))
+              ? Number(state.selectedLoopCount)
+              : this.selectedLoopCount
+          this.repetitionsPerStep = this.selectedLoopCount === 'infinite'
+            ? 10
+            : Math.max(1, Math.min(50, Number(state.repetitionsPerStep || this.selectedLoopCount || this.repetitionsPerStep || 5)))
+          this.gapBetweenVerses = ['none', '1x', '3s', '5s', 'custom'].includes(state.gapBetweenVerses)
+            ? state.gapBetweenVerses
+            : this.gapBetweenVerses
+          this.customGapSeconds = Math.max(0.5, Math.min(10, Number(state.customGapSeconds || this.customGapSeconds || 2)))
+          this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
+          this.fontScale = Math.max(0.9, Math.min(1.2, Number(state.fontScale ?? this.fontScale ?? 1)))
+          this.enScale = this.fontScale
+          this.quizType = ['mixed', 'flashcard', 'mcq', 'audio_mcq', 'blank'].includes(state.quizType)
+            ? state.quizType
+            : this.quizType
+          this.quizFocus = ['adaptive', 'recite_text', 'audio_recall', 'meaning'].includes(state.quizFocus)
+            ? state.quizFocus
+            : this.quizFocus
+          this.quizLength = [4, 6, 8, 10, 12].includes(Number(state.quizLength))
+            ? Number(state.quizLength)
+            : this.quizLength
+          this.anchorModeEnabled = state.anchorModeEnabled ?? false
+          this.anchorCount = state.anchorCount ?? 2
+          this.settingsDraft = {
+            tajweedEnabled: state.tajweedEnabled ?? this.tajweedEnabled ?? false,
+            showTranslation: state.showTranslation ?? this.showTranslation,
+            showTransliteration: state.showTransliteration ?? this.showTransliteration,
+            showWordByWord: state.showWordByWord ?? this.showWordByWord,
+            wordByWordAudioEnabled: state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled,
+            defaultFontSize: Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
           }
+          this.uiScale = Number(state.uiScale ?? this.uiScale)
+          this.quranFont = state.quranFont || this.quranFont
+          this.script = state.script || this.script
+          this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
+          this.tajweedEnabled = state.tajweedEnabled ?? false
+          this.mainCardCollapsed = !!state.mainCardCollapsed
+          this.feedbackCollapsed = !!state.feedbackCollapsed
         }
       } catch (e) {
         console.error('Error loading UI state:', e)
@@ -15749,7 +16281,7 @@ export default {
 
       if (this.isBootstrapping) return
       try {
-        localStorage.setItem('telawa.uiState', JSON.stringify({
+        const nextUiState = {
           anchorModeEnabled: this.anchorModeEnabled,
           anchorCount: this.anchorCount,
           theme: this.theme,
@@ -15793,8 +16325,13 @@ export default {
           tajweedEnabled: this.tajweedEnabled,
           mainCardCollapsed: this.mainCardCollapsed,
           feedbackCollapsed: this.feedbackCollapsed,
+        }
 
-        }))
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue('uiState', nextUiState)
+        } else {
+          localStorage.setItem('telawa.uiState', JSON.stringify(nextUiState))
+        }
       } catch (e) {
         console.error('Failed to persist UI state:', e)
       }
@@ -15808,23 +16345,32 @@ export default {
       if (this.isBootstrapping) return
       const mode = this.currentMode
       try {
-        localStorage.setItem(SESSION_STORAGE_KEYS[mode], JSON.stringify({
+        const nextState = {
           activeKey: this.activeKey,
           activeVerseKey: this.activeVerseKey,
           queueIndex: this.queueIndex,
           completed: !!this.sessionCompleted,
           completedAt: this.sessionCompletedAt,
           timestamp: Date.now()
-        }))
+        }
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue(`sessionState:${mode}`, nextState)
+        } else {
+          localStorage.setItem(SESSION_STORAGE_KEYS[mode], JSON.stringify(nextState))
+        }
       } catch (e) { console.error(e) }
     },
 
     restoreSessionState() {
       ;['beginner', 'advanced', 'planner'].forEach(mode => {
-        const saved = localStorage.getItem(SESSION_STORAGE_KEYS[mode])
-        if (!saved) return
         try {
-          const state = JSON.parse(saved)
+          const state = this.learningBackendEnabled()
+            ? this.readWorkspaceStateValue(`sessionState:${mode}`, null)
+            : (() => {
+              const saved = localStorage.getItem(SESSION_STORAGE_KEYS[mode])
+              return saved ? JSON.parse(saved) : null
+            })()
+          if (!state) return
           if (state.completed) return
           if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
             const target = this.getModeStore(mode)
@@ -15856,13 +16402,18 @@ export default {
     _persistAudioStateNow() {
       if (this.isBootstrapping) return
       try {
-        localStorage.setItem('telawa.audioState', JSON.stringify({
+        const nextState = {
           src: this.audioElement?.currentSrc || '',
           currentTime: this.currentTime || 0,
           playerVisible: this.playerVisible,
           speed: this.speed,
           isPlaying: this.isPlaying
-        }))
+        }
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue('audioState', nextState)
+        } else {
+          localStorage.setItem('telawa.audioState', JSON.stringify(nextState))
+        }
       } catch (e) {
         console.error('Failed to persist audio state:', e)
       }
@@ -15897,16 +16448,12 @@ export default {
     },
 
     getOrCreateDeviceId() {
-      try {
-        let id = localStorage.getItem('mutqin.deviceId')
-        if (!id) {
-          id = `web-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`
-          localStorage.setItem('mutqin.deviceId', id)
-        }
-        return id
-      } catch {
-        return null
+      let id = this.readScopedStorageValue('deviceId', 'mutqin.deviceId', null)
+      if (!id) {
+        id = `web-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`
+        this.writeScopedStorageValue('deviceId', 'mutqin.deviceId', id)
       }
+      return id
     },
 
     buildLearningStatePayload() {
@@ -16011,11 +16558,8 @@ export default {
 
     async runLearningMigration() {
       if (!this.learningBackendEnabled()) return
-      try {
-        if (localStorage.getItem('migration_complete') === 'true') return
-      } catch {
-        return
-      }
+      if (this.auth?.just_registered) return
+      if (this.readScopedStorageValue('migrationComplete', 'migration_complete', false) === true) return
 
       const payload = this.buildLearningStatePayload()
       const state = payload.state || {}
@@ -16025,14 +16569,14 @@ export default {
         Number(state.stats?.sessions_completed || 0) > 0
 
       if (!hasLocalData) {
-        try { localStorage.setItem('migration_complete', 'true') } catch {}
+        this.writeScopedStorageValue('migrationComplete', 'migration_complete', true)
         return
       }
 
       try {
         const res = await withRetry(() => learningApi.migrateLocalStorage(payload), { retries: 2, baseDelay: 1500 })
         if (res?.migrated || res?.already_migrated) {
-          try { localStorage.setItem('migration_complete', 'true') } catch {}
+          this.writeScopedStorageValue('migrationComplete', 'migration_complete', true)
           this.learningSync.lastPushedHash = this.learningPayloadHash(payload)
         }
       } catch {
@@ -16045,7 +16589,7 @@ export default {
       try {
         const hasRemote = await this.pullLearningState()
         if (hasRemote) {
-          try { localStorage.setItem('migration_complete', 'true') } catch {}
+          this.writeScopedStorageValue('migrationComplete', 'migration_complete', true)
         } else {
           await this.runLearningMigration()
         }
@@ -16058,9 +16602,7 @@ export default {
 
     readApiCache(key, maxAgeMs = 7 * 24 * 60 * 60 * 1000) {
       try {
-        const raw = localStorage.getItem(`mutqin.apiCache.${key}`)
-        if (!raw) return null
-        const parsed = JSON.parse(raw)
+        const parsed = this.readScopedStorageValue(`apiCache:${key}`, `mutqin.apiCache.${key}`, null)
         if (!parsed || typeof parsed.t !== 'number') return null
         if (Date.now() - parsed.t > maxAgeMs) return null
         return parsed.v
@@ -16071,7 +16613,7 @@ export default {
 
     writeApiCache(key, value) {
       try {
-        localStorage.setItem(`mutqin.apiCache.${key}`, JSON.stringify({ t: Date.now(), v: value }))
+        this.writeScopedStorageValue(`apiCache:${key}`, `mutqin.apiCache.${key}`, { t: Date.now(), v: value })
       } catch { /* storage full / disabled: non-critical */ }
     },
 
@@ -16158,8 +16700,14 @@ export default {
 
     loadSavedSessions() {
       try {
-        this.ensureSeededSavedSessions()
-        this.savedSessions = JSON.parse(localStorage.getItem(this.savedSessionsStorageKey()) || '[]')
+        let sessions = []
+        if (this.learningBackendEnabled()) {
+          sessions = this.readWorkspaceStateValue('savedSessions', [])
+        } else {
+          this.ensureSeededSavedSessions()
+          sessions = JSON.parse(localStorage.getItem(this.savedSessionsStorageKey()) || '[]')
+        }
+        this.savedSessions = (Array.isArray(sessions) ? sessions : [])
           .map(session => this.normalizeSavedSessionRecord(session))
           .filter(Boolean)
         if (!this.savedSessions.some(session => session.id === this.selectedStatsSessionId)) {
@@ -16172,19 +16720,36 @@ export default {
     },
 
     loadSm2() {
-      try { this.sm2 = JSON.parse(localStorage.getItem('telawa.sm2') || '{}') } catch { this.sm2 = {} }
+      try {
+        this.sm2 = this.learningBackendEnabled()
+          ? (this.readWorkspaceStateValue('sm2', {}) || {})
+          : JSON.parse(localStorage.getItem('telawa.sm2') || '{}')
+      } catch { this.sm2 = {} }
     },
 
     persistSm2() {
-      try { localStorage.setItem('telawa.sm2', JSON.stringify(this.sm2)) } catch (e) { console.error(e) }
+      try {
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue('sm2', this.sm2)
+        } else {
+          localStorage.setItem('telawa.sm2', JSON.stringify(this.sm2))
+        }
+      } catch (e) { console.error(e) }
     },
 
     loadEvents() {
-      try { this.events = JSON.parse(localStorage.getItem('telawa.events') || '[]') } catch { this.events = [] }
+      try {
+        const list = this.readScopedStorageValue('events', 'telawa.events', [])
+        this.events = Array.isArray(list) ? list : []
+      } catch { this.events = [] }
     },
 
     loadPlanner() {
-      try { this.plannerState = JSON.parse(localStorage.getItem('telawa.planner') || 'null') } catch { this.plannerState = null }
+      try {
+        this.plannerState = this.learningBackendEnabled()
+          ? (this.readWorkspaceStateValue('plannerState', null))
+          : JSON.parse(localStorage.getItem('telawa.planner') || 'null')
+      } catch { this.plannerState = null }
       if (!this.plannerState) {
         this.plannerState = { settings: { dailyMinutes: 20, newAyat: 5, reviewCards: 15 } }
       }
@@ -16192,26 +16757,45 @@ export default {
     },
 
     loadTodayPlan() {
-      try { this.todayPlan = JSON.parse(localStorage.getItem('telawa.todayPlan') || 'null') } catch { this.todayPlan = null }
+      try {
+        this.todayPlan = this.learningBackendEnabled()
+          ? (this.readWorkspaceStateValue('todayPlan', null))
+          : JSON.parse(localStorage.getItem('telawa.todayPlan') || 'null')
+      } catch { this.todayPlan = null }
     },
 
     persistPlanner() {
-      try { localStorage.setItem('telawa.planner', JSON.stringify(this.plannerState)) } catch (e) { console.error(e) }
+      try {
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue('plannerState', this.plannerState)
+        } else {
+          localStorage.setItem('telawa.planner', JSON.stringify(this.plannerState))
+        }
+      } catch (e) { console.error(e) }
     },
 
     persistTodayPlan() {
-      try { localStorage.setItem('telawa.todayPlan', JSON.stringify(this.todayPlan)) } catch (e) { console.error(e) }
+      try {
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue('todayPlan', this.todayPlan)
+        } else {
+          localStorage.setItem('telawa.todayPlan', JSON.stringify(this.todayPlan))
+        }
+      } catch (e) { console.error(e) }
     },
 
     loadMetrics() {
-      try { this.metrics = JSON.parse(localStorage.getItem('telawa.metrics') || 'null') } catch { this.metrics = null }
+      try {
+        this.metrics = this.readScopedStorageValue('metrics', 'telawa.metrics', null)
+      } catch { this.metrics = null }
       if (!this.metrics) this.metrics = { avgAyahSeconds: 10, durationsByVerse: {} }
     },
 
     loadAnalytics() {
       try {
-        const raw = localStorage.getItem('telawa.analytics') || 'null'
-        const saved = JSON.parse(raw)
+        const saved = this.learningBackendEnabled()
+          ? this.readWorkspaceStateValue('analytics', null)
+          : JSON.parse(localStorage.getItem('telawa.analytics') || 'null')
         if (saved && typeof saved === 'object') {
           this.analytics = { ...this.analytics, ...saved }
         }
@@ -16220,7 +16804,13 @@ export default {
     },
 
     persistAnalytics() {
-      try { localStorage.setItem('telawa.analytics', JSON.stringify(this.analytics)) } catch { }
+      try {
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue('analytics', this.analytics)
+        } else {
+          localStorage.setItem('telawa.analytics', JSON.stringify(this.analytics))
+        }
+      } catch { }
     },
 
     getActivityDayKey(ts = Date.now()) {
@@ -16229,20 +16819,26 @@ export default {
 
     addActivityEvent(event) {
       try {
-        const raw = localStorage.getItem('telawa.activity') || '[]'
-        const list = JSON.parse(raw)
+        const list = this.learningBackendEnabled()
+          ? (this.readWorkspaceStateValue('activity', []) || [])
+          : JSON.parse(localStorage.getItem('telawa.activity') || '[]')
         if (!Array.isArray(list)) return
         list.push(event)
         // cap to keep it lightweight
         while (list.length > 5000) list.shift()
-        localStorage.setItem('telawa.activity', JSON.stringify(list))
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue('activity', list)
+        } else {
+          localStorage.setItem('telawa.activity', JSON.stringify(list))
+        }
       } catch { }
     },
 
     readActivityEvents() {
       try {
-        const raw = localStorage.getItem('telawa.activity') || '[]'
-        const list = JSON.parse(raw)
+        const list = this.learningBackendEnabled()
+          ? (this.readWorkspaceStateValue('activity', []) || [])
+          : JSON.parse(localStorage.getItem('telawa.activity') || '[]')
         return Array.isArray(list) ? list : []
       } catch {
         return []
@@ -16347,8 +16943,16 @@ export default {
     },
 
     loadBookmarksPins() {
-      try { this.bookmarks = JSON.parse(localStorage.getItem(this.userStorageKey('bookmarks')) || '[]') } catch { this.bookmarks = [] }
-      try { this.pins = JSON.parse(localStorage.getItem(this.userStorageKey('pins')) || '[]') } catch { this.pins = [] }
+      try {
+        this.bookmarks = this.learningBackendEnabled()
+          ? (this.readWorkspaceStateValue('bookmarks', []) || [])
+          : JSON.parse(localStorage.getItem(this.userStorageKey('bookmarks')) || '[]')
+      } catch { this.bookmarks = [] }
+      try {
+        this.pins = this.learningBackendEnabled()
+          ? (this.readWorkspaceStateValue('pins', []) || [])
+          : JSON.parse(localStorage.getItem(this.userStorageKey('pins')) || '[]')
+      } catch { this.pins = [] }
     },
 
     userStorageKey(suffix) {

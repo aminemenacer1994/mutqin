@@ -48,6 +48,13 @@ function hasLocalStorage() {
   return typeof localStorage !== 'undefined'
 }
 
+function getStorageAdapter() {
+  const bridge = typeof globalThis !== 'undefined' ? globalThis.__MUTQIN_STORAGE_BRIDGE__ : null
+  if (bridge && typeof bridge.getItem === 'function') return bridge
+  if (hasLocalStorage()) return localStorage
+  return null
+}
+
 function safeJsonParse(value, fallback) {
   try {
     const parsed = value ? JSON.parse(value) : fallback
@@ -58,8 +65,9 @@ function safeJsonParse(value, fallback) {
 }
 
 function readStorageObject(key, fallback = {}) {
-  if (!hasLocalStorage()) return fallback
-  const parsed = safeJsonParse(localStorage.getItem(key), fallback)
+  const storage = getStorageAdapter()
+  if (!storage) return fallback
+  const parsed = safeJsonParse(storage.getItem(key), fallback)
   return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : fallback
 }
 
