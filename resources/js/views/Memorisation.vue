@@ -15,7 +15,9 @@
     </div>
 
     <!-- Main Content -->
-    <div v-if="appReady && isLoggedIn" class="main container" :class="{
+    <div v-if="appReady && isLoggedIn" class="main" :class="{
+      'container-fluid': readingViewMode === 'mushaf',
+      'container': readingViewMode !== 'mushaf',
       'tools-open': showTools,
       'player-visible': playerVisible,
       'mushaf-mode-active': readingViewMode === 'mushaf',
@@ -24,7 +26,7 @@
       'flow-practice': guidedUiStep === 'practice',
       'flow-recall': guidedUiStep === 'recall'
     }">
-      <div class="content">
+      <div v-if="!shouldGateWorkspaceForResumeChoice" class="content">
         <div v-if="false" class="reading-toolbar">
           <hr class="reading-toolbar-sep" aria-hidden="true" />
           <div class="reading-toolbar-group">
@@ -91,6 +93,21 @@
           <div class="workspace-shell-copy">
             <span class="workspace-shell-kicker">{{ t('memorisation.sessionOverview.kicker') }}</span>
             <h1 class="workspace-shell-main-title">{{ topCardSessionLabel }}</h1>
+            <div
+              v-if="topCardMetadataPills.length"
+              v-show="!mainCardCollapsed"
+              class="workspace-shell-metadata d-flex flex-nowrap gap-2"
+              aria-label="Session metadata"
+            >
+              <span
+                v-for="item in topCardMetadataPills"
+                :key="item.key"
+                class="badge rounded-pill workspace-shell-metadata-pill"
+              >
+                <strong>{{ item.label }}:</strong>
+                <span>{{ item.value }}</span>
+              </span>
+            </div>
             <div v-if="reviewPriorityLabel" v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
               <span>{{ reviewPriorityLabel }}</span>
             </div>
@@ -108,7 +125,7 @@
                 </span>
                 <span class="view-mode-switch-label">{{ t('memorisation.view.mushaf') }}</span>
               </button>
-              <div v-if="readingViewMode !== 'mushaf'" class="font-dropdown quick-font-dropdown" @click.stop>
+              <div class="font-dropdown quick-font-dropdown" @click.stop>
                 <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
                   <i class="bi bi-text-paragraph" aria-hidden="true"></i>
                   <span class="d-none d-sm-inline">{{ getCurrentFontLabel() }}</span>
@@ -133,12 +150,12 @@
                 <i class="bi bi-plus-circle" aria-hidden="true"></i>
                 <span>{{ t('memorisation.open_session_setup') }}</span>
               </button>
-              <button v-if="showHeaderSessionAction" class="action-btn action-btn-session" type="button"
+              <button v-if="showHeaderSessionAction" class="action-btn btn btn-primary session-primary-action" type="button"
                 @click="handleHeaderSessionAction" :title="headerSessionActionLabel" :aria-label="headerSessionActionLabel">
                 <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
                 <span>{{ headerSessionActionLabel }}</span>
               </button>
-              <button v-if="hasSessionStarted && !isSessionCompleted" class="action-btn action-btn-secondary action-btn-exit" type="button"
+              <button v-if="hasSessionStarted && !isSessionCompleted" class="action-btn btn btn-outline-secondary action-btn-secondary action-btn-exit" type="button"
                 @click="openSessionExitModal" title="End session" aria-label="End session">
                 <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                 <span class="d-none d-sm-inline">{{ t('sessionStatus.end') }}</span>
@@ -227,8 +244,8 @@
               </div>
             </section>
             <div v-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace container-fluid px-0">
-              <div class="mushaf-frame">
-                <div class="mushaf-pill-bar mushaf-pill-toolbar">
+              <div class="mushaf-frame" :class="{ 'mushaf-frame-toolbar-collapsed': mushafToolbarCollapsed }">
+                <div class="mushaf-pill-bar mushaf-pill-toolbar" :class="{ 'is-collapsed': mushafToolbarCollapsed }">
                   <div class="mushaf-toolbar-cluster mushaf-toolbar-cluster-start">
                     <div class="mushaf-toolbar-dropdown font-dropdown-region">
                       <button @click.stop="fontOpen = !fontOpen; bgOpen = false; borderOpen = false" type="button" class="mushaf-toolbar-trigger"
@@ -284,6 +301,17 @@
                   </div>
 
                   <div class="mushaf-toolbar-cluster mushaf-toolbar-cluster-end">
+                    <button
+                      type="button"
+                      class="mushaf-pill mushaf-tajweed-pill"
+                      :class="{ active: tajweedEnabled }"
+                      @click.stop="toggleTajweed"
+                      :aria-pressed="tajweedEnabled ? 'true' : 'false'"
+                      title="Toggle Tajweed"
+                    >
+                      <i class="bi bi-palette"></i>
+                      <span class="mushaf-pill-label">Tajweed</span>
+                    </button>
                     <button v-if="showAiMemorisationButton" class="mushaf-pill mushaf-ai-pill mushaf-ai-memory" type="button" @click.stop="openAiMemorisationCheckerForVerse(activeVerseRef)"
                       :class="{ active: aiMemorisationCheckerRecording }"
                       :disabled="!activeVerseRef || aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()"
@@ -305,7 +333,7 @@
                     </button>
                   </div>
                 </div>
-                <div ref="mushafViewport" class="mushaf-viewport" :class="[`mushaf-bg-${mushafBackground}`]">
+                <div ref="mushafViewport" class="mushaf-viewport" :class="[`mushaf-bg-${mushafBackground}`, { 'toolbar-collapsed': mushafToolbarCollapsed }]">
                   <div v-if="!mushafPages.length" class="mushaf-empty-page">
                     <i class="bi bi-book"></i>
                     <strong>{{ t('memorisation.mushaf_page_is_preparing') }}</strong>
@@ -895,6 +923,49 @@
               </div>
             </section>
 
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('talqin_mode')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-soundwave"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">Talqin mode</span>
+                    <span class="st-sub">Pause after each ayah so the learner can repeat before the next one starts.</span>
+                  </span>
+                </span>
+                <div class="st-right-group">
+                  <div class="mode-radio-group" @click.stop>
+                    <button
+                      id="talqin-mode-toggle"
+                      type="button"
+                      class="mode-radio"
+                      :class="{ active: talqinModeEnabled }"
+                      :aria-pressed="talqinModeEnabled ? 'true' : 'false'"
+                      aria-label="Use talqin mode"
+                      @click="talqinModeEnabled = !talqinModeEnabled"
+                    >
+                      <i class="mode-radio-icon bi" :class="talqinModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <span class="st-chev" :class="{ open: sectionOpen.talqin_mode }"><i class="bi bi-chevron-down"></i></span>
+                </div>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.talqin_mode">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="technique-description">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>Mutqin pauses after each ayah so the learner can repeat before the next ayah begins.</span>
+                    </div>
+                    <div class="technique-best">
+                      <i class="bi bi-check-circle-fill"></i>
+                      <span>Best for listen, pause, repeat practice.</span>
+                    </div>
+                    <small class="field-hint">When enabled, Mutqin holds the next ayah for at least 1.5x the verse duration or the selected delay.</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <!-- <section class="sheet-section retention-check-section">
               <button class="sheet-toggle" @click="toggleSection('quiz_lab')" type="button">
                 <span class="st-left">
@@ -976,7 +1047,7 @@
                     </div>
                   </div>
                   <div class="session-actions">
-                    <button class="session-resume-btn" @click="loadSavedSession(session.id)" type="button">
+                    <button class="session-resume-btn btn btn-primary" @click="loadSavedSession(session.id)" type="button">
                       <i class="bi bi-play-fill"></i>
                       <span>{{ t('common.resume') }}</span>
                     </button>
@@ -1218,7 +1289,7 @@
             <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="openHifzPlanModal">
               <i class="bi bi-pencil-square"></i><span>{{ t('memorisation.edit_plan') }}</span>
             </button>
-            <button class="tools-btn tools-btn-primary tools-btn-soft" @click="startPlannerPrimaryAction">
+            <button class="tools-btn btn btn-primary session-primary-action" @click="startPlannerPrimaryAction">
               <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i><span>{{ plannerPrimaryActionLabel }}</span>
             </button>
           </template>
@@ -1226,8 +1297,8 @@
             <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls">
               <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
             </button>
-            <button class="tools-btn tools-btn-primary tools-btn-soft" @click="startSessionAndClose">
-              <i class="bi bi-play-fill"></i><span>{{ t('common.startSession') }}</span>
+            <button class="tools-btn btn btn-primary session-primary-action" @click="startSessionAndClose">
+              <i class="bi bi-play-fill"></i><span>{{ hasSessionStarted ? 'Resume session' : 'Start session' }}</span>
             </button>
           </template>
         </div>
@@ -1237,8 +1308,8 @@
     <div v-else-if="appReady && !isLoggedIn" class="main container">
       <section class="guest-auth-shell" aria-label="Login">
         <div class="guest-auth-card">
-          <span class="guest-auth-kicker">{{ t('ui.memorisation') }}</span>
-          <h1 class="guest-auth-title">{{ t('ui.login') }}</h1>
+          <span class="guest-auth-kicker">{{ t('common.memorisation') }}</span>
+          <h1 class="guest-auth-title">{{ t('common.login') }}</h1>
 
           <div v-if="auth.google_error" class="alert alert-danger guest-auth-alert" role="alert">
             {{ auth.google_error }}
@@ -1256,16 +1327,16 @@
                 <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.31 9.14 5.38 12 5.38z"/>
               </svg>
             </span>
-            <span>Continue with Google</span>
+            <span>{{ t('auth.continueGoogle') }}</span>
           </a>
 
-          <div class="guest-auth-divider"><span>or</span></div>
+          <div class="guest-auth-divider"><span>{{ t('auth.or') }}</span></div>
 
           <form class="guest-auth-form" method="POST" :action="auth.login_url || '/login'">
             <input type="hidden" name="_token" :value="auth.csrf_token || ''">
 
             <div class="guest-auth-field">
-              <label for="guestLoginEmail">Email Address</label>
+              <label for="guestLoginEmail">{{ t('auth.emailAddress') }}</label>
               <input
                 id="guestLoginEmail"
                 type="email"
@@ -1277,7 +1348,7 @@
             </div>
 
             <div class="guest-auth-field">
-              <label for="guestLoginPassword">Password</label>
+              <label for="guestLoginPassword">{{ t('auth.password') }}</label>
               <input
                 id="guestLoginPassword"
                 type="password"
@@ -1290,21 +1361,21 @@
             <div class="guest-auth-meta">
               <label class="guest-auth-check" for="guestRemember">
                 <input id="guestRemember" type="checkbox" name="remember" :checked="!!auth.old_remember">
-                <span>Remember me</span>
+                <span>{{ t('auth.rememberMe') }}</span>
               </label>
 
               <a v-if="auth.forgot_password_url" :href="auth.forgot_password_url" class="guest-auth-link">
-                Forgot password?
+                {{ t('auth.forgotPassword') }}
               </a>
             </div>
 
             <button type="submit" class="guest-auth-submit">
-              {{ t('ui.login') }}
+              {{ t('common.login') }}
             </button>
           </form>
 
           <p class="guest-auth-register">
-            <a :href="auth.register_url || '/register'" class="guest-auth-link">{{ t('ui.register') }}</a>
+            <a :href="auth.register_url || '/register'" class="guest-auth-link">{{ t('common.register') }}</a>
           </p>
         </div>
       </section>
@@ -1424,17 +1495,14 @@
           </div>
         </div>
         <div class="modal-footer ready-begin-footer" :class="{ 'has-continue': canResumePreviousSession }">
-          <button v-if="canResumePreviousSession" class="btn-primary" type="button" @click="continueLastSession">
-            Continue from previous session
+          <button v-if="canResumePreviousSession" class="btn-secondary" type="button" @click="continueLastSession">
+            Continue previous
           </button>
-          <button v-if="canResumePreviousSession" class="btn-secondary" type="button" @click="repeatPreviousSession">
-            Repeat session
+          <button class="btn-primary" type="button" @click="openResumeNewSession">
+            Start new session
           </button>
-          <button :class="canResumePreviousSession ? 'btn-secondary' : 'btn-primary'" type="button" @click="openResumeNewSession">
-            Create a new session
-          </button>
-          <button class="btn-secondary" type="button" @click="openResumeSavedSessions">
-            View your saved sessions
+          <button v-if="canViewSavedSessions" class="btn-secondary" type="button" @click="openResumeSavedSessions">
+            View saved sessions
           </button>
         </div>
       </div>
@@ -1533,6 +1601,18 @@
                         <span>{{ detail.text }}</span>
                       </div>
                     </div>
+                    <section
+                      v-if="activeHelpLearningSection.key === 'talqin-mode'"
+                      class="help-learning-talqin-guide text-dark dark:text-white"
+                    >
+                      <h5 class="text-dark dark:text-white"><strong>Talqin Workflow Guide (Listen, Pause, Repeat, Extend)</strong></h5>
+                      <p class="text-dark dark:text-white">Activated seamlessly right after you submit a practice session. The platform handles the timing so you can focus entirely on your retention:</p>
+                      <ul class="text-dark dark:text-white">
+                        <li><strong>1. Listen Phase:</strong> The app streams the correct pronunciation of the verse. Focus on Tajweed tracking.</li>
+                        <li><strong>2. Pause &amp; Repeat Phase:</strong> The audio pauses automatically. A live on-screen alert prompts you to recite what you just heard.</li>
+                        <li><strong>3. Extend Phase:</strong> The sequence systematically links verses together to build long-term memory capacity automatically.</li>
+                      </ul>
+                    </section>
                     <div class="help-learning-best-for">
                       <span class="help-learning-best-for-label">{{ helpLearningUi.bestFor }}</span>
                       <p>{{ activeHelpLearningSection.bestFor }}</p>
@@ -2122,22 +2202,14 @@
                   <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
                   <span>{{ recitationCheckRecording ? 'Stop AI' : 'AI Recite' }}</span>
                 </button>
-                <!-- <button v-if="recitationCheckPanelOpen" class="self-check-toolbar-btn self-check-ayah-action-recall" type="button"
-                  @click.stop="toggleAiRecallMode"
-                  :class="{ active: aiRecallModeEnabled }"
-                  :aria-pressed="aiRecallModeEnabled ? 'true' : 'false'"
-                  :disabled="isSelfCheckRecording || recitationCheckPreparing"
-                  :title="aiRecallModeEnabled ? t('memorisation.recall_mode_on_hint') : t('memorisation.recall_mode_off_hint')"
-                  :aria-label="t('memorisation.recall_mode')">
-                  <i class="bi" :class="aiRecallModeEnabled ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
-                  <span>{{ t('memorisation.recall_mode') }}</span>
-                </button> -->
-                <button v-if="aiRecallModeEnabled && recitationCheckRecording" class="self-check-toolbar-btn self-check-ayah-action-recall-peek" type="button"
-                  @click.stop="revealCurrentRecallWord"
-                  :title="t('memorisation.reveal_current_word')"
-                  :aria-label="t('memorisation.reveal_current_word')">
-                  <i class="bi bi-eye"></i>
-                  <span>{{ t('memorisation.peek') }}</span>
+                <button class="self-check-toolbar-btn self-check-toolbar-btn-text self-check-ayah-action-tajweed" type="button"
+                  @click.stop="toggleSelfCheckTajweed"
+                  :class="{ active: selfCheckTajweedEnabled }"
+                  :aria-pressed="selfCheckTajweedEnabled ? 'true' : 'false'"
+                  :title="selfCheckTajweedEnabled ? 'Hide Tajweed highlights' : 'Show Tajweed highlights'"
+                  aria-label="Toggle Tajweed highlights">
+                  <i class="bi bi-palette2"></i>
+                  <span>{{ t('common.tajweed') }}</span>
                 </button>
                 <button class="self-check-toolbar-btn self-check-ayah-action-manual" type="button"
                   @click.stop="toggleManualSelfCheckRecording(selfCheckModalVerse)"
@@ -2166,15 +2238,6 @@
               </div>
             </header>
 
-            <div v-if="recitationCheckPanelOpen && aiRecallModeEnabled && aiRecallModeStatus.message" class="recall-mode-status"
-              :class="`recall-mode-status--${aiRecallModeStatus.tone}`" aria-live="polite">
-              <i class="bi" :class="aiRecallModeStatus.icon" aria-hidden="true"></i>
-              <div class="recall-mode-status-copy">
-                <strong v-if="aiRecallModeStatus.title">{{ aiRecallModeStatus.title }}</strong>
-                <span>{{ aiRecallModeStatus.message }}</span>
-              </div>
-            </div>
-
             <div v-if="selfCheckBlurEnabled && !recitationCheckVisible" class="technique-peek-hint" @mousedown="startSelfCheckPeek"
               @mouseup="stopSelfCheckPeek" @mouseleave="stopSelfCheckPeek" @touchstart.prevent="startSelfCheckPeek"
               @touchend="stopSelfCheckPeek" @touchcancel="stopSelfCheckPeek">
@@ -2186,15 +2249,14 @@
               :class="{ 'is-blurred': selfCheckBlurEnabled && !selfCheckPeekActive && !recitationCheckVisible, 'is-peekable': selfCheckBlurEnabled && !recitationCheckVisible }"
               @mousedown="startSelfCheckPeek" @mouseup="stopSelfCheckPeek" @mouseleave="stopSelfCheckPeek"
               @touchstart.prevent="startSelfCheckPeek" @touchend="stopSelfCheckPeek" @touchcancel="stopSelfCheckPeek">
-	              <div class="self-check-modal-ayah" dir="rtl" lang="ar" :style="getSelfCheckAyahDisplayStyle()"
-	              :class="{
-	                'tajweed-enabled': selfCheckTajweedEnabled,
-	                'self-check-session-ayat': recitationCheckScope === 'session' && recitationCheckPendingTargets.length > 1,
-	                'recitation-word-review-active': selfCheckModalVerse && shouldShowRecitationReviewHighlights(selfCheckModalVerse.key),
-	                'recall-mode-active': aiRecallModeEnabled && recitationCheckRecording
-	              }"
-	                v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"></div>
-	            </div>
+		              <div class="self-check-modal-ayah" dir="rtl" lang="ar" :style="getSelfCheckAyahDisplayStyle()"
+		              :class="{
+		                'tajweed-enabled': selfCheckTajweedEnabled,
+		                'self-check-session-ayat': recitationCheckScope === 'session' && recitationCheckPendingTargets.length > 1,
+		                'recitation-word-review-active': selfCheckModalVerse && shouldShowRecitationReviewHighlights(selfCheckModalVerse.key)
+		              }"
+		                v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"></div>
+		            </div>
 		          </section>
 
           <section v-if="selfCheckReviewVisible" class="self-check-modal-recorder-grid"
@@ -2721,11 +2783,10 @@
           </div>
         </div>
         <div class="modal-footer post-onboarding-footer">
-          <button class="btn-secondary" @click="skipOnboarding">{{ t('memorisation.skip') }}</button>
           <button v-if="onboardingStepIndex < onboardingSteps.length - 1" class="btn-primary"
             @click="nextOnboardingStep">{{ t('memorisation.next') }}</button>
-          <button v-else-if="!onboardingManualLaunch" class="btn-secondary" @click="completeOnboardingWithDefaultSession">
-            Use default session
+          <button v-else-if="!onboardingManualLaunch" class="btn-primary" @click="completeOnboardingWithDefaultSession">
+            Start your session
           </button>
           <button v-else-if="onboardingManualLaunch" class="btn-primary" @click="completeOnboardingAndStart">
             Finish

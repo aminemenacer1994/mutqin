@@ -1612,7 +1612,6 @@
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {
   background: var(--accent-light);
-  cursor: pointer;
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*="tajweed-"], .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {
@@ -4957,7 +4956,6 @@ body.has-navbar .tools-top {
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {
   background: var(--accent-light);
-  cursor: pointer;
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {
@@ -5165,7 +5163,6 @@ html {
 
 .verse-arabic word:hover {
   background: var(--accent-light);
-  cursor: pointer;
 }
 
 .rail-stat strong, .player-eta {
@@ -6999,6 +6996,7 @@ html {
   font-size: 0.8rem;
   font-weight: 600;
 }
+
 
 .player-eta {
   color: var(--accent);
@@ -20629,7 +20627,7 @@ textarea {
 .workspace-shell {
   width: min(100%, 1420px);
   margin: 0 auto 18px;
-  padding: clamp(14px, 2vw, 20px);
+  padding: clamp(12px, 1.8vw, 16px);
   border-radius: 24px;
   overflow: visible !important;
   z-index: 12;
@@ -20640,7 +20638,7 @@ textarea {
   flex-wrap: wrap;
   align-items: flex-start !important;
   justify-content: space-between;
-  gap: 14px;
+  gap: 10px;
 }
 
 .workspace-shell-copy {
@@ -20648,15 +20646,53 @@ textarea {
   min-width: min(100%, 18rem);
 }
 
+.workspace-shell-metadata {
+  width: 100%;
+  margin-top: 0.5rem;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex: 0 0 100%;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.workspace-shell-metadata-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.78rem;
+  border: 1px solid rgba(177, 136, 94, 0.18);
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
+  box-shadow: none;
+  transition: none;
+}
+
+.workspace-shell-metadata-pill strong {
+  color: inherit;
+  font-weight: 700;
+}
+
+.workspace-shell-metadata-pill span {
+  color: inherit;
+}
+
 .workspace-shell-main-title,
 .workspace-shell-copy h1 {
-  display: -webkit-box;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: block;
+  overflow: visible;
+  text-overflow: clip;
   white-space: normal;
   line-height: 1.16;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 
 .workspace-shell-actions {
@@ -21215,6 +21251,29 @@ textarea {
 .help-learning-card-body {
   gap: 1rem;
   padding: 1.35rem;
+}
+
+.help-learning-talqin-guide {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--surface, #fff) 90%, rgba(191, 128, 69, 0.1));
+  border: 1px solid rgba(191, 128, 69, 0.16);
+}
+
+.help-learning-talqin-guide h5,
+.help-learning-talqin-guide p,
+.help-learning-talqin-guide ul {
+  margin: 0;
+}
+
+.help-learning-talqin-guide ul {
+  padding-left: 1.25rem;
+}
+
+.help-learning-talqin-guide li + li {
+  margin-top: 0.55rem;
 }
 
 .help-learning-copy h3 {
@@ -21996,10 +22055,12 @@ textarea {
 }
 
 .guest-auth-card {
-  width: min(100%, 560px);
+  width: min(100%, var(--auth-form-max-width));
+  max-width: var(--auth-form-max-width);
+  min-height: var(--auth-form-min-height);
   display: grid;
   gap: 18px;
-  padding: clamp(22px, 3.4vw, 34px);
+  padding: clamp(22px, 3vw, 34px);
   border: 1px solid var(--border);
   border-radius: 28px;
   background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
@@ -22088,7 +22149,7 @@ textarea {
 
 .guest-auth-field label {
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--auth-form-label-size);
   font-weight: 700;
 }
 
@@ -22101,6 +22162,7 @@ textarea {
   border-radius: 18px;
   background: color-mix(in srgb, var(--surface) 88%, var(--field-bg));
   color: var(--text);
+  font-size: var(--auth-form-label-size);
 }
 
 .guest-auth-field input[type="email"]:focus,
@@ -22124,6 +22186,7 @@ textarea {
   gap: 10px;
   color: var(--text-muted);
   font-weight: 600;
+  font-size: var(--auth-form-label-size);
   cursor: pointer;
 }
 
@@ -22147,7 +22210,7 @@ textarea {
   border-radius: 18px;
   background: color-mix(in srgb, var(--text) 94%, #140f0a);
   color: #fff;
-  font-size: 16px;
+  font-size: var(--auth-form-label-size);
   font-weight: 800;
   letter-spacing: 0.01em;
 }
@@ -22160,6 +22223,7 @@ textarea {
 .guest-auth-register {
   margin: 0;
   text-align: center;
+  font-size: var(--auth-form-copy-size);
 }
 
 @media (max-width: 767.98px) {
@@ -22370,6 +22434,12 @@ textarea {
     linear-gradient(180deg, rgba(30, 26, 23, 0.98), rgba(22, 19, 17, 0.96));
   border-color: rgba(239, 193, 141, 0.14);
   box-shadow: 0 22px 48px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .workspace-shell-metadata-pill {
+  border-color: rgba(239, 193, 141, 0.16);
+  background: rgba(248, 239, 227, 0.08);
+  color: #f4ede4;
 }
 
 [data-theme="dark"] .verse-card {
@@ -23324,4 +23394,321 @@ textarea {
   .ready-begin-progress-card {
     text-align: left;
   }
+}
+
+/* Mushaf layout and toolbar overrides */
+.main.container-fluid.mushaf-mode-active .content,
+.main.container-fluid.mushaf-mode-active .workspace,
+.main.container-fluid.mushaf-mode-active .workspace-main,
+.main.container-fluid.mushaf-mode-active .mushaf-workspace,
+.main.container-fluid.mushaf-mode-active .mushaf-frame {
+  width: 100%;
+  max-width: none;
+}
+
+.main.container-fluid.mushaf-mode-active .mushaf-frame {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(0.55rem, 1vw, 0.8rem);
+  overflow: visible !important;
+}
+
+.main.container-fluid.mushaf-mode-active .mushaf-frame.mushaf-frame-toolbar-collapsed {
+  grid-template-columns: minmax(14rem, 20%) minmax(0, 80%);
+  align-items: start;
+}
+
+.workspace-header-view-controls .view-mode-switch,
+.workspace-header-view-controls .font-dropdown-trigger {
+  min-height: 40px;
+  padding-inline: 0.6rem !important;
+  font-size: 0.85rem !important;
+}
+
+.workspace-header-view-controls .view-mode-switch {
+  gap: 0.4rem !important;
+}
+
+.workspace-header-view-controls .view-mode-switch,
+.workspace-header-view-controls .font-dropdown-trigger {
+  overflow: visible !important;
+}
+
+.view-mode-switch-label,
+.workspace-header-view-controls .font-dropdown-trigger span,
+.quick-font-dropdown .font-dropdown-trigger span,
+.mushaf-toolbar-trigger-label,
+.mushaf-pill-label {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  max-width: none !important;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.workspace-header-view-controls .view-mode-switch-track {
+  width: 42px;
+}
+
+.workspace-header-view-controls .view-mode-switch-thumb {
+  width: 20px;
+  height: 20px;
+}
+
+.workspace-header-view-controls .view-mode-switch.is-mushaf .view-mode-switch-thumb {
+  transform: translateX(18px);
+}
+
+.mushaf-workspace,
+.mushaf-frame,
+.mushaf-pill-toolbar,
+.mushaf-toolbar-dropdown {
+  overflow: visible !important;
+}
+
+.mushaf-pill-toolbar {
+  margin-bottom: 0;
+}
+
+.mushaf-toolbar-trigger,
+.mushaf-pill-toolbar .mushaf-pill {
+  min-height: 40px;
+  padding: 0.35rem 0.72rem;
+}
+
+.mushaf-toolbar-menu {
+  z-index: 5000 !important;
+}
+
+.mushaf-frame-toolbar-collapsed .mushaf-pill-toolbar {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  margin-bottom: 0;
+  padding: 0.72rem;
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 88px);
+}
+
+.mushaf-frame-toolbar-collapsed .mushaf-toolbar-cluster,
+.mushaf-frame-toolbar-collapsed .mushaf-toolbar-cluster-start,
+.mushaf-frame-toolbar-collapsed .mushaf-toolbar-cluster-end {
+  width: 100% !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+
+.mushaf-frame-toolbar-collapsed .mushaf-toolbar-cluster-end {
+  margin-inline-start: 0;
+}
+
+.mushaf-frame-toolbar-collapsed .mushaf-toolbar-dropdown {
+  width: 100%;
+}
+
+.mushaf-frame-toolbar-collapsed .mushaf-toolbar-trigger,
+.mushaf-frame-toolbar-collapsed .mushaf-pill-toolbar .mushaf-pill {
+  width: 100%;
+  min-width: 0 !important;
+  justify-content: space-between;
+  border-radius: 16px;
+}
+
+.mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
+  top: 0;
+  left: calc(100% + 0.55rem);
+  right: auto;
+}
+
+html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
+  right: calc(100% + 0.55rem);
+  left: auto;
+}
+
+.mushaf-frame-toolbar-collapsed .mushaf-viewport,
+.mushaf-viewport.toolbar-collapsed {
+  margin-top: 0;
+}
+
+.mushaf-tajweed-pill.active {
+  background: color-mix(in srgb, var(--accent-light) 72%, var(--surface) 28%);
+  color: var(--accent-strong);
+}
+
+@media (max-width: 991.98px) {
+  .main.container-fluid.mushaf-mode-active .mushaf-frame.mushaf-frame-toolbar-collapsed {
+    grid-template-columns: minmax(12.5rem, 20%) minmax(0, 80%);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .main.container-fluid.mushaf-mode-active .mushaf-frame.mushaf-frame-toolbar-collapsed {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mushaf-frame-toolbar-collapsed .mushaf-pill-toolbar {
+    position: static;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: stretch !important;
+    gap: 0.55rem;
+    padding: 0 0 0.55rem;
+  }
+
+  .mushaf-frame-toolbar-collapsed .mushaf-toolbar-cluster,
+  .mushaf-frame-toolbar-collapsed .mushaf-toolbar-cluster-start,
+  .mushaf-frame-toolbar-collapsed .mushaf-toolbar-cluster-end {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+  }
+
+  .mushaf-frame-toolbar-collapsed .mushaf-toolbar-dropdown,
+  .mushaf-frame-toolbar-collapsed .mushaf-pill-toolbar .mushaf-pill {
+    flex: 1 1 10rem;
+    width: auto;
+  }
+
+  .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
+    top: calc(100% + 0.35rem);
+    left: 0;
+    right: auto;
+  }
+
+  html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
+    right: 0;
+    left: auto;
+  }
+}
+
+/* AI modal and session button overrides */
+.recitation-review-ayah {
+  margin-bottom: 1rem;
+  padding: 1rem 1.15rem !important;
+}
+
+.modal-content.self-check-modal .self-check-toolbar-btn.self-check-toolbar-btn-text,
+.modal-content.memorisation-checker-modal .self-check-toolbar-btn.self-check-toolbar-btn-text {
+  width: auto !important;
+  min-width: max-content !important;
+  padding: 0 0.85rem !important;
+  display: inline-grid !important;
+  grid-auto-flow: column;
+  gap: 0.45rem;
+  place-items: center;
+}
+
+.modal-content.self-check-modal .self-check-toolbar-btn.self-check-toolbar-btn-text span,
+.modal-content.memorisation-checker-modal .self-check-toolbar-btn.self-check-toolbar-btn-text span {
+  display: inline !important;
+}
+
+.modal-content.self-check-modal .self-check-toolbar-btn.self-check-ayah-action-tajweed.active,
+.modal-content.memorisation-checker-modal .self-check-toolbar-btn.self-check-ayah-action-tajweed.active {
+  background: color-mix(in srgb, var(--accent-light) 72%, var(--surface) 28%);
+  color: var(--accent-strong);
+}
+
+[data-theme="dark"] .modal-content.self-check-modal,
+[data-theme="dark"] .modal-content.self-check-modal .modal-header,
+[data-theme="dark"] .modal-content.self-check-modal .self-check-modal-body,
+[data-theme="dark"] .modal-content.self-check-modal .self-check-modal-stage,
+[data-theme="dark"] .modal-content.self-check-modal .self-check-recorder-card,
+[data-theme="dark"] .modal-content.self-check-modal .recitation-check-panel-inline,
+[data-theme="dark"] .modal-content.self-check-modal .recitation-result-stat,
+[data-theme="dark"] .modal-content.self-check-modal .recitation-next-card,
+[data-theme="dark"] .modal-content.self-check-modal .recitation-review-ayah,
+.dark-mode .modal-content.self-check-modal,
+.dark-mode .modal-content.self-check-modal .modal-header,
+.dark-mode .modal-content.self-check-modal .self-check-modal-body,
+.dark-mode .modal-content.self-check-modal .self-check-modal-stage,
+.dark-mode .modal-content.self-check-modal .self-check-recorder-card,
+.dark-mode .modal-content.self-check-modal .recitation-check-panel-inline,
+.dark-mode .modal-content.self-check-modal .recitation-result-stat,
+.dark-mode .modal-content.self-check-modal .recitation-next-card,
+.dark-mode .modal-content.self-check-modal .recitation-review-ayah {
+  background: linear-gradient(180deg, rgba(25, 24, 22, 0.98), rgba(18, 17, 16, 0.96)) !important;
+  border-color: rgba(255, 232, 205, 0.12) !important;
+  color: #f4ede4 !important;
+}
+
+[data-theme="dark"] .modal-content.self-check-modal .modal-context-badge,
+[data-theme="dark"] .modal-content.self-check-modal .self-check-kicker,
+[data-theme="dark"] .modal-content.self-check-modal .recitation-check-kicker,
+[data-theme="dark"] .modal-content.self-check-modal .self-check-card-desc,
+[data-theme="dark"] .modal-content.self-check-modal .recitation-check-status span,
+[data-theme="dark"] .modal-content.self-check-modal .recitation-live-head span,
+.dark-mode .modal-content.self-check-modal .modal-context-badge,
+.dark-mode .modal-content.self-check-modal .self-check-kicker,
+.dark-mode .modal-content.self-check-modal .recitation-check-kicker,
+.dark-mode .modal-content.self-check-modal .self-check-card-desc,
+.dark-mode .modal-content.self-check-modal .recitation-check-status span,
+.dark-mode .modal-content.self-check-modal .recitation-live-head span {
+  color: rgba(244, 237, 228, 0.72) !important;
+}
+
+[data-theme="dark"] .modal-content.self-check-modal .self-check-toolbar-btn,
+[data-theme="dark"] .modal-content.self-check-modal .modal-close-btn,
+.dark-mode .modal-content.self-check-modal .self-check-toolbar-btn,
+.dark-mode .modal-content.self-check-modal .modal-close-btn {
+  color: #f4ede4 !important;
+  background: transparent;
+}
+
+[data-theme="dark"] .modal-content.self-check-modal .self-check-toolbar-btn:hover:not(:disabled),
+[data-theme="dark"] .modal-content.self-check-modal .modal-close-btn:hover:not(:disabled),
+.dark-mode .modal-content.self-check-modal .self-check-toolbar-btn:hover:not(:disabled),
+.dark-mode .modal-content.self-check-modal .modal-close-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .modal-content.self-check-modal .self-check-toolbar-btn.self-check-ayah-action-ai,
+.dark-mode .modal-content.self-check-modal .self-check-toolbar-btn.self-check-ayah-action-ai {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 84%, #3d2817), color-mix(in srgb, var(--accent-strong) 86%, #d6b084)) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .modal-content.self-check-modal .self-check-toolbar-btn.self-check-ayah-action-tajweed.active,
+.dark-mode .modal-content.self-check-modal .self-check-toolbar-btn.self-check-ayah-action-tajweed.active {
+  background: rgba(244, 197, 134, 0.16) !important;
+  color: #ffe6bf !important;
+}
+
+.tools-btn.btn.btn-primary.session-primary-action,
+.workspace-shell-actions .action-btn.btn.btn-primary.session-primary-action,
+.session-resume-btn.btn.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+  border: 1px solid color-mix(in srgb, var(--accent) 82%, transparent) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 26px rgba(88, 59, 29, 0.12);
+}
+
+.tools-btn.btn.btn-primary.session-primary-action:hover:not(:disabled),
+.workspace-shell-actions .action-btn.btn.btn-primary.session-primary-action:hover:not(:disabled),
+.session-resume-btn.btn.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-strong), color-mix(in srgb, var(--accent-strong) 72%, #e7c89f)) !important;
+  border-color: color-mix(in srgb, var(--accent-strong) 84%, transparent) !important;
+  color: #fff !important;
+}
+
+.session-resume-btn.btn.btn-primary span,
+.session-resume-btn.btn.btn-primary i {
+  color: inherit !important;
+}
+
+.workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit,
+.dark-mode .workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 232, 205, 0.14) !important;
+  color: #f4ede4 !important;
 }

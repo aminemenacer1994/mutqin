@@ -137,6 +137,11 @@ const HELP_LEARNING_FALLBACKS = {
       description: 'AI Recitation listens to your recitation and gives instant feedback so you can identify mistakes and improve accuracy while memorising.',
       bestFor: 'Students who want guided practice and immediate feedback.'
     },
+    talqinMode: {
+      title: 'Talqin Mode Guide',
+      description: 'Talqin Mode automates the listen, pause, repeat, and extend cycle after you submit a practice session, so the timing stays consistent without extra manual control.',
+      bestFor: 'Students building verse retention through guided listening and repetition.'
+    },
     manualAssessment: {
       title: 'Manual Assessment',
       description: 'Manual Assessment lets you evaluate your own memorisation after each session and track confidence over time.',
@@ -200,6 +205,8 @@ export default {
       savedSessions: [], // Make sure this exists
       continueSessionPayload: null, // Make sure this exists
       hasContinueSession: false,
+      returningUserChoicePending: false,
+      pendingResumeDefaultTab: '',
       showHifzPlanModal: false,
       hifzPlanExists: false,
       hifzPlan: null,
@@ -246,6 +253,7 @@ export default {
       fontOpen: false,
       bgOpen: false,
       borderOpen: false,
+      mushafToolbarCollapsed: true,
       
       // Feature 2: Gap between verses
       gapBetweenVerses: "1x", // Options: 'none', '1x', '3s', '5s', 'custom'
@@ -257,6 +265,7 @@ export default {
       showCountdownOverlay: false,
       countdownValue: 3,
       countdownInterval: null,
+      talqinPauseTimer: null,
       activeWaveIndex: 0,
       showSaveNameModal: false,
       saveSessionName: '',
@@ -306,6 +315,8 @@ export default {
       wordSyncEngine: null,
       currentPhraseIndex: -1,
       lastHighlightedWordNodes: [],
+      pendingWordHighlightState: null,
+      wordHighlightNodeRegistry: markRaw(new Map()),
       wordClickHandler: null,
       statsTickFrame: null,
       statsTickLastFrameAt: 0,
@@ -727,6 +738,7 @@ export default {
         focus_mode: false,
         blur_mode: false,
         chaining: false,
+        talqin_mode: false,
         anchor_mode: false,
         quiz_lab: false,
         presets: true,
@@ -859,6 +871,13 @@ export default {
           title: this.translateOrFallback('memorisation.helpLearning.sections.aiRecitation.title', HELP_LEARNING_FALLBACKS.sections.aiRecitation.title),
           description: this.translateOrFallback('memorisation.helpLearning.sections.aiRecitation.description', HELP_LEARNING_FALLBACKS.sections.aiRecitation.description),
           bestFor: this.translateOrFallback('memorisation.helpLearning.sections.aiRecitation.bestFor', HELP_LEARNING_FALLBACKS.sections.aiRecitation.bestFor)
+        },
+        {
+          key: 'talqin-mode',
+          icon: 'bi-soundwave',
+          title: this.translateOrFallback('memorisation.helpLearning.sections.talqinMode.title', HELP_LEARNING_FALLBACKS.sections.talqinMode.title),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.talqinMode.description', HELP_LEARNING_FALLBACKS.sections.talqinMode.description),
+          bestFor: this.translateOrFallback('memorisation.helpLearning.sections.talqinMode.bestFor', HELP_LEARNING_FALLBACKS.sections.talqinMode.bestFor)
         },
         {
           key: 'manual-assessment',
@@ -1399,6 +1418,33 @@ export default {
       const surah = this.currentChapter?.name_simple || this.activeChapterName || 'Casual Session'
       return surah
     },
+    topCardMetadataPills() {
+      if (!this.hasVerses) return []
+
+      const surahName = this.currentChapter?.name_simple || this.activeChapterName || this.topCardSessionLabel
+      const start = Math.max(1, Number(this.rangeStart || 1))
+      const end = Math.max(start, Number(this.rangeEnd || start))
+      const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
+      const repeatCount = Math.max(1, Number(this.repetitionsPerStep || 1))
+      const delaySeconds = Number.isFinite(Number(this.delay)) ? Math.max(0, Number(this.delay)) : 0
+      const activeTechniqueLabels = this.activePracticeTechniques
+        .map(item => item?.label)
+        .filter(Boolean)
+      const rangeValue = start === end ? `Ayah ${start}` : `Ayahs ${start}-${end}`
+      const delayValue = `${delaySeconds}s`
+      const techniqueValue = activeTechniqueLabels.length
+        ? activeTechniqueLabels.join(', ')
+        : this.t('common.none')
+
+      return [
+        { key: 'surah', label: 'Surah', value: surahName },
+        { key: 'range', label: 'Ayah range', value: rangeValue },
+        { key: 'reciter', label: 'Reciter', value: reciter?.name || 'Alafasy' },
+        { key: 'repetition', label: 'Repetition', value: `${repeatCount}x` },
+        { key: 'delay', label: 'Delay', value: delayValue },
+        { key: 'technique', label: 'Memorisation technique', value: techniqueValue }
+      ]
+    },
     workspaceProgressSummary() {
       const sessionTotal = Math.max(0, Number(this.totalVerses || 0))
       const sessionCovered = this.hasVerses
@@ -1517,8 +1563,8 @@ export default {
     },
     headerSessionActionLabel() {
       if (this.isPlaying) return this.t('memorisation.sessionType.pause')
-      if (this.hasSessionStarted) return this.t('common.resume')
-      return this.t('common.startSession')
+      if (this.hasSessionStarted) return 'Resume session'
+      return 'Start session'
     },
     headerSessionActionIcon() {
       return this.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'
@@ -1577,6 +1623,12 @@ export default {
     },
     canResumePreviousSession() {
       return !!(this.hasContinueSession && this.continueSessionPayload?.config?.chapterId)
+    },
+    canViewSavedSessions() {
+      return this.sortedSavedSessions.length > 0
+    },
+    shouldGateWorkspaceForResumeChoice() {
+      return !!(this.isLoggedIn && this.showResumeModal && this.returningUserChoicePending)
     },
     resumeSessionDetailItems() {
       if (!this.canResumePreviousSession) return []
@@ -2797,6 +2849,12 @@ export default {
       if (!this.reciterFollowModeActive) return ''
       return this.t('memorisation.recite_now_window', { seconds: Math.max(0, Number(this.recitationWindowRemaining || 0)) })
     },
+    talqinModeActive() {
+      if (this.mutqinState?.sessionState?.active) {
+        return !!this.mutqinState?.sessionState?.config?.talqinModeEnabled
+      }
+      return !!this.currentConfig?.talqinModeEnabled
+    },
 
     sessionConfig() {
       return this.buildSessionConfig(this.currentMode)
@@ -2843,7 +2901,7 @@ export default {
     },
 
     resumeModalTitle() {
-      if (!this.canResumePreviousSession) return 'Ready to begin'
+      if (!this.canResumePreviousSession) return 'Welcome back'
       const c = this.continueSessionPayload.config
       const chapter = this.chapters.find(item => Number(item.id) === Number(c.chapterId))
       return chapter?.name_simple || 'Previous session'
@@ -2851,7 +2909,9 @@ export default {
 
     resumeWhatNext() {
       if (!this.canResumePreviousSession) {
-        return 'Choose how you want to begin. You can start a new session or open your saved sessions.'
+        return this.canViewSavedSessions
+          ? 'Choose how you want to begin. Start a new session or open one of your saved sessions.'
+          : 'Start a new session to open your setup and begin from a fresh range.'
       }
       if (this.dueCount) return `You have ${this.dueCount} verses due for review. Continue to pick up where you left off.`
       return 'Continue from your last saved ayah and keep building consistency.'
@@ -2951,6 +3011,13 @@ export default {
         const safeMode = ['auto', 'manual', 'follow'].includes(val) ? val : 'auto'
         const store = this.getModeStore(this.currentMode)
         if (store) store.playMode = safeMode
+      }
+    },
+    talqinModeEnabled: {
+      get() { return !!this.currentConfig.talqinModeEnabled },
+      set(val) {
+        const store = this.getModeStore(this.currentMode)
+        if (store) store.talqinModeEnabled = !!val
       }
     },
     recitationWindowSeconds: {
@@ -3445,6 +3512,7 @@ export default {
       const authenticatedWorkspace = this.learningBackendEnabled()
       const justRegistered = authenticatedWorkspace && !!this.auth?.just_registered
       this.syncWorkspaceStorageBridge()
+      this.hydrateAuthenticatedWorkspaceStateFromLocalStorage()
 
       if (this.auth?.locale && this.$setLocale) {
         await this.$setLocale(this.auth.locale)
@@ -3536,7 +3604,7 @@ export default {
       this.loadRecordingsLibrary()
 
       if (this.isLoggedIn && !justRegistered) {
-        this.showResumeModal = true
+        this.maybeShowReadyToBeginModal()
       }
 
       if (justRegistered) {
@@ -3553,12 +3621,20 @@ export default {
         this.tab = 'tools'
         this.showTools = false
         await this.loadVerses()
-      } else {
-        this.tab = 'tools'
-        this.showTools = false
-        this.isDataReady = true
-      }
-    } catch (error) {
+        } else {
+          this.tab = 'tools'
+          this.showTools = false
+          this.isDataReady = true
+        }
+
+        if (this.pendingResumeDefaultTab) {
+          const pendingTab = this.pendingResumeDefaultTab
+          this.pendingResumeDefaultTab = ''
+          this.$nextTick(() => {
+            this.openToolsPanel({ tab: pendingTab })
+          })
+        }
+      } catch (error) {
       console.error('Memorisation bootstrap failed:', error)
       this.tab = 'tools'
       this.showTools = false
@@ -3912,6 +3988,67 @@ export default {
       return translated && translated !== key ? translated : fallback
     },
 
+    hydrateWorkspaceStateValueFromLocalStorage(workspaceKey, localKey) {
+      if (!this.learningBackendEnabled()) return false
+      if (this.readWorkspaceStateValue(workspaceKey, null) !== null) return false
+      try {
+        const raw = localStorage.getItem(localKey)
+        if (!raw) return false
+        this.writeWorkspaceStateValue(workspaceKey, JSON.parse(raw))
+        return true
+      } catch {
+        try {
+          const raw = localStorage.getItem(localKey)
+          if (!raw) return false
+          this.writeWorkspaceStateValue(workspaceKey, raw)
+          return true
+        } catch {
+          return false
+        }
+      }
+    },
+
+    hydrateAuthenticatedWorkspaceStateFromLocalStorage() {
+      if (!this.learningBackendEnabled()) return
+      this.hydrateWorkspaceStateValueFromLocalStorage('uiState', 'telawa.uiState')
+      this.hydrateWorkspaceStateValueFromLocalStorage('continueSession', 'telawa.continueSession')
+      this.hydrateWorkspaceStateValueFromLocalStorage('audioState', 'telawa.audioState')
+      this.hydrateWorkspaceStateValueFromLocalStorage('centralSession', CENTRAL_SESSION_STORAGE_KEY)
+      ;['beginner', 'advanced', 'planner'].forEach(mode => {
+        this.hydrateWorkspaceStateValueFromLocalStorage(`modeState:${mode}`, MODE_STORAGE_KEYS[mode])
+        this.hydrateWorkspaceStateValueFromLocalStorage(`sessionState:${mode}`, SESSION_STORAGE_KEYS[mode])
+      })
+    },
+
+    hasShownReadyToBeginModal() {
+      try {
+        return sessionStorage.getItem('modalShown') === 'true'
+      } catch {
+        return false
+      }
+    },
+
+    markReadyToBeginModalShown() {
+      try {
+        sessionStorage.setItem('modalShown', 'true')
+      } catch {}
+    },
+
+    maybeShowReadyToBeginModal() {
+      if (this.hasShownReadyToBeginModal()) return
+      if (!this.canResumePreviousSession && !this.canViewSavedSessions) {
+        this.returningUserChoicePending = false
+        this.pendingResumeDefaultTab = 'tools'
+        this.markReadyToBeginModalShown()
+        return
+      }
+      this.returningUserChoicePending = true
+      this.showResumeModal = true
+      this.$nextTick(() => {
+        this.markReadyToBeginModalShown()
+      })
+    },
+
     getWorkspacePersistenceBucket() {
       if (!this.learningBackendEnabled() || !this.mutqinState || typeof this.mutqinState !== 'object') return null
       if (!this.mutqinState.workspaceState || typeof this.mutqinState.workspaceState !== 'object') {
@@ -4033,6 +4170,7 @@ export default {
         repetitionsPerStep: 3,
         selectedLoopCount: 3,
         playMode: 'auto',
+        talqinModeEnabled: false,
         gapBetweenVerses: '1x',
         customGapSeconds: 2,
         recitationWindowSeconds: 8,
@@ -4065,6 +4203,7 @@ export default {
       this.repetitionsPerStep = defaults.repetitionsPerStep
       this.selectedLoopCount = defaults.selectedLoopCount
       this.playMode = defaults.playMode
+      this.talqinModeEnabled = defaults.talqinModeEnabled
       this.gapBetweenVerses = defaults.gapBetweenVerses
       this.customGapSeconds = defaults.customGapSeconds
       this.recitationWindowSeconds = defaults.recitationWindowSeconds
@@ -4097,7 +4236,7 @@ export default {
       const tm = typeof this.$tm === 'function' ? this.$tm.bind(this) : (path) => this.t(path)
       const points = tm(`${base}.points`)
       const previewItems = tm(`${base}.previewItems`)
-      return {
+      const step = {
         key,
         icon,
         title: this.t(`${base}.title`),
@@ -4111,6 +4250,13 @@ export default {
           items: Array.isArray(previewItems) ? previewItems : []
         }
       }
+      if (key === 'practice') {
+        step.title = 'Master Verse Retention with Talqin'
+        step.body = 'Once your session is submitted, this mode guides you step-by-step: it plays an Ayah, pauses automatically so you can repeat it, and extends your memory stack. Real-time banner alerts will prompt you exactly when to listen and when to recite.'
+        step.targetSelector = '#talqin-mode-toggle'
+        step.targetSection = 'advanced_playback'
+      }
+      return step
     },
 
     selectSessionFromDropdown(sessionId) {
@@ -4943,6 +5089,7 @@ export default {
           reciterId: this.reciterId,
           speed: this.speed,
           playMode: this.playMode,
+          talqinModeEnabled: this.talqinModeEnabled,
           recitationWindowSeconds: this.recitationWindowSeconds,
           repetitionsPerStep: this.repetitionsPerStep,
           selectedLoopCount: this.selectedLoopCount,
@@ -5382,6 +5529,44 @@ export default {
       }, 1000)
     },
 
+    getTalqinModeToggleValue() {
+      if (typeof document === 'undefined') return !!this.talqinModeEnabled
+      const toggle = document.getElementById('talqin-mode-toggle')
+      if (toggle && 'checked' in toggle) return !!toggle.checked
+      if (toggle && typeof toggle.getAttribute === 'function') {
+        return toggle.getAttribute('aria-pressed') === 'true'
+      }
+      return !!this.talqinModeEnabled
+    },
+
+    clearTalqinPauseTimer() {
+      if (this.talqinPauseTimer) {
+        window.clearTimeout(this.talqinPauseTimer)
+        this.talqinPauseTimer = null
+      }
+    },
+
+    getTalqinPauseDelayMs() {
+      const verseDurationSeconds = Math.max(0, Number(this.duration || this.audioElement?.duration || 0))
+      const configuredDelayMs = Math.max(0, Number(this.getCurrentPlaybackGapSeconds() || 0) * 1000)
+      const talqinDelayMs = verseDurationSeconds > 0 ? verseDurationSeconds * 1.5 * 1000 : 0
+      return Math.max(configuredDelayMs, talqinDelayMs)
+    },
+
+    scheduleTalqinAdvance(onComplete = null) {
+      this.clearTalqinPauseTimer()
+      const delayMs = this.getTalqinPauseDelayMs()
+      this.talqinPauseTimer = window.setTimeout(() => {
+        this.talqinPauseTimer = null
+        window.setTimeout(() => {
+          if (!this.talqinModeActive) {
+            return
+          }
+          if (typeof onComplete === 'function') onComplete()
+        }, 300)
+      }, delayMs)
+    },
+
     startSessionWithCountdown() {
       if (!this.canStartSession) {
         this.showTools = true
@@ -5403,7 +5588,9 @@ export default {
         this.showBanner(this.t('toasts.pleaseSelectAValidSurahAnd'), 'info', 3600)
         return
       }
+      this.talqinModeEnabled = this.getTalqinModeToggleValue()
       this.applySessionConfig(this.buildSessionConfig(this.currentMode))
+      this.persistModeState(this.currentMode)
       this.persistUiState()
       this.persistCentralSessionState()
       await this.applyWorkspaceControls({ mode: this.currentMode })
@@ -5641,6 +5828,7 @@ export default {
           reciterId: DEFAULT_ALQURAN_RECITER,
           speed: 1,
           playMode: 'auto',
+          talqinModeEnabled: false,
           recitationWindowSeconds: 8,
           chainingEnabled: true,
           chainingMethod: 'linking',
@@ -5932,6 +6120,9 @@ export default {
       this.applyDefaultWorkspaceSessionConfig({ openSetup: false })
       await this.loadChapter(this.currentMode)
       this.isDataReady = true
+      this.$nextTick(() => {
+        this.startSessionWithCountdown()
+      })
     },
     prepareOnboardingDemo() {
       const snapshot = {
@@ -5944,6 +6135,7 @@ export default {
         reciterId: this.reciterId,
         speed: this.speed,
         playMode: this.playMode,
+        talqinModeEnabled: this.talqinModeEnabled,
         recitationWindowSeconds: this.recitationWindowSeconds,
         repetitionsPerStep: this.repetitionsPerStep,
         selectedLoopCount: this.selectedLoopCount,
@@ -5974,6 +6166,7 @@ export default {
       this.reciterId = this.reciters[0]?.id || this.reciterId
       this.speed = 1
       this.playMode = 'auto'
+      this.talqinModeEnabled = false
       this.repetitionsPerStep = 5
       this.chainingEnabled = false
       this.chainingMethod = 'linking'
@@ -6003,6 +6196,7 @@ export default {
       this.reciterId = snapshot.reciterId
       this.speed = snapshot.speed
       this.playMode = snapshot.playMode
+      this.talqinModeEnabled = !!snapshot.talqinModeEnabled
       this.recitationWindowSeconds = snapshot.recitationWindowSeconds || this.recitationWindowSeconds
       this.repetitionsPerStep = snapshot.repetitionsPerStep || this.repetitionsPerStep
       this.selectedLoopCount = snapshot.selectedLoopCount ?? this.selectedLoopCount
@@ -6026,13 +6220,15 @@ export default {
     applyOnboardingStep(stepIndex) {
       if (!this.onboardingDemoActive) return
       const step = Math.max(0, Math.min(this.onboardingSteps.length - 1, Number(stepIndex || 0)))
+      const stepMeta = this.onboardingSteps[step] || {}
       this.applyOnboardingGoalPreset()
       const stepConfig = [
         { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
         { tab: 'settings', section: 'reading_settings', mode: 'mushaf', blur: false, chaining: false, anchor: false },
-        { tab: 'techniques', section: 'focus_mode', mode: 'stacked', blur: false, chaining: false, anchor: false },
+        { tab: 'tools', section: 'advanced_playback', mode: 'stacked', blur: false, chaining: false, anchor: false },
         { tab: 'saved', section: null, mode: 'stacked', blur: false, chaining: false, anchor: false }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
+      if (stepMeta.targetSection) stepConfig.section = stepMeta.targetSection
       this.tab = stepConfig.tab
       this.showTools = true
       if (stepConfig.mode) this.readingViewMode = stepConfig.mode
@@ -6056,7 +6252,10 @@ export default {
         if (this.sectionOpen[stepConfig.section] !== undefined) this.sectionOpen[stepConfig.section] = true
       }
       this.$nextTick(() => {
-        const section = this.$refs.toolsBody?.querySelector?.(`.sheet-section .sheet-toggle`) || null
+        const target = stepMeta.targetSelector
+          ? this.$refs.toolsBody?.querySelector?.(stepMeta.targetSelector)
+          : null
+        const section = target || this.$refs.toolsBody?.querySelector?.(`.sheet-section .sheet-toggle`) || null
         if (section?.scrollIntoView) section.scrollIntoView({ behavior: 'smooth', block: 'center' })
       })
     },
@@ -11766,37 +11965,20 @@ export default {
 
     closeResumeModal() {
       this.showResumeModal = false
+      this.returningUserChoicePending = false
     },
 
     openResumeNewSession() {
       this.showResumeModal = false
+      this.returningUserChoicePending = false
       this.openToolsPanel({ tab: 'tools' })
     },
 
     openResumeSavedSessions() {
+      if (!this.canViewSavedSessions) return
       this.showResumeModal = false
+      this.returningUserChoicePending = false
       this.openToolsPanel({ tab: 'saved' })
-    },
-
-    async repeatPreviousSession() {
-      const payload = this.continueSessionPayload
-      if (!payload?.config?.chapterId) return
-      this.showResumeModal = false
-      await this.hydrateSessionFromPayload(payload, {
-        bannerText: 'Session restarted',
-        forcePlayback: false
-      })
-      this.prepareRangeRestart()
-      this.$nextTick(() => {
-        const firstVerseKey = this.verses?.[0]?.key || this.effectiveActiveVerseKey
-        if (firstVerseKey) {
-          const el = document.querySelector(`.verse-card[data-verse-key="${firstVerseKey}"]`)
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }
-      })
-      this.showCountdown(() => {
-        this.resumePlaybackFromRestoredState()
-      })
     },
 
     openAdvancedControls() {
@@ -11814,6 +11996,33 @@ export default {
         return
       }
       this.startSessionWithCountdown()
+    },
+    promptTapToPlay(message = 'Playback is ready. Tap to play.') {
+      this.showBanner(message, 'warning', 5200, {
+        key: 'resume-playback',
+        label: 'Tap to play'
+      })
+    },
+    async resumePlaybackAfterGesture() {
+      const audio = this.audioElement || this.$refs.audio
+      if (audio?.src) {
+        try {
+          const safeSpeed = this.normalizePlaybackSpeed(this.speed)
+          audio.defaultPlaybackRate = safeSpeed
+          audio.playbackRate = safeSpeed
+          await audio.play()
+          this.isPlaying = true
+          this.playerVisible = true
+          this.markPlaybackStart()
+          return
+        } catch (error) {
+          console.error('Playback resume after gesture failed:', error)
+        }
+      }
+      const entry = this.queue?.[this.queueIndex]
+      if (entry) {
+        await this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
+      }
     },
     openInsightsPanel() {
       this.openToolsPanel({ tab: 'stats' })
@@ -12100,6 +12309,10 @@ export default {
       if (nextMode === 'mushaf') {
         this.applyMushafThemeDefault(this.theme)
         this.syncMushafPageToActiveVerse()
+      } else {
+        this.fontOpen = false
+        this.bgOpen = false
+        this.borderOpen = false
       }
       this.topCardMenuOpen = false
       this.fontDropdownOpen = false
@@ -12421,6 +12634,7 @@ export default {
         mode,
         repetitionsPerStep: Math.max(1, Math.min(50, Number(this.repetitionsPerStep || 1))),
         selectedLoopCount: this.selectedLoopCount,
+        talqinModeEnabled: !!this.talqinModeEnabled,
         recitationWindowSeconds: Math.max(5, Math.min(30, Number(this.recitationWindowSeconds || 8))),
         gapBetweenVerses: this.gapBetweenVerses,
         customGapSeconds: Math.max(0.5, Math.min(10, Number(this.customGapSeconds || 2))),
@@ -12460,6 +12674,7 @@ export default {
       const parsedDelay = Number(config.delay)
       this.delay = Number.isFinite(parsedDelay) && parsedDelay >= 0 ? parsedDelay : 2
       this.playMode = ['auto', 'manual', 'follow'].includes(config.playMode) ? config.playMode : 'auto'
+      this.talqinModeEnabled = !!config.talqinModeEnabled
       this.recitationWindowSeconds = Math.max(5, Math.min(30, Number(config.recitationWindowSeconds || this.recitationWindowSeconds || 8)))
       this.order = 'seq'
       this.repetitionsPerStep = Math.max(1, Math.min(50, Number(config.repetitionsPerStep || this.repetitionsPerStep || 5)))
@@ -12860,6 +13075,9 @@ export default {
 
     loadContinueSessionPrompt() {
       try {
+        this.hasContinueSession = false
+        this.continueSessionPayload = null
+        this.continueSessionLabel = ''
         const persistedContinue = this.learningBackendEnabled()
           ? this.readWorkspaceStateValue('continueSession', null)
           : (() => {
@@ -12908,6 +13126,7 @@ export default {
       if (!payload) return
       this.hasContinueSession = false
       this.showResumeModal = false
+      this.returningUserChoicePending = false
       if (!payload.config?.chapterId) {
         this.clearContinueSession()
         return
@@ -12949,6 +13168,7 @@ export default {
       const state = this.restoredAudioState
       if (!state || !this.audioElement || !state.src) return
       const autoplay = typeof options.autoplay === 'boolean' ? options.autoplay : !!state.isPlaying
+      const onAutoplayBlocked = typeof options.onAutoplayBlocked === 'function' ? options.onAutoplayBlocked : null
       const activeAudio = this.activeVerseRef?.audio ? this.normalizeAudioUrl(this.activeVerseRef.audio) : ''
       const restoredAudio = this.normalizeAudioUrl(state.src)
       if (activeAudio && restoredAudio && activeAudio !== restoredAudio) return
@@ -12966,7 +13186,9 @@ export default {
           if (autoplay) {
             this.audioElement.play().then(() => {
               this.isPlaying = true
-            }).catch(() => { })
+            }).catch(() => {
+              if (onAutoplayBlocked) onAutoplayBlocked()
+            })
           }
         } catch (e) { }
         this.audioElement.removeEventListener('loadedmetadata', seekOnLoad)
@@ -13048,7 +13270,10 @@ export default {
 
     resumePlaybackFromRestoredState() {
       if (this.restoredAudioState?.src) {
-        this.applyRestoredAudioState({ autoplay: true })
+        this.applyRestoredAudioState({
+          autoplay: true,
+          onAutoplayBlocked: () => this.promptTapToPlay()
+        })
         return
       }
       const entry = this.queue?.[this.queueIndex]
@@ -14568,7 +14793,54 @@ export default {
       this.currentHighlightedVerseKey = verseKey || null
       this.currentWordIndex = Number.isFinite(Number(activeIndex)) ? Number(activeIndex) : -1
       this.currentPhraseIndex = this.currentWordIndex
-      this.applyWordHighlightClasses(verseKey, this.currentWordIndex)
+      this.scheduleWordHighlightDomUpdate(verseKey, this.currentWordIndex)
+    },
+
+    scheduleWordHighlightDomUpdate(verseKey, activeIndex) {
+      const nextState = {
+        verseKey: verseKey || null,
+        activeIndex: Number.isFinite(Number(activeIndex)) ? Number(activeIndex) : -1
+      }
+      this.pendingWordHighlightState = nextState
+
+      if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
+        this.flushWordHighlightDomUpdate()
+        return
+      }
+      if (this.wordHighlightFrame) return
+      this.wordHighlightFrame = window.requestAnimationFrame(() => {
+        this.wordHighlightFrame = null
+        this.flushWordHighlightDomUpdate()
+      })
+    },
+
+    flushWordHighlightDomUpdate() {
+      const pending = this.pendingWordHighlightState
+      this.pendingWordHighlightState = null
+      this.applyWordHighlightClasses(pending?.verseKey || null, pending?.activeIndex ?? -1)
+    },
+
+    getWordHighlightNodes(verseKey, activeIndex) {
+      if (!verseKey || activeIndex < 0) return []
+
+      const cacheKey = `${verseKey}:${activeIndex}`
+      const registry = this.wordHighlightNodeRegistry
+      const cachedNodes = registry.get(cacheKey)
+      if (Array.isArray(cachedNodes) && cachedNodes.length && cachedNodes.every(node => node?.isConnected)) {
+        return cachedNodes
+      }
+
+      const nextNodes = []
+      document.querySelectorAll(`[data-verse-key="${verseKey}"][data-word-index="${activeIndex}"]`).forEach(node => {
+        if (node?.isConnected) nextNodes.push(node)
+      })
+
+      const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
+      const activeWordItem = verseCard?.querySelectorAll('.word-item')?.[activeIndex]
+      if (activeWordItem?.isConnected) nextNodes.push(activeWordItem)
+
+      registry.set(cacheKey, nextNodes)
+      return nextNodes
     },
 
     applyWordHighlightClasses(verseKey, activeIndex) {
@@ -14584,20 +14856,11 @@ export default {
       if (!verseKey || activeIndex < 0) return
 
       const nextNodes = new Set()
-      const wordSelector = `[data-verse-key="${verseKey}"][data-word-index="${activeIndex}"]`
-      document.querySelectorAll(wordSelector).forEach(node => {
+      this.getWordHighlightNodes(verseKey, activeIndex).forEach(node => {
         node.classList.add('highlighted')
         node.classList.add('phrase-highlighted')
         nextNodes.add(node)
       })
-
-      const verseCard = document.querySelector(`.verse-card[data-verse-key="${verseKey}"]`)
-      const activeWordItem = verseCard?.querySelectorAll('.word-item')?.[activeIndex]
-      if (activeWordItem) {
-        activeWordItem.classList.add('highlighted')
-        activeWordItem.classList.add('phrase-highlighted')
-        nextNodes.add(activeWordItem)
-      }
       this.lastHighlightedWordNodes = Array.from(nextNodes)
     },
 
@@ -14660,6 +14923,7 @@ export default {
 
       this.wordHighlightLoading = false
       this.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : []
+      this.wordHighlightNodeRegistry.clear()
       // Feed the normalised timeline into the sync engine (Timestamp Map Layer).
       this.ensureWordSyncEngine().setTimeline(this.wordHighlightTimestamps, verse.key)
       this.syncWordHighlightFromAudio(verse)
@@ -14703,9 +14967,11 @@ export default {
       this.wordHighlightRequestId += 1
       if (this.wordHighlightFrame) window.cancelAnimationFrame(this.wordHighlightFrame)
       this.wordHighlightFrame = null
+      this.pendingWordHighlightState = null
       if (this.wordSyncEngine) this.wordSyncEngine.reset()
       this.wordHighlightHandler = null
       this.wordHighlightLoading = false
+      this.wordHighlightNodeRegistry.clear()
       this.applyWordHighlightClasses(null, -1)
       this.currentWordIndex = -1
       this.currentPhraseIndex = -1
@@ -14745,13 +15011,12 @@ export default {
             if ((!this.wordHighlightTimestamps?.length || this.currentHighlightedVerseKey !== verse.key) && !this.wordHighlightLoading) {
               this.startWordHighlighting(verse)
             } else if (!this.wordHighlightLoading) {
-              // Safety net: the WordSyncEngine owns the rAF loop + drift loop, so
-              // we do NOT resync here every timeupdate (that would bypass
-              // hysteresis). We only revive the loop if it parked unexpectedly
-              // while audio is still playing (buffering stall / rAF throttle).
               const engine = this.wordSyncEngine
-              if (engine && engine.hasTimeline() && !engine.running && this.audioElement && !this.audioElement.paused) {
-                engine.resume()
+              if (engine && engine.hasTimeline()) {
+                engine.observe(this.currentTime)
+                if (!engine.running && this.audioElement && !this.audioElement.paused) {
+                  engine.resume()
+                }
               }
             }
           }
@@ -14782,6 +15047,17 @@ export default {
         const gapDelayMs = Math.max(0, gapSeconds * 1000)
         if (this.playbackAdvanceTimer) clearTimeout(this.playbackAdvanceTimer)
         this.playbackAdvanceTimer = null
+        if (this.talqinModeActive && this.playMode !== 'manual') {
+          this.advanceLocked = false
+          this.scheduleTalqinAdvance(() => {
+            if (this.canNext) {
+              this.next()
+              return
+            }
+            this.handleSessionComplete()
+          })
+          return
+        }
         if (this.playMode === 'follow') {
           this.advanceLocked = false
           this.startRecitationWindow(() => {
@@ -14889,6 +15165,7 @@ export default {
       if (this.playRequestLocked && !options.force) return
       this.playRequestLocked = true
       this.clearRecitationWindowTimer()
+      this.clearTalqinPauseTimer()
       this.stopRecordingsPlayback({ clearSource: true })
       if (this.segmentPlaybackTimer) {
         clearTimeout(this.segmentPlaybackTimer)
@@ -15025,7 +15302,10 @@ export default {
         console.error('playVerse failed:', err)
         this.isPlaying = false
         this.playRequestLocked = false
-        this.showBanner(this.t('toasts.failedToPlayAudio'), 'error', 3000)
+        this.showBanner(this.t('toasts.failedToPlayAudio'), 'error', 3000, {
+          key: 'resume-playback',
+          label: 'Tap to play'
+        })
       })
     },
 
@@ -15077,7 +15357,10 @@ export default {
           })
           .catch(err => {
             console.error('Failed to play:', err)
-            this.showBanner(this.t('toasts.playbackFailed'), 'error', 2000)
+            this.showBanner(this.t('toasts.playbackFailed'), 'error', 2400, {
+              key: 'resume-playback',
+              label: 'Tap to play'
+            })
           })
       } else {
         this.audioElement.pause()
@@ -15097,6 +15380,7 @@ export default {
     next() {
       if (this.advanceLocked) return
       this.clearRecitationWindowTimer()
+      this.clearTalqinPauseTimer()
       this.advanceLocked = true
 
       if (this.canNext) {
@@ -15135,6 +15419,7 @@ export default {
       if (this.advanceLocked) return
 
       this.clearRecitationWindowTimer()
+      this.clearTalqinPauseTimer()
       this.advanceLocked = true
       this.sessionCompleted = false
       this.queueIndex--
@@ -15758,6 +16043,10 @@ export default {
         this.startSessionWithCountdown()
         return
       }
+      if (actionKey === 'resume-playback') {
+        this.resumePlaybackAfterGesture()
+        return
+      }
       if (actionKey === 'open-setup') {
         this.openModeSettings()
         return
@@ -16181,6 +16470,7 @@ export default {
         if (state) {
           this.theme = state.theme || this.theme
           this.tab = ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(state.tab) ? state.tab : 'tools'
+          this.showTools = !!state.showTools
           this.currentMode = state.currentMode || 'beginner'
           this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep)
             ? state.flowStep
@@ -16258,7 +16548,7 @@ export default {
         this.anchorCount = 2
       }
 
-      this.showTools = false
+      if (!state) this.showTools = false
       this.beginner = this.loadModeState('beginner')
       this.advanced = this.loadModeState('advanced')
       this.planner = this.loadModeState('planner')
