@@ -93,24 +93,6 @@
           <div class="workspace-shell-copy">
             <span class="workspace-shell-kicker">{{ t('memorisation.sessionOverview.kicker') }}</span>
             <h1 class="workspace-shell-main-title">{{ topCardSessionLabel }}</h1>
-            <div
-              v-if="topCardMetadataPills.length"
-              v-show="!mainCardCollapsed"
-              class="workspace-shell-metadata d-flex flex-nowrap gap-2"
-              aria-label="Session metadata"
-            >
-              <span
-                v-for="item in topCardMetadataPills"
-                :key="item.key"
-                class="badge rounded-pill workspace-shell-metadata-pill"
-              >
-                <strong>{{ item.label }}:</strong>
-                <span>{{ item.value }}</span>
-              </span>
-            </div>
-            <div v-if="reviewPriorityLabel" v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
-              <span>{{ reviewPriorityLabel }}</span>
-            </div>
           </div>
           <div class="workspace-shell-actions">
             <div v-if="hasVerses" class="workspace-header-view-controls quick-right-controls" aria-label="View controls">
@@ -206,6 +188,24 @@
               </div>
             </div>
           </div>
+        </div>
+        <div
+          v-if="topCardMetadataPills.length"
+          v-show="!mainCardCollapsed"
+          class="workspace-shell-metadata d-flex flex-nowrap gap-2"
+          aria-label="Session metadata"
+        >
+          <span
+            v-for="item in topCardMetadataPills"
+            :key="item.key"
+            class="badge rounded-pill workspace-shell-metadata-pill"
+          >
+            <strong>{{ item.label }}:</strong>
+            <span>{{ item.value }}</span>
+          </span>
+        </div>
+        <div v-if="reviewPriorityLabel" v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
+          <span>{{ reviewPriorityLabel }}</span>
         </div>
 
   
@@ -954,13 +954,13 @@
                   <div class="field">
                     <div class="technique-description">
                       <i class="bi bi-info-circle-fill"></i>
-                      <span>Mutqin pauses after each ayah so the learner can repeat before the next ayah begins.</span>
+                      <span>Pause after each ayah for repeat-back practice.</span>
                     </div>
                     <div class="technique-best">
                       <i class="bi bi-check-circle-fill"></i>
-                      <span>Best for listen, pause, repeat practice.</span>
+                      <span>Best for listen and repeat.</span>
                     </div>
-                    <small class="field-hint">When enabled, Mutqin holds the next ayah for at least 1.5x the verse duration or the selected delay.</small>
+                    <small class="field-hint">Uses the longer of your delay or a brief verse-length pause.</small>
                   </div>
                 </div>
               </div>
@@ -1448,12 +1448,12 @@
     </div>
 
     <div class="modal-overlay" v-if="showResumeModal">
-      <div class="modal-content confirm-modal resume-modal ready-begin-modal" role="dialog" aria-modal="true"
+      <div class="modal-content modal-xl confirm-modal resume-modal ready-begin-modal" role="dialog" aria-modal="true"
         aria-labelledby="resumeModalTitle">
         <div class="modal-header">
           <div class="modal-header-text">
             <div class="modal-context-badge">Ready to begin</div>
-            <h2 id="resumeModalTitle">{{ resumeModalTitle }}</h2>
+            <h2 id="resumeModalTitle">Ready to begin</h2>
           </div>
         </div>
         <div class="modal-body ready-begin-body">
@@ -1494,15 +1494,18 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer ready-begin-footer" :class="{ 'has-continue': canResumePreviousSession }">
-          <button v-if="canResumePreviousSession" class="btn-secondary" type="button" @click="continueLastSession">
-            Continue previous
-          </button>
+        <div class="modal-footer ready-begin-footer ready-begin-footer-grid">
           <button class="btn-primary" type="button" @click="openResumeNewSession">
             Start new session
           </button>
-          <button v-if="canViewSavedSessions" class="btn-secondary" type="button" @click="openResumeSavedSessions">
-            View saved sessions
+          <button class="btn-secondary" type="button" :disabled="!canResumePreviousSession" @click="repeatLastSessionFromStart">
+            Repeat this session
+          </button>
+          <button class="btn-secondary" type="button" :disabled="!canResumePreviousSession" @click="continueLastSession">
+            Continue previous
+          </button>
+          <button class="btn-secondary" type="button" :disabled="!canSaveSessionFromResumeChoice" @click="saveSessionFromResumeChoice">
+            Save this session
           </button>
         </div>
       </div>

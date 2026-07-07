@@ -1624,6 +1624,9 @@ export default {
     canResumePreviousSession() {
       return !!(this.hasContinueSession && this.continueSessionPayload?.config?.chapterId)
     },
+    canSaveSessionFromResumeChoice() {
+      return !!(this.canResumePreviousSession || this.hasVerses)
+    },
     canViewSavedSessions() {
       return this.sortedSavedSessions.length > 0
     },
@@ -2909,12 +2912,10 @@ export default {
 
     resumeWhatNext() {
       if (!this.canResumePreviousSession) {
-        return this.canViewSavedSessions
-          ? 'Choose how you want to begin. Start a new session or open one of your saved sessions.'
-          : 'Start a new session to open your setup and begin from a fresh range.'
+        return 'Choose how you want to begin. Start a fresh session now, or continue after you save a session snapshot later.'
       }
-      if (this.dueCount) return `You have ${this.dueCount} verses due for review. Continue to pick up where you left off.`
-      return 'Continue from your last saved ayah and keep building consistency.'
+      if (this.dueCount) return `You have ${this.dueCount} verses due for review. Start fresh, repeat the range, continue from your last ayah, or save this session first.`
+      return 'Choose how you want to continue. You can start fresh, repeat the range from the beginning, continue from your last ayah, or save this session first.'
     },
 
     resumeSavedAtLabel() {
@@ -3603,7 +3604,7 @@ export default {
       this.updateMasteredWeekly()
       this.loadRecordingsLibrary()
 
-      if (this.isLoggedIn && !justRegistered) {
+      if (this.isLoggedIn && this.auth?.just_logged_in && !justRegistered) {
         this.maybeShowReadyToBeginModal()
       }
 
@@ -3627,13 +3628,6 @@ export default {
           this.isDataReady = true
         }
 
-        if (this.pendingResumeDefaultTab) {
-          const pendingTab = this.pendingResumeDefaultTab
-          this.pendingResumeDefaultTab = ''
-          this.$nextTick(() => {
-            this.openToolsPanel({ tab: pendingTab })
-          })
-        }
       } catch (error) {
       console.error('Memorisation bootstrap failed:', error)
       this.tab = 'tools'
@@ -4020,33 +4014,11 @@ export default {
       })
     },
 
-    hasShownReadyToBeginModal() {
-      try {
-        return sessionStorage.getItem('modalShown') === 'true'
-      } catch {
-        return false
-      }
-    },
-
-    markReadyToBeginModalShown() {
-      try {
-        sessionStorage.setItem('modalShown', 'true')
-      } catch {}
-    },
-
     maybeShowReadyToBeginModal() {
-      if (this.hasShownReadyToBeginModal()) return
-      if (!this.canResumePreviousSession && !this.canViewSavedSessions) {
-        this.returningUserChoicePending = false
-        this.pendingResumeDefaultTab = 'tools'
-        this.markReadyToBeginModalShown()
-        return
-      }
       this.returningUserChoicePending = true
+      this.showTools = false
+      this.topCardMenuOpen = false
       this.showResumeModal = true
-      this.$nextTick(() => {
-        this.markReadyToBeginModalShown()
-      })
     },
 
     getWorkspacePersistenceBucket() {
@@ -11972,6 +11944,44 @@ export default {
       this.showResumeModal = false
       this.returningUserChoicePending = false
       this.openToolsPanel({ tab: 'tools' })
+    },
+
+    async repeatLastSessionFromStart() {
+      const payload = this.continueSessionPayload
+      if (!payload?.config?.chapterId) return
+      this.showResumeModal = false
+      this.returningUserChoicePending = false
+      await this.hydrateSessionFromPayload(payload, {
+        banner: false,
+        forcePlayback: false
+      })
+      this.prepareRangeRestart()
+      this.showBanner('Session restarted from the beginning.', 'success', 2200)
+      this.$nextTick(() => {
+        this.showCountdown(() => {
+          this.resumePlaybackFromRestoredState()
+        })
+      })
+    },
+
+    async saveSessionFromResumeChoice() {
+      this.showResumeModal = false
+      this.returningUserChoicePending = false
+
+      if (this.canResumePreviousSession) {
+        await this.hydrateSessionFromPayload(this.continueSessionPayload, {
+          banner: false,
+          forcePlayback: false
+        })
+      }
+
+      const session = this.saveCurrentSessionSilently()
+      if (session?.name) {
+        this.showBanner(this.t('toasts.sessionSaved', { name: session.name }), 'success', 2200)
+        return
+      }
+
+      this.showBanner('Nothing is ready to save yet.', 'info', 2200)
     },
 
     openResumeSavedSessions() {

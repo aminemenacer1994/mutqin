@@ -27,7 +27,7 @@
                 <input type="hidden" name="token" value="{{ $token }}">
 
                 <div class="mb-3">
-                    <label for="email" class="form-label" data-i18n="emailAddress">{{ __('Email Address') }}</label>
+                    <label for="email" class="form-label" data-i18n="email_address">{{ __('ui.email_address') }}</label>
                     <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ $email ?? old('email') }}" required autocomplete="email" autofocus>
 
                     @error('email')
@@ -38,7 +38,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="password" class="form-label" data-i18n="password">{{ __('Password') }}</label>
+                    <label for="password" class="form-label" data-i18n="password">{{ __('ui.password') }}</label>
                     <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="new-password">
 
                     @error('password')
@@ -49,7 +49,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="password-confirm" class="form-label" data-i18n="confirmPassword">{{ __('Confirm Password') }}</label>
+                    <label for="password-confirm" class="form-label" data-i18n="confirm_password">{{ __('ui.confirm_password') }}</label>
                     <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required autocomplete="new-password">
                 </div>
 

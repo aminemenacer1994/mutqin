@@ -65,6 +65,7 @@ export class WordSyncEngine {
     // Normalised, monotonic timeline. Each entry: { index, start, end }.
     this.timeline = []
     this.starts = [] // parallel array of start times for fast binary search
+    this.indexPositions = new Map()
     this.context = null // opaque value handed back to onRender (e.g. verse key)
 
     // ---- Interpolator / committed state ----
@@ -76,6 +77,8 @@ export class WordSyncEngine {
     this.running = false
     this.lastFrameAt = 0
     this.lastDriftCheckAt = 0
+    this.lastObservedAt = 0
+    this.lastObservedClockTime = -1
 
     this._frame = this._frame.bind(this)
     this._onVisibilityChange = this._onVisibilityChange.bind(this)
@@ -100,6 +103,7 @@ export class WordSyncEngine {
     const normalised = this._normaliseTimeline(timeline)
     this.timeline = normalised
     this.starts = normalised.map(item => item.start)
+    this.indexPositions = new Map(normalised.map((item, position) => [item.index, position]))
     // A new timeline means a new track/verse: the previously committed index is
     // meaningless, so force the next resolve to render fresh (prevents a stale
     // highlight sticking when the new active index happens to match the old).
@@ -271,11 +275,7 @@ export class WordSyncEngine {
   }
 
   _positionOfIndex(wordIndex) {
-    const tl = this.timeline
-    for (let i = 0; i < tl.length; i += 1) {
-      if (tl[i].index === wordIndex) return i
-    }
-    return -1
+    return this.indexPositions.has(wordIndex) ? this.indexPositions.get(wordIndex) : -1
   }
 
   // -------------------------------------------------------------------------
@@ -383,6 +383,7 @@ export class WordSyncEngine {
   _tick(time) {
     if (!this.timeline.length) return
     const safeTime = clampNonNegative(time)
+    this.lastObservedClockTime = safeTime
 
     // Interpolation + hysteresis -> candidate index. Renders only on change.
     const next = this._resolveWithHysteresis(safeTime)
@@ -418,6 +419,37 @@ export class WordSyncEngine {
   // -------------------------------------------------------------------------
   // Seek / Pause / Resume / public control
   // -------------------------------------------------------------------------
+
+  /**
+   * Lightweight fallback path for coarse clock events like `timeupdate`.
+   * This keeps highlights moving if rAF is throttled or unexpectedly parked,
+   * while avoiding redundant work when rAF is already driving the timeline.
+   */
+  observe(time, opts = {}) {
+    if (!this.timeline.length) return false
+    const safeTime = clampNonNegative(time)
+    const wallNow = nowMs()
+    const minIntervalMs = Number.isFinite(Number(opts.minIntervalMs))
+      ? Math.max(0, Number(opts.minIntervalMs))
+      : (this.running ? 48 : 0)
+    const minClockDeltaSeconds = Number.isFinite(Number(opts.minClockDeltaSeconds))
+      ? Math.max(0, Number(opts.minClockDeltaSeconds))
+      : 0.018
+
+    if (
+      !opts.force
+      && minIntervalMs > 0
+      && this.lastObservedAt
+      && wallNow - this.lastObservedAt < minIntervalMs
+      && Math.abs(safeTime - this.lastObservedClockTime) < minClockDeltaSeconds
+    ) {
+      return false
+    }
+
+    this.lastObservedAt = wallNow
+    this._tick(safeTime)
+    return true
+  }
 
   /**
    * Immediately recompute the active word from the current clock and render,
@@ -462,9 +494,12 @@ export class WordSyncEngine {
     this.stop()
     this.timeline = []
     this.starts = []
+    this.indexPositions = new Map()
     this.committedIndex = -1
     this.cursor = 0
     this.context = null
+    this.lastObservedAt = 0
+    this.lastObservedClockTime = -1
   }
 
   destroy() {
@@ -474,6 +509,7 @@ export class WordSyncEngine {
     }
     this.timeline = []
     this.starts = []
+    this.indexPositions = new Map()
     this.onRender = () => {}
     this.getClock = () => null
   }

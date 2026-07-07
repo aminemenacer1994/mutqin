@@ -439,9 +439,10 @@ export default {
     const currentTheme = ref('light');
     
     const setTheme = (theme) => {
-      currentTheme.value = theme;
-      localStorage.setItem('mutqin-theme', theme);
-      document.documentElement.setAttribute('data-theme', theme);
+      const normalizedTheme = ['dark', 'sepia'].includes(theme) ? theme : 'light';
+      currentTheme.value = normalizedTheme;
+      localStorage.setItem('mutqin-theme', normalizedTheme);
+      document.documentElement.setAttribute('data-theme', normalizedTheme);
     };
     
     const loadTheme = () => {
@@ -449,10 +450,8 @@ export default {
       if (saved && ['light', 'dark', 'sepia'].includes(saved)) {
         currentTheme.value = saved;
         document.documentElement.setAttribute('data-theme', saved);
-      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        setTheme('dark');
       } else {
-        setTheme('light');
+        setTheme(document.documentElement.getAttribute('data-theme') || 'light');
       }
     };
     

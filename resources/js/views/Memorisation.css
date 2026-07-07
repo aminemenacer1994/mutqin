@@ -22047,43 +22047,35 @@ textarea {
 
 .guest-auth-shell {
   width: 100%;
-  min-height: calc(100dvh - var(--nav-h) - 32px);
+  min-height: calc(100dvh - var(--nav-h) - 44px);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: clamp(16px, 3vw, 40px) 0 clamp(28px, 5vw, 56px);
+  padding: clamp(4px, 0.85vw, 8px) 0;
 }
 
 .guest-auth-card {
-  width: min(100%, var(--auth-form-max-width));
-  max-width: var(--auth-form-max-width);
-  min-height: var(--auth-form-min-height);
+  width: min(100%, 30rem);
+  max-width: 30rem;
+  min-height: auto;
   display: grid;
-  gap: 18px;
-  padding: clamp(22px, 3vw, 34px);
-  border: 1px solid var(--border);
-  border-radius: 28px;
-  background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
+  gap: 12px;
+  padding: clamp(16px, 1.8vw, 22px);
+  border: 1px solid color-mix(in srgb, var(--accent) 8%, var(--border));
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--surface-strong) 98%, transparent);
 }
 
 .guest-auth-kicker {
-  display: inline-flex;
-  width: fit-content;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent-light) 80%, transparent);
-  color: var(--accent-strong);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  display: none;
 }
 
 .guest-auth-title {
   margin: 0;
-  font-size: clamp(32px, 4.4vw, 44px);
-  line-height: 1;
-  letter-spacing: -0.03em;
+  font-size: clamp(1.75rem, 1vw + 1.45rem, 2.1rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  font-weight: 500;
   color: var(--text);
 }
 
@@ -22094,7 +22086,7 @@ textarea {
 }
 
 .guest-auth-google {
-  min-height: 54px;
+  min-height: 50px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -22102,10 +22094,10 @@ textarea {
   width: 100%;
   padding: 0 18px;
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--surface) 88%, var(--surface-strong));
   color: var(--text);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .guest-auth-google:hover {
@@ -22125,7 +22117,7 @@ textarea {
   align-items: center;
   color: var(--text-muted);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -22139,7 +22131,7 @@ textarea {
 
 .guest-auth-form {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .guest-auth-field {
@@ -22150,16 +22142,16 @@ textarea {
 .guest-auth-field label {
   color: var(--text);
   font-size: var(--auth-form-label-size);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .guest-auth-field input[type="email"],
 .guest-auth-field input[type="password"] {
-  min-height: 54px;
+  min-height: 50px;
   width: 100%;
   padding: 0 16px;
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--surface) 88%, var(--field-bg));
   color: var(--text);
   font-size: var(--auth-form-label-size);
@@ -22185,7 +22177,7 @@ textarea {
   align-items: center;
   gap: 10px;
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 400;
   font-size: var(--auth-form-label-size);
   cursor: pointer;
 }
@@ -22196,7 +22188,7 @@ textarea {
 
 .guest-auth-link {
   color: var(--accent-strong);
-  font-weight: 700;
+  font-weight: 500;
   text-decoration: none;
 }
 
@@ -22205,13 +22197,13 @@ textarea {
 }
 
 .guest-auth-submit {
-  min-height: 54px;
+  min-height: 50px;
   border: 0;
-  border-radius: 18px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--text) 94%, #140f0a);
   color: #fff;
   font-size: var(--auth-form-label-size);
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.01em;
 }
 
@@ -22227,9 +22219,26 @@ textarea {
 }
 
 @media (max-width: 767.98px) {
+  .guest-auth-shell {
+    min-height: calc(100dvh - var(--nav-h) - 56px);
+    padding: 0;
+  }
+
   .guest-auth-card {
-    padding: 20px;
-    border-radius: 24px;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .guest-auth-title {
+    font-size: 1.45rem;
+  }
+
+  .guest-auth-field input[type="email"],
+  .guest-auth-field input[type="password"],
+  .guest-auth-google,
+  .guest-auth-submit {
+    min-height: 46px;
   }
 
   .guest-auth-meta {
@@ -23711,4 +23720,172 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   background: rgba(255, 255, 255, 0.04) !important;
   border-color: rgba(255, 232, 205, 0.14) !important;
   color: #f4ede4 !important;
+}
+
+@keyframes workspaceMetadataSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes workspacePillFloatIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.workspace-shell {
+  overflow: hidden;
+}
+
+.workspace-shell-head {
+  gap: 0.75rem !important;
+}
+
+.workspace-shell-copy,
+.workspace-shell-actions {
+  min-width: 0;
+}
+
+.workspace-shell-metadata {
+  width: 100%;
+  margin-top: 0.15rem;
+  padding-bottom: 0.18rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  animation: workspaceMetadataSlideIn 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.workspace-shell-metadata::-webkit-scrollbar {
+  display: none;
+}
+
+.workspace-shell-metadata-pill {
+  gap: 0.42rem;
+  padding: 0.52rem 0.9rem;
+  border: 1px solid rgba(177, 136, 94, 0.16);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 239, 229, 0.92));
+  font-size: 0.84rem;
+  box-shadow: 0 10px 20px rgba(88, 59, 29, 0.06);
+}
+
+.workspace-shell-metadata-pill:nth-child(1) { animation: workspacePillFloatIn 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.workspace-shell-metadata-pill:nth-child(2) { animation: workspacePillFloatIn 260ms 40ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.workspace-shell-metadata-pill:nth-child(3) { animation: workspacePillFloatIn 260ms 80ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.workspace-shell-metadata-pill:nth-child(4) { animation: workspacePillFloatIn 260ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.workspace-shell-metadata-pill:nth-child(5) { animation: workspacePillFloatIn 260ms 160ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.workspace-shell-metadata-pill:nth-child(6) { animation: workspacePillFloatIn 260ms 200ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.workspace-header-view-controls,
+.quick-right-controls {
+  width: min(100%, 20.75rem);
+  grid-template-columns: minmax(0, 1fr) minmax(7.9rem, auto) !important;
+  gap: 0.45rem !important;
+}
+
+.workspace-header-view-controls .view-mode-switch,
+.workspace-header-view-controls .font-dropdown-trigger {
+  min-width: 0 !important;
+}
+
+.workspace-header-view-controls .view-mode-switch {
+  padding-inline: 0.58rem !important;
+  gap: 0.38rem !important;
+}
+
+.view-mode-switch-label {
+  max-width: none !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  text-align: center;
+  line-height: 1.05;
+  font-size: 0.84rem;
+}
+
+.workspace-header-view-controls .view-mode-switch-track {
+  flex: 0 0 auto;
+}
+
+.workspace-header-view-controls .quick-font-dropdown {
+  flex: 0 1 7.9rem;
+}
+
+.workspace-header-view-controls .font-dropdown-trigger {
+  padding-inline: 0.58rem !important;
+  gap: 0.4rem;
+}
+
+.workspace-header-view-controls .font-dropdown-trigger span,
+.quick-font-dropdown .font-dropdown-trigger span {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  line-height: 1.1;
+  font-size: 0.8rem;
+}
+
+.planner-inline-btn {
+  min-height: 38px;
+  padding: 0 0.78rem;
+  font-weight: 600;
+}
+
+.mode-radio-group {
+  flex-shrink: 0;
+}
+
+.sheet-toggle .st-left {
+  min-width: 0;
+}
+
+#talqin-mode-toggle {
+  margin-inline-start: 0.4rem;
+}
+
+.mushaf-pill-toolbar {
+  gap: 0.45rem !important;
+  padding: 0.62rem 0.72rem;
+}
+
+.mushaf-toolbar-cluster,
+.mushaf-toolbar-cluster-start,
+.mushaf-toolbar-cluster-end {
+  gap: 0.4rem !important;
+}
+
+.mushaf-toolbar-trigger,
+.mushaf-pill-toolbar .mushaf-pill {
+  min-height: 42px;
+  padding: 0 0.68rem;
+}
+
+.mushaf-toolbar-trigger-label,
+.mushaf-pill-label {
+  max-width: 5.8rem;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  line-height: 1.05;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.mushaf-pill-toolbar .mushaf-controls-pill {
+  width: 42px !important;
+  min-width: 42px !important;
 }

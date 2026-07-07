@@ -2,50 +2,10 @@
 
 @section('content')
 <div class="auth-shell">
-    <div class="auth-stage">
-        <section class="auth-panel auth-panel-copy">
-            <a class="auth-brand" href="{{ route('memorisation') }}" aria-label="Open memorisation workspace">
-                <span class="auth-brand-mark"><i class="bi bi-book-half" aria-hidden="true"></i></span>
-                <span class="auth-brand-text">
-                    <strong>Mutqin</strong>
-                    <small>{{ __('ui.auth_workspace_label') }}</small>
-                </span>
-            </a>
-
-            <div class="auth-copy auth-copy-wide">
-                <div class="auth-eyebrow"><i class="bi bi-stars"></i> <span data-i18n="auth_access_eyebrow">{{ __('ui.auth_access_eyebrow') }}</span></div>
-                <h1 class="auth-title" data-i18n="login">{{ __('ui.login') }}</h1>
-                <p class="auth-subtitle" data-i18n="authLoginSubtitle">{{ __('ui.auth_login_subtitle') }}</p>
-            </div>
-
-            <div class="auth-feature-list">
-                <article class="auth-feature-item">
-                    <span class="auth-feature-icon"><i class="bi bi-journal-check" aria-hidden="true"></i></span>
-                    <div>
-                        <strong data-i18n="auth_resume_title">{{ __('ui.auth_resume_title') }}</strong>
-                        <p data-i18n="auth_resume_desc">{{ __('ui.auth_resume_desc') }}</p>
-                    </div>
-                </article>
-                <article class="auth-feature-item">
-                    <span class="auth-feature-icon"><i class="bi bi-cloud-check" aria-hidden="true"></i></span>
-                    <div>
-                        <strong>{{ __('ui.auth_guided_title') }}</strong>
-                        <p>{{ __('ui.auth_guided_desc') }}</p>
-                    </div>
-                </article>
-                <article class="auth-feature-item">
-                    <span class="auth-feature-icon"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
-                    <div>
-                        <strong data-i18n="auth_secure_title">{{ __('ui.auth_secure_title') }}</strong>
-                        <p data-i18n="auth_secure_desc">{{ __('ui.auth_secure_desc') }}</p>
-                    </div>
-                </article>
-            </div>
-        </section>
-
+    <div class="auth-stage auth-stage-single">
         <section class="auth-panel auth-panel-form">
             <div class="auth-form-wrap">
-                <a class="auth-brand auth-brand-mobile" href="{{ route('memorisation') }}" aria-label="Open memorisation workspace">
+                <a class="auth-brand auth-brand-static" href="{{ route('memorisation') }}" aria-label="Open memorisation workspace">
                     <span class="auth-brand-mark"><i class="bi bi-book-half" aria-hidden="true"></i></span>
                     <span class="auth-brand-text">
                         <strong>Mutqin</strong>
@@ -54,9 +14,8 @@
                 </a>
 
                 <div class="auth-copy auth-copy-compact">
-                    <div class="auth-eyebrow"><i class="bi bi-stars"></i> <span data-i18n="auth_access_eyebrow">{{ __('ui.auth_access_eyebrow') }}</span></div>
                     <h2 class="auth-form-title" data-i18n="login">{{ __('ui.login') }}</h2>
-                    <p class="auth-form-subtitle" data-i18n="authLoginSubtitle">{{ __('ui.auth_login_subtitle') }}</p>
+                    <p class="auth-form-subtitle" data-i18n="auth_login_subtitle">{{ __('ui.auth_login_subtitle') }}</p>
                 </div>
 
                 @if (session('error'))
@@ -84,7 +43,7 @@
                     @csrf
 
                     <div class="auth-field">
-                        <label for="email" class="form-label" data-i18n="emailAddress">{{ __('ui.email_address') }}</label>
+                        <label for="email" class="form-label" data-i18n="email_address">{{ __('ui.email_address') }}</label>
                         <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
 
                         @error('email')
@@ -108,12 +67,12 @@
                     <div class="auth-meta-row">
                         <label class="auth-check" for="remember">
                             <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
-                            <span data-i18n="rememberMe">{{ __('ui.remember_me') }}</span>
+                            <span data-i18n="remember_me">{{ __('ui.remember_me') }}</span>
                         </label>
 
                         @if (Route::has('password.request'))
                             <a class="auth-text-link" href="{{ route('password.request') }}">
-                                <span data-i18n="forgotPassword">{{ __('ui.forgot_password') }}</span>
+                                <span data-i18n="forgot_password">{{ __('ui.forgot_password') }}</span>
                             </a>
                         @endif
                     </div>

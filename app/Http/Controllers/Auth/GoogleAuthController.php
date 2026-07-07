@@ -79,6 +79,8 @@ class GoogleAuthController extends Controller
         request()->session()->regenerate();
         if ($created) {
             request()->session()->flash('mutqin_just_registered', true);
+        } else {
+            request()->session()->flash('mutqin_just_logged_in', true);
         }
 
         return redirect()->intended(route('memorisation'));

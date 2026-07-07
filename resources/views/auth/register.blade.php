@@ -5,9 +5,17 @@
     <div class="auth-stage auth-stage-single">
         <section class="auth-panel auth-panel-form">
             <div class="auth-form-wrap">
+                <a class="auth-brand auth-brand-static" href="{{ route('memorisation') }}" aria-label="Open memorisation workspace">
+                    <span class="auth-brand-mark"><i class="bi bi-book-half" aria-hidden="true"></i></span>
+                    <span class="auth-brand-text">
+                        <strong>Mutqin</strong>
+                        <small>{{ __('ui.auth_workspace_label') }}</small>
+                    </span>
+                </a>
+
                 <div class="auth-copy auth-copy-compact">
                     <h2 class="auth-form-title" data-i18n="register">{{ __('ui.register') }}</h2>
-                    <p class="auth-form-subtitle" data-i18n="authRegisterSubtitle">{{ __('ui.auth_register_subtitle') }}</p>
+                    <p class="auth-form-subtitle" data-i18n="auth_register_subtitle">{{ __('ui.auth_register_subtitle') }}</p>
                 </div>
 
                 @error('google')
@@ -45,7 +53,7 @@
                     </div>
 
                     <div class="auth-field">
-                        <label for="email" class="form-label" data-i18n="emailAddress">{{ __('ui.email_address') }}</label>
+                        <label for="email" class="form-label" data-i18n="email_address">{{ __('ui.email_address') }}</label>
                         <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email">
 
                         @error('email')
@@ -68,7 +76,7 @@
                         </div>
 
                         <div>
-                            <label for="password-confirm" class="form-label" data-i18n="confirmPassword">{{ __('ui.confirm_password') }}</label>
+                            <label for="password-confirm" class="form-label" data-i18n="confirm_password">{{ __('ui.confirm_password') }}</label>
                             <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required autocomplete="new-password">
                         </div>
                     </div>
