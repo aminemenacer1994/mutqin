@@ -686,7 +686,7 @@
               <span class="technique-group-kicker">Visibility</span>
               <p>Use these to keep the current ayah clear and the next ayahs quieter.</p>
             </div>
-            <hr class="technique-group-divider">
+            
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('focus_mode')" type="button">
                 <span class="st-left">
@@ -782,7 +782,7 @@
               <span class="technique-group-kicker">Flow &amp; Recall</span>
               <p>Use these to connect ayahs together and anchor harder words.</p>
             </div>
-            <hr class="technique-group-divider">
+            
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('chaining')" type="button">
                 <span class="st-left">

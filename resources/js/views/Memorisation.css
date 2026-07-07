@@ -23133,11 +23133,7 @@ textarea {
   color: #8a5c2a;
 }
 
-.technique-group-divider {
-  border: 0;
-  border-top: 1px solid rgba(188, 145, 92, 0.18);
-  margin: 0 0 1rem;
-}
+
 
 .ready-begin-modal {
   width: min(880px, calc(100vw - 2rem));
