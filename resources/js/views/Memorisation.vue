@@ -806,8 +806,13 @@
                   <div class="field">
                     <div class="technique-description">
                       <i class="bi bi-info-circle-fill"></i>
-                      <span>{{ chainingMethod === 'cumulative' ? t('memorisation.techniques.chainingCumulativeDescription') :
-                        t('memorisation.techniques.chainingLinkingDescription') }}</span>
+                      <span>{{ chainingEnabled
+                        ? (hasChainingMethodSelected
+                          ? (chainingMethod === 'cumulative'
+                            ? t('memorisation.techniques.chainingCumulativeDescription')
+                            : t('memorisation.techniques.chainingLinkingDescription'))
+                          : 'Select linking or cumulative to build the chaining queue.')
+                        : t('memorisation.techniques.chainingOffDescription') }}</span>
                     </div>
                     <div class="technique-best">
                       <i class="bi bi-check-circle-fill"></i>
@@ -818,12 +823,12 @@
                     <label>{{ t('common.method') }}</label>
                     <div class="radio-group">
                       <label class="radio">
-                        <input type="radio" value="linking" v-model="chainingMethod"
+                        <input type="radio" value="linking" :checked="chainingMethod === 'linking'"
                           @change="setChainingMethod('linking')">
                         {{ t('memorisation.linking') }}
                       </label>
                       <label class="radio">
-                        <input type="radio" value="cumulative" v-model="chainingMethod"
+                        <input type="radio" value="cumulative" :checked="chainingMethod === 'cumulative'"
                           @change="setChainingMethod('cumulative')">
                         {{ t('memorisation.cumulative') }}
                       </label>

@@ -376,8 +376,8 @@ export default {
       focusDimPercent: 54,
       blurModeEnabled: false,
       blurIntensity: 10,
-      chainingEnabled: true,
-      chainingMethod: 'linking',
+      chainingEnabled: false,
+      chainingMethod: '',
       chainingRepetitions: 1,
       // Primary guided UX flow: learn -> practice -> recall.
       flowStep: 'learn',
@@ -2065,6 +2065,7 @@ export default {
     },
     chainingMethodDescription() {
       if (!this.chainingEnabled) return this.t('memorisation.techniques.chainingOffSub')
+      if (!this.hasChainingMethodSelected) return 'Choose linking or cumulative before starting.'
       if (this.chainingMethod === 'cumulative') return this.t('memorisation.techniques.chainingCumulativeSub')
       return this.t('memorisation.techniques.chainingLinkingSub')
     },
@@ -3213,6 +3214,10 @@ export default {
       return this.showPlannerModal
     },
 
+    hasChainingMethodSelected() {
+      return ['linking', 'cumulative'].includes(this.chainingMethod)
+    },
+
     canStartSession() {
       const config = this.sessionConfig
       return this.appReady &&
@@ -3221,7 +3226,8 @@ export default {
         !!config.chapterId &&
         config.rangeStart > 0 &&
         config.rangeEnd >= config.rangeStart &&
-        (!!this.verses.length || !!this.currentConfig.verses.length)
+        (!!this.verses.length || !!this.currentConfig.verses.length) &&
+        (!this.chainingEnabled || this.hasChainingMethodSelected)
     },
 
     currentSessionExplanation() {
@@ -4215,7 +4221,7 @@ export default {
         customGapSeconds: 2,
         recitationWindowSeconds: 8,
         chainingEnabled: false,
-        chainingMethod: 'linking',
+        chainingMethod: '',
         chainingRepetitions: 1,
         focusModeEnabled: false,
         blurModeEnabled: false,
@@ -15826,7 +15832,7 @@ export default {
             sequenceTotal: chain.length
           })))
         }
-      } else {
+      } else if (chainingMethod === 'linking') {
         // Linking method: practice ayahs individually, then adjacent ayah pairs.
         for (let index = 0; index < verses.length; index++) {
           const verse = verses[index]
@@ -15900,7 +15906,12 @@ export default {
     },
 
     setChainingEnabled(enabled) {
-      this.chainingEnabled = !!enabled
+      const nextEnabled = !!enabled
+      if (this.chainingEnabled === nextEnabled) return
+      this.chainingEnabled = nextEnabled
+      if (!nextEnabled) {
+        this.chainingMethod = ''
+      }
       this.applyChainingQueueChange(this.currentMode, { restart: true })
     },
     toggleFocusModeRadio() {
@@ -15926,7 +15937,7 @@ export default {
 
     setChainingMethod(method) {
       const nextMethod = method === 'cumulative' ? 'cumulative' : 'linking'
-      this.chainingEnabled = true
+      if (this.chainingMethod === nextMethod) return
       this.chainingMethod = nextMethod
       this.applyChainingQueueChange(this.currentMode, { restart: true })
     },
@@ -16492,6 +16503,11 @@ export default {
 
       if (errors.length > 0) {
         this.showBanner(this.t('toasts.settingsIssue', { join: errors.join(', ') }), 'warning', 3000)
+        return false
+      }
+
+      if (this.chainingEnabled && !this.hasChainingMethodSelected) {
+        this.showBanner('Choose a chaining method before starting the session.', 'warning', 3200)
         return false
       }
 
