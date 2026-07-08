@@ -190,7 +190,6 @@
         </div>
         <div
           v-if="topCardMetadataPills.length"
-          v-show="!mainCardCollapsed"
           class="workspace-shell-metadata d-flex flex-nowrap gap-2"
           aria-label="Session metadata"
         >
@@ -203,26 +202,10 @@
             <span>{{ item.value }}</span>
           </span>
         </div>
-        <div v-if="reviewPriorityLabel" v-show="!mainCardCollapsed" class="workspace-shell-compact-meta">
+        <div v-if="reviewPriorityLabel" class="workspace-shell-compact-meta">
           <span>{{ reviewPriorityLabel }}</span>
         </div>
 
-  
-
-  <!-- Quick controls - also hidden when session is completed -->
-  <div v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills.length" v-show="!mainCardCollapsed" class="workspace-quick-controls" aria-label="Quick reading controls">
-    <div class="quick-pill-group-list" :class="{ 'quick-pill-group-list-compact': !topCardAppliedPills.length }">
-      <div v-if="topCardAppliedPills.length" class="quick-left-pills">
-        <div class="workspace-applied-pills" aria-label="Live session settings">
-          <span v-for="item in topCardAppliedPills" :key="item.key" class="workspace-applied-pill"
-            :class="{ muted: item.muted }">
-            <i class="bi" :class="item.icon" aria-hidden="true"></i>
-            <span>{{ item.label }}</span>
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
 </section>
 
           <main v-if="!isOnboardingExperienceActive" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"

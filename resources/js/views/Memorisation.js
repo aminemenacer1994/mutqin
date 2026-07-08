@@ -2053,9 +2053,7 @@ export default {
         }
       ]
     },
-    topCardAppliedPills() {
-      return []
-    },
+
     appStyleVars() {
       return {
         '--ui-scale': this.uiScale,
@@ -3151,7 +3149,7 @@ export default {
     },
 
     sessionTypeInfo() {
-      return { key: 'memorisation', label: this.t('memorisation.sessionType.label'), tone: 'memorisation' }
+      return { key: 'session', label: this.t('memorisation.sessionType.session'), tone: 'session' }
     },
 
     quranFontFamily() {
