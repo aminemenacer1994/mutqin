@@ -3520,7 +3520,7 @@ export default {
       }
       this.handleGlobalThemeChange = (event) => {
         const nextTheme = event?.detail?.theme || document.documentElement.getAttribute('data-theme') || 'light'
-        this.theme = nextTheme
+        this.theme = this.normalizeThemeToken(nextTheme)
       }
       this.handleThemeStorageSync = (event) => {
         if (event?.key === HIFZ_PLAN_STORAGE_KEY || event?.key === AYAH_PROGRESS_STORAGE_KEY) {
@@ -3529,14 +3529,14 @@ export default {
         }
         if (event?.key && event.key !== 'mutqin-theme') return
         const nextTheme = event?.newValue || document.documentElement.getAttribute('data-theme') || 'light'
-        this.theme = nextTheme
+        this.theme = this.normalizeThemeToken(nextTheme)
       }
       window.addEventListener('mutqin:theme-change', this.handleGlobalThemeChange)
       window.addEventListener('mutqin:locale-change', this.handleLocaleChange)
       window.addEventListener('storage', this.handleThemeStorageSync)
       this.themeObserver = new MutationObserver(() => {
         const nextTheme = document.documentElement.getAttribute('data-theme') || 'light'
-        if (nextTheme !== this.theme) this.theme = nextTheme
+        if (nextTheme !== this.theme) this.theme = this.normalizeThemeToken(nextTheme)
       })
       this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
       this.watchActiveVerse()
@@ -3592,7 +3592,7 @@ export default {
       this.initAudio()
       this.restoreAudioState()
       this.theme = document.documentElement.getAttribute('data-theme') || this.theme || 'light'
-      document.documentElement.setAttribute('data-theme', this.theme)
+      this.syncGlobalTheme(this.theme)
       this.loadBookmarksPins()
       this.setupWordClickHandler()
       this.loadSavedSessions()
@@ -3989,6 +3989,35 @@ export default {
   },
 
   methods: {
+    normalizeThemeToken(value = 'light') {
+      const theme = String(value || 'light').toLowerCase()
+      if (theme === 'dark' || theme === 'dark-mode') return 'dark'
+      if (theme === 'sepia' || theme === 'sepia-mode') return 'sepia'
+      return 'light'
+    },
+
+    toThemePreference(value = 'light') {
+      const theme = this.normalizeThemeToken(value)
+      if (theme === 'dark') return 'dark-mode'
+      if (theme === 'sepia') return 'sepia-mode'
+      return 'light-mode'
+    },
+
+    syncGlobalTheme(theme = this.theme) {
+      const normalizedTheme = this.normalizeThemeToken(theme)
+      this.theme = normalizedTheme
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-theme', this.theme)
+        document.cookie = `mutqin_theme=${this.toThemePreference(normalizedTheme)};path=/;max-age=31536000;samesite=lax`
+      }
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem('mutqin-theme', normalizedTheme)
+          localStorage.setItem('mutqin-theme-preference', this.toThemePreference(normalizedTheme))
+        } catch {}
+      }
+    },
+
     translateOrFallback(key, fallback, params = {}) {
       const translated = this.t(key, params)
       return translated && translated !== key ? translated : fallback
@@ -12792,8 +12821,7 @@ export default {
       this.blurIntensity = Math.max(4, Math.min(18, Number(config.blurIntensity || this.blurIntensity || 10)))
       this.anchorModeEnabled = !!config.anchorModeEnabled
       this.anchorCount = Math.max(1, Math.min(3, Number(config.anchorCount || this.anchorCount || 2)))
-      this.theme = config.theme || this.theme
-      document.documentElement.setAttribute('data-theme', this.theme)
+      this.syncGlobalTheme(config.theme || this.theme)
     },
 
     loadModeState(mode) {
@@ -16523,8 +16551,7 @@ export default {
     cycleTheme() {
       const themes = ['light', 'dark']
       const idx = themes.indexOf(this.theme)
-      this.theme = themes[(idx + 1) % themes.length]
-      document.documentElement.setAttribute('data-theme', this.theme)
+      this.syncGlobalTheme(themes[(idx + 1) % themes.length])
       this.persistUiState()
     },
 
@@ -16656,8 +16683,8 @@ export default {
       this.beginner = this.loadModeState('beginner')
       this.advanced = this.loadModeState('advanced')
       this.planner = this.loadModeState('planner')
+      this.syncGlobalTheme(this.theme)
       if (this.readingViewMode === 'mushaf') this.applyMushafThemeDefault(this.theme)
-      document.documentElement.setAttribute('data-theme', this.theme)
     },
 
     persistUiState() {
