@@ -205,6 +205,7 @@ export default {
       savedSessions: [], // Make sure this exists
       continueSessionPayload: null, // Make sure this exists
       hasContinueSession: false,
+      startingFreshSessionSelection: false,
       returningUserChoicePending: false,
       pendingResumeDefaultTab: '',
       showHifzPlanModal: false,
@@ -1617,10 +1618,10 @@ export default {
         : this.t('common.close')
     },
     canResumePreviousSession() {
-      return !!(this.hasContinueSession && this.continueSessionPayload?.config?.chapterId)
+      return !!(this.continueSessionPayload?.config?.chapterId)
     },
     canSaveSessionFromResumeChoice() {
-      return !!(this.canResumePreviousSession || this.hasVerses)
+      return !!(this.continueSessionPayload?.config?.chapterId || this.hasVerses)
     },
     canViewSavedSessions() {
       return this.sortedSavedSessions.length > 0
@@ -3599,11 +3600,27 @@ export default {
       this.updateMasteredWeekly()
       this.loadRecordingsLibrary()
 
-      if (this.isLoggedIn && this.auth?.just_logged_in && !justRegistered) {
+      const shouldAutoRestorePersistedSession = !justRegistered
+        && !this.auth?.just_logged_in
+        && this.canResumePreviousSession
+
+      if (shouldAutoRestorePersistedSession) {
+        await this.hydrateSessionFromPayload(this.continueSessionPayload, {
+          banner: false
+        })
+        this.showResumeModal = false
+        this.returningUserChoicePending = false
+        this.showTools = false
+        this.isDataReady = true
+      }
+
+      if (this.isLoggedIn && !justRegistered) {
         this.maybeShowReadyToBeginModal()
       }
 
-      if (justRegistered) {
+      if (shouldAutoRestorePersistedSession) {
+        this.isDataReady = true
+      } else if (justRegistered) {
         this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
         this.openOnboardingModal()
         this.isDataReady = true
@@ -4010,10 +4027,39 @@ export default {
     },
 
     maybeShowReadyToBeginModal() {
+      if (!this.isLoggedIn) return
+      if (!this.getReadyToBeginSessionStorageKey()) return
+      if (this.hasShownReadyToBeginModalForCurrentLogin()) return
+      this.markReadyToBeginModalShownForCurrentLogin()
       this.returningUserChoicePending = true
       this.showTools = false
       this.topCardMenuOpen = false
       this.showResumeModal = true
+    },
+
+    getReadyToBeginSessionStorageKey() {
+      const loginEventId = String(this.auth?.login_event_id || '').trim()
+      if (!loginEventId) return ''
+      const userId = this.auth?.id ? String(this.auth.id) : 'guest'
+      return `mutqin.readyToBeginShown:${userId}:${loginEventId}`
+    },
+
+    hasShownReadyToBeginModalForCurrentLogin() {
+      const storageKey = this.getReadyToBeginSessionStorageKey()
+      if (!storageKey || typeof sessionStorage === 'undefined') return false
+      try {
+        return sessionStorage.getItem(storageKey) === '1'
+      } catch {
+        return false
+      }
+    },
+
+    markReadyToBeginModalShownForCurrentLogin() {
+      const storageKey = this.getReadyToBeginSessionStorageKey()
+      if (!storageKey || typeof sessionStorage === 'undefined') return
+      try {
+        sessionStorage.setItem(storageKey, '1')
+      } catch {}
     },
 
     getWorkspacePersistenceBucket() {
@@ -4057,9 +4103,6 @@ export default {
         return fallback
       }
     },
-      if (!this.isLoggedIn || !this.auth?.just_logged_in) return
-      if (this.hasShownReadyToBeginModalForCurrentLogin()) return
-      this.markReadyToBeginModalShownForCurrentLogin()
 
     writeScopedStorageValue(workspaceKey, localKey, value) {
       if (this.learningBackendEnabled()) {
@@ -4068,31 +4111,6 @@ export default {
       try {
         localStorage.setItem(localKey, JSON.stringify(value))
         return true
-    getReadyToBeginSessionStorageKey() {
-      const loginEventId = String(this.auth?.login_event_id || '').trim()
-      if (!loginEventId) return ''
-      const userId = this.auth?.id ? String(this.auth.id) : 'guest'
-      return `mutqin.readyToBeginShown:${userId}:${loginEventId}`
-    },
-
-    hasShownReadyToBeginModalForCurrentLogin() {
-      const storageKey = this.getReadyToBeginSessionStorageKey()
-      if (!storageKey || typeof sessionStorage === 'undefined') return false
-      try {
-        return sessionStorage.getItem(storageKey) === '1'
-      } catch {
-        return false
-      }
-    },
-
-    markReadyToBeginModalShownForCurrentLogin() {
-      const storageKey = this.getReadyToBeginSessionStorageKey()
-      if (!storageKey || typeof sessionStorage === 'undefined') return
-      try {
-        sessionStorage.setItem(storageKey, '1')
-      } catch {}
-    },
-
       } catch {
         return false
       }
@@ -11936,8 +11954,9 @@ export default {
     },
 
     openToolsPanel(options = {}) {
-      const { verseKey = null, mode = this.currentMode, scroll = false, tab = 'tools' } = options
+      const { verseKey = null, mode = this.currentMode, scroll = false, tab = 'tools', preserveFreshSelection = false } = options
       this.toolsReturnFocusEl = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      this.startingFreshSessionSelection = !!preserveFreshSelection
       this.currentMode = mode
       this.tab = ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(tab) ? tab : 'tools'
       this.syncSettingsDraft()
@@ -11977,14 +11996,16 @@ export default {
     },
 
     openResumeNewSession() {
+      this.startingFreshSessionSelection = true
       this.showResumeModal = false
       this.returningUserChoicePending = false
-      this.openToolsPanel({ tab: 'tools' })
+      this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
     },
 
     async repeatLastSessionFromStart() {
       const payload = this.continueSessionPayload
       if (!payload?.config?.chapterId) return
+      this.startingFreshSessionSelection = false
       this.showResumeModal = false
       this.returningUserChoicePending = false
       await this.hydrateSessionFromPayload(payload, {
@@ -11999,6 +12020,7 @@ export default {
     },
 
     async saveSessionFromResumeChoice() {
+      this.startingFreshSessionSelection = false
       this.showResumeModal = false
       this.returningUserChoicePending = false
 
@@ -12031,6 +12053,7 @@ export default {
     },
     handleHeaderSessionAction() {
       if (!this.hasVerses) return
+      this.startingFreshSessionSelection = false
       if (this.isPlaying) {
         this.togglePlay()
         return
@@ -13128,6 +13151,12 @@ export default {
             const raw = localStorage.getItem('telawa.continueSession')
             return raw ? JSON.parse(raw) : null
           })()
+        const persistedAudioState = this.learningBackendEnabled()
+          ? this.readWorkspaceStateValue('audioState', null)
+          : (() => {
+            const raw = localStorage.getItem('telawa.audioState')
+            return raw ? JSON.parse(raw) : null
+          })()
         const mutqinSession = this.mutqinState?.sessionState
         if (mutqinSession?.completed || this.sessionCompleted || this.centralSession?.sessionStatus === 'completed') {
           this.clearExitSessionStorage()
@@ -13145,6 +13174,15 @@ export default {
             queueIndex: restoredQueueIndex,
             mutqinSessionIndex: Number(mutqinSession.current_index || 0),
             mutqinPhase: activeItem?.phase || mutqinSession.phase || 'Takrar',
+            currentTime: Number(persistedContinue?.currentTime ?? persistedAudioState?.currentTime ?? 0),
+            duration: Number(persistedContinue?.duration ?? this.duration ?? 0),
+            isPlaying: typeof persistedContinue?.isPlaying === 'boolean'
+              ? persistedContinue.isPlaying
+              : !!persistedAudioState?.isPlaying,
+            playerVisible: typeof persistedContinue?.playerVisible === 'boolean'
+              ? persistedContinue.playerVisible
+              : !!persistedAudioState?.playerVisible,
+            audioSrc: persistedContinue?.audioSrc || persistedAudioState?.src || '',
             config: mutqinSession.config
           }
           this.hasContinueSession = true
@@ -13168,6 +13206,7 @@ export default {
     async continueLastSession() {
       const payload = this.continueSessionPayload
       if (!payload) return
+      this.startingFreshSessionSelection = false
       this.hasContinueSession = false
       this.showResumeModal = false
       this.returningUserChoicePending = false
@@ -16978,6 +17017,7 @@ export default {
         this.currentChapter = null
         return
       }
+      this.startingFreshSessionSelection = false
       this.currentChapter = this.chapters.find(c => c.id === chapterId)
       const max = this.currentChapter?.verses_count || 286
 
