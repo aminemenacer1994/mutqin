@@ -9217,8 +9217,13 @@ export default {
           audioHash: kind === 'recitation' ? this.recitationInputAudioHash : ''
         }
       }
+      const livePreviewAlignmentOptions = {
+        ...liveAlignmentOptions,
+        strictProgression: false
+      }
       if (this.hiddenRevealModeEnabled) {
         liveAlignmentOptions.strictProgression = true
+        livePreviewAlignmentOptions.strictProgression = true
       }
       const committedSignature = this.getLiveAlignmentInputSignature(kind, targetVerses, committedWords, committedWords)
       const committedAlignment = this.getCachedCommittedAlignment(
@@ -9280,13 +9285,8 @@ export default {
       if (!this.isSessionRecitationCheckActive()) return true
       return !!this.recitationAlignmentState?.complete
     },
-      const livePreviewAlignmentOptions = {
-        ...liveAlignmentOptions,
-        strictProgression: false
-      }
     chooseRecorderMimeType() {
       if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') return ''
-        livePreviewAlignmentOptions.strictProgression = true
       const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']
       return candidates.find(type => MediaRecorder.isTypeSupported(type)) || ''
     },
