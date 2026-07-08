@@ -95,17 +95,6 @@
           </div>
           <div class="workspace-shell-actions">
             <div v-if="hasVerses" class="workspace-header-view-controls quick-right-controls" aria-label="View controls">
-              <button type="button" class="view-mode-switch" :class="{ 'is-mushaf': readingViewMode === 'mushaf' }"
-                @click="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
-                :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'" aria-label="Toggle mushaf mode">
-                <span class="view-mode-switch-label">{{ t('memorisation.view.stacked') }}</span>
-                <span class="view-mode-switch-track" aria-hidden="true">
-                  <span class="view-mode-switch-thumb">
-                    <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-book' : 'bi-view-stacked'"></i>
-                  </span>
-                </span>
-                <span class="view-mode-switch-label">{{ t('memorisation.view.mushaf') }}</span>
-              </button>
               <div class="font-dropdown quick-font-dropdown" @click.stop>
                 <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
                   <i class="bi bi-text-paragraph" aria-hidden="true"></i>
@@ -124,6 +113,17 @@
                   </div>
                 </transition>
               </div>
+              <button type="button" class="view-mode-switch" :class="{ 'is-mushaf': readingViewMode === 'mushaf' }"
+                @click="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
+                :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'" aria-label="Toggle mushaf mode">
+                <span class="view-mode-switch-label">{{ t('memorisation.view.stacked') }}</span>
+                <span class="view-mode-switch-track" aria-hidden="true">
+                  <span class="view-mode-switch-thumb">
+                    <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-book' : 'bi-view-stacked'"></i>
+                  </span>
+                </span>
+                <span class="view-mode-switch-label">{{ t('memorisation.view.mushaf') }}</span>
+              </button>
             </div>
             <div class="action-buttons-group">
               <button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls"

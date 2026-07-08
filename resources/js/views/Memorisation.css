@@ -1115,6 +1115,48 @@
   color: var(--accent);
 }
 
+.loading-spinner {
+  min-height: clamp(320px, 48vh, 560px);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.9rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.loading-spinner i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 84%, var(--accent-light) 16%);
+  color: var(--accent);
+  font-size: 1.35rem;
+  box-shadow: 0 10px 28px rgba(154, 103, 56, 0.14);
+  animation: memorisationLoadingPulse 1.35s ease-in-out infinite;
+}
+
+.loading-spinner span {
+  max-width: 26rem;
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+@keyframes memorisationLoadingPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -6995,6 +7037,28 @@ html {
   color: #6f431d;
   font-size: 0.8rem;
   font-weight: 600;
+}
+
+.player-recitation-window.is-talqin {
+  background: linear-gradient(135deg, rgba(184, 130, 78, 0.18), rgba(226, 193, 149, 0.24));
+  color: #5f3613;
+  box-shadow: 0 10px 22px rgba(154, 103, 56, 0.14);
+  animation: talqinTurnPulse 1.2s ease-in-out infinite;
+}
+
+.player-recitation-window.is-talqin i {
+  font-size: 0.92rem;
+}
+
+@keyframes talqinTurnPulse {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 10px 22px rgba(154, 103, 56, 0.14);
+  }
+  50% {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(154, 103, 56, 0.2);
+  }
 }
 
 
@@ -19238,7 +19302,7 @@ textarea {
 }
 
 .modal-content.recordings-library-modal, .modal-content.modal-xl.recordings-library-modal {
-  width: min(1140px, calc(100vw - 24px)) !important;
+  width: min(1240px, calc(100vw - 24px)) !important;
   max-width: calc(100vw - 24px) !important;
 }
 
@@ -19603,7 +19667,7 @@ textarea {
 }
 
 .recordings-library-shell {
-  grid-template-columns: minmax(285px, 320px) minmax(0, 1fr);
+  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
   gap: 1rem;
 }
 
@@ -19617,6 +19681,38 @@ textarea {
 .recordings-library-nav-head, .recordings-library-detail-head {
   padding: 1rem;
   border-bottom-color: color-mix(in srgb, var(--border) 65%, transparent);
+}
+
+.recordings-library-nav-head strong,
+.recordings-library-detail-count,
+.recordings-library-surah-title,
+.recordings-library-ayah-label {
+  font-size: 0.98rem;
+}
+
+.recordings-library-recordings {
+  margin-left: 16px;
+  padding-left: 14px;
+}
+
+.recordings-library-recording-item {
+  gap: 14px;
+  padding: 11px 12px;
+}
+
+.recordings-library-recording-copy {
+  gap: 4px;
+}
+
+.recordings-library-recording-copy strong {
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.recordings-library-recording-copy span {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: normal;
 }
 
 .recordings-library-search {
@@ -19860,6 +19956,30 @@ textarea {
   padding: 1rem;
 }
 
+.self-check-modal .recitation-check-panel-inline, .memorisation-checker-modal .recitation-check-panel-inline {
+  display: grid !important;
+  gap: 1rem !important;
+  margin: 1rem 0 0 !important;
+  padding: 1rem 1rem 1.1rem !important;
+}
+
+.self-check-modal .recitation-check-head, .memorisation-checker-modal .recitation-check-head {
+  gap: 0.9rem;
+  margin: 0;
+}
+
+.self-check-modal .recitation-check-status, .memorisation-checker-modal .recitation-check-status, .self-check-modal .recitation-check-error, .memorisation-checker-modal .recitation-check-error, .self-check-modal .recitation-check-actions, .memorisation-checker-modal .recitation-check-actions, .self-check-modal .recitation-live-review, .memorisation-checker-modal .recitation-live-review, .self-check-modal .recitation-check-body, .memorisation-checker-modal .recitation-check-body, .self-check-modal .memorisation-checker-results, .memorisation-checker-modal .memorisation-checker-results, .self-check-modal .recitation-check-footnotes, .memorisation-checker-modal .recitation-check-footnotes, .self-check-modal .recitation-result-actions, .memorisation-checker-modal .recitation-result-actions {
+  margin: 0;
+}
+
+.self-check-modal .recitation-live-review, .memorisation-checker-modal .recitation-live-review, .self-check-modal .recitation-check-body, .memorisation-checker-modal .recitation-check-body {
+  padding: 0;
+}
+
+.self-check-modal .recitation-check-head-actions, .memorisation-checker-modal .recitation-check-head-actions {
+  align-self: start;
+}
+
 .self-check-modal .self-check-modal-ayah-shell, .memorisation-checker-modal .self-check-modal-ayah-shell, .self-check-modal .self-check-modal-stage, .memorisation-checker-modal .memorisation-checker-stage, .self-check-modal .self-check-recorder-card, .memorisation-checker-modal .self-check-recorder-card, .self-check-modal .recitation-check-panel, .memorisation-checker-modal .recitation-check-panel, .memorisation-checker-modal .memorisation-checker-body {
   padding: 0;
 }
@@ -19956,30 +20076,6 @@ textarea {
   align-items: center;
   gap: 0.7rem;
   min-width: 0;
-.self-check-modal .recitation-check-panel-inline, .memorisation-checker-modal .recitation-check-panel-inline {
-  display: grid !important;
-  gap: 1rem !important;
-  margin: 1rem 0 0 !important;
-  padding: 1rem 1rem 1.1rem !important;
-}
-
-.self-check-modal .recitation-check-head, .memorisation-checker-modal .recitation-check-head {
-  gap: 0.9rem;
-  margin: 0;
-}
-
-.self-check-modal .recitation-check-status, .memorisation-checker-modal .recitation-check-status, .self-check-modal .recitation-check-error, .memorisation-checker-modal .recitation-check-error, .self-check-modal .recitation-check-actions, .memorisation-checker-modal .recitation-check-actions, .self-check-modal .recitation-live-review, .memorisation-checker-modal .recitation-live-review, .self-check-modal .recitation-check-body, .memorisation-checker-modal .recitation-check-body, .self-check-modal .memorisation-checker-results, .memorisation-checker-modal .memorisation-checker-results, .self-check-modal .recitation-check-footnotes, .memorisation-checker-modal .recitation-check-footnotes, .self-check-modal .recitation-result-actions, .memorisation-checker-modal .recitation-result-actions {
-  margin: 0;
-}
-
-.self-check-modal .recitation-live-review, .memorisation-checker-modal .recitation-live-review, .self-check-modal .recitation-check-body, .memorisation-checker-modal .recitation-check-body {
-  padding: 0;
-}
-
-.self-check-modal .recitation-check-head-actions, .memorisation-checker-modal .recitation-check-head-actions {
-  align-self: start;
-}
-
 }
 
 .recitation-saved-footnote-action {
@@ -21036,7 +21132,7 @@ textarea {
 }
 
 .recordings-library-modal {
-  width: min(1180px, calc(100vw - 24px)) !important;
+  width: min(1240px, calc(100vw - 24px)) !important;
 }
 
 @media (max-width: 1024px) {
@@ -23415,6 +23511,12 @@ textarea {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .workspace-header-view-controls,
+  .quick-right-controls {
+    width: 100%;
+    grid-template-columns: minmax(7.6rem, auto) minmax(0, 1fr) !important;
+  }
+
   .ready-begin-summary-head {
     flex-direction: column;
   }
@@ -23510,21 +23612,6 @@ textarea {
   min-height: 40px;
   padding: 0.35rem 0.72rem;
 }
-
-  .workspace-header-view-controls,
-  .quick-right-controls {
-    width: 100%;
-    grid-template-columns: minmax(0, 1fr) minmax(7.6rem, auto) !important;
-  }
-
-  .workspace-header-view-controls .view-mode-switch {
-    grid-template-columns: minmax(4rem, 1fr) auto minmax(4rem, 1fr);
-    gap: 0.4rem !important;
-  }
-
-  .view-mode-switch-label {
-    font-size: 0.8rem;
-  }
 
 .mushaf-toolbar-menu {
   z-index: 5000 !important;
@@ -23831,9 +23918,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .workspace-header-view-controls,
 .quick-right-controls {
-  width: min(100%, 19.25rem);
-  grid-template-columns: minmax(0, 1fr) minmax(8.4rem, auto) !important;
-  gap: 0.55rem !important;
+  width: min(100%, 20.75rem);
+  grid-template-columns: minmax(7.9rem, auto) minmax(0, 1fr) !important;
+  gap: 0.45rem !important;
 }
 
 .workspace-header-view-controls .view-mode-switch,
@@ -23842,11 +23929,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .workspace-header-view-controls .view-mode-switch {
-  display: grid;
-  grid-template-columns: minmax(4.6rem, 1fr) auto minmax(4.6rem, 1fr);
-  align-items: center;
-  padding-inline: 0.7rem !important;
-  gap: 0.55rem !important;
+  padding-inline: 0.58rem !important;
+  gap: 0.38rem !important;
 }
 
 .view-mode-switch-label {
@@ -23855,9 +23939,47 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   text-overflow: clip !important;
   white-space: normal !important;
   text-align: center;
-  line-height: 1.1;
-  font-size: 0.88rem;
-  font-weight: 600;
+  line-height: 1.05;
+  font-size: 0.84rem;
+}
+
+.practice-turn-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 1rem;
+  padding: 12px 14px;
+  background: var(--accent-light);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  border-radius: 12px;
+  color: var(--text);
+}
+
+.practice-turn-callout i {
+  color: var(--accent);
+  font-size: 1rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.practice-turn-callout span {
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.practice-turn-callout.is-talqin {
+  background: color-mix(in srgb, var(--accent-light) 72%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+[data-theme="dark"] .practice-turn-callout {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+}
+
+[data-theme="dark"] .practice-turn-callout span {
+  color: var(--text-muted);
 }
 
 .workspace-header-view-controls .view-mode-switch-track {
@@ -23920,58 +24042,37 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .mushaf-toolbar-trigger,
 .mushaf-pill-toolbar .mushaf-pill {
+  width: 42px;
+  min-width: 42px;
   min-height: 42px;
   padding: 0;
   justify-content: center;
 }
 
-.mushaf-toolbar-trigger-label,
-.mushaf-pill-label,
-.mushaf-controls-pill {
-  display: none !important;
-  overflow: visible !important;
-  text-overflow: clip !important;
-  white-space: normal !important;
-  line-height: 1.05;
-  text-align: center;
-  font-size: 0.8rem;
-}
-
-.mushaf-pill-toolbar .mushaf-controls-pill {
-  width: 42px !important;
-  min-width: 42px !important;
-}
-  width: 42px;
-  min-width: 42px;
 .mushaf-pill-toolbar .mushaf-controls-pill {
   width: 42px !important;
   min-width: 42px !important;
 }
 
 .mushaf-toolbar-trigger .bi-chevron-down,
-
-.workspace-header-view-controls .view-mode-switch {
-  min-height: 38px;
-  padding-inline: 0.52rem !important;
-  gap: 0.34rem !important;
+.mushaf-toolbar-trigger-label,
+.mushaf-pill-label,
+.mushaf-controls-pill {
+  display: none !important;
 }
 
-.view-mode-switch-label {
-  max-width: 3.35rem !important;
-  text-wrap: wrap;
-  font-size: clamp(0.68rem, 0.28vw + 0.64rem, 0.75rem);
+.ready-begin-footer-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.workspace-header-view-controls .view-mode-switch-track {
-  width: 2.3rem;
-  min-width: 2.3rem;
-  height: 1.5rem;
+.ready-begin-footer-grid .btn-secondary,
+.ready-begin-footer-grid .btn-primary {
+  width: 100%;
+  min-height: 72px;
+  justify-content: center;
 }
 
-.workspace-header-view-controls .view-mode-switch-thumb {
-  width: 1rem;
-  height: 1rem;
+.ready-begin-footer-grid .btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
-
-.workspace-header-view-controls .view-mode-switch.is-mushaf .view-mode-switch-thumb {
-  transform: translateX(0.78rem);
