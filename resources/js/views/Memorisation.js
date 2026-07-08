@@ -5580,6 +5580,27 @@ export default {
       }, delayMs)
     },
 
+    beginTalqinRecitationTurn(onComplete = null) {
+      this.clearTalqinPauseTimer()
+      this.clearRecitationWindowTimer()
+      this.recitationWindowActive = true
+      this.startRecitationWindow(() => {
+        if (typeof onComplete === 'function') onComplete()
+      })
+    },
+
+    startSessionAfterUserGesture() {
+      if (!this.canStartSession) {
+        this.showTools = true
+        this.showBanner(this.t('toasts.chooseAValidSurahAndAyah'), 'info', 3600)
+        return
+      }
+      this.showPlannerCompletionModal = false
+      this.showPlannerCompletionConfetti = false
+      this.showSessionEndedModal = false
+      this.startSession()
+    },
+
     startSessionWithCountdown() {
       if (!this.canStartSession) {
         this.showTools = true
@@ -13637,12 +13658,12 @@ export default {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
         this.closeSessionExitModal({ restore: false })
         this.prepareRangeRestart()
-        this.startSessionWithCountdown()
+        this.startSessionAfterUserGesture()
         return
       }
       this.confirmSessionExit({ showSummary: false })
       this.prepareRangeRestart()
-      this.startSessionWithCountdown()
+      this.startSessionAfterUserGesture()
     },
     exitSessionToSaveSession() {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
@@ -13698,7 +13719,7 @@ export default {
     repeatSessionFromEndedModal() {
       this.closeSessionEndedModal()
       this.prepareRangeRestart()
-      this.startSessionWithCountdown()
+      this.startSessionAfterUserGesture()
     },
 
     openConfirmModal(options) {
