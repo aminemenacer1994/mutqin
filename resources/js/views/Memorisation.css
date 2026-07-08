@@ -23511,6 +23511,21 @@ textarea {
   padding: 0.35rem 0.72rem;
 }
 
+  .workspace-header-view-controls,
+  .quick-right-controls {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(7.6rem, auto) !important;
+  }
+
+  .workspace-header-view-controls .view-mode-switch {
+    grid-template-columns: minmax(4rem, 1fr) auto minmax(4rem, 1fr);
+    gap: 0.4rem !important;
+  }
+
+  .view-mode-switch-label {
+    font-size: 0.8rem;
+  }
+
 .mushaf-toolbar-menu {
   z-index: 5000 !important;
 }
@@ -23816,9 +23831,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .workspace-header-view-controls,
 .quick-right-controls {
-  width: min(100%, 20.75rem);
-  grid-template-columns: minmax(0, 1fr) minmax(7.9rem, auto) !important;
-  gap: 0.45rem !important;
+  width: min(100%, 19.25rem);
+  grid-template-columns: minmax(0, 1fr) minmax(8.4rem, auto) !important;
+  gap: 0.55rem !important;
 }
 
 .workspace-header-view-controls .view-mode-switch,
@@ -23827,8 +23842,11 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .workspace-header-view-controls .view-mode-switch {
-  padding-inline: 0.58rem !important;
-  gap: 0.38rem !important;
+  display: grid;
+  grid-template-columns: minmax(4.6rem, 1fr) auto minmax(4.6rem, 1fr);
+  align-items: center;
+  padding-inline: 0.7rem !important;
+  gap: 0.55rem !important;
 }
 
 .view-mode-switch-label {
@@ -23837,8 +23855,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   text-overflow: clip !important;
   white-space: normal !important;
   text-align: center;
-  line-height: 1.05;
-  font-size: 0.84rem;
+  line-height: 1.1;
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
 .workspace-header-view-controls .view-mode-switch-track {
@@ -23930,3 +23949,29 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .mushaf-toolbar-trigger .bi-chevron-down,
+
+.workspace-header-view-controls .view-mode-switch {
+  min-height: 38px;
+  padding-inline: 0.52rem !important;
+  gap: 0.34rem !important;
+}
+
+.view-mode-switch-label {
+  max-width: 3.35rem !important;
+  text-wrap: wrap;
+  font-size: clamp(0.68rem, 0.28vw + 0.64rem, 0.75rem);
+}
+
+.workspace-header-view-controls .view-mode-switch-track {
+  width: 2.3rem;
+  min-width: 2.3rem;
+  height: 1.5rem;
+}
+
+.workspace-header-view-controls .view-mode-switch-thumb {
+  width: 1rem;
+  height: 1rem;
+}
+
+.workspace-header-view-controls .view-mode-switch.is-mushaf .view-mode-switch-thumb {
+  transform: translateX(0.78rem);
