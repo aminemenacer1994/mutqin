@@ -395,6 +395,17 @@
         .app-navbar .nav-link-home:focus-visible,
         .app-navbar .nav-link-home.active,
         .app-navbar .nav-link-memorisation,
+        .navbar,
+        .app-navbar,
+        .navbar-shell,
+        .app-navbar::before,
+        .app-navbar::after,
+        .navbar-shell::before,
+        .navbar-shell::after {
+            box-shadow: none !important;
+            filter: none !important;
+        }
+
         .app-navbar .nav-link-memorisation:hover,
         .app-navbar .nav-link-memorisation:focus,
         .app-navbar .nav-link-memorisation:focus-visible,
