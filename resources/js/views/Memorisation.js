@@ -8843,7 +8843,9 @@ export default {
     buildVisibleLiveWordWindow(sourceWords = [], limit = 36, keyPrefix = 'live') {
       const words = Array.isArray(sourceWords) ? sourceWords : []
       if (!words.length) return []
-      const safeLimit = Math.max(12, Number(limit || 36))
+      const safeLimit = keyPrefix === 'memory-live'
+        ? words.length
+        : Math.max(12, Number(limit || 36))
       let focusIndex = words.findIndex(word => !['correct', 'partial', 'incorrect', 'skipped'].includes(String(word?.status || 'pending')))
       if (focusIndex < 0) {
         focusIndex = words.length - 1
@@ -9230,12 +9232,12 @@ export default {
       const liveAlignment = this.areRecognitionWordListsEquivalent(displayWords, committedWords)
         ? committedAlignment
         : buildRealtimePreviewAlignment(targetText, displayWords, {
-          ...liveAlignmentOptions,
+          ...livePreviewAlignmentOptions,
           targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses)
         })
       const statuses = this.mergeLiveRecitationStatuses(
-        committedAlignment.progression?.visibleStatuses || committedAlignment.wordStatuses || [],
-        liveAlignment.progression?.visibleStatuses || liveAlignment.wordStatuses || []
+        committedAlignment.wordStatuses || committedAlignment.progression?.visibleStatuses || [],
+        liveAlignment.wordStatuses || liveAlignment.progression?.visibleStatuses || []
       )
       if (kind === 'memorisation') {
 	        this.aiMemorisationCheckerAlignmentState = committedAlignment.progression
@@ -9278,8 +9280,13 @@ export default {
       if (!this.isSessionRecitationCheckActive()) return true
       return !!this.recitationAlignmentState?.complete
     },
+      const livePreviewAlignmentOptions = {
+        ...liveAlignmentOptions,
+        strictProgression: false
+      }
     chooseRecorderMimeType() {
       if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') return ''
+        livePreviewAlignmentOptions.strictProgression = true
       const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']
       return candidates.find(type => MediaRecorder.isTypeSupported(type)) || ''
     },
@@ -9541,7 +9548,9 @@ export default {
     scheduleLiveWordsUpdate(kind = 'recitation') {
       const timerKey = kind === 'memorisation' ? 'aiMemorisationCheckerLiveUpdateTimer' : 'recitationLiveUpdateTimer'
       if (this[timerKey]) return
-      const schedule = callback => window.setTimeout(callback, 16)
+      const schedule = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
+        ? window.requestAnimationFrame.bind(window)
+        : callback => window.setTimeout(callback, 16)
       const run = () => {
         this[timerKey] = null
         this.updateLiveWordsFromCommittedRecognition(kind)
@@ -9554,7 +9563,11 @@ export default {
         this[timerKey] = null
         return
       }
-      if (typeof window !== 'undefined') window.clearTimeout(this[timerKey])
+      if (typeof window !== 'undefined' && typeof window.cancelAnimationFrame === 'function') {
+        window.cancelAnimationFrame(this[timerKey])
+      } else if (typeof window !== 'undefined') {
+        window.clearTimeout(this[timerKey])
+      }
       this[timerKey] = null
     },
     getCommittedRecognitionWords(kind = 'recitation') {
