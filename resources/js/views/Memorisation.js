@@ -893,11 +893,6 @@ export default {
         || this.helpLearningSections[0]
         || null
     },
-    shouldRenderWorkspaceShell() {
-      return !this.isOnboardingExperienceActive
-        && !this.showResumeModal
-        && !(this.isLoggedIn && !this.hasVerses && !this.showTools)
-    },
     shouldShowWorkspaceEmptyState() {
       return !this.hasVerses && !this.isLoggedIn
     },

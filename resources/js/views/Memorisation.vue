@@ -26,7 +26,7 @@
       'flow-practice': guidedUiStep === 'practice',
       'flow-recall': guidedUiStep === 'recall'
     }">
-      <div v-if="!shouldGateWorkspaceForResumeChoice" class="content">
+      <div class="content">
         <div v-if="false" class="reading-toolbar">
           <hr class="reading-toolbar-sep" aria-hidden="true" />
           <div class="reading-toolbar-group">
@@ -83,7 +83,6 @@
         <div v-else class="workspace">
           <!-- In your template, replace the workspace-shell section -->
         <section
-          v-if="shouldRenderWorkspaceShell && !isOnboardingExperienceActive"
           class="workspace-shell"
           :class="{ collapsed: mainCardCollapsed }"
           :data-reading-mode="readingViewMode"
