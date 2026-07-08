@@ -243,17 +243,14 @@
                 </div>
               </div>
             </section>
-            <div v-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace container-fluid px-0">
+            <div v-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace container-fluid w-100 px-0">
               <div class="mushaf-frame" :class="{ 'mushaf-frame-toolbar-collapsed': mushafToolbarCollapsed }">
                 <div class="mushaf-pill-bar mushaf-pill-toolbar" :class="{ 'is-collapsed': mushafToolbarCollapsed }">
                   <div class="mushaf-toolbar-cluster mushaf-toolbar-cluster-start">
                     <div class="mushaf-toolbar-dropdown font-dropdown-region">
                       <button @click.stop="fontOpen = !fontOpen; bgOpen = false; borderOpen = false" type="button" class="mushaf-toolbar-trigger"
-                        :aria-expanded="fontOpen ? 'true' : 'false'" aria-label="Choose Mushaf text style">
+                        :aria-expanded="fontOpen ? 'true' : 'false'" aria-label="Choose Mushaf text style" :title="getCurrentFontLabel()">
                         <i class="bi bi-type"></i>
-                        <span class="mushaf-toolbar-trigger-label d-none d-sm-inline">{{ getCurrentFontLabel() }}</span>
-                        <span class="mushaf-toolbar-trigger-label d-sm-none">{{ t('memorisation.reading.font') }}</span>
-                        <i class="bi bi-chevron-down" :class="{ rotated: fontOpen }"></i>
                       </button>
                       <div v-if="fontOpen" @click.stop class="mushaf-toolbar-menu">
                         <button v-for="f in quranFontOptions" :key="f.value" @click="selectFont(f.value); fontOpen = false"
@@ -267,10 +264,8 @@
 
                     <div class="mushaf-toolbar-dropdown bg-dropdown-region">
                       <button @click.stop="bgOpen = !bgOpen; fontOpen = false; borderOpen = false" type="button" class="mushaf-toolbar-trigger"
-                        :aria-expanded="bgOpen ? 'true' : 'false'" aria-label="Choose Mushaf page theme">
+                        :aria-expanded="bgOpen ? 'true' : 'false'" aria-label="Choose Mushaf page theme" :title="t('memorisation.reading.theme')">
                         <span class="mushaf-toolbar-theme-swatch mushaf-toolbar-trigger-swatch" :class="`theme-${mushafBackground}`"></span>
-                        <span class="mushaf-toolbar-trigger-label">{{ t('memorisation.reading.theme') }}</span>
-                        <i class="bi bi-chevron-down" :class="{ rotated: bgOpen }"></i>
                       </button>
                       <div v-if="bgOpen" @click.stop class="mushaf-toolbar-menu">
                         <button v-for="b in mushafBackgroundOptions" :key="b.value" @click="setMushafBackground(b.value); bgOpen = false"
@@ -284,10 +279,8 @@
 
                     <div class="mushaf-toolbar-dropdown border-dropdown-region">
                       <button @click.stop="borderOpen = !borderOpen; fontOpen = false; bgOpen = false" type="button" class="mushaf-toolbar-trigger"
-                        :aria-expanded="borderOpen ? 'true' : 'false'" aria-label="Choose Mushaf border style">
+                        :aria-expanded="borderOpen ? 'true' : 'false'" aria-label="Choose Mushaf border style" :title="t('memorisation.reading.border')">
                         <i class="bi bi-border-outer"></i>
-                        <span class="mushaf-toolbar-trigger-label">{{ t('memorisation.reading.border') }}</span>
-                        <i class="bi bi-chevron-down" :class="{ rotated: borderOpen }"></i>
                       </button>
                       <div v-if="borderOpen" @click.stop class="mushaf-toolbar-menu">
                         <button v-for="b in mushafBorderOptions" :key="b.value" @click="setMushafBorder(b.value); borderOpen = false"
@@ -307,29 +300,23 @@
                       :class="{ active: tajweedEnabled }"
                       @click.stop="toggleTajweed"
                       :aria-pressed="tajweedEnabled ? 'true' : 'false'"
-                      title="Toggle Tajweed"
+                      title="Tajweed"
                     >
                       <i class="bi bi-palette"></i>
-                      <span class="mushaf-pill-label">Tajweed</span>
                     </button>
                     <button v-if="showAiMemorisationButton" class="mushaf-pill mushaf-ai-pill mushaf-ai-memory" type="button" @click.stop="openAiMemorisationCheckerForVerse(activeVerseRef)"
                       :class="{ active: aiMemorisationCheckerRecording }"
                       :disabled="!activeVerseRef || aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()"
-                      :title="activeVerseRef ? 'Hide the ayah and recite from memory' : 'Tap an ayah first'">
+                      :title="activeVerseRef ? 'Hide the ayah and recite from memory' : 'Tap an ayah first'"
+                      :aria-label="aiMemorisationCheckerRecording ? 'Stop AI memorisation check' : 'Start AI memorisation check'">
                       <i class="bi" :class="aiMemorisationCheckerRecording ? 'bi-stop-circle' : 'bi-eye-slash'"></i>
-                      <span class="mushaf-pill-label d-none d-sm-inline">{{ aiMemorisationCheckerRecording ? 'Stop' : 'AI Memory' }}</span>
                     </button>
 
                     <button class="mushaf-pill mushaf-ai-pill mushaf-ai-recite" type="button" @click.stop="openAiRecitationCheckForVerse(activeVerseRef)"
                       :class="{ active: recitationCheckRecording }"
                       :disabled="!activeVerseRef || recitationCheckPreparing || !supportsSelfCheckRecording()"
-                      :title="activeVerseRef ? 'Recite this ayah for instant AI feedback' : 'Tap an ayah first'">
+                      :title="activeVerseRef ? 'AI Recite' : 'Tap an ayah first'">
                       <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
-                      <span class="mushaf-pill-label d-none d-sm-inline">{{ recitationCheckRecording ? 'Stop' : 'AI Recite' }}</span>
-                    </button>
-
-                    <button type="button" class="mushaf-pill mushaf-controls-pill" @click="openAdvancedControls" aria-label="Open controls" title="Session controls">
-                      <i class="bi bi-sliders2"></i>
                     </button>
                   </div>
                 </div>
