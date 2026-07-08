@@ -65,8 +65,8 @@ export default {
   display:inline-block;
   padding:6px 12px;
   border-radius:999px;
-  background:var(--accent-light, rgba(160, 120, 76, 0.1));
-  color:var(--accent, #a0784c);
+  background:var(--accent-light);
+  color:var(--accent-strong);
   font-size:12px;
   margin-bottom:16px;
 }
@@ -107,15 +107,15 @@ button{
 }
 
 .primary{
-  background:var(--accent, #a0784c);
-  color:#fff;
+  background:var(--accent);
+  color:var(--text-on-accent, #fffaf5);
   font-weight:600;
 }
 
 .secondary{
-  background:var(--surface, rgba(255,255,255,0.96));
-  color:var(--text, #1f1a17);
-  border:1px solid var(--border, rgba(160, 120, 76, 0.12));
+  background:var(--surface);
+  color:var(--text);
+  border:1px solid var(--border);
 }
 
 /* GRID */

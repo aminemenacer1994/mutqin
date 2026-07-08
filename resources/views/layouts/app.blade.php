@@ -43,6 +43,8 @@
             --accent: #a0784c;
             --accent-strong: #8b653b;
             --accent-light: rgba(160, 120, 76, 0.1);
+            --text-on-accent: #fffaf5;
+            --text-on-accent-muted: rgba(255, 250, 245, 0.82);
             --field-bg: rgba(255, 255, 255, 0.9);
             --field-bg-strong: rgba(255, 255, 255, 0.97);
             --overlay: rgba(17, 13, 10, 0.34);
@@ -77,6 +79,8 @@
             --accent: #c49a6c;
             --accent-strong: #d4aa7c;
             --accent-light: rgba(196, 154, 108, 0.15);
+            --text-on-accent: #fff4e6;
+            --text-on-accent-muted: rgba(255, 244, 230, 0.82);
             --field-bg: rgba(34, 30, 27, 0.96);
             --field-bg-strong: rgba(39, 34, 30, 0.98);
             --overlay: rgba(4, 4, 4, 0.52);
@@ -100,6 +104,8 @@
             --accent: #b87333;
             --accent-strong: #9a5a2a;
             --accent-light: rgba(184, 115, 51, 0.1);
+            --text-on-accent: #fff7ec;
+            --text-on-accent-muted: rgba(255, 247, 236, 0.82);
             --field-bg: rgba(255, 250, 241, 0.95);
             --field-bg-strong: rgba(255, 250, 241, 0.98);
             --overlay: rgba(44, 31, 20, 0.24);

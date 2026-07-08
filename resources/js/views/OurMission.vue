@@ -146,7 +146,7 @@ export default {
   width: fit-content;
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(154, 103, 56, 0.1);
+  background: var(--accent-light);
   color: var(--accent-strong);
   font-size: 12px;
   font-weight: 800;
@@ -253,15 +253,15 @@ export default {
   padding: 20px 22px;
   border-radius: 30px;
   background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.14), transparent 28%),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--text-on-accent, #fffaf5) 14%, transparent), transparent 28%),
     linear-gradient(135deg, color-mix(in srgb, var(--accent-strong) 72%, var(--surface-strong)), color-mix(in srgb, var(--accent) 82%, var(--surface)));
-  color: #fffaf5;
+  color: var(--text-on-accent, #fffaf5);
   box-shadow: var(--shadow-lg);
 }
 
 .mission-band p {
   margin-top: 14px;
-  color: rgba(255, 250, 245, 0.82);
+  color: var(--text-on-accent-muted, rgba(255, 250, 245, 0.82));
   max-width: 62ch;
 }
 
@@ -278,9 +278,9 @@ export default {
   min-height: 42px;
   padding: 0 14px;
   border-radius: 999px;
-  background: color-mix(in srgb, #ffffff 14%, transparent);
-  border: 1px solid color-mix(in srgb, #ffffff 20%, transparent);
-  color: #fffaf5;
+  background: color-mix(in srgb, var(--text-on-accent, #fffaf5) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-on-accent, #fffaf5) 20%, transparent);
+  color: var(--text-on-accent, #fffaf5);
   font-weight: 700;
 }
 
