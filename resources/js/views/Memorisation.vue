@@ -1284,7 +1284,8 @@
               <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
             </button>
             <button class="tools-btn btn btn-primary session-primary-action" @click="startSessionAndClose">
-              <i class="bi bi-play-fill"></i><span>{{ hasSessionStarted ? 'Resume session' : 'Start session' }}</span>
+              <i class="bi" :class="isPlaying ? 'bi-pause-fill' : (hasSessionStarted ? 'bi-play-fill' : 'bi-play-fill')"></i>
+              <span>{{ isPlaying ? 'Pause session' : (hasSessionStarted ? 'Resume session' : 'Start session') }}</span>
             </button>
           </template>
         </div>

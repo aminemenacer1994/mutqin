@@ -1558,7 +1558,7 @@ export default {
       return this.hasVerses
     },
     headerSessionActionLabel() {
-      if (this.isPlaying) return this.t('memorisation.sessionType.pause')
+      if (this.isPlaying) return 'Pause session'
       if (this.hasSessionStarted) return 'Resume session'
       return 'Start session'
     },
