@@ -19956,6 +19956,30 @@ textarea {
   align-items: center;
   gap: 0.7rem;
   min-width: 0;
+.self-check-modal .recitation-check-panel-inline, .memorisation-checker-modal .recitation-check-panel-inline {
+  display: grid !important;
+  gap: 1rem !important;
+  margin: 1rem 0 0 !important;
+  padding: 1rem 1rem 1.1rem !important;
+}
+
+.self-check-modal .recitation-check-head, .memorisation-checker-modal .recitation-check-head {
+  gap: 0.9rem;
+  margin: 0;
+}
+
+.self-check-modal .recitation-check-status, .memorisation-checker-modal .recitation-check-status, .self-check-modal .recitation-check-error, .memorisation-checker-modal .recitation-check-error, .self-check-modal .recitation-check-actions, .memorisation-checker-modal .recitation-check-actions, .self-check-modal .recitation-live-review, .memorisation-checker-modal .recitation-live-review, .self-check-modal .recitation-check-body, .memorisation-checker-modal .recitation-check-body, .self-check-modal .memorisation-checker-results, .memorisation-checker-modal .memorisation-checker-results, .self-check-modal .recitation-check-footnotes, .memorisation-checker-modal .recitation-check-footnotes, .self-check-modal .recitation-result-actions, .memorisation-checker-modal .recitation-result-actions {
+  margin: 0;
+}
+
+.self-check-modal .recitation-live-review, .memorisation-checker-modal .recitation-live-review, .self-check-modal .recitation-check-body, .memorisation-checker-modal .recitation-check-body {
+  padding: 0;
+}
+
+.self-check-modal .recitation-check-head-actions, .memorisation-checker-modal .recitation-check-head-actions {
+  align-self: start;
+}
+
 }
 
 .recitation-saved-footnote-action {
