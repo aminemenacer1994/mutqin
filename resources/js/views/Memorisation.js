@@ -4062,6 +4062,9 @@ export default {
         return fallback
       }
     },
+      if (!this.isLoggedIn || !this.auth?.just_logged_in) return
+      if (this.hasShownReadyToBeginModalForCurrentLogin()) return
+      this.markReadyToBeginModalShownForCurrentLogin()
 
     writeScopedStorageValue(workspaceKey, localKey, value) {
       if (this.learningBackendEnabled()) {
@@ -4070,6 +4073,31 @@ export default {
       try {
         localStorage.setItem(localKey, JSON.stringify(value))
         return true
+    getReadyToBeginSessionStorageKey() {
+      const loginEventId = String(this.auth?.login_event_id || '').trim()
+      if (!loginEventId) return ''
+      const userId = this.auth?.id ? String(this.auth.id) : 'guest'
+      return `mutqin.readyToBeginShown:${userId}:${loginEventId}`
+    },
+
+    hasShownReadyToBeginModalForCurrentLogin() {
+      const storageKey = this.getReadyToBeginSessionStorageKey()
+      if (!storageKey || typeof sessionStorage === 'undefined') return false
+      try {
+        return sessionStorage.getItem(storageKey) === '1'
+      } catch {
+        return false
+      }
+    },
+
+    markReadyToBeginModalShownForCurrentLogin() {
+      const storageKey = this.getReadyToBeginSessionStorageKey()
+      if (!storageKey || typeof sessionStorage === 'undefined') return
+      try {
+        sessionStorage.setItem(storageKey, '1')
+      } catch {}
+    },
+
       } catch {
         return false
       }

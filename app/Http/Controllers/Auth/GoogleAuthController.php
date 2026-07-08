@@ -77,6 +77,7 @@ class GoogleAuthController extends Controller
 
         Auth::login($user, true);
         request()->session()->regenerate();
+        request()->session()->put('mutqin_login_event_id', (string) Str::uuid());
         if ($created) {
             request()->session()->flash('mutqin_just_registered', true);
         } else {

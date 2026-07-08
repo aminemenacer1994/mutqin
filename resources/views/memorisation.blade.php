@@ -13,6 +13,7 @@
             'locale' => Auth::user()?->locale ?? 'en',
             'ai_recall_mode_enabled' => Auth::user()?->ai_recall_mode_enabled ?? false,
             'created_at' => Auth::user()?->created_at?->toIso8601String(),
+            'login_event_id' => session('mutqin_login_event_id'),
             'just_registered' => session('mutqin_just_registered', false),
             'just_logged_in' => session('mutqin_just_logged_in', false),
             'csrf_token' => csrf_token(),
