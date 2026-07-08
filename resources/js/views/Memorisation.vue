@@ -208,6 +208,21 @@
 
 </section>
 
+          <div
+            v-if="practiceTurnCalloutVisible"
+            class="practice-turn-callout"
+            :class="{ 'is-talqin': talqinRecitationTurnActive }"
+            role="status"
+            aria-live="polite"
+          >
+            <i
+              class="bi"
+              :class="talqinRecitationTurnActive ? 'bi-soundwave' : 'bi-mic'"
+              aria-hidden="true"
+            ></i>
+            <span>{{ practiceTurnCalloutMessage }}</span>
+          </div>
+
           <main v-if="!isOnboardingExperienceActive" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             aria-label="Memorisation workspace">
             <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" aria-label="Session setup">
@@ -2821,10 +2836,6 @@
               <span v-if="etaLabel && isPlaying" class="player-eta" :title="getEtaTooltip()">
                 &bull; {{ etaLabel }} remaining
               </span>
-            </div>
-            <div v-if="reciterFollowModeActive" class="player-recitation-window" aria-live="polite">
-              <i class="bi bi-mic" aria-hidden="true"></i>
-              <span>{{ reciterFollowPrompt }}</span>
             </div>
           </div>
 

@@ -2847,6 +2847,22 @@ export default {
       if (!this.reciterFollowModeActive) return ''
       return this.t('memorisation.recite_now_window', { seconds: Math.max(0, Number(this.recitationWindowRemaining || 0)) })
     },
+    talqinRecitationTurnActive() {
+      return this.talqinModeActive && this.recitationWindowActive
+    },
+    talqinRecitationPrompt() {
+      if (!this.talqinRecitationTurnActive) return ''
+      const seconds = Math.max(0, Number(this.recitationWindowRemaining || 0))
+      return `Talqin is active. Your turn to recite now${seconds ? ` · ${seconds}s left` : ''}.`
+    },
+    practiceTurnCalloutVisible() {
+      return this.talqinRecitationTurnActive || this.reciterFollowModeActive
+    },
+    practiceTurnCalloutMessage() {
+      if (this.talqinRecitationTurnActive) return this.talqinRecitationPrompt
+      if (this.reciterFollowModeActive) return this.reciterFollowPrompt
+      return ''
+    },
     talqinModeActive() {
       if (this.mutqinState?.sessionState?.active) {
         return !!this.mutqinState?.sessionState?.config?.talqinModeEnabled
@@ -15185,7 +15201,7 @@ export default {
         this.playbackAdvanceTimer = null
         if (this.talqinModeActive && this.playMode !== 'manual') {
           this.advanceLocked = false
-          this.scheduleTalqinAdvance(() => {
+          this.beginTalqinRecitationTurn(() => {
             if (this.canNext) {
               this.next()
               return

@@ -616,7 +616,7 @@
     "use_slower_speed_for_early_memorisation": "Use slower speed for early memorisation.",
     "auto_advance": "Auto-advance",
     "listen_then_recite": "Listen then recite",
-    "auto_advance_mode_hint": "Auto moves on immediately, Listen then recite pauses for your turn, and No waits for manual control.",
+    "auto_advance_mode_hint": "Auto moves on immediately, Listen then recite pauses for your turn inside audio playback, and No waits for manual control. This is separate from Talqin mode in Memorisation Techniques.",
     "auto_moves_to_the_next_queue_item_when_audio_ends": "Auto moves to the next queue item when audio ends.",
     "recitation_window_secs": "Recitation window (secs)",
     "recitation_window_hint": "How long to pause after the reciter so you can repeat before the next ayah starts.",
