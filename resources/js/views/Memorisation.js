@@ -12106,7 +12106,7 @@ export default {
       this.prepareRangeRestart()
       this.showBanner('Session restarted from the beginning.', 'success', 2200)
       this.$nextTick(() => {
-        this.startSessionWithCountdown()
+        this.startSessionAfterUserGesture()
       })
     },
 
