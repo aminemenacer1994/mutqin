@@ -395,12 +395,6 @@
             opacity: 0.7;
         }
 
-        .app-navbar .nav-link-home,
-        .app-navbar .nav-link-home:hover,
-        .app-navbar .nav-link-home:focus,
-        .app-navbar .nav-link-home:focus-visible,
-        .app-navbar .nav-link-home.active,
-        .app-navbar .nav-link-memorisation,
         .navbar,
         .app-navbar,
         .navbar-shell,
@@ -412,6 +406,12 @@
             filter: none !important;
         }
 
+        .app-navbar .nav-link-home,
+        .app-navbar .nav-link-home:hover,
+        .app-navbar .nav-link-home:focus,
+        .app-navbar .nav-link-home:focus-visible,
+        .app-navbar .nav-link-home.active,
+        .app-navbar .nav-link-memorisation,
         .app-navbar .nav-link-memorisation:hover,
         .app-navbar .nav-link-memorisation:focus,
         .app-navbar .nav-link-memorisation:focus-visible,
