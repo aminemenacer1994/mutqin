@@ -428,31 +428,28 @@
 </template>
 
 <script>
-import { reactive, ref, computed, onMounted } from 'vue';
+import { reactive, ref, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { getSavedTheme, setGlobalTheme } from '../utils/theme';
 
 export default {
   name: 'OnboardingPage',
   setup() {
     const { t } = useI18n();
     // Theme management
-    const currentTheme = ref('light');
-    
+    const currentTheme = ref(getSavedTheme());
+
     const setTheme = (theme) => {
-      const normalizedTheme = ['dark', 'sepia'].includes(theme) ? theme : 'light';
-      currentTheme.value = normalizedTheme;
-      localStorage.setItem('mutqin-theme', normalizedTheme);
-      document.documentElement.setAttribute('data-theme', normalizedTheme);
+      currentTheme.value = setGlobalTheme(theme);
     };
-    
+
     const loadTheme = () => {
-      const saved = localStorage.getItem('mutqin-theme');
-      if (saved && ['light', 'dark', 'sepia'].includes(saved)) {
-        currentTheme.value = saved;
-        document.documentElement.setAttribute('data-theme', saved);
-      } else {
-        setTheme(document.documentElement.getAttribute('data-theme') || 'light');
-      }
+      currentTheme.value = getSavedTheme();
+      setGlobalTheme(currentTheme.value, { dispatchEvent: false });
+    };
+
+    const handleGlobalThemeChange = (event) => {
+      currentTheme.value = event?.detail?.theme || getSavedTheme();
     };
     
     // Refs for scroll tracking
@@ -654,7 +651,8 @@ export default {
     
     onMounted(() => {
       loadTheme();
-      
+      window.addEventListener('mutqin:theme-change', handleGlobalThemeChange);
+
       // Animate elements when they come into view
       const animatedElements = document.querySelectorAll('[data-aos]');
       const observer = new IntersectionObserver((entries) => {
@@ -668,7 +666,11 @@ export default {
       
       animatedElements.forEach(el => observer.observe(el));
     });
-    
+
+    onUnmounted(() => {
+      window.removeEventListener('mutqin:theme-change', handleGlobalThemeChange);
+    });
+
     return {
       t,
       currentTheme,

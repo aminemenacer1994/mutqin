@@ -1851,7 +1851,7 @@
             // Load saved theme
             const savedThemePreference = safeGet('mutqin-theme-preference');
             const savedTheme = safeGet('mutqin-theme');
-            setTheme(window.mutqinInitialThemePreference || savedThemePreference || savedTheme || window.mutqinInitialTheme || 'light-mode');
+            setTheme(savedTheme || savedThemePreference || window.mutqinInitialThemePreference || window.mutqinInitialTheme || 'light-mode');
             
             runWhenReady(function() {
                 const themeButton = document.getElementById('globalThemeToggle');

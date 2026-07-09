@@ -1,4 +1,11 @@
 import axios from 'axios'
+import {
+  cycleGlobalTheme,
+  getSavedTheme,
+  normalizeThemeToken as normalizeThemeValue,
+  setGlobalTheme,
+  toThemePreference as toThemePref
+} from '../utils/theme'
 import diff from 'fast-diff'
 import { markRaw } from 'vue'
 import { getEditions, getQuranEdition, getSurahEdition, getSurahEditions } from '../scripts/lib/quranApis'
@@ -3622,8 +3629,7 @@ export default {
       this.loadAnalytics()
       this.initAudio()
       this.restoreAudioState()
-      this.theme = document.documentElement.getAttribute('data-theme') || this.theme || 'light'
-      this.syncGlobalTheme(this.theme)
+      this.syncGlobalTheme(getSavedTheme())
       this.loadBookmarksPins()
       this.setupWordClickHandler()
       this.loadSavedSessions()
@@ -4077,32 +4083,15 @@ export default {
 
   methods: {
     normalizeThemeToken(value = 'light') {
-      const theme = String(value || 'light').toLowerCase()
-      if (theme === 'dark' || theme === 'dark-mode') return 'dark'
-      if (theme === 'sepia' || theme === 'sepia-mode') return 'sepia'
-      return 'light'
+      return normalizeThemeValue(value)
     },
 
     toThemePreference(value = 'light') {
-      const theme = this.normalizeThemeToken(value)
-      if (theme === 'dark') return 'dark-mode'
-      if (theme === 'sepia') return 'sepia-mode'
-      return 'light-mode'
+      return toThemePref(value)
     },
 
     syncGlobalTheme(theme = this.theme) {
-      const normalizedTheme = this.normalizeThemeToken(theme)
-      this.theme = normalizedTheme
-      if (typeof document !== 'undefined') {
-        document.documentElement.setAttribute('data-theme', this.theme)
-        document.cookie = `mutqin_theme=${this.toThemePreference(normalizedTheme)};path=/;max-age=31536000;samesite=lax`
-      }
-      if (typeof localStorage !== 'undefined') {
-        try {
-          localStorage.setItem('mutqin-theme', normalizedTheme)
-          localStorage.setItem('mutqin-theme-preference', this.toThemePreference(normalizedTheme))
-        } catch {}
-      }
+      this.theme = setGlobalTheme(theme)
     },
 
     translateOrFallback(key, fallback, params = {}) {
@@ -13211,7 +13200,7 @@ export default {
       this.blurIntensity = Math.max(4, Math.min(18, Number(config.blurIntensity || this.blurIntensity || 10)))
       this.anchorModeEnabled = !!config.anchorModeEnabled
       this.anchorCount = Math.max(1, Math.min(3, Number(config.anchorCount || this.anchorCount || 2)))
-      this.syncGlobalTheme(config.theme || this.theme)
+      this.syncGlobalTheme(getSavedTheme())
     },
 
     loadModeState(mode) {
@@ -16988,9 +16977,7 @@ export default {
     },
 
     cycleTheme() {
-      const themes = ['light', 'dark']
-      const idx = themes.indexOf(this.theme)
-      this.syncGlobalTheme(themes[(idx + 1) % themes.length])
+      this.syncGlobalTheme(cycleGlobalTheme())
       this.persistUiState()
     },
 
@@ -17039,7 +17026,6 @@ export default {
 
         if (state) {
           const keepWorkspaceVisible = this.hasLocalInProgressSessionEvidence()
-          this.theme = state.theme || this.theme
           this.tab = ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(state.tab) ? state.tab : 'tools'
           this.showTools = keepWorkspaceVisible ? false : !!state.showTools
           this.currentMode = state.currentMode || 'beginner'
@@ -17123,7 +17109,7 @@ export default {
       this.beginner = this.loadModeState('beginner')
       this.advanced = this.loadModeState('advanced')
       this.planner = this.loadModeState('planner')
-      this.syncGlobalTheme(this.theme)
+      this.syncGlobalTheme(getSavedTheme())
       if (this.readingViewMode === 'mushaf') this.applyMushafThemeDefault(this.theme)
     },
 
