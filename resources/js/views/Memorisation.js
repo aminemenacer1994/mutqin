@@ -8935,7 +8935,8 @@ export default {
       return Math.max(0, Math.min(100, Math.round((checked / this.recitationLiveWords.length) * 100)))
     },
     getVisibleRecitationLiveWords(limit = 36) {
-      return this.buildVisibleLiveWordWindow(this.recitationLiveWords, limit, 'recitation-live')
+      const liveWordCount = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords.length : 0
+      return this.buildVisibleLiveWordWindow(this.recitationLiveWords, liveWordCount || limit, 'recitation-live')
     },
     seedRecitationLiveWords(targetVerses = this.getRecitationCheckTargetVerses()) {
       this.cancelLiveWordDomPatchFrame()
@@ -9020,17 +9021,42 @@ export default {
       return targetKey === 'aiMemorisationCheckerLiveWords' ? 'memorisation' : 'recitation'
     },
     resolveLiveWordPatchTarget(targetKey = '', globalIndex = 0) {
+      const safeGlobalIndex = Number(globalIndex)
+      if (!Number.isFinite(safeGlobalIndex) || safeGlobalIndex < 0) return null
+      const evaluationMap = targetKey === 'aiMemorisationCheckerLiveWords'
+        ? this.aiMemorisationCheckerEvaluationMap
+        : this.recitationSessionEvaluationMap
       const targets = this.getLiveWordTargetsForPatch(targetKey)
+      const evaluationEntries = Object.values(evaluationMap || {})
+        .filter(entry => Number.isFinite(Number(entry?.wordOffset)) && Number.isFinite(Number(entry?.wordCount)) && Number(entry.wordCount) > 0)
+        .sort((left, right) => Number(left?.wordOffset || 0) - Number(right?.wordOffset || 0))
+      for (const entry of evaluationEntries) {
+        const wordOffset = Number(entry.wordOffset || 0)
+        const wordCount = Number(entry.wordCount || 0)
+        if (safeGlobalIndex < wordOffset || safeGlobalIndex >= wordOffset + wordCount) continue
+        const sessionTargetKey = entry.sessionTargetKey || ''
+        const verse = targets.find((candidate, targetIndex) => this.getSessionTargetKey(candidate, targetIndex) === sessionTargetKey)
+          || targets.find(candidate => candidate?.key === entry.ayahKey)
+          || null
+        return {
+          verse,
+          verseKey: entry.ayahKey || verse?.key || '',
+          localIndex: safeGlobalIndex - wordOffset,
+          globalIndex: safeGlobalIndex,
+          sessionTargetKey,
+          kind: this.getLiveWordKindForTarget(targetKey)
+        }
+      }
       let offset = 0
       for (let targetIndex = 0; targetIndex < targets.length; targetIndex += 1) {
         const verse = targets[targetIndex]
         const count = this.tokenizeRecitationDisplayWords(this.getPlainVerseArabicForCheck(verse)).length
-        if (globalIndex >= offset && globalIndex < offset + count) {
+        if (safeGlobalIndex >= offset && safeGlobalIndex < offset + count) {
           return {
             verse,
             verseKey: verse?.key || '',
-            localIndex: globalIndex - offset,
-            globalIndex,
+            localIndex: safeGlobalIndex - offset,
+            globalIndex: safeGlobalIndex,
             sessionTargetKey: this.getSessionTargetKey(verse, targetIndex),
             kind: this.getLiveWordKindForTarget(targetKey)
           }
@@ -9112,6 +9138,15 @@ export default {
     buildLiveWordChipRegistryKey(kind = '', globalIndex = 0) {
       return `${kind || 'recitation'}::${Number(globalIndex)}`
     },
+    registerLiveWordRegistryNodes(registry = null, key = '', nodes = []) {
+      const connectedNodes = (Array.isArray(nodes) ? nodes : []).filter(node => node?.isConnected)
+      if (connectedNodes.length) {
+        registry?.set?.(key, connectedNodes)
+        return connectedNodes
+      }
+      registry?.delete?.(key)
+      return []
+    },
     getLiveWordRegistryNodes(registry = null, key = '', selector = '') {
       const cached = Array.isArray(registry?.get?.(key))
         ? registry.get(key).filter(node => node?.isConnected)
@@ -9122,12 +9157,87 @@ export default {
         return []
       }
       const nodes = Array.from(document.querySelectorAll(selector)).filter(node => node?.isConnected)
-      if (nodes.length) {
-        registry?.set?.(key, nodes)
-      } else {
-        registry?.delete?.(key)
-      }
-      return nodes
+      return this.registerLiveWordRegistryNodes(registry, key, nodes)
+    },
+    primeLiveWordVerseRegistryForPatches(patches = []) {
+      if (typeof document === 'undefined' || !Array.isArray(patches) || !patches.length) return
+      const verseKeysToPrime = new Set()
+      const sessionKeysToPrime = new Set()
+      patches.forEach(patch => {
+        if (!patch?.verseKey || !Number.isFinite(Number(patch.localIndex))) return
+        const verseRegistryKey = `${this.buildLiveWordVerseRegistryKey(patch.verseKey, patch.localIndex, '')}::verse`
+        if (!this.getLiveWordRegistryNodes(this.liveWordVerseNodeRegistry, verseRegistryKey, '').length) {
+          verseKeysToPrime.add(patch.verseKey)
+        }
+        if (!patch.sessionTargetKey) return
+        const sessionRegistryKey = `${this.buildLiveWordVerseRegistryKey(patch.verseKey, patch.localIndex, patch.sessionTargetKey)}::session`
+        if (!this.getLiveWordRegistryNodes(this.liveWordVerseNodeRegistry, sessionRegistryKey, '').length) {
+          sessionKeysToPrime.add(patch.sessionTargetKey)
+        }
+      })
+
+      sessionKeysToPrime.forEach(sessionTargetKey => {
+        const selector = `[data-session-target-key="${this.escapeCssAttributeValue(sessionTargetKey)}"][data-word-index]`
+        const groupedNodes = new Map()
+        Array.from(document.querySelectorAll(selector)).forEach(node => {
+          const localIndex = Number(node?.dataset?.wordIndex)
+          if (!Number.isFinite(localIndex)) return
+          const verseKey = node?.dataset?.verseKey || ''
+          const registryKey = `${this.buildLiveWordVerseRegistryKey(verseKey, localIndex, sessionTargetKey)}::session`
+          const existing = groupedNodes.get(registryKey) || []
+          existing.push(node)
+          groupedNodes.set(registryKey, existing)
+        })
+        groupedNodes.forEach((nodes, key) => {
+          this.registerLiveWordRegistryNodes(this.liveWordVerseNodeRegistry, key, nodes)
+        })
+      })
+
+      verseKeysToPrime.forEach(verseKey => {
+        const selector = `[data-verse-key="${this.escapeCssAttributeValue(verseKey)}"][data-word-index]`
+        const groupedNodes = new Map()
+        Array.from(document.querySelectorAll(selector)).forEach(node => {
+          const localIndex = Number(node?.dataset?.wordIndex)
+          if (!Number.isFinite(localIndex)) return
+          const registryKey = `${this.buildLiveWordVerseRegistryKey(verseKey, localIndex, '')}::verse`
+          const existing = groupedNodes.get(registryKey) || []
+          existing.push(node)
+          groupedNodes.set(registryKey, existing)
+        })
+        groupedNodes.forEach((nodes, key) => {
+          this.registerLiveWordRegistryNodes(this.liveWordVerseNodeRegistry, key, nodes)
+        })
+      })
+    },
+    primeLiveWordChipRegistryForPatches(patches = []) {
+      if (typeof document === 'undefined' || !Array.isArray(patches) || !patches.length) return
+      const kindsToPrime = new Set()
+      patches.forEach(patch => {
+        const liveKind = patch?.kind || this.getLiveWordKindForTarget(patch?.targetKey || '')
+        const registryKey = this.buildLiveWordChipRegistryKey(liveKind, patch?.globalIndex)
+        if (!this.getLiveWordRegistryNodes(this.liveWordChipNodeRegistry, registryKey, '').length) {
+          kindsToPrime.add(liveKind)
+        }
+      })
+      kindsToPrime.forEach(liveKind => {
+        const selector = `.recitation-word-chip.word-live[data-live-kind="${this.escapeCssAttributeValue(liveKind)}"][data-live-word-index]`
+        const groupedNodes = new Map()
+        Array.from(document.querySelectorAll(selector)).forEach(node => {
+          const globalIndex = Number(node?.dataset?.liveWordIndex)
+          if (!Number.isFinite(globalIndex)) return
+          const registryKey = this.buildLiveWordChipRegistryKey(liveKind, globalIndex)
+          const existing = groupedNodes.get(registryKey) || []
+          existing.push(node)
+          groupedNodes.set(registryKey, existing)
+        })
+        groupedNodes.forEach((nodes, key) => {
+          this.registerLiveWordRegistryNodes(this.liveWordChipNodeRegistry, key, nodes)
+        })
+      })
+    },
+    primeLiveWordDomRegistries(patches = []) {
+      this.primeLiveWordVerseRegistryForPatches(patches)
+      this.primeLiveWordChipRegistryForPatches(patches)
     },
     clearRecitationDisplayHtmlCache() {
       if (this.recitationDisplayHtmlCache?.clear) this.recitationDisplayHtmlCache.clear()
@@ -9137,6 +9247,7 @@ export default {
       if (typeof document === 'undefined') return
       const patches = Object.values(this.pendingLiveWordDomPatches || {})
       this.pendingLiveWordDomPatches = {}
+      this.primeLiveWordDomRegistries(patches)
       patches.forEach(patch => this.applyLiveWordDomPatch(patch))
       if (this.aiRecallModeEnabled && this.recitationCheckRecording) {
         this.applyRecallVisibility()
