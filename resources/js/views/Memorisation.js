@@ -1559,7 +1559,6 @@ export default {
     },
     headerSessionActionLabel() {
       if (this.isPlaying) return 'Pause session'
-      if (this.hasSessionStarted) return 'Resume session'
       return 'Start session'
     },
     headerSessionActionIcon() {
