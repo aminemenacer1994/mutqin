@@ -377,7 +377,9 @@
     "workspaceEmpty": {
       "kicker": "Ready to begin",
       "title": "Choose a surah and range",
-      "desc": "Use session controls to set up a new range. The main workspace will stay in view once you start."
+      "desc": "Use session controls to set up a new range. The main workspace will stay in view once you start.",
+      "startNewSession": "Start new session",
+      "continuePreviousSession": "Continue from previous session"
     },
     "sessionOverview": {
       "kicker": "Session Overview"

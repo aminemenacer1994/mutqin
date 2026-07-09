@@ -83,6 +83,8 @@ import {
   createSpeechmaticsRealtimeProvider
 } from '../scripts/memorisationRuntime'
 
+const ACTIVE_SESSION_SNAPSHOT_KEY = 'telawa.activeSession.v1'
+
 const HELP_LEARNING_FALLBACKS = {
   title: 'Help & Learning',
   subtitle: 'Learn how to use Mutqin\'s tools to memorise more effectively.',
@@ -272,6 +274,7 @@ export default {
       saveSessionName: '',
       appReady: false,
       isBootstrapping: true,
+      isRestoringWorkspace: true,
       isDataReady: false,
       fontDropdownOpen: false,
       topCardMenuOpen: false,
@@ -895,7 +898,10 @@ export default {
         || null
     },
     shouldShowWorkspaceEmptyState() {
-      return !this.hasVerses && !this.isLoggedIn
+      return false
+    },
+    showSessionOverviewIdleActions() {
+      return !this.hasVerses && !this.isRestoringWorkspace && this.isDataReady
     },
     shouldShowOffcanvasTabs() {
       return true
@@ -1423,22 +1429,15 @@ export default {
       const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
       const repeatCount = Math.max(1, Number(this.repetitionsPerStep || 1))
       const delaySeconds = Number.isFinite(Number(this.delay)) ? Math.max(0, Number(this.delay)) : 0
-      const activeTechniqueLabels = this.activePracticeTechniques
-        .map(item => item?.label)
-        .filter(Boolean)
       const rangeValue = start === end ? `Ayah ${start}` : `Ayahs ${start}-${end}`
       const delayValue = `${delaySeconds}s`
-      const techniqueValue = activeTechniqueLabels.length
-        ? activeTechniqueLabels.join(', ')
-        : this.t('common.none')
 
       return [
         { key: 'surah', label: 'Surah', value: surahName },
         { key: 'range', label: 'Ayah range', value: rangeValue },
         { key: 'reciter', label: 'Reciter', value: reciter?.name || 'Alafasy' },
         { key: 'repetition', label: 'Repetition', value: `${repeatCount}x` },
-        { key: 'delay', label: 'Delay', value: delayValue },
-        { key: 'technique', label: 'Memorisation technique', value: techniqueValue }
+        { key: 'delay', label: 'Delay', value: delayValue }
       ]
     },
     workspaceProgressSummary() {
@@ -1619,6 +1618,14 @@ export default {
     },
     canResumePreviousSession() {
       return !!(this.continueSessionPayload?.config?.chapterId)
+    },
+    hasPersistedInProgressSession() {
+      if (this.sessionCompleted || this.centralSession?.sessionStatus === 'completed') return false
+      if (this.canResumePreviousSession) return true
+      if (this.centralSession?.sessionStatus === 'active') return true
+      if (this.mutqinState?.sessionState?.active) return true
+      if (this.readActiveSessionSnapshot()?.config?.chapterId) return true
+      return this.hasLocalInProgressSessionEvidence()
     },
     canSaveSessionFromResumeChoice() {
       return !!(this.continueSessionPayload?.config?.chapterId || this.hasVerses)
@@ -3532,6 +3539,7 @@ export default {
       const justRegistered = authenticatedWorkspace && !!this.auth?.just_registered
       this.syncWorkspaceStorageBridge()
       this.hydrateAuthenticatedWorkspaceStateFromLocalStorage()
+      const localResumeSnapshot = this.captureLocalResumeSnapshot()
 
       if (this.auth?.locale && this.$setLocale) {
         await this.$setLocale(this.auth.locale)
@@ -3593,6 +3601,7 @@ export default {
       this.loadVerseFontSizes()
       if (authenticatedWorkspace) {
         await this.initLearningBackend()
+        this.reconcileLocalResumeAfterBackendSync(localResumeSnapshot)
       } else {
         this.loadSavedSessions()
         this.migrateLocalStorage()
@@ -3622,21 +3631,71 @@ export default {
       this.updateMasteredWeekly()
       this.loadRecordingsLibrary()
 
+      const hasRestorableSession = !!this.continueSessionPayload?.config?.chapterId
+        || !!this.readActiveSessionSnapshot()?.config?.chapterId
+        || this.hasPersistedInProgressSession
+        || (
+          this.hasLocalInProgressSessionEvidence()
+          && !!(
+            this.beginner.chapterId
+            || this.advanced.chapterId
+            || this.mutqinState?.sessionState?.config?.chapterId
+          )
+        )
+
       const shouldAutoRestorePersistedSession = !justRegistered
         && !this.auth?.just_logged_in
-        && this.canResumePreviousSession
+        && hasRestorableSession
 
       if (shouldAutoRestorePersistedSession) {
-        await this.hydrateSessionFromPayload(this.continueSessionPayload, {
-          banner: false
-        })
+        this.isRestoringWorkspace = true
+        if (this.continueSessionPayload) {
+          await this.hydrateSessionFromPayload(this.continueSessionPayload, {
+            banner: false,
+            forcePlayback: false
+          })
+        } else {
+          const snapshotPayload = this.readActiveSessionSnapshot()
+          if (snapshotPayload?.config?.chapterId) {
+            await this.hydrateSessionFromPayload(snapshotPayload, {
+              banner: false,
+              forcePlayback: false
+            })
+          } else if (this.currentMode === 'advanced' && this.advanced.chapterId) {
+            this.showTools = false
+            await this.loadVerses('advanced')
+            this.applyRestoredQueuePosition('advanced')
+          } else if (this.beginner.chapterId) {
+            this.showTools = false
+            await this.loadVerses('beginner')
+            this.applyRestoredQueuePosition('beginner')
+          } else {
+            const mutqinConfig = this.mutqinState?.sessionState?.config
+            if (this.mutqinState?.sessionState?.active && mutqinConfig?.chapterId) {
+              const mode = this.mutqinState.sessionState.mode || 'beginner'
+              const target = mode === 'planner' ? 'planner' : (mode === 'advanced' ? 'advanced' : 'beginner')
+              this.currentMode = mode
+              this[target] = { ...this.getModeStore(target), ...this.cloneModeState(mutqinConfig) }
+              this.showTools = false
+              await this.loadVerses(mode)
+              this.applyRestoredQueuePosition(mode)
+            }
+          }
+        }
         this.showResumeModal = false
         this.returningUserChoicePending = false
         this.showTools = false
+        this.tab = 'tools'
         this.isDataReady = true
+        this.$nextTick(() => {
+          if (this.effectiveActiveVerseKey) {
+            const el = document.querySelector(`[data-verse-key="${this.effectiveActiveVerseKey}"]`)
+            if (el) el.scrollIntoView({ behavior: 'auto', block: 'center' })
+          }
+        })
       }
 
-      if (this.isLoggedIn && !justRegistered) {
+      if (this.isLoggedIn && !justRegistered && !shouldAutoRestorePersistedSession && !this.canResumePreviousSession) {
         this.maybeShowReadyToBeginModal()
       }
 
@@ -3670,12 +3729,17 @@ export default {
       this.showBanner(this.t('toasts.theMemorisationWorkspaceRecoveredFromA'), 'error', 5000)
     } finally {
       this.isBootstrapping = false
+      this.isRestoringWorkspace = false
+      if (this.hasPersistedInProgressSession || this.hasSessionStarted) {
+        this.markActiveSessionSnapshot()
+      }
       this.reconcilePersistedSessionCompletion()
     }
 
     window.addEventListener('online', this.handleOnline)
     window.addEventListener('offline', this.handleOffline)
     window.addEventListener('beforeunload', this.persistAllState)
+    window.addEventListener('pagehide', this.persistAllState)
     window.addEventListener('keydown', this.handleGlobalKeydown)
     window.addEventListener('keyup', this.handleGlobalKeyup)
     window.addEventListener('scroll', this.handleWindowScroll, { passive: true })
@@ -3713,6 +3777,7 @@ export default {
     window.removeEventListener('storage', this.handleThemeStorageSync)
     if (this.themeObserver) this.themeObserver.disconnect()
     window.removeEventListener('beforeunload', this.persistAllState)
+    window.removeEventListener('pagehide', this.persistAllState)
     window.removeEventListener('keydown', this.handleGlobalKeydown)
     window.removeEventListener('keyup', this.handleGlobalKeyup)
     window.removeEventListener('scroll', this.handleWindowScroll)
@@ -4077,8 +4142,177 @@ export default {
       })
     },
 
+    readPersistedContinueSession() {
+      if (this.learningBackendEnabled()) {
+        return this.readWorkspaceStateValue('continueSession', null)
+      }
+      try {
+        const raw = localStorage.getItem('telawa.continueSession')
+        return raw ? JSON.parse(raw) : null
+      } catch {
+        return null
+      }
+    },
+
+    readPersistedCentralSession() {
+      if (this.learningBackendEnabled()) {
+        return this.readWorkspaceStateValue('centralSession', null)
+      }
+      try {
+        const raw = localStorage.getItem(CENTRAL_SESSION_STORAGE_KEY)
+        return raw ? JSON.parse(raw) : null
+      } catch {
+        return null
+      }
+    },
+
+    hasLocalInProgressSessionEvidence() {
+      const mutqinSession = this.mutqinState?.sessionState
+      const centralSession = this.readPersistedCentralSession()
+      const continueSession = this.readPersistedContinueSession()
+      return !!mutqinSession?.active
+        || centralSession?.sessionStatus === 'active'
+        || !!continueSession?.config?.chapterId
+        || !!this.readActiveSessionSnapshot()?.config?.chapterId
+    },
+
+    buildActiveSessionSnapshot() {
+      if (this.sessionCompleted || this.centralSession?.sessionStatus === 'completed') return null
+      const sessionInProgress = !!this.mutqinState?.sessionState?.active
+        || this.centralSession?.sessionStatus === 'active'
+        || Number(this.sessionStartedAt || 0) > 0
+      if (!sessionInProgress) return null
+      const payload = this.buildContinueSessionPayload?.()
+      if (!payload?.config?.chapterId) return null
+      return {
+        ...payload,
+        sessionStartedAt: Number(this.sessionStartedAt || 0) || null,
+        savedAt: Date.now()
+      }
+    },
+
+    markActiveSessionSnapshot() {
+      if (this.isBootstrapping) return
+      const snapshot = this.buildActiveSessionSnapshot()
+      if (!snapshot) return
+      try {
+        sessionStorage.setItem(ACTIVE_SESSION_SNAPSHOT_KEY, JSON.stringify(snapshot))
+      } catch (error) {
+        console.error('Failed to persist active session snapshot:', error)
+      }
+    },
+
+    readActiveSessionSnapshot() {
+      try {
+        const raw = sessionStorage.getItem(ACTIVE_SESSION_SNAPSHOT_KEY)
+        return raw ? JSON.parse(raw) : null
+      } catch {
+        return null
+      }
+    },
+
+    clearActiveSessionSnapshot() {
+      try {
+        sessionStorage.removeItem(ACTIVE_SESSION_SNAPSHOT_KEY)
+      } catch (error) {
+        console.error('Failed to clear active session snapshot:', error)
+      }
+    },
+
+    captureLocalResumeSnapshot() {
+      if (!this.hasLocalInProgressSessionEvidence()) return null
+      return {
+        mutqinSession: deepClone(this.mutqinState?.sessionState || null),
+        continueSession: this.readPersistedContinueSession() || this.readActiveSessionSnapshot(),
+        centralSession: this.readPersistedCentralSession(),
+        sessionStates: ['beginner', 'advanced', 'planner'].reduce((map, mode) => {
+          map[mode] = this.readPersistedSessionStateForMode(mode)
+          return map
+        }, {}),
+        timestamp: Date.now()
+      }
+    },
+
+    reconcileLocalResumeAfterBackendSync(snapshot) {
+      if (!snapshot) return
+      const remoteSession = this.mutqinState?.sessionState || {}
+      const localWasActive = !!snapshot.mutqinSession?.active
+      const remoteIsActive = !!remoteSession.active
+      const localUpdated = Date.parse(snapshot.mutqinSession?.updated_at || 0) || Number(snapshot.timestamp || 0)
+      const remoteUpdated = Date.parse(remoteSession.updated_at || 0) || 0
+      const shouldRestoreLocalSession = localWasActive && (!remoteIsActive || localUpdated >= remoteUpdated)
+
+      if (shouldRestoreLocalSession && snapshot.mutqinSession) {
+        this.mutqinState.sessionState = {
+          ...(this.mutqinState.sessionState || {}),
+          ...deepClone(snapshot.mutqinSession)
+        }
+        saveMutqinState(this.mutqinState)
+      }
+
+      const restoreWorkspaceValue = (key, value) => {
+        if (!value) return
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue(key, value)
+          return
+        }
+        if (key === 'continueSession') {
+          localStorage.setItem('telawa.continueSession', JSON.stringify(value))
+        } else if (key === 'centralSession') {
+          localStorage.setItem(CENTRAL_SESSION_STORAGE_KEY, JSON.stringify(value))
+        }
+      }
+
+      if (snapshot.continueSession?.config?.chapterId) {
+        restoreWorkspaceValue('continueSession', snapshot.continueSession)
+      }
+      if (snapshot.centralSession?.sessionStatus === 'active') {
+        restoreWorkspaceValue('centralSession', snapshot.centralSession)
+      }
+      const tabSnapshot = this.readActiveSessionSnapshot()
+      if (tabSnapshot?.config?.chapterId) {
+        restoreWorkspaceValue('continueSession', tabSnapshot)
+      }
+      ;['beginner', 'advanced', 'planner'].forEach(mode => {
+        const sessionState = snapshot.sessionStates?.[mode]
+        if (!sessionState) return
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue(`sessionState:${mode}`, sessionState)
+        } else {
+          localStorage.setItem(SESSION_STORAGE_KEYS[mode], JSON.stringify(sessionState))
+        }
+      })
+    },
+
+    applyRestoredQueuePosition(mode = this.currentMode) {
+      const store = this.getModeStore(mode)
+      if (!store?.verses?.length) return
+      this.buildQueue(mode)
+      const restoredIndex = Math.max(0, Number(store.queueIndex ?? this.queueIndex ?? 0))
+      store.queueIndex = Math.min(restoredIndex, Math.max((store.queue?.length || 1) - 1, 0))
+      this.queueIndex = store.queueIndex
+      const restoredKey = store.queue?.[this.queueIndex]?.verse?.key
+        || store.activeKey
+        || this.activeVerseKey
+      if (restoredKey) {
+        this.setActiveVerse(restoredKey, { mode, queueIndex: this.queueIndex, scroll: false })
+      }
+      this.syncMutqinAyahs(store.verses)
+      this.syncMutqinSession(store.queue || [], mode)
+      if (this.mutqinState?.sessionState?.active) {
+        moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+      }
+      this.sessionStartedAt = this.sessionStartedAt || Date.now()
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'active'
+      }
+    },
+
     maybeShowReadyToBeginModal() {
       if (!this.isLoggedIn) return
+      if (this.canResumePreviousSession) return
+      if (this.hasPersistedInProgressSession) return
+      if (this.readActiveSessionSnapshot()?.config?.chapterId) return
       if (!this.getReadyToBeginLoginEventId()) return
       if (this.hasShownReadyToBeginModalForCurrentLogin()) return
       this.markReadyToBeginModalShownForCurrentLogin()
@@ -5837,7 +6071,9 @@ export default {
 
       this.sessionCompleted = false
       this.sessionCompletedAt = null
-      this.sessionStartedAt = Date.now()
+      this.sessionStartedAt = Number(payload.sessionStartedAt || 0) || Date.now()
+      this.showTools = false
+      this.flowStep = 'learn'
       this.playerVisible = payload.playerVisible ?? payload.config?.playerVisible ?? true
       const shouldResumePlayback = options.forcePlayback ?? payload.isPlaying ?? true
       this.restoredAudioState = {
@@ -5858,6 +6094,7 @@ export default {
         }
       })
       this.persistAllState()
+      this.markActiveSessionSnapshot()
       if (options.banner !== false) this.showBanner(options.bannerText || 'Session restored', 'success', 2200)
       return true
     },
@@ -13237,33 +13474,49 @@ export default {
       const mutqinItem = mutqinSession.queue?.[mutqinIndex]
       const verse = mutqinItem?.ayahId || this.verses[this.activeVerseIndex >= 0 ? this.activeVerseIndex : this.queueIndex]?.key || this.activeVerseKey
       const source = this.currentMode === 'beginner' ? this.beginner : this.advanced
+      const config = this.cloneModeState(source)
+      const rangeStart = Math.max(1, Number(config.rangeStart || 1))
+      const fallbackAyah = Math.min(
+        Math.max(rangeStart, Number(config.rangeEnd || rangeStart)),
+        rangeStart + Math.max(0, Number(this.queueIndex || 0))
+      )
+      const activeVerseKey = mutqinItem?.ayahId
+        || this.activeVerseKey
+        || (config.chapterId ? `${config.chapterId}:${fallbackAyah}` : null)
       return {
         timestamp: Date.now(),
         mode: this.currentMode,
         tab: this.tab,
-        activeKey: verse || null,
-        activeVerseKey: mutqinItem?.ayahId || this.activeVerseKey || null,
+        activeKey: verse || activeVerseKey || null,
+        activeVerseKey,
         queueIndex: this.queueIndex || 0,
         mutqinSessionIndex: mutqinIndex,
         mutqinPhase: mutqinItem?.phase || mutqinSession.phase || 'Takrar',
         currentTime: this.currentTime || 0,
         duration: this.duration || 0,
-        isPlaying: !!this.isPlaying,
+        isPlaying: false,
         playerVisible: !!this.playerVisible,
         audioSrc: this.audioElement?.currentSrc || '',
-        config: this.cloneModeState(source)
+        config
       }
     },
 
     persistContinueSession() {
       if (this.isBootstrapping) return
-      if (this.sessionCompleted || this.mutqinState?.sessionState?.completed || !this.mutqinState?.sessionState?.active) {
+      if (this.sessionCompleted || this.mutqinState?.sessionState?.completed) {
+        this.clearExitSessionStorage()
+        return
+      }
+      const sessionInProgress = !!this.mutqinState?.sessionState?.active
+        || this.centralSession?.sessionStatus === 'active'
+        || (Number(this.sessionStartedAt || 0) > 0 && this.hasVerses)
+      if (!sessionInProgress) {
         this.clearExitSessionStorage()
         return
       }
       try {
         const payload = this.buildContinueSessionPayload()
-        if (!payload?.config?.chapterId || !payload?.activeVerseKey) {
+        if (!payload?.config?.chapterId) {
           this.clearExitSessionStorage()
           return
         }
@@ -13273,6 +13526,7 @@ export default {
           localStorage.setItem('telawa.continueSession', JSON.stringify(payload))
         }
       } catch (e) { console.error(e) }
+      this.markActiveSessionSnapshot()
     },
 
     readPersistedSessionStateForMode(mode) {
@@ -13311,7 +13565,11 @@ export default {
           || sessionState?.activeKey
           || config.activeKey
           || `${config.chapterId}:${fallbackAyah}`
-        const hasRecoverableProgress = queueIndex > 0
+        const sessionInProgress = this.centralSession?.sessionStatus === 'active'
+          || !!this.mutqinState?.sessionState?.active
+          || Number(this.sessionStartedAt || 0) > 0
+        const hasRecoverableProgress = sessionInProgress
+          || queueIndex > 0
           || !!activeVerseKey
           || Number(audioState?.currentTime || 0) > 0
         if (!hasRecoverableProgress) return null
@@ -13392,7 +13650,7 @@ export default {
           this.continueSessionLabel = `${chapterName} · Ayahs ${mutqinSession.config.rangeStart}-${mutqinSession.config.rangeEnd}`
           return
         }
-        const payload = persistedContinue || this.buildFallbackContinueSessionPayload()
+        const payload = persistedContinue || this.buildFallbackContinueSessionPayload() || this.readActiveSessionSnapshot()
         if (!payload) return
         if (!payload?.config?.chapterId || payload.completed || payload.sessionStatus === 'completed') {
           this.clearExitSessionStorage()
@@ -13626,6 +13884,7 @@ export default {
       } catch (error) {
         console.error('Failed to clear exit-session storage:', error)
       }
+      this.clearActiveSessionSnapshot()
       this.hasContinueSession = false
       this.continueSessionPayload = null
       this.continueSessionLabel = ''
@@ -14142,6 +14401,9 @@ export default {
         this.applySpeed()
         this.sessionCompleted = this.centralSession.sessionStatus === 'completed'
         this.sessionCompletedAt = this.centralSession.sessionCompletedAt || null
+        if (this.centralSession.sessionStatus === 'active' && Number(this.centralSession.sessionStartedAt || 0) > 0) {
+          this.sessionStartedAt = Number(this.centralSession.sessionStartedAt)
+        }
         this.reconcilePersistedSessionCompletion()
       } catch (e) {
         console.error('Failed to load central session state:', e)
@@ -14155,7 +14417,16 @@ export default {
           ...this.centralSession,
           // Update to include 'techniques' as valid tab
           activeTab: ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(this.tab) ? this.tab : 'tools',
-          sessionStatus: this.sessionCompleted ? 'completed' : (this.centralSession.sessionStatus || 'idle'),
+          sessionStatus: this.sessionCompleted
+            ? 'completed'
+            : (
+              this.centralSession.sessionStatus === 'active'
+              || this.mutqinState?.sessionState?.active
+              || Number(this.sessionStartedAt || 0) > 0
+            )
+              ? 'active'
+              : (this.centralSession.sessionStatus || 'idle'),
+          sessionStartedAt: Number(this.sessionStartedAt || this.centralSession.sessionStartedAt || 0) || null,
           sessionCompletedAt: this.sessionCompletedAt || this.centralSession.sessionCompletedAt || null,
           tajweedEnabled: !!this.tajweedEnabled,
           focusModeEnabled: !!this.focusModeEnabled,
@@ -16250,6 +16521,11 @@ export default {
         })
       }
 
+      this.persistSessionState()
+      this.persistContinueSession()
+      this.persistCentralSessionState()
+      this.markActiveSessionSnapshot()
+
       const chainingStatus = this.chainingEnabled
         ? `${this.chainingMethod} chaining (${this.chainingRepetitions}x)`
         : 'no chaining'
@@ -16762,9 +17038,10 @@ export default {
         }
 
         if (state) {
+          const keepWorkspaceVisible = this.hasLocalInProgressSessionEvidence()
           this.theme = state.theme || this.theme
           this.tab = ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(state.tab) ? state.tab : 'tools'
-          this.showTools = !!state.showTools
+          this.showTools = keepWorkspaceVisible ? false : !!state.showTools
           this.currentMode = state.currentMode || 'beginner'
           this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep)
             ? state.flowStep

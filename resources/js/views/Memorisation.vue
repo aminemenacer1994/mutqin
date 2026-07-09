@@ -79,18 +79,20 @@
         <div class="workspace">
           <!-- In your template, replace the workspace-shell section -->
         <section
+          v-show="hasVerses || showSessionOverviewIdleActions"
           class="workspace-shell"
           :class="{ collapsed: mainCardCollapsed }"
           :data-reading-mode="readingViewMode"
           aria-label="Session overview"
         >
-        <div class="workspace-shell-head">
+        <div class="workspace-shell-head" :class="{ 'is-idle': showSessionOverviewIdleActions }">
+          <template v-if="hasVerses">
           <div class="workspace-shell-copy">
             <span class="workspace-shell-kicker">{{ t('memorisation.sessionOverview.kicker') }}</span>
             <h1 class="workspace-shell-main-title">{{ topCardSessionLabel }}</h1>
           </div>
           <div class="workspace-shell-actions">
-            <div v-if="hasVerses" class="workspace-header-view-controls quick-right-controls" aria-label="View controls">
+            <div class="workspace-header-view-controls quick-right-controls" aria-label="View controls">
               <div class="font-dropdown quick-font-dropdown" @click.stop>
                 <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
                   <i class="bi bi-text-paragraph" aria-hidden="true"></i>
@@ -122,11 +124,6 @@
               </button>
             </div>
             <div class="action-buttons-group">
-              <button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls"
-                :title="t('memorisation.open_session_setup')" :aria-label="t('memorisation.open_session_setup')">
-                <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                <span>{{ t('memorisation.open_session_setup') }}</span>
-              </button>
               <button v-if="showHeaderSessionAction" class="action-btn btn btn-primary session-primary-action" type="button"
                 @click="handleHeaderSessionAction" :title="headerSessionActionLabel" :aria-label="headerSessionActionLabel">
                 <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
@@ -140,9 +137,8 @@
               <button class="action-btn action-btn-secondary" type="button" @click="openAdvancedControls"
                 title="Open session controls" aria-label="Open session controls">
                 <i class="bi bi-sliders" aria-hidden="true"></i>
-                <span v-if="!hasVerses">{{ t('memorisation.open_controls') }}</span>
               </button>
-              <div v-if="hasVerses" class="top-card-menu-wrap" @click.stop>
+              <div class="top-card-menu-wrap" @click.stop>
                 <button class="top-card-ellipsis" type="button" @click="toggleTopCardMenu"
                   aria-label="Open reading options">
                   <i class="bi bi-three-dots-vertical"></i>
@@ -183,6 +179,29 @@
               </div>
             </div>
           </div>
+          </template>
+          <div v-else-if="showSessionOverviewIdleActions" class="workspace-shell-actions workspace-shell-actions-minimal">
+            <button class="action-btn primary session-idle-action" type="button" @click="openNewSessionSetup">
+              {{ t('memorisation.workspaceEmpty.startNewSession') }}
+            </button>
+            <button
+              class="action-btn session-idle-action"
+              type="button"
+              :disabled="!canResumePreviousSession"
+              @click="continueLastSession"
+            >
+              {{ t('memorisation.workspaceEmpty.continuePreviousSession') }}
+            </button>
+            <button
+              class="action-btn action-btn-icon session-idle-controls"
+              type="button"
+              @click="openAdvancedControls"
+              :title="t('memorisation.open_controls')"
+              :aria-label="t('memorisation.open_controls')"
+            >
+              <i class="bi bi-sliders" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
         <div
           v-if="topCardMetadataPills.length"
@@ -192,7 +211,8 @@
           <span
             v-for="item in topCardMetadataPills"
             :key="item.key"
-            class="badge rounded-pill workspace-shell-metadata-pill"
+            class="badge rounded-pill workspace-shell-metadata-pill is-readonly"
+            aria-disabled="true"
           >
             <strong>{{ item.label }}:</strong>
             <span>{{ item.value }}</span>
@@ -204,7 +224,7 @@
 
 </section>
 
-          <div v-if="!isDataReady" class="loading-spinner">
+          <div v-if="!isDataReady || isRestoringWorkspace" class="loading-spinner">
             <i class="bi bi-hourglass-split"></i>
             <span>{{ t('common.loading') }}</span>
           </div>
@@ -2834,6 +2854,7 @@
     <transition name="slide-up">
       <div v-if="appReady && playerVisible" class="player-bar" :class="{ collapsed: playerCollapsed, 'is-playing': isPlaying }" role="region"
         aria-label="Audio player">
+        <div class="player-accent" aria-hidden="true"></div>
         <div class="player-main">
           <div class="player-info">
             <div class="player-chapter">{{ currentChapter?.name_simple || 'Quran' }}</div>
@@ -2851,6 +2872,7 @@
             </button>
             <button class="player-btn player-play" @click="togglePlay" title="Play/Pause" type="button"
               :aria-label="isPlaying ? 'Pause audio' : 'Play audio'">
+              <span class="player-play-ring" aria-hidden="true"></span>
               <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
             </button>
             <button class="player-btn" @click="next" title="Next" type="button" aria-label="Next ayah">
@@ -2859,16 +2881,16 @@
           </div>
 
           <div class="player-progress-wrap">
+            <span class="player-time elapsed">{{ formatTime(currentTime) }}</span>
             <div class="player-progress-bg" @click="seek" ref="progress" role="progressbar" aria-label="Audio progress"
               :aria-valuenow="Math.round((currentTime / (duration || 1)) * 100)" aria-valuemin="0" aria-valuemax="100">
               <div class="player-progress-fill" :style="{ width: (currentTime / (duration || 1)) * 100 + '%' }"></div>
+              <div class="player-progress-thumb" :style="{ left: `calc(${(currentTime / (duration || 1)) * 100}% - 6px)` }"></div>
             </div>
+            <span class="player-time total">{{ formatTime(duration) }}</span>
           </div>
 
-
-
-
-          <button class="player-btn" @click="playerVisible = false" title="Close player" type="button"
+          <button class="player-btn player-close" @click="playerVisible = false" title="Close player" type="button"
             aria-label="Close audio player">
             <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
