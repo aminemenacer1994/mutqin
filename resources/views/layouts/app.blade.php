@@ -998,8 +998,8 @@
         .auth-submit {
             width: 100%;
             border: 0;
-            background: color-mix(in srgb, var(--text) 94%, #140f0a);
-            color: #fff;
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            color: var(--text-on-accent);
             font-weight: 500;
             font-size: var(--auth-form-label-size);
             letter-spacing: 0.01em;
@@ -1007,8 +1007,8 @@
 
         .auth-submit:hover,
         .auth-submit:focus {
-            background: color-mix(in srgb, var(--text) 86%, #20160f);
-            color: #fff;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 90%, white 10%), var(--accent-strong));
+            color: var(--text-on-accent);
         }
 
         .auth-switch {
@@ -1123,7 +1123,7 @@
             width: fit-content;
             padding: 8px 12px;
             border-radius: 999px;
-            background: rgba(154, 103, 56, 0.1);
+            background: var(--accent-light);
             color: var(--accent-strong);
             font-size: 12px;
             font-weight: 800;
@@ -1155,7 +1155,7 @@
             min-height: 34px;
             padding: 0 12px;
             border-radius: 999px;
-            background: rgba(154, 103, 56, 0.1);
+            background: var(--accent-light);
             color: var(--accent-strong);
             font-size: 12px;
             font-weight: 800;
@@ -1271,7 +1271,7 @@
 
         .profile-form .form-control:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 0 0.2rem rgba(154, 103, 56, 0.12);
+            box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 18%, transparent);
         }
 
         .profile-subscription-grid {
@@ -1515,7 +1515,7 @@
         .billing-alert-info {
             background: var(--accent-light);
             color: var(--accent-strong);
-            border: 1px solid rgba(154, 103, 56, 0.18);
+            border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
         }
 
         .billing-grid {
@@ -1625,7 +1625,7 @@
         .billing-primary-btn {
             border: 1px solid var(--accent);
             background: var(--accent);
-            color: #fff;
+            color: var(--text-on-accent);
         }
 
         .billing-secondary-btn,

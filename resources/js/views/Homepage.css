@@ -1,19 +1,36 @@
 /* Homepage-only tone extensions built on the shared app tokens. */
 .vue-onboarding {
-  --accent-soft: #d8c1a8;
-  --accent-wash: rgba(228, 211, 194, 0.42);
+  --accent-soft: color-mix(in srgb, var(--accent) 30%, var(--surface-strong));
+  --accent-wash: color-mix(in srgb, var(--accent-light) 74%, transparent);
+  --homepage-card-surface: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  --homepage-card-surface-strong: color-mix(in srgb, var(--surface-strong) 95%, var(--surface-elevated));
+  --homepage-card-border: color-mix(in srgb, var(--accent) 14%, var(--border));
+  --homepage-card-border-strong: color-mix(in srgb, var(--accent) 22%, var(--border));
+  --homepage-muted-strong: color-mix(in srgb, var(--text-muted) 88%, var(--text));
+  --homepage-heading-strong: color-mix(in srgb, var(--text) 96%, var(--text-on-accent));
+  --homepage-comparison-even: color-mix(in srgb, var(--accent-light) 28%, transparent);
+  --homepage-contrast-sparkle: color-mix(in srgb, var(--text-on-accent) 18%, transparent);
+  --homepage-contrast-border: color-mix(in srgb, var(--text-on-accent) 18%, var(--border));
+  --homepage-contrast-bg: linear-gradient(135deg, color-mix(in srgb, var(--accent-strong) 78%, var(--surface-strong)), color-mix(in srgb, var(--accent) 74%, var(--surface-elevated)));
+  --homepage-contrast-bg-dark: linear-gradient(135deg, color-mix(in srgb, var(--surface-strong) 92%, var(--accent-strong)), color-mix(in srgb, var(--surface-elevated) 78%, var(--accent)));
+  --homepage-focus-ring: color-mix(in srgb, var(--accent) 18%, transparent);
   --font-ar: 'Amiri', 'Noto Naskh Arabic', serif;
   --font-ui: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
 .vue-onboarding[data-theme="dark"] {
-  --accent-soft: #5f4530;
-  --accent-wash: rgba(208, 160, 107, 0.08);
+  --accent-soft: color-mix(in srgb, var(--accent) 34%, var(--surface-strong));
+  --accent-wash: color-mix(in srgb, var(--accent-light) 48%, transparent);
+  --homepage-card-surface: color-mix(in srgb, var(--surface-strong) 94%, var(--surface));
+  --homepage-card-surface-strong: color-mix(in srgb, var(--surface-strong) 96%, var(--surface-elevated));
+  --homepage-card-border: color-mix(in srgb, var(--text-on-accent) 10%, var(--border));
+  --homepage-card-border-strong: color-mix(in srgb, var(--accent) 26%, var(--border));
+  --homepage-comparison-even: color-mix(in srgb, var(--surface-soft) 52%, transparent);
 }
 
 .vue-onboarding[data-theme="sepia"] {
-  --accent-soft: #dcc3a6;
-  --accent-wash: rgba(221, 194, 162, 0.35);
+  --accent-soft: color-mix(in srgb, var(--accent) 28%, var(--surface-strong));
+  --accent-wash: color-mix(in srgb, var(--accent-light) 68%, transparent);
 }
 
 .vue-onboarding {
@@ -129,12 +146,6 @@
   font-weight: 200;
 }
 
-.vue-onboarding[data-theme="dark"] .hero-title span {
-  background: linear-gradient(135deg, #fff7ee, #ffd19b 62%, #e0ad72 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-
 .problem-solution {
   background: var(--surface);
   border-radius: var(--radius);
@@ -189,13 +200,13 @@
 .hero-buttons .hero-action-btn:first-child {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border-color: color-mix(in srgb, var(--accent-strong) 78%, transparent);
-  color: #fffaf4;
+  color: var(--text-on-accent);
 }
 
 .hero-buttons .hero-action-btn:first-child:hover {
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 90%, white 10%), var(--accent-strong));
   border-color: color-mix(in srgb, var(--accent-strong) 84%, transparent);
-  color: #fffaf4;
+  color: var(--text-on-accent);
 }
 
 .hero-buttons .hero-action-btn:last-child {
@@ -737,7 +748,7 @@
 }
 
 .comparison-table tbody tr:nth-child(even) {
-  background: rgba(154, 103, 56, 0.03);
+  background: var(--homepage-comparison-even);
 }
 
 .comparison-value {
@@ -762,9 +773,9 @@
 }
 
 .comparison-value-excluded {
-  color: #b23b3b;
-  background: rgba(178, 59, 59, 0.08);
-  border-color: rgba(178, 59, 59, 0.18);
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border-color: color-mix(in srgb, var(--danger-text) 20%, var(--border));
 }
 
 .comparison-value-limited {
@@ -824,7 +835,7 @@
 }
 
 .faq-accordion .accordion-button:focus {
-  box-shadow: 0 0 0 0.2rem rgba(154, 103, 56, 0.15);
+  box-shadow: 0 0 0 0.2rem var(--homepage-focus-ring);
 }
 
 .faq-accordion .accordion-button::after {
@@ -883,7 +894,7 @@
 
 .contact-form .form-control:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 0.2rem rgba(154, 103, 56, 0.14);
+  box-shadow: 0 0 0 0.2rem var(--homepage-focus-ring);
 }
 
 .contact-textarea {
@@ -982,7 +993,7 @@
   left: 50%;
   transform: translateX(-50%);
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: white;
+  color: var(--text-on-accent);
   font-size: 0.7rem;
   font-weight: 700;
   padding: 0.25rem 1rem;
@@ -1045,8 +1056,8 @@
 .vue-onboarding[data-theme="dark"] .feature-badge,
 .vue-onboarding[data-theme="dark"] .testimonial-proof,
 .vue-onboarding[data-theme="dark"] .plan-label {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, var(--surface-strong) 72%, transparent);
+  border-color: var(--homepage-card-border);
 }
 
 .vue-onboarding[data-theme="dark"] .problem-solution,
@@ -1055,8 +1066,8 @@
 .vue-onboarding[data-theme="dark"] .testimonial-card,
 .vue-onboarding[data-theme="dark"] .pricing-card,
 .vue-onboarding[data-theme="dark"] .demo-card {
-  background: rgba(31, 27, 24, 0.96);
-  border-color: rgba(255, 236, 216, 0.14);
+  background: var(--homepage-card-surface-strong);
+  border-color: var(--homepage-card-border);
 }
 
 .vue-onboarding[data-theme="dark"] .hero-desc,
@@ -1068,7 +1079,7 @@
 .vue-onboarding[data-theme="dark"] .pricing-alt,
 .vue-onboarding[data-theme="dark"] .pricing-features li,
 .vue-onboarding[data-theme="dark"] .author-info p {
-  color: #d8cabb;
+  color: var(--homepage-muted-strong);
 }
 
 .vue-onboarding[data-theme="dark"] .section-title,
@@ -1078,77 +1089,77 @@
 .vue-onboarding[data-theme="dark"] .testimonial-card h4,
 .vue-onboarding[data-theme="dark"] .pricing-card h3,
 .vue-onboarding[data-theme="dark"] .comparison-header h3 {
-  color: #f8efe3;
+  color: var(--homepage-heading-strong);
 }
 
 .vue-onboarding[data-theme="dark"] .pricing-comparison {
-  background: rgba(31, 27, 24, 0.96);
-  border-color: rgba(255, 236, 216, 0.14);
+  background: var(--homepage-card-surface-strong);
+  border-color: var(--homepage-card-border);
 }
 
 .vue-onboarding[data-theme="dark"] .faq-shell,
 .vue-onboarding[data-theme="dark"] .contact-card,
 .vue-onboarding[data-theme="dark"] .faq-accordion .accordion-button,
 .vue-onboarding[data-theme="dark"] .contact-form .form-control {
-  background: rgba(31, 27, 24, 0.96);
-  border-color: rgba(255, 236, 216, 0.14);
+  background: var(--homepage-card-surface-strong);
+  border-color: var(--homepage-card-border);
 }
 
 .vue-onboarding[data-theme="dark"] .faq-accordion .accordion-button:not(.collapsed) {
-  background: rgba(224, 173, 114, 0.14);
+  background: color-mix(in srgb, var(--warning-bg) 86%, transparent);
   color: var(--text);
 }
 
 .vue-onboarding[data-theme="dark"] .faq-accordion .accordion-body {
-  color: #d8cabb;
+  color: var(--homepage-muted-strong);
 }
 
 .vue-onboarding[data-theme="dark"] .contact-form .form-label {
-  color: #f8efe3;
+  color: var(--homepage-heading-strong);
 }
 
 .vue-onboarding[data-theme="dark"] .contact-alert-success {
-  color: #b7f0d7;
+  color: var(--success-text);
 }
 
 .vue-onboarding[data-theme="dark"] .contact-alert-error {
-  color: #ffcdc6;
+  color: var(--danger-text);
 }
 
 .vue-onboarding[data-theme="dark"] .comparison-table thead th,
 .vue-onboarding[data-theme="dark"] .comparison-header p {
-  color: #d8cabb;
+  color: var(--homepage-muted-strong);
 }
 
 .vue-onboarding[data-theme="dark"] .comparison-table tbody th,
 .vue-onboarding[data-theme="dark"] .comparison-table tbody td {
-  color: #f8efe3;
-  border-bottom-color: rgba(255, 236, 216, 0.12);
+  color: var(--homepage-heading-strong);
+  border-bottom-color: color-mix(in srgb, var(--border) 90%, transparent);
 }
 
 .vue-onboarding[data-theme="dark"] .comparison-table tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--homepage-comparison-even);
 }
 
 .vue-onboarding[data-theme="dark"] .comparison-table-wrap {
-  background: rgba(255, 255, 255, 0.025);
+  background: color-mix(in srgb, var(--surface-soft) 48%, transparent);
 }
 
 .vue-onboarding[data-theme="dark"] .comparison-value-included {
-  color: #ffd19b;
-  background: rgba(224, 173, 114, 0.13);
-  border-color: rgba(224, 173, 114, 0.28);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent-light) 76%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
 }
 
 .vue-onboarding[data-theme="dark"] .comparison-value-excluded {
-  color: #ffcdc6;
-  background: rgba(178, 59, 59, 0.16);
-  border-color: rgba(255, 205, 198, 0.15);
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border-color: color-mix(in srgb, var(--danger-text) 20%, var(--border));
 }
 
 .vue-onboarding[data-theme="dark"] .comparison-value-limited {
-  color: #fff7ee;
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-on-accent);
+  background: color-mix(in srgb, var(--surface-strong) 74%, transparent);
 }
 
 .pricing-actions {
@@ -1181,16 +1192,16 @@
 
 .vue-onboarding[data-theme="dark"] .pricing-actions .btn-secondary,
 .vue-onboarding[data-theme="dark"] .pricing-card > .btn-secondary {
-  background: rgba(255, 255, 255, 0.075);
-  color: #f8efe3;
-  border-color: rgba(255, 236, 216, 0.22);
+  background: color-mix(in srgb, var(--surface-strong) 82%, transparent);
+  color: var(--homepage-heading-strong);
+  border-color: var(--homepage-card-border-strong);
 }
 
 .vue-onboarding[data-theme="dark"] .pricing-actions .btn-secondary:hover,
 .vue-onboarding[data-theme="dark"] .pricing-card > .btn-secondary:hover {
-  background: rgba(224, 173, 114, 0.16);
-  color: #ffd19b;
-  border-color: rgba(224, 173, 114, 0.42);
+  background: color-mix(in srgb, var(--accent-light) 86%, transparent);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
 }
 
 /* CTA Block */
@@ -1198,12 +1209,12 @@
   max-width: 1000px;
   margin: 1.4rem auto 2.2rem;
   background:
-    radial-gradient(circle at 12% 20%, rgba(255,255,255,0.3), transparent 24%),
-    linear-gradient(135deg, #6e4726, #b97c44);
+    radial-gradient(circle at 12% 20%, var(--homepage-contrast-sparkle), transparent 24%),
+    var(--homepage-contrast-bg);
   border-radius: 40px;
-  color: #fffaf4;
+  color: var(--text-on-accent);
   padding: 2.35rem;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid var(--homepage-contrast-border);
   box-shadow: var(--shadow-lg);
 }
 
@@ -1218,12 +1229,12 @@
   width: 58px;
   height: 58px;
   border-radius: 20px;
-  background: color-mix(in srgb, #ffffff 16%, transparent);
+  background: color-mix(in srgb, var(--text-on-accent) 16%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.7rem;
-  color: #fffaf4;
+  color: var(--text-on-accent);
   margin-bottom: 1rem;
 }
 
@@ -1235,7 +1246,7 @@
 
 .cta-block p {
   margin-bottom: 0;
-  color: rgba(255,255,255,0.82);
+  color: var(--text-on-accent-muted);
   max-width: 600px;
   line-height: 1.65;
 }
@@ -1251,7 +1262,7 @@
 .cta-actions .btn-primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border-color: color-mix(in srgb, var(--accent-strong) 84%, transparent);
-  color: #fffaf4;
+  color: var(--text-on-accent);
   width: 100%;
   height: 58px;
   min-height: 58px;
@@ -1261,24 +1272,24 @@
 .cta-actions .btn-primary:hover {
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 90%, white 10%), var(--accent-strong));
   border-color: color-mix(in srgb, var(--accent-strong) 90%, transparent);
-  color: #fffaf4;
+  color: var(--text-on-accent);
 }
 
 .cta-actions span {
-  color: rgba(255,255,255,0.75);
+  color: var(--text-on-accent-muted);
   font-size: 0.85rem;
 }
 
 .vue-onboarding[data-theme="dark"] .cta-block {
   background:
-    radial-gradient(circle at 12% 20%, rgba(255, 209, 155, 0.16), transparent 24%),
-    linear-gradient(135deg, #1f1b18, #3a2b20 46%, #7d5435);
-  border-color: rgba(255, 236, 216, 0.18);
+    radial-gradient(circle at 12% 20%, color-mix(in srgb, var(--accent-light) 84%, transparent), transparent 24%),
+    var(--homepage-contrast-bg-dark);
+  border-color: color-mix(in srgb, var(--text-on-accent) 12%, var(--border));
 }
 
 .vue-onboarding[data-theme="dark"] .cta-block p,
 .vue-onboarding[data-theme="dark"] .cta-actions span {
-  color: rgba(255, 247, 238, 0.78);
+  color: var(--text-on-accent-muted);
 }
 
 /* Buttons */
@@ -1304,7 +1315,7 @@
 
 .btn-primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: white;
+  color: var(--text-on-accent);
 }
 
 .btn-primary:hover {

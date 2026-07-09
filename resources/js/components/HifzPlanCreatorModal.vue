@@ -946,7 +946,7 @@ export default {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--plan-accent-strong), color-mix(in srgb, var(--plan-accent) 46%, #ffffff));
+  background: linear-gradient(90deg, var(--plan-accent-strong), color-mix(in srgb, var(--plan-accent) 46%, var(--text-on-accent, #fffaf5)));
   transition: width 180ms ease;
 }
 
@@ -1004,7 +1004,7 @@ export default {
 .hifz-plan-step-dot.active span,
 .hifz-plan-step-dot.complete span {
   background: var(--plan-accent);
-  color: #fff;
+  color: var(--text-on-accent, #fffaf5);
   border-color: var(--plan-accent);
 }
 
@@ -1075,7 +1075,7 @@ export default {
 
 .hifz-plan-choice.selected .hifz-plan-choice-icon {
   background: var(--plan-accent-strong);
-  color: #fff;
+  color: var(--text-on-accent, #fffaf5);
 }
 
 .hifz-plan-choice strong {
