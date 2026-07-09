@@ -24040,6 +24040,17 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   max-width: none !important;
 }
 
+.main.container-fluid.mushaf-mode-active .mushaf-workspace {
+  justify-items: stretch !important;
+}
+
+.main.container-fluid.mushaf-mode-active .mushaf-viewport,
+.main.container-fluid.mushaf-mode-active .mushaf-track,
+.main.container-fluid.mushaf-mode-active .mushaf-page {
+  width: 100%;
+  max-width: none !important;
+}
+
 .mushaf-toolbar-cluster,
 .mushaf-toolbar-cluster-start,
 .mushaf-toolbar-cluster-end {
@@ -24065,6 +24076,33 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .mushaf-pill-label,
 .mushaf-controls-pill {
   display: none !important;
+}
+
+@media (min-width: 768px) {
+  .main.container-fluid.mushaf-mode-active .mushaf-frame.mushaf-frame-toolbar-collapsed {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .mushaf-frame-toolbar-collapsed .mushaf-pill-toolbar {
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding-inline: 0;
+  }
+
+  .mushaf-frame-toolbar-collapsed .mushaf-toolbar-cluster,
+  .mushaf-frame-toolbar-collapsed .mushaf-toolbar-cluster-start,
+  .mushaf-frame-toolbar-collapsed .mushaf-toolbar-cluster-end,
+  .mushaf-frame-toolbar-collapsed .mushaf-toolbar-dropdown {
+    width: auto !important;
+    align-items: center !important;
+  }
+
+  .mushaf-frame-toolbar-collapsed .mushaf-toolbar-trigger,
+  .mushaf-frame-toolbar-collapsed .mushaf-pill-toolbar .mushaf-pill {
+    width: 42px !important;
+    min-width: 42px !important;
+    justify-content: center !important;
+  }
 }
 
 .ready-begin-footer-grid {

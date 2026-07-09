@@ -297,6 +297,7 @@
                       :class="{ active: tajweedEnabled }"
                       @click.stop="toggleTajweed"
                       :aria-pressed="tajweedEnabled ? 'true' : 'false'"
+                      aria-label="Toggle Tajweed colouring"
                       title="Tajweed"
                     >
                       <i class="bi bi-palette"></i>
@@ -312,7 +313,8 @@
                     <button class="mushaf-pill mushaf-ai-pill mushaf-ai-recite" type="button" @click.stop="openAiRecitationCheckForVerse(activeVerseRef)"
                       :class="{ active: recitationCheckRecording }"
                       :disabled="!activeVerseRef || recitationCheckPreparing || !supportsSelfCheckRecording()"
-                      :title="activeVerseRef ? 'AI Recite' : 'Tap an ayah first'">
+                      :title="activeVerseRef ? 'AI Recite' : 'Tap an ayah first'"
+                      :aria-label="recitationCheckRecording ? 'Stop AI recitation check' : (activeVerseRef ? 'Start AI recitation check' : 'Tap an ayah first')">
                       <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
                     </button>
                   </div>
