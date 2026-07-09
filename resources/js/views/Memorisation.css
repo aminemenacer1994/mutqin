@@ -7835,14 +7835,21 @@ html {
   padding-inline-end: 0.35rem;
 }
 
-.navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  /* Higher than tools? Lower? Tools should be 60, navbar 100 */
-  background: var(--surface-strong);
+body.memorisation-page nav.navbar.app-navbar,
+body.memorisation-page nav.navbar.app-navbar::before,
+body.memorisation-page nav.navbar.app-navbar::after,
+body.memorisation-page nav.navbar.app-navbar *,
+body.memorisation-page nav.navbar.app-navbar .navbar-shell,
+body.memorisation-page nav.navbar.app-navbar .navbar-shell::before,
+body.memorisation-page nav.navbar.app-navbar .navbar-shell::after {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+body.memorisation-page nav.navbar.app-navbar {
+  background: var(--surface-strong) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .main.container, .main.container-fluid {

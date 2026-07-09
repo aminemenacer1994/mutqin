@@ -12163,13 +12163,13 @@ canvas {
   }
 }
 .app-navbar {
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--surface-strong);
   border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(12px);
+  box-shadow: none !important;
 }
 
 html[data-theme=dark] .app-navbar {
-  background: rgba(18, 18, 18, 0.82);
+  background: var(--surface-strong);
 }
 
 .app-navbar-logo {

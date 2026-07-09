@@ -3537,6 +3537,7 @@ export default {
   },
 
   async mounted() {
+    document.body.classList.add('memorisation-page')
     document.addEventListener('click', this.handleClickOutside);
     this.activeLocale = this.$i18n?.locale?.value || 'en'
     this.appReady = true
@@ -3772,6 +3773,7 @@ export default {
   },
 
   beforeUnmount() {
+    document.body.classList.remove('memorisation-page')
     if (this.anchorHighlightObserver) {
       this.anchorHighlightObserver.disconnect()
     }

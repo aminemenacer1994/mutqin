@@ -267,13 +267,15 @@
         /* App Navbar - NO SHADOWS */
         .app-navbar {
             background: var(--surface-strong);
-            backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
             padding: 3px;
             position: sticky;
             top: 0;
             z-index: 1000;
             padding-top: env(safe-area-inset-top, 0px);
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
         }
 
         [data-theme="dark"] .app-navbar {
