@@ -410,7 +410,12 @@
         .app-navbar .nav-link-home:hover,
         .app-navbar .nav-link-home:focus,
         .app-navbar .nav-link-home:focus-visible,
-        .app-navbar .nav-link-home.active {
+        .app-navbar .nav-link-home.active,
+        .app-navbar .nav-link-memorisation,
+        .app-navbar .nav-link-memorisation:hover,
+        .app-navbar .nav-link-memorisation:focus,
+        .app-navbar .nav-link-memorisation:focus-visible,
+        .app-navbar .nav-link-memorisation.active {
             box-shadow: none !important;
         }
 
@@ -680,9 +685,9 @@
 
         .auth-shell {
             --auth-form-max-width: 520px;
-            --auth-form-min-height: auto;
-            --auth-form-title-size: clamp(1.75rem, 1vw + 1.45rem, 2.1rem);
-            --auth-form-copy-size: 0.97rem;
+            --auth-form-min-height: 640px;
+            --auth-form-title-size: 2rem;
+            --auth-form-copy-size: 0.95rem;
             --auth-form-label-size: 0.95rem;
             min-height: calc(100dvh - var(--nav-h) - 8px);
             display: flex;
@@ -1028,6 +1033,10 @@
             .auth-shell {
                 padding-block: 4px 6px;
                 padding-inline: var(--gutter-tight);
+            }
+
+            .auth-shell {
+                --auth-form-min-height: auto;
             }
 
             .auth-panel,
@@ -1668,6 +1677,7 @@
                     <div class="navbar-nav-shell d-flex justify-content-lg-center">
                         <div class="navbar-nav nav-links-desktop gap-2 gap-lg-3 justify-content-lg-center">
                             <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}" data-i18n="home">{{ __('ui.home') }}</a>
+                            <a class="nav-link nav-link-memorisation {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}" data-i18n="memorisation">{{ __('ui.memorisation') }}</a>
                         </div>
                     </div>
 

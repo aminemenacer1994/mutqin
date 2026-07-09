@@ -2832,7 +2832,7 @@
 
     <!-- Global Audio Player - Updated with Speed Controls -->
     <transition name="slide-up">
-      <div v-if="appReady && playerVisible" class="player-bar" :class="{ collapsed: playerCollapsed }" role="region"
+      <div v-if="appReady && playerVisible" class="player-bar" :class="{ collapsed: playerCollapsed, 'is-playing': isPlaying }" role="region"
         aria-label="Audio player">
         <div class="player-main">
           <div class="player-info">

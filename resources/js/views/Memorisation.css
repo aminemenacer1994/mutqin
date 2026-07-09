@@ -6990,7 +6990,17 @@ html {
   gap: 8px;
   /* Avoid iOS Safari compositing artifacts (black bands) from backdrop-filter on fixed elements. */
   backdrop-filter: blur(2px);
-  transition: transform 0.22s ease, opacity 0.22s ease, padding 0.22s ease;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease, padding 0.22s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+  will-change: transform, opacity;
+}
+
+.player-bar.is-playing {
+  border-color: rgba(120, 78, 40, 0.56);
+  box-shadow: 0 34px 84px rgba(29, 17, 7, 0.34),
+    0 0 0 2px rgba(255, 255, 255, 0.95),
+    0 0 0 6px rgba(120, 78, 40, 0.2),
+    0 0 24px rgba(154, 103, 56, 0.12);
+  animation: playerBarBreathe 3.6s ease-in-out infinite;
 }
 
 .player-bar.collapsed {
@@ -7112,15 +7122,29 @@ html {
   height: 100%;
   background: linear-gradient(90deg, #9a6738, #b9834f);
   border-radius: 999px;
-  transition: width 0.1s linear;
+  transition: width 0.12s linear;
 }
 
-.slide-up-enter-active, .slide-up-leave-active {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+@keyframes playerBarBreathe {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  50% {
+    transform: translateX(-50%) translateY(-2px);
+  }
+}
+
+.slide-up-enter-active {
+  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.34s ease;
+}
+
+.slide-up-leave-active {
+  transition: transform 0.28s cubic-bezier(0.4, 0, 1, 1), opacity 0.22s ease;
 }
 
 .slide-up-enter-from, .slide-up-leave-to {
-  transform: translate(-50%, 100px);
+  transform: translate(-50%, 28px) scale(0.985);
   opacity: 0;
 }
 
@@ -20606,6 +20630,11 @@ textarea {
   display: none;
 }
 
+.workspace-shell-actions .session-primary-action span,
+.workspace-shell-actions .action-btn-exit span {
+  display: inline;
+}
+
 /* Keep the mushaf controls in grid tracks that compress rather than stack. */
 .mushaf-workspace,
 .mushaf-frame {
@@ -20727,11 +20756,12 @@ textarea {
 
 .workspace-shell-metadata {
   width: 100%;
-  margin-top: 0.5rem;
+  margin-top: 0.42rem;
   align-items: center;
   overflow-x: auto;
   overflow-y: hidden;
   flex: 0 0 100%;
+  gap: 0.35rem !important;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
@@ -20739,14 +20769,14 @@ textarea {
 .workspace-shell-metadata-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.42rem 0.78rem;
-  border: 1px solid rgba(177, 136, 94, 0.18);
+  gap: 0.28rem;
+  padding: 0.3rem 0.62rem;
+  border: 1px solid rgba(177, 136, 94, 0.16);
   background: rgba(255, 255, 255, 0.74);
   color: var(--text);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.15;
   white-space: nowrap;
   flex: 0 0 auto;
   cursor: default;
@@ -20831,11 +20861,17 @@ textarea {
 }
 
 .workspace-shell-actions .action-btn.primary,
+.workspace-shell-actions .action-btn.btn-primary,
+.workspace-shell-actions .session-primary-action,
 .workspace-shell-actions .action-btn-exit {
   min-width: max-content !important;
+  width: auto !important;
+  padding-inline: 0.9rem !important;
 }
 
 .workspace-shell-actions .action-btn.primary span,
+.workspace-shell-actions .action-btn.btn-primary span,
+.workspace-shell-actions .session-primary-action span,
 .workspace-shell-actions .action-btn-exit span {
   display: inline;
 }
@@ -21736,7 +21772,8 @@ textarea {
   .self-check-modal .self-check-recorder-card.recording,
   .self-check-modal .self-check-modal-ayah .wbw-word,
   .self-check-modal .self-check-modal-ayah word,
-  .self-check-modal .recall-mode-status > .bi {
+  .self-check-modal .recall-mode-status > .bi,
+  .player-bar.is-playing {
     animation: none !important;
   }
 }
@@ -22355,10 +22392,11 @@ textarea {
   align-items: center;
 }
 
-.workspace-shell-actions .action-btn.action-btn-session,
-.workspace-shell-actions .action-btn.action-btn-exit {
+.workspace-shell-actions .action-btn.primary,
+.workspace-shell-actions .action-btn.btn-primary,
+.workspace-shell-actions .session-primary-action,
+.workspace-shell-actions .action-btn-exit {
   min-width: max-content !important;
-  padding-inline: 0.92rem !important;
   white-space: nowrap;
   box-shadow: 0 10px 24px rgba(88, 59, 29, 0.08);
 }
@@ -23840,12 +23878,12 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .workspace-shell-metadata-pill {
-  gap: 0.42rem;
-  padding: 0.52rem 0.9rem;
-  border: 1px solid rgba(177, 136, 94, 0.16);
+  gap: 0.28rem;
+  padding: 0.3rem 0.62rem;
+  border: 1px solid rgba(177, 136, 94, 0.14);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 239, 229, 0.92));
-  font-size: 0.84rem;
-  box-shadow: 0 10px 20px rgba(88, 59, 29, 0.06);
+  font-size: 0.72rem;
+  box-shadow: 0 6px 14px rgba(88, 59, 29, 0.04);
 }
 
 .workspace-shell-metadata-pill:nth-child(1) { animation: workspacePillFloatIn 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }

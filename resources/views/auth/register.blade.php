@@ -5,17 +5,17 @@
     <div class="auth-stage auth-stage-single">
         <section class="auth-panel auth-panel-form">
             <div class="auth-form-wrap">
-                <a class="auth-brand auth-brand-static" href="{{ route('memorisation') }}" aria-label="Open memorisation workspace">
+                <!-- <a class="auth-brand auth-brand-static" href="{{ route('memorisation') }}" aria-label="Open memorisation workspace">
                     <span class="auth-brand-mark"><i class="bi bi-book-half" aria-hidden="true"></i></span>
                     <span class="auth-brand-text">
                         <strong>Mutqin</strong>
                         <small>{{ __('ui.auth_workspace_label') }}</small>
                     </span>
-                </a>
+                </a> -->
 
                 <div class="auth-copy auth-copy-compact">
                     <h2 class="auth-form-title" data-i18n="register">{{ __('ui.register') }}</h2>
-                    <p class="auth-form-subtitle" data-i18n="auth_register_subtitle">{{ __('ui.auth_register_subtitle') }}</p>
+                    <!-- <p class="auth-form-subtitle" data-i18n="auth_register_subtitle">{{ __('ui.auth_register_subtitle') }}</p> -->
                 </div>
 
                 @error('google')

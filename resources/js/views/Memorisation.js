@@ -1559,6 +1559,7 @@ export default {
     },
     headerSessionActionLabel() {
       if (this.isPlaying) return 'Pause session'
+      if (this.hasSessionStarted) return 'Resume session'
       return 'Start session'
     },
     headerSessionActionIcon() {
@@ -12217,7 +12218,7 @@ export default {
       this.prepareRangeRestart()
       this.showBanner('Session restarted from the beginning.', 'success', 2200)
       this.$nextTick(() => {
-        this.startSessionAfterUserGesture()
+        this.startSessionWithCountdown()
       })
     },
 
@@ -13838,12 +13839,12 @@ export default {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
         this.closeSessionExitModal({ restore: false })
         this.prepareRangeRestart()
-        this.startSessionAfterUserGesture()
+        this.startSessionWithCountdown()
         return
       }
       this.confirmSessionExit({ showSummary: false })
       this.prepareRangeRestart()
-      this.startSessionAfterUserGesture()
+      this.startSessionWithCountdown()
     },
     exitSessionToSaveSession() {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
@@ -13899,7 +13900,7 @@ export default {
     repeatSessionFromEndedModal() {
       this.closeSessionEndedModal()
       this.prepareRangeRestart()
-      this.startSessionAfterUserGesture()
+      this.startSessionWithCountdown()
     },
 
     openConfirmModal(options) {
