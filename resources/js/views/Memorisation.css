@@ -23719,9 +23719,23 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 /* AI modal and session button overrides */
+.modal-content.self-check-modal .self-check-modal-body,
+.modal-content.memorisation-checker-modal .memorisation-checker-body,
+.modal-content.self-check-modal .recitation-check-results,
+.modal-content.memorisation-checker-modal .memorisation-checker-results {
+  gap: 14px !important;
+}
+
+.modal-content.self-check-modal .recitation-result-stats,
+.modal-content.memorisation-checker-modal .memorisation-checker-result-grid,
+.modal-content.self-check-modal .recitation-insights-grid,
+.modal-content.memorisation-checker-modal .recitation-insights-grid {
+  gap: 12px !important;
+}
+
 .recitation-review-ayah {
-  margin-bottom: 1rem;
-  padding: 1rem 1.15rem !important;
+  margin-bottom: 14px;
+  padding: 18px 20px !important;
 }
 
 .modal-content.self-check-modal .self-check-toolbar-btn.self-check-toolbar-btn-text,
