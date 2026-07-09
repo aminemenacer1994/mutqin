@@ -848,7 +848,11 @@
                         {{ t('memorisation.cumulative') }}
                       </label>
                     </div>
-                    <small class="field-hint">{{ chainingMethod === 'linking' ? t('memorisation.techniques.chainingLinkingHint') : t('memorisation.techniques.chainingCumulativeHint') }}</small>
+                    <small class="field-hint">{{ hasChainingMethodSelected
+                      ? (chainingMethod === 'linking'
+                        ? t('memorisation.techniques.chainingLinkingHint')
+                        : t('memorisation.techniques.chainingCumulativeHint'))
+                      : 'Choose linking or cumulative before starting.' }}</small>
                   </div>
                   <div v-if="chainingEnabled" class="field">
                     <label>{{ t('memorisation.repeats_per_step') }}</label>

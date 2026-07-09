@@ -2071,12 +2071,14 @@ export default {
     chainingMethodLabel() {
       const count = this.chainingRepetitions
       if (!this.chainingEnabled) return this.t('memorisation.techniques.chainingOffLabel', { count })
+      if (!this.hasChainingMethodSelected) return 'Choose chaining method'
       if (this.chainingMethod === 'cumulative') return this.t('memorisation.techniques.chainingCumulativeLabel', { count })
       return this.t('memorisation.techniques.chainingLinkingLabel', { count })
     },
     chainingMethodPreview() {
       const count = this.chainingRepetitions
       if (!this.chainingEnabled) return this.t('memorisation.techniques.chainingOffPreview', { count })
+      if (!this.hasChainingMethodSelected) return 'Select linking or cumulative to preview the chaining queue.'
       if (this.chainingMethod === 'cumulative') return this.t('memorisation.techniques.chainingCumulativePreview', { count })
       return this.t('memorisation.techniques.chainingLinkingPreview', { count })
     },
@@ -5276,7 +5278,7 @@ export default {
       this.focusModeEnabled = true
       this.blurModeEnabled = false
       this.chainingEnabled = true
-      this.chainingMethod = 'linking'
+      this.chainingMethod = ''
       this.chainingRepetitions = 1
       this.anchorModeEnabled = false
       this.sectionOpen.advanced_setup = true
@@ -5312,13 +5314,13 @@ export default {
       this.focusModeEnabled = false;
       this.blurModeEnabled = false;
       this.chainingEnabled = false;
+      this.chainingMethod = '';
       this.anchorModeEnabled = false;
 
       switch (type) {
         case 'guided':
           this.focusModeEnabled = true;
           this.chainingEnabled = true;
-          this.chainingMethod = 'linking';
           this.chainingRepetitions = 1;
           this.showBanner(this.t('toasts.presetGuidedStart'), 'success', 2000);
           break;
@@ -5932,8 +5934,8 @@ export default {
           playMode: 'auto',
           talqinModeEnabled: false,
           recitationWindowSeconds: 8,
-          chainingEnabled: true,
-          chainingMethod: 'linking',
+          chainingEnabled: false,
+          chainingMethod: '',
           chainingRepetitions: 1,
           tajweedEnabled: false,
           showTranslation: true,
@@ -6271,7 +6273,7 @@ export default {
       this.talqinModeEnabled = false
       this.repetitionsPerStep = 5
       this.chainingEnabled = false
-      this.chainingMethod = 'linking'
+      this.chainingMethod = ''
       this.chainingRepetitions = 1
       this.focusModeEnabled = false
       this.focusDimPercent = 54
@@ -14021,7 +14023,7 @@ export default {
         this.anchorCount = Math.max(1, Math.min(2, Number(this.centralSession.anchorCount || 2)))
         if (!uiChaining) {
           this.chainingEnabled = !!this.centralSession.chaining.enabled
-          this.chainingMethod = ['linking', 'cumulative'].includes(this.centralSession.chaining.method) ? this.centralSession.chaining.method : 'linking'
+          this.chainingMethod = ['linking', 'cumulative'].includes(this.centralSession.chaining.method) ? this.centralSession.chaining.method : ''
           this.chainingRepetitions = Math.max(1, Math.min(5, Number(this.centralSession.chaining.repetitions || 1)))
         }
         this.speed = this.normalizePlaybackSpeed(this.centralSession.audio.speed)
@@ -17449,8 +17451,8 @@ export default {
       this.speed = 1
       this.delay = 2
       this.recitationWindowSeconds = 8
-      this.chainingEnabled = true
-      this.chainingMethod = 'linking'
+      this.chainingEnabled = false
+      this.chainingMethod = ''
       this.chainingRepetitions = 1
       this.playMode = 'auto'
       this.order = 'seq'
