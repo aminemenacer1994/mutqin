@@ -76,11 +76,7 @@
         </div>
 
         <!-- Verses Grid -->
-        <div v-if="!isDataReady" class="loading-spinner" >
-          <i class="bi bi-hourglass-split"></i>
-          <span>{{ t('common.loading') }}</span>
-        </div>
-        <div v-else class="workspace">
+        <div class="workspace">
           <!-- In your template, replace the workspace-shell section -->
         <section
           class="workspace-shell"
@@ -208,8 +204,12 @@
 
 </section>
 
+          <div v-if="!isDataReady" class="loading-spinner">
+            <i class="bi bi-hourglass-split"></i>
+            <span>{{ t('common.loading') }}</span>
+          </div>
           <div
-            v-if="practiceTurnCalloutVisible"
+            v-if="isDataReady && practiceTurnCalloutVisible"
             class="practice-turn-callout"
             :class="{ 'is-talqin': talqinRecitationTurnActive }"
             role="status"
@@ -223,7 +223,7 @@
             <span>{{ practiceTurnCalloutMessage }}</span>
           </div>
 
-          <main v-if="!isOnboardingExperienceActive" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
+          <main v-if="isDataReady && !isOnboardingExperienceActive" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             aria-label="Memorisation workspace">
             <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" aria-label="Session setup">
               <div class="workspace-empty-card">
