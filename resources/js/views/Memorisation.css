@@ -7026,42 +7026,6 @@ html {
   text-overflow: ellipsis;
 }
 
-.player-recitation-window {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(154, 103, 56, 0.12);
-  color: #6f431d;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.player-recitation-window.is-talqin {
-  background: linear-gradient(135deg, rgba(184, 130, 78, 0.18), rgba(226, 193, 149, 0.24));
-  color: #5f3613;
-  box-shadow: 0 10px 22px rgba(154, 103, 56, 0.14);
-  animation: talqinTurnPulse 1.2s ease-in-out infinite;
-}
-
-.player-recitation-window.is-talqin i {
-  font-size: 0.92rem;
-}
-
-@keyframes talqinTurnPulse {
-  0%, 100% {
-    transform: translateY(0);
-    box-shadow: 0 10px 22px rgba(154, 103, 56, 0.14);
-  }
-  50% {
-    transform: translateY(-1px);
-    box-shadow: 0 14px 28px rgba(154, 103, 56, 0.2);
-  }
-}
-
-
 .player-eta {
   color: var(--accent);
   font-weight: 500;
@@ -8041,11 +8005,6 @@ html {
 
 [data-theme="dark"] .verse-number, [data-theme="dark"] .verse-status-badge, [data-theme="dark"] .player-chapter, [data-theme="dark"] .player-verse, [data-theme="dark"] .preview-stat, [data-theme="dark"] .preview-surah, [data-theme="dark"] .preview-range {
   color: var(--text);
-}
-
-[data-theme="dark"] .player-recitation-window {
-  background: rgba(223, 167, 98, 0.16);
-  color: #f0cfab;
 }
 
 [data-theme="dark"] .player-progress-bg, [data-theme="dark"] .progress-bar-track, [data-theme="dark"] .form-range {
