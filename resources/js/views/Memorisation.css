@@ -23918,9 +23918,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .workspace-header-view-controls,
 .quick-right-controls {
-  width: min(100%, 20.75rem);
-  grid-template-columns: minmax(7.9rem, auto) minmax(0, 1fr) !important;
-  gap: 0.45rem !important;
+  width: auto;
+  max-width: 100%;
+  gap: 0.75rem !important;
 }
 
 .workspace-header-view-controls .view-mode-switch,
@@ -23929,18 +23929,21 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .workspace-header-view-controls .view-mode-switch {
-  padding-inline: 0.58rem !important;
-  gap: 0.38rem !important;
+  width: auto;
+  max-width: none;
+  padding-inline: 1rem !important;
+  gap: 0.75rem !important;
+  justify-content: space-between;
 }
 
 .view-mode-switch-label {
   max-width: none !important;
   overflow: visible !important;
   text-overflow: clip !important;
-  white-space: normal !important;
-  text-align: center;
-  line-height: 1.05;
-  font-size: 0.84rem;
+  white-space: nowrap !important;
+  text-align: left;
+  line-height: 1;
+  font-size: 0.8rem;
 }
 
 .practice-turn-callout {
@@ -23987,20 +23990,23 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .workspace-header-view-controls .quick-font-dropdown {
-  flex: 0 1 7.9rem;
+  flex: 0 1 15rem;
+  min-width: 15rem;
 }
 
 .workspace-header-view-controls .font-dropdown-trigger {
-  padding-inline: 0.58rem !important;
-  gap: 0.4rem;
+  min-width: 15rem;
+  justify-content: space-between;
+  padding-inline: 1rem !important;
+  gap: 0.5rem;
 }
 
 .workspace-header-view-controls .font-dropdown-trigger span,
 .quick-font-dropdown .font-dropdown-trigger span {
   overflow: visible !important;
   text-overflow: clip !important;
-  white-space: normal !important;
-  line-height: 1.1;
+  white-space: nowrap !important;
+  line-height: 1;
   font-size: 0.8rem;
 }
 
