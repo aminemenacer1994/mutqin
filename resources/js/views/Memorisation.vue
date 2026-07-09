@@ -2069,7 +2069,7 @@
             class="self-check-modal-recorder-grid memorisation-checker-recorder-grid">
             <article class="self-check-recorder-card"
               :class="{ recording: aiMemorisationCheckerRecording, reviewing: !!aiMemorisationCheckerResult }">
-              <div class="self-check-recorder-head">
+              <div style="padding:10px" class="self-check-recorder-head">
                 <div>
                   <span class="self-check-kicker">{{ t('memorisation.memorisation_review') }}</span>
                   <strong>{{ aiMemorisationCheckerRecording ? 'AI memorisation listening' : aiMemorisationCheckerResult ? 'Review before saving' : 'AI memorisation review' }}</strong>
@@ -2280,9 +2280,9 @@
 
           <section v-if="selfCheckReviewVisible" class="self-check-modal-recorder-grid"
             :class="{ 'saved-attempts-open': selfCheckSavedAttemptsVisible }">
-            <article class="self-check-recorder-card"
+            <article class="self-check-recorder-card" style="padding:10px"
               :class="{ recording: isSelfCheckRecording, reviewing: !!selfCheckActiveDraft }">
-              <div class="self-check-recorder-head">
+              <div class="self-check-recorder-head" style="padding:10px">
                 <div>
                   <span class="self-check-kicker">{{ t('memorisation.recitation_review') }}</span>
                   <strong>{{ recitationCheckRecording ? 'AI recitation listening' : selfCheckActiveDraft ? 'Review before saving': 'AI recitation review' }}</strong>

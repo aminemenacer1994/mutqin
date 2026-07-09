@@ -2681,6 +2681,9 @@ var _hoisted_512 = {
   "class": "self-check-modal-recorder-grid memorisation-checker-recorder-grid"
 };
 var _hoisted_513 = {
+  style: {
+    "padding": "10px"
+  },
   "class": "self-check-recorder-head"
 };
 var _hoisted_514 = {
@@ -2812,7 +2815,10 @@ var _hoisted_553 = ["disabled"];
 var _hoisted_554 = ["title"];
 var _hoisted_555 = ["innerHTML"];
 var _hoisted_556 = {
-  "class": "self-check-recorder-head"
+  "class": "self-check-recorder-head",
+  style: {
+    "padding": "10px"
+  }
 };
 var _hoisted_557 = {
   "class": "self-check-kicker"
@@ -5691,7 +5697,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["self-check-recorder-card", {
       recording: _ctx.isSelfCheckRecording,
       reviewing: !!_ctx.selfCheckActiveDraft
-    }])
+    }]),
+    style: {
+      "padding": "10px"
+    }
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_556, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_557, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('memorisation.recitation_review')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.recitationCheckRecording ? 'AI recitation listening' : _ctx.selfCheckActiveDraft ? 'Review before saving' : 'AI recitation review'), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_558, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.getSelfCheckRecorderDescription()), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "self-check-library-link",
     type: "button",
