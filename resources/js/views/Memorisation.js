@@ -4076,7 +4076,7 @@ export default {
 
     maybeShowReadyToBeginModal() {
       if (!this.isLoggedIn) return
-      if (!this.getReadyToBeginSessionStorageKey()) return
+      if (!this.getReadyToBeginLoginEventId()) return
       if (this.hasShownReadyToBeginModalForCurrentLogin()) return
       this.markReadyToBeginModalShownForCurrentLogin()
       this.returningUserChoicePending = true
@@ -4085,28 +4085,48 @@ export default {
       this.showResumeModal = true
     },
 
-    getReadyToBeginSessionStorageKey() {
-      const loginEventId = String(this.auth?.login_event_id || '').trim()
-      if (!loginEventId) return ''
-      const userId = this.auth?.id ? String(this.auth.id) : 'guest'
-      return `mutqin.readyToBeginShown:${userId}:${loginEventId}`
+    getReadyToBeginLoginEventId() {
+      return String(this.auth?.login_event_id || '').trim()
     },
 
     hasShownReadyToBeginModalForCurrentLogin() {
-      const storageKey = this.getReadyToBeginSessionStorageKey()
-      if (!storageKey || typeof sessionStorage === 'undefined') return false
-      try {
-        return sessionStorage.getItem(storageKey) === '1'
-      } catch {
-        return false
-      }
+      const loginEventId = this.getReadyToBeginLoginEventId()
+      if (!loginEventId) return false
+      return this.readReadyToBeginModalLoginEventId() === loginEventId
     },
 
     markReadyToBeginModalShownForCurrentLogin() {
-      const storageKey = this.getReadyToBeginSessionStorageKey()
-      if (!storageKey || typeof sessionStorage === 'undefined') return
+      const loginEventId = this.getReadyToBeginLoginEventId()
+      if (!loginEventId) return
+      this.writeReadyToBeginModalLoginEventId(loginEventId)
+    },
+
+    getReadyToBeginModalStorageKey() {
+      return this.userStorageKey('readyToBeginLoginEventId')
+    },
+
+    readReadyToBeginModalLoginEventId() {
+      const storageKey = this.getReadyToBeginModalStorageKey()
+      if (!storageKey) return ''
+      if (this.learningBackendEnabled()) {
+        return String(this.readWorkspaceStateValue('readyToBeginLoginEventId', '') || '').trim()
+      }
       try {
-        sessionStorage.setItem(storageKey, '1')
+        return String(localStorage.getItem(storageKey) || '').trim()
+      } catch {
+        return ''
+      }
+    },
+
+    writeReadyToBeginModalLoginEventId(loginEventId) {
+      const storageKey = this.getReadyToBeginModalStorageKey()
+      if (!storageKey || !loginEventId) return
+      if (this.learningBackendEnabled()) {
+        this.writeWorkspaceStateValue('readyToBeginLoginEventId', loginEventId)
+        return
+      }
+      try {
+        localStorage.setItem(storageKey, loginEventId)
       } catch {}
     },
 
