@@ -44,10 +44,7 @@ includesAll('session setup controls', [
   /<select v-model="reciterId" @change="refreshVerses"/,
   /@change="setPlaybackSpeed\(option\)"/,
   /value="auto" v-model="playMode"/,
-  /value="follow" v-model="playMode"/,
   /value="manual" v-model="playMode"/,
-  /v-model\.number="recitationWindowSeconds"/,
-  /option in recitationWindowOptions/,
   /t\('memorisation\.delay_between_recitations_secs'\)/,
   /<select v-model\.number="delay" class="select">/,
   /option in delayOptions/

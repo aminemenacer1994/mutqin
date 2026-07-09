@@ -2050,7 +2050,7 @@
   min-height: 28px;
   padding: 0 8px;
   border-radius: 999px;
-  border: 1px solid rgba(154, 103, 56, 0.14);
+  border: 0;
   background: rgba(255, 255, 255, 0.88);
   color: var(--text);
   display: inline-flex;
@@ -2138,9 +2138,9 @@
 }
 
 .self-check-modal-stage, .self-check-recorder-card, .self-check-attempts-card, .self-check-attempt-card {
-  border: 1px solid rgba(154, 103, 56, 0.14);
+  border: 0;
   background: linear-gradient(180deg, rgba(255, 252, 247, 0.96), rgba(250, 244, 236, 0.9));
-  box-shadow: 0 18px 40px rgba(85, 55, 26, 0.08);
+  box-shadow: none;
 }
 
 .self-check-modal-stage {
@@ -2210,9 +2210,9 @@
   border-radius: 18px;
   background: radial-gradient(circle at top, rgba(212, 176, 133, 0.2), transparent 55%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 240, 232, 0.96));
-  border: 1px solid rgba(154, 103, 56, 0.18);
+  border: 0;
   overflow: hidden;
-  transition: box-shadow 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+  transition: transform 0.22s ease, opacity 0.22s ease;
 }
 
 .self-check-modal-ayah-shell.is-peekable {
@@ -2221,7 +2221,7 @@
 }
 
 .self-check-modal-ayah-shell.is-peekable.is-blurred:hover {
-  box-shadow: inset 0 0 0 1px rgba(154, 103, 56, 0.2), 0 10px 24px rgba(154, 103, 56, 0.08);
+  transform: translateY(-1px);
 }
 
 .self-check-ayah-action {
@@ -2481,7 +2481,7 @@
 .self-check-review-card {
   padding: 14px;
   border-radius: 14px;
-  border: 1px solid rgba(154, 103, 56, 0.12);
+  border: 0;
   background: rgba(255, 255, 255, 0.62);
 }
 
@@ -3481,7 +3481,7 @@
 
 .action-btn-exit {
   background: rgba(255, 247, 243, 0.9);
-  border: 1px solid rgba(154, 103, 56, 0.14);
+  border: 0;
 }
 
 .action-btn-exit:hover {
@@ -3514,10 +3514,10 @@
 .recitation-check-panel {
   margin-top: 14px;
   padding: 16px;
-  border: 1px solid rgba(154, 103, 56, 0.16);
+  border: 0;
   border-radius: 16px;
   background: linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(250, 244, 236, 0.82));
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
 }
 
 .recitation-check-panel-inline {
@@ -3641,7 +3641,7 @@
 
 .recitation-live-review-compact {
   padding: 10px 12px;
-  border: 1px solid rgba(37, 112, 104, 0.18);
+  border: 0;
   border-radius: 12px;
   background: rgba(37, 112, 104, 0.06);
 }
@@ -3667,7 +3667,7 @@
   align-items: center;
   justify-content: flex-start;
   padding: 14px;
-  border: 1px solid rgba(154, 103, 56, 0.14);
+  border: 0;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.58);
   line-height: 2.1;
@@ -3744,7 +3744,7 @@
   gap: 4px;
   padding: 12px;
   border-radius: 14px;
-  border: 1px solid rgba(154, 103, 56, 0.14);
+  border: 0;
   background: rgba(255, 255, 255, 0.68);
 }
 
@@ -3771,7 +3771,7 @@
   display: grid;
   gap: 6px;
   padding: 14px;
-  border: 1px solid rgba(154, 103, 56, 0.14);
+  border: 0;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.68);
 }
@@ -3883,7 +3883,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(214, 183, 132, 0.18);
+  border: 0;
   background: linear-gradient(180deg, #fffdf8, #f7efe5);
   color: var(--text);
   height: min(92vh, 920px);
@@ -3891,10 +3891,9 @@
 }
 
 .memorisation-checker-header {
-  border-bottom: 1px solid rgba(214, 183, 132, 0.14);
+  border: 0;
   flex: 0 0 auto;
   background: rgba(255, 255, 255, 0.72);
-  border-bottom-color: rgba(154, 103, 56, 0.14);
 }
 
 .memorisation-checker-body {
@@ -6834,7 +6833,7 @@ html {
   min-height: 24px;
   padding: 3px 8px;
   border-radius: 999px;
-  border: 1px solid rgba(154, 103, 56, 0.14);
+  border: 0;
   background: rgba(255, 255, 255, 0.72);
   color: rgba(48, 42, 35, 0.82);
   font-size: 0.72rem;
@@ -9202,7 +9201,7 @@ body.memorisation-page nav.navbar.app-navbar {
   gap: 6px;
   min-height: 30px;
   padding: 5px 9px;
-  border: 1px solid rgba(154, 103, 56, 0.14);
+  border: 0;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.66);
   color: var(--text);
@@ -11258,8 +11257,8 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .recitation-review-ayah {
   padding: 18px 20px;
-  border: 1px solid rgba(154, 103, 56, 0.12);
-  border-radius: 10px;
+  border: 0;
+  border-radius: 0;
   color: var(--text);
   font-family: "Uthmanic Hafs", "Amiri Quran", "Scheherazade New", serif;
   font-size: clamp(1.35rem, 2.8vw, 2.35rem);
@@ -11967,7 +11966,7 @@ button:active {
   overflow: visible;
   padding: 12px;
   border-radius: 10px;
-  border: 1px solid rgba(184, 127, 67, 0.28);
+  border: 0;
   background: #241b16;
   box-shadow: none;
 }
@@ -12379,10 +12378,9 @@ button:active {
 
 .recitation-review-ayah {
   padding: 12px 14px;
-  border: 1px solid rgba(47, 111, 88, 0.22);
+  border: 0;
   border-radius: 10px;
   background: var(--surface-strong);
-  border-color: var(--border);
 }
 
 .recitation-review-clean {
@@ -15091,7 +15089,7 @@ button:active {
   gap: 0.8rem;
 }
 
-.self-check-modal .self-check-modal-stage, .self-check-modal .self-check-recorder-card, .memorisation-checker-modal .memorisation-checker-workspace, .memorisation-checker-modal .memorisation-checker-ayah-panel, .memorisation-checker-modal .memorisation-checker-live, .memorisation-checker-modal .memorisation-checker-results, .recitation-check-panel-inline {
+.modal-content.self-check-modal:not(.recitation-review-modal) .self-check-modal-stage, .modal-content.self-check-modal:not(.recitation-review-modal) .self-check-recorder-card, .modal-content.memorisation-checker-modal:not(.recitation-review-modal) .memorisation-checker-workspace, .modal-content.memorisation-checker-modal:not(.recitation-review-modal) .memorisation-checker-ayah-panel, .modal-content.memorisation-checker-modal:not(.recitation-review-modal) .memorisation-checker-live, .modal-content.memorisation-checker-modal:not(.recitation-review-modal) .memorisation-checker-results, .modal-content.self-check-modal:not(.recitation-review-modal) .recitation-check-panel-inline {
   border-radius: 18px;
   border: 1px solid rgba(177, 136, 94, 0.18);
   background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(250, 244, 235, 0.96));
@@ -15517,7 +15515,7 @@ button:active {
   min-height: 128px;
   padding: 1rem 1.05rem;
   border-radius: 18px;
-  border: 1px solid rgba(177, 136, 94, 0.18);
+  border: 0;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(249, 243, 235, 0.95));
   display: grid;
   align-content: start;
@@ -15550,7 +15548,6 @@ button:active {
 }
 
 .ai-review-card {
-  border-color: rgba(150, 88, 34, 0.24);
   background: linear-gradient(180deg, rgba(255, 248, 239, 0.98), rgba(250, 237, 220, 0.96));
 }
 
@@ -16049,7 +16046,7 @@ button:active {
   align-items: center !important;
   gap: 0.75rem !important;
   border: 0 !important;
-  box-shadow: 0 14px 32px rgba(74, 53, 31, 0.08) !important;
+  box-shadow: none !important;
 }
 
 .memorisation-checker-header-actions, .self-check-header-tools {
@@ -16087,7 +16084,7 @@ button:active {
 
 .self-check-modal .self-check-modal-stage, .self-check-modal .self-check-recorder-card, .memorisation-checker-modal .memorisation-checker-workspace, .memorisation-checker-modal .memorisation-checker-target-panel, .memorisation-checker-modal .memorisation-checker-live, .memorisation-checker-modal .memorisation-checker-results, .recitation-check-panel-inline, .recitation-next-card, .recitation-result-stat {
   border: 0;
-  box-shadow: 0 14px 30px rgba(71, 51, 31, 0.08);
+  box-shadow: none;
 }
 
 .memorisation-checker-modal .memorisation-checker-live, .memorisation-checker-modal .memorisation-checker-results, .recitation-check-panel-inline {
@@ -16751,11 +16748,17 @@ button:active {
   gap: 0.45rem;
 }
 
-.modal-header, .self-check-modal .self-check-modal-header, .memorisation-checker-modal .memorisation-checker-header, .recordings-library-header, .session-analytics-header {
+.modal-header, .self-check-modal:not(.recitation-review-modal) .self-check-modal-header, .memorisation-checker-modal:not(.recitation-review-modal) .memorisation-checker-header, .recordings-library-header, .session-analytics-header {
   min-height: auto;
   padding: clamp(1rem, 2vw, 1.35rem) clamp(1rem, 2.4vw, 1.6rem) !important;
   align-items: center !important;
   border-bottom: 1px solid var(--border);
+}
+
+.modal-content.recitation-review-modal .modal-header,
+.modal-content.recitation-review-modal .self-check-modal-header,
+.modal-content.recitation-review-modal .memorisation-checker-header {
+  border-bottom: 0 !important;
 }
 
 .modal-header h2, .self-check-modal .self-check-modal-head-copy h2, .memorisation-checker-modal .self-check-modal-head-copy h2, .recordings-library-head-copy h2, .session-analytics-head-copy h2 {
@@ -17282,7 +17285,7 @@ button:active {
 }
 
 .memorisation-checker-modal .memorisation-checker-stage, .memorisation-checker-modal .self-check-recorder-card {
-  border: 1px solid rgba(154, 103, 56, 0.14);
+  border: 0;
   background: linear-gradient(180deg, rgba(255, 252, 247, 0.96), rgba(250, 244, 236, 0.9));
   box-shadow: 0 18px 40px rgba(85, 55, 26, 0.08);
 }
@@ -17380,7 +17383,6 @@ button:active {
 }
 
 .memorisation-checker-modal.self-check-modal .memorisation-checker-results .ai-review-card {
-  border-color: rgba(150, 88, 34, 0.24);
   background: linear-gradient(180deg, rgba(255, 248, 239, 0.98), rgba(250, 237, 220, 0.96));
 }
 
@@ -17438,12 +17440,12 @@ button:active {
 
 .modal-content.self-check-modal, .modal-content.memorisation-checker-modal {
   background: #fff !important;
-  border: 1px solid rgba(168, 127, 85, 0.14) !important;
+  border: 0 !important;
   box-shadow: none !important;
 }
 
 .modal-content.self-check-modal .modal-header, .modal-content.memorisation-checker-modal .modal-header {
-  border-bottom: 1px solid rgba(168, 127, 85, 0.12);
+  border: 0 !important;
   background: color-mix(in srgb, var(--surface) 96%, white) !important;
 }
 
@@ -17460,7 +17462,7 @@ button:active {
 
 .modal-content.self-check-modal .self-check-modal-stage, .modal-content.memorisation-checker-modal .memorisation-checker-stage, .modal-content.self-check-modal .self-check-recorder-card, .modal-content.memorisation-checker-modal .self-check-recorder-card, .modal-content.self-check-modal .recitation-check-panel, .modal-content.memorisation-checker-modal .recitation-check-panel {
   background: #fff !important;
-  border: 1px solid rgba(168, 127, 85, 0.12) !important;
+  border: 0 !important;
   box-shadow: none !important;
 }
 
@@ -17475,38 +17477,38 @@ button:active {
 .modal-content.self-check-modal .recitation-result-stat, .modal-content.memorisation-checker-modal .recitation-result-stat {
   min-height: 122px;
   padding: 0.9rem 1rem !important;
-  border: 1px solid rgba(168, 127, 85, 0.12) !important;
+  border: 0 !important;
   background: linear-gradient(180deg, #ffffff, #fbf7f0) !important;
   box-shadow: none !important;
 }
 
 .modal-content.self-check-modal .recitation-result-stat.tone-green, .modal-content.memorisation-checker-modal .recitation-result-stat.tone-green {
   background: linear-gradient(180deg, rgba(239, 250, 244, 0.98), rgba(228, 245, 236, 0.96)) !important;
-  border-color: rgba(47, 111, 88, 0.22);
+  border: 0 !important;
   color: #245d4a !important;
 }
 
 .modal-content.self-check-modal .recitation-result-stat.tone-amber, .modal-content.memorisation-checker-modal .recitation-result-stat.tone-amber {
   background: linear-gradient(180deg, rgba(255, 248, 235, 0.98), rgba(253, 240, 213, 0.96)) !important;
-  border-color: rgba(188, 132, 39, 0.22);
+  border: 0 !important;
   color: #946118 !important;
 }
 
 .modal-content.self-check-modal .recitation-result-stat.tone-red, .modal-content.memorisation-checker-modal .recitation-result-stat.tone-red {
   background: linear-gradient(180deg, rgba(255, 241, 238, 0.98), rgba(252, 229, 224, 0.96)) !important;
-  border-color: rgba(177, 63, 50, 0.22);
+  border: 0 !important;
   color: #982f22 !important;
 }
 
 .modal-content.self-check-modal .recitation-result-stat.tone-blue, .modal-content.memorisation-checker-modal .recitation-result-stat.tone-blue {
   background: linear-gradient(180deg, rgba(240, 246, 255, 0.98), rgba(228, 239, 255, 0.96)) !important;
-  border-color: rgba(79, 118, 184, 0.22);
+  border: 0 !important;
   color: #31579c !important;
 }
 
 .modal-content.self-check-modal .recitation-next-card, .modal-content.memorisation-checker-modal .recitation-next-card {
   background: linear-gradient(180deg, #ffffff, #fbf7f0) !important;
-  border: 1px solid rgba(168, 127, 85, 0.12) !important;
+  border: 0 !important;
   box-shadow: none !important;
 }
 
@@ -19620,12 +19622,12 @@ textarea {
   vertical-align: baseline !important;
 }
 
-.modal-content.self-check-modal .self-check-modal-body, .modal-content.memorisation-checker-modal .memorisation-checker-body {
+.modal-content.self-check-modal:not(.recitation-review-modal) .self-check-modal-body, .modal-content.memorisation-checker-modal:not(.recitation-review-modal) .memorisation-checker-body {
   padding: clamp(0.9rem, 2vw, 1.4rem) !important;
   gap: 1rem !important;
 }
 
-.modal-content.self-check-modal .self-check-modal-stage, .modal-content.memorisation-checker-modal .memorisation-checker-stage {
+.modal-content.self-check-modal:not(.recitation-review-modal) .self-check-modal-stage, .modal-content.memorisation-checker-modal:not(.recitation-review-modal) .memorisation-checker-stage {
   padding: clamp(0.95rem, 2vw, 1.45rem) !important;
   gap: 1rem !important;
 }
@@ -20135,7 +20137,7 @@ textarea {
   display: grid !important;
   gap: 1rem !important;
   margin: 1rem 0 0 !important;
-  padding: 1rem 1rem 1.1rem !important;
+  padding: 1.25rem !important;
 }
 
 .self-check-modal .recitation-check-head, .memorisation-checker-modal .recitation-check-head {
@@ -20148,7 +20150,8 @@ textarea {
 }
 
 .self-check-modal .recitation-live-review, .memorisation-checker-modal .recitation-live-review, .self-check-modal .recitation-check-body, .memorisation-checker-modal .recitation-check-body {
-  padding: 0;
+  padding: 0.75rem 0;
+  margin: 0.75rem 0 0;
 }
 
 .self-check-modal .recitation-check-head-actions, .memorisation-checker-modal .recitation-check-head-actions {
@@ -20156,7 +20159,8 @@ textarea {
 }
 
 .self-check-modal .self-check-modal-ayah-shell, .memorisation-checker-modal .self-check-modal-ayah-shell, .self-check-modal .self-check-modal-stage, .memorisation-checker-modal .memorisation-checker-stage, .self-check-modal .self-check-recorder-card, .memorisation-checker-modal .self-check-recorder-card, .self-check-modal .recitation-check-panel, .memorisation-checker-modal .recitation-check-panel, .memorisation-checker-modal .memorisation-checker-body {
-  padding: 0;
+  padding: 1.25rem;
+  margin: 0;
 }
 
 .verse-card .verse-arabic-wrap, .verse-arabic, .mushaf-ayah-text, .self-check-modal-ayah, .memorisation-checker-ayah, .recitation-review-ayah, .session-evaluation-ayah {
@@ -21266,7 +21270,7 @@ textarea {
 .memorisation-checker-modal .memorisation-checker-stage,
 .memorisation-checker-modal .self-check-recorder-card {
   background: color-mix(in srgb, var(--surface) 98%, white 2%);
-  border-color: color-mix(in srgb, var(--border) 88%, transparent);
+  border: 0;
 }
 
 .self-check-modal .self-check-review-head {
@@ -23906,6 +23910,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .recitation-review-ayah {
   margin-bottom: 14px;
   padding: 18px 20px !important;
+  border: 0 !important;
 }
 
 .modal-content.self-check-modal .self-check-toolbar-btn.self-check-toolbar-btn-text,
@@ -23930,24 +23935,24 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: var(--accent-strong);
 }
 
-[data-theme="dark"] .modal-content.self-check-modal,
-[data-theme="dark"] .modal-content.self-check-modal .modal-header,
-[data-theme="dark"] .modal-content.self-check-modal .self-check-modal-body,
-[data-theme="dark"] .modal-content.self-check-modal .self-check-modal-stage,
-[data-theme="dark"] .modal-content.self-check-modal .self-check-recorder-card,
-[data-theme="dark"] .modal-content.self-check-modal .recitation-check-panel-inline,
-[data-theme="dark"] .modal-content.self-check-modal .recitation-result-stat,
-[data-theme="dark"] .modal-content.self-check-modal .recitation-next-card,
-[data-theme="dark"] .modal-content.self-check-modal .recitation-review-ayah,
-.dark-mode .modal-content.self-check-modal,
-.dark-mode .modal-content.self-check-modal .modal-header,
-.dark-mode .modal-content.self-check-modal .self-check-modal-body,
-.dark-mode .modal-content.self-check-modal .self-check-modal-stage,
-.dark-mode .modal-content.self-check-modal .self-check-recorder-card,
-.dark-mode .modal-content.self-check-modal .recitation-check-panel-inline,
-.dark-mode .modal-content.self-check-modal .recitation-result-stat,
-.dark-mode .modal-content.self-check-modal .recitation-next-card,
-.dark-mode .modal-content.self-check-modal .recitation-review-ayah {
+[data-theme="dark"] .modal-content.self-check-modal:not(.recitation-review-modal),
+[data-theme="dark"] .modal-content.self-check-modal:not(.recitation-review-modal) .modal-header,
+[data-theme="dark"] .modal-content.self-check-modal:not(.recitation-review-modal) .self-check-modal-body,
+[data-theme="dark"] .modal-content.self-check-modal:not(.recitation-review-modal) .self-check-modal-stage,
+[data-theme="dark"] .modal-content.self-check-modal:not(.recitation-review-modal) .self-check-recorder-card,
+[data-theme="dark"] .modal-content.self-check-modal:not(.recitation-review-modal) .recitation-check-panel-inline,
+[data-theme="dark"] .modal-content.self-check-modal:not(.recitation-review-modal) .recitation-result-stat,
+[data-theme="dark"] .modal-content.self-check-modal:not(.recitation-review-modal) .recitation-next-card,
+[data-theme="dark"] .modal-content.self-check-modal:not(.recitation-review-modal) .recitation-review-ayah,
+.dark-mode .modal-content.self-check-modal:not(.recitation-review-modal),
+.dark-mode .modal-content.self-check-modal:not(.recitation-review-modal) .modal-header,
+.dark-mode .modal-content.self-check-modal:not(.recitation-review-modal) .self-check-modal-body,
+.dark-mode .modal-content.self-check-modal:not(.recitation-review-modal) .self-check-modal-stage,
+.dark-mode .modal-content.self-check-modal:not(.recitation-review-modal) .self-check-recorder-card,
+.dark-mode .modal-content.self-check-modal:not(.recitation-review-modal) .recitation-check-panel-inline,
+.dark-mode .modal-content.self-check-modal:not(.recitation-review-modal) .recitation-result-stat,
+.dark-mode .modal-content.self-check-modal:not(.recitation-review-modal) .recitation-next-card,
+.dark-mode .modal-content.self-check-modal:not(.recitation-review-modal) .recitation-review-ayah {
   background: linear-gradient(180deg, rgba(25, 24, 22, 0.98), rgba(18, 17, 16, 0.96)) !important;
   border-color: rgba(255, 232, 205, 0.12) !important;
   color: #f4ede4 !important;
@@ -24135,12 +24140,19 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  margin: 0 0 1rem;
   padding: 12px 14px;
   background: var(--accent-light);
   border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
   border-radius: 12px;
   color: var(--text);
+}
+
+.practice-turn-callout--tracked {
+  position: fixed;
+  z-index: 12250;
+  margin: 0;
+  pointer-events: none;
+  transition: top 180ms ease, left 180ms ease, width 180ms ease;
 }
 
 .practice-turn-callout i {
@@ -24153,12 +24165,17 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .practice-turn-callout span {
   font-size: 0.92rem;
   line-height: 1.45;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
 .practice-turn-callout.is-talqin {
   background: color-mix(in srgb, var(--accent-light) 72%, var(--surface));
   border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+.practice-turn-callout.is-talqin span {
+  color: var(--text);
 }
 
 [data-theme="dark"] .practice-turn-callout {
@@ -24168,6 +24185,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 [data-theme="dark"] .practice-turn-callout span {
   color: var(--text-muted);
+}
+
+[data-theme="dark"] .practice-turn-callout.is-talqin span {
+  color: var(--text);
 }
 
 .workspace-header-view-controls .view-mode-switch-track {
@@ -24308,4 +24329,192 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   border-color: rgba(120, 90, 60, 0.1);
   color: rgba(72, 54, 38, 0.45);
   box-shadow: none;
+}
+
+/* Recitation review modals: borderless layout with consistent spacing */
+.modal-content.recitation-review-modal {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: var(--surface-strong) !important;
+}
+
+.modal-content.recitation-review-modal :is(
+  .modal-header,
+  .self-check-modal-header,
+  .memorisation-checker-header,
+  .modal-body,
+  .self-check-modal-body,
+  .memorisation-checker-body,
+  .self-check-modal-stage,
+  .memorisation-checker-stage,
+  .self-check-modal-ayah-shell,
+  .self-check-recorder-card,
+  .self-check-review-card,
+  .self-check-live-card,
+  .self-check-attempts-card,
+  .self-check-attempt-card,
+  .recitation-check-panel,
+  .recitation-check-panel-inline,
+  .recitation-live-review,
+  .recitation-live-review-compact,
+  .recitation-check-body,
+  .recitation-check-results,
+  .memorisation-checker-results,
+  .recitation-result-stat,
+  .recitation-next-card,
+  .recitation-review-ayah,
+  .recitation-word-stream,
+  .recitation-check-idle,
+  .recitation-check-footnote,
+  .self-check-status,
+  .self-check-status-success,
+  .self-check-status-warning,
+  .self-check-status-info,
+  .technique-peek-hint,
+  .memorisation-checker-workspace,
+  .memorisation-checker-ayah-panel,
+  .recitation-word-chip,
+  .recitation-result-close,
+  .recitation-result-reset,
+  .modal-close-btn,
+  .self-check-library-link,
+  .self-check-toolbar-btn,
+  .self-check-action-btn,
+  .ai-review-card,
+  .self-check-live-stage
+) {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.modal-content.recitation-review-modal .modal-header,
+.modal-content.recitation-review-modal .self-check-modal-header,
+.modal-content.recitation-review-modal .memorisation-checker-header {
+  padding: 1.35rem 1.6rem 1rem !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+.modal-content.recitation-review-modal .modal-body,
+.modal-content.recitation-review-modal .self-check-modal-body,
+.modal-content.recitation-review-modal .memorisation-checker-body {
+  display: grid !important;
+  gap: 1.35rem !important;
+  padding: 0 1.6rem 1.6rem !important;
+}
+
+.modal-content.recitation-review-modal .self-check-modal-stage,
+.modal-content.recitation-review-modal .memorisation-checker-stage,
+.modal-content.recitation-review-modal .self-check-recorder-card,
+.modal-content.recitation-review-modal .recitation-check-panel,
+.modal-content.recitation-review-modal .recitation-check-panel-inline {
+  display: grid !important;
+  gap: 1rem !important;
+  padding: 1.25rem !important;
+  margin: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+.modal-content.recitation-review-modal .self-check-modal-ayah-shell {
+  padding: 1.5rem 1.25rem !important;
+  margin: 0.5rem 0 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+.modal-content.recitation-review-modal .self-check-modal-recorder-grid,
+.modal-content.recitation-review-modal .memorisation-checker-recorder-grid {
+  gap: 1.25rem !important;
+  margin-top: 0.25rem !important;
+}
+
+.modal-content.recitation-review-modal .self-check-recorder-head,
+.modal-content.recitation-review-modal .recitation-check-head,
+.modal-content.recitation-review-modal .self-check-section-head {
+  margin: 0 0 0.85rem !important;
+  padding: 0 !important;
+  gap: 0.85rem !important;
+}
+
+.modal-content.recitation-review-modal :is(
+  .recitation-check-status,
+  .recitation-check-error,
+  .recitation-check-actions,
+  .recitation-live-review,
+  .recitation-check-body,
+  .recitation-check-results,
+  .memorisation-checker-results,
+  .recitation-check-footnotes,
+  .recitation-result-actions
+) {
+  margin: 0.85rem 0 0 !important;
+  padding: 0 !important;
+  gap: 0.85rem !important;
+}
+
+.modal-content.recitation-review-modal :is(
+  .recitation-result-stats,
+  .memorisation-checker-result-grid,
+  .recitation-insights-grid
+) {
+  gap: 0.85rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.modal-content.recitation-review-modal :is(
+  .recitation-result-stat,
+  .recitation-next-card,
+  .self-check-status
+) {
+  padding: 1rem 1.1rem !important;
+  margin: 0 !important;
+}
+
+.modal-content.recitation-review-modal .recitation-review-ayah {
+  margin: 1rem 0 !important;
+  padding: 1.25rem 0 !important;
+  background: transparent !important;
+}
+
+.modal-content.recitation-review-modal .recitation-word-stream {
+  padding: 0.75rem 0 !important;
+  margin: 0 !important;
+}
+
+.modal-content.recitation-review-modal .recitation-check-footnotes {
+  margin-top: 1rem !important;
+  gap: 0.75rem !important;
+}
+
+.modal-content.recitation-review-modal .recitation-result-actions {
+  margin-top: 1rem !important;
+  gap: 0.75rem !important;
+}
+
+[data-theme="dark"] .modal-content.recitation-review-modal,
+[data-theme="dark"] .modal-content.recitation-review-modal :is(
+  .modal-header,
+  .self-check-modal-header,
+  .memorisation-checker-header,
+  .self-check-modal-stage,
+  .self-check-recorder-card,
+  .recitation-check-panel-inline,
+  .recitation-result-stat,
+  .recitation-next-card,
+  .recitation-review-ayah,
+  .self-check-modal-ayah-shell
+) {
+  border: 0 !important;
+  border-bottom: 0 !important;
+  border-color: transparent !important;
+  background: var(--surface-strong) !important;
+  background-image: none !important;
+  color: var(--text) !important;
 }

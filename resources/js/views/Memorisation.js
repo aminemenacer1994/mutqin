@@ -276,6 +276,8 @@ export default {
       countdownValue: 3,
       countdownInterval: null,
       talqinPauseTimer: null,
+      practiceTurnCalloutStyle: {},
+      practiceTurnCalloutFrame: null,
       activeWaveIndex: 0,
       showSaveNameModal: false,
       saveSessionName: '',
@@ -3034,9 +3036,12 @@ export default {
     },
 
     playMode: {
-      get() { return this.currentConfig.playMode },
+      get() {
+        const mode = this.currentConfig.playMode
+        return mode === 'follow' ? 'auto' : mode
+      },
       set(val) {
-        const safeMode = ['auto', 'manual', 'follow'].includes(val) ? val : 'auto'
+        const safeMode = ['auto', 'manual'].includes(val) ? val : 'auto'
         const store = this.getModeStore(this.currentMode)
         if (store) store.playMode = safeMode
       }
@@ -3750,6 +3755,10 @@ export default {
     window.addEventListener('keydown', this.handleGlobalKeydown)
     window.addEventListener('keyup', this.handleGlobalKeyup)
     window.addEventListener('scroll', this.handleWindowScroll, { passive: true })
+    this.handlePracticeTurnCalloutResize = () => {
+      if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
+    }
+    window.addEventListener('resize', this.handlePracticeTurnCalloutResize, { passive: true })
     document.addEventListener('click', this.handleClickOutside)
     this.queueStatsVisualTick()
     if (this.showTools) {
@@ -3789,6 +3798,15 @@ export default {
     window.removeEventListener('keydown', this.handleGlobalKeydown)
     window.removeEventListener('keyup', this.handleGlobalKeyup)
     window.removeEventListener('scroll', this.handleWindowScroll)
+    if (this.handlePracticeTurnCalloutResize) {
+      window.removeEventListener('resize', this.handlePracticeTurnCalloutResize)
+      this.handlePracticeTurnCalloutResize = null
+    }
+    if (this.practiceTurnCalloutFrame) {
+      if (typeof window.cancelAnimationFrame === 'function') window.cancelAnimationFrame(this.practiceTurnCalloutFrame)
+      window.clearTimeout(this.practiceTurnCalloutFrame)
+      this.practiceTurnCalloutFrame = null
+    }
     this.syncBodyScrollLock(false)
     this.clearTouchPeek()
     this.blurPeekHoldingSpace = false
@@ -4075,6 +4093,27 @@ export default {
     activeVerseKey(newVal) {
       this.persistSessionState()
       if (this.showWordByWord) this.restoreWordScroll(newVal)
+      if (this.practiceTurnCalloutVisible) this.$nextTick(() => this.schedulePracticeTurnCalloutSync())
+    },
+
+    practiceTurnCalloutVisible(newVal) {
+      if (newVal) {
+        this.$nextTick(() => this.schedulePracticeTurnCalloutSync())
+        return
+      }
+      this.practiceTurnCalloutStyle = {}
+    },
+
+    effectiveActiveVerseKey() {
+      if (this.practiceTurnCalloutVisible) this.$nextTick(() => this.schedulePracticeTurnCalloutSync())
+    },
+
+    readingViewMode() {
+      if (this.practiceTurnCalloutVisible) this.$nextTick(() => this.schedulePracticeTurnCalloutSync())
+    },
+
+    recitationWindowRemaining() {
+      if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
     },
 
     focusModeEnabled: 'persistControlState',
@@ -5150,20 +5189,22 @@ export default {
         this.uiAudioContext = context
         if (context.state === 'suspended') context.resume()
         const tones = {
-          open: [520, 0.04],
-          complete: [660, 0.055],
-          save: [740, 0.06],
-          error: [240, 0.055],
-          tap: [460, 0.035]
+          open: [520, 0.04, 0.018, 'sine'],
+          complete: [660, 0.055, 0.018, 'sine'],
+          save: [740, 0.06, 0.018, 'sine'],
+          error: [240, 0.055, 0.018, 'sine'],
+          tap: [460, 0.035, 0.018, 'sine'],
+          talqin: [920, 0.2, 0.16, 'square'],
+          talqinAccent: [1180, 0.22, 0.14, 'square']
         }
-        const [frequency, duration] = tones[kind] || tones.tap
+        const [frequency, duration, peakGain = 0.018, wave = 'sine'] = tones[kind] || tones.tap
         const oscillator = context.createOscillator()
         const gain = context.createGain()
         const now = context.currentTime
-        oscillator.type = 'sine'
+        oscillator.type = wave
         oscillator.frequency.setValueAtTime(frequency, now)
         gain.gain.setValueAtTime(0.0001, now)
-        gain.gain.exponentialRampToValueAtTime(0.018, now + 0.01)
+        gain.gain.exponentialRampToValueAtTime(peakGain, now + 0.01)
         gain.gain.exponentialRampToValueAtTime(0.0001, now + duration)
         oscillator.connect(gain)
         gain.connect(context.destination)
@@ -5253,6 +5294,61 @@ export default {
       }
       return Math.max(0, Number(this.actualGapDelay || 0))
     },
+    playTalqinTurnAlert() {
+      if (!this.talqinModeActive) return
+      this.playUiTone('talqin')
+      window.setTimeout(() => {
+        if (this.talqinRecitationTurnActive) this.playUiTone('talqinAccent')
+      }, 180)
+    },
+
+    syncPracticeTurnCalloutPosition() {
+      if (!this.practiceTurnCalloutVisible) {
+        this.practiceTurnCalloutStyle = {}
+        return
+      }
+
+      const key = this.effectiveActiveVerseKey
+      const anchor = key
+        ? document.querySelector(`.verse-card[data-verse-key="${key}"], .mushaf-ayah[data-verse-key="${key}"]`)
+        : null
+      const trackHost = document.querySelector('.verses-grid, .mushaf-workspace, .workspace-shell')
+      const hostRect = trackHost?.getBoundingClientRect()
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0
+
+      if (!anchor || !hostRect) {
+        this.practiceTurnCalloutStyle = { display: 'none' }
+        return
+      }
+
+      const anchorRect = anchor.getBoundingClientRect()
+      const horizontalPadding = 12
+      const left = Math.max(horizontalPadding, hostRect.left + horizontalPadding)
+      const width = Math.max(240, Math.min(hostRect.width - horizontalPadding * 2, viewportWidth - left - horizontalPadding))
+      const calloutHeight = 52
+      const margin = 8
+      let top = anchorRect.top - calloutHeight - margin
+      const minTop = 72
+      if (top < minTop) top = Math.min(anchorRect.bottom + margin, (window.innerHeight || 0) - calloutHeight - margin)
+
+      this.practiceTurnCalloutStyle = {
+        top: `${Math.max(minTop, top)}px`,
+        left: `${left}px`,
+        width: `${width}px`,
+      }
+    },
+
+    schedulePracticeTurnCalloutSync() {
+      if (this.practiceTurnCalloutFrame) return
+      const schedule = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
+        ? window.requestAnimationFrame.bind(window)
+        : callback => window.setTimeout(callback, 16)
+      this.practiceTurnCalloutFrame = schedule(() => {
+        this.practiceTurnCalloutFrame = null
+        this.syncPracticeTurnCalloutPosition()
+      })
+    },
+
     clearRecitationWindowTimer() {
       if (this.recitationWindowTimer) {
         window.clearInterval(this.recitationWindowTimer)
@@ -5266,6 +5362,7 @@ export default {
       const seconds = Math.max(5, Math.min(30, Number(this.recitationWindowSeconds || 8)))
       this.recitationWindowActive = true
       this.recitationWindowRemaining = seconds
+      this.$nextTick(() => this.schedulePracticeTurnCalloutSync())
       this.recitationWindowTimer = window.setInterval(() => {
         const nextRemaining = Math.max(0, Number(this.recitationWindowRemaining || 0) - 1)
         this.recitationWindowRemaining = nextRemaining
@@ -5880,6 +5977,8 @@ export default {
       this.clearTalqinPauseTimer()
       this.clearRecitationWindowTimer()
       this.recitationWindowActive = true
+      this.playTalqinTurnAlert()
+      this.$nextTick(() => this.schedulePracticeTurnCalloutSync())
       this.startRecitationWindow(() => {
         if (typeof onComplete === 'function') onComplete()
       })
@@ -13085,6 +13184,7 @@ export default {
         this.$nextTick(() => {
           const el = document.querySelector(`.verse-card[data-verse-key="${verseKey}"], .mushaf-ayah[data-verse-key="${verseKey}"]`)
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
         })
       }
 
@@ -13456,6 +13556,7 @@ export default {
         const nextCollapsed = current > this.lastScrollY && current > 120
         if (this.playerCollapsed !== nextCollapsed) this.playerCollapsed = nextCollapsed
         this.lastScrollY = current
+        if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
       })
     },
 

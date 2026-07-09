@@ -230,8 +230,9 @@
           </div>
           <div
             v-if="isDataReady && practiceTurnCalloutVisible"
-            class="practice-turn-callout"
+            class="practice-turn-callout practice-turn-callout--tracked"
             :class="{ 'is-talqin': talqinRecitationTurnActive }"
+            :style="practiceTurnCalloutStyle"
             role="status"
             aria-live="polite"
           >
@@ -689,17 +690,8 @@
                     <label>{{ t('memorisation.auto_advance') }}</label>
                     <div class="radio-group radio-group-tight">
                       <label class="radio"><input type="radio" name="session-auto-advance" value="auto" v-model="playMode"> {{ t('common.yes') }}</label>
-                      <label class="radio"><input type="radio" name="session-auto-advance" value="follow" v-model="playMode"> {{ t('memorisation.listen_then_recite') }}</label>
                       <label class="radio"><input type="radio" name="session-auto-advance" value="manual" v-model="playMode"> {{ t('common.no') }}</label>
                     </div>
-                    <small class="field-hint">{{ t('memorisation.auto_advance_mode_hint') }}</small>
-                  </div>
-                  <div v-if="playMode === 'follow'" class="field">
-                    <label><i class="bi bi-person-raised-hand"></i> {{ t('memorisation.recitation_window_secs') }}</label>
-                    <select v-model.number="recitationWindowSeconds" class="select">
-                      <option v-for="option in recitationWindowOptions" :key="`tool-recitation-window-${option}`" :value="option">{{ option }}s</option>
-                    </select>
-                    <small class="field-hint">{{ t('memorisation.recitation_window_hint') }}</small>
                   </div>
                   <div class="field">
                     <label><i class="bi bi-hourglass-split"></i> {{ t('memorisation.delay_between_recitations_secs') }}</label>
@@ -1994,7 +1986,7 @@
 
     <div v-if="showAiMemorisationCheckerModal && aiMemorisationCheckerVerse" class="modal-overlay memorisation-checker-overlay"
       @click.self="closeAiMemorisationCheckerModal">
-      <div class="modal-content self-check-modal memorisation-checker-modal" role="dialog" aria-modal="true"
+      <div class="modal-content self-check-modal memorisation-checker-modal recitation-review-modal" role="dialog" aria-modal="true"
         aria-labelledby="aiMemorisationCheckerTitle">
         <div class="modal-header self-check-modal-header memorisation-checker-header">
           <div class="self-check-modal-head-copy">
@@ -2069,7 +2061,7 @@
             class="self-check-modal-recorder-grid memorisation-checker-recorder-grid">
             <article class="self-check-recorder-card"
               :class="{ recording: aiMemorisationCheckerRecording, reviewing: !!aiMemorisationCheckerResult }">
-              <div style="padding:10px" class="self-check-recorder-head">
+              <div class="self-check-recorder-head">
                 <div>
                   <span class="self-check-kicker">{{ t('memorisation.memorisation_review') }}</span>
                   <strong>{{ aiMemorisationCheckerRecording ? 'AI memorisation listening' : aiMemorisationCheckerResult ? 'Review before saving' : 'AI memorisation review' }}</strong>
@@ -2191,7 +2183,7 @@
 
     <div v-if="showSelfCheckModal && selfCheckModalVerse" class="modal-overlay self-check-modal-overlay"
       @click.self="closeSelfCheckModal">
-      <div class="modal-content self-check-modal" role="dialog" aria-modal="true" aria-labelledby="selfCheckModalTitle">
+      <div class="modal-content self-check-modal recitation-review-modal" role="dialog" aria-modal="true" aria-labelledby="selfCheckModalTitle">
         <div class="modal-header self-check-modal-header">
           <div class="self-check-modal-head-copy">
             <div class="modal-context-badges">
@@ -2280,9 +2272,9 @@
 
           <section v-if="selfCheckReviewVisible" class="self-check-modal-recorder-grid"
             :class="{ 'saved-attempts-open': selfCheckSavedAttemptsVisible }">
-            <article class="self-check-recorder-card" style="padding:10px"
+            <article class="self-check-recorder-card"
               :class="{ recording: isSelfCheckRecording, reviewing: !!selfCheckActiveDraft }">
-              <div class="self-check-recorder-head" style="padding:10px">
+              <div class="self-check-recorder-head">
                 <div>
                   <span class="self-check-kicker">{{ t('memorisation.recitation_review') }}</span>
                   <strong>{{ recitationCheckRecording ? 'AI recitation listening' : selfCheckActiveDraft ? 'Review before saving': 'AI recitation review' }}</strong>
