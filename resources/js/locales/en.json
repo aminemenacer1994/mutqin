@@ -381,6 +381,18 @@
       "startNewSession": "Start new session",
       "continuePreviousSession": "Continue from previous session"
     },
+    "welcomeBack": {
+      "kicker": "Welcome back",
+      "startNewSession": "Start new session",
+      "continuePreviousSession": "Continue from previous session"
+    },
+    "sessionExit": {
+      "kicker": "Session paused",
+      "startNewSession": "Start new session",
+      "repeatSession": "Repeat session",
+      "continueSession": "Continue this session",
+      "saveSession": "Save this session"
+    },
     "sessionOverview": {
       "kicker": "Session Overview"
     },
@@ -530,7 +542,17 @@
     "onboarding": {
       "stepCounter": "Step {current} of {total}",
       "finish": "Finish",
-      "useSampleSession": "Use sample session",
+      "useSampleSession": "Play sample session",
+      "playSampleSession": "Play sample session",
+      "postSession": {
+        "kicker": "Sample session complete",
+        "title": "Masha'Allah!",
+        "message": "Masha'Allah! May Allah bless your efforts and make this Quran journey easy, steady, and full of barakah.",
+        "repeat": "Repeat this session",
+        "newSession": "Start a new session",
+        "save": "Save this session",
+        "savedToast": "This session has been successfully saved."
+      },
       "steps": {
         "setup": {
           "title": "Set up a session",
@@ -653,9 +675,16 @@
     "best_for_memorising_key_vocabulary": "Best for: Memorising key vocabulary",
     "anchor_points_per_ayah": "Anchor points per ayah",
     "saved_sessions": "Saved Sessions",
+    "saved_sessions_intro": "Your Hifz journeys, bookmarked with barakah — pick up a completed khatm or return to an ayah range still in progress.",
+    "completed_sessions": "Completed Sessions",
+    "completed_sessions_desc": "Sessions where you reached the end of your selected ayah range. Revisit for muraja'ah and strengthen your recall.",
+    "incomplete_sessions": "Incomplete Sessions",
+    "incomplete_sessions_desc": "Hifz sessions paused mid-range. Resume exactly where you left off and continue building your memorisation.",
+    "last_opened": "Last opened {date}",
+    "no_surah_selected": "No surah selected",
     "each_session_keeps_only_the_essentials_what_it_is_": "Each session keeps only the essentials: what it is, where it is, and how to get back in.",
     "no_saved_sessions_yet": "No saved sessions yet",
-    "save_your_current_session_to_get_started": "Save your current session to get started",
+    "save_your_current_session_to_get_started": "Preserve today's Hifz effort — save your current ayah range so you can return with intention.",
     "current_session": "Current Session",
     "today_first_advanced_analytics_stay_tucked_away_un": "Today first. Advanced analytics stay tucked away until you ask for them.",
     "show_advanced_metrics": "Show advanced metrics",
@@ -693,6 +722,15 @@
     "end_this_session_now": "End this session now?",
     "prepare_yourself": "Prepare yourself",
     "session_finished": "Session Finished",
+    "postSession": {
+      "kicker": "Session complete",
+      "title": "Masha'Allah!",
+      "message": "Masha'Allah! May Allah accept your efforts and grant you consistency in your memorisation.",
+      "repeat": "Repeat this session",
+      "newSession": "Start a new session",
+      "save": "Save this session",
+      "savedToast": "This session has been successfully saved."
+    },
     "congratulations_todays_hifz_session_is_complete": "Congratulations. Today&apos;s Hifz session is complete.",
     "memorised_today": "Memorised today",
     "new_ayahs": "New ayahs",
@@ -738,6 +776,7 @@
     "open_recordings": "Open recordings",
     "recording_is_not_available_in_this_browser": "Recording is not available in this browser.",
     "recite_check": "Recite Check",
+    "start_reciting_prompt": "Start reciting the ayah displayed below.",
     "use_the_ai_recite_tool_in_the_header_when_you_want": "Use the AI recite tool in the header when you want to begin.",
     "recall_mode": "Recall Mode",
     "recall_mode_hint": "Hide future words and reveal them as you recite.",
@@ -765,16 +804,36 @@
     "ai_recitation_feedback_is_a_guide_verify_important": "AI recitation feedback is a guide. Verify important mistakes against the ayah before you save or reset.",
     "recording_now": "Recording now",
     "stop_recording": "Stop Recording",
-    "review_this_attempt": "Review this attempt",
-    "self_rating": "Self-rating",
+    "review_this_attempt": "Listen back to your recitation",
+    "self_rating": "Self-assessment",
+    "self_rating_prompt": "How well did you recall this ayah from Hifz?",
     "selfCheckRatings": {
-      "excellent": "Excellent",
-      "good": "Good",
-      "review": "Needs Review",
-      "excellentHint": "Confident and accurate from memory",
-      "goodHint": "Mostly correct with minor hesitation",
-      "reviewHint": "Revisit this ayah before moving on"
+      "excellent": "Itqan",
+      "good": "Strong recall",
+      "fair": "Still building",
+      "review": "Needs muraja'ah",
+      "excellentHint": "Fluent and accurate — the ayah flows from memory with confidence",
+      "goodHint": "Solid recall with only minor hesitation on a word or two",
+      "fairHint": "Mostly there, but a few gaps remain — worth one more repetition",
+      "reviewHint": "Return to this ayah before moving forward in your Hifz"
     },
+    "selfCheckRecorder": {
+      "aiListening": "AI is listening to your recitation",
+      "reviewHeading": "Review your recitation",
+      "assessmentHeading": "Assess your Hifz",
+      "aiSessionReady": "When you are ready, recite your selected ayah range aloud and let AI guide your review.",
+      "aiAyahReady": "When you are ready, recite this ayah from memory and let AI guide your review.",
+      "recordingActive": "Your microphone is live — recite the ayah with tajweed, then press stop when you finish.",
+      "reviewDraft": "Listen to your recording, honestly rate your recall, then save this attempt to your library.",
+      "preparingMic": "Preparing your microphone for a clear recording, insha'Allah.",
+      "unsupportedBrowser": "Recording needs a browser with microphone support to capture your recitation.",
+      "idle": "Record yourself reciting this ayah from Hifz, then assess how well it stayed in memory."
+    },
+    "no_recordings_yet_desc": "Open Self-Check on any ayah, record your recitation, and save the attempt. Every saved recording is gathered here by surah and ayah.",
+    "no_matching_recording": "No matching recording",
+    "no_matching_recording_desc": "Try a different surah name or ayah number, or clear the search to see every saved recitation.",
+    "choose_a_recording": "Choose a recording",
+    "choose_a_recording_desc": "Select a saved recitation from the list to review your Hifz attempt in full.",
     "record_again": "Record Again",
     "recordings_library": "Recordings Library",
     "back_to_self_check": "Back to Self-Check",

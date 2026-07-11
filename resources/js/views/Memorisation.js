@@ -216,6 +216,7 @@ export default {
       hasContinueSession: false,
       startingFreshSessionSelection: false,
       returningUserChoicePending: false,
+      welcomeBackWorkspaceHidden: false,
       pendingResumeDefaultTab: '',
       showHifzPlanModal: false,
       hifzPlanExists: false,
@@ -290,7 +291,7 @@ export default {
       topCardMenuOpen: false,
       openVerseActionKey: '',
       verseFontSizes: {},
-      defaultFontSize: 120,
+      defaultFontSize: 100,
       fontSizeStep: 10,
       minFontSize: 100,
       maxFontSize: 280,
@@ -403,6 +404,12 @@ export default {
       onboardingManualLaunch: false,
       onboardingPath: 'casual',
       onboardingGoal: 'small',
+      onboardingSampleSessionActive: false,
+      showPostSessionModal: false,
+      showPostSessionConfetti: false,
+      postSessionSnapshot: null,
+      postSessionOffcanvasOpen: false,
+      sessionExitOffcanvasOpen: false,
       showAdvancedAnalytics: false,
       showAdvancedMetricsModal: false,
       showConfirmModal: false,
@@ -441,7 +448,7 @@ export default {
       hasContinueSession: false,
       continueSessionLabel: '',
       continueSessionPayload: null,
-      showResumeModal: false,
+      showWelcomeBackModal: false,
       showRenameRecordingModal: false,
       renameRecordingId: '',
       renameRecordingName: '',
@@ -508,6 +515,7 @@ export default {
       recallRevealCurrentIndex: -1,
       selfCheckSavedAttemptsVisible: false,
       selfCheckSavedAttemptsFilter: 'all',
+      selfCheckRatingsByAyahKey: {},
       themeObserver: null,
 
       // Reading options
@@ -536,7 +544,7 @@ export default {
         showTransliteration: false,
         showWordByWord: false,
         wordByWordAudioEnabled: true,
-        defaultFontSize: 120
+        defaultFontSize: 100
       },
 
       // Quiz state
@@ -598,6 +606,7 @@ export default {
       recordingsLibrary: [],
       recordingsLibrarySearch: '',
       selectedRecordingsAyahKey: '',
+      selectedRecordingsEntryId: '',
       recordingsNavExpanded: true,
       recordingValidationAuditState: {},
       pendingRecordingDeleteId: '',
@@ -1594,6 +1603,53 @@ export default {
     canContinueCurrentSession() {
       return !!(this.showSessionExitModal && this.hasSessionStarted && this.sessionExitSnapshot?.activeVerseKey)
     },
+    sessionExitPositionLabel() {
+      const key = this.sessionExitSnapshot?.activeVerseKey || this.effectiveActiveVerseKey
+      if (key && String(key).includes(':')) return String(key)
+      const chapterId = Number(this.chapterId || this.currentChapter?.id || 0)
+      const ayah = Math.max(1, Number(this.currentPosition || this.queueIndex + 1 || 1))
+      if (chapterId) return `${chapterId}:${ayah}`
+      return ''
+    },
+    sessionExitProgressPills() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      const done = Math.max(0, Number(snapshot.coveredAyahCount || this.currentPosition || 0))
+      const total = Math.max(1, Number(snapshot.totalAyahs || this.totalVerses || 1))
+      const pills = [
+        { key: 'progress', label: `You've done: ${done} of ${total}` }
+      ]
+      if (snapshot.durationLabel) {
+        pills.push({ key: 'time', label: `Time: ${snapshot.durationLabel}` })
+      }
+      return pills
+    },
+    sessionExitMotivationMessage() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      const percent = Math.max(0, Math.min(100, Number(snapshot.progressPercent || this.progressPercent || 0)))
+      if (percent >= 100) return 'Alhamdulillah, you completed this range!'
+      if (percent >= 75) return 'Almost there, Masha\'Allah!'
+      if (percent >= 50) return 'You\'re making steady progress, bi\'idhnillah.'
+      if (percent >= 25) return 'Keep going, Allah rewards consistency!'
+      return 'Every ayah brings you closer, keep going!'
+    },
+    sessionExitRemainingLabel() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      const done = Math.max(0, Number(snapshot.coveredAyahCount || this.currentPosition || 0))
+      const total = Math.max(1, Number(snapshot.totalAyahs || this.totalVerses || 1))
+      const remaining = Math.max(0, total - done)
+      const ayahLabel = remaining === 1 ? 'ayah' : 'ayahs'
+      let label = `What I have left: ${remaining} ${ayahLabel}`
+      if (snapshot.durationLabel && remaining > 0 && done > 0) {
+        const durationSeconds = this.sessionStartedAt
+          ? Math.max(0, Math.round((Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt)) / 1000))
+          : Math.max(0, Math.round(Number(this.currentTime || 0)))
+        const estimatedRemainingSeconds = Math.round((durationSeconds / Math.max(done, 1)) * remaining)
+        if (estimatedRemainingSeconds > 0) {
+          label += ` · ~${this.formatTime(estimatedRemainingSeconds)}`
+        }
+      }
+      return label
+    },
     sessionExitStatusPills() {
       const snapshot = this.sessionExitPreviewSnapshot || {}
       const pills = []
@@ -1645,7 +1701,21 @@ export default {
       return this.sortedSavedSessions.length > 0
     },
     shouldGateWorkspaceForResumeChoice() {
-      return !!(this.isLoggedIn && this.showResumeModal && this.returningUserChoicePending)
+      return !!(this.isLoggedIn && this.showWelcomeBackModal && this.returningUserChoicePending)
+    },
+    isWelcomeBackWorkspaceHidden() {
+      return !!(this.welcomeBackWorkspaceHidden || this.shouldGateWorkspaceForResumeChoice())
+    },
+    welcomeBackModalTitle() {
+      const name = String(this.auth?.name || '').trim()
+      if (name) return `Welcome back, ${name}`
+      return 'Welcome back'
+    },
+    welcomeBackModalSubtitle() {
+      if (this.canResumePreviousSession) {
+        return 'Pick up where you left off, start a fresh session, or sign out.'
+      }
+      return 'Start a new session or sign out to continue your memorisation journey.'
     },
     resumeSessionDetailItems() {
       if (!this.canResumePreviousSession) return []
@@ -1733,8 +1803,50 @@ export default {
         }
       }))
     },
+    postSessionConfettiPieces() {
+      return Array.from({ length: 72 }, (_, index) => ({
+        id: `post-session-confetti-${index}`,
+        style: {
+          '--onboarding-post-session-confetti-left': `${(index * 1.45) % 100}%`,
+          '--onboarding-post-session-confetti-delay': `${(index % 16) * 26}ms`,
+          '--onboarding-post-session-confetti-duration': `${1800 + ((index % 8) * 110)}ms`,
+          '--onboarding-post-session-confetti-rotate': `${(index % 2 === 0 ? 1 : -1) * (20 + (index * 5))}deg`,
+          '--onboarding-post-session-confetti-color': ['#2f6f58', '#d4a24f', '#ef8d62', '#7aa7ff', '#f4ce9d'][index % 5]
+        }
+      }))
+    },
+    postSessionPills() {
+      const snap = this.postSessionSnapshot
+      if (!snap) return []
+      const rangeValue = snap.rangeLabel
+        || (snap.chapterName
+          ? this.t('memorisation.common.rangeLabel', {
+            start: snap.rangeStart || this.rangeStart,
+            end: snap.rangeEnd || this.rangeEnd
+          })
+          : `${snap.rangeStart || this.rangeStart}-${snap.rangeEnd || this.rangeEnd}`)
+      return [
+        { key: 'surah', label: 'Surah', value: snap.chapterName || this.currentChapter?.name_simple || '—' },
+        { key: 'range', label: 'Range', value: rangeValue },
+        { key: 'time', label: 'Time taken', value: snap.durationLabel || this.formatTime(0) }
+      ]
+    },
+    postSessionUi() {
+      const base = this.onboardingSampleSessionActive
+        ? 'memorisation.onboarding.postSession'
+        : 'memorisation.postSession'
+      return {
+        kicker: this.t(`${base}.kicker`),
+        title: this.t(`${base}.title`),
+        message: this.t(`${base}.message`),
+        repeat: this.t(`${base}.repeat`),
+        newSession: this.t(`${base}.newSession`),
+        save: this.t(`${base}.save`),
+        savedToast: this.t(`${base}.savedToast`)
+      }
+    },
     sessionCompletionSnapshot() {
-      if (this.isOnboardingExperienceActive) return null
+      if (this.showPostLoginOnboarding) return null
       if (this.sessionEndedSnapshot && Object.keys(this.sessionEndedSnapshot).length) {
         return this.sessionEndedSnapshot
       }
@@ -1742,6 +1854,15 @@ export default {
     },
     isOnboardingExperienceActive() {
       return !!this.showPostLoginOnboarding
+    },
+    requiresFirstTimeOnboarding() {
+      if (!this.isLoggedIn) return false
+      if (this.onboardingManualLaunch) return false
+      if (this.auth?.just_logged_in && !this.auth?.just_registered) return false
+      return !!this.auth?.just_registered || !this.hasCompletedOnboarding()
+    },
+    isExistingUserLogin() {
+      return !!(this.auth?.just_logged_in && !this.auth?.just_registered)
     },
     hasMeaningfulSessionCompletionData() {
       if (!this.isSessionCompleted || !this.hasVerses) return false
@@ -2202,6 +2323,26 @@ export default {
         return rightTs - leftTs
       })
     },
+    completedSavedSessions() {
+      return this.sortedSavedSessions.filter(session => this.isSavedSessionComplete(session))
+    },
+    incompleteSavedSessions() {
+      return this.sortedSavedSessions.filter(session => !this.isSavedSessionComplete(session))
+    },
+    selfCheckRatingOptions() {
+      return [
+        { key: 'Excellent', tone: 'tone-excellent', icon: 'bi-stars' },
+        { key: 'Good', tone: 'tone-good', icon: 'bi-check-circle' },
+        { key: 'Fair', tone: 'tone-fair', icon: 'bi-circle-half' },
+        { key: 'Needs Review', tone: 'tone-review', icon: 'bi-arrow-repeat' }
+      ]
+    },
+    selfCheckSelectedRating() {
+      const ayahKey = this.selfCheckVerseKey || this.selfCheckDraft?.ayahKey || ''
+      if (this.selfCheckDraft?.result) return this.selfCheckDraft.result
+      if (ayahKey && this.selfCheckRatingsByAyahKey[ayahKey]) return this.selfCheckRatingsByAyahKey[ayahKey]
+      return ''
+    },
     hasRecordingsLibraryEntries() {
       return this.recordingsLibrary.length > 0
     },
@@ -2264,6 +2405,11 @@ export default {
     filteredRecordingsAyahCount() {
       return this.filteredRecordingsAyahGroups.reduce((sum, group) => sum + group.ayahs.length, 0)
     },
+    filteredRecordingsList() {
+      return this.filteredRecordingsAyahGroups.flatMap(group => (
+        group.ayahs.flatMap(ayahGroup => ayahGroup.recordings)
+      ))
+    },
     selectedRecordingsAyahGroup() {
       for (const surahGroup of this.filteredRecordingsAyahGroups) {
         const match = surahGroup.ayahs.find(ayah => ayah.ayahKey === this.selectedRecordingsAyahKey)
@@ -2280,6 +2426,12 @@ export default {
         ...recording,
         attemptNumber: total - index
       }))
+    },
+    selectedRecordingsEntry() {
+      if (!this.selectedRecordingsEntryId) return null
+      return this.filteredRecordingsList.find(recording => recording.id === this.selectedRecordingsEntryId)
+        || this.recordingsLibrary.find(recording => recording.id === this.selectedRecordingsEntryId)
+        || null
     },
     selfCheckModalVerse() {
       if (!this.selfCheckVerseKey) return null
@@ -3643,7 +3795,7 @@ export default {
 
     try {
       const authenticatedWorkspace = this.learningBackendEnabled()
-      const justRegistered = authenticatedWorkspace && !!this.auth?.just_registered
+      const needsFirstTimeOnboarding = authenticatedWorkspace && this.requiresFirstTimeOnboarding()
       this.syncWorkspaceStorageBridge()
       this.hydrateAuthenticatedWorkspaceStateFromLocalStorage()
       const localResumeSnapshot = this.captureLocalResumeSnapshot()
@@ -3749,7 +3901,7 @@ export default {
           )
         )
 
-      const shouldAutoRestorePersistedSession = !justRegistered
+      const shouldAutoRestorePersistedSession = !needsFirstTimeOnboarding
         && !this.auth?.just_logged_in
         && hasRestorableSession
 
@@ -3788,7 +3940,7 @@ export default {
             }
           }
         }
-        this.showResumeModal = false
+        this.showWelcomeBackModal = false
         this.returningUserChoicePending = false
         this.showTools = false
         this.tab = 'tools'
@@ -3808,13 +3960,13 @@ export default {
         })
       }
 
-      if (this.isLoggedIn && !justRegistered && !shouldAutoRestorePersistedSession && !this.canResumePreviousSession) {
-        this.maybeShowReadyToBeginModal()
+      if (this.isLoggedIn && !needsFirstTimeOnboarding && this.isExistingUserLogin()) {
+        this.maybeShowWelcomeBackModal()
       }
 
       if (shouldAutoRestorePersistedSession) {
         this.isDataReady = true
-      } else if (justRegistered) {
+      } else if (needsFirstTimeOnboarding) {
         this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
         this.openOnboardingModal()
         this.isDataReady = true
@@ -3996,11 +4148,38 @@ export default {
         this.topCardMenuOpen = false
       }
     },
+    showPostSessionModal(newVal) {
+      this.syncBodyScrollLock(newVal)
+      if (newVal) {
+        this.showTools = false
+        this.postSessionOffcanvasOpen = false
+        this.topCardMenuOpen = false
+      }
+    },
+    showWelcomeBackModal(newVal) {
+      this.syncBodyScrollLock(!!newVal)
+      if (newVal) {
+        this.showTools = false
+        this.topCardMenuOpen = false
+      }
+    },
+    showSessionExitModal(newVal) {
+      this.syncBodyScrollLock(!!newVal)
+      if (newVal) {
+        this.showTools = false
+        this.sessionExitOffcanvasOpen = false
+        this.topCardMenuOpen = false
+      }
+    },
     showSessionEndedModal(newVal) {
       this.syncBodyScrollLock(newVal)
     },
     showHelpLearningModal(newVal) {
       this.syncBodyScrollLock(newVal)
+    },
+    recordingsLibrarySearch() {
+      if (!this.showRecordingsLibrary) return
+      this.ensureSelectedRecordingsSelection()
     },
     'mutqinState.sessionState.lastSilentEvaluation': {
       handler() {
@@ -4454,18 +4633,25 @@ export default {
       }
     },
 
-    maybeShowReadyToBeginModal() {
+    maybeShowWelcomeBackModal() {
       if (!this.isLoggedIn) return
-      if (this.canResumePreviousSession) return
-      if (this.hasPersistedInProgressSession) return
-      if (this.readActiveSessionSnapshot()?.config?.chapterId) return
+      if (!this.isExistingUserLogin()) return
       if (!this.getReadyToBeginLoginEventId()) return
-      if (this.hasShownReadyToBeginModalForCurrentLogin()) return
-      this.markReadyToBeginModalShownForCurrentLogin()
+      if (this.hasShownWelcomeBackModalForCurrentLogin()) return
+      this.markWelcomeBackModalShownForCurrentLogin()
       this.returningUserChoicePending = true
+      this.welcomeBackWorkspaceHidden = false
       this.showTools = false
       this.topCardMenuOpen = false
-      this.showResumeModal = true
+      this.showWelcomeBackModal = true
+    },
+
+    hasShownWelcomeBackModalForCurrentLogin() {
+      return this.hasShownReadyToBeginModalForCurrentLogin()
+    },
+
+    markWelcomeBackModalShownForCurrentLogin() {
+      this.markReadyToBeginModalShownForCurrentLogin()
     },
 
     getReadyToBeginLoginEventId() {
@@ -5296,6 +5482,10 @@ export default {
       this.quranSearchVoiceActive = false
     },
 
+    playRecitationStartCue() {
+      this.playUiTone('recite')
+      this.showBanner(this.t('memorisation.start_reciting_prompt'), 'info', 3200)
+    },
     playUiTone(kind = 'tap') {
       if (typeof window === 'undefined') return
       const AudioContext = window.AudioContext || window.webkitAudioContext
@@ -5310,6 +5500,7 @@ export default {
           save: [740, 0.06, 0.018, 'sine'],
           error: [240, 0.055, 0.018, 'sine'],
           tap: [460, 0.035, 0.018, 'sine'],
+          recite: [880, 0.08, 0.022, 'sine'],
           talqin: [920, 0.2, 0.16, 'square'],
           talqinAccent: [1180, 0.22, 0.14, 'square']
         }
@@ -5347,11 +5538,12 @@ export default {
         || this.showSessionExitModal
         || this.showPlannerCompletionModal
         || this.showSessionEndedModal
-        || this.showResumeModal
+        || this.showWelcomeBackModal
         || this.showPlannerModal
         || this.showSessionAnalyticsModal
         || this.showHelpLearningModal
         || this.showPostLoginOnboarding
+        || this.showPostSessionModal
         || this.showHifzPlanModal
         || this.showAiMemorisationCheckerModal
       const shouldMarkPanelOpen = !!locked
@@ -5363,11 +5555,12 @@ export default {
         || this.showSessionExitModal
         || this.showPlannerCompletionModal
         || this.showSessionEndedModal
-        || this.showResumeModal
+        || this.showWelcomeBackModal
         || this.showPlannerModal
         || this.showSessionAnalyticsModal
         || this.showHelpLearningModal
         || this.showPostLoginOnboarding
+        || this.showPostSessionModal
         || this.showHifzPlanModal
         || this.showAiMemorisationCheckerModal
       document.body.classList.toggle('tools-panel-open', shouldMarkPanelOpen)
@@ -6220,6 +6413,9 @@ export default {
       this.showPlannerCompletionConfetti = false
       this.showSessionEndedModal = false
       this.showSessionExitModal = false
+      if (!this.showPostSessionModal) {
+        this.showPostSessionConfetti = false
+      }
       if (!options.skipPrime) {
         this.primeAudioPlaybackUnlock()
       }
@@ -6743,7 +6939,7 @@ export default {
       if (!this.isLoggedIn && !force) return
       this.onboardingManualLaunch = !!force
       this.onboardingStepIndex = 0
-      if (!force && !this.auth?.just_registered && this.hasCompletedOnboarding()) return
+      if (!force && this.hasCompletedOnboarding() && !this.auth?.just_registered) return
       this.sessionEndedSnapshot = null
       if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
       this.showTools = false
@@ -6762,15 +6958,93 @@ export default {
       this.applyOnboardingStep(this.onboardingStepIndex)
     },
     skipOnboarding() {
+      if (this.requiresFirstTimeOnboarding) return
       this.markOnboardingCompleted()
       this.showPostLoginOnboarding = false
       this.onboardingStepIndex = 0
       this.sessionEndedSnapshot = null
       this.restoreOnboardingDemo()
-      if (!this.onboardingManualLaunch && this.auth?.just_registered) {
-        this.applyDefaultWorkspaceSessionConfig({ openSetup: false })
-      }
       this.onboardingManualLaunch = false
+    },
+    async playOnboardingSampleSession() {
+      this.showPostLoginOnboarding = false
+      this.onboardingStepIndex = 0
+      this.sessionEndedSnapshot = null
+      this.onboardingManualLaunch = false
+      this.onboardingSampleSessionActive = true
+      this.applyOnboardingStep(this.onboardingSteps.length - 1)
+      this.restoreOnboardingDemo({ keepCurrentSession: true })
+      this.applyOnboardingGoalPreset()
+      this.currentMode = 'advanced'
+      this.tab = 'tools'
+      this.showTools = false
+      this.focusModeEnabled = false
+      this.blurModeEnabled = false
+      this.chainingEnabled = false
+      this.anchorModeEnabled = false
+      if (this.chapterId) {
+        await this.loadChapter(this.currentMode)
+        this.$nextTick(() => {
+          this.startSessionWithCountdown()
+        })
+      }
+    },
+    openPostSessionModal(snapshot = null) {
+      this.postSessionSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
+      if (!this.postSessionSnapshot) return
+      this.showPostSessionConfetti = true
+      this.showPostSessionModal = true
+      this.showTools = false
+      this.postSessionOffcanvasOpen = false
+      window.setTimeout(() => {
+        this.showPostSessionConfetti = false
+      }, 4200)
+    },
+    repeatPostSession() {
+      this.showPostSessionModal = false
+      this.showPostSessionConfetti = false
+      this.postSessionOffcanvasOpen = false
+      this.postSessionSnapshot = null
+      this.showTools = false
+      this.prepareRangeRestart()
+      this.startSessionWithCountdown({ skipPrime: true })
+    },
+    openPostSessionNewSessionOffcanvas() {
+      this.postSessionOffcanvasOpen = true
+      this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
+    },
+    savePostSession() {
+      this.saveCurrentSessionSilently()
+      this.showBanner(this.postSessionUi.savedToast, 'success', 2500)
+    },
+    logoutFromPostSession() {
+      if (typeof document === 'undefined') return
+      this.postSessionSnapshot = null
+      this.showPostSessionModal = false
+      this.showPostSessionConfetti = false
+      this.postSessionOffcanvasOpen = false
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = this.auth?.logout_url || '/logout'
+      const token = document.createElement('input')
+      token.type = 'hidden'
+      token.name = '_token'
+      token.value = this.auth?.csrf_token || ''
+      form.appendChild(token)
+      document.body.appendChild(form)
+      form.submit()
+    },
+    continueFromOnboardingPostSession() {
+      this.onboardingSampleSessionActive = false
+      this.showPostSessionModal = false
+      this.showPostSessionConfetti = false
+      this.postSessionOffcanvasOpen = false
+      this.postSessionSnapshot = null
+      this.markOnboardingCompleted()
+      this.restoreOnboardingDemo()
+      this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
+      this.showTools = false
+      this.topCardMenuOpen = false
     },
     async completeOnboardingAndStart() {
       this.markOnboardingCompleted()
@@ -7617,10 +7891,29 @@ export default {
         transcript: String(recording.transcript || '').slice(0, 2400)
       }
     },
+    ensureSelectedRecordingsSelection() {
+      const recordings = this.filteredRecordingsList
+      if (!recordings.length) {
+        this.selectedRecordingsEntryId = ''
+        this.selectedRecordingsAyahKey = ''
+        return
+      }
+
+      const current = recordings.find(recording => recording.id === this.selectedRecordingsEntryId)
+      if (current) {
+        this.selectedRecordingsAyahKey = current.ayahKey || ''
+        return
+      }
+
+      const ayahMatch = this.selectedRecordingsAyahKey
+        ? recordings.find(recording => recording.ayahKey === this.selectedRecordingsAyahKey)
+        : null
+      const next = ayahMatch || recordings[0]
+      this.selectedRecordingsEntryId = next?.id || ''
+      this.selectedRecordingsAyahKey = next?.ayahKey || ''
+    },
     ensureSelectedRecordingsAyah() {
-      const matches = this.filteredRecordingsAyahGroups.flatMap(group => group.ayahs)
-      if (matches.some(item => item.ayahKey === this.selectedRecordingsAyahKey)) return
-      this.selectedRecordingsAyahKey = matches[0]?.ayahKey || ''
+      this.ensureSelectedRecordingsSelection()
     },
     getRecitationValidationReport(recording = null) {
       return recording?.validationReport || recording?.reviewMetadata?.validationReport || null
@@ -7722,7 +8015,7 @@ export default {
       this.showTools = false
       this.showConfirmModal = false
       this.showSessionExitModal = false
-      this.showResumeModal = false
+      this.showWelcomeBackModal = false
       this.showSelfCheckModal = false
       this.recordingsLibraryReturnToSelfCheckKey = options?.returnToSelfCheck ? targetAyahKey : ''
       this.selfCheckPeekActive = false
@@ -7740,16 +8033,20 @@ export default {
 
       schedule(() => {
         this.loadRecordingsLibrary()
+        if (options?.recordingId) {
+          this.selectedRecordingsEntryId = options.recordingId
+        }
         if (targetAyahKey) {
           this.selectedRecordingsAyahKey = targetAyahKey
-          this.ensureSelectedRecordingsAyah()
         }
+        this.ensureSelectedRecordingsSelection()
         this.isRecordingsLibraryLoading = false
       })
     },
     closeRecordingsLibrary() {
       this.pendingRecordingDeleteId = ''
       this.recordingsLibrarySearch = ''
+      this.selectedRecordingsEntryId = ''
       this.showRecordingsLibrary = false
       this.recordingsLibraryReturnToSelfCheckKey = ''
       this.stopRecordingsPlayback({ clearSource: true })
@@ -7772,8 +8069,23 @@ export default {
     toggleRecordingsNav() {
       this.recordingsNavExpanded = !this.recordingsNavExpanded
     },
+    selectRecordingsEntry(recording) {
+      if (!recording?.id) return
+      this.selectedRecordingsEntryId = recording.id
+      this.selectedRecordingsAyahKey = recording.ayahKey || ''
+      this.pendingRecordingDeleteId = ''
+      if (this.activeRecordingPlaybackId && this.activeRecordingPlaybackId !== recording.id) {
+        this.stopRecordingsPlayback({ clearSource: true })
+      }
+    },
     selectRecordingsAyah(ayahKey) {
+      const recording = this.filteredRecordingsList.find(item => item.ayahKey === ayahKey)
+      if (recording) {
+        this.selectRecordingsEntry(recording)
+        return
+      }
       this.selectedRecordingsAyahKey = ayahKey
+      this.selectedRecordingsEntryId = ''
       this.pendingRecordingDeleteId = ''
     },
     initRecordingsAudio() {
@@ -7917,9 +8229,10 @@ export default {
       this.persistRecordingsLibrary()
       if (target && this.isAiCheckRecording(target)) this.deleteAiCheckFromMutqinSessions(recordingId)
       this.pendingRecordingDeleteId = ''
-      this.ensureSelectedRecordingsAyah()
+      this.ensureSelectedRecordingsSelection()
       if (!this.recordingsLibrary.length) {
         this.selectedRecordingsAyahKey = ''
+        this.selectedRecordingsEntryId = ''
       }
       this.showBanner(
         target ? `Deleted ayah ${target.ayahNumber} ${this.isAiCheckRecording(target) ? 'Recite Check' : 'recording'}` : 'Recording deleted',
@@ -7929,7 +8242,11 @@ export default {
     },
     openRecordingsLibraryForHistory(recording) {
       if (!recording?.ayahKey) return
-      this.openRecordingsLibrary({ ayahKey: recording.ayahKey, returnToSelfCheck: true })
+      this.openRecordingsLibrary({
+        ayahKey: recording.ayahKey,
+        recordingId: recording.id,
+        returnToSelfCheck: true
+      })
     },
     deleteAiCheckFromMutqinSessions(attemptId) {
       if (!attemptId) return
@@ -8024,18 +8341,22 @@ export default {
         ...this.recordingsLibrary.filter(recording => recording.id !== savedEntry.id)
       ]
       const persisted = this.persistRecordingsLibrary()
-      this.ensureSelectedRecordingsAyah()
+      this.selectedRecordingsEntryId = savedEntry.id
+      this.selectedRecordingsAyahKey = savedEntry.ayahKey
+      this.ensureSelectedRecordingsSelection()
       return persisted
     },
     getRecordingResultTone(result) {
       if (result === 'Excellent') return 'tone-excellent'
       if (result === 'Good') return 'tone-good'
+      if (result === 'Fair') return 'tone-fair'
       return 'tone-review'
     },
     getSelfCheckResultLabel(option) {
       const labels = {
         Excellent: this.t('memorisation.selfCheckRatings.excellent'),
         Good: this.t('memorisation.selfCheckRatings.good'),
+        Fair: this.t('memorisation.selfCheckRatings.fair'),
         'Needs Review': this.t('memorisation.selfCheckRatings.review')
       }
       return labels[option] || option
@@ -8044,29 +8365,59 @@ export default {
       const hints = {
         Excellent: this.t('memorisation.selfCheckRatings.excellentHint'),
         Good: this.t('memorisation.selfCheckRatings.goodHint'),
+        Fair: this.t('memorisation.selfCheckRatings.fairHint'),
         'Needs Review': this.t('memorisation.selfCheckRatings.reviewHint')
       }
       return hints[option] || ''
     },
+    isSavedSessionComplete(session) {
+      if (!session) return false
+      const config = session?.config || {}
+      const rangeStart = Number(config.rangeStart || 1)
+      const rangeEnd = Number(config.rangeEnd || rangeStart)
+      const totalAyahs = Math.max(1, rangeEnd - rangeStart + 1)
+      const stats = this.normalizeSessionStats(session?.stats || {}, config)
+
+      if (Number(stats.sessions_completed || 0) >= 1) return true
+      if (session?.restore?.centralSession?.sessionStatus === 'completed') return true
+      if (session?.restore?.continueSession?.completed) return true
+
+      const versesRead = Number(stats.verses_read || 0)
+      const flowSteps = Math.max(totalAyahs, Number(stats.session_flow_steps || totalAyahs))
+      return versesRead >= totalAyahs && versesRead >= flowSteps
+    },
+    scrollToSelfCheckReview() {
+      this.$nextTick(() => {
+        const target = this.$refs.selfCheckReviewSection
+        if (!target) return
+        const modalBody = target.closest('.self-check-modal-body')
+        if (modalBody) {
+          const top = target.offsetTop - 16
+          modalBody.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+          return
+        }
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+    },
     getSelfCheckRecorderDescription() {
       if (this.recitationCheckPanelOpen && !this.recitationCheckRecording && !this.recitationCheckPreparing && !this.recitationCheckResult) {
         return this.recitationCheckScope === 'session'
-          ? 'Review the selected range, choose the reciter you want to hear, then start AI Recite when you are ready.'
-          : 'Set the reciter if needed, then start AI Recite when you are ready to recite this ayah.'
+          ? this.t('memorisation.selfCheckRecorder.aiSessionReady')
+          : this.t('memorisation.selfCheckRecorder.aiAyahReady')
       }
       if (this.isSelfCheckRecording) {
-        return 'Your microphone is active. Recite the ayah aloud, then stop when you are finished.'
+        return this.t('memorisation.selfCheckRecorder.recordingActive')
       }
       if (this.selfCheckActiveDraft) {
-        return 'Listen to your recording, rate your confidence, then save it to your library or try again.'
+        return this.t('memorisation.selfCheckRecorder.reviewDraft')
       }
       if (this.selfCheckPreparing) {
-        return 'Setting up microphone access for a clear recording.'
+        return this.t('memorisation.selfCheckRecorder.preparingMic')
       }
       if (!this.supportsSelfCheckRecording()) {
-        return 'Recording requires a browser with microphone support.'
+        return this.t('memorisation.selfCheckRecorder.unsupportedBrowser')
       }
-      return 'Record yourself reciting this ayah, then compare your attempt against the text above.'
+      return this.t('memorisation.selfCheckRecorder.idle')
     },
     getAyahTranslation(ayahKey) {
       if (!ayahKey) return ''
@@ -9466,7 +9817,8 @@ export default {
       ]
       const persisted = this.persistRecordingsLibrary()
       this.selectedRecordingsAyahKey = savedEntry.ayahKey
-      this.ensureSelectedRecordingsAyah()
+      this.selectedRecordingsEntryId = savedEntry.id
+      this.ensureSelectedRecordingsSelection()
       return persisted
     },
     deleteAiMemorisationCheckerAssessment() {
@@ -10906,11 +11258,12 @@ export default {
       }
       await this.startRecitationCheckRecording()
     },
-    toggleRecitationCheckForVerse(verse) {
+    toggleRecitationCheckForVerse(verse, options = {}) {
       if (this.recitationCheckRecording) {
         this.stopRecitationCheckRecording()
         return
       }
+      if (options.prompt !== false) this.playRecitationStartCue()
       this.recitationCheckScope = 'ayah'
       this.startRecitationCheckRecording(verse)
     },
@@ -10919,17 +11272,19 @@ export default {
         this.stopRecitationCheckRecording()
         return
       }
+      this.playRecitationStartCue()
       if (this.recitationCheckScope === 'session') {
         this.startRecitationCheckRecording()
         return
       }
-      this.toggleRecitationCheckForVerse(this.selfCheckModalVerse)
+      this.toggleRecitationCheckForVerse(this.selfCheckModalVerse, { prompt: false })
     },
     toggleManualSelfCheckRecording(verse) {
       if (this.isSelfCheckRecording) {
         this.stopSelfCheckRecording()
         return
       }
+      this.playRecitationStartCue()
       this.startSelfCheckRecording(verse)
     },
     async startRecitationCheckRecording(targetVerse = null) {
@@ -12218,6 +12573,7 @@ export default {
               this.selfCheckPreparingLabel = 'Processing recording…'
               const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' })
               const dataUrl = await this.blobToDataUrl(blob)
+              const persistedRating = this.selfCheckRatingsByAyahKey[verse.key] || 'Needs Review'
               this.selfCheckDraft = {
                 id: `draft-${verse.key}-${Date.now()}`,
                 ayahKey: verse.key,
@@ -12226,11 +12582,12 @@ export default {
                 chapterName: this.currentChapter?.name_simple || this.activeChapterName || `Surah ${verse.chapterId}`,
                 recordedAt: new Date().toISOString(),
                 durationSeconds,
-                result: 'Needs Review',
+                result: normalizeRecordingResult(persistedRating),
                 audioSrc: dataUrl
               }
               this.selfCheckSavedAttemptsVisible = false
               this.showBanner(this.t('toasts.recordingReadyForAyah', { number: verse.number }), 'success', 1800)
+              this.scrollToSelfCheckReview()
             }
           } catch (error) {
             console.error('Failed to process self-check recording:', error)
@@ -12287,9 +12644,16 @@ export default {
     },
     setSelfCheckDraftResult(result) {
       if (!this.selfCheckDraft) return
+      const normalized = normalizeRecordingResult(result)
       this.selfCheckDraft = {
         ...this.selfCheckDraft,
-        result: normalizeRecordingResult(result)
+        result: normalized
+      }
+      if (this.selfCheckDraft.ayahKey) {
+        this.selfCheckRatingsByAyahKey = {
+          ...this.selfCheckRatingsByAyahKey,
+          [this.selfCheckDraft.ayahKey]: normalized
+        }
       }
     },
     async toggleSelfCheckPreview(verseKey) {
@@ -12346,6 +12710,10 @@ export default {
       this.recordingsLibrary = [savedEntry, ...this.recordingsLibrary]
       this.persistRecordingsLibrary()
       this.selfCheckLastSavedAyahKey = savedEntry.ayahKey
+      this.selfCheckRatingsByAyahKey = {
+        ...this.selfCheckRatingsByAyahKey,
+        [savedEntry.ayahKey]: savedEntry.result
+      }
       this.selfCheckDraft = null
       this.ensureSelectedRecordingsAyah()
       this.selfCheckSavedAttemptsVisible = false
@@ -12761,7 +13129,7 @@ export default {
 
       this.showPlannerModal = false
       this.showConfirmModal = false
-      this.showResumeModal = false
+      this.showWelcomeBackModal = false
       this.showTools = true
       this.persistUiState()
       this.$nextTick(() => {
@@ -12775,6 +13143,13 @@ export default {
       if (!this.showTools) return
       this.commitOffcanvasSettings()
       this.showTools = false
+      this.welcomeBackWorkspaceHidden = false
+      if (this.showPostSessionModal) {
+        this.postSessionOffcanvasOpen = false
+      }
+      if (this.showSessionExitModal) {
+        this.sessionExitOffcanvasOpen = false
+      }
       this.persistUiState()
       this.restoreToolsFocus()
     },
@@ -12789,16 +13164,59 @@ export default {
       }
     },
 
-    closeResumeModal() {
-      this.showResumeModal = false
+    closeWelcomeBackModal() {
+      this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
+      this.welcomeBackWorkspaceHidden = false
     },
 
-    openResumeNewSession() {
+    welcomeBackStartNewSession() {
       this.startingFreshSessionSelection = true
-      this.showResumeModal = false
+      this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
+      this.welcomeBackWorkspaceHidden = true
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
+    },
+
+    async welcomeBackContinueSession() {
+      if (!this.canResumePreviousSession) return
+      this.primeAudioPlaybackUnlock()
+      const audioState = this.learningBackendEnabled()
+        ? this.readWorkspaceStateValue('audioState', null)
+        : (() => {
+          try {
+            return JSON.parse(localStorage.getItem('telawa.audioState') || 'null')
+          } catch {
+            return null
+          }
+        })()
+      if (audioState && this.continueSessionPayload) {
+        this.continueSessionPayload = {
+          ...this.continueSessionPayload,
+          currentTime: Number(this.continueSessionPayload.currentTime ?? audioState.currentTime ?? 0),
+          audioSrc: this.continueSessionPayload.audioSrc || audioState.src || '',
+          playerVisible: this.continueSessionPayload.playerVisible ?? audioState.playerVisible,
+          isPlaying: false
+        }
+      }
+      await this.continueLastSession()
+    },
+
+    logoutFromWelcomeBack() {
+      if (typeof document === 'undefined') return
+      this.showWelcomeBackModal = false
+      this.returningUserChoicePending = false
+      this.welcomeBackWorkspaceHidden = false
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = this.auth?.logout_url || '/logout'
+      const token = document.createElement('input')
+      token.type = 'hidden'
+      token.name = '_token'
+      token.value = this.auth?.csrf_token || ''
+      form.appendChild(token)
+      document.body.appendChild(form)
+      form.submit()
     },
 
     async repeatLastSessionFromStart() {
@@ -12806,7 +13224,7 @@ export default {
       if (!payload?.config?.chapterId) return
       this.primeAudioPlaybackUnlock()
       this.startingFreshSessionSelection = false
-      this.showResumeModal = false
+      this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
       await this.hydrateSessionFromPayload(payload, {
         banner: false,
@@ -12819,7 +13237,7 @@ export default {
 
     async saveSessionFromResumeChoice() {
       this.startingFreshSessionSelection = false
-      this.showResumeModal = false
+      this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
 
       if (this.canResumePreviousSession) {
@@ -12840,7 +13258,7 @@ export default {
 
     openResumeSavedSessions() {
       if (!this.canViewSavedSessions) return
-      this.showResumeModal = false
+      this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
       this.openToolsPanel({ tab: 'saved' })
     },
@@ -13206,9 +13624,9 @@ export default {
     getMushafAyahNumberStyle(number) {
       const digits = Math.min(3, String(number || '').length || 1)
       const sizes = {
-        1: { width: '1.9em', height: '1.9em', fontSize: '0.92em' },
-        2: { width: '2.35em', height: '2.35em', fontSize: '0.74em' },
-        3: { width: '2.95em', height: '2.95em', fontSize: '0.62em' }
+        1: { width: '1.22em', height: '1.22em', fontSize: '0.34em' },
+        2: { width: '1.34em', height: '1.34em', fontSize: '0.3em' },
+        3: { width: '1.46em', height: '1.46em', fontSize: '0.27em' }
       }
       return sizes[digits] || sizes[3]
     },
@@ -14124,8 +14542,9 @@ export default {
       if (!payload) return
       this.startingFreshSessionSelection = false
       this.hasContinueSession = false
-      this.showResumeModal = false
+      this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
+      this.welcomeBackWorkspaceHidden = false
       if (!payload.config?.chapterId) {
         this.clearContinueSession()
         return
@@ -14218,13 +14637,42 @@ export default {
     openSessionExitModal() {
       if (!this.hasVerses && !this.playerVisible) return
       this.flushPlaybackTime()
+      if (this.audioElement) {
+        this.currentTime = Number(this.audioElement.currentTime || this.currentTime || 0)
+      }
+      this._persistAudioStateNow()
+      this.persistContinueSession()
+      this.markActiveSessionSnapshot()
       this.sessionExitSnapshot = this.buildSessionExitSnapshot()
       this.sessionExitPreviewSnapshot = this.buildSessionEndedSnapshot({ force: true })
       if (this.audioElement && !this.audioElement.paused) {
         this.audioElement.pause()
       }
       this.isPlaying = false
+      this.sessionExitOffcanvasOpen = false
       this.showSessionExitModal = true
+    },
+
+    openSessionExitNewSessionOffcanvas() {
+      this.sessionExitOffcanvasOpen = true
+      this.startingFreshSessionSelection = true
+      this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
+    },
+
+    logoutFromSessionExit() {
+      if (typeof document === 'undefined') return
+      this.closeSessionExitModal({ restore: false })
+      this.sessionExitOffcanvasOpen = false
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = this.auth?.logout_url || '/logout'
+      const token = document.createElement('input')
+      token.type = 'hidden'
+      token.name = '_token'
+      token.value = this.auth?.csrf_token || ''
+      form.appendChild(token)
+      document.body.appendChild(form)
+      form.submit()
     },
 
     restoreSessionFromSnapshot(snapshot, options = {}) {
@@ -14283,6 +14731,7 @@ export default {
       const snapshot = this.sessionExitSnapshot
       this.primeAudioPlaybackUnlock()
       this.showSessionExitModal = false
+      this.sessionExitOffcanvasOpen = false
       this.sessionExitPreviewSnapshot = null
       if (!snapshot) return
       this.restoreSessionFromSnapshot(snapshot, { autoplay: false })
@@ -14354,6 +14803,7 @@ export default {
     closeSessionExitModal(options = {}) {
       const { restore = true } = options
       this.showSessionExitModal = false
+      this.sessionExitOffcanvasOpen = false
       if (restore) {
         this.restoreSessionExitSnapshot()
       } else {
@@ -14425,6 +14875,8 @@ export default {
         progressPercent,
         completedAll,
         durationLabel,
+        rangeStart,
+        rangeEnd,
         summaryMessage,
         detailMessage,
         coveredAyahCount: coveredAyah,
@@ -14583,8 +15035,7 @@ export default {
         this.openNewSessionSetup()
         return
       }
-      this.confirmSessionExit({ showSummary: false })
-      this.openNewSessionSetup()
+      this.openSessionExitNewSessionOffcanvas()
     },
     exitSessionToRepeatRange() {
       this.primeAudioPlaybackUnlock()
@@ -14594,18 +15045,26 @@ export default {
         this.startSessionWithCountdown({ skipPrime: true })
         return
       }
-      this.confirmSessionExit({ showSummary: false })
+      this.closeSessionExitModal({ restore: false })
+      this.sessionExitOffcanvasOpen = false
       this.prepareRangeRestart()
       this.startSessionWithCountdown({ skipPrime: true })
     },
     exitSessionToSaveSession() {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
         this.closeSessionExitModal({ restore: false })
-        this.saveCurrentSessionWithName()
+        const session = this.saveCurrentSessionSilently()
+        if (session) {
+          this.showBanner('This session has been successfully saved.', 'success', 2500)
+        }
         return
       }
-      this.confirmSessionExit({ showSummary: false })
-      this.saveCurrentSessionWithName()
+      const session = this.saveCurrentSessionSilently()
+      if (session) {
+        this.showBanner('This session has been successfully saved.', 'success', 2500)
+      } else {
+        this.showBanner('Nothing is ready to save yet.', 'info', 2200)
+      }
     },
     exitSessionToRetentionCheck() {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
@@ -14667,7 +15126,7 @@ export default {
         data: options.data || null
       }
       this.showPlannerModal = false
-      this.showResumeModal = false
+      this.showWelcomeBackModal = false
       this.showTools = false
       this.showConfirmModal = true
     },
@@ -15165,7 +15624,7 @@ export default {
     },
 
     resetDefaultFontSize() {
-      this.defaultFontSize = 120
+      this.defaultFontSize = 100
       this.updateDefaultFontSize()
     },
 
@@ -15292,8 +15751,8 @@ export default {
             this.defaultFontSize = parsed
           }
         } else {
-          this.defaultFontSize = 120
-          this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', 120)
+          this.defaultFontSize = 100
+          this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', 100)
         }
       } catch (e) {
         console.error('Failed to load font sizes:', e)
@@ -17379,7 +17838,7 @@ export default {
     handleSessionComplete() {
       if (!this.verses.length) return
 
-      const endedSnapshot = this.buildSessionEndedSnapshot()
+      const endedSnapshot = this.buildSessionEndedSnapshot({ force: true })
       this.sessionEndedSnapshot = endedSnapshot
       this.sessionCompleted = true
       this.sessionCompletedAt = new Date().toISOString()
@@ -17390,6 +17849,10 @@ export default {
       this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
       this.recomputeAnalytics()
       this.finishSessionCleanup()
+      if (this.isLoggedIn) {
+        this.openPostSessionModal(endedSnapshot)
+        return
+      }
       this.showBanner(this.t('memorisation.session_finished'), 'success', 2800)
     },
 

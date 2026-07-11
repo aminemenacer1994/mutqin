@@ -20,6 +20,7 @@
             'login_url' => route('login'),
             'google_login_url' => route('auth.google.redirect'),
             'register_url' => route('register'),
+            'logout_url' => route('logout'),
             'forgot_password_url' => Route::has('password.request') ? route('password.request') : null,
             'login_error' => $errors->first('email') ?: $errors->first('password'),
             'google_error' => $errors->first('google'),
