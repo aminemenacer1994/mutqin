@@ -14078,7 +14078,7 @@ button:active {
 }
 
 .mushaf-ayah-text {
-  font-size: inherit;
+  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.45rem, 2.8vw, 2.85rem));
   line-height: inherit;
   font-weight: 430;
 }
@@ -24841,4 +24841,293 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .workspace-shell:hover,
 [data-theme="dark"] .workspace-shell:hover {
   border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+
+/* Mushaf layout refresh */
+.main.mushaf-mode-active .content {
+  width: 100%;
+  max-width: none;
+  padding-inline: clamp(0.1rem, 0.35vw, 0.2rem);
+}
+
+.main.mushaf-mode-active .workspace-shell {
+  margin-bottom: 0.45rem;
+  padding: clamp(0.95rem, 2vw, 1.25rem) clamp(1rem, 2.4vw, 1.45rem) clamp(0.8rem, 1.6vw, 1rem);
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+.main.mushaf-mode-active .workspace-shell-metadata,
+.main.mushaf-mode-active .workspace-shell-compact-meta,
+.main.mushaf-mode-active .mushaf-reading-aids {
+  display: none !important;
+}
+
+.main.container-fluid.mushaf-mode-active .mushaf-frame {
+  display: grid !important;
+  grid-template-columns: minmax(3.25rem, 4.25rem) minmax(0, 1fr) !important;
+  align-items: start !important;
+  gap: 0.45rem;
+}
+
+.mushaf-workspace {
+  gap: 0.1rem;
+  padding: clamp(0.55rem, 1.4vw, 0.95rem) 0 0;
+}
+
+.mushaf-frame {
+  width: min(100%, 1680px);
+  max-width: calc(100vw - 0.2rem);
+  margin-inline: auto;
+  padding: 0;
+}
+
+.mushaf-toolbar-rail {
+  align-self: start;
+  height: fit-content;
+  min-height: 0;
+  padding-top: clamp(0.35rem, 1vw, 0.65rem);
+}
+
+.mushaf-toolbar-rail .bg-dropdown-region,
+.mushaf-toolbar-rail .border-dropdown-region,
+.mushaf-toolbar-rail .mushaf-play-pill {
+  display: none !important;
+}
+
+.mushaf-pill-toolbar {
+  margin-bottom: 0;
+  align-self: start;
+  height: auto;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0.32rem;
+  padding: 0.35rem 0.28rem;
+}
+
+.mushaf-pill-toolbar.is-collapsed {
+  display: flex !important;
+  grid-template-columns: none !important;
+}
+
+.mushaf-toolbar-cluster-start,
+.mushaf-toolbar-cluster-end {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.32rem !important;
+  width: 100%;
+}
+
+.mushaf-toolbar-cluster-end {
+  grid-template-columns: none !important;
+}
+
+.mushaf-stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: clamp(0.25rem, 1vw, 0.55rem);
+  min-width: 0;
+}
+
+.mushaf-viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  min-width: 0;
+}
+
+.main.mushaf-mode-active .mushaf-page {
+  min-height: auto;
+  padding: clamp(0.85rem, 1.8vw, 1.35rem) clamp(0.65rem, 1.4vw, 1.1rem) clamp(0.7rem, 1.2vw, 1rem);
+  gap: 0.1rem;
+  grid-template-rows: minmax(0, 1fr);
+  border: 1px solid color-mix(in srgb, var(--mushaf-border, rgba(150, 99, 52, 0.34)) 28%, transparent);
+  border-radius: 10px;
+  background: var(--mushaf-bg, #f1ede8);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+
+.main.mushaf-mode-active .mushaf-page::before,
+.main.mushaf-mode-active .mushaf-page::after {
+  display: none;
+}
+
+.mushaf-page {
+  min-height: auto;
+  padding: 0.45rem clamp(0.35rem, 0.9vw, 0.65rem) 0.35rem;
+  gap: 0.1rem;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.mushaf-page-meta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 1.05rem 0.82rem 0.48rem 1.35rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.mushaf-page-meta-line {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--mushaf-muted, #6f6258);
+  font-family: inherit;
+  font-size: clamp(0.72rem, 1.5vw, 0.82rem);
+  font-weight: 600;
+  letter-spacing: 0.035em;
+  line-height: 1;
+  text-transform: none;
+}
+
+.mushaf-page-body {
+  padding: 0;
+  line-height: 1.95;
+  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.45rem, 2.8vw, 2.85rem));
+}
+
+.mushaf-bismillah-inline {
+  margin: 0 0 0.2rem;
+  padding: 0;
+  font-size: clamp(1rem, 1.8vw, 1.4rem);
+  line-height: 1.35;
+  text-align: center;
+}
+
+.mushaf-page-footer,
+.mushaf-pagination,
+.mushaf-viewport-nav {
+  display: none !important;
+}
+
+.mushaf-stage-nav {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: clamp(2.35rem, 4.8vw, 3.15rem);
+  height: clamp(3.1rem, 9vh, 4.6rem);
+  border: 1px solid color-mix(in srgb, var(--mushaf-border, #8b5a2c) 22%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mushaf-bg, #fffaf0) 96%, var(--accent, #2f8f6b) 4%);
+  color: var(--mushaf-text, #111827);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, opacity 160ms ease;
+}
+
+.mushaf-stage-nav i {
+  font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+  line-height: 1;
+}
+
+.mushaf-stage-nav:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.1);
+  background: color-mix(in srgb, var(--mushaf-bg, #fffaf0) 92%, var(--accent, #2f8f6b) 8%);
+}
+
+.mushaf-stage-nav:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.mushaf-stage-nav:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.mushaf-pill.mushaf-font-size-pill {
+  color: var(--text);
+}
+
+.mushaf-ayah-text.word-highlight-enabled .wbw-word.highlighted,
+.mushaf-ayah-text.word-highlight-enabled word.highlighted,
+.mushaf-ayah-text.word-highlight-enabled .wbw-word.phrase-highlighted,
+.mushaf-ayah-text.word-highlight-enabled word.phrase-highlighted {
+  background: color-mix(in srgb, var(--accent, #2f8f6b) 28%, transparent);
+  box-shadow: inset 0 -0.12em 0 var(--accent, #2f8f6b);
+  border-radius: 0.14em;
+}
+
+.mushaf-ayah.is-playing .mushaf-ayah-text {
+  background: color-mix(in srgb, var(--accent, #2f8f6b) 10%, transparent);
+}
+
+[data-theme="dark"] .mushaf-page-meta-line {
+  color: rgba(217, 203, 189, 0.88);
+}
+
+[data-theme="dark"] .mushaf-stage-nav {
+  background: rgba(23, 20, 18, 0.94);
+  border-color: rgba(139, 215, 179, 0.2);
+  color: #f3eadc;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+[data-theme="dark"] .mushaf-stage-nav:hover:not(:disabled) {
+  background: rgba(32, 28, 24, 0.98);
+}
+
+@media (max-width: 767px) {
+  .main.container-fluid.mushaf-mode-active .mushaf-frame {
+    grid-template-columns: minmax(2.75rem, 3.2rem) minmax(0, 1fr) !important;
+  }
+
+  .mushaf-stage {
+    gap: 0.2rem;
+  }
+
+  .mushaf-stage-nav {
+    width: 2.15rem;
+    height: 3rem;
+    border-radius: 12px;
+  }
+
+  .mushaf-page {
+    padding-top: 0.35rem;
+    padding-bottom: 0.28rem;
+  }
+
+  .mushaf-page-meta {
+    padding: 0.82rem 0.62rem 0.38rem 1.05rem;
+  }
+}
+
+.app.is-rtl .mushaf-page-meta {
+  text-align: right;
+}
+
+.mushaf-empty-page {
+  min-height: auto;
+  padding: 0.85rem;
+}
+
+.main.mushaf-mode-active .mushaf-ayah-text {
+  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.45rem, 2.8vw, 2.85rem)) !important;
+}
+
+.main.mushaf-mode-active .mushaf-pill-toolbar {
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  box-shadow: none;
+}
+
+.main.mushaf-mode-active .mushaf-page-body,
+.main.mushaf-mode-active .mushaf-bismillah-inline,
+.main.mushaf-mode-active .mushaf-ayah-text {
+  font-family: var(--mushaf-quran-font, 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif);
 }

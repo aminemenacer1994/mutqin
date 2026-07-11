@@ -603,6 +603,7 @@
     "open_session_setup": "Ouvrir la configuration de session",
     "open_controls": "Ouvrir les contrôles",
     "mushaf_page_is_preparing": "La page mushaf se prépare",
+    "session_setup_in_progress": "Votre session est en cours de configuration, veuillez patienter…",
     "text": "Texte",
     "session": "Session",
     "practice": "Pratique",

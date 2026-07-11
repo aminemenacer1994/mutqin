@@ -204,7 +204,7 @@
           </div>
         </div>
         <div
-          v-if="topCardMetadataPills.length"
+          v-if="topCardMetadataPills.length && readingViewMode !== 'mushaf'"
           class="workspace-shell-metadata d-flex flex-nowrap gap-2"
           aria-label="Session metadata"
         >
@@ -218,7 +218,7 @@
             <span>{{ item.value }}</span>
           </span>
         </div>
-        <div v-if="reviewPriorityLabel" class="workspace-shell-compact-meta">
+        <div v-if="reviewPriorityLabel && readingViewMode !== 'mushaf'" class="workspace-shell-compact-meta">
           <span>{{ reviewPriorityLabel }}</span>
         </div>
 
@@ -226,7 +226,7 @@
 
           <div v-if="!isDataReady || isRestoringWorkspace" class="loading-spinner">
             <i class="bi bi-hourglass-split"></i>
-            <span>{{ t('common.loading') }}</span>
+            <span>{{ workspaceLoadingLabel }}</span>
           </div>
           <div
             v-if="isDataReady && practiceTurnCalloutVisible && !talqinRecitationTurnActive"
@@ -257,8 +257,9 @@
               </div>
             </section>
             <div v-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace container-fluid w-100 px-0">
-              <div class="mushaf-frame" :class="{ 'mushaf-frame-toolbar-collapsed': mushafToolbarCollapsed }">
-                <div class="mushaf-pill-bar mushaf-pill-toolbar" :class="{ 'is-collapsed': mushafToolbarCollapsed }">
+              <div class="mushaf-frame mushaf-frame-toolbar-collapsed">
+                <aside class="mushaf-toolbar-rail" aria-label="Mushaf tools">
+                <div class="mushaf-pill-bar mushaf-pill-toolbar is-collapsed">
                   <div class="mushaf-toolbar-cluster mushaf-toolbar-cluster-start">
                     <div class="mushaf-toolbar-dropdown font-dropdown-region">
                       <button @click.stop="fontOpen = !fontOpen; bgOpen = false; borderOpen = false" type="button" class="mushaf-toolbar-trigger"
@@ -274,6 +275,25 @@
                         </button>
                       </div>
                     </div>
+
+                    <button
+                      type="button"
+                      class="mushaf-pill mushaf-font-size-pill"
+                      @click.stop="decreaseMushafFontSize"
+                      title="Decrease font size"
+                      aria-label="Decrease font size"
+                    >
+                      <i class="bi bi-dash-lg" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="mushaf-pill mushaf-font-size-pill"
+                      @click.stop="increaseMushafFontSize"
+                      title="Increase font size"
+                      aria-label="Increase font size"
+                    >
+                      <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                    </button>
 
                     <div class="mushaf-toolbar-dropdown bg-dropdown-region">
                       <button @click.stop="bgOpen = !bgOpen; fontOpen = false; borderOpen = false" type="button" class="mushaf-toolbar-trigger"
@@ -309,6 +329,25 @@
                   <div class="mushaf-toolbar-cluster mushaf-toolbar-cluster-end">
                     <button
                       type="button"
+                      class="mushaf-pill mushaf-controls-pill"
+                      @click.stop="openAdvancedControls"
+                      title="Session controls"
+                      aria-label="Open session controls"
+                    >
+                      <i class="bi bi-sliders"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="mushaf-pill mushaf-play-pill"
+                      @click.stop="toggleMushafActiveAyahPlayback"
+                      :disabled="!activeVerseRef?.audio"
+                      :title="activeVerseRef ? (isMushafActiveAyahPlaying ? 'Pause ayah audio' : 'Play active ayah') : 'Select an ayah first'"
+                      :aria-label="activeVerseRef ? (isMushafActiveAyahPlaying ? 'Pause ayah audio' : 'Play active ayah') : 'Select an ayah first'"
+                    >
+                      <i class="bi" :class="isMushafActiveAyahPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                    </button>
+                    <button
+                      type="button"
                       class="mushaf-pill mushaf-tajweed-pill"
                       :class="{ active: tajweedEnabled }"
                       @click.stop="toggleTajweed"
@@ -335,86 +374,101 @@
                     </button>
                   </div>
                 </div>
-                <div ref="mushafViewport" class="mushaf-viewport" :class="[`mushaf-bg-${mushafBackground}`, { 'toolbar-collapsed': mushafToolbarCollapsed }]">
-                  <div v-if="!mushafPages.length" class="mushaf-empty-page">
-                    <i class="bi bi-book"></i>
-                    <strong>{{ t('memorisation.mushaf_page_is_preparing') }}</strong>
+                </aside>
+                <div class="mushaf-stage">
+                  <button
+                    v-if="mushafPages.length > 1"
+                    type="button"
+                    class="mushaf-stage-nav mushaf-stage-nav-prev"
+                    :disabled="!canGoPreviousMushafPage"
+                    @click="goToPreviousMushafPage"
+                    aria-label="Previous mushaf page"
+                  >
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                  </button>
+                <div ref="mushafViewport" class="mushaf-viewport" :class="`mushaf-bg-${mushafBackground}`">
+                  <div v-if="!currentMushafPage" class="mushaf-empty-page">
+                    <i class="bi bi-hourglass-split"></i>
+                    <strong>{{ workspaceLoadingLabel }}</strong>
                     <span>{{ t('memorisation.common.mushafSyncMessage') }}</span>
                   </div>
-                  <div class="mushaf-track" :style="mushafTrackStyle">
-                    <article v-for="(page, pageIndex) in mushafPages" :key="page.id" class="mushaf-page"
-                      :class="[`mushaf-bg-${mushafBackground}`, `mushaf-border-${mushafBorder}`, { active: pageIndex === safeMushafPageIndex }]"
-                      :aria-hidden="pageIndex === safeMushafPageIndex ? 'false' : 'true'">
-                      <header class="mushaf-page-header" dir="rtl">
-                        <h2>{{ mushafSurahTitle }}</h2>
-                        <div v-if="showMushafBismillah" class="mushaf-bismillah" aria-label="Bismillah">
-                          بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-                        </div>
-                      </header>
-                      <div class="mushaf-page-body" dir="rtl">
-                        <span v-for="verse in page.verses" :key="verse.key" role="button" tabindex="0"
-                          :data-verse-key="verse.key" class="mushaf-ayah" :class="{
-                            active: isVerseVisuallyActive(verse.key),
-                            'hifz-ayah-new': isNewHifzAyah(verse.key),
-                            'hifz-ayah-due': isDueHifzAyah(verse.key),
-                            'hifz-ayah-weak': isWeakAyah(verse.key),
-                            'hifz-ayah-mastered': isMasteredAyah(verse.key),
-                            'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key),
-                            'peek-revealed': isVersePeekRevealed(verse.key),
-                            'review-priority': isReviewPriorityAyah(verse.key),
-                            'is-playing': activeVerseKey === verse.key && isPlaying
-                          }" @click="onMushafAyahClick(verse)" @mouseenter="onMushafAyahEnter(verse)"
-                          @mouseleave="onMushafAyahLeave(verse)" @keydown.enter.prevent="onMushafAyahClick(verse)"
-                          @keydown.space.prevent="onMushafAyahClick(verse)"
-                          @touchstart.passive="onVerseTouchStart($event, verse.key)"
-                          @touchmove.passive="clearTouchPeek"
-                          @touchend.passive="onVerseTouchEnd($event, verse.key)" @touchcancel.passive="clearTouchPeek">
-                          <span class="mushaf-ayah-text" dir="rtl" lang="ar" @click.stop v-html="getDisplayArabic(verse)" :class="{
+                    <article
+                    v-else
+                    :key="`${currentMushafPage.id}-${safeMushafPageIndex}-${defaultFontSize}-${quranFont}`"
+                    class="mushaf-page"
+                    :class="[`mushaf-bg-${mushafBackground}`, `mushaf-border-${mushafBorder}`]"
+                    :style="{ '--verse-font-percent': defaultFontSize, '--mushaf-quran-font': quranFontFamily }"
+                  >
+                    <div
+                      class="mushaf-page-body"
+                      dir="rtl"
+                      :style="{ '--verse-font-percent': defaultFontSize, '--mushaf-quran-font': quranFontFamily }"
+                    >
+                      <p v-if="showMushafBismillahOnPage" class="mushaf-bismillah-inline" aria-label="Bismillah">
+                        بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+                      </p>
+                      <span
+                        v-for="row in currentMushafVerseRows"
+                        :key="row.key"
+                        v-memo="[row.isActive, row.isNew, row.isDue, row.isWeak, row.isMastered, row.isBlurred, row.isPeekRevealed, row.isReviewPriority, row.isPlayingAyah, row.fontPercent, row.html, quranFont, tajweedEnabled]"
+                        role="button"
+                        tabindex="0"
+                        :data-verse-key="row.key"
+                        class="mushaf-ayah"
+                        :class="{
+                          active: row.isActive,
+                          'hifz-ayah-new': row.isNew,
+                          'hifz-ayah-due': row.isDue,
+                          'hifz-ayah-weak': row.isWeak,
+                          'hifz-ayah-mastered': row.isMastered,
+                          'blur-upcoming': row.isBlurred,
+                          'peek-revealed': row.isPeekRevealed,
+                          'review-priority': row.isReviewPriority,
+                          'is-playing': row.isPlayingAyah
+                        }"
+                        @click="onMushafAyahClick(row.verse)"
+                        @mouseenter="onMushafAyahEnter(row.verse)"
+                        @mouseleave="onMushafAyahLeave(row.verse)"
+                        @keydown.enter.prevent="onMushafAyahClick(row.verse)"
+                        @keydown.space.prevent="onMushafAyahClick(row.verse)"
+                        @touchstart.passive="onVerseTouchStart($event, row.key)"
+                        @touchmove.passive="clearTouchPeek"
+                        @touchend.passive="onVerseTouchEnd($event, row.key)"
+                        @touchcancel.passive="clearTouchPeek"
+                      >
+                        <span
+                          class="mushaf-ayah-text"
+                          dir="rtl"
+                          lang="ar"
+                          @click.stop
+                          v-html="row.html"
+                          :class="{
                             'tajweed-enabled': tajweedEnabled,
                             'word-highlight-enabled': true,
-                            'verse-weak': isWeakAyah(verse.key),
-                            'verse-mastered': isMasteredAyah(verse.key)
-                          }" :style="{
-                              '--verse-font-percent': getVerseFontSize(verse.key),
-                              'font-family': quranFontFamily
-                            }"></span>
-                          <span class="mushaf-ayah-number"
-                            :class="[`mushaf-ayah-number-digits-${Math.min(3, String(verse.number || '').length || 1)}`]"
-                            :style="getMushafAyahNumberStyle(verse.number)">{{ verse.number }}</span>
-                        </span>
-                      </div>
-                      <footer class="mushaf-page-footer">
-                        <span class="mushaf-page-folio">{{ pageIndex + 1 }}</span>
-                      </footer>
-                    </article>
-                  </div>
+                            'verse-weak': row.isWeak,
+                            'verse-mastered': row.isMastered
+                          }"
+                          :style="{ '--verse-font-percent': row.fontPercent }"
+                        ></span>
+                        <span
+                          class="mushaf-ayah-number"
+                          :class="[`mushaf-ayah-number-digits-${row.numberDigits}`]"
+                          :style="row.numberStyle"
+                        >{{ row.verse.number }}</span>
+                      </span>
+                    </div>
+                  </article>
                 </div>
-              </div>
-              <div v-if="activeVerseRef && (showTranslation || showTransliteration || showWordByWord)" class="mushaf-reading-aids">
-                <div v-if="showTransliteration && activeVerseRef.transliteration" class="verse-aid-block" dir="ltr" lang="en">
-                  <div class="verse-aid-title" dir="ltr" lang="en">{{ t('memorisation.reading.transliteration') }}</div>
-                  <div class="verse-transliteration verse-aid" dir="ltr" lang="en">
-                    {{ activeVerseRef.transliteration }}
-                  </div>
-                </div>
-                <div v-if="showTranslation && activeVerseRef.translation" class="verse-aid-block" dir="ltr" lang="en">
-                  <div class="verse-aid-title" dir="ltr" lang="en">{{ t('memorisation.reading.translation') }}</div>
-                  <div class="verse-translation verse-aid" dir="ltr" lang="en">
-                    {{ activeVerseRef.translation }}
-                  </div>
-                </div>
-                <div v-if="showWordByWord && activeVerseRef.words && activeVerseRef.words.length" class="verse-words verse-aid mushaf-verse-words">
-                  <div v-for="(word, wi) in activeVerseRef.words" :key="wi" class="word-item"
-                    :class="{ highlighted: currentHighlightedVerseKey === activeVerseRef.key && currentWordIndex === wi, 'phrase-highlighted': currentHighlightedVerseKey === activeVerseRef.key && currentPhraseIndex === wi }"
-                    tabindex="-1">
-                    <span class="word-arabic" dir="rtl" lang="ar">{{ word.ar }}</span>
-                    <span class="word-meaning">{{ word.en }}</span>
-                    <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn" type="button"
-                      @click.stop="playWordAudio(word.audio, activeVerseRef, wi)"
-                      :aria-label="`Play word ${wi + 1} audio for ayah ${activeVerseRef.number}`">
-                      <i class="bi bi-volume-up" aria-hidden="true"></i>
-                    </button>
-                  </div>
+                  <button
+                    v-if="mushafPages.length > 1"
+                    type="button"
+                    class="mushaf-stage-nav mushaf-stage-nav-next"
+                    :disabled="!canGoNextMushafPage"
+                    @click="goToNextMushafPage"
+                    aria-label="Next mushaf page"
+                  >
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -559,10 +613,7 @@
               type="button">
               <i class="bi bi-bar-chart-line"></i> {{ t('memorisation.insights') }}
             </button> -->
-            <button role="tab" :aria-selected="tab === 'settings' ? 'true' : 'false'" :class="{ active: tab === 'settings' }"
-              @click.prevent="setActiveTab('settings')" title="Display and reading settings" type="button">
-              <i class="bi bi-gear"></i> {{ t('common.settings') }}
-            </button>
+            <!-- Settings tab hidden permanently; display/reading controls live in Setup and Techniques -->
           </div>
         </div>
 

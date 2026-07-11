@@ -264,6 +264,7 @@ export default {
       bgOpen: false,
       borderOpen: false,
       mushafToolbarCollapsed: true,
+      mushafAyahHtmlCache: null,
       
       // Feature 2: Gap between verses
       gapBetweenVerses: "1x", // Options: 'none', '1x', '3s', '5s', 'custom'
@@ -767,6 +768,7 @@ export default {
       audioRateChange: null,
       audioLoadStart: null,
       lastAudioDebug: null,
+      _lastAudioUiSyncAt: 0,
       uiAudioContext: null,
 
       // AlQuran
@@ -3413,6 +3415,22 @@ export default {
       return pages
     },
 
+    currentMushafPage() {
+      if (!this.mushafPages.length) return null
+      return this.mushafPages[this.safeMushafPageIndex] || null
+    },
+
+    mushafDisplayCacheKey() {
+      return [
+        this.tajweedEnabled ? 1 : 0,
+        this.quranFont,
+        this.anchorModeEnabled ? 1 : 0,
+        this.showWordByWord ? 1 : 0,
+        this.wordByWordAudioEnabled ? 1 : 0,
+        this.defaultFontSize
+      ].join('|')
+    },
+
     mushafSurahTitle() {
       const chapterId = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
       const fallbackTitles = {
@@ -3424,9 +3442,20 @@ export default {
       return this.currentChapter?.name_arabic || fallbackTitles[chapterId] || `سُورَةُ ${this.currentChapter?.name_simple || this.activeChapterName || ''}`
     },
 
-    showMushafBismillah() {
+    showMushafBismillahOnPage() {
       const chapterId = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
-      return chapterId !== 9
+      if (chapterId === 9) return false
+      const rangeStart = Number(this.rangeStart || this.currentConfig?.rangeStart || 1)
+      if (rangeStart !== 1) return false
+      const firstVerse = this.currentMushafPage?.verses?.[0]
+      return Number(firstVerse?.number) === 1
+    },
+
+    mushafPageMetaLabel() {
+      const surah = this.mushafCornerSurahLabel
+      const ayah = this.activeAyahNumber ? this.activeAyahLabel : ''
+      if (surah && ayah) return `${surah} · ${ayah}`
+      return surah || ayah || ''
     },
 
     mushafTrackStyle() {
@@ -3447,6 +3476,61 @@ export default {
 
     canGoNextMushafPage() {
       return this.safeMushafPageIndex < this.mushafPages.length - 1
+    },
+
+    mushafPaginationLabel() {
+      const total = this.mushafPages.length
+      if (!total) return ''
+      return `${this.safeMushafPageIndex + 1} / ${total}`
+    },
+
+    workspaceLoadingLabel() {
+      if (
+        this.isRestoringWorkspace
+        || !this.isDataReady
+        || (Number(this.chapterId || 0) > 0 && !this.hasVerses)
+        || (this.readingViewMode === 'mushaf' && this.shouldShowReadingWorkspace && !this.currentMushafPage)
+      ) {
+        return this.t('memorisation.session_setup_in_progress')
+      }
+      return this.t('common.loading')
+    },
+
+    mushafCornerSurahLabel() {
+      return this.currentChapter?.name_simple || this.activeChapterName || this.mushafSurahTitle
+    },
+
+    isMushafActiveAyahPlaying() {
+      const key = this.activeVerseRef?.key || this.effectiveActiveVerseKey
+      return !!key && this.activeVerseKey === key && !!this.isPlaying
+    },
+
+    currentMushafVerseRows() {
+      const page = this.currentMushafPage
+      if (!page?.verses?.length) return []
+      const hasStarted = this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback
+      const effectiveKey = this.effectiveActiveVerseKey
+      return page.verses.map(verse => {
+        const key = verse.key
+        const hasActiveReview = this.shouldShowRecitationReviewHighlights(key)
+        return {
+          key,
+          verse,
+          html: this.getMushafAyahHtml(verse),
+          fontPercent: this.getVerseFontSize(key),
+          numberStyle: this.getMushafAyahNumberStyle(verse.number),
+          numberDigits: Math.min(3, String(verse.number || '').length || 1),
+          isActive: (hasStarted && effectiveKey === key) || hasActiveReview,
+          isNew: this.isNewHifzAyah(key),
+          isDue: this.isDueHifzAyah(key),
+          isWeak: this.isWeakAyah(key),
+          isMastered: this.isMasteredAyah(key),
+          isBlurred: this.blurModeEnabled && this.isVerseBlurred(key),
+          isPeekRevealed: this.isVersePeekRevealed(key),
+          isReviewPriority: this.isReviewPriorityAyah(key),
+          isPlayingAyah: this.activeVerseKey === key && this.isPlaying
+        }
+      })
     },
 
     quizAccuracy() {
@@ -3935,7 +4019,11 @@ export default {
       window.removeEventListener('storage', this.handleThemeStorageSync)
     },
     tab(newVal) {
-      if (!['tools', 'techniques', 'saved', 'stats', 'settings'].includes(newVal)) {
+      if (newVal === 'settings') {
+        this.tab = 'tools'
+        return
+      }
+      if (!['tools', 'techniques', 'saved', 'stats'].includes(newVal)) {
         this.tab = 'tools'
         return
       }
@@ -4048,7 +4136,10 @@ export default {
     },
     wordByWordAudioEnabled: 'persistUiState',
     fontScale: 'persistUiState',
-    quranFont: 'persistUiState',
+    quranFont() {
+      this.clearMushafAyahHtmlCache()
+      this.persistUiState()
+    },
     script: 'persistUiState',
     repetitionsPerStep(newVal) {
       const safeValue = Math.max(1, Math.min(50, Number(newVal || 1)))
@@ -4112,6 +4203,7 @@ export default {
     tajweedEnabled() {
       this.persistUiState()
       this.persistCentralSessionState()
+      this.clearMushafAyahHtmlCache()
     },
 
     activeVerseKey(newVal) {
@@ -6822,7 +6914,7 @@ export default {
       this.applyOnboardingGoalPreset()
       const stepConfig = [
         { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
-        { tab: 'settings', section: 'reading_settings', mode: 'mushaf', blur: false, chaining: false, anchor: false },
+        { tab: 'tools', section: 'advanced_setup', mode: 'mushaf', blur: false, chaining: false, anchor: false },
         { tab: 'tools', section: 'advanced_playback', mode: 'stacked', blur: false, chaining: false, anchor: false },
         { tab: 'saved', section: null, mode: 'stacked', blur: false, chaining: false, anchor: false }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
@@ -12654,7 +12746,7 @@ export default {
       this.toolsReturnFocusEl = document.activeElement instanceof HTMLElement ? document.activeElement : null
       this.startingFreshSessionSelection = !!preserveFreshSelection
       this.currentMode = mode
-      this.tab = ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(tab) ? tab : 'tools'
+      this.tab = ['tools', 'techniques', 'saved', 'stats'].includes(tab) ? tab : 'tools'
       this.syncSettingsDraft()
       if (this.tab === 'saved' || this.tab === 'stats') {
         this.loadSavedSessions()
@@ -13130,6 +13222,7 @@ export default {
       }
       this.readingViewMode = nextMode
       if (nextMode === 'mushaf') {
+        this.wordByWordAudioEnabled = true
         this.applyMushafThemeDefault(this.theme)
         this.syncMushafPageToActiveVerse()
       } else {
@@ -13169,12 +13262,32 @@ export default {
         return
       }
       this.mushafPageIndex = Math.max(0, Math.min(Number(index || 0), this.mushafPages.length - 1))
+      this.persistUiState()
     },
     goToPreviousMushafPage() {
       this.goToMushafPage(this.safeMushafPageIndex - 1)
     },
     goToNextMushafPage() {
       this.goToMushafPage(this.safeMushafPageIndex + 1)
+    },
+    prefetchMushafPageForUpcomingAyah() {
+      if (this.readingViewMode !== 'mushaf' || !this.canNext) return
+      const nextEntry = this.queue?.[this.queueIndex + 1]
+      const nextKey = nextEntry?.verse?.key || nextEntry?.key
+      if (!nextKey) return
+      const nextPageIndex = this.mushafPages.findIndex(page => page.verses.some(verse => verse.key === nextKey))
+      if (nextPageIndex >= 0 && nextPageIndex !== this.safeMushafPageIndex) {
+        this.goToMushafPage(nextPageIndex)
+      }
+    },
+    toggleMushafActiveAyahPlayback() {
+      const verse = this.activeVerseRef
+      if (!verse?.audio) return
+      if (this.activeVerseKey === verse.key && this.isPlaying) {
+        this.togglePlay()
+        return
+      }
+      this.playVerse(verse, { force: true })
     },
     onMushafAyahEnter(verse) {
       if (!verse?.key) return
@@ -13187,11 +13300,31 @@ export default {
     },
     increaseMushafFontSize() {
       this.defaultFontSize = Math.min(this.maxFontSize, Number(this.defaultFontSize || 120) + this.fontSizeStep)
-      this.updateDefaultFontSize()
+      this.applyMushafFontSizeChange()
     },
     decreaseMushafFontSize() {
       this.defaultFontSize = Math.max(this.minFontSize, Number(this.defaultFontSize || 120) - this.fontSizeStep)
-      this.updateDefaultFontSize()
+      this.applyMushafFontSizeChange()
+    },
+    applyMushafFontSizeChange(options = {}) {
+      const { silent = true } = options
+      this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(this.defaultFontSize || 120)))
+      const pageVerses = this.currentMushafPage?.verses || []
+      if (pageVerses.length) {
+        const nextVerseFontSizes = { ...this.verseFontSizes }
+        pageVerses.forEach(verse => {
+          if (verse?.key) delete nextVerseFontSizes[verse.key]
+        })
+        this.verseFontSizes = nextVerseFontSizes
+      }
+      this.clearMushafAyahHtmlCache()
+      this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', this.defaultFontSize)
+      this.syncSettingsDraft()
+      this.persistVerseFontSizes()
+      this.persistUiState()
+      if (!silent) {
+        this.showBanner(this.t('toasts.fontSize', { defaultFontSize: this.defaultFontSize }), 'info', 600)
+      }
     },
     setMushafBackground(value) {
       if (!this.mushafBackgroundOptions.some(option => option.value === value)) return
@@ -13382,6 +13515,7 @@ export default {
         this.activeKey = null
         this.queueIndex = 0
         this.isDataReady = false
+        this.clearMushafAyahHtmlCache()
       }
     },
 
@@ -13404,6 +13538,9 @@ export default {
         this.activeKey = verseKey
         this.activeVerseKey = verseKey
         this.queueIndex = store.queueIndex || 0
+        if (this.readingViewMode === 'mushaf') {
+          this.$nextTick(() => this.syncMushafPageToActiveVerse())
+        }
       }
 
       if (options.scroll !== false) {
@@ -14644,7 +14781,7 @@ export default {
 
     setActiveTab(tabName) {
       // Validate tab name
-      const validTabs = ['tools', 'techniques', 'saved', 'stats', 'settings']
+      const validTabs = ['tools', 'techniques', 'saved', 'stats']
       if (!validTabs.includes(tabName)) {
         console.warn(`Invalid tab: ${tabName}, defaulting to tools`)
         this.tab = 'tools'
@@ -14740,7 +14877,7 @@ export default {
           }
         }
         // Update to include 'techniques' as valid tab
-        this.tab = ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(this.centralSession.activeTab)
+        this.tab = ['tools', 'techniques', 'saved', 'stats'].includes(this.centralSession.activeTab)
           ? this.centralSession.activeTab
           : 'tools'
         this.tajweedEnabled = !!this.centralSession.tajweedEnabled
@@ -14773,7 +14910,7 @@ export default {
         this.centralSession = {
           ...this.centralSession,
           // Update to include 'techniques' as valid tab
-          activeTab: ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(this.tab) ? this.tab : 'tools',
+          activeTab: ['tools', 'techniques', 'saved', 'stats'].includes(this.tab) ? this.tab : 'tools',
           sessionStatus: this.sessionCompleted
             ? 'completed'
             : (
@@ -14993,8 +15130,8 @@ export default {
     selectFont(fontValue) {
       this.quranFont = fontValue
       this.fontDropdownOpen = false
+      this.fontOpen = false
       this.syncSettingsDraft()
-      this.persistUiState()
     },
     getCurrentFontLabel() {
       const font = this.quranFontOptions.find(f => f.value === this.quranFont)
@@ -15322,17 +15459,48 @@ export default {
       }
     },
 
+    getMushafAyahHtml(verse) {
+      if (!verse?.key) return ''
+      const cacheKey = `${verse.key}::${this.mushafDisplayCacheKey}`
+      if (!this.mushafAyahHtmlCache) this.mushafAyahHtmlCache = Object.create(null)
+      if (this.mushafAyahHtmlCache[cacheKey]) return this.mushafAyahHtmlCache[cacheKey]
+      const html = this.getDisplayArabic(verse)
+      this.mushafAyahHtmlCache[cacheKey] = html
+      return html
+    },
+
+    clearMushafAyahHtmlCache() {
+      this.mushafAyahHtmlCache = Object.create(null)
+    },
+
+    syncAudioUiState(nextTime, nextDuration) {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
+      const minInterval = this.playerVisible ? 120 : 500
+      const timeDelta = Math.abs(nextTime - Number(this.currentTime || 0))
+      if (timeDelta < 0.12 && (now - Number(this._lastAudioUiSyncAt || 0)) < minInterval) {
+        return
+      }
+      this._lastAudioUiSyncAt = now
+      this.currentTime = nextTime
+      if (Number.isFinite(nextDuration) && nextDuration > 0) {
+        this.duration = nextDuration
+      }
+      if (this.centralSession?.audio) {
+        this.centralSession.audio.currentTime = nextTime
+      }
+    },
+
     getDisplayArabic(verse) {
       if (!verse?.arabic) return ''
+      const forceMushafWords = this.readingViewMode === 'mushaf'
+      const wrapWords = forceMushafWords || this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled
       if (this.shouldShowRecitationReviewHighlights(verse.key)) {
         return this.splitRecitationDisplayIntoWords(verse)
       }
       if (this.tajweedEnabled && verse.arabic_tajweed) {
-        return this.renderWordLevelTajweedMarkup(verse, {
-          wrapWords: this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled
-        })
+        return this.renderWordLevelTajweedMarkup(verse, { wrapWords })
       }
-      if (this.showWordByWord || this.anchorModeEnabled || this.wordByWordAudioEnabled) return this.splitArabicIntoWords(verse)
+      if (wrapWords) return this.splitArabicIntoWords(verse)
       return this.stripTajweedMarkup(verse.arabic)
     },
 
@@ -15908,26 +16076,26 @@ export default {
       this.audioElement.removeEventListener('loadstart', this.audioLoadStart)
 
       this.audioTimeUpdate = () => {
-        this.currentTime = this.audioElement.currentTime
-        this.duration = this.audioElement.duration
-        this.centralSession.audio.currentTime = Number(this.currentTime || 0)
-        this.centralSession.audio.speed = Number(this.speed || 1)
+        const audio = this.audioElement
+        if (!audio) return
+        const nextTime = Number(audio.currentTime || 0)
+        const nextDuration = Number(audio.duration || 0)
 
-        if (this.segmentEndTime > 0 && Number(this.currentTime || 0) >= this.segmentEndTime - 0.04) {
+        if (this.segmentEndTime > 0 && nextTime >= this.segmentEndTime - 0.04) {
           this.handleSegmentBoundary()
           return
         }
 
         if (this.wordByWordAudioEnabled) {
           const verse = this.activeVerseRef
-          if (verse && verse.key) {
+          if (verse?.key) {
             if ((!this.wordHighlightTimestamps?.length || this.currentHighlightedVerseKey !== verse.key) && !this.wordHighlightLoading) {
               this.startWordHighlighting(verse)
             } else if (!this.wordHighlightLoading) {
               const engine = this.wordSyncEngine
               if (engine && engine.hasTimeline()) {
-                engine.observe(this.currentTime)
-                if (!engine.running && this.audioElement && !this.audioElement.paused) {
+                engine.observe(nextTime)
+                if (!engine.running && !audio.paused) {
                   engine.resume()
                 }
               }
@@ -15935,11 +16103,12 @@ export default {
           }
         }
 
-        // Waveform - separate from word highlighting (works even if word-by-word is off)
-        const verse = this.activeVerseRef
-        if (verse && verse.key !== this.currentWaveVerseKey) {
-          this.currentWaveVerseKey = verse.key;
+        const waveVerse = this.activeVerseRef
+        if (waveVerse?.key && waveVerse.key !== this.currentWaveVerseKey) {
+          this.currentWaveVerseKey = waveVerse.key
         }
+
+        this.syncAudioUiState(nextTime, nextDuration)
       }
 
       this.audioEnded = () => {
@@ -15955,6 +16124,9 @@ export default {
           this.manualOnlyPlayback = false
           this.advanceLocked = false
           return
+        }
+        if (this.readingViewMode === 'mushaf' && this.playMode !== 'manual') {
+          this.prefetchMushafPageForUpcomingAyah()
         }
         const gapSeconds = this.getCurrentPlaybackGapSeconds()
         const gapDelayMs = Math.max(0, gapSeconds * 1000)
@@ -16463,6 +16635,7 @@ export default {
 
         this.buildQueue(mode)
         this.syncActiveVerseState(mode)
+        this.clearMushafAyahHtmlCache()
 
         // Set ready after data loads
         this.isDataReady = true
@@ -17272,6 +17445,7 @@ export default {
     updateDefaultFontSize() {
       // Clamp the value
       this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, this.defaultFontSize))
+      this.clearMushafAyahHtmlCache()
       this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', this.defaultFontSize)
       this.syncSettingsDraft()
       this.persistVerseFontSizes()
@@ -17368,7 +17542,9 @@ export default {
 
         if (state) {
           const keepWorkspaceVisible = this.hasLocalInProgressSessionEvidence()
-          this.tab = ['tools', 'techniques', 'saved', 'stats', 'settings'].includes(state.tab) ? state.tab : 'tools'
+          this.tab = state.tab === 'settings' || !['tools', 'techniques', 'saved', 'stats'].includes(state.tab)
+            ? 'tools'
+            : state.tab
           this.showTools = keepWorkspaceVisible ? false : !!state.showTools
           this.currentMode = state.currentMode || 'beginner'
           this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep)
@@ -17451,6 +17627,9 @@ export default {
       }
 
       if (!state) this.showTools = false
+      if (this.readingViewMode === 'mushaf') {
+        this.wordByWordAudioEnabled = true
+      }
       this.beginner = this.loadModeState('beginner')
       this.advanced = this.loadModeState('advanced')
       this.planner = this.loadModeState('planner')

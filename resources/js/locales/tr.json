@@ -609,6 +609,7 @@
     "open_session_setup": "Open session setup",
     "open_controls": "Open controls",
     "mushaf_page_is_preparing": "Mushaf page is preparing",
+    "session_setup_in_progress": "Oturumunuz hazırlanıyor, lütfen bekleyin…",
     "text": "Text",
     "session": "Session",
     "practice": "Practice",
