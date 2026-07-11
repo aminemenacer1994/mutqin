@@ -621,6 +621,9 @@
     "recitation_window_secs": "Jendela tilawah (detik)",
     "recitation_window_hint": "Berapa lama jeda setelah qari agar Anda bisa mengulang sebelum ayah berikutnya dimulai.",
     "recite_now_window": "Giliran Anda tilawah sekarang · {seconds}s tersisa",
+    "talqin": {
+      "yourTurn": "Giliran Anda tilawah"
+    },
     "delay_between_recitations_secs": "Jeda antar tilawah (detik)",
     "pause_before_each_next_repetition_recitation_in_au": "Jeda sebelum setiap pengulangan/tilawah berikutnya dalam mode otomatis.",
     "focus_mode": "Mode Fokus",

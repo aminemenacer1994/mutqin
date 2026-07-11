@@ -390,6 +390,33 @@
                   </div>
                 </div>
               </div>
+              <div v-if="activeVerseRef && (showTranslation || showTransliteration || showWordByWord)" class="mushaf-reading-aids">
+                <div v-if="showTransliteration && activeVerseRef.transliteration" class="verse-aid-block" dir="ltr" lang="en">
+                  <div class="verse-aid-title" dir="ltr" lang="en">{{ t('memorisation.reading.transliteration') }}</div>
+                  <div class="verse-transliteration verse-aid" dir="ltr" lang="en">
+                    {{ activeVerseRef.transliteration }}
+                  </div>
+                </div>
+                <div v-if="showTranslation && activeVerseRef.translation" class="verse-aid-block" dir="ltr" lang="en">
+                  <div class="verse-aid-title" dir="ltr" lang="en">{{ t('memorisation.reading.translation') }}</div>
+                  <div class="verse-translation verse-aid" dir="ltr" lang="en">
+                    {{ activeVerseRef.translation }}
+                  </div>
+                </div>
+                <div v-if="showWordByWord && activeVerseRef.words && activeVerseRef.words.length" class="verse-words verse-aid mushaf-verse-words">
+                  <div v-for="(word, wi) in activeVerseRef.words" :key="wi" class="word-item"
+                    :class="{ highlighted: currentHighlightedVerseKey === activeVerseRef.key && currentWordIndex === wi, 'phrase-highlighted': currentHighlightedVerseKey === activeVerseRef.key && currentPhraseIndex === wi }"
+                    tabindex="-1">
+                    <span class="word-arabic" dir="rtl" lang="ar">{{ word.ar }}</span>
+                    <span class="word-meaning">{{ word.en }}</span>
+                    <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn" type="button"
+                      @click.stop="playWordAudio(word.audio, activeVerseRef, wi)"
+                      :aria-label="`Play word ${wi + 1} audio for ayah ${activeVerseRef.number}`">
+                      <i class="bi bi-volume-up" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div v-else-if="shouldShowReadingWorkspace" class="verses-grid">
               <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{
@@ -532,9 +559,10 @@
               type="button">
               <i class="bi bi-bar-chart-line"></i> {{ t('memorisation.insights') }}
             </button> -->
-            <!-- <button :class="{ active: tab === 'settings' }" @click.prevent="setActiveTab('settings')" type="button">
+            <button role="tab" :aria-selected="tab === 'settings' ? 'true' : 'false'" :class="{ active: tab === 'settings' }"
+              @click.prevent="setActiveTab('settings')" title="Display and reading settings" type="button">
               <i class="bi bi-gear"></i> {{ t('common.settings') }}
-            </button> -->
+            </button>
           </div>
         </div>
 
@@ -686,7 +714,15 @@
                     <div class="radio-group radio-group-tight">
                       <label class="radio"><input type="radio" name="session-auto-advance" value="auto" v-model="playMode"> {{ t('common.yes') }}</label>
                       <label class="radio"><input type="radio" name="session-auto-advance" value="manual" v-model="playMode"> {{ t('common.no') }}</label>
+                      <label class="radio"><input type="radio" name="session-auto-advance" value="follow" v-model="playMode"> {{ t('memorisation.listen_then_recite') }}</label>
                     </div>
+                  </div>
+                  <div v-if="playMode === 'follow' || talqinModeEnabled" class="field">
+                    <label><i class="bi bi-hourglass-top"></i> {{ t('memorisation.recitation_window_secs') }}</label>
+                    <select v-model.number="recitationWindowSeconds" class="select">
+                      <option v-for="option in recitationWindowOptions" :key="`recitation-window-${option}`" :value="option">{{ option }}s</option>
+                    </select>
+                    <small class="field-hint">{{ t('memorisation.recitation_window_hint') }}</small>
                   </div>
                   <div class="field">
                     <label><i class="bi bi-hourglass-split"></i> {{ t('memorisation.delay_between_recitations_secs') }}</label>
@@ -1200,10 +1236,13 @@
                     <div class="setting-label">{{ t('sessionSetup.tajweed') }}</div>
                     <div class="setting-description">{{ t('sessionSetup.tajweedDesc') }}</div>
                   </div>
+                  <button class="toggle-chip" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
+                    {{ tajweedEnabled ? t('common.on') : t('common.off') }}
+                  </button>
                 </div>
 
                 <!-- Font Size -->
-                <div v-if="false" class="setting-item setting-item-range">
+                <div class="setting-item setting-item-range">
                   <div class="setting-info">
                     <div class="setting-label">{{ t('sessionSetup.fontSize') }}</div>
                     <div class="setting-description">{{ t('sessionSetup.fontSizeDesc') }}</div>
@@ -1551,7 +1590,7 @@
               {{ t('memorisation.actions.newSession') }}
             </button>
             <button class="btn-secondary" type="button" @click="exitSessionToRepeatRange">
-              Repeat session
+              {{ t('memorisation.actions.repeatRange') }}
             </button>
             <button class="btn-secondary" type="button" @click="exitSessionToSaveSession">
               {{ t('memorisation.save_session') }}
@@ -2786,7 +2825,7 @@
             <span v-for="dot in onboardingSteps.length" :key="`ob-dot-${dot}`"
               :class="{ active: onboardingStepIndex === dot - 1 }"></span>
           </div>
-          <div v-if="!onboardingManualLaunch && onboardingStepIndex === onboardingSteps.length - 1" class="post-onboarding-preview onboarding-default-preview">
+          <!-- <div v-if="!onboardingManualLaunch && onboardingStepIndex === onboardingSteps.length - 1" class="post-onboarding-preview onboarding-default-preview">
             <div class="post-onboarding-preview-head">
               <span class="post-onboarding-preview-icon"><i class="bi bi-book"></i></span>
               <div>
@@ -2794,7 +2833,7 @@
                 <small>Surah Al-Fatihah, ayahs 1-7, Alafasy, standard speed, 3 repeats, no memorisation techniques.</small>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
         <div class="modal-footer post-onboarding-footer">
           <button v-if="onboardingStepIndex < onboardingSteps.length - 1" class="btn-primary"
@@ -2850,12 +2889,22 @@
       <div v-if="appReady && (playerVisible || talqinRecitationTurnActive)" class="player-dock">
         <div
           v-if="talqinRecitationTurnActive"
-          class="practice-turn-callout practice-turn-callout--docked is-talqin"
+          class="practice-turn-callout practice-turn-callout--docked practice-turn-callout--countdown is-talqin"
           role="status"
           aria-live="polite"
+          :aria-label="talqinRecitationPrompt"
         >
-          <i class="bi bi-soundwave" aria-hidden="true"></i>
-          <span>{{ practiceTurnCalloutMessage }}</span>
+          <div class="talqin-callout-modal">
+            <div
+              v-if="talqinCalloutSeconds > 0"
+              :key="talqinCalloutSeconds"
+              class="talqin-callout-number"
+              aria-hidden="true"
+            >
+              {{ talqinCalloutSeconds }}
+            </div>
+            <div class="talqin-callout-text">{{ talqinCalloutHeadline }}</div>
+          </div>
         </div>
 
         <div

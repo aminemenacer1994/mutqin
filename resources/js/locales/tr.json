@@ -627,6 +627,9 @@
     "recitation_window_secs": "Recitation window (secs)",
     "recitation_window_hint": "How long to pause after the reciter so you can repeat before the next ayah starts.",
     "recite_now_window": "Your turn to recite now · {seconds}s left",
+    "talqin": {
+      "yourTurn": "Tilavinizin sırası"
+    },
     "delay_between_recitations_secs": "Delay between recitations (secs)",
     "pause_before_each_next_repetition_recitation_in_au": "Pause before each next repetition/recitation in auto mode.",
     "focus_mode": "Focus Mode",

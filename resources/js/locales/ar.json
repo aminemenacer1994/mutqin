@@ -621,6 +621,9 @@
     "recitation_window_secs": "مهلة التلاوة (ثوانٍ)",
     "recitation_window_hint": "المدة التي يتوقف فيها بعد القارئ حتى تردد قبل بدء الآية التالية.",
     "recite_now_window": "دورك الآن في التلاوة · متبقٍ {seconds}ث",
+    "talqin": {
+      "yourTurn": "حان دورك في التلاوة"
+    },
     "delay_between_recitations_secs": "التأخير بين التلاوات (ثوانٍ)",
     "pause_before_each_next_repetition_recitation_in_au": "توقّف قبل كل تكرار/تلاوة تالية في الوضع التلقائي.",
     "focus_mode": "وضع التركيز",

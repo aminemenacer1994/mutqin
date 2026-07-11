@@ -2138,7 +2138,11 @@ export default {
     },
 
     activeVerseRef() {
-      return this.mushafDisplayVerses.find(v => v.key === this.effectiveActiveVerseKey) || null
+      const key = this.effectiveActiveVerseKey
+      if (!key) return null
+      return this.mushafDisplayVerses.find(v => v.key === key)
+        || (this.verses || []).find(v => v.key === key)
+        || null
     },
     recitationCheckVisible() {
       return (this.recitationCheckPreparing && !!this.recitationCheckStartedAt && !this.recitationCheckRecording)
@@ -2873,6 +2877,12 @@ export default {
       const seconds = Math.max(0, Number(this.recitationWindowRemaining || 0))
       return `Talqin is active. Your turn to recite now${seconds ? ` · ${seconds}s left` : ''}.`
     },
+    talqinCalloutSeconds() {
+      return Math.max(0, Number(this.recitationWindowRemaining || 0))
+    },
+    talqinCalloutHeadline() {
+      return this.translateOrFallback('memorisation.talqin.yourTurn', 'Your turn to recite')
+    },
     practiceTurnCalloutVisible() {
       return this.talqinRecitationTurnActive || this.reciterFollowModeActive
     },
@@ -3038,10 +3048,10 @@ export default {
     playMode: {
       get() {
         const mode = this.currentConfig.playMode
-        return mode === 'follow' ? 'auto' : mode
+        return ['auto', 'manual', 'follow'].includes(mode) ? mode : 'auto'
       },
       set(val) {
-        const safeMode = ['auto', 'manual'].includes(val) ? val : 'auto'
+        const safeMode = ['auto', 'manual', 'follow'].includes(val) ? val : 'auto'
         const store = this.getModeStore(this.currentMode)
         if (store) store.playMode = safeMode
       }
@@ -3700,6 +3710,13 @@ export default {
         this.tab = 'tools'
         this.isDataReady = true
         this.$nextTick(() => {
+          if (this.readingViewMode === 'mushaf') {
+            if (Number.isFinite(Number(this.mushafPageIndex)) && this.mushafPageIndex > 0 && this.mushafPages.length) {
+              this.mushafPageIndex = Math.min(this.mushafPageIndex, this.mushafPages.length - 1)
+            } else {
+              this.syncMushafPageToActiveVerse()
+            }
+          }
           if (this.effectiveActiveVerseKey) {
             const el = document.querySelector(`[data-verse-key="${this.effectiveActiveVerseKey}"]`)
             if (el) el.scrollIntoView({ behavior: 'auto', block: 'center' })
@@ -3888,6 +3905,12 @@ export default {
     },
     showPlannerCompletionModal(newVal) {
       this.syncBodyScrollLock(newVal)
+    },
+    showPostLoginOnboarding(newVal) {
+      if (newVal) {
+        this.showTools = false
+        this.topCardMenuOpen = false
+      }
     },
     showSessionEndedModal(newVal) {
       this.syncBodyScrollLock(newVal)
@@ -6050,7 +6073,51 @@ export default {
       }
     },
 
-    startSessionWithCountdown() {
+    isPlaybackActive() {
+      const audio = this.audioElement || this.$refs.audio
+      return !!this.isPlaying || !!(audio && !audio.paused && (audio.currentSrc || audio.getAttribute('src')))
+    },
+
+    preloadQueueEntryAudio(entry, options = {}) {
+      const verse = entry?.verse || entry
+      const audioUrl = verse?.audio ? this.normalizeAudioUrl(verse.audio) : ''
+      if (!audioUrl) return false
+
+      const audio = this.audioElement || this.$refs.audio
+      if (!audio) return false
+      if (!this.audioElement) {
+        this.audioElement = audio
+        this.initAudio()
+      }
+
+      const currentSrc = audio.currentSrc ? this.normalizeAudioUrl(audio.currentSrc) : ''
+      if (currentSrc !== audioUrl) {
+        audio.src = audioUrl
+        audio.load()
+      }
+      if (options.playerVisible) {
+        this.playerVisible = true
+      }
+      return true
+    },
+
+    async ensureSessionPlaybackStarted() {
+      await this.$nextTick()
+      if (this.isPlaybackActive()) return true
+
+      const entry = this.queue?.[this.queueIndex]
+      if (entry) {
+        await this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
+        await this.$nextTick()
+        if (this.isPlaybackActive()) return true
+      }
+
+      await this.resumePlaybackAfterGesture()
+      await this.$nextTick()
+      return this.isPlaybackActive()
+    },
+
+    startSessionWithCountdown(options = {}) {
       if (!this.canStartSession) {
         this.showTools = true
         this.showBanner(this.t('toasts.chooseAValidSurahAndAyah'), 'info', 3600)
@@ -6060,16 +6127,27 @@ export default {
       this.showPlannerCompletionModal = false
       this.showPlannerCompletionConfetti = false
       this.showSessionEndedModal = false
-      this.primeAudioPlaybackUnlock()
+      this.showSessionExitModal = false
+      if (!options.skipPrime) {
+        this.primeAudioPlaybackUnlock()
+      }
+
+      const preloadEntry = this.queue?.[this.queueIndex] || this.queue?.[0]
+      if (preloadEntry) {
+        this.preloadQueueEntryAudio(preloadEntry, { playerVisible: true })
+      }
+
       this.showCountdown(async () => {
         try {
           await this.startSession()
-          if (!this.isPlaying && this.queue?.length) {
-            await this.resumePlaybackAfterGesture()
+          const playbackStarted = await this.ensureSessionPlaybackStarted()
+          if (!playbackStarted && this.queue?.length) {
+            this.promptTapToPlay()
           }
         } catch (error) {
           console.error('Session start after countdown failed:', error)
-          if (this.queue?.length) {
+          const playbackStarted = await this.ensureSessionPlaybackStarted()
+          if (!playbackStarted && this.queue?.length) {
             this.promptTapToPlay()
           }
         }
@@ -6191,9 +6269,17 @@ export default {
       if (!payload?.config?.chapterId) return false
       const mode = payload.mode || this.currentMode || 'beginner'
       const target = mode === 'planner' ? 'planner' : (mode === 'beginner' ? 'beginner' : 'advanced')
+      const savedReadingViewMode = ['stacked', 'mushaf'].includes(payload.readingViewMode)
+        ? payload.readingViewMode
+        : (['stacked', 'mushaf'].includes(payload.config?.readingViewMode) ? payload.config.readingViewMode : null)
+      const savedMushafPageIndex = Number(payload.mushafPageIndex ?? payload.config?.mushafPageIndex)
 
       this.currentMode = mode
-      this.tab = 'tools'
+      this.tab = payload.tab || this.tab || 'tools'
+      if (savedReadingViewMode) this.readingViewMode = savedReadingViewMode
+      if (Number.isFinite(savedMushafPageIndex) && savedMushafPageIndex >= 0) {
+        this.mushafPageIndex = savedMushafPageIndex
+      }
       this.applySessionConfig({ ...(payload.config || {}), mode })
       this[target] = {
         ...(target === 'planner' ? createPlannerState() : (target === 'beginner' ? createBeginnerState() : createAdvancedState())),
@@ -6226,6 +6312,15 @@ export default {
       this.sessionCompleted = false
       this.sessionCompletedAt = null
       this.sessionStartedAt = Number(payload.sessionStartedAt || 0) || Date.now()
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'active'
+        this.centralSession.sessionCompletedAt = null
+      }
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = true
+        this.mutqinState.sessionState.completed = false
+        this.mutqinState.sessionState.completed_at = null
+      }
       this.showTools = false
       this.flowStep = 'learn'
       this.playerVisible = payload.playerVisible ?? payload.config?.playerVisible ?? true
@@ -6238,8 +6333,15 @@ export default {
         isPlaying: !!shouldResumePlayback
       }
       this.$nextTick(() => {
+        if (this.readingViewMode === 'mushaf') {
+          if (Number.isFinite(savedMushafPageIndex) && savedMushafPageIndex >= 0 && this.mushafPages.length) {
+            this.mushafPageIndex = Math.min(savedMushafPageIndex, this.mushafPages.length - 1)
+          } else {
+            this.syncMushafPageToActiveVerse()
+          }
+        }
         if (this.restoredAudioState?.src) {
-          this.applyRestoredAudioState()
+          this.applyRestoredAudioState({ autoplay: shouldResumePlayback })
           return
         }
         if (shouldResumePlayback) {
@@ -6675,7 +6777,7 @@ export default {
       this.anchorCount = 2
       this.readingViewMode = 'stacked'
       this.tab = 'tools'
-      this.showTools = true
+      this.showTools = false
     },
     restoreOnboardingDemo(options = {}) {
       const snapshot = this.onboardingDemoSnapshot
@@ -6726,7 +6828,7 @@ export default {
       ][step] || { tab: 'tools', section: 'advanced_setup' }
       if (stepMeta.targetSection) stepConfig.section = stepMeta.targetSection
       this.tab = stepConfig.tab
-      this.showTools = true
+      this.showTools = false
       if (stepConfig.mode) this.readingViewMode = stepConfig.mode
       this.blurModeEnabled = !!stepConfig.blur
       this.chainingEnabled = stepConfig.chaining !== false
@@ -12579,9 +12681,20 @@ export default {
 
     closeToolsPanel() {
       if (!this.showTools) return
+      this.commitOffcanvasSettings()
       this.showTools = false
       this.persistUiState()
       this.restoreToolsFocus()
+    },
+
+    commitOffcanvasSettings() {
+      this.applySettingsChanges({ silent: true })
+      this.applySpeed()
+      this.persistModeState(this.currentMode)
+      this.persistCentralSessionState()
+      if (this.anchorModeEnabled) {
+        this.scheduleAnchorHighlights()
+      }
     },
 
     closeResumeModal() {
@@ -12599,6 +12712,7 @@ export default {
     async repeatLastSessionFromStart() {
       const payload = this.continueSessionPayload
       if (!payload?.config?.chapterId) return
+      this.primeAudioPlaybackUnlock()
       this.startingFreshSessionSelection = false
       this.showResumeModal = false
       this.returningUserChoicePending = false
@@ -12608,9 +12722,7 @@ export default {
       })
       this.prepareRangeRestart()
       this.showBanner('Session restarted from the beginning.', 'success', 2200)
-      this.$nextTick(() => {
-        this.startSessionWithCountdown()
-      })
+      this.startSessionWithCountdown({ skipPrime: true })
     },
 
     async saveSessionFromResumeChoice() {
@@ -12664,25 +12776,75 @@ export default {
         label: 'Tap to play'
       })
     },
-    async resumePlaybackAfterGesture() {
-      const audio = this.audioElement || this.$refs.audio
-      if (audio?.src) {
-        try {
-          const safeSpeed = this.normalizePlaybackSpeed(this.speed)
-          audio.defaultPlaybackRate = safeSpeed
-          audio.playbackRate = safeSpeed
-          await audio.play()
-          this.isPlaying = true
-          this.playerVisible = true
-          this.markPlaybackStart()
-          return
-        } catch (error) {
-          console.error('Playback resume after gesture failed:', error)
+    waitForAudioElementReady(audio, timeoutMs = 10000) {
+      if (!audio) return Promise.reject(new Error('No audio element'))
+      if (audio.readyState >= 2) return Promise.resolve()
+
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          cleanup()
+          reject(new Error('Audio load timeout'))
+        }, timeoutMs)
+
+        const cleanup = () => {
+          clearTimeout(timeout)
+          audio.removeEventListener('canplay', onCanPlay)
+          audio.removeEventListener('error', onError)
         }
-      }
+
+        const onCanPlay = () => {
+          cleanup()
+          resolve()
+        }
+
+        const onError = () => {
+          cleanup()
+          reject(new Error('Audio load error'))
+        }
+
+        audio.addEventListener('canplay', onCanPlay, { once: true })
+        audio.addEventListener('error', onError, { once: true })
+      })
+    },
+
+    async resumePlaybackAfterGesture() {
       const entry = this.queue?.[this.queueIndex]
       if (entry) {
-        await this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
+        try {
+          await this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
+          return
+        } catch (error) {
+          console.error('Playback resume via queue entry failed:', error)
+        }
+      }
+
+      const verse = this.activeVerseRef
+        || (this.verses || []).find(candidate => candidate?.key === this.effectiveActiveVerseKey)
+      const audioUrl = verse?.audio ? this.normalizeAudioUrl(verse.audio) : ''
+      const audio = this.audioElement || this.$refs.audio
+      if (!audio || !audioUrl) return
+
+      if (!this.audioElement) {
+        this.audioElement = audio
+        this.initAudio()
+      }
+
+      try {
+        const currentSrc = audio.currentSrc ? this.normalizeAudioUrl(audio.currentSrc) : ''
+        if (currentSrc !== audioUrl) {
+          audio.src = audioUrl
+          audio.load()
+        }
+        await this.waitForAudioElementReady(audio)
+        const safeSpeed = this.normalizePlaybackSpeed(this.speed)
+        audio.defaultPlaybackRate = safeSpeed
+        audio.playbackRate = safeSpeed
+        await audio.play()
+        this.isPlaying = true
+        this.playerVisible = true
+        this.markPlaybackStart()
+      } catch (error) {
+        console.error('Playback resume after gesture failed:', error)
       }
     },
     openInsightsPanel() {
@@ -13648,9 +13810,12 @@ export default {
         mutqinPhase: mutqinItem?.phase || mutqinSession.phase || 'Takrar',
         currentTime: this.currentTime || 0,
         duration: this.duration || 0,
-        isPlaying: false,
+        isPlaying: !!this.isPlaying,
         playerVisible: !!this.playerVisible,
         audioSrc: this.audioElement?.currentSrc || '',
+        readingViewMode: this.readingViewMode,
+        mushafPageIndex: this.mushafPageIndex,
+        sessionStartedAt: Number(this.sessionStartedAt || 0) || null,
         config
       }
     },
@@ -13979,12 +14144,17 @@ export default {
 
     continueSessionFromExitModal() {
       const snapshot = this.sessionExitSnapshot
+      this.primeAudioPlaybackUnlock()
       this.showSessionExitModal = false
       this.sessionExitPreviewSnapshot = null
       if (!snapshot) return
       this.restoreSessionFromSnapshot(snapshot, { autoplay: false })
-      this.showCountdown(() => {
+      this.showCountdown(async () => {
         this.resumePlaybackFromRestoredState()
+        const playbackStarted = await this.ensureSessionPlaybackStarted()
+        if (!playbackStarted && this.queue?.length) {
+          this.promptTapToPlay()
+        }
       })
     },
 
@@ -14037,6 +14207,10 @@ export default {
       }
       if (firstVerseKey) {
         this.setActiveVerse(firstVerseKey, { mode, queueIndex: 0, scroll: false })
+      }
+      const firstEntry = this.queue?.[0]
+      if (firstEntry) {
+        this.preloadQueueEntryAudio(firstEntry, { playerVisible: true })
       }
     },
 
@@ -14276,15 +14450,16 @@ export default {
       this.openNewSessionSetup()
     },
     exitSessionToRepeatRange() {
+      this.primeAudioPlaybackUnlock()
       if (!this.hasSessionStarted && this.isSessionCompleted) {
         this.closeSessionExitModal({ restore: false })
         this.prepareRangeRestart()
-        this.startSessionWithCountdown()
+        this.startSessionWithCountdown({ skipPrime: true })
         return
       }
       this.confirmSessionExit({ showSummary: false })
       this.prepareRangeRestart()
-      this.startSessionWithCountdown()
+      this.startSessionWithCountdown({ skipPrime: true })
     },
     exitSessionToSaveSession() {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
@@ -14338,9 +14513,10 @@ export default {
       }
     },
     repeatSessionFromEndedModal() {
+      this.primeAudioPlaybackUnlock()
       this.closeSessionEndedModal()
       this.prepareRangeRestart()
-      this.startSessionWithCountdown()
+      this.startSessionWithCountdown({ skipPrime: true })
     },
 
     openConfirmModal(options) {
@@ -15970,80 +16146,49 @@ export default {
       }
       this.playerVisible = true
 
-      return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Audio load timeout'))
-        }, 10000)
+      try {
+        await this.waitForAudioElementReady(this.audioElement)
 
-        const startPlayback = async () => {
-          clearTimeout(timeout)
-          const safeSpeed = this.normalizePlaybackSpeed(this.speed)
-          this.audioElement.defaultPlaybackRate = safeSpeed
-          this.audioElement.playbackRate = safeSpeed
-          const segment = options.segment || null
-          const segmentTotal = Math.max(1, Number(segment?.sequenceTotal || segment?.total || 1))
-          const segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number(segment?.index || 0)))
-          let segmentEnd = 0
+        const safeSpeed = this.normalizePlaybackSpeed(this.speed)
+        this.audioElement.defaultPlaybackRate = safeSpeed
+        this.audioElement.playbackRate = safeSpeed
+        const segment = options.segment || null
+        const segmentTotal = Math.max(1, Number(segment?.sequenceTotal || segment?.total || 1))
+        const segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number(segment?.index || 0)))
+        let segmentEnd = 0
 
-          if (segment && Number.isFinite(this.audioElement.duration) && this.audioElement.duration > 0 && segmentTotal > 1) {
-            const duration = Number(this.audioElement.duration || 0)
-            const segmentStart = Math.max(0, duration * (segmentIndex / segmentTotal))
-            segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal))
-            this.segmentEndTime = segmentEnd
-            this.audioElement.currentTime = segmentStart
-          }
-
-          try {
-            await this.audioElement.play()
-            this.incrementVersePlayCount(verse.key)
-            this.markPlaybackStart()
-            this.addActivityEvent({ ts: Date.now(), type: 'play', verseKey: verse.key })
-            this.recomputeAnalytics()
-            if (this.wordByWordAudioEnabled) {
-              this.ensureWordHighlightTrack(verse, { force: true }).then(() => {
-                this.syncWordHighlightFromAudio(verse)
-                if (!this.audioElement?.paused) this.queueWordHighlightFrame(verse)
-              }).catch(err => {
-                console.warn('Word highlight bootstrap failed:', err)
-              })
-            }
-            this.playRequestLocked = false
-            resolve()
-          } catch (err) {
-            this.isPlaying = false
-            this.playRequestLocked = false
-            reject(err)
-          }
+        if (segment && Number.isFinite(this.audioElement.duration) && this.audioElement.duration > 0 && segmentTotal > 1) {
+          const duration = Number(this.audioElement.duration || 0)
+          const segmentStart = Math.max(0, duration * (segmentIndex / segmentTotal))
+          segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal))
+          this.segmentEndTime = segmentEnd
+          this.audioElement.currentTime = segmentStart
         }
 
-        const canPlayHandler = async () => {
-          await startPlayback()
-          this.audioElement.removeEventListener('canplay', canPlayHandler)
+        await this.audioElement.play()
+        this.isPlaying = true
+        this.incrementVersePlayCount(verse.key)
+        this.markPlaybackStart()
+        this.addActivityEvent({ ts: Date.now(), type: 'play', verseKey: verse.key })
+        this.recomputeAnalytics()
+        if (this.wordByWordAudioEnabled) {
+          this.ensureWordHighlightTrack(verse, { force: true }).then(() => {
+            this.syncWordHighlightFromAudio(verse)
+            if (!this.audioElement?.paused) this.queueWordHighlightFrame(verse)
+          }).catch(err => {
+            console.warn('Word highlight bootstrap failed:', err)
+          })
         }
-
-        const errorHandler = (err) => {
-          clearTimeout(timeout)
-          this.isPlaying = false
-          this.playRequestLocked = false
-          reject(err)
-          this.audioElement.removeEventListener('error', errorHandler)
-        }
-
-        this.audioElement.addEventListener('error', errorHandler, { once: true })
-        if (isSameSource && this.audioElement.readyState >= 2) {
-          startPlayback()
-        } else {
-          this.audioElement.addEventListener('canplay', canPlayHandler)
-        }
-      }).catch(err => {
+      } catch (err) {
         console.error('playVerse failed:', err)
         this.isPlaying = false
-        this.playRequestLocked = false
         this.showBanner(this.t('toasts.failedToPlayAudio'), 'error', 3000, {
           key: 'resume-playback',
           label: 'Tap to play'
         })
-      })
+      } finally {
+        this.playRequestLocked = false
+      }
     },
 
     playQueueEntry(entry, options = {}) {
@@ -17072,7 +17217,7 @@ export default {
       this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
       this.recomputeAnalytics()
       this.finishSessionCleanup()
-      this.triggerSessionCompletionQuiz()
+      this.showBanner(this.t('memorisation.session_finished'), 'success', 2800)
     },
 
     handlePrimaryAction() {
@@ -17237,7 +17382,9 @@ export default {
           this.readingViewMode = ['stacked', 'mushaf'].includes(state.readingViewMode)
             ? state.readingViewMode
             : 'stacked'
-          this.mushafPageIndex = 0
+          this.mushafPageIndex = Number.isFinite(Number(state.mushafPageIndex))
+            ? Math.max(0, Number(state.mushafPageIndex))
+            : 0
           this.aiRecitationStrictProgression = state.aiRecitationStrictProgression !== false
           this.aiRecitationPersistMistakes = false
           this.persistentAiRecitationReviews = {}
@@ -17344,7 +17491,8 @@ export default {
 	          persistentAiRecitationReviews: this.persistentAiRecitationReviews,
 	          hiddenRevealModeEnabled: false,
 	          aiRecallModeEnabled: this.aiRecallModeEnabled,
-	        readingViewMode: this.readingViewMode,
+	          readingViewMode: this.readingViewMode,
+        mushafPageIndex: this.mushafPageIndex,
         mushafBackground: this.mushafBackground,
         mushafBorder: this.mushafBorder,
           focusModeEnabled: this.focusModeEnabled,

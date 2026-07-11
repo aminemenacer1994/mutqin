@@ -621,6 +621,9 @@
     "recitation_window_secs": "Fenêtre de récitation (sec.)",
     "recitation_window_hint": "Combien de temps laisser après le réciteur pour que vous répétiez avant l'ayah suivante.",
     "recite_now_window": "À vous de réciter · {seconds}s restantes",
+    "talqin": {
+      "yourTurn": "À vous de réciter"
+    },
     "delay_between_recitations_secs": "Délai entre les récitations (sec.)",
     "pause_before_each_next_repetition_recitation_in_au": "Pause avant chaque répétition/récitation suivante en mode auto.",
     "focus_mode": "Mode focus",
