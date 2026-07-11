@@ -435,7 +435,7 @@ export default {
         weeklyMinutes: [0, 0, 0, 0, 0, 0, 0]
       },
       playerVisible: false,
-      playerCollapsed: true,
+      playerCompact: false,
       playerMenuOpen: false,
       hasContinueSession: false,
       continueSessionLabel: '',
@@ -4044,6 +4044,7 @@ export default {
     activeKey: 'persistSessionState',
     queueIndex: 'persistSessionState',
     playerVisible: 'persistAudioState',
+    playerCompact: 'persistUiState',
     isPlaying: 'persistAudioState',
     currentTime: 'persistAudioState',
     flowStep: 'persistUiState',
@@ -5303,7 +5304,7 @@ export default {
     },
 
     syncPracticeTurnCalloutPosition() {
-      if (!this.practiceTurnCalloutVisible) {
+      if (!this.practiceTurnCalloutVisible || this.talqinRecitationTurnActive) {
         this.practiceTurnCalloutStyle = {}
         return
       }
@@ -5996,6 +5997,59 @@ export default {
       this.startSession()
     },
 
+    primeAudioPlaybackUnlock() {
+      const audio = this.audioElement || this.$refs.audio
+      if (!audio) return
+      if (!this.audioElement) {
+        this.audioElement = audio
+        this.initAudio()
+      }
+
+      const previousSrc = audio.currentSrc || audio.getAttribute('src') || ''
+      const previousTime = Number(audio.currentTime || 0)
+      const silentSrc = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
+      const unlockSrc = previousSrc || silentSrc
+
+      try {
+        if (!previousSrc) {
+          audio.src = unlockSrc
+          audio.load()
+        }
+        audio.muted = true
+        const playPromise = audio.play()
+        const restoreAudio = () => {
+          audio.pause()
+          audio.muted = false
+          if (previousSrc) {
+            audio.currentTime = previousTime
+          } else {
+            audio.removeAttribute('src')
+            audio.load()
+            audio.currentTime = 0
+          }
+        }
+        if (playPromise?.then) {
+          playPromise.then(restoreAudio).catch(() => {
+            audio.muted = false
+            if (!previousSrc) {
+              audio.removeAttribute('src')
+              audio.load()
+            }
+          })
+        } else {
+          restoreAudio()
+        }
+      } catch {
+        audio.muted = false
+        if (!previousSrc) {
+          try {
+            audio.removeAttribute('src')
+            audio.load()
+          } catch {}
+        }
+      }
+    },
+
     startSessionWithCountdown() {
       if (!this.canStartSession) {
         this.showTools = true
@@ -6006,9 +6060,19 @@ export default {
       this.showPlannerCompletionModal = false
       this.showPlannerCompletionConfetti = false
       this.showSessionEndedModal = false
-      const self = this
-      this.showCountdown(function () {
-        self.startSession()
+      this.primeAudioPlaybackUnlock()
+      this.showCountdown(async () => {
+        try {
+          await this.startSession()
+          if (!this.isPlaying && this.queue?.length) {
+            await this.resumePlaybackAfterGesture()
+          }
+        } catch (error) {
+          console.error('Session start after countdown failed:', error)
+          if (this.queue?.length) {
+            this.promptTapToPlay()
+          }
+        }
       })
     },
     async startSessionAndClose() {
@@ -13552,11 +13616,9 @@ export default {
         : callback => window.setTimeout(callback, 16)
       this.scrollFrame = schedule(() => {
         this.scrollFrame = null
-        const current = window.scrollY || 0
-        const nextCollapsed = current > this.lastScrollY && current > 120
-        if (this.playerCollapsed !== nextCollapsed) this.playerCollapsed = nextCollapsed
-        this.lastScrollY = current
-        if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
+        if (this.practiceTurnCalloutVisible && !this.talqinRecitationTurnActive) {
+          this.schedulePracticeTurnCalloutSync()
+        }
       })
     },
 
@@ -13930,6 +13992,24 @@ export default {
       const mode = this.currentMode
       const store = this.getModeStore(mode)
       const firstVerseKey = store?.verses?.[0]?.key || this.verses?.[0]?.key || null
+
+      this.sessionCompleted = false
+      this.sessionCompletedAt = null
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'idle'
+        this.centralSession.sessionCompletedAt = null
+      }
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.completed = false
+        this.mutqinState.sessionState.completed_at = null
+        this.mutqinState.sessionState.active = false
+      }
+      this.advanceLocked = false
+      this.playRequestLocked = false
+      this.manualOnlyPlayback = false
+      this.clearRecitationWindowTimer()
+      this.clearTalqinPauseTimer()
+
       if (store) {
         store.queueIndex = 0
         store.activeKey = firstVerseKey
@@ -13947,6 +14027,13 @@ export default {
           this.audioElement.removeAttribute('src')
           this.audioElement.load()
         } catch {}
+      }
+      if (store?.verses?.length) {
+        this.buildQueue(mode)
+        if (store) {
+          store.queueIndex = 0
+        }
+        this.queueIndex = 0
       }
       if (firstVerseKey) {
         this.setActiveVerse(firstVerseKey, { mode, queueIndex: 0, scroll: false })
@@ -14115,6 +14202,8 @@ export default {
 
     finishSessionCleanup() {
       this.finalizePlannerSessionProgress()
+      this.clearRecitationWindowTimer()
+      this.clearTalqinPauseTimer()
       this.closePlayer()
       this.clearTouchPeek()
       this.blurPeekHoldingSpace = false
@@ -16094,6 +16183,11 @@ export default {
       }
     },
 
+    setPlayerCompact(compact = false) {
+      this.playerCompact = !!compact
+      this.persistUiState()
+    },
+
     closePlayer() {
       this.flushPlaybackTime()
       this.stopWordHighlighting()
@@ -17200,6 +17294,7 @@ export default {
           this.tajweedEnabled = state.tajweedEnabled ?? false
           this.mainCardCollapsed = !!state.mainCardCollapsed
           this.feedbackCollapsed = !!state.feedbackCollapsed
+          this.playerCompact = !!state.playerCompact
         }
       } catch (e) {
         console.error('Error loading UI state:', e)
@@ -17275,6 +17370,7 @@ export default {
           tajweedEnabled: this.tajweedEnabled,
           mainCardCollapsed: this.mainCardCollapsed,
           feedbackCollapsed: this.feedbackCollapsed,
+          playerCompact: this.playerCompact,
         }
 
         if (this.learningBackendEnabled()) {

@@ -229,18 +229,13 @@
             <span>{{ t('common.loading') }}</span>
           </div>
           <div
-            v-if="isDataReady && practiceTurnCalloutVisible"
+            v-if="isDataReady && practiceTurnCalloutVisible && !talqinRecitationTurnActive"
             class="practice-turn-callout practice-turn-callout--tracked"
-            :class="{ 'is-talqin': talqinRecitationTurnActive }"
             :style="practiceTurnCalloutStyle"
             role="status"
             aria-live="polite"
           >
-            <i
-              class="bi"
-              :class="talqinRecitationTurnActive ? 'bi-soundwave' : 'bi-mic'"
-              aria-hidden="true"
-            ></i>
+            <i class="bi bi-mic" aria-hidden="true"></i>
             <span>{{ practiceTurnCalloutMessage }}</span>
           </div>
 
@@ -700,6 +695,14 @@
                       </option>
                     </select>
                     <small class="field-hint">{{ t('memorisation.pause_before_each_next_repetition_recitation_in_au') }}</small>
+                  </div>
+                  <div class="field">
+                    <label><i class="bi bi-music-player"></i> Player layout</label>
+                    <div class="radio-group radio-group-tight">
+                      <label class="radio"><input type="radio" name="session-player-layout" value="full" :checked="!playerCompact" @change="setPlayerCompact(false)"> Full</label>
+                      <label class="radio"><input type="radio" name="session-player-layout" value="mini" :checked="playerCompact" @change="setPlayerCompact(true)"> Mini</label>
+                    </div>
+                    <small class="field-hint">Mini keeps playback controls out of the way while you read.</small>
                   </div>
                 </div>
               </div>
@@ -2842,50 +2845,94 @@
       @saved="handleHifzPlanSaved"
     />
 
-    <!-- Global Audio Player - Updated with Speed Controls -->
+    <!-- Global Audio Player -->
     <transition name="slide-up">
-      <div v-if="appReady && playerVisible" class="player-bar" :class="{ collapsed: playerCollapsed, 'is-playing': isPlaying }" role="region"
-        aria-label="Audio player">
-        <div class="player-accent" aria-hidden="true"></div>
-        <div class="player-main">
-          <div class="player-info">
-            <div class="player-chapter">{{ currentChapter?.name_simple || 'Quran' }}</div>
-            <div class="player-verse">
-              {{ activeAyahLabel }}
-              <span v-if="etaLabel && isPlaying" class="player-eta" :title="getEtaTooltip()">
-                &bull; {{ etaLabel }} remaining
-              </span>
+      <div v-if="appReady && (playerVisible || talqinRecitationTurnActive)" class="player-dock">
+        <div
+          v-if="talqinRecitationTurnActive"
+          class="practice-turn-callout practice-turn-callout--docked is-talqin"
+          role="status"
+          aria-live="polite"
+        >
+          <i class="bi bi-soundwave" aria-hidden="true"></i>
+          <span>{{ practiceTurnCalloutMessage }}</span>
+        </div>
+
+        <div
+          v-if="playerVisible"
+          class="player-bar"
+          :class="{ compact: playerCompact, 'is-playing': isPlaying }"
+          role="region"
+          aria-label="Audio player"
+        >
+          <div class="player-accent" aria-hidden="true"></div>
+
+          <div v-if="!playerCompact" class="player-main">
+            <div class="player-info">
+              <div class="player-chapter">{{ currentChapter?.name_simple || 'Quran' }}</div>
+              <div class="player-verse">
+                {{ activeAyahLabel }}
+                <span v-if="etaLabel && isPlaying" class="player-eta" :title="getEtaTooltip()">
+                  &bull; {{ etaLabel }} remaining
+                </span>
+              </div>
+            </div>
+
+            <div class="player-controls">
+              <button class="player-btn" @click="prev" title="Previous" type="button" aria-label="Previous ayah">
+                <i class="bi bi-skip-start-fill" aria-hidden="true"></i>
+              </button>
+              <button class="player-btn player-play" @click="togglePlay" title="Play/Pause" type="button"
+                :aria-label="isPlaying ? 'Pause audio' : 'Play audio'">
+                <span class="player-play-ring" aria-hidden="true"></span>
+                <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+              </button>
+              <button class="player-btn" @click="next" title="Next" type="button" aria-label="Next ayah">
+                <i class="bi bi-skip-end-fill" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <div class="player-progress-wrap">
+              <span class="player-time elapsed">{{ formatTime(currentTime) }}</span>
+              <div class="player-progress-bg" @click="seek" ref="progress" role="progressbar" aria-label="Audio progress"
+                :aria-valuenow="Math.round((currentTime / (duration || 1)) * 100)" aria-valuemin="0" aria-valuemax="100">
+                <div class="player-progress-fill" :style="{ width: (currentTime / (duration || 1)) * 100 + '%' }"></div>
+                <div class="player-progress-thumb" :style="{ left: `calc(${(currentTime / (duration || 1)) * 100}% - 6px)` }"></div>
+              </div>
+              <span class="player-time total">{{ formatTime(duration) }}</span>
+            </div>
+
+            <div class="player-actions">
+              <button class="player-btn player-layout-toggle" @click="setPlayerCompact(true)" title="Mini player" type="button"
+                aria-label="Switch to mini player">
+                <i class="bi bi-dash-lg" aria-hidden="true"></i>
+              </button>
+              <button class="player-btn player-close" @click="playerVisible = false" title="Close player" type="button"
+                aria-label="Close audio player">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+              </button>
             </div>
           </div>
 
-          <div class="player-controls">
-            <button class="player-btn" @click="prev" title="Previous" type="button" aria-label="Previous ayah">
-              <i class="bi bi-skip-start-fill" aria-hidden="true"></i>
-            </button>
+          <div v-else class="player-mini">
             <button class="player-btn player-play" @click="togglePlay" title="Play/Pause" type="button"
               :aria-label="isPlaying ? 'Pause audio' : 'Play audio'">
               <span class="player-play-ring" aria-hidden="true"></span>
               <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
             </button>
-            <button class="player-btn" @click="next" title="Next" type="button" aria-label="Next ayah">
-              <i class="bi bi-skip-end-fill" aria-hidden="true"></i>
+            <div class="player-mini-info" aria-hidden="true">
+              <div class="player-chapter">{{ collapsedPlayerTitle }}</div>
+              <div class="player-verse">{{ collapsedPlayerSubtitle }}</div>
+            </div>
+            <button class="player-btn player-layout-toggle" @click="setPlayerCompact(false)" title="Full player" type="button"
+              aria-label="Switch to full player">
+              <i class="bi bi-arrows-angle-expand" aria-hidden="true"></i>
+            </button>
+            <button class="player-btn player-close" @click="playerVisible = false" title="Close player" type="button"
+              aria-label="Close audio player">
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
             </button>
           </div>
-
-          <div class="player-progress-wrap">
-            <span class="player-time elapsed">{{ formatTime(currentTime) }}</span>
-            <div class="player-progress-bg" @click="seek" ref="progress" role="progressbar" aria-label="Audio progress"
-              :aria-valuenow="Math.round((currentTime / (duration || 1)) * 100)" aria-valuemin="0" aria-valuemax="100">
-              <div class="player-progress-fill" :style="{ width: (currentTime / (duration || 1)) * 100 + '%' }"></div>
-              <div class="player-progress-thumb" :style="{ left: `calc(${(currentTime / (duration || 1)) * 100}% - 6px)` }"></div>
-            </div>
-            <span class="player-time total">{{ formatTime(duration) }}</span>
-          </div>
-
-          <button class="player-btn player-close" @click="playerVisible = false" title="Close player" type="button"
-            aria-label="Close audio player">
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
-          </button>
         </div>
       </div>
     </transition>
