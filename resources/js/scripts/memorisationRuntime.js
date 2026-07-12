@@ -205,6 +205,8 @@ export function normalizeRecordingResult(value) {
   if (raw.includes('excellent')) return 'Excellent'
   if (raw.includes('good')) return 'Good'
   if (raw.includes('pass')) return 'Good'
+  if (raw.includes('fair') || raw.includes('building')) return 'Fair'
+  if (raw.includes('review') || raw.includes('needs')) return 'Needs Review'
   return 'Needs Review'
 }
 

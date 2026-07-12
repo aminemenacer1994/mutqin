@@ -1102,7 +1102,7 @@ export default {
         completedEntries.map(item => item?.verse?.key || item?.key).filter(Boolean)
       ).size
       const elapsedMs = this.sessionStartedAt
-        ? Math.max(0, Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt))
+        ? this.getSessionElapsedSeconds() * 1000
         : 0
       const totalAttempts = completedAyahs + Number(this.sessionErrorCount || 0)
       const successRate = totalAttempts > 0
@@ -1657,6 +1657,13 @@ export default {
     sessionExitHeaderAyahRef() {
       return this.sessionExitPositionLabel || ''
     },
+    sessionExitPositionLine() {
+      const surah = this.sessionExitHeaderSurahName
+      const ayah = this.sessionExitHeaderAyahRef
+      if (surah && ayah) return `${surah} · ${ayah}`
+      if (surah) return surah
+      return ayah || ''
+    },
     sessionExitStats() {
       const snapshot = this.sessionExitPreviewSnapshot || {}
       if (!snapshot || !Object.keys(snapshot).length) return []
@@ -1711,6 +1718,14 @@ export default {
       }
       return stats.filter(stat => stat.key !== 'duration')
     },
+    sessionExitDetailRows() {
+      return this.sessionExitStats.map(stat => ({
+        key: stat.key,
+        label: stat.label,
+        value: stat.value,
+        hint: stat.hint || ''
+      }))
+    },
     sessionExitRemainingProgress() {
       const snapshot = this.sessionExitPreviewSnapshot || {}
       const done = Math.max(0, Number(snapshot.coveredAyahCount || this.currentPosition || 0))
@@ -1749,9 +1764,7 @@ export default {
       })
       let estimatedRemaining = ''
       if (remaining > 0 && done > 0) {
-        const durationSeconds = this.sessionStartedAt
-          ? Math.max(0, Math.round((Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt)) / 1000))
-          : Math.max(0, Math.round(Number(this.currentTime || 0)))
+        const durationSeconds = this.getSessionElapsedSeconds()
         const estimatedRemainingSeconds = Math.round((durationSeconds / Math.max(done, 1)) * remaining)
         if (estimatedRemainingSeconds > 0) {
           estimatedRemaining = this.formatTime(estimatedRemainingSeconds)
@@ -1945,6 +1958,25 @@ export default {
         return this.t('memorisation.welcomeBack.resumeSubtitle')
       }
       return this.t('memorisation.welcomeBack.freshSubtitle')
+    },
+    welcomeBackIslamicContent() {
+      if (this.canResumePreviousSession) {
+        return {
+          translation: this.t('memorisation.welcomeBack.resumeReminderTranslation'),
+          source: this.t('memorisation.welcomeBack.resumeReminderSource'),
+          intention: this.t('memorisation.welcomeBack.resumeIntention')
+        }
+      }
+      return {
+        translation: this.t('memorisation.welcomeBack.freshReminderTranslation'),
+        source: this.t('memorisation.welcomeBack.freshReminderSource'),
+        intention: this.t('memorisation.welcomeBack.freshIntention')
+      }
+    },
+    welcomeBackResumeHints() {
+      if (!this.canResumePreviousSession) return []
+      const card = this.welcomeBackMetaCards?.[0]
+      return (card?.points || []).filter(Boolean).slice(0, 2)
     },
     welcomeBackStats() {
       return []
@@ -2227,6 +2259,39 @@ export default {
         })
       }
       return stats
+    },
+    postSessionProgress() {
+      const snap = this.postSessionSnapshot
+      if (!snap) return null
+      const percentComplete = Math.max(0, Math.min(100, Number(snap.progressPercent || 0)))
+      const covered = Number(snap.coveredAyahCount || 0)
+      const total = Number(snap.totalAyahs || 0)
+      return {
+        percentComplete,
+        label: snap.completedAll
+          ? this.t('memorisation.sessionComplete.title')
+          : this.t('memorisation.postSession.progressLabel'),
+        detail: snap.progressLabel || (total ? `${covered}/${total} ayahs` : '')
+      }
+    },
+    postSessionDetailRows() {
+      return this.postSessionStats
+        .filter(stat => !['progress', 'repeats', 'techniques'].includes(stat.key))
+        .map(stat => ({
+          key: stat.key,
+          label: stat.label,
+          value: stat.value,
+          hint: stat.key === 'surah' ? '' : (stat.hint || '')
+        }))
+    },
+    postSessionNextStep() {
+      const snap = this.postSessionSnapshot
+      if (!snap) return ''
+      const nextSteps = Array.isArray(snap.nextSteps) ? snap.nextSteps.filter(Boolean) : []
+      if (nextSteps.length) return nextSteps[0]
+      if (snap.completedAll) return this.t('memorisation.summary.nextAdvance')
+      if (Number(snap.progressPercent || 0) >= 50) return this.t('memorisation.summary.nextRepeat')
+      return this.t('memorisation.summary.nextContinue')
     },
     postSessionSampleMetaCards() {
       const snapshot = this.postSessionSnapshot || {}
@@ -2878,8 +2943,9 @@ export default {
       ]
     },
     selfCheckSelectedRating() {
-      const ayahKey = this.selfCheckVerseKey || this.selfCheckDraft?.ayahKey || ''
-      if (this.selfCheckDraft?.result) return this.selfCheckDraft.result
+      const draft = this.selfCheckActiveDraft || this.selfCheckDraft
+      const ayahKey = this.selfCheckVerseKey || draft?.ayahKey || ''
+      if (draft?.result) return draft.result
       if (ayahKey && this.selfCheckRatingsByAyahKey[ayahKey]) return this.selfCheckRatingsByAyahKey[ayahKey]
       return ''
     },
@@ -5704,13 +5770,14 @@ export default {
 
     buildOnboardingStep(key, icon) {
       const base = `memorisation.onboarding.steps.${key}`
+      const pointsRaw = typeof this.$tm === 'function' ? this.$tm(`${base}.points`) : []
       const step = {
         key,
         icon,
         title: this.t(`${base}.title`),
         stepLabel: this.t(`${base}.stepLabel`),
         body: this.t(`${base}.body`),
-        points: []
+        points: Array.isArray(pointsRaw) ? pointsRaw.filter(Boolean) : []
       }
       if (key === 'practice') {
         step.targetSelector = '#talqin-mode-toggle'
@@ -6584,9 +6651,7 @@ export default {
       const activeVerseKey = this.effectiveActiveVerseKey || this.activeVerseKey || null
       if (activeVerseKey) completedVerseKeys.add(activeVerseKey)
       const versesRead = completedVerseKeys.size
-      const elapsedSeconds = this.sessionStartedAt
-        ? Math.max(0, Math.round((Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt)) / 1000))
-        : 0
+      const elapsedSeconds = this.getSessionElapsedSeconds()
       const repetitionsCompleted = Math.max(
         Number(this.centralSession?.repetitionTimes || 0),
         currentIndex
@@ -15837,9 +15902,7 @@ export default {
       const coveredAyah = Math.max(1, Number(this.currentPosition || this.queueIndex || 1))
       const totalAyahs = Math.max(1, Number(this.totalVerses || 1))
       const progressPercent = Math.max(0, Math.min(100, Number(this.progressPercent || 0)))
-      const durationSeconds = this.sessionStartedAt
-        ? Math.max(0, Math.round((Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt)) / 1000))
-        : Math.max(0, Math.round(Number(this.currentTime || 0)))
+      const durationSeconds = this.getSessionElapsedSeconds()
       const activeAids = []
       if (this.tajweedEnabled) activeAids.push(this.t('memorisation.common.tajweedOn'))
       if (this.showTranslation) activeAids.push(this.t('memorisation.common.translationOn'))
@@ -15876,6 +15939,7 @@ export default {
         progressPercent,
         completedAll,
         durationLabel,
+        durationSeconds,
         rangeStart,
         rangeEnd,
         summaryMessage,
@@ -18572,7 +18636,22 @@ export default {
       )
     },
 
-    // Utility methods
+    getSessionElapsedSeconds(options = {}) {
+      const now = Number(options.now || Date.now())
+      const startedAt = Number(this.sessionStartedAt || 0)
+      if (startedAt > 0) {
+        return Math.max(0, Math.round((now - startedAt) / 1000))
+      }
+      const mutqinStartedAt = Date.parse(this.mutqinState?.sessionState?.started_at || '')
+      if (Number.isFinite(mutqinStartedAt) && mutqinStartedAt > 0) {
+        return Math.max(0, Math.round((now - mutqinStartedAt) / 1000))
+      }
+      const centralStartedAt = Number(this.centralSession?.sessionStartedAt || 0)
+      if (centralStartedAt > 0) {
+        return Math.max(0, Math.round((now - centralStartedAt) / 1000))
+      }
+      return Math.max(0, Math.round(Number(this.currentTime || 0)))
+    },
     formatTime(sec) {
       const t = Math.max(0, Math.floor(sec || 0))
       return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`

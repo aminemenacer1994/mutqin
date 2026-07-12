@@ -169,7 +169,7 @@
 }
 
 .save-name-modal {
-  width: min(620px, calc(100vw - 32px));
+  width: 100% !important;
 }
 
 .save-name-modal .modal-header {
@@ -2087,12 +2087,33 @@
 }
 
 .self-check-modal {
-  width: min(1280px, calc(100vw - 20px));
-  max-height: calc(100dvh - 20px);
+  width: 100% !important;
+  max-width: none !important;
+  max-height: calc(100dvh - 2rem);
   height: auto;
   padding: 0;
   overflow: hidden;
-  animation: selfCheckModalIn 180ms ease;
+}
+
+.recordings-library-modal {
+  width: 100% !important;
+  max-width: none !important;
+  max-height: calc(100dvh - 2rem);
+  height: auto;
+}
+
+.session-analytics-modal {
+  width: 100% !important;
+  max-width: none !important;
+  max-height: calc(100dvh - 2rem);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--mutqin-modal-surface-bg);
+}
+
+.planner-completion-modal {
+  width: 100% !important;
+  max-width: none !important;
 }
 
 .self-check-modal-overlay {
@@ -8773,9 +8794,6 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .post-onboarding-overlay {
   z-index: 12500;
-  display: grid !important;
-  place-items: center;
-  padding: max(1rem, env(safe-area-inset-top, 0px)) 1rem max(1rem, env(safe-area-inset-bottom, 0px)) !important;
   overflow: auto !important;
 }
 
@@ -10384,9 +10402,14 @@ body.memorisation-page nav.navbar.app-navbar {
   gap: 12px;
 }
 
-.confirm-modal {
-  max-width: 460px;
-  width: 100%;
+.confirm-modal,
+.save-name-modal,
+.rename-recording-modal {
+  max-width: none !important;
+}
+
+.save-name-modal {
+  width: 100% !important;
 }
 
 .confirm-copy {
@@ -19937,7 +19960,6 @@ button:active {
 
 .planner-completion-overlay {
   z-index: 14040;
-  background: color-mix(in srgb, #0f1110 52%, transparent);
 }
 
 .planner-completion-modal {
@@ -20106,14 +20128,19 @@ button:active {
   overscroll-behavior: contain;
 }
 
-.modal-content:not(.keyboard-shortcuts-modal), .save-name-modal, .memorisation-checker-modal, .recordings-library-modal {
+.modal-content:not(.keyboard-shortcuts-modal):not(.memorisation-checker-modal):not(.recordings-library-modal):not(.session-analytics-modal):not(.self-check-modal),
+.save-name-modal,
+.memorisation-checker-modal,
+.recordings-library-modal {
   width: min(100%, 960px) !important;
   max-height: calc(100dvh - 2rem);
   overflow: hidden auto !important;
 }
 
-.keyboard-shortcuts-modal {
-  width: min(680px, calc(100vw - 2rem)) !important;
+.mutqin-modal-dialog .modal-content,
+.mutqin-modal-dialog .keyboard-shortcuts-modal {
+  width: 100% !important;
+  max-width: none !important;
   max-height: calc(100dvh - 2rem);
   overflow: hidden auto !important;
 }
@@ -29373,34 +29400,385 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 /* UX patch layer */
 
-.onboarding-post-session-modal-wrap .modal-dialog.modal-lg,
-.welcome-back-modal-wrap .modal-dialog.modal-lg,
-.session-exit-modal-wrap .modal-dialog.modal-xl {
-  width: min(640px, calc(100vw - 2rem));
-  max-width: min(640px, calc(100vw - 2rem));
-  margin: auto;
+:root {
+  --mutqin-modal-width-xl: min(720px, calc(100vw - 2rem));
+  --mutqin-modal-width-wide: min(960px, calc(100vw - 2rem));
+  --mutqin-modal-width-full: min(1140px, calc(100vw - 2rem));
+  --mutqin-modal-backdrop: rgba(12, 10, 8, 0.62);
+  --mutqin-modal-backdrop-blur: 8px;
+  --mutqin-modal-surface-bg: color-mix(in srgb, var(--surface-elevated, var(--surface)) 98%, transparent);
+  --mutqin-modal-surface-border: color-mix(in srgb, var(--accent) 14%, var(--border));
+  --mutqin-modal-hero-bg: color-mix(in srgb, var(--accent) 5%, var(--surface));
+}
+
+[data-theme="dark"] {
+  --mutqin-modal-backdrop: color-mix(in srgb, #070a09 72%, transparent);
+  --mutqin-modal-surface-bg: color-mix(in srgb, var(--surface-elevated, var(--surface)) 96%, #1a1714 4%);
+}
+
+[data-theme="light"] {
+  --mutqin-modal-backdrop: color-mix(in srgb, #1a1410 42%, transparent);
+}
+
+.modal-overlay,
+.mutqin-modal-overlay {
+  display: grid !important;
+  place-items: center !important;
+  align-content: center !important;
+  justify-items: center !important;
+  background: var(--mutqin-modal-backdrop) !important;
+  backdrop-filter: blur(var(--mutqin-modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--mutqin-modal-backdrop-blur));
+  animation: mutqinBackdropFade 280ms ease;
+}
+
+.welcome-back-backdrop,
+.session-exit-backdrop,
+.onboarding-post-session-backdrop {
+  background: var(--mutqin-modal-backdrop) !important;
+  backdrop-filter: blur(var(--mutqin-modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--mutqin-modal-backdrop-blur));
+}
+
+.welcome-back-modal-wrap,
+.session-exit-modal-wrap,
+.onboarding-post-session-modal-wrap {
+  display: grid !important;
+  place-items: center !important;
+  align-content: center !important;
+  justify-items: center !important;
+}
+
+.modal-overlay > .modal-dialog,
+.modal-overlay > .modal-content {
+  grid-area: 1 / 1;
+  margin: 0 !important;
+  justify-self: center;
+  align-self: center;
+}
+
+.mutqin-modal-dialog {
+  width: var(--mutqin-modal-width-xl) !important;
+  max-width: var(--mutqin-modal-width-xl) !important;
+  margin: 0 !important;
+  pointer-events: auto;
+}
+
+.mutqin-modal-dialog--wide {
+  width: var(--mutqin-modal-width-wide) !important;
+  max-width: var(--mutqin-modal-width-wide) !important;
+}
+
+.mutqin-modal-dialog--full {
+  width: var(--mutqin-modal-width-full) !important;
+  max-width: var(--mutqin-modal-width-full) !important;
+}
+
+.mutqin-modal-overlay > .mutqin-modal-dialog {
+  animation: mutqinModalEnter 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mutqin-modal-flow .mutqin-modal-dialog {
+  animation: none;
+}
+
+.mutqin-modal-flow .mutqin-modal-dialog,
+.onboarding-post-session-modal-wrap .modal-dialog.modal-xl,
+.welcome-back-modal-wrap .modal-dialog.modal-xl,
+.session-exit-modal-wrap .modal-dialog.modal-xl,
+.post-onboarding-overlay .modal-dialog.modal-xl {
+  width: var(--mutqin-modal-width-xl) !important;
+  max-width: var(--mutqin-modal-width-xl) !important;
+  margin: 0 auto !important;
+  justify-self: center;
+  align-self: center;
+}
+
+.modal-content.mutqin-modal-surface {
+  width: 100% !important;
+  max-width: none !important;
+  background: var(--mutqin-modal-surface-bg) !important;
+  border: 1px solid var(--mutqin-modal-surface-border) !important;
+  border-radius: 20px !important;
+  color: var(--text) !important;
+  box-shadow:
+    0 24px 64px color-mix(in srgb, #0f1110 18%, transparent),
+    0 1px 0 color-mix(in srgb, white 50%, transparent) inset !important;
+  animation: mutqinModalEnter 380ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+[data-theme="dark"] .modal-content.mutqin-modal-surface {
+  box-shadow:
+    0 22px 56px rgba(0, 0, 0, 0.34),
+    0 1px 0 rgba(255, 255, 255, 0.04) inset !important;
+}
+
+.mutqin-modal-surface .modal-header,
+.mutqin-modal-surface .session-analytics-header,
+.mutqin-modal-surface .help-learning-header,
+.mutqin-modal-surface .recordings-library-header,
+.mutqin-modal-surface .self-check-modal-header {
+  background: var(--mutqin-modal-surface-bg) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+}
+
+.mutqin-modal-surface .modal-footer,
+.mutqin-modal-surface .help-learning-footer,
+.mutqin-modal-surface .planner-completion-footer,
+.mutqin-modal-surface .keyboard-shortcuts-footer {
+  background: color-mix(in srgb, var(--surface) 94%, transparent) !important;
+  border-top: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+}
+
+.mutqin-modal-surface .welcome-back-hero,
+.mutqin-modal-surface .session-exit-hero,
+.mutqin-modal-surface .post-session-hero,
+.mutqin-modal-surface .onboarding-hero {
+  background: linear-gradient(180deg, var(--mutqin-modal-hero-bg), transparent) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+}
+
+.mutqin-modal-surface.session-analytics-modal,
+.mutqin-modal-surface.planner-completion-modal,
+.mutqin-modal-surface.help-learning-modal,
+.mutqin-modal-surface.recordings-library-modal,
+.mutqin-modal-surface.self-check-modal {
+  background: var(--mutqin-modal-surface-bg) !important;
+}
+
+.mutqin-modal-surface .session-analytics-summary-card,
+.mutqin-modal-surface .session-analytics-panel,
+.mutqin-modal-surface .session-analytics-chart-card,
+.mutqin-modal-surface .comparison-item,
+.mutqin-modal-surface .self-check-modal-stage,
+.mutqin-modal-surface .self-check-recorder-card,
+.mutqin-modal-surface .self-check-attempts-card,
+.mutqin-modal-surface .self-check-attempt-card,
+.mutqin-modal-surface .help-learning-card,
+.mutqin-modal-surface .planner-completion-stat {
+  background: color-mix(in srgb, var(--surface) 92%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.help-learning-dialog {
+  width: var(--mutqin-modal-width-wide) !important;
+  max-width: var(--mutqin-modal-width-wide) !important;
+  margin: 0 !important;
+}
+
+.help-learning-modal {
+  width: 100% !important;
+  max-width: none !important;
+  height: min(78vh, 640px);
+}
+
+.mutqin-modal-surface.save-name-modal,
+.mutqin-modal-surface.confirm-modal,
+.mutqin-modal-surface.keyboard-shortcuts-modal,
+.mutqin-modal-surface.rename-recording-modal {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+@keyframes mutqinModalEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes mutqinBackdropFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.mutqin-modal-surface .modal-header-text h2,
+.mutqin-modal-surface .onboarding-title,
+.mutqin-modal-surface .welcome-back-title,
+.mutqin-modal-surface .session-exit-title,
+.mutqin-modal-surface .post-session-title {
+  font-weight: 520 !important;
+  letter-spacing: -0.015em;
+}
+
+.mutqin-modal-surface .modal-header-text p,
+.mutqin-modal-surface .confirm-copy,
+.mutqin-modal-surface .welcome-back-message,
+.mutqin-modal-surface .session-exit-motivation,
+.mutqin-modal-surface .post-session-message,
+.mutqin-modal-surface .onboarding-lead,
+.mutqin-modal-surface .onboarding-intro {
+  font-weight: 400;
+  line-height: 1.62;
+}
+
+.mutqin-modal-surface .onboarding-kicker,
+.mutqin-modal-surface .welcome-back-kicker,
+.mutqin-modal-surface .session-exit-kicker,
+.mutqin-modal-surface .post-session-kicker,
+.mutqin-modal-surface .modal-context-badge,
+.mutqin-modal-surface .keyboard-shortcuts-group-header h3 {
+  font-weight: 560 !important;
+}
+
+.mutqin-modal-surface .session-exit-stat-value,
+.mutqin-modal-surface .post-session-stat-value,
+.mutqin-modal-surface .session-exit-remaining-item-value,
+.mutqin-modal-surface .onboarding-choice-card strong {
+  font-weight: 520 !important;
+}
+
+.mutqin-modal-surface .session-exit-stat-label,
+.mutqin-modal-surface .post-session-stat-label,
+.mutqin-modal-surface .session-exit-remaining-item-label {
+  font-weight: 500;
 }
 
 .welcome-back-body {
-  padding: 1rem 1.35rem 1.25rem !important;
+  padding: 1.1rem 1.35rem 1.35rem !important;
 }
 
 .welcome-back-actions--solo {
   margin-top: 0.15rem;
 }
 
-.welcome-back-modal {
+.welcome-back-modal,
+.post-onboarding-modal {
   box-shadow: none;
 }
 
-.post-session-body {
-  padding: 1.1rem 1.35rem 1.25rem !important;
-  gap: 1rem;
+.welcome-back-hero,
+.session-exit-hero,
+.post-session-hero,
+.onboarding-hero {
+  padding: 1.2rem 1.35rem 1rem !important;
 }
 
-.post-session-title {
-  font-size: clamp(1.15rem, 2.6vw, 1.45rem);
-  font-weight: 650;
+.post-session-body,
+.onboarding-body {
+  padding: 1.05rem 1.35rem 1.3rem !important;
+  gap: 0.95rem;
+}
+
+.post-session-title,
+.onboarding-title,
+.welcome-back-title,
+.session-exit-title {
+  font-size: clamp(1.08rem, 2.4vw, 1.32rem) !important;
+  line-height: 1.28 !important;
+}
+
+.onboarding-step-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 12px;
+  flex-shrink: 0;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  font-size: 1rem;
+}
+
+.onboarding-hero {
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  gap: 0.85rem !important;
+  align-items: center !important;
+}
+
+.onboarding-step-label {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.onboarding-intro {
+  margin: 0.45rem 0 0;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  max-width: 52ch;
+}
+
+.onboarding-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1.35rem 0.15rem;
+}
+
+.onboarding-progress-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border) 88%, transparent);
+  transition: transform 220ms ease, background-color 220ms ease, width 220ms ease;
+}
+
+.onboarding-progress-dot.complete {
+  background: color-mix(in srgb, var(--accent) 42%, var(--border));
+}
+
+.onboarding-progress-dot.active {
+  width: 1.35rem;
+  background: color-mix(in srgb, var(--accent) 72%, #58b68e);
+}
+
+.onboarding-points li {
+  font-size: 0.84rem;
+}
+
+.onboarding-choice-card {
+  padding: 0.85rem 0.95rem;
+}
+
+.onboarding-choice-card strong {
+  font-size: 0.86rem;
+}
+
+.onboarding-choice-card span {
+  font-size: 0.8rem;
+}
+
+.onboarding-btn {
+  font-weight: 520;
+  min-height: 2.5rem;
+}
+
+.onboarding-footer {
+  padding: 0.85rem 1.35rem 1.2rem !important;
+}
+
+.post-session-stats,
+.session-exit-stats {
+  gap: 0.55rem;
+}
+
+.post-session-stat,
+.session-exit-stat {
+  padding: 0.75rem 0.85rem;
+}
+
+.session-exit-summary-modal {
+  width: 100% !important;
+  max-width: none !important;
 }
 
 .saved-sessions-sheet,
@@ -29557,17 +29935,17 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .mutqin-modal-surface {
-  border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border)) !important;
+  border: 1px solid var(--mutqin-modal-surface-border) !important;
   border-radius: 20px !important;
   overflow: hidden;
-  background: color-mix(in srgb, var(--surface-elevated, var(--surface)) 98%, transparent) !important;
+  background: var(--mutqin-modal-surface-bg) !important;
   box-shadow:
     0 24px 64px color-mix(in srgb, #0f1110 18%, transparent),
     0 1px 0 color-mix(in srgb, white 50%, transparent) inset !important;
 }
 
 [data-theme="dark"] .mutqin-modal-surface {
-  background: color-mix(in srgb, var(--surface-elevated, var(--surface)) 96%, #1a1714 4%) !important;
+  background: var(--mutqin-modal-surface-bg) !important;
   box-shadow:
     0 22px 56px rgba(0, 0, 0, 0.34),
     0 1px 0 rgba(255, 255, 255, 0.04) inset !important;
@@ -29585,26 +29963,14 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .mutqin-modal-surface .modal-footer {
   padding: 0.85rem 1.35rem 1.15rem !important;
+  gap: 0.65rem;
 }
 
-.welcome-back-modal.mutqin-modal-surface,
-.session-exit-modal.mutqin-modal-surface,
-.onboarding-post-session-modal.mutqin-modal-surface {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface-elevated, var(--surface)) 98%, white 2%),
-    color-mix(in srgb, var(--surface) 96%, transparent)
-  ) !important;
-}
-
-[data-theme="dark"] .welcome-back-modal.mutqin-modal-surface,
-[data-theme="dark"] .session-exit-modal.mutqin-modal-surface,
-[data-theme="dark"] .onboarding-post-session-modal.mutqin-modal-surface {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface-elevated, var(--surface)) 94%, #1a1714 6%),
-    color-mix(in srgb, var(--surface) 98%, transparent)
-  ) !important;
+.welcome-back-modal,
+.post-onboarding-modal,
+.onboarding-post-session-modal,
+.session-exit-modal {
+  box-shadow: none;
 }
 
 .keyboard-shortcuts-overlay {
@@ -29782,10 +30148,535 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   }
 }
 
+/* Session paused modal — aligned with post-session / mutqin-modal-surface */
+
+.mutqin-modal-surface.session-exit-modal {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-hero {
+  display: block;
+  padding: 1.15rem 1.35rem 0.95rem !important;
+  background: linear-gradient(180deg, var(--mutqin-modal-hero-bg), transparent) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-kicker {
+  color: color-mix(in srgb, var(--accent-strong) 88%, var(--text)) !important;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface)) !important;
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border)) !important;
+  box-shadow: none !important;
+  font-size: 0.68rem !important;
+  font-weight: 560 !important;
+  letter-spacing: 0.05em;
+  padding: 0.32rem 0.72rem;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-title {
+  margin: 0.5rem 0 0 !important;
+  font-size: clamp(1.05rem, 2.3vw, 1.28rem) !important;
+  line-height: 1.28 !important;
+  font-weight: 520 !important;
+  letter-spacing: -0.015em;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-message,
+.mutqin-modal-surface.session-exit-modal .session-exit-motivation {
+  margin: 0.4rem 0 0 !important;
+  max-width: 52ch;
+  font-size: 0.84rem !important;
+  line-height: 1.58 !important;
+  color: var(--text-muted) !important;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-position-line {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--accent) 68%, var(--text-muted));
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-body {
+  padding: 0.95rem 1.35rem 1rem !important;
+  gap: 0.75rem !important;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-progress {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  font-size: 0.78rem;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-progress-label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-progress-value {
+  color: var(--accent-strong);
+  font-weight: 520;
+  font-variant-numeric: tabular-nums;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-progress-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--border));
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--accent) 78%, #58b68e);
+  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-stats {
+  grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+  gap: 0.55rem;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-stat {
+  gap: 0.12rem;
+  padding: 0.62rem 0.72rem !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--surface) 92%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-stat-label {
+  font-size: 0.62rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.05em;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-stat-value {
+  font-size: 0.88rem !important;
+  font-weight: 520 !important;
+  line-height: 1.3;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-stat-hint {
+  font-size: 0.72rem !important;
+  color: var(--text-muted) !important;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-footer {
+  padding: 0.8rem 1.35rem 1.1rem !important;
+  border-top: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+  background: color-mix(in srgb, var(--surface) 94%, transparent) !important;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-actions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-actions.has-continue {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-btn {
+  min-height: 2.45rem;
+  font-size: 0.8rem;
+  font-weight: 520;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-btn--ghost {
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  border-color: color-mix(in srgb, var(--border) 82%, transparent);
+  box-shadow: none;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-btn--ghost:hover {
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-btn--primary {
+  color: #07150f;
+  background: color-mix(in srgb, var(--accent) 82%, #58b68e);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: none;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-btn--accent {
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  box-shadow: none;
+}
+
+@media (max-width: 520px) {
+  .mutqin-modal-surface.session-exit-modal .session-exit-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mutqin-modal-surface.session-exit-modal .session-exit-actions,
+  .mutqin-modal-surface.session-exit-modal .session-exit-actions.has-continue {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Welcome back — Islamic reminder */
+
+.mutqin-modal-surface.welcome-back-modal .welcome-back-body {
+  gap: 0.85rem !important;
+}
+
+.mutqin-modal-surface.welcome-back-modal .welcome-back-reminder {
+  margin: 0;
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+  text-align: start;
+}
+
+.mutqin-modal-surface.welcome-back-modal .welcome-back-reminder-kicker {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.62rem;
+  font-weight: 560;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 72%, var(--text-muted));
+}
+
+.mutqin-modal-surface.welcome-back-modal .welcome-back-reminder-quote {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--text);
+  font-style: italic;
+}
+
+.mutqin-modal-surface.welcome-back-modal .welcome-back-reminder-footer {
+  margin-top: 0.35rem;
+}
+
+.mutqin-modal-surface.welcome-back-modal .welcome-back-reminder-footer cite {
+  font-size: 0.72rem;
+  font-style: normal;
+  color: color-mix(in srgb, var(--accent) 68%, var(--text-muted));
+}
+
+.mutqin-modal-surface.welcome-back-modal .welcome-back-reminder-intention {
+  margin: 0.55rem 0 0;
+  padding-top: 0.55rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--text) 84%, var(--text-muted));
+}
+
+.mutqin-modal-surface.welcome-back-modal .welcome-back-hints {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.mutqin-modal-surface.welcome-back-modal .welcome-back-hints li {
+  position: relative;
+  padding-left: 0.95rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.mutqin-modal-surface.welcome-back-modal .welcome-back-hints li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 72%, #58b68e);
+}
+
 .onboarding-hero {
   padding-bottom: 0.85rem;
 }
 
 .onboarding-body {
   gap: 0.85rem;
+}
+
+/* Unified modal footer + actions */
+
+.mutqin-modal-footer {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0.8rem 1.35rem 1.1rem !important;
+  border-top: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+  background: color-mix(in srgb, var(--surface) 94%, transparent) !important;
+}
+
+.mutqin-modal-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.mutqin-modal-actions--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mutqin-modal-actions--4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mutqin-modal-actions--stack {
+  grid-template-columns: 1fr;
+}
+
+.mutqin-modal-actions--end {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.mutqin-modal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.45rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.8rem;
+  font-weight: 520;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.mutqin-modal-btn:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.mutqin-modal-btn--primary {
+  color: #fff;
+  background: color-mix(in srgb, var(--accent) 82%, #58b68e);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.mutqin-modal-btn--primary i {
+  color: inherit;
+}
+
+.mutqin-modal-btn--primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 90%, #58b68e);
+  border-color: color-mix(in srgb, var(--accent) 52%, transparent);
+}
+
+.mutqin-modal-btn--secondary {
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  border-color: color-mix(in srgb, var(--border) 82%, transparent);
+}
+
+.mutqin-modal-btn--secondary:hover:not(:disabled) {
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+.mutqin-modal-btn--muted {
+  color: var(--text-muted);
+  background: transparent;
+  border-color: color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.mutqin-modal-btn--muted:hover:not(:disabled) {
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+.mutqin-modal-btn--danger {
+  color: #fff;
+  background: color-mix(in srgb, var(--danger, #c0392b) 88%, #e74c3c);
+  border-color: color-mix(in srgb, var(--danger, #c0392b) 52%, transparent);
+}
+
+.mutqin-modal-btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger, #c0392b) 96%, #e74c3c);
+}
+
+.mutqin-modal-actions--end .mutqin-modal-btn {
+  flex: 0 1 auto;
+  min-width: 7rem;
+}
+
+/* Session summary — post-session + session exit */
+
+.mutqin-session-summary {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mutqin-session-summary-progress {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+}
+
+.mutqin-session-summary-progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  font-size: 0.78rem;
+}
+
+.mutqin-session-summary-progress-meta span:first-child {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.mutqin-session-summary-progress-meta span:last-child {
+  color: var(--accent-strong);
+  font-weight: 520;
+  font-variant-numeric: tabular-nums;
+}
+
+.mutqin-session-summary-progress-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--border));
+}
+
+.mutqin-session-summary-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--accent) 78%, #58b68e);
+  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mutqin-session-summary-progress-detail {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.mutqin-session-summary-details {
+  display: grid;
+  gap: 0;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  border-radius: 12px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+.mutqin-session-summary-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  padding: 0.62rem 0.75rem;
+}
+
+.mutqin-session-summary-row + .mutqin-session-summary-row {
+  border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.mutqin-session-summary-row-label {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.mutqin-session-summary-row-value {
+  font-size: 0.82rem;
+  font-weight: 520;
+  color: var(--text);
+  line-height: 1.35;
+  text-align: end;
+}
+
+.mutqin-session-summary-row-value small {
+  display: block;
+  margin-top: 0.12rem;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.mutqin-session-summary-next {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--text) 88%, var(--text-muted));
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+}
+
+.mutqin-session-summary-next-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.62rem;
+  font-weight: 560;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 72%, var(--text-muted));
+}
+
+.mutqin-modal-surface.onboarding-post-session-modal .post-session-body {
+  padding-bottom: 0.85rem !important;
+}
+
+@media (max-width: 520px) {
+  .mutqin-modal-actions,
+  .mutqin-modal-actions--3,
+  .mutqin-modal-actions--4 {
+    grid-template-columns: 1fr;
+  }
+
+  .mutqin-session-summary-row {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+
+  .mutqin-session-summary-row-value {
+    text-align: start;
+  }
 }

@@ -659,7 +659,8 @@
           "title": "Explore the Workspace First",
           "description": "Look around the workspace and open setup when you are ready."
         }
-      }
+      },
+      "intro": "Four quick steps to get oriented before your first session."
     },
     "open_session_setup": "Ouvrir la configuration de session",
     "open_controls": "Ouvrir les contrôles",
@@ -1023,7 +1024,18 @@
       "resumeGeneric": "Pick up where you left off",
       "resumeGenericNamed": "Welcome back, {name}",
       "resumeSubtitle": "Your last session is still here whenever you are ready.",
-      "resumeSubtitleDetail": "{detail} — continue whenever it suits you."
+      "resumeSubtitleDetail": "{detail} — continue whenever it suits you.",
+      "greetingArabic": "ٱلسَّلَامُ عَلَيْكُمْ",
+      "greetingTranslation": "Peace be upon you",
+      "freshReminderArabic": "رَبِّ زِدْنِى عِلْمًا",
+      "freshReminderTranslation": "My Lord, increase me in knowledge.",
+      "freshReminderSource": "Qur'an 20:114",
+      "freshIntention": "Begin with a sincere niyyah — even a few ayahs, done consistently, are beloved to Allah.",
+      "resumeReminderArabic": "وَٱلَّذِينَ جَـٰهَدُوا۟ فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا",
+      "resumeReminderTranslation": "As for those who strive for Us, We shall guide them to Our paths.",
+      "resumeReminderSource": "Qur'an 29:69",
+      "resumeIntention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time.",
+      "reminderLabel": "A word of remembrance"
     },
     "sessionExit": {
       "kicker": "Session en pause",
@@ -1052,7 +1064,11 @@
       "repeat": "Répéter cette session",
       "newSession": "Commencer une nouvelle session",
       "save": "Enregistrer cette session",
-      "savedToast": "Cette session a été enregistrée avec succès."
+      "savedToast": "Cette session a été enregistrée avec succès.",
+      "summaryTitle": "Session summary",
+      "progressLabel": "Range progress",
+      "detailsLabel": "Session details",
+      "nextStepLabel": "Suggested next step"
     },
     "start_reciting_prompt": "Commencez à réciter",
     "view_all_recording_library": "Voir toute la bibliothèque",
