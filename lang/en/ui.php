@@ -11,6 +11,8 @@ return [
     'french' => 'French',
     'indonesian' => 'Indonesian',
     'turkish' => 'Turkish',
+    'spanish' => 'Spanish',
+    'urdu' => 'Urdu',
     'login' => 'Login',
     'register' => 'Register',
     'logout' => 'Logout',

@@ -1,7 +1,8 @@
 <template>
-  <div class="app" :data-theme="theme" :dir="activeLocale === 'ar' ? 'rtl' : 'ltr'" :class="{
-    'is-rtl': activeLocale === 'ar',
+  <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
+    'is-rtl': isRtlLocale,
     'onboarding-post-session-active': showPostSessionModal,
+    'overlay-onboarding-active': isOnboardingExperienceActive,
     'onboarding-post-session-offcanvas-open': showPostSessionModal && postSessionOffcanvasOpen && showTools,
     'session-exit-flow-active': showSessionExitModal,
     'session-exit-offcanvas-open': showSessionExitModal && sessionExitOffcanvasOpen && showTools
@@ -11,12 +12,12 @@
       <span>{{ t('common.loading') }}</span>
     </div>
 
-    <div v-if="appReady && banner" class="banner" :class="banner.kind" role="status" aria-live="polite">
+    <div v-if="appReady && banner" class="banner" :class="[banner.kind, { important: banner.important, persistent: banner.persistent }]" role="alert" aria-live="assertive">
       <span class="banner-message">{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
         }}</button>
-        <button class="banner-x" @click="banner = null" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
+        <button class="banner-x" @click="banner = null" :aria-label="t('common.dismiss')"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
 
@@ -25,7 +26,8 @@
       'container-fluid': readingViewMode === 'mushaf',
       'container': readingViewMode !== 'mushaf',
       'tools-open': showTools,
-      'player-visible': playerVisible,
+      'player-visible': playbackShellActive,
+      'playback-pill-visible': playbackPillVisible,
       'mushaf-mode-active': readingViewMode === 'mushaf',
       'focus-mode-active': focusModeEnabled,
       'blur-mode-active': blurModeEnabled,
@@ -37,10 +39,10 @@
           <hr class="reading-toolbar-sep" aria-hidden="true" />
           <div class="reading-toolbar-group">
             <button class="toolbar-chip" :class="{ active: showTranslation }"
-              title="Show or hide the English translation" @click="toggleReadingOption('translation')">
+              :title="t('memorisation.a11y.showTranslation')" @click="toggleReadingOption('translation')">
               <i class="bi bi-translate"></i><span>{{ t('memorisation.reading.translation') }}</span>
             </button>
-            <button class="toolbar-chip" :class="{ active: showTransliteration }" title="Show or hide transliteration"
+            <button class="toolbar-chip" :class="{ active: showTransliteration }" :title="t('memorisation.a11y.showTransliteration')"
               @click="toggleReadingOption('transliteration')">
               <i class="bi bi-type"></i><span>{{ t('memorisation.reading.transliteration') }}</span>
             </button>
@@ -49,20 +51,20 @@
               <i class="bi bi-grid-3x2-gap"></i><span>{{ t('memorisation.reading.wordByWord') }}</span>
             </button> -->
             <!-- <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }"
-              title="Enable audio for individual word chips" @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
+              :title="t('memorisation.a11y.enableWordAudio')" @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
               <i class="bi bi-volume-up"></i><span>{{ t('memorisation.reading.wordAudio') }}</span>
             </button> -->
 
             <!-- ADD TAJWEED PILL HERE -->
             <button class="toolbar-chip" :class="{ active: tajweedEnabled }"
-              title="Use connected Tajweed text from the Quran API" @click="toggleTajweed">
+              :title="t('memorisation.a11y.showTajweedText')" @click="toggleTajweed">
               <i class="bi bi-palette"></i><span>{{ t('memorisation.reading.tajweed') }}</span>
             </button>
           </div>
 
           <div class="reading-toolbar-group">
             <div class="font-dropdown">
-              <button class="font-dropdown-trigger" @click="toggleFontDropdown" title="Change Quran font">
+              <button class="font-dropdown-trigger" @click="toggleFontDropdown" :title="t('memorisation.a11y.changeQuranFont')">
                 <i class="bi bi-text-paragraph"></i>
                 <span>{{ getCurrentFontLabel() }}</span>
                 <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }"></i>
@@ -85,11 +87,11 @@
         <div class="workspace">
           <!-- In your template, replace the workspace-shell section -->
         <section
-          v-show="(hasVerses || showSessionOverviewIdleActions) && !isWelcomeBackWorkspaceHidden"
+          v-show="(hasVerses || showSessionOverviewIdleActions) && !isWelcomeBackWorkspaceHidden && !isOnboardingExperienceActive"
           class="workspace-shell"
           :class="{ collapsed: mainCardCollapsed }"
           :data-reading-mode="readingViewMode"
-          aria-label="Session overview"
+          :aria-label="t('memorisation.a11y.sessionOverview')"
         >
         <div class="workspace-shell-head" :class="{ 'is-idle': showSessionOverviewIdleActions }">
           <template v-if="hasVerses">
@@ -100,32 +102,37 @@
           <div class="workspace-shell-actions">
             <div class="action-buttons-group">
               <div
-                v-if="showHeaderSessionAction"
-                class="action-btn btn btn-primary session-primary-action top-card-action-trigger"
-                role="button"
-                tabindex="0"
-                @click="handleHeaderSessionAction"
-                @keydown.enter.prevent="handleHeaderSessionAction"
-                @keydown.space.prevent="handleHeaderSessionAction"
-                :title="headerSessionActionLabel"
-                :aria-label="headerSessionActionLabel"
+                class="top-card-session-actions"
+                :class="{ 'has-paired-actions': hasSessionStarted && !isSessionCompleted }"
               >
-                <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
-                <span>{{ headerSessionActionLabel }}</span>
-              </div>
-              <div
-                v-if="hasSessionStarted && !isSessionCompleted"
-                class="action-btn btn btn-outline-secondary action-btn-secondary action-btn-exit top-card-action-trigger"
-                role="button"
-                tabindex="0"
-                @click="openSessionExitModal"
-                @keydown.enter.prevent="openSessionExitModal"
-                @keydown.space.prevent="openSessionExitModal"
-                title="End session"
-                aria-label="End session"
-              >
-                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                <span class="d-none d-sm-inline">{{ t('sessionStatus.end') }}</span>
+                <div
+                  v-if="showHeaderSessionAction"
+                  class="action-btn btn btn-primary session-primary-action top-card-action-trigger"
+                  role="button"
+                  tabindex="0"
+                  @click="handleHeaderSessionAction"
+                  @keydown.enter.prevent="handleHeaderSessionAction"
+                  @keydown.space.prevent="handleHeaderSessionAction"
+                  :title="headerSessionActionLabel"
+                  :aria-label="headerSessionActionLabel"
+                >
+                  <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
+                  <span>{{ headerSessionActionLabel }}</span>
+                </div>
+                <div
+                  v-if="hasSessionStarted && !isSessionCompleted"
+                  class="action-btn btn btn-outline-secondary action-btn-secondary action-btn-exit top-card-action-trigger"
+                  role="button"
+                  tabindex="0"
+                  @click="openSessionExitModal"
+                  @keydown.enter.prevent="openSessionExitModal"
+                  @keydown.space.prevent="openSessionExitModal"
+                  :title="t('memorisation.a11y.endSession')"
+                  :aria-label="t('memorisation.a11y.endSession')"
+                >
+                  <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                  <span>{{ t('sessionStatus.end') }}</span>
+                </div>
               </div>
               <div
                 class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger"
@@ -147,7 +154,7 @@
                   @click="toggleTopCardMenu"
                   @keydown.enter.prevent="toggleTopCardMenu"
                   @keydown.space.prevent="toggleTopCardMenu"
-                  aria-label="Open reading options"
+                  :aria-label="t('memorisation.a11y.openReadingOptions')"
                 >
                   <i class="bi bi-three-dots-vertical"></i>
                 </div>
@@ -162,6 +169,72 @@
                     <button type="button" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
                       <i class="bi bi-palette"></i><span>{{ t('memorisation.reading.tajweed') }}</span>
                     </button>
+                    <div class="top-card-submenu-wrap">
+                      <button
+                        type="button"
+                        class="top-card-submenu-trigger"
+                        :class="{ active: topCardFontSubmenuOpen }"
+                        :aria-expanded="topCardFontSubmenuOpen ? 'true' : 'false'"
+                        @click.stop="toggleTopCardFontSubmenu"
+                      >
+                        <i class="bi bi-text-paragraph" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.reading.quranicFont') }}</span>
+                        <i class="bi bi-chevron-right top-card-submenu-chevron" aria-hidden="true"></i>
+                      </button>
+                      <transition name="dropdown-fade">
+                        <div v-if="topCardFontSubmenuOpen" class="top-card-submenu top-card-font-submenu" @click.stop>
+                          <button
+                            v-for="font in quranFontOptions"
+                            :key="font.value"
+                            type="button"
+                            class="top-card-submenu-option"
+                            :class="{ active: quranFont === font.value }"
+                            @click="selectFont(font.value)"
+                          >
+                            <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
+                            <span>{{ font.label }}</span>
+                            <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                          </button>
+                        </div>
+                      </transition>
+                    </div>
+                    <div class="top-card-submenu-wrap">
+                      <button
+                        type="button"
+                        class="top-card-submenu-trigger"
+                        :class="{ active: topCardLayoutSubmenuOpen }"
+                        :aria-expanded="topCardLayoutSubmenuOpen ? 'true' : 'false'"
+                        @click.stop="toggleTopCardLayoutSubmenu"
+                      >
+                        <i class="bi bi-layout-split" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.reading.selectLayout') }}</span>
+                        <i class="bi bi-chevron-right top-card-submenu-chevron" aria-hidden="true"></i>
+                      </button>
+                      <transition name="dropdown-fade">
+                        <div v-if="topCardLayoutSubmenuOpen" class="top-card-submenu top-card-layout-submenu" @click.stop>
+                          <button
+                            type="button"
+                            class="top-card-submenu-option"
+                            :class="{ active: readingViewMode === 'stacked' }"
+                            @click="setReadingViewMode('stacked')"
+                          >
+                            <i class="bi bi-view-stacked" aria-hidden="true"></i>
+                            <span>{{ t('memorisation.view.stacked') }}</span>
+                            <i v-if="readingViewMode === 'stacked'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                          </button>
+                          <button
+                            type="button"
+                            class="top-card-submenu-option"
+                            :class="{ active: readingViewMode === 'mushaf' }"
+                            @click="setReadingViewMode('mushaf')"
+                          >
+                            <i class="bi bi-book" aria-hidden="true"></i>
+                            <span>{{ t('memorisation.view.mushaf') }}</span>
+                            <i v-if="readingViewMode === 'mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                          </button>
+                        </div>
+                      </transition>
+                    </div>
                     <!--
                       <button type="button" @click="openAdvancedControls">
                         <i class="bi bi-sliders"></i><span>{{ t('common.controls') }}</span>
@@ -169,10 +242,10 @@
                       <button type="button" @click="openOnboardingFromTopMenu">
                         <i class="bi bi-compass"></i><span>{{ t('memorisation.onboarding') }}</span>
                       </button>
-                      <button @click="toggleKeyboardShortcuts" type="button">
-                        <i class="bi bi-keyboard"></i><span>{{ t('shortcuts.title') }}</span>
-                      </button>
                     -->
+                    <button @click="toggleKeyboardShortcuts" type="button">
+                      <i class="bi bi-keyboard"></i><span>{{ t('shortcuts.title') }}</span>
+                    </button>
                     <button @click="toggleFullScreen" type="button">
                       <i class="bi bi-arrows-fullscreen"></i><span>{{ t('memorisation.reading.fullScreen') }}</span>
                     </button>
@@ -212,7 +285,7 @@
           >
             <div
               class="workspace-shell-metadata d-flex flex-nowrap gap-2"
-              aria-label="Session metadata"
+              :aria-label="t('memorisation.a11y.sessionMetadata')"
             >
               <span
                 v-for="item in topCardMetadataPills"
@@ -225,37 +298,6 @@
               </span>
             </div>
           </div>
-          <div class="workspace-shell-bottom-controls workspace-header-view-controls quick-right-controls" aria-label="View controls">
-            <div class="font-dropdown quick-font-dropdown" @click.stop>
-              <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
-                <i class="bi bi-text-paragraph" aria-hidden="true"></i>
-                <span class="d-none d-sm-inline">{{ getCurrentFontLabel() }}</span>
-                <span class="d-sm-none">{{ t('memorisation.reading.font') }}</span>
-                <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }" aria-hidden="true"></i>
-              </button>
-              <transition name="dropdown-fade">
-                <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
-                  <button v-for="font in quranFontOptions" :key="font.value" type="button" class="font-option"
-                    :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
-                    <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
-                    <span>{{ font.label }}</span>
-                    <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                  </button>
-                </div>
-              </transition>
-            </div>
-            <button type="button" class="view-mode-switch" :class="{ 'is-mushaf': readingViewMode === 'mushaf' }"
-              @click="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
-              :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'" aria-label="Toggle mushaf mode">
-              <span class="view-mode-switch-label">{{ t('memorisation.view.stacked') }}</span>
-              <span class="view-mode-switch-track" aria-hidden="true">
-                <span class="view-mode-switch-thumb">
-                  <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-book' : 'bi-view-stacked'"></i>
-                </span>
-              </span>
-              <span class="view-mode-switch-label">{{ t('memorisation.view.mushaf') }}</span>
-            </button>
-          </div>
         </div>
         <div v-if="reviewPriorityLabel && readingViewMode !== 'mushaf'" class="workspace-shell-compact-meta">
           <span>{{ reviewPriorityLabel }}</span>
@@ -263,7 +305,7 @@
 
 </section>
 
-          <div v-if="!isDataReady || isRestoringWorkspace" class="loading-spinner">
+          <div v-if="!isDataReady || isRestoringWorkspace || isWorkspaceRefreshing" class="loading-spinner" :class="{ 'is-reciter-refresh': isWorkspaceRefreshing && workspaceRefreshReason === 'reciter' }">
             <i class="bi bi-hourglass-split"></i>
             <span>{{ workspaceLoadingLabel }}</span>
           </div>
@@ -279,8 +321,8 @@
           </div>
 
           <main v-if="isDataReady && !isOnboardingExperienceActive && !isWelcomeBackWorkspaceHidden" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
-            aria-label="Memorisation workspace">
-            <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" aria-label="Session setup">
+            :aria-label="t('memorisation.a11y.memorisationWorkspace')">
+            <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t('memorisation.a11y.sessionSetup')">
               <div class="workspace-empty-card">
                 <span class="workspace-empty-kicker">{{ t('memorisation.workspaceEmpty.kicker') }}</span>
                 <h2>{{ t('memorisation.workspaceEmpty.title') }}</h2>
@@ -297,12 +339,12 @@
             </section>
             <div v-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace container-fluid w-100 px-0">
               <div class="mushaf-frame mushaf-frame-toolbar-collapsed">
-                <aside class="mushaf-toolbar-rail" aria-label="Mushaf tools">
+                <aside class="mushaf-toolbar-rail" :aria-label="t('memorisation.a11y.mushafTools')">
                 <div class="mushaf-pill-bar mushaf-pill-toolbar is-collapsed">
                   <div class="mushaf-toolbar-cluster mushaf-toolbar-cluster-start">
                     <div class="mushaf-toolbar-dropdown font-dropdown-region">
                       <button @click.stop="fontOpen = !fontOpen; bgOpen = false; borderOpen = false" type="button" class="mushaf-toolbar-trigger"
-                        :aria-expanded="fontOpen ? 'true' : 'false'" aria-label="Choose Mushaf text style" :title="getCurrentFontLabel()">
+                        :aria-expanded="fontOpen ? 'true' : 'false'" :aria-label="t('memorisation.a11y.chooseMushafFont')" :title="getCurrentFontLabel()">
                         <i class="bi bi-type"></i>
                       </button>
                       <div v-if="fontOpen" @click.stop class="mushaf-toolbar-menu">
@@ -319,8 +361,8 @@
                       type="button"
                       class="mushaf-pill mushaf-font-size-pill"
                       @click.stop="decreaseMushafFontSize"
-                      title="Decrease font size"
-                      aria-label="Decrease font size"
+                      :title="t('memorisation.a11y.decreaseFontSize')"
+                      :aria-label="t('memorisation.a11y.decreaseFontSize')"
                     >
                       <i class="bi bi-dash-lg" aria-hidden="true"></i>
                     </button>
@@ -328,8 +370,8 @@
                       type="button"
                       class="mushaf-pill mushaf-font-size-pill"
                       @click.stop="increaseMushafFontSize"
-                      title="Increase font size"
-                      aria-label="Increase font size"
+                      :title="t('memorisation.a11y.increaseFontSize')"
+                      :aria-label="t('memorisation.a11y.increaseFontSize')"
                     >
                       <i class="bi bi-plus-lg" aria-hidden="true"></i>
                     </button>
@@ -370,8 +412,8 @@
                       type="button"
                       class="mushaf-pill mushaf-controls-pill"
                       @click.stop="openAdvancedControls"
-                      title="Session controls"
-                      aria-label="Open session controls"
+                      :title="t('memorisation.a11y.sessionControls')"
+                      :aria-label="t('memorisation.a11y.openSessionControls')"
                     >
                       <i class="bi bi-sliders"></i>
                     </button>
@@ -391,8 +433,8 @@
                       :class="{ active: tajweedEnabled }"
                       @click.stop="toggleTajweed"
                       :aria-pressed="tajweedEnabled ? 'true' : 'false'"
-                      aria-label="Toggle Tajweed colouring"
-                      title="Tajweed"
+                      :aria-label="t('memorisation.a11y.toggleTajweed')"
+                      :title="t('memorisation.a11y.tajweedLabel')"
                     >
                       <i class="bi bi-palette"></i>
                     </button>
@@ -421,7 +463,7 @@
                     class="mushaf-stage-nav mushaf-stage-nav-prev"
                     :disabled="!canGoPreviousMushafPage"
                     @click="goToPreviousMushafPage"
-                    aria-label="Previous mushaf page"
+                    :aria-label="t('memorisation.a11y.previousMushafPage')"
                   >
                     <i class="bi bi-chevron-left" aria-hidden="true"></i>
                   </button>
@@ -443,7 +485,7 @@
                       dir="rtl"
                       :style="{ '--verse-font-percent': defaultFontSize, '--mushaf-quran-font': quranFontFamily }"
                     >
-                      <p v-if="showMushafBismillahOnPage" class="mushaf-bismillah-inline" aria-label="Bismillah">
+                      <p v-if="showMushafBismillahOnPage" class="mushaf-bismillah-inline" :aria-label="t('memorisation.a11y.bismillah')">
                         بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
                       </p>
                       <span
@@ -504,7 +546,7 @@
                     class="mushaf-stage-nav mushaf-stage-nav-next"
                     :disabled="!canGoNextMushafPage"
                     @click="goToNextMushafPage"
-                    aria-label="Next mushaf page"
+                    :aria-label="t('memorisation.a11y.nextMushafPage')"
                   >
                     <i class="bi bi-chevron-right" aria-hidden="true"></i>
                   </button>
@@ -566,7 +608,7 @@
                     </button>
                     <button class="verse-inline-action-btn verse-inline-download-btn" type="button"
                       @click.stop="downloadVerseAudio(verse)" :disabled="!verse.audio"
-                      :title="t('common.download')" :aria-label="t('common.download')">
+                      :title="t('memorisation.offlineDownload.buttonHint')" :aria-label="t('memorisation.offlineDownload.buttonHint')">
                       <i class="bi bi-download" aria-hidden="true"></i>
                     </button>
                   </div>
@@ -606,7 +648,7 @@
                     tabindex="-1">
                     <span class="word-arabic" dir="rtl" lang="ar">{{ word.ar }}</span>
                     <span class="word-meaning">{{ word.en }}</span>
-                    <button v-if="word.audio && wordByWordAudioEnabled" class="word-audio-btn" type="button"
+                    <button v-if="word.audio" class="word-audio-btn" type="button"
                       @click.stop="playWordAudio(word.audio, verse, wi)"
                       :aria-label="`Play word ${wi + 1} audio for ayah ${verse.number}`">
                       <i class="bi bi-volume-up" aria-hidden="true"></i>
@@ -637,11 +679,11 @@
           <div id="memorisationToolsTitle" class="tools-title">
             <h3><b>{{ t('common.controls') }}</b></h3>
           </div>
-            <button class="tools-x" @click="closeToolsPanel" aria-label="Close panel" type="button">
+            <button class="tools-x" @click="closeToolsPanel" :aria-label="t('memorisation.a11y.closePanel')" type="button">
               <span class="tools-x-glyph" aria-hidden="true">&times;</span>
             </button>
           </div>
-          <div v-if="shouldShowOffcanvasTabs" class="tools-tabs" role="tablist" aria-label="Controls tabs">
+          <div v-if="shouldShowOffcanvasTabs" class="tools-tabs" role="tablist" :aria-label="t('memorisation.a11y.controlsTabs')">
             <button role="tab" :aria-selected="tab === 'tools' ? 'true' : 'false'" :class="{ active: tab === 'tools' }"
               @click.prevent="setActiveTab('tools')" title="Session setup" type="button">
               <i class="bi bi-sliders"></i> {{ t('memorisation.tools.tabs.setup') }}
@@ -682,7 +724,7 @@
                   <div class="field">
                     <label><i class="bi bi-gem"></i> {{ t('memorisation.planner.memoryReview') }}</label>
                     <strong>{{ plannerMemoryReviewLine }}</strong>
-                    <small class="field-hint">Next review: {{ plannerSessionState.nextReviewLabel }} · {{ plannerConfidenceLine }}</small>
+                    <small class="field-hint">{{ t('memorisation.analyticsHeatmap.nextReviewHint', { label: plannerSessionState.nextReviewLabel, confidence: plannerConfidenceLine }) }}</small>
                   </div>
                   <div v-if="hasSessionStarted" class="field">
                     <label><i class="bi bi-layout-text-window-reverse"></i> {{ t('memorisation.planner.sessionView') }}</label>
@@ -760,12 +802,16 @@
                   </div>
                   <div class="field">
                     <label><i class="bi bi-mic-fill"></i> {{ t('sessionSetup.reciter') }}</label>
-                    <select v-model="reciterId" @change="refreshVerses" class="select">
+                    <select v-model="reciterId" @change="refreshVerses" class="select" :disabled="isWorkspaceRefreshing && workspaceRefreshReason === 'reciter'">
                       <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
                     </select>
-                    <small class="field-hint">{{ t('sessionSetup.reciterHint') }}</small>
+                    <small v-if="isWorkspaceRefreshing && workspaceRefreshReason === 'reciter'" class="field-hint field-hint-loading">
+                      <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
+                      {{ t('memorisation.loading.reciterRefresh') }}
+                    </small>
+                    <small v-else class="field-hint">{{ t('sessionSetup.reciterHint') }}</small>
                   </div>
-                  <div class="field">
+                  <div class="field field-repetitions-clean">
                     <div class="field-header">
                       <label><i class="bi bi-arrow-repeat"></i> {{ t('sessionSetup.repetitions') }}</label>
                       <span class="range-value-pill">{{ repetitionDisplayValue }}</span>
@@ -795,11 +841,11 @@
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i
                     class="bi bi-chevron-down"></i></span>
               </button>
-              <div class="sheet-content" v-show="sectionOpen.advanced_playback">
+              <div class="sheet-content offcanvas-audio-panel" v-show="sectionOpen.advanced_playback">
                 <div class="field-stack field-stack-compact">
                   <div class="field">
                     <label>{{ t('memorisation.speed') }}</label>
-                    <div class="radio-group radio-group-tight">
+                    <div class="radio-group radio-group-tight radio-group-compact">
                       <label class="radio" v-for="option in speedOptions" :key="`tool-speed-${option}`">
                         <input type="radio" name="session-playback-speed" :value="option" v-model.number="speed"
                           @change="setPlaybackSpeed(option)"> {{ option }}x
@@ -809,34 +855,25 @@
                   </div>
                   <div class="field">
                     <label>{{ t('memorisation.auto_advance') }}</label>
-                    <div class="radio-group radio-group-tight">
+                    <div class="radio-group radio-group-tight radio-group-compact">
                       <label class="radio"><input type="radio" name="session-auto-advance" value="auto" v-model="playMode"> {{ t('common.yes') }}</label>
                       <label class="radio"><input type="radio" name="session-auto-advance" value="manual" v-model="playMode"> {{ t('common.no') }}</label>
-                      <label class="radio"><input type="radio" name="session-auto-advance" value="follow" v-model="playMode"> {{ t('memorisation.listen_then_recite') }}</label>
                     </div>
                   </div>
-                  <div v-if="playMode === 'follow' || talqinModeEnabled" class="field">
+                  <div v-if="talqinModeEnabled" class="field">
                     <label><i class="bi bi-hourglass-top"></i> {{ t('memorisation.recitation_window_secs') }}</label>
-                    <select v-model.number="recitationWindowSeconds" class="select">
+                    <select v-model.number="recitationWindowSeconds" class="select select-compact">
                       <option v-for="option in recitationWindowOptions" :key="`recitation-window-${option}`" :value="option">{{ option }}s</option>
                     </select>
                     <small class="field-hint">{{ t('memorisation.recitation_window_hint') }}</small>
                   </div>
                   <div class="field">
                     <label><i class="bi bi-hourglass-split"></i> {{ t('memorisation.delay_between_recitations_secs') }}</label>
-                    <select v-model.number="delay" class="select">
+                    <select v-model.number="delay" class="select select-compact">
                       <option v-for="option in delayOptions" :key="`tool-delay-${option}`" :value="option">{{ option }}s
                       </option>
                     </select>
                     <small class="field-hint">{{ t('memorisation.pause_before_each_next_repetition_recitation_in_au') }}</small>
-                  </div>
-                  <div class="field">
-                    <label><i class="bi bi-music-player"></i> Player layout</label>
-                    <div class="radio-group radio-group-tight">
-                      <label class="radio"><input type="radio" name="session-player-layout" value="full" :checked="!playerCompact" @change="setPlayerCompact(false)"> Full</label>
-                      <label class="radio"><input type="radio" name="session-player-layout" value="mini" :checked="playerCompact" @change="setPlayerCompact(true)"> Mini</label>
-                    </div>
-                    <small class="field-hint">Mini keeps playback controls out of the way while you read.</small>
                   </div>
                 </div>
               </div>
@@ -845,9 +882,9 @@
 
           <!-- TECHNIQUES TAB -->
           <div v-else-if="tab === 'techniques'" class="sheet">
-            <div class="technique-group-copy">
-              <span class="technique-group-kicker">Visibility</span>
-              <p>Use these to keep the current ayah clear and the next ayahs quieter.</p>
+            <div class="technique-group-copy technique-group-beginner">
+              <span class="technique-group-kicker">{{ t('memorisation.practiceTools.beginner') }}</span>
+              <p>{{ t('memorisation.practiceTools.beginnerDesc') }}</p>
             </div>
             
             <section class="sheet-section">
@@ -862,7 +899,7 @@
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
                     <button type="button" class="mode-radio" :class="{ active: focusModeEnabled }"
-                      :aria-pressed="focusModeEnabled ? 'true' : 'false'" aria-label="Use focus mode" @click="toggleFocusModeRadio">
+                      :aria-pressed="focusModeEnabled ? 'true' : 'false'" :aria-label="t('memorisation.a11y.useFocusMode')" @click="toggleFocusModeRadio">
                       <i class="mode-radio-icon bi" :class="focusModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
                         aria-hidden="true"></i>
                     </button>
@@ -908,7 +945,7 @@
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
                     <button type="button" class="mode-radio" :class="{ active: blurModeEnabled }"
-                      :aria-pressed="blurModeEnabled ? 'true' : 'false'" aria-label="Use blur mode" @click="toggleBlurModeRadio">
+                      :aria-pressed="blurModeEnabled ? 'true' : 'false'" :aria-label="t('memorisation.a11y.useBlurMode')" @click="toggleBlurModeRadio">
                       <i class="mode-radio-icon bi" :class="blurModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
                         aria-hidden="true"></i>
                     </button>
@@ -941,9 +978,52 @@
               </div>
             </section>
 
-            <div class="technique-group-copy">
-              <span class="technique-group-kicker">Flow &amp; Recall</span>
-              <p>Use these to connect ayahs together and anchor harder words.</p>
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('talqin_mode')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-soundwave"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">{{ t('memorisation.talqinMode.title') }}</span>
+                    <span class="st-sub">{{ t('memorisation.talqinMode.subtitle') }}</span>
+                  </span>
+                </span>
+                <div class="st-right-group">
+                  <div class="mode-radio-group" @click.stop>
+                    <button
+                      id="talqin-mode-toggle"
+                      type="button"
+                      class="mode-radio"
+                      :class="{ active: talqinModeEnabled }"
+                      :aria-pressed="talqinModeEnabled ? 'true' : 'false'"
+                      :aria-label="t('memorisation.a11y.useTalqinMode')"
+                      @click="talqinModeEnabled = !talqinModeEnabled"
+                    >
+                      <i class="mode-radio-icon bi" :class="talqinModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <span class="st-chev" :class="{ open: sectionOpen.talqin_mode }"><i class="bi bi-chevron-down"></i></span>
+                </div>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.talqin_mode">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="technique-description">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>{{ t('memorisation.talqinMode.description') }}</span>
+                    </div>
+                    <div class="technique-best">
+                      <i class="bi bi-check-circle-fill"></i>
+                      <span>{{ t('memorisation.talqinMode.bestFor') }}</span>
+                    </div>
+                    <small class="field-hint">{{ t('memorisation.talqinMode.hint') }}</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <div class="technique-group-copy technique-group-advanced">
+              <span class="technique-group-kicker">{{ t('memorisation.practiceTools.advanced') }}</span>
+              <p>{{ t('memorisation.practiceTools.advancedDesc') }}</p>
             </div>
             
             <section class="sheet-section">
@@ -958,7 +1038,7 @@
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
                     <button type="button" class="mode-radio" :class="{ active: chainingEnabled }"
-                      :aria-pressed="chainingEnabled ? 'true' : 'false'" aria-label="Use chaining" @click="toggleChainingRadio">
+                      :aria-pressed="chainingEnabled ? 'true' : 'false'" :aria-label="t('memorisation.a11y.useChaining')" @click="toggleChainingRadio">
                       <i class="mode-radio-icon bi" :class="chainingEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
                         aria-hidden="true"></i>
                     </button>
@@ -1034,7 +1114,7 @@
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
                     <button type="button" class="mode-radio" :class="{ active: anchorModeEnabled }"
-                      :aria-pressed="anchorModeEnabled ? 'true' : 'false'" aria-label="Use anchor mode" @click="toggleAnchorModeRadio">
+                      :aria-pressed="anchorModeEnabled ? 'true' : 'false'" :aria-label="t('memorisation.a11y.useAnchorMode')" @click="toggleAnchorModeRadio">
                       <i class="mode-radio-icon bi" :class="anchorModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
                         aria-hidden="true"></i>
                     </button>
@@ -1062,49 +1142,6 @@
                       <option :value="2">2 anchors (first + last)</option>
                     </select>
                     <small class="field-hint">{{ anchorModeDescription }}</small>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('talqin_mode')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-soundwave"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">Talqin mode</span>
-                    <span class="st-sub">Pause after each ayah so the learner can repeat before the next one starts.</span>
-                  </span>
-                </span>
-                <div class="st-right-group">
-                  <div class="mode-radio-group" @click.stop>
-                    <button
-                      id="talqin-mode-toggle"
-                      type="button"
-                      class="mode-radio"
-                      :class="{ active: talqinModeEnabled }"
-                      :aria-pressed="talqinModeEnabled ? 'true' : 'false'"
-                      aria-label="Use talqin mode"
-                      @click="talqinModeEnabled = !talqinModeEnabled"
-                    >
-                      <i class="mode-radio-icon bi" :class="talqinModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                  <span class="st-chev" :class="{ open: sectionOpen.talqin_mode }"><i class="bi bi-chevron-down"></i></span>
-                </div>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.talqin_mode">
-                <div class="field-stack">
-                  <div class="field">
-                    <div class="technique-description">
-                      <i class="bi bi-info-circle-fill"></i>
-                      <span>Pause after each ayah for repeat-back practice.</span>
-                    </div>
-                    <div class="technique-best">
-                      <i class="bi bi-check-circle-fill"></i>
-                      <span>Best for listen and repeat.</span>
-                    </div>
-                    <small class="field-hint">Uses the longer of your delay or a brief verse-length pause.</small>
                   </div>
                 </div>
               </div>
@@ -1169,97 +1206,73 @@
 
           <!-- SAVED TAB -->
           <div v-else-if="tab === 'saved'" class="sheet">
-            <div class="saved-sessions-container saved-sessions-v2">
-              <div class="saved-header">
-                <h3><i class="bi bi-clock-history"></i> {{ t('memorisation.saved_sessions') }}</h3>
-                <p>{{ t('memorisation.saved_sessions_intro') }}</p>
-              </div>
-
-              <template v-if="savedSessions.length > 0">
-                <section v-if="completedSavedSessions.length" class="saved-sessions-section">
-                  <header class="saved-sessions-section-head">
-                    <h4><i class="bi bi-check2-circle"></i> {{ t('memorisation.completed_sessions') }}</h4>
-                    <p>{{ t('memorisation.completed_sessions_desc') }}</p>
-                  </header>
-                  <div class="sessions-list">
-                    <div v-for="session in completedSavedSessions" :key="session.id" class="session-item"
-                      :class="{ 'session-item-active': sessionMatchesCurrentLiveConfig(session) }">
-                      <div class="session-info" @click="loadSavedSession(session.id)">
-                        <div class="session-name">
-                          <i class="bi bi-bookmark-fill"></i>
-                          <span>{{ getSavedSessionName(session) }}</span>
-                        </div>
-                        <div class="session-details">
-                          <span><i class="bi bi-book-half"></i> {{ getSavedSessionSurah(session) }}</span>
-                          <span><i class="bi bi-clock-history"></i> {{ t('memorisation.last_opened', { date: formatDate(session.savedAt) }) }}</span>
-                        </div>
-                      </div>
-                      <div class="session-actions">
-                        <button class="session-resume-btn btn btn-primary" @click="loadSavedSession(session.id)" type="button">
-                          <i class="bi bi-play-fill"></i>
-                          <span>{{ t('common.resume') }}</span>
-                        </button>
-                        <button class="session-delete-btn" @click.stop="deleteSavedSession(session.id)" :title="t('common.delete')">
-                          <i class="bi bi-trash3"></i>
-                          <span>{{ t('common.delete') }}</span>
-                        </button>
-                      </div>
+            <section class="sheet-section sheet-section-compact">
+              <button class="sheet-toggle" type="button" @click="toggleSection('saved_sessions')">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-clock-history"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">{{ t('memorisation.saved_sessions') }}</span>
+                    <span class="st-sub">{{ t('memorisation.saved_sessions_intro') }}</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.saved_sessions }"><i class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content saved-sessions-sheet" v-show="sectionOpen.saved_sessions">
+                <div v-if="savedSessions.length > 0" class="saved-sessions-list" role="list">
+                  <article
+                    v-for="session in sortedSavedSessions"
+                    :key="session.id"
+                    class="saved-session-row"
+                    :class="{
+                      'is-complete': isSavedSessionComplete(session),
+                      'is-active': sessionMatchesCurrentLiveConfig(session)
+                    }"
+                    role="listitem"
+                  >
+                    <button type="button" class="saved-session-row-main" @click="loadSavedSession(session.id)">
+                      <span class="saved-session-row-title">
+                        <i class="bi" :class="isSavedSessionComplete(session) ? 'bi-check-circle' : 'bi-bookmark'" aria-hidden="true"></i>
+                        <span>{{ getSavedSessionName(session) }}</span>
+                      </span>
+                      <span class="saved-session-row-meta">
+                        {{ getSavedSessionSurah(session) }} · {{ t('memorisation.last_opened', { date: formatDate(session.savedAt) }) }}
+                      </span>
+                    </button>
+                    <div class="saved-session-row-actions">
+                      <button class="saved-session-row-btn saved-session-row-btn-primary" @click="loadSavedSession(session.id)" type="button">
+                        <i class="bi bi-play-fill" aria-hidden="true"></i>
+                        <span>{{ t('common.resume') }}</span>
+                      </button>
+                      <button class="saved-session-row-btn" @click.stop="deleteSavedSession(session.id)" :title="t('common.delete')" :aria-label="t('common.delete')" type="button">
+                        <i class="bi bi-trash3" aria-hidden="true"></i>
+                      </button>
                     </div>
-                  </div>
-                </section>
+                  </article>
+                </div>
 
-                <section v-if="incompleteSavedSessions.length" class="saved-sessions-section">
-                  <header class="saved-sessions-section-head">
-                    <h4><i class="bi bi-hourglass-split"></i> {{ t('memorisation.incomplete_sessions') }}</h4>
-                    <p>{{ t('memorisation.incomplete_sessions_desc') }}</p>
-                  </header>
-                  <div class="sessions-list">
-                    <div v-for="session in incompleteSavedSessions" :key="session.id" class="session-item"
-                      :class="{ 'session-item-active': sessionMatchesCurrentLiveConfig(session) }">
-                      <div class="session-info" @click="loadSavedSession(session.id)">
-                        <div class="session-name">
-                          <i class="bi bi-bookmark"></i>
-                          <span>{{ getSavedSessionName(session) }}</span>
-                        </div>
-                        <div class="session-details">
-                          <span><i class="bi bi-book-half"></i> {{ getSavedSessionSurah(session) }}</span>
-                          <span><i class="bi bi-clock-history"></i> {{ t('memorisation.last_opened', { date: formatDate(session.savedAt) }) }}</span>
-                        </div>
-                      </div>
-                      <div class="session-actions">
-                        <button class="session-resume-btn btn btn-primary" @click="loadSavedSession(session.id)" type="button">
-                          <i class="bi bi-play-fill"></i>
-                          <span>{{ t('common.resume') }}</span>
-                        </button>
-                        <button class="session-delete-btn" @click.stop="deleteSavedSession(session.id)" :title="t('common.delete')">
-                          <i class="bi bi-trash3"></i>
-                          <span>{{ t('common.delete') }}</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-              </template>
-
-              <div v-if="savedSessions.length === 0" class="empty-state">
-                <i class="bi bi-journal-bookmark"></i>
-                <p>{{ t('memorisation.no_saved_sessions_yet') }}</p>
-                <span>{{ t('memorisation.save_your_current_session_to_get_started') }}</span>
+                <div v-else class="saved-empty-sheet">
+                  <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
+                  <p>{{ t('memorisation.no_saved_sessions_yet') }}</p>
+                  <span>{{ t('memorisation.save_your_current_session_to_get_started') }}</span>
+                </div>
               </div>
+            </section>
 
-              <div v-if="hasVerses" class="save-section">
-                <div class="current-info">
-                  <i class="bi bi-play-circle"></i>
+            <section v-if="hasVerses" class="sheet-section sheet-section-compact">
+              <div class="sheet-content saved-current-session-sheet">
+                <div class="saved-current-session-copy">
+                  <i class="bi bi-play-circle" aria-hidden="true"></i>
                   <div>
                     <strong>{{ t('memorisation.current_session') }}</strong>
                     <small>{{ currentChapter?.name_simple || t('memorisation.no_surah_selected') }} · {{ rangeStart }}-{{ rangeEnd }}</small>
                   </div>
                 </div>
-                <button class="save-btn" @click="saveCurrentSessionWithName()">
-                  <i class="bi bi-save"></i> {{ t('common.save') }}
+                <button class="saved-current-session-btn" @click="saveCurrentSessionWithName()" type="button">
+                  <i class="bi bi-save" aria-hidden="true"></i>
+                  <span>{{ t('common.save') }}</span>
                 </button>
               </div>
-            </div>
+            </section>
           </div>
 
           <div v-else-if="isLoggedIn && tab === 'stats'" class="sheet">
@@ -1269,7 +1282,7 @@
                   <h3><i class="bi bi-bar-chart-line"></i> {{ t('memorisation.insights') }}</h3>
                   <p>{{ t('memorisation.today_first_advanced_analytics_stay_tucked_away_un') }}</p>
                 </div>
-                <div class="hifz-simple-analytics" aria-label="Current session analytics">
+                <div class="hifz-simple-analytics" :aria-label="t('memorisation.a11y.currentSessionAnalytics')">
                   <article v-for="item in controlsAnalyticsCards" :key="item.key" class="hifz-simple-analytics-item">
                     <i class="bi" :class="item.icon" aria-hidden="true"></i>
                     <span>{{ item.label }}</span>
@@ -1282,7 +1295,7 @@
                   <span>{{ t('memorisation.show_advanced_metrics') }}</span>
                 </button>
                 <div v-if="false">
-                  <section class="detailed-analytics-system" aria-label="Detailed analytics">
+                  <section class="detailed-analytics-system" :aria-label="t('memorisation.a11y.detailedAnalytics')">
                     <article v-for="section in detailedAnalyticsSections" :key="section.key" class="detailed-analytics-section">
                       <div class="analytics-section-head">
                         <i class="bi" :class="section.icon" aria-hidden="true"></i>
@@ -1451,17 +1464,7 @@
                   </button>
                 </div>
 
-                <!-- Word Audio -->
-                <div class="setting-item">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('sessionSetup.wordAudio') }}</div>
-                    <div class="setting-description">{{ t('sessionSetup.wordAudioDesc') }}</div>
-                  </div>
-                  <button class="toggle-chip" :class="{ active: wordByWordAudioEnabled }"
-                    @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
-                    {{ wordByWordAudioEnabled ? t('common.on') : t('common.off') }}
-                  </button>
-                </div>
+                <!-- Word Audio: always enabled — toggle removed -->
               </div>
             </section>
           </div>
@@ -1489,91 +1492,15 @@
       </aside>
     </div>
 
-    <div v-else-if="appReady && !isLoggedIn" class="main container">
-      <section class="guest-auth-shell" aria-label="Login">
-        <div class="guest-auth-card">
-          <span class="guest-auth-kicker">{{ t('common.memorisation') }}</span>
-          <h1 class="guest-auth-title">{{ t('common.login') }}</h1>
-
-          <div v-if="auth.google_error" class="alert alert-danger guest-auth-alert" role="alert">
-            {{ auth.google_error }}
-          </div>
-          <div v-else-if="auth.login_error" class="alert alert-danger guest-auth-alert" role="alert">
-            {{ auth.login_error }}
-          </div>
-
-          <a :href="auth.google_login_url || '/auth/redirect'" class="guest-auth-google text-decoration-none">
-            <span class="guest-auth-google-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.24 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#fbbc05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z"/>
-                <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.31 9.14 5.38 12 5.38z"/>
-              </svg>
-            </span>
-            <span>{{ t('auth.continueGoogle') }}</span>
-          </a>
-
-          <div class="guest-auth-divider"><span>{{ t('auth.or') }}</span></div>
-
-          <form class="guest-auth-form" method="POST" :action="auth.login_url || '/login'">
-            <input type="hidden" name="_token" :value="auth.csrf_token || ''">
-
-            <div class="guest-auth-field">
-              <label for="guestLoginEmail">{{ t('auth.emailAddress') }}</label>
-              <input
-                id="guestLoginEmail"
-                type="email"
-                name="email"
-                :value="auth.old_email || ''"
-                autocomplete="email"
-                required
-              >
-            </div>
-
-            <div class="guest-auth-field">
-              <label for="guestLoginPassword">{{ t('auth.password') }}</label>
-              <input
-                id="guestLoginPassword"
-                type="password"
-                name="password"
-                autocomplete="current-password"
-                required
-              >
-            </div>
-
-            <div class="guest-auth-meta">
-              <label class="guest-auth-check" for="guestRemember">
-                <input id="guestRemember" type="checkbox" name="remember" :checked="!!auth.old_remember">
-                <span>{{ t('auth.rememberMe') }}</span>
-              </label>
-
-              <a v-if="auth.forgot_password_url" :href="auth.forgot_password_url" class="guest-auth-link">
-                {{ t('auth.forgotPassword') }}
-              </a>
-            </div>
-
-            <button type="submit" class="guest-auth-submit">
-              {{ t('common.login') }}
-            </button>
-          </form>
-
-          <p class="guest-auth-register">
-            <a :href="auth.register_url || '/register'" class="guest-auth-link">{{ t('common.register') }}</a>
-          </p>
-        </div>
-      </section>
-    </div>
-
     <!-- Save Session Name Modal - Clean & Updated Version -->
     <div class="modal-overlay" v-if="showSaveNameModal" @click.self="closeSaveModal">
-      <div class="modal-content save-name-modal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
+      <div class="modal-content mutqin-modal-surface save-name-modal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
         <div class="modal-header">
           <div class="modal-header-text">
             <h2 id="saveModalTitle">{{ t('memorisation.save_memorisation_session') }}</h2>
             <p>{{ t('memorisation.name_this_session_so_you_can_find_it_again_later') }}</p>
           </div>
-          <button class="modal-close-btn" @click="closeSaveModal" aria-label="Close">
+          <button class="modal-close-btn" @click="closeSaveModal" :aria-label="t('common.close')">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -1611,13 +1538,13 @@
     </div>
 
     <div class="modal-overlay confirm-modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal">
-      <div class="modal-content confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+      <div class="modal-content mutqin-modal-surface confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
         <div class="modal-header">
           <div class="modal-header-text">
             <div class="modal-context-badge">{{ sessionContextBadge }}</div>
             <h2 id="confirmModalTitle">{{ confirmModal.title }}</h2>
           </div>
-          <button class="btn-icon" @click="closeConfirmModal" type="button" aria-label="Close confirmation dialog"><i
+          <button class="modal-close-btn" @click="closeConfirmModal" type="button" :aria-label="t('memorisation.confirmModals.closeDialog')"><i
               class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body">
@@ -1631,7 +1558,7 @@
       </div>
     </div>
 
-    <div v-if="showWelcomeBackModal" class="welcome-back-flow" aria-live="polite">
+    <div v-if="showWelcomeBackModal" class="welcome-back-flow" :class="{ 'welcome-back-flow--ready': welcomeBackModalReady }" aria-live="polite">
       <div class="modal-backdrop fade show welcome-back-backdrop"></div>
       <div
         class="modal fade show d-block welcome-back-modal-wrap"
@@ -1641,45 +1568,40 @@
         aria-labelledby="welcomeBackModalTitle"
       >
         <div class="modal-dialog modal-dialog-centered modal-lg">
-          <div class="modal-content welcome-back-modal">
-            <div class="modal-header border-0 pb-0">
-              <div>
-                <span class="badge rounded-pill text-bg-success welcome-back-kicker">
-                  <i class="bi bi-person-check" aria-hidden="true"></i>
+          <div class="modal-content mutqin-modal-surface welcome-back-modal">
+            <div class="welcome-back-hero">
+              <div class="welcome-back-hero-copy">
+                <span class="welcome-back-kicker">
                   {{ t('memorisation.welcomeBack.kicker') }}
                 </span>
-                <h2 id="welcomeBackModalTitle" class="modal-title mt-2 mb-1">
+                <h2 id="welcomeBackModalTitle" class="welcome-back-title">
                   {{ welcomeBackModalTitle }}
                 </h2>
-                <p class="welcome-back-message mb-0">
+                <p class="welcome-back-message">
                   {{ welcomeBackModalSubtitle }}
                 </p>
               </div>
             </div>
-            <div class="modal-body pt-4">
-              <div class="container-fluid px-0">
-                <div class="row g-3 welcome-back-actions">
-                  <div class="col-md-4">
-                    <button type="button" class="btn btn-primary w-100" @click="welcomeBackStartNewSession">
-                      {{ t('memorisation.welcomeBack.startNewSession') }}
-                    </button>
-                  </div>
-                  <div class="col-md-4">
-                    <button
-                      type="button"
-                      class="btn btn-outline-primary w-100"
-                      :disabled="!canResumePreviousSession"
-                      @click="welcomeBackContinueSession"
-                    >
-                      {{ t('memorisation.welcomeBack.continuePreviousSession') }}
-                    </button>
-                  </div>
-                  <div class="col-md-4">
-                    <button type="button" class="btn btn-outline-danger w-100" @click="logoutFromWelcomeBack">
-                      {{ t('common.logout') }}
-                    </button>
-                  </div>
-                </div>
+
+            <div class="modal-body welcome-back-body">
+              <div class="welcome-back-actions welcome-back-actions--solo">
+                <button type="button" class="welcome-back-btn welcome-back-btn--primary" @click="welcomeBackStartNewSession">
+                  <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.welcomeBack.startNewSession') }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="welcome-back-btn welcome-back-btn--ghost"
+                  :disabled="!canResumePreviousSession"
+                  @click="welcomeBackContinueSession"
+                >
+                  <i class="bi bi-play-circle" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.welcomeBack.continuePreviousSession') }}</span>
+                </button>
+                <button type="button" class="welcome-back-btn welcome-back-btn--muted" @click="logoutFromWelcomeBack">
+                  <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                  <span>{{ t('common.logout') }}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1696,58 +1618,87 @@
         aria-modal="true"
         aria-labelledby="sessionExitTitle"
       >
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-          <div class="modal-content session-exit-modal session-exit-summary-modal">
-            <div class="modal-header border-0 pb-0">
-              <div>
-                <span class="badge rounded-pill text-bg-secondary session-exit-kicker">
-                  {{ t('memorisation.sessionExit.kicker') }}
-                </span>
-                <h2 id="sessionExitTitle" class="modal-title mt-2 mb-0 session-exit-position">
-                  {{ sessionExitPositionLabel }}
-                </h2>
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+          <div class="modal-content mutqin-modal-surface session-exit-modal session-exit-summary-modal">
+            <div class="session-exit-hero">
+              <div class="session-exit-hero-main">
+                <div class="session-exit-hero-copy">
+                  <span class="session-exit-kicker">
+                    {{ t('memorisation.sessionExit.kicker') }}
+                  </span>
+                  <h2 id="sessionExitTitle" class="session-exit-title">
+                    {{ sessionExitModalTitle }}
+                  </h2>
+                  <p v-if="sessionExitMotivationMessage" class="session-exit-motivation">
+                    {{ sessionExitMotivationMessage }}
+                  </p>
+                </div>
+              </div>
+              <div v-if="sessionExitHeaderSurahName || sessionExitHeaderAyahRef" class="session-exit-hero-position">
+                <span v-if="sessionExitHeaderSurahName" class="session-exit-surah-name">{{ sessionExitHeaderSurahName }}</span>
+                <strong v-if="sessionExitHeaderAyahRef" class="session-exit-ayah-position">{{ sessionExitHeaderAyahRef }}</strong>
               </div>
             </div>
-            <div class="modal-body pt-3 session-exit-summary-body">
-              <div class="session-exit-pills d-flex flex-row flex-nowrap gap-2 overflow-auto">
-                <span
-                  v-for="pill in sessionExitProgressPills"
-                  :key="pill.key"
-                  class="badge rounded-pill text-bg-light session-exit-pill"
+
+            <div class="modal-body session-exit-body">
+              <div class="session-exit-stats" role="list" :aria-label="t('memorisation.stats.progress')">
+                <article
+                  v-for="stat in sessionExitStats"
+                  :key="stat.key"
+                  class="session-exit-stat"
+                  role="listitem"
                 >
-                  {{ pill.label }}
-                </span>
+                  <span class="session-exit-stat-label">{{ stat.label }}</span>
+                  <strong class="session-exit-stat-value">{{ stat.value }}</strong>
+                  <small v-if="stat.hint" class="session-exit-stat-hint">{{ stat.hint }}</small>
+                </article>
               </div>
-              <p class="session-exit-motivation mb-2">{{ sessionExitMotivationMessage }}</p>
-              <p class="session-exit-remaining mb-0">{{ sessionExitRemainingLabel }}</p>
-              <div class="container-fluid px-0 mt-4">
-                <div class="row g-2 session-exit-actions">
-                  <div class="col-md-4 col-6">
-                    <button type="button" class="btn btn-outline-primary w-100" @click="exitSessionToNewSession">
-                      {{ t('memorisation.sessionExit.startNewSession') }}
-                    </button>
+
+              <section class="session-exit-remaining-panel" aria-labelledby="sessionExitRemainingTitle">
+                <header class="session-exit-remaining-head">
+                  <div>
+                    <span class="session-exit-remaining-kicker">{{ t('memorisation.meta.nextKicker') }}</span>
+                    <h3 id="sessionExitRemainingTitle">{{ sessionExitRemainingTitle }}</h3>
                   </div>
-                  <div class="col-md-4 col-6">
-                    <button type="button" class="btn btn-outline-primary w-100" @click="exitSessionToRepeatRange">
-                      {{ t('memorisation.sessionExit.repeatSession') }}
-                    </button>
+                  <div class="session-exit-remaining-progress" role="progressbar" :aria-valuenow="sessionExitRemainingProgress.percentComplete" aria-valuemin="0" aria-valuemax="100">
+                    <span class="session-exit-remaining-progress-fill" :style="{ width: `${sessionExitRemainingProgress.percentComplete}%` }"></span>
                   </div>
-                  <div v-if="canContinueCurrentSession" class="col-md-4 col-6">
-                    <button type="button" class="btn btn-primary w-100" @click="continueSessionFromExitModal">
-                      {{ t('memorisation.sessionExit.continueSession') }}
-                    </button>
-                  </div>
-                  <div class="col-md-6 col-6">
-                    <button type="button" class="btn btn-outline-success w-100" @click="exitSessionToSaveSession">
-                      {{ t('memorisation.sessionExit.saveSession') }}
-                    </button>
-                  </div>
-                  <div class="col-md-6 col-6">
-                    <button type="button" class="btn btn-outline-danger w-100" @click="logoutFromSessionExit">
-                      {{ t('common.logout') }}
-                    </button>
-                  </div>
+                </header>
+                <div class="session-exit-remaining-grid">
+                  <article
+                    v-for="item in sessionExitRemainingItems"
+                    :key="item.key"
+                    class="session-exit-remaining-item"
+                  >
+                    <span class="session-exit-remaining-item-label">{{ item.label }}</span>
+                    <strong class="session-exit-remaining-item-value">{{ item.value }}</strong>
+                    <small v-if="item.hint" class="session-exit-remaining-item-hint">{{ item.hint }}</small>
+                  </article>
                 </div>
+              </section>
+
+              <div class="session-exit-actions" :class="{ 'has-continue': canContinueCurrentSession }">
+                <button type="button" class="session-exit-btn session-exit-btn--ghost" @click="exitSessionToNewSession">
+                  <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.sessionExit.startNewSession') }}</span>
+                </button>
+                <button type="button" class="session-exit-btn session-exit-btn--ghost" @click="exitSessionToRepeatRange">
+                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.sessionExit.repeatSession') }}</span>
+                </button>
+                <button
+                  v-if="canContinueCurrentSession"
+                  type="button"
+                  class="session-exit-btn session-exit-btn--primary"
+                  @click="continueSessionFromExitModal"
+                >
+                  <i class="bi bi-play-circle" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.sessionExit.continueSession') }}</span>
+                </button>
+                <button type="button" class="session-exit-btn session-exit-btn--accent" @click="exitSessionToSaveSession">
+                  <i class="bi bi-bookmark-check" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.sessionExit.saveSession') }}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1764,13 +1715,13 @@
               <h2 id="helpLearningTitle">{{ helpLearningUi.title }}</h2>
               <p id="helpLearningSubtitle">{{ helpLearningUi.subtitle }}</p>
             </div>
-            <button class="modal-close-btn" @click="closeHelpLearningModal" aria-label="Close help and learning">
+            <button class="modal-close-btn" @click="closeHelpLearningModal" :aria-label="t('memorisation.a11y.closeHelpLearning')">
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
           <div class="modal-body help-learning-body">
             <div class="help-learning-shell">
-              <nav class="help-learning-nav" role="tablist" aria-label="Help topics">
+              <nav class="help-learning-nav" role="tablist" :aria-label="t('memorisation.a11y.helpTopics')">
                 <button
                   v-for="section in helpLearningSections"
                   :key="section.key"
@@ -1810,12 +1761,12 @@
                       v-if="activeHelpLearningSection.key === 'talqin-mode'"
                       class="help-learning-talqin-guide text-dark dark:text-white"
                     >
-                      <h5 class="text-dark dark:text-white"><strong>Talqin Workflow Guide (Listen, Pause, Repeat, Extend)</strong></h5>
-                      <p class="text-dark dark:text-white">Activated seamlessly right after you submit a practice session. The platform handles the timing so you can focus entirely on your retention:</p>
+                      <h5 class="text-dark dark:text-white"><strong>{{ t('memorisation.helpLearning.sections.talqinMode.workflowTitle') }}</strong></h5>
+                      <p class="text-dark dark:text-white">{{ t('memorisation.helpLearning.sections.talqinMode.workflowIntro') }}</p>
                       <ul class="text-dark dark:text-white">
-                        <li><strong>1. Listen Phase:</strong> The app streams the correct pronunciation of the verse. Focus on Tajweed tracking.</li>
-                        <li><strong>2. Pause &amp; Repeat Phase:</strong> The audio pauses automatically. A live on-screen alert prompts you to recite what you just heard.</li>
-                        <li><strong>3. Extend Phase:</strong> The sequence systematically links verses together to build long-term memory capacity automatically.</li>
+                        <li><strong>{{ t('memorisation.helpLearning.sections.talqinMode.workflowListen') }}</strong> {{ t('memorisation.helpLearning.sections.talqinMode.workflowListenText') }}</li>
+                        <li><strong>{{ t('memorisation.helpLearning.sections.talqinMode.workflowPause') }}</strong> {{ t('memorisation.helpLearning.sections.talqinMode.workflowPauseText') }}</li>
+                        <li><strong>{{ t('memorisation.helpLearning.sections.talqinMode.workflowExtend') }}</strong> {{ t('memorisation.helpLearning.sections.talqinMode.workflowExtendText') }}</li>
                       </ul>
                     </section>
                     <div class="help-learning-best-for">
@@ -1872,11 +1823,11 @@
         aria-labelledby="plannerCompletionTitle">
         <div class="modal-header planner-completion-header">
           <div class="planner-completion-head-copy">
-            <span class="planner-completion-kicker"><i class="bi bi-stars"></i> {{ t('memorisation.session_finished') }}</span>
+            <span class="planner-completion-kicker">{{ t('memorisation.session_finished') }}</span>
             <h2 id="plannerCompletionTitle">{{ t('memorisation.congratulations_todays_hifz_session_is_complete') }}</h2>
             <p>{{ plannerCompletionSummaryMessage }}</p>
           </div>
-          <button class="modal-close-btn" @click="closePlannerCompletionModal" aria-label="Close">
+          <button class="modal-close-btn" @click="closePlannerCompletionModal" :aria-label="t('common.close')">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -1953,7 +1904,7 @@
               <i class="bi" :class="analyticsReportIcon"></i>
               <span>{{ analyticsReportLabel }}</span>
             </button>
-            <button class="modal-close-btn" @click="closeSessionAnalyticsModal" aria-label="Close">
+            <button class="modal-close-btn" @click="closeSessionAnalyticsModal" :aria-label="t('common.close')">
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
@@ -2070,7 +2021,7 @@
                   <p>{{ t('memorisation.verse_plays_across_the_selected_range') }}</p>
                 </header>
                 <div v-if="analyticsVerseSeries.length" class="analytics-line-chart">
-                  <svg viewBox="0 0 320 160" role="img" aria-label="Ayah activity chart">
+                  <svg viewBox="0 0 320 160" role="img" :aria-label="t('memorisation.analyticsHeatmap.ayahActivityChart')">
                     <defs>
                       <linearGradient id="analyticsAreaGradient" x1="0" x2="0" y1="0" y2="1">
                         <stop offset="0%" stop-color="rgba(189, 140, 88, 0.34)"></stop>
@@ -2142,7 +2093,7 @@
             <p>{{ t('memorisation.session_signals_review_health_cards_graphs_and_cha') }}</p>
             <small>{{ t('memorisation.save_a_session_to_unlock_full_per_session_analytic') }}</small>
           </div>
-          <button class="modal-close-btn" @click="closeAdvancedMetricsModal" aria-label="Close advanced metrics">
+          <button class="modal-close-btn" @click="closeAdvancedMetricsModal" :aria-label="t('memorisation.a11y.closeAdvancedMetrics')">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -2201,34 +2152,34 @@
                 <span class="self-check-kicker">{{ t('memorisation.ayah_display') }}</span>
                 <strong class="self-check-section-title">{{ t('memorisation.recite_from_memory') }}</strong>
               </div>
-              <div class="self-check-header-tools memorisation-checker-header-tools" aria-label="AI memorisation tools">
+              <div class="self-check-header-tools memorisation-checker-header-tools" :aria-label="t('memorisation.a11y.aiMemorisationTools')">
                 <button class="self-check-toolbar-btn self-check-ayah-action-ai" type="button"
                   @click.stop="toggleAiMemorisationCheckerRecording"
                   :disabled="aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()"
                   :class="{ recording: aiMemorisationCheckerRecording }"
                   :title="aiMemorisationCheckerRecording ? 'Stop memorisation check' : 'Play memorisation check'"
-                  aria-label="Play memorisation check">
+                  :aria-label="t('memorisation.a11y.playMemorisationCheck')">
                   <i class="bi" :class="aiMemorisationCheckerRecording ? 'bi-stop-circle' : 'bi-stars'"></i>
                   <span>{{ aiMemorisationCheckerRecording ? 'Stop' : 'Play Memorisation' }}</span>
                 </button>
                 <button class="self-check-toolbar-btn" type="button"
                   @click.stop="toggleSelfCheckAyahPlayback(aiMemorisationCheckerVerse)"
                   :title="activeSelfCheckAyahPlaybackKey === aiMemorisationCheckerVerse.key ? 'Pause ayah' : 'Play ayah once'"
-                  aria-label="Play ayah once">
+                  :aria-label="t('memorisation.a11y.playAyahOnce')">
                   <i class="bi" :class="activeSelfCheckAyahPlaybackKey === aiMemorisationCheckerVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                   <span>{{ activeSelfCheckAyahPlaybackKey === aiMemorisationCheckerVerse.key ? 'Pause' : 'Play' }}</span>
                 </button>
                 <button class="self-check-toolbar-btn" type="button" @click.stop="toggleAiMemorisationCheckerBlur"
                   :class="{ active: aiMemorisationCheckerBlurEnabled }"
                   :aria-pressed="aiMemorisationCheckerBlurEnabled ? 'true' : 'false'"
-                  title="Blur everything" aria-label="Blur everything">
+                  :title="t('memorisation.a11y.blurEverything')" :aria-label="t('memorisation.a11y.blurEverything')">
                   <i class="bi" :class="aiMemorisationCheckerBlurEnabled ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
                   <span>{{ t('memorisation.blur_everything') }}</span>
                 </button>
                 <button class="self-check-toolbar-btn" type="button" @mousedown="startAiMemorisationCheckerPeek"
                   @mouseup="stopAiMemorisationCheckerPeek" @mouseleave="stopAiMemorisationCheckerPeek"
                   @touchstart.prevent="startAiMemorisationCheckerPeek" @touchend="stopAiMemorisationCheckerPeek"
-                  @touchcancel="stopAiMemorisationCheckerPeek" title="Peek ayah" aria-label="Peek ayah">
+                  @touchcancel="stopAiMemorisationCheckerPeek" :title="t('memorisation.a11y.peekAyah')" :aria-label="t('memorisation.a11y.peekAyah')">
                   <i class="bi bi-eye"></i>
                   <span>{{ t('memorisation.peek') }}</span>
                 </button>
@@ -2273,12 +2224,12 @@
                   <div class="recitation-check-head-actions">
                     <button v-if="aiMemorisationCheckerResult && !aiMemorisationCheckerRecording && !aiMemorisationCheckerPreparing"
                       class="recitation-result-close" type="button" @click="discardAiMemorisationCheckerAssessment"
-                      aria-label="Close memorisation review">
+                      :aria-label="t('memorisation.a11y.closeMemorisationReview')">
                       <i class="bi bi-x-lg"></i>
                     </button>
                     <button v-if="aiMemorisationCheckerResult && !aiMemorisationCheckerRecording && !aiMemorisationCheckerPreparing"
                       class="recitation-result-reset" type="button" @click="resetAiMemorisationCheckerAssessment"
-                      title="Reset memorisation review" aria-label="Reset memorisation review">
+                      :title="t('memorisation.a11y.resetMemorisationReview')" :aria-label="t('memorisation.a11y.resetMemorisationReview')">
                       <i class="bi bi-arrow-counterclockwise"></i>
                     </button>
                   </div>
@@ -2288,7 +2239,7 @@
                   <span>{{ aiMemorisationCheckerStageDescription }}</span>
                 </div>
                 <div v-if="aiMemorisationCheckerRecording" class="recitation-live-review recitation-live-review-compact"
-                  aria-label="Live memorisation word check">
+                  :aria-label="t('memorisation.a11y.liveMemorisationCheck')">
                   <div class="recitation-live-head">
 	                    <span>{{ aiMemorisationCheckerLiveSummary }}</span>
 	                    <strong>{{ t('memorisation.live') }}</strong>
@@ -2382,38 +2333,48 @@
           <div class="self-check-modal-head-copy">
             <h2 id="selfCheckModalTitle">{{ selfCheckModalTitle }}</h2>
           </div>
-          <button class="modal-close-btn" @click="closeSelfCheckModal" aria-label="Close self-check">
-            <i class="bi bi-x-lg"></i>
-          </button>
+          <div class="self-check-modal-header-actions">
+            <button
+              v-if="showSelfCheckLibraryShortcut"
+              class="self-check-library-shortcut-btn"
+              type="button"
+              @click="openRecordingsLibraryFromSelfCheck"
+            >
+              <i class="bi bi-collection-play" aria-hidden="true"></i>
+              <span>{{ t('memorisation.view_all_recording_library') }}</span>
+            </button>
+            <button class="modal-close-btn" @click="closeSelfCheckModal" :aria-label="t('memorisation.a11y.closeSelfCheck')">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
         </div>
 
-        <div class="modal-body self-check-modal-body">
+        <div ref="selfCheckModalBody" class="modal-body self-check-modal-body">
           <section class="self-check-modal-stage">
             <header class="self-check-section-head">
               <div>
                 <span class="self-check-kicker">{{ t('memorisation.ayah_display') }}</span>
                 <strong class="self-check-section-title">{{ t('memorisation.recite_from_memory') }}</strong>
               </div>
-              <div class="self-check-header-tools" aria-label="Ayah tools">
+              <div class="self-check-header-tools" :aria-label="t('memorisation.a11y.ayahTools')">
                 <button
-                  class="verse-self-check-btn verse-ai-check-btn self-check-ai-recite-btn"
+                  class="self-check-toolbar-btn self-check-toolbar-btn-icon-only self-check-ai-recite-btn"
                   type="button"
                   @click.stop="toggleRecitationCheckForCurrentModal"
                   :disabled="isSelfCheckRecording || recitationCheckPreparing || !supportsSelfCheckRecording()"
-                  :class="{ active: recitationCheckRecording || recitationCheckPreparing || !!recitationCheckResult }"
-                  :title="recitationCheckRecording ? 'Stop AI recitation check' : 'Start AI recitation check'"
-                  aria-label="AI recitation check"
+                  :class="{ active: recitationCheckRecording || recitationCheckPreparing || !!recitationCheckResult, recording: recitationCheckRecording }"
+                  :title="recitationCheckRecording ? 'Stop AI recitation check' : t('memorisation.reading.aiRecite')"
+                  :aria-label="recitationCheckRecording ? 'Stop AI recitation check' : t('memorisation.reading.aiRecite')"
                 >
-                  <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'" aria-hidden="true"></i>
-                  <span>{{ recitationCheckRecording ? 'Stop AI' : t('memorisation.reading.aiRecite') }}</span>
+                  <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle-fill' : 'bi-stars'" aria-hidden="true"></i>
                 </button>
                 <button class="self-check-toolbar-btn self-check-toolbar-btn-text self-check-ayah-action-tajweed" type="button"
                   @click.stop="toggleSelfCheckTajweed"
                   :class="{ active: selfCheckTajweedEnabled }"
                   :aria-pressed="selfCheckTajweedEnabled ? 'true' : 'false'"
                   :title="selfCheckTajweedEnabled ? 'Hide Tajweed highlights' : 'Show Tajweed highlights'"
-                  aria-label="Toggle Tajweed highlights">
-                  <i class="bi bi-soundwave" aria-hidden="true"></i>
+                  :aria-label="t('memorisation.a11y.toggleTajweedHighlights')">
+                  <i class="bi bi-highlighter" aria-hidden="true"></i>
                   <span>{{ t('common.tajweed') }}</span>
                 </button>
                 <button class="self-check-toolbar-btn self-check-ayah-action-manual" type="button"
@@ -2421,7 +2382,7 @@
                   :disabled="recitationCheckRecording || recitationCheckPreparing"
                   :class="{ recording: isSelfCheckRecording }"
                   :title="isSelfCheckRecording ? 'Stop manual recording' : 'Start manual recording'"
-                  aria-label="Manual recording">
+                  :aria-label="t('memorisation.a11y.manualRecording')">
                   <i class="bi" :class="isSelfCheckRecording ? 'bi-stop-circle' : 'bi-mic-fill'"></i>
                   <span>{{ isSelfCheckRecording ? 'Stop Manual' : 'Manual' }}</span>
                 </button>
@@ -2435,7 +2396,7 @@
                 <button class="self-check-toolbar-btn" type="button"
                   @click.stop="toggleSelfCheckAyahPlayback(selfCheckModalVerse)"
                   :title="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'Pause ayah' : 'Play ayah once'"
-                  aria-label="Play ayah once">
+                  :aria-label="t('memorisation.a11y.playAyahOnce')">
                   <i class="bi"
                     :class="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                   <span>{{ activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'Pause' : 'Play' }}</span>
@@ -2462,14 +2423,24 @@
 		              }"
 		                v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"></div>
 		            </div>
+
+            <div
+              v-if="recitationStartCueActive && (recitationCheckRecording || isSelfCheckRecording)"
+              class="recitation-start-cue"
+              role="status"
+              aria-live="polite"
+            >
+              <i class="bi bi-mic-fill" aria-hidden="true"></i>
+              <span>{{ t('memorisation.start_reciting_prompt') }}</span>
+            </div>
 		          </section>
 
-          <section v-if="selfCheckReviewVisible" ref="selfCheckReviewSection" class="self-check-modal-recorder-grid"
+          <section v-if="selfCheckReviewVisible" ref="selfCheckReviewSection" class="self-check-modal-recorder-grid self-check-assessment-section"
             :class="{ 'saved-attempts-open': selfCheckSavedAttemptsVisible }">
-            <article class="self-check-recorder-card"
+            <article class="self-check-recorder-card self-check-assessment-card"
               :class="{ recording: isSelfCheckRecording, reviewing: !!selfCheckActiveDraft }">
-              <div class="self-check-recorder-head">
-                <div>
+              <div class="self-check-recorder-head self-check-assessment-head">
+                <div class="self-check-assessment-copy">
                   <span class="self-check-kicker">{{ t('memorisation.recitation_review') }}</span>
                   <strong>{{ recitationCheckRecording ? t('memorisation.selfCheckRecorder.aiListening') : selfCheckActiveDraft ? t('memorisation.selfCheckRecorder.reviewHeading') : t('memorisation.selfCheckRecorder.assessmentHeading') }}</strong>
                   <p class="self-check-card-desc">{{ getSelfCheckRecorderDescription() }}</p>
@@ -2603,18 +2574,17 @@
                 </div>
               </section>
 
-              <div v-else-if="isSelfCheckRecording" class="self-check-live-card">
+              <div v-else-if="isSelfCheckRecording" class="self-check-live-card self-check-assessment-live">
                 <div class="self-check-live-stage">
                   <div class="self-check-live-copy">
                     <strong>{{ t('memorisation.recording_now') }}</strong>
-                    <span>{{ getSelfCheckLiveDurationLabel() }} elapsed · speak clearly, then tap stop when
-                      finished</span>
+                    <span>{{ getSelfCheckLiveDurationLabel() }} elapsed · speak clearly, then tap stop when finished</span>
                   </div>
                   <div class="self-check-live-pulse" aria-hidden="true">
                     <span></span><span></span><span></span>
                   </div>
                 </div>
-                <div class="self-check-live-actions">
+                <div class="self-check-live-actions self-check-assessment-actions">
                   <button class="btn-secondary self-check-action-btn" type="button" @click="discardSelfCheckRecording">
                     <i class="bi bi-x-circle"></i>
                     <span>{{ t('common.discard') }}</span>
@@ -2626,47 +2596,82 @@
                 </div>
               </div>
 
-              <div v-else-if="selfCheckPreparing" class="self-check-status self-check-status-info">
+              <div v-else-if="selfCheckPreparing" class="self-check-status self-check-status-info self-check-assessment-status">
                 <i class="bi bi-hourglass-split"></i>
                 <span>{{ selfCheckPreparingLabel }}</span>
               </div>
 
-              <div v-else-if="selfCheckActiveDraft" class="self-check-review-card">
-                <div class="self-check-review-head">
-                  <div>
+              <div v-else-if="selfCheckActiveDraft" class="self-check-review-card self-check-assessment-review">
+                <div class="self-check-review-head self-check-assessment-review-head">
+                  <div class="self-check-assessment-review-copy">
+                    <span class="self-check-kicker">{{ t('memorisation.self_rating') }}</span>
                     <strong>{{ t('memorisation.review_this_attempt') }}</strong>
-                    <span>{{ formatRecordingDate(selfCheckActiveDraft.recordedAt) }} · {{
-                      formatRecordingDuration(selfCheckActiveDraft.durationSeconds) }}</span>
+                    <span>{{ formatRecordingDate(selfCheckActiveDraft.recordedAt) }} · {{ formatRecordingDuration(selfCheckActiveDraft.durationSeconds) }}</span>
                   </div>
-                  <audio class="self-check-review-audio" :src="selfCheckActiveDraft.audioSrc" controls preload="metadata"></audio>
                 </div>
 
-                <div class="self-check-result-block">
-                  <div class="self-check-result-label">
-                    <span class="self-check-kicker">{{ t('memorisation.self_rating') }}</span>
-                    <p class="self-check-result-prompt">{{ t('memorisation.self_rating_prompt') }}</p>
-                  </div>
-                  <div class="row self-check-rating-grid g-3" role="group" :aria-label="t('memorisation.self_rating')">
-                    <div v-for="option in selfCheckRatingOptions" :key="option.key" class="col-6 col-md-3">
-                      <button type="button" class="self-check-rating-card"
-                        :class="[option.tone, { active: selfCheckSelectedRating === option.key }]"
-                        :title="getSelfCheckResultHint(option.key)"
-                        :aria-pressed="selfCheckSelectedRating === option.key ? 'true' : 'false'"
-                        @click="setSelfCheckDraftResult(option.key)">
-                        <span class="self-check-rating-card-icon" aria-hidden="true">
-                          <i class="bi" :class="option.icon"></i>
-                        </span>
-                        <span class="self-check-rating-card-label">{{ getSelfCheckResultLabel(option.key) }}</span>
-                        <span class="self-check-rating-card-hint">{{ getSelfCheckResultHint(option.key) }}</span>
-                        <span v-if="selfCheckSelectedRating === option.key" class="self-check-rating-card-check" aria-hidden="true">
-                          <i class="bi bi-check-lg"></i>
-                        </span>
-                      </button>
+                <div class="self-check-audio-player" v-if="selfCheckActiveDraft.audioSrc">
+                  <audio
+                    ref="selfCheckDraftAudio"
+                    :src="selfCheckActiveDraft.audioSrc"
+                    preload="metadata"
+                    @loadedmetadata="onSelfCheckDraftAudioLoadedMetadata"
+                    @timeupdate="onSelfCheckDraftAudioTimeUpdate"
+                    @ended="onSelfCheckDraftAudioEnded"
+                    @play="selfCheckDraftAudioPlaying = true"
+                    @pause="selfCheckDraftAudioPlaying = false"
+                  ></audio>
+                  <button
+                    type="button"
+                    class="self-check-audio-player-btn"
+                    @click="toggleSelfCheckDraftAudio"
+                    :aria-label="selfCheckDraftAudioPlaying ? 'Pause playback' : 'Play playback'"
+                  >
+                    <i class="bi" :class="selfCheckDraftAudioPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+                  </button>
+                  <div class="self-check-audio-player-track">
+                    <input
+                      type="range"
+                      class="self-check-audio-player-seek"
+                      min="0"
+                      :max="selfCheckDraftAudioDuration || 0"
+                      step="0.1"
+                      :value="selfCheckDraftAudioCurrentTime"
+                      @input="seekSelfCheckDraftAudio"
+                    />
+                    <div class="self-check-audio-player-times">
+                      <span>{{ formatSelfCheckDraftAudioTime(selfCheckDraftAudioCurrentTime) }}</span>
+                      <span>{{ formatSelfCheckDraftAudioTime(selfCheckDraftAudioDuration || selfCheckActiveDraft.durationSeconds) }}</span>
                     </div>
                   </div>
                 </div>
 
-                <div class="self-check-review-actions">
+                <div class="self-check-result-block self-check-assessment-ratings">
+                  <p class="self-check-result-prompt">{{ t('memorisation.self_rating_prompt') }}</p>
+                  <div class="self-check-rating-grid self-check-assessment-rating-grid" role="group" :aria-label="t('memorisation.self_rating')">
+                    <button
+                      v-for="option in selfCheckRatingOptions"
+                      :key="option.key"
+                      type="button"
+                      class="self-check-rating-card"
+                      :class="[option.tone, { active: selfCheckSelectedRating === option.key }]"
+                      :title="getSelfCheckResultHint(option.key)"
+                      :aria-pressed="selfCheckSelectedRating === option.key ? 'true' : 'false'"
+                      @click="setSelfCheckDraftResult(option.key)"
+                    >
+                      <span class="self-check-rating-card-icon" aria-hidden="true">
+                        <i class="bi" :class="option.icon"></i>
+                      </span>
+                      <span class="self-check-rating-card-label">{{ getSelfCheckResultLabel(option.key) }}</span>
+                      <span class="self-check-rating-card-hint">{{ getSelfCheckResultHint(option.key) }}</span>
+                      <span v-if="selfCheckSelectedRating === option.key" class="self-check-rating-card-check" aria-hidden="true">
+                        <i class="bi bi-check-lg"></i>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="self-check-review-actions self-check-assessment-actions">
                   <button class="btn-secondary self-check-action-btn" type="button" @click="discardSelfCheckRecording">
                     <i class="bi bi-trash3"></i>
                     <span>{{ t('common.discard') }}</span>
@@ -2732,43 +2737,48 @@
           </div>
 
           <div v-else class="recordings-library-shell">
-            <aside class="recordings-library-nav">
+            <aside class="recordings-library-nav recordings-library-nav-panel">
               <div class="recordings-library-nav-head">
-                <div>
+                <div class="recordings-library-nav-intro">
                   <span class="recordings-library-nav-kicker">{{ t('memorisation.saved_session') }}</span>
                   <strong>{{ currentChapter?.name_simple || 'Session recordings' }}</strong>
                   <div class="recordings-library-nav-meta">
                     <span>Range {{ rangeStart }}-{{ rangeEnd }}</span>
-                    <span>{{ filteredRecordingsList.length }} recording{{ filteredRecordingsList.length === 1 ? '' : 's'
-                      }}</span>
+                    <span>{{ filteredRecordingsList.length }} recording{{ filteredRecordingsList.length === 1 ? '' : 's' }}</span>
                   </div>
                 </div>
-                <button class="recordings-library-nav-toggle" type="button" @click="toggleRecordingsNav">
+                <button class="recordings-library-nav-toggle" type="button" @click="toggleRecordingsNav"
+                  :aria-expanded="recordingsNavExpanded ? 'true' : 'false'">
                   <span>{{ recordingsNavExpanded ? 'Hide list' : 'Show list' }}</span>
                   <i class="bi" :class="recordingsNavExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
                 </button>
               </div>
 
               <div class="recordings-library-search">
-                <div class="recordings-library-search-field">
-                  <i class="bi bi-search"></i>
+                <label class="recordings-library-search-field">
+                  <i class="bi bi-search" aria-hidden="true"></i>
                   <input v-model.trim="recordingsLibrarySearch" type="search" placeholder="Search surah or ayah number"
                     aria-label="Search recorded ayahs">
-                </div>
+                </label>
               </div>
 
               <div v-show="recordingsNavExpanded" class="recordings-library-nav-scroll">
                 <div v-for="surahGroup in filteredRecordingsAyahGroups"
                   :key="surahGroup.chapterId || surahGroup.chapterName" class="recordings-library-surah-group">
                   <div class="recordings-library-surah-title">{{ surahGroup.chapterName }}</div>
-                  <template v-for="ayahGroup in surahGroup.ayahs" :key="ayahGroup.ayahKey">
-                    <button v-for="recording in ayahGroup.recordings" :key="recording.id" type="button"
-                      class="recordings-library-recording-item"
-                      :class="{ active: recording.id === selectedRecordingsEntryId, playing: recording.id === activeRecordingPlaybackId }"
-                      @click="selectRecordingsEntry(recording)">
-                      <span class="recordings-library-recording-title">{{ getRecordingAttemptLabel(recording) }}</span>
-                    </button>
-                  </template>
+                  <div class="recordings-library-recordings">
+                    <template v-for="ayahGroup in surahGroup.ayahs" :key="ayahGroup.ayahKey">
+                      <button v-for="recording in ayahGroup.recordings" :key="recording.id" type="button"
+                        class="recordings-library-recording-item"
+                        :class="{ active: recording.id === selectedRecordingsEntryId, playing: recording.id === activeRecordingPlaybackId }"
+                        @click="selectRecordingsEntry(recording)">
+                        <span class="recordings-library-recording-title">{{ getRecordingAttemptLabel(recording) }}</span>
+                        <span class="recordings-library-recording-meta">
+                          Ayah {{ ayahGroup.ayahNumber }} · {{ formatRecordingDate(recording.recordedAt) }}
+                        </span>
+                      </button>
+                    </template>
+                  </div>
                 </div>
               </div>
             </aside>
@@ -2877,22 +2887,27 @@
 
     <div v-if="showPostLoginOnboarding" class="modal-overlay post-onboarding-overlay"
       @click.self="!requiresFirstTimeOnboarding && skipOnboarding()">
+      <div class="modal-dialog modal-dialog-centered modal-xl">
       <div class="modal-content post-onboarding-modal" role="dialog" aria-modal="true"
         aria-labelledby="postOnboardingTitle">
-        <div class="modal-header post-onboarding-header">
-          <h2 id="postOnboardingTitle">{{ onboardingStepContent.title }}</h2>
-          <button v-if="!requiresFirstTimeOnboarding" class="modal-close-btn" @click="skipOnboarding"
-            aria-label="Skip onboarding">
+        <div class="onboarding-hero">
+          <div class="onboarding-hero-copy">
+            <span class="onboarding-kicker">{{ onboardingStepCounterLabel }}</span>
+            <h2 id="postOnboardingTitle" class="onboarding-title">{{ onboardingStepContent.title }}</h2>
+          </div>
+          <button
+            v-if="!requiresFirstTimeOnboarding"
+            class="onboarding-close-btn"
+            @click="skipOnboarding"
+            :aria-label="t('common.skipOnboarding')"
+          >
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
-        <div class="modal-body post-onboarding-body">
-          <span class="post-onboarding-kicker">Step {{ onboardingStepIndex + 1 }} of {{ onboardingSteps.length }}</span>
-          <div class="post-onboarding-step-label">{{ onboardingStepContent.stepLabel }}</div>
-          <p>{{ onboardingStepContent.body }}</p>
-          <ul v-if="onboardingStepContent.points?.length" class="post-onboarding-points">
-            <li v-for="item in onboardingStepContent.points" :key="item">{{ item }}</li>
-          </ul>
+
+        <div class="modal-body onboarding-body">
+          <p class="onboarding-lead">{{ onboardingStepContent.body }}</p>
+
           <div v-if="onboardingStepContent.choices?.length" class="onboarding-choice-grid">
             <button
               v-for="choice in onboardingStepContent.choices"
@@ -2906,67 +2921,90 @@
               <span>{{ choice.description }}</span>
             </button>
           </div>
-          <div v-if="onboardingStepContent.preview" class="post-onboarding-preview">
-            <div class="post-onboarding-preview-head">
-              <span class="post-onboarding-preview-icon"><i class="bi" :class="onboardingStepContent.preview.icon"></i></span>
-              <div>
-                <strong>{{ onboardingStepContent.preview.title }}</strong>
-                <small>{{ onboardingStepContent.preview.subtitle }}</small>
-              </div>
-            </div>
-            <div class="post-onboarding-preview-grid">
-              <span v-for="item in onboardingStepContent.preview.items" :key="item">
-                <i class="bi bi-check2"></i>{{ item }}
-              </span>
-            </div>
+
+          <div
+            v-if="requiresFirstTimeOnboarding && onboardingStepIndex === onboardingSteps.length - 1"
+            class="onboarding-choice-grid onboarding-finish-choice-grid"
+            role="group"
+            :aria-label="t('memorisation.onboarding.choices.groupLabel')"
+          >
+            <button
+              type="button"
+              class="onboarding-choice-card onboarding-choice-card--recommended"
+              @click="playOnboardingSampleSession"
+            >
+              <strong>{{ t('memorisation.onboarding.choices.sample.title') }}</strong>
+              <span>{{ t('memorisation.onboarding.choices.sample.description') }}</span>
+            </button>
+            <button
+              type="button"
+              class="onboarding-choice-card"
+              @click="completeOnboardingOpenSetup"
+            >
+              <strong>{{ t('memorisation.onboarding.choices.setup.title') }}</strong>
+              <span>{{ t('memorisation.onboarding.choices.setup.description') }}</span>
+            </button>
+            <button
+              type="button"
+              class="onboarding-choice-card"
+              @click="completeOnboardingExploreWorkspace"
+            >
+              <strong>{{ t('memorisation.onboarding.choices.explore.title') }}</strong>
+              <span>{{ t('memorisation.onboarding.choices.explore.description') }}</span>
+            </button>
           </div>
-          <div v-if="onboardingStepContent.duas?.length" class="dua-onboarding-grid">
-            <article v-for="dua in onboardingStepContent.duas" :key="dua.title" class="dua-onboarding-card">
-              <span class="dua-onboarding-title">{{ dua.title }}</span>
-              <p class="dua-onboarding-arabic" dir="rtl" lang="ar">{{ dua.arabic }}</p>
-              <p class="dua-onboarding-translation">{{ dua.translation }}</p>
-              <small class="dua-onboarding-source">{{ dua.source }}</small>
-            </article>
-          </div>
-          <div class="post-onboarding-progress">
-            <span v-for="dot in onboardingSteps.length" :key="`ob-dot-${dot}`"
-              :class="{ active: onboardingStepIndex === dot - 1 }"></span>
-          </div>
-          <!-- <div v-if="!onboardingManualLaunch && onboardingStepIndex === onboardingSteps.length - 1" class="post-onboarding-preview onboarding-default-preview">
-            <div class="post-onboarding-preview-head">
-              <span class="post-onboarding-preview-icon"><i class="bi bi-book"></i></span>
-              <div>
-                <strong>Default session if you skip the sample</strong>
-                <small>Surah Al-Fatihah, ayahs 1-7, Alafasy, standard speed, 3 repeats, no memorisation techniques.</small>
-              </div>
-            </div>
-          </div> -->
         </div>
-        <div class="modal-footer post-onboarding-footer">
-          <button v-if="onboardingStepIndex < onboardingSteps.length - 1" class="btn-primary"
-            @click="nextOnboardingStep">{{ t('memorisation.next') }}</button>
-          <button v-else-if="requiresFirstTimeOnboarding" class="btn-primary" @click="playOnboardingSampleSession">
-            {{ t('memorisation.onboarding.playSampleSession') }}
+
+        <div
+          v-if="!(requiresFirstTimeOnboarding && onboardingStepIndex === onboardingSteps.length - 1)"
+          class="modal-footer onboarding-footer"
+        >
+          <button
+            v-if="onboardingStepIndex < onboardingSteps.length - 1"
+            type="button"
+            class="onboarding-btn onboarding-btn--primary"
+            @click="nextOnboardingStep"
+          >
+            <span>{{ t('memorisation.next') }}</span>
+            <i class="bi bi-arrow-right" aria-hidden="true"></i>
           </button>
-          <button v-else-if="onboardingManualLaunch" class="btn-primary" @click="completeOnboardingAndStart">
-            {{ t('memorisation.onboarding.finish') }}
+          <button
+            v-else-if="onboardingManualLaunch"
+            type="button"
+            class="onboarding-btn onboarding-btn--primary"
+            @click="completeOnboardingAndStart"
+          >
+            <i class="bi bi-check2-circle" aria-hidden="true"></i>
+            <span>{{ t('memorisation.onboarding.finish') }}</span>
           </button>
-          <button v-else class="btn-primary" @click="completeOnboardingWithDefaultSession">
-            {{ t('common.startSession') }}
+          <button
+            v-else
+            type="button"
+            class="onboarding-btn onboarding-btn--primary"
+            @click="completeOnboardingWithDefaultSession"
+          >
+            <i class="bi bi-play-circle" aria-hidden="true"></i>
+            <span>{{ t('common.startSession') }}</span>
           </button>
         </div>
       </div>
+      </div>
     </div>
 
-    <div v-if="showPostSessionModal" class="onboarding-post-session-flow" aria-live="polite">
+    <div v-if="showPostSessionModal" class="onboarding-post-session-flow" :class="{ 'onboarding-post-session-flow--sample': onboardingSampleSessionActive }" aria-live="polite">
       <div class="modal-backdrop fade show onboarding-post-session-backdrop"></div>
 
-      <transition name="fade">
-        <div v-if="showPostSessionConfetti" class="onboarding-post-session-confetti-layer" aria-hidden="true">
+      <transition name="post-session-confetti-fade">
+        <div
+          v-if="showPostSessionConfetti"
+          class="onboarding-post-session-confetti-layer"
+          :class="{ 'onboarding-post-session-confetti-layer--sample': onboardingSampleSessionActive }"
+          aria-hidden="true"
+        >
           <span
             v-for="piece in postSessionConfettiPieces"
             :key="piece.id"
-            class="onboarding-post-session-confetti-piece"
+            :class="piece.className"
             :style="piece.style"
           ></span>
         </div>
@@ -2980,59 +3018,67 @@
         aria-labelledby="postSessionTitle"
       >
         <div class="modal-dialog modal-dialog-centered modal-lg">
-          <div class="modal-content onboarding-post-session-modal">
-            <div class="modal-header border-0 pb-0">
-              <div>
-                <span class="badge rounded-pill text-bg-success onboarding-post-session-kicker">
-                  <i class="bi bi-stars" aria-hidden="true"></i>
+          <div
+            class="modal-content mutqin-modal-surface onboarding-post-session-modal"
+            :class="{ 'onboarding-post-session-modal--sample': onboardingSampleSessionActive }"
+          >
+            <div class="post-session-hero" :class="{ 'post-session-hero--sample': onboardingSampleSessionActive }">
+              <div class="post-session-hero-copy">
+                <span class="post-session-kicker" :class="{ 'post-session-kicker--sample': onboardingSampleSessionActive }">
                   {{ postSessionUi.kicker }}
                 </span>
-                <h2 id="postSessionTitle" class="modal-title mt-2">
-                  {{ postSessionUi.title }}
+                <h2 id="postSessionTitle" class="post-session-title">
+                  {{ postSessionModalTitle }}
                 </h2>
-                <p class="onboarding-post-session-message mb-0">
-                  {{ postSessionUi.message }}
+                <p v-if="postSessionModalMessage" class="post-session-message">
+                  {{ postSessionModalMessage }}
                 </p>
               </div>
             </div>
-            <div class="modal-body pt-3">
-              <div class="onboarding-post-session-pills d-flex flex-row flex-nowrap gap-2 overflow-auto">
-                <span
-                  v-for="pill in postSessionPills"
-                  :key="pill.key"
-                  class="badge rounded-pill text-bg-light onboarding-post-session-pill"
+
+            <div class="modal-body post-session-body">
+              <div class="post-session-stats" role="list" :aria-label="t('memorisation.stats.progress')">
+                <article
+                  v-for="stat in postSessionStats"
+                  :key="stat.key"
+                  class="post-session-stat"
+                  role="listitem"
                 >
-                  <strong>{{ pill.label }}:</strong> {{ pill.value }}
-                </span>
+                  <span class="post-session-stat-label">{{ stat.label }}</span>
+                  <strong class="post-session-stat-value">{{ stat.value }}</strong>
+                  <small v-if="stat.hint" class="post-session-stat-hint">{{ stat.hint }}</small>
+                </article>
               </div>
-              <div class="container-fluid px-0 mt-4">
-                <div class="row g-2 onboarding-post-session-actions">
-                  <div class="col-md-3 col-6">
-                    <button type="button" class="btn btn-outline-primary w-100" @click="repeatPostSession">
-                      {{ postSessionUi.repeat }}
-                    </button>
-                  </div>
-                  <div class="col-md-3 col-6">
-                    <button type="button" class="btn btn-outline-primary w-100" @click="openPostSessionNewSessionOffcanvas">
-                      {{ postSessionUi.newSession }}
-                    </button>
-                  </div>
-                  <div class="col-md-3 col-6">
-                    <button type="button" class="btn btn-outline-success w-100" @click="savePostSession">
-                      {{ postSessionUi.save }}
-                    </button>
-                  </div>
-                  <div class="col-md-3 col-6">
-                    <button type="button" class="btn btn-outline-danger w-100" @click="logoutFromPostSession">
-                      {{ t('common.logout') }}
-                    </button>
-                  </div>
-                  <div v-if="onboardingSampleSessionActive" class="col-md-3 col-6">
-                    <button type="button" class="btn btn-primary w-100" @click="continueFromOnboardingPostSession">
-                      {{ t('common.continue') }}
-                    </button>
-                  </div>
-                </div>
+
+              <div class="post-session-actions" :class="{ 'post-session-actions--sample': onboardingSampleSessionActive }">
+                <template v-if="onboardingSampleSessionActive">
+                  <button type="button" class="post-session-btn post-session-btn--ghost" @click="repeatPostSession">
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                    <span>{{ postSessionUi.repeat }}</span>
+                  </button>
+                  <button type="button" class="post-session-btn post-session-btn--ghost" @click="openPostSessionNewSessionOffcanvas">
+                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                    <span>{{ postSessionUi.newSession }}</span>
+                  </button>
+                  <button type="button" class="post-session-btn post-session-btn--accent" @click="continueFromOnboardingPostSession">
+                    <i class="bi bi-mortarboard" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.onboarding.finish') }}</span>
+                  </button>
+                </template>
+                <template v-else>
+                  <button type="button" class="post-session-btn post-session-btn--ghost" @click="repeatPostSession">
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                    <span>{{ postSessionUi.repeat }}</span>
+                  </button>
+                  <button type="button" class="post-session-btn post-session-btn--ghost" @click="openPostSessionNewSessionOffcanvas">
+                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                    <span>{{ postSessionUi.newSession }}</span>
+                  </button>
+                  <button type="button" class="post-session-btn post-session-btn--accent" @click="savePostSession">
+                    <i class="bi bi-bookmark-check" aria-hidden="true"></i>
+                    <span>{{ postSessionUi.save }}</span>
+                  </button>
+                </template>
               </div>
             </div>
           </div>
@@ -3041,26 +3087,26 @@
     </div>
 
     <div v-if="showRenameRecordingModal" class="modal-overlay" @click.self="closeRenameRecordingModal">
-      <div class="modal-content confirm-modal rename-recording-modal" role="dialog" aria-modal="true"
+      <div class="modal-content mutqin-modal-surface confirm-modal rename-recording-modal" role="dialog" aria-modal="true"
         aria-labelledby="renameRecordingTitle">
         <div class="modal-header">
           <div class="modal-header-text">
-            <div class="modal-context-badge">Recordings library</div>
-            <h2 id="renameRecordingTitle">Rename recording</h2>
+            <div class="modal-context-badge">{{ t('memorisation.renameRecording.badge') }}</div>
+            <h2 id="renameRecordingTitle">{{ t('memorisation.renameRecording.title') }}</h2>
           </div>
-          <button class="btn-icon" @click="closeRenameRecordingModal" type="button" aria-label="Close rename recording dialog">
+          <button class="modal-close-btn" @click="closeRenameRecordingModal" type="button" :aria-label="t('memorisation.renameRecording.closeDialog')">
             <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
         </div>
         <div class="modal-body">
-          <label class="save-name-label" for="renameRecordingInput">Recording name</label>
+          <label class="save-name-label" for="renameRecordingInput">{{ t('memorisation.renameRecording.label') }}</label>
           <input id="renameRecordingInput" v-model.trim="renameRecordingName" class="save-name-input" type="text"
-            maxlength="80" placeholder="Morning self-check">
+            maxlength="80" :placeholder="t('memorisation.renameRecording.placeholder')">
           <p v-if="renameRecordingError" class="save-name-error">{{ renameRecordingError }}</p>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" @click="closeRenameRecordingModal">Cancel</button>
-          <button class="btn-primary" @click="confirmRenameRecording">Save name</button>
+          <button class="btn-secondary" @click="closeRenameRecordingModal">{{ t('common.cancel') }}</button>
+          <button class="btn-primary" @click="confirmRenameRecording">{{ t('memorisation.renameRecording.saveName') }}</button>
         </div>
       </div>
     </div>
@@ -3075,15 +3121,38 @@
 
     <!-- Global Audio Player -->
     <transition name="slide-up">
-      <div v-if="appReady && (playerVisible || talqinRecitationTurnActive)" class="player-dock">
-        <div
-          v-if="talqinRecitationTurnActive"
-          class="practice-turn-callout practice-turn-callout--docked practice-turn-callout--countdown is-talqin"
-          role="status"
-          aria-live="polite"
-          :aria-label="talqinRecitationPrompt"
+      <div
+        v-if="appReady && showPlayerDock"
+        class="player-dock"
+        :class="{ 'tools-open': showTools, 'talqin-priority': talqinRecitationTurnActive, 'has-pill': playbackPillVisible }"
+      >
+        <button
+          v-if="playbackPillVisible"
+          type="button"
+          class="playback-pill"
+          @click="restorePlayer"
+          :aria-label="t('memorisation.player.restorePlayer')"
         >
-          <div class="talqin-callout-modal">
+          <span class="playback-pill-ring" :class="{ 'is-playing': isPlaying }" aria-hidden="true"></span>
+          <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+          <span class="playback-pill-copy">
+            <strong>{{ collapsedPlayerTitle }}</strong>
+            <small>{{ collapsedPlayerSubtitle }}</small>
+          </span>
+        </button>
+
+        <div
+          v-else
+          class="player-dock-card"
+          :class="{ 'is-talqin-only': playerDockShowsTalqinOnly, 'is-unified': talqinRecitationTurnActive && playerVisible }"
+        >
+          <div
+            v-if="talqinRecitationTurnActive"
+            class="player-talqin-strip"
+            role="status"
+            aria-live="polite"
+            :aria-label="talqinRecitationPrompt"
+          >
             <div
               v-if="talqinCalloutSeconds > 0"
               :key="talqinCalloutSeconds"
@@ -3094,45 +3163,44 @@
             </div>
             <div class="talqin-callout-text">{{ talqinCalloutHeadline }}</div>
           </div>
-        </div>
 
         <div
           v-if="playerVisible"
           class="player-bar"
-          :class="{ compact: playerCompact, 'is-playing': isPlaying }"
+          :class="{ compact: playerCompact, 'is-playing': isPlaying, 'has-talqin-strip': talqinRecitationTurnActive }"
           role="region"
-          aria-label="Audio player"
+          :aria-label="t('memorisation.player.audioPlayer')"
         >
           <div class="player-accent" aria-hidden="true"></div>
 
           <div v-if="!playerCompact" class="player-main">
             <div class="player-info">
-              <div class="player-chapter">{{ currentChapter?.name_simple || 'Quran' }}</div>
+              <div class="player-chapter">{{ currentChapter?.name_simple || t('memorisation.player.quranFallback') }}</div>
               <div class="player-verse">
                 {{ activeAyahLabel }}
                 <span v-if="etaLabel && isPlaying" class="player-eta" :title="getEtaTooltip()">
-                  &bull; {{ etaLabel }} remaining
+                  &bull; {{ t('memorisation.player.remaining', { eta: etaLabel }) }}
                 </span>
               </div>
             </div>
 
             <div class="player-controls">
-              <button class="player-btn" @click="prev" title="Previous" type="button" aria-label="Previous ayah">
+              <button class="player-btn" @click="prev" :title="t('memorisation.player.previous')" type="button" :aria-label="t('memorisation.player.previousAyah')">
                 <i class="bi bi-skip-start-fill" aria-hidden="true"></i>
               </button>
-              <button class="player-btn player-play" @click="togglePlay" title="Play/Pause" type="button"
-                :aria-label="isPlaying ? 'Pause audio' : 'Play audio'">
+              <button class="player-btn player-play" @click="togglePlay" :title="t('memorisation.player.playPause')" type="button"
+                :aria-label="isPlaying ? t('memorisation.player.pauseAudio') : t('memorisation.player.playAudio')">
                 <span class="player-play-ring" aria-hidden="true"></span>
                 <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
               </button>
-              <button class="player-btn" @click="next" title="Next" type="button" aria-label="Next ayah">
+              <button class="player-btn" @click="next" :title="t('memorisation.player.next')" type="button" :aria-label="t('memorisation.player.nextAyah')">
                 <i class="bi bi-skip-end-fill" aria-hidden="true"></i>
               </button>
             </div>
 
             <div class="player-progress-wrap">
               <span class="player-time elapsed">{{ formatTime(currentTime) }}</span>
-              <div class="player-progress-bg" @click="seek" ref="progress" role="progressbar" aria-label="Audio progress"
+              <div class="player-progress-bg" @click="seek" ref="progress" role="progressbar" :aria-label="t('memorisation.player.audioProgress')"
                 :aria-valuenow="Math.round((currentTime / (duration || 1)) * 100)" aria-valuemin="0" aria-valuemax="100">
                 <div class="player-progress-fill" :style="{ width: (currentTime / (duration || 1)) * 100 + '%' }"></div>
                 <div class="player-progress-thumb" :style="{ left: `calc(${(currentTime / (duration || 1)) * 100}% - 6px)` }"></div>
@@ -3141,20 +3209,20 @@
             </div>
 
             <div class="player-actions">
-              <button class="player-btn player-layout-toggle" @click="setPlayerCompact(true)" title="Mini player" type="button"
-                aria-label="Switch to mini player">
+              <button class="player-btn player-layout-toggle" @click="setPlayerCompact(true)" :title="t('memorisation.player.miniPlayer')" type="button"
+                :aria-label="t('memorisation.player.switchMini')">
                 <i class="bi bi-dash-lg" aria-hidden="true"></i>
               </button>
-              <button class="player-btn player-close" @click="playerVisible = false" title="Close player" type="button"
-                aria-label="Close audio player">
+              <button class="player-btn player-close" @click="dismissPlayer" :title="t('memorisation.player.closePlayer')" type="button"
+                :aria-label="t('memorisation.player.closeAudioPlayer')">
                 <i class="bi bi-x-lg" aria-hidden="true"></i>
               </button>
             </div>
           </div>
 
           <div v-else class="player-mini">
-            <button class="player-btn player-play" @click="togglePlay" title="Play/Pause" type="button"
-              :aria-label="isPlaying ? 'Pause audio' : 'Play audio'">
+            <button class="player-btn player-play" @click="togglePlay" :title="t('memorisation.player.playPause')" type="button"
+              :aria-label="isPlaying ? t('memorisation.player.pauseAudio') : t('memorisation.player.playAudio')">
               <span class="player-play-ring" aria-hidden="true"></span>
               <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
             </button>
@@ -3162,15 +3230,16 @@
               <div class="player-chapter">{{ collapsedPlayerTitle }}</div>
               <div class="player-verse">{{ collapsedPlayerSubtitle }}</div>
             </div>
-            <button class="player-btn player-layout-toggle" @click="setPlayerCompact(false)" title="Full player" type="button"
-              aria-label="Switch to full player">
+            <button class="player-btn player-layout-toggle" @click="setPlayerCompact(false)" :title="t('memorisation.player.fullPlayer')" type="button"
+              :aria-label="t('memorisation.player.switchFull')">
               <i class="bi bi-arrows-angle-expand" aria-hidden="true"></i>
             </button>
-            <button class="player-btn player-close" @click="playerVisible = false" title="Close player" type="button"
-              aria-label="Close audio player">
+            <button class="player-btn player-close" @click="dismissPlayer" :title="t('memorisation.player.closePlayer')" type="button"
+              :aria-label="t('memorisation.player.closeAudioPlayer')">
               <i class="bi bi-x-lg" aria-hidden="true"></i>
             </button>
           </div>
+        </div>
         </div>
       </div>
     </transition>
@@ -3456,6 +3525,67 @@
             <span>{{ t('memorisation.quiz.easy') }}</span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div v-if="showKeyboardShortcuts" class="modal-overlay keyboard-shortcuts-overlay" @click.self="closeKeyboardShortcuts">
+    <div
+      class="modal-content mutqin-modal-surface keyboard-shortcuts-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="keyboardShortcutsTitle"
+      aria-describedby="keyboardShortcutsSubtitle"
+    >
+      <div class="modal-header keyboard-shortcuts-header">
+        <span class="keyboard-shortcuts-header-icon" aria-hidden="true">
+          <i class="bi bi-keyboard"></i>
+        </span>
+        <div class="modal-header-text">
+          <h2 id="keyboardShortcutsTitle">{{ t('shortcuts.title') }}</h2>
+          <p id="keyboardShortcutsSubtitle">{{ t('shortcuts.subtitle') }}</p>
+        </div>
+        <button type="button" class="modal-close-btn" @click="closeKeyboardShortcuts" :aria-label="t('common.close')">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="modal-body keyboard-shortcuts-body">
+        <div class="keyboard-shortcuts-grid">
+          <section
+            v-for="group in keyboardShortcutGroups"
+            :key="group.id"
+            class="keyboard-shortcuts-group"
+            :aria-labelledby="`keyboardShortcutsGroup-${group.id}`"
+          >
+            <header class="keyboard-shortcuts-group-header">
+              <span class="keyboard-shortcuts-group-icon" aria-hidden="true">
+                <i class="bi" :class="group.icon"></i>
+              </span>
+              <h3 :id="`keyboardShortcutsGroup-${group.id}`">{{ group.title }}</h3>
+            </header>
+            <ul class="keyboard-shortcuts-list">
+              <li v-for="item in group.items" :key="item.id" class="keyboard-shortcuts-item">
+                <span class="keyboard-shortcuts-label">{{ item.label }}</span>
+                <div class="keyboard-shortcut-keys">
+                  <template v-for="(combo, comboIndex) in item.combos" :key="`${item.id}-${comboIndex}`">
+                    <span v-if="comboIndex > 0" class="keyboard-shortcut-or">{{ t('shortcuts.or') }}</span>
+                    <span class="keyboard-shortcut-combo">
+                      <template v-for="(part, partIndex) in combo" :key="`${item.id}-${comboIndex}-${partIndex}`">
+                        <span v-if="partIndex > 0" class="keyboard-shortcut-plus">+</span>
+                        <kbd>{{ part }}</kbd>
+                      </template>
+                    </span>
+                  </template>
+                </div>
+              </li>
+            </ul>
+          </section>
+        </div>
+      </div>
+      <div class="modal-footer keyboard-shortcuts-footer">
+        <button type="button" class="btn-primary keyboard-shortcuts-dismiss" @click="closeKeyboardShortcuts">
+          {{ t('shortcuts.gotIt') }}
+        </button>
       </div>
     </div>
   </div>

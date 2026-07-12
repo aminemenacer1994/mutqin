@@ -40,7 +40,7 @@ class ProfileController extends Controller
     public function updateLocale(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'locale' => ['required', 'string', Rule::in(['en', 'ar', 'fr', 'id', 'tr'])],
+            'locale' => ['required', 'string', Rule::in(['en', 'ar', 'fr', 'id', 'tr', 'es'])],
         ]);
 
         $request->user()->forceFill([

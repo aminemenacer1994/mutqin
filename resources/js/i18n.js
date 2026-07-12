@@ -1,7 +1,8 @@
 import { createI18n } from 'vue-i18n'
 import enMessages from './locales/en.json'
 
-export const SUPPORT_LOCALES = ['en', 'ar', 'fr', 'id', 'tr']
+export const SUPPORT_LOCALES = ['en', 'ar', 'fr', 'id', 'tr', 'es']
+export const RTL_LOCALES = ['ar']
 const STORAGE_KEY = 'mutqin.locale'
 
 function normalizeLocale(locale) {
@@ -32,10 +33,10 @@ export function getSavedLocale() {
 
 function setDocumentLanguage(locale) {
   const normalized = normalizeLocale(locale)
-  const isArabic = normalized === 'ar'
+  const isRtl = RTL_LOCALES.includes(normalized)
   document.documentElement.setAttribute('lang', normalized)
-  document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr')
-  document.body?.setAttribute('dir', isArabic ? 'rtl' : 'ltr')
+  document.documentElement.setAttribute('dir', isRtl ? 'rtl' : 'ltr')
+  document.body?.setAttribute('dir', isRtl ? 'rtl' : 'ltr')
 }
 
 export async function loadLocaleMessages(i18n, locale) {

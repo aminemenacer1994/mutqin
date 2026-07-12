@@ -197,25 +197,17 @@
   max-width: 280px;
 }
 
-.hero-buttons .hero-action-btn:first-child {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  border-color: color-mix(in srgb, var(--accent-strong) 78%, transparent);
-  color: var(--text-on-accent);
+.hero-buttons .hero-action-btn--primary {
+  box-shadow: var(--shadow-md);
 }
 
-.hero-buttons .hero-action-btn:first-child:hover {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 90%, white 10%), var(--accent-strong));
-  border-color: color-mix(in srgb, var(--accent-strong) 84%, transparent);
-  color: var(--text-on-accent);
-}
-
-.hero-buttons .hero-action-btn:last-child {
+.hero-buttons .hero-action-btn--secondary {
   background: color-mix(in srgb, var(--accent-light) 70%, var(--surface-strong));
   border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
   color: var(--accent-strong);
 }
 
-.hero-buttons .hero-action-btn:last-child:hover {
+.hero-buttons .hero-action-btn--secondary:hover {
   background: color-mix(in srgb, var(--accent-light) 88%, var(--surface-strong));
   border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
   color: var(--accent-strong);
@@ -790,6 +782,81 @@
 
 .comparison-value i {
   font-size: 1rem;
+}
+
+.comparison-cards {
+  display: none;
+  gap: 0.85rem;
+}
+
+.comparison-card {
+  padding: 1rem 1.05rem;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+.comparison-card-feature {
+  margin: 0 0 0.85rem;
+  font-size: 0.98rem;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.comparison-card-tiers {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.comparison-card-tier {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 34%) 1fr;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.comparison-card-tier dt {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.comparison-card-tier dd {
+  margin: 0;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.comparison-card-tier .comparison-value {
+  min-width: 0;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+@media (max-width: 767px) {
+  .comparison-table-wrap {
+    display: none;
+  }
+
+  .comparison-cards {
+    display: grid;
+  }
+
+  .pricing-comparison {
+    padding: 1.05rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .comparison-card-tier {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
 }
 
 .faq-shell,

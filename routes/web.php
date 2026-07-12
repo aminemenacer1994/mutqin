@@ -34,7 +34,7 @@ Route::get('/billing/success', [BillingController::class, 'success'])->name('bil
 
 Route::get('/memorisation', function () {
     return view('memorisation');
-})->name('memorisation');
+})->middleware('auth')->name('memorisation');
 
 Route::view('/about', 'content.about-us')->name('about');
 Route::view('/about-us', 'content.about-us')->name('about-us');

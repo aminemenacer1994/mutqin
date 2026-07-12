@@ -51,14 +51,14 @@ includesAll('session setup controls', [
 ])
 
 includesAll('technique controls', [
-  /aria-label="Use focus mode" @click="toggleFocusModeRadio"/,
+  /:aria-label="t\('memorisation\.a11y\.useFocusMode'\)" @click="toggleFocusModeRadio"/,
   /:aria-pressed="focusModeEnabled \? 'true' : 'false'"/,
-  /aria-label="Use blur mode" @click="toggleBlurModeRadio"/,
+  /:aria-label="t\('memorisation\.a11y\.useBlurMode'\)" @click="toggleBlurModeRadio"/,
   /:aria-pressed="blurModeEnabled \? 'true' : 'false'"/,
   /v-model\.number="blurIntensity"/,
-  /aria-label="Use chaining" @click="toggleChainingRadio"/,
+  /:aria-label="t\('memorisation\.a11y\.useChaining'\)" @click="toggleChainingRadio"/,
   /:aria-pressed="chainingEnabled \? 'true' : 'false'"/,
-  /aria-label="Use anchor mode" @click="toggleAnchorModeRadio"/,
+  /:aria-label="t\('memorisation\.a11y\.useAnchorMode'\)" @click="toggleAnchorModeRadio"/,
   /:aria-pressed="anchorModeEnabled \? 'true' : 'false'"/,
   /v-model\.number="focusDimPercent"/,
   /cycleQuranFontPill\(\)/,
@@ -82,7 +82,7 @@ includesAll('reading settings controls', [
   /@click="toggleReadingOption\('translation'\)"/,
   /@click="toggleReadingOption\('transliteration'\)"/,
   /@click="toggleReadingOption\('wbw'\)"/,
-  /@click="wordByWordAudioEnabled = !wordByWordAudioEnabled"/,
+  /Word Audio: always enabled/,
   /applySettingsChanges\(\{ silent: true \}\)/,
   /syncSettingsDraft\(\)/,
   /toggleSettingsOption\(key\)/,
@@ -113,7 +113,7 @@ assert.doesNotMatch(
 )
 
 includesAll('tajweed independence', [
-  /title="Use connected Tajweed text from the Quran API" @click="toggleTajweed"/,
+  /:title="t\('memorisation\.a11y\.showTajweedText'\)" @click="toggleTajweed"/,
   /if \(this\.tajweedEnabled && verse\.arabic_tajweed\) \{\s*return this\.renderWordLevelTajweedMarkup\(verse,\s*\{\s*wrapWords: this\.wordByWordAudioEnabled \|\| this\.showWordByWord \|\| this\.anchorModeEnabled\s*\}\s*\)\s*\}/s,
   /if \(this\.selfCheckTajweedEnabled && verse\.arabic_tajweed\) \{\s*return this\.renderWordLevelTajweedMarkup\(verse\)\s*\}/s,
   /else if \(this\.aiMemorisationCheckerTajweedEnabled && liveVerse\.arabic_tajweed\) \{\s*html = this\.renderWordLevelTajweedMarkup\(liveVerse\)\s*\}/s,
@@ -136,7 +136,7 @@ includesAll('workspace application', [
   /v-if="showTransliteration && verse\.transliteration"/,
   /v-if="showTranslation && verse\.translation"/,
   /v-if="showWordByWord && verse\.words && verse\.words\.length"/,
-  /v-if="word\.audio && wordByWordAudioEnabled"/,
+  /v-if="word\.audio"/,
   /'--verse-font-percent': getVerseFontSize\(verse\.key\)/,
   /'focus-mode-active': focusModeEnabled/,
   /'blur-mode-active': blurModeEnabled/,
@@ -189,7 +189,7 @@ includesAll('ai recitation full-session recording', [
 ])
 
 includesAll('ai memorisation mirrors recitation modal', [
-  /aria-label="AI memorisation tools"/,
+  /:aria-label="t\('memorisation\.a11y\.aiMemorisationTools'\)"/,
   /Play Memorisation/,
   /t\('memorisation\.blur_everything'\)/,
   /class="recitation-check-panel recitation-check-panel-inline memorisation-checker-panel"/,
@@ -213,7 +213,7 @@ includesAll('planner ui hidden', [
   /v-if="showAiMemorisationButton" class="mushaf-pill mushaf-ai-pill mushaf-ai-memory"/,
   /v-if="showAiMemorisationButton" class="verse-self-check-btn verse-ai-check-btn"/,
   /<button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls"/,
-  /<section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" aria-label="Session setup">/,
+  /<section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t\('memorisation\.a11y\.sessionSetup'\)">/,
   /t\('memorisation\.open_session_setup'\)/,
   /aria-label="Open controls"/,
   /v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills\.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"/
@@ -324,7 +324,7 @@ assert.doesNotMatch(
 
 includesAll('ai recitation simplified workspace', [
   /class="self-check-header-tools"/,
-  /aria-label="Play ayah once"/,
+  /:aria-label="t\('memorisation\.a11y\.playAyahOnce'\)"/,
   /v-if="shouldShowOffcanvasTabs"/,
   /shouldShowOffcanvasTabs\(\) \{\s*return true\s*\}/s,
   /class="recitation-word-stream recitation-live-word-stream" dir="rtl"/,

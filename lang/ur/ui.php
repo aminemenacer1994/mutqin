@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'app_title' => 'متقن - حافظ على حفظك',
+    'app_title' => 'متقن - اپنے حفظ کو محفوظ رکھیں',
     'skip_main' => 'تخطي إلى المحتوى الرئيسي',
     'primary_navigation' => 'التنقل الرئيسي',
     'language_switcher' => 'مبدل اللغة',

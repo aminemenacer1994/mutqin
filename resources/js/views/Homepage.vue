@@ -22,8 +22,8 @@
               </div>
               
               <div class="hero-buttons">
-                <a href="/memorisation" class="btn-secondary hero-action-btn"><i class="bi bi-book-half"></i> {{ t('homepage.hero.startFree') }}</a>
-                <button @click="scrollToFeatures" class="btn-secondary hero-action-btn"><i class="bi bi-arrow-down"></i> {{ t('homepage.hero.seeFeatures') }}</button>
+                <a href="/memorisation" class="btn-primary hero-action-btn hero-action-btn--primary"><i class="bi bi-book-half"></i> {{ t('homepage.hero.startFree') }}</a>
+                <button @click="scrollToFeatures" class="btn-secondary hero-action-btn hero-action-btn--secondary"><i class="bi bi-arrow-down"></i> {{ t('homepage.hero.seeFeatures') }}</button>
               </div>
             </div>
           </div>
@@ -217,7 +217,7 @@
             <h3>{{ t('homepage.feature_comparison') }}</h3>
             <p>{{ t('homepage.everything_included_in_each_subscription_at_a_glan') }}</p>
           </div>
-          <div class="comparison-table-wrap">
+          <div class="comparison-table-wrap" role="region" :aria-label="t('homepage.feature_comparison')">
             <table class="comparison-table">
               <thead>
                 <tr>
@@ -251,6 +251,46 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <div class="comparison-cards" role="list" :aria-label="t('homepage.feature_comparison')">
+            <article
+              v-for="row in comparisonRows"
+              :key="`comparison-card-${row.id}`"
+              class="comparison-card"
+              role="listitem"
+            >
+              <h4 class="comparison-card-feature">{{ row.feature }}</h4>
+              <dl class="comparison-card-tiers">
+                <div class="comparison-card-tier">
+                  <dt>{{ t('homepage.free') }}</dt>
+                  <dd>
+                    <span :class="comparisonValueClass(row.free)">
+                      <i v-if="comparisonCell(row.free).icon" class="bi" :class="comparisonCell(row.free).icon" aria-hidden="true"></i>
+                      <span v-if="comparisonCell(row.free).label">{{ comparisonCell(row.free).label }}</span>
+                    </span>
+                  </dd>
+                </div>
+                <div class="comparison-card-tier">
+                  <dt>{{ t('homepage.pricing.premium') }}</dt>
+                  <dd>
+                    <span :class="comparisonValueClass(row.premium)">
+                      <i v-if="comparisonCell(row.premium).icon" class="bi" :class="comparisonCell(row.premium).icon" aria-hidden="true"></i>
+                      <span v-if="comparisonCell(row.premium).label">{{ comparisonCell(row.premium).label }}</span>
+                    </span>
+                  </dd>
+                </div>
+                <div class="comparison-card-tier">
+                  <dt>{{ t('homepage.pro') }}</dt>
+                  <dd>
+                    <span :class="comparisonValueClass(row.pro)">
+                      <i v-if="comparisonCell(row.pro).icon" class="bi" :class="comparisonCell(row.pro).icon" aria-hidden="true"></i>
+                      <span v-if="comparisonCell(row.pro).label">{{ comparisonCell(row.pro).label }}</span>
+                    </span>
+                  </dd>
+                </div>
+              </dl>
+            </article>
           </div>
         </div>
       </div>

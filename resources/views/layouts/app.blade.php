@@ -1693,6 +1693,7 @@
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="ar">🇸🇦 {{ __('ui.arabic') }}</button></li>
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="id">🇮🇩 {{ __('ui.indonesian') }}</button></li>
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="tr">🇹🇷 {{ __('ui.turkish') }}</button></li>
+                            <li><button type="button" class="dropdown-item lang-btn" data-locale="es">🇪🇸 {{ __('ui.spanish') }}</button></li>
                         </ul>
                     </div>
 
@@ -1706,7 +1707,7 @@
             </div>
 
             <div class="d-flex align-items-center gap-2 navbar-quick-actions">
-                <!-- <div class="global-lang-switcher dropdown d-none d-lg-block" aria-label="{{ __('ui.language_switcher') }}">
+                <div class="global-lang-switcher dropdown d-none d-lg-block" aria-label="{{ __('ui.language_switcher') }}">
                     <button class="btn app-lang-toggle icon-only lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('ui.language_switcher') }}">
                         <i class="bi bi-translate" aria-hidden="true"></i>
                     </button>
@@ -1716,8 +1717,9 @@
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="ar">🇸🇦 {{ __('ui.arabic') }}</button></li>
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="id">🇮🇩 {{ __('ui.indonesian') }}</button></li>
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="tr">🇹🇷 {{ __('ui.turkish') }}</button></li>
+                        <li><button type="button" class="dropdown-item lang-btn" data-locale="es">🇪🇸 {{ __('ui.spanish') }}</button></li>
                     </ul>
-                </div> -->
+                </div>
 
                 <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="{{ __('ui.switch_dark') }}">
                     <i class="bi bi-sun"></i>
@@ -1776,6 +1778,7 @@
             ar: @json(trans('ui', [], 'ar')),
             id: @json(trans('ui', [], 'id')),
             tr: @json(trans('ui', [], 'tr')),
+            es: @json(trans('ui', [], 'es')),
         };
         window.mutqinInitialThemePreference = @json($appThemePreference);
         window.mutqinInitialTheme = @json($appTheme);
@@ -1929,8 +1932,8 @@
         
         // Global language switcher for all pages
         (function() {
-            const supported = ['en', 'ar', 'fr', 'id', 'tr'];
-            const labels = window.mutqinUiLabels || { en: {}, fr: {}, ar: {}, id: {}, tr: {} };
+            const supported = ['en', 'ar', 'fr', 'id', 'tr', 'es'];
+            const labels = window.mutqinUiLabels || { en: {}, fr: {}, ar: {}, id: {}, tr: {}, es: {} };
 
             function safeGet(key) {
                 try { return localStorage.getItem(key); } catch (e) { return null; }

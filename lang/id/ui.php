@@ -11,6 +11,8 @@ return [
     'french' => 'Français',
     'indonesian' => 'Bahasa Indonesia',
     'turkish' => 'Türkçe',
+    'spanish' => 'Español',
+    'urdu' => 'اردو',
     'login' => 'Masuk',
     'register' => 'Daftar',
     'logout' => 'Keluar',

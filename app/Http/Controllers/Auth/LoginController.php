@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class LoginController extends Controller
 {
@@ -30,9 +31,9 @@ class LoginController extends Controller
      */
     protected $redirectTo = '/memorisation';
 
-    public function showLoginForm(): RedirectResponse
+    public function showLoginForm(): View
     {
-        return redirect()->route('memorisation');
+        return view('auth.login');
     }
 
     /**

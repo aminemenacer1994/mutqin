@@ -27,7 +27,10 @@
     "filter": "Filter",
     "metadata": "Metadata",
     "download": "Download",
-    "method": "Method"
+    "method": "Method",
+    "tajweed": "Tajweed",
+    "dismiss": "Dismiss",
+    "skipOnboarding": "Skip onboarding"
   },
   "auth": {
     "continueGoogle": "Google ile devam et",
@@ -62,7 +65,35 @@
   },
   "shortcuts": {
     "title": "Keyboard Shortcuts",
-    "navigation": "Navigation"
+    "navigation": "Navigation",
+    "playPause": "Play or pause audio",
+    "playAyah": "Play selected ayah",
+    "nextAyah": "Next ayah",
+    "previousAyah": "Previous ayah",
+    "playCurrent": "Play current ayah",
+    "saveSession": "Save current session",
+    "closePanel": "Close open panel",
+    "mushafNextPage": "Next mushaf page",
+    "mushafPrevPage": "Previous mushaf page",
+    "keys": {
+      "space": "Space",
+      "enter": "Enter",
+      "next": "→ / J",
+      "prev": "← / K",
+      "save": "Ctrl/Cmd + S"
+    },
+    "subtitle": "Work faster without leaving the memorisation view.",
+    "gotIt": "Got it",
+    "or": "or",
+    "firstAyah": "Jump to first ayah",
+    "lastAyah": "Jump to last ayah",
+    "groups": {
+      "playback": "Playback",
+      "navigation": "Navigation",
+      "session": "Session",
+      "mushaf": "Mushaf view",
+      "general": "General"
+    }
   },
   "home": {
     "startKicker": "Start a new session",
@@ -383,7 +414,9 @@
     "workspaceEmpty": {
       "kicker": "Ready to begin",
       "title": "Choose a surah and range",
-      "desc": "Use session controls to set up a new range. The main workspace will stay in view once you start."
+      "desc": "Use session controls to set up a new range. The main workspace will stay in view once you start.",
+      "startNewSession": "Yeni oturum başlat",
+      "continuePreviousSession": "Önceki oturuma devam et"
     },
     "sessionOverview": {
       "kicker": "Session Overview"
@@ -471,7 +504,8 @@
       "forwardTitle": "This range moved forward.",
       "studiedTitle": "This is how you studied.",
       "advanceTitle": "Advance or reinforce.",
-      "continueTitle": "Continue or begin again."
+      "continueTitle": "Continue or begin again.",
+      "previousSession": "Önceki oturum"
     },
     "summary": {
       "default": "You can start a new range, save this one, or repeat it now.",
@@ -497,7 +531,9 @@
       "theme": "Tema",
       "border": "Çerçeve",
       "aiRecite": "AI Recite",
-      "aiMemory": "AI Memory"
+      "aiMemory": "AI Memory",
+      "quranicFont": "Kuran yazı tipi",
+      "selectLayout": "Düzen seç"
     },
     "badges": {
       "new": "New",
@@ -603,6 +639,31 @@
             "Recordings",
             "Insights"
           ]
+        }
+      },
+      "playSampleSession": "Örnek oturumu oynat",
+      "postSession": {
+        "kicker": "Örnek oturum tamamlandı",
+        "title": "Maşaallah!",
+        "message": "Maşaallah! Allah çabanızı bereketlendirsin ve Kuran yolculuğunuzu kolaylaştırsın.",
+        "repeat": "Bu oturumu tekrarla",
+        "newSession": "Yeni oturum başlat",
+        "save": "Bu oturumu kaydet",
+        "savedToast": "Bu oturum başarıyla kaydedildi."
+      },
+      "choices": {
+        "groupLabel": "Choose how to begin",
+        "sample": {
+          "title": "Try Guided Sample (Recommended)",
+          "description": "Walk through a short guided session to see how memorisation flows work."
+        },
+        "setup": {
+          "title": "Set Up My Own Session",
+          "description": "Choose your surah, range, and reciter before you begin."
+        },
+        "explore": {
+          "title": "Explore the Workspace First",
+          "description": "Look around the workspace and open setup when you are ready."
         }
       }
     },
@@ -777,7 +838,9 @@
       "review": "Gözden Geçir",
       "excellentHint": "Ezberden güvenli ve doğru",
       "goodHint": "Küçük duraksamalarla çoğunlukla doğru",
-      "reviewHint": "Devam etmeden önce bu ayeti tekrar gözden geçir"
+      "reviewHint": "Devam etmeden önce bu ayeti tekrar gözden geçir",
+      "fair": "Hâlâ gelişiyor",
+      "fairHint": "Çoğunlukla hazır ama boşluklar var — bir tekrar daha değer."
     },
     "record_again": "Yeniden Kaydet",
     "recordings_library": "Kayıt Kitaplığı",
@@ -935,7 +998,8 @@
       "wordAudioOn": "Word audio on",
       "tajweedOn": "Tajweed on",
       "fontLabel": "Font {font}",
-      "modeLabel": "{label} mode"
+      "modeLabel": "{label} mode",
+      "repeatSummary": "{count}x repeats"
     },
     "search": {
       "juzNumber": "Juz number",
@@ -1216,6 +1280,352 @@
         "invalidConfig": "Canlı transkripsiyon yapılandırması geçersiz.",
         "disconnectedUnexpectedly": "Canlı transkripsiyon beklenmedik şekilde bağlantısı kesildi."
       }
+    },
+    "welcomeBack": {
+      "kicker": "Tekrar hoş geldiniz",
+      "startNewSession": "Yeni oturum başlat",
+      "continuePreviousSession": "Önceki oturuma devam et",
+      "freshTitle": "Ready when you are",
+      "freshTitleNamed": "Welcome back, {name}",
+      "freshSubtitle": "Take a breath, settle in, and choose whether to start fresh or pick up where you left off.",
+      "resumeTitle": "Continue with {chapter}",
+      "resumeTitleNamed": "{chapter}, {name}",
+      "resumeGeneric": "Pick up where you left off",
+      "resumeGenericNamed": "Welcome back, {name}",
+      "resumeSubtitle": "Your last session is still here whenever you are ready.",
+      "resumeSubtitleDetail": "{detail} — continue whenever it suits you."
+    },
+    "sessionExit": {
+      "kicker": "Oturum duraklatıldı",
+      "startNewSession": "Yeni oturum başlat",
+      "repeatSession": "Oturumu tekrarla",
+      "continueSession": "Bu oturuma devam et",
+      "saveSession": "Bu oturumu kaydet"
+    },
+    "practiceTools": {
+      "beginner": "Başlangıç araçları",
+      "beginnerDesc": "Ayetleri okuma, dinleme ve tekrar için basit seçenekler.",
+      "advanced": "Gelişmiş araçlar",
+      "advancedDesc": "Ayetleri bağlama ve anahtar kelimeleri hatırlama teknikleri."
+    },
+    "saved_sessions_intro": "Hıfz yolculuklarınız — tamamlanan hatim veya devam eden aralığa dönün.",
+    "completed_sessions": "Tamamlanan oturumlar",
+    "completed_sessions_desc": "Ayet aralığının sonuna ulaştığınız oturumlar. Muraja'ah için tekrar ziyaret edin.",
+    "incomplete_sessions": "Tamamlanmayan oturumlar",
+    "incomplete_sessions_desc": "Yarıda kalan hıfz oturumları. Kaldığınız yerden devam edin.",
+    "last_opened": "Son açılış {date}",
+    "no_surah_selected": "Sure seçilmedi",
+    "postSession": {
+      "kicker": "Oturum tamamlandı",
+      "title": "Maşaallah!",
+      "message": "Maşaallah! Allah çabanızı kabul etsin ve istikrar versin.",
+      "repeat": "Bu oturumu tekrarla",
+      "newSession": "Yeni oturum başlat",
+      "save": "Bu oturumu kaydet",
+      "savedToast": "Bu oturum başarıyla kaydedildi."
+    },
+    "start_reciting_prompt": "Tilavete başla",
+    "view_all_recording_library": "Tüm kayıt kütüphanesini gör",
+    "self_rating_prompt": "Bu ayeti hıfızdan ne kadar iyi hatırladınız?",
+    "selfCheckRecorder": {
+      "aiListening": "AI tilavetinizi dinliyor",
+      "reviewHeading": "Tilavetinizi gözden geçirin",
+      "assessmentHeading": "Hıfznızı değerlendirin",
+      "aiSessionReady": "Hazır olduğunuzda ayet aralığınızı tilavet edin ve AI incelemenizi yönlendirsin.",
+      "aiAyahReady": "Hazır olduğunuzda bu ayeti hıfızdan tilavet edin ve AI incelemenizi yönlendirsin.",
+      "recordingActive": "Mikrofonunuz açık — tecvidle tilavet edin, bitince durdurun.",
+      "reviewDraft": "Kaydınızı dinleyin, dürüstçe değerlendirin ve kaydedin.",
+      "preparingMic": "Net bir kayıt için mikrofon hazırlanıyor, inşaallah.",
+      "unsupportedBrowser": "Kayıt için mikrofon destekli bir tarayıcı gerekir.",
+      "idle": "Bu ayeti hıfızdan tilavet ederek kaydedin, sonra hatırlamayı değerlendirin."
+    },
+    "no_recordings_yet_desc": "Öz kontrolü açın, tilavetinizi kaydedin ve denemeyi saklayın.",
+    "no_matching_recording": "Eşleşen kayıt yok",
+    "no_matching_recording_desc": "Farklı bir sure adı veya ayet numarası deneyin.",
+    "choose_a_recording": "Kayıt seç",
+    "choose_a_recording_desc": "Hıfznızı gözden geçirmek için kayıtlı bir tilavet seçin.",
+    "a11y": {
+      "sessionOverview": "Session overview",
+      "endSession": "End session",
+      "openReadingOptions": "Open reading options",
+      "sessionMetadata": "Session metadata",
+      "memorisationWorkspace": "Memorisation workspace",
+      "sessionSetup": "Session setup",
+      "mushafTools": "Mushaf tools",
+      "chooseMushafFont": "Choose Mushaf text style",
+      "decreaseFontSize": "Decrease font size",
+      "increaseFontSize": "Increase font size",
+      "sessionControls": "Session controls",
+      "openSessionControls": "Open session controls",
+      "playActiveAyah": "Play active ayah",
+      "pauseActiveAyah": "Pause active ayah",
+      "selectAyahFirst": "Select an ayah first",
+      "toggleTajweed": "Toggle Tajweed colouring",
+      "startAiMemory": "Start AI memorisation check",
+      "stopAiMemory": "Stop AI memorisation check",
+      "startAiRecite": "Start AI recitation check",
+      "stopAiRecite": "Stop AI recitation check",
+      "aiReciteActive": "AI recitation check is active",
+      "openAiRecite": "Open AI recitation check for this ayah",
+      "previousMushafPage": "Previous mushaf page",
+      "nextMushafPage": "Next mushaf page",
+      "bismillah": "Bismillah",
+      "playAyahAudio": "Play ayah audio",
+      "pauseAyahAudio": "Pause ayah audio",
+      "openAyah": "Open ayah {number}",
+      "openActiveAyah": "Open ayah {number}, active ayah",
+      "playWordAudio": "Play word {index} audio for ayah {number}",
+      "closePanel": "Close panel",
+      "controlsTabs": "Controls tabs",
+      "practicePresets": "Practice presets",
+      "savedSessions": "Saved sessions",
+      "sessionInsights": "Session insights",
+      "changeQuranFont": "Change Quran font",
+      "changeQuranicFont": "Change Quranic font",
+      "showTranslation": "Show or hide the English translation",
+      "showTransliteration": "Show or hide transliteration",
+      "showTajweedText": "Use connected Tajweed text from the Quran API",
+      "useFocusMode": "Use focus mode",
+      "useBlurMode": "Use blur mode",
+      "useTalqinMode": "Use talqin mode",
+      "useChaining": "Use chaining",
+      "useAnchorMode": "Use anchor mode",
+      "hideAyahRecite": "Hide the ayah and recite from memory",
+      "openAiMemoryAyah": "Open AI memorisation checker for this ayah",
+      "closeSelfCheck": "Close self-check",
+      "toggleTajweedHighlights": "Toggle Tajweed highlights",
+      "stopManualRecording": "Stop manual recording",
+      "startManualRecording": "Start manual recording",
+      "manualRecording": "Manual recording",
+      "resetAyahReview": "Reset displayed ayah review",
+      "pauseAyah": "Pause ayah",
+      "playAyahOnce": "Play ayah once",
+      "stopAiRecitationCheck": "Stop AI recitation check",
+      "workspaceLoading": "Loading memorisation workspace…",
+      "workspacePreparing": "Preparing your session tools.",
+      "workspaceLoadFailed": "Memorisation workspace failed to load",
+      "closeHelpLearning": "Close help and learning",
+      "helpTopics": "Help topics",
+      "closeConfirmDialog": "Close confirmation dialog",
+      "closeRenameDialog": "Close rename recording dialog",
+      "currentSessionAnalytics": "Current session analytics",
+      "detailedAnalytics": "Detailed analytics",
+      "closeAdvancedMetrics": "Close advanced metrics",
+      "blurEverything": "Blur everything",
+      "peekAyah": "Peek ayah",
+      "playMemorisationCheck": "Play memorisation check",
+      "resetMemorisationReview": "Reset memorisation review",
+      "closeMemorisationReview": "Close memorisation review",
+      "liveMemorisationCheck": "Live memorisation word check",
+      "aiMemorisationTools": "AI memorisation tools",
+      "ayahTools": "Ayah tools",
+      "loginShell": "Login",
+      "setupTab": "Session setup",
+      "tajweedLabel": "Tajweed",
+      "enableWordAudio": "Enable audio for individual word chips",
+      "guestAuthShell": "Login"
+    },
+    "calligraphy": {
+      "onboarding": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+      "selfCheck": "رَبِّ زِدْنِي عِلْمًا",
+      "recordingsLibrary": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
+      "sessionOverview": "اللَّهُمَّ انْفَعْنِي بِمَا عَلَّمْتَنِي"
+    },
+    "onboardingLabel": "Başlangıç",
+    "player": {
+      "previous": "Önceki",
+      "next": "Sonraki",
+      "previousAyah": "Önceki ayet",
+      "nextAyah": "Sonraki ayet",
+      "playAudio": "Sesi oynat",
+      "pauseAudio": "Sesi duraklat",
+      "playPause": "Oynat/Duraklat",
+      "remaining": "{eta} kaldı",
+      "audioPlayer": "Ses oynatıcı",
+      "audioProgress": "Audio progress",
+      "miniPlayer": "Mini player",
+      "fullPlayer": "Full player",
+      "closePlayer": "Close player",
+      "switchMini": "Switch to mini player",
+      "switchFull": "Switch to full player",
+      "closeAudioPlayer": "Close audio player",
+      "quranFallback": "Kur'an",
+      "restorePlayer": "Show audio player",
+      "tapToPlay": "Tap to play"
+    },
+    "confirmModals": {
+      "defaultTitle": "Confirm action",
+      "confirm": "Onayla",
+      "cancel": "İptal",
+      "closeDialog": "Close confirmation dialog",
+      "keep": "Koru",
+      "delete": "Sil",
+      "discard": "Discard",
+      "remove": "Remove",
+      "reset": "Reset",
+      "deleteSession": {
+        "title": "Delete saved session?",
+        "message": "This will permanently remove \"{label}\" and its export snapshot from this device.",
+        "messageFallback": "This will permanently remove this session and its export snapshot from this device.",
+        "confirm": "Delete session",
+        "cancel": "Keep session"
+      },
+      "deleteRecording": {
+        "title": "Delete recording?",
+        "titleReciteCheck": "Delete Recite Check?",
+        "message": "This removes the recording for ayah {number} from the recording library.",
+        "messageReciteCheck": "This removes the Recite Check for ayah {number} from the recording library.",
+        "messageFallback": "This item will be removed from the recording library.",
+        "confirm": "Delete",
+        "cancel": "Keep"
+      },
+      "deleteReciteCheck": {
+        "title": "Delete Recite Check?",
+        "message": "This removes the current Recite Check result. Saved recordings are not affected unless this result was already saved."
+      },
+      "discardContinue": {
+        "title": "Discard saved session?",
+        "message": "This removes the current continue-where-you-left-off snapshot from this device."
+      },
+      "removeOffline": {
+        "title": "Remove offline surah?",
+        "message": "This deletes the saved verses from this device."
+      },
+      "resetControls": {
+        "title": "Reset Session Controls?",
+        "message": "This will reset all session settings to defaults. Your progress will not be lost."
+      }
+    },
+    "renameRecording": {
+      "badge": "Recordings library",
+      "title": "Kaydı yeniden adlandır",
+      "label": "Recording name",
+      "placeholder": "Morning self-check",
+      "saveName": "Save name",
+      "closeDialog": "Close rename recording dialog",
+      "nameRequired": "Enter a recording name."
+    },
+    "workspaceProgress": {
+      "kicker": "Progress",
+      "sessionProgress": "Session progress",
+      "planProgress": "Plan progress",
+      "complete": "Tamamlandı",
+      "left": "{count} left",
+      "covered": "Covered",
+      "remaining": "Kalan",
+      "chooseRange": "Choose a range",
+      "ready": "Ready",
+      "detailSession": "{covered} of {total} ayahs covered in this range.",
+      "detailEmpty": "Start a session to see live memorisation progress here.",
+      "detailPlan": "{completed} of {total} ayahs completed in the current plan.",
+      "forecast": "Forecast",
+      "daysActive": "Days active",
+      "pending": "Pending",
+      "remainingAyahs": "{count} ayahs",
+      "readyToComplete": "Tamamlamaya hazır",
+      "daysRemaining": "Days Remaining",
+      "nextReview": "Next review",
+      "afterNewAyahs": "After today's new ayahs"
+    },
+    "talqinMode": {
+      "title": "Talqin modu",
+      "subtitle": "Pause after each ayah so the learner can repeat before the next one starts.",
+      "description": "Pause after each ayah for repeat-back practice.",
+      "bestFor": "Best for listen and repeat.",
+      "hint": "Uses the longer of your delay or a brief verse-length pause."
+    },
+    "plannerUi": {
+      "todayMemorise": "Today: Memorise your ayahs",
+      "guideStepByStep": "We will guide today's session step by step.",
+      "retentionActive": "Retention system active",
+      "lowConfidence": "Low",
+      "confidenceSuffix": "{level} confidence",
+      "noAyahsScheduled": "No ayahs scheduled yet",
+      "nextReviewNote": "Next review {date}. {reason}",
+      "targetKicker": "Target",
+      "todayTarget": "Bugünün hedefi",
+      "reviewLoad": "Review load",
+      "confidence": "Confidence",
+      "tomorrow": "Tomorrow",
+      "nextSession": "Next session",
+      "revisionOnlyHint": "Revision only until the next ayahs are due.",
+      "listenFollowTitle": "Listen carefully and follow along.",
+      "listenFollowBodyStart": "Mutqin will start the timer, audio, and ayah highlighting together.",
+      "listenFollowBodyDuring": "Watch the highlighted words and keep a steady rhythm before the next ayah.",
+      "tryRecitingTitle": "Try reciting without looking.",
+      "tryRecitingBody": "Say the ayah first from memory, then check only what you need.",
+      "continueNextTitle": "Great job. Continue to the next ayah.",
+      "continueNextBodyWarm": "Refresh what is due today, then move forward while the memory is still warm.",
+      "continueNextBodySteady": "Stay calm, keep the pace light, and move on when the current ayah feels steady.",
+      "reviewThisAyah": "Review this ayah, then continue.",
+      "reciteFromMemory": "Recite from memory, then reveal to confirm."
+    },
+    "aiCheck": {
+      "sessionRecite": "Session AI Recite",
+      "ayahRecite": "Ayah AI Recite",
+      "aiRecite": "AI Recite",
+      "memorisationCheckerTitle": "AI Memorisation Checker · {surah} · {target}",
+      "memorisationCheckerAyah": "AI Memorisation Checker · Ayah {number}",
+      "currentAyah": "Current ayah",
+      "wordsRecognized": "{checked} of {total} words recognized",
+      "startWhenMicActive": "Start reciting when the microphone is active",
+      "retryWhenMicReady": "Check the message below, then retry when your microphone is ready.",
+      "micStoppedUnexpectedly": "The microphone stopped unexpectedly.",
+      "micBlocked": "Microphone access was blocked. Allow microphone permission, then try again.",
+      "noArabicWords": "No clear Arabic words were detected. Record again closer to the microphone.",
+      "preparingMic": "Preparing microphone…",
+      "noWordMistake": "AI did not detect a word-level mistake. Still verify the ayah yourself before saving.",
+      "wordOrderIssue": "AI detected {count} word order issue(s). Tap any false highlight to mark it correct and update the results.",
+      "possibleIssues": "AI detected {count} possible issue(s). Tap any amber or red word that AI got wrong to turn it green and update the analysis.",
+      "markAsAiMistake": "Mark as AI mistake.",
+      "aiMemorisation": "AI memorisation",
+      "aiRecitation": "AI recitation",
+      "recordingUnsupported": "Recording is not supported in this browser.",
+      "chooseAyahFirst": "Choose an ayah before starting Recite Check.",
+      "noAudioCaptured": "No audio was captured.",
+      "checkFailed": "The memorisation check could not be completed.",
+      "recitationCheckFailed": "The recitation check could not be completed.",
+      "speechRecognitionFailed": "Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted."
+    },
+    "analyticsHeatmap": {
+      "confidence": "Confidence: {value}%",
+      "accuracy": "Accuracy: {value}%",
+      "mistakes": "Mistakes: {count}",
+      "tajweedIssues": "Tajweed Issues: {count}",
+      "attempts": "Attempts: {count}",
+      "priority": "Priority: {count} ayah(s) below 60% confidence",
+      "ayahActivityChart": "Ayah activity chart",
+      "nextReviewHint": "Next review: {label} · {confidence}",
+      "ayahLeftToComplete": "{count} ayah(s) left to complete the range"
+    },
+    "sync": {
+      "badge": {
+        "syncing": "Syncing…",
+        "retrying": "Retrying sync…",
+        "synced": "Synced",
+        "failed": "Sync failed",
+        "saved": "Saved locally"
+      },
+      "status": {
+        "syncing": "Saving your progress to the cloud…",
+        "retrying": "Cloud sync failed. Retrying in the background…",
+        "synced": "Progress synced to the cloud.",
+        "failed": "Could not sync progress. Your work is saved on this device and will retry automatically."
+      }
+    },
+    "loading": {
+      "reciterRefresh": "Loading verses for the new reciter…"
+    },
+    "offlineDownload": {
+      "buttonHint": "Download ayah audio for offline listening",
+      "success": "Ayah {number} audio downloaded. Open your device Downloads folder to find the MP3.",
+      "hint": "Tip: download ayahs while online, then play them from your device anytime without using mobile data.",
+      "failed": "Download did not start. Check your connection, then tap download again.",
+      "unavailable": "Audio is not available for this ayah yet. Try another reciter or refresh the session."
+    },
+    "saveAttemptConfirm": {
+      "aiRecite": "Your AI recitation attempt has been saved.",
+      "selfCheck": "Your recording for Ayah {ayahNumber} has been saved."
     }
   },
   "toasts": {
@@ -1321,7 +1731,10 @@
     "wordTimingUnavailableForThisAyah": "Word timing unavailable for this ayah.",
     "unableToPlayThisWordRight": "Unable to play this word right now.",
     "unableToPlayAyahNow": "Unable to play this ayah right now.",
-    "textSizePercent": "Text size: {percent}%"
+    "textSizePercent": "Text size: {percent}%",
+    "audioElementNotReady": "Playback could not start because the audio player did not finish loading. Refresh the page, then press play again.",
+    "audioRecordingNotReady": "Recording playback is not ready yet. Close any open check modal, refresh if needed, then try again.",
+    "playbackTapToPlay": "Your browser blocked autoplay. Tap play when you are ready to listen."
   },
   "errors": {
     "network": "Network error. Check your connection."
@@ -1636,6 +2049,19 @@
           "title": "Manual Assessment",
           "description": "Manual Assessment allows you to evaluate your own memorisation after each session and track your confidence and progress over time.",
           "bestFor": "Students who prefer self-reflection and independent revision."
+        },
+        "talqinMode": {
+          "title": "Talqin Mode Guide",
+          "description": "Talqin Mode automates the listen, pause, repeat, and extend cycle after you submit a practice session, so the timing stays consistent without extra manual control.",
+          "bestFor": "Students building verse retention through guided listening and repetition.",
+          "workflowTitle": "Talqin Workflow Guide (Listen, Pause, Repeat, Extend)",
+          "workflowIntro": "Activated seamlessly right after you submit a practice session. The platform handles the timing so you can focus entirely on your retention:",
+          "workflowListen": "1. Listen Phase:",
+          "workflowListenText": "The app streams the correct pronunciation of the verse. Focus on Tajweed tracking.",
+          "workflowPause": "2. Pause & Repeat Phase:",
+          "workflowPauseText": "The audio pauses automatically. A live on-screen alert prompts you to recite what you just heard.",
+          "workflowExtend": "3. Extend Phase:",
+          "workflowExtendText": "The sequence systematically links verses together to build long-term memory capacity automatically."
         }
       }
     },

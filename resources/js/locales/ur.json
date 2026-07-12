@@ -1,8 +1,8 @@
 {
   "common": {
-    "on": "تشغيل",
-    "off": "إيقاف",
-    "reset": "إعادة تعيين",
+    "on": "آن",
+    "off": "آف",
+    "reset": "ری سیٹ",
     "startSession": "بدء الجلسة",
     "pause": "إيقاف مؤقت",
     "settings": "الإعدادات",
@@ -11,10 +11,10 @@
     "login": "تسجيل الدخول",
     "register": "إنشاء حساب",
     "logout": "تسجيل الخروج",
-    "loading": "جاري التحميل...",
-    "cancel": "إلغاء",
-    "save": "حفظ",
-    "close": "إغلاق",
+    "loading": "لوڈ ہو رہا ہے…",
+    "cancel": "منسوخ",
+    "save": "محفوظ کریں",
+    "close": "بند کریں",
     "yes": "نعم",
     "no": "لا",
     "home": "الرئيسية",
@@ -22,13 +22,13 @@
     "delete": "حذف",
     "resume": "استئناف",
     "discard": "تجاهل",
-    "back": "رجوع",
-    "continue": "متابعة",
+    "back": "واپس",
+    "continue": "جاری رکھیں",
     "filter": "تصفية",
     "metadata": "البيانات الوصفية",
-    "download": "تنزيل",
+    "download": "ڈاؤن لوڈ",
     "method": "الطريقة",
-    "tajweed": "Tajweed",
+    "tajweed": "تجوید",
     "dismiss": "Dismiss",
     "skipOnboarding": "Skip onboarding"
   },
@@ -41,8 +41,8 @@
     "forgotPassword": "هل نسيت كلمة المرور؟"
   },
   "nav": {
-    "home": "الرئيسية",
-    "memorisation": "الحفظ",
+    "home": "ہوم",
+    "memorisation": "حفظ",
     "profile": "الملف الشخصي",
     "subscription": "الاشتراك",
     "settings": "الإعدادات"
@@ -128,7 +128,7 @@
     "displaySub": "خصّص طريقة ظهور القرآن",
     "readingAids": "مساعدات القراءة",
     "readingAidsSub": "الترجمات ومساعدات الكلمات",
-    "tajweed": "التجويد",
+    "tajweed": "تجوید",
     "tajweedDesc": "قواعد ألوان التلاوة (إدغام، إخفاء، مد، إلخ)",
     "fontSize": "حجم الخط",
     "fontSizeDesc": "اضبط حجم النص العربي لقراءة أفضل",
@@ -138,12 +138,12 @@
     "transliterationDesc": "مساعدة نطق بالحروف اللاتينية",
     "wordByWord": "كلمة بكلمة",
     "wordByWordDesc": "شرائح كلمات فردية مع المعاني",
-    "wordAudio": "صوت الكلمات",
-    "wordAudioDesc": "تشغيل صوتي مع تمييز الكلمات"
+    "wordAudio": "لفظی آڈیو",
+    "wordAudioDesc": "آیت کی آڈیو چلتے ہوئے ہر لفظ کو نمایاں کریں۔"
   },
   "homepage": {
     "hero": {
-      "badge": "تعلّم القرآن بالذكاء الاصطناعي",
+      "badge": "اے آئی کے ساتھ قرآن حفظ",
       "title": "احفظ القرآن بحلقة تدريب أكثر هدوءاً ودقة.",
       "desc": "متقن يجمع آياتك وتسجيلاتك وفحوص الذكاء الاصطناعي والمراجعة ورؤى نقاط الضعف في مساحة واحدة.",
       "problem": "المشكلة:",
@@ -526,8 +526,8 @@
       "border": "الإطار",
       "aiRecite": "تلاوة بالذكاء الاصطناعي",
       "aiMemory": "ذاكرة الذكاء الاصطناعي",
-      "quranicFont": "خط القرآن",
-      "selectLayout": "اختر التخطيط"
+      "quranicFont": "قرآنی فونٹ",
+      "selectLayout": "لے آؤٹ منتخب کریں"
     },
     "badges": {
       "new": "جديد",
@@ -1012,7 +1012,7 @@
       "lateef": "لطيف"
     },
     "welcomeBack": {
-      "kicker": "مرحبًا بعودتك",
+      "kicker": "خوش آمدید",
       "startNewSession": "بدء جلسة جديدة",
       "continuePreviousSession": "متابعة الجلسة السابقة",
       "freshTitle": "Ready when you are",
@@ -1026,16 +1026,16 @@
       "resumeSubtitleDetail": "{detail} — continue whenever it suits you."
     },
     "sessionExit": {
-      "kicker": "الجلسة متوقفة",
+      "kicker": "سیشن روکا گیا",
       "startNewSession": "بدء جلسة جديدة",
       "repeatSession": "إعادة الجلسة",
       "continueSession": "متابعة هذه الجلسة",
       "saveSession": "حفظ هذه الجلسة"
     },
     "practiceTools": {
-      "beginner": "أدوات للمبتدئين",
+      "beginner": "ابتدائی ٹولز",
       "beginnerDesc": "خيارات بسيطة للقراءة والاستماع وتكرار الآيات.",
-      "advanced": "أدوات متقدمة",
+      "advanced": "اعلیٰ ٹولز",
       "advancedDesc": "تقنيات لربط الآيات وتذكر الكلمات المفتاحية."
     },
     "saved_sessions_intro": "رحلات حفظك المحفوظة — تابع ختمًا مكتملًا أو نطاقًا قيد التقدم.",
@@ -1054,16 +1054,16 @@
       "save": "حفظ هذه الجلسة",
       "savedToast": "تم حفظ هذه الجلسة بنجاح."
     },
-    "start_reciting_prompt": "ابدأ التلاوة",
-    "view_all_recording_library": "عرض كل مكتبة التسجيلات",
+    "start_reciting_prompt": "تلاوت شروع کریں",
+    "view_all_recording_library": "تمام ریکارڈنگ لائبریری دیکھیں",
     "self_rating_prompt": "ما مدى تذكّرك لهذه الآية من الحفظ؟",
     "selfCheckRecorder": {
-      "aiListening": "الذكاء الاصطناعي يستمع لتلاوتك",
+      "aiListening": "اے آئی آپ کی تلاوت سن رہا ہے",
       "reviewHeading": "راجع تلاوتك",
       "assessmentHeading": "قيّم حفظك",
       "aiSessionReady": "عندما تكون مستعدًا، أَتِ نطاق الآيات ودع الذكاء الاصطناعي يوجّه مراجعتك.",
       "aiAyahReady": "عندما تكون مستعدًا، أَتِ الآية من الحفظ ودع الذكاء الاصطناعي يوجّه مراجعتك.",
-      "recordingActive": "الميكروفون نشط — أَتِ بالتجويد ثم اضغط إيقاف عند الانتهاء.",
+      "recordingActive": "مائیکروفون فعال ہے — تجوید کے ساتھ تلاوت کریں، پھر روک دبائیں۔",
       "reviewDraft": "استمع لتسجيلك، قيّم بصدق، ثم احفظ المحاولة.",
       "preparingMic": "جارٍ تجهيز الميكروفون لتسجيل واضح، إن شاء الله.",
       "unsupportedBrowser": "التسجيل يتطلب متصفحًا يدعم الميكروفون.",
@@ -1072,7 +1072,7 @@
     "no_recordings_yet_desc": "افتح التحقق الذاتي، سجّل تلاوتك، واحفظ المحاولة.",
     "no_matching_recording": "لا يوجد تسجيل مطابق",
     "no_matching_recording_desc": "جرّب اسم سورة أو رقم آية مختلفاً.",
-    "choose_a_recording": "اختر تسجيلاً",
+    "choose_a_recording": "ریکارڈنگ منتخب کریں",
     "choose_a_recording_desc": "اختر تلاوة محفوظة لمراجعة حفظك.",
     "a11y": {
       "sessionOverview": "Session overview",

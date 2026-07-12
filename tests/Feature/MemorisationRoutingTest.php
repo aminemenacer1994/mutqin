@@ -47,14 +47,14 @@ class MemorisationRoutingTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_failed_login_from_memorisation_returns_back_to_memorisation(): void
+    public function test_failed_login_from_login_page_returns_back_to_login(): void
     {
-        $this->from(route('memorisation'))
+        $this->from(route('login'))
             ->post(route('login'), [
                 'email' => 'missing@example.com',
                 'password' => 'wrong-password',
             ])
-            ->assertRedirect(route('memorisation'));
+            ->assertRedirect(route('login'));
     }
 
     public function test_legacy_home_route_redirects_to_the_landing_page(): void

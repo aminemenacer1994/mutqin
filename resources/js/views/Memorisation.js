@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { RTL_LOCALES } from '../i18n'
 import {
   cycleGlobalTheme,
   getSavedTheme,
@@ -289,6 +289,8 @@ export default {
       isDataReady: false,
       fontDropdownOpen: false,
       topCardMenuOpen: false,
+      topCardFontSubmenuOpen: false,
+      topCardLayoutSubmenuOpen: false,
       openVerseActionKey: '',
       verseFontSizes: {},
       defaultFontSize: 100,
@@ -312,7 +314,13 @@ export default {
         pushing: false,
         retryScheduled: false,
         ready: false,
+        status: 'idle',
+        lastSyncedAt: 0,
+        statusTimer: null,
       },
+      playerDismissed: false,
+      isWorkspaceRefreshing: false,
+      workspaceRefreshReason: '',
       currentWaveVerseKey: null,
       showKeyboardShortcuts: false,
       // chaining removed
@@ -420,8 +428,8 @@ export default {
       confirmModal: {
         title: '',
         message: '',
-        confirmLabel: 'Confirm',
-        cancelLabel: 'Cancel',
+        confirmLabel: '',
+        cancelLabel: '',
         tone: 'default',
         action: '',
         data: null
@@ -449,6 +457,8 @@ export default {
       continueSessionLabel: '',
       continueSessionPayload: null,
       showWelcomeBackModal: false,
+      welcomeBackModalReady: false,
+      welcomeBackRevealTimer: null,
       showRenameRecordingModal: false,
       renameRecordingId: '',
       renameRecordingName: '',
@@ -481,6 +491,8 @@ export default {
       recitationCheckPanelOpen: false,
       recitationLiveWords: [],
       recitationCheckAutoStopArmed: false,
+      recitationStartCueActive: false,
+      recitationStartCueTimer: null,
       recitationSpeechRecognition: null,
       recitationSpeechTranscript: '',
       recitationSpeechInterim: '',
@@ -635,6 +647,9 @@ export default {
       activeSelfCheckPreviewKey: '',
       activeSelfCheckAyahPlaybackKey: '',
       selfCheckLastSavedAyahKey: '',
+      selfCheckDraftAudioPlaying: false,
+      selfCheckDraftAudioCurrentTime: 0,
+      selfCheckDraftAudioDuration: 0,
       recordingsLibraryReturnToSelfCheckKey: '',
       showAiMemorisationCheckerModal: false,
       aiMemorisationCheckerVerseRef: null,
@@ -757,7 +772,7 @@ export default {
         analytics_planner: true,
         analytics_weak: false,
         memorisation_techniques: false,
-        saved_sessions: false,
+        saved_sessions: true,
         focus_mode: false,
         blur_mode: false,
         chaining: false,
@@ -1347,16 +1362,17 @@ export default {
       return this.currentMode === 'planner' && this.hasVerses && Array.isArray(this.queue) && this.queue.length > 0
     },
     plannerGuidanceTitle() {
-      return this.plannerSessionState.nextAction || 'Today: Memorise your ayahs'
+      return this.plannerSessionState.nextAction || this.t('memorisation.plannerUi.todayMemorise')
     },
     plannerGuidanceWhy() {
-      return this.plannerSessionState.why || 'We will guide today’s session step by step.'
+      return this.plannerSessionState.why || this.t('memorisation.plannerUi.guideStepByStep')
     },
     plannerMemoryReviewLine() {
-      return this.plannerSessionState.retentionLabel || 'Retention system active'
+      return this.plannerSessionState.retentionLabel || this.t('memorisation.plannerUi.retentionActive')
     },
     plannerConfidenceLine() {
-      return `${this.plannerSessionState.memoryConfidence || 'Low'} confidence`
+      const level = this.plannerSessionState.memoryConfidence || this.t('memorisation.plannerUi.lowConfidence')
+      return this.t('memorisation.plannerUi.confidenceSuffix', { level })
     },
     plannerNextReviewHumanLabel() {
       return this.toFriendlyReviewLabel(this.plannerSessionState.nextReviewLabel)
@@ -1365,7 +1381,7 @@ export default {
       return `${this.plannerActiveGuidance.title} ${this.plannerActiveGuidance.body}`.trim()
     },
     plannerProgressLine() {
-      if (!this.plannerSessionState.todaySession?.length) return 'No ayahs scheduled yet'
+      if (!this.plannerSessionState.todaySession?.length) return this.t('memorisation.plannerUi.noAyahsScheduled')
       const total = this.plannerSessionState.todaySession.length
       const current = this.hasVerses ? Math.min(total, Math.max(1, this.currentPosition || 1)) : 0
       return `${current}/${total} ayahs`
@@ -1394,31 +1410,31 @@ export default {
     plannerActiveGuidance() {
       if (!this.hasSessionStarted) {
         return {
-          title: 'Listen carefully and follow along.',
-          body: 'Mutqin will start the timer, audio, and ayah highlighting together.'
+          title: this.t('memorisation.plannerUi.listenFollowTitle'),
+          body: this.t('memorisation.plannerUi.listenFollowBodyStart')
         }
       }
       if (this.guidedUiStep === 'recall') {
         return {
-          title: 'Try reciting without looking.',
-          body: 'Say the ayah first from memory, then check only what you need.'
+          title: this.t('memorisation.plannerUi.tryRecitingTitle'),
+          body: this.t('memorisation.plannerUi.tryRecitingBody')
         }
       }
       if (this.guidedUiStep === 'practice' || this.isPlaying) {
         return {
-          title: 'Listen carefully and follow along.',
-          body: 'Watch the highlighted words and keep a steady rhythm before the next ayah.'
+          title: this.t('memorisation.plannerUi.listenFollowTitle'),
+          body: this.t('memorisation.plannerUi.listenFollowBodyDuring')
         }
       }
       if (this.guidedUiStep === 'review') {
         return {
-          title: 'Great job. Continue to the next ayah.',
-          body: 'Refresh what is due today, then move forward while the memory is still warm.'
+          title: this.t('memorisation.plannerUi.continueNextTitle'),
+          body: this.t('memorisation.plannerUi.continueNextBodyWarm')
         }
       }
       return {
-        title: 'Great job. Continue to the next ayah.',
-        body: 'Stay calm, keep the pace light, and move on when the current ayah feels steady.'
+        title: this.t('memorisation.plannerUi.continueNextTitle'),
+        body: this.t('memorisation.plannerUi.continueNextBodySteady')
       }
     },
     plannerBeginnerGuidance() {
@@ -1472,15 +1488,24 @@ export default {
       if (this.hasVerses && sessionTotal) {
         const remaining = Math.max(0, sessionTotal - sessionCovered)
         return {
-          kicker: 'Progress',
-          title: 'Session progress',
-          badge: sessionPercent >= 100 ? 'Complete' : `${remaining} left`,
+          kicker: this.t('memorisation.workspaceProgress.kicker'),
+          title: this.t('memorisation.workspaceProgress.sessionProgress'),
+          badge: sessionPercent >= 100
+            ? this.t('memorisation.workspaceProgress.complete')
+            : this.t('memorisation.workspaceProgress.left', { count: remaining }),
           value: `${sessionPercent}%`,
           meter: sessionPercent,
-          detail: `${sessionCovered} of ${sessionTotal} ayahs covered in this range.`,
+          detail: this.t('memorisation.workspaceProgress.detailSession', {
+            covered: sessionCovered,
+            total: sessionTotal
+          }),
           meta: [
-            { key: 'covered', label: 'Covered', value: `${sessionCovered}/${sessionTotal}` },
-            { key: 'remaining', label: 'Remaining', value: `${remaining} ayah${remaining === 1 ? '' : 's'}` }
+            { key: 'covered', label: this.t('memorisation.workspaceProgress.covered'), value: `${sessionCovered}/${sessionTotal}` },
+            {
+              key: 'remaining',
+              label: this.t('memorisation.workspaceProgress.remaining'),
+              value: this.t('memorisation.workspaceProgress.remainingAyahs', { count: remaining })
+            }
           ]
         }
       }
@@ -1489,29 +1514,40 @@ export default {
         const totalPlan = Math.max(1, Number(this.hifzPlannerForecast.totalAyahs || 1))
         const completed = Math.max(0, Number(this.hifzCompletedAyahCount || 0))
         return {
-          kicker: 'Progress',
-          title: 'Plan progress',
+          kicker: this.t('memorisation.workspaceProgress.kicker'),
+          title: this.t('memorisation.workspaceProgress.planProgress'),
           badge: this.hifzPlanHealth.label,
           value: `${this.hifzPlannerProgressPercent}%`,
           meter: this.hifzPlannerProgressPercent,
-          detail: `${completed} of ${totalPlan} ayahs completed in the current plan.`,
+          detail: this.t('memorisation.workspaceProgress.detailPlan', {
+            completed,
+            total: totalPlan
+          }),
           meta: [
-            { key: 'forecast', label: 'Forecast', value: this.hifzPlannerForecast.estimatedCompletionDate || 'Pending' },
-            { key: 'active', label: 'Days active', value: this.hifzDaysActive || 0 }
+            {
+              key: 'forecast',
+              label: this.t('memorisation.workspaceProgress.forecast'),
+              value: this.hifzPlannerForecast.estimatedCompletionDate || this.t('memorisation.workspaceProgress.pending')
+            },
+            {
+              key: 'active',
+              label: this.t('memorisation.workspaceProgress.daysActive'),
+              value: this.hifzDaysActive || 0
+            }
           ]
         }
       }
 
       return {
-        kicker: 'Progress',
-        title: 'Session progress',
-        badge: 'Ready',
+        kicker: this.t('memorisation.workspaceProgress.kicker'),
+        title: this.t('memorisation.workspaceProgress.sessionProgress'),
+        badge: this.t('memorisation.workspaceProgress.ready'),
         value: '0%',
         meter: 0,
-        detail: 'Start a session to see live memorisation progress here.',
+        detail: this.t('memorisation.workspaceProgress.detailEmpty'),
         meta: [
-          { key: 'covered', label: 'Covered', value: '0/0' },
-          { key: 'remaining', label: 'Remaining', value: 'Choose a range' }
+          { key: 'covered', label: this.t('memorisation.workspaceProgress.covered'), value: '0/0' },
+          { key: 'remaining', label: this.t('memorisation.workspaceProgress.remaining'), value: this.t('memorisation.workspaceProgress.chooseRange') }
         ]
       }
     },
@@ -1527,18 +1563,21 @@ export default {
         const plannerMeter = this.hasVerses
           ? Math.min(100, Math.round((plannerCovered / plannerTotal) * 100))
           : 0
-        const nextReview = this.plannerNextReviewHumanLabel || this.plannerSessionState.nextReviewLabel || 'Tomorrow'
+        const nextReview = this.plannerNextReviewHumanLabel || this.plannerSessionState.nextReviewLabel || this.t('memorisation.plannerUi.tomorrow')
         return {
-          kicker: 'Target',
-          title: 'Today\'s target',
+          kicker: this.t('memorisation.plannerUi.targetKicker'),
+          title: this.t('memorisation.plannerUi.todayTarget'),
           badge: this.hifzPlanHealth.label,
           headline: this.plannerSessionState.todayGoalLabel || this.hifzJourneyDailyTarget,
           subline: this.plannerGuidanceTitle,
-          note: `Next review ${nextReview}. ${this.plannerGuidanceWhy}`,
+          note: this.t('memorisation.plannerUi.nextReviewNote', {
+            date: nextReview,
+            reason: this.plannerGuidanceWhy
+          }),
           meter: plannerMeter,
           meta: [
-            { key: 'review', label: 'Review load', value: this.plannerMemoryReviewLine },
-            { key: 'confidence', label: 'Confidence', value: this.plannerConfidenceLine }
+            { key: 'review', label: this.t('memorisation.plannerUi.reviewLoad'), value: this.plannerMemoryReviewLine },
+            { key: 'confidence', label: this.t('memorisation.plannerUi.confidence'), value: this.plannerConfidenceLine }
           ]
         }
       }
@@ -1611,44 +1650,212 @@ export default {
       if (chapterId) return `${chapterId}:${ayah}`
       return ''
     },
-    sessionExitProgressPills() {
+    sessionExitHeaderSurahName() {
       const snapshot = this.sessionExitPreviewSnapshot || {}
-      const done = Math.max(0, Number(snapshot.coveredAyahCount || this.currentPosition || 0))
-      const total = Math.max(1, Number(snapshot.totalAyahs || this.totalVerses || 1))
-      const pills = [
-        { key: 'progress', label: `You've done: ${done} of ${total}` }
-      ]
-      if (snapshot.durationLabel) {
-        pills.push({ key: 'time', label: `Time: ${snapshot.durationLabel}` })
+      return snapshot.chapterName || this.currentChapter?.name_simple || this.activeChapterName || ''
+    },
+    sessionExitHeaderAyahRef() {
+      return this.sessionExitPositionLabel || ''
+    },
+    sessionExitStats() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      if (!snapshot || !Object.keys(snapshot).length) return []
+      const stats = []
+      const statusPill = this.sessionExitStatusPills.find(pill => pill.key === 'status')
+      if (statusPill?.label) {
+        stats.push({
+          key: 'status',
+          label: this.t('memorisation.sessionOverview.kicker'),
+          value: statusPill.label,
+          hint: snapshot.completedAll ? this.t('memorisation.sessionComplete.title') : ''
+        })
       }
-      return pills
+      if (snapshot.progressLabel) {
+        stats.push({
+          key: 'progress',
+          label: this.t('memorisation.stats.progress'),
+          value: snapshot.progressLabel,
+          hint: `${snapshot.progressPercent || 0}%`
+        })
+      }
+      const rangeValue = snapshot.rangeLabel
+        || (snapshot.chapterName
+          ? this.t('memorisation.common.rangeLabel', {
+            start: snapshot.rangeStart || this.rangeStart,
+            end: snapshot.rangeEnd || this.rangeEnd
+          })
+          : '')
+      if (rangeValue) {
+        stats.push({
+          key: 'range',
+          label: this.t('sessionSetup.ayahRange'),
+          value: rangeValue,
+          hint: ''
+        })
+      }
+      if (snapshot.durationLabel) {
+        stats.push({
+          key: 'duration',
+          label: this.t('memorisation.stats.duration'),
+          value: snapshot.durationLabel,
+          hint: ''
+        })
+      }
+      if (snapshot.repeatShortLabel) {
+        stats.push({
+          key: 'repeats',
+          label: this.t('memorisation.stats.repeats'),
+          value: snapshot.repeatShortLabel,
+          hint: snapshot.repeatSummary || ''
+        })
+      }
+      return stats.filter(stat => stat.key !== 'duration')
     },
-    sessionExitMotivationMessage() {
-      const snapshot = this.sessionExitPreviewSnapshot || {}
-      const percent = Math.max(0, Math.min(100, Number(snapshot.progressPercent || this.progressPercent || 0)))
-      if (percent >= 100) return 'Alhamdulillah, you completed this range!'
-      if (percent >= 75) return 'Almost there, Masha\'Allah!'
-      if (percent >= 50) return 'You\'re making steady progress, bi\'idhnillah.'
-      if (percent >= 25) return 'Keep going, Allah rewards consistency!'
-      return 'Every ayah brings you closer, keep going!'
-    },
-    sessionExitRemainingLabel() {
+    sessionExitRemainingProgress() {
       const snapshot = this.sessionExitPreviewSnapshot || {}
       const done = Math.max(0, Number(snapshot.coveredAyahCount || this.currentPosition || 0))
       const total = Math.max(1, Number(snapshot.totalAyahs || this.totalVerses || 1))
-      const remaining = Math.max(0, total - done)
-      const ayahLabel = remaining === 1 ? 'ayah' : 'ayahs'
-      let label = `What I have left: ${remaining} ${ayahLabel}`
-      if (snapshot.durationLabel && remaining > 0 && done > 0) {
+      const percentComplete = Math.max(0, Math.min(100, Number(
+        snapshot.progressPercent || Math.round((done / total) * 100)
+      )))
+      return {
+        done,
+        total,
+        remaining: Math.max(0, total - done),
+        percentComplete,
+        percentRemaining: Math.max(0, 100 - percentComplete)
+      }
+    },
+    sessionExitRemainingTitle() {
+      const { remaining } = this.sessionExitRemainingProgress
+      if (!remaining) return this.t('memorisation.sessionComplete.title')
+      return this.t('memorisation.summary.nextContinue')
+    },
+    sessionExitRemainingItems() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      const { done, total, remaining, percentComplete, percentRemaining } = this.sessionExitRemainingProgress
+      const items = []
+      items.push({
+        key: 'remaining-count',
+        label: this.t('memorisation.sessionExit.kicker'),
+        value: `${remaining}/${total}`,
+        hint: `${percentRemaining}%`
+      })
+      items.push({
+        key: 'completed-count',
+        label: this.t('memorisation.stats.progress'),
+        value: `${done}/${total}`,
+        hint: `${percentComplete}%`
+      })
+      let estimatedRemaining = ''
+      if (remaining > 0 && done > 0) {
         const durationSeconds = this.sessionStartedAt
           ? Math.max(0, Math.round((Number(this.statsTick || Date.now()) - Number(this.sessionStartedAt)) / 1000))
           : Math.max(0, Math.round(Number(this.currentTime || 0)))
         const estimatedRemainingSeconds = Math.round((durationSeconds / Math.max(done, 1)) * remaining)
         if (estimatedRemainingSeconds > 0) {
-          label += ` · ~${this.formatTime(estimatedRemainingSeconds)}`
+          estimatedRemaining = this.formatTime(estimatedRemainingSeconds)
         }
       }
-      return label
+      if (estimatedRemaining) {
+        items.push({
+          key: 'estimated-time',
+          label: this.t('memorisation.stats.duration'),
+          value: estimatedRemaining,
+          hint: snapshot.durationLabel || ''
+        })
+      }
+      const rangeEnd = Math.max(1, Number(snapshot.rangeEnd || this.rangeEnd || total))
+      const nextAyah = Math.min(rangeEnd, done + (remaining > 0 ? 1 : 0))
+      const surahName = snapshot.chapterName || this.currentChapter?.name_simple || ''
+      const nextAyahRef = this.sessionExitPositionLabel && remaining > 0
+        ? String(this.sessionExitPositionLabel).replace(/:\d+$/, `:${nextAyah}`)
+        : (this.chapterId ? `${this.chapterId}:${nextAyah}` : `${nextAyah}`)
+      if (remaining > 0 && nextAyahRef) {
+        items.push({
+          key: 'next-ayah',
+          label: this.t('memorisation.badges.active'),
+          value: surahName ? `${surahName} ${nextAyahRef}` : nextAyahRef,
+          hint: snapshot.rangeLabel || ''
+        })
+      }
+      return items.filter(item => item.key !== 'estimated-time')
+    },
+    sessionExitMetaCards() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      if (!snapshot || !Object.keys(snapshot).length) return []
+      const coveredAyahs = Number(snapshot.coveredAyahCount || 0)
+      const totalAyahs = Number(snapshot.totalAyahs || 0)
+      const remaining = Math.max(0, totalAyahs - coveredAyahs)
+      const nextSteps = Array.isArray(snapshot.nextSteps) ? snapshot.nextSteps : []
+      return [
+        {
+          key: 'pause',
+          kicker: this.t('memorisation.meta.steadinessKicker'),
+          calligraphy: 'وَاصْبِرْ وَمَا صَبْرُكَ إِلَّا بِاللَّهِ',
+          title: this.t('memorisation.sessionExit.kicker'),
+          body: snapshot.summaryMessage || this.sessionExitSummaryCopy,
+          points: [
+            snapshot.rangeLabel && snapshot.chapterName ? `${snapshot.chapterName} · ${snapshot.rangeLabel}` : '',
+            snapshot.modeSummary || ''
+          ].filter(Boolean)
+        },
+        {
+          key: 'progress',
+          kicker: this.t('memorisation.meta.graceKicker'),
+          calligraphy: 'اللهم بارك لنا فيما بقي',
+          title: this.t('memorisation.meta.forwardTitle'),
+          body: this.t('memorisation.summary.endedProgress', {
+            covered: coveredAyahs,
+            total: totalAyahs
+          }),
+          points: [
+            snapshot.durationLabel ? `${this.t('memorisation.stats.duration')}: ${snapshot.durationLabel}` : '',
+            snapshot.repeatShortLabel ? `${this.t('memorisation.stats.repeats')}: ${snapshot.repeatShortLabel}` : ''
+          ].filter(Boolean)
+        },
+        {
+          key: 'remaining',
+          kicker: this.t('memorisation.meta.nextKicker'),
+          calligraphy: 'اللهم لا تكلنا إلى أنفسنا',
+          title: this.t('memorisation.meta.continueTitle'),
+          body: remaining > 0
+            ? this.t('memorisation.summary.endedPartial', {
+              ayah: Math.min(totalAyahs, coveredAyahs + 1),
+              percent: snapshot.progressPercent || this.sessionExitRemainingProgress.percentComplete
+            })
+            : this.t('memorisation.summary.default'),
+          points: (nextSteps.length ? nextSteps : [
+            this.t('memorisation.summary.nextContinue'),
+            this.t('memorisation.summary.nextRepeat')
+          ]).slice(0, 2)
+        }
+      ]
+    },
+    sessionExitReflectionTitle() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      return snapshot.completedAll
+        ? this.t('memorisation.sessionComplete.title')
+        : this.t('memorisation.sessionEnded.title')
+    },
+    sessionExitMotivationMessage() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      const percent = Math.max(0, Math.min(100, Number(snapshot.progressPercent || this.progressPercent || 0)))
+      const coveredAyahs = Number(snapshot.coveredAyahCount || this.currentPosition || 0)
+      const totalAyahs = Number(snapshot.totalAyahs || this.totalVerses || 1)
+      if (percent >= 100) {
+        return this.t('memorisation.summary.completedAll', { count: totalAyahs })
+      }
+      if (percent >= 75) {
+        return this.t('memorisation.summary.endedPartial', { ayah: coveredAyahs, percent })
+      }
+      if (percent >= 50) {
+        return this.t('memorisation.summary.endedProgress', { covered: coveredAyahs, total: totalAyahs })
+      }
+      if (percent >= 25) {
+        return this.t('memorisation.summary.nextContinue')
+      }
+      return this.t('memorisation.summary.default')
     },
     sessionExitStatusPills() {
       const snapshot = this.sessionExitPreviewSnapshot || {}
@@ -1656,7 +1863,9 @@ export default {
       pills.push({
         key: 'status',
         tone: this.canContinueCurrentSession ? 'active' : (snapshot.completedAll ? 'complete' : 'paused'),
-        label: this.canContinueCurrentSession ? 'In progress' : (snapshot.completedAll ? 'Completed' : 'Stopped')
+        label: this.canContinueCurrentSession
+          ? this.t('sessionStatus.active')
+          : (snapshot.completedAll ? this.t('sessionStatus.completed') : this.t('memorisation.sessionExit.kicker'))
       })
       if (snapshot.progressLabel) {
         pills.push({ key: 'progress', tone: 'neutral', label: snapshot.progressLabel })
@@ -1665,7 +1874,7 @@ export default {
         pills.push({ key: 'duration', tone: 'neutral', label: snapshot.durationLabel })
       }
       if (snapshot.repeatShortLabel) {
-        pills.push({ key: 'repeat', tone: 'neutral', label: `${snapshot.repeatShortLabel} repeats` })
+        pills.push({ key: 'repeat', tone: 'neutral', label: `${snapshot.repeatShortLabel} ${this.t('memorisation.stats.repeats')}` })
       }
       return pills
     },
@@ -1676,7 +1885,10 @@ export default {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
         return this.t('memorisation.summary.default')
       }
-      return `You covered ${snapshot.coveredAyahCount || 0} of ${snapshot.totalAyahs || 0} ayahs before ending.`
+      return this.t('memorisation.summary.endedProgress', {
+        covered: snapshot.coveredAyahCount || 0,
+        total: snapshot.totalAyahs || 0
+      })
     },
     sessionExitDismissLabel() {
       return this.showSessionExitModal && this.hasSessionStarted
@@ -1708,14 +1920,111 @@ export default {
     },
     welcomeBackModalTitle() {
       const name = String(this.auth?.name || '').trim()
-      if (name) return `Welcome back, ${name}`
-      return 'Welcome back'
+      if (this.canResumePreviousSession) {
+        const chapterTitle = this.resumeModalTitle
+        if (chapterTitle && chapterTitle !== this.t('memorisation.welcomeBack.kicker')) {
+          return name
+            ? this.t('memorisation.welcomeBack.resumeTitleNamed', { chapter: chapterTitle, name })
+            : this.t('memorisation.welcomeBack.resumeTitle', { chapter: chapterTitle })
+        }
+        return name
+          ? this.t('memorisation.welcomeBack.resumeGenericNamed', { name })
+          : this.t('memorisation.welcomeBack.resumeGeneric')
+      }
+      return name
+        ? this.t('memorisation.welcomeBack.freshTitleNamed', { name })
+        : this.t('memorisation.welcomeBack.freshTitle')
     },
     welcomeBackModalSubtitle() {
       if (this.canResumePreviousSession) {
-        return 'Pick up where you left off, start a fresh session, or sign out.'
+        const details = this.smartResumeDetails
+        const parts = [details.focus, details.saved].filter(Boolean)
+        if (parts.length) {
+          return this.t('memorisation.welcomeBack.resumeSubtitleDetail', { detail: parts.join(' · ') })
+        }
+        return this.t('memorisation.welcomeBack.resumeSubtitle')
       }
-      return 'Start a new session or sign out to continue your memorisation journey.'
+      return this.t('memorisation.welcomeBack.freshSubtitle')
+    },
+    welcomeBackStats() {
+      return []
+    },
+    welcomeBackReflectionTitle() {
+      return this.canResumePreviousSession
+        ? this.t('resume.title')
+        : this.t('memorisation.welcomeBack.kicker')
+    },
+    welcomeBackReflectionSummary() {
+      if (this.canResumePreviousSession) {
+        return this.continueSessionMeta
+      }
+      return this.t('memorisation.summary.default')
+    },
+    welcomeBackMetaCards() {
+      const payload = this.continueSessionPayload || {}
+      const config = payload.config || {}
+      const details = this.smartResumeDetails
+      const chapter = this.chapters.find(item => Number(item.id) === Number(config.chapterId))
+      const chapterName = chapter?.name_simple || ''
+      const rangeStart = Number(config.rangeStart || 0)
+      const rangeEnd = Number(config.rangeEnd || rangeStart || 0)
+      const rangeLabel = rangeStart && rangeEnd
+        ? this.t('memorisation.common.rangeLabel', { start: rangeStart, end: rangeEnd })
+        : ''
+      const reciter = this.reciters.find(item => String(item.id) === String(config.reciterId || ''))
+      const resumePoints = [
+        chapterName && rangeLabel ? `${chapterName} · ${rangeLabel}` : '',
+        details.saved || this.resumeSavedAtLabel || '',
+        details.focus || ''
+      ].filter(Boolean)
+      const studyPoints = [
+        reciter?.name ? `${this.t('sessionSetup.reciter')}: ${reciter.name}` : '',
+        Number(config.speed || 0) > 0 ? `${this.t('memorisation.audio.title')}: ${Number(config.speed)}x` : '',
+        Number(config.repetitionsPerStep || 0) > 0
+          ? `${this.t('memorisation.stats.repeats')}: ${Number(config.repetitionsPerStep)}x`
+          : ''
+      ].filter(Boolean)
+      const nextPoints = this.canResumePreviousSession
+        ? [
+            this.t('memorisation.welcomeBack.continuePreviousSession'),
+            this.t('memorisation.welcomeBack.startNewSession')
+          ]
+        : [
+            this.t('memorisation.welcomeBack.startNewSession'),
+            this.t('memorisation.summary.default')
+          ]
+      return [
+        {
+          key: 'return',
+          kicker: this.t('memorisation.meta.graceKicker'),
+          calligraphy: 'السَّلاَمُ عَلَيْكُمْ',
+          title: this.t('memorisation.welcomeBack.kicker'),
+          body: this.welcomeBackModalSubtitle,
+          points: resumePoints.slice(0, 2)
+        },
+        {
+          key: 'session',
+          kicker: this.t('memorisation.meta.steadinessKicker'),
+          calligraphy: 'رَبِّ زِدْنِي عِلْمًا',
+          title: this.canResumePreviousSession
+            ? this.t('memorisation.sessionOverview.kicker')
+            : this.t('memorisation.welcomeBack.startNewSession'),
+          body: this.canResumePreviousSession
+            ? this.continueSessionMeta
+            : this.t('memorisation.summary.nextContinue'),
+          points: studyPoints.slice(0, 2)
+        },
+        {
+          key: 'next',
+          kicker: this.t('memorisation.meta.nextKicker'),
+          calligraphy: 'اللهم أعني على ذكرك وشكرك',
+          title: this.t('resume.title'),
+          body: this.canResumePreviousSession
+            ? this.t('memorisation.summary.nextContinue')
+            : this.t('memorisation.summary.default'),
+          points: nextPoints
+        }
+      ]
     },
     resumeSessionDetailItems() {
       if (!this.canResumePreviousSession) return []
@@ -1740,7 +2049,7 @@ export default {
       const payload = this.continueSessionPayload || {}
       const config = payload.config || {}
       const chapter = this.chapters.find(item => Number(item.id) === Number(config.chapterId))
-      const chapterName = chapter?.name_simple || this.currentChapter?.name_simple || 'Previous session'
+      const chapterName = chapter?.name_simple || this.currentChapter?.name_simple || this.t('memorisation.meta.previousSession')
       const start = Number(config.rangeStart || 1)
       const end = Number(config.rangeEnd || start)
       const ayah = payload.activeVerseKey ? String(payload.activeVerseKey).split(':')[1] : start
@@ -1804,18 +2113,43 @@ export default {
       }))
     },
     postSessionConfettiPieces() {
-      return Array.from({ length: 72 }, (_, index) => ({
+      if (this.onboardingSampleSessionActive) {
+        const colors = ['#d4a24f', '#f4ce9d', '#b8723c', '#58b68e', '#2f6f58', '#c49a6c', '#ef8d62', '#74d99e', '#fff4df']
+        const shapes = ['circle', 'rect', 'streamer', 'diamond', 'ring', 'star']
+        return Array.from({ length: 148 }, (_, index) => ({
+          id: `sample-post-session-confetti-${index}`,
+          className: `onboarding-post-session-confetti-piece post-session-confetti--${shapes[index % shapes.length]} post-session-confetti--sample`,
+          style: {
+            '--onboarding-post-session-confetti-left': `${(index * 1.75 + ((index % 8) * 6.2) + (index < 40 ? 20 : 0)) % 100}%`,
+            '--onboarding-post-session-confetti-delay': `${(index % 28) * 28}ms`,
+            '--onboarding-post-session-confetti-duration': `${2800 + ((index % 12) * 210)}ms`,
+            '--onboarding-post-session-confetti-rotate': `${(index % 2 === 0 ? 1 : -1) * (32 + ((index * 17) % 260))}deg`,
+            '--onboarding-post-session-confetti-drift': `${((index % 11) - 5) * 26}px`,
+            '--onboarding-post-session-confetti-rise': `${8 + (index % 6) * 3}vh`,
+            '--onboarding-post-session-confetti-color': colors[index % colors.length],
+            '--onboarding-post-session-confetti-size': `${4 + (index % 7) * 2}px`,
+            '--onboarding-post-session-confetti-opacity': `${0.68 + ((index % 5) * 0.06)}`
+          }
+        }))
+      }
+      const colors = ['#2f6f58', '#b8723c', '#d4a24f', '#c49a6c', '#74d99e', '#f4ce9d', '#8b5e3c', '#58b68e']
+      const shapes = ['circle', 'rect', 'streamer', 'diamond', 'ring']
+      return Array.from({ length: 118 }, (_, index) => ({
         id: `post-session-confetti-${index}`,
+        className: `onboarding-post-session-confetti-piece post-session-confetti--${shapes[index % shapes.length]}`,
         style: {
-          '--onboarding-post-session-confetti-left': `${(index * 1.45) % 100}%`,
-          '--onboarding-post-session-confetti-delay': `${(index % 16) * 26}ms`,
-          '--onboarding-post-session-confetti-duration': `${1800 + ((index % 8) * 110)}ms`,
-          '--onboarding-post-session-confetti-rotate': `${(index % 2 === 0 ? 1 : -1) * (20 + (index * 5))}deg`,
-          '--onboarding-post-session-confetti-color': ['#2f6f58', '#d4a24f', '#ef8d62', '#7aa7ff', '#f4ce9d'][index % 5]
+          '--onboarding-post-session-confetti-left': `${(index * 2.15 + ((index % 6) * 9.5)) % 100}%`,
+          '--onboarding-post-session-confetti-delay': `${(index % 24) * 32}ms`,
+          '--onboarding-post-session-confetti-duration': `${2600 + ((index % 10) * 190)}ms`,
+          '--onboarding-post-session-confetti-rotate': `${(index % 2 === 0 ? 1 : -1) * (28 + ((index * 13) % 220))}deg`,
+          '--onboarding-post-session-confetti-drift': `${((index % 9) - 4) * 22}px`,
+          '--onboarding-post-session-confetti-color': colors[index % colors.length],
+          '--onboarding-post-session-confetti-size': `${5 + (index % 6) * 2}px`,
+          '--onboarding-post-session-confetti-opacity': `${0.72 + ((index % 4) * 0.07)}`
         }
       }))
     },
-    postSessionPills() {
+    postSessionStats() {
       const snap = this.postSessionSnapshot
       if (!snap) return []
       const rangeValue = snap.rangeLabel
@@ -1825,11 +2159,205 @@ export default {
             end: snap.rangeEnd || this.rangeEnd
           })
           : `${snap.rangeStart || this.rangeStart}-${snap.rangeEnd || this.rangeEnd}`)
+      const stats = []
+      const chapterName = snap.chapterName || this.currentChapter?.name_simple || ''
+      if (chapterName) {
+        stats.push({
+          key: 'surah',
+          label: this.t('memorisation.search.surah'),
+          value: chapterName,
+          hint: snap.modeSummary || ''
+        })
+      }
+      if (rangeValue) {
+        stats.push({
+          key: 'range',
+          label: this.t('sessionSetup.ayahRange'),
+          value: rangeValue,
+          hint: ''
+        })
+      }
+      if (snap.progressLabel) {
+        stats.push({
+          key: 'progress',
+          label: this.t('memorisation.stats.progress'),
+          value: snap.progressLabel,
+          hint: snap.completedAll
+            ? this.t('memorisation.sessionComplete.title')
+            : `${snap.progressPercent || 0}%`
+        })
+      }
+      if (snap.durationLabel) {
+        stats.push({
+          key: 'duration',
+          label: this.t('memorisation.stats.duration'),
+          value: snap.durationLabel,
+          hint: ''
+        })
+      }
+      const repeatValue = snap.repeatShortLabel
+        || (Number(snap.repetitionsPerStep || this.repetitionsPerStep) > 0
+          ? `${Number(snap.repetitionsPerStep || this.repetitionsPerStep)}x`
+          : '')
+      if (repeatValue) {
+        stats.push({
+          key: 'repeats',
+          label: this.t('memorisation.stats.repeats'),
+          value: repeatValue,
+          hint: snap.repeatSummary || ''
+        })
+      }
+      const reciterName = snap.reciterName
+        || this.reciters.find(item => String(item.id) === String(snap.reciterId || this.reciterId || ''))?.name
+        || ''
+      if (reciterName) {
+        stats.push({
+          key: 'reciter',
+          label: this.t('sessionSetup.reciter'),
+          value: reciterName,
+          hint: ''
+        })
+      }
+      if (snap.pacingSummary) {
+        stats.push({
+          key: 'techniques',
+          label: this.t('memorisation.practice'),
+          value: snap.pacingSummary,
+          hint: snap.displaySummary || ''
+        })
+      }
+      return stats
+    },
+    postSessionSampleMetaCards() {
+      const snapshot = this.postSessionSnapshot || {}
+      if (!snapshot || !Object.keys(snapshot).length) return []
+      const coveredAyahs = Number(snapshot.coveredAyahCount || 0)
+      const totalAyahs = Number(snapshot.totalAyahs || 0)
       return [
-        { key: 'surah', label: 'Surah', value: snap.chapterName || this.currentChapter?.name_simple || '—' },
-        { key: 'range', label: 'Range', value: rangeValue },
-        { key: 'time', label: 'Time taken', value: snap.durationLabel || this.formatTime(0) }
+        {
+          key: 'sample',
+          kicker: this.t('memorisation.meta.graceKicker'),
+          calligraphy: 'بَارَكَ اللَّهُ فِيكَ',
+          title: this.postSessionUi.kicker,
+          body: snapshot.summaryMessage || this.postSessionUi.message,
+          points: [
+            snapshot.rangeLabel && snapshot.chapterName ? `${snapshot.chapterName} · ${snapshot.rangeLabel}` : '',
+            snapshot.modeSummary || ''
+          ].filter(Boolean)
+        },
+        {
+          key: 'journey',
+          kicker: this.t('memorisation.meta.steadinessKicker'),
+          calligraphy: 'رَبَّنَا تَقَبَّلْ مِنَّا',
+          title: this.t('memorisation.onboarding.playSampleSession'),
+          body: snapshot.completedAll
+            ? this.t('memorisation.summary.completedRangeDetail', {
+              covered: coveredAyahs,
+              total: totalAyahs,
+              duration: snapshot.durationLabel || this.t('memorisation.stats.duration')
+            })
+            : this.t('memorisation.summary.endedProgress', {
+              covered: coveredAyahs,
+              total: totalAyahs
+            }),
+          points: [
+            snapshot.durationLabel ? `${this.t('memorisation.stats.duration')}: ${snapshot.durationLabel}` : '',
+            snapshot.repeatShortLabel ? `${this.t('memorisation.stats.repeats')}: ${snapshot.repeatShortLabel}` : ''
+          ].filter(Boolean)
+        },
+        {
+          key: 'begin',
+          kicker: this.t('memorisation.meta.nextKicker'),
+          calligraphy: 'اللهم انفعنا بما علمتنا',
+          title: this.t('memorisation.onboarding.finish'),
+          body: this.t('memorisation.summary.nextAdvance'),
+          points: [
+            this.postSessionUi.repeat,
+            this.postSessionUi.newSession
+          ].filter(Boolean)
+        }
       ]
+    },
+    postSessionDisplayMetaCards() {
+      return this.onboardingSampleSessionActive
+        ? this.postSessionSampleMetaCards
+        : this.postSessionMetaCards
+    },
+    postSessionReflectionKicker() {
+      return this.onboardingSampleSessionActive
+        ? this.t('memorisation.onboarding.playSampleSession')
+        : this.t('memorisation.meta.graceKicker')
+    },
+    postSessionMetaCards() {
+      const snapshot = this.postSessionSnapshot || {}
+      if (!snapshot || !Object.keys(snapshot).length) return []
+      const coveredAyahs = Number(snapshot.coveredAyahCount || 0)
+      const totalAyahs = Number(snapshot.totalAyahs || 0)
+      const nextSteps = Array.isArray(snapshot.nextSteps) ? snapshot.nextSteps : []
+      return [
+        {
+          key: 'happened',
+          kicker: this.t('memorisation.meta.graceKicker'),
+          calligraphy: 'الحمد لله على التمام',
+          title: snapshot.completedAll ? this.t('memorisation.meta.completedTitle') : this.t('memorisation.meta.forwardTitle'),
+          body: snapshot.completedAll
+            ? this.t('memorisation.summary.completedRangeDetail', {
+              covered: coveredAyahs,
+              total: totalAyahs,
+              duration: snapshot.durationLabel || this.t('memorisation.stats.duration')
+            })
+            : this.t('memorisation.summary.endedProgress', {
+              covered: coveredAyahs,
+              total: totalAyahs
+            }),
+          points: [
+            snapshot.rangeLabel && snapshot.chapterName ? `${snapshot.chapterName} · ${snapshot.rangeLabel}` : '',
+            snapshot.modeSummary || ''
+          ].filter(Boolean)
+        },
+        {
+          key: 'done',
+          kicker: this.t('memorisation.meta.steadinessKicker'),
+          calligraphy: 'زادك الله ثباتا',
+          title: this.t('memorisation.meta.studiedTitle'),
+          body: snapshot.repeatSummary
+            ? `${snapshot.repeatSummary} · ${snapshot.durationLabel || ''}`.replace(/ · $/, '')
+            : snapshot.detailMessage || snapshot.summaryMessage || '',
+          points: [
+            snapshot.displaySummary || '',
+            snapshot.pacingSummary || ''
+          ].filter(Boolean)
+        },
+        {
+          key: 'next',
+          kicker: this.t('memorisation.meta.nextKicker'),
+          calligraphy: 'اللهم زدني علما',
+          title: snapshot.completedAll ? this.t('memorisation.meta.advanceTitle') : this.t('memorisation.meta.continueTitle'),
+          body: snapshot.completedAll
+            ? this.t('memorisation.summary.nextAdvance')
+            : this.t('memorisation.summary.nextContinue'),
+          points: (nextSteps.length ? nextSteps : [
+            this.t('memorisation.summary.nextRepeat'),
+            this.t('memorisation.summary.default')
+          ]).slice(0, 2)
+        }
+      ]
+    },
+    postSessionReflectionTitle() {
+      const snapshot = this.postSessionSnapshot || {}
+      if (this.onboardingSampleSessionActive) {
+        return this.postSessionUi.title
+      }
+      return snapshot.completedAll
+        ? this.t('memorisation.sessionComplete.title')
+        : this.t('memorisation.sessionEnded.title')
+    },
+    postSessionReflectionSummary() {
+      const snapshot = this.postSessionSnapshot || {}
+      if (this.onboardingSampleSessionActive) {
+        return snapshot.detailMessage || snapshot.summaryMessage || this.postSessionUi.message
+      }
+      return snapshot.summaryMessage || snapshot.detailMessage || ''
     },
     postSessionUi() {
       const base = this.onboardingSampleSessionActive
@@ -1854,6 +2382,9 @@ export default {
     },
     isOnboardingExperienceActive() {
       return !!this.showPostLoginOnboarding
+    },
+    isRtlLocale() {
+      return RTL_LOCALES.includes(this.activeLocale)
     },
     requiresFirstTimeOnboarding() {
       if (!this.isLoggedIn) return false
@@ -2044,7 +2575,11 @@ export default {
         label: `${entry.surah}:${entry.ayah}`,
         date: entry.nextToken ? entry.nextToken.replaceAll('-', '/') : 'Not scheduled'
       }))
-      return upcoming.length ? upcoming : [{ key: 'empty', label: 'Next review', date: 'After today’s new ayahs' }]
+      return upcoming.length ? upcoming : [{
+        key: 'empty',
+        label: this.t('memorisation.workspaceProgress.nextReview'),
+        date: this.t('memorisation.workspaceProgress.afterNewAyahs')
+      }]
     },
     hifzPlanHealth() {
       if (!this.hifzPlanExists) {
@@ -2281,20 +2816,25 @@ export default {
         || this.selfCheckPreparing
         || !!this.selfCheckActiveDraft
         || !!this.selfCheckError
-        || this.selfCheckLastSavedAyahKey === this.selfCheckModalVerse?.key
         || this.selfCheckSavedAttemptsVisible
+    },
+    showSelfCheckLibraryShortcut() {
+      if (!this.showSelfCheckModal) return false
+      return this.selfCheckReviewVisible
+        || this.selfCheckLastSavedAyahKey === this.selfCheckModalVerse?.key
+        || this.hasRecordingsLibraryEntries
     },
     recitationCheckTitle() {
       const targets = this.getRecitationCheckTargetVerses()
-      if (!targets.length) return 'Current ayah'
+      if (!targets.length) return this.t('memorisation.aiCheck.currentAyah')
       const first = targets[0]?.number
       const last = targets[targets.length - 1]?.number
       const surah = this.currentChapter?.name_simple || this.activeChapterName || 'Session'
       return first === last ? `${surah} · Ayah ${first}` : `${surah} · Ayahs ${first}-${last}`
     },
     recitationCheckPromptLabel() {
-      if (this.recitationCheckScope === 'session') return 'Session AI Recite'
-      return 'Ayah AI Recite'
+      if (this.recitationCheckScope === 'session') return this.t('memorisation.aiCheck.sessionRecite')
+      return this.t('memorisation.aiCheck.ayahRecite')
     },
     activeMutqinAyah() {
       return this.effectiveActiveVerseKey ? this.mutqinState.ayahs?.[this.effectiveActiveVerseKey] || null : null
@@ -2489,9 +3029,14 @@ export default {
     },
     aiMemorisationCheckerTitle() {
       const surah = this.currentChapter?.name_simple || this.activeChapterName || 'Session'
-      if (this.aiMemorisationCheckerScope === 'session') return `AI Memorisation Checker · ${surah} · ${this.aiMemorisationCheckerTargetLabel}`
+      if (this.aiMemorisationCheckerScope === 'session') {
+        return this.t('memorisation.aiCheck.memorisationCheckerTitle', {
+          surah,
+          target: this.aiMemorisationCheckerTargetLabel
+        })
+      }
       const number = this.aiMemorisationCheckerVerse?.number || ''
-      return `AI Memorisation Checker · Ayah ${number}`
+      return this.t('memorisation.aiCheck.memorisationCheckerAyah', { number })
     },
     aiMemorisationCheckerTargetLabel() {
       const targets = this.aiMemorisationCheckerTargets
@@ -2520,13 +3065,15 @@ export default {
       if (!total) return 'Preparing ayah words...'
       if (this.aiMemorisationCheckerResult) return 'Assessment complete. Review the analysis below.'
       const checked = this.aiMemorisationCheckerLiveWords.filter(word => word.status !== 'pending').length
-      return checked ? `${checked} of ${total} words recognized` : 'Start reciting when the microphone is active'
+      return checked
+        ? this.t('memorisation.aiCheck.wordsRecognized', { checked, total })
+        : this.t('memorisation.aiCheck.startWhenMicActive')
     },
     aiMemorisationCheckerStageDescription() {
       if (this.aiMemorisationCheckerResult) return 'Review the word colours, then save, reset, or retry the same target.'
       if (this.aiMemorisationCheckerPreparing) return 'Analysing your recording and preparing the word review.'
       if (this.aiMemorisationCheckerRecording) return 'Listening now. Recite at your natural pace, then stop when finished.'
-      if (this.aiMemorisationCheckerError) return 'Check the message below, then retry when your microphone is ready.'
+      if (this.aiMemorisationCheckerError) return this.t('memorisation.aiCheck.retryWhenMicReady')
       return 'Start the check only when you are ready to recite from memory.'
     },
     aiMemorisationCheckerStatusLabel() {
@@ -2788,7 +3335,7 @@ export default {
     },
     analyticsRemainingSummary() {
       const remaining = Math.max(0, this.analyticsTotalAyahs - Number(this.analyticsModalData?.metrics?.verses_read || 0))
-      return `${remaining} ayah${remaining === 1 ? '' : 's'} left to complete the range`
+      return this.t('memorisation.analyticsHeatmap.ayahLeftToComplete', { count: remaining })
     },
     analyticsVerseSeries() {
       return this.analyticsModalData?.charts?.verseSeries || []
@@ -2904,6 +3451,129 @@ export default {
     },
     onboardingStepContent() {
       return this.onboardingSteps[this.onboardingStepIndex] || this.onboardingSteps[0]
+    },
+    onboardingStepCounterLabel() {
+      return this.t('memorisation.onboarding.stepCounter', {
+        current: this.onboardingStepIndex + 1,
+        total: this.onboardingSteps.length
+      })
+    },
+    onboardingStepStats() {
+      const stepKey = this.onboardingStepContent?.key
+      if (!stepKey) return []
+      const stats = []
+      const chapter = this.chapters.find(item => Number(item.id) === Number(this.chapterId || this.currentConfig?.chapterId))
+      const chapterName = chapter?.name_simple || ''
+      const rangeStart = Math.max(1, Number(this.rangeStart || 1))
+      const rangeEnd = Math.max(rangeStart, Number(this.rangeEnd || rangeStart))
+      const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
+
+      if (stepKey === 'setup') {
+        if (chapterName) {
+          stats.push({
+            key: 'surah',
+            label: this.t('memorisation.search.surah'),
+            value: chapterName,
+            hint: ''
+          })
+        }
+        stats.push({
+          key: 'range',
+          label: this.t('sessionSetup.ayahRange'),
+          value: this.t('memorisation.common.rangeLabel', { start: rangeStart, end: rangeEnd }),
+          hint: ''
+        })
+        if (reciter?.name) {
+          stats.push({
+            key: 'reciter',
+            label: this.t('sessionSetup.reciter'),
+            value: reciter.name,
+            hint: ''
+          })
+        }
+        if (Number(this.repetitionsPerStep) > 0) {
+          stats.push({
+            key: 'repeats',
+            label: this.t('memorisation.stats.repeats'),
+            value: `${this.repetitionsPerStep}x`,
+            hint: ''
+          })
+        }
+      }
+
+      if (stepKey === 'reading') {
+        const viewLabel = this.readingViewMode === 'mushaf'
+          ? this.t('memorisation.view.mushaf')
+          : this.t('memorisation.view.stacked')
+        stats.push({
+          key: 'view',
+          label: this.t('memorisation.text'),
+          value: viewLabel,
+          hint: ''
+        })
+        const aids = []
+        if (this.showTranslation) aids.push(this.t('memorisation.reading.translation'))
+        if (this.showTransliteration) aids.push(this.t('memorisation.reading.transliteration'))
+        if (this.tajweedEnabled) aids.push(this.t('memorisation.reading.tajweed'))
+        stats.push({
+          key: 'aids',
+          label: this.t('memorisation.reading.controls'),
+          value: aids.length ? aids.join(' · ') : this.t('memorisation.common.noReadingAids'),
+          hint: ''
+        })
+      }
+
+      if (stepKey === 'practice') {
+        const techniques = []
+        if (this.focusModeEnabled) techniques.push(this.t('memorisation.focus_mode'))
+        if (this.blurModeEnabled) techniques.push(this.t('memorisation.blur_mode'))
+        if (this.chainingEnabled) {
+          techniques.push(this.t('memorisation.common.chainingLabel', { method: this.chainingMethod || 'Standard' }))
+        }
+        if (this.talqinModeEnabled) techniques.push(this.t('memorisation.talqin.yourTurn'))
+        if (techniques.length) {
+          stats.push({
+            key: 'techniques',
+            label: this.t('memorisation.practice'),
+            value: techniques.join(' · '),
+            hint: ''
+          })
+        }
+        if (Number(this.speed) > 0) {
+          stats.push({
+            key: 'speed',
+            label: this.t('memorisation.speed'),
+            value: `${Number(this.speed)}x`,
+            hint: ''
+          })
+        }
+      }
+
+      if (stepKey === 'review') {
+        stats.push({
+          key: 'saved',
+          label: this.t('memorisation.saved'),
+          value: String(this.savedSessions.length),
+          hint: ''
+        })
+        stats.push({
+          key: 'recordings',
+          label: this.t('recordings.viewAll'),
+          value: String(this.recordingsLibrary.length),
+          hint: ''
+        })
+        const userName = String(this.auth?.name || '').trim()
+        if (userName) {
+          stats.push({
+            key: 'user',
+            label: this.t('memorisation.welcomeBack.kicker'),
+            value: userName,
+            hint: ''
+          })
+        }
+      }
+
+      return stats
     },
     chainingProgressLabel() {
       if (!this.chainingEnabled) return ''
@@ -3062,11 +3732,18 @@ export default {
     },
     continueSessionMeta() {
       const payload = this.continueSessionPayload
-      if (!payload) return 'Your last study session is ready to continue with the same setup.'
+      if (!payload) return this.t('memorisation.summary.default')
       const ayah = payload.activeVerseKey ? String(payload.activeVerseKey).split(':')[1] : null
-      const minutesAgo = Math.max(0, Math.round((Date.now() - Number(payload.timestamp || 0)) / 60000))
-      const timeLabel = minutesAgo < 1 ? 'saved just now' : `saved ${minutesAgo} min ago`
-      return `Your ayah, progress, audio position, and memorisation settings are ready to restore from ayah ${ayah || payload.config?.rangeStart || 1}; ${timeLabel}.`
+      const chapter = this.chapters.find(item => Number(item.id) === Number(payload.config?.chapterId))
+      const chapterName = chapter?.name_simple || ''
+      const resumeAyah = ayah || payload.config?.rangeStart || 1
+      const details = this.smartResumeDetails
+      const parts = [
+        chapterName && resumeAyah ? `${chapterName} · ${resumeAyah}` : '',
+        details.saved || this.resumeSavedAtLabel || ''
+      ].filter(Boolean)
+      if (parts.length) return parts.join(' · ')
+      return this.t('resume.title')
     },
     smartResumeDetails() {
       const payload = this.continueSessionPayload || {}
@@ -3082,25 +3759,43 @@ export default {
       const queueTotal = Math.max(1, queue.length || total)
       const queueIndex = Math.max(0, Math.min(queueTotal, Number(payload.queueIndex ?? payload.mutqinSessionIndex ?? covered)))
       const progressPercent = Math.max(0, Math.min(100, queue.length ? Math.round((queueIndex / queueTotal) * 100) : fallbackPercent))
-      const minutesAgo = Math.max(0, Math.round((Date.now() - Number(payload.timestamp || 0)) / 60000))
-      const saved = minutesAgo < 1
-        ? 'Saved just now'
-        : minutesAgo < 60
-          ? `Saved ${minutesAgo} min ago`
-          : `Saved ${Math.round(minutesAgo / 60)} hr ago`
+      const chapter = this.chapters.find(item => Number(item.id) === Number(config.chapterId))
+      const chapterName = chapter?.name_simple || ''
+      const focusAyah = activeAyah || start
+      const focus = chapterName && payload.activeVerseKey
+        ? `${chapterName} ${payload.activeVerseKey}`
+        : this.t('sessionStatus.progress', {
+          current: focusAyah,
+          total: end,
+          percent: progressPercent
+        })
+      const saved = this.resumeSavedAtLabel
+        || (Number(payload.timestamp || 0)
+          ? this.t('memorisation.common.savedAt', {
+            date: new Date(Number(payload.timestamp)).toLocaleString(this.$i18n?.locale || 'en-GB', {
+              year: 'numeric',
+              month: 'short',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          })
+          : '')
       return {
-        focus: `Resume at ayah ${activeAyah || start} of ${end}`,
+        focus,
         saved,
         progressPercent,
-        progressLabel: progressPercent > 0 ? 'Previous progress' : 'Ready to begin this range'
+        progressLabel: progressPercent > 0
+          ? this.t('memorisation.stats.progress')
+          : this.t('sessionStatus.ready')
       }
     },
 
     resumeModalTitle() {
-      if (!this.canResumePreviousSession) return 'Welcome back'
+      if (!this.canResumePreviousSession) return this.t('memorisation.welcomeBack.kicker')
       const c = this.continueSessionPayload.config
       const chapter = this.chapters.find(item => Number(item.id) === Number(c.chapterId))
-      return chapter?.name_simple || 'Previous session'
+      return chapter?.name_simple || this.t('memorisation.common.currentSession')
     },
 
     resumeWhatNext() {
@@ -3453,7 +4148,7 @@ export default {
       if (this.showTranslation) pills.push('Translation')
       if (this.showTransliteration) pills.push('Transliteration')
       if (this.showWordByWord) pills.push('Word by word')
-      if (this.wordByWordAudioEnabled) pills.push('Word audio')
+      if (this.wordByWordAudioEnabled) pills.push(this.t('memorisation.reading.wordAudio'))
       if (this.tajweedEnabled) pills.push('Tajweed')
       return pills
     },
@@ -3473,7 +4168,7 @@ export default {
     },
 
     etaSubtext() {
-      if (!this.remainingAyahs) return 'Ready to complete'
+      if (!this.remainingAyahs) return this.t('memorisation.workspaceProgress.readyToComplete')
       return `Review + repetition included`
     },
 
@@ -3637,8 +4332,12 @@ export default {
     },
 
     workspaceLoadingLabel() {
+      if (this.isWorkspaceRefreshing && this.workspaceRefreshReason === 'reciter') {
+        return this.t('memorisation.loading.reciterRefresh')
+      }
       if (
         this.isRestoringWorkspace
+        || this.isWorkspaceRefreshing
         || !this.isDataReady
         || (Number(this.chapterId || 0) > 0 && !this.hasVerses)
         || (this.readingViewMode === 'mushaf' && this.shouldShowReadingWorkspace && !this.currentMushafPage)
@@ -3646,6 +4345,106 @@ export default {
         return this.t('memorisation.session_setup_in_progress')
       }
       return this.t('common.loading')
+    },
+
+    learningSyncBadge() {
+      return null
+    },
+
+    keyboardShortcutGroups() {
+      return [
+        {
+          id: 'playback',
+          title: this.t('shortcuts.groups.playback'),
+          icon: 'bi-play-circle',
+          items: [
+            { id: 'play-pause', label: this.t('shortcuts.playPause'), combos: [['Space']] },
+            { id: 'play-ayah', label: this.t('shortcuts.playAyah'), combos: [['Enter']] },
+            { id: 'play-current', label: this.t('shortcuts.playCurrent'), combos: [['P']] }
+          ]
+        },
+        {
+          id: 'navigation',
+          title: this.t('shortcuts.groups.navigation'),
+          icon: 'bi-compass',
+          items: [
+            { id: 'next-ayah', label: this.t('shortcuts.nextAyah'), combos: [['→'], ['J']] },
+            { id: 'prev-ayah', label: this.t('shortcuts.previousAyah'), combos: [['←'], ['K']] },
+            { id: 'first-ayah', label: this.t('shortcuts.firstAyah'), combos: [['Home']] },
+            { id: 'last-ayah', label: this.t('shortcuts.lastAyah'), combos: [['End']] }
+          ]
+        },
+        {
+          id: 'session',
+          title: this.t('shortcuts.groups.session'),
+          icon: 'bi-bookmark-check',
+          items: [
+            { id: 'save-session', label: this.t('shortcuts.saveSession'), combos: [['Ctrl/Cmd', 'S']] }
+          ]
+        },
+        {
+          id: 'mushaf',
+          title: this.t('shortcuts.groups.mushaf'),
+          icon: 'bi-journal-bookmark',
+          items: [
+            { id: 'mushaf-next', label: this.t('shortcuts.mushafNextPage'), combos: [['Page Down'], [']']] },
+            { id: 'mushaf-prev', label: this.t('shortcuts.mushafPrevPage'), combos: [['Page Up'], ['[']] }
+          ]
+        },
+        {
+          id: 'general',
+          title: this.t('shortcuts.groups.general'),
+          icon: 'bi-x-circle',
+          items: [
+            { id: 'close-panel', label: this.t('shortcuts.closePanel'), combos: [['Esc']] }
+          ]
+        }
+      ]
+    },
+
+    postSessionModalTitle() {
+      const snap = this.postSessionSnapshot
+      if (!snap) {
+        return this.t('memorisation.sessionComplete.title')
+      }
+      const chapterName = snap.chapterName || this.currentChapter?.name_simple || ''
+      const rangeLabel = snap.rangeLabel || ''
+      if (chapterName && rangeLabel) {
+        return `${chapterName} · ${rangeLabel}`
+      }
+      if (chapterName) return chapterName
+      return snap.completedAll
+        ? this.t('memorisation.sessionComplete.title')
+        : this.t('memorisation.sessionEnded.title')
+    },
+
+    postSessionModalMessage() {
+      const snap = this.postSessionSnapshot
+      if (!snap) return ''
+      return snap.detailMessage || snap.summaryMessage || ''
+    },
+
+    hasLoadedAudio() {
+      const src = String(this.audioElement?.src || '').trim()
+      return !!src && src !== 'about:blank'
+    },
+
+    playbackPillVisible() {
+      return this.playerDismissed
+        && !this.playerVisible
+        && (this.isPlaying || this.hasLoadedAudio)
+    },
+
+    showPlayerDock() {
+      return this.playbackPillVisible || this.playerVisible || this.talqinRecitationTurnActive
+    },
+
+    playbackShellActive() {
+      return this.playerVisible || this.playbackPillVisible || this.talqinRecitationTurnActive
+    },
+
+    playerDockShowsTalqinOnly() {
+      return this.talqinRecitationTurnActive && !this.playerVisible
     },
 
     mushafCornerSurahLabel() {
@@ -3791,7 +4590,7 @@ export default {
     document.body.classList.add('memorisation-page')
     document.addEventListener('click', this.handleClickOutside);
     this.activeLocale = this.$i18n?.locale?.value || 'en'
-    this.appReady = true
+    this.ensureWordAudioHighlighting()
 
     try {
       const authenticatedWorkspace = this.learningBackendEnabled()
@@ -3995,6 +4794,9 @@ export default {
     } finally {
       this.isBootstrapping = false
       this.isRestoringWorkspace = false
+      this.isWorkspaceRefreshing = false
+      this.workspaceRefreshReason = ''
+      this.appReady = true
       if (this.hasPersistedInProgressSession || this.hasSessionStarted) {
         this.markActiveSessionSnapshot()
       }
@@ -4161,6 +4963,8 @@ export default {
       if (newVal) {
         this.showTools = false
         this.topCardMenuOpen = false
+      } else {
+        this.welcomeBackModalReady = false
       }
     },
     showSessionExitModal(newVal) {
@@ -4313,7 +5117,13 @@ export default {
       this.persistUiState()
       if (newVal) this.restoreWordScroll(this.effectiveActiveVerseKey)
     },
-    wordByWordAudioEnabled: 'persistUiState',
+    wordByWordAudioEnabled(val) {
+      if (!val) {
+        this.wordByWordAudioEnabled = true
+        return
+      }
+      this.persistUiState()
+    },
     fontScale: 'persistUiState',
     quranFont() {
       this.clearMushafAyahHtmlCache()
@@ -4643,7 +5453,18 @@ export default {
       this.welcomeBackWorkspaceHidden = false
       this.showTools = false
       this.topCardMenuOpen = false
-      this.showWelcomeBackModal = true
+      this.welcomeBackModalReady = false
+      if (this.welcomeBackRevealTimer) {
+        window.clearTimeout(this.welcomeBackRevealTimer)
+      }
+      this.welcomeBackRevealTimer = window.setTimeout(() => {
+        this.showWelcomeBackModal = true
+        this.$nextTick(() => {
+          window.requestAnimationFrame(() => {
+            this.welcomeBackModalReady = true
+          })
+        })
+      }, 900)
     },
 
     hasShownWelcomeBackModalForCurrentLogin() {
@@ -4836,7 +5657,7 @@ export default {
         showTranslation: false,
         showTransliteration: false,
         showWordByWord: false,
-        wordByWordAudioEnabled: false,
+        wordByWordAudioEnabled: true,
         readingViewMode: 'stacked'
       }
     },
@@ -4869,7 +5690,7 @@ export default {
       this.showTranslation = defaults.showTranslation
       this.showTransliteration = defaults.showTransliteration
       this.showWordByWord = defaults.showWordByWord
-      this.wordByWordAudioEnabled = defaults.wordByWordAudioEnabled
+      this.wordByWordAudioEnabled = true
       this.readingViewMode = defaults.readingViewMode
       this.tab = 'tools'
       this.showTools = !!openSetup
@@ -4883,26 +5704,15 @@ export default {
 
     buildOnboardingStep(key, icon) {
       const base = `memorisation.onboarding.steps.${key}`
-      const tm = typeof this.$tm === 'function' ? this.$tm.bind(this) : (path) => this.t(path)
-      const points = tm(`${base}.points`)
-      const previewItems = tm(`${base}.previewItems`)
       const step = {
         key,
         icon,
         title: this.t(`${base}.title`),
         stepLabel: this.t(`${base}.stepLabel`),
         body: this.t(`${base}.body`),
-        points: Array.isArray(points) ? points : [],
-        preview: {
-          icon,
-          title: this.t(`${base}.previewTitle`),
-          subtitle: this.t(`${base}.previewSubtitle`),
-          items: Array.isArray(previewItems) ? previewItems : []
-        }
+        points: []
       }
       if (key === 'practice') {
-        step.title = 'Master Verse Retention with Talqin'
-        step.body = 'Once your session is submitted, this mode guides you step-by-step: it plays an Ayah, pauses automatically so you can repeat it, and extends your memory stack. Real-time banner alerts will prompt you exactly when to listen and when to recite.'
         step.targetSelector = '#talqin-mode-toggle'
         step.targetSection = 'advanced_playback'
       }
@@ -5452,7 +6262,7 @@ export default {
       }
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
       const recognition = new SpeechRecognition()
-      recognition.lang = this.activeLocale === 'ar' ? 'ar-SA' : 'en-US'
+      recognition.lang = this.activeLocale === 'ar' ? 'ar-SA' : (this.activeLocale === 'fr' ? 'fr-FR' : this.activeLocale === 'es' ? 'es-ES' : this.activeLocale === 'tr' ? 'tr-TR' : this.activeLocale === 'id' ? 'id-ID' : 'en-US')
       recognition.interimResults = true
       recognition.continuous = false
       recognition.onresult = event => {
@@ -5482,9 +6292,56 @@ export default {
       this.quranSearchVoiceActive = false
     },
 
-    playRecitationStartCue() {
-      this.playUiTone('recite')
+    playRecitationStartCue(options = {}) {
+      const inModal = options.inModal ?? (this.showSelfCheckModal || this.showAiMemorisationCheckerModal)
+      this.playRecitationStartBeep()
+      if (inModal) {
+        this.recitationStartCueActive = true
+        clearTimeout(this.recitationStartCueTimer)
+        this.recitationStartCueTimer = setTimeout(() => {
+          this.recitationStartCueActive = false
+          this.recitationStartCueTimer = null
+        }, 3200)
+        return
+      }
       this.showBanner(this.t('memorisation.start_reciting_prompt'), 'info', 3200)
+    },
+    playRecitationStartBeep() {
+      if (typeof window === 'undefined') return
+      const AudioContext = window.AudioContext || window.webkitAudioContext
+      if (!AudioContext) return
+      try {
+        const context = this.uiAudioContext || new AudioContext()
+        this.uiAudioContext = context
+        if (context.state === 'suspended') context.resume()
+        const notes = [
+          { frequency: 784, duration: 0.11, peakGain: 0.1, startAt: 0 },
+          { frequency: 988, duration: 0.16, peakGain: 0.12, startAt: 0.13 }
+        ]
+        const now = context.currentTime
+        notes.forEach(({ frequency, duration, peakGain, startAt }) => {
+          const oscillator = context.createOscillator()
+          const gain = context.createGain()
+          const start = now + startAt
+          oscillator.type = 'sine'
+          oscillator.frequency.setValueAtTime(frequency, start)
+          gain.gain.setValueAtTime(0.0001, start)
+          gain.gain.exponentialRampToValueAtTime(peakGain, start + 0.012)
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + duration)
+          oscillator.connect(gain)
+          gain.connect(context.destination)
+          oscillator.start(start)
+          oscillator.stop(start + duration + 0.02)
+        })
+      } catch (error) {
+        console.warn('Recitation start beep failed:', error)
+        this.playUiTone('recite')
+      }
+    },
+    clearRecitationStartCue() {
+      clearTimeout(this.recitationStartCueTimer)
+      this.recitationStartCueTimer = null
+      this.recitationStartCueActive = false
     },
     playUiTone(kind = 'tap') {
       if (typeof window === 'undefined') return
@@ -5500,7 +6357,7 @@ export default {
           save: [740, 0.06, 0.018, 'sine'],
           error: [240, 0.055, 0.018, 'sine'],
           tap: [460, 0.035, 0.018, 'sine'],
-          recite: [880, 0.08, 0.022, 'sine'],
+          recite: [880, 0.14, 0.065, 'sine'],
           talqin: [920, 0.2, 0.16, 'square'],
           talqinAccent: [1180, 0.22, 0.14, 'square']
         }
@@ -5897,10 +6754,13 @@ export default {
       this.closeSaveModal()
     },
     toggleWordAudio() {
-      this.wordByWordAudioEnabled = !this.wordByWordAudioEnabled
+      this.wordByWordAudioEnabled = true
       this.persistUiState()
       this.persistCentralSessionState()
-      this.showBanner(this.wordByWordAudioEnabled ? 'Word audio enabled' : 'Word audio disabled', 'info', 1000)
+      this.showBanner(this.t('memorisation.common.wordAudioOn'), 'info', 1000)
+    },
+    ensureWordAudioHighlighting() {
+      this.wordByWordAudioEnabled = true
     },
     applyRecommendedSetup() {
       this.playMode = 'auto'
@@ -6496,6 +7356,8 @@ export default {
 
     // Fix banner positioning - update CSS
     toggleKeyboardShortcuts() {
+      this.topCardMenuOpen = false
+      this.closeTopCardSubmenus()
       this.showKeyboardShortcuts = !this.showKeyboardShortcuts
     },
     closeKeyboardShortcuts() {
@@ -6673,12 +7535,14 @@ export default {
     // Update deleteSavedSession method
     deleteSavedSession(sessionId) {
       const session = this.savedSessions.find(s => s.id === sessionId)
-      const label = session ? (session.name || this.getSessionPrimaryLabel(session)) : 'this session'
+      const label = session ? (session.name || this.getSessionPrimaryLabel(session)) : this.t('memorisation.confirmModals.deleteSession.messageFallback')
       this.openConfirmModal({
-        title: 'Delete saved session?',
-        message: `This will permanently remove "${label}" and its export snapshot from this device.`,
-        confirmLabel: 'Delete session',
-        cancelLabel: 'Keep session',
+        title: this.t('memorisation.confirmModals.deleteSession.title'),
+        message: session
+          ? this.t('memorisation.confirmModals.deleteSession.message', { label })
+          : this.t('memorisation.confirmModals.deleteSession.messageFallback'),
+        confirmLabel: this.t('memorisation.confirmModals.deleteSession.confirm'),
+        cancelLabel: this.t('memorisation.confirmModals.deleteSession.cancel'),
         tone: 'danger',
         action: 'delete-saved-session',
         data: { sessionId }
@@ -6723,7 +7587,7 @@ export default {
           showTranslation: true,
           showTransliteration: false,
           showWordByWord: false,
-          wordByWordAudioEnabled: false,
+          wordByWordAudioEnabled: true,
           focusModeEnabled: false,
           blurModeEnabled: false,
           blurIntensity: 10,
@@ -6989,6 +7853,33 @@ export default {
         })
       }
     },
+    async completeOnboardingOpenSetup() {
+      this.markOnboardingCompleted()
+      this.showPostLoginOnboarding = false
+      this.onboardingStepIndex = 0
+      this.sessionEndedSnapshot = null
+      this.onboardingManualLaunch = false
+      this.restoreOnboardingDemo()
+      this.applyDefaultWorkspaceSessionConfig({ openSetup: true, silent: true })
+      if (this.chapterId) {
+        await this.loadChapter(this.currentMode)
+      }
+      this.isDataReady = true
+    },
+    async completeOnboardingExploreWorkspace() {
+      this.markOnboardingCompleted()
+      this.showPostLoginOnboarding = false
+      this.onboardingStepIndex = 0
+      this.sessionEndedSnapshot = null
+      this.onboardingManualLaunch = false
+      this.restoreOnboardingDemo()
+      this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
+      if (this.chapterId) {
+        await this.loadChapter(this.currentMode)
+      }
+      this.showTools = false
+      this.isDataReady = true
+    },
     openPostSessionModal(snapshot = null) {
       this.postSessionSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
       if (!this.postSessionSnapshot) return
@@ -6998,7 +7889,7 @@ export default {
       this.postSessionOffcanvasOpen = false
       window.setTimeout(() => {
         this.showPostSessionConfetti = false
-      }, 4200)
+      }, this.onboardingSampleSessionActive ? 6600 : 5600)
     },
     repeatPostSession() {
       this.showPostSessionModal = false
@@ -8140,7 +9031,7 @@ export default {
 
       const audio = this.ensureRecordingsAudioElement()
       if (!audio) {
-        this.showBanner(this.t('toasts.audioSystemNotReady'), 'error', 2200)
+        this.showAudioUnavailableError('recording')
         return
       }
 
@@ -8175,13 +9066,18 @@ export default {
     promptDeleteRecording(recordingId) {
       this.pendingRecordingDeleteId = recordingId
       const target = this.recordingsLibrary.find(recording => recording.id === recordingId) || null
+      const isReciteCheck = this.isAiCheckRecording(target)
       this.openConfirmModal({
-        title: this.isAiCheckRecording(target) ? 'Delete Recite Check?' : 'Delete recording?',
+        title: isReciteCheck
+          ? this.t('memorisation.confirmModals.deleteRecording.titleReciteCheck')
+          : this.t('memorisation.confirmModals.deleteRecording.title'),
         message: target
-          ? `This removes ${this.isAiCheckRecording(target) ? 'the Recite Check' : 'the recording'} for ayah ${target.ayahNumber} from the recording library.`
-          : 'This item will be removed from the recording library.',
-        confirmLabel: 'Delete',
-        cancelLabel: 'Keep',
+          ? (isReciteCheck
+            ? this.t('memorisation.confirmModals.deleteRecording.messageReciteCheck', { number: target.ayahNumber })
+            : this.t('memorisation.confirmModals.deleteRecording.message', { number: target.ayahNumber }))
+          : this.t('memorisation.confirmModals.deleteRecording.messageFallback'),
+        confirmLabel: this.t('memorisation.confirmModals.deleteRecording.confirm'),
+        cancelLabel: this.t('memorisation.confirmModals.deleteRecording.cancel'),
         tone: 'danger',
         action: 'delete-recording',
         data: { recordingId }
@@ -8204,7 +9100,7 @@ export default {
     confirmRenameRecording() {
       const trimmedName = String(this.renameRecordingName || '').trim()
       if (!trimmedName) {
-        this.renameRecordingError = 'Enter a recording name.'
+        this.renameRecordingError = this.t('memorisation.renameRecording.nameRequired')
         return
       }
       this.recordingsLibrary = this.recordingsLibrary.map(recording => (
@@ -8274,7 +9170,9 @@ export default {
       return recording?.source === 'ai-check' || recording?.type === 'ai-check' || recording?.type === 'ai-memorisation-check'
     },
     getRecordingTypeLabel(recording) {
-      return recording?.type === 'ai-memorisation-check' ? 'AI memorisation' : 'AI recitation'
+      return recording?.type === 'ai-memorisation-check'
+        ? this.t('memorisation.aiCheck.aiMemorisation')
+        : this.t('memorisation.aiCheck.aiRecitation')
     },
     getRecitationScoreTone(score) {
       const value = Number(score || 0)
@@ -8398,6 +9296,85 @@ export default {
         }
         target.scrollIntoView({ behavior: 'smooth', block: 'start' })
       })
+    },
+    scrollSelfCheckModalToTop() {
+      this.$nextTick(() => {
+        const modalBody = this.$refs.selfCheckModalBody
+        if (modalBody?.scrollTo) {
+          modalBody.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
+        const fallback = document.querySelector('.self-check-modal-body')
+        fallback?.scrollTo?.({ top: 0, behavior: 'smooth' })
+      })
+    },
+    collapseSelfCheckReviewSection({ scrollTop = true, keepSavedMarker = false } = {}) {
+      this.selfCheckDraft = null
+      this.selfCheckSavedAttemptsVisible = false
+      this.selfCheckError = ''
+      this.selfCheckPreparing = false
+      this.selfCheckPreparingLabel = ''
+      this.stopSelfCheckDraftAudio()
+      this.clearRecitationReviewState()
+      if (!keepSavedMarker) {
+        this.selfCheckLastSavedAyahKey = ''
+      }
+      if (scrollTop) this.scrollSelfCheckModalToTop()
+    },
+    stopSelfCheckDraftAudio() {
+      const audio = this.$refs.selfCheckDraftAudio
+      if (audio) {
+        try {
+          audio.pause()
+          audio.currentTime = 0
+        } catch { }
+      }
+      this.selfCheckDraftAudioPlaying = false
+      this.selfCheckDraftAudioCurrentTime = 0
+      this.selfCheckDraftAudioDuration = 0
+    },
+    toggleSelfCheckDraftAudio() {
+      const audio = this.$refs.selfCheckDraftAudio
+      if (!audio) return
+      if (audio.paused) {
+        audio.play().catch(() => {
+          this.showBanner(this.t('toasts.unableToPlayThisRecordingRight'), 'error', 2200)
+        })
+        return
+      }
+      audio.pause()
+    },
+    onSelfCheckDraftAudioLoadedMetadata() {
+      const audio = this.$refs.selfCheckDraftAudio
+      if (!audio) return
+      this.selfCheckDraftAudioDuration = Number(audio.duration || 0)
+    },
+    onSelfCheckDraftAudioTimeUpdate() {
+      const audio = this.$refs.selfCheckDraftAudio
+      if (!audio) return
+      this.selfCheckDraftAudioCurrentTime = Number(audio.currentTime || 0)
+      if (!this.selfCheckDraftAudioDuration && audio.duration) {
+        this.selfCheckDraftAudioDuration = Number(audio.duration || 0)
+      }
+    },
+    onSelfCheckDraftAudioEnded() {
+      this.selfCheckDraftAudioPlaying = false
+      this.selfCheckDraftAudioCurrentTime = 0
+      const audio = this.$refs.selfCheckDraftAudio
+      if (audio) audio.currentTime = 0
+    },
+    seekSelfCheckDraftAudio(event) {
+      const audio = this.$refs.selfCheckDraftAudio
+      if (!audio) return
+      const nextTime = Number(event?.target?.value || 0)
+      audio.currentTime = nextTime
+      this.selfCheckDraftAudioCurrentTime = nextTime
+    },
+    formatSelfCheckDraftAudioTime(seconds = 0) {
+      const safe = Math.max(0, Number(seconds || 0))
+      const mins = Math.floor(safe / 60)
+      const secs = Math.floor(safe % 60)
+      return `${mins}:${String(secs).padStart(2, '0')}`
     },
     getSelfCheckRecorderDescription() {
       if (this.recitationCheckPanelOpen && !this.recitationCheckRecording && !this.recitationCheckPreparing && !this.recitationCheckResult) {
@@ -8609,7 +9586,7 @@ export default {
 
       const audio = this.ensureRecordingsAudioElement()
       if (!audio) {
-        this.showBanner(this.t('toasts.audioSystemNotReady'), 'error', 2200)
+        this.showAudioUnavailableError('recording')
         return
       }
 
@@ -9341,7 +10318,7 @@ export default {
       const verse = targets[0]
       if (!verse?.key || !targets.length) return
       if (!this.supportsSelfCheckRecording()) {
-        this.aiMemorisationCheckerError = 'Recording is not supported in this browser.'
+        this.aiMemorisationCheckerError = this.t('memorisation.selfCheckRecorder.unsupportedBrowser')
         return
       }
       if (this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing) return
@@ -9383,7 +10360,7 @@ export default {
           }
         }
         recorder.onerror = () => {
-          this.aiMemorisationCheckerError = 'The microphone stopped unexpectedly.'
+          this.aiMemorisationCheckerError = this.t('memorisation.aiCheck.micStoppedUnexpectedly')
           this.aiMemorisationCheckerPreparing = false
           this.aiMemorisationCheckerRecording = false
           this.cleanupAiMemorisationCheckerMedia()
@@ -9402,13 +10379,13 @@ export default {
           this.aiMemorisationCheckerRecording = false
           this.aiMemorisationCheckerPreparing = true
           try {
-            if (!chunks.length) throw new Error('No audio was captured.')
+            if (!chunks.length) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
             const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' })
             const audioSrc = await this.blobToDataUrl(blob)
             await this.submitAiMemorisationChecker(blob, targets, audioSrc)
           } catch (error) {
             console.error('Failed to process memorisation check:', error)
-            this.aiMemorisationCheckerError = error?.response?.data?.message || error?.message || 'The memorisation check could not be completed.'
+            this.aiMemorisationCheckerError = error?.response?.data?.message || error?.message || this.t('memorisation.aiCheck.checkFailed')
           } finally {
             this.aiMemorisationCheckerPreparing = false
             this.cleanupAiMemorisationCheckerMedia()
@@ -9424,7 +10401,7 @@ export default {
         console.error('Failed to start memorisation check:', error)
         this.aiMemorisationCheckerPreparing = false
         this.aiMemorisationCheckerRecording = false
-        this.aiMemorisationCheckerError = 'Microphone access was blocked. Allow microphone permission, then try again.'
+        this.aiMemorisationCheckerError = this.t('memorisation.aiCheck.micBlocked')
         this.cleanupAiMemorisationCheckerMedia()
       }
     },
@@ -9444,7 +10421,7 @@ export default {
       const committedWords = this.getCommittedRecognitionWords('memorisation')
       const transcript = wordsToTranscript(committedWords)
       if (!committedWords.length) {
-        throw new Error('No clear Arabic words were detected. Record again closer to the microphone.')
+        throw new Error(this.t('memorisation.aiCheck.noArabicWords'))
       }
       const provider = this.getDominantRecognitionProvider(committedWords)
       const result = this.completeAiMemorisationCheckerFromRecognitionWords(
@@ -9524,7 +10501,7 @@ export default {
     },
     completeAiMemorisationCheckerFromRecognitionWords(recognitionWords = [], targetVerses, source = 'stabilised speech input', audioSrc = '', options = {}) {
       if (!recognitionWords.length) {
-        this.aiMemorisationCheckerError = 'No clear Arabic words were detected. Record again closer to the microphone.'
+        this.aiMemorisationCheckerError = this.t('memorisation.aiCheck.noArabicWords')
         return null
       }
       this.cancelLiveWordDomPatchFrame()
@@ -9671,9 +10648,11 @@ export default {
       const red = statuses.filter(word => ['incorrect', 'pending'].includes(word.status)).length
       const amber = statuses.filter(word => word.status === 'partial').length
       const outOfOrder = statuses.filter(word => word.outOfOrder).length
-      if (!red && !amber) return 'AI did not detect a word-level mistake. Still verify the ayah yourself before saving.'
-      if (outOfOrder) return `AI detected ${outOfOrder} word order issue${outOfOrder === 1 ? '' : 's'}. Tap any false highlight to mark it correct and update the results.`
-      return `AI detected ${red + amber} possible issue${red + amber === 1 ? '' : 's'}. Tap any amber or red word that AI got wrong to turn it green and update the analysis.`
+      if (!red && !amber) return this.t('memorisation.aiCheck.noWordMistake')
+      if (outOfOrder) {
+        return this.t('memorisation.aiCheck.wordOrderIssue', { count: outOfOrder })
+      }
+      return this.t('memorisation.aiCheck.possibleIssues', { count: red + amber })
     },
     aiMemorisationCheckerStorageKey() {
       return 'mutqin_ai_memorisation_checker'
@@ -11196,6 +12175,7 @@ export default {
       this.showBanner(this.t('toasts.displayedAyahReviewReset'), 'info', 1400)
     },
     clearRecitationReviewState() {
+      this.clearRecitationStartCue()
       this.recitationCheckResult = null
       this.recitationCheckError = ''
       this.recitationCheckPanelOpen = false
@@ -11220,26 +12200,24 @@ export default {
       const ayahKey = this.recitationCheckTargetVerseKey || this.selfCheckVerseKey
       if (ayahKey) this.selectedRecordingsAyahKey = ayahKey
       this.playUiTone('save')
-      this.showBanner(this.t('toasts.reciteCheckSavedToSavedAttempts'), 'success', 2800, {
-        key: 'open-recordings-library',
-        label: 'Go to recording library',
-        payload: { ayahKey, returnToSelfCheck: true }
-      })
+      this.showBanner(this.t('memorisation.saveAttemptConfirm.aiRecite'), 'success', 3200)
       this.selfCheckLastSavedAyahKey = ayahKey || this.selfCheckVerseKey
       this.selfCheckSavedAttemptsVisible = false
+      this.collapseSelfCheckReviewSection({ scrollTop: true, keepSavedMarker: true })
     },
     discardRecitationCheckAttempt() {
       this.dismissRecitationCheckResult()
       this.selfCheckSavedAttemptsVisible = false
+      this.collapseSelfCheckReviewSection({ scrollTop: true })
       this.showBanner(this.t('toasts.reciteCheckDiscarded'), 'info', 1400)
     },
     deleteRecitationCheckAttempt() {
       if (!this.recitationCheckResult) return
       this.openConfirmModal({
-        title: 'Delete Recite Check?',
-        message: 'This removes the current Recite Check result. Saved recordings are not affected unless this result was already saved.',
-        confirmLabel: 'Delete',
-        cancelLabel: 'Keep',
+        title: this.t('memorisation.confirmModals.deleteReciteCheck.title'),
+        message: this.t('memorisation.confirmModals.deleteReciteCheck.message'),
+        confirmLabel: this.t('memorisation.confirmModals.delete'),
+        cancelLabel: this.t('memorisation.confirmModals.keep'),
         tone: 'danger',
         action: 'delete-pending-recitation-check',
         data: { attemptId: this.recitationCheckResult.id || '' }
@@ -11263,7 +12241,6 @@ export default {
         this.stopRecitationCheckRecording()
         return
       }
-      if (options.prompt !== false) this.playRecitationStartCue()
       this.recitationCheckScope = 'ayah'
       this.startRecitationCheckRecording(verse)
     },
@@ -11272,7 +12249,6 @@ export default {
         this.stopRecitationCheckRecording()
         return
       }
-      this.playRecitationStartCue()
       if (this.recitationCheckScope === 'session') {
         this.startRecitationCheckRecording()
         return
@@ -11284,7 +12260,6 @@ export default {
         this.stopSelfCheckRecording()
         return
       }
-      this.playRecitationStartCue()
       this.startSelfCheckRecording(verse)
     },
     async startRecitationCheckRecording(targetVerse = null) {
@@ -11295,7 +12270,7 @@ export default {
       this.selfCheckModeChoiceVisible = false
       const targets = this.getRecitationCheckTargetVerses(targetVerse)
       if (!targets.length) {
-        this.recitationCheckError = 'Choose an ayah before starting Recite Check.'
+        this.recitationCheckError = this.t('memorisation.aiCheck.chooseAyahFirst')
         return
       }
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return
@@ -11346,7 +12321,7 @@ export default {
           }
         }
         recorder.onerror = () => {
-          this.recitationCheckError = 'The microphone stopped unexpectedly.'
+          this.recitationCheckError = this.t('memorisation.aiCheck.micStoppedUnexpectedly')
           this.recitationCheckPreparing = false
           this.recitationCheckRecording = false
           this.cleanupRecitationCheckMedia()
@@ -11360,7 +12335,7 @@ export default {
           this.recitationCheckPreparing = true
 
           try {
-            if (!chunks.length) throw new Error('No audio was captured.')
+            if (!chunks.length) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
             const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' })
             audioSrc = await this.blobToDataUrl(blob)
             await this.submitRecitationCheck(blob, targets, audioSrc)
@@ -11369,8 +12344,8 @@ export default {
             const serverMessage = error?.response?.data?.message
             const providerUnavailable = error?.response?.status === 422 && /transcription|api key is not configured/i.test(String(serverMessage || ''))
             this.recitationCheckError = providerUnavailable
-              ? 'Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted.'
-              : (serverMessage || error?.message || 'The recitation check could not be completed.')
+              ? this.t('memorisation.aiCheck.speechRecognitionFailed')
+              : (serverMessage || error?.message || this.t('memorisation.aiCheck.recitationCheckFailed'))
             if (serverMessage && !providerUnavailable) this.showBanner(serverMessage, 'error', 3600)
           } finally {
             this.recitationCheckPreparing = false
@@ -11383,16 +12358,18 @@ export default {
         this.recitationCheckStartedAt = Date.now()
         this.recitationCheckRecording = true
         this.recitationCheckPreparing = false
+        this.playRecitationStartCue({ inModal: this.showSelfCheckModal || this.showAiMemorisationCheckerModal })
       } catch (error) {
         console.error('Failed to start recitation check:', error)
         this.recitationCheckPreparing = false
         this.recitationCheckRecording = false
-        this.recitationCheckError = 'Microphone access was blocked. Allow microphone permission, then try again.'
+        this.recitationCheckError = this.t('memorisation.aiCheck.micBlocked')
         this.recitationCheckAutoStopArmed = false
         this.cleanupRecitationCheckMedia()
       }
     },
     stopRecitationCheckRecording() {
+      this.clearRecitationStartCue()
       if (!this.recitationCheckMediaRecorder || !['recording', 'paused'].includes(this.recitationCheckMediaRecorder.state)) return
       this.recitationCheckAutoStopArmed = false
       this.recitationCheckPreparing = true
@@ -11435,7 +12412,7 @@ export default {
       const committedWords = this.getCommittedRecognitionWords('recitation')
       const transcript = wordsToTranscript(committedWords)
       if (!committedWords.length) {
-        throw new Error('No clear Arabic words were detected. Record again closer to the microphone.')
+        throw new Error(this.t('memorisation.aiCheck.noArabicWords'))
       }
       const result = this.assessRecitationRecognitionWords(committedWords, targetVerses, {
         sessionId,
@@ -12513,7 +13490,7 @@ export default {
     async startSelfCheckRecording(verse) {
       if (!verse?.key) return
       if (!this.supportsSelfCheckRecording()) {
-        this.selfCheckError = 'Recording is not supported in this browser.'
+        this.selfCheckError = this.t('memorisation.selfCheckRecorder.unsupportedBrowser')
         return
       }
       if (this.isSelfCheckRecording) return
@@ -12529,7 +13506,7 @@ export default {
       this.selfCheckDraft = null
       this.clearRecitationReviewState()
       this.selfCheckPreparing = true
-      this.selfCheckPreparingLabel = 'Preparing microphone…'
+      this.selfCheckPreparingLabel = this.t('memorisation.aiCheck.preparingMic')
       this.selfCheckSavedAttemptsVisible = false
       this.selfCheckSavedAttemptsFilter = 'all'
       this.selfCheckPermissionState = 'prompt'
@@ -12554,7 +13531,7 @@ export default {
           if (event.data?.size) this.selfCheckChunks.push(event.data)
         }
         recorder.onerror = () => {
-          this.selfCheckError = 'The microphone stopped unexpectedly.'
+          this.selfCheckError = this.t('memorisation.aiCheck.micStoppedUnexpectedly')
           this.selfCheckPreparing = false
           this.isSelfCheckRecording = false
           this.cleanupSelfCheckMedia()
@@ -12566,6 +13543,7 @@ export default {
           this.selfCheckPreparing = false
           this.isSelfCheckRecording = false
           this.selfCheckDiscardOnStop = false
+          this.clearRecitationStartCue()
 
           try {
             if (!discard && chunks.length) {
@@ -12585,9 +13563,14 @@ export default {
                 result: normalizeRecordingResult(persistedRating),
                 audioSrc: dataUrl
               }
+              this.selfCheckDraftAudioPlaying = false
+              this.selfCheckDraftAudioCurrentTime = 0
+              this.selfCheckDraftAudioDuration = 0
               this.selfCheckSavedAttemptsVisible = false
               this.showBanner(this.t('toasts.recordingReadyForAyah', { number: verse.number }), 'success', 1800)
               this.scrollToSelfCheckReview()
+            } else if (discard) {
+              this.collapseSelfCheckReviewSection({ scrollTop: true })
             }
           } catch (error) {
             console.error('Failed to process self-check recording:', error)
@@ -12604,17 +13587,19 @@ export default {
         this.isSelfCheckRecording = true
         this.selfCheckPreparing = false
         this.selfCheckPreparingLabel = ''
+        this.playRecitationStartCue({ inModal: true })
       } catch (error) {
         console.error('Failed to start self-check recording:', error)
         this.selfCheckPermissionState = 'denied'
         this.selfCheckPreparing = false
         this.selfCheckPreparingLabel = ''
-        this.selfCheckError = 'Microphone access was blocked. Allow microphone permission, then try again.'
+        this.selfCheckError = this.t('memorisation.aiCheck.micBlocked')
         this.cleanupSelfCheckMedia()
       }
     },
     stopSelfCheckRecording() {
       if (!this.selfCheckMediaRecorder || this.selfCheckMediaRecorder.state !== 'recording') return
+      this.clearRecitationStartCue()
       this.selfCheckPreparing = true
       this.selfCheckPreparingLabel = 'Finalising recording…'
       this.selfCheckMediaRecorder.stop()
@@ -12635,12 +13620,24 @@ export default {
       this.selfCheckPreparing = false
       this.selfCheckPreparingLabel = ''
       this.pendingRecordingDeleteId = ''
+      this.collapseSelfCheckReviewSection({ scrollTop: true })
     },
     restartSelfCheckRecording(verse) {
-      this.discardSelfCheckRecording()
-      window.setTimeout(() => {
-        this.startSelfCheckRecording(verse)
-      }, 40)
+      this.stopSelfCheckDraftAudio()
+      if (this.isSelfCheckRecording && this.selfCheckMediaRecorder) {
+        this.selfCheckDiscardOnStop = true
+        this.selfCheckPreparing = true
+        this.selfCheckPreparingLabel = 'Discarding recording…'
+        this.selfCheckMediaRecorder.stop()
+        window.setTimeout(() => {
+          this.startSelfCheckRecording(verse)
+        }, 120)
+        return
+      }
+      this.selfCheckDraft = null
+      this.selfCheckError = ''
+      this.scrollSelfCheckModalToTop()
+      this.startSelfCheckRecording(verse)
     },
     setSelfCheckDraftResult(result) {
       if (!this.selfCheckDraft) return
@@ -12662,7 +13659,7 @@ export default {
 
       const audio = this.ensureRecordingsAudioElement()
       if (!audio) {
-        this.showBanner(this.t('toasts.audioSystemNotReady'), 'error', 2200)
+        this.showAudioUnavailableError('recording')
         return
       }
 
@@ -12717,7 +13714,8 @@ export default {
       this.selfCheckDraft = null
       this.ensureSelectedRecordingsAyah()
       this.selfCheckSavedAttemptsVisible = false
-      this.showBanner(this.t('toasts.savedSelfCheckForAyah', { ayahNumber: savedEntry.ayahNumber }), 'success', 1800)
+      this.showBanner(this.t('memorisation.saveAttemptConfirm.selfCheck', { ayahNumber: savedEntry.ayahNumber }), 'success', 3200)
+      this.collapseSelfCheckReviewSection({ scrollTop: true, keepSavedMarker: true })
     },
 
     runConfirmAction() {
@@ -12735,28 +13733,6 @@ export default {
 
 
 
-    async downloadVerseAudio(verse) {
-      const audioUrl = this.normalizeAudioUrl(verse?.audio || '')
-      if (!audioUrl) {
-        this.showBanner(this.t('toasts.audioNotAvailableForThisAyah'), 'info', 2200)
-        return
-      }
-
-      try {
-        const filename = `surah-${this.chapterId}-ayah-${verse.number}.mp3`
-        const downloadUrl = `/memorisation/audio-download?url=${encodeURIComponent(audioUrl)}&filename=${encodeURIComponent(filename)}`
-        const anchor = document.createElement('a')
-        anchor.href = downloadUrl
-        anchor.download = filename
-        document.body.appendChild(anchor)
-        anchor.click()
-        anchor.remove()
-        this.showBanner(this.t('toasts.downloadedAyahAudio', { number: verse.number }), 'success', 1800)
-      } catch (error) {
-        console.error('Verse download failed:', error)
-        this.showBanner(this.t('toasts.failedToDownloadAyahAudio'), 'error', 2600)
-      }
-    },
     syncSettingsDraft() {
       this.settingsDraft = {
         tajweedEnabled: !!this.tajweedEnabled,
@@ -13280,11 +14256,11 @@ export default {
       }
       this.startSessionWithCountdown()
     },
-    promptTapToPlay(message = 'Playback is ready. Tap to play.') {
-      this.showBanner(message, 'warning', 5200, {
+    promptTapToPlay(message = '') {
+      this.showBanner(message || this.t('toasts.playbackTapToPlay'), 'warning', 9000, {
         key: 'resume-playback',
-        label: 'Tap to play'
-      })
+        label: this.t('memorisation.player.tapToPlay')
+      }, { important: true })
     },
     waitForAudioElementReady(audio, timeoutMs = 10000) {
       if (!audio) return Promise.reject(new Error('No audio element'))
@@ -13636,6 +14612,7 @@ export default {
       if (this.readingViewMode === nextMode) {
         this.topCardMenuOpen = false
         this.fontDropdownOpen = false
+        this.closeTopCardSubmenus()
         return
       }
       this.readingViewMode = nextMode
@@ -13650,6 +14627,7 @@ export default {
       }
       this.topCardMenuOpen = false
       this.fontDropdownOpen = false
+      this.closeTopCardSubmenus()
       this.persistUiState()
     },
     getDefaultMushafBackgroundForTheme(theme = this.theme) {
@@ -13880,12 +14858,16 @@ export default {
         this.currentChapter = null
         this.clearWorkspaceForConfigChange(mode)
         this.isDataReady = true
+        this.isWorkspaceRefreshing = false
+        this.workspaceRefreshReason = ''
         return
       }
 
       const matchedChapter = this.chapters.find(chapter => Number(chapter.id) === chapterId) || null
       this.currentChapter = matchedChapter || (this.chapters.length ? null : this.currentChapter)
       this.clampControlRange(mode)
+      this.isWorkspaceRefreshing = true
+      this.workspaceRefreshReason = options.reason || 'config'
       this.clearWorkspaceForConfigChange(mode)
 
       if (options.immediate) {
@@ -14076,7 +15058,7 @@ export default {
       this.showTranslation = config.showTranslation ?? this.showTranslation
       this.showTransliteration = config.showTransliteration ?? this.showTransliteration
       this.showWordByWord = config.showWordByWord ?? this.showWordByWord
-      this.wordByWordAudioEnabled = config.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+      this.wordByWordAudioEnabled = true
       this.focusModeEnabled = !!config.focusModeEnabled
       this.focusDimPercent = Math.max(30, Math.min(75, Number(config.focusDimPercent || this.focusDimPercent || 54)))
       this.blurModeEnabled = !!config.blurModeEnabled
@@ -14177,6 +15159,11 @@ export default {
         if (this.showHelpLearningModal) {
           event.preventDefault()
           this.closeHelpLearningModal()
+          return
+        }
+        if (this.showKeyboardShortcuts) {
+          event.preventDefault()
+          this.closeKeyboardShortcuts()
           return
         }
         if (this.showTools) {
@@ -14636,6 +15623,7 @@ export default {
 
     openSessionExitModal() {
       if (!this.hasVerses && !this.playerVisible) return
+      this.forceStopPlayback()
       this.flushPlaybackTime()
       if (this.audioElement) {
         this.currentTime = Number(this.audioElement.currentTime || this.currentTime || 0)
@@ -14645,12 +15633,22 @@ export default {
       this.markActiveSessionSnapshot()
       this.sessionExitSnapshot = this.buildSessionExitSnapshot()
       this.sessionExitPreviewSnapshot = this.buildSessionEndedSnapshot({ force: true })
-      if (this.audioElement && !this.audioElement.paused) {
-        this.audioElement.pause()
-      }
-      this.isPlaying = false
       this.sessionExitOffcanvasOpen = false
       this.showSessionExitModal = true
+    },
+
+    forceStopPlayback() {
+      this.clearRecitationWindowTimer()
+      this.clearTalqinPauseTimer()
+      this.stopWordHighlighting()
+      if (this.audioElement) {
+        try {
+          this.audioElement.pause()
+          this.audioElement.currentTime = 0
+        } catch {}
+      }
+      this.isPlaying = false
+      this.talqinRecitationTurnActive = false
     },
 
     openSessionExitNewSessionOffcanvas() {
@@ -14848,15 +15846,18 @@ export default {
       if (this.showTransliteration) activeAids.push(this.t('memorisation.common.transliterationOn'))
       if (this.showWordByWord) activeAids.push(this.t('memorisation.common.wordByWordOn'))
       if (this.wordByWordAudioEnabled) activeAids.push(this.t('memorisation.common.wordAudioOn'))
-      const activeMethods = []
-      if (this.focusModeEnabled) activeMethods.push('Focus mode')
-      if (this.blurModeEnabled) activeMethods.push('Blur mode')
-      if (this.chainingEnabled) activeMethods.push(this.t('memorisation.common.chainingLabel', { method: this.chainingMethod || 'Standard' }))
-      const repeatCount = Number(this.repeatCount || 1)
-      const repeatSummary = `${repeatCount}x`
-      const repeatShortLabel = `${this.repeatCount || 1}x`
+      const repeatCount = Math.max(1, Number(this.repetitionsPerStep || this.repeatCount || 1))
+      const repeatSummary = this.t('memorisation.common.repeatSummary', { count: repeatCount })
+      const repeatShortLabel = `${repeatCount}x`
       const displaySummary = activeAids.join(', ')
-      const pacingSummary = activeMethods.join(', ')
+      const activeMethodLabels = []
+      if (this.focusModeEnabled) activeMethodLabels.push(this.t('memorisation.focus_mode'))
+      if (this.blurModeEnabled) activeMethodLabels.push(this.t('memorisation.blur_mode'))
+      if (this.chainingEnabled) {
+        activeMethodLabels.push(this.t('memorisation.common.chainingLabel', { method: this.chainingMethod || 'Standard' }))
+      }
+      const pacingSummary = activeMethodLabels.join(', ')
+      const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
       const completedAll = coveredAyah >= totalAyahs && progressPercent >= 100
       const durationLabel = this.formatTime(durationSeconds)
       const rangeLabel = chapterName
@@ -14885,10 +15886,13 @@ export default {
         modeSummary: this.sessionTypeInfo?.label ? this.t('memorisation.common.modeLabel', { label: this.sessionTypeInfo.label }) : '',
         repeatSummary,
         repeatShortLabel,
+        repetitionsPerStep: repeatCount,
+        reciterId: this.reciterId,
+        reciterName: reciter?.name || '',
         displaySummary,
         pacingSummary,
         activeAids,
-        activeMethods,
+        activeMethods: activeMethodLabels,
         nextSteps: completedAll
           ? [
               this.t('memorisation.summary.nextAdvance'),
@@ -15117,10 +16121,10 @@ export default {
 
     openConfirmModal(options) {
       this.confirmModal = {
-        title: options.title || 'Confirm action',
+        title: options.title || this.t('memorisation.confirmModals.defaultTitle'),
         message: options.message || '',
-        confirmLabel: options.confirmLabel || 'Confirm',
-        cancelLabel: options.cancelLabel || 'Cancel',
+        confirmLabel: options.confirmLabel || this.t('memorisation.confirmModals.confirm'),
+        cancelLabel: options.cancelLabel || this.t('memorisation.confirmModals.cancel'),
         tone: options.tone || 'default',
         action: options.action || '',
         data: options.data || null
@@ -15154,9 +16158,9 @@ export default {
 
     confirmDiscardContinueSession() {
       this.openConfirmModal({
-        title: 'Discard saved session?',
-        message: 'This removes the current continue-where-you-left-off snapshot from this device.',
-        confirmLabel: 'Discard',
+        title: this.t('memorisation.confirmModals.discardContinue.title'),
+        message: this.t('memorisation.confirmModals.discardContinue.message'),
+        confirmLabel: this.t('memorisation.confirmModals.discard'),
         tone: 'danger',
         action: 'discard-continue'
       })
@@ -15562,13 +16566,36 @@ export default {
       this.fontDropdownOpen = !this.fontDropdownOpen
       if (this.fontDropdownOpen) {
         this.topCardMenuOpen = false
+        this.closeTopCardSubmenus()
         this.openVerseActionKey = ''
       }
     },
+    closeTopCardSubmenus() {
+      this.topCardFontSubmenuOpen = false
+      this.topCardLayoutSubmenuOpen = false
+    },
     toggleTopCardMenu() {
-      this.topCardMenuOpen = !this.topCardMenuOpen
-      if (this.topCardMenuOpen) {
+      const nextOpen = !this.topCardMenuOpen
+      this.topCardMenuOpen = nextOpen
+      if (nextOpen) {
         this.openVerseActionKey = ''
+        this.fontDropdownOpen = false
+        this.closeTopCardSubmenus()
+      } else {
+        this.closeTopCardSubmenus()
+      }
+    },
+    toggleTopCardFontSubmenu() {
+      this.topCardFontSubmenuOpen = !this.topCardFontSubmenuOpen
+      if (this.topCardFontSubmenuOpen) {
+        this.topCardLayoutSubmenuOpen = false
+        this.fontDropdownOpen = false
+      }
+    },
+    toggleTopCardLayoutSubmenu() {
+      this.topCardLayoutSubmenuOpen = !this.topCardLayoutSubmenuOpen
+      if (this.topCardLayoutSubmenuOpen) {
+        this.topCardFontSubmenuOpen = false
         this.fontDropdownOpen = false
       }
     },
@@ -15577,6 +16604,7 @@ export default {
       if (this.openVerseActionKey) {
         this.topCardMenuOpen = false
         this.fontDropdownOpen = false
+        this.closeTopCardSubmenus()
       }
     },
     cycleQuranFont() {
@@ -15585,11 +16613,14 @@ export default {
       const next = options[(index + 1 + options.length) % Math.max(1, options.length)]
       if (next?.value) this.setQuranFont(next.value)
       this.topCardMenuOpen = false
+      this.closeTopCardSubmenus()
     },
     selectFont(fontValue) {
       this.quranFont = fontValue
       this.fontDropdownOpen = false
       this.fontOpen = false
+      this.topCardMenuOpen = false
+      this.closeTopCardSubmenus()
       this.syncSettingsDraft()
     },
     getCurrentFontLabel() {
@@ -15643,6 +16674,7 @@ export default {
       }
       if (this.topCardMenuOpen && !event.target.closest('.top-card-menu-wrap')) {
         this.topCardMenuOpen = false
+        this.closeTopCardSubmenus()
       }
       if (this.openVerseActionKey && !event.target.closest('.verse-menu-wrap')) {
         this.openVerseActionKey = ''
@@ -15877,9 +16909,9 @@ export default {
     deleteOfflineSurah(id) {
       this.pendingDeleteId = id
       this.openConfirmModal({
-        title: 'Remove offline surah?',
-        message: 'This deletes the saved verses from this device.',
-        confirmLabel: 'Remove',
+        title: this.t('memorisation.confirmModals.removeOffline.title'),
+        message: this.t('memorisation.confirmModals.removeOffline.message'),
+        confirmLabel: this.t('memorisation.confirmModals.remove'),
         tone: 'danger',
         action: 'delete-offline'
       })
@@ -15898,7 +16930,7 @@ export default {
     async downloadVerseAudio(verse) {
       const audioUrl = this.normalizeAudioUrl(verse?.audio || '')
       if (!audioUrl) {
-        this.showBanner(this.t('toasts.audioNotAvailableForThisAyah'), 'info', 2200)
+        this.showBanner(this.t('memorisation.offlineDownload.unavailable'), 'info', 5000, null, { important: true })
         return
       }
 
@@ -15911,10 +16943,16 @@ export default {
         document.body.appendChild(anchor)
         anchor.click()
         anchor.remove()
-        this.showBanner(this.t('toasts.downloadedAyahAudio', { number: verse.number }), 'success', 1800)
+        this.showBanner(this.t('memorisation.offlineDownload.success', { number: verse.number }), 'success', 6000, null, { important: true })
+        if (!this.readScopedStorageValue('offlineDownloadHintSeen', 'mutqin.offlineDownloadHintSeen', false)) {
+          this.writeScopedStorageValue('offlineDownloadHintSeen', 'mutqin.offlineDownloadHintSeen', true)
+          window.setTimeout(() => {
+            this.showBanner(this.t('memorisation.offlineDownload.hint'), 'info', 9000, null, { important: true })
+          }, 700)
+        }
       } catch (error) {
         console.error('Verse download failed:', error)
-        this.showBanner(this.t('toasts.failedToDownloadAyahAudio'), 'error', 2600)
+        this.showBanner(this.t('memorisation.offlineDownload.failed'), 'error', 9000, null, { important: true })
       }
     },
 
@@ -16764,7 +17802,7 @@ export default {
       if (!this.audioElement) {
         this.audioElement = this.$refs.audio
         if (!this.audioElement) {
-          this.showBanner(this.t('toasts.audioSystemNotReady'), 'error', 3000)
+          this.showAudioUnavailableError('playback')
           this.playRequestLocked = false
           return
         }
@@ -16776,6 +17814,8 @@ export default {
         this.audioElement.load()
       }
       this.playerVisible = true
+      this.playerDismissed = false
+      this.playerCompact = false
 
       try {
         await this.waitForAudioElementReady(this.audioElement)
@@ -16813,10 +17853,10 @@ export default {
       } catch (err) {
         console.error('playVerse failed:', err)
         this.isPlaying = false
-        this.showBanner(this.t('toasts.failedToPlayAudio'), 'error', 3000, {
+        this.showBanner(this.t('toasts.failedToPlayAudio'), 'error', 9000, {
           key: 'resume-playback',
-          label: 'Tap to play'
-        })
+          label: this.t('memorisation.player.tapToPlay')
+        }, { important: true })
       } finally {
         this.playRequestLocked = false
       }
@@ -16870,10 +17910,10 @@ export default {
           })
           .catch(err => {
             console.error('Failed to play:', err)
-            this.showBanner(this.t('toasts.playbackFailed'), 'error', 2400, {
+            this.showBanner(this.t('toasts.playbackFailed'), 'error', 9000, {
               key: 'resume-playback',
-              label: 'Tap to play'
-            })
+              label: this.t('memorisation.player.tapToPlay')
+            }, { important: true })
           })
       } else {
         this.audioElement.pause()
@@ -16961,6 +18001,25 @@ export default {
 
     setPlayerCompact(compact = false) {
       this.playerCompact = !!compact
+      if (!compact) this.playerDismissed = false
+      this.persistUiState()
+    },
+
+    dismissPlayer() {
+      if (this.isPlaying || this.hasLoadedAudio) {
+        this.playerDismissed = true
+        this.playerVisible = false
+        this.playerCompact = true
+      } else {
+        this.closePlayer()
+      }
+      this.persistUiState()
+    },
+
+    restorePlayer() {
+      this.playerDismissed = false
+      this.playerVisible = true
+      this.playerCompact = false
       this.persistUiState()
     },
 
@@ -16985,6 +18044,7 @@ export default {
         this.audioElement.src = ''
       }
       this.playerVisible = false
+      this.playerDismissed = false
       this.isPlaying = false
       this.playerMenuOpen = false
       this.persistAudioState()
@@ -17012,6 +18072,8 @@ export default {
           this.syncActiveVerseState(mode)
           this.syncMutqinAyahs(cached.verses)
           this.isDataReady = true
+          this.isWorkspaceRefreshing = false
+          this.workspaceRefreshReason = ''
           return
         }
 
@@ -17101,8 +18163,13 @@ export default {
 
       } catch (e) {
         console.error('Error loading verses:', e)
-        this.showBanner(this.t('toasts.failedToLoadVerses'), 'error', 3000)
+        this.showBanner(this.t('toasts.failedToLoadVerses'), 'error', 7000, null, { important: true })
         this.isDataReady = true
+      } finally {
+        if (requestId === this.verseRequestId) {
+          this.isWorkspaceRefreshing = false
+          this.workspaceRefreshReason = ''
+        }
       }
     },
 
@@ -17549,19 +18616,54 @@ export default {
       return Math.max(5, Math.min(45, arabicLength * 0.12)) / speedFactor
     },
 
-    showBanner(message, kind = 'info', ttlMs = 3500, action = null) {
+    showBanner(message, kind = 'info', ttlMs = 3500, action = null, options = {}) {
       if (this.bannerTimer) clearTimeout(this.bannerTimer)
+      const important = !!options.important || kind === 'error'
+      const persistent = !!options.persistent
+      const resolvedTtl = options.ttlMs ?? (
+        persistent ? 0 :
+        important ? (kind === 'error' ? 12000 : kind === 'warning' ? 9000 : 6500) :
+        kind === 'error' ? 7000 :
+        kind === 'warning' ? 5500 :
+        ttlMs
+      )
       this.banner = {
         message,
         kind,
         at: Date.now(),
         actionKey: action?.key || '',
         actionLabel: action?.label || '',
-        actionPayload: action?.payload || null
+        actionPayload: action?.payload || null,
+        important,
+        persistent
       }
-      this.bannerTimer = setTimeout(() => {
-        if (this.banner && Date.now() - this.banner.at >= ttlMs) this.banner = null
-      }, ttlMs + 50)
+      if (!persistent && resolvedTtl > 0) {
+        this.bannerTimer = setTimeout(() => {
+          if (this.banner && Date.now() - this.banner.at >= resolvedTtl) this.banner = null
+        }, resolvedTtl + 50)
+      }
+    },
+
+    showAudioUnavailableError(context = 'playback') {
+      const key = context === 'recording'
+        ? 'toasts.audioRecordingNotReady'
+        : 'toasts.audioElementNotReady'
+      this.showBanner(this.t(key), 'error', 12000, null, { important: true, persistent: false })
+    },
+
+    setLearningSyncStatus(status, options = {}) {
+      if (!this.learningBackendEnabled()) return
+      this.learningSync.status = status
+      if (this.learningSync.statusTimer) {
+        clearTimeout(this.learningSync.statusTimer)
+        this.learningSync.statusTimer = null
+      }
+      if (status === 'synced') {
+        this.learningSync.lastSyncedAt = Date.now()
+        this.learningSync.statusTimer = setTimeout(() => {
+          if (this.learningSync.status === 'synced') this.learningSync.status = 'idle'
+        }, 6000)
+      }
     },
 
     runBannerAction() {
@@ -17982,7 +19084,7 @@ export default {
       this.showTranslation = !!next.showTranslation
       this.showTransliteration = !!next.showTransliteration
       this.showWordByWord = !!next.showWordByWord
-      this.wordByWordAudioEnabled = !!next.wordByWordAudioEnabled
+      this.wordByWordAudioEnabled = true
       this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(next.defaultFontSize || 100)))
       this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', this.defaultFontSize)
       this.persistVerseFontSizes()
@@ -18017,7 +19119,7 @@ export default {
           this.showTranslation = state.showTranslation ?? this.showTranslation
           this.showTransliteration = state.showTransliteration ?? this.showTransliteration
           this.showWordByWord = state.showWordByWord ?? this.showWordByWord
-          this.wordByWordAudioEnabled = state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled
+          this.wordByWordAudioEnabled = true
           this.readingViewMode = ['stacked', 'mushaf'].includes(state.readingViewMode)
             ? state.readingViewMode
             : 'stacked'
@@ -18339,6 +19441,7 @@ export default {
     scheduleLearningRetry() {
       if (this.learningSync.retryScheduled) return
       this.learningSync.retryScheduled = true
+      this.setLearningSyncStatus('retrying')
       setTimeout(() => {
         this.learningSync.retryScheduled = false
         if (typeof navigator !== 'undefined' && navigator.onLine === false) return
@@ -18357,15 +19460,21 @@ export default {
       const hash = this.learningPayloadHash(payload)
       if (!force && hash === this.learningSync.lastPushedHash) return
 
+      const previousStatus = this.learningSync.status
       this.learningSync.pushing = true
+      this.setLearningSyncStatus('syncing', { notify: false })
       try {
         await withRetry(() => learningApi.saveState(payload), { retries: 3, baseDelay: 1000 })
         this.learningSync.lastPushedHash = hash
+        this.setLearningSyncStatus('synced', { forceNotify: force || previousStatus === 'retrying' || previousStatus === 'failed' })
       } catch (error) {
         const status = error?.response?.status
         // Auth/session/CSRF errors: stop silently (e.g. logged out in another tab).
         if (![401, 403, 419].includes(status)) {
+          this.setLearningSyncStatus('failed')
           this.scheduleLearningRetry()
+        } else {
+          this.learningSync.status = 'idle'
         }
       } finally {
         this.learningSync.pushing = false
@@ -18432,6 +19541,7 @@ export default {
         this.learningSync.ready = true
       } catch {
         // Backend unreachable: keep using the local cache and retry when online.
+        this.setLearningSyncStatus('failed')
         this.scheduleLearningRetry()
       }
     },
@@ -18799,10 +19909,10 @@ export default {
 
     resetControls() {
       this.openConfirmModal({
-        title: 'Reset Session Controls?',
-        message: 'This will reset all session settings to defaults. Your progress will not be lost.',
-        confirmLabel: 'Reset',
-        cancelLabel: 'Cancel',
+        title: this.t('memorisation.confirmModals.resetControls.title'),
+        message: this.t('memorisation.confirmModals.resetControls.message'),
+        confirmLabel: this.t('memorisation.confirmModals.reset'),
+        cancelLabel: this.t('memorisation.confirmModals.cancel'),
         tone: 'warning',
         action: 'reset-session'
       })
@@ -19197,7 +20307,7 @@ export default {
 
       const verseAudioUrl = this.normalizeAudioUrl(targetVerse.audio)
       if (!verseAudioUrl || !this.audioElement) {
-        this.showBanner(this.t('toasts.audioSystemNotReady'), 'error', 2200)
+        this.showAudioUnavailableError('recording')
         return
       }
 
