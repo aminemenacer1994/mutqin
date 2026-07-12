@@ -464,6 +464,10 @@
             justify-content: center;
         }
 
+        .global-lang-switcher {
+            display: none !important;
+        }
+
         .global-lang-switcher.d-lg-none .app-lang-toggle.icon-only {
             width: 100%;
         }

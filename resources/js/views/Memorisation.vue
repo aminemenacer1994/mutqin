@@ -7,9 +7,9 @@
     'session-exit-flow-active': showSessionExitModal,
     'session-exit-offcanvas-open': showSessionExitModal && sessionExitOffcanvasOpen && showTools
   }" :style="appStyleVars" v-cloak>
-    <div v-if="!appReady" class="app-boot-loading" role="status" aria-live="polite">
+    <div v-if="showAppBootLoader" class="app-boot-loading" role="status" aria-live="polite">
       <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-      <span>{{ t('common.loading') }}</span>
+      <span>{{ workspaceLoadingLabel }}</span>
     </div>
 
     <div
@@ -279,6 +279,12 @@
             </button>
           </div>
         </div>
+        <p v-if="chainingSetupBlocking" class="workspace-setup-hint workspace-setup-hint-warning" role="status">
+          <span>{{ t('memorisation.techniques.chainingMethodRequired') }}</span>
+          <button type="button" class="workspace-setup-hint-action" @click="guideChainingSetup">
+            {{ t('memorisation.techniques.chooseChainingMethod') }}
+          </button>
+        </p>
         <div v-if="hasVerses" class="workspace-shell-bottom">
           <div
             v-if="topCardMetadataPills.length"
@@ -306,7 +312,7 @@
 
 </section>
 
-          <div v-if="!isDataReady || isRestoringWorkspace || isWorkspaceRefreshing" class="loading-spinner" :class="{ 'is-reciter-refresh': isWorkspaceRefreshing && workspaceRefreshReason === 'reciter' }">
+          <div v-if="showWorkspaceRefreshSpinner" class="loading-spinner" :class="{ 'is-reciter-refresh': workspaceRefreshReason === 'reciter' }">
             <i class="bi bi-hourglass-split"></i>
             <span>{{ workspaceLoadingLabel }}</span>
           </div>
@@ -338,7 +344,7 @@
                 </div>
               </div>
             </section>
-            <div v-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace container-fluid w-100 px-0">
+            <div v-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace container-fluid w-100">
               <div class="mushaf-frame mushaf-frame-toolbar-collapsed">
                 <aside class="mushaf-toolbar-rail" :aria-label="t('memorisation.a11y.mushafTools')">
                 <div class="mushaf-pill-bar mushaf-pill-toolbar is-collapsed">
@@ -497,6 +503,7 @@
                         tabindex="0"
                         :data-verse-key="row.key"
                         class="mushaf-ayah"
+                        :style="{ '--verse-font-percent': row.fontPercent }"
                         :class="{
                           active: row.isActive,
                           'hifz-ayah-new': row.isNew,
@@ -530,7 +537,6 @@
                             'verse-weak': row.isWeak,
                             'verse-mastered': row.isMastered
                           }"
-                          :style="{ '--verse-font-percent': row.fontPercent }"
                         ></span>
                         <span
                           class="mushaf-ayah-number"
@@ -640,20 +646,6 @@
                   <div class="verse-aid-title" dir="ltr" lang="en">{{ t('memorisation.reading.translation') }}</div>
                   <div class="verse-translation verse-aid" dir="ltr" lang="en">
                     {{ verse.translation }}
-                  </div>
-                </div>
-                <div v-if="showWordByWord && verse.words && verse.words.length" class="verse-words verse-aid"
-                  @scroll="onVerseWordsScroll(verse.key, $event)">
-                  <div v-for="(word, wi) in verse.words" :key="wi" class="word-item"
-                    :class="{ highlighted: currentHighlightedVerseKey === verse.key && currentWordIndex === wi, 'phrase-highlighted': currentHighlightedVerseKey === verse.key && currentPhraseIndex === wi }"
-                    tabindex="-1">
-                    <span class="word-arabic" dir="rtl" lang="ar">{{ word.ar }}</span>
-                    <span class="word-meaning">{{ word.en }}</span>
-                    <button v-if="word.audio" class="word-audio-btn" type="button"
-                      @click.stop="playWordAudio(word.audio, verse, wi)"
-                      :aria-label="`Play word ${wi + 1} audio for ayah ${verse.number}`">
-                      <i class="bi bi-volume-up" aria-hidden="true"></i>
-                    </button>
                   </div>
                 </div>
               </div>
@@ -1454,17 +1446,6 @@
                   </button>
                 </div>
 
-                <!-- Word by Word -->
-                <div class="setting-item">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('sessionSetup.wordByWord') }}</div>
-                    <div class="setting-description">{{ t('sessionSetup.wordByWordDesc') }}</div>
-                  </div>
-                  <button class="toggle-chip" :class="{ active: showWordByWord }" @click="toggleReadingOption('wbw')">
-                    {{ showWordByWord ? t('common.on') : t('common.off') }}
-                  </button>
-                </div>
-
                 <!-- Word Audio: always enabled — toggle removed -->
               </div>
             </section>
@@ -2201,6 +2182,13 @@
         </div>
 
         <div class="modal-body self-check-modal-body memorisation-checker-body">
+          <div class="ai-check-step-guide" role="status" aria-live="polite">
+            <span class="ai-check-step-badge">{{ t('memorisation.aiCheck.stepLabel', aiMemorisationCheckerStepGuide) }}</span>
+            <div class="ai-check-step-copy">
+              <strong>{{ aiMemorisationCheckerStepGuide.title }}</strong>
+              <p>{{ aiMemorisationCheckerStepGuide.detail }}</p>
+            </div>
+          </div>
           <section class="self-check-modal-stage memorisation-checker-stage">
             <header class="self-check-section-head">
               <div>
@@ -2355,22 +2343,18 @@
                       <span>{{ t('memorisation.ai_memorisation_feedback_is_a_guide_verify_importa') }}</span>
                     </div>
                   </div>
-                  <div class="recitation-result-actions">
-                    <button class="btn-secondary self-check-action-btn" type="button" @click="discardAiMemorisationCheckerAssessment">
-                      <i class="bi bi-x-circle"></i>
-                      <span>{{ t('common.discard') }}</span>
-                    </button>
-                    <button class="btn-secondary self-check-action-btn" type="button" @click="resetAiMemorisationCheckerAssessment">
-                      <i class="bi bi-arrow-counterclockwise"></i>
-                      <span>{{ t('memorisation.reset_ayah') }}</span>
-                    </button>
-                    <button class="btn-secondary self-check-action-btn recitation-delete-btn" type="button" @click="deleteAiMemorisationCheckerAssessment">
-                      <i class="bi bi-trash3"></i>
-                      <span>{{ t('common.delete') }}</span>
-                    </button>
+                  <div class="recitation-result-actions recitation-result-actions-compact">
                     <button class="btn-primary self-check-action-btn" type="button" @click="saveAiMemorisationCheckerAssessment">
                       <i class="bi bi-save2"></i>
                       <span>{{ t('memorisation.save_attempt') }}</span>
+                    </button>
+                    <button class="btn-secondary self-check-action-btn" type="button" @click="resetAiMemorisationCheckerAssessment">
+                      <i class="bi bi-arrow-counterclockwise"></i>
+                      <span>{{ t('memorisation.aiCheck.tryAgain') }}</span>
+                    </button>
+                    <button class="btn-secondary self-check-action-btn" type="button" @click="discardAiMemorisationCheckerAssessment">
+                      <i class="bi bi-x-circle"></i>
+                      <span>{{ t('common.discard') }}</span>
                     </button>
                   </div>
                 </div>
@@ -2407,6 +2391,13 @@
         </div>
 
         <div ref="selfCheckModalBody" class="modal-body self-check-modal-body">
+          <div v-if="recitationCheckVisible" class="ai-check-step-guide" role="status" aria-live="polite">
+            <span class="ai-check-step-badge">{{ t('memorisation.aiCheck.stepLabel', recitationCheckStepGuide) }}</span>
+            <div class="ai-check-step-copy">
+              <strong>{{ recitationCheckStepGuide.title }}</strong>
+              <p>{{ recitationCheckStepGuide.detail }}</p>
+            </div>
+          </div>
           <section class="self-check-modal-stage">
             <header class="self-check-section-head">
               <div>
@@ -2610,22 +2601,18 @@
                       <span>{{ t('memorisation.ai_recitation_feedback_is_a_guide_verify_important') }}</span>
                     </div>
                   </div>
-                  <div class="recitation-result-actions">
-                    <button class="btn-secondary self-check-action-btn" type="button" @click="discardRecitationCheckAttempt">
-                      <i class="bi bi-x-circle"></i>
-                      <span>{{ t('common.discard') }}</span>
-                    </button>
-                    <button class="btn-secondary self-check-action-btn" type="button" @click="resetDisplayedRecitationAyah">
-                      <i class="bi bi-arrow-counterclockwise"></i>
-                      <span>{{ t('memorisation.reset_ayah') }}</span>
-                    </button>
-                    <button class="btn-secondary self-check-action-btn recitation-delete-btn" type="button" @click="deleteRecitationCheckAttempt">
-                      <i class="bi bi-trash3"></i>
-                      <span>{{ t('common.delete') }}</span>
-                    </button>
+                  <div class="recitation-result-actions recitation-result-actions-compact">
                     <button class="btn-primary self-check-action-btn" type="button" @click="savePendingRecitationCheckAttempt">
                       <i class="bi bi-save2"></i>
                       <span>{{ t('memorisation.save_attempt') }}</span>
+                    </button>
+                    <button class="btn-secondary self-check-action-btn" type="button" @click="resetDisplayedRecitationAyah">
+                      <i class="bi bi-arrow-counterclockwise"></i>
+                      <span>{{ t('memorisation.aiCheck.tryAgain') }}</span>
+                    </button>
+                    <button class="btn-secondary self-check-action-btn" type="button" @click="discardRecitationCheckAttempt">
+                      <i class="bi bi-x-circle"></i>
+                      <span>{{ t('common.discard') }}</span>
                     </button>
                   </div>
                 </div>

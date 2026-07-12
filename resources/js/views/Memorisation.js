@@ -4286,7 +4286,6 @@ export default {
       labels.push(this.t('memorisation.common.fontLabel', { font: this.getCurrentFontLabel() }))
       if (this.showTranslation) labels.push(this.t('memorisation.common.translationOn'))
       if (this.showTransliteration) labels.push(this.t('memorisation.common.transliterationOn'))
-      if (this.showWordByWord) labels.push(this.t('memorisation.common.wordByWordOn'))
       if (this.wordByWordAudioEnabled) labels.push(this.t('memorisation.common.wordAudioOn'))
       if (this.tajweedEnabled) labels.push(this.t('memorisation.common.tajweedOn'))
       return labels.length ? labels.join(' • ') : this.t('memorisation.common.noReadingAids')
@@ -4295,7 +4294,6 @@ export default {
       const pills = [`${this.guidedPhaseLabel} mode`, `Font: ${this.getCurrentFontLabel()}`]
       if (this.showTranslation) pills.push('Translation')
       if (this.showTransliteration) pills.push('Transliteration')
-      if (this.showWordByWord) pills.push('Word by word')
       if (this.wordByWordAudioEnabled) pills.push(this.t('memorisation.reading.wordAudio'))
       if (this.tajweedEnabled) pills.push('Tajweed')
       return pills
@@ -4493,6 +4491,81 @@ export default {
         return this.t('memorisation.session_setup_in_progress')
       }
       return this.t('common.loading')
+    },
+
+    showAppBootLoader() {
+      if (!this.appReady || this.isBootstrapping || this.isRestoringWorkspace) return true
+      if (!this.isDataReady) return true
+      if (
+        this.readingViewMode === 'mushaf'
+        && this.shouldShowReadingWorkspace
+        && !this.currentMushafPage
+        && Number(this.chapterId || 0) > 0
+      ) {
+        return true
+      }
+      return false
+    },
+
+    showWorkspaceRefreshSpinner() {
+      return !!this.isWorkspaceRefreshing
+    },
+
+    chainingSetupBlocking() {
+      return this.hasVerses
+        && this.chainingEnabled
+        && !this.hasChainingMethodSelected
+        && !this.hasSessionStarted
+    },
+
+    aiMemorisationCheckerStepGuide() {
+      if (this.aiMemorisationCheckerResult) {
+        return {
+          step: 3,
+          total: 3,
+          title: this.t('memorisation.aiCheck.stepReview'),
+          detail: this.t('memorisation.aiCheck.stepReviewAction')
+        }
+      }
+      if (this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing) {
+        return {
+          step: 2,
+          total: 3,
+          title: this.t('memorisation.aiCheck.stepListen'),
+          detail: this.aiMemorisationCheckerStageDescription
+        }
+      }
+      return {
+        step: 1,
+        total: 3,
+        title: this.t('memorisation.aiCheck.stepPrepare'),
+        detail: this.aiMemorisationCheckerStageDescription
+      }
+    },
+
+    recitationCheckStepGuide() {
+      if (this.recitationCheckResult) {
+        return {
+          step: 3,
+          total: 3,
+          title: this.t('memorisation.aiCheck.stepReview'),
+          detail: this.t('memorisation.aiCheck.stepReciteReviewAction')
+        }
+      }
+      if (this.recitationCheckRecording || this.recitationCheckPreparing) {
+        return {
+          step: 2,
+          total: 3,
+          title: this.t('memorisation.aiCheck.stepListen'),
+          detail: this.getAiRecitationLiveGuidance(this.recitationLiveWords)
+        }
+      }
+      return {
+        step: 1,
+        total: 3,
+        title: this.t('memorisation.aiCheck.stepRecitePrepare'),
+        detail: this.t('memorisation.use_the_ai_recite_tool_in_the_header_when_you_want')
+      }
     },
 
     learningSyncBadge() {
@@ -4783,14 +4856,7 @@ export default {
           document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`)
         }
       })
-      // Re-apply highlights when word-by-word toggles
-      this.$watch('showWordByWord', () => {
-        if (this.anchorModeEnabled) {
-          this.scheduleAnchorHighlights()
-        }
-      })
-
-      // Re-apply when tajweed toggles
+      // Re-apply highlights when anchor/tajweed toggles affect word layout
       this.$watch('tajweedEnabled', () => {
         if (this.anchorModeEnabled) {
           this.scheduleAnchorHighlights()
@@ -5161,17 +5227,8 @@ export default {
       this.persistUiState()
       this.persistCentralSessionState()
     },
-    fadingVerseEnabled(newVal) {
-      if (newVal && this.showWordByWord) {
-        this.showWordByWord = false;
-        this.showBanner(this.t('toasts.fadingModeWordByWordDisabled'), 'info', 2000);
-      }
-    },
-    showWordByWord(newVal) {
-      if (newVal && this.fadingVerseEnabled) {
-        this.fadingVerseEnabled = false;
-        this.showBanner(this.t('toasts.wordByWordModeFadingDisabled'), 'info', 2000);
-      }
+    fadingVerseEnabled() {
+      this.persistUiState()
     },
     focusModeEnabled(newVal) {
       if (newVal && this.blurModeEnabled) {
@@ -5255,16 +5312,11 @@ export default {
       this.applyChainingQueueChange(this.currentMode)
     },
 
-    showWordByWord: 'persistUiState',
     defaultFontSize: 'persistUiState',
     tajweedEnabled: 'persistUiState',
     aiRecallModeEnabled: 'persistUiState',
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
-    showWordByWord(newVal) {
-      this.persistUiState()
-      if (newVal) this.restoreWordScroll(this.effectiveActiveVerseKey)
-    },
     wordByWordAudioEnabled(val) {
       if (!val) {
         this.wordByWordAudioEnabled = true
@@ -6868,11 +6920,38 @@ export default {
       return candidate
     },
 
+    canSaveCurrentSession() {
+      if (this.hasVerses) return true
+      const config = this.sessionConfig || {}
+      if (config.chapterId && config.rangeStart && config.rangeEnd) return true
+      if (this.continueSessionPayload?.config?.chapterId) return true
+      if (Number(this.sessionStartedAt || 0) > 0 && config.chapterId) return true
+      return false
+    },
+
+    async ensureSaveableWorkspaceState() {
+      if (this.hasVerses) return true
+      if (this.continueSessionPayload?.config?.chapterId) {
+        await this.hydrateSessionFromPayload(this.continueSessionPayload, {
+          banner: false,
+          forcePlayback: false
+        })
+      } else if (Number(this.chapterId || 0) > 0) {
+        await this.loadVerses(this.currentMode)
+      }
+      return this.canSaveCurrentSession()
+    },
+
     saveCurrentSessionSilently(name = this.buildAutoSaveSessionName()) {
-      if (!this.hasVerses) return null
+      if (!this.canSaveCurrentSession()) return null
       const session = this.buildSessionRecord(name, { archived: true, autoSaved: true })
       this.addSavedSession(session)
       return session
+    },
+
+    async saveCurrentSessionSilentlyAsync(name = this.buildAutoSaveSessionName()) {
+      await this.ensureSaveableWorkspaceState()
+      return this.saveCurrentSessionSilently(name)
     },
 
     confirmSaveSession() {
@@ -7410,6 +7489,10 @@ export default {
     },
 
     startSessionWithCountdown(options = {}) {
+      if (this.chainingEnabled && !this.hasChainingMethodSelected) {
+        this.guideChainingSetup()
+        return
+      }
       if (!this.canStartSession) {
         this.showTools = true
         this.showBanner(this.t('toasts.chooseAValidSurahAndAyah'), 'info', 3600)
@@ -7764,8 +7847,7 @@ export default {
             rangeStart: 1,
             rangeEnd: 4,
             focusModeEnabled: true,
-            showTranslation: true,
-            showWordByWord: true
+            showTranslation: true
           }, 0),
           this.buildSeededSession('Linking Review', {
             chapterId: 87,
@@ -7795,8 +7877,7 @@ export default {
             rangeStart: 31,
             rangeEnd: 40,
             anchorModeEnabled: true,
-            anchorCount: 2,
-            showWordByWord: true
+            anchorCount: 2
           }, 1)
         ],
         [
@@ -13915,7 +13996,7 @@ export default {
         tajweedEnabled: !!this.tajweedEnabled,
         showTranslation: !!this.showTranslation,
         showTransliteration: !!this.showTransliteration,
-        showWordByWord: !!this.showWordByWord,
+        showWordByWord: false,
         wordByWordAudioEnabled: !!this.wordByWordAudioEnabled,
         defaultFontSize: Math.max(
           this.minFontSize,
@@ -14262,6 +14343,29 @@ export default {
       return this.setActiveVerse(verseKey, options)
     },
 
+    guideChainingSetup(options = {}) {
+      const { silent = false } = options
+      this.sectionOpen.chaining = true
+      this.openToolsPanel({ tab: 'techniques' })
+      if (!silent) {
+        this.showBanner(this.t('toasts.chooseChainingMethod'), 'warning', 4500, {
+          key: 'open-chaining',
+          label: this.t('memorisation.techniques.chooseChainingMethod')
+        })
+      }
+      this.$nextTick(() => {
+        const chainingSection = document.querySelector('.sheet-section .sheet-toggle[aria-controls], .sheet-section button.sheet-toggle')
+        const chainingToggle = Array.from(document.querySelectorAll('.sheet-toggle')).find(el =>
+          el.textContent?.includes(this.t('memorisation.chaining'))
+        )
+        if (chainingToggle instanceof HTMLElement) {
+          chainingToggle.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        } else if (chainingSection instanceof HTMLElement) {
+          chainingSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        }
+      })
+    },
+
     openToolsPanel(options = {}) {
       const { verseKey = null, mode = this.currentMode, scroll = false, tab = 'tools', preserveFreshSelection = false } = options
       this.toolsReturnFocusEl = document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -14393,20 +14497,13 @@ export default {
       this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
 
-      if (this.canResumePreviousSession) {
-        await this.hydrateSessionFromPayload(this.continueSessionPayload, {
-          banner: false,
-          forcePlayback: false
-        })
-      }
-
-      const session = this.saveCurrentSessionSilently()
+      const session = await this.saveCurrentSessionSilentlyAsync()
       if (session?.name) {
         this.showBanner(this.t('toasts.sessionSaved', { name: session.name }), 'success', 2200)
         return
       }
 
-      this.showBanner('Nothing is ready to save yet.', 'info', 2200)
+      this.showBanner(this.t('toasts.nothingReadyToSave'), 'info', 2800)
     },
 
     openResumeSavedSessions() {
@@ -14429,6 +14526,10 @@ export default {
       }
       if (this.hasSessionStarted && this.audioElement?.src) {
         this.togglePlay()
+        return
+      }
+      if (this.chainingEnabled && !this.hasChainingMethodSelected) {
+        this.guideChainingSetup()
         return
       }
       this.startSessionWithCountdown()
@@ -14777,9 +14878,9 @@ export default {
     getMushafAyahNumberStyle(number) {
       const digits = Math.min(3, String(number || '').length || 1)
       const sizes = {
-        1: { width: '1.22em', height: '1.22em', fontSize: '0.34em' },
-        2: { width: '1.34em', height: '1.34em', fontSize: '0.3em' },
-        3: { width: '1.46em', height: '1.46em', fontSize: '0.27em' }
+        1: { width: '1.35em', height: '1.35em' },
+        2: { width: '1.55em', height: '1.55em' },
+        3: { width: '1.75em', height: '1.75em' }
       }
       return sizes[digits] || sizes[3]
     },
@@ -15234,7 +15335,7 @@ export default {
       this.script = config.script || this.script
       this.showTranslation = config.showTranslation ?? this.showTranslation
       this.showTransliteration = config.showTransliteration ?? this.showTransliteration
-      this.showWordByWord = config.showWordByWord ?? this.showWordByWord
+      this.showWordByWord = false
       this.wordByWordAudioEnabled = true
       this.focusModeEnabled = !!config.focusModeEnabled
       this.focusDimPercent = Math.max(30, Math.min(75, Number(config.focusDimPercent || this.focusDimPercent || 54)))
@@ -16019,7 +16120,6 @@ export default {
       if (this.tajweedEnabled) activeAids.push(this.t('memorisation.common.tajweedOn'))
       if (this.showTranslation) activeAids.push(this.t('memorisation.common.translationOn'))
       if (this.showTransliteration) activeAids.push(this.t('memorisation.common.transliterationOn'))
-      if (this.showWordByWord) activeAids.push(this.t('memorisation.common.wordByWordOn'))
       if (this.wordByWordAudioEnabled) activeAids.push(this.t('memorisation.common.wordAudioOn'))
       const repeatCount = Math.max(1, Number(this.repetitionsPerStep || this.repeatCount || 1))
       const repeatSummary = this.t('memorisation.common.repeatSummary', { count: repeatCount })
@@ -16230,20 +16330,20 @@ export default {
       this.prepareRangeRestart()
       this.startSessionWithCountdown({ skipPrime: true })
     },
-    exitSessionToSaveSession() {
+    async exitSessionToSaveSession() {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
         this.closeSessionExitModal({ restore: false })
-        const session = this.saveCurrentSessionSilently()
+        const session = await this.saveCurrentSessionSilentlyAsync()
         if (session) {
-          this.showBanner('This session has been successfully saved.', 'success', 2500)
+          this.showBanner(this.t('toasts.sessionSavedSuccess'), 'success', 2500)
         }
         return
       }
-      const session = this.saveCurrentSessionSilently()
+      const session = await this.saveCurrentSessionSilentlyAsync()
       if (session) {
-        this.showBanner('This session has been successfully saved.', 'success', 2500)
+        this.showBanner(this.t('toasts.sessionSavedSuccess'), 'success', 2500)
       } else {
-        this.showBanner('Nothing is ready to save yet.', 'info', 2200)
+        this.showBanner(this.t('toasts.nothingReadyToSave'), 'info', 2800)
       }
     },
     exitSessionToRetentionCheck() {
@@ -17166,7 +17266,7 @@ export default {
     getDisplayArabic(verse) {
       if (!verse?.arabic) return ''
       const forceMushafWords = this.readingViewMode === 'mushaf'
-      const wrapWords = forceMushafWords || this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled
+      const wrapWords = forceMushafWords || this.wordByWordAudioEnabled || this.anchorModeEnabled
       if (this.shouldShowRecitationReviewHighlights(verse.key)) {
         return this.splitRecitationDisplayIntoWords(verse)
       }
@@ -17200,9 +17300,7 @@ export default {
         ? ` data-session-target-key="${this.escapeHtml(verse.sessionTargetKey)}"`
         : ''
       const tajweedAttr = wordData?.tajweedWord ? ' data-tajweed-word="true"' : ''
-      const wordAudio = this.wordByWordAudioEnabled && wordData.audio
-        ? `<button class="word-audio-btn" data-word-index="${idx}" data-word-audio="${this.escapeHtml(wordData.audio)}"><i class="bi bi-volume-up"></i></button>`
-        : ''
+      const wordAudio = ''
 
       return `<word class="wbw-word${activeClass}${weakClass}${masteredClass}${recitationClass}${tajweedClass}" data-word-index="${idx}" data-verse-key="${verse.key}"${sessionTargetAttr}${tajweedAttr} data-word-audio="${this.escapeHtml(wordData.audio || '')}">${innerHtml}${wordAudio}</word>`
     },
@@ -17351,10 +17449,7 @@ export default {
     // Arabic text word splitting and highlighting
     getHighlightedArabic(verse) {
       if (!verse || !verse.arabic) return ''
-      if (!this.wordByWordAudioEnabled) return verse.arabic
-
-      const highlightedHtml = this.splitArabicIntoWords(verse.arabic, verse.key)
-      return highlightedHtml
+      return this.splitArabicIntoWords(verse)
     },
 
     escapeRegex(str) {
@@ -18873,6 +18968,10 @@ export default {
         this.openModeSettings()
         return
       }
+      if (actionKey === 'open-chaining') {
+        this.guideChainingSetup({ silent: true })
+        return
+      }
       if (actionKey === 'open-recordings-library') {
         this.openRecordingsLibrary(actionPayload || {})
       }
@@ -19155,6 +19254,10 @@ export default {
         this.isPlaying = false
         return
       }
+      if (this.chainingEnabled && !this.hasChainingMethodSelected) {
+        this.guideChainingSetup()
+        return
+      }
       if (!this.canStartSession) {
         this.showTools = true
         this.showBanner(this.t('toasts.chooseAValidSurahAndAyah'), 'info', 3600, { key: 'open-setup', label: 'Open setup' })
@@ -19192,7 +19295,7 @@ export default {
       }
 
       if (this.chainingEnabled && !this.hasChainingMethodSelected) {
-        this.showBanner('Choose a chaining method before starting the session.', 'warning', 3200)
+        this.guideChainingSetup()
         return false
       }
 
@@ -19223,13 +19326,12 @@ export default {
         nextState = this.showTransliteration
       }
       if (kind === 'wbw') {
-        this.showWordByWord = !this.showWordByWord
-        nextState = this.showWordByWord
+        return
       }
       this.syncSettingsDraft()
       this.persistUiState()
       // Show feedback that change was applied
-      this.showBanner(this.t('toasts.message', { p0: kind, p1: nextState ? 'enabled' : 'disabled' }), 'info', 800)
+      this.showBanner(this.t('toasts.message', { p0: kind, p1: nextState ? 'enabled' : 'disabled' }), 'info', 2800)
     },
 
     setScriptMode(mode) {
@@ -19274,7 +19376,7 @@ export default {
       this.tajweedEnabled = !!next.tajweedEnabled
       this.showTranslation = !!next.showTranslation
       this.showTransliteration = !!next.showTransliteration
-      this.showWordByWord = !!next.showWordByWord
+      this.showWordByWord = false
       this.wordByWordAudioEnabled = true
       this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(next.defaultFontSize || 100)))
       this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', this.defaultFontSize)
@@ -19309,7 +19411,7 @@ export default {
           this.flowListenPlays = Math.max(0, Number(state.flowListenPlays || 0))
           this.showTranslation = state.showTranslation ?? this.showTranslation
           this.showTransliteration = state.showTransliteration ?? this.showTransliteration
-          this.showWordByWord = state.showWordByWord ?? this.showWordByWord
+          this.showWordByWord = false
           this.wordByWordAudioEnabled = true
           this.readingViewMode = ['stacked', 'mushaf'].includes(state.readingViewMode)
             ? state.readingViewMode

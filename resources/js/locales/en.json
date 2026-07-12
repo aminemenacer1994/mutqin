@@ -715,7 +715,15 @@
       "noAudioCaptured": "No audio was captured.",
       "checkFailed": "The memorisation check could not be completed.",
       "recitationCheckFailed": "The recitation check could not be completed.",
-      "speechRecognitionFailed": "Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted."
+      "speechRecognitionFailed": "Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted.",
+      "stepLabel": "Step {step} of {total}",
+      "stepPrepare": "Prepare to recite",
+      "stepListen": "Recite from memory",
+      "stepReview": "Review your results",
+      "stepReviewAction": "Check the word colours, then save your attempt or try again.",
+      "stepRecitePrepare": "Tap the AI recite button above when you are ready.",
+      "stepReciteReviewAction": "Review the feedback, then save your attempt or try again.",
+      "tryAgain": "Try again"
     },
     "analyticsHeatmap": {
       "confidence": "Confidence: {value}%",
@@ -1241,7 +1249,9 @@
       "chainingWhyCumulative": "Use when you want to build longer runs by adding one ayah at a time.",
       "chainingWhyLinking": "Use when you want to strengthen transitions between neighboring ayahs.",
       "chainingNextCumulative": "Next: add one ayah to the block",
-      "chainingNextLinking": "Next: single -> next -> pair"
+      "chainingNextLinking": "Next: single -> next -> pair",
+      "chainingMethodRequired": "Chaining is on, but no method is selected yet.",
+      "chooseChainingMethod": "Choose chaining method"
     },
     "analytics": {
       "todayProgress": "Today's progress",
@@ -1399,6 +1409,9 @@
     "anchorModeDisabled": "Anchor Mode disabled",
     "anchorModeUsing": "Anchor Mode: Using {anchorCount}",
     "chooseAValidSurahAndAyah": "Choose a valid surah and ayah range before starting.",
+    "chooseChainingMethod": "Chaining is enabled. Choose linking or cumulative in Practice Tools to start.",
+    "nothingReadyToSave": "Nothing is ready to save yet. Load a surah range or start a session first.",
+    "sessionSavedSuccess": "Session saved successfully.",
     "pleaseSelectAValidSurahAnd": "Please select a valid surah and ayah range first",
     "noActiveSessionToSave": "No active session to save",
     "sessionSaved2": "Session saved",
