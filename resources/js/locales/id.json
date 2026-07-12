@@ -660,7 +660,8 @@
           "description": "Look around the workspace and open setup when you are ready."
         }
       },
-      "intro": "Four quick steps to get oriented before your first session."
+      "intro": "Four quick steps to get oriented before your first session.",
+      "confirmChoice": "Confirm choice"
     },
     "open_session_setup": "Buka pengaturan sesi",
     "open_controls": "Buka kontrol",
@@ -1035,7 +1036,9 @@
       "resumeReminderTranslation": "As for those who strive for Us, We shall guide them to Our paths.",
       "resumeReminderSource": "Qur'an 29:69",
       "resumeIntention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time.",
-      "reminderLabel": "A word of remembrance"
+      "reminderLabel": "A word of remembrance",
+      "stoppedAt": "Stopped at",
+      "lastSaved": "Last saved"
     },
     "sessionExit": {
       "kicker": "Sesi dijeda",
@@ -1372,7 +1375,8 @@
     "saveAttemptConfirm": {
       "aiRecite": "Your AI recitation attempt has been saved.",
       "selfCheck": "Your recording for Ayah {ayahNumber} has been saved."
-    }
+    },
+    "revisitOnboarding": "Revisit onboarding"
   },
   "toasts": {
     "saved": "Berhasil disimpan.",

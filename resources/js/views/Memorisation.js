@@ -413,6 +413,7 @@ export default {
       onboardingPath: 'casual',
       onboardingGoal: 'small',
       onboardingSampleSessionActive: false,
+      onboardingFinishChoice: '',
       showPostSessionModal: false,
       showPostSessionConfetti: false,
       postSessionSnapshot: null,
@@ -1678,11 +1679,14 @@ export default {
         })
       }
       if (snapshot.progressLabel) {
+        const covered = Number(snapshot.coveredAyahCount || 0)
+        const total = Number(snapshot.totalAyahs || 0)
+        const percent = Math.max(0, Math.min(100, Number(snapshot.progressPercent || 0)))
         stats.push({
           key: 'progress',
           label: this.t('memorisation.stats.progress'),
-          value: snapshot.progressLabel,
-          hint: `${snapshot.progressPercent || 0}%`
+          value: total ? `${covered}/${total} (${percent}%)` : snapshot.progressLabel,
+          hint: ''
         })
       }
       const rangeValue = snapshot.rangeLabel
@@ -1708,15 +1712,20 @@ export default {
           hint: ''
         })
       }
-      if (snapshot.repeatShortLabel) {
+      if (snapshot.repeatShortLabel || snapshot.repetitionsPerStep) {
+        const repeatCount = Math.max(1, Number(snapshot.repetitionsPerStep || String(snapshot.repeatShortLabel || '1').replace(/x$/i, '') || 1))
         stats.push({
           key: 'repeats',
           label: this.t('memorisation.stats.repeats'),
-          value: snapshot.repeatShortLabel,
-          hint: snapshot.repeatSummary || ''
+          value: this.t('memorisation.common.repeatSummary', { count: repeatCount }),
+          hint: ''
         })
       }
       return stats.filter(stat => stat.key !== 'duration')
+    },
+    sessionExitProgressSummary() {
+      const { done, total, percentComplete } = this.sessionExitRemainingProgress
+      return `${done}/${total} (${percentComplete}%)`
     },
     sessionExitDetailRows() {
       return this.sessionExitStats.map(stat => ({
@@ -1933,31 +1942,67 @@ export default {
     },
     welcomeBackModalTitle() {
       const name = String(this.auth?.name || '').trim()
-      if (this.canResumePreviousSession) {
-        const chapterTitle = this.resumeModalTitle
-        if (chapterTitle && chapterTitle !== this.t('memorisation.welcomeBack.kicker')) {
-          return name
-            ? this.t('memorisation.welcomeBack.resumeTitleNamed', { chapter: chapterTitle, name })
-            : this.t('memorisation.welcomeBack.resumeTitle', { chapter: chapterTitle })
-        }
-        return name
-          ? this.t('memorisation.welcomeBack.resumeGenericNamed', { name })
-          : this.t('memorisation.welcomeBack.resumeGeneric')
+      if (name) {
+        return this.t('memorisation.welcomeBack.freshTitleNamed', { name })
       }
-      return name
-        ? this.t('memorisation.welcomeBack.freshTitleNamed', { name })
-        : this.t('memorisation.welcomeBack.freshTitle')
+      return this.t('memorisation.welcomeBack.kicker')
     },
     welcomeBackModalSubtitle() {
       if (this.canResumePreviousSession) {
-        const details = this.smartResumeDetails
-        const parts = [details.focus, details.saved].filter(Boolean)
-        if (parts.length) {
-          return this.t('memorisation.welcomeBack.resumeSubtitleDetail', { detail: parts.join(' · ') })
-        }
         return this.t('memorisation.welcomeBack.resumeSubtitle')
       }
       return this.t('memorisation.welcomeBack.freshSubtitle')
+    },
+    welcomeBackDetailRows() {
+      if (!this.canResumePreviousSession) return []
+      const payload = this.continueSessionPayload || {}
+      const config = payload.config || {}
+      const chapter = this.chapters.find(item => Number(item.id) === Number(config.chapterId))
+      const reciter = this.reciters.find(item => String(item.id) === String(config.reciterId || ''))
+      const activeAyah = payload.activeVerseKey
+        ? String(payload.activeVerseKey).split(':')[1]
+        : String(config.rangeStart || 1)
+      const details = this.smartResumeDetails
+      const rows = [
+        {
+          key: 'surah',
+          label: this.t('sessionSetup.surah'),
+          value: chapter?.name_simple || ''
+        },
+        {
+          key: 'range',
+          label: this.t('sessionSetup.ayahRange'),
+          value: this.t('memorisation.common.rangeLabel', {
+            start: config.rangeStart || 1,
+            end: config.rangeEnd || config.rangeStart || 1
+          })
+        },
+        {
+          key: 'stopped',
+          label: this.t('memorisation.welcomeBack.stoppedAt'),
+          value: this.t('memorisation.sessionType.ayahLabel', { number: activeAyah })
+        },
+        {
+          key: 'progress',
+          label: this.t('memorisation.stats.progress'),
+          value: `${details.progressPercent || 0}%`
+        }
+      ]
+      if (reciter?.name) {
+        rows.push({
+          key: 'reciter',
+          label: this.t('sessionSetup.reciter'),
+          value: reciter.name
+        })
+      }
+      if (details.saved) {
+        rows.push({
+          key: 'saved',
+          label: this.t('memorisation.welcomeBack.lastSaved'),
+          value: details.saved
+        })
+      }
+      return rows.filter(row => row.value)
     },
     welcomeBackIslamicContent() {
       if (this.canResumePreviousSession) {
@@ -3524,6 +3569,47 @@ export default {
         total: this.onboardingSteps.length
       })
     },
+    onboardingStepPreview() {
+      const step = this.onboardingStepContent
+      if (!step?.key) return null
+      const base = `memorisation.onboarding.steps.${step.key}`
+      const stats = this.onboardingStepStats
+      const previewItemsRaw = typeof this.$tm === 'function' ? this.$tm(`${base}.previewItems`) : []
+      const fallbackLabels = Array.isArray(previewItemsRaw) ? previewItemsRaw.filter(Boolean) : []
+      let items = stats.map(stat => ({
+        key: stat.key,
+        label: stat.label,
+        value: stat.value || '—'
+      }))
+      if (!items.length && fallbackLabels.length) {
+        items = fallbackLabels.map((label, index) => ({
+          key: `preview-${index}`,
+          label,
+          value: '—'
+        }))
+      }
+      return {
+        title: this.t(`${base}.previewTitle`),
+        subtitle: this.t(`${base}.previewSubtitle`),
+        items
+      }
+    },
+    isAnyModalOverlayActive() {
+      return !!(
+        this.showPostLoginOnboarding
+        || this.showPostSessionModal
+        || this.showSessionExitModal
+        || this.showWelcomeBackModal
+        || this.showSaveNameModal
+        || this.showConfirmModal
+        || this.showRenameRecordingModal
+        || this.showKeyboardShortcuts
+        || this.showHelpLearningModal
+        || this.showSessionAnalyticsModal
+        || this.showSelfCheckModal
+        || this.showPlannerCompletionModal
+      )
+    },
     onboardingStepStats() {
       const stepKey = this.onboardingStepContent?.key
       if (!stepKey) return []
@@ -3597,22 +3683,18 @@ export default {
           techniques.push(this.t('memorisation.common.chainingLabel', { method: this.chainingMethod || 'Standard' }))
         }
         if (this.talqinModeEnabled) techniques.push(this.t('memorisation.talqin.yourTurn'))
-        if (techniques.length) {
-          stats.push({
-            key: 'techniques',
-            label: this.t('memorisation.practice'),
-            value: techniques.join(' · '),
-            hint: ''
-          })
-        }
-        if (Number(this.speed) > 0) {
-          stats.push({
-            key: 'speed',
-            label: this.t('memorisation.speed'),
-            value: `${Number(this.speed)}x`,
-            hint: ''
-          })
-        }
+        stats.push({
+          key: 'techniques',
+          label: this.t('memorisation.practice'),
+          value: techniques.length ? techniques.join(' · ') : this.t('common.off'),
+          hint: ''
+        })
+        stats.push({
+          key: 'speed',
+          label: this.t('memorisation.speed'),
+          value: `${Number(this.speed || 1)}x`,
+          hint: ''
+        })
       }
 
       if (stepKey === 'review') {
@@ -7868,6 +7950,7 @@ export default {
       if (!this.isLoggedIn && !force) return
       this.onboardingManualLaunch = !!force
       this.onboardingStepIndex = 0
+      this.onboardingFinishChoice = ''
       if (!force && this.hasCompletedOnboarding() && !this.auth?.just_registered) return
       this.sessionEndedSnapshot = null
       if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
@@ -7882,9 +7965,38 @@ export default {
       this.topCardMenuOpen = false
       this.openOnboardingModal(true)
     },
+    prevOnboardingStep() {
+      if (this.onboardingStepIndex <= 0) return
+      this.onboardingStepIndex -= 1
+      if (this.onboardingStepIndex < this.onboardingSteps.length - 1) {
+        this.onboardingFinishChoice = ''
+      }
+      this.applyOnboardingStep(this.onboardingStepIndex)
+    },
     nextOnboardingStep() {
       this.onboardingStepIndex = Math.min(this.onboardingSteps.length - 1, this.onboardingStepIndex + 1)
+      if (this.onboardingStepIndex === this.onboardingSteps.length - 1) {
+        this.onboardingFinishChoice = ''
+      }
       this.applyOnboardingStep(this.onboardingStepIndex)
+    },
+    selectOnboardingFinishChoice(value) {
+      this.onboardingFinishChoice = value
+    },
+    confirmOnboardingFinishChoice() {
+      const choice = this.onboardingFinishChoice
+      if (!choice) return
+      if (choice === 'sample') {
+        this.playOnboardingSampleSession()
+        return
+      }
+      if (choice === 'setup') {
+        this.completeOnboardingOpenSetup()
+        return
+      }
+      if (choice === 'explore') {
+        this.completeOnboardingExploreWorkspace()
+      }
     },
     skipOnboarding() {
       if (this.requiresFirstTimeOnboarding) return
@@ -8144,9 +8256,9 @@ export default {
       this.applyOnboardingGoalPreset()
       const stepConfig = [
         { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
-        { tab: 'tools', section: 'advanced_setup', mode: 'mushaf', blur: false, chaining: false, anchor: false },
-        { tab: 'tools', section: 'advanced_playback', mode: 'stacked', blur: false, chaining: false, anchor: false },
-        { tab: 'saved', section: null, mode: 'stacked', blur: false, chaining: false, anchor: false }
+        { tab: 'tools', section: 'reading_settings', mode: 'mushaf', blur: false, chaining: false, anchor: false },
+        { tab: 'techniques', section: 'focus_mode', mode: 'stacked', blur: false, chaining: false, anchor: false },
+        { tab: 'saved', section: 'saved_sessions', mode: 'stacked', blur: false, chaining: false, anchor: false }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
       if (stepMeta.targetSection) stepConfig.section = stepMeta.targetSection
       this.tab = stepConfig.tab

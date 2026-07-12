@@ -8286,6 +8286,10 @@ html {
   top: calc(72px + env(safe-area-inset-top, 0px));
 }
 
+.banner.banner--above-modal {
+  z-index: 14150;
+}
+
 .banner-message {
   flex: 1 1 auto;
   min-width: 0;
@@ -30423,6 +30427,140 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   gap: 0.85rem;
 }
 
+/* Onboarding — spacing, preview examples, finish-choice selection */
+
+.post-onboarding-modal .onboarding-body {
+  display: grid;
+  gap: 1.15rem;
+  padding: 1.25rem 1.5rem 1.45rem !important;
+}
+
+.post-onboarding-modal .onboarding-lead {
+  margin: 0;
+  line-height: 1.62;
+}
+
+.post-onboarding-modal .onboarding-points {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.post-onboarding-modal .onboarding-points li {
+  line-height: 1.55;
+}
+
+.post-onboarding-modal .onboarding-progress {
+  padding: 0.85rem 1.5rem 0.35rem;
+}
+
+.post-onboarding-modal .onboarding-choice-grid {
+  gap: 1rem;
+  margin-top: 0.15rem;
+}
+
+.post-onboarding-modal .onboarding-finish-choice-grid {
+  margin-top: 0.35rem;
+}
+
+.onboarding-preview {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+}
+
+.onboarding-preview-head {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.onboarding-preview-head strong {
+  font-size: 0.78rem;
+  font-weight: 560;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 72%, var(--text-muted));
+}
+
+.onboarding-preview-head span {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.onboarding-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.onboarding-preview-item {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  padding: 0.62rem 0.72rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+}
+
+.onboarding-preview-label {
+  font-size: 0.68rem;
+  font-weight: 560;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.onboarding-preview-value {
+  font-size: 0.84rem;
+  font-weight: 520;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.onboarding-choice-card {
+  position: relative;
+  padding: 1rem 1.05rem 1rem 1.15rem;
+}
+
+.onboarding-choice-card.active {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.onboarding-choice-check {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.8rem;
+  color: var(--accent-strong);
+  font-size: 1rem;
+}
+
+.onboarding-nav-actions {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.onboarding-nav-actions .mutqin-modal-btn--secondary {
+  margin-inline-end: auto;
+}
+
+@media (max-width: 640px) {
+  .onboarding-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .post-onboarding-modal .onboarding-body {
+    padding-inline: 1.15rem !important;
+  }
+}
+
 /* Unified modal footer + actions */
 
 .mutqin-modal-footer {
@@ -30446,7 +30584,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .mutqin-modal-actions--4 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .mutqin-modal-actions--stack {
@@ -30678,5 +30816,149 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
   .mutqin-session-summary-row-value {
     text-align: start;
+  }
+}
+
+/* Techniques — round radio controls */
+
+.tools-body .mode-radio {
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1;
+  flex: 0 0 30px;
+  overflow: hidden;
+}
+
+.tools-body .techniques-choice-group {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
+.tools-body .techniques-choice-group .radio {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0.35rem 0;
+  border-radius: 0;
+  min-height: 0;
+}
+
+.tools-body .techniques-choice-group .radio:hover {
+  transform: none;
+  background: transparent;
+}
+
+.tools-body .techniques-choice-group .radio input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-grid;
+  place-content: center;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  margin: 0;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--border) 86%, transparent);
+  background: var(--surface);
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.tools-body .techniques-choice-group .radio input[type="radio"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 160ms ease;
+  background: color-mix(in srgb, var(--accent) 82%, #58b68e);
+}
+
+.tools-body .techniques-choice-group .radio input[type="radio"]:checked {
+  border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+
+.tools-body .techniques-choice-group .radio input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+/* Welcome back — visible session data + 3-column actions */
+
+.welcome-back-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+.welcome-back-detail-row {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.welcome-back-detail-label {
+  font-size: 0.68rem;
+  font-weight: 560;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.welcome-back-detail-value {
+  font-size: 0.86rem;
+  font-weight: 520;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.welcome-back-actions-grid .mutqin-modal-btn {
+  min-height: 2.55rem;
+  padding-inline: 0.55rem;
+  font-size: 0.74rem;
+}
+
+.welcome-back-actions-grid .mutqin-modal-btn span {
+  text-align: center;
+  line-height: 1.25;
+}
+
+.session-exit-actions-grid .mutqin-modal-btn {
+  min-height: 2.55rem;
+  padding-inline: 0.55rem;
+  font-size: 0.74rem;
+}
+
+.session-exit-actions-grid .mutqin-modal-btn span {
+  text-align: center;
+  line-height: 1.25;
+}
+
+@media (min-width: 768px) {
+  .welcome-back-actions-grid.mutqin-modal-actions--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .session-exit-actions-grid.mutqin-modal-actions--4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .session-exit-actions-grid.mutqin-modal-actions--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .welcome-back-details {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-back-actions-grid.mutqin-modal-actions--3,
+  .session-exit-actions-grid.mutqin-modal-actions--4,
+  .session-exit-actions-grid.mutqin-modal-actions--3 {
+    grid-template-columns: 1fr;
   }
 }

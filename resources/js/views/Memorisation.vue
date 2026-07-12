@@ -12,7 +12,13 @@
       <span>{{ t('common.loading') }}</span>
     </div>
 
-    <div v-if="appReady && banner" class="banner" :class="[banner.kind, { important: banner.important, persistent: banner.persistent }]" role="alert" aria-live="assertive">
+    <div
+      v-if="appReady && banner"
+      class="banner"
+      :class="[banner.kind, { important: banner.important, persistent: banner.persistent, 'banner--above-modal': isAnyModalOverlayActive }]"
+      role="alert"
+      aria-live="assertive"
+    >
       <span class="banner-message">{{ banner.message }}</span>
       <div class="banner-actions">
         <button v-if="banner.actionLabel" class="banner-action" @click="runBannerAction">{{ banner.actionLabel
@@ -235,14 +241,9 @@
                         </div>
                       </transition>
                     </div>
-                    <!--
-                      <button type="button" @click="openAdvancedControls">
-                        <i class="bi bi-sliders"></i><span>{{ t('common.controls') }}</span>
-                      </button>
-                      <button type="button" @click="openOnboardingFromTopMenu">
-                        <i class="bi bi-compass"></i><span>{{ t('memorisation.onboarding') }}</span>
-                      </button>
-                    -->
+                    <button type="button" @click="openOnboardingFromTopMenu">
+                      <i class="bi bi-compass"></i><span>{{ t('memorisation.revisitOnboarding') }}</span>
+                    </button>
                     <button @click="toggleKeyboardShortcuts" type="button">
                       <i class="bi bi-keyboard"></i><span>{{ t('shortcuts.title') }}</span>
                     </button>
@@ -1067,7 +1068,7 @@
                   </div>
                   <div v-if="chainingEnabled" class="field">
                     <label>{{ t('common.method') }}</label>
-                    <div class="radio-group">
+                    <div class="radio-group techniques-choice-group">
                       <label class="radio">
                         <input type="radio" value="linking" :checked="chainingMethod === 'linking'"
                           @change="setChainingMethod('linking')">
@@ -1484,8 +1485,8 @@
               <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
             </button>
             <button class="tools-btn btn btn-primary session-primary-action" @click="startSessionAndClose">
-              <i class="bi" :class="isPlaying ? 'bi-pause-fill' : (hasSessionStarted ? 'bi-play-fill' : 'bi-play-fill')"></i>
-              <span>{{ isPlaying ? 'Pause session' : (hasSessionStarted ? 'Resume session' : 'Start session') }}</span>
+              <i class="bi bi-play-fill" aria-hidden="true"></i>
+              <span>{{ t('memorisation.welcomeBack.startNewSession') }}</span>
             </button>
           </template>
         </div>
@@ -1600,6 +1601,21 @@
             </div>
 
             <div class="modal-body welcome-back-body">
+              <div
+                v-if="welcomeBackDetailRows.length"
+                class="welcome-back-details"
+                :aria-label="t('memorisation.postSession.detailsLabel')"
+              >
+                <div
+                  v-for="row in welcomeBackDetailRows"
+                  :key="row.key"
+                  class="welcome-back-detail-row"
+                >
+                  <span class="welcome-back-detail-label">{{ row.label }}</span>
+                  <strong class="welcome-back-detail-value">{{ row.value }}</strong>
+                </div>
+              </div>
+
               <blockquote class="welcome-back-reminder" :aria-label="t('memorisation.welcomeBack.reminderLabel')">
                 <span class="welcome-back-reminder-kicker">{{ t('memorisation.welcomeBack.reminderLabel') }}</span>
                 <p class="welcome-back-reminder-quote">{{ welcomeBackIslamicContent.translation }}</p>
@@ -1608,16 +1624,10 @@
                 </footer>
                 <p class="welcome-back-reminder-intention">{{ welcomeBackIslamicContent.intention }}</p>
               </blockquote>
-
-              <ul v-if="welcomeBackResumeHints.length" class="welcome-back-hints">
-                <li v-for="(hint, index) in welcomeBackResumeHints" :key="`welcome-back-hint-${index}`">
-                  {{ hint }}
-                </li>
-              </ul>
             </div>
 
             <div class="modal-footer mutqin-modal-footer">
-              <div class="mutqin-modal-actions mutqin-modal-actions--stack">
+              <div class="mutqin-modal-actions mutqin-modal-actions--3 welcome-back-actions-grid">
                 <button type="button" class="mutqin-modal-btn mutqin-modal-btn--primary" @click="welcomeBackStartNewSession">
                   <i class="bi bi-plus-circle" aria-hidden="true"></i>
                   <span>{{ t('memorisation.welcomeBack.startNewSession') }}</span>
@@ -1664,9 +1674,6 @@
                 <p v-if="sessionExitMotivationMessage" class="session-exit-message">
                   {{ sessionExitMotivationMessage }}
                 </p>
-                <p v-if="sessionExitPositionLine" class="session-exit-position-line">
-                  {{ sessionExitPositionLine }}
-                </p>
               </div>
             </div>
 
@@ -1678,11 +1685,11 @@
                 :aria-valuenow="sessionExitRemainingProgress.percentComplete"
                 aria-valuemin="0"
                 aria-valuemax="100"
-                :aria-label="sessionExitRemainingTitle"
+                :aria-label="sessionExitProgressSummary"
               >
                 <div class="session-exit-progress-meta">
-                  <span class="session-exit-progress-label">{{ sessionExitRemainingTitle }}</span>
-                  <span class="session-exit-progress-value">{{ sessionExitRemainingProgress.percentComplete }}%</span>
+                  <span class="session-exit-progress-label">{{ t('memorisation.stats.progress') }}</span>
+                  <span class="session-exit-progress-value">{{ sessionExitProgressSummary }}</span>
                 </div>
                 <div class="session-exit-progress-track">
                   <span
@@ -1712,7 +1719,7 @@
             </div>
 
             <div class="modal-footer mutqin-modal-footer">
-              <div class="mutqin-modal-actions" :class="canContinueCurrentSession ? 'mutqin-modal-actions--4' : 'mutqin-modal-actions--3'">
+              <div class="mutqin-modal-actions session-exit-actions-grid" :class="canContinueCurrentSession ? 'mutqin-modal-actions--4' : 'mutqin-modal-actions--3'">
                 <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="exitSessionToNewSession">
                   <i class="bi bi-plus-circle" aria-hidden="true"></i>
                   <span>{{ t('memorisation.sessionExit.startNewSession') }}</span>
@@ -2988,6 +2995,27 @@
             </li>
           </ul>
 
+          <section
+            v-if="onboardingStepPreview"
+            class="onboarding-preview"
+            :aria-label="onboardingStepPreview.title"
+          >
+            <header class="onboarding-preview-head">
+              <strong>{{ onboardingStepPreview.title }}</strong>
+              <span>{{ onboardingStepPreview.subtitle }}</span>
+            </header>
+            <div class="onboarding-preview-grid">
+              <div
+                v-for="item in onboardingStepPreview.items"
+                :key="item.key"
+                class="onboarding-preview-item"
+              >
+                <span class="onboarding-preview-label">{{ item.label }}</span>
+                <strong class="onboarding-preview-value">{{ item.value }}</strong>
+              </div>
+            </div>
+          </section>
+
           <div v-if="onboardingStepContent.choices?.length" class="onboarding-choice-grid">
             <button
               v-for="choice in onboardingStepContent.choices"
@@ -3011,37 +3039,65 @@
             <button
               type="button"
               class="onboarding-choice-card onboarding-choice-card--recommended"
-              @click="playOnboardingSampleSession"
+              :class="{ active: onboardingFinishChoice === 'sample' }"
+              @click="selectOnboardingFinishChoice('sample')"
             >
+              <span v-if="onboardingFinishChoice === 'sample'" class="onboarding-choice-check" aria-hidden="true">
+                <i class="bi bi-check-circle-fill"></i>
+              </span>
               <strong>{{ t('memorisation.onboarding.choices.sample.title') }}</strong>
               <span>{{ t('memorisation.onboarding.choices.sample.description') }}</span>
             </button>
             <button
               type="button"
               class="onboarding-choice-card"
-              @click="completeOnboardingOpenSetup"
+              :class="{ active: onboardingFinishChoice === 'setup' }"
+              @click="selectOnboardingFinishChoice('setup')"
             >
+              <span v-if="onboardingFinishChoice === 'setup'" class="onboarding-choice-check" aria-hidden="true">
+                <i class="bi bi-check-circle-fill"></i>
+              </span>
               <strong>{{ t('memorisation.onboarding.choices.setup.title') }}</strong>
               <span>{{ t('memorisation.onboarding.choices.setup.description') }}</span>
             </button>
             <button
               type="button"
               class="onboarding-choice-card"
-              @click="completeOnboardingExploreWorkspace"
+              :class="{ active: onboardingFinishChoice === 'explore' }"
+              @click="selectOnboardingFinishChoice('explore')"
             >
+              <span v-if="onboardingFinishChoice === 'explore'" class="onboarding-choice-check" aria-hidden="true">
+                <i class="bi bi-check-circle-fill"></i>
+              </span>
               <strong>{{ t('memorisation.onboarding.choices.explore.title') }}</strong>
               <span>{{ t('memorisation.onboarding.choices.explore.description') }}</span>
             </button>
           </div>
         </div>
 
-        <div
-          v-if="!(requiresFirstTimeOnboarding && onboardingStepIndex === onboardingSteps.length - 1)"
-          class="modal-footer mutqin-modal-footer"
-        >
-          <div class="mutqin-modal-actions mutqin-modal-actions--end">
+        <div class="modal-footer mutqin-modal-footer">
+          <div class="mutqin-modal-actions mutqin-modal-actions--end onboarding-nav-actions">
             <button
-              v-if="onboardingStepIndex < onboardingSteps.length - 1"
+              v-if="onboardingStepIndex > 0"
+              type="button"
+              class="mutqin-modal-btn mutqin-modal-btn--secondary"
+              @click="prevOnboardingStep"
+            >
+              <i class="bi bi-arrow-left" aria-hidden="true"></i>
+              <span>{{ t('common.back') }}</span>
+            </button>
+            <button
+              v-if="requiresFirstTimeOnboarding && onboardingStepIndex === onboardingSteps.length - 1"
+              type="button"
+              class="mutqin-modal-btn mutqin-modal-btn--primary"
+              :disabled="!onboardingFinishChoice"
+              @click="confirmOnboardingFinishChoice"
+            >
+              <i class="bi bi-check2-circle" aria-hidden="true"></i>
+              <span>{{ t('memorisation.onboarding.confirmChoice') }}</span>
+            </button>
+            <button
+              v-else-if="onboardingStepIndex < onboardingSteps.length - 1"
               type="button"
               class="mutqin-modal-btn mutqin-modal-btn--primary"
               @click="nextOnboardingStep"
