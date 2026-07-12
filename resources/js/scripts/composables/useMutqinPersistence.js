@@ -200,14 +200,42 @@ export function saveMutqinState(state, owner = MUTQIN_DEFAULT_OWNER) {
     const snapshot = JSON.stringify(clone(state))
     if (snapshot === lastSavedSnapshot) return false
     const primaryKey = stateStorageKey(owner)
-    const previous = localStorage.getItem(primaryKey)
-    if (previous) localStorage.setItem(backupStorageKey(owner), previous)
-    localStorage.setItem(primaryKey, snapshot)
-    if (ownerKey(owner) === MUTQIN_DEFAULT_OWNER) {
-      const legacyPrevious = localStorage.getItem(MUTQIN_STATE_KEY)
-      if (legacyPrevious) localStorage.setItem(`${MUTQIN_STATE_KEY}:backup`, legacyPrevious)
-      localStorage.setItem(MUTQIN_STATE_KEY, snapshot)
+    const backupKey = backupStorageKey(owner)
+    const legacyBackupKey = `${MUTQIN_STATE_KEY}:backup`
+    const isGuest = ownerKey(owner) === MUTQIN_DEFAULT_OWNER
+
+    const writePrimary = () => {
+      localStorage.setItem(primaryKey, snapshot)
+      if (isGuest) localStorage.setItem(MUTQIN_STATE_KEY, snapshot)
     }
+
+    const writeWithBackup = () => {
+      const previous = localStorage.getItem(primaryKey)
+      if (previous) localStorage.setItem(backupKey, previous)
+      writePrimary()
+      if (isGuest) {
+        const legacyPrevious = localStorage.getItem(MUTQIN_STATE_KEY)
+        if (legacyPrevious) localStorage.setItem(legacyBackupKey, legacyPrevious)
+      }
+    }
+
+    try {
+      writeWithBackup()
+    } catch (error) {
+      if (error?.name !== 'QuotaExceededError') throw error
+      try {
+        localStorage.removeItem(backupKey)
+        if (isGuest) localStorage.removeItem(legacyBackupKey)
+      } catch {}
+      try {
+        writePrimary()
+      } catch (retryError) {
+        if (retryError?.name !== 'QuotaExceededError') throw retryError
+        console.warn('mutqin_state save skipped: localStorage quota exceeded')
+        return false
+      }
+    }
+
     lastSavedSnapshot = snapshot
     return true
   } catch (error) {

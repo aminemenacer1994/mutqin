@@ -1704,7 +1704,7 @@ export default {
       return !!(this.isLoggedIn && this.showWelcomeBackModal && this.returningUserChoicePending)
     },
     isWelcomeBackWorkspaceHidden() {
-      return !!(this.welcomeBackWorkspaceHidden || this.shouldGateWorkspaceForResumeChoice())
+      return !!(this.welcomeBackWorkspaceHidden || this.shouldGateWorkspaceForResumeChoice)
     },
     welcomeBackModalTitle() {
       const name = String(this.auth?.name || '').trim()
@@ -3795,7 +3795,7 @@ export default {
 
     try {
       const authenticatedWorkspace = this.learningBackendEnabled()
-      const needsFirstTimeOnboarding = authenticatedWorkspace && this.requiresFirstTimeOnboarding()
+      const needsFirstTimeOnboarding = authenticatedWorkspace && this.requiresFirstTimeOnboarding
       this.syncWorkspaceStorageBridge()
       this.hydrateAuthenticatedWorkspaceStateFromLocalStorage()
       const localResumeSnapshot = this.captureLocalResumeSnapshot()
@@ -3960,7 +3960,7 @@ export default {
         })
       }
 
-      if (this.isLoggedIn && !needsFirstTimeOnboarding && this.isExistingUserLogin()) {
+      if (this.isLoggedIn && !needsFirstTimeOnboarding && this.isExistingUserLogin) {
         this.maybeShowWelcomeBackModal()
       }
 
@@ -4635,7 +4635,7 @@ export default {
 
     maybeShowWelcomeBackModal() {
       if (!this.isLoggedIn) return
-      if (!this.isExistingUserLogin()) return
+      if (!this.isExistingUserLogin) return
       if (!this.getReadyToBeginLoginEventId()) return
       if (this.hasShownWelcomeBackModalForCurrentLogin()) return
       this.markWelcomeBackModalShownForCurrentLogin()
