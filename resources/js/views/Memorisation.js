@@ -6,6 +6,10 @@ import {
   setGlobalTheme,
   toThemePreference as toThemePref
 } from '../utils/theme'
+import {
+  buildPostSessionEmotionalContext,
+  buildWelcomeBackConsistencyNudge
+} from '../utils/emotionalTouches'
 import diff from 'fast-diff'
 import { markRaw } from 'vue'
 import { getEditions, getQuranEdition, getSurahEdition, getSurahEditions } from '../scripts/lib/quranApis'
@@ -418,6 +422,8 @@ export default {
       showPostSessionConfetti: false,
       postSessionSnapshot: null,
       postSessionOffcanvasOpen: false,
+      postSessionStatsExpanded: false,
+      postSessionEmotionalContext: null,
       sessionExitOffcanvasOpen: false,
       showAdvancedAnalytics: false,
       showAdvancedMetricsModal: false,
@@ -1616,13 +1622,23 @@ export default {
     showHeaderSessionAction() {
       return this.hasVerses
     },
+    headerSessionControlState() {
+      if (!this.isSessionLive) return 'idle'
+      return this.isPlaying ? 'active' : 'paused'
+    },
     headerSessionActionLabel() {
-      if (this.isPlaying) return 'Pause session'
-      if (this.hasSessionStarted) return 'Resume session'
-      return 'Start session'
+      const state = this.headerSessionControlState
+      if (state === 'active') return this.t('common.continue')
+      if (state === 'paused') return this.t('common.resume')
+      return this.t('common.startSession')
     },
     headerSessionActionIcon() {
-      return this.isPlaying ? 'bi-pause-fill' : 'bi-play-fill'
+      const state = this.headerSessionControlState
+      if (state === 'active') return 'bi-play-circle-fill'
+      return 'bi-play-fill'
+    },
+    showHeaderEndSessionAction() {
+      return this.isSessionLive && !this.isSessionCompleted
     },
     sessionExitModalTitle() {
       if (this.showSessionExitModal && !this.hasSessionStarted && this.sessionExitPreviewSnapshot) {
@@ -1959,9 +1975,7 @@ export default {
       const config = payload.config || {}
       const chapter = this.chapters.find(item => Number(item.id) === Number(config.chapterId))
       const reciter = this.reciters.find(item => String(item.id) === String(config.reciterId || ''))
-      const activeAyah = payload.activeVerseKey
-        ? String(payload.activeVerseKey).split(':')[1]
-        : String(config.rangeStart || 1)
+      const stoppedAyahLabel = this.formatResumeStoppedAyahLabel(payload)
       const details = this.smartResumeDetails
       const rows = [
         {
@@ -1980,7 +1994,7 @@ export default {
         {
           key: 'stopped',
           label: this.t('memorisation.welcomeBack.stoppedAt'),
-          value: this.t('memorisation.sessionType.ayahLabel', { number: activeAyah })
+          value: stoppedAyahLabel
         },
         {
           key: 'progress',
@@ -2017,6 +2031,13 @@ export default {
         source: this.t('memorisation.welcomeBack.freshReminderSource'),
         intention: this.t('memorisation.welcomeBack.freshIntention')
       }
+    },
+    welcomeBackConsistencyNudge() {
+      return buildWelcomeBackConsistencyNudge(
+        this.readActivityEvents(),
+        Date.now(),
+        this.t.bind(this)
+      )
     },
     welcomeBackResumeHints() {
       if (!this.canResumePreviousSession) return []
@@ -2109,13 +2130,11 @@ export default {
       const config = payload.config || {}
       const chapter = this.chapters.find(item => Number(item.id) === Number(config.chapterId))
       const reciter = this.reciters.find(item => String(item.id) === String(config.reciterId || ''))
-      const activeAyah = payload.activeVerseKey
-        ? String(payload.activeVerseKey).split(':')[1]
-        : String(config.rangeStart || 1)
+      const stoppedAyahLabel = this.formatResumeStoppedAyahLabel(payload)
       return [
         { key: 'surah', label: 'Surah', value: chapter?.name_simple || `Surah ${config.chapterId || ''}`.trim() },
         { key: 'range', label: 'Range', value: `Ayahs ${config.rangeStart || 1}-${config.rangeEnd || config.rangeStart || 1}` },
-        { key: 'stopped', label: 'Stopped at', value: `Ayah ${activeAyah}` },
+        ...(stoppedAyahLabel ? [{ key: 'stopped', label: 'Stopped at', value: stoppedAyahLabel }] : []),
         { key: 'reciter', label: 'Reciter', value: reciter?.name || 'Alafasy' },
         { key: 'speed', label: 'Speed', value: `${Number(config.speed || 1)}x` },
         { key: 'repeats', label: 'Repeats', value: `${Math.max(1, Number(config.repetitionsPerStep || 1))}x per ayah` }
@@ -4628,21 +4647,23 @@ export default {
       if (!snap) {
         return this.t('memorisation.sessionComplete.title')
       }
-      const chapterName = snap.chapterName || this.currentChapter?.name_simple || ''
-      const rangeLabel = snap.rangeLabel || ''
-      if (chapterName && rangeLabel) {
-        return `${chapterName} · ${rangeLabel}`
-      }
-      if (chapterName) return chapterName
       return snap.completedAll
-        ? this.t('memorisation.sessionComplete.title')
-        : this.t('memorisation.sessionEnded.title')
+        ? this.t('memorisation.postSession.celebrationTitleComplete')
+        : this.t('memorisation.postSession.celebrationTitlePartial')
     },
 
     postSessionModalMessage() {
       const snap = this.postSessionSnapshot
       if (!snap) return ''
-      return snap.detailMessage || snap.summaryMessage || ''
+      return snap.summaryMessage || this.t('memorisation.postSession.celebrationMessage')
+    },
+
+    postSessionEncouragement() {
+      return this.postSessionEmotionalContext?.encouragement || ''
+    },
+
+    postSessionMilestone() {
+      return this.postSessionEmotionalContext?.milestone || ''
     },
 
     hasLoadedAudio() {
@@ -5170,6 +5191,9 @@ export default {
         this.showTools = false
         this.postSessionOffcanvasOpen = false
         this.topCardMenuOpen = false
+      } else {
+        this.postSessionStatsExpanded = false
+        this.postSessionEmotionalContext = null
       }
     },
     showWelcomeBackModal(newVal) {
@@ -8138,9 +8162,20 @@ export default {
       this.showTools = false
       this.isDataReady = true
     },
-    openPostSessionModal(snapshot = null) {
+    openPostSessionModal(snapshot = null, options = {}) {
       this.postSessionSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
       if (!this.postSessionSnapshot) return
+      this.postSessionEmotionalContext = buildPostSessionEmotionalContext({
+        snapshot: this.postSessionSnapshot,
+        chapter: this.currentChapter,
+        previousStreak: Number(
+          options.previousStreak ?? this.analytics?.currentStreak ?? 0
+        ),
+        currentStreak: Number(this.analytics?.currentStreak || 0),
+        seed: `${this.auth?.id || 'guest'}:${this.postSessionSnapshot.chapterName || ''}:${this.sessionCompletedAt || Date.now()}`,
+        t: this.t.bind(this)
+      })
+      this.postSessionStatsExpanded = false
       this.showPostSessionConfetti = true
       this.showPostSessionModal = true
       this.showTools = false
@@ -8149,10 +8184,16 @@ export default {
         this.showPostSessionConfetti = false
       }, this.onboardingSampleSessionActive ? 6600 : 5600)
     },
+    togglePostSessionStats() {
+      this.postSessionStatsExpanded = !this.postSessionStatsExpanded
+    },
+
     repeatPostSession() {
       this.showPostSessionModal = false
       this.showPostSessionConfetti = false
       this.postSessionOffcanvasOpen = false
+      this.postSessionStatsExpanded = false
+      this.postSessionEmotionalContext = null
       this.postSessionSnapshot = null
       this.showTools = false
       this.prepareRangeRestart()
@@ -8169,6 +8210,7 @@ export default {
     logoutFromPostSession() {
       if (typeof document === 'undefined') return
       this.postSessionSnapshot = null
+      this.postSessionEmotionalContext = null
       this.showPostSessionModal = false
       this.showPostSessionConfetti = false
       this.postSessionOffcanvasOpen = false
@@ -8189,6 +8231,7 @@ export default {
       this.showPostSessionConfetti = false
       this.postSessionOffcanvasOpen = false
       this.postSessionSnapshot = null
+      this.postSessionEmotionalContext = null
       this.markOnboardingCompleted()
       this.restoreOnboardingDemo()
       this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
@@ -14421,6 +14464,35 @@ export default {
       }
     },
 
+    resolveResumeStoppedAyahNumber(payload = null) {
+      const data = payload || this.continueSessionPayload || {}
+      const key = data.activeVerseKey || data.activeKey
+      if (!key) return null
+      const parts = String(key).split(':')
+      const ayahPart = parts.length > 1 ? parts[1] : parts[0]
+      const parsed = Number(ayahPart)
+      if (!Number.isFinite(parsed) || parsed <= 0) return null
+      return parsed
+    },
+
+    hasResumePlaybackPosition(payload = null) {
+      const data = payload || this.continueSessionPayload || {}
+      const ayahNumber = this.resolveResumeStoppedAyahNumber(data)
+      if (ayahNumber == null) return false
+      return Number(data.sessionStartedAt || 0) > 0
+        || Number(data.queueIndex || 0) > 0
+        || Number(data.mutqinSessionIndex || 0) > 0
+        || Number(data.currentTime || 0) > 0
+    },
+
+    formatResumeStoppedAyahLabel(payload = null) {
+      if (!this.hasResumePlaybackPosition(payload)) {
+        return this.t('memorisation.welcomeBack.stoppedAtBeginning')
+      }
+      const n = this.resolveResumeStoppedAyahNumber(payload)
+      return this.t('memorisation.welcomeBack.stoppedAtAyah', { number: n })
+    },
+
     closeWelcomeBackModal() {
       this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
@@ -14520,12 +14592,21 @@ export default {
     handleHeaderSessionAction() {
       if (!this.hasVerses) return
       this.startingFreshSessionSelection = false
-      if (this.isPlaying) {
-        this.togglePlay()
-        return
-      }
-      if (this.hasSessionStarted && this.audioElement?.src) {
-        this.togglePlay()
+      const state = this.headerSessionControlState
+      if (state === 'paused') {
+        if (this.audioElement?.src) {
+          this.togglePlay()
+          return
+        }
+      } else if (state === 'active') {
+        if (this.recitationWindowActive && this.activeQueueEntry) {
+          this.playQueueEntry(this.activeQueueEntry, { force: true, queueIndex: this.queueIndex })
+          return
+        }
+        if (this.audioElement?.src && !this.isPlaying) {
+          this.togglePlay()
+          return
+        }
         return
       }
       if (this.chainingEnabled && !this.hasChainingMethodSelected) {
@@ -14533,6 +14614,12 @@ export default {
         return
       }
       this.startSessionWithCountdown()
+    },
+    openSessionExitModalFromMenu() {
+      this.topCardMenuOpen = false
+      this.topCardFontSubmenuOpen = false
+      this.topCardLayoutSubmenuOpen = false
+      this.openSessionExitModal()
     },
     promptTapToPlay(message = '') {
       this.showBanner(message || this.t('toasts.playbackTapToPlay'), 'warning', 9000, {
@@ -19230,6 +19317,7 @@ export default {
     handleSessionComplete() {
       if (!this.verses.length) return
 
+      const previousStreak = Number(this.analytics?.currentStreak || 0)
       const endedSnapshot = this.buildSessionEndedSnapshot({ force: true })
       this.sessionEndedSnapshot = endedSnapshot
       this.sessionCompleted = true
@@ -19240,9 +19328,10 @@ export default {
       completeMutqinSession(this.mutqinState)
       this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
       this.recomputeAnalytics()
+      endedSnapshot.versesInSurah = Number(this.currentChapter?.verses_count || 0)
       this.finishSessionCleanup()
       if (this.isLoggedIn) {
-        this.openPostSessionModal(endedSnapshot)
+        this.openPostSessionModal(endedSnapshot, { previousStreak })
         return
       }
       this.showBanner(this.t('memorisation.session_finished'), 'success', 2800)

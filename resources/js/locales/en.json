@@ -430,6 +430,8 @@
       "resumeSubtitle": "Here's where you left off.",
       "resumeSubtitleDetail": "{detail} — continue whenever it suits you.",
       "stoppedAt": "Stopped at",
+      "stoppedAtAyah": "Ayah {number}",
+      "stoppedAtBeginning": "Beginning of Surah",
       "lastSaved": "Last saved",
       "resumeReminderArabic": "وَٱلَّذِينَ جَـٰهَدُوا۟ فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا",
       "resumeReminderTranslation": "As for those who strive for Us, We shall guide them to Our paths.",
@@ -1097,10 +1099,38 @@
       "progressLabel": "Range progress",
       "detailsLabel": "Session details",
       "nextStepLabel": "Suggested next step",
+      "celebrationTitleComplete": "Well done!",
+      "celebrationTitlePartial": "Nice effort today",
+      "celebrationMessage": "You showed up and put in the work — that matters.",
+      "viewStats": "View stats",
+      "hideStats": "Hide stats",
       "repeat": "Repeat this session",
       "newSession": "Start a new session",
       "save": "Save this session",
       "savedToast": "This session has been successfully saved."
+    },
+    "emotional": {
+      "postSession": {
+        "encouragement1": "Small steps, repeated with sincerity, become lasting memorisation.",
+        "encouragement2": "What you reviewed today has a place in your heart — return to it gently.",
+        "encouragement3": "Consistency matters more than pace. You showed up, and that counts.",
+        "encouragement4": "Each session is a quiet act of devotion. May it be accepted.",
+        "encouragement5": "The Qur'an opens to those who return to it — keep coming back.",
+        "encouragement6": "Steady effort, even in small portions, is beloved."
+      },
+      "milestone": {
+        "surahComplete": "You completed {chapter} in this session — may it settle gently in your heart.",
+        "streak3": "Three days of showing up. Steadiness is its own quiet blessing.",
+        "streak7": "A week of consistency. May Allah make it easy to continue.",
+        "streak14": "Two weeks of returning to the Book. That rhythm is worth keeping.",
+        "streak21": "Three weeks of practice. Small daily efforts build something lasting.",
+        "streak30": "A month of showing up. May your connection to the Qur'an deepen."
+      },
+      "consistency": {
+        "nudgeShort": "However long it's been, today is a good day to return.",
+        "nudgeMedium": "A few days away — pick up gently, one ayah at a time.",
+        "nudgeLong": "Welcome back. There is no rush; begin where you are."
+      }
     },
     "congratulations_todays_hifz_session_is_complete": "Congratulations. Today&apos;s Hifz session is complete.",
     "memorised_today": "Memorised today",
@@ -1113,7 +1143,7 @@
     "recite_check_results": "Recite Check Results",
     "saved_word_checks_for_this_session_range": "Saved word checks for this session range.",
     "what_next": "What next?",
-    "deterministic_replay": "Deterministic replay",
+    "deterministic_replay": "Consistency check",
     "recitation_confidence_heatmap": "Recitation Confidence Heatmap",
     "most_improved": "Most Improved:",
     "needs_focus": "Needs Focus:",

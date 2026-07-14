@@ -109,7 +109,6 @@
             <div class="action-buttons-group">
               <div
                 class="top-card-session-actions"
-                :class="{ 'has-paired-actions': hasSessionStarted && !isSessionCompleted }"
               >
                 <div
                   v-if="showHeaderSessionAction"
@@ -124,20 +123,6 @@
                 >
                   <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
                   <span>{{ headerSessionActionLabel }}</span>
-                </div>
-                <div
-                  v-if="hasSessionStarted && !isSessionCompleted"
-                  class="action-btn btn btn-outline-secondary action-btn-secondary action-btn-exit top-card-action-trigger"
-                  role="button"
-                  tabindex="0"
-                  @click="openSessionExitModal"
-                  @keydown.enter.prevent="openSessionExitModal"
-                  @keydown.space.prevent="openSessionExitModal"
-                  :title="t('memorisation.a11y.endSession')"
-                  :aria-label="t('memorisation.a11y.endSession')"
-                >
-                  <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                  <span>{{ t('sessionStatus.end') }}</span>
                 </div>
               </div>
               <div
@@ -250,6 +235,12 @@
                     <button @click="toggleFullScreen" type="button">
                       <i class="bi bi-arrows-fullscreen"></i><span>{{ t('memorisation.reading.fullScreen') }}</span>
                     </button>
+                    <template v-if="showHeaderEndSessionAction">
+                      <div class="top-card-menu-divider" role="separator"></div>
+                      <button type="button" class="top-card-menu-end-session" @click="openSessionExitModalFromMenu">
+                        <i class="bi bi-box-arrow-right"></i><span>{{ t('sessionStatus.end') }}</span>
+                      </button>
+                    </template>
                   </div>
                 </transition>
               </div>
@@ -1556,6 +1547,7 @@
       </div>
     </div>
 
+    <transition name="mutqin-flow">
     <div v-if="showWelcomeBackModal" class="welcome-back-flow mutqin-modal-flow" :class="{ 'welcome-back-flow--ready': welcomeBackModalReady }" aria-live="polite">
       <div class="modal-backdrop fade show welcome-back-backdrop"></div>
       <div
@@ -1597,6 +1589,14 @@
                 </div>
               </div>
 
+              <p
+                v-if="welcomeBackConsistencyNudge"
+                class="emotional-touch emotional-touch--nudge"
+                role="status"
+              >
+                {{ welcomeBackConsistencyNudge }}
+              </p>
+
               <blockquote class="welcome-back-reminder" :aria-label="t('memorisation.welcomeBack.reminderLabel')">
                 <span class="welcome-back-reminder-kicker">{{ t('memorisation.welcomeBack.reminderLabel') }}</span>
                 <p class="welcome-back-reminder-quote">{{ welcomeBackIslamicContent.translation }}</p>
@@ -1632,7 +1632,9 @@
         </div>
       </div>
     </div>
+    </transition>
 
+    <transition name="mutqin-flow">
     <div v-if="showSessionExitModal" class="session-exit-flow mutqin-modal-flow" aria-live="polite">
       <div class="modal-backdrop fade show session-exit-backdrop"></div>
       <div
@@ -1700,34 +1702,40 @@
             </div>
 
             <div class="modal-footer mutqin-modal-footer">
-              <div class="mutqin-modal-actions session-exit-actions-grid" :class="canContinueCurrentSession ? 'mutqin-modal-actions--4' : 'mutqin-modal-actions--3'">
-                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="exitSessionToNewSession">
-                  <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.sessionExit.startNewSession') }}</span>
-                </button>
-                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="exitSessionToRepeatRange">
-                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.sessionExit.repeatSession') }}</span>
-                </button>
-                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="exitSessionToSaveSession">
-                  <i class="bi bi-bookmark-check" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.sessionExit.saveSession') }}</span>
-                </button>
+              <div class="session-exit-actions-layout">
                 <button
                   v-if="canContinueCurrentSession"
                   type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--primary"
+                  class="mutqin-modal-btn mutqin-modal-btn--primary session-exit-actions-primary"
                   @click="continueSessionFromExitModal"
                 >
                   <i class="bi bi-play-circle" aria-hidden="true"></i>
                   <span>{{ t('memorisation.sessionExit.continueSession') }}</span>
                 </button>
+                <div
+                  class="session-exit-actions-secondary"
+                  :class="{ 'session-exit-actions-secondary--with-primary': canContinueCurrentSession }"
+                >
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="exitSessionToNewSession">
+                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.sessionExit.startNewSession') }}</span>
+                  </button>
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="exitSessionToRepeatRange">
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.sessionExit.repeatSession') }}</span>
+                  </button>
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="exitSessionToSaveSession">
+                    <i class="bi bi-bookmark-check" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.sessionExit.saveSession') }}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    </transition>
 
     <div v-if="showHelpLearningModal" class="modal-overlay mutqin-modal-overlay help-learning-overlay" @click.self="closeHelpLearningModal">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--wide help-learning-dialog">
@@ -3116,6 +3124,7 @@
       </div>
     </div>
 
+    <transition name="mutqin-flow">
     <div v-if="showPostSessionModal" class="onboarding-post-session-flow mutqin-modal-flow" :class="{ 'onboarding-post-session-flow--sample': onboardingSampleSessionActive }" aria-live="polite">
       <div class="modal-backdrop fade show onboarding-post-session-backdrop"></div>
 
@@ -3148,21 +3157,73 @@
             :class="{ 'onboarding-post-session-modal--sample': onboardingSampleSessionActive }"
           >
             <div class="post-session-hero" :class="{ 'post-session-hero--sample': onboardingSampleSessionActive }">
-              <div class="post-session-hero-copy">
-                <span class="post-session-kicker" :class="{ 'post-session-kicker--sample': onboardingSampleSessionActive }">
-                  {{ postSessionUi.kicker }}
-                </span>
-                <h2 id="postSessionTitle" class="post-session-title">
-                  {{ postSessionModalTitle }}
-                </h2>
-                <p v-if="postSessionModalMessage" class="post-session-message">
-                  {{ postSessionModalMessage }}
-                </p>
+              <div class="post-session-hero-main">
+                <div class="post-session-hero-illustration" aria-hidden="true">
+                  <span class="post-session-illustration-orbit post-session-illustration-orbit--outer"></span>
+                  <span class="post-session-illustration-orbit post-session-illustration-orbit--inner"></span>
+                  <span class="post-session-illustration-core">
+                    <i class="bi bi-check-circle-fill post-session-success-icon"></i>
+                  </span>
+                  <span class="post-session-illustration-spark post-session-illustration-spark--one">
+                    <i class="bi bi-stars"></i>
+                  </span>
+                  <span class="post-session-illustration-spark post-session-illustration-spark--two">
+                    <i class="bi bi-heart-fill"></i>
+                  </span>
+                </div>
+                <div class="post-session-hero-copy">
+                  <span class="post-session-kicker" :class="{ 'post-session-kicker--sample': onboardingSampleSessionActive }">
+                    {{ postSessionUi.kicker }}
+                  </span>
+                  <h2 id="postSessionTitle" class="post-session-title">
+                    {{ postSessionModalTitle }}
+                  </h2>
+                  <p v-if="postSessionModalMessage" class="post-session-message">
+                    {{ postSessionModalMessage }}
+                  </p>
+                  <p v-if="postSessionEncouragement" class="emotional-touch emotional-touch--encouragement">
+                    {{ postSessionEncouragement }}
+                  </p>
+                </div>
               </div>
             </div>
 
             <div class="modal-body post-session-body">
-              <section class="mutqin-session-summary" :aria-label="t('memorisation.postSession.summaryTitle')">
+              <p
+                v-if="postSessionMilestone"
+                class="emotional-touch emotional-touch--milestone"
+                role="status"
+              >
+                {{ postSessionMilestone }}
+              </p>
+
+              <section
+                v-if="postSessionNextStep"
+                class="post-session-next-step-card"
+                :aria-label="t('memorisation.postSession.nextStepLabel')"
+              >
+                <span class="post-session-next-step-label">{{ t('memorisation.postSession.nextStepLabel') }}</span>
+                <p class="post-session-next-step-copy">{{ postSessionNextStep }}</p>
+              </section>
+
+              <button
+                v-if="postSessionDetailRows.length || postSessionProgress"
+                type="button"
+                class="post-session-stats-toggle"
+                :aria-expanded="postSessionStatsExpanded ? 'true' : 'false'"
+                :aria-controls="'postSessionStatsPanel'"
+                @click="togglePostSessionStats"
+              >
+                <span>{{ postSessionStatsExpanded ? t('memorisation.postSession.hideStats') : t('memorisation.postSession.viewStats') }}</span>
+                <i class="bi" :class="postSessionStatsExpanded ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+              </button>
+
+              <section
+                v-if="postSessionStatsExpanded && (postSessionDetailRows.length || postSessionProgress)"
+                id="postSessionStatsPanel"
+                class="mutqin-session-summary post-session-stats-panel"
+                :aria-label="t('memorisation.postSession.summaryTitle')"
+              >
                 <div
                   v-if="postSessionProgress"
                   class="mutqin-session-summary-progress"
@@ -3204,11 +3265,6 @@
                     </span>
                   </div>
                 </div>
-
-                <p v-if="postSessionNextStep" class="mutqin-session-summary-next">
-                  <span class="mutqin-session-summary-next-label">{{ t('memorisation.postSession.nextStepLabel') }}</span>
-                  {{ postSessionNextStep }}
-                </p>
               </section>
             </div>
 
@@ -3248,6 +3304,7 @@
         </div>
       </div>
     </div>
+    </transition>
 
     <div v-if="showRenameRecordingModal" class="modal-overlay mutqin-modal-overlay" @click.self="closeRenameRecordingModal">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
