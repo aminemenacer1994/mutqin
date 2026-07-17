@@ -30068,7 +30068,25 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .keyboard-shortcuts-modal {
+  --keyboard-shortcuts-panel-bg: color-mix(in srgb, var(--surface-soft, var(--surface)) 88%, transparent);
+  --keyboard-shortcuts-panel-bg-strong: color-mix(in srgb, var(--surface) 94%, transparent);
+  --keyboard-shortcuts-panel-border: color-mix(in srgb, var(--border) 78%, transparent);
+  --keyboard-shortcuts-key-bg: color-mix(in srgb, var(--surface-elevated, var(--surface)) 92%, transparent);
+  --keyboard-shortcuts-key-border: color-mix(in srgb, var(--border) 82%, transparent);
+  --keyboard-shortcuts-key-shadow: 0 1px 0 color-mix(in srgb, white 65%, transparent);
+  --keyboard-shortcuts-accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
   max-height: min(calc(100dvh - 2rem), 720px);
+  color: var(--text);
+}
+
+[data-theme="dark"] .keyboard-shortcuts-modal {
+  --keyboard-shortcuts-panel-bg: color-mix(in srgb, #2a241f 78%, var(--surface) 22%);
+  --keyboard-shortcuts-panel-bg-strong: color-mix(in srgb, #312922 72%, var(--surface-elevated, var(--surface)) 28%);
+  --keyboard-shortcuts-panel-border: color-mix(in srgb, #f1dcc4 16%, var(--border));
+  --keyboard-shortcuts-key-bg: color-mix(in srgb, #3a322a 68%, var(--surface-elevated, var(--surface)) 32%);
+  --keyboard-shortcuts-key-border: color-mix(in srgb, #f1dcc4 18%, var(--border));
+  --keyboard-shortcuts-key-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+  --keyboard-shortcuts-accent-soft: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .keyboard-shortcuts-header {
@@ -30084,7 +30102,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   border-radius: 12px;
   flex-shrink: 0;
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: var(--keyboard-shortcuts-accent-soft);
   border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
   font-size: 1.1rem;
 }
@@ -30104,9 +30122,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  border: 1px solid var(--keyboard-shortcuts-panel-border);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--surface-soft, var(--surface)) 88%, transparent);
+  background: var(--keyboard-shortcuts-panel-bg);
   overflow: hidden;
 }
 
@@ -30115,8 +30133,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   align-items: center;
   gap: 0.55rem;
   padding: 0.65rem 0.85rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border-bottom: 1px solid var(--keyboard-shortcuts-panel-border);
+  background: var(--keyboard-shortcuts-panel-bg-strong);
 }
 
 .keyboard-shortcuts-group-header h3 {
@@ -30136,7 +30154,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   height: 1.65rem;
   border-radius: 8px;
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: var(--keyboard-shortcuts-accent-soft);
   font-size: 0.82rem;
 }
 
@@ -30155,6 +30173,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   gap: 0.65rem;
   padding: 0.45rem 0.2rem;
   font-size: 0.82rem;
+}
+
+.keyboard-shortcuts-item:not(:last-child) {
+  border-bottom: 1px solid color-mix(in srgb, var(--keyboard-shortcuts-panel-border) 86%, transparent);
 }
 
 .keyboard-shortcuts-label {
@@ -30196,9 +30218,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   min-width: 1.55rem;
   padding: 0.12rem 0.45rem;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-  background: color-mix(in srgb, var(--surface-elevated, var(--surface)) 92%, transparent);
-  box-shadow: 0 1px 0 color-mix(in srgb, white 65%, transparent);
+  border: 1px solid var(--keyboard-shortcuts-key-border);
+  background: var(--keyboard-shortcuts-key-bg);
+  box-shadow: var(--keyboard-shortcuts-key-shadow);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 0.68rem;
   font-weight: 700;
@@ -30207,14 +30229,24 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: var(--text);
 }
 
-[data-theme="dark"] .keyboard-shortcuts-item kbd {
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
+.keyboard-shortcuts-modal .modal-header-text p {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .keyboard-shortcuts-modal .modal-close-btn {
+  background: color-mix(in srgb, #241f1a 82%, var(--surface) 18%);
+  border-color: color-mix(in srgb, #f1dcc4 16%, var(--border));
+}
+
+[data-theme="dark"] .keyboard-shortcuts-modal .modal-close-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 14%, #241f1a);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
 }
 
 .keyboard-shortcuts-footer {
   justify-content: flex-end !important;
-  border-top: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
-  background: color-mix(in srgb, var(--surface) 94%, transparent) !important;
+  border-top: 1px solid var(--keyboard-shortcuts-panel-border) !important;
+  background: var(--keyboard-shortcuts-panel-bg-strong) !important;
 }
 
 .keyboard-shortcuts-dismiss {
@@ -31352,7 +31384,6 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .workspace-shell-bottom {
   padding-top: 0.35rem;
-  border-top: 1px solid color-mix(in srgb, var(--zone-divider) 65%, transparent);
 }
 
 .workspace-shell-bottom-pills {

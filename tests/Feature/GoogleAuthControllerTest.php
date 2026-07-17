@@ -29,6 +29,22 @@ class GoogleAuthControllerTest extends TestCase
             ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
     }
 
+    public function test_legacy_google_redirect_route_redirects_to_the_provider(): void
+    {
+        $provider = Mockery::mock();
+        $provider->shouldReceive('redirect')
+            ->once()
+            ->andReturn(redirect('https://accounts.google.com/o/oauth2/auth'));
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andReturn($provider);
+
+        $this->get('/auth/google/redirect')
+            ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
+    }
+
     public function test_existing_google_user_is_logged_in_without_creating_a_duplicate(): void
     {
         $user = User::factory()->create([
@@ -96,6 +112,25 @@ class GoogleAuthControllerTest extends TestCase
         $this->assertNotEmpty($user->password);
         $this->assertAuthenticatedAs($user);
         $this->assertSame(1, User::count());
+    }
+
+    public function test_legacy_google_callback_route_signs_the_user_in(): void
+    {
+        $this->mockGoogleUser([
+            'id' => 'google-999',
+            'name' => 'Legacy Callback User',
+            'email' => 'legacy@example.com',
+            'avatar' => 'https://example.com/legacy-user.png',
+        ]);
+
+        $this->get('/auth/google/callback')
+            ->assertRedirect(route('memorisation'));
+
+        $user = User::where('email', 'legacy@example.com')->first();
+
+        $this->assertNotNull($user);
+        $this->assertSame('google-999', $user->google_id);
+        $this->assertAuthenticatedAs($user);
     }
 
     private function mockGoogleUser(array $attributes): void

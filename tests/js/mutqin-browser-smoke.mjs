@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { chromium, devices } from 'playwright'
 
-const url = process.env.MUTQIN_BASE_URL || 'http://localhost:8000/memorisation'
+const url = process.env.MUTQIN_BASE_URL || 'http://localhost:8001/memorisation'
 
 async function smokePage(name, contextOptions) {
   const browser = await chromium.launch({ headless: true })

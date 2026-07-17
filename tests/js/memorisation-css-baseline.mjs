@@ -1,13 +1,13 @@
 /**
  * Capture /memorisation screenshots for CSS refactor regression checks.
- * Usage: MUTQIN_BASE_URL=http://localhost:8000/memorisation node tests/js/memorisation-css-baseline.mjs [baseline|compare]
+ * Usage: MUTQIN_BASE_URL=http://localhost:8001/memorisation node tests/js/memorisation-css-baseline.mjs [baseline|compare]
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { chromium } from 'playwright'
 
 const mode = process.argv[2] || 'baseline'
-const url = process.env.MUTQIN_BASE_URL || 'http://localhost:8000/memorisation'
+const url = process.env.MUTQIN_BASE_URL || 'http://localhost:8001/memorisation'
 const outDir = path.resolve('tests/js/screenshots/memorisation-css')
 const widths = [1440, 1024, 768, 390]
 const themes = ['light', 'dark']

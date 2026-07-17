@@ -109,6 +109,7 @@
             <div class="action-buttons-group">
               <div
                 class="top-card-session-actions"
+                :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
               >
                 <div
                   v-if="showHeaderSessionAction"
@@ -124,6 +125,17 @@
                   <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
                   <span>{{ headerSessionActionLabel }}</span>
                 </div>
+                <button
+                  v-if="showHeaderEndSessionAction"
+                  type="button"
+                  class="action-btn action-btn-secondary top-card-action-trigger action-btn-exit"
+                  @click="openSessionExitModalFromMenu"
+                  :title="t('sessionStatus.end')"
+                  :aria-label="t('sessionStatus.end')"
+                >
+                  <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                  <span>{{ t('sessionStatus.end') }}</span>
+                </button>
               </div>
               <div
                 class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger"
@@ -235,12 +247,6 @@
                     <button @click="toggleFullScreen" type="button">
                       <i class="bi bi-arrows-fullscreen"></i><span>{{ t('memorisation.reading.fullScreen') }}</span>
                     </button>
-                    <template v-if="showHeaderEndSessionAction">
-                      <div class="top-card-menu-divider" role="separator"></div>
-                      <button type="button" class="top-card-menu-end-session" @click="openSessionExitModalFromMenu">
-                        <i class="bi bi-box-arrow-right"></i><span>{{ t('sessionStatus.end') }}</span>
-                      </button>
-                    </template>
                   </div>
                 </transition>
               </div>
