@@ -604,7 +604,7 @@
                       <em v-if="getAyahRecordingCount(verse.key)">{{ getAyahRecordingCount(verse.key) }}</em>
                     </button>
                     <button class="verse-inline-action-btn verse-inline-play-btn" type="button"
-                      @click.stop="playVerse(verse)"
+                      @click.stop="playVerse(verse, { primePlayback: true })"
                       :disabled="!verse.audio"
                       :title="activeVerseKey === verse.key && isPlaying ? 'Pause ayah audio' : 'Play ayah audio'"
                       :aria-label="activeVerseKey === verse.key && isPlaying ? 'Pause ayah audio' : 'Play ayah audio'">
@@ -3915,7 +3915,7 @@
             <i class="bi bi-ear"></i>
             <span>{{ t('memorisation.quiz.audioPrompt') }}</span>
           </div>
-          <button type="button" class="quiz-reveal" @click="playVerse(quizCard)">
+          <button type="button" class="quiz-reveal" @click="playVerse(quizCard, { primePlayback: true })">
             <i class="bi bi-arrow-repeat"></i>
             <span>{{ t('memorisation.quiz.replayAudio') }}</span>
           </button>

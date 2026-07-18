@@ -219,6 +219,29 @@ includesAll('planner ui hidden', [
   /v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills\.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"/
 ])
 
+includesAll('session completion success flow', [
+  /handleSessionComplete\(\)\s*\{[\s\S]*this\.finishSessionCleanup\(\)[\s\S]*if \(!this\.isLoggedIn\) \{\s*this\.showBanner\(this\.t\('memorisation\.session_finished'\), 'success', 2800\)\s*return\s*\}\s*this\.openPostSessionModal\(endedSnapshot, \{ previousStreak \}\)/,
+])
+
+assert.doesNotMatch(
+  source,
+  /Complete an AI Review Check for this session to view the summary\./,
+  'session completion should not defer success behind AI review'
+)
+
+includesAll('audio unlock flow', [
+  /primeUiAudioUnlock\(\) \{/,
+  /primeAudioPlaybackUnlock\(audioOverride = null\) \{[\s\S]*this\.primeUiAudioUnlock\(\)[\s\S]*if \(!audioOverride && !this\.audioElement\) \{/,
+  /startSessionAndClose\(\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*setTimeout\(\(\) => \{\s*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
+  /repeatPostSession\(\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
+  /toggleRecordingPlayback\(recording\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*await audio\.play\(\)/,
+  /toggleReviewResultAudio\(result = null\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*audio\.play\(\)\.catch/,
+  /toggleSelfCheckAyahPlayback\(verse\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*await audio\.play\(\)/,
+  /toggleSelfCheckPreview\(verseKey\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*await audio\.play\(\)/,
+  /@click\.stop="playVerse\(verse, \{ primePlayback: true \}\)"/,
+  /@click="playVerse\(quizCard, \{ primePlayback: true \}\)"/
+])
+
 includesAll('light theme default', [
   /theme: 'light'/,
   /this\.theme = document\.documentElement\.getAttribute\('data-theme'\) \|\| this\.theme \|\| 'light'/,

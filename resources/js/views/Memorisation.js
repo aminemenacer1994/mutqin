@@ -7430,10 +7430,25 @@ export default {
       this.startSession()
     },
 
-    primeAudioPlaybackUnlock() {
-      const audio = this.audioElement || this.$refs.audio
-      if (!audio) return
-      if (!this.audioElement) {
+    primeUiAudioUnlock() {
+      if (typeof window === 'undefined') return
+      const AudioContext = window.AudioContext || window.webkitAudioContext
+      if (!AudioContext) return
+      try {
+        const context = this.uiAudioContext || new AudioContext()
+        this.uiAudioContext = context
+        if (context.state === 'suspended') {
+          const resume = context.resume()
+          if (resume?.catch) resume.catch(() => {})
+        }
+      } catch {}
+    },
+
+    primeAudioPlaybackUnlock(audioOverride = null) {
+      this.primeUiAudioUnlock()
+      const audio = audioOverride || this.audioElement || this.$refs.audio
+      if (!audio) return false
+      if (!audioOverride && !this.audioElement) {
         this.audioElement = audio
         this.initAudio()
       }
@@ -7481,6 +7496,7 @@ export default {
           } catch {}
         }
       }
+      return true
     },
 
     isPlaybackActive() {
@@ -7580,6 +7596,7 @@ export default {
         this.showBanner(this.t('toasts.pleaseSelectAValidSurahAnd'), 'info', 3600)
         return
       }
+      this.primeAudioPlaybackUnlock()
       this.talqinModeEnabled = this.getTalqinModeToggleValue()
       this.applySessionConfig(this.buildSessionConfig(this.currentMode))
       this.persistModeState(this.currentMode)
@@ -7588,7 +7605,7 @@ export default {
       await this.applyWorkspaceControls({ mode: this.currentMode })
       this.closeToolsPanel()
       setTimeout(() => {
-        this.startSessionWithCountdown()
+        this.startSessionWithCountdown({ skipPrime: true })
       }, 100)
     },
     handlePrimaryAction() {
@@ -7782,6 +7799,7 @@ export default {
       const session = this.savedSessions.find(s => s.id === sessionId)
       if (!session) return
       this.loadingSessionId = sessionId
+      this.primeAudioPlaybackUnlock()
       try {
         const restorePayload = session.restore?.continueSession
           ? { ...session.restore.continueSession, config: { ...(session.config || {}), ...(session.restore.continueSession.config || {}) } }
@@ -7798,7 +7816,7 @@ export default {
         await this.hydrateSessionFromPayload(restorePayload, { bannerText: `Loaded: ${session.name}`, forcePlayback: false })
         this.showTools = false
         this.$nextTick(() => {
-          this.startSessionWithCountdown()
+          this.startSessionWithCountdown({ skipPrime: true })
         })
       } finally {
         this.loadingSessionId = ''
@@ -8132,6 +8150,7 @@ export default {
       this.onboardingManualLaunch = false
     },
     async playOnboardingSampleSession() {
+      this.primeAudioPlaybackUnlock()
       this.showPostLoginOnboarding = false
       this.onboardingStepIndex = 0
       this.sessionEndedSnapshot = null
@@ -8150,7 +8169,7 @@ export default {
       if (this.chapterId) {
         await this.loadChapter(this.currentMode)
         this.$nextTick(() => {
-          this.startSessionWithCountdown()
+          this.startSessionWithCountdown({ skipPrime: true })
         })
       }
     },
@@ -8278,6 +8297,7 @@ export default {
       this.postSessionEmotionalContext = null
       this.postSessionSnapshot = null
       this.showTools = false
+      this.primeAudioPlaybackUnlock()
       this.prepareRangeRestart()
       this.startSessionWithCountdown({ skipPrime: true })
     },
@@ -8321,6 +8341,7 @@ export default {
       this.topCardMenuOpen = false
     },
     async completeOnboardingAndStart() {
+      this.primeAudioPlaybackUnlock()
       this.markOnboardingCompleted()
       this.showPostLoginOnboarding = false
       this.onboardingStepIndex = 0
@@ -8344,11 +8365,12 @@ export default {
         this.anchorModeEnabled = false
         await this.loadChapter(this.currentMode)
         this.$nextTick(() => {
-          this.startSessionWithCountdown()
+          this.startSessionWithCountdown({ skipPrime: true })
         })
       }
     },
     async completeOnboardingWithDefaultSession() {
+      this.primeAudioPlaybackUnlock()
       this.markOnboardingCompleted()
       this.showPostLoginOnboarding = false
       this.onboardingStepIndex = 0
@@ -8359,7 +8381,7 @@ export default {
       await this.loadChapter(this.currentMode)
       this.isDataReady = true
       this.$nextTick(() => {
-        this.startSessionWithCountdown()
+        this.startSessionWithCountdown({ skipPrime: true })
       })
     },
     prepareOnboardingDemo() {
@@ -9436,6 +9458,7 @@ export default {
       }
 
       try {
+        this.primeAudioPlaybackUnlock(audio)
         await audio.play()
         this.activeRecordingPlaybackId = recording.id
         this.activeSelfCheckPreviewKey = ''
@@ -9749,6 +9772,7 @@ export default {
       const audio = this.$refs.selfCheckDraftAudio
       if (!audio) return
       if (audio.paused) {
+        this.primeAudioPlaybackUnlock(audio)
         audio.play().catch(() => {
           this.showBanner(this.t('toasts.unableToPlayThisRecordingRight'), 'error', 2200)
         })
@@ -9815,6 +9839,7 @@ export default {
         this.reviewResultAudioSource = source
       }
       if (audio.paused) {
+        this.primeAudioPlaybackUnlock(audio)
         audio.play().catch(() => {
           this.showBanner(this.t('toasts.unableToPlayThisRecordingRight'), 'error', 2200)
         })
@@ -10079,6 +10104,7 @@ export default {
       audio.load()
 
       try {
+        this.primeAudioPlaybackUnlock(audio)
         await audio.play()
         this.activeSelfCheckAyahPlaybackKey = verse.key
         this.activeRecordingPlaybackId = ''
@@ -14194,6 +14220,7 @@ export default {
       audio.load()
 
       try {
+        this.primeAudioPlaybackUnlock(audio)
         await audio.play()
         this.activeSelfCheckPreviewKey = verseKey
       } catch (error) {
@@ -14370,6 +14397,9 @@ export default {
 
     async activatePlannerMode(options = {}) {
       if (!this.hifzPlan) return false
+      if (options.startPlayback) {
+        this.primeAudioPlaybackUnlock()
+      }
       const plannerState = this.plannerSessionState
       const sessionRange = plannerState.sessionRange
       if (!plannerState.plannerReady || !sessionRange?.chapterId) {
@@ -14431,7 +14461,7 @@ export default {
       this.persistSessionState()
 
       if (options.startPlayback) {
-        this.startSessionWithCountdown()
+        this.startSessionWithCountdown({ skipPrime: true })
       } else if (options.bannerText) {
         this.showBanner(options.bannerText, 'success', 1800)
       }
@@ -14873,6 +14903,7 @@ export default {
     },
 
     async resumePlaybackAfterGesture() {
+      this.primeAudioPlaybackUnlock()
       const entry = this.queue?.[this.queueIndex]
       if (entry) {
         try {
@@ -16106,6 +16137,7 @@ export default {
     async continueLastSession() {
       const payload = this.continueSessionPayload
       if (!payload) return
+      this.primeAudioPlaybackUnlock()
       this.startingFreshSessionSelection = false
       this.hasContinueSession = false
       this.showWelcomeBackModal = false
@@ -18381,6 +18413,9 @@ export default {
         }
         this.initAudio()
       }
+      if (options.primePlayback) {
+        this.primeAudioPlaybackUnlock(this.audioElement)
+      }
 
       if (!isSameSource) {
         this.audioElement.src = audioUrl
@@ -19539,12 +19574,11 @@ export default {
       this.recomputeAnalytics()
       endedSnapshot.versesInSurah = Number(this.currentChapter?.verses_count || 0)
       this.finishSessionCleanup()
-      if (this.isLoggedIn) {
-        this.queuePostSessionModalAfterAiReview(endedSnapshot, previousStreak)
-        this.showBanner('Complete an AI Review Check for this session to view the summary.', 'info', 3200)
+      if (!this.isLoggedIn) {
+        this.showBanner(this.t('memorisation.session_finished'), 'success', 2800)
         return
       }
-      this.showBanner(this.t('memorisation.session_finished'), 'success', 2800)
+      this.openPostSessionModal(endedSnapshot, { previousStreak })
     },
 
     handlePrimaryAction() {
