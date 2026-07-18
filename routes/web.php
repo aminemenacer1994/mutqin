@@ -103,14 +103,18 @@ Route::middleware(['auth'])->group(function () {
 
         if (!$apiKey) {
             return response()->json([
+                'available' => false,
                 'message' => 'Speechmatics API key is not configured.',
-            ], 422);
+                'speechmatics_status' => 422,
+            ]);
         }
 
         if (!$region) {
             return response()->json([
+                'available' => false,
                 'message' => 'Speechmatics region is not configured.',
-            ], 422);
+                'speechmatics_status' => 422,
+            ]);
         }
 
         try {
@@ -128,8 +132,10 @@ Route::middleware(['auth'])->group(function () {
             ]);
 
             return response()->json([
+                'available' => false,
                 'message' => 'Speechmatics token request failed before Speechmatics responded.',
-            ], 502);
+                'speechmatics_status' => 502,
+            ]);
         }
 
         if (!$response->successful()) {
@@ -157,11 +163,12 @@ Route::middleware(['auth'])->group(function () {
             ]);
 
             $errorPayload = [
+                'available' => false,
                 'message' => $message,
+                'speechmatics_status' => $status,
             ];
 
             if (config('app.debug')) {
-                $errorPayload['speechmatics_status'] = $status;
                 $errorPayload['speechmatics_message'] = $upstreamMessage ?: null;
                 $errorPayload['configured_key_suffix'] = $keySuffix ?: null;
                 if (in_array($status, [401, 403], true)) {
@@ -169,7 +176,7 @@ Route::middleware(['auth'])->group(function () {
                 }
             }
 
-            return response()->json(array_filter($errorPayload, fn ($value) => $value !== null && $value !== ''), $status);
+            return response()->json(array_filter($errorPayload, fn ($value) => $value !== null && $value !== ''));
         }
 
         return response()->json([

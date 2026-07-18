@@ -424,6 +424,9 @@ export default {
       postSessionOffcanvasOpen: false,
       postSessionStatsExpanded: false,
       postSessionEmotionalContext: null,
+      postSessionAutoSaved: false,
+      pendingPostSessionModalPayload: null,
+      lastAutoSavedPostSessionKey: '',
       sessionExitOffcanvasOpen: false,
       showAdvancedAnalytics: false,
       showAdvancedMetricsModal: false,
@@ -657,6 +660,10 @@ export default {
       selfCheckDraftAudioPlaying: false,
       selfCheckDraftAudioCurrentTime: 0,
       selfCheckDraftAudioDuration: 0,
+      reviewResultAudioPlaying: false,
+      reviewResultAudioCurrentTime: 0,
+      reviewResultAudioDuration: 0,
+      reviewResultAudioSource: '',
       recordingsLibraryReturnToSelfCheckKey: '',
       showAiMemorisationCheckerModal: false,
       aiMemorisationCheckerVerseRef: null,
@@ -3200,11 +3207,11 @@ export default {
         : this.t('memorisation.aiCheck.startWhenMicActive')
     },
     aiMemorisationCheckerStageDescription() {
-      if (this.aiMemorisationCheckerResult) return 'Review the word colours, then save, reset, or retry the same target.'
-      if (this.aiMemorisationCheckerPreparing) return 'Analysing your recording and preparing the word review.'
-      if (this.aiMemorisationCheckerRecording) return 'Listening now. Recite at your natural pace, then stop when finished.'
+      if (this.aiMemorisationCheckerResult) return 'Review the highlights, then save or retry.'
+      if (this.aiMemorisationCheckerPreparing) return 'Preparing the review.'
+      if (this.aiMemorisationCheckerRecording) return 'Listening now.'
       if (this.aiMemorisationCheckerError) return this.t('memorisation.aiCheck.retryWhenMicReady')
-      return 'Start the check only when you are ready to recite from memory.'
+      return 'Start when you are ready.'
     },
     aiMemorisationCheckerStatusLabel() {
       if (this.aiMemorisationCheckerRecording) return 'Listening now'
@@ -3346,8 +3353,8 @@ export default {
       return {
         stats,
         validation,
-        recommendation: latest.recommendation || this.getRecitationRecommendation(average, latest.mistakeBreakdown || latest.mistakes || {}),
-        nextStep: this.getRecitationNextStep(latest)
+        recommendation: this.getRecitationResultHeadline({ ...latest, accuracyScore: average }),
+        nextStep: this.getRecitationNextStep(latest, { saved: true })
       }
     },
     recitationLiveSummary() {
@@ -3554,6 +3561,13 @@ export default {
     },
     sliderRepetitionValue() {
       return Math.min(10, Math.max(1, Number(this.repetitionsPerStep || 1)))
+    },
+    sessionRepetitionSliderStyle() {
+      const steps = 9
+      const progress = Math.max(0, Math.min(100, ((this.sliderRepetitionValue - 1) / steps) * 100))
+      return {
+        '--technique-range-progress': `${progress}%`
+      }
     },
     repetitionDisplayValue() {
       return `${this.repetitionsPerStep}x`
@@ -5194,6 +5208,7 @@ export default {
       } else {
         this.postSessionStatsExpanded = false
         this.postSessionEmotionalContext = null
+        this.postSessionAutoSaved = false
       }
     },
     showWelcomeBackModal(newVal) {
@@ -7527,9 +7542,13 @@ export default {
       this.showPlannerCompletionConfetti = false
       this.showSessionEndedModal = false
       this.showSessionExitModal = false
-      if (!this.showPostSessionModal) {
-        this.showPostSessionConfetti = false
+      if (this.showPostSessionModal) {
+        this.showPostSessionModal = false
+        this.postSessionOffcanvasOpen = false
+        this.postSessionStatsExpanded = false
       }
+      this.showPostSessionConfetti = false
+      this.pendingPostSessionModalPayload = null
       if (!options.skipPrime) {
         this.primeAudioPlaybackUnlock()
       }
@@ -8165,6 +8184,16 @@ export default {
     openPostSessionModal(snapshot = null, options = {}) {
       this.postSessionSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
       if (!this.postSessionSnapshot) return
+      this.pendingPostSessionModalPayload = null
+      this.postSessionAutoSaved = false
+      const autoSaveKey = this.buildPostSessionAutoSaveKey(this.postSessionSnapshot)
+      if (!this.onboardingSampleSessionActive && this.postSessionSnapshot.completedAll && autoSaveKey && this.lastAutoSavedPostSessionKey !== autoSaveKey) {
+        const savedSession = this.saveCurrentSessionSilently()
+        if (savedSession) {
+          this.lastAutoSavedPostSessionKey = autoSaveKey
+          this.postSessionAutoSaved = true
+        }
+      }
       this.postSessionEmotionalContext = buildPostSessionEmotionalContext({
         snapshot: this.postSessionSnapshot,
         chapter: this.currentChapter,
@@ -8183,6 +8212,59 @@ export default {
       window.setTimeout(() => {
         this.showPostSessionConfetti = false
       }, this.onboardingSampleSessionActive ? 6600 : 5600)
+    },
+    queuePostSessionModalAfterAiReview(snapshot = null, previousStreak = 0) {
+      if (!snapshot || !this.isLoggedIn) return
+      this.pendingPostSessionModalPayload = {
+        snapshot,
+        previousStreak: Number(previousStreak || 0)
+      }
+    },
+    maybeOpenQueuedPostSessionModal(result = null, targetVerses = []) {
+      const payload = this.pendingPostSessionModalPayload
+      if (!payload?.snapshot || !result || !this.isLoggedIn || this.showPostSessionModal) return false
+
+      const reviewTargets = Array.isArray(targetVerses) ? targetVerses.filter(Boolean) : []
+      const reviewChapterId = Number(
+        reviewTargets[0]?.chapterId
+        || result?.selectedAyah?.chapterId
+        || this.currentChapter?.id
+        || this.chapterId
+        || 0
+      )
+      const reviewStart = Number(result?.ayahRange?.start || reviewTargets[0]?.number || 0)
+      const reviewEnd = Number(result?.ayahRange?.end || reviewTargets.at(-1)?.number || reviewStart || 0)
+      const snapshot = payload.snapshot
+      const sameChapter = !snapshot.chapterId || !reviewChapterId || Number(snapshot.chapterId) === reviewChapterId
+      const sameRange = Number(snapshot.rangeStart || 0) === reviewStart && Number(snapshot.rangeEnd || 0) === reviewEnd
+
+      if (!sameChapter || !sameRange) return false
+
+      if (this.showSelfCheckModal) {
+        this.showSelfCheckModal = false
+        this.selfCheckPeekActive = false
+        this.pendingRecordingDeleteId = ''
+        this.selfCheckError = ''
+        this.selfCheckLastSavedAyahKey = ''
+        this.selfCheckSavedAttemptsVisible = false
+        this.clearRecitationReviewState()
+        this.stopRecordingsPlayback({ clearSource: true })
+        this.selfCheckVerseRef = null
+        this.selfCheckVerseKey = ''
+      }
+
+      this.openPostSessionModal(snapshot, { previousStreak: payload.previousStreak })
+      return true
+    },
+    buildPostSessionAutoSaveKey(snapshot = null) {
+      if (!snapshot) return ''
+      return [
+        snapshot.chapterName || '',
+        snapshot.rangeStart || '',
+        snapshot.rangeEnd || '',
+        snapshot.completedAll ? 'complete' : 'partial',
+        this.sessionCompletedAt || ''
+      ].join(':')
     },
     togglePostSessionStats() {
       this.postSessionStatsExpanded = !this.postSessionStatsExpanded
@@ -9117,16 +9199,15 @@ export default {
     },
     getRecitationValidationLabel(recording = null) {
       const report = this.getRecitationValidationReport(recording)
-      if (!report) return 'Validation pending'
-      if (report.passed) return `Replay stable (${report.replayPassCount}/${report.replayCount})`
-      return `Replay mismatch (${report.replayPassCount}/${report.replayCount})`
+      if (!report) return 'Quality check pending'
+      if (report.passed) return 'Quality verified'
+      return 'Please review again'
     },
     getRecitationValidationSummary(recording = null) {
       const report = this.getRecitationValidationReport(recording)
-      if (!report) return 'No deterministic replay audit is stored for this result yet.'
-      const variantSummary = `${report.variantPassCount}/${(report.variants || []).length} stream variants matched`
-      if (report.passed) return `${variantSummary}. Baseline hash ${report.baselineHash}.`
-      return (report.warnings || []).join(' ') || `${variantSummary}. Deterministic audit failed.`
+      if (!report) return 'No saved quality check yet.'
+      if (report.passed) return 'Consistent across both checks.'
+      return 'The checks did not fully align.'
     },
     canRerunRecordingValidationAudit(recording = null) {
       return !!(recording?.sessionId && recording?.audioHash)
@@ -9503,7 +9584,36 @@ export default {
       const ayahSkips = Array.isArray(mistakes?.skippedAyahs) ? mistakes.skippedAyahs.length : 0
       const verseJumps = Array.isArray(mistakes?.verseJumps) ? mistakes.verseJumps.length : 0
       const total = missing + extra + incorrect + wordSkips + ayahSkips + verseJumps
-      return total ? `${total} detected issue${total === 1 ? '' : 's'}` : 'No word issues'
+      return total ? `${total} detected issue${total === 1 ? '' : 's'}` : 'No clear word-level mistakes were detected.'
+    },
+    getUnifiedResultSectionLabel(section = '') {
+      const labels = {
+        summary: 'Your result',
+        words: 'Words to review',
+        next: 'Recommended next step',
+        recording: 'Recording',
+        actions: 'Save or retry',
+        saved: 'Saved recording'
+      }
+      return labels[section] || ''
+    },
+    getFriendlyNoWordMistakesMessage() {
+      return 'No clear mistakes found. Listen once more before saving.'
+    },
+    getRecitationWordsToReview(result = null, limit = 8) {
+      return this.getRecitationWordStatuses(result)
+        .map((word, index) => ({
+          ...word,
+          index,
+          visualStatus: this.getWordVisualStatus(word, false, true)
+        }))
+        .filter(word => word.visualStatus && word.visualStatus !== 'correct')
+        .slice(0, limit)
+    },
+    getRecitationWordsReviewSummary(result = null) {
+      const words = this.getRecitationWordsToReview(result)
+      if (!words.length) return this.getFriendlyNoWordMistakesMessage()
+      return `${words.length} word${words.length === 1 ? '' : 's'} to revisit.`
     },
     saveAiCheckToRecordingsLibrary(attempt, result) {
       if (!attempt || !result) return false
@@ -9616,6 +9726,7 @@ export default {
       this.selfCheckPreparing = false
       this.selfCheckPreparingLabel = ''
       this.stopSelfCheckDraftAudio()
+      this.resetReviewResultAudio()
       this.clearRecitationReviewState()
       if (!keepSavedMarker) {
         this.selfCheckLastSavedAyahKey = ''
@@ -9677,25 +9788,85 @@ export default {
       const secs = Math.floor(safe % 60)
       return `${mins}:${String(secs).padStart(2, '0')}`
     },
+    resetReviewResultAudio() {
+      const audio = this.$refs.reviewResultAudio
+      if (audio) {
+        try {
+          audio.pause()
+          audio.currentTime = 0
+          if (audio.getAttribute('src')) {
+            audio.removeAttribute('src')
+            audio.load()
+          }
+        } catch { }
+      }
+      this.reviewResultAudioPlaying = false
+      this.reviewResultAudioCurrentTime = 0
+      this.reviewResultAudioDuration = 0
+      this.reviewResultAudioSource = ''
+    },
+    toggleReviewResultAudio(result = null) {
+      const audio = this.$refs.reviewResultAudio
+      const source = String(result?.audioSrc || '')
+      if (!audio || !source) return
+      if (this.reviewResultAudioSource !== source) {
+        audio.src = source
+        audio.load()
+        this.reviewResultAudioSource = source
+      }
+      if (audio.paused) {
+        audio.play().catch(() => {
+          this.showBanner(this.t('toasts.unableToPlayThisRecordingRight'), 'error', 2200)
+        })
+        return
+      }
+      audio.pause()
+    },
+    onReviewResultAudioLoadedMetadata() {
+      const audio = this.$refs.reviewResultAudio
+      if (!audio) return
+      this.reviewResultAudioDuration = Number(audio.duration || 0)
+    },
+    onReviewResultAudioTimeUpdate() {
+      const audio = this.$refs.reviewResultAudio
+      if (!audio) return
+      this.reviewResultAudioCurrentTime = Number(audio.currentTime || 0)
+      if (!this.reviewResultAudioDuration && audio.duration) {
+        this.reviewResultAudioDuration = Number(audio.duration || 0)
+      }
+    },
+    onReviewResultAudioEnded() {
+      this.reviewResultAudioPlaying = false
+      this.reviewResultAudioCurrentTime = 0
+      const audio = this.$refs.reviewResultAudio
+      if (audio) audio.currentTime = 0
+    },
+    seekReviewResultAudio(event) {
+      const audio = this.$refs.reviewResultAudio
+      if (!audio) return
+      const nextTime = Number(event?.target?.value || 0)
+      audio.currentTime = nextTime
+      this.reviewResultAudioCurrentTime = nextTime
+    },
     getSelfCheckRecorderDescription() {
       if (this.recitationCheckPanelOpen && !this.recitationCheckRecording && !this.recitationCheckPreparing && !this.recitationCheckResult) {
         return this.recitationCheckScope === 'session'
-          ? this.t('memorisation.selfCheckRecorder.aiSessionReady')
-          : this.t('memorisation.selfCheckRecorder.aiAyahReady')
+          ? 'AI review is ready for this range.'
+          : 'AI review is ready for this ayah.'
       }
       if (this.isSelfCheckRecording) {
-        return this.t('memorisation.selfCheckRecorder.recordingActive')
+        return 'Recording now.'
       }
       if (this.selfCheckActiveDraft) {
-        return this.t('memorisation.selfCheckRecorder.reviewDraft')
+        return 'Review this attempt.'
       }
       if (this.selfCheckPreparing) {
-        return this.t('memorisation.selfCheckRecorder.preparingMic')
+        return 'Preparing microphone.'
       }
       if (!this.supportsSelfCheckRecording()) {
-        return this.t('memorisation.selfCheckRecorder.unsupportedBrowser')
+        return 'Recording is not supported in this browser.'
       }
-      return this.t('memorisation.selfCheckRecorder.idle')
+      return 'Choose AI review or manual recording.'
     },
     getAyahTranslation(ayahKey) {
       if (!ayahKey) return ''
@@ -10939,9 +11110,9 @@ export default {
       const statuses = this.getRecitationWordStatuses(result)
       const partial = statuses.filter(word => word.status === 'partial').slice(0, 3).map(word => word.text)
       const review = statuses.filter(word => word.status === 'incorrect' || word.status === 'pending').slice(0, 3).map(word => word.text)
-      if (review.length) return `Replay and drill: ${review.join('، ')}. Then retry the checker for the same target.`
-      if (partial.length) return `Slow down and sharpen: ${partial.join('، ')}. These were close but not clean.`
-      if (this.getResolvedRecitationScore(result) >= 100) return 'Save this attempt to the recordings library, then run one clean recall without peeking.'
+      if (review.length) return `Review ${review.join('، ')}, then try again.`
+      if (partial.length) return `Tighten ${partial.join('، ')}, then try again.`
+      if (this.getResolvedRecitationScore(result) >= 100) return 'Save this attempt for light review.'
       return this.getRecitationNextStep(result)
     },
     getAiRecitationPostReviewMessage(result) {
@@ -10949,7 +11120,7 @@ export default {
       const red = statuses.filter(word => ['incorrect', 'pending'].includes(word.status)).length
       const amber = statuses.filter(word => word.status === 'partial').length
       const outOfOrder = statuses.filter(word => word.outOfOrder).length
-      if (!red && !amber) return this.t('memorisation.aiCheck.noWordMistake')
+      if (!red && !amber) return this.getFriendlyNoWordMistakesMessage()
       if (outOfOrder) {
         return this.t('memorisation.aiCheck.wordOrderIssue', { count: outOfOrder })
       }
@@ -11107,6 +11278,7 @@ export default {
         this.loadAiMemorisationCheckerHistory()
         this.aiMemorisationCheckerHistory = this.aiMemorisationCheckerHistory.filter(item => item.id !== id)
       }
+      this.resetReviewResultAudio()
       this.aiMemorisationCheckerResult = null
       this.aiMemorisationCheckerSavedNotice = false
       this.resetRecognitionPipelineState('memorisation')
@@ -11116,6 +11288,7 @@ export default {
       this.showBanner(this.t('toasts.memorisationAssessmentDeleted'), 'info', 1400)
     },
     resetAiMemorisationCheckerAssessment() {
+      this.resetReviewResultAudio()
       this.aiMemorisationCheckerResult = null
       this.aiMemorisationCheckerError = ''
       this.aiMemorisationCheckerSavedNotice = false
@@ -11129,6 +11302,7 @@ export default {
       this.showBanner(this.t('toasts.memorisationCheckerReset'), 'info', 1400)
     },
     discardAiMemorisationCheckerAssessment() {
+      this.resetReviewResultAudio()
       this.aiMemorisationCheckerResult = null
       this.aiMemorisationCheckerSavedNotice = false
       this.prepareAiMemorisationCheckerWords()
@@ -11909,7 +12083,7 @@ export default {
             validationReport: report
           }
         }
-        this.showBanner(report.passed ? 'Deterministic replay audit passed.' : 'Deterministic replay audit found a mismatch.', report.passed ? 'success' : 'error', 2600)
+        this.showBanner(report.passed ? 'Recording quality verified.' : 'The recording needs another review.', report.passed ? 'success' : 'error', 2600)
         return report
       } catch (error) {
         console.error('Failed to rerun deterministic validation audit:', error)
@@ -12141,9 +12315,22 @@ export default {
     async fetchTranscriptionAccessToken() {
       try {
         const response = await axios.post('/memorisation/transcription-token')
+        const payload = response?.data || {}
+        const accessToken = String(payload?.access_token || '').trim()
+        const websocketHost = String(payload?.websocket_host || '').trim()
+
+        if (payload?.available === false || !accessToken || !websocketHost) {
+          const unavailableError = new Error(String(payload?.message || 'Unable to start live streaming right now.').trim())
+          unavailableError.response = {
+            status: Number(payload?.speechmatics_status || response?.status || 0),
+            data: payload
+          }
+          throw unavailableError
+        }
+
         return {
-          accessToken: String(response?.data?.access_token || '').trim(),
-          websocketHost: String(response?.data?.websocket_host || '').trim()
+          accessToken,
+          websocketHost
         }
       } catch (error) {
         const wrapped = new Error(this.describeTranscriptionTokenFailure(error))
@@ -12182,8 +12369,11 @@ export default {
         return !!ready
       } catch (error) {
         const message = this.describeTranscriptionTokenFailure(error)
+        const fallbackAvailable = !!this.getSpeechRecognitionConstructor()
         console.warn('Unable to start Speechmatics streaming:', message, error)
-        this.showBanner(message, 'error', 5600)
+        if (!fallbackAvailable) {
+          this.showBanner(message, 'warning', 5600)
+        }
         this.stopTranscriptionRecognition(kind)
         return false
       }
@@ -12454,7 +12644,9 @@ export default {
       this.recitationCheckError = ''
       this.playUiTone('complete')
       this.showBanner(this.t('toasts.reciteCheckComplete'), 'success', 2200)
-      this.scrollToRecitationResults()
+      if (!this.maybeOpenQueuedPostSessionModal(result, targetVerses)) {
+        this.scrollToRecitationResults()
+      }
       return result
     },
     dismissRecitationCheckResult() {
@@ -12464,6 +12656,7 @@ export default {
       const targets = this.recitationCheckPendingTargets?.length
         ? this.recitationCheckPendingTargets
         : this.getRecitationCheckTargetVerses(this.selfCheckModalVerse || null)
+      this.resetReviewResultAudio()
       this.recitationCheckResult = null
       this.recitationCheckError = ''
       this.recitationCheckPanelOpen = true
@@ -12477,6 +12670,7 @@ export default {
     },
     clearRecitationReviewState() {
       this.clearRecitationStartCue()
+      this.resetReviewResultAudio()
       this.recitationCheckResult = null
       this.recitationCheckError = ''
       this.recitationCheckPanelOpen = false
@@ -13608,23 +13802,43 @@ export default {
       const markerCount = rules.reduce((sum, rule) => sum + Number(rule.count || 0), 0)
       return `${markerCount} checked marker${markerCount === 1 ? '' : 's'}`
     },
-    getRecitationNextStep(result) {
+    getRecitationResultHeadline(result = null) {
+      const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
+      const sequenceIssues = (mistakes.skippedAyahs?.length || 0) + (mistakes.verseJumps?.length || 0) + (mistakes.sequenceErrors?.length || 0)
+      const wordIssues = (mistakes.incorrect?.length || 0) + (mistakes.missing?.length || 0) + (mistakes.extra?.length || 0)
+      const score = this.getResolvedRecitationScore(result)
+      if (sequenceIssues) return 'Review the sequence'
+      if (score >= 100) return 'Strong recitation'
+      if (score >= 85 && !wordIssues) return 'Nearly there'
+      if (score >= 85) return 'Close review needed'
+      return 'Needs another pass'
+    },
+    getRecitationNextStep(result, options = {}) {
+      const saved = !!options.saved
       const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
       const reviewCount = (mistakes.incorrect?.length || 0) + (mistakes.missing?.length || 0)
       const extraCount = mistakes.extra?.length || 0
       const tajweedIssues = this.getRecitationTajweedSummary(result).filter(rule => rule.issueCount).slice(0, 2)
       if (reviewCount && tajweedIssues.length) {
-        return `Review ${reviewCount} word${reviewCount === 1 ? '' : 's'}, then recite again slowly.`
+        return `Review ${reviewCount} word${reviewCount === 1 ? '' : 's'}, then try again slowly.`
       }
-      if (reviewCount) return `Review ${reviewCount} word${reviewCount === 1 ? '' : 's'}, replay the ayah, then try again.`
-      if (extraCount) return 'Remove the extra wording, slow down, then try again.'
-      if (this.getResolvedRecitationScore(result) >= 100) return 'Save this attempt, then recite once more from memory.'
-      return 'Repeat once slowly, then save or retry.'
+      if (reviewCount) return `Review ${reviewCount} word${reviewCount === 1 ? '' : 's'}, then listen once more.`
+      if (extraCount) return 'Listen once more, then keep tighter to the ayah.'
+      if (this.getResolvedRecitationScore(result) >= 100) {
+        return saved
+          ? 'Keep this for light review.'
+          : 'Listen once more, then save it.'
+      }
+      return saved ? 'Listen once more, then keep or replace it.' : 'Listen once more, then save or retry.'
     },
     getRecitationRecommendationDisplay(result) {
-      return String(result?.recommendation || '')
+      const raw = String(result?.recommendation || '')
         .replace(/\s*Transcription source:.*$/i, '')
         .trim()
+      if (!raw || /clean match|mostly clean|replay stable|stream variants|baseline hash/i.test(raw)) {
+        return this.getRecitationResultHeadline(result)
+      }
+      return raw
     },
     assessRecitationRecognitionWords(recognitionWords = [], targetVerses = this.getRecitationCheckTargetVerses(), options = {}) {
       const targetText = this.getRecitationTargetText(targetVerses)
@@ -13670,17 +13884,17 @@ export default {
       const incorrect = mistakes.incorrect?.length || 0
       const partial = mistakes.partial?.length || 0
       const extra = mistakes.extra?.length || 0
-      if (skippedAyahs) return `Skipped ${skippedAyahs} ayah${skippedAyahs === 1 ? '' : 's'}. Review the selected range in order.`
-      if (verseJumps) return `Verse jump detected ${verseJumps === 1 ? 'once' : `${verseJumps} times`}. Restart from the last complete ayah.`
-      if (sequenceErrors) return 'Ayahs were recited out of order. Restart from the first selected ayah.'
-      if (wordSkips) return `Skipped ${wordSkips} word${wordSkips === 1 ? '' : 's'}. Slow down and complete each ayah before moving on.`
-      if (missing) return `Missing ${missing} word${missing === 1 ? '' : 's'}. Recite that section slowly before retrying.`
-      if (partial) return `Clarify ${partial} close word${partial === 1 ? '' : 's'}, then check again.`
-      if (incorrect) return `Review ${incorrect} changed word${incorrect === 1 ? '' : 's'} and compare with the displayed ayah.`
-      if (extra) return 'Extra wording detected. Slow down and keep the ayah boundary tight.'
-      if (score >= 100) return 'Clean match. Save it and keep this ayah on light review.'
-      if (score >= 85) return 'Mostly clean. Recheck once before saving.'
-      return 'Replay the ayah once, recite without looking, then run another Recite Check.'
+      if (skippedAyahs) return `Review the ${skippedAyahs} skipped ayah${skippedAyahs === 1 ? '' : 's'} in order.`
+      if (verseJumps) return 'Return to the ayah sequence and recite it steadily from the beginning.'
+      if (sequenceErrors) return 'Review the ayah order, then begin the selected range again.'
+      if (wordSkips) return `Revisit the ${wordSkips} skipped word${wordSkips === 1 ? '' : 's'} with a slower pass.`
+      if (missing) return `Return to the ${missing} missed word${missing === 1 ? '' : 's'}.`
+      if (partial) return `Tighten the ${partial} close word${partial === 1 ? '' : 's'}.`
+      if (incorrect) return `Review the ${incorrect} changed word${incorrect === 1 ? '' : 's'}.`
+      if (extra) return 'Keep the ayah boundary tighter on the next pass.'
+      if (score >= 100) return 'Strong recitation'
+      if (score >= 85) return 'Nearly there'
+      return 'Needs another pass'
     },
     buildRecitationReviewMetadata(score, mistakes, tajweedRules = [], baseIso = '') {
       const issueCount = (mistakes.missing?.length || 0) + (mistakes.extra?.length || 0) + (mistakes.incorrect?.length || 0) + (mistakes.partial?.length || 0)
@@ -16114,6 +16328,7 @@ export default {
 
       this.sessionCompleted = false
       this.sessionCompletedAt = null
+      this.pendingPostSessionModalPayload = null
       if (this.centralSession) {
         this.centralSession.sessionStatus = 'idle'
         this.centralSession.sessionCompletedAt = null
@@ -16232,6 +16447,7 @@ export default {
         ? this.t('memorisation.summary.completedRangeDetail', { covered: coveredAyah, total: totalAyahs, duration: durationLabel })
         : this.t('memorisation.summary.endedProgress', { covered: coveredAyah, total: totalAyahs })
       return {
+        chapterId: Number(this.currentChapter?.id || this.chapterId || 0),
         chapterName,
         rangeLabel,
         progressLabel: `${coveredAyah}/${totalAyahs}`,
@@ -18087,7 +18303,6 @@ export default {
         this.isPlaying = false
         this.sessionErrorCount += 1
         this.stopWordHighlighting()
-        this.showBanner(this.t('toasts.audioPlaybackError'), 'error', 3000)
       }
 
       this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate)
@@ -18211,10 +18426,7 @@ export default {
       } catch (err) {
         console.error('playVerse failed:', err)
         this.isPlaying = false
-        this.showBanner(this.t('toasts.failedToPlayAudio'), 'error', 9000, {
-          key: 'resume-playback',
-          label: this.t('memorisation.player.tapToPlay')
-        }, { important: true })
+        this.promptTapToPlay()
       } finally {
         this.playRequestLocked = false
       }
@@ -18268,10 +18480,7 @@ export default {
           })
           .catch(err => {
             console.error('Failed to play:', err)
-            this.showBanner(this.t('toasts.playbackFailed'), 'error', 9000, {
-              key: 'resume-playback',
-              label: this.t('memorisation.player.tapToPlay')
-            }, { important: true })
+            this.promptTapToPlay()
           })
       } else {
         this.audioElement.pause()
@@ -19331,7 +19540,8 @@ export default {
       endedSnapshot.versesInSurah = Number(this.currentChapter?.verses_count || 0)
       this.finishSessionCleanup()
       if (this.isLoggedIn) {
-        this.openPostSessionModal(endedSnapshot, { previousStreak })
+        this.queuePostSessionModalAfterAiReview(endedSnapshot, previousStreak)
+        this.showBanner('Complete an AI Review Check for this session to view the summary.', 'info', 3200)
         return
       }
       this.showBanner(this.t('memorisation.session_finished'), 'success', 2800)

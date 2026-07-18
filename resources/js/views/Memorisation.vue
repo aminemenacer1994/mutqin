@@ -807,7 +807,7 @@
                       <span class="range-value-pill">{{ repetitionDisplayValue }}</span>
                     </div>
                     <div class="range-control">
-                      <input type="range" :value="sliderRepetitionValue"
+                      <input type="range" :value="sliderRepetitionValue" :style="sessionRepetitionSliderStyle"
                         @input="setRepetitionsFromSlider(Number($event.target.value))" min="1" max="10" step="1"
                         class="input technique-range" />
                     </div>
@@ -1985,12 +1985,12 @@
                   </article>
                 </div>
                 <div class="recitation-next-card">
-                  <span>{{ t('memorisation.what_next') }}</span>
+                  <span>{{ getUnifiedResultSectionLabel('next') }}</span>
                   <strong>{{ analyticsAiCheckSummary.recommendation }}</strong>
                   <p>{{ analyticsAiCheckSummary.nextStep }}</p>
                 </div>
                 <div v-if="analyticsAiCheckSummary.validation" class="recitation-next-card">
-                  <span>{{ t('memorisation.deterministic_replay') }}</span>
+                  <span>{{ getUnifiedResultSectionLabel('recording') }}</span>
                   <strong :class="analyticsAiCheckSummary.validation.tone">{{ analyticsAiCheckSummary.validation.label }}</strong>
                   <p>{{ analyticsAiCheckSummary.validation.summary }}</p>
                 </div>
@@ -2323,33 +2323,90 @@
                   {{ aiMemorisationCheckerError }}
                 </div>
                 <div v-if="aiMemorisationCheckerResult" ref="aiMemorisationCheckerResults"
-                  class="recitation-check-body recitation-check-results memorisation-checker-results">
-                  <div class="recitation-result-stats memorisation-checker-result-grid">
-                    <article v-for="stat in getAiMemorisationCheckerResultStats(aiMemorisationCheckerResult)" :key="stat.key"
-                      class="recitation-result-stat" :class="stat.tone">
-                      <span>{{ stat.label }}</span>
-                      <strong>{{ stat.value }}</strong>
-                      <small>{{ stat.description }}</small>
-                    </article>
-                  </div>
-                  <div class="recitation-insights-grid">
-                    <div class="recitation-next-card">
-                      <span>{{ t('memorisation.what_next') }}</span>
-                      <strong>{{ getRecitationRecommendationDisplay(aiMemorisationCheckerResult) }}</strong>
-                      <p>{{ getAiMemorisationCheckerNextStep(aiMemorisationCheckerResult) }}</p>
+                  class="recitation-check-body recitation-check-results memorisation-checker-results shared-result-flow transition-all duration-300">
+                  <section class="shared-result-section shared-result-section--summary transition-all duration-300">
+                    <div class="shared-result-section-head">
+                      <span class="recitation-check-section-label">
+                        <span class="shared-result-step-badge">1</span>
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                        {{ getUnifiedResultSectionLabel('summary') }}
+                      </span>
+                      <strong>{{ getRecitationResultHeadline(aiMemorisationCheckerResult) }}</strong>
                     </div>
-                    <div class="recitation-next-card ai-review-card">
-                      <span>{{ t('common.metadata') }}</span>
-                      <p>{{ getAiRecitationPostReviewMessage(aiMemorisationCheckerResult) }}</p>
+                    <div class="recitation-result-stats memorisation-checker-result-grid">
+                      <article v-for="stat in getAiMemorisationCheckerResultStats(aiMemorisationCheckerResult)" :key="stat.key"
+                        class="recitation-result-stat" :class="stat.tone">
+                        <span>{{ stat.label }}</span>
+                        <strong>{{ stat.value }}</strong>
+                        <small>{{ stat.description }}</small>
+                      </article>
                     </div>
-                  </div>
-                  <div class="recitation-word-stream memorisation-checker-final-words" dir="rtl" lang="ar">
-                    <span v-for="(word, index) in getRecitationWordStatuses(aiMemorisationCheckerResult)" :key="`memory-final-${index}`"
-                      class="recitation-word-chip" :class="[`word-${getWordVisualStatus(word, false, true)}`, { 'can-correct-ai': word.status && word.status !== 'correct' }]"
-                      :title="word.status && word.status !== 'correct' ? `${word.note || ''} Mark as AI mistake.` : word.note"
-                      @click="markAiRecitationWordAsCorrect(aiMemorisationCheckerResult, index)">
-                      {{ word.text }}
-                    </span>
+                  </section>
+                  <section class="shared-result-section shared-result-section--words transition-all duration-300">
+                    <div class="shared-result-section-head">
+                      <span class="recitation-check-section-label">
+                        <span class="shared-result-step-badge">2</span>
+                        <i class="bi bi-chat-square-text" aria-hidden="true"></i>
+                        {{ getUnifiedResultSectionLabel('words') }}
+                      </span>
+                      <p>{{ getRecitationWordsReviewSummary(aiMemorisationCheckerResult) }}</p>
+                    </div>
+                    <div v-if="getRecitationReviewArabic(aiMemorisationCheckerResult, aiMemorisationCheckerVerse)"
+                      class="recitation-review-ayah shared-result-ayah" dir="rtl"
+                      v-html="getRecitationReviewArabic(aiMemorisationCheckerResult, aiMemorisationCheckerVerse)"
+                      @click="handleRecitationReviewWordClick($event, aiMemorisationCheckerResult)"></div>
+                    <div class="shared-result-word-review transition-all duration-300">
+                      <div v-if="getRecitationWordsToReview(aiMemorisationCheckerResult).length" class="shared-result-word-review-list" dir="rtl">
+                        <span v-for="word in getRecitationWordsToReview(aiMemorisationCheckerResult)" :key="`memory-review-${word.index}`"
+                          class="shared-result-word-review-chip" :class="`is-${word.visualStatus}`">
+                          {{ word.text }}
+                        </span>
+                      </div>
+                      <p v-else class="shared-result-word-review-summary"><i class="bi bi-check2-circle" aria-hidden="true"></i><span>{{ getFriendlyNoWordMistakesMessage() }}</span></p>
+                    </div>
+                  </section>
+                  <div class="shared-result-support-grid transition-all duration-300">
+                    <section class="shared-result-section shared-result-section--support shared-result-section--next transition-all duration-300">
+                      <div class="shared-result-section-head">
+                        <span class="recitation-check-section-label">
+                          <span class="shared-result-step-badge">3</span>
+                          <i class="bi bi-compass" aria-hidden="true"></i>
+                          {{ getUnifiedResultSectionLabel('next') }}
+                        </span>
+                        <strong>{{ getRecitationRecommendationDisplay(aiMemorisationCheckerResult) }}</strong>
+                        <p>{{ getAiMemorisationCheckerNextStep(aiMemorisationCheckerResult) }}</p>
+                      </div>
+                    </section>
+                    <section class="shared-result-section shared-result-section--support shared-result-section--recording transition-all duration-300">
+                      <div class="shared-result-section-head">
+                        <span class="recitation-check-section-label">
+                          <span class="shared-result-step-badge">4</span>
+                          <i class="bi bi-play-circle" aria-hidden="true"></i>
+                          {{ getUnifiedResultSectionLabel('recording') }}
+                        </span>
+                        <strong :class="getRecitationValidationTone(aiMemorisationCheckerResult)">{{ getRecitationValidationLabel(aiMemorisationCheckerResult) }}</strong>
+                        <p>{{ getRecitationValidationSummary(aiMemorisationCheckerResult) }}</p>
+                      </div>
+                      <div v-if="aiMemorisationCheckerResult.audioSrc" class="self-check-audio-player shared-result-audio-player shared-result-audio-player--compact">
+                        <button class="self-check-audio-player-btn" type="button"
+                          @click="toggleReviewResultAudio(aiMemorisationCheckerResult)"
+                          :aria-label="reviewResultAudioPlaying ? 'Pause playback' : 'Replay recitation'">
+                          <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+                        </button>
+                        <div class="self-check-audio-player-track">
+                          <div class="self-check-audio-player-waveform">
+                            <input class="self-check-audio-player-seek" type="range" min="0"
+                              :max="reviewResultAudioDuration || 0" step="0.01" :value="reviewResultAudioCurrentTime"
+                              @input="seekReviewResultAudio" :aria-label="getUnifiedResultSectionLabel('recording')" />
+                          </div>
+                          <div class="self-check-audio-player-times">
+                            <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioCurrentTime) }}</span>
+                            <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioDuration || aiMemorisationCheckerResult.durationSeconds) }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p v-else class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(aiMemorisationCheckerResult) }}</span></p>
+                    </section>
                   </div>
                   <div class="recitation-check-footnotes">
                     <div class="self-check-status self-check-status-warning ai-recitation-disclaimer recitation-check-footnote">
@@ -2357,7 +2414,7 @@
                       <span>{{ t('memorisation.ai_memorisation_feedback_is_a_guide_verify_importa') }}</span>
                     </div>
                   </div>
-                  <div class="recitation-result-actions recitation-result-actions-compact">
+                  <div class="recitation-result-actions recitation-result-actions-compact recitation-result-actions-compact-clean">
                     <button class="btn-primary self-check-action-btn" type="button" @click="saveAiMemorisationCheckerAssessment">
                       <i class="bi bi-save2"></i>
                       <span>{{ t('memorisation.save_attempt') }}</span>
@@ -2574,30 +2631,91 @@
                     <p>{{ t('memorisation.use_the_ai_recite_tool_in_the_header_when_you_want') }}</p>
                   </div>
                 </div>
-                <div v-if="recitationCheckResult" class="recitation-check-body recitation-check-results">
-                  <div class="recitation-result-stats">
-                    <article v-for="stat in getRecitationResultStats(recitationCheckResult)" :key="stat.key"
-                      class="recitation-result-stat" :class="stat.tone">
-                      <span>{{ stat.label }}</span>
-                      <strong>{{ stat.value }}</strong>
-                      <small>{{ stat.description }}</small>
-                    </article>
-                  </div>
-                  <div class="recitation-insights-grid">
-                    <div class="recitation-next-card">
-                      <span>{{ t('memorisation.what_to_do_next') }}</span>
-                      <strong>{{ getRecitationRecommendationDisplay(recitationCheckResult) }}</strong>
-                      <p>{{ getRecitationNextStep(recitationCheckResult) }}</p>
+                <div v-if="recitationCheckResult" class="recitation-check-body recitation-check-results shared-result-flow transition-all duration-300">
+                  <section class="shared-result-section shared-result-section--summary transition-all duration-300">
+                    <div class="shared-result-section-head">
+                      <span class="recitation-check-section-label">
+                        <span class="shared-result-step-badge">1</span>
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                        {{ getUnifiedResultSectionLabel('summary') }}
+                      </span>
+                      <strong>{{ getRecitationResultHeadline(recitationCheckResult) }}</strong>
                     </div>
-                    <div class="recitation-next-card ai-review-card">
-                      <span>{{ t('memorisation.ai_review_check') }}</span>
-                      <p>{{ getAiRecitationPostReviewMessage(recitationCheckResult) }}</p>
+                    <div class="recitation-result-stats">
+                      <article v-for="stat in getRecitationResultStats(recitationCheckResult)" :key="stat.key"
+                        class="recitation-result-stat" :class="stat.tone">
+                        <span>{{ stat.label }}</span>
+                        <strong>{{ stat.value }}</strong>
+                        <small>{{ stat.description }}</small>
+                      </article>
                     </div>
+                  </section>
+                  <section class="shared-result-section shared-result-section--words transition-all duration-300">
+                    <div class="shared-result-section-head">
+                      <span class="recitation-check-section-label">
+                        <span class="shared-result-step-badge">2</span>
+                        <i class="bi bi-chat-square-text" aria-hidden="true"></i>
+                        {{ getUnifiedResultSectionLabel('words') }}
+                      </span>
+                      <p>{{ getRecitationWordsReviewSummary(recitationCheckResult) }}</p>
+                    </div>
+                    <div v-if="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
+                      class="recitation-review-ayah shared-result-ayah" dir="rtl"
+                      v-html="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
+                      @click="handleRecitationReviewWordClick($event, recitationCheckResult)"></div>
+                    <div class="shared-result-word-review transition-all duration-300">
+                      <div v-if="getRecitationWordsToReview(recitationCheckResult).length" class="shared-result-word-review-list" dir="rtl">
+                        <span v-for="word in getRecitationWordsToReview(recitationCheckResult)" :key="`recitation-review-${word.index}`"
+                          class="shared-result-word-review-chip" :class="`is-${word.visualStatus}`">
+                          {{ word.text }}
+                        </span>
+                      </div>
+                      <p v-else class="shared-result-word-review-summary"><i class="bi bi-check2-circle" aria-hidden="true"></i><span>{{ getFriendlyNoWordMistakesMessage() }}</span></p>
+                    </div>
+                  </section>
+                  <div class="shared-result-support-grid transition-all duration-300">
+                    <section class="shared-result-section shared-result-section--support shared-result-section--next transition-all duration-300">
+                      <div class="shared-result-section-head">
+                        <span class="recitation-check-section-label">
+                          <span class="shared-result-step-badge">3</span>
+                          <i class="bi bi-compass" aria-hidden="true"></i>
+                          {{ getUnifiedResultSectionLabel('next') }}
+                        </span>
+                        <strong>{{ getRecitationRecommendationDisplay(recitationCheckResult) }}</strong>
+                        <p>{{ getRecitationNextStep(recitationCheckResult) }}</p>
+                      </div>
+                    </section>
+                    <section class="shared-result-section shared-result-section--support shared-result-section--recording transition-all duration-300">
+                      <div class="shared-result-section-head">
+                        <span class="recitation-check-section-label">
+                          <span class="shared-result-step-badge">4</span>
+                          <i class="bi bi-play-circle" aria-hidden="true"></i>
+                          {{ getUnifiedResultSectionLabel('recording') }}
+                        </span>
+                        <strong :class="getRecitationValidationTone(recitationCheckResult)">{{ getRecitationValidationLabel(recitationCheckResult) }}</strong>
+                        <p>{{ getRecitationValidationSummary(recitationCheckResult) }}</p>
+                      </div>
+                      <div v-if="recitationCheckResult.audioSrc" class="self-check-audio-player shared-result-audio-player shared-result-audio-player--compact">
+                        <button class="self-check-audio-player-btn" type="button"
+                          @click="toggleReviewResultAudio(recitationCheckResult)"
+                          :aria-label="reviewResultAudioPlaying ? 'Pause playback' : 'Replay recitation'">
+                          <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+                        </button>
+                        <div class="self-check-audio-player-track">
+                          <div class="self-check-audio-player-waveform">
+                            <input class="self-check-audio-player-seek" type="range" min="0"
+                              :max="reviewResultAudioDuration || 0" step="0.01" :value="reviewResultAudioCurrentTime"
+                              @input="seekReviewResultAudio" :aria-label="getUnifiedResultSectionLabel('recording')" />
+                          </div>
+                          <div class="self-check-audio-player-times">
+                            <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioCurrentTime) }}</span>
+                            <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioDuration || recitationCheckResult.durationSeconds) }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p v-else class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(recitationCheckResult) }}</span></p>
+                    </section>
                   </div>
-                  <div v-if="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
-                    class="recitation-review-ayah" dir="rtl"
-                    v-html="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
-                    @click="handleRecitationReviewWordClick($event, recitationCheckResult)"></div>
                   <div class="recitation-check-footnotes">
                     <div v-if="selfCheckLastSavedAyahKey === selfCheckModalVerse.key"
                       class="self-check-status self-check-status-success recitation-check-footnote recitation-saved-footnote">
@@ -2615,7 +2733,7 @@
                       <span>{{ t('memorisation.ai_recitation_feedback_is_a_guide_verify_important') }}</span>
                     </div>
                   </div>
-                  <div class="recitation-result-actions recitation-result-actions-compact">
+                  <div class="recitation-result-actions recitation-result-actions-compact recitation-result-actions-compact-clean">
                     <button class="btn-primary self-check-action-btn" type="button" @click="savePendingRecitationCheckAttempt">
                       <i class="bi bi-save2"></i>
                       <span>{{ t('memorisation.save_attempt') }}</span>
@@ -2688,15 +2806,17 @@
                     <i class="bi" :class="selfCheckDraftAudioPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
                   </button>
                   <div class="self-check-audio-player-track">
-                    <input
-                      type="range"
-                      class="self-check-audio-player-seek"
-                      min="0"
-                      :max="selfCheckDraftAudioDuration || 0"
-                      step="0.1"
-                      :value="selfCheckDraftAudioCurrentTime"
-                      @input="seekSelfCheckDraftAudio"
-                    />
+                    <div class="self-check-audio-player-waveform">
+                      <input
+                        type="range"
+                        class="self-check-audio-player-seek"
+                        min="0"
+                        :max="selfCheckDraftAudioDuration || 0"
+                        step="0.1"
+                        :value="selfCheckDraftAudioCurrentTime"
+                        @input="seekSelfCheckDraftAudio"
+                      />
+                    </div>
                     <div class="self-check-audio-player-times">
                       <span>{{ formatSelfCheckDraftAudioTime(selfCheckDraftAudioCurrentTime) }}</span>
                       <span>{{ formatSelfCheckDraftAudioTime(selfCheckDraftAudioDuration || selfCheckActiveDraft.durationSeconds) }}</span>
@@ -2745,6 +2865,11 @@
                     <span>{{ t('memorisation.save_attempt') }}</span>
                   </button>
                 </div>
+              </div>
+
+              <div v-else class="self-check-assessment-idle">
+                <span class="self-check-assessment-idle-pill"><i class="bi bi-stars" aria-hidden="true"></i>AI review</span>
+                <span class="self-check-assessment-idle-pill"><i class="bi bi-mic" aria-hidden="true"></i>Manual recording</span>
               </div>
 
             </article>
@@ -2845,9 +2970,8 @@
 
             <section class="recordings-library-detail">
               <div v-if="selectedRecordingsEntry && selectedRecordingsAyahGroup" class="recordings-library-detail-head">
-                <div>
+                <div class="recordings-library-detail-head-copy">
                   <span class="recordings-library-detail-kicker">{{ t('memorisation.selected_ayah') }}</span>
-                  <span class="recordings-library-detail-kicker">{{ selectedRecordingsAyahGroup.chapterName }}</span>
                   <h3>{{ getRecordingAttemptLabel(selectedRecordingsEntry) }}</h3>
                   <div class="recordings-library-detail-meta">
                     <span>Ayah {{ selectedRecordingsAyahGroup.ayahNumber }}</span>
@@ -2858,27 +2982,54 @@
 
               <div v-if="selectedRecordingsEntry" class="recordings-library-history">
                 <article class="recording-history-card"
-                  :class="{ playing: selectedRecordingsEntry.id === activeRecordingPlaybackId }">
-                  <div class="recording-history-top">
+                  :class="{
+                    playing: selectedRecordingsEntry.id === activeRecordingPlaybackId,
+                    'recording-history-card--standard': !isAiCheckRecording(selectedRecordingsEntry)
+                  }">
+                  <div class="recording-history-top"
+                    :class="{ 'recording-history-top--standard': !isAiCheckRecording(selectedRecordingsEntry) }">
                     <div class="recording-history-copy">
-                      <div v-if="!isAiCheckRecording(selectedRecordingsEntry)" class="recording-history-kicker">{{
-                        getRecordingAttemptLabel(selectedRecordingsEntry) }}</div>
-                      <span>{{ formatRecordingTimestamp(selectedRecordingsEntry.recordedAt) }}</span>
-                      <p class="recording-history-note">{{ isAiCheckRecording(selectedRecordingsEntry) ?
+                      <div class="recording-history-kicker">{{
+                        isAiCheckRecording(selectedRecordingsEntry) ? `${getRecordingTypeLabel(selectedRecordingsEntry)} result` : 'Saved recording' }}</div>
+                      <strong v-if="!isAiCheckRecording(selectedRecordingsEntry)">{{ getRecordingAttemptLabel(selectedRecordingsEntry) }}</strong>
+                      <div v-if="!isAiCheckRecording(selectedRecordingsEntry)" class="recording-history-inline-meta">
+                        <span>{{ formatRecordingTimestamp(selectedRecordingsEntry.recordedAt) }}</span>
+                        <span class="recording-result-pill"
+                          :class="getRecordingResultTone(selectedRecordingsEntry.result)">
+                          {{ getSelfCheckResultLabel(selectedRecordingsEntry.result) }}
+                        </span>
+                      </div>
+                      <span v-else>{{ formatRecordingTimestamp(selectedRecordingsEntry.recordedAt) }}</span>
+                      <p v-if="isAiCheckRecording(selectedRecordingsEntry)" class="recording-history-note">{{ isAiCheckRecording(selectedRecordingsEntry) ?
                         `${getRecordingTypeLabel(selectedRecordingsEntry)} result` :
                         `${t('memorisation.self_rating')} · ${getSelfCheckResultLabel(selectedRecordingsEntry.result)}`
                         }}</p>
                     </div>
-                    <span v-if="!isAiCheckRecording(selectedRecordingsEntry)" class="recording-result-pill"
-                      :class="getRecordingResultTone(selectedRecordingsEntry.result)">
-                      {{ getSelfCheckResultLabel(selectedRecordingsEntry.result) }}
-                    </span>
                   </div>
 
-                  <div class="recording-history-meta">
-                    <span v-if="!isAiCheckRecording(selectedRecordingsEntry)"><i class="bi bi-clock-history"></i> {{
-                      formatRecordingDuration(selectedRecordingsEntry.durationSeconds) }}</span>
-                    <span v-else><i class="bi bi-stars"></i> {{
+                  <div v-if="!isAiCheckRecording(selectedRecordingsEntry)" class="recording-history-standard-simple">
+                    <p class="recording-history-standard-hint">{{ getSelfCheckResultHint(selectedRecordingsEntry.result) }}</p>
+                    <div v-if="selectedRecordingsEntry.audioSrc" class="recording-history-player-compact recording-history-player-compact--surface recording-history-player-compact--simple">
+                      <button class="recording-history-player-btn"
+                        type="button" @click="toggleRecordingPlayback(selectedRecordingsEntry)"
+                        :aria-label="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Pause replay' : 'Replay recitation'">
+                        <i class="bi"
+                          :class="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                      </button>
+                      <div class="recording-history-player-copy">
+                        <strong>{{ selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Playing' : 'Replay recording' }}</strong>
+                        <span>{{ formatRecordingDuration(selectedRecordingsEntry.durationSeconds) }}</span>
+                      </div>
+                    </div>
+                    <p v-else class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>No audio is available for replay.</span></p>
+                    <div class="recording-history-standard-meta">
+                      <span><i class="bi bi-clock-history" aria-hidden="true"></i>{{ formatRecordingDuration(selectedRecordingsEntry.durationSeconds) }}</span>
+                      <span><i class="bi bi-bookmark-check" aria-hidden="true"></i>{{ t('memorisation.self_rating') }}</span>
+                    </div>
+                  </div>
+
+                  <div v-else class="recording-history-meta">
+                    <span><i class="bi bi-stars"></i> {{
                       getRecitationMistakeSummary(selectedRecordingsEntry.mistakeBreakdown
                         ||
                         selectedRecordingsEntry.mistakes) }}</span>
@@ -2886,47 +3037,99 @@
                       }}</span>
                   </div>
 
-                  <div v-if="isAiCheckRecording(selectedRecordingsEntry)" class="recording-history-ai-detail">
-                    <div class="recitation-result-stats">
-                      <article v-for="stat in getRecitationResultStats(selectedRecordingsEntry)" :key="stat.key"
-                        class="recitation-result-stat" :class="stat.tone">
-                        <span>{{ stat.label }}</span>
-                        <strong>{{ stat.value }}</strong>
-                        <small>{{ stat.description }}</small>
-                      </article>
+                  <div v-if="isAiCheckRecording(selectedRecordingsEntry)" class="recording-history-ai-detail shared-result-flow">
+                    <section class="shared-result-section shared-result-section--summary transition-all duration-300">
+                      <div class="shared-result-section-head">
+                        <span class="recitation-check-section-label">
+                          <span class="shared-result-step-badge">1</span>
+                          <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                          {{ getUnifiedResultSectionLabel('summary') }}
+                        </span>
+                        <strong>{{ getRecitationResultHeadline(selectedRecordingsEntry) }}</strong>
+                      </div>
+                      <div class="recitation-result-stats">
+                        <article v-for="stat in getRecitationResultStats(selectedRecordingsEntry)" :key="stat.key"
+                          class="recitation-result-stat" :class="stat.tone">
+                          <span>{{ stat.label }}</span>
+                          <strong>{{ stat.value }}</strong>
+                          <small>{{ stat.description }}</small>
+                        </article>
+                      </div>
+                    </section>
+                    <section class="shared-result-section shared-result-section--words transition-all duration-300">
+                      <div class="shared-result-section-head">
+                        <span class="recitation-check-section-label">
+                          <span class="shared-result-step-badge">2</span>
+                          <i class="bi bi-chat-square-text" aria-hidden="true"></i>
+                          {{ getUnifiedResultSectionLabel('words') }}
+                        </span>
+                        <p>{{ getRecitationWordsReviewSummary(selectedRecordingsEntry) }}</p>
+                      </div>
+                      <div v-if="getRecitationReviewArabic(selectedRecordingsEntry)" class="recitation-review-ayah shared-result-ayah"
+                        dir="rtl" v-html="getRecitationReviewArabic(selectedRecordingsEntry)"></div>
+                      <div class="shared-result-word-review transition-all duration-300">
+                        <div v-if="getRecitationWordsToReview(selectedRecordingsEntry).length" class="shared-result-word-review-list" dir="rtl">
+                          <span v-for="word in getRecitationWordsToReview(selectedRecordingsEntry)" :key="`saved-review-${word.index}`"
+                            class="shared-result-word-review-chip" :class="`is-${word.visualStatus}`">
+                            {{ word.text }}
+                          </span>
+                        </div>
+                        <p v-else class="shared-result-word-review-summary"><i class="bi bi-check2-circle" aria-hidden="true"></i><span>{{ getFriendlyNoWordMistakesMessage() }}</span></p>
+                      </div>
+                    </section>
+                    <div class="shared-result-support-grid transition-all duration-300">
+                      <section class="shared-result-section shared-result-section--support shared-result-section--next transition-all duration-300">
+                        <div class="shared-result-section-head">
+                          <span class="recitation-check-section-label">
+                            <span class="shared-result-step-badge">3</span>
+                            <i class="bi bi-compass" aria-hidden="true"></i>
+                            {{ getUnifiedResultSectionLabel('next') }}
+                          </span>
+                          <strong>{{ getRecitationRecommendationDisplay(selectedRecordingsEntry) }}</strong>
+                          <p>{{ getRecitationNextStep(selectedRecordingsEntry, { saved: true }) }}</p>
+                        </div>
+                      </section>
+                      <section class="shared-result-section shared-result-section--support shared-result-section--recording transition-all duration-300">
+                        <div class="shared-result-section-head">
+                          <span class="recitation-check-section-label">
+                            <span class="shared-result-step-badge">4</span>
+                            <i class="bi bi-play-circle" aria-hidden="true"></i>
+                            {{ getUnifiedResultSectionLabel('recording') }}
+                          </span>
+                          <strong :class="getRecitationValidationTone(selectedRecordingsEntry)">{{ getRecitationValidationLabel(selectedRecordingsEntry) }}</strong>
+                          <p>{{ getRecitationValidationSummary(selectedRecordingsEntry) }}</p>
+                        </div>
+                        <div v-if="selectedRecordingsEntry.audioSrc" class="recording-history-player-compact">
+                          <button class="recording-history-player-btn"
+                            type="button" @click="toggleRecordingPlayback(selectedRecordingsEntry)"
+                            :aria-label="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Pause replay' : 'Replay recitation'">
+                            <i class="bi"
+                              :class="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                          </button>
+                          <div class="recording-history-player-copy">
+                            <strong>{{ selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Playing' : 'Replay recitation' }}</strong>
+                            <span>{{ formatRecordingDuration(selectedRecordingsEntry.durationSeconds) }}</span>
+                          </div>
+                        </div>
+                        <p v-else class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(selectedRecordingsEntry) }}</span></p>
+                      </section>
                     </div>
-                    <div class="recitation-next-card">
-                      <span>{{ t('memorisation.what_next') }}</span>
-                      <strong>{{ getRecitationRecommendationDisplay(selectedRecordingsEntry) }}</strong>
-                      <p>{{ getRecitationNextStep(selectedRecordingsEntry) }}</p>
-                    </div>
-                    <div class="recitation-next-card">
-                      <span>{{ t('memorisation.deterministic_replay') }}</span>
-                      <strong :class="getRecitationValidationTone(selectedRecordingsEntry)">{{
-                        getRecitationValidationLabel(selectedRecordingsEntry) }}</strong>
-                      <p>{{ getRecitationValidationSummary(selectedRecordingsEntry) }}</p>
-                    </div>
-                    <div v-if="getRecitationReviewArabic(selectedRecordingsEntry)" class="recitation-review-ayah"
-                      dir="rtl" v-html="getRecitationReviewArabic(selectedRecordingsEntry)"></div>
                   </div>
 
-                  <div class="recording-history-actions">
-                    <button v-if="selectedRecordingsEntry.audioSrc" class="player-btn recording-history-action"
-                      type="button" @click="toggleRecordingPlayback(selectedRecordingsEntry)">
-                      <i class="bi"
-                        :class="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                      <span>{{ selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Pause' : 'Play' }}</span>
-                    </button>
-                    <button class="player-btn recording-history-action" type="button"
-                      @click="openRenameRecordingModal(selectedRecordingsEntry.id)">
-                      <i class="bi bi-pencil-square"></i>
-                      <span>Rename</span>
-                    </button>
-                    <button class="player-btn recording-history-action recording-history-action-delete" type="button"
-                      @click="promptDeleteRecording(selectedRecordingsEntry.id)">
-                      <i class="bi bi-trash3"></i>
-                      <span>{{ t('common.delete') }}</span>
-                    </button>
+                  <div class="recording-history-footer"
+                    :class="{ 'recording-history-footer--standard': !isAiCheckRecording(selectedRecordingsEntry) }">
+                    <div class="recording-history-actions recording-history-actions--utility">
+                      <button class="recording-history-utility-link" type="button"
+                        @click="openRenameRecordingModal(selectedRecordingsEntry.id)">
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Rename</span>
+                      </button>
+                      <button class="recording-history-utility-link recording-history-utility-link-delete" type="button"
+                        @click="promptDeleteRecording(selectedRecordingsEntry.id)">
+                        <i class="bi bi-trash3"></i>
+                        <span>{{ t('common.delete') }}</span>
+                      </button>
+                    </div>
                   </div>
 
                 </article>
@@ -3151,8 +3354,7 @@
       </transition>
 
       <div
-        class="modal fade show d-block onboarding-post-session-modal-wrap"
-        tabindex="-1"
+        class="onboarding-post-session-modal-wrap"
         role="dialog"
         aria-modal="true"
         aria-labelledby="postSessionTitle"
@@ -3201,6 +3403,10 @@
                 role="status"
               >
                 {{ postSessionMilestone }}
+              </p>
+
+              <p v-if="postSessionAutoSaved && !onboardingSampleSessionActive" class="post-session-autosaved-note" role="status">
+                This session was saved automatically, so your completion history is already safe.
               </p>
 
               <section
@@ -3291,17 +3497,17 @@
                   </button>
                 </template>
                 <template v-else>
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--primary" @click="openPostSessionNewSessionOffcanvas">
+                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                    <span>Start next session</span>
+                  </button>
                   <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="repeatPostSession">
                     <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                    <span>{{ postSessionUi.repeat }}</span>
+                    <span>Repeat this session</span>
                   </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="openPostSessionNewSessionOffcanvas">
-                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                    <span>{{ postSessionUi.newSession }}</span>
-                  </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--primary" @click="savePostSession">
-                    <i class="bi bi-bookmark-check" aria-hidden="true"></i>
-                    <span>{{ postSessionUi.save }}</span>
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--ghost" @click="togglePostSessionStats">
+                    <i class="bi" :class="postSessionStatsExpanded ? 'bi-chevron-up' : 'bi-bar-chart-line'" aria-hidden="true"></i>
+                    <span>{{ postSessionStatsExpanded ? 'Hide session summary' : 'View session summary' }}</span>
                   </button>
                 </template>
               </div>
@@ -3481,6 +3687,12 @@
     <!-- Audio System -->
     <audio ref="audio" style="display:none"></audio>
     <audio ref="recordingsAudio" style="display:none"></audio>
+    <audio ref="reviewResultAudio" style="display:none"
+      @loadedmetadata="onReviewResultAudioLoadedMetadata"
+      @timeupdate="onReviewResultAudioTimeUpdate"
+      @play="reviewResultAudioPlaying = true"
+      @pause="reviewResultAudioPlaying = false"
+      @ended="onReviewResultAudioEnded"></audio>
 
     <div v-if="showQuranSearchModal" class="quran-search-modal-backdrop" role="presentation"
       @click.self="closeQuranSearchModal">
