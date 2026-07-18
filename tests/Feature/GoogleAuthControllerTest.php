@@ -15,33 +15,17 @@ class GoogleAuthControllerTest extends TestCase
 
     public function test_google_redirect_route_redirects_to_the_provider(): void
     {
-        $provider = Mockery::mock();
-        $provider->shouldReceive('redirect')
-            ->once()
-            ->andReturn(redirect('https://accounts.google.com/o/oauth2/auth'));
-
-        Socialite::shouldReceive('driver')
-            ->once()
-            ->with('google')
-            ->andReturn($provider);
+        $this->mockGoogleRedirect();
 
         $this->get(route('auth.google.redirect'))
             ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
     }
 
-    public function test_legacy_google_redirect_route_redirects_to_the_provider(): void
+    public function test_short_google_redirect_route_redirects_to_the_provider(): void
     {
-        $provider = Mockery::mock();
-        $provider->shouldReceive('redirect')
-            ->once()
-            ->andReturn(redirect('https://accounts.google.com/o/oauth2/auth'));
+        $this->mockGoogleRedirect();
 
-        Socialite::shouldReceive('driver')
-            ->once()
-            ->with('google')
-            ->andReturn($provider);
-
-        $this->get('/auth/google/redirect')
+        $this->get('/auth/redirect')
             ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
     }
 
@@ -114,7 +98,7 @@ class GoogleAuthControllerTest extends TestCase
         $this->assertSame(1, User::count());
     }
 
-    public function test_legacy_google_callback_route_signs_the_user_in(): void
+    public function test_short_google_callback_route_signs_the_user_in(): void
     {
         $this->mockGoogleUser([
             'id' => 'google-999',
@@ -123,7 +107,7 @@ class GoogleAuthControllerTest extends TestCase
             'avatar' => 'https://example.com/legacy-user.png',
         ]);
 
-        $this->get('/auth/google/callback')
+        $this->get('/auth/callback')
             ->assertRedirect(route('memorisation'));
 
         $user = User::where('email', 'legacy@example.com')->first();
@@ -136,11 +120,38 @@ class GoogleAuthControllerTest extends TestCase
     private function mockGoogleUser(array $attributes): void
     {
         $provider = Mockery::mock();
+        $provider->shouldReceive('redirectUrl')
+            ->once()
+            ->with(route('auth.google.callback'))
+            ->andReturnSelf();
+        $provider->shouldReceive('stateless')
+            ->once()
+            ->andReturnSelf();
         $provider->shouldReceive('user')
             ->once()
             ->andReturn(
                 (new SocialiteUser())->map($attributes)->setRaw($attributes)
             );
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andReturn($provider);
+    }
+
+    private function mockGoogleRedirect(): void
+    {
+        $provider = Mockery::mock();
+        $provider->shouldReceive('redirectUrl')
+            ->once()
+            ->with(route('auth.google.callback'))
+            ->andReturnSelf();
+        $provider->shouldReceive('stateless')
+            ->once()
+            ->andReturnSelf();
+        $provider->shouldReceive('redirect')
+            ->once()
+            ->andReturn(redirect('https://accounts.google.com/o/oauth2/auth'));
 
         Socialite::shouldReceive('driver')
             ->once()

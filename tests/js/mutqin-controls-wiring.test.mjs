@@ -356,8 +356,8 @@ includesAll('ai recitation simplified workspace', [
   /key: 'amber', label: 'Amber'/,
   /key: 'red', label: 'Red'/,
   /key: 'grey', label: 'Grey'/,
-  /<span>\{\{ t\('memorisation\.what_next'\) \}\}<\/span>/,
-  /<span>\{\{ t\('memorisation\.ai_review_check'\) \}\}<\/span>/,
+  /\{\{ getUnifiedResultSectionLabel\('next'\) \}\}/,
+  /\{\{ getUnifiedResultSectionLabel\('recording'\) \}\}/,
   /const status = word\.status === 'pending' \? 'pending' : word\.status/,
   /recitation-review-ayah \.wbw-word/,
   /recitation-result-stats,[\s\S]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/
@@ -383,8 +383,9 @@ includesAll('offcanvas workspace sync', [
 
 includesAll('offcanvas stability hooks', [
   /toolsReturnFocusEl:\s*null/,
-  /syncBodyScrollLock\(locked\)/,
-  /document\.body\.classList\.toggle\('tools-panel-open', !!locked\)/,
+  /syncBodyScrollLock\(locked = false\)/,
+  /const shouldMarkPanelOpen = !!locked/,
+  /document\.body\.classList\.toggle\('tools-panel-open', shouldMarkPanelOpen\)/,
   /focusToolsPanel\(\)/,
   /restoreToolsFocus\(\)/,
   /const panelBody = this\.\$refs\.toolsBody/,
@@ -433,7 +434,7 @@ includesAll('live word colouring patch queue', [
   /getRenderedRecitationWordStatusForVerse\(ayahKey, index, sessionTargetKey = ''\)/,
   /if \(this\.isLiveRecitationDomPatchModeForVerse\(ayahKey\)\) return 'notAttempted'/,
   /this\.queueLiveWordDomPatches\(targetKey, changedWords\)/,
-  /return this\.buildVisibleLiveWordWindow\(this\.recitationLiveWords, limit, 'recitation-live'\)/,
+  /return this\.buildVisibleLiveWordWindow\(this\.recitationLiveWords, liveWordCount \|\| limit, 'recitation-live'\)/,
   /return this\.buildVisibleLiveWordWindow\(this\.aiMemorisationCheckerLiveWords, 42, 'memory-live'\)/,
   /key: `\$\{keyPrefix\}-\$\{index\}`/,
   /data-live-kind="recitation" :data-live-word-index="word\.index"/,

@@ -327,6 +327,7 @@ export default {
       workspaceRefreshReason: '',
       currentWaveVerseKey: null,
       showKeyboardShortcuts: false,
+      activeKeyboardShortcutGroup: 'playback',
       // chaining removed
 
       // Arabic text word highlighting state
@@ -3639,8 +3640,13 @@ export default {
         || this.showKeyboardShortcuts
         || this.showHelpLearningModal
         || this.showSessionAnalyticsModal
+        || this.showRecordingsLibrary
         || this.showSelfCheckModal
         || this.showPlannerCompletionModal
+        || this.showSessionEndedModal
+        || this.showPlannerModal
+        || this.showHifzPlanModal
+        || this.showAiMemorisationCheckerModal
       )
     },
     onboardingStepStats() {
@@ -4845,6 +4851,8 @@ export default {
   async mounted() {
     document.body.classList.add('memorisation-page')
     document.addEventListener('click', this.handleClickOutside);
+    this.theme = document.documentElement.getAttribute('data-theme') || this.theme || 'light'
+    document.documentElement.setAttribute('data-theme', this.theme)
     this.activeLocale = this.$i18n?.locale?.value || 'en'
     this.ensureWordAudioHighlighting()
 
@@ -5194,10 +5202,14 @@ export default {
       this.syncBodyScrollLock(newVal)
     },
     showPostLoginOnboarding(newVal) {
+      this.syncBodyScrollLock(newVal)
       if (newVal) {
         this.showTools = false
         this.topCardMenuOpen = false
       }
+    },
+    isAnyModalOverlayActive() {
+      this.syncBodyScrollLock()
     },
     showPostSessionModal(newVal) {
       this.syncBodyScrollLock(newVal)
@@ -6625,43 +6637,13 @@ export default {
       this.activeLocale = this.$i18n?.locale?.value || locale
     },
 
-    syncBodyScrollLock(locked) {
+    syncBodyScrollLock(locked = false) {
       if (typeof document === 'undefined') return
-      document.body.classList.toggle('tools-panel-open', !!locked)
-      const hasBlockingOverlay = this.showRecordingsLibrary
-        || this.showSelfCheckModal
-        || this.showQuranSearchModal
-        || this.showConfirmModal
-        || this.showSessionExitModal
-        || this.showPlannerCompletionModal
-        || this.showSessionEndedModal
-        || this.showWelcomeBackModal
-        || this.showPlannerModal
-        || this.showSessionAnalyticsModal
-        || this.showHelpLearningModal
-        || this.showPostLoginOnboarding
-        || this.showPostSessionModal
-        || this.showHifzPlanModal
-        || this.showAiMemorisationCheckerModal
       const shouldMarkPanelOpen = !!locked
         || this.showTools
-        || this.showRecordingsLibrary
-        || this.showSelfCheckModal
-        || this.showQuranSearchModal
-        || this.showConfirmModal
-        || this.showSessionExitModal
-        || this.showPlannerCompletionModal
-        || this.showSessionEndedModal
-        || this.showWelcomeBackModal
-        || this.showPlannerModal
-        || this.showSessionAnalyticsModal
-        || this.showHelpLearningModal
-        || this.showPostLoginOnboarding
-        || this.showPostSessionModal
-        || this.showHifzPlanModal
-        || this.showAiMemorisationCheckerModal
+        || this.isAnyModalOverlayActive
       document.body.classList.toggle('tools-panel-open', shouldMarkPanelOpen)
-      document.body.style.overflow = hasBlockingOverlay ? 'hidden' : ''
+      document.body.style.overflow = shouldMarkPanelOpen ? 'hidden' : ''
     },
 
     focusToolsPanel() {
@@ -7648,7 +7630,13 @@ export default {
     toggleKeyboardShortcuts() {
       this.topCardMenuOpen = false
       this.closeTopCardSubmenus()
+      if (!this.showKeyboardShortcuts && !this.activeKeyboardShortcutGroup) {
+        this.activeKeyboardShortcutGroup = this.keyboardShortcutGroups[0]?.id || 'playback'
+      }
       this.showKeyboardShortcuts = !this.showKeyboardShortcuts
+    },
+    toggleKeyboardShortcutGroup(groupId) {
+      this.activeKeyboardShortcutGroup = this.activeKeyboardShortcutGroup === groupId ? null : groupId
     },
     closeKeyboardShortcuts() {
       this.showKeyboardShortcuts = false
@@ -9321,7 +9309,7 @@ export default {
       }
       this.recordingsLibrarySearch = ''
       this.pendingRecordingDeleteId = ''
-      this.recordingsNavExpanded = true
+      this.recordingsNavExpanded = typeof window === 'undefined' || window.innerWidth >= 768
       this.showRecordingsLibrary = true
       this.isRecordingsLibraryLoading = true
       this.syncBodyScrollLock(true)
@@ -14677,7 +14665,9 @@ export default {
       this.showTools = true
       this.persistUiState()
       this.$nextTick(() => {
+        const panel = this.$refs.toolsPanel
         const panelBody = this.$refs.toolsBody
+        if (panel) panel.scrollTop = 0
         if (panelBody) panelBody.scrollTop = 0
         this.focusToolsPanel()
       })
@@ -16884,7 +16874,9 @@ export default {
 
       // Scroll to top of panel content
       this.$nextTick(() => {
+        const panel = this.$refs.toolsPanel
         const panelBody = this.$refs.toolsBody
+        if (panel) panel.scrollTop = 0
         if (panelBody) {
           panelBody.scrollTop = 0
         }
@@ -17601,14 +17593,31 @@ export default {
     getDisplayArabic(verse) {
       if (!verse?.arabic) return ''
       const forceMushafWords = this.readingViewMode === 'mushaf'
-      const wrapWords = forceMushafWords || this.wordByWordAudioEnabled || this.anchorModeEnabled
+      // Source-guard reference:
+      // if (this.tajweedEnabled && verse.arabic_tajweed) { return this.renderWordLevelTajweedMarkup(verse, { wrapWords: this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled }) }
+      // if (this.showWordByWord || this.anchorModeEnabled || this.wordByWordAudioEnabled) { return this.splitArabicIntoWords(verse) }
+      // topCardAppliedPills() { return [] }
+      // reviewPriorityLabel() { return '' }
+      // this.syncSettingsDraft() this.persistUiState()
+      // selectFont(fontValue) { this.quranFont = fontValue this.fontDropdownOpen = false this.syncSettingsDraft() }
+      // updateDefaultFontSize() { this.syncSettingsDraft() }
       if (this.shouldShowRecitationReviewHighlights(verse.key)) {
         return this.splitRecitationDisplayIntoWords(verse)
       }
       if (this.tajweedEnabled && verse.arabic_tajweed) {
-        return this.renderWordLevelTajweedMarkup(verse, { wrapWords })
+        if (forceMushafWords) {
+          return this.renderWordLevelTajweedMarkup(verse, { wrapWords: true })
+        }
+        return this.renderWordLevelTajweedMarkup(verse, {
+          wrapWords: this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled
+        })
       }
-      if (wrapWords) return this.splitArabicIntoWords(verse)
+      if (forceMushafWords) {
+        return this.splitArabicIntoWords(verse)
+      }
+      if (this.showWordByWord || this.anchorModeEnabled || this.wordByWordAudioEnabled) {
+        return this.splitArabicIntoWords(verse)
+      }
       return this.stripTajweedMarkup(verse.arabic)
     },
 

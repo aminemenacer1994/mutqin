@@ -6,7 +6,7 @@
 <html lang="{{ $appLocale }}" dir="{{ $appDirection }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Mutqin - AI-Powered Quran Memorization | Master Tajweed with Artificial Intelligence</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -870,6 +870,423 @@
             color: #4f9d8a;
             font-size: 1.5rem;
             letter-spacing: 10px;
+        }
+
+        @media (max-width: 767.98px) {
+            :root {
+                --landing-grid: repeat(4, minmax(0, 1fr));
+                --landing-gap: clamp(8px, 2.7vw, 14px);
+                --landing-gutter: max(14px, env(safe-area-inset-left));
+            }
+
+            html {
+                scroll-padding-top: 9rem;
+            }
+
+            body {
+                overflow-x: visible;
+            }
+
+            .navbar {
+                position: sticky;
+                padding: max(10px, env(safe-area-inset-top)) var(--landing-gutter) 10px;
+            }
+
+            .nav-container {
+                width: min(100%, 44rem);
+                padding: 0;
+                display: grid;
+                grid-template-columns: var(--landing-grid);
+                gap: 8px var(--landing-gap);
+            }
+
+            .logo {
+                grid-column: 1 / span 2;
+                min-width: 0;
+                gap: 7px;
+            }
+
+            .logo-icon {
+                font-size: 1.6rem;
+            }
+
+            .logo h1 {
+                font-size: 1.15rem;
+            }
+
+            .nav-links {
+                grid-column: 3 / -1;
+                min-width: 0;
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 5px;
+                align-items: stretch;
+            }
+
+            .nav-links a {
+                min-width: 0;
+                min-height: 42px;
+                padding: 5px 3px;
+                display: grid;
+                place-items: center;
+                text-align: center;
+                font-size: clamp(0.62rem, 2.45vw, 0.76rem);
+                line-height: 1.15;
+                overflow-wrap: anywhere;
+            }
+
+            .nav-links .btn-nav {
+                grid-column: 1 / -1;
+                min-height: 44px;
+                padding-inline: 10px;
+            }
+
+            .verse-ticker {
+                padding-block: 0.7rem;
+            }
+
+            .hero,
+            .features,
+            .how-it-works,
+            .testimonials,
+            .pricing,
+            .cta,
+            .footer {
+                padding-inline: var(--landing-gutter);
+            }
+
+            .hero {
+                min-height: auto;
+                padding-top: clamp(2.5rem, 11vw, 5rem);
+                padding-bottom: clamp(3rem, 12vw, 5rem);
+                overflow: visible;
+            }
+
+            .hero::before {
+                right: -45%;
+                font-size: 18rem;
+            }
+
+            .hero-container,
+            .hero-content,
+            .hero-buttons,
+            .hero-stats,
+            .section-container,
+            .features-grid,
+            .steps,
+            .testimonials-grid,
+            .pricing-grid,
+            .footer-content {
+                display: grid;
+                grid-template-columns: var(--landing-grid);
+                gap: var(--landing-gap);
+                min-width: 0;
+            }
+
+            .hero-container > .hero-content,
+            .hero-container > .hero-image,
+            .hero-content > h1,
+            .hero-content > p,
+            .hero-content > .hero-buttons,
+            .hero-content > .hero-stats,
+            .section-container > .section-title,
+            .section-container > .section-subtitle,
+            .section-container > .features-grid,
+            .section-container > .steps,
+            .section-container > .testimonials-grid,
+            .section-container > .pricing-grid {
+                grid-column: 1 / -1;
+                min-width: 0;
+            }
+
+            .hero-content h1 {
+                margin-bottom: 0.8rem;
+                font-size: clamp(2rem, 10vw, 3.25rem);
+            }
+
+            .hero-content p {
+                margin-bottom: 0.8rem;
+                font-size: clamp(0.92rem, 3.8vw, 1.1rem);
+            }
+
+            .hero-buttons {
+                margin-top: 0.65rem;
+            }
+
+            .hero-buttons > a {
+                grid-column: span 2;
+                min-width: 0;
+                min-height: 48px;
+                padding: 10px;
+                justify-content: center;
+                text-align: center;
+                line-height: 1.2;
+            }
+
+            .hero-stats {
+                margin-top: 1.3rem;
+            }
+
+            .hero-stats > .stat {
+                grid-column: span 1;
+                min-width: 0;
+            }
+
+            .stat-number {
+                font-size: clamp(1.25rem, 6vw, 1.8rem);
+            }
+
+            .stat-label {
+                font-size: clamp(0.62rem, 2.5vw, 0.78rem);
+                overflow-wrap: anywhere;
+            }
+
+            .hero-image {
+                margin-top: 1rem;
+            }
+
+            .hero-image > div:first-child {
+                min-height: clamp(240px, 72vw, 360px) !important;
+                padding: clamp(1rem, 5vw, 2rem) !important;
+            }
+
+            .floating-card {
+                max-width: min(68%, 15rem);
+                padding: 0.65rem 0.8rem;
+                font-size: clamp(0.72rem, 3vw, 0.88rem);
+            }
+
+            .floating-card:nth-child(1) {
+                right: 8px;
+            }
+
+            .floating-card:nth-child(2) {
+                left: 8px;
+            }
+
+            .floating-card:nth-child(3) {
+                right: 8px;
+            }
+
+            .features,
+            .how-it-works,
+            .testimonials,
+            .pricing,
+            .cta {
+                padding-top: clamp(3rem, 12vw, 5rem);
+                padding-bottom: clamp(3rem, 12vw, 5rem);
+            }
+
+            .section-title {
+                font-size: clamp(1.75rem, 8vw, 2.4rem);
+            }
+
+            .section-title::before,
+            .section-title::after {
+                margin-inline: 0.35rem;
+                font-size: 1rem;
+            }
+
+            .section-subtitle {
+                margin-bottom: 1.5rem;
+                font-size: 0.94rem;
+            }
+
+            .features-grid > .feature-card,
+            .steps > .step,
+            .testimonials-grid > .testimonial-card {
+                grid-column: span 2;
+                min-width: 0;
+            }
+
+            .feature-card,
+            .testimonial-card,
+            .pricing-card {
+                padding: clamp(1rem, 4vw, 1.6rem);
+            }
+
+            .feature-icon {
+                margin-bottom: 0.65rem;
+                font-size: 2rem;
+            }
+
+            .feature-card h3,
+            .step h3 {
+                font-size: clamp(1rem, 4vw, 1.2rem);
+            }
+
+            .feature-card p,
+            .step p,
+            .testimonial-text {
+                font-size: clamp(0.78rem, 3vw, 0.94rem);
+            }
+
+            .steps {
+                margin-top: 1.5rem;
+            }
+
+            .step:not(:last-child)::after {
+                content: none;
+            }
+
+            .step-number {
+                width: 54px;
+                height: 54px;
+                margin-bottom: 0.75rem;
+                font-size: 1.35rem;
+            }
+
+            .testimonials-grid,
+            .pricing-grid {
+                margin-top: 1.5rem;
+            }
+
+            .testimonial-author {
+                display: grid;
+                grid-template-columns: 42px minmax(0, 1fr);
+                gap: 8px;
+            }
+
+            .author-avatar {
+                width: 42px;
+                height: 42px;
+            }
+
+            .pricing-grid > .pricing-card {
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: var(--landing-grid);
+                gap: 8px var(--landing-gap);
+                text-align: start;
+            }
+
+            .pricing-card > h3,
+            .pricing-card > .price {
+                grid-column: span 2;
+                align-self: center;
+                margin: 0;
+            }
+
+            .pricing-card > .price {
+                text-align: end;
+                font-size: clamp(2rem, 9vw, 3rem);
+            }
+
+            .pricing-card > .pricing-features,
+            .pricing-card > .btn-primary,
+            .pricing-card > .btn-secondary {
+                grid-column: 1 / -1;
+            }
+
+            .pricing-features {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 4px var(--landing-gap);
+                margin: 0.5rem 0;
+            }
+
+            .pricing-features li {
+                min-width: 0;
+                padding: 0.35rem 0;
+                font-size: clamp(0.76rem, 3vw, 0.9rem);
+            }
+
+            .pricing-card.featured,
+            .pricing-card.featured:hover {
+                transform: none;
+            }
+
+            .pricing-card > .btn-secondary,
+            .pricing-card > .btn-primary {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                min-height: 48px !important;
+            }
+
+            .cta .section-container > h2,
+            .cta .section-container > p,
+            .cta .section-container > a {
+                grid-column: 1 / -1;
+                min-width: 0;
+            }
+
+            .cta h2 {
+                font-size: clamp(1.8rem, 8vw, 2.4rem);
+            }
+
+            .cta .btn-primary {
+                width: min(100%, 24rem);
+                min-height: 48px;
+                justify-self: center;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .footer-content > .footer-section {
+                grid-column: span 2;
+                min-width: 0;
+            }
+
+            .footer-section:first-child,
+            .footer-section:last-child {
+                grid-column: 1 / -1;
+            }
+
+            .social-links {
+                display: grid;
+                grid-template-columns: repeat(5, minmax(44px, 1fr));
+                gap: 6px;
+            }
+
+            .social-links a {
+                min-width: 44px;
+                min-height: 44px;
+                display: grid;
+                place-items: center;
+                margin: 0;
+            }
+        }
+
+        @media (min-width: 560px) and (max-width: 767.98px) {
+                .features-grid > .feature-card,
+                .testimonials-grid > .testimonial-card,
+                .pricing-grid > .pricing-card {
+                grid-column: span 2;
+            }
+
+            .pricing-grid > .pricing-card {
+                display: block;
+                text-align: center;
+            }
+
+            .pricing-card > .price {
+                text-align: center;
+                margin: 1rem 0;
+            }
+
+            .pricing-features {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @media (max-width: 349.98px) {
+            .logo {
+                grid-column: 1 / -1;
+            }
+
+            .nav-links {
+                grid-column: 1 / -1;
+            }
+
+            .hero-buttons > a {
+                grid-column: 1 / -1;
+            }
+
+            .features-grid > .feature-card,
+            .testimonials-grid > .testimonial-card {
+                grid-column: 1 / -1;
+            }
         }
     </style>
 </head>

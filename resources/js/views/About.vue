@@ -158,4 +158,84 @@ html[dir="rtl"] .verse {
   text-align: center;
 }
 
+@media (max-width: 767.98px) {
+  .page {
+    --about-mobile-grid: repeat(4, minmax(0, 1fr));
+    --about-mobile-gap: clamp(8px, 2.6vw, 14px);
+    padding: clamp(24px, 7vw, 44px) clamp(12px, 4vw, 24px);
+    overflow-x: visible;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: var(--about-mobile-grid);
+    column-gap: var(--about-mobile-gap);
+    margin-bottom: clamp(28px, 8vw, 44px);
+    text-align: start;
+  }
+
+  .hero > .tag,
+  .hero > h1,
+  .hero > p,
+  .hero > .cta {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .hero > .tag {
+    justify-self: start;
+  }
+
+  .hero > h1 {
+    font-size: clamp(32px, 10vw, 46px);
+    overflow-wrap: normal;
+  }
+
+  .hero > p {
+    margin-inline: 0;
+  }
+
+  .cta,
+  .grid {
+    display: grid;
+    grid-template-columns: var(--about-mobile-grid);
+    gap: var(--about-mobile-gap);
+  }
+
+  .cta > button {
+    grid-column: span 2;
+    min-width: 0;
+  }
+
+  .grid > .card {
+    grid-column: span 2;
+  }
+
+  .grid > .card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .card {
+    padding: clamp(14px, 4vw, 20px);
+  }
+
+  .verse {
+    width: min(100%, 36rem);
+    margin-inline: auto;
+  }
+}
+
+@media (min-width: 560px) and (max-width: 767.98px) {
+  .grid > .card,
+  .grid > .card:last-child {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 349.98px) {
+  .cta > button {
+    grid-column: 1 / -1;
+  }
+}
+
 </style>

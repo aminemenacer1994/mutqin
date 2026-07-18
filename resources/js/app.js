@@ -120,9 +120,10 @@ function showBootstrapFailure(error) {
 
 bootstrapApp().catch(showBootstrapFailure);
 
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        const serviceWorkerUrl = new URL('/sw.js', window.location.origin).href;
+        navigator.serviceWorker.register(serviceWorkerUrl)
             .then((registration) => {
                 registration.update().catch(() => {});
             })

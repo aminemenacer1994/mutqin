@@ -307,4 +307,188 @@ export default {
   }
 }
 
+@media (max-width: 767.98px) {
+  .mission-page {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    padding: 1.25rem 0 2.25rem;
+  }
+
+  .mission-page::before,
+  .mission-page::after {
+    width: min(68vw, 220px);
+    height: min(68vw, 220px);
+  }
+
+  .mission-page::before {
+    left: 0;
+  }
+
+  .mission-page::after {
+    right: 0;
+  }
+
+  .mission-shell,
+  .mission-hero,
+  .mission-copy,
+  .mission-side-panel,
+  .mission-roadmap,
+  .mission-step,
+  .mission-band {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .mission-shell {
+    width: calc(100% - clamp(1.5rem, 7.6vw, 2rem));
+    gap: 0.85rem;
+  }
+
+  .mission-hero,
+  .mission-roadmap {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.85rem;
+  }
+
+  .mission-copy,
+  .mission-side-panel,
+  .mission-step,
+  .mission-band {
+    padding: 1rem;
+    border-radius: 20px;
+  }
+
+  .mission-copy h1 {
+    margin: 0.9rem 0 0.75rem;
+    font-size: clamp(2rem, 11vw, 2.8rem);
+    line-height: 1.03;
+    letter-spacing: -0.035em;
+    overflow-wrap: break-word;
+  }
+
+  .mission-lead,
+  .mission-side-list p,
+  .mission-step p,
+  .mission-band p,
+  .mission-band-points span {
+    min-width: 0;
+    line-height: 1.65;
+    overflow-wrap: break-word;
+  }
+
+  .mission-band-points {
+    gap: 0.5rem;
+  }
+
+  .mission-band-points span {
+    max-width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    white-space: normal;
+    padding-inline: 8px;
+    overflow-wrap: anywhere;
+  }
+
+  .mission-side-panel,
+  .mission-side-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mission-side-list strong,
+  .mission-side-list p,
+  .mission-band > *,
+  .mission-band-points {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .mission-page {
+    --mission-mobile-grid: repeat(4, minmax(0, 1fr));
+    --mission-mobile-gap: clamp(8px, 2.3vw, 12px);
+  }
+
+  .mission-shell,
+  .mission-hero,
+  .mission-roadmap,
+  .mission-band,
+  .mission-band-points {
+    display: grid !important;
+    grid-template-columns: var(--mission-mobile-grid) !important;
+    gap: var(--mission-mobile-gap) !important;
+  }
+
+  .mission-shell > * {
+    grid-column: 1 / -1;
+  }
+
+  .mission-copy {
+    grid-column: 1 / span 2;
+  }
+
+  .mission-side-panel {
+    grid-column: 3 / -1;
+  }
+
+  .mission-roadmap > .mission-step,
+  .mission-band-points > span {
+    grid-column: span 2;
+    min-width: 0;
+  }
+
+  .mission-band > :first-child {
+    grid-column: 1 / span 2;
+  }
+
+  .mission-band > :last-child {
+    grid-column: 3 / -1;
+  }
+}
+
+@media (max-width: 349.98px) {
+  .mission-copy,
+  .mission-side-panel,
+  .mission-band > :first-child,
+  .mission-band > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 559.98px) {
+  .mission-copy,
+  .mission-side-panel,
+  .mission-band > :first-child,
+  .mission-band > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  .mission-side-list {
+    display: grid;
+    grid-template-columns: var(--mission-mobile-grid);
+    gap: var(--mission-mobile-gap);
+  }
+
+  .mission-side-list > div {
+    grid-column: span 2;
+    min-width: 0;
+  }
+
+  .mission-side-list > div:last-child:nth-child(odd),
+  .mission-roadmap > .mission-step:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .mission-band-points > span {
+    grid-column: span 1;
+  }
+}
+
+@media (min-width: 560px) and (max-width: 767.98px) {
+  .mission-roadmap > .mission-step {
+    grid-column: span 2;
+  }
+}
+
 </style>

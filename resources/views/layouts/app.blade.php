@@ -8,7 +8,7 @@
 <html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="{{ $appTheme }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ __('ui.app_title') }}</title>
     <link id="appFaviconLight" rel="icon" type="image/svg+xml" href="/favicon-light.svg" media="(prefers-color-scheme: light)">
@@ -1058,6 +1058,136 @@
                 align-items: flex-start;
                 flex-direction: column;
             }
+
+            .navbar-shell {
+                min-height: calc(var(--nav-h) + env(safe-area-inset-top, 0px));
+                padding: 10px max(12px, env(safe-area-inset-left, 0px)) 10px max(12px, env(safe-area-inset-right, 0px));
+                gap: 8px;
+                flex-wrap: nowrap;
+            }
+
+            .navbar-brand {
+                flex: 0 1 auto;
+                min-width: 0;
+            }
+
+            .app-navbar-logo {
+                height: 38px;
+                width: auto;
+                max-width: min(44vw, 156px);
+                object-fit: contain;
+            }
+
+            .navbar-quick-actions {
+                flex: 0 0 auto;
+                min-width: 0;
+                gap: 8px !important;
+            }
+
+            .app-theme-toggle,
+            .navbar-toggler,
+            .app-user-toggle,
+            .app-lang-toggle.icon-only {
+                width: 44px;
+                min-width: 44px;
+                height: 44px;
+                min-height: 44px;
+                padding: 0;
+                border-radius: 14px;
+                justify-content: center;
+            }
+
+            .app-user-toggle {
+                gap: 0;
+            }
+
+            .app-user-toggle > span:last-of-type,
+            .app-user-toggle .bi-chevron-down {
+                display: none;
+            }
+
+            .app-user-avatar {
+                width: 34px;
+                height: 34px;
+                font-size: 14px;
+            }
+
+            .app-navbar .offcanvas-lg {
+                --bs-offcanvas-width: min(88vw, 360px);
+            }
+
+            .app-navbar .offcanvas-header {
+                padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px;
+            }
+
+            .app-navbar .offcanvas-body {
+                padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 20px);
+                overflow-y: auto;
+            }
+
+            .nav-links-desktop,
+            .app-auth-links {
+                width: 100%;
+                align-items: stretch;
+            }
+
+            .nav-link {
+                display: flex;
+                align-items: center;
+                min-height: 44px;
+                padding: 12px 14px;
+                border-radius: 14px;
+                white-space: normal;
+            }
+
+            .nav-link.active::after,
+            .nav-link:hover::after {
+                left: 14px;
+                right: 14px;
+            }
+
+            .auth-shell {
+                min-height: calc(100dvh - var(--nav-h));
+                align-items: flex-start;
+                padding-top: max(8px, env(safe-area-inset-top, 0px));
+                padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+            }
+
+            .auth-card,
+            .auth-stage,
+            .auth-stage-single,
+            .auth-panel,
+            .auth-form-wrap {
+                width: 100%;
+                max-width: none;
+            }
+
+            .auth-form-wrap {
+                gap: 14px;
+                padding: 16px;
+                min-height: auto;
+                border-radius: 22px;
+            }
+
+            .auth-form-title {
+                font-size: clamp(1.7rem, 9vw, 2.15rem);
+                line-height: 1.05;
+            }
+
+            .auth-form-wrap .form-control,
+            .auth-google-btn,
+            .auth-btn-primary {
+                min-height: 46px;
+                border-radius: 16px;
+            }
+
+            .auth-alert,
+            .auth-form-wrap .invalid-feedback,
+            .auth-switch,
+            .auth-text-link,
+            .auth-divider {
+                overflow-wrap: anywhere;
+            }
         }
 
         .billing-page {
@@ -1657,6 +1787,704 @@
         .billing-plan-selected-action {
             box-shadow: 0 0 0 3px var(--accent-light);
         }
+
+        /* Mobile drawer affordances stay inert outside the phone breakpoint. */
+        .nav-links-desktop .nav-link-icon,
+        .nav-links-desktop .nav-link-chevron,
+        .nav-links-desktop .nav-link-copy small,
+        .offcanvas-body .app-lang-toggle > span,
+        .offcanvas-body .app-lang-toggle > .bi-chevron-down,
+        .mobile-nav-identity > img,
+        .mobile-nav-identity > div > span,
+        .mobile-nav-only {
+            display: none !important;
+        }
+
+        .nav-links-desktop .nav-link-copy,
+        .nav-links-desktop .nav-link-copy strong {
+            display: inline;
+            font: inherit;
+            color: inherit;
+        }
+
+        @media (max-width: 767.98px) {
+            .app-navbar {
+                padding-inline: 0;
+                z-index: var(--bs-offcanvas-zindex, 1045);
+            }
+
+            .navbar-shell {
+                box-sizing: border-box;
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+            }
+
+            .app-navbar-logo {
+                max-width: min(44vw, 148px);
+            }
+
+            .app-navbar .offcanvas-lg {
+                --bs-offcanvas-width: min(88vw, 360px);
+                max-width: 100vw;
+                z-index: var(--bs-offcanvas-zindex, 1045) !important;
+            }
+
+            html[dir="rtl"] .app-navbar .offcanvas-lg.offcanvas-end {
+                right: auto;
+                left: 0;
+                transform: translateX(-100%);
+                border-right: 0;
+                border-left: var(--bs-offcanvas-border-width) solid var(--bs-offcanvas-border-color);
+            }
+
+            html[dir="rtl"] .app-navbar .offcanvas-lg.offcanvas-end.show,
+            html[dir="rtl"] .app-navbar .offcanvas-lg.offcanvas-end.showing {
+                transform: none;
+            }
+
+            #mainContent,
+            .profile-page,
+            .admin-page,
+            .billing-page,
+            .profile-stage,
+            .profile-hero-card,
+            .profile-hero-copy,
+            .profile-hero-summary,
+            .profile-grid,
+            .profile-pane,
+            .profile-subscription-grid,
+            .billing-hero,
+            .billing-status-panel,
+            .billing-confirmation,
+            .billing-grid,
+            .billing-card {
+                box-sizing: border-box;
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+            }
+
+            .profile-page,
+            .admin-page,
+            .billing-page {
+                padding-block: 20px 36px;
+            }
+
+            .profile-stage {
+                gap: 14px;
+            }
+
+            .profile-hero-card,
+            .profile-grid,
+            .billing-hero,
+            .billing-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .profile-hero-card {
+                gap: 14px;
+                padding: 16px;
+                border-radius: 22px;
+            }
+
+            .profile-hero-card::after {
+                right: 0;
+                bottom: 0;
+                width: min(54vw, 180px);
+                height: min(54vw, 180px);
+            }
+
+            .profile-hero-copy h1,
+            .admin-page-head h1,
+            .billing-hero h1 {
+                font-size: clamp(1.9rem, 10vw, 2.65rem);
+                line-height: 1.05;
+                overflow-wrap: break-word;
+            }
+
+            .profile-hero-copy p,
+            .profile-summary-meta,
+            .profile-card-head p,
+            .admin-page-head p,
+            .billing-hero p,
+            .billing-card li,
+            .billing-card small {
+                overflow-wrap: break-word;
+            }
+
+            .profile-hero-summary,
+            .profile-pane,
+            .billing-status-panel,
+            .billing-card {
+                padding: 16px;
+                border-radius: 20px;
+            }
+
+            .profile-grid {
+                gap: 14px;
+            }
+
+            .profile-card-head-split,
+            .admin-page-head,
+            .admin-message-head,
+            .billing-confirmation {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .profile-hero-actions,
+            .profile-subscription-actions,
+            .admin-message-actions,
+            .billing-confirmation-actions {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr);
+                width: 100%;
+                min-width: 0;
+            }
+
+            .profile-hero-actions form,
+            .profile-subscription-actions form,
+            .admin-message-actions form,
+            .profile-action-btn,
+            .profile-submit-btn,
+            .billing-confirmation-actions,
+            .billing-confirmation-actions form {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .profile-subscription-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .profile-subscription-item {
+                min-width: 0;
+                padding: 13px;
+                border-radius: 16px;
+            }
+
+            .profile-subscription-item strong {
+                font-size: 17px;
+                overflow-wrap: break-word;
+            }
+
+            .admin-page-head,
+            .billing-hero {
+                gap: 14px;
+                margin-bottom: 18px;
+            }
+
+            .admin-message-body {
+                padding: 14px;
+                overflow-wrap: anywhere;
+            }
+
+            .billing-confirmation {
+                gap: 14px;
+                padding: 16px;
+            }
+
+            .billing-confirmation-actions {
+                min-width: 0;
+            }
+
+            .billing-grid {
+                gap: 14px;
+            }
+
+            .billing-card {
+                min-height: 0;
+            }
+
+            .billing-actions {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            /* Canonical four-column phone grid for the shared application shell. */
+            .navbar-shell {
+                --app-mobile-grid: repeat(4, minmax(0, 1fr));
+                --app-mobile-gap: clamp(8px, 2.4vw, 12px);
+                display: grid !important;
+                grid-template-columns: var(--app-mobile-grid);
+                gap: var(--app-mobile-gap) !important;
+                align-items: center;
+            }
+
+            .navbar-brand {
+                grid-column: 1 / span 2;
+                min-width: 0;
+                justify-self: start;
+            }
+
+            .navbar-quick-actions {
+                grid-column: 3 / -1;
+                display: grid !important;
+                grid-auto-flow: column;
+                grid-auto-columns: 44px;
+                justify-content: end;
+                gap: var(--app-mobile-gap) !important;
+                min-width: 0;
+            }
+
+            .navbar-quick-actions > .dropdown,
+            .navbar-quick-actions > button {
+                width: 44px;
+                min-width: 44px;
+            }
+
+            .app-navbar .offcanvas-lg {
+                display: grid;
+                grid-template-rows: auto minmax(0, 1fr);
+                --bs-offcanvas-width: min(88vw, 360px);
+                width: var(--bs-offcanvas-width) !important;
+                max-width: min(88vw, 360px) !important;
+                background: var(--surface);
+                border-inline-start: 1px solid var(--border);
+                box-shadow: -18px 0 50px rgba(31, 42, 35, 0.14);
+            }
+
+            .app-navbar .offcanvas-header {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 44px;
+                gap: 10px;
+                align-items: center;
+                min-height: 82px;
+                padding: max(14px, env(safe-area-inset-top)) 16px 14px;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .mobile-nav-identity {
+                display: grid;
+                grid-template-columns: 78px minmax(0, 1fr);
+                gap: 10px;
+                align-items: center;
+                min-width: 0;
+            }
+
+            .mobile-nav-identity img {
+                display: block !important;
+                width: 78px;
+                height: auto;
+                max-height: 40px;
+                object-fit: contain;
+            }
+
+            .mobile-nav-identity > div {
+                min-width: 0;
+            }
+
+            .mobile-nav-identity > div > span {
+                display: none !important;
+            }
+
+            .mobile-nav-identity h2 {
+                color: var(--text);
+                font-size: 1.05rem !important;
+                font-weight: 800;
+            }
+
+            .app-navbar .offcanvas-body {
+                display: grid !important;
+                grid-template-columns: var(--app-mobile-grid);
+                grid-auto-rows: max-content;
+                align-content: start;
+                gap: 16px;
+                padding: 16px 14px calc(20px + env(safe-area-inset-bottom)) !important;
+                overflow-x: hidden;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+            }
+
+            .app-navbar .offcanvas-body > * {
+                grid-column: 1 / -1;
+                min-width: 0;
+            }
+
+            .nav-links-desktop,
+            .app-auth-links {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 8px !important;
+                width: 100%;
+            }
+
+            .navbar-nav-shell {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .app-navbar .offcanvas-body .nav-link {
+                display: grid;
+                grid-template-columns: 44px minmax(0, 1fr) 20px;
+                gap: 10px;
+                align-items: center;
+                width: 100%;
+                min-width: 0;
+                min-height: 60px;
+                padding: 8px 10px;
+                color: var(--text-muted);
+                text-align: start;
+                border: 1px solid transparent;
+                border-radius: 14px;
+            }
+
+            .app-navbar .offcanvas-body .nav-link:hover,
+            .app-navbar .offcanvas-body .nav-link:focus-visible {
+                color: var(--text);
+                background: var(--surface-2);
+                border-color: var(--border);
+            }
+
+            .app-navbar .offcanvas-body .nav-link.active {
+                color: var(--text);
+                background: color-mix(in srgb, var(--success-text) 9%, var(--surface) 91%);
+                border-color: color-mix(in srgb, var(--success-text) 24%, var(--border) 76%);
+                box-shadow: inset 3px 0 0 var(--success-text);
+            }
+
+            html[dir="rtl"] .app-navbar .offcanvas-body .nav-link.active {
+                box-shadow: inset -3px 0 0 var(--success-text);
+            }
+
+            .app-navbar .offcanvas-body .nav-link-icon {
+                display: grid !important;
+                grid-column: 1;
+                place-items: center;
+                width: 44px;
+                height: 44px;
+                border-radius: 12px;
+                background: var(--surface-soft);
+                font-size: 1.1rem;
+            }
+
+            .app-navbar .offcanvas-body .nav-link-copy {
+                display: grid !important;
+                grid-column: 2;
+                gap: 2px;
+                width: 100%;
+                min-width: 0;
+            }
+
+            .app-navbar .offcanvas-body .nav-link-copy strong {
+                display: block;
+                color: inherit;
+                font-size: 0.96rem;
+                line-height: 1.2;
+                white-space: normal;
+                word-break: normal;
+                overflow-wrap: break-word;
+            }
+
+            .app-navbar .offcanvas-body .nav-link-copy small {
+                display: block !important;
+                color: var(--text-muted);
+                font-size: 0.74rem;
+                line-height: 1.3;
+                white-space: normal;
+                word-break: normal;
+                overflow-wrap: break-word;
+            }
+
+            .app-navbar .offcanvas-body .nav-link-chevron {
+                display: block !important;
+                grid-column: 3;
+                justify-self: end;
+                color: var(--text-muted);
+            }
+
+            .app-navbar .offcanvas-body .nav-link > span:not(.nav-link-copy) {
+                grid-column: 2 / -1;
+                min-width: 0;
+                white-space: normal;
+                word-break: normal;
+            }
+
+            html[dir="rtl"] .app-navbar .offcanvas-body .nav-link-chevron {
+                transform: scaleX(-1);
+            }
+
+            .app-navbar .offcanvas-body .app-lang-toggle {
+                display: grid;
+                grid-template-columns: 44px minmax(0, 1fr) 20px;
+                gap: 10px;
+                align-items: center;
+                min-height: 54px;
+                padding: 5px 10px;
+                text-align: start;
+            }
+
+            .app-navbar .offcanvas-body .app-lang-toggle > :first-child {
+                width: 44px;
+                height: 44px;
+                display: grid;
+                place-items: center;
+            }
+
+            .app-navbar .offcanvas-body .app-lang-toggle > span,
+            .app-navbar .offcanvas-body .app-lang-toggle > .bi-chevron-down {
+                display: block !important;
+            }
+
+            .mobile-nav-only {
+                display: grid !important;
+            }
+
+            .mobile-nav-account {
+                display: grid;
+                gap: 8px;
+                padding-top: 12px;
+                border-top: 1px solid var(--border);
+            }
+
+            .mobile-nav-section-label {
+                color: var(--text-muted);
+                font-size: 0.72rem;
+                font-weight: 800;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+            }
+
+            .mobile-nav-account form {
+                min-width: 0;
+            }
+
+            .app-navbar .offcanvas-body .mobile-nav-logout {
+                grid-template-columns: 44px minmax(0, 1fr);
+                border: 0;
+                background: transparent;
+            }
+
+            .auth-stage,
+            .auth-stage-single,
+            .auth-form-wrap,
+            .auth-form-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                column-gap: clamp(8px, 2.4vw, 12px);
+            }
+
+            .auth-stage > *,
+            .auth-stage-single > *,
+            .auth-form-wrap > *,
+            .auth-form-grid > * {
+                grid-column: 1 / -1;
+                min-width: 0;
+            }
+
+            .auth-field-split {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .auth-field-split > * {
+                grid-column: span 2;
+                min-width: 0;
+            }
+
+            .auth-meta-row {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 8px;
+                align-items: center;
+            }
+
+            .auth-meta-row > :first-child {
+                grid-column: 1 / span 2;
+            }
+
+            .auth-meta-row > :last-child {
+                grid-column: 3 / -1;
+                justify-self: end;
+                text-align: end;
+            }
+
+            .profile-stage,
+            .profile-hero-card,
+            .profile-grid,
+            .profile-subscription-grid,
+            .profile-hero-actions,
+            .profile-subscription-actions,
+            .admin-page-head,
+            .admin-message-head,
+            .admin-message-actions,
+            .billing-hero,
+            .billing-confirmation,
+            .billing-confirmation-actions,
+            .billing-grid,
+            .billing-actions {
+                display: grid !important;
+                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+                gap: clamp(8px, 2.4vw, 12px) !important;
+                min-width: 0;
+            }
+
+            .profile-stage > *,
+            .profile-grid > *,
+            .billing-grid > * {
+                grid-column: 1 / -1;
+                min-width: 0;
+            }
+
+            .profile-hero-copy {
+                grid-column: 1 / span 2;
+            }
+
+            .profile-hero-summary {
+                grid-column: 3 / -1;
+            }
+
+            .profile-hero-copy h1,
+            .admin-page-head h1,
+            .billing-hero h1 {
+                font-size: clamp(1.5rem, 7.8vw, 2.35rem);
+                line-height: 1.02;
+            }
+
+            .profile-hero-actions > *,
+            .profile-subscription-actions > *,
+            .admin-message-actions > * {
+                grid-column: span 2;
+                width: 100%;
+                min-width: 0;
+            }
+
+            .profile-action-btn,
+            .profile-submit-btn {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .profile-card-head-split {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: 10px;
+                align-items: start;
+            }
+
+            .profile-subscription-grid > * {
+                grid-column: span 2;
+            }
+
+            .admin-page-head > :first-child,
+            .admin-message-head > :first-child,
+            .billing-confirmation > :first-child {
+                grid-column: 1 / span 3;
+            }
+
+            .admin-page-head > :last-child,
+            .admin-message-head > :last-child,
+            .billing-confirmation > :last-child {
+                grid-column: 4 / -1;
+            }
+
+            .billing-hero > :first-child {
+                grid-column: 1 / span 2;
+            }
+
+            .billing-hero > .billing-status-panel {
+                grid-column: 3 / -1;
+            }
+
+            .billing-confirmation-actions > *,
+            .billing-actions > * {
+                grid-column: span 2;
+                min-width: 0;
+            }
+
+            .billing-card {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .billing-card > * {
+                grid-column: 1 / -1;
+                min-width: 0;
+            }
+
+            .billing-card ul {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .billing-card li {
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 479.98px) {
+            .profile-hero-copy,
+            .profile-hero-summary {
+                grid-column: 1 / -1;
+            }
+
+            .profile-hero-summary {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 8px;
+                align-items: center;
+            }
+
+            .profile-summary-label {
+                grid-column: 1 / span 2;
+            }
+
+            .profile-summary-plan {
+                grid-column: 3 / -1;
+            }
+
+            .profile-summary-meta {
+                grid-column: 1 / span 3;
+            }
+
+            .profile-hero-summary > .profile-hero-actions {
+                grid-column: 4 / -1;
+                align-self: stretch;
+            }
+
+            .profile-hero-summary > .profile-hero-actions > * {
+                grid-column: 1 / -1;
+            }
+
+            .profile-hero-summary .profile-action-btn {
+                min-width: 0;
+                height: 100%;
+            }
+        }
+
+        @media (max-width: 349.98px) {
+            .app-navbar-logo {
+                max-width: 40vw;
+            }
+
+            .profile-subscription-grid,
+            .billing-actions {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .profile-hero-copy,
+            .profile-hero-summary,
+            .billing-hero > :first-child,
+            .billing-hero > .billing-status-panel,
+            .admin-page-head > :first-child,
+            .admin-page-head > :last-child,
+            .admin-message-head > :first-child,
+            .admin-message-head > :last-child,
+            .billing-confirmation > :first-child,
+            .billing-confirmation > :last-child {
+                grid-column: 1 / -1;
+            }
+
+            .auth-field-split > *,
+            .profile-subscription-grid > *,
+            .billing-actions > * {
+                grid-column: 1 / -1;
+            }
+        }
     </style>
 </head>
 <body dir="{{ $appDirection }}">
@@ -1676,20 +2504,51 @@
 
             <div class="offcanvas offcanvas-end offcanvas-lg" tabindex="-1" id="primaryNavbar" aria-labelledby="primaryNavbarLabel">
                 <div class="offcanvas-header">
-                    <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ __('ui.primary_navigation') }}</h2>
+                    <div class="mobile-nav-identity">
+                        <img src="/images/logo.png" alt="" aria-hidden="true">
+                        <div>
+                            <span>Mutqin</span>
+                            <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ __('ui.primary_navigation') }}</h2>
+                        </div>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#primaryNavbar" aria-label="{{ __('ui.close_navigation') }}"></button>
                 </div>
                 <div class="offcanvas-body d-flex flex-column flex-lg-row align-items-lg-center gap-3 pt-3 pt-lg-0">
                     <div class="navbar-nav-shell d-flex justify-content-lg-center">
                         <div class="navbar-nav nav-links-desktop gap-2 gap-lg-3 justify-content-lg-center">
-                            <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}" data-i18n="home">{{ __('ui.home') }}</a>
-                            <a class="nav-link nav-link-memorisation {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}" data-i18n="memorisation">{{ __('ui.memorisation') }}</a>
+                            <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">
+                                <i class="bi bi-house-door nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong data-i18n="home">{{ __('ui.home') }}</strong><small class="d-lg-none">Overview and product guidance</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
+                            <a class="nav-link nav-link-memorisation {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}">
+                                <i class="bi bi-journal-bookmark nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong data-i18n="memorisation">{{ __('ui.memorisation') }}</strong><small class="d-lg-none">Continue your Quran practice</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
+                            <a class="nav-link mobile-nav-only {{ request()->routeIs('about', 'about-us') ? 'active' : '' }}" href="{{ route('about-us') }}">
+                                <i class="bi bi-people nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>About Mutqin</strong><small>Our story and approach</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
+                            </a>
+                            <a class="nav-link mobile-nav-only {{ request()->routeIs('our-mission') ? 'active' : '' }}" href="{{ route('our-mission') }}">
+                                <i class="bi bi-compass nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>Our Mission</strong><small>Why deliberate memorisation matters</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
+                            </a>
+                            <a class="nav-link mobile-nav-only {{ request()->routeIs('donate') ? 'active' : '' }}" href="{{ route('donate') }}">
+                                <i class="bi bi-heart nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>Support Mutqin</strong><small>Help make learning accessible</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
+                            </a>
                         </div>
                     </div>
 
                     <div class="global-lang-switcher dropdown d-lg-none w-100" aria-label="{{ __('ui.language_switcher') }}">
                         <button class="btn app-lang-toggle icon-only w-100 lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('ui.language_switcher') }}">
                             <i class="bi bi-translate" aria-hidden="true"></i>
+                            <span>{{ __('ui.language_switcher') }}</span>
+                            <i class="bi bi-chevron-down" aria-hidden="true"></i>
                         </button>
                         <ul class="dropdown-menu w-100 app-lang-menu">
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="en">🇬🇧 {{ __('ui.english') }}</button></li>
@@ -1703,10 +2562,27 @@
 
                     @guest
                         <div class="app-auth-links d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 gap-lg-0">
-                            <a class="nav-link" href="{{ route('login') }}" data-i18n="login">{{ __('ui.login') }}</a>
-                            <a class="nav-link" href="{{ route('register') }}" data-i18n="register">{{ __('ui.register') }}</a>
+                            <a class="nav-link" href="{{ route('login') }}"><i class="bi bi-box-arrow-in-right nav-link-icon d-lg-none" aria-hidden="true"></i><span data-i18n="login">{{ __('ui.login') }}</span></a>
+                            <a class="nav-link" href="{{ route('register') }}"><i class="bi bi-person-plus nav-link-icon d-lg-none" aria-hidden="true"></i><span data-i18n="register">{{ __('ui.register') }}</span></a>
                         </div>
                     @endguest
+                    @auth
+                        <div class="mobile-nav-account mobile-nav-only">
+                            <span class="mobile-nav-section-label">Account</span>
+                            <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}" href="{{ route('profile.show') }}">
+                                <i class="bi bi-person nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>Profile</strong><small>Preferences and subscription</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
+                            </a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="nav-link mobile-nav-logout">
+                                    <i class="bi bi-box-arrow-right nav-link-icon" aria-hidden="true"></i>
+                                    <span>{{ __('ui.logout') }}</span>
+                                </button>
+                            </form>
+                        </div>
+                    @endauth
                 </div>
             </div>
 

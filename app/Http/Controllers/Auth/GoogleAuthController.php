@@ -14,13 +14,7 @@ class GoogleAuthController extends Controller
 {
     public function redirect(): RedirectResponse
     {
-        $provider = Socialite::driver('google');
-
-        if (method_exists($provider, 'stateless')) {
-            $provider = $provider->stateless();
-        }
-
-        return $provider->redirect();
+        return $this->googleProvider()->redirect();
     }
 
     public function callback(): RedirectResponse
@@ -28,13 +22,7 @@ class GoogleAuthController extends Controller
         $created = false;
 
         try {
-            $provider = Socialite::driver('google');
-
-            if (method_exists($provider, 'stateless')) {
-                $provider = $provider->stateless();
-            }
-
-            $googleUser = $provider->user();
+            $googleUser = $this->googleProvider()->user();
         } catch (Throwable) {
             return redirect()
                 ->route('login')
@@ -85,5 +73,22 @@ class GoogleAuthController extends Controller
         }
 
         return redirect()->intended(route('memorisation'));
+    }
+
+    private function googleProvider()
+    {
+        $provider = Socialite::driver('google')
+            ->redirectUrl($this->googleRedirectUrl());
+
+        if (is_callable([$provider, 'stateless'])) {
+            $provider = $provider->stateless();
+        }
+
+        return $provider;
+    }
+
+    private function googleRedirectUrl(): string
+    {
+        return route('auth.google.callback');
     }
 }

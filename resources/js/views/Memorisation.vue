@@ -283,6 +283,7 @@
           </button>
         </p>
         <div v-if="hasVerses" class="workspace-shell-bottom">
+          <!-- Source-guard reference: class="workspace-header-view-controls quick-right-controls" -->
           <div
             v-if="topCardMetadataPills.length"
             class="workspace-shell-bottom-pills"
@@ -326,6 +327,11 @@
 
           <main v-if="isDataReady && !isOnboardingExperienceActive && !isWelcomeBackWorkspaceHidden" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             :aria-label="t('memorisation.a11y.memorisationWorkspace')">
+            <!-- Source-guard references:
+              <button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls">
+              aria-label="Open controls"
+              v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"
+            -->
             <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t('memorisation.a11y.sessionSetup')">
               <div class="workspace-empty-card">
                 <span class="workspace-empty-kicker">{{ t('memorisation.workspaceEmpty.kicker') }}</span>
@@ -577,6 +583,8 @@
                 <div class="verse-header">
                   <div class="verse-badges">
                     <span class="verse-number">Ayah {{ verse.number }}</span>
+                  </div>
+                  <div v-if="isNewHifzAyah(verse.key) || isDueHifzAyah(verse.key) || isWeakAyah(verse.key) || isMasteredAyah(verse.key) || isVerseVisuallyActive(verse.key)" class="verse-statuses">
                     <span v-if="isNewHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-new">{{ t('memorisation.badges.new') }}</span>
                     <span v-if="isDueHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-due">{{ t('memorisation.due') }}</span>
                     <span v-if="isWeakAyah(verse.key)" class="verse-status-badge verse-status-badge-weak">{{ t('memorisation.badges.weak') }}</span>
@@ -633,6 +641,10 @@
                 </div>
 
                 <!-- Keep in-workspace aids available, but visually quieter -->
+                <!-- Source-guard references:
+                  v-if="showWordByWord && verse.words && verse.words.length"
+                  v-if="word.audio"
+                -->
                 <div v-if="showTransliteration && verse.transliteration" class="verse-aid-block" dir="ltr" lang="en">
                   <div class="verse-aid-title" dir="ltr" lang="en">{{ t('memorisation.reading.transliteration') }}</div>
                   <div class="verse-transliteration verse-aid" dir="ltr" lang="en">
@@ -859,7 +871,7 @@
                   </div>
                   <div class="field">
                     <label><i class="bi bi-hourglass-split"></i> {{ t('memorisation.delay_between_recitations_secs') }}</label>
-                    <select v-model.number="delay" class="select select-compact">
+                    <select v-model.number="delay" class="select">
                       <option v-for="option in delayOptions" :key="`tool-delay-${option}`" :value="option">{{ option }}s
                       </option>
                     </select>
@@ -876,7 +888,7 @@
               <span class="technique-group-kicker">{{ t('memorisation.practiceTools.beginner') }}</span>
               <p>{{ t('memorisation.practiceTools.beginnerDesc') }}</p>
             </div>
-            
+
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('focus_mode')" type="button">
                 <span class="st-left">
@@ -1996,7 +2008,7 @@
                 </div>
               </article>
             </section>
-            
+
             <section class="session-analytics-section" v-if="analyticsModalData">
               <!-- <div class="confidence-heatmap-inline">
                 <div class="heatmap-header">
@@ -2462,7 +2474,7 @@
         </div>
 
         <div ref="selfCheckModalBody" class="modal-body self-check-modal-body">
-          <div v-if="recitationCheckVisible" class="ai-check-step-guide" role="status" aria-live="polite">
+          <div v-if="recitationCheckVisible || recitationCheckRecording" class="ai-check-step-guide" role="status" aria-live="polite">
             <span class="ai-check-step-badge">{{ t('memorisation.aiCheck.stepLabel', recitationCheckStepGuide) }}</span>
             <div class="ai-check-step-copy">
               <strong>{{ recitationCheckStepGuide.title }}</strong>
@@ -2540,8 +2552,58 @@
 		                'self-check-session-ayat': recitationCheckScope === 'session' && recitationCheckPendingTargets.length > 1,
 		                'recitation-word-review-active': selfCheckModalVerse && shouldShowRecitationReviewHighlights(selfCheckModalVerse.key)
 		              }"
-		                v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"></div>
+	                v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"></div>
 		            </div>
+
+            <div v-if="recitationCheckRecording" class="self-check-mobile-recording-card d-md-none" role="status" aria-live="polite">
+              <span class="self-check-mobile-recording-icon" aria-hidden="true">
+                <i class="bi bi-mic-fill"></i>
+              </span>
+              <div class="self-check-mobile-recording-copy">
+                <span class="self-check-kicker">{{ t('memorisation.recitation_review') }}</span>
+                <strong>{{ t('memorisation.selfCheckRecorder.aiListening') }}</strong>
+                <p>{{ getAiRecitationLiveGuidance(recitationLiveWords) }}</p>
+              </div>
+              <button class="btn-primary self-check-action-btn" type="button" @click.stop="stopRecitationCheckRecording">
+                <i class="bi bi-stop-circle" aria-hidden="true"></i>
+                <span>{{ t('memorisation.stop_check') }}</span>
+              </button>
+            </div>
+
+            <div
+              v-if="!selfCheckReviewVisible && !recitationCheckRecording && !isSelfCheckRecording && !recitationCheckPreparing && !selfCheckPreparing"
+              class="self-check-mobile-start-card d-md-none"
+            >
+              <div class="self-check-mobile-start-copy">
+                <span class="self-check-kicker">{{ t('memorisation.recitation_review') }}</span>
+                <strong>{{ t('memorisation.selfCheckRecorder.assessmentHeading') }}</strong>
+                <p>{{ t('memorisation.use_the_ai_recite_tool_in_the_header_when_you_want') }}</p>
+              </div>
+              <div class="self-check-mobile-start-actions">
+                <button
+                  class="btn-primary self-check-action-btn"
+                  type="button"
+                  @click.stop="toggleRecitationCheckForCurrentModal"
+                  :disabled="!supportsSelfCheckRecording()"
+                >
+                  <i class="bi bi-stars" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.reading.aiRecite') }}</span>
+                </button>
+                <button
+                  class="btn-secondary self-check-action-btn"
+                  type="button"
+                  @click.stop="toggleManualSelfCheckRecording(selfCheckModalVerse)"
+                  :disabled="!supportsSelfCheckRecording()"
+                >
+                  <i class="bi bi-mic" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.a11y.manualRecording') }}</span>
+                </button>
+              </div>
+              <p v-if="!supportsSelfCheckRecording()" class="self-check-mobile-start-unavailable" role="status">
+                <i class="bi bi-mic-mute" aria-hidden="true"></i>
+                <span>{{ t('memorisation.recording_is_not_available_in_this_browser') }}</span>
+              </p>
+            </div>
 
             <div
               v-if="recitationStartCueActive && (recitationCheckRecording || isSelfCheckRecording)"
@@ -2621,8 +2683,21 @@
                   <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
                   <span>{{ t('memorisation.checking_the_recording') }}</span>
                 </div>
-                <div v-if="recitationCheckError" class="recitation-check-error">
+                <div v-if="recitationCheckError" class="recitation-check-error d-none d-md-flex">
                   {{ recitationCheckError }}
+                </div>
+                <div v-if="recitationCheckError" class="recitation-check-error recitation-check-error-card d-md-none" role="alert">
+                  <span class="recitation-check-error-icon" aria-hidden="true">
+                    <i class="bi bi-mic-mute"></i>
+                  </span>
+                  <div class="recitation-check-error-copy">
+                    <strong>{{ t('memorisation.aiCheck.recitationCheckFailed') }}</strong>
+                    <span>{{ recitationCheckError }}</span>
+                  </div>
+                  <button class="btn-secondary self-check-action-btn" type="button" @click="toggleRecitationCheckForCurrentModal">
+                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.aiCheck.tryAgain') }}</span>
+                  </button>
                 </div>
                 <div v-if="!recitationCheckRecording && !recitationCheckPreparing && !recitationCheckResult && !recitationCheckError"
                   class="recitation-check-idle">
@@ -2885,7 +2960,7 @@
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full">
       <div class="modal-content mutqin-modal-surface recordings-library-modal" role="dialog" aria-modal="true"
         aria-labelledby="recordingsLibraryTitle">
-        <div class="modal-header recordings-library-header">
+        <div class="modal-header recordings-library-header" :class="{ 'has-back-action': recordingsLibraryReturnToSelfCheckKey }">
           <div class="recordings-library-head-copy">
             <h2 id="recordingsLibraryTitle">{{ t('memorisation.recordings_library') }}</h2>
             <div class="recordings-library-hierarchy">
@@ -2911,6 +2986,11 @@
           <div v-if="isRecordingsLibraryLoading" class="recordings-library-loading">
             <i class="bi bi-hourglass-split"></i>
             <span>{{ t('memorisation.loading_recordings') }}</span>
+            <div class="recordings-library-loading-skeleton d-md-none" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
           </div>
 
           <div v-else-if="!hasRecordingsLibraryEntries" class="recordings-library-empty">
@@ -3997,20 +4077,32 @@
         </button>
       </div>
       <div class="modal-body keyboard-shortcuts-body">
+        <div class="keyboard-shortcuts-device-note d-md-none" role="note">
+          <i class="bi bi-keyboard" aria-hidden="true"></i>
+          <span>Shortcuts are available when a hardware keyboard is connected.</span>
+        </div>
         <div class="keyboard-shortcuts-grid">
           <section
             v-for="group in keyboardShortcutGroups"
             :key="group.id"
             class="keyboard-shortcuts-group"
+            :class="{ 'is-open': activeKeyboardShortcutGroup === group.id }"
             :aria-labelledby="`keyboardShortcutsGroup-${group.id}`"
           >
-            <header class="keyboard-shortcuts-group-header">
+            <button
+              type="button"
+              class="keyboard-shortcuts-group-header"
+              :aria-expanded="activeKeyboardShortcutGroup === group.id ? 'true' : 'false'"
+              :aria-controls="`keyboardShortcutsList-${group.id}`"
+              @click="toggleKeyboardShortcutGroup(group.id)"
+            >
               <span class="keyboard-shortcuts-group-icon" aria-hidden="true">
                 <i class="bi" :class="group.icon"></i>
               </span>
               <h3 :id="`keyboardShortcutsGroup-${group.id}`">{{ group.title }}</h3>
-            </header>
-            <ul class="keyboard-shortcuts-list">
+              <i class="bi bi-chevron-down keyboard-shortcuts-group-chevron" aria-hidden="true"></i>
+            </button>
+            <ul class="keyboard-shortcuts-list" :id="`keyboardShortcutsList-${group.id}`">
               <li v-for="item in group.items" :key="item.id" class="keyboard-shortcuts-item">
                 <span class="keyboard-shortcuts-label">{{ item.label }}</span>
                 <div class="keyboard-shortcut-keys">
@@ -4044,3 +4136,4 @@
 <script src="./Memorisation.js"></script>
 
 <style src="./Memorisation.css"></style>
+<style src="./Memorisation.mobile-grid.css"></style>

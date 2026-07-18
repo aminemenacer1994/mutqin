@@ -15,11 +15,11 @@ use App\Http\Controllers\MemorisationSyncController;
 // Authentication routes (from laravel/ui)
 Auth::routes();
 
-Route::get('/auth/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
-Route::get('/auth/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect']);
-Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect']);
-Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
+Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+Route::get('/auth/redirect', [GoogleAuthController::class, 'redirect']);
+Route::get('/auth/callback', [GoogleAuthController::class, 'callback']);
 
 // Public routes
 Route::get('/', function () {

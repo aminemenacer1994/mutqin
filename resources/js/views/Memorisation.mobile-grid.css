@@ -1,0 +1,2672 @@
+/*
+ * Canonical phone composition.
+ *
+ * The legacy stylesheet contains the desktop design and historical responsive
+ * rules. This final layer owns every layout below 768px and places related UI
+ * on an explicit four-column grid rather than flattening it into full-width rows.
+ */
+@media (max-width: 767.98px) {
+  .app {
+    --mq-mobile-gutter: clamp(12px, 3.6vw, 16px);
+    --mq-grid-gap: clamp(6px, 1.8vw, 10px);
+    --mq-grid: repeat(4, minmax(0, 1fr));
+    --mq-card-pad: clamp(12px, 3.6vw, 16px);
+    --mq-control-size: 44px;
+    --mq-radius-card: 18px;
+    --mq-radius-compact: 14px;
+    --mq-safe-top: env(safe-area-inset-top, 0px);
+    --mq-safe-right: env(safe-area-inset-right, 0px);
+    --mq-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --mq-safe-left: env(safe-area-inset-left, 0px);
+    --mobile-page-gutter: var(--mq-mobile-gutter);
+    --mobile-safe-top: var(--mq-safe-top);
+    --mobile-safe-bottom: var(--mq-safe-bottom);
+    inline-size: 100%;
+    max-inline-size: 100%;
+  }
+
+  .app,
+  .app *,
+  .app *::before,
+  .app *::after {
+    box-sizing: border-box;
+  }
+
+  .app :where(
+    .main,
+    .content,
+    .workspace,
+    .workspace-main,
+    .workspace-shell,
+    .workspace-shell-head,
+    .workspace-shell-copy,
+    .workspace-shell-actions,
+    .workspace-shell-bottom,
+    .workspace-shell-metadata,
+    .verses-grid,
+    .verse-card,
+    .verse-header,
+    .verse-badges,
+    .verse-statuses,
+    .verse-actions,
+    .verse-arabic,
+    .tools,
+    .tools-top,
+    .tools-body,
+    .tools-footer,
+    .sheet,
+    .sheet-section,
+    .sheet-content,
+    .field-stack,
+    .field,
+    .setting-row,
+    .player-dock,
+    .player-bar,
+    .player-main,
+    .mutqin-modal-dialog,
+    .mutqin-modal-surface,
+    .self-check-modal-body,
+    .self-check-modal-stage,
+    .shared-result-flow,
+    .shared-result-section,
+    .recordings-library-shell,
+    .recordings-library-nav,
+    .recordings-library-detail
+  ) {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .main {
+    inline-size: 100%;
+    padding-inline: var(--mq-mobile-gutter) !important;
+  }
+
+  .content,
+  .workspace,
+  .workspace-main {
+    inline-size: 100%;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+  }
+
+  /* Workspace overview: title/utilities, actions, and metadata share one grid. */
+  .workspace-shell,
+  .main.mushaf-mode-active .workspace-shell {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid);
+    gap: 12px var(--mq-grid-gap) !important;
+    inline-size: 100% !important;
+    margin: 0 0 14px !important;
+    padding: var(--mq-card-pad) !important;
+    min-block-size: 0 !important;
+    border-radius: 20px;
+  }
+
+  .workspace-shell-head,
+  .workspace-shell-head.is-idle {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: 10px var(--mq-grid-gap) !important;
+    align-items: center !important;
+  }
+
+  .workspace-shell-copy {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    display: grid;
+    gap: 3px;
+    align-self: center;
+  }
+
+  .workspace-shell-kicker {
+    inline-size: max-content;
+    max-inline-size: 100%;
+  }
+
+  .workspace-shell-main-title,
+  .workspace-shell-copy h1 {
+    margin: 0;
+    font-size: clamp(1.18rem, 5.7vw, 1.5rem) !important;
+    line-height: 1.15 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  .workspace-shell-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: 10px var(--mq-grid-gap) !important;
+    inline-size: 100% !important;
+    pointer-events: none;
+  }
+
+  .workspace-shell-actions .action-buttons-group {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+  }
+
+  .workspace-shell-actions :where(.top-card-session-actions, .top-card-controls-trigger, .top-card-menu-wrap) {
+    pointer-events: auto;
+  }
+
+  .workspace-shell-actions .top-card-session-actions,
+  .workspace-shell-actions .top-card-session-actions.has-paired-actions {
+    display: contents !important;
+  }
+
+  .top-card-session-actions.has-paired-actions > .session-primary-action {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .top-card-session-actions.has-paired-actions > .action-btn-exit {
+    grid-column: 1 / span 2;
+    grid-row: 2;
+  }
+
+  .top-card-session-actions:not(.has-paired-actions) > .session-primary-action {
+    grid-column: 1 / span 2;
+    grid-row: 1;
+  }
+
+  .workspace-shell-actions .top-card-action-trigger.session-primary-action,
+  .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
+    inline-size: 100% !important;
+    min-inline-size: 0 !important;
+    min-block-size: 44px !important;
+    block-size: auto !important;
+    padding: 9px clamp(8px, 3vw, 14px) !important;
+    justify-content: center !important;
+    white-space: normal !important;
+    line-height: 1.2;
+  }
+
+  .workspace-shell-actions .top-card-controls-trigger {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .workspace-shell-actions .top-card-menu-wrap {
+    grid-column: 4;
+    grid-row: 2;
+    position: relative;
+  }
+
+  .top-card-session-actions:not(.has-paired-actions) ~ .top-card-controls-trigger {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .top-card-session-actions:not(.has-paired-actions) ~ .top-card-menu-wrap {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  .workspace-shell-actions .top-card-controls-trigger,
+  .workspace-shell-actions .top-card-menu-wrap,
+  .workspace-shell-actions .top-card-ellipsis {
+    justify-self: end;
+    inline-size: 44px !important;
+    min-inline-size: 44px !important;
+    max-inline-size: 44px !important;
+    block-size: 44px !important;
+    min-block-size: 44px !important;
+    padding: 0 !important;
+  }
+
+  .workspace-shell-actions-minimal {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+    pointer-events: auto;
+  }
+
+  .workspace-shell-actions-minimal .session-idle-action:first-child {
+    grid-column: 1 / span 2;
+  }
+
+  .workspace-shell-actions-minimal .session-idle-action:nth-child(2) {
+    grid-column: 3;
+  }
+
+  .workspace-shell-actions-minimal .session-idle-controls {
+    grid-column: 4;
+    inline-size: 44px !important;
+    justify-self: end;
+  }
+
+  .workspace-setup-hint,
+  .workspace-shell-bottom,
+  .workspace-shell-compact-meta {
+    grid-column: 1 / -1;
+  }
+
+  .workspace-shell-bottom,
+  .workspace-shell-bottom-pills {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid);
+    gap: var(--mq-grid-gap);
+    inline-size: 100% !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .workspace-shell-bottom-pills {
+    grid-column: 1 / -1;
+  }
+
+  .workspace-shell-metadata {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: 6px var(--mq-grid-gap) !important;
+    inline-size: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .workspace-shell-metadata > .workspace-shell-metadata-pill {
+    grid-column: span 2;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline !important;
+    gap: 3px;
+    inline-size: 100%;
+    min-inline-size: 0 !important;
+    padding: 7px 8px;
+    border-radius: 12px;
+    font-size: clamp(0.66rem, 2.9vw, 0.76rem);
+    line-height: 1.25;
+    white-space: normal !important;
+  }
+
+  .workspace-shell-metadata:has(> :nth-child(5)) > :nth-child(n + 3) {
+    grid-column: span 2;
+  }
+
+  .workspace-shell-metadata:has(> :nth-child(5)) > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .workspace-shell-metadata-pill strong,
+  .workspace-shell-metadata-pill span {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* Ayah cards: badge rail and action rail remain in the same header row. */
+  .verses-grid {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: 14px var(--mq-grid-gap) !important;
+  }
+
+  .verse-card,
+  .verses-grid .verse-card {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: var(--mq-grid);
+    gap: 12px var(--mq-grid-gap) !important;
+    inline-size: 100% !important;
+    min-block-size: 0 !important;
+    block-size: auto !important;
+    margin: 0 !important;
+    padding: var(--mq-card-pad) !important;
+    border-radius: 18px;
+  }
+
+  .verse-card > * {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+  }
+
+  .verse-header {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+    align-items: start !important;
+  }
+
+  .verse-badges {
+    grid-column: 1;
+    grid-row: 1;
+    display: grid !important;
+    grid-template-columns: minmax(0, max-content);
+    align-content: start;
+    justify-content: start;
+    gap: 6px;
+    inline-size: 100%;
+  }
+
+  .verse-badges > * {
+    justify-self: start;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .verse-statuses {
+    grid-column: 1 / span 2;
+    grid-row: 2;
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    min-inline-size: 0;
+  }
+
+  .verse-statuses .verse-status-badge {
+    inline-size: max-content;
+    max-inline-size: 100%;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.2;
+  }
+
+  .verse-actions {
+    grid-column: 2 / -1;
+    grid-row: 1;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 44px 44px !important;
+    gap: 6px !important;
+    align-items: start !important;
+    inline-size: 100%;
+  }
+
+  .verse-actions:has(.verse-ai-check-btn + .verse-ai-check-btn) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) 44px 44px !important;
+  }
+
+  .verse-ai-check-btn,
+  .verse-self-check-btn {
+    inline-size: 100% !important;
+    min-inline-size: 0 !important;
+    max-inline-size: 100%;
+    min-block-size: 44px;
+    padding: 7px 8px;
+    white-space: normal;
+  }
+
+  .verse-inline-action-btn,
+  .verse-inline-play-btn,
+  .verse-inline-download-btn {
+    inline-size: 44px !important;
+    min-inline-size: 44px !important;
+    block-size: 44px !important;
+    min-block-size: 44px !important;
+  }
+
+  .verse-arabic-wrap,
+  .verse-arabic,
+  .verse-arabic-primary,
+  .verse-aid,
+  .verse-transliteration,
+  .verse-translation {
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .verse-arabic {
+    padding: 8px 4px 10px !important;
+    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(2rem, 9.5vw, 3rem)) !important;
+    line-height: 2.05 !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+  }
+
+  .verse-arabic :where(.wbw-word, word),
+  .mushaf-ayah-text :where(.wbw-word, word),
+  .self-check-modal-ayah :where(.wbw-word, word),
+  .recitation-review-ayah :where(.wbw-word, word) {
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+  }
+
+  /* Mushaf controls use two compact utility rails above the reading surface. */
+  .mushaf-workspace,
+  .mushaf-frame,
+  .mushaf-toolbar-rail,
+  .mushaf-stage,
+  .mushaf-viewport {
+    inline-size: 100% !important;
+    min-inline-size: 0 !important;
+    max-inline-size: 100% !important;
+    min-block-size: 0 !important;
+    block-size: auto !important;
+    margin: 0 !important;
+  }
+
+  .mushaf-workspace {
+    padding: 0 !important;
+  }
+
+  .mushaf-frame {
+    display: grid !important;
+    gap: 10px;
+    padding: 10px !important;
+  }
+
+  .mushaf-toolbar-rail {
+    position: relative !important;
+    inset: auto !important;
+    transform: none !important;
+  }
+
+  .mushaf-pill-toolbar {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+  }
+
+  .mushaf-toolbar-cluster-start {
+    grid-column: 1 / -1;
+  }
+
+  .mushaf-toolbar-cluster-end {
+    grid-column: 1 / -1;
+  }
+
+  .mushaf-toolbar-cluster,
+  .mushaf-toolbar-cluster-start,
+  .mushaf-toolbar-cluster-end {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(44px, 1fr));
+    gap: 6px !important;
+    min-inline-size: 0;
+  }
+
+  .mushaf-toolbar-trigger,
+  .mushaf-pill-toolbar .mushaf-pill {
+    inline-size: 100% !important;
+    min-inline-size: 44px !important;
+    min-block-size: 44px;
+  }
+
+  .mushaf-page {
+    min-block-size: 0 !important;
+    block-size: auto !important;
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    padding: 16px 12px 20px !important;
+  }
+
+  .mushaf-stage {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    align-items: center;
+  }
+
+  .mushaf-viewport {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    overflow: visible !important;
+  }
+
+  .mushaf-stage-nav {
+    grid-row: 1;
+    z-index: 2;
+    inline-size: 44px !important;
+    block-size: 44px !important;
+  }
+
+  .mushaf-stage-nav-prev {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .mushaf-stage-nav-next {
+    grid-column: 4;
+    justify-self: end;
+  }
+
+  .mushaf-page-body,
+  .mushaf-ayah-text,
+  .main.mushaf-mode-active .mushaf-ayah-text {
+    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(1.6rem, 7.1vw, 2.4rem)) !important;
+    line-height: 2.08 !important;
+  }
+
+  /* Bottom player: bento rows at narrow widths, one compact rail when possible. */
+  .main.player-visible,
+  .main.playback-pill-visible {
+    padding-bottom: calc(154px + var(--mq-safe-bottom)) !important;
+  }
+
+  .player-dock,
+  .player-dock.tools-open {
+    inset-inline: max(var(--mq-mobile-gutter), var(--mq-safe-left)) max(var(--mq-mobile-gutter), var(--mq-safe-right)) !important;
+    inset-block-end: calc(8px + var(--mq-safe-bottom)) !important;
+    inline-size: auto !important;
+    transform: none !important;
+  }
+
+  .player-bar {
+    inline-size: 100%;
+    padding: 10px 12px !important;
+    border-radius: 18px;
+  }
+
+  .player-main {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    grid-template-areas: none !important;
+    gap: 8px var(--mq-grid-gap) !important;
+    align-items: center;
+  }
+
+  .player-info {
+    grid-area: 1 / 1 / 2 / 3 !important;
+    min-inline-size: 0;
+    inline-size: 100% !important;
+  }
+
+  .player-actions {
+    grid-area: 1 / 3 / 2 / 5 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 44px);
+    justify-content: end;
+    gap: 4px;
+  }
+
+  .player-controls {
+    grid-area: 2 / 1 / 3 / 3 !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(42px, 1fr));
+    justify-content: start;
+    gap: 4px;
+  }
+
+  .player-progress-wrap {
+    grid-area: 2 / 3 / 3 / 5 !important;
+    min-inline-size: 0;
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+  }
+
+  .player-chapter,
+  .player-verse {
+    min-inline-size: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* Controls is a three-row shell with one visible scroll owner. */
+  .tools-backdrop {
+    z-index: 12480 !important;
+    background: rgba(18, 24, 20, 0.42) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .tools-backdrop.open {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  .tools {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    inset: 0 0 0 auto !important;
+    inline-size: 100vw !important;
+    max-inline-size: 100vw !important;
+    min-block-size: 100dvh !important;
+    block-size: 100dvh !important;
+    padding: var(--mq-safe-top) 0 0;
+    overflow: hidden !important;
+    z-index: 12490 !important;
+    isolation: isolate;
+    opacity: 1 !important;
+    filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: var(--surface-strong) !important;
+  }
+
+  .tools.open {
+    visibility: visible !important;
+    transform: translate3d(0, 0, 0) !important;
+    pointer-events: auto !important;
+  }
+
+  html[dir="rtl"] .tools {
+    inset: 0 auto 0 0 !important;
+  }
+
+  .tools-top {
+    position: relative !important;
+    padding: 10px var(--mq-mobile-gutter) 8px !important;
+  }
+
+  .tools-topbar {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid);
+    gap: var(--mq-grid-gap);
+    align-items: center;
+  }
+
+  .tools-title {
+    grid-column: 1 / span 3;
+  }
+
+  .tools-title h3 {
+    margin: 0;
+    font-size: clamp(1.4rem, 6.5vw, 1.8rem);
+    line-height: 1.1;
+  }
+
+  .tools-x {
+    grid-column: 4;
+    justify-self: end;
+    inline-size: 44px;
+    min-inline-size: 44px;
+    block-size: 44px;
+    min-block-size: 44px;
+  }
+
+  .tools-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: var(--mq-grid-gap) !important;
+    margin-top: 8px;
+    overflow: visible !important;
+  }
+
+  .tools-tabs > button {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, max-content);
+    place-content: center;
+    gap: 5px;
+    min-inline-size: 0;
+    min-block-size: 44px;
+    padding: 7px 4px;
+    border-radius: 12px;
+    font-size: clamp(0.68rem, 3vw, 0.82rem);
+    line-height: 1.1;
+    white-space: normal;
+  }
+
+  .tools-body {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid);
+    align-content: start;
+    gap: 12px var(--mq-grid-gap);
+    inline-size: 100%;
+    min-block-size: 0;
+    padding: 10px var(--mq-mobile-gutter) 14px !important;
+    overflow-x: visible !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+
+  .tools-body > .sheet,
+  .tools-body > * {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+  }
+
+  .sheet {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid);
+    gap: 10px var(--mq-grid-gap);
+  }
+
+  .sheet > .sheet-section,
+  .sheet > .technique-group-copy,
+  .sheet > .stats-sessions-container {
+    grid-column: 1 / -1;
+  }
+
+  .sheet-section,
+  .sheet-content,
+  .tools-body .sheet-content {
+    inline-size: 100%;
+    block-size: auto !important;
+    max-block-size: none !important;
+    overflow: visible !important;
+  }
+
+  .sheet-toggle,
+  .tools-body .sheet-toggle {
+    display: grid !important;
+    grid-template-columns: 36px minmax(0, 1fr) 44px 44px !important;
+    gap: var(--mq-grid-gap) !important;
+    align-items: center !important;
+    padding: 10px 12px !important;
+  }
+
+  .sheet-toggle > .st-left {
+    display: contents !important;
+  }
+
+  .sheet-toggle .st-ico {
+    grid-column: 1;
+  }
+
+  .sheet-toggle .st-txt {
+    grid-column: 2;
+    align-self: center;
+  }
+
+  .sheet-toggle > .st-right-group,
+  .sheet-toggle > .st-chev {
+    grid-column: 4;
+    justify-self: end;
+  }
+
+  .sheet-toggle .st-right-group {
+    grid-column: 3 / -1;
+    display: grid !important;
+    grid-template-columns: repeat(2, 44px);
+    gap: 4px;
+  }
+
+  .sheet-toggle .mode-radio,
+  .sheet-toggle .st-chev {
+    inline-size: 44px;
+    min-inline-size: 44px;
+    block-size: 44px;
+    min-block-size: 44px;
+  }
+
+  .sheet-toggle .st-txt,
+  .sheet-toggle .st-sub,
+  .setting-copy,
+  .setting-description,
+  .field-hint,
+  .technique-group-copy p {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    text-align: start;
+  }
+
+  .sheet-content > .field-stack,
+  .sheet-content > .field-stack-compact,
+  .planner-controls-content > .field-stack {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: 12px var(--mq-grid-gap) !important;
+  }
+
+  .field-stack > .field,
+  .field-stack-compact > .field {
+    grid-column: span 2;
+    min-inline-size: 0;
+    align-content: start;
+  }
+
+  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(1) {
+    grid-column: 1 / span 2;
+    grid-row: 1;
+  }
+
+  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(2) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(3) {
+    grid-column: 3 / -1;
+    grid-row: 1;
+  }
+
+  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(4) {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .field-stack > .field:has(.range.range-single),
+  .field-stack-compact > .field:has(.range.range-single),
+  .field-stack > .field-repetitions-clean,
+  .field-stack-compact > .field-repetitions-clean,
+  .field-stack > .technique-preview-block,
+  .field-stack-compact > .technique-preview-block,
+  .field-stack > .quiz-launch-btn,
+  .field-stack-compact > .quiz-launch-btn {
+    grid-column: 1 / -1;
+  }
+
+  .range.range-single {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    gap: 8px !important;
+    align-items: center;
+  }
+
+  .range.range-single :where(.input, input),
+  .tools-body :where(.select, .input) {
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .radio-group,
+  .techniques-choice-group,
+  .planner-controls-inline {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 84px), 1fr));
+    gap: 6px !important;
+  }
+
+  .setting-row {
+    display: grid !important;
+    grid-template-columns: 36px minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    align-items: start !important;
+  }
+
+  .tools-footer,
+  .tools-footer.settings-footer {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+    inline-size: 100%;
+    padding: 10px var(--mq-mobile-gutter) calc(10px + var(--mq-safe-bottom)) !important;
+  }
+
+  .tools-footer > :first-child {
+    grid-column: 1;
+  }
+
+  .tools-footer > :last-child {
+    grid-column: 2 / -1;
+  }
+
+  .tools-footer :where(.tools-btn, .session-primary-action, .btn) {
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 44px;
+    padding-inline: 8px;
+    white-space: normal;
+  }
+
+  /* Saved session cards retain title and actions as parallel grid regions. */
+  .saved-sessions-list {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid);
+    gap: 10px var(--mq-grid-gap) !important;
+  }
+
+  .saved-session-row {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+    align-items: center;
+    padding: 10px !important;
+  }
+
+  .saved-session-row-main {
+    grid-column: 1 / span 2;
+    min-inline-size: 0;
+    text-align: start;
+  }
+
+  .saved-session-row-title,
+  .saved-session-row-meta {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  .saved-session-row-actions {
+    grid-column: 3 / -1;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 44px !important;
+    gap: 6px;
+    inline-size: 100%;
+  }
+
+  .saved-session-row-btn {
+    min-inline-size: 0;
+    min-block-size: 44px;
+    padding-inline: 6px;
+  }
+
+  .saved-session-row-btn-primary {
+    white-space: nowrap !important;
+  }
+
+  .saved-current-session-sheet {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+    align-items: center;
+  }
+
+  .saved-current-session-copy {
+    grid-column: 1 / span 3;
+  }
+
+  .saved-current-session-btn {
+    grid-column: 4;
+    inline-size: 100%;
+    min-block-size: 44px;
+    justify-content: center;
+  }
+
+  /* Shared overlay shells use one scroll owner and grid-composed internals. */
+  .modal-overlay.mutqin-modal-overlay,
+  .welcome-back-modal-wrap,
+  .session-exit-modal-wrap,
+  .onboarding-post-session-modal-wrap {
+    padding:
+      max(10px, var(--mq-safe-top))
+      max(10px, var(--mq-safe-right))
+      max(10px, var(--mq-safe-bottom))
+      max(10px, var(--mq-safe-left)) !important;
+  }
+
+  .mutqin-modal-dialog,
+  .mutqin-modal-dialog--wide,
+  .mutqin-modal-overlay > .mutqin-modal-dialog,
+  .mutqin-modal-flow .mutqin-modal-dialog,
+  .welcome-back-modal-wrap .modal-dialog,
+  .session-exit-modal-wrap .modal-dialog,
+  .onboarding-post-session-modal-wrap .modal-dialog,
+  .post-onboarding-overlay .modal-dialog {
+    inline-size: min(100%, 720px) !important;
+    max-inline-size: 720px !important;
+    min-block-size: 0 !important;
+    max-block-size: calc(100dvh - max(20px, var(--mq-safe-top) + var(--mq-safe-bottom))) !important;
+    margin: 0 !important;
+  }
+
+  .mutqin-modal-surface:not(.self-check-modal):not(.recordings-library-modal) {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    inline-size: 100% !important;
+    min-block-size: 0 !important;
+    block-size: auto !important;
+    max-block-size: calc(100dvh - max(20px, var(--mq-safe-top) + var(--mq-safe-bottom))) !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+  }
+
+  .mutqin-modal-surface :where(
+    .modal-body,
+    .help-learning-body,
+    .session-analytics-body,
+    .planner-completion-body,
+    .welcome-back-body,
+    .post-session-body,
+    .onboarding-body,
+    .session-exit-body
+  ) {
+    min-block-size: 0;
+    overflow-x: visible !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+
+  .post-onboarding-modal {
+    grid-template-rows: auto auto minmax(0, 1fr) auto !important;
+  }
+
+  .post-onboarding-modal .onboarding-hero {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+    padding: 12px 14px 10px !important;
+  }
+
+  .onboarding-step-icon {
+    grid-column: 1;
+  }
+
+  .onboarding-hero-copy {
+    grid-column: 2 / span 2;
+  }
+
+  .onboarding-close-btn {
+    grid-column: 4;
+    justify-self: end;
+  }
+
+  .onboarding-body {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid);
+    gap: 12px var(--mq-grid-gap) !important;
+    padding: 12px 14px 16px !important;
+  }
+
+  .onboarding-body > :where(.onboarding-lead, .onboarding-points, .onboarding-preview, .onboarding-choice-grid) {
+    grid-column: 1 / -1;
+  }
+
+  .onboarding-preview-grid,
+  .onboarding-choice-grid,
+  .onboarding-finish-choice-grid {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+  }
+
+  .onboarding-preview-item,
+  .onboarding-choice-card {
+    grid-column: span 2;
+    min-inline-size: 0;
+  }
+
+  .onboarding-choice-grid > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .onboarding-nav-actions,
+  .mutqin-modal-actions,
+  .mutqin-modal-actions--end,
+  .mutqin-modal-actions--3,
+  .welcome-back-actions-grid {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+    inline-size: 100%;
+  }
+
+  .onboarding-nav-actions > *,
+  .mutqin-modal-actions > *,
+  .welcome-back-actions-grid > * {
+    grid-column: span 2;
+    min-inline-size: 0;
+    min-block-size: 44px;
+    white-space: normal;
+  }
+
+  .onboarding-nav-actions > :only-child,
+  .mutqin-modal-actions > :only-child,
+  .welcome-back-actions-grid > :only-child {
+    grid-column: 1 / -1;
+  }
+
+  .mutqin-modal-actions--3 > :nth-child(1) {
+    grid-column: 1 / span 2;
+  }
+
+  .mutqin-modal-actions--3 > :nth-child(2) {
+    grid-column: 3 / -1;
+  }
+
+  .mutqin-modal-actions--3 > :nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  /* Paused and complete summaries use label/value tracks, not stacked rows. */
+  .session-exit-body,
+  .post-session-body {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid);
+    gap: 10px var(--mq-grid-gap) !important;
+    padding: 12px 14px 14px !important;
+  }
+
+  .session-exit-body > *,
+  .post-session-body > * {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+  }
+
+  .post-session-body > .post-session-autosaved-note {
+    grid-column: 1 / span 2;
+    margin: 0;
+  }
+
+  .post-session-body > .post-session-next-step-card {
+    grid-column: 3 / -1;
+    margin: 0;
+  }
+
+  .post-session-body > .post-session-stats-toggle,
+  .post-session-body > .post-session-stats-panel {
+    grid-column: 1 / -1;
+  }
+
+  .post-session-hero-main {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid);
+    gap: var(--mq-grid-gap) !important;
+    align-items: center;
+  }
+
+  .post-session-hero-illustration {
+    grid-column: 1;
+    inline-size: 72px !important;
+    block-size: 72px !important;
+    justify-self: center;
+  }
+
+  .post-session-hero-copy {
+    grid-column: 2 / -1;
+    text-align: start;
+  }
+
+  .mutqin-session-summary-row {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+    align-items: center;
+  }
+
+  .mutqin-session-summary-row-label {
+    grid-column: 1 / span 2;
+  }
+
+  .mutqin-session-summary-row-value {
+    grid-column: 3 / -1;
+    min-inline-size: 0;
+    text-align: end !important;
+    overflow-wrap: anywhere;
+  }
+
+  .session-exit-actions-layout {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+  }
+
+  .session-exit-actions-primary {
+    grid-column: 1 / -1;
+  }
+
+  .session-exit-actions-secondary,
+  .session-exit-actions-secondary--with-primary {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: var(--mq-grid-gap) !important;
+  }
+
+  .session-exit-actions-secondary > * {
+    min-inline-size: 0;
+    min-block-size: 44px !important;
+    padding: 6px !important;
+    white-space: normal;
+  }
+
+  /* AI Recite: full-height shell, compact stage, and sequential report flow. */
+  .self-check-modal-overlay,
+  .recordings-library-overlay {
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+
+  .self-check-modal-overlay > .mutqin-modal-dialog,
+  .recordings-library-overlay > .mutqin-modal-dialog {
+    inline-size: 100vw !important;
+    max-inline-size: 100vw !important;
+    block-size: 100dvh !important;
+    max-block-size: 100dvh !important;
+  }
+
+  .modal-content.self-check-modal,
+  .modal-content.recordings-library-modal {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr);
+    inline-size: 100% !important;
+    min-block-size: 100dvh !important;
+    block-size: 100dvh !important;
+    max-block-size: 100dvh !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .self-check-modal-header,
+  .recordings-library-header {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+    align-items: center !important;
+    padding: calc(10px + var(--mq-safe-top)) 14px 10px !important;
+  }
+
+  .self-check-modal-head-copy,
+  .recordings-library-head-copy {
+    grid-column: 1 / span 2;
+    min-inline-size: 0;
+  }
+
+  .self-check-modal-header-actions,
+  .recordings-library-header-actions {
+    grid-column: 3 / -1;
+    display: grid !important;
+    grid-auto-flow: column;
+    grid-auto-columns: 44px;
+    justify-content: end;
+    gap: 6px;
+  }
+
+  .self-check-modal-header > .modal-close-btn {
+    grid-column: 4;
+    justify-self: end;
+  }
+
+  .self-check-modal-head-copy h2,
+  .recordings-library-head-copy h2 {
+    margin: 0;
+    font-size: clamp(1.14rem, 5.2vw, 1.45rem) !important;
+    line-height: 1.15;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .self-check-modal-body,
+  .recordings-library-body {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid);
+    grid-auto-rows: max-content !important;
+    grid-template-rows: none !important;
+    align-content: start !important;
+    gap: 12px var(--mq-grid-gap) !important;
+    min-block-size: 0;
+    padding: 12px 14px calc(16px + var(--mq-safe-bottom)) !important;
+    overflow-y: auto !important;
+  }
+
+  .self-check-modal-body > *,
+  .recordings-library-body > * {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+  }
+
+  .ai-check-step-guide {
+    display: grid !important;
+    grid-template-columns: max-content repeat(3, minmax(0, 1fr)) !important;
+    gap: var(--mq-grid-gap) !important;
+    align-items: start;
+    padding: 10px 12px !important;
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 8;
+    background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
+    box-shadow: 0 1px 0 var(--border);
+  }
+
+  .ai-check-step-badge {
+    grid-column: 1;
+    justify-self: start;
+    inline-size: max-content;
+    max-inline-size: 100%;
+    white-space: nowrap !important;
+    font-size: clamp(0.66rem, 2.7vw, 0.74rem) !important;
+  }
+
+  .ai-check-step-copy {
+    grid-column: 2 / -1;
+  }
+
+  .self-check-modal-stage {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    grid-auto-rows: max-content !important;
+    align-content: start !important;
+    gap: 12px var(--mq-grid-gap) !important;
+    min-block-size: 0 !important;
+    block-size: auto !important;
+    padding: 12px !important;
+    border-radius: var(--mq-radius-card) !important;
+  }
+
+  .self-check-section-head {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-block-size: 0 !important;
+  }
+
+  .self-check-section-head > :first-child {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    min-inline-size: 0;
+  }
+
+  .self-check-header-tools {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(42px, 1fr)) !important;
+    justify-content: end !important;
+    gap: 5px !important;
+    inline-size: 100%;
+  }
+
+  .self-check-header-tools .self-check-toolbar-btn,
+  .self-check-header-tools .self-check-toolbar-btn.self-check-ai-recite-btn {
+    inline-size: 100% !important;
+    min-inline-size: 44px !important;
+    max-inline-size: none !important;
+    block-size: 44px !important;
+    min-block-size: 44px !important;
+    padding: 0 !important;
+    justify-content: center;
+  }
+
+  .self-check-header-tools .self-check-toolbar-btn span {
+    display: none !important;
+  }
+
+  .self-check-modal-ayah-shell {
+    grid-column: 1 / -1;
+    display: grid;
+    place-items: center;
+    min-block-size: clamp(96px, 15dvh, 132px) !important;
+    block-size: auto !important;
+    padding: 12px 8px !important;
+    margin: 0 !important;
+  }
+
+  .self-check-mobile-start-card {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: 10px var(--mq-grid-gap) !important;
+    min-inline-size: 0;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--mq-radius-compact);
+    background: color-mix(in srgb, var(--surface-soft) 82%, var(--surface) 18%);
+  }
+
+  .self-check-mobile-start-copy,
+  .self-check-mobile-start-unavailable {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+  }
+
+  .self-check-mobile-start-copy {
+    display: grid;
+    gap: 3px;
+  }
+
+  .self-check-mobile-start-copy :where(strong, p),
+  .self-check-mobile-start-unavailable {
+    margin: 0;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .self-check-mobile-start-copy p,
+  .self-check-mobile-start-unavailable {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .self-check-mobile-start-actions {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+  }
+
+  .self-check-mobile-start-actions > * {
+    grid-column: span 2;
+    min-inline-size: 0;
+    min-block-size: 44px;
+    padding-inline: 8px;
+    white-space: normal;
+  }
+
+  .self-check-mobile-start-actions .btn-secondary {
+    justify-content: center;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--mq-radius-compact) !important;
+    background: var(--surface) !important;
+    color: var(--text) !important;
+  }
+
+  .self-check-mobile-start-unavailable {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 6px;
+    align-items: start;
+  }
+
+  .self-check-mobile-recording-card {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: 44px repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px var(--mq-grid-gap) !important;
+    align-items: center;
+    min-inline-size: 0;
+    padding: 12px;
+    border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--border));
+    border-radius: var(--mq-radius-compact);
+    background: color-mix(in srgb, var(--danger) 6%, var(--surface));
+  }
+
+  .self-check-mobile-recording-icon {
+    grid-column: 1;
+    display: grid;
+    place-items: center;
+    inline-size: 44px;
+    block-size: 44px;
+    border-radius: 50%;
+    color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+    animation: selfCheckMobileRecordingPulse 1.6s ease-in-out infinite;
+  }
+
+  .self-check-mobile-recording-copy {
+    grid-column: 2 / -1;
+    display: grid;
+    gap: 3px;
+    min-inline-size: 0;
+  }
+
+  .self-check-mobile-recording-copy :where(strong, p) {
+    margin: 0;
+    min-inline-size: 0;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .self-check-mobile-recording-copy p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .self-check-mobile-recording-card > .self-check-action-btn {
+    grid-column: 1 / -1;
+    min-block-size: 44px;
+  }
+
+  .self-check-modal-ayah,
+  .recitation-review-ayah,
+  .shared-result-ayah {
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    font-size: clamp(1.8rem, 8.8vw, 2.65rem) !important;
+    line-height: 2.05 !important;
+    white-space: normal !important;
+  }
+
+  .self-check-modal-recorder-grid,
+  .self-check-recorder-card,
+  .recitation-check-panel-inline,
+  .recitation-check-body,
+  .shared-result-flow {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    grid-auto-rows: max-content !important;
+    align-content: start !important;
+    gap: 12px var(--mq-grid-gap) !important;
+    min-inline-size: 0;
+    min-block-size: 0 !important;
+    block-size: auto !important;
+    margin: 0 !important;
+  }
+
+  .self-check-modal-recorder-grid > *,
+  .self-check-recorder-card > *,
+  .recitation-check-panel-inline > *,
+  .recitation-check-body > *,
+  .shared-result-flow > * {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+  }
+
+  .recitation-check-head,
+  .self-check-recorder-head {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    align-items: start;
+  }
+
+  .recitation-result-stats {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+  }
+
+  .recitation-result-stat {
+    grid-column: span 2;
+    min-inline-size: 0;
+    padding: 10px !important;
+  }
+
+  .shared-result-support-grid {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+  }
+
+  .shared-result-support-grid > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .shared-result-support-grid > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  .shared-result-section,
+  .shared-result-section--summary {
+    min-inline-size: 0;
+    padding: 10px !important;
+  }
+
+  .shared-result-section-head,
+  .shared-result-section-head strong,
+  .shared-result-section-head p,
+  .recitation-result-stat :where(span, strong, small) {
+    min-inline-size: 0;
+    white-space: normal !important;
+    overflow-wrap: break-word;
+    word-break: normal !important;
+  }
+
+  .shared-result-word-review-list {
+    display: flex;
+    flex-wrap: wrap;
+    max-inline-size: 100%;
+  }
+
+  .recitation-result-actions,
+  .recitation-result-actions-compact {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+  }
+
+  .recitation-result-actions > :first-child {
+    grid-column: 1 / span 2;
+  }
+
+  .recitation-result-actions > :nth-child(2) {
+    grid-column: 3;
+  }
+
+  .recitation-result-actions > :nth-child(3) {
+    grid-column: 4;
+  }
+
+  .recitation-result-actions .self-check-action-btn {
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 44px !important;
+    padding-inline: 6px;
+    white-space: normal;
+  }
+
+  .self-check-rating-grid,
+  .self-check-assessment-rating-grid,
+  .self-check-review-actions,
+  .self-check-live-actions {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+  }
+
+  .self-check-rating-grid > * {
+    grid-column: span 2;
+  }
+
+  .self-check-review-actions > *,
+  .self-check-live-actions > * {
+    grid-column: span 2;
+  }
+
+  /* Recordings remains one main column, with strict grids inside each card. */
+  .recordings-library-header .recordings-library-head-copy {
+    grid-column: 1 / span 2;
+  }
+
+  .recordings-library-header .recordings-library-header-actions {
+    grid-column: 3 / -1;
+  }
+
+  .recordings-library-hierarchy,
+  .recordings-library-nav-meta,
+  .recordings-library-detail-meta,
+  .recording-history-inline-meta,
+  .recording-history-meta {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+    min-inline-size: 0;
+  }
+
+  .recordings-library-back-btn,
+  .recordings-library-header .modal-close-btn {
+    inline-size: 44px;
+    min-inline-size: 44px;
+    block-size: 44px;
+    min-block-size: 44px;
+    padding: 0;
+  }
+
+  .recordings-library-back-btn span {
+    display: inline;
+  }
+
+  .recordings-library-header .recordings-library-head-copy {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .recordings-library-header .recordings-library-header-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    grid-auto-flow: initial;
+    grid-auto-columns: initial;
+    inline-size: 100%;
+  }
+
+  .recordings-library-back-btn {
+    grid-column: 1 / span 3;
+    inline-size: 100% !important;
+    max-inline-size: 220px;
+    padding-inline: 12px;
+    justify-content: center;
+    white-space: normal;
+  }
+
+  .recordings-library-header .modal-close-btn {
+    grid-column: 4;
+    justify-self: end;
+  }
+
+  .recordings-library-header:not(.has-back-action) .recordings-library-head-copy {
+    grid-column: 1 / span 3;
+    grid-row: 1;
+  }
+
+  .recordings-library-header:not(.has-back-action) .recordings-library-header-actions {
+    grid-column: 4;
+    grid-row: 1;
+    grid-template-columns: 44px !important;
+    justify-self: end;
+    inline-size: 44px;
+  }
+
+  .recordings-library-header:not(.has-back-action) .modal-close-btn {
+    grid-column: 1;
+  }
+
+  .recordings-library-shell {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: 12px var(--mq-grid-gap) !important;
+  }
+
+  .recordings-library-nav,
+  .recordings-library-detail {
+    grid-column: 1 / -1;
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .recordings-library-nav-head,
+  .recordings-library-detail-head,
+  .recording-history-top,
+  .recording-history-footer,
+  .recording-history-actions,
+  .recording-history-actions--utility {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+    align-items: start !important;
+  }
+
+  .recordings-library-nav-intro,
+  .recordings-library-detail-head-copy {
+    grid-column: 1 / span 3;
+    min-inline-size: 0;
+  }
+
+  .recording-history-copy {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+  }
+
+  .recordings-library-nav-toggle,
+  .recording-history-actions,
+  .recording-history-actions--utility {
+    grid-column: 4;
+  }
+
+  .recording-history-footer > .recording-history-actions--utility {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .recording-history-action-primary,
+  .recording-history-utility-link {
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 44px;
+    justify-content: center;
+  }
+
+  .recordings-library-recording-title,
+  .recordings-library-recording-meta,
+  .recording-history-copy,
+  .recording-history-copy strong,
+  .recording-history-copy span {
+    min-inline-size: 0;
+    white-space: normal !important;
+    overflow-wrap: break-word;
+    word-break: normal !important;
+  }
+
+  .recordings-library-detail,
+  .recordings-library-history,
+  .recording-history-card,
+  .recording-history-ai-detail,
+  .recording-history-ai-detail > * {
+    inline-size: 100% !important;
+    max-inline-size: none !important;
+    min-inline-size: 0 !important;
+  }
+
+  .recordings-library-detail {
+    padding: 10px !important;
+  }
+
+  .recordings-library-detail .recordings-library-history {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .recordings-library-detail .recording-history-card {
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .recordings-library-detail .recording-history-ai-detail {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Secondary overlays and analytics inherit the same grid discipline. */
+  .help-learning-shell,
+  .keyboard-shortcuts-grid,
+  .session-analytics-summary-grid,
+  .advanced-metrics-grid,
+  .controls-analytics-grid,
+  .completion-stats,
+  .session-exit-stats,
+  .session-exit-remaining-grid {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+  }
+
+  .help-learning-shell > *,
+  .keyboard-shortcuts-grid > *,
+  .session-analytics-summary-grid > *,
+  .advanced-metrics-grid > *,
+  .controls-analytics-grid > *,
+  .completion-stats > *,
+  .session-exit-stats > *,
+  .session-exit-remaining-grid > * {
+    grid-column: span 2;
+    min-inline-size: 0;
+  }
+
+  /* Hardware-keyboard help follows the same full-height sheet pattern. */
+  .keyboard-shortcuts-overlay {
+    align-items: stretch !important;
+    padding: 0 !important;
+  }
+
+  .keyboard-shortcuts-overlay > .mutqin-modal-dialog {
+    inline-size: 100vw !important;
+    max-inline-size: 100vw !important;
+    block-size: 100dvh !important;
+    max-block-size: 100dvh !important;
+  }
+
+  .keyboard-shortcuts-modal {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    inline-size: 100% !important;
+    block-size: 100dvh !important;
+    max-block-size: 100dvh !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .keyboard-shortcuts-header {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) 44px !important;
+    gap: 10px !important;
+    align-items: center !important;
+    padding: calc(10px + var(--mq-safe-top)) 14px 10px !important;
+  }
+
+  .keyboard-shortcuts-header-icon,
+  .keyboard-shortcuts-header .modal-close-btn {
+    inline-size: 44px !important;
+    block-size: 44px !important;
+  }
+
+  .keyboard-shortcuts-header .modal-header-text {
+    min-inline-size: 0;
+  }
+
+  .keyboard-shortcuts-header :where(h2, p) {
+    min-inline-size: 0;
+    margin: 0 !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word;
+  }
+
+  .keyboard-shortcuts-body {
+    display: grid !important;
+    align-content: start;
+    gap: 10px;
+    min-block-size: 0;
+    padding: 12px 14px 18px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+
+  .keyboard-shortcuts-device-note {
+    display: grid !important;
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--mq-radius-compact);
+    background: color-mix(in srgb, var(--surface-soft) 78%, var(--surface) 22%);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  .keyboard-shortcuts-device-note i {
+    display: grid;
+    place-items: center;
+    inline-size: 36px;
+    block-size: 36px;
+    color: var(--accent);
+  }
+
+  .keyboard-shortcuts-grid > .keyboard-shortcuts-group {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+    overflow: hidden;
+  }
+
+  .keyboard-shortcuts-group-header {
+    display: grid !important;
+    grid-template-columns: 36px minmax(0, 1fr) 36px !important;
+    gap: 8px;
+    align-items: center;
+    inline-size: 100%;
+    min-block-size: 52px;
+    padding: 8px 10px !important;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    text-align: start;
+  }
+
+  .keyboard-shortcuts-group-header h3 {
+    min-inline-size: 0;
+    margin: 0 !important;
+    font-size: 0.94rem !important;
+    line-height: 1.25;
+  }
+
+  .keyboard-shortcuts-group-chevron {
+    justify-self: center;
+    transition: transform 160ms ease;
+  }
+
+  .keyboard-shortcuts-group.is-open .keyboard-shortcuts-group-chevron {
+    transform: rotate(180deg);
+  }
+
+  .keyboard-shortcuts-group:not(.is-open) .keyboard-shortcuts-list {
+    display: none !important;
+  }
+
+  .keyboard-shortcuts-list {
+    display: grid !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 10px 8px !important;
+  }
+
+  .keyboard-shortcuts-item {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(92px, auto) !important;
+    gap: 10px !important;
+    align-items: center;
+    min-block-size: 46px;
+    padding: 7px 0 !important;
+  }
+
+  .keyboard-shortcuts-label,
+  .keyboard-shortcut-keys {
+    min-inline-size: 0;
+    white-space: normal !important;
+    word-break: normal !important;
+  }
+
+  .keyboard-shortcut-keys {
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+
+  .keyboard-shortcuts-modal > .mutqin-modal-footer {
+    padding-bottom: calc(10px + var(--mq-safe-bottom)) !important;
+  }
+
+  /* Ordinary interface copy must never collapse into per-character columns. */
+  .app :where(
+    .st-txt,
+    .st-title,
+    .st-sub,
+    .saved-session-row-title,
+    .saved-session-row-meta,
+    .shared-result-section-head,
+    .recording-history-copy,
+    .recordings-library-recording-title,
+    .recordings-library-recording-meta,
+    .self-check-card-desc
+  ) {
+    min-inline-size: 0;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .top-card-menu,
+  .font-dropdown-menu,
+  .quick-font-menu,
+  .mushaf-toolbar-menu,
+  .verse-action-menu {
+    max-inline-size: calc(100vw - 2 * var(--mq-mobile-gutter));
+  }
+}
+
+@media (min-width: 560px) and (max-width: 767.98px) {
+  .verses-grid .verse-card {
+    grid-column: span 2;
+  }
+
+  .shared-result-flow > .shared-result-section--summary {
+    grid-column: 1 / span 2;
+  }
+
+  .shared-result-flow > .shared-result-section--words {
+    grid-column: 3 / -1;
+  }
+
+  .shared-result-support-grid > * {
+    grid-column: span 2 !important;
+  }
+
+  .onboarding-preview-item,
+  .onboarding-choice-card {
+    grid-column: span 2;
+  }
+
+  .onboarding-choice-grid > :last-child:nth-child(odd) {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 429.98px) {
+  .post-session-body > .post-session-autosaved-note,
+  .post-session-body > .post-session-next-step-card {
+    grid-column: 1 / -1;
+  }
+
+  .main.player-visible {
+    padding-bottom: calc(194px + var(--mq-safe-bottom)) !important;
+  }
+
+  .player-controls {
+    grid-area: 2 / 1 / 3 / 5 !important;
+    grid-template-columns: repeat(3, 52px) !important;
+    justify-content: center;
+  }
+
+  .player-progress-wrap {
+    grid-area: 3 / 1 / 4 / 5 !important;
+  }
+}
+
+@media (max-width: 349.98px) {
+  .workspace-shell-copy {
+    grid-column: 1 / -1;
+  }
+
+  .workspace-shell-metadata > .workspace-shell-metadata-pill,
+  .workspace-shell-metadata:has(> :nth-child(5)) > :nth-child(n + 3) {
+    grid-column: 1 / -1;
+  }
+
+  .verse-badges {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    grid-auto-flow: column;
+    justify-content: start;
+  }
+
+  .verse-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: minmax(0, 1fr) 42px 42px !important;
+    gap: 4px !important;
+  }
+
+  .verse-statuses {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .verse-inline-action-btn,
+  .verse-inline-play-btn,
+  .verse-inline-download-btn {
+    inline-size: 42px !important;
+    min-inline-size: 42px !important;
+  }
+
+  .field-stack > .field,
+  .field-stack-compact > .field {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+
+  .saved-session-row-main {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .saved-session-row-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .post-session-body > .post-session-autosaved-note,
+  .post-session-body > .post-session-next-step-card {
+    grid-column: 1 / -1;
+  }
+
+  .session-exit-actions-secondary > * {
+    grid-column: auto;
+  }
+
+  .session-exit-actions-secondary,
+  .session-exit-actions-secondary--with-primary {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .session-exit-actions-secondary > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .self-check-section-head > :first-child {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .self-check-header-tools {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: repeat(5, minmax(42px, 1fr)) !important;
+  }
+
+  .shared-result-support-grid > * {
+    grid-column: 1 / -1 !important;
+  }
+
+  .recitation-result-actions > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .recitation-result-actions > :nth-child(2) {
+    grid-column: 1 / span 2;
+  }
+
+  .recitation-result-actions > :nth-child(3) {
+    grid-column: 3 / -1;
+  }
+}
+
+@media (max-width: 479.98px) {
+  .saved-session-row-main {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .saved-session-row-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: var(--mq-grid) !important;
+  }
+
+  .saved-session-row-actions > :first-child {
+    grid-column: 1 / span 3;
+  }
+
+  .saved-session-row-actions > :last-child {
+    grid-column: 4;
+  }
+}
+
+/* Specificity locks for legacy modal selectors that also use !important. */
+@media (max-width: 767.98px) {
+  @keyframes selfCheckMobileRecordingPulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger) 20%, transparent); }
+    50% { box-shadow: 0 0 0 7px transparent; }
+  }
+
+  .app .main.container-fluid.mushaf-mode-active .mushaf-frame,
+  .app .main.mushaf-mode-active .mushaf-frame.mushaf-frame-toolbar-collapsed {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: 10px var(--mq-grid-gap) !important;
+    padding: 10px !important;
+  }
+
+  .app .main.mushaf-mode-active .mushaf-toolbar-rail {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    inline-size: 100% !important;
+    padding: 0 !important;
+  }
+
+  .app .main.mushaf-mode-active .mushaf-pill-toolbar,
+  .app .main.mushaf-mode-active .mushaf-pill-toolbar.is-collapsed {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: 6px var(--mq-grid-gap) !important;
+    inline-size: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app .main.mushaf-mode-active .mushaf-toolbar-cluster,
+  .app .main.mushaf-mode-active .mushaf-toolbar-cluster-start,
+  .app .main.mushaf-mode-active .mushaf-toolbar-cluster-end {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(44px, 1fr)) !important;
+    gap: 6px !important;
+    inline-size: 100% !important;
+  }
+
+  .app .main.mushaf-mode-active .mushaf-toolbar-rail .bg-dropdown-region,
+  .app .main.mushaf-mode-active .mushaf-toolbar-rail .border-dropdown-region {
+    display: block !important;
+    min-inline-size: 0;
+  }
+
+  .app .main.mushaf-mode-active .mushaf-toolbar-rail .mushaf-play-pill {
+    display: flex !important;
+  }
+
+  .app .main.mushaf-mode-active .mushaf-stage {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    inline-size: 100% !important;
+  }
+
+  .app .main.mushaf-mode-active .mushaf-toolbar-trigger,
+  .app .main.mushaf-mode-active .mushaf-pill-toolbar .mushaf-pill,
+  .app .verse-actions .verse-ai-check-btn {
+    min-inline-size: 44px !important;
+    block-size: 44px !important;
+    min-block-size: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .app .modal-overlay.keyboard-shortcuts-overlay {
+    align-items: stretch !important;
+    padding: 0 !important;
+  }
+
+  .app .keyboard-shortcuts-overlay > .mutqin-modal-dialog {
+    inline-size: 100vw !important;
+    max-inline-size: 100vw !important;
+    block-size: 100dvh !important;
+    max-block-size: 100dvh !important;
+    margin: 0 !important;
+  }
+
+  .app .keyboard-shortcuts-overlay .modal-content.keyboard-shortcuts-modal {
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    inline-size: 100% !important;
+    block-size: 100dvh !important;
+    min-block-size: 100dvh !important;
+    max-block-size: 100dvh !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .app .keyboard-shortcuts-modal .keyboard-shortcuts-grid {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: 8px var(--mq-grid-gap) !important;
+  }
+
+  .app .keyboard-shortcuts-modal .keyboard-shortcuts-grid > .keyboard-shortcuts-group {
+    grid-column: 1 / -1;
+  }
+
+  .modal-overlay.mutqin-modal-overlay.keyboard-shortcuts-overlay {
+    --mq-grid-gap: clamp(6px, 1.8vw, 10px);
+    --mq-grid: repeat(4, minmax(0, 1fr));
+    --mq-safe-top: env(safe-area-inset-top, 0px);
+    --mq-safe-bottom: env(safe-area-inset-bottom, 0px);
+    align-items: stretch !important;
+    place-items: stretch !important;
+    padding: 0 !important;
+  }
+
+  .keyboard-shortcuts-overlay > .mutqin-modal-dialog {
+    inline-size: 100vw !important;
+    max-inline-size: 100vw !important;
+    block-size: 100dvh !important;
+    max-block-size: 100dvh !important;
+    margin: 0 !important;
+  }
+
+  .keyboard-shortcuts-overlay .mutqin-modal-dialog .modal-content.mutqin-modal-surface.keyboard-shortcuts-modal {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    inline-size: 100% !important;
+    block-size: 100dvh !important;
+    min-block-size: 100dvh !important;
+    max-block-size: 100dvh !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .keyboard-shortcuts-overlay .keyboard-shortcuts-modal .keyboard-shortcuts-body .keyboard-shortcuts-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px var(--mq-grid-gap) !important;
+  }
+
+  .keyboard-shortcuts-overlay .keyboard-shortcuts-modal .keyboard-shortcuts-grid > .keyboard-shortcuts-group {
+    grid-column: 1 / -1;
+  }
+
+  .app .workspace-shell .workspace-shell-actions .top-card-action-trigger.session-primary-action,
+  .app .workspace-shell .workspace-shell-actions .top-card-action-trigger.action-btn-exit,
+  .app .tools-footer :where(.tools-btn, .session-primary-action, .btn),
+  .app .mutqin-modal-footer .mutqin-modal-btn {
+    block-size: 44px !important;
+    min-block-size: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .app .workspace-shell .workspace-shell-actions .top-card-controls-trigger,
+  .app .workspace-shell .workspace-shell-actions .top-card-menu-wrap,
+  .app .workspace-shell .workspace-shell-actions .top-card-ellipsis,
+  .app .modal-content.self-check-modal .self-check-library-shortcut-btn,
+  .app .recordings-library-nav-toggle {
+    inline-size: 44px !important;
+    min-inline-size: 44px !important;
+    block-size: 44px !important;
+    min-block-size: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .app .recordings-library-nav-toggle {
+    inline-size: auto !important;
+    min-inline-size: 44px !important;
+    padding-inline: 10px !important;
+  }
+
+  .app .modal-content.self-check-modal.recitation-review-modal {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+  }
+
+  .app .modal-content.self-check-modal .self-check-modal-header {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: var(--mq-grid-gap) !important;
+  }
+
+  .app .modal-content.self-check-modal .self-check-modal-head-copy {
+    grid-column: 1 / span 2;
+    min-inline-size: 0;
+  }
+
+  .app .modal-content.self-check-modal .self-check-modal-header-actions {
+    grid-column: 3 / -1;
+    display: grid !important;
+    grid-auto-flow: column;
+    grid-auto-columns: 44px;
+    justify-content: end;
+    gap: 6px;
+  }
+
+  .app .modal-content.self-check-modal .self-check-modal-body,
+  .app .modal-content.self-check-modal .self-check-modal-stage,
+  .app .modal-content.self-check-modal .self-check-section-head,
+  .app .modal-content.self-check-modal .self-check-modal-recorder-grid,
+  .app .modal-content.self-check-modal .self-check-recorder-card,
+  .app .modal-content.self-check-modal .recitation-check-panel-inline,
+  .app .modal-content.self-check-modal .recitation-check-body,
+  .app .modal-content.self-check-modal .shared-result-flow,
+  .app .modal-content.self-check-modal .recitation-result-stats {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    grid-auto-rows: max-content !important;
+    align-content: start !important;
+    min-inline-size: 0;
+  }
+
+  .app .modal-content.self-check-modal .self-check-modal-body > *,
+  .app .modal-content.self-check-modal .self-check-modal-stage > .self-check-modal-ayah-shell,
+  .app .modal-content.self-check-modal .self-check-modal-recorder-grid > *,
+  .app .modal-content.self-check-modal .self-check-recorder-card > *,
+  .app .modal-content.self-check-modal .recitation-check-panel-inline > *,
+  .app .modal-content.self-check-modal .recitation-check-body > *,
+  .app .modal-content.self-check-modal .shared-result-flow > * {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+  }
+
+  .app .modal-content.self-check-modal .self-check-section-head > :first-child {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .app .modal-content.self-check-modal .self-check-header-tools {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(42px, 1fr)) !important;
+    gap: 5px !important;
+    inline-size: 100%;
+  }
+
+  .app .modal-content.self-check-modal .self-check-header-tools .self-check-toolbar-btn,
+  .app .modal-content.self-check-modal .self-check-header-tools .self-check-toolbar-btn.self-check-ai-recite-btn,
+  .app .modal-content.self-check-modal .self-check-header-tools .self-check-toolbar-btn.self-check-toolbar-btn-icon-only.self-check-ai-recite-btn {
+    inline-size: 100% !important;
+    min-inline-size: 42px !important;
+    max-inline-size: none !important;
+    block-size: 44px !important;
+    min-block-size: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .app .modal-content.self-check-modal .recitation-result-stat {
+    grid-column: span 2;
+  }
+
+  .modal-content.self-check-modal.recitation-review-modal .self-check-modal-body {
+    gap: 12px var(--mq-grid-gap) !important;
+    padding: 12px 14px calc(16px + var(--mq-safe-bottom)) !important;
+  }
+
+  .modal-content.self-check-modal.recitation-review-modal .self-check-modal-stage {
+    gap: 10px var(--mq-grid-gap) !important;
+    padding: 10px !important;
+    margin: 0 !important;
+  }
+
+  .modal-content.self-check-modal.recitation-review-modal .self-check-section-head,
+  .modal-content.self-check-modal.recitation-review-modal .self-check-recorder-head,
+  .modal-content.self-check-modal.recitation-review-modal .recitation-check-head {
+    gap: 8px var(--mq-grid-gap) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .modal-content.self-check-modal.recitation-review-modal .self-check-modal-ayah-shell {
+    min-block-size: clamp(92px, 14dvh, 124px) !important;
+    padding: 10px 8px !important;
+    margin: 0 !important;
+  }
+
+  .modal-content.self-check-modal.recitation-review-modal .self-check-modal-recorder-grid {
+    gap: 10px var(--mq-grid-gap) !important;
+    margin: 0 !important;
+  }
+
+  .modal-content.self-check-modal.recitation-review-modal .self-check-recorder-card {
+    gap: 10px var(--mq-grid-gap) !important;
+    padding: 10px !important;
+    margin: 0 !important;
+  }
+
+  .modal-content.self-check-modal.recitation-review-modal .recitation-check-panel,
+  .modal-content.self-check-modal.recitation-review-modal .recitation-check-panel-inline {
+    gap: 10px var(--mq-grid-gap) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .modal-content.self-check-modal.recitation-review-modal :is(
+    .recitation-check-status,
+    .recitation-check-error,
+    .recitation-check-actions,
+    .recitation-live-review,
+    .recitation-check-body,
+    .recitation-check-results,
+    .recitation-check-footnotes,
+    .recitation-result-actions
+  ) {
+    gap: 10px var(--mq-grid-gap) !important;
+    margin: 0 !important;
+  }
+
+  .app .modal-content.self-check-modal .recitation-check-error-card {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+    gap: 10px var(--mq-grid-gap) !important;
+    align-items: center;
+    padding: 12px !important;
+    color: var(--danger-text, #9f3f2d);
+    background: color-mix(in srgb, var(--danger-bg, #f8e7e2) 72%, var(--surface) 28%);
+    border: 1px solid color-mix(in srgb, var(--danger-text, #9f3f2d) 22%, var(--border) 78%);
+    border-radius: var(--mq-radius-compact);
+  }
+
+  .app .recitation-check-error-icon {
+    grid-column: 1;
+    grid-row: 1;
+    display: grid;
+    place-items: center;
+    inline-size: var(--mq-control-size);
+    block-size: var(--mq-control-size);
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--danger-text, #9f3f2d) 10%, var(--surface) 90%);
+    font-size: 1.15rem;
+  }
+
+  .app .recitation-check-error-copy {
+    grid-column: 2 / -1;
+    grid-row: 1;
+    display: grid;
+    gap: 3px;
+    min-inline-size: 0;
+  }
+
+  .app .recitation-check-error-copy strong,
+  .app .recitation-check-error-copy span {
+    min-inline-size: 0;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .app .recitation-check-error-copy strong {
+    color: var(--text);
+    font-size: 0.94rem;
+  }
+
+  .app .recitation-check-error-copy span {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .app .recitation-check-error-card > button {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    min-block-size: var(--mq-control-size);
+  }
+
+  .app .recordings-library-loading {
+    display: grid;
+    grid-template-columns: var(--mq-grid);
+    gap: 12px var(--mq-grid-gap);
+    place-items: initial;
+    align-items: center;
+    align-content: center;
+    inline-size: min(100%, 420px);
+    min-block-size: min(52dvh, 420px);
+    margin-inline: auto;
+    padding: var(--mq-card-pad);
+    color: var(--text-muted);
+    text-align: start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--mq-radius-card);
+  }
+
+  .app .recordings-library-loading > .bi {
+    grid-column: 1;
+    display: grid;
+    place-items: center;
+    inline-size: var(--mq-control-size);
+    block-size: var(--mq-control-size);
+    color: var(--accent);
+    background: var(--surface-soft);
+    border-radius: 13px;
+    font-size: 1.15rem;
+    animation: recordingsLibraryHourglass 1.4s ease-in-out infinite;
+  }
+
+  .app .recordings-library-loading > span {
+    grid-column: 2 / -1;
+    min-inline-size: 0;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .app .recordings-library-loading-skeleton {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: var(--mq-grid);
+    gap: 10px var(--mq-grid-gap);
+  }
+
+  .app .recordings-library-loading-skeleton > span {
+    grid-column: 1 / -1;
+    block-size: 54px;
+    border-radius: 12px;
+    background: linear-gradient(100deg, var(--surface-soft) 20%, var(--surface-2) 42%, var(--surface-soft) 64%);
+    background-size: 220% 100%;
+    animation: recordingsLibrarySkeleton 1.5s ease-in-out infinite;
+  }
+
+  .app .recordings-library-loading-skeleton > span:nth-child(2) {
+    grid-column: 1 / span 2;
+  }
+
+  .app .recordings-library-loading-skeleton > span:nth-child(3) {
+    grid-column: 3 / -1;
+  }
+
+  @keyframes recordingsLibraryHourglass {
+    50% { transform: rotate(180deg); }
+  }
+
+  @keyframes recordingsLibrarySkeleton {
+    from { background-position: 100% 0; }
+    to { background-position: -100% 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app .recordings-library-loading > .bi,
+    .app .recordings-library-loading-skeleton > span {
+      animation: none;
+    }
+  }
+}
+
+@media (max-width: 349.98px) {
+  .app .workspace-shell .workspace-shell-metadata,
+  .app .workspace-shell .workspace-shell-bottom-pills .workspace-shell-metadata {
+    display: grid !important;
+    grid-template-columns: var(--mq-grid) !important;
+  }
+
+  .app .workspace-shell .workspace-shell-metadata > * {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+  }
+
+  .app .workspace-shell .workspace-shell-metadata > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .app .modal-content.self-check-modal .self-check-modal-head-copy {
+    grid-column: 1 / span 2;
+  }
+
+  .app .modal-content.self-check-modal .self-check-modal-header-actions {
+    grid-column: 3 / -1;
+  }
+
+  .app .modal-content.self-check-modal .self-check-section-head > :first-child {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .app .modal-content.self-check-modal .self-check-header-tools {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: repeat(5, minmax(42px, 1fr)) !important;
+  }
+
+  .app .modal-content.self-check-modal .recitation-result-stat {
+    grid-column: 1 / -1;
+  }
+
+  .self-check-mobile-start-actions > * {
+    grid-column: 1 / -1;
+  }
+}
