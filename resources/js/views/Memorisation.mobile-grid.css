@@ -263,6 +263,24 @@
     grid-column: 1 / -1;
   }
 
+  .workspace-shell-reading-toggles {
+    grid-column: 1 / -1;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center;
+    gap: 0.55rem 1rem !important;
+    margin: 0 !important;
+    width: 100%;
+  }
+
+  .workspace-reading-check {
+    min-height: 1.5rem;
+  }
+
+  .workspace-reading-check .form-check-label {
+    font-size: 0.875rem !important;
+  }
+
   .workspace-shell-metadata {
     grid-column: 1 / -1;
     display: grid !important;
@@ -354,8 +372,10 @@
   }
 
   .verse-statuses {
-    grid-column: 1 / span 2;
-    grid-row: 2;
+    display: none !important;
+  }
+
+  .verse-badges {
     display: flex !important;
     flex-wrap: wrap;
     align-items: center;
@@ -363,7 +383,7 @@
     min-inline-size: 0;
   }
 
-  .verse-statuses .verse-status-badge {
+  .verse-badges .verse-status-badge {
     inline-size: max-content;
     max-inline-size: 100%;
     white-space: normal !important;
@@ -376,14 +396,14 @@
     grid-column: 2 / -1;
     grid-row: 1;
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 44px 44px !important;
+    grid-template-columns: minmax(0, 1fr) 40px !important;
     gap: 6px !important;
     align-items: start !important;
     inline-size: 100%;
   }
 
   .verse-actions:has(.verse-ai-check-btn + .verse-ai-check-btn) {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) 44px 44px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) 40px !important;
   }
 
   .verse-ai-check-btn,
@@ -399,10 +419,36 @@
   .verse-inline-action-btn,
   .verse-inline-play-btn,
   .verse-inline-download-btn {
-    inline-size: 44px !important;
-    min-inline-size: 44px !important;
-    block-size: 44px !important;
-    min-block-size: 44px !important;
+    inline-size: 36px !important;
+    min-inline-size: 36px !important;
+    block-size: 36px !important;
+    min-block-size: 36px !important;
+  }
+
+  .verse-ai-check-btn.verse-ai-recite-btn {
+    min-block-size: 40px;
+    padding: 6px 8px;
+    font-size: 0.74rem;
+  }
+
+  .workspace-shell-bottom {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    gap: 0.65rem !important;
+  }
+
+  .workspace-shell-reading-toggles {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100%;
+    margin-inline-start: 0 !important;
+    justify-content: flex-start !important;
+    gap: 0.45rem 0.75rem !important;
+  }
+
+  .workspace-reading-check .form-check-label {
+    font-size: 0.875rem !important;
   }
 
   .verse-arabic-wrap,
@@ -2084,20 +2130,19 @@
   .verse-actions {
     grid-column: 1 / -1;
     grid-row: 2;
-    grid-template-columns: minmax(0, 1fr) 42px 42px !important;
+    grid-template-columns: minmax(0, 1fr) 40px !important;
     gap: 4px !important;
   }
 
   .verse-statuses {
-    grid-column: 1 / -1;
-    grid-row: 3;
+    display: none !important;
   }
 
   .verse-inline-action-btn,
   .verse-inline-play-btn,
   .verse-inline-download-btn {
-    inline-size: 42px !important;
-    min-inline-size: 42px !important;
+    inline-size: 40px !important;
+    min-inline-size: 40px !important;
   }
 
   .field-stack > .field,

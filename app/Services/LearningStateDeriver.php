@@ -51,9 +51,11 @@ class LearningStateDeriver
 
         [$surah, $ayah] = $this->parseAyahId($current['ayahId'] ?? ($current['verse']['key'] ?? null));
 
+        $lifecycle = app(SessionLifecycleService::class)->attributesFromEngineState($session);
+
         UserSession::updateOrCreate(
             ['user_id' => $user->id],
-            [
+            array_merge([
                 'surah_number' => $surah,
                 'ayah_number' => $ayah,
                 'current_step' => $index,
@@ -62,7 +64,7 @@ class LearningStateDeriver
                 'session_duration_seconds' => $this->sessionDurationSeconds($session),
                 'last_activity_at' => $this->parseDate($session['updated_at'] ?? null),
                 'metadata' => $session ?: null,
-            ]
+            ], $lifecycle)
         );
     }
 

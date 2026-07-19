@@ -69,7 +69,10 @@ class BillingController extends Controller
             return redirect()->to(route('profile.show') . '#subscription')->with('billing_status', 'Your Mutqin subscription is being activated.');
         }
 
-        return redirect()->route('login')->with('status', 'Your checkout completed. Sign in with the same email to sync your subscription.');
+        return redirect()->route('login')->with(
+            'status',
+            'Checkout complete. Sign in with the same email you used in Stripe to sync your plan, then open Memorisation.'
+        );
     }
 
     public function portal(Request $request)

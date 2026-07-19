@@ -22,7 +22,7 @@
               </div>
               
               <div class="hero-buttons">
-                <a href="/memorisation" class="btn-primary hero-action-btn hero-action-btn--primary"><i class="bi bi-book-half"></i> {{ t('homepage.hero.startFree') }}</a>
+                <a :href="startFreeHref" class="btn-primary hero-action-btn hero-action-btn--primary"><i class="bi bi-book-half"></i> {{ t('homepage.hero.startFree') }}</a>
                 <button @click="scrollToFeatures" class="btn-secondary hero-action-btn hero-action-btn--secondary"><i class="bi bi-arrow-down"></i> {{ t('homepage.hero.seeFeatures') }}</button>
               </div>
             </div>
@@ -136,6 +136,7 @@
         <div class="section-kicker"><i class="bi bi-credit-card-2-front"></i> {{ t('homepage.pricing.kicker') }}</div>
         <h2 class="section-title">{{ t('homepage.pricing.title') }}</h2>
         <p class="section-subtitle">{{ t('homepage.start_free_upgrade_only_when_you_need_deeper_recit') }}</p>
+        <p class="pricing-account-note">{{ t('homepage.pricing.accountNote') }}</p>
         <div class="pricing-grid">
           <!-- Freemium Plan -->
           <div class="pricing-grid-item" data-aos="flip-right">
@@ -151,7 +152,7 @@
                   {{ feature }}
                 </li>
               </ul>
-              <a href="/register" class="btn-secondary">{{ t('homepage.start_free') }} <i class="bi bi-arrow-right"></i></a>
+              <a :href="startFreeHref" class="btn-secondary">{{ t('homepage.start_free') }} <i class="bi bi-arrow-right"></i></a>
             </div>
           </div>
           <!-- Premium Plan -->
@@ -506,6 +507,7 @@ export default {
     };
 
     const csrfToken = ref(document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+    const startFreeHref = computed(() => (window.mutqinAuthCheck ? '/memorisation' : '/register'));
 
     const comparisonValueClass = (value) => {
       if (value === true) return 'comparison-value comparison-value-included comparison-value-icon';
@@ -715,6 +717,7 @@ export default {
       t,
       currentTheme,
       csrfToken,
+      startFreeHref,
       setTheme,
       featuresSection,
       pricingSection,

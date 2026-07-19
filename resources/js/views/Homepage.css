@@ -397,6 +397,19 @@
   line-height: 1.88;
 }
 
+.pricing-section .section-subtitle {
+  margin-bottom: 0.85rem;
+}
+
+.pricing-account-note {
+  text-align: center;
+  color: var(--text-muted);
+  max-width: 720px;
+  margin: 0 auto 2.5rem;
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
 /* Features Grid */
 .features-grid {
   margin-top: 0;

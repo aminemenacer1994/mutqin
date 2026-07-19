@@ -30,7 +30,11 @@
     "method": "Method",
     "tajweed": "Tajweed",
     "dismiss": "Dismiss",
-    "skipOnboarding": "Skip onboarding"
+    "skipOnboarding": "Skip onboarding",
+    "resumeSession": "Resume Session",
+    "resumingSession": "Resuming…",
+    "endingSession": "Ending…",
+    "startingSession": "Starting…"
   },
   "auth": {
     "continueGoogle": "Continue with Google",
@@ -262,7 +266,8 @@
       "premiumYearly": "or £17.99 yearly",
       "proYearly": "or £49.99 yearly",
       "featureColumn": "Feature",
-      "freeTrial": "7-DAY FREE TRIAL"
+      "freeTrial": "7-DAY FREE TRIAL",
+      "accountNote": "You can begin Premium or Pro checkout without an account. Afterwards, create an account or sign in with the same email so Mutqin can sync your plan."
     },
     "faq": {
       "kicker": "Common questions",
@@ -408,7 +413,7 @@
     "workspaceEmpty": {
       "kicker": "Ready to begin",
       "title": "Choose a surah and range",
-      "desc": "Use session controls to set up a new range. The main workspace will stay in view once you start.",
+      "desc": "Open session setup to pick a surah and ayah range. Your verses appear here once you start.",
       "startNewSession": "Start new session",
       "continuePreviousSession": "Continue from previous session"
     },
@@ -446,7 +451,11 @@
       "startNewSession": "Start new session",
       "repeatSession": "Repeat session",
       "continueSession": "Continue this session",
-      "saveSession": "Save this session"
+      "saveSession": "Save this session",
+      "confirmTitle": "End this session?",
+      "confirmDescription": "Your current session will be completed and you will not be able to resume it.",
+      "confirmEnd": "End Session",
+      "confirmContinue": "Continue Session"
     },
     "sessionOverview": {
       "kicker": "Session Overview"
@@ -610,6 +619,13 @@
         "messageFallback": "This item will be removed from the recording library.",
         "confirm": "Delete",
         "cancel": "Keep"
+      },
+      "deleteAyahRecordings": {
+        "title": "Delete all recordings for this ayah?",
+        "message": "This permanently removes {count} recording(s) for ayah {number} from the library.",
+        "confirm": "Delete all",
+        "cancel": "Keep",
+        "done": "Deleted {count} recording(s) for ayah {number}."
       },
       "deleteReciteCheck": {
         "title": "Delete Recite Check?",
@@ -897,7 +913,7 @@
     "revisitOnboarding": "Revisit onboarding",
     "onboarding": {
       "stepCounter": "Step {current} of {total}",
-      "intro": "Four quick steps to get oriented before your first session.",
+      "intro": "A short tour of Mutqin’s memorisation workspace: session setup, reading aids, practice techniques, AI checks, and your saved library.",
       "finish": "Finish",
       "confirmChoice": "Confirm choice",
       "useSampleSession": "Play sample session",
@@ -922,7 +938,7 @@
         "title": "Session complete",
         "message": "You finished the guided sample. Choose your next step below.",
         "repeat": "Repeat this session",
-        "newSession": "Start a new session",
+        "newSession": "Start new session",
         "save": "Save this session",
         "savedToast": "This session has been successfully saved."
       },
@@ -930,10 +946,10 @@
         "setup": {
           "title": "Set up your session",
           "stepLabel": "Session setup",
-          "body": "Choose a surah, ayah range, and reciter before you begin.",
+          "body": "Pick a surah, ayah range, and reciter. Open Controls any time to refine playback, delays, and session targets.",
           "points": [
-            "Start with a short ayah range",
-            "Reopen setup any time from the tools panel"
+            "Start with a short ayah range you can finish in one sitting",
+            "Saved setup stays in Controls under Setup and Saved"
           ],
           "previewTitle": "Session inputs",
           "previewSubtitle": "Live from your current setup.",
@@ -946,10 +962,10 @@
         "reading": {
           "title": "Choose your reading view",
           "stepLabel": "Reading view",
-          "body": "Switch between stacked and mushaf layouts, and toggle aids only when you need them.",
+          "body": "Use stacked cards or Mushaf layout. Toggle translation, transliteration, and tajweed colouring from the session bar when you need them.",
           "points": [
-            "Keep the main text clean by default",
-            "Translation, transliteration, and tajweed stay one tap away"
+            "Keep Arabic primary; turn aids on only when they help",
+            "Tajweed colours map to real rules — see Help & Learning for the legend"
           ],
           "previewTitle": "Reading controls",
           "previewSubtitle": "Based on your current view settings.",
@@ -962,10 +978,10 @@
         "practice": {
           "title": "Practice with built-in tools",
           "stepLabel": "Practice tools",
-          "body": "Use focus, blur, chaining, and Talqin when you want more structure around each ayah.",
+          "body": "Focus, blur, chaining, and Talqin structure each ayah. AI Recite and AI Memory check pronunciation and recall; your attempts land in the recordings library.",
           "points": [
-            "Focus narrows attention to the active ayah",
-            "Talqin pauses audio so you can recite your turn"
+            "Focus and blur guide attention; Talqin gives you a recite turn matching ayah length",
+            "AI Recite / AI Memory save feedback you can revisit later"
           ],
           "previewTitle": "Technique controls",
           "previewSubtitle": "Reflects your current practice settings.",
@@ -978,10 +994,10 @@
         "review": {
           "title": "Review and return",
           "stepLabel": "Review & return",
-          "body": "Saved sessions and recordings keep your next visit close to the ayahs that need work.",
+          "body": "Resume saved sessions, replay recordings, and let smart revision surface ayahs that need work next visit.",
           "points": [
-            "Resume exactly where you left off",
-            "Insights highlight what needs review"
+            "Continue exactly where you left off",
+            "Recordings and insights keep weak ayahs visible"
           ],
           "previewTitle": "Your library",
           "previewSubtitle": "Pulled from your account activity.",
@@ -991,7 +1007,9 @@
             "Insights"
           ]
         }
-      }
+      },
+      "startOnboarding": "Start Onboarding",
+      "continueOnboarding": "Continue Onboarding"
     },
     "open_session_setup": "Open session setup",
     "open_controls": "Open controls",
@@ -1099,15 +1117,67 @@
       "progressLabel": "Range progress",
       "detailsLabel": "Session details",
       "nextStepLabel": "Suggested next step",
-      "celebrationTitleComplete": "Well done!",
-      "celebrationTitlePartial": "Nice effort today",
-      "celebrationMessage": "You showed up and put in the work — that matters.",
+      "celebrationTitleComplete": "Alhamdulillah",
+      "celebrationTitlePartial": "Barakallahu feek",
+      "celebrationMessage": "Your effort is recorded with sincerity.",
       "viewStats": "View stats",
       "hideStats": "Hide stats",
       "repeat": "Repeat this session",
-      "newSession": "Start a new session",
+      "newSession": "Start new session",
       "save": "Save this session",
-      "savedToast": "This session has been successfully saved."
+      "savedToast": "This session has been successfully saved.",
+      "autoSavedNote": "Progress saved.",
+      "recommendation": {
+        "cardTitle": "Next",
+        "chooseNext": "What would you like next?",
+        "recommendedNext": "{surah} · {range}",
+        "recommendedNextSurah": "Surah {surah}",
+        "surahCompletedTitle": "Alhamdulillah — Surah {surah} complete",
+        "ayahRange": "Ayat {start}–{end}",
+        "singleAyah": "Ayah {ayah}",
+        "ayahCount": "{count} ayat",
+        "modeNewLearning": "New",
+        "modeRevision": "Revision",
+        "modeNextSurah": "Next surah",
+        "startRecommendedNextSession": "Continue",
+        "startRecommendedRevision": "Revise now",
+        "continueToNextSurah": "Next surah",
+        "startNewSession": "Start new session",
+        "viewSessionSummary": "Session details",
+        "hideSessionSummary": "Hide details",
+        "reviewThisSurah": "Revise this surah",
+        "backToOverview": "Back",
+        "retry": "Try again",
+        "loadError": "Suggestion unavailable — your session is still saved.",
+        "startError": "Could not start. Please try again.",
+        "techniqueLabel": "Helpful now",
+        "techniques": {
+          "blur": "Blur mode — hide text and recall",
+          "focus": "Focus mode — one ayah at a time",
+          "talqin": "Talqin — listen, then repeat"
+        },
+        "confirm": {
+          "continueNextAyat": "Continue to the next ayat?",
+          "reviewAgain": "Revise these ayat?",
+          "continueNextSurah": "Ready for the next surah?",
+          "startSession": "Begin",
+          "startRevision": "Begin revision",
+          "continueToNextSurah": "Continue",
+          "chooseSomethingElse": "Choose differently"
+        },
+        "reasons": {
+          "strongPreviousPerformance": "MashaAllah — you recited well. Continue gently.",
+          "continueCurrentSurah": "Barakallahu feek. Continue with the next {count} ayat.",
+          "revisionRequired": "A calm revision will settle these ayat.",
+          "difficultAyahDetected": "One ayah needs care. Revise gently before moving on.",
+          "completeRemainingAyat": "Only {count} ayah remain — complete this surah with presence.",
+          "surahCompleted": "Alhamdulillah — Surah {surah} is complete. Continue when ready.",
+          "resumeIncompleteSession": "Resume with sincerity where you paused.",
+          "reinforceRecentRange": "A quiet return helps these ayat settle in the heart.",
+          "learningPlanComplete": "A beautiful moment to revisit earlier surahs.",
+          "manualFallback": "Choose what you would like to recite next."
+        }
+      }
     },
     "emotional": {
       "postSession": {
@@ -1523,7 +1593,9 @@
     "wordTimingUnavailableForThisAyah": "Word timing unavailable for this ayah.",
     "unableToPlayThisWordRight": "Unable to play this word right now.",
     "unableToPlayAyahNow": "Couldn't play this ayah. Try again.",
-    "textSizePercent": "Text size: {percent}%"
+    "textSizePercent": "Text size: {percent}%",
+    "sessionResumeFailed": "Unable to resume session. Please try again.",
+    "sessionEndFailed": "Unable to end session. Please try again."
   },
   "errors": {
     "network": "Network error. Check your connection."
@@ -1770,7 +1842,35 @@
         "tajweed": {
           "title": "Tajweed Rules",
           "description": "Tajweed is the set of rules that helps you recite the Quran correctly and beautifully. Mutqin highlights these rules so you can recognise and practise them while memorising.",
-          "bestFor": "Students improving pronunciation and recitation quality."
+          "bestFor": "Students improving pronunciation and recitation quality.",
+          "legendTitle": "What each colour means",
+          "legendIntro": "When Tajweed is on, letters are coloured by rule. Use this legend while you listen and repeat.",
+          "colors": {
+            "gray": {
+              "label": "Silent / connection marks",
+              "description": "Hamzat al-wasl and silent letters that are not pronounced."
+            },
+            "green": {
+              "label": "Ghunnah / Idgham with ghunnah",
+              "description": "Nasalisation and joining with a nasal sound."
+            },
+            "purple": {
+              "label": "Ikhfa / Idgham without ghunnah",
+              "description": "Hidden noon sound and non-nasal joining."
+            },
+            "orange": {
+              "label": "Qalqalah",
+              "description": "Echoing stop on ق ط ب ج د."
+            },
+            "red": {
+              "label": "Madd (elongation)",
+              "description": "Normal, obligatory, and necessary lengthening."
+            },
+            "blue": {
+              "label": "Idgham shafawi",
+              "description": "Labial merging with م."
+            }
+          }
         },
         "srs": {
           "title": "Smart Revision (SRS)",

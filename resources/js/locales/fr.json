@@ -30,7 +30,11 @@
     "method": "Méthode",
     "tajweed": "Tajweed",
     "dismiss": "Dismiss",
-    "skipOnboarding": "Skip onboarding"
+    "skipOnboarding": "Skip onboarding",
+    "resumeSession": "Reprendre la session",
+    "resumingSession": "Reprise…",
+    "endingSession": "Fin…",
+    "startingSession": "Démarrage…"
   },
   "auth": {
     "continueGoogle": "Continuer avec Google",
@@ -408,7 +412,7 @@
     "workspaceEmpty": {
       "kicker": "Prêt à commencer",
       "title": "Choisissez une sourate et une plage",
-      "desc": "Utilisez les contrôles pour configurer une nouvelle plage.",
+      "desc": "Ouvrez la configuration de session pour choisir une sourate et une plage. Les versets apparaissent ici une fois démarré.",
       "startNewSession": "Commencer une nouvelle session",
       "continuePreviousSession": "Continuer la session précédente"
     },
@@ -661,7 +665,9 @@
         }
       },
       "intro": "Four quick steps to get oriented before your first session.",
-      "confirmChoice": "Confirm choice"
+      "confirmChoice": "Confirm choice",
+      "startOnboarding": "Start Onboarding",
+      "continueOnboarding": "Continue Onboarding"
     },
     "open_session_setup": "Ouvrir la configuration de session",
     "open_controls": "Ouvrir les contrôles",
@@ -1071,7 +1077,64 @@
       "summaryTitle": "Session summary",
       "progressLabel": "Range progress",
       "detailsLabel": "Session details",
-      "nextStepLabel": "Suggested next step"
+      "nextStepLabel": "Suggested next step",
+      "autoSavedNote": "Progress saved.",
+      "recommendation": {
+        "cardTitle": "Next",
+        "chooseNext": "What would you like next?",
+        "recommendedNext": "{surah} · {range}",
+        "recommendedNextSurah": "Surah {surah}",
+        "surahCompletedTitle": "Alhamdulillah — Surah {surah} complete",
+        "ayahRange": "Ayat {start}–{end}",
+        "singleAyah": "Ayah {ayah}",
+        "ayahCount": "{count} ayat",
+        "modeNewLearning": "New",
+        "modeRevision": "Revision",
+        "modeNextSurah": "Next surah",
+        "startRecommendedNextSession": "Continue",
+        "startRecommendedRevision": "Revise now",
+        "continueToNextSurah": "Next surah",
+        "startNewSession": "Choose range",
+        "viewSessionSummary": "Session details",
+        "hideSessionSummary": "Hide details",
+        "reviewThisSurah": "Revise this surah",
+        "backToOverview": "Back",
+        "retry": "Try again",
+        "loadError": "Suggestion unavailable — your session is still saved.",
+        "startError": "Could not start. Please try again.",
+        "techniqueLabel": "Helpful now",
+        "techniques": {
+          "blur": "Blur mode — hide text and recall",
+          "focus": "Focus mode — one ayah at a time",
+          "talqin": "Talqin — listen, then repeat"
+        },
+        "confirm": {
+          "continueNextAyat": "Continue to the next ayat?",
+          "reviewAgain": "Revise these ayat?",
+          "continueNextSurah": "Ready for the next surah?",
+          "startSession": "Begin",
+          "startRevision": "Begin revision",
+          "continueToNextSurah": "Continue",
+          "chooseSomethingElse": "Choose differently"
+        },
+        "reasons": {
+          "strongPreviousPerformance": "MashaAllah — you recited well. Continue gently.",
+          "continueCurrentSurah": "Barakallahu feek. Continue with the next {count} ayat.",
+          "revisionRequired": "A calm revision will settle these ayat.",
+          "difficultAyahDetected": "One ayah needs care. Revise gently before moving on.",
+          "completeRemainingAyat": "Only {count} ayah remain — complete this surah with presence.",
+          "surahCompleted": "Alhamdulillah — Surah {surah} is complete. Continue when ready.",
+          "resumeIncompleteSession": "Resume with sincerity where you paused.",
+          "reinforceRecentRange": "A quiet return helps these ayat settle in the heart.",
+          "learningPlanComplete": "A beautiful moment to revisit earlier surahs.",
+          "manualFallback": "Choose what you would like to recite next."
+        }
+      },
+      "viewStats": "View stats",
+      "hideStats": "Hide stats",
+      "celebrationTitleComplete": "Alhamdulillah",
+      "celebrationTitlePartial": "Barakallahu feek",
+      "celebrationMessage": "Your effort is recorded with sincerity."
     },
     "start_reciting_prompt": "Commencez à réciter",
     "view_all_recording_library": "Voir toute la bibliothèque",
@@ -1484,7 +1547,9 @@
     "textSizePercent": "Text size: {percent}%",
     "audioElementNotReady": "Playback could not start because the audio player did not finish loading. Refresh the page, then press play again.",
     "audioRecordingNotReady": "Recording playback is not ready yet. Close any open check modal, refresh if needed, then try again.",
-    "playbackTapToPlay": "Your browser blocked autoplay. Tap play when you are ready to listen."
+    "playbackTapToPlay": "Your browser blocked autoplay. Tap play when you are ready to listen.",
+    "sessionResumeFailed": "Unable to resume session. Please try again.",
+    "sessionEndFailed": "Unable to end session. Please try again."
   },
   "errors": {
     "network": "Erreur réseau. Vérifiez votre connexion."

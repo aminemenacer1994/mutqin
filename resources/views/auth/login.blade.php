@@ -18,6 +18,9 @@
                     <!-- <p class="auth-form-subtitle" data-i18n="auth_login_subtitle">{{ __('ui.auth_login_subtitle') }}</p> -->
                 </div>
 
+                @if (session('status'))
+                    <div class="alert alert-success auth-alert" role="alert">{{ session('status') }}</div>
+                @endif
                 @if (session('error'))
                     <div class="alert alert-danger auth-alert" role="alert">{{ session('error') }}</div>
                 @endif

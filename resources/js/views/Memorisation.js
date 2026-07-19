@@ -15,6 +15,26 @@ import { markRaw } from 'vue'
 import { getEditions, getQuranEdition, getSurahEdition, getSurahEditions } from '../scripts/lib/quranApis'
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
+import {
+  RECOMMENDATION_TYPES,
+  buildLocalFallbackRecommendation,
+  formatAyahRangeLabel,
+  isActionableRecommendation,
+  localizeRecommendationReason,
+  recommendationModeLabelKey,
+  recommendationPrimaryActionKey,
+} from '../scripts/recommendations/nextSessionRecommendation'
+import {
+  PRIMARY_SESSION_ACTION,
+  SESSION_MUTATION,
+  SESSION_STATUS,
+  assertTransition,
+  buildSessionLifecycleViewModel,
+  createSessionActionLock,
+  createSessionBroadcast,
+  isResumableSessionPayload,
+  reconcileContinuePayloadWithBackend,
+} from '../scripts/session/sessionLifecycle'
 import { seedAyahs } from '../scripts/composables/useAyahState'
 import { buildSessionQueue, startMutqinSession, moveMutqinSession, completeMutqinSession } from '../scripts/composables/useSessionEngine'
 import { createDailyPlan } from '../scripts/composables/useDailyPlanner'
@@ -104,7 +124,17 @@ const HELP_LEARNING_FALLBACKS = {
     tajweed: {
       title: 'Tajweed Rules',
       description: 'Tajweed is the set of rules that helps you recite the Quran correctly and beautifully. Mutqin highlights these rules so you can recognise and practise them while memorising.',
-      bestFor: 'Students improving pronunciation and recitation quality.'
+      bestFor: 'Students improving pronunciation and recitation quality.',
+      legendTitle: 'What each colour means',
+      legendIntro: 'When Tajweed is on, letters are coloured by rule. Use this legend while you listen and repeat.',
+      colors: {
+        gray: { label: 'Silent / connection marks', description: 'Hamzat al-wasl and silent letters that are not pronounced.' },
+        green: { label: 'Ghunnah / Idgham with ghunnah', description: 'Nasalisation and joining with a nasal sound.' },
+        purple: { label: 'Ikhfa / Idgham without ghunnah', description: 'Hidden noon sound and non-nasal joining.' },
+        orange: { label: 'Qalqalah', description: 'Echoing stop on ق ط ب ج د.' },
+        red: { label: 'Madd (elongation)', description: 'Normal, obligatory, and necessary lengthening.' },
+        blue: { label: 'Idgham shafawi', description: 'Labial merging with م.' }
+      }
     },
     srs: {
       title: 'Smart Revision (SRS)',
@@ -308,6 +338,16 @@ export default {
       mutqinState: loadMutqinState(),
       centralSession: createCentralSessionState(),
       unwatchMutqinState: null,
+      // Centralised session lifecycle (source of truth for Start/Resume/End).
+      sessionLifecycleHydrated: false,
+      sessionLifecycleMutation: SESSION_MUTATION.IDLE,
+      sessionLifecycleError: null,
+      backendUnfinishedSession: false,
+      backendSessionSnapshot: null,
+      onboardingExampleRejected: false,
+      sessionActionLock: createSessionActionLock(),
+      sessionBroadcast: null,
+      sessionBroadcastUnsubscribe: null,
       // Backend-driven learning persistence (authenticated users only). For guests
       // localStorage remains the source of truth; for authenticated users the
       // backend is authoritative and localStorage acts only as an offline cache.
@@ -363,6 +403,7 @@ export default {
       advanceLocked: false,
       repeatActionLocked: false,
       playRequestLocked: false,
+      ignoreMainAudioPauseEvent: false,
       mainCardCollapsed: false,
       feedbackCollapsed: true,
 
@@ -428,6 +469,13 @@ export default {
       postSessionAutoSaved: false,
       pendingPostSessionModalPayload: null,
       lastAutoSavedPostSessionKey: '',
+      postSessionRecommendation: null,
+      postSessionRecommendationStatus: 'idle', // idle | loading | ready | error | empty
+      postSessionRecommendationError: '',
+      postSessionRecommendationStep: 'main', // main | confirm
+      postSessionRecommendationStarting: false,
+      postSessionRecommendationStartError: '',
+      postSessionRecommendationRequestId: 0,
       sessionExitOffcanvasOpen: false,
       showAdvancedAnalytics: false,
       showAdvancedMetricsModal: false,
@@ -636,6 +684,7 @@ export default {
       activeRecordingPlaybackId: '',
       recordingsAudioElement: null,
       recordingsAudioBound: false,
+      ignoreRecordingsAudioPauseEvent: false,
       showSelfCheckModal: false,
       selfCheckVerseRef: null,
       selfCheckVerseKey: '',
@@ -864,6 +913,47 @@ export default {
         subtitle: this.translateOrFallback('memorisation.helpLearning.subtitle', HELP_LEARNING_FALLBACKS.subtitle),
         bestFor: this.translateOrFallback('memorisation.helpLearning.bestFor', HELP_LEARNING_FALLBACKS.bestFor)
       }
+    },
+    tajweedColorLegend() {
+      const colors = HELP_LEARNING_FALLBACKS.sections.tajweed.colors || {}
+      return [
+        {
+          id: 'gray',
+          color: '#7e8a97',
+          label: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.gray.label', colors.gray.label),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.gray.description', colors.gray.description)
+        },
+        {
+          id: 'green',
+          color: '#2e9d62',
+          label: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.green.label', colors.green.label),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.green.description', colors.green.description)
+        },
+        {
+          id: 'purple',
+          color: '#9b59b6',
+          label: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.purple.label', colors.purple.label),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.purple.description', colors.purple.description)
+        },
+        {
+          id: 'orange',
+          color: '#d98824',
+          label: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.orange.label', colors.orange.label),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.orange.description', colors.orange.description)
+        },
+        {
+          id: 'red',
+          color: '#d55245',
+          label: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.red.label', colors.red.label),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.red.description', colors.red.description)
+        },
+        {
+          id: 'blue',
+          color: '#2b7bbb',
+          label: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.blue.label', colors.blue.label),
+          description: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.blue.description', colors.blue.description)
+        }
+      ]
     },
     helpLearningSections() {
       return [
@@ -1403,9 +1493,8 @@ export default {
     },
     plannerPrimaryActionLabel() {
       if (!this.hifzPlanExists) return this.t('hifzPlan.wizard.createPlan')
-      if (this.isPlaying) return this.t('memorisation.sessionType.pause')
-      if (this.hasSessionStarted) return this.t('common.continue')
-      return this.t('common.startSession')
+      // Media pause stays on the player; planner session CTA uses the shared resolver.
+      return this.primarySessionActionPresentation.label
     },
     plannerGuidanceBadge() {
       if (!this.hasSessionStarted) return this.t('memorisation.guided.beforeBegin')
@@ -1628,25 +1717,81 @@ export default {
       }
     },
     showHeaderSessionAction() {
-      return this.hasVerses
+      return this.hasVerses && this.primarySessionAction !== PRIMARY_SESSION_ACTION.NONE
+    },
+    sessionLifecycleInput() {
+      return {
+        authHydrated: !this.isBootstrapping,
+        sessionHydrated: !!this.sessionLifecycleHydrated,
+        isAuthenticated: !!this.isLoggedIn,
+        requiresOnboarding: !!this.requiresFirstTimeOnboarding,
+        onboardingStarted: !!this.showPostLoginOnboarding || this.onboardingStepIndex > 0,
+        onboardingExampleActive: !!this.onboardingSampleSessionActive,
+        onboardingExampleRejected: !!this.onboardingExampleRejected,
+        mutqinSessionActive: !!this.isSessionLive,
+        sessionCompleted: !!this.isSessionCompleted,
+        hasValidatedContinuePayload: this.hasValidatedResumableSession,
+        backendUnfinished: !!this.backendUnfinishedSession,
+        isPlaying: !!this.isPlaying,
+        wasInterrupted: false,
+        mutation: this.sessionLifecycleMutation || SESSION_MUTATION.IDLE,
+        lastError: this.sessionLifecycleError,
+        t: (key, params) => this.t(key, params),
+      }
+    },
+    sessionLifecycleViewModel() {
+      return buildSessionLifecycleViewModel(this.sessionLifecycleInput)
+    },
+    primarySessionAction() {
+      return this.sessionLifecycleViewModel.action
+    },
+    primarySessionActionPresentation() {
+      return this.sessionLifecycleViewModel.presentation
+    },
+    sessionLifecycleStatus() {
+      return this.sessionLifecycleViewModel.status
     },
     headerSessionControlState() {
-      if (!this.isSessionLive) return 'idle'
-      return this.isPlaying ? 'active' : 'paused'
+      const status = this.sessionLifecycleStatus
+      if (status === SESSION_STATUS.PLAYING) return 'active'
+      if (
+        status === SESSION_STATUS.PAUSED
+        || status === SESSION_STATUS.ACTIVE
+        || status === SESSION_STATUS.INTERRUPTED
+      ) return 'paused'
+      if (status === SESSION_STATUS.RESUMABLE) return 'resumable'
+      if (
+        status === SESSION_STATUS.UNINITIALISED
+        || status === SESSION_STATUS.STARTING
+        || status === SESSION_STATUS.RESUMING
+        || status === SESSION_STATUS.ENDING
+      ) return 'loading'
+      return 'idle'
     },
     headerSessionActionLabel() {
-      const state = this.headerSessionControlState
-      if (state === 'active') return this.t('common.continue')
-      if (state === 'paused') return this.t('common.resume')
-      return this.t('common.startSession')
+      return this.primarySessionActionPresentation.label
     },
     headerSessionActionIcon() {
-      const state = this.headerSessionControlState
-      if (state === 'active') return 'bi-play-circle-fill'
-      return 'bi-play-fill'
+      return this.primarySessionActionPresentation.icon
+    },
+    headerSessionActionDisabled() {
+      return !!this.primarySessionActionPresentation.disabled
+    },
+    headerSessionActionBusy() {
+      return !!this.primarySessionActionPresentation.ariaBusy
     },
     showHeaderEndSessionAction() {
-      return this.isSessionLive && !this.isSessionCompleted
+      // End Session is the primary action while live — do not render a duplicate.
+      return false
+    },
+    hasValidatedResumableSession() {
+      if (this.onboardingSampleSessionActive) return false
+      if (this.isSessionCompleted || this.centralSession?.sessionStatus === 'completed') return false
+      if (this.backendSessionSnapshot && !this.backendUnfinishedSession) return false
+      return isResumableSessionPayload(this.continueSessionPayload, {
+        backendStatus: this.backendSessionSnapshot?.status || null,
+        isSample: false,
+      })
     },
     sessionExitModalTitle() {
       if (this.showSessionExitModal && !this.hasSessionStarted && this.sessionExitPreviewSnapshot) {
@@ -1654,7 +1799,7 @@ export default {
           ? this.t('memorisation.sessionComplete.title')
           : this.t('memorisation.sessionEnded.title')
       }
-      return this.t('sessionStatus.end')
+      return this.t('memorisation.sessionExit.confirmTitle')
     },
     sessionExitModalBadge() {
       if (this.showSessionExitModal && !this.hasSessionStarted && this.sessionExitPreviewSnapshot) {
@@ -1885,6 +2030,9 @@ export default {
         : this.t('memorisation.sessionEnded.title')
     },
     sessionExitMotivationMessage() {
+      if (this.hasSessionStarted) {
+        return this.t('memorisation.sessionExit.confirmDescription')
+      }
       const snapshot = this.sessionExitPreviewSnapshot || {}
       const percent = Math.max(0, Math.min(100, Number(snapshot.progressPercent || this.progressPercent || 0)))
       const coveredAyahs = Number(snapshot.coveredAyahCount || this.currentPosition || 0)
@@ -1942,11 +2090,14 @@ export default {
         : this.t('common.close')
     },
     canResumePreviousSession() {
-      return !!(this.continueSessionPayload?.config?.chapterId)
+      return this.hasValidatedResumableSession
+        || this.primarySessionAction === PRIMARY_SESSION_ACTION.RESUME_SESSION
     },
     hasPersistedInProgressSession() {
+      if (this.onboardingSampleSessionActive) return false
       if (this.sessionCompleted || this.centralSession?.sessionStatus === 'completed') return false
-      if (this.canResumePreviousSession) return true
+      if (this.backendSessionSnapshot && !this.backendUnfinishedSession) return false
+      if (this.hasValidatedResumableSession) return true
       if (this.centralSession?.sessionStatus === 'active') return true
       if (this.mutqinState?.sessionState?.active) return true
       if (this.readActiveSessionSnapshot()?.config?.chapterId) return true
@@ -2509,6 +2660,93 @@ export default {
         save: this.t(`${base}.save`),
         savedToast: this.t(`${base}.savedToast`)
       }
+    },
+    postSessionRecommendationReady() {
+      return this.postSessionRecommendationStatus === 'ready' && !!this.postSessionRecommendation
+    },
+    postSessionRecommendationActionable() {
+      return isActionableRecommendation(this.postSessionRecommendation)
+    },
+    postSessionRecommendationReasonText() {
+      return localizeRecommendationReason(this.postSessionRecommendation, this.t.bind(this))
+    },
+    postSessionRecommendationTitle() {
+      const rec = this.postSessionRecommendation
+      if (!rec) return ''
+      if (rec.type === RECOMMENDATION_TYPES.NEXT_SURAH) {
+        const name = this.resolveRecommendationSurahName(rec.next_surah || rec.surah)
+        return this.t('memorisation.postSession.recommendation.recommendedNextSurah', { surah: name })
+      }
+      const surah = this.resolveRecommendationSurahName(rec.surah)
+      const range = formatAyahRangeLabel(rec.ayah_range, this.t.bind(this))
+      if (surah && range) {
+        return this.t('memorisation.postSession.recommendation.recommendedNext', { surah, range })
+      }
+      return this.t('memorisation.postSession.recommendation.cardTitle')
+    },
+    postSessionRecommendationDisplaySurahName() {
+      const rec = this.postSessionRecommendation
+      if (!rec) return ''
+      if (rec.type === RECOMMENDATION_TYPES.NEXT_SURAH) {
+        return this.resolveRecommendationSurahName(rec.next_surah || rec.surah)
+      }
+      return this.resolveRecommendationSurahName(rec.surah)
+    },
+    postSessionRecommendationMeta() {
+      const rec = this.postSessionRecommendation
+      if (!rec?.ayah_range) {
+        if (rec?.type === RECOMMENDATION_TYPES.NEXT_SURAH) {
+          return this.t('memorisation.postSession.recommendation.modeNextSurah')
+        }
+        return ''
+      }
+      const modeKey = recommendationModeLabelKey(rec)
+      const mode = this.t(`memorisation.postSession.recommendation.${modeKey}`)
+      const count = Number(rec.ayah_range.count || 0)
+      const countLabel = this.t('memorisation.postSession.recommendation.ayahCount', { count })
+      return [mode, countLabel].filter(Boolean).join(' · ')
+    },
+    postSessionRecommendationPrimaryLabel() {
+      const key = recommendationPrimaryActionKey(this.postSessionRecommendation)
+      return this.t(`memorisation.postSession.recommendation.${key}`)
+    },
+    postSessionConfirmationTitle() {
+      const rec = this.postSessionRecommendation
+      const key = rec?.confirmation?.title_key
+        || (rec?.type === RECOMMENDATION_TYPES.NEXT_SURAH
+          ? 'continueNextSurah'
+          : (rec?.session_mode === 'revision' ? 'reviewAgain' : 'continueNextAyat'))
+      return this.t(`memorisation.postSession.recommendation.confirm.${key}`)
+    },
+    postSessionConfirmationPrimaryLabel() {
+      const rec = this.postSessionRecommendation
+      const key = rec?.confirmation?.primary_action_key
+        || (rec?.type === RECOMMENDATION_TYPES.NEXT_SURAH
+          ? 'continueToNextSurah'
+          : (rec?.session_mode === 'revision' ? 'startRevision' : 'startSession'))
+      return this.t(`memorisation.postSession.recommendation.confirm.${key}`)
+    },
+    postSessionCompletedSurahMessage() {
+      const name = this.resolveRecommendationSurahName(
+        this.postSessionRecommendation?.completed_surah
+          || { id: this.postSessionSnapshot?.chapterId, name: this.postSessionSnapshot?.chapterName }
+      )
+      if (!name) return ''
+      return this.t('memorisation.postSession.recommendation.surahCompletedTitle', { surah: name })
+    },
+    postSessionTechniqueTip() {
+      const technique = this.postSessionRecommendation?.technique
+      if (!technique?.id) return null
+      const id = String(technique.id)
+      if (!['blur', 'focus', 'talqin'].includes(id)) return null
+      return {
+        id,
+        icon: id === 'blur' ? 'bi-cloud-haze2' : (id === 'talqin' ? 'bi-mic' : 'bi-bullseye'),
+        label: this.t(`memorisation.postSession.recommendation.techniques.${id}`),
+      }
+    },
+    postSessionShowQuietHero() {
+      return !this.onboardingSampleSessionActive && this.postSessionRecommendationActionable
     },
     sessionCompletionSnapshot() {
       if (this.showPostLoginOnboarding) return null
@@ -3563,15 +3801,32 @@ export default {
     sliderRepetitionValue() {
       return Math.min(10, Math.max(1, Number(this.repetitionsPerStep || 1)))
     },
+    repetitionSliderSteps() {
+      return [1, 3, 5, 7, 10]
+    },
+    sliderRepetitionIndex() {
+      const steps = this.repetitionSliderSteps
+      const value = this.sliderRepetitionValue
+      let bestIndex = 0
+      let bestDistance = Number.POSITIVE_INFINITY
+      steps.forEach((step, index) => {
+        const distance = Math.abs(step - value)
+        if (distance < bestDistance) {
+          bestDistance = distance
+          bestIndex = index
+        }
+      })
+      return bestIndex
+    },
     sessionRepetitionSliderStyle() {
-      const steps = 9
-      const progress = Math.max(0, Math.min(100, ((this.sliderRepetitionValue - 1) / steps) * 100))
+      const maxIndex = Math.max(1, this.repetitionSliderSteps.length - 1)
+      const progress = Math.max(0, Math.min(100, (this.sliderRepetitionIndex / maxIndex) * 100))
       return {
         '--technique-range-progress': `${progress}%`
       }
     },
     repetitionDisplayValue() {
-      return `${this.repetitionsPerStep}x`
+      return `${Math.max(1, Number(this.repetitionsPerStep || 1))}x`
     },
     sessionPlayCountValue() {
       return Math.max(0, Number(this.mutqinState?.sessionState?.play_count || 0))
@@ -4942,79 +5197,15 @@ export default {
       this.setupWordClickHandler()
       this.loadSavedSessions()
       this.loadContinueSessionPrompt()
+      await this.validateSessionLifecycleAgainstBackend()
+      this.demoteLiveSessionToResumableOnBootstrap()
+      this.bindSessionLifecycleBroadcast()
       this.updateMasteredWeekly()
       this.loadRecordingsLibrary()
 
-      const hasRestorableSession = !!this.continueSessionPayload?.config?.chapterId
-        || !!this.readActiveSessionSnapshot()?.config?.chapterId
-        || this.hasPersistedInProgressSession
-        || (
-          this.hasLocalInProgressSessionEvidence()
-          && !!(
-            this.beginner.chapterId
-            || this.advanced.chapterId
-            || this.mutqinState?.sessionState?.config?.chapterId
-          )
-        )
-
-      const shouldAutoRestorePersistedSession = !needsFirstTimeOnboarding
-        && !this.auth?.just_logged_in
-        && hasRestorableSession
-
-      if (shouldAutoRestorePersistedSession) {
-        this.isRestoringWorkspace = true
-        if (this.continueSessionPayload) {
-          await this.hydrateSessionFromPayload(this.continueSessionPayload, {
-            banner: false,
-            forcePlayback: false
-          })
-        } else {
-          const snapshotPayload = this.readActiveSessionSnapshot()
-          if (snapshotPayload?.config?.chapterId) {
-            await this.hydrateSessionFromPayload(snapshotPayload, {
-              banner: false,
-              forcePlayback: false
-            })
-          } else if (this.currentMode === 'advanced' && this.advanced.chapterId) {
-            this.showTools = false
-            await this.loadVerses('advanced')
-            this.applyRestoredQueuePosition('advanced')
-          } else if (this.beginner.chapterId) {
-            this.showTools = false
-            await this.loadVerses('beginner')
-            this.applyRestoredQueuePosition('beginner')
-          } else {
-            const mutqinConfig = this.mutqinState?.sessionState?.config
-            if (this.mutqinState?.sessionState?.active && mutqinConfig?.chapterId) {
-              const mode = this.mutqinState.sessionState.mode || 'beginner'
-              const target = mode === 'planner' ? 'planner' : (mode === 'advanced' ? 'advanced' : 'beginner')
-              this.currentMode = mode
-              this[target] = { ...this.getModeStore(target), ...this.cloneModeState(mutqinConfig) }
-              this.showTools = false
-              await this.loadVerses(mode)
-              this.applyRestoredQueuePosition(mode)
-            }
-          }
-        }
-        this.showWelcomeBackModal = false
-        this.returningUserChoicePending = false
-        this.showTools = false
-        this.tab = 'tools'
-        this.isDataReady = true
-        this.$nextTick(() => {
-          if (this.readingViewMode === 'mushaf') {
-            if (Number.isFinite(Number(this.mushafPageIndex)) && this.mushafPageIndex > 0 && this.mushafPages.length) {
-              this.mushafPageIndex = Math.min(this.mushafPageIndex, this.mushafPages.length - 1)
-            } else {
-              this.syncMushafPageToActiveVerse()
-            }
-          }
-          if (this.effectiveActiveVerseKey) {
-            const el = document.querySelector(`[data-verse-key="${this.effectiveActiveVerseKey}"]`)
-            if (el) el.scrollIntoView({ behavior: 'auto', block: 'center' })
-          }
-        })
-      }
+      // After refresh / cold start, never auto-activate into End Session.
+      // Unfinished work stays resumable until the user explicitly resumes.
+      const shouldAutoRestorePersistedSession = false
 
       if (this.isLoggedIn && !needsFirstTimeOnboarding && this.isExistingUserLogin) {
         this.maybeShowWelcomeBackModal()
@@ -5136,6 +5327,11 @@ export default {
     this.clearRecitationWindowTimer()
     this.flushPlaybackTime()
     this.stopWordHighlighting()
+    this.sessionBroadcastUnsubscribe?.()
+    this.sessionBroadcastUnsubscribe = null
+    this.sessionBroadcast?.close?.()
+    this.sessionBroadcast = null
+    this.sessionActionLock?.reset?.()
     if (this.wordSyncEngine) {
       this.wordSyncEngine.destroy()
       this.wordSyncEngine = null
@@ -5221,6 +5417,7 @@ export default {
         this.postSessionStatsExpanded = false
         this.postSessionEmotionalContext = null
         this.postSessionAutoSaved = false
+        this.resetPostSessionRecommendationState()
       }
     },
     showWelcomeBackModal(newVal) {
@@ -6745,9 +6942,12 @@ export default {
       this.recitationWindowActive = false
       this.recitationWindowRemaining = 0
     },
-    startRecitationWindow(onComplete = null) {
+    startRecitationWindow(onComplete = null, options = {}) {
       this.clearRecitationWindowTimer()
-      const seconds = Math.max(5, Math.min(30, Number(this.recitationWindowSeconds || 8)))
+      const overrideSeconds = Number(options?.seconds)
+      const seconds = Number.isFinite(overrideSeconds) && overrideSeconds > 0
+        ? Math.max(5, Math.min(90, Math.ceil(overrideSeconds)))
+        : Math.max(5, Math.min(30, Number(this.recitationWindowSeconds || 8)))
       this.recitationWindowActive = true
       this.recitationWindowRemaining = seconds
       this.$nextTick(() => this.schedulePracticeTurnCalloutSync())
@@ -7369,10 +7569,27 @@ export default {
     },
 
     getTalqinPauseDelayMs() {
-      const verseDurationSeconds = Math.max(0, Number(this.duration || this.audioElement?.duration || 0))
+      const verseDurationSeconds = Math.max(
+        0,
+        Number(this.duration || this.audioElement?.duration || 0)
+      ) || this.getQueueItemAudioSeconds(this.activeVerseRef || {}, false)
       const configuredDelayMs = Math.max(0, Number(this.getCurrentPlaybackGapSeconds() || 0) * 1000)
-      const talqinDelayMs = verseDurationSeconds > 0 ? verseDurationSeconds * 1.5 * 1000 : 0
+      // Wait for the current ayah audio length (at playback speed) before advancing.
+      const talqinDelayMs = verseDurationSeconds > 0 ? verseDurationSeconds * 1000 : 0
       return Math.max(configuredDelayMs, talqinDelayMs)
+    },
+
+    getTalqinRecitationWindowSeconds() {
+      const verseDurationSeconds = Math.max(
+        0,
+        Number(this.duration || this.audioElement?.duration || 0)
+      ) || this.getQueueItemAudioSeconds(this.activeVerseRef || {}, false)
+      const configured = Math.max(5, Math.min(30, Number(this.recitationWindowSeconds || 8)))
+      // Match the user's recite turn to ayah length so longer ayahs get more time.
+      if (verseDurationSeconds > 0) {
+        return Math.max(configured, Math.ceil(verseDurationSeconds))
+      }
+      return configured
     },
 
     scheduleTalqinAdvance(onComplete = null) {
@@ -7397,7 +7614,7 @@ export default {
       this.$nextTick(() => this.schedulePracticeTurnCalloutSync())
       this.startRecitationWindow(() => {
         if (typeof onComplete === 'function') onComplete()
-      })
+      }, { seconds: this.getTalqinRecitationWindowSeconds() })
     },
 
     startSessionAfterUserGesture() {
@@ -7426,7 +7643,7 @@ export default {
       } catch {}
     },
 
-    primeAudioPlaybackUnlock(audioOverride = null) {
+    primeAudioPlaybackUnlock(audioOverride = null, options = {}) {
       this.primeUiAudioUnlock()
       const audio = audioOverride || this.audioElement || this.$refs.audio
       if (!audio) return false
@@ -7435,47 +7652,84 @@ export default {
         this.initAudio()
       }
 
+      const token = (Number(audio._mutqinUnlockToken) || 0) + 1
+      audio._mutqinUnlockToken = token
+
+      const targetUrl = typeof options.targetUrl === 'string' ? this.normalizeAudioUrl(options.targetUrl) : ''
       const previousSrc = audio.currentSrc || audio.getAttribute('src') || ''
+      const previousNormalized = this.normalizeAudioUrl(previousSrc)
       const previousTime = Number(audio.currentTime || 0)
       const silentSrc = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
-      const unlockSrc = previousSrc || silentSrc
+      const unlockSrc = targetUrl || previousSrc || silentSrc
+      const isSilentUnlock = !targetUrl && !previousSrc
+
+      const isStale = () => Number(audio._mutqinUnlockToken) !== token
 
       try {
-        if (!previousSrc) {
+        if (targetUrl) {
+          if (previousNormalized !== targetUrl) {
+            audio.src = targetUrl
+            audio.load()
+          }
+        } else if (!previousSrc) {
           audio.src = unlockSrc
           audio.load()
         }
         audio.muted = true
         const playPromise = audio.play()
         const restoreAudio = () => {
-          audio.pause()
+          if (isStale()) return
           audio.muted = false
+          if (targetUrl) {
+            // Keep the real ayah URL and do not pause — intentional play may already
+            // be underway (or about to start) on this same element.
+            return
+          }
+          try { audio.pause() } catch { }
+          const nowSrc = audio.currentSrc || audio.getAttribute('src') || ''
+          const nowNormalized = this.normalizeAudioUrl(nowSrc)
           if (previousSrc) {
-            audio.currentTime = previousTime
-          } else {
-            audio.removeAttribute('src')
-            audio.load()
-            audio.currentTime = 0
+            // Only rewind if we did not move to a newer intentional source.
+            if (nowNormalized === previousNormalized || nowSrc === unlockSrc) {
+              try { audio.currentTime = previousTime } catch { }
+            }
+            return
+          }
+          // Silent unlock: never tear down a real URL assigned after unlock started.
+          if (isSilentUnlock && (nowSrc === silentSrc || String(nowSrc).startsWith('data:audio/wav;base64,UklGRig'))) {
+            try {
+              audio.removeAttribute('src')
+              audio.load()
+              audio.currentTime = 0
+            } catch { }
           }
         }
         if (playPromise?.then) {
           playPromise.then(restoreAudio).catch(() => {
+            if (isStale()) return
             audio.muted = false
-            if (!previousSrc) {
-              audio.removeAttribute('src')
-              audio.load()
+            if (isSilentUnlock) {
+              const nowSrc = audio.currentSrc || audio.getAttribute('src') || ''
+              if (nowSrc === silentSrc || String(nowSrc).startsWith('data:audio/wav;base64,UklGRig')) {
+                try {
+                  audio.removeAttribute('src')
+                  audio.load()
+                } catch { }
+              }
             }
           })
         } else {
           restoreAudio()
         }
       } catch {
-        audio.muted = false
-        if (!previousSrc) {
-          try {
-            audio.removeAttribute('src')
-            audio.load()
-          } catch {}
+        if (!isStale()) {
+          audio.muted = false
+          if (isSilentUnlock) {
+            try {
+              audio.removeAttribute('src')
+              audio.load()
+            } catch { }
+          }
         }
       }
       return true
@@ -7535,6 +7789,8 @@ export default {
         this.showBanner(this.t('toasts.chooseAValidSurahAndAyah'), 'info', 3600)
         return
       }
+      if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return
+      if (this.sessionActionLock.isLocked()) return
 
       this.showPlannerCompletionModal = false
       this.showPlannerCompletionConfetti = false
@@ -7557,18 +7813,39 @@ export default {
       }
 
       this.showCountdown(async () => {
-        try {
-          await this.startSession()
-          const playbackStarted = await this.ensureSessionPlaybackStarted()
-          if (!playbackStarted && this.queue?.length) {
-            this.promptTapToPlay()
+        const lockResult = await this.sessionActionLock.run('start', async () => {
+          this.transitionSessionLifecycle(SESSION_STATUS.STARTING, SESSION_MUTATION.STARTING)
+          try {
+            if (this.learningBackendEnabled() && !this.onboardingSampleSessionActive) {
+              await learningApi.startSession({
+                surah_number: Number(this.chapterId || this.currentChapter?.id || 0) || null,
+                ayah_number: Number(this.rangeStart || 1) || null,
+                memorisation_mode: this.currentMode,
+                idempotency_key: `start-${this.chapterId || 0}-${this.rangeStart || 0}-${this.rangeEnd || 0}`,
+              })
+              this.backendUnfinishedSession = true
+            }
+            await this.startSession()
+            const playbackStarted = await this.ensureSessionPlaybackStarted()
+            if (!playbackStarted && this.queue?.length) {
+              this.promptTapToPlay()
+            }
+            this.transitionSessionLifecycle(
+              this.isPlaying ? SESSION_STATUS.PLAYING : SESSION_STATUS.PAUSED,
+              SESSION_MUTATION.IDLE
+            )
+            this.sessionLifecycleError = null
+            this.sessionBroadcast?.publish('session-started', { at: Date.now() })
+            return true
+          } catch (error) {
+            console.error(error)
+            this.sessionLifecycleError = 'start_failed'
+            this.transitionSessionLifecycle(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
+            throw error
           }
-        } catch (error) {
-          console.error('Session start after countdown failed:', error)
-          const playbackStarted = await this.ensureSessionPlaybackStarted()
-          if (!playbackStarted && this.queue?.length) {
-            this.promptTapToPlay()
-          }
+        })
+        if (!lockResult?.ok && lockResult?.reason === 'locked') {
+          return
         }
       })
     },
@@ -7654,6 +7931,12 @@ export default {
 
     setRepetitionsFromSlider(value) {
       this.repetitionsPerStep = Math.max(1, Math.min(10, Number(value || 1)))
+    },
+
+    setRepetitionsFromSliderIndex(index) {
+      const steps = this.repetitionSliderSteps
+      const safeIndex = Math.max(0, Math.min(steps.length - 1, Number(index) || 0))
+      this.repetitionsPerStep = steps[safeIndex]
     },
 
     isLoadingSession(sessionId) {
@@ -8212,13 +8495,268 @@ export default {
         t: this.t.bind(this)
       })
       this.postSessionStatsExpanded = false
+      this.resetPostSessionRecommendationState()
       this.showPostSessionConfetti = true
       this.showPostSessionModal = true
       this.showTools = false
       this.postSessionOffcanvasOpen = false
+      if (!this.onboardingSampleSessionActive) {
+        this.loadPostSessionRecommendation()
+      }
       window.setTimeout(() => {
         this.showPostSessionConfetti = false
       }, this.onboardingSampleSessionActive ? 6600 : 5600)
+    },
+    resetPostSessionRecommendationState() {
+      this.postSessionRecommendationRequestId += 1
+      this.postSessionRecommendation = null
+      this.postSessionRecommendationStatus = 'idle'
+      this.postSessionRecommendationError = ''
+      this.postSessionRecommendationStep = 'main'
+      this.postSessionRecommendationStarting = false
+      this.postSessionRecommendationStartError = ''
+    },
+    resolveRecommendationSurahName(surah) {
+      if (!surah) return ''
+      if (surah.name) return surah.name
+      const id = Number(surah.id || 0)
+      if (!id) return ''
+      const chapter = (this.chapters || []).find(item => Number(item.id) === id)
+      return chapter?.name_simple || chapter?.name_arabic || `Surah ${id}`
+    },
+    enrichPostSessionRecommendation(recommendation) {
+      if (!recommendation || typeof recommendation !== 'object') return recommendation
+      const next = { ...recommendation }
+      if (next.surah) {
+        next.surah = {
+          ...next.surah,
+          name: this.resolveRecommendationSurahName(next.surah),
+        }
+      }
+      if (next.next_surah) {
+        next.next_surah = {
+          ...next.next_surah,
+          name: this.resolveRecommendationSurahName(next.next_surah),
+        }
+      }
+      if (next.completed_surah) {
+        next.completed_surah = {
+          ...next.completed_surah,
+          name: this.resolveRecommendationSurahName(next.completed_surah),
+        }
+      }
+      return next
+    },
+    async loadPostSessionRecommendation() {
+      const requestId = ++this.postSessionRecommendationRequestId
+      this.postSessionRecommendationStatus = 'loading'
+      this.postSessionRecommendationError = ''
+      this.postSessionRecommendationStep = 'main'
+      this.postSessionRecommendationStartError = ''
+
+      const applyResult = (recommendation, status = 'ready') => {
+        if (requestId !== this.postSessionRecommendationRequestId) return
+        this.postSessionRecommendation = this.enrichPostSessionRecommendation(recommendation)
+        this.postSessionRecommendationStatus = status
+      }
+
+      const snapshotFallback = () => {
+        const snap = this.postSessionSnapshot || {}
+        return buildLocalFallbackRecommendation({
+          ...snap,
+          totalAyahsInSurah: snap.totalAyahsInSurah
+            || snap.versesInSurah
+            || this.currentChapter?.verses_count
+            || 0,
+        })
+      }
+
+      try {
+        if (this.isLoggedIn && this.learningBackendEnabled()) {
+          // Ensure latest progress is on the backend before recommending.
+          try {
+            await this.pushLearningState(true)
+          } catch (_) { /* recommendation can still proceed from existing backend data */ }
+
+          const recommendation = await withRetry(() => learningApi.getNextRecommendation(), { retries: 2, baseDelay: 500 })
+          if (requestId !== this.postSessionRecommendationRequestId) return
+
+          if (!recommendation || recommendation.type === RECOMMENDATION_TYPES.NO_RECOMMENDATION) {
+            applyResult(snapshotFallback(), 'empty')
+            return
+          }
+          if (recommendation.type === RECOMMENDATION_TYPES.MANUAL_SELECTION && !recommendation.surah) {
+            applyResult(recommendation, 'empty')
+            return
+          }
+          applyResult(recommendation, 'ready')
+          return
+        }
+
+        applyResult(snapshotFallback(), 'ready')
+      } catch (error) {
+        console.warn('Failed to load next-session recommendation:', error)
+        if (requestId !== this.postSessionRecommendationRequestId) return
+        this.postSessionRecommendationError = this.t('memorisation.postSession.recommendation.loadError')
+        applyResult(snapshotFallback(), 'error')
+      }
+    },
+    retryPostSessionRecommendation() {
+      this.loadPostSessionRecommendation()
+    },
+    openPostSessionRecommendationConfirm() {
+      if (!this.postSessionRecommendationActionable || this.postSessionRecommendationStarting) return
+      this.postSessionRecommendationStartError = ''
+      if (this.postSessionRecommendation?.requires_confirmation !== false) {
+        this.postSessionRecommendationStep = 'confirm'
+        this.$nextTick(() => {
+          const title = this.$el?.querySelector?.('#postSessionConfirmTitle')
+          if (title && typeof title.focus === 'function') {
+            title.setAttribute('tabindex', '-1')
+            title.focus()
+          }
+        })
+        return
+      }
+      this.confirmPostSessionRecommendation()
+    },
+    cancelPostSessionRecommendationConfirm() {
+      this.postSessionRecommendationStep = 'main'
+      this.postSessionRecommendationStartError = ''
+    },
+    async dismissPostSessionRecommendation(choseOther = true) {
+      const recommendation = this.postSessionRecommendation
+      if (recommendation?.id && this.isLoggedIn && this.learningBackendEnabled()) {
+        try {
+          await learningApi.rejectRecommendation(recommendation.id, choseOther)
+        } catch (error) {
+          console.warn('Failed to reject recommendation:', error)
+        }
+      }
+      this.postSessionRecommendationStep = 'main'
+    },
+    async chooseOtherFromRecommendation() {
+      await this.dismissPostSessionRecommendation(true)
+      this.openPostSessionNewSessionOffcanvas()
+    },
+    async reviewCompletedSurahFromRecommendation() {
+      const rec = this.postSessionRecommendation
+      const surah = rec?.completed_surah || this.postSessionSnapshot
+      const chapterId = Number(surah?.id || this.postSessionSnapshot?.chapterId || this.chapterId || 0)
+      const from = Number(this.postSessionSnapshot?.rangeStart || 1)
+      const to = Number(this.postSessionSnapshot?.rangeEnd || from)
+      await this.dismissPostSessionRecommendation(true)
+      if (!chapterId) {
+        this.openPostSessionNewSessionOffcanvas()
+        return
+      }
+      await this.startSessionFromRecommendationPayload({
+        chapterId,
+        rangeStart: from,
+        rangeEnd: to,
+        sessionMode: 'revision',
+      })
+    },
+    async confirmPostSessionRecommendation() {
+      if (!this.postSessionRecommendationActionable || this.postSessionRecommendationStarting) return
+      const recommendation = this.postSessionRecommendation
+      this.postSessionRecommendationStarting = true
+      this.postSessionRecommendationStartError = ''
+
+      try {
+        let sessionPayload = null
+        if (recommendation?.id && this.isLoggedIn && this.learningBackendEnabled()) {
+          const result = await learningApi.startRecommendedSession(recommendation.id)
+          sessionPayload = result?.session || null
+          if (result?.recommendation) {
+            this.postSessionRecommendation = result.recommendation
+          }
+        }
+
+        const config = sessionPayload?.metadata?.config || {}
+        const chapterId = Number(
+          config.chapterId
+          || recommendation?.surah?.id
+          || recommendation?.next_surah?.id
+          || 0
+        )
+        const rangeStart = Number(
+          config.rangeStart
+          || recommendation?.ayah_range?.from
+          || 1
+        )
+        const rangeEnd = Number(
+          config.rangeEnd
+          || recommendation?.ayah_range?.to
+          || rangeStart
+        )
+
+        if (!chapterId || !rangeStart || !rangeEnd) {
+          throw new Error('invalid_recommendation_range')
+        }
+
+        await this.startSessionFromRecommendationPayload({
+          chapterId,
+          rangeStart,
+          rangeEnd,
+          sessionMode: recommendation?.session_mode || 'new_learning',
+          techniqueId: recommendation?.technique?.id || null,
+        })
+      } catch (error) {
+        console.error('Failed to start recommended session:', error)
+        this.postSessionRecommendationStarting = false
+        this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.startError')
+        // Preserve recommendation for retry.
+        this.postSessionRecommendationStep = 'confirm'
+      }
+    },
+    async startSessionFromRecommendationPayload({ chapterId, rangeStart, rangeEnd, sessionMode = 'new_learning', techniqueId = null }) {
+      this.primeAudioPlaybackUnlock()
+      const baseConfig = this.buildSessionConfig(this.currentMode) || {}
+      this.applySessionConfig({
+        ...baseConfig,
+        chapterId: Number(chapterId),
+        rangeStart: Number(rangeStart),
+        rangeEnd: Number(rangeEnd),
+      })
+      this.applyRecommendedTechnique(techniqueId || this.postSessionRecommendation?.technique?.id || null, sessionMode)
+      this.persistModeState(this.currentMode)
+      this.persistUiState()
+      this.persistCentralSessionState()
+      await this.loadChapter(this.currentMode)
+      this.prepareRangeRestart()
+      this.showPostSessionModal = false
+      this.showPostSessionConfetti = false
+      this.postSessionRecommendationStarting = false
+      this.$nextTick(() => {
+        this.startSessionWithCountdown({ skipPrime: true })
+      })
+    },
+    applyRecommendedTechnique(techniqueId, sessionMode = 'new_learning') {
+      const id = String(techniqueId || '')
+      // Reset to a calm baseline, then enable only what helps.
+      this.focusModeEnabled = false
+      this.blurModeEnabled = false
+      if (id === 'blur' || sessionMode === 'revision') {
+        this.blurModeEnabled = true
+        this.focusModeEnabled = false
+        this.talqinModeEnabled = false
+        return
+      }
+      if (id === 'talqin') {
+        this.talqinModeEnabled = true
+        this.blurModeEnabled = false
+        this.focusModeEnabled = false
+        return
+      }
+      if (id === 'focus') {
+        this.focusModeEnabled = true
+        this.blurModeEnabled = false
+        return
+      }
+      if (sessionMode === 'revision') {
+        this.blurModeEnabled = true
+      }
     },
     queuePostSessionModalAfterAiReview(snapshot = null, previousStreak = 0) {
       if (!snapshot || !this.isLoggedIn) return
@@ -8299,6 +8837,7 @@ export default {
     },
     logoutFromPostSession() {
       if (typeof document === 'undefined') return
+      this.prepareLogoutSessionCleanup()
       this.postSessionSnapshot = null
       this.postSessionEmotionalContext = null
       this.showPostSessionModal = false
@@ -8317,6 +8856,9 @@ export default {
     },
     continueFromOnboardingPostSession() {
       this.onboardingSampleSessionActive = false
+      this.onboardingExampleRejected = false
+      this.clearContinueSessionQuietly()
+      this.stopSessionMediaResources()
       this.showPostSessionModal = false
       this.showPostSessionConfetti = false
       this.postSessionOffcanvasOpen = false
@@ -8327,6 +8869,9 @@ export default {
       this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
       this.showTools = false
       this.topCardMenuOpen = false
+      if (this.learningBackendEnabled()) {
+        learningApi.discardOnboardingExampleSession().catch(() => {})
+      }
     },
     async completeOnboardingAndStart() {
       this.primeAudioPlaybackUnlock()
@@ -8519,9 +9064,13 @@ export default {
         this.refreshAnalyticsModalData(session)
       })
     },
-    openHelpLearningModal() {
+    openHelpLearningModal(sectionKey = 'tajweed') {
       this.topCardMenuOpen = false
-      this.helpLearningActiveKey = this.helpLearningSections[0]?.key || 'tajweed'
+      this.closeTopCardSubmenus?.()
+      const key = this.helpLearningSections.some(section => section.key === sectionKey)
+        ? sectionKey
+        : (this.helpLearningSections[0]?.key || 'tajweed')
+      this.helpLearningActiveKey = key
       this.showHelpLearningModal = true
     },
     closeHelpLearningModal() {
@@ -9374,6 +9923,7 @@ export default {
     initRecordingsAudio() {
       if (this.recordingsAudioBound || !this.recordingsAudioElement) return
       this.recordingsAudioElement.addEventListener('pause', () => {
+        if (this.ignoreRecordingsAudioPauseEvent) return
         if (!this.recordingsAudioElement?.ended) {
           this.activeRecordingPlaybackId = ''
           this.activeSelfCheckPreviewKey = ''
@@ -9386,6 +9936,7 @@ export default {
         this.activeSelfCheckAyahPlaybackKey = ''
       })
       this.recordingsAudioElement.addEventListener('error', error => {
+        if (this.ignoreRecordingsAudioPauseEvent) return
         console.error('Recordings playback error:', error)
         this.activeRecordingPlaybackId = ''
         this.activeSelfCheckPreviewKey = ''
@@ -10064,7 +10615,9 @@ export default {
       }
     },
     async toggleSelfCheckAyahPlayback(verse) {
-      if (!verse?.audio) {
+      if (!verse) return
+      const audioUrl = this.resolveAyahAudioUrl(verse)
+      if (!audioUrl) {
         this.showBanner(this.t('toasts.audioNotAvailableForVerse', { number: verse?.number || '' }).trim(), 'info', 2000)
         return
       }
@@ -10075,33 +10628,131 @@ export default {
         return
       }
 
-      if (this.activeSelfCheckAyahPlaybackKey === verse.key && !audio.paused) {
-        audio.pause()
+      if (this.activeSelfCheckAyahPlaybackKey === verse.key && audio.src && !audio.paused) {
+        try { audio.pause() } catch { }
         this.activeSelfCheckAyahPlaybackKey = ''
         return
       }
 
-      this.stopRecordingsPlayback({ clearSource: true })
+      this.activeRecordingPlaybackId = ''
+      this.activeSelfCheckPreviewKey = ''
+      this.ignoreRecordingsAudioPauseEvent = true
+      try { audio.pause() } catch { }
       if (this.audioElement) {
         try { this.audioElement.pause() } catch { }
       }
       this.isPlaying = false
       this.manualOnlyPlayback = false
 
-      audio.src = this.normalizeAudioUrl(verse.audio)
-      audio.load()
-
       try {
-        this.primeAudioPlaybackUnlock(audio)
+        this.primeAudioPlaybackUnlock(audio, { targetUrl: audioUrl })
+        this.claimAudioElement(audio)
+        const currentSrc = this.normalizeAudioUrl(audio.currentSrc || audio.getAttribute('src') || '')
+        if (currentSrc !== audioUrl) {
+          audio.src = audioUrl
+          audio.load()
+        } else {
+          try { audio.currentTime = 0 } catch { }
+        }
+        await this.waitForAudioElementReady(audio)
         await audio.play()
         this.activeSelfCheckAyahPlaybackKey = verse.key
-        this.activeRecordingPlaybackId = ''
-        this.activeSelfCheckPreviewKey = ''
       } catch (error) {
         console.error('Failed to play self-check ayah audio:', error)
         this.activeSelfCheckAyahPlaybackKey = ''
         this.showBanner(this.t('toasts.unableToPlayAyahNow'), 'error', 2200)
+      } finally {
+        window.setTimeout(() => {
+          this.ignoreRecordingsAudioPauseEvent = false
+        }, 250)
       }
+    },
+    playAyahCardAudio(verse) {
+      if (!verse) return
+      const audioUrl = this.resolveAyahAudioUrl(verse)
+      if (!audioUrl) {
+        this.showBanner(this.t('toasts.audioNotAvailableForVerse', { number: verse?.number || '' }).trim(), 'info', 2000)
+        return
+      }
+
+      const audio = this.audioElement || this.$refs.audio
+      const currentSrc = audio
+        ? this.normalizeAudioUrl(audio.currentSrc || audio.getAttribute('src') || '')
+        : ''
+      const isActiveAyah = this.activeVerseKey === verse.key || this.activeKey === verse.key
+      const isSameSource = !!currentSrc && currentSrc === audioUrl
+
+      // Same ayah + loaded source → toggle pause/resume. Do not force-replay.
+      if (isActiveAyah && isSameSource && audio && !audio.ended) {
+        this.togglePlay()
+        return
+      }
+
+      // Focus / blur / active ayah still track this card. Talqin + follow get their
+      // recite window after this listen; other modes stay a one-shot independent play.
+      const engageTechniqueTurn = this.talqinModeActive || this.playMode === 'follow'
+      return this.playVerse({ ...verse, audio: audioUrl }, {
+        primePlayback: true,
+        force: true,
+        manualOnly: !engageTechniqueTurn
+      })
+    },
+    isAyahCardPlaying(verse) {
+      if (!verse?.key) return false
+      if (this.activeVerseKey !== verse.key && this.activeKey !== verse.key) return false
+      const audio = this.audioElement || this.$refs.audio
+      if (audio && (audio.currentSrc || audio.getAttribute('src')) && !audio.paused && !audio.ended) {
+        return true
+      }
+      return !!this.isPlaying
+    },
+    promptDeleteAyahRecordings(ayahKey) {
+      if (!ayahKey) return
+      const recordings = this.getAyahRecordingHistory(ayahKey)
+      if (!recordings.length) return
+      const sample = recordings[0]
+      this.openConfirmModal({
+        title: this.t('memorisation.confirmModals.deleteAyahRecordings.title'),
+        message: this.t('memorisation.confirmModals.deleteAyahRecordings.message', {
+          number: sample?.ayahNumber || String(ayahKey).split(':')[1] || '',
+          count: recordings.length
+        }),
+        confirmLabel: this.t('memorisation.confirmModals.deleteAyahRecordings.confirm'),
+        cancelLabel: this.t('memorisation.confirmModals.deleteAyahRecordings.cancel'),
+        tone: 'danger',
+        action: 'delete-ayah-recordings',
+        data: { ayahKey }
+      })
+    },
+    deleteAyahRecordings(ayahKey) {
+      if (!ayahKey) return
+      const targets = this.recordingsLibrary.filter(recording => (
+        recording.ayahKey === ayahKey || recording?.ayahRange?.keys?.includes(ayahKey)
+      ))
+      if (!targets.length) return
+      if (targets.some(recording => recording.id === this.activeRecordingPlaybackId)) {
+        this.stopRecordingsPlayback({ clearSource: true })
+      }
+      const removeIds = new Set(targets.map(recording => recording.id))
+      this.recordingsLibrary = this.recordingsLibrary.filter(recording => !removeIds.has(recording.id))
+      this.persistRecordingsLibrary()
+      targets.forEach(recording => {
+        if (this.isAiCheckRecording(recording)) this.deleteAiCheckFromMutqinSessions(recording.id)
+      })
+      this.pendingRecordingDeleteId = ''
+      this.ensureSelectedRecordingsSelection()
+      if (!this.recordingsLibrary.length) {
+        this.selectedRecordingsAyahKey = ''
+        this.selectedRecordingsEntryId = ''
+      }
+      this.showBanner(
+        this.t('memorisation.confirmModals.deleteAyahRecordings.done', {
+          number: targets[0]?.ayahNumber || String(ayahKey).split(':')[1] || '',
+          count: targets.length
+        }),
+        'info',
+        1800
+      )
     },
     supportsSelfCheckRecording() {
       return typeof navigator !== 'undefined'
@@ -14466,15 +15117,7 @@ export default {
         await this.activatePlannerMode({ startPlayback: true })
         return
       }
-      if (this.isPlaying) {
-        this.togglePlay()
-        return
-      }
-      if (this.hasSessionStarted && this.audioElement?.src) {
-        this.togglePlay()
-        return
-      }
-      this.startSessionWithCountdown()
+      this.handleHeaderSessionAction()
     },
 
     persistHifzPlan(nextPlan, message = '') {
@@ -14767,6 +15410,7 @@ export default {
 
     logoutFromWelcomeBack() {
       if (typeof document === 'undefined') return
+      this.prepareLogoutSessionCleanup()
       this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
       this.welcomeBackWorkspaceHidden = false
@@ -14825,30 +15469,244 @@ export default {
     },
     handleHeaderSessionAction() {
       if (!this.hasVerses) return
+      if (this.headerSessionActionDisabled) return
       this.startingFreshSessionSelection = false
-      const state = this.headerSessionControlState
-      if (state === 'paused') {
-        if (this.audioElement?.src) {
-          this.togglePlay()
-          return
-        }
-      } else if (state === 'active') {
-        if (this.recitationWindowActive && this.activeQueueEntry) {
-          this.playQueueEntry(this.activeQueueEntry, { force: true, queueIndex: this.queueIndex })
-          return
-        }
-        if (this.audioElement?.src && !this.isPlaying) {
-          this.togglePlay()
-          return
-        }
+      const action = this.primarySessionAction
+
+      if (action === PRIMARY_SESSION_ACTION.LOADING || action === PRIMARY_SESSION_ACTION.NONE) {
         return
       }
-      if (this.chainingEnabled && !this.hasChainingMethodSelected) {
-        this.guideChainingSetup()
+
+      if (
+        action === PRIMARY_SESSION_ACTION.START_ONBOARDING
+        || action === PRIMARY_SESSION_ACTION.CONTINUE_ONBOARDING
+      ) {
+        this.showPostLoginOnboarding = true
         return
       }
-      this.startSessionWithCountdown()
+
+      if (action === PRIMARY_SESSION_ACTION.TRY_EXAMPLE) {
+        this.playOnboardingSampleSession()
+        return
+      }
+
+      if (action === PRIMARY_SESSION_ACTION.END_SESSION) {
+        this.openSessionExitModalFromMenu()
+        return
+      }
+
+      if (action === PRIMARY_SESSION_ACTION.RESUME_SESSION) {
+        this.resumeSessionFromPrimaryAction()
+        return
+      }
+
+      if (action === PRIMARY_SESSION_ACTION.START_SESSION) {
+        if (this.chainingEnabled && !this.hasChainingMethodSelected) {
+          this.guideChainingSetup()
+          return
+        }
+        this.startSessionWithCountdown()
+      }
     },
+
+    async resumeSessionFromPrimaryAction() {
+      if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return
+      const locked = await this.sessionActionLock.run('resume', async () => {
+        this.transitionSessionLifecycle(SESSION_STATUS.RESUMING, SESSION_MUTATION.RESUMING)
+        try {
+          if (this.learningBackendEnabled()) {
+            try {
+              await learningApi.resumeSession({
+                idempotency_key: `resume-${Date.now()}`,
+              })
+            } catch (error) {
+              const status = error?.response?.status
+              if (status === 422) {
+                this.backendUnfinishedSession = false
+                this.backendSessionSnapshot = error?.response?.data?.session || this.backendSessionSnapshot
+                this.clearContinueSessionQuietly()
+                this.sessionLifecycleError = 'resume_invalid'
+                this.transitionSessionLifecycle(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
+                this.showBanner(this.t('toasts.sessionResumeFailed') || 'This session can no longer be resumed. Start a new session.', 'warning', 4200)
+                return false
+              }
+              throw error
+            }
+          }
+          await this.continueLastSession()
+          this.transitionSessionLifecycle(
+            this.isPlaying ? SESSION_STATUS.PLAYING : SESSION_STATUS.PAUSED,
+            SESSION_MUTATION.IDLE
+          )
+          this.sessionLifecycleError = null
+          this.sessionBroadcast?.publish('session-resumed', { at: Date.now() })
+          return true
+        } catch (error) {
+          console.error(error)
+          this.sessionLifecycleError = 'resume_failed'
+          this.transitionSessionLifecycle(
+            this.hasValidatedResumableSession ? SESSION_STATUS.RESUMABLE : SESSION_STATUS.READY,
+            SESSION_MUTATION.IDLE
+          )
+          this.showBanner(this.t('toasts.sessionResumeFailed') || 'Unable to resume session. Please try again.', 'danger', 4200)
+          return false
+        }
+      })
+      return locked
+    },
+
+    transitionSessionLifecycle(nextStatus, mutation = SESSION_MUTATION.IDLE) {
+      const from = this.sessionLifecycleStatus || SESSION_STATUS.UNINITIALISED
+      const result = assertTransition(from, nextStatus)
+      if (!result.ok && from !== SESSION_STATUS.UNINITIALISED) {
+        // Allow hydration / recovery paths to re-derive without blocking UX.
+        console.warn('[sessionLifecycle] blocked transition', result)
+      }
+      this.sessionLifecycleMutation = mutation
+      if (this.centralSession && (nextStatus === SESSION_STATUS.ACTIVE || nextStatus === SESSION_STATUS.PLAYING || nextStatus === SESSION_STATUS.PAUSED)) {
+        this.centralSession.sessionStatus = 'active'
+        this.centralSession.sessionCompletedAt = null
+      }
+      if (this.centralSession && nextStatus === SESSION_STATUS.ENDED) {
+        this.centralSession.sessionStatus = 'completed'
+        this.centralSession.sessionCompletedAt = this.centralSession.sessionCompletedAt || new Date().toISOString()
+      }
+      if (this.centralSession && (nextStatus === SESSION_STATUS.READY || nextStatus === SESSION_STATUS.RESUMABLE)) {
+        if (nextStatus === SESSION_STATUS.READY && !this.hasValidatedResumableSession) {
+          this.centralSession.sessionStatus = this.isSessionCompleted ? 'completed' : 'idle'
+        }
+      }
+    },
+
+    clearContinueSessionQuietly() {
+      this.hasContinueSession = false
+      this.continueSessionPayload = null
+      this.continueSessionLabel = ''
+      try {
+        if (this.learningBackendEnabled()) {
+          this.deleteWorkspaceStateValue('continueSession')
+        } else {
+          localStorage.removeItem('telawa.continueSession')
+        }
+      } catch (e) { console.error(e) }
+    },
+
+    async validateSessionLifecycleAgainstBackend() {
+      if (!this.learningBackendEnabled()) {
+        this.backendUnfinishedSession = false
+        this.backendSessionSnapshot = null
+        this.sessionLifecycleHydrated = true
+        return
+      }
+      try {
+        const { session, unfinished } = await learningApi.getCurrentSession()
+        this.backendSessionSnapshot = session
+        this.backendUnfinishedSession = !!unfinished
+        const reconciled = reconcileContinuePayloadWithBackend(this.continueSessionPayload, session)
+        if (!reconciled) {
+          if (this.continueSessionPayload && session && !unfinished) {
+            this.clearContinueSessionQuietly()
+          }
+        } else {
+          this.continueSessionPayload = reconciled
+          this.hasContinueSession = true
+        }
+      } catch (error) {
+        console.warn('Failed to validate session against backend', error)
+        this.sessionLifecycleError = 'backend_validation_failed'
+      } finally {
+        this.sessionLifecycleHydrated = true
+      }
+    },
+
+    stopSessionMediaResources() {
+      try {
+        this.clearRecitationWindowTimer?.()
+        this.clearTalqinPauseTimer?.()
+        this.stopWordHighlighting?.()
+      } catch (e) { console.error(e) }
+      try {
+        if (this.audioElement) {
+          this.audioElement.pause()
+          this.audioElement.removeAttribute('src')
+          this.audioElement.load()
+        }
+      } catch (e) { console.error(e) }
+      this.isPlaying = false
+      this.playerVisible = false
+      this.currentTime = 0
+    },
+
+    clearInMemorySessionLifecycleState() {
+      this.sessionActionLock?.reset?.()
+      this.sessionLifecycleMutation = SESSION_MUTATION.IDLE
+      this.sessionLifecycleError = null
+      this.backendUnfinishedSession = false
+      this.backendSessionSnapshot = null
+      this.continueSessionPayload = null
+      this.hasContinueSession = false
+      this.continueSessionLabel = ''
+      this.onboardingSampleSessionActive = false
+      this.onboardingExampleRejected = false
+      this.sessionCompleted = false
+      this.sessionCompletedAt = null
+      this.sessionStartedAt = 0
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'idle'
+        this.centralSession.sessionCompletedAt = null
+      }
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.queue = []
+        this.mutqinState.sessionState.current_index = 0
+      }
+    },
+
+    demoteLiveSessionToResumableOnBootstrap() {
+      const unfinished = this.hasValidatedResumableSession
+        || this.backendUnfinishedSession
+        || isResumableSessionPayload(this.continueSessionPayload)
+        || !!this.mutqinState?.sessionState?.active
+      if (!unfinished) return
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+      }
+      if (this.centralSession?.sessionStatus === 'active') {
+        this.centralSession.sessionStatus = 'idle'
+      }
+      this.sessionStartedAt = 0
+      this.sessionCompleted = false
+    },
+
+    bindSessionLifecycleBroadcast() {
+      if (this.sessionBroadcastUnsubscribe) {
+        this.sessionBroadcastUnsubscribe()
+        this.sessionBroadcastUnsubscribe = null
+      }
+      this.sessionBroadcast?.close?.()
+      this.sessionBroadcast = createSessionBroadcast()
+      this.sessionBroadcastUnsubscribe = this.sessionBroadcast.subscribe((message) => {
+        if (!message?.type) return
+        if (message.type === 'session-ended') {
+          this.backendUnfinishedSession = false
+          this.clearContinueSessionQuietly()
+          if (!this.isSessionLive) {
+            this.sessionCompleted = true
+          }
+        }
+        if (message.type === 'session-started' || message.type === 'session-resumed') {
+          this.demoteLiveSessionToResumableOnBootstrap()
+          this.validateSessionLifecycleAgainstBackend()
+        }
+      })
+    },
+
+    prepareLogoutSessionCleanup() {
+      this.stopSessionMediaResources()
+      this.clearInMemorySessionLifecycleState()
+      this.sessionBroadcast?.publish('session-logout', { at: Date.now() })
+    },
+
     openSessionExitModalFromMenu() {
       this.topCardMenuOpen = false
       this.topCardFontSubmenuOpen = false
@@ -14861,34 +15719,78 @@ export default {
         label: this.t('memorisation.player.tapToPlay')
       }, { important: true })
     },
-    waitForAudioElementReady(audio, timeoutMs = 10000) {
+    claimAudioElement(audio) {
+      if (!audio) return
+      // Invalidate in-flight unlock restores so they cannot pause/clear after we take over.
+      audio._mutqinUnlockToken = (Number(audio._mutqinUnlockToken) || 0) + 1
+      try { audio.muted = false } catch { }
+    },
+
+    waitForAudioElementReady(audio, timeoutMs = 15000) {
       if (!audio) return Promise.reject(new Error('No audio element'))
-      if (audio.readyState >= 2) return Promise.resolve()
+      // HAVE_METADATA (1) is enough for play(); requiring HAVE_CURRENT_DATA (2)
+      // falsely times out on some browsers/CDNs that hold metadata-only until play().
+      const isReady = () => Number(audio.readyState || 0) >= 1
+
+      if (isReady()) return Promise.resolve()
+
+      const hasSource = !!(audio.currentSrc || audio.getAttribute('src'))
+      if (!hasSource) return Promise.reject(new Error('Audio source missing'))
 
       return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
+        let settled = false
+        let poll = null
+        const finish = (fn, value) => {
+          if (settled) return
+          settled = true
           cleanup()
-          reject(new Error('Audio load timeout'))
+          fn(value)
+        }
+
+        const onReady = () => {
+          if (isReady()) finish(resolve)
+        }
+
+        const onError = () => finish(reject, new Error('Audio load error'))
+
+        const timeout = setTimeout(() => {
+          if (isReady()) {
+            finish(resolve)
+            return
+          }
+          finish(reject, new Error('Audio load timeout'))
         }, timeoutMs)
+
+        // If load stalled after a prior abort/clear, nudge the element once.
+        const nudge = setTimeout(() => {
+          if (settled || isReady()) return
+          const src = audio.currentSrc || audio.getAttribute('src') || ''
+          if (!src) return
+          try { audio.load() } catch { }
+        }, 1200)
 
         const cleanup = () => {
           clearTimeout(timeout)
-          audio.removeEventListener('canplay', onCanPlay)
+          clearTimeout(nudge)
+          if (poll) clearInterval(poll)
+          audio.removeEventListener('loadedmetadata', onReady)
+          audio.removeEventListener('loadeddata', onReady)
+          audio.removeEventListener('canplay', onReady)
+          audio.removeEventListener('canplaythrough', onReady)
           audio.removeEventListener('error', onError)
         }
 
-        const onCanPlay = () => {
-          cleanup()
-          resolve()
-        }
+        audio.addEventListener('loadedmetadata', onReady)
+        audio.addEventListener('loadeddata', onReady)
+        audio.addEventListener('canplay', onReady)
+        audio.addEventListener('canplaythrough', onReady)
+        audio.addEventListener('error', onError)
 
-        const onError = () => {
-          cleanup()
-          reject(new Error('Audio load error'))
-        }
+        // Some browsers skip events when re-assigning the same cached URL.
+        poll = setInterval(onReady, 200)
 
-        audio.addEventListener('canplay', onCanPlay, { once: true })
-        audio.addEventListener('error', onError, { once: true })
+        // In case the element became ready between the initial check and listener attach.
+        if (isReady()) finish(resolve)
       })
     },
 
@@ -15964,6 +16866,10 @@ export default {
 
     persistContinueSession() {
       if (this.isBootstrapping) return
+      if (this.onboardingSampleSessionActive) {
+        // Sample sessions must never become resumable user sessions.
+        return
+      }
       if (this.sessionCompleted || this.mutqinState?.sessionState?.completed) {
         this.clearExitSessionStorage()
         return
@@ -16126,7 +17032,13 @@ export default {
 
     async continueLastSession() {
       const payload = this.continueSessionPayload
-      if (!payload) return
+      if (!payload || !isResumableSessionPayload(payload, {
+        backendStatus: this.backendSessionSnapshot?.status || null,
+        isSample: !!this.onboardingSampleSessionActive,
+      })) {
+        this.clearContinueSessionQuietly()
+        return
+      }
       this.primeAudioPlaybackUnlock()
       this.startingFreshSessionSelection = false
       this.hasContinueSession = false
@@ -16260,6 +17172,7 @@ export default {
 
     logoutFromSessionExit() {
       if (typeof document === 'undefined') return
+      this.prepareLogoutSessionCleanup()
       this.closeSessionExitModal({ restore: false })
       this.sessionExitOffcanvasOpen = false
       const form = document.createElement('form')
@@ -16620,18 +17533,68 @@ export default {
 
     confirmSessionExit(options = {}) {
       const { showSummary = true } = options
-      const endedSnapshot = this.sessionExitPreviewSnapshot || this.buildSessionEndedSnapshot({ force: true })
-      this.closeSessionExitModal({ restore: false })
-      this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
-      this.centralSession.sessionStatus = 'completed'
-      this.centralSession.sessionCompletedAt = new Date().toISOString()
-      completeMutqinSession(this.mutqinState)
-      this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
-      this.recomputeAnalytics()
-      this.finishSessionCleanup()
-      if (showSummary) {
-        this.showSessionEndedSummary(endedSnapshot)
+      if (this.sessionLifecycleMutation === SESSION_MUTATION.ENDING) {
+        return this.sessionExitPreviewSnapshot || null
       }
+      if (this.sessionActionLock.isLocked() || this.sessionActionLock.isLocked('end')) {
+        return this.sessionExitPreviewSnapshot || null
+      }
+
+      const endedSnapshot = this.sessionExitPreviewSnapshot || this.buildSessionEndedSnapshot({ force: true })
+      const wasSample = !!this.onboardingSampleSessionActive
+      this.sessionActionLock.run('end', async () => {
+        this.transitionSessionLifecycle(SESSION_STATUS.ENDING, SESSION_MUTATION.ENDING)
+        try {
+          this.stopSessionMediaResources()
+          this.closeSessionExitModal({ restore: false })
+          if (this.learningBackendEnabled()) {
+            try {
+              if (wasSample) {
+                await learningApi.discardOnboardingExampleSession()
+              } else {
+                await learningApi.endSession({
+                  idempotency_key: `end-${Date.now()}`,
+                  metadata: { completed: true },
+                })
+              }
+            } catch (error) {
+              console.warn('Failed to end session on backend', error)
+              this.sessionLifecycleError = 'end_failed'
+              this.transitionSessionLifecycle(SESSION_STATUS.PAUSED, SESSION_MUTATION.IDLE)
+              this.showBanner(this.t('toasts.sessionEndFailed') || 'Unable to end session. Please try again.', 'danger', 4200)
+              return null
+            }
+          }
+          this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
+          this.centralSession.sessionStatus = 'completed'
+          this.centralSession.sessionCompletedAt = new Date().toISOString()
+          completeMutqinSession(this.mutqinState)
+          this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+          this.recomputeAnalytics()
+          this.onboardingSampleSessionActive = false
+          this.finishSessionCleanup()
+          this.backendUnfinishedSession = false
+          this.backendSessionSnapshot = {
+            ...(this.backendSessionSnapshot || {}),
+            status: 'completed',
+          }
+          this.transitionSessionLifecycle(SESSION_STATUS.ENDED, SESSION_MUTATION.IDLE)
+          this.sessionBroadcast?.publish('session-ended', { at: Date.now() })
+          if (showSummary) {
+            this.showSessionEndedSummary(endedSnapshot)
+          }
+          return endedSnapshot
+        } catch (error) {
+          console.error(error)
+          this.sessionLifecycleError = 'end_failed'
+          this.transitionSessionLifecycle(
+            this.isSessionLive ? SESSION_STATUS.PAUSED : SESSION_STATUS.READY,
+            SESSION_MUTATION.IDLE
+          )
+          this.showBanner(this.t('toasts.sessionEndFailed') || 'Unable to end session. Please try again.', 'danger', 4200)
+          return null
+        }
+      })
       return endedSnapshot
     },
     exitSessionToNewSession() {
@@ -16754,6 +17717,7 @@ export default {
       if (action === 'discard-continue') this.clearContinueSession()
       if (action === 'delete-saved-session' && actionData?.sessionId) this.performDeleteSavedSession(actionData.sessionId)
       if (action === 'delete-recording' && actionData?.recordingId) this.deleteRecording(actionData.recordingId)
+      if (action === 'delete-ayah-recordings' && actionData?.ayahKey) this.deleteAyahRecordings(actionData.ayahKey)
       if (action === 'delete-pending-recitation-check') this.performDeleteRecitationCheckAttempt(actionData?.attemptId)
     },
 
@@ -18308,6 +19272,7 @@ export default {
       }
 
       this.audioPaused = () => {
+        if (this.ignoreMainAudioPauseEvent) return
         this.isPlaying = false
         // Freeze state: stop the loop but retain the active word.
         if (this.wordSyncEngine) this.wordSyncEngine.pause()
@@ -18423,10 +19388,16 @@ export default {
         this.initAudio()
       }
       if (options.primePlayback) {
-        this.primeAudioPlaybackUnlock(this.audioElement)
+        this.ignoreMainAudioPauseEvent = true
+        this.primeAudioPlaybackUnlock(this.audioElement, { targetUrl: audioUrl })
       }
+      this.claimAudioElement(this.audioElement)
 
-      if (!isSameSource) {
+      const activeSrc = this.audioElement?.currentSrc
+        ? this.normalizeAudioUrl(this.audioElement.currentSrc)
+        : this.normalizeAudioUrl(this.audioElement?.getAttribute?.('src') || '')
+      if (activeSrc !== audioUrl) {
+        this.ignoreMainAudioPauseEvent = true
         this.audioElement.src = audioUrl
         this.audioElement.load()
       }
@@ -18473,6 +19444,9 @@ export default {
         this.promptTapToPlay()
       } finally {
         this.playRequestLocked = false
+        window.setTimeout(() => {
+          this.ignoreMainAudioPauseEvent = false
+        }, 120)
       }
     },
 
@@ -19662,18 +20636,33 @@ export default {
       if (kind === 'translation') {
         this.showTranslation = !this.showTranslation
         nextState = this.showTranslation
-      }
-      if (kind === 'transliteration') {
+      } else if (kind === 'transliteration') {
         this.showTransliteration = !this.showTransliteration
         nextState = this.showTransliteration
-      }
-      if (kind === 'wbw') {
+      } else if (kind === 'wbw') {
+        return
+      } else {
         return
       }
       this.syncSettingsDraft()
       this.persistUiState()
-      // Show feedback that change was applied
       this.showBanner(this.t('toasts.message', { p0: kind, p1: nextState ? 'enabled' : 'disabled' }), 'info', 2800)
+    },
+
+    setReadingOption(kind, enabled) {
+      const nextState = !!enabled
+      if (kind === 'translation') this.showTranslation = nextState
+      else if (kind === 'transliteration') this.showTransliteration = nextState
+      else return
+      this.syncSettingsDraft()
+      this.persistUiState()
+    },
+
+    setTajweedEnabled(enabled) {
+      this.tajweedEnabled = !!enabled
+      this.syncSettingsDraft()
+      this.persistUiState()
+      this.persistCentralSessionState()
     },
 
     setScriptMode(mode) {

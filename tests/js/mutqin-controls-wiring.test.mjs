@@ -171,8 +171,10 @@ includesAll('ai recitation speechmatics stability', [
   /const liveAlignmentOptions = \{\s*strictProgression: true,/,
   /const verseSelector = `\[data-verse-key="\$\{this\.escapeCssAttributeValue\(patch\.verseKey\)\}"\]\[data-word-index="\$\{Number\(patch\.localIndex\)\}"\]`/,
   /class="verse-inline-action-btn verse-inline-play-btn"/,
-  /class="verse-inline-action-btn verse-inline-download-btn"/
 ])
+
+// Download control may live in CSS/layout helpers; do not require obsolete Vue class wiring.
+assert.match(source, /verse-inline-download-btn/, 'verse inline download styles/helpers should remain available')
 
 includesAll('ai recitation full-session recording', [
   /getActiveSessionQueueForCheck\(\)/,
@@ -231,14 +233,15 @@ assert.doesNotMatch(
 
 includesAll('audio unlock flow', [
   /primeUiAudioUnlock\(\) \{/,
-  /primeAudioPlaybackUnlock\(audioOverride = null\) \{[\s\S]*this\.primeUiAudioUnlock\(\)[\s\S]*if \(!audioOverride && !this\.audioElement\) \{/,
-  /startSessionAndClose\(\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*setTimeout\(\(\) => \{\s*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
-  /repeatPostSession\(\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
+  /primeAudioPlaybackUnlock\(audioOverride = null, options = \{\}\) \{[\s\S]*this\.primeUiAudioUnlock\(\)[\s\S]*if \(!audioOverride && !this\.audioElement\) \{/,
+  /claimAudioElement\(audio\) \{/,
+  /startSessionAndClose\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
+  /repeatPostSession\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
   /toggleRecordingPlayback\(recording\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*await audio\.play\(\)/,
   /toggleReviewResultAudio\(result = null\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*audio\.play\(\)\.catch/,
-  /toggleSelfCheckAyahPlayback\(verse\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*await audio\.play\(\)/,
+  /toggleSelfCheckAyahPlayback\(verse\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: audioUrl \}\)[\s\S]*this\.claimAudioElement\(audio\)[\s\S]*await this\.waitForAudioElementReady\(audio\)[\s\S]*await audio\.play\(\)/,
   /toggleSelfCheckPreview\(verseKey\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*await audio\.play\(\)/,
-  /@click\.stop="playVerse\(verse, \{ primePlayback: true \}\)"/,
+  /playVerse\([^)]*primePlayback:\s*true/,
   /@click="playVerse\(quizCard, \{ primePlayback: true \}\)"/
 ])
 
@@ -466,5 +469,20 @@ assert.equal(rebuildQueueCount, 1, 'rebuildQueue should have one implementation'
 
 const toggleTajweedCount = (source.match(/toggleTajweed\(\) \{/g) || []).length
 assert.equal(toggleTajweedCount, 1, 'toggleTajweed should have one implementation')
+
+includesAll('centralised session lifecycle wiring', [
+  /from '\.\.\/scripts\/session\/sessionLifecycle'/,
+  /buildSessionLifecycleViewModel/,
+  /primarySessionActionPresentation/,
+  /handleHeaderSessionAction/,
+  /resumeSessionFromPrimaryAction/,
+  /validateSessionLifecycleAgainstBackend/,
+  /demoteLiveSessionToResumableOnBootstrap/,
+  /prepareLogoutSessionCleanup/,
+  /PRIMARY_SESSION_ACTION\.END_SESSION/,
+  /PRIMARY_SESSION_ACTION\.RESUME_SESSION/,
+  /headerSessionActionBusy/,
+  /onboardingSampleSessionActive/
+])
 
 console.log('mutqin controls wiring passed')

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Learning\AnalyticsController;
 use App\Http\Controllers\Api\Learning\ContinueController;
 use App\Http\Controllers\Api\Learning\MigrateLocalStorageController;
 use App\Http\Controllers\Api\Learning\ProgressController;
+use App\Http\Controllers\Api\Learning\RecommendationController;
 use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
 use Illuminate\Support\Facades\Route;
@@ -17,7 +18,11 @@ Route::post('/contact', [ContactSubmissionController::class, 'store'])->name('ap
 // Backend-driven learning persistence (Sanctum SPA cookie auth, user scoped).
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/session', [SessionController::class, 'show'])->name('api.session.show');
+    Route::get('/session/current', [SessionController::class, 'current'])->name('api.session.current');
     Route::post('/session', [SessionController::class, 'store'])->name('api.session.store');
+    Route::post('/session/start', [SessionController::class, 'start'])->name('api.session.start');
+    Route::post('/session/resume', [SessionController::class, 'resume'])->name('api.session.resume');
+    Route::post('/session/end', [SessionController::class, 'end'])->name('api.session.end');
 
     Route::get('/continue', [ContinueController::class, 'show'])->name('api.continue.show');
     Route::post('/continue', [ContinueController::class, 'store'])->name('api.continue.store');
@@ -27,6 +32,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('api.analytics.index');
     Route::post('/analytics', [AnalyticsController::class, 'store'])->name('api.analytics.store');
+
+    // Personalised next-session recommendations.
+    Route::get('/recommendations/next', [RecommendationController::class, 'show'])->name('api.recommendations.next');
+    Route::post('/recommendations/start', [RecommendationController::class, 'start'])->name('api.recommendations.start');
+    Route::post('/recommendations/reject', [RecommendationController::class, 'reject'])->name('api.recommendations.reject');
 
     // Full-fidelity state blob used as the live persistence boundary.
     Route::get('/state', [StateSyncController::class, 'show'])->name('api.state.show');

@@ -116,6 +116,10 @@
                   class="action-btn btn btn-primary session-primary-action top-card-action-trigger"
                   role="button"
                   tabindex="0"
+                  :aria-disabled="headerSessionActionDisabled ? 'true' : 'false'"
+                  :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
+                  :class="{ 'is-disabled': headerSessionActionDisabled, 'is-loading': headerSessionActionBusy }"
+                  :style="{ minWidth: primarySessionActionPresentation.stableWidthCh + 'ch' }"
                   @click="handleHeaderSessionAction"
                   @keydown.enter.prevent="handleHeaderSessionAction"
                   @keydown.space.prevent="handleHeaderSessionAction"
@@ -149,7 +153,7 @@
               >
                 <i class="bi bi-sliders" aria-hidden="true"></i>
               </div>
-              <div class="top-card-menu-wrap" @click.stop>
+              <div class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
                 <div
                   class="top-card-ellipsis top-card-action-trigger"
                   role="button"
@@ -163,44 +167,39 @@
                 </div>
                 <transition name="dropdown-fade">
                   <div v-if="topCardMenuOpen" class="top-card-menu">
-                    <button type="button" :class="{ active: showTranslation }" @click="toggleReadingOption('translation')">
-                      <i class="bi bi-translate"></i><span>{{ t('memorisation.reading.translation') }}</span>
+                    <button
+                      type="button"
+                      class="top-card-menu-toggle"
+                      :class="{ active: showTranslation }"
+                      :aria-pressed="showTranslation ? 'true' : 'false'"
+                      @click.stop="toggleReadingOption('translation')"
+                    >
+                      <i class="bi bi-translate" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.reading.translation') }}</span>
+                      <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
-                    <button type="button" :class="{ active: showTransliteration }" @click="toggleReadingOption('transliteration')">
-                      <i class="bi bi-type"></i><span>{{ t('memorisation.reading.transliteration') }}</span>
+                    <button
+                      type="button"
+                      class="top-card-menu-toggle"
+                      :class="{ active: showTransliteration }"
+                      :aria-pressed="showTransliteration ? 'true' : 'false'"
+                      @click.stop="toggleReadingOption('transliteration')"
+                    >
+                      <i class="bi bi-type" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.reading.transliteration') }}</span>
+                      <i v-if="showTransliteration" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
-                    <button type="button" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
-                      <i class="bi bi-palette"></i><span>{{ t('memorisation.reading.tajweed') }}</span>
+                    <button
+                      type="button"
+                      class="top-card-menu-toggle"
+                      :class="{ active: tajweedEnabled }"
+                      :aria-pressed="tajweedEnabled ? 'true' : 'false'"
+                      @click.stop="toggleTajweed"
+                    >
+                      <i class="bi bi-palette" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.reading.tajweed') }}</span>
+                      <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
-                    <div class="top-card-submenu-wrap">
-                      <button
-                        type="button"
-                        class="top-card-submenu-trigger"
-                        :class="{ active: topCardFontSubmenuOpen }"
-                        :aria-expanded="topCardFontSubmenuOpen ? 'true' : 'false'"
-                        @click.stop="toggleTopCardFontSubmenu"
-                      >
-                        <i class="bi bi-text-paragraph" aria-hidden="true"></i>
-                        <span>{{ t('memorisation.reading.quranicFont') }}</span>
-                        <i class="bi bi-chevron-right top-card-submenu-chevron" aria-hidden="true"></i>
-                      </button>
-                      <transition name="dropdown-fade">
-                        <div v-if="topCardFontSubmenuOpen" class="top-card-submenu top-card-font-submenu" @click.stop>
-                          <button
-                            v-for="font in quranFontOptions"
-                            :key="font.value"
-                            type="button"
-                            class="top-card-submenu-option"
-                            :class="{ active: quranFont === font.value }"
-                            @click="selectFont(font.value)"
-                          >
-                            <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
-                            <span>{{ font.label }}</span>
-                            <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                          </button>
-                        </div>
-                      </transition>
-                    </div>
                     <div class="top-card-submenu-wrap">
                       <button
                         type="button"
@@ -241,9 +240,6 @@
                     <button type="button" @click="openOnboardingFromTopMenu">
                       <i class="bi bi-compass"></i><span>{{ t('memorisation.revisitOnboarding') }}</span>
                     </button>
-                    <button @click="toggleKeyboardShortcuts" type="button">
-                      <i class="bi bi-keyboard"></i><span>{{ t('shortcuts.title') }}</span>
-                    </button>
                     <button @click="toggleFullScreen" type="button">
                       <i class="bi bi-arrows-fullscreen"></i><span>{{ t('memorisation.reading.fullScreen') }}</span>
                     </button>
@@ -260,19 +256,10 @@
             <button
               class="action-btn session-idle-action"
               type="button"
-              :disabled="!canResumePreviousSession"
-              @click="continueLastSession"
+              :disabled="!canResumePreviousSession || headerSessionActionDisabled"
+              @click="resumeSessionFromPrimaryAction"
             >
-              {{ t('memorisation.workspaceEmpty.continuePreviousSession') }}
-            </button>
-            <button
-              class="action-btn action-btn-icon session-idle-controls"
-              type="button"
-              @click="openAdvancedControls"
-              :title="t('memorisation.open_controls')"
-              :aria-label="t('memorisation.open_controls')"
-            >
-              <i class="bi bi-sliders" aria-hidden="true"></i>
+              {{ t('common.resumeSession') }}
             </button>
           </div>
         </div>
@@ -301,6 +288,40 @@
                 <strong>{{ item.label }}:</strong>
                 <span>{{ item.value }}</span>
               </span>
+            </div>
+          </div>
+          <div
+            class="workspace-shell-reading-toggles workspace-shell-font-control"
+            :aria-label="t('memorisation.reading.quranicFont')"
+          >
+            <div class="font-dropdown workspace-font-dropdown">
+              <button
+                class="font-dropdown-trigger"
+                type="button"
+                @click.stop="toggleFontDropdown"
+                :title="t('memorisation.a11y.changeQuranFont')"
+                :aria-expanded="fontDropdownOpen ? 'true' : 'false'"
+              >
+                <i class="bi bi-text-paragraph" aria-hidden="true"></i>
+                <span>{{ getCurrentFontLabel() }}</span>
+                <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }" aria-hidden="true"></i>
+              </button>
+              <transition name="dropdown-fade">
+                <div v-if="fontDropdownOpen" class="font-dropdown-menu" @click.stop>
+                  <button
+                    v-for="font in quranFontOptions"
+                    :key="font.value"
+                    type="button"
+                    class="font-option"
+                    :class="{ active: quranFont === font.value }"
+                    @click="selectFont(font.value)"
+                  >
+                    <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
+                    <span>{{ font.label }}</span>
+                    <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </transition>
             </div>
           </div>
         </div>
@@ -340,9 +361,6 @@
                 <div class="workspace-empty-actions">
                   <button class="action-btn primary" type="button" @click="openNewSessionSetup">
                     {{ t('memorisation.open_session_setup') }}
-                  </button>
-                  <button class="action-btn" type="button" @click="openAdvancedControls">
-                    {{ t('memorisation.open_controls') }}
                   </button>
                 </div>
               </div>
@@ -583,16 +601,13 @@
                 <div class="verse-header">
                   <div class="verse-badges">
                     <span class="verse-number">Ayah {{ verse.number }}</span>
-                  </div>
-                  <div v-if="isNewHifzAyah(verse.key) || isDueHifzAyah(verse.key) || isWeakAyah(verse.key) || isMasteredAyah(verse.key) || isVerseVisuallyActive(verse.key)" class="verse-statuses">
+                    <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge verse-status-badge-active">{{ t('memorisation.badges.active') }}</span>
                     <span v-if="isNewHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-new">{{ t('memorisation.badges.new') }}</span>
                     <span v-if="isDueHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-due">{{ t('memorisation.due') }}</span>
                     <span v-if="isWeakAyah(verse.key)" class="verse-status-badge verse-status-badge-weak">{{ t('memorisation.badges.weak') }}</span>
                     <span v-if="isMasteredAyah(verse.key)" class="verse-status-badge verse-status-badge-mastered">{{ t('memorisation.badges.steady') }}</span>
-                    <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge">{{ t('memorisation.badges.active') }}</span>
                   </div>
                   <div class="verse-actions">
-                    
                     <button v-if="showAiMemorisationButton" class="verse-self-check-btn verse-ai-check-btn"
                       :class="{ active: shouldShowRecitationReviewHighlights(verse.key) && aiMemorisationCheckerVerseKey === verse.key }"
                       @click.stop="openAiMemorisationCheckerForVerse(verse)"
@@ -602,7 +617,7 @@
                       <span>{{ t('memorisation.reading.aiMemory') }}</span>
                     </button>
 
-                    <button class="verse-self-check-btn verse-ai-check-btn"
+                    <button class="verse-self-check-btn verse-ai-check-btn verse-ai-recite-btn"
                       :class="{ active: isRecitationCheckTargetVerse(verse.key), saved: getAyahRecordingCount(verse.key) }"
                       @click.stop="openAiRecitationCheckForVerse(verse)"
                       :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()"
@@ -612,16 +627,11 @@
                       <em v-if="getAyahRecordingCount(verse.key)">{{ getAyahRecordingCount(verse.key) }}</em>
                     </button>
                     <button class="verse-inline-action-btn verse-inline-play-btn" type="button"
-                      @click.stop="playVerse(verse, { primePlayback: true })"
-                      :disabled="!verse.audio"
-                      :title="activeVerseKey === verse.key && isPlaying ? 'Pause ayah audio' : 'Play ayah audio'"
-                      :aria-label="activeVerseKey === verse.key && isPlaying ? 'Pause ayah audio' : 'Play ayah audio'">
-                      <i class="bi" :class="activeVerseKey === verse.key && isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                    </button>
-                    <button class="verse-inline-action-btn verse-inline-download-btn" type="button"
-                      @click.stop="downloadVerseAudio(verse)" :disabled="!verse.audio"
-                      :title="t('memorisation.offlineDownload.buttonHint')" :aria-label="t('memorisation.offlineDownload.buttonHint')">
-                      <i class="bi bi-download" aria-hidden="true"></i>
+                      @click.stop="playAyahCardAudio(verse)"
+                      :disabled="!resolveAyahAudioUrl(verse)"
+                      :title="isAyahCardPlaying(verse) ? 'Pause ayah audio' : 'Play ayah audio'"
+                      :aria-label="isAyahCardPlaying(verse) ? 'Pause ayah audio' : 'Play ayah audio'">
+                      <i class="bi" :class="isAyahCardPlaying(verse) ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                     </button>
                   </div>
                 </div>
@@ -669,7 +679,7 @@
         'onboarding-post-session-tools-backdrop': showPostSessionModal && postSessionOffcanvasOpen,
         'session-exit-tools-backdrop': showSessionExitModal && sessionExitOffcanvasOpen
       }" @click="closeToolsPanel" aria-hidden="true"></div>
-      <aside id="memorisationToolsPanel" ref="toolsPanel" class="tools offcanvas-section offcanvas-end" :class="{
+      <aside id="memorisationToolsPanel" ref="toolsPanel" class="tools offcanvas-section offcanvas-end h-100" :class="{
         open: showTools,
         'onboarding-post-session-tools': showPostSessionModal && postSessionOffcanvasOpen,
         'session-exit-tools': showSessionExitModal && sessionExitOffcanvasOpen
@@ -819,12 +829,12 @@
                       <span class="range-value-pill">{{ repetitionDisplayValue }}</span>
                     </div>
                     <div class="range-control">
-                      <input type="range" :value="sliderRepetitionValue" :style="sessionRepetitionSliderStyle"
-                        @input="setRepetitionsFromSlider(Number($event.target.value))" min="1" max="10" step="1"
-                        class="input technique-range" />
+                      <input type="range" :value="sliderRepetitionIndex" :style="sessionRepetitionSliderStyle"
+                        @input="setRepetitionsFromSliderIndex(Number($event.target.value))" min="0" :max="repetitionSliderSteps.length - 1" step="1"
+                        class="input technique-range" :aria-valuetext="repetitionDisplayValue" />
                     </div>
                     <div class="slider-markers slider-markers-compact">
-                      <span>1x</span><span>3x</span><span>5x</span><span>7x</span><span>10x</span>
+                      <span v-for="step in repetitionSliderSteps" :key="`rep-${step}`">{{ step }}x</span>
                     </div>
                     <small class="field-hint">{{ t('sessionSetup.repeatHint', { count: repetitionsPerStep }) }}</small>
                   </div>
@@ -1627,20 +1637,20 @@
 
             <div class="modal-footer mutqin-modal-footer">
               <div class="mutqin-modal-actions mutqin-modal-actions--3 welcome-back-actions-grid">
-                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--primary" @click="welcomeBackStartNewSession">
-                  <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.welcomeBack.startNewSession') }}</span>
-                </button>
                 <button
                   type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--secondary"
+                  class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate"
                   :disabled="!canResumePreviousSession"
                   @click="welcomeBackContinueSession"
                 >
                   <i class="bi bi-play-circle" aria-hidden="true"></i>
                   <span>{{ t('memorisation.welcomeBack.continuePreviousSession') }}</span>
                 </button>
-                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--muted" @click="logoutFromWelcomeBack">
+                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate" @click="welcomeBackStartNewSession">
+                  <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.welcomeBack.startNewSession') }}</span>
+                </button>
+                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate" @click="logoutFromWelcomeBack">
                   <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                   <span>{{ t('common.logout') }}</span>
                 </button>
@@ -1724,7 +1734,7 @@
                 <button
                   v-if="canContinueCurrentSession"
                   type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--primary session-exit-actions-primary"
+                  class="mutqin-modal-btn mutqin-modal-btn--primary session-exit-actions-primary mutqin-btn-animate"
                   @click="continueSessionFromExitModal"
                 >
                   <i class="bi bi-play-circle" aria-hidden="true"></i>
@@ -1734,15 +1744,15 @@
                   class="session-exit-actions-secondary"
                   :class="{ 'session-exit-actions-secondary--with-primary': canContinueCurrentSession }"
                 >
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="exitSessionToNewSession">
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate" @click="exitSessionToNewSession">
                     <i class="bi bi-plus-circle" aria-hidden="true"></i>
                     <span>{{ t('memorisation.sessionExit.startNewSession') }}</span>
                   </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="exitSessionToRepeatRange">
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate" @click="exitSessionToRepeatRange">
                     <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
                     <span>{{ t('memorisation.sessionExit.repeatSession') }}</span>
                   </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="exitSessionToSaveSession">
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate" @click="exitSessionToSaveSession">
                     <i class="bi bi-bookmark-check" aria-hidden="true"></i>
                     <span>{{ t('memorisation.sessionExit.saveSession') }}</span>
                   </button>
@@ -1806,6 +1816,23 @@
                         <span>{{ detail.text }}</span>
                       </div>
                     </div>
+                    <section
+                      v-if="activeHelpLearningSection.key === 'tajweed'"
+                      class="help-learning-tajweed-legend"
+                      :aria-label="t('memorisation.helpLearning.sections.tajweed.legendTitle')"
+                    >
+                      <h5>{{ t('memorisation.helpLearning.sections.tajweed.legendTitle') }}</h5>
+                      <p>{{ t('memorisation.helpLearning.sections.tajweed.legendIntro') }}</p>
+                      <ul class="tajweed-color-legend">
+                        <li v-for="rule in tajweedColorLegend" :key="rule.id">
+                          <span class="tajweed-color-swatch" :style="{ background: rule.color }" aria-hidden="true"></span>
+                          <div>
+                            <strong>{{ rule.label }}</strong>
+                            <span>{{ rule.description }}</span>
+                          </div>
+                        </li>
+                      </ul>
+                    </section>
                     <section
                       v-if="activeHelpLearningSection.key === 'talqin-mode'"
                       class="help-learning-talqin-guide text-dark dark:text-white"
@@ -3033,15 +3060,21 @@
                   <div class="recordings-library-surah-title">{{ surahGroup.chapterName }}</div>
                   <div class="recordings-library-recordings">
                     <template v-for="ayahGroup in surahGroup.ayahs" :key="ayahGroup.ayahKey">
-                      <button v-for="recording in ayahGroup.recordings" :key="recording.id" type="button"
-                        class="recordings-library-recording-item"
-                        :class="{ active: recording.id === selectedRecordingsEntryId, playing: recording.id === activeRecordingPlaybackId }"
-                        @click="selectRecordingsEntry(recording)">
-                        <span class="recordings-library-recording-title">{{ getRecordingAttemptLabel(recording) }}</span>
-                        <span class="recordings-library-recording-meta">
-                          Ayah {{ ayahGroup.ayahNumber }} · {{ formatRecordingDate(recording.recordedAt) }}
-                        </span>
-                      </button>
+                      <div
+                        v-for="recording in ayahGroup.recordings"
+                        :key="recording.id"
+                        class="recordings-library-recording-row"
+                      >
+                        <button type="button"
+                          class="recordings-library-recording-item"
+                          :class="{ active: recording.id === selectedRecordingsEntryId, playing: recording.id === activeRecordingPlaybackId }"
+                          @click="selectRecordingsEntry(recording)">
+                          <span class="recordings-library-recording-title">{{ getRecordingAttemptLabel(recording) }}</span>
+                          <span class="recordings-library-recording-meta">
+                            Ayah {{ ayahGroup.ayahNumber }} · {{ formatRecordingDate(recording.recordedAt) }}
+                          </span>
+                        </button>
+                      </div>
                     </template>
                   </div>
                 </div>
@@ -3203,11 +3236,6 @@
                         @click="openRenameRecordingModal(selectedRecordingsEntry.id)">
                         <i class="bi bi-pencil-square"></i>
                         <span>Rename</span>
-                      </button>
-                      <button class="recording-history-utility-link recording-history-utility-link-delete" type="button"
-                        @click="promptDeleteRecording(selectedRecordingsEntry.id)">
-                        <i class="bi bi-trash3"></i>
-                        <span>{{ t('common.delete') }}</span>
                       </button>
                     </div>
                   </div>
@@ -3466,49 +3494,135 @@
                   <h2 id="postSessionTitle" class="post-session-title">
                     {{ postSessionModalTitle }}
                   </h2>
-                  <p v-if="postSessionModalMessage" class="post-session-message">
+                  <p v-if="postSessionModalMessage && !postSessionShowQuietHero" class="post-session-message">
                     {{ postSessionModalMessage }}
                   </p>
-                  <p v-if="postSessionEncouragement" class="emotional-touch emotional-touch--encouragement">
+                  <p v-if="postSessionEncouragement && !postSessionShowQuietHero" class="emotional-touch emotional-touch--encouragement">
                     {{ postSessionEncouragement }}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div class="modal-body post-session-body">
+            <div class="modal-body post-session-body post-session-body--guided">
               <p
-                v-if="postSessionMilestone"
-                class="emotional-touch emotional-touch--milestone"
+                v-if="postSessionAutoSaved && !onboardingSampleSessionActive && !postSessionRecommendationActionable"
+                class="post-session-autosaved-note post-session-autosaved-note--quiet"
                 role="status"
               >
-                {{ postSessionMilestone }}
+                {{ t('memorisation.postSession.autoSavedNote') }}
               </p>
 
-              <p v-if="postSessionAutoSaved && !onboardingSampleSessionActive" class="post-session-autosaved-note" role="status">
-                This session was saved automatically, so your completion history is already safe.
-              </p>
+              <template v-if="!onboardingSampleSessionActive && postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
+                <section
+                  class="post-session-recommendation-confirm mutqin-guide-card"
+                  role="group"
+                  aria-labelledby="postSessionConfirmTitle"
+                >
+                  <p
+                    v-if="postSessionRecommendation?.is_end_of_surah && postSessionCompletedSurahMessage"
+                    class="post-session-surah-complete"
+                    role="status"
+                  >
+                    {{ postSessionCompletedSurahMessage }}
+                  </p>
+                  <h3 id="postSessionConfirmTitle" class="post-session-confirm-title" tabindex="-1">
+                    {{ postSessionConfirmationTitle }}
+                  </h3>
+                  <div class="post-session-confirm-details">
+                    <strong>{{ postSessionRecommendationDisplaySurahName }}</strong>
+                    <span v-if="postSessionRecommendation?.ayah_range">
+                      {{ t('memorisation.postSession.recommendation.ayahRange', {
+                        start: postSessionRecommendation.ayah_range.from,
+                        end: postSessionRecommendation.ayah_range.to
+                      }) }}
+                    </span>
+                  </div>
+                  <p v-if="postSessionRecommendationReasonText" class="post-session-confirm-reason">
+                    {{ postSessionRecommendationReasonText }}
+                  </p>
+                  <p
+                    v-if="postSessionTechniqueTip"
+                    class="post-session-technique-chip"
+                  >
+                    <i class="bi" :class="postSessionTechniqueTip.icon" aria-hidden="true"></i>
+                    <span>{{ postSessionTechniqueTip.label }}</span>
+                  </p>
+                  <p
+                    v-if="postSessionRecommendationStartError"
+                    class="post-session-recommendation-error"
+                    role="alert"
+                  >
+                    {{ postSessionRecommendationStartError }}
+                  </p>
+                </section>
+              </template>
+
+              <template v-else-if="!onboardingSampleSessionActive">
+                <section
+                  class="post-session-recommendation-card mutqin-guide-card"
+                  :class="{
+                    'post-session-recommendation-card--revision': postSessionRecommendation?.session_mode === 'revision',
+                    'post-session-recommendation-card--loading': postSessionRecommendationStatus === 'loading',
+                    'post-session-recommendation-card--empty': postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable,
+                    'is-revealed': postSessionRecommendationStatus !== 'loading'
+                  }"
+                  :aria-busy="postSessionRecommendationStatus === 'loading' ? 'true' : 'false'"
+                  :aria-label="t('memorisation.postSession.recommendation.cardTitle')"
+                >
+                  <div v-if="postSessionRecommendationStatus === 'loading'" class="post-session-recommendation-skeleton" aria-hidden="true">
+                    <span class="post-session-skeleton-line post-session-skeleton-line--title"></span>
+                    <span class="post-session-skeleton-line post-session-skeleton-line--short"></span>
+                  </div>
+
+                  <template v-else-if="postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable">
+                    <span class="post-session-recommendation-label">{{ t('memorisation.postSession.recommendation.chooseNext') }}</span>
+                    <p class="post-session-recommendation-reason">
+                      {{ postSessionRecommendationReasonText || t('memorisation.postSession.recommendation.reasons.manualFallback') }}
+                    </p>
+                  </template>
+
+                  <template v-else>
+                    <span class="post-session-recommendation-label">{{ t('memorisation.postSession.recommendation.cardTitle') }}</span>
+                    <strong class="post-session-recommendation-heading">{{ postSessionRecommendationTitle }}</strong>
+                    <span v-if="postSessionRecommendationMeta" class="post-session-recommendation-meta">
+                      <i
+                        class="bi"
+                        :class="postSessionRecommendation?.session_mode === 'revision' ? 'bi-arrow-repeat' : 'bi-journal-plus'"
+                        aria-hidden="true"
+                      ></i>
+                      {{ postSessionRecommendationMeta }}
+                    </span>
+                    <p v-if="postSessionRecommendationReasonText" class="post-session-recommendation-reason">
+                      {{ postSessionRecommendationReasonText }}
+                    </p>
+                    <p v-if="postSessionTechniqueTip" class="post-session-technique-chip">
+                      <i class="bi" :class="postSessionTechniqueTip.icon" aria-hidden="true"></i>
+                      <span>{{ postSessionTechniqueTip.label }}</span>
+                    </p>
+                  </template>
+
+                  <p
+                    v-if="postSessionRecommendationStatus === 'error' && postSessionRecommendationError"
+                    class="post-session-recommendation-error"
+                    role="status"
+                  >
+                    {{ postSessionRecommendationError }}
+                    <button type="button" class="post-session-recommendation-retry" @click="retryPostSessionRecommendation">
+                      {{ t('memorisation.postSession.recommendation.retry') }}
+                    </button>
+                  </p>
+                </section>
+              </template>
 
               <section
-                v-if="postSessionNextStep"
+                v-else-if="postSessionNextStep"
                 class="post-session-next-step-card"
                 :aria-label="t('memorisation.postSession.nextStepLabel')"
               >
                 <span class="post-session-next-step-label">{{ t('memorisation.postSession.nextStepLabel') }}</span>
                 <p class="post-session-next-step-copy">{{ postSessionNextStep }}</p>
               </section>
-
-              <button
-                v-if="postSessionDetailRows.length || postSessionProgress"
-                type="button"
-                class="post-session-stats-toggle"
-                :aria-expanded="postSessionStatsExpanded ? 'true' : 'false'"
-                :aria-controls="'postSessionStatsPanel'"
-                @click="togglePostSessionStats"
-              >
-                <span>{{ postSessionStatsExpanded ? t('memorisation.postSession.hideStats') : t('memorisation.postSession.viewStats') }}</span>
-                <i class="bi" :class="postSessionStatsExpanded ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
-              </button>
 
               <section
                 v-if="postSessionStatsExpanded && (postSessionDetailRows.length || postSessionProgress)"
@@ -3535,9 +3649,6 @@
                       :style="{ width: `${postSessionProgress.percentComplete}%` }"
                     ></span>
                   </div>
-                  <p v-if="postSessionProgress.detail" class="mutqin-session-summary-progress-detail">
-                    {{ postSessionProgress.detail }}
-                  </p>
                 </div>
 
                 <div
@@ -3551,43 +3662,113 @@
                     class="mutqin-session-summary-row"
                   >
                     <span class="mutqin-session-summary-row-label">{{ row.label }}</span>
-                    <span class="mutqin-session-summary-row-value">
-                      {{ row.value }}
-                      <small v-if="row.hint">{{ row.hint }}</small>
-                    </span>
+                    <span class="mutqin-session-summary-row-value">{{ row.value }}</span>
                   </div>
                 </div>
               </section>
             </div>
 
             <div class="modal-footer mutqin-modal-footer">
-              <div class="mutqin-modal-actions mutqin-modal-actions--3">
+              <div
+                class="mutqin-modal-actions post-session-actions-grid"
+                :class="onboardingSampleSessionActive
+                  ? 'mutqin-modal-actions--3'
+                  : (postSessionRecommendationStep === 'confirm' ? 'post-session-actions-grid--confirm' : 'post-session-actions-grid--main')"
+              >
                 <template v-if="onboardingSampleSessionActive">
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="repeatPostSession">
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate" @click="repeatPostSession">
                     <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
                     <span>{{ postSessionUi.repeat }}</span>
                   </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="openPostSessionNewSessionOffcanvas">
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate" @click="openPostSessionNewSessionOffcanvas">
                     <i class="bi bi-plus-circle" aria-hidden="true"></i>
                     <span>{{ postSessionUi.newSession }}</span>
                   </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--primary" @click="continueFromOnboardingPostSession">
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate" @click="continueFromOnboardingPostSession">
                     <i class="bi bi-mortarboard" aria-hidden="true"></i>
                     <span>{{ t('memorisation.onboarding.finish') }}</span>
                   </button>
                 </template>
-                <template v-else>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--primary" @click="openPostSessionNewSessionOffcanvas">
-                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                    <span>Start next session</span>
+
+                <template v-else-if="postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
+                  <button
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate"
+                    :disabled="postSessionRecommendationStarting"
+                    :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
+                    @click="confirmPostSessionRecommendation"
+                  >
+                    <span
+                      v-if="postSessionRecommendationStarting"
+                      class="spinner-border spinner-border-sm"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    <i v-else class="bi bi-play-fill" aria-hidden="true"></i>
+                    <span>{{ postSessionConfirmationPrimaryLabel }}</span>
                   </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary" @click="repeatPostSession">
+                  <button
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate"
+                    :disabled="postSessionRecommendationStarting"
+                    @click="chooseOtherFromRecommendation"
+                  >
+                    <i class="bi bi-grid" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.postSession.recommendation.confirm.chooseSomethingElse') }}</span>
+                  </button>
+                  <button
+                    v-if="postSessionRecommendation?.is_end_of_surah"
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate"
+                    :disabled="postSessionRecommendationStarting"
+                    @click="reviewCompletedSurahFromRecommendation"
+                  >
                     <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                    <span>Repeat this session</span>
+                    <span>{{ t('memorisation.postSession.recommendation.reviewThisSurah') }}</span>
                   </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--ghost" @click="togglePostSessionStats">
-                    <i class="bi" :class="postSessionStatsExpanded ? 'bi-chevron-up' : 'bi-bar-chart-line'" aria-hidden="true"></i>
-                    <span>{{ postSessionStatsExpanded ? 'Hide session summary' : 'View session summary' }}</span>
+                  <button
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate"
+                    :disabled="postSessionRecommendationStarting"
+                    @click="cancelPostSessionRecommendationConfirm"
+                  >
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.postSession.recommendation.backToOverview') }}</span>
+                  </button>
+                </template>
+
+                <template v-else>
+                  <button
+                    v-if="postSessionRecommendationActionable"
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate"
+                    :disabled="postSessionRecommendationStatus === 'loading' || postSessionRecommendationStarting"
+                    @click="openPostSessionRecommendationConfirm"
+                  >
+                    <i class="bi" :class="postSessionRecommendation?.session_mode === 'revision' ? 'bi-arrow-repeat' : 'bi-play-fill'" aria-hidden="true"></i>
+                    <span>{{ postSessionRecommendationPrimaryLabel }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="mutqin-modal-btn mutqin-btn-animate"
+                    :class="postSessionRecommendationActionable ? 'mutqin-modal-btn--secondary' : 'mutqin-modal-btn--primary'"
+                    :disabled="postSessionRecommendationStatus === 'loading'"
+                    @click="chooseOtherFromRecommendation"
+                  >
+                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.postSession.recommendation.startNewSession') }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--ghost post-session-summary-btn mutqin-btn-animate"
+                    :aria-expanded="postSessionStatsExpanded ? 'true' : 'false'"
+                    aria-controls="postSessionStatsPanel"
+                    @click="togglePostSessionStats"
+                  >
+                    <i class="bi" :class="postSessionStatsExpanded ? 'bi-chevron-up' : 'bi-list-ul'" aria-hidden="true"></i>
+                    <span>{{ postSessionStatsExpanded
+                      ? t('memorisation.postSession.recommendation.hideSessionSummary')
+                      : t('memorisation.postSession.recommendation.viewSessionSummary') }}</span>
                   </button>
                 </template>
               </div>

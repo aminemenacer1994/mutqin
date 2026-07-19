@@ -38,7 +38,7 @@ const MemorisationLoadError = {
 };
 
 const Memorisation = defineAsyncComponent({
-    loader: () => import('./views/Memorisation.vue'),
+    loader: () => import(/* webpackChunkName: "memorisation" */ './views/Memorisation.vue'),
     loadingComponent: MemorisationBootFallback,
     errorComponent: MemorisationLoadError,
     delay: 0,

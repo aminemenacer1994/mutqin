@@ -73,6 +73,11 @@ class User extends Authenticatable
         return $this->hasMany(UserSession::class);
     }
 
+    public function sessionRecommendations(): HasMany
+    {
+        return $this->hasMany(SessionRecommendation::class);
+    }
+
     public function lastPosition(): HasOne
     {
         return $this->hasOne(UserLastPosition::class);

@@ -100,8 +100,31 @@ export const learningApi = {
     const { data } = await http.get('/session')
     return data?.session ?? null
   },
+  async getCurrentSession() {
+    const { data } = await http.get('/session/current')
+    return {
+      session: data?.session ?? null,
+      unfinished: !!data?.unfinished,
+    }
+  },
   async saveSession(payload) {
     const { data } = await http.post('/session', payload)
+    return data
+  },
+  async startSession(payload = {}) {
+    const { data } = await http.post('/session/start', payload)
+    return data
+  },
+  async resumeSession(payload = {}) {
+    const { data } = await http.post('/session/resume', payload)
+    return data
+  },
+  async endSession(payload = {}) {
+    const { data } = await http.post('/session/end', payload)
+    return data
+  },
+  async discardOnboardingExampleSession(payload = {}) {
+    const { data } = await http.post('/session', { ...payload, action: 'discard_example' })
     return data
   },
 
@@ -148,6 +171,25 @@ export const learningApi = {
   // One-time legacy migration --------------------------------------------
   async migrateLocalStorage(payload) {
     const { data } = await http.post('/migrate-local-storage', payload)
+    return data
+  },
+
+  // Personalised next-session recommendations -----------------------------
+  async getNextRecommendation() {
+    const { data } = await http.get('/recommendations/next')
+    return data?.recommendation ?? null
+  },
+  async startRecommendedSession(recommendationId) {
+    const { data } = await http.post('/recommendations/start', {
+      recommendation_id: recommendationId,
+    })
+    return data
+  },
+  async rejectRecommendation(recommendationId, choseOther = true) {
+    const { data } = await http.post('/recommendations/reject', {
+      recommendation_id: recommendationId,
+      chose_other: choseOther,
+    })
     return data
   },
 }

@@ -30,7 +30,11 @@
     "method": "الطريقة",
     "tajweed": "Tajweed",
     "dismiss": "Dismiss",
-    "skipOnboarding": "Skip onboarding"
+    "skipOnboarding": "Skip onboarding",
+    "resumeSession": "استئناف الجلسة",
+    "resumingSession": "جارٍ الاستئناف…",
+    "endingSession": "جارٍ الإنهاء…",
+    "startingSession": "جارٍ البدء…"
   },
   "auth": {
     "continueGoogle": "المتابعة باستخدام Google",
@@ -408,7 +412,7 @@
     "workspaceEmpty": {
       "kicker": "جاهز للبدء",
       "title": "اختر سورة ونطاقاً",
-      "desc": "استخدم عناصر التحكم لإعداد نطاق جديد.",
+      "desc": "افتح إعداد الجلسة لاختيار سورة ونطاق آيات. تظهر الآيات هنا بعد البدء.",
       "startNewSession": "بدء جلسة جديدة",
       "continuePreviousSession": "متابعة الجلسة السابقة"
     },
@@ -661,7 +665,9 @@
         }
       },
       "intro": "Four quick steps to get oriented before your first session.",
-      "confirmChoice": "Confirm choice"
+      "confirmChoice": "Confirm choice",
+      "startOnboarding": "Start Onboarding",
+      "continueOnboarding": "Continue Onboarding"
     },
     "open_session_setup": "فتح إعداد الجلسة",
     "open_controls": "فتح عناصر التحكم",
@@ -1071,7 +1077,64 @@
       "summaryTitle": "Session summary",
       "progressLabel": "Range progress",
       "detailsLabel": "Session details",
-      "nextStepLabel": "Suggested next step"
+      "nextStepLabel": "Suggested next step",
+      "autoSavedNote": "تم حفظ تقدّمك.",
+      "recommendation": {
+        "cardTitle": "التالي",
+        "chooseNext": "ماذا تريد تاليًا؟",
+        "recommendedNext": "{surah} · {range}",
+        "recommendedNextSurah": "سورة {surah}",
+        "surahCompletedTitle": "الحمد لله — أتممت سورة {surah}",
+        "ayahRange": "الآيات {start}–{end}",
+        "singleAyah": "الآية {ayah}",
+        "ayahCount": "{count} آيات",
+        "modeNewLearning": "جديد",
+        "modeRevision": "مراجعة",
+        "modeNextSurah": "السورة التالية",
+        "startRecommendedNextSession": "تابع",
+        "startRecommendedRevision": "راجع الآن",
+        "continueToNextSurah": "السورة التالية",
+        "startNewSession": "اختر نطاقًا",
+        "viewSessionSummary": "تفاصيل الجلسة",
+        "hideSessionSummary": "إخفاء التفاصيل",
+        "reviewThisSurah": "راجع هذه السورة",
+        "backToOverview": "رجوع",
+        "retry": "أعد المحاولة",
+        "loadError": "الاقتراح غير متاح — جلستك محفوظة.",
+        "startError": "تعذّر البدء. حاول مرة أخرى.",
+        "techniqueLabel": "مفيد الآن",
+        "techniques": {
+          "blur": "وضع الإخفاء — أخفِ النص وتذكّر",
+          "focus": "وضع التركيز — آية واحدة كل مرة",
+          "talqin": "التلقين — استمع ثم كرّر"
+        },
+        "confirm": {
+          "continueNextAyat": "هل تتابع الآيات التالية؟",
+          "reviewAgain": "هل تراجع هذه الآيات؟",
+          "continueNextSurah": "هل أنت مستعد للسورة التالية؟",
+          "startSession": "ابدأ",
+          "startRevision": "ابدأ المراجعة",
+          "continueToNextSurah": "تابع",
+          "chooseSomethingElse": "اختر شيئًا آخر"
+        },
+        "reasons": {
+          "strongPreviousPerformance": "ما شاء الله — أحسنت. تابع بلطف.",
+          "continueCurrentSurah": "بارك الله فيك. تابع مع {count} آيات التالية.",
+          "revisionRequired": "مراجعة هادئة تساعد على تثبيت هذه الآيات.",
+          "difficultAyahDetected": "آية تحتاج عناية. راجعها بلطف قبل المتابعة.",
+          "completeRemainingAyat": "تبقّى {count} — أتمّ السورة بحضور.",
+          "surahCompleted": "الحمد لله — أتممت سورة {surah}. تابع عندما يطمئن قلبك.",
+          "resumeIncompleteSession": "استأنف بإخلاص من حيث توقفت.",
+          "reinforceRecentRange": "عودة هادئة تساعد الآيات على الاستقرار في القلب.",
+          "learningPlanComplete": "لحظة جميلة للعودة إلى سور سابقة.",
+          "manualFallback": "اختر ما تريد تلاوته تاليًا."
+        }
+      },
+      "viewStats": "عرض الإحصاءات",
+      "hideStats": "إخفاء الإحصاءات",
+      "celebrationTitleComplete": "الحمد لله",
+      "celebrationTitlePartial": "بارك الله فيك",
+      "celebrationMessage": "جهدك محفوظ بإخلاص."
     },
     "start_reciting_prompt": "ابدأ التلاوة",
     "view_all_recording_library": "عرض كل مكتبة التسجيلات",
@@ -1484,7 +1547,9 @@
     "textSizePercent": "Text size: {percent}%",
     "audioElementNotReady": "Playback could not start because the audio player did not finish loading. Refresh the page, then press play again.",
     "audioRecordingNotReady": "Recording playback is not ready yet. Close any open check modal, refresh if needed, then try again.",
-    "playbackTapToPlay": "Your browser blocked autoplay. Tap play when you are ready to listen."
+    "playbackTapToPlay": "Your browser blocked autoplay. Tap play when you are ready to listen.",
+    "sessionResumeFailed": "Unable to resume session. Please try again.",
+    "sessionEndFailed": "Unable to end session. Please try again."
   },
   "errors": {
     "network": "خطأ في الشبكة. تحقق من اتصالك."

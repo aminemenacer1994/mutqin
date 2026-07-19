@@ -30,7 +30,11 @@
     "method": "Method",
     "tajweed": "Tajwid",
     "dismiss": "Dismiss",
-    "skipOnboarding": "Skip onboarding"
+    "skipOnboarding": "Skip onboarding",
+    "resumeSession": "Reanudar sesión",
+    "resumingSession": "Reanudando…",
+    "endingSession": "Finalizando…",
+    "startingSession": "Iniciando…"
   },
   "auth": {
     "continueGoogle": "Continue with Google",
@@ -408,7 +412,7 @@
     "workspaceEmpty": {
       "kicker": "Ready to begin",
       "title": "Choose a surah and range",
-      "desc": "Use session controls to set up a new range. The main workspace will stay in view once you start.",
+      "desc": "Open session setup to pick a surah and ayah range. Your verses appear here once you start.",
       "startNewSession": "Iniciar nueva sesión",
       "continuePreviousSession": "Continuar sesión anterior"
     },
@@ -981,7 +985,9 @@
             "Insights"
           ]
         }
-      }
+      },
+      "startOnboarding": "Start Onboarding",
+      "continueOnboarding": "Continue Onboarding"
     },
     "open_session_setup": "Open session setup",
     "open_controls": "Open controls",
@@ -1092,7 +1098,64 @@
       "repeat": "Repetir esta sesión",
       "newSession": "Iniciar nueva sesión",
       "save": "Guardar esta sesión",
-      "savedToast": "Esta sesión se guardó correctamente."
+      "savedToast": "Esta sesión se guardó correctamente.",
+      "autoSavedNote": "Progress saved.",
+      "recommendation": {
+        "cardTitle": "Next",
+        "chooseNext": "What would you like next?",
+        "recommendedNext": "{surah} · {range}",
+        "recommendedNextSurah": "Surah {surah}",
+        "surahCompletedTitle": "Alhamdulillah — Surah {surah} complete",
+        "ayahRange": "Ayat {start}–{end}",
+        "singleAyah": "Ayah {ayah}",
+        "ayahCount": "{count} ayat",
+        "modeNewLearning": "New",
+        "modeRevision": "Revision",
+        "modeNextSurah": "Next surah",
+        "startRecommendedNextSession": "Continue",
+        "startRecommendedRevision": "Revise now",
+        "continueToNextSurah": "Next surah",
+        "startNewSession": "Choose range",
+        "viewSessionSummary": "Session details",
+        "hideSessionSummary": "Hide details",
+        "reviewThisSurah": "Revise this surah",
+        "backToOverview": "Back",
+        "retry": "Try again",
+        "loadError": "Suggestion unavailable — your session is still saved.",
+        "startError": "Could not start. Please try again.",
+        "techniqueLabel": "Helpful now",
+        "techniques": {
+          "blur": "Blur mode — hide text and recall",
+          "focus": "Focus mode — one ayah at a time",
+          "talqin": "Talqin — listen, then repeat"
+        },
+        "confirm": {
+          "continueNextAyat": "Continue to the next ayat?",
+          "reviewAgain": "Revise these ayat?",
+          "continueNextSurah": "Ready for the next surah?",
+          "startSession": "Begin",
+          "startRevision": "Begin revision",
+          "continueToNextSurah": "Continue",
+          "chooseSomethingElse": "Choose differently"
+        },
+        "reasons": {
+          "strongPreviousPerformance": "MashaAllah — you recited well. Continue gently.",
+          "continueCurrentSurah": "Barakallahu feek. Continue with the next {count} ayat.",
+          "revisionRequired": "A calm revision will settle these ayat.",
+          "difficultAyahDetected": "One ayah needs care. Revise gently before moving on.",
+          "completeRemainingAyat": "Only {count} ayah remain — complete this surah with presence.",
+          "surahCompleted": "Alhamdulillah — Surah {surah} is complete. Continue when ready.",
+          "resumeIncompleteSession": "Resume with sincerity where you paused.",
+          "reinforceRecentRange": "A quiet return helps these ayat settle in the heart.",
+          "learningPlanComplete": "A beautiful moment to revisit earlier surahs.",
+          "manualFallback": "Choose what you would like to recite next."
+        }
+      },
+      "viewStats": "View stats",
+      "hideStats": "Hide stats",
+      "celebrationTitleComplete": "Alhamdulillah",
+      "celebrationTitlePartial": "Barakallahu feek",
+      "celebrationMessage": "Your effort is recorded with sincerity."
     },
     "congratulations_todays_hifz_session_is_complete": "Congratulations. Today&apos;s Hifz session is complete.",
     "memorised_today": "Memorised today",
@@ -1480,7 +1543,9 @@
     "wordTimingUnavailableForThisAyah": "Word timing unavailable for this ayah.",
     "unableToPlayThisWordRight": "Unable to play this word right now.",
     "unableToPlayAyahNow": "Unable to play this ayah right now.",
-    "textSizePercent": "Text size: {percent}%"
+    "textSizePercent": "Text size: {percent}%",
+    "sessionResumeFailed": "Unable to resume session. Please try again.",
+    "sessionEndFailed": "Unable to end session. Please try again."
   },
   "errors": {
     "network": "Network error. Check your connection."
