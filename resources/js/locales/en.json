@@ -545,7 +545,12 @@
       "setupTab": "Session setup",
       "tajweedLabel": "Tajweed",
       "enableWordAudio": "Enable audio for individual word chips",
-      "guestAuthShell": "Login"
+      "guestAuthShell": "Login",
+      "ayahNumberLabel": "Ayah {number}",
+      "playRecording": "Play recording",
+      "pauseRecording": "Pause recording",
+      "replayRecording": "Replay recording",
+      "loadingRecording": "Loading recording"
     },
     "onboardingLabel": "Onboarding",
     "player": {
@@ -676,10 +681,10 @@
       "afterNewAyahs": "After today's new ayahs"
     },
     "talqinMode": {
-      "title": "Talqin mode",
-      "subtitle": "Pause after each ayah so the learner can repeat before the next one starts.",
-      "description": "Pause after each ayah for repeat-back practice.",
-      "bestFor": "Best for listen and repeat.",
+      "title": "Listen and repeat (Talqin)",
+      "subtitle": "Listen to each section, then repeat it",
+      "description": "Listen to each section, then repeat it",
+      "bestFor": "Best for listen-and-repeat practice.",
       "hint": "Uses the longer of your delay or a brief verse-length pause."
     },
     "plannerUi": {
@@ -888,7 +893,8 @@
     "stats": {
       "progress": "Progress",
       "duration": "Duration",
-      "repeats": "Repeats"
+      "repeats": "Repeats",
+      "reciter": "Reciter"
     },
     "due": "Due",
     "audio": {
@@ -1038,26 +1044,26 @@
     },
     "delay_between_recitations_secs": "Delay between recitations (secs)",
     "pause_before_each_next_repetition_recitation_in_au": "Pause before each next repetition/recitation in auto mode.",
-    "focus_mode": "Focus Mode",
+    "focus_mode": "One ayah at a time (Focus)",
     "reduce_distractions_around_the_active_ayah": "Reduce distractions around the active ayah",
     "best_for_deep_memorisation_sessions": "Best for: Deep memorisation sessions",
     "focus_strength": "Focus strength",
     "higher_values_dim_non_active_verses_more_aggressiv": "Higher values dim non-active verses more aggressively.",
-    "blur_mode": "Blur Mode",
-    "progressive_concealment_for_active_recall": "Progressive concealment for active recall",
-    "blurs_upcoming_verses_requiring_you_to_recall_them": "Blurs upcoming verses, requiring you to recall them before revealing.",
+    "blur_mode": "Gradually hide the text (Blur)",
+    "progressive_concealment_for_active_recall": "Hide more of the text gradually to strengthen recall",
+    "blurs_upcoming_verses_requiring_you_to_recall_them": "Hide more of the text gradually to strengthen recall",
     "best_for_active_recall_testing": "Best for: Active recall testing",
     "blur_intensity": "Blur Intensity",
     "hold": "Hold",
     "hover_or_long_press_to_peek_temporarily": ", hover, or long-press to peek temporarily",
-    "chaining": "Chaining",
+    "chaining": "Join ayahs together (Chaining)",
     "best_for_building_long_passages": "Best for: Building long passages",
-    "linking": "Linking",
-    "cumulative": "Cumulative",
+    "linking": "Practice ayah pairs (Linking)",
+    "cumulative": "Grow the passage step by step (Cumulative)",
     "repeats_per_step": "Repeats per step",
     "number_of_times_to_repeat_each_chaining_step": "Number of times to repeat each chaining step",
-    "anchor_mode": "Anchor Mode",
-    "mental_hooks_using_key_words": "Mental hooks using key words",
+    "anchor_mode": "Highlight memory words (Anchor)",
+    "mental_hooks_using_key_words": "Use key words as hooks to recall each ayah",
     "highlights_key_words_as_memory_anchors_to_help_rec": "Highlights key words as memory anchors to help recall the entire ayah.",
     "best_for_memorising_key_vocabulary": "Best for: Memorising key vocabulary",
     "anchor_points_per_ayah": "Anchor points per ayah",
@@ -1120,6 +1126,9 @@
       "celebrationTitleComplete": "Alhamdulillah",
       "celebrationTitlePartial": "Barakallahu feek",
       "celebrationMessage": "Your effort is recorded with sincerity.",
+      "duaStrengthen": "May Allah strengthen what you have memorised and make it firm in your heart.",
+      "duaStrengthenShort": "May Allah strengthen what you have memorised.",
+      "sessionStats": "Session stats",
       "viewStats": "View stats",
       "hideStats": "Hide stats",
       "repeat": "Repeat this session",
@@ -1129,6 +1138,9 @@
       "autoSavedNote": "Progress saved.",
       "recommendation": {
         "cardTitle": "Next",
+        "nextSetTitle": "Continue to the next set",
+        "revisionSetTitle": "Repeat this range",
+        "nextSurahTitle": "Continue to the next surah",
         "chooseNext": "What would you like next?",
         "recommendedNext": "{surah} · {range}",
         "recommendedNextSurah": "Surah {surah}",
@@ -1138,23 +1150,72 @@
         "ayahCount": "{count} ayat",
         "modeNewLearning": "New",
         "modeRevision": "Revision",
+        "modeRepeated": "Repeated",
         "modeNextSurah": "Next surah",
-        "startRecommendedNextSession": "Continue",
+        "startRecommendedNextSession": "Start recommended session",
         "startRecommendedRevision": "Revise now",
         "continueToNextSurah": "Next surah",
+        "continueToAyat": "Continue to ayat {start}–{end}",
+        "repeatAyat": "Repeat ayat {start}–{end}",
+        "repeatThisSession": "Repeat this session",
+        "adjustSettings": "Adjust settings",
+        "resetSettings": "Reset to recommended",
+        "testWithAiRecite": "Test with AI Recite",
+        "testMyMemorisation": "Test my memorisation",
+        "aiReciteSubtitle": "Recite this range from memory and receive a focused review before moving forward",
+        "aiReciteHint": "Recite this completed range. Your result will update the next-step recommendation.",
         "startNewSession": "Start new session",
+        "startDifferentSession": "Start a different session",
         "viewSessionSummary": "Session details",
         "hideSessionSummary": "Hide details",
         "reviewThisSurah": "Revise this surah",
         "backToOverview": "Back",
         "retry": "Try again",
-        "loadError": "Suggestion unavailable — your session is still saved.",
+        "retryRecommendation": "Prepare recommendation again",
+        "loadError": "Your session was saved successfully. We could not prepare your next recommendation. You can retry or choose another session.",
         "startError": "Could not start. Please try again.",
+        "settingsError": "Could not save settings. Please try again.",
+        "confidenceError": "Could not save your response. Please try again.",
+        "aiReciteError": "AI Recite is unavailable right now. Your session is still saved.",
+        "openingAiRecite": "Opening AI Recite…",
+        "preparingRecommendation": "Preparing recommendation…",
+        "startingNextSession": "Starting next set…",
+        "preparingRepeatSession": "Preparing revision…",
+        "savingSettings": "Saving settings…",
+        "completingSession": "Completing session…",
         "techniqueLabel": "Helpful now",
+        "settingsSummaryLabel": "Suggested settings",
+        "settingsTechnique": "Technique",
+        "settingsSpeed": "Playback",
+        "settingsRepetitions": "Repetitions",
+        "settingsReciter": "Reciter",
+        "settingsOutcome": "These settings are intended to help you hear each phrase more clearly, repeat it more consistently and strengthen recall before progressing.",
+        "repetitionsSummary": "{count} repetitions",
+        "aiResultLabel": "AI Recite",
+        "aiResult": {
+          "strong": "Strong recall",
+          "mixed": "Needs review",
+          "weak": "Needs practice"
+        },
+        "confidencePrompt": "How confident do you feel with this range?",
+        "confidenceConfident": "Confident",
+        "confidenceNeedsPractice": "Needs more practice",
+        "supportingCompletedRange": "Masha’Allah, you completed {surah}, ayat {start}–{end}",
+        "supportingProgressSaved": "Your progress has been saved.",
+        "repeatThisRange": "Repeat this range",
+        "continueNextSet": "Continue to the next set",
+        "continueNextSurahShort": "Continue to the next surah",
+        "repeatRangeTitle": "Repeat {surah}, {range}",
+        "aiReciteShort": "AI Recite",
+        "aiReciteHintShort": "Test this range from memory.",
+        "speedPill": "{speed}× speed",
         "techniques": {
-          "blur": "Blur mode — hide text and recall",
-          "focus": "Focus mode — one ayah at a time",
-          "talqin": "Talqin — listen, then repeat"
+          "blur": "Gradually hide the text (Blur)",
+          "focus": "One ayah at a time (Focus)",
+          "talqin": "Listen and repeat (Talqin)",
+          "blurShort": "Gradually hide the text (Blur)",
+          "focusShort": "One ayah at a time (Focus)",
+          "talqinShort": "Listen and repeat (Talqin)"
         },
         "confirm": {
           "continueNextAyat": "Continue to the next ayat?",
@@ -1166,16 +1227,26 @@
           "chooseSomethingElse": "Choose differently"
         },
         "reasons": {
-          "strongPreviousPerformance": "MashaAllah — you recited well. Continue gently.",
-          "continueCurrentSurah": "Barakallahu feek. Continue with the next {count} ayat.",
-          "revisionRequired": "A calm revision will settle these ayat.",
-          "difficultAyahDetected": "One ayah needs care. Revise gently before moving on.",
-          "completeRemainingAyat": "Only {count} ayah remain — complete this surah with presence.",
-          "surahCompleted": "Alhamdulillah — Surah {surah} is complete. Continue when ready.",
-          "resumeIncompleteSession": "Resume with sincerity where you paused.",
-          "reinforceRecentRange": "A quiet return helps these ayat settle in the heart.",
-          "learningPlanComplete": "A beautiful moment to revisit earlier surahs.",
-          "manualFallback": "Choose what you would like to recite next."
+          "strongPreviousPerformance": "Continue while this range is still fresh.",
+          "continueCurrentSurah": "Continue while this range is still fresh.",
+          "continueWhileFresh": "Continue while this range is still fresh.",
+          "revisionRequired": "Use a slower pace and a few more repetitions to strengthen recall.",
+          "needsMorePractice": "Use a slower pace and a few more repetitions to strengthen recall.",
+          "difficultAyahDetected": "Review this range once more before moving on.",
+          "completeRemainingAyat": "Finish the remaining ayat in this surah.",
+          "surahCompleted": "Masha’Allah — this Surah is complete.",
+          "resumeIncompleteSession": "Resume where you paused.",
+          "reinforceRecentRange": "Return to these ayat to strengthen recall.",
+          "learningPlanComplete": "Choose what you would like to recite next.",
+          "manualFallback": "Choose what you would like to recite next.",
+          "aiReciteStrong": "You recalled this range well.",
+          "aiReciteMixed": "Review this range once more.",
+          "aiReciteWeak": "A little more practice will help.",
+          "confidenceConfident": "Continue while this range is still fresh.",
+          "confidenceNeedsPractice": "Use a slower pace and a few more repetitions to strengthen recall.",
+          "simpleContinue": "Continue while this range is still fresh.",
+          "simpleRepeat": "Use a slower pace and a few more repetitions to strengthen recall.",
+          "simpleNextSurah": "Ready for Surah {surah} when you are."
         }
       }
     },
@@ -1321,7 +1392,7 @@
     "loading_quran_search_index": "Loading Quran search index...",
     "no_matching_ayahs_found_for_this_passage_and_filte": "No matching ayahs found for this passage and filter.",
     "techniques": {
-      "focusDescription": "Focus Mode dims all non-active verses, helping you concentrate on the current ayah without distractions.",
+      "focusDescription": "Concentrate on one ayah before moving forward",
       "chainingOffDescription": "Play the selected ayahs in order without chaining.",
       "chainingCumulativeDescription": "Build longer runs by adding one ayah at a time.",
       "chainingLinkingDescription": "Strengthen transitions between neighbouring ayahs.",
@@ -1336,11 +1407,11 @@
       "chainingOffLabel": "Chaining off · {count} repeats",
       "chainingCumulativeLabel": "Cumulative · {count} repeats",
       "chainingLinkingLabel": "Linking · {count} repeats",
-      "focusActiveDescription": "Non-active verses are softened so the current ayah stays central.",
-      "blurActiveDescription": "Upcoming verses are hidden with {px}px blur for active recall.",
+      "focusActiveDescription": "Concentrate on one ayah before moving forward",
+      "blurActiveDescription": "Hide more of the text gradually to strengthen recall",
       "chainingActiveDescription": "{count} repeat(s) per chaining step.",
-      "cumulativeChaining": "Cumulative Chaining",
-      "linkingChaining": "Linking Chaining",
+      "cumulativeChaining": "Grow the passage step by step (Cumulative)",
+      "linkingChaining": "Practice ayah pairs (Linking)",
       "anchorOffDescription": "Anchor mode off · use key words as memory hooks",
       "anchorUsingDescription": "Using {anchors} as mental anchors for each ayah",
       "anchorFirstLast": "first/last word",
@@ -1482,7 +1553,45 @@
       "naskh": "Noto Naskh Arabic",
       "scheherazade": "Scheherazade New",
       "lateef": "Lateef"
-    }
+    },
+    "techniqueDisplay": {
+      "talqin": {
+        "label": "Listen and repeat (Talqin)",
+        "short": "Listen and repeat (Talqin)",
+        "description": "Listen to each section, then repeat it"
+      },
+      "focus": {
+        "label": "One ayah at a time (Focus)",
+        "short": "One ayah at a time (Focus)",
+        "description": "Concentrate on one ayah before moving forward"
+      },
+      "blur": {
+        "label": "Gradually hide the text (Blur)",
+        "short": "Gradually hide the text (Blur)",
+        "description": "Hide more of the text gradually to strengthen recall"
+      },
+      "chaining": {
+        "label": "Join ayahs together (Chaining)",
+        "short": "Join ayahs together (Chaining)",
+        "description": "Link neighbouring ayahs so the passage flows"
+      },
+      "anchor": {
+        "label": "Highlight memory words (Anchor)",
+        "short": "Highlight memory words (Anchor)",
+        "description": "Use key words as hooks to recall each ayah"
+      },
+      "linking": {
+        "label": "Practice ayah pairs (Linking)",
+        "short": "Practice ayah pairs (Linking)",
+        "description": "Practise each ayah, then join it with the next"
+      },
+      "cumulative": {
+        "label": "Grow the passage step by step (Cumulative)",
+        "short": "Grow the passage step by step (Cumulative)",
+        "description": "Add one ayah at a time to build a longer run"
+      }
+    },
+    "reduce_distracted_around_the_active_ayah": "Concentrate on one ayah before moving forward"
   },
   "toasts": {
     "saved": "Saved successfully.",
@@ -1520,7 +1629,7 @@
     "downloadReady": "Download ready ✓",
     "exportFailedRetry": "Export failed, retry",
     "thisResultDoesNotHaveEnough": "This result does not have enough stored metadata to re-run the audit.",
-    "unableToPlayThisRecordingRight": "Couldn't play this recording. Try again.",
+    "unableToPlayThisRecordingRight": "We could not play this recording. Try reloading it or record again.",
     "audioSystemNotReady": "Audio isn't ready yet.",
     "audioElementNotReady": "Audio isn't ready yet. Try again in a moment.",
     "audioRecordingNotReady": "This recording isn't ready yet. Try again in a moment.",
@@ -1595,7 +1704,8 @@
     "unableToPlayAyahNow": "Couldn't play this ayah. Try again.",
     "textSizePercent": "Text size: {percent}%",
     "sessionResumeFailed": "Unable to resume session. Please try again.",
-    "sessionEndFailed": "Unable to end session. Please try again."
+    "sessionEndFailed": "Unable to end session. Please try again.",
+    "couldNotPlayRecording": "We could not play this recording. Try reloading it or record again."
   },
   "errors": {
     "network": "Network error. Check your connection."

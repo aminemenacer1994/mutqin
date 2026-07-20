@@ -4,7 +4,7 @@
         "dev": "mix",
         "watch": "mix watch",
         "prod": "mix --production",
-        "test:mutqin": "node --experimental-vm-modules tests/js/mutqin-flow.test.mjs && node --experimental-vm-modules tests/js/recitation-replay.test.mjs && node --experimental-vm-modules tests/js/recitation-validation.test.mjs && node tests/js/mutqin-controls-wiring.test.mjs && node --experimental-vm-modules tests/js/next-session-recommendation.test.mjs && node --experimental-vm-modules tests/js/session-lifecycle.test.mjs",
+        "test:mutqin": "node --experimental-vm-modules tests/js/mutqin-flow.test.mjs && node --experimental-vm-modules tests/js/recitation-replay.test.mjs && node --experimental-vm-modules tests/js/recitation-validation.test.mjs && node tests/js/mutqin-controls-wiring.test.mjs && node --experimental-vm-modules tests/js/next-session-recommendation.test.mjs && node --experimental-vm-modules tests/js/session-lifecycle.test.mjs && node --experimental-vm-modules tests/js/technique-display.test.mjs && node --experimental-vm-modules tests/js/recording-playback.test.mjs && node --experimental-vm-modules tests/js/mushaf-ayah-number.test.mjs",
         "test:mutqin:browser": "node tests/js/mutqin-browser-smoke.mjs",
         "test:mutqin:mobile": "node tests/js/mutqin-mobile-responsive.test.mjs"
     },

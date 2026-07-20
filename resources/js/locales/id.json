@@ -543,7 +543,8 @@
     "stats": {
       "progress": "Progres",
       "duration": "Durasi",
-      "repeats": "Pengulangan"
+      "repeats": "Pengulangan",
+      "reciter": "Qari"
     },
     "due": "Jatuh Tempo",
     "audio": {
@@ -696,25 +697,25 @@
     },
     "delay_between_recitations_secs": "Jeda antar tilawah (detik)",
     "pause_before_each_next_repetition_recitation_in_au": "Jeda sebelum setiap pengulangan/tilawah berikutnya dalam mode otomatis.",
-    "focus_mode": "Mode Fokus",
+    "focus_mode": "Satu ayat sekaligus (Focus)",
     "reduce_distractions_around_the_active_ayah": "Kurangi gangguan di sekitar ayah aktif",
     "best_for_deep_memorisation_sessions": "Terbaik untuk: Sesi hafalan mendalam",
     "focus_strength": "Kekuatan fokus",
     "higher_values_dim_non_active_verses_more_aggressiv": "Nilai lebih tinggi meredupkan ayat non-aktif lebih agresif.",
-    "blur_mode": "Mode Blur",
+    "blur_mode": "Sembunyikan teks bertahap (Blur)",
     "progressive_concealment_for_active_recall": "Penyembunyian progresif untuk hafalan aktif",
     "blurs_upcoming_verses_requiring_you_to_recall_them": "Menyembunyikan ayat mendatang, mewajibkan Anda mengingatnya sebelum ditampilkan.",
     "best_for_active_recall_testing": "Terbaik untuk: Uji hafalan aktif",
     "blur_intensity": "Intensitas Blur",
     "hold": "Tahan",
     "hover_or_long_press_to_peek_temporarily": ", hover, atau tekan lama untuk intip sementara",
-    "chaining": "Chaining",
+    "chaining": "Gabungkan ayat (Chaining)",
     "best_for_building_long_passages": "Terbaik untuk: Membangun bagian panjang",
-    "linking": "Linking",
-    "cumulative": "Kumulatif",
+    "linking": "Latih pasangan ayat (Linking)",
+    "cumulative": "Perpanjang bacaan langkah demi langkah (Cumulative)",
     "repeats_per_step": "Pengulangan per langkah",
     "number_of_times_to_repeat_each_chaining_step": "Berapa kali mengulang setiap langkah chaining",
-    "anchor_mode": "Mode Anchor",
+    "anchor_mode": "Sorot kata kunci (Anchor)",
     "mental_hooks_using_key_words": "Pengait mental menggunakan kata kunci",
     "highlights_key_words_as_memory_anchors_to_help_rec": "Menyorot kata kunci sebagai jangkar hafalan untuk membantu mengingat seluruh ayah.",
     "best_for_memorising_key_vocabulary": "Terbaik untuk: Menghafal kosakata kunci",
@@ -859,7 +860,7 @@
     "loading_quran_search_index": "Memuat indeks pencarian Al-Quran...",
     "no_matching_ayahs_found_for_this_passage_and_filte": "Tidak ada ayah cocok untuk bagian dan filter ini.",
     "techniques": {
-      "focusDescription": "Mode Fokus meredupkan semua ayat non-aktif, membantu Anda fokus pada ayah saat ini tanpa gangguan.",
+      "focusDescription": "Concentrate on one ayah before moving forward",
       "chainingOffDescription": "Putar ayah terpilih berurutan tanpa chaining.",
       "chainingCumulativeDescription": "Bangun rangkaian lebih panjang dengan menambah satu ayah setiap kali.",
       "chainingLinkingDescription": "Perkuat transisi antar ayah tetangga.",
@@ -874,11 +875,11 @@
       "chainingOffLabel": "Chaining mati · {count} pengulangan",
       "chainingCumulativeLabel": "Kumulatif · {count} pengulangan",
       "chainingLinkingLabel": "Linking · {count} pengulangan",
-      "focusActiveDescription": "Ayat non-aktif dilembutkan agar ayah saat ini tetap sentral.",
-      "blurActiveDescription": "Ayat mendatang disembunyikan dengan blur {px}px untuk hafalan aktif.",
+      "focusActiveDescription": "Concentrate on one ayah before moving forward",
+      "blurActiveDescription": "Hide more of the text gradually to strengthen recall",
       "chainingActiveDescription": "{count} pengulangan per langkah chaining.",
-      "cumulativeChaining": "Chaining Kumulatif",
-      "linkingChaining": "Chaining Linking",
+      "cumulativeChaining": "Grow the passage step by step (Cumulative)",
+      "linkingChaining": "Practice ayah pairs (Linking)",
       "anchorOffDescription": "Mode anchor mati · gunakan kata kunci sebagai pengait hafalan",
       "anchorUsingDescription": "Menggunakan {anchors} sebagai jangkar mental untuk setiap ayah",
       "anchorFirstLast": "kata pertama/terakhir",
@@ -1104,9 +1105,12 @@
         "startError": "Could not start. Please try again.",
         "techniqueLabel": "Helpful now",
         "techniques": {
-          "blur": "Blur mode — hide text and recall",
-          "focus": "Focus mode — one ayah at a time",
-          "talqin": "Talqin — listen, then repeat"
+          "blur": "Sembunyikan teks bertahap (Blur)",
+          "focus": "Satu ayat sekaligus (Focus)",
+          "talqin": "Dengar dan ulang (Talqin)",
+          "blurShort": "Sembunyikan teks bertahap (Blur)",
+          "focusShort": "Satu ayat sekaligus (Focus)",
+          "talqinShort": "Dengar dan ulang (Talqin)"
         },
         "confirm": {
           "continueNextAyat": "Continue to the next ayat?",
@@ -1119,22 +1123,84 @@
         },
         "reasons": {
           "strongPreviousPerformance": "MashaAllah — you recited well. Continue gently.",
-          "continueCurrentSurah": "Barakallahu feek. Continue with the next {count} ayat.",
-          "revisionRequired": "A calm revision will settle these ayat.",
+          "continueCurrentSurah": "This continues directly from the range you completed while it is still fresh.",
+          "revisionRequired": "Gunakan tempo lebih lambat dan lebih banyak pengulangan.",
           "difficultAyahDetected": "One ayah needs care. Revise gently before moving on.",
           "completeRemainingAyat": "Only {count} ayah remain — complete this surah with presence.",
           "surahCompleted": "Alhamdulillah — Surah {surah} is complete. Continue when ready.",
           "resumeIncompleteSession": "Resume with sincerity where you paused.",
           "reinforceRecentRange": "A quiet return helps these ayat settle in the heart.",
           "learningPlanComplete": "A beautiful moment to revisit earlier surahs.",
-          "manualFallback": "Choose what you would like to recite next."
-        }
+          "manualFallback": "Choose what you would like to recite next.",
+          "continueWhileFresh": "Lanjutkan saat rentang ini masih segar.",
+          "needsMorePractice": "Try a slower pace and additional repetitions.",
+          "aiReciteStrong": "Good progress — you recalled this range well.",
+          "aiReciteMixed": "Nearly there — review this range once more.",
+          "aiReciteWeak": "A little more practice will help.",
+          "confidenceConfident": "Continue while the previous ayat are still fresh.",
+          "confidenceNeedsPractice": "Gunakan tempo lebih lambat dan lebih banyak pengulangan.",
+          "simpleContinue": "Lanjutkan saat rentang ini masih segar.",
+          "simpleRepeat": "Gunakan tempo lebih lambat dan lebih banyak pengulangan.",
+          "simpleNextSurah": "Siap untuk Surah {surah} kapan saja."
+        },
+        "modeRepeated": "Repeated",
+        "continueToAyat": "Continue to ayat {start}–{end}",
+        "repeatThisSession": "Repeat this session",
+        "adjustSettings": "Adjust settings",
+        "resetSettings": "Reset to recommended",
+        "testWithAiRecite": "Test with AI Recite",
+        "testMyMemorisation": "Test my memorisation",
+        "retryRecommendation": "Prepare recommendation again",
+        "settingsError": "Could not save settings. Please try again.",
+        "confidenceError": "Could not save your response. Please try again.",
+        "aiReciteError": "AI Recite is unavailable right now. Your session is still saved.",
+        "openingAiRecite": "Opening AI Recite…",
+        "preparingRecommendation": "Preparing recommendation…",
+        "startingNextSession": "Starting next set…",
+        "preparingRepeatSession": "Preparing revision…",
+        "savingSettings": "Saving settings…",
+        "completingSession": "Completing session…",
+        "settingsSummaryLabel": "Suggested settings",
+        "repetitionsSummary": "{count} repetitions",
+        "confidencePrompt": "How confident do you feel with this range?",
+        "confidenceConfident": "Confident",
+        "confidenceNeedsPractice": "Needs more practice",
+        "supportingCompletedRange": "Masha’Allah, you completed {surah}, ayat {start}–{end}",
+        "supportingProgressSaved": "Your progress has been saved.",
+        "aiReciteSubtitle": "Recite this range from memory and receive a focused review before moving forward",
+        "aiReciteHint": "Recite this completed range. Your result will update the next-step recommendation.",
+        "nextSetTitle": "Lanjut ke set berikutnya",
+        "revisionSetTitle": "Ulangi rentang ini",
+        "nextSurahTitle": "Next surah",
+        "repeatAyat": "Repeat ayat {start}–{end}",
+        "startDifferentSession": "Start a different session",
+        "settingsTechnique": "Technique",
+        "settingsSpeed": "Playback",
+        "settingsRepetitions": "Repetitions",
+        "settingsReciter": "Reciter",
+        "settingsOutcome": "These settings are intended to help you hear each phrase more clearly, repeat it more consistently and strengthen recall before progressing.",
+        "aiResultLabel": "AI Recite",
+        "aiResult": {
+          "strong": "Strong recall",
+          "mixed": "Needs review",
+          "weak": "Needs practice"
+        },
+        "repeatThisRange": "Ulangi rentang ini",
+        "continueNextSet": "Lanjut ke set berikutnya",
+        "continueNextSurahShort": "Lanjut ke surah berikutnya",
+        "repeatRangeTitle": "Ulangi {surah}, {range}",
+        "aiReciteShort": "AI Recite",
+        "aiReciteHintShort": "Uji rentang ini dari hafalan.",
+        "speedPill": "{speed}× kecepatan"
       },
       "viewStats": "View stats",
       "hideStats": "Hide stats",
       "celebrationTitleComplete": "Alhamdulillah",
       "celebrationTitlePartial": "Barakallahu feek",
-      "celebrationMessage": "Your effort is recorded with sincerity."
+      "celebrationMessage": "Your effort is recorded with sincerity.",
+      "duaStrengthen": "May Allah strengthen what you have memorised and make it firm in your heart.",
+      "duaStrengthenShort": "Semoga Allah menguatkan apa yang telah dihafal.",
+      "sessionStats": "Statistik sesi"
     },
     "start_reciting_prompt": "Mulai tilawah",
     "view_all_recording_library": "Lihat semua perpustakaan rekaman",
@@ -1235,7 +1301,12 @@
       "setupTab": "Session setup",
       "tajweedLabel": "Tajweed",
       "enableWordAudio": "Enable audio for individual word chips",
-      "guestAuthShell": "Login"
+      "guestAuthShell": "Login",
+      "ayahNumberLabel": "Ayah {number}",
+      "playRecording": "Play recording",
+      "pauseRecording": "Pause recording",
+      "replayRecording": "Replay recording",
+      "loadingRecording": "Loading recording"
     },
     "calligraphy": {
       "onboarding": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
@@ -1340,9 +1411,9 @@
       "afterNewAyahs": "After today's new ayahs"
     },
     "talqinMode": {
-      "title": "Mode talqin",
-      "subtitle": "Pause after each ayah so the learner can repeat before the next one starts.",
-      "description": "Pause after each ayah for repeat-back practice.",
+      "title": "Dengar dan ulang (Talqin)",
+      "subtitle": "Dengarkan setiap bagian, lalu ulangi",
+      "description": "Dengarkan setiap bagian, lalu ulangi",
       "bestFor": "Best for listen and repeat.",
       "hint": "Uses the longer of your delay or a brief verse-length pause."
     },
@@ -1439,7 +1510,44 @@
       "aiRecite": "Your AI recitation attempt has been saved.",
       "selfCheck": "Your recording for Ayah {ayahNumber} has been saved."
     },
-    "revisitOnboarding": "Revisit onboarding"
+    "revisitOnboarding": "Revisit onboarding",
+    "techniqueDisplay": {
+      "talqin": {
+        "label": "Dengar dan ulang (Talqin)",
+        "short": "Dengar dan ulang (Talqin)",
+        "description": "Dengarkan setiap bagian, lalu ulangi"
+      },
+      "focus": {
+        "label": "Satu ayat sekaligus (Focus)",
+        "short": "Satu ayat sekaligus (Focus)",
+        "description": "Fokus pada satu ayat sebelum lanjut"
+      },
+      "blur": {
+        "label": "Sembunyikan teks bertahap (Blur)",
+        "short": "Sembunyikan teks bertahap (Blur)",
+        "description": "Sembunyikan teks lebih banyak secara bertahap untuk memperkuat hafalan"
+      },
+      "chaining": {
+        "label": "Gabungkan ayat (Chaining)",
+        "short": "Gabungkan ayat (Chaining)",
+        "description": "Hubungkan ayat berdekatan agar bacaan mengalir"
+      },
+      "anchor": {
+        "label": "Sorot kata kunci (Anchor)",
+        "short": "Sorot kata kunci (Anchor)",
+        "description": "Gunakan kata kunci sebagai pengingat tiap ayat"
+      },
+      "linking": {
+        "label": "Latih pasangan ayat (Linking)",
+        "short": "Latih pasangan ayat (Linking)",
+        "description": "Latih tiap ayat, lalu gabungkan dengan ayat berikutnya"
+      },
+      "cumulative": {
+        "label": "Perpanjang bacaan langkah demi langkah (Cumulative)",
+        "short": "Perpanjang bacaan langkah demi langkah (Cumulative)",
+        "description": "Tambah satu ayat setiap kali untuk membangun bacaan lebih panjang"
+      }
+    }
   },
   "toasts": {
     "saved": "Berhasil disimpan.",
@@ -1474,7 +1582,7 @@
     "downloadReady": "Unduhan siap ✓",
     "exportFailedRetry": "Ekspor gagal, coba lagi",
     "thisResultDoesNotHaveEnough": "Hasil ini tidak punya metadata cukup untuk menjalankan ulang audit.",
-    "unableToPlayThisRecordingRight": "Tidak dapat memutar rekaman ini sekarang.",
+    "unableToPlayThisRecordingRight": "We could not play this recording. Try reloading it or record again.",
     "audioSystemNotReady": "Sistem audio belum siap",
     "stopTheCurrentSelfCheckBefore": "Hentikan pemeriksaan diri saat ini sebelum pindah ke ayah lain.",
     "saveOrDiscardTheCurrentSelf": "Simpan atau buang usaha pemeriksaan diri saat ini sebelum ganti ayah.",
@@ -1549,7 +1657,8 @@
     "audioRecordingNotReady": "Recording playback is not ready yet. Close any open check modal, refresh if needed, then try again.",
     "playbackTapToPlay": "Your browser blocked autoplay. Tap play when you are ready to listen.",
     "sessionResumeFailed": "Unable to resume session. Please try again.",
-    "sessionEndFailed": "Unable to end session. Please try again."
+    "sessionEndFailed": "Unable to end session. Please try again.",
+    "couldNotPlayRecording": "We could not play this recording. Try reloading it or record again."
   },
   "errors": {
     "network": "Kesalahan jaringan. Periksa koneksi Anda."

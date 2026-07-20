@@ -3,29 +3,50 @@
  *
  * All Start / Resume / End session controls must derive labels and behaviour
  * from this module instead of local ad-hoc conditionals.
+ *
+ * Session status and media (audio) status are intentionally separate:
+ * pausing an ayah never changes the primary lifecycle action away from End Session.
  */
 
-/** @typedef {'uninitialised'|'onboarding_required'|'onboarding_example'|'ready'|'starting'|'active'|'playing'|'paused'|'interrupted'|'resumable'|'resuming'|'ending'|'ended'|'rejected'|'error'} SessionStatus */
+/** @typedef {'hydrating'|'onboarding_required'|'onboarding_example'|'ready_to_start'|'starting'|'active'|'interrupted_resumable'|'resuming'|'ending'|'completed'|'completion_modal_open'|'error_recoverable'|'logged_out'|'rejected'|'uninitialised'|'ready'|'resumable'|'ended'|'error'|'playing'|'paused'|'interrupted'} SessionStatus */
+
+/** @typedef {'idle'|'loading'|'playing'|'paused'|'ended'|'error'} MediaStatus */
 
 /** @typedef {'start-onboarding'|'continue-onboarding'|'try-example'|'start-session'|'resume-session'|'end-session'|'loading'|'none'} PrimarySessionAction */
 
 /** @typedef {'idle'|'starting'|'resuming'|'ending'} SessionMutation */
 
 export const SESSION_STATUS = Object.freeze({
-  UNINITIALISED: 'uninitialised',
+  HYDRATING: 'hydrating',
   ONBOARDING_REQUIRED: 'onboarding_required',
   ONBOARDING_EXAMPLE: 'onboarding_example',
-  READY: 'ready',
+  READY_TO_START: 'ready_to_start',
   STARTING: 'starting',
   ACTIVE: 'active',
-  PLAYING: 'playing',
-  PAUSED: 'paused',
-  INTERRUPTED: 'interrupted',
-  RESUMABLE: 'resumable',
+  INTERRUPTED_RESUMABLE: 'interrupted_resumable',
   RESUMING: 'resuming',
   ENDING: 'ending',
-  ENDED: 'ended',
+  COMPLETED: 'completed',
+  COMPLETION_MODAL_OPEN: 'completion_modal_open',
+  ERROR_RECOVERABLE: 'error_recoverable',
+  LOGGED_OUT: 'logged_out',
+  UNINITIALISED: 'hydrating',
+  READY: 'ready_to_start',
+  RESUMABLE: 'interrupted_resumable',
+  ENDED: 'completed',
+  ERROR: 'error_recoverable',
   REJECTED: 'rejected',
+  PLAYING: 'active',
+  PAUSED: 'active',
+  INTERRUPTED: 'active',
+})
+
+export const MEDIA_STATUS = Object.freeze({
+  IDLE: 'idle',
+  LOADING: 'loading',
+  PLAYING: 'playing',
+  PAUSED: 'paused',
+  ENDED: 'ended',
   ERROR: 'error',
 })
 
@@ -56,113 +77,114 @@ export const BACKEND_SESSION_STATUS = Object.freeze({
   ABANDONED: 'abandoned',
 })
 
-/** @type {Record<SessionStatus, SessionStatus[]>} */
+/** @type {Record<string, string[]>} */
 export const LEGAL_TRANSITIONS = Object.freeze({
-  [SESSION_STATUS.UNINITIALISED]: [
+  [SESSION_STATUS.HYDRATING]: [
     SESSION_STATUS.ONBOARDING_REQUIRED,
-    SESSION_STATUS.READY,
-    SESSION_STATUS.RESUMABLE,
-    SESSION_STATUS.ENDED,
-    SESSION_STATUS.ERROR,
+    SESSION_STATUS.READY_TO_START,
+    SESSION_STATUS.INTERRUPTED_RESUMABLE,
+    SESSION_STATUS.COMPLETED,
+    SESSION_STATUS.ACTIVE,
+    SESSION_STATUS.LOGGED_OUT,
+    SESSION_STATUS.ERROR_RECOVERABLE,
   ],
   [SESSION_STATUS.ONBOARDING_REQUIRED]: [
     SESSION_STATUS.ONBOARDING_EXAMPLE,
-    SESSION_STATUS.READY,
+    SESSION_STATUS.READY_TO_START,
     SESSION_STATUS.REJECTED,
   ],
   [SESSION_STATUS.ONBOARDING_EXAMPLE]: [
-    SESSION_STATUS.READY,
+    SESSION_STATUS.READY_TO_START,
     SESSION_STATUS.REJECTED,
-    SESSION_STATUS.ENDED,
+    SESSION_STATUS.COMPLETED,
   ],
   [SESSION_STATUS.REJECTED]: [
     SESSION_STATUS.ONBOARDING_REQUIRED,
-    SESSION_STATUS.READY,
+    SESSION_STATUS.READY_TO_START,
   ],
-  [SESSION_STATUS.READY]: [
+  [SESSION_STATUS.READY_TO_START]: [
     SESSION_STATUS.STARTING,
     SESSION_STATUS.ONBOARDING_REQUIRED,
-    SESSION_STATUS.RESUMABLE,
+    SESSION_STATUS.INTERRUPTED_RESUMABLE,
+    SESSION_STATUS.COMPLETION_MODAL_OPEN,
   ],
   [SESSION_STATUS.STARTING]: [
     SESSION_STATUS.ACTIVE,
-    SESSION_STATUS.PLAYING,
-    SESSION_STATUS.READY,
-    SESSION_STATUS.ERROR,
+    SESSION_STATUS.READY_TO_START,
+    SESSION_STATUS.ERROR_RECOVERABLE,
   ],
   [SESSION_STATUS.ACTIVE]: [
-    SESSION_STATUS.PLAYING,
-    SESSION_STATUS.PAUSED,
-    SESSION_STATUS.INTERRUPTED,
     SESSION_STATUS.ENDING,
-    SESSION_STATUS.ENDED,
+    SESSION_STATUS.COMPLETED,
+    SESSION_STATUS.INTERRUPTED_RESUMABLE,
+    SESSION_STATUS.COMPLETION_MODAL_OPEN,
   ],
-  [SESSION_STATUS.PLAYING]: [
-    SESSION_STATUS.PAUSED,
-    SESSION_STATUS.ACTIVE,
-    SESSION_STATUS.INTERRUPTED,
-    SESSION_STATUS.ENDING,
-  ],
-  [SESSION_STATUS.PAUSED]: [
-    SESSION_STATUS.PLAYING,
-    SESSION_STATUS.ACTIVE,
-    SESSION_STATUS.INTERRUPTED,
-    SESSION_STATUS.ENDING,
-  ],
-  [SESSION_STATUS.INTERRUPTED]: [
-    SESSION_STATUS.RESUMABLE,
-    SESSION_STATUS.ENDING,
-    SESSION_STATUS.ENDED,
-  ],
-  [SESSION_STATUS.RESUMABLE]: [
+  [SESSION_STATUS.INTERRUPTED_RESUMABLE]: [
     SESSION_STATUS.RESUMING,
-    SESSION_STATUS.READY,
-    SESSION_STATUS.ENDED,
+    SESSION_STATUS.READY_TO_START,
+    SESSION_STATUS.COMPLETED,
   ],
   [SESSION_STATUS.RESUMING]: [
     SESSION_STATUS.ACTIVE,
-    SESSION_STATUS.PLAYING,
-    SESSION_STATUS.PAUSED,
-    SESSION_STATUS.RESUMABLE,
-    SESSION_STATUS.ERROR,
-    SESSION_STATUS.READY,
+    SESSION_STATUS.INTERRUPTED_RESUMABLE,
+    SESSION_STATUS.ERROR_RECOVERABLE,
+    SESSION_STATUS.READY_TO_START,
   ],
   [SESSION_STATUS.ENDING]: [
-    SESSION_STATUS.ENDED,
+    SESSION_STATUS.COMPLETED,
     SESSION_STATUS.ACTIVE,
-    SESSION_STATUS.PLAYING,
-    SESSION_STATUS.PAUSED,
-    SESSION_STATUS.ERROR,
+    SESSION_STATUS.COMPLETION_MODAL_OPEN,
+    SESSION_STATUS.ERROR_RECOVERABLE,
   ],
-  [SESSION_STATUS.ENDED]: [
-    SESSION_STATUS.READY,
+  [SESSION_STATUS.COMPLETED]: [
+    SESSION_STATUS.READY_TO_START,
+    SESSION_STATUS.COMPLETION_MODAL_OPEN,
+    SESSION_STATUS.STARTING,
   ],
-  [SESSION_STATUS.ERROR]: [
-    SESSION_STATUS.READY,
-    SESSION_STATUS.RESUMABLE,
+  [SESSION_STATUS.COMPLETION_MODAL_OPEN]: [
+    SESSION_STATUS.READY_TO_START,
+    SESSION_STATUS.STARTING,
     SESSION_STATUS.ACTIVE,
+    SESSION_STATUS.COMPLETED,
+  ],
+  [SESSION_STATUS.ERROR_RECOVERABLE]: [
+    SESSION_STATUS.READY_TO_START,
+    SESSION_STATUS.INTERRUPTED_RESUMABLE,
+    SESSION_STATUS.ACTIVE,
+    SESSION_STATUS.ONBOARDING_REQUIRED,
+  ],
+  [SESSION_STATUS.LOGGED_OUT]: [
+    SESSION_STATUS.HYDRATING,
+    SESSION_STATUS.READY_TO_START,
     SESSION_STATUS.ONBOARDING_REQUIRED,
   ],
 })
 
-/**
- * @param {SessionStatus|string} from
- * @param {SessionStatus|string} to
- */
 export function canTransition(from, to) {
   if (from === to) return true
-  const allowed = LEGAL_TRANSITIONS[from]
-  return Array.isArray(allowed) && allowed.includes(to)
+  const normalisedFrom = normaliseSessionStatus(from)
+  const normalisedTo = normaliseSessionStatus(to)
+  if (normalisedFrom === normalisedTo) return true
+  const allowed = LEGAL_TRANSITIONS[normalisedFrom]
+  return Array.isArray(allowed) && allowed.includes(normalisedTo)
 }
 
-/**
- * @param {SessionStatus|string} from
- * @param {SessionStatus|string} to
- * @param {{ logger?: (msg: string, meta?: object) => void }} [options]
- */
+function normaliseSessionStatus(status) {
+  if (!status) return SESSION_STATUS.HYDRATING
+  if (status === 'playing' || status === 'paused' || status === 'interrupted') {
+    return SESSION_STATUS.ACTIVE
+  }
+  if (status === 'uninitialised') return SESSION_STATUS.HYDRATING
+  if (status === 'ready') return SESSION_STATUS.READY_TO_START
+  if (status === 'resumable') return SESSION_STATUS.INTERRUPTED_RESUMABLE
+  if (status === 'ended') return SESSION_STATUS.COMPLETED
+  if (status === 'error') return SESSION_STATUS.ERROR_RECOVERABLE
+  return status
+}
+
 export function assertTransition(from, to, options = {}) {
   if (canTransition(from, to)) {
-    return { ok: true, from, to }
+    return { ok: true, from, to: normaliseSessionStatus(to) }
   }
   const logger = options.logger || ((message, meta) => {
     if (typeof console !== 'undefined' && console.warn) {
@@ -173,13 +195,15 @@ export function assertTransition(from, to, options = {}) {
   return { ok: false, from, to, reason: 'invalid_transition' }
 }
 
-/**
- * True when a continue/restore payload represents a real unfinished user session.
- * Sample / onboarding payloads and completed sessions are never resumable.
- *
- * @param {object|null|undefined} payload
- * @param {{ backendStatus?: string|null, isSample?: boolean }} [options]
- */
+export function deriveMediaStatus(mediaState = {}) {
+  if (mediaState.error) return MEDIA_STATUS.ERROR
+  if (mediaState.loading) return MEDIA_STATUS.LOADING
+  if (mediaState.isPlaying) return MEDIA_STATUS.PLAYING
+  if (mediaState.ended) return MEDIA_STATUS.ENDED
+  if (mediaState.isPaused || mediaState.hasAudio) return MEDIA_STATUS.PAUSED
+  return MEDIA_STATUS.IDLE
+}
+
 export function isResumableSessionPayload(payload, options = {}) {
   if (!payload || typeof payload !== 'object') return false
   if (options.isSample || payload.isOnboardingSample || payload.sessionKind === 'sample') return false
@@ -196,17 +220,11 @@ export function isResumableSessionPayload(payload, options = {}) {
   return chapterId > 0
 }
 
-/**
- * Authoritative unfinished signal from the backend session row.
- *
- * @param {object|null|undefined} session
- */
 export function isBackendSessionUnfinished(session) {
   if (!session || typeof session !== 'object') return false
   if (session.is_onboarding_example) return false
   const status = String(session.status || session.session_status || '').toLowerCase()
   if (!status) {
-    // Legacy rows without status: treat active metadata as unfinished.
     const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {}
     if (meta.completed || meta.completed_at) return false
     return !!meta.active
@@ -218,15 +236,6 @@ export function isBackendSessionUnfinished(session) {
   )
 }
 
-/**
- * Derive the lifecycle status from authoritative inputs.
- *
- * Priority: mutation-in-flight → hydration → auth/onboarding → live session
- * → backend/local unfinished → ready/ended/error.
- *
- * @param {object} input
- * @returns {SessionStatus}
- */
 export function deriveSessionStatus(input = {}) {
   const {
     authHydrated = true,
@@ -238,24 +247,34 @@ export function deriveSessionStatus(input = {}) {
     onboardingExampleRejected = false,
     mutqinSessionActive = false,
     sessionCompleted = false,
+    completionModalOpen = false,
     hasValidatedContinuePayload = false,
     backendUnfinished = false,
-    isPlaying = false,
     wasInterrupted = false,
+    loggedOut = false,
     mutation = SESSION_MUTATION.IDLE,
     lastError = null,
   } = input
 
   if (!authHydrated || !sessionHydrated) {
-    return SESSION_STATUS.UNINITIALISED
+    return SESSION_STATUS.HYDRATING
+  }
+
+  // Explicit logout clears user-scoped session state; guests may still start locally.
+  if (loggedOut || (authHydrated && !isAuthenticated && !mutqinSessionActive && !hasValidatedContinuePayload && input.requireAuthForSession)) {
+    return SESSION_STATUS.LOGGED_OUT
   }
 
   if (mutation === SESSION_MUTATION.STARTING) return SESSION_STATUS.STARTING
   if (mutation === SESSION_MUTATION.RESUMING) return SESSION_STATUS.RESUMING
   if (mutation === SESSION_MUTATION.ENDING) return SESSION_STATUS.ENDING
 
+  if (completionModalOpen) {
+    return SESSION_STATUS.COMPLETION_MODAL_OPEN
+  }
+
   if (lastError && !mutqinSessionActive && !hasValidatedContinuePayload && !requiresOnboarding) {
-    return SESSION_STATUS.ERROR
+    return SESSION_STATUS.ERROR_RECOVERABLE
   }
 
   if (onboardingExampleRejected && requiresOnboarding) {
@@ -266,48 +285,38 @@ export function deriveSessionStatus(input = {}) {
     return SESSION_STATUS.ONBOARDING_EXAMPLE
   }
 
-  if (isAuthenticated && requiresOnboarding) {
+  if (requiresOnboarding) {
     return SESSION_STATUS.ONBOARDING_REQUIRED
   }
 
-  if (sessionCompleted && !mutqinSessionActive && !hasValidatedContinuePayload && !backendUnfinished) {
-    return SESSION_STATUS.ENDED
-  }
-
   if (mutqinSessionActive && !sessionCompleted) {
-    if (wasInterrupted) return SESSION_STATUS.INTERRUPTED
-    if (isPlaying) return SESSION_STATUS.PLAYING
-    return SESSION_STATUS.PAUSED
+    return SESSION_STATUS.ACTIVE
   }
 
-  // After refresh / re-login: unfinished work that is not currently live.
   if ((hasValidatedContinuePayload || backendUnfinished) && !mutqinSessionActive) {
-    return SESSION_STATUS.RESUMABLE
+    return SESSION_STATUS.INTERRUPTED_RESUMABLE
+  }
+
+  if (sessionCompleted && !mutqinSessionActive && !hasValidatedContinuePayload && !backendUnfinished) {
+    return SESSION_STATUS.COMPLETED
   }
 
   if (onboardingStarted && requiresOnboarding) {
     return SESSION_STATUS.ONBOARDING_REQUIRED
   }
 
-  return SESSION_STATUS.READY
+  void wasInterrupted
+  return SESSION_STATUS.READY_TO_START
 }
 
-/**
- * Deterministic primary session action for every surface.
- *
- * @param {object} authState
- * @param {object} onboardingState
- * @param {object} sessionState
- * @param {object} [mediaState]
- * @returns {PrimarySessionAction}
- */
 export function resolvePrimarySessionAction(
   authState = {},
   onboardingState = {},
   sessionState = {},
   mediaState = {}
 ) {
-  const status = sessionState.status || deriveSessionStatus({
+  void mediaState
+  const status = normaliseSessionStatus(sessionState.status || deriveSessionStatus({
     authHydrated: authState.hydrated !== false,
     sessionHydrated: sessionState.hydrated !== false,
     isAuthenticated: !!authState.isAuthenticated,
@@ -317,27 +326,30 @@ export function resolvePrimarySessionAction(
     onboardingExampleRejected: !!onboardingState.exampleRejected,
     mutqinSessionActive: !!sessionState.mutqinSessionActive,
     sessionCompleted: !!sessionState.completed,
+    completionModalOpen: !!sessionState.completionModalOpen,
     hasValidatedContinuePayload: !!sessionState.hasValidatedContinuePayload,
     backendUnfinished: !!sessionState.backendUnfinished,
-    isPlaying: !!mediaState.isPlaying,
     wasInterrupted: !!sessionState.wasInterrupted,
     mutation: sessionState.mutation || SESSION_MUTATION.IDLE,
     lastError: sessionState.lastError || null,
-  })
+  }))
 
   switch (status) {
-    case SESSION_STATUS.UNINITIALISED:
+    case SESSION_STATUS.HYDRATING:
     case SESSION_STATUS.STARTING:
     case SESSION_STATUS.RESUMING:
     case SESSION_STATUS.ENDING:
       return PRIMARY_SESSION_ACTION.LOADING
+
+    case SESSION_STATUS.LOGGED_OUT:
+    case SESSION_STATUS.COMPLETION_MODAL_OPEN:
+      return PRIMARY_SESSION_ACTION.NONE
 
     case SESSION_STATUS.ONBOARDING_REQUIRED:
       if (onboardingState.started) return PRIMARY_SESSION_ACTION.CONTINUE_ONBOARDING
       return PRIMARY_SESSION_ACTION.START_ONBOARDING
 
     case SESSION_STATUS.ONBOARDING_EXAMPLE:
-      // Sample sessions are not real user sessions; ending cleans them up.
       return PRIMARY_SESSION_ACTION.END_SESSION
 
     case SESSION_STATUS.REJECTED:
@@ -346,20 +358,16 @@ export function resolvePrimarySessionAction(
         : PRIMARY_SESSION_ACTION.START_SESSION
 
     case SESSION_STATUS.ACTIVE:
-    case SESSION_STATUS.PLAYING:
-    case SESSION_STATUS.PAUSED:
-    case SESSION_STATUS.INTERRUPTED:
-      // Playback must never replace End Session as the primary lifecycle action.
       return PRIMARY_SESSION_ACTION.END_SESSION
 
-    case SESSION_STATUS.RESUMABLE:
+    case SESSION_STATUS.INTERRUPTED_RESUMABLE:
       return PRIMARY_SESSION_ACTION.RESUME_SESSION
 
-    case SESSION_STATUS.ENDED:
-    case SESSION_STATUS.READY:
+    case SESSION_STATUS.COMPLETED:
+    case SESSION_STATUS.READY_TO_START:
       return PRIMARY_SESSION_ACTION.START_SESSION
 
-    case SESSION_STATUS.ERROR:
+    case SESSION_STATUS.ERROR_RECOVERABLE:
       if (sessionState.hasValidatedContinuePayload || sessionState.backendUnfinished) {
         return PRIMARY_SESSION_ACTION.RESUME_SESSION
       }
@@ -370,29 +378,11 @@ export function resolvePrimarySessionAction(
   }
 }
 
-/**
- * @param {PrimarySessionAction|string} action
- * @param {(key: string, params?: object) => string} t
- * @param {{ status?: SessionStatus|string, stableWidthCh?: number }} [options]
- * @returns {{
- *   action: PrimarySessionAction|string,
- *   label: string,
- *   disabled: boolean,
- *   loading: boolean,
- *   ariaLabel: string,
- *   ariaBusy: boolean,
- *   icon: string,
- *   showEndCompanion: boolean,
- *   stableWidthCh: number,
- * }}
- */
 export function resolveSessionActionPresentation(action, t = (key) => key, options = {}) {
   const translate = typeof t === 'function' ? t : (key) => key
   const loading = action === PRIMARY_SESSION_ACTION.LOADING
-  const disabled = loading
-    || action === PRIMARY_SESSION_ACTION.NONE
+  const disabled = loading || action === PRIMARY_SESSION_ACTION.NONE
 
-  /** @type {Record<string, { labelKey: string, icon: string, fallback: string }>} */
   const map = {
     [PRIMARY_SESSION_ACTION.START_ONBOARDING]: {
       labelKey: 'memorisation.onboarding.startOnboarding',
@@ -448,27 +438,29 @@ export function resolveSessionActionPresentation(action, t = (key) => key, optio
     ariaLabel: label,
     ariaBusy: loading,
     icon: entry.icon,
-    // End is the primary action while live — never pair with a second End button.
     showEndCompanion: false,
     stableWidthCh: Number(options.stableWidthCh || 16),
   }
 }
 
 function resolveLoadingLabelKey(status) {
-  if (status === SESSION_STATUS.STARTING) return 'common.startingSession'
-  if (status === SESSION_STATUS.RESUMING) return 'common.resumingSession'
-  if (status === SESSION_STATUS.ENDING) return 'common.endingSession'
+  const normalised = normaliseSessionStatus(status)
+  if (normalised === SESSION_STATUS.STARTING) return 'common.startingSession'
+  if (normalised === SESSION_STATUS.RESUMING) return 'common.resumingSession'
+  if (normalised === SESSION_STATUS.ENDING) return 'common.endingSession'
   return 'common.loading'
 }
 
-/**
- * Build a snapshot consumed by Vue computeds / multiple UI surfaces so they
- * stay synchronised.
- *
- * @param {object} input
- */
 export function buildSessionLifecycleViewModel(input = {}) {
   const status = deriveSessionStatus(input)
+  const mediaStatus = deriveMediaStatus({
+    isPlaying: !!input.isPlaying,
+    isPaused: !!input.isPaused,
+    loading: !!input.mediaLoading,
+    ended: !!input.mediaEnded,
+    error: !!input.mediaError,
+    hasAudio: !!input.hasAudio,
+  })
   const action = resolvePrimarySessionAction(
     {
       hydrated: input.authHydrated !== false,
@@ -485,32 +477,30 @@ export function buildSessionLifecycleViewModel(input = {}) {
       hydrated: input.sessionHydrated !== false,
       mutqinSessionActive: !!input.mutqinSessionActive,
       completed: !!input.sessionCompleted,
+      completionModalOpen: !!input.completionModalOpen,
       hasValidatedContinuePayload: !!input.hasValidatedContinuePayload,
       backendUnfinished: !!input.backendUnfinished,
       wasInterrupted: !!input.wasInterrupted,
       mutation: input.mutation || SESSION_MUTATION.IDLE,
       lastError: input.lastError || null,
     },
-    {
-      isPlaying: !!input.isPlaying,
-    }
+    { isPlaying: !!input.isPlaying }
   )
   const presentation = resolveSessionActionPresentation(action, input.t, { status })
 
   return {
     status,
+    mediaStatus,
     action,
     presentation,
     canResume: action === PRIMARY_SESSION_ACTION.RESUME_SESSION,
     canStart: action === PRIMARY_SESSION_ACTION.START_SESSION,
     canEnd: action === PRIMARY_SESSION_ACTION.END_SESSION,
     isLoading: action === PRIMARY_SESSION_ACTION.LOADING,
+    isHidden: action === PRIMARY_SESSION_ACTION.NONE,
   }
 }
 
-/**
- * Serialise mutation lock to prevent double-start / double-end / resume races.
- */
 export function createSessionActionLock() {
   let inFlight = null
   let generation = 0
@@ -549,11 +539,6 @@ export function createSessionActionLock() {
   }
 }
 
-/**
- * Cross-tab session event bus (BroadcastChannel with storage fallback).
- *
- * @param {string} [channelName]
- */
 export function createSessionBroadcast(channelName = 'mutqin.session.lifecycle') {
   let channel = null
   try {
@@ -568,25 +553,15 @@ export function createSessionBroadcast(channelName = 'mutqin.session.lifecycle')
 
   return {
     publish(type, payload = {}) {
-      const message = {
-        type,
-        payload,
-        at: Date.now(),
-      }
+      const message = { type, payload, at: Date.now() }
       if (channel) {
-        try {
-          channel.postMessage(message)
-        } catch {
-          // ignore
-        }
+        try { channel.postMessage(message) } catch { /* ignore */ }
       }
       try {
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem(storageKey, JSON.stringify(message))
         }
-      } catch {
-        // ignore
-      }
+      } catch { /* ignore */ }
     },
     subscribe(handler) {
       const onMessage = (event) => {
@@ -599,9 +574,7 @@ export function createSessionBroadcast(channelName = 'mutqin.session.lifecycle')
         try {
           const data = JSON.parse(event.newValue)
           if (data?.type) handler(data)
-        } catch {
-          // ignore
-        }
+        } catch { /* ignore */ }
       }
       if (channel) channel.addEventListener('message', onMessage)
       if (typeof window !== 'undefined') {
@@ -615,21 +588,12 @@ export function createSessionBroadcast(channelName = 'mutqin.session.lifecycle')
       }
     },
     close() {
-      try {
-        channel?.close?.()
-      } catch {
-        // ignore
-      }
+      try { channel?.close?.() } catch { /* ignore */ }
       channel = null
     },
   }
 }
 
-/**
- * Map engine/mutqin session blob fields onto a backend-friendly status.
- *
- * @param {object} sessionState
- */
 export function deriveBackendStatusFromEngine(sessionState = {}) {
   if (!sessionState || typeof sessionState !== 'object') {
     return BACKEND_SESSION_STATUS.NONE
@@ -646,17 +610,14 @@ export function deriveBackendStatusFromEngine(sessionState = {}) {
   return BACKEND_SESSION_STATUS.NONE
 }
 
-/**
- * Ignore stale local continue hints when the backend says the session ended.
- *
- * @param {object|null} localPayload
- * @param {object|null} backendSession
- */
-export function reconcileContinuePayloadWithBackend(localPayload, backendSession) {
+export function reconcileContinuePayloadWithBackend(localPayload, backendSession, options = {}) {
   if (!isResumableSessionPayload(localPayload)) return null
+  if (options.backendAuthoritative && options.unfinished === false) {
+    return null
+  }
   if (!backendSession) {
-    // No backend row yet (guest or not synced) — keep validated local payload.
-    return localPayload
+    // Guest / not-yet-synced: keep local. Authoritative empty current clears it.
+    return options.backendAuthoritative ? null : localPayload
   }
   if (!isBackendSessionUnfinished(backendSession)) {
     return null
@@ -668,14 +629,21 @@ export function reconcileContinuePayloadWithBackend(localPayload, backendSession
   }
 }
 
+export function userScopedStorageKey(baseKey, userId) {
+  const id = userId == null || userId === '' ? 'guest' : String(userId)
+  return `${baseKey}.u.${id}`
+}
+
 export default {
   SESSION_STATUS,
+  MEDIA_STATUS,
   PRIMARY_SESSION_ACTION,
   SESSION_MUTATION,
   BACKEND_SESSION_STATUS,
   LEGAL_TRANSITIONS,
   canTransition,
   assertTransition,
+  deriveMediaStatus,
   isResumableSessionPayload,
   isBackendSessionUnfinished,
   deriveSessionStatus,
@@ -686,4 +654,5 @@ export default {
   createSessionBroadcast,
   deriveBackendStatusFromEngine,
   reconcileContinuePayloadWithBackend,
+  userScopedStorageKey,
 }

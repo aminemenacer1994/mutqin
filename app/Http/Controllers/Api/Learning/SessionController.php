@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Learning;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveSessionRequest;
 use App\Models\UserSession;
+use App\Services\NextSessionRecommendationService;
 use App\Services\SessionLifecycleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,27 +57,7 @@ class SessionController extends Controller
             'resume' => $this->lifecycle->resume($request->user(), $data),
             'end' => $this->lifecycle->end($request->user(), $data),
             'discard_example' => $this->lifecycle->discardOnboardingExample($request->user()),
-            default => UserSession::updateOrCreate(
-                ['user_id' => $request->user()->id],
-                array_filter([
-                    'surah_number' => $data['surah_number'] ?? null,
-                    'ayah_number' => $data['ayah_number'] ?? null,
-                    'current_step' => $data['current_step'] ?? 0,
-                    'memorisation_mode' => $data['memorisation_mode'] ?? null,
-                    'status' => $data['status'] ?? null,
-                    'is_onboarding_example' => array_key_exists('is_onboarding_example', $data)
-                        ? (bool) $data['is_onboarding_example']
-                        : null,
-                    'repetitions_completed' => $data['repetitions_completed'] ?? 0,
-                    'session_duration_seconds' => $data['session_duration_seconds'] ?? 0,
-                    'last_activity_at' => $data['last_activity_at'] ?? now(),
-                    'started_at' => $data['started_at'] ?? null,
-                    'paused_at' => $data['paused_at'] ?? null,
-                    'resumed_at' => $data['resumed_at'] ?? null,
-                    'ended_at' => $data['ended_at'] ?? null,
-                    'metadata' => $data['metadata'] ?? null,
-                ], static fn ($value) => $value !== null)
-            ),
+            default => $this->saveProgress($request->user(), $data),
         };
 
         if ($session) {
@@ -136,23 +117,65 @@ class SessionController extends Controller
         ]);
     }
 
-    public function end(Request $request): JsonResponse
+    public function end(Request $request, NextSessionRecommendationService $recommendations): JsonResponse
     {
         $data = $request->validate([
             'session_duration_seconds' => ['nullable', 'integer', 'min:0'],
             'last_activity_at' => ['nullable', 'date'],
             'ended_at' => ['nullable', 'date'],
             'metadata' => ['nullable', 'array'],
+            'completion_settings' => ['nullable', 'array'],
             'idempotency_key' => ['nullable', 'string', 'max:128'],
         ]);
 
         $session = $this->lifecycle->end($request->user(), $data);
         $this->authorize('update', $session);
 
+        $recommendation = null;
+        $recommendationError = false;
+        try {
+            $recommendation = $recommendations->recommendForCompletedSession($request->user(), $session);
+        } catch (\Throwable) {
+            $recommendationError = true;
+        }
+
         return response()->json([
             'saved' => true,
             'session' => $session,
             'unfinished' => false,
+            'recommendation' => $recommendation,
+            'recommendation_error' => $recommendationError && ! $recommendation,
         ]);
+    }
+
+    /**
+     * Mid-session progress save — updates the unfinished session only.
+     * Never mutates a completed historical record.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function saveProgress(\App\Models\User $user, array $data): UserSession
+    {
+        $unfinished = $this->lifecycle->currentUnfinished($user);
+        if ($unfinished) {
+            $unfinished->fill(array_filter([
+                'surah_number' => $data['surah_number'] ?? null,
+                'ayah_number' => $data['ayah_number'] ?? null,
+                'current_step' => $data['current_step'] ?? null,
+                'memorisation_mode' => $data['memorisation_mode'] ?? null,
+                'status' => $data['status'] ?? null,
+                'repetitions_completed' => $data['repetitions_completed'] ?? null,
+                'session_duration_seconds' => $data['session_duration_seconds'] ?? null,
+                'last_activity_at' => $data['last_activity_at'] ?? now(),
+                'paused_at' => $data['paused_at'] ?? null,
+                'resumed_at' => $data['resumed_at'] ?? null,
+                'metadata' => $data['metadata'] ?? null,
+            ], static fn ($value) => $value !== null));
+            $unfinished->save();
+
+            return $unfinished->fresh();
+        }
+
+        return $this->lifecycle->start($user, $data);
     }
 }

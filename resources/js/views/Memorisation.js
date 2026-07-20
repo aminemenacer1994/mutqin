@@ -19,11 +19,27 @@ import {
   RECOMMENDATION_TYPES,
   buildLocalFallbackRecommendation,
   formatAyahRangeLabel,
+  formatRecommendationSettingsSummary,
   isActionableRecommendation,
+  isRepeatRecommendation,
   localizeRecommendationReason,
   recommendationModeLabelKey,
   recommendationPrimaryActionKey,
 } from '../scripts/recommendations/nextSessionRecommendation'
+import {
+  getTechniqueDescription,
+  getTechniqueLabel,
+  resolveTechniqueDisplay,
+} from '../scripts/techniques/techniqueDisplay'
+import {
+  REVIEW_AUDIO_STATES,
+  bindAudioSource,
+  chooseSupportedRecorderMimeType,
+  createObjectUrlFromBlob,
+  playAudioElement,
+  revokeObjectUrl,
+  sanitizeAudioDuration,
+} from '../scripts/audio/recordingPlayback'
 import {
   PRIMARY_SESSION_ACTION,
   SESSION_MUTATION,
@@ -34,6 +50,7 @@ import {
   createSessionBroadcast,
   isResumableSessionPayload,
   reconcileContinuePayloadWithBackend,
+  userScopedStorageKey,
 } from '../scripts/session/sessionLifecycle'
 import { seedAyahs } from '../scripts/composables/useAyahState'
 import { buildSessionQueue, startMutqinSession, moveMutqinSession, completeMutqinSession } from '../scripts/composables/useSessionEngine'
@@ -476,6 +493,16 @@ export default {
       postSessionRecommendationStarting: false,
       postSessionRecommendationStartError: '',
       postSessionRecommendationRequestId: 0,
+      postSessionConfidenceBusy: false,
+      postSessionConfidenceError: '',
+      postSessionSettingsBusy: false,
+      postSessionSettingsError: '',
+      postSessionAiReciteBusy: false,
+      postSessionAiReciteActive: false,
+      postSessionAiFeedback: '',
+      postSessionViewState: 'idle', // completing | generating_recommendation | recommendation_ready | editing_settings | starting_recommended | preparing_repeat | starting_repeat | opening_ai_recite | recommendation_failed | action_failed
+      postSessionCompletedSessionId: null,
+      postSessionRecommendationFailed: false,
       sessionExitOffcanvasOpen: false,
       showAdvancedAnalytics: false,
       showAdvancedMetricsModal: false,
@@ -714,6 +741,13 @@ export default {
       reviewResultAudioCurrentTime: 0,
       reviewResultAudioDuration: 0,
       reviewResultAudioSource: '',
+      reviewResultAudioState: 'idle',
+      reviewResultAudioError: '',
+      reviewResultObjectUrl: '',
+      reviewResultOwnedObjectUrl: '',
+      recitationCheckRecordingMimeType: '',
+      selfCheckRecordingMimeType: '',
+      aiMemorisationCheckerRecordingMimeType: '',
       recordingsLibraryReturnToSelfCheckKey: '',
       showAiMemorisationCheckerModal: false,
       aiMemorisationCheckerVerseRef: null,
@@ -1283,25 +1317,24 @@ export default {
         items.push({
           key: 'focus',
           icon: 'bi bi-bullseye',
-          label: this.t('memorisation.focus_mode'),
-          description: this.t('memorisation.techniques.focusActiveDescription')
+          label: this.getTechniqueDisplayLabel('focus'),
+          description: this.getTechniqueDisplayDescription('focus')
         })
       }
       if (this.blurModeEnabled) {
         items.push({
           key: 'blur',
           icon: 'bi bi-cloud-haze2',
-          label: this.t('memorisation.blur_mode'),
-          description: this.t('memorisation.techniques.blurActiveDescription', { px: this.blurIntensity })
+          label: this.getTechniqueDisplayLabel('blur'),
+          description: this.getTechniqueDisplayDescription('blur')
         })
       }
       if (this.chainingEnabled) {
+        const chainingId = this.chainingMethod === 'cumulative' ? 'cumulative' : 'linking'
         items.push({
           key: 'chaining',
           icon: 'bi bi-link-45deg',
-          label: this.chainingMethod === 'cumulative'
-            ? this.t('memorisation.techniques.cumulativeChaining')
-            : this.t('memorisation.techniques.linkingChaining'),
+          label: this.getTechniqueDisplayLabel(chainingId),
           description: this.t('memorisation.techniques.chainingActiveDescription', { count: this.chainingRepetitions })
         })
       }
@@ -1309,7 +1342,7 @@ export default {
         items.push({
           key: 'anchor',
           icon: 'bi bi-pin-angle-fill',
-          label: this.t('memorisation.anchor_mode'),
+          label: this.getTechniqueDisplayLabel('anchor'),
           description: this.anchorModeDescription
         })
       }
@@ -1350,9 +1383,9 @@ export default {
       if (ai.memorisationChecker) features.push({ key: 'memory', icon: 'bi-gem', label: 'Recall feedback' })
       if (retention.enabled !== false) features.push({ key: 'review', icon: 'bi-calendar-check', label: 'Review reminders' })
       if (ai.precisionMode) features.push({ key: 'precision', icon: 'bi-shield-check', label: 'Careful checking' })
-      if (this.blurModeEnabled) features.push({ key: 'blur', icon: 'bi-cloud-haze2', label: 'Recall view' })
-      if (this.chainingEnabled) features.push({ key: 'chain', icon: 'bi-link-45deg', label: 'Ayah linking' })
-      if (this.anchorModeEnabled) features.push({ key: 'anchor', icon: 'bi-pin-angle-fill', label: 'Memory anchors' })
+      if (this.blurModeEnabled) features.push({ key: 'blur', icon: 'bi-cloud-haze2', label: this.getTechniqueDisplayLabel('blur') })
+      if (this.chainingEnabled) features.push({ key: 'chain', icon: 'bi-link-45deg', label: this.getTechniqueDisplayLabel('chaining') })
+      if (this.anchorModeEnabled) features.push({ key: 'anchor', icon: 'bi-pin-angle-fill', label: this.getTechniqueDisplayLabel('anchor') })
       if (!features.length) features.push({ key: 'standard', icon: 'bi-stars', label: 'Standard support' })
       return features.slice(0, 7)
     },
@@ -1717,7 +1750,14 @@ export default {
       }
     },
     showHeaderSessionAction() {
-      return this.hasVerses && this.primarySessionAction !== PRIMARY_SESSION_ACTION.NONE
+      if (this.primarySessionAction === PRIMARY_SESSION_ACTION.NONE) return false
+      // Keep a stable control during hydration even before verses load.
+      if (this.primarySessionAction === PRIMARY_SESSION_ACTION.LOADING) return true
+      if (this.primarySessionAction === PRIMARY_SESSION_ACTION.RESUME_SESSION) return true
+      if (this.primarySessionAction === PRIMARY_SESSION_ACTION.END_SESSION) return true
+      if (this.primarySessionAction === PRIMARY_SESSION_ACTION.START_ONBOARDING) return true
+      if (this.primarySessionAction === PRIMARY_SESSION_ACTION.CONTINUE_ONBOARDING) return true
+      return this.hasVerses || this.showSessionOverviewIdleActions
     },
     sessionLifecycleInput() {
       return {
@@ -1730,10 +1770,14 @@ export default {
         onboardingExampleRejected: !!this.onboardingExampleRejected,
         mutqinSessionActive: !!this.isSessionLive,
         sessionCompleted: !!this.isSessionCompleted,
+        completionModalOpen: !!this.showPostSessionModal,
         hasValidatedContinuePayload: this.hasValidatedResumableSession,
         backendUnfinished: !!this.backendUnfinishedSession,
         isPlaying: !!this.isPlaying,
+        isPaused: !this.isPlaying && !!this.playerVisible,
+        hasAudio: !!this.playerVisible,
         wasInterrupted: false,
+        loggedOut: false,
         mutation: this.sessionLifecycleMutation || SESSION_MUTATION.IDLE,
         lastError: this.sessionLifecycleError,
         t: (key, params) => this.t(key, params),
@@ -1753,15 +1797,15 @@ export default {
     },
     headerSessionControlState() {
       const status = this.sessionLifecycleStatus
-      if (status === SESSION_STATUS.PLAYING) return 'active'
+      if (status === SESSION_STATUS.ACTIVE) {
+        return this.isPlaying ? 'active' : 'paused'
+      }
+      if (status === SESSION_STATUS.INTERRUPTED_RESUMABLE || status === SESSION_STATUS.RESUMABLE) {
+        return 'resumable'
+      }
       if (
-        status === SESSION_STATUS.PAUSED
-        || status === SESSION_STATUS.ACTIVE
-        || status === SESSION_STATUS.INTERRUPTED
-      ) return 'paused'
-      if (status === SESSION_STATUS.RESUMABLE) return 'resumable'
-      if (
-        status === SESSION_STATUS.UNINITIALISED
+        status === SESSION_STATUS.HYDRATING
+        || status === SESSION_STATUS.UNINITIALISED
         || status === SESSION_STATUS.STARTING
         || status === SESSION_STATUS.RESUMING
         || status === SESSION_STATUS.ENDING
@@ -1787,11 +1831,21 @@ export default {
     hasValidatedResumableSession() {
       if (this.onboardingSampleSessionActive) return false
       if (this.isSessionCompleted || this.centralSession?.sessionStatus === 'completed') return false
+      // Logged-in learning mode: backend unfinished is authoritative.
+      // Never advertise Resume from local continue alone — that causes /session/resume 422s.
+      if (this.learningBackendEnabled()) {
+        if (!this.sessionLifecycleHydrated) return false
+        if (!this.backendUnfinishedSession) return false
+      }
       if (this.backendSessionSnapshot && !this.backendUnfinishedSession) return false
       return isResumableSessionPayload(this.continueSessionPayload, {
         backendStatus: this.backendSessionSnapshot?.status || null,
         isSample: false,
-      })
+      }) || (
+        this.learningBackendEnabled()
+        && !!this.backendUnfinishedSession
+        && !!this.backendSessionSnapshot
+      )
     },
     sessionExitModalTitle() {
       if (this.showSessionExitModal && !this.hasSessionStarted && this.sessionExitPreviewSnapshot) {
@@ -2670,20 +2724,6 @@ export default {
     postSessionRecommendationReasonText() {
       return localizeRecommendationReason(this.postSessionRecommendation, this.t.bind(this))
     },
-    postSessionRecommendationTitle() {
-      const rec = this.postSessionRecommendation
-      if (!rec) return ''
-      if (rec.type === RECOMMENDATION_TYPES.NEXT_SURAH) {
-        const name = this.resolveRecommendationSurahName(rec.next_surah || rec.surah)
-        return this.t('memorisation.postSession.recommendation.recommendedNextSurah', { surah: name })
-      }
-      const surah = this.resolveRecommendationSurahName(rec.surah)
-      const range = formatAyahRangeLabel(rec.ayah_range, this.t.bind(this))
-      if (surah && range) {
-        return this.t('memorisation.postSession.recommendation.recommendedNext', { surah, range })
-      }
-      return this.t('memorisation.postSession.recommendation.cardTitle')
-    },
     postSessionRecommendationDisplaySurahName() {
       const rec = this.postSessionRecommendation
       if (!rec) return ''
@@ -2707,15 +2747,201 @@ export default {
       return [mode, countLabel].filter(Boolean).join(' · ')
     },
     postSessionRecommendationPrimaryLabel() {
-      const key = recommendationPrimaryActionKey(this.postSessionRecommendation)
+      const rec = this.postSessionRecommendation
+      const key = recommendationPrimaryActionKey(rec)
+      if (this.postSessionRecommendationStarting) {
+        return isRepeatRecommendation(rec)
+          ? this.t('memorisation.postSession.recommendation.preparingRepeatSession')
+          : this.t('memorisation.postSession.recommendation.startingNextSession')
+      }
+      if (isRepeatRecommendation(rec) && rec?.ayah_range) {
+        return this.t('memorisation.postSession.recommendation.repeatAyat', {
+          start: rec.ayah_range.from,
+          end: rec.ayah_range.to,
+        })
+      }
+      if (key === 'continueToAyat' && rec?.ayah_range) {
+        return this.t('memorisation.postSession.recommendation.continueToAyat', {
+          start: rec.ayah_range.from,
+          end: rec.ayah_range.to,
+        })
+      }
       return this.t(`memorisation.postSession.recommendation.${key}`)
+    },
+    postSessionSecondaryActionLabel() {
+      return this.t('memorisation.postSession.recommendation.startDifferentSession')
+    },
+    postSessionShowRepeatAction() {
+      // Confidence owns progression vs repetition — never show a contradictory footer repeat.
+      return false
+    },
+    postSessionIsRepeatRecommendation() {
+      return isRepeatRecommendation(this.postSessionRecommendation)
+    },
+    postSessionPanelTitle() {
+      const key = this.postSessionRecommendation?.panel_title_key
+        || (this.postSessionIsRepeatRecommendation ? 'revisionSetTitle' : 'nextSetTitle')
+      return this.t(`memorisation.postSession.recommendation.${key}`)
+    },
+    postSessionSimpleActionLabel() {
+      if (this.postSessionIsRepeatRecommendation) {
+        return this.t('memorisation.postSession.recommendation.repeatThisRange')
+      }
+      if (this.postSessionRecommendation?.type === RECOMMENDATION_TYPES.NEXT_SURAH) {
+        return this.t('memorisation.postSession.recommendation.continueNextSurahShort')
+      }
+      return this.t('memorisation.postSession.recommendation.continueNextSet')
+    },
+    postSessionSimpleReason() {
+      const rec = this.postSessionRecommendation
+      if (!rec) return ''
+      if (this.postSessionIsRepeatRecommendation) {
+        return this.t('memorisation.postSession.recommendation.reasons.simpleRepeat')
+      }
+      if (rec.type === RECOMMENDATION_TYPES.NEXT_SURAH || rec.is_end_of_surah) {
+        return this.t('memorisation.postSession.recommendation.reasons.simpleNextSurah', {
+          surah: this.resolveRecommendationSurahName(rec.next_surah || rec.surah),
+        })
+      }
+      if (rec.reason_code === 'manual_fallback' || !this.postSessionRecommendationActionable) {
+        return this.t('memorisation.postSession.recommendation.reasons.manualFallback')
+      }
+      return this.t('memorisation.postSession.recommendation.reasons.simpleContinue')
+    },
+    postSessionStaticPills() {
+      const settings = this.postSessionRecommendation?.settings
+      if (!settings || typeof settings !== 'object') return []
+      const pills = []
+      const technique = String(settings.technique || '').toLowerCase()
+      if (['talqin', 'focus', 'blur'].includes(technique)) {
+        pills.push({
+          key: 'technique',
+          label: this.getTechniqueDisplayLabel(technique),
+        })
+      }
+      const speed = Number(settings.playback_speed)
+      if (Number.isFinite(speed) && speed > 0) {
+        pills.push({
+          key: 'speed',
+          label: this.t('memorisation.postSession.recommendation.speedPill', { speed }),
+        })
+      }
+      const reps = Number(settings.repetitions)
+      if (Number.isFinite(reps) && reps > 0) {
+        pills.push({
+          key: 'reps',
+          label: this.t('memorisation.postSession.recommendation.repetitionsSummary', { count: reps }),
+        })
+      }
+      return pills.slice(0, 4)
+    },
+    postSessionAdaptationExplanations() {
+      return []
+    },
+    postSessionSettingsOutcome() {
+      return ''
+    },
+    postSessionCompactStats() {
+      const snap = this.postSessionSnapshot || {}
+      const settings = this.postSessionRecommendation?.settings || {}
+      const cells = []
+      if (snap.durationLabel) {
+        cells.push({ key: 'duration', label: this.t('memorisation.stats.duration'), value: snap.durationLabel })
+      }
+      const reciterName = snap.reciterName
+        || this.reciters.find(item => String(item.id) === String(settings.reciter || snap.reciterId || this.reciterId || ''))?.name
+      if (reciterName) {
+        cells.push({ key: 'reciter', label: this.t('memorisation.stats.reciter'), value: reciterName })
+      }
+      const technique = String(settings.technique || '').toLowerCase()
+      if (['talqin', 'focus', 'blur'].includes(technique)) {
+        cells.push({
+          key: 'technique',
+          label: this.t('memorisation.postSession.recommendation.settingsTechnique'),
+          value: this.getTechniqueDisplayLabel(technique),
+        })
+      }
+      const speed = Number(settings.playback_speed ?? snap.playbackSpeed)
+      if (Number.isFinite(speed) && speed > 0) {
+        cells.push({
+          key: 'speed',
+          label: this.t('memorisation.postSession.recommendation.settingsSpeed'),
+          value: `${speed}×`,
+        })
+      }
+      const reps = Number(settings.repetitions ?? snap.repetitionsPerStep)
+      if (Number.isFinite(reps) && reps > 0) {
+        cells.push({
+          key: 'reps',
+          label: this.t('memorisation.stats.repeats'),
+          value: String(reps),
+        })
+      }
+      return cells.slice(0, 4)
+    },
+    postSessionDuaMessage() {
+      return this.t('memorisation.postSession.duaStrengthenShort')
+    },
+    postSessionAiReciteBusyLabel() {
+      return this.postSessionAiReciteBusy
+        ? this.t('memorisation.postSession.recommendation.openingAiRecite')
+        : this.t('memorisation.postSession.recommendation.aiReciteShort')
+    },
+    postSessionRecommendationTitle() {
+      const rec = this.postSessionRecommendation
+      if (!rec) return ''
+      if (rec.type === RECOMMENDATION_TYPES.NEXT_SURAH) {
+        const name = this.resolveRecommendationSurahName(rec.next_surah || rec.surah)
+        return this.t('memorisation.postSession.recommendation.recommendedNextSurah', { surah: name })
+      }
+      const surah = this.resolveRecommendationSurahName(rec.surah)
+      const range = formatAyahRangeLabel(rec.ayah_range, this.t.bind(this))
+      if (surah && range) {
+        if (this.postSessionIsRepeatRecommendation) {
+          return this.t('memorisation.postSession.recommendation.repeatRangeTitle', { surah, range })
+        }
+        return this.t('memorisation.postSession.recommendation.recommendedNext', { surah, range })
+      }
+      return this.postSessionSimpleActionLabel
+    },
+    postSessionSettingsSummary() {
+      const settings = this.postSessionRecommendation?.settings
+      if (!settings) return ''
+      const reciterId = settings.reciter
+      let reciterName = ''
+      if (reciterId && Array.isArray(this.reciters)) {
+        const match = this.reciters.find(item => String(item.id) === String(reciterId) || String(item.identifier) === String(reciterId))
+        reciterName = match?.name || match?.englishName || ''
+      }
+      return formatRecommendationSettingsSummary(settings, this.t.bind(this), { reciterName })
+    },
+    postSessionSupportingMessage() {
+      const snap = this.postSessionSnapshot
+      if (snap?.chapterName && snap?.rangeStart && snap?.rangeEnd) {
+        return this.t('memorisation.postSession.recommendation.supportingCompletedRange', {
+          surah: snap.chapterName,
+          start: snap.rangeStart,
+          end: snap.rangeEnd,
+        })
+      }
+      if (this.postSessionAutoSaved) {
+        return this.t('memorisation.postSession.recommendation.supportingProgressSaved')
+      }
+      return ''
+    },
+    postSessionActionsBusy() {
+      return this.postSessionRecommendationStarting
+        || this.postSessionConfidenceBusy
+        || this.postSessionSettingsBusy
+        || this.postSessionAiReciteBusy
+        || this.postSessionRecommendationStatus === 'loading'
     },
     postSessionConfirmationTitle() {
       const rec = this.postSessionRecommendation
       const key = rec?.confirmation?.title_key
         || (rec?.type === RECOMMENDATION_TYPES.NEXT_SURAH
           ? 'continueNextSurah'
-          : (rec?.session_mode === 'revision' ? 'reviewAgain' : 'continueNextAyat'))
+          : (isRepeatRecommendation(rec) ? 'reviewAgain' : 'continueNextAyat'))
       return this.t(`memorisation.postSession.recommendation.confirm.${key}`)
     },
     postSessionConfirmationPrimaryLabel() {
@@ -2723,7 +2949,7 @@ export default {
       const key = rec?.confirmation?.primary_action_key
         || (rec?.type === RECOMMENDATION_TYPES.NEXT_SURAH
           ? 'continueToNextSurah'
-          : (rec?.session_mode === 'revision' ? 'startRevision' : 'startSession'))
+          : (isRepeatRecommendation(rec) ? 'startRevision' : 'startSession'))
       return this.t(`memorisation.postSession.recommendation.confirm.${key}`)
     },
     postSessionCompletedSurahMessage() {
@@ -2742,7 +2968,7 @@ export default {
       return {
         id,
         icon: id === 'blur' ? 'bi-cloud-haze2' : (id === 'talqin' ? 'bi-mic' : 'bi-bullseye'),
-        label: this.t(`memorisation.postSession.recommendation.techniques.${id}`),
+        label: this.getTechniqueDisplayLabel(id),
       }
     },
     postSessionShowQuietHero() {
@@ -2764,8 +2990,11 @@ export default {
     requiresFirstTimeOnboarding() {
       if (!this.isLoggedIn) return false
       if (this.onboardingManualLaunch) return false
+      // Exploring / finishing onboarding must immediately unlock Start Session,
+      // even while auth.just_registered is still true for this login.
+      if (this.hasCompletedOnboarding()) return false
       if (this.auth?.just_logged_in && !this.auth?.just_registered) return false
-      return !!this.auth?.just_registered || !this.hasCompletedOnboarding()
+      return true
     },
     isExistingUserLogin() {
       return !!(this.auth?.just_logged_in && !this.auth?.just_registered)
@@ -3971,12 +4200,13 @@ export default {
 
       if (stepKey === 'practice') {
         const techniques = []
-        if (this.focusModeEnabled) techniques.push(this.t('memorisation.focus_mode'))
-        if (this.blurModeEnabled) techniques.push(this.t('memorisation.blur_mode'))
+        if (this.focusModeEnabled) techniques.push(this.getTechniqueDisplayLabel('focus'))
+        if (this.blurModeEnabled) techniques.push(this.getTechniqueDisplayLabel('blur'))
         if (this.chainingEnabled) {
-          techniques.push(this.t('memorisation.common.chainingLabel', { method: this.chainingMethod || 'Standard' }))
+          techniques.push(this.getTechniqueDisplayLabel(this.chainingMethod === 'cumulative' ? 'cumulative' : 'linking'))
         }
-        if (this.talqinModeEnabled) techniques.push(this.t('memorisation.talqin.yourTurn'))
+        if (this.talqinModeEnabled) techniques.push(this.getTechniqueDisplayLabel('talqin'))
+        if (this.anchorModeEnabled) techniques.push(this.getTechniqueDisplayLabel('anchor'))
         stats.push({
           key: 'techniques',
           label: this.t('memorisation.practice'),
@@ -4918,13 +5148,7 @@ export default {
     },
 
     postSessionModalTitle() {
-      const snap = this.postSessionSnapshot
-      if (!snap) {
-        return this.t('memorisation.sessionComplete.title')
-      }
-      return snap.completedAll
-        ? this.t('memorisation.postSession.celebrationTitleComplete')
-        : this.t('memorisation.postSession.celebrationTitlePartial')
+      return this.t('memorisation.postSession.title')
     },
 
     postSessionModalMessage() {
@@ -5350,6 +5574,7 @@ export default {
     }
     this.cleanupRecitationCheckMedia()
     this.cleanupSelfCheckMedia()
+    this.resetReviewResultAudio({ revokeOwned: true })
     this.persistAllState()
     saveMutqinState(this.mutqinState)
     if (this.unwatchMutqinState) this.unwatchMutqinState()
@@ -5730,8 +5955,10 @@ export default {
         return this.readWorkspaceStateValue('continueSession', null)
       }
       try {
-        const raw = localStorage.getItem('telawa.continueSession')
-        return raw ? JSON.parse(raw) : null
+        const scoped = localStorage.getItem(this.continueSessionLocalStorageKey())
+        if (scoped) return JSON.parse(scoped)
+        const legacy = localStorage.getItem('telawa.continueSession')
+        return legacy ? JSON.parse(legacy) : null
       } catch {
         return null
       }
@@ -5840,7 +6067,7 @@ export default {
           return
         }
         if (key === 'continueSession') {
-          localStorage.setItem('telawa.continueSession', JSON.stringify(value))
+          localStorage.setItem(this.continueSessionLocalStorageKey(), JSON.stringify(value))
         } else if (key === 'centralSession') {
           localStorage.setItem(CENTRAL_SESSION_STORAGE_KEY, JSON.stringify(value))
         }
@@ -7821,7 +8048,7 @@ export default {
                 surah_number: Number(this.chapterId || this.currentChapter?.id || 0) || null,
                 ayah_number: Number(this.rangeStart || 1) || null,
                 memorisation_mode: this.currentMode,
-                idempotency_key: `start-${this.chapterId || 0}-${this.rangeStart || 0}-${this.rangeEnd || 0}`,
+                idempotency_key: `start-${this.auth?.id || 'guest'}-${this.chapterId || 0}-${this.rangeStart || 0}-${this.rangeEnd || 0}`,
               })
               this.backendUnfinishedSession = true
             }
@@ -7831,7 +8058,7 @@ export default {
               this.promptTapToPlay()
             }
             this.transitionSessionLifecycle(
-              this.isPlaying ? SESSION_STATUS.PLAYING : SESSION_STATUS.PAUSED,
+              SESSION_STATUS.ACTIVE,
               SESSION_MUTATION.IDLE
             )
             this.sessionLifecycleError = null
@@ -8495,13 +8722,28 @@ export default {
         t: this.t.bind(this)
       })
       this.postSessionStatsExpanded = false
+      const preservedRecommendation = this.postSessionRecommendation
+      const preservedStatus = this.postSessionRecommendationStatus
+      const preservedSessionId = this.postSessionCompletedSessionId
       this.resetPostSessionRecommendationState()
+      if (preservedSessionId) {
+        this.postSessionCompletedSessionId = preservedSessionId
+      }
+      if (preservedRecommendation && preservedStatus === 'ready') {
+        this.postSessionRecommendation = preservedRecommendation
+        this.postSessionRecommendationStatus = 'ready'
+        this.postSessionViewState = 'recommendation_ready'
+      }
       this.showPostSessionConfetti = true
       this.showPostSessionModal = true
       this.showTools = false
       this.postSessionOffcanvasOpen = false
       if (!this.onboardingSampleSessionActive) {
-        this.loadPostSessionRecommendation()
+        if (this.postSessionRecommendationStatus === 'ready' && this.postSessionRecommendation) {
+          // Already finalised with the completion response — keep stable.
+        } else {
+          this.loadPostSessionRecommendation()
+        }
       }
       window.setTimeout(() => {
         this.showPostSessionConfetti = false
@@ -8515,6 +8757,16 @@ export default {
       this.postSessionRecommendationStep = 'main'
       this.postSessionRecommendationStarting = false
       this.postSessionRecommendationStartError = ''
+      this.postSessionConfidenceBusy = false
+      this.postSessionConfidenceError = ''
+      this.postSessionSettingsBusy = false
+      this.postSessionSettingsError = ''
+      this.postSessionAiReciteBusy = false
+      this.postSessionAiReciteActive = false
+      this.postSessionAiFeedback = ''
+      this.postSessionViewState = 'idle'
+      this.postSessionCompletedSessionId = null
+      this.postSessionRecommendationFailed = false
     },
     resolveRecommendationSurahName(surah) {
       if (!surah) return ''
@@ -8553,11 +8805,15 @@ export default {
       this.postSessionRecommendationError = ''
       this.postSessionRecommendationStep = 'main'
       this.postSessionRecommendationStartError = ''
+      this.postSessionViewState = 'generating_recommendation'
+      this.postSessionRecommendationFailed = false
 
       const applyResult = (recommendation, status = 'ready') => {
         if (requestId !== this.postSessionRecommendationRequestId) return
         this.postSessionRecommendation = this.enrichPostSessionRecommendation(recommendation)
         this.postSessionRecommendationStatus = status
+        this.postSessionViewState = status === 'error' ? 'recommendation_failed' : 'recommendation_ready'
+        this.postSessionRecommendationFailed = status === 'error'
       }
 
       const snapshotFallback = () => {
@@ -8573,19 +8829,31 @@ export default {
 
       try {
         if (this.isLoggedIn && this.learningBackendEnabled()) {
-          // Ensure latest progress is on the backend before recommending.
           try {
             await this.pushLearningState(true)
           } catch (_) { /* recommendation can still proceed from existing backend data */ }
 
-          const recommendation = await withRetry(() => learningApi.getNextRecommendation(), { retries: 2, baseDelay: 500 })
+          const params = {}
+          if (this.postSessionCompletedSessionId) {
+            params.source_session_id = this.postSessionCompletedSessionId
+          }
+          const recommendation = await withRetry(
+            () => learningApi.getNextRecommendation(params),
+            { retries: 2, baseDelay: 500 }
+          )
           if (requestId !== this.postSessionRecommendationRequestId) return
 
           if (!recommendation || recommendation.type === RECOMMENDATION_TYPES.NO_RECOMMENDATION) {
             applyResult(snapshotFallback(), 'empty')
             return
           }
-          if (recommendation.type === RECOMMENDATION_TYPES.MANUAL_SELECTION && !recommendation.surah) {
+          if (
+            (recommendation.type === RECOMMENDATION_TYPES.MANUAL_SELECTION
+              || recommendation.type === RECOMMENDATION_TYPES.CHOOSE_NEW_SESSION
+              || recommendation.type === RECOMMENDATION_TYPES.PLAN_COMPLETE)
+            && !recommendation.surah
+            && !recommendation.ayah_range
+          ) {
             applyResult(recommendation, 'empty')
             return
           }
@@ -8604,10 +8872,289 @@ export default {
     retryPostSessionRecommendation() {
       this.loadPostSessionRecommendation()
     },
+    async submitPostSessionConfidence(confidence) {
+      if (this.postSessionActionsBusy || !this.postSessionRecommendation?.id) return
+      if (!['confident', 'needs_practice'].includes(confidence)) return
+      this.postSessionConfidenceBusy = true
+      this.postSessionConfidenceError = ''
+      try {
+        const updated = await learningApi.submitRecommendationConfidence(
+          this.postSessionRecommendation.id,
+          confidence
+        )
+        if (updated) {
+          this.postSessionRecommendation = this.enrichPostSessionRecommendation(updated)
+          this.postSessionRecommendationStatus = 'ready'
+          this.postSessionViewState = 'recommendation_ready'
+        }
+      } catch (error) {
+        console.warn('Failed to submit confidence feedback:', error)
+        if (error?.response?.status === 422) {
+          try {
+            await this.loadPostSessionRecommendation()
+          } catch (_) { /* keep existing error path */ }
+        }
+        this.postSessionConfidenceError = this.t('memorisation.postSession.recommendation.confidenceError')
+        this.postSessionViewState = 'action_failed'
+      } finally {
+        this.postSessionConfidenceBusy = false
+      }
+    },
+    openPostSessionRecommendationSettings() {
+      // Inline settings replaced the offcanvas adjust-settings flow.
+      return
+    },
+    async updatePostSessionInlineSetting(key, value) {
+      if (!this.postSessionRecommendation?.id || this.postSessionActionsBusy) return
+      const current = { ...(this.postSessionRecommendation.settings || {}) }
+      if (key === 'technique') {
+        current.technique = value
+        current.focus_enabled = value === 'focus'
+        current.blur_enabled = value === 'blur'
+        current.talqin_enabled = value === 'talqin'
+        if (value === 'focus' && !current.ayat_per_step) {
+          current.ayat_per_step = 1
+        }
+      } else if (key === 'playback_speed') {
+        current.playback_speed = Number(value)
+      } else if (key === 'repetitions') {
+        current.repetitions = Number(value)
+      } else if (key === 'reciter') {
+        current.reciter = value
+      } else if (key === 'ayat_per_step') {
+        current.ayat_per_step = value === '' || value == null ? null : Number(value)
+      } else {
+        return
+      }
+      await this.persistPostSessionRecommendationSettings(current)
+    },
+    async persistPostSessionRecommendationSettings(overrides = null) {
+      if (!this.postSessionRecommendation?.id || !this.isLoggedIn || !this.learningBackendEnabled()) {
+        return
+      }
+      this.postSessionSettingsBusy = true
+      this.postSessionSettingsError = ''
+      this.postSessionViewState = 'editing_settings'
+      try {
+        const settings = overrides || {
+          technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : 'talqin')),
+          reciter: this.reciterId || null,
+          playback_speed: Number(this.playbackSpeed || 1),
+          repetitions: Number(this.repetitionsPerStep || 3),
+          ayat_per_step: this.focusModeEnabled ? 1 : null,
+          focus_enabled: !!this.focusModeEnabled,
+          blur_enabled: !!this.blurModeEnabled,
+          talqin_enabled: !!this.talqinModeEnabled,
+        }
+        const updated = await learningApi.saveRecommendationSettings(
+          this.postSessionRecommendation.id,
+          settings
+        )
+        if (updated) {
+          this.postSessionRecommendation = this.enrichPostSessionRecommendation(updated)
+        }
+        this.postSessionViewState = 'recommendation_ready'
+      } catch (error) {
+        console.warn('Failed to save recommendation settings:', error)
+        this.postSessionSettingsError = this.t('memorisation.postSession.recommendation.settingsError')
+        this.postSessionViewState = 'action_failed'
+      } finally {
+        this.postSessionSettingsBusy = false
+      }
+    },
+    async resetPostSessionRecommendationSettings() {
+      if (!this.postSessionRecommendation?.id) return
+      this.postSessionSettingsBusy = true
+      try {
+        const updated = await learningApi.saveRecommendationSettings(
+          this.postSessionRecommendation.id,
+          null,
+          true
+        )
+        if (updated) {
+          this.postSessionRecommendation = this.enrichPostSessionRecommendation(updated)
+          this.applyRecommendedTechnique(
+            updated?.settings?.technique || updated?.technique?.id,
+            updated?.session_mode
+          )
+          if (updated?.settings?.playback_speed) {
+            this.setPlaybackSpeed(Number(updated.settings.playback_speed))
+          }
+          if (updated?.settings?.repetitions) {
+            this.repetitionsPerStep = Number(updated.settings.repetitions)
+          }
+          if (updated?.settings?.reciter) {
+            this.reciterId = updated.settings.reciter
+          }
+        }
+      } catch (error) {
+        this.postSessionSettingsError = this.t('memorisation.postSession.recommendation.settingsError')
+      } finally {
+        this.postSessionSettingsBusy = false
+        this.postSessionViewState = 'recommendation_ready'
+      }
+    },
+    async openPostSessionAiRecite() {
+      if (this.postSessionActionsBusy) return
+      this.postSessionAiReciteBusy = true
+      this.postSessionViewState = 'opening_ai_recite'
+      this.postSessionRecommendationStartError = ''
+      try {
+        const snap = this.postSessionSnapshot || {}
+        const chapterId = Number(snap.chapterId || this.chapterId || this.sessionConfig?.chapterId || 0)
+        const from = Number(snap.rangeStart || this.sessionConfig?.rangeStart || 0)
+        const to = Number(snap.rangeEnd || this.sessionConfig?.rangeEnd || from)
+        if (!chapterId || !from || !to) {
+          throw new Error('missing_range')
+        }
+
+        // Ensure AI Recite uses the completed session range even after cleanup.
+        this.chapterId = chapterId
+        this.rangeStart = from
+        this.rangeEnd = to
+        if (this.sessionConfig) {
+          this.sessionConfig = {
+            ...this.sessionConfig,
+            chapterId,
+            rangeStart: from,
+            rangeEnd: to,
+          }
+        }
+
+        this.postSessionAiReciteActive = true
+        this.openAiRecitationCheckForSession()
+        if (!this.showSelfCheckModal) {
+          throw new Error('ai_recite_unavailable')
+        }
+        this.$nextTick(() => {
+          const overlay = document.querySelector('.self-check-modal-overlay--above-post-session')
+          const title = overlay?.querySelector?.('#selfCheckModalTitle')
+          if (title && typeof title.focus === 'function') {
+            title.setAttribute('tabindex', '-1')
+            title.focus()
+          }
+        })
+      } catch (error) {
+        console.warn('Failed to open AI Recite from completion modal:', error)
+        this.postSessionAiReciteActive = false
+        this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.aiReciteError')
+        this.postSessionViewState = 'action_failed'
+      } finally {
+        this.postSessionAiReciteBusy = false
+        if (this.postSessionViewState === 'opening_ai_recite') {
+          this.postSessionViewState = 'recommendation_ready'
+        }
+      }
+    },
+    returnFromPostSessionAiRecite() {
+      if (!this.postSessionAiReciteActive) return
+      this.postSessionAiReciteActive = false
+      this.postSessionViewState = 'recommendation_ready'
+      this.$nextTick(() => {
+        const title = this.$el?.querySelector?.('#postSessionTitle')
+        if (title && typeof title.focus === 'function') {
+          title.setAttribute('tabindex', '-1')
+          title.focus()
+        }
+      })
+    },
+    async applyPostSessionAiAssessment(result, summary = '') {
+      if (!this.postSessionRecommendation?.id || !this.isLoggedIn) {
+        if (summary) this.postSessionAiFeedback = summary
+        return
+      }
+      try {
+        const updated = await learningApi.submitRecommendationAiAssessment(
+          this.postSessionRecommendation.id,
+          { result, summary }
+        )
+        if (updated) {
+          this.postSessionRecommendation = this.enrichPostSessionRecommendation(updated)
+          this.postSessionRecommendationStatus = 'ready'
+          this.postSessionAiFeedback = summary
+            || updated?.reason
+            || this.localizePostSessionAiSummary(result)
+        }
+      } catch (error) {
+        console.warn('Failed to apply AI assessment to recommendation:', error)
+        this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.aiReciteError')
+        if (summary) this.postSessionAiFeedback = summary
+      }
+    },
+    localizePostSessionAiSummary(result) {
+      if (result === 'strong') {
+        return this.t('memorisation.postSession.recommendation.reasons.aiReciteStrong')
+      }
+      if (result === 'weak') {
+        return this.t('memorisation.postSession.recommendation.reasons.aiReciteWeak')
+      }
+      return this.t('memorisation.postSession.recommendation.reasons.aiReciteMixed')
+    },
+    async repeatPostSessionFromCompleted() {
+      if (this.postSessionActionsBusy) return
+      this.postSessionViewState = 'preparing_repeat'
+      this.postSessionRecommendationStarting = true
+      this.postSessionRecommendationStartError = ''
+      try {
+        // Prefer backend repeat recommendation when available; otherwise force confidence path.
+        let rec = this.postSessionRecommendation
+        if (rec?.id && !isRepeatRecommendation(rec) && this.isLoggedIn && this.learningBackendEnabled()) {
+          const updated = await learningApi.submitRecommendationConfidence(rec.id, 'needs_practice')
+          if (updated) {
+            rec = this.enrichPostSessionRecommendation(updated)
+            this.postSessionRecommendation = rec
+          }
+        }
+
+        if (rec?.id && this.isLoggedIn && this.learningBackendEnabled()) {
+          this.postSessionViewState = 'starting_repeat'
+          const result = await learningApi.startRecommendedSession(rec.id, rec.settings || null)
+          const sessionPayload = result?.session || null
+          if (result?.recommendation) {
+            this.postSessionRecommendation = this.enrichPostSessionRecommendation(result.recommendation)
+          }
+          const config = sessionPayload?.metadata?.config || {}
+          await this.startSessionFromRecommendationPayload({
+            chapterId: Number(config.chapterId || this.postSessionSnapshot?.chapterId || 0),
+            rangeStart: Number(config.rangeStart || this.postSessionSnapshot?.rangeStart || 0),
+            rangeEnd: Number(config.rangeEnd || this.postSessionSnapshot?.rangeEnd || 0),
+            sessionMode: 'revision',
+            techniqueId: config.technique || rec?.settings?.technique || 'talqin',
+            settings: rec?.settings || sessionPayload?.metadata?.settings || null,
+          })
+          return
+        }
+
+        const snap = this.postSessionSnapshot || {}
+        await this.startSessionFromRecommendationPayload({
+          chapterId: Number(snap.chapterId || 0),
+          rangeStart: Number(snap.rangeStart || 0),
+          rangeEnd: Number(snap.rangeEnd || 0),
+          sessionMode: 'revision',
+          techniqueId: 'talqin',
+          settings: {
+            technique: 'talqin',
+            playback_speed: Math.max(0.5, Number(this.playbackSpeed || 1) - 0.25),
+            repetitions: Math.min(8, Number(this.repetitionsPerStep || 3) + 2),
+          },
+        })
+      } catch (error) {
+        console.error('Failed to start repeat session:', error)
+        this.postSessionRecommendationStarting = false
+        if (error?.response?.status === 422) {
+          try {
+            await this.loadPostSessionRecommendation()
+          } catch (_) { /* ignore */ }
+        }
+        this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.startError')
+        this.postSessionViewState = 'action_failed'
+      }
+    },
     openPostSessionRecommendationConfirm() {
       if (!this.postSessionRecommendationActionable || this.postSessionRecommendationStarting) return
       this.postSessionRecommendationStartError = ''
-      if (this.postSessionRecommendation?.requires_confirmation !== false) {
+      if (this.postSessionRecommendation?.requires_confirmation !== false
+        && this.postSessionRecommendation?.type === RECOMMENDATION_TYPES.NEXT_SURAH) {
         this.postSessionRecommendationStep = 'confirm'
         this.$nextTick(() => {
           const title = this.$el?.querySelector?.('#postSessionConfirmTitle')
@@ -8662,14 +9209,27 @@ export default {
       const recommendation = this.postSessionRecommendation
       this.postSessionRecommendationStarting = true
       this.postSessionRecommendationStartError = ''
+      this.postSessionViewState = isRepeatRecommendation(recommendation)
+        ? 'starting_repeat'
+        : 'starting_recommended'
 
       try {
+        // Persist any live tools-panel tweaks before accept.
+        if (recommendation?.id && this.postSessionOffcanvasOpen && this.isLoggedIn) {
+          try {
+            await this.persistPostSessionRecommendationSettings()
+          } catch (_) { /* accept can still use last known settings */ }
+        }
+
         let sessionPayload = null
         if (recommendation?.id && this.isLoggedIn && this.learningBackendEnabled()) {
-          const result = await learningApi.startRecommendedSession(recommendation.id)
+          const result = await learningApi.startRecommendedSession(
+            recommendation.id,
+            recommendation.settings || null
+          )
           sessionPayload = result?.session || null
           if (result?.recommendation) {
-            this.postSessionRecommendation = result.recommendation
+            this.postSessionRecommendation = this.enrichPostSessionRecommendation(result.recommendation)
           }
         }
 
@@ -8700,17 +9260,30 @@ export default {
           rangeStart,
           rangeEnd,
           sessionMode: recommendation?.session_mode || 'new_learning',
-          techniqueId: recommendation?.technique?.id || null,
+          techniqueId: recommendation?.technique?.id || recommendation?.settings?.technique || null,
+          settings: recommendation?.settings || sessionPayload?.metadata?.settings || null,
         })
       } catch (error) {
         console.error('Failed to start recommended session:', error)
         this.postSessionRecommendationStarting = false
+        if (error?.response?.status === 422) {
+          try {
+            await this.loadPostSessionRecommendation()
+          } catch (_) { /* ignore */ }
+        }
         this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.startError')
-        // Preserve recommendation for retry.
         this.postSessionRecommendationStep = 'confirm'
+        this.postSessionViewState = 'action_failed'
       }
     },
-    async startSessionFromRecommendationPayload({ chapterId, rangeStart, rangeEnd, sessionMode = 'new_learning', techniqueId = null }) {
+    async startSessionFromRecommendationPayload({
+      chapterId,
+      rangeStart,
+      rangeEnd,
+      sessionMode = 'new_learning',
+      techniqueId = null,
+      settings = null,
+    }) {
       this.primeAudioPlaybackUnlock()
       const baseConfig = this.buildSessionConfig(this.currentMode) || {}
       this.applySessionConfig({
@@ -8719,7 +9292,22 @@ export default {
         rangeStart: Number(rangeStart),
         rangeEnd: Number(rangeEnd),
       })
-      this.applyRecommendedTechnique(techniqueId || this.postSessionRecommendation?.technique?.id || null, sessionMode)
+
+      const resolvedSettings = settings && typeof settings === 'object' ? settings : null
+      if (resolvedSettings?.reciter) {
+        this.reciterId = resolvedSettings.reciter
+      }
+      if (resolvedSettings?.playback_speed) {
+        this.setPlaybackSpeed(Number(resolvedSettings.playback_speed))
+      }
+      if (resolvedSettings?.repetitions) {
+        this.repetitionsPerStep = Number(resolvedSettings.repetitions)
+      }
+
+      this.applyRecommendedTechnique(
+        techniqueId || resolvedSettings?.technique || this.postSessionRecommendation?.technique?.id || null,
+        sessionMode
+      )
       this.persistModeState(this.currentMode)
       this.persistUiState()
       this.persistCentralSessionState()
@@ -8728,6 +9316,9 @@ export default {
       this.showPostSessionModal = false
       this.showPostSessionConfetti = false
       this.postSessionRecommendationStarting = false
+      this.postSessionOffcanvasOpen = false
+      this.showTools = false
+      this.postSessionViewState = 'idle'
       this.$nextTick(() => {
         this.startSessionWithCountdown({ skipPrime: true })
       })
@@ -10346,12 +10937,12 @@ export default {
       this.selfCheckDraftAudioCurrentTime = nextTime
     },
     formatSelfCheckDraftAudioTime(seconds = 0) {
-      const safe = Math.max(0, Number(seconds || 0))
+      const safe = Math.max(0, sanitizeAudioDuration(seconds) || Number(seconds) || 0)
       const mins = Math.floor(safe / 60)
       const secs = Math.floor(safe % 60)
       return `${mins}:${String(secs).padStart(2, '0')}`
     },
-    resetReviewResultAudio() {
+    resetReviewResultAudio({ revokeOwned = false } = {}) {
       const audio = this.$refs.reviewResultAudio
       if (audio) {
         try {
@@ -10367,49 +10958,132 @@ export default {
       this.reviewResultAudioCurrentTime = 0
       this.reviewResultAudioDuration = 0
       this.reviewResultAudioSource = ''
-    },
-    toggleReviewResultAudio(result = null) {
-      const audio = this.$refs.reviewResultAudio
-      const source = String(result?.audioSrc || '')
-      if (!audio || !source) return
-      if (this.reviewResultAudioSource !== source) {
-        audio.src = source
-        audio.load()
-        this.reviewResultAudioSource = source
+      this.reviewResultAudioState = REVIEW_AUDIO_STATES.IDLE
+      this.reviewResultAudioError = ''
+      if (revokeOwned) {
+        this.revokeOwnedReviewObjectUrl()
+        this.reviewResultObjectUrl = ''
       }
-      if (audio.paused) {
-        this.primeAudioPlaybackUnlock(audio)
-        audio.play().catch(() => {
-          this.showBanner(this.t('toasts.unableToPlayThisRecordingRight'), 'error', 2200)
-        })
+    },
+    async ensureReviewResultAudioSource(result = null) {
+      const audio = this.$refs.reviewResultAudio
+      const source = String(result?.audioSrc || this.reviewResultObjectUrl || '')
+      if (!audio || !source) {
+        this.reviewResultAudioState = REVIEW_AUDIO_STATES.ERROR
+        this.reviewResultAudioError = this.t('toasts.couldNotPlayRecording')
+        return ''
+      }
+      if (this.reviewResultAudioSource === source && audio.src) {
+        return source
+      }
+      this.reviewResultAudioState = REVIEW_AUDIO_STATES.LOADING_AUDIO
+      this.reviewResultAudioError = ''
+      try {
+        const meta = await bindAudioSource(audio, source)
+        this.reviewResultAudioSource = source
+        this.reviewResultAudioDuration = sanitizeAudioDuration(meta?.duration)
+          || sanitizeAudioDuration(result?.durationSeconds)
+          || 0
+        this.reviewResultAudioState = REVIEW_AUDIO_STATES.READY
+        return source
+      } catch {
+        this.reviewResultAudioState = REVIEW_AUDIO_STATES.ERROR
+        this.reviewResultAudioError = this.t('toasts.couldNotPlayRecording')
+        this.reviewResultAudioPlaying = false
+        return ''
+      }
+    },
+    async toggleReviewResultAudio(result = null) {
+      const audio = this.$refs.reviewResultAudio
+      if (!audio) return
+      if (this.recitationCheckRecording || this.recitationCheckPreparing || this.isSelfCheckRecording) {
         return
       }
-      audio.pause()
+      if (!audio.paused && this.reviewResultAudioPlaying) {
+        try { audio.pause() } catch { }
+        this.reviewResultAudioPlaying = false
+        this.reviewResultAudioState = REVIEW_AUDIO_STATES.PAUSED
+        return
+      }
+      const source = await this.ensureReviewResultAudioSource(result)
+      if (!source) {
+        this.showBanner(this.t('toasts.couldNotPlayRecording'), 'error', 2800)
+        return
+      }
+      if (this.reviewResultAudioState === REVIEW_AUDIO_STATES.ENDED || audio.ended) {
+        try { audio.currentTime = 0 } catch { }
+        this.reviewResultAudioCurrentTime = 0
+      }
+      this.primeAudioPlaybackUnlock(audio)
+      this.reviewResultAudioState = REVIEW_AUDIO_STATES.LOADING_AUDIO
+      try {
+        await playAudioElement(audio)
+        this.reviewResultAudioPlaying = true
+        this.reviewResultAudioState = REVIEW_AUDIO_STATES.PLAYING
+        this.reviewResultAudioError = ''
+      } catch {
+        this.reviewResultAudioPlaying = false
+        this.reviewResultAudioState = REVIEW_AUDIO_STATES.ERROR
+        this.reviewResultAudioError = this.t('toasts.couldNotPlayRecording')
+        this.showBanner(this.t('toasts.couldNotPlayRecording'), 'error', 2800)
+      }
     },
     onReviewResultAudioLoadedMetadata() {
       const audio = this.$refs.reviewResultAudio
       if (!audio) return
-      this.reviewResultAudioDuration = Number(audio.duration || 0)
+      const duration = sanitizeAudioDuration(audio.duration)
+      if (duration) this.reviewResultAudioDuration = duration
+      if (this.reviewResultAudioState === REVIEW_AUDIO_STATES.LOADING_AUDIO) {
+        this.reviewResultAudioState = REVIEW_AUDIO_STATES.READY
+      }
     },
     onReviewResultAudioTimeUpdate() {
       const audio = this.$refs.reviewResultAudio
       if (!audio) return
       this.reviewResultAudioCurrentTime = Number(audio.currentTime || 0)
-      if (!this.reviewResultAudioDuration && audio.duration) {
-        this.reviewResultAudioDuration = Number(audio.duration || 0)
-      }
+      const duration = sanitizeAudioDuration(audio.duration)
+      if (duration) this.reviewResultAudioDuration = duration
     },
     onReviewResultAudioEnded() {
       this.reviewResultAudioPlaying = false
       this.reviewResultAudioCurrentTime = 0
+      this.reviewResultAudioState = REVIEW_AUDIO_STATES.ENDED
       const audio = this.$refs.reviewResultAudio
-      if (audio) audio.currentTime = 0
+      if (audio) {
+        try { audio.currentTime = 0 } catch { }
+      }
+    },
+    onReviewResultAudioPlay() {
+      this.reviewResultAudioPlaying = true
+      this.reviewResultAudioState = REVIEW_AUDIO_STATES.PLAYING
+    },
+    onReviewResultAudioPause() {
+      if (this.reviewResultAudioState === REVIEW_AUDIO_STATES.ENDED) return
+      this.reviewResultAudioPlaying = false
+      if (this.reviewResultAudioState !== REVIEW_AUDIO_STATES.ERROR) {
+        this.reviewResultAudioState = REVIEW_AUDIO_STATES.PAUSED
+      }
+    },
+    onReviewResultAudioWaiting() {
+      if (this.reviewResultAudioPlaying) {
+        this.reviewResultAudioState = REVIEW_AUDIO_STATES.LOADING_AUDIO
+      }
+    },
+    onReviewResultAudioCanPlay() {
+      if (this.reviewResultAudioState === REVIEW_AUDIO_STATES.LOADING_AUDIO && !this.reviewResultAudioPlaying) {
+        this.reviewResultAudioState = REVIEW_AUDIO_STATES.READY
+      }
+    },
+    onReviewResultAudioError() {
+      this.reviewResultAudioPlaying = false
+      this.reviewResultAudioState = REVIEW_AUDIO_STATES.ERROR
+      this.reviewResultAudioError = this.t('toasts.couldNotPlayRecording')
     },
     seekReviewResultAudio(event) {
       const audio = this.$refs.reviewResultAudio
       if (!audio) return
       const nextTime = Number(event?.target?.value || 0)
-      audio.currentTime = nextTime
+      try { audio.currentTime = nextTime } catch { }
       this.reviewResultAudioCurrentTime = nextTime
     },
     getSelfCheckRecorderDescription() {
@@ -10504,17 +11178,23 @@ export default {
         this.showBanner(this.t('toasts.stopOrDiscardTheCurrentRecording'), 'info', 2200)
         return
       }
+      const returningToPostSession = this.postSessionAiReciteActive
       this.showSelfCheckModal = false
       this.selfCheckPeekActive = false
       this.pendingRecordingDeleteId = ''
       this.selfCheckError = ''
       this.selfCheckLastSavedAyahKey = ''
       this.selfCheckSavedAttemptsVisible = false
+      this.stopSelfCheckDraftAudio()
+      this.resetReviewResultAudio({ revokeOwned: true })
       this.clearRecitationReviewState()
       this.stopRecordingsPlayback({ clearSource: true })
       this.selfCheckVerseRef = null
       this.selfCheckVerseKey = ''
-      this.syncBodyScrollLock(false)
+      this.syncBodyScrollLock(returningToPostSession || this.showPostSessionModal)
+      if (returningToPostSession) {
+        this.returnFromPostSessionAiRecite()
+      }
     },
     openRecordingsLibraryFromSelfCheck() {
       const ayahKey = this.selfCheckVerseKey || this.selfCheckModalVerse?.key || ''
@@ -11461,6 +12141,7 @@ export default {
       if (this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing) return
 	      this.aiMemorisationCheckerError = ''
 	      this.aiMemorisationCheckerResult = null
+      this.resetReviewResultAudio({ revokeOwned: true })
 	      this.prepareAiMemorisationCheckerWords()
 	      this.resetAiMemorisationCheckerLiveTranscription()
 	      this.resetRecognitionPipelineState('memorisation')
@@ -11480,6 +12161,7 @@ export default {
           }
         })
         const mimeType = this.chooseRecorderMimeType()
+        this.aiMemorisationCheckerRecordingMimeType = mimeType
         const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
         this.aiMemorisationCheckerMediaStream = stream
         this.aiMemorisationCheckerMediaRecorder = recorder
@@ -11503,6 +12185,7 @@ export default {
           this.cleanupAiMemorisationCheckerMedia()
         }
         recorder.onstop = async () => {
+          await new Promise(resolve => queueMicrotask(resolve))
           const chunks = [...this.aiMemorisationCheckerChunks]
           await this.finalizeTranscriptionRecognition('memorisation')
           this.stopAiMemorisationCheckerSpeechRecognition()
@@ -11518,7 +12201,8 @@ export default {
           try {
             if (!chunks.length) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
             const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' })
-            const audioSrc = await this.blobToDataUrl(blob)
+            if (!blob.size) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
+            const audioSrc = await this.createStableRecordingSrc(blob)
             await this.submitAiMemorisationChecker(blob, targets, audioSrc)
           } catch (error) {
             console.error('Failed to process memorisation check:', error)
@@ -11545,6 +12229,9 @@ export default {
     stopAiMemorisationCheckerRecording() {
       if (!this.aiMemorisationCheckerMediaRecorder || !['recording', 'paused'].includes(this.aiMemorisationCheckerMediaRecorder.state)) return
       this.aiMemorisationCheckerPreparing = true
+      try {
+        this.aiMemorisationCheckerMediaRecorder.requestData?.()
+      } catch { }
       this.aiMemorisationCheckerMediaRecorder.stop()
     },
     async submitAiMemorisationChecker(blob, targetVerses, audioSrc = '') {
@@ -11552,7 +12239,13 @@ export default {
       const audioHash = await this.hashAudioBlob(blob)
       const cached = await this.readRecitationSessionCache(sessionId, audioHash)
       if (cached?.analysisResult) {
-        this.completeAiMemorisationCheckerFromCachedResult(cached.analysisResult, targetVerses, audioSrc || cached.audioSrc || '')
+        let resolvedAudioSrc = audioSrc || ''
+        if (!resolvedAudioSrc && cached.audioBlob) {
+          resolvedAudioSrc = await this.createStableRecordingSrc(cached.audioBlob, cached.audioSrc || '')
+        } else if (!resolvedAudioSrc) {
+          resolvedAudioSrc = cached.audioSrc || ''
+        }
+        this.completeAiMemorisationCheckerFromCachedResult(cached.analysisResult, targetVerses, resolvedAudioSrc)
         return
       }
       const committedWords = this.getCommittedRecognitionWords('memorisation')
@@ -12562,11 +13255,6 @@ export default {
       if (!this.isSessionRecitationCheckActive()) return true
       return !!this.recitationAlignmentState?.complete
     },
-    chooseRecorderMimeType() {
-      if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') return ''
-      const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']
-      return candidates.find(type => MediaRecorder.isTypeSupported(type)) || ''
-    },
     openRecitationSessionDb() {
       if (typeof indexedDB === 'undefined') return Promise.resolve(null)
       if (this.recitationSessionCacheDb) return Promise.resolve(this.recitationSessionCacheDb)
@@ -13309,10 +13997,39 @@ export default {
       this.recitationCheckError = ''
       this.playUiTone('complete')
       this.showBanner(this.t('toasts.reciteCheckComplete'), 'success', 2200)
+      this.maybeApplyPostSessionAiAssessmentFromResult(result)
       if (!this.maybeOpenQueuedPostSessionModal(result, targetVerses)) {
         this.scrollToRecitationResults()
       }
       return result
+    },
+    maybeApplyPostSessionAiAssessmentFromResult(result) {
+      if (!result) return
+      if (!this.postSessionAiReciteActive && !this.showPostSessionModal) return
+      if (!this.postSessionRecommendation?.id && !this.postSessionAiReciteActive) return
+
+      const accuracy = Number(
+        result.accuracy
+        ?? result.score
+        ?? result.percent
+        ?? result.overallAccuracy
+        ?? result.matchPercent
+        ?? NaN
+      )
+      let outcome = 'mixed'
+      if (Number.isFinite(accuracy)) {
+        const normalized = accuracy <= 1 ? accuracy * 100 : accuracy
+        if (normalized >= 85) outcome = 'strong'
+        else if (normalized < 60) outcome = 'weak'
+      } else if (result.passed === true || result.strong === true) {
+        outcome = 'strong'
+      } else if (result.passed === false || result.weak === true) {
+        outcome = 'weak'
+      }
+
+      const summary = this.localizePostSessionAiSummary(outcome)
+      this.postSessionAiFeedback = summary
+      this.applyPostSessionAiAssessment(outcome, summary)
     },
     dismissRecitationCheckResult() {
       this.clearRecitationReviewState()
@@ -13321,7 +14038,7 @@ export default {
       const targets = this.recitationCheckPendingTargets?.length
         ? this.recitationCheckPendingTargets
         : this.getRecitationCheckTargetVerses(this.selfCheckModalVerse || null)
-      this.resetReviewResultAudio()
+      this.resetReviewResultAudio({ revokeOwned: true })
       this.recitationCheckResult = null
       this.recitationCheckError = ''
       this.recitationCheckPanelOpen = true
@@ -13335,7 +14052,7 @@ export default {
     },
     clearRecitationReviewState() {
       this.clearRecitationStartCue()
-      this.resetReviewResultAudio()
+      this.resetReviewResultAudio({ revokeOwned: false })
       this.recitationCheckResult = null
       this.recitationCheckError = ''
       this.recitationCheckPanelOpen = false
@@ -13437,6 +14154,7 @@ export default {
 
       this.recitationCheckError = ''
       this.recitationCheckResult = null
+      this.resetReviewResultAudio({ revokeOwned: true })
       this.recitationCheckPendingTargets = targets
       this.recitationCheckTargetVerseKey = targets[0]?.key || ''
       this.recitationCheckAutoStopArmed = false
@@ -13462,6 +14180,7 @@ export default {
           }
         })
         const mimeType = this.chooseRecorderMimeType()
+        this.recitationCheckRecordingMimeType = mimeType
         const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
         this.recitationCheckMediaStream = stream
         this.recitationCheckMediaRecorder = recorder
@@ -13487,6 +14206,8 @@ export default {
           this.cleanupRecitationCheckMedia()
         }
         recorder.onstop = async () => {
+          // Allow the final dataavailable from stop() to land before we snapshot chunks.
+          await new Promise(resolve => queueMicrotask(resolve))
           const chunks = [...this.recitationCheckChunks]
           await this.finalizeTranscriptionRecognition('recitation')
           let audioSrc = ''
@@ -13496,8 +14217,10 @@ export default {
 
           try {
             if (!chunks.length) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
-            const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' })
-            audioSrc = await this.blobToDataUrl(blob)
+            const blobType = recorder.mimeType || mimeType || 'audio/webm'
+            const blob = new Blob(chunks, { type: blobType })
+            if (!blob.size) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
+            audioSrc = await this.createStableRecordingSrc(blob)
             await this.submitRecitationCheck(blob, targets, audioSrc)
           } catch (error) {
             console.error('Failed to process recitation check:', error)
@@ -13533,6 +14256,9 @@ export default {
       if (!this.recitationCheckMediaRecorder || !['recording', 'paused'].includes(this.recitationCheckMediaRecorder.state)) return
       this.recitationCheckAutoStopArmed = false
       this.recitationCheckPreparing = true
+      try {
+        this.recitationCheckMediaRecorder.requestData?.()
+      } catch { }
       this.recitationCheckMediaRecorder.stop()
     },
     scrollToRecitationTarget() {
@@ -13554,9 +14280,15 @@ export default {
       this.recitationInputAudioHash = audioHash
       const cached = await this.readRecitationSessionCache(sessionId, audioHash)
       if (cached?.analysisResult) {
+        let resolvedAudioSrc = audioSrc || ''
+        if (!resolvedAudioSrc && cached.audioBlob) {
+          resolvedAudioSrc = await this.createStableRecordingSrc(cached.audioBlob, cached.audioSrc || '')
+        } else if (!resolvedAudioSrc) {
+          resolvedAudioSrc = cached.audioSrc || ''
+        }
         const cachedResult = {
           ...cached.analysisResult,
-          audioSrc: audioSrc || cached.audioSrc || '',
+          audioSrc: resolvedAudioSrc,
           transcriptionSource: 'indexeddb cache'
         }
         this.recitationCheckResult = cachedResult
@@ -14701,6 +15433,7 @@ export default {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
         const mimeType = this.chooseRecorderMimeType()
+        this.selfCheckRecordingMimeType = mimeType
         const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
         this.selfCheckMediaStream = stream
         this.selfCheckMediaRecorder = recorder
@@ -14717,6 +15450,7 @@ export default {
           this.cleanupSelfCheckMedia()
         }
         recorder.onstop = async () => {
+          await new Promise(resolve => queueMicrotask(resolve))
           const durationSeconds = Math.max(1, Math.round((Date.now() - Number(this.selfCheckStartedAt || Date.now())) / 1000))
           const chunks = [...this.selfCheckChunks]
           const discard = this.selfCheckDiscardOnStop
@@ -14730,7 +15464,8 @@ export default {
               this.selfCheckPreparing = true
               this.selfCheckPreparingLabel = 'Processing recording…'
               const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' })
-              const dataUrl = await this.blobToDataUrl(blob)
+              if (!blob.size) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
+              const audioSrc = await this.createStableRecordingSrc(blob)
               const persistedRating = this.selfCheckRatingsByAyahKey[verse.key] || 'Needs Review'
               this.selfCheckDraft = {
                 id: `draft-${verse.key}-${Date.now()}`,
@@ -14741,7 +15476,7 @@ export default {
                 recordedAt: new Date().toISOString(),
                 durationSeconds,
                 result: normalizeRecordingResult(persistedRating),
-                audioSrc: dataUrl
+                audioSrc
               }
               this.selfCheckDraftAudioPlaying = false
               this.selfCheckDraftAudioCurrentTime = 0
@@ -14782,6 +15517,9 @@ export default {
       this.clearRecitationStartCue()
       this.selfCheckPreparing = true
       this.selfCheckPreparingLabel = 'Finalising recording…'
+      try {
+        this.selfCheckMediaRecorder.requestData?.()
+      } catch { }
       this.selfCheckMediaRecorder.stop()
     },
     discardSelfCheckRecording() {
@@ -15405,7 +16143,10 @@ export default {
           isPlaying: false
         }
       }
-      await this.continueLastSession()
+      this.showWelcomeBackModal = false
+      this.returningUserChoicePending = false
+      this.welcomeBackWorkspaceHidden = false
+      await this.resumeSessionFromPrimaryAction()
     },
 
     logoutFromWelcomeBack() {
@@ -15468,7 +16209,6 @@ export default {
       this.openToolsPanel()
     },
     handleHeaderSessionAction() {
-      if (!this.hasVerses) return
       if (this.headerSessionActionDisabled) return
       this.startingFreshSessionSelection = false
       const action = this.primarySessionAction
@@ -15501,6 +16241,10 @@ export default {
       }
 
       if (action === PRIMARY_SESSION_ACTION.START_SESSION) {
+        if (!this.hasVerses) {
+          this.openNewSessionSetup()
+          return
+        }
         if (this.chainingEnabled && !this.hasChainingMethodSelected) {
           this.guideChainingSetup()
           return
@@ -15515,19 +16259,47 @@ export default {
         this.transitionSessionLifecycle(SESSION_STATUS.RESUMING, SESSION_MUTATION.RESUMING)
         try {
           if (this.learningBackendEnabled()) {
+            // Re-check authority right before resume so stale Resume buttons never 422.
             try {
+              const { session, unfinished } = await learningApi.getCurrentSession()
+              this.backendSessionSnapshot = session
+              this.backendUnfinishedSession = !!unfinished
+              if (!unfinished) {
+                this.clearContinueSessionQuietly()
+                this.sessionLifecycleError = 'resume_invalid'
+                this.transitionSessionLifecycle(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
+                this.showBanner(
+                  this.t('toasts.sessionResumeFailed') || 'This session can no longer be resumed. Start a new session.',
+                  'warning',
+                  4200
+                )
+                return false
+              }
+              if (!isResumableSessionPayload(this.continueSessionPayload, {
+                backendStatus: session?.status || null,
+              })) {
+                this.continueSessionPayload = this.buildContinuePayloadFromBackendSession(session)
+                this.hasContinueSession = !!this.continueSessionPayload
+              }
               await learningApi.resumeSession({
-                idempotency_key: `resume-${Date.now()}`,
+                idempotency_key: `resume-${session?.id || 'current'}`,
+                surah_number: Number(session?.surah_number || this.continueSessionPayload?.config?.chapterId || 0) || null,
+                ayah_number: Number(session?.ayah_number || this.continueSessionPayload?.config?.rangeStart || 0) || null,
+                memorisation_mode: session?.memorisation_mode || this.continueSessionPayload?.mode || this.currentMode,
               })
             } catch (error) {
               const status = error?.response?.status
               if (status === 422) {
                 this.backendUnfinishedSession = false
-                this.backendSessionSnapshot = error?.response?.data?.session || this.backendSessionSnapshot
+                this.backendSessionSnapshot = error?.response?.data?.session || null
                 this.clearContinueSessionQuietly()
                 this.sessionLifecycleError = 'resume_invalid'
                 this.transitionSessionLifecycle(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
-                this.showBanner(this.t('toasts.sessionResumeFailed') || 'This session can no longer be resumed. Start a new session.', 'warning', 4200)
+                this.showBanner(
+                  this.t('toasts.sessionResumeFailed') || 'This session can no longer be resumed. Start a new session.',
+                  'warning',
+                  4200
+                )
                 return false
               }
               throw error
@@ -15535,7 +16307,7 @@ export default {
           }
           await this.continueLastSession()
           this.transitionSessionLifecycle(
-            this.isPlaying ? SESSION_STATUS.PLAYING : SESSION_STATUS.PAUSED,
+            SESSION_STATUS.ACTIVE,
             SESSION_MUTATION.IDLE
           )
           this.sessionLifecycleError = null
@@ -15563,7 +16335,7 @@ export default {
         console.warn('[sessionLifecycle] blocked transition', result)
       }
       this.sessionLifecycleMutation = mutation
-      if (this.centralSession && (nextStatus === SESSION_STATUS.ACTIVE || nextStatus === SESSION_STATUS.PLAYING || nextStatus === SESSION_STATUS.PAUSED)) {
+      if (this.centralSession && nextStatus === SESSION_STATUS.ACTIVE) {
         this.centralSession.sessionStatus = 'active'
         this.centralSession.sessionCompletedAt = null
       }
@@ -15578,6 +16350,9 @@ export default {
       }
     },
 
+    continueSessionLocalStorageKey() {
+      return userScopedStorageKey('telawa.continueSession', this.auth?.id || this.auth?.user?.id || null)
+    },
     clearContinueSessionQuietly() {
       this.hasContinueSession = false
       this.continueSessionPayload = null
@@ -15586,6 +16361,7 @@ export default {
         if (this.learningBackendEnabled()) {
           this.deleteWorkspaceStateValue('continueSession')
         } else {
+          localStorage.removeItem(this.continueSessionLocalStorageKey())
           localStorage.removeItem('telawa.continueSession')
         }
       } catch (e) { console.error(e) }
@@ -15602,12 +16378,24 @@ export default {
         const { session, unfinished } = await learningApi.getCurrentSession()
         this.backendSessionSnapshot = session
         this.backendUnfinishedSession = !!unfinished
-        const reconciled = reconcileContinuePayloadWithBackend(this.continueSessionPayload, session)
-        if (!reconciled) {
-          if (this.continueSessionPayload && session && !unfinished) {
+
+        if (!unfinished) {
+          // Backend is authoritative: drop stale local continue hints even when
+          // /session/current returns null (no unfinished row at all).
+          if (this.continueSessionPayload) {
             this.clearContinueSessionQuietly()
           }
-        } else {
+          return
+        }
+
+        let reconciled = reconcileContinuePayloadWithBackend(this.continueSessionPayload, session, {
+          backendAuthoritative: true,
+          unfinished: true,
+        })
+        if (!reconciled) {
+          reconciled = this.buildContinuePayloadFromBackendSession(session)
+        }
+        if (reconciled) {
           this.continueSessionPayload = reconciled
           this.hasContinueSession = true
         }
@@ -15616,6 +16404,44 @@ export default {
         this.sessionLifecycleError = 'backend_validation_failed'
       } finally {
         this.sessionLifecycleHydrated = true
+      }
+    },
+
+    buildContinuePayloadFromBackendSession(session) {
+      if (!session || typeof session !== 'object') return null
+      const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {}
+      const config = meta.config && typeof meta.config === 'object' ? meta.config : {}
+      const chapterId = Number(config.chapterId || session.surah_number || 0)
+      if (!chapterId) return null
+      const rangeStart = Math.max(1, Number(config.rangeStart || session.ayah_number || 1))
+      const rangeEnd = Math.max(rangeStart, Number(config.rangeEnd || rangeStart))
+      const queueIndex = Math.max(0, Number(session.current_step ?? meta.current_index ?? 0))
+      return {
+        timestamp: Date.now(),
+        mode: session.memorisation_mode || meta.mode || this.currentMode || 'advanced',
+        tab: 'tools',
+        activeKey: `${chapterId}:${Math.min(rangeEnd, rangeStart + queueIndex)}`,
+        activeVerseKey: `${chapterId}:${Math.min(rangeEnd, rangeStart + queueIndex)}`,
+        queueIndex,
+        currentTime: 0,
+        duration: 0,
+        isPlaying: false,
+        playerVisible: true,
+        audioSrc: '',
+        backendSessionId: session.id || null,
+        backendStatus: session.status || null,
+        config: {
+          chapterId,
+          rangeStart,
+          rangeEnd,
+          reciterId: config.reciterId || config.reciter || this.reciterId || null,
+          speed: Number(config.playbackSpeed || config.playback_speed || this.playbackSpeed || 1),
+          repetitionsPerStep: Number(config.repetitionsPerStep || config.repetitions || this.repetitionsPerStep || 3),
+          technique: config.technique || null,
+          focusModeEnabled: !!config.focusModeEnabled,
+          blurModeEnabled: !!config.blurModeEnabled,
+          talqinModeEnabled: !!config.talqinModeEnabled,
+        },
       }
     },
 
@@ -16099,14 +16925,66 @@ export default {
       if (!verse?.audio) return
       return this.playVerse(verse, { manualOnly: true })
     },
+    getTechniqueDisplayLabel(techniqueId, options = {}) {
+      return getTechniqueLabel(techniqueId, this.t.bind(this), options)
+    },
+    getTechniqueDisplayDescription(techniqueId) {
+      return getTechniqueDescription(techniqueId, this.t.bind(this))
+    },
+    getTechniqueDisplay(techniqueId, options = {}) {
+      return resolveTechniqueDisplay(techniqueId, this.t.bind(this), options)
+    },
+    getMushafAyahNumberAriaLabel(number) {
+      return this.t('memorisation.a11y.ayahNumberLabel', { number })
+    },
+    reviewResultAudioAriaLabel() {
+      if (this.reviewResultAudioState === REVIEW_AUDIO_STATES.LOADING_AUDIO) {
+        return this.t('memorisation.a11y.loadingRecording')
+      }
+      if (this.reviewResultAudioPlaying) {
+        return this.t('memorisation.a11y.pauseRecording')
+      }
+      if (this.reviewResultAudioState === REVIEW_AUDIO_STATES.ENDED) {
+        return this.t('memorisation.a11y.replayRecording')
+      }
+      return this.t('memorisation.a11y.playRecording')
+    },
+    chooseRecorderMimeType() {
+      return chooseSupportedRecorderMimeType()
+    },
+    revokeOwnedReviewObjectUrl() {
+      if (this.reviewResultOwnedObjectUrl) {
+        revokeObjectUrl(this.reviewResultOwnedObjectUrl)
+        this.reviewResultOwnedObjectUrl = ''
+      }
+    },
+    adoptReviewRecordingObjectUrl(url = '') {
+      const next = String(url || '')
+      if (this.reviewResultOwnedObjectUrl && this.reviewResultOwnedObjectUrl !== next) {
+        revokeObjectUrl(this.reviewResultOwnedObjectUrl)
+      }
+      this.reviewResultOwnedObjectUrl = next.startsWith('blob:') ? next : ''
+      this.reviewResultObjectUrl = next
+      return next
+    },
+    async createStableRecordingSrc(blob, preferredSrc = '') {
+      if (preferredSrc && String(preferredSrc).startsWith('blob:')) {
+        this.adoptReviewRecordingObjectUrl(preferredSrc)
+        return preferredSrc
+      }
+      const objectUrl = createObjectUrlFromBlob(blob)
+      if (objectUrl) {
+        this.adoptReviewRecordingObjectUrl(objectUrl)
+        return objectUrl
+      }
+      // Last-resort fallback for environments without object URLs.
+      return preferredSrc || await this.blobToDataUrl(blob)
+    },
     getMushafAyahNumberStyle(number) {
       const digits = Math.min(3, String(number || '').length || 1)
-      const sizes = {
-        1: { width: '1.35em', height: '1.35em' },
-        2: { width: '1.55em', height: '1.55em' },
-        3: { width: '1.75em', height: '1.75em' }
+      return {
+        '--mushaf-ayah-digits': String(digits),
       }
-      return sizes[digits] || sizes[3]
     },
     setReadingViewMode(mode) {
       const allowedModes = ['stacked', 'mushaf']
@@ -16890,7 +17768,7 @@ export default {
         if (this.learningBackendEnabled()) {
           this.writeWorkspaceStateValue('continueSession', payload)
         } else {
-          localStorage.setItem('telawa.continueSession', JSON.stringify(payload))
+          localStorage.setItem(this.continueSessionLocalStorageKey(), JSON.stringify(payload))
         }
       } catch (e) { console.error(e) }
       this.markActiveSessionSnapshot()
@@ -16975,8 +17853,10 @@ export default {
         const persistedContinue = this.learningBackendEnabled()
           ? this.readWorkspaceStateValue('continueSession', null)
           : (() => {
-            const raw = localStorage.getItem('telawa.continueSession')
-            return raw ? JSON.parse(raw) : null
+            const scoped = localStorage.getItem(this.continueSessionLocalStorageKey())
+            if (scoped) return JSON.parse(scoped)
+            const legacy = localStorage.getItem('telawa.continueSession')
+            return legacy ? JSON.parse(legacy) : null
           })()
         const persistedAudioState = this.learningBackendEnabled()
           ? this.readWorkspaceStateValue('audioState', null)
@@ -17363,11 +18243,13 @@ export default {
       const repeatShortLabel = `${repeatCount}x`
       const displaySummary = activeAids.join(', ')
       const activeMethodLabels = []
-      if (this.focusModeEnabled) activeMethodLabels.push(this.t('memorisation.focus_mode'))
-      if (this.blurModeEnabled) activeMethodLabels.push(this.t('memorisation.blur_mode'))
+      if (this.focusModeEnabled) activeMethodLabels.push(this.getTechniqueDisplayLabel('focus'))
+      if (this.blurModeEnabled) activeMethodLabels.push(this.getTechniqueDisplayLabel('blur'))
       if (this.chainingEnabled) {
-        activeMethodLabels.push(this.t('memorisation.common.chainingLabel', { method: this.chainingMethod || 'Standard' }))
+        activeMethodLabels.push(this.getTechniqueDisplayLabel(this.chainingMethod === 'cumulative' ? 'cumulative' : 'linking'))
       }
+      if (this.talqinModeEnabled) activeMethodLabels.push(this.getTechniqueDisplayLabel('talqin'))
+      if (this.anchorModeEnabled) activeMethodLabels.push(this.getTechniqueDisplayLabel('anchor'))
       const pacingSummary = activeMethodLabels.join(', ')
       const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
       const completedAll = coveredAyah >= totalAyahs && progressPercent >= 100
@@ -17534,15 +18416,16 @@ export default {
     confirmSessionExit(options = {}) {
       const { showSummary = true } = options
       if (this.sessionLifecycleMutation === SESSION_MUTATION.ENDING) {
-        return this.sessionExitPreviewSnapshot || null
+        return Promise.resolve(this.sessionExitPreviewSnapshot || null)
       }
       if (this.sessionActionLock.isLocked() || this.sessionActionLock.isLocked('end')) {
-        return this.sessionExitPreviewSnapshot || null
+        return Promise.resolve(this.sessionExitPreviewSnapshot || null)
       }
 
       const endedSnapshot = this.sessionExitPreviewSnapshot || this.buildSessionEndedSnapshot({ force: true })
       const wasSample = !!this.onboardingSampleSessionActive
-      this.sessionActionLock.run('end', async () => {
+      const backendSessionId = this.backendSessionSnapshot?.id || this.postSessionCompletedSessionId || 'current'
+      return this.sessionActionLock.run('end', async () => {
         this.transitionSessionLifecycle(SESSION_STATUS.ENDING, SESSION_MUTATION.ENDING)
         try {
           this.stopSessionMediaResources()
@@ -17552,15 +18435,49 @@ export default {
               if (wasSample) {
                 await learningApi.discardOnboardingExampleSession()
               } else {
-                await learningApi.endSession({
-                  idempotency_key: `end-${Date.now()}`,
-                  metadata: { completed: true },
+                const endResult = await learningApi.endSession({
+                  idempotency_key: `end-${backendSessionId}`,
+                  metadata: {
+                    completed: true,
+                    config: {
+                      chapterId: this.chapterId || this.sessionConfig?.chapterId,
+                      rangeStart: this.sessionConfig?.rangeStart,
+                      rangeEnd: this.sessionConfig?.rangeEnd,
+                      reciterId: this.reciterId,
+                      playbackSpeed: this.playbackSpeed,
+                      repetitionsPerStep: this.repetitionsPerStep,
+                      technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : null)),
+                      focusModeEnabled: !!this.focusModeEnabled,
+                      blurModeEnabled: !!this.blurModeEnabled,
+                      talqinModeEnabled: !!this.talqinModeEnabled,
+                    },
+                  },
+                  completion_settings: {
+                    technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : 'talqin')),
+                    reciter: this.reciterId || null,
+                    playback_speed: Number(this.playbackSpeed || 1),
+                    repetitions: Number(this.repetitionsPerStep || 3),
+                    ayat_per_step: this.focusModeEnabled ? 1 : null,
+                    focus_enabled: !!this.focusModeEnabled,
+                    blur_enabled: !!this.blurModeEnabled,
+                    talqin_enabled: !!this.talqinModeEnabled,
+                  },
                 })
+                if (endResult?.session?.id) {
+                  this.postSessionCompletedSessionId = endResult.session.id
+                }
+                if (endResult?.recommendation) {
+                  this.postSessionRecommendation = this.enrichPostSessionRecommendation(endResult.recommendation)
+                  this.postSessionRecommendationStatus = 'ready'
+                  this.postSessionViewState = 'recommendation_ready'
+                } else if (endResult?.recommendation_error) {
+                  this.postSessionRecommendationFailed = true
+                }
               }
             } catch (error) {
               console.warn('Failed to end session on backend', error)
               this.sessionLifecycleError = 'end_failed'
-              this.transitionSessionLifecycle(SESSION_STATUS.PAUSED, SESSION_MUTATION.IDLE)
+              this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
               this.showBanner(this.t('toasts.sessionEndFailed') || 'Unable to end session. Please try again.', 'danger', 4200)
               return null
             }
@@ -17588,24 +18505,25 @@ export default {
           console.error(error)
           this.sessionLifecycleError = 'end_failed'
           this.transitionSessionLifecycle(
-            this.isSessionLive ? SESSION_STATUS.PAUSED : SESSION_STATUS.READY,
+            this.isSessionLive ? SESSION_STATUS.ACTIVE : SESSION_STATUS.READY,
             SESSION_MUTATION.IDLE
           )
           this.showBanner(this.t('toasts.sessionEndFailed') || 'Unable to end session. Please try again.', 'danger', 4200)
           return null
         }
-      })
-      return endedSnapshot
+      }).then((locked) => (locked?.ok ? locked.result : null))
     },
-    exitSessionToNewSession() {
+    async exitSessionToNewSession() {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
         this.closeSessionExitModal({ restore: false })
         this.openNewSessionSetup()
         return
       }
-      this.openSessionExitNewSessionOffcanvas()
+      const ended = await this.confirmSessionExit({ showSummary: false })
+      if (ended === null && this.isSessionLive) return
+      this.openNewSessionSetup()
     },
-    exitSessionToRepeatRange() {
+    async exitSessionToRepeatRange() {
       this.primeAudioPlaybackUnlock()
       if (!this.hasSessionStarted && this.isSessionCompleted) {
         this.closeSessionExitModal({ restore: false })
@@ -17613,7 +18531,8 @@ export default {
         this.startSessionWithCountdown({ skipPrime: true })
         return
       }
-      this.closeSessionExitModal({ restore: false })
+      const ended = await this.confirmSessionExit({ showSummary: false })
+      if (ended === null && this.sessionLifecycleError === 'end_failed') return
       this.sessionExitOffcanvasOpen = false
       this.prepareRangeRestart()
       this.startSessionWithCountdown({ skipPrime: true })
@@ -17627,20 +18546,50 @@ export default {
         }
         return
       }
+      // Save-and-exit: persist progress, leave the session unfinished/resumable.
       const session = await this.saveCurrentSessionSilentlyAsync()
+      this.stopSessionMediaResources()
+      this.closeSessionExitModal({ restore: false })
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+      }
+      if (this.learningBackendEnabled()) {
+        try {
+          await learningApi.saveSession({
+            action: 'save',
+            status: 'interrupted',
+            surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
+            ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
+            current_step: Number(this.queueIndex || 0),
+            memorisation_mode: this.currentMode,
+            metadata: {
+              ...(this.mutqinState?.sessionState || {}),
+              active: true,
+              completed: false,
+              config: this.sessionConfig || this.mutqinState?.sessionState?.config || null,
+            },
+          })
+          this.backendUnfinishedSession = true
+        } catch (error) {
+          console.warn('Failed to mark session interrupted on save-and-exit', error)
+        }
+      }
+      this.persistContinueSession()
+      this.demoteLiveSessionToResumableOnBootstrap()
+      this.transitionSessionLifecycle(SESSION_STATUS.RESUMABLE, SESSION_MUTATION.IDLE)
       if (session) {
         this.showBanner(this.t('toasts.sessionSavedSuccess'), 'success', 2500)
       } else {
         this.showBanner(this.t('toasts.nothingReadyToSave'), 'info', 2800)
       }
     },
-    exitSessionToRetentionCheck() {
+    async exitSessionToRetentionCheck() {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
         this.closeSessionExitModal({ restore: false })
         this.openRetentionQuiz()
         return
       }
-      this.confirmSessionExit({ showSummary: false })
+      await this.confirmSessionExit({ showSummary: false })
       this.openRetentionQuiz()
     },
     openNewSessionFromEndedModal() {
@@ -20561,7 +21510,70 @@ export default {
         this.showBanner(this.t('memorisation.session_finished'), 'success', 2800)
         return
       }
-      this.openPostSessionModal(endedSnapshot, { previousStreak })
+      // Persist completion + recommendation before opening the modal when possible.
+      this.finaliseCompletedSessionOnBackend(endedSnapshot)
+        .finally(() => {
+          this.openPostSessionModal(endedSnapshot, { previousStreak })
+        })
+    },
+    async finaliseCompletedSessionOnBackend(snapshot = null) {
+      if (!this.learningBackendEnabled()) return null
+      try {
+        await this.pushLearningState(true)
+      } catch (_) { /* endSession below remains authoritative */ }
+
+      try {
+        const endResult = await learningApi.endSession({
+          idempotency_key: `complete-${this.sessionCompletedAt || Date.now()}`,
+          metadata: {
+            completed: true,
+            active: false,
+            config: {
+              chapterId: snapshot?.chapterId || this.chapterId || this.sessionConfig?.chapterId,
+              rangeStart: snapshot?.rangeStart || this.sessionConfig?.rangeStart,
+              rangeEnd: snapshot?.rangeEnd || this.sessionConfig?.rangeEnd,
+              reciterId: this.reciterId,
+              playbackSpeed: this.playbackSpeed,
+              repetitionsPerStep: this.repetitionsPerStep,
+              technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : null)),
+              focusModeEnabled: !!this.focusModeEnabled,
+              blurModeEnabled: !!this.blurModeEnabled,
+              talqinModeEnabled: !!this.talqinModeEnabled,
+            },
+          },
+          completion_settings: {
+            technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : 'talqin')),
+            reciter: this.reciterId || null,
+            playback_speed: Number(this.playbackSpeed || 1),
+            repetitions: Number(this.repetitionsPerStep || 3),
+            ayat_per_step: this.focusModeEnabled ? 1 : null,
+            focus_enabled: !!this.focusModeEnabled,
+            blur_enabled: !!this.blurModeEnabled,
+            talqin_enabled: !!this.talqinModeEnabled,
+          },
+        })
+        if (endResult?.session?.id) {
+          this.postSessionCompletedSessionId = endResult.session.id
+        }
+        if (endResult?.recommendation) {
+          this.postSessionRecommendation = this.enrichPostSessionRecommendation(endResult.recommendation)
+          this.postSessionRecommendationStatus = 'ready'
+          this.postSessionViewState = 'recommendation_ready'
+          this.postSessionRecommendationFailed = false
+        } else if (endResult?.recommendation_error) {
+          this.postSessionRecommendationFailed = true
+        }
+        this.backendUnfinishedSession = false
+        this.backendSessionSnapshot = {
+          ...(this.backendSessionSnapshot || {}),
+          ...(endResult?.session || {}),
+          status: 'completed',
+        }
+        return endResult
+      } catch (error) {
+        console.warn('Failed to finalise completed session on backend:', error)
+        return null
+      }
     },
 
     handlePrimaryAction() {

@@ -24,9 +24,11 @@ class NextSessionRecommendationTest extends TestCase
             'ayah_number' => $to,
             'current_step' => max(0, $to - $from),
             'memorisation_mode' => 'advanced',
+            'status' => 'completed',
             'repetitions_completed' => 3,
             'session_duration_seconds' => 600,
             'last_activity_at' => now(),
+            'ended_at' => now(),
             'metadata' => [
                 'active' => false,
                 'completed' => true,
@@ -62,7 +64,7 @@ class NextSessionRecommendationTest extends TestCase
         $this->postJson('/api/recommendations/start', ['recommendation_id' => 1])->assertUnauthorized();
     }
 
-    public function test_recommends_next_three_to_four_ayat_after_successful_completion(): void
+    public function test_recommends_workload_balanced_next_range_after_successful_completion(): void
     {
         $user = User::factory()->create();
         $this->seedCompletedSession($user, 2, 1, 4);
@@ -72,17 +74,19 @@ class NextSessionRecommendationTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('recommendation.type', RecommendationType::Continue->value)
             ->assertJsonPath('recommendation.ayah_range.from', 5)
-            ->assertJsonPath('recommendation.ayah_range.to', 8)
-            ->assertJsonPath('recommendation.ayah_range.count', 4)
+            ->assertJsonPath('recommendation.ayah_range.to', 7)
+            ->assertJsonPath('recommendation.ayah_range.count', 3)
             ->assertJsonPath('recommendation.reason_code', RecommendationReasonCode::StrongPreviousPerformance->value)
             ->assertJsonPath('recommendation.requires_confirmation', false)
-            ->assertJsonPath('recommendation.is_end_of_surah', false);
+            ->assertJsonPath('recommendation.is_end_of_surah', false)
+            ->assertJsonPath('recommendation.panel_title_key', 'nextSetTitle');
 
+        $this->assertNotNull(data_get($response->json(), 'recommendation.workload.score'));
         $this->assertDatabaseHas('session_recommendations', [
             'user_id' => $user->id,
             'surah_number' => 2,
             'ayah_start' => 5,
-            'ayah_end' => 8,
+            'ayah_end' => 7,
             'recommendation_type' => RecommendationType::Continue->value,
         ]);
     }
@@ -190,7 +194,7 @@ class NextSessionRecommendationTest extends TestCase
             ->assertJsonPath('recommendation.next_surah.id', 2)
             ->assertJsonPath('recommendation.surah.id', 2)
             ->assertJsonPath('recommendation.ayah_range.from', 1)
-            ->assertJsonPath('recommendation.ayah_range.to', 4)
+            ->assertJsonPath('recommendation.ayah_range.to', 5)
             ->assertJsonPath('recommendation.completed_surah.id', 1)
             ->assertJsonPath('recommendation.reason_code', RecommendationReasonCode::SurahCompleted->value);
     }
@@ -203,7 +207,7 @@ class NextSessionRecommendationTest extends TestCase
         $this->actingAs($user)
             ->getJson('/api/recommendations/next')
             ->assertOk()
-            ->assertJsonPath('recommendation.type', RecommendationType::ManualSelection->value)
+            ->assertJsonPath('recommendation.type', RecommendationType::PlanComplete->value)
             ->assertJsonPath('recommendation.is_end_of_surah', true)
             ->assertJsonPath('recommendation.next_surah', null)
             ->assertJsonPath('recommendation.reason_code', RecommendationReasonCode::LearningPlanComplete->value);
@@ -233,7 +237,7 @@ class NextSessionRecommendationTest extends TestCase
             ->getJson('/api/recommendations/next')
             ->assertOk()
             ->assertJsonPath('recommendation.ayah_range.from', 24)
-            ->assertJsonPath('recommendation.ayah_range.to', 27);
+            ->assertJsonPath('recommendation.ayah_range.to', 25);
     }
 
     public function test_accepting_recommendation_starts_session_idempotently(): void
@@ -258,14 +262,323 @@ class NextSessionRecommendationTest extends TestCase
             ->json();
 
         $this->assertSame($first['session']['id'], $second['session']['id']);
-        $this->assertSame(1, UserSession::where('user_id', $user->id)->count());
+        // Completed source session remains immutable; accepting creates a new active session.
+        $this->assertSame(2, UserSession::where('user_id', $user->id)->count());
+        $this->assertDatabaseHas('user_sessions', [
+            'id' => $first['session']['id'],
+            'status' => 'active',
+            'recommendation_id' => $recommendationId,
+        ]);
+        $completed = UserSession::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->first();
+        $this->assertNotNull($completed);
+        $this->assertSame(2, (int) $completed->surah_number);
         $this->assertDatabaseHas('session_recommendations', [
             'id' => $recommendationId,
             'accepted' => 1,
             'started_session_id' => $first['session']['id'],
         ]);
         $this->assertSame(5, $first['session']['metadata']['config']['rangeStart']);
-        $this->assertSame(8, $first['session']['metadata']['config']['rangeEnd']);
+        $this->assertSame(7, $first['session']['metadata']['config']['rangeEnd']);
+    }
+
+    public function test_confidence_needs_practice_supersedes_with_repeat(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+
+        $recommendationId = $this->actingAs($user)
+            ->getJson('/api/recommendations/next')
+            ->json('recommendation.id');
+
+        $response = $this->actingAs($user)
+            ->postJson('/api/recommendations/confidence', [
+                'recommendation_id' => $recommendationId,
+                'confidence' => 'needs_practice',
+            ])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::RepeatCurrentRange->value, $response['type']);
+        $this->assertSame(12, $response['ayah_range']['from']);
+        $this->assertSame(14, $response['ayah_range']['to']);
+        $this->assertSame('repeated', $response['range_kind']);
+        $this->assertSame('revisionSetTitle', $response['panel_title_key']);
+        $this->assertNotEmpty($response['adaptation_explanations'] ?? []);
+        $this->assertContains('repeat_range', $response['available_actions'] ?? []);
+        $this->assertGreaterThanOrEqual(3, (int) ($response['settings']['repetitions'] ?? 0));
+        $this->assertLessThanOrEqual(1.0, (float) ($response['settings']['playback_speed'] ?? 1));
+        $this->assertDatabaseHas('session_recommendations', [
+            'id' => $recommendationId,
+            'status' => 'superseded',
+        ]);
+    }
+
+    public function test_confidence_confident_upgrades_repeat_to_continue(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+
+        $recommendationId = $this->actingAs($user)
+            ->getJson('/api/recommendations/next')
+            ->json('recommendation.id');
+
+        $repeatId = $this->actingAs($user)
+            ->postJson('/api/recommendations/confidence', [
+                'recommendation_id' => $recommendationId,
+                'confidence' => 'needs_practice',
+            ])
+            ->assertOk()
+            ->json('recommendation.id');
+
+        $this->actingAs($user)
+            ->postJson('/api/recommendations/confidence', [
+                'recommendation_id' => $repeatId,
+                'confidence' => 'confident',
+            ])
+            ->assertOk()
+            ->assertJsonPath('recommendation.type', RecommendationType::Continue->value)
+            ->assertJsonPath('recommendation.ayah_range.from', 15)
+            ->assertJsonPath('recommendation.ayah_range.to', 17);
+    }
+
+    public function test_settings_overrides_apply_only_on_accept(): void
+    {
+        $user = User::factory()->create();
+        $completed = $this->seedCompletedSession($user, 2, 12, 14);
+        $completedSettings = $completed->fresh()->completion_settings;
+
+        $recommendationId = $this->actingAs($user)
+            ->getJson('/api/recommendations/next')
+            ->json('recommendation.id');
+
+        $this->actingAs($user)
+            ->postJson('/api/recommendations/settings', [
+                'recommendation_id' => $recommendationId,
+                'settings' => [
+                    'playback_speed' => 0.75,
+                    'repetitions' => 5,
+                    'technique' => 'talqin',
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('recommendation.settings.playback_speed', 0.75)
+            ->assertJsonPath('recommendation.settings.repetitions', 5);
+
+        $started = $this->actingAs($user)
+            ->postJson('/api/recommendations/start', [
+                'recommendation_id' => $recommendationId,
+            ])
+            ->assertOk()
+            ->json('session');
+
+        $this->assertSame(0.75, (float) data_get($started, 'metadata.config.playbackSpeed'));
+        $this->assertSame(5, (int) data_get($started, 'metadata.config.repetitionsPerStep'));
+        $this->assertSame(
+            $completedSettings,
+            UserSession::query()->find($completed->id)?->completion_settings,
+            'Completed session settings must remain immutable'
+        );
+    }
+
+    public function test_end_session_returns_recommendation_idempotently(): void
+    {
+        $user = User::factory()->create();
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'ayah_number' => 14,
+            'status' => 'active',
+            'last_activity_at' => now(),
+            'started_at' => now(),
+            'metadata' => [
+                'active' => true,
+                'completed' => false,
+                'config' => [
+                    'chapterId' => 2,
+                    'rangeStart' => 12,
+                    'rangeEnd' => 14,
+                    'reciterId' => 'ar.alafasy',
+                    'playbackSpeed' => 1,
+                    'repetitionsPerStep' => 3,
+                    'talqinModeEnabled' => true,
+                ],
+            ],
+        ]);
+
+        for ($ayah = 12; $ayah <= 14; $ayah++) {
+            MemorisationProgress::create([
+                'user_id' => $user->id,
+                'surah_number' => 2,
+                'ayah_number' => $ayah,
+                'status' => 'memorised',
+                'mastery_level' => 80,
+                'repetitions' => 3,
+                'metadata' => ['engine_status' => 'reviewed'],
+                'completed_at' => now(),
+            ]);
+        }
+
+        $first = $this->actingAs($user)
+            ->postJson('/api/session/end', [
+                'metadata' => [
+                    'active' => false,
+                    'completed' => true,
+                    'config' => [
+                        'chapterId' => 2,
+                        'rangeStart' => 12,
+                        'rangeEnd' => 14,
+                    ],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', false)
+            ->json();
+
+        $this->assertNotNull($first['recommendation']['id'] ?? null);
+        $this->assertSame(15, $first['recommendation']['ayah_range']['from']);
+        $this->assertSame(17, $first['recommendation']['ayah_range']['to']);
+
+        $second = $this->actingAs($user)
+            ->postJson('/api/session/end', [])
+            ->assertOk()
+            ->json();
+
+        $this->assertSame($first['session']['id'], $second['session']['id']);
+        $this->assertSame($first['recommendation']['id'], $second['recommendation']['id']);
+        $this->assertSame(1, SessionRecommendation::where('user_id', $user->id)->count());
+    }
+
+    public function test_ai_assessment_weak_recommends_repeat(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $this->actingAs($user)
+            ->postJson('/api/recommendations/ai-assessment', [
+                'recommendation_id' => $recommendationId,
+                'result' => 'weak',
+                'summary' => 'A little more practice will help',
+            ])
+            ->assertOk()
+            ->assertJsonPath('recommendation.type', RecommendationType::RepeatCurrentRange->value)
+            ->assertJsonPath('recommendation.ayah_range.from', 12)
+            ->assertJsonPath('recommendation.ayah_range.to', 14);
+    }
+
+    public function test_cannot_accept_another_users_recommendation(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $this->seedCompletedSession($owner, 2, 1, 4);
+        $id = $this->actingAs($owner)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $this->actingAs($other)
+            ->postJson('/api/recommendations/start', ['recommendation_id' => $id])
+            ->assertNotFound();
+    }
+
+    public function test_stale_dismissed_recommendation_cannot_start(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 1, 4);
+        $id = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $this->actingAs($user)
+            ->postJson('/api/recommendations/reject', ['recommendation_id' => $id])
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->postJson('/api/recommendations/start', ['recommendation_id' => $id])
+            ->assertStatus(422);
+    }
+
+    public function test_stale_superseded_recommendation_id_still_updates_and_starts(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+
+        $staleId = $this->actingAs($user)
+            ->getJson('/api/recommendations/next')
+            ->json('recommendation.id');
+
+        $repeat = $this->actingAs($user)
+            ->postJson('/api/recommendations/confidence', [
+                'recommendation_id' => $staleId,
+                'confidence' => 'needs_practice',
+            ])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertNotSame($staleId, $repeat['id']);
+        $this->assertSame(RecommendationType::RepeatCurrentRange->value, $repeat['type']);
+        $this->assertDatabaseHas('session_recommendations', [
+            'id' => $staleId,
+            'status' => 'superseded',
+        ]);
+
+        // Client still holding the superseded id should resolve to the open repeat.
+        $upgraded = $this->actingAs($user)
+            ->postJson('/api/recommendations/confidence', [
+                'recommendation_id' => $staleId,
+                'confidence' => 'confident',
+            ])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::Continue->value, $upgraded['type']);
+        $this->assertNotSame($staleId, $upgraded['id']);
+        $this->assertNotSame($repeat['id'], $upgraded['id']);
+        $this->assertDatabaseHas('session_recommendations', [
+            'id' => $repeat['id'],
+            'status' => 'superseded',
+        ]);
+        $this->assertDatabaseHas('session_recommendations', [
+            'id' => $upgraded['id'],
+            'status' => 'generated',
+        ]);
+
+        // Starting with the first superseded id must still reach the latest open continue.
+        $started = $this->actingAs($user)
+            ->postJson('/api/recommendations/start', [
+                'recommendation_id' => $staleId,
+                'settings' => array_merge($upgraded['settings'] ?? [], [
+                    'adaptations' => ['increase_repetitions'],
+                    'reason_code' => 'reinforce_recent_range',
+                    'playback_speed' => '0.75',
+                    'repetitions' => '5',
+                ]),
+            ])
+            ->assertOk()
+            ->assertJsonPath('started', true)
+            ->json();
+
+        $this->assertSame($upgraded['id'], (int) data_get($started, 'recommendation.id'));
+    }
+
+    public function test_start_ignores_extra_settings_keys(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 1, 4);
+        $id = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $this->actingAs($user)
+            ->postJson('/api/recommendations/start', [
+                'recommendation_id' => $id,
+                'settings' => [
+                    'technique' => 'talqin',
+                    'playback_speed' => 1,
+                    'repetitions' => 3,
+                    'adaptations' => ['use_talqin'],
+                    'reason_code' => 'continue_while_fresh',
+                    'unknown_flag' => true,
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('started', true);
     }
 
     public function test_handles_users_with_no_previous_sessions(): void
@@ -312,6 +625,22 @@ class NextSessionRecommendationTest extends TestCase
         $this->assertSame(RecommendationType::Continue->value, $recommendation['type']);
         $this->assertSame(9, $recommendation['ayah_range']['from']);
         $this->assertGreaterThanOrEqual(9, $recommendation['ayah_range']['from']);
-        $this->assertSame(12, $recommendation['ayah_range']['to']);
+        $this->assertGreaterThanOrEqual(9, $recommendation['ayah_range']['to']);
+        $this->assertLessThanOrEqual(16, $recommendation['ayah_range']['to']);
+        $this->assertArrayHasKey('workload', $recommendation);
+    }
+
+    public function test_long_ayah_recommendation_uses_single_ayah_set(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 281, 281);
+
+        $this->actingAs($user)
+            ->getJson('/api/recommendations/next')
+            ->assertOk()
+            ->assertJsonPath('recommendation.type', RecommendationType::Continue->value)
+            ->assertJsonPath('recommendation.ayah_range.from', 282)
+            ->assertJsonPath('recommendation.ayah_range.to', 282)
+            ->assertJsonPath('recommendation.ayah_range.count', 1);
     }
 }

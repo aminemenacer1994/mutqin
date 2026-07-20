@@ -6,30 +6,33 @@ use App\Enums\UserSessionStatus;
 use App\Models\User;
 use App\Models\UserSession;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
  * Authoritative start / resume / end transitions for user_sessions.
  *
- * The Vue lifecycle module remains the UX source of truth for button labels;
- * this service ensures the backend never invents duplicate active sessions or
- * resumes already completed / example sessions.
+ * Completed sessions are immutable historical records. Starting a new session
+ * after completion always creates a new row rather than overwriting the past.
+ * At most one unfinished (active/paused/interrupted) session exists per user.
  */
 class SessionLifecycleService
 {
     public function currentUnfinished(User $user): ?UserSession
     {
-        $session = UserSession::query()
+        $sessions = UserSession::query()
             ->where('user_id', $user->id)
             ->latest('last_activity_at')
             ->latest('id')
-            ->first();
+            ->get();
 
-        if (! $session || ! $this->isUnfinished($session)) {
-            return null;
+        foreach ($sessions as $session) {
+            if ($this->isUnfinished($session)) {
+                return $session;
+            }
         }
 
-        return $session;
+        return null;
     }
 
     public function isUnfinished(UserSession $session): bool
@@ -53,7 +56,8 @@ class SessionLifecycleService
 
     /**
      * Start (or re-assert) the single active learning session for the user.
-     * Idempotent when the payload matches the current unfinished session.
+     * Idempotent when the payload matches the current unfinished session or
+     * when a start_idempotency_key was already used.
      *
      * @param  array<string, mixed>  $attributes
      */
@@ -65,36 +69,57 @@ class SessionLifecycleService
             ]);
         }
 
-        $existing = UserSession::query()->where('user_id', $user->id)->first();
-        $now = now();
+        $attributes = $this->normaliseIdempotencyAttributes($attributes, 'start');
 
-        if ($existing && $this->isUnfinished($existing)) {
-            // Idempotent re-start of the same unfinished session.
-            $existing->fill($this->sessionAttributes($attributes, [
-                'status' => UserSessionStatus::Active->value,
-                'is_onboarding_example' => false,
-                'resumed_at' => $existing->resumed_at ?: $now,
-                'paused_at' => null,
-                'ended_at' => null,
-                'last_activity_at' => $attributes['last_activity_at'] ?? $now,
-            ]));
-            $existing->save();
+        return DB::transaction(function () use ($user, $attributes) {
+            $now = now();
+            $idempotencyKey = isset($attributes['start_idempotency_key'])
+                ? (string) $attributes['start_idempotency_key']
+                : null;
 
-            return $existing->fresh();
-        }
+            if ($idempotencyKey !== null && $idempotencyKey !== '') {
+                $byKey = UserSession::query()
+                    ->where('user_id', $user->id)
+                    ->where('start_idempotency_key', $idempotencyKey)
+                    ->lockForUpdate()
+                    ->first();
+                if ($byKey) {
+                    return $byKey;
+                }
+            }
 
-        return UserSession::updateOrCreate(
-            ['user_id' => $user->id],
-            $this->sessionAttributes($attributes, [
+            $existing = $this->lockCurrentUnfinished($user);
+
+            if ($existing) {
+                // Idempotent re-start of the same unfinished session — never create a second active row.
+                $existing->fill($this->sessionAttributes($attributes, [
+                    'status' => UserSessionStatus::Active->value,
+                    'is_onboarding_example' => false,
+                    'resumed_at' => $existing->resumed_at ?: $now,
+                    'paused_at' => null,
+                    'ended_at' => null,
+                    'last_activity_at' => $attributes['last_activity_at'] ?? $now,
+                    'start_idempotency_key' => $idempotencyKey ?: $existing->start_idempotency_key,
+                ]));
+                $existing->save();
+
+                return $existing->fresh();
+            }
+
+            // Never overwrite a completed session — create a new attempt.
+            return UserSession::create($this->sessionAttributes($attributes, [
+                'user_id' => $user->id,
                 'status' => UserSessionStatus::Active->value,
                 'is_onboarding_example' => false,
                 'started_at' => $attributes['started_at'] ?? $now,
                 'resumed_at' => null,
                 'paused_at' => null,
                 'ended_at' => null,
+                'attempt_number' => $attributes['attempt_number'] ?? 1,
                 'last_activity_at' => $attributes['last_activity_at'] ?? $now,
-            ])
-        );
+                'start_idempotency_key' => $idempotencyKey,
+            ]));
+        });
     }
 
     /**
@@ -104,75 +129,171 @@ class SessionLifecycleService
      */
     public function resume(User $user, array $attributes = []): UserSession
     {
-        $session = $this->currentUnfinished($user);
-        if (! $session) {
-            throw ValidationException::withMessages([
-                'session' => ['No unfinished session is available to resume.'],
-            ]);
-        }
+        $attributes = $this->normaliseIdempotencyAttributes($attributes, 'resume');
 
-        $now = now();
-        $session->fill($this->sessionAttributes($attributes, [
-            'status' => UserSessionStatus::Active->value,
-            'is_onboarding_example' => false,
-            'resumed_at' => $now,
-            'paused_at' => null,
-            'ended_at' => null,
-            'last_activity_at' => $attributes['last_activity_at'] ?? $now,
-        ]));
-        $session->save();
+        return DB::transaction(function () use ($user, $attributes) {
+            $session = $this->lockCurrentUnfinished($user);
+            if (! $session) {
+                throw ValidationException::withMessages([
+                    'session' => ['No unfinished session is available to resume.'],
+                ]);
+            }
 
-        return $session->fresh();
+            $now = now();
+            $session->fill($this->sessionAttributes($attributes, [
+                'status' => UserSessionStatus::Active->value,
+                'is_onboarding_example' => false,
+                'resumed_at' => $now,
+                'paused_at' => null,
+                'ended_at' => null,
+                'last_activity_at' => $attributes['last_activity_at'] ?? $now,
+            ]));
+            $session->save();
+
+            return $session->fresh();
+        });
     }
 
     /**
-     * End the current session. Idempotent when already completed.
+     * End the current unfinished session. Idempotent when already completed.
+     * Never reactivates or mutates an already-completed historical record beyond
+     * the first completion write.
      *
      * @param  array<string, mixed>  $attributes
      */
     public function end(User $user, array $attributes = []): UserSession
     {
-        $session = UserSession::query()->where('user_id', $user->id)->first();
-        $now = now();
+        $attributes = $this->normaliseIdempotencyAttributes($attributes, 'end');
 
-        if (! $session) {
-            return UserSession::create($this->sessionAttributes($attributes, [
-                'user_id' => $user->id,
+        return DB::transaction(function () use ($user, $attributes) {
+            $now = now();
+            $endKey = isset($attributes['end_idempotency_key'])
+                ? (string) $attributes['end_idempotency_key']
+                : null;
+
+            if ($endKey !== null && $endKey !== '') {
+                $completed = UserSession::query()
+                    ->where('user_id', $user->id)
+                    ->where('status', UserSessionStatus::Completed->value)
+                    ->orderByDesc('id')
+                    ->lockForUpdate()
+                    ->limit(20)
+                    ->get();
+
+                foreach ($completed as $candidate) {
+                    $meta = is_array($candidate->metadata) ? $candidate->metadata : [];
+                    if (($meta['end_idempotency_key'] ?? null) === $endKey) {
+                        return $candidate;
+                    }
+                }
+            }
+
+            $session = $this->lockCurrentUnfinished($user);
+
+            if (! $session) {
+                $latest = UserSession::query()
+                    ->where('user_id', $user->id)
+                    ->latest('id')
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($latest && $latest->status === UserSessionStatus::Completed && $latest->ended_at) {
+                    return $latest;
+                }
+
+                // Do not invent a completed historical row when nothing was unfinished.
+                throw ValidationException::withMessages([
+                    'session' => ['No unfinished session is available to end.'],
+                ]);
+            }
+
+            if ($session->status === UserSessionStatus::Completed && $session->ended_at) {
+                return $session;
+            }
+
+            $meta = is_array($session->metadata) ? $session->metadata : [];
+            $incomingMeta = is_array($attributes['metadata'] ?? null) ? $attributes['metadata'] : [];
+            $completionSettings = $this->extractCompletionSettings($attributes, $meta, $incomingMeta);
+
+            $session->fill($this->sessionAttributes($attributes, [
                 'status' => UserSessionStatus::Completed->value,
                 'is_onboarding_example' => false,
-                'ended_at' => $now,
+                'ended_at' => $attributes['ended_at'] ?? $now,
+                'paused_at' => null,
                 'last_activity_at' => $attributes['last_activity_at'] ?? $now,
-                'metadata' => array_merge(
-                    is_array($attributes['metadata'] ?? null) ? $attributes['metadata'] : [],
-                    ['active' => false, 'completed' => true, 'completed_at' => $now->toIso8601String()]
-                ),
+                'completion_settings' => $completionSettings,
+                'metadata' => array_merge($meta, $incomingMeta, [
+                    'active' => false,
+                    'completed' => true,
+                    'completed_at' => ($attributes['ended_at'] ?? $now) instanceof Carbon
+                        ? ($attributes['ended_at'] ?? $now)->toIso8601String()
+                        : Carbon::parse($attributes['ended_at'] ?? $now)->toIso8601String(),
+                    'final_settings' => $completionSettings,
+                    'end_idempotency_key' => $endKey ?: ($meta['end_idempotency_key'] ?? null),
+                ]),
             ]));
+            $session->save();
+
+            return $session->fresh();
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    private function normaliseIdempotencyAttributes(array $attributes, string $for = 'start'): array
+    {
+        if (empty($attributes['idempotency_key'])) {
+            return $attributes;
         }
 
-        if ($session->status === UserSessionStatus::Completed->value && $session->ended_at) {
-            return $session;
+        $key = (string) $attributes['idempotency_key'];
+        if ($for === 'start' && empty($attributes['start_idempotency_key'])) {
+            $attributes['start_idempotency_key'] = $key;
+        }
+        if ($for === 'end' && empty($attributes['end_idempotency_key'])) {
+            $attributes['end_idempotency_key'] = $key;
         }
 
-        $meta = is_array($session->metadata) ? $session->metadata : [];
-        $incomingMeta = is_array($attributes['metadata'] ?? null) ? $attributes['metadata'] : [];
+        return $attributes;
+    }
 
-        $session->fill($this->sessionAttributes($attributes, [
-            'status' => UserSessionStatus::Completed->value,
-            'is_onboarding_example' => false,
-            'ended_at' => $attributes['ended_at'] ?? $now,
-            'paused_at' => null,
-            'last_activity_at' => $attributes['last_activity_at'] ?? $now,
-            'metadata' => array_merge($meta, $incomingMeta, [
-                'active' => false,
-                'completed' => true,
-                'completed_at' => ($attributes['ended_at'] ?? $now) instanceof Carbon
-                    ? ($attributes['ended_at'] ?? $now)->toIso8601String()
-                    : Carbon::parse($attributes['ended_at'] ?? $now)->toIso8601String(),
-            ]),
-        ]));
-        $session->save();
+    private function lockCurrentUnfinished(User $user): ?UserSession
+    {
+        $sessions = UserSession::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', [
+                UserSessionStatus::Active->value,
+                UserSessionStatus::Paused->value,
+                UserSessionStatus::Interrupted->value,
+            ])
+            ->orderByDesc('last_activity_at')
+            ->orderByDesc('id')
+            ->lockForUpdate()
+            ->get();
 
-        return $session->fresh();
+        foreach ($sessions as $session) {
+            if ($this->isUnfinished($session)) {
+                return $session;
+            }
+        }
+
+        // Legacy rows without a reliable status enum value.
+        $legacy = UserSession::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('last_activity_at')
+            ->orderByDesc('id')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($legacy as $session) {
+            if ($this->isUnfinished($session)) {
+                return $session;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -180,7 +301,9 @@ class SessionLifecycleService
      */
     public function discardOnboardingExample(User $user): ?UserSession
     {
-        $session = UserSession::query()->where('user_id', $user->id)->first();
+        $session = $this->currentUnfinished($user)
+            ?? UserSession::query()->where('user_id', $user->id)->latest('id')->first();
+
         if (! $session) {
             return null;
         }
@@ -277,6 +400,12 @@ class SessionLifecycleService
             'resumed_at',
             'ended_at',
             'user_id',
+            'repeated_from_session_id',
+            'attempt_number',
+            'recommendation_id',
+            'recommendation_source',
+            'completion_settings',
+            'start_idempotency_key',
         ];
 
         $merged = array_merge($defaults, $attributes);
@@ -288,6 +417,52 @@ class SessionLifecycleService
         }
 
         return $filtered;
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $meta
+     * @param  array<string, mixed>  $incomingMeta
+     * @return array<string, mixed>|null
+     */
+    private function extractCompletionSettings(array $attributes, array $meta = [], array $incomingMeta = []): ?array
+    {
+        if (is_array($attributes['completion_settings'] ?? null)) {
+            return $attributes['completion_settings'];
+        }
+
+        $config = [];
+        foreach ([$meta, $incomingMeta, is_array($attributes['metadata'] ?? null) ? $attributes['metadata'] : []] as $blob) {
+            if (is_array($blob['config'] ?? null)) {
+                $config = array_merge($config, $blob['config']);
+            }
+            if (is_array($blob['final_settings'] ?? null)) {
+                return $blob['final_settings'];
+            }
+            if (is_array($blob['settings'] ?? null)) {
+                $config = array_merge($config, $blob['settings']);
+            }
+        }
+
+        if ($config === []) {
+            return null;
+        }
+
+        $technique = $config['technique']
+            ?? (($config['talqinModeEnabled'] ?? false) ? 'talqin'
+                : (($config['focusModeEnabled'] ?? false) ? 'focus'
+                    : (($config['blurModeEnabled'] ?? false) ? 'blur' : null)));
+
+        return [
+            'technique' => $technique,
+            'reciter' => $config['reciterId'] ?? $config['reciter'] ?? null,
+            'playback_speed' => $config['playbackSpeed'] ?? $config['playback_speed'] ?? 1,
+            'repetitions' => $config['repetitionsPerStep'] ?? $config['repetitions'] ?? 3,
+            'ayat_per_step' => $config['ayatPerStep'] ?? $config['ayat_per_step'] ?? null,
+            'focus_enabled' => (bool) ($config['focusModeEnabled'] ?? $config['focus_enabled'] ?? false),
+            'blur_enabled' => (bool) ($config['blurModeEnabled'] ?? $config['blur_enabled'] ?? false),
+            'talqin_enabled' => (bool) ($config['talqinModeEnabled'] ?? $config['talqin_enabled'] ?? ($technique === 'talqin')),
+        ];
     }
 
     private function parseDate(mixed $value): ?Carbon

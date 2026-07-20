@@ -2,6 +2,7 @@
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'onboarding-post-session-active': showPostSessionModal,
+    'post-session-ai-recite-open': postSessionAiReciteActive,
     'overlay-onboarding-active': isOnboardingExperienceActive,
     'onboarding-post-session-offcanvas-open': showPostSessionModal && postSessionOffcanvasOpen && showTools,
     'session-exit-flow-active': showSessionExitModal,
@@ -250,17 +251,24 @@
           </div>
           </template>
           <div v-else-if="showSessionOverviewIdleActions" class="workspace-shell-actions workspace-shell-actions-minimal">
-            <button class="action-btn primary session-idle-action" type="button" @click="openNewSessionSetup">
-              {{ t('memorisation.workspaceEmpty.startNewSession') }}
-            </button>
-            <button
-              class="action-btn session-idle-action"
-              type="button"
-              :disabled="!canResumePreviousSession || headerSessionActionDisabled"
-              @click="resumeSessionFromPrimaryAction"
+            <div
+              v-if="showHeaderSessionAction"
+              class="action-btn primary session-idle-action session-primary-action"
+              role="button"
+              tabindex="0"
+              :aria-disabled="headerSessionActionDisabled ? 'true' : 'false'"
+              :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
+              :class="{ 'is-disabled': headerSessionActionDisabled, 'is-loading': headerSessionActionBusy }"
+              :style="{ minWidth: primarySessionActionPresentation.stableWidthCh + 'ch' }"
+              @click="handleHeaderSessionAction"
+              @keydown.enter.prevent="handleHeaderSessionAction"
+              @keydown.space.prevent="handleHeaderSessionAction"
+              :title="headerSessionActionLabel"
+              :aria-label="headerSessionActionLabel"
             >
-              {{ t('common.resumeSession') }}
-            </button>
+              <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
+              <span>{{ headerSessionActionLabel }}</span>
+            </div>
           </div>
         </div>
         <p v-if="chainingSetupBlocking" class="workspace-setup-hint workspace-setup-hint-warning" role="status">
@@ -563,7 +571,15 @@
                           class="mushaf-ayah-number"
                           :class="[`mushaf-ayah-number-digits-${row.numberDigits}`]"
                           :style="row.numberStyle"
-                        >{{ row.verse.number }}</span>
+                          role="img"
+                          :aria-label="getMushafAyahNumberAriaLabel(row.verse.number)"
+                        >
+                          <span class="mushaf-ayah-number-visual" aria-hidden="true" dir="ltr">
+                            <span class="mushaf-ayah-number-paren mushaf-ayah-number-paren--open">(</span>
+                            <span class="mushaf-ayah-number-digit">{{ row.verse.number }}</span>
+                            <span class="mushaf-ayah-number-paren mushaf-ayah-number-paren--close">)</span>
+                          </span>
+                        </span>
                       </span>
                     </div>
                   </article>
@@ -904,8 +920,8 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-bullseye"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">{{ t('memorisation.focus_mode') }}</span>
-                    <span class="st-sub">{{ t('memorisation.reduce_distractions_around_the_active_ayah') }}</span>
+                    <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('focus') }}</span>
+                    <span class="st-sub">{{ getTechniqueDisplayDescription('focus') }}</span>
                   </span>
                 </span>
                 <div class="st-right-group">
@@ -926,7 +942,7 @@
                   <div class="field">
                     <div class="technique-description">
                       <i class="bi bi-info-circle-fill"></i>
-                      <span>{{ t('memorisation.techniques.focusDescription') }}</span>
+                      <span>{{ getTechniqueDisplayDescription('focus') }}</span>
                     </div>
                     <div class="technique-best">
                       <i class="bi bi-check-circle-fill"></i>
@@ -950,8 +966,8 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-cloud-haze2"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">{{ t('memorisation.blur_mode') }}</span>
-                    <span class="st-sub">{{ t('memorisation.progressive_concealment_for_active_recall') }}</span>
+                    <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('blur') }}</span>
+                    <span class="st-sub">{{ getTechniqueDisplayDescription('blur') }}</span>
                   </span>
                 </span>
                 <div class="st-right-group">
@@ -971,7 +987,7 @@
                   <div class="field">
                     <div class="technique-description">
                       <i class="bi bi-info-circle-fill"></i>
-                      <span>{{ t('memorisation.blurs_upcoming_verses_requiring_you_to_recall_them') }}</span>
+                      <span>{{ getTechniqueDisplayDescription('blur') }}</span>
                     </div>
                     <div class="technique-best">
                       <i class="bi bi-check-circle-fill"></i>
@@ -995,8 +1011,8 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-soundwave"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">{{ t('memorisation.talqinMode.title') }}</span>
-                    <span class="st-sub">{{ t('memorisation.talqinMode.subtitle') }}</span>
+                    <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('talqin') }}</span>
+                    <span class="st-sub">{{ getTechniqueDisplayDescription('talqin') }}</span>
                   </span>
                 </span>
                 <div class="st-right-group">
@@ -1021,7 +1037,7 @@
                   <div class="field">
                     <div class="technique-description">
                       <i class="bi bi-info-circle-fill"></i>
-                      <span>{{ t('memorisation.talqinMode.description') }}</span>
+                      <span>{{ getTechniqueDisplayDescription('talqin') }}</span>
                     </div>
                     <div class="technique-best">
                       <i class="bi bi-check-circle-fill"></i>
@@ -1043,7 +1059,7 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-link-45deg"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">{{ t('memorisation.chaining') }}</span>
+                    <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('chaining') }}</span>
                     <span class="st-sub">{{ chainingMethodDescription }}</span>
                   </span>
                 </span>
@@ -1119,8 +1135,8 @@
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-pin-angle-fill"></i></span>
                   <span class="st-txt">
-                    <span class="st-title">{{ t('memorisation.anchor_mode') }}</span>
-                    <span class="st-sub">{{ t('memorisation.mental_hooks_using_key_words') }}</span>
+                    <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('anchor') }}</span>
+                    <span class="st-sub">{{ getTechniqueDisplayDescription('anchor') }}</span>
                   </span>
                 </span>
                 <div class="st-right-group">
@@ -1744,6 +1760,16 @@
                   class="session-exit-actions-secondary"
                   :class="{ 'session-exit-actions-secondary--with-primary': canContinueCurrentSession }"
                 >
+                  <button
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate"
+                    :disabled="headerSessionActionBusy"
+                    :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
+                    @click="confirmSessionExit({ showSummary: true })"
+                  >
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                    <span>{{ t('sessionStatus.end') }}</span>
+                  </button>
                   <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate" @click="exitSessionToNewSession">
                     <i class="bi bi-plus-circle" aria-hidden="true"></i>
                     <span>{{ t('memorisation.sessionExit.startNewSession') }}</span>
@@ -2429,8 +2455,10 @@
                       <div v-if="aiMemorisationCheckerResult.audioSrc" class="self-check-audio-player shared-result-audio-player shared-result-audio-player--compact">
                         <button class="self-check-audio-player-btn" type="button"
                           @click="toggleReviewResultAudio(aiMemorisationCheckerResult)"
-                          :aria-label="reviewResultAudioPlaying ? 'Pause playback' : 'Replay recitation'">
-                          <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+                          :disabled="reviewResultAudioState === 'loading_audio' || aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording"
+                          :aria-busy="reviewResultAudioState === 'loading_audio' ? 'true' : 'false'"
+                          :aria-label="reviewResultAudioAriaLabel()">
+                          <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : (reviewResultAudioState === 'ended' ? 'bi-arrow-counterclockwise' : 'bi-play-fill')" aria-hidden="true"></i>
                         </button>
                         <div class="self-check-audio-player-track">
                           <div class="self-check-audio-player-waveform">
@@ -2444,7 +2472,11 @@
                           </div>
                         </div>
                       </div>
-                      <p v-else class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(aiMemorisationCheckerResult) }}</span></p>
+                      <p v-if="reviewResultAudioError" class="shared-result-recording-empty" role="status" aria-live="polite">
+                        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                        <span>{{ reviewResultAudioError }}</span>
+                      </p>
+                      <p v-else-if="!aiMemorisationCheckerResult.audioSrc" class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(aiMemorisationCheckerResult) }}</span></p>
                     </section>
                   </div>
                   <div class="recitation-check-footnotes">
@@ -2476,13 +2508,23 @@
       </div>
     </div>
 
-    <div v-if="showSelfCheckModal && selfCheckModalVerse" class="modal-overlay mutqin-modal-overlay self-check-modal-overlay"
-      @click.self="closeSelfCheckModal">
+    <div
+      v-if="showSelfCheckModal && selfCheckModalVerse"
+      class="modal-overlay mutqin-modal-overlay self-check-modal-overlay"
+      :class="{ 'self-check-modal-overlay--above-post-session': postSessionAiReciteActive }"
+      @click.self="closeSelfCheckModal"
+    >
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full">
       <div class="modal-content mutqin-modal-surface self-check-modal recitation-review-modal" role="dialog" aria-modal="true" aria-labelledby="selfCheckModalTitle">
         <div class="modal-header self-check-modal-header">
           <div class="self-check-modal-head-copy">
             <h2 id="selfCheckModalTitle">{{ selfCheckModalTitle }}</h2>
+            <p
+              v-if="postSessionAiReciteActive"
+              class="self-check-post-session-hint"
+            >
+              {{ t('memorisation.postSession.recommendation.aiReciteHint') }}
+            </p>
           </div>
           <div class="self-check-modal-header-actions">
             <button
@@ -2800,8 +2842,10 @@
                       <div v-if="recitationCheckResult.audioSrc" class="self-check-audio-player shared-result-audio-player shared-result-audio-player--compact">
                         <button class="self-check-audio-player-btn" type="button"
                           @click="toggleReviewResultAudio(recitationCheckResult)"
-                          :aria-label="reviewResultAudioPlaying ? 'Pause playback' : 'Replay recitation'">
-                          <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+                          :disabled="reviewResultAudioState === 'loading_audio' || recitationCheckPreparing || recitationCheckRecording"
+                          :aria-busy="reviewResultAudioState === 'loading_audio' ? 'true' : 'false'"
+                          :aria-label="reviewResultAudioAriaLabel()">
+                          <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : (reviewResultAudioState === 'ended' ? 'bi-arrow-counterclockwise' : 'bi-play-fill')" aria-hidden="true"></i>
                         </button>
                         <div class="self-check-audio-player-track">
                           <div class="self-check-audio-player-waveform">
@@ -2815,7 +2859,11 @@
                           </div>
                         </div>
                       </div>
-                      <p v-else class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(recitationCheckResult) }}</span></p>
+                      <p v-if="reviewResultAudioError" class="shared-result-recording-empty" role="status" aria-live="polite">
+                        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                        <span>{{ reviewResultAudioError }}</span>
+                      </p>
+                      <p v-else-if="!recitationCheckResult.audioSrc" class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(recitationCheckResult) }}</span></p>
                     </section>
                   </div>
                   <div class="recitation-check-footnotes">
@@ -3441,343 +3489,275 @@
       </div>
     </div>
 
+    <Teleport to="body">
     <transition name="mutqin-flow">
-    <div v-if="showPostSessionModal" class="onboarding-post-session-flow mutqin-modal-flow" :class="{ 'onboarding-post-session-flow--sample': onboardingSampleSessionActive }" aria-live="polite">
-      <div class="modal-backdrop fade show onboarding-post-session-backdrop"></div>
-
-      <transition name="post-session-confetti-fade">
-        <div
-          v-if="showPostSessionConfetti"
-          class="onboarding-post-session-confetti-layer"
-          :class="{ 'onboarding-post-session-confetti-layer--sample': onboardingSampleSessionActive }"
-          aria-hidden="true"
-        >
-          <span
-            v-for="piece in postSessionConfettiPieces"
-            :key="piece.id"
-            :class="piece.className"
-            :style="piece.style"
-          ></span>
-        </div>
-      </transition>
+    <div
+      v-if="showPostSessionModal"
+      class="post-session-simple"
+      :class="{ 'post-session-simple--sample': onboardingSampleSessionActive }"
+      aria-live="polite"
+    >
+      <div class="post-session-simple__backdrop" aria-hidden="true"></div>
 
       <div
-        class="onboarding-post-session-modal-wrap"
+        class="post-session-simple__overlay"
         role="dialog"
         aria-modal="true"
         aria-labelledby="postSessionTitle"
       >
-        <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
-          <div
-            class="modal-content mutqin-modal-surface onboarding-post-session-modal"
-            :class="{ 'onboarding-post-session-modal--sample': onboardingSampleSessionActive }"
-          >
-            <div class="post-session-hero" :class="{ 'post-session-hero--sample': onboardingSampleSessionActive }">
-              <div class="post-session-hero-main">
-                <div class="post-session-hero-illustration" aria-hidden="true">
-                  <span class="post-session-illustration-orbit post-session-illustration-orbit--outer"></span>
-                  <span class="post-session-illustration-orbit post-session-illustration-orbit--inner"></span>
-                  <span class="post-session-illustration-core">
-                    <i class="bi bi-check-circle-fill post-session-success-icon"></i>
-                  </span>
-                  <span class="post-session-illustration-spark post-session-illustration-spark--one">
-                    <i class="bi bi-stars"></i>
-                  </span>
-                  <span class="post-session-illustration-spark post-session-illustration-spark--two">
-                    <i class="bi bi-heart-fill"></i>
-                  </span>
-                </div>
-                <div class="post-session-hero-copy">
-                  <span class="post-session-kicker" :class="{ 'post-session-kicker--sample': onboardingSampleSessionActive }">
-                    {{ postSessionUi.kicker }}
-                  </span>
-                  <h2 id="postSessionTitle" class="post-session-title">
-                    {{ postSessionModalTitle }}
-                  </h2>
-                  <p v-if="postSessionModalMessage && !postSessionShowQuietHero" class="post-session-message">
-                    {{ postSessionModalMessage }}
-                  </p>
-                  <p v-if="postSessionEncouragement && !postSessionShowQuietHero" class="emotional-touch emotional-touch--encouragement">
-                    {{ postSessionEncouragement }}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-body post-session-body post-session-body--guided">
+        <div class="post-session-simple__dialog">
+          <header class="post-session-simple__header">
+            <span class="post-session-simple__check" aria-hidden="true">
+              <i class="bi bi-check-lg"></i>
+            </span>
+            <div class="post-session-simple__header-copy">
+              <h2 id="postSessionTitle" class="post-session-simple__title">
+                {{ postSessionSupportingMessage || postSessionModalTitle }}
+              </h2>
               <p
-                v-if="postSessionAutoSaved && !onboardingSampleSessionActive && !postSessionRecommendationActionable"
-                class="post-session-autosaved-note post-session-autosaved-note--quiet"
-                role="status"
+                v-if="postSessionDuaMessage && !onboardingSampleSessionActive"
+                class="post-session-simple__subtitle"
               >
-                {{ t('memorisation.postSession.autoSavedNote') }}
+                {{ postSessionDuaMessage }}
               </p>
-
-              <template v-if="!onboardingSampleSessionActive && postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
-                <section
-                  class="post-session-recommendation-confirm mutqin-guide-card"
-                  role="group"
-                  aria-labelledby="postSessionConfirmTitle"
-                >
-                  <p
-                    v-if="postSessionRecommendation?.is_end_of_surah && postSessionCompletedSurahMessage"
-                    class="post-session-surah-complete"
-                    role="status"
-                  >
-                    {{ postSessionCompletedSurahMessage }}
-                  </p>
-                  <h3 id="postSessionConfirmTitle" class="post-session-confirm-title" tabindex="-1">
-                    {{ postSessionConfirmationTitle }}
-                  </h3>
-                  <div class="post-session-confirm-details">
-                    <strong>{{ postSessionRecommendationDisplaySurahName }}</strong>
-                    <span v-if="postSessionRecommendation?.ayah_range">
-                      {{ t('memorisation.postSession.recommendation.ayahRange', {
-                        start: postSessionRecommendation.ayah_range.from,
-                        end: postSessionRecommendation.ayah_range.to
-                      }) }}
-                    </span>
-                  </div>
-                  <p v-if="postSessionRecommendationReasonText" class="post-session-confirm-reason">
-                    {{ postSessionRecommendationReasonText }}
-                  </p>
-                  <p
-                    v-if="postSessionTechniqueTip"
-                    class="post-session-technique-chip"
-                  >
-                    <i class="bi" :class="postSessionTechniqueTip.icon" aria-hidden="true"></i>
-                    <span>{{ postSessionTechniqueTip.label }}</span>
-                  </p>
-                  <p
-                    v-if="postSessionRecommendationStartError"
-                    class="post-session-recommendation-error"
-                    role="alert"
-                  >
-                    {{ postSessionRecommendationStartError }}
-                  </p>
-                </section>
-              </template>
-
-              <template v-else-if="!onboardingSampleSessionActive">
-                <section
-                  class="post-session-recommendation-card mutqin-guide-card"
-                  :class="{
-                    'post-session-recommendation-card--revision': postSessionRecommendation?.session_mode === 'revision',
-                    'post-session-recommendation-card--loading': postSessionRecommendationStatus === 'loading',
-                    'post-session-recommendation-card--empty': postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable,
-                    'is-revealed': postSessionRecommendationStatus !== 'loading'
-                  }"
-                  :aria-busy="postSessionRecommendationStatus === 'loading' ? 'true' : 'false'"
-                  :aria-label="t('memorisation.postSession.recommendation.cardTitle')"
-                >
-                  <div v-if="postSessionRecommendationStatus === 'loading'" class="post-session-recommendation-skeleton" aria-hidden="true">
-                    <span class="post-session-skeleton-line post-session-skeleton-line--title"></span>
-                    <span class="post-session-skeleton-line post-session-skeleton-line--short"></span>
-                  </div>
-
-                  <template v-else-if="postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable">
-                    <span class="post-session-recommendation-label">{{ t('memorisation.postSession.recommendation.chooseNext') }}</span>
-                    <p class="post-session-recommendation-reason">
-                      {{ postSessionRecommendationReasonText || t('memorisation.postSession.recommendation.reasons.manualFallback') }}
-                    </p>
-                  </template>
-
-                  <template v-else>
-                    <span class="post-session-recommendation-label">{{ t('memorisation.postSession.recommendation.cardTitle') }}</span>
-                    <strong class="post-session-recommendation-heading">{{ postSessionRecommendationTitle }}</strong>
-                    <span v-if="postSessionRecommendationMeta" class="post-session-recommendation-meta">
-                      <i
-                        class="bi"
-                        :class="postSessionRecommendation?.session_mode === 'revision' ? 'bi-arrow-repeat' : 'bi-journal-plus'"
-                        aria-hidden="true"
-                      ></i>
-                      {{ postSessionRecommendationMeta }}
-                    </span>
-                    <p v-if="postSessionRecommendationReasonText" class="post-session-recommendation-reason">
-                      {{ postSessionRecommendationReasonText }}
-                    </p>
-                    <p v-if="postSessionTechniqueTip" class="post-session-technique-chip">
-                      <i class="bi" :class="postSessionTechniqueTip.icon" aria-hidden="true"></i>
-                      <span>{{ postSessionTechniqueTip.label }}</span>
-                    </p>
-                  </template>
-
-                  <p
-                    v-if="postSessionRecommendationStatus === 'error' && postSessionRecommendationError"
-                    class="post-session-recommendation-error"
-                    role="status"
-                  >
-                    {{ postSessionRecommendationError }}
-                    <button type="button" class="post-session-recommendation-retry" @click="retryPostSessionRecommendation">
-                      {{ t('memorisation.postSession.recommendation.retry') }}
-                    </button>
-                  </p>
-                </section>
-              </template>
-
-              <section
-                v-else-if="postSessionNextStep"
-                class="post-session-next-step-card"
-                :aria-label="t('memorisation.postSession.nextStepLabel')"
-              >
-                <span class="post-session-next-step-label">{{ t('memorisation.postSession.nextStepLabel') }}</span>
-                <p class="post-session-next-step-copy">{{ postSessionNextStep }}</p>
-              </section>
-
-              <section
-                v-if="postSessionStatsExpanded && (postSessionDetailRows.length || postSessionProgress)"
-                id="postSessionStatsPanel"
-                class="mutqin-session-summary post-session-stats-panel"
-                :aria-label="t('memorisation.postSession.summaryTitle')"
-              >
-                <div
-                  v-if="postSessionProgress"
-                  class="mutqin-session-summary-progress"
-                  role="progressbar"
-                  :aria-valuenow="postSessionProgress.percentComplete"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  :aria-label="postSessionProgress.label"
-                >
-                  <div class="mutqin-session-summary-progress-meta">
-                    <span>{{ postSessionProgress.label }}</span>
-                    <span>{{ postSessionProgress.percentComplete }}%</span>
-                  </div>
-                  <div class="mutqin-session-summary-progress-track">
-                    <span
-                      class="mutqin-session-summary-progress-fill"
-                      :style="{ width: `${postSessionProgress.percentComplete}%` }"
-                    ></span>
-                  </div>
-                </div>
-
-                <div
-                  v-if="postSessionDetailRows.length"
-                  class="mutqin-session-summary-details"
-                  :aria-label="t('memorisation.postSession.detailsLabel')"
-                >
-                  <div
-                    v-for="row in postSessionDetailRows"
-                    :key="row.key"
-                    class="mutqin-session-summary-row"
-                  >
-                    <span class="mutqin-session-summary-row-label">{{ row.label }}</span>
-                    <span class="mutqin-session-summary-row-value">{{ row.value }}</span>
-                  </div>
-                </div>
-              </section>
             </div>
+          </header>
 
-            <div class="modal-footer mutqin-modal-footer">
-              <div
-                class="mutqin-modal-actions post-session-actions-grid"
-                :class="onboardingSampleSessionActive
-                  ? 'mutqin-modal-actions--3'
-                  : (postSessionRecommendationStep === 'confirm' ? 'post-session-actions-grid--confirm' : 'post-session-actions-grid--main')"
-              >
-                <template v-if="onboardingSampleSessionActive">
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate" @click="repeatPostSession">
-                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                    <span>{{ postSessionUi.repeat }}</span>
-                  </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate" @click="openPostSessionNewSessionOffcanvas">
-                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                    <span>{{ postSessionUi.newSession }}</span>
-                  </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate" @click="continueFromOnboardingPostSession">
-                    <i class="bi bi-mortarboard" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.onboarding.finish') }}</span>
-                  </button>
-                </template>
+          <div class="post-session-simple__body">
+            <template v-if="onboardingSampleSessionActive">
+              <p v-if="postSessionNextStep" class="post-session-simple__sample-copy">{{ postSessionNextStep }}</p>
+            </template>
 
-                <template v-else-if="postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
+            <template v-else-if="postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
+              <section class="post-session-simple__panel post-session-simple__panel--hero" aria-labelledby="postSessionConfirmTitle">
+                <h3 id="postSessionConfirmTitle" class="post-session-simple__panel-title" tabindex="-1">
+                  {{ postSessionConfirmationTitle }}
+                </h3>
+                <p class="post-session-simple__range">
+                  <strong>{{ postSessionRecommendationDisplaySurahName }}</strong>
+                  <span v-if="postSessionRecommendation?.ayah_range">
+                    · {{ t('memorisation.postSession.recommendation.ayahRange', {
+                      start: postSessionRecommendation.ayah_range.from,
+                      end: postSessionRecommendation.ayah_range.to
+                    }) }}
+                  </span>
+                </p>
+                <p v-if="postSessionSimpleReason" class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
+                <p v-if="postSessionRecommendationStartError" class="post-session-simple__error" role="alert">
+                  {{ postSessionRecommendationStartError }}
+                </p>
+              </section>
+            </template>
+
+            <template v-else>
+              <div class="post-session-simple__row">
+                <section class="post-session-simple__ai" aria-labelledby="postSessionAiTitle">
+                  <p id="postSessionAiTitle" class="post-session-simple__section-label">
+                    {{ t('memorisation.postSession.recommendation.aiReciteHintShort') }}
+                  </p>
                   <button
                     type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate"
-                    :disabled="postSessionRecommendationStarting"
-                    :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
-                    @click="confirmPostSessionRecommendation"
+                    class="post-session-simple__ai-btn"
+                    :disabled="postSessionActionsBusy"
+                    :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
+                    @click="openPostSessionAiRecite"
                   >
                     <span
-                      v-if="postSessionRecommendationStarting"
+                      v-if="postSessionAiReciteBusy"
                       class="spinner-border spinner-border-sm"
                       role="status"
                       aria-hidden="true"
                     ></span>
-                    <i v-else class="bi bi-play-fill" aria-hidden="true"></i>
-                    <span>{{ postSessionConfirmationPrimaryLabel }}</span>
+                    <i v-else class="bi bi-stars" aria-hidden="true"></i>
+                    <span>{{ postSessionAiReciteBusy
+                      ? t('memorisation.postSession.recommendation.openingAiRecite')
+                      : t('memorisation.postSession.recommendation.aiReciteShort') }}</span>
                   </button>
-                  <button
-                    type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate"
-                    :disabled="postSessionRecommendationStarting"
-                    @click="chooseOtherFromRecommendation"
+                  <p
+                    v-if="postSessionRecommendation?.ai_assessment?.summary || postSessionAiFeedback"
+                    class="post-session-simple__ai-feedback"
+                    role="status"
                   >
-                    <i class="bi bi-grid" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.postSession.recommendation.confirm.chooseSomethingElse') }}</span>
-                  </button>
-                  <button
-                    v-if="postSessionRecommendation?.is_end_of_surah"
-                    type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate"
-                    :disabled="postSessionRecommendationStarting"
-                    @click="reviewCompletedSurahFromRecommendation"
-                  >
-                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.postSession.recommendation.reviewThisSurah') }}</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate"
-                    :disabled="postSessionRecommendationStarting"
-                    @click="cancelPostSessionRecommendationConfirm"
-                  >
-                    <i class="bi bi-arrow-left" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.postSession.recommendation.backToOverview') }}</span>
-                  </button>
-                </template>
+                    {{ postSessionAiFeedback || postSessionRecommendation.ai_assessment.summary }}
+                  </p>
+                </section>
 
-                <template v-else>
-                  <button
-                    v-if="postSessionRecommendationActionable"
-                    type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate"
-                    :disabled="postSessionRecommendationStatus === 'loading' || postSessionRecommendationStarting"
-                    @click="openPostSessionRecommendationConfirm"
-                  >
-                    <i class="bi" :class="postSessionRecommendation?.session_mode === 'revision' ? 'bi-arrow-repeat' : 'bi-play-fill'" aria-hidden="true"></i>
-                    <span>{{ postSessionRecommendationPrimaryLabel }}</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="mutqin-modal-btn mutqin-btn-animate"
-                    :class="postSessionRecommendationActionable ? 'mutqin-modal-btn--secondary' : 'mutqin-modal-btn--primary'"
-                    :disabled="postSessionRecommendationStatus === 'loading'"
-                    @click="chooseOtherFromRecommendation"
-                  >
-                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.postSession.recommendation.startNewSession') }}</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--ghost post-session-summary-btn mutqin-btn-animate"
-                    :aria-expanded="postSessionStatsExpanded ? 'true' : 'false'"
-                    aria-controls="postSessionStatsPanel"
-                    @click="togglePostSessionStats"
-                  >
-                    <i class="bi" :class="postSessionStatsExpanded ? 'bi-chevron-up' : 'bi-list-ul'" aria-hidden="true"></i>
-                    <span>{{ postSessionStatsExpanded
-                      ? t('memorisation.postSession.recommendation.hideSessionSummary')
-                      : t('memorisation.postSession.recommendation.viewSessionSummary') }}</span>
-                  </button>
-                </template>
+                <section
+                  v-if="postSessionRecommendation?.id"
+                  class="post-session-simple__confidence"
+                  role="group"
+                  :aria-label="t('memorisation.postSession.recommendation.confidencePrompt')"
+                >
+                  <p class="post-session-simple__section-label">
+                    {{ t('memorisation.postSession.recommendation.confidencePrompt') }}
+                  </p>
+                  <div class="post-session-simple__segment" role="radiogroup">
+                    <button
+                      type="button"
+                      class="post-session-simple__segment-btn"
+                      role="radio"
+                      :class="{ 'is-selected': postSessionRecommendation?.confidence_feedback === 'confident' }"
+                      :disabled="postSessionActionsBusy"
+                      :aria-checked="postSessionRecommendation?.confidence_feedback === 'confident' ? 'true' : 'false'"
+                      @click="submitPostSessionConfidence('confident')"
+                    >
+                      {{ t('memorisation.postSession.recommendation.confidenceConfident') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="post-session-simple__segment-btn"
+                      role="radio"
+                      :class="{ 'is-selected': postSessionRecommendation?.confidence_feedback === 'needs_practice' }"
+                      :disabled="postSessionActionsBusy"
+                      :aria-checked="postSessionRecommendation?.confidence_feedback === 'needs_practice' ? 'true' : 'false'"
+                      @click="submitPostSessionConfidence('needs_practice')"
+                    >
+                      {{ t('memorisation.postSession.recommendation.confidenceNeedsPractice') }}
+                    </button>
+                  </div>
+                  <p v-if="postSessionConfidenceError" class="post-session-simple__error" role="status">
+                    {{ postSessionConfidenceError }}
+                  </p>
+                </section>
               </div>
-            </div>
+
+              <section
+                class="post-session-simple__panel post-session-simple__panel--hero"
+                :class="{
+                  'is-loading': postSessionRecommendationStatus === 'loading',
+                  'is-empty': postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable
+                }"
+                :aria-busy="postSessionRecommendationStatus === 'loading' ? 'true' : 'false'"
+                :aria-label="postSessionSimpleActionLabel"
+              >
+                <div v-if="postSessionRecommendationStatus === 'loading'" class="post-session-simple__skeleton" aria-hidden="true">
+                  <span></span><span></span><span></span>
+                </div>
+                <template v-else-if="postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable">
+                  <p class="post-session-simple__reason">
+                    {{ postSessionSimpleReason || t('memorisation.postSession.recommendation.reasons.manualFallback') }}
+                  </p>
+                </template>
+                <template v-else>
+                  <div class="post-session-simple__panel-head">
+                    <p class="post-session-simple__action-label">{{ postSessionSimpleActionLabel }}</p>
+                    <p class="post-session-simple__range">{{ postSessionRecommendationTitle }}</p>
+                  </div>
+                  <p v-if="postSessionSimpleReason" class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
+                  <div v-if="postSessionStaticPills.length" class="post-session-simple__pills">
+                    <span
+                      v-for="pill in postSessionStaticPills"
+                      :key="pill.key"
+                      class="post-session-simple__pill"
+                    >{{ pill.label }}</span>
+                  </div>
+                </template>
+                <p
+                  v-if="postSessionRecommendationStatus === 'error' && postSessionRecommendationError"
+                  class="post-session-simple__error"
+                  role="status"
+                >
+                  {{ postSessionRecommendationError }}
+                  <button type="button" class="post-session-simple__link" @click="retryPostSessionRecommendation">
+                    {{ t('memorisation.postSession.recommendation.retry') }}
+                  </button>
+                </p>
+              </section>
+
+              <div v-if="postSessionCompactStats.length" class="post-session-simple__stats">
+                <button
+                  type="button"
+                  class="post-session-simple__stats-toggle"
+                  :aria-expanded="postSessionStatsExpanded ? 'true' : 'false'"
+                  aria-controls="postSessionStatsPanel"
+                  @click="togglePostSessionStats"
+                >
+                  <span>{{ t('memorisation.postSession.sessionStats') }}</span>
+                  <i class="bi" :class="postSessionStatsExpanded ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+                </button>
+                <div
+                  v-show="postSessionStatsExpanded"
+                  id="postSessionStatsPanel"
+                  class="post-session-simple__stats-grid"
+                >
+                  <div
+                    v-for="cell in postSessionCompactStats"
+                    :key="cell.key"
+                    class="post-session-simple__stat"
+                  >
+                    <span class="post-session-simple__stat-label">{{ cell.label }}</span>
+                    <span class="post-session-simple__stat-value">{{ cell.value }}</span>
+                  </div>
+                </div>
+              </div>
+            </template>
           </div>
+
+          <footer class="post-session-simple__footer">
+            <div
+              class="post-session-simple__actions"
+              :class="{ 'post-session-simple__actions--3': onboardingSampleSessionActive }"
+            >
+              <template v-if="onboardingSampleSessionActive">
+                <button type="button" class="post-session-simple__btn post-session-simple__btn--secondary" @click="repeatPostSession">
+                  <span>{{ postSessionUi.repeat }}</span>
+                </button>
+                <button type="button" class="post-session-simple__btn post-session-simple__btn--secondary" @click="openPostSessionNewSessionOffcanvas">
+                  <span>{{ postSessionUi.newSession }}</span>
+                </button>
+                <button type="button" class="post-session-simple__btn post-session-simple__btn--primary" @click="continueFromOnboardingPostSession">
+                  <span>{{ t('memorisation.onboarding.finish') }}</span>
+                </button>
+              </template>
+
+              <template v-else-if="postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
+                <button
+                  type="button"
+                  class="post-session-simple__btn post-session-simple__btn--secondary"
+                  :disabled="postSessionRecommendationStarting"
+                  @click="chooseOtherFromRecommendation"
+                >
+                  <span>{{ t('memorisation.postSession.recommendation.startDifferentSession') }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="post-session-simple__btn post-session-simple__btn--primary"
+                  :disabled="postSessionRecommendationStarting"
+                  :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
+                  @click="confirmPostSessionRecommendation"
+                >
+                  <span>{{ postSessionConfirmationPrimaryLabel }}</span>
+                </button>
+              </template>
+
+              <template v-else>
+                <button
+                  type="button"
+                  class="post-session-simple__btn"
+                  :class="postSessionRecommendationActionable ? 'post-session-simple__btn--secondary' : 'post-session-simple__btn--primary'"
+                  :disabled="postSessionActionsBusy"
+                  @click="chooseOtherFromRecommendation"
+                >
+                  <span>{{ t('memorisation.postSession.recommendation.startDifferentSession') }}</span>
+                </button>
+                <button
+                  v-if="postSessionRecommendationActionable"
+                  type="button"
+                  class="post-session-simple__btn post-session-simple__btn--primary"
+                  :disabled="postSessionActionsBusy"
+                  :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
+                  @click="openPostSessionRecommendationConfirm"
+                >
+                  <span>{{ postSessionRecommendationPrimaryLabel }}</span>
+                </button>
+              </template>
+            </div>
+          </footer>
         </div>
       </div>
     </div>
     </transition>
+    </Teleport>
 
     <div v-if="showRenameRecordingModal" class="modal-overlay mutqin-modal-overlay" @click.self="closeRenameRecordingModal">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
@@ -3951,9 +3931,13 @@
     <audio ref="reviewResultAudio" style="display:none"
       @loadedmetadata="onReviewResultAudioLoadedMetadata"
       @timeupdate="onReviewResultAudioTimeUpdate"
-      @play="reviewResultAudioPlaying = true"
-      @pause="reviewResultAudioPlaying = false"
-      @ended="onReviewResultAudioEnded"></audio>
+      @play="onReviewResultAudioPlay"
+      @pause="onReviewResultAudioPause"
+      @ended="onReviewResultAudioEnded"
+      @waiting="onReviewResultAudioWaiting"
+      @canplay="onReviewResultAudioCanPlay"
+      @stalled="onReviewResultAudioWaiting"
+      @error="onReviewResultAudioError"></audio>
 
     <div v-if="showQuranSearchModal" class="quran-search-modal-backdrop" role="presentation"
       @click.self="closeQuranSearchModal">

@@ -3,20 +3,30 @@
  * Reason codes stay internal; UI copy is resolved through i18n keys.
  */
 
+import { getTechniqueShortLabel } from '../techniques/techniqueDisplay.js'
+
 export const RECOMMENDATION_TYPES = Object.freeze({
   CONTINUE: 'continue',
+  CONTINUE_NEXT_RANGE: 'continue_next_range',
   REVISION: 'revision',
+  REPEAT_CURRENT_RANGE: 'repeat_current_range',
   COMPLETE_SURAH: 'complete_surah',
+  SURAH_COMPLETE: 'surah_complete',
   NEXT_SURAH: 'next_surah',
+  PLAN_COMPLETE: 'plan_complete',
+  TEST_WITH_AI_RECITE: 'test_with_ai_recite',
   RESUME: 'resume',
   MANUAL_SELECTION: 'manual_selection',
+  CHOOSE_NEW_SESSION: 'choose_new_session',
   NO_RECOMMENDATION: 'no_recommendation',
 })
 
 const REASON_I18N_KEYS = Object.freeze({
   strong_previous_performance: 'reasons.strongPreviousPerformance',
   continue_current_surah: 'reasons.continueCurrentSurah',
+  continue_while_fresh: 'reasons.continueWhileFresh',
   revision_required: 'reasons.revisionRequired',
+  needs_more_practice: 'reasons.needsMorePractice',
   difficult_ayah_detected: 'reasons.difficultAyahDetected',
   complete_remaining_ayat: 'reasons.completeRemainingAyat',
   surah_completed: 'reasons.surahCompleted',
@@ -24,29 +34,61 @@ const REASON_I18N_KEYS = Object.freeze({
   reinforce_recent_range: 'reasons.reinforceRecentRange',
   learning_plan_complete: 'reasons.learningPlanComplete',
   manual_fallback: 'reasons.manualFallback',
+  ai_recite_strong: 'reasons.aiReciteStrong',
+  ai_recite_mixed: 'reasons.aiReciteMixed',
+  ai_recite_weak: 'reasons.aiReciteWeak',
+  confidence_confident: 'reasons.confidenceConfident',
+  confidence_needs_practice: 'reasons.confidenceNeedsPractice',
 })
+
+const NON_ACTIONABLE = new Set([
+  RECOMMENDATION_TYPES.MANUAL_SELECTION,
+  RECOMMENDATION_TYPES.CHOOSE_NEW_SESSION,
+  RECOMMENDATION_TYPES.NO_RECOMMENDATION,
+  RECOMMENDATION_TYPES.PLAN_COMPLETE,
+  RECOMMENDATION_TYPES.SURAH_COMPLETE,
+  RECOMMENDATION_TYPES.TEST_WITH_AI_RECITE,
+])
 
 export function isActionableRecommendation(recommendation) {
   if (!recommendation || typeof recommendation !== 'object') return false
   const type = String(recommendation.type || '')
-  return ![
-    RECOMMENDATION_TYPES.MANUAL_SELECTION,
-    RECOMMENDATION_TYPES.NO_RECOMMENDATION,
-  ].includes(type) && !!(recommendation.surah || recommendation.next_surah)
+  if (NON_ACTIONABLE.has(type)) {
+    // Surah/plan complete can still offer next-surah range when present.
+    if (type === RECOMMENDATION_TYPES.SURAH_COMPLETE || type === RECOMMENDATION_TYPES.PLAN_COMPLETE) {
+      return !!(recommendation.ayah_range && recommendation.surah)
+    }
+    return false
+  }
+  return !!(recommendation.surah || recommendation.next_surah)
+}
+
+export function isRepeatRecommendation(recommendation) {
+  const type = String(recommendation?.type || '')
+  return type === RECOMMENDATION_TYPES.REVISION
+    || type === RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE
+    || type === RECOMMENDATION_TYPES.RESUME
+    || recommendation?.session_mode === 'revision'
+    || recommendation?.range_kind === 'repeated'
+    || recommendation?.range_kind === 'revision'
 }
 
 export function recommendationPrimaryActionKey(recommendation) {
+  if (recommendation?.primary_action_label_key) {
+    return recommendation.primary_action_label_key
+  }
   const type = String(recommendation?.type || '')
   if (type === RECOMMENDATION_TYPES.NEXT_SURAH) return 'continueToNextSurah'
-  if (type === RECOMMENDATION_TYPES.REVISION || type === RECOMMENDATION_TYPES.RESUME) {
-    return 'startRecommendedRevision'
+  if (isRepeatRecommendation(recommendation)) return 'repeatThisSession'
+  if (recommendation?.ayah_range?.from && recommendation?.ayah_range?.to) {
+    return 'continueToAyat'
   }
   return 'startRecommendedNextSession'
 }
 
 export function recommendationModeLabelKey(recommendation) {
-  const mode = String(recommendation?.session_mode || '')
-  if (mode === 'revision' || recommendation?.type === RECOMMENDATION_TYPES.REVISION || recommendation?.type === RECOMMENDATION_TYPES.RESUME) {
+  if (recommendation?.range_kind === 'repeated') return 'modeRepeated'
+  if (recommendation?.range_kind === 'revision' || isRepeatRecommendation(recommendation)) {
     return 'modeRevision'
   }
   if (recommendation?.type === RECOMMENDATION_TYPES.NEXT_SURAH) return 'modeNextSurah'
@@ -69,6 +111,8 @@ export function localizeRecommendationReason(recommendation, t, prefix = 'memori
       count,
       surah: surahName,
       nextSurah: nextName,
+      start: range.from,
+      end: range.to,
     })
     if (translated && translated !== `${prefix}.${keySuffix}`) return translated
   }
@@ -86,6 +130,39 @@ export function formatAyahRangeLabel(range, t) {
   return t('memorisation.postSession.recommendation.ayahRange', { start: from, end: to })
 }
 
+export function formatRecommendationSettingsSummary(settings, t, options = {}) {
+  if (!settings || typeof settings !== 'object') return ''
+  const parts = []
+  const technique = String(settings.technique || '').toLowerCase()
+  if (technique && t) {
+    let techLabel = ''
+    if (typeof options.resolveTechniqueLabel === 'function') {
+      techLabel = options.resolveTechniqueLabel(technique, t)
+    } else {
+      techLabel = getTechniqueShortLabel(technique, t)
+    }
+    if (techLabel && !String(techLabel).includes('techniqueDisplay.') && !String(techLabel).includes('techniques.')) {
+      parts.push(techLabel)
+    } else if (technique) {
+      parts.push(technique.charAt(0).toUpperCase() + technique.slice(1))
+    }
+  }
+  const reciterName = options.reciterName || settings.reciter_name || settings.reciter
+  if (reciterName) {
+    const short = String(reciterName).replace(/^ar\./i, '').replace(/\./g, ' ')
+    parts.push(short.charAt(0).toUpperCase() + short.slice(1))
+  }
+  const speed = Number(settings.playback_speed)
+  if (Number.isFinite(speed) && speed > 0) {
+    parts.push(`${speed}×`)
+  }
+  const reps = Number(settings.repetitions)
+  if (Number.isFinite(reps) && reps > 0 && t) {
+    parts.push(t('memorisation.postSession.recommendation.repetitionsSummary', { count: reps }))
+  }
+  return parts.filter(Boolean).join(' · ')
+}
+
 /**
  * Lightweight offline/guest fallback when the backend recommendation is unavailable.
  * Never invents a next surah automatically.
@@ -97,6 +174,7 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
   const rangeEnd = Number(snapshot.rangeEnd || 0)
   const totalAyahs = Number(snapshot.totalAyahsInSurah || snapshot.surahAyahCount || 0)
   const completedAll = !!snapshot.completedAll
+  const preferredSize = Math.max(3, Math.min(4, (rangeEnd - rangeStart + 1) || 3))
 
   if (!chapterId || !rangeStart || !rangeEnd) {
     return {
@@ -111,6 +189,7 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
       is_end_of_surah: false,
       next_surah: null,
       confirmation: null,
+      settings: null,
     }
   }
 
@@ -125,6 +204,7 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
       id: null,
       type: RECOMMENDATION_TYPES.RESUME,
       session_mode: 'revision',
+      range_kind: 'revision',
       surah,
       ayah_range: {
         from: rangeStart,
@@ -146,61 +226,55 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
 
   if (totalAyahs && rangeEnd >= totalAyahs) {
     const nextId = chapterId < 114 ? chapterId + 1 : null
-    const nextRangeTo = 4
+    const nextRangeTo = Math.min(preferredSize, 4)
     return {
       id: null,
-      type: nextId
-        ? RECOMMENDATION_TYPES.NEXT_SURAH
-        : RECOMMENDATION_TYPES.MANUAL_SELECTION,
+      type: nextId ? RECOMMENDATION_TYPES.NEXT_SURAH : RECOMMENDATION_TYPES.PLAN_COMPLETE,
       session_mode: nextId ? 'new_learning' : 'manual',
-      surah: nextId
-        ? { id: nextId, name: '', translated_name: '' }
-        : surah,
-      completed_surah: { ...surah },
-      ayah_range: nextId
-        ? { from: 1, to: nextRangeTo, count: nextRangeTo }
-        : null,
+      range_kind: nextId ? 'new' : null,
+      surah: nextId ? { id: nextId, name: '', translated_name: '' } : surah,
+      completed_surah: surah,
+      ayah_range: nextId ? { from: 1, to: nextRangeTo, count: nextRangeTo } : null,
       reason_code: nextId ? 'surah_completed' : 'learning_plan_complete',
       reason: '',
       requires_confirmation: !!nextId,
       is_end_of_surah: true,
-      next_surah: nextId
-        ? { id: nextId, name: '', translated_name: '' }
-        : null,
-      confirmation: nextId
-        ? {
-          title_key: 'continueNextSurah',
-          primary_action_key: 'continueToNextSurah',
-          secondary_action_key: 'chooseSomethingElse',
-        }
-        : null,
+      next_surah: nextId ? { id: nextId, name: '', translated_name: '' } : null,
+      confirmation: nextId ? {
+        title_key: 'continueNextSurah',
+        primary_action_key: 'continueToNextSurah',
+        secondary_action_key: 'chooseSomethingElse',
+      } : null,
     }
   }
 
-  const preferred = Math.min(4, Math.max(3, rangeEnd - rangeStart + 1 || 4))
   const nextFrom = rangeEnd + 1
-  let nextTo = nextFrom + preferred - 1
-  if (totalAyahs) {
-    nextTo = Math.min(nextTo, totalAyahs)
-  }
-  const count = Math.max(1, nextTo - nextFrom + 1)
-  const completing = totalAyahs > 0 && nextTo >= totalAyahs
+  const remaining = totalAyahs ? Math.max(0, totalAyahs - nextFrom + 1) : preferredSize
+  const size = remaining > 0 ? Math.min(preferredSize, remaining) : preferredSize
+  const nextTo = nextFrom + size - 1
 
   return {
     id: null,
-    type: completing ? RECOMMENDATION_TYPES.COMPLETE_SURAH : RECOMMENDATION_TYPES.CONTINUE,
+    type: RECOMMENDATION_TYPES.CONTINUE,
     session_mode: 'new_learning',
+    range_kind: 'new',
     surah,
-    ayah_range: { from: nextFrom, to: nextTo, count },
-    reason_code: completing ? 'complete_remaining_ayat' : 'continue_current_surah',
+    ayah_range: {
+      from: nextFrom,
+      to: nextTo,
+      count: size,
+    },
+    reason_code: 'continue_while_fresh',
     reason: '',
-    requires_confirmation: true,
+    requires_confirmation: false,
     is_end_of_surah: false,
     next_surah: null,
-    confirmation: {
-      title_key: 'continueNextAyat',
-      primary_action_key: 'startSession',
-      secondary_action_key: 'chooseSomethingElse',
+    confirmation: null,
+    settings: {
+      technique: 'talqin',
+      playback_speed: 1,
+      repetitions: 3,
     },
+    primary_action_label_key: 'continueToAyat',
   }
 }

@@ -40,7 +40,7 @@ const stateSelectors = {
   recordingsEmpty: ['.recordings-library-modal', '.recordings-library-header', '.recordings-library-body', '.recordings-library-empty'],
   onboarding: ['.post-onboarding-modal', '.onboarding-hero', '.onboarding-progress', '.onboarding-body', '.mutqin-modal-footer'],
   paused: ['.session-exit-modal', '.session-exit-hero', '.session-exit-body', '.mutqin-modal-footer', '.session-exit-actions-layout'],
-  complete: ['.onboarding-post-session-modal', '.post-session-hero', '.post-session-body', '.mutqin-modal-footer', '.mutqin-modal-actions']
+  complete: ['.post-session-simple', '.post-session-simple__header', '.post-session-simple__body', '.post-session-simple__footer', '.post-session-simple__actions']
 }
 
 const touchTargetSelectors = {
@@ -62,7 +62,7 @@ const touchTargetSelectors = {
   recordingsEmpty: '.recordings-library-header button',
   onboarding: '.onboarding-close-btn, .onboarding-nav-actions button',
   paused: '.session-exit-actions-layout button',
-  complete: '.onboarding-post-session-modal .mutqin-modal-footer button'
+  complete: '.post-session-simple__footer button'
 }
 
 const publicRoutes = [
@@ -440,7 +440,7 @@ async function inspectState(page, state) {
       recordingsEmpty: ['.recordings-library-header', '.recordings-library-body'],
       onboarding: ['.onboarding-hero', '.onboarding-body', '.onboarding-preview-grid', '.onboarding-nav-actions'],
       paused: ['.session-exit-body', '.session-exit-actions-layout', ['.session-exit-actions-secondary', 3], '.mutqin-session-summary-row'],
-      complete: ['.post-session-hero-main', '.post-session-body', '.mutqin-session-summary-row', '.mutqin-modal-actions']
+      complete: ['.post-session-simple__header', '.post-session-simple__body', '.post-session-simple__row', '.post-session-simple__actions']
     }
 
     if (viewportWidth < 768) {
@@ -487,8 +487,9 @@ async function inspectState(page, state) {
         expectParallel('.session-exit-actions-secondary > :nth-child(1)', '.session-exit-actions-secondary > :nth-child(2)', 'paused secondary actions')
         expectParallel('.session-exit-actions-secondary > :nth-child(2)', '.session-exit-actions-secondary > :nth-child(3)', 'paused secondary actions')
       }
-      if (state === 'complete' && viewportWidth >= 430) expectParallel('.post-session-autosaved-note', '.post-session-next-step-card', 'completion guidance')
-    }
+      if (state === 'complete' && viewportWidth >= 430) {
+        expectParallel('.post-session-simple__ai', '.post-session-simple__confidence', 'completion decision row')
+      }
 
     for (const selector of selectors) {
       const visible = visibleElements(selector)
@@ -637,7 +638,7 @@ async function inspectState(page, state) {
     }
 
     if (['onboarding', 'paused', 'complete'].includes(state)) {
-      const selector = state === 'onboarding' ? '.post-onboarding-modal' : state === 'paused' ? '.session-exit-modal' : '.onboarding-post-session-modal'
+      const selector = state === 'onboarding' ? '.post-onboarding-modal' : state === 'paused' ? '.session-exit-modal' : '.post-session-simple__dialog'
       const surface = document.querySelector(selector)
       if (surface && surface.getBoundingClientRect().height > viewportHeight - 18) {
         issues.push(`${state}: centered dialog has no viewport gutter`)

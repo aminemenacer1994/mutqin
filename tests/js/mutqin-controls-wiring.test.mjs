@@ -222,7 +222,17 @@ includesAll('planner ui hidden', [
 ])
 
 includesAll('session completion success flow', [
-  /handleSessionComplete\(\)\s*\{[\s\S]*this\.finishSessionCleanup\(\)[\s\S]*if \(!this\.isLoggedIn\) \{\s*this\.showBanner\(this\.t\('memorisation\.session_finished'\), 'success', 2800\)\s*return\s*\}\s*this\.openPostSessionModal\(endedSnapshot, \{ previousStreak \}\)/,
+  /handleSessionComplete\(\)/,
+  /finaliseCompletedSessionOnBackend\(endedSnapshot\)/,
+  /openPostSessionModal\(endedSnapshot, \{ previousStreak \}\)/,
+  /learningApi\.endSession\(/,
+  /submitPostSessionConfidence/,
+  /repeatPostSessionFromCompleted/,
+  /openPostSessionAiRecite/,
+  /postSessionAiReciteActive/,
+  /self-check-modal-overlay--above-post-session/,
+  /post-session-simple__ai-btn/,
+  /returnFromPostSessionAiRecite/,
 ])
 
 assert.doesNotMatch(
@@ -238,7 +248,7 @@ includesAll('audio unlock flow', [
   /startSessionAndClose\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
   /repeatPostSession\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
   /toggleRecordingPlayback\(recording\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*await audio\.play\(\)/,
-  /toggleReviewResultAudio\(result = null\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*audio\.play\(\)\.catch/,
+  /toggleReviewResultAudio\(result = null\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*await playAudioElement\(audio\)/,
   /toggleSelfCheckAyahPlayback\(verse\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: audioUrl \}\)[\s\S]*this\.claimAudioElement\(audio\)[\s\S]*await this\.waitForAudioElementReady\(audio\)[\s\S]*await audio\.play\(\)/,
   /toggleSelfCheckPreview\(verseKey\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*await audio\.play\(\)/,
   /playVerse\([^)]*primePlayback:\s*true/,

@@ -400,4 +400,47 @@ function presentationFor(input) {
   assert.equal(action, PRIMARY_SESSION_ACTION.END_SESSION)
 }
 
+// Completion modal hides contradictory Start/Resume/End behind it
+{
+  const vm = buildSessionLifecycleViewModel({
+    authHydrated: true,
+    sessionHydrated: true,
+    isAuthenticated: true,
+    sessionCompleted: true,
+    completionModalOpen: true,
+    t,
+  })
+  assert.equal(vm.status, SESSION_STATUS.COMPLETION_MODAL_OPEN)
+  assert.equal(vm.action, PRIMARY_SESSION_ACTION.NONE)
+  assert.equal(vm.isHidden, true)
+}
+
+// Live session stays ACTIVE regardless of playback; media status is separate
+{
+  const playing = buildSessionLifecycleViewModel({
+    authHydrated: true,
+    sessionHydrated: true,
+    isAuthenticated: true,
+    mutqinSessionActive: true,
+    isPlaying: true,
+    t,
+  })
+  const paused = buildSessionLifecycleViewModel({
+    authHydrated: true,
+    sessionHydrated: true,
+    isAuthenticated: true,
+    mutqinSessionActive: true,
+    isPlaying: false,
+    isPaused: true,
+    hasAudio: true,
+    t,
+  })
+  assert.equal(playing.status, SESSION_STATUS.ACTIVE)
+  assert.equal(paused.status, SESSION_STATUS.ACTIVE)
+  assert.equal(playing.action, PRIMARY_SESSION_ACTION.END_SESSION)
+  assert.equal(paused.action, PRIMARY_SESSION_ACTION.END_SESSION)
+  assert.equal(playing.mediaStatus, 'playing')
+  assert.equal(paused.mediaStatus, 'paused')
+}
+
 console.log('session-lifecycle.test.mjs: all assertions passed')

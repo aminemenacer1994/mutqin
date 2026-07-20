@@ -175,14 +175,17 @@ export const learningApi = {
   },
 
   // Personalised next-session recommendations -----------------------------
-  async getNextRecommendation() {
-    const { data } = await http.get('/recommendations/next')
+  async getNextRecommendation(params = {}) {
+    const { data } = await http.get('/recommendations/next', { params })
     return data?.recommendation ?? null
   },
-  async startRecommendedSession(recommendationId) {
-    const { data } = await http.post('/recommendations/start', {
-      recommendation_id: recommendationId,
-    })
+  async startRecommendedSession(recommendationId, settings = null) {
+    const payload = { recommendation_id: recommendationId }
+    const sanitized = sanitizeRecommendationSettings(settings)
+    if (sanitized) {
+      payload.settings = sanitized
+    }
+    const { data } = await http.post('/recommendations/start', payload)
     return data
   },
   async rejectRecommendation(recommendationId, choseOther = true) {
@@ -192,6 +195,50 @@ export const learningApi = {
     })
     return data
   },
+  async submitRecommendationConfidence(recommendationId, confidence) {
+    const { data } = await http.post('/recommendations/confidence', {
+      recommendation_id: recommendationId,
+      confidence,
+    })
+    return data?.recommendation ?? null
+  },
+  async saveRecommendationSettings(recommendationId, settings, reset = false) {
+    const payload = { recommendation_id: recommendationId, reset: !!reset }
+    if (!reset) {
+      payload.settings = sanitizeRecommendationSettings(settings) || {}
+    }
+    const { data } = await http.post('/recommendations/settings', payload)
+    return data?.recommendation ?? null
+  },
+  async submitRecommendationAiAssessment(recommendationId, assessment) {
+    const { data } = await http.post('/recommendations/ai-assessment', {
+      recommendation_id: recommendationId,
+      result: assessment?.result,
+      summary: assessment?.summary || undefined,
+      weak_ayahs: Array.isArray(assessment?.weak_ayahs) ? assessment.weak_ayahs : undefined,
+    })
+    return data?.recommendation ?? null
+  },
+}
+
+function sanitizeRecommendationSettings(settings) {
+  if (!settings || typeof settings !== 'object') return null
+  const clean = {}
+  const technique = String(settings.technique || '').toLowerCase().trim()
+  if (['talqin', 'focus', 'blur'].includes(technique)) clean.technique = technique
+  if (settings.reciter) clean.reciter = String(settings.reciter)
+  const speed = Number(settings.playback_speed)
+  if (Number.isFinite(speed)) clean.playback_speed = Math.max(0.5, Math.min(1.5, Number(speed.toFixed(2))))
+  const reps = Number(settings.repetitions)
+  if (Number.isFinite(reps)) clean.repetitions = Math.max(1, Math.min(8, Math.round(reps)))
+  if (settings.ayat_per_step != null && settings.ayat_per_step !== '') {
+    const step = Number(settings.ayat_per_step)
+    if (Number.isFinite(step)) clean.ayat_per_step = Math.max(1, Math.min(10, Math.round(step)))
+  }
+  if (typeof settings.focus_enabled === 'boolean') clean.focus_enabled = settings.focus_enabled
+  if (typeof settings.blur_enabled === 'boolean') clean.blur_enabled = settings.blur_enabled
+  if (typeof settings.talqin_enabled === 'boolean') clean.talqin_enabled = settings.talqin_enabled
+  return Object.keys(clean).length ? clean : null
 }
 
 export default learningApi

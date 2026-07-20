@@ -126,6 +126,17 @@ class SessionLifecycleTest extends TestCase
         $this->assertSame(1, UserSession::where('user_id', $user->id)->count());
     }
 
+    public function test_end_without_unfinished_session_does_not_create_ghost(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson('/api/session/end', ['idempotency_key' => 'end-orphan'])
+            ->assertStatus(422);
+
+        $this->assertSame(0, UserSession::where('user_id', $user->id)->count());
+    }
+
     public function test_onboarding_example_is_never_resumable(): void
     {
         $user = User::factory()->create();
@@ -205,5 +216,31 @@ class SessionLifecycleTest extends TestCase
         $this->assertNotNull($session);
         $this->assertSame(UserSessionStatus::Active, $session->status);
         $this->assertFalse((bool) $session->is_onboarding_example);
+    }
+
+    public function test_start_idempotency_key_alias_is_honoured(): void
+    {
+        $user = User::factory()->create();
+
+        $first = $this->actingAs($user)
+            ->postJson('/api/session/start', [
+                'surah_number' => 1,
+                'ayah_number' => 1,
+                'idempotency_key' => 'client-start-1',
+            ])
+            ->assertOk()
+            ->json('session.id');
+
+        $second = $this->actingAs($user)
+            ->postJson('/api/session/start', [
+                'surah_number' => 2,
+                'ayah_number' => 5,
+                'idempotency_key' => 'client-start-1',
+            ])
+            ->assertOk()
+            ->json('session.id');
+
+        $this->assertSame($first, $second);
+        $this->assertSame(1, UserSession::where('user_id', $user->id)->count());
     }
 }

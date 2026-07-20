@@ -51,21 +51,52 @@ class LearningStateDeriver
 
         [$surah, $ayah] = $this->parseAyahId($current['ayahId'] ?? ($current['verse']['key'] ?? null));
 
-        $lifecycle = app(SessionLifecycleService::class)->attributesFromEngineState($session);
+        $lifecycleService = app(SessionLifecycleService::class);
+        $lifecycle = $lifecycleService->attributesFromEngineState($session);
+        $attrs = array_merge([
+            'surah_number' => $surah,
+            'ayah_number' => $ayah,
+            'current_step' => $index,
+            'memorisation_mode' => isset($session['mode']) ? (string) $session['mode'] : null,
+            'repetitions_completed' => (int) ($current['repeatCount'] ?? 0),
+            'session_duration_seconds' => $this->sessionDurationSeconds($session),
+            'last_activity_at' => $this->parseDate($session['updated_at'] ?? null),
+            'metadata' => $session ?: null,
+        ], $lifecycle);
 
-        UserSession::updateOrCreate(
-            ['user_id' => $user->id],
-            array_merge([
-                'surah_number' => $surah,
-                'ayah_number' => $ayah,
-                'current_step' => $index,
-                'memorisation_mode' => isset($session['mode']) ? (string) $session['mode'] : null,
-                'repetitions_completed' => (int) ($current['repeatCount'] ?? 0),
-                'session_duration_seconds' => $this->sessionDurationSeconds($session),
-                'last_activity_at' => $this->parseDate($session['updated_at'] ?? null),
-                'metadata' => $session ?: null,
-            ], $lifecycle)
-        );
+        $unfinished = $lifecycleService->currentUnfinished($user);
+        if ($unfinished) {
+            // Completing via engine sync finalises the unfinished row in place.
+            if (($lifecycle['status'] ?? null) === \App\Enums\UserSessionStatus::Completed->value
+                || ! empty($session['completed'])
+                || ! empty($session['completed_at'])) {
+                $lifecycleService->end($user, array_merge($attrs, [
+                    'metadata' => $session ?: null,
+                ]));
+
+                return;
+            }
+
+            $unfinished->fill($attrs)->save();
+
+            return;
+        }
+
+        $isCompleted = ($lifecycle['status'] ?? null) === \App\Enums\UserSessionStatus::Completed->value
+            || ! empty($session['completed'])
+            || ! empty($session['completed_at']);
+
+        // Do not invent duplicate completed history rows on every sync —
+        // completion is owned by SessionLifecycleService::end once no unfinished remains.
+        if ($isCompleted) {
+            return;
+        }
+
+        if (! empty($session['active'])) {
+            UserSession::create(array_merge($attrs, [
+                'user_id' => $user->id,
+            ]));
+        }
     }
 
     private function deriveLastPosition(User $user, array $state, ?array $continue): void

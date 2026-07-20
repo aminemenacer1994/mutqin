@@ -23,6 +23,12 @@ class UserSession extends Model
         'paused_at',
         'resumed_at',
         'ended_at',
+        'repeated_from_session_id',
+        'attempt_number',
+        'recommendation_id',
+        'recommendation_source',
+        'completion_settings',
+        'start_idempotency_key',
         'metadata',
     ];
 
@@ -34,6 +40,7 @@ class UserSession extends Model
             'current_step' => 'integer',
             'repetitions_completed' => 'integer',
             'session_duration_seconds' => 'integer',
+            'attempt_number' => 'integer',
             'is_onboarding_example' => 'boolean',
             'last_activity_at' => 'datetime',
             'started_at' => 'datetime',
@@ -41,6 +48,7 @@ class UserSession extends Model
             'resumed_at' => 'datetime',
             'ended_at' => 'datetime',
             'metadata' => 'array',
+            'completion_settings' => 'array',
             'status' => UserSessionStatus::class,
         ];
     }
@@ -48,6 +56,16 @@ class UserSession extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function repeatedFrom(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'repeated_from_session_id');
+    }
+
+    public function recommendation(): BelongsTo
+    {
+        return $this->belongsTo(SessionRecommendation::class, 'recommendation_id');
     }
 
     public function isUnfinished(): bool
