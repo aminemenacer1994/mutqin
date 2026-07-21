@@ -30,6 +30,14 @@ export function normalizeArabicForRecitation(text) {
     .trim()
 }
 
+/** ASR often drops or reattaches ال on ayah-final words — compare bare stems too. */
+export function stripArabicDefiniteArticle(word = '') {
+  const value = String(word || '')
+  if (value.startsWith('ال') && value.length > 3) return value.slice(2)
+  if (value.startsWith('لل') && value.length > 3) return `ل${value.slice(2)}`
+  return value
+}
+
 export function cleanRecitationDisplayText(text) {
   return stripMarkup(text)
     .replace(/\u0640/g, '')
@@ -734,12 +742,16 @@ function isNearbyWord(left = {}, right = {}) {
   const leftEnd = finiteOrNull(left.end)
   const rightStart = finiteOrNull(right.start)
   if (leftEnd !== null && rightStart !== null) return rightStart <= leftEnd
-  return true
+  // Missing timestamps: only treat as nearby within the same segment.
+  // Defaulting to true previously dropped legitimate last-word re-emits after EOU.
+  if (left.segmentId && right.segmentId && left.segmentId === right.segmentId) return true
+  return false
 }
 
 function getWeightedMatchCost(targetWord, heardWord, similarity, confidence) {
   if (targetWord === heardWord) return 0
-  if (similarity >= 0.9) return 0.16 + ((1 - confidence) * 0.1)
+  if (stripArabicDefiniteArticle(targetWord) === stripArabicDefiniteArticle(heardWord)) return 0
+  if (similarity >= 0.85) return 0.16 + ((1 - confidence) * 0.1)
   if (similarity >= 0.35) return 0.68 + ((1 - confidence) * 0.22)
   return 1.34
 }
@@ -762,6 +774,17 @@ function operationTieBreak(op) {
 export function getRecitationWordSimilarity(left, right) {
   const a = String(left || '')
   const b = String(right || '')
+  if (!a || !b) return 0
+  if (a === b) return 1
+  const strippedA = stripArabicDefiniteArticle(a)
+  const strippedB = stripArabicDefiniteArticle(b)
+  if (strippedA && strippedA === strippedB) return 1
+  const base = levenshteinSimilarity(a, b)
+  if (strippedA === a && strippedB === b) return base
+  return Math.max(base, levenshteinSimilarity(strippedA, strippedB))
+}
+
+function levenshteinSimilarity(a, b) {
   if (!a || !b) return 0
   if (a === b) return 1
   const rows = a.length + 1
@@ -792,7 +815,12 @@ function classifyWordMatch({ displayText, targetWord, heardWord = {}, similarity
     ayahIndex: Number.isFinite(Number(targetUnit?.ayahIndex)) ? Number(targetUnit.ayahIndex) : 0,
     ayahWordIndex: Number.isFinite(Number(targetUnit?.ayahWordIndex)) ? Number(targetUnit.ayahWordIndex) : targetIndex
   }
-  if (expected && (expected === actual || similarity >= 0.9)) {
+  const articleMatch = expected
+    && actual
+    && stripArabicDefiniteArticle(expected) === stripArabicDefiniteArticle(actual)
+  // Soften ASR near-misses (common on ayah-final words) without accepting weak guesses.
+  // Keep above ~0.83 so common substitutions like الصراط/السراط stay partial.
+  if (expected && (expected === actual || articleMatch || similarity >= 0.85)) {
     return {
       text: displayText,
       targetWord: expected,
@@ -864,14 +892,20 @@ function applyWrongOrderGuard(statuses = [], targetWords = [], transcriptWords =
   })
 }
 
+function isProgressionAdvanceStatus(status = '') {
+  return status === 'correct' || status === 'partial'
+}
+
 function buildStableProgression(statuses = [], extraWords = [], options = {}) {
   const strict = options.strictProgression !== false
-  const firstBlockingIndex = statuses.findIndex(word => word.status !== 'correct')
+  // Partials must not freeze the live cursor — ASR near-misses on last words
+  // were locking the whole range behind "Recite it correctly before moving on."
+  const firstBlockingIndex = statuses.findIndex(word => !isProgressionAdvanceStatus(word.status))
   const visibleStatuses = strict && firstBlockingIndex >= 0
     ? statuses.map((word, index) => index <= firstBlockingIndex ? word : { ...word, status: 'pending', note: 'Locked until the previous word is green.' })
     : statuses
   const advancedCount = visibleStatuses.filter(word => word.status && word.status !== 'pending').length
-  const completedWords = statuses.filter(word => ['correct', 'partial'].includes(word.status)).length
+  const completedWords = statuses.filter(word => isProgressionAdvanceStatus(word.status)).length
   return {
     owner: 'quran-alignment-engine',
     currentIndex: firstBlockingIndex >= 0 ? firstBlockingIndex : statuses.length,
@@ -880,7 +914,9 @@ function buildStableProgression(statuses = [], extraWords = [], options = {}) {
     totalWords: statuses.length,
     progressPercentage: statuses.length ? Math.round((advancedCount / statuses.length) * 100) : 0,
     completionPercentage: statuses.length ? Math.round((completedWords / statuses.length) * 100) : 0,
-    complete: statuses.length > 0 && statuses.every(word => word.status === 'correct') && !extraWords.length,
+    complete: statuses.length > 0
+      && statuses.every(word => isProgressionAdvanceStatus(word.status))
+      && !extraWords.length,
     visibleStatuses
   }
 }

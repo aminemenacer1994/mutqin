@@ -52,6 +52,13 @@ import {
   reconcileContinuePayloadWithBackend,
   userScopedStorageKey,
 } from '../scripts/session/sessionLifecycle'
+import {
+  COMPLETION_FLOW,
+  deriveCompletionFlowPhase,
+  primarySurfaceForPhase,
+  resolveConfidenceSelection,
+  shouldHideCompletionUnderAi,
+} from '../scripts/session/completionFlow'
 import { seedAyahs } from '../scripts/composables/useAyahState'
 import { buildSessionQueue, startMutqinSession, moveMutqinSession, completeMutqinSession } from '../scripts/composables/useSessionEngine'
 import { createDailyPlan } from '../scripts/composables/useDailyPlanner'
@@ -500,9 +507,11 @@ export default {
       postSessionAiReciteBusy: false,
       postSessionAiReciteActive: false,
       postSessionAiFeedback: '',
+      postSessionConfidenceSelection: null, // local authoritative selection; null → resolve from recommendation
       postSessionViewState: 'idle', // completing | generating_recommendation | recommendation_ready | editing_settings | starting_recommended | preparing_repeat | starting_repeat | opening_ai_recite | recommendation_failed | action_failed
       postSessionCompletedSessionId: null,
       postSessionRecommendationFailed: false,
+      postSessionConfidenceHydrated: false,
       sessionExitOffcanvasOpen: false,
       showAdvancedAnalytics: false,
       showAdvancedMetricsModal: false,
@@ -2795,6 +2804,14 @@ export default {
     postSessionSimpleReason() {
       const rec = this.postSessionRecommendation
       if (!rec) return ''
+      if (rec.user_reason && String(rec.user_reason).trim()) {
+        return String(rec.user_reason).trim()
+      }
+      if (rec.balance_message && String(rec.balance_message).trim()) {
+        return String(rec.balance_message).trim()
+      }
+      const localized = this.postSessionRecommendationReasonText
+      if (localized) return localized
       if (this.postSessionIsRepeatRecommendation) {
         return this.t('memorisation.postSession.recommendation.reasons.simpleRepeat')
       }
@@ -2808,15 +2825,55 @@ export default {
       }
       return this.t('memorisation.postSession.recommendation.reasons.simpleContinue')
     },
+    postSessionIntendedOutcome() {
+      const outcome = this.postSessionRecommendation?.intended_outcome
+        || this.postSessionRecommendation?.settings_outcome
+        || this.postSessionRecommendation?.settings?.intended_outcome
+      return outcome && String(outcome).trim() ? String(outcome).trim() : ''
+    },
+    postSessionSelectedConfidence() {
+      return resolveConfidenceSelection(
+        this.postSessionRecommendation,
+        this.postSessionConfidenceSelection
+      )
+    },
+    postSessionFlowPhase() {
+      return deriveCompletionFlowPhase({
+        showPostSessionModal: this.showPostSessionModal,
+        postSessionAiReciteActive: this.postSessionAiReciteActive,
+        showSelfCheckModal: this.showSelfCheckModal,
+        isSelfCheckRecording: this.isSelfCheckRecording,
+        hasSelfCheckResult: !!this.recitationCheckResult,
+        postSessionOffcanvasOpen: this.postSessionOffcanvasOpen,
+        postSessionRecommendationStarting: this.postSessionRecommendationStarting,
+        isRepeatRecommendation: this.postSessionIsRepeatRecommendation,
+        postSessionViewState: this.postSessionViewState,
+        postSessionRecommendationStatus: this.postSessionRecommendationStatus,
+        postSessionRecommendationFailed: this.postSessionRecommendationFailed,
+      })
+    },
+    postSessionPrimarySurface() {
+      return primarySurfaceForPhase(this.postSessionFlowPhase)
+    },
+    postSessionHideUnderAi() {
+      return shouldHideCompletionUnderAi(this.postSessionFlowPhase)
+    },
     postSessionStaticPills() {
       const settings = this.postSessionRecommendation?.settings
       if (!settings || typeof settings !== 'object') return []
       const pills = []
       const technique = String(settings.technique || '').toLowerCase()
-      if (['talqin', 'focus', 'blur'].includes(technique)) {
+      if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(technique)) {
         pills.push({
           key: 'technique',
           label: this.getTechniqueDisplayLabel(technique),
+        })
+      }
+      const complementary = String(settings.complementary_technique || '').toLowerCase()
+      if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(complementary) && complementary !== technique) {
+        pills.push({
+          key: 'complementary',
+          label: this.getTechniqueDisplayLabel(complementary),
         })
       }
       const speed = Number(settings.playback_speed)
@@ -2839,29 +2896,64 @@ export default {
       return []
     },
     postSessionSettingsOutcome() {
-      return ''
+      return this.postSessionIntendedOutcome
+    },
+    postSessionStatsSummary() {
+      const snap = this.postSessionSnapshot || {}
+      const parts = []
+      if (snap.durationLabel) parts.push(snap.durationLabel)
+      const percent = Number(snap.progressPercent)
+      if (Number.isFinite(percent) && percent > 0 && percent < 100) {
+        parts.push(`${Math.round(percent)}%`)
+      } else if (snap.completedAll) {
+        parts.push(this.t('memorisation.postSession.statsCompleteShort'))
+      }
+      return parts.filter(Boolean).join(' · ')
     },
     postSessionCompactStats() {
       const snap = this.postSessionSnapshot || {}
       const settings = this.postSessionRecommendation?.settings || {}
       const cells = []
+      const chapterName = snap.chapterName || ''
+      const rangeLabel = snap.rangeLabel
+        || (snap.rangeStart && snap.rangeEnd
+          ? this.t('memorisation.postSession.recommendation.ayahRange', {
+            start: snap.rangeStart,
+            end: snap.rangeEnd,
+          })
+          : '')
+      if (chapterName && rangeLabel) {
+        cells.push({
+          key: 'range',
+          label: this.t('memorisation.postSession.statsRange'),
+          value: `${chapterName} · ${rangeLabel}`,
+        })
+      }
       if (snap.durationLabel) {
         cells.push({ key: 'duration', label: this.t('memorisation.stats.duration'), value: snap.durationLabel })
       }
       const reciterName = snap.reciterName
-        || this.reciters.find(item => String(item.id) === String(settings.reciter || snap.reciterId || this.reciterId || ''))?.name
+        || this.reciters.find(item => String(item.id) === String(snap.reciterId || this.reciterId || ''))?.name
       if (reciterName) {
         cells.push({ key: 'reciter', label: this.t('memorisation.stats.reciter'), value: reciterName })
       }
-      const technique = String(settings.technique || '').toLowerCase()
-      if (['talqin', 'focus', 'blur'].includes(technique)) {
+      const sessionTechnique = String(
+        snap.techniqueId
+        || (snap.talqinModeEnabled ? 'talqin' : '')
+        || (snap.focusModeEnabled ? 'focus' : '')
+        || (snap.blurModeEnabled ? 'blur' : '')
+        || (snap.chainingEnabled ? 'chaining' : '')
+        || (snap.anchorModeEnabled ? 'anchor' : '')
+        || ''
+      ).toLowerCase()
+      if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(sessionTechnique)) {
         cells.push({
           key: 'technique',
           label: this.t('memorisation.postSession.recommendation.settingsTechnique'),
-          value: this.getTechniqueDisplayLabel(technique),
+          value: this.getTechniqueDisplayLabel(sessionTechnique),
         })
       }
-      const speed = Number(settings.playback_speed ?? snap.playbackSpeed)
+      const speed = Number(snap.playbackSpeed ?? settings.playback_speed)
       if (Number.isFinite(speed) && speed > 0) {
         cells.push({
           key: 'speed',
@@ -2869,7 +2961,7 @@ export default {
           value: `${speed}×`,
         })
       }
-      const reps = Number(settings.repetitions ?? snap.repetitionsPerStep)
+      const reps = Number(snap.repetitionsPerStep ?? settings.repetitions)
       if (Number.isFinite(reps) && reps > 0) {
         cells.push({
           key: 'reps',
@@ -2877,7 +2969,36 @@ export default {
           value: String(reps),
         })
       }
-      return cells.slice(0, 4)
+      const retries = Number(snap.retryCount ?? snap.retries ?? 0)
+      if (retries > 0) {
+        cells.push({
+          key: 'retries',
+          label: this.t('memorisation.postSession.statsRetries'),
+          value: String(retries),
+        })
+      }
+      const aiResult = this.postSessionRecommendation?.ai_assessment?.result
+      if (aiResult && ['strong', 'mixed', 'weak'].includes(String(aiResult))) {
+        cells.push({
+          key: 'ai',
+          label: this.t('memorisation.postSession.recommendation.aiResultLabel'),
+          value: this.t(`memorisation.postSession.recommendation.aiResult.${aiResult}`),
+        })
+      }
+      if (snap.isRepeatSession || snap.repeatedFromSessionId) {
+        cells.push({
+          key: 'attempt',
+          label: this.t('memorisation.postSession.statsAttempt'),
+          value: this.t('memorisation.postSession.statsRepeated'),
+        })
+      } else if (snap.completedAll) {
+        cells.push({
+          key: 'attempt',
+          label: this.t('memorisation.postSession.statsAttempt'),
+          value: this.t('memorisation.postSession.statsNew'),
+        })
+      }
+      return cells.filter(cell => cell.value != null && String(cell.value).trim() !== '').slice(0, 8)
     },
     postSessionDuaMessage() {
       return this.t('memorisation.postSession.duaStrengthenShort')
@@ -3842,7 +3963,7 @@ export default {
       const committedRaw = Number(this.recitationAlignmentState?.currentIndex)
       const committed = Number.isFinite(committedRaw) && committedRaw >= 0 ? committedRaw : 0
       if (!live.length) return committed
-      let liveIndex = live.findIndex(word => word?.status !== 'correct')
+      let liveIndex = live.findIndex(word => !['correct', 'partial'].includes(word?.status))
       if (liveIndex < 0) liveIndex = live.length
       return Math.max(committed, liveIndex)
     },
@@ -3877,7 +3998,7 @@ export default {
       if (this.recitationCheckRecording) {
         const total = this.recitationLiveWords.length
         const revealed = Math.max(0, this.recallCurrentWordIndex)
-        const issue = (this.recitationLiveWords || []).find(word => ['incorrect', 'partial'].includes(word?.status))
+        const issue = (this.recitationLiveWords || []).find(word => word?.status === 'incorrect')
         if (issue && this.aiRecitationStrictProgression) {
           return {
             tone: 'mistake',
@@ -8733,6 +8854,7 @@ export default {
         this.postSessionRecommendation = preservedRecommendation
         this.postSessionRecommendationStatus = 'ready'
         this.postSessionViewState = 'recommendation_ready'
+        this.syncPostSessionConfidenceFromRecommendation(preservedRecommendation, { force: true })
       }
       this.showPostSessionConfetti = true
       this.showPostSessionModal = true
@@ -8764,6 +8886,8 @@ export default {
       this.postSessionAiReciteBusy = false
       this.postSessionAiReciteActive = false
       this.postSessionAiFeedback = ''
+      this.postSessionConfidenceSelection = null
+      this.postSessionConfidenceHydrated = false
       this.postSessionViewState = 'idle'
       this.postSessionCompletedSessionId = null
       this.postSessionRecommendationFailed = false
@@ -8799,6 +8923,56 @@ export default {
       }
       return next
     },
+    syncPostSessionConfidenceFromRecommendation(recommendation, { force = false } = {}) {
+      if (!recommendation) return
+      const resolved = resolveConfidenceSelection(recommendation, force ? null : this.postSessionConfidenceSelection)
+      // Preserve an in-progress local selection across recommendation refreshes
+      // unless the backend saved a value or we are forcing a hydrate.
+      if (force || !this.postSessionConfidenceHydrated || recommendation.confidence_feedback) {
+        this.postSessionConfidenceSelection = resolved
+        this.postSessionConfidenceHydrated = true
+      }
+    },
+    buildCompletionPerformancePayload() {
+      const versePlayCounts = { ...(this.mutqinState?.sessionState?.verse_play_counts || {}) }
+      const rangeStart = Number(this.sessionConfig?.rangeStart || this.rangeStart || 0)
+      const rangeEnd = Number(this.sessionConfig?.rangeEnd || this.rangeEnd || rangeStart)
+      const ayahCount = Math.max(1, rangeEnd - rangeStart + 1)
+      const values = Object.values(versePlayCounts).map(value => Math.max(0, Number(value || 0)))
+      const totalPlays = values.reduce((sum, value) => sum + value, 0)
+      const maxReplays = values.length ? Math.max(...values) : 0
+      const replayHeavy = values.filter(value => value >= 3).length
+      const technique = this.talqinModeEnabled
+        ? 'talqin'
+        : (this.focusModeEnabled
+          ? 'focus'
+          : (this.blurModeEnabled
+            ? 'blur'
+            : (this.chainingEnabled
+              ? 'chaining'
+              : (this.anchorModeEnabled ? 'anchor' : 'talqin'))))
+      return {
+        technique,
+        reciter: this.reciterId || null,
+        playback_speed: Number(this.playbackSpeed || 1),
+        repetitions: Number(this.repetitionsPerStep || 3),
+        ayat_per_step: this.focusModeEnabled ? 1 : null,
+        focus_enabled: !!this.focusModeEnabled,
+        blur_enabled: !!this.blurModeEnabled,
+        talqin_enabled: !!this.talqinModeEnabled,
+        chaining_enabled: !!this.chainingEnabled,
+        chaining_method: this.chainingMethod || null,
+        chaining_repetitions: Number(this.chainingRepetitions || 2),
+        anchor_mode_enabled: !!this.anchorModeEnabled,
+        anchor_count: Number(this.anchorCount || 2),
+        verse_play_counts: versePlayCounts,
+        replay_ratio: Math.round((totalPlays / ayahCount) * 100) / 100,
+        max_ayah_replays: maxReplays,
+        replay_heavy_ayahs: replayHeavy,
+        hints_used: Number(this.sessionHintCount || this.centralSession?.hintsUsed || 0),
+        session_duration_seconds: Number(this.centralSession?.sessionDurationSeconds || 0),
+      }
+    },
     async loadPostSessionRecommendation() {
       const requestId = ++this.postSessionRecommendationRequestId
       this.postSessionRecommendationStatus = 'loading'
@@ -8814,6 +8988,7 @@ export default {
         this.postSessionRecommendationStatus = status
         this.postSessionViewState = status === 'error' ? 'recommendation_failed' : 'recommendation_ready'
         this.postSessionRecommendationFailed = status === 'error'
+        this.syncPostSessionConfidenceFromRecommendation(this.postSessionRecommendation, { force: true })
       }
 
       const snapshotFallback = () => {
@@ -8875,6 +9050,12 @@ export default {
     async submitPostSessionConfidence(confidence) {
       if (this.postSessionActionsBusy || !this.postSessionRecommendation?.id) return
       if (!['confident', 'needs_practice'].includes(confidence)) return
+      if (this.postSessionSelectedConfidence === confidence && this.postSessionRecommendation?.confidence_feedback === confidence) {
+        return
+      }
+      // Update local selection immediately so rerenders / recommendation refreshes do not flicker.
+      this.postSessionConfidenceSelection = confidence
+      this.postSessionConfidenceHydrated = true
       this.postSessionConfidenceBusy = true
       this.postSessionConfidenceError = ''
       try {
@@ -8886,6 +9067,7 @@ export default {
           this.postSessionRecommendation = this.enrichPostSessionRecommendation(updated)
           this.postSessionRecommendationStatus = 'ready'
           this.postSessionViewState = 'recommendation_ready'
+          this.syncPostSessionConfidenceFromRecommendation(this.postSessionRecommendation)
         }
       } catch (error) {
         console.warn('Failed to submit confidence feedback:', error)
@@ -8975,7 +9157,8 @@ export default {
           this.postSessionRecommendation = this.enrichPostSessionRecommendation(updated)
           this.applyRecommendedTechnique(
             updated?.settings?.technique || updated?.technique?.id,
-            updated?.session_mode
+            updated?.session_mode,
+            updated?.settings || null
           )
           if (updated?.settings?.playback_speed) {
             this.setPlaybackSpeed(Number(updated.settings.playback_speed))
@@ -9058,7 +9241,7 @@ export default {
         }
       })
     },
-    async applyPostSessionAiAssessment(result, summary = '') {
+    async applyPostSessionAiAssessment(result, summary = '', extras = {}) {
       if (!this.postSessionRecommendation?.id || !this.isLoggedIn) {
         if (summary) this.postSessionAiFeedback = summary
         return
@@ -9066,14 +9249,24 @@ export default {
       try {
         const updated = await learningApi.submitRecommendationAiAssessment(
           this.postSessionRecommendation.id,
-          { result, summary }
+          {
+            result,
+            summary,
+            weak_ayahs: extras.weak_ayahs,
+            sequence_errors: extras.sequence_errors,
+            missed_words: extras.missed_words,
+            pronunciation_issues: extras.pronunciation_issues,
+          }
         )
         if (updated) {
           this.postSessionRecommendation = this.enrichPostSessionRecommendation(updated)
           this.postSessionRecommendationStatus = 'ready'
           this.postSessionAiFeedback = summary
+            || updated?.balance_message
+            || updated?.user_reason
             || updated?.reason
             || this.localizePostSessionAiSummary(result)
+          this.syncPostSessionConfidenceFromRecommendation(this.postSessionRecommendation)
         }
       } catch (error) {
         console.warn('Failed to apply AI assessment to recommendation:', error)
@@ -9089,6 +9282,25 @@ export default {
         return this.t('memorisation.postSession.recommendation.reasons.aiReciteWeak')
       }
       return this.t('memorisation.postSession.recommendation.reasons.aiReciteMixed')
+    },
+    buildPostSessionAiReviewSummary(result, outcome) {
+      const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
+      const weakAyahs = Array.isArray(result?.weakAyahs)
+        ? result.weakAyahs
+        : []
+      if (outcome === 'strong') {
+        return this.t('memorisation.postSession.recommendation.aiReviewStrong')
+      }
+      if (weakAyahs.length === 1) {
+        return this.t('memorisation.postSession.recommendation.aiReviewWeakAyah', { ayah: weakAyahs[0] })
+      }
+      if (weakAyahs.length > 1) {
+        return this.t('memorisation.postSession.recommendation.aiReviewWeakAyahs', { count: weakAyahs.length })
+      }
+      if (Number(mistakes.sequenceErrors || 0) > 0) {
+        return this.t('memorisation.postSession.recommendation.aiReviewSequence')
+      }
+      return this.localizePostSessionAiSummary(outcome)
     },
     async repeatPostSessionFromCompleted() {
       if (this.postSessionActionsBusy) return
@@ -9306,7 +9518,8 @@ export default {
 
       this.applyRecommendedTechnique(
         techniqueId || resolvedSettings?.technique || this.postSessionRecommendation?.technique?.id || null,
-        sessionMode
+        sessionMode,
+        resolvedSettings
       )
       this.persistModeState(this.currentMode)
       this.persistUiState()
@@ -9323,31 +9536,52 @@ export default {
         this.startSessionWithCountdown({ skipPrime: true })
       })
     },
-    applyRecommendedTechnique(techniqueId, sessionMode = 'new_learning') {
-      const id = String(techniqueId || '')
-      // Reset to a calm baseline, then enable only what helps.
+    applyRecommendedTechnique(techniqueId, sessionMode = 'new_learning', settings = null) {
+      const id = String(techniqueId || '').toLowerCase().trim()
+      const complementary = String(settings?.complementary_technique || '').toLowerCase().trim()
+      // Reset to a calm baseline, then enable the recommended technique set.
       this.focusModeEnabled = false
       this.blurModeEnabled = false
-      if (id === 'blur' || sessionMode === 'revision') {
+      this.talqinModeEnabled = false
+      this.chainingEnabled = false
+      this.anchorModeEnabled = false
+
+      const enable = (technique) => {
+        if (technique === 'talqin') this.talqinModeEnabled = true
+        else if (technique === 'focus') this.focusModeEnabled = true
+        else if (technique === 'blur') this.blurModeEnabled = true
+        else if (technique === 'chaining') {
+          this.chainingEnabled = true
+          if (settings?.chaining_method) this.chainingMethod = settings.chaining_method
+          if (settings?.chaining_repetitions) this.chainingRepetitions = Number(settings.chaining_repetitions)
+        } else if (technique === 'anchor') {
+          this.anchorModeEnabled = true
+          if (settings?.anchor_count) this.anchorCount = Number(settings.anchor_count)
+        }
+      }
+
+      if (id) enable(id)
+      if (complementary && complementary !== id) enable(complementary)
+
+      // Honour explicit flags from the recommendation payload when present.
+      if (settings && typeof settings === 'object') {
+        if (settings.focus_enabled != null) this.focusModeEnabled = !!settings.focus_enabled
+        if (settings.blur_enabled != null) this.blurModeEnabled = !!settings.blur_enabled
+        if (settings.talqin_enabled != null) this.talqinModeEnabled = !!settings.talqin_enabled
+        if (settings.chaining_enabled != null) this.chainingEnabled = !!settings.chaining_enabled
+        if (settings.anchor_mode_enabled != null) this.anchorModeEnabled = !!settings.anchor_mode_enabled
+        if (settings.chaining_method) this.chainingMethod = settings.chaining_method
+        if (settings.chaining_repetitions) this.chainingRepetitions = Number(settings.chaining_repetitions)
+        if (settings.anchor_count) this.anchorCount = Number(settings.anchor_count)
+      }
+
+      if (!id && sessionMode === 'revision') {
         this.blurModeEnabled = true
-        this.focusModeEnabled = false
-        this.talqinModeEnabled = false
-        return
       }
-      if (id === 'talqin') {
-        this.talqinModeEnabled = true
-        this.blurModeEnabled = false
-        this.focusModeEnabled = false
-        return
-      }
-      if (id === 'focus') {
-        this.focusModeEnabled = true
-        this.blurModeEnabled = false
-        return
-      }
-      if (sessionMode === 'revision') {
-        this.blurModeEnabled = true
-      }
+
+      // Enforce product mutual exclusions.
+      if (this.blurModeEnabled && this.focusModeEnabled) this.focusModeEnabled = false
+      if (this.blurModeEnabled && this.chainingEnabled) this.chainingEnabled = false
     },
     queuePostSessionModalAfterAiReview(snapshot = null, previousStreak = 0) {
       if (!snapshot || !this.isLoggedIn) return
@@ -11781,7 +12015,7 @@ export default {
     },
     getAiRecitationLiveGuidance(words = []) {
       const list = Array.isArray(words) ? words : []
-      const issue = list.find(word => ['incorrect', 'partial'].includes(word.status))
+      const issue = list.find(word => word.status === 'incorrect')
       if (this.aiRecitationStrictProgression && issue) {
         return `Mistake detected at ${issue.text}. Recite it correctly before moving on.`
       }
@@ -14077,19 +14311,21 @@ export default {
       this.recitationCheckError = ''
       this.playUiTone('complete')
       this.showBanner(this.t('toasts.reciteCheckComplete'), 'success', 2200)
-      this.maybeApplyPostSessionAiAssessmentFromResult(result)
-      if (!this.maybeOpenQueuedPostSessionModal(result, targetVerses)) {
-        this.scrollToRecitationResults()
-      }
+      void this.finalizePostSessionAiReciteFromResult(result).then(handled => {
+        if (!handled && !this.maybeOpenQueuedPostSessionModal(result, targetVerses)) {
+          this.scrollToRecitationResults()
+        }
+      })
       return result
     },
-    maybeApplyPostSessionAiAssessmentFromResult(result) {
+    async maybeApplyPostSessionAiAssessmentFromResult(result) {
       if (!result) return
       if (!this.postSessionAiReciteActive && !this.showPostSessionModal) return
       if (!this.postSessionRecommendation?.id && !this.postSessionAiReciteActive) return
 
       const accuracy = Number(
-        result.accuracy
+        result.accuracyScore
+        ?? result.accuracy
         ?? result.score
         ?? result.percent
         ?? result.overallAccuracy
@@ -14107,9 +14343,31 @@ export default {
         outcome = 'weak'
       }
 
-      const summary = this.localizePostSessionAiSummary(outcome)
+      const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
+      const weakAyahs = Array.isArray(result?.weakAyahs)
+        ? result.weakAyahs.map(Number).filter(n => Number.isFinite(n) && n > 0)
+        : []
+      const summary = this.buildPostSessionAiReviewSummary(result, outcome)
       this.postSessionAiFeedback = summary
-      this.applyPostSessionAiAssessment(outcome, summary)
+      await this.applyPostSessionAiAssessment(outcome, summary, {
+        weak_ayahs: weakAyahs,
+        sequence_errors: Number(mistakes.sequenceErrors || mistakes.verseJumps || 0),
+        missed_words: Number(mistakes.missing || mistakes.incorrect || 0),
+        pronunciation_issues: Number(mistakes.partial || 0) >= 2,
+      })
+    },
+    async finalizePostSessionAiReciteFromResult(result) {
+      if (!result || !this.postSessionAiReciteActive) return false
+      await this.maybeApplyPostSessionAiAssessmentFromResult(result)
+      // Hand control back to the recommendation modal with the updated next step.
+      await new Promise(resolve => setTimeout(resolve, 700))
+      if (!this.postSessionAiReciteActive || this.isSelfCheckRecording) return true
+      if (this.showSelfCheckModal) {
+        this.closeSelfCheckModal()
+      } else {
+        this.returnFromPostSessionAiRecite()
+      }
+      return true
     },
     dismissRecitationCheckResult() {
       this.clearRecitationReviewState()
@@ -14378,7 +14636,8 @@ export default {
         this.recitationCheckAutoStopArmed = false
         this.playUiTone('complete')
         this.showBanner(this.t('toasts.loadedCachedReciteCheck'), 'success', 2200)
-        this.scrollToRecitationResults()
+        const handledPostSession = await this.finalizePostSessionAiReciteFromResult(cachedResult)
+        if (!handledPostSession) this.scrollToRecitationResults()
         return
       }
       const committedWords = (() => {
@@ -14412,7 +14671,8 @@ export default {
       this.recitationCheckAutoStopArmed = false
       this.playUiTone('complete')
       this.showBanner(this.t('toasts.reciteCheckComplete'), 'success', 2200)
-      this.scrollToRecitationResults()
+      const handledPostSession = await this.finalizePostSessionAiReciteFromResult(result)
+      if (!handledPostSession) this.scrollToRecitationResults()
       const cachePayload = {
         analysisVersion: RECITATION_ANALYSIS_VERSION,
         sessionId,
@@ -14826,7 +15086,7 @@ export default {
     buildSequentialRecitationWordStatuses(displayWords, normalizedTargetWords, transcriptWords) {
       const alignment = this.buildRecitationAlignment(displayWords, normalizedTargetWords, transcriptWords).statuses
       if (!this.aiRecitationStrictProgression) return alignment
-      const firstNonGreen = alignment.findIndex(word => word.status !== 'correct')
+      const firstNonGreen = alignment.findIndex(word => !['correct', 'partial'].includes(word.status))
       if (firstNonGreen < 0) return alignment
       return alignment.map((word, index) => {
         if (index <= firstNonGreen) return word
@@ -18545,16 +18805,7 @@ export default {
                       talqinModeEnabled: !!this.talqinModeEnabled,
                     },
                   },
-                  completion_settings: {
-                    technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : 'talqin')),
-                    reciter: this.reciterId || null,
-                    playback_speed: Number(this.playbackSpeed || 1),
-                    repetitions: Number(this.repetitionsPerStep || 3),
-                    ayat_per_step: this.focusModeEnabled ? 1 : null,
-                    focus_enabled: !!this.focusModeEnabled,
-                    blur_enabled: !!this.blurModeEnabled,
-                    talqin_enabled: !!this.talqinModeEnabled,
-                  },
+                  completion_settings: this.buildCompletionPerformancePayload(),
                 })
                 if (endResult?.session?.id) {
                   this.postSessionCompletedSessionId = endResult.session.id
@@ -18563,6 +18814,7 @@ export default {
                   this.postSessionRecommendation = this.enrichPostSessionRecommendation(endResult.recommendation)
                   this.postSessionRecommendationStatus = 'ready'
                   this.postSessionViewState = 'recommendation_ready'
+                  this.syncPostSessionConfidenceFromRecommendation(this.postSessionRecommendation, { force: true })
                 } else if (endResult?.recommendation_error) {
                   this.postSessionRecommendationFailed = true
                 }
@@ -21634,16 +21886,7 @@ export default {
               talqinModeEnabled: !!this.talqinModeEnabled,
             },
           },
-          completion_settings: {
-            technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : 'talqin')),
-            reciter: this.reciterId || null,
-            playback_speed: Number(this.playbackSpeed || 1),
-            repetitions: Number(this.repetitionsPerStep || 3),
-            ayat_per_step: this.focusModeEnabled ? 1 : null,
-            focus_enabled: !!this.focusModeEnabled,
-            blur_enabled: !!this.blurModeEnabled,
-            talqin_enabled: !!this.talqinModeEnabled,
-          },
+          completion_settings: this.buildCompletionPerformancePayload(),
         })
         if (endResult?.session?.id) {
           this.postSessionCompletedSessionId = endResult.session.id
@@ -21653,6 +21896,7 @@ export default {
           this.postSessionRecommendationStatus = 'ready'
           this.postSessionViewState = 'recommendation_ready'
           this.postSessionRecommendationFailed = false
+          this.syncPostSessionConfidenceFromRecommendation(this.postSessionRecommendation, { force: true })
         } else if (endResult?.recommendation_error) {
           this.postSessionRecommendationFailed = true
         }

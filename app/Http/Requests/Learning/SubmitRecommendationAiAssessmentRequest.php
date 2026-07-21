@@ -22,6 +22,9 @@ class SubmitRecommendationAiAssessmentRequest extends FormRequest
             'summary' => ['sometimes', 'nullable', 'string', 'max:500'],
             'weak_ayahs' => ['sometimes', 'array'],
             'weak_ayahs.*' => ['integer', 'min:1', 'max:300'],
+            'sequence_errors' => ['sometimes', 'integer', 'min:0', 'max:500'],
+            'missed_words' => ['sometimes', 'integer', 'min:0', 'max:2000'],
+            'pronunciation_issues' => ['sometimes', 'boolean'],
         ];
     }
 }

@@ -2211,7 +2211,10 @@
 .app.post-session-ai-recite-open .onboarding-post-session-confetti-layer,
 .app.post-session-ai-recite-open .post-session-simple,
 .app.post-session-ai-recite-open .post-session-simple__backdrop,
-.app.post-session-ai-recite-open .post-session-simple__overlay {
+.app.post-session-ai-recite-open .post-session-simple__overlay,
+.post-session-simple--under-ai,
+.post-session-simple--under-ai .post-session-simple__backdrop,
+.post-session-simple--under-ai .post-session-simple__overlay {
   visibility: hidden;
   pointer-events: none;
   opacity: 0;
@@ -10703,12 +10706,21 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 .tools-backdrop.onboarding-post-session-tools-backdrop {
-  z-index: 12615;
+  z-index: 12710;
   background: rgba(4, 8, 6, 0.78);
 }
 
 .tools.offcanvas-section.onboarding-post-session-tools {
-  z-index: 12620;
+  z-index: 12720;
+}
+
+.app.onboarding-post-session-offcanvas-open .post-session-simple,
+.app.onboarding-post-session-offcanvas-open .post-session-simple__backdrop,
+.app.onboarding-post-session-offcanvas-open .post-session-simple__overlay,
+.post-session-simple--builder-open,
+.post-session-simple--builder-open .post-session-simple__backdrop,
+.post-session-simple--builder-open .post-session-simple__overlay {
+  pointer-events: none;
 }
 
 .post-onboarding-modal {
@@ -30321,6 +30333,16 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   background: color-mix(in srgb, var(--accent) 14%, var(--surface) 86%);
 }
 
+.self-check-back-to-session-btn {
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--surface) 94%, var(--text) 6%);
+  color: var(--text);
+}
+
+.self-check-back-to-session-btn:hover {
+  background: color-mix(in srgb, var(--surface) 88%, var(--text) 12%);
+}
+
 .self-check-assessment-section {
   margin-top: 0.35rem;
 }
@@ -30605,6 +30627,12 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   background: rgba(116, 217, 158, 0.1);
   border-color: rgba(116, 217, 158, 0.24);
   color: #d8ffe8;
+}
+
+[data-theme="dark"] .self-check-back-to-session-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f2f2f2;
 }
 
 @media (max-width: 639.98px) {
@@ -36425,9 +36453,44 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .recordings-library-recording-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.35rem;
   align-items: stretch;
+}
+
+.recordings-library-recording-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  min-height: 2rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #9d5e56 22%, var(--border) 78%);
+  background: color-mix(in srgb, #9d5e56 8%, var(--surface) 92%);
+  color: color-mix(in srgb, #8a443b 78%, var(--text) 22%);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.recordings-library-recording-delete:hover {
+  background: color-mix(in srgb, #9d5e56 16%, var(--surface) 84%);
+  border-color: color-mix(in srgb, #9d5e56 36%, var(--border) 64%);
+  color: #8a443b;
+}
+
+[data-theme="dark"] .recordings-library-recording-delete {
+  background: rgba(201, 112, 104, 0.12);
+  border-color: rgba(201, 112, 104, 0.28);
+  color: #f0c4bf;
+}
+
+[data-theme="dark"] .recordings-library-recording-delete:hover {
+  background: rgba(201, 112, 104, 0.2);
+  color: #ffd7d2;
 }
 
 .recordings-library-detail-head {
@@ -36716,19 +36779,6 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   flex: 1 1 auto;
 }
 
-.post-session-simple__row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-  align-items: stretch;
-  min-width: 0;
-}
-
-.post-session-simple__row > *:only-child {
-  grid-column: 1 / -1;
-}
-
-.post-session-simple__ai,
 .post-session-simple__confidence {
   min-width: 0;
   display: flex;
@@ -36742,7 +36792,6 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .post-session-simple__section-label,
-.post-session-simple__ai-label,
 .post-session-simple__confidence-label {
   margin: 0;
   font-size: 0.8rem;
@@ -36751,52 +36800,12 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: color-mix(in srgb, var(--text) 68%, transparent);
 }
 
-.post-session-simple__ai-btn {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.42rem;
-  align-self: flex-start;
-  min-height: 2.25rem;
-  padding: 0 0.95rem;
-  border-radius: 999px;
-  border: 1px solid var(--ps-mint-border);
-  background: linear-gradient(180deg, #f4faf7, var(--ps-mint-soft));
-  color: #245f4d;
-  font-size: 0.82rem;
-  font-weight: 650;
-  letter-spacing: 0.01em;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--ps-mint) 10%, transparent);
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
-}
-
-.post-session-simple__ai-btn:hover:not(:disabled) {
-  border-color: rgba(47, 111, 88, 0.42);
-  background: linear-gradient(180deg, #eaf6f0, #dff0e7);
-  box-shadow: 0 6px 14px color-mix(in srgb, var(--ps-mint) 14%, transparent);
-}
-
-.post-session-simple__ai-btn:focus-visible,
 .post-session-simple__segment-btn:focus-visible,
 .post-session-simple__btn:focus-visible,
 .post-session-simple__stats-toggle:focus-visible,
 .post-session-simple__link:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
   outline-offset: 2px;
-}
-
-.post-session-simple__ai-btn:disabled {
-  opacity: 0.62;
-  cursor: not-allowed;
-}
-
-.post-session-simple__ai-feedback {
-  margin: 0;
-  font-size: 0.76rem;
-  line-height: 1.4;
-  color: color-mix(in srgb, var(--text) 66%, transparent);
 }
 
 .post-session-simple__segment {
@@ -36906,6 +36915,16 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   overflow-wrap: anywhere;
 }
 
+.post-session-simple__outcome {
+  margin: 0;
+  max-width: 48ch;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--accent) 55%, var(--text-muted, var(--text)));
+  overflow-wrap: anywhere;
+}
+
 .post-session-simple__pills {
   display: flex;
   flex-wrap: wrap;
@@ -36940,8 +36959,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   appearance: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.55rem;
   justify-self: start;
+  max-width: 100%;
+  min-width: 0;
   min-height: 2rem;
   padding: 0.2rem 0.45rem 0.2rem 0.15rem;
   border: 0;
@@ -36951,6 +36972,20 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   font-size: 0.8rem;
   font-weight: 550;
   cursor: pointer;
+}
+
+.post-session-simple__stats-toggle-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.post-session-simple__stats-summary {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--text) 52%, transparent);
 }
 
 .post-session-simple__stats-toggle:hover {
@@ -37126,7 +37161,6 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 [dir="rtl"] .post-session-simple__overlay,
-[dir="rtl"] .post-session-simple__row,
 [dir="rtl"] .post-session-simple__actions,
 [dir="rtl"] .post-session-simple__stats-grid,
 [dir="rtl"] .post-session-simple__pills,
@@ -37135,10 +37169,6 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 @media (max-width: 720px) {
-  .post-session-simple__row {
-    grid-template-columns: 1fr;
-  }
-
   .post-session-simple__stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -37200,7 +37230,6 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     padding-block: 0.7rem 0.85rem;
   }
 
-  .post-session-simple__ai,
   .post-session-simple__confidence,
   .post-session-simple__panel--hero {
     padding-block: 0.75rem;

@@ -1191,6 +1191,10 @@
         "repeatRangeTitle": "أعد {surah}، {range}",
         "aiReciteShort": "التلاوة الذكية",
         "aiReciteHintShort": "اختبر هذا المدى من حفظك.",
+        "aiReviewStrong": "استذكرتَ معظم المدى جيدًا.",
+        "aiReviewWeakAyah": "استذكرتَ معظم المدى جيدًا، مع بعض الصعوبة في الآية {ayah}.",
+        "aiReviewWeakAyahs": "استذكرتَ معظم المدى جيدًا، مع صعوبة في {count} آيات.",
+        "aiReviewSequence": "كان الاستذكار صحيحًا في الغالب، لكن الترتيب كان غير ثابت.",
         "speedPill": "سرعة {speed}×"
       },
       "viewStats": "عرض الإحصاءات",
@@ -1200,10 +1204,17 @@
       "celebrationMessage": "جهدك محفوظ بإخلاص.",
       "duaStrengthen": "اللهم ثبّت ما حفظتُ واجعله راسخًا في قلبي.",
       "duaStrengthenShort": "اللهم ثبّت ما حفظتُ.",
-      "sessionStats": "إحصاءات الجلسة"
+      "sessionStats": "إحصاءات الجلسة",
+      "statsCompleteShort": "مكتمل",
+      "statsRange": "النطاق",
+      "statsRetries": "إعادة المحاولة",
+      "statsAttempt": "الجلسة",
+      "statsNew": "جديدة",
+      "statsRepeated": "مكررة"
     },
     "start_reciting_prompt": "ابدأ التلاوة",
     "view_all_recording_library": "عرض كل مكتبة التسجيلات",
+    "back_to_session_complete": "العودة لإكمال الجلسة",
     "self_rating_prompt": "ما مدى تذكّرك لهذه الآية من الحفظ؟",
     "selfCheckRecorder": {
       "aiListening": "الذكاء الاصطناعي يستمع لتلاوتك",
@@ -1271,6 +1282,7 @@
       "hideAyahRecite": "Hide the ayah and recite from memory",
       "openAiMemoryAyah": "Open AI memorisation checker for this ayah",
       "closeSelfCheck": "Close self-check",
+      "deleteRecording": "حذف هذا التسجيل",
       "toggleTajweedHighlights": "Toggle Tajweed highlights",
       "stopManualRecording": "Stop manual recording",
       "startManualRecording": "Start manual recording",

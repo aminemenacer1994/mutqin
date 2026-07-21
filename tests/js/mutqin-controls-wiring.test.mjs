@@ -267,11 +267,10 @@ includesAll('session completion success flow', [
   /learningApi\.endSession\(/,
   /submitPostSessionConfidence/,
   /repeatPostSessionFromCompleted/,
-  /openPostSessionAiRecite/,
-  /postSessionAiReciteActive/,
-  /self-check-modal-overlay--above-post-session/,
-  /post-session-simple__ai-btn/,
-  /returnFromPostSessionAiRecite/,
+  /openPostSessionNewSessionOffcanvas/,
+  /postSessionOffcanvasOpen/,
+  /post-session-simple__confidence/,
+  /post-session-simple__segment/,
 ])
 
 assert.doesNotMatch(
@@ -279,6 +278,20 @@ assert.doesNotMatch(
   /Complete an AI Review Check for this session to view the summary\./,
   'session completion should not defer success behind AI review'
 )
+
+{
+  const vueOnly = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
+  assert.doesNotMatch(
+    vueOnly,
+    /post-session-simple__ai-btn|openPostSessionAiRecite/,
+    'completion modal should not expose AI Recite section'
+  )
+  assert.match(vueOnly, /post-session-simple--builder-open/)
+  assert.match(
+    readFileSync(new URL('../../resources/js/views/Memorisation.css', import.meta.url), 'utf8'),
+    /onboarding-post-session-tools\s*\{[\s\S]*?z-index:\s*12720/
+  )
+}
 
 includesAll('audio unlock flow', [
   /primeUiAudioUnlock\(\) \{/,

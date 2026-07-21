@@ -216,6 +216,15 @@ export const learningApi = {
       result: assessment?.result,
       summary: assessment?.summary || undefined,
       weak_ayahs: Array.isArray(assessment?.weak_ayahs) ? assessment.weak_ayahs : undefined,
+      sequence_errors: Number.isFinite(Number(assessment?.sequence_errors))
+        ? Number(assessment.sequence_errors)
+        : undefined,
+      missed_words: Number.isFinite(Number(assessment?.missed_words))
+        ? Number(assessment.missed_words)
+        : undefined,
+      pronunciation_issues: typeof assessment?.pronunciation_issues === 'boolean'
+        ? assessment.pronunciation_issues
+        : undefined,
     })
     return data?.recommendation ?? null
   },
@@ -225,7 +234,11 @@ function sanitizeRecommendationSettings(settings) {
   if (!settings || typeof settings !== 'object') return null
   const clean = {}
   const technique = String(settings.technique || '').toLowerCase().trim()
-  if (['talqin', 'focus', 'blur'].includes(technique)) clean.technique = technique
+  if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(technique)) clean.technique = technique
+  const complementary = String(settings.complementary_technique || '').toLowerCase().trim()
+  if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(complementary)) {
+    clean.complementary_technique = complementary
+  }
   if (settings.reciter) clean.reciter = String(settings.reciter)
   const speed = Number(settings.playback_speed)
   if (Number.isFinite(speed)) clean.playback_speed = Math.max(0.5, Math.min(1.5, Number(speed.toFixed(2))))
@@ -238,6 +251,15 @@ function sanitizeRecommendationSettings(settings) {
   if (typeof settings.focus_enabled === 'boolean') clean.focus_enabled = settings.focus_enabled
   if (typeof settings.blur_enabled === 'boolean') clean.blur_enabled = settings.blur_enabled
   if (typeof settings.talqin_enabled === 'boolean') clean.talqin_enabled = settings.talqin_enabled
+  if (typeof settings.chaining_enabled === 'boolean') clean.chaining_enabled = settings.chaining_enabled
+  if (typeof settings.anchor_mode_enabled === 'boolean') clean.anchor_mode_enabled = settings.anchor_mode_enabled
+  if (['linking', 'cumulative'].includes(String(settings.chaining_method || ''))) {
+    clean.chaining_method = settings.chaining_method
+  }
+  const chainingReps = Number(settings.chaining_repetitions)
+  if (Number.isFinite(chainingReps)) clean.chaining_repetitions = Math.max(1, Math.min(5, Math.round(chainingReps)))
+  const anchorCount = Number(settings.anchor_count)
+  if (Number.isFinite(anchorCount)) clean.anchor_count = Math.max(1, Math.min(3, Math.round(anchorCount)))
   return Object.keys(clean).length ? clean : null
 }
 

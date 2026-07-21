@@ -2525,6 +2525,15 @@
           </div>
           <div class="self-check-modal-header-actions">
             <button
+              v-if="postSessionAiReciteActive"
+              class="self-check-library-shortcut-btn self-check-back-to-session-btn"
+              type="button"
+              @click="closeSelfCheckModal"
+            >
+              <i class="bi bi-arrow-left" aria-hidden="true"></i>
+              <span>{{ t('memorisation.back_to_session_complete') }}</span>
+            </button>
+            <button
               v-if="showSelfCheckLibraryShortcut"
               class="self-check-library-shortcut-btn"
               type="button"
@@ -3125,6 +3134,14 @@
                             Ayah {{ ayahGroup.ayahNumber }} · {{ formatRecordingDate(recording.recordedAt) }}
                           </span>
                         </button>
+                        <button
+                          type="button"
+                          class="recordings-library-recording-delete"
+                          :aria-label="t('memorisation.a11y.deleteRecording')"
+                          @click.stop="promptDeleteRecording(recording.id)"
+                        >
+                          <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        </button>
                       </div>
                     </template>
                   </div>
@@ -3499,7 +3516,10 @@
     <div
       v-if="showPostSessionModal"
       class="post-session-simple"
-      :class="{ 'post-session-simple--sample': onboardingSampleSessionActive }"
+      :class="{
+        'post-session-simple--sample': onboardingSampleSessionActive,
+        'post-session-simple--builder-open': postSessionOffcanvasOpen && showTools,
+      }"
       aria-live="polite"
     >
       <div class="post-session-simple__backdrop" aria-hidden="true"></div>
@@ -3555,76 +3575,43 @@
             </template>
 
             <template v-else>
-              <div class="post-session-simple__row">
-                <section class="post-session-simple__ai" aria-labelledby="postSessionAiTitle">
-                  <p id="postSessionAiTitle" class="post-session-simple__section-label">
-                    {{ t('memorisation.postSession.recommendation.aiReciteHintShort') }}
-                  </p>
+              <section
+                v-if="postSessionRecommendation?.id"
+                class="post-session-simple__confidence"
+                role="group"
+                :aria-label="t('memorisation.postSession.recommendation.confidencePrompt')"
+              >
+                <p class="post-session-simple__section-label">
+                  {{ t('memorisation.postSession.recommendation.confidencePrompt') }}
+                </p>
+                <div class="post-session-simple__segment" role="radiogroup">
                   <button
                     type="button"
-                    class="post-session-simple__ai-btn"
+                    class="post-session-simple__segment-btn"
+                    role="radio"
+                    :class="{ 'is-selected': postSessionSelectedConfidence === 'confident' }"
                     :disabled="postSessionActionsBusy"
-                    :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
-                    @click="openPostSessionAiRecite"
+                    :aria-checked="postSessionSelectedConfidence === 'confident' ? 'true' : 'false'"
+                    @click="submitPostSessionConfidence('confident')"
                   >
-                    <span
-                      v-if="postSessionAiReciteBusy"
-                      class="spinner-border spinner-border-sm"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
-                    <i v-else class="bi bi-stars" aria-hidden="true"></i>
-                    <span>{{ postSessionAiReciteBusy
-                      ? t('memorisation.postSession.recommendation.openingAiRecite')
-                      : t('memorisation.postSession.recommendation.aiReciteShort') }}</span>
+                    {{ t('memorisation.postSession.recommendation.confidenceConfident') }}
                   </button>
-                  <p
-                    v-if="postSessionRecommendation?.ai_assessment?.summary || postSessionAiFeedback"
-                    class="post-session-simple__ai-feedback"
-                    role="status"
+                  <button
+                    type="button"
+                    class="post-session-simple__segment-btn"
+                    role="radio"
+                    :class="{ 'is-selected': postSessionSelectedConfidence === 'needs_practice' }"
+                    :disabled="postSessionActionsBusy"
+                    :aria-checked="postSessionSelectedConfidence === 'needs_practice' ? 'true' : 'false'"
+                    @click="submitPostSessionConfidence('needs_practice')"
                   >
-                    {{ postSessionAiFeedback || postSessionRecommendation.ai_assessment.summary }}
-                  </p>
-                </section>
-
-                <section
-                  v-if="postSessionRecommendation?.id"
-                  class="post-session-simple__confidence"
-                  role="group"
-                  :aria-label="t('memorisation.postSession.recommendation.confidencePrompt')"
-                >
-                  <p class="post-session-simple__section-label">
-                    {{ t('memorisation.postSession.recommendation.confidencePrompt') }}
-                  </p>
-                  <div class="post-session-simple__segment" role="radiogroup">
-                    <button
-                      type="button"
-                      class="post-session-simple__segment-btn"
-                      role="radio"
-                      :class="{ 'is-selected': postSessionRecommendation?.confidence_feedback === 'confident' }"
-                      :disabled="postSessionActionsBusy"
-                      :aria-checked="postSessionRecommendation?.confidence_feedback === 'confident' ? 'true' : 'false'"
-                      @click="submitPostSessionConfidence('confident')"
-                    >
-                      {{ t('memorisation.postSession.recommendation.confidenceConfident') }}
-                    </button>
-                    <button
-                      type="button"
-                      class="post-session-simple__segment-btn"
-                      role="radio"
-                      :class="{ 'is-selected': postSessionRecommendation?.confidence_feedback === 'needs_practice' }"
-                      :disabled="postSessionActionsBusy"
-                      :aria-checked="postSessionRecommendation?.confidence_feedback === 'needs_practice' ? 'true' : 'false'"
-                      @click="submitPostSessionConfidence('needs_practice')"
-                    >
-                      {{ t('memorisation.postSession.recommendation.confidenceNeedsPractice') }}
-                    </button>
-                  </div>
-                  <p v-if="postSessionConfidenceError" class="post-session-simple__error" role="status">
-                    {{ postSessionConfidenceError }}
-                  </p>
-                </section>
-              </div>
+                    {{ t('memorisation.postSession.recommendation.confidenceNeedsPractice') }}
+                  </button>
+                </div>
+                <p v-if="postSessionConfidenceError" class="post-session-simple__error" role="status">
+                  {{ postSessionConfidenceError }}
+                </p>
+              </section>
 
               <section
                 class="post-session-simple__panel post-session-simple__panel--hero"
@@ -3649,6 +3636,7 @@
                     <p class="post-session-simple__range">{{ postSessionRecommendationTitle }}</p>
                   </div>
                   <p v-if="postSessionSimpleReason" class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
+                  <p v-if="postSessionIntendedOutcome" class="post-session-simple__outcome">{{ postSessionIntendedOutcome }}</p>
                   <div v-if="postSessionStaticPills.length" class="post-session-simple__pills">
                     <span
                       v-for="pill in postSessionStaticPills"
@@ -3669,7 +3657,7 @@
                 </p>
               </section>
 
-              <div v-if="postSessionCompactStats.length" class="post-session-simple__stats">
+              <div v-if="postSessionCompactStats.length || postSessionStatsSummary" class="post-session-simple__stats">
                 <button
                   type="button"
                   class="post-session-simple__stats-toggle"
@@ -3677,7 +3665,13 @@
                   aria-controls="postSessionStatsPanel"
                   @click="togglePostSessionStats"
                 >
-                  <span>{{ t('memorisation.postSession.sessionStats') }}</span>
+                  <span class="post-session-simple__stats-toggle-label">
+                    <span>{{ t('memorisation.postSession.sessionStats') }}</span>
+                    <span
+                      v-if="!postSessionStatsExpanded && postSessionStatsSummary"
+                      class="post-session-simple__stats-summary"
+                    >{{ postSessionStatsSummary }}</span>
+                  </span>
                   <i class="bi" :class="postSessionStatsExpanded ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
                 </button>
                 <div

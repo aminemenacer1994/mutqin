@@ -117,6 +117,9 @@ class RecommendationController extends Controller
             'result' => $request->validated('result'),
             'summary' => $request->validated('summary'),
             'weak_ayahs' => $request->validated('weak_ayahs') ?? [],
+            'sequence_errors' => $request->validated('sequence_errors') ?? 0,
+            'missed_words' => $request->validated('missed_words') ?? 0,
+            'pronunciation_issues' => (bool) ($request->validated('pronunciation_issues') ?? false),
         ]);
 
         return response()->json([

@@ -68,4 +68,154 @@ class RepeatAdaptationServiceTest extends TestCase
         $this->assertSame('talqin', $merged['technique']);
         $this->assertSame(0.5, $merged['playback_speed']);
     }
+
+    public function test_frequent_replay_prefers_talqin_over_generic_settings(): void
+    {
+        $result = $this->service->resolve([
+            'technique' => 'focus',
+            'playback_speed' => 1.0,
+            'repetitions' => 3,
+        ], [
+            'confidence' => 'needs_practice',
+            'mode' => 'revision',
+            'attempt_number' => 1,
+            'range_ayah_count' => 3,
+            'replay_ratio' => 2.4,
+            'max_ayah_replays' => 5,
+            'replay_heavy_ayahs' => 2,
+        ]);
+
+        $this->assertSame('talqin', $result['technique']);
+        $this->assertLessThan(1.0, $result['playback_speed']);
+        $this->assertContains('use_talqin', $result['adaptations']);
+        $this->assertNotEmpty($result['user_reason']);
+        $this->assertNotEmpty($result['intended_outcome']);
+    }
+
+    public function test_sequence_errors_recommend_chaining(): void
+    {
+        $result = $this->service->resolve([
+            'technique' => 'talqin',
+            'playback_speed' => 1.0,
+            'repetitions' => 3,
+        ], [
+            'confidence' => 'needs_practice',
+            'mode' => 'revision',
+            'sequence_errors' => 2,
+            'range_ayah_count' => 4,
+        ]);
+
+        $this->assertSame('chaining', $result['technique']);
+        $this->assertTrue($result['chaining_enabled']);
+        $this->assertContains($result['chaining_method'], ['linking', 'cumulative']);
+    }
+
+    public function test_mixed_recall_gaps_recommend_blur(): void
+    {
+        $result = $this->service->resolve([
+            'technique' => 'talqin',
+            'playback_speed' => 1.0,
+            'repetitions' => 3,
+        ], [
+            'confidence' => 'needs_practice',
+            'mode' => 'revision',
+            'ai_result' => 'mixed',
+            'missed_words' => 3,
+            'range_ayah_count' => 3,
+        ]);
+
+        $this->assertSame('blur', $result['technique']);
+        $this->assertTrue($result['blur_enabled']);
+    }
+
+    public function test_confident_progression_can_use_blur_without_ai(): void
+    {
+        $result = $this->service->resolve([
+            'technique' => 'talqin',
+            'playback_speed' => 1.0,
+            'repetitions' => 3,
+        ], [
+            'confidence' => 'confident',
+            'mode' => 'progression',
+            'attempt_number' => 1,
+            'range_ayah_count' => 3,
+            'replay_ratio' => 1.1,
+            'max_ayah_replays' => 1,
+        ]);
+
+        $this->assertSame('blur', $result['technique']);
+        $this->assertLessThanOrEqual(2, $result['repetitions']);
+        $this->assertSame('continue_while_fresh', $result['reason_code']);
+    }
+
+    public function test_strong_ai_confident_can_recommend_chaining(): void
+    {
+        $result = $this->service->resolve([
+            'technique' => 'talqin',
+            'playback_speed' => 1.0,
+            'repetitions' => 3,
+        ], [
+            'confidence' => 'confident',
+            'mode' => 'progression',
+            'ai_result' => 'strong',
+            'range_ayah_count' => 3,
+            'range_workload_score' => 30,
+            'replay_ratio' => 1.0,
+            'max_ayah_replays' => 1,
+        ]);
+
+        $this->assertSame('chaining', $result['technique']);
+        $this->assertSame('anchor', $result['complementary_technique']);
+        $this->assertTrue($result['chaining_enabled']);
+        $this->assertTrue($result['anchor_mode_enabled']);
+    }
+
+    public function test_vocabulary_gaps_recommend_anchor(): void
+    {
+        $result = $this->service->resolve([
+            'technique' => 'focus',
+            'playback_speed' => 1.0,
+            'repetitions' => 3,
+        ], [
+            'confidence' => 'needs_practice',
+            'mode' => 'revision',
+            'missed_words' => 2,
+            'range_ayah_count' => 2,
+            'replay_ratio' => 1.0,
+            'max_ayah_replays' => 1,
+        ]);
+
+        $this->assertSame('anchor', $result['technique']);
+        $this->assertTrue($result['anchor_mode_enabled']);
+    }
+
+    public function test_needs_practice_with_strong_ai_stays_light(): void
+    {
+        $result = $this->service->resolve([
+            'technique' => 'talqin',
+            'playback_speed' => 1.0,
+            'repetitions' => 3,
+        ], [
+            'confidence' => 'needs_practice',
+            'mode' => 'revision',
+            'ai_result' => 'strong',
+            'range_ayah_count' => 3,
+        ]);
+
+        $this->assertLessThanOrEqual(4, $result['repetitions']);
+        $this->assertStringContainsString('light', strtolower($result['user_reason']));
+    }
+
+    public function test_replay_signal_summary(): void
+    {
+        $signals = $this->service->summariseReplaySignals([
+            '1:1' => 1,
+            '1:2' => 4,
+            '1:3' => 3,
+        ], 3);
+
+        $this->assertSame(2.67, $signals['replay_ratio']);
+        $this->assertSame(4, $signals['max_ayah_replays']);
+        $this->assertSame(2, $signals['replay_heavy_ayahs']);
+    }
 }

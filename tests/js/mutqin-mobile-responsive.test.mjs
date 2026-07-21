@@ -498,7 +498,11 @@ async function inspectState(page, state) {
         if (endBtn) issues.push('paused: End session button should be removed from exit actions')
       }
       if (state === 'complete' && viewportWidth >= 430) {
-        expectParallel('.post-session-simple__ai', '.post-session-simple__confidence', 'completion decision row')
+        const confidence = document.querySelector('.post-session-simple__confidence')
+        if (!confidence) issues.push('completion: confidence control missing')
+        if (document.querySelector('.post-session-simple__ai')) {
+          issues.push('completion: AI Recite section should be removed')
+        }
       }
     }
 

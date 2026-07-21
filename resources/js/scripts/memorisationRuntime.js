@@ -33,7 +33,8 @@ export const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 1200
 export const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.82
 export const SPEECHMATICS_AUDIO_BUFFER_SIZE = 2048
 export const SPEECHMATICS_MAX_DELAY_SECONDS = 0.02
-export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.12
+// 0.12s was cutting ayah-final words during natural pauses between ayat.
+export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.55
 export const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0
 export const RECITATION_WORD_STATUS_CLASSES = [
   'recitation-word-pending',

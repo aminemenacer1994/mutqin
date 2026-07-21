@@ -192,9 +192,15 @@ class NextSessionRecommendationService
                     'repetitionsPerStep' => $settings['repetitions'] ?? 3,
                     'ayatPerStep' => $settings['ayat_per_step'] ?? null,
                     'technique' => $settings['technique'] ?? null,
+                    'complementaryTechnique' => $settings['complementary_technique'] ?? null,
                     'focusModeEnabled' => (bool) ($settings['focus_enabled'] ?? false),
                     'blurModeEnabled' => (bool) ($settings['blur_enabled'] ?? false),
                     'talqinModeEnabled' => (bool) ($settings['talqin_enabled'] ?? ($settings['technique'] ?? '') === 'talqin'),
+                    'chainingEnabled' => (bool) ($settings['chaining_enabled'] ?? false),
+                    'chainingMethod' => $settings['chaining_method'] ?? null,
+                    'chainingRepetitions' => $settings['chaining_repetitions'] ?? null,
+                    'anchorModeEnabled' => (bool) ($settings['anchor_mode_enabled'] ?? false),
+                    'anchorCount' => $settings['anchor_count'] ?? null,
                 ],
                 'recommendation' => [
                     'id' => $recommendation->id,
@@ -393,19 +399,47 @@ class NextSessionRecommendationService
         $recommendation->forceFill([
             'ai_assessment' => array_merge($assessment, [
                 'result' => $result,
+                'summary' => isset($assessment['summary']) ? (string) $assessment['summary'] : null,
+                'weak_ayahs' => is_array($assessment['weak_ayahs'] ?? null) ? array_values($assessment['weak_ayahs']) : [],
+                'sequence_errors' => (int) ($assessment['sequence_errors'] ?? 0),
+                'missed_words' => (int) ($assessment['missed_words'] ?? 0),
                 'assessed_at' => now()->toIso8601String(),
             ]),
         ])->save();
 
-        return match ($result) {
-            'strong' => $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteStrong),
-            'mixed' => $this->supersedeWithRepeat($user, $recommendation, [
-                'ai_result' => 'mixed',
-            ], RecommendationReasonCode::AiReciteMixed),
-            default => $this->supersedeWithRepeat($user, $recommendation, [
-                'ai_result' => 'weak',
-            ], RecommendationReasonCode::AiReciteWeak),
-        };
+        $confidence = (string) ($recommendation->confidence_feedback ?? ConfidenceFeedback::Confident->value);
+        if ($confidence === '') {
+            $confidence = ConfidenceFeedback::Confident->value;
+        }
+        $adaptationExtra = [
+            'ai_result' => $result,
+            'sequence_errors' => (int) ($assessment['sequence_errors'] ?? 0),
+            'missed_words' => (int) ($assessment['missed_words'] ?? 0),
+            'weak_ayahs' => is_array($assessment['weak_ayahs'] ?? null) ? array_values($assessment['weak_ayahs']) : [],
+            'pronunciation_issues' => (bool) ($assessment['pronunciation_issues'] ?? false),
+            'confidence' => $confidence ?: null,
+        ];
+
+        if ($result === 'strong') {
+            if ($confidence === ConfidenceFeedback::NeedsPractice->value) {
+                // Prioritise the learner's confidence with lighter revision settings.
+                return $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::ConfidenceNeedsPractice);
+            }
+
+            return $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteStrong);
+        }
+
+        if ($result === 'mixed') {
+            if ($confidence === ConfidenceFeedback::Confident->value) {
+                // Allow progression with a smaller / review-first next set rather than forcing a full repeat.
+                return $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteMixed);
+            }
+
+            return $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::AiReciteMixed);
+        }
+
+        // Weak AI may move to revision even when Confident was selected — learner can still override.
+        return $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::AiReciteWeak);
     }
 
     /**
@@ -812,15 +846,31 @@ class NextSessionRecommendationService
             $sessionCompleted = $coveredComplete || (bool) ($meta['completed'] ?? false);
         }
 
+        $technique = $completionSettings['technique']
+            ?? $config['technique']
+            ?? (($config['talqinModeEnabled'] ?? false) ? 'talqin'
+                : (($config['focusModeEnabled'] ?? false) ? 'focus'
+                    : (($config['blurModeEnabled'] ?? false) ? 'blur'
+                        : (($config['chainingEnabled'] ?? false) ? 'chaining'
+                            : (($config['anchorModeEnabled'] ?? false) ? 'anchor' : null)))));
+
         $baseSettings = [
-            'technique' => $completionSettings['technique']
-                ?? $config['technique']
-                ?? (($config['talqinModeEnabled'] ?? false) ? 'talqin' : (($config['focusModeEnabled'] ?? false) ? 'focus' : (($config['blurModeEnabled'] ?? false) ? 'blur' : null))),
+            'technique' => $technique,
             'reciter' => $completionSettings['reciter'] ?? $config['reciterId'] ?? null,
             'playback_speed' => $completionSettings['playback_speed'] ?? $config['playbackSpeed'] ?? 1.0,
             'repetitions' => $completionSettings['repetitions'] ?? $config['repetitionsPerStep'] ?? 3,
             'ayat_per_step' => $completionSettings['ayat_per_step'] ?? $config['ayatPerStep'] ?? null,
+            'chaining_enabled' => (bool) ($completionSettings['chaining_enabled'] ?? $config['chainingEnabled'] ?? false),
+            'chaining_method' => $completionSettings['chaining_method'] ?? $config['chainingMethod'] ?? null,
+            'anchor_mode_enabled' => (bool) ($completionSettings['anchor_mode_enabled'] ?? $config['anchorModeEnabled'] ?? false),
+            'anchor_count' => $completionSettings['anchor_count'] ?? $config['anchorCount'] ?? null,
         ];
+
+        $ayahCount = ($rangeStart && $rangeEnd) ? max(1, $rangeEnd - $rangeStart + 1) : 1;
+        $versePlayCounts = is_array($completionSettings['verse_play_counts'] ?? null)
+            ? $completionSettings['verse_play_counts']
+            : (is_array($meta['verse_play_counts'] ?? null) ? $meta['verse_play_counts'] : null);
+        $replaySignals = $this->adaptation->summariseReplaySignals($versePlayCounts, $ayahCount);
 
         return [
             'session' => $session,
@@ -837,6 +887,11 @@ class NextSessionRecommendationService
             'memorisation_mode' => $session?->memorisation_mode ?: ($meta['mode'] ?? 'advanced'),
             'base_settings' => $baseSettings,
             'attempt_number' => (int) ($session?->attempt_number ?? 1),
+            'performance' => array_merge($replaySignals, [
+                'hints_used' => (int) ($completionSettings['hints_used'] ?? $meta['hints_used'] ?? 0),
+                'session_duration_seconds' => (int) ($session?->session_duration_seconds ?? $completionSettings['session_duration_seconds'] ?? 0),
+                'is_repeat_session' => (bool) ($session?->repeated_from_session_id),
+            ]),
         ];
     }
 
@@ -1057,6 +1112,7 @@ class NextSessionRecommendationService
         $base = is_array($context['base_settings'] ?? null) ? $context['base_settings'] : [];
         $mode = strtolower((string) ($context['memorisation_mode'] ?? 'advanced'));
         $isBeginner = in_array($mode, ['beginner', 'guided', 'easy'], true);
+        $performance = is_array($context['performance'] ?? null) ? $context['performance'] : [];
 
         $defaultTechnique = $this->adaptation->normaliseTechnique($base['technique'] ?? null);
         if (! $defaultTechnique) {
@@ -1067,39 +1123,6 @@ class NextSessionRecommendationService
             } else {
                 $defaultTechnique = 'focus';
             }
-        }
-
-        if ($type?->isRepeat()) {
-            $settings = $this->adaptation->resolve($base + ['technique' => $defaultTechnique], [
-                'attempt_number' => (int) ($context['attempt_number'] ?? 1),
-                'range_ayah_count' => (int) ($payload['ayah_range']['count'] ?? (($context['range_end'] ?? 1) - ($context['range_start'] ?? 1) + 1)),
-                'confidence' => 'needs_practice',
-                'range_workload_score' => (float) ($payload['workload']['score'] ?? 0),
-            ]);
-            $payload['adaptations'] = $settings['adaptations'] ?? [];
-            $payload['adaptation_explanations'] = $this->adaptationExplanations(
-                $settings['adaptations'] ?? [],
-                $base + ['technique' => $defaultTechnique],
-                $settings,
-            );
-            $payload['settings_outcome'] = 'These settings are intended to help you hear each phrase more clearly, repeat it more consistently and strengthen recall before progressing.';
-        } else {
-            $flags = $this->adaptation->techniqueFlags($defaultTechnique);
-            $settings = [
-                'technique' => $defaultTechnique,
-                'reciter' => $base['reciter'] ?? null,
-                'playback_speed' => $this->adaptation->clampSpeed((float) ($base['playback_speed'] ?? 1)),
-                'repetitions' => $this->adaptation->clampRepetitions((int) ($base['repetitions'] ?? 3)),
-                'ayat_per_step' => $base['ayat_per_step'] ?? null,
-                'focus_enabled' => $flags['focus_enabled'],
-                'blur_enabled' => $flags['blur_enabled'],
-                'talqin_enabled' => $flags['talqin_enabled'],
-                'adaptations' => [],
-                'reason_code' => (string) ($payload['reason_code'] ?? ''),
-            ];
-            $payload['adaptations'] = [];
-            $payload['adaptation_explanations'] = [];
-            $payload['settings_outcome'] = null;
         }
 
         if (! isset($payload['workload']) && isset($payload['ayah_range']['from'], $payload['ayah_range']['to'], $payload['surah']['id'])) {
@@ -1116,6 +1139,36 @@ class NextSessionRecommendationService
                 'target_max' => AyahWorkload::TARGET_MAX,
                 'within_band' => $stats['score'] >= AyahWorkload::TARGET_MIN && $stats['score'] <= AyahWorkload::TARGET_MAX,
             ];
+        }
+
+        $rangeCount = (int) ($payload['ayah_range']['count']
+            ?? (($context['range_end'] ?? 1) - ($context['range_start'] ?? 1) + 1));
+        $adaptationContext = array_merge($performance, [
+            'attempt_number' => (int) ($context['attempt_number'] ?? 1),
+            'range_ayah_count' => max(1, $rangeCount),
+            'range_workload_score' => (float) ($payload['workload']['score'] ?? 0),
+            'mode' => $type?->isRepeat() || $type === RecommendationType::Resume ? 'revision' : 'progression',
+            'confidence' => $type?->isRepeat() || $type === RecommendationType::Resume ? 'needs_practice' : 'confident',
+        ]);
+
+        $settings = $this->adaptation->resolve($base + ['technique' => $defaultTechnique], $adaptationContext);
+        $payload['adaptations'] = $settings['adaptations'] ?? [];
+        $payload['adaptation_explanations'] = $this->adaptationExplanations(
+            $settings['adaptations'] ?? [],
+            $base + ['technique' => $defaultTechnique],
+            $settings,
+        );
+        $payload['user_reason'] = $settings['user_reason'] ?? null;
+        $payload['intended_outcome'] = $settings['intended_outcome'] ?? null;
+        $payload['evidence_codes'] = $settings['evidence_codes'] ?? [];
+        $payload['settings_outcome'] = $settings['intended_outcome']
+            ?? ($type?->isRepeat()
+                ? 'These settings are intended to strengthen recall before progressing.'
+                : null);
+
+        // Prefer the engine's plain-language reason when it is more specific than the default code text.
+        if (! empty($settings['user_reason'])) {
+            $payload['reason'] = $settings['user_reason'];
         }
 
         $payload['settings'] = $settings;
@@ -1152,8 +1205,15 @@ class NextSessionRecommendationService
                     (int) ($before['repetitions'] ?? 2),
                     (int) ($after['repetitions'] ?? 4),
                 ),
-                'use_talqin' => 'Talqin selected so you can listen and repeat one section at a time',
-                'use_focus' => 'Focus mode selected so you can concentrate on one ayah at a time',
+                'reduce_repetitions' => sprintf(
+                    'Repetitions reduced to %d for lighter independent practice',
+                    (int) ($after['repetitions'] ?? 2),
+                ),
+                'use_talqin' => 'Listen and repeat (Talqin) so you can hear each section clearly',
+                'use_focus' => 'One ayah at a time (Focus) to reduce cognitive load',
+                'use_blur' => 'Gradually hide the text (Blur) to strengthen recall',
+                'use_chaining' => 'Join ayahs together (Chaining) to strengthen sequence',
+                'use_anchor' => 'Highlight memory words (Anchor) as recall hooks',
                 'reduce_ayat_per_step' => 'Step size reduced so each section is smaller and easier to recall',
                 default => null,
             };
@@ -1182,10 +1242,22 @@ class NextSessionRecommendationService
         $reason = match ($id) {
             'blur' => 'technique_blur_recall',
             'talqin' => 'technique_talqin_listen',
+            'chaining' => 'technique_chaining_sequence',
+            'anchor' => 'technique_anchor_hooks',
             default => 'technique_focus_one',
         };
 
-        return ['id' => $id, 'reason_code' => $reason];
+        $complementary = $this->adaptation->normaliseTechnique(
+            is_string($payload['settings']['complementary_technique'] ?? null)
+                ? $payload['settings']['complementary_technique']
+                : null
+        );
+
+        return [
+            'id' => $id,
+            'reason_code' => $reason,
+            'complementary_id' => $complementary,
+        ];
     }
 
     /**
@@ -1423,9 +1495,13 @@ class NextSessionRecommendationService
             return $this->payloadFromRecord($current);
         }
 
-        $adapted = $this->adaptation->resolve($context['base_settings'] ?? [], array_merge([
+        $performance = is_array($context['performance'] ?? null) ? $context['performance'] : [];
+        $rangeStats = AyahWorkload::rangeStats((int) $surah['id'], $from, $to);
+        $adapted = $this->adaptation->resolve($context['base_settings'] ?? [], array_merge($performance, [
             'attempt_number' => (int) ($context['attempt_number'] ?? 1) + 1,
             'range_ayah_count' => max(1, $to - $from + 1),
+            'range_workload_score' => (float) ($rangeStats['score'] ?? 0),
+            'mode' => 'revision',
         ], $adaptationContext));
 
         $payload = $this->buildPayload(
@@ -1447,7 +1523,22 @@ class NextSessionRecommendationService
             $context['base_settings'] ?? [],
             $adapted,
         );
-        $payload['settings_outcome'] = 'These settings are intended to help you hear each phrase more clearly, repeat it more consistently and strengthen recall before progressing.';
+        $payload['user_reason'] = $adapted['user_reason'] ?? null;
+        $payload['intended_outcome'] = $adapted['intended_outcome'] ?? null;
+        $payload['evidence_codes'] = $adapted['evidence_codes'] ?? [];
+        if (! empty($adapted['user_reason'])) {
+            $payload['reason'] = $adapted['user_reason'];
+        }
+        $payload['settings_outcome'] = $adapted['intended_outcome']
+            ?? 'These settings are intended to strengthen recall before progressing.';
+        $payload['workload'] = [
+            'score' => $rangeStats['score'],
+            'word_count' => $rangeStats['word_count'],
+            'ayah_count' => $rangeStats['ayah_count'],
+            'target_min' => AyahWorkload::TARGET_MIN,
+            'target_max' => AyahWorkload::TARGET_MAX,
+            'within_band' => $rangeStats['score'] >= AyahWorkload::TARGET_MIN && $rangeStats['score'] <= AyahWorkload::TARGET_MAX,
+        ];
         $payload['panel_title_key'] = 'revisionSetTitle';
         $payload['available_actions'] = $this->availableActions(RecommendationType::RepeatCurrentRange, $payload['ayah_range'] ?? null);
         $payload['technique'] = $this->techniquePayload($payload);
@@ -1518,15 +1609,43 @@ class NextSessionRecommendationService
         $type = RecommendationType::tryFrom((string) ($payload['type'] ?? ''));
 
         if ($type?->isContinue() || $type === RecommendationType::NextSurah || $type === RecommendationType::CompleteSurah) {
+            $source = $recommendation->sourceSession;
+            $context = $source ? $this->buildContext($user, $source) : [];
             $payload['reason_code'] = $reasonCode->value;
-            $payload['reason'] = $this->defaultReasonText(
-                $reasonCode,
-                $payload['ayah_range'] ?? null,
-                $payload['surah'] ?? null,
-                $payload['next_surah'] ?? null,
-            );
+            $payload = $this->attachSettings($payload, array_merge($context, [
+                'base_settings' => $context['base_settings'] ?? ($payload['settings'] ?? []),
+                'attempt_number' => $context['attempt_number'] ?? 1,
+                'performance' => array_merge(
+                    is_array($context['performance'] ?? null) ? $context['performance'] : [],
+                    [
+                        'ai_result' => match ($reasonCode) {
+                            RecommendationReasonCode::AiReciteStrong => 'strong',
+                            RecommendationReasonCode::AiReciteMixed => 'mixed',
+                            RecommendationReasonCode::AiReciteWeak => 'weak',
+                            default => '',
+                        },
+                    ]
+                ),
+            ]));
+            if ($reasonCode === RecommendationReasonCode::AiReciteMixed) {
+                $payload['reason'] = 'Your recall was mostly correct, with a few gaps, so the next set stays smaller and review-focused.';
+                $payload['balance_message'] = 'AI Recite found a few difficulties, so the next set is lighter while still moving forward.';
+            } elseif ($reasonCode === RecommendationReasonCode::AiReciteStrong) {
+                $payload['reason'] = $payload['user_reason']
+                    ?? $this->defaultReasonText($reasonCode, $payload['ayah_range'] ?? null, $payload['surah'] ?? null, $payload['next_surah'] ?? null);
+            } else {
+                $payload['reason'] = $payload['user_reason']
+                    ?? $this->defaultReasonText($reasonCode, $payload['ayah_range'] ?? null, $payload['surah'] ?? null, $payload['next_surah'] ?? null);
+            }
+            $payload['technique'] = $this->techniquePayload($payload);
             $recommendation->forceFill([
                 'reason_code' => $reasonCode->value,
+                'recommended_technique' => $payload['settings']['technique'] ?? null,
+                'recommended_reciter' => $payload['settings']['reciter'] ?? null,
+                'recommended_playback_speed' => $payload['settings']['playback_speed'] ?? null,
+                'recommended_repetitions' => $payload['settings']['repetitions'] ?? null,
+                'recommended_ayat_per_step' => $payload['settings']['ayat_per_step'] ?? null,
+                'recommended_settings' => $payload['settings'] ?? null,
                 'payload' => array_merge(is_array($recommendation->payload) ? $recommendation->payload : [], $payload),
             ])->save();
 
