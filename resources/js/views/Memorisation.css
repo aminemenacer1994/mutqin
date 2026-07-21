@@ -37110,6 +37110,214 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   transform: none;
 }
 
+/* Dark mode: warmer elevation, clearer contrast, no light-mode white washes */
+[data-theme="dark"] .post-session-simple {
+  --ps-mint: #6ec9a4;
+  --ps-mint-soft: color-mix(in srgb, #1d3d32 78%, #0f1411);
+  --ps-mint-border: color-mix(in srgb, #6ec9a4 34%, transparent);
+  --ps-muted: color-mix(in srgb, var(--text) 78%, transparent);
+  --ps-muted-soft: color-mix(in srgb, var(--text) 64%, transparent);
+  --ps-panel: color-mix(in srgb, var(--zone-elevated, #2a2420) 88%, #1a1614);
+  --ps-panel-border: color-mix(in srgb, var(--border) 70%, rgba(244, 220, 190, 0.22));
+}
+
+[data-theme="dark"] .post-session-simple__backdrop {
+  background: color-mix(in srgb, #050403 72%, transparent);
+  backdrop-filter: blur(12px) saturate(1.08);
+  -webkit-backdrop-filter: blur(12px) saturate(1.08);
+}
+
+[data-theme="dark"] .post-session-simple__dialog {
+  border-color: color-mix(in srgb, var(--accent) 28%, rgba(244, 220, 190, 0.18));
+  background:
+    radial-gradient(95% 70% at 6% -8%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 55%),
+    radial-gradient(70% 48% at 100% 0%, color-mix(in srgb, var(--ps-mint) 10%, transparent), transparent 48%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #322b26 92%, var(--accent) 8%),
+      color-mix(in srgb, #241f1c 96%, #1a1613 4%)
+    );
+  box-shadow:
+    0 1px 0 color-mix(in srgb, rgba(255, 236, 210, 0.12) 80%, transparent) inset,
+    0 18px 44px color-mix(in srgb, #000 42%, transparent),
+    0 40px 90px color-mix(in srgb, #000 38%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__header {
+  border-bottom-color: color-mix(in srgb, rgba(244, 220, 190, 0.14) 70%, var(--border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 14%, transparent),
+    color-mix(in srgb, var(--accent) 4%, transparent) 68%,
+    transparent 100%
+  );
+}
+
+[data-theme="dark"] .post-session-simple__check {
+  border-color: var(--ps-mint-border);
+  background: linear-gradient(180deg, #2a4a3d, #1d3530);
+  color: var(--ps-mint);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ps-mint) 12%, transparent) inset,
+    0 8px 18px color-mix(in srgb, #000 28%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__title {
+  color: color-mix(in srgb, #fff8f0 92%, var(--text));
+}
+
+[data-theme="dark"] .post-session-simple__subtitle {
+  color: var(--ps-muted);
+}
+
+[data-theme="dark"] .post-session-simple__confidence,
+[data-theme="dark"] .post-session-simple__panel {
+  border-color: var(--ps-panel-border);
+  background: var(--ps-panel);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, rgba(255, 236, 210, 0.06) 90%, transparent) inset,
+    0 8px 20px color-mix(in srgb, #000 18%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__panel--hero {
+  border-color: color-mix(in srgb, var(--accent) 36%, rgba(244, 220, 190, 0.16));
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--accent) 18%, #2f2823),
+      color-mix(in srgb, #26211d 94%, transparent) 64%
+    );
+  box-shadow:
+    0 1px 0 color-mix(in srgb, rgba(255, 236, 210, 0.08) 85%, transparent) inset,
+    0 12px 28px color-mix(in srgb, #000 22%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__section-label,
+[data-theme="dark"] .post-session-simple__confidence-label {
+  color: var(--ps-muted);
+}
+
+[data-theme="dark"] .post-session-simple__segment {
+  background: color-mix(in srgb, #1a1613 82%, #000);
+  border-color: color-mix(in srgb, rgba(244, 220, 190, 0.16) 70%, var(--border));
+}
+
+[data-theme="dark"] .post-session-simple__segment-btn {
+  color: var(--ps-muted);
+}
+
+[data-theme="dark"] .post-session-simple__segment-btn.is-selected {
+  background: color-mix(in srgb, var(--accent) 22%, #322b26);
+  color: color-mix(in srgb, #fff8f0 94%, var(--text));
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent) inset,
+    0 2px 8px color-mix(in srgb, #000 28%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__action-label {
+  color: color-mix(in srgb, var(--accent) 86%, #f3dfc4);
+}
+
+[data-theme="dark"] .post-session-simple__range,
+[data-theme="dark"] .post-session-simple__panel-title {
+  color: color-mix(in srgb, #fff8f0 94%, var(--text));
+}
+
+[data-theme="dark"] .post-session-simple__reason,
+[data-theme="dark"] .post-session-simple__sample-copy {
+  color: var(--ps-muted);
+}
+
+[data-theme="dark"] .post-session-simple__outcome {
+  color: color-mix(in srgb, var(--accent) 72%, #e8d2b4);
+}
+
+[data-theme="dark"] .post-session-simple__pill {
+  border-color: color-mix(in srgb, rgba(244, 220, 190, 0.18) 75%, var(--border));
+  background: color-mix(in srgb, #1f1a17 78%, #2c2520);
+  color: color-mix(in srgb, var(--text) 88%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__stats-toggle {
+  color: var(--ps-muted);
+}
+
+[data-theme="dark"] .post-session-simple__stats-summary {
+  color: var(--ps-muted-soft);
+}
+
+[data-theme="dark"] .post-session-simple__stats-toggle:hover {
+  color: color-mix(in srgb, var(--text) 92%, transparent);
+  background: color-mix(in srgb, rgba(244, 220, 190, 0.08) 80%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__stat {
+  border-color: var(--ps-panel-border);
+  background: color-mix(in srgb, #1f1a17 84%, #2a2420);
+}
+
+[data-theme="dark"] .post-session-simple__stat-label {
+  color: var(--ps-muted-soft);
+}
+
+[data-theme="dark"] .post-session-simple__stat-value {
+  color: color-mix(in srgb, #fff8f0 92%, var(--text));
+}
+
+[data-theme="dark"] .post-session-simple__footer {
+  border-top-color: color-mix(in srgb, rgba(244, 220, 190, 0.12) 75%, var(--border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #1f1a17 70%, transparent),
+    color-mix(in srgb, #2a2420 94%, transparent)
+  );
+}
+
+[data-theme="dark"] .post-session-simple__btn--secondary {
+  border-color: color-mix(in srgb, rgba(244, 220, 190, 0.22) 70%, var(--border));
+  background: color-mix(in srgb, #2a2420 88%, transparent);
+  color: color-mix(in srgb, #fff8f0 90%, var(--text));
+  box-shadow: none;
+}
+
+[data-theme="dark"] .post-session-simple__btn--secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 14%, #322b26);
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__btn--primary {
+  border-color: color-mix(in srgb, var(--accent) 55%, #8a6844);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 96%, #f0d7b4),
+    color-mix(in srgb, var(--accent) 82%, #9a7048)
+  );
+  color: #1a130f;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 22%, transparent) inset,
+    0 8px 20px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__btn--primary:hover:not(:disabled) {
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 24%, transparent) inset,
+    0 12px 24px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__link {
+  color: color-mix(in srgb, var(--accent) 88%, #f0d7b4);
+}
+
+[data-theme="dark"] .post-session-simple__skeleton span {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, rgba(244, 220, 190, 0.08) 80%, transparent),
+    color-mix(in srgb, rgba(244, 220, 190, 0.16) 80%, transparent),
+    color-mix(in srgb, rgba(244, 220, 190, 0.08) 80%, transparent)
+  );
+}
+
 .post-session-simple__error {
   margin: 0;
   font-size: 0.78rem;
