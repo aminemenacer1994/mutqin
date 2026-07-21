@@ -1652,11 +1652,14 @@
             </div>
 
             <div class="modal-footer mutqin-modal-footer">
-              <div class="mutqin-modal-actions mutqin-modal-actions--3 welcome-back-actions-grid">
+              <div
+                class="mutqin-modal-actions welcome-back-actions-grid"
+                :class="{ 'mutqin-modal-actions--3': canResumePreviousSession }"
+              >
                 <button
+                  v-if="canResumePreviousSession"
                   type="button"
                   class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate"
-                  :disabled="!canResumePreviousSession"
                   @click="welcomeBackContinueSession"
                 >
                   <i class="bi bi-play-circle" aria-hidden="true"></i>
@@ -1764,7 +1767,7 @@
                   <button
                     v-if="canContinueCurrentSession"
                     type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--primary session-exit-action-chip session-exit-action-chip--continue mutqin-btn-animate"
+                    class="mutqin-modal-btn session-exit-action-chip session-exit-action-chip--continue mutqin-btn-animate"
                     @click="continueSessionFromExitModal"
                   >
                     <i class="bi bi-play-circle" aria-hidden="true"></i>
@@ -2426,8 +2429,10 @@
                           <i class="bi bi-compass" aria-hidden="true"></i>
                           {{ getUnifiedResultSectionLabel('next') }}
                         </span>
-                        <strong>{{ getRecitationRecommendationDisplay(aiMemorisationCheckerResult) }}</strong>
-                        <p>{{ getAiMemorisationCheckerNextStep(aiMemorisationCheckerResult) }}</p>
+                      </div>
+                      <div class="shared-result-support-body">
+                        <strong class="shared-result-support-title">{{ getRecitationRecommendationDisplay(aiMemorisationCheckerResult) }}</strong>
+                        <p class="shared-result-support-copy">{{ getAiMemorisationCheckerNextStep(aiMemorisationCheckerResult) }}</p>
                       </div>
                     </section>
                     <section class="shared-result-section shared-result-section--support shared-result-section--recording transition-all duration-300">
@@ -2437,34 +2442,38 @@
                           <i class="bi bi-play-circle" aria-hidden="true"></i>
                           {{ getUnifiedResultSectionLabel('recording') }}
                         </span>
-                        <strong :class="getRecitationValidationTone(aiMemorisationCheckerResult)">{{ getRecitationValidationLabel(aiMemorisationCheckerResult) }}</strong>
-                        <p>{{ getRecitationValidationSummary(aiMemorisationCheckerResult) }}</p>
                       </div>
-                      <div v-if="aiMemorisationCheckerResult.audioSrc" class="self-check-audio-player shared-result-audio-player shared-result-audio-player--compact">
-                        <button class="self-check-audio-player-btn" type="button"
-                          @click="toggleReviewResultAudio(aiMemorisationCheckerResult)"
-                          :disabled="reviewResultAudioState === 'loading_audio' || aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording"
-                          :aria-busy="reviewResultAudioState === 'loading_audio' ? 'true' : 'false'"
-                          :aria-label="reviewResultAudioAriaLabel()">
-                          <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : (reviewResultAudioState === 'ended' ? 'bi-arrow-counterclockwise' : 'bi-play-fill')" aria-hidden="true"></i>
-                        </button>
-                        <div class="self-check-audio-player-track">
-                          <div class="self-check-audio-player-waveform">
-                            <input class="self-check-audio-player-seek" type="range" min="0"
-                              :max="reviewResultAudioDuration || 0" step="0.01" :value="reviewResultAudioCurrentTime"
-                              @input="seekReviewResultAudio" :aria-label="getUnifiedResultSectionLabel('recording')" />
-                          </div>
-                          <div class="self-check-audio-player-times">
-                            <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioCurrentTime) }}</span>
-                            <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioDuration || aiMemorisationCheckerResult.durationSeconds) }}</span>
+                      <div class="shared-result-support-body">
+                        <strong class="shared-result-support-title" :class="getRecitationValidationTone(aiMemorisationCheckerResult)">{{ getRecitationValidationLabel(aiMemorisationCheckerResult) }}</strong>
+                        <p class="shared-result-support-copy">{{ getRecitationValidationSummary(aiMemorisationCheckerResult) }}</p>
+                      </div>
+                      <div class="shared-result-support-media">
+                        <div v-if="aiMemorisationCheckerResult.audioSrc" class="self-check-audio-player shared-result-audio-player shared-result-audio-player--compact">
+                          <button class="self-check-audio-player-btn" type="button"
+                            @click="toggleReviewResultAudio(aiMemorisationCheckerResult)"
+                            :disabled="reviewResultAudioState === 'loading_audio' || aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording"
+                            :aria-busy="reviewResultAudioState === 'loading_audio' ? 'true' : 'false'"
+                            :aria-label="reviewResultAudioAriaLabel()">
+                            <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : (reviewResultAudioState === 'ended' ? 'bi-arrow-counterclockwise' : 'bi-play-fill')" aria-hidden="true"></i>
+                          </button>
+                          <div class="self-check-audio-player-track">
+                            <div class="self-check-audio-player-waveform">
+                              <input class="self-check-audio-player-seek" type="range" min="0"
+                                :max="reviewResultAudioDuration || 0" step="0.01" :value="reviewResultAudioCurrentTime"
+                                @input="seekReviewResultAudio" :aria-label="getUnifiedResultSectionLabel('recording')" />
+                            </div>
+                            <div class="self-check-audio-player-times">
+                              <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioCurrentTime) }}</span>
+                              <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioDuration || aiMemorisationCheckerResult.durationSeconds) }}</span>
+                            </div>
                           </div>
                         </div>
+                        <p v-if="reviewResultAudioError" class="shared-result-recording-empty" role="status" aria-live="polite">
+                          <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                          <span>{{ reviewResultAudioError }}</span>
+                        </p>
+                        <p v-else-if="!aiMemorisationCheckerResult.audioSrc" class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(aiMemorisationCheckerResult) }}</span></p>
                       </div>
-                      <p v-if="reviewResultAudioError" class="shared-result-recording-empty" role="status" aria-live="polite">
-                        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
-                        <span>{{ reviewResultAudioError }}</span>
-                      </p>
-                      <p v-else-if="!aiMemorisationCheckerResult.audioSrc" class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(aiMemorisationCheckerResult) }}</span></p>
                     </section>
                   </div>
                   <div class="recitation-check-footnotes">
@@ -2813,8 +2822,10 @@
                           <i class="bi bi-compass" aria-hidden="true"></i>
                           {{ getUnifiedResultSectionLabel('next') }}
                         </span>
-                        <strong>{{ getRecitationRecommendationDisplay(recitationCheckResult) }}</strong>
-                        <p>{{ getRecitationNextStep(recitationCheckResult) }}</p>
+                      </div>
+                      <div class="shared-result-support-body">
+                        <strong class="shared-result-support-title">{{ getRecitationRecommendationDisplay(recitationCheckResult) }}</strong>
+                        <p class="shared-result-support-copy">{{ getRecitationNextStep(recitationCheckResult) }}</p>
                       </div>
                     </section>
                     <section class="shared-result-section shared-result-section--support shared-result-section--recording transition-all duration-300">
@@ -2824,34 +2835,38 @@
                           <i class="bi bi-play-circle" aria-hidden="true"></i>
                           {{ getUnifiedResultSectionLabel('recording') }}
                         </span>
-                        <strong :class="getRecitationValidationTone(recitationCheckResult)">{{ getRecitationValidationLabel(recitationCheckResult) }}</strong>
-                        <p>{{ getRecitationValidationSummary(recitationCheckResult) }}</p>
                       </div>
-                      <div v-if="recitationCheckResult.audioSrc" class="self-check-audio-player shared-result-audio-player shared-result-audio-player--compact">
-                        <button class="self-check-audio-player-btn" type="button"
-                          @click="toggleReviewResultAudio(recitationCheckResult)"
-                          :disabled="reviewResultAudioState === 'loading_audio' || recitationCheckPreparing || recitationCheckRecording"
-                          :aria-busy="reviewResultAudioState === 'loading_audio' ? 'true' : 'false'"
-                          :aria-label="reviewResultAudioAriaLabel()">
-                          <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : (reviewResultAudioState === 'ended' ? 'bi-arrow-counterclockwise' : 'bi-play-fill')" aria-hidden="true"></i>
-                        </button>
-                        <div class="self-check-audio-player-track">
-                          <div class="self-check-audio-player-waveform">
-                            <input class="self-check-audio-player-seek" type="range" min="0"
-                              :max="reviewResultAudioDuration || 0" step="0.01" :value="reviewResultAudioCurrentTime"
-                              @input="seekReviewResultAudio" :aria-label="getUnifiedResultSectionLabel('recording')" />
-                          </div>
-                          <div class="self-check-audio-player-times">
-                            <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioCurrentTime) }}</span>
-                            <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioDuration || recitationCheckResult.durationSeconds) }}</span>
+                      <div class="shared-result-support-body">
+                        <strong class="shared-result-support-title" :class="getRecitationValidationTone(recitationCheckResult)">{{ getRecitationValidationLabel(recitationCheckResult) }}</strong>
+                        <p class="shared-result-support-copy">{{ getRecitationValidationSummary(recitationCheckResult) }}</p>
+                      </div>
+                      <div class="shared-result-support-media">
+                        <div v-if="recitationCheckResult.audioSrc" class="self-check-audio-player shared-result-audio-player shared-result-audio-player--compact">
+                          <button class="self-check-audio-player-btn" type="button"
+                            @click="toggleReviewResultAudio(recitationCheckResult)"
+                            :disabled="reviewResultAudioState === 'loading_audio' || recitationCheckPreparing || recitationCheckRecording"
+                            :aria-busy="reviewResultAudioState === 'loading_audio' ? 'true' : 'false'"
+                            :aria-label="reviewResultAudioAriaLabel()">
+                            <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : (reviewResultAudioState === 'ended' ? 'bi-arrow-counterclockwise' : 'bi-play-fill')" aria-hidden="true"></i>
+                          </button>
+                          <div class="self-check-audio-player-track">
+                            <div class="self-check-audio-player-waveform">
+                              <input class="self-check-audio-player-seek" type="range" min="0"
+                                :max="reviewResultAudioDuration || 0" step="0.01" :value="reviewResultAudioCurrentTime"
+                                @input="seekReviewResultAudio" :aria-label="getUnifiedResultSectionLabel('recording')" />
+                            </div>
+                            <div class="self-check-audio-player-times">
+                              <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioCurrentTime) }}</span>
+                              <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioDuration || recitationCheckResult.durationSeconds) }}</span>
+                            </div>
                           </div>
                         </div>
+                        <p v-if="reviewResultAudioError" class="shared-result-recording-empty" role="status" aria-live="polite">
+                          <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                          <span>{{ reviewResultAudioError }}</span>
+                        </p>
+                        <p v-else-if="!recitationCheckResult.audioSrc" class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(recitationCheckResult) }}</span></p>
                       </div>
-                      <p v-if="reviewResultAudioError" class="shared-result-recording-empty" role="status" aria-live="polite">
-                        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
-                        <span>{{ reviewResultAudioError }}</span>
-                      </p>
-                      <p v-else-if="!recitationCheckResult.audioSrc" class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(recitationCheckResult) }}</span></p>
                     </section>
                   </div>
                   <div class="recitation-check-footnotes">
@@ -3230,8 +3245,10 @@
                             <i class="bi bi-compass" aria-hidden="true"></i>
                             {{ getUnifiedResultSectionLabel('next') }}
                           </span>
-                          <strong>{{ getRecitationRecommendationDisplay(selectedRecordingsEntry) }}</strong>
-                          <p>{{ getRecitationNextStep(selectedRecordingsEntry, { saved: true }) }}</p>
+                        </div>
+                        <div class="shared-result-support-body">
+                          <strong class="shared-result-support-title">{{ getRecitationRecommendationDisplay(selectedRecordingsEntry) }}</strong>
+                          <p class="shared-result-support-copy">{{ getRecitationNextStep(selectedRecordingsEntry, { saved: true }) }}</p>
                         </div>
                       </section>
                       <section class="shared-result-section shared-result-section--support shared-result-section--recording transition-all duration-300">
@@ -3241,22 +3258,26 @@
                             <i class="bi bi-play-circle" aria-hidden="true"></i>
                             {{ getUnifiedResultSectionLabel('recording') }}
                           </span>
-                          <strong :class="getRecitationValidationTone(selectedRecordingsEntry)">{{ getRecitationValidationLabel(selectedRecordingsEntry) }}</strong>
-                          <p>{{ getRecitationValidationSummary(selectedRecordingsEntry) }}</p>
                         </div>
-                        <div v-if="selectedRecordingsEntry.audioSrc" class="recording-history-player-compact">
-                          <button class="recording-history-player-btn"
-                            type="button" @click="toggleRecordingPlayback(selectedRecordingsEntry)"
-                            :aria-label="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Pause replay' : 'Replay recitation'">
-                            <i class="bi"
-                              :class="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
-                          </button>
-                          <div class="recording-history-player-copy">
-                            <strong>{{ selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Playing' : 'Replay recitation' }}</strong>
-                            <span>{{ formatRecordingDuration(selectedRecordingsEntry.durationSeconds) }}</span>
+                        <div class="shared-result-support-body">
+                          <strong class="shared-result-support-title" :class="getRecitationValidationTone(selectedRecordingsEntry)">{{ getRecitationValidationLabel(selectedRecordingsEntry) }}</strong>
+                          <p class="shared-result-support-copy">{{ getRecitationValidationSummary(selectedRecordingsEntry) }}</p>
+                        </div>
+                        <div class="shared-result-support-media">
+                          <div v-if="selectedRecordingsEntry.audioSrc" class="recording-history-player-compact">
+                            <button class="recording-history-player-btn"
+                              type="button" @click="toggleRecordingPlayback(selectedRecordingsEntry)"
+                              :aria-label="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Pause replay' : 'Replay recitation'">
+                              <i class="bi"
+                                :class="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                            </button>
+                            <div class="recording-history-player-copy">
+                              <strong>{{ selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Playing' : 'Replay recitation' }}</strong>
+                              <span>{{ formatRecordingDuration(selectedRecordingsEntry.durationSeconds) }}</span>
+                            </div>
                           </div>
+                          <p v-else class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(selectedRecordingsEntry) }}</span></p>
                         </div>
-                        <p v-else class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(selectedRecordingsEntry) }}</span></p>
                       </section>
                     </div>
                   </div>

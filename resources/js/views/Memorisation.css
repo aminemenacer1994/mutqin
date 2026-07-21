@@ -32532,14 +32532,19 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .session-exit-actions-secondary {
-  display: grid;
+  display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   width: 100%;
 }
 
 .session-exit-actions-secondary--with-continue {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) max-content;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.session-exit-actions-secondary > * {
+  min-width: 0;
+  width: 100%;
 }
 
 .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip,
@@ -32549,11 +32554,15 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   align-items: center !important;
   justify-content: center !important;
   gap: 0.42rem !important;
-  width: 100%;
+  box-sizing: border-box;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  flex: 1 1 0 !important;
   min-height: 2.45rem !important;
   height: 2.45rem !important;
   max-height: 2.45rem !important;
-  padding: 0 0.78rem !important;
+  padding: 0 0.7rem !important;
   border-radius: 999px !important;
   border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
   background:
@@ -32575,30 +32584,28 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
-.session-exit-actions-secondary .session-exit-action-chip--continue {
-  width: max-content;
-  min-width: max-content;
-  max-width: none;
-  padding-inline: 1rem !important;
-  overflow: visible;
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--accent) 88%, #1f1812),
-      color-mix(in srgb, var(--accent) 78%, #1f1812)
-    );
-  color: #fff;
+.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue,
+.session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  padding-inline: 0.7rem !important;
+  overflow: hidden;
+  border-color: #255a47 !important;
+  background: #2f6f58 !important;
+  color: #ffffff !important;
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, #ffffff 22%, transparent),
-    0 6px 14px color-mix(in srgb, var(--accent) 28%, transparent);
+    0 6px 14px color-mix(in srgb, #2f6f58 28%, transparent) !important;
 }
 
-.session-exit-actions-secondary .session-exit-action-chip--continue i,
-.session-exit-actions-secondary .session-exit-action-chip--continue span {
-  color: #fff;
-  overflow: visible;
-  text-overflow: clip;
+.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue i,
+.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue span,
+.session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue i,
+.session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue span {
+  color: #ffffff !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   max-width: none;
 }
@@ -32618,15 +32625,12 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   transform: translateY(-0.5px);
 }
 
-.session-exit-actions-secondary .session-exit-action-chip--continue:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--accent) 94%, #1f1812),
-      color-mix(in srgb, var(--accent) 84%, #1f1812)
-    );
-  color: #fff;
+.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue:hover:not(:disabled),
+.session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue:hover:not(:disabled) {
+  border-color: #1d4d3c !important;
+  background: #255a47 !important;
+  color: #ffffff !important;
+  transform: translateY(-0.5px);
 }
 
 .session-exit-actions-secondary .mutqin-modal-btn:focus-visible,
@@ -32654,12 +32658,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   line-height: 1.15;
 }
 
-.session-exit-actions-secondary .session-exit-action-chip--continue span {
-  min-width: max-content;
-  max-width: none;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: nowrap;
+.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue span {
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 [data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn,
@@ -32683,16 +32684,28 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   border-color: color-mix(in srgb, var(--accent) 36%, var(--border));
 }
 
-[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip--continue,
-[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip--continue:hover:not(:disabled) {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--accent) 88%, #0f1412),
-      color-mix(in srgb, var(--accent) 76%, #0f1412)
-    );
-  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
-  color: #fff;
+[data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue,
+[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue {
+  background: #3f8f6f !important;
+  border-color: #4aa882 !important;
+  color: #ffffff !important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 14%, transparent),
+    0 8px 18px rgba(0, 0, 0, 0.28) !important;
+}
+
+[data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue:hover:not(:disabled),
+[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue:hover:not(:disabled) {
+  background: #2f6f58 !important;
+  border-color: #7dd3b0 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue i,
+[data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue span,
+[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue i,
+[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue span {
+  color: #ffffff !important;
 }
 
 @media (min-width: 768px) {
@@ -32732,33 +32745,20 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   }
 
   .session-exit-actions-secondary--with-continue {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .session-exit-actions-secondary .session-exit-action-chip--continue {
-    grid-column: 1 / -1;
-    width: 100%;
-    min-width: 0;
-    justify-content: center !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip,
   .session-exit-actions-secondary .session-exit-action-chip {
     justify-content: center !important;
-    padding-inline: 0.7rem !important;
-    font-size: 0.76rem;
+    padding-inline: 0.55rem !important;
+    font-size: 0.72rem;
     gap: 0.34rem;
   }
 
   .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip i,
   .session-exit-actions-secondary .session-exit-action-chip i {
     font-size: 0.86rem;
-  }
-
-  .session-exit-actions-secondary .session-exit-action-chip--continue span {
-    overflow: visible;
-    text-overflow: clip;
-    white-space: nowrap;
   }
 }
 
@@ -33487,11 +33487,216 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .shared-result-support-grid {
   display: grid;
-  gap: 0.58rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: stretch;
 }
 
 .shared-result-section--support {
+  display: grid;
+  grid-template-rows: auto auto auto;
   align-content: start;
+  gap: 0.55rem;
+  min-height: 0;
+  height: auto;
+  padding: 0.85rem 0.95rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--surface) 97%, #fff 3%) 0%,
+      color-mix(in srgb, var(--surface) 92%, #f3e8d8 8%) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 55%, transparent),
+    0 8px 18px color-mix(in srgb, #1f1812 4%, transparent);
+}
+
+.shared-result-section--next {
+  border-color: color-mix(in srgb, #c4a57a 28%, var(--border));
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, #fbf6ee 88%, var(--surface) 12%) 0%,
+      color-mix(in srgb, var(--surface) 94%, #f0e2cf 6%) 100%
+    );
+}
+
+.shared-result-section--recording {
+  border-color: color-mix(in srgb, #2f6f58 22%, var(--border));
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, #f3faf6 82%, var(--surface) 18%) 0%,
+      color-mix(in srgb, var(--surface) 94%, #e7f3ec 6%) 100%
+    );
+}
+
+.shared-result-section--support .shared-result-section-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.35rem;
+}
+
+.shared-result-section--support .recitation-check-section-label {
+  gap: 0.38rem;
+  color: color-mix(in srgb, var(--text) 58%, #7a5b3e 42%);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+
+.shared-result-section--recording .recitation-check-section-label {
+  color: color-mix(in srgb, var(--text) 52%, #2f6f58 48%);
+}
+
+.shared-result-section--support .shared-result-step-badge {
+  width: 1.25rem;
+  height: 1.25rem;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface) 84%);
+  color: color-mix(in srgb, var(--accent-strong) 80%, #2f6f58 20%);
+  font-size: 0.68rem;
+}
+
+.shared-result-section--recording .shared-result-step-badge {
+  background: color-mix(in srgb, #2f6f58 16%, var(--surface) 84%);
+  color: #2f6f58;
+}
+
+.shared-result-support-body {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.shared-result-support-title {
+  margin: 0;
+  color: color-mix(in srgb, var(--text) 92%, #3d2f22 8%);
+  font-size: 1.02rem;
+  font-weight: 720;
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+}
+
+.shared-result-support-copy {
+  margin: 0;
+  color: color-mix(in srgb, var(--text) 68%, transparent);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  max-width: 36ch;
+}
+
+.shared-result-support-media {
+  display: grid;
+  gap: 0.4rem;
+  align-content: start;
+  margin-top: 0.15rem;
+  padding-top: 0;
+}
+
+.shared-result-section--recording .shared-result-audio-player--compact,
+.shared-result-section--recording .recording-history-player-compact {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, #2f6f58 16%, var(--border));
+  background: color-mix(in srgb, var(--surface) 94%, #ffffff 6%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 50%, transparent);
+}
+
+.shared-result-section--recording .shared-result-audio-player--compact {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.shared-result-section--recording .shared-result-audio-player--compact .self-check-audio-player-btn {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  background: color-mix(in srgb, #2f6f58 14%, var(--surface) 86%);
+  color: #2f6f58;
+}
+
+.shared-result-section--recording .shared-result-audio-player--compact .self-check-audio-player-track {
+  gap: 0.28rem;
+}
+
+.shared-result-section--recording .shared-result-audio-player--compact .self-check-audio-player-waveform {
+  padding: 0.2rem 0;
+  background: transparent;
+}
+
+.shared-result-section--recording .shared-result-audio-player--compact .self-check-audio-player-times {
+  font-size: 0.68rem;
+  color: color-mix(in srgb, var(--text) 62%, transparent);
+}
+
+.shared-result-section--recording .shared-result-recording-empty {
+  width: 100%;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  border: 1px dashed color-mix(in srgb, var(--border) 78%, transparent);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: color-mix(in srgb, var(--text) 66%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+[data-theme="dark"] .shared-result-section--support {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--surface) 92%, #1a211e 8%) 0%,
+      color-mix(in srgb, var(--surface) 86%, #0f1412 14%) 100%
+    );
+  border-color: color-mix(in srgb, var(--border) 62%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 5%, transparent),
+    0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+[data-theme="dark"] .shared-result-section--next {
+  border-color: color-mix(in srgb, #c4a57a 22%, var(--border));
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--surface) 88%, #3a2f22 12%) 0%,
+      color-mix(in srgb, var(--surface) 90%, #1a211e 10%) 100%
+    );
+}
+
+[data-theme="dark"] .shared-result-section--recording {
+  border-color: color-mix(in srgb, #4aa882 24%, var(--border));
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--surface) 86%, #1d3a2e 14%) 0%,
+      color-mix(in srgb, var(--surface) 90%, #0f1412 10%) 100%
+    );
+}
+
+[data-theme="dark"] .shared-result-support-title {
+  color: color-mix(in srgb, var(--text) 94%, #fff 6%);
+}
+
+[data-theme="dark"] .shared-result-support-copy {
+  color: color-mix(in srgb, var(--text) 72%, transparent);
+}
+
+[data-theme="dark"] .shared-result-section--recording .shared-result-audio-player--compact,
+[data-theme="dark"] .shared-result-section--recording .recording-history-player-compact {
+  background: color-mix(in srgb, var(--surface) 82%, #0f1412 18%);
+  border-color: color-mix(in srgb, #4aa882 22%, var(--border));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 4%, transparent);
+}
+
+[data-theme="dark"] .shared-result-section--recording .shared-result-audio-player--compact .self-check-audio-player-btn {
+  background: color-mix(in srgb, #4aa882 18%, var(--surface) 82%);
+  color: #8fdbb8;
 }
 
 .shared-result-section-head {
@@ -33527,14 +33732,6 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .shared-result-section--summary .recitation-result-stat {
   padding: 0.62rem 0.7rem;
-}
-
-.shared-result-section--recording {
-  gap: 0.28rem;
-}
-
-.shared-result-section--next {
-  gap: 0.28rem;
 }
 
 .recitation-check-section-label {
@@ -33869,22 +34066,28 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 @media (min-width: 900px) {
   .shared-result-support-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: stretch;
+    gap: 0.85rem;
+    align-items: start;
   }
 
   .shared-result-section--next,
   .shared-result-section--recording {
-    min-height: 100%;
+    min-height: 0;
+    height: 100%;
   }
 
   .shared-result-section--recording {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .shared-result-section--recording .shared-result-support-media {
+    margin-top: auto;
   }
 
   .shared-result-section--recording .shared-result-audio-player--compact,
   .shared-result-section--recording .recording-history-player-compact,
   .shared-result-section--recording .shared-result-recording-empty {
-    width: min(100%, 18rem);
+    width: 100%;
   }
 }
 
@@ -35665,7 +35868,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     padding: 0 0.95rem !important;
     border-radius: 999px !important;
     white-space: nowrap !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
 
   .session-exit-actions-secondary .mutqin-modal-btn span,
@@ -35675,13 +35878,26 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     white-space: nowrap !important;
   }
 
-  .session-exit-actions-secondary .session-exit-action-chip--continue,
-  .session-exit-actions-secondary .session-exit-action-chip--continue span {
-    width: 100%;
-    min-width: 0;
-    overflow: visible !important;
-    text-overflow: clip !important;
-    white-space: nowrap !important;
+  .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue {
+    background: #2f6f58 !important;
+    border-color: #255a47 !important;
+    color: #ffffff !important;
+  }
+
+  .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue span,
+  .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue i {
+    color: #ffffff !important;
+  }
+
+  [data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue {
+    background: #3f8f6f !important;
+    border-color: #4aa882 !important;
+    color: #ffffff !important;
+  }
+
+  [data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue span,
+  [data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue i {
+    color: #ffffff !important;
   }
 
   .mutqin-session-summary-row {

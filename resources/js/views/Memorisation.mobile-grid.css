@@ -1229,22 +1229,12 @@
   .session-exit-actions-secondary--with-continue {
     grid-column: 1 / -1;
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 0.45rem !important;
   }
 
-  .session-exit-actions-secondary .session-exit-action-chip--continue {
-    grid-column: 1 / -1 !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    justify-content: center !important;
-    overflow: visible !important;
-  }
-
-  .session-exit-actions-secondary .session-exit-action-chip--continue span {
-    overflow: visible !important;
-    text-overflow: clip !important;
-    white-space: nowrap !important;
+  .session-exit-actions-secondary:not(.session-exit-actions-secondary--with-continue) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
   .session-exit-actions-secondary > * {
@@ -1615,10 +1605,7 @@
     gap: var(--mq-grid-gap) !important;
   }
 
-  .shared-result-support-grid > :first-child {
-    grid-column: 1 / -1;
-  }
-
+  .shared-result-support-grid > :first-child,
   .shared-result-support-grid > :last-child {
     grid-column: 1 / -1;
   }
@@ -1629,9 +1616,26 @@
     padding: 10px !important;
   }
 
+  .shared-result-section--support {
+    gap: 0.5rem !important;
+    padding: 12px !important;
+  }
+
+  .shared-result-support-title {
+    font-size: 0.98rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .shared-result-support-copy {
+    font-size: 0.82rem !important;
+    max-width: none !important;
+  }
+
   .shared-result-section-head,
   .shared-result-section-head strong,
   .shared-result-section-head p,
+  .shared-result-support-title,
+  .shared-result-support-copy,
   .recitation-result-stat :where(span, strong, small) {
     min-inline-size: 0;
     white-space: normal !important;
