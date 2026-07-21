@@ -439,7 +439,7 @@ async function inspectState(page, state) {
       recordingsLoading: ['.recordings-library-header', '.recordings-library-body'],
       recordingsEmpty: ['.recordings-library-header', '.recordings-library-body'],
       onboarding: ['.onboarding-hero', '.onboarding-body', '.onboarding-preview-grid', '.onboarding-nav-actions'],
-      paused: ['.session-exit-body', '.session-exit-actions-layout', ['.session-exit-actions-secondary', 3], '.mutqin-session-summary-row'],
+      paused: ['.session-exit-body', '.session-exit-actions-layout', ['.session-exit-actions-secondary', 2], '.mutqin-session-summary-row'],
       complete: ['.post-session-simple__header', '.post-session-simple__body', '.post-session-simple__row', '.post-session-simple__actions']
     }
 
@@ -485,11 +485,22 @@ async function inspectState(page, state) {
       if (state === 'onboarding') expectParallel('.onboarding-step-icon', '.onboarding-hero-copy', 'onboarding hero')
       if (state === 'paused' && viewportWidth >= 350) {
         expectParallel('.session-exit-actions-secondary > :nth-child(1)', '.session-exit-actions-secondary > :nth-child(2)', 'paused secondary actions')
-        expectParallel('.session-exit-actions-secondary > :nth-child(2)', '.session-exit-actions-secondary > :nth-child(3)', 'paused secondary actions')
+        const continueBtn = visibleElements('.session-exit-action-chip--continue')[0]
+        if (continueBtn) {
+          const label = String(continueBtn.textContent || '').replace(/\s+/g, ' ').trim()
+          if (/\.\.\.|…/.test(label) || /continue this sess/i.test(label) && !/continue this session/i.test(label)) {
+            issues.push('paused: Continue this session label should stay on one line without ellipsis')
+          }
+        }
+        const saveBtn = Array.from(document.querySelectorAll('.session-exit-actions-layout button')).find(btn => /save this session/i.test(btn.textContent || ''))
+        if (saveBtn) issues.push('paused: Save this session button should be removed from exit actions')
+        const endBtn = Array.from(document.querySelectorAll('.session-exit-actions-layout button')).find(btn => /end session/i.test(btn.textContent || ''))
+        if (endBtn) issues.push('paused: End session button should be removed from exit actions')
       }
       if (state === 'complete' && viewportWidth >= 430) {
         expectParallel('.post-session-simple__ai', '.post-session-simple__confidence', 'completion decision row')
       }
+    }
 
     for (const selector of selectors) {
       const visible = visibleElements(selector)

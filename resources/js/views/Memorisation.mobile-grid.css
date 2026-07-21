@@ -1225,23 +1225,38 @@
     gap: var(--mq-grid-gap) !important;
   }
 
-  .session-exit-actions-primary {
-    grid-column: 1 / -1;
-  }
-
   .session-exit-actions-secondary,
-  .session-exit-actions-secondary--with-primary {
+  .session-exit-actions-secondary--with-continue {
     grid-column: 1 / -1;
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: var(--mq-grid-gap) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.45rem !important;
+  }
+
+  .session-exit-actions-secondary .session-exit-action-chip--continue {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    overflow: visible !important;
+  }
+
+  .session-exit-actions-secondary .session-exit-action-chip--continue span {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
   }
 
   .session-exit-actions-secondary > * {
     min-inline-size: 0;
-    min-block-size: 44px !important;
-    padding: 6px !important;
-    white-space: normal;
+    min-block-size: 2.45rem !important;
+    height: 2.45rem !important;
+    max-height: 2.45rem !important;
+    padding: 0 0.55rem !important;
+    white-space: nowrap !important;
+    border-radius: 999px !important;
+    flex-direction: row !important;
+    justify-content: center !important;
   }
 
   /* AI Recite: full-height shell, compact stage, and sequential report flow. */
@@ -1691,7 +1706,7 @@
   .recording-history-meta {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 5px !important;
+    gap: 0.45rem !important;
     min-inline-size: 0;
   }
 
@@ -1832,24 +1847,28 @@
   }
 
   .recordings-library-detail {
-    padding: 10px !important;
+    padding: 0.85rem !important;
   }
 
   .recordings-library-detail .recordings-library-history {
     margin: 0 !important;
     padding: 0 !important;
+    display: grid !important;
+    gap: 0.85rem !important;
   }
 
   .recordings-library-detail .recording-history-card {
-    padding: 0 !important;
-    border: 0 !important;
+    padding: 0.9rem !important;
+    border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+    border-radius: 14px !important;
     box-shadow: none !important;
-    background: transparent !important;
+    background: color-mix(in srgb, var(--surface) 96%, #f7efe4 4%) !important;
   }
 
   .recordings-library-detail .recording-history-ai-detail {
-    margin: 0 !important;
-    padding: 0 !important;
+    margin-top: 0.35rem !important;
+    padding: 0.75rem !important;
+    gap: 0.75rem !important;
   }
 
   /* Secondary overlays and analytics inherit the same grid discipline. */
@@ -2171,12 +2190,20 @@
   }
 
   .session-exit-actions-secondary,
-  .session-exit-actions-secondary--with-primary {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  .session-exit-actions-secondary--with-continue {
+    grid-template-columns: 1fr !important;
+    gap: 0.42rem !important;
   }
 
-  .session-exit-actions-secondary > :last-child:nth-child(odd) {
-    grid-column: 1 / -1;
+  .session-exit-actions-secondary > :last-child {
+    grid-column: auto;
+  }
+
+  .session-exit-actions-secondary > * {
+    justify-content: flex-start !important;
+    min-block-size: 2.55rem !important;
+    height: 2.55rem !important;
+    padding-inline: 0.9rem !important;
   }
 
   .self-check-section-head > :first-child {

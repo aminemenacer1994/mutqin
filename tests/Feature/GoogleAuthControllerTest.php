@@ -122,7 +122,7 @@ class GoogleAuthControllerTest extends TestCase
         $provider = Mockery::mock();
         $provider->shouldReceive('redirectUrl')
             ->once()
-            ->with(route('auth.google.callback'))
+            ->with($this->expectedGoogleRedirectUrl())
             ->andReturnSelf();
         $provider->shouldReceive('stateless')
             ->once()
@@ -144,7 +144,7 @@ class GoogleAuthControllerTest extends TestCase
         $provider = Mockery::mock();
         $provider->shouldReceive('redirectUrl')
             ->once()
-            ->with(route('auth.google.callback'))
+            ->with($this->expectedGoogleRedirectUrl())
             ->andReturnSelf();
         $provider->shouldReceive('stateless')
             ->once()
@@ -157,5 +157,16 @@ class GoogleAuthControllerTest extends TestCase
             ->once()
             ->with('google')
             ->andReturn($provider);
+    }
+
+    private function expectedGoogleRedirectUrl(): string
+    {
+        $configured = trim((string) config('services.google.redirect', ''));
+
+        if ($configured !== '' && ! str_contains($configured, '${')) {
+            return $configured;
+        }
+
+        return route('auth.google.callback');
     }
 }

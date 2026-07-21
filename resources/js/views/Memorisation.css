@@ -13067,7 +13067,7 @@ body.memorisation-page nav.navbar.app-navbar {
   display: block;
   width: 100%;
   max-width: 100%;
-  padding: 8px 10px;
+  padding: 0.7rem 0.85rem;
   border-radius: 10px;
   border: 1px solid transparent;
   background: rgba(154, 103, 56, 0.05);
@@ -13099,8 +13099,9 @@ body.memorisation-page nav.navbar.app-navbar {
   width: 100%;
   max-width: 100%;
   color: var(--text);
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   font-weight: 600;
+  line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -13132,9 +13133,9 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .recording-history-ai-detail {
   display: grid;
-  gap: 10px;
-  margin-top: 4px;
-  padding: 12px;
+  gap: 0.85rem;
+  margin-top: 0.55rem;
+  padding: 0.95rem 1rem;
   border: 1px solid rgba(154, 103, 56, 0.12);
   border-radius: 12px;
   background: rgba(154, 103, 56, 0.045);
@@ -13318,29 +13319,37 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .recording-history-copy {
   display: grid;
-  gap: 3px;
+  gap: 0.42rem;
   flex: 1;
   min-width: 0;
 }
 
 .recording-history-kicker {
   color: var(--text);
-  font-size: 0.92rem;
+  font-size: 0.84rem;
   font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
 }
 
 .recording-history-note {
-  margin-top: 0;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 .recording-history-copy strong {
   color: var(--text);
-  font-size: 0.96rem;
+  font-size: 0.98rem;
+  line-height: 1.35;
 }
 
 .recording-history-copy span, .recording-history-meta span {
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
 }
 
 .recording-history-meta {
@@ -30765,29 +30774,29 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .recordings-library-surah-title {
-  padding: 0.1rem 0.2rem;
-  font-size: 0.8rem;
+  padding: 0.28rem 0.3rem;
+  font-size: 0.84rem;
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.4;
   color: var(--text);
   overflow-wrap: anywhere;
 }
 
 .recordings-library-recordings {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.48rem;
   margin: 0 !important;
-  padding: 0 0 0 0.45rem !important;
+  padding: 0 0 0 0.55rem !important;
   border-left: 2px solid color-mix(in srgb, var(--accent) 18%, var(--border) 82%);
 }
 
 .recordings-library-recording-item {
   display: grid;
-  gap: 0.16rem;
+  gap: 0.28rem;
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  padding: 0.55rem 0.65rem !important;
+  padding: 0.72rem 0.8rem !important;
   border-radius: 10px;
   border: 1px solid transparent;
   background: color-mix(in srgb, var(--accent) 5%, var(--surface) 95%);
@@ -30833,9 +30842,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   display: block;
   min-width: 0;
   color: var(--text-muted);
-  font-size: 0.68rem;
+  font-size: 0.76rem;
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
 
@@ -32511,51 +32520,179 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   line-height: 1.25;
 }
 
-/* End Session modal — primary vs secondary action hierarchy */
+/* Session exit modal — compact single-line action chips (Save + Continue as peers) */
 .session-exit-actions-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
+  display: grid;
+  gap: 0.55rem;
   width: 100%;
 }
 
-.session-exit-actions-primary {
-  width: 100%;
-  letter-spacing: 0.01em;
-}
-
-.session-exit-actions-primary i {
-  font-size: 1.05rem;
+.session-exit-actions-layout.has-continue {
+  gap: 0.55rem;
 }
 
 .session-exit-actions-secondary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.45rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
 }
 
-.session-exit-actions-secondary--with-primary {
-  padding-top: 0.7rem;
-  border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+.session-exit-actions-secondary--with-continue {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) max-content;
 }
 
-.session-exit-actions-secondary .mutqin-modal-btn {
-  min-height: 2.1rem;
-  padding: 0.35rem 0.55rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 500;
-  background: transparent;
-  box-shadow: none;
-}
-
-.session-exit-actions-secondary .mutqin-modal-btn i {
-  font-size: 0.82rem;
-}
-
-.session-exit-actions-secondary .mutqin-modal-btn span {
+.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip,
+.session-exit-actions-secondary .session-exit-action-chip {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.42rem !important;
+  width: 100%;
+  min-height: 2.45rem !important;
+  height: 2.45rem !important;
+  max-height: 2.45rem !important;
+  padding: 0 0.78rem !important;
+  border-radius: 999px !important;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface) 98%, white 2%),
+      color-mix(in srgb, var(--surface) 94%, #f4ebe0 6%)
+    );
+  color: var(--text);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 55%, transparent),
+    0 4px 12px color-mix(in srgb, #1f1812 4%, transparent);
+  font-size: 0.78rem;
+  font-weight: 620;
+  line-height: 1.15;
   text-align: center;
-  line-height: 1.2;
+  white-space: nowrap !important;
+  overflow: hidden;
+  transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.session-exit-actions-secondary .session-exit-action-chip--continue {
+  width: max-content;
+  min-width: max-content;
+  max-width: none;
+  padding-inline: 1rem !important;
+  overflow: visible;
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 88%, #1f1812),
+      color-mix(in srgb, var(--accent) 78%, #1f1812)
+    );
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 22%, transparent),
+    0 6px 14px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.session-exit-actions-secondary .session-exit-action-chip--continue i,
+.session-exit-actions-secondary .session-exit-action-chip--continue span {
+  color: #fff;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+  max-width: none;
+}
+
+.session-exit-actions-secondary .mutqin-modal-btn:hover:not(:disabled),
+.session-exit-actions-secondary .session-exit-action-chip:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 7%, var(--surface)),
+      color-mix(in srgb, var(--accent) 11%, var(--surface))
+    );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 40%, transparent),
+    0 6px 14px color-mix(in srgb, #1f1812 6%, transparent);
+  transform: translateY(-0.5px);
+}
+
+.session-exit-actions-secondary .session-exit-action-chip--continue:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 94%, #1f1812),
+      color-mix(in srgb, var(--accent) 84%, #1f1812)
+    );
+  color: #fff;
+}
+
+.session-exit-actions-secondary .mutqin-modal-btn:focus-visible,
+.session-exit-actions-secondary .session-exit-action-chip:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.session-exit-actions-secondary .mutqin-modal-btn i,
+.session-exit-actions-secondary .session-exit-action-chip i {
+  flex: 0 0 auto;
+  font-size: 0.92rem;
+  line-height: 1;
+  color: color-mix(in srgb, var(--accent) 82%, var(--text));
+}
+
+.session-exit-actions-secondary .mutqin-modal-btn span,
+.session-exit-actions-secondary .session-exit-action-chip span {
+  min-width: 0;
+  max-width: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: start;
+  line-height: 1.15;
+}
+
+.session-exit-actions-secondary .session-exit-action-chip--continue span {
+  min-width: max-content;
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn,
+[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface) 92%, #1a211e 8%),
+      color-mix(in srgb, var(--surface) 86%, #0f1412 14%)
+    );
+  border-color: color-mix(in srgb, var(--border) 66%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 6%, transparent),
+    0 6px 14px rgba(0, 0, 0, 0.2);
+  color: var(--text);
+}
+
+[data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn:hover:not(:disabled),
+[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 36%, var(--border));
+}
+
+[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip--continue,
+[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip--continue:hover:not(:disabled) {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 88%, #0f1412),
+      color-mix(in srgb, var(--accent) 76%, #0f1412)
+    );
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+  color: #fff;
 }
 
 @media (min-width: 768px) {
@@ -32569,9 +32706,59 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     grid-template-columns: 1fr;
   }
 
-  .welcome-back-actions-grid.mutqin-modal-actions--3,
+  .welcome-back-actions-grid.mutqin-modal-actions--3 {
+    grid-template-columns: 1fr;
+  }
+
   .session-exit-actions-secondary {
     grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip,
+  .session-exit-actions-secondary .session-exit-action-chip {
+    justify-content: flex-start !important;
+    min-height: 2.55rem !important;
+    height: 2.55rem !important;
+    max-height: 2.55rem !important;
+    padding-inline: 0.95rem !important;
+  }
+}
+
+@media (min-width: 420px) and (max-width: 767px) {
+  .session-exit-actions-secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.42rem;
+  }
+
+  .session-exit-actions-secondary--with-continue {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .session-exit-actions-secondary .session-exit-action-chip--continue {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+    justify-content: center !important;
+  }
+
+  .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip,
+  .session-exit-actions-secondary .session-exit-action-chip {
+    justify-content: center !important;
+    padding-inline: 0.7rem !important;
+    font-size: 0.76rem;
+    gap: 0.34rem;
+  }
+
+  .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip i,
+  .session-exit-actions-secondary .session-exit-action-chip i {
+    font-size: 0.86rem;
+  }
+
+  .session-exit-actions-secondary .session-exit-action-chip--continue span {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
   }
 }
 
@@ -32594,7 +32781,6 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .mushaf-pill.mushaf-ai-recite,
 .mushaf-pill-toolbar .mushaf-ai-pill.mushaf-ai-recite,
 .mushaf-ai-button:first-child,
-.session-exit-actions-primary,
 .quiz-launch-btn.tools-btn-primary,
 .saved-session-row-btn-primary,
 .welcome-back-btn--primary,
@@ -33382,20 +33568,20 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .recordings-library-detail-head-copy {
   display: grid;
-  gap: 0.38rem;
+  gap: 0.5rem;
   max-width: 28rem;
 }
 
 .recordings-library-detail-head-copy .recordings-library-detail-kicker {
-  margin-bottom: -0.08rem;
+  margin-bottom: 0;
 }
 
 .recordings-library-detail-head .recordings-library-detail-meta {
-  gap: 0.42rem;
+  gap: 0.5rem;
 }
 
 .recording-history-card--standard {
-  gap: 0.72rem;
+  gap: 0.9rem;
 }
 
 .recording-history-top--standard {
@@ -33403,14 +33589,15 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .recording-history-card--standard .recording-history-copy {
-  gap: 0.24rem;
+  gap: 0.42rem;
 }
 
 .recording-history-inline-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.42rem;
+  gap: 0.55rem;
+  margin-top: 0.08rem;
 }
 
 .recording-history-inline-meta > span:first-child {
@@ -33440,20 +33627,20 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .recording-history-standard-simple {
   display: grid;
-  gap: 0.58rem;
+  gap: 0.75rem;
 }
 
 .recording-history-standard-hint {
   margin: 0;
   color: color-mix(in srgb, var(--text) 72%, transparent);
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: 0.84rem;
+  line-height: 1.5;
 }
 
 .recording-history-standard-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.48rem;
+  gap: 0.55rem;
 }
 
 .recording-history-standard-meta span {
@@ -33646,12 +33833,12 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.42rem;
+  gap: 0.7rem;
 }
 
 .recording-history-player-btn {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   border: 0;
   border-radius: 999px;
   background: color-mix(in srgb, var(--accent) 10%, var(--surface) 90%);
@@ -33663,19 +33850,20 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .recording-history-player-copy {
   display: grid;
-  gap: 0.04rem;
+  gap: 0.18rem;
   min-width: 0;
 }
 
 .recording-history-player-copy strong {
-  font-size: 0.76rem;
-  line-height: 1.2;
+  font-size: 0.86rem;
+  line-height: 1.3;
+  font-weight: 650;
 }
 
 .recording-history-player-copy span {
   color: color-mix(in srgb, var(--text) 68%, transparent);
-  font-size: 0.68rem;
-  line-height: 1.25;
+  font-size: 0.76rem;
+  line-height: 1.35;
 }
 
 @media (min-width: 900px) {
@@ -35399,7 +35587,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     gap: 0.45rem !important;
   }
 
-  .mutqin-modal-btn,
+  .mutqin-modal-btn:not(.session-exit-action-chip),
   .session-exit-btn {
     min-block-size: 44px;
     white-space: normal;
@@ -35449,18 +35637,51 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     padding: 0.7rem 1rem calc(0.7rem + var(--mobile-safe-bottom)) !important;
   }
 
-  .session-exit-actions-layout,
-  .session-exit-actions-secondary,
-  .session-exit-actions-secondary--with-primary {
+  .session-exit-actions-layout {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) !important;
-    gap: 0.5rem !important;
+    gap: 0.75rem !important;
     inline-size: 100%;
   }
 
-  .session-exit-actions-secondary .mutqin-modal-btn {
-    min-height: 44px !important;
-    padding-block: 0.55rem !important;
+  .session-exit-actions-secondary,
+  .session-exit-actions-secondary--with-continue {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.45rem !important;
+    inline-size: 100%;
+  }
+
+  .session-exit-actions-secondary .mutqin-modal-btn,
+  .session-exit-actions-secondary .session-exit-action-chip {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.42rem !important;
+    min-height: 2.55rem !important;
+    height: 2.55rem !important;
+    max-height: 2.55rem !important;
+    padding: 0 0.95rem !important;
+    border-radius: 999px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+
+  .session-exit-actions-secondary .mutqin-modal-btn span,
+  .session-exit-actions-secondary .session-exit-action-chip span {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .session-exit-actions-secondary .session-exit-action-chip--continue,
+  .session-exit-actions-secondary .session-exit-action-chip--continue span {
+    width: 100%;
+    min-width: 0;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
   }
 
   .mutqin-session-summary-row {

@@ -89,6 +89,29 @@ class GoogleAuthController extends Controller
 
     private function googleRedirectUrl(): string
     {
+        $configured = trim((string) config('services.google.redirect', ''));
+
+        if ($configured !== '' && ! str_contains($configured, '${')) {
+            if (app()->isLocal() && ($requestHost = request()?->getHost())) {
+                $configuredHost = parse_url($configured, PHP_URL_HOST);
+                // localhost vs 127.0.0.1 must match the browser host exactly for Google.
+                if (is_string($configuredHost) && strcasecmp($configuredHost, $requestHost) !== 0) {
+                    return $this->callbackUrlForRequest();
+                }
+            }
+
+            return $configured;
+        }
+
+        if (request()?->getHttpHost()) {
+            return $this->callbackUrlForRequest();
+        }
+
         return route('auth.google.callback');
+    }
+
+    private function callbackUrlForRequest(): string
+    {
+        return rtrim((string) request()->getSchemeAndHttpHost(), '/').'/auth/google/callback';
     }
 }

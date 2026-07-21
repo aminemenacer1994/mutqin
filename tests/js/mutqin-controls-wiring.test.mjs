@@ -186,9 +186,48 @@ includesAll('ai recitation full-session recording', [
   /isSessionRecitationCheckActive\(\)/,
   /shouldAutoStopRecitationCheckFromAlignment\(alignment = null\)/,
   /shouldAutoStopRecitationCheckFromSilence\(\)/,
+  /hasRecitationCheckHeardThroughEnd\(kind = 'recitation'\)/,
+  /commitPendingRecognitionInterim\(kind = 'recitation'\)/,
+  /getBestRecognitionWordsForAssessment\(kind = 'recitation'\)/,
   /if \(this\.recitationCheckScope === 'session' && this\.recitationCheckPendingTargets\?\.length\) return this\.recitationCheckPendingTargets/,
+  /if \(!this\.hasRecitationCheckHeardThroughEnd\('recitation'\) && !this\.recitationAlignmentState\?\.complete\) \{\s*return false\s*\}/s,
   /if \(!this\.isSessionRecitationCheckActive\(\)\) return true\s*return !!this\.recitationAlignmentState\?\.complete/s
 ])
+
+includesAll('session exit action grid', [
+  /class="session-exit-actions-layout"/,
+  /session-exit-actions-secondary/,
+  /session-exit-actions-secondary--with-continue/,
+  /session-exit-action-chip/,
+  /session-exit-action-chip--continue/,
+  /exitSessionToNewSession/,
+  /exitSessionToRepeatRange/,
+  /continueSessionFromExitModal/,
+])
+
+assert.doesNotMatch(
+  source,
+  /session-exit-actions-secondary--with-continue[\s\S]{0,1200}?exitSessionToSaveSession/,
+  'exit modal should not include Save this session'
+)
+
+assert.doesNotMatch(
+  source,
+  /@click="exitSessionToSaveSession"/,
+  'exit modal markup should not wire Save this session'
+)
+
+assert.doesNotMatch(
+  source,
+  /session-exit-actions-primary/,
+  'exit modal should not render the bulky Continue primary button'
+)
+
+assert.doesNotMatch(
+  source,
+  /session-exit-actions-secondary[\s\S]*confirmSessionExit\(\{ showSummary: true \}\)/,
+  'exit modal secondary grid should not include End session'
+)
 
 includesAll('ai memorisation mirrors recitation modal', [
   /:aria-label="t\('memorisation\.a11y\.aiMemorisationTools'\)"/,
@@ -247,10 +286,10 @@ includesAll('audio unlock flow', [
   /claimAudioElement\(audio\) \{/,
   /startSessionAndClose\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
   /repeatPostSession\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
-  /toggleRecordingPlayback\(recording\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*await audio\.play\(\)/,
-  /toggleReviewResultAudio\(result = null\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*await playAudioElement\(audio\)/,
+  /toggleRecordingPlayback\(recording\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: source \}\)[\s\S]*await audio\.play\(\)/,
+  /toggleReviewResultAudio\(result = null\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: source \}\)[\s\S]*await playAudioElement\(audio\)/,
   /toggleSelfCheckAyahPlayback\(verse\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: audioUrl \}\)[\s\S]*this\.claimAudioElement\(audio\)[\s\S]*await this\.waitForAudioElementReady\(audio\)[\s\S]*await audio\.play\(\)/,
-  /toggleSelfCheckPreview\(verseKey\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio\)[\s\S]*await audio\.play\(\)/,
+  /toggleSelfCheckPreview\(verseKey\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: source \}\)[\s\S]*await audio\.play\(\)/,
   /playVerse\([^)]*primePlayback:\s*true/,
   /@click="playVerse\(quizCard, \{ primePlayback: true \}\)"/
 ])

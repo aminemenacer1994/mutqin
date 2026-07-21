@@ -1746,41 +1746,29 @@
             </div>
 
             <div class="modal-footer mutqin-modal-footer">
-              <div class="session-exit-actions-layout">
-                <button
-                  v-if="canContinueCurrentSession"
-                  type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--primary session-exit-actions-primary mutqin-btn-animate"
-                  @click="continueSessionFromExitModal"
-                >
-                  <i class="bi bi-play-circle" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.sessionExit.continueSession') }}</span>
-                </button>
+              <div class="session-exit-actions-layout" :class="{ 'has-continue': canContinueCurrentSession }">
                 <div
                   class="session-exit-actions-secondary"
-                  :class="{ 'session-exit-actions-secondary--with-primary': canContinueCurrentSession }"
+                  :class="{ 'session-exit-actions-secondary--with-continue': canContinueCurrentSession }"
+                  role="group"
+                  :aria-label="t('memorisation.sessionExit.kicker')"
                 >
-                  <button
-                    type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate"
-                    :disabled="headerSessionActionBusy"
-                    :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
-                    @click="confirmSessionExit({ showSummary: true })"
-                  >
-                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                    <span>{{ t('sessionStatus.end') }}</span>
-                  </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate" @click="exitSessionToNewSession">
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary session-exit-action-chip mutqin-btn-animate" @click="exitSessionToNewSession">
                     <i class="bi bi-plus-circle" aria-hidden="true"></i>
                     <span>{{ t('memorisation.sessionExit.startNewSession') }}</span>
                   </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate" @click="exitSessionToRepeatRange">
+                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary session-exit-action-chip mutqin-btn-animate" @click="exitSessionToRepeatRange">
                     <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
                     <span>{{ t('memorisation.sessionExit.repeatSession') }}</span>
                   </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate" @click="exitSessionToSaveSession">
-                    <i class="bi bi-bookmark-check" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.sessionExit.saveSession') }}</span>
+                  <button
+                    v-if="canContinueCurrentSession"
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--primary session-exit-action-chip session-exit-action-chip--continue mutqin-btn-animate"
+                    @click="continueSessionFromExitModal"
+                  >
+                    <i class="bi bi-play-circle" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.sessionExit.continueSession') }}</span>
                   </button>
                 </div>
               </div>
@@ -3151,7 +3139,7 @@
                     :class="{ 'recording-history-top--standard': !isAiCheckRecording(selectedRecordingsEntry) }">
                     <div class="recording-history-copy">
                       <div class="recording-history-kicker">{{
-                        isAiCheckRecording(selectedRecordingsEntry) ? `${getRecordingTypeLabel(selectedRecordingsEntry)} result` : 'Saved recording' }}</div>
+                        isAiCheckRecording(selectedRecordingsEntry) ? getRecordingTypeLabel(selectedRecordingsEntry) : 'Saved recording' }}</div>
                       <strong v-if="!isAiCheckRecording(selectedRecordingsEntry)">{{ getRecordingAttemptLabel(selectedRecordingsEntry) }}</strong>
                       <div v-if="!isAiCheckRecording(selectedRecordingsEntry)" class="recording-history-inline-meta">
                         <span>{{ formatRecordingTimestamp(selectedRecordingsEntry.recordedAt) }}</span>
@@ -3160,11 +3148,7 @@
                           {{ getSelfCheckResultLabel(selectedRecordingsEntry.result) }}
                         </span>
                       </div>
-                      <span v-else>{{ formatRecordingTimestamp(selectedRecordingsEntry.recordedAt) }}</span>
-                      <p v-if="isAiCheckRecording(selectedRecordingsEntry)" class="recording-history-note">{{ isAiCheckRecording(selectedRecordingsEntry) ?
-                        `${getRecordingTypeLabel(selectedRecordingsEntry)} result` :
-                        `${t('memorisation.self_rating')} · ${getSelfCheckResultLabel(selectedRecordingsEntry.result)}`
-                        }}</p>
+                      <p v-else class="recording-history-note">{{ formatRecordingTimestamp(selectedRecordingsEntry.recordedAt) }}</p>
                     </div>
                   </div>
 

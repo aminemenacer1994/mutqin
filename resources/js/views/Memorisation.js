@@ -10570,32 +10570,42 @@ export default {
       }
 
       if (this.activeRecordingPlaybackId === recording.id && !audio.paused) {
-        audio.pause()
+        try { audio.pause() } catch { }
         this.activeRecordingPlaybackId = ''
         this.activeSelfCheckPreviewKey = ''
         return
       }
 
       this.pendingRecordingDeleteId = ''
+      this.activeSelfCheckPreviewKey = ''
+      this.activeSelfCheckAyahPlaybackKey = ''
       if (this.audioElement && !this.audioElement.paused) {
-        this.audioElement.pause()
+        try { this.audioElement.pause() } catch { }
         this.isPlaying = false
       }
 
-      if (audio.currentSrc !== recording.audioSrc) {
-        audio.src = recording.audioSrc
-        audio.load()
-      }
-
+      const source = String(recording.audioSrc || '')
+      this.ignoreRecordingsAudioPauseEvent = true
       try {
-        this.primeAudioPlaybackUnlock(audio)
+        // Pass targetUrl so unlock does not pause this same element after a muted play race.
+        this.primeAudioPlaybackUnlock(audio, { targetUrl: source })
+        const currentSrc = this.normalizeAudioUrl(audio.currentSrc || audio.getAttribute('src') || '')
+        const targetSrc = this.normalizeAudioUrl(source)
+        if (currentSrc !== targetSrc) {
+          audio.src = source
+          audio.load()
+        } else {
+          try { audio.currentTime = 0 } catch { }
+        }
+        await this.waitForAudioElementReady(audio)
         await audio.play()
         this.activeRecordingPlaybackId = recording.id
-        this.activeSelfCheckPreviewKey = ''
       } catch (error) {
         console.error('Failed to play recording:', error)
         this.activeRecordingPlaybackId = ''
         this.showBanner(this.t('toasts.unableToPlayThisRecordingRight'), 'error', 2200)
+      } finally {
+        this.ignoreRecordingsAudioPauseEvent = false
       }
     },
     promptDeleteRecording(recordingId) {
@@ -11014,7 +11024,8 @@ export default {
         try { audio.currentTime = 0 } catch { }
         this.reviewResultAudioCurrentTime = 0
       }
-      this.primeAudioPlaybackUnlock(audio)
+      // Pass targetUrl so unlock does not pause this same element after a muted play race.
+      this.primeAudioPlaybackUnlock(audio, { targetUrl: source })
       this.reviewResultAudioState = REVIEW_AUDIO_STATES.LOADING_AUDIO
       try {
         await playAudioElement(audio)
@@ -12248,7 +12259,10 @@ export default {
         this.completeAiMemorisationCheckerFromCachedResult(cached.analysisResult, targetVerses, resolvedAudioSrc)
         return
       }
-      const committedWords = this.getCommittedRecognitionWords('memorisation')
+      const committedWords = (() => {
+        this.commitPendingRecognitionInterim('memorisation')
+        return this.getBestRecognitionWordsForAssessment('memorisation')
+      })()
       const transcript = wordsToTranscript(committedWords)
       if (!committedWords.length) {
         throw new Error(this.t('memorisation.aiCheck.noArabicWords'))
@@ -12748,13 +12762,21 @@ export default {
       const committed = Array.isArray(committedStatuses) ? committedStatuses : []
       const display = Array.isArray(displayStatuses) ? displayStatuses : []
       const maxLength = Math.max(committed.length, display.length)
+      const rank = status => {
+        if (status === 'correct') return 3
+        if (status === 'partial') return 2
+        if (status === 'incorrect') return 1
+        return 0
+      }
       return Array.from({ length: maxLength }, (_, index) => {
         const confirmed = committed[index] || null
+        const live = display[index] || null
+        // Prefer a stronger live/interim hear so the final word does not lag behind speech.
+        if (live && rank(live.status) > rank(confirmed?.status)) return live
         if (confirmed && confirmed.status && confirmed.status !== 'pending') return confirmed
-        const live = display[index] || confirmed || null
-        if (!live) return { status: 'pending', note: 'Waiting for this word.' }
-        if (['correct', 'partial', 'incorrect'].includes(live.status)) return live
-        return { ...live, status: 'pending', note: confirmed?.note || 'Waiting for confirmation.' }
+        if (!live && !confirmed) return { status: 'pending', note: 'Waiting for this word.' }
+        if (live && ['correct', 'partial', 'incorrect'].includes(live.status)) return live
+        return { ...(live || confirmed), status: 'pending', note: confirmed?.note || 'Waiting for confirmation.' }
       })
     },
     getLiveWordTargetsForPatch(targetKey = '') {
@@ -13232,28 +13254,86 @@ export default {
     },
     handleAiRecitationSilenceAutoStop() {
       const recitationReadyToStop = this.shouldAutoStopRecitationCheckFromSilence()
-      const memorisationReadyToStop = this.aiMemorisationCheckerRecording && this.getCommittedRecognitionWords('memorisation').length > 0
+      const memorisationReadyToStop = this.shouldAutoStopMemorisationCheckFromSilence()
       if (recitationReadyToStop) {
+        this.commitPendingRecognitionInterim('recitation')
         this.stopRecitationCheckRecording()
         return
       }
       if (memorisationReadyToStop) {
+        this.commitPendingRecognitionInterim('memorisation')
         this.stopAiMemorisationCheckerRecording()
       }
     },
     isSessionRecitationCheckActive() {
       return this.recitationCheckScope === 'session' && (this.recitationCheckPendingTargets || []).length > 1
     },
+    getRecitationCheckTargetWordCount(kind = 'recitation') {
+      const targetVerses = kind === 'memorisation'
+        ? this.aiMemorisationCheckerTargets
+        : (this.recitationCheckPendingTargets?.length ? this.recitationCheckPendingTargets : this.getRecitationCheckTargetVerses())
+      return this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(targetVerses)).length
+    },
+    getBestRecognitionWordsForAssessment(kind = 'recitation') {
+      const state = this.getRecognitionPipelineState(kind)
+      const committedWords = Array.isArray(state?.committedWords) ? state.committedWords : []
+      const displayWords = getRecognitionDisplayWords(state)
+      if (Array.isArray(displayWords) && displayWords.length > committedWords.length) return displayWords
+      return committedWords
+    },
+    commitPendingRecognitionInterim(kind = 'recitation') {
+      const state = this.getRecognitionPipelineState(kind)
+      const interimSegment = state?.interimSegment || null
+      const interimWords = Array.isArray(interimSegment?.words) && interimSegment.words.length
+        ? interimSegment.words
+        : (Array.isArray(state?.interimWords) ? state.interimWords : [])
+      if (!interimWords.length) return false
+      const provider = interimSegment?.provider
+        || interimWords.find(word => word?.provider)?.provider
+        || (this.getTranscriptionProvider(kind) ? 'speechmatics' : 'web-speech')
+      this.applyRecognizedEntries(kind, interimWords, true, {
+        provider,
+        speechFinal: true,
+        start: interimSegment?.start,
+        duration: interimSegment?.duration,
+        segmentId: interimSegment?.segmentId || `interim-commit:${kind}:${Date.now()}`
+      })
+      return true
+    },
+    hasRecitationCheckHeardThroughEnd(kind = 'recitation') {
+      const targetWordCount = this.getRecitationCheckTargetWordCount(kind)
+      if (targetWordCount <= 0) return false
+      const bestWords = this.getBestRecognitionWordsForAssessment(kind)
+      if (bestWords.length >= targetWordCount) return true
+      const liveWords = kind === 'memorisation' ? this.aiMemorisationCheckerLiveWords : this.recitationLiveWords
+      if (!Array.isArray(liveWords) || liveWords.length < targetWordCount) return false
+      const lastWord = liveWords[targetWordCount - 1]
+      return ['correct', 'partial', 'incorrect'].includes(String(lastWord?.status || ''))
+    },
     shouldAutoStopRecitationCheckFromAlignment(alignment = null) {
       if (!this.recitationCheckRecording || !alignment?.progression?.complete) return false
       if (!this.isSessionRecitationCheckActive()) return true
-      const targetWordCount = this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(this.recitationCheckPendingTargets)).length
+      const targetWordCount = this.getRecitationCheckTargetWordCount('recitation')
       return targetWordCount > 0 && this.getCommittedRecognitionWords('recitation').length >= targetWordCount
     },
     shouldAutoStopRecitationCheckFromSilence() {
-      if (!this.recitationCheckRecording || !this.getCommittedRecognitionWords('recitation').length) return false
+      if (!this.recitationCheckRecording) return false
+      if (!this.getCommittedRecognitionWords('recitation').length && !this.hasRecitationCheckHeardThroughEnd('recitation')) {
+        return false
+      }
+      // Never cut off before the final word has been heard — that caused last-word lag/misses.
+      if (!this.hasRecitationCheckHeardThroughEnd('recitation') && !this.recitationAlignmentState?.complete) {
+        return false
+      }
       if (!this.isSessionRecitationCheckActive()) return true
       return !!this.recitationAlignmentState?.complete
+    },
+    shouldAutoStopMemorisationCheckFromSilence() {
+      if (!this.aiMemorisationCheckerRecording) return false
+      if (!this.getCommittedRecognitionWords('memorisation').length && !this.hasRecitationCheckHeardThroughEnd('memorisation')) {
+        return false
+      }
+      return this.hasRecitationCheckHeardThroughEnd('memorisation') || !!this.aiMemorisationCheckerAlignmentState?.complete
     },
     openRecitationSessionDb() {
       if (typeof indexedDB === 'undefined') return Promise.resolve(null)
@@ -14301,7 +14381,10 @@ export default {
         this.scrollToRecitationResults()
         return
       }
-      const committedWords = this.getCommittedRecognitionWords('recitation')
+      const committedWords = (() => {
+        this.commitPendingRecognitionInterim('recitation')
+        return this.getBestRecognitionWordsForAssessment('recitation')
+      })()
       const transcript = wordsToTranscript(committedWords)
       if (!committedWords.length) {
         throw new Error(this.t('memorisation.aiCheck.noArabicWords'))
@@ -15582,28 +15665,38 @@ export default {
       }
 
       if (this.activeSelfCheckPreviewKey === verseKey && !audio.paused) {
-        audio.pause()
+        try { audio.pause() } catch { }
         this.activeSelfCheckPreviewKey = ''
         return
       }
 
       this.stopRecordingsPlayback({ clearSource: true })
       if (this.audioElement && !this.audioElement.paused) {
-        this.audioElement.pause()
+        try { this.audioElement.pause() } catch { }
         this.isPlaying = false
       }
 
-      audio.src = draft.audioSrc
-      audio.load()
-
+      const source = String(draft.audioSrc || '')
+      this.ignoreRecordingsAudioPauseEvent = true
       try {
-        this.primeAudioPlaybackUnlock(audio)
+        this.primeAudioPlaybackUnlock(audio, { targetUrl: source })
+        const currentSrc = this.normalizeAudioUrl(audio.currentSrc || audio.getAttribute('src') || '')
+        const targetSrc = this.normalizeAudioUrl(source)
+        if (currentSrc !== targetSrc) {
+          audio.src = source
+          audio.load()
+        } else {
+          try { audio.currentTime = 0 } catch { }
+        }
+        await this.waitForAudioElementReady(audio)
         await audio.play()
         this.activeSelfCheckPreviewKey = verseKey
       } catch (error) {
         console.error('Failed to preview self-check recording:', error)
         this.activeSelfCheckPreviewKey = ''
         this.showBanner(this.t('toasts.unableToPlayThisRecordingRight'), 'error', 2200)
+      } finally {
+        this.ignoreRecordingsAudioPauseEvent = false
       }
     },
     saveSelfCheckRecording(verse) {
