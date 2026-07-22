@@ -747,7 +747,7 @@
       "continueNextBodyWarm": "Refresh what is due today, then move forward while the memory is still warm.",
       "continueNextBodySteady": "Stay calm, keep the pace light, and move on when the current ayah feels steady.",
       "reviewThisAyah": "Review this ayah, then continue.",
-      "reciteFromMemory": "Recite from memory, then reveal to confirm."
+      "reciteFromMemory": "Review Session, then reveal to confirm."
     },
     "aiCheck": {
       "sessionRecite": "Session AI Recite",
@@ -777,7 +777,7 @@
       "speechRecognitionFailed": "Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted.",
       "stepLabel": "Step {step} of {total}",
       "stepPrepare": "Prepare to recite",
-      "stepListen": "Recite from memory",
+      "stepListen": "Review Session",
       "stepReview": "Review your results",
       "stepReviewAction": "Check the word colours, then save your attempt or try again.",
       "stepRecitePrepare": "Tap the AI recite button above when you are ready.",
@@ -921,7 +921,7 @@
       "theme": "Theme",
       "border": "Border",
       "aiRecite": "AI Recite",
-      "aiMemory": "AI Memory"
+      "aiMemory": "AI Recite"
     },
     "badges": {
       "new": "New",
@@ -1024,10 +1024,10 @@
         "practice": {
           "title": "Practice with built-in tools",
           "stepLabel": "Practice tools",
-          "body": "Focus, blur, chaining, and Talqin structure each ayah. AI Recite and AI Memory check pronunciation and recall; your attempts land in the recordings library.",
+          "body": "Focus, blur, chaining, and Talqin structure each ayah. AI Recite checks pronunciation and recall; your attempts land in the recordings library.",
           "points": [
             "Focus and blur guide attention; Talqin gives you a recite turn matching ayah length",
-            "AI Recite / AI Memory save feedback you can revisit later"
+            "AI Recite saves feedback you can revisit later"
           ],
           "previewTitle": "Technique controls",
           "previewSubtitle": "Reflects your current practice settings.",
@@ -1229,7 +1229,10 @@
         "startError": "Could not start. Please try again.",
         "settingsError": "Could not save settings. Please try again.",
         "confidenceError": "Could not save your response. Please try again.",
-        "aiReciteError": "AI Recite is unavailable right now. Your session is still saved.",
+        "aiReciteError": "AI Recite unavailable. Your session is saved — choose confidence or continue.",
+        "aiReciteOffline": "Connection lost during AI Recite. Progress is saved; retry later or continue below.",
+        "aiReciteOptionalHint": "Optional — may Allah make the words firm for you.",
+        "aiReciteSkippedHint": "Continuing without AI Recite. Choose confidence, or start the plan.",
         "openingAiRecite": "Opening AI Recite…",
         "preparingRecommendation": "Preparing recommendation…",
         "startingNextSession": "Starting next set…",
@@ -1256,6 +1259,19 @@
         "confidenceConfident": "Confident",
         "confidenceNeedsPractice": "Needs more practice",
         "whyThisPlan": "Why this plan?",
+        "whatChangingDoes": "How this helps",
+        "paramHints": {
+          "repetitionsHigh": "{count}× repetitions — more passes help challenging ayahs settle.",
+          "repetitionsModerate": "{count} repetitions — another steady pass without overload.",
+          "repetitionsLight": "{count}× — light practice while the range is still fresh.",
+          "focus": "Focus Mode — one ayah at a time, fewer distractions.",
+          "blur": "Blur — hide the text so you recall instead of read.",
+          "talqin": "Talqin — listen, then recite before moving on.",
+          "anchor": "Anchor — keep key words visible as the rest fades.",
+          "chaining": "Chaining — join ayahs you have just memorised.",
+          "speedSlower": "{speed}× speed — more time to hear each phrase clearly.",
+          "speedFaster": "{speed}× speed — brisk practice once the range feels familiar."
+        },
         "supportingCompletedRange": "You completed {surah}, {range}.",
         "supportingProgressSaved": "Your progress has been saved.",
         "repeatThisRange": "Repeat this range",
@@ -1263,7 +1279,7 @@
         "continueNextSurahShort": "Continue to the next surah",
         "repeatRangeTitle": "{surah} · {range}",
         "aiReciteShort": "AI Recite",
-        "aiReciteHintShort": "Test this range from memory.",
+        "aiReciteHintShort": "Review Session",
         "aiReviewStrong": "You recalled most of the range well.",
         "aiReviewWeakAyah": "You recalled most of the range well, with a few difficulties in ayah {ayah}.",
         "aiReviewWeakAyahs": "You recalled most of the range well, with difficulties in {count} ayahs.",
@@ -1367,7 +1383,7 @@
     "compact_breakdown_for_this_metric_group": "Compact breakdown for this metric group.",
     "ai_memorisation_review": "AI memorisation review",
     "ayah_display": "Ayah display",
-    "recite_from_memory": "Recite from memory",
+    "recite_from_memory": "Review Session",
     "blur_everything": "Blur Everything",
     "peek": "Peek",
     "memorisation_review": "Memorisation review",
@@ -1394,7 +1410,7 @@
     "recall_mode_preparing_title": "Getting ready",
     "recall_mode_preparing_message": "Preparing the microphone. Words will hide as soon as listening starts.",
     "recall_mode_listening_title": "Listening…",
-    "recall_mode_listening_message": "Recite from memory. Each correct word reveals the next one.",
+    "recall_mode_listening_message": "Review Session. Each correct word reveals the next one.",
     "recall_mode_progress_message": "{revealed} of {total} words revealed. Keep going.",
     "recall_mode_mistake_title": "Try that word again",
     "recall_mode_mistake_message": "The current word stays hidden until you recite it correctly.",

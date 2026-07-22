@@ -2225,26 +2225,39 @@
 }
 
 .self-check-modal-overlay--above-post-session {
-  z-index: 14000 !important;
+  z-index: 20000 !important;
 }
 
+/* Completion is unmounted while AI Recite is active; keep these as a belt-and-braces fallback. */
 .app.post-session-ai-recite-open .onboarding-post-session-flow,
 .app.post-session-ai-recite-open .onboarding-post-session-backdrop,
 .app.post-session-ai-recite-open .onboarding-post-session-modal-wrap,
 .app.post-session-ai-recite-open .onboarding-post-session-confetti-layer,
 .app.post-session-ai-recite-open .post-session-simple,
-.app.post-session-ai-recite-open .post-session-simple__backdrop,
-.app.post-session-ai-recite-open .post-session-simple__overlay,
 .post-session-simple--under-ai,
 .post-session-simple--under-ai .post-session-simple__backdrop,
 .post-session-simple--under-ai .post-session-simple__overlay {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  z-index: -1 !important;
+}
+
+.app.post-session-ai-recite-open .self-check-modal-overlay,
+body > .self-check-modal-overlay--above-post-session,
+.self-check-modal-overlay--above-post-session {
+  z-index: 20000 !important;
+}
+
+.app.onboarding-post-session-offcanvas-open .post-session-simple,
+.post-session-simple--builder-open,
+.post-session-simple--builder-open .post-session-simple__backdrop,
+.post-session-simple--builder-open .post-session-simple__overlay {
+  display: none !important;
   visibility: hidden;
   pointer-events: none;
   opacity: 0;
-}
-
-.app.post-session-ai-recite-open .self-check-modal-overlay {
-  z-index: 14000 !important;
 }
 
 .self-check-post-session-hint {
@@ -36760,9 +36773,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .post-session-simple__dialog {
   pointer-events: auto;
-  width: min(720px, calc(100vw - 2.5rem));
-  max-width: min(720px, calc(100vw - 2.5rem));
-  max-height: calc(100dvh - 2.5rem);
+  width: min(820px, calc(100vw - 2rem));
+  max-width: min(820px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
   margin: auto;
   display: flex;
   flex-direction: column;
@@ -36842,46 +36855,62 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .post-session-simple__body {
   display: grid;
-  gap: 1rem;
-  padding: 1.15rem 1.4rem 1rem;
+  gap: 1.15rem;
+  padding: 1.25rem 1.5rem 1.1rem;
   overflow: auto;
   min-height: 0;
   flex: 1 1 auto;
 }
 
+.post-session-simple__stack,
 .post-session-simple__row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  grid-template-columns: 1fr;
+  gap: 0.7rem;
   align-items: stretch;
   min-width: 0;
+  width: 100%;
 }
 
-.post-session-simple__row > *:only-child {
+.post-session-simple__row > *:only-child,
+.post-session-simple__stack > * {
   grid-column: 1 / -1;
+  width: 100%;
+  max-width: none;
 }
 
 .post-session-simple__ai,
 .post-session-simple__confidence {
   min-width: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--ps-space-2);
-  padding: 0.85rem 0.95rem;
+  gap: 0.4rem;
+  padding: 0.7rem 0.95rem;
   border-radius: var(--ps-radius-md);
   border: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   box-shadow: 0 1px 0 color-mix(in srgb, #fff 40%, transparent) inset;
+}
+
+.post-session-simple__ai-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.85rem;
+  width: 100%;
 }
 
 .post-session-simple__section-label,
 .post-session-simple__ai-label,
 .post-session-simple__confidence-label {
   margin: 0;
-  font-size: 0.8rem;
-  font-weight: 550;
-  line-height: 1.35;
-  color: color-mix(in srgb, var(--text) 68%, transparent);
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+  max-width: none;
 }
 
 .post-session-simple__ai-btn {
@@ -36891,13 +36920,13 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   justify-content: center;
   gap: 0.42rem;
   align-self: flex-start;
-  min-height: 2.25rem;
-  padding: 0 0.95rem;
+  min-height: 2.35rem;
+  padding: 0 1.05rem;
   border-radius: 999px;
   border: 1px solid var(--ps-mint-border);
   background: linear-gradient(180deg, #f4faf7, var(--ps-mint-soft));
   color: #245f4d;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 650;
   letter-spacing: 0.01em;
   box-shadow: 0 4px 12px color-mix(in srgb, var(--ps-mint) 10%, transparent);
@@ -36926,45 +36955,74 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   cursor: not-allowed;
 }
 
-.post-session-simple__ai-feedback {
+.post-session-simple__ai-feedback,
+.post-session-simple__ai-hint {
   margin: 0;
-  font-size: 0.76rem;
-  line-height: 1.4;
-  color: color-mix(in srgb, var(--text) 66%, transparent);
+  width: 100%;
+  max-width: none;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--text) 64%, transparent);
+}
+
+.post-session-simple__ai-hint--quiet {
+  color: color-mix(in srgb, var(--text) 48%, transparent);
 }
 
 .post-session-simple__segment {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.2rem;
-  margin-top: auto;
-  padding: 0.2rem;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--border) 28%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  gap: 0.45rem;
+  width: 100%;
+  margin-top: 0.15rem;
+  padding: 0.3rem;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--border) 22%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
 }
 
 .post-session-simple__segment-btn {
   appearance: none;
-  min-height: 2.05rem;
-  padding: 0.35rem 0.5rem;
-  border-radius: 9px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: color-mix(in srgb, var(--text) 78%, transparent);
-  font-size: 0.78rem;
-  line-height: 1.2;
+  min-height: 2.45rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 11px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  color: color-mix(in srgb, var(--text) 72%, transparent);
+  font-size: 0.84rem;
+  line-height: 1.25;
   font-weight: 550;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.post-session-simple__segment.is-awaiting .post-session-simple__segment-btn {
+  opacity: 1;
+  font-weight: 550;
+  box-shadow: none;
+}
+
+.post-session-simple__segment.has-selection .post-session-simple__segment-btn:not(.is-selected) {
+  opacity: 0.62;
+  background: transparent;
+  border-color: transparent;
+  color: color-mix(in srgb, var(--text) 58%, transparent);
+  font-weight: 500;
+  box-shadow: none;
 }
 
 .post-session-simple__segment-btn.is-selected {
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
-  color: var(--text);
-  font-weight: 650;
-  border-color: color-mix(in srgb, var(--border) 50%, transparent);
-  box-shadow: 0 1px 2px color-mix(in srgb, #0f1110 8%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 92%, #fff),
+    color-mix(in srgb, var(--accent) 78%, #5a3d28)
+  );
+  color: #fff;
+  font-weight: 700;
+  border-color: color-mix(in srgb, var(--accent) 70%, #3d2a1c);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 28%, transparent) inset,
+    0 6px 14px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .post-session-simple__segment-btn:disabled {
@@ -36974,17 +37032,18 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .post-session-simple__panel {
   min-width: 0;
+  width: 100%;
   display: grid;
-  gap: var(--ps-space-2);
-  padding: 0.95rem 1.05rem;
+  gap: 0.85rem;
+  padding: 1.15rem 1.25rem;
   border-radius: var(--ps-radius-md);
   border: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
 }
 
 .post-session-simple__panel--hero {
-  gap: 0.65rem;
-  padding: 1.2rem 1.25rem;
+  gap: 0.85rem;
+  padding: 1.3rem 1.35rem;
   border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
   background:
     linear-gradient(
@@ -36995,6 +37054,42 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   box-shadow:
     0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
     0 10px 24px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.post-session-simple__reason,
+.post-session-simple__sample-copy {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--text) 74%, transparent);
+}
+
+.post-session-simple__param-hints {
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.post-session-simple__param-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.post-session-simple__param-list li {
+  margin: 0;
+  padding: 0.4rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 48%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
 }
 
 .post-session-simple__panel-title {
@@ -37032,9 +37127,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .post-session-simple__why {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.4rem;
   margin: 0;
-  max-width: 48ch;
+  width: 100%;
+  max-width: none;
 }
 
 .post-session-simple__why-label {
@@ -37049,16 +37145,18 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .post-session-simple__reason,
 .post-session-simple__sample-copy {
   margin: 0;
-  max-width: 48ch;
-  font-size: 0.84rem;
-  line-height: 1.45;
+  width: 100%;
+  max-width: none;
+  font-size: 0.9rem;
+  line-height: 1.55;
   color: color-mix(in srgb, var(--text) 70%, transparent);
   overflow-wrap: anywhere;
 }
 
 .post-session-simple__outcome {
   margin: 0;
-  max-width: 48ch;
+  width: 100%;
+  max-width: none;
   font-size: 0.78rem;
   line-height: 1.4;
   font-weight: 500;
@@ -37412,12 +37510,29 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 [data-theme="dark"] .post-session-simple__segment-btn.is-selected {
-  background: color-mix(in srgb, var(--accent) 22%, #322b26);
-  color: color-mix(in srgb, #fff8f0 94%, var(--text));
-  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 78%, #5a3d28),
+    color-mix(in srgb, var(--accent) 62%, #2a1c14)
+  );
+  color: #fff8f0;
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent) inset,
-    0 2px 8px color-mix(in srgb, #000 28%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent) inset,
+    0 6px 16px color-mix(in srgb, #000 32%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__segment.has-selection .post-session-simple__segment-btn:not(.is-selected) {
+  opacity: 0.55;
+  background: transparent;
+  border-color: transparent;
+}
+
+[data-theme="dark"] .post-session-simple__ai-hint,
+[data-theme="dark"] .post-session-simple__param-list li {
+  color: var(--ps-muted);
+  border-color: color-mix(in srgb, rgba(244, 220, 190, 0.14) 70%, var(--border));
+  background: color-mix(in srgb, #1a1613 70%, transparent);
 }
 
 [data-theme="dark"] .post-session-simple__action-label {
@@ -37587,6 +37702,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 [dir="rtl"] .post-session-simple__overlay,
 [dir="rtl"] .post-session-simple__row,
+[dir="rtl"] .post-session-simple__stack,
 [dir="rtl"] .post-session-simple__actions,
 [dir="rtl"] .post-session-simple__stats-grid,
 [dir="rtl"] .post-session-simple__pills,
@@ -37595,7 +37711,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 @media (max-width: 720px) {
-  .post-session-simple__row {
+  .post-session-simple__row,
+  .post-session-simple__stack {
     grid-template-columns: 1fr;
   }
 

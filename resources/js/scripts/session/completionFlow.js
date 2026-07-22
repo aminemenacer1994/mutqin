@@ -107,7 +107,8 @@ export function primarySurfaceForPhase(phase) {
 
 /**
  * Resolve the confidence option that should appear selected.
- * Defaults to confident unless saved feedback, weak AI, or a repeat recommendation says otherwise.
+ * Only explicit user choice or saved backend feedback selects a button — heuristics
+ * must not pre-select, or both options look equal-weight with a weak selected style.
  *
  * @param {{
  *   confidence_feedback?: string|null,
@@ -117,7 +118,7 @@ export function primarySurfaceForPhase(phase) {
  *   range_kind?: string|null,
  * }} recommendation
  * @param {string|null} localSelection
- * @returns {'confident'|'needs_practice'}
+ * @returns {'confident'|'needs_practice'|null}
  */
 export function resolveConfidenceSelection(recommendation, localSelection = null) {
   if (localSelection === 'confident' || localSelection === 'needs_practice') {
@@ -129,26 +130,9 @@ export function resolveConfidenceSelection(recommendation, localSelection = null
     return saved
   }
 
-  const aiResult = String(recommendation?.ai_assessment?.result || '').toLowerCase()
-  if (aiResult === 'weak') {
-    return 'needs_practice'
-  }
-
-  const type = String(recommendation?.type || '')
-  const rangeKind = String(recommendation?.range_kind || '')
-  const sessionMode = String(recommendation?.session_mode || '')
-  if (
-    type === 'repeat_current_range'
-    || type === 'revision'
-    || type === 'resume'
-    || rangeKind === 'repeated'
-    || rangeKind === 'revision'
-    || sessionMode === 'revision'
-  ) {
-    return 'needs_practice'
-  }
-
-  return 'confident'
+  // Soft signals (AI / repeat) inform the plan, not the selected radio chrome.
+  void recommendation
+  return null
 }
 
 /**

@@ -34,6 +34,7 @@ import {
   recommendationModeLabelKey,
   recommendationPrimaryActionKey,
 } from '../scripts/recommendations/nextSessionRecommendation'
+import { buildAdaptationExplanations } from '../scripts/recommendations/adaptationExplanations'
 import {
   getTechniqueDescription,
   getTechniqueLabel,
@@ -2812,8 +2813,24 @@ export default {
       }
       return pills.slice(0, 4)
     },
+    postSessionAiAssistHint() {
+      if (this.postSessionRecommendation?.ai_assessment?.summary || this.postSessionAiFeedback) {
+        return ''
+      }
+      if (this.postSessionRecommendationStartError) {
+        return this.postSessionRecommendationStartError
+      }
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        return this.t('memorisation.postSession.recommendation.aiReciteOffline')
+      }
+      // Keep Review Session quiet by default — no long optional essay under the button.
+      return ''
+    },
     postSessionAdaptationExplanations() {
-      return []
+      return buildAdaptationExplanations(
+        this.postSessionRecommendation?.settings,
+        (key, params) => this.t(key, params)
+      ).slice(0, 2)
     },
     postSessionSettingsOutcome() {
       return this.postSessionIntendedOutcome
@@ -4351,7 +4368,7 @@ export default {
       if (!this.hasVerses) return 'Choose a surah and ayah range to begin.'
       if (!this.effectiveActiveVerseKey) return 'Start the session to build your memorisation queue.'
       if (this.guidedUiStep === 'review') return 'Review this ayah, then continue.'
-      if (this.guidedUiStep === 'recall') return 'Recite from memory, then reveal to confirm.'
+      if (this.guidedUiStep === 'recall') return this.t('memorisation.guided.reciteFromMemory') || 'Review Session, then reveal to confirm.'
       if (this.isPlaying) return 'Listen to the active ayah and follow calmly.'
       return 'Press play, then recite and repeat at your pace.'
     },
@@ -9175,7 +9192,7 @@ export default {
       // unless the backend saved a value or we are forcing a hydrate.
       if (force || !this.postSessionConfidenceHydrated || recommendation.confidence_feedback) {
         this.postSessionConfidenceSelection = resolved
-        this.postSessionConfidenceHydrated = true
+        this.postSessionConfidenceHydrated = resolved != null || !!recommendation.confidence_feedback
       }
     },
     buildCompletionPerformancePayload() {
@@ -9542,23 +9559,33 @@ export default {
         }
 
         this.postSessionAiReciteActive = true
+        // Wait one tick so the completion Teleport unmounts before AI Recite mounts.
+        await this.$nextTick()
         this.openAiRecitationCheckForSession()
+        await this.$nextTick()
         if (!this.showSelfCheckModal) {
           throw new Error('ai_recite_unavailable')
         }
-        this.$nextTick(() => {
-          const overlay = document.querySelector('.self-check-modal-overlay--above-post-session')
-          const title = overlay?.querySelector?.('#selfCheckModalTitle')
-          if (title && typeof title.focus === 'function') {
-            title.setAttribute('tabindex', '-1')
-            title.focus()
-          }
-        })
+        const overlay = document.querySelector('.self-check-modal-overlay')
+        if (overlay) {
+          overlay.style.zIndex = '20000'
+        }
+        const title = overlay?.querySelector?.('#selfCheckModalTitle')
+        if (title && typeof title.focus === 'function') {
+          title.setAttribute('tabindex', '-1')
+          title.focus()
+        }
       } catch (error) {
         console.warn('Failed to open AI Recite from completion modal:', error)
         this.postSessionAiReciteActive = false
-        this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.aiReciteError')
-        this.postSessionViewState = 'action_failed'
+        const offline = typeof navigator !== 'undefined' && navigator.onLine === false
+        this.postSessionRecommendationStartError = this.t(
+          offline
+            ? 'memorisation.postSession.recommendation.aiReciteOffline'
+            : 'memorisation.postSession.recommendation.aiReciteError'
+        )
+        this.postSessionAiFeedback = this.t('memorisation.postSession.recommendation.aiReciteSkippedHint')
+        this.postSessionViewState = 'recommendation_ready'
       } finally {
         this.postSessionAiReciteBusy = false
         if (this.postSessionViewState === 'opening_ai_recite') {
@@ -9607,8 +9634,16 @@ export default {
         }
       } catch (error) {
         console.warn('Failed to apply AI assessment to recommendation:', error)
-        this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.aiReciteError')
+        const offline = typeof navigator !== 'undefined' && navigator.onLine === false
+        this.postSessionRecommendationStartError = this.t(
+          offline
+            ? 'memorisation.postSession.recommendation.aiReciteOffline'
+            : 'memorisation.postSession.recommendation.aiReciteError'
+        )
+        // Keep the local review copy so skipping the network round-trip still feels complete.
         if (summary) this.postSessionAiFeedback = summary
+        else if (result) this.postSessionAiFeedback = this.localizePostSessionAiSummary(result)
+        this.postSessionViewState = 'recommendation_ready'
       }
     },
     localizePostSessionAiSummary(result) {

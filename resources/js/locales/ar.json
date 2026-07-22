@@ -549,7 +549,7 @@
       "theme": "السمة",
       "border": "الإطار",
       "aiRecite": "تلاوة بالذكاء الاصطناعي",
-      "aiMemory": "ذاكرة الذكاء الاصطناعي",
+      "aiMemory": "تلاوة بالذكاء الاصطناعي",
       "quranicFont": "خط القرآن",
       "selectLayout": "اختر التخطيط"
     },
@@ -1220,7 +1220,7 @@
         "continueNextSurahShort": "خطة مقترحة",
         "repeatRangeTitle": "{surah} · {range}",
         "aiReciteShort": "التلاوة الذكية",
-        "aiReciteHintShort": "اختبر هذا المدى من حفظك.",
+        "aiReciteHintShort": "مراجعة الجلسة",
         "aiReviewStrong": "بناءً على هذه الجلسة",
         "aiReviewWeakAyah": "بناءً على هذه الجلسة",
         "aiReviewWeakAyahs": "بناءً على هذه الجلسة",
@@ -1230,7 +1230,23 @@
         "basedOnThisSession": "بناءً على هذه الجلسة",
         "tryThisCombination": "جرّب هذا المزيج",
         "adjustPlan": "تعديل الخطة",
-        "suggestedNextStep": "الخطوة التالية المقترحة"
+        "suggestedNextStep": "الخطوة التالية المقترحة",
+        "aiReciteOptionalHint": "Optional — may Allah make the words firm for you.",
+        "aiReciteSkippedHint": "Continuing without AI Recite. Pick how the range felt, or start the recommended plan.",
+        "aiReciteOffline": "Connection lost during AI Recite. Progress is saved; retry later or continue below.",
+        "whatChangingDoes": "How this helps",
+        "paramHints": {
+          "repetitionsHigh": "{count}× repetitions — more passes help challenging ayahs settle.",
+          "repetitionsModerate": "{count} repetitions — another steady pass without overload.",
+          "repetitionsLight": "{count}× — light practice while the range is still fresh.",
+          "focus": "Focus Mode — one ayah at a time, fewer distractions.",
+          "blur": "Blur — hide the text so you recall instead of read.",
+          "talqin": "Talqin — listen, then recite before moving on.",
+          "anchor": "Anchor — keep key words visible as the rest fades.",
+          "chaining": "Chaining — join ayahs you have just memorised.",
+          "speedSlower": "{speed}× speed — more time to hear each phrase clearly.",
+          "speedFaster": "{speed}× speed — brisk practice once the range feels familiar."
+        }
       },
       "viewStats": "عرض الإحصاءات",
       "hideStats": "إخفاء الإحصاءات",
@@ -1515,7 +1531,8 @@
       "noAudioCaptured": "No audio was captured.",
       "checkFailed": "The memorisation check could not be completed.",
       "recitationCheckFailed": "The recitation check could not be completed.",
-      "speechRecognitionFailed": "Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted."
+      "speechRecognitionFailed": "Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted.",
+      "stepListen": "مراجعة الجلسة"
     },
     "analyticsHeatmap": {
       "confidence": "Confidence: {value}%",

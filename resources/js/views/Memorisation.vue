@@ -630,7 +630,7 @@
                       :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
                       title="Open AI memorisation checker for this ayah">
                       <i class="bi bi-eye-slash" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.reading.aiMemory') }}</span>
+                      <span>{{ t('memorisation.reading.aiRecite') }}</span>
                     </button>
 
                     <button class="verse-self-check-btn verse-ai-check-btn verse-ai-recite-btn"
@@ -2309,7 +2309,7 @@
                 aria-live="polite">
                 <div class="recitation-check-head">
                   <div>
-                    <span class="recitation-check-kicker">{{ t('memorisation.reading.aiMemory') }}</span>
+                    <span class="recitation-check-kicker">{{ t('memorisation.reading.aiRecite') }}</span>
                     <h2>{{ aiMemorisationCheckerResult ? 'Memorisation review' : aiMemorisationCheckerRecording ? 'AI memorisation listening' : 'AI memorisation check' }}</h2>
                   </div>
                   <div class="recitation-check-head-actions">
@@ -2483,10 +2483,12 @@
       </div>
     </div>
 
+    <Teleport to="body">
     <div
       v-if="showSelfCheckModal && selfCheckModalVerse"
       class="modal-overlay mutqin-modal-overlay self-check-modal-overlay"
       :class="{ 'self-check-modal-overlay--above-post-session': postSessionAiReciteActive }"
+      :style="postSessionAiReciteActive ? { zIndex: 20000 } : null"
       @click.self="closeSelfCheckModal"
     >
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full">
@@ -3019,6 +3021,7 @@
       </div>
       </div>
     </div>
+    </Teleport>
 
     <div v-if="showRecordingsLibrary" class="modal-overlay mutqin-modal-overlay recordings-library-overlay"
       @click.self="closeRecordingsLibrary">
@@ -3492,7 +3495,7 @@
     <Teleport to="body">
     <transition name="mutqin-flow">
     <div
-      v-if="showPostSessionModal"
+      v-if="showPostSessionModal && !postSessionAiReciteActive"
       class="post-session-simple"
       :class="{
         'post-session-simple--sample': onboardingSampleSessionActive,
@@ -3556,33 +3559,48 @@
             </template>
 
             <template v-else>
-              <div class="post-session-simple__row">
+              <div class="post-session-simple__stack">
                 <section class="post-session-simple__ai" aria-labelledby="postSessionAiTitle">
-                  <p id="postSessionAiTitle" class="post-session-simple__section-label">
-                    {{ t('memorisation.postSession.recommendation.aiReciteHintShort') }}
-                  </p>
-                  <button
-                    type="button"
-                    class="post-session-simple__ai-btn"
-                    :disabled="postSessionActionsBusy"
-                    :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
-                    @click="openPostSessionAiRecite"
-                  >
-                    <span
-                      v-if="postSessionAiReciteBusy"
-                      class="spinner-border spinner-border-sm"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
-                    <i v-else class="bi bi-stars" aria-hidden="true"></i>
-                    <span>{{ postSessionAiReciteBusyLabel }}</span>
-                  </button>
+                  <div class="post-session-simple__ai-head">
+                    <p id="postSessionAiTitle" class="post-session-simple__section-label">
+                      {{ t('memorisation.postSession.recommendation.aiReciteHintShort') }}
+                    </p>
+                    <button
+                      type="button"
+                      class="post-session-simple__ai-btn"
+                      :disabled="postSessionActionsBusy"
+                      :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
+                      @click="openPostSessionAiRecite"
+                    >
+                      <span
+                        v-if="postSessionAiReciteBusy"
+                        class="spinner-border spinner-border-sm"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      <i v-else class="bi bi-stars" aria-hidden="true"></i>
+                      <span>{{ postSessionAiReciteBusyLabel }}</span>
+                    </button>
+                  </div>
                   <p
                     v-if="postSessionRecommendation?.ai_assessment?.summary || postSessionAiFeedback"
                     class="post-session-simple__ai-feedback"
                     role="status"
                   >
                     {{ postSessionAiFeedback || postSessionRecommendation.ai_assessment.summary }}
+                  </p>
+                  <p
+                    v-else-if="postSessionAiAssistHint"
+                    class="post-session-simple__ai-hint"
+                    role="status"
+                  >
+                    {{ postSessionAiAssistHint }}
+                  </p>
+                  <p
+                    v-else
+                    class="post-session-simple__ai-hint post-session-simple__ai-hint--quiet"
+                  >
+                    {{ t('memorisation.postSession.recommendation.aiReciteOptionalHint') }}
                   </p>
                 </section>
 
@@ -3595,7 +3613,14 @@
                   <p class="post-session-simple__section-label">
                     {{ t('memorisation.postSession.recommendation.confidencePrompt') }}
                   </p>
-                  <div class="post-session-simple__segment" role="radiogroup">
+                  <div
+                    class="post-session-simple__segment"
+                    role="radiogroup"
+                    :class="{
+                      'has-selection': !!postSessionSelectedConfidence,
+                      'is-awaiting': !postSessionSelectedConfidence
+                    }"
+                  >
                     <button
                       type="button"
                       class="post-session-simple__segment-btn"
@@ -3666,6 +3691,22 @@
                         class="post-session-simple__pill"
                       >{{ pill.label }}</span>
                     </div>
+                  </div>
+                  <div
+                    v-if="postSessionAdaptationExplanations.length"
+                    class="post-session-simple__param-hints"
+                  >
+                    <p class="post-session-simple__why-label">
+                      {{ t('memorisation.postSession.recommendation.whatChangingDoes') }}
+                    </p>
+                    <ul class="post-session-simple__param-list">
+                      <li
+                        v-for="(hint, index) in postSessionAdaptationExplanations"
+                        :key="`param-hint-${index}`"
+                      >
+                        {{ hint }}
+                      </li>
+                    </ul>
                   </div>
                   <button
                     type="button"

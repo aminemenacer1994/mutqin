@@ -11,7 +11,7 @@ import {
 {
   assert.equal(
     resolveConfidenceSelection({ confidence_feedback: null, ai_assessment: null }),
-    'confident'
+    null
   )
   assert.equal(
     resolveConfidenceSelection({ confidence_feedback: 'needs_practice' }),
@@ -22,7 +22,7 @@ import {
       confidence_feedback: null,
       ai_assessment: { result: 'weak' },
     }),
-    'needs_practice'
+    null
   )
   assert.equal(
     resolveConfidenceSelection(
@@ -37,6 +37,10 @@ import {
       type: 'repeat_current_range',
       range_kind: 'repeated',
     }),
+    null
+  )
+  assert.equal(
+    resolveConfidenceSelection({ confidence_feedback: null }, 'needs_practice'),
     'needs_practice'
   )
 }

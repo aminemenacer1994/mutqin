@@ -535,7 +535,7 @@
       "theme": "Tema",
       "border": "Çerçeve",
       "aiRecite": "AI Recite",
-      "aiMemory": "AI Memory",
+      "aiMemory": "AI Recite",
       "quranicFont": "Kuran yazı tipi",
       "selectLayout": "Düzen seç"
     },
@@ -635,7 +635,7 @@
           "points": [
             "Saved sessions let you resume where you left off",
             "Recording history keeps prior attempts visible",
-            "AI recite and AI memory checks are always available from the workspace"
+            "AI recite and AI Recite checks are always available from the workspace"
           ],
           "previewTitle": "What you can return to",
           "previewSubtitle": "Review and resume are already built into the system.",
@@ -797,7 +797,7 @@
     "compact_breakdown_for_this_metric_group": "Compact breakdown for this metric group.",
     "ai_memorisation_review": "AI memorisation review",
     "ayah_display": "Ayah display",
-    "recite_from_memory": "Recite from memory",
+    "recite_from_memory": "Review Session",
     "blur_everything": "Blur Everything",
     "peek": "Peek",
     "memorisation_review": "Memorisation review",
@@ -1423,7 +1423,7 @@
         "retryRecommendation": "Prepare recommendation again",
         "settingsError": "Could not save settings. Please try again.",
         "confidenceError": "Could not save your response. Please try again.",
-        "aiReciteError": "AI Recite is unavailable right now. Your session is still saved.",
+        "aiReciteError": "AI Recite unavailable. Your session is saved — choose confidence or continue.",
         "openingAiRecite": "Opening AI Recite…",
         "preparingRecommendation": "Preparing recommendation…",
         "startingNextSession": "Starting next set…",
@@ -1461,7 +1461,7 @@
         "continueNextSurahShort": "Recommended plan",
         "repeatRangeTitle": "{surah} · {range}",
         "aiReciteShort": "AI Recite",
-        "aiReciteHintShort": "Bu aralığı ezberden test et.",
+        "aiReciteHintShort": "Oturumu gözden geçir",
         "speedPill": "{speed}× hız",
         "recommendedPlan": "Recommended plan",
         "basedOnThisSession": "Based on this session",
@@ -1471,7 +1471,23 @@
         "aiReviewStrong": "Based on this session",
         "aiReviewWeakAyah": "Based on this session",
         "aiReviewWeakAyahs": "Based on this session",
-        "aiReviewSequence": "Based on this session"
+        "aiReviewSequence": "Based on this session",
+        "aiReciteOptionalHint": "Optional — may Allah make the words firm for you.",
+        "aiReciteSkippedHint": "Continuing without AI Recite. Pick how the range felt, or start the recommended plan.",
+        "aiReciteOffline": "Connection lost during AI Recite. Progress is saved; retry later or continue below.",
+        "whatChangingDoes": "How this helps",
+        "paramHints": {
+          "repetitionsHigh": "{count}× repetitions — more passes help challenging ayahs settle.",
+          "repetitionsModerate": "{count} repetitions — another steady pass without overload.",
+          "repetitionsLight": "{count}× — light practice while the range is still fresh.",
+          "focus": "Focus Mode — one ayah at a time, fewer distractions.",
+          "blur": "Blur — hide the text so you recall instead of read.",
+          "talqin": "Talqin — listen, then recite before moving on.",
+          "anchor": "Anchor — keep key words visible as the rest fades.",
+          "chaining": "Chaining — join ayahs you have just memorised.",
+          "speedSlower": "{speed}× speed — more time to hear each phrase clearly.",
+          "speedFaster": "{speed}× speed — brisk practice once the range feels familiar."
+        }
       },
       "viewStats": "View stats",
       "hideStats": "Hide stats",
@@ -1748,7 +1764,8 @@
       "noAudioCaptured": "No audio was captured.",
       "checkFailed": "The memorisation check could not be completed.",
       "recitationCheckFailed": "The recitation check could not be completed.",
-      "speechRecognitionFailed": "Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted."
+      "speechRecognitionFailed": "Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted.",
+      "stepListen": "Review Session"
     },
     "analyticsHeatmap": {
       "confidence": "Confidence: {value}%",
