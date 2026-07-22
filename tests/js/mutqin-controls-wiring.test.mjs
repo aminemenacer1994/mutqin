@@ -209,6 +209,22 @@ includesAll('session exit confirmation modal', [
   /PRIMARY_SESSION_ACTION\.PAUSE_SESSION/,
 ])
 
+includesAll('pause session halts Talqin automation', [
+  /pausePlaybackGuards/,
+  /shouldRunDeferredTalqinAdvance/,
+  /isSessionAutomationHalted/,
+  /talqinPauseSettleTimer/,
+  /clearPlaybackAdvanceTimer/,
+  /if \(this\.sessionPaused\) return false/,
+  /applyLocalPausedSessionState\(\)\s*\n\s*this\.softPausePlayback\(\)/,
+])
+
+assert.doesNotMatch(
+  source,
+  /this\.talqinRecitationTurnActive = false/,
+  'soft pause must not assign the computed talqinRecitationTurnActive flag'
+)
+
 assert.doesNotMatch(
   source,
   /session-exit-action-chip--continue/,

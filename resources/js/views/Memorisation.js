@@ -66,6 +66,10 @@ import {
   userScopedStorageKey,
 } from '../scripts/session/sessionLifecycle'
 import {
+  isSessionAutomationHalted,
+  shouldRunDeferredTalqinAdvance,
+} from '../scripts/session/pausePlaybackGuards'
+import {
   COMPLETION_FLOW,
   deriveCompletionFlowPhase,
   primarySurfaceForPhase,
@@ -354,6 +358,7 @@ export default {
       countdownValue: 3,
       countdownInterval: null,
       talqinPauseTimer: null,
+      talqinPauseSettleTimer: null,
       practiceTurnCalloutStyle: {},
       practiceTurnCalloutFrame: null,
       activeWaveIndex: 0,
@@ -4443,6 +4448,9 @@ export default {
       return ''
     },
     talqinModeActive() {
+      // While paused, treat Talqin as inactive so deferred advance callbacks and
+      // "your turn" overlays cannot keep running after Pause Session.
+      if (this.sessionPaused) return false
       if (this.mutqinState?.sessionState?.active) {
         return !!this.mutqinState?.sessionState?.config?.talqinModeEnabled
       }
@@ -7393,7 +7401,19 @@ export default {
       this.recitationWindowActive = false
       this.recitationWindowRemaining = 0
     },
+    clearPlaybackAdvanceTimer() {
+      if (this.playbackAdvanceTimer) {
+        window.clearTimeout(this.playbackAdvanceTimer)
+        this.playbackAdvanceTimer = null
+      }
+    },
     startRecitationWindow(onComplete = null, options = {}) {
+      if (isSessionAutomationHalted({
+        sessionPaused: this.sessionPaused,
+        sessionCompleted: this.sessionCompleted,
+      })) {
+        return
+      }
       this.clearRecitationWindowTimer()
       const overrideSeconds = Number(options?.seconds)
       const seconds = Number.isFinite(overrideSeconds) && overrideSeconds > 0
@@ -7403,6 +7423,13 @@ export default {
       this.recitationWindowRemaining = seconds
       this.$nextTick(() => this.schedulePracticeTurnCalloutSync())
       this.recitationWindowTimer = window.setInterval(() => {
+        if (isSessionAutomationHalted({
+          sessionPaused: this.sessionPaused,
+          sessionCompleted: this.sessionCompleted,
+        })) {
+          this.clearRecitationWindowTimer()
+          return
+        }
         const nextRemaining = Math.max(0, Number(this.recitationWindowRemaining || 0) - 1)
         this.recitationWindowRemaining = nextRemaining
         if (nextRemaining > 0) return
@@ -8017,6 +8044,10 @@ export default {
         window.clearTimeout(this.talqinPauseTimer)
         this.talqinPauseTimer = null
       }
+      if (this.talqinPauseSettleTimer) {
+        window.clearTimeout(this.talqinPauseSettleTimer)
+        this.talqinPauseSettleTimer = null
+      }
     },
 
     getTalqinPauseDelayMs() {
@@ -8045,11 +8076,24 @@ export default {
 
     scheduleTalqinAdvance(onComplete = null) {
       this.clearTalqinPauseTimer()
+      if (isSessionAutomationHalted({
+        sessionPaused: this.sessionPaused,
+        sessionCompleted: this.sessionCompleted,
+      })) {
+        return
+      }
       const delayMs = this.getTalqinPauseDelayMs()
       this.talqinPauseTimer = window.setTimeout(() => {
         this.talqinPauseTimer = null
-        window.setTimeout(() => {
-          if (!this.talqinModeActive) {
+        // Track the settle timeout so Pause Session can cancel it; previously
+        // only the outer timer was cleared and "your turn" could restart.
+        this.talqinPauseSettleTimer = window.setTimeout(() => {
+          this.talqinPauseSettleTimer = null
+          if (!shouldRunDeferredTalqinAdvance({
+            sessionPaused: this.sessionPaused,
+            sessionCompleted: this.sessionCompleted,
+            talqinModeActive: this.talqinModeActive,
+          })) {
             return
           }
           if (typeof onComplete === 'function') onComplete()
@@ -8058,12 +8102,24 @@ export default {
     },
 
     beginTalqinRecitationTurn(onComplete = null) {
+      if (isSessionAutomationHalted({
+        sessionPaused: this.sessionPaused,
+        sessionCompleted: this.sessionCompleted,
+      })) {
+        return
+      }
       this.clearTalqinPauseTimer()
       this.clearRecitationWindowTimer()
       this.recitationWindowActive = true
       this.playTalqinTurnAlert()
       this.$nextTick(() => this.schedulePracticeTurnCalloutSync())
       this.startRecitationWindow(() => {
+        if (isSessionAutomationHalted({
+          sessionPaused: this.sessionPaused,
+          sessionCompleted: this.sessionCompleted,
+        })) {
+          return
+        }
         if (typeof onComplete === 'function') onComplete()
       }, { seconds: this.getTalqinRecitationWindowSeconds() })
     },
@@ -19014,6 +19070,11 @@ export default {
     softPausePlayback() {
       this.clearRecitationWindowTimer()
       this.clearTalqinPauseTimer()
+      this.clearPlaybackAdvanceTimer()
+      if (this.segmentPlaybackTimer) {
+        window.clearTimeout(this.segmentPlaybackTimer)
+        this.segmentPlaybackTimer = null
+      }
       this.stopWordHighlighting()
       if (this.audioElement) {
         try {
@@ -19021,7 +19082,7 @@ export default {
         } catch {}
       }
       this.isPlaying = false
-      this.talqinRecitationTurnActive = false
+      this.advanceLocked = false
     },
 
     forceStopPlayback() {
@@ -19566,15 +19627,21 @@ export default {
       }).then((locked) => (locked?.ok ? locked.result : null))
     },
     async pauseSessionFromPrimaryAction() {
+      // Stuck locks/mutations previously made Pause a silent no-op while the
+      // Talqin "your turn" overlay kept counting down.
+      if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE || this.sessionActionLock.isLocked()) {
+        this.resetStuckSessionLifecycleControls()
+      }
       if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return
       if (this.sessionActionLock.isLocked()) return
 
       const locked = await this.sessionActionLock.run('pause', async () => {
         // Optimistic local pause without LOADING flicker or audio position reset.
         try {
+          // Mark paused first so in-flight audio-ended / Talqin settle callbacks no-op.
+          this.applyLocalPausedSessionState()
           this.softPausePlayback()
           this.flushPlaybackTime()
-          this.applyLocalPausedSessionState()
           this.transitionSessionLifecycle(SESSION_STATUS.PAUSED, SESSION_MUTATION.IDLE)
           const persistPaused = () => {
             try {
@@ -21305,6 +21372,14 @@ export default {
 
       this.audioEnded = () => {
         if (this.advanceLocked) return
+        if (isSessionAutomationHalted({
+          sessionPaused: this.sessionPaused,
+          sessionCompleted: this.sessionCompleted,
+        })) {
+          this.isPlaying = false
+          this.stopWordHighlighting()
+          return
+        }
         this.advanceLocked = true
         this.isPlaying = false
         this.stopWordHighlighting()
@@ -21322,11 +21397,16 @@ export default {
         }
         const gapSeconds = this.getCurrentPlaybackGapSeconds()
         const gapDelayMs = Math.max(0, gapSeconds * 1000)
-        if (this.playbackAdvanceTimer) clearTimeout(this.playbackAdvanceTimer)
-        this.playbackAdvanceTimer = null
+        this.clearPlaybackAdvanceTimer()
         if (this.talqinModeActive && this.playMode !== 'manual') {
           this.advanceLocked = false
           this.beginTalqinRecitationTurn(() => {
+            if (isSessionAutomationHalted({
+              sessionPaused: this.sessionPaused,
+              sessionCompleted: this.sessionCompleted,
+            })) {
+              return
+            }
             if (this.canNext) {
               this.next()
               return
@@ -21338,6 +21418,12 @@ export default {
         if (this.playMode === 'follow') {
           this.advanceLocked = false
           this.startRecitationWindow(() => {
+            if (isSessionAutomationHalted({
+              sessionPaused: this.sessionPaused,
+              sessionCompleted: this.sessionCompleted,
+            })) {
+              return
+            }
             if (this.canNext) {
               this.next()
               return
@@ -21350,6 +21436,13 @@ export default {
           if (!this.chainingEnabled && this.selectedLoopCount === 'infinite' && this.activeQueueEntry) {
             this.playbackAdvanceTimer = window.setTimeout(() => {
               this.playbackAdvanceTimer = null
+              if (isSessionAutomationHalted({
+                sessionPaused: this.sessionPaused,
+                sessionCompleted: this.sessionCompleted,
+              })) {
+                this.advanceLocked = false
+                return
+              }
               const entry = this.activeQueueEntry
               this.advanceLocked = false
               if (entry) {
@@ -21360,6 +21453,13 @@ export default {
           }
           this.playbackAdvanceTimer = window.setTimeout(() => {
             this.playbackAdvanceTimer = null
+            if (isSessionAutomationHalted({
+              sessionPaused: this.sessionPaused,
+              sessionCompleted: this.sessionCompleted,
+            })) {
+              this.advanceLocked = false
+              return
+            }
             this.advanceLocked = false
             this.next()
           }, gapDelayMs)
@@ -21633,6 +21733,12 @@ export default {
 
     next() {
       if (this.advanceLocked) return
+      if (isSessionAutomationHalted({
+        sessionPaused: this.sessionPaused,
+        sessionCompleted: this.sessionCompleted,
+      })) {
+        return
+      }
       this.clearRecitationWindowTimer()
       this.clearTalqinPauseTimer()
       this.advanceLocked = true
