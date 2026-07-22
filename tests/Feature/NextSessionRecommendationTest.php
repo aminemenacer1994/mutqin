@@ -185,32 +185,43 @@ class NextSessionRecommendationTest extends TestCase
         $user = User::factory()->create();
         $this->seedCompletedSession($user, 1, 1, 7);
 
-        $this->actingAs($user)
+        $response = $this->actingAs($user)
             ->getJson('/api/recommendations/next')
             ->assertOk()
             ->assertJsonPath('recommendation.type', RecommendationType::NextSurah->value)
             ->assertJsonPath('recommendation.is_end_of_surah', true)
             ->assertJsonPath('recommendation.requires_confirmation', true)
-            ->assertJsonPath('recommendation.next_surah.id', 2)
-            ->assertJsonPath('recommendation.surah.id', 2)
+            ->assertJsonPath('recommendation.next_surah.id', 114)
+            ->assertJsonPath('recommendation.surah.id', 114)
             ->assertJsonPath('recommendation.ayah_range.from', 1)
-            ->assertJsonPath('recommendation.ayah_range.to', 5)
             ->assertJsonPath('recommendation.completed_surah.id', 1)
-            ->assertJsonPath('recommendation.reason_code', RecommendationReasonCode::SurahCompleted->value);
+            ->assertJsonPath('recommendation.reason_code', RecommendationReasonCode::SurahCompleted->value)
+            ->json('recommendation');
+
+        $this->assertGreaterThanOrEqual(4, (int) ($response['ayah_range']['to'] ?? 0));
+        $this->assertLessThanOrEqual(6, (int) ($response['ayah_range']['to'] ?? 0));
     }
 
-    public function test_handles_final_surah_without_forcing_next(): void
+    public function test_after_an_nas_continues_juz_amma_with_small_opening(): void
     {
         $user = User::factory()->create();
         $this->seedCompletedSession($user, 114, 1, 6);
 
-        $this->actingAs($user)
+        $response = $this->actingAs($user)
             ->getJson('/api/recommendations/next')
             ->assertOk()
-            ->assertJsonPath('recommendation.type', RecommendationType::PlanComplete->value)
+            ->assertJsonPath('recommendation.type', RecommendationType::NextSurah->value)
             ->assertJsonPath('recommendation.is_end_of_surah', true)
-            ->assertJsonPath('recommendation.next_surah', null)
-            ->assertJsonPath('recommendation.reason_code', RecommendationReasonCode::LearningPlanComplete->value);
+            ->assertJsonPath('recommendation.next_surah.id', 113)
+            ->assertJsonPath('recommendation.surah.id', 113)
+            ->assertJsonPath('recommendation.completed_surah.id', 114)
+            ->assertJsonPath('recommendation.ayah_range.from', 1)
+            ->assertJsonPath('recommendation.reason_code', RecommendationReasonCode::SurahCompleted->value)
+            ->json('recommendation');
+
+        // Adaptive bite — never dump the whole next surah.
+        $this->assertLessThanOrEqual(5, (int) ($response['ayah_range']['to'] ?? 0));
+        $this->assertLessThanOrEqual(5, (int) ($response['ayah_range']['count'] ?? 99));
     }
 
     public function test_prevents_duplicate_open_recommendations(): void

@@ -31,14 +31,43 @@ const MemorisationLoadError = {
             <div class="memorisation-boot-card">
                 <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
                 <strong>Memorisation workspace failed to load</strong>
-                <span>Refresh the page. If this keeps happening, run <code>npm run dev</code> and hard-refresh.</span>
+                <span>Refresh the page. If this keeps happening after <code>npm run watch</code> finishes compiling, hard-refresh once.</span>
+                <button type="button" class="btn btn-sm btn-primary mt-2" @click="reload">Refresh</button>
             </div>
         </div>
     `,
+    methods: {
+        reload() {
+            window.location.reload();
+        },
+    },
 };
 
+/**
+ * Mix watch rewrites public/js/memorisation.js while the browser may still be
+ * requesting it — that surfaces as ChunkLoadError. Retry a few times before failing.
+ */
+function loadMemorisationChunk(attempt = 0) {
+    return import(/* webpackChunkName: "memorisation" */ './views/Memorisation.vue').catch((error) => {
+        const name = String(error?.name || '');
+        const message = String(error?.message || '');
+        const isChunkError = name === 'ChunkLoadError'
+            || /Loading chunk \d+ failed/i.test(message)
+            || /memorisation\.js/i.test(message);
+        if (isChunkError && attempt < 3) {
+            const delayMs = 400 * (attempt + 1);
+            return new Promise((resolve, reject) => {
+                window.setTimeout(() => {
+                    loadMemorisationChunk(attempt + 1).then(resolve, reject);
+                }, delayMs);
+            });
+        }
+        throw error;
+    });
+}
+
 const Memorisation = defineAsyncComponent({
-    loader: () => import(/* webpackChunkName: "memorisation" */ './views/Memorisation.vue'),
+    loader: () => loadMemorisationChunk(),
     loadingComponent: MemorisationBootFallback,
     errorComponent: MemorisationLoadError,
     delay: 0,

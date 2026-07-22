@@ -306,6 +306,8 @@ includesAll('session completion success flow', [
   /resolveCompletionGate\(\{[\s\S]*persistenceSucceeded: false/,
   /postSessionActionsUnlocked/,
   /learningApi\.endSession\(/,
+  /confirmEndSessionFromExitModal\(\)/,
+  /confirmSessionExit\(\{ showSummary: false, openCompletion: false \}\)/,
   /submitPostSessionConfidence/,
   /repeatPostSessionFromCompleted/,
   /openPostSessionNewSessionOffcanvas/,
@@ -367,10 +369,15 @@ assert.doesNotMatch(
 
 includesAll('audio unlock flow', [
   /primeUiAudioUnlock\(\) \{/,
-  /primeAudioPlaybackUnlock\(audioOverride = null, options = \{\}\) \{[\s\S]*this\.primeUiAudioUnlock\(\)[\s\S]*if \(!audioOverride && !this\.audioElement\) \{/,
+  /primeAudioPlaybackUnlock\(audioOverride = null, options = \{\}\) \{[\s\S]*this\.primeUiAudioUnlock\(\)[\s\S]*new Audio\(\)[\s\S]*if \(!audioOverride && !this\.audioElement\) \{/,
   /claimAudioElement\(audio\) \{/,
+  /isAudioLoadAbortError\(audio = null\) \{/,
+  /ensureSessionPlaybackStarted\(options = \{\}\) \{[\s\S]*skipImmediatePlay/,
+  /startSessionWithCountdown[\s\S]*ensureSessionPlaybackStarted\(\{ skipImmediatePlay: true \}\)/,
+  /preloadQueueEntryAudio\(entry, options = \{\}\) \{[\s\S]*this\.claimAudioElement\(audio\)/,
+  /normalizeAudioUrl\(url\) \{[\s\S]*cdn\.islamic\.network/,
   /startSessionAndClose\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
-  /repeatPostSession\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
+  /repeatPostSession\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true, sampleSession: keepSample \}\)/,
   /toggleRecordingPlayback\(recording\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: source \}\)[\s\S]*await audio\.play\(\)/,
   /toggleReviewResultAudio\(result = null\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: source \}\)[\s\S]*await playAudioElement\(audio\)/,
   /toggleSelfCheckAyahPlayback\(verse\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: audioUrl \}\)[\s\S]*this\.claimAudioElement\(audio\)[\s\S]*await this\.waitForAudioElementReady\(audio\)[\s\S]*await audio\.play\(\)/,
@@ -616,7 +623,10 @@ includesAll('centralised session lifecycle wiring', [
   /PRIMARY_SESSION_ACTION\.END_SESSION/,
   /PRIMARY_SESSION_ACTION\.RESUME_SESSION/,
   /headerSessionActionBusy/,
-  /onboardingSampleSessionActive/
+  /onboardingSampleSessionActive/,
+  /exitOnboardingSampleMode/,
+  /sampleSession:\s*true/,
+  /onboardingSampleSessionActive && !options\.sampleSession/,
 ])
 
 console.log('mutqin controls wiring passed')

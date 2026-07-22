@@ -106,13 +106,37 @@ final class QuranMetadata
         ];
     }
 
+    /**
+     * Next surah in the adaptive beginner path:
+     * Al-Fatiha → An-Nas, then Juz ʿAmma descending (114→78), then Al-Baqarah.
+     */
     public static function nextSurah(int $surah): ?array
     {
-        if ($surah < 1 || $surah >= 114) {
+        if ($surah < 1 || $surah > 114) {
             return null;
         }
 
-        return self::surah($surah + 1);
+        // After Al-Fatiha, continue into Juz ʿAmma from An-Nas (not Al-Baqarah).
+        if ($surah === 1) {
+            return self::surah(114);
+        }
+
+        // Juz ʿAmma reverse: An-Nas → Al-Falaq → … → An-Naba.
+        if ($surah >= 79 && $surah <= 114) {
+            return self::surah($surah - 1);
+        }
+
+        // After An-Naba, begin Al-Baqarah in small adaptive chunks.
+        if ($surah === 78) {
+            return self::surah(2);
+        }
+
+        // Long-surah path: Al-Baqarah → … → Al-Mursalat, then stop (Juz ʿAmma already covered).
+        if ($surah >= 2 && $surah < 77) {
+            return self::surah($surah + 1);
+        }
+
+        return null;
     }
 
     public static function isValidAyah(int $surah, int $ayah): bool

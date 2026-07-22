@@ -17,6 +17,7 @@ import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState 
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
 import {
   RECOMMENDATION_TYPES,
+  adaptRecommendationForAiAssessment,
   adaptRecommendationForConfidence,
   buildLocalFallbackRecommendation,
   formatAyahRangeLabel,
@@ -35,6 +36,7 @@ import {
   recommendationPrimaryActionKey,
 } from '../scripts/recommendations/nextSessionRecommendation'
 import { buildAdaptationExplanations } from '../scripts/recommendations/adaptationExplanations'
+import { buildAiReviewDetails } from '../scripts/recommendations/aiReviewDetails'
 import {
   getTechniqueDescription,
   getTechniqueLabel,
@@ -534,6 +536,7 @@ export default {
       postSessionAiReciteBusy: false,
       postSessionAiReciteActive: false,
       postSessionAiFeedback: '',
+      postSessionAiReviewDetails: null,
       postSessionConfidenceSelection: null, // local authoritative selection; null → resolve from recommendation
       postSessionViewState: 'idle', // completing | generating_recommendation | recommendation_ready | editing_settings | starting_recommended | preparing_repeat | starting_repeat | opening_ai_recite | recommendation_failed | action_failed
       postSessionCompletedSessionId: null,
@@ -2693,6 +2696,18 @@ export default {
         return this.t('memorisation.postSession.recommendation.continueNextSurahShort')
       }
       return this.t('memorisation.postSession.recommendation.continueNextSet')
+    },
+    postSessionPlanKind() {
+      if (this.postSessionIsRepeatRecommendation) return 'repeat'
+      if (this.postSessionRecommendation?.type === RECOMMENDATION_TYPES.NEXT_SURAH) return 'next-surah'
+      if (this.postSessionRecommendationStatus === 'empty' || !this.postSessionRecommendationActionable) return 'empty'
+      return 'continue'
+    },
+    postSessionPlanSealIcon() {
+      if (this.postSessionPlanKind === 'repeat') return 'bi-arrow-repeat'
+      if (this.postSessionPlanKind === 'next-surah') return 'bi-book'
+      if (this.postSessionPlanKind === 'empty') return 'bi-compass'
+      return 'bi-arrow-right-circle'
     },
     postSessionSimpleReason() {
       const rec = this.postSessionRecommendation
@@ -8169,6 +8184,29 @@ export default {
 
     primeAudioPlaybackUnlock(audioOverride = null, options = {}) {
       this.primeUiAudioUnlock()
+      const targetUrl = typeof options.targetUrl === 'string' ? this.normalizeAudioUrl(options.targetUrl) : ''
+
+      // Silent gesture unlock should not mutate the main ayah <audio> element —
+      // assigning/clearing a data: URI races preload/playVerse and aborts CDN loads.
+      if (!audioOverride && !targetUrl) {
+        try {
+          const unlockAudio = new Audio()
+          unlockAudio.muted = true
+          unlockAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
+          const playPromise = unlockAudio.play()
+          if (playPromise?.then) {
+            playPromise.then(() => {
+              try { unlockAudio.pause() } catch { }
+              try {
+                unlockAudio.removeAttribute('src')
+                unlockAudio.load()
+              } catch { }
+            }).catch(() => {})
+          }
+        } catch { }
+        return true
+      }
+
       const audio = audioOverride || this.audioElement || this.$refs.audio
       if (!audio) return false
       if (!audioOverride && !this.audioElement) {
@@ -8179,7 +8217,6 @@ export default {
       const token = (Number(audio._mutqinUnlockToken) || 0) + 1
       audio._mutqinUnlockToken = token
 
-      const targetUrl = typeof options.targetUrl === 'string' ? this.normalizeAudioUrl(options.targetUrl) : ''
       const previousSrc = audio.currentSrc || audio.getAttribute('src') || ''
       const previousNormalized = this.normalizeAudioUrl(previousSrc)
       const previousTime = Number(audio.currentTime || 0)
@@ -8276,8 +8313,12 @@ export default {
         this.initAudio()
       }
 
+      // Invalidate in-flight silent unlock restores before assigning the real ayah URL.
+      this.claimAudioElement(audio)
+
       const currentSrc = audio.currentSrc ? this.normalizeAudioUrl(audio.currentSrc) : ''
-      if (currentSrc !== audioUrl) {
+      const attrSrc = this.normalizeAudioUrl(audio.getAttribute('src') || '')
+      if (currentSrc !== audioUrl && attrSrc !== audioUrl) {
         audio.src = audioUrl
         audio.load()
       }
@@ -8287,9 +8328,16 @@ export default {
       return true
     },
 
-    async ensureSessionPlaybackStarted() {
+    async ensureSessionPlaybackStarted(options = {}) {
       await this.$nextTick()
       if (this.isPlaybackActive()) return true
+
+      // startSession already attempted playback; only re-try when callers did not
+      // (resume / soft-resume), or when autoplay was blocked after a successful load.
+      if (options.skipImmediatePlay) {
+        await this.$nextTick()
+        return this.isPlaybackActive()
+      }
 
       const entry = this.queue?.[this.queueIndex]
       if (entry) {
@@ -8315,6 +8363,13 @@ export default {
       }
       if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return
       if (this.sessionActionLock.isLocked()) return
+
+      // Only playOnboardingSampleSession / sample repeat may keep the sample flag.
+      // Any other start (new range from the sample modal, Controls, etc.) must exit
+      // sample mode so completion shows the recommendation modal.
+      if (this.onboardingSampleSessionActive && !options.sampleSession) {
+        this.exitOnboardingSampleMode({ discard: true, markCompleted: true })
+      }
 
       this.showPlannerCompletionModal = false
       this.showPlannerCompletionConfetti = false
@@ -8350,7 +8405,9 @@ export default {
               this.backendUnfinishedSession = true
             }
             await this.startSession()
-            const playbackStarted = await this.ensureSessionPlaybackStarted()
+            // startSession already called playQueueEntry; avoid a second force-play
+            // that races load()/abort and floods Audio load errors.
+            const playbackStarted = await this.ensureSessionPlaybackStarted({ skipImmediatePlay: true })
             if (!playbackStarted && this.queue?.length) {
               this.promptTapToPlay()
             }
@@ -9015,7 +9072,7 @@ export default {
       if (this.chapterId) {
         await this.loadChapter(this.currentMode)
         this.$nextTick(() => {
-          this.startSessionWithCountdown({ skipPrime: true })
+          this.startSessionWithCountdown({ skipPrime: true, sampleSession: true })
         })
       }
     },
@@ -9115,6 +9172,7 @@ export default {
       this.postSessionAiReciteBusy = false
       this.postSessionAiReciteActive = false
       this.postSessionAiFeedback = ''
+      this.postSessionAiReviewDetails = null
       this.postSessionConfidenceSelection = null
       this.postSessionConfidenceHydrated = false
       this.postSessionViewState = 'idle'
@@ -9281,18 +9339,38 @@ export default {
           if (requestId !== this.postSessionRecommendationRequestId) return
 
           if (!recommendation || recommendation.type === RECOMMENDATION_TYPES.NO_RECOMMENDATION) {
-            applyResult(snapshotFallback(), 'empty')
+            const fallback = snapshotFallback()
+            applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'empty')
             return
           }
           if (
-            (recommendation.type === RECOMMENDATION_TYPES.MANUAL_SELECTION
-              || recommendation.type === RECOMMENDATION_TYPES.CHOOSE_NEW_SESSION
-              || recommendation.type === RECOMMENDATION_TYPES.PLAN_COMPLETE)
-            && !recommendation.surah
-            && !recommendation.ayah_range
+            recommendation.type === RECOMMENDATION_TYPES.MANUAL_SELECTION
+            || recommendation.type === RECOMMENDATION_TYPES.CHOOSE_NEW_SESSION
+            || recommendation.type === RECOMMENDATION_TYPES.PLAN_COMPLETE
+            || recommendation.type === RECOMMENDATION_TYPES.SURAH_COMPLETE
           ) {
-            applyResult(recommendation, 'empty')
-            return
+            // Terminal payloads without a concrete next range — rebuild from the session snapshot.
+            if (!isActionableRecommendation(recommendation)) {
+              const snap = this.postSessionSnapshot || {}
+              const promoted = adaptRecommendationForConfidence(
+                recommendation,
+                'confident',
+                {
+                  ...snap,
+                  totalAyahsInSurah: snap.totalAyahsInSurah
+                    || snap.versesInSurah
+                    || this.currentChapter?.verses_count
+                    || 0,
+                }
+              )
+              if (isActionableRecommendation(promoted)) {
+                applyResult(promoted, 'ready')
+                return
+              }
+              const fallback = snapshotFallback()
+              applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'empty')
+              return
+            }
           }
           applyResult(recommendation, 'ready')
           return
@@ -9303,7 +9381,8 @@ export default {
         console.warn('Failed to load next-session recommendation:', error)
         if (requestId !== this.postSessionRecommendationRequestId) return
         this.postSessionRecommendationError = this.t('memorisation.postSession.recommendation.loadError')
-        applyResult(snapshotFallback(), 'error')
+        const fallback = snapshotFallback()
+        applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'error')
       }
     },
     retryPostSessionRecommendation() {
@@ -9606,8 +9685,22 @@ export default {
       })
     },
     async applyPostSessionAiAssessment(result, summary = '', extras = {}) {
+      // Optimistic reshape so the plan reacts immediately to AI Recite.
+      if (this.postSessionRecommendation) {
+        this.postSessionRecommendation = this.enrichPostSessionRecommendation(
+          adaptRecommendationForAiAssessment(
+            this.postSessionRecommendation,
+            result,
+            this.postSessionSnapshot || {}
+          )
+        )
+        this.postSessionRecommendationStatus = 'ready'
+        this.syncPostSessionConfidenceFromRecommendation(this.postSessionRecommendation)
+      }
+      if (summary) this.postSessionAiFeedback = summary
+      this.postSessionAiReviewDetails = this.buildPostSessionAiReviewDetails(result, extras, extras._result || null)
+
       if (!this.postSessionRecommendation?.id || !this.isLoggedIn) {
-        if (summary) this.postSessionAiFeedback = summary
         return
       }
       try {
@@ -9620,6 +9713,7 @@ export default {
             sequence_errors: extras.sequence_errors,
             missed_words: extras.missed_words,
             pronunciation_issues: extras.pronunciation_issues,
+            accuracy_percent: extras.accuracy_percent,
           }
         )
         if (updated) {
@@ -9655,24 +9749,65 @@ export default {
       }
       return this.t('memorisation.postSession.recommendation.reasons.aiReciteMixed')
     },
+    buildPostSessionAiReviewDetails(outcome, extras = {}, result = null) {
+      return buildAiReviewDetails(
+        outcome,
+        extras,
+        result,
+        (key, params) => this.t(key, params)
+      )
+    },
     buildPostSessionAiReviewSummary(result, outcome) {
       const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
-      const weakAyahs = Array.isArray(result?.weakAyahs)
-        ? result.weakAyahs
-        : []
+      const weakAyahs = Array.isArray(result?.weakAyahs) ? result.weakAyahs : []
+      const accuracyRaw = Number(
+        result?.accuracyScore
+        ?? result?.accuracy
+        ?? result?.score
+        ?? result?.percent
+        ?? result?.overallAccuracy
+        ?? result?.matchPercent
+        ?? NaN
+      )
+      const accuracy = Number.isFinite(accuracyRaw)
+        ? Math.round(accuracyRaw <= 1 ? accuracyRaw * 100 : accuracyRaw)
+        : null
+      const listCount = (value) => (Array.isArray(value) ? value.length : (Number.isFinite(Number(value)) ? Math.max(0, Math.round(Number(value))) : 0))
+      const missed = listCount(mistakes.missing) + listCount(mistakes.incorrect)
+      const sequence = listCount(mistakes.sequenceErrors) + listCount(mistakes.verseJumps) + listCount(mistakes.skippedAyahs)
+      const pronunciation = listCount(mistakes.partial) >= 2
+
       if (outcome === 'strong') {
+        if (accuracy != null) {
+          return this.t('memorisation.postSession.recommendation.aiReviewStrongDetail', { percent: accuracy })
+        }
         return this.t('memorisation.postSession.recommendation.aiReviewStrong')
       }
-      if (weakAyahs.length === 1) {
-        return this.t('memorisation.postSession.recommendation.aiReviewWeakAyah', { ayah: weakAyahs[0] })
+
+      const parts = []
+      if (accuracy != null) {
+        parts.push(
+          outcome === 'weak'
+            ? this.t('memorisation.postSession.recommendation.aiReviewWeakDetail', { percent: accuracy })
+            : this.t('memorisation.postSession.recommendation.aiReviewMixedDetail', { percent: accuracy })
+        )
+      } else if (weakAyahs.length === 1) {
+        parts.push(this.t('memorisation.postSession.recommendation.aiReviewWeakAyah', { ayah: weakAyahs[0] }))
+      } else if (weakAyahs.length > 1) {
+        parts.push(this.t('memorisation.postSession.recommendation.aiReviewWeakAyahs', { count: weakAyahs.length }))
+      } else if (sequence > 0) {
+        parts.push(this.t('memorisation.postSession.recommendation.aiReviewSequence'))
+      } else {
+        parts.push(this.localizePostSessionAiSummary(outcome))
       }
-      if (weakAyahs.length > 1) {
-        return this.t('memorisation.postSession.recommendation.aiReviewWeakAyahs', { count: weakAyahs.length })
+
+      if (missed > 0) {
+        parts.push(this.t('memorisation.postSession.recommendation.aiReviewMissedWords', { count: missed }))
       }
-      if (Number(mistakes.sequenceErrors || 0) > 0) {
-        return this.t('memorisation.postSession.recommendation.aiReviewSequence')
+      if (pronunciation) {
+        parts.push(this.t('memorisation.postSession.recommendation.aiReviewPronunciation'))
       }
-      return this.localizePostSessionAiSummary(outcome)
+      return parts.filter(Boolean).join(' ')
     },
     async repeatPostSessionFromCompleted() {
       if (this.postSessionActionsBusy) return
@@ -10104,6 +10239,7 @@ export default {
     },
 
     repeatPostSession() {
+      const keepSample = !!this.onboardingSampleSessionActive
       this.showPostSessionModal = false
       this.showPostSessionConfetti = false
       this.postSessionOffcanvasOpen = false
@@ -10113,11 +10249,33 @@ export default {
       this.showTools = false
       this.primeAudioPlaybackUnlock()
       this.prepareRangeRestart()
-      this.startSessionWithCountdown({ skipPrime: true })
+      this.startSessionWithCountdown({ skipPrime: true, sampleSession: keepSample })
     },
     openPostSessionNewSessionOffcanvas() {
-      this.postSessionOffcanvasOpen = true
+      // Leaving the guided sample for a user-built session — unlock recommendation UI.
+      if (this.onboardingSampleSessionActive) {
+        this.exitOnboardingSampleMode({ discard: true, markCompleted: true })
+        this.showPostSessionModal = false
+        this.showPostSessionConfetti = false
+        this.postSessionSnapshot = null
+        this.postSessionEmotionalContext = null
+        this.postSessionOffcanvasOpen = false
+      } else {
+        this.postSessionOffcanvasOpen = true
+      }
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
+    },
+    exitOnboardingSampleMode({ discard = true, markCompleted = true } = {}) {
+      const wasSample = !!this.onboardingSampleSessionActive
+      this.onboardingSampleSessionActive = false
+      this.onboardingExampleRejected = false
+      if (!wasSample) return
+      if (markCompleted) {
+        this.markOnboardingCompleted()
+      }
+      if (discard && this.learningBackendEnabled()) {
+        learningApi.discardOnboardingExampleSession().catch(() => {})
+      }
     },
     savePostSession() {
       this.saveCurrentSessionSilently()
@@ -10143,8 +10301,7 @@ export default {
       form.submit()
     },
     continueFromOnboardingPostSession() {
-      this.onboardingSampleSessionActive = false
-      this.onboardingExampleRejected = false
+      this.exitOnboardingSampleMode({ discard: true, markCompleted: true })
       this.clearContinueSessionQuietly()
       this.stopSessionMediaResources()
       this.showPostSessionModal = false
@@ -10152,14 +10309,10 @@ export default {
       this.postSessionOffcanvasOpen = false
       this.postSessionSnapshot = null
       this.postSessionEmotionalContext = null
-      this.markOnboardingCompleted()
       this.restoreOnboardingDemo()
       this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
       this.showTools = false
       this.topCardMenuOpen = false
-      if (this.learningBackendEnabled()) {
-        learningApi.discardOnboardingExampleSession().catch(() => {})
-      }
     },
     async completeOnboardingAndStart() {
       this.primeAudioPlaybackUnlock()
@@ -14830,13 +14983,29 @@ export default {
       const weakAyahs = Array.isArray(result?.weakAyahs)
         ? result.weakAyahs.map(Number).filter(n => Number.isFinite(n) && n > 0)
         : []
+      const accuracyRaw = Number(
+        result.accuracyScore
+        ?? result.accuracy
+        ?? result.score
+        ?? result.percent
+        ?? result.overallAccuracy
+        ?? result.matchPercent
+        ?? NaN
+      )
+      const accuracyPercent = Number.isFinite(accuracyRaw)
+        ? Math.round(accuracyRaw <= 1 ? accuracyRaw * 100 : accuracyRaw)
+        : null
+      const listCount = (value) => (Array.isArray(value) ? value.length : (Number.isFinite(Number(value)) ? Math.max(0, Math.round(Number(value))) : 0))
       const summary = this.buildPostSessionAiReviewSummary(result, outcome)
       this.postSessionAiFeedback = summary
       await this.applyPostSessionAiAssessment(outcome, summary, {
         weak_ayahs: weakAyahs,
-        sequence_errors: Number(mistakes.sequenceErrors || mistakes.verseJumps || 0),
-        missed_words: Number(mistakes.missing || mistakes.incorrect || 0),
-        pronunciation_issues: Number(mistakes.partial || 0) >= 2,
+        sequence_errors: listCount(mistakes.sequenceErrors) + listCount(mistakes.verseJumps) + listCount(mistakes.skippedAyahs),
+        missed_words: listCount(mistakes.missing) + listCount(mistakes.incorrect),
+        pronunciation_issues: listCount(mistakes.partial) >= 2,
+        accuracy_percent: accuracyPercent,
+        duration_seconds: Number(result?.durationSeconds || 0),
+        _result: result,
       })
     },
     async finalizePostSessionAiReciteFromResult(result) {
@@ -14850,6 +15019,15 @@ export default {
       } else {
         this.returnFromPostSessionAiRecite()
       }
+      this.$nextTick(() => {
+        const review = this.$el?.querySelector?.('.post-session-simple__ai-review')
+        const body = this.$el?.querySelector?.('.post-session-simple__body')
+        if (review && typeof review.scrollIntoView === 'function') {
+          review.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+        } else if (body) {
+          body.scrollTop = 0
+        }
+      })
       return true
     },
     dismissRecitationCheckResult() {
@@ -17541,6 +17719,12 @@ export default {
       try { audio.muted = false } catch { }
     },
 
+    isAudioLoadAbortError(audio = null) {
+      const code = Number(audio?.error?.code || 0)
+      // MEDIA_ERR_ABORTED (1) is expected when src changes or a newer load() supersedes.
+      return code === 1
+    },
+
     waitForAudioElementReady(audio, timeoutMs = 15000) {
       if (!audio) return Promise.reject(new Error('No audio element'))
       // HAVE_METADATA (1) is enough for play(); requiring HAVE_CURRENT_DATA (2)
@@ -17566,7 +17750,16 @@ export default {
           if (isReady()) finish(resolve)
         }
 
-        const onError = () => finish(reject, new Error('Audio load error'))
+        const onError = () => {
+          // Ignore aborts from concurrent src/load changes; keep waiting for the
+          // current source unless a real decode/network failure sticks.
+          if (this.isAudioLoadAbortError(audio)) return
+          if (isReady()) {
+            finish(resolve)
+            return
+          }
+          finish(reject, new Error('Audio load error'))
+        }
 
         const timeout = setTimeout(() => {
           if (isReady()) {
@@ -17576,13 +17769,20 @@ export default {
           finish(reject, new Error('Audio load timeout'))
         }, timeoutMs)
 
-        // If load stalled after a prior abort/clear, nudge the element once.
+        // If a prior abort left the element idle with a valid src, re-kick once
+        // without calling load() on an in-flight fetch (that causes MEDIA_ERR_ABORTED).
         const nudge = setTimeout(() => {
           if (settled || isReady()) return
-          const src = audio.currentSrc || audio.getAttribute('src') || ''
-          if (!src) return
-          try { audio.load() } catch { }
-        }, 1200)
+          const src = audio.getAttribute('src') || audio.currentSrc || ''
+          if (!src || src.startsWith('data:')) return
+          const networkState = Number(audio.networkState || 0)
+          // NETWORK_EMPTY (0) / NETWORK_IDLE (1) after an abort — reassign src.
+          // NETWORK_LOADING (2) must not be interrupted.
+          if (networkState === 2) return
+          try {
+            audio.src = src
+          } catch { }
+        }, 1800)
 
         const cleanup = () => {
           clearTimeout(timeout)
@@ -19099,7 +19299,9 @@ export default {
     async confirmEndSessionFromExitModal() {
       const decision = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION)
       if (!decision.completeSession) return
-      await this.confirmSessionExit({ showSummary: false, openCompletion: true })
+      // End Session confirm ends practice and returns to the workspace —
+      // the recommendation success modal is only for natural completion.
+      await this.confirmSessionExit({ showSummary: false, openCompletion: false })
     },
 
     softPausePlayback() {
@@ -19365,6 +19567,13 @@ export default {
         detailMessage,
         coveredAyahCount: coveredAyah,
         totalAyahs,
+        totalAyahsInSurah: Number(
+          this.currentChapter?.verses_count
+          || this.currentChapter?.ayah_count
+          || this.plannerConfig?.totalVersesInSurah
+          || totalAyahs
+          || 0
+        ),
         lastAyahLabel: coveredAyah,
         modeSummary: this.sessionTypeInfo?.label ? this.t('memorisation.common.modeLabel', { label: this.sessionTypeInfo.label }) : '',
         repeatSummary,
@@ -19510,6 +19719,15 @@ export default {
 
     confirmSessionExit(options = {}) {
       const { showSummary = false, openCompletion = true } = options
+      // Stuck pause/end locks previously made "End session" a silent no-op.
+      if (
+        this.sessionLifecycleMutation === SESSION_MUTATION.ENDING
+        || this.sessionExitEndingBusy
+        || this.sessionActionLock.isLocked()
+        || this.sessionActionLock.isLocked('end')
+      ) {
+        this.resetStuckSessionLifecycleControls()
+      }
       if (this.sessionLifecycleMutation === SESSION_MUTATION.ENDING || this.sessionExitEndingBusy) {
         return Promise.resolve(null)
       }
@@ -19517,7 +19735,17 @@ export default {
         return Promise.resolve(null)
       }
 
-      const endedSnapshot = this.sessionExitPreviewSnapshot || this.buildSessionEndedSnapshot({ force: true })
+      const endedSnapshot = {
+        ...(this.sessionExitPreviewSnapshot || this.buildSessionEndedSnapshot({ force: true }) || {}),
+        totalAyahsInSurah: Number(
+          this.sessionExitPreviewSnapshot?.totalAyahsInSurah
+          || this.currentChapter?.verses_count
+          || this.currentChapter?.ayah_count
+          || 0
+        ),
+        versesInSurah: Number(this.currentChapter?.verses_count || 0),
+        endedManually: true,
+      }
       const wasSample = !!this.onboardingSampleSessionActive
       const backendSessionId = this.backendSessionSnapshot?.id || this.postSessionCompletedSessionId || 'current'
       const previousStreak = Number(this.analytics?.currentStreak || 0)
@@ -19535,7 +19763,7 @@ export default {
             }
           } catch (_) { /* endSession below remains authoritative */ }
 
-            if (this.learningBackendEnabled()) {
+          if (this.learningBackendEnabled()) {
             try {
               if (wasSample) {
                 await learningApi.discardOnboardingExampleSession()
@@ -19547,10 +19775,11 @@ export default {
                     metadata: {
                       completed: true,
                       active: false,
+                      ended_manually: true,
                       config: {
-                        chapterId: this.chapterId || this.sessionConfig?.chapterId,
-                        rangeStart: this.sessionConfig?.rangeStart,
-                        rangeEnd: this.sessionConfig?.rangeEnd,
+                        chapterId: endedSnapshot.chapterId || this.chapterId || this.sessionConfig?.chapterId,
+                        rangeStart: endedSnapshot.rangeStart || this.sessionConfig?.rangeStart,
+                        rangeEnd: endedSnapshot.rangeEnd || this.sessionConfig?.rangeEnd,
                         reciterId: this.reciterId,
                         playbackSpeed: this.speed,
                         repetitionsPerStep: this.repetitionsPerStep,
@@ -19591,16 +19820,15 @@ export default {
                 }
               }
             } catch (error) {
-              console.warn('Failed to end session on backend', error)
-              this.sessionLifecycleError = 'end_failed'
-              this.sessionExitEndingBusy = false
-              const gate = resolveCompletionGate({
-                persistenceSucceeded: false,
-                priorStatus,
-              })
-              this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
-              this.showBanner(this.t('toasts.sessionEndFailed') || 'Unable to end session. Please try again.', 'danger', 4200)
-              return null
+              console.warn('Failed to end session on backend; opening local success modal', error)
+              // Manual end must still reach the success modal. Keep a local plan ready.
+              if (!this.postSessionRecommendation) {
+                const fallback = buildLocalFallbackRecommendation(endedSnapshot)
+                this.postSessionRecommendation = this.enrichPostSessionRecommendation(fallback)
+                this.postSessionRecommendationStatus = isActionableRecommendation(fallback) ? 'ready' : 'empty'
+                this.postSessionViewState = 'recommendation_ready'
+                this.syncPostSessionConfidenceFromRecommendation(this.postSessionRecommendation, { force: true })
+              }
             }
           }
 
@@ -19612,7 +19840,8 @@ export default {
           this.centralSession.sessionCompletedAt = this.sessionCompletedAt
           completeMutqinSession(this.mutqinState)
           this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
-          this.onboardingSampleSessionActive = false
+          // Keep sample flag through the post-session modal so Finish / sample CTAs
+          // still render; exitOnboardingSampleMode clears it when leaving that flow.
           this.sessionPaused = false
           this.backendUnfinishedSession = false
           this.backendSessionSnapshot = {
@@ -19626,7 +19855,8 @@ export default {
           this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
           this.sessionBroadcast?.publish('session-ended', { at: Date.now() })
 
-          // Open success modal only after persistence succeeds.
+          // Always open the success modal after a manual/natural end once local
+          // completion is applied — backend sync failure must not strand the user.
           if ((openCompletion || showSummary) && gate.openCompletionScreen && gate.showPostCompletionActions) {
             this.postSessionActionsUnlocked = true
             this.openPostSessionModal(endedSnapshot, { previousStreak })
@@ -21556,7 +21786,12 @@ export default {
       }
 
       this.audioError = (e) => {
-        console.error('Audio error:', e)
+        const audio = e?.target || this.audioElement
+        if (this.isAudioLoadAbortError(audio)) {
+          // Expected when unlock/preload/playVerse supersede an in-flight load.
+          return
+        }
+        console.error('Audio error:', e, audio?.error || null)
         this.isPlaying = false
         this.sessionErrorCount += 1
         this.stopWordHighlighting()
@@ -21651,6 +21886,14 @@ export default {
         this.ignoreMainAudioPauseEvent = true
         this.audioElement.src = audioUrl
         this.audioElement.load()
+      } else if (Number(this.audioElement.readyState || 0) < 1) {
+        // Same URL but a prior abort left the element idle — re-kick without churning src.
+        this.ignoreMainAudioPauseEvent = true
+        try {
+          this.audioElement.src = audioUrl
+        } catch {
+          try { this.audioElement.load() } catch { }
+        }
       }
       this.playerVisible = true
       this.playerDismissed = false
@@ -22436,12 +22679,26 @@ export default {
     },
 
     normalizeAudioUrl(url) {
-      if (!url) return ''
-      if (url.startsWith('http://') || url.startsWith('https://')) return url
-      if (url.startsWith('//')) return `https:${url}`
-      if (url.startsWith('/')) return `https://verses.quran.com${url}`
-      if (url.includes('mp3')) return `https://verses.quran.com/${url}`
-      return url
+      if (!url || typeof url !== 'string') return ''
+      const trimmed = url.trim()
+      if (!trimmed) return ''
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed
+      if (trimmed.startsWith('//')) return `https:${trimmed}`
+      if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) return trimmed
+
+      // AlQuran Cloud / islamic.network relative ayah audio paths.
+      if (
+        trimmed.startsWith('/quran/audio')
+        || trimmed.startsWith('quran/audio')
+        || /^\/?\d+\/[a-z0-9._-]+\/\d+\.mp3$/i.test(trimmed)
+      ) {
+        const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+        return `https://cdn.islamic.network${path}`
+      }
+
+      // Quran.com word-by-word / verse relative paths.
+      if (trimmed.startsWith('/')) return `https://verses.quran.com${trimmed}`
+      return trimmed
     },
     resolveAyahAudioUrl(ayah = {}) {
       const direct = typeof ayah.audio === 'string' ? ayah.audio : ''

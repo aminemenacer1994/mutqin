@@ -83,7 +83,8 @@ export function isActionableRecommendation(recommendation) {
     return false
   }
 
-  return !!(surahId || recommendation.surah || recommendation.next_surah)
+  // Need a concrete surah + range so the Continue button can start a real session.
+  return !!(surahId && hasRange)
 }
 
 export function isRepeatRecommendation(recommendation) {
@@ -179,6 +180,21 @@ export function formatRecommendationSettingsSummary(settings, t, options = {}) {
 }
 
 /**
+ * Next surah in the adaptive beginner path:
+ * Al-Fatiha → An-Nas, then Juz ʿAmma descending (114→78), then Al-Baqarah.
+ * @param {number} chapterId
+ * @returns {number|null}
+ */
+export function resolveNextSurahId(chapterId) {
+  const id = Number(chapterId || 0)
+  if (id === 1) return 114
+  if (id >= 79 && id <= 114) return id - 1
+  if (id === 78) return 2
+  if (id >= 2 && id < 77) return id + 1
+  return null
+}
+
+/**
  * Lightweight offline/guest fallback when the backend recommendation is unavailable.
  * Never invents a next surah automatically.
  */
@@ -240,7 +256,7 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
   }
 
   if (totalAyahs && rangeEnd >= totalAyahs) {
-    const nextId = chapterId < 114 ? chapterId + 1 : null
+    const nextId = resolveNextSurahId(chapterId)
     const nextRangeTo = Math.min(preferredSize, 4)
     return {
       id: null,
@@ -356,11 +372,16 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
   // Confident — clear stale practice copy, but keep evidence-based progression reasons.
   const existingReason = String(recommendation.user_reason || '').trim()
   const stalePracticeCopy = /selected Needs more practice|asked for more practice/i.test(existingReason)
+  const type = String(recommendation.type || '')
+  const isTerminal = type === RECOMMENDATION_TYPES.PLAN_COMPLETE
+    || type === RECOMMENDATION_TYPES.SURAH_COMPLETE
+    || type === RECOMMENDATION_TYPES.MANUAL_SELECTION
 
-  if (!isRepeatRecommendation(recommendation)) {
+  // Already a forward plan — keep its evidence copy and range.
+  if (!isRepeatRecommendation(recommendation) && !isTerminal) {
     return {
       ...next,
-      reason_code: 'confidence_confident',
+      reason_code: recommendation.reason_code || 'confidence_confident',
       user_reason: stalePracticeCopy ? null : (existingReason || null),
       reason: stalePracticeCopy ? '' : String(recommendation.reason || ''),
       balance_message: null,
@@ -369,8 +390,17 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
 
   const completedEnd = Math.max(snapshotEnd, Number(range?.to || 0))
   const nextFrom = completedEnd + 1
+  const completedSurahId = Number(
+    recommendation.completed_surah?.id
+    || snapshot.chapterId
+    || recommendation.surah?.id
+    || 0
+  )
+
+  // Still inside the surah — advance a small next bite (never the rest of the surah).
   if (totalAyahs && nextFrom <= totalAyahs) {
-    const size = Math.min(3, totalAyahs - nextFrom + 1)
+    const remaining = totalAyahs - nextFrom + 1
+    const size = Math.min(3, remaining)
     return {
       ...next,
       type: RECOMMENDATION_TYPES.CONTINUE,
@@ -382,16 +412,63 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
       balance_message: null,
       panel_title_key: 'nextSetTitle',
       primary_action_label_key: 'continueToAyat',
+      surah: recommendation.surah || {
+        id: completedSurahId,
+        name: snapshot.chapterName || '',
+        translated_name: snapshot.chapterName || '',
+      },
       ayah_range: {
         from: nextFrom,
         to: nextFrom + size - 1,
         count: size,
       },
+      is_end_of_surah: false,
+      requires_confirmation: false,
       settings: {
         ...settings,
+        technique: settings.technique || 'focus',
+        complementary_technique: settings.complementary_technique || 'anchor',
         playback_speed: Math.max(1, Number(settings.playback_speed || 1)),
         repetitions: Math.min(3, Math.max(2, Number(settings.repetitions || 3))),
       },
+    }
+  }
+
+  // Finished the surah — promote to the next surah in the beginner path.
+  if ((totalAyahs && nextFrom > totalAyahs) || isTerminal) {
+    const nextId = resolveNextSurahId(completedSurahId)
+    if (nextId) {
+      // Keep the opening bite small — never dump a whole surah.
+      const openingSize = Math.min(3, 4)
+      return {
+        ...next,
+        type: RECOMMENDATION_TYPES.NEXT_SURAH,
+        session_mode: 'new_learning',
+        range_kind: 'new',
+        reason_code: 'surah_completed',
+        user_reason: null,
+        reason: '',
+        balance_message: null,
+        panel_title_key: 'nextSurahTitle',
+        primary_action_label_key: 'continueToNextSurah',
+        completed_surah: recommendation.completed_surah || {
+          id: completedSurahId,
+          name: snapshot.chapterName || recommendation.surah?.name || '',
+          translated_name: snapshot.chapterName || recommendation.surah?.name || '',
+        },
+        surah: { id: nextId, name: '', translated_name: '' },
+        next_surah: { id: nextId, name: '', translated_name: '' },
+        ayah_range: { from: 1, to: openingSize, count: openingSize },
+        is_end_of_surah: true,
+        requires_confirmation: true,
+        settings: {
+          ...settings,
+          technique: settings.technique || 'focus',
+          complementary_technique: settings.complementary_technique || 'anchor',
+          playback_speed: Math.max(1, Number(settings.playback_speed || 1)),
+          repetitions: Math.min(3, Math.max(2, Number(settings.repetitions || 3))),
+        },
+      }
     }
   }
 
@@ -402,4 +479,30 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
     reason: '',
     balance_message: null,
   }
+}
+
+/**
+ * Optimistically reshape the plan from an AI Recite outcome.
+ * @param {object|null} recommendation
+ * @param {'strong'|'mixed'|'weak'} result
+ * @param {object} [snapshot]
+ * @returns {object|null}
+ */
+export function adaptRecommendationForAiAssessment(recommendation, result, snapshot = {}) {
+  if (!recommendation || !['strong', 'mixed', 'weak'].includes(result)) {
+    return recommendation
+  }
+
+  if (result === 'strong') {
+    return adaptRecommendationForConfidence(recommendation, 'confident', snapshot)
+  }
+  if (result === 'weak') {
+    return adaptRecommendationForConfidence(recommendation, 'needs_practice', snapshot)
+  }
+
+  const confidence = recommendation.confidence_feedback
+  if (confidence === 'confident') {
+    return adaptRecommendationForConfidence(recommendation, 'confident', snapshot)
+  }
+  return adaptRecommendationForConfidence(recommendation, 'needs_practice', snapshot)
 }

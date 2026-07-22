@@ -1,6 +1,5 @@
-const SHELL_CACHE = 'mutqin-shell-v15';
-const RUNTIME_CACHE = 'mutqin-runtime-v15';
-const AUDIO_CACHE = 'mutqin-audio-v1';
+const SHELL_CACHE = 'mutqin-shell-v16';
+const RUNTIME_CACHE = 'mutqin-runtime-v16';
 const SHELL_URLS = [
   '/',
   '/memorisation',
@@ -20,7 +19,7 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
       keys
-        .filter(key => ![SHELL_CACHE, RUNTIME_CACHE, AUDIO_CACHE].includes(key))
+        .filter(key => ![SHELL_CACHE, RUNTIME_CACHE].includes(key))
         .map(key => caches.delete(key))
     )).then(() => self.clients.claim())
   );
@@ -75,7 +74,9 @@ self.addEventListener('fetch', event => {
   }
 
   if (isAudio || url.host === 'cdn.islamic.network') {
-    event.respondWith(cacheFirst(request, AUDIO_CACHE));
+    // Do not cache media responses. cacheFirst + Range requests commonly break
+    // HTMLMediaElement duration/seeking (00:00/00:00) and can surface load errors.
+    event.respondWith(fetch(request));
     return;
   }
 

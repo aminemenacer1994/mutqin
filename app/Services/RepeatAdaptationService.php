@@ -371,8 +371,8 @@ class RepeatAdaptationService
             $adaptations[] = 'use_anchor';
             $intendedOutcome = 'Steady progression with light support.';
             $userReason = $confidence === 'confident' || $confidence === ''
-                ? 'You completed the range and selected Confident, but used several memory prompts. Start the next ayah with Focus and Anchor mode, then remove the support once recall feels stable.'
-                : 'You completed the range, but used several memory prompts. Start the next ayah with Focus and Anchor mode, then remove the support once recall feels stable.';
+                ? 'You completed the range and selected Confident, but used several memory prompts. This plan moves forward with a smaller next set in Focus and Anchor — remove the support once recall feels stable.'
+                : 'You completed the range, but used several memory prompts. This plan moves forward with a smaller next set in Focus and Anchor — remove the support once recall feels stable.';
             $reasonCode = 'continue_current_surah';
         } elseif ($aiResult === '' && $efficient) {
             $primary = 'blur';

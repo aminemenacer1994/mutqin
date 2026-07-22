@@ -2210,7 +2210,7 @@
   width: 100% !important;
   max-width: none !important;
   max-height: calc(100dvh - 2rem);
-  border-radius: 20px;
+  border-radius: var(--mutqin-modal-radius);
   overflow: hidden;
   background: var(--mutqin-modal-surface-bg);
 }
@@ -20442,14 +20442,20 @@ button:active {
 }
 
 .modal-content.self-check-modal, .modal-content.memorisation-checker-modal {
-  background: #fff !important;
-  border: 0 !important;
-  box-shadow: none !important;
+  background: var(--mutqin-modal-surface-bg) !important;
+  border: 1px solid var(--mutqin-modal-surface-border) !important;
+  border-radius: var(--mutqin-modal-radius) !important;
+  box-shadow: var(--mutqin-modal-shadow) !important;
 }
 
 .modal-content.self-check-modal .modal-header, .modal-content.memorisation-checker-modal .modal-header {
   border: 0 !important;
-  background: color-mix(in srgb, var(--surface) 96%, white) !important;
+  background: linear-gradient(
+    180deg,
+    var(--mutqin-modal-hero-bg),
+    color-mix(in srgb, var(--mutqin-modal-hero-bg) 18%, transparent) 70%,
+    transparent 100%
+  ) !important;
 }
 
 .modal-context-badges {
@@ -20464,9 +20470,10 @@ button:active {
 }
 
 .modal-content.self-check-modal .self-check-modal-stage, .modal-content.memorisation-checker-modal .memorisation-checker-stage, .modal-content.self-check-modal .self-check-recorder-card, .modal-content.memorisation-checker-modal .self-check-recorder-card, .modal-content.self-check-modal .recitation-check-panel, .modal-content.memorisation-checker-modal .recitation-check-panel {
-  background: #fff !important;
-  border: 0 !important;
+  background: color-mix(in srgb, var(--surface) 94%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent) !important;
   box-shadow: none !important;
+  border-radius: var(--mutqin-modal-radius-inner) !important;
 }
 
 .modal-content.self-check-modal .self-check-toolbar-btn, .modal-content.memorisation-checker-modal .self-check-toolbar-btn, .modal-content.self-check-modal .modal-close-btn, .modal-content.memorisation-checker-modal .modal-close-btn, .modal-content.self-check-modal .self-check-library-link, .modal-content.memorisation-checker-modal .self-check-library-link {
@@ -31066,26 +31073,56 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: rgba(214, 236, 220, 0.82);
 }
 
-/* UX patch layer */
+/* UX patch layer — shared modal system (all Mutqin dialogs) */
 
 :root {
   --mutqin-modal-width-xl: min(720px, calc(100vw - 2rem));
   --mutqin-modal-width-wide: min(960px, calc(100vw - 2rem));
   --mutqin-modal-width-full: min(1140px, calc(100vw - 2rem));
-  --mutqin-modal-backdrop: rgba(12, 10, 8, 0.62);
-  --mutqin-modal-backdrop-blur: 0px;
-  --mutqin-modal-surface-bg: color-mix(in srgb, var(--surface-elevated, var(--surface)) 98%, transparent);
-  --mutqin-modal-surface-border: color-mix(in srgb, var(--accent) 14%, var(--border));
-  --mutqin-modal-hero-bg: color-mix(in srgb, var(--accent) 5%, var(--surface));
+  --mutqin-modal-radius: 26px;
+  --mutqin-modal-radius-inner: 14px;
+  --mutqin-modal-backdrop: color-mix(in srgb, #0a100d 58%, transparent);
+  --mutqin-modal-backdrop-blur: 10px;
+  --mutqin-modal-surface-border: color-mix(in srgb, var(--border) 62%, var(--accent) 38%);
+  --mutqin-modal-surface-bg:
+    radial-gradient(90% 70% at 8% -10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 52%),
+    radial-gradient(70% 50% at 100% 0%, color-mix(in srgb, #2f6f58 8%, transparent), transparent 46%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--zone-elevated, var(--surface)) 98%, #fff 2%),
+      color-mix(in srgb, var(--zone-reading, var(--surface)) 90%, var(--zone-elevated, var(--surface)) 10%)
+    );
+  --mutqin-modal-surface-solid: color-mix(in srgb, var(--surface-elevated, var(--surface)) 98%, transparent);
+  --mutqin-modal-hero-bg: color-mix(in srgb, var(--accent-wash, var(--accent-light, var(--accent))) 72%, transparent);
+  --mutqin-modal-shadow:
+    0 1px 0 color-mix(in srgb, #fff 62%, transparent) inset,
+    0 22px 48px color-mix(in srgb, #0f1110 14%, transparent),
+    0 48px 100px color-mix(in srgb, #0f1110 18%, transparent);
+  --mutqin-modal-enter-duration: 480ms;
+  --mutqin-modal-enter-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --mutqin-modal-btn-radius: 12px;
+  --mutqin-modal-btn-min-height: 2.55rem;
 }
 
 [data-theme="dark"] {
   --mutqin-modal-backdrop: color-mix(in srgb, #070a09 72%, transparent);
-  --mutqin-modal-surface-bg: color-mix(in srgb, var(--surface-elevated, var(--surface)) 96%, #1a1714 4%);
+  --mutqin-modal-surface-bg:
+    radial-gradient(90% 70% at 8% -10%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 52%),
+    radial-gradient(70% 50% at 100% 0%, color-mix(in srgb, #2f6f58 10%, transparent), transparent 46%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-elevated, var(--surface)) 96%, #1a1714 4%),
+      color-mix(in srgb, var(--surface) 92%, #12100e 8%)
+    );
+  --mutqin-modal-surface-solid: color-mix(in srgb, var(--surface-elevated, var(--surface)) 96%, #1a1714 4%);
+  --mutqin-modal-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 22px 56px rgba(0, 0, 0, 0.34),
+    0 40px 90px rgba(0, 0, 0, 0.28);
 }
 
 [data-theme="light"] {
-  --mutqin-modal-backdrop: color-mix(in srgb, #1a1410 42%, transparent);
+  --mutqin-modal-backdrop: color-mix(in srgb, #1a1410 36%, transparent);
 }
 
 .modal-overlay,
@@ -31102,8 +31139,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .session-exit-backdrop {
   background: var(--mutqin-modal-backdrop) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  backdrop-filter: blur(var(--mutqin-modal-backdrop-blur)) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(var(--mutqin-modal-backdrop-blur)) saturate(1.15) !important;
 }
 
 .welcome-back-backdrop,
@@ -31148,11 +31185,11 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .mutqin-modal-overlay > .mutqin-modal-dialog {
-  animation: mutqinModalEnter var(--motion-enter, 220ms) var(--motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  animation: mutqinModalEnter var(--mutqin-modal-enter-duration) var(--mutqin-modal-enter-ease);
 }
 
 .mutqin-modal-flow .mutqin-modal-dialog {
-  animation: none;
+  animation: mutqinModalEnter var(--mutqin-modal-enter-duration) var(--mutqin-modal-enter-ease);
 }
 
 .onboarding-post-session-modal-wrap .modal-dialog.modal-xl,
@@ -31180,18 +31217,14 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   max-width: none !important;
   background: var(--mutqin-modal-surface-bg) !important;
   border: 1px solid var(--mutqin-modal-surface-border) !important;
-  border-radius: 20px !important;
+  border-radius: var(--mutqin-modal-radius) !important;
   color: var(--text) !important;
-  box-shadow:
-    0 24px 64px color-mix(in srgb, #0f1110 18%, transparent),
-    0 1px 0 color-mix(in srgb, white 50%, transparent) inset !important;
-  animation: mutqinModalEnter var(--motion-enter, 220ms) var(--motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) !important;
+  box-shadow: var(--mutqin-modal-shadow) !important;
+  animation: mutqinModalEnter var(--mutqin-modal-enter-duration) var(--mutqin-modal-enter-ease) !important;
 }
 
 [data-theme="dark"] .modal-content.mutqin-modal-surface {
-  box-shadow:
-    0 22px 56px rgba(0, 0, 0, 0.34),
-    0 1px 0 rgba(255, 255, 255, 0.04) inset !important;
+  box-shadow: var(--mutqin-modal-shadow) !important;
 }
 
 .mutqin-modal-surface .modal-header,
@@ -31199,8 +31232,13 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .mutqin-modal-surface .help-learning-header,
 .mutqin-modal-surface .recordings-library-header,
 .mutqin-modal-surface .self-check-modal-header {
-  background: var(--mutqin-modal-surface-bg) !important;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
+  background: linear-gradient(
+    180deg,
+    var(--mutqin-modal-hero-bg),
+    color-mix(in srgb, var(--mutqin-modal-hero-bg) 18%, transparent) 70%,
+    transparent 100%
+  ) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 48%, transparent) !important;
 }
 
 .mutqin-modal-surface .modal-footer,
@@ -31265,7 +31303,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 @keyframes mutqinModalEnter {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.985);
+    transform: translateY(18px) scale(0.975);
   }
 
   to {
@@ -31617,19 +31655,15 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .mutqin-modal-surface {
   border: 1px solid var(--mutqin-modal-surface-border) !important;
-  border-radius: 20px !important;
+  border-radius: var(--mutqin-modal-radius) !important;
   overflow: hidden;
   background: var(--mutqin-modal-surface-bg) !important;
-  box-shadow:
-    0 24px 64px color-mix(in srgb, #0f1110 18%, transparent),
-    0 1px 0 color-mix(in srgb, white 50%, transparent) inset !important;
+  box-shadow: var(--mutqin-modal-shadow) !important;
 }
 
 [data-theme="dark"] .mutqin-modal-surface {
   background: var(--mutqin-modal-surface-bg) !important;
-  box-shadow:
-    0 22px 56px rgba(0, 0, 0, 0.34),
-    0 1px 0 rgba(255, 255, 255, 0.04) inset !important;
+  box-shadow: var(--mutqin-modal-shadow) !important;
 }
 
 .mutqin-modal-surface .modal-header {
@@ -31651,7 +31685,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .post-onboarding-modal,
 .onboarding-post-session-modal,
 .session-exit-modal {
-  box-shadow: none;
+  box-shadow: var(--mutqin-modal-shadow) !important;
 }
 
 .keyboard-shortcuts-overlay {
@@ -32345,9 +32379,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   align-items: center;
   justify-content: center;
   gap: var(--primary-action-gap);
-  min-height: var(--primary-action-min-height);
+  min-height: var(--mutqin-modal-btn-min-height, var(--primary-action-min-height));
   padding: var(--primary-action-padding-y) var(--primary-action-padding-x);
-  border-radius: var(--primary-action-radius);
+  border-radius: var(--mutqin-modal-btn-radius, var(--primary-action-radius));
   border: 1px solid transparent;
   font-size: var(--primary-action-font-size);
   font-weight: var(--primary-action-font-weight);
@@ -32357,7 +32391,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     background-color 180ms ease,
     border-color 180ms ease,
     color 180ms ease,
-    opacity 180ms ease;
+    opacity 180ms ease,
+    transform 120ms ease,
+    box-shadow 150ms ease;
 }
 
 .mutqin-modal-btn:disabled,
@@ -32394,6 +32430,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     color-mix(in srgb, var(--accent-strong) 72%, var(--accent))
   );
   border-color: color-mix(in srgb, var(--accent) 52%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .mutqin-modal-btn--primary:active:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
@@ -36750,13 +36788,14 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   position: fixed;
   inset: 0;
   pointer-events: auto;
-  background: color-mix(in srgb, #0a100d 58%, transparent);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: var(--mutqin-modal-backdrop);
+  backdrop-filter: blur(var(--mutqin-modal-backdrop-blur)) saturate(1.15);
+  -webkit-backdrop-filter: blur(var(--mutqin-modal-backdrop-blur)) saturate(1.15);
+  animation: mutqinBackdropFade 280ms ease;
 }
 
 [data-theme="light"] .post-session-simple__backdrop {
-  background: color-mix(in srgb, #1a1410 36%, transparent);
+  background: var(--mutqin-modal-backdrop);
 }
 
 .post-session-simple__overlay {
@@ -36773,40 +36812,31 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .post-session-simple__dialog {
   pointer-events: auto;
-  width: min(820px, calc(100vw - 2rem));
-  max-width: min(820px, calc(100vw - 2rem));
+  width: min(640px, calc(100vw - 2rem));
+  max-width: min(640px, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
   margin: auto;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border-radius: 26px;
-  border: 1px solid color-mix(in srgb, var(--border) 62%, var(--accent) 38%);
-  background:
-    radial-gradient(90% 70% at 8% -10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 52%),
-    radial-gradient(70% 50% at 100% 0%, color-mix(in srgb, var(--ps-mint) 8%, transparent), transparent 46%),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--zone-elevated, var(--surface)) 98%, #fff 2%),
-      color-mix(in srgb, var(--zone-reading, var(--surface)) 90%, var(--zone-elevated, var(--surface)) 10%)
-    );
-  box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 62%, transparent) inset,
-    0 22px 48px color-mix(in srgb, #0f1110 14%, transparent),
-    0 48px 100px color-mix(in srgb, #0f1110 18%, transparent);
+  border-radius: calc(var(--mutqin-modal-radius) - 2px);
+  border: 1px solid var(--mutqin-modal-surface-border);
+  background: var(--mutqin-modal-surface-bg);
+  box-shadow: var(--mutqin-modal-shadow);
   overflow: hidden;
+  animation: mutqinModalEnter var(--mutqin-modal-enter-duration) var(--mutqin-modal-enter-ease) both;
 }
 
 .post-session-simple__header {
   display: flex;
   align-items: flex-start;
-  gap: 0.95rem;
-  padding: 1.35rem 1.4rem 1rem;
+  gap: 0.75rem;
+  padding: 0.95rem 1.1rem 0.75rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 48%, transparent);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--accent-wash, var(--accent-light)) 72%, transparent),
-    color-mix(in srgb, var(--accent-wash, var(--accent-light)) 18%, transparent) 70%,
+    var(--mutqin-modal-hero-bg),
+    color-mix(in srgb, var(--mutqin-modal-hero-bg) 18%, transparent) 70%,
     transparent 100%
   );
   min-width: 0;
@@ -36814,8 +36844,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .post-session-simple__check {
   flex-shrink: 0;
-  width: 2.6rem;
-  height: 2.6rem;
+  width: 2.15rem;
+  height: 2.15rem;
   display: grid;
   place-items: center;
   margin-top: 0.02rem;
@@ -36823,23 +36853,353 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   border: 1px solid color-mix(in srgb, var(--ps-mint) 24%, transparent);
   background: linear-gradient(180deg, #f7fcf9, #dff1e7);
   color: var(--ps-mint);
-  font-size: 1.15rem;
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--ps-mint) 14%, transparent);
+  font-size: 1rem;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ps-mint) 10%, transparent);
+  animation: post-session-check-pop 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+@keyframes post-session-check-pop {
+  0% { transform: scale(0.72); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.post-session-simple__dialog {
+  animation: mutqinModalEnter var(--mutqin-modal-enter-duration) var(--mutqin-modal-enter-ease) both;
+}
+
+@keyframes post-session-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.975);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.post-session-simple__stack > *,
+.post-session-simple__panel--hero {
+  animation: post-session-rise 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.post-session-simple__stack > *:nth-child(1) { animation-delay: 60ms; }
+.post-session-simple__stack > *:nth-child(2) { animation-delay: 110ms; }
+.post-session-simple__panel--hero { animation-delay: 160ms; }
+
+@keyframes post-session-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.post-session-simple__ai-review {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, transparent), transparent 55%),
+    color-mix(in srgb, var(--zone-elevated, var(--surface)) 94%, #fff 6%);
+  width: 100%;
+  min-width: 0;
+}
+
+.post-session-simple__ai-review-top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.post-session-simple__ai-score {
+  --ai-score: 0;
+  width: 4.4rem;
+  height: 4.4rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.05rem;
+  border-radius: 999px;
+  border: 3px solid color-mix(in srgb, var(--ps-mint) 28%, transparent);
+  background:
+    radial-gradient(circle at 50% 45%, color-mix(in srgb, #fff 70%, transparent), transparent 62%),
+    conic-gradient(
+      from -90deg,
+      #2f6f58 calc(var(--ai-score) * 1%),
+      color-mix(in srgb, var(--border) 45%, transparent) 0
+    );
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--ps-mint) 12%, transparent);
+  position: relative;
+}
+
+.post-session-simple__ai-score::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 96%, #fff 4%);
+}
+
+.post-session-simple__ai-score > * {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.post-session-simple__ai-score strong {
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--text);
+}
+
+.post-session-simple__ai-score span {
+  font-size: 0.58rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-muted, var(--text)) 80%, transparent);
+}
+
+.post-session-simple__ai-score[data-outcome="strong"] {
+  border-color: color-mix(in srgb, #2f6f58 40%, transparent);
+}
+
+.post-session-simple__ai-score[data-outcome="mixed"] {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background:
+    radial-gradient(circle at 50% 45%, color-mix(in srgb, #fff 70%, transparent), transparent 62%),
+    conic-gradient(
+      from -90deg,
+      var(--accent) calc(var(--ai-score) * 1%),
+      color-mix(in srgb, var(--border) 45%, transparent) 0
+    );
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.post-session-simple__ai-score[data-outcome="weak"] {
+  border-color: color-mix(in srgb, #c45c48 40%, transparent);
+  background:
+    radial-gradient(circle at 50% 45%, color-mix(in srgb, #fff 70%, transparent), transparent 62%),
+    conic-gradient(
+      from -90deg,
+      #c45c48 calc(var(--ai-score) * 1%),
+      color-mix(in srgb, var(--border) 45%, transparent) 0
+    );
+  box-shadow: 0 8px 18px color-mix(in srgb, #c45c48 14%, transparent);
+}
+
+.post-session-simple__ai-review-copy {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.post-session-simple__ai-duration {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text-muted, var(--text)) 78%, transparent);
+}
+
+.post-session-simple__ai-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.post-session-simple__ai-metric {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+  padding: 0.5rem 0.55rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
+  background: color-mix(in srgb, var(--surface) 94%, #fff 6%);
+}
+
+.post-session-simple__ai-metric[data-tone="good"] {
+  border-color: color-mix(in srgb, #2f6f58 24%, transparent);
+  background: color-mix(in srgb, #2f6f58 8%, #fff);
+}
+
+.post-session-simple__ai-metric[data-tone="mid"] {
+  border-color: color-mix(in srgb, var(--accent) 26%, transparent);
+  background: color-mix(in srgb, var(--accent) 9%, #fff);
+}
+
+.post-session-simple__ai-metric[data-tone="warn"] {
+  border-color: color-mix(in srgb, #c45c48 24%, transparent);
+  background: color-mix(in srgb, #c45c48 8%, #fff);
+}
+
+.post-session-simple__ai-metric-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-muted, var(--text)) 82%, transparent);
+}
+
+.post-session-simple__ai-metric-value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.post-session-simple__ai-highlights {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.post-session-simple__ai-highlights li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: start;
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 52%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--text) 80%, transparent);
+}
+
+.post-session-simple__ai-highlights li .bi {
+  margin-top: 0.12rem;
+  font-size: 0.92rem;
+}
+
+.post-session-simple__ai-highlights li[data-tone="good"] .bi { color: #2f6f58; }
+.post-session-simple__ai-highlights li[data-tone="mid"] .bi { color: #8a5a18; }
+.post-session-simple__ai-highlights li[data-tone="warn"] .bi { color: #c45c48; }
+
+.post-session-simple__ai-focus {
+  margin: 0;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 34%, transparent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--text) 82%, transparent);
+}
+
+.post-session-simple__ai-focus-label {
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 78%, #5a3d28);
+}
+
+.post-session-simple__ai-ayahs {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.post-session-simple__ai-ayahs-label {
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-muted, var(--text)) 80%, transparent);
+}
+
+.post-session-simple__ai-ayah-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.post-session-simple__ai-ayah-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #c45c48 26%, transparent);
+  background: color-mix(in srgb, #c45c48 10%, #fff);
+  color: #8a3b2e;
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+
+[data-theme="dark"] .post-session-simple__ai-review {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 55%),
+    color-mix(in srgb, var(--zone-elevated, var(--surface)) 88%, #000 12%);
+}
+
+[data-theme="dark"] .post-session-simple__ai-score::before {
+  background: color-mix(in srgb, #241f1c 92%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__ai-metric,
+[data-theme="dark"] .post-session-simple__ai-highlights li {
+  background: color-mix(in srgb, #1a1613 78%, transparent);
+  border-color: color-mix(in srgb, rgba(244, 220, 190, 0.14) 70%, var(--border));
+}
+
+[data-theme="dark"] .post-session-simple__ai-ayah-pill {
+  background: color-mix(in srgb, #c45c48 18%, #1a1613);
+  border-color: color-mix(in srgb, #c45c48 34%, transparent);
+  color: #f0b4a8;
+}
+
+@media (max-width: 640px) {
+  .post-session-simple__ai-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post-session-simple__check,
+  .post-session-simple__dialog,
+  .post-session-simple__stack > *,
+  .post-session-simple__panel--hero,
+  .post-session-simple__segment.is-awaiting,
+  .modal-content.mutqin-modal-surface,
+  .mutqin-modal-overlay > .mutqin-modal-dialog,
+  .mutqin-modal-flow .mutqin-modal-dialog,
+  .modal-overlay,
+  .mutqin-modal-overlay {
+    animation: none !important;
+  }
+}
+
 
 .post-session-simple__header-copy {
   min-width: 0;
   flex: 1 1 auto;
   display: grid;
-  gap: 0.28rem;
-  padding-top: 0.1rem;
+  gap: 0.15rem;
+  padding-top: 0.05rem;
 }
 
 .post-session-simple__title {
   margin: 0;
-  font-size: 1.12rem;
-  font-weight: 650;
-  letter-spacing: -0.015em;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   line-height: 1.35;
   color: var(--text);
   overflow-wrap: anywhere;
@@ -36847,26 +37207,30 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .post-session-simple__subtitle {
   margin: 0;
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   line-height: 1.4;
+  font-weight: 400;
   color: color-mix(in srgb, var(--text) 62%, transparent);
   overflow-wrap: anywhere;
 }
 
 .post-session-simple__body {
   display: grid;
-  gap: 1.15rem;
-  padding: 1.25rem 1.5rem 1.1rem;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem 0.95rem;
   overflow: auto;
+  overflow-x: hidden;
   min-height: 0;
   flex: 1 1 auto;
+  scroll-padding-bottom: 1rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .post-session-simple__stack,
 .post-session-simple__row {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.7rem;
+  gap: 0.55rem;
   align-items: stretch;
   min-width: 0;
   width: 100%;
@@ -36886,11 +37250,11 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  padding: 0.7rem 0.95rem;
-  border-radius: var(--ps-radius-md);
-  border: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  box-shadow: 0 1px 0 color-mix(in srgb, #fff 40%, transparent) inset;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  box-shadow: none;
 }
 
 .post-session-simple__ai-head {
@@ -36906,10 +37270,12 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .post-session-simple__ai-label,
 .post-session-simple__confidence-label {
   margin: 0;
-  font-size: 0.86rem;
+  font-size: 0.68rem;
   font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   line-height: 1.3;
-  color: color-mix(in srgb, var(--text) 78%, transparent);
+  color: color-mix(in srgb, var(--text-muted, var(--text)) 78%, transparent);
   max-width: none;
 }
 
@@ -36918,26 +37284,29 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.42rem;
+  gap: 0.35rem;
   align-self: flex-start;
-  min-height: 2.35rem;
-  padding: 0 1.05rem;
+  min-height: 2rem;
+  padding: 0 0.85rem;
   border-radius: 999px;
   border: 1px solid var(--ps-mint-border);
-  background: linear-gradient(180deg, #f4faf7, var(--ps-mint-soft));
+  background: #eef7f2;
   color: #245f4d;
-  font-size: 0.84rem;
-  font-weight: 650;
-  letter-spacing: 0.01em;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--ps-mint) 10%, transparent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  box-shadow: none;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
 }
 
 .post-session-simple__ai-btn:hover:not(:disabled) {
   border-color: rgba(47, 111, 88, 0.42);
   background: linear-gradient(180deg, #eaf6f0, #dff0e7);
-  box-shadow: 0 6px 14px color-mix(in srgb, var(--ps-mint) 14%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 70%, transparent) inset,
+    0 8px 16px color-mix(in srgb, var(--ps-mint) 16%, transparent);
+  transform: translateY(-1px);
 }
 
 .post-session-simple__ai-btn:focus-visible,
@@ -36953,6 +37322,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .post-session-simple__ai-btn:disabled {
   opacity: 0.62;
   cursor: not-allowed;
+  transform: none;
 }
 
 .post-session-simple__ai-feedback,
@@ -36960,9 +37330,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   margin: 0;
   width: 100%;
   max-width: none;
-  font-size: 0.78rem;
-  line-height: 1.35;
-  color: color-mix(in srgb, var(--text) 64%, transparent);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--text) 72%, transparent);
 }
 
 .post-session-simple__ai-hint--quiet {
@@ -36972,88 +37342,182 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .post-session-simple__segment {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
+  gap: 0.4rem;
   width: 100%;
-  margin-top: 0.15rem;
-  padding: 0.3rem;
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--border) 22%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  margin-top: 0.1rem;
+  padding: 0.28rem;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--border) 18%, transparent), transparent),
+    color-mix(in srgb, var(--surface) 88%, #efe6da 12%);
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  box-shadow: inset 0 1px 2px color-mix(in srgb, #0f1110 4%, transparent);
+}
+
+.post-session-simple__segment.is-awaiting {
+  animation: post-session-await-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes post-session-await-pulse {
+  0%, 100% { box-shadow: inset 0 1px 2px color-mix(in srgb, #0f1110 4%, transparent); }
+  50% {
+    box-shadow:
+      inset 0 1px 2px color-mix(in srgb, #0f1110 4%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
 }
 
 .post-session-simple__segment-btn {
   appearance: none;
-  min-height: 2.45rem;
-  padding: 0.45rem 0.7rem;
-  border-radius: 11px;
-  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
-  color: color-mix(in srgb, var(--text) 72%, transparent);
-  font-size: 0.84rem;
+  min-height: 2.55rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: color-mix(in srgb, var(--text) 68%, transparent);
+  font-size: 0.86rem;
   line-height: 1.25;
-  font-weight: 550;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, transform 0.12s ease;
 }
 
 .post-session-simple__segment.is-awaiting .post-session-simple__segment-btn {
   opacity: 1;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border-color: color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.post-session-simple__segment.has-selection .post-session-simple__segment-btn:not(.is-selected) {
+  opacity: 0.7;
+  background: transparent;
+  border-color: transparent;
+  color: color-mix(in srgb, var(--text) 55%, transparent);
   font-weight: 550;
   box-shadow: none;
 }
 
-.post-session-simple__segment.has-selection .post-session-simple__segment-btn:not(.is-selected) {
-  opacity: 0.62;
-  background: transparent;
-  border-color: transparent;
-  color: color-mix(in srgb, var(--text) 58%, transparent);
-  font-weight: 500;
-  box-shadow: none;
-}
-
 .post-session-simple__segment-btn.is-selected {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 92%, #fff),
-    color-mix(in srgb, var(--accent) 78%, #5a3d28)
-  );
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #fff;
-  font-weight: 700;
-  border-color: color-mix(in srgb, var(--accent) 70%, #3d2a1c);
+  font-weight: 600;
+  border-color: color-mix(in srgb, var(--accent) 55%, #3d2a1c);
   box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 28%, transparent) inset,
-    0 6px 14px color-mix(in srgb, var(--accent) 28%, transparent);
+    0 1px 0 color-mix(in srgb, #fff 30%, transparent) inset,
+    0 4px 12px color-mix(in srgb, var(--accent) 18%, transparent);
+  transform: none;
 }
 
 .post-session-simple__segment-btn:disabled {
   opacity: 0.62;
   cursor: not-allowed;
+  transform: none;
 }
 
 .post-session-simple__panel {
+  position: relative;
+  isolation: isolate;
   min-width: 0;
   width: 100%;
   display: grid;
-  gap: 0.85rem;
-  padding: 1.15rem 1.25rem;
-  border-radius: var(--ps-radius-md);
+  gap: 0.65rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
   border: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
+  overflow: visible;
 }
 
 .post-session-simple__panel--hero {
-  gap: 0.85rem;
-  padding: 1.3rem 1.35rem;
+  gap: 0.7rem;
+  padding: 0.9rem 1rem 0.95rem;
   border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
   background:
     linear-gradient(
       155deg,
-      color-mix(in srgb, var(--accent-wash, var(--accent-light)) 88%, var(--surface)),
-      color-mix(in srgb, var(--surface) 97%, transparent) 62%
+      color-mix(in srgb, var(--accent-wash, var(--accent-light)) 88%, #fff),
+      color-mix(in srgb, var(--surface) 97%, transparent) 62%,
+      color-mix(in srgb, var(--zone-elevated, var(--surface)) 96%, transparent)
     );
   box-shadow:
     0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
-    0 10px 24px color-mix(in srgb, var(--accent) 8%, transparent);
+    0 6px 16px color-mix(in srgb, var(--accent) 6%, transparent);
+  overflow: visible;
+}
+
+.post-session-simple__panel--hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 88%, #fff),
+    color-mix(in srgb, var(--accent-strong, var(--accent)) 80%, #5a3d28)
+  );
+  border-radius: 18px 0 0 18px;
+  z-index: 1;
+}
+
+.post-session-simple__panel--hero[data-plan="repeat"]::before {
+  background: linear-gradient(180deg, #c47a3a, #8a4f22);
+}
+
+.post-session-simple__panel--hero[data-plan="next-surah"]::before {
+  background: linear-gradient(180deg, #3d8f6e, #245f4d);
+}
+
+.post-session-simple__panel--hero[data-plan="continue"]::before {
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+}
+
+.post-session-simple__plan-glow {
+  display: none;
+}
+
+.post-session-simple__panel--hero > *:not(.post-session-simple__plan-glow) {
+  position: relative;
+  z-index: 1;
+}
+
+.post-session-simple__panel-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  min-width: 0;
+}
+
+.post-session-simple__plan-seal {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 82%, #5a3d28);
+  font-size: 1rem;
+  box-shadow: none;
+}
+
+.post-session-simple__panel--hero[data-plan="repeat"] .post-session-simple__plan-seal {
+  border-color: color-mix(in srgb, #c47a3a 34%, transparent);
+  background: linear-gradient(180deg, #fff7ef, #f4e3d0);
+  color: #8a4f22;
+}
+
+.post-session-simple__panel--hero[data-plan="next-surah"] .post-session-simple__plan-seal {
+  border-color: color-mix(in srgb, #2f6f58 34%, transparent);
+  background: linear-gradient(180deg, #f4faf7, #dff0e7);
+  color: #245f4d;
+}
+
+.post-session-simple__plan-copy {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+  padding-top: 0.08rem;
 }
 
 .post-session-simple__reason,
@@ -37063,12 +37527,12 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   max-width: none;
   font-size: 0.9rem;
   line-height: 1.55;
-  color: color-mix(in srgb, var(--text) 74%, transparent);
+  color: color-mix(in srgb, var(--text) 78%, transparent);
 }
 
 .post-session-simple__param-hints {
   display: grid;
-  gap: 0.3rem;
+  gap: 0.4rem;
   width: 100%;
 }
 
@@ -37077,19 +37541,31 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 0.3rem;
+  gap: 0.4rem;
   width: 100%;
 }
 
 .post-session-simple__param-list li {
   margin: 0;
-  padding: 0.4rem 0.65rem;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 48%, transparent);
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
-  font-size: 0.78rem;
-  line-height: 1.35;
-  color: color-mix(in srgb, var(--text) 70%, transparent);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: start;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--ps-mint) 18%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 50%, transparent), transparent 55%),
+    color-mix(in srgb, var(--ps-mint-soft) 55%, var(--surface));
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--text) 76%, transparent);
+}
+
+.post-session-simple__param-list li .bi {
+  margin-top: 0.1rem;
+  color: var(--ps-mint);
+  font-size: 0.95rem;
 }
 
 .post-session-simple__panel-title {
@@ -37100,25 +37576,39 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: var(--text);
 }
 
-.post-session-simple__panel-head {
-  display: grid;
-  gap: 0.28rem;
-  min-width: 0;
-}
-
 .post-session-simple__action-label {
   margin: 0;
-  font-size: 0.7rem;
-  font-weight: 650;
-  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.16rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--accent) 72%, var(--text-muted, var(--text)));
+  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 78%, #5a3d28);
+}
+
+.post-session-simple__panel--hero[data-plan="repeat"] .post-session-simple__action-label {
+  border-color: color-mix(in srgb, #c47a3a 30%, transparent);
+  background: color-mix(in srgb, #c47a3a 12%, #fff);
+  color: #8a4f22;
+}
+
+.post-session-simple__panel--hero[data-plan="next-surah"] .post-session-simple__action-label {
+  border-color: color-mix(in srgb, #2f6f58 30%, transparent);
+  background: color-mix(in srgb, #2f6f58 12%, #fff);
+  color: #245f4d;
 }
 
 .post-session-simple__range {
   margin: 0;
-  font-size: 1.14rem;
-  font-weight: 650;
+  font-size: 1.05rem;
+  font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.3;
   color: var(--text);
@@ -37127,19 +37617,24 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .post-session-simple__why {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.25rem;
   margin: 0;
   width: 100%;
   max-width: none;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 52%, transparent);
+  background: color-mix(in srgb, var(--surface) 94%, #fff 6%);
+  box-shadow: none;
 }
 
 .post-session-simple__why-label {
   margin: 0;
-  font-size: 0.72rem;
-  font-weight: 650;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  color: color-mix(in srgb, var(--text) 78%, transparent);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-muted, var(--text)) 82%, transparent);
 }
 
 .post-session-simple__reason,
@@ -37147,9 +37642,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   margin: 0;
   width: 100%;
   max-width: none;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: color-mix(in srgb, var(--text) 70%, transparent);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text) 72%, transparent);
   overflow-wrap: anywhere;
 }
 
@@ -37164,65 +37660,93 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   overflow-wrap: anywhere;
 }
 
-.post-session-simple__pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.15rem;
-}
-
-.post-session-simple__combination {
+.post-session-simple__plan-actions {
   display: grid;
   gap: 0.4rem;
-  margin-top: 0.1rem;
+  width: 100%;
+  margin-top: 0.05rem;
+}
+
+.post-session-simple__plan-start {
+  width: 100%;
+  min-height: 2.4rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 28%, transparent) inset,
+    0 6px 14px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .post-session-simple__adjust-link {
   appearance: none;
   display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   align-self: start;
-  margin: 0.15rem 0 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: color-mix(in srgb, var(--text-muted, var(--text)) 82%, transparent);
-  font-size: 0.78rem;
-  font-weight: 550;
+  margin: 0.1rem 0 0;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--border) 62%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+  font-size: 0.8rem;
+  font-weight: 600;
   line-height: 1.35;
-  text-decoration: underline;
-  text-underline-offset: 0.14em;
+  text-decoration: none;
   cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
 }
 
 .post-session-simple__adjust-link:hover:not(:disabled) {
-  color: color-mix(in srgb, var(--accent) 70%, var(--text));
+  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 80%, var(--text));
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  transform: translateY(-1px);
 }
 
 .post-session-simple__adjust-link:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+  transform: none;
 }
 
 .post-session-simple__adjust-link:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
   outline-offset: 2px;
-  border-radius: 2px;
 }
 
 .post-session-simple__pill {
   display: inline-flex;
   align-items: center;
-  min-height: 1.7rem;
-  padding: 0.2rem 0.65rem;
+  min-height: 1.85rem;
+  padding: 0.28rem 0.72rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  background: color-mix(in srgb, var(--surface) 90%, transparent);
-  color: color-mix(in srgb, var(--text) 78%, transparent);
-  font-size: 0.74rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 70%, transparent), transparent 70%),
+    color-mix(in srgb, var(--accent) 7%, var(--surface));
+  color: color-mix(in srgb, var(--text) 82%, transparent);
+  font-size: 0.76rem;
   line-height: 1.2;
-  font-weight: 550;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset;
   pointer-events: none;
   user-select: none;
+}
+
+.post-session-simple__combination {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.05rem;
+  padding-top: 0.15rem;
+}
+
+.post-session-simple__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
 }
 
 .post-session-simple__stats {
@@ -37310,19 +37834,15 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .post-session-simple__footer {
   flex: 0 0 auto;
-  padding: 1rem 1.4rem 1.2rem;
+  padding: 0.75rem 1.1rem 0.9rem;
   border-top: 1px solid color-mix(in srgb, var(--border) 52%, transparent);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface) 78%, transparent),
-    color-mix(in srgb, var(--zone-elevated, var(--surface)) 96%, transparent)
-  );
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
 }
 
 .post-session-simple__actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
+  gap: 0.5rem;
   width: 100%;
 }
 
@@ -37335,31 +37855,32 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  min-height: 2.55rem;
+  gap: var(--primary-action-gap, 0.35rem);
+  min-height: calc(var(--mutqin-modal-btn-min-height) - 0.15rem);
   width: 100%;
   min-width: 0;
-  padding: 0.55rem 0.9rem;
-  border-radius: 12px;
+  padding: 0.45rem 0.8rem;
+  border-radius: var(--mutqin-modal-btn-radius);
   border: 1px solid color-mix(in srgb, var(--border) 75%, var(--accent));
   background: color-mix(in srgb, var(--surface) 96%, transparent);
   color: var(--text);
-  font-size: 0.88rem;
-  font-weight: 650;
-  letter-spacing: -0.01em;
+  font-size: var(--primary-action-font-size, 0.84rem);
+  font-weight: 600;
+  letter-spacing: 0;
   cursor: pointer;
   overflow-wrap: anywhere;
-  transition: transform 0.12s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.15s ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
 }
 
 .post-session-simple__btn--primary {
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 92%, #fff 8%),
-    color-mix(in srgb, var(--accent-strong, var(--accent)) 88%, #6b4a2a)
-  );
   color: #fff;
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   box-shadow:
     0 1px 0 color-mix(in srgb, #fff 28%, transparent) inset,
     0 8px 18px color-mix(in srgb, var(--accent) 22%, transparent);
@@ -37367,18 +37888,27 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .post-session-simple__btn--primary:hover:not(:disabled) {
   transform: translateY(-1px);
+  background: linear-gradient(
+    135deg,
+    var(--accent-strong),
+    color-mix(in srgb, var(--accent-strong) 72%, var(--accent))
+  );
   box-shadow:
     0 1px 0 color-mix(in srgb, #fff 28%, transparent) inset,
     0 10px 22px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .post-session-simple__btn--secondary {
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  border-color: color-mix(in srgb, var(--border) 82%, transparent);
   box-shadow: 0 1px 0 color-mix(in srgb, #fff 35%, transparent) inset;
 }
 
 .post-session-simple__btn--secondary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--surface) 88%, var(--accent-light));
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
 }
 
 .post-session-simple__btn:disabled {
@@ -37399,33 +37929,23 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 [data-theme="dark"] .post-session-simple__backdrop {
-  background: color-mix(in srgb, #050403 72%, transparent);
-  backdrop-filter: blur(12px) saturate(1.08);
-  -webkit-backdrop-filter: blur(12px) saturate(1.08);
+  background: var(--mutqin-modal-backdrop);
+  backdrop-filter: blur(var(--mutqin-modal-backdrop-blur)) saturate(1.08);
+  -webkit-backdrop-filter: blur(var(--mutqin-modal-backdrop-blur)) saturate(1.08);
 }
 
 [data-theme="dark"] .post-session-simple__dialog {
-  border-color: color-mix(in srgb, var(--accent) 28%, rgba(244, 220, 190, 0.18));
-  background:
-    radial-gradient(95% 70% at 6% -8%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 55%),
-    radial-gradient(70% 48% at 100% 0%, color-mix(in srgb, var(--ps-mint) 10%, transparent), transparent 48%),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, #322b26 92%, var(--accent) 8%),
-      color-mix(in srgb, #241f1c 96%, #1a1613 4%)
-    );
-  box-shadow:
-    0 1px 0 color-mix(in srgb, rgba(255, 236, 210, 0.12) 80%, transparent) inset,
-    0 18px 44px color-mix(in srgb, #000 42%, transparent),
-    0 40px 90px color-mix(in srgb, #000 38%, transparent);
+  border-color: var(--mutqin-modal-surface-border);
+  background: var(--mutqin-modal-surface-bg);
+  box-shadow: var(--mutqin-modal-shadow);
 }
 
 [data-theme="dark"] .post-session-simple__header {
   border-bottom-color: color-mix(in srgb, rgba(244, 220, 190, 0.14) 70%, var(--border));
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--accent) 14%, transparent),
-    color-mix(in srgb, var(--accent) 4%, transparent) 68%,
+    var(--mutqin-modal-hero-bg),
+    color-mix(in srgb, var(--mutqin-modal-hero-bg) 18%, transparent) 68%,
     transparent 100%
   );
 }
@@ -37470,6 +37990,32 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     0 12px 28px color-mix(in srgb, #000 22%, transparent);
 }
 
+[data-theme="dark"] .post-session-simple__plan-seal {
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  background: linear-gradient(180deg, #3a322b, #2a241f);
+  color: color-mix(in srgb, var(--accent) 88%, #f3dfc4);
+  box-shadow: 0 8px 16px color-mix(in srgb, #000 28%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__why {
+  border-color: color-mix(in srgb, rgba(244, 220, 190, 0.14) 70%, var(--border));
+  background: color-mix(in srgb, #1a1613 78%, transparent);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .post-session-simple__pill {
+  border-color: color-mix(in srgb, var(--accent) 24%, rgba(244, 220, 190, 0.14));
+  background: color-mix(in srgb, #2a241f 86%, var(--accent) 14%);
+  color: color-mix(in srgb, #f7efe5 88%, transparent);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .post-session-simple__adjust-link {
+  border-color: color-mix(in srgb, rgba(244, 220, 190, 0.16) 70%, var(--border));
+  background: color-mix(in srgb, #241f1c 88%, transparent);
+  color: var(--ps-muted);
+}
+
 [data-theme="dark"] .post-session-simple__section-label,
 [data-theme="dark"] .post-session-simple__ai-label,
 [data-theme="dark"] .post-session-simple__confidence-label {
@@ -37510,11 +38056,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 [data-theme="dark"] .post-session-simple__segment-btn.is-selected {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 78%, #5a3d28),
-    color-mix(in srgb, var(--accent) 62%, #2a1c14)
-  );
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #fff8f0;
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   box-shadow:
@@ -37536,6 +38078,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 [data-theme="dark"] .post-session-simple__action-label {
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+  background: color-mix(in srgb, var(--accent) 18%, #2a241f);
   color: color-mix(in srgb, var(--accent) 86%, #f3dfc4);
 }
 

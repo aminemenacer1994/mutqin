@@ -3,6 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
   RECOMMENDATION_TYPES,
+  adaptRecommendationForAiAssessment,
   adaptRecommendationForConfidence,
   buildLocalFallbackRecommendation,
   formatAyahRangeLabel,
@@ -126,7 +127,77 @@ function t(key, params = {}) {
   })
   assert.equal(end.type, RECOMMENDATION_TYPES.NEXT_SURAH)
   assert.equal(end.is_end_of_surah, true)
+  assert.equal(end.next_surah.id, 114)
+  assert.equal(end.surah.id, 114)
   assert.equal(end.ayah_range.from, 1)
+}
+
+{
+  // After An-Nas, continue Juz ʿAmma with a small Al-Falaq opening — not plan-complete.
+  const afterNas = buildLocalFallbackRecommendation({
+    chapterId: 114,
+    chapterName: 'An-Nas',
+    rangeStart: 1,
+    rangeEnd: 6,
+    totalAyahsInSurah: 6,
+    completedAll: true,
+  })
+  assert.equal(afterNas.type, RECOMMENDATION_TYPES.NEXT_SURAH)
+  assert.equal(afterNas.next_surah.id, 113)
+  assert.equal(afterNas.ayah_range.from, 1)
+  assert.ok(afterNas.ayah_range.to <= 4)
+  assert.equal(isActionableRecommendation(afterNas), true)
+
+  const planComplete = {
+    id: 99,
+    type: RECOMMENDATION_TYPES.PLAN_COMPLETE,
+    surah: { id: 114, name: 'An-Nas' },
+    ayah_range: null,
+    is_end_of_surah: true,
+  }
+  const promoted = adaptRecommendationForConfidence(planComplete, 'confident', {
+    chapterId: 114,
+    chapterName: 'An-Nas',
+    rangeStart: 1,
+    rangeEnd: 6,
+    totalAyahsInSurah: 6,
+  })
+  assert.equal(promoted.type, RECOMMENDATION_TYPES.NEXT_SURAH)
+  assert.equal(promoted.next_surah.id, 113)
+  assert.equal(promoted.ayah_range.to, 3)
+  assert.equal(isActionableRecommendation(promoted), true)
+}
+
+{
+  const endRepeat = {
+    id: 11,
+    type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
+    session_mode: 'revision',
+    range_kind: 'repeated',
+    surah: { id: 1, name: 'Al-Fatihah' },
+    ayah_range: { from: 1, to: 7, count: 7 },
+    reason_code: 'confidence_needs_practice',
+    settings: { technique: 'talqin', playback_speed: 0.75, repetitions: 4 },
+  }
+  const afterConfident = adaptRecommendationForConfidence(endRepeat, 'confident', {
+    chapterId: 1,
+    chapterName: 'Al-Fatihah',
+    rangeStart: 1,
+    rangeEnd: 7,
+    totalAyahsInSurah: 7,
+  })
+  assert.equal(afterConfident.type, RECOMMENDATION_TYPES.NEXT_SURAH)
+  assert.equal(afterConfident.next_surah.id, 114)
+  assert.equal(afterConfident.ayah_range.from, 1)
+
+  const afterStrongAi = adaptRecommendationForAiAssessment(endRepeat, 'strong', {
+    chapterId: 1,
+    rangeStart: 1,
+    rangeEnd: 7,
+    totalAyahsInSurah: 7,
+  })
+  assert.equal(afterStrongAi.type, RECOMMENDATION_TYPES.NEXT_SURAH)
+  assert.equal(afterStrongAi.next_surah.id, 114)
 }
 
 {
@@ -166,6 +237,27 @@ function t(key, params = {}) {
   assert.match(vue, /is-awaiting/)
   assert.match(js, /submitRecommendationConfidence/)
   assert.match(js, /openPostSessionNewSessionOffcanvas/)
+  assert.match(js, /exitOnboardingSampleMode/)
+  assert.match(js, /onboardingSampleSessionActive && !options\.sampleSession/)
+  assert.match(js, /sampleSession:\s*keepSample/)
+  assert.match(js, /adaptRecommendationForAiAssessment/)
+  assert.match(js, /buildPostSessionAiReviewDetails/)
+  assert.match(js, /buildAiReviewDetails/)
+  assert.match(vue, /post-session-simple__ai-review/)
+  assert.match(vue, /post-session-simple__ai-metrics/)
+  assert.match(vue, /post-session-simple__ai-highlights/)
+  assert.match(vue, /post-session-simple__ai-focus/)
+  assert.match(css, /post-session-simple__ai-score/)
+  assert.match(css, /--ai-score/)
+  assert.match(vue, /postSessionAiReviewDetails/)
+  assert.match(vue, /post-session-simple__plan-seal/)
+  assert.match(vue, /post-session-simple__plan-start/)
+  assert.match(vue, /openPostSessionRecommendationConfirm/)
+  assert.match(vue, /data-plan="postSessionPlanKind"|:data-plan="postSessionPlanKind"/)
+  assert.match(js, /postSessionPlanKind\(\)/)
+  assert.match(css, /post-session-simple__panel--hero::before/)
+  assert.match(css, /post-session-simple__plan-glow/)
+  assert.match(css, /post-session-await-pulse/)
   assert.match(js, /openPostSessionAdjustPlan/)
   assert.match(js, /postSessionViewState/)
   assert.match(js, /deriveCompletionFlowPhase/)

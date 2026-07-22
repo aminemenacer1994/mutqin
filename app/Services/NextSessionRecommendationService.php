@@ -1735,12 +1735,14 @@ class NextSessionRecommendationService
             return $this->payloadFromRecord($recommendation->fresh());
         }
 
-        // If currently a repeat, regenerate a continue from the completed source when possible.
+        // If currently a repeat, regenerate continue / next-surah from the completed source.
         $source = $recommendation->sourceSession;
         if ($source) {
             $context = $this->buildContext($user, $source);
-            if ($context['session_completed'] && ! $context['is_end_of_surah']) {
-                $continue = $this->continuePayload($context);
+            if ($context['session_completed']) {
+                $continue = $context['is_end_of_surah']
+                    ? $this->endOfSurahPayload($context)
+                    : $this->continuePayload($context);
                 $continue = $this->attachSettings($continue, array_merge($context, [
                     'performance' => array_merge(
                         is_array($context['performance'] ?? null) ? $context['performance'] : [],
@@ -1761,7 +1763,7 @@ class NextSessionRecommendationService
                         $reasonCode,
                         $continue['ayah_range'] ?? null,
                         $continue['surah'] ?? null,
-                        null,
+                        $continue['next_surah'] ?? null,
                     );
                 }
                 $continue['technique'] = $this->techniquePayload($continue);
