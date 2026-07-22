@@ -27,6 +27,26 @@ for (const token of sharedTokens) {
 assert.match(css, /\.post-session-simple__dialog[\s\S]*?var\(--mutqin-modal-surface-bg\)/)
 assert.match(css, /\.post-session-simple__dialog[\s\S]*?var\(--mutqin-modal-radius\)/)
 assert.match(css, /\.post-session-simple__backdrop[\s\S]*?var\(--mutqin-modal-backdrop\)/)
+assert.match(
+  css,
+  /\[data-theme="dark"\]\s*\{[\s\S]*?--mutqin-modal-hero-bg:\s*color-mix\(in srgb, #3a322b/,
+  'dark mode must redefine modal hero bg so headers stay dark'
+)
+assert.match(
+  css,
+  /\[data-theme="dark"\] \.post-session-simple__header \{[\s\S]*?background:\s*linear-gradient\([\s\S]*?#322b26/,
+  'post-session dark header must use opaque dark surface'
+)
+assert.match(
+  css,
+  /\[data-theme="dark"\] \.post-session-simple__title \{[\s\S]*?color:\s*#fff8f0/,
+  'post-session dark title must stay light on dark header'
+)
+assert.match(
+  css,
+  /\[data-theme="dark"\] \.post-session-simple__dialog \{[\s\S]*?background:\s*linear-gradient\(180deg, #2a2420/,
+  'post-session dark dialog must use opaque dark shell'
+)
 assert.match(css, /\.modal-content\.mutqin-modal-surface[\s\S]*?var\(--mutqin-modal-radius\)/)
 assert.match(css, /\.mutqin-modal-btn[\s\S]*?var\(--mutqin-modal-btn-radius/)
 assert.match(css, /\.post-session-simple__btn[\s\S]*?var\(--mutqin-modal-btn-radius\)/)

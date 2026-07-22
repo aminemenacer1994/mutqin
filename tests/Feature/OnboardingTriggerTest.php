@@ -51,6 +51,12 @@ class OnboardingTriggerTest extends TestCase
 
     public function test_new_google_user_flashes_just_registered(): void
     {
+        config([
+            'services.google.client_id' => 'test-client.apps.googleusercontent.com',
+            'services.google.client_secret' => 'test-secret',
+            'services.google.redirect' => route('auth.google.callback'),
+        ]);
+
         $this->mockGoogleUser([
             'id' => 'google-onboarding-1',
             'name' => 'Google Newbie',

@@ -13,12 +13,47 @@ class GoogleAuthControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config([
+            'services.google.client_id' => 'test-client.apps.googleusercontent.com',
+            'services.google.client_secret' => 'test-secret',
+            'services.google.redirect' => route('auth.google.callback'),
+        ]);
+    }
+
     public function test_google_redirect_route_redirects_to_the_provider(): void
     {
         $this->mockGoogleRedirect();
 
         $this->get(route('auth.google.redirect'))
             ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
+    }
+
+    public function test_google_redirect_fails_clearly_when_client_id_missing(): void
+    {
+        config([
+            'services.google.client_id' => '',
+            'services.google.client_secret' => 'test-secret',
+        ]);
+
+        $this->get(route('auth.google.redirect'))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('google');
+    }
+
+    public function test_google_redirect_fails_clearly_when_client_id_malformed(): void
+    {
+        config([
+            'services.google.client_id' => 'not-a-real-client-id',
+            'services.google.client_secret' => 'test-secret',
+        ]);
+
+        $this->get(route('auth.google.redirect'))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('google');
     }
 
     public function test_short_google_redirect_route_redirects_to_the_provider(): void
@@ -161,12 +196,6 @@ class GoogleAuthControllerTest extends TestCase
 
     private function expectedGoogleRedirectUrl(): string
     {
-        $configured = trim((string) config('services.google.redirect', ''));
-
-        if ($configured !== '' && ! str_contains($configured, '${')) {
-            return $configured;
-        }
-
         return route('auth.google.callback');
     }
 }

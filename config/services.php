@@ -41,10 +41,15 @@ return [
     ],
 
     'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID'),
-        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        // Trim: Laravel Cloud / .env editors often leave trailing whitespace that
+        // produces Google's "OAuth client was not found" (invalid_client).
+        'client_id' => trim((string) env('GOOGLE_CLIENT_ID', '')),
+        'client_secret' => trim((string) env('GOOGLE_CLIENT_SECRET', '')),
         // Must exactly match an Authorized redirect URI in Google Cloud Console.
-        'redirect' => env('GOOGLE_REDIRECT_URI') ?: rtrim((string) env('APP_URL', 'http://localhost'), '/').'/auth/google/callback',
+        'redirect' => trim((string) (
+            env('GOOGLE_REDIRECT_URI')
+            ?: rtrim((string) env('APP_URL', 'http://localhost'), '/').'/auth/google/callback'
+        )),
     ],
 
     'stripe' => [

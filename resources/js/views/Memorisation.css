@@ -31106,19 +31106,18 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 [data-theme="dark"] {
   --mutqin-modal-backdrop: color-mix(in srgb, #070a09 72%, transparent);
+  --mutqin-modal-surface-border: color-mix(in srgb, rgba(244, 220, 190, 0.16) 70%, var(--border));
   --mutqin-modal-surface-bg:
-    radial-gradient(90% 70% at 8% -10%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 52%),
-    radial-gradient(70% 50% at 100% 0%, color-mix(in srgb, #2f6f58 10%, transparent), transparent 46%),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface-elevated, var(--surface)) 96%, #1a1714 4%),
-      color-mix(in srgb, var(--surface) 92%, #12100e 8%)
-    );
-  --mutqin-modal-surface-solid: color-mix(in srgb, var(--surface-elevated, var(--surface)) 96%, #1a1714 4%);
+    radial-gradient(90% 70% at 8% -10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 52%),
+    radial-gradient(70% 50% at 100% 0%, color-mix(in srgb, #2f6f58 8%, transparent), transparent 46%),
+    linear-gradient(180deg, #2a2420 0%, #1f1a17 48%, #181412 100%);
+  --mutqin-modal-surface-solid: #221d19;
+  /* Must stay dark — light accent-wash made the success modal header cream with white text. */
+  --mutqin-modal-hero-bg: color-mix(in srgb, #3a322b 82%, var(--accent) 18%);
   --mutqin-modal-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 22px 56px rgba(0, 0, 0, 0.34),
-    0 40px 90px rgba(0, 0, 0, 0.28);
+    0 1px 0 rgba(255, 255, 255, 0.035) inset,
+    0 18px 48px rgba(0, 0, 0, 0.42),
+    0 36px 80px rgba(0, 0, 0, 0.32);
 }
 
 [data-theme="light"] {
@@ -31239,6 +31238,34 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     transparent 100%
   ) !important;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 48%, transparent) !important;
+}
+
+[data-theme="dark"] .mutqin-modal-surface .modal-header,
+[data-theme="dark"] .mutqin-modal-surface .session-analytics-header,
+[data-theme="dark"] .mutqin-modal-surface .help-learning-header,
+[data-theme="dark"] .mutqin-modal-surface .recordings-library-header,
+[data-theme="dark"] .mutqin-modal-surface .self-check-modal-header,
+[data-theme="dark"] .mutqin-modal-surface .welcome-back-hero,
+[data-theme="dark"] .mutqin-modal-surface .session-exit-hero,
+[data-theme="dark"] .mutqin-modal-surface .post-session-hero,
+[data-theme="dark"] .mutqin-modal-surface .onboarding-hero {
+  background: linear-gradient(
+    180deg,
+    #322b26 0%,
+    color-mix(in srgb, #2a2420 88%, var(--accent) 12%) 60%,
+    transparent 100%
+  ) !important;
+  color: #fff8f0 !important;
+}
+
+[data-theme="dark"] .mutqin-modal-surface .modal-header h2,
+[data-theme="dark"] .mutqin-modal-surface .modal-header h3,
+[data-theme="dark"] .mutqin-modal-surface .modal-title,
+[data-theme="dark"] .mutqin-modal-surface .welcome-back-hero h2,
+[data-theme="dark"] .mutqin-modal-surface .session-exit-hero h2,
+[data-theme="dark"] .mutqin-modal-surface .post-session-hero h2,
+[data-theme="dark"] .mutqin-modal-surface .onboarding-hero h2 {
+  color: #fff8f0 !important;
 }
 
 .mutqin-modal-surface .modal-footer,
@@ -37922,10 +37949,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   --ps-mint: #6ec9a4;
   --ps-mint-soft: color-mix(in srgb, #1d3d32 78%, #0f1411);
   --ps-mint-border: color-mix(in srgb, #6ec9a4 34%, transparent);
-  --ps-muted: color-mix(in srgb, var(--text) 78%, transparent);
-  --ps-muted-soft: color-mix(in srgb, var(--text) 64%, transparent);
-  --ps-panel: color-mix(in srgb, var(--zone-elevated, #2a2420) 88%, #1a1614);
-  --ps-panel-border: color-mix(in srgb, var(--border) 70%, rgba(244, 220, 190, 0.22));
+  --ps-muted: color-mix(in srgb, #f7ebdf 72%, transparent);
+  --ps-muted-soft: color-mix(in srgb, #f7ebdf 58%, transparent);
+  --ps-panel: #2a2420;
+  --ps-panel-border: color-mix(in srgb, rgba(244, 220, 190, 0.18) 80%, transparent);
 }
 
 [data-theme="dark"] .post-session-simple__backdrop {
@@ -37936,17 +37963,17 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 [data-theme="dark"] .post-session-simple__dialog {
   border-color: var(--mutqin-modal-surface-border);
-  background: var(--mutqin-modal-surface-bg);
+  background: linear-gradient(180deg, #2a2420 0%, #1f1a17 42%, #181412 100%);
   box-shadow: var(--mutqin-modal-shadow);
 }
 
 [data-theme="dark"] .post-session-simple__header {
-  border-bottom-color: color-mix(in srgb, rgba(244, 220, 190, 0.14) 70%, var(--border));
+  border-bottom-color: color-mix(in srgb, rgba(244, 220, 190, 0.14) 70%, transparent);
   background: linear-gradient(
     180deg,
-    var(--mutqin-modal-hero-bg),
-    color-mix(in srgb, var(--mutqin-modal-hero-bg) 18%, transparent) 68%,
-    transparent 100%
+    #322b26 0%,
+    color-mix(in srgb, #2a2420 88%, var(--accent) 12%) 55%,
+    #2a2420 100%
   );
 }
 
@@ -37960,11 +37987,15 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 [data-theme="dark"] .post-session-simple__title {
-  color: color-mix(in srgb, #fff8f0 92%, var(--text));
+  color: #fff8f0;
 }
 
 [data-theme="dark"] .post-session-simple__subtitle {
-  color: var(--ps-muted);
+  color: color-mix(in srgb, #f7ebdf 74%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__body {
+  background: transparent;
 }
 
 [data-theme="dark"] .post-session-simple__ai,
