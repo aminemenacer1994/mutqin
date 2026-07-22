@@ -3556,43 +3556,74 @@
             </template>
 
             <template v-else>
-              <section
-                v-if="postSessionRecommendation"
-                class="post-session-simple__confidence"
-                role="group"
-                :aria-label="t('memorisation.postSession.recommendation.confidencePrompt')"
-              >
-                <p class="post-session-simple__section-label">
-                  {{ t('memorisation.postSession.recommendation.confidencePrompt') }}
-                </p>
-                <div class="post-session-simple__segment" role="radiogroup">
+              <div class="post-session-simple__row">
+                <section class="post-session-simple__ai" aria-labelledby="postSessionAiTitle">
+                  <p id="postSessionAiTitle" class="post-session-simple__section-label">
+                    {{ t('memorisation.postSession.recommendation.aiReciteHintShort') }}
+                  </p>
                   <button
                     type="button"
-                    class="post-session-simple__segment-btn"
-                    role="radio"
-                    :class="{ 'is-selected': postSessionSelectedConfidence === 'confident' }"
+                    class="post-session-simple__ai-btn"
                     :disabled="postSessionActionsBusy"
-                    :aria-checked="postSessionSelectedConfidence === 'confident' ? 'true' : 'false'"
-                    @click="submitPostSessionConfidence('confident')"
+                    :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
+                    @click="openPostSessionAiRecite"
                   >
-                    {{ t('memorisation.postSession.recommendation.confidenceConfident') }}
+                    <span
+                      v-if="postSessionAiReciteBusy"
+                      class="spinner-border spinner-border-sm"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    <i v-else class="bi bi-stars" aria-hidden="true"></i>
+                    <span>{{ postSessionAiReciteBusyLabel }}</span>
                   </button>
-                  <button
-                    type="button"
-                    class="post-session-simple__segment-btn"
-                    role="radio"
-                    :class="{ 'is-selected': postSessionSelectedConfidence === 'needs_practice' }"
-                    :disabled="postSessionActionsBusy"
-                    :aria-checked="postSessionSelectedConfidence === 'needs_practice' ? 'true' : 'false'"
-                    @click="submitPostSessionConfidence('needs_practice')"
+                  <p
+                    v-if="postSessionRecommendation?.ai_assessment?.summary || postSessionAiFeedback"
+                    class="post-session-simple__ai-feedback"
+                    role="status"
                   >
-                    {{ t('memorisation.postSession.recommendation.confidenceNeedsPractice') }}
-                  </button>
-                </div>
-                <p v-if="postSessionConfidenceError" class="post-session-simple__error" role="status">
-                  {{ postSessionConfidenceError }}
-                </p>
-              </section>
+                    {{ postSessionAiFeedback || postSessionRecommendation.ai_assessment.summary }}
+                  </p>
+                </section>
+
+                <section
+                  v-if="postSessionRecommendation"
+                  class="post-session-simple__confidence"
+                  role="group"
+                  :aria-label="t('memorisation.postSession.recommendation.confidencePrompt')"
+                >
+                  <p class="post-session-simple__section-label">
+                    {{ t('memorisation.postSession.recommendation.confidencePrompt') }}
+                  </p>
+                  <div class="post-session-simple__segment" role="radiogroup">
+                    <button
+                      type="button"
+                      class="post-session-simple__segment-btn"
+                      role="radio"
+                      :class="{ 'is-selected': postSessionSelectedConfidence === 'confident' }"
+                      :disabled="postSessionActionsBusy"
+                      :aria-checked="postSessionSelectedConfidence === 'confident' ? 'true' : 'false'"
+                      @click="submitPostSessionConfidence('confident')"
+                    >
+                      {{ t('memorisation.postSession.recommendation.confidenceConfident') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="post-session-simple__segment-btn"
+                      role="radio"
+                      :class="{ 'is-selected': postSessionSelectedConfidence === 'needs_practice' }"
+                      :disabled="postSessionActionsBusy"
+                      :aria-checked="postSessionSelectedConfidence === 'needs_practice' ? 'true' : 'false'"
+                      @click="submitPostSessionConfidence('needs_practice')"
+                    >
+                      {{ t('memorisation.postSession.recommendation.confidenceNeedsPractice') }}
+                    </button>
+                  </div>
+                  <p v-if="postSessionConfidenceError" class="post-session-simple__error" role="status">
+                    {{ postSessionConfidenceError }}
+                  </p>
+                </section>
+              </div>
 
               <section
                 class="post-session-simple__panel post-session-simple__panel--hero"

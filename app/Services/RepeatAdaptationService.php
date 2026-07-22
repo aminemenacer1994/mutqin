@@ -349,7 +349,7 @@ class RepeatAdaptationService
                 $intendedOutcome = 'Stronger independent recall as you move forward.';
                 $userReason = 'AI Recite was strong. This plan moves forward and gradually hides the text with Blur so recall stays independent.';
             }
-            $repetitions = max(self::MIN_REPETITIONS, min($repetitions, 2));
+            $repetitions = max(2, min($repetitions, 2));
             $adaptations[] = 'reduce_repetitions';
             $reasonCode = 'strong_previous_performance';
         } elseif ($aiResult === 'mixed') {
@@ -377,7 +377,7 @@ class RepeatAdaptationService
         } elseif ($aiResult === '' && $efficient) {
             $primary = 'blur';
             $adaptations[] = 'use_blur';
-            $repetitions = max(self::MIN_REPETITIONS, min($repetitions, 2));
+            $repetitions = max(2, min($repetitions, 2));
             $adaptations[] = 'reduce_repetitions';
             $intendedOutcome = 'Light verification of recall before adding new ayahs.';
             $userReason = 'You completed this range smoothly. This plan moves forward with light Blur practice rather than extra repetition.';

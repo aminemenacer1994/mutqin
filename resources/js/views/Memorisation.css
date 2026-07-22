@@ -36849,6 +36849,19 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   flex: 1 1 auto;
 }
 
+.post-session-simple__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.post-session-simple__row > *:only-child {
+  grid-column: 1 / -1;
+}
+
+.post-session-simple__ai,
 .post-session-simple__confidence {
   min-width: 0;
   display: flex;
@@ -36862,6 +36875,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .post-session-simple__section-label,
+.post-session-simple__ai-label,
 .post-session-simple__confidence-label {
   margin: 0;
   font-size: 0.8rem;
@@ -36870,6 +36884,34 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: color-mix(in srgb, var(--text) 68%, transparent);
 }
 
+.post-session-simple__ai-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  align-self: flex-start;
+  min-height: 2.25rem;
+  padding: 0 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--ps-mint-border);
+  background: linear-gradient(180deg, #f4faf7, var(--ps-mint-soft));
+  color: #245f4d;
+  font-size: 0.82rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ps-mint) 10%, transparent);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.post-session-simple__ai-btn:hover:not(:disabled) {
+  border-color: rgba(47, 111, 88, 0.42);
+  background: linear-gradient(180deg, #eaf6f0, #dff0e7);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--ps-mint) 14%, transparent);
+}
+
+.post-session-simple__ai-btn:focus-visible,
 .post-session-simple__segment-btn:focus-visible,
 .post-session-simple__btn:focus-visible,
 .post-session-simple__stats-toggle:focus-visible,
@@ -36877,6 +36919,18 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .post-session-simple__adjust-link:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
   outline-offset: 2px;
+}
+
+.post-session-simple__ai-btn:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.post-session-simple__ai-feedback {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--text) 66%, transparent);
 }
 
 .post-session-simple__segment {
@@ -37295,6 +37349,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: var(--ps-muted);
 }
 
+[data-theme="dark"] .post-session-simple__ai,
 [data-theme="dark"] .post-session-simple__confidence,
 [data-theme="dark"] .post-session-simple__panel {
   border-color: var(--ps-panel-border);
@@ -37318,7 +37373,32 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 [data-theme="dark"] .post-session-simple__section-label,
+[data-theme="dark"] .post-session-simple__ai-label,
 [data-theme="dark"] .post-session-simple__confidence-label {
+  color: var(--ps-muted);
+}
+
+[data-theme="dark"] .post-session-simple__ai-btn {
+  border-color: var(--ps-mint-border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ps-mint) 22%, #2a332e),
+    color-mix(in srgb, var(--ps-mint-soft) 90%, #1a221e)
+  );
+  color: color-mix(in srgb, #e8fff4 88%, var(--ps-mint));
+  box-shadow: 0 4px 12px color-mix(in srgb, #000 22%, transparent);
+}
+
+[data-theme="dark"] .post-session-simple__ai-btn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--ps-mint) 48%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ps-mint) 28%, #314038),
+    color-mix(in srgb, var(--ps-mint-soft) 86%, #222c27)
+  );
+}
+
+[data-theme="dark"] .post-session-simple__ai-feedback {
   color: var(--ps-muted);
 }
 
@@ -37506,6 +37586,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 [dir="rtl"] .post-session-simple__overlay,
+[dir="rtl"] .post-session-simple__row,
 [dir="rtl"] .post-session-simple__actions,
 [dir="rtl"] .post-session-simple__stats-grid,
 [dir="rtl"] .post-session-simple__pills,
@@ -37514,6 +37595,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 @media (max-width: 720px) {
+  .post-session-simple__row {
+    grid-template-columns: 1fr;
+  }
+
   .post-session-simple__stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -37575,6 +37660,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     padding-block: 0.7rem 0.85rem;
   }
 
+  .post-session-simple__ai,
   .post-session-simple__confidence,
   .post-session-simple__panel--hero {
     padding-block: 0.75rem;

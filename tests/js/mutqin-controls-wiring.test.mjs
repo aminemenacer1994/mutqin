@@ -332,10 +332,15 @@ assert.doesNotMatch(
 
 {
   const vueOnly = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
-  assert.doesNotMatch(
+  assert.match(
     vueOnly,
-    /post-session-simple__ai-btn|openPostSessionAiRecite/,
-    'completion modal should not expose AI Recite section'
+    /post-session-simple__ai-btn/,
+    'completion modal must expose AI Recite for recommendation feedback'
+  )
+  assert.match(
+    vueOnly,
+    /openPostSessionAiRecite/,
+    'completion modal must wire AI Recite open handler'
   )
   assert.match(vueOnly, /post-session-simple--builder-open/)
   assert.match(

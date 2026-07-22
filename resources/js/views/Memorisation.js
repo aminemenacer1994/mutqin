@@ -2796,9 +2796,13 @@ export default {
       }
       const reps = Number(settings.repetitions)
       if (Number.isFinite(reps) && reps > 0) {
+        const repsKey = reps === 1
+          ? 'memorisation.postSession.recommendation.repetitionsSummaryOne'
+          : 'memorisation.postSession.recommendation.repetitionsSummaryOther'
         pills.push({
           key: 'reps',
-          label: this.t('memorisation.postSession.recommendation.repetitionsSummary', { count: reps }),
+          label: this.t(repsKey, { count: reps })
+            || this.t('memorisation.postSession.recommendation.repetitionsSummary', { count: reps }),
         })
       }
       return pills.slice(0, 4)
