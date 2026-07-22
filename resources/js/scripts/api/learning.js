@@ -115,6 +115,10 @@ export const learningApi = {
     const { data } = await http.post('/session/start', payload)
     return data
   },
+  async pauseSession(payload = {}) {
+    const { data } = await http.post('/session/pause', payload)
+    return data
+  },
   async resumeSession(payload = {}) {
     const { data } = await http.post('/session/resume', payload)
     return data

@@ -8,10 +8,10 @@ mix.js('resources/js/app.js', 'public/js')
    })
    .webpackConfig({
        output: {
-           // Bust browser caches for lazy Vue chunks (Memorisation, locales, etc.).
-           chunkFilename: mix.inProduction()
-               ? 'js/[name].[chunkhash:8].js'
-               : 'js/[name].js'
+           // Stable lazy-chunk names. Cache busting comes from mix.version()
+           // on the entry (app.js embeds the chunk mapping) — hashed chunk
+           // filenames caused mix-manifest / watch mismatches and stale loads.
+           chunkFilename: 'js/[name].js'
        }
    })
    .version();

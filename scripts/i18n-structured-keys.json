@@ -2,12 +2,12 @@
   "memorisation": {
     "techniques": {
       "focusDescription": "Focus Mode dims all non-active verses, helping you concentrate on the current ayah without distractions.",
-      "chainingOffDescription": "Play the selected ayahs in order without chaining.",
+      "chainingOffDescription": "Link each ayah to the next and practise the range as one continuous sequence.",
       "chainingCumulativeDescription": "Build longer runs by adding one ayah at a time.",
       "chainingLinkingDescription": "Strengthen transitions between neighbouring ayahs.",
       "chainingLinkingHint": "Practice ayahs individually, then in pairs.",
       "chainingCumulativeHint": "Start with first ayah, then add one more each time.",
-      "chainingOffSub": "Play the selected ayahs in order without chaining.",
+      "chainingOffSub": "Link each ayah to the next and practise the range as one continuous sequence.",
       "chainingCumulativeSub": "Build longer connected runs from the first ayah outward.",
       "chainingLinkingSub": "Train the transition between neighbouring ayahs.",
       "chainingOffPreview": "Flow: selected ayahs in order, each ayah repeated {count} time(s).",

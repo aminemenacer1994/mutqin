@@ -17,8 +17,16 @@ import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState 
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
 import {
   RECOMMENDATION_TYPES,
+  adaptRecommendationForConfidence,
   buildLocalFallbackRecommendation,
   formatAyahRangeLabel,
+  formatContinueToAyahLabel,
+  formatRepeatAyahLabel,
+  formatSurahAyahLabel,
+  formatCompletedSurahAyahLabel,
+  formatAyahCountLabel,
+  formatRepetitionCountLabel,
+  formatAttemptCountLabel,
   formatRecommendationSettingsSummary,
   isActionableRecommendation,
   isRepeatRecommendation,
@@ -41,15 +49,20 @@ import {
   sanitizeAudioDuration,
 } from '../scripts/audio/recordingPlayback'
 import {
+  END_SESSION_CONFIRM_ACTION,
   PRIMARY_SESSION_ACTION,
   SESSION_MUTATION,
   SESSION_STATUS,
   assertTransition,
+  buildRepetitionProgressSummary,
   buildSessionLifecycleViewModel,
   createSessionActionLock,
   createSessionBroadcast,
   isResumableSessionPayload,
+  reconcileBootstrapSessionState,
   reconcileContinuePayloadWithBackend,
+  resolveCompletionGate,
+  resolveEndSessionConfirmDecision,
   userScopedStorageKey,
 } from '../scripts/session/sessionLifecycle'
 import {
@@ -139,6 +152,11 @@ import {
 } from '../scripts/memorisationRuntime'
 
 const ACTIVE_SESSION_SNAPSHOT_KEY = 'telawa.activeSession.v1'
+
+function activeSessionSnapshotStorageKey(userId = null) {
+  const id = userId != null && String(userId).trim() !== '' ? String(userId) : 'guest'
+  return `${ACTIVE_SESSION_SNAPSHOT_KEY}.${id}`
+}
 
 const HELP_LEARNING_FALLBACKS = {
   title: 'Help & Learning',
@@ -362,12 +380,14 @@ export default {
       mutqinState: loadMutqinState(),
       centralSession: createCentralSessionState(),
       unwatchMutqinState: null,
-      // Centralised session lifecycle (source of truth for Start/Resume/End).
+      // Centralised session lifecycle (source of truth for Start/Resume/Pause/End).
       sessionLifecycleHydrated: false,
       sessionLifecycleMutation: SESSION_MUTATION.IDLE,
       sessionLifecycleError: null,
+      sessionLifecycleMutationWatchdog: null,
       backendUnfinishedSession: false,
       backendSessionSnapshot: null,
+      sessionPaused: false,
       onboardingExampleRejected: false,
       sessionActionLock: createSessionActionLock(),
       sessionBroadcast: null,
@@ -485,6 +505,7 @@ export default {
       onboardingSampleSessionActive: false,
       onboardingFinishChoice: '',
       showPostSessionModal: false,
+      postSessionActionsUnlocked: false,
       showPostSessionConfetti: false,
       postSessionSnapshot: null,
       postSessionOffcanvasOpen: false,
@@ -517,6 +538,7 @@ export default {
       showAdvancedMetricsModal: false,
       showConfirmModal: false,
       showSessionExitModal: false,
+      sessionExitEndingBusy: false,
       sessionExitAutoSave: true,
       sessionExitSnapshot: null,
       sessionExitPreviewSnapshot: null,
@@ -843,6 +865,7 @@ export default {
       longPressPeekTriggered: false,
       blurPeekHoldingSpace: false,
       suppressNextVerseClick: false,
+      sessionHintCount: 0,
 
       // Word sequence
       wordSequence: null,
@@ -855,8 +878,8 @@ export default {
       bookmarks: [],
       pins: [],
 
-      // Options
-      speedOptions: [0.5, 1, 1.25, 1.5, 2],
+      // Options (0.75 is a first-class recommendation speed)
+      speedOptions: [0.5, 0.75, 1, 1.25, 1.5, 2],
       delayOptions: [0, 0.5, 1, 2, 3, 5, 7, 10],
       recitationWindowOptions: [5, 8, 10, 12, 15, 20, 30],
       rangeLoopDelay: 1,
@@ -1611,7 +1634,7 @@ export default {
       const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
       const repeatCount = Math.max(1, Number(this.repetitionsPerStep || 1))
       const delaySeconds = Number.isFinite(Number(this.delay)) ? Math.max(0, Number(this.delay)) : 0
-      const rangeValue = start === end ? `Ayah ${start}` : `Ayahs ${start}-${end}`
+      const rangeValue = formatAyahRangeLabel({ start, end }, this.t.bind(this))
       const delayValue = `${delaySeconds}s`
 
       return [
@@ -1650,7 +1673,8 @@ export default {
             {
               key: 'remaining',
               label: this.t('memorisation.workspaceProgress.remaining'),
-              value: this.t('memorisation.workspaceProgress.remainingAyahs', { count: remaining })
+              value: formatAyahCountLabel(remaining, this.t.bind(this))
+                || this.t('memorisation.workspaceProgress.remainingAyahs', { count: remaining })
             }
           ]
         }
@@ -1738,7 +1762,7 @@ export default {
       const start = Math.max(1, Number(this.rangeStart || 1))
       const end = Math.max(start, Number(this.rangeEnd || start))
       const rangeLabel = this.hasVerses
-        ? (start === end ? `Ayah ${start}` : `Ayahs ${start}-${end}`)
+        ? formatAyahRangeLabel({ start, end }, this.t.bind(this))
         : 'Select a range'
       return {
         kicker: 'Target',
@@ -1763,6 +1787,7 @@ export default {
       // Keep a stable control during hydration even before verses load.
       if (this.primarySessionAction === PRIMARY_SESSION_ACTION.LOADING) return true
       if (this.primarySessionAction === PRIMARY_SESSION_ACTION.RESUME_SESSION) return true
+      if (this.primarySessionAction === PRIMARY_SESSION_ACTION.PAUSE_SESSION) return true
       if (this.primarySessionAction === PRIMARY_SESSION_ACTION.END_SESSION) return true
       if (this.primarySessionAction === PRIMARY_SESSION_ACTION.START_ONBOARDING) return true
       if (this.primarySessionAction === PRIMARY_SESSION_ACTION.CONTINUE_ONBOARDING) return true
@@ -1779,9 +1804,12 @@ export default {
         onboardingExampleRejected: !!this.onboardingExampleRejected,
         mutqinSessionActive: !!this.isSessionLive,
         sessionCompleted: !!this.isSessionCompleted,
+        sessionPaused: !!this.sessionPaused
+          || this.backendSessionSnapshot?.status === 'paused',
         completionModalOpen: !!this.showPostSessionModal,
         hasValidatedContinuePayload: this.hasValidatedResumableSession,
         backendUnfinished: !!this.backendUnfinishedSession,
+        backendStatus: this.backendSessionSnapshot?.status || null,
         isPlaying: !!this.isPlaying,
         isPaused: !this.isPlaying && !!this.playerVisible,
         hasAudio: !!this.playerVisible,
@@ -1807,16 +1835,22 @@ export default {
     headerSessionControlState() {
       const status = this.sessionLifecycleStatus
       if (status === SESSION_STATUS.ACTIVE) {
-        return this.isPlaying ? 'active' : 'paused'
+        return 'active'
       }
-      if (status === SESSION_STATUS.INTERRUPTED_RESUMABLE || status === SESSION_STATUS.RESUMABLE) {
-        return 'resumable'
+      if (
+        status === SESSION_STATUS.PAUSED
+        || status === SESSION_STATUS.INTERRUPTED_RESUMABLE
+        || status === SESSION_STATUS.RESUMABLE
+      ) {
+        return 'paused'
       }
       if (
         status === SESSION_STATUS.HYDRATING
         || status === SESSION_STATUS.UNINITIALISED
         || status === SESSION_STATUS.STARTING
         || status === SESSION_STATUS.RESUMING
+        || status === SESSION_STATUS.PAUSING
+        || status === SESSION_STATUS.COMPLETING
         || status === SESSION_STATUS.ENDING
       ) return 'loading'
       return 'idle'
@@ -1834,12 +1868,17 @@ export default {
       return !!this.primarySessionActionPresentation.ariaBusy
     },
     showHeaderEndSessionAction() {
-      // End Session is the primary action while live — do not render a duplicate.
-      return false
+      return !!this.primarySessionActionPresentation.showEndCompanion
+        && !this.showPostSessionModal
+        && !this.isSessionCompleted
     },
     hasValidatedResumableSession() {
       if (this.onboardingSampleSessionActive) return false
-      if (this.isSessionCompleted || this.centralSession?.sessionStatus === 'completed') return false
+      // Stale local "completed" must not hide Resume when backend still has unfinished work.
+      if (
+        (this.isSessionCompleted || this.centralSession?.sessionStatus === 'completed')
+        && !this.backendUnfinishedSession
+      ) return false
       // Logged-in learning mode: backend unfinished is authoritative.
       // Never advertise Resume from local continue alone — that causes /session/resume 422s.
       if (this.learningBackendEnabled()) {
@@ -1857,11 +1896,6 @@ export default {
       )
     },
     sessionExitModalTitle() {
-      if (this.showSessionExitModal && !this.hasSessionStarted && this.sessionExitPreviewSnapshot) {
-        return this.sessionExitPreviewSnapshot.completedAll
-          ? this.t('memorisation.sessionComplete.title')
-          : this.t('memorisation.sessionEnded.title')
-      }
       return this.t('memorisation.sessionExit.confirmTitle')
     },
     sessionExitModalBadge() {
@@ -1873,7 +1907,54 @@ export default {
       return this.sessionContextBadge
     },
     canContinueCurrentSession() {
-      return !!(this.showSessionExitModal && this.hasSessionStarted && this.sessionExitSnapshot?.activeVerseKey)
+      return false
+    },
+    sessionExitRepetitionProgressLabel() {
+      const total = Math.max(1, Number(
+        this.sessionExitPreviewSnapshot?.repetitionsPerStep
+        || this.repetitionsPerStep
+        || 1
+      ))
+      const entry = this.activeQueueEntry || this.queue?.[this.queueIndex] || null
+      const fromEntry = Math.max(0, Number(entry?.repeatCount || 0))
+      const fromQueue = Math.max(0, Number(this.queueIndex || 0) % total)
+      const completed = Math.max(0, Math.min(total, fromEntry || fromQueue || Number(this.sessionExitPreviewSnapshot?.repetitionsCompleted || 0)))
+      return buildRepetitionProgressSummary({ completed, total }, (key, params) => this.t(key, params))
+    },
+    sessionExitContextLabel() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      const surah = snapshot.chapterName
+        || this.currentChapter?.name_simple
+        || this.activeChapterName
+        || ''
+      const rangeStart = Number(snapshot.rangeStart || this.rangeStart || 0)
+      const rangeEnd = Number(snapshot.rangeEnd || this.rangeEnd || rangeStart)
+      let range = String(snapshot.rangeLabel || '').trim()
+      if (!range && rangeStart > 0) {
+        range = this.t('memorisation.common.rangeLabel', {
+          start: rangeStart,
+          end: Math.max(rangeStart, rangeEnd),
+        })
+      }
+      if (surah && range) {
+        return this.t('memorisation.sessionExit.confirmContext', { surah, range })
+      }
+      return surah || range || this.sessionExitPositionLine || ''
+    },
+    sessionExitAyahProgressLabel() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      const rangeStart = Math.max(1, Number(snapshot.rangeStart || this.rangeStart || 1))
+      const rangeEnd = Math.max(rangeStart, Number(snapshot.rangeEnd || this.rangeEnd || rangeStart))
+      const totalInRange = Math.max(1, rangeEnd - rangeStart + 1)
+      const covered = Math.max(1, Number(snapshot.coveredAyahCount || this.currentPosition || rangeStart))
+      const currentInRange = Math.max(1, Math.min(totalInRange, covered - rangeStart + 1))
+      if (totalInRange <= 1) {
+        return this.t('memorisation.sessionExit.positionProgress', { ayah: covered })
+      }
+      return this.t('memorisation.sessionExit.ayahProgress', {
+        current: currentInRange,
+        total: totalInRange,
+      })
     },
     sessionExitPositionLabel() {
       const key = this.sessionExitSnapshot?.activeVerseKey || this.effectiveActiveVerseKey
@@ -1898,74 +1979,13 @@ export default {
       return ayah || ''
     },
     sessionExitStats() {
-      const snapshot = this.sessionExitPreviewSnapshot || {}
-      if (!snapshot || !Object.keys(snapshot).length) return []
-      const stats = []
-      const statusPill = this.sessionExitStatusPills.find(pill => pill.key === 'status')
-      if (statusPill?.label) {
-        stats.push({
-          key: 'status',
-          label: this.t('memorisation.sessionOverview.kicker'),
-          value: statusPill.label,
-          hint: snapshot.completedAll ? this.t('memorisation.sessionComplete.title') : ''
-        })
-      }
-      if (snapshot.progressLabel) {
-        const covered = Number(snapshot.coveredAyahCount || 0)
-        const total = Number(snapshot.totalAyahs || 0)
-        const percent = Math.max(0, Math.min(100, Number(snapshot.progressPercent || 0)))
-        stats.push({
-          key: 'progress',
-          label: this.t('memorisation.stats.progress'),
-          value: total ? `${covered}/${total} (${percent}%)` : snapshot.progressLabel,
-          hint: ''
-        })
-      }
-      const rangeValue = snapshot.rangeLabel
-        || (snapshot.chapterName
-          ? this.t('memorisation.common.rangeLabel', {
-            start: snapshot.rangeStart || this.rangeStart,
-            end: snapshot.rangeEnd || this.rangeEnd
-          })
-          : '')
-      if (rangeValue) {
-        stats.push({
-          key: 'range',
-          label: this.t('sessionSetup.ayahRange'),
-          value: rangeValue,
-          hint: ''
-        })
-      }
-      if (snapshot.durationLabel) {
-        stats.push({
-          key: 'duration',
-          label: this.t('memorisation.stats.duration'),
-          value: snapshot.durationLabel,
-          hint: ''
-        })
-      }
-      if (snapshot.repeatShortLabel || snapshot.repetitionsPerStep) {
-        const repeatCount = Math.max(1, Number(snapshot.repetitionsPerStep || String(snapshot.repeatShortLabel || '1').replace(/x$/i, '') || 1))
-        stats.push({
-          key: 'repeats',
-          label: this.t('memorisation.stats.repeats'),
-          value: this.t('memorisation.common.repeatSummary', { count: repeatCount }),
-          hint: ''
-        })
-      }
-      return stats.filter(stat => stat.key !== 'duration')
+      return []
     },
     sessionExitProgressSummary() {
-      const { done, total, percentComplete } = this.sessionExitRemainingProgress
-      return `${done}/${total} (${percentComplete}%)`
+      return this.sessionExitRepetitionProgressLabel
     },
     sessionExitDetailRows() {
-      return this.sessionExitStats.map(stat => ({
-        key: stat.key,
-        label: stat.label,
-        value: stat.value,
-        hint: stat.hint || ''
-      }))
+      return []
     },
     sessionExitRemainingProgress() {
       const snapshot = this.sessionExitPreviewSnapshot || {}
@@ -1988,103 +2008,12 @@ export default {
       return this.t('memorisation.summary.nextContinue')
     },
     sessionExitRemainingItems() {
-      const snapshot = this.sessionExitPreviewSnapshot || {}
-      const { done, total, remaining, percentComplete, percentRemaining } = this.sessionExitRemainingProgress
-      const items = []
-      items.push({
-        key: 'remaining-count',
-        label: this.t('memorisation.sessionExit.kicker'),
-        value: `${remaining}/${total}`,
-        hint: `${percentRemaining}%`
-      })
-      items.push({
-        key: 'completed-count',
-        label: this.t('memorisation.stats.progress'),
-        value: `${done}/${total}`,
-        hint: `${percentComplete}%`
-      })
-      let estimatedRemaining = ''
-      if (remaining > 0 && done > 0) {
-        const durationSeconds = this.getSessionElapsedSeconds()
-        const estimatedRemainingSeconds = Math.round((durationSeconds / Math.max(done, 1)) * remaining)
-        if (estimatedRemainingSeconds > 0) {
-          estimatedRemaining = this.formatTime(estimatedRemainingSeconds)
-        }
-      }
-      if (estimatedRemaining) {
-        items.push({
-          key: 'estimated-time',
-          label: this.t('memorisation.stats.duration'),
-          value: estimatedRemaining,
-          hint: snapshot.durationLabel || ''
-        })
-      }
-      const rangeEnd = Math.max(1, Number(snapshot.rangeEnd || this.rangeEnd || total))
-      const nextAyah = Math.min(rangeEnd, done + (remaining > 0 ? 1 : 0))
-      const surahName = snapshot.chapterName || this.currentChapter?.name_simple || ''
-      const nextAyahRef = this.sessionExitPositionLabel && remaining > 0
-        ? String(this.sessionExitPositionLabel).replace(/:\d+$/, `:${nextAyah}`)
-        : (this.chapterId ? `${this.chapterId}:${nextAyah}` : `${nextAyah}`)
-      if (remaining > 0 && nextAyahRef) {
-        items.push({
-          key: 'next-ayah',
-          label: this.t('memorisation.badges.active'),
-          value: surahName ? `${surahName} ${nextAyahRef}` : nextAyahRef,
-          hint: snapshot.rangeLabel || ''
-        })
-      }
-      return items.filter(item => item.key !== 'estimated-time')
+      // End Session modal keeps only the concise progress summary — no overview rows.
+      return []
     },
     sessionExitMetaCards() {
-      const snapshot = this.sessionExitPreviewSnapshot || {}
-      if (!snapshot || !Object.keys(snapshot).length) return []
-      const coveredAyahs = Number(snapshot.coveredAyahCount || 0)
-      const totalAyahs = Number(snapshot.totalAyahs || 0)
-      const remaining = Math.max(0, totalAyahs - coveredAyahs)
-      const nextSteps = Array.isArray(snapshot.nextSteps) ? snapshot.nextSteps : []
-      return [
-        {
-          key: 'pause',
-          kicker: this.t('memorisation.meta.steadinessKicker'),
-          calligraphy: 'وَاصْبِرْ وَمَا صَبْرُكَ إِلَّا بِاللَّهِ',
-          title: this.t('memorisation.sessionExit.kicker'),
-          body: snapshot.summaryMessage || this.sessionExitSummaryCopy,
-          points: [
-            snapshot.rangeLabel && snapshot.chapterName ? `${snapshot.chapterName} · ${snapshot.rangeLabel}` : '',
-            snapshot.modeSummary || ''
-          ].filter(Boolean)
-        },
-        {
-          key: 'progress',
-          kicker: this.t('memorisation.meta.graceKicker'),
-          calligraphy: 'اللهم بارك لنا فيما بقي',
-          title: this.t('memorisation.meta.forwardTitle'),
-          body: this.t('memorisation.summary.endedProgress', {
-            covered: coveredAyahs,
-            total: totalAyahs
-          }),
-          points: [
-            snapshot.durationLabel ? `${this.t('memorisation.stats.duration')}: ${snapshot.durationLabel}` : '',
-            snapshot.repeatShortLabel ? `${this.t('memorisation.stats.repeats')}: ${snapshot.repeatShortLabel}` : ''
-          ].filter(Boolean)
-        },
-        {
-          key: 'remaining',
-          kicker: this.t('memorisation.meta.nextKicker'),
-          calligraphy: 'اللهم لا تكلنا إلى أنفسنا',
-          title: this.t('memorisation.meta.continueTitle'),
-          body: remaining > 0
-            ? this.t('memorisation.summary.endedPartial', {
-              ayah: Math.min(totalAyahs, coveredAyahs + 1),
-              percent: snapshot.progressPercent || this.sessionExitRemainingProgress.percentComplete
-            })
-            : this.t('memorisation.summary.default'),
-          points: (nextSteps.length ? nextSteps : [
-            this.t('memorisation.summary.nextContinue'),
-            this.t('memorisation.summary.nextRepeat')
-          ]).slice(0, 2)
-        }
-      ]
+      // End Session modal keeps only the concise progress summary — no overview cards.
+      return []
     },
     sessionExitReflectionTitle() {
       const snapshot = this.sessionExitPreviewSnapshot || {}
@@ -2093,47 +2022,10 @@ export default {
         : this.t('memorisation.sessionEnded.title')
     },
     sessionExitMotivationMessage() {
-      if (this.hasSessionStarted) {
-        return this.t('memorisation.sessionExit.confirmDescription')
-      }
-      const snapshot = this.sessionExitPreviewSnapshot || {}
-      const percent = Math.max(0, Math.min(100, Number(snapshot.progressPercent || this.progressPercent || 0)))
-      const coveredAyahs = Number(snapshot.coveredAyahCount || this.currentPosition || 0)
-      const totalAyahs = Number(snapshot.totalAyahs || this.totalVerses || 1)
-      if (percent >= 100) {
-        return this.t('memorisation.summary.completedAll', { count: totalAyahs })
-      }
-      if (percent >= 75) {
-        return this.t('memorisation.summary.endedPartial', { ayah: coveredAyahs, percent })
-      }
-      if (percent >= 50) {
-        return this.t('memorisation.summary.endedProgress', { covered: coveredAyahs, total: totalAyahs })
-      }
-      if (percent >= 25) {
-        return this.t('memorisation.summary.nextContinue')
-      }
-      return this.t('memorisation.summary.default')
+      return this.t('memorisation.sessionExit.confirmDescription')
     },
     sessionExitStatusPills() {
-      const snapshot = this.sessionExitPreviewSnapshot || {}
-      const pills = []
-      pills.push({
-        key: 'status',
-        tone: this.canContinueCurrentSession ? 'active' : (snapshot.completedAll ? 'complete' : 'paused'),
-        label: this.canContinueCurrentSession
-          ? this.t('sessionStatus.active')
-          : (snapshot.completedAll ? this.t('sessionStatus.completed') : this.t('memorisation.sessionExit.kicker'))
-      })
-      if (snapshot.progressLabel) {
-        pills.push({ key: 'progress', tone: 'neutral', label: snapshot.progressLabel })
-      }
-      if (snapshot.durationLabel) {
-        pills.push({ key: 'duration', tone: 'neutral', label: snapshot.durationLabel })
-      }
-      if (snapshot.repeatShortLabel) {
-        pills.push({ key: 'repeat', tone: 'neutral', label: `${snapshot.repeatShortLabel} ${this.t('memorisation.stats.repeats')}` })
-      }
-      return pills
+      return []
     },
     sessionExitSummaryCopy() {
       const snapshot = this.sessionExitPreviewSnapshot || {}
@@ -2355,7 +2247,7 @@ export default {
       const stoppedAyahLabel = this.formatResumeStoppedAyahLabel(payload)
       return [
         { key: 'surah', label: 'Surah', value: chapter?.name_simple || `Surah ${config.chapterId || ''}`.trim() },
-        { key: 'range', label: 'Range', value: `Ayahs ${config.rangeStart || 1}-${config.rangeEnd || config.rangeStart || 1}` },
+        { key: 'range', label: this.t('memorisation.postSession.statsRange'), value: formatAyahRangeLabel({ start: config.rangeStart || 1, end: config.rangeEnd || config.rangeStart || 1 }, this.t.bind(this)) },
         ...(stoppedAyahLabel ? [{ key: 'stopped', label: 'Stopped at', value: stoppedAyahLabel }] : []),
         { key: 'reciter', label: 'Reciter', value: reciter?.name || 'Alafasy' },
         { key: 'speed', label: 'Speed', value: `${Number(config.speed || 1)}x` },
@@ -2373,7 +2265,7 @@ export default {
       const ayah = payload.activeVerseKey ? String(payload.activeVerseKey).split(':')[1] : start
       return {
         chapterName,
-        rangeLabel: `Ayahs ${start}-${end}`,
+        rangeLabel: formatAyahRangeLabel({ start, end }, this.t.bind(this)),
         resumeLabel: `Stopped near ayah ${ayah}`,
         summary: this.continueSessionMeta,
         savedAt: this.resumeSavedAtLabel || this.smartResumeDetails.saved
@@ -2752,7 +2644,8 @@ export default {
       const modeKey = recommendationModeLabelKey(rec)
       const mode = this.t(`memorisation.postSession.recommendation.${modeKey}`)
       const count = Number(rec.ayah_range.count || 0)
-      const countLabel = this.t('memorisation.postSession.recommendation.ayahCount', { count })
+      const countLabel = formatAyahCountLabel(count, this.t.bind(this))
+        || this.t('memorisation.postSession.recommendation.ayahCount', { count })
       return [mode, countLabel].filter(Boolean).join(' · ')
     },
     postSessionRecommendationPrimaryLabel() {
@@ -2764,16 +2657,10 @@ export default {
           : this.t('memorisation.postSession.recommendation.startingNextSession')
       }
       if (isRepeatRecommendation(rec) && rec?.ayah_range) {
-        return this.t('memorisation.postSession.recommendation.repeatAyat', {
-          start: rec.ayah_range.from,
-          end: rec.ayah_range.to,
-        })
+        return formatRepeatAyahLabel(rec.ayah_range, this.t.bind(this))
       }
       if (key === 'continueToAyat' && rec?.ayah_range) {
-        return this.t('memorisation.postSession.recommendation.continueToAyat', {
-          start: rec.ayah_range.from,
-          end: rec.ayah_range.to,
-        })
+        return formatContinueToAyahLabel(rec.ayah_range, this.t.bind(this))
       }
       return this.t(`memorisation.postSession.recommendation.${key}`)
     },
@@ -2804,15 +2691,36 @@ export default {
     postSessionSimpleReason() {
       const rec = this.postSessionRecommendation
       if (!rec) return ''
-      if (rec.user_reason && String(rec.user_reason).trim()) {
-        return String(rec.user_reason).trim()
+      const confidence = this.postSessionSelectedConfidence
+      const isRepeat = this.postSessionIsRepeatRecommendation
+      const reasonCode = String(rec.reason_code || '')
+      const userReason = String(rec.user_reason || rec.reason || '').trim()
+      const practiceReason = /selected Needs more practice|asked for more practice|طلبت المزيد|مزيد من التمرين/i.test(userReason)
+      const isPlaceholder = !userReason
+        || /^based on this session\.?$/i.test(userReason)
+        || /^suggested next step\.?$/i.test(userReason)
+
+      // Prefer structured evidence→plan copy from the backend whenever available.
+      if (!isPlaceholder && !(confidence === 'confident' && practiceReason && isRepeat)) {
+        return userReason
       }
       if (rec.balance_message && String(rec.balance_message).trim()) {
         return String(rec.balance_message).trim()
       }
+
+      // Keep the visible reason aligned with the selected confidence toggle while waiting for refresh.
+      if (confidence === 'confident' && (isRepeat || practiceReason || reasonCode === 'confidence_needs_practice')) {
+        return this.t('memorisation.postSession.recommendation.reasons.confidenceConfident')
+      }
+      if (confidence === 'needs_practice' && (!isRepeat || reasonCode === 'confidence_confident')) {
+        return this.t('memorisation.postSession.recommendation.reasons.confidenceNeedsPractice')
+      }
+
       const localized = this.postSessionRecommendationReasonText
-      if (localized) return localized
-      if (this.postSessionIsRepeatRecommendation) {
+      if (localized && !/^based on this session\.?$/i.test(String(localized))) {
+        return localized
+      }
+      if (isRepeat) {
         return this.t('memorisation.postSession.recommendation.reasons.simpleRepeat')
       }
       if (rec.type === RECOMMENDATION_TYPES.NEXT_SURAH || rec.is_end_of_surah) {
@@ -2820,10 +2728,13 @@ export default {
           surah: this.resolveRecommendationSurahName(rec.next_surah || rec.surah),
         })
       }
-      if (rec.reason_code === 'manual_fallback' || !this.postSessionRecommendationActionable) {
+      if (reasonCode === 'manual_fallback' || reasonCode === 'learning_plan_complete' || !this.postSessionRecommendationActionable) {
         return this.t('memorisation.postSession.recommendation.reasons.manualFallback')
       }
       return this.t('memorisation.postSession.recommendation.reasons.simpleContinue')
+    },
+    postSessionWhyLabel() {
+      return this.t('memorisation.postSession.recommendation.whyThisPlan')
     },
     postSessionIntendedOutcome() {
       const outcome = this.postSessionRecommendation?.intended_outcome
@@ -3039,11 +2950,19 @@ export default {
     postSessionSupportingMessage() {
       const snap = this.postSessionSnapshot
       if (snap?.chapterName && snap?.rangeStart && snap?.rangeEnd) {
-        return this.t('memorisation.postSession.recommendation.supportingCompletedRange', {
-          surah: snap.chapterName,
+        const range = formatAyahRangeLabel({
           start: snap.rangeStart,
           end: snap.rangeEnd,
-        })
+        }, this.t.bind(this))
+        return this.t('memorisation.postSession.recommendation.supportingCompletedRange', {
+          surah: snap.chapterName,
+          range,
+          start: snap.rangeStart,
+          end: snap.rangeEnd,
+        }) || formatCompletedSurahAyahLabel(snap.chapterName, {
+          start: snap.rangeStart,
+          end: snap.rangeEnd,
+        }, this.t.bind(this))
       }
       if (this.postSessionAutoSaved) {
         return this.t('memorisation.postSession.recommendation.supportingProgressSaved')
@@ -3111,14 +3030,21 @@ export default {
     requiresFirstTimeOnboarding() {
       if (!this.isLoggedIn) return false
       if (this.onboardingManualLaunch) return false
-      // Exploring / finishing onboarding must immediately unlock Start Session,
-      // even while auth.just_registered is still true for this login.
+      // Exploring / finishing onboarding must immediately unlock Start Session
+      // once completion is marked, even while auth.just_registered is still true.
       if (this.hasCompletedOnboarding()) return false
+      // New accounts stay on first-run onboarding until they finish it themselves.
+      if (this.isSignupIsolationActive()) return true
+      // Live / resumable practice must never trap the header on Start Onboarding.
+      if (this.hasPostOnboardingPracticeEvidence()) return false
+      // Returning logins never re-enter first-time onboarding.
       if (this.auth?.just_logged_in && !this.auth?.just_registered) return false
-      return true
+      // Only an in-progress pending first-run still needs it after the flash expires.
+      return !!this.readWorkspaceStateValue('onboardingPending', false)
     },
     isExistingUserLogin() {
-      return !!(this.auth?.just_logged_in && !this.auth?.just_registered)
+      // Welcome Back is only for returning users who already finished onboarding.
+      return !!(this.auth?.just_logged_in && !this.auth?.just_registered && this.hasCompletedOnboarding())
     },
     hasMeaningfulSessionCompletionData() {
       if (!this.isSessionCompleted || !this.hasVerses) return false
@@ -3463,7 +3389,7 @@ export default {
       }
     },
     chainingMethodDescription() {
-      if (!this.chainingEnabled) return this.t('memorisation.techniques.chainingOffSub')
+      if (!this.chainingEnabled) return this.getTechniqueDisplayDescription('chaining')
       if (!this.hasChainingMethodSelected) return 'Choose linking or cumulative before starting.'
       if (this.chainingMethod === 'cumulative') return this.t('memorisation.techniques.chainingCumulativeSub')
       return this.t('memorisation.techniques.chainingLinkingSub')
@@ -3555,7 +3481,7 @@ export default {
       const first = targets[0]?.number
       const last = targets[targets.length - 1]?.number
       const surah = this.currentChapter?.name_simple || this.activeChapterName || 'Session'
-      return first === last ? `${surah} · Ayah ${first}` : `${surah} · Ayahs ${first}-${last}`
+      return formatSurahAyahLabel(surah, { start: first, end: last }, this.t.bind(this))
     },
     recitationCheckPromptLabel() {
       if (this.recitationCheckScope === 'session') return this.t('memorisation.aiCheck.sessionRecite')
@@ -3725,9 +3651,11 @@ export default {
       if (targets.length > 1) {
         const first = targets[0]?.number || String(targets[0]?.key || '').split(':')[1] || ''
         const last = targets[targets.length - 1]?.number || String(targets[targets.length - 1]?.key || '').split(':')[1] || ''
-        return `${prefix} for Ayahs ${first}-${last}`
+        const rangeLabel = formatAyahRangeLabel({ start: first, end: last }, this.t.bind(this))
+        return rangeLabel ? `${prefix} for ${rangeLabel}` : prefix
       }
-      return `${prefix} for Ayah ${this.selfCheckModalVerse?.number || ''}`.trim()
+      const single = formatAyahRangeLabel({ start: this.selfCheckModalVerse?.number }, this.t.bind(this))
+      return single ? `${prefix} for ${single}` : prefix
     },
     aiMemorisationCheckerVerse() {
       if (!this.aiMemorisationCheckerVerseKey) return null
@@ -3769,7 +3697,7 @@ export default {
       if (!targets.length) return 'Selected ayah'
       const first = targets[0]?.number
       const last = targets[targets.length - 1]?.number
-      return first === last ? `Ayah ${first}` : `Ayahs ${first}-${last}`
+      return formatAyahRangeLabel({ start: first, end: last }, this.t.bind(this)) || 'Selected ayah'
     },
     aiMemorisationCheckerDisplayWords() {
       const hidden = new Set(this.aiMemorisationCheckerHiddenIndexes || [])
@@ -3863,8 +3791,7 @@ export default {
         const chapterName = config?.chapterName || (config?.chapterId ? `Surah ${config.chapterId}` : 'Session')
         const start = Number(config?.rangeStart || 0)
         const end = Number(config?.rangeEnd || 0)
-        const rangeLabel = start && end ? `Ayahs ${start}\u2013${end}` : (start ? `Ayah ${start}` : '')
-        return rangeLabel ? `${chapterName} \u00b7 ${rangeLabel}` : chapterName
+        return formatSurahAyahLabel(chapterName, { start, end }, this.t.bind(this)) || chapterName
       }
     },
     selectedStatsSessionRecord() {
@@ -4061,7 +3988,10 @@ export default {
     },
     analyticsRemainingSummary() {
       const remaining = Math.max(0, this.analyticsTotalAyahs - Number(this.analyticsModalData?.metrics?.verses_read || 0))
-      return this.t('memorisation.analyticsHeatmap.ayahLeftToComplete', { count: remaining })
+      const key = remaining === 1
+        ? 'memorisation.analyticsHeatmap.ayahLeftToComplete'
+        : 'memorisation.analyticsHeatmap.ayahLeftToCompleteOther'
+      return this.t(key, { count: remaining })
     },
     analyticsVerseSeries() {
       return this.analyticsModalData?.charts?.verseSeries || []
@@ -5458,10 +5388,22 @@ export default {
 
     try {
       const authenticatedWorkspace = this.learningBackendEnabled()
-      const needsFirstTimeOnboarding = authenticatedWorkspace && this.requiresFirstTimeOnboarding
+      // Durable isolation survives the one-shot just_registered flash so refresh
+      // cannot re-import another profile's guest/shared learning cache.
+      const signupIsolated = this.ensureSignupIsolation()
+      // Bind owner-scoped cache before any hydrate/sync so a new signup never
+      // inherits another profile's guest mutqin_state on this device.
+      this.bindMutqinStateForCurrentOwner({ signupIsolated })
       this.syncWorkspaceStorageBridge()
-      this.hydrateAuthenticatedWorkspaceStateFromLocalStorage()
-      const localResumeSnapshot = this.captureLocalResumeSnapshot()
+      // Shared telawa.* keys belong to whoever used this browser last — never
+      // copy them into a brand-new / isolated account's workspace.
+      if (authenticatedWorkspace && !signupIsolated) {
+        this.hydrateAuthenticatedWorkspaceStateFromLocalStorage()
+      }
+      if (signupIsolated) {
+        this.resetIsolatedSignupWorkspace()
+      }
+      const localResumeSnapshot = signupIsolated ? null : this.captureLocalResumeSnapshot()
 
       if (this.auth?.locale && this.$setLocale) {
         await this.$setLocale(this.auth.locale)
@@ -5511,7 +5453,11 @@ export default {
       this.$watch(() => this.mushafPages.length, () => {
         this.syncMushafPageToActiveVerse()
       })
-      this.unwatchMutqinState = watchMutqinState(this.mutqinState, undefined, () => this.scheduleLearningSync())
+      this.unwatchMutqinState = watchMutqinState(
+        this.mutqinState,
+        this.getMutqinStateOwner(),
+        () => this.scheduleLearningSync()
+      )
       this.refreshHifzJourneyState()
       this.loadVerseFontSizes()
       if (authenticatedWorkspace) {
@@ -5541,8 +5487,8 @@ export default {
       this.loadBookmarksPins()
       this.setupWordClickHandler()
       this.loadSavedSessions()
-      this.loadContinueSessionPrompt()
       await this.validateSessionLifecycleAgainstBackend()
+      this.loadContinueSessionPrompt()
       this.demoteLiveSessionToResumableOnBootstrap()
       this.bindSessionLifecycleBroadcast()
       this.updateMasteredWeekly()
@@ -5551,6 +5497,23 @@ export default {
       // After refresh / cold start, never auto-activate into End Session.
       // Unfinished work stays resumable until the user explicitly resumes.
       const shouldAutoRestorePersistedSession = false
+
+      // Re-evaluate after hydrate/backend sync so signup onboarding is not skipped
+      // by a stale completion flag computed before workspace state was ready.
+      if (
+        authenticatedWorkspace
+        && !signupIsolated
+        && !this.hasCompletedOnboarding()
+        && (
+          this.hasPostOnboardingPracticeEvidence()
+          || (this.auth?.just_logged_in && !this.auth?.just_registered)
+        )
+      ) {
+        // Returning accounts (or users already practising) must not stick on
+        // Start Onboarding after owner-scoped storage migration.
+        this.markOnboardingCompleted()
+      }
+      const needsFirstTimeOnboarding = authenticatedWorkspace && this.requiresFirstTimeOnboarding
 
       if (this.isLoggedIn && !needsFirstTimeOnboarding && this.isExistingUserLogin) {
         this.maybeShowWelcomeBackModal()
@@ -5676,6 +5639,10 @@ export default {
     this.sessionBroadcastUnsubscribe = null
     this.sessionBroadcast?.close?.()
     this.sessionBroadcast = null
+    if (this.sessionLifecycleMutationWatchdog) {
+      window.clearTimeout(this.sessionLifecycleMutationWatchdog)
+      this.sessionLifecycleMutationWatchdog = null
+    }
     this.sessionActionLock?.reset?.()
     if (this.wordSyncEngine) {
       this.wordSyncEngine.destroy()
@@ -5697,7 +5664,7 @@ export default {
     this.cleanupSelfCheckMedia()
     this.resetReviewResultAudio({ revokeOwned: true })
     this.persistAllState()
-    saveMutqinState(this.mutqinState)
+    this.persistMutqinStateLocally()
     if (this.unwatchMutqinState) this.unwatchMutqinState()
     document.removeEventListener('click', this.handleClickOutside)
     if (this.handleMushafToolbarDocumentClick) {
@@ -5782,6 +5749,19 @@ export default {
         this.sessionExitOffcanvasOpen = false
         this.topCardMenuOpen = false
       }
+    },
+    sessionLifecycleMutation(newVal) {
+      if (this.sessionLifecycleMutationWatchdog) {
+        window.clearTimeout(this.sessionLifecycleMutationWatchdog)
+        this.sessionLifecycleMutationWatchdog = null
+      }
+      if (!newVal || newVal === SESSION_MUTATION.IDLE) return
+      this.sessionLifecycleMutationWatchdog = window.setTimeout(() => {
+        if (this.sessionLifecycleMutation === newVal) {
+          console.warn('[sessionLifecycle] clearing stuck mutation', newVal)
+          this.resetStuckSessionLifecycleControls()
+        }
+      }, 10000)
     },
     showSessionEndedModal(newVal) {
       this.syncBodyScrollLock(newVal)
@@ -6111,6 +6091,9 @@ export default {
       if (this.sessionCompleted || this.centralSession?.sessionStatus === 'completed') return null
       const sessionInProgress = !!this.mutqinState?.sessionState?.active
         || this.centralSession?.sessionStatus === 'active'
+        || this.centralSession?.sessionStatus === 'paused'
+        || !!this.sessionPaused
+        || !!this.backendUnfinishedSession
         || Number(this.sessionStartedAt || 0) > 0
       if (!sessionInProgress) return null
       const payload = this.buildContinueSessionPayload?.()
@@ -6127,7 +6110,7 @@ export default {
       const snapshot = this.buildActiveSessionSnapshot()
       if (!snapshot) return
       try {
-        sessionStorage.setItem(ACTIVE_SESSION_SNAPSHOT_KEY, JSON.stringify(snapshot))
+        sessionStorage.setItem(this.getActiveSessionSnapshotKey(), JSON.stringify(snapshot))
       } catch (error) {
         console.error('Failed to persist active session snapshot:', error)
       }
@@ -6135,7 +6118,7 @@ export default {
 
     readActiveSessionSnapshot() {
       try {
-        const raw = sessionStorage.getItem(ACTIVE_SESSION_SNAPSHOT_KEY)
+        const raw = sessionStorage.getItem(this.getActiveSessionSnapshotKey())
         return raw ? JSON.parse(raw) : null
       } catch {
         return null
@@ -6144,6 +6127,8 @@ export default {
 
     clearActiveSessionSnapshot() {
       try {
+        sessionStorage.removeItem(this.getActiveSessionSnapshotKey())
+        // Drop legacy unscoped key so it cannot resurrect another profile's resume.
         sessionStorage.removeItem(ACTIVE_SESSION_SNAPSHOT_KEY)
       } catch (error) {
         console.error('Failed to clear active session snapshot:', error)
@@ -6178,7 +6163,7 @@ export default {
           ...(this.mutqinState.sessionState || {}),
           ...deepClone(snapshot.mutqinSession)
         }
-        saveMutqinState(this.mutqinState)
+        this.persistMutqinStateLocally()
       }
 
       const restoreWorkspaceValue = (key, value) => {
@@ -6244,6 +6229,20 @@ export default {
       if (!this.isExistingUserLogin) return
       if (!this.getReadyToBeginLoginEventId()) return
       if (this.hasShownWelcomeBackModalForCurrentLogin()) return
+      // Re-assert continue eligibility from the latest backend snapshot so the
+      // Continue CTA is not missing when hydrate finished slightly earlier.
+      if (
+        this.learningBackendEnabled()
+        && this.backendUnfinishedSession
+        && this.backendSessionSnapshot
+        && !this.continueSessionPayload?.config?.chapterId
+      ) {
+        const fromBackend = this.buildContinuePayloadFromBackendSession(this.backendSessionSnapshot)
+        if (fromBackend) {
+          this.continueSessionPayload = fromBackend
+          this.hasContinueSession = true
+        }
+      }
       this.markWelcomeBackModalShownForCurrentLogin()
       this.returningUserChoicePending = true
       this.welcomeBackWorkspaceHidden = false
@@ -6314,6 +6313,106 @@ export default {
       try {
         localStorage.setItem(storageKey, loginEventId)
       } catch {}
+    },
+
+    getMutqinStateOwner() {
+      return this.auth?.id != null ? String(this.auth.id) : 'guest'
+    },
+
+    getActiveSessionSnapshotKey() {
+      return activeSessionSnapshotStorageKey(this.auth?.id ?? this.auth?.user?.id ?? null)
+    },
+
+    getSignupIsolationStorageKey() {
+      const userId = this.auth?.id != null ? String(this.auth.id) : null
+      return userId ? `mutqin.signupIsolated.${userId}` : null
+    },
+
+    isSignupIsolationActive() {
+      if (!this.learningBackendEnabled()) return false
+      if (this.auth?.just_registered) return true
+      const key = this.getSignupIsolationStorageKey()
+      if (!key) return false
+      try {
+        return localStorage.getItem(key) === '1'
+      } catch {
+        return false
+      }
+    },
+
+    ensureSignupIsolation() {
+      if (!this.learningBackendEnabled()) return false
+      if (this.auth?.just_registered) {
+        this.activateSignupIsolation()
+        return true
+      }
+      return this.isSignupIsolationActive()
+    },
+
+    activateSignupIsolation() {
+      const key = this.getSignupIsolationStorageKey()
+      if (!key) return
+      try {
+        localStorage.setItem(key, '1')
+      } catch { /* ignore */ }
+    },
+
+    clearSignupIsolation() {
+      const key = this.getSignupIsolationStorageKey()
+      if (!key) return
+      try {
+        localStorage.removeItem(key)
+      } catch { /* ignore */ }
+    },
+
+    resetIsolatedSignupWorkspace() {
+      // Clear ONLY this account's scoped markers / resume hints.
+      // Guest and other users' mutqin_state:* caches stay intact.
+      try {
+        this.deleteWorkspaceStateValue('onboardingCompleted')
+        this.deleteWorkspaceStateValue(this.getOnboardingWorkspaceKey())
+        this.deleteWorkspaceStateValue('continueSession')
+        this.deleteWorkspaceStateValue('audioState')
+        this.deleteWorkspaceStateValue('centralSession')
+        this.deleteWorkspaceStateValue('uiState')
+        ;['beginner', 'advanced', 'planner'].forEach((mode) => {
+          this.deleteWorkspaceStateValue(`modeState:${mode}`)
+          this.deleteWorkspaceStateValue(`sessionState:${mode}`)
+        })
+        this.writeWorkspaceStateValue('onboardingPending', true)
+        localStorage.removeItem(this.getOnboardingStorageKey())
+        localStorage.removeItem(this.continueSessionLocalStorageKey())
+        this.clearActiveSessionSnapshot()
+        this.clearContinueSessionQuietly()
+        this.backendUnfinishedSession = false
+        this.backendSessionSnapshot = null
+        this.hasContinueSession = false
+        this.continueSessionPayload = null
+        this.persistMutqinStateLocally()
+      } catch { /* ignore */ }
+    },
+
+    persistMutqinStateLocally() {
+      return saveMutqinState(this.mutqinState, this.getMutqinStateOwner())
+    },
+
+    bindMutqinStateForCurrentOwner({ signupIsolated = false } = {}) {
+      const owner = this.getMutqinStateOwner()
+      if (signupIsolated) {
+        // Brand-new accounts get a fresh unique cache under mutqin_state:{userId}.
+        // Guest / other users' keys are left untouched.
+        replaceMutqinState(this.mutqinState, {})
+        this.persistMutqinStateLocally()
+        this.learningSync.lastPushedHash = this.learningPayloadHash(this.buildLearningStatePayload())
+        return owner
+      }
+      if (this.learningBackendEnabled()) {
+        // Authenticated owners never inherit guest/shared cache. Backend pull is
+        // the source of truth; empty local is correct until remote state arrives.
+        const scoped = loadMutqinState(owner, { allowGuestFallback: false })
+        replaceMutqinState(this.mutqinState, scoped)
+      }
+      return owner
     },
 
     getWorkspacePersistenceBucket() {
@@ -8688,9 +8787,44 @@ export default {
       const userId = this.auth?.id ? String(this.auth.id) : 'guest'
       return `mutqin.onboardingCompleted.${userId}`
     },
+    getOnboardingWorkspaceKey() {
+      const userId = this.auth?.id != null ? String(this.auth.id) : null
+      return userId ? `onboardingCompleted.${userId}` : 'onboardingCompleted'
+    },
+    hasPostOnboardingPracticeEvidence() {
+      if (this.isSignupIsolationActive()) return false
+      if (this.onboardingSampleSessionActive) return false
+      if (this.isSessionLive || this.sessionPaused) return true
+      if (this.backendUnfinishedSession) return true
+      if (this.hasValidatedResumableSession) return true
+      const stats = this.mutqinState?.stats || {}
+      if (Number(stats.sessions_completed || 0) > 0) return true
+      if (Object.keys(this.mutqinState?.ayahs || {}).length > 0) return true
+      if (this.isPlaying || this.playerVisible) return true
+      return false
+    },
     hasCompletedOnboarding() {
-      if (this.learningBackendEnabled()) {
-        return !!this.readWorkspaceStateValue('onboardingCompleted', false)
+      const userId = this.auth?.id != null ? String(this.auth.id) : null
+
+      if (this.learningBackendEnabled() && userId) {
+        if (this.isSignupIsolationActive()) return false
+        if (this.readWorkspaceStateValue(this.getOnboardingWorkspaceKey(), false)) return true
+        try {
+          if (localStorage.getItem(this.getOnboardingStorageKey()) === 'true') {
+            this.writeWorkspaceStateValue(this.getOnboardingWorkspaceKey(), true)
+            return true
+          }
+        } catch { /* ignore */ }
+
+        // Pre-scoping installs stored a single shared flag. Adopt it for this
+        // account once, but never while signup isolation is active.
+        const legacy = !!this.readWorkspaceStateValue('onboardingCompleted', false)
+        if (legacy && !this.isSignupIsolationActive()) {
+          this.writeWorkspaceStateValue(this.getOnboardingWorkspaceKey(), true)
+          this.deleteWorkspaceStateValue('onboardingCompleted')
+          return true
+        }
+        return false
       }
       try {
         return localStorage.getItem(this.getOnboardingStorageKey()) === 'true'
@@ -8699,20 +8833,36 @@ export default {
       }
     },
     markOnboardingCompleted() {
+      const workspaceKey = this.getOnboardingWorkspaceKey()
       if (this.learningBackendEnabled()) {
-        this.writeWorkspaceStateValue('onboardingCompleted', true)
-        return
+        this.writeWorkspaceStateValue(workspaceKey, true)
+        this.deleteWorkspaceStateValue('onboardingPending')
+        // Drop legacy unscoped flag so it cannot leak across accounts.
+        if (workspaceKey !== 'onboardingCompleted') {
+          this.deleteWorkspaceStateValue('onboardingCompleted')
+        }
       }
       try {
         localStorage.setItem(this.getOnboardingStorageKey(), 'true')
       } catch { }
+      // User finished their own first-run — isolation can end.
+      this.clearSignupIsolation()
     },
     openOnboardingModal(force = false) {
       if (!this.isLoggedIn && !force) return
       this.onboardingManualLaunch = !!force
       this.onboardingStepIndex = 0
       this.onboardingFinishChoice = ''
-      if (!force && this.hasCompletedOnboarding() && !this.auth?.just_registered) return
+      if (this.isSignupIsolationActive()) {
+        // New account: clear ONLY this user's scoped completion markers.
+        // Never remove guest / other accounts' mutqin.onboardingCompleted.* keys.
+        try {
+          this.deleteWorkspaceStateValue(this.getOnboardingWorkspaceKey())
+          localStorage.removeItem(this.getOnboardingStorageKey())
+        } catch { /* ignore */ }
+        this.writeWorkspaceStateValue('onboardingPending', true)
+      }
+      if (!force && this.hasCompletedOnboarding() && !this.isSignupIsolationActive()) return
       this.sessionEndedSnapshot = null
       if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
       this.showTools = false
@@ -8822,6 +8972,7 @@ export default {
     openPostSessionModal(snapshot = null, options = {}) {
       this.postSessionSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
       if (!this.postSessionSnapshot) return
+      this.postSessionActionsUnlocked = true
       this.pendingPostSessionModalPayload = null
       this.postSessionAutoSaved = false
       const autoSaveKey = this.buildPostSessionAutoSaveKey(this.postSessionSnapshot)
@@ -8858,6 +9009,7 @@ export default {
       }
       this.showPostSessionConfetti = true
       this.showPostSessionModal = true
+      this.postSessionActionsUnlocked = true
       this.showTools = false
       this.postSessionOffcanvasOpen = false
       if (!this.onboardingSampleSessionActive) {
@@ -8954,7 +9106,7 @@ export default {
       return {
         technique,
         reciter: this.reciterId || null,
-        playback_speed: Number(this.playbackSpeed || 1),
+        playback_speed: Number(this.speed || 1),
         repetitions: Number(this.repetitionsPerStep || 3),
         ayat_per_step: this.focusModeEnabled ? 1 : null,
         focus_enabled: !!this.focusModeEnabled,
@@ -9048,16 +9200,38 @@ export default {
       this.loadPostSessionRecommendation()
     },
     async submitPostSessionConfidence(confidence) {
-      if (this.postSessionActionsBusy || !this.postSessionRecommendation?.id) return
+      if (this.postSessionActionsBusy) return
       if (!['confident', 'needs_practice'].includes(confidence)) return
-      if (this.postSessionSelectedConfidence === confidence && this.postSessionRecommendation?.confidence_feedback === confidence) {
-        return
-      }
+
+      const alreadyAligned = this.postSessionSelectedConfidence === confidence
+        && this.postSessionRecommendation?.confidence_feedback === confidence
+        && (
+          (confidence === 'needs_practice' && this.postSessionIsRepeatRecommendation)
+          || (confidence === 'confident' && !this.postSessionIsRepeatRecommendation)
+        )
+      if (alreadyAligned) return
+
       // Update local selection immediately so rerenders / recommendation refreshes do not flicker.
       this.postSessionConfidenceSelection = confidence
       this.postSessionConfidenceHydrated = true
-      this.postSessionConfidenceBusy = true
       this.postSessionConfidenceError = ''
+
+      // Optimistic reshape so the card/reason react to the toggle without waiting on the API.
+      this.postSessionRecommendation = this.enrichPostSessionRecommendation(
+        adaptRecommendationForConfidence(
+          this.postSessionRecommendation,
+          confidence,
+          this.postSessionSnapshot || {}
+        )
+      )
+      this.postSessionRecommendationStatus = 'ready'
+      this.postSessionViewState = 'recommendation_ready'
+
+      if (!this.postSessionRecommendation?.id || !this.isLoggedIn || !this.learningBackendEnabled()) {
+        return
+      }
+
+      this.postSessionConfidenceBusy = true
       try {
         const updated = await learningApi.submitRecommendationConfidence(
           this.postSessionRecommendation.id,
@@ -9083,8 +9257,78 @@ export default {
       }
     },
     openPostSessionRecommendationSettings() {
-      // Inline settings replaced the offcanvas adjust-settings flow.
-      return
+      return this.openPostSessionAdjustPlan()
+    },
+    async openPostSessionAdjustPlan() {
+      if (!this.postSessionRecommendationActionable || this.postSessionActionsBusy) return
+      const recommendation = this.postSessionRecommendation
+      if (!recommendation) return
+
+      const chapterId = Number(
+        recommendation?.surah?.id
+        || recommendation?.next_surah?.id
+        || recommendation?.ayah_range?.surah_id
+        || this.postSessionSnapshot?.chapterId
+        || this.chapterId
+        || 0
+      )
+      const rangeStart = Number(
+        recommendation?.ayah_range?.from
+        || recommendation?.ayah_range?.start
+        || this.rangeStart
+        || 1
+      )
+      const rangeEnd = Number(
+        recommendation?.ayah_range?.to
+        || recommendation?.ayah_range?.end
+        || rangeStart
+      )
+      const settings = this.resolveRecommendationStartSettings(recommendation)
+      const sessionMode = recommendation?.session_mode
+        || (isRepeatRecommendation(recommendation) ? 'revision' : 'new_learning')
+      const techniqueId = settings.technique
+        || recommendation?.technique?.id
+        || null
+
+      this.postSessionRecommendationStartError = ''
+      this.postSessionSettingsError = ''
+      this.postSessionViewState = 'editing_settings'
+      this.postSessionOffcanvasOpen = true
+
+      const baseConfig = this.buildSessionConfig(this.currentMode) || {}
+      this.applySessionConfig({
+        ...baseConfig,
+        chapterId: chapterId || baseConfig.chapterId,
+        rangeStart: rangeStart || baseConfig.rangeStart,
+        rangeEnd: rangeEnd || baseConfig.rangeEnd,
+        reciterId: settings.reciter || baseConfig.reciterId,
+        speed: this.normalizePlaybackSpeed(settings.playback_speed ?? baseConfig.speed ?? 1),
+        repetitionsPerStep: Number(settings.repetitions || baseConfig.repetitionsPerStep || 3),
+        talqinModeEnabled: !!settings.talqin_enabled,
+        focusModeEnabled: !!settings.focus_enabled,
+        blurModeEnabled: !!settings.blur_enabled,
+        chainingEnabled: !!settings.chaining_enabled,
+        chainingMethod: settings.chaining_method || 'linking',
+        chainingRepetitions: Number(settings.chaining_repetitions || baseConfig.chainingRepetitions || 2),
+        anchorModeEnabled: !!settings.anchor_mode_enabled,
+        anchorCount: Number(settings.anchor_count || baseConfig.anchorCount || 2),
+      })
+
+      if (settings.reciter) {
+        this.reciterId = settings.reciter
+      }
+      if (settings.playback_speed != null) {
+        this.setPlaybackSpeed(Number(settings.playback_speed), { silent: true })
+      }
+      if (settings.repetitions) {
+        this.repetitionsPerStep = Number(settings.repetitions)
+      }
+
+      this.applyRecommendedTechnique(techniqueId, sessionMode, settings)
+      this.persistModeState(this.currentMode)
+      this.persistUiState()
+      this.persistCentralSessionState()
+      this.openToolsPanel({ tab: 'techniques' })
     },
     async updatePostSessionInlineSetting(key, value) {
       if (!this.postSessionRecommendation?.id || this.postSessionActionsBusy) return
@@ -9121,7 +9365,7 @@ export default {
         const settings = overrides || {
           technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : 'talqin')),
           reciter: this.reciterId || null,
-          playback_speed: Number(this.playbackSpeed || 1),
+          playback_speed: Number(this.speed || 1),
           repetitions: Number(this.repetitionsPerStep || 3),
           ayat_per_step: this.focusModeEnabled ? 1 : null,
           focus_enabled: !!this.focusModeEnabled,
@@ -9346,7 +9590,7 @@ export default {
           techniqueId: 'talqin',
           settings: {
             technique: 'talqin',
-            playback_speed: Math.max(0.5, Number(this.playbackSpeed || 1) - 0.25),
+            playback_speed: Math.max(0.5, Number(this.speed || 1) - 0.25),
             repetitions: Math.min(8, Number(this.repetitionsPerStep || 3) + 2),
           },
         })
@@ -9471,9 +9715,12 @@ export default {
           chapterId,
           rangeStart,
           rangeEnd,
-          sessionMode: recommendation?.session_mode || 'new_learning',
-          techniqueId: recommendation?.technique?.id || recommendation?.settings?.technique || null,
-          settings: recommendation?.settings || sessionPayload?.metadata?.settings || null,
+          sessionMode: recommendation?.session_mode
+            || sessionPayload?.metadata?.recommendation?.session_mode
+            || 'new_learning',
+          techniqueId: null,
+          settings: this.resolveRecommendationStartSettings(recommendation, sessionPayload),
+          sessionPayload,
         })
       } catch (error) {
         console.error('Failed to start recommended session:', error)
@@ -9488,6 +9735,58 @@ export default {
         this.postSessionViewState = 'action_failed'
       }
     },
+    resolveRecommendationStartSettings(recommendation = null, sessionPayload = null) {
+      const config = sessionPayload?.metadata?.config || {}
+      const fromConfig = {
+        technique: config.technique || null,
+        complementary_technique: config.complementaryTechnique || null,
+        reciter: config.reciterId || null,
+        playback_speed: config.playbackSpeed ?? null,
+        repetitions: config.repetitionsPerStep ?? null,
+        ayat_per_step: config.ayatPerStep ?? null,
+        focus_enabled: config.focusModeEnabled,
+        blur_enabled: config.blurModeEnabled,
+        talqin_enabled: config.talqinModeEnabled,
+        chaining_enabled: config.chainingEnabled,
+        chaining_method: config.chainingMethod || null,
+        chaining_repetitions: config.chainingRepetitions ?? null,
+        anchor_mode_enabled: config.anchorModeEnabled,
+        anchor_count: config.anchorCount ?? null,
+      }
+      const settings = {
+        ...fromConfig,
+        ...(recommendation?.settings && typeof recommendation.settings === 'object' ? recommendation.settings : {}),
+        ...(sessionPayload?.metadata?.settings && typeof sessionPayload.metadata.settings === 'object'
+          ? sessionPayload.metadata.settings
+          : {}),
+      }
+      if (!settings.technique) {
+        settings.technique = recommendation?.technique?.id || null
+      }
+      if (!settings.complementary_technique && recommendation?.technique?.complementary) {
+        settings.complementary_technique = recommendation.technique.complementary
+      }
+      if ((settings.chaining_enabled || settings.technique === 'chaining' || settings.complementary_technique === 'chaining')
+        && !['linking', 'cumulative'].includes(String(settings.chaining_method || ''))) {
+        settings.chaining_method = 'linking'
+      }
+      if (settings.chaining_enabled == null && (settings.technique === 'chaining' || settings.complementary_technique === 'chaining')) {
+        settings.chaining_enabled = true
+      }
+      if (settings.talqin_enabled == null && settings.technique === 'talqin') {
+        settings.talqin_enabled = true
+      }
+      if (settings.focus_enabled == null && settings.technique === 'focus') {
+        settings.focus_enabled = true
+      }
+      if (settings.blur_enabled == null && settings.technique === 'blur') {
+        settings.blur_enabled = true
+      }
+      if (settings.anchor_mode_enabled == null && settings.technique === 'anchor') {
+        settings.anchor_mode_enabled = true
+      }
+      return settings
+    },
     async startSessionFromRecommendationPayload({
       chapterId,
       rangeStart,
@@ -9495,36 +9794,68 @@ export default {
       sessionMode = 'new_learning',
       techniqueId = null,
       settings = null,
+      sessionPayload = null,
     }) {
       this.primeAudioPlaybackUnlock()
+      const mergedSettings = this.resolveRecommendationStartSettings(
+        {
+          settings: settings && typeof settings === 'object' ? settings : null,
+          technique: techniqueId ? { id: techniqueId } : null,
+          session_mode: sessionMode,
+        },
+        sessionPayload
+      )
+
       const baseConfig = this.buildSessionConfig(this.currentMode) || {}
       this.applySessionConfig({
         ...baseConfig,
         chapterId: Number(chapterId),
         rangeStart: Number(rangeStart),
         rangeEnd: Number(rangeEnd),
+        reciterId: mergedSettings.reciter || baseConfig.reciterId,
+        speed: this.normalizePlaybackSpeed(mergedSettings.playback_speed ?? baseConfig.speed ?? 1),
+        repetitionsPerStep: Number(mergedSettings.repetitions || baseConfig.repetitionsPerStep || 3),
+        talqinModeEnabled: !!mergedSettings.talqin_enabled,
+        focusModeEnabled: !!mergedSettings.focus_enabled,
+        blurModeEnabled: !!mergedSettings.blur_enabled,
+        chainingEnabled: !!mergedSettings.chaining_enabled,
+        chainingMethod: mergedSettings.chaining_method || 'linking',
+        chainingRepetitions: Number(mergedSettings.chaining_repetitions || baseConfig.chainingRepetitions || 2),
+        anchorModeEnabled: !!mergedSettings.anchor_mode_enabled,
+        anchorCount: Number(mergedSettings.anchor_count || baseConfig.anchorCount || 2),
       })
 
-      const resolvedSettings = settings && typeof settings === 'object' ? settings : null
-      if (resolvedSettings?.reciter) {
-        this.reciterId = resolvedSettings.reciter
+      if (mergedSettings.reciter) {
+        this.reciterId = mergedSettings.reciter
       }
-      if (resolvedSettings?.playback_speed) {
-        this.setPlaybackSpeed(Number(resolvedSettings.playback_speed))
+      if (mergedSettings.playback_speed != null) {
+        this.setPlaybackSpeed(Number(mergedSettings.playback_speed), { silent: true })
       }
-      if (resolvedSettings?.repetitions) {
-        this.repetitionsPerStep = Number(resolvedSettings.repetitions)
+      if (mergedSettings.repetitions) {
+        this.repetitionsPerStep = Number(mergedSettings.repetitions)
       }
 
       this.applyRecommendedTechnique(
-        techniqueId || resolvedSettings?.technique || this.postSessionRecommendation?.technique?.id || null,
+        techniqueId || mergedSettings.technique || this.postSessionRecommendation?.technique?.id || null,
         sessionMode,
-        resolvedSettings
+        mergedSettings
       )
       this.persistModeState(this.currentMode)
       this.persistUiState()
       this.persistCentralSessionState()
       await this.loadChapter(this.currentMode)
+      // Re-apply after chapter load so mode-store hydration cannot drop recommended tools.
+      this.applyRecommendedTechnique(
+        techniqueId || mergedSettings.technique || this.postSessionRecommendation?.technique?.id || null,
+        sessionMode,
+        mergedSettings
+      )
+      if (mergedSettings.playback_speed != null) {
+        this.setPlaybackSpeed(Number(mergedSettings.playback_speed), { silent: true })
+      }
+      if (mergedSettings.repetitions) {
+        this.repetitionsPerStep = Number(mergedSettings.repetitions)
+      }
       this.prepareRangeRestart()
       this.showPostSessionModal = false
       this.showPostSessionConfetti = false
@@ -9552,7 +9883,7 @@ export default {
         else if (technique === 'blur') this.blurModeEnabled = true
         else if (technique === 'chaining') {
           this.chainingEnabled = true
-          if (settings?.chaining_method) this.chainingMethod = settings.chaining_method
+          this.chainingMethod = settings?.chaining_method || this.chainingMethod || 'linking'
           if (settings?.chaining_repetitions) this.chainingRepetitions = Number(settings.chaining_repetitions)
         } else if (technique === 'anchor') {
           this.anchorModeEnabled = true
@@ -9575,7 +9906,11 @@ export default {
         if (settings.anchor_count) this.anchorCount = Number(settings.anchor_count)
       }
 
-      if (!id && sessionMode === 'revision') {
+      if (this.chainingEnabled && !['linking', 'cumulative'].includes(String(this.chainingMethod || ''))) {
+        this.chainingMethod = 'linking'
+      }
+
+      if (!id && sessionMode === 'revision' && !this.talqinModeEnabled && !this.focusModeEnabled && !this.blurModeEnabled && !this.anchorModeEnabled) {
         this.blurModeEnabled = true
       }
 
@@ -10116,7 +10451,7 @@ export default {
       const current = Math.max(0, Number(this.mutqinState?.sessionState?.play_count || 0))
       if (!this.mutqinState?.sessionState) return
       this.mutqinState.sessionState.play_count = current + 1
-      saveMutqinState(this.mutqinState)
+      this.persistMutqinStateLocally()
       this.persistCentralSessionState()
     },
     incrementVersePlayCount(verseKey) {
@@ -10127,7 +10462,7 @@ export default {
         ...currentMap,
         [verseKey]: current + 1
       }
-      saveMutqinState(this.mutqinState)
+      this.persistMutqinStateLocally()
       this.persistCentralSessionState()
     },
 
@@ -10251,6 +10586,22 @@ export default {
         .replaceAll("'", '&#039;')
     },
 
+    formatAyahRangeDisplay(start, end = start) {
+      return formatAyahRangeLabel({ start, end }, this.t.bind(this))
+    },
+
+    formatSurahAyahDisplay(surahName, start, end = start) {
+      return formatSurahAyahLabel(surahName, { start, end }, this.t.bind(this))
+    },
+
+    formatAttemptCountDisplay(count) {
+      return formatAttemptCountLabel(count, this.t.bind(this))
+    },
+
+    formatRepetitionCountDisplay(count) {
+      return formatRepetitionCountLabel(count, this.t.bind(this))
+    },
+
     buildSessionExportHtml(payload) {
       const session = payload?.session || {}
       const config = session?.config || {}
@@ -10259,7 +10610,9 @@ export default {
       const title = this.escapeHtml(session?.name || 'Session Export')
       const subtitleParts = [
         config?.chapterName || (config?.chapterId ? `Surah ${config.chapterId}` : ''),
-        (config?.rangeStart && config?.rangeEnd) ? `Ayahs ${config.rangeStart}-${config.rangeEnd}` : ''
+        (config?.rangeStart && config?.rangeEnd)
+          ? formatAyahRangeLabel({ start: config.rangeStart, end: config.rangeEnd }, this.t.bind(this))
+          : ''
       ].filter(Boolean)
       const subtitle = this.escapeHtml(subtitleParts.join(' · '))
 
@@ -11483,6 +11836,7 @@ export default {
     },
     startSelfCheckPeek() {
       if (!this.selfCheckBlurEnabled) return
+      if (!this.selfCheckPeekActive) this.recordSessionHint()
       this.selfCheckPeekActive = true
     },
     stopSelfCheckPeek() {
@@ -12266,6 +12620,7 @@ export default {
       this.persistAiMemorisationCheckerSession()
     },
     startAiMemorisationCheckerPeek() {
+      if (!this.aiMemorisationCheckerPeekActive) this.recordSessionHint()
       this.aiMemorisationCheckerPeekActive = true
     },
     stopAiMemorisationCheckerPeek() {
@@ -16562,11 +16917,15 @@ export default {
       this.openToolsPanel()
     },
     handleHeaderSessionAction() {
-      if (this.headerSessionActionDisabled) return
+      if (this.headerSessionActionDisabled) {
+        this.resetStuckSessionLifecycleControls()
+        if (this.headerSessionActionDisabled) return
+      }
       this.startingFreshSessionSelection = false
       const action = this.primarySessionAction
 
       if (action === PRIMARY_SESSION_ACTION.LOADING || action === PRIMARY_SESSION_ACTION.NONE) {
+        this.resetStuckSessionLifecycleControls()
         return
       }
 
@@ -16588,6 +16947,11 @@ export default {
         return
       }
 
+      if (action === PRIMARY_SESSION_ACTION.PAUSE_SESSION) {
+        this.pauseSessionFromPrimaryAction()
+        return
+      }
+
       if (action === PRIMARY_SESSION_ACTION.RESUME_SESSION) {
         this.resumeSessionFromPrimaryAction()
         return
@@ -16606,11 +16970,88 @@ export default {
       }
     },
 
+    canSoftResumePausedSession() {
+      if (this.sessionCompleted || this.isSessionCompleted) return false
+      if (String(this.backendSessionSnapshot?.status || '') === 'completed') return false
+      return !!this.sessionPaused
+        && !!this.hasVerses
+        && Array.isArray(this.queue)
+        && this.queue.length > 0
+        && Number(this.chapterId || this.sessionConfig?.chapterId || 0) > 0
+    },
+
+    applyLocalActiveSessionState() {
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = true
+        this.mutqinState.sessionState.paused = false
+        this.mutqinState.sessionState.completed = false
+      }
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'active'
+        this.centralSession.sessionCompletedAt = null
+      }
+      this.sessionPaused = false
+      this.sessionCompleted = false
+    },
+
+    softResumePausedSession() {
+      this.primeAudioPlaybackUnlock()
+      this.applyLocalActiveSessionState()
+      this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
+      this.resumePlaybackFromRestoredState()
+      this.$nextTick(async () => {
+        const playbackStarted = await this.ensureSessionPlaybackStarted()
+        if (!playbackStarted && this.queue?.length) {
+          this.promptTapToPlay()
+        }
+      })
+    },
+
     async resumeSessionFromPrimaryAction() {
       if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return
+      if (this.sessionCompleted || this.isSessionCompleted) return
+      if (String(this.backendSessionSnapshot?.status || '') === 'completed') return
       const locked = await this.sessionActionLock.run('resume', async () => {
-        this.transitionSessionLifecycle(SESSION_STATUS.RESUMING, SESSION_MUTATION.RESUMING)
+        const softResume = this.canSoftResumePausedSession()
+        // Avoid PAUSING/RESUMING → LOADING label flicker; resume in place when possible.
         try {
+          if (softResume) {
+            this.softResumePausedSession()
+            this.sessionLifecycleError = null
+            this.sessionBroadcast?.publish('session-resumed', { at: Date.now() })
+            if (this.learningBackendEnabled()) {
+              Promise.resolve().then(async () => {
+                try {
+                  await learningApi.resumeSession({
+                    idempotency_key: `resume-${this.backendSessionSnapshot?.id || 'current'}`,
+                    surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
+                    ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
+                    memorisation_mode: this.currentMode,
+                  })
+                  this.backendUnfinishedSession = true
+                  this.backendSessionSnapshot = {
+                    ...(this.backendSessionSnapshot || {}),
+                    status: 'active',
+                  }
+                } catch (error) {
+                  if (error?.response?.status === 422) {
+                    this.backendUnfinishedSession = false
+                    this.clearContinueSessionQuietly()
+                    this.sessionLifecycleError = 'resume_invalid'
+                    this.applyLocalPausedSessionState()
+                    this.transitionSessionLifecycle(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
+                    this.showBanner(
+                      this.t('toasts.sessionResumeFailed') || 'This session can no longer be resumed. Start a new session.',
+                      'warning',
+                      4200
+                    )
+                  }
+                }
+              })
+            }
+            return true
+          }
+
           if (this.learningBackendEnabled()) {
             // Re-check authority right before resume so stale Resume buttons never 422.
             try {
@@ -16658,7 +17099,9 @@ export default {
               throw error
             }
           }
-          await this.continueLastSession()
+          // Mid-session / primary Resume never uses the start-session countdown.
+          await this.continueLastSession({ skipCountdown: true })
+          this.applyLocalActiveSessionState()
           this.transitionSessionLifecycle(
             SESSION_STATUS.ACTIVE,
             SESSION_MUTATION.IDLE
@@ -16691,12 +17134,18 @@ export default {
       if (this.centralSession && nextStatus === SESSION_STATUS.ACTIVE) {
         this.centralSession.sessionStatus = 'active'
         this.centralSession.sessionCompletedAt = null
+        this.sessionPaused = false
       }
-      if (this.centralSession && nextStatus === SESSION_STATUS.ENDED) {
+      if (this.centralSession && nextStatus === SESSION_STATUS.PAUSED) {
+        this.centralSession.sessionStatus = 'paused'
+        this.sessionPaused = true
+      }
+      if (this.centralSession && (nextStatus === SESSION_STATUS.ENDED || nextStatus === SESSION_STATUS.COMPLETED)) {
         this.centralSession.sessionStatus = 'completed'
         this.centralSession.sessionCompletedAt = this.centralSession.sessionCompletedAt || new Date().toISOString()
+        this.sessionPaused = false
       }
-      if (this.centralSession && (nextStatus === SESSION_STATUS.READY || nextStatus === SESSION_STATUS.RESUMABLE)) {
+      if (this.centralSession && (nextStatus === SESSION_STATUS.READY || nextStatus === SESSION_STATUS.RESUMABLE || nextStatus === SESSION_STATUS.INTERRUPTED_RESUMABLE)) {
         if (nextStatus === SESSION_STATUS.READY && !this.hasValidatedResumableSession) {
           this.centralSession.sessionStatus = this.isSessionCompleted ? 'completed' : 'idle'
         }
@@ -16738,8 +17187,16 @@ export default {
           if (this.continueSessionPayload) {
             this.clearContinueSessionQuietly()
           }
+          this.clearActiveSessionSnapshot()
+          this.sessionPaused = false
+          if (this.centralSession?.sessionStatus === 'active' || this.mutqinState?.sessionState?.active) {
+            if (this.centralSession) this.centralSession.sessionStatus = this.sessionCompleted ? 'completed' : 'idle'
+            if (this.mutqinState?.sessionState) this.mutqinState.sessionState.active = false
+          }
           return
         }
+
+        this.sessionPaused = String(session?.status || '').toLowerCase() === 'paused'
 
         let reconciled = reconcileContinuePayloadWithBackend(this.continueSessionPayload, session, {
           backendAuthoritative: true,
@@ -16788,7 +17245,7 @@ export default {
           rangeStart,
           rangeEnd,
           reciterId: config.reciterId || config.reciter || this.reciterId || null,
-          speed: Number(config.playbackSpeed || config.playback_speed || this.playbackSpeed || 1),
+          speed: Number(config.playbackSpeed || config.playback_speed || this.speed || 1),
           repetitionsPerStep: Number(config.repetitionsPerStep || config.repetitions || this.repetitionsPerStep || 3),
           technique: config.technique || null,
           focusModeEnabled: !!config.focusModeEnabled,
@@ -16842,19 +17299,69 @@ export default {
     },
 
     demoteLiveSessionToResumableOnBootstrap() {
-      const unfinished = this.hasValidatedResumableSession
-        || this.backendUnfinishedSession
-        || isResumableSessionPayload(this.continueSessionPayload)
-        || !!this.mutqinState?.sessionState?.active
-      if (!unfinished) return
+      const reconciled = reconcileBootstrapSessionState({
+        backendUnfinished: !!this.backendUnfinishedSession,
+        backendStatus: this.backendSessionSnapshot?.status || null,
+        backendAuthoritative: this.learningBackendEnabled() && !!this.sessionLifecycleHydrated,
+        localContinuePayload: this.continueSessionPayload,
+        centralSessionStatus: this.centralSession?.sessionStatus || null,
+        // Never let a stale local completed flag win when backend still has unfinished work.
+        sessionCompleted: this.backendUnfinishedSession
+          ? false
+          : (!!this.sessionCompleted || this.centralSession?.sessionStatus === 'completed'),
+        mutqinSessionActive: !!this.mutqinState?.sessionState?.active,
+        activeSnapshot: this.readActiveSessionSnapshot(),
+      })
+
+      if (reconciled.sessionCompleted) {
+        if (this.mutqinState?.sessionState) {
+          this.mutqinState.sessionState.active = false
+          this.mutqinState.sessionState.completed = true
+        }
+        if (this.centralSession) {
+          this.centralSession.sessionStatus = 'completed'
+        }
+        this.sessionPaused = false
+        this.sessionCompleted = true
+        this.sessionStartedAt = 0
+        this.clearContinueSessionQuietly()
+        this.clearActiveSessionSnapshot()
+        return
+      }
+
       if (this.mutqinState?.sessionState) {
         this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.completed = false
+        this.mutqinState.sessionState.paused = !!reconciled.sessionPaused
       }
-      if (this.centralSession?.sessionStatus === 'active') {
-        this.centralSession.sessionStatus = 'idle'
+      if (this.centralSession) {
+        if (reconciled.sessionPaused) {
+          this.centralSession.sessionStatus = 'paused'
+        } else if (reconciled.resumable) {
+          this.centralSession.sessionStatus = 'idle'
+        } else if (this.centralSession.sessionStatus === 'active') {
+          this.centralSession.sessionStatus = 'idle'
+        }
+        if (reconciled.resumable) {
+          this.centralSession.sessionCompletedAt = null
+        }
       }
       this.sessionStartedAt = 0
       this.sessionCompleted = false
+      this.sessionPaused = !!reconciled.sessionPaused
+      if (!reconciled.resumable) {
+        this.clearContinueSessionQuietly()
+        this.clearActiveSessionSnapshot()
+      } else if (reconciled.continuePayload) {
+        this.continueSessionPayload = reconciled.continuePayload
+        this.hasContinueSession = true
+      } else if (this.backendUnfinishedSession && this.backendSessionSnapshot) {
+        const fromBackend = this.buildContinuePayloadFromBackendSession(this.backendSessionSnapshot)
+        if (fromBackend) {
+          this.continueSessionPayload = fromBackend
+          this.hasContinueSession = true
+        }
+      }
     },
 
     bindSessionLifecycleBroadcast() {
@@ -16887,6 +17394,7 @@ export default {
     },
 
     openSessionExitModalFromMenu() {
+      this.resetStuckSessionLifecycleControls()
       this.topCardMenuOpen = false
       this.topCardFontSubmenuOpen = false
       this.topCardLayoutSubmenuOpen = false
@@ -17146,7 +17654,7 @@ export default {
         sessions.push({
           key: `planner-future-${index}-${startAyah}-${endAyah}`,
           label: sessionLabels[index],
-          value: startAyah === endAyah ? `Ayah ${startAyah}` : `Ayahs ${startAyah}-${endAyah}`
+          value: formatAyahRangeLabel({ start: startAyah, end: endAyah }, this.t.bind(this))
         })
         cursor = endAyah + 1
       }
@@ -17209,10 +17717,14 @@ export default {
     },
     onVersePeekEnter(verseKey) {
       if (!this.blurModeEnabled || !this.isVerseBlurred(verseKey)) return
+      if (this.hoverPeekVerseKey !== verseKey) this.recordSessionHint()
       this.hoverPeekVerseKey = verseKey
     },
     onVersePeekLeave(verseKey) {
       if (this.hoverPeekVerseKey === verseKey) this.hoverPeekVerseKey = null
+    },
+    recordSessionHint() {
+      this.sessionHintCount = Math.max(0, Number(this.sessionHintCount || 0)) + 1
     },
     clearTouchPeek() {
       if (this.longPressPeekTimer) {
@@ -17232,6 +17744,7 @@ export default {
       this.longPressPeekTimer = window.setTimeout(() => {
         this.longPressPeekTriggered = true
         this.touchPeekVerseKey = verseKey
+        this.recordSessionHint()
       }, 320)
     },
     onVerseTouchEnd(event, verseKey = null) {
@@ -17819,7 +18332,7 @@ export default {
         if (typeof merged.reciterId !== 'string' || !merged.reciterId) {
           merged.reciterId = DEFAULT_ALQURAN_RECITER
         }
-        merged.speed = [0.5, 1, 1.25, 1.5, 2].includes(Number(merged.speed)) ? Number(merged.speed) : 1
+        merged.speed = [0.5, 0.75, 1, 1.25, 1.5, 2].includes(Number(merged.speed)) ? Number(merged.speed) : 1
         merged.delay = Math.max(0, Number.isFinite(Number(merged.delay)) ? Number(merged.delay) : 2)
         merged.playMode = ['auto', 'manual', 'follow'].includes(merged.playMode) ? merged.playMode : 'auto'
         merged.recitationWindowSeconds = Math.max(5, Math.min(30, Number(merged.recitationWindowSeconds || 8)))
@@ -17911,7 +18424,7 @@ export default {
         }
         if (this.showSessionExitModal) {
           event.preventDefault()
-          this.closeSessionExitModal()
+          this.keepPractisingFromExitModal()
           return
         }
         if (this.showSessionEndedModal) {
@@ -17929,6 +18442,7 @@ export default {
       if (event.key === ' ' || event.code === 'Space') {
         if (this.blurModeEnabled) {
           event.preventDefault()
+          if (!this.blurPeekHoldingSpace) this.recordSessionHint()
           this.blurPeekHoldingSpace = true
           return
         }
@@ -18107,6 +18621,9 @@ export default {
       }
       const sessionInProgress = !!this.mutqinState?.sessionState?.active
         || this.centralSession?.sessionStatus === 'active'
+        || this.centralSession?.sessionStatus === 'paused'
+        || !!this.sessionPaused
+        || !!this.backendUnfinishedSession
         || (Number(this.sessionStartedAt || 0) > 0 && this.hasVerses)
       if (!sessionInProgress) {
         this.clearExitSessionStorage()
@@ -18123,6 +18640,8 @@ export default {
         } else {
           localStorage.setItem(this.continueSessionLocalStorageKey(), JSON.stringify(payload))
         }
+        this.continueSessionPayload = payload
+        this.hasContinueSession = true
       } catch (e) { console.error(e) }
       this.markActiveSessionSnapshot()
     },
@@ -18199,10 +18718,21 @@ export default {
     },
 
     loadContinueSessionPrompt() {
+      // Keep a backend-validated continue payload if validateSessionLifecycleAgainstBackend
+      // already reconciled one — do not wipe it when local storage is empty/stale.
+      const backendOwnedPayload = (
+        this.learningBackendEnabled()
+        && this.backendUnfinishedSession
+        && this.continueSessionPayload
+        && Number(this.continueSessionPayload?.config?.chapterId || 0) > 0
+      ) ? this.continueSessionPayload : null
+
       try {
         this.hasContinueSession = false
-        this.continueSessionPayload = null
-        this.continueSessionLabel = ''
+        if (!backendOwnedPayload) {
+          this.continueSessionPayload = null
+          this.continueSessionLabel = ''
+        }
         const persistedContinue = this.learningBackendEnabled()
           ? this.readWorkspaceStateValue('continueSession', null)
           : (() => {
@@ -18218,7 +18748,10 @@ export default {
             return raw ? JSON.parse(raw) : null
           })()
         const mutqinSession = this.mutqinState?.sessionState
-        if (mutqinSession?.completed || this.sessionCompleted || this.centralSession?.sessionStatus === 'completed') {
+        if (
+          (mutqinSession?.completed || this.sessionCompleted || this.centralSession?.sessionStatus === 'completed')
+          && !this.backendUnfinishedSession
+        ) {
           this.clearExitSessionStorage()
           return
         }
@@ -18247,23 +18780,51 @@ export default {
           }
           this.hasContinueSession = true
           const chapterName = this.chapters.find(c => Number(c.id) === Number(mutqinSession.config.chapterId))?.name_simple || 'Saved session'
-          this.continueSessionLabel = `${chapterName} · Ayahs ${mutqinSession.config.rangeStart}-${mutqinSession.config.rangeEnd}`
+          this.continueSessionLabel = formatSurahAyahLabel(
+            chapterName,
+            { start: mutqinSession.config.rangeStart, end: mutqinSession.config.rangeEnd },
+            this.t.bind(this)
+          ) || chapterName
           return
         }
-        const payload = persistedContinue || this.buildFallbackContinueSessionPayload() || this.readActiveSessionSnapshot()
-        if (!payload) return
+        const payload = persistedContinue || this.buildFallbackContinueSessionPayload() || this.readActiveSessionSnapshot() || backendOwnedPayload
+        if (!payload) {
+          if (backendOwnedPayload) {
+            this.continueSessionPayload = backendOwnedPayload
+            this.hasContinueSession = true
+          }
+          return
+        }
         if (!payload?.config?.chapterId || payload.completed || payload.sessionStatus === 'completed') {
-          this.clearExitSessionStorage()
+          if (this.backendUnfinishedSession && backendOwnedPayload) {
+            this.continueSessionPayload = backendOwnedPayload
+            this.hasContinueSession = true
+            return
+          }
+          if (!this.backendUnfinishedSession) {
+            this.clearExitSessionStorage()
+          }
           return
         }
         this.continueSessionPayload = payload
         this.hasContinueSession = true
         const chapterName = this.chapters.find(c => Number(c.id) === Number(payload.config.chapterId))?.name_simple || 'Saved session'
-        this.continueSessionLabel = `${chapterName} · Ayahs ${payload.config.rangeStart}-${payload.config.rangeEnd}`
-      } catch (e) { console.error(e) }
+        this.continueSessionLabel = formatSurahAyahLabel(
+          chapterName,
+          { start: payload.config.rangeStart, end: payload.config.rangeEnd },
+          this.t.bind(this)
+        ) || chapterName
+      } catch (e) {
+        console.error(e)
+        if (backendOwnedPayload) {
+          this.continueSessionPayload = backendOwnedPayload
+          this.hasContinueSession = true
+        }
+      }
     },
 
-    async continueLastSession() {
+    async continueLastSession(options = {}) {
+      const { skipCountdown = false } = options
       const payload = this.continueSessionPayload
       if (!payload || !isResumableSessionPayload(payload, {
         backendStatus: this.backendSessionSnapshot?.status || null,
@@ -18284,6 +18845,7 @@ export default {
       }
       await this.hydrateSessionFromPayload(payload, {
         bannerText: 'Session restored',
+        banner: !skipCountdown,
         forcePlayback: false
       })
       this.$nextTick(() => {
@@ -18292,6 +18854,10 @@ export default {
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
         }
       })
+      if (skipCountdown) {
+        this.resumePlaybackFromRestoredState()
+        return
+      }
       this.showCountdown(() => {
         this.resumePlaybackFromRestoredState()
       })
@@ -18369,32 +18935,65 @@ export default {
 
     openSessionExitModal() {
       if (!this.hasVerses && !this.playerVisible) return
-      this.forceStopPlayback()
-      this.flushPlaybackTime()
+      if (this.sessionExitEndingBusy) return
+      this.resetStuckSessionLifecycleControls()
+      // Soft-pause keeps position for Keep practising; paint the modal before heavy persistence.
+      this.softPausePlayback()
       if (this.audioElement) {
         this.currentTime = Number(this.audioElement.currentTime || this.currentTime || 0)
       }
-      this._persistAudioStateNow()
-      this.persistContinueSession()
-      this.markActiveSessionSnapshot()
       this.sessionExitSnapshot = this.buildSessionExitSnapshot()
       this.sessionExitPreviewSnapshot = this.buildSessionEndedSnapshot({ force: true })
       this.sessionExitOffcanvasOpen = false
+      this.sessionExitEndingBusy = false
       this.showSessionExitModal = true
+      const persistExitState = () => {
+        try {
+          this.flushPlaybackTime()
+          this._persistAudioStateNow()
+        } catch (_) { /* modal already open */ }
+      }
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(persistExitState, { timeout: 350 })
+      } else {
+        setTimeout(persistExitState, 0)
+      }
     },
 
-    forceStopPlayback() {
+    keepPractisingFromExitModal() {
+      const decision = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.KEEP_PRACTISING)
+      if (!decision.closeModal || decision.mutateSession) return
+      if (this.sessionExitEndingBusy) return
+      // Dismiss confirm without mutating session data, then countdown before resume.
+      this.continueSessionFromExitModal()
+    },
+
+    async confirmEndSessionFromExitModal() {
+      const decision = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION)
+      if (!decision.completeSession) return
+      await this.confirmSessionExit({ showSummary: false, openCompletion: true })
+    },
+
+    softPausePlayback() {
       this.clearRecitationWindowTimer()
       this.clearTalqinPauseTimer()
       this.stopWordHighlighting()
       if (this.audioElement) {
         try {
           this.audioElement.pause()
-          this.audioElement.currentTime = 0
         } catch {}
       }
       this.isPlaying = false
       this.talqinRecitationTurnActive = false
+    },
+
+    forceStopPlayback() {
+      this.softPausePlayback()
+      if (this.audioElement) {
+        try {
+          this.audioElement.currentTime = 0
+        } catch {}
+      }
     },
 
     openSessionExitNewSessionOffcanvas() {
@@ -18547,11 +19146,13 @@ export default {
     },
 
     closeSessionExitModal(options = {}) {
-      const { restore = true } = options
+      const { restore = true, autoplay = false } = options
+      if (this.sessionExitEndingBusy && restore) return
       this.showSessionExitModal = false
       this.sessionExitOffcanvasOpen = false
+      this.sessionExitEndingBusy = false
       if (restore) {
-        this.restoreSessionExitSnapshot()
+        this.restoreSessionExitSnapshot({ autoplay: !!autoplay })
       } else {
         this.sessionExitSnapshot = null
       }
@@ -18656,13 +19257,18 @@ export default {
       }
     },
     showSessionEndedSummary(snapshot = null) {
-      this.sessionEndedSnapshot = null
+      // Completion CTAs (Start new / Repeat) only appear after successful persistence
+      // via the post-session recommendation screen — never via the exit confirm modal.
+      const endedSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
+      this.sessionEndedSnapshot = endedSnapshot
       this.sessionExitSnapshot = null
-      this.sessionExitPreviewSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
-      if (!this.sessionExitPreviewSnapshot) return
+      this.sessionExitPreviewSnapshot = null
       this.showSessionEndedModal = false
+      this.showSessionExitModal = false
       this.showTools = false
-      this.showSessionExitModal = true
+      if (endedSnapshot) {
+        this.openPostSessionModal(endedSnapshot)
+      }
     },
     closeSessionEndedModal() {
       this.showSessionEndedModal = false
@@ -18761,28 +19367,41 @@ export default {
     },
 
     exitSessionAnyway() {
-      this.closeSessionExitModal({ restore: false })
-      this.finishSessionCleanup()
-      this.showSessionEndedSummary(this.buildSessionEndedSnapshot({ force: true }))
+      // Completion CTAs require successful End Session persistence — never bypass the gate.
+      this.showBanner(
+        this.t('toasts.sessionEndFailed') || 'Unable to end session. Please try again.',
+        'warning',
+        3200
+      )
     },
 
     confirmSessionExit(options = {}) {
-      const { showSummary = true } = options
-      if (this.sessionLifecycleMutation === SESSION_MUTATION.ENDING) {
-        return Promise.resolve(this.sessionExitPreviewSnapshot || null)
+      const { showSummary = false, openCompletion = true } = options
+      if (this.sessionLifecycleMutation === SESSION_MUTATION.ENDING || this.sessionExitEndingBusy) {
+        return Promise.resolve(null)
       }
       if (this.sessionActionLock.isLocked() || this.sessionActionLock.isLocked('end')) {
-        return Promise.resolve(this.sessionExitPreviewSnapshot || null)
+        return Promise.resolve(null)
       }
 
       const endedSnapshot = this.sessionExitPreviewSnapshot || this.buildSessionEndedSnapshot({ force: true })
       const wasSample = !!this.onboardingSampleSessionActive
       const backendSessionId = this.backendSessionSnapshot?.id || this.postSessionCompletedSessionId || 'current'
+      const previousStreak = Number(this.analytics?.currentStreak || 0)
+      const priorStatus = this.sessionPaused ? SESSION_STATUS.PAUSED : SESSION_STATUS.ACTIVE
       return this.sessionActionLock.run('end', async () => {
-        this.transitionSessionLifecycle(SESSION_STATUS.ENDING, SESSION_MUTATION.ENDING)
+        this.sessionExitEndingBusy = true
+        this.transitionSessionLifecycle(SESSION_STATUS.COMPLETING, SESSION_MUTATION.ENDING)
         try {
           this.stopSessionMediaResources()
-          this.closeSessionExitModal({ restore: false })
+          // Persist progress before marking complete so a failed end stays recoverable.
+          try {
+            this.persistContinueSession()
+            if (typeof this.saveCurrentSessionSilentlyAsync === 'function') {
+              await this.saveCurrentSessionSilentlyAsync()
+            }
+          } catch (_) { /* endSession below remains authoritative */ }
+
           if (this.learningBackendEnabled()) {
             try {
               if (wasSample) {
@@ -18792,12 +19411,13 @@ export default {
                   idempotency_key: `end-${backendSessionId}`,
                   metadata: {
                     completed: true,
+                    active: false,
                     config: {
                       chapterId: this.chapterId || this.sessionConfig?.chapterId,
                       rangeStart: this.sessionConfig?.rangeStart,
                       rangeEnd: this.sessionConfig?.rangeEnd,
                       reciterId: this.reciterId,
-                      playbackSpeed: this.playbackSpeed,
+                      playbackSpeed: this.speed,
                       repetitionsPerStep: this.repetitionsPerStep,
                       technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : null)),
                       focusModeEnabled: !!this.focusModeEnabled,
@@ -18822,35 +19442,67 @@ export default {
             } catch (error) {
               console.warn('Failed to end session on backend', error)
               this.sessionLifecycleError = 'end_failed'
-              this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
+              this.sessionExitEndingBusy = false
+              const gate = resolveCompletionGate({
+                persistenceSucceeded: false,
+                priorStatus,
+              })
+              this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
               this.showBanner(this.t('toasts.sessionEndFailed') || 'Unable to end session. Please try again.', 'danger', 4200)
               return null
             }
           }
+
+          const gate = resolveCompletionGate({ persistenceSucceeded: true })
+          this.sessionCompleted = true
+          this.sessionCompletedAt = new Date().toISOString()
           this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
           this.centralSession.sessionStatus = 'completed'
-          this.centralSession.sessionCompletedAt = new Date().toISOString()
+          this.centralSession.sessionCompletedAt = this.sessionCompletedAt
           completeMutqinSession(this.mutqinState)
           this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
-          this.recomputeAnalytics()
           this.onboardingSampleSessionActive = false
-          this.finishSessionCleanup()
+          this.sessionPaused = false
           this.backendUnfinishedSession = false
           this.backendSessionSnapshot = {
             ...(this.backendSessionSnapshot || {}),
             status: 'completed',
           }
-          this.transitionSessionLifecycle(SESSION_STATUS.ENDED, SESSION_MUTATION.IDLE)
+          this.clearContinueSessionQuietly()
+          this.clearActiveSessionSnapshot()
+          this.sessionExitEndingBusy = false
+          this.closeSessionExitModal({ restore: false })
+          this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
           this.sessionBroadcast?.publish('session-ended', { at: Date.now() })
-          if (showSummary) {
-            this.showSessionEndedSummary(endedSnapshot)
+
+          // Open success modal only after persistence succeeds.
+          if ((openCompletion || showSummary) && gate.openCompletionScreen && gate.showPostCompletionActions) {
+            this.postSessionActionsUnlocked = true
+            this.openPostSessionModal(endedSnapshot, { previousStreak })
+          }
+
+          const finalizeAfterOpen = () => {
+            try {
+              this.recomputeAnalytics()
+              this.finishSessionCleanup()
+            } catch (_) { /* completion UI already open */ }
+          }
+          if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(finalizeAfterOpen, { timeout: 500 })
+          } else {
+            setTimeout(finalizeAfterOpen, 0)
           }
           return endedSnapshot
         } catch (error) {
           console.error(error)
           this.sessionLifecycleError = 'end_failed'
+          this.sessionExitEndingBusy = false
+          const gate = resolveCompletionGate({
+            persistenceSucceeded: false,
+            priorStatus,
+          })
           this.transitionSessionLifecycle(
-            this.isSessionLive ? SESSION_STATUS.ACTIVE : SESSION_STATUS.READY,
+            this.isSessionLive || this.sessionPaused ? gate.status : SESSION_STATUS.READY,
             SESSION_MUTATION.IDLE
           )
           this.showBanner(this.t('toasts.sessionEndFailed') || 'Unable to end session. Please try again.', 'danger', 4200)
@@ -18858,75 +19510,170 @@ export default {
         }
       }).then((locked) => (locked?.ok ? locked.result : null))
     },
+    async pauseSessionFromPrimaryAction() {
+      if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return
+      if (this.sessionActionLock.isLocked()) return
+
+      const locked = await this.sessionActionLock.run('pause', async () => {
+        // Optimistic local pause without LOADING flicker or audio position reset.
+        try {
+          this.softPausePlayback()
+          this.flushPlaybackTime()
+          this.applyLocalPausedSessionState()
+          this.transitionSessionLifecycle(SESSION_STATUS.PAUSED, SESSION_MUTATION.IDLE)
+          const persistPaused = () => {
+            try {
+              this.persistContinueSession()
+            } catch (_) { /* local pause already applied */ }
+          }
+          if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(persistPaused, { timeout: 400 })
+          } else {
+            setTimeout(persistPaused, 0)
+          }
+        } catch (error) {
+          console.warn('Local pause failed', error)
+          this.sessionLifecycleError = 'pause_failed'
+          this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
+          this.showBanner(this.t('toasts.sessionPauseFailed') || 'Unable to pause session. Please try again.', 'danger', 4200)
+          return false
+        }
+
+        if (!this.learningBackendEnabled()) {
+          this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
+          this.showBanner(this.t('toasts.sessionPaused') || 'Session paused. You can resume anytime.', 'info', 2800)
+          return true
+        }
+
+        try {
+          const stats = this.buildCurrentSessionStatsSnapshot()
+          const pauseResult = await Promise.race([
+            learningApi.pauseSession({
+              idempotency_key: `pause-${this.backendSessionSnapshot?.id || 'current'}-${Date.now()}`,
+              surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
+              ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
+              current_step: Number(this.queueIndex || 0),
+              memorisation_mode: this.currentMode,
+              repetitions_completed: Number(stats?.repetitions_completed || 0),
+              session_duration_seconds: Number(stats?.time_spent_seconds || 0),
+              metadata: {
+                ...(this.mutqinState?.sessionState || {}),
+                active: false,
+                paused: true,
+                completed: false,
+                completed_at: null,
+                config: this.sessionConfig || this.mutqinState?.sessionState?.config || null,
+              },
+            }),
+            new Promise((_, reject) => {
+              window.setTimeout(() => reject(new Error('pause_timeout')), 8000)
+            }),
+          ])
+          this.backendUnfinishedSession = true
+          this.backendSessionSnapshot = {
+            ...(this.backendSessionSnapshot || {}),
+            ...(pauseResult?.session || {}),
+            status: 'paused',
+          }
+          this.sessionLifecycleError = null
+          this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
+          this.showBanner(this.t('toasts.sessionPaused') || 'Session paused. You can resume anytime.', 'info', 2800)
+          return true
+        } catch (error) {
+          // Keep the local paused/resumable state even if persistence times out.
+          console.warn('Failed to persist paused session on backend', error)
+          this.sessionLifecycleError = 'pause_persist_failed'
+          this.backendUnfinishedSession = true
+          this.backendSessionSnapshot = {
+            ...(this.backendSessionSnapshot || {}),
+            status: 'paused',
+          }
+          try {
+            await learningApi.saveSession({
+              action: 'save',
+              status: 'interrupted',
+              surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
+              ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
+              current_step: Number(this.queueIndex || 0),
+              memorisation_mode: this.currentMode,
+              metadata: {
+                ...(this.mutqinState?.sessionState || {}),
+                active: false,
+                paused: true,
+                completed: false,
+                completed_at: null,
+                config: this.sessionConfig || this.mutqinState?.sessionState?.config || null,
+              },
+            })
+          } catch (_) { /* local pause already applied */ }
+          this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
+          this.showBanner(this.t('toasts.sessionPaused') || 'Session paused. You can resume anytime.', 'info', 2800)
+          return true
+        } finally {
+          if (this.sessionLifecycleMutation === SESSION_MUTATION.PAUSING) {
+            this.transitionSessionLifecycle(SESSION_STATUS.PAUSED, SESSION_MUTATION.IDLE)
+          }
+        }
+      })
+      return !!(locked?.ok && locked.result)
+    },
+
+    applyLocalPausedSessionState() {
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.paused = true
+        this.mutqinState.sessionState.completed = false
+        this.mutqinState.sessionState.completed_at = null
+      }
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'paused'
+        this.centralSession.sessionCompletedAt = null
+      }
+      this.sessionPaused = true
+      this.sessionCompleted = false
+      this.isPlaying = false
+      this.playerVisible = !!this.playerVisible
+    },
+
+    resetStuckSessionLifecycleControls() {
+      if (
+        this.sessionLifecycleMutation === SESSION_MUTATION.IDLE
+        && !this.sessionActionLock.isLocked()
+        && !this.sessionExitEndingBusy
+      ) {
+        return false
+      }
+      this.sessionExitEndingBusy = false
+      this.sessionActionLock?.reset?.()
+      const nextStatus = this.sessionPaused || this.backendSessionSnapshot?.status === 'paused'
+        ? SESSION_STATUS.PAUSED
+        : (this.isSessionLive ? SESSION_STATUS.ACTIVE : (
+          this.hasValidatedResumableSession ? SESSION_STATUS.INTERRUPTED_RESUMABLE : SESSION_STATUS.READY
+        ))
+      this.transitionSessionLifecycle(nextStatus, SESSION_MUTATION.IDLE)
+      return true
+    },
     async exitSessionToNewSession() {
-      if (!this.hasSessionStarted && this.isSessionCompleted) {
+      // Post-completion actions live on the completion screen only.
+      if (this.isSessionCompleted && !this.isSessionLive) {
         this.closeSessionExitModal({ restore: false })
         this.openNewSessionSetup()
         return
       }
-      const ended = await this.confirmSessionExit({ showSummary: false })
-      if (ended === null && this.isSessionLive) return
-      this.openNewSessionSetup()
+      await this.confirmSessionExit({ showSummary: false, openCompletion: true })
     },
     async exitSessionToRepeatRange() {
-      this.primeAudioPlaybackUnlock()
-      if (!this.hasSessionStarted && this.isSessionCompleted) {
+      if (this.isSessionCompleted && !this.isSessionLive) {
         this.closeSessionExitModal({ restore: false })
         this.prepareRangeRestart()
         this.startSessionWithCountdown({ skipPrime: true })
         return
       }
-      const ended = await this.confirmSessionExit({ showSummary: false })
-      if (ended === null && this.sessionLifecycleError === 'end_failed') return
-      this.sessionExitOffcanvasOpen = false
-      this.prepareRangeRestart()
-      this.startSessionWithCountdown({ skipPrime: true })
+      await this.confirmSessionExit({ showSummary: false, openCompletion: true })
     },
     async exitSessionToSaveSession() {
-      if (!this.hasSessionStarted && this.isSessionCompleted) {
-        this.closeSessionExitModal({ restore: false })
-        const session = await this.saveCurrentSessionSilentlyAsync()
-        if (session) {
-          this.showBanner(this.t('toasts.sessionSavedSuccess'), 'success', 2500)
-        }
-        return
-      }
-      // Save-and-exit: persist progress, leave the session unfinished/resumable.
-      const session = await this.saveCurrentSessionSilentlyAsync()
-      this.stopSessionMediaResources()
+      await this.pauseSessionFromPrimaryAction()
       this.closeSessionExitModal({ restore: false })
-      if (this.mutqinState?.sessionState) {
-        this.mutqinState.sessionState.active = false
-      }
-      if (this.learningBackendEnabled()) {
-        try {
-          await learningApi.saveSession({
-            action: 'save',
-            status: 'interrupted',
-            surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
-            ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
-            current_step: Number(this.queueIndex || 0),
-            memorisation_mode: this.currentMode,
-            metadata: {
-              ...(this.mutqinState?.sessionState || {}),
-              active: true,
-              completed: false,
-              config: this.sessionConfig || this.mutqinState?.sessionState?.config || null,
-            },
-          })
-          this.backendUnfinishedSession = true
-        } catch (error) {
-          console.warn('Failed to mark session interrupted on save-and-exit', error)
-        }
-      }
-      this.persistContinueSession()
-      this.demoteLiveSessionToResumableOnBootstrap()
-      this.transitionSessionLifecycle(SESSION_STATUS.RESUMABLE, SESSION_MUTATION.IDLE)
-      if (session) {
-        this.showBanner(this.t('toasts.sessionSavedSuccess'), 'success', 2500)
-      } else {
-        this.showBanner(this.t('toasts.nothingReadyToSave'), 'info', 2800)
-      }
     },
     async exitSessionToRetentionCheck() {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
@@ -18934,7 +19681,7 @@ export default {
         this.openRetentionQuiz()
         return
       }
-      await this.confirmSessionExit({ showSummary: false })
+      await this.confirmSessionExit({ showSummary: false, openCompletion: true })
       this.openRetentionQuiz()
     },
     openNewSessionFromEndedModal() {
@@ -19077,10 +19824,21 @@ export default {
 
     normalizePlaybackSpeed(value = this.speed) {
       const numeric = Number(value)
-      return this.speedOptions.includes(numeric) ? numeric : 1
+      if (!Number.isFinite(numeric) || numeric <= 0) return 1
+      if (this.speedOptions.includes(numeric)) return numeric
+      let best = this.speedOptions[0]
+      let bestDist = Math.abs(best - numeric)
+      for (const option of this.speedOptions) {
+        const dist = Math.abs(option - numeric)
+        if (dist < bestDist) {
+          best = option
+          bestDist = dist
+        }
+      }
+      return best
     },
 
-    setPlaybackSpeed(newSpeed) {
+    setPlaybackSpeed(newSpeed, options = {}) {
       const safeSpeed = this.normalizePlaybackSpeed(newSpeed)
       const currentTime = Number(this.audioElement?.currentTime || this.currentTime || 0)
       this.speed = safeSpeed
@@ -19098,7 +19856,9 @@ export default {
       }
       this.persistUiState()
       this.persistCentralSessionState()
-      this.showBanner(this.t('toasts.speedChangedToX', { p0: safeSpeed }), 'info', 1000)
+      if (!options.silent) {
+        this.showBanner(this.t('toasts.speedChangedToX', { p0: safeSpeed }), 'info', 1000)
+      }
     },
 
     setActiveTab(tabName) {
@@ -19151,10 +19911,11 @@ export default {
       const hasSnapshot = !!(this.sessionEndedSnapshot && Object.keys(this.sessionEndedSnapshot).length)
       if (hasSnapshot) return
 
-      // A completed flag can survive in localStorage without the in-memory
-      // summary that powers the completion screen, which leaves the workspace blank.
+      // Completed flag without in-memory summary must not reopen as active/resumable.
+      // Drop to idle workspace (not active, not paused, not continue-able).
       this.sessionCompleted = false
       this.sessionCompletedAt = null
+      this.sessionPaused = false
       if (this.centralSession) {
         this.centralSession.sessionStatus = 'idle'
         this.centralSession.sessionCompletedAt = null
@@ -19162,7 +19923,11 @@ export default {
       if (this.mutqinState?.sessionState) {
         this.mutqinState.sessionState.completed = false
         this.mutqinState.sessionState.completed_at = null
+        this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.paused = false
       }
+      this.clearContinueSessionQuietly()
+      this.clearActiveSessionSnapshot()
     },
 
     loadCentralSessionState() {
@@ -19237,6 +20002,8 @@ export default {
           activeTab: ['tools', 'techniques', 'saved', 'stats'].includes(this.tab) ? this.tab : 'tools',
           sessionStatus: this.sessionCompleted
             ? 'completed'
+            : this.sessionPaused
+              ? 'paused'
             : (
               this.centralSession.sessionStatus === 'active'
               || this.mutqinState?.sessionState?.active
@@ -21807,14 +22574,18 @@ export default {
 
     getChainingDescription() {
       if (!this.chainingEnabled) {
-        return 'Play ayahs in order without special chaining patterns.'
+        return this.getTechniqueDisplayDescription('chaining')
       }
 
       if (this.chainingMethod === 'cumulative') {
-        return `Cumulative method: Start with first ayah, then add one more each time. Each ayah is repeated ${this.chainingRepetitions} time(s) per cycle.`
+        const reps = Number(this.chainingRepetitions) === 1 ? '1 time' : `${this.chainingRepetitions} times`
+        return `Cumulative method: Start with first ayah, then add one more each time. Each ayah is repeated ${reps} per cycle.`
       }
 
-      return `Linking method: Practice ayahs individually, then in pairs. Each ayah is repeated ${this.chainingRepetitions} time(s) per cycle.`
+      {
+        const reps = Number(this.chainingRepetitions) === 1 ? '1 time' : `${this.chainingRepetitions} times`
+        return `Linking method: Practice ayahs individually, then in pairs. Each ayah is repeated ${reps} per cycle.`
+      }
     },
 
     getQueuePreview() {
@@ -21837,39 +22608,114 @@ export default {
 
     handleSessionComplete() {
       if (!this.verses.length) return
+      if (this.sessionLifecycleMutation === SESSION_MUTATION.ENDING || this.sessionExitEndingBusy) return
+      if (this.sessionActionLock.isLocked() || this.sessionActionLock.isLocked('end')) return
 
       const previousStreak = Number(this.analytics?.currentStreak || 0)
       const endedSnapshot = this.buildSessionEndedSnapshot({ force: true })
-      this.sessionEndedSnapshot = endedSnapshot
-      this.sessionCompleted = true
-      this.sessionCompletedAt = new Date().toISOString()
-      this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
-      this.centralSession.sessionStatus = 'completed'
-      this.centralSession.sessionCompletedAt = this.sessionCompletedAt
-      completeMutqinSession(this.mutqinState)
-      this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
-      this.recomputeAnalytics()
       endedSnapshot.versesInSurah = Number(this.currentChapter?.verses_count || 0)
-      this.finishSessionCleanup()
+      this.sessionEndedSnapshot = endedSnapshot
+
       if (!this.isLoggedIn) {
+        this.sessionCompleted = true
+        this.sessionCompletedAt = new Date().toISOString()
+        this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
+        this.centralSession.sessionStatus = 'completed'
+        this.centralSession.sessionCompletedAt = this.sessionCompletedAt
+        completeMutqinSession(this.mutqinState)
+        this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+        this.recomputeAnalytics()
+        this.finishSessionCleanup()
         this.showBanner(this.t('memorisation.session_finished'), 'success', 2800)
         return
       }
-      // Persist completion + recommendation before opening the modal when possible.
-      this.finaliseCompletedSessionOnBackend(endedSnapshot)
-        .finally(() => {
-          this.openPostSessionModal(endedSnapshot, { previousStreak })
-        })
+
+      const priorStatus = this.sessionPaused ? SESSION_STATUS.PAUSED : SESSION_STATUS.ACTIVE
+      this.sessionActionLock.run('end', async () => {
+        this.sessionExitEndingBusy = true
+        this.transitionSessionLifecycle(SESSION_STATUS.COMPLETING, SESSION_MUTATION.ENDING)
+        try {
+          // Persist progress first; do not mark completed until endSession succeeds.
+          try {
+            this.persistContinueSession()
+          } catch (_) { /* endSession remains authoritative */ }
+
+          const endResult = await this.finaliseCompletedSessionOnBackend(endedSnapshot)
+          if (!endResult) {
+            const gate = resolveCompletionGate({
+              persistenceSucceeded: false,
+              priorStatus,
+            })
+            this.sessionLifecycleError = 'end_failed'
+            this.sessionExitEndingBusy = false
+            this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
+            this.showBanner(
+              this.t('toasts.sessionEndFailed') || 'Unable to end session. Please try again.',
+              'danger',
+              4200
+            )
+            return null
+          }
+
+          const gate = resolveCompletionGate({ persistenceSucceeded: true })
+          this.sessionCompleted = true
+          this.sessionCompletedAt = new Date().toISOString()
+          this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
+          this.centralSession.sessionStatus = 'completed'
+          this.centralSession.sessionCompletedAt = this.sessionCompletedAt
+          completeMutqinSession(this.mutqinState)
+          this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+          this.sessionPaused = false
+          this.clearContinueSessionQuietly()
+          this.clearActiveSessionSnapshot()
+          this.sessionExitEndingBusy = false
+          this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
+          this.sessionBroadcast?.publish('session-ended', { at: Date.now() })
+
+          if (gate.openCompletionScreen && gate.showPostCompletionActions) {
+            this.postSessionActionsUnlocked = true
+            this.openPostSessionModal(endedSnapshot, { previousStreak })
+          }
+
+          const finalizeAfterOpen = () => {
+            try {
+              this.recomputeAnalytics()
+              this.finishSessionCleanup()
+            } catch (_) { /* completion UI already open */ }
+          }
+          if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(finalizeAfterOpen, { timeout: 500 })
+          } else {
+            setTimeout(finalizeAfterOpen, 0)
+          }
+          return endedSnapshot
+        } catch (error) {
+          console.error(error)
+          const gate = resolveCompletionGate({
+            persistenceSucceeded: false,
+            priorStatus,
+          })
+          this.sessionLifecycleError = 'end_failed'
+          this.sessionExitEndingBusy = false
+          this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
+          this.showBanner(
+            this.t('toasts.sessionEndFailed') || 'Unable to end session. Please try again.',
+            'danger',
+            4200
+          )
+          return null
+        }
+      })
     },
     async finaliseCompletedSessionOnBackend(snapshot = null) {
-      if (!this.learningBackendEnabled()) return null
+      if (!this.learningBackendEnabled()) return { skipped: true }
       try {
         await this.pushLearningState(true)
       } catch (_) { /* endSession below remains authoritative */ }
 
       try {
         const endResult = await learningApi.endSession({
-          idempotency_key: `complete-${this.sessionCompletedAt || Date.now()}`,
+          idempotency_key: `complete-${this.backendSessionSnapshot?.id || this.sessionCompletedAt || Date.now()}`,
           metadata: {
             completed: true,
             active: false,
@@ -21878,7 +22724,7 @@ export default {
               rangeStart: snapshot?.rangeStart || this.sessionConfig?.rangeStart,
               rangeEnd: snapshot?.rangeEnd || this.sessionConfig?.rangeEnd,
               reciterId: this.reciterId,
-              playbackSpeed: this.playbackSpeed,
+              playbackSpeed: this.speed,
               repetitionsPerStep: this.repetitionsPerStep,
               technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : null)),
               focusModeEnabled: !!this.focusModeEnabled,
@@ -22337,6 +23183,9 @@ export default {
       this._uiPersistDebouncer?.cancel?.()
       this._audioPersistDebouncer?.cancel?.()
       this._persistUiStateNow()
+      // Leaving mid-session must leave an unfinished/paused row so Welcome Back
+      // can offer Continue — never rely on a best-effort active snapshot alone.
+      this.pauseLiveSessionForUnload()
       this.persistSessionState()
       this.persistCentralSessionState()
       this._persistAudioStateNow()
@@ -22344,8 +23193,51 @@ export default {
       this.persistPlanner()
       this.persistTodayPlan()
       this.persistSm2()
-      saveMutqinState(this.mutqinState)
+      this.persistMutqinStateLocally()
       this.flushLearningSync()
+    },
+
+    pauseLiveSessionForUnload() {
+      if (this.onboardingSampleSessionActive) return
+      if (this.sessionCompleted || this.centralSession?.sessionStatus === 'completed') return
+      const live = !!this.isSessionLive
+        || this.centralSession?.sessionStatus === 'active'
+        || !!this.mutqinState?.sessionState?.active
+        || !!this.sessionPaused
+        || this.centralSession?.sessionStatus === 'paused'
+      if (!live) return
+
+      try {
+        this.softPausePlayback?.()
+        this.flushPlaybackTime?.()
+        this.applyLocalPausedSessionState()
+      } catch (_) { /* best-effort unload pause */ }
+
+      if (!this.learningBackendEnabled()) return
+      try {
+        const payload = {
+          idempotency_key: `unload-pause-${this.backendSessionSnapshot?.id || 'current'}-${Date.now()}`,
+          surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
+          ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
+          current_step: Number(this.queueIndex || 0),
+          memorisation_mode: this.currentMode,
+          metadata: {
+            ...(this.mutqinState?.sessionState || {}),
+            active: false,
+            paused: true,
+            completed: false,
+            completed_at: null,
+            config: this.sessionConfig || this.mutqinState?.sessionState?.config || null,
+          },
+        }
+        this.backendUnfinishedSession = true
+        this.backendSessionSnapshot = {
+          ...(this.backendSessionSnapshot || {}),
+          status: 'paused',
+        }
+        // Fire-and-forget; page may unload before the response arrives.
+        learningApi.pauseSession(payload).catch(() => {})
+      } catch (_) { /* local pause already applied */ }
     },
 
     // ---- Backend-driven learning persistence -----------------------------
@@ -22424,6 +23316,9 @@ export default {
 
     async pushLearningState(force = false) {
       if (!this.learningBackendEnabled()) return
+      // Isolated signups must never upload another profile's local cache —
+      // including forced retry pushes — until the user finishes their own first-run.
+      if (this.isSignupIsolationActive()) return
       if (this.learningSync.pushing) {
         // A push is already in flight; queue a follow-up so we don't lose changes.
         this.scheduleLearningSync()
@@ -22476,7 +23371,8 @@ export default {
 
     async runLearningMigration() {
       if (!this.learningBackendEnabled()) return
-      if (this.auth?.just_registered) return
+      // Never migrate guest/shared browser cache into an isolated new account.
+      if (this.isSignupIsolationActive()) return
       if (this.readScopedStorageValue('migrationComplete', 'migration_complete', false) === true) return
 
       const payload = this.buildLearningStatePayload()

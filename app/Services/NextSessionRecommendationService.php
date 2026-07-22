@@ -331,7 +331,18 @@ class NextSessionRecommendationService
         // Idempotent: same confidence already applied on an open recommendation.
         if ((string) $recommendation->confidence_feedback === $feedback->value
             && $status->isOpen()) {
-            return $this->payloadFromRecord($recommendation);
+            $payload = $this->payloadFromRecord($recommendation);
+            $type = RecommendationType::tryFrom((string) ($payload['type'] ?? ''));
+            $userReason = strtolower((string) ($payload['user_reason'] ?? ''));
+            $stalePracticeCopy = $feedback === ConfidenceFeedback::Confident
+                && (str_contains($userReason, 'more practice') || ($type?->isRepeat() ?? false));
+            $staleContinueCopy = $feedback === ConfidenceFeedback::NeedsPractice
+                && ! ($type?->isRepeat() ?? false);
+
+            if (! $stalePracticeCopy && ! $staleContinueCopy) {
+                return $payload;
+            }
+            // Fall through to reshape when stored confidence and recommendation shape disagree.
         }
 
         $recommendation->forceFill([
@@ -339,11 +350,6 @@ class NextSessionRecommendationService
         ])->save();
 
         if ($feedback === ConfidenceFeedback::NeedsPractice) {
-            if ($recommendation->recommendation_type === RecommendationType::RepeatCurrentRange->value
-                || $recommendation->recommendation_type === RecommendationType::Revision->value) {
-                return $this->payloadFromRecord($recommendation->fresh());
-            }
-
             return $this->supersedeWithRepeat($user, $recommendation, [
                 'confidence' => $feedback->value,
             ], RecommendationReasonCode::ConfidenceNeedsPractice);
@@ -357,15 +363,35 @@ class NextSessionRecommendationService
             return $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::ConfidenceConfident);
         }
 
+        // Confident on progression — refresh settings/reason from session evidence.
+        $source = $recommendation->sourceSession;
+        $context = $source ? $this->buildContext($user, $source) : [];
         $payload['reason_code'] = RecommendationReasonCode::ConfidenceConfident->value;
-        $payload['reason'] = $this->defaultReasonText(
-            RecommendationReasonCode::ConfidenceConfident,
-            $payload['ayah_range'] ?? null,
-            $payload['surah'] ?? null,
-            $payload['next_surah'] ?? null,
-        );
+        $payload = $this->attachSettings($payload, array_merge($context, [
+            'base_settings' => $context['base_settings'] ?? ($payload['settings'] ?? []),
+            'attempt_number' => $context['attempt_number'] ?? 1,
+            'performance' => array_merge(
+                is_array($context['performance'] ?? null) ? $context['performance'] : [],
+                ['confidence' => ConfidenceFeedback::Confident->value],
+            ),
+        ]));
+        if (empty($payload['user_reason'])) {
+            $payload['reason'] = $this->defaultReasonText(
+                RecommendationReasonCode::ConfidenceConfident,
+                $payload['ayah_range'] ?? null,
+                $payload['surah'] ?? null,
+                $payload['next_surah'] ?? null,
+            );
+        }
+        unset($payload['balance_message']);
         $recommendation->forceFill([
             'reason_code' => $payload['reason_code'],
+            'recommended_technique' => $payload['settings']['technique'] ?? null,
+            'recommended_reciter' => $payload['settings']['reciter'] ?? null,
+            'recommended_playback_speed' => $payload['settings']['playback_speed'] ?? null,
+            'recommended_repetitions' => $payload['settings']['repetitions'] ?? null,
+            'recommended_ayat_per_step' => $payload['settings']['ayat_per_step'] ?? null,
+            'recommended_settings' => $payload['settings'] ?? null,
             'payload' => array_merge(is_array($recommendation->payload) ? $recommendation->payload : [], $payload),
         ])->save();
 
@@ -1077,27 +1103,27 @@ class NextSessionRecommendationService
         $nextName = $nextSurah['name'] ?? '';
 
         return match ($code) {
-            RecommendationReasonCode::StrongPreviousPerformance => 'MashaAllah — you recited well. Continue gently with the next ayat.',
+            RecommendationReasonCode::StrongPreviousPerformance => 'You completed this range well. This plan continues gently to the next ayahs while they are still fresh.',
             RecommendationReasonCode::ContinueCurrentSurah,
-            RecommendationReasonCode::ContinueWhileFresh => 'This continues directly from the range you completed while it is still fresh.',
+            RecommendationReasonCode::ContinueWhileFresh => 'You completed this range. This plan continues directly to the next ayahs while the material is still fresh.',
             RecommendationReasonCode::RevisionRequired,
             RecommendationReasonCode::NeedsMorePractice,
-            RecommendationReasonCode::ConfidenceNeedsPractice => 'We recommend repeating this range with additional guidance so the sequence becomes more familiar and easier to recall.',
-            RecommendationReasonCode::DifficultAyahDetected => 'One ayah needs care. Revise it gently before moving on.',
+            RecommendationReasonCode::ConfidenceNeedsPractice => 'This range still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.',
+            RecommendationReasonCode::DifficultAyahDetected => 'One or more ayahs still need care. This plan returns to that range with focused support before moving on.',
             RecommendationReasonCode::CompleteRemainingAyat => $count && $count <= 2
-                ? "Only {$count} ayah remain — complete this surah with presence."
-                : 'This short range completes the section you began.',
+                ? "Only {$count} ayah".($count === 1 ? '' : 's').' remain in this surah. This plan finishes the section you began.'
+                : 'A short stretch remains in this surah. This plan completes the section you began.',
             RecommendationReasonCode::SurahCompleted => $surahName
-                ? "Masha’Allah, you have completed the final ayat of Surah {$surahName}."
-                : 'Masha’Allah, you have completed the final ayat of this Surah.',
-            RecommendationReasonCode::ResumeIncompleteSession => 'You left a few ayah unfinished. Resume with sincerity where you paused.',
-            RecommendationReasonCode::ReinforceRecentRange => 'A quiet return to these ayat will help them settle in the heart.',
-            RecommendationReasonCode::LearningPlanComplete => 'You have reached the end. Returning to earlier surahs is a beautiful next step.',
-            RecommendationReasonCode::ManualFallback => 'Choose what you would like to recite next — there is no rush.',
+                ? "You completed the final ayahs of Surah {$surahName}. This plan begins the next surah gently from the opening ayahs."
+                : 'You completed the final ayahs of this Surah. This plan begins the next surah gently from the opening ayahs.',
+            RecommendationReasonCode::ResumeIncompleteSession => 'You paused mid-range. This plan resumes from the ayahs you left unfinished.',
+            RecommendationReasonCode::ReinforceRecentRange => 'Recent ayahs still need another quiet pass. This plan returns to that range so recall can settle.',
+            RecommendationReasonCode::LearningPlanComplete => 'You have reached the end of the available plan. Choose what you would like to recite next.',
+            RecommendationReasonCode::ManualFallback => 'There is no automatic next set right now. Choose what you would like to recite next.',
             RecommendationReasonCode::AiReciteStrong,
-            RecommendationReasonCode::ConfidenceConfident => 'Continue while the previous ayat are still fresh.',
-            RecommendationReasonCode::AiReciteMixed => 'Nearly there — review this range once more with a little more support.',
-            RecommendationReasonCode::AiReciteWeak => 'A little more practice will help. Repeat this range with more guidance.',
+            RecommendationReasonCode::ConfidenceConfident => 'You completed this range with confidence. This plan continues while the previous ayahs are still fresh.',
+            RecommendationReasonCode::AiReciteMixed => 'AI Recite was mostly correct, with a few gaps. This plan reviews the same range once more with a little more support.',
+            RecommendationReasonCode::AiReciteWeak => 'AI Recite found parts that still need practice. This plan keeps the same range with more guidance.',
         };
     }
 
@@ -1148,7 +1174,8 @@ class NextSessionRecommendationService
             'range_ayah_count' => max(1, $rangeCount),
             'range_workload_score' => (float) ($payload['workload']['score'] ?? 0),
             'mode' => $type?->isRepeat() || $type === RecommendationType::Resume ? 'revision' : 'progression',
-            'confidence' => $type?->isRepeat() || $type === RecommendationType::Resume ? 'needs_practice' : 'confident',
+            'confidence' => $performance['confidence']
+                ?? ($type?->isRepeat() || $type === RecommendationType::Resume ? 'needs_practice' : 'confident'),
         ]);
 
         $settings = $this->adaptation->resolve($base + ['technique' => $defaultTechnique], $adaptationContext);
@@ -1628,14 +1655,18 @@ class NextSessionRecommendationService
                 ),
             ]));
             if ($reasonCode === RecommendationReasonCode::AiReciteMixed) {
-                $payload['reason'] = 'Your recall was mostly correct, with a few gaps, so the next set stays smaller and review-focused.';
-                $payload['balance_message'] = 'AI Recite found a few difficulties, so the next set is lighter while still moving forward.';
-            } elseif ($reasonCode === RecommendationReasonCode::AiReciteStrong) {
-                $payload['reason'] = $payload['user_reason']
-                    ?? $this->defaultReasonText($reasonCode, $payload['ayah_range'] ?? null, $payload['surah'] ?? null, $payload['next_surah'] ?? null);
+                // Keep the evidence-based adaptation reason; drop the older balance-only message.
+                unset($payload['balance_message']);
+            } elseif (empty($payload['user_reason'])) {
+                $payload['reason'] = $this->defaultReasonText(
+                    $reasonCode,
+                    $payload['ayah_range'] ?? null,
+                    $payload['surah'] ?? null,
+                    $payload['next_surah'] ?? null
+                );
+                unset($payload['balance_message']);
             } else {
-                $payload['reason'] = $payload['user_reason']
-                    ?? $this->defaultReasonText($reasonCode, $payload['ayah_range'] ?? null, $payload['surah'] ?? null, $payload['next_surah'] ?? null);
+                unset($payload['balance_message']);
             }
             $payload['technique'] = $this->techniquePayload($payload);
             $recommendation->forceFill([
@@ -1658,14 +1689,29 @@ class NextSessionRecommendationService
             $context = $this->buildContext($user, $source);
             if ($context['session_completed'] && ! $context['is_end_of_surah']) {
                 $continue = $this->continuePayload($context);
-                $continue = $this->attachSettings($continue, $context);
+                $continue = $this->attachSettings($continue, array_merge($context, [
+                    'performance' => array_merge(
+                        is_array($context['performance'] ?? null) ? $context['performance'] : [],
+                        [
+                            'confidence' => ConfidenceFeedback::Confident->value,
+                            'ai_result' => match ($reasonCode) {
+                                RecommendationReasonCode::AiReciteStrong => 'strong',
+                                RecommendationReasonCode::AiReciteMixed => 'mixed',
+                                RecommendationReasonCode::AiReciteWeak => 'weak',
+                                default => '',
+                            },
+                        ]
+                    ),
+                ]));
                 $continue['reason_code'] = $reasonCode->value;
-                $continue['reason'] = $this->defaultReasonText(
-                    $reasonCode,
-                    $continue['ayah_range'] ?? null,
-                    $continue['surah'] ?? null,
-                    null,
-                );
+                if (empty($continue['user_reason'])) {
+                    $continue['reason'] = $this->defaultReasonText(
+                        $reasonCode,
+                        $continue['ayah_range'] ?? null,
+                        $continue['surah'] ?? null,
+                        null,
+                    );
+                }
                 $continue['technique'] = $this->techniquePayload($continue);
 
                 $this->markSuperseded($recommendation);
@@ -1685,7 +1731,25 @@ class NextSessionRecommendationService
             }
         }
 
-        return $payload;
+        // Could not upgrade — keep any evidence-based reason, otherwise use a clear default.
+        $payload['reason_code'] = $reasonCode->value;
+        if (empty($payload['user_reason'])) {
+            $payload['reason'] = $this->defaultReasonText(
+                $reasonCode,
+                $payload['ayah_range'] ?? null,
+                $payload['surah'] ?? null,
+                $payload['next_surah'] ?? null,
+            );
+        } else {
+            $payload['reason'] = $payload['user_reason'];
+        }
+        unset($payload['balance_message']);
+        $recommendation->forceFill([
+            'reason_code' => $reasonCode->value,
+            'payload' => array_merge(is_array($recommendation->payload) ? $recommendation->payload : [], $payload),
+        ])->save();
+
+        return $this->payloadFromRecord($recommendation->fresh());
     }
 
     /**

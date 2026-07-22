@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/session/current', [SessionController::class, 'current'])->name('api.session.current');
     Route::post('/session', [SessionController::class, 'store'])->name('api.session.store');
     Route::post('/session/start', [SessionController::class, 'start'])->name('api.session.start');
+    Route::post('/session/pause', [SessionController::class, 'pause'])->name('api.session.pause');
     Route::post('/session/resume', [SessionController::class, 'resume'])->name('api.session.resume');
     Route::post('/session/end', [SessionController::class, 'end'])->name('api.session.end');
 

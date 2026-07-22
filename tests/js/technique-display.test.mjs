@@ -49,6 +49,18 @@ const tAr = makeT(ar)
   const chaining = resolveTechniqueDisplay('chaining', tEn)
   const anchor = resolveTechniqueDisplay('anchor', tEn)
   assert.match(chaining.label, /\(Chaining\)/)
+  assert.equal(
+    chaining.description,
+    'Link each ayah to the next and practise the range as one continuous sequence.'
+  )
+  assert.equal(
+    en.memorisation.techniques.chainingOffDescription,
+    chaining.description
+  )
+  assert.equal(
+    en.memorisation.techniques.chainingOffSub,
+    chaining.description
+  )
   assert.match(anchor.label, /\(Anchor\)/)
   assert.match(getTechniqueLabel('linking', tEn), /\(Linking\)/)
   assert.match(getTechniqueLabel('cumulative', tEn), /\(Cumulative\)/)

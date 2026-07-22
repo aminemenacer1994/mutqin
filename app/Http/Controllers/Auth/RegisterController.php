@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class RegisterController extends Controller
 {
@@ -71,6 +72,11 @@ class RegisterController extends Controller
 
     protected function registered(Request $request, $user): void
     {
+        // Match login/Google: login event id powers Welcome Back vs onboarding,
+        // and just_registered must survive the redirect into /memorisation.
+        $request->session()->put('mutqin_login_event_id', (string) Str::uuid());
         $request->session()->flash('mutqin_just_registered', true);
+        // Existing-user Welcome Back must not win over first-run onboarding.
+        $request->session()->forget('mutqin_just_logged_in');
     }
 }

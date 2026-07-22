@@ -333,7 +333,7 @@ class NextSessionRecommendationTest extends TestCase
             ->assertOk()
             ->json('recommendation.id');
 
-        $this->actingAs($user)
+        $upgraded = $this->actingAs($user)
             ->postJson('/api/recommendations/confidence', [
                 'recommendation_id' => $repeatId,
                 'confidence' => 'confident',
@@ -341,7 +341,14 @@ class NextSessionRecommendationTest extends TestCase
             ->assertOk()
             ->assertJsonPath('recommendation.type', RecommendationType::Continue->value)
             ->assertJsonPath('recommendation.ayah_range.from', 15)
-            ->assertJsonPath('recommendation.ayah_range.to', 17);
+            ->assertJsonPath('recommendation.ayah_range.to', 17)
+            ->assertJsonPath('recommendation.reason_code', RecommendationReasonCode::ConfidenceConfident->value)
+            ->json('recommendation');
+
+        $why = (string) ($upgraded['user_reason'] ?? $upgraded['reason'] ?? '');
+        $this->assertNotEmpty($why);
+        $this->assertStringNotContainsStringIgnoringCase('score', $why);
+        $this->assertStringNotContainsStringIgnoringCase('mastery', $why);
     }
 
     public function test_settings_overrides_apply_only_on_accept(): void

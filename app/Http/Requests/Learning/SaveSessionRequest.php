@@ -14,7 +14,7 @@ class SaveSessionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'action' => ['nullable', 'string', 'in:save,start,resume,end,discard_example'],
+            'action' => ['nullable', 'string', 'in:save,start,pause,resume,end,discard_example'],
             'surah_number' => ['nullable', 'integer', 'min:1', 'max:114'],
             'ayah_number' => ['nullable', 'integer', 'min:1', 'max:300'],
             'current_step' => ['nullable', 'integer', 'min:0'],

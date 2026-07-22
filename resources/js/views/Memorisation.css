@@ -274,16 +274,16 @@
 }
 
 .action-btn.primary:hover {
-  box-shadow: 0 4px 16px rgba(154, 103, 56, 0.25);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 [data-theme="dark"] .action-btn.primary {
-  background: linear-gradient(135deg, #2f8b66, #74d99e);
-  color: #07150f;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #1a120c;
 }
 
 [data-theme="dark"] .action-btn.primary:hover {
-  box-shadow: 0 4px 16px rgba(46, 125, 50, 0.25);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 @keyframes fadeSlideUp {
@@ -1100,6 +1100,18 @@
   --accent-soft: #d8c1a8;
   --accent-light: rgba(154, 103, 56, 0.10);
   --accent-wash: rgba(228, 211, 194, 0.42);
+  /* Shared button colour semantics — Bootstrap custom danger (#b55041) */
+  --bs-danger: #b55041;
+  --bs-danger-rgb: 181, 80, 65;
+  --success: #2e7d64;
+  --success-strong: #23624e;
+  --success-soft: rgba(46, 125, 100, 0.12);
+  --danger: #b55041;
+  --danger-strong: #9a4336;
+  --danger-soft: rgba(181, 80, 65, 0.12);
+  --destructive: var(--danger);
+  --destructive-strong: var(--danger-strong);
+  --destructive-soft: var(--danger-soft);
   --zone-canvas: #f3eee6;
   --zone-reading: #faf7f1;
   --zone-chrome: #f0e9de;
@@ -1143,6 +1155,17 @@
   --accent-soft: #5f4530;
   --accent-light: rgba(208, 160, 107, 0.14);
   --accent-wash: rgba(208, 160, 107, 0.08);
+  --success: #3f8f6f;
+  --success-strong: #2f6f58;
+  --success-soft: rgba(63, 143, 111, 0.16);
+  --bs-danger: #d4786a;
+  --bs-danger-rgb: 212, 120, 106;
+  --danger: #d4786a;
+  --danger-strong: #c45f50;
+  --danger-soft: rgba(212, 120, 106, 0.16);
+  --destructive: var(--danger);
+  --destructive-strong: var(--danger-strong);
+  --destructive-soft: var(--danger-soft);
   --zone-canvas: #14110f;
   --zone-reading: #1a1714;
   --zone-chrome: #221d19;
@@ -3779,15 +3802,41 @@
   box-shadow: var(--shadow-md);
 }
 
-.action-btn-exit {
-  background: rgba(255, 247, 243, 0.9);
-  border: 0;
+/* End Session trigger — shared destructive semantics (solid red, not green) */
+.action-btn-exit,
+.action-btn.mutqin-btn--destructive {
+  color: #fff;
+  background: var(--bs-danger, var(--destructive, var(--danger, #b55041)));
+  border: 1px solid var(--bs-danger, var(--destructive, var(--danger, #b55041)));
 }
 
-.action-btn-exit:hover {
-  background: rgba(255, 239, 232, 0.96);
-  border-color: rgba(139, 79, 57, 0.22);
-  color: #8b4f39;
+.action-btn-exit:hover,
+.action-btn.mutqin-btn--destructive:hover {
+  color: #fff;
+  background: var(--destructive-strong, var(--danger-strong, #9a4336));
+  border-color: var(--destructive-strong, var(--danger-strong, #9a4336));
+}
+
+.action-btn-exit:active,
+.action-btn.mutqin-btn--destructive:active {
+  background: var(--destructive-strong, var(--danger-strong, #9a4336));
+}
+
+.action-btn-exit:focus-visible,
+.action-btn.mutqin-btn--destructive:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--bs-danger, var(--destructive, #b55041)) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.action-btn-exit:disabled,
+.action-btn-exit.is-loading,
+.action-btn-exit[aria-busy="true"],
+.action-btn.mutqin-btn--destructive:disabled,
+.action-btn.mutqin-btn--destructive.is-loading,
+.action-btn.mutqin-btn--destructive[aria-busy="true"] {
+  opacity: 0.52;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .action-btn-primary:hover:not(:disabled) {
@@ -5150,8 +5199,8 @@
 }
 
 .learning-sync-badge.is-success {
-  color: #2f8f5b;
-  border-color: color-mix(in srgb, #2f8f5b 35%, var(--border));
+  color: var(--success, #2e7d64);
+  border-color: color-mix(in srgb, var(--success, #2e7d64) 35%, var(--border));
 }
 
 .learning-sync-badge.is-warning {
@@ -10365,9 +10414,9 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 .post-session-btn--accent {
-  color: #f8fff9;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 88%, #2f6f58), color-mix(in srgb, #58b68e 72%, var(--accent-strong)));
-  border-color: color-mix(in srgb, #58b68e 42%, transparent);
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
   box-shadow: 0 12px 26px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
@@ -10377,10 +10426,10 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .post-session-btn--primary {
   grid-column: 1 / -1;
-  color: #07150f;
-  background: linear-gradient(135deg, #58b68e, #79d39e);
-  border-color: color-mix(in srgb, #79d39e 48%, transparent);
-  box-shadow: 0 14px 28px color-mix(in srgb, #58b68e 24%, transparent);
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
 [data-theme="dark"] .post-session-btn--ghost {
@@ -10389,17 +10438,17 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 [data-theme="dark"] .post-session-btn--ghost:hover {
-  background: color-mix(in srgb, #2f6f58 18%, var(--surface));
-  color: #d8f5e4;
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  color: var(--accent-strong);
 }
 
 [data-theme="dark"] .post-session-btn--accent {
-  color: #07150f;
-  background: linear-gradient(135deg, #2f8b66, #74d99e);
+  color: #1a120c;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
 }
 
 [data-theme="dark"] .post-session-btn--primary {
-  color: #07150f;
+  color: #1a120c;
 }
 
 .onboarding-post-session-confetti-layer {
@@ -11060,15 +11109,15 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 .onboarding-btn--primary {
-  color: #07150f;
-  background: linear-gradient(135deg, #58b68e, #79d39e);
-  border-color: color-mix(in srgb, #79d39e 48%, transparent);
-  box-shadow: 0 14px 28px color-mix(in srgb, #58b68e 24%, transparent);
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
 [data-theme="dark"] .onboarding-btn--primary {
-  background: linear-gradient(135deg, #2f8b66, #74d99e);
-  color: #07150f;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #1a120c;
 }
 
 .onboarding-choice-grid {
@@ -11586,7 +11635,21 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 .btn-danger {
-  background: #b55041;
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--bs-danger, #b55041);
+  --bs-btn-border-color: var(--bs-danger, #b55041);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--destructive-strong, #9a4336);
+  --bs-btn-hover-border-color: var(--destructive-strong, #9a4336);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--destructive-strong, #9a4336);
+  --bs-btn-active-border-color: var(--destructive-strong, #9a4336);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: var(--bs-danger, #b55041);
+  --bs-btn-disabled-border-color: var(--bs-danger, #b55041);
+  color: #fff;
+  background: var(--bs-danger, #b55041);
+  border-color: var(--bs-danger, #b55041);
 }
 
 .btn-icon {
@@ -13656,14 +13719,18 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 .recitation-check-actions .btn-primary, .self-check-action-btn.btn-primary {
-  background: #2f6f58;
-  border-color: #2f6f58;
-  box-shadow: 0 12px 24px rgba(47, 111, 88, 0.18);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: color-mix(in srgb, var(--accent) 52%, transparent);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .recitation-check-actions .btn-primary:hover, .self-check-action-btn.btn-primary:hover {
-  background: #255f4d;
-  border-color: #255f4d;
+  background: linear-gradient(
+    135deg,
+    var(--accent-strong),
+    color-mix(in srgb, var(--accent-strong) 72%, var(--accent))
+  );
+  border-color: color-mix(in srgb, var(--accent) 64%, transparent);
 }
 
 .self-check-attempts-head strong {
@@ -17636,10 +17703,10 @@ button:active {
 }
 
 [data-theme="dark"] .tools-btn-primary, [data-theme="dark"] .action-btn-primary {
-  background: linear-gradient(135deg, #2f8b66, #74d99e);
-  color: #07150f;
-  border-color: rgba(116, 217, 158, 0.5);
-  box-shadow: 0 14px 34px rgba(116, 217, 158, 0.2);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #1a120c;
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .workspace-shell {
@@ -26984,17 +27051,29 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: inherit !important;
 }
 
-.workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit {
-  background: var(--surface) !important;
-  border: 1px solid var(--border) !important;
-  color: var(--text) !important;
+.workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit,
+.workspace-shell-actions .action-btn.action-btn-exit,
+.workspace-shell-actions .action-btn.mutqin-btn--destructive {
+  color: #fff !important;
+  background: var(--bs-danger, var(--destructive, var(--danger, #b55041))) !important;
+  border: 1px solid var(--bs-danger, var(--destructive, var(--danger, #b55041))) !important;
+}
+
+.workspace-shell-actions .action-btn.action-btn-exit:hover,
+.workspace-shell-actions .action-btn.mutqin-btn--destructive:hover {
+  color: #fff !important;
+  background: var(--destructive-strong, var(--danger-strong, #9a4336)) !important;
 }
 
 [data-theme="dark"] .workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit,
-.dark-mode .workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(255, 232, 205, 0.14) !important;
-  color: #f4ede4 !important;
+.dark-mode .workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit,
+[data-theme="dark"] .workspace-shell-actions .action-btn.action-btn-exit,
+.dark-mode .workspace-shell-actions .action-btn.action-btn-exit,
+[data-theme="dark"] .workspace-shell-actions .action-btn.mutqin-btn--destructive,
+.dark-mode .workspace-shell-actions .action-btn.mutqin-btn--destructive {
+  color: #fff !important;
+  background: var(--bs-danger, var(--destructive, #d4786a)) !important;
+  border-color: var(--bs-danger, var(--destructive, #d4786a)) !important;
 }
 
 @keyframes workspaceMetadataSlideIn {
@@ -28052,9 +28131,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 [data-theme="dark"] .workspace-shell-actions .action-btn.primary,
 [data-theme="dark"] .tools-btn.btn.btn-primary.session-primary-action,
 [data-theme="dark"] .session-resume-btn.btn.btn-primary {
-  background: linear-gradient(135deg, #2a6b52, #6fcea0) !important;
-  border: 1px solid rgba(132, 226, 173, 0.38) !important;
-  color: #07150f !important;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent) !important;
+  color: #1a120c !important;
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.28) !important;
 }
 
@@ -28781,10 +28860,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .welcome-back-btn--primary {
-  color: #07150f;
-  background: linear-gradient(135deg, #58b68e, #79d39e);
-  border-color: color-mix(in srgb, #79d39e 48%, transparent);
-  box-shadow: 0 14px 28px color-mix(in srgb, #58b68e 24%, transparent);
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
 .welcome-back-btn--ghost {
@@ -28819,13 +28898,13 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 [data-theme="dark"] .welcome-back-btn--ghost:hover:not(:disabled) {
-  background: color-mix(in srgb, #2f6f58 18%, var(--surface));
-  color: #d8f5e4;
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  color: var(--accent-strong);
 }
 
 [data-theme="dark"] .welcome-back-btn--primary {
-  color: #07150f;
-  background: linear-gradient(135deg, #2f8b66, #74d99e);
+  color: #1a120c;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
 }
 
 @keyframes welcomeBackModalEnter {
@@ -28914,7 +28993,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   z-index: 12600;
   pointer-events: auto;
   background: color-mix(in srgb, #0a100d 68%, transparent);
-  backdrop-filter: blur(6px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 [data-theme="light"] .session-exit-backdrop {
@@ -29465,16 +29545,16 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .session-exit-btn--primary {
-  color: #07150f;
-  background: linear-gradient(135deg, #58b68e, #79d39e);
-  border-color: color-mix(in srgb, #79d39e 48%, transparent);
-  box-shadow: 0 14px 28px color-mix(in srgb, #58b68e 24%, transparent);
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
 .session-exit-btn--accent {
-  color: #f8fff9;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 88%, #2f6f58), color-mix(in srgb, #58b68e 72%, var(--accent-strong)));
-  border-color: color-mix(in srgb, #58b68e 42%, transparent);
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
   box-shadow: 0 12px 26px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
@@ -29484,14 +29564,14 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 [data-theme="dark"] .session-exit-btn--ghost:hover {
-  background: color-mix(in srgb, #2f6f58 18%, var(--surface));
-  color: #d8f5e4;
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  color: var(--accent-strong);
 }
 
 [data-theme="dark"] .session-exit-btn--accent,
 [data-theme="dark"] .session-exit-btn--primary {
-  color: #07150f;
-  background: linear-gradient(135deg, #2f8b66, #74d99e);
+  color: #1a120c;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
 }
 
 @keyframes sessionExitModalEnter {
@@ -30980,7 +31060,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   --mutqin-modal-width-wide: min(960px, calc(100vw - 2rem));
   --mutqin-modal-width-full: min(1140px, calc(100vw - 2rem));
   --mutqin-modal-backdrop: rgba(12, 10, 8, 0.62);
-  --mutqin-modal-backdrop-blur: 8px;
+  --mutqin-modal-backdrop-blur: 0px;
   --mutqin-modal-surface-bg: color-mix(in srgb, var(--surface-elevated, var(--surface)) 98%, transparent);
   --mutqin-modal-surface-border: color-mix(in srgb, var(--accent) 14%, var(--border));
   --mutqin-modal-hero-bg: color-mix(in srgb, var(--accent) 5%, var(--surface));
@@ -31007,8 +31087,13 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   animation: mutqinBackdropFade 280ms ease;
 }
 
+.session-exit-backdrop {
+  background: var(--mutqin-modal-backdrop) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 .welcome-back-backdrop,
-.session-exit-backdrop,
 .onboarding-post-session-backdrop {
   background: var(--mutqin-modal-backdrop) !important;
   backdrop-filter: blur(var(--mutqin-modal-backdrop-blur));
@@ -31859,6 +31944,39 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.mutqin-modal-surface.session-exit-modal .session-exit-progress-summary {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 520;
+  line-height: 1.45;
+  color: var(--text);
+  text-align: center;
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-context {
+  margin: 0.35rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 560;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-progress-block {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-muted, #f3ebe0) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-progress-summary--ayah {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+}
+
 .mutqin-modal-surface.session-exit-modal .session-exit-stats {
   grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
   gap: 0.55rem;
@@ -31927,8 +32045,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .mutqin-modal-surface.session-exit-modal .session-exit-btn--primary {
-  color: #07150f;
-  background: color-mix(in srgb, var(--accent) 82%, #58b68e);
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   box-shadow: none;
 }
@@ -32229,14 +32347,26 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     opacity 180ms ease;
 }
 
-.mutqin-modal-btn:disabled {
+.mutqin-modal-btn:disabled,
+.mutqin-modal-btn.is-loading,
+.mutqin-modal-btn[aria-busy="true"] {
   opacity: 0.48;
   cursor: not-allowed;
 }
 
+.mutqin-modal-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.mutqin-modal-btn:active:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  transform: translateY(0.5px);
+}
+
+/* primary — gold/brown (Continue, Next, Start, Resume, Apply plan, …) */
 .mutqin-modal-btn--primary {
   color: #fff;
-  background: color-mix(in srgb, var(--accent) 82%, #58b68e);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
@@ -32244,21 +32374,38 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: inherit;
 }
 
-.mutqin-modal-btn--primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 90%, #58b68e);
+.mutqin-modal-btn--primary:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  background: linear-gradient(
+    135deg,
+    var(--accent-strong),
+    color-mix(in srgb, var(--accent-strong) 72%, var(--accent))
+  );
   border-color: color-mix(in srgb, var(--accent) 52%, transparent);
 }
 
+.mutqin-modal-btn--primary:active:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  background: var(--accent-strong);
+}
+
+.mutqin-modal-btn--primary:focus-visible {
+  outline-color: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* secondary — neutral (Keep practising, Cancel, Back, Adjust plan, Change date) */
 .mutqin-modal-btn--secondary {
   color: var(--text);
   background: color-mix(in srgb, var(--surface) 96%, transparent);
   border-color: color-mix(in srgb, var(--border) 82%, transparent);
 }
 
-.mutqin-modal-btn--secondary:hover:not(:disabled) {
+.mutqin-modal-btn--secondary:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
   color: var(--accent-strong);
   background: color-mix(in srgb, var(--accent) 8%, var(--surface));
   border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+.mutqin-modal-btn--secondary:active:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
 }
 
 .mutqin-modal-btn--muted {
@@ -32267,19 +32414,66 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   border-color: color-mix(in srgb, var(--border) 72%, transparent);
 }
 
-.mutqin-modal-btn--muted:hover:not(:disabled) {
+.mutqin-modal-btn--muted:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
   color: var(--text);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
 }
 
-.mutqin-modal-btn--danger {
+/* success — green (Completed, Verified, Saved, success badges/icons) */
+.mutqin-modal-btn--success {
   color: #fff;
-  background: color-mix(in srgb, var(--danger, #c0392b) 88%, #e74c3c);
-  border-color: color-mix(in srgb, var(--danger, #c0392b) 52%, transparent);
+  background: linear-gradient(135deg, var(--success), var(--success-strong));
+  border-color: color-mix(in srgb, var(--success) 52%, transparent);
 }
 
-.mutqin-modal-btn--danger:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--danger, #c0392b) 96%, #e74c3c);
+.mutqin-modal-btn--success i {
+  color: inherit;
+}
+
+.mutqin-modal-btn--success:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  background: linear-gradient(
+    135deg,
+    var(--success-strong),
+    color-mix(in srgb, var(--success-strong) 72%, var(--success))
+  );
+  border-color: color-mix(in srgb, var(--success) 64%, transparent);
+}
+
+.mutqin-modal-btn--success:active:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  background: var(--success-strong);
+}
+
+.mutqin-modal-btn--success:focus-visible {
+  outline-color: color-mix(in srgb, var(--success) 60%, transparent);
+}
+
+/* destructive / danger — red (End session, Delete, Remove data) */
+.mutqin-modal-btn--danger,
+.mutqin-modal-btn--destructive {
+  color: #fff;
+  background: var(--bs-danger, var(--destructive, var(--danger, #b55041)));
+  border-color: var(--bs-danger, var(--destructive, var(--danger, #b55041)));
+}
+
+.mutqin-modal-btn--danger i,
+.mutqin-modal-btn--destructive i {
+  color: inherit;
+}
+
+.mutqin-modal-btn--danger:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]),
+.mutqin-modal-btn--destructive:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  background: var(--destructive-strong, var(--danger-strong, #9a4336));
+  border-color: var(--destructive-strong, var(--danger-strong, #9a4336));
+}
+
+.mutqin-modal-btn--danger:active:not(:disabled):not(.is-loading):not([aria-busy="true"]),
+.mutqin-modal-btn--destructive:active:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  background: var(--destructive-strong, var(--danger-strong, #9a4336));
+}
+
+.mutqin-modal-btn--danger:focus-visible,
+.mutqin-modal-btn--destructive:focus-visible {
+  outline-color: color-mix(in srgb, var(--bs-danger, var(--destructive, #b55041)) 60%, transparent);
 }
 
 .mutqin-modal-actions--end .mutqin-modal-btn {
@@ -32575,6 +32769,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   width: 100%;
 }
 
+/* Session-exit chips: layout only — colours come from shared mutqin-modal-btn variants */
 .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip,
 .session-exit-actions-secondary .session-exit-action-chip {
   display: inline-flex !important;
@@ -32592,90 +32787,28 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   max-height: 2.45rem !important;
   padding: 0 0.7rem !important;
   border-radius: 999px !important;
-  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface) 98%, white 2%),
-      color-mix(in srgb, var(--surface) 94%, #f4ebe0 6%)
-    );
-  color: var(--text);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #ffffff 55%, transparent),
-    0 4px 12px color-mix(in srgb, #1f1812 4%, transparent);
   font-size: 0.78rem;
   font-weight: 620;
   line-height: 1.15;
   text-align: center;
   white-space: nowrap !important;
   overflow: hidden;
-  transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
-.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue,
-.session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue {
-  width: 100% !important;
-  min-width: 0 !important;
-  max-width: none !important;
-  padding-inline: 0.7rem !important;
-  overflow: hidden;
-  border-color: #255a47 !important;
-  background: #2f6f58 !important;
-  color: #ffffff !important;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #ffffff 22%, transparent),
-    0 6px 14px color-mix(in srgb, #2f6f58 28%, transparent) !important;
-}
-
-.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue i,
-.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue span,
-.session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue i,
-.session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue span {
-  color: #ffffff !important;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: none;
-}
-
-.session-exit-actions-secondary .mutqin-modal-btn:hover:not(:disabled),
-.session-exit-actions-secondary .session-exit-action-chip:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--accent) 7%, var(--surface)),
-      color-mix(in srgb, var(--accent) 11%, var(--surface))
-    );
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #ffffff 40%, transparent),
-    0 6px 14px color-mix(in srgb, #1f1812 6%, transparent);
+.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]),
+.session-exit-actions-secondary .session-exit-action-chip:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
   transform: translateY(-0.5px);
 }
 
-.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue:hover:not(:disabled),
-.session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue:hover:not(:disabled) {
-  border-color: #1d4d3c !important;
-  background: #255a47 !important;
-  color: #ffffff !important;
-  transform: translateY(-0.5px);
-}
-
-.session-exit-actions-secondary .mutqin-modal-btn:focus-visible,
-.session-exit-actions-secondary .session-exit-action-chip:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
-  outline-offset: 2px;
-}
-
-.session-exit-actions-secondary .mutqin-modal-btn i,
+.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip i,
 .session-exit-actions-secondary .session-exit-action-chip i {
   flex: 0 0 auto;
   font-size: 0.92rem;
   line-height: 1;
-  color: color-mix(in srgb, var(--accent) 82%, var(--text));
+  color: inherit;
 }
 
-.session-exit-actions-secondary .mutqin-modal-btn span,
+.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip span,
 .session-exit-actions-secondary .session-exit-action-chip span {
   min-width: 0;
   max-width: none;
@@ -32684,56 +32817,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   white-space: nowrap;
   text-align: start;
   line-height: 1.15;
-}
-
-.session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue span {
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-[data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn,
-[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface) 92%, #1a211e 8%),
-      color-mix(in srgb, var(--surface) 86%, #0f1412 14%)
-    );
-  border-color: color-mix(in srgb, var(--border) 66%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #ffffff 6%, transparent),
-    0 6px 14px rgba(0, 0, 0, 0.2);
-  color: var(--text);
-}
-
-[data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn:hover:not(:disabled),
-[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
-  border-color: color-mix(in srgb, var(--accent) 36%, var(--border));
-}
-
-[data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue,
-[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue {
-  background: #3f8f6f !important;
-  border-color: #4aa882 !important;
-  color: #ffffff !important;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #ffffff 14%, transparent),
-    0 8px 18px rgba(0, 0, 0, 0.28) !important;
-}
-
-[data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue:hover:not(:disabled),
-[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue:hover:not(:disabled) {
-  background: #2f6f58 !important;
-  border-color: #7dd3b0 !important;
-  color: #ffffff !important;
-}
-
-[data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue i,
-[data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue span,
-[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue i,
-[data-theme="dark"] .session-exit-actions-secondary .session-exit-action-chip.session-exit-action-chip--continue span {
-  color: #ffffff !important;
+  color: inherit;
 }
 
 @media (min-width: 768px) {
@@ -34165,9 +34249,17 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: color-mix(in srgb, var(--text) 74%, transparent);
 }
 
-.mutqin-modal-btn--ghost:hover {
+.mutqin-modal-btn--ghost:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
   background: color-mix(in srgb, var(--surface) 82%, #f4e5cf 18%);
   color: var(--text);
+}
+
+.mutqin-modal-btn--ghost:active:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  background: color-mix(in srgb, var(--surface) 76%, #f4e5cf 24%);
+}
+
+.mutqin-modal-btn--ghost:focus-visible {
+  outline-color: color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 @media (max-width: 767px) {
@@ -35906,28 +35998,6 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     white-space: nowrap !important;
   }
 
-  .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue {
-    background: #2f6f58 !important;
-    border-color: #255a47 !important;
-    color: #ffffff !important;
-  }
-
-  .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue span,
-  .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue i {
-    color: #ffffff !important;
-  }
-
-  [data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue {
-    background: #3f8f6f !important;
-    border-color: #4aa882 !important;
-    color: #ffffff !important;
-  }
-
-  [data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue span,
-  [data-theme="dark"] .session-exit-actions-secondary .mutqin-modal-btn.session-exit-action-chip.session-exit-action-chip--continue i {
-    color: #ffffff !important;
-  }
-
   .mutqin-session-summary-row {
     grid-template-columns: minmax(0, 1fr) !important;
     gap: 0.2rem !important;
@@ -36668,8 +36738,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   inset: 0;
   pointer-events: auto;
   background: color-mix(in srgb, #0a100d 58%, transparent);
-  backdrop-filter: blur(10px) saturate(1.05);
-  -webkit-backdrop-filter: blur(10px) saturate(1.05);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 [data-theme="light"] .post-session-simple__backdrop {
@@ -36803,7 +36873,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .post-session-simple__segment-btn:focus-visible,
 .post-session-simple__btn:focus-visible,
 .post-session-simple__stats-toggle:focus-visible,
-.post-session-simple__link:focus-visible {
+.post-session-simple__link:focus-visible,
+.post-session-simple__adjust-link:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
   outline-offset: 2px;
 }
@@ -36905,6 +36976,22 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   overflow-wrap: anywhere;
 }
 
+.post-session-simple__why {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  max-width: 48ch;
+}
+
+.post-session-simple__why-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+}
+
 .post-session-simple__reason,
 .post-session-simple__sample-copy {
   margin: 0;
@@ -36930,6 +37017,44 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   flex-wrap: wrap;
   gap: 0.4rem;
   margin-top: 0.15rem;
+}
+
+.post-session-simple__combination {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+}
+
+.post-session-simple__adjust-link {
+  appearance: none;
+  display: inline-flex;
+  align-self: start;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--text-muted, var(--text)) 82%, transparent);
+  font-size: 0.78rem;
+  font-weight: 550;
+  line-height: 1.35;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+  cursor: pointer;
+}
+
+.post-session-simple__adjust-link:hover:not(:disabled) {
+  color: color-mix(in srgb, var(--accent) 70%, var(--text));
+}
+
+.post-session-simple__adjust-link:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.post-session-simple__adjust-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .post-session-simple__pill {
@@ -37224,6 +37349,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: color-mix(in srgb, #fff8f0 94%, var(--text));
 }
 
+[data-theme="dark"] .post-session-simple__why-label {
+  color: color-mix(in srgb, var(--ps-muted) 88%, #e8d2b4);
+}
+
 [data-theme="dark"] .post-session-simple__reason,
 [data-theme="dark"] .post-session-simple__sample-copy {
   color: var(--ps-muted);
@@ -37307,6 +37436,14 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 [data-theme="dark"] .post-session-simple__link {
   color: color-mix(in srgb, var(--accent) 88%, #f0d7b4);
+}
+
+[data-theme="dark"] .post-session-simple__adjust-link {
+  color: color-mix(in srgb, var(--ps-muted) 90%, #e8d2b4);
+}
+
+[data-theme="dark"] .post-session-simple__adjust-link:hover:not(:disabled) {
+  color: color-mix(in srgb, var(--accent) 82%, #f0d7b4);
 }
 
 [data-theme="dark"] .post-session-simple__skeleton span {
@@ -37447,4 +37584,82 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 /* Keep page scroll locked while the simplified modal is open */
 body:has(.post-session-simple) {
   overflow: hidden;
+}
+
+/*
+ * Button colour semantics — final lock (wins over legacy one-offs).
+ * primary = gold/brown · success = green · destructive = red · secondary = neutral
+ */
+.mutqin-modal-btn--primary,
+.btn-primary,
+.tools-btn-primary,
+.tools-btn.btn-primary,
+.action-btn.primary,
+.action-btn.btn-primary,
+.action-btn-primary,
+.session-primary-action.btn-primary,
+.session-resume-btn.btn-primary,
+.self-check-action-btn.btn-primary,
+.recitation-check-actions .btn-primary,
+.post-session-btn--primary,
+.post-session-btn--accent,
+.post-session-simple__btn--primary,
+.welcome-back-btn--primary,
+.onboarding-btn--primary,
+.saved-session-row-btn-primary {
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent) !important;
+}
+
+[data-theme="dark"] .mutqin-modal-btn--primary,
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] .tools-btn-primary,
+[data-theme="dark"] .tools-btn.btn-primary,
+[data-theme="dark"] .action-btn.primary,
+[data-theme="dark"] .action-btn.btn-primary,
+[data-theme="dark"] .action-btn-primary,
+[data-theme="dark"] .session-primary-action.btn-primary,
+[data-theme="dark"] .session-resume-btn.btn-primary,
+[data-theme="dark"] .self-check-action-btn.btn-primary,
+[data-theme="dark"] .recitation-check-actions .btn-primary,
+[data-theme="dark"] .post-session-btn--primary,
+[data-theme="dark"] .post-session-simple__btn--primary,
+[data-theme="dark"] .welcome-back-btn--primary,
+[data-theme="dark"] .onboarding-btn--primary {
+  color: #1a120c !important;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
+}
+
+.mutqin-modal-btn--secondary,
+.post-session-simple__btn--secondary {
+  color: var(--text) !important;
+  background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
+  border-color: color-mix(in srgb, var(--border) 82%, transparent) !important;
+}
+
+.mutqin-modal-btn--success {
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--success), var(--success-strong)) !important;
+  border-color: color-mix(in srgb, var(--success) 52%, transparent) !important;
+}
+
+.mutqin-modal-btn--danger,
+.mutqin-modal-btn--destructive,
+.action-btn-exit,
+.action-btn.mutqin-btn--destructive,
+.session-exit-action-chip--end {
+  color: #fff !important;
+  background: var(--bs-danger, var(--destructive, var(--danger, #b55041))) !important;
+  border-color: var(--bs-danger, var(--destructive, var(--danger, #b55041))) !important;
+}
+
+.mutqin-modal-btn--danger:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]),
+.mutqin-modal-btn--destructive:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]),
+.action-btn-exit:hover:not(:disabled),
+.action-btn.mutqin-btn--destructive:hover:not(:disabled),
+.session-exit-action-chip--end:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
+  color: #fff !important;
+  background: var(--destructive-strong, var(--danger-strong, #9a4336)) !important;
 }

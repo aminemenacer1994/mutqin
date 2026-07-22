@@ -439,7 +439,7 @@ async function inspectState(page, state) {
       recordingsLoading: ['.recordings-library-header', '.recordings-library-body'],
       recordingsEmpty: ['.recordings-library-header', '.recordings-library-body'],
       onboarding: ['.onboarding-hero', '.onboarding-body', '.onboarding-preview-grid', '.onboarding-nav-actions'],
-      paused: ['.session-exit-body', '.session-exit-actions-layout', ['.session-exit-actions-secondary', 2], '.mutqin-session-summary-row'],
+      paused: ['.session-exit-body', '.session-exit-actions-layout', ['.session-exit-actions-secondary', 2], '.session-exit-progress-summary'],
       complete: ['.post-session-simple__header', '.post-session-simple__body', '.post-session-simple__row', '.post-session-simple__actions']
     }
 
@@ -485,17 +485,17 @@ async function inspectState(page, state) {
       if (state === 'onboarding') expectParallel('.onboarding-step-icon', '.onboarding-hero-copy', 'onboarding hero')
       if (state === 'paused' && viewportWidth >= 350) {
         expectParallel('.session-exit-actions-secondary > :nth-child(1)', '.session-exit-actions-secondary > :nth-child(2)', 'paused secondary actions')
-        const continueBtn = visibleElements('.session-exit-action-chip--continue')[0]
-        if (continueBtn) {
-          const label = String(continueBtn.textContent || '').replace(/\s+/g, ' ').trim()
-          if (/\.\.\.|…/.test(label) || /continue this sess/i.test(label) && !/continue this session/i.test(label)) {
-            issues.push('paused: Continue this session label should stay on one line without ellipsis')
-          }
-        }
-        const saveBtn = Array.from(document.querySelectorAll('.session-exit-actions-layout button')).find(btn => /save this session/i.test(btn.textContent || ''))
-        if (saveBtn) issues.push('paused: Save this session button should be removed from exit actions')
+        const keepBtn = Array.from(document.querySelectorAll('.session-exit-actions-layout button')).find(btn => /keep practising/i.test(btn.textContent || ''))
         const endBtn = Array.from(document.querySelectorAll('.session-exit-actions-layout button')).find(btn => /end session/i.test(btn.textContent || ''))
-        if (endBtn) issues.push('paused: End session button should be removed from exit actions')
+        if (!keepBtn) issues.push('paused: Keep practising button missing')
+        if (!endBtn) issues.push('paused: End session button missing')
+        const startNew = Array.from(document.querySelectorAll('.session-exit-actions-layout button')).find(btn => /start new session/i.test(btn.textContent || ''))
+        const repeat = Array.from(document.querySelectorAll('.session-exit-actions-layout button')).find(btn => /repeat session/i.test(btn.textContent || ''))
+        if (startNew) issues.push('paused: Start new session must wait until completion succeeds')
+        if (repeat) issues.push('paused: Repeat session must wait until completion succeeds')
+        if (document.querySelector('.mutqin-session-summary-row')) {
+          issues.push('paused: Session Overview detail rows should be removed from exit modal')
+        }
       }
       if (state === 'complete' && viewportWidth >= 430) {
         const confidence = document.querySelector('.post-session-simple__confidence')

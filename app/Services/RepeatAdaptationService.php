@@ -109,6 +109,7 @@ class RepeatAdaptationService
             $evidence,
             $aiResult,
             $hintsUsed,
+            $confidence,
         );
     }
 
@@ -139,7 +140,8 @@ class RepeatAdaptationService
         $chainingReps = 2;
         $anchorCount = 2;
         $intendedOutcome = 'Strengthen recall before progressing.';
-        $userReason = 'A short, focused repeat will help this range settle.';
+        $userReason = 'This range still needs another pass. This plan keeps the same ayahs with a short, focused repeat so recall can settle.';
+        $missedWords = max(0, (int) ($evidence['missed_words'] ?? 0));
 
         if ($evidence['pronunciation'] || $evidence['listening_difficulty']) {
             $primary = 'talqin';
@@ -157,8 +159,8 @@ class RepeatAdaptationService
             $reasonCode = 'needs_more_practice';
             $intendedOutcome = 'Clearer listening and more accurate pronunciation.';
             $userReason = $evidence['listening_difficulty']
-                ? 'You replayed parts of this range several times, so we recommend listen-and-repeat practice at a slightly slower pace.'
-                : 'Your AI Recite result highlighted pronunciation difficulty, so this repeat prioritises listening to the reciter phrase by phrase.';
+                ? 'You replayed parts of this range several times. This plan keeps the same range and uses Talqin with slower playback so each phrase can settle.'
+                : 'AI Recite highlighted pronunciation difficulty. This plan keeps the same range and uses Talqin with slower playback to reinforce those phrases.';
         } elseif ($evidence['attention_spread'] || $evidence['weak_ayah_cluster']) {
             $primary = 'focus';
             $adaptations[] = 'use_focus';
@@ -166,7 +168,9 @@ class RepeatAdaptationService
             $adaptations[] = 'reduce_ayat_per_step';
             $reasonCode = 'difficult_ayah_detected';
             $intendedOutcome = 'Reduced cognitive load with one ayah at a time.';
-            $userReason = 'Attention was harder across several ayat, so this repeat works one ayah at a time.';
+            $userReason = 'Attention was harder across several ayahs. This plan keeps the same range and works one ayah at a time with Focus'
+                .($rangeCount >= 3 ? ' and Anchor support' : '')
+                .'.';
             if ($rangeCount >= 3) {
                 $complementary = 'anchor';
                 $adaptations[] = 'use_anchor';
@@ -177,8 +181,8 @@ class RepeatAdaptationService
             $chainingMethod = $rangeCount >= 4 ? 'cumulative' : 'linking';
             $adaptations[] = 'use_chaining';
             $reasonCode = 'reinforce_recent_range';
-            $intendedOutcome = 'Stronger ordering between neighbouring ayat.';
-            $userReason = 'The order between ayat was uncertain, so this repeat focuses on joining them in sequence.';
+            $intendedOutcome = 'Stronger ordering between neighbouring ayahs.';
+            $userReason = 'The order between ayahs was uncertain. This plan keeps the same range and uses Chaining with Focus so neighbouring ayahs join more reliably.';
             $complementary = 'focus';
             $adaptations[] = 'use_focus';
             $ayatPerStep = 1;
@@ -188,21 +192,38 @@ class RepeatAdaptationService
             $adaptations[] = 'use_blur';
             $reasonCode = 'difficult_ayah_detected';
             $intendedOutcome = 'Stronger independent recall without relying on the full text.';
-            $userReason = 'Recognition was stronger than recall, so this repeat gradually hides the text.';
+            $userReason = 'Recognition was stronger than independent recall. This plan keeps the same range and gradually hides the text with Blur'
+                .($rangeCount >= 3 ? ', plus Anchor support' : '')
+                .'.';
             if ($rangeCount >= 3) {
                 $complementary = 'anchor';
                 $adaptations[] = 'use_anchor';
             }
-        } elseif ($evidence['vocabulary_hooks']) {
-            $primary = 'anchor';
-            $adaptations[] = 'use_anchor';
-            $anchorCount = 3;
-            $reasonCode = 'reinforce_recent_range';
-            $intendedOutcome = 'Clearer memory hooks for key words in each ayah.';
-            $userReason = 'A few key words were missed, so this repeat highlights memory anchors.';
-            $complementary = 'focus';
-            $adaptations[] = 'use_focus';
-            $ayatPerStep = 1;
+        } elseif ($evidence['vocabulary_hooks'] || ($missedWords >= 1 && in_array($aiResult, ['weak', 'mixed', 'needs_practice'], true))) {
+            $wordPhrase = $this->countPhrase($missedWords > 0 ? $missedWords : 2, 'word', 'words');
+            if (in_array($aiResult, ['weak', 'mixed', 'needs_practice'], true) && $missedWords >= 1) {
+                // AI-detected word gaps: reinforce with listen-and-repeat rather than anchors alone.
+                $primary = 'talqin';
+                $adaptations[] = 'use_talqin';
+                $slower = $this->clampSpeed(round($speed - 0.25, 2));
+                if ($slower < $speed) {
+                    $speed = $slower;
+                    $adaptations[] = 'reduce_playback_speed';
+                }
+                $reasonCode = 'needs_more_practice';
+                $intendedOutcome = 'Clearer reinforcement for the words that slipped.';
+                $userReason = "AI Recite found {$wordPhrase} that needed another attempt. This plan keeps the same range and combines Talqin with slower playback to reinforce those words.";
+            } else {
+                $primary = 'anchor';
+                $adaptations[] = 'use_anchor';
+                $anchorCount = 3;
+                $reasonCode = 'reinforce_recent_range';
+                $intendedOutcome = 'Clearer memory hooks for key words in each ayah.';
+                $userReason = "A few key words still needed support. This plan keeps the same range and highlights memory anchors with Focus so those words stick.";
+                $complementary = 'focus';
+                $adaptations[] = 'use_focus';
+                $ayatPerStep = 1;
+            }
         } else {
             if ($baseTechnique === 'blur') {
                 $primary = 'blur';
@@ -223,13 +244,15 @@ class RepeatAdaptationService
             }
             $reasonCode = 'needs_more_practice';
             $intendedOutcome = 'Clearer listening and steadier recall before progressing.';
-            $userReason = 'You asked for more practice, so this repeat slows the pace and adds a little more repetition.';
+            $userReason = $confidence === 'needs_practice'
+                ? 'You selected Needs more practice. This plan keeps the same range, slows playback, and adds a little more repetition so recall can settle.'
+                : 'This range still needs another pass. This plan keeps the same ayahs with slower playback and a little more repetition.';
         }
 
         if ($confidence === 'needs_practice' && $aiResult === 'strong') {
             $repetitions = min($repetitions, max(self::MIN_REPETITIONS, (int) ($baseSettings['repetitions'] ?? 3) + 1));
             $speed = max($speed, $this->clampSpeed((float) ($baseSettings['playback_speed'] ?? 1.0) - 0.15));
-            $userReason = 'You asked for more practice. Your AI Recite was strong, so this repeat stays light.';
+            $userReason = 'You selected Needs more practice, and AI Recite was already strong. This plan keeps the same range with a light repeat rather than adding unnecessary difficulty.';
             $intendedOutcome = 'Light reinforcement without unnecessary difficulty.';
             $evidence['codes'][] = 'balance_user_confidence_over_strong_ai';
         }
@@ -295,6 +318,7 @@ class RepeatAdaptationService
         array $evidence,
         string $aiResult,
         int $hintsUsed,
+        string $confidence = '',
     ): array {
         $adaptations = [];
         $reasonCode = 'continue_while_fresh';
@@ -304,7 +328,7 @@ class RepeatAdaptationService
         $chainingReps = 2;
         $anchorCount = 2;
         $intendedOutcome = 'Balanced progression with independent recall.';
-        $userReason = 'You completed this range smoothly, so the next set keeps a steady pace with recall-focused practice.';
+        $userReason = 'You completed this range smoothly. This plan moves forward at a steady pace with recall-focused practice.';
 
         $efficient = ($evidence['replay_ratio'] ?? 0) < 1.35
             && ($evidence['max_ayah_replays'] ?? 0) <= 2
@@ -317,13 +341,13 @@ class RepeatAdaptationService
                 $adaptations[] = 'use_chaining';
                 $complementary = 'anchor';
                 $adaptations[] = 'use_anchor';
-                $intendedOutcome = 'Smooth flow across neighbouring ayat.';
-                $userReason = 'You completed this range smoothly with minimal replay, so the next set joins ayat together for fluency.';
+                $intendedOutcome = 'Smooth flow across neighbouring ayahs.';
+                $userReason = 'AI Recite was strong and you needed little replay. This plan moves to the next ayahs with Chaining and Anchor to build fluent flow.';
             } else {
                 $primary = 'blur';
                 $adaptations[] = 'use_blur';
                 $intendedOutcome = 'Stronger independent recall as you move forward.';
-                $userReason = 'Your recall was strong, so the next set gradually hides the text.';
+                $userReason = 'AI Recite was strong. This plan moves forward and gradually hides the text with Blur so recall stays independent.';
             }
             $repetitions = max(self::MIN_REPETITIONS, min($repetitions, 2));
             $adaptations[] = 'reduce_repetitions';
@@ -336,7 +360,7 @@ class RepeatAdaptationService
             $complementary = 'anchor';
             $adaptations[] = 'use_anchor';
             $intendedOutcome = 'Progress with a brief targeted review.';
-            $userReason = 'Your recall was mostly correct, with a few gaps, so the next set stays smaller and review-focused.';
+            $userReason = 'AI Recite was mostly correct, with a few gaps. This plan still moves forward, but keeps the next set smaller with Focus and Anchor support.';
             $reasonCode = 'ai_recite_mixed';
         } elseif ($hintsUsed >= 2 || ($evidence['replay_ratio'] ?? 0) >= 1.6) {
             $primary = 'focus';
@@ -346,22 +370,24 @@ class RepeatAdaptationService
             $complementary = 'anchor';
             $adaptations[] = 'use_anchor';
             $intendedOutcome = 'Steady progression with light support.';
-            $userReason = 'You are ready to continue, with a brief review-first approach because a few hints were still needed.';
+            $userReason = $confidence === 'confident' || $confidence === ''
+                ? 'You completed the range and selected Confident, but used several memory prompts. Start the next ayah with Focus and Anchor mode, then remove the support once recall feels stable.'
+                : 'You completed the range, but used several memory prompts. Start the next ayah with Focus and Anchor mode, then remove the support once recall feels stable.';
             $reasonCode = 'continue_current_surah';
         } elseif ($aiResult === '' && $efficient) {
             $primary = 'blur';
             $adaptations[] = 'use_blur';
             $repetitions = max(self::MIN_REPETITIONS, min($repetitions, 2));
             $adaptations[] = 'reduce_repetitions';
-            $intendedOutcome = 'Light verification of recall before adding new ayat.';
-            $userReason = 'You performed well. Without an AI Recite check yet, the next set uses light recall practice rather than extra repetition.';
+            $intendedOutcome = 'Light verification of recall before adding new ayahs.';
+            $userReason = 'You completed this range smoothly. This plan moves forward with light Blur practice rather than extra repetition.';
             $reasonCode = 'continue_while_fresh';
         } elseif ($rangeWorkload >= 55 || $rangeCount === 1) {
             $primary = 'focus';
             $adaptations[] = 'use_focus';
             $ayatPerStep = 1;
             $intendedOutcome = 'Manageable load for a longer or denser ayah.';
-            $userReason = 'The next ayah is longer, so the next set keeps one ayah with focused practice.';
+            $userReason = 'The next ayah is longer or denser. This plan keeps one ayah at a time with Focus so the load stays manageable.';
             $reasonCode = 'continue_current_surah';
         } else {
             if (! in_array($primary, self::TECHNIQUES, true)) {
@@ -375,7 +401,7 @@ class RepeatAdaptationService
                 $adaptations[] = 'use_blur';
             }
             $intendedOutcome = 'Steady progression at your normal pace.';
-            $userReason = 'Continue while this range is still fresh, keeping your normal speed and technique.';
+            $userReason = 'You completed this range cleanly. This plan continues to the next ayahs while the material is still fresh.';
         }
 
         if ($rangeWorkload >= 55 && ($ayatPerStep === null || $ayatPerStep > 1)) {
@@ -465,8 +491,24 @@ class RepeatAdaptationService
             'weak_ayah_cluster' => $weakAyahCluster,
             'replay_ratio' => $replayRatio,
             'max_ayah_replays' => $maxReplays,
+            'missed_words' => $missedWords,
             'codes' => $codes,
         ];
+    }
+
+    private function countPhrase(int $count, string $singular, string $plural): string
+    {
+        $safe = max(1, $count);
+        $words = [
+            1 => 'one',
+            2 => 'two',
+            3 => 'three',
+            4 => 'four',
+            5 => 'five',
+        ];
+        $number = $words[$safe] ?? (string) $safe;
+
+        return $safe === 1 ? "{$number} {$singular}" : "{$number} {$plural}";
     }
 
     /**

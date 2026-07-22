@@ -194,21 +194,43 @@ includesAll('ai recitation full-session recording', [
   /if \(!this\.isSessionRecitationCheckActive\(\)\) return true\s*return !!this\.recitationAlignmentState\?\.complete/s
 ])
 
-includesAll('session exit action grid', [
+includesAll('session exit confirmation modal', [
   /class="session-exit-actions-layout"/,
   /session-exit-actions-secondary/,
-  /session-exit-actions-secondary--with-continue/,
   /session-exit-action-chip/,
-  /session-exit-action-chip--continue/,
-  /exitSessionToNewSession/,
-  /exitSessionToRepeatRange/,
-  /continueSessionFromExitModal/,
+  /session-exit-action-chip--end/,
+  /mutqin-modal-btn--destructive/,
+  /mutqin-modal-btn--secondary/,
+  /mutqin-btn--destructive/,
+  /session-exit-progress-summary/,
+  /keepPractisingFromExitModal/,
+  /confirmEndSessionFromExitModal/,
+  /pauseSessionFromPrimaryAction/,
+  /PRIMARY_SESSION_ACTION\.PAUSE_SESSION/,
 ])
 
 assert.doesNotMatch(
   source,
-  /session-exit-actions-secondary--with-continue[\s\S]{0,1200}?exitSessionToSaveSession/,
-  'exit modal should not include Save this session'
+  /session-exit-action-chip--continue/,
+  'exit confirm must not use the legacy green continue chip override'
+)
+
+assert.doesNotMatch(
+  source,
+  /@click="exitSessionToNewSession"/,
+  'exit confirm modal must not show Start new session before completion'
+)
+
+assert.doesNotMatch(
+  source,
+  /@click="exitSessionToRepeatRange"/,
+  'exit confirm modal must not show Repeat session before completion'
+)
+
+assert.doesNotMatch(
+  source,
+  /@click="continueSessionFromExitModal"/,
+  'exit confirm modal must not show Continue this session'
 )
 
 assert.doesNotMatch(
@@ -225,8 +247,8 @@ assert.doesNotMatch(
 
 assert.doesNotMatch(
   source,
-  /session-exit-actions-secondary[\s\S]*confirmSessionExit\(\{ showSummary: true \}\)/,
-  'exit modal secondary grid should not include End session'
+  /showSessionExitModal[\s\S]{0,2500}?mutqin-session-summary-details/,
+  'exit confirm modal should not show Session Overview detail table'
 )
 
 includesAll('ai memorisation mirrors recitation modal', [
@@ -264,14 +286,43 @@ includesAll('session completion success flow', [
   /handleSessionComplete\(\)/,
   /finaliseCompletedSessionOnBackend\(endedSnapshot\)/,
   /openPostSessionModal\(endedSnapshot, \{ previousStreak \}\)/,
+  /resolveCompletionGate\(\{[\s\S]*persistenceSucceeded: true/,
+  /resolveCompletionGate\(\{[\s\S]*persistenceSucceeded: false/,
+  /postSessionActionsUnlocked/,
   /learningApi\.endSession\(/,
   /submitPostSessionConfidence/,
   /repeatPostSessionFromCompleted/,
   /openPostSessionNewSessionOffcanvas/,
+  /openPostSessionAdjustPlan/,
   /postSessionOffcanvasOpen/,
   /post-session-simple__confidence/,
   /post-session-simple__segment/,
+  /post-session-simple__adjust-link/,
+  /keepPractisingFromExitModal/,
+  /continueSessionFromExitModal/,
+  /showCountdown\(/,
+  /SESSION_STATUS\.COMPLETING/,
+  /SESSION_STATUS\.PAUSED/,
+  /SESSION_STATUS\.COMPLETED/,
 ])
+
+assert.match(
+  source,
+  /keepPractisingFromExitModal\(\)\s*\{[\s\S]*?continueSessionFromExitModal\(\)/,
+  'Keep practising must trigger the resume countdown via continueSessionFromExitModal'
+)
+
+assert.match(
+  source,
+  /continueSessionFromExitModal\(\)\s*\{[\s\S]*?showCountdown\(/,
+  'continueSessionFromExitModal must show the countdown before resuming playback'
+)
+
+assert.doesNotMatch(
+  source,
+  /finaliseCompletedSessionOnBackend\(endedSnapshot\)\s*\.finally\s*\(/,
+  'natural completion must not open recommendations before endSession succeeds'
+)
 
 assert.doesNotMatch(
   source,

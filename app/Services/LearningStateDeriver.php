@@ -66,15 +66,36 @@ class LearningStateDeriver
 
         $unfinished = $lifecycleService->currentUnfinished($user);
         if ($unfinished) {
+            $enginePaused = ! empty($session['paused'])
+                || (($session['status'] ?? null) === \App\Enums\UserSessionStatus::Paused->value);
+            $rowPaused = \App\Enums\UserSessionStatus::tryFromMixed($unfinished->status)
+                === \App\Enums\UserSessionStatus::Paused;
+
             // Completing via engine sync finalises the unfinished row in place.
-            if (($lifecycle['status'] ?? null) === \App\Enums\UserSessionStatus::Completed->value
+            // Never auto-end a paused session from stale completed_at metadata —
+            // pause/resume must stay unfinished until an explicit end.
+            $wantsComplete = ($lifecycle['status'] ?? null) === \App\Enums\UserSessionStatus::Completed->value
                 || ! empty($session['completed'])
-                || ! empty($session['completed_at'])) {
+                || ! empty($session['completed_at']);
+
+            if ($wantsComplete && ! $enginePaused && ! $rowPaused) {
                 $lifecycleService->end($user, array_merge($attrs, [
                     'metadata' => $session ?: null,
                 ]));
 
                 return;
+            }
+
+            if ($enginePaused || $rowPaused) {
+                $attrs['status'] = \App\Enums\UserSessionStatus::Paused->value;
+                $attrs['ended_at'] = null;
+                $meta = is_array($attrs['metadata'] ?? null) ? $attrs['metadata'] : ($session ?: []);
+                $attrs['metadata'] = array_merge($meta, [
+                    'active' => false,
+                    'paused' => true,
+                    'completed' => false,
+                    'completed_at' => null,
+                ]);
             }
 
             $unfinished->fill($attrs)->save();

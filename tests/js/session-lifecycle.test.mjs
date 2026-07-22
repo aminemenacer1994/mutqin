@@ -27,6 +27,8 @@ const t = (key) => {
     'common.startingSession': 'Starting…',
     'common.loading': 'Loading...',
     'sessionStatus.end': 'End Session',
+    'common.pauseSession': 'Pause Session',
+    'common.pausingSession': 'Pausing…',
     'memorisation.onboarding.startOnboarding': 'Start Onboarding',
     'memorisation.onboarding.continueOnboarding': 'Continue Onboarding',
     'memorisation.onboarding.playSampleSession': 'Play sample session',
@@ -53,6 +55,41 @@ function presentationFor(input) {
   assert.equal(action, PRIMARY_SESSION_ACTION.START_ONBOARDING)
   assert.notEqual(action, PRIMARY_SESSION_ACTION.RESUME_SESSION)
   assert.notEqual(action, PRIMARY_SESSION_ACTION.END_SESSION)
+}
+
+// 1b. Stale onboarding flag must not override an active practice session
+{
+  assert.equal(actionFor({
+    authHydrated: true,
+    sessionHydrated: true,
+    isAuthenticated: true,
+    requiresOnboarding: true,
+    mutqinSessionActive: true,
+  }), PRIMARY_SESSION_ACTION.PAUSE_SESSION)
+  assert.equal(deriveSessionStatus({
+    authHydrated: true,
+    sessionHydrated: true,
+    requiresOnboarding: true,
+    mutqinSessionActive: true,
+  }), SESSION_STATUS.ACTIVE)
+}
+
+// 1c. Stale onboarding flag must not override a paused / resumable session
+{
+  assert.equal(actionFor({
+    authHydrated: true,
+    sessionHydrated: true,
+    isAuthenticated: true,
+    requiresOnboarding: true,
+    sessionPaused: true,
+  }), PRIMARY_SESSION_ACTION.RESUME_SESSION)
+  assert.equal(actionFor({
+    authHydrated: true,
+    sessionHydrated: true,
+    isAuthenticated: true,
+    requiresOnboarding: true,
+    hasValidatedContinuePayload: true,
+  }), PRIMARY_SESSION_ACTION.RESUME_SESSION)
 }
 
 // 2. User who completed onboarding sees Start Session
@@ -97,7 +134,7 @@ function presentationFor(input) {
   }).label, 'Resume Session')
 }
 
-// 5. Active session displays End Session
+// 5. Active session displays Pause Session (End is companion)
 {
   const action = actionFor({
     authHydrated: true,
@@ -105,10 +142,15 @@ function presentationFor(input) {
     mutqinSessionActive: true,
     isPlaying: false,
   })
-  assert.equal(action, PRIMARY_SESSION_ACTION.END_SESSION)
+  assert.equal(action, PRIMARY_SESSION_ACTION.PAUSE_SESSION)
+  assert.equal(presentationFor({
+    authHydrated: true,
+    sessionHydrated: true,
+    mutqinSessionActive: true,
+  }).showEndCompanion, true)
 }
 
-// 6. Playing audio does not replace End Session
+// 6. Playing audio does not replace Pause Session
 {
   const action = actionFor({
     authHydrated: true,
@@ -116,43 +158,43 @@ function presentationFor(input) {
     mutqinSessionActive: true,
     isPlaying: true,
   })
-  assert.equal(action, PRIMARY_SESSION_ACTION.END_SESSION)
+  assert.equal(action, PRIMARY_SESSION_ACTION.PAUSE_SESSION)
   assert.equal(deriveSessionStatus({
     authHydrated: true,
     sessionHydrated: true,
     mutqinSessionActive: true,
     isPlaying: true,
-  }), SESSION_STATUS.PLAYING)
+  }), SESSION_STATUS.ACTIVE)
 }
 
-// 7. Pausing audio does not end the session
+// 7. Pausing audio does not change lifecycle away from active / Pause Session
 {
-  const paused = deriveSessionStatus({
+  const active = deriveSessionStatus({
     authHydrated: true,
     sessionHydrated: true,
     mutqinSessionActive: true,
     isPlaying: false,
   })
-  assert.equal(paused, SESSION_STATUS.PAUSED)
+  assert.equal(active, SESSION_STATUS.ACTIVE)
   assert.equal(actionFor({
     authHydrated: true,
     sessionHydrated: true,
     mutqinSessionActive: true,
     isPlaying: false,
-  }), PRIMARY_SESSION_ACTION.END_SESSION)
+  }), PRIMARY_SESSION_ACTION.PAUSE_SESSION)
 }
 
-// 8. Resume button becomes Resuming… and cannot be triggered twice
+// 8. Resume in-flight keeps Resume label (no LOADING flicker); lock prevents double-trigger
 {
   const presentation = presentationFor({
     authHydrated: true,
     sessionHydrated: true,
+    sessionPaused: true,
     mutation: SESSION_MUTATION.RESUMING,
   })
-  assert.equal(presentation.action, PRIMARY_SESSION_ACTION.LOADING)
-  assert.equal(presentation.label, 'Resuming…')
-  assert.equal(presentation.disabled, true)
-  assert.equal(presentation.loading, true)
+  assert.equal(presentation.action, PRIMARY_SESSION_ACTION.RESUME_SESSION)
+  assert.equal(presentation.disabled, false)
+  assert.equal(presentation.loading, false)
 
   const lock = createSessionActionLock()
   let runs = 0
@@ -170,14 +212,14 @@ function presentationFor(input) {
   assert.equal(runs, 1)
 }
 
-// 9. Successful resume changes button to End Session
+// 9. Successful resume changes button to Pause Session
 {
   assert.equal(actionFor({
     authHydrated: true,
     sessionHydrated: true,
     mutqinSessionActive: true,
     mutation: SESSION_MUTATION.IDLE,
-  }), PRIMARY_SESSION_ACTION.END_SESSION)
+  }), PRIMARY_SESSION_ACTION.PAUSE_SESSION)
 }
 
 // 10. Failed resume restores a safe state
@@ -236,7 +278,7 @@ function presentationFor(input) {
     mutqinSessionActive: true,
     lastError: 'end_failed',
     mutation: SESSION_MUTATION.IDLE,
-  }), PRIMARY_SESSION_ACTION.END_SESSION)
+  }), PRIMARY_SESSION_ACTION.PAUSE_SESSION)
 }
 
 // 14. Rejecting onboarding example does not create a resumable session
@@ -325,7 +367,7 @@ function presentationFor(input) {
   const b = buildSessionLifecycleViewModel(input)
   assert.deepEqual(a.action, b.action)
   assert.deepEqual(a.presentation.label, b.presentation.label)
-  assert.equal(a.action, PRIMARY_SESSION_ACTION.END_SESSION)
+  assert.equal(a.action, PRIMARY_SESSION_ACTION.PAUSE_SESSION)
 }
 
 // 21. Mobile and desktop share the same logical action (same resolver)
@@ -346,12 +388,16 @@ function presentationFor(input) {
   assert.equal(desktop, PRIMARY_SESSION_ACTION.RESUME_SESSION)
 }
 
-// 22. Audio playing still maps to End Session (media separate from lifecycle)
+// 22. End Session label remains available for the companion control
 {
   assert.equal(resolveSessionActionPresentation(
     PRIMARY_SESSION_ACTION.END_SESSION,
     t
   ).label, 'End Session')
+  assert.equal(resolveSessionActionPresentation(
+    PRIMARY_SESSION_ACTION.PAUSE_SESSION,
+    t
+  ).label, 'Pause Session')
 }
 
 // 23–24. Duplicate start/end guarded by lock + legal transitions
@@ -362,7 +408,10 @@ function presentationFor(input) {
     logger: () => {},
   }).ok, false)
   assert.equal(canTransition(SESSION_STATUS.READY, SESSION_STATUS.STARTING), true)
-  assert.equal(canTransition(SESSION_STATUS.ENDING, SESSION_STATUS.ENDED), true)
+  assert.equal(canTransition(SESSION_STATUS.COMPLETING, SESSION_STATUS.COMPLETED), true)
+  assert.equal(canTransition(SESSION_STATUS.ACTIVE, SESSION_STATUS.PAUSED), true)
+  assert.equal(canTransition(SESSION_STATUS.PAUSED, SESSION_STATUS.RESUMING), true)
+  assert.equal(canTransition(SESSION_STATUS.COMPLETED, SESSION_STATUS.RESUMING), false)
 }
 
 // 25. Invalid state transitions are rejected
@@ -437,8 +486,8 @@ function presentationFor(input) {
   })
   assert.equal(playing.status, SESSION_STATUS.ACTIVE)
   assert.equal(paused.status, SESSION_STATUS.ACTIVE)
-  assert.equal(playing.action, PRIMARY_SESSION_ACTION.END_SESSION)
-  assert.equal(paused.action, PRIMARY_SESSION_ACTION.END_SESSION)
+  assert.equal(playing.action, PRIMARY_SESSION_ACTION.PAUSE_SESSION)
+  assert.equal(paused.action, PRIMARY_SESSION_ACTION.PAUSE_SESSION)
   assert.equal(playing.mediaStatus, 'playing')
   assert.equal(paused.mediaStatus, 'paused')
 }

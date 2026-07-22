@@ -31,6 +31,14 @@ import {
     ),
     'confident'
   )
+  assert.equal(
+    resolveConfidenceSelection({
+      confidence_feedback: null,
+      type: 'repeat_current_range',
+      range_kind: 'repeated',
+    }),
+    'needs_practice'
+  )
 }
 
 {

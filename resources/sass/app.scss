@@ -25,6 +25,18 @@
   --accent: #8b5e3c;
   --accent-strong: #a86a3f;
   --accent-light: rgba(139, 94, 60, 0.12);
+  /* Shared button colour semantics — Bootstrap custom danger (#b55041), not plain BS red */
+  --bs-danger: #b55041;
+  --bs-danger-rgb: 181, 80, 65;
+  --success: #2e7d64;
+  --success-strong: #23624e;
+  --success-soft: rgba(46, 125, 100, 0.12);
+  --danger: #b55041;
+  --danger-strong: #9a4336;
+  --danger-soft: rgba(181, 80, 65, 0.12);
+  --destructive: var(--danger);
+  --destructive-strong: var(--danger-strong);
+  --destructive-soft: var(--danger-soft);
   --shadow-sm: 0 10px 22px rgba(45, 32, 20, 0.08);
   --shadow-md: 0 18px 44px rgba(45, 32, 20, 0.12);
   --shadow-lg: -40px 0 120px rgba(0, 0, 0, 0.18);
@@ -65,6 +77,17 @@ html[data-theme="dark"] {
   --accent: #c49a6c;
   --accent-strong: #e0b07f;
   --accent-light: rgba(196, 154, 108, 0.14);
+  --success: #3f8f6f;
+  --success-strong: #2f6f58;
+  --success-soft: rgba(63, 143, 111, 0.16);
+  --bs-danger: #d4786a;
+  --bs-danger-rgb: 212, 120, 106;
+  --danger: #d4786a;
+  --danger-strong: #c45f50;
+  --danger-soft: rgba(212, 120, 106, 0.16);
+  --destructive: var(--danger);
+  --destructive-strong: var(--danger-strong);
+  --destructive-soft: var(--danger-soft);
   --shadow-sm: 0 10px 22px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 18px 44px rgba(0, 0, 0, 0.45);
   --shadow-lg: -40px 0 120px rgba(0, 0, 0, 0.55);
@@ -658,4 +681,80 @@ html[data-theme="dark"] .app-navbar {
     min-height: 48px;
     font-size: 16px;
   }
+}
+
+/* Button colour semantics — global lock (versioned via mix css/app.css) */
+.mutqin-modal-btn--primary,
+.btn-primary,
+.tools-btn-primary,
+.tools-btn.btn-primary,
+.action-btn.primary,
+.action-btn.btn-primary,
+.action-btn-primary,
+.session-primary-action.btn-primary,
+.session-resume-btn.btn-primary,
+.self-check-action-btn.btn-primary,
+.recitation-check-actions .btn-primary,
+.post-session-btn--primary,
+.post-session-btn--accent,
+.post-session-simple__btn--primary,
+.welcome-back-btn--primary,
+.onboarding-btn--primary,
+.saved-session-row-btn-primary {
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent) !important;
+}
+
+html[data-theme="dark"] .mutqin-modal-btn--primary,
+html[data-theme="dark"] .btn-primary,
+html[data-theme="dark"] .tools-btn-primary,
+html[data-theme="dark"] .tools-btn.btn-primary,
+html[data-theme="dark"] .action-btn.primary,
+html[data-theme="dark"] .action-btn.btn-primary,
+html[data-theme="dark"] .action-btn-primary,
+html[data-theme="dark"] .session-primary-action.btn-primary,
+html[data-theme="dark"] .session-resume-btn.btn-primary,
+html[data-theme="dark"] .self-check-action-btn.btn-primary,
+html[data-theme="dark"] .recitation-check-actions .btn-primary,
+html[data-theme="dark"] .post-session-btn--primary,
+html[data-theme="dark"] .post-session-simple__btn--primary,
+html[data-theme="dark"] .welcome-back-btn--primary,
+html[data-theme="dark"] .onboarding-btn--primary {
+  color: #1a120c !important;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
+}
+
+.mutqin-modal-btn--secondary,
+.post-session-simple__btn--secondary {
+  color: var(--text) !important;
+  background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
+  border-color: color-mix(in srgb, var(--border) 82%, transparent) !important;
+}
+
+.mutqin-modal-btn--success {
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--success), var(--success-strong)) !important;
+  border-color: color-mix(in srgb, var(--success) 52%, transparent) !important;
+}
+
+.mutqin-modal-btn--danger,
+.mutqin-modal-btn--destructive,
+.action-btn-exit,
+.action-btn.mutqin-btn--destructive,
+.session-exit-action-chip--end {
+  color: #fff !important;
+  background: var(--bs-danger, var(--destructive, #b55041)) !important;
+  border-color: var(--bs-danger, var(--destructive, #b55041)) !important;
+}
+
+.mutqin-modal-btn--danger:hover:not(:disabled),
+.mutqin-modal-btn--destructive:hover:not(:disabled),
+.action-btn-exit:hover:not(:disabled),
+.action-btn.mutqin-btn--destructive:hover:not(:disabled),
+.session-exit-action-chip--end:hover:not(:disabled) {
+  color: #fff !important;
+  background: var(--destructive-strong, #9a4336) !important;
+  border-color: var(--destructive-strong, #9a4336) !important;
 }

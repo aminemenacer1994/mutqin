@@ -54,6 +54,7 @@ class SessionController extends Controller
 
         $session = match ($action) {
             'start' => $this->lifecycle->start($request->user(), $data),
+            'pause' => $this->lifecycle->pause($request->user(), $data),
             'resume' => $this->lifecycle->resume($request->user(), $data),
             'end' => $this->lifecycle->end($request->user(), $data),
             'discard_example' => $this->lifecycle->discardOnboardingExample($request->user()),
@@ -86,6 +87,31 @@ class SessionController extends Controller
         ]);
 
         $session = $this->lifecycle->start($request->user(), $data);
+        $this->authorize('update', $session);
+
+        return response()->json([
+            'saved' => true,
+            'session' => $session,
+            'unfinished' => true,
+        ]);
+    }
+
+    public function pause(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'surah_number' => ['nullable', 'integer', 'min:1', 'max:114'],
+            'ayah_number' => ['nullable', 'integer', 'min:1', 'max:300'],
+            'current_step' => ['nullable', 'integer', 'min:0'],
+            'memorisation_mode' => ['nullable', 'string', 'max:32'],
+            'repetitions_completed' => ['nullable', 'integer', 'min:0'],
+            'session_duration_seconds' => ['nullable', 'integer', 'min:0'],
+            'last_activity_at' => ['nullable', 'date'],
+            'paused_at' => ['nullable', 'date'],
+            'metadata' => ['nullable', 'array'],
+            'idempotency_key' => ['nullable', 'string', 'max:128'],
+        ]);
+
+        $session = $this->lifecycle->pause($request->user(), $data);
         $this->authorize('update', $session);
 
         return response()->json([
@@ -158,6 +184,11 @@ class SessionController extends Controller
     {
         $unfinished = $this->lifecycle->currentUnfinished($user);
         if ($unfinished) {
+            // Never collapse an unfinished row into status "none" via mid-session sync.
+            if (($data['status'] ?? null) === \App\Enums\UserSessionStatus::None->value) {
+                unset($data['status']);
+            }
+
             $unfinished->fill(array_filter([
                 'surah_number' => $data['surah_number'] ?? null,
                 'ayah_number' => $data['ayah_number'] ?? null,

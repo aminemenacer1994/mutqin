@@ -4,6 +4,19 @@
  */
 
 import { getTechniqueShortLabel } from '../techniques/techniqueDisplay.js'
+import { formatRepetitionCountLabel } from '../formatting/ayahLabels.js'
+
+export {
+  formatAyahRangeLabel,
+  formatContinueToAyahLabel,
+  formatRepeatAyahLabel,
+  formatSurahAyahLabel,
+  formatCompletedSurahAyahLabel,
+  formatAyahCountLabel,
+  formatRepetitionCountLabel,
+  formatAttemptCountLabel,
+  normalizeAyahRange,
+} from '../formatting/ayahLabels.js'
 
 export const RECOMMENDATION_TYPES = Object.freeze({
   CONTINUE: 'continue',
@@ -120,16 +133,6 @@ export function localizeRecommendationReason(recommendation, t, prefix = 'memori
   return String(recommendation.reason || '').trim()
 }
 
-export function formatAyahRangeLabel(range, t) {
-  if (!range || !range.from) return ''
-  const from = Number(range.from)
-  const to = Number(range.to || from)
-  if (from === to) {
-    return t('memorisation.postSession.recommendation.singleAyah', { ayah: from })
-  }
-  return t('memorisation.postSession.recommendation.ayahRange', { start: from, end: to })
-}
-
 export function formatRecommendationSettingsSummary(settings, t, options = {}) {
   if (!settings || typeof settings !== 'object') return ''
   const parts = []
@@ -157,8 +160,10 @@ export function formatRecommendationSettingsSummary(settings, t, options = {}) {
     parts.push(`${speed}×`)
   }
   const reps = Number(settings.repetitions)
-  if (Number.isFinite(reps) && reps > 0 && t) {
-    parts.push(t('memorisation.postSession.recommendation.repetitionsSummary', { count: reps }))
+  if (Number.isFinite(reps) && reps > 0) {
+    const repsLabel = formatRepetitionCountLabel(reps, t)
+      || (t ? t('memorisation.postSession.recommendation.repetitionsSummary', { count: reps }) : '')
+    if (repsLabel) parts.push(repsLabel)
   }
   return parts.filter(Boolean).join(' · ')
 }
@@ -276,5 +281,115 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
       repetitions: 3,
     },
     primary_action_label_key: 'continueToAyat',
+  }
+}
+
+/**
+ * Optimistically reshape a recommendation so the success modal reacts immediately
+ * to Confident / Needs more practice before the backend round-trip finishes.
+ *
+ * @param {object|null} recommendation
+ * @param {'confident'|'needs_practice'} confidence
+ * @param {object} [snapshot]
+ * @returns {object|null}
+ */
+export function adaptRecommendationForConfidence(recommendation, confidence, snapshot = {}) {
+  if (!recommendation || (confidence !== 'confident' && confidence !== 'needs_practice')) {
+    return recommendation
+  }
+
+  const next = {
+    ...recommendation,
+    confidence_feedback: confidence,
+  }
+  const settings = { ...(recommendation.settings || {}) }
+  const range = recommendation.ayah_range || null
+  const snapshotStart = Number(snapshot.rangeStart || range?.from || 0)
+  const snapshotEnd = Number(snapshot.rangeEnd || range?.to || snapshotStart)
+  const totalAyahs = Number(
+    snapshot.totalAyahsInSurah
+    || snapshot.totalAyahs
+    || snapshot.versesInSurah
+    || 0
+  )
+
+  if (confidence === 'needs_practice') {
+    const speed = Number(settings.playback_speed || 1)
+    const reps = Number(settings.repetitions || 3)
+    return {
+      ...next,
+      type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
+      session_mode: 'revision',
+      range_kind: 'repeated',
+      reason_code: 'confidence_needs_practice',
+      user_reason: null,
+      reason: '',
+      balance_message: null,
+      panel_title_key: 'revisionSetTitle',
+      primary_action_label_key: 'repeatThisSession',
+      ayah_range: range || (snapshotStart
+        ? {
+          from: snapshotStart,
+          to: Math.max(snapshotStart, snapshotEnd),
+          count: Math.max(1, Math.max(snapshotStart, snapshotEnd) - snapshotStart + 1),
+        }
+        : null),
+      settings: {
+        ...settings,
+        technique: settings.technique || 'talqin',
+        playback_speed: Math.min(0.75, Number.isFinite(speed) && speed > 0 ? speed : 1),
+        repetitions: Math.max(4, Number.isFinite(reps) ? reps : 3),
+      },
+    }
+  }
+
+  // Confident — clear stale practice copy, but keep evidence-based progression reasons.
+  const existingReason = String(recommendation.user_reason || '').trim()
+  const stalePracticeCopy = /selected Needs more practice|asked for more practice/i.test(existingReason)
+
+  if (!isRepeatRecommendation(recommendation)) {
+    return {
+      ...next,
+      reason_code: 'confidence_confident',
+      user_reason: stalePracticeCopy ? null : (existingReason || null),
+      reason: stalePracticeCopy ? '' : String(recommendation.reason || ''),
+      balance_message: null,
+    }
+  }
+
+  const completedEnd = Math.max(snapshotEnd, Number(range?.to || 0))
+  const nextFrom = completedEnd + 1
+  if (totalAyahs && nextFrom <= totalAyahs) {
+    const size = Math.min(3, totalAyahs - nextFrom + 1)
+    return {
+      ...next,
+      type: RECOMMENDATION_TYPES.CONTINUE,
+      session_mode: 'new_learning',
+      range_kind: 'new',
+      reason_code: 'confidence_confident',
+      user_reason: null,
+      reason: '',
+      balance_message: null,
+      panel_title_key: 'nextSetTitle',
+      primary_action_label_key: 'continueToAyat',
+      ayah_range: {
+        from: nextFrom,
+        to: nextFrom + size - 1,
+        count: size,
+      },
+      settings: {
+        ...settings,
+        playback_speed: Math.max(1, Number(settings.playback_speed || 1)),
+        repetitions: Math.min(3, Math.max(2, Number(settings.repetitions || 3))),
+      },
+    }
+  }
+
+  return {
+    ...next,
+    reason_code: 'confidence_confident',
+    user_reason: null,
+    reason: '',
+    balance_message: null,
   }
 }

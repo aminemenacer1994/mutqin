@@ -206,6 +206,53 @@ class RepeatAdaptationServiceTest extends TestCase
         $this->assertStringContainsString('light', strtolower($result['user_reason']));
     }
 
+    public function test_confident_with_hints_explains_focus_and_anchor_plan(): void
+    {
+        $result = $this->service->resolve([
+            'technique' => 'talqin',
+            'playback_speed' => 1.0,
+            'repetitions' => 3,
+        ], [
+            'confidence' => 'confident',
+            'mode' => 'progression',
+            'hints_used' => 3,
+            'range_ayah_count' => 3,
+            'replay_ratio' => 1.2,
+            'max_ayah_replays' => 1,
+        ]);
+
+        $this->assertSame('focus', $result['technique']);
+        $this->assertSame('anchor', $result['complementary_technique']);
+        $this->assertStringContainsString('Confident', $result['user_reason']);
+        $this->assertStringContainsString('memory prompts', $result['user_reason']);
+        $this->assertStringContainsString('Focus and Anchor', $result['user_reason']);
+        $this->assertStringNotContainsStringIgnoringCase('score', $result['user_reason']);
+    }
+
+    public function test_ai_word_errors_explain_talqin_repeat_plan(): void
+    {
+        $result = $this->service->resolve([
+            'technique' => 'focus',
+            'playback_speed' => 1.0,
+            'repetitions' => 3,
+        ], [
+            'confidence' => 'needs_practice',
+            'mode' => 'revision',
+            'ai_result' => 'weak',
+            'missed_words' => 2,
+            'range_ayah_count' => 2,
+            'replay_ratio' => 1.0,
+            'max_ayah_replays' => 1,
+        ]);
+
+        $this->assertSame('talqin', $result['technique']);
+        $this->assertLessThan(1.0, $result['playback_speed']);
+        $this->assertStringContainsString('AI Recite found two words', $result['user_reason']);
+        $this->assertStringContainsString('Talqin', $result['user_reason']);
+        $this->assertStringContainsString('slower playback', $result['user_reason']);
+        $this->assertStringNotContainsStringIgnoringCase('score', $result['user_reason']);
+    }
+
     public function test_replay_signal_summary(): void
     {
         $signals = $this->service->summariseReplaySignals([

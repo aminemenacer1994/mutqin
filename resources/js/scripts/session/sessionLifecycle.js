@@ -1,20 +1,23 @@
 /**
  * Central session lifecycle state machine and primary-action resolver.
  *
- * All Start / Resume / End session controls must derive labels and behaviour
+ * All Start / Resume / Pause / End session controls must derive labels and behaviour
  * from this module instead of local ad-hoc conditionals.
  *
  * Session status and media (audio) status are intentionally separate:
- * pausing an ayah never changes the primary lifecycle action away from End Session.
+ * pausing an ayah never changes the lifecycle status away from active.
+ *
+ * Explicit practice-session states used by End / Pause / Resume flows:
+ * active → paused | completing → completed
  */
 
-/** @typedef {'hydrating'|'onboarding_required'|'onboarding_example'|'ready_to_start'|'starting'|'active'|'interrupted_resumable'|'resuming'|'ending'|'completed'|'completion_modal_open'|'error_recoverable'|'logged_out'|'rejected'|'uninitialised'|'ready'|'resumable'|'ended'|'error'|'playing'|'paused'|'interrupted'} SessionStatus */
+/** @typedef {'hydrating'|'onboarding_required'|'onboarding_example'|'ready_to_start'|'starting'|'active'|'paused'|'interrupted_resumable'|'resuming'|'pausing'|'completing'|'completed'|'completion_modal_open'|'error_recoverable'|'logged_out'|'rejected'|'uninitialised'|'ready'|'resumable'|'ended'|'error'|'playing'|'interrupted'|'ending'} SessionStatus */
 
 /** @typedef {'idle'|'loading'|'playing'|'paused'|'ended'|'error'} MediaStatus */
 
-/** @typedef {'start-onboarding'|'continue-onboarding'|'try-example'|'start-session'|'resume-session'|'end-session'|'loading'|'none'} PrimarySessionAction */
+/** @typedef {'start-onboarding'|'continue-onboarding'|'try-example'|'start-session'|'resume-session'|'pause-session'|'end-session'|'loading'|'none'} PrimarySessionAction */
 
-/** @typedef {'idle'|'starting'|'resuming'|'ending'} SessionMutation */
+/** @typedef {'idle'|'starting'|'resuming'|'pausing'|'ending'} SessionMutation */
 
 export const SESSION_STATUS = Object.freeze({
   HYDRATING: 'hydrating',
@@ -23,9 +26,11 @@ export const SESSION_STATUS = Object.freeze({
   READY_TO_START: 'ready_to_start',
   STARTING: 'starting',
   ACTIVE: 'active',
+  PAUSED: 'paused',
   INTERRUPTED_RESUMABLE: 'interrupted_resumable',
   RESUMING: 'resuming',
-  ENDING: 'ending',
+  PAUSING: 'pausing',
+  COMPLETING: 'completing',
   COMPLETED: 'completed',
   COMPLETION_MODAL_OPEN: 'completion_modal_open',
   ERROR_RECOVERABLE: 'error_recoverable',
@@ -34,11 +39,11 @@ export const SESSION_STATUS = Object.freeze({
   READY: 'ready_to_start',
   RESUMABLE: 'interrupted_resumable',
   ENDED: 'completed',
+  ENDING: 'completing',
   ERROR: 'error_recoverable',
   REJECTED: 'rejected',
   PLAYING: 'active',
-  PAUSED: 'active',
-  INTERRUPTED: 'active',
+  INTERRUPTED: 'interrupted_resumable',
 })
 
 export const MEDIA_STATUS = Object.freeze({
@@ -56,6 +61,7 @@ export const PRIMARY_SESSION_ACTION = Object.freeze({
   TRY_EXAMPLE: 'try-example',
   START_SESSION: 'start-session',
   RESUME_SESSION: 'resume-session',
+  PAUSE_SESSION: 'pause-session',
   END_SESSION: 'end-session',
   LOADING: 'loading',
   NONE: 'none',
@@ -65,7 +71,14 @@ export const SESSION_MUTATION = Object.freeze({
   IDLE: 'idle',
   STARTING: 'starting',
   RESUMING: 'resuming',
+  PAUSING: 'pausing',
   ENDING: 'ending',
+})
+
+/** Confirmation modal actions for End Session. */
+export const END_SESSION_CONFIRM_ACTION = Object.freeze({
+  KEEP_PRACTISING: 'keep_practising',
+  END_SESSION: 'end_session',
 })
 
 export const BACKEND_SESSION_STATUS = Object.freeze({
@@ -83,6 +96,7 @@ export const LEGAL_TRANSITIONS = Object.freeze({
     SESSION_STATUS.ONBOARDING_REQUIRED,
     SESSION_STATUS.READY_TO_START,
     SESSION_STATUS.INTERRUPTED_RESUMABLE,
+    SESSION_STATUS.PAUSED,
     SESSION_STATUS.COMPLETED,
     SESSION_STATUS.ACTIVE,
     SESSION_STATUS.LOGGED_OUT,
@@ -97,6 +111,7 @@ export const LEGAL_TRANSITIONS = Object.freeze({
     SESSION_STATUS.READY_TO_START,
     SESSION_STATUS.REJECTED,
     SESSION_STATUS.COMPLETED,
+    SESSION_STATUS.COMPLETING,
   ],
   [SESSION_STATUS.REJECTED]: [
     SESSION_STATUS.ONBOARDING_REQUIRED,
@@ -106,6 +121,7 @@ export const LEGAL_TRANSITIONS = Object.freeze({
     SESSION_STATUS.STARTING,
     SESSION_STATUS.ONBOARDING_REQUIRED,
     SESSION_STATUS.INTERRUPTED_RESUMABLE,
+    SESSION_STATUS.PAUSED,
     SESSION_STATUS.COMPLETION_MODAL_OPEN,
   ],
   [SESSION_STATUS.STARTING]: [
@@ -114,25 +130,43 @@ export const LEGAL_TRANSITIONS = Object.freeze({
     SESSION_STATUS.ERROR_RECOVERABLE,
   ],
   [SESSION_STATUS.ACTIVE]: [
-    SESSION_STATUS.ENDING,
+    SESSION_STATUS.PAUSING,
+    SESSION_STATUS.PAUSED,
+    SESSION_STATUS.COMPLETING,
     SESSION_STATUS.COMPLETED,
     SESSION_STATUS.INTERRUPTED_RESUMABLE,
     SESSION_STATUS.COMPLETION_MODAL_OPEN,
   ],
-  [SESSION_STATUS.INTERRUPTED_RESUMABLE]: [
+  [SESSION_STATUS.PAUSING]: [
+    SESSION_STATUS.PAUSED,
+    SESSION_STATUS.ACTIVE,
+    SESSION_STATUS.ERROR_RECOVERABLE,
+  ],
+  [SESSION_STATUS.PAUSED]: [
     SESSION_STATUS.RESUMING,
+    SESSION_STATUS.ACTIVE,
+    SESSION_STATUS.COMPLETING,
     SESSION_STATUS.READY_TO_START,
     SESSION_STATUS.COMPLETED,
   ],
+  [SESSION_STATUS.INTERRUPTED_RESUMABLE]: [
+    SESSION_STATUS.RESUMING,
+    SESSION_STATUS.READY_TO_START,
+    SESSION_STATUS.COMPLETING,
+    SESSION_STATUS.COMPLETED,
+    SESSION_STATUS.PAUSED,
+  ],
   [SESSION_STATUS.RESUMING]: [
     SESSION_STATUS.ACTIVE,
+    SESSION_STATUS.PAUSED,
     SESSION_STATUS.INTERRUPTED_RESUMABLE,
     SESSION_STATUS.ERROR_RECOVERABLE,
     SESSION_STATUS.READY_TO_START,
   ],
-  [SESSION_STATUS.ENDING]: [
+  [SESSION_STATUS.COMPLETING]: [
     SESSION_STATUS.COMPLETED,
     SESSION_STATUS.ACTIVE,
+    SESSION_STATUS.PAUSED,
     SESSION_STATUS.COMPLETION_MODAL_OPEN,
     SESSION_STATUS.ERROR_RECOVERABLE,
   ],
@@ -150,6 +184,7 @@ export const LEGAL_TRANSITIONS = Object.freeze({
   [SESSION_STATUS.ERROR_RECOVERABLE]: [
     SESSION_STATUS.READY_TO_START,
     SESSION_STATUS.INTERRUPTED_RESUMABLE,
+    SESSION_STATUS.PAUSED,
     SESSION_STATUS.ACTIVE,
     SESSION_STATUS.ONBOARDING_REQUIRED,
   ],
@@ -171,9 +206,9 @@ export function canTransition(from, to) {
 
 function normaliseSessionStatus(status) {
   if (!status) return SESSION_STATUS.HYDRATING
-  if (status === 'playing' || status === 'paused' || status === 'interrupted') {
-    return SESSION_STATUS.ACTIVE
-  }
+  if (status === 'playing') return SESSION_STATUS.ACTIVE
+  if (status === 'ending') return SESSION_STATUS.COMPLETING
+  if (status === 'interrupted') return SESSION_STATUS.INTERRUPTED_RESUMABLE
   if (status === 'uninitialised') return SESSION_STATUS.HYDRATING
   if (status === 'ready') return SESSION_STATUS.READY_TO_START
   if (status === 'resumable') return SESSION_STATUS.INTERRUPTED_RESUMABLE
@@ -212,11 +247,15 @@ export function isResumableSessionPayload(payload, options = {}) {
   if (
     backendStatus === BACKEND_SESSION_STATUS.COMPLETED
     || backendStatus === BACKEND_SESSION_STATUS.ABANDONED
-    || backendStatus === BACKEND_SESSION_STATUS.NONE
   ) {
     return false
   }
+  // "none" is only a hard reject when there is no recoverable chapter range.
+  // Backend may still report unfinished for legacy none+progress rows.
   const chapterId = Number(payload?.config?.chapterId || payload?.chapterId || 0)
+  if (backendStatus === BACKEND_SESSION_STATUS.NONE && chapterId <= 0) {
+    return false
+  }
   return chapterId > 0
 }
 
@@ -247,9 +286,11 @@ export function deriveSessionStatus(input = {}) {
     onboardingExampleRejected = false,
     mutqinSessionActive = false,
     sessionCompleted = false,
+    sessionPaused = false,
     completionModalOpen = false,
     hasValidatedContinuePayload = false,
     backendUnfinished = false,
+    backendStatus = null,
     wasInterrupted = false,
     loggedOut = false,
     mutation = SESSION_MUTATION.IDLE,
@@ -267,13 +308,14 @@ export function deriveSessionStatus(input = {}) {
 
   if (mutation === SESSION_MUTATION.STARTING) return SESSION_STATUS.STARTING
   if (mutation === SESSION_MUTATION.RESUMING) return SESSION_STATUS.RESUMING
-  if (mutation === SESSION_MUTATION.ENDING) return SESSION_STATUS.ENDING
+  if (mutation === SESSION_MUTATION.PAUSING) return SESSION_STATUS.PAUSING
+  if (mutation === SESSION_MUTATION.ENDING) return SESSION_STATUS.COMPLETING
 
   if (completionModalOpen) {
     return SESSION_STATUS.COMPLETION_MODAL_OPEN
   }
 
-  if (lastError && !mutqinSessionActive && !hasValidatedContinuePayload && !requiresOnboarding) {
+  if (lastError && !mutqinSessionActive && !hasValidatedContinuePayload && !requiresOnboarding && !sessionPaused) {
     return SESSION_STATUS.ERROR_RECOVERABLE
   }
 
@@ -285,15 +327,29 @@ export function deriveSessionStatus(input = {}) {
     return SESSION_STATUS.ONBOARDING_EXAMPLE
   }
 
-  if (requiresOnboarding) {
-    return SESSION_STATUS.ONBOARDING_REQUIRED
-  }
-
+  // Practice session state always wins over a stale onboarding CTA.
+  // An active / paused / resumable session must never show "Start Onboarding".
   if (mutqinSessionActive && !sessionCompleted) {
     return SESSION_STATUS.ACTIVE
   }
 
-  if ((hasValidatedContinuePayload || backendUnfinished) && !mutqinSessionActive) {
+  const unfinishedBackend = backendUnfinished
+    || backendStatus === BACKEND_SESSION_STATUS.ACTIVE
+    || backendStatus === BACKEND_SESSION_STATUS.PAUSED
+    || backendStatus === BACKEND_SESSION_STATUS.INTERRUPTED
+
+  if (
+    !mutqinSessionActive
+    && !sessionCompleted
+    && (
+      sessionPaused
+      || backendStatus === BACKEND_SESSION_STATUS.PAUSED
+    )
+  ) {
+    return SESSION_STATUS.PAUSED
+  }
+
+  if ((hasValidatedContinuePayload || unfinishedBackend) && !mutqinSessionActive && !sessionCompleted) {
     return SESSION_STATUS.INTERRUPTED_RESUMABLE
   }
 
@@ -301,11 +357,12 @@ export function deriveSessionStatus(input = {}) {
     return SESSION_STATUS.COMPLETED
   }
 
-  if (onboardingStarted && requiresOnboarding) {
+  if (requiresOnboarding) {
     return SESSION_STATUS.ONBOARDING_REQUIRED
   }
 
   void wasInterrupted
+  void onboardingStarted
   return SESSION_STATUS.READY_TO_START
 }
 
@@ -326,9 +383,11 @@ export function resolvePrimarySessionAction(
     onboardingExampleRejected: !!onboardingState.exampleRejected,
     mutqinSessionActive: !!sessionState.mutqinSessionActive,
     sessionCompleted: !!sessionState.completed,
+    sessionPaused: !!sessionState.paused,
     completionModalOpen: !!sessionState.completionModalOpen,
     hasValidatedContinuePayload: !!sessionState.hasValidatedContinuePayload,
     backendUnfinished: !!sessionState.backendUnfinished,
+    backendStatus: sessionState.backendStatus || null,
     wasInterrupted: !!sessionState.wasInterrupted,
     mutation: sessionState.mutation || SESSION_MUTATION.IDLE,
     lastError: sessionState.lastError || null,
@@ -337,9 +396,15 @@ export function resolvePrimarySessionAction(
   switch (status) {
     case SESSION_STATUS.HYDRATING:
     case SESSION_STATUS.STARTING:
-    case SESSION_STATUS.RESUMING:
-    case SESSION_STATUS.ENDING:
+    case SESSION_STATUS.COMPLETING:
       return PRIMARY_SESSION_ACTION.LOADING
+
+    // Keep Pause/Resume labels stable during in-flight pause/resume to avoid flicker.
+    case SESSION_STATUS.RESUMING:
+      return PRIMARY_SESSION_ACTION.RESUME_SESSION
+
+    case SESSION_STATUS.PAUSING:
+      return PRIMARY_SESSION_ACTION.PAUSE_SESSION
 
     case SESSION_STATUS.LOGGED_OUT:
     case SESSION_STATUS.COMPLETION_MODAL_OPEN:
@@ -358,8 +423,9 @@ export function resolvePrimarySessionAction(
         : PRIMARY_SESSION_ACTION.START_SESSION
 
     case SESSION_STATUS.ACTIVE:
-      return PRIMARY_SESSION_ACTION.END_SESSION
+      return PRIMARY_SESSION_ACTION.PAUSE_SESSION
 
+    case SESSION_STATUS.PAUSED:
     case SESSION_STATUS.INTERRUPTED_RESUMABLE:
       return PRIMARY_SESSION_ACTION.RESUME_SESSION
 
@@ -368,7 +434,7 @@ export function resolvePrimarySessionAction(
       return PRIMARY_SESSION_ACTION.START_SESSION
 
     case SESSION_STATUS.ERROR_RECOVERABLE:
-      if (sessionState.hasValidatedContinuePayload || sessionState.backendUnfinished) {
+      if (sessionState.hasValidatedContinuePayload || sessionState.backendUnfinished || sessionState.paused) {
         return PRIMARY_SESSION_ACTION.RESUME_SESSION
       }
       return PRIMARY_SESSION_ACTION.START_SESSION
@@ -382,6 +448,10 @@ export function resolveSessionActionPresentation(action, t = (key) => key, optio
   const translate = typeof t === 'function' ? t : (key) => key
   const loading = action === PRIMARY_SESSION_ACTION.LOADING
   const disabled = loading || action === PRIMARY_SESSION_ACTION.NONE
+  const showEndCompanion = (
+    action === PRIMARY_SESSION_ACTION.PAUSE_SESSION
+    || action === PRIMARY_SESSION_ACTION.RESUME_SESSION
+  )
 
   const map = {
     [PRIMARY_SESSION_ACTION.START_ONBOARDING]: {
@@ -408,6 +478,11 @@ export function resolveSessionActionPresentation(action, t = (key) => key, optio
       labelKey: 'common.resumeSession',
       icon: 'bi-play-fill',
       fallback: 'Resume Session',
+    },
+    [PRIMARY_SESSION_ACTION.PAUSE_SESSION]: {
+      labelKey: 'common.pauseSession',
+      icon: 'bi-pause-fill',
+      fallback: 'Pause Session',
     },
     [PRIMARY_SESSION_ACTION.END_SESSION]: {
       labelKey: 'sessionStatus.end',
@@ -438,7 +513,7 @@ export function resolveSessionActionPresentation(action, t = (key) => key, optio
     ariaLabel: label,
     ariaBusy: loading,
     icon: entry.icon,
-    showEndCompanion: false,
+    showEndCompanion,
     stableWidthCh: Number(options.stableWidthCh || 16),
   }
 }
@@ -447,7 +522,8 @@ function resolveLoadingLabelKey(status) {
   const normalised = normaliseSessionStatus(status)
   if (normalised === SESSION_STATUS.STARTING) return 'common.startingSession'
   if (normalised === SESSION_STATUS.RESUMING) return 'common.resumingSession'
-  if (normalised === SESSION_STATUS.ENDING) return 'common.endingSession'
+  if (normalised === SESSION_STATUS.PAUSING) return 'common.pausingSession'
+  if (normalised === SESSION_STATUS.COMPLETING) return 'common.endingSession'
   return 'common.loading'
 }
 
@@ -477,9 +553,11 @@ export function buildSessionLifecycleViewModel(input = {}) {
       hydrated: input.sessionHydrated !== false,
       mutqinSessionActive: !!input.mutqinSessionActive,
       completed: !!input.sessionCompleted,
+      paused: !!input.sessionPaused,
       completionModalOpen: !!input.completionModalOpen,
       hasValidatedContinuePayload: !!input.hasValidatedContinuePayload,
       backendUnfinished: !!input.backendUnfinished,
+      backendStatus: input.backendStatus || null,
       wasInterrupted: !!input.wasInterrupted,
       mutation: input.mutation || SESSION_MUTATION.IDLE,
       lastError: input.lastError || null,
@@ -494,8 +572,9 @@ export function buildSessionLifecycleViewModel(input = {}) {
     action,
     presentation,
     canResume: action === PRIMARY_SESSION_ACTION.RESUME_SESSION,
+    canPause: action === PRIMARY_SESSION_ACTION.PAUSE_SESSION,
     canStart: action === PRIMARY_SESSION_ACTION.START_SESSION,
-    canEnd: action === PRIMARY_SESSION_ACTION.END_SESSION,
+    canEnd: action === PRIMARY_SESSION_ACTION.END_SESSION || !!presentation.showEndCompanion,
     isLoading: action === PRIMARY_SESSION_ACTION.LOADING,
     isHidden: action === PRIMARY_SESSION_ACTION.NONE,
   }
@@ -604,6 +683,9 @@ export function deriveBackendStatusFromEngine(sessionState = {}) {
   if (sessionState.completed || sessionState.completed_at) {
     return BACKEND_SESSION_STATUS.COMPLETED
   }
+  if (sessionState.paused || sessionState.status === BACKEND_SESSION_STATUS.PAUSED) {
+    return BACKEND_SESSION_STATUS.PAUSED
+  }
   if (sessionState.active) {
     return BACKEND_SESSION_STATUS.ACTIVE
   }
@@ -629,6 +711,205 @@ export function reconcileContinuePayloadWithBackend(localPayload, backendSession
   }
 }
 
+/**
+ * Resolve End Session confirmation modal actions.
+ * Keep practising dismisses the modal without mutating session completion state.
+ * Playback may resume after a countdown (UI-only).
+ */
+export function resolveEndSessionConfirmDecision(action) {
+  if (action === END_SESSION_CONFIRM_ACTION.KEEP_PRACTISING) {
+    return {
+      action: END_SESSION_CONFIRM_ACTION.KEEP_PRACTISING,
+      closeModal: true,
+      mutateSession: false,
+      completeSession: false,
+    }
+  }
+  if (action === END_SESSION_CONFIRM_ACTION.END_SESSION) {
+    return {
+      action: END_SESSION_CONFIRM_ACTION.END_SESSION,
+      closeModal: false,
+      mutateSession: true,
+      completeSession: true,
+    }
+  }
+  return {
+    action: null,
+    closeModal: false,
+    mutateSession: false,
+    completeSession: false,
+  }
+}
+
+/**
+ * Concise repetition progress for the End Session confirmation modal.
+ * Example: "3 of 5 repetitions completed" / "0 of 1 repetition completed"
+ */
+export function buildRepetitionProgressSummary({ completed = 0, total = 1 } = {}, t = null) {
+  const safeTotal = Math.max(1, Number(total) || 1)
+  const safeCompleted = Math.max(0, Math.min(safeTotal, Number(completed) || 0))
+  if (typeof t === 'function') {
+    const key = safeTotal === 1
+      ? 'memorisation.sessionExit.repetitionsProgressOne'
+      : 'memorisation.sessionExit.repetitionsProgressOther'
+    const translated = t(key, {
+      completed: safeCompleted,
+      total: safeTotal,
+    })
+    if (translated && translated !== key) {
+      return translated
+    }
+    const fallback = t('memorisation.sessionExit.repetitionsProgress', {
+      completed: safeCompleted,
+      total: safeTotal,
+    })
+    if (fallback && fallback !== 'memorisation.sessionExit.repetitionsProgress') {
+      return fallback
+    }
+  }
+  const noun = safeTotal === 1 ? 'repetition' : 'repetitions'
+  return `${safeCompleted} of ${safeTotal} ${noun} completed`
+}
+
+/**
+ * After End Session persistence settles, decide whether completion UI may open.
+ * Failed persistence keeps the session recoverable and must not open completion CTAs.
+ *
+ * @param {{
+ *   persistenceSucceeded?: boolean,
+ *   alreadyCompleted?: boolean,
+ *   priorStatus?: string,
+ * }} [input]
+ */
+export function resolveCompletionGate({
+  persistenceSucceeded = false,
+  alreadyCompleted = false,
+  priorStatus = SESSION_STATUS.ACTIVE,
+} = {}) {
+  if (alreadyCompleted) {
+    return {
+      openCompletionScreen: true,
+      keepRecoverable: false,
+      status: SESSION_STATUS.COMPLETED,
+      showPostCompletionActions: true,
+    }
+  }
+  if (persistenceSucceeded) {
+    return {
+      openCompletionScreen: true,
+      keepRecoverable: false,
+      status: SESSION_STATUS.COMPLETED,
+      showPostCompletionActions: true,
+    }
+  }
+  const recoverableStatus = priorStatus === SESSION_STATUS.PAUSED
+    ? SESSION_STATUS.PAUSED
+    : SESSION_STATUS.ACTIVE
+  return {
+    openCompletionScreen: false,
+    keepRecoverable: true,
+    status: recoverableStatus,
+    showPostCompletionActions: false,
+  }
+}
+
+/**
+ * Refresh / browser-back bootstrap: completed sessions must never reopen as active
+ * or resumable. Backend unfinished (active/paused/interrupted) always wins over
+ * stale local "completed" flags from a previous attempt.
+ */
+export function reconcileBootstrapSessionState(input = {}) {
+  const {
+    backendUnfinished = false,
+    backendStatus = null,
+    backendAuthoritative = false,
+    localContinuePayload = null,
+    centralSessionStatus = null,
+    sessionCompleted = false,
+    mutqinSessionActive = false,
+    activeSnapshot = null,
+  } = input
+
+  const unfinishedBackendStatus = (
+    backendStatus === BACKEND_SESSION_STATUS.ACTIVE
+    || backendStatus === BACKEND_SESSION_STATUS.PAUSED
+    || backendStatus === BACKEND_SESSION_STATUS.INTERRUPTED
+  )
+  const hasUnfinished = !!backendUnfinished || unfinishedBackendStatus
+
+  // Authoritative unfinished row: keep resumable even if local storage still
+  // says "completed" from an earlier session attempt.
+  if (hasUnfinished) {
+    const paused = backendStatus === BACKEND_SESSION_STATUS.PAUSED
+    const resumablePayload = isResumableSessionPayload(localContinuePayload, { backendStatus })
+      || isResumableSessionPayload(activeSnapshot, { backendStatus })
+    return {
+      mutqinSessionActive: false,
+      sessionCompleted: false,
+      sessionPaused: paused,
+      continuePayload: resumablePayload ? (localContinuePayload || activeSnapshot) : (localContinuePayload || activeSnapshot || null),
+      activeSnapshot: resumablePayload ? activeSnapshot : (activeSnapshot || null),
+      resumable: true,
+      status: paused ? SESSION_STATUS.PAUSED : SESSION_STATUS.INTERRUPTED_RESUMABLE,
+    }
+  }
+
+  const completed = sessionCompleted
+    || centralSessionStatus === 'completed'
+    || backendStatus === BACKEND_SESSION_STATUS.COMPLETED
+    || backendStatus === BACKEND_SESSION_STATUS.ABANDONED
+
+  if (completed) {
+    return {
+      mutqinSessionActive: false,
+      sessionCompleted: true,
+      sessionPaused: false,
+      continuePayload: null,
+      activeSnapshot: null,
+      resumable: false,
+      status: SESSION_STATUS.COMPLETED,
+    }
+  }
+
+  // Authoritative backend with no unfinished row: drop stale resume hints.
+  if (backendAuthoritative && !backendUnfinished) {
+    return {
+      mutqinSessionActive: false,
+      sessionCompleted: false,
+      sessionPaused: false,
+      continuePayload: null,
+      activeSnapshot: null,
+      resumable: false,
+      status: SESSION_STATUS.READY_TO_START,
+    }
+  }
+
+  const resumablePayload = isResumableSessionPayload(localContinuePayload, { backendStatus })
+    || isResumableSessionPayload(activeSnapshot, { backendStatus })
+
+  if (resumablePayload) {
+    return {
+      mutqinSessionActive: false,
+      sessionCompleted: false,
+      sessionPaused: false,
+      continuePayload: localContinuePayload || activeSnapshot,
+      activeSnapshot,
+      resumable: true,
+      status: SESSION_STATUS.INTERRUPTED_RESUMABLE,
+    }
+  }
+
+  return {
+    mutqinSessionActive: !!mutqinSessionActive,
+    sessionCompleted: false,
+    sessionPaused: false,
+    continuePayload: localContinuePayload,
+    activeSnapshot,
+    resumable: false,
+    status: mutqinSessionActive ? SESSION_STATUS.ACTIVE : SESSION_STATUS.READY_TO_START,
+  }
+}
+
 export function userScopedStorageKey(baseKey, userId) {
   const id = userId == null || userId === '' ? 'guest' : String(userId)
   return `${baseKey}.u.${id}`
@@ -640,6 +921,7 @@ export default {
   PRIMARY_SESSION_ACTION,
   SESSION_MUTATION,
   BACKEND_SESSION_STATUS,
+  END_SESSION_CONFIRM_ACTION,
   LEGAL_TRANSITIONS,
   canTransition,
   assertTransition,
@@ -654,5 +936,9 @@ export default {
   createSessionBroadcast,
   deriveBackendStatusFromEngine,
   reconcileContinuePayloadWithBackend,
+  resolveEndSessionConfirmDecision,
+  buildRepetitionProgressSummary,
+  resolveCompletionGate,
+  reconcileBootstrapSessionState,
   userScopedStorageKey,
 }

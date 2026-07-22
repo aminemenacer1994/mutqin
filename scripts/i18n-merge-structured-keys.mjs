@@ -34,12 +34,12 @@ const arStructured = {
   memorisation: {
     techniques: {
       focusDescription: 'يُخفت وضعية التركيز جميع الآيات غير النشطة، مما يساعدك على التركيز على الآية الحالية دون تشتيت.',
-      chainingOffDescription: 'تشغيل الآيات المحددة بالترتيب دون سلسلة.',
+      chainingOffDescription: 'اربط كل آية بالتالية وتدرّب على النطاق كتسلسل متصل واحد.',
       chainingCumulativeDescription: 'بناء مقاطع أطول بإضافة آية واحدة في كل مرة.',
       chainingLinkingDescription: 'تقوية الانتقالات بين الآيات المتجاورة.',
       chainingLinkingHint: 'تدرب على الآيات فردياً، ثم في أزواج.',
       chainingCumulativeHint: 'ابدأ بالآية الأولى، ثم أضف آية واحدة في كل مرة.',
-      chainingOffSub: 'تشغيل الآيات المحددة بالترتيب دون سلسلة.',
+      chainingOffSub: 'اربط كل آية بالتالية وتدرّب على النطاق كتسلسل متصل واحد.',
       chainingCumulativeSub: 'بناء مقاطع متصلة أطول من الآية الأولى.',
       chainingLinkingSub: 'تدريب الانتقال بين الآيات المتجاورة.',
       chainingOffPreview: 'التدفق: الآيات المحددة بالترتيب، كل آية تُكرَّر {count} مرة.',
@@ -365,12 +365,12 @@ const frStructured = {
   memorisation: {
     techniques: {
       focusDescription: 'Le mode Focus atténue toutes les ayahs non actives pour vous aider à vous concentrer sur l\'ayah en cours.',
-      chainingOffDescription: 'Lire les ayahs sélectionnées dans l\'ordre sans enchaînement.',
+      chainingOffDescription: 'Reliez chaque ayah à la suivante et pratiquez la plage comme une séquence continue.',
       chainingCumulativeDescription: 'Construire des passages plus longs en ajoutant une ayah à la fois.',
       chainingLinkingDescription: 'Renforcer les transitions entre ayahs voisines.',
       chainingLinkingHint: 'Pratiquez les ayahs individuellement, puis par paires.',
       chainingCumulativeHint: 'Commencez par la première ayah, puis ajoutez-en une à chaque fois.',
-      chainingOffSub: 'Lire les ayahs sélectionnées dans l\'ordre sans enchaînement.',
+      chainingOffSub: 'Reliez chaque ayah à la suivante et pratiquez la plage comme une séquence continue.',
       chainingCumulativeSub: 'Construire des passages connectés depuis la première ayah.',
       chainingLinkingSub: 'Entraîner la transition entre ayahs voisines.',
       chainingOffPreview: 'Flux : ayahs dans l\'ordre, chaque ayah répétée {count} fois.',

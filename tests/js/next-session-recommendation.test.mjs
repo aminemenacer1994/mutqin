@@ -3,6 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
   RECOMMENDATION_TYPES,
+  adaptRecommendationForConfidence,
   buildLocalFallbackRecommendation,
   formatAyahRangeLabel,
   formatRecommendationSettingsSummary,
@@ -14,8 +15,8 @@ import {
 } from '../../resources/js/scripts/recommendations/nextSessionRecommendation.js'
 
 function t(key, params = {}) {
-  if (key.endsWith('ayahRange')) return `Ayat ${params.start}–${params.end}`
-  if (key.endsWith('singleAyah')) return `Ayah ${params.ayah}`
+  if (key.endsWith('ayahRange') || key.endsWith('.ayahs')) return `Ayahs ${params.start}–${params.end}`
+  if (key.endsWith('singleAyah') || key.endsWith('.ayah')) return `Ayah ${params.ayah}`
   if (key.includes('continueCurrentSurah') || key.includes('continueWhileFresh') || key.includes('simpleContinue')) {
     return `Continue while this range is still fresh.`
   }
@@ -23,7 +24,10 @@ function t(key, params = {}) {
   if (key.includes('techniqueDisplay.talqin') || key.endsWith('talqinShort') || key.endsWith('talqin.label') || key.endsWith('talqin.short')) {
     return 'Listen and repeat (Talqin)'
   }
-  if (key.endsWith('repetitionsSummary')) return `${params.count} repetitions`
+  if (key.endsWith('repetitionCountOne') || key.endsWith('repetitionsSummaryOne')) return `${params.count} repetition`
+  if (key.endsWith('repetitionCountOther') || key.endsWith('repetitionsSummary') || key.endsWith('repetitionsSummaryOther')) {
+    return `${params.count} repetitions`
+  }
   return key
 }
 
@@ -40,7 +44,7 @@ function t(key, params = {}) {
   assert.equal(isActionableRecommendation(continueRec), true)
   assert.equal(recommendationPrimaryActionKey(continueRec), 'continueToAyat')
   assert.equal(recommendationModeLabelKey(continueRec), 'modeNewLearning')
-  assert.equal(formatAyahRangeLabel(continueRec.ayah_range, t), 'Ayat 15–17')
+  assert.equal(formatAyahRangeLabel(continueRec.ayah_range, t), 'Ayahs 15–17')
   assert.match(localizeRecommendationReason(continueRec, t), /fresh/)
   assert.match(
     formatRecommendationSettingsSummary(continueRec.settings, t, { reciterName: 'Alafasy' }),
@@ -124,26 +128,94 @@ function t(key, params = {}) {
   assert.match(vue, /postSessionStatsExpanded/)
   assert.match(vue, /postSessionSelectedConfidence/)
   assert.match(vue, /postSessionStatsSummary/)
-  assert.match(vue, /postSessionIntendedOutcome/)
+  assert.match(vue, /postSessionWhyLabel/)
+  assert.match(vue, /tryThisCombination/)
+  assert.match(vue, /adjustPlan/)
+  assert.match(vue, /openPostSessionAdjustPlan/)
+  assert.match(vue, /post-session-simple__adjust-link/)
+  assert.match(vue, /post-session-simple__why/)
+  assert.match(vue, /post-session-simple__reason/)
+  assert.match(vue, /suggestedNextStep/)
   assert.match(vue, /startDifferentSession/)
   assert.match(vue, /post-session-simple--builder-open/)
   assert.doesNotMatch(vue, /SESSION COMPLETE|Alhamdulillah/)
-  assert.doesNotMatch(vue, /adjustSettings/)
   assert.doesNotMatch(vue, /post-session-chip/)
   assert.doesNotMatch(vue, /post-session-inline-select/)
   assert.doesNotMatch(vue, /openPostSessionAiRecite|post-session-simple__ai-btn/)
   assert.match(js, /submitRecommendationConfidence/)
   assert.match(js, /openPostSessionNewSessionOffcanvas/)
+  assert.match(js, /openPostSessionAdjustPlan/)
   assert.match(js, /postSessionViewState/)
   assert.match(js, /deriveCompletionFlowPhase/)
   assert.match(js, /resolveConfidenceSelection/)
+  assert.match(js, /adaptRecommendationForConfidence/)
   assert.match(js, /buildCompletionPerformancePayload/)
   assert.match(js, /postSessionShowRepeatAction\(\)[\s\S]*return false/)
   assert.match(js, /postSessionStaticPills/)
   assert.match(js, /postSessionSimpleReason/)
+  assert.match(js, /user_reason/)
+  assert.match(js, /postSessionWhyLabel/)
+  assert.match(js, /whyThisPlan/)
+  assert.match(js, /sessionHintCount/)
+  assert.match(js, /recordSessionHint/)
+  assert.match(js, /sessionExitContextLabel/)
+  assert.match(js, /sessionExitAyahProgressLabel/)
   assert.match(js, /chainingEnabled/)
   assert.match(js, /anchorModeEnabled/)
   assert.match(css, /onboarding-post-session-tools[\s\S]*z-index:\s*12720/)
+  assert.match(css, /post-session-simple__adjust-link/)
+  assert.match(vue, /session-exit-context/)
+  assert.match(vue, /sessionExitAyahProgressLabel/)
+}
+
+{
+  const repeat = {
+    id: 9,
+    type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
+    session_mode: 'revision',
+    range_kind: 'repeated',
+    surah: { id: 2, name: 'Al-Baqarah' },
+    ayah_range: { from: 12, to: 14, count: 3 },
+    reason_code: 'confidence_needs_practice',
+    user_reason: 'You asked for more practice, so this repeat slows the pace and adds a little more repetition.',
+    settings: { technique: 'talqin', playback_speed: 0.75, repetitions: 4 },
+  }
+  const confident = adaptRecommendationForConfidence(repeat, 'confident', {
+    rangeStart: 12,
+    rangeEnd: 14,
+    totalAyahsInSurah: 286,
+  })
+  assert.equal(confident.type, RECOMMENDATION_TYPES.CONTINUE)
+  assert.equal(confident.confidence_feedback, 'confident')
+  assert.equal(confident.user_reason, null)
+  assert.equal(confident.ayah_range.from, 15)
+  assert.equal(confident.ayah_range.to, 17)
+  assert.equal(confident.reason_code, 'confidence_confident')
+
+  const continueRec = {
+    id: 10,
+    type: RECOMMENDATION_TYPES.CONTINUE,
+    session_mode: 'new_learning',
+    range_kind: 'new',
+    surah: { id: 2, name: 'Al-Baqarah' },
+    ayah_range: { from: 15, to: 17, count: 3 },
+    reason_code: 'continue_while_fresh',
+    user_reason: 'You completed the range and selected Confident, but used several memory prompts. Start the next ayah with Focus and Anchor mode, then remove the support once recall feels stable.',
+    settings: { technique: 'talqin', playback_speed: 1, repetitions: 3 },
+  }
+  const keepReason = adaptRecommendationForConfidence(continueRec, 'confident')
+  assert.equal(keepReason.user_reason, continueRec.user_reason)
+  assert.match(String(keepReason.user_reason), /Focus and Anchor/)
+
+  const needsPractice = adaptRecommendationForConfidence(continueRec, 'needs_practice', {
+    rangeStart: 12,
+    rangeEnd: 14,
+  })
+  assert.equal(needsPractice.type, RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE)
+  assert.equal(needsPractice.confidence_feedback, 'needs_practice')
+  assert.equal(needsPractice.reason_code, 'confidence_needs_practice')
+  assert.equal(needsPractice.settings.playback_speed, 0.75)
+  assert.ok(needsPractice.settings.repetitions >= 4)
 }
 
 console.log('next-session-recommendation.test.mjs: ok')

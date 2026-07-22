@@ -41,17 +41,50 @@ class SessionLifecycleService
             return false;
         }
 
-        $status = UserSessionStatus::tryFromMixed($session->status);
-        if ($status) {
-            return $status->isUnfinished();
+        $meta = is_array($session->metadata) ? $session->metadata : [];
+        if (! empty($meta['discarded_example'])) {
+            return false;
         }
 
-        $meta = is_array($session->metadata) ? $session->metadata : [];
+        $status = UserSessionStatus::tryFromMixed($session->status);
+
+        // Explicit unfinished statuses win over stale completion metadata
+        // (pause/resume can leave completed_at behind from an earlier attempt).
+        if ($status?->isUnfinished()) {
+            return true;
+        }
+
         if (! empty($meta['completed']) || ! empty($meta['completed_at'])) {
             return false;
         }
 
-        return (bool) ($meta['active'] ?? false);
+        if ($status) {
+            // Recover legacy mid-session rows incorrectly stored as "none".
+            if ($status === UserSessionStatus::None && $this->hasRecoverableProgress($session, $meta)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        return (bool) ($meta['active'] ?? false) || $this->hasRecoverableProgress($session, $meta);
+    }
+
+    /**
+     * @param  array<string, mixed>  $meta
+     */
+    private function hasRecoverableProgress(UserSession $session, array $meta): bool
+    {
+        if (! empty($meta['paused']) || ! empty($meta['active'])) {
+            return true;
+        }
+
+        $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
+        if (! empty($config['chapterId'])) {
+            return true;
+        }
+
+        return ! empty($session->surah_number);
     }
 
     /**
@@ -123,6 +156,54 @@ class SessionLifecycleService
     }
 
     /**
+     * Pause an unfinished session without completing it.
+     * Paused sessions remain unfinished and resumable.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function pause(User $user, array $attributes = []): UserSession
+    {
+        $attributes = $this->normaliseIdempotencyAttributes($attributes, 'pause');
+
+        return DB::transaction(function () use ($user, $attributes) {
+            $session = $this->lockCurrentUnfinished($user);
+            if (! $session) {
+                throw ValidationException::withMessages([
+                    'session' => ['No unfinished session is available to pause.'],
+                ]);
+            }
+
+            $status = UserSessionStatus::tryFromMixed($session->status);
+            if ($status === UserSessionStatus::Completed) {
+                throw ValidationException::withMessages([
+                    'session' => ['Completed sessions cannot be paused or resumed.'],
+                ]);
+            }
+
+            $now = now();
+            $meta = is_array($session->metadata) ? $session->metadata : [];
+            $incomingMeta = is_array($attributes['metadata'] ?? null) ? $attributes['metadata'] : [];
+
+            $session->fill($this->sessionAttributes($attributes, [
+                'status' => UserSessionStatus::Paused->value,
+                'is_onboarding_example' => false,
+                'paused_at' => $attributes['paused_at'] ?? $now,
+                'ended_at' => null,
+                'last_activity_at' => $attributes['last_activity_at'] ?? $now,
+                'metadata' => array_merge($meta, $incomingMeta, [
+                    'active' => false,
+                    'paused' => true,
+                    'completed' => false,
+                    'completed_at' => null,
+                ]),
+            ]));
+            $session->save();
+
+            return $session->fresh();
+        });
+    }
+
+    /**
      * Resume an unfinished session. Rejects completed / sample / foreign sessions.
      *
      * @param  array<string, mixed>  $attributes
@@ -139,7 +220,17 @@ class SessionLifecycleService
                 ]);
             }
 
+            $status = UserSessionStatus::tryFromMixed($session->status);
+            if ($status === UserSessionStatus::Completed) {
+                throw ValidationException::withMessages([
+                    'session' => ['Completed sessions cannot be resumed.'],
+                ]);
+            }
+
             $now = now();
+            $meta = is_array($session->metadata) ? $session->metadata : [];
+            $incomingMeta = is_array($attributes['metadata'] ?? null) ? $attributes['metadata'] : [];
+
             $session->fill($this->sessionAttributes($attributes, [
                 'status' => UserSessionStatus::Active->value,
                 'is_onboarding_example' => false,
@@ -147,6 +238,11 @@ class SessionLifecycleService
                 'paused_at' => null,
                 'ended_at' => null,
                 'last_activity_at' => $attributes['last_activity_at'] ?? $now,
+                'metadata' => array_merge($meta, $incomingMeta, [
+                    'active' => true,
+                    'paused' => false,
+                    'completed' => false,
+                ]),
             ]));
             $session->save();
 
@@ -351,12 +447,21 @@ class SessionLifecycleService
             ];
         }
 
-        if (! empty($sessionState['completed']) || ! empty($sessionState['completed_at'])) {
+        // Explicit unfinished signals win over stale completion metadata.
+        // Pause/active can otherwise be wiped by a leftover completed_at from an
+        // earlier attempt in the same engine blob.
+        if (! empty($sessionState['paused']) || (($sessionState['status'] ?? null) === UserSessionStatus::Paused->value)) {
             return [
-                'status' => UserSessionStatus::Completed->value,
+                'status' => UserSessionStatus::Paused->value,
                 'is_onboarding_example' => false,
-                'ended_at' => $this->parseDate($sessionState['completed_at'] ?? null) ?? now(),
-                'metadata' => $sessionState,
+                'paused_at' => $this->parseDate($sessionState['paused_at'] ?? null) ?? now(),
+                'ended_at' => null,
+                'metadata' => array_merge($sessionState, [
+                    'active' => false,
+                    'paused' => true,
+                    'completed' => false,
+                    'completed_at' => null,
+                ]),
             ];
         }
 
@@ -366,7 +471,40 @@ class SessionLifecycleService
                 'is_onboarding_example' => false,
                 'started_at' => $this->parseDate($sessionState['started_at'] ?? null),
                 'ended_at' => null,
+                'metadata' => array_merge($sessionState, [
+                    'completed' => false,
+                    'completed_at' => null,
+                ]),
+            ];
+        }
+
+        if (! empty($sessionState['completed']) || ! empty($sessionState['completed_at'])) {
+            return [
+                'status' => UserSessionStatus::Completed->value,
+                'is_onboarding_example' => false,
+                'ended_at' => $this->parseDate($sessionState['completed_at'] ?? null) ?? now(),
                 'metadata' => $sessionState,
+            ];
+        }
+
+        $config = is_array($sessionState['config'] ?? null) ? $sessionState['config'] : [];
+        $hasProgress = ! empty($config['chapterId'])
+            || ! empty($sessionState['surah_number'])
+            || (is_array($sessionState['queue'] ?? null) && $sessionState['queue'] !== [])
+            || (($sessionState['status'] ?? null) === UserSessionStatus::Interrupted->value);
+
+        // Demoted / refreshed mid-session engine state must stay resumable.
+        // Never collapse recoverable progress into status "none".
+        if ($hasProgress) {
+            return [
+                'status' => UserSessionStatus::Interrupted->value,
+                'is_onboarding_example' => false,
+                'ended_at' => null,
+                'metadata' => array_merge($sessionState, [
+                    'active' => false,
+                    'paused' => ! empty($sessionState['paused']),
+                    'completed' => false,
+                ]),
             ];
         }
 

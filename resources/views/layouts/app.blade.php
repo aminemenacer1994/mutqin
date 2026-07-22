@@ -20,6 +20,90 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
+    @if(request()->routeIs('memorisation'))
+    {{-- Survives stale memorisation JS chunks: HTML is network-first / not JS-chunk-cached --}}
+    <style id="mutqin-button-colour-semantics">
+      :root {
+        --bs-danger: #b55041;
+        --bs-danger-rgb: 181, 80, 65;
+        --success: #2e7d64;
+        --success-strong: #23624e;
+        --danger: #b55041;
+        --danger-strong: #9a4336;
+        --destructive: var(--danger);
+        --destructive-strong: var(--danger-strong);
+      }
+      [data-theme="dark"] {
+        --bs-danger: #d4786a;
+        --bs-danger-rgb: 212, 120, 106;
+        --success: #3f8f6f;
+        --success-strong: #2f6f58;
+        --danger: #d4786a;
+        --danger-strong: #c45f50;
+      }
+      .app .mutqin-modal-btn--primary,
+      .app .btn-primary,
+      .app .tools-btn-primary,
+      .app .tools-btn.btn-primary,
+      .app .action-btn.primary,
+      .app .action-btn.btn-primary,
+      .app .session-primary-action.btn-primary,
+      .app .session-resume-btn.btn-primary,
+      .app .self-check-action-btn.btn-primary,
+      .app .recitation-check-actions .btn-primary,
+      .app .post-session-simple__btn--primary,
+      .app .saved-session-row-btn-primary {
+        color: #fff !important;
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+        border-color: color-mix(in srgb, var(--accent) 48%, transparent) !important;
+      }
+      [data-theme="dark"] .app .mutqin-modal-btn--primary,
+      [data-theme="dark"] .app .btn-primary,
+      [data-theme="dark"] .app .tools-btn-primary,
+      [data-theme="dark"] .app .action-btn.primary,
+      [data-theme="dark"] .app .action-btn.btn-primary,
+      [data-theme="dark"] .app .session-primary-action.btn-primary,
+      [data-theme="dark"] .app .self-check-action-btn.btn-primary {
+        color: #1a120c !important;
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+      }
+      .app .mutqin-modal-btn--secondary,
+      .app .post-session-simple__btn--secondary {
+        color: var(--text) !important;
+        background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
+        border-color: color-mix(in srgb, var(--border) 82%, transparent) !important;
+      }
+      .app .mutqin-modal-btn--success {
+        color: #fff !important;
+        background: linear-gradient(135deg, var(--success), var(--success-strong)) !important;
+      }
+      .app .mutqin-modal-btn--danger,
+      .app .mutqin-modal-btn--destructive,
+      .app .action-btn-exit,
+      .app .action-btn.mutqin-btn--destructive,
+      .app .session-exit-action-chip--end,
+      .app .workspace-shell-actions .action-btn-exit {
+        color: #fff !important;
+        background: var(--bs-danger, #b55041) !important;
+        border-color: var(--bs-danger, #b55041) !important;
+      }
+    </style>
+    <script>
+      // Re-assert colour lock after Vue injects chunk CSS (beats stale cached chunks).
+      (function () {
+        function pin() {
+          var el = document.getElementById('mutqin-button-colour-semantics');
+          if (el && el.parentNode) el.parentNode.appendChild(el);
+        }
+        window.addEventListener('load', function () {
+          pin();
+          setTimeout(pin, 0);
+          setTimeout(pin, 500);
+          setTimeout(pin, 2000);
+        });
+      })();
+    </script>
+    @endif
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-W4K8J2T0SG"></script>
     <script>

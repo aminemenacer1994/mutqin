@@ -107,11 +107,14 @@ export function primarySurfaceForPhase(phase) {
 
 /**
  * Resolve the confidence option that should appear selected.
- * Defaults to confident unless saved feedback or a weak AI result says otherwise.
+ * Defaults to confident unless saved feedback, weak AI, or a repeat recommendation says otherwise.
  *
  * @param {{
  *   confidence_feedback?: string|null,
  *   ai_assessment?: { result?: string }|null,
+ *   type?: string|null,
+ *   session_mode?: string|null,
+ *   range_kind?: string|null,
  * }} recommendation
  * @param {string|null} localSelection
  * @returns {'confident'|'needs_practice'}
@@ -128,6 +131,20 @@ export function resolveConfidenceSelection(recommendation, localSelection = null
 
   const aiResult = String(recommendation?.ai_assessment?.result || '').toLowerCase()
   if (aiResult === 'weak') {
+    return 'needs_practice'
+  }
+
+  const type = String(recommendation?.type || '')
+  const rangeKind = String(recommendation?.range_kind || '')
+  const sessionMode = String(recommendation?.session_mode || '')
+  if (
+    type === 'repeat_current_range'
+    || type === 'revision'
+    || type === 'resume'
+    || rangeKind === 'repeated'
+    || rangeKind === 'revision'
+    || sessionMode === 'revision'
+  ) {
     return 'needs_practice'
   }
 

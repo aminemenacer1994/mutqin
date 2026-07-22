@@ -143,27 +143,49 @@ function mergeState(saved) {
   }
 }
 
-export function loadMutqinState(owner = MUTQIN_DEFAULT_OWNER) {
+function readStoredMutqinRaw(owner = MUTQIN_DEFAULT_OWNER, { allowGuestFallback = false } = {}) {
+  const primaryKey = stateStorageKey(owner)
+  const isGuest = ownerKey(owner) === MUTQIN_DEFAULT_OWNER
+  const primary = localStorage.getItem(primaryKey)
+  if (primary) return primary
+  // Guests keep the legacy unscoped key. Authenticated owners must never
+  // silently inherit another profile's guest cache unless explicitly allowed.
+  if (isGuest) return localStorage.getItem(MUTQIN_STATE_KEY)
+  if (allowGuestFallback) return localStorage.getItem(MUTQIN_STATE_KEY)
+  return null
+}
+
+function readStoredMutqinBackup(owner = MUTQIN_DEFAULT_OWNER, { allowGuestFallback = false } = {}) {
+  const backupKey = backupStorageKey(owner)
+  const isGuest = ownerKey(owner) === MUTQIN_DEFAULT_OWNER
+  const primary = localStorage.getItem(backupKey)
+  if (primary) return primary
+  if (isGuest) return localStorage.getItem(`${MUTQIN_STATE_KEY}:backup`)
+  if (allowGuestFallback) return localStorage.getItem(`${MUTQIN_STATE_KEY}:backup`)
+  return null
+}
+
+export function createFreshMutqinState() {
+  const fresh = defaultState()
+  lastSavedSnapshot = JSON.stringify(clone(fresh))
+  return reactive(fresh)
+}
+
+export function loadMutqinState(owner = MUTQIN_DEFAULT_OWNER, options = {}) {
+  const allowGuestFallback = options.allowGuestFallback === true
   try {
-    const primaryKey = stateStorageKey(owner)
-    const raw = ownerKey(owner) === MUTQIN_DEFAULT_OWNER
-      ? (localStorage.getItem(MUTQIN_STATE_KEY) ?? localStorage.getItem(primaryKey))
-      : (localStorage.getItem(primaryKey) ?? localStorage.getItem(MUTQIN_STATE_KEY))
+    const raw = readStoredMutqinRaw(owner, { allowGuestFallback })
     const merged = mergeState(raw ? JSON.parse(raw) : null)
     lastSavedSnapshot = JSON.stringify(clone(merged))
     return reactive(merged)
   } catch {
     try {
-      const backup = ownerKey(owner) === MUTQIN_DEFAULT_OWNER
-        ? (localStorage.getItem(`${MUTQIN_STATE_KEY}:backup`) ?? localStorage.getItem(backupStorageKey(owner)))
-        : (localStorage.getItem(backupStorageKey(owner)) ?? localStorage.getItem(`${MUTQIN_STATE_KEY}:backup`))
+      const backup = readStoredMutqinBackup(owner, { allowGuestFallback })
       const merged = mergeState(backup ? JSON.parse(backup) : null)
       lastSavedSnapshot = JSON.stringify(clone(merged))
       return reactive(merged)
     } catch {
-      const fresh = defaultState()
-      lastSavedSnapshot = JSON.stringify(fresh)
-      return reactive(fresh)
+      return createFreshMutqinState()
     }
   }
 }

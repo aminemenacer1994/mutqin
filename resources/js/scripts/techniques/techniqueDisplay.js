@@ -50,7 +50,7 @@ const TECHNIQUE_I18N = Object.freeze({
     descriptionKey: 'memorisation.techniqueDisplay.chaining.description',
     fallbackLabel: 'Join ayahs together (Chaining)',
     fallbackShort: 'Join ayahs together (Chaining)',
-    fallbackDescription: 'Link neighbouring ayahs so the passage flows',
+    fallbackDescription: 'Link each ayah to the next and practise the range as one continuous sequence.',
   },
   anchor: {
     labelKey: 'memorisation.techniqueDisplay.anchor.label',

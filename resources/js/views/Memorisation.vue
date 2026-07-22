@@ -133,7 +133,7 @@
                 <button
                   v-if="showHeaderEndSessionAction"
                   type="button"
-                  class="action-btn action-btn-secondary top-card-action-trigger action-btn-exit"
+                  class="action-btn top-card-action-trigger action-btn-exit mutqin-btn--destructive"
                   @click="openSessionExitModalFromMenu"
                   :title="t('sessionStatus.end')"
                   :aria-label="t('sessionStatus.end')"
@@ -852,7 +852,7 @@
                     <div class="slider-markers slider-markers-compact">
                       <span v-for="step in repetitionSliderSteps" :key="`rep-${step}`">{{ step }}x</span>
                     </div>
-                    <small class="field-hint">{{ t('sessionSetup.repeatHint', { count: repetitionsPerStep }) }}</small>
+                    <small class="field-hint">{{ Number(repetitionsPerStep) === 1 ? t('sessionSetup.repeatHintOne', { count: repetitionsPerStep }) : t('sessionSetup.repeatHintOther', { count: repetitionsPerStep }) }}</small>
                   </div>
                 </div>
               </div>
@@ -1086,7 +1086,7 @@
                             ? t('memorisation.techniques.chainingCumulativeDescription')
                             : t('memorisation.techniques.chainingLinkingDescription'))
                           : 'Select linking or cumulative to build the chaining queue.')
-                        : t('memorisation.techniques.chainingOffDescription') }}</span>
+                        : getTechniqueDisplayDescription('chaining') }}</span>
                     </div>
                     <div class="technique-best">
                       <i class="bi bi-check-circle-fill"></i>
@@ -1533,7 +1533,7 @@
               @keyup.enter="confirmSaveSession" @input="clearNameError" autofocus maxlength="50" />
             <div class="input-hint">
               <span class="char-count">{{ saveSessionName.length }}/50</span>
-              <span class="hint-text">{{ currentChapter?.name_simple || 'Current session' }} · Ayahs {{ rangeStart }}-{{ rangeEnd }}</span>
+              <span class="hint-text">{{ formatSurahAyahDisplay(currentChapter?.name_simple || 'Current session', rangeStart, rangeEnd) }}</span>
             </div>
             <div v-if="nameError" class="error-message">
               <i class="bi bi-exclamation-circle-fill"></i>
@@ -1580,7 +1580,7 @@
             <button
               type="button"
               class="mutqin-modal-btn"
-              :class="confirmModal.tone === 'danger' ? 'mutqin-modal-btn--danger' : 'mutqin-modal-btn--primary'"
+              :class="confirmModal.tone === 'danger' ? 'mutqin-modal-btn--destructive' : 'mutqin-modal-btn--primary'"
               @click="runConfirmAction"
             >
               <span>{{ confirmModal.confirmLabel }}</span>
@@ -1691,87 +1691,65 @@
         aria-modal="true"
         aria-labelledby="sessionExitTitle"
       >
-        <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
+        <div class="modal-dialog modal-dialog-centered modal-lg mutqin-modal-dialog">
           <div class="modal-content mutqin-modal-surface session-exit-modal">
             <div class="session-exit-hero">
               <div class="session-exit-hero-copy">
-                <span class="session-exit-kicker">
-                  {{ t('memorisation.sessionExit.kicker') }}
-                </span>
                 <h2 id="sessionExitTitle" class="session-exit-title">
                   {{ sessionExitModalTitle }}
                 </h2>
-                <p v-if="sessionExitMotivationMessage" class="session-exit-message">
+                <p v-if="sessionExitContextLabel" class="session-exit-context">
+                  {{ sessionExitContextLabel }}
+                </p>
+                <p class="session-exit-message">
                   {{ sessionExitMotivationMessage }}
                 </p>
               </div>
             </div>
 
             <div class="modal-body session-exit-body">
-              <div
-                v-if="sessionExitRemainingProgress.percentComplete < 100"
-                class="session-exit-progress"
-                role="progressbar"
-                :aria-valuenow="sessionExitRemainingProgress.percentComplete"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                :aria-label="sessionExitProgressSummary"
-              >
-                <div class="session-exit-progress-meta">
-                  <span class="session-exit-progress-label">{{ t('memorisation.stats.progress') }}</span>
-                  <span class="session-exit-progress-value">{{ sessionExitProgressSummary }}</span>
-                </div>
-                <div class="session-exit-progress-track">
-                  <span
-                    class="session-exit-progress-fill"
-                    :style="{ width: `${sessionExitRemainingProgress.percentComplete}%` }"
-                  ></span>
-                </div>
-              </div>
-
-              <div
-                v-if="sessionExitDetailRows.length"
-                class="mutqin-session-summary-details"
-                :aria-label="t('memorisation.postSession.detailsLabel')"
-              >
-                <div
-                  v-for="row in sessionExitDetailRows"
-                  :key="row.key"
-                  class="mutqin-session-summary-row"
+              <div class="session-exit-progress-block" role="status">
+                <p
+                  v-if="sessionExitAyahProgressLabel"
+                  class="session-exit-progress-summary session-exit-progress-summary--ayah"
                 >
-                  <span class="mutqin-session-summary-row-label">{{ row.label }}</span>
-                  <span class="mutqin-session-summary-row-value">
-                    {{ row.value }}
-                    <small v-if="row.hint">{{ row.hint }}</small>
-                  </span>
-                </div>
+                  {{ sessionExitAyahProgressLabel }}
+                </p>
+                <p
+                  class="session-exit-progress-summary"
+                  :aria-label="sessionExitRepetitionProgressLabel"
+                >
+                  {{ sessionExitRepetitionProgressLabel }}
+                </p>
               </div>
             </div>
 
             <div class="modal-footer mutqin-modal-footer">
-              <div class="session-exit-actions-layout" :class="{ 'has-continue': canContinueCurrentSession }">
+              <div class="session-exit-actions-layout">
                 <div
                   class="session-exit-actions-secondary"
-                  :class="{ 'session-exit-actions-secondary--with-continue': canContinueCurrentSession }"
                   role="group"
-                  :aria-label="t('memorisation.sessionExit.kicker')"
+                  :aria-label="t('memorisation.sessionExit.confirmTitle')"
                 >
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary session-exit-action-chip mutqin-btn-animate" @click="exitSessionToNewSession">
-                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.sessionExit.startNewSession') }}</span>
-                  </button>
-                  <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary session-exit-action-chip mutqin-btn-animate" @click="exitSessionToRepeatRange">
-                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.sessionExit.repeatSession') }}</span>
+                  <button
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--secondary session-exit-action-chip mutqin-btn-animate"
+                    :disabled="sessionExitEndingBusy"
+                    @click="keepPractisingFromExitModal"
+                  >
+                    <i class="bi bi-arrow-return-left" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.sessionExit.keepPractising') }}</span>
                   </button>
                   <button
-                    v-if="canContinueCurrentSession"
                     type="button"
-                    class="mutqin-modal-btn session-exit-action-chip session-exit-action-chip--continue mutqin-btn-animate"
-                    @click="continueSessionFromExitModal"
+                    class="mutqin-modal-btn mutqin-modal-btn--destructive session-exit-action-chip session-exit-action-chip--end mutqin-btn-animate"
+                    :disabled="sessionExitEndingBusy"
+                    :aria-busy="sessionExitEndingBusy ? 'true' : 'false'"
+                    :class="{ 'is-loading': sessionExitEndingBusy }"
+                    @click="confirmEndSessionFromExitModal"
                   >
-                    <i class="bi bi-play-circle" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.sessionExit.continueSession') }}</span>
+                    <i class="bi" :class="sessionExitEndingBusy ? 'bi-hourglass-split' : 'bi-box-arrow-right'" aria-hidden="true"></i>
+                    <span>{{ sessionExitEndingBusy ? t('common.endingSession') : t('memorisation.sessionExit.confirmEnd') }}</span>
                   </button>
                 </div>
               </div>
@@ -3095,8 +3073,8 @@
                   <span class="recordings-library-nav-kicker">{{ t('memorisation.saved_session') }}</span>
                   <strong>{{ currentChapter?.name_simple || 'Session recordings' }}</strong>
                   <div class="recordings-library-nav-meta">
-                    <span>Range {{ rangeStart }}-{{ rangeEnd }}</span>
-                    <span>{{ filteredRecordingsList.length }} recording{{ filteredRecordingsList.length === 1 ? '' : 's' }}</span>
+                    <span>{{ formatAyahRangeDisplay(rangeStart, rangeEnd) }}</span>
+                    <span>{{ filteredRecordingsList.length === 1 ? '1 recording' : `${filteredRecordingsList.length} recordings` }}</span>
                   </div>
                 </div>
                 <button class="recordings-library-nav-toggle" type="button" @click="toggleRecordingsNav"
@@ -3561,13 +3539,16 @@
                 <p class="post-session-simple__range">
                   <strong>{{ postSessionRecommendationDisplaySurahName }}</strong>
                   <span v-if="postSessionRecommendation?.ayah_range">
-                    · {{ t('memorisation.postSession.recommendation.ayahRange', {
-                      start: postSessionRecommendation.ayah_range.from,
-                      end: postSessionRecommendation.ayah_range.to
-                    }) }}
+                    · {{ formatAyahRangeDisplay(
+                      postSessionRecommendation.ayah_range.from,
+                      postSessionRecommendation.ayah_range.to
+                    ) }}
                   </span>
                 </p>
-                <p v-if="postSessionSimpleReason" class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
+                <div v-if="postSessionSimpleReason" class="post-session-simple__why">
+                  <p class="post-session-simple__why-label">{{ postSessionWhyLabel }}</p>
+                  <p class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
+                </div>
                 <p v-if="postSessionRecommendationStartError" class="post-session-simple__error" role="alert">
                   {{ postSessionRecommendationStartError }}
                 </p>
@@ -3576,7 +3557,7 @@
 
             <template v-else>
               <section
-                v-if="postSessionRecommendation?.id"
+                v-if="postSessionRecommendation"
                 class="post-session-simple__confidence"
                 role="group"
                 :aria-label="t('memorisation.postSession.recommendation.confidencePrompt')"
@@ -3620,30 +3601,49 @@
                   'is-empty': postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable
                 }"
                 :aria-busy="postSessionRecommendationStatus === 'loading' ? 'true' : 'false'"
-                :aria-label="postSessionSimpleActionLabel"
+                :aria-label="t('memorisation.postSession.recommendation.suggestedNextStep')"
               >
                 <div v-if="postSessionRecommendationStatus === 'loading'" class="post-session-simple__skeleton" aria-hidden="true">
                   <span></span><span></span><span></span>
                 </div>
                 <template v-else-if="postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable">
-                  <p class="post-session-simple__reason">
-                    {{ postSessionSimpleReason || t('memorisation.postSession.recommendation.reasons.manualFallback') }}
-                  </p>
+                  <div class="post-session-simple__panel-head">
+                    <p class="post-session-simple__action-label">{{ t('memorisation.postSession.recommendation.suggestedNextStep') }}</p>
+                  </div>
+                  <div class="post-session-simple__why">
+                    <p class="post-session-simple__why-label">{{ postSessionWhyLabel }}</p>
+                    <p class="post-session-simple__reason">
+                      {{ postSessionSimpleReason || t('memorisation.postSession.recommendation.reasons.manualFallback') }}
+                    </p>
+                  </div>
                 </template>
                 <template v-else>
                   <div class="post-session-simple__panel-head">
                     <p class="post-session-simple__action-label">{{ postSessionSimpleActionLabel }}</p>
                     <p class="post-session-simple__range">{{ postSessionRecommendationTitle }}</p>
                   </div>
-                  <p v-if="postSessionSimpleReason" class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
-                  <p v-if="postSessionIntendedOutcome" class="post-session-simple__outcome">{{ postSessionIntendedOutcome }}</p>
-                  <div v-if="postSessionStaticPills.length" class="post-session-simple__pills">
-                    <span
-                      v-for="pill in postSessionStaticPills"
-                      :key="pill.key"
-                      class="post-session-simple__pill"
-                    >{{ pill.label }}</span>
+                  <div v-if="postSessionSimpleReason" class="post-session-simple__why">
+                    <p class="post-session-simple__why-label">{{ postSessionWhyLabel }}</p>
+                    <p class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
                   </div>
+                  <div v-if="postSessionStaticPills.length" class="post-session-simple__combination">
+                    <p class="post-session-simple__why-label">{{ t('memorisation.postSession.recommendation.tryThisCombination') }}</p>
+                    <div class="post-session-simple__pills">
+                      <span
+                        v-for="pill in postSessionStaticPills"
+                        :key="pill.key"
+                        class="post-session-simple__pill"
+                      >{{ pill.label }}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="post-session-simple__adjust-link"
+                    :disabled="postSessionActionsBusy"
+                    @click="openPostSessionAdjustPlan"
+                  >
+                    {{ t('memorisation.postSession.recommendation.adjustPlan') }}
+                  </button>
                 </template>
                 <p
                   v-if="postSessionRecommendationStatus === 'error' && postSessionRecommendationError"
@@ -4030,7 +4030,7 @@
           </div>
           <article v-for="result in filteredQuranSearchResults" :key="result.key" class="quran-search-result-card">
             <div class="quran-search-result-meta">
-              <span>{{ result.surahName }} · Ayah {{ result.ayah }}</span>
+              <span>{{ formatSurahAyahDisplay(result.surahName, result.ayah) }}</span>
               <small>Juz {{ result.juz }} · Hizb {{ result.hizb }} · Page {{ result.page }} · Word {{ result.firstWordIndex || 1 }}</small>
             </div>
             <p class="quran-search-arabic" dir="rtl" :style="{ fontSize: `${quranSearchFontSize}px`, fontFamily: quranFontFamily }"
