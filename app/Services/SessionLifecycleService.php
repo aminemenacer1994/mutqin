@@ -293,7 +293,18 @@ class SessionLifecycleService
                     ->lockForUpdate()
                     ->first();
 
-                if ($latest && $latest->status === UserSessionStatus::Completed && $latest->ended_at) {
+                // Idempotent end: a prior state-sync/deriver completion (or a
+                // completed row missing ended_at) must not 422 the client.
+                if ($latest && $latest->status === UserSessionStatus::Completed) {
+                    if (! $latest->ended_at) {
+                        $latest->forceFill([
+                            'ended_at' => $attributes['ended_at'] ?? $now,
+                            'last_activity_at' => $attributes['last_activity_at'] ?? $now,
+                        ])->save();
+
+                        return $latest->fresh();
+                    }
+
                     return $latest;
                 }
 
@@ -303,7 +314,16 @@ class SessionLifecycleService
                 ]);
             }
 
-            if ($session->status === UserSessionStatus::Completed && $session->ended_at) {
+            if ($session->status === UserSessionStatus::Completed) {
+                if (! $session->ended_at) {
+                    $session->forceFill([
+                        'ended_at' => $attributes['ended_at'] ?? $now,
+                        'last_activity_at' => $attributes['last_activity_at'] ?? $now,
+                    ])->save();
+
+                    return $session->fresh();
+                }
+
                 return $session;
             }
 

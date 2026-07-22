@@ -53,6 +53,20 @@ function t(key, params = {}) {
 }
 
 {
+  // Truncated payloads (columns only) must still be actionable.
+  assert.equal(isActionableRecommendation({
+    type: 'complete_surah',
+    surah_number: 112,
+    ayah_range: { from: 4, to: 4, count: 1 },
+    user_reason: 'You completed this range smoothly. This plan moves forward with light Blur practice rather than extra repetition.',
+  }), true)
+  assert.equal(isActionableRecommendation({
+    type: 'complete_surah',
+    user_reason: 'You completed this range smoothly. This plan moves forward with light Blur practice rather than extra repetition.',
+  }), false)
+}
+
+{
   const revision = {
     type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
     session_mode: 'revision',

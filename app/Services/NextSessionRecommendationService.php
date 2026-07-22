@@ -57,7 +57,15 @@ class NextSessionRecommendationService
         $payload = $this->resolveRecommendation($user, $context);
         $payload = $this->attachSettings($payload, $context);
         $payload['technique'] = $this->techniquePayload($payload);
-        $record = $this->persistRecommendation($user, $session, $payload);
+
+        // Always return the computed plan even if persistence fails (e.g. schema
+        // drift). The client can still present an actionable next step.
+        $record = null;
+        try {
+            $record = $this->persistRecommendation($user, $session, $payload);
+        } catch (\Throwable) {
+            $record = null;
+        }
 
         $payload['id'] = $record?->id;
         $payload['source_session_id'] = $session?->id;
@@ -84,22 +92,22 @@ class NextSessionRecommendationService
             return null;
         }
 
-        $existing = SessionRecommendation::query()
-            ->where('user_id', $user->id)
-            ->where('source_session_id', $session->id)
-            ->whereIn('status', [
-                RecommendationStatus::Generated->value,
-                RecommendationStatus::Accepted->value,
-                RecommendationStatus::Started->value,
-            ])
-            ->latest('id')
-            ->first();
-
-        if ($existing) {
-            return $this->payloadFromRecord($existing);
-        }
-
         try {
+            $existing = SessionRecommendation::query()
+                ->where('user_id', $user->id)
+                ->where('source_session_id', $session->id)
+                ->whereIn('status', [
+                    RecommendationStatus::Generated->value,
+                    RecommendationStatus::Accepted->value,
+                    RecommendationStatus::Started->value,
+                ])
+                ->latest('id')
+                ->first();
+
+            if ($existing) {
+                return $this->payloadFromRecord($existing);
+            }
+
             return $this->recommend($user, $session);
         } catch (\Throwable) {
             return null;
@@ -1439,9 +1447,53 @@ class NextSessionRecommendationService
         $payload['settings'] = $this->resolvedSettings($recommendation);
         $payload['settings_modified'] = is_array($recommendation->settings_overrides) && $recommendation->settings_overrides !== [];
         $payload['range_kind'] = $recommendation->range_kind ?? ($payload['range_kind'] ?? null);
+        $payload['session_mode'] = $payload['session_mode']
+            ?? $recommendation->session_mode
+            ?? null;
+        $payload['reason_code'] = $payload['reason_code']
+            ?? $recommendation->reason_code
+            ?? null;
+
+        // Rebuild core fields from columns when the JSON payload was truncated
+        // or written before these keys existed — otherwise the CTA disappears.
+        if (empty($payload['type']) && $recommendation->recommendation_type) {
+            $payload['type'] = $recommendation->recommendation_type;
+        }
+
+        $surahId = (int) ($payload['surah']['id'] ?? $recommendation->surah_number ?? 0);
+        if ($surahId > 0 && empty($payload['surah']['id'])) {
+            $payload['surah'] = [
+                'id' => $surahId,
+                'name' => QuranMetadata::name($surahId) ?: ('Surah '.$surahId),
+                'translated_name' => QuranMetadata::translatedName($surahId) ?: ('Surah '.$surahId),
+                'ayah_count' => QuranMetadata::ayahCount($surahId),
+            ];
+        }
+
+        $from = (int) ($payload['ayah_range']['from'] ?? $recommendation->ayah_start ?? 0);
+        $to = (int) ($payload['ayah_range']['to'] ?? $recommendation->ayah_end ?? 0);
+        if ($from > 0 && $to >= $from && empty($payload['ayah_range']['from'])) {
+            $payload['ayah_range'] = [
+                'from' => $from,
+                'to' => $to,
+                'count' => max(1, $to - $from + 1),
+            ];
+        }
+
+        if (
+            empty($payload['user_reason'])
+            && is_array($payload['settings'] ?? null)
+            && ! empty($payload['settings']['user_reason'])
+        ) {
+            $payload['user_reason'] = $payload['settings']['user_reason'];
+            if (empty($payload['reason'])) {
+                $payload['reason'] = $payload['settings']['user_reason'];
+            }
+        }
+
         $payload['technique'] = $this->techniquePayload($payload);
 
-        $type = RecommendationType::tryFrom((string) $recommendation->recommendation_type);
+        $type = RecommendationType::tryFrom((string) ($payload['type'] ?? $recommendation->recommendation_type));
         $payload['primary_action_label_key'] = $this->primaryActionLabelKey(
             $type ?? RecommendationType::ManualSelection,
             $payload['ayah_range'] ?? null,

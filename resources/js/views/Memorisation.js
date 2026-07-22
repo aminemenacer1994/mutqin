@@ -9055,6 +9055,39 @@ export default {
     enrichPostSessionRecommendation(recommendation) {
       if (!recommendation || typeof recommendation !== 'object') return recommendation
       const next = { ...recommendation }
+
+      // Rebuild surah from scalar ids when the API payload was truncated —
+      // otherwise the CTA is treated as non-actionable despite a valid plan.
+      const surahId = Number(next.surah?.id || next.surah_number || 0)
+      if (surahId > 0 && !next.surah?.id) {
+        next.surah = {
+          id: surahId,
+          name: this.resolveRecommendationSurahName({ id: surahId }),
+          translated_name: this.resolveRecommendationSurahName({ id: surahId }),
+        }
+      }
+      const from = Number(next.ayah_range?.from || next.ayah_start || 0)
+      const to = Number(next.ayah_range?.to || next.ayah_end || from)
+      if (from > 0 && to >= from && !next.ayah_range?.from) {
+        next.ayah_range = {
+          from,
+          to,
+          count: Math.max(1, to - from + 1),
+        }
+      }
+      if (!next.type && next.recommendation_type) {
+        next.type = next.recommendation_type
+      }
+      if (
+        !next.user_reason
+        && next.settings
+        && typeof next.settings === 'object'
+        && next.settings.user_reason
+      ) {
+        next.user_reason = next.settings.user_reason
+        if (!next.reason) next.reason = next.settings.user_reason
+      }
+
       if (next.surah) {
         next.surah = {
           ...next.surah,
@@ -19402,31 +19435,49 @@ export default {
             }
           } catch (_) { /* endSession below remains authoritative */ }
 
-          if (this.learningBackendEnabled()) {
+            if (this.learningBackendEnabled()) {
             try {
               if (wasSample) {
                 await learningApi.discardOnboardingExampleSession()
               } else {
-                const endResult = await learningApi.endSession({
-                  idempotency_key: `end-${backendSessionId}`,
-                  metadata: {
-                    completed: true,
-                    active: false,
-                    config: {
-                      chapterId: this.chapterId || this.sessionConfig?.chapterId,
-                      rangeStart: this.sessionConfig?.rangeStart,
-                      rangeEnd: this.sessionConfig?.rangeEnd,
-                      reciterId: this.reciterId,
-                      playbackSpeed: this.speed,
-                      repetitionsPerStep: this.repetitionsPerStep,
-                      technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : null)),
-                      focusModeEnabled: !!this.focusModeEnabled,
-                      blurModeEnabled: !!this.blurModeEnabled,
-                      talqinModeEnabled: !!this.talqinModeEnabled,
+                let endResult = null
+                try {
+                  endResult = await learningApi.endSession({
+                    idempotency_key: `end-${backendSessionId}`,
+                    metadata: {
+                      completed: true,
+                      active: false,
+                      config: {
+                        chapterId: this.chapterId || this.sessionConfig?.chapterId,
+                        rangeStart: this.sessionConfig?.rangeStart,
+                        rangeEnd: this.sessionConfig?.rangeEnd,
+                        reciterId: this.reciterId,
+                        playbackSpeed: this.speed,
+                        repetitionsPerStep: this.repetitionsPerStep,
+                        technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : null)),
+                        focusModeEnabled: !!this.focusModeEnabled,
+                        blurModeEnabled: !!this.blurModeEnabled,
+                        talqinModeEnabled: !!this.talqinModeEnabled,
+                      },
                     },
-                  },
-                  completion_settings: this.buildCompletionPerformancePayload(),
-                })
+                    completion_settings: this.buildCompletionPerformancePayload(),
+                  })
+                } catch (endError) {
+                  if (endError?.response?.status !== 422) throw endError
+                  // Already completed by state sync — recover recommendation so the CTA still appears.
+                  const params = {}
+                  if (this.backendSessionSnapshot?.id) {
+                    params.source_session_id = this.backendSessionSnapshot.id
+                  }
+                  const recommendation = await learningApi.getNextRecommendation(params).catch(() => null)
+                  endResult = {
+                    saved: true,
+                    unfinished: false,
+                    session: { ...(this.backendSessionSnapshot || {}), status: 'completed' },
+                    recommendation,
+                    recovered_from_end_conflict: true,
+                  }
+                }
                 if (endResult?.session?.id) {
                   this.postSessionCompletedSessionId = endResult.session.id
                 }
@@ -22709,6 +22760,8 @@ export default {
     },
     async finaliseCompletedSessionOnBackend(snapshot = null) {
       if (!this.learningBackendEnabled()) return { skipped: true }
+      // Avoid pushing a "completed" engine blob before endSession — LearningStateDeriver
+      // can finalise the row without recommendation metadata and race the end call.
       try {
         await this.pushLearningState(true)
       } catch (_) { /* endSession below remains authoritative */ }
@@ -22755,6 +22808,34 @@ export default {
         return endResult
       } catch (error) {
         console.warn('Failed to finalise completed session on backend:', error)
+        // Soft-recover when the row was already completed by state sync: still load a plan.
+        if (error?.response?.status === 422) {
+          try {
+            const params = {}
+            if (this.postSessionCompletedSessionId || this.backendSessionSnapshot?.id) {
+              params.source_session_id = this.postSessionCompletedSessionId || this.backendSessionSnapshot.id
+            }
+            const recommendation = await learningApi.getNextRecommendation(params)
+            if (recommendation) {
+              this.postSessionRecommendation = this.enrichPostSessionRecommendation(recommendation)
+              this.postSessionRecommendationStatus = 'ready'
+              this.postSessionViewState = 'recommendation_ready'
+              this.postSessionRecommendationFailed = false
+              this.syncPostSessionConfidenceFromRecommendation(this.postSessionRecommendation, { force: true })
+              this.backendUnfinishedSession = false
+              this.backendSessionSnapshot = {
+                ...(this.backendSessionSnapshot || {}),
+                status: 'completed',
+              }
+              return {
+                saved: true,
+                unfinished: false,
+                recommendation,
+                recovered_from_end_conflict: true,
+              }
+            }
+          } catch (_) { /* fall through to failure */ }
+        }
         return null
       }
     },

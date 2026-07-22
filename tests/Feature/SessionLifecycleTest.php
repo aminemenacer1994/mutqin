@@ -137,6 +137,36 @@ class SessionLifecycleTest extends TestCase
         $this->assertSame(0, UserSession::where('user_id', $user->id)->count());
     }
 
+    public function test_end_accepts_completed_session_missing_ended_at(): void
+    {
+        $user = User::factory()->create();
+        $session = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 3,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => null,
+            'last_activity_at' => now(),
+            'started_at' => now()->subMinutes(2),
+            'metadata' => [
+                'active' => false,
+                'completed' => true,
+                'config' => ['chapterId' => 112, 'rangeStart' => 1, 'rangeEnd' => 3],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->postJson('/api/session/end', ['idempotency_key' => 'end-missing-ended-at'])
+            ->assertOk()
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('session.id', $session->id);
+
+        $this->assertNotNull($session->fresh()->ended_at);
+        $this->assertNotNull($response->json('recommendation'));
+        $this->assertSame(112, (int) data_get($response->json('recommendation'), 'surah.id'));
+    }
+
     public function test_onboarding_example_is_never_resumable(): void
     {
         $user = User::factory()->create();

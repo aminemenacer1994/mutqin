@@ -66,14 +66,24 @@ const NON_ACTIONABLE = new Set([
 export function isActionableRecommendation(recommendation) {
   if (!recommendation || typeof recommendation !== 'object') return false
   const type = String(recommendation.type || '')
+  const surahId = Number(
+    recommendation.surah?.id
+    || recommendation.next_surah?.id
+    || recommendation.surah_number
+    || 0
+  )
+  const range = recommendation.ayah_range || null
+  const hasRange = !!(range && Number(range.from) > 0 && Number(range.to) >= Number(range.from))
+
   if (NON_ACTIONABLE.has(type)) {
     // Surah/plan complete can still offer next-surah range when present.
     if (type === RECOMMENDATION_TYPES.SURAH_COMPLETE || type === RECOMMENDATION_TYPES.PLAN_COMPLETE) {
-      return !!(recommendation.ayah_range && recommendation.surah)
+      return !!(hasRange && surahId)
     }
     return false
   }
-  return !!(recommendation.surah || recommendation.next_surah)
+
+  return !!(surahId || recommendation.surah || recommendation.next_surah)
 }
 
 export function isRepeatRecommendation(recommendation) {

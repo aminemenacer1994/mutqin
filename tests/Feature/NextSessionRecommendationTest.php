@@ -637,6 +637,47 @@ class NextSessionRecommendationTest extends TestCase
         $this->assertArrayHasKey('workload', $recommendation);
     }
 
+    public function test_payload_from_record_rebuilds_surah_when_json_truncated(): void
+    {
+        $user = User::factory()->create();
+        $session = $this->seedCompletedSession($user, 112, 1, 3);
+
+        $row = SessionRecommendation::create([
+            'user_id' => $user->id,
+            'source_session_id' => $session->id,
+            'surah_number' => 112,
+            'ayah_start' => 4,
+            'ayah_end' => 4,
+            'recommendation_type' => RecommendationType::CompleteSurah->value,
+            'reason_code' => 'complete_remaining_ayat',
+            'session_mode' => 'new_learning',
+            'status' => 'generated',
+            'range_kind' => 'new',
+            'recommended_technique' => 'blur',
+            'recommended_settings' => [
+                'technique' => 'blur',
+                'user_reason' => 'You completed this range smoothly. This plan moves forward with light Blur practice rather than extra repetition.',
+            ],
+            // Truncated payload — missing surah/ayah_range/type (production drift case).
+            'payload' => [
+                'user_reason' => 'You completed this range smoothly. This plan moves forward with light Blur practice rather than extra repetition.',
+            ],
+            'idempotency_key' => 'complete-'.$session->id,
+        ]);
+
+        $payload = $this->actingAs($user)
+            ->getJson('/api/recommendations/next?source_session_id='.$session->id)
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame($row->id, $payload['id']);
+        $this->assertSame(RecommendationType::CompleteSurah->value, $payload['type']);
+        $this->assertSame(112, (int) $payload['surah']['id']);
+        $this->assertSame(4, (int) $payload['ayah_range']['from']);
+        $this->assertSame(4, (int) $payload['ayah_range']['to']);
+        $this->assertStringContainsString('Blur', (string) $payload['user_reason']);
+    }
+
     public function test_long_ayah_recommendation_uses_single_ayah_set(): void
     {
         $user = User::factory()->create();
