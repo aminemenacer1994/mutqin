@@ -37377,6 +37377,11 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: color-mix(in srgb, var(--text) 48%, transparent);
 }
 
+.post-session-simple__ai-hint--result {
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+  font-weight: 500;
+}
+
 .post-session-simple__segment {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -37764,6 +37769,49 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   gap: 0.45rem;
   margin-top: 0.05rem;
   padding-top: 0.15rem;
+}
+
+.post-session-simple__combination-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.post-session-simple__why-toggle {
+  appearance: none;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 72%, var(--text-muted, var(--text)));
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.post-session-simple__why-toggle:hover {
+  color: var(--accent-strong, var(--accent));
+}
+
+.post-session-simple__why-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.post-session-simple__why-disclosure {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
+  overflow-wrap: anywhere;
 }
 
 .post-session-simple__pills {

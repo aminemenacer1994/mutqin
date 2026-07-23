@@ -536,6 +536,7 @@ export default {
       postSessionAiReciteActive: false,
       postSessionAiFeedback: '',
       postSessionAiReviewDetails: null,
+      postSessionWhyExpanded: false,
       postSessionConfidenceSelection: null, // local authoritative selection; null → resolve from recommendation
       postSessionViewState: 'idle', // completing | generating_recommendation | recommendation_ready | editing_settings | starting_recommended | preparing_repeat | starting_repeat | opening_ai_recite | recommendation_failed | action_failed
       postSessionCompletedSessionId: null,
@@ -2744,6 +2745,39 @@ export default {
         return this.t('memorisation.postSession.recommendation.reasons.manualFallback')
       }
       return this.t('memorisation.postSession.recommendation.reasons.simpleContinue')
+    },
+    postSessionHasAiCheck() {
+      if (this.postSessionAiReviewDetails?.summaryLine || this.postSessionAiReviewDetails?.outcome) {
+        return true
+      }
+      const assessment = this.postSessionRecommendation?.ai_assessment
+      if (assessment && (assessment.result || assessment.summary || assessment.outcome)) {
+        return true
+      }
+      const feedback = String(this.postSessionAiFeedback || '').trim()
+      if (!feedback) return false
+      return !/skipped|optional|without ai recite/i.test(feedback)
+    },
+    postSessionAiResultLine() {
+      const fromDetails = String(this.postSessionAiReviewDetails?.summaryLine || '').trim()
+      if (fromDetails) return fromDetails
+      const summary = String(
+        this.postSessionRecommendation?.ai_assessment?.summary
+        || this.postSessionAiFeedback
+        || ''
+      ).trim()
+      if (summary && !/skipped|optional|without ai recite/i.test(summary)) {
+        // Keep one line even if backend sent a longer paragraph.
+        return summary.split(/(?<=\.)\s+/)[0].slice(0, 140)
+      }
+      return ''
+    },
+    postSessionWhyDisclosureText() {
+      if (!this.postSessionHasAiCheck) {
+        return this.t('memorisation.postSession.recommendation.evidenceFromSessionAndConfidence')
+      }
+      return this.postSessionSimpleReason
+        || this.t('memorisation.postSession.recommendation.evidenceFromSessionAndConfidence')
     },
     postSessionIntendedOutcome() {
       const outcome = this.postSessionRecommendation?.intended_outcome
@@ -9110,6 +9144,7 @@ export default {
         t: this.t.bind(this)
       })
       this.postSessionStatsExpanded = false
+      this.postSessionWhyExpanded = false
       const preservedRecommendation = this.postSessionRecommendation
       const preservedStatus = this.postSessionRecommendationStatus
       const preservedSessionId = this.postSessionCompletedSessionId
@@ -9155,6 +9190,7 @@ export default {
       this.postSessionAiReciteActive = false
       this.postSessionAiFeedback = ''
       this.postSessionAiReviewDetails = null
+      this.postSessionWhyExpanded = false
       this.postSessionConfidenceSelection = null
       this.postSessionConfidenceHydrated = false
       this.postSessionViewState = 'idle'
@@ -10218,6 +10254,9 @@ export default {
     },
     togglePostSessionStats() {
       this.postSessionStatsExpanded = !this.postSessionStatsExpanded
+    },
+    togglePostSessionWhy() {
+      this.postSessionWhyExpanded = !this.postSessionWhyExpanded
     },
 
     repeatPostSession() {
@@ -15004,10 +15043,11 @@ export default {
         this.returnFromPostSessionAiRecite()
       }
       this.$nextTick(() => {
-        const review = this.$el?.querySelector?.('.post-session-simple__ai-review')
+        const result = this.$el?.querySelector?.('.post-session-simple__ai-hint--result')
+          || this.$el?.querySelector?.('.post-session-simple__ai')
         const body = this.$el?.querySelector?.('.post-session-simple__body')
-        if (review && typeof review.scrollIntoView === 'function') {
-          review.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+        if (result && typeof result.scrollIntoView === 'function') {
+          result.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
         } else if (body) {
           body.scrollTop = 0
         }

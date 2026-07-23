@@ -31,6 +31,15 @@ const t = (key, params = {}) => {
     'memorisation.postSession.recommendation.aiFocusSequence': 'Restart from the first ayah.',
     'memorisation.postSession.recommendation.aiFocusWeakAyah': `Focus on ayah ${params.ayah}.`,
     'memorisation.postSession.recommendation.aiFocusWeakAyahs': `Revisit ayahs ${params.ayahs}.`,
+    'memorisation.postSession.recommendation.aiResultLineStrong': 'Strong overall — most of the range landed cleanly.',
+    'memorisation.postSession.recommendation.aiResultLineStrongHesitation': `Strong overall, with one hesitation in Ayah ${params.ayah}.`,
+    'memorisation.postSession.recommendation.aiResultLineStrongOneGap': 'Strong overall, with one small hesitation.',
+    'memorisation.postSession.recommendation.aiResultLineMixed': 'Solid overall, with a few gaps to tighten.',
+    'memorisation.postSession.recommendation.aiResultLineMixedAyah': `Solid overall, with a hesitation in Ayah ${params.ayah}.`,
+    'memorisation.postSession.recommendation.aiResultLineMixedAyahs': `Solid overall, with hesitations in ${params.count} ayahs.`,
+    'memorisation.postSession.recommendation.aiResultLineMixedOrder': 'Solid overall, but ayah order drifted once or twice.',
+    'memorisation.postSession.recommendation.aiResultLineWeak': 'Needs another pass — several spots still need support.',
+    'memorisation.postSession.recommendation.aiResultLineWeakAyah': `Needs another pass — Ayah ${params.ayah} carried most of the difficulty.`,
   }
   return map[key] || key
 }
@@ -96,6 +105,18 @@ const t = (key, params = {}) => {
   assert.ok(details.metrics.length >= 3)
   assert.ok(details.highlights.length >= 1)
   assert.match(details.focus, /Keep this pace/i)
+  assert.match(details.summaryLine, /Strong overall/i)
+}
+
+{
+  const hesitation = buildAiReviewDetails('strong', {
+    accuracy_percent: 94,
+    weak_ayahs: [3],
+  }, {
+    accuracyScore: 94,
+    weakAyahs: [3],
+  }, t)
+  assert.match(hesitation.summaryLine, /Strong overall, with one hesitation in Ayah 3/i)
 }
 
 console.log('ai-review-details.test.mjs: ok')

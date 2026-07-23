@@ -213,6 +213,14 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     outcome,
     outcomeLabel,
     accuracy,
+    summaryLine: buildAiSummaryLine({
+      outcome,
+      weakAyahs,
+      missed,
+      partial,
+      sequence,
+      t,
+    }),
     durationLabel: durationSeconds > 0
       ? t('memorisation.postSession.recommendation.aiReviewDuration', { seconds: Math.round(durationSeconds) })
       : '',
@@ -226,6 +234,34 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
       label: metric.key === 'accuracy' ? metric.value : `${metric.label}: ${metric.value}`,
     })),
   }
+}
+
+function buildAiSummaryLine({ outcome, weakAyahs, missed, partial, sequence, t }) {
+  if (outcome === 'strong') {
+    if (weakAyahs.length === 1) {
+      return t('memorisation.postSession.recommendation.aiResultLineStrongHesitation', { ayah: weakAyahs[0] })
+    }
+    if (partial === 1 || missed === 1) {
+      return t('memorisation.postSession.recommendation.aiResultLineStrongOneGap')
+    }
+    return t('memorisation.postSession.recommendation.aiResultLineStrong')
+  }
+  if (outcome === 'mixed') {
+    if (weakAyahs.length === 1) {
+      return t('memorisation.postSession.recommendation.aiResultLineMixedAyah', { ayah: weakAyahs[0] })
+    }
+    if (weakAyahs.length > 1) {
+      return t('memorisation.postSession.recommendation.aiResultLineMixedAyahs', { count: weakAyahs.length })
+    }
+    if (sequence > 0) {
+      return t('memorisation.postSession.recommendation.aiResultLineMixedOrder')
+    }
+    return t('memorisation.postSession.recommendation.aiResultLineMixed')
+  }
+  if (weakAyahs.length === 1) {
+    return t('memorisation.postSession.recommendation.aiResultLineWeakAyah', { ayah: weakAyahs[0] })
+  }
+  return t('memorisation.postSession.recommendation.aiResultLineWeak')
 }
 
 function buildFocusTip({

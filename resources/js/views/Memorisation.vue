@@ -3582,108 +3582,13 @@
                       <span>{{ postSessionAiReciteBusyLabel }}</span>
                     </button>
                   </div>
-                  <template v-if="postSessionRecommendation?.ai_assessment?.summary || postSessionAiFeedback || postSessionAiReviewDetails">
-                    <div
-                      v-if="postSessionAiReviewDetails"
-                      class="post-session-simple__ai-review"
-                      :data-outcome="postSessionAiReviewDetails.outcome || 'mixed'"
-                    >
-                      <div class="post-session-simple__ai-review-top">
-                        <div
-                          class="post-session-simple__ai-score"
-                          :data-outcome="postSessionAiReviewDetails.outcome || 'mixed'"
-                          :style="postSessionAiReviewDetails.accuracy != null
-                            ? { '--ai-score': `${postSessionAiReviewDetails.accuracy}` }
-                            : null"
-                          aria-hidden="true"
-                        >
-                          <strong>
-                            {{ postSessionAiReviewDetails.accuracy != null ? `${postSessionAiReviewDetails.accuracy}%` : '—' }}
-                          </strong>
-                          <span>{{ postSessionAiReviewDetails.outcomeLabel }}</span>
-                        </div>
-                        <div class="post-session-simple__ai-review-copy">
-                          <p class="post-session-simple__ai-feedback" role="status">
-                            {{ postSessionAiFeedback || postSessionRecommendation?.ai_assessment?.summary }}
-                          </p>
-                          <p
-                            v-if="postSessionAiReviewDetails.durationLabel"
-                            class="post-session-simple__ai-duration"
-                          >
-                            {{ postSessionAiReviewDetails.durationLabel }}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div
-                        v-if="postSessionAiReviewDetails.metrics?.length"
-                        class="post-session-simple__ai-metrics"
-                        role="list"
-                      >
-                        <div
-                          v-for="metric in postSessionAiReviewDetails.metrics"
-                          :key="metric.key"
-                          class="post-session-simple__ai-metric"
-                          :data-tone="metric.tone"
-                          role="listitem"
-                        >
-                          <span class="post-session-simple__ai-metric-label">{{ metric.label }}</span>
-                          <strong class="post-session-simple__ai-metric-value">{{ metric.value }}</strong>
-                        </div>
-                      </div>
-
-                      <ul
-                        v-if="postSessionAiReviewDetails.highlights?.length"
-                        class="post-session-simple__ai-highlights"
-                      >
-                        <li
-                          v-for="item in postSessionAiReviewDetails.highlights"
-                          :key="item.key"
-                          :data-tone="item.tone"
-                        >
-                          <i
-                            class="bi"
-                            :class="item.tone === 'good' ? 'bi-check-circle-fill' : (item.tone === 'warn' ? 'bi-exclamation-circle-fill' : 'bi-info-circle-fill')"
-                            aria-hidden="true"
-                          ></i>
-                          <span>{{ item.text }}</span>
-                        </li>
-                      </ul>
-
-                      <div
-                        v-if="postSessionAiReviewDetails.weakAyahs?.length"
-                        class="post-session-simple__ai-ayahs"
-                      >
-                        <span class="post-session-simple__ai-ayahs-label">
-                          {{ t('memorisation.postSession.recommendation.aiReviewAyahsLabel') }}
-                        </span>
-                        <div class="post-session-simple__ai-ayah-pills">
-                          <span
-                            v-for="ayah in postSessionAiReviewDetails.weakAyahs"
-                            :key="`weak-ayah-${ayah}`"
-                            class="post-session-simple__ai-ayah-pill"
-                          >{{ t('memorisation.postSession.recommendation.aiReviewWeakAyahChip', { ayah }) }}</span>
-                        </div>
-                      </div>
-
-                      <p
-                        v-if="postSessionAiReviewDetails.focus"
-                        class="post-session-simple__ai-focus"
-                      >
-                        <span class="post-session-simple__ai-focus-label">
-                          {{ t('memorisation.postSession.recommendation.aiReviewFocusLabel') }}
-                        </span>
-                        <span>{{ postSessionAiReviewDetails.focus }}</span>
-                      </p>
-                    </div>
-                    <p
-                      v-else-if="postSessionRecommendation?.ai_assessment?.summary || postSessionAiFeedback"
-                      class="post-session-simple__ai-feedback"
-                      role="status"
-                    >
-                      {{ postSessionAiFeedback || postSessionRecommendation.ai_assessment.summary }}
-                    </p>
-                  </template>
+                  <p
+                    v-if="postSessionAiResultLine"
+                    class="post-session-simple__ai-hint post-session-simple__ai-hint--result"
+                    role="status"
+                  >
+                    {{ postSessionAiResultLine }}
+                  </p>
                   <p
                     v-else-if="postSessionAiAssistHint"
                     class="post-session-simple__ai-hint"
@@ -3784,11 +3689,26 @@
                       <p class="post-session-simple__range">{{ postSessionRecommendationTitle }}</p>
                     </div>
                   </div>
-                  <div v-if="postSessionSimpleReason" class="post-session-simple__why">
-                    <p class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
-                  </div>
                   <div v-if="postSessionStaticPills.length" class="post-session-simple__combination">
-                    <p class="post-session-simple__why-label">{{ t('memorisation.postSession.recommendation.tryThisCombination') }}</p>
+                    <div class="post-session-simple__combination-head">
+                      <p class="post-session-simple__why-label">{{ t('memorisation.postSession.recommendation.tryThisCombination') }}</p>
+                      <button
+                        type="button"
+                        class="post-session-simple__why-toggle"
+                        :aria-expanded="postSessionWhyExpanded ? 'true' : 'false'"
+                        aria-controls="postSessionWhyDisclosure"
+                        @click="togglePostSessionWhy"
+                      >
+                        {{ t('memorisation.postSession.recommendation.whyThisPlanToggle') }}
+                      </button>
+                    </div>
+                    <p
+                      v-show="postSessionWhyExpanded"
+                      id="postSessionWhyDisclosure"
+                      class="post-session-simple__why-disclosure"
+                    >
+                      {{ postSessionWhyDisclosureText }}
+                    </p>
                     <div class="post-session-simple__pills">
                       <span
                         v-for="pill in postSessionStaticPills"
@@ -3796,6 +3716,27 @@
                         class="post-session-simple__pill"
                       >{{ pill.label }}</span>
                     </div>
+                  </div>
+                  <div
+                    v-else-if="postSessionWhyDisclosureText"
+                    class="post-session-simple__combination"
+                  >
+                    <button
+                      type="button"
+                      class="post-session-simple__why-toggle"
+                      :aria-expanded="postSessionWhyExpanded ? 'true' : 'false'"
+                      aria-controls="postSessionWhyDisclosureEmpty"
+                      @click="togglePostSessionWhy"
+                    >
+                      {{ t('memorisation.postSession.recommendation.whyThisPlanToggle') }}
+                    </button>
+                    <p
+                      v-show="postSessionWhyExpanded"
+                      id="postSessionWhyDisclosureEmpty"
+                      class="post-session-simple__why-disclosure"
+                    >
+                      {{ postSessionWhyDisclosureText }}
+                    </p>
                   </div>
                   <div class="post-session-simple__plan-actions">
                     <button
