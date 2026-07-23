@@ -3497,6 +3497,7 @@
     <div
       v-if="showPostSessionModal && !postSessionAiReciteActive"
       class="post-session-simple"
+      :data-theme="theme"
       :class="{
         'post-session-simple--sample': onboardingSampleSessionActive,
         'post-session-simple--builder-open': postSessionOffcanvasOpen && showTools,
@@ -3549,7 +3550,6 @@
                   </span>
                 </p>
                 <div v-if="postSessionSimpleReason" class="post-session-simple__why">
-                  <p class="post-session-simple__why-label">{{ postSessionWhyLabel }}</p>
                   <p class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
                 </div>
                 <p v-if="postSessionRecommendationStartError" class="post-session-simple__error" role="alert">
@@ -3769,7 +3769,6 @@
                     </div>
                   </div>
                   <div class="post-session-simple__why">
-                    <p class="post-session-simple__why-label">{{ postSessionWhyLabel }}</p>
                     <p class="post-session-simple__reason">
                       {{ postSessionSimpleReason || t('memorisation.postSession.recommendation.reasons.manualFallback') }}
                     </p>
@@ -3786,7 +3785,6 @@
                     </div>
                   </div>
                   <div v-if="postSessionSimpleReason" class="post-session-simple__why">
-                    <p class="post-session-simple__why-label">{{ postSessionWhyLabel }}</p>
                     <p class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
                   </div>
                   <div v-if="postSessionStaticPills.length" class="post-session-simple__combination">
@@ -3799,34 +3797,7 @@
                       >{{ pill.label }}</span>
                     </div>
                   </div>
-                  <div
-                    v-if="postSessionAdaptationExplanations.length"
-                    class="post-session-simple__param-hints"
-                  >
-                    <p class="post-session-simple__why-label">
-                      {{ t('memorisation.postSession.recommendation.whatChangingDoes') }}
-                    </p>
-                    <ul class="post-session-simple__param-list">
-                      <li
-                        v-for="(hint, index) in postSessionAdaptationExplanations"
-                        :key="`param-hint-${index}`"
-                      >
-                        <i class="bi bi-check2-circle" aria-hidden="true"></i>
-                        <span>{{ hint }}</span>
-                      </li>
-                    </ul>
-                  </div>
                   <div class="post-session-simple__plan-actions">
-                    <button
-                      type="button"
-                      class="post-session-simple__btn post-session-simple__btn--primary post-session-simple__plan-start"
-                      :disabled="postSessionActionsBusy"
-                      :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
-                      @click="openPostSessionRecommendationConfirm"
-                    >
-                      <i class="bi bi-play-fill" aria-hidden="true"></i>
-                      <span>{{ postSessionRecommendationPrimaryLabel }}</span>
-                    </button>
                     <button
                       type="button"
                       class="post-session-simple__adjust-link"

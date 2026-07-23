@@ -35,7 +35,6 @@ import {
   recommendationModeLabelKey,
   recommendationPrimaryActionKey,
 } from '../scripts/recommendations/nextSessionRecommendation'
-import { buildAdaptationExplanations } from '../scripts/recommendations/adaptationExplanations'
 import { buildAiReviewDetails } from '../scripts/recommendations/aiReviewDetails'
 import {
   getTechniqueDescription,
@@ -2715,25 +2714,19 @@ export default {
       const confidence = this.postSessionSelectedConfidence
       const isRepeat = this.postSessionIsRepeatRecommendation
       const reasonCode = String(rec.reason_code || '')
-      const userReason = String(rec.user_reason || rec.reason || '').trim()
-      const practiceReason = /selected Needs more practice|asked for more practice|طلبت المزيد|مزيد من التمرين/i.test(userReason)
-      const isPlaceholder = !userReason
-        || /^based on this session\.?$/i.test(userReason)
-        || /^suggested next step\.?$/i.test(userReason)
+      const nextSurahReason = () => this.t('memorisation.postSession.recommendation.reasons.simpleNextSurah', {
+        surah: this.resolveRecommendationSurahName(rec.next_surah || rec.surah),
+      })
 
-      // Prefer structured evidence→plan copy from the backend whenever available.
-      if (!isPlaceholder && !(confidence === 'confident' && practiceReason && isRepeat)) {
-        return userReason
-      }
-      if (rec.balance_message && String(rec.balance_message).trim()) {
-        return String(rec.balance_message).trim()
-      }
-
-      // Keep the visible reason aligned with the selected confidence toggle while waiting for refresh.
-      if (confidence === 'confident' && (isRepeat || practiceReason || reasonCode === 'confidence_needs_practice')) {
+      // Confidence owns the visible why — one short line that matches the plan on screen.
+      // Do not surface long backend essays (they contradict the toggle and crowd the modal).
+      if (confidence === 'confident') {
+        if (rec.type === RECOMMENDATION_TYPES.NEXT_SURAH || rec.is_end_of_surah) {
+          return nextSurahReason()
+        }
         return this.t('memorisation.postSession.recommendation.reasons.confidenceConfident')
       }
-      if (confidence === 'needs_practice' && (!isRepeat || reasonCode === 'confidence_confident')) {
+      if (confidence === 'needs_practice') {
         return this.t('memorisation.postSession.recommendation.reasons.confidenceNeedsPractice')
       }
 
@@ -2745,17 +2738,12 @@ export default {
         return this.t('memorisation.postSession.recommendation.reasons.simpleRepeat')
       }
       if (rec.type === RECOMMENDATION_TYPES.NEXT_SURAH || rec.is_end_of_surah) {
-        return this.t('memorisation.postSession.recommendation.reasons.simpleNextSurah', {
-          surah: this.resolveRecommendationSurahName(rec.next_surah || rec.surah),
-        })
+        return nextSurahReason()
       }
       if (reasonCode === 'manual_fallback' || reasonCode === 'learning_plan_complete' || !this.postSessionRecommendationActionable) {
         return this.t('memorisation.postSession.recommendation.reasons.manualFallback')
       }
       return this.t('memorisation.postSession.recommendation.reasons.simpleContinue')
-    },
-    postSessionWhyLabel() {
-      return this.t('memorisation.postSession.recommendation.whyThisPlan')
     },
     postSessionIntendedOutcome() {
       const outcome = this.postSessionRecommendation?.intended_outcome
@@ -2840,12 +2828,6 @@ export default {
       }
       // Keep Review Session quiet by default — no long optional essay under the button.
       return ''
-    },
-    postSessionAdaptationExplanations() {
-      return buildAdaptationExplanations(
-        this.postSessionRecommendation?.settings,
-        (key, params) => this.t(key, params)
-      ).slice(0, 2)
     },
     postSessionSettingsOutcome() {
       return this.postSessionIntendedOutcome
@@ -11396,7 +11378,9 @@ export default {
       })
       this.recordingsAudioElement.addEventListener('error', error => {
         if (this.ignoreRecordingsAudioPauseEvent) return
-        console.error('Recordings playback error:', error)
+        const audio = error?.target || this.recordingsAudioElement
+        if (this.isAudioLoadAbortError(audio)) return
+        console.error('Recordings playback error:', this.describeAudioMediaError(audio), error)
         this.activeRecordingPlaybackId = ''
         this.activeSelfCheckPreviewKey = ''
         this.activeSelfCheckAyahPlaybackKey = ''
@@ -17721,8 +17705,30 @@ export default {
 
     isAudioLoadAbortError(audio = null) {
       const code = Number(audio?.error?.code || 0)
-      // MEDIA_ERR_ABORTED (1) is expected when src changes or a newer load() supersedes.
-      return code === 1
+      // MEDIA_ERR_ABORTED (1): expected when src changes or a newer load() supersedes.
+      if (code === 1) return true
+      // MEDIA_ERR_SRC_NOT_SUPPORTED (4) with no src: expected after removeAttribute('src') + load()
+      // when stopping session/recording playback before AI Recite mic capture.
+      const src = String(audio?.getAttribute?.('src') || audio?.currentSrc || '').trim()
+      if (code === 4 && !src) return true
+      return false
+    },
+
+    describeAudioMediaError(audio = null) {
+      const mediaError = audio?.error || null
+      const code = Number(mediaError?.code || 0)
+      const labels = {
+        1: 'MEDIA_ERR_ABORTED',
+        2: 'MEDIA_ERR_NETWORK',
+        3: 'MEDIA_ERR_DECODE',
+        4: 'MEDIA_ERR_SRC_NOT_SUPPORTED',
+      }
+      return {
+        code,
+        label: labels[code] || (code ? `MEDIA_ERR_${code}` : 'UNKNOWN'),
+        message: mediaError?.message || '',
+        src: String(audio?.currentSrc || audio?.getAttribute?.('src') || ''),
+      }
     },
 
     waitForAudioElementReady(audio, timeoutMs = 15000) {
@@ -21788,10 +21794,11 @@ export default {
       this.audioError = (e) => {
         const audio = e?.target || this.audioElement
         if (this.isAudioLoadAbortError(audio)) {
-          // Expected when unlock/preload/playVerse supersede an in-flight load.
+          // Expected when unlock/preload/playVerse supersede an in-flight load,
+          // or when session media is cleared before AI Recite.
           return
         }
-        console.error('Audio error:', e, audio?.error || null)
+        console.error('Audio error:', this.describeAudioMediaError(audio), e)
         this.isPlaying = false
         this.sessionErrorCount += 1
         this.stopWordHighlighting()
@@ -22126,7 +22133,8 @@ export default {
       this.playRequestLocked = false
       if (this.audioElement) {
         this.audioElement.pause()
-        this.audioElement.src = ''
+        this.audioElement.removeAttribute('src')
+        try { this.audioElement.load() } catch { }
       }
       this.playerVisible = false
       this.playerDismissed = false

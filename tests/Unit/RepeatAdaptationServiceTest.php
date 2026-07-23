@@ -224,8 +224,9 @@ class RepeatAdaptationServiceTest extends TestCase
         $this->assertSame('focus', $result['technique']);
         $this->assertSame('anchor', $result['complementary_technique']);
         $this->assertStringContainsString('Confident', $result['user_reason']);
-        $this->assertStringContainsString('memory prompts', $result['user_reason']);
         $this->assertStringContainsString('Focus and Anchor', $result['user_reason']);
+        $this->assertStringNotContainsStringIgnoringCase('memory prompts', $result['user_reason']);
+        $this->assertStringNotContainsStringIgnoringCase('but used', $result['user_reason']);
         $this->assertStringNotContainsStringIgnoringCase('score', $result['user_reason']);
     }
 

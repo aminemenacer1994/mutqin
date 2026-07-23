@@ -1352,8 +1352,8 @@
           "aiReciteStrong": "AI Recite was strong. This plan continues while the previous ayahs are still fresh.",
           "aiReciteMixed": "AI Recite was mostly correct, with a few gaps. This plan reviews the same range once more with a little more support.",
           "aiReciteWeak": "AI Recite found parts that still need practice. This plan keeps the same range with more guidance.",
-          "confidenceConfident": "You completed this range with confidence. This plan continues while the previous ayahs are still fresh.",
-          "confidenceNeedsPractice": "You selected Needs more practice. This plan keeps the same range with slower pacing and a little more guidance.",
+          "confidenceConfident": "You marked this range Confident — continuing while those ayahs are still fresh.",
+          "confidenceNeedsPractice": "You asked for more practice — repeating this range with slower pacing and more support.",
           "simpleContinue": "You completed this range. This plan continues to the next ayahs while the material is still fresh.",
           "simpleRepeat": "This range still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.",
           "simpleNextSurah": "You completed this surah. This plan is ready for Surah {surah} when you are."

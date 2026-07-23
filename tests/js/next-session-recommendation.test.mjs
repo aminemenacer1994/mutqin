@@ -213,7 +213,6 @@ function t(key, params = {}) {
   assert.match(vue, /postSessionStatsExpanded/)
   assert.match(vue, /postSessionSelectedConfidence/)
   assert.match(vue, /postSessionStatsSummary/)
-  assert.match(vue, /postSessionWhyLabel/)
   assert.match(vue, /tryThisCombination/)
   assert.match(vue, /adjustPlan/)
   assert.match(vue, /openPostSessionAdjustPlan/)
@@ -226,13 +225,12 @@ function t(key, params = {}) {
   assert.doesNotMatch(vue, /SESSION COMPLETE|Alhamdulillah/)
   assert.doesNotMatch(vue, /post-session-chip/)
   assert.doesNotMatch(vue, /post-session-inline-select/)
+  assert.doesNotMatch(vue, /whatChangingDoes|post-session-simple__param-hints/, 'plan card must not stack How this helps under combination pills')
+  assert.doesNotMatch(vue, /postSessionWhyLabel|whyThisPlan/, 'why label removed — reason is one short confidence line')
   assert.match(vue, /openPostSessionAiRecite/)
   assert.match(vue, /post-session-simple__ai-btn/)
   assert.match(vue, /post-session-simple__stack/)
   assert.match(vue, /aiReciteHintShort/)
-  assert.match(vue, /postSessionAdaptationExplanations/)
-  assert.match(vue, /whatChangingDoes/)
-  assert.match(vue, /post-session-simple__param-hints/)
   assert.match(vue, /has-selection/)
   assert.match(vue, /is-awaiting/)
   assert.match(js, /submitRecommendationConfidence/)
@@ -251,8 +249,17 @@ function t(key, params = {}) {
   assert.match(css, /--ai-score/)
   assert.match(vue, /postSessionAiReviewDetails/)
   assert.match(vue, /post-session-simple__plan-seal/)
-  assert.match(vue, /post-session-simple__plan-start/)
+  assert.doesNotMatch(
+    vue,
+    /post-session-simple__plan-start/,
+    'plan card must not duplicate the footer primary CTA'
+  )
   assert.match(vue, /openPostSessionRecommendationConfirm/)
+  assert.match(
+    css,
+    /\.post-session-simple__dialog[\s\S]*?width:\s*min\(760px/,
+    'success modal should be slightly wider for cleaner whitespace'
+  )
   assert.match(vue, /data-plan="postSessionPlanKind"|:data-plan="postSessionPlanKind"/)
   assert.match(js, /postSessionPlanKind\(\)/)
   assert.match(css, /post-session-simple__panel--hero::before/)
@@ -263,16 +270,16 @@ function t(key, params = {}) {
   assert.match(js, /deriveCompletionFlowPhase/)
   assert.match(js, /resolveConfidenceSelection/)
   assert.match(js, /adaptRecommendationForConfidence/)
-  assert.match(js, /buildAdaptationExplanations/)
+  assert.doesNotMatch(js, /buildAdaptationExplanations/)
   assert.match(js, /aiReciteOffline/)
   assert.match(vue, /aiReciteOptionalHint/)
   assert.match(js, /buildCompletionPerformancePayload/)
   assert.match(js, /postSessionShowRepeatAction\(\)[\s\S]*return false/)
   assert.match(js, /postSessionStaticPills/)
   assert.match(js, /postSessionSimpleReason/)
-  assert.match(js, /user_reason/)
-  assert.match(js, /postSessionWhyLabel/)
-  assert.match(js, /whyThisPlan/)
+  assert.match(js, /confidenceConfident/)
+  assert.match(js, /confidenceNeedsPractice/)
+  assert.doesNotMatch(js, /postSessionWhyLabel|whyThisPlan/)
   assert.match(js, /sessionHintCount/)
   assert.match(js, /recordSessionHint/)
   assert.match(js, /sessionExitContextLabel/)
@@ -282,7 +289,6 @@ function t(key, params = {}) {
   assert.match(css, /onboarding-post-session-tools[\s\S]*z-index:\s*12720/)
   assert.match(css, /post-session-simple__adjust-link/)
   assert.match(css, /\.post-session-simple__segment-btn\.is-selected/)
-  assert.match(css, /post-session-simple__param-list/)
   assert.match(vue, /showPostSessionModal && !postSessionAiReciteActive/)
   assert.match(vue, /zIndex:\s*20000|z-index:\s*20000/)
   assert.match(css, /self-check-modal-overlay--above-post-session[\s\S]*z-index:\s*20000/)
@@ -327,9 +333,9 @@ function t(key, params = {}) {
     user_reason: 'You completed the range and selected Confident, but used several memory prompts. Start the next ayah with Focus and Anchor mode, then remove the support once recall feels stable.',
     settings: { technique: 'talqin', playback_speed: 1, repetitions: 3 },
   }
-  const keepReason = adaptRecommendationForConfidence(continueRec, 'confident')
-  assert.equal(keepReason.user_reason, continueRec.user_reason)
-  assert.match(String(keepReason.user_reason), /Focus and Anchor/)
+  const clearHedging = adaptRecommendationForConfidence(continueRec, 'confident')
+  assert.equal(clearHedging.user_reason, null)
+  assert.equal(clearHedging.reason_code, 'confidence_confident')
 
   const needsPractice = adaptRecommendationForConfidence(continueRec, 'needs_practice', {
     rangeStart: 12,

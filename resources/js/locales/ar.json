@@ -1193,11 +1193,11 @@
           "aiReciteStrong": "بناءً على هذه الجلسة",
           "aiReciteMixed": "بناءً على هذه الجلسة",
           "aiReciteWeak": "بناءً على هذه الجلسة",
-          "confidenceConfident": "بناءً على هذه الجلسة",
-          "confidenceNeedsPractice": "بناءً على هذه الجلسة",
-          "simpleContinue": "بناءً على هذه الجلسة",
-          "simpleRepeat": "بناءً على هذه الجلسة",
-          "simpleNextSurah": "بناءً على هذه الجلسة"
+          "confidenceConfident": "اخترت واثق — نتابع والآيات لا تزال حاضرة.",
+          "confidenceNeedsPractice": "طلبت مزيدًا من التمرين — نعيد نفس النطاق بإيقاع أهدأ ودعم أوضح.",
+          "simpleContinue": "أكملت هذا النطاق. نتابع إلى الآيات التالية وهي لا تزال حاضرة.",
+          "simpleRepeat": "هذا النطاق يحتاج دعمًا. نبقي نفس الآيات بإيقاع أهدأ ودعم أوضح.",
+          "simpleNextSurah": "أكملت هذه السورة. الخطة جاهزة لسورة {surah} متى شئت."
         },
         "nextSetTitle": "خطة مقترحة",
         "revisionSetTitle": "خطة مقترحة",

@@ -369,21 +369,25 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
     }
   }
 
-  // Confident — clear stale practice copy, but keep evidence-based progression reasons.
+  // Confident — clear practice/hedging copy so the modal why stays aligned with the toggle.
   const existingReason = String(recommendation.user_reason || '').trim()
   const stalePracticeCopy = /selected Needs more practice|asked for more practice/i.test(existingReason)
+  const hedgingCopy = /but used several memory prompts|used several memory prompts/i.test(existingReason)
+  const clearReason = stalePracticeCopy || hedgingCopy
   const type = String(recommendation.type || '')
   const isTerminal = type === RECOMMENDATION_TYPES.PLAN_COMPLETE
     || type === RECOMMENDATION_TYPES.SURAH_COMPLETE
     || type === RECOMMENDATION_TYPES.MANUAL_SELECTION
 
-  // Already a forward plan — keep its evidence copy and range.
+  // Already a forward plan — keep the range; drop contradictory why copy.
   if (!isRepeatRecommendation(recommendation) && !isTerminal) {
     return {
       ...next,
-      reason_code: recommendation.reason_code || 'confidence_confident',
-      user_reason: stalePracticeCopy ? null : (existingReason || null),
-      reason: stalePracticeCopy ? '' : String(recommendation.reason || ''),
+      reason_code: clearReason
+        ? 'confidence_confident'
+        : (recommendation.reason_code || 'confidence_confident'),
+      user_reason: clearReason ? null : (existingReason || null),
+      reason: clearReason ? '' : String(recommendation.reason || ''),
       balance_message: null,
     }
   }

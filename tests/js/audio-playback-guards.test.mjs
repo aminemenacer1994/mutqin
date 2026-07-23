@@ -31,6 +31,16 @@ describe('audio playback guards', () => {
       memorisationSource,
       /this\.audioError = \(e\) => \{[\s\S]*isAudioLoadAbortError\(audio\)/
     )
+    assert.match(
+      memorisationSource,
+      /code === 4 && !src/,
+      'empty-src MEDIA_ERR_SRC_NOT_SUPPORTED must be treated as benign'
+    )
+    assert.match(
+      memorisationSource,
+      /describeAudioMediaError\(audio = null\) \{/,
+      'real audio failures should log structured MediaError details'
+    )
     assert.doesNotMatch(
       memorisationSource,
       /nudge = setTimeout\(\(\) => \{[\s\S]*try \{ audio\.load\(\) \} catch/
