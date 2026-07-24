@@ -389,6 +389,8 @@ includesAll('audio unlock flow', [
   /isAudioLoadAbortError\(audio = null\) \{/,
   /ensureSessionPlaybackStarted\(options = \{\}\) \{[\s\S]*skipImmediatePlay/,
   /startSessionWithCountdown[\s\S]*ensureSessionPlaybackStarted\(\{ skipImmediatePlay: true \}\)/,
+  /startSessionWithCountdown[\s\S]*noteLearningBackendFailure\(error, 'start'\)[\s\S]*continuing locally/,
+  /learningBackendEnabled\(\) \{\s*return !!this\.auth\?\.check && !this\.learningBackendUnavailable/,
   /preloadQueueEntryAudio\(entry, options = \{\}\) \{[\s\S]*this\.claimAudioElement\(audio\)/,
   /normalizeAudioUrl\(url\) \{[\s\S]*cdn\.islamic\.network/,
   /startSessionAndClose\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,

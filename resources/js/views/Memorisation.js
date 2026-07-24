@@ -418,6 +418,10 @@ export default {
       sessionActionLock: createSessionActionLock(),
       sessionBroadcast: null,
       sessionBroadcastUnsubscribe: null,
+      // When Sanctum cookies reject /api (401/403/419), keep practising locally
+      // instead of hard-blocking Start / countdown / audio on backend calls.
+      learningBackendUnavailable: false,
+      learningBackendAuthBannerShown: false,
       // Backend-driven learning persistence (authenticated users only). For guests
       // localStorage remains the source of truth; for authenticated users the
       // backend is authoritative and localStorage acts only as an offline cache.
@@ -5965,6 +5969,9 @@ export default {
       this.isWorkspaceRefreshing = false
       this.workspaceRefreshReason = ''
       this.appReady = true
+      // Never leave the header stuck on Loading if bootstrap skipped/aborted
+      // before validateSessionLifecycleAgainstBackend ran.
+      this.sessionLifecycleHydrated = true
       if (this.hasPersistedInProgressSession || this.hasSessionStarted) {
         this.markActiveSessionSnapshot()
       }
@@ -8424,7 +8431,12 @@ export default {
           clearInterval(this.countdownInterval)
           this.countdownInterval = null
           this.showCountdownOverlay = false
-          if (callback) callback()
+          if (!callback) return
+          Promise.resolve()
+            .then(() => callback())
+            .catch((error) => {
+              console.error('Countdown callback failed', error)
+            })
         }
       }, 1000)
     },
@@ -8764,13 +8776,20 @@ export default {
           this.transitionSessionLifecycle(SESSION_STATUS.STARTING, SESSION_MUTATION.STARTING)
           try {
             if (this.learningBackendEnabled() && !this.onboardingSampleSessionActive) {
-              await learningApi.startSession({
-                surah_number: Number(this.chapterId || this.currentChapter?.id || 0) || null,
-                ayah_number: Number(this.rangeStart || 1) || null,
-                memorisation_mode: this.currentMode,
-                idempotency_key: `start-${this.auth?.id || 'guest'}-${this.chapterId || 0}-${this.rangeStart || 0}-${this.rangeEnd || 0}`,
-              })
-              this.backendUnfinishedSession = true
+              try {
+                await learningApi.startSession({
+                  surah_number: Number(this.chapterId || this.currentChapter?.id || 0) || null,
+                  ayah_number: Number(this.rangeStart || 1) || null,
+                  memorisation_mode: this.currentMode,
+                  idempotency_key: `start-${this.auth?.id || 'guest'}-${this.chapterId || 0}-${this.rangeStart || 0}-${this.rangeEnd || 0}`,
+                })
+                this.backendUnfinishedSession = true
+              } catch (error) {
+                // Mirror pause/end: never block local start/countdown/audio on API auth
+                // or network failure. Progress stays in the local cache until sync works.
+                this.noteLearningBackendFailure(error, 'start')
+                console.warn('Failed to persist session start on backend; continuing locally', error)
+              }
             }
             await this.startSession()
             // startSession already called playQueueEntry; avoid a second force-play
@@ -8790,7 +8809,7 @@ export default {
             console.error(error)
             this.sessionLifecycleError = 'start_failed'
             this.transitionSessionLifecycle(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
-            throw error
+            return false
           }
         })
         if (!lockResult?.ok && lockResult?.reason === 'locked') {
@@ -18394,7 +18413,9 @@ export default {
                       'warning',
                       4200
                     )
+                    return
                   }
+                  this.noteLearningBackendFailure(error, 'resume')
                 }
               })
             }
@@ -18445,7 +18466,11 @@ export default {
                 )
                 return false
               }
-              throw error
+              if (this.noteLearningBackendFailure(error, 'resume')) {
+                console.warn('Failed to resume session on backend; continuing locally', error)
+              } else {
+                throw error
+              }
             }
           }
           // Mid-session / primary Resume never uses the start-session countdown.
@@ -18561,6 +18586,7 @@ export default {
       } catch (error) {
         console.warn('Failed to validate session against backend', error)
         this.sessionLifecycleError = 'backend_validation_failed'
+        this.noteLearningBackendFailure(error, 'validate')
       } finally {
         this.sessionLifecycleHydrated = true
       }
@@ -24797,7 +24823,33 @@ export default {
     // flaky networks. Guests are unaffected and remain fully localStorage-based.
 
     learningBackendEnabled() {
-      return !!this.auth?.check
+      return !!this.auth?.check && !this.learningBackendUnavailable
+    },
+
+    isLearningBackendAuthError(error) {
+      const status = error?.response?.status
+      return status === 401 || status === 403 || status === 419
+    },
+
+    noteLearningBackendFailure(error, context = '') {
+      if (!this.isLearningBackendAuthError(error)) return false
+      if (this.learningBackendUnavailable) return true
+      console.warn(`[learning] backend auth lost (${context || 'request'})`, error?.response?.status)
+      this.learningBackendUnavailable = true
+      this.backendUnfinishedSession = false
+      this.backendSessionSnapshot = null
+      this.learningSync.status = 'idle'
+      this.sessionLifecycleHydrated = true
+      if (!this.learningBackendAuthBannerShown) {
+        this.learningBackendAuthBannerShown = true
+        this.showBanner(
+          this.t('toasts.offlineModeActiveReadingFallsBack')
+            || 'Session sync unavailable. Continuing locally.',
+          'warning',
+          4200
+        )
+      }
+      return true
     },
 
     getOrCreateDeviceId() {
@@ -24892,6 +24944,7 @@ export default {
           this.setLearningSyncStatus('failed')
           this.scheduleLearningRetry()
         } else {
+          this.noteLearningBackendFailure(error, 'push')
           this.learningSync.status = 'idle'
         }
       } finally {
@@ -24958,10 +25011,12 @@ export default {
           await this.runLearningMigration()
         }
         this.learningSync.ready = true
-      } catch {
-        // Backend unreachable: keep using the local cache and retry when online.
-        this.setLearningSyncStatus('failed')
-        this.scheduleLearningRetry()
+      } catch (error) {
+        // Backend unreachable or unauthorized: keep using the local cache.
+        if (!this.noteLearningBackendFailure(error, 'init')) {
+          this.setLearningSyncStatus('failed')
+          this.scheduleLearningRetry()
+        }
       }
     },
 
