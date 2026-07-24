@@ -6,6 +6,7 @@ use App\Enums\ConfidenceFeedback;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\RespondToRecommendationRequest;
 use App\Http\Requests\Learning\SaveRecommendationSettingsRequest;
+use App\Http\Requests\Learning\SubmitRecommendationAdaptiveAssessmentRequest;
 use App\Http\Requests\Learning\SubmitRecommendationAiAssessmentRequest;
 use App\Http\Requests\Learning\SubmitRecommendationConfidenceRequest;
 use App\Models\SessionRecommendation;
@@ -77,8 +78,18 @@ class RecommendationController extends Controller
     ): JsonResponse {
         $recommendation = $this->findOwnedRecommendation($request, (int) $request->validated('recommendation_id'));
         $feedback = ConfidenceFeedback::from($request->validated('confidence'));
+        $validated = $request->validated();
 
-        $payload = $service->submitConfidence($request->user(), $recommendation, $feedback);
+        $payload = $service->submitConfidence(
+            $request->user(),
+            $recommendation,
+            $feedback,
+            [
+                'plan_detail' => $validated['plan_detail'] ?? null,
+                'ayah_range' => $validated['ayah_range'] ?? null,
+                'focus_ayahs' => $validated['focus_ayahs'] ?? null,
+            ],
+        );
 
         return response()->json([
             'saved' => true,
@@ -113,13 +124,52 @@ class RecommendationController extends Controller
     ): JsonResponse {
         $recommendation = $this->findOwnedRecommendation($request, (int) $request->validated('recommendation_id'));
 
+        $validated = $request->validated();
         $payload = $service->applyAiAssessment($request->user(), $recommendation, [
-            'result' => $request->validated('result'),
-            'summary' => $request->validated('summary'),
-            'weak_ayahs' => $request->validated('weak_ayahs') ?? [],
-            'sequence_errors' => $request->validated('sequence_errors') ?? 0,
-            'missed_words' => $request->validated('missed_words') ?? 0,
-            'pronunciation_issues' => (bool) ($request->validated('pronunciation_issues') ?? false),
+            'result' => $validated['result'],
+            'summary' => $validated['summary'] ?? null,
+            'weak_ayahs' => $validated['weak_ayahs'] ?? [],
+            'sequence_errors' => $validated['sequence_errors'] ?? 0,
+            'missed_words' => $validated['missed_words'] ?? 0,
+            'pronunciation_issues' => (bool) ($validated['pronunciation_issues'] ?? false),
+            'color_counts' => is_array($validated['color_counts'] ?? null) ? $validated['color_counts'] : null,
+            'plan_detail' => $validated['plan_detail'] ?? null,
+            'ayah_range' => $validated['ayah_range'] ?? null,
+            'focus_ayahs' => $validated['focus_ayahs'] ?? null,
+        ]);
+
+        return response()->json([
+            'saved' => true,
+            'recommendation' => $payload,
+        ]);
+    }
+
+    public function adaptiveAssessment(
+        SubmitRecommendationAdaptiveAssessmentRequest $request,
+        NextSessionRecommendationService $service,
+    ): JsonResponse {
+        $recommendation = $this->findOwnedRecommendation($request, (int) $request->validated('recommendation_id'));
+        $validated = $request->validated();
+
+        $payload = $service->applyAdaptiveAssessment($request->user(), $recommendation, [
+            'result' => $validated['result'],
+            'summary' => $validated['summary'] ?? null,
+            'assessment_id' => $validated['assessment_id'] ?? null,
+            'weak_ayahs' => $validated['weak_ayahs'] ?? [],
+            'sequence_errors' => $validated['sequence_errors'] ?? 0,
+            'missed_words' => $validated['missed_words'] ?? 0,
+            'pronunciation_issues' => (bool) ($validated['pronunciation_issues'] ?? false),
+            'reason_codes' => $validated['reason_codes'] ?? [],
+            'skills' => $validated['skills'] ?? null,
+            'skill_view' => $validated['skill_view'] ?? null,
+            'policy' => $validated['policy'] ?? null,
+            'responses' => $validated['responses'] ?? null,
+            'events' => $validated['events'] ?? null,
+            'review' => $validated['review'] ?? null,
+            'snapshot' => $validated['snapshot'] ?? null,
+            'plan_detail' => $validated['plan_detail'] ?? null,
+            'ayah_range' => $validated['ayah_range'] ?? null,
+            'focus_ayahs' => $validated['focus_ayahs'] ?? null,
         ]);
 
         return response()->json([

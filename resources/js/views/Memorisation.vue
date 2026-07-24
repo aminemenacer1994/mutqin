@@ -3,6 +3,7 @@
     'is-rtl': isRtlLocale,
     'onboarding-post-session-active': showPostSessionModal,
     'post-session-ai-recite-open': postSessionAiReciteActive,
+    'post-session-adaptive-check-open': postSessionAdaptiveCheckActive,
     'overlay-onboarding-active': isOnboardingExperienceActive,
     'onboarding-post-session-offcanvas-open': showPostSessionModal && postSessionOffcanvasOpen && showTools,
     'session-exit-flow-active': showSessionExitModal,
@@ -2761,104 +2762,111 @@
                     <p>{{ t('memorisation.use_the_ai_recite_tool_in_the_header_when_you_want') }}</p>
                   </div>
                 </div>
-                <div v-if="recitationCheckResult" class="recitation-check-body recitation-check-results shared-result-flow transition-all duration-300">
-                  <section class="shared-result-section shared-result-section--summary transition-all duration-300">
-                    <div class="shared-result-section-head">
-                      <span class="recitation-check-section-label">
-                        <span class="shared-result-step-badge">1</span>
-                        <i class="bi bi-check2-circle" aria-hidden="true"></i>
-                        {{ getUnifiedResultSectionLabel('summary') }}
-                      </span>
-                      <strong>{{ getRecitationResultHeadline(recitationCheckResult) }}</strong>
+                <div v-if="recitationCheckResult" class="recitation-check-body recitation-check-results recitation-premium-review transition-all duration-300">
+                  <header class="recitation-premium-hero" :data-outcome="recitationPremiumSummary.outcomeTone">
+                    <div class="recitation-premium-hero-copy">
+                      <span class="recitation-premium-kicker">{{ recitationPremiumSummary.outcomeLabel }}</span>
+                      <strong class="recitation-premium-headline">{{ recitationPremiumSummary.headline }}</strong>
+                      <p v-if="recitationPremiumSummary.focusLine" class="recitation-premium-focus">
+                        {{ recitationPremiumSummary.focusLine }}
+                      </p>
                     </div>
-                    <div class="recitation-result-stats">
-                      <article v-for="stat in getRecitationResultStats(recitationCheckResult)" :key="stat.key"
-                        class="recitation-result-stat" :class="stat.tone">
-                        <span>{{ stat.label }}</span>
-                        <strong>{{ stat.value }}</strong>
-                        <small>{{ stat.description }}</small>
-                      </article>
+                    <div
+                      v-if="recitationPremiumSummary.accuracy != null"
+                      class="recitation-premium-score"
+                      :aria-label="t('memorisation.aiCheck.matchPercentAria', { percent: recitationPremiumSummary.accuracy })"
+                    >
+                      <span class="recitation-premium-score-value">{{ recitationPremiumSummary.accuracy }}</span>
+                      <span class="recitation-premium-score-unit">%</span>
+                      <span class="recitation-premium-score-label">{{ t('memorisation.aiCheck.matchLabel') }}</span>
                     </div>
-                  </section>
-                  <section class="shared-result-section shared-result-section--words transition-all duration-300">
-                    <div class="shared-result-section-head">
-                      <span class="recitation-check-section-label">
-                        <span class="shared-result-step-badge">2</span>
-                        <i class="bi bi-chat-square-text" aria-hidden="true"></i>
-                        {{ getUnifiedResultSectionLabel('words') }}
-                      </span>
-                      <p>{{ getRecitationWordsReviewSummary(recitationCheckResult) }}</p>
+                  </header>
+
+                  <div
+                    v-if="recitationPremiumSummary.segments.length"
+                    class="recitation-premium-meter"
+                    role="img"
+                    :aria-label="t('memorisation.aiCheck.colourMeterAria')"
+                  >
+                    <div class="recitation-premium-meter-track" aria-hidden="true">
+                      <span
+                        v-for="segment in recitationPremiumSummary.segments"
+                        :key="`meter-${segment.key}`"
+                        class="recitation-premium-meter-segment"
+                        :class="segment.tone"
+                        :style="{ flexGrow: segment.count, flexBasis: 0 }"
+                      ></span>
                     </div>
-                    <div v-if="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
-                      class="recitation-review-ayah shared-result-ayah" dir="rtl"
-                      v-html="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
-                      @click="handleRecitationReviewWordClick($event, recitationCheckResult)"></div>
-                    <div class="shared-result-word-review transition-all duration-300">
-                      <div v-if="getRecitationWordsToReview(recitationCheckResult).length" class="shared-result-word-review-list" dir="rtl">
-                        <span v-for="word in getRecitationWordsToReview(recitationCheckResult)" :key="`recitation-review-${word.index}`"
-                          class="shared-result-word-review-chip" :class="`is-${word.visualStatus}`">
-                          {{ word.text }}
-                        </span>
-                      </div>
-                      <p v-else class="shared-result-word-review-summary"><i class="bi bi-check2-circle" aria-hidden="true"></i><span>{{ getFriendlyNoWordMistakesMessage() }}</span></p>
-                    </div>
-                  </section>
-                  <div class="shared-result-support-grid transition-all duration-300">
-                    <section class="shared-result-section shared-result-section--support shared-result-section--next transition-all duration-300">
-                      <div class="shared-result-section-head">
-                        <span class="recitation-check-section-label">
-                          <span class="shared-result-step-badge">3</span>
-                          <i class="bi bi-compass" aria-hidden="true"></i>
-                          {{ getUnifiedResultSectionLabel('next') }}
-                        </span>
-                      </div>
-                      <div class="shared-result-support-body">
-                        <strong class="shared-result-support-title">{{ getRecitationRecommendationDisplay(recitationCheckResult) }}</strong>
-                        <p class="shared-result-support-copy">{{ getRecitationNextStep(recitationCheckResult) }}</p>
-                      </div>
-                    </section>
-                    <section class="shared-result-section shared-result-section--support shared-result-section--recording transition-all duration-300">
-                      <div class="shared-result-section-head">
-                        <span class="recitation-check-section-label">
-                          <span class="shared-result-step-badge">4</span>
-                          <i class="bi bi-play-circle" aria-hidden="true"></i>
-                          {{ getUnifiedResultSectionLabel('recording') }}
-                        </span>
-                      </div>
-                      <div class="shared-result-support-body">
-                        <strong class="shared-result-support-title" :class="getRecitationValidationTone(recitationCheckResult)">{{ getRecitationValidationLabel(recitationCheckResult) }}</strong>
-                        <p class="shared-result-support-copy">{{ getRecitationValidationSummary(recitationCheckResult) }}</p>
-                      </div>
-                      <div class="shared-result-support-media">
-                        <div v-if="recitationCheckResult.audioSrc" class="self-check-audio-player shared-result-audio-player shared-result-audio-player--compact">
-                          <button class="self-check-audio-player-btn" type="button"
-                            @click="toggleReviewResultAudio(recitationCheckResult)"
-                            :disabled="reviewResultAudioState === 'loading_audio' || recitationCheckPreparing || recitationCheckRecording"
-                            :aria-busy="reviewResultAudioState === 'loading_audio' ? 'true' : 'false'"
-                            :aria-label="reviewResultAudioAriaLabel()">
-                            <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : (reviewResultAudioState === 'ended' ? 'bi-arrow-counterclockwise' : 'bi-play-fill')" aria-hidden="true"></i>
-                          </button>
-                          <div class="self-check-audio-player-track">
-                            <div class="self-check-audio-player-waveform">
-                              <input class="self-check-audio-player-seek" type="range" min="0"
-                                :max="reviewResultAudioDuration || 0" step="0.01" :value="reviewResultAudioCurrentTime"
-                                @input="seekReviewResultAudio" :aria-label="getUnifiedResultSectionLabel('recording')" />
-                            </div>
-                            <div class="self-check-audio-player-times">
-                              <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioCurrentTime) }}</span>
-                              <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioDuration || recitationCheckResult.durationSeconds) }}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <p v-if="reviewResultAudioError" class="shared-result-recording-empty" role="status" aria-live="polite">
-                          <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
-                          <span>{{ reviewResultAudioError }}</span>
-                        </p>
-                        <p v-else-if="!recitationCheckResult.audioSrc" class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ getRecitationValidationSummary(recitationCheckResult) }}</span></p>
-                      </div>
-                    </section>
+                    <ul class="recitation-premium-legend">
+                      <li
+                        v-for="segment in recitationPremiumSummary.segments"
+                        :key="`legend-${segment.key}`"
+                        class="recitation-premium-legend-item"
+                        :class="segment.tone"
+                      >
+                        <span class="recitation-premium-legend-dot" aria-hidden="true"></span>
+                        <span class="recitation-premium-legend-label">{{ segment.label }}</span>
+                        <strong class="recitation-premium-legend-count">{{ segment.count }}</strong>
+                      </li>
+                    </ul>
                   </div>
-                  <div class="recitation-check-footnotes">
+
+                  <section class="recitation-premium-ayah-block" v-if="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)">
+                    <div
+                      class="recitation-review-ayah shared-result-ayah recitation-premium-ayah"
+                      dir="rtl"
+                      v-html="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
+                      @click="handleRecitationReviewWordClick($event, recitationCheckResult)"
+                    ></div>
+                    <div
+                      v-if="recitationPremiumIssueWords.length"
+                      class="recitation-premium-issues"
+                      dir="rtl"
+                    >
+                      <span class="recitation-premium-issues-label">{{ t('memorisation.aiCheck.wordsToRevisit') }}</span>
+                      <div class="recitation-premium-issue-list">
+                        <span
+                          v-for="word in recitationPremiumIssueWords"
+                          :key="`recitation-issue-${word.index}`"
+                          class="recitation-premium-issue-chip"
+                          :class="`is-${word.visualStatus}`"
+                        >{{ word.text }}</span>
+                      </div>
+                    </div>
+                    <p v-else class="recitation-premium-clean">
+                      <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                      <span>{{ getFriendlyNoWordMistakesMessage() }}</span>
+                    </p>
+                  </section>
+
+                  <div v-if="recitationCheckResult.audioSrc" class="recitation-premium-audio">
+                    <div class="self-check-audio-player shared-result-audio-player shared-result-audio-player--compact">
+                      <button class="self-check-audio-player-btn" type="button"
+                        @click="toggleReviewResultAudio(recitationCheckResult)"
+                        :disabled="reviewResultAudioState === 'loading_audio' || recitationCheckPreparing || recitationCheckRecording"
+                        :aria-busy="reviewResultAudioState === 'loading_audio' ? 'true' : 'false'"
+                        :aria-label="reviewResultAudioAriaLabel()">
+                        <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : (reviewResultAudioState === 'ended' ? 'bi-arrow-counterclockwise' : 'bi-play-fill')" aria-hidden="true"></i>
+                      </button>
+                      <div class="self-check-audio-player-track">
+                        <div class="self-check-audio-player-waveform">
+                          <input class="self-check-audio-player-seek" type="range" min="0"
+                            :max="reviewResultAudioDuration || 0" step="0.01" :value="reviewResultAudioCurrentTime"
+                            @input="seekReviewResultAudio" :aria-label="getUnifiedResultSectionLabel('recording')" />
+                        </div>
+                        <div class="self-check-audio-player-times">
+                          <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioCurrentTime) }}</span>
+                          <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioDuration || recitationCheckResult.durationSeconds) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p v-if="reviewResultAudioError" class="shared-result-recording-empty" role="status" aria-live="polite">
+                      <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                      <span>{{ reviewResultAudioError }}</span>
+                    </p>
+                  </div>
+
+                  <div class="recitation-check-footnotes recitation-premium-footnotes">
                     <div v-if="selfCheckLastSavedAyahKey === selfCheckModalVerse.key"
                       class="self-check-status self-check-status-success recitation-check-footnote recitation-saved-footnote">
                       <div class="recitation-saved-footnote-copy">
@@ -2875,19 +2883,34 @@
                       <span>{{ t('memorisation.ai_recitation_feedback_is_a_guide_verify_important') }}</span>
                     </div>
                   </div>
-                  <div class="recitation-result-actions recitation-result-actions-compact recitation-result-actions-compact-clean">
-                    <button class="btn-primary self-check-action-btn" type="button" @click="savePendingRecitationCheckAttempt">
-                      <i class="bi bi-save2"></i>
-                      <span>{{ t('memorisation.save_attempt') }}</span>
-                    </button>
-                    <button class="btn-secondary self-check-action-btn" type="button" @click="resetDisplayedRecitationAyah">
-                      <i class="bi bi-arrow-counterclockwise"></i>
-                      <span>{{ t('memorisation.aiCheck.tryAgain') }}</span>
-                    </button>
-                    <button class="btn-secondary self-check-action-btn" type="button" @click="discardRecitationCheckAttempt">
-                      <i class="bi bi-x-circle"></i>
-                      <span>{{ t('common.discard') }}</span>
-                    </button>
+
+                  <div class="recitation-premium-actions">
+                    <template v-if="postSessionAiReciteActive">
+                      <button class="btn-primary self-check-action-btn" type="button" @click="continuePostSessionAiReciteToPlan">
+                        <i class="bi bi-arrow-right-circle" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.aiCheck.continueToPlan') }}</span>
+                      </button>
+                      <button class="btn-secondary self-check-action-btn" type="button" @click="resetDisplayedRecitationAyah">
+                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.aiCheck.tryAgain') }}</span>
+                      </button>
+                      <button class="recitation-premium-discard" type="button" @click="discardRecitationCheckAttempt">
+                        {{ t('common.discard') }}
+                      </button>
+                    </template>
+                    <template v-else>
+                      <button class="btn-primary self-check-action-btn" type="button" @click="savePendingRecitationCheckAttempt">
+                        <i class="bi bi-save2" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.save_attempt') }}</span>
+                      </button>
+                      <button class="btn-secondary self-check-action-btn" type="button" @click="resetDisplayedRecitationAyah">
+                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.aiCheck.tryAgain') }}</span>
+                      </button>
+                      <button class="recitation-premium-discard" type="button" @click="discardRecitationCheckAttempt">
+                        {{ t('common.discard') }}
+                      </button>
+                    </template>
                   </div>
                 </div>
               </section>
@@ -3495,7 +3518,7 @@
     <Teleport to="body">
     <transition name="mutqin-flow">
     <div
-      v-if="showPostSessionModal && !postSessionAiReciteActive"
+      v-if="showPostSessionModal && !postSessionAiReciteActive && !postSessionAdaptiveCheckActive"
       class="post-session-simple"
       :data-theme="theme"
       :class="{
@@ -3559,208 +3582,291 @@
             </template>
 
             <template v-else>
-              <div class="post-session-simple__stack">
-                <section class="post-session-simple__ai" aria-labelledby="postSessionAiTitle">
-                  <div class="post-session-simple__ai-head">
-                    <p id="postSessionAiTitle" class="post-session-simple__section-label">
-                      {{ t('memorisation.postSession.recommendation.aiReciteHintShort') }}
-                    </p>
-                    <button
-                      type="button"
-                      class="post-session-simple__ai-btn"
-                      :disabled="postSessionActionsBusy"
-                      :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
-                      @click="openPostSessionAiRecite"
-                    >
-                      <span
-                        v-if="postSessionAiReciteBusy"
-                        class="spinner-border spinner-border-sm"
+              <div class="post-session-simple__stack post-session-simple__stack--flow ps-flow">
+                <p class="ps-flow__intro">
+                  {{ t('memorisation.postSession.recommendation.flowIntro') }}
+                </p>
+
+                <section
+                  class="ps-quiz"
+                  :class="{ 'ps-quiz--done': postSessionMemoryCheckResultVisible }"
+                  aria-labelledby="postSessionReviewTitle"
+                >
+                  <div class="ps-step">
+                    <div class="ps-step__rail" aria-hidden="true">
+                      <span class="ps-step__num">1</span>
+                      <span class="ps-step__line"></span>
+                    </div>
+                    <div class="ps-step__content">
+                      <div class="ps-step__head">
+                        <div class="ps-step__titles">
+                          <p class="ps-step__eyebrow">
+                            {{ t('memorisation.postSession.recommendation.stepCheck') }}
+                            <span class="ps-step__dot" aria-hidden="true">·</span>
+                            {{ t('memorisation.postSession.adaptiveCheck.memoryCheckOptionalTag') }}
+                            <span class="ps-step__dot" aria-hidden="true">·</span>
+                            {{ t('memorisation.postSession.adaptiveCheck.memoryCheckTimeTag') }}
+                          </p>
+                          <h3 id="postSessionReviewTitle" class="ps-quiz__title">
+                            {{ t('memorisation.postSession.adaptiveCheck.memoryCheckLead') }}
+                          </h3>
+                        </div>
+                        <span class="ps-quiz__brand" aria-hidden="true">
+                          {{ t('memorisation.postSession.adaptiveCheck.quizAiTitle') }}
+                        </span>
+                      </div>
+
+                      <p class="ps-quiz__sub">
+                        {{ t('memorisation.postSession.adaptiveCheck.memoryCheckDescription') }}
+                      </p>
+                      <p class="ps-quiz__why">
+                        {{ t('memorisation.postSession.adaptiveCheck.memoryCheckWhy') }}
+                      </p>
+
+                      <ul class="ps-quiz__bullets" v-if="!postSessionMemoryCheckResultVisible">
+                        <li>{{ t('memorisation.postSession.adaptiveCheck.memoryCheckBulletQuiz') }}</li>
+                        <li>{{ t('memorisation.postSession.adaptiveCheck.memoryCheckBulletAi') }}</li>
+                        <li>{{ t('memorisation.postSession.adaptiveCheck.memoryCheckBulletTime') }}</li>
+                      </ul>
+
+                      <div class="ps-quiz__actions">
+                        <button
+                          type="button"
+                          class="ps-quiz__cta"
+                          :disabled="postSessionActionsBusy"
+                          :aria-busy="postSessionMemoryCheckBusy ? 'true' : 'false'"
+                          @click="startPostSessionAdaptiveCheck"
+                        >
+                          <span
+                            v-if="postSessionMemoryCheckBusy"
+                            class="spinner-border spinner-border-sm"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
+                          {{ postSessionMemoryCheckBusy
+                            ? t('memorisation.postSession.adaptiveCheck.memoryCheckOpening')
+                            : (postSessionMemoryCheckResultVisible
+                              ? t('memorisation.postSession.adaptiveCheck.tryAgainCta')
+                              : t('memorisation.postSession.adaptiveCheck.memoryCheckCta')) }}
+                        </button>
+                        <button
+                          v-if="!postSessionMemoryCheckResultVisible"
+                          type="button"
+                          class="ps-quiz__voice"
+                          :disabled="postSessionActionsBusy"
+                          @click="openPostSessionAiRecite"
+                        >
+                          <i class="bi bi-mic" aria-hidden="true"></i>
+                          {{ t('memorisation.postSession.adaptiveCheck.voiceOnlyCta') }}
+                        </button>
+                      </div>
+
+                      <p
+                        v-if="!postSessionMemoryCheckResultVisible"
+                        class="ps-quiz__hint"
+                      >
+                        {{ t('memorisation.postSession.adaptiveCheck.memoryCheckHint') }}
+                      </p>
+
+                      <div
+                        v-if="postSessionMemoryCheckResultVisible"
+                        class="ps-quiz__result"
+                        :data-outcome="postSessionMemoryCheckOutcome"
                         role="status"
-                        aria-hidden="true"
-                      ></span>
-                      <i v-else class="bi bi-stars" aria-hidden="true"></i>
-                      <span>{{ postSessionAiReciteBusyLabel }}</span>
-                    </button>
+                        aria-live="polite"
+                      >
+                        <div class="ps-quiz__result-top">
+                          <span class="ps-quiz__badge">{{ postSessionMemoryCheckBadge }}</span>
+                          <button
+                            type="button"
+                            class="ps-quiz__details"
+                            @click="reopenPostSessionQuizReview"
+                          >
+                            {{ t('memorisation.postSession.adaptiveCheck.seeFullReview') }}
+                            <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                          </button>
+                        </div>
+                        <p class="ps-quiz__result-text">{{ postSessionBeginnerResultLine }}</p>
+                        <p class="ps-quiz__result-note">
+                          {{ t('memorisation.postSession.adaptiveCheck.resultShapedPlan') }}
+                        </p>
+                      </div>
+
+                      <p v-if="postSessionAdaptiveError" class="post-session-simple__error" role="status">
+                        {{ postSessionAdaptiveError }}
+                      </p>
+                    </div>
                   </div>
-                  <p
-                    v-if="postSessionAiResultLine"
-                    class="post-session-simple__ai-hint post-session-simple__ai-hint--result"
-                    role="status"
-                  >
-                    {{ postSessionAiResultLine }}
-                  </p>
-                  <p
-                    v-else-if="postSessionAiAssistHint"
-                    class="post-session-simple__ai-hint"
-                    role="status"
-                  >
-                    {{ postSessionAiAssistHint }}
-                  </p>
-                  <p
-                    v-else
-                    class="post-session-simple__ai-hint post-session-simple__ai-hint--quiet"
-                  >
-                    {{ t('memorisation.postSession.recommendation.aiReciteOptionalHint') }}
-                  </p>
                 </section>
 
                 <section
-                  v-if="postSessionRecommendation"
-                  class="post-session-simple__confidence"
-                  role="group"
-                  :aria-label="t('memorisation.postSession.recommendation.confidencePrompt')"
+                  class="ps-plan"
+                  :class="{
+                    'is-loading': postSessionRecommendationStatus === 'loading',
+                    'is-empty': postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable
+                  }"
+                  :data-plan="postSessionPlanKind"
+                  :aria-busy="postSessionRecommendationStatus === 'loading' ? 'true' : 'false'"
+                  :aria-label="t('memorisation.postSession.recommendation.suggestedNextStep')"
                 >
-                  <p class="post-session-simple__section-label">
-                    {{ t('memorisation.postSession.recommendation.confidencePrompt') }}
-                  </p>
-                  <div
-                    class="post-session-simple__segment"
-                    role="radiogroup"
-                    :class="{
-                      'has-selection': !!postSessionSelectedConfidence,
-                      'is-awaiting': !postSessionSelectedConfidence
-                    }"
-                  >
-                    <button
-                      type="button"
-                      class="post-session-simple__segment-btn"
-                      role="radio"
-                      :class="{ 'is-selected': postSessionSelectedConfidence === 'confident' }"
-                      :disabled="postSessionActionsBusy"
-                      :aria-checked="postSessionSelectedConfidence === 'confident' ? 'true' : 'false'"
-                      @click="submitPostSessionConfidence('confident')"
-                    >
-                      {{ t('memorisation.postSession.recommendation.confidenceConfident') }}
-                    </button>
-                    <button
-                      type="button"
-                      class="post-session-simple__segment-btn"
-                      role="radio"
-                      :class="{ 'is-selected': postSessionSelectedConfidence === 'needs_practice' }"
-                      :disabled="postSessionActionsBusy"
-                      :aria-checked="postSessionSelectedConfidence === 'needs_practice' ? 'true' : 'false'"
-                      @click="submitPostSessionConfidence('needs_practice')"
-                    >
-                      {{ t('memorisation.postSession.recommendation.confidenceNeedsPractice') }}
-                    </button>
+                  <div class="ps-step">
+                    <div class="ps-step__rail" aria-hidden="true">
+                      <span class="ps-step__num ps-step__num--plan">2</span>
+                    </div>
+                    <div class="ps-step__content">
+                      <div v-if="postSessionRecommendationStatus === 'loading'" class="post-session-simple__skeleton" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                      </div>
+                      <template v-else-if="postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable">
+                        <header class="ps-plan__head">
+                          <p class="ps-plan__kicker">{{ t('memorisation.postSession.recommendation.suggestedNextStep') }}</p>
+                          <p class="ps-plan__why">
+                            {{ postSessionSimpleReason || t('memorisation.postSession.recommendation.reasons.manualFallback') }}
+                          </p>
+                        </header>
+                      </template>
+                      <template v-else>
+                        <header class="ps-plan__head">
+                          <div class="ps-plan__head-row">
+                            <p class="ps-plan__kicker">
+                              {{ t('memorisation.postSession.recommendation.stepPlan') }}
+                              <span class="ps-step__dot" aria-hidden="true">·</span>
+                              {{ postSessionSimpleActionLabel }}
+                            </p>
+                            <span class="ps-plan__ready">
+                              {{ t('memorisation.postSession.recommendation.planReadyTag') }}
+                            </span>
+                          </div>
+                          <h3 class="ps-plan__title">{{ postSessionRecommendationTitle }}</h3>
+                        </header>
+
+                        <div class="ps-plan__why-box">
+                          <p class="ps-plan__why-label">
+                            {{ t('memorisation.postSession.recommendation.whyThisHelps') }}
+                          </p>
+                          <p class="ps-plan__why">{{ postSessionWhyDisclosureText }}</p>
+                        </div>
+
+                        <div v-if="postSessionPersonalPlan" class="ps-plan__body">
+                          <div
+                            v-if="postSessionPersonalPlan.range?.label"
+                            class="ps-plan__item"
+                          >
+                            <div class="ps-plan__item-icon" aria-hidden="true">
+                              <i class="bi bi-journal-text"></i>
+                            </div>
+                            <div class="ps-plan__item-copy">
+                              <span class="ps-plan__label">{{ t('memorisation.postSession.recommendation.planDetail.practiceRange') }}</span>
+                              <p class="ps-plan__value">
+                                {{ postSessionPersonalPlan.range.label }}
+                              </p>
+                              <p
+                                v-if="postSessionPersonalPlan.range.focusLabel"
+                                class="ps-plan__note"
+                              >
+                                {{ postSessionPersonalPlan.range.focusLabel }}
+                              </p>
+                              <p class="ps-plan__explain">
+                                {{ t('memorisation.postSession.recommendation.planDetail.rangeExplain') }}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div
+                            v-if="postSessionPersonalPlan.practiceApproach"
+                            class="ps-plan__item ps-plan__item--how"
+                          >
+                            <div class="ps-plan__item-icon" aria-hidden="true">
+                              <i class="bi bi-lightbulb"></i>
+                            </div>
+                            <div class="ps-plan__item-copy">
+                              <span class="ps-plan__label">{{ t('memorisation.postSession.recommendation.planDetail.howYouPractice') }}</span>
+                              <div class="ps-plan__how">
+                                <strong>{{ postSessionPersonalPlan.practiceApproach.title }}</strong>
+                                <span v-if="postSessionPersonalPlan.practiceApproach.how">
+                                  {{ postSessionPersonalPlan.practiceApproach.how }}
+                                </span>
+                                <span
+                                  v-if="postSessionPersonalPlan.practiceApproach.with"
+                                  class="ps-plan__note"
+                                >
+                                  {{ postSessionPersonalPlan.practiceApproach.with }}
+                                </span>
+                              </div>
+                              <p class="ps-plan__explain">
+                                {{ t('memorisation.postSession.recommendation.planDetail.methodExplain') }}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div
+                            v-if="postSessionBeginnerSetup.length"
+                            class="ps-plan__item"
+                          >
+                            <div class="ps-plan__item-icon" aria-hidden="true">
+                              <i class="bi bi-toggles"></i>
+                            </div>
+                            <div class="ps-plan__item-copy">
+                              <span class="ps-plan__label">{{ t('memorisation.postSession.recommendation.planDetail.setup') }}</span>
+                              <div class="ps-plan__chips">
+                                <span
+                                  v-for="row in postSessionBeginnerSetup"
+                                  :key="row.key"
+                                  class="ps-plan__chip"
+                                  :title="row.hint || undefined"
+                                >{{ row.label }}</span>
+                              </div>
+                              <p
+                                v-for="row in postSessionBeginnerSetup.filter((r) => r.hint)"
+                                :key="`${row.key}-hint`"
+                                class="ps-plan__explain"
+                              >
+                                {{ row.hint }}
+                              </p>
+                              <p
+                                v-if="!postSessionBeginnerSetup.some((r) => r.hint)"
+                                class="ps-plan__explain"
+                              >
+                                {{ t('memorisation.postSession.recommendation.planDetail.setupExplain') }}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="ps-plan__foot">
+                          <span v-if="postSessionPersonalPlan?.time?.label" class="ps-plan__time">
+                            <i class="bi bi-clock" aria-hidden="true"></i>
+                            <span>
+                              <span class="ps-plan__time-label">{{ t('memorisation.postSession.recommendation.estimatedTime') }}</span>
+                              {{ postSessionPersonalPlan.time.label }}
+                            </span>
+                          </span>
+                          <span v-else class="ps-plan__time ps-plan__time--spacer" aria-hidden="true"></span>
+                          <button
+                            type="button"
+                            class="ps-plan__adjust"
+                            :disabled="postSessionActionsBusy"
+                            @click="openPostSessionAdjustPlan"
+                          >
+                            <i class="bi bi-sliders" aria-hidden="true"></i>
+                            {{ t('memorisation.postSession.recommendation.adjustPlan') }}
+                          </button>
+                        </div>
+                      </template>
+                      <p
+                        v-if="postSessionRecommendationStatus === 'error' && postSessionRecommendationError"
+                        class="post-session-simple__error"
+                        role="status"
+                      >
+                        {{ postSessionRecommendationError }}
+                        <button type="button" class="post-session-simple__link" @click="retryPostSessionRecommendation">
+                          {{ t('memorisation.postSession.recommendation.retry') }}
+                        </button>
+                      </p>
+                    </div>
                   </div>
-                  <p v-if="postSessionConfidenceError" class="post-session-simple__error" role="status">
-                    {{ postSessionConfidenceError }}
-                  </p>
                 </section>
               </div>
-
-              <section
-                class="post-session-simple__panel post-session-simple__panel--hero"
-                :class="{
-                  'is-loading': postSessionRecommendationStatus === 'loading',
-                  'is-empty': postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable
-                }"
-                :data-plan="postSessionPlanKind"
-                :aria-busy="postSessionRecommendationStatus === 'loading' ? 'true' : 'false'"
-                :aria-label="t('memorisation.postSession.recommendation.suggestedNextStep')"
-              >
-                <div class="post-session-simple__plan-glow" aria-hidden="true"></div>
-                <div v-if="postSessionRecommendationStatus === 'loading'" class="post-session-simple__skeleton" aria-hidden="true">
-                  <span></span><span></span><span></span>
-                </div>
-                <template v-else-if="postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable">
-                  <div class="post-session-simple__panel-head">
-                    <div class="post-session-simple__plan-seal" aria-hidden="true">
-                      <i class="bi" :class="postSessionPlanSealIcon"></i>
-                    </div>
-                    <div class="post-session-simple__plan-copy">
-                      <p class="post-session-simple__action-label">{{ t('memorisation.postSession.recommendation.suggestedNextStep') }}</p>
-                    </div>
-                  </div>
-                  <div class="post-session-simple__why">
-                    <p class="post-session-simple__reason">
-                      {{ postSessionSimpleReason || t('memorisation.postSession.recommendation.reasons.manualFallback') }}
-                    </p>
-                  </div>
-                </template>
-                <template v-else>
-                  <div class="post-session-simple__panel-head">
-                    <div class="post-session-simple__plan-seal" aria-hidden="true">
-                      <i class="bi" :class="postSessionPlanSealIcon"></i>
-                    </div>
-                    <div class="post-session-simple__plan-copy">
-                      <p class="post-session-simple__action-label">{{ postSessionSimpleActionLabel }}</p>
-                      <p class="post-session-simple__range">{{ postSessionRecommendationTitle }}</p>
-                    </div>
-                  </div>
-                  <div v-if="postSessionStaticPills.length" class="post-session-simple__combination">
-                    <div class="post-session-simple__combination-head">
-                      <p class="post-session-simple__why-label">{{ t('memorisation.postSession.recommendation.tryThisCombination') }}</p>
-                      <button
-                        type="button"
-                        class="post-session-simple__why-toggle"
-                        :aria-expanded="postSessionWhyExpanded ? 'true' : 'false'"
-                        aria-controls="postSessionWhyDisclosure"
-                        @click="togglePostSessionWhy"
-                      >
-                        {{ t('memorisation.postSession.recommendation.whyThisPlanToggle') }}
-                      </button>
-                    </div>
-                    <p
-                      v-show="postSessionWhyExpanded"
-                      id="postSessionWhyDisclosure"
-                      class="post-session-simple__why-disclosure"
-                    >
-                      {{ postSessionWhyDisclosureText }}
-                    </p>
-                    <div class="post-session-simple__pills">
-                      <span
-                        v-for="pill in postSessionStaticPills"
-                        :key="pill.key"
-                        class="post-session-simple__pill"
-                      >{{ pill.label }}</span>
-                    </div>
-                  </div>
-                  <div
-                    v-else-if="postSessionWhyDisclosureText"
-                    class="post-session-simple__combination"
-                  >
-                    <button
-                      type="button"
-                      class="post-session-simple__why-toggle"
-                      :aria-expanded="postSessionWhyExpanded ? 'true' : 'false'"
-                      aria-controls="postSessionWhyDisclosureEmpty"
-                      @click="togglePostSessionWhy"
-                    >
-                      {{ t('memorisation.postSession.recommendation.whyThisPlanToggle') }}
-                    </button>
-                    <p
-                      v-show="postSessionWhyExpanded"
-                      id="postSessionWhyDisclosureEmpty"
-                      class="post-session-simple__why-disclosure"
-                    >
-                      {{ postSessionWhyDisclosureText }}
-                    </p>
-                  </div>
-                  <div class="post-session-simple__plan-actions">
-                    <button
-                      type="button"
-                      class="post-session-simple__adjust-link"
-                      :disabled="postSessionActionsBusy"
-                      @click="openPostSessionAdjustPlan"
-                    >
-                      <i class="bi bi-sliders" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.postSession.recommendation.adjustPlan') }}</span>
-                    </button>
-                  </div>
-                </template>
-                <p
-                  v-if="postSessionRecommendationStatus === 'error' && postSessionRecommendationError"
-                  class="post-session-simple__error"
-                  role="status"
-                >
-                  {{ postSessionRecommendationError }}
-                  <button type="button" class="post-session-simple__link" @click="retryPostSessionRecommendation">
-                    {{ t('memorisation.postSession.recommendation.retry') }}
-                  </button>
-                </p>
-              </section>
 
               <div v-if="postSessionCompactStats.length || postSessionStatsSummary" class="post-session-simple__stats">
                 <button
@@ -4147,6 +4253,358 @@
       </section>
     </div>
 
+  </div>
+
+  <div
+    v-if="postSessionAdaptiveCheckActive"
+    class="memory-check-overlay"
+    :data-theme="theme"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="memoryCheckTitle"
+  >
+    <div
+      class="memory-check-card"
+      :class="{ 'memory-check-card--result': !!postSessionAdaptiveResultView }"
+      :data-feedback="postSessionAdaptiveFeedback || undefined"
+      :data-band="postSessionAdaptiveResultView?.objectiveBand || undefined"
+    >
+      <header class="memory-check-header" :class="{ 'memory-check-header--result': !!postSessionAdaptiveResultView }">
+        <div class="memory-check-header-copy">
+          <template v-if="postSessionAdaptiveResultView">
+            <div class="memory-check-result-kicker">
+              <span class="memory-check-result-kicker-label">
+                {{ t('memorisation.postSession.adaptiveCheck.quizAiTitle') }}
+              </span>
+              <span
+                class="memory-check-band-pill"
+                :data-band="postSessionAdaptiveResultView.objectiveBand || 'mixed'"
+              >
+                {{ postSessionQuizResultBandLabel }}
+              </span>
+            </div>
+            <h2 id="memoryCheckTitle" class="memory-check-title memory-check-title--result">
+              {{ postSessionAdaptiveResultView.headline }}
+            </h2>
+          </template>
+          <template v-else>
+            <h2 id="memoryCheckTitle" class="memory-check-title">
+              {{ t('memorisation.postSession.adaptiveCheck.quizAiTitle') }}
+            </h2>
+            <div class="memory-check-progress" aria-hidden="true">
+              <span
+                v-for="n in postSessionAdaptiveProgressTotal"
+                :key="n"
+                class="memory-check-dot"
+                :class="{
+                  'is-done': n < postSessionAdaptiveProgressCurrent,
+                  'is-current': n === postSessionAdaptiveProgressCurrent
+                }"
+              ></span>
+            </div>
+            <p class="memory-check-sub">
+              {{ postSessionAdaptiveProgressLabel }}
+            </p>
+          </template>
+        </div>
+        <button
+          type="button"
+          class="memory-check-close"
+          :aria-label="t('common.close')"
+          @click="closePostSessionAdaptiveCheck({ abandon: !postSessionAdaptiveResultView })"
+        >
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div v-if="postSessionAdaptiveResultView" class="memory-check-body memory-check-body--result">
+        <section class="quiz-ai-result" :data-band="postSessionAdaptiveResultView.objectiveBand || 'mixed'">
+          <p v-if="postSessionQuizScoreLine" class="quiz-ai-result__score quiz-ai-result__score--top">
+            {{ postSessionQuizScoreLine }}
+          </p>
+
+          <div class="quiz-ai-result__grid">
+            <section class="quiz-ai-result__panel">
+              <p class="quiz-ai-result__label">
+                {{ t('memorisation.postSession.adaptiveCheck.resultFoundLabel') }}
+              </p>
+              <p class="quiz-ai-result__lead">
+                {{ postSessionAdaptiveResultView.why || postSessionAdaptiveResultView.explanation }}
+              </p>
+              <div v-if="postSessionQuizResultPills.length" class="quiz-ai-result__pills">
+                <span
+                  v-for="pill in postSessionQuizResultPills"
+                  :key="pill.key"
+                  class="quiz-ai-result__pill"
+                  :data-tone="pill.tone || undefined"
+                >
+                  {{ pill.label }}
+                </span>
+              </div>
+              <ul v-if="postSessionQuizSkillRows.length" class="quiz-ai-result__skills">
+                <li
+                  v-for="skill in postSessionQuizSkillRows"
+                  :key="skill.key"
+                  :data-band="skill.band || 'steady'"
+                >
+                  <span>{{ skill.label }}</span>
+                  <strong>{{ skill.bandLabel || skill.band }}</strong>
+                </li>
+              </ul>
+            </section>
+
+            <section
+              v-if="postSessionAiReviewDetails || postSessionAiResultLine"
+              class="quiz-ai-result__panel quiz-ai-result__panel--ai"
+            >
+              <p class="quiz-ai-result__label">
+                {{ t('memorisation.postSession.adaptiveCheck.aiReciteTitle') }}
+              </p>
+              <div class="quiz-ai-result__ai-head">
+                <span
+                  class="memory-check-band-pill"
+                  :data-band="postSessionAiReviewDetails?.outcome || 'mixed'"
+                >
+                  {{ postSessionAiReviewDetails?.outcomeLabel || t('memorisation.postSession.recommendation.aiOutcomeMixed') }}
+                </span>
+                <p>{{ postSessionAiReviewDetails?.summaryLine || postSessionAiResultLine }}</p>
+              </div>
+              <div
+                v-if="postSessionAiColourSegments.length"
+                class="post-session-simple__check-meter quiz-ai-result__meter"
+                role="img"
+                :aria-label="t('memorisation.aiCheck.colourMeterAria')"
+              >
+                <div class="post-session-simple__check-meter-track" aria-hidden="true">
+                  <span
+                    v-for="segment in postSessionAiColourSegments"
+                    :key="`quiz-ai-meter-${segment.key}`"
+                    class="post-session-simple__check-meter-segment"
+                    :class="segment.tone"
+                    :style="{ flexGrow: segment.count, flexBasis: 0 }"
+                  ></span>
+                </div>
+                <ul class="post-session-simple__check-meter-legend">
+                  <li
+                    v-for="segment in postSessionAiColourSegments"
+                    :key="`quiz-ai-legend-${segment.key}`"
+                    :class="segment.tone"
+                  >
+                    <span aria-hidden="true"></span>
+                    {{ segment.label }} {{ segment.count }}
+                  </li>
+                </ul>
+              </div>
+              <ul v-if="postSessionAiResultMetrics.length" class="quiz-ai-result__metrics">
+                <li v-for="metric in postSessionAiResultMetrics" :key="metric.key" :data-tone="metric.tone || undefined">
+                  <span>{{ metric.label }}</span>
+                  <strong>{{ metric.value }}</strong>
+                </li>
+              </ul>
+              <p v-if="postSessionAiReviewDetails?.focus" class="quiz-ai-result__focus">
+                {{ postSessionAiReviewDetails.focus }}
+              </p>
+              <ul v-if="postSessionQuizAiHighlights.length" class="quiz-ai-result__highlights">
+                <li v-for="(item, idx) in postSessionQuizAiHighlights" :key="`hl-${idx}`">
+                  {{ item.text || item }}
+                </li>
+              </ul>
+            </section>
+
+            <section
+              v-else
+              class="quiz-ai-result__panel quiz-ai-result__panel--ai quiz-ai-result__panel--empty"
+            >
+              <p class="quiz-ai-result__label">
+                {{ t('memorisation.postSession.adaptiveCheck.aiReciteTitle') }}
+              </p>
+              <p class="quiz-ai-result__lead">
+                {{ t('memorisation.postSession.adaptiveCheck.aiReciteNotRun') }}
+              </p>
+              <button
+                type="button"
+                class="quiz-ai-result__link"
+                :disabled="postSessionActionsBusy"
+                @click="openPostSessionAiRecite"
+              >
+                <i class="bi bi-mic" aria-hidden="true"></i>
+                {{ t('memorisation.postSession.adaptiveCheck.voiceOnlyCta') }}
+              </button>
+            </section>
+          </div>
+
+          <section class="quiz-ai-result__next">
+            <p class="quiz-ai-result__label">
+              {{ t('memorisation.postSession.adaptiveCheck.resultNextLabel') }}
+            </p>
+            <p class="quiz-ai-result__next-text">
+              {{ postSessionQuizResultPlanLine }}
+            </p>
+          </section>
+        </section>
+
+        <div class="memory-check-actions memory-check-actions--result">
+          <button type="button" class="memory-check-btn memory-check-btn--ghost" @click="adjustAdaptivePlan">
+            {{ t('memorisation.postSession.recommendation.adjustPlan') }}
+          </button>
+          <button type="button" class="memory-check-btn memory-check-btn--primary" @click="acceptAdaptiveRecommendation">
+            {{ t('memorisation.postSession.adaptiveCheck.continueToPlan') }}
+          </button>
+        </div>
+      </div>
+
+      <div v-else-if="postSessionAdaptiveQuestion" class="memory-check-body">
+        <p class="memory-check-ask">{{ postSessionAdaptiveFriendlyPrompt }}</p>
+
+        <div
+          v-if="postSessionAdaptiveQuestion.promptHtml"
+          class="memory-check-ayah"
+          dir="rtl"
+          lang="ar"
+        >{{ postSessionAdaptiveQuestion.promptHtml }}</div>
+
+        <div
+          v-if="postSessionAdaptiveQuestion.renderer === 'mcq' || postSessionAdaptiveQuestion.renderer === 'mcq_simple'"
+          class="memory-check-choices"
+          role="listbox"
+          :aria-label="t('memorisation.postSession.adaptiveCheck.selectAnswer')"
+        >
+          <button
+            v-for="(opt, idx) in postSessionAdaptiveQuestion.options"
+            :key="`${idx}-${opt}`"
+            type="button"
+            class="memory-check-choice"
+            role="option"
+            :class="{
+              'is-selected': postSessionAdaptiveSelectedOption === idx,
+              'is-correct': postSessionAdaptiveFeedback === 'correct' && postSessionAdaptiveSelectedOption === idx,
+              'is-wrong': postSessionAdaptiveFeedback === 'incorrect' && postSessionAdaptiveSelectedOption === idx
+            }"
+            :disabled="!!postSessionAdaptiveFeedback || postSessionAdaptiveCheckBusy"
+            :aria-selected="postSessionAdaptiveSelectedOption === idx ? 'true' : 'false'"
+            @click="selectAdaptiveOption(idx)"
+          >
+            <span class="memory-check-choice-mark" aria-hidden="true">{{ idx + 1 }}</span>
+            <span class="memory-check-choice-text" dir="rtl">{{ opt }}</span>
+          </button>
+        </div>
+
+        <div v-else-if="postSessionAdaptiveQuestion.renderer === 'ordering'" class="memory-check-order">
+          <p class="memory-check-order-hint">{{ t('memorisation.postSession.adaptiveCheck.reorderHint') }}</p>
+          <div
+            v-for="(seg, idx) in postSessionAdaptiveOrdering"
+            :key="seg._id || idx"
+            class="memory-check-order-item"
+          >
+            <span class="memory-check-order-index" aria-hidden="true">{{ idx + 1 }}</span>
+            <span class="memory-check-order-text" dir="rtl">{{ seg.text || seg.label || seg }}</span>
+            <div class="memory-check-order-moves">
+              <button
+                type="button"
+                class="memory-check-mini"
+                :disabled="idx === 0 || !!postSessionAdaptiveFeedback"
+                :aria-label="t('memorisation.postSession.adaptiveCheck.moveUp')"
+                @click="moveAdaptiveOrdering(idx, -1)"
+              >
+                <i class="bi bi-chevron-up" aria-hidden="true"></i>
+              </button>
+              <button
+                type="button"
+                class="memory-check-mini"
+                :disabled="idx === postSessionAdaptiveOrdering.length - 1 || !!postSessionAdaptiveFeedback"
+                :aria-label="t('memorisation.postSession.adaptiveCheck.moveDown')"
+                @click="moveAdaptiveOrdering(idx, 1)"
+              >
+                <i class="bi bi-chevron-down" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div v-else-if="postSessionAdaptiveQuestion.renderer === 'open'" class="memory-check-open">
+          <label class="visually-hidden" for="adaptiveOpenAnswer">{{ t('memorisation.postSession.adaptiveCheck.typeAnswer') }}</label>
+          <textarea
+            id="adaptiveOpenAnswer"
+            v-model="postSessionAdaptiveAnswer"
+            class="memory-check-textarea"
+            dir="rtl"
+            rows="3"
+            :disabled="!!postSessionAdaptiveFeedback"
+            :placeholder="t('memorisation.postSession.adaptiveCheck.typeAnswer')"
+          ></textarea>
+        </div>
+
+        <div v-else-if="postSessionAdaptiveQuestion.renderer === 'ai_recite'" class="memory-check-ai-panel">
+          <div class="memory-check-ai-icon" aria-hidden="true"><i class="bi bi-stars"></i></div>
+          <p>{{ t('memorisation.postSession.adaptiveCheck.aiRecitePrompt') }}</p>
+        </div>
+
+        <p
+          v-if="postSessionAdaptiveFeedback"
+          class="memory-check-feedback"
+          :data-tone="postSessionAdaptiveFeedback"
+          role="status"
+        >
+          {{ postSessionAdaptiveFeedbackLabel }}
+        </p>
+        <p v-else-if="postSessionAdaptiveHintText" class="memory-check-hint" role="status">
+          {{ postSessionAdaptiveHintText }}
+        </p>
+        <p v-if="postSessionAdaptiveError" class="post-session-simple__error" role="alert">
+          {{ postSessionAdaptiveError }}
+        </p>
+
+        <div
+          v-if="postSessionAdaptiveQuestion.renderer !== 'mcq' && postSessionAdaptiveQuestion.renderer !== 'mcq_simple'"
+          class="memory-check-actions"
+        >
+          <button
+            type="button"
+            class="memory-check-btn memory-check-btn--ghost"
+            :disabled="postSessionAdaptiveCheckBusy || postSessionAdaptiveUsedHint || !!postSessionAdaptiveFeedback"
+            @click="useAdaptiveHint"
+          >
+            {{ t('memorisation.postSession.adaptiveCheck.hint') }}
+          </button>
+          <button
+            type="button"
+            class="memory-check-btn memory-check-btn--primary"
+            :disabled="postSessionAdaptiveCheckBusy || !!postSessionAdaptiveFeedback"
+            @click="submitAdaptiveAnswer"
+          >
+            <span
+              v-if="postSessionAdaptiveCheckBusy"
+              class="spinner-border spinner-border-sm"
+              role="status"
+              aria-hidden="true"
+            ></span>
+            <span>
+              {{ postSessionAdaptiveQuestion.requiresAiRecite
+                ? t('memorisation.postSession.adaptiveCheck.startAiRecite')
+                : t('memorisation.postSession.adaptiveCheck.submit') }}
+            </span>
+          </button>
+        </div>
+        <div v-else class="memory-check-actions memory-check-actions--mcq">
+          <button
+            type="button"
+            class="memory-check-text-link"
+            :disabled="postSessionAdaptiveCheckBusy || postSessionAdaptiveUsedHint || !!postSessionAdaptiveFeedback"
+            @click="useAdaptiveHint"
+          >
+            {{ t('memorisation.postSession.adaptiveCheck.hint') }}
+          </button>
+          <button
+            type="button"
+            class="memory-check-text-link"
+            :disabled="postSessionAdaptiveCheckBusy || !!postSessionAdaptiveFeedback"
+            @click="skipAdaptiveQuestion"
+          >
+            {{ t('memorisation.postSession.adaptiveCheck.skip') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div v-if="quizActive" class="quiz-overlay" @click.self="stopQuiz">

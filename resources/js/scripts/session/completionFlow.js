@@ -8,6 +8,8 @@ export const COMPLETION_FLOW = Object.freeze({
   COMPLETION: 'completion',
   AI_RECITE_RECORDING: 'ai_recite_recording',
   AI_RECITE_REVIEW: 'ai_recite_review',
+  ADAPTIVE_CHECK: 'adaptive_check',
+  ADAPTIVE_CHECK_RESULT: 'adaptive_check_result',
   RECOMMENDATION: 'recommendation',
   NEW_SESSION_BUILDER: 'new_session_builder',
   CREATING_SESSION: 'creating_session',
@@ -28,12 +30,16 @@ export const COMPLETION_FLOW = Object.freeze({
  *   postSessionViewState?: string,
  *   postSessionRecommendationStatus?: string,
  *   postSessionRecommendationFailed?: boolean,
+ *   postSessionAdaptiveCheckActive?: boolean,
+ *   postSessionAdaptiveCheckResult?: boolean,
  * }} state
  * @returns {string}
  */
 export function deriveCompletionFlowPhase(state = {}) {
   const starting = !!state.postSessionRecommendationStarting
   const aiActive = !!state.postSessionAiReciteActive
+  const adaptiveActive = !!state.postSessionAdaptiveCheckActive
+  const adaptiveResult = !!state.postSessionAdaptiveCheckResult
   const selfCheckOpen = !!state.showSelfCheckModal
   const recording = !!state.isSelfCheckRecording
   const hasResult = !!state.hasSelfCheckResult
@@ -46,6 +52,14 @@ export function deriveCompletionFlowPhase(state = {}) {
     return state.isRepeatRecommendation
       ? COMPLETION_FLOW.CREATING_REPEAT
       : COMPLETION_FLOW.CREATING_SESSION
+  }
+
+  if (adaptiveActive && !adaptiveResult) {
+    return COMPLETION_FLOW.ADAPTIVE_CHECK
+  }
+
+  if (adaptiveActive && adaptiveResult) {
+    return COMPLETION_FLOW.ADAPTIVE_CHECK_RESULT
   }
 
   if (aiActive && recording) {
@@ -89,13 +103,16 @@ export function deriveCompletionFlowPhase(state = {}) {
  * Which surface owns the backdrop / focus trap.
  * Exactly one primary surface unless a lightweight confirmation sits on top.
  * @param {string} phase
- * @returns {'none'|'completion'|'self_check'|'builder'}
+ * @returns {'none'|'completion'|'self_check'|'builder'|'adaptive_check'}
  */
 export function primarySurfaceForPhase(phase) {
   switch (phase) {
     case COMPLETION_FLOW.AI_RECITE_RECORDING:
     case COMPLETION_FLOW.AI_RECITE_REVIEW:
       return 'self_check'
+    case COMPLETION_FLOW.ADAPTIVE_CHECK:
+    case COMPLETION_FLOW.ADAPTIVE_CHECK_RESULT:
+      return 'adaptive_check'
     case COMPLETION_FLOW.NEW_SESSION_BUILDER:
       return 'builder'
     case COMPLETION_FLOW.CLOSED:
@@ -150,4 +167,6 @@ export function shouldKeepCompletionMounted(phase) {
 export function shouldHideCompletionUnderAi(phase) {
   return phase === COMPLETION_FLOW.AI_RECITE_RECORDING
     || phase === COMPLETION_FLOW.AI_RECITE_REVIEW
+    || phase === COMPLETION_FLOW.ADAPTIVE_CHECK
+    || phase === COMPLETION_FLOW.ADAPTIVE_CHECK_RESULT
 }

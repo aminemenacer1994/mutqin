@@ -199,10 +199,17 @@ export const learningApi = {
     })
     return data
   },
-  async submitRecommendationConfidence(recommendationId, confidence) {
+  async submitRecommendationConfidence(recommendationId, confidence, extras = {}) {
     const { data } = await http.post('/recommendations/confidence', {
       recommendation_id: recommendationId,
       confidence,
+      plan_detail: extras?.plan_detail && typeof extras.plan_detail === 'object'
+        ? extras.plan_detail
+        : undefined,
+      ayah_range: extras?.ayah_range && typeof extras.ayah_range === 'object'
+        ? extras.ayah_range
+        : undefined,
+      focus_ayahs: Array.isArray(extras?.focus_ayahs) ? extras.focus_ayahs : undefined,
     })
     return data?.recommendation ?? null
   },
@@ -215,6 +222,9 @@ export const learningApi = {
     return data?.recommendation ?? null
   },
   async submitRecommendationAiAssessment(recommendationId, assessment) {
+    const colorCounts = assessment?.color_counts && typeof assessment.color_counts === 'object'
+      ? assessment.color_counts
+      : undefined
     const { data } = await http.post('/recommendations/ai-assessment', {
       recommendation_id: recommendationId,
       result: assessment?.result,
@@ -229,6 +239,48 @@ export const learningApi = {
       pronunciation_issues: typeof assessment?.pronunciation_issues === 'boolean'
         ? assessment.pronunciation_issues
         : undefined,
+      color_counts: colorCounts,
+      plan_detail: assessment?.plan_detail && typeof assessment.plan_detail === 'object'
+        ? assessment.plan_detail
+        : undefined,
+      ayah_range: assessment?.ayah_range && typeof assessment.ayah_range === 'object'
+        ? assessment.ayah_range
+        : undefined,
+      focus_ayahs: Array.isArray(assessment?.focus_ayahs) ? assessment.focus_ayahs : undefined,
+    })
+    return data?.recommendation ?? null
+  },
+  async submitRecommendationAdaptiveAssessment(recommendationId, assessment) {
+    const { data } = await http.post('/recommendations/adaptive-assessment', {
+      recommendation_id: recommendationId,
+      result: assessment?.result,
+      summary: assessment?.summary || undefined,
+      assessment_id: assessment?.assessment_id || undefined,
+      weak_ayahs: Array.isArray(assessment?.weak_ayahs) ? assessment.weak_ayahs : undefined,
+      sequence_errors: Number.isFinite(Number(assessment?.sequence_errors))
+        ? Number(assessment.sequence_errors)
+        : undefined,
+      missed_words: Number.isFinite(Number(assessment?.missed_words))
+        ? Number(assessment.missed_words)
+        : undefined,
+      pronunciation_issues: typeof assessment?.pronunciation_issues === 'boolean'
+        ? assessment.pronunciation_issues
+        : undefined,
+      reason_codes: Array.isArray(assessment?.reason_codes) ? assessment.reason_codes : undefined,
+      skills: assessment?.skills && typeof assessment.skills === 'object' ? assessment.skills : undefined,
+      skill_view: Array.isArray(assessment?.skill_view) ? assessment.skill_view : undefined,
+      policy: assessment?.policy && typeof assessment.policy === 'object' ? assessment.policy : undefined,
+      responses: Array.isArray(assessment?.responses) ? assessment.responses : undefined,
+      events: Array.isArray(assessment?.events) ? assessment.events : undefined,
+      review: assessment?.review && typeof assessment.review === 'object' ? assessment.review : undefined,
+      snapshot: assessment?.snapshot && typeof assessment.snapshot === 'object' ? assessment.snapshot : undefined,
+      plan_detail: assessment?.plan_detail && typeof assessment.plan_detail === 'object'
+        ? assessment.plan_detail
+        : undefined,
+      ayah_range: assessment?.ayah_range && typeof assessment.ayah_range === 'object'
+        ? assessment.ayah_range
+        : undefined,
+      focus_ayahs: Array.isArray(assessment?.focus_ayahs) ? assessment.focus_ayahs : undefined,
     })
     return data?.recommendation ?? null
   },

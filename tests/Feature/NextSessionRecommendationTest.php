@@ -120,9 +120,9 @@ class NextSessionRecommendationTest extends TestCase
         $this->actingAs($user)
             ->getJson('/api/recommendations/next')
             ->assertOk()
-            ->assertJsonPath('recommendation.type', RecommendationType::CompleteSurah->value)
+            ->assertJsonPath('recommendation.type', RecommendationType::Continue->value)
             ->assertJsonPath('recommendation.ayah_range.from', 4)
-            ->assertJsonPath('recommendation.ayah_range.to', 7);
+            ->assertJsonPath('recommendation.ayah_range.to', 6);
     }
 
     public function test_recommends_revision_after_weak_performance(): void
@@ -198,8 +198,9 @@ class NextSessionRecommendationTest extends TestCase
             ->assertJsonPath('recommendation.reason_code', RecommendationReasonCode::SurahCompleted->value)
             ->json('recommendation');
 
-        $this->assertGreaterThanOrEqual(4, (int) ($response['ayah_range']['to'] ?? 0));
-        $this->assertLessThanOrEqual(6, (int) ($response['ayah_range']['to'] ?? 0));
+        $this->assertGreaterThanOrEqual(1, (int) ($response['ayah_range']['to'] ?? 0));
+        $this->assertLessThanOrEqual(3, (int) ($response['ayah_range']['to'] ?? 0));
+        $this->assertLessThanOrEqual(3, (int) ($response['ayah_range']['count'] ?? 0));
     }
 
     public function test_after_an_nas_continues_juz_amma_with_small_opening(): void
@@ -485,6 +486,98 @@ class NextSessionRecommendationTest extends TestCase
             ->assertJsonPath('recommendation.type', RecommendationType::RepeatCurrentRange->value)
             ->assertJsonPath('recommendation.ayah_range.from', 12)
             ->assertJsonPath('recommendation.ayah_range.to', 14);
+    }
+
+    public function test_adaptive_assessment_snapshot_reshapes_plan(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $response = $this->actingAs($user)
+            ->postJson('/api/recommendations/adaptive-assessment', [
+                'recommendation_id' => $recommendationId,
+                'result' => 'weak',
+                'summary' => 'Sequence needs support',
+                'reason_codes' => ['sequence_errors', 'low_recall'],
+                'weak_ayahs' => [13],
+                'skills' => [
+                    'phraseRecall' => 0.3,
+                    'ayahSequence' => 0.25,
+                ],
+                'snapshot' => [
+                    'assessment_id' => 'assess_test',
+                    'result' => 'weak',
+                    'reason_codes' => ['sequence_errors'],
+                    'skills' => ['phraseRecall' => 0.3, 'ayahSequence' => 0.25],
+                    'policy' => [
+                        'goal' => 'reinforce',
+                        'primary_action' => 'start_focused_review',
+                    ],
+                ],
+                'ayah_range' => ['from' => 12, 'to' => 14, 'count' => 3, 'focus_ayahs' => [13]],
+                'focus_ayahs' => [13],
+                'plan_detail' => [
+                    'source' => 'quiz',
+                    'personalWhy' => 'Verse 13 still feels tricky.',
+                    'estimated_minutes' => 8,
+                    'focus_ayahs' => [13],
+                    'range' => [
+                        'from' => 12,
+                        'to' => 14,
+                        'focusAyahs' => [13],
+                        'label' => 'Al-Baqarah · Ayahs 12–14',
+                    ],
+                    'time' => ['minutes' => 8, 'label' => 'About 8 minutes'],
+                ],
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('recommendation.type', RecommendationType::RepeatCurrentRange->value)
+            ->assertJsonPath('recommendation.ayah_range.from', 12)
+            ->assertJsonPath('recommendation.ayah_range.to', 14)
+            ->assertJsonPath('recommendation.ayah_range.focus_ayahs.0', 13)
+            ->assertJsonPath('recommendation.plan_detail.estimated_minutes', 8)
+            ->assertJsonPath('recommendation.plan_detail.focus_ayahs.0', 13)
+            ->assertJsonPath('recommendation.adaptive_assessment.assessment_id', 'assess_test')
+            ->assertJsonPath('recommendation.ai_assessment.adaptive', true)
+            ->assertJsonPath('recommendation.ai_assessment.result', 'weak');
+    }
+
+    public function test_ai_assessment_persists_focused_plan_detail(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $this->actingAs($user)
+            ->postJson('/api/recommendations/ai-assessment', [
+                'recommendation_id' => $recommendationId,
+                'result' => 'weak',
+                'summary' => 'Verse 13 needs another pass',
+                'weak_ayahs' => [13],
+                'color_counts' => [
+                    'green' => 8,
+                    'amber' => 2,
+                    'red' => 1,
+                    'black' => 1,
+                    'gray' => 0,
+                ],
+                'ayah_range' => ['from' => 12, 'to' => 14, 'count' => 3],
+                'focus_ayahs' => [13],
+                'plan_detail' => [
+                    'source' => 'ai',
+                    'estimated_minutes' => 7,
+                    'focus_ayahs' => [13],
+                    'personalWhy' => 'Verse 13 needs another pass.',
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('recommendation.ai_assessment.color_counts.black', 1)
+            ->assertJsonPath('recommendation.ai_assessment.color_counts.red', 1)
+            ->assertJsonPath('recommendation.type', RecommendationType::RepeatCurrentRange->value)
+            ->assertJsonPath('recommendation.ayah_range.focus_ayahs.0', 13)
+            ->assertJsonPath('recommendation.plan_detail.estimated_minutes', 7);
     }
 
     public function test_cannot_accept_another_users_recommendation(): void

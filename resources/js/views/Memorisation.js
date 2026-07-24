@@ -18,7 +18,9 @@ import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning
 import {
   RECOMMENDATION_TYPES,
   adaptRecommendationForAiAssessment,
+  adaptRecommendationForAdaptiveAssessment,
   adaptRecommendationForConfidence,
+  clampRecommendationRange,
   buildLocalFallbackRecommendation,
   formatAyahRangeLabel,
   formatContinueToAyahLabel,
@@ -34,6 +36,9 @@ import {
   localizeRecommendationReason,
   recommendationModeLabelKey,
   recommendationPrimaryActionKey,
+  buildCombinedCheckInsight,
+  buildPersonalPracticePlan,
+  applyPersonalPlanToRecommendation,
 } from '../scripts/recommendations/nextSessionRecommendation'
 import { buildAiReviewDetails } from '../scripts/recommendations/aiReviewDetails'
 import {
@@ -78,6 +83,18 @@ import {
   resolveConfidenceSelection,
   shouldHideCompletionUnderAi,
 } from '../scripts/session/completionFlow'
+import {
+  startAdaptiveCheck,
+  answerCurrentQuestion,
+  completeAssessment,
+  buildAssessmentResultViewModel,
+  loadAssessmentSession,
+  requestHint,
+  pauseAssessment,
+  resumeAssessment,
+} from '../scripts/assessment/AdaptiveAssessmentService'
+import { loadMasteryMap } from '../scripts/assessment/LearnerMasteryService'
+import { recordEffectiveness } from '../scripts/assessment/RecommendationEffectivenessService'
 import { seedAyahs } from '../scripts/composables/useAyahState'
 import { buildSessionQueue, startMutqinSession, moveMutqinSession, completeMutqinSession } from '../scripts/composables/useSessionEngine'
 import { createDailyPlan } from '../scripts/composables/useDailyPlanner'
@@ -107,7 +124,9 @@ import {
   buildQuranAlignment,
   cleanRecitationDisplayText as cleanRecitationDisplayTextEngine,
   createRecognitionState,
+  deriveWeakAyahsFromWordStatuses,
   getRecognitionDisplayWords,
+  getRecitationColorCounts,
   getRecitationWordSimilarity as getRecitationWordSimilarityEngine,
   normalizeArabicForRecitation as normalizeArabicForRecitationEngine,
   stabilizeRecognitionEvent,
@@ -536,6 +555,19 @@ export default {
       postSessionAiReciteActive: false,
       postSessionAiFeedback: '',
       postSessionAiReviewDetails: null,
+      postSessionAdaptiveCheckActive: false,
+      postSessionAdaptiveCheckBusy: false,
+      postSessionAdaptiveSession: null,
+      postSessionAdaptiveResultView: null,
+      postSessionAdaptiveAnswer: '',
+      postSessionAdaptiveSelectedOption: null,
+      postSessionAdaptiveOrdering: [],
+      postSessionAdaptiveUsedHint: false,
+      postSessionAdaptiveHintText: '',
+      postSessionAdaptiveError: '',
+      postSessionAdaptiveFeedback: '',
+      postSessionAdaptiveQuestionStartedAt: 0,
+      postSessionAdaptiveFeedbackTimer: null,
       postSessionWhyExpanded: false,
       postSessionConfidenceSelection: null, // local authoritative selection; null → resolve from recommendation
       postSessionViewState: 'idle', // completing | generating_recommendation | recommendation_ready | editing_settings | starting_recommended | preparing_repeat | starting_repeat | opening_ai_recite | recommendation_failed | action_failed
@@ -646,7 +678,9 @@ export default {
         active: false,
         throttled: false
       },
-      aiRecitationStrictProgression: true,
+      // Soft by default: imperfect recites keep red/amber/green/black/gray colours
+      // so the recommendation plan can use a full word-level signal.
+      aiRecitationStrictProgression: false,
       aiRecitationPersistMistakes: false,
       persistentAiRecitationReviews: {},
       aiRecallModeEnabled: false,
@@ -988,6 +1022,29 @@ export default {
         subtitle: this.translateOrFallback('memorisation.helpLearning.subtitle', HELP_LEARNING_FALLBACKS.subtitle),
         bestFor: this.translateOrFallback('memorisation.helpLearning.bestFor', HELP_LEARNING_FALLBACKS.bestFor)
       }
+    },
+    recitationPremiumSummary() {
+      return this.getRecitationPremiumSummary(this.recitationCheckResult)
+    },
+    recitationPremiumIssueWords() {
+      return this.getRecitationIssueWords(this.recitationCheckResult)
+    },
+    postSessionAiColourSegments() {
+      const details = this.postSessionAiReviewDetails
+      const counts = details?.colorCounts
+      if (!counts || typeof counts !== 'object') return []
+      const defs = [
+        { key: 'green', tone: 'tone-green', count: Number(counts.green || 0), labelKey: 'colourCorrect', fallback: 'Correct' },
+        { key: 'amber', tone: 'tone-amber', count: Number(counts.amber || 0), labelKey: 'colourClose', fallback: 'Close' },
+        { key: 'red', tone: 'tone-red', count: Number(counts.red || 0), labelKey: 'colourIncorrect', fallback: 'Incorrect' },
+        { key: 'black', tone: 'tone-black', count: Number(counts.black || 0), labelKey: 'colourSkipped', fallback: 'Skipped' },
+      ]
+      return defs
+        .filter((row) => row.count > 0)
+        .map((row) => ({
+          ...row,
+          label: this.t(`memorisation.aiCheck.${row.labelKey}`) || row.fallback,
+        }))
     },
     tajweedColorLegend() {
       const colors = HELP_LEARNING_FALLBACKS.sections.tajweed.colors || {}
@@ -2772,12 +2829,236 @@ export default {
       }
       return ''
     },
+    postSessionCombinedCheckInsight() {
+      return buildCombinedCheckInsight({
+        aiDetails: this.postSessionAiReviewDetails || (
+          this.postSessionAiResultLine
+            ? { summaryLine: this.postSessionAiResultLine, outcomeLabel: '', outcome: 'mixed' }
+            : null
+        ),
+        quizView: this.postSessionAdaptiveResultView,
+        recommendation: this.postSessionRecommendation,
+        confidence: this.postSessionSelectedConfidence,
+        isRepeat: this.postSessionIsRepeatRecommendation,
+        t: this.t.bind(this),
+      })
+    },
+    postSessionCheckAnswers() {
+      return this.postSessionCombinedCheckInsight?.answers || []
+    },
+    postSessionPersonalPlan() {
+      const stored = this.postSessionRecommendation?.plan_detail
+      const built = buildPersonalPracticePlan({
+        recommendation: this.postSessionRecommendation,
+        snapshot: this.postSessionSnapshot || {},
+        completion: this.buildCompletionPerformancePayload?.() || null,
+        aiDetails: this.postSessionAiReviewDetails || (
+          this.postSessionAiResultLine
+            ? { summaryLine: this.postSessionAiResultLine, outcomeLabel: '', outcome: 'mixed' }
+            : null
+        ),
+        quizView: this.postSessionAdaptiveResultView,
+        confidence: this.postSessionSelectedConfidence,
+        isRepeat: this.postSessionIsRepeatRecommendation,
+        t: this.t.bind(this),
+      })
+      if (!built) return stored && typeof stored === 'object' ? stored : null
+      // Prefer freshly built plan; keep stored minutes/source if identical range.
+      return built
+    },
     postSessionWhyDisclosureText() {
-      if (!this.postSessionHasAiCheck) {
-        return this.t('memorisation.postSession.recommendation.evidenceFromSessionAndConfidence')
+      const personal = this.postSessionPersonalPlan?.personalWhy
+      if (personal) return personal
+      const insight = this.postSessionCombinedCheckInsight
+      if (insight?.summary) return insight.summary
+      const reason = String(this.postSessionSimpleReason || '').trim()
+      if (reason) return reason
+      return this.t('memorisation.postSession.recommendation.evidenceFromSessionAndConfidence')
+    },
+    postSessionPlanInsightVisible() {
+      return !!(this.postSessionCombinedCheckInsight?.hasChecks || this.postSessionWhyDisclosureText)
+    },
+    postSessionQuizResultBandLabel() {
+      const band = String(this.postSessionAdaptiveResultView?.objectiveBand || 'mixed').toLowerCase()
+      if (band === 'strong') {
+        return this.t('memorisation.postSession.recommendation.checkAnswerQuizStrong')
       }
-      return this.postSessionSimpleReason
-        || this.t('memorisation.postSession.recommendation.evidenceFromSessionAndConfidence')
+      if (band === 'weak') {
+        return this.t('memorisation.postSession.recommendation.checkAnswerQuizWeak')
+      }
+      return this.t('memorisation.postSession.recommendation.checkAnswerQuizMixed')
+    },
+    postSessionQuizResultPills() {
+      const view = this.postSessionAdaptiveResultView
+      if (!view) return []
+      const pills = []
+      const weak = Array.isArray(view.weakAyahs) ? view.weakAyahs.filter(Boolean).slice(0, 4) : []
+      weak.forEach((ayah) => {
+        pills.push({
+          key: `ayah-${ayah}`,
+          tone: 'weak',
+          label: this.t('memorisation.postSession.adaptiveCheck.resultVersePill', { ayah }),
+        })
+      })
+      const skills = Array.isArray(view.skillView) ? view.skillView : []
+      skills
+        .filter((s) => s && (s.band === 'developing' || s.band === 'steady'))
+        .slice(0, 4)
+        .forEach((s) => {
+          pills.push({
+            key: `skill-${s.key}`,
+            tone: s.band === 'developing' ? 'weak' : 'mixed',
+            label: `${s.label}: ${s.bandLabel || s.band}`,
+          })
+        })
+      if (!pills.length && view.weaknessLabel) {
+        pills.push({
+          key: 'weakness',
+          tone: 'weak',
+          label: view.weaknessLabel,
+        })
+      }
+      if (view.strengthLabel && view.objectiveBand === 'strong') {
+        pills.push({
+          key: 'strength',
+          tone: 'strong',
+          label: view.strengthLabel,
+        })
+      }
+      return pills.slice(0, 6)
+    },
+    postSessionQuizScoreLine() {
+      const stats = this.postSessionAdaptiveResultView?.quizStats
+      if (stats?.scoreLine) return stats.scoreLine
+      return String(this.postSessionAdaptiveResultView?.how || '').trim()
+    },
+    postSessionQuizSkillRows() {
+      const skills = this.postSessionAdaptiveResultView?.skillView
+      return Array.isArray(skills) ? skills.slice(0, 4) : []
+    },
+    postSessionQuizResultPlanLine() {
+      const view = this.postSessionAdaptiveResultView
+      const insight = this.postSessionCombinedCheckInsight
+      const band = String(view?.objectiveBand || '').toLowerCase()
+      const aiTone = String(this.postSessionAiReviewDetails?.outcome || '').toLowerCase()
+      const needsSupport = band === 'weak'
+        || aiTone === 'weak'
+        || (Array.isArray(view?.weakAyahs) && view.weakAyahs.length > 0)
+      const fromView = String(view?.should || view?.nextStep || '').trim()
+      const fromInsight = String(insight?.summary || '').trim()
+      if (needsSupport) {
+        if (fromView) return fromView
+        if (fromInsight && !/look ready|Nice work\. Next/i.test(fromInsight)) return fromInsight
+        return this.t('memorisation.postSession.recommendation.combinedContinueNeedsSupport')
+      }
+      if (fromInsight) return fromInsight
+      return fromView
+    },
+    postSessionAiResultMetrics() {
+      const details = this.postSessionAiReviewDetails
+      if (!details) return []
+      const metrics = Array.isArray(details.metrics) ? details.metrics.slice(0, 4) : []
+      return metrics
+    },
+    postSessionQuizAiHighlights() {
+      const details = this.postSessionAiReviewDetails
+      const highlights = Array.isArray(details?.highlights) ? details.highlights.slice(0, 3) : []
+      return highlights
+    },
+    postSessionMemoryCheckBusy() {
+      return !!(this.postSessionAdaptiveCheckBusy || this.postSessionAiReciteBusy)
+    },
+    postSessionMemoryCheckResultVisible() {
+      if (this.postSessionAdaptiveCheckActive) return false
+      return !!(
+        this.postSessionAdaptiveResultView
+        || this.postSessionHasAiCheck
+        || this.postSessionAiResultLine
+      )
+    },
+    postSessionMemoryCheckOutcome() {
+      const answers = this.postSessionCombinedCheckInsight?.answers || []
+      if (answers.length) {
+        const tones = answers.map((a) => String(a.tone || '').toLowerCase())
+        if (tones.includes('weak')) return 'weak'
+        if (tones.every((t) => t === 'strong')) return 'strong'
+        return 'mixed'
+      }
+      if (this.postSessionAdaptiveResultView?.objectiveBand) {
+        return String(this.postSessionAdaptiveResultView.objectiveBand).toLowerCase()
+      }
+      return String(this.postSessionAiReviewDetails?.outcome || 'mixed').toLowerCase()
+    },
+    postSessionMemoryCheckBadge() {
+      const outcome = this.postSessionMemoryCheckOutcome
+      if (this.postSessionHasAiCheck && this.postSessionAdaptiveResultView) {
+        if (outcome === 'strong') {
+          return this.t('memorisation.postSession.recommendation.checkAnswerQuizStrong')
+        }
+        if (outcome === 'weak') {
+          return this.t('memorisation.postSession.recommendation.checkAnswerQuizWeak')
+        }
+        return this.t('memorisation.postSession.recommendation.checkAnswerQuizMixed')
+      }
+      if (this.postSessionAdaptiveResultView) {
+        return this.postSessionQuizResultBandLabel
+      }
+      return this.postSessionAiReviewDetails?.outcomeLabel
+        || this.t('memorisation.postSession.recommendation.aiOutcomeMixed')
+    },
+    postSessionMemoryCheckSummary() {
+      const insight = this.postSessionCombinedCheckInsight
+      if (insight?.summary) return insight.summary
+      if (this.postSessionAdaptiveResultView) {
+        return String(
+          this.postSessionAdaptiveResultView.why
+          || this.postSessionAdaptiveResultView.headline
+          || ''
+        ).trim()
+      }
+      return this.postSessionAiResultLine
+        || String(this.postSessionAiReviewDetails?.summaryLine || '').trim()
+    },
+    postSessionBeginnerResultLine() {
+      const focus = String(this.postSessionAiReviewDetails?.focus || '').trim()
+      if (focus) return focus
+      const why = String(this.postSessionAdaptiveResultView?.why || '').trim()
+      if (why) return why
+      const score = String(this.postSessionQuizScoreLine || '').trim()
+      if (score) return score
+      return this.postSessionMemoryCheckSummary
+    },
+    postSessionBeginnerSetup() {
+      const setup = this.postSessionPersonalPlan?.setup
+      if (!Array.isArray(setup)) return []
+      const settings = this.postSessionRecommendation?.settings || {}
+      // Beginners: only speed + reps. Technique already shown in "How".
+      return setup
+        .filter((row) => row && (row.key === 'speed' || row.key === 'reps'))
+        .slice(0, 2)
+        .map((row) => {
+          let hint = ''
+          if (row.key === 'speed') {
+            const speed = Number(settings.playback_speed)
+            if (Number.isFinite(speed) && speed > 0) {
+              const key = speed < 1
+                ? 'memorisation.postSession.recommendation.paramHints.speedSlower'
+                : 'memorisation.postSession.recommendation.paramHints.speedFaster'
+              hint = String(this.t(key, { speed }) || '').trim()
+            }
+          } else if (row.key === 'reps') {
+            const reps = Number(settings.repetitions)
+            if (Number.isFinite(reps) && reps > 0) {
+              const key = reps >= 5
+                ? 'memorisation.postSession.recommendation.paramHints.repetitionsHigh'
+                : reps >= 3
+                  ? 'memorisation.postSession.recommendation.paramHints.repetitionsModerate'
+                  : 'memorisation.postSession.recommendation.paramHints.repetitionsLight'
+              hint = String(this.t(key, { count: reps }) || '').trim()
+            }
+          }
+          return { ...row, hint }
+        })
     },
     postSessionIntendedOutcome() {
       const outcome = this.postSessionRecommendation?.intended_outcome
@@ -2795,6 +3076,10 @@ export default {
       return deriveCompletionFlowPhase({
         showPostSessionModal: this.showPostSessionModal,
         postSessionAiReciteActive: this.postSessionAiReciteActive,
+        postSessionAdaptiveCheckActive: this.postSessionAdaptiveCheckActive,
+        postSessionAdaptiveCheckResult: !!(
+          this.postSessionAdaptiveCheckActive && this.postSessionAdaptiveResultView
+        ),
         showSelfCheckModal: this.showSelfCheckModal,
         isSelfCheckRecording: this.isSelfCheckRecording,
         hasSelfCheckResult: !!this.recitationCheckResult,
@@ -2976,6 +3261,72 @@ export default {
         ? this.t('memorisation.postSession.recommendation.openingAiRecite')
         : this.t('memorisation.postSession.recommendation.aiReciteShort')
     },
+    postSessionAdaptiveQuestion() {
+      return this.postSessionAdaptiveSession?.currentQuestion || null
+    },
+    postSessionAdaptiveProgressCurrent() {
+      const session = this.postSessionAdaptiveSession
+      if (!session) return 1
+      if (session.currentQuestion) return Math.max(1, Number(session.questionsAsked || 1))
+      return Math.max(1, Number(session.questionsAsked || 1))
+    },
+    postSessionAdaptiveProgressTotal() {
+      const asked = Number(this.postSessionAdaptiveSession?.questionsAsked || 1)
+      return Math.min(7, Math.max(3, asked + (this.postSessionAdaptiveSession?.currentQuestion ? 1 : 0)))
+    },
+    postSessionAdaptiveProgressLabel() {
+      return this.t('memorisation.postSession.adaptiveCheck.progress', {
+        current: this.postSessionAdaptiveProgressCurrent,
+        total: this.postSessionAdaptiveProgressTotal,
+      })
+    },
+    postSessionAdaptiveFriendlyPrompt() {
+      const type = String(this.postSessionAdaptiveQuestion?.type || '')
+      const map = {
+        surah_identification: 'Which surah is this from?',
+        missing_word_options: 'Which word is missing?',
+        select_next_phrase: 'What comes next?',
+        basic_phrase_ordering: 'Put these in order',
+        match_beginning_ending: 'How does this ayah end?',
+        complete_ayah_reduced: 'Which word fits here?',
+        previous_next_ayah: 'Which ayah comes next?',
+        mushaf_hide_partial: 'What are the hidden words?',
+        arrange_ayah_segments: 'Put these in order',
+        beginning_end_recall: 'How does this ayah end?',
+        complete_ayah_open: 'Continue from memory',
+        missing_ayah: 'Which ayah belongs here?',
+        random_start_continuation: 'Continue from memory',
+        mushaf_hide_heavy: 'What are the hidden words?',
+        ai_recite_no_text: 'Recite this ayah',
+        harakah_check: 'Which word is correct?',
+        mutashabihat_comparison: 'Which ayah matches?',
+        similar_ayah_identification: 'Which ayah matches?',
+        cross_range_sequence: 'Put these ayahs in order',
+        delayed_recall: 'Which word belongs here?',
+        pronunciation_fluency: 'Recite this ayah',
+      }
+      return map[type] || this.postSessionAdaptiveQuestion?.prompt || this.t('memorisation.postSession.adaptiveCheck.selectAnswer')
+    },
+    postSessionAdaptiveFeedbackLabel() {
+      const tone = this.postSessionAdaptiveFeedback
+      if (tone === 'correct') return this.t('memorisation.postSession.adaptiveCheck.feedbackCorrect')
+      if (tone === 'almost') return this.t('memorisation.postSession.adaptiveCheck.feedbackAlmost')
+      if (tone === 'incorrect') return this.t('memorisation.postSession.adaptiveCheck.feedbackIncorrect')
+      return ''
+    },
+    postSessionAdaptivePrimaryActionLabel() {
+      const key = this.postSessionAdaptiveResultView?.primaryActionLabelKey || 'continue'
+      const mapped = {
+        continue: 'continue',
+        repeatWeakAyahs: 'repeatWeakAyahs',
+        startFocusedReview: 'startFocusedReview',
+        reviewTomorrow: 'reviewTomorrow',
+      }
+      const i18nKey = mapped[key] || 'continue'
+      const label = this.t(`memorisation.postSession.adaptiveCheck.actions.${i18nKey}`)
+      if (label && !String(label).includes('adaptiveCheck.actions')) return label
+      return this.t('memorisation.postSession.adaptiveCheck.doneCta')
+    },
     postSessionRecommendationTitle() {
       const rec = this.postSessionRecommendation
       if (!rec) return ''
@@ -3031,6 +3382,7 @@ export default {
         || this.postSessionConfidenceBusy
         || this.postSessionSettingsBusy
         || this.postSessionAiReciteBusy
+        || this.postSessionAdaptiveCheckBusy
         || this.postSessionRecommendationStatus === 'loading'
     },
     postSessionConfirmationTitle() {
@@ -9170,6 +9522,7 @@ export default {
           this.loadPostSessionRecommendation()
         }
       }
+      this.$nextTick(() => this.restoreAdaptiveCheckIfNeeded())
       window.setTimeout(() => {
         this.showPostSessionConfetti = false
       }, this.onboardingSampleSessionActive ? 6600 : 5600)
@@ -9190,6 +9543,22 @@ export default {
       this.postSessionAiReciteActive = false
       this.postSessionAiFeedback = ''
       this.postSessionAiReviewDetails = null
+      this.postSessionAdaptiveCheckActive = false
+      this.postSessionAdaptiveCheckBusy = false
+      this.postSessionAdaptiveSession = null
+      this.postSessionAdaptiveResultView = null
+      this.postSessionAdaptiveAnswer = ''
+      this.postSessionAdaptiveSelectedOption = null
+      this.postSessionAdaptiveOrdering = []
+      this.postSessionAdaptiveUsedHint = false
+      this.postSessionAdaptiveHintText = ''
+      this.postSessionAdaptiveError = ''
+      this.postSessionAdaptiveFeedback = ''
+      if (this.postSessionAdaptiveFeedbackTimer) {
+        clearTimeout(this.postSessionAdaptiveFeedbackTimer)
+        this.postSessionAdaptiveFeedbackTimer = null
+      }
+      this.postSessionAdaptiveQuestionStartedAt = 0
       this.postSessionWhyExpanded = false
       this.postSessionConfidenceSelection = null
       this.postSessionConfidenceHydrated = false
@@ -9259,7 +9628,7 @@ export default {
           name: this.resolveRecommendationSurahName(next.completed_surah),
         }
       }
-      return next
+      return clampRecommendationRange(next, 3)
     },
     syncPostSessionConfidenceFromRecommendation(recommendation, { force = false } = {}) {
       if (!recommendation) return
@@ -9406,6 +9775,39 @@ export default {
     retryPostSessionRecommendation() {
       this.loadPostSessionRecommendation()
     },
+    syncPersonalPlanOntoRecommendation(recommendation = this.postSessionRecommendation) {
+      if (!recommendation) return recommendation
+      const plan = buildPersonalPracticePlan({
+        recommendation,
+        snapshot: {
+          ...(this.postSessionSnapshot || {}),
+          completion: this.buildCompletionPerformancePayload?.() || null,
+          aiDetails: this.postSessionAiReviewDetails || null,
+          quizView: this.postSessionAdaptiveResultView || null,
+        },
+        completion: this.buildCompletionPerformancePayload?.() || null,
+        aiDetails: this.postSessionAiReviewDetails || null,
+        quizView: this.postSessionAdaptiveResultView || null,
+        confidence: recommendation.confidence_feedback || this.postSessionSelectedConfidence,
+        isRepeat: isRepeatRecommendation(recommendation),
+        t: this.t.bind(this),
+      })
+      return this.enrichPostSessionRecommendation(
+        applyPersonalPlanToRecommendation(recommendation, plan),
+      )
+    },
+    personalPlanPersistPayload(recommendation = this.postSessionRecommendation) {
+      const plan = recommendation?.plan_detail || this.postSessionPersonalPlan
+      if (!plan) return {}
+      return {
+        plan_detail: plan,
+        ayah_range: recommendation?.ayah_range || null,
+        focus_ayahs: plan.focus_ayahs
+          || recommendation?.ayah_range?.focus_ayahs
+          || plan.range?.focusAyahs
+          || [],
+      }
+    },
     async submitPostSessionConfidence(confidence) {
       if (this.postSessionActionsBusy) return
       if (!['confident', 'needs_practice'].includes(confidence)) return
@@ -9424,12 +9826,17 @@ export default {
       this.postSessionConfidenceError = ''
 
       // Optimistic reshape so the card/reason react to the toggle without waiting on the API.
-      this.postSessionRecommendation = this.enrichPostSessionRecommendation(
+      this.postSessionRecommendation = this.syncPersonalPlanOntoRecommendation(
         adaptRecommendationForConfidence(
           this.postSessionRecommendation,
           confidence,
-          this.postSessionSnapshot || {}
-        )
+          {
+            ...(this.postSessionSnapshot || {}),
+            completion: this.buildCompletionPerformancePayload?.() || null,
+            aiDetails: this.postSessionAiReviewDetails || null,
+            quizView: this.postSessionAdaptiveResultView || null,
+          },
+        ),
       )
       this.postSessionRecommendationStatus = 'ready'
       this.postSessionViewState = 'recommendation_ready'
@@ -9442,7 +9849,8 @@ export default {
       try {
         const updated = await learningApi.submitRecommendationConfidence(
           this.postSessionRecommendation.id,
-          confidence
+          confidence,
+          this.personalPlanPersistPayload(),
         )
         if (updated) {
           this.postSessionRecommendation = this.enrichPostSessionRecommendation(updated)
@@ -9656,6 +10064,8 @@ export default {
         }
 
         this.postSessionAiReciteActive = true
+        // Post-session Quiz AI should never hard-lock word progression.
+        this.aiRecitationStrictProgression = false
         // Wait one tick so the completion Teleport unmounts before AI Recite mounts.
         await this.$nextTick()
         this.openAiRecitationCheckForSession()
@@ -9702,21 +10112,395 @@ export default {
         }
       })
     },
+    restoreAdaptiveCheckIfNeeded() {
+      if (!this.showPostSessionModal || this.postSessionAdaptiveCheckActive) return
+      const existing = loadAssessmentSession()
+      if (!existing || existing.status === 'abandoned') return
+      if (existing.status === 'completed' && existing.result) {
+        this.postSessionAdaptiveSession = existing
+        this.postSessionAdaptiveResultView = buildAssessmentResultViewModel(
+          existing,
+          this.t.bind(this),
+        )
+        this.postSessionAdaptiveCheckActive = true
+        return
+      }
+      if (existing.status === 'paused' || existing.status === 'active') {
+        this.postSessionAdaptiveSession = resumeAssessment(existing)
+        this.postSessionAdaptiveCheckActive = true
+        this.syncAdaptiveQuestionLocalState()
+      }
+    },
+    syncAdaptiveQuestionLocalState() {
+      const question = this.postSessionAdaptiveSession?.currentQuestion
+      this.postSessionAdaptiveAnswer = ''
+      this.postSessionAdaptiveSelectedOption = null
+      this.postSessionAdaptiveUsedHint = false
+      this.postSessionAdaptiveHintText = ''
+      this.postSessionAdaptiveError = ''
+      this.postSessionAdaptiveFeedback = ''
+      if (this.postSessionAdaptiveFeedbackTimer) {
+        clearTimeout(this.postSessionAdaptiveFeedbackTimer)
+        this.postSessionAdaptiveFeedbackTimer = null
+      }
+      this.postSessionAdaptiveQuestionStartedAt = Date.now()
+      if (question?.renderer === 'ordering' && Array.isArray(question.segments)) {
+        this.postSessionAdaptiveOrdering = question.segments.map((seg, index) => (
+          typeof seg === 'object'
+            ? { ...seg, _id: seg.key || seg.label || index }
+            : { key: String(index), label: String(seg), text: String(seg), _id: String(index) }
+        ))
+      } else {
+        this.postSessionAdaptiveOrdering = []
+      }
+    },
+    selectAdaptiveOption(idx) {
+      if (this.postSessionAdaptiveFeedback || this.postSessionAdaptiveCheckBusy) return
+      const question = this.postSessionAdaptiveQuestion
+      if (!question) return
+      this.postSessionAdaptiveSelectedOption = Number(idx)
+      const correct = Number(question.correctIndex) === Number(idx)
+      this.postSessionAdaptiveFeedback = correct ? 'correct' : 'incorrect'
+      if (this.postSessionAdaptiveFeedbackTimer) clearTimeout(this.postSessionAdaptiveFeedbackTimer)
+      this.postSessionAdaptiveFeedbackTimer = setTimeout(() => {
+        this.postSessionAdaptiveFeedbackTimer = null
+        this.submitAdaptiveAnswer()
+      }, correct ? 650 : 900)
+    },
+    skipAdaptiveQuestion() {
+      if (this.postSessionAdaptiveCheckBusy || this.postSessionAdaptiveFeedback) return
+      // Treat skip as an incorrect unsupported attempt so difficulty can ease.
+      this.postSessionAdaptiveUsedHint = true
+      this.postSessionAdaptiveSelectedOption = -1
+      this.postSessionAdaptiveFeedback = 'incorrect'
+      if (this.postSessionAdaptiveFeedbackTimer) clearTimeout(this.postSessionAdaptiveFeedbackTimer)
+      this.postSessionAdaptiveFeedbackTimer = setTimeout(() => {
+        this.postSessionAdaptiveFeedbackTimer = null
+        this.submitAdaptiveAnswer({ skipped: true })
+      }, 400)
+    },
+    async startPostSessionAdaptiveCheck() {
+      if (this.postSessionActionsBusy) return
+      this.postSessionAdaptiveCheckBusy = true
+      this.postSessionAdaptiveError = ''
+      this.postSessionViewState = 'opening_adaptive_check'
+      try {
+        const snap = this.postSessionSnapshot || {}
+        const chapterId = Number(snap.chapterId || this.chapterId || this.sessionConfig?.chapterId || 0)
+        const from = Number(snap.rangeStart || this.sessionConfig?.rangeStart || 0)
+        const to = Number(snap.rangeEnd || this.sessionConfig?.rangeEnd || from)
+        const verses = (this.verses || [])
+          .filter((v) => {
+            const surah = Number(v.surah || String(v.key || '').split(':')[0] || 0)
+            const ayah = Number(v.number || v.ayah || String(v.key || '').split(':')[1] || 0)
+            if (chapterId && surah && surah !== chapterId) return false
+            if (from && to && ayah && (ayah < from || ayah > to)) return false
+            return !!(v.arabic || v.text)
+          })
+          .map((v) => ({
+            key: v.key,
+            surah: Number(v.surah || String(v.key || '').split(':')[0] || chapterId || 0),
+            ayah: Number(v.number || v.ayah || String(v.key || '').split(':')[1] || 0),
+            arabic: this.stripTajweedMarkup(v.arabic || v.text || ''),
+            surahName: snap.chapterName || this.chapterName || '',
+          }))
+
+        if (!verses.length) {
+          throw new Error('no_verses')
+        }
+
+        const completion = this.buildCompletionPerformancePayload?.() || {}
+        const session = startAdaptiveCheck({
+          verses,
+          sourceSessionId: this.postSessionCompletedSessionId || snap.sessionId || null,
+          recommendationId: this.postSessionRecommendation?.id || null,
+          sessionContext: {
+            incomplete: !snap.completedAll,
+            hints_used: Number(completion.hints_used || this.sessionHintCount || 0),
+            replay_ratio: Number(completion.replay_ratio || 0),
+            weak_ayahs: this.postSessionRecommendation?.ai_assessment?.weak_ayahs || [],
+            overdueKeys: [],
+            confidence: this.postSessionSelectedConfidence,
+            range: { surah: chapterId, from, to },
+          },
+          surahCatalog: (this.chapters || []).map((c) => ({
+            id: Number(c.id),
+            name: c.name_simple || c.name_arabic || `Surah ${c.id}`,
+          })),
+          masteryByKey: loadMasteryMap(),
+        })
+
+        this.postSessionAdaptiveSession = session
+        this.postSessionAdaptiveResultView = null
+        this.postSessionAdaptiveCheckActive = true
+        this.syncAdaptiveQuestionLocalState()
+        this.postSessionViewState = 'adaptive_check'
+      } catch (error) {
+        console.warn('Failed to start adaptive check:', error)
+        this.postSessionAdaptiveError = this.t('memorisation.postSession.adaptiveCheck.startError')
+        this.postSessionViewState = 'recommendation_ready'
+      } finally {
+        this.postSessionAdaptiveCheckBusy = false
+      }
+    },
+    closePostSessionAdaptiveCheck({ abandon = false } = {}) {
+      if (abandon && this.postSessionAdaptiveSession) {
+        pauseAssessment(this.postSessionAdaptiveSession)
+      }
+      if (abandon) {
+        this.postSessionAdaptiveCheckActive = false
+        this.postSessionAdaptiveResultView = null
+        this.postSessionViewState = 'recommendation_ready'
+        this.$nextTick(() => {
+          const title = this.$el?.querySelector?.('#postSessionTitle')
+          if (title && typeof title.focus === 'function') {
+            title.setAttribute('tabindex', '-1')
+            title.focus()
+          }
+        })
+        return
+      }
+      void this.landOnAdaptedPlanFromCheck()
+    },
+    useAdaptiveHint() {
+      if (!this.postSessionAdaptiveSession?.currentQuestion) return
+      const { session, hint } = requestHint(this.postSessionAdaptiveSession)
+      this.postSessionAdaptiveSession = session
+      this.postSessionAdaptiveUsedHint = true
+      this.postSessionAdaptiveHintText = hint
+        || this.t('memorisation.postSession.adaptiveCheck.hintFallback')
+    },
+    moveAdaptiveOrdering(index, direction) {
+      const list = [...(this.postSessionAdaptiveOrdering || [])]
+      const target = index + direction
+      if (target < 0 || target >= list.length) return
+      ;[list[index], list[target]] = [list[target], list[index]]
+      this.postSessionAdaptiveOrdering = list
+    },
+    async submitAdaptiveAnswer(options = {}) {
+      const session = this.postSessionAdaptiveSession
+      const question = session?.currentQuestion
+      if (!session || !question || this.postSessionAdaptiveCheckBusy) return
+
+      let answer = this.postSessionAdaptiveAnswer
+      if (question.renderer === 'mcq' || question.renderer === 'mcq_simple') {
+        if (this.postSessionAdaptiveSelectedOption == null && !options.skipped) {
+          this.postSessionAdaptiveError = this.t('memorisation.postSession.adaptiveCheck.selectAnswer')
+          return
+        }
+        answer = options.skipped ? -1 : this.postSessionAdaptiveSelectedOption
+      } else if (question.renderer === 'ordering') {
+        answer = (this.postSessionAdaptiveOrdering || []).map((seg) => (
+          typeof seg === 'object' ? (seg.key || seg.text || seg.label) : seg
+        ))
+      } else if (question.renderer === 'ai_recite') {
+        this.postSessionAdaptiveCheckBusy = true
+        try {
+          await this.openPostSessionAiRecite()
+        } finally {
+          this.postSessionAdaptiveCheckBusy = false
+        }
+        return
+      }
+
+      this.postSessionAdaptiveCheckBusy = true
+      this.postSessionAdaptiveError = ''
+      try {
+        const responseMs = Math.max(0, Date.now() - Number(this.postSessionAdaptiveQuestionStartedAt || Date.now()))
+        const next = answerCurrentQuestion(session, {
+          answer,
+          usedHint: this.postSessionAdaptiveUsedHint || !!options.skipped,
+          responseMs,
+        })
+        this.postSessionAdaptiveSession = next
+        this.postSessionAdaptiveFeedback = ''
+        if (next.status === 'completed') {
+          await this.finaliseAdaptiveAssessment(next)
+        } else {
+          this.syncAdaptiveQuestionLocalState()
+        }
+      } catch (error) {
+        console.warn('Adaptive answer failed:', error)
+        this.postSessionAdaptiveError = this.t('memorisation.postSession.adaptiveCheck.answerError')
+        this.postSessionAdaptiveFeedback = ''
+      } finally {
+        this.postSessionAdaptiveCheckBusy = false
+      }
+    },
+    async finishAdaptiveWithAiResult(aiResult) {
+      const session = this.postSessionAdaptiveSession
+      if (!session?.currentQuestion?.requiresAiRecite) return
+      const responseMs = Math.max(0, Date.now() - Number(this.postSessionAdaptiveQuestionStartedAt || Date.now()))
+      const next = answerCurrentQuestion(session, {
+        usedHint: this.postSessionAdaptiveUsedHint,
+        responseMs,
+        aiResult: typeof aiResult === 'object' ? aiResult : { result: aiResult },
+      })
+      this.postSessionAdaptiveSession = next
+      this.postSessionAiReciteActive = false
+      if (next.status === 'completed') {
+        await this.finaliseAdaptiveAssessment(next)
+      } else {
+        this.syncAdaptiveQuestionLocalState()
+      }
+    },
+    async finaliseAdaptiveAssessment(session) {
+      const completed = session.status === 'completed'
+        ? session
+        : completeAssessment(session, {
+          confidence: this.postSessionSelectedConfidence,
+          baseRecommendation: this.postSessionRecommendation,
+        })
+      this.postSessionAdaptiveSession = completed
+      const view = buildAssessmentResultViewModel(completed, this.t.bind(this))
+      this.postSessionAdaptiveResultView = view
+
+      if (view?.recommendation && this.postSessionRecommendation) {
+        this.postSessionRecommendation = this.syncPersonalPlanOntoRecommendation(
+          adaptRecommendationForAdaptiveAssessment(
+            this.postSessionRecommendation,
+            view.recommendation,
+            {
+              ...(this.postSessionSnapshot || {}),
+              objectiveBand: view.objectiveBand,
+              adaptiveSnapshot: view.snapshot,
+              weakAyahs: view.weakAyahs || [],
+              quizView: view,
+              aiDetails: this.postSessionAiReviewDetails || null,
+              completion: this.buildCompletionPerformancePayload?.() || null,
+            },
+          ),
+        )
+        this.postSessionRecommendationStatus = 'ready'
+      }
+
+      // Hybrid persistence: progress metadata + recommendation snapshot
+      if (this.isLoggedIn) {
+        try {
+          if (Array.isArray(view?.progressItems) && view.progressItems.length) {
+            await learningApi.saveProgress(view.progressItems)
+          }
+          if (this.postSessionRecommendation?.id && view?.snapshot) {
+            const updated = await learningApi.submitRecommendationAdaptiveAssessment(
+              this.postSessionRecommendation.id,
+              {
+                result: view.objectiveBand || view.snapshot.result || 'mixed',
+                summary: view.explanation,
+                assessment_id: view.snapshot.assessment_id,
+                weak_ayahs: view.weakAyahs || [],
+                reason_codes: (view.reasonCodes || []).map((c) => String(c).toLowerCase()),
+                skills: view.snapshot.skills,
+                skill_view: view.snapshot.skill_view,
+                policy: view.snapshot.policy,
+                responses: view.snapshot.responses,
+                events: view.snapshot.events,
+                review: view.snapshot.review,
+                snapshot: view.snapshot,
+                ...this.personalPlanPersistPayload(),
+              },
+            )
+            if (updated) {
+              this.postSessionRecommendation = this.enrichPostSessionRecommendation(updated)
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to persist adaptive assessment:', error)
+        }
+      }
+    },
+    acceptAdaptiveRecommendation() {
+      recordEffectiveness({
+        recommendationId: this.postSessionRecommendation?.id,
+        technique: this.postSessionRecommendation?.settings?.technique,
+        accepted: true,
+        adjusted: false,
+      })
+      void this.landOnAdaptedPlanFromCheck()
+    },
+    reopenPostSessionQuizReview() {
+      if (!this.postSessionAdaptiveResultView && !this.postSessionAdaptiveSession?.result) {
+        void this.startPostSessionAdaptiveCheck()
+        return
+      }
+      if (!this.postSessionAdaptiveResultView && this.postSessionAdaptiveSession?.result) {
+        this.postSessionAdaptiveResultView = buildAssessmentResultViewModel(
+          this.postSessionAdaptiveSession,
+          this.t.bind(this),
+        )
+      }
+      this.postSessionAdaptiveCheckActive = true
+      this.postSessionViewState = 'adaptive_check'
+      this.syncBodyScrollLock(true)
+    },
+    adjustAdaptivePlan() {
+      recordEffectiveness({
+        recommendationId: this.postSessionRecommendation?.id,
+        technique: this.postSessionRecommendation?.settings?.technique,
+        accepted: false,
+        adjusted: true,
+      })
+      void this.landOnAdaptedPlanFromCheck()
+      void this.openPostSessionAdjustPlan()
+    },
+    async landOnAdaptedPlanFromCheck() {
+      this.postSessionAdaptiveCheckActive = false
+      this.postSessionAdaptiveCheckBusy = false
+      this.postSessionWhyExpanded = true
+      this.postSessionViewState = 'recommendation_ready'
+      this.syncBodyScrollLock(!!this.showPostSessionModal)
+
+      await this.$nextTick()
+      const planEl = this.$el?.querySelector?.('.ps-plan')
+        || this.$el?.querySelector?.('.post-session-simple__panel--hero')
+        || this.$el?.querySelector?.('.post-session-simple__check-review')
+      if (planEl && typeof planEl.scrollIntoView === 'function') {
+        planEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    },
     async applyPostSessionAiAssessment(result, summary = '', extras = {}) {
+      // If adaptive check is waiting on an AI Recite question, fold evidence there first.
+      if (
+        this.postSessionAdaptiveCheckActive
+        && this.postSessionAdaptiveSession?.currentQuestion?.requiresAiRecite
+      ) {
+        await this.finishAdaptiveWithAiResult({
+          result,
+          summary,
+          omissions: extras.missed_words || extras.omissions,
+          missed_words: extras.missed_words,
+          pronunciation_issues: extras.pronunciation_issues,
+          hesitation: extras.hesitation,
+          fluency: extras.accuracy_percent != null
+            ? Number(extras.accuracy_percent) / 100
+            : undefined,
+        })
+        if (summary) this.postSessionAiFeedback = summary
+        return
+      }
+
       // Optimistic reshape so the plan reacts immediately to AI Recite.
       if (this.postSessionRecommendation) {
-        this.postSessionRecommendation = this.enrichPostSessionRecommendation(
+        this.postSessionAiReviewDetails = this.buildPostSessionAiReviewDetails(result, extras, extras._result || null)
+        this.postSessionRecommendation = this.syncPersonalPlanOntoRecommendation(
           adaptRecommendationForAiAssessment(
             this.postSessionRecommendation,
             result,
-            this.postSessionSnapshot || {}
-          )
+            {
+              ...(this.postSessionSnapshot || {}),
+              weak_ayahs: extras.weak_ayahs,
+              weakAyahs: extras.weak_ayahs,
+              aiDetails: this.postSessionAiReviewDetails,
+              completion: this.buildCompletionPerformancePayload?.() || null,
+            },
+          ),
         )
         this.postSessionRecommendationStatus = 'ready'
         this.syncPostSessionConfidenceFromRecommendation(this.postSessionRecommendation)
       }
       if (summary) this.postSessionAiFeedback = summary
-      this.postSessionAiReviewDetails = this.buildPostSessionAiReviewDetails(result, extras, extras._result || null)
+      if (!this.postSessionAiReviewDetails) {
+        this.postSessionAiReviewDetails = this.buildPostSessionAiReviewDetails(result, extras, extras._result || null)
+      }
 
       if (!this.postSessionRecommendation?.id || !this.isLoggedIn) {
         return
@@ -9732,6 +10516,8 @@ export default {
             missed_words: extras.missed_words,
             pronunciation_issues: extras.pronunciation_issues,
             accuracy_percent: extras.accuracy_percent,
+            color_counts: extras.color_counts,
+            ...this.personalPlanPersistPayload(),
           }
         )
         if (updated) {
@@ -12414,8 +13200,9 @@ export default {
     },
     getWordVisualStatus(word = {}, active = false, finalised = false) {
       const status = String(word?.status || 'pending')
-      if (['correct', 'partial', 'incorrect', 'skipped', 'notAttempted'].includes(status)) return status
-      if (status === 'pending') return finalised ? 'skipped' : (active ? 'notAttempted' : 'notAttempted')
+      if (['correct', 'partial', 'incorrect', 'omitted', 'skipped', 'notAttempted'].includes(status)) return status
+      // Finalised pending words were never said → black (omitted), not gray.
+      if (status === 'pending') return finalised ? 'omitted' : 'notAttempted'
       return 'notAttempted'
     },
     shouldShowRecitationReviewHighlights(ayahKey) {
@@ -12478,8 +13265,8 @@ export default {
       const offsetTargets = isMemoryTarget ? this.aiMemorisationCheckerTargets : this.recitationCheckPendingTargets
       const offset = this.getRecitationWordOffsetForVerse(ayahKey, offsetTargets, sessionTargetKey)
       const status = source?.[offset + index]?.status || ''
-      if (['correct', 'partial', 'incorrect'].includes(status)) return status
-      if (status === 'pending') return modeActive ? 'notAttempted' : 'skipped'
+      if (['correct', 'partial', 'incorrect', 'omitted'].includes(status)) return status
+      if (status === 'pending') return modeActive ? 'notAttempted' : 'omitted'
       if (['skipped', 'notAttempted'].includes(status)) return status
       return modeActive ? 'notAttempted' : ''
     },
@@ -12673,14 +13460,18 @@ export default {
     },
     getAiRecitationLiveGuidance(words = []) {
       const list = Array.isArray(words) ? words : []
-      const issue = list.find(word => word.status === 'incorrect')
-      if (this.aiRecitationStrictProgression && issue) {
-        return `Mistake detected at ${issue.text}. Recite it correctly before moving on.`
+      // Hidden-reveal tutoring is the only mode that locks progression word-by-word.
+      if (this.hiddenRevealModeEnabled) {
+        const issue = list.find(word => word.status === 'incorrect')
+        if (issue) {
+          return this.t('memorisation.aiCheck.guidanceFixWord', { word: issue.text })
+            || `Mistake at ${issue.text}. Try that word again.`
+        }
+        return this.t('memorisation.aiCheck.guidanceHiddenReveal')
+          || 'Listening now. Recite the highlighted word to continue.'
       }
-      if (this.aiRecitationStrictProgression) {
-        return 'Listening now. Each word must turn green before the next word unlocks.'
-      }
-      return 'Listening now. Recite to the end; final colours are confirmed after you stop.'
+      return this.t('memorisation.aiCheck.guidanceFreeFlow')
+        || 'Listening now. Recite to the end — colours update as you go, and final results appear after you stop.'
     },
     rebuildRecitationResultFromStatuses(result = null) {
       if (!result) return null
@@ -13971,6 +14762,7 @@ export default {
         correct: { color: '#15724c', underline: 'rgba(26, 133, 79, 0.85)' },
         partial: { color: '#9a6207', underline: 'rgba(204, 138, 11, 0.85)' },
         incorrect: { color: '#a83327', underline: 'rgba(193, 63, 45, 0.85)' },
+        omitted: { color: '#1a1a1a', underline: 'rgba(26, 26, 26, 0.88)' },
         pending: { color: 'inherit', underline: 'rgba(116, 126, 141, 0.42)' },
         skipped: { color: 'inherit', underline: 'rgba(116, 126, 141, 0.32)' },
         notAttempted: { color: 'inherit', underline: 'transparent' }
@@ -13983,6 +14775,7 @@ export default {
           correct: 'rgba(34, 166, 98, 0.16)',
           partial: 'rgba(237, 179, 71, 0.18)',
           incorrect: 'rgba(226, 96, 77, 0.16)',
+          omitted: 'rgba(26, 26, 26, 0.14)',
           pending: 'rgba(116, 126, 141, 0.10)',
           skipped: 'rgba(116, 126, 141, 0.10)',
           notAttempted: 'transparent'
@@ -14095,13 +14888,16 @@ export default {
       const signature = this.getLiveAlignmentInputSignature(kind, targetVerses, committedWords, displayWords)
       if (this[signatureKey] === signature) return
       this[signatureKey] = signature
+      const strictProgression = !!this.aiRecitationStrictProgression
       const liveAlignmentOptions = {
-        strictProgression: true,
+        strictProgression,
         metadata: {
           sessionId: this.getCurrentRecitationSessionId(),
           audioHash: kind === 'recitation' ? this.recitationInputAudioHash : ''
         }
       }
+      // Live preview stays soft so interim ASR can colour ahead; committed
+      // alignment follows the learner's progression preference.
       const livePreviewAlignmentOptions = {
         ...liveAlignmentOptions,
         strictProgression: false
@@ -14201,7 +14997,7 @@ export default {
       const liveWords = kind === 'memorisation' ? this.aiMemorisationCheckerLiveWords : this.recitationLiveWords
       if (!Array.isArray(liveWords) || liveWords.length < targetWordCount) return false
       const lastWord = liveWords[targetWordCount - 1]
-      return ['correct', 'partial', 'incorrect'].includes(String(lastWord?.status || ''))
+      return ['correct', 'partial', 'incorrect', 'omitted'].includes(String(lastWord?.status || ''))
     },
     shouldAutoStopRecitationCheckFromAlignment(alignment = null) {
       if (!this.recitationCheckRecording || !alignment?.progression?.complete) return false
@@ -14982,6 +15778,18 @@ export default {
       if (!this.postSessionAiReciteActive && !this.showPostSessionModal) return
       if (!this.postSessionRecommendation?.id && !this.postSessionAiReciteActive) return
 
+      const wordStatuses = this.getRecitationWordStatuses(result)
+      const colorCounts = result?.colorCounts && typeof result.colorCounts === 'object'
+        ? result.colorCounts
+        : getRecitationColorCounts(wordStatuses)
+      const derivedWeakAyahs = deriveWeakAyahsFromWordStatuses(wordStatuses)
+      const fromResultWeak = Array.isArray(result?.weakAyahs)
+        ? result.weakAyahs.map(Number).filter(n => Number.isFinite(n) && n > 0)
+        : []
+      const weakAyahs = [...new Set([...fromResultWeak, ...derivedWeakAyahs])]
+        .filter(n => Number.isFinite(n) && n > 0)
+        .sort((a, b) => a - b)
+
       const accuracy = Number(
         result.accuracyScore
         ?? result.accuracy
@@ -15000,12 +15808,20 @@ export default {
         outcome = 'strong'
       } else if (result.passed === false || result.weak === true) {
         outcome = 'weak'
+      } else {
+        // Colour mix fallback when accuracy is unavailable.
+        const total = Math.max(1, (colorCounts.green || 0) + (colorCounts.amber || 0)
+          + (colorCounts.red || 0) + (colorCounts.black || 0) + (colorCounts.gray || 0))
+        const hardIssues = (colorCounts.red || 0) + (colorCounts.black || 0)
+        const softIssues = colorCounts.amber || 0
+        if (hardIssues === 0 && softIssues <= 1 && (colorCounts.green || 0) / total >= 0.85) {
+          outcome = 'strong'
+        } else if (hardIssues / total >= 0.35 || (hardIssues + softIssues) / total >= 0.5) {
+          outcome = 'weak'
+        }
       }
 
       const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
-      const weakAyahs = Array.isArray(result?.weakAyahs)
-        ? result.weakAyahs.map(Number).filter(n => Number.isFinite(n) && n > 0)
-        : []
       const accuracyRaw = Number(
         result.accuracyScore
         ?? result.accuracy
@@ -15019,40 +15835,84 @@ export default {
         ? Math.round(accuracyRaw <= 1 ? accuracyRaw * 100 : accuracyRaw)
         : null
       const listCount = (value) => (Array.isArray(value) ? value.length : (Number.isFinite(Number(value)) ? Math.max(0, Math.round(Number(value))) : 0))
+      const missedWords = Math.max(
+        listCount(mistakes.missing) + listCount(mistakes.incorrect),
+        (colorCounts.red || 0) + (colorCounts.black || 0),
+      )
       const summary = this.buildPostSessionAiReviewSummary(result, outcome)
       this.postSessionAiFeedback = summary
       await this.applyPostSessionAiAssessment(outcome, summary, {
         weak_ayahs: weakAyahs,
         sequence_errors: listCount(mistakes.sequenceErrors) + listCount(mistakes.verseJumps) + listCount(mistakes.skippedAyahs),
-        missed_words: listCount(mistakes.missing) + listCount(mistakes.incorrect),
-        pronunciation_issues: listCount(mistakes.partial) >= 2,
+        missed_words: missedWords,
+        pronunciation_issues: listCount(mistakes.partial) >= 2 || (colorCounts.amber || 0) >= 2,
         accuracy_percent: accuracyPercent,
         duration_seconds: Number(result?.durationSeconds || 0),
-        _result: result,
+        color_counts: colorCounts,
+        _result: { ...result, colorCounts, weakAyahs },
       })
     },
     async finalizePostSessionAiReciteFromResult(result) {
       if (!result || !this.postSessionAiReciteActive) return false
-      await this.maybeApplyPostSessionAiAssessmentFromResult(result)
-      // Hand control back to the recommendation modal with the updated next step.
-      await new Promise(resolve => setTimeout(resolve, 700))
-      if (!this.postSessionAiReciteActive || this.isSelfCheckRecording) return true
-      if (this.showSelfCheckModal) {
-        this.closeSelfCheckModal()
-      } else {
-        this.returnFromPostSessionAiRecite()
+      const adaptiveWaiting = !!(
+        this.postSessionAdaptiveCheckActive
+        && this.postSessionAdaptiveSession?.currentQuestion?.requiresAiRecite
+      )
+
+      try {
+        await this.maybeApplyPostSessionAiAssessmentFromResult(result)
+      } catch (error) {
+        console.warn('Post-session AI assessment failed:', error)
       }
-      this.$nextTick(() => {
-        const result = this.$el?.querySelector?.('.post-session-simple__ai-hint--result')
-          || this.$el?.querySelector?.('.post-session-simple__ai')
-        const body = this.$el?.querySelector?.('.post-session-simple__body')
-        if (result && typeof result.scrollIntoView === 'function') {
-          result.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-        } else if (body) {
-          body.scrollTop = 0
-        }
+
+      await this.releasePostSessionAiReciteSurface({
+        adaptiveWaiting,
+        scrollToResult: true,
       })
       return true
+    },
+    async releasePostSessionAiReciteSurface({ adaptiveWaiting = false, scrollToResult = false, reason = '' } = {}) {
+      // Always release the AI Recite surface — never leave the learner stuck.
+      this.postSessionAiReciteBusy = false
+      this.postSessionAiReciteActive = false
+      if (this.isSelfCheckRecording) {
+        try { this.stopSelfCheckRecording?.({ silent: true }) } catch (_) { /* ignore */ }
+      }
+      if (this.recitationCheckRecording) {
+        try { this.stopRecitationCheckRecording?.() } catch (_) { /* ignore */ }
+      }
+      this.recitationCheckPreparing = false
+      this.showSelfCheckModal = false
+      this.selfCheckPeekActive = false
+      this.selfCheckModeChoiceVisible = false
+      this.recitationCheckPanelOpen = false
+      this.stopSelfCheckDraftAudio?.()
+      this.clearRecitationReviewState?.()
+      this.syncBodyScrollLock(!!(this.showPostSessionModal || this.postSessionAdaptiveCheckActive))
+
+      if (adaptiveWaiting || this.postSessionAdaptiveCheckActive) {
+        this.postSessionViewState = 'adaptive_check'
+        await this.$nextTick()
+        this.$nextTick(() => {
+          const title = document.querySelector('#memoryCheckTitle')
+          if (title && typeof title.focus === 'function') {
+            title.setAttribute('tabindex', '-1')
+            title.focus()
+          }
+        })
+        return
+      }
+
+      this.postSessionWhyExpanded = true
+      this.postSessionViewState = 'recommendation_ready'
+
+      await this.$nextTick()
+      const reviewEl = this.$el?.querySelector?.('.post-session-simple__ai-review')
+        || this.$el?.querySelector?.('.post-session-simple__panel--hero')
+        || this.$el?.querySelector?.('.post-session-simple__review')
+      if ((scrollToResult || reason === 'error' || this.postSessionAiReviewDetails) && reviewEl?.scrollIntoView) {
+        reviewEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
     },
     dismissRecitationCheckResult() {
       this.clearRecitationReviewState()
@@ -15232,7 +16092,15 @@ export default {
           // Allow the final dataavailable from stop() to land before we snapshot chunks.
           await new Promise(resolve => queueMicrotask(resolve))
           const chunks = [...this.recitationCheckChunks]
-          await this.finalizeTranscriptionRecognition('recitation')
+          const settleMs = this.postSessionAiReciteActive ? 2500 : undefined
+          try {
+            await Promise.race([
+              this.finalizeTranscriptionRecognition('recitation'),
+              new Promise((resolve) => window.setTimeout(resolve, settleMs || 8000)),
+            ])
+          } catch (settleError) {
+            console.warn('Transcription settle failed:', settleError)
+          }
           let audioSrc = ''
           this.stopRecitationSpeechRecognition()
           this.recitationCheckRecording = false
@@ -15244,7 +16112,18 @@ export default {
             const blob = new Blob(chunks, { type: blobType })
             if (!blob.size) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
             audioSrc = await this.createStableRecordingSrc(blob)
-            await this.submitRecitationCheck(blob, targets, audioSrc)
+            const submitPromise = this.submitRecitationCheck(blob, targets, audioSrc)
+            // Never leave post-session AI Recite spinning forever.
+            if (this.postSessionAiReciteActive) {
+              await Promise.race([
+                submitPromise,
+                new Promise((_, reject) => {
+                  window.setTimeout(() => reject(new Error(this.t('memorisation.aiCheck.recitationCheckFailed'))), 12000)
+                }),
+              ])
+            } else {
+              await submitPromise
+            }
           } catch (error) {
             console.error('Failed to process recitation check:', error)
             const serverMessage = error?.response?.data?.message
@@ -15253,6 +16132,10 @@ export default {
               ? this.t('memorisation.aiCheck.speechRecognitionFailed')
               : (serverMessage || error?.message || this.t('memorisation.aiCheck.recitationCheckFailed'))
             if (serverMessage && !providerUnavailable) this.showBanner(serverMessage, 'error', 3600)
+            if (this.postSessionAiReciteActive) {
+              this.postSessionAiFeedback = this.t('memorisation.postSession.recommendation.aiReciteSkippedHint')
+              await this.releasePostSessionAiReciteSurface({ reason: 'error' })
+            }
           } finally {
             this.recitationCheckPreparing = false
             this.cleanupRecitationCheckMedia()
@@ -15782,7 +16665,7 @@ export default {
       const groups = []
       statuses
         .map((word, index) => ({ word, index }))
-        .filter(item => item.word?.status === 'pending')
+        .filter(item => ['pending', 'omitted'].includes(item.word?.status))
         .forEach(item => {
           const last = groups[groups.length - 1]
           const sameAyah = last
@@ -15963,7 +16846,9 @@ export default {
     getRecitationDetectionCounts(result = null) {
       const statuses = this.getRecitationWordStatuses(result)
       const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
-      const missingWords = Array.isArray(mistakes.missing) ? mistakes.missing.length : statuses.filter(word => word.status === 'pending').length
+      const missingWords = Array.isArray(mistakes.missing)
+        ? mistakes.missing.length
+        : statuses.filter(word => ['pending', 'omitted'].includes(word.status)).length
       const extraWords = Array.isArray(mistakes.extra) ? mistakes.extra.length : 0
       const incorrectWords = Array.isArray(mistakes.incorrect) ? mistakes.incorrect.length : statuses.filter(word => word.status === 'incorrect').length
       const wordSkipGroups = mistakes.wordSkips || mistakes.skippedWords || result?.wordSkips || result?.skippedWords || []
@@ -15982,17 +16867,149 @@ export default {
     },
     getRecitationResultStats(result) {
       const statuses = this.getRecitationWordStatuses(result)
-      const counts = this.getRecitationDetectionCounts(result)
-      const greenCount = statuses.filter(word => word.status === 'correct').length
-      const amberCount = statuses.filter(word => word.status === 'partial').length
-      const greyCount = statuses.filter(word => word.status === 'pending').length
-      const redCount = Math.max(0, statuses.filter(word => word.status === 'incorrect').length)
+      const colorCounts = result?.colorCounts && typeof result.colorCounts === 'object'
+        ? result.colorCounts
+        : getRecitationColorCounts(statuses)
       return [
-        { key: 'green', label: 'Green', value: `${greenCount}`, description: 'Clear words heard correctly.', tone: 'tone-green' },
-        { key: 'amber', label: 'Amber', value: `${amberCount}`, description: 'Close words to repeat slowly.', tone: 'tone-amber' },
-        { key: 'red', label: 'Red', value: `${redCount}`, description: 'Words to stop and fix.', tone: 'tone-red' },
-        { key: 'grey', label: 'Grey', value: `${greyCount}`, description: 'Words not heard yet.', tone: 'tone-grey' }
+        {
+          key: 'green',
+          label: this.t('memorisation.aiCheck.colourCorrect') || 'Correct',
+          value: `${colorCounts.green || 0}`,
+          description: this.t('memorisation.aiCheck.colourCorrectHint') || 'Words heard clearly.',
+          tone: 'tone-green',
+        },
+        {
+          key: 'amber',
+          label: this.t('memorisation.aiCheck.colourClose') || 'Close',
+          value: `${colorCounts.amber || 0}`,
+          description: this.t('memorisation.aiCheck.colourCloseHint') || 'Near misses to polish.',
+          tone: 'tone-amber',
+        },
+        {
+          key: 'red',
+          label: this.t('memorisation.aiCheck.colourIncorrect') || 'Incorrect',
+          value: `${colorCounts.red || 0}`,
+          description: this.t('memorisation.aiCheck.colourIncorrectHint') || 'Words said incorrectly.',
+          tone: 'tone-red',
+        },
+        {
+          key: 'black',
+          label: this.t('memorisation.aiCheck.colourSkipped') || 'Skipped',
+          value: `${colorCounts.black || 0}`,
+          description: this.t('memorisation.aiCheck.colourSkippedHint') || 'Words not recited.',
+          tone: 'tone-black',
+        },
+        {
+          key: 'grey',
+          label: this.t('memorisation.aiCheck.colourWaiting') || 'Waiting',
+          value: `${colorCounts.gray || 0}`,
+          description: this.t('memorisation.aiCheck.colourWaitingHint') || 'Not evaluated yet.',
+          tone: 'tone-grey',
+        },
       ]
+    },
+    getRecitationPremiumSummary(result = null) {
+      if (!result) {
+        return {
+          accuracy: null,
+          outcomeTone: 'mixed',
+          outcomeLabel: '',
+          headline: '',
+          focusLine: '',
+          segments: [],
+          issueCount: 0,
+          totalWords: 0,
+        }
+      }
+      const statuses = this.getRecitationWordStatuses(result)
+      const colorCounts = result?.colorCounts && typeof result.colorCounts === 'object'
+        ? result.colorCounts
+        : getRecitationColorCounts(statuses)
+      const accuracyRaw = this.getResolvedRecitationScore(result)
+      const accuracy = Number.isFinite(Number(accuracyRaw))
+        ? Math.max(0, Math.min(100, Math.round(Number(accuracyRaw))))
+        : null
+
+      let outcomeTone = 'mixed'
+      if (accuracy != null) {
+        if (accuracy >= 85) outcomeTone = 'strong'
+        else if (accuracy < 60) outcomeTone = 'weak'
+      }
+
+      const segmentDefs = [
+        { key: 'green', tone: 'tone-green', count: Number(colorCounts.green || 0), labelKey: 'colourCorrect', fallback: 'Correct' },
+        { key: 'amber', tone: 'tone-amber', count: Number(colorCounts.amber || 0), labelKey: 'colourClose', fallback: 'Close' },
+        { key: 'red', tone: 'tone-red', count: Number(colorCounts.red || 0), labelKey: 'colourIncorrect', fallback: 'Incorrect' },
+        { key: 'black', tone: 'tone-black', count: Number(colorCounts.black || 0), labelKey: 'colourSkipped', fallback: 'Skipped' },
+        { key: 'grey', tone: 'tone-grey', count: Number(colorCounts.gray || 0), labelKey: 'colourWaiting', fallback: 'Waiting' },
+      ]
+      const segments = segmentDefs
+        .filter((row) => row.count > 0)
+        .map((row) => ({
+          key: row.key,
+          tone: row.tone,
+          count: row.count,
+          label: this.t(`memorisation.aiCheck.${row.labelKey}`) || row.fallback,
+          percent: 0,
+        }))
+      const totalWords = segments.reduce((sum, row) => sum + row.count, 0)
+        || Math.max(statuses.length, 1)
+      segments.forEach((row) => {
+        row.percent = Math.max(2, Math.round((row.count / totalWords) * 100))
+      })
+      // Normalize so bars fill ~100% when rounding drifts.
+      const percentSum = segments.reduce((sum, row) => sum + row.percent, 0)
+      if (segments.length && percentSum !== 100) {
+        segments[segments.length - 1].percent = Math.max(2, segments[segments.length - 1].percent + (100 - percentSum))
+      }
+
+      const issueCount = Number(colorCounts.amber || 0)
+        + Number(colorCounts.red || 0)
+        + Number(colorCounts.black || 0)
+
+      const reviewDetails = this.postSessionAiReviewDetails
+      const focusLine = (reviewDetails?.focus && String(reviewDetails.focus).trim())
+        || this.getRecitationNextStep(result)
+        || ''
+
+      const outcomeLabel = outcomeTone === 'strong'
+        ? (this.t('memorisation.postSession.recommendation.aiOutcomeStrong') || 'Strong')
+        : outcomeTone === 'weak'
+          ? (this.t('memorisation.postSession.recommendation.aiOutcomeWeak') || 'Needs work')
+          : (this.t('memorisation.postSession.recommendation.aiOutcomeMixed') || 'Mixed')
+
+      return {
+        accuracy,
+        outcomeTone,
+        outcomeLabel,
+        headline: this.getRecitationResultHeadline(result),
+        focusLine,
+        segments,
+        issueCount,
+        totalWords: statuses.length || totalWords,
+        colorCounts,
+      }
+    },
+    getRecitationIssueWords(result = null, limit = 8) {
+      return this.getRecitationWordsToReview(result, limit * 2)
+        .filter((word) => ['incorrect', 'omitted', 'partial'].includes(String(word.visualStatus || word.status || '')))
+        .slice(0, limit)
+    },
+    async continuePostSessionAiReciteToPlan() {
+      if (!this.postSessionAiReciteActive) {
+        this.showSelfCheckModal = false
+        return
+      }
+      try {
+        await this.releasePostSessionAiReciteSurface({
+          scrollToResult: true,
+          reason: 'continue',
+        })
+      } catch (error) {
+        console.warn('Failed to return from AI Recite to plan:', error)
+        this.postSessionAiReciteActive = false
+        this.showSelfCheckModal = false
+      }
     },
     getTajweedRuleCatalog() {
       return {
@@ -16269,7 +17286,9 @@ export default {
       const targetText = this.getRecitationTargetText(targetVerses)
       const timestamp = options.timestamp || new Date().toISOString()
 	      const result = buildDeterministicRecitationResult(targetText, recognitionWords, {
-	        strictProgression: true,
+	        // Final review always shows the full colour map (soft), even if live
+	        // tutoring used strict progression.
+	        strictProgression: false,
         id: options.id,
         timestamp,
         ayahRange: this.buildRecitationAyahRangePayload(targetVerses),
@@ -23476,7 +24495,7 @@ export default {
           this.mushafPageIndex = Number.isFinite(Number(state.mushafPageIndex))
             ? Math.max(0, Number(state.mushafPageIndex))
             : 0
-          this.aiRecitationStrictProgression = state.aiRecitationStrictProgression !== false
+          this.aiRecitationStrictProgression = state.aiRecitationStrictProgression === true
           this.aiRecitationPersistMistakes = false
           this.persistentAiRecitationReviews = {}
           this.hiddenRevealModeEnabled = false

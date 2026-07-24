@@ -215,13 +215,33 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
 
     const exactAheadIndex = findExactWordIndexWithinWindow(targetWords, heardWord.word, cursor + 1, lookahead)
     if (exactAheadIndex >= 0) {
-      statuses[cursor] = {
-        ...classified,
-        note: `Expected ${displayWords[cursor] || targetWord} before ${heardWord.display || heardWord.word || 'this word'}.`,
-        outOfOrder: true
+      // Soft mode: words jumped over are omitted (black), not a wrong substitution.
+      for (let skipIndex = cursor; skipIndex < exactAheadIndex; skipIndex += 1) {
+        const skipUnit = targetUnits[skipIndex] || null
+        statuses[skipIndex] = {
+          text: displayWords[skipIndex] || targetWords[skipIndex] || '',
+          targetWord: targetWords[skipIndex] || '',
+          status: 'omitted',
+          note: `Skipped. Expected ${displayWords[skipIndex] || targetWords[skipIndex] || ''} before continuing.`,
+          actual: '',
+          confidence: 0,
+          similarity: 0,
+          targetIndex: skipIndex,
+          ayahKey: skipUnit?.ayahKey || '',
+          ayahNumber: skipUnit?.ayahNumber ?? null,
+          ayahIndex: Number.isFinite(Number(skipUnit?.ayahIndex)) ? Number(skipUnit.ayahIndex) : 0,
+          ayahWordIndex: Number.isFinite(Number(skipUnit?.ayahWordIndex)) ? Number(skipUnit.ayahWordIndex) : skipIndex
+        }
       }
       firstBlockingIndex = cursor
-      if (strict) break
+      if (strict) {
+        statuses[cursor] = {
+          ...classified,
+          note: `Expected ${displayWords[cursor] || targetWord} before ${heardWord.display || heardWord.word || 'this word'}.`,
+          outOfOrder: true
+        }
+        break
+      }
       const aheadUnit = targetUnits[exactAheadIndex] || null
       statuses[exactAheadIndex] = classifyWordMatch({
         displayText: displayWords[exactAheadIndex] || targetWords[exactAheadIndex] || '',
@@ -348,7 +368,23 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
       extraWords.unshift(extra)
       operations.unshift({ op: repeated ? 'repetition' : 'extra', heardIndex: heardIndex - 1 })
     } else if (cell.op === 'omission') {
-      operations.unshift({ op: 'omission', targetIndex: targetIndex - 1 })
+      const omitIndex = targetIndex - 1
+      const omitUnit = targetUnits[omitIndex] || null
+      statuses[omitIndex] = {
+        text: displayWords[omitIndex] || targetWords[omitIndex] || '',
+        targetWord: targetWords[omitIndex] || '',
+        status: 'omitted',
+        note: 'Word was not recited.',
+        actual: '',
+        confidence: 0,
+        similarity: 0,
+        targetIndex: omitIndex,
+        ayahKey: omitUnit?.ayahKey || '',
+        ayahNumber: omitUnit?.ayahNumber ?? null,
+        ayahIndex: Number.isFinite(Number(omitUnit?.ayahIndex)) ? Number(omitUnit.ayahIndex) : 0,
+        ayahWordIndex: Number.isFinite(Number(omitUnit?.ayahWordIndex)) ? Number(omitUnit.ayahWordIndex) : omitIndex
+      }
+      operations.unshift({ op: 'omission', targetIndex: omitIndex })
     }
     ;[targetIndex, heardIndex] = cell.prev || [0, 0]
   }
@@ -426,6 +462,8 @@ export function buildDeterministicRecitationResult(targetText = '', recognitionW
   const reviewMetadata = buildReviewMetadata(accuracyScore, mistakes, {
     timestamp: options.timestamp || options.metadata?.timestamp || DEFAULT_ANALYSIS_TIMESTAMP
   })
+  const colorCounts = getRecitationColorCounts(statuses)
+  const weakAyahs = deriveWeakAyahsFromWordStatuses(statuses)
 
   return {
     id: options.id || deterministicResultId(targetText, alignment.committedWords),
@@ -462,6 +500,8 @@ export function buildDeterministicRecitationResult(targetText = '', recognitionW
     reviewRecommendations: alignment.analysis.reviewRecommendations,
     retentionSignals: alignment.analysis.retentionSignals,
     wordStatuses: statuses,
+    colorCounts,
+    weakAyahs,
     committedWords: alignment.committedWords,
     alignmentState: alignment.progression,
     recommendation,
@@ -896,16 +936,27 @@ function isProgressionAdvanceStatus(status = '') {
   return status === 'correct' || status === 'partial'
 }
 
+function isEvaluatedWordStatus(status = '') {
+  return ['correct', 'partial', 'incorrect', 'omitted'].includes(String(status || ''))
+}
+
+function isOmissionWordStatus(status = '') {
+  return status === 'omitted' || status === 'pending'
+}
+
 function buildStableProgression(statuses = [], extraWords = [], options = {}) {
   const strict = options.strictProgression !== false
   // Partials must not freeze the live cursor — ASR near-misses on last words
   // were locking the whole range behind "Recite it correctly before moving on."
   const firstBlockingIndex = statuses.findIndex(word => !isProgressionAdvanceStatus(word.status))
   const visibleStatuses = strict && firstBlockingIndex >= 0
-    ? statuses.map((word, index) => index <= firstBlockingIndex ? word : { ...word, status: 'pending', note: 'Locked until the previous word is green.' })
+    ? statuses.map((word, index) => index <= firstBlockingIndex
+      ? word
+      : { ...word, status: 'pending', note: 'Locked until the previous word is clear.' })
     : statuses
   const advancedCount = visibleStatuses.filter(word => word.status && word.status !== 'pending').length
   const completedWords = statuses.filter(word => isProgressionAdvanceStatus(word.status)).length
+  const evaluatedWords = statuses.filter(word => isEvaluatedWordStatus(word.status)).length
   return {
     owner: 'quran-alignment-engine',
     currentIndex: firstBlockingIndex >= 0 ? firstBlockingIndex : statuses.length,
@@ -914,11 +965,55 @@ function buildStableProgression(statuses = [], extraWords = [], options = {}) {
     totalWords: statuses.length,
     progressPercentage: statuses.length ? Math.round((advancedCount / statuses.length) * 100) : 0,
     completionPercentage: statuses.length ? Math.round((completedWords / statuses.length) * 100) : 0,
+    // Soft mode: finishing the range (any colour) counts as complete so imperfect
+    // recites can stop and feed red/amber/green/black/gray into recommendations.
     complete: statuses.length > 0
-      && statuses.every(word => isProgressionAdvanceStatus(word.status))
+      && (
+        strict
+          ? statuses.every(word => isProgressionAdvanceStatus(word.status))
+          : evaluatedWords >= statuses.length
+      )
       && !extraWords.length,
     visibleStatuses
   }
+}
+
+/**
+ * Five-tier colour counts for AI Recite → recommendation / personal plan.
+ * green=correct, amber=partial, red=incorrect, black=omitted, gray=not yet.
+ */
+export function getRecitationColorCounts(statuses = []) {
+  const list = Array.isArray(statuses) ? statuses : []
+  return {
+    green: list.filter(word => word?.status === 'correct').length,
+    amber: list.filter(word => word?.status === 'partial').length,
+    red: list.filter(word => word?.status === 'incorrect').length,
+    black: list.filter(word => word?.status === 'omitted').length,
+    gray: list.filter(word => ['pending', 'skipped', 'notAttempted'].includes(word?.status)).length,
+  }
+}
+
+/**
+ * Derive weak ayah numbers from word-level colour statuses.
+ * Red/black weigh more than amber; gray alone does not mark an ayah weak.
+ */
+export function deriveWeakAyahsFromWordStatuses(statuses = [], options = {}) {
+  const minScore = Number.isFinite(Number(options.minScore)) ? Number(options.minScore) : 2
+  const byAyah = new Map()
+  for (const word of (Array.isArray(statuses) ? statuses : [])) {
+    const ayah = Number(word?.ayahNumber)
+    if (!Number.isFinite(ayah) || ayah <= 0) continue
+    const status = String(word?.status || '')
+    let add = 0
+    if (status === 'incorrect' || status === 'omitted') add = 2
+    else if (status === 'partial') add = 1
+    if (!add) continue
+    byAyah.set(ayah, (byAyah.get(ayah) || 0) + add)
+  }
+  return [...byAyah.entries()]
+    .filter(([, score]) => score >= minScore)
+    .map(([ayah]) => ayah)
+    .sort((a, b) => a - b)
 }
 
 function buildStructuralRecitationAnalysis({ statuses = [], heardWords = [], extraWords = [], targetAyahs = [], targetUnits = [], operations = [] } = {}) {
@@ -1002,7 +1097,7 @@ function detectSkippedAyahs(statuses = [], targetAyahs = []) {
   return targetAyahs
     .map((ayah, ayahIndex) => {
       const words = statuses.filter(word => Number(word.ayahIndex || 0) === ayahIndex)
-      const heardCount = words.filter(word => word.status !== 'pending' && word.actual).length
+      const heardCount = words.filter(word => !isOmissionWordStatus(word.status) && word.actual).length
       if (!words.length || heardCount > 0) return null
       return {
         ayahKey: ayah.key || '',
@@ -1073,10 +1168,10 @@ function detectVerseJumps(statuses = [], targetAyahs = [], recitedAyahs = []) {
     for (let ayahIndex = 0; ayahIndex < ayah.ayahIndex; ayahIndex += 1) {
       const earlierWords = statuses.filter(word => Number(word.ayahIndex || 0) === ayahIndex)
       if (!earlierWords.length) continue
-      const firstMissing = earlierWords.find(word => word.status === 'pending')
+      const firstMissing = earlierWords.find(word => isOmissionWordStatus(word.status))
       if (!firstMissing) continue
       const sameAyahRecoveredAfterMissing = earlierWords
-        .some(word => Number(word.targetIndex) > Number(firstMissing.targetIndex) && word.status !== 'pending')
+        .some(word => Number(word.targetIndex) > Number(firstMissing.targetIndex) && !isOmissionWordStatus(word.status))
       if (sameAyahRecoveredAfterMissing) continue
       const previousAyah = targetAyahs[ayahIndex] || {}
       jumps.push({
@@ -1123,20 +1218,19 @@ function summarizeOperations(operations = []) {
 }
 
 function buildMistakesFromStatuses(statuses = [], extraWords = [], structural = {}) {
+  const omittedStatuses = statuses.filter(word => isOmissionWordStatus(word.status))
   const skippedWords = buildSkippedWordGroups(
-    statuses
-      .filter(word => word.status === 'pending')
-      .map(word => ({
-        word: word.text,
-        expectedIndex: word.targetIndex,
-        ayahKey: word.ayahKey || '',
-        ayahNumber: word.ayahNumber ?? null,
-        ayahWordIndex: word.ayahWordIndex
-      }))
+    omittedStatuses.map(word => ({
+      word: word.text,
+      expectedIndex: word.targetIndex,
+      ayahKey: word.ayahKey || '',
+      ayahNumber: word.ayahNumber ?? null,
+      ayahWordIndex: word.ayahWordIndex
+    }))
   )
   return {
     correct: statuses.filter(word => word.status === 'correct').map(word => word.text),
-    missing: statuses.filter(word => word.status === 'pending').map(word => word.text),
+    missing: omittedStatuses.map(word => word.text),
     extra: extraWords.map(item => item.display || item.word).filter(Boolean),
     partial: statuses
       .filter(word => word.status === 'partial')
@@ -1150,13 +1244,14 @@ function buildMistakesFromStatuses(statuses = [], extraWords = [], structural = 
     wordSkips: skippedWords,
     skippedAyahs: structural.skippedAyahs || [],
     verseJumps: structural.verseJumps || [],
-    sequenceErrors: structural.sequenceErrors || []
+    sequenceErrors: structural.sequenceErrors || [],
+    colorCounts: getRecitationColorCounts(statuses)
   }
 }
 
 function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistakes = {}, targetWords = [], targetAyahs = [], targetUnits = [], targetText = '', operations = [], progression = {}, structural = {}, metadata = {} }) {
   const omissions = statuses
-    .filter(word => word.status === 'pending')
+    .filter(word => isOmissionWordStatus(word.status))
     .map(word => ({
       word: word.text,
       expectedIndex: word.targetIndex,
@@ -1191,7 +1286,7 @@ function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistak
       ayahKey: word.ayahKey || '',
       ayahNumber: word.ayahNumber ?? null,
       ayahWordIndex: word.ayahWordIndex,
-      status: word.status === 'pending' ? 'omission' : word.status,
+      status: isOmissionWordStatus(word.status) ? 'omission' : word.status,
       confidence: Number(word.confidence || 0),
       similarity: Number(word.similarity || 0)
     }))

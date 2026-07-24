@@ -168,7 +168,8 @@ includesAll('ai recitation speechmatics stability', [
   /const transcript = String\(message\?\.metadata\?\.transcript \|\| ''\)\.trim\(\) \|\| words\.map\(item => item\.word\)\.join\(' '\)/,
   /const displayWords = getRecognitionDisplayWords\(state\)/,
   /displayWords: Array\.isArray\(displayWords\) && displayWords\.length \? displayWords : committedWords/,
-  /const liveAlignmentOptions = \{\s*strictProgression: true,/,
+  /const strictProgression = !!this\.aiRecitationStrictProgression/,
+  /const liveAlignmentOptions = \{\s*strictProgression,/,
   /const verseSelector = `\[data-verse-key="\$\{this\.escapeCssAttributeValue\(patch\.verseKey\)\}"\]\[data-word-index="\$\{Number\(patch\.localIndex\)\}"\]`/,
   /class="verse-inline-action-btn verse-inline-play-btn"/,
 ])
@@ -313,8 +314,7 @@ includesAll('session completion success flow', [
   /openPostSessionNewSessionOffcanvas/,
   /openPostSessionAdjustPlan/,
   /postSessionOffcanvasOpen/,
-  /post-session-simple__confidence/,
-  /post-session-simple__segment/,
+  /ps-quiz/,
   /post-session-simple__adjust-link/,
   /keepPractisingFromExitModal/,
   /continueSessionFromExitModal/,
@@ -352,13 +352,28 @@ assert.doesNotMatch(
   const vueOnly = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
   assert.match(
     vueOnly,
-    /post-session-simple__ai-btn/,
-    'completion modal must expose AI Recite for recommendation feedback'
+    /ps-quiz/,
+    'completion modal must expose a beginner Quiz AI card'
   )
   assert.match(
     vueOnly,
-    /openPostSessionAiRecite/,
-    'completion modal must wire AI Recite open handler'
+    /startPostSessionAdaptiveCheck/,
+    'completion modal must keep an optional memory check'
+  )
+  assert.match(
+    vueOnly,
+    /memoryCheckTitle/,
+    'completion modal must present a unified Memory check'
+  )
+  assert.match(
+    vueOnly,
+    /@click="openPostSessionAiRecite"/,
+    'AI Recite remains a secondary entry inside the Memory check card'
+  )
+  assert.doesNotMatch(
+    vueOnly,
+    /post-session-simple__confidence/,
+    'confidence Step 2 must be removed from the completion UI'
   )
   assert.match(vueOnly, /post-session-simple--builder-open/)
   assert.match(
@@ -399,11 +414,11 @@ assert.doesNotMatch(
 )
 
 includesAll('ai recitation live review signals', [
-  /buildLiveRecitationReviewResult\(kind = 'recitation'\)/,
-  /key: 'green', label: 'Green'/,
-  /key: 'amber', label: 'Amber'/,
-  /key: 'red', label: 'Red'/,
-  /key: 'grey', label: 'Grey'/
+  /getRecitationPremiumSummary\(result/,
+  /recitation-premium-review/,
+  /recitation-premium-meter/,
+  /colourCorrect/,
+  /colourSkipped/,
 ])
 
 assert.doesNotMatch(source, /modal-speed-badge|recitationSpeedReview\(\) \{|memorisationSpeedReview\(\) \{|STEADY PACE|PACE NOT MEASURED|WPM/, 'pace badges should not render in AI review modals')
@@ -496,15 +511,12 @@ includesAll('ai recitation simplified workspace', [
   /shouldShowOffcanvasTabs\(\) \{\s*return true\s*\}/s,
   /class="recitation-word-stream recitation-live-word-stream" dir="rtl"/,
   /if \(this\.recitationCheckRecording\) return false/,
-  /key: 'green', label: 'Green'/,
-  /key: 'amber', label: 'Amber'/,
-  /key: 'red', label: 'Red'/,
-  /key: 'grey', label: 'Grey'/,
-  /\{\{ getUnifiedResultSectionLabel\('next'\) \}\}/,
+  /recitation-premium-review/,
+  /recitation-premium-meter/,
+  /continuePostSessionAiReciteToPlan/,
+  /continueToPlan/,
   /\{\{ getUnifiedResultSectionLabel\('recording'\) \}\}/,
-  /const status = word\.status === 'pending' \? 'pending' : word\.status/,
-  /recitation-review-ayah \.wbw-word/,
-  /recitation-result-stats,[\s\S]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/
+  /recitation-review-ayah/,
 ])
 
 assert.doesNotMatch(source, /Grey means the word was not heard yet/, 'obsolete grey description card should be removed')
@@ -513,6 +525,11 @@ assert.doesNotMatch(source, /key: 'pace', label: 'Pace'/, 'pace card should be r
 assert.doesNotMatch(source, /key: 'fixes', label: 'Words to fix'/, 'fixes card should be removed')
 assert.doesNotMatch(source, /key: 'jumps', label: 'Big jumps'/, 'jumps card should be removed')
 assert.doesNotMatch(source, /getRecitationResultStats\(buildLiveRecitationReviewResult\('recitation'\)\)/, 'live review stats should not render while recording')
+assert.doesNotMatch(
+  source,
+  /v-if="recitationCheckResult"[\s\S]*shared-result-step-badge[\s\S]*getRecitationResultStats\(recitationCheckResult\)/,
+  'self-check AI results should not use the dense stepped 5-card stats layout'
+)
 assert.doesNotMatch(source, /class="verse-status-badge verse-status-badge-review">Review Due<\/span>/, 'per-ayah review due badge should be removed')
 assert.doesNotMatch(source, /<div v-if="showSessionEndedModal" class="modal-overlay planner-completion-overlay"/, 'session ended modal should not render')
 assert.doesNotMatch(source, /this\.showSelfCheckModal \|\|\s*this\.showRecordingsLibrary/, 'open self-check modal should not force periodic rerenders')

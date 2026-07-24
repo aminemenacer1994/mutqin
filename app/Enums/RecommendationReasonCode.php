@@ -21,4 +21,23 @@ enum RecommendationReasonCode: string
     case AiReciteWeak = 'ai_recite_weak';
     case ConfidenceConfident = 'confidence_confident';
     case ConfidenceNeedsPractice = 'confidence_needs_practice';
+
+    // Adaptive memorisation check evidence
+    case SessionIncomplete = 'session_incomplete';
+    case LowRecall = 'low_recall';
+    case SequenceErrors = 'sequence_errors';
+    case HighHintDependency = 'high_hint_dependency';
+    case VisualDependency = 'visual_dependency';
+    case AudioDependency = 'audio_dependency';
+    case SpokenHesitation = 'spoken_hesitation';
+    case OmissionErrors = 'omission_errors';
+    case SimilarAyahConfusion = 'similar_ayah_confusion';
+    case LowDelayedRetention = 'low_delayed_retention';
+    case HighPerformance = 'high_performance';
+    case LowConfidence = 'low_confidence';
+    case Overconfidence = 'overconfidence';
+    case ReviewOverdue = 'review_overdue';
+    case AdaptiveCheckStrong = 'adaptive_check_strong';
+    case AdaptiveCheckMixed = 'adaptive_check_mixed';
+    case AdaptiveCheckWeak = 'adaptive_check_weak';
 }

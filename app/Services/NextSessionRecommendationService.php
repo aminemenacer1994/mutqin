@@ -30,10 +30,12 @@ use Illuminate\Validation\ValidationException;
  */
 class NextSessionRecommendationService
 {
-    /** Fallback ayah count when workload metadata is unavailable. */
-    private const DEFAULT_SESSION_SIZE = 4;
+    /** Fallback ayah count when workload metadata is unavailable. Hard cap: 3. */
+    private const DEFAULT_SESSION_SIZE = 3;
 
     private const MIN_SESSION_SIZE = 1;
+
+    private const MAX_SESSION_SIZE = 3;
 
     /** Explicit weakness only — low mastery alone is normal after a first pass. */
     private const HARD_WEAK_MASTERY_THRESHOLD = 25;
@@ -156,6 +158,9 @@ class NextSessionRecommendationService
         $surah = (int) ($recommendation->surah_number ?? ($payload['surah']['id'] ?? 0));
         $from = (int) ($recommendation->ayah_start ?? ($payload['ayah_range']['from'] ?? 1));
         $to = (int) ($recommendation->ayah_end ?? ($payload['ayah_range']['to'] ?? $from));
+        if ($from > 0 && $to >= $from && ($to - $from + 1) > self::MAX_SESSION_SIZE) {
+            $to = $from + self::MAX_SESSION_SIZE - 1;
+        }
         $mode = (string) ($recommendation->session_mode ?: ($payload['session_mode'] ?? 'new_learning'));
         $type = RecommendationType::tryFrom((string) $recommendation->recommendation_type);
 
@@ -324,6 +329,7 @@ class NextSessionRecommendationService
         User $user,
         SessionRecommendation $recommendation,
         ConfidenceFeedback $feedback,
+        array $planExtras = [],
     ): array {
         $recommendation = $this->resolveMutableRecommendation($user, $recommendation);
 
@@ -348,7 +354,7 @@ class NextSessionRecommendationService
                 && ! ($type?->isRepeat() ?? false);
 
             if (! $stalePracticeCopy && ! $staleContinueCopy) {
-                return $payload;
+                return $this->attachPlanExtrasToPayload($payload, $planExtras, $recommendation);
             }
             // Fall through to reshape when stored confidence and recommendation shape disagree.
         }
@@ -358,9 +364,9 @@ class NextSessionRecommendationService
         ])->save();
 
         if ($feedback === ConfidenceFeedback::NeedsPractice) {
-            return $this->supersedeWithRepeat($user, $recommendation, [
+            return $this->supersedeWithRepeat($user, $recommendation, array_merge([
                 'confidence' => $feedback->value,
-            ], RecommendationReasonCode::ConfidenceNeedsPractice);
+            ], $this->planExtrasForAdaptation($planExtras)), RecommendationReasonCode::ConfidenceNeedsPractice);
         }
 
         // Confident — preserve progression, or upgrade a repeat back to continue.
@@ -368,7 +374,12 @@ class NextSessionRecommendationService
         $type = RecommendationType::tryFrom((string) ($payload['type'] ?? ''));
 
         if ($type?->isRepeat()) {
-            return $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::ConfidenceConfident);
+            return $this->strengthenContinue(
+                $user,
+                $recommendation,
+                RecommendationReasonCode::ConfidenceConfident,
+                $planExtras,
+            );
         }
 
         // Confident on progression — refresh settings/reason from session evidence.
@@ -392,6 +403,9 @@ class NextSessionRecommendationService
             );
         }
         unset($payload['balance_message']);
+        if (is_array($planExtras['plan_detail'] ?? null)) {
+            $payload['plan_detail'] = $planExtras['plan_detail'];
+        }
         $recommendation->forceFill([
             'reason_code' => $payload['reason_code'],
             'recommended_technique' => $payload['settings']['technique'] ?? null,
@@ -430,6 +444,8 @@ class NextSessionRecommendationService
             ]);
         }
 
+        $colorCounts = $this->normalizeColorCounts($assessment['color_counts'] ?? null);
+
         $recommendation->forceFill([
             'ai_assessment' => array_merge($assessment, [
                 'result' => $result,
@@ -437,6 +453,7 @@ class NextSessionRecommendationService
                 'weak_ayahs' => is_array($assessment['weak_ayahs'] ?? null) ? array_values($assessment['weak_ayahs']) : [],
                 'sequence_errors' => (int) ($assessment['sequence_errors'] ?? 0),
                 'missed_words' => (int) ($assessment['missed_words'] ?? 0),
+                'color_counts' => $colorCounts,
                 'assessed_at' => now()->toIso8601String(),
             ]),
         ])->save();
@@ -445,14 +462,15 @@ class NextSessionRecommendationService
         if ($confidence === '') {
             $confidence = ConfidenceFeedback::Confident->value;
         }
-        $adaptationExtra = [
+        $adaptationExtra = array_merge([
             'ai_result' => $result,
             'sequence_errors' => (int) ($assessment['sequence_errors'] ?? 0),
             'missed_words' => (int) ($assessment['missed_words'] ?? 0),
             'weak_ayahs' => is_array($assessment['weak_ayahs'] ?? null) ? array_values($assessment['weak_ayahs']) : [],
             'pronunciation_issues' => (bool) ($assessment['pronunciation_issues'] ?? false),
+            'color_counts' => $colorCounts,
             'confidence' => $confidence ?: null,
-        ];
+        ], $this->planExtrasForAdaptation($assessment));
 
         if ($result === 'strong') {
             if ($confidence === ConfidenceFeedback::NeedsPractice->value) {
@@ -460,13 +478,13 @@ class NextSessionRecommendationService
                 return $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::ConfidenceNeedsPractice);
             }
 
-            return $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteStrong);
+            return $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteStrong, $assessment);
         }
 
         if ($result === 'mixed') {
             if ($confidence === ConfidenceFeedback::Confident->value) {
                 // Allow progression with a smaller / review-first next set rather than forcing a full repeat.
-                return $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteMixed);
+                return $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteMixed, $assessment);
             }
 
             return $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::AiReciteMixed);
@@ -474,6 +492,116 @@ class NextSessionRecommendationService
 
         // Weak AI may move to revision even when Confident was selected — learner can still override.
         return $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::AiReciteWeak);
+    }
+
+    /**
+     * Persist an adaptive memorisation-check snapshot (hybrid: client domain logic,
+     * server stores evidence on the recommendation and reshapes the plan).
+     *
+     * @param  array<string, mixed>  $assessment
+     * @return array<string, mixed>
+     */
+    public function applyAdaptiveAssessment(User $user, SessionRecommendation $recommendation, array $assessment): array
+    {
+        $recommendation = $this->resolveMutableRecommendation($user, $recommendation);
+
+        $status = RecommendationStatus::tryFrom((string) ($recommendation->status?->value ?? $recommendation->status))
+            ?? RecommendationStatus::Generated;
+
+        if (! $status->isOpen() && $status !== RecommendationStatus::Accepted) {
+            throw ValidationException::withMessages([
+                'recommendation' => ['This recommendation can no longer be updated.'],
+            ]);
+        }
+
+        $result = strtolower((string) ($assessment['result'] ?? 'mixed'));
+        if (! in_array($result, ['strong', 'mixed', 'weak'], true)) {
+            throw ValidationException::withMessages([
+                'result' => ['Adaptive assessment result must be strong, mixed, or weak.'],
+            ]);
+        }
+
+        $snapshot = is_array($assessment['snapshot'] ?? null)
+            ? $assessment['snapshot']
+            : array_merge($assessment, ['assessed_at' => now()->toIso8601String()]);
+
+        $payload = is_array($recommendation->payload) ? $recommendation->payload : [];
+        $payload['adaptive_assessment'] = $snapshot;
+
+        $reasonCodes = is_array($assessment['reason_codes'] ?? null)
+            ? array_values($assessment['reason_codes'])
+            : (is_array($snapshot['reason_codes'] ?? null) ? array_values($snapshot['reason_codes']) : []);
+
+        $policy = is_array($assessment['policy'] ?? null)
+            ? $assessment['policy']
+            : (is_array($snapshot['policy'] ?? null) ? $snapshot['policy'] : []);
+
+        $recommendation->forceFill([
+            'payload' => $payload,
+            'ai_assessment' => array_merge(is_array($recommendation->ai_assessment) ? $recommendation->ai_assessment : [], [
+                'result' => $result,
+                'summary' => isset($assessment['summary']) ? (string) $assessment['summary'] : ($snapshot['summary'] ?? null),
+                'weak_ayahs' => is_array($assessment['weak_ayahs'] ?? null)
+                    ? array_values($assessment['weak_ayahs'])
+                    : (is_array($snapshot['weak_ayahs'] ?? null) ? array_values($snapshot['weak_ayahs']) : []),
+                'sequence_errors' => (int) ($assessment['sequence_errors'] ?? $snapshot['sequence_errors'] ?? 0),
+                'missed_words' => (int) ($assessment['missed_words'] ?? $snapshot['missed_words'] ?? 0),
+                'pronunciation_issues' => (bool) ($assessment['pronunciation_issues'] ?? $snapshot['pronunciation_issues'] ?? false),
+                'adaptive' => true,
+                'reason_codes' => $reasonCodes,
+                'skills' => is_array($assessment['skills'] ?? null) ? $assessment['skills'] : ($snapshot['skills'] ?? null),
+                'assessed_at' => now()->toIso8601String(),
+            ]),
+        ])->save();
+
+        $confidence = (string) ($recommendation->confidence_feedback ?? ConfidenceFeedback::Confident->value);
+        if ($confidence === '') {
+            $confidence = ConfidenceFeedback::Confident->value;
+        }
+
+        $adaptationExtra = array_merge([
+            'ai_result' => $result,
+            'sequence_errors' => (int) ($assessment['sequence_errors'] ?? $snapshot['sequence_errors'] ?? 0),
+            'missed_words' => (int) ($assessment['missed_words'] ?? $snapshot['missed_words'] ?? 0),
+            'weak_ayahs' => is_array($assessment['weak_ayahs'] ?? null)
+                ? array_values($assessment['weak_ayahs'])
+                : (is_array($snapshot['weak_ayahs'] ?? null) ? array_values($snapshot['weak_ayahs']) : []),
+            'pronunciation_issues' => (bool) ($assessment['pronunciation_issues'] ?? false),
+            'confidence' => $confidence ?: null,
+            'evidence_codes' => $reasonCodes,
+            'adaptive_policy' => $policy,
+        ], $this->planExtrasForAdaptation($assessment));
+
+        $reason = match ($result) {
+            'strong' => RecommendationReasonCode::AdaptiveCheckStrong,
+            'weak' => RecommendationReasonCode::AdaptiveCheckWeak,
+            default => RecommendationReasonCode::AdaptiveCheckMixed,
+        };
+
+        // Map primary adaptive reason code when provided (snake_case from client).
+        $primary = strtolower((string) ($reasonCodes[0] ?? ''));
+        $mapped = RecommendationReasonCode::tryFrom($primary);
+        if ($mapped) {
+            $reason = $mapped;
+        }
+
+        if ($result === 'strong') {
+            if ($confidence === ConfidenceFeedback::NeedsPractice->value) {
+                return $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::LowConfidence);
+            }
+
+            return $this->strengthenContinue($user, $recommendation, $reason, $assessment);
+        }
+
+        if ($result === 'mixed') {
+            if ($confidence === ConfidenceFeedback::Confident->value) {
+                return $this->strengthenContinue($user, $recommendation, $reason, $assessment);
+            }
+
+            return $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, $reason);
+        }
+
+        return $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, $reason);
     }
 
     /**
@@ -766,7 +894,10 @@ class NextSessionRecommendationService
     {
         $surah = $context['surah'];
         $ayahCount = (int) $surah['ayah_count'];
-        $preferredSize = (int) ($context['preferred_session_size'] ?? self::DEFAULT_SESSION_SIZE);
+        $preferredSize = max(
+            self::MIN_SESSION_SIZE,
+            min(self::MAX_SESSION_SIZE, (int) ($context['preferred_session_size'] ?? self::DEFAULT_SESSION_SIZE))
+        );
         $nextFrom = max(1, (int) $context['range_end'] + 1);
 
         if ($nextFrom > $ayahCount) {
@@ -847,7 +978,7 @@ class NextSessionRecommendationService
         }
 
         $preferred = $rangeStart && $rangeEnd
-            ? max(1, min(self::DEFAULT_SESSION_SIZE + 2, $rangeEnd - $rangeStart + 1))
+            ? max(self::MIN_SESSION_SIZE, min(self::MAX_SESSION_SIZE, $rangeEnd - $rangeStart + 1))
             : self::DEFAULT_SESSION_SIZE;
 
         $rangeProgress = collect();
@@ -1116,7 +1247,8 @@ class NextSessionRecommendationService
             RecommendationReasonCode::ContinueWhileFresh => 'You completed this range. This plan continues directly to the next ayahs while the material is still fresh.',
             RecommendationReasonCode::RevisionRequired,
             RecommendationReasonCode::NeedsMorePractice,
-            RecommendationReasonCode::ConfidenceNeedsPractice => 'This range still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.',
+            RecommendationReasonCode::ConfidenceNeedsPractice,
+            RecommendationReasonCode::LowConfidence => 'This range still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.',
             RecommendationReasonCode::DifficultAyahDetected => 'One or more ayahs still need care. This plan returns to that range with focused support before moving on.',
             RecommendationReasonCode::CompleteRemainingAyat => $count && $count <= 2
                 ? "Only {$count} ayah".($count === 1 ? '' : 's').' remain in this surah. This plan finishes the section you began.'
@@ -1124,14 +1256,30 @@ class NextSessionRecommendationService
             RecommendationReasonCode::SurahCompleted => $surahName
                 ? "You completed the final ayahs of Surah {$surahName}. This plan begins the next surah gently from the opening ayahs."
                 : 'You completed the final ayahs of this Surah. This plan begins the next surah gently from the opening ayahs.',
-            RecommendationReasonCode::ResumeIncompleteSession => 'You paused mid-range. This plan resumes from the ayahs you left unfinished.',
+            RecommendationReasonCode::ResumeIncompleteSession,
+            RecommendationReasonCode::SessionIncomplete => 'You paused mid-range. This plan resumes from the ayahs you left unfinished.',
             RecommendationReasonCode::ReinforceRecentRange => 'Recent ayahs still need another quiet pass. This plan returns to that range so recall can settle.',
             RecommendationReasonCode::LearningPlanComplete => 'You have reached the end of the available plan. Choose what you would like to recite next.',
             RecommendationReasonCode::ManualFallback => 'There is no automatic next set right now. Choose what you would like to recite next.',
             RecommendationReasonCode::AiReciteStrong,
+            RecommendationReasonCode::AdaptiveCheckStrong,
+            RecommendationReasonCode::HighPerformance,
             RecommendationReasonCode::ConfidenceConfident => 'You completed this range with confidence. This plan continues while the previous ayahs are still fresh.',
-            RecommendationReasonCode::AiReciteMixed => 'AI Recite was mostly correct, with a few gaps. This plan reviews the same range once more with a little more support.',
-            RecommendationReasonCode::AiReciteWeak => 'AI Recite found parts that still need practice. This plan keeps the same range with more guidance.',
+            RecommendationReasonCode::AiReciteMixed,
+            RecommendationReasonCode::AdaptiveCheckMixed => 'AI Recite was mostly correct, with a few gaps. This plan reviews the same range once more with a little more support.',
+            RecommendationReasonCode::AiReciteWeak,
+            RecommendationReasonCode::AdaptiveCheckWeak => 'AI Recite found parts that still need practice. This plan keeps the same range with more guidance.',
+            RecommendationReasonCode::LowRecall,
+            RecommendationReasonCode::OmissionErrors => 'Phrase recall needs support. This plan rebuilds the range with listen-and-repeat.',
+            RecommendationReasonCode::SequenceErrors => 'Ayah order was uncertain. This plan uses linking and phrase ordering before moving on.',
+            RecommendationReasonCode::HighHintDependency => 'Memory prompts were used often. This plan reduces hints with progressive Mushaf hiding.',
+            RecommendationReasonCode::VisualDependency => 'Recall leaned on visible text. This plan hides more of the Mushaf step by step.',
+            RecommendationReasonCode::AudioDependency => 'Replay was heavy. This plan shifts toward active recall with lighter audio support.',
+            RecommendationReasonCode::SpokenHesitation => 'Spoken recall hesitated. This plan uses phrase chunks, slower playback, and AI Recite.',
+            RecommendationReasonCode::SimilarAyahConfusion => 'Similar ayahs were mixed. This plan compares them side by side with anchors.',
+            RecommendationReasonCode::LowDelayedRetention,
+            RecommendationReasonCode::ReviewOverdue => 'Earlier material needs murājaʿah sooner. This plan schedules an earlier review.',
+            RecommendationReasonCode::Overconfidence => 'Confidence was high, but the check found a weak spot. This plan reinforces that gap.',
         };
     }
 
@@ -1444,6 +1592,13 @@ class NextSessionRecommendationService
             : ($recommendation->status ?? RecommendationStatus::Generated->value);
         $payload['confidence_feedback'] = $recommendation->confidence_feedback;
         $payload['ai_assessment'] = $recommendation->ai_assessment;
+        $storedPayload = is_array($recommendation->payload) ? $recommendation->payload : [];
+        if (isset($storedPayload['adaptive_assessment'])) {
+            $payload['adaptive_assessment'] = $storedPayload['adaptive_assessment'];
+        }
+        if (isset($storedPayload['plan_detail']) && is_array($storedPayload['plan_detail'])) {
+            $payload['plan_detail'] = $storedPayload['plan_detail'];
+        }
         $payload['settings'] = $this->resolvedSettings($recommendation);
         $payload['settings_modified'] = is_array($recommendation->settings_overrides) && $recommendation->settings_overrides !== [];
         $payload['range_kind'] = $recommendation->range_kind ?? ($payload['range_kind'] ?? null);
@@ -1570,6 +1725,17 @@ class NextSessionRecommendationService
         $to = (int) ($context['range_end'] ?? $current->ayah_end ?? 0);
         $surah = $context['surah'];
 
+        $focused = $this->resolveFocusedAyahRange(
+            $adaptationContext,
+            $from,
+            $to,
+            (int) (QuranMetadata::ayahCount((int) ($surah['id'] ?? 0)) ?: 0),
+        );
+        if ($focused !== null) {
+            $from = $focused['from'];
+            $to = $focused['to'];
+        }
+
         if (! $surah || ! $from || ! $to) {
             return $this->payloadFromRecord($current);
         }
@@ -1622,6 +1788,18 @@ class NextSessionRecommendationService
         $payload['available_actions'] = $this->availableActions(RecommendationType::RepeatCurrentRange, $payload['ayah_range'] ?? null);
         $payload['technique'] = $this->techniquePayload($payload);
         $payload['source_session_id'] = $source?->id ?? $current->source_session_id;
+        $currentPayload = is_array($current->payload) ? $current->payload : [];
+        if (isset($currentPayload['adaptive_assessment'])) {
+            $payload['adaptive_assessment'] = $currentPayload['adaptive_assessment'];
+        }
+        if (is_array($adaptationContext['plan_detail'] ?? null)) {
+            $payload['plan_detail'] = $adaptationContext['plan_detail'];
+        }
+        if (is_array($adaptationContext['focus_ayahs'] ?? null)) {
+            $payload['ayah_range']['focus_ayahs'] = array_values(array_map('intval', $adaptationContext['focus_ayahs']));
+        } elseif ($focused !== null && ! empty($focused['focus_ayahs'])) {
+            $payload['ayah_range']['focus_ayahs'] = $focused['focus_ayahs'];
+        }
 
         $this->markSuperseded($current);
 
@@ -1668,6 +1846,167 @@ class NextSessionRecommendationService
         ])->save();
     }
 
+    /**
+     * @param  array<string, mixed>  $extras
+     * @return array<string, mixed>
+     */
+    private function planExtrasForAdaptation(array $extras): array
+    {
+        $out = [];
+        if (is_array($extras['plan_detail'] ?? null)) {
+            $out['plan_detail'] = $extras['plan_detail'];
+        }
+        if (is_array($extras['ayah_range'] ?? null)) {
+            $out['ayah_range'] = $extras['ayah_range'];
+        }
+        if (is_array($extras['focus_ayahs'] ?? null)) {
+            $out['focus_ayahs'] = array_values(array_map('intval', $extras['focus_ayahs']));
+        }
+        $colorCounts = $this->normalizeColorCounts($extras['color_counts'] ?? null);
+        if ($colorCounts !== null) {
+            $out['color_counts'] = $colorCounts;
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  mixed  $counts
+     * @return array{green: int, amber: int, red: int, black: int, gray: int}|null
+     */
+    private function normalizeColorCounts(mixed $counts): ?array
+    {
+        if (! is_array($counts)) {
+            return null;
+        }
+
+        $pick = static function (array $source, string $key): int {
+            return max(0, min(5000, (int) ($source[$key] ?? 0)));
+        };
+
+        return [
+            'green' => $pick($counts, 'green'),
+            'amber' => $pick($counts, 'amber'),
+            'red' => $pick($counts, 'red'),
+            'black' => $pick($counts, 'black'),
+            'gray' => $pick($counts, 'gray'),
+        ];
+    }
+
+    /**
+     * Prefer a client-provided focused range (max 3), else expand weak ayahs ±1 neighbor.
+     *
+     * @param  array<string, mixed>  $context
+     * @return array{from: int, to: int, focus_ayahs: list<int>}|null
+     */
+    private function resolveFocusedAyahRange(array $context, int $sessionFrom, int $sessionTo, int $surahAyahCount = 0): ?array
+    {
+        $range = is_array($context['ayah_range'] ?? null) ? $context['ayah_range'] : null;
+        if ($range) {
+            $from = (int) ($range['from'] ?? 0);
+            $to = (int) ($range['to'] ?? 0);
+            if ($from > 0 && $to >= $from) {
+                $to = min($to, $from + self::MAX_SESSION_SIZE - 1);
+                $focus = is_array($range['focus_ayahs'] ?? null)
+                    ? array_values(array_map('intval', $range['focus_ayahs']))
+                    : (is_array($context['focus_ayahs'] ?? null)
+                        ? array_values(array_map('intval', $context['focus_ayahs']))
+                        : []);
+
+                return [
+                    'from' => $from,
+                    'to' => $to,
+                    'focus_ayahs' => array_values(array_filter(
+                        $focus,
+                        static fn (int $ayah): bool => $ayah >= $from && $ayah <= $to
+                    )),
+                ];
+            }
+        }
+
+        $weak = is_array($context['weak_ayahs'] ?? null)
+            ? array_values(array_unique(array_map('intval', $context['weak_ayahs'])))
+            : (is_array($context['focus_ayahs'] ?? null)
+                ? array_values(array_unique(array_map('intval', $context['focus_ayahs'])))
+                : []);
+        $weak = array_values(array_filter($weak, static fn (int $ayah): bool => $ayah > 0));
+        sort($weak);
+
+        if ($weak === [] || $sessionFrom <= 0 || $sessionTo < $sessionFrom) {
+            return null;
+        }
+
+        $floor = $sessionFrom;
+        $ceiling = $sessionTo;
+        if ($surahAyahCount > 0) {
+            $ceiling = min($ceiling, $surahAyahCount);
+        }
+
+        $from = max($floor, min($weak) - 1);
+        $to = min($ceiling, max($weak) + 1);
+        if (($to - $from + 1) > self::MAX_SESSION_SIZE) {
+            $from = max($floor, min($weak) - 1);
+            $to = min($ceiling, $from + self::MAX_SESSION_SIZE - 1);
+            if (max($weak) > $to) {
+                $to = min($ceiling, max($weak) + 1);
+                $from = max($floor, $to - self::MAX_SESSION_SIZE + 1);
+            }
+        }
+
+        return [
+            'from' => $from,
+            'to' => $to,
+            'focus_ayahs' => array_values(array_filter(
+                $weak,
+                static fn (int $ayah): bool => $ayah >= $from && $ayah <= $to
+            )),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $planExtras
+     * @return array<string, mixed>
+     */
+    private function attachPlanExtrasToPayload(
+        array $payload,
+        array $planExtras,
+        SessionRecommendation $recommendation,
+    ): array {
+        if (! is_array($planExtras['plan_detail'] ?? null) && ! is_array($planExtras['ayah_range'] ?? null)) {
+            return $payload;
+        }
+
+        if (is_array($planExtras['plan_detail'] ?? null)) {
+            $payload['plan_detail'] = $planExtras['plan_detail'];
+        }
+        $focused = $this->resolveFocusedAyahRange(
+            $planExtras,
+            (int) ($payload['ayah_range']['from'] ?? $recommendation->ayah_start ?? 0),
+            (int) ($payload['ayah_range']['to'] ?? $recommendation->ayah_end ?? 0),
+        );
+        if ($focused !== null && (($payload['type'] ?? '') === RecommendationType::RepeatCurrentRange->value || str_contains((string) ($payload['range_kind'] ?? ''), 'repeat'))) {
+            $payload['ayah_range'] = [
+                'from' => $focused['from'],
+                'to' => $focused['to'],
+                'count' => max(1, $focused['to'] - $focused['from'] + 1),
+                'focus_ayahs' => $focused['focus_ayahs'],
+            ];
+        }
+
+        $stored = is_array($recommendation->payload) ? $recommendation->payload : [];
+        $recommendation->forceFill([
+            'payload' => array_merge($stored, [
+                'plan_detail' => $payload['plan_detail'] ?? ($stored['plan_detail'] ?? null),
+                'ayah_range' => $payload['ayah_range'] ?? ($stored['ayah_range'] ?? null),
+            ]),
+            'ayah_start' => (int) ($payload['ayah_range']['from'] ?? $recommendation->ayah_start),
+            'ayah_end' => (int) ($payload['ayah_range']['to'] ?? $recommendation->ayah_end),
+        ])->save();
+
+        return $this->payloadFromRecord($recommendation->fresh());
+    }
+
     private function isReusableOpenRecommendation(SessionRecommendation $recommendation): bool
     {
         $status = RecommendationStatus::tryFrom((string) ($recommendation->status?->value ?? $recommendation->status))
@@ -1683,6 +2022,7 @@ class NextSessionRecommendationService
         User $user,
         SessionRecommendation $recommendation,
         RecommendationReasonCode $reasonCode,
+        array $planExtras = [],
     ): array {
         $payload = $this->payloadFromRecord($recommendation);
         $type = RecommendationType::tryFrom((string) ($payload['type'] ?? ''));
@@ -1721,6 +2061,9 @@ class NextSessionRecommendationService
                 unset($payload['balance_message']);
             }
             $payload['technique'] = $this->techniquePayload($payload);
+            if (is_array($planExtras['plan_detail'] ?? null)) {
+                $payload['plan_detail'] = $planExtras['plan_detail'];
+            }
             $recommendation->forceFill([
                 'reason_code' => $reasonCode->value,
                 'recommended_technique' => $payload['settings']['technique'] ?? null,
@@ -1775,10 +2118,17 @@ class NextSessionRecommendationService
                     return $continue;
                 }
 
+                $prevPayload = is_array($recommendation->payload) ? $recommendation->payload : [];
+                $mergedPayload = is_array($record->payload) ? $record->payload : [];
+                if (isset($prevPayload['adaptive_assessment'])) {
+                    $mergedPayload['adaptive_assessment'] = $prevPayload['adaptive_assessment'];
+                }
+
                 $record->forceFill([
                     'confidence_feedback' => $recommendation->confidence_feedback,
                     'ai_assessment' => $recommendation->ai_assessment,
                     'supersedes_recommendation_id' => $recommendation->id,
+                    'payload' => $mergedPayload,
                 ])->save();
 
                 return $this->payloadFromRecord($record->fresh());

@@ -29,11 +29,33 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     const s = String(status || '').toLowerCase()
     return s.includes('incorrect') || s.includes('missing') || s.includes('missed') || s === 'red'
   }
+  const isOmittedStatus = (status) => {
+    const s = String(status || '').toLowerCase()
+    return s === 'omitted' || s === 'black' || s.includes('omission')
+  }
+  const isGrayStatus = (status) => {
+    const s = String(status || '').toLowerCase()
+    return s === 'pending' || s === 'skipped' || s === 'notattempted' || s === 'gray' || s === 'grey'
+  }
 
   const correctWords = wordStatuses.filter((w) => isCorrectStatus(w?.status)).length
   const partialFromWords = wordStatuses.filter((w) => isPartialStatus(w?.status)).length
-  const missedFromWords = wordStatuses.filter((w) => isMissedStatus(w?.status)).length
+  const redFromWords = wordStatuses.filter((w) => isMissedStatus(w?.status) && !isOmittedStatus(w?.status)).length
+  const blackFromWords = wordStatuses.filter((w) => isOmittedStatus(w?.status)).length
+  const grayFromWords = wordStatuses.filter((w) => isGrayStatus(w?.status)).length
+  const missedFromWords = redFromWords + blackFromWords
   const outOfOrderWords = wordStatuses.filter((w) => w?.outOfOrder).length
+  const colorCounts = extras.color_counts && typeof extras.color_counts === 'object'
+    ? extras.color_counts
+    : (result?.colorCounts && typeof result.colorCounts === 'object'
+      ? result.colorCounts
+      : {
+        green: correctWords,
+        amber: partialFromWords,
+        red: redFromWords,
+        black: blackFromWords,
+        gray: grayFromWords,
+      })
 
   const accuracyRaw = Number(extras.accuracy_percent ?? result?.accuracyScore ?? result?.accuracy ?? result?.matchPercent)
   const accuracy = Number.isFinite(accuracyRaw)
@@ -50,17 +72,18 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     countList(mistakes.sequenceErrors) + countList(mistakes.verseJumps) + countList(mistakes.skippedAyahs),
     outOfOrderWords
   )
-  const partial = Math.max(countList(mistakes.partial), partialFromWords)
+  const partial = Math.max(countList(mistakes.partial), partialFromWords, Number(colorCounts.amber || 0))
+  const amberCount = partial
   const pronunciation = extras.pronunciation_issues != null
     ? !!extras.pronunciation_issues
-    : partial >= 2
+    : amberCount >= 2
 
   const weakAyahs = Array.isArray(extras.weak_ayahs)
     ? extras.weak_ayahs.filter(Boolean)
     : (Array.isArray(result?.weakAyahs) ? result.weakAyahs.filter(Boolean) : [])
 
   const totalWords = wordStatuses.length
-    || Math.max(correctWords + missed + partial, 0)
+    || Math.max(correctWords + missed + amberCount, 0)
   const estimatedCorrect = totalWords > 0
     ? correctWords
     : (accuracy != null ? Math.round((accuracy / 100) * Math.max(totalWords, 1)) : null)
@@ -107,12 +130,20 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
       ? t('memorisation.postSession.recommendation.aiMetricOrderIssues', { count: sequence })
       : t('memorisation.postSession.recommendation.aiMetricOrderSteady'),
   })
-  if (partial > 0) {
+  if (amberCount > 0) {
     metrics.push({
       key: 'close',
       tone: 'mid',
       label: t('memorisation.postSession.recommendation.aiMetricClose'),
-      value: String(partial),
+      value: String(amberCount),
+    })
+  }
+  if ((colorCounts.black || 0) > 0) {
+    metrics.push({
+      key: 'omitted',
+      tone: 'warn',
+      label: t('memorisation.postSession.recommendation.aiMetricOmitted'),
+      value: String(colorCounts.black),
     })
   }
 
@@ -131,12 +162,21 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
       text: t('memorisation.postSession.recommendation.aiHighlightMissedWords', { count: missed }),
     })
   }
-  if (partial > 0 || pronunciation) {
+  if (amberCount > 0 || pronunciation) {
     highlights.push({
       key: 'pronunciation',
       tone: 'mid',
       text: t('memorisation.postSession.recommendation.aiHighlightPronunciation', {
-        count: Math.max(partial, 1),
+        count: Math.max(amberCount, 1),
+      }),
+    })
+  }
+  if ((colorCounts.black || 0) > 0) {
+    highlights.push({
+      key: 'omitted',
+      tone: 'warn',
+      text: t('memorisation.postSession.recommendation.aiHighlightOmittedWords', {
+        count: colorCounts.black,
       }),
     })
   }
@@ -195,11 +235,12 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
   const focus = buildFocusTip({
     accuracy: accuracy ?? 0,
     missed,
-    partial,
+    partial: amberCount,
     sequence,
     pronunciation,
     weakAyahs,
     mistakes,
+    omitted: Number(colorCounts.black || 0),
     t,
   })
 
@@ -213,22 +254,23 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     outcome,
     outcomeLabel,
     accuracy,
+    colorCounts,
     summaryLine: buildAiSummaryLine({
       outcome,
       weakAyahs,
       missed,
-      partial,
+      partial: amberCount,
       sequence,
       t,
     }),
     durationLabel: durationSeconds > 0
       ? t('memorisation.postSession.recommendation.aiReviewDuration', { seconds: Math.round(durationSeconds) })
       : '',
-    metrics: metrics.slice(0, 5),
-    highlights: highlights.slice(0, 4),
+    metrics: metrics.slice(0, 6),
+    highlights: highlights.slice(0, 5),
     focus,
     weakAyahs: weakAyahs.slice(0, 6),
-    chips: metrics.slice(0, 4).map((metric) => ({
+    chips: metrics.slice(0, 5).map((metric) => ({
       key: metric.key,
       tone: metric.tone,
       label: metric.key === 'accuracy' ? metric.value : `${metric.label}: ${metric.value}`,
@@ -272,6 +314,7 @@ function buildFocusTip({
   pronunciation,
   weakAyahs,
   mistakes,
+  omitted = 0,
   t,
 }) {
   if (weakAyahs.length === 1) {
@@ -285,6 +328,9 @@ function buildFocusTip({
   }
   if (sequence > 0 || countLen(mistakes.skippedAyahs) || countLen(mistakes.verseJumps)) {
     return t('memorisation.postSession.recommendation.aiFocusSequence')
+  }
+  if (omitted > 0) {
+    return t('memorisation.postSession.recommendation.aiFocusOmitted', { count: omitted })
   }
   if (missed > 0) {
     return t('memorisation.postSession.recommendation.aiFocusMissed', { count: missed })

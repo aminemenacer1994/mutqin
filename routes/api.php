@@ -41,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/recommendations/confidence', [RecommendationController::class, 'confidence'])->name('api.recommendations.confidence');
     Route::post('/recommendations/settings', [RecommendationController::class, 'settings'])->name('api.recommendations.settings');
     Route::post('/recommendations/ai-assessment', [RecommendationController::class, 'aiAssessment'])->name('api.recommendations.ai-assessment');
+    Route::post('/recommendations/adaptive-assessment', [RecommendationController::class, 'adaptiveAssessment'])->name('api.recommendations.adaptive-assessment');
 
     // Full-fidelity state blob used as the live persistence boundary.
     Route::get('/state', [StateSyncController::class, 'show'])->name('api.state.show');

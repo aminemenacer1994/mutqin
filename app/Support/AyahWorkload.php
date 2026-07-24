@@ -20,7 +20,7 @@ final class AyahWorkload
 
     public const MIN_AYAHS = 1;
 
-    public const MAX_AYAHS = 8;
+    public const MAX_AYAHS = 3;
 
     /** Soft preference when previous session size is known. */
     public const PREFERRED_SIZE_WEIGHT = 0.35;

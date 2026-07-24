@@ -4,7 +4,7 @@ namespace App\Http\Requests\Learning;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class SubmitRecommendationAiAssessmentRequest extends FormRequest
+class SubmitRecommendationAdaptiveAssessmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -20,17 +20,21 @@ class SubmitRecommendationAiAssessmentRequest extends FormRequest
             'recommendation_id' => ['required', 'integer', 'min:1'],
             'result' => ['required', 'string', 'in:strong,mixed,weak'],
             'summary' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'assessment_id' => ['sometimes', 'nullable', 'string', 'max:120'],
             'weak_ayahs' => ['sometimes', 'array'],
             'weak_ayahs.*' => ['integer', 'min:1', 'max:300'],
             'sequence_errors' => ['sometimes', 'integer', 'min:0', 'max:500'],
             'missed_words' => ['sometimes', 'integer', 'min:0', 'max:2000'],
             'pronunciation_issues' => ['sometimes', 'boolean'],
-            'color_counts' => ['sometimes', 'nullable', 'array'],
-            'color_counts.green' => ['sometimes', 'integer', 'min:0', 'max:5000'],
-            'color_counts.amber' => ['sometimes', 'integer', 'min:0', 'max:5000'],
-            'color_counts.red' => ['sometimes', 'integer', 'min:0', 'max:5000'],
-            'color_counts.black' => ['sometimes', 'integer', 'min:0', 'max:5000'],
-            'color_counts.gray' => ['sometimes', 'integer', 'min:0', 'max:5000'],
+            'reason_codes' => ['sometimes', 'array'],
+            'reason_codes.*' => ['string', 'max:64'],
+            'skills' => ['sometimes', 'array'],
+            'skill_view' => ['sometimes', 'array'],
+            'policy' => ['sometimes', 'array'],
+            'responses' => ['sometimes', 'array'],
+            'events' => ['sometimes', 'array'],
+            'review' => ['sometimes', 'array'],
+            'snapshot' => ['sometimes', 'array'],
             'plan_detail' => ['sometimes', 'nullable', 'array'],
             'ayah_range' => ['sometimes', 'nullable', 'array'],
             'ayah_range.from' => ['sometimes', 'integer', 'min:1', 'max:300'],
