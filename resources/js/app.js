@@ -8,6 +8,7 @@ import OurMissionPage from './views/OurMission.vue';
 import DonationPage from './views/DonationPage.vue';
 import { setupI18n, setLocale } from './i18n';
 import { i18nMixin } from './mixins/i18nMixin';
+import { initPwa } from './pwa';
 
 // The memorisation workspace is by far the heaviest component. It is only used
 // on the memorisation page, so load it as a separate async chunk to keep the
@@ -149,15 +150,4 @@ function showBootstrapFailure(error) {
 
 bootstrapApp().catch(showBootstrapFailure);
 
-if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
-    window.addEventListener('load', () => {
-        const serviceWorkerUrl = new URL('/sw.js', window.location.origin).href;
-        navigator.serviceWorker.register(serviceWorkerUrl)
-            .then((registration) => {
-                registration.update().catch(() => {});
-            })
-            .catch((error) => {
-                console.warn('Failed to register service worker:', error);
-            });
-    });
-}
+initPwa();

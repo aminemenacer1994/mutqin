@@ -758,3 +758,113 @@ html[data-theme="dark"] .onboarding-btn--primary {
   background: var(--destructive-strong, #9a4336) !important;
   border-color: var(--destructive-strong, #9a4336) !important;
 }
+
+/* -------------------------------------------------------------------------- */
+/* PWA install banner + standalone shell — phone only (≤767.98px)             */
+/* Desktop / tablet layouts are intentionally untouched.                      */
+/* -------------------------------------------------------------------------- */
+.mutqin-pwa-install {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .mutqin-pwa-install {
+    position: fixed;
+    z-index: 1080;
+    inset-inline: max(12px, env(safe-area-inset-left, 0px)) max(12px, env(safe-area-inset-right, 0px));
+    inset-block-end: max(12px, env(safe-area-inset-bottom, 0px));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 14px 14px 16px;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+    color: var(--text);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .mutqin-pwa-install__copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .mutqin-pwa-install__copy strong {
+    font-size: 0.95rem;
+    line-height: 1.25;
+  }
+
+  .mutqin-pwa-install__copy span {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .mutqin-pwa-install__actions {
+    display: grid;
+    gap: 6px;
+  }
+
+  .mutqin-pwa-install__btn {
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .mutqin-pwa-install__btn--primary {
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  }
+
+  html[data-theme="dark"] .mutqin-pwa-install__btn--primary {
+    color: #1a120c;
+  }
+
+  .mutqin-pwa-install__btn--ghost {
+    color: var(--text-muted);
+    background: transparent;
+    border-color: color-mix(in srgb, var(--border) 70%, transparent);
+  }
+
+  /* Installed / standalone phone app: fill the screen and respect notches. */
+  html.mutqin-pwa-standalone,
+  html.mutqin-pwa-standalone body {
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+    overscroll-behavior-y: none;
+  }
+
+  html.mutqin-pwa-standalone #mainContent,
+  html.mutqin-pwa-standalone main {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  /* Phone shell hardening so the installed app never horizontal-scrolls. */
+  html.mutqin-pwa-mobile,
+  html.mutqin-pwa-mobile body,
+  html.mutqin-pwa-mobile #app {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  html.mutqin-pwa-mobile img,
+  html.mutqin-pwa-mobile svg,
+  html.mutqin-pwa-mobile video,
+  html.mutqin-pwa-mobile canvas,
+  html.mutqin-pwa-mobile iframe {
+    max-width: 100%;
+  }
+}
+
