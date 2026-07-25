@@ -18,6 +18,7 @@ const fatihahPageVerses = [
     verse_key: '1:1',
     verse_number: 1,
     page_number: 1,
+    juz_number: 1,
     words: [
       { position: 1, char_type_name: 'word', code_v2: 'A', text_qpc_hafs: 'بِسْمِ', line_number: 2, page_number: 1 },
       { position: 2, char_type_name: 'word', code_v2: 'B', text_qpc_hafs: 'ٱللَّهِ', line_number: 2, page_number: 1 },
@@ -85,6 +86,8 @@ assert.equal(fatihahLayout.lines[1].words[0].verseKey, '1:1')
 assert.equal(fatihahLayout.lines[2].type, 'ayah')
 assert.ok(fatihahLayout.lines.every(line => line.type !== 'empty'))
 assert.equal(fatihahLayout.lines.length, 3)
+assert.equal(fatihahLayout.juzNumber, 1)
+assert.equal(fatihahLayout.primaryChapterId, 1)
 
 const baqarahLayout = buildMadaniPageLayout(2, baqarahPageVerses)
 assert.equal(baqarahLayout.lines[0].type, 'surah_name')

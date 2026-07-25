@@ -30,84 +30,58 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-    <meta name="mutqin-build" content="v45b-force">
-    <style id="mutqin-ai-recite-force-v45b">
+    <meta name="mutqin-build" content="v48-ai-recite-clean">
+    <style id="mutqin-ai-recite-force-v48">
       #mutqin-build-stamp {
         position: fixed !important;
         bottom: 10px !important;
         left: 10px !important;
         z-index: 2147483647 !important;
         display: inline-flex !important;
-        align-items: center !important;
-        gap: 0.4rem !important;
         padding: 0.45rem 0.7rem !important;
         border-radius: 0.55rem !important;
         background: #1f4d36 !important;
         color: #f4faf6 !important;
         font: 700 12px/1.2 Inter, system-ui, sans-serif !important;
-        box-shadow: 0 8px 20px rgba(0,0,0,.28) !important;
         pointer-events: none !important;
       }
-      .self-check-modal-overlay .self-check-library-shortcut-btn:not(.self-check-back-to-session-btn),
-      .self-check-modal-overlay .self-check-ayah-action-manual,
-      .self-check-modal-overlay .self-check-assessment-head,
-      .self-check-modal-overlay .self-check-assessment-copy,
-      .self-check-modal-overlay .recitation-check-idle,
-      .self-check-modal-overlay .self-check-assessment-idle,
-      .self-check-modal-overlay .self-check-mobile-start-card,
-      .self-check-modal-overlay .recitation-saved-footnote,
-      .self-check-modal-overlay .self-check-assessment-live,
-      .self-check-modal-overlay .self-check-assessment-review,
-      body > .recordings-library-overlay {
+      .recordings-library-overlay,
+      .self-check-library-shortcut-btn:not(.self-check-back-to-session-btn),
+      .self-check-ayah-action-manual {
         display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-        overflow: hidden !important;
-        pointer-events: none !important;
+      }
+      .self-check-modal-overlay .ai-check-step-guide {
+        display: none !important;
       }
       .self-check-modal-overlay .self-check-modal-ayah-shell,
+      .self-check-modal-overlay .ai-recite-ayah-shell,
       .self-check-modal-overlay .self-check-modal-ayah,
-      .self-check-modal-overlay .self-check-modal-ayah .session-evaluation-ayah,
+      .self-check-modal-overlay .ai-recite-ayah,
+      .self-check-modal-overlay .session-evaluation-ayah,
       .self-check-modal-overlay .recitation-review-ayah,
-      .self-check-modal-overlay .recitation-live-word-stream,
-      .ai-recite-force-modal .ai-recite-force-ayah {
+      .self-check-modal-overlay .recitation-live-word-stream {
         direction: rtl !important;
         unicode-bidi: isolate !important;
         text-align: right !important;
       }
-      .ai-recite-force-modal {
-        border: 3px solid #1f4d36 !important;
-        box-shadow: 0 0 0 4px rgba(31, 77, 54, 0.18), 0 24px 60px rgba(20, 40, 28, 0.28) !important;
-      }
-      .ai-recite-force-banner {
+      .self-check-modal-overlay .self-check-modal-ayah-shell,
+      .self-check-modal-overlay .ai-recite-ayah-shell,
+      .self-check-modal-overlay .self-check-modal-ayah,
+      .self-check-modal-overlay .ai-recite-ayah {
         display: block !important;
-        margin: 0 0 0.75rem;
-        padding: 0.55rem 0.85rem;
-        border-radius: 0.65rem;
-        background: #1f4d36;
-        color: #f4faf6;
-        font-weight: 700;
-        font-size: 0.92rem;
-        letter-spacing: 0.02em;
-      }
-      .ai-recite-force-start {
-        display: inline-flex !important;
-        align-items: center;
-        gap: 0.55rem;
-        margin: 1rem auto 0;
-        min-height: 3rem;
-        padding: 0.7rem 1.35rem !important;
-        border-radius: 999px !important;
-        border: none !important;
-        background: #9a6738 !important;
-        color: #fff !important;
-        font-weight: 700 !important;
-        font-size: 1.05rem !important;
+        width: 100% !important;
+        max-width: none !important;
+        min-height: 0 !important;
+        place-items: unset !important;
+        justify-content: unset !important;
+        align-items: unset !important;
+        align-content: unset !important;
+        text-wrap: unset !important;
       }
     </style>
     <script>
       (function () {
-        var KEY = 'mutqin.force.ui.v45b';
+        var KEY = 'mutqin.force.ui.v48';
         try {
           if (sessionStorage.getItem(KEY) === '1') return;
           sessionStorage.setItem(KEY, '1');
@@ -125,8 +99,8 @@
         }
         Promise.all(tasks).then(function () {
           var url = new URL(window.location.href);
-          if (url.searchParams.get('mutqin_force') === '45b') return;
-          url.searchParams.set('mutqin_force', '45b');
+          if (url.searchParams.get('mutqin_force') === '48') return;
+          url.searchParams.set('mutqin_force', '48');
           window.location.replace(url.toString());
         }).catch(function () {});
       })();
@@ -2839,7 +2813,7 @@
             @yield('content')
         </main>
     </div>
-    <div id="mutqin-build-stamp" aria-hidden="true">Mutqin build v45b · localhost:8000</div>
+    <div id="mutqin-build-stamp" aria-hidden="true">Mutqin build v48 · AI Recite clean</div>
 
     <script src="{{ mix('js/app.js') }}" defer></script>
     

@@ -26,11 +26,10 @@ assert.match(css, /\.madani-line/)
 assert.match(css, /\.madani-word/)
 assert.match(css, /--mushaf-line-rule/)
 
-assert.match(js, /buildMadaniPageLayout/)
-assert.match(js, /ensureMadaniPagesLoaded/)
-assert.match(js, /getMadaniPageVerses/)
-assert.match(js, /loadQcfPageFont/)
-assert.match(js, /currentMadaniLines/)
-assert.match(js, /Madani Mushaf uses the official QCF page font/)
+assert.match(js, /useMadaniQcfGlyphs/)
+assert.match(js, /getDefaultMushafBackgroundForTheme/)
+assert.match(js, /mushafBackgroundTouched/)
+assert.doesNotMatch(js, /Madani Mushaf uses the official QCF page font/)
 
 console.log('Madani mushaf rendering tests passed')
+

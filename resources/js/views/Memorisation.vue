@@ -312,8 +312,37 @@
           </div>
           <div
             class="workspace-shell-reading-toggles workspace-shell-font-control"
-            :aria-label="t('memorisation.reading.quranicFont')"
+            :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')}`"
           >
+            <div
+              class="workspace-layout-toggle view-mode-toggle"
+              role="group"
+              :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')}`"
+            >
+              <button
+                type="button"
+                class="view-mode-btn workspace-layout-btn"
+                :class="{ active: readingViewMode === 'stacked' }"
+                :aria-pressed="readingViewMode === 'stacked' ? 'true' : 'false'"
+                @click.stop="setReadingViewMode('stacked')"
+                :title="t('memorisation.view.stacked')"
+              >
+                <i class="bi bi-view-stacked" aria-hidden="true"></i>
+                <span>{{ t('memorisation.view.stacked') }}</span>
+              </button>
+              <button
+                type="button"
+                class="view-mode-btn workspace-layout-btn"
+                :class="{ active: readingViewMode === 'mushaf' }"
+                :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'"
+                @click.stop="setReadingViewMode('mushaf')"
+                :title="t('memorisation.view.mushaf')"
+              >
+                <i class="bi bi-journal-richtext" aria-hidden="true"></i>
+                <span>{{ t('memorisation.view.mushaf') }}</span>
+              </button>
+            </div>
+
             <div class="font-dropdown workspace-font-dropdown">
               <button
                 class="font-dropdown-trigger"
@@ -356,7 +385,7 @@
             <span>{{ workspaceLoadingLabel }}</span>
           </div>
           <div
-            v-if="isDataReady && liveTechniqueGuide && hasSessionStarted && !isSessionCompleted && !talqinRecitationTurnActive"
+            v-if="isDataReady && liveTechniqueGuide && hasSessionStarted && !isSessionCompleted && !talqinRecitationTurnActive && readingViewMode !== 'mushaf'"
             class="live-practice-method"
             role="status"
             aria-live="polite"
@@ -379,7 +408,7 @@
             </div>
           </div>
           <div
-            v-if="isDataReady && livePracticeCoachText && hasSessionStarted && !isSessionCompleted && !talqinRecitationTurnActive"
+            v-if="isDataReady && livePracticeCoachText && hasSessionStarted && !isSessionCompleted && !talqinRecitationTurnActive && readingViewMode !== 'mushaf'"
             class="live-practice-coach"
             :class="{ 'live-practice-coach--focus': !!activePracticeFocusWord }"
             role="status"
@@ -456,36 +485,6 @@
                     >
                       <i class="bi bi-plus-lg" aria-hidden="true"></i>
                     </button>
-
-                    <div class="mushaf-toolbar-dropdown bg-dropdown-region">
-                      <button @click.stop="bgOpen = !bgOpen; fontOpen = false; borderOpen = false" type="button" class="mushaf-toolbar-trigger"
-                        :aria-expanded="bgOpen ? 'true' : 'false'" aria-label="Choose Mushaf page theme" :title="t('memorisation.reading.theme')">
-                        <span class="mushaf-toolbar-theme-swatch mushaf-toolbar-trigger-swatch" :class="`theme-${mushafBackground}`"></span>
-                      </button>
-                      <div v-if="bgOpen" @click.stop class="mushaf-toolbar-menu">
-                        <button v-for="b in mushafBackgroundOptions" :key="b.value" @click="setMushafBackground(b.value); bgOpen = false"
-                          class="mushaf-toolbar-option mushaf-toolbar-option-theme" :class="{ active: mushafBackground === b.value }">
-                          <span class="mushaf-toolbar-theme-swatch" :class="`theme-${b.value}`"></span>
-                          <span>{{ b.label }}</span>
-                          <i v-if="mushafBackground === b.value" class="bi bi-check2 mushaf-toolbar-check" aria-hidden="true"></i>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div class="mushaf-toolbar-dropdown border-dropdown-region">
-                      <button @click.stop="borderOpen = !borderOpen; fontOpen = false; bgOpen = false" type="button" class="mushaf-toolbar-trigger"
-                        :aria-expanded="borderOpen ? 'true' : 'false'" aria-label="Choose Mushaf border style" :title="t('memorisation.reading.border')">
-                        <i class="bi bi-border-outer"></i>
-                      </button>
-                      <div v-if="borderOpen" @click.stop class="mushaf-toolbar-menu">
-                        <button v-for="b in mushafBorderOptions" :key="b.value" @click="setMushafBorder(b.value); borderOpen = false"
-                          class="mushaf-toolbar-option" :class="{ active: mushafBorder === b.value }">
-                          <span class="mushaf-toolbar-border-swatch" :class="`border-${b.value}`"></span>
-                          <span>{{ b.label }}</span>
-                          <i v-if="mushafBorder === b.value" class="bi bi-check2 mushaf-toolbar-check" aria-hidden="true"></i>
-                        </button>
-                      </div>
-                    </div>
                   </div>
 
                   <div class="mushaf-toolbar-cluster mushaf-toolbar-cluster-end">
@@ -538,6 +537,44 @@
                 </div>
                 </aside>
                 <div class="mushaf-stage">
+                  <div
+                    v-if="(liveTechniqueGuide || livePracticeCoachText) && hasSessionStarted && !isSessionCompleted && !talqinRecitationTurnActive"
+                    class="live-practice-guidance live-practice-guidance--mushaf"
+                  >
+                    <div
+                      v-if="liveTechniqueGuide"
+                      class="live-practice-method"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <span class="live-practice-method__label">{{ liveTechniqueGuide.label }}</span>
+                      <span class="live-practice-method__hint">{{ liveTechniqueGuide.hint }}</span>
+                      <div
+                        v-if="liveKeyWordHooks.length"
+                        class="live-practice-method__hooks"
+                      >
+                        <span class="live-practice-method__hooks-label">
+                          {{ t('memorisation.postSession.coach.live.hooksLabel') }}
+                        </span>
+                        <ul class="live-practice-method__hooks-list" dir="rtl" lang="ar">
+                          <li
+                            v-for="(word, idx) in liveKeyWordHooks"
+                            :key="`mushaf-hook-${word.verseKey || ''}-${word.wordIndex}-${idx}`"
+                          >{{ word.text }}</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div
+                      v-if="livePracticeCoachText"
+                      class="live-practice-coach"
+                      :class="{ 'live-practice-coach--focus': !!activePracticeFocusWord }"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <i class="bi" :class="activePracticeFocusWord ? 'bi-bullseye' : 'bi-moon-stars'" aria-hidden="true"></i>
+                      <span>{{ livePracticeCoachText }}</span>
+                    </div>
+                  </div>
                   <button
                     v-if="mushafPages.length > 1"
                     type="button"
@@ -548,7 +585,7 @@
                   >
                     <i class="bi bi-chevron-left" aria-hidden="true"></i>
                   </button>
-                <div ref="mushafViewport" class="mushaf-viewport" :class="`mushaf-bg-${mushafBackground}`">
+                <div ref="mushafViewport" class="mushaf-viewport mushaf-bg-contrast">
                   <div v-if="!currentMushafPage" class="mushaf-empty-page">
                     <i class="bi bi-hourglass-split"></i>
                     <strong>{{ workspaceLoadingLabel }}</strong>
@@ -556,18 +593,21 @@
                   </div>
                     <article
                     v-else
-                    :key="`${currentMushafPage.id}-${safeMushafPageIndex}-${defaultFontSize}-${tajweedEnabled}`"
-                    class="mushaf-page mushaf-page--madani"
-                    :class="[`mushaf-bg-${mushafBackground}`, `mushaf-border-${mushafBorder}`]"
-                    :style="{ '--verse-font-percent': defaultFontSize, '--mushaf-quran-font': currentMushafPage.fontFamily || quranFontFamily }"
+                    :key="`${currentMushafPage.id}-${safeMushafPageIndex}-${defaultFontSize}-${tajweedEnabled}-${quranFont}`"
+                    class="mushaf-page mushaf-page--madani mushaf-bg-contrast mushaf-border-classic"
+                    :style="{ '--verse-font-percent': defaultFontSize, '--mushaf-quran-font': quranFontFamily, '--mushaf-selected-font': quranFontFamily }"
                   >
                     <div
                       class="mushaf-page-body madani-page-sheet"
                       dir="rtl"
-                      :class="{ 'madani-page-sheet--glyphs-ready': !!madaniFontsReady[currentMushafPage.pageNumber] }"
+                      :class="{
+                        'madani-page-sheet--glyphs-ready': useMadaniQcfGlyphs && !!madaniFontsReady[currentMushafPage.pageNumber],
+                        'madani-page-sheet--unicode': !useMadaniQcfGlyphs
+                      }"
                       :style="{
                         '--verse-font-percent': defaultFontSize,
-                        '--madani-page-font': `'${currentMushafPage.fontFamily || ('p' + currentMushafPage.pageNumber + '-v2')}'`
+                        '--madani-page-font': `'${currentMushafPage.fontFamily || ('p' + currentMushafPage.pageNumber + '-v2')}'`,
+                        '--mushaf-selected-font': quranFontFamily
                       }"
                     >
                       <div
@@ -578,7 +618,8 @@
                           `madani-line--${line.type}`,
                           {
                             'madani-line--empty': line.type === 'empty',
-                            'madani-line--glyphs': line.fontReady && line.type === 'ayah'
+                            'madani-line--glyphs': line.useGlyphs && line.fontReady && line.type === 'ayah',
+                            'madani-line--ayah': line.type === 'ayah'
                           }
                         ]"
                         :data-line-number="line.lineNumber"
@@ -605,7 +646,8 @@
                             :class="{
                               'madani-word--end': word.isEnd,
                               'madani-word--glyph': word.useGlyph,
-                              'madani-word--fallback': !word.useGlyph,
+                              'madani-word--fallback': !word.useGlyph && useMadaniQcfGlyphs,
+                              'madani-word--unicode': !word.useGlyph && !useMadaniQcfGlyphs,
                               'madani-word--out': word.inSession === false,
                               active: word.isActive,
                               'hifz-ayah-new': word.isNew,
@@ -2578,28 +2620,26 @@
       class="modal-overlay mutqin-modal-overlay self-check-modal-overlay"
       :class="{
         'self-check-modal-overlay--above-post-session': postSessionAiReciteActive,
-        'self-check-modal-overlay--ai-recite': postSessionAiReciteActive,
+        'self-check-modal-overlay--ai-recite': true,
       }"
       :style="postSessionAiReciteActive ? { zIndex: 20000 } : null"
       @click.self="closeSelfCheckModal"
     >
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full">
-      <!-- FORCE: dedicated AI Recite surface (no recordings UI) -->
       <div
-        v-if="postSessionAiReciteActive || recitationCheckPanelOpen"
-        class="modal-content mutqin-modal-surface self-check-modal recitation-review-modal self-check-modal--ai-recite-only ai-recite-force-modal"
-        data-ai-recite-ui="v44-force"
+        class="modal-content mutqin-modal-surface self-check-modal recitation-review-modal self-check-modal--ai-recite-only"
+        data-ai-recite-ui="v48"
         role="dialog"
         aria-modal="true"
         aria-labelledby="selfCheckModalTitle"
       >
         <div class="modal-header self-check-modal-header">
           <div class="self-check-modal-head-copy">
-            <div class="ai-recite-force-banner">AI RECITE · no recordings</div>
             <h2 id="selfCheckModalTitle">{{ t('memorisation.reading.aiRecite') }}</h2>
             <p v-if="aiReciteRangeLabel" class="self-check-post-session-hint">{{ aiReciteRangeLabel }}</p>
+            <p v-else-if="recitationCheckTitle" class="self-check-post-session-hint">{{ recitationCheckTitle }}</p>
             <p
-              v-if="aiReciteAttemptCount"
+              v-if="postSessionAiReciteActive && aiReciteAttemptCount"
               class="self-check-post-session-attempts"
             >
               {{ t('memorisation.aiRecitePlan.attemptProgress', {
@@ -2607,10 +2647,17 @@
                 max: 3,
               }) }}
             </p>
+            <p
+              v-else-if="postSessionAiReciteActive"
+              class="self-check-post-session-hint self-check-post-session-hint--secondary"
+            >
+              {{ t('memorisation.aiRecitePlan.startHint') }}
+            </p>
           </div>
           <div class="self-check-modal-header-actions">
             <button
-              class="self-check-library-shortcut-btn self-check-back-to-session-btn"
+              v-if="postSessionAiReciteActive"
+              class="self-check-back-to-session-btn"
               type="button"
               @click="closeSelfCheckModal"
             >
@@ -2623,118 +2670,7 @@
           </div>
         </div>
 
-        <div class="modal-body self-check-modal-body">
-          <section class="self-check-modal-stage" style="border:none;box-shadow:none;">
-            <div
-              class="self-check-modal-ayah-shell ai-recite-force-ayah"
-              dir="rtl"
-              lang="ar"
-              style="direction:rtl;text-align:right;"
-            >
-              <div
-                class="self-check-modal-ayah"
-                dir="rtl"
-                lang="ar"
-                style="direction:rtl;text-align:right;"
-                :style="getSelfCheckAyahDisplayStyle()"
-                :class="{
-                  'tajweed-enabled': selfCheckTajweedEnabled,
-                  'self-check-session-ayat': recitationCheckScope === 'session' && recitationCheckPendingTargets.length > 1,
-                  'recitation-word-review-active': selfCheckModalVerse && shouldShowRecitationReviewHighlights(selfCheckModalVerse.key)
-                }"
-                v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"
-              ></div>
-            </div>
-
-            <div v-if="recitationCheckRecording" class="recitation-check-status" style="justify-content:center;margin-top:1rem;">
-              <i class="bi bi-stars" aria-hidden="true"></i>
-              <span>{{ getAiRecitationLiveGuidance(recitationLiveWords) }}</span>
-            </div>
-            <div
-              v-if="recitationCheckRecording"
-              class="recitation-word-stream recitation-live-word-stream"
-              dir="rtl"
-              lang="ar"
-              style="direction:rtl;justify-content:flex-start;margin-top:0.75rem;"
-            >
-              <span
-                v-for="word in getVisibleRecitationLiveWords()"
-                :key="word.key"
-                class="recitation-word-chip word-live"
-                :class="`word-${word.visualStatus || word.status || 'notAttempted'}`"
-              >{{ word.text }}</span>
-            </div>
-
-            <div style="display:flex;justify-content:center;gap:0.75rem;margin-top:1.1rem;flex-wrap:wrap;">
-              <button
-                v-if="!recitationCheckRecording && !recitationCheckPreparing"
-                class="ai-recite-force-start"
-                type="button"
-                :disabled="!supportsSelfCheckRecording()"
-                @click.stop="toggleRecitationCheckForCurrentModal"
-              >
-                <i class="bi bi-stars" aria-hidden="true"></i>
-                <span>{{ t('memorisation.aiRecitePlan.startReciting') }}</span>
-              </button>
-              <button
-                v-else-if="recitationCheckRecording"
-                class="ai-recite-force-start"
-                type="button"
-                style="background:#8a3d3d !important;"
-                @click.stop="stopRecitationCheckRecording"
-              >
-                <i class="bi bi-stop-circle" aria-hidden="true"></i>
-                <span>{{ t('memorisation.stop_check') }}</span>
-              </button>
-              <button
-                v-else
-                class="ai-recite-force-start"
-                type="button"
-                disabled
-              >
-                <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
-                <span>{{ t('memorisation.aiCheck.checkingRecitation') }}</span>
-              </button>
-            </div>
-            <p v-if="recitationCheckError" class="recitation-check-error" style="text-align:center;margin-top:0.85rem;">
-              {{ recitationCheckError }}
-            </p>
-          </section>
-        </div>
-      </div>
-
-      <div
-        v-else
-        class="modal-content mutqin-modal-surface self-check-modal recitation-review-modal"
-        data-ai-recite-ui="v44"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="selfCheckModalTitle"
-      >
-        <div class="modal-header self-check-modal-header">
-          <div class="self-check-modal-head-copy">
-            <h2 id="selfCheckModalTitle">{{ selfCheckModalTitle }}</h2>
-          </div>
-          <div class="self-check-modal-header-actions">
-            <button class="modal-close-btn" @click="closeSelfCheckModal" :aria-label="t('memorisation.a11y.closeSelfCheck')">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-        </div>
-
         <div ref="selfCheckModalBody" class="modal-body self-check-modal-body">
-          <div
-            v-if="recitationCheckVisible || recitationCheckRecording"
-            class="ai-check-step-guide"
-            role="status"
-            aria-live="polite"
-          >
-            <span class="ai-check-step-badge">{{ t('memorisation.aiCheck.stepLabel', recitationCheckStepGuide) }}</span>
-            <div class="ai-check-step-copy">
-              <strong>{{ recitationCheckStepGuide.title }}</strong>
-              <p>{{ recitationCheckStepGuide.detail }}</p>
-            </div>
-          </div>
           <section class="self-check-modal-stage">
             <header class="self-check-section-head">
               <div>
@@ -2753,41 +2689,52 @@
                 >
                   <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle-fill' : 'bi-stars'" aria-hidden="true"></i>
                 </button>
-                <button class="self-check-toolbar-btn self-check-toolbar-btn-text self-check-ayah-action-tajweed" type="button"
+                <button
+                  class="self-check-toolbar-btn self-check-toolbar-btn-text self-check-ayah-action-tajweed"
+                  type="button"
                   @click.stop="toggleSelfCheckTajweed"
                   :class="{ active: selfCheckTajweedEnabled }"
                   :aria-pressed="selfCheckTajweedEnabled ? 'true' : 'false'"
                   :title="selfCheckTajweedEnabled ? 'Hide Tajweed highlights' : 'Show Tajweed highlights'"
-                  :aria-label="t('memorisation.a11y.toggleTajweedHighlights')">
+                  :aria-label="t('memorisation.a11y.toggleTajweedHighlights')"
+                >
                   <i class="bi bi-highlighter" aria-hidden="true"></i>
                   <span>{{ t('common.tajweed') }}</span>
                 </button>
-                <button class="self-check-toolbar-btn" type="button"
+                <button
+                  class="self-check-toolbar-btn"
+                  type="button"
                   @click.stop="resetDisplayedRecitationAyah"
                   :disabled="recitationCheckRecording || recitationCheckPreparing"
-                  title="Reset displayed ayah review" aria-label="Reset displayed ayah review">
+                  title="Reset displayed ayah review"
+                  aria-label="Reset displayed ayah review"
+                >
                   <i class="bi bi-arrow-counterclockwise"></i>
                   <span>{{ t('common.reset') }}</span>
                 </button>
-                <button class="self-check-toolbar-btn" type="button"
+                <button
+                  class="self-check-toolbar-btn"
+                  type="button"
                   @click.stop="toggleSelfCheckAyahPlayback(selfCheckModalVerse)"
                   :title="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'Pause ayah' : 'Play ayah once'"
-                  :aria-label="t('memorisation.a11y.playAyahOnce')">
-                  <i class="bi"
-                    :class="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+                  :aria-label="t('memorisation.a11y.playAyahOnce')"
+                >
+                  <i
+                    class="bi"
+                    :class="activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'bi-pause-fill' : 'bi-play-fill'"
+                  ></i>
                   <span>{{ activeSelfCheckAyahPlaybackKey === selfCheckModalVerse.key ? 'Pause' : 'Play' }}</span>
                 </button>
               </div>
             </header>
 
-            <div class="self-check-modal-ayah-shell"
+            <div
+              class="self-check-modal-ayah-shell ai-recite-ayah-shell"
               dir="rtl"
               lang="ar"
-              :class="{ 'is-blurred': selfCheckBlurEnabled && !selfCheckPeekActive && !recitationCheckVisible, 'is-peekable': selfCheckBlurEnabled && !recitationCheckVisible }"
-              @mousedown="startSelfCheckPeek" @mouseup="stopSelfCheckPeek" @mouseleave="stopSelfCheckPeek"
-              @touchstart.prevent="startSelfCheckPeek" @touchend="stopSelfCheckPeek" @touchcancel="stopSelfCheckPeek">
+            >
               <div
-                class="self-check-modal-ayah"
+                class="self-check-modal-ayah ai-recite-ayah"
                 dir="rtl"
                 lang="ar"
                 :style="getSelfCheckAyahDisplayStyle()"
@@ -2798,6 +2745,26 @@
                 }"
                 v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"
               ></div>
+            </div>
+
+            <div
+              v-if="recitationCheckRecording"
+              class="self-check-mobile-recording-card d-md-none"
+              role="status"
+              aria-live="polite"
+            >
+              <span class="self-check-mobile-recording-icon" aria-hidden="true">
+                <i class="bi bi-stars"></i>
+              </span>
+              <div class="self-check-mobile-recording-copy">
+                <span class="self-check-kicker">{{ t('memorisation.reading.aiRecite') }}</span>
+                <strong>{{ t('memorisation.selfCheckRecorder.aiListening') }}</strong>
+                <p>{{ getAiRecitationLiveGuidance(recitationLiveWords) }}</p>
+              </div>
+              <button class="btn-primary self-check-action-btn" type="button" @click.stop="stopRecitationCheckRecording">
+                <i class="bi bi-stop-circle" aria-hidden="true"></i>
+                <span>{{ t('memorisation.stop_check') }}</span>
+              </button>
             </div>
 
             <div v-if="showAiReciteStartCta" class="ai-recite-start-row">
@@ -2812,62 +2779,49 @@
               </button>
             </div>
 
-            <div v-if="recitationCheckRecording" class="self-check-mobile-recording-card d-md-none" role="status" aria-live="polite">
-              <span class="self-check-mobile-recording-icon" aria-hidden="true">
-                <i class="bi bi-stars"></i>
-              </span>
-              <div class="self-check-mobile-recording-copy">
-                <span class="self-check-kicker">{{ t('memorisation.reading.aiRecite') }}</span>
-                <strong>{{ t('memorisation.selfCheckRecorder.aiListening') }}</strong>
-                <p>{{ getAiRecitationLiveGuidance(recitationLiveWords) }}</p>
-              </div>
-              <button class="btn-primary self-check-action-btn" type="button" @click.stop="stopRecitationCheckRecording">
-                <i class="bi bi-stop-circle" aria-hidden="true"></i>
-                <span>{{ t('memorisation.stop_check') }}</span>
-              </button>
+            <div
+              v-if="recitationStartCueActive && recitationCheckRecording"
+              class="recitation-start-cue"
+              role="status"
+              aria-live="polite"
+            >
+              <i class="bi bi-stars" aria-hidden="true"></i>
+              <span>{{ t('memorisation.start_reciting_prompt') }}</span>
             </div>
           </section>
 
-          <section v-if="selfCheckReviewVisible" ref="selfCheckReviewSection" class="self-check-modal-recorder-grid self-check-assessment-section">
-            <article class="self-check-recorder-card self-check-assessment-card"
-              :class="{ reviewing: !!recitationCheckResult }">
-              <div v-if="!supportsSelfCheckRecording()" class="self-check-status self-check-status-warning">
-                <i class="bi bi-mic-mute"></i>
-                <span>{{ t('memorisation.aiCheck.recordingUnsupported') }}</span>
-              </div>
-
-              <section v-if="recitationCheckVisible" class="recitation-check-panel recitation-check-panel-inline"
-                aria-live="polite">
-                <div class="recitation-check-head">
-                  <div class="recitation-check-head-actions">
-                    <button v-if="recitationCheckResult && !recitationCheckRecording && !recitationCheckPreparing"
-                      class="recitation-result-close" type="button" @click="dismissRecitationCheckResult"
-                      aria-label="Close Recite Check results">
-                      <i class="bi bi-x-lg"></i>
-                    </button>
-                    <button v-if="recitationCheckResult && !recitationCheckRecording && !recitationCheckPreparing"
-                      class="recitation-result-reset" type="button" @click="resetDisplayedRecitationAyah"
-                      title="Reset displayed ayah review" aria-label="Reset displayed ayah review">
-                      <i class="bi bi-arrow-counterclockwise"></i>
-                    </button>
-                  </div>
-                </div>
+          <section
+            v-if="selfCheckReviewVisible"
+            ref="selfCheckReviewSection"
+            class="self-check-modal-recorder-grid self-check-assessment-section"
+          >
+            <article class="self-check-recorder-card self-check-assessment-card" :class="{ reviewing: !!recitationCheckResult }">
+              <section
+                v-if="recitationCheckVisible"
+                class="recitation-check-panel recitation-check-panel-inline"
+                aria-live="polite"
+              >
                 <div v-if="recitationCheckRecording" class="recitation-check-status">
                   <i class="bi bi-stars" aria-hidden="true"></i>
                   <span>{{ getAiRecitationLiveGuidance(recitationLiveWords) }}</span>
                 </div>
-                <div v-if="recitationCheckRecording" class="recitation-live-review recitation-live-review-compact"
-                  aria-label="Live recitation word check">
+                <div
+                  v-if="recitationCheckRecording"
+                  class="recitation-live-review recitation-live-review-compact"
+                  aria-label="Live recitation word check"
+                >
                   <div class="recitation-live-head">
                     <span>{{ recitationLiveSummary }}</span>
-                    <strong>{{ recitationCheckRecording ? 'Live' : 'Ready' }}</strong>
+                    <strong>Live</strong>
                   </div>
                   <div class="recitation-word-stream recitation-live-word-stream" dir="rtl" lang="ar">
-                    <span v-for="word in getVisibleRecitationLiveWords()" :key="word.key"
-                      class="recitation-word-chip word-live" :class="`word-${word.visualStatus || word.status || 'notAttempted'}`"
-                      data-live-kind="recitation" :data-live-word-index="word.index" :title="word.note">
-                      {{ word.text }}
-                    </span>
+                    <span
+                      v-for="word in getVisibleRecitationLiveWords()"
+                      :key="word.key"
+                      class="recitation-word-chip word-live"
+                      :class="`word-${word.visualStatus || word.status || 'notAttempted'}`"
+                      :title="word.note"
+                    >{{ word.text }}</span>
                   </div>
                 </div>
                 <div v-if="recitationCheckRecording" class="recitation-check-actions">
@@ -2880,23 +2834,19 @@
                   <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
                   <span>{{ t('memorisation.aiCheck.checkingRecitation') }}</span>
                 </div>
-                <div v-if="recitationCheckError" class="recitation-check-error d-none d-md-flex">
-                  {{ recitationCheckError }}
-                </div>
-                <div v-if="recitationCheckError" class="recitation-check-error recitation-check-error-card d-md-none" role="alert">
-                  <span class="recitation-check-error-icon" aria-hidden="true">
-                    <i class="bi bi-exclamation-triangle"></i>
-                  </span>
-                  <div class="recitation-check-error-copy">
-                    <strong>{{ t('memorisation.aiCheck.recitationCheckFailed') }}</strong>
-                    <span>{{ recitationCheckError }}</span>
-                  </div>
+                <div v-if="recitationCheckError" class="recitation-check-error" role="alert">
+                  <strong>{{ t('memorisation.aiCheck.recitationCheckFailed') }}</strong>
+                  <span>{{ recitationCheckError }}</span>
                   <button class="btn-secondary self-check-action-btn" type="button" @click="toggleRecitationCheckForCurrentModal">
                     <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
                     <span>{{ t('memorisation.aiCheck.tryAgain') }}</span>
                   </button>
                 </div>
-                <div v-if="recitationCheckResult && !postSessionAiReciteActive" class="recitation-check-body recitation-check-results recitation-premium-review transition-all duration-300">
+
+                <div
+                  v-if="recitationCheckResult && !postSessionAiReciteActive"
+                  class="recitation-check-body recitation-check-results recitation-premium-review"
+                >
                   <header class="recitation-premium-hero" :data-outcome="recitationPremiumSummary.outcomeTone">
                     <div class="recitation-premium-hero-copy">
                       <span class="recitation-premium-kicker">{{ recitationPremiumSummary.outcomeLabel }}</span>
@@ -2908,7 +2858,6 @@
                     <div
                       v-if="recitationPremiumSummary.accuracy != null"
                       class="recitation-premium-score"
-                      :aria-label="t('memorisation.aiCheck.matchPercentAria', { percent: recitationPremiumSummary.accuracy })"
                     >
                       <span class="recitation-premium-score-value">{{ recitationPremiumSummary.accuracy }}</span>
                       <span class="recitation-premium-score-unit">%</span>
@@ -2916,96 +2865,18 @@
                     </div>
                   </header>
 
-                  <div
-                    v-if="recitationPremiumSummary.segments.length"
-                    class="recitation-premium-meter"
-                    role="img"
-                    :aria-label="t('memorisation.aiCheck.colourMeterAria')"
+                  <section
+                    class="recitation-premium-ayah-block"
+                    v-if="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
                   >
-                    <div class="recitation-premium-meter-track" aria-hidden="true">
-                      <span
-                        v-for="segment in recitationPremiumSummary.segments"
-                        :key="`meter-${segment.key}`"
-                        class="recitation-premium-meter-segment"
-                        :class="segment.tone"
-                        :style="{ flexGrow: segment.count, flexBasis: 0 }"
-                      ></span>
-                    </div>
-                    <ul class="recitation-premium-legend">
-                      <li
-                        v-for="segment in recitationPremiumSummary.segments"
-                        :key="`legend-${segment.key}`"
-                        class="recitation-premium-legend-item"
-                        :class="segment.tone"
-                      >
-                        <span class="recitation-premium-legend-dot" aria-hidden="true"></span>
-                        <span class="recitation-premium-legend-label">{{ segment.label }}</span>
-                        <strong class="recitation-premium-legend-count">{{ segment.count }}</strong>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <section class="recitation-premium-ayah-block" v-if="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)">
                     <div
                       class="recitation-review-ayah shared-result-ayah recitation-premium-ayah"
                       dir="rtl"
+                      lang="ar"
                       v-html="getRecitationReviewArabic(recitationCheckResult, selfCheckModalVerse)"
                       @click="handleRecitationReviewWordClick($event, recitationCheckResult)"
                     ></div>
-                    <div
-                      v-if="recitationPremiumIssueWords.length"
-                      class="recitation-premium-issues"
-                      dir="rtl"
-                    >
-                      <span class="recitation-premium-issues-label">{{ t('memorisation.aiCheck.wordsToRevisit') }}</span>
-                      <div class="recitation-premium-issue-list">
-                        <span
-                          v-for="word in recitationPremiumIssueWords"
-                          :key="`recitation-issue-${word.index}`"
-                          class="recitation-premium-issue-chip"
-                          :class="`is-${word.visualStatus}`"
-                        >{{ word.text }}</span>
-                      </div>
-                    </div>
-                    <p v-else class="recitation-premium-clean">
-                      <i class="bi bi-check2-circle" aria-hidden="true"></i>
-                      <span>{{ getFriendlyNoWordMistakesMessage() }}</span>
-                    </p>
                   </section>
-
-                  <div v-if="recitationCheckResult.audioSrc" class="recitation-premium-audio">
-                    <div class="self-check-audio-player shared-result-audio-player shared-result-audio-player--compact">
-                      <button class="self-check-audio-player-btn" type="button"
-                        @click="toggleReviewResultAudio(recitationCheckResult)"
-                        :disabled="reviewResultAudioState === 'loading_audio' || recitationCheckPreparing || recitationCheckRecording"
-                        :aria-busy="reviewResultAudioState === 'loading_audio' ? 'true' : 'false'"
-                        :aria-label="reviewResultAudioAriaLabel()">
-                        <i class="bi" :class="reviewResultAudioPlaying ? 'bi-pause-fill' : (reviewResultAudioState === 'ended' ? 'bi-arrow-counterclockwise' : 'bi-play-fill')" aria-hidden="true"></i>
-                      </button>
-                      <div class="self-check-audio-player-track">
-                        <div class="self-check-audio-player-waveform">
-                          <input class="self-check-audio-player-seek" type="range" min="0"
-                            :max="reviewResultAudioDuration || 0" step="0.01" :value="reviewResultAudioCurrentTime"
-                            @input="seekReviewResultAudio" :aria-label="getUnifiedResultSectionLabel('recording')" />
-                        </div>
-                        <div class="self-check-audio-player-times">
-                          <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioCurrentTime) }}</span>
-                          <span>{{ formatSelfCheckDraftAudioTime(reviewResultAudioDuration || recitationCheckResult.durationSeconds) }}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <p v-if="reviewResultAudioError" class="shared-result-recording-empty" role="status" aria-live="polite">
-                      <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
-                      <span>{{ reviewResultAudioError }}</span>
-                    </p>
-                  </div>
-
-                  <div class="recitation-check-footnotes recitation-premium-footnotes">
-                    <div class="self-check-status self-check-status-warning ai-recitation-disclaimer recitation-check-footnote">
-                      <i class="bi bi-info-circle"></i>
-                      <span>{{ t('memorisation.ai_recitation_feedback_is_a_guide_verify_important') }}</span>
-                    </div>
-                  </div>
 
                   <div class="recitation-premium-actions">
                     <button class="btn-secondary self-check-action-btn" type="button" @click="resetDisplayedRecitationAyah">
@@ -3018,9 +2889,7 @@
                   </div>
                 </div>
               </section>
-
             </article>
-
           </section>
         </div>
       </div>
@@ -3028,7 +2897,7 @@
     </div>
     </Teleport>
 
-    <div v-if="showRecordingsLibrary" class="modal-overlay mutqin-modal-overlay recordings-library-overlay"
+    <div v-if="false && showRecordingsLibrary" class="modal-overlay mutqin-modal-overlay recordings-library-overlay"
       @click.self="closeRecordingsLibrary">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full">
       <div class="modal-content mutqin-modal-surface recordings-library-modal" role="dialog" aria-modal="true"

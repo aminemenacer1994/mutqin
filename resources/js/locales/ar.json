@@ -1956,7 +1956,7 @@
       "recitationCheckFailed": "The recitation check could not be completed.",
       "checkingRecitation": "جارٍ التحقق من تلاوتك…",
       "speechRecognitionFailed": "Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted.",
-      "stepListen": "مراجعة الجلسة",
+      "stepListen": "جاري الاستماع",
       "tryAgain": "حاول مرة أخرى",
       "continueToPlan": "المتابعة إلى الخطة",
       "matchLabel": "التطابق",

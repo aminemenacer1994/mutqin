@@ -532,7 +532,6 @@ export default {
       showTools: false,
       readingViewMode: 'stacked',
       mushafPageIndex: 0,
-      mushafBackground: 'warm',
       mushafBorder: 'classic',
       hoveredMushafVerseKey: '',
       madaniPageNumbers: [],
@@ -542,13 +541,6 @@ export default {
       madaniPagesError: '',
       madaniLoadRequestId: 0,
       madaniFontsReady: {},
-      mushafBackgroundOptions: [
-        { value: 'warm', label: 'Warm' },
-        { value: 'paper', label: 'Paper' },
-        { value: 'contrast', label: 'High contrast' },
-        { value: 'mist', label: 'Mist' },
-        { value: 'night', label: 'Night' }
-      ],
       mushafBorderOptions: [
         { value: 'classic', label: 'Classic' },
         { value: 'fine', label: 'Fine' },
@@ -4322,20 +4314,14 @@ export default {
         || !!this.recitationCheckResult
     },
     selfCheckReviewVisible() {
-      // AI Recite: only mount the lower panel while listening / reviewing — never as an idle “recording” card.
+      // Show live/results panel for AI Recite; keep Start CTA in the stage when idle.
       if (this.postSessionAiReciteActive || this.recitationCheckPanelOpen) {
         return !!this.recitationCheckRecording
           || (this.recitationCheckPreparing && !!this.recitationCheckStartedAt)
           || !!this.recitationCheckResult
           || !!this.recitationCheckError
       }
-      if (this.recitationCheckRecording) return false
-      return (this.recitationCheckPreparing && !!this.recitationCheckStartedAt)
-        || !!this.recitationCheckResult
-        || !!this.recitationCheckError
-        || this.selfCheckPreparing
-        || !!this.selfCheckActiveDraft
-        || !!this.selfCheckError
+      return false
     },
     showSelfCheckLibraryShortcut() {
       // Recordings library is permanently removed from AI Recite / self-check.
@@ -5662,6 +5648,10 @@ export default {
       return fonts[this.quranFont] || fonts.uthmanic
     },
 
+    useMadaniQcfGlyphs() {
+      return this.readingViewMode === 'mushaf' && this.quranFont === 'uthmanic'
+    },
+
     collapsedPlayerTitle() {
       const verse = this.verses.find(v => v.key === this.activeKey)
       if (!verse) return this.currentChapter?.name_simple || this.t('memorisation.sessionType.nowPlaying')
@@ -5870,6 +5860,8 @@ export default {
           lines: layout?.lines || [],
           fontFamily: layout?.fontFamily || `p${pageNumber}-v2`,
           verseKeys: layout?.verseKeys || [...sessionKeys],
+          juzNumber: layout?.juzNumber || null,
+          primaryChapterId: layout?.primaryChapterId || null,
           verses,
           startNumber: verses[0]?.number || layoutVerses[0]?.number || null,
           endNumber: verses[verses.length - 1]?.number || layoutVerses[layoutVerses.length - 1]?.number || null,
@@ -5901,12 +5893,17 @@ export default {
     },
 
     mushafSurahTitle() {
-      const chapterId = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
+      const pageChapterId = Number(this.currentMushafPage?.primaryChapterId || 0)
+      const chapterId = pageChapterId || Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
       const fallbackTitles = {
         1: 'سُورَةُ الْفَاتِحَةِ',
+        2: 'سُورَةُ البَقَرَةِ',
         112: 'سُورَةُ الْإِخْلَاصِ',
         113: 'سُورَةُ الْفَلَقِ',
         114: 'سُورَةُ النَّاسِ'
+      }
+      if (pageChapterId && pageChapterId !== Number(this.currentChapter?.id || 0)) {
+        return fallbackTitles[pageChapterId] || `سُورَةُ ${pageChapterId}`
       }
       return this.currentChapter?.name_arabic || fallbackTitles[chapterId] || `سُورَةُ ${this.currentChapter?.name_simple || this.activeChapterName || ''}`
     },
@@ -6154,8 +6151,9 @@ export default {
       const hasStarted = this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback
       const effectiveKey = this.effectiveActiveVerseKey
       const fontFamily = page.fontFamily || `p${page.pageNumber}-v2`
-      // Only treat as ready after a successful FontFace.load — never document.fonts.check().
-      const fontReady = !!this.madaniFontsReady?.[page.pageNumber]
+      const useGlyphs = this.useMadaniQcfGlyphs
+      const fontReady = useGlyphs
+        && !!this.madaniFontsReady?.[page.pageNumber]
         && isQcfFontLoaded(page.pageNumber, { tajweed: !!this.tajweedEnabled })
 
       return lines.map(line => {
@@ -6164,14 +6162,14 @@ export default {
           const inSession = isVerseInteractiveOnPage(verseKey, sessionKeys)
           const hasActiveReview = this.shouldShowRecitationReviewHighlights(verseKey)
           const isActive = inSession && ((hasStarted && effectiveKey === verseKey) || hasActiveReview)
-          // NEVER paint code_v2 without the page font — Presentation Forms look like garbage ligatures.
-          const html = fontReady
+          const useGlyph = useGlyphs && fontReady && !!word.codeV2
+          const html = useGlyph
             ? (word.codeV2 || word.textQpc || '')
-            : (word.textQpc || '')
+            : (word.textQpc || word.codeV2 || '')
           return {
             ...word,
             html,
-            useGlyph: fontReady && !!word.codeV2,
+            useGlyph,
             inSession,
             isActive,
             isWeak: inSession && this.isWeakAyah(verseKey),
@@ -6189,6 +6187,7 @@ export default {
           key: `madani-${page.pageNumber}-line-${line.lineNumber}`,
           fontFamily,
           fontReady,
+          useGlyphs,
           words
         }
       })
@@ -6623,13 +6622,12 @@ export default {
     },
     theme(newVal) {
       this.persistUiState()
-      if (this.readingViewMode === 'mushaf') this.applyMushafThemeDefault(newVal)
+      this.syncMushafColorsToAppTheme(newVal)
     },
     readingViewMode(newVal) {
       if (newVal === 'mushaf') {
-        this.applyMushafThemeDefault(this.theme)
+        this.applyMushafThemeDefault(this.theme, { force: !this.mushafBackgroundTouched })
         this.showWordByWord = false
-        this.quranFont = 'uthmanic'
         this.ensureMadaniPagesLoaded().then(() => this.syncMushafPageToActiveVerse())
       }
       this.persistUiState()
@@ -13919,32 +13917,9 @@ export default {
       return Math.max(280, Math.min(420, verseFont + 120))
     },
     openSelfCheckModal(verse) {
+      // Self-check is AI Recite only — no recordings / manual assessment UI.
       if (!verse?.key) return
-      
-      if (this.isSelfCheckRecording && this.selfCheckVerseKey && this.selfCheckVerseKey !== verse.key) {
-        this.showBanner(this.t('toasts.stopTheCurrentSelfCheckBefore'), 'info', 2200)
-        return
-      }
-      if (this.selfCheckDraft?.ayahKey && this.selfCheckDraft.ayahKey !== verse.key) {
-        this.showBanner(this.t('toasts.saveOrDiscardTheCurrentSelf'), 'info', 2400)
-        return
-      }
-
-      this.loadRecordingsLibrary()
-      this.showTools = false
-      this.selfCheckVerseRef = this.buildSelfCheckVerseRef(verse)
-      this.selfCheckVerseKey = verse.key
-      this.selfCheckFontSize = this.getSelfCheckInitialFontSize(verse)
-      this.selfCheckTajweedEnabled = !!this.tajweedEnabled
-      this.showSelfCheckModal = true
-      this.selfCheckError = ''
-      this.selfCheckLastSavedAyahKey = ''
-      this.pendingRecordingDeleteId = ''
-      this.selfCheckPeekActive = false
-      this.selfCheckModeChoiceVisible = false
-      this.selfCheckSavedAttemptsVisible = false
-      this.recitationCheckPanelOpen = false
-      this.syncBodyScrollLock(true)
+      this.openAiRecitationCheckForVerse(verse)
     },
     closeSelfCheckModal() {
       if (this.isSelfCheckRecording) {
@@ -14657,16 +14632,31 @@ export default {
     },
     openAiRecitationCheckForVerse(verse) {
       if (!verse?.key) return
+      if (this.recitationCheckRecording || this.recitationCheckPreparing) {
+        this.showBanner(this.t('toasts.stopTheCurrentSelfCheckBefore'), 'info', 2200)
+        return
+      }
+      this.showTools = false
       this.recitationCheckScope = 'ayah'
-      this.openSelfCheckModal(verse)
-      const target = this.buildSelfCheckVerseRef(verse)
-      this.recitationCheckPendingTargets = target ? [target] : []
+      this.selfCheckVerseRef = this.buildSelfCheckVerseRef(verse)
+      this.selfCheckVerseKey = verse.key
+      this.selfCheckFontSize = this.getSelfCheckInitialFontSize(verse)
+      this.selfCheckTajweedEnabled = !!this.tajweedEnabled
+      this.selfCheckError = ''
+      this.selfCheckLastSavedAyahKey = ''
+      this.selfCheckPeekActive = false
+      this.selfCheckModeChoiceVisible = false
+      this.selfCheckSavedAttemptsVisible = false
       this.selfCheckBlurEnabled = false
+      const target = this.selfCheckVerseRef
+      this.recitationCheckPendingTargets = target ? [target] : []
       this.recitationCheckPanelOpen = true
       this.recitationCheckError = ''
       this.recitationCheckResult = null
       this.syncSessionEvaluationMaps('recitation', this.recitationCheckPendingTargets, [], false)
       this.seedRecitationLiveWords(this.recitationCheckPendingTargets)
+      this.showSelfCheckModal = true
+      this.syncBodyScrollLock(true)
     },
     openAiRecitationCheckForSession() {
       if (this.recitationCheckRecording || this.recitationCheckPreparing) {
@@ -20783,8 +20773,6 @@ export default {
       if (nextMode === 'mushaf') {
         this.wordByWordAudioEnabled = true
         this.showWordByWord = false
-        this.quranFont = 'uthmanic'
-        this.applyMushafThemeDefault(this.theme)
         this.ensureMadaniPagesLoaded({ force: false }).then(() => {
           this.syncMushafPageToActiveVerse()
         })
@@ -20798,14 +20786,18 @@ export default {
       this.closeTopCardSubmenus()
       this.persistUiState()
     },
-    getDefaultMushafBackgroundForTheme(theme = this.theme) {
-      return theme === 'dark' ? 'night' : 'contrast'
+    getDefaultMushafBackgroundForTheme() {
+      return 'contrast'
     },
-    applyMushafThemeDefault(theme = this.theme) {
-      const nextBackground = this.getDefaultMushafBackgroundForTheme(theme)
-      if (this.mushafBackground !== nextBackground) {
-        this.mushafBackground = nextBackground
-      }
+    applyMushafThemeDefault() {
+      // Mushaf uses a fixed white / black page; no theme switching.
+    },
+    resolveSystemPreferredTheme() {
+      if (typeof window === 'undefined' || !window.matchMedia) return this.theme
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    },
+    syncMushafColorsToAppTheme() {
+      // Fixed white / black mushaf palette — ignore app theme color sync.
     },
     syncMushafPageToActiveVerse() {
       if (!this.mushafPages.length) {
@@ -21060,11 +21052,6 @@ export default {
       if (!silent) {
         this.showBanner(this.t('toasts.fontSize', { defaultFontSize: this.defaultFontSize }), 'info', 600)
       }
-    },
-    setMushafBackground(value) {
-      if (!this.mushafBackgroundOptions.some(option => option.value === value)) return
-      this.mushafBackground = value
-      this.persistUiState()
     },
     setMushafBorder(value) {
       if (!this.mushafBorderOptions.some(option => option.value === value)) return
@@ -23350,6 +23337,9 @@ export default {
     toggleFontDropdown() {
       this.fontDropdownOpen = !this.fontDropdownOpen
       if (this.fontDropdownOpen) {
+        this.bgOpen = false
+        this.fontOpen = false
+        this.borderOpen = false
         this.topCardMenuOpen = false
         this.closeTopCardSubmenus()
         this.openVerseActionKey = ''
@@ -23401,18 +23391,19 @@ export default {
       this.closeTopCardSubmenus()
     },
     selectFont(fontValue) {
-      if (this.readingViewMode === 'mushaf' && fontValue !== 'uthmanic') {
-        this.fontOpen = false
-        this.fontDropdownOpen = false
-        this.showBanner('Madani Mushaf uses the official QCF page font', 'info', 1800)
-        return
-      }
+      const allowed = (this.quranFontOptions || []).some(font => font.value === fontValue)
+      if (!allowed) return
       this.quranFont = fontValue
       this.fontDropdownOpen = false
       this.fontOpen = false
       this.topCardMenuOpen = false
       this.closeTopCardSubmenus()
       this.syncSettingsDraft()
+      this.persistUiState()
+      if (this.readingViewMode === 'mushaf' && fontValue === 'uthmanic') {
+        const page = this.currentMadaniPageNumber
+        if (page) this.ensureMadaniFontForPage(page)
+      }
     },
     getCurrentFontLabel() {
       const font = this.quranFontOptions.find(f => f.value === this.quranFont)
@@ -26285,7 +26276,6 @@ export default {
           this.persistentAiRecitationReviews = {}
           this.hiddenRevealModeEnabled = false
           this.aiRecallModeEnabled = !!state.aiRecallModeEnabled
-          this.mushafBackground = ['warm', 'paper', 'contrast', 'mist', 'night'].includes(state.mushafBackground) ? state.mushafBackground : this.mushafBackground
           this.mushafBorder = ['classic', 'fine', 'layered', 'emerald', 'ink'].includes(state.mushafBorder) ? state.mushafBorder : this.mushafBorder
           this.focusModeEnabled = !!state.focusModeEnabled
           this.blurModeEnabled = !!state.blurModeEnabled
@@ -26353,7 +26343,7 @@ export default {
       this.advanced = this.loadModeState('advanced')
       this.planner = this.loadModeState('planner')
       this.syncGlobalTheme(getSavedTheme())
-      if (this.readingViewMode === 'mushaf') this.applyMushafThemeDefault(this.theme)
+      if (this.readingViewMode === 'mushaf') this.applyMushafThemeDefault(this.theme, { force: !this.mushafBackgroundTouched })
     },
 
     persistUiState() {
@@ -26392,6 +26382,7 @@ export default {
 	          readingViewMode: this.readingViewMode,
         mushafPageIndex: this.mushafPageIndex,
         mushafBackground: this.mushafBackground,
+        mushafBackgroundTouched: this.mushafBackgroundTouched,
         mushafBorder: this.mushafBorder,
           focusModeEnabled: this.focusModeEnabled,
           blurModeEnabled: this.blurModeEnabled,

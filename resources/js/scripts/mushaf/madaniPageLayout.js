@@ -135,16 +135,26 @@ export function buildMadaniPageLayout(pageNumber, verses = [], options = {}) {
     ayahLines.flatMap(line => line.words.map(word => word.verseKey).filter(Boolean))
   )]
 
+  const firstVerse = verses[0] || null
+  const firstKey = String(firstVerse?.verse_key || firstVerse?.key || verseKeys[0] || '')
+  const primaryChapterId = Number(firstKey.split(':')[0]) || surahStart?.chapterId || null
+  const juzNumber = Number(firstVerse?.juz_number)
+    || Number(verses.find(verse => Number(verse?.juz_number) > 0)?.juz_number)
+    || null
+
   return {
     pageNumber: page,
     fontFamily: qcfFontFamily(page, { tajweed }),
     tajweed,
     lines: visibleLines,
     verseKeys,
+    primaryChapterId,
+    juzNumber: Number.isFinite(juzNumber) && juzNumber > 0 ? juzNumber : null,
     verses: verses.map(verse => ({
       key: String(verse.verse_key || verse.key || ''),
       number: Number(verse.verse_number || String(verse.verse_key || '').split(':')[1]) || 0,
-      pageNumber: Number(verse.page_number) || page
+      pageNumber: Number(verse.page_number) || page,
+      juzNumber: Number(verse.juz_number) || null
     }))
   }
 }

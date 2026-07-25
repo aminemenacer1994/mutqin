@@ -553,14 +553,21 @@
     align-items: center;
   }
 
-  .mushaf-viewport {
+  .mushaf-stage .live-practice-guidance--mushaf {
     grid-column: 1 / -1;
     grid-row: 1;
+    width: 100%;
+    margin-bottom: 0.4rem;
+  }
+
+  .mushaf-viewport {
+    grid-column: 1 / -1;
+    grid-row: 2;
     overflow: visible !important;
   }
 
   .mushaf-stage-nav {
-    grid-row: 1;
+    grid-row: 2;
     z-index: 2;
     inline-size: 44px !important;
     block-size: 44px !important;

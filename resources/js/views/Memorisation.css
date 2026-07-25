@@ -2273,9 +2273,6 @@
 
 /* Make key-word marks unmistakable on ayah cards */
 .verse-card .verse-arabic {
-  text-align: center;
-  min-height: 3.25rem;
-  display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
@@ -2431,20 +2428,76 @@ body > .self-check-modal-overlay--above-post-session,
   color: var(--accent);
 }
 
-.self-check-modal-ayah-shell {
+.self-check-modal-ayah-shell,
+.self-check-modal-ayah-shell.ai-recite-ayah-shell {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
+  display: block;
+  width: 100%;
   direction: rtl;
-  padding: 22px 22px 20px;
-  min-height: 310px;
-  border-radius: 18px;
-  background: radial-gradient(circle at top, rgba(212, 176, 133, 0.2), transparent 55%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 240, 232, 0.96));
-  border: 0;
+  text-align: right;
+  padding: 1rem 1.15rem;
+  min-height: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(154, 103, 56, 0.12);
   overflow: hidden;
   transition: transform 0.22s ease, opacity 0.22s ease;
+  place-items: unset;
+  align-items: unset;
+  justify-content: unset;
+}
+
+.self-check-modal-ayah,
+.self-check-modal-ayah.ai-recite-ayah {
+  display: block;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  direction: rtl !important;
+  unicode-bidi: isolate;
+  text-align: right !important;
+  text-wrap: unset;
+  line-height: 2.15;
+  color: var(--text);
+  font-weight: 500;
+  transition: filter 0.22s ease, transform 0.22s ease, opacity 0.22s ease;
+  justify-content: unset;
+  align-items: unset;
+  align-content: unset;
+}
+
+.ai-recite-only-body {
+  padding-top: 0.75rem;
+}
+
+.ai-recite-only-stage {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.ai-recite-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.1rem;
+}
+
+.ai-recite-live-status {
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.ai-recite-live-words {
+  direction: rtl !important;
+  justify-content: flex-start !important;
+  margin-top: 0.75rem;
+}
+
+.self-check-modal--ai-recite-only .self-check-modal-ayah .session-evaluation-ayah,
+.self-check-modal--ai-recite-only .self-check-modal-ayah .wbw-word,
+.self-check-modal--ai-recite-only .self-check-modal-ayah word {
+  direction: rtl;
+  unicode-bidi: isolate;
 }
 
 .self-check-modal-ayah-shell.is-peekable {
@@ -2505,7 +2558,9 @@ body > .self-check-modal-overlay--above-post-session,
 }
 
 .self-check-modal-ayah {
-  width: min(100%, 900px);
+  display: block;
+  width: 100%;
+  max-width: none;
   direction: rtl !important;
   unicode-bidi: isolate;
   text-align: right !important;
@@ -2523,6 +2578,7 @@ body > .self-check-modal-overlay--above-post-session,
 
 .self-check-modal-ayah-shell {
   direction: rtl;
+  text-align: right;
 }
 
 .self-check-modal-ayah .wbw-word,
@@ -12451,6 +12507,7 @@ body.memorisation-page nav.navbar.app-navbar {
   --mushaf-border: rgba(137, 92, 49, 0.48);
   --mushaf-border-soft: rgba(137, 92, 49, 0.13);
   --mushaf-inner-border: rgba(255, 250, 243, 0.72);
+  --mushaf-line-rule: #e4ddd4;
 }
 
 .mushaf-bg-paper {
@@ -12461,6 +12518,7 @@ body.memorisation-page nav.navbar.app-navbar {
   --mushaf-border: rgba(166, 119, 48, 0.46);
   --mushaf-border-soft: rgba(166, 119, 48, 0.12);
   --mushaf-inner-border: rgba(255, 255, 255, 0.76);
+  --mushaf-line-rule: #efe6d4;
 }
 
 .mushaf-bg-contrast {
@@ -12471,6 +12529,7 @@ body.memorisation-page nav.navbar.app-navbar {
   --mushaf-border: rgba(17, 24, 39, 0.34);
   --mushaf-border-soft: rgba(17, 24, 39, 0.09);
   --mushaf-inner-border: rgba(255, 255, 255, 0.86);
+  --mushaf-line-rule: #ececec;
 }
 
 .mushaf-bg-mist {
@@ -12481,6 +12540,7 @@ body.memorisation-page nav.navbar.app-navbar {
   --mushaf-border: rgba(96, 112, 102, 0.38);
   --mushaf-border-soft: rgba(96, 112, 102, 0.12);
   --mushaf-inner-border: rgba(255, 255, 255, 0.78);
+  --mushaf-line-rule: #e2e8e3;
 }
 
 .mushaf-bg-night {
@@ -12491,6 +12551,7 @@ body.memorisation-page nav.navbar.app-navbar {
   --mushaf-border: rgba(211, 168, 96, 0.46);
   --mushaf-border-soft: rgba(211, 168, 96, 0.1);
   --mushaf-inner-border: rgba(248, 250, 252, 0.06);
+  --mushaf-line-rule: rgba(248, 250, 252, 0.12);
 }
 
 .mushaf-border-classic {
@@ -12607,26 +12668,11 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 .mushaf-page--madani {
-  background: #ffffff;
-  color: #000000;
-  --mushaf-bg: #ffffff;
-  --mushaf-text: #000000;
-  --mushaf-line-rule: #ececec;
-  --mushaf-hover: rgba(0, 0, 0, 0.06);
+  background: var(--mushaf-bg, #ffffff);
+  color: var(--mushaf-text, #000000);
   min-height: auto;
   padding: clamp(1.4rem, 3vw, 2.4rem) clamp(1rem, 4vw, 2.8rem) clamp(1.6rem, 3vw, 2.8rem);
-}
-
-.mushaf-page--madani.mushaf-bg-contrast,
-.mushaf-page--madani.mushaf-bg-paper,
-.mushaf-page--madani.mushaf-bg-warm,
-.mushaf-page--madani.mushaf-bg-mist,
-.mushaf-viewport.mushaf-bg-contrast .mushaf-page--madani {
-  --mushaf-bg: #ffffff;
-  --mushaf-text: #000000;
-  --mushaf-line-rule: #ececec;
-  background: #ffffff;
-  color: #000000;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
 }
 
 .madani-page-sheet {
@@ -12640,6 +12686,8 @@ body.memorisation-page nav.navbar.app-navbar {
   text-align: center;
   line-height: 1;
   direction: rtl;
+  color: var(--mushaf-text, #000000);
+  --mushaf-selected-font: 'UthmanicHafs', 'Amiri Quran', 'Amiri', serif;
 }
 
 .madani-line {
@@ -12649,7 +12697,7 @@ body.memorisation-page nav.navbar.app-navbar {
   min-height: calc((var(--verse-font-percent, 120) / 100) * 2.55rem);
   padding: 0.28em 0.1em 0.32em;
   border-bottom: 1px solid var(--mushaf-line-rule, #ececec);
-  color: #000000;
+  color: var(--mushaf-text, #000000);
   white-space: nowrap;
   line-height: 1.55;
 }
@@ -12672,17 +12720,17 @@ body.memorisation-page nav.navbar.app-navbar {
   font-family: surahnames, serif !important;
   font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(2.1rem, 4.2vw, 3.2rem));
   line-height: 1.25;
-  color: #000000;
+  color: var(--mushaf-text, #000000);
   letter-spacing: 0;
   font-weight: 400 !important;
 }
 
 .madani-basmala {
   display: inline-block;
-  font-family: 'UthmanicHafs', 'Amiri Quran', 'Amiri', serif !important;
+  font-family: var(--mushaf-selected-font) !important;
   font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.65rem, 3.2vw, 2.55rem));
   line-height: 1.4;
-  color: #000000;
+  color: var(--mushaf-text, #000000);
   font-weight: 400 !important;
 }
 
@@ -12693,7 +12741,7 @@ body.memorisation-page nav.navbar.app-navbar {
   margin: 0;
   padding: 0;
   background: transparent;
-  color: #000000;
+  color: var(--mushaf-text, #000000);
   font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.75rem, 3.2vw, 2.7rem));
   font-weight: 400 !important;
   line-height: inherit;
@@ -12701,16 +12749,21 @@ body.memorisation-page nav.navbar.app-navbar {
   word-spacing: 0;
   cursor: pointer;
   border-radius: 0.08em;
-  transition: background 140ms ease, opacity 140ms ease, filter 140ms ease;
+  transition: background 140ms ease, opacity 140ms ease, filter 140ms ease, color 140ms ease;
 }
 
 .madani-word--glyph {
   font-family: var(--madani-page-font) !important;
 }
 
-.madani-word--fallback {
-  font-family: 'UthmanicHafs', 'Amiri Quran', 'Amiri', serif !important;
+.madani-word--fallback,
+.madani-word--unicode {
+  font-family: var(--mushaf-selected-font) !important;
   margin-inline: 0.08em;
+}
+
+.madani-page-sheet--unicode .madani-line--ayah {
+  white-space: normal;
 }
 
 .main.focus-mode-active .madani-word:not(.active):not(.is-playing) {
@@ -15641,19 +15694,24 @@ button:active {
 }
 
 .self-check-modal .self-check-modal-ayah-shell {
-  min-height: clamp(250px, 38dvh, 430px);
+  min-height: 0;
   padding: 14px;
   border-radius: 10px;
+  display: block;
+  place-items: unset;
+  align-items: unset;
+  justify-content: unset;
 }
 
 .self-check-modal .self-check-modal-ayah {
-  min-height: clamp(220px, 34dvh, 390px);
-  padding-bottom: 20px;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  min-height: 0;
+  padding: 0.35rem 0;
+  align-items: unset;
+  justify-content: unset;
   border-radius: 10px;
-  font-size: clamp(2rem, 3.6vw, 4.2rem);
+  font-size: clamp(1.75rem, 3.2vw, 3.1rem);
+  text-align: right;
+  direction: rtl;
 }
 
 .self-check-modal .self-check-modal-quick-actions {
@@ -16962,29 +17020,33 @@ button:active {
 }
 
 .self-check-modal .self-check-modal-ayah-shell {
-  min-height: 310px;
+  min-height: 0;
   max-height: 58vh;
   padding: clamp(1rem, 2vw, 1.65rem);
   border-radius: 10px;
   overflow: auto;
-  align-items: center;
+  display: block;
+  align-items: unset;
+  place-items: unset;
+  text-align: right;
+  direction: rtl;
 }
 
 .self-check-modal .self-check-modal-ayah {
-  width: min(100%, 1180px);
+  width: 100%;
+  max-width: none;
   line-height: 2.05;
   font-weight: 430;
-  text-align: center;
-  text-wrap: balance;
-  padding-block: 0.5rem 1rem;
+  text-align: right;
+  direction: rtl;
+  text-wrap: unset;
+  padding-block: 0.35rem 0.75rem;
 }
 
 .self-check-modal .self-check-modal-ayah.recitation-word-review-active {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-content: center;
-  gap: 0.44rem;
+  display: block;
+  text-align: right;
+  direction: rtl;
   line-height: 1.85;
 }
 
@@ -17135,11 +17197,13 @@ button:active {
 
 .memorisation-checker-modal .memorisation-checker-ayah, .self-check-modal .self-check-modal-ayah-shell {
   align-items: flex-start;
-  justify-content: center;
-  min-height: min(52dvh, 520px);
+  justify-content: flex-start;
+  min-height: 0;
   height: auto;
   max-height: none;
   overscroll-behavior: contain;
+  text-align: right;
+  direction: rtl;
 }
 
 .recitation-result-stat strong {
@@ -18628,7 +18692,7 @@ button:active {
 }
 
 .self-check-modal .self-check-modal-ayah-shell {
-  min-height: 340px;
+  min-height: 0;
 }
 
 .self-check-modal .self-check-modal-ayah {
@@ -19459,6 +19523,12 @@ button:active {
 .mushaf-toolbar-theme-swatch.theme-contrast { background: #ffffff; }
 .mushaf-toolbar-theme-swatch.theme-mist { background: #f5f7f3; }
 .mushaf-toolbar-theme-swatch.theme-night { background: #101317; }
+.mushaf-toolbar-theme-swatch.theme-azure,
+.mushaf-toolbar-theme-swatch.theme-gold,
+.mushaf-toolbar-theme-swatch.theme-emerald,
+.mushaf-toolbar-theme-swatch.theme-jewel {
+  /* illuminated swatches defined in Memorisation.mushaf-illumination.css */
+}
 
 .memorisation-checker-modal .memorisation-checker-body, .memorisation-checker-modal.is-session-check .memorisation-checker-body {
   display: grid;
@@ -24939,13 +25009,15 @@ textarea {
   }
 
   .self-check-modal .self-check-modal-ayah-shell {
-    min-height: clamp(220px, 30dvh, 320px);
+    min-height: 0;
   }
 
   .self-check-modal .self-check-modal-ayah {
     min-height: auto;
     padding: 12px;
     font-size: clamp(1.65rem, 7vw, 2.6rem);
+    text-align: right;
+    direction: rtl;
   }
 
   .self-check-review-actions,
@@ -28483,11 +28555,139 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   flex-wrap: wrap;
   gap: 0.65rem 1.15rem;
   max-width: 100%;
+  position: relative;
+  z-index: 40;
+  overflow: visible;
 }
 
 .workspace-shell-font-control {
   position: relative;
   z-index: 1;
+}
+
+.workspace-layout-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0.18rem;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 103, 56, 0.22);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
+}
+
+.workspace-mushaf-theme-dropdown {
+  position: relative;
+  z-index: 30;
+}
+
+.workspace-mushaf-theme-menu {
+  min-width: min(18.5rem, 82vw);
+  max-height: min(70vh, 28rem);
+  overflow-y: auto;
+  padding: 0.35rem;
+  z-index: 40;
+}
+
+.workspace-mushaf-theme-option {
+  align-items: flex-start !important;
+  gap: 0.65rem !important;
+  padding: 0.55rem 0.65rem !important;
+  white-space: normal !important;
+}
+
+.workspace-mushaf-theme-option .mushaf-theme-option-copy {
+  display: grid;
+  gap: 0.12rem;
+  flex: 1;
+  min-width: 0;
+  text-align: start;
+}
+
+.workspace-mushaf-theme-option .mushaf-theme-option-label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.workspace-mushaf-theme-option .mushaf-theme-option-desc {
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.72;
+  line-height: 1.25;
+}
+
+.workspace-mushaf-theme-trigger .mushaf-toolbar-theme-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  flex: 0 0 auto;
+}
+
+.workspace-layout-btn.view-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 1.85rem;
+  padding: 0.28rem 0.72rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #57534e;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.workspace-layout-btn.view-mode-btn:hover {
+  color: #1c1917;
+  background: rgba(154, 103, 56, 0.1);
+  transform: none;
+}
+
+.workspace-layout-btn.view-mode-btn.active {
+  background: #1c1917;
+  color: #fffaf3;
+  box-shadow: 0 6px 14px rgba(28, 25, 23, 0.18);
+}
+
+.workspace-layout-btn.view-mode-btn i {
+  font-size: 0.92rem;
+}
+
+[data-theme="dark"] .workspace-layout-toggle {
+  background: rgba(24, 24, 27, 0.72);
+  border-color: rgba(212, 175, 110, 0.28);
+}
+
+[data-theme="dark"] .workspace-layout-btn.view-mode-btn {
+  color: rgba(244, 234, 220, 0.78);
+}
+
+[data-theme="dark"] .workspace-layout-btn.view-mode-btn:hover {
+  color: #f8f1e6;
+  background: rgba(212, 175, 110, 0.12);
+}
+
+[data-theme="dark"] .workspace-layout-btn.view-mode-btn.active {
+  background: rgba(212, 175, 110, 0.92);
+  color: #1a1208;
+  box-shadow: none;
+}
+
+@media (max-width: 720px) {
+  .workspace-layout-btn.view-mode-btn span {
+    display: none;
+  }
+
+  .workspace-layout-btn.view-mode-btn {
+    min-width: 2.1rem;
+    padding-inline: 0.55rem;
+  }
 }
 
 .workspace-font-dropdown {
@@ -36719,9 +36919,11 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   }
 
   .self-check-modal-ayah-shell {
-    display: grid;
-    place-items: center;
-    min-block-size: clamp(7rem, 18dvh, 9rem) !important;
+    display: block !important;
+    place-items: unset !important;
+    text-align: right !important;
+    direction: rtl !important;
+    min-block-size: 0 !important;
     block-size: auto !important;
     max-block-size: none !important;
     padding: 1rem 0.65rem !important;
@@ -42216,6 +42418,76 @@ body:has(.post-session-simple) {
   border-bottom: none;
 }
 
+.live-practice-guidance {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.live-practice-guidance--mushaf {
+  grid-column: 1 / -1;
+  width: min(100%, 38rem);
+  max-width: 100%;
+  margin: 0 auto 0.45rem;
+  gap: 0;
+  justify-self: center;
+}
+
+.live-practice-guidance--mushaf .live-practice-method,
+.live-practice-guidance--mushaf .live-practice-coach {
+  margin: 0;
+  width: 100%;
+}
+
+.live-practice-guidance--mushaf .live-practice-method {
+  border-radius: 0.75rem 0.75rem 0 0;
+  padding: 0.5rem 0.85rem 0.35rem;
+  background: color-mix(in srgb, #e8f3ec 82%, #ffffff);
+  border: 1px solid color-mix(in srgb, #2e9d62 16%, transparent);
+  border-bottom: none;
+}
+
+.live-practice-guidance--mushaf .live-practice-coach {
+  border-radius: 0 0 0.75rem 0.75rem;
+  padding: 0.45rem 0.85rem 0.55rem;
+  background: color-mix(in srgb, #e8f3ec 82%, #ffffff);
+  border: 1px solid color-mix(in srgb, #2e9d62 16%, transparent);
+  border-top: 1px solid color-mix(in srgb, #2e9d62 10%, transparent);
+  font-size: 0.84rem;
+}
+
+.live-practice-guidance--mushaf .live-practice-method:only-child,
+.live-practice-guidance--mushaf .live-practice-coach:only-child {
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, #2e9d62 16%, transparent);
+}
+
+.live-practice-guidance--mushaf .live-practice-method__label {
+  font-size: 0.9rem;
+}
+
+.live-practice-guidance--mushaf .live-practice-method__hint {
+  font-size: 0.78rem;
+}
+
+.mushaf-stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: clamp(0.25rem, 1vw, 0.55rem);
+  min-width: 0;
+}
+
+.mushaf-stage .live-practice-guidance--mushaf {
+  grid-column: 1 / -1;
+}
+
+.mushaf-stage .mushaf-viewport {
+  min-width: 0;
+  width: 100%;
+}
+
 .live-practice-method__label {
   font-size: 0.92rem;
   font-weight: 600;
@@ -43228,4 +43500,39 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
   background: color-mix(in srgb, #c9a227 16%, transparent);
   box-shadow: inset 0 -2px 0 #a67c1a;
   font-size: 1.05rem;
+}
+
+/* -------------------------------------------------------------------------
+   AI Recite clean layout — keep ayah RTL/right-aligned (beats later overrides)
+   ------------------------------------------------------------------------- */
+.self-check-modal-overlay .self-check-modal-ayah-shell,
+.self-check-modal-overlay .ai-recite-ayah-shell,
+.self-check-modal .self-check-modal-ayah-shell,
+.self-check-modal .ai-recite-ayah-shell {
+  display: block !important;
+  min-height: 0 !important;
+  place-items: unset !important;
+  justify-content: unset !important;
+  align-items: flex-start !important;
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+.self-check-modal-overlay .self-check-modal-ayah,
+.self-check-modal-overlay .ai-recite-ayah,
+.self-check-modal .self-check-modal-ayah,
+.self-check-modal .ai-recite-ayah,
+.self-check-modal .self-check-modal-ayah.recitation-word-review-active {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  direction: rtl !important;
+  unicode-bidi: isolate !important;
+  text-align: right !important;
+  text-wrap: unset !important;
+  justify-content: unset !important;
+  align-items: unset !important;
+  align-content: unset !important;
+  flex-wrap: unset !important;
 }
