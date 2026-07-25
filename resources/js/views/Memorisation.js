@@ -4291,16 +4291,14 @@ export default {
       return !!this.recitationCheckPanelOpen
         || !!this.recitationCheckRecording
         || (this.recitationCheckPreparing && !!this.recitationCheckStartedAt)
-        || !!this.recitationCheckError
         || !!this.recitationCheckResult
     },
     selfCheckReviewVisible() {
-      // Show live/results panel for AI Recite; keep Start CTA in the stage when idle.
+      // Live listening + results only — never pin an error “session” in the modal.
       if (this.postSessionAiReciteActive || this.recitationCheckPanelOpen) {
         return !!this.recitationCheckRecording
           || (this.recitationCheckPreparing && !!this.recitationCheckStartedAt)
           || !!this.recitationCheckResult
-          || !!this.recitationCheckError
       }
       return false
     },
@@ -4311,8 +4309,16 @@ export default {
     showAiReciteStartCta() {
       if (!this.showSelfCheckModal || !this.selfCheckModalVerse) return false
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return false
-      if (this.recitationCheckResult || this.recitationCheckError) return false
+      if (this.recitationCheckResult) return false
       return this.postSessionAiReciteActive || this.recitationCheckPanelOpen
+    },
+    reportRecitationCheckFailure(message = '', options = {}) {
+      const text = String(message || this.t('memorisation.aiCheck.recitationCheckFailed')).trim()
+      // Never mount the sticky mic/error session banner — toast only, keep Start Reciting.
+      this.recitationCheckError = ''
+      this.recitationCheckPreparing = false
+      this.recitationCheckRecording = false
+      if (text) this.showBanner(text, 'error', options.durationMs || 4200)
     },
     recitationCheckTitle() {
       const targets = this.getRecitationCheckTargetVerses()
@@ -10177,14 +10183,6 @@ export default {
       this.postSessionActionsUnlocked = true
       this.pendingPostSessionModalPayload = null
       this.postSessionAutoSaved = false
-      const autoSaveKey = this.buildPostSessionAutoSaveKey(this.postSessionSnapshot)
-      if (!this.onboardingSampleSessionActive && this.postSessionSnapshot.completedAll && autoSaveKey && this.lastAutoSavedPostSessionKey !== autoSaveKey) {
-        const savedSession = this.saveCurrentSessionSilently()
-        if (savedSession) {
-          this.lastAutoSavedPostSessionKey = autoSaveKey
-          this.postSessionAutoSaved = true
-        }
-      }
       this.postSessionEmotionalContext = buildPostSessionEmotionalContext({
         snapshot: this.postSessionSnapshot,
         chapter: this.currentChapter,
@@ -12311,8 +12309,21 @@ export default {
       }
     },
     savePostSession() {
-      this.saveCurrentSessionSilently()
-      this.showBanner(this.postSessionUi.savedToast, 'success', 2500)
+      this.saveCurrentSessionWithName()
+    },
+
+    promptSaveSessionAfterEnd({ wasSample = false } = {}) {
+      if (wasSample || this.onboardingSampleSessionActive) return
+      if (this.sessionExitAutoSave) return
+      if (!this.canSaveCurrentSession()) return
+      if (this.showSaveNameModal || this.showConfirmModal) return
+      this.openConfirmModal({
+        title: this.t('memorisation.confirmModals.saveSession.title'),
+        message: this.t('memorisation.confirmModals.saveSession.message'),
+        confirmLabel: this.t('memorisation.confirmModals.saveSession.confirm'),
+        cancelLabel: this.t('memorisation.confirmModals.saveSession.cancel'),
+        action: 'save-session-after-end'
+      })
     },
     logoutFromPostSession() {
       if (typeof document === 'undefined') return
@@ -17674,13 +17685,13 @@ export default {
     },
     async startRecitationCheckRecording(targetVerse = null) {
       if (!this.supportsSelfCheckRecording()) {
-        this.recitationCheckError = 'Recording is not supported in this browser.'
+        this.reportRecitationCheckFailure('Recording is not supported in this browser.')
         return
       }
       this.selfCheckModeChoiceVisible = false
       const targets = this.getRecitationCheckTargetVerses(targetVerse)
       if (!targets.length) {
-        this.recitationCheckError = this.t('memorisation.aiCheck.chooseAyahFirst')
+        this.reportRecitationCheckFailure(this.t('memorisation.aiCheck.chooseAyahFirst'))
         return
       }
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return
@@ -17693,9 +17704,9 @@ export default {
       this.recitationCheckTargetVerseKey = targets[0]?.key || ''
       this.recitationCheckAutoStopArmed = false
       this.recitationCheckPanelOpen = true
-	      this.selfCheckSavedAttemptsVisible = false
-	      this.seedRecitationLiveWords(targets)
-	      this.resetRecognitionPipelineState('recitation')
+      this.selfCheckSavedAttemptsVisible = false
+      this.seedRecitationLiveWords(targets)
+      this.resetRecognitionPipelineState('recitation')
       this.recitationCheckPreparing = true
       this.stopRecordingsPlayback({ clearSource: true })
       if (this.audioElement && !this.audioElement.paused) {
@@ -17734,9 +17745,7 @@ export default {
           }
         }
         recorder.onerror = () => {
-          this.recitationCheckError = this.t('memorisation.aiCheck.micStoppedUnexpectedly')
-          this.recitationCheckPreparing = false
-          this.recitationCheckRecording = false
+          this.reportRecitationCheckFailure(this.t('memorisation.aiCheck.micStoppedUnexpectedly'))
           this.cleanupRecitationCheckMedia()
         }
         recorder.onstop = async () => {
@@ -17785,14 +17794,11 @@ export default {
             console.error('Failed to process recitation check:', error)
             const serverMessage = error?.response?.data?.message
             const providerUnavailable = error?.response?.status === 422 && /transcription|api key is not configured/i.test(String(serverMessage || ''))
-            this.recitationCheckError = providerUnavailable
+            const failureText = providerUnavailable
               ? this.t('memorisation.aiCheck.speechRecognitionFailed')
               : (serverMessage || error?.message || this.t('memorisation.aiCheck.recitationCheckFailed'))
-            if (serverMessage && !providerUnavailable) this.showBanner(serverMessage, 'error', 3600)
-            if (this.postSessionAiReciteActive) {
-              this.postSessionAiFeedback = this.t('memorisation.postSession.recommendation.aiReciteSkippedHint')
-              await this.releasePostSessionAiReciteSurface({ reason: 'error' })
-            }
+            // Keep AI Recite recommendation open — toast only, never eject the surface.
+            this.reportRecitationCheckFailure(failureText)
           } finally {
             this.recitationCheckPreparing = false
             this.cleanupRecitationCheckMedia()
@@ -17804,14 +17810,14 @@ export default {
         this.recitationCheckStartedAt = Date.now()
         this.recitationCheckRecording = true
         this.recitationCheckPreparing = false
+        // Ensure ayah word nodes exist before the first live colour patches land.
+        await this.$nextTick()
         this.playRecitationStartCue({ inModal: this.showSelfCheckModal || this.showAiMemorisationCheckerModal })
       } catch (error) {
         console.error('Failed to start recitation check:', error)
-        this.recitationCheckPreparing = false
-        this.recitationCheckRecording = false
-        this.recitationCheckError = this.t('memorisation.aiCheck.micBlocked')
         this.recitationCheckAutoStopArmed = false
         this.cleanupRecitationCheckMedia()
+        this.reportRecitationCheckFailure(this.t('memorisation.aiCheck.micBlocked'))
       }
     },
     stopRecitationCheckRecording() {
@@ -19776,13 +19782,11 @@ export default {
       this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
 
-      const session = await this.saveCurrentSessionSilentlyAsync()
-      if (session?.name) {
-        this.showBanner(this.t('toasts.sessionSaved', { name: session.name }), 'success', 2200)
+      if (!this.canSaveCurrentSession()) {
+        this.showBanner(this.t('toasts.nothingReadyToSave'), 'info', 2800)
         return
       }
-
-      this.showBanner(this.t('toasts.nothingReadyToSave'), 'info', 2800)
+      this.saveCurrentSessionWithName()
     },
 
     openResumeSavedSessions() {
@@ -22624,11 +22628,9 @@ export default {
         try {
           this.stopSessionMediaResources()
           // Persist progress before marking complete so a failed end stays recoverable.
+          // Never auto-save named sessions — always ask the learner below.
           try {
             this.persistContinueSession()
-            if (typeof this.saveCurrentSessionSilentlyAsync === 'function') {
-              await this.saveCurrentSessionSilentlyAsync()
-            }
           } catch (_) { /* endSession below remains authoritative */ }
 
           if (this.learningBackendEnabled()) {
@@ -22735,6 +22737,7 @@ export default {
               this.recomputeAnalytics()
               this.finishSessionCleanup()
             } catch (_) { /* completion UI already open */ }
+            this.promptSaveSessionAfterEnd({ wasSample })
           }
           if (typeof requestIdleCallback === 'function') {
             requestIdleCallback(finalizeAfterOpen, { timeout: 500 })
@@ -23015,6 +23018,7 @@ export default {
       if (action === 'delete-recording' && actionData?.recordingId) this.deleteRecording(actionData.recordingId)
       if (action === 'delete-ayah-recordings' && actionData?.ayahKey) this.deleteAyahRecordings(actionData.ayahKey)
       if (action === 'delete-pending-recitation-check') this.performDeleteRecitationCheckAttempt(actionData?.attemptId)
+      if (action === 'save-session-after-end') this.saveCurrentSessionWithName()
     },
 
     confirmDiscardContinueSession() {
@@ -26135,6 +26139,7 @@ export default {
               this.recomputeAnalytics()
               this.finishSessionCleanup()
             } catch (_) { /* completion UI already open */ }
+            this.promptSaveSessionAfterEnd()
           }
           if (typeof requestIdleCallback === 'function') {
             requestIdleCallback(finalizeAfterOpen, { timeout: 500 })

@@ -1074,7 +1074,7 @@
       "continueSession": "متابعة هذه الجلسة",
       "saveSession": "حفظ هذه الجلسة",
       "confirmTitle": "إنهاء هذه الجلسة؟",
-      "confirmDescription": "سيتم حفظ تقدّمك ووسم هذه الجلسة كمكتملة.",
+      "confirmDescription": "سيتم وسم هذه الجلسة كمكتملة، ثم يُسأل إن كنت تريد حفظها.",
       "confirmContext": "{surah} · {range}",
       "confirmEnd": "إنهاء الجلسة",
       "confirmContinue": "متابعة التمرين",
@@ -1840,6 +1840,12 @@
       "discard": "تجاهل",
       "remove": "إزالة",
       "reset": "إعادة ضبط",
+      "saveSession": {
+        "title": "حفظ هذه الجلسة؟",
+        "message": "هل تريد حفظ هذه الجلسة لتتمكن من العودة إليها لاحقاً؟",
+        "confirm": "حفظ الجلسة",
+        "cancel": "عدم الحفظ"
+      },
       "deleteSession": {
         "title": "حذف الجلسة المحفوظة؟",
         "message": "This will permanently remove \"{label}\" and its export snapshot from this device.",

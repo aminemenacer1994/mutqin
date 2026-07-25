@@ -475,7 +475,7 @@
       "continueSession": "Continue this session",
       "saveSession": "Save this session",
       "confirmTitle": "End this session?",
-      "confirmDescription": "Your progress will be saved and this session will be marked as complete.",
+      "confirmDescription": "This session will be marked as complete. You will be asked whether to save it.",
       "confirmContext": "{surah} · {range}",
       "confirmEnd": "End session",
       "confirmContinue": "Keep practising",
@@ -647,6 +647,12 @@
       "discard": "Discard",
       "remove": "Remove",
       "reset": "Reset",
+      "saveSession": {
+        "title": "Save this session?",
+        "message": "Would you like to save this session so you can return to it later?",
+        "confirm": "Save session",
+        "cancel": "Don't save"
+      },
       "deleteSession": {
         "title": "Delete saved session?",
         "message": "This will permanently remove \"{label}\" and its export snapshot from this device.",

@@ -1,8 +1,8 @@
-const SHELL_CACHE = 'mutqin-shell-v44';
-const RUNTIME_CACHE = 'mutqin-runtime-v44';
+const SHELL_CACHE = 'mutqin-shell-v57';
+const RUNTIME_CACHE = 'mutqin-runtime-v57';
+// Do NOT precache /memorisation — stale HTML shells freeze AI Recite UI updates.
 const SHELL_URLS = [
   '/',
-  '/memorisation',
   '/login',
   '/register',
   '/manifest.webmanifest',
@@ -49,7 +49,6 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   const isDocument = request.mode === 'navigate';
   const isSameOrigin = url.origin === self.location.origin;
-  // Never cache built JS/CSS (including lazy Memorisation chunks without ?id=).
   const isBuildAsset = isSameOrigin && (
     /^\/js\//.test(url.pathname)
     || /^\/css\//.test(url.pathname)
@@ -61,8 +60,18 @@ self.addEventListener('fetch', event => {
     url.pathname === '/manifest.webmanifest'
     || url.pathname.startsWith('/icons/')
   );
+  const isMemorisationDoc = isSameOrigin && (
+    url.pathname === '/memorisation'
+    || url.pathname.startsWith('/memorisation/')
+  );
 
   if (isBuildAsset) {
+    event.respondWith(fetch(request, { cache: 'no-store' }));
+    return;
+  }
+
+  // Always network-only for memorisation HTML so AI Recite UI never freezes on a shell.
+  if (isDocument && isMemorisationDoc) {
     event.respondWith(fetch(request, { cache: 'no-store' }));
     return;
   }
@@ -78,8 +87,6 @@ self.addEventListener('fetch', event => {
   }
 
   if (isAudio || url.host === 'cdn.islamic.network') {
-    // Do not cache media responses. cacheFirst + Range requests commonly break
-    // HTMLMediaElement duration/seeking (00:00/00:00) and can surface load errors.
     event.respondWith(fetch(request));
     return;
   }

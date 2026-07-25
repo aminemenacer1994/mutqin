@@ -216,21 +216,41 @@
 }
 
 .main.mushaf-mode-active .mushaf-page--ornate .madani-word.highlighted,
-.main.mushaf-mode-active .mushaf-page--ornate .madani-word.phrase-highlighted {
-  background: #1c1410 !important;
-  color: #fff8e8 !important;
-  -webkit-text-fill-color: #fff8e8 !important;
-  border-radius: 0.18em;
-  box-shadow:
-    0 0 0 2px #1c1410,
-    0 0 0 4px #f0b35a,
-    inset 0 -0.12em 0 rgba(255, 248, 232, 0.35) !important;
+.main.mushaf-mode-active .mushaf-page--ornate .madani-word.phrase-highlighted,
+.main.mushaf-mode-active .mushaf-page--ornate[data-madani-skin] .madani-word.highlighted,
+.main.mushaf-mode-active .mushaf-page--ornate[data-madani-skin] .madani-word.phrase-highlighted {
+  background: transparent !important;
+  background-image: none !important;
+  color: #b45309 !important;
+  -webkit-text-fill-color: #b45309 !important;
+  border: 0 !important;
+  border-radius: 0;
+  box-shadow: none !important;
+  outline: none !important;
+  transform: none !important;
+  padding-inline: 0;
 }
 
 .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet--tajweed .madani-word.highlighted.madani-word--glyph,
-.main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet--tajweed .madani-word.phrase-highlighted.madani-word--glyph {
+.main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet--tajweed .madani-word.phrase-highlighted.madani-word--glyph,
+.main.mushaf-mode-active .mushaf-page--ornate[data-madani-skin] .madani-page-sheet--tajweed .madani-word.highlighted.madani-word--glyph,
+.main.mushaf-mode-active .mushaf-page--ornate[data-madani-skin] .madani-page-sheet--tajweed .madani-word.phrase-highlighted.madani-word--glyph {
   color: unset !important;
   -webkit-text-fill-color: unset !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: sepia(1) saturate(6) hue-rotate(-18deg) brightness(0.82);
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-word.highlighted,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-word.phrase-highlighted,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate[data-madani-skin] .madani-word.highlighted,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate[data-madani-skin] .madani-word.phrase-highlighted {
+  background: transparent !important;
+  color: #b45309 !important;
+  -webkit-text-fill-color: #b45309 !important;
+  box-shadow: none !important;
+  filter: none !important;
 }
 
 .main.mushaf-mode-active .mushaf-page--ornate .madani-word.anchor-highlight {

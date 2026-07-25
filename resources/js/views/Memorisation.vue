@@ -519,7 +519,7 @@
                         :aria-label="t('memorisation.a11y.mushafLayoutMenu')"
                         :title="t('memorisation.a11y.mushafLayoutMenu')"
                       >
-                        <i class="bi bi-palette" aria-hidden="true"></i>
+                        <i class="bi bi-journal-richtext" aria-hidden="true"></i>
                       </button>
                       <div
                         v-if="mushafLayoutMenuOpen"
@@ -554,29 +554,19 @@
                             aria-hidden="true"
                           ></i>
                         </button>
-                        <div class="mushaf-layout-menu__divider" role="separator"></div>
-                        <button
-                          type="button"
-                          class="mushaf-layout-option"
-                          :class="{ 'is-active': tajweedEnabled }"
-                          role="menuitemcheckbox"
-                          :aria-checked="tajweedEnabled ? 'true' : 'false'"
-                          @click="toggleTajweed"
-                        >
-                          <span class="mushaf-layout-option__swatches" aria-hidden="true">
-                            <span class="mushaf-layout-option__swatch" style="background:#c94b6a"></span>
-                            <span class="mushaf-layout-option__swatch" style="background:#2f8a55"></span>
-                            <span class="mushaf-layout-option__swatch" style="background:#2b65ec"></span>
-                          </span>
-                          <span>{{ t('memorisation.a11y.tajweedLabel') }}</span>
-                          <i
-                            v-if="tajweedEnabled"
-                            class="bi bi-check2 mushaf-layout-option__check"
-                            aria-hidden="true"
-                          ></i>
-                        </button>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      class="mushaf-shell__btn mushaf-shell__btn--icon"
+                      :class="{ 'is-active': tajweedEnabled }"
+                      @click.stop="mushafLayoutMenuOpen = false; toggleTajweed()"
+                      :aria-pressed="tajweedEnabled ? 'true' : 'false'"
+                      :aria-label="t('memorisation.a11y.toggleTajweed')"
+                      :title="t('memorisation.a11y.tajweedLabel')"
+                    >
+                      <i class="bi bi-palette" aria-hidden="true"></i>
+                    </button>
                     <button
                       v-if="showAiMemorisationButton"
                       type="button"
@@ -1225,29 +1215,6 @@
               <p>{{ t('memorisation.practiceTools.beginnerDesc') }}</p>
             </div>
 
-            <div class="technique-presets" role="group" :aria-label="t('memorisation.practiceTools.beginner')">
-              <button type="button" class="technique-preset-chip" @click="applyPreset('guided')">
-                <i class="bi bi-signpost-2" aria-hidden="true"></i>
-                <span>{{ getTechniqueDisplayLabel('chaining') }}</span>
-              </button>
-              <button type="button" class="technique-preset-chip" @click="applyPreset('focus')">
-                <i class="bi bi-bullseye" aria-hidden="true"></i>
-                <span>{{ getTechniqueDisplayLabel('focus') }}</span>
-              </button>
-              <button type="button" class="technique-preset-chip" @click="applyPreset('blur')">
-                <i class="bi bi-cloud-haze2" aria-hidden="true"></i>
-                <span>{{ getTechniqueDisplayLabel('blur') }}</span>
-              </button>
-              <button type="button" class="technique-preset-chip" @click="applyPreset('chain')">
-                <i class="bi bi-pin-angle" aria-hidden="true"></i>
-                <span>{{ getTechniqueDisplayLabel('anchor') }}</span>
-              </button>
-              <button type="button" class="technique-preset-chip" @click="applyPreset('talqin')">
-                <i class="bi bi-mic" aria-hidden="true"></i>
-                <span>{{ t('memorisation.talqinMode.title') || 'Talqin' }}</span>
-              </button>
-            </div>
-
             <section class="sheet-section">
               <button class="sheet-toggle" @click="toggleSection('focus_mode')" type="button">
                 <span class="st-left">
@@ -1855,7 +1822,7 @@
     </div>
 
     <!-- Save Session Name Modal - Clean & Updated Version -->
-    <div class="modal-overlay mutqin-modal-overlay" v-if="showSaveNameModal" @click.self="closeSaveModal">
+    <div class="modal-overlay mutqin-modal-overlay save-name-modal-overlay" v-if="showSaveNameModal" @click.self="closeSaveModal">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
       <div class="modal-content mutqin-modal-surface save-name-modal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
         <div class="modal-header">
@@ -2842,7 +2809,7 @@
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full">
       <div
         class="modal-content mutqin-modal-surface self-check-modal recitation-review-modal"
-        data-ai-recite-ui="v55-ai-recite"
+        data-ai-recite-ui="v57-unfreeze"
         role="dialog"
         aria-modal="true"
         aria-labelledby="selfCheckModalTitle"
@@ -3032,6 +2999,8 @@
                       :key="word.key"
                       class="recitation-word-chip word-live"
                       :class="`word-${word.visualStatus || word.status || 'notAttempted'}`"
+                      data-live-kind="recitation"
+                      :data-live-word-index="word.index"
                       :title="word.note"
                     >{{ word.text }}</span>
                   </div>
@@ -3045,14 +3014,6 @@
                 <div v-else-if="recitationCheckPreparing" class="recitation-check-status">
                   <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
                   <span>{{ t('memorisation.aiCheck.checkingRecitation') }}</span>
-                </div>
-                <div v-if="recitationCheckError" class="recitation-check-error" role="alert">
-                  <strong>{{ t('memorisation.aiCheck.recitationCheckFailed') }}</strong>
-                  <span>{{ recitationCheckError }}</span>
-                  <button class="btn-secondary self-check-action-btn" type="button" @click="toggleRecitationCheckForCurrentModal">
-                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.aiCheck.tryAgain') }}</span>
-                  </button>
                 </div>
 
                 <div

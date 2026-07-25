@@ -30,8 +30,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-    <meta name="mutqin-build" content="v55-ai-recite">
-    <style id="mutqin-ai-recite-force-v55">
+    <meta name="mutqin-build" content="v57-unfreeze">
+    <style id="mutqin-ai-recite-force-v57">
       #mutqin-build-stamp {
         position: fixed !important;
         bottom: 10px !important;
@@ -49,7 +49,9 @@
       .ai-recite-clean-overlay,
       .recordings-library-overlay,
       .self-check-library-shortcut-btn:not(.self-check-back-to-session-btn),
-      .self-check-ayah-action-manual {
+      .self-check-ayah-action-manual,
+      .self-check-modal-overlay .recitation-check-error,
+      .self-check-modal-overlay .recitation-check-error-card {
         display: none !important;
       }
       .self-check-modal-overlay .ai-check-step-guide {
@@ -72,19 +74,29 @@
         visibility: visible !important;
       }
       .self-check-modal-overlay .recitation-live-review-compact .recitation-word-stream,
+      .self-check-modal-overlay .recitation-live-review-compact .recitation-live-word-stream,
       .self-check-modal-overlay .recitation-live-review-compact .recitation-word-chip {
         display: flex !important;
-        flex-wrap: wrap;
+        flex-wrap: wrap !important;
+        visibility: visible !important;
       }
     </style>
     <script>
       (function () {
+        // One-shot unfreeze per build. Older scripts marked "done" before refresh and
+        // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
+        var BUILD = 'v57-unfreeze';
+        var FORCE = '57';
+        var STORE = 'mutqin.asset.build';
+        var url = new URL(window.location.href);
+        var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
         try {
+          if (localStorage.getItem(STORE) === BUILD) return;
           Object.keys(sessionStorage).forEach(function (k) {
             if (k.indexOf('mutqin.force') === 0) sessionStorage.removeItem(k);
           });
-          sessionStorage.setItem('mutqin.force.ui.v55', '1');
         } catch (e) {}
+
         var tasks = [];
         if ('serviceWorker' in navigator) {
           tasks.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
@@ -96,12 +108,25 @@
             return Promise.all(keys.map(function (k) { return caches.delete(k); }));
           }));
         }
-        Promise.all(tasks).then(function () {
-          var url = new URL(window.location.href);
-          if (url.searchParams.get('mutqin_force') === '55') return;
-          url.searchParams.set('mutqin_force', '55');
+
+        var finish = function () {
+          if (alreadyForced) {
+            try { localStorage.setItem(STORE, BUILD); } catch (e) {}
+            return;
+          }
+          url.searchParams.set('mutqin_force', FORCE);
+          url.searchParams.set('_', String(Date.now()));
           window.location.replace(url.toString());
-        }).catch(function () {});
+        };
+
+        var watchdog = window.setTimeout(finish, 2500);
+        Promise.all(tasks).then(function () {
+          window.clearTimeout(watchdog);
+          finish();
+        }).catch(function () {
+          window.clearTimeout(watchdog);
+          finish();
+        });
       })();
     </script>
     @if(request()->routeIs('memorisation'))
@@ -2812,7 +2837,7 @@
             @yield('content')
         </main>
     </div>
-    <div id="mutqin-build-stamp" aria-hidden="true">Mutqin build v55 · AI Recite restored</div>
+    <div id="mutqin-build-stamp" aria-hidden="true">Mutqin build v57 · unfreeze live words</div>
 
     <script src="{{ mix('js/app.js') }}" defer></script>
     
