@@ -30,8 +30,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-    <meta name="mutqin-build" content="v54-no-live-panel">
-    <style id="mutqin-ai-recite-force-v54">
+    <meta name="mutqin-build" content="v55-ai-recite">
+    <style id="mutqin-ai-recite-force-v55">
       #mutqin-build-stamp {
         position: fixed !important;
         bottom: 10px !important;
@@ -49,13 +49,7 @@
       .ai-recite-clean-overlay,
       .recordings-library-overlay,
       .self-check-library-shortcut-btn:not(.self-check-back-to-session-btn),
-      .self-check-ayah-action-manual,
-      .self-check-modal-overlay .self-check-mobile-recording-card,
-      .self-check-modal-overlay .recitation-live-review,
-      .self-check-modal-overlay .recitation-live-review-compact,
-      .self-check-modal-overlay .recitation-check-actions,
-      .self-check-modal-overlay .recitation-start-cue,
-      .self-check-modal-overlay .ai-recite-start-row {
+      .self-check-ayah-action-manual {
         display: none !important;
       }
       .self-check-modal-overlay .ai-check-step-guide {
@@ -77,6 +71,11 @@
         opacity: 1 !important;
         visibility: visible !important;
       }
+      .self-check-modal-overlay .recitation-live-review-compact .recitation-word-stream,
+      .self-check-modal-overlay .recitation-live-review-compact .recitation-word-chip {
+        display: flex !important;
+        flex-wrap: wrap;
+      }
     </style>
     <script>
       (function () {
@@ -84,7 +83,7 @@
           Object.keys(sessionStorage).forEach(function (k) {
             if (k.indexOf('mutqin.force') === 0) sessionStorage.removeItem(k);
           });
-          sessionStorage.setItem('mutqin.force.ui.v54', '1');
+          sessionStorage.setItem('mutqin.force.ui.v55', '1');
         } catch (e) {}
         var tasks = [];
         if ('serviceWorker' in navigator) {
@@ -99,8 +98,8 @@
         }
         Promise.all(tasks).then(function () {
           var url = new URL(window.location.href);
-          if (url.searchParams.get('mutqin_force') === '54') return;
-          url.searchParams.set('mutqin_force', '54');
+          if (url.searchParams.get('mutqin_force') === '55') return;
+          url.searchParams.set('mutqin_force', '55');
           window.location.replace(url.toString());
         }).catch(function () {});
       })();
@@ -2813,7 +2812,7 @@
             @yield('content')
         </main>
     </div>
-    <div id="mutqin-build-stamp" aria-hidden="true">Mutqin build v54 · no live panel</div>
+    <div id="mutqin-build-stamp" aria-hidden="true">Mutqin build v55 · AI Recite restored</div>
 
     <script src="{{ mix('js/app.js') }}" defer></script>
     

@@ -54,9 +54,9 @@ function loadMemorisationChunk(attempt = 0) {
     return import(/* webpackChunkName: "memorisation" */ './views/Memorisation.vue').then((mod) => {
         if (typeof window !== 'undefined') {
             window.__MUTQIN_PRACTICE_COACH__ = 'v18';
-            window.__MUTQIN_AI_RECITE_UI__ = 'v54-no-live-panel';
+            window.__MUTQIN_AI_RECITE_UI__ = 'v55-ai-recite';
             document.documentElement.dataset.practiceCoach = 'v2';
-            document.documentElement.dataset.aiReciteUi = 'v54';
+            document.documentElement.dataset.aiReciteUi = 'v55';
         }
         return mod;
     }).catch((error) => {
@@ -87,42 +87,6 @@ const Memorisation = defineAsyncComponent({
 
 async function bootstrapApp() {
     const app = createApp({});
-
-    // [TEMP DIAGNOSTIC] Surface the exact reactive property behind a
-    // "Maximum recursive updates exceeded" loop. Remove once the bug is fixed.
-    window.__showLoopBanner = (lines) => {
-        try {
-            let el = document.getElementById('__loop_banner');
-            if (!el) {
-                el = document.createElement('div');
-                el.id = '__loop_banner';
-                el.style.cssText = [
-                    'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:2147483647',
-                    'background:#b00020', 'color:#fff', 'font:13px/1.4 monospace',
-                    'padding:10px 14px', 'white-space:pre-wrap', 'word-break:break-word',
-                    'box-shadow:0 2px 8px rgba(0,0,0,.4)'
-                ].join(';');
-                document.body.appendChild(el);
-            }
-            el.textContent = '[RENDER/RECURSION DIAGNOSTIC]\n' + lines;
-        } catch (e) { /* noop */ }
-    };
-
-    app.config.warnHandler = (msg, instance, trace) => {
-        if (typeof msg === 'string' && msg.includes('recursive')) {
-            const dbg = window.__renderDbg || {};
-            const ranked = Object.entries(dbg.keys || {})
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 10);
-            const text = 'Maximum recursive updates exceeded.\n'
-                + 'Top trigger keys (key -> count):\n'
-                + (ranked.length ? ranked.map(([k, c]) => `   ${k}  ->  ${c}`).join('\n') : '   (none captured -> likely a WATCHER loop, not render)')
-                + '\nLast trigger: ' + (dbg.last || '(none)');
-            console.error('[RECURSION] ' + text);
-            window.__showLoopBanner(text);
-        }
-        console.warn('[Vue warn]', msg, trace);
-    };
 
     const i18n = await setupI18n();
 

@@ -6531,7 +6531,7 @@ html {
 }
 
 .main.focus-mode-active .verse-card:not(.active) {
-  opacity: 0.54;
+  opacity: var(--focus-dim-opacity, 0.54);
   filter: saturate(0.72);
 }
 
@@ -12768,16 +12768,25 @@ body.memorisation-page nav.navbar.app-navbar {
   white-space: normal;
 }
 
-.main.focus-mode-active .madani-word:not(.active):not(.is-playing) {
+.main.focus-mode-active .madani-word.is-focus-dim {
+  opacity: var(--focus-dim-opacity, 0.54);
+  filter: saturate(0.78);
+}
+
+.main.focus-mode-active .madani-word.active,
+.main.focus-mode-active .madani-word.is-playing,
+.main.focus-mode-active .madani-word.highlighted {
   opacity: 1;
+  filter: none;
 }
 
 .main.blur-mode-active .madani-word.blur-upcoming:not(.peek-revealed) {
-  filter: blur(calc(var(--blur-intensity, 10) * 0.08px + 2px));
+  filter: blur(var(--recall-blur, 10px));
 }
 
 .main.blur-mode-active .madani-word.blur-upcoming.peek-revealed,
-.main.blur-mode-active .madani-word.active {
+.main.blur-mode-active .madani-word.active,
+.main.blur-mode-active .madani-word.highlighted {
   filter: none;
 }
 
@@ -12797,12 +12806,162 @@ body.memorisation-page nav.navbar.app-navbar {
   box-shadow: inset 0 -0.12em 0 color-mix(in srgb, var(--mushaf-text, #000) 28%, transparent);
 }
 
+.madani-word.highlighted,
+.madani-word.phrase-highlighted {
+  background: #1c1410 !important;
+  color: #fff8e8 !important;
+  -webkit-text-fill-color: #fff8e8;
+  border-radius: 0.18em;
+  box-shadow:
+    0 0 0 2px #1c1410,
+    0 0 0 4px #f0b35a,
+    inset 0 -0.12em 0 rgba(255, 248, 232, 0.35) !important;
+  padding-inline: 0.06em;
+  z-index: 2;
+}
+
+.madani-word.anchor-highlight {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.28), rgba(255, 152, 0, 0.34));
+  box-shadow: inset 0 -0.14em 0 #ff9800;
+  border-radius: 0.08em;
+}
+
+.madani-word.anchor-highlight::after {
+  display: none;
+}
+
+.madani-word.practice-focus-word {
+  box-shadow: inset 0 -0.14em 0 rgba(220, 38, 38, 0.75);
+  background: color-mix(in srgb, #dc2626 12%, transparent);
+}
+
+.madani-word.practice-focus-word--active {
+  box-shadow: inset 0 -0.18em 0 rgba(220, 38, 38, 0.95);
+  background: color-mix(in srgb, #dc2626 18%, transparent);
+}
+
+.madani-word.hifz-ayah-weak {
+  box-shadow: inset 0 -0.1em 0 rgba(239, 68, 68, 0.55);
+}
+
+.madani-word.hifz-ayah-due {
+  box-shadow: inset 0 -0.1em 0 rgba(245, 158, 11, 0.6);
+}
+
+.madani-word.hifz-ayah-mastered {
+  box-shadow: inset 0 -0.1em 0 rgba(34, 197, 94, 0.55);
+}
+
+.madani-word[class*="recitation-word-"] {
+  border-radius: 0.08em;
+}
+
+.mushaf-verse-aids {
+  width: min(100%, 48rem);
+  margin: 0.85rem auto 0;
+  display: grid;
+  gap: 0.65rem;
+  padding: 0 0.15rem 0.35rem;
+}
+
+.mushaf-word-tooltip {
+  justify-self: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(28, 25, 23, 0.9);
+  color: #fffaf3;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.mushaf-wbw-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.mushaf-wbw-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 3.2rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(28, 25, 23, 0.1);
+  border-radius: 10px;
+  background: #fffdf9;
+  color: #1c1917;
+  cursor: pointer;
+}
+
+.mushaf-wbw-chip.highlighted {
+  background: #1c1410;
+  border-color: #f0b35a;
+  color: #fff8e8;
+  box-shadow:
+    0 0 0 1px #f0b35a,
+    inset 0 -0.14em 0 rgba(240, 179, 90, 0.85);
+}
+
+.mushaf-wbw-chip.highlighted .mushaf-wbw-chip__en {
+  color: rgba(255, 248, 232, 0.72);
+}
+
+.mushaf-wbw-chip.practice-focus-word {
+  border-color: rgba(220, 38, 38, 0.45);
+  box-shadow: inset 0 -0.12em 0 rgba(220, 38, 38, 0.75);
+}
+
+.mushaf-wbw-chip__ar {
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.mushaf-wbw-chip__en {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: rgba(28, 25, 23, 0.55);
+}
+
+.mushaf-verse-aids .verse-aid-block {
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  background: rgba(255, 253, 249, 0.92);
+  border: 1px solid rgba(28, 25, 23, 0.08);
+}
+
+[data-theme="dark"] .mushaf-wbw-chip,
+[data-theme="dark"] .mushaf-verse-aids .verse-aid-block {
+  background: #22252b;
+  border-color: rgba(245, 242, 234, 0.12);
+  color: #f5f2ea;
+}
+
+[data-theme="dark"] .mushaf-wbw-chip__en {
+  color: rgba(245, 242, 234, 0.55);
+}
+
+[data-theme="dark"] .mushaf-wbw-chip.highlighted {
+  background: #f0b35a;
+  border-color: #fff3d1;
+  color: #14110e;
+  box-shadow:
+    0 0 0 1px #fff3d1,
+    0 6px 16px rgba(240, 179, 90, 0.28);
+}
+
+[data-theme="dark"] .mushaf-wbw-chip.highlighted .mushaf-wbw-chip__en {
+  color: rgba(20, 17, 14, 0.72);
+}
+
 .madani-word.review-priority {
   box-shadow: inset 0 -2px 0 rgba(245, 158, 11, 0.48);
 }
 
 .madani-word.blur-upcoming:not(.peek-revealed) {
-  filter: blur(calc(var(--blur-intensity, 10) * 0.08px + 2px));
+  filter: blur(var(--recall-blur, 10px));
 }
 
 .madani-page-loading {
@@ -14429,8 +14588,15 @@ body.memorisation-page nav.navbar.app-navbar {
   height: 40px;
 }
 
-.self-check-modal:not(.memorisation-checker-modal) .recitation-word-stream, .self-check-modal:not(.memorisation-checker-modal) .recitation-word-chip {
+.self-check-modal:not(.memorisation-checker-modal) .recitation-word-stream:not(.recitation-live-word-stream),
+.self-check-modal:not(.memorisation-checker-modal) .recitation-word-chip:not(.word-live) {
   display: none;
+}
+
+.self-check-modal .recitation-live-review-compact .recitation-live-word-stream,
+.self-check-modal .recitation-live-review-compact .recitation-word-chip.word-live {
+  display: inline-flex !important;
+  flex-wrap: wrap;
 }
 
 .self-check-modal-ayah.recitation-word-review-active .wbw-word, .self-check-modal-ayah.recitation-word-review-active word {
@@ -26752,12 +26918,22 @@ textarea {
 [data-theme="dark"] .self-check-modal-ayah word.highlighted,
 [data-theme="dark"] .memorisation-checker-ayah .wbw-word.highlighted,
 [data-theme="dark"] .memorisation-checker-ayah word.highlighted {
-  background: rgba(120, 216, 164, 0.14) !important;
-  color: #f8f0e5 !important;
+  background: #f0b35a !important;
+  color: #14110e !important;
   border-radius: 0.28em;
   box-shadow:
-    0 0 0 1px rgba(120, 216, 164, 0.18),
-    inset 0 -0.1em 0 rgba(120, 216, 164, 0.7) !important;
+    0 0 0 2px #f0b35a,
+    0 0 0 4px rgba(255, 243, 209, 0.85),
+    0 8px 18px rgba(240, 179, 90, 0.28) !important;
+  padding-inline: 0.08em;
+}
+
+[data-theme="dark"] .verse-arabic .wbw-word.highlighted .word-arabic-text,
+[data-theme="dark"] .verse-arabic word.highlighted .word-arabic-text,
+[data-theme="dark"] .mushaf-ayah-text .wbw-word.highlighted .word-arabic-text,
+[data-theme="dark"] .mushaf-ayah-text word.highlighted .word-arabic-text {
+  color: #14110e !important;
+  -webkit-text-fill-color: #14110e;
 }
 
 [data-theme="dark"] .word-revealed {
@@ -27094,6 +27270,42 @@ textarea {
   color: var(--text-muted, #6d655b);
   font-size: 0.84rem;
   line-height: 1.45;
+}
+
+.technique-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 0.85rem;
+}
+
+.technique-preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(28, 25, 23, 0.12);
+  background: #fffdf9;
+  color: #1c1917;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.technique-preset-chip:hover {
+  background: #f3eee6;
+  border-color: rgba(28, 25, 23, 0.2);
+}
+
+[data-theme="dark"] .technique-preset-chip {
+  background: #23262d;
+  border-color: rgba(245, 242, 234, 0.12);
+  color: #f5f2ea;
+}
+
+[data-theme="dark"] .technique-preset-chip:hover {
+  background: #2c3038;
 }
 
 .technique-group-kicker {
@@ -43627,9 +43839,36 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
 }
 
 .main.mushaf-mode-active .mushaf-shell__btn--icon {
-  width: 2.2rem;
-  min-width: 2.2rem;
+  width: 2.35rem;
+  min-width: 2.35rem;
+  height: 2.35rem;
+  min-height: 2.35rem;
   padding: 0;
+  border-radius: 999px;
+}
+
+.main.mushaf-mode-active .mushaf-shell__btn--font {
+  min-width: 3.6rem;
+  padding-inline: 0.8rem;
+}
+
+.main.mushaf-mode-active .mushaf-shell__aa {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  line-height: 1;
+}
+
+.main.mushaf-mode-active .mushaf-shell__aa em {
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 700;
+  opacity: 0.72;
+}
+
+.main.mushaf-mode-active .mushaf-shell__aa strong {
+  font-size: 0.95rem;
+  font-weight: 800;
 }
 
 .main.mushaf-mode-active .mushaf-shell__btn:hover:not(:disabled) {
@@ -43804,10 +44043,74 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
   box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #8b5a2b 55%, transparent);
 }
 
-.main.mushaf-mode-active .madani-word--out,
-.main.focus-mode-active.mushaf-mode-active .madani-word,
-.main.focus-mode-active.mushaf-mode-active .madani-word:not(.active):not(.is-playing) {
+.main.mushaf-mode-active .madani-word.highlighted,
+.main.mushaf-mode-active .madani-word.phrase-highlighted {
+  background: #1c1410 !important;
+  color: #fff8e8 !important;
+  -webkit-text-fill-color: #fff8e8 !important;
+  border-radius: 0.18em;
+  box-shadow:
+    0 0 0 2px #1c1410,
+    0 0 0 4px #f0b35a,
+    inset 0 -0.12em 0 rgba(255, 248, 232, 0.35) !important;
+  padding-inline: 0.06em;
+  z-index: 2;
+}
+
+/* Non-tajweed glyphs: force ink fill so the active word reads clearly */
+.main.mushaf-mode-active .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word.highlighted.madani-word--glyph,
+.main.mushaf-mode-active .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word.phrase-highlighted.madani-word--glyph {
+  color: #fff8e8 !important;
+  -webkit-text-fill-color: #fff8e8 !important;
+}
+
+/* Tajweed COLR: keep glyph paint, rely on solid high-contrast plate behind */
+.main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.highlighted.madani-word--glyph,
+.main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.phrase-highlighted.madani-word--glyph {
+  color: unset !important;
+  -webkit-text-fill-color: unset !important;
+}
+
+.main.mushaf-mode-active .madani-word.anchor-highlight {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.42), rgba(255, 152, 0, 0.5)) !important;
+  box-shadow:
+    0 0 0 2px rgba(255, 152, 0, 0.55),
+    inset 0 -0.14em 0 #ff9800 !important;
+}
+
+.main.mushaf-mode-active .madani-word.practice-focus-word {
+  background: rgba(127, 29, 29, 0.92) !important;
+  color: #fff1f2 !important;
+  -webkit-text-fill-color: #fff1f2;
+  box-shadow:
+    0 0 0 2px #7f1d1d,
+    0 0 0 4px #f87171,
+    inset 0 -0.12em 0 rgba(255, 241, 242, 0.35) !important;
+}
+
+.main.mushaf-mode-active .madani-word--out {
+  opacity: 0.42 !important;
+}
+
+.main.focus-mode-active.mushaf-mode-active .madani-word.is-focus-dim {
+  opacity: var(--focus-dim-opacity, 0.54) !important;
+  filter: saturate(0.78);
+}
+
+.main.focus-mode-active.mushaf-mode-active .madani-word.active,
+.main.focus-mode-active.mushaf-mode-active .madani-word.is-playing,
+.main.focus-mode-active.mushaf-mode-active .madani-word.highlighted {
   opacity: 1 !important;
+  filter: none !important;
+}
+
+.main.blur-mode-active.mushaf-mode-active .madani-word.blur-upcoming:not(.peek-revealed) {
+  filter: blur(var(--recall-blur, 10px)) !important;
+}
+
+.main.blur-mode-active.mushaf-mode-active .madani-word.blur-upcoming.peek-revealed,
+.main.blur-mode-active.mushaf-mode-active .madani-word.active,
+.main.blur-mode-active.mushaf-mode-active .madani-word.highlighted {
   filter: none !important;
 }
 
@@ -43863,39 +44166,94 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
   color: #f5f2ea;
 }
 
-[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell__page,
-[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani {
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__page,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) {
   background: #0e0f11 !important;
-  color: #f5f2ea !important;
+  color: #f7f4ec !important;
   --mushaf-bg: #0e0f11;
-  --mushaf-text: #f5f2ea;
+  --mushaf-text: #f7f4ec;
 }
 
-[data-theme="dark"] .main.mushaf-mode-active .madani-line--surah_name {
-  border-block-color: rgba(245, 242, 234, 0.12) !important;
-  background: rgba(245, 242, 234, 0.04);
+/* COLR tajweed glyphs paint their own black ink — invert so base ink reads white in dark mode */
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet--tajweed {
+  filter: invert(1) hue-rotate(180deg);
 }
 
-[data-theme="dark"] .main.mushaf-mode-active .madani-basmala,
-[data-theme="dark"] .main.mushaf-mode-active .madani-surah-name,
-[data-theme="dark"] .main.mushaf-mode-active .madani-word--unicode,
-[data-theme="dark"] .main.mushaf-mode-active .madani-word--fallback {
-  color: #f5f2ea !important;
-}
-
-[data-theme="dark"] .main.mushaf-mode-active .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph {
-  color: #f5f2ea;
-}
-
-[data-theme="dark"] .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word--glyph {
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet--tajweed .madani-word--glyph {
   color: unset !important;
   -webkit-text-fill-color: unset;
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-surah-name,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--unicode,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--fallback,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph {
+  color: #f7f4ec !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #f7f4ec;
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-line--surah_name {
+  border-block-color: rgba(247, 244, 236, 0.16) !important;
+  background: rgba(247, 244, 236, 0.05);
 }
 
 [data-theme="dark"] .main.mushaf-mode-active .madani-word:hover,
 [data-theme="dark"] .main.mushaf-mode-active .madani-word.active,
 [data-theme="dark"] .main.mushaf-mode-active .madani-word.is-playing {
   box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #d4af6e 70%, transparent);
+}
+
+/* Dark standard mushaf: bright amber plate on dark page */
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word.highlighted,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word.phrase-highlighted {
+  background: #f0b35a !important;
+  color: #14110e !important;
+  -webkit-text-fill-color: #14110e !important;
+  box-shadow:
+    0 0 0 2px #f0b35a,
+    0 0 0 4px #fff3d1,
+    0 8px 18px rgba(240, 179, 90, 0.3) !important;
+}
+
+/* Dark + tajweed invert: restore highlight so it stays high-contrast amber */
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet--tajweed .madani-word.highlighted,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet--tajweed .madani-word.phrase-highlighted {
+  filter: invert(1) hue-rotate(180deg);
+  background: #f0b35a !important;
+  color: #14110e !important;
+  -webkit-text-fill-color: #14110e !important;
+  box-shadow:
+    0 0 0 2px #f0b35a,
+    0 0 0 4px #fff3d1,
+    0 8px 18px rgba(240, 179, 90, 0.3) !important;
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet--tajweed .madani-word.highlighted.madani-word--glyph,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet--tajweed .madani-word.phrase-highlighted.madani-word--glyph {
+  color: unset !important;
+  -webkit-text-fill-color: unset !important;
+}
+
+/* Ornate cream page keeps charcoal plate + light ink in both themes */
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-word.highlighted,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-word.phrase-highlighted {
+  background: #1c1410 !important;
+  color: #fff8e8 !important;
+  -webkit-text-fill-color: #fff8e8 !important;
+  box-shadow:
+    0 0 0 2px #1c1410,
+    0 0 0 4px #f0b35a,
+    inset 0 -0.12em 0 rgba(255, 248, 232, 0.35) !important;
+  filter: none !important;
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet--tajweed .madani-word.highlighted.madani-word--glyph,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet--tajweed .madani-word.phrase-highlighted.madani-word--glyph {
+  color: unset !important;
+  -webkit-text-fill-color: unset !important;
 }
 
 [data-theme="dark"] .main.mushaf-mode-active .live-practice-guidance--mushaf .live-practice-method,

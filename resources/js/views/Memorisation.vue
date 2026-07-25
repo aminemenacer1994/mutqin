@@ -364,7 +364,7 @@
             </div>
           </div>
         </div>
-        <div v-if="reviewPriorityLabel && readingViewMode !== 'mushaf'" class="workspace-shell-compact-meta">
+        <div v-if="reviewPriorityLabel" class="workspace-shell-compact-meta">
           <span>{{ reviewPriorityLabel }}</span>
         </div>
 
@@ -438,20 +438,24 @@
               </div>
             </section>
             <div v-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace">
-              <section class="mushaf-shell" aria-label="Mushaf">
+              <section
+                class="mushaf-shell"
+                :class="{ 'is-madani-skin': isMadaniMushafSkin }"
+                :data-madani-skin="activeMadaniSkin"
+                aria-label="Mushaf"
+              >
                 <header class="mushaf-shell__bar" :aria-label="t('memorisation.a11y.mushafTools')">
                   <div class="mushaf-shell__bar-group">
                     <div class="mushaf-toolbar-dropdown font-dropdown-region">
                       <button
                         type="button"
-                        class="mushaf-shell__btn"
-                        @click.stop="fontOpen = !fontOpen; bgOpen = false; borderOpen = false"
+                        class="mushaf-shell__btn mushaf-shell__btn--font"
+                        @click.stop="fontOpen = !fontOpen; bgOpen = false; borderOpen = false; mushafLayoutMenuOpen = false"
                         :aria-expanded="fontOpen ? 'true' : 'false'"
                         :aria-label="t('memorisation.a11y.chooseMushafFont')"
                         :title="getCurrentFontLabel()"
                       >
-                        <i class="bi bi-type" aria-hidden="true"></i>
-                        <span>Aa</span>
+                        <span class="mushaf-shell__aa" aria-hidden="true"><em>Aa</em> <strong>Aa</strong></span>
                       </button>
                       <div v-if="fontOpen" @click.stop class="mushaf-toolbar-menu mushaf-shell__menu">
                         <button
@@ -504,17 +508,75 @@
                     >
                       <i class="bi bi-sliders" aria-hidden="true"></i>
                     </button>
-                    <button
-                      type="button"
-                      class="mushaf-shell__btn mushaf-shell__btn--icon"
-                      :class="{ 'is-active': tajweedEnabled }"
-                      @click.stop="toggleTajweed"
-                      :aria-pressed="tajweedEnabled ? 'true' : 'false'"
-                      :aria-label="t('memorisation.a11y.toggleTajweed')"
-                      :title="t('memorisation.a11y.tajweedLabel')"
-                    >
-                      <i class="bi bi-palette" aria-hidden="true"></i>
-                    </button>
+                    <div class="mushaf-toolbar-dropdown mushaf-layout-dropdown">
+                      <button
+                        type="button"
+                        class="mushaf-shell__btn mushaf-shell__btn--icon"
+                        :class="{ 'is-active': mushafLayoutMenuOpen || isMadaniMushafSkin }"
+                        @click.stop="toggleMushafLayoutMenu"
+                        :aria-expanded="mushafLayoutMenuOpen ? 'true' : 'false'"
+                        :aria-haspopup="true"
+                        :aria-label="t('memorisation.a11y.mushafLayoutMenu')"
+                        :title="t('memorisation.a11y.mushafLayoutMenu')"
+                      >
+                        <i class="bi bi-palette" aria-hidden="true"></i>
+                      </button>
+                      <div
+                        v-if="mushafLayoutMenuOpen"
+                        class="mushaf-layout-menu"
+                        role="menu"
+                        :aria-label="t('memorisation.a11y.mushafLayoutMenu')"
+                        @click.stop
+                      >
+                        <span class="mushaf-layout-menu__label">{{ t('memorisation.a11y.mushafLayoutMenu') }}</span>
+                        <button
+                          v-for="layout in mushafLayoutOptions"
+                          :key="layout.id"
+                          type="button"
+                          class="mushaf-layout-option"
+                          :class="{ 'is-active': (activeMadaniSkin || 'standard') === layout.id }"
+                          role="menuitemradio"
+                          :aria-checked="(activeMadaniSkin || 'standard') === layout.id ? 'true' : 'false'"
+                          @click="setMushafUiSkin(layout.id)"
+                        >
+                          <span class="mushaf-layout-option__swatches" aria-hidden="true">
+                            <span
+                              v-for="(swatch, swatchIndex) in layout.swatches"
+                              :key="`${layout.id}-${swatchIndex}`"
+                              class="mushaf-layout-option__swatch"
+                              :style="{ background: swatch }"
+                            ></span>
+                          </span>
+                          <span>{{ layout.label }}</span>
+                          <i
+                            v-if="(activeMadaniSkin || 'standard') === layout.id"
+                            class="bi bi-check2 mushaf-layout-option__check"
+                            aria-hidden="true"
+                          ></i>
+                        </button>
+                        <div class="mushaf-layout-menu__divider" role="separator"></div>
+                        <button
+                          type="button"
+                          class="mushaf-layout-option"
+                          :class="{ 'is-active': tajweedEnabled }"
+                          role="menuitemcheckbox"
+                          :aria-checked="tajweedEnabled ? 'true' : 'false'"
+                          @click="toggleTajweed"
+                        >
+                          <span class="mushaf-layout-option__swatches" aria-hidden="true">
+                            <span class="mushaf-layout-option__swatch" style="background:#c94b6a"></span>
+                            <span class="mushaf-layout-option__swatch" style="background:#2f8a55"></span>
+                            <span class="mushaf-layout-option__swatch" style="background:#2b65ec"></span>
+                          </span>
+                          <span>{{ t('memorisation.a11y.tajweedLabel') }}</span>
+                          <i
+                            v-if="tajweedEnabled"
+                            class="bi bi-check2 mushaf-layout-option__check"
+                            aria-hidden="true"
+                          ></i>
+                        </button>
+                      </div>
+                    </div>
                     <button
                       v-if="showAiMemorisationButton"
                       type="button"
@@ -597,6 +659,14 @@
                     <i class="bi" :class="activePracticeFocusWord ? 'bi-bullseye' : 'bi-moon-stars'" aria-hidden="true"></i>
                     <span>{{ livePracticeCoachText }}</span>
                   </div>
+                  <div v-if="reviewPriorityLabel" class="live-practice-coach live-practice-coach--meta" role="status">
+                    <i class="bi bi-flag" aria-hidden="true"></i>
+                    <span>{{ reviewPriorityLabel }}</span>
+                  </div>
+                  <div v-if="chainingEnabled && chainingProgressLabel" class="live-practice-coach live-practice-coach--meta" role="status">
+                    <i class="bi bi-link-45deg" aria-hidden="true"></i>
+                    <span>{{ chainingProgressLabel }}</span>
+                  </div>
                 </div>
 
                 <div ref="mushafViewport" class="mushaf-shell__page">
@@ -607,17 +677,110 @@
                   </div>
                   <article
                     v-else
-                    :key="`${currentMushafPage.id}-${safeMushafPageIndex}-${defaultFontSize}-${tajweedEnabled}-${quranFont}`"
+                    :key="`${currentMushafPage.id}-${safeMushafPageIndex}-${defaultFontSize}-${tajweedEnabled}-${quranFont}-${mushafUiSkin}`"
                     class="mushaf-page mushaf-page--madani"
+                    :class="{ 'mushaf-page--ornate': isMadaniMushafSkin }"
+                    :data-madani-skin="activeMadaniSkin"
                     :style="{ '--verse-font-percent': String(defaultFontSize), '--mushaf-quran-font': quranFontFamily, '--mushaf-selected-font': quranFontFamily }"
                   >
+                    <div class="madani-ornate" v-if="isMadaniMushafSkin">
+                      <div class="madani-ornate__frame">
+                        <div class="madani-ornate__inner">
+                          <div class="madani-ornate__meta" dir="rtl">
+                            <span class="madani-ornate__meta-surah">{{ mushafSurahTitle }}</span>
+                            <span class="madani-ornate__meta-juz">{{ madaniJuzLabel }}</span>
+                          </div>
+                          <div
+                            class="mushaf-page-body madani-page-sheet"
+                            dir="rtl"
+                            :class="{
+                              'madani-page-sheet--glyphs-ready': useMadaniQcfGlyphs && !!madaniFontsReady[currentMushafPage.pageNumber],
+                              'madani-page-sheet--unicode': !useMadaniQcfGlyphs,
+                              'madani-page-sheet--tajweed': !!tajweedEnabled && useMadaniQcfGlyphs,
+                              'word-by-word-meanings': !!showWordByWord,
+                              'recitation-word-review-active': !!(mushafAidVerse && shouldShowRecitationReviewHighlights(mushafAidVerse.key))
+                            }"
+                            :style="{
+                              '--verse-font-percent': String(defaultFontSize),
+                              '--madani-page-font': `'${currentMushafPage.fontFamily || ('p' + currentMushafPage.pageNumber + (tajweedEnabled ? '-v4' : '-v2'))}'`,
+                              '--mushaf-selected-font': quranFontFamily
+                            }"
+                          >
+                            <div
+                              v-for="line in currentMadaniLines"
+                              :key="line.key"
+                              class="madani-line"
+                              :class="[
+                                `madani-line--${line.type}`,
+                                {
+                                  'madani-line--empty': line.type === 'empty',
+                                  'madani-line--glyphs': line.useGlyphs && line.fontReady && line.type === 'ayah',
+                                  'madani-line--ayah': line.type === 'ayah'
+                                }
+                              ]"
+                              :data-line-number="line.lineNumber"
+                            >
+                              <template v-if="line.type === 'surah_name'">
+                                <span
+                                  class="madani-surah-name"
+                                  :style="{ fontFamily: `'${surahNamesFontFamily}'` }"
+                                  aria-hidden="true"
+                                >{{ line.glyphText }}</span>
+                                <span class="sr-only">{{ mushafSurahTitle }}</span>
+                              </template>
+                              <template v-else-if="line.type === 'basmala'">
+                                <span
+                                  class="madani-basmala"
+                                  aria-label="بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"
+                                >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</span>
+                              </template>
+                              <template v-else-if="line.type === 'ayah'">
+                                <span
+                                  v-for="(word, wordIndex) in line.words"
+                                  :key="`${line.key}-w-${word.position || wordIndex}-${word.verseKey}`"
+                                  class="madani-word"
+                                  :class="madaniWordClassList(word)"
+                                  :data-verse-key="word.verseKey"
+                                  :data-word-index="word.wordIndex != null ? word.wordIndex : null"
+                                  :data-practice-focus="word.isPracticeFocus ? 'true' : null"
+                                  :title="word.meaningLabel || null"
+                                  :style="word.useGlyph ? { fontFamily: `'${line.fontFamily}'` } : null"
+                                  role="button"
+                                  tabindex="0"
+                                  @click="onMadaniWordClick(word)"
+                                  @mouseenter="onMadaniWordEnter(word)"
+                                  @mouseleave="onMadaniWordLeave(word)"
+                                  @touchstart.passive="onMadaniWordTouchStart($event, word)"
+                                  @touchend.passive="onMadaniWordTouchEnd($event, word)"
+                                  @touchcancel.passive="clearTouchPeek"
+                                  @keydown.enter.prevent="onMadaniWordClick(word)"
+                                  @keydown.space.prevent="onMadaniWordClick(word)"
+                                  v-html="word.html"
+                                ></span>
+                              </template>
+                            </div>
+                            <div v-if="madaniPagesLoading && !currentMadaniLines.length" class="madani-page-loading">
+                              <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                              <span>{{ workspaceLoadingLabel }}</span>
+                            </div>
+                          </div>
+                          <div class="madani-ornate__footer">
+                            <span class="madani-ornate__page-no">{{ madaniPageNumberArabic }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     <div
+                      v-else
                       class="mushaf-page-body madani-page-sheet"
                       dir="rtl"
                       :class="{
                         'madani-page-sheet--glyphs-ready': useMadaniQcfGlyphs && !!madaniFontsReady[currentMushafPage.pageNumber],
                         'madani-page-sheet--unicode': !useMadaniQcfGlyphs,
-                        'madani-page-sheet--tajweed': !!tajweedEnabled && useMadaniQcfGlyphs
+                        'madani-page-sheet--tajweed': !!tajweedEnabled && useMadaniQcfGlyphs,
+                        'word-by-word-meanings': !!showWordByWord,
+                        'recitation-word-review-active': !!(mushafAidVerse && shouldShowRecitationReviewHighlights(mushafAidVerse.key))
                       }"
                       :style="{
                         '--verse-font-percent': String(defaultFontSize),
@@ -658,29 +821,20 @@
                             v-for="(word, wordIndex) in line.words"
                             :key="`${line.key}-w-${word.position || wordIndex}-${word.verseKey}`"
                             class="madani-word"
-                            :class="{
-                              'madani-word--end': word.isEnd,
-                              'madani-word--glyph': word.useGlyph,
-                              'madani-word--fallback': !word.useGlyph && useMadaniQcfGlyphs,
-                              'madani-word--unicode': !word.useGlyph && !useMadaniQcfGlyphs,
-                              'madani-word--out': word.inSession === false,
-                              active: word.isActive,
-                              'hifz-ayah-new': word.isNew,
-                              'hifz-ayah-due': word.isDue,
-                              'hifz-ayah-weak': word.isWeak,
-                              'hifz-ayah-mastered': word.isMastered,
-                              'blur-upcoming': word.isBlurred,
-                              'peek-revealed': word.isPeekRevealed,
-                              'review-priority': word.isReviewPriority,
-                              'is-playing': word.isPlayingAyah
-                            }"
+                            :class="madaniWordClassList(word)"
                             :data-verse-key="word.verseKey"
+                            :data-word-index="word.wordIndex != null ? word.wordIndex : null"
+                            :data-practice-focus="word.isPracticeFocus ? 'true' : null"
+                            :title="word.meaningLabel || null"
                             :style="word.useGlyph ? { fontFamily: `'${line.fontFamily}'` } : null"
                             role="button"
                             tabindex="0"
                             @click="onMadaniWordClick(word)"
                             @mouseenter="onMadaniWordEnter(word)"
                             @mouseleave="onMadaniWordLeave(word)"
+                            @touchstart.passive="onMadaniWordTouchStart($event, word)"
+                            @touchend.passive="onMadaniWordTouchEnd($event, word)"
+                            @touchcancel.passive="clearTouchPeek"
                             @keydown.enter.prevent="onMadaniWordClick(word)"
                             @keydown.space.prevent="onMadaniWordClick(word)"
                             v-html="word.html"
@@ -690,6 +844,39 @@
                       <div v-if="madaniPagesLoading && !currentMadaniLines.length" class="madani-page-loading">
                         <i class="bi bi-hourglass-split" aria-hidden="true"></i>
                         <span>{{ workspaceLoadingLabel }}</span>
+                      </div>
+                    </div>
+
+                    <div
+                      v-if="mushafAidVerse && (showTranslation || showTransliteration || showWordByWord || activeWordTooltip)"
+                      class="mushaf-verse-aids"
+                    >
+                      <div v-if="activeWordTooltip?.text" class="mushaf-word-tooltip" dir="ltr" lang="en">
+                        {{ activeWordTooltip.text }}
+                      </div>
+                      <div v-if="showWordByWord && mushafAidWords.length" class="mushaf-wbw-strip" dir="rtl">
+                        <button
+                          v-for="word in mushafAidWords"
+                          :key="`mushaf-wbw-${mushafAidVerse.key}-${word.index}`"
+                          type="button"
+                          class="mushaf-wbw-chip"
+                          :class="{
+                            highlighted: currentHighlightedVerseKey === mushafAidVerse.key && currentWordIndex === word.index,
+                            'practice-focus-word': isPracticeFocusWeakWord(mushafAidVerse.key, word.index, word.ar)
+                          }"
+                          @click="onMadaniAidWordClick(mushafAidVerse, word.index)"
+                        >
+                          <span class="mushaf-wbw-chip__ar" lang="ar">{{ word.ar }}</span>
+                          <span v-if="word.en" class="mushaf-wbw-chip__en" dir="ltr" lang="en">{{ word.en }}</span>
+                        </button>
+                      </div>
+                      <div v-if="showTransliteration && mushafAidVerse.transliteration" class="verse-aid-block" dir="ltr" lang="en">
+                        <div class="verse-aid-title">{{ t('memorisation.reading.transliteration') }}</div>
+                        <div class="verse-transliteration verse-aid">{{ mushafAidVerse.transliteration }}</div>
+                      </div>
+                      <div v-if="showTranslation && mushafAidVerse.translation" class="verse-aid-block" dir="ltr" lang="en">
+                        <div class="verse-aid-title">{{ t('memorisation.reading.translation') }}</div>
+                        <div class="verse-translation verse-aid">{{ mushafAidVerse.translation }}</div>
                       </div>
                     </div>
                   </article>
@@ -1036,6 +1223,29 @@
             <div class="technique-group-copy technique-group-beginner">
               <span class="technique-group-kicker">{{ t('memorisation.practiceTools.beginner') }}</span>
               <p>{{ t('memorisation.practiceTools.beginnerDesc') }}</p>
+            </div>
+
+            <div class="technique-presets" role="group" :aria-label="t('memorisation.practiceTools.beginner')">
+              <button type="button" class="technique-preset-chip" @click="applyPreset('guided')">
+                <i class="bi bi-signpost-2" aria-hidden="true"></i>
+                <span>{{ getTechniqueDisplayLabel('chaining') }}</span>
+              </button>
+              <button type="button" class="technique-preset-chip" @click="applyPreset('focus')">
+                <i class="bi bi-bullseye" aria-hidden="true"></i>
+                <span>{{ getTechniqueDisplayLabel('focus') }}</span>
+              </button>
+              <button type="button" class="technique-preset-chip" @click="applyPreset('blur')">
+                <i class="bi bi-cloud-haze2" aria-hidden="true"></i>
+                <span>{{ getTechniqueDisplayLabel('blur') }}</span>
+              </button>
+              <button type="button" class="technique-preset-chip" @click="applyPreset('chain')">
+                <i class="bi bi-pin-angle" aria-hidden="true"></i>
+                <span>{{ getTechniqueDisplayLabel('anchor') }}</span>
+              </button>
+              <button type="button" class="technique-preset-chip" @click="applyPreset('talqin')">
+                <i class="bi bi-mic" aria-hidden="true"></i>
+                <span>{{ t('memorisation.talqinMode.title') || 'Talqin' }}</span>
+              </button>
             </div>
 
             <section class="sheet-section">
@@ -2632,7 +2842,7 @@
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full">
       <div
         class="modal-content mutqin-modal-surface self-check-modal recitation-review-modal"
-        data-ai-recite-ui="v54-no-live-panel"
+        data-ai-recite-ui="v55-ai-recite"
         role="dialog"
         aria-modal="true"
         aria-labelledby="selfCheckModalTitle"
@@ -2748,6 +2958,48 @@
                 v-html="getSelfCheckDisplayArabic(selfCheckModalVerse)"
               ></div>
             </div>
+
+            <div
+              v-if="recitationCheckRecording"
+              class="self-check-mobile-recording-card d-md-none"
+              role="status"
+              aria-live="polite"
+            >
+              <span class="self-check-mobile-recording-icon" aria-hidden="true">
+                <i class="bi bi-stars"></i>
+              </span>
+              <div class="self-check-mobile-recording-copy">
+                <span class="self-check-kicker">{{ t('memorisation.reading.aiRecite') }}</span>
+                <strong>{{ t('memorisation.selfCheckRecorder.aiListening') }}</strong>
+                <p>{{ getAiRecitationLiveGuidance(recitationLiveWords) }}</p>
+              </div>
+              <button class="btn-primary self-check-action-btn" type="button" @click.stop="stopRecitationCheckRecording">
+                <i class="bi bi-stop-circle" aria-hidden="true"></i>
+                <span>{{ t('memorisation.stop_check') }}</span>
+              </button>
+            </div>
+
+            <div v-if="showAiReciteStartCta" class="ai-recite-start-row">
+              <button
+                class="btn-primary self-check-action-btn ai-recite-start-btn"
+                type="button"
+                :disabled="recitationCheckPreparing || !supportsSelfCheckRecording()"
+                @click.stop="toggleRecitationCheckForCurrentModal"
+              >
+                <i class="bi bi-stars" aria-hidden="true"></i>
+                <span>{{ t('memorisation.aiRecitePlan.startReciting') }}</span>
+              </button>
+            </div>
+
+            <div
+              v-if="recitationStartCueActive && recitationCheckRecording"
+              class="recitation-start-cue"
+              role="status"
+              aria-live="polite"
+            >
+              <i class="bi bi-stars" aria-hidden="true"></i>
+              <span>{{ t('memorisation.start_reciting_prompt') }}</span>
+            </div>
           </section>
 
           <section
@@ -2757,11 +3009,40 @@
           >
             <article class="self-check-recorder-card self-check-assessment-card" :class="{ reviewing: !!recitationCheckResult }">
               <section
-                v-if="recitationCheckVisible && !recitationCheckRecording"
+                v-if="recitationCheckVisible"
                 class="recitation-check-panel recitation-check-panel-inline"
                 aria-live="polite"
               >
-                <div v-if="recitationCheckPreparing" class="recitation-check-status">
+                <div v-if="recitationCheckRecording" class="recitation-check-status">
+                  <i class="bi bi-stars" aria-hidden="true"></i>
+                  <span>{{ getAiRecitationLiveGuidance(recitationLiveWords) }}</span>
+                </div>
+                <div
+                  v-if="recitationCheckRecording"
+                  class="recitation-live-review recitation-live-review-compact"
+                  aria-label="Live recitation word check"
+                >
+                  <div class="recitation-live-head">
+                    <span>{{ recitationLiveSummary }}</span>
+                    <strong>Live</strong>
+                  </div>
+                  <div class="recitation-word-stream recitation-live-word-stream" dir="rtl" lang="ar">
+                    <span
+                      v-for="word in getVisibleRecitationLiveWords()"
+                      :key="word.key"
+                      class="recitation-word-chip word-live"
+                      :class="`word-${word.visualStatus || word.status || 'notAttempted'}`"
+                      :title="word.note"
+                    >{{ word.text }}</span>
+                  </div>
+                </div>
+                <div v-if="recitationCheckRecording" class="recitation-check-actions">
+                  <button class="btn-primary self-check-action-btn" type="button" @click="stopRecitationCheckRecording">
+                    <i class="bi bi-stop-circle"></i>
+                    <span>{{ t('memorisation.stop_check') }}</span>
+                  </button>
+                </div>
+                <div v-else-if="recitationCheckPreparing" class="recitation-check-status">
                   <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
                   <span>{{ t('memorisation.aiCheck.checkingRecitation') }}</span>
                 </div>
@@ -4515,4 +4796,5 @@
 <script src="./Memorisation.js"></script>
 
 <style src="./Memorisation.css"></style>
+<style src="./Memorisation.mushaf-madani.css"></style>
 <style src="./Memorisation.mobile-grid.css"></style>
