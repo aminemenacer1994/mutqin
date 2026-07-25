@@ -444,10 +444,11 @@ export function buildDeterministicRecitationResult(targetText = '', recognitionW
   const correctScore = statuses.filter(word => word.status === 'correct').length
   const partialScore = statuses.filter(word => word.status === 'partial').reduce((sum, word) => {
     const confidence = Number.isFinite(Number(word.confidence)) ? Number(word.confidence) : 1
-    return sum + (0.45 * Math.max(0.35, Math.min(1, confidence)))
+    // Near-miss ASR still shows effort — credit more generously than before.
+    return sum + (0.65 * Math.max(0.4, Math.min(1, confidence)))
   }, 0)
-  const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * 0.35
-  const extraPenalty = (mistakes.extra.length || 0) * 0.35
+  const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * 0.2
+  const extraPenalty = (mistakes.extra.length || 0) * 0.2
   const baseAccuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - wrongOrderPenalty - extraPenalty) / targetCount) * 100)))
   const structuralPenalty = getStructuralScorePenalty(alignment.structural || {})
   const accuracyScore = Math.max(0, Math.min(100, baseAccuracyScore - structuralPenalty))
@@ -859,8 +860,8 @@ function classifyWordMatch({ displayText, targetWord, heardWord = {}, similarity
     && actual
     && stripArabicDefiniteArticle(expected) === stripArabicDefiniteArticle(actual)
   // Soften ASR near-misses (common on ayah-final words) without accepting weak guesses.
-  // Keep above ~0.83 so common substitutions like الصراط/السراط stay partial.
-  if (expected && (expected === actual || articleMatch || similarity >= 0.85)) {
+  // 0.78 keeps clear substitutions partial while treating close matches as correct.
+  if (expected && (expected === actual || articleMatch || similarity >= 0.78)) {
     return {
       text: displayText,
       targetWord: expected,

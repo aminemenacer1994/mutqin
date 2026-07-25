@@ -25,16 +25,17 @@ export const RECITATION_IDB_VERSION = 2
 export const RECITATION_IDB_STORE = 'sessions'
 export const RECITATION_HISTORY_IDB_STORE = 'sessionHistory'
 export const RECITATION_ANALYSIS_VERSION = '2026-06-27-live-rtl-v2'
-export const RECITATION_CONFIDENCE_THRESHOLD = Math.min(DEFAULT_RECITATION_CONFIDENCE_THRESHOLD, 0.45)
-export const RECITATION_SILENCE_THROTTLE_MS = 1400
+export const RECITATION_CONFIDENCE_THRESHOLD = Math.min(DEFAULT_RECITATION_CONFIDENCE_THRESHOLD, 0.40)
+// Give learners room to breathe between āyahs — 1.4s was cutting mid-passage.
+export const RECITATION_SILENCE_THROTTLE_MS = 3200
 export const RECITATION_CHUNK_TIMESLICE_MS = 40
-export const RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS = 4000
-export const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 1200
+export const RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS = 5000
+export const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 1800
 export const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.82
 export const SPEECHMATICS_AUDIO_BUFFER_SIZE = 2048
 export const SPEECHMATICS_MAX_DELAY_SECONDS = 0.02
-// 0.12s was cutting ayah-final words during natural pauses between ayat.
-export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.55
+// Natural pauses between āyahs need more than half a second.
+export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 1.05
 export const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0
 export const RECITATION_WORD_STATUS_CLASSES = [
   'recitation-word-pending',

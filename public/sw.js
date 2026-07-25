@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'mutqin-shell-v17';
-const RUNTIME_CACHE = 'mutqin-runtime-v17';
+const SHELL_CACHE = 'mutqin-shell-v44';
+const RUNTIME_CACHE = 'mutqin-runtime-v44';
 const SHELL_URLS = [
   '/',
   '/memorisation',

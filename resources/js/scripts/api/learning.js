@@ -247,8 +247,51 @@ export const learningApi = {
         ? assessment.ayah_range
         : undefined,
       focus_ayahs: Array.isArray(assessment?.focus_ayahs) ? assessment.focus_ayahs : undefined,
+      settings: assessment?.settings && typeof assessment.settings === 'object'
+        ? sanitizeRecommendationSettings(assessment.settings)
+        : undefined,
+      average_accuracy: Number.isFinite(Number(assessment?.average_accuracy))
+        ? Number(assessment.average_accuracy)
+        : undefined,
+      accuracy_percent: Number.isFinite(Number(assessment?.accuracy_percent))
+        ? Number(assessment.accuracy_percent)
+        : undefined,
+      attempt_count: Number.isFinite(Number(assessment?.attempt_count))
+        ? Number(assessment.attempt_count)
+        : undefined,
+      weak_words: Array.isArray(assessment?.weak_words) ? assessment.weak_words : undefined,
+      attempts: Array.isArray(assessment?.attempts)
+        ? assessment.attempts.slice(0, 10).map((attempt, index) => ({
+          attempt_number: Number(attempt?.attempt_number ?? index + 1),
+          accuracy: Number.isFinite(Number(attempt?.accuracy ?? attempt?.accuracyPercent))
+            ? Number(attempt.accuracy ?? attempt.accuracyPercent)
+            : undefined,
+          band: attempt?.band || undefined,
+          ayah_range: attempt?.ayah_range && typeof attempt.ayah_range === 'object'
+            ? attempt.ayah_range
+            : undefined,
+          color_counts: attempt?.color_counts && typeof attempt.color_counts === 'object'
+            ? attempt.color_counts
+            : undefined,
+          weak_words: Array.isArray(attempt?.weak_words) ? attempt.weak_words : undefined,
+          word_statuses: Array.isArray(attempt?.word_statuses)
+            ? attempt.word_statuses.slice(0, 200)
+            : (Array.isArray(attempt?.result?.wordStatuses)
+              ? attempt.result.wordStatuses.slice(0, 200)
+              : undefined),
+          plan_snapshot: attempt?.plan_snapshot && typeof attempt.plan_snapshot === 'object'
+            ? attempt.plan_snapshot
+            : undefined,
+        }))
+        : undefined,
     })
     return data?.recommendation ?? null
+  },
+  async getRecommendationHistory(limit = 20) {
+    const { data } = await http.get('/recommendations/history', {
+      params: { limit: Math.max(1, Math.min(50, Number(limit) || 20)) },
+    })
+    return Array.isArray(data?.history) ? data.history : []
   },
   async submitRecommendationAdaptiveAssessment(recommendationId, assessment) {
     const { data } = await http.post('/recommendations/adaptive-assessment', {
@@ -295,6 +338,10 @@ function sanitizeRecommendationSettings(settings) {
   if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(complementary)) {
     clean.complementary_technique = complementary
   }
+  const tipTechnique = String(settings.tip_technique || '').toLowerCase().trim()
+  if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(tipTechnique)) {
+    clean.tip_technique = tipTechnique
+  }
   if (settings.reciter) clean.reciter = String(settings.reciter)
   const speed = Number(settings.playback_speed)
   if (Number.isFinite(speed)) clean.playback_speed = Math.max(0.5, Math.min(1.5, Number(speed.toFixed(2))))
@@ -315,7 +362,25 @@ function sanitizeRecommendationSettings(settings) {
   const chainingReps = Number(settings.chaining_repetitions)
   if (Number.isFinite(chainingReps)) clean.chaining_repetitions = Math.max(1, Math.min(5, Math.round(chainingReps)))
   const anchorCount = Number(settings.anchor_count)
-  if (Number.isFinite(anchorCount)) clean.anchor_count = Math.max(1, Math.min(3, Math.round(anchorCount)))
+  if (Number.isFinite(anchorCount)) clean.anchor_count = Math.max(1, Math.min(4, Math.round(anchorCount)))
+  const weakSource = Array.isArray(settings.practice_weak_words)
+    ? settings.practice_weak_words
+    : (Array.isArray(settings.weak_words) ? settings.weak_words : null)
+  if (weakSource?.length) {
+    clean.practice_weak_words = weakSource.slice(0, 12).map((word) => {
+      if (!word || typeof word !== 'object') return null
+      const wordIndex = Number(word.ayahWordIndex ?? word.wordIndex ?? word.index)
+      if (!Number.isFinite(wordIndex) || wordIndex < 0) return null
+      return {
+        text: String(word.text || word.word || word.ar || '').slice(0, 120),
+        wordIndex,
+        ayahNumber: Number.isFinite(Number(word.ayahNumber)) ? Number(word.ayahNumber) : undefined,
+        surahId: Number.isFinite(Number(word.surahId)) ? Number(word.surahId) : undefined,
+        verseKey: word.verseKey || word.ayahKey || undefined,
+        reason: word.reason || word.status || undefined,
+      }
+    }).filter(Boolean)
+  }
   return Object.keys(clean).length ? clean : null
 }
 

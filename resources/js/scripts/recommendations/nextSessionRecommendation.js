@@ -8,6 +8,7 @@ import {
   getTechniqueShortLabel,
 } from '../techniques/techniqueDisplay.js'
 import { formatRepetitionCountLabel } from '../formatting/ayahLabels.js'
+import { estimatePracticeDuration } from '../session/sessionPracticeCoach.js'
 
 export {
   formatAyahRangeLabel,
@@ -420,8 +421,15 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
     || type === RECOMMENDATION_TYPES.SURAH_COMPLETE
     || type === RECOMMENDATION_TYPES.MANUAL_SELECTION
 
-  // Already a forward plan — keep the range; drop contradictory why copy.
-  if (!isRepeatRecommendation(recommendation) && !isTerminal) {
+  const recFrom = Number(range?.from || 0)
+  // A “forward” plan that still sits inside the completed window is stale —
+  // treat it like a repeat so we advance to the true next session.
+  const rangeOverlapsCompleted = snapshotStart > 0
+    && recFrom > 0
+    && recFrom <= snapshotEnd
+
+  // Already a forward plan beyond the completed range — keep it.
+  if (!isRepeatRecommendation(recommendation) && !isTerminal && !rangeOverlapsCompleted) {
     return {
       ...next,
       reason_code: clearReason
@@ -643,22 +651,22 @@ export function buildFocusedPracticeRange(input = {}) {
  */
 export function estimatePracticeMinutes(input = {}) {
   const ayahCount = Math.max(1, Number(input.ayahCount) || 1)
-  const words = Number(input.wordCount)
-    || Number(input.workloadScore)
-    || (ayahCount * 12)
   const settings = input.settings && typeof input.settings === 'object' ? input.settings : {}
-  const reps = Math.max(1, Number(settings.repetitions) || 3)
-  const speed = Math.max(0.5, Number(settings.playback_speed) || 1)
-  let minutes = Math.round((words * reps) / (15 * speed))
-
   const technique = String(settings.technique || '').toLowerCase()
-  if (settings.blur_enabled || technique === 'blur') minutes += 2
-  if (settings.talqin_enabled || technique === 'talqin') minutes += 2
-  if (settings.chaining_enabled || technique === 'chaining') minutes += 1
-  if (settings.anchor_mode_enabled || technique === 'anchor') minutes += 1
-  if (settings.focus_enabled || technique === 'focus') minutes += 1
+  const audioDurationSeconds = Number(input.audioDurationSeconds)
+  const hasAudio = Number.isFinite(audioDurationSeconds) && audioDurationSeconds > 0
+  const wordProxy = Number(input.wordCount) || Number(input.workloadScore) || (ayahCount * 12)
+  const inferredAudioSeconds = Math.max(ayahCount * 22, wordProxy * 0.9)
 
-  return Math.max(4, Math.min(20, minutes || 6))
+  const estimated = estimatePracticeDuration({
+    audioDurationSeconds: hasAudio ? audioDurationSeconds : inferredAudioSeconds,
+    playbackSpeed: Number(settings.playback_speed) || 1,
+    repetitions: Number(settings.repetitions) || 3,
+    pauseBetweenRepeats: Number(input.pauseBetweenRepeats) || 1.5,
+    technique: technique || 'talqin',
+    ayahCount,
+  })
+  return estimated.minutes
 }
 
 /**

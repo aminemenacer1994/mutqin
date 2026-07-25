@@ -761,6 +761,41 @@ class RepeatAdaptationService
             $merged['anchor_count'] = max(1, min(3, (int) $overrides['anchor_count']));
         }
 
+        $weakSource = null;
+        if (array_key_exists('practice_weak_words', $overrides) && is_array($overrides['practice_weak_words'])) {
+            $weakSource = $overrides['practice_weak_words'];
+        } elseif (array_key_exists('weak_words', $overrides) && is_array($overrides['weak_words'])) {
+            $weakSource = $overrides['weak_words'];
+        }
+        if (is_array($weakSource)) {
+            $cleaned = [];
+            foreach (array_slice($weakSource, 0, 12) as $word) {
+                if (! is_array($word)) {
+                    continue;
+                }
+                $wordIndex = isset($word['wordIndex']) ? (int) $word['wordIndex'] : (isset($word['index']) ? (int) $word['index'] : null);
+                if ($wordIndex === null || $wordIndex < 0) {
+                    continue;
+                }
+                $cleaned[] = [
+                    'text' => isset($word['text']) ? mb_substr((string) $word['text'], 0, 120) : '',
+                    'wordIndex' => $wordIndex,
+                    'ayahNumber' => isset($word['ayahNumber']) && is_numeric($word['ayahNumber']) ? (int) $word['ayahNumber'] : null,
+                    'surahId' => isset($word['surahId']) && is_numeric($word['surahId']) ? (int) $word['surahId'] : null,
+                    'verseKey' => isset($word['verseKey']) ? mb_substr((string) $word['verseKey'], 0, 32) : null,
+                    'reason' => isset($word['reason']) ? mb_substr((string) $word['reason'], 0, 40) : null,
+                ];
+            }
+            $merged['practice_weak_words'] = $cleaned;
+        }
+
+        if (array_key_exists('tip_technique', $overrides) && is_string($overrides['tip_technique'])) {
+            $tip = $this->normaliseTechnique($overrides['tip_technique']);
+            if ($tip) {
+                $merged['tip_technique'] = $tip;
+            }
+        }
+
         return $merged;
     }
 

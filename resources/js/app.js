@@ -45,16 +45,26 @@ const MemorisationLoadError = {
 };
 
 /**
- * Mix watch rewrites public/js/memorisation.js while the browser may still be
+ * Mix watch rewrites public/js/memorisation*.js while the browser may still be
  * requesting it — that surfaces as ChunkLoadError. Retry a few times before failing.
+ * Chunk URLs are contenthashed (see webpack.mix.cjs) so a new app.js always pulls
+ * a fresh Memorisation bundle.
  */
 function loadMemorisationChunk(attempt = 0) {
-    return import(/* webpackChunkName: "memorisation" */ './views/Memorisation.vue').catch((error) => {
+    return import(/* webpackChunkName: "memorisation" */ './views/Memorisation.vue').then((mod) => {
+        if (typeof window !== 'undefined') {
+            window.__MUTQIN_PRACTICE_COACH__ = 'v17';
+            window.__MUTQIN_AI_RECITE_UI__ = 'v44-force';
+            document.documentElement.dataset.practiceCoach = 'v2';
+            document.documentElement.dataset.aiReciteUi = 'v44-force';
+        }
+        return mod;
+    }).catch((error) => {
         const name = String(error?.name || '');
         const message = String(error?.message || '');
         const isChunkError = name === 'ChunkLoadError'
             || /Loading chunk \d+ failed/i.test(message)
-            || /memorisation\.js/i.test(message);
+            || /memorisation/i.test(message);
         if (isChunkError && attempt < 3) {
             const delayMs = 400 * (attempt + 1);
             return new Promise((resolve, reject) => {

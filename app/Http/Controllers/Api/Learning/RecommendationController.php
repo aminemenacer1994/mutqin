@@ -136,11 +136,26 @@ class RecommendationController extends Controller
             'plan_detail' => $validated['plan_detail'] ?? null,
             'ayah_range' => $validated['ayah_range'] ?? null,
             'focus_ayahs' => $validated['focus_ayahs'] ?? null,
+            'settings' => $validated['settings'] ?? null,
+            'average_accuracy' => $validated['average_accuracy'] ?? null,
+            'accuracy_percent' => $validated['accuracy_percent'] ?? null,
+            'attempt_count' => $validated['attempt_count'] ?? null,
+            'weak_words' => $validated['weak_words'] ?? [],
+            'attempts' => $validated['attempts'] ?? [],
         ]);
 
         return response()->json([
             'saved' => true,
             'recommendation' => $payload,
+        ]);
+    }
+
+    public function history(Request $request, NextSessionRecommendationService $service): JsonResponse
+    {
+        $limit = (int) $request->query('limit', 20);
+
+        return response()->json([
+            'history' => $service->history($request->user(), $limit),
         ]);
     }
 

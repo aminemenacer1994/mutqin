@@ -143,7 +143,7 @@
     "transliteration": "النسخ الصوتي",
     "transliterationDesc": "مساعدة نطق بالحروف اللاتينية",
     "wordByWord": "كلمة بكلمة",
-    "wordByWordDesc": "شرائح كلمات فردية مع المعاني",
+    "wordByWordDesc": "معنى إنجليزي تحت كل كلمة عربية",
     "wordAudio": "صوت الكلمات",
     "wordAudioDesc": "تشغيل صوتي مع تمييز الكلمات"
   },
@@ -1098,8 +1098,118 @@
     "no_surah_selected": "لم تُختر سورة",
     "postSession": {
       "kicker": "اكتملت الجلسة",
-      "title": "ما شاء الله!",
-      "message": "ما شاء الله! تقبل الله جهدك ووفقك للاستمرار في الحفظ.",
+      "title": "اكتملت الجلسة",
+      "message": "اختر كيف تتابع.",
+      "coach": {
+        "yourNextPractice": "الخطوة التالية",
+        "whyLabel": "السبب",
+        "methodLabel": "الطريقة",
+        "aiCardHint": "اتلُ من حفظك لنُنشئ خطتك.",
+        "aiFirstBody": "اختبر نفسك بالتلاوة الذكية أولًا. ستظهر نتيجتك وخطة التدريب هنا بعد الاستماع إليك.",
+        "aiRetestBody": "أنهيت خطة التدريب. اختبر بالتلاوة الذكية مجددًا — اجتز الاختبار لفتح الجلسة التالية.",
+        "aiRetestHint": "اجتز هذا الاختبار لفتح الجلسة التالية.",
+        "differentSession": "جلسة أخرى",
+        "nextHintAi": "اختبر بالتلاوة الذكية لفتح خطتك التالية.",
+        "rangeCaption": {
+          "test": "اختبر هذا المقطع",
+          "retest": "أعد اختبار هذا المقطع",
+          "practice": "تدرّب على هذا المقطع",
+          "next": "جاهز للجلسة التالية"
+        },
+        "chooseWhenReady": "اختر جلسة عندما تكون مستعدًا.",
+        "weakWordsFocus": "كلمات ضعيفة",
+        "ayahLabel": "آية {ayah}",
+        "ayahRangeLabel": "آيات {from}–{to}",
+        "replayPhrase": "أعد",
+        "headers": {
+          "practiceDone": "اكتمل التدريب",
+          "aiDone": "ما تحتاج تقويته تاليًا"
+        },
+        "subtitles": {
+          "practiceDone": "اختبر بالتلاوة الذكية لفتح خطتك التالية.",
+          "aiDone": "ركّز على هذه الكلمات تاليًا.",
+          "aiFirst": "اختبر بالتلاوة الذكية أولًا — ثم تظهر خطتك هنا.",
+          "retestAfterPractice": "اختبر مجددًا بالتلاوة الذكية. اجتز الاختبار لفتح الجلسة التالية."
+        },
+        "guidance": {
+          "recommended": "استمع مرة ثم كرّر.",
+          "afterPractice": "اختبر بالتلاوة الذكية عندما تكون مستعدًا.",
+          "afterAi": "تدرّب على الكلمات المحددة ببطء."
+        },
+        "cta": {
+          "startPractice": "ابدأ التدريب",
+          "startFocusPractice": "ابدأ تدريبًا مركّزًا"
+        },
+        "live": {
+          "before": "بسم الله. استمع مرة واتبع الكلمات.",
+          "beforeTalqin": "استمع مرة ثم اتلُ بصوت مسموع.",
+          "beforeFocus": "استمع مرة — الكلمات المذهَّبة تحتاج عناية إضافية.",
+          "playing": "اتبع الكلمات بهدوء — فتح الله عليك.",
+          "playingFocus": "العلامات الذهبية تحتاج عنايتك — استمع بحضور.",
+          "focusWord": "تمسّك بهذه الكلمة بلطف: {word}",
+          "focusCueTitle": "ركّز على هذه الكلمة",
+          "focusBadge": "كلمات للمتابعة",
+          "focusStripLabel": "تمسّك بـ",
+          "hooksLabel": "كلماتك الأساسية",
+          "pause": "الآن اتلُ بصوت مسموع بحضور.",
+          "pauseFocus": "كرّر الكلمات المذهَّبة بصوت مسموع، ثم الآية كاملة.",
+          "difficulty": "خفّف السرعة — جرّب هذه الآية بسرعة {speed}×.",
+          "after": "الحمد لله. الآن حاول التلاوة دون النظر.",
+          "ready": "ما شاء الله — عندما تشعر بالاستعداد، اختبر من حفظك.",
+          "ayahCue": "آية {ayah}",
+          "talqin": {
+            "before": "بسم الله. استمع مرة ثم اتلُ بصوت مسموع.",
+            "playing": "استمع جيدًا. دورك يأتي بعد الصوت.",
+            "pause": "دورك — اتلُ هذه الآية بصوت مسموع ببطء."
+          },
+          "focus": {
+            "before": "نبقى مع آية واحدة. لا تستعجل.",
+            "playing": "اتبع هذه الآية فقط. دعها تستقر.",
+            "pause": "كرّر نفس الآية بصوت مسموع قبل الانتقال."
+          },
+          "blur": {
+            "before": "ستختفي الكلمات تدريجيًا. ثق بحفظك.",
+            "playing": "بينما يختفي النص، اتلُ من قلبك.",
+            "pause": "حاول من حفظك. ثبّتها الله في قلبك."
+          },
+          "chaining": {
+            "before": "سنربط هذه الآيات في سياق واحد.",
+            "playing": "استمع كيف تتصل هذه الآية بما بعدها.",
+            "pause": "اتلُ ما سمعت، ثم صلْه بالآية التالية."
+          },
+          "anchor": {
+            "before": "الكلمات الذهبية مفاتيحك — لاحظها أولًا.",
+            "playing": "راقب الكلمات المحددة. ستعينك على التذكر.",
+            "pause": "قل الكلمات الأساسية أولًا، ثم الآية كاملة."
+          },
+          "technique": {
+            "talqin": {
+              "label": "استمع ثم اتلُ",
+              "hint": "القارئ يقود. عندما يتوقف، قلها بصوت مسموع."
+            },
+            "focus": {
+              "label": "آية واحدة في كل مرة",
+              "hint": "ابقَ مع هذه الآية حتى تثبت في قلبك."
+            },
+            "blur": {
+              "label": "إخفاء النص شيئًا فشيئًا",
+              "hint": "كلما اختفت الكلمات، دع حفظك يقود — واسأل الله الثبات."
+            },
+            "chaining": {
+              "label": "ربط الآيات",
+              "hint": "صل كل آية بما بعدها في سياق سلس."
+            },
+            "anchor": {
+              "label": "التمسّك بالكلمات الأساسية",
+              "hint": "الكلمات الذهبية مفاتيحك — انطقها بوضوح ثم الآية كاملة."
+            },
+            "listen": {
+              "label": "استمع بحضور",
+              "hint": "اتبع الكلمات بهدوء واتلُ بإخلاص."
+            }
+          }
+        }
+      },
       "repeat": "إعادة هذه الجلسة",
       "newSession": "بدء جلسة جديدة",
       "save": "حفظ هذه الجلسة",
@@ -1503,6 +1613,79 @@
       "statsNew": "جديدة",
       "statsRepeated": "مكررة"
     },
+    "aiRecitePlan": {
+      "startReciting": "ابدأ التلاوة",
+      "startHint": "خذ وقتك. اتلُ المقطع كاملًا من حفظك — التوقف قليلًا لا بأس. حتى ٣ محاولات هادئة.",
+      "attemptProgress": "محاولة {current} من {max}",
+      "tryAgainRemaining": "حاول مجددًا ({remaining} متبقية)",
+      "seePracticePlan": "عرض خطتي",
+      "averageScore": "الدقة: {score}%",
+      "accuracyLabel": "الدقة",
+      "resultTag": "الخطوة التالية",
+      "resultTitle": "اكتملت الجلسة",
+      "resultSubtitle": "هذه خطة التدريب من التلاوة الذكية.",
+      "resultAria": "نتيجة التلاوة الذكية وخطة التدريب",
+      "rangeLabel": "النطاق",
+      "methodLabel": "الطريقة",
+      "techniques": "التقنيات",
+      "startThisPlan": "ابدأ هذه الخطة",
+      "startSimplerPlan": "ابدأ هذه الخطة الأبسط",
+      "continueNextSession": "تابع إلى الجلسة التالية",
+      "masteryTitle": "تم إتقان النطاق",
+      "masterySubtitle": "استذكار قوي — جاهز للجلسة التالية.",
+      "masteryBanner": "تم الإتقان. يمكنك المتابعة إلى الجلسة التالية.",
+      "simplerSubtitle": "ليس ثابتًا بعد — تدرّب على هذه الخطة الأبسط ثم اختبر مجددًا.",
+      "simplerBanner": "واصل التدريب على هذه الخطة الأبسط، ثم اختبر بالتلاوة الذكية مجددًا.",
+      "returningToPlan": "جارٍ فتح خطة التدريب…",
+      "focusAyah": "ركّز على الآية {ayah}",
+      "focusAyahs": "ركّز على الآيات {ayahs}",
+      "alsoWith": "أيضًا: {technique}",
+      "alsoTip": "نصيحة: {technique}",
+      "beginner": {
+        "yourResult": "نتيجتك",
+        "what": "ما تتدرّب عليه",
+        "how": "كيف",
+        "words": "كلمات للانتباه",
+        "strong": "قوي — جاهز للمتابعة",
+        "notFirm": "ليس ثابتًا بعد"
+      },
+      "surahRecap": {
+        "aria": "ملخص إتمام السورة",
+        "kicker": "اكتملت السورة",
+        "title": "أتممت {surah}",
+        "summary": "نظرة هادئة على تقدّمك في هذه السورة.",
+        "sessions": "تدرّبت على هذه السورة عبر {count} جلسات.",
+        "accuracy": "آخر دقة في التلاوة الذكية: {score}%",
+        "technique": "الطريقة التي ساعدت: {technique}",
+        "weakLeft": "ما زال يستحق الانتباه: {items}",
+        "next": "التالي: ابدأ {surah} · الآيات {from}–{to}",
+        "cta": "ابدأ السورة التالية"
+      },
+      "feedbackStrong": "استرجاع قوي. مراجعة خفيفة تثبّته.",
+      "feedbackFocused": "جهد طيب. قوّ الكلمات الضعيفة تاليًا.",
+      "feedbackGentle": "بهدوء. خطوةً خطوة.",
+      "feedbackMixed": "خطة قصيرة مركّزة ستساعد.",
+      "whyWeakWords": "دقة {accuracy}% · {count} كلمات · {techniques}",
+      "whyStrong": "استرجاع قوي. خطة خفيفة تبقيه حيًّا.",
+      "whyDefault": "مبنية على نتيجة التلاوة الذكية.",
+      "setup": {
+        "speed": "سرعة {speed}×",
+        "repOne": "تكرار واحد",
+        "reps": "{count} تكرارات"
+      },
+      "tech": {
+        "anchorTitle": "ارتكاز",
+        "anchorHow": "إظهار الكلمات الضعيفة قبل الآية.",
+        "talqinTitle": "تلقين",
+        "talqinHow": "استمع ثم كرّر — آيةً آية.",
+        "chainingTitle": "تجزئة",
+        "chainingHow": "أجزاء قصيرة ثم ربط بطيء.",
+        "blurTitle": "إخفاء",
+        "blurHow": "إخفاء الكلمات تدريجيًا.",
+        "focusTitle": "تركيز",
+        "focusHow": "آية واحدة في كل مرة."
+      }
+    },
     "start_reciting_prompt": "ابدأ التلاوة",
     "view_all_recording_library": "عرض كل مكتبة التسجيلات",
     "back_to_session_complete": "العودة لإكمال الجلسة",
@@ -1771,6 +1954,7 @@
       "noAudioCaptured": "No audio was captured.",
       "checkFailed": "The memorisation check could not be completed.",
       "recitationCheckFailed": "The recitation check could not be completed.",
+      "checkingRecitation": "جارٍ التحقق من تلاوتك…",
       "speechRecognitionFailed": "Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted.",
       "stepListen": "مراجعة الجلسة",
       "tryAgain": "حاول مرة أخرى",
@@ -1778,7 +1962,7 @@
       "matchLabel": "التطابق",
       "matchPercentAria": "تطابق {percent} بالمئة",
       "colourMeterAria": "تفصيل ألوان الكلمات",
-      "guidanceFreeFlow": "نستمع الآن. أتل حتى النهاية — تتحدث الألوان أثناء التلاوة، وتظهر النتيجة النهائية بعد التوقف.",
+      "guidanceFreeFlow": "نستمع معك. خذ وقتك — أكمل المقطع كاملًا ثم اضغط إيقاف عندما تنتهي.",
       "guidanceHiddenReveal": "نستمع الآن. أتل الكلمة المظللة للمتابعة.",
       "guidanceFixWord": "خطأ عند {word}. حاول هذه الكلمة مرة أخرى.",
       "wordsToRevisit": "أعد النظر",

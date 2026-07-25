@@ -241,18 +241,14 @@ function t(key, params = {}) {
   const vue = await fs.readFile(path.join(root, 'views/Memorisation.vue'), 'utf8')
   const js = await fs.readFile(path.join(root, 'views/Memorisation.js'), 'utf8')
   const css = await fs.readFile(path.join(root, 'views/Memorisation.css'), 'utf8')
+  const calmModal = vue.match(/post-session-simple__stack--calm[\s\S]*?<\/section>/)?.[0] || ''
+
   assert.match(vue, /Teleport to="body"/)
   assert.match(vue, /post-session-simple/)
+  assert.match(vue, /post-session-simple__stack--calm|ps-plan--calm/)
   assert.doesNotMatch(vue, /post-session-simple__confidence/, 'confidence Step 2 removed from completion UI')
   assert.doesNotMatch(vue, /submitPostSessionConfidence/, 'confidence CTA removed from completion UI')
-  assert.match(vue, /ps-plan__chip|post-session-simple__pill/)
-  assert.match(vue, /postSessionStatsExpanded/)
-  assert.match(vue, /postSessionStatsSummary/)
-  assert.match(vue, /adjustPlan/)
-  assert.match(vue, /openPostSessionAdjustPlan/)
-  assert.match(vue, /ps-plan__adjust|post-session-simple__adjust-link/)
-  assert.match(vue, /ps-plan__why|post-session-simple__reason/)
-  assert.match(vue, /postSessionWhyDisclosureText|ps-plan__why/)
+  assert.match(vue, /ps-plan__chip|ps-calm__chips|ps-ai-result__chip/)
   assert.match(vue, /suggestedNextStep/)
   assert.match(vue, /startDifferentSession/)
   assert.match(vue, /post-session-simple--builder-open/)
@@ -262,18 +258,20 @@ function t(key, params = {}) {
   assert.doesNotMatch(vue, /postSessionWhyLabel/, 'always-visible why label removed')
   assert.doesNotMatch(vue, /post-session-simple__ai-metrics/, 'AI section stays one-line — no metrics dashboard')
   assert.doesNotMatch(vue, /tryThisCombination/, 'Practice style label removed from plan card')
-  assert.match(vue, /startPostSessionAdaptiveCheck/)
-  assert.match(vue, /ps-quiz/)
-  assert.match(vue, /ps-quiz__cta/)
-  assert.match(vue, /post-session-simple__stack/)
-  assert.match(vue, /adaptiveCheck\.memoryCheckTitle|memoryCheckTitle|startPostSessionAdaptiveCheck/)
-  assert.match(vue, /startPostSessionAdaptiveCheck/)
-  assert.match(vue, /adaptiveCheck\.memoryCheckCta|memoryCheckCta|ps-quiz__cta/)
-  assert.match(vue, /ps-plan__value|practiceApproach/)
-  assert.match(vue, /ps-plan/)
-  assert.match(vue, /@click="openPostSessionAiRecite"/, 'AI Recite remains available as Or recite aloud')
-  assert.match(vue, /voiceOnlyCta|ps-quiz__voice/)
-  assert.match(vue, /aiReciteTitle/)
+  assert.ok(calmModal.length > 0, 'calm plan modal present')
+  assert.doesNotMatch(calmModal, /ps-quiz/, 'quiz section removed from recommendation modal')
+  assert.doesNotMatch(calmModal, /startPostSessionAdaptiveCheck/, 'quiz CTA removed from recommendation modal')
+  assert.doesNotMatch(calmModal, /post-session-simple__stats/, 'session stats removed from recommendation modal')
+  assert.doesNotMatch(calmModal, /ps-plan__adjust|openPostSessionAdjustPlan/, 'adjust plan removed from recommendation modal')
+  assert.match(vue, /testWithAiRecite|openPostSessionAiRecite/)
+  assert.match(vue, /onPostSessionCalmPrimaryAction/)
+  assert.match(vue, /live-practice-coach/)
+  assert.match(vue, /live-practice-method/)
+  assert.match(vue, /liveTechniqueGuide/)
+  assert.match(js, /aiReciteAdvanceToNextSession/)
+  assert.match(js, /resolveLiveTechniqueGuide/)
+  assert.match(js, /practice-focus-word|focusPracticeWeakWord|practiceFocusWeakWords/)
+  assert.match(css, /\.practice-focus-word/)
   assert.doesNotMatch(vue, /plan-tech-list/, 'techniques render as one practice approach, not peer cards')
   assert.match(js, /buildCombinedCheckInsight/)
   assert.match(js, /submitRecommendationConfidence/)
@@ -284,21 +282,25 @@ function t(key, params = {}) {
   assert.match(js, /sampleSession:\s*keepSample/)
   assert.match(js, /adaptRecommendationForAiAssessment/)
   assert.match(js, /adaptRecommendationForAdaptiveAssessment/)
-  assert.match(js, /startPostSessionAdaptiveCheck/)
   assert.match(js, /openPostSessionAiRecite/)
+  assert.match(js, /onPostSessionCalmPrimaryAction/)
+  assert.match(js, /recommendedPracticeCompleted/)
+  assert.match(js, /estimatePracticeDuration|postSessionEstimatedTimeLabel/)
+  assert.match(js, /capturePracticeFocusWeakWordsFromResult/)
+  assert.match(js, /sessionPracticeCoach/)
   assert.match(js, /submitRecommendationAdaptiveAssessment/)
   assert.match(js, /selectAdaptiveOption/)
   assert.match(js, /buildPostSessionAiReviewDetails/)
   assert.match(js, /buildAiReviewDetails/)
   assert.match(js, /postSessionAiReviewDetails/)
   assert.match(js, /summaryLine/)
-  assert.match(vue, /ps-plan__title|post-session-simple__plan-copy/)
+  assert.match(vue, /ps-plan__title|ps-calm__range|post-session-simple__plan-copy|ps-ai-result__range/)
   assert.doesNotMatch(
     vue,
     /post-session-simple__plan-start/,
     'plan card must not duplicate the footer primary CTA'
   )
-  assert.match(vue, /openPostSessionRecommendationConfirm/)
+  assert.match(vue, /openPostSessionRecommendationConfirm|onPostSessionCalmPrimaryAction/)
   assert.match(
     css,
     /\.post-session-simple__dialog[\s\S]*?width:\s*min\(52rem/,
@@ -306,11 +308,9 @@ function t(key, params = {}) {
   )
   assert.match(vue, /data-plan="postSessionPlanKind"|:data-plan="postSessionPlanKind"/)
   assert.match(js, /postSessionPlanKind\(\)/)
-  assert.match(css, /\.ps-plan|post-session-simple__plan-glow/)
-  assert.match(css, /\.ps-quiz/)
-  assert.match(css, /post-session-check-note-in|post-session-insight-in/)
-  assert.match(css, /\.ps-plan/)
-  assert.match(css, /\.ps-plan__body/)
+  assert.match(css, /\.ps-plan|post-session-simple__plan-glow|ps-plan--calm/)
+  assert.match(css, /\.live-practice-coach/)
+  assert.match(css, /\.practice-focus-word/)
   assert.match(js, /openPostSessionAdjustPlan/)
   assert.match(js, /postSessionViewState/)
   assert.match(js, /deriveCompletionFlowPhase/)
@@ -318,26 +318,18 @@ function t(key, params = {}) {
   assert.match(js, /adaptRecommendationForConfidence/)
   assert.doesNotMatch(js, /buildAdaptationExplanations/)
   assert.match(js, /aiReciteOffline/)
-  assert.match(vue, /quizAiTitle|ps-quiz|postSessionMemoryCheck/)
   assert.match(js, /buildCompletionPerformancePayload/)
   assert.match(js, /postSessionShowRepeatAction\(\)[\s\S]*return false/)
   assert.match(js, /postSessionStaticPills/)
   assert.match(js, /postSessionSimpleReason/)
   assert.match(js, /postSessionWhyDisclosureText/)
   assert.match(js, /postSessionHasAiCheck/)
-  assert.match(js, /postSessionMemoryCheckBusy/)
   assert.match(js, /evidenceFromSessionAndConfidence/)
   assert.match(js, /confidenceConfident/)
   assert.match(js, /confidenceNeedsPractice/)
   assert.doesNotMatch(js, /postSessionWhyLabel/)
-  assert.match(vue, /ps-plan__why|postSessionWhyDisclosureText/)
-  assert.match(js, /togglePostSessionWhy/)
-  assert.match(vue, /quiz-ai-result|ps-quiz/)
-  assert.match(vue, /quizAiTitle/)
   assert.match(js, /guidanceFreeFlow|aiRecitationStrictProgression = false/)
-  assert.match(js, /postSessionQuizScoreLine/)
   assert.doesNotMatch(js, /Each word must turn green before the next word unlocks/)
-  assert.match(css, /quiz-ai-result__grid/)
   assert.match(js, /postSessionWhyExpanded:\s*false/)
   assert.match(js, /postSessionStatsExpanded:\s*false/)
   assert.match(js, /sessionHintCount/)
@@ -347,9 +339,6 @@ function t(key, params = {}) {
   assert.match(js, /chainingEnabled/)
   assert.match(js, /anchorModeEnabled/)
   assert.match(css, /onboarding-post-session-tools[\s\S]*z-index:\s*12720/)
-  assert.match(css, /\.ps-plan__adjust|post-session-simple__adjust-link/)
-  assert.match(css, /\.post-session-simple__segment-btn\.is-selected/)
-  assert.match(css, /post-session-simple__why-panel|why-panel-text/)
   assert.match(vue, /showPostSessionModal && !postSessionAiReciteActive/)
   assert.match(vue, /zIndex:\s*20000|z-index:\s*20000/)
   assert.match(css, /self-check-modal-overlay--above-post-session[\s\S]*z-index:\s*20000/)
@@ -397,6 +386,26 @@ function t(key, params = {}) {
   const clearHedging = adaptRecommendationForConfidence(continueRec, 'confident')
   assert.equal(clearHedging.user_reason, null)
   assert.equal(clearHedging.reason_code, 'confidence_confident')
+
+  // Stale “continue” that still sits inside the completed window must advance.
+  const staleContinue = {
+    id: 11,
+    type: RECOMMENDATION_TYPES.CONTINUE,
+    session_mode: 'new_learning',
+    range_kind: 'new',
+    surah: { id: 2, name: 'Al-Baqarah' },
+    ayah_range: { from: 12, to: 14, count: 3 },
+    reason_code: 'continue_while_fresh',
+    settings: { technique: 'talqin', playback_speed: 1, repetitions: 3 },
+  }
+  const advancedFromStale = adaptRecommendationForConfidence(staleContinue, 'confident', {
+    rangeStart: 12,
+    rangeEnd: 14,
+    totalAyahsInSurah: 286,
+  })
+  assert.equal(advancedFromStale.type, RECOMMENDATION_TYPES.CONTINUE)
+  assert.equal(advancedFromStale.ayah_range.from, 15)
+  assert.equal(advancedFromStale.ayah_range.to, 17)
 
   const needsPractice = adaptRecommendationForConfidence(continueRec, 'needs_practice', {
     rangeStart: 12,

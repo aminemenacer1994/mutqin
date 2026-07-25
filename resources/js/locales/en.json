@@ -145,7 +145,7 @@
     "transliteration": "Transliteration",
     "transliterationDesc": "Latin script pronunciation aid",
     "wordByWord": "Word by word",
-    "wordByWordDesc": "Individual word chips with meanings",
+    "wordByWordDesc": "English meaning under each Arabic word",
     "wordAudio": "Word audio",
     "wordAudioDesc": "Audio playback with word highlighting"
   },
@@ -774,6 +774,7 @@
       "noAudioCaptured": "No audio was captured.",
       "checkFailed": "The memorisation check could not be completed.",
       "recitationCheckFailed": "The recitation check could not be completed.",
+      "checkingRecitation": "Checking your recitation…",
       "speechRecognitionFailed": "Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted.",
       "stepLabel": "Step {step} of {total}",
       "stepPrepare": "Prepare to recite",
@@ -787,7 +788,7 @@
       "matchLabel": "Match",
       "matchPercentAria": "Match {percent} percent",
       "colourMeterAria": "Word colour breakdown",
-      "guidanceFreeFlow": "Listening now. Recite to the end — colours update as you go, and final results appear after you stop.",
+      "guidanceFreeFlow": "Listening with you. Take your time — finish the whole passage, then tap Stop when you are done.",
       "guidanceHiddenReveal": "Listening now. Recite the highlighted word to continue.",
       "guidanceFixWord": "Mistake at {word}. Try that word again.",
       "wordsToRevisit": "Revisit",
@@ -1176,7 +1177,127 @@
     "postSession": {
       "kicker": "Session complete",
       "title": "Session complete",
-      "message": "Here is a concise summary of what you covered, then choose your next step.",
+      "message": "Choose how to continue.",
+      "coach": {
+        "yourNextPractice": "Next step",
+        "whyLabel": "Why",
+        "methodLabel": "Method",
+        "aiCardHint": "Recite from memory so we can build your plan.",
+        "aiFirstBody": "Test yourself with AI Recite first. Your score and practice plan will appear here after we hear you.",
+        "aiRetestBody": "You finished the practice plan. Test with AI Recite again — pass to unlock the next session.",
+        "aiRetestHint": "Pass this test to unlock the next session.",
+        "differentSession": "Other session",
+        "nextHintAi": "Test with AI Recite to unlock your next plan.",
+        "rangeCaption": {
+          "test": "Test this range",
+          "retest": "Retest this range",
+          "practice": "Practise this range",
+          "next": "Ready for the next session"
+        },
+        "chooseWhenReady": "Choose a session when ready.",
+        "weakWordsFocus": "Weak words",
+        "ayahLabel": "Āyah {ayah}",
+        "ayahRangeLabel": "Āyahs {from}–{to}",
+        "replayPhrase": "Replay",
+        "ayahNeededMore": "Āyah {ayah} needs another slow pass.",
+        "takeItSlow": "You paused often. Slow down on one āyah.",
+        "speedSettled": "Keep this pace when you test.",
+        "readyToTest": "Ready to test.",
+        "firstPracticeDone": "Practice done. Test when ready.",
+        "headers": {
+          "practiceDone": "Practice complete",
+          "aiDone": "What to strengthen next"
+        },
+        "subtitles": {
+          "practiceDone": "Test with AI Recite to unlock your next plan.",
+          "aiDone": "Focus on these words next.",
+          "aiFirst": "Test with AI Recite first — then your plan appears here.",
+          "retestAfterPractice": "Test again with AI Recite. Pass to unlock the next session."
+        },
+        "guidance": {
+          "recommended": "Listen once, then repeat.",
+          "afterPractice": "Test with AI Recite when ready.",
+          "afterAi": "Practise the marked words slowly."
+        },
+        "cta": {
+          "startPractice": "Start practice",
+          "startFocusPractice": "Start focused practice"
+        },
+        "reason": {
+          "pronunciation": "Pronunciation",
+          "frequent_replay": "Frequent replay",
+          "hesitation": "Hesitation"
+        },
+        "live": {
+          "before": "Bismillāh. Listen once and follow the words.",
+          "beforeTalqin": "Listen once, then recite aloud.",
+          "beforeFocus": "Listen once — gold-marked words need extra care.",
+          "playing": "Follow the words calmly — may Allah open your heart.",
+          "playingFocus": "Gold marks need your care — listen with presence.",
+          "focusWord": "Hold this word gently: {word}",
+          "focusCueTitle": "Focus on this word",
+          "focusBadge": "Words to watch",
+          "focusStripLabel": "Hold onto",
+          "hooksLabel": "Your key words",
+          "pause": "Now recite aloud with presence.",
+          "pauseFocus": "Repeat the gold-marked words aloud, then the full āyah.",
+          "difficulty": "Take it slower — try this āyah at {speed}×.",
+          "after": "Alḥamdulillāh. Now try reciting without looking.",
+          "ready": "Mā shā’ Allāh — when you feel ready, test from memory.",
+          "ayahCue": "Āyah {ayah}",
+          "talqin": {
+            "before": "Bismillāh. Listen once, then recite aloud.",
+            "playing": "Listen carefully. Your turn comes after the audio.",
+            "pause": "Your turn — recite this āyah aloud, slowly."
+          },
+          "focus": {
+            "before": "We stay with one āyah. Do not rush ahead.",
+            "playing": "Follow this āyah only. Let it settle.",
+            "pause": "Repeat this same āyah aloud before moving on."
+          },
+          "blur": {
+            "before": "Words will hide gradually. Trust your memory.",
+            "playing": "As the text fades, recite from the heart.",
+            "pause": "Try again from memory. May Allah make it firm."
+          },
+          "chaining": {
+            "before": "We will join these āyahs into one flow.",
+            "playing": "Listen for how this āyah links to the next.",
+            "pause": "Recite what you just heard, then join the next āyah."
+          },
+          "anchor": {
+            "before": "Gold words are your hooks — notice them first.",
+            "playing": "Watch the marked words. They will help you remember.",
+            "pause": "Say the key words first, then the full āyah."
+          },
+          "technique": {
+            "talqin": {
+              "label": "Listen, then recite",
+              "hint": "The reciter leads. When it pauses, you say it aloud."
+            },
+            "focus": {
+              "label": "One āyah at a time",
+              "hint": "Stay with this āyah until it feels steady in your heart."
+            },
+            "blur": {
+              "label": "Hide the text little by little",
+              "hint": "As words fade, let your memory lead — ask Allah for firmness."
+            },
+            "chaining": {
+              "label": "Join the āyahs",
+              "hint": "Connect each āyah to the next as one smooth flow."
+            },
+            "anchor": {
+              "label": "Hold onto key words",
+              "hint": "Gold-marked words are your hooks — say them clearly, then the full āyah."
+            },
+            "listen": {
+              "label": "Listen with presence",
+              "hint": "Follow the words calmly and recite with sincerity."
+            }
+          }
+        }
+      },
       "summaryTitle": "Session summary",
       "progressLabel": "Range progress",
       "detailsLabel": "Session details",
@@ -1320,15 +1441,15 @@
         "tryThisCombination": "Practice style",
         "adjustPlan": "Adjust plan",
         "suggestedNextStep": "Your next session",
-        "flowIntro": "Two simple steps: optionally check your memory, then start the plan we prepared for you.",
+        "flowIntro": "Bismillah — begin when you are ready.",
         "stepCheck": "Step 1",
         "stepPlan": "Step 2",
-        "planReadyTag": "Ready to start",
+        "planReadyTag": "Ready",
         "whyThisHelps": "Why this plan",
         "whatYouWillDo": "What you will practise",
         "howItWorks": "How you will practise",
         "paceAndSupport": "Pace & support",
-        "estimatedTime": "Estimated time",
+        "estimatedTime": "About",
         "nextSetTitle": "Recommended plan",
         "revisionSetTitle": "Recommended plan",
         "nextSurahTitle": "Recommended plan",
@@ -1584,6 +1705,79 @@
         "aiFocusWeakAyah": "Spend the next pass on ayah {ayah} with Focus mode.",
         "aiFocusWeakAyahs": "Revisit ayahs {ayahs} before continuing.",
         "aiWeakAyahsLabel": "Focus ayahs"
+      }
+    },
+    "aiRecitePlan": {
+      "startReciting": "Start Reciting",
+      "startHint": "Take your time. Recite the whole passage from memory — pauses are fine. Up to 3 gentle tries.",
+      "attemptProgress": "Try {current} of {max}",
+      "tryAgainRemaining": "Try again ({remaining} left)",
+      "seePracticePlan": "See my plan",
+      "averageScore": "Accuracy: {score}%",
+      "accuracyLabel": "Accuracy",
+      "resultTag": "Next step",
+      "resultTitle": "Session complete",
+      "resultSubtitle": "Here is your practice plan from AI Recite.",
+      "resultAria": "AI Recite result and practice plan",
+      "rangeLabel": "Range",
+      "methodLabel": "Method",
+      "techniques": "Techniques",
+      "startThisPlan": "Start this plan",
+      "startSimplerPlan": "Start this simpler plan",
+      "continueNextSession": "Continue to next session",
+      "masteryTitle": "Range achieved",
+      "masterySubtitle": "Strong recall — ready for the next session.",
+      "masteryBanner": "Achieved. You can continue to the next session.",
+      "simplerSubtitle": "Not firm yet — practise this simpler plan, then test again.",
+      "simplerBanner": "Keep practising this simpler plan, then test with AI Recite again.",
+      "returningToPlan": "Opening your practice plan…",
+      "focusAyah": "Focus on āyah {ayah}",
+      "focusAyahs": "Focus on āyahs {ayahs}",
+      "alsoWith": "Also: {technique}",
+      "alsoTip": "Tip: {technique}",
+      "beginner": {
+        "yourResult": "Your result",
+        "what": "What to practise",
+        "how": "How",
+        "words": "Words to watch",
+        "strong": "Strong — ready to move on",
+        "notFirm": "Not firm yet"
+      },
+      "surahRecap": {
+        "aria": "Surah complete recap",
+        "kicker": "Surah complete",
+        "title": "You finished {surah}",
+        "summary": "Here is a calm look at your progress on this surah.",
+        "sessions": "You practised this surah across {count} sessions.",
+        "accuracy": "Last AI Recite accuracy: {score}%",
+        "technique": "Technique that helped: {technique}",
+        "weakLeft": "Still watch: {items}",
+        "next": "Next: start {surah} · āyahs {from}–{to}",
+        "cta": "Start next surah"
+      },
+      "feedbackStrong": "Strong recall. A light review will keep it firm.",
+      "feedbackFocused": "Good effort. Strengthen the weak words next.",
+      "feedbackGentle": "Take it slow. One step at a time.",
+      "feedbackMixed": "A short focused plan will help.",
+      "whyWeakWords": "Accuracy {accuracy}% · {count} words · {techniques}",
+      "whyStrong": "Strong recall. This light plan keeps it fresh.",
+      "whyDefault": "Built from your AI Recite result.",
+      "setup": {
+        "speed": "{speed}× speed",
+        "repOne": "1 repetition",
+        "reps": "{count} repetitions"
+      },
+      "tech": {
+        "anchorTitle": "Anchor",
+        "anchorHow": "Flash weak words before the full āyah.",
+        "talqinTitle": "Talqin",
+        "talqinHow": "Listen, then repeat — one āyah at a time.",
+        "chainingTitle": "Chunking",
+        "chainingHow": "Short chunks, then link slowly.",
+        "blurTitle": "Blur",
+        "blurHow": "Hide words step by step.",
+        "focusTitle": "Focus",
+        "focusHow": "One verse at a time."
       }
     },
     "emotional": {

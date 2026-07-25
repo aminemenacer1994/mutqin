@@ -795,4 +795,129 @@ class NextSessionRecommendationTest extends TestCase
             ->assertJsonPath('recommendation.ayah_range.to', 282)
             ->assertJsonPath('recommendation.ayah_range.count', 1);
     }
+
+    public function test_ai_assessment_persists_attempts_and_history(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $this->actingAs($user)
+            ->postJson('/api/recommendations/ai-assessment', [
+                'recommendation_id' => $recommendationId,
+                'result' => 'weak',
+                'summary' => 'Needs practice',
+                'weak_ayahs' => [13],
+                'average_accuracy' => 48,
+                'attempt_count' => 2,
+                'weak_words' => [
+                    [
+                        'text' => 'ٱهْدِنَا',
+                        'wordIndex' => 0,
+                        'ayahNumber' => 13,
+                        'surahId' => 2,
+                        'verseKey' => '2:13',
+                    ],
+                ],
+                'attempts' => [
+                    [
+                        'attempt_number' => 1,
+                        'accuracy' => 40,
+                        'band' => 'gentle',
+                        'ayah_range' => ['from' => 12, 'to' => 14],
+                        'weak_words' => [['text' => 'ٱهْدِنَا', 'wordIndex' => 0, 'ayahNumber' => 13]],
+                    ],
+                    [
+                        'attempt_number' => 2,
+                        'accuracy' => 56,
+                        'band' => 'gentle',
+                        'ayah_range' => ['from' => 12, 'to' => 14],
+                    ],
+                ],
+                'settings' => [
+                    'technique' => 'talqin',
+                    'practice_weak_words' => [
+                        [
+                            'text' => 'ٱهْدِنَا',
+                            'wordIndex' => 0,
+                            'ayahNumber' => 13,
+                            'surahId' => 2,
+                            'verseKey' => '2:13',
+                        ],
+                    ],
+                ],
+                'plan_detail' => [
+                    'source' => 'ai_recite_dynamic',
+                ],
+                'ayah_range' => ['from' => 13, 'to' => 13, 'count' => 1],
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('ai_recite_attempts', [
+            'user_id' => $user->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 40,
+        ]);
+        $this->assertDatabaseHas('ai_recite_attempts', [
+            'user_id' => $user->id,
+            'attempt_number' => 2,
+            'accuracy_percent' => 56,
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/recommendations/history?limit=5')
+            ->assertOk()
+            ->assertJsonPath('history.0.attempts.0.attempt_number', 1)
+            ->assertJsonPath('history.0.attempts.1.accuracy_percent', 56);
+    }
+
+    public function test_start_keeps_practice_weak_words_in_session_metadata(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 1, 1, 3);
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $response = $this->actingAs($user)
+            ->postJson('/api/recommendations/start', [
+                'recommendation_id' => $recommendationId,
+                'settings' => [
+                    'technique' => 'talqin',
+                    'talqin_enabled' => true,
+                    'practice_weak_words' => [
+                        [
+                            'text' => 'ٱهْدِنَا',
+                            'wordIndex' => 0,
+                            'ayahNumber' => 6,
+                            'surahId' => 1,
+                            'verseKey' => '1:6',
+                        ],
+                    ],
+                ],
+            ])
+            ->assertOk();
+
+        $sessionId = $response->json('session.id');
+        $session = UserSession::query()->findOrFail($sessionId);
+        $settings = $session->metadata['settings'] ?? [];
+        $this->assertIsArray($settings['practice_weak_words'] ?? null);
+        $this->assertSame('ٱهْدِنَا', $settings['practice_weak_words'][0]['text']);
+    }
+
+    public function test_surah_completion_payload_includes_surah_recap(): void
+    {
+        $user = User::factory()->create();
+        // Al-Ikhlas has 4 ayahs — completing 1–4 is end of surah.
+        $this->seedCompletedSession($user, 112, 1, 4);
+
+        $payload = $this->actingAs($user)
+            ->getJson('/api/recommendations/next')
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertTrue((bool) ($payload['is_end_of_surah'] ?? false));
+        $this->assertSame(RecommendationType::NextSurah->value, $payload['type']);
+        $this->assertIsArray($payload['plan_detail']['surah_recap'] ?? null);
+        $this->assertNotEmpty($payload['plan_detail']['surah_recap']['bullets'] ?? []);
+        $this->assertNotEmpty($payload['plan_detail']['surah_recap']['next_label'] ?? '');
+    }
 }

@@ -2228,6 +2228,71 @@
   z-index: 20000 !important;
 }
 
+.live-practice-method__hooks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.55rem;
+  margin-top: 0.45rem;
+}
+
+.live-practice-method__hooks-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6b5210;
+}
+
+.live-practice-method__hooks-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.live-practice-method__hooks-list li {
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, #c9a227 28%, transparent);
+  border: 1px solid color-mix(in srgb, #a67c1a 40%, transparent);
+  color: #4a3a0c;
+  font-family: var(--font-ar, "Amiri", "Scheherazade New", serif);
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.ps-rec__caption {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #1f4d36 70%, var(--text-muted, #667));
+}
+
+/* Make key-word marks unmistakable on ayah cards */
+.verse-card .verse-arabic {
+  text-align: center;
+  min-height: 3.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3rem 0.45rem;
+}
+
+html body .verse-arabic .wbw-word.practice-focus-word,
+html body .verse-arabic word.practice-focus-word,
+html body .verse-arabic .wbw-word.anchor-highlight,
+html body .verse-arabic word.anchor-highlight {
+  background: color-mix(in srgb, #c9a227 34%, #fff6d6) !important;
+  box-shadow: inset 0 -3px 0 #8a6a2b, 0 0 0 1px color-mix(in srgb, #c9a227 45%, transparent) !important;
+  border-radius: 0.35em !important;
+  padding: 0.08em 0.18em !important;
+  font-weight: 600;
+}
+
 /* Completion is unmounted while AI Recite is active; keep these as a belt-and-braces fallback. */
 .app.post-session-ai-recite-open .onboarding-post-session-flow,
 .app.post-session-ai-recite-open .onboarding-post-session-backdrop,
@@ -2370,7 +2435,8 @@ body > .self-check-modal-overlay--above-post-session,
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  direction: rtl;
   padding: 22px 22px 20px;
   min-height: 310px;
   border-radius: 18px;
@@ -2417,13 +2483,59 @@ body > .self-check-modal-overlay--above-post-session,
   border-color: rgba(154, 103, 56, 0.36);
 }
 
+.self-check-section-hint {
+  margin: 0.35rem 0 0;
+  max-width: 36rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--text) 68%, transparent);
+}
+
+.ai-recite-start-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 1rem 0 0.35rem;
+}
+
+.ai-recite-start-row .ai-recite-start-btn {
+  min-height: 2.85rem;
+  padding-inline: 1.25rem;
+}
+
 .self-check-modal-ayah {
   width: min(100%, 900px);
-  text-align: center;
+  direction: rtl !important;
+  unicode-bidi: isolate;
+  text-align: right !important;
   line-height: 2.15;
   color: var(--text);
   font-weight: 500;
   transition: filter 0.22s ease, transform 0.22s ease, opacity 0.22s ease;
+}
+
+.self-check-modal-ayah.self-check-session-ayat,
+.self-check-modal-ayah.recitation-word-review-active {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+.self-check-modal-ayah-shell {
+  direction: rtl;
+}
+
+.self-check-modal-ayah .wbw-word,
+.self-check-modal-ayah word {
+  unicode-bidi: isolate;
+}
+
+.recitation-review-ayah,
+.shared-result-ayah,
+.recitation-premium-ayah {
+  direction: rtl !important;
+  unicode-bidi: isolate;
+  text-align: right !important;
 }
 
 .self-check-modal-ayah.tajweed-enabled .tajweed-mark {
@@ -5553,6 +5665,74 @@ html {
   transition: all 0.15s ease;
   vertical-align: baseline;
   white-space: nowrap;
+}
+
+.verse-arabic.word-by-word-meanings {
+  display: block;
+  line-height: 1;
+  text-align: right;
+}
+
+.mushaf-ayah-text.word-by-word-meanings {
+  display: inline;
+  line-height: inherit;
+  text-align: inherit;
+}
+
+.verse-arabic.word-by-word-meanings word,
+.verse-arabic.word-by-word-meanings .wbw-word,
+.mushaf-ayah-text.word-by-word-meanings word,
+.mushaf-ayah-text.word-by-word-meanings .wbw-word {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  vertical-align: top;
+  white-space: normal;
+  text-align: center;
+  width: auto;
+  max-width: none;
+  margin: 0 0.08em 0.55em;
+  padding: 0;
+  line-height: 1.1;
+  gap: 0.08em;
+  background: transparent !important;
+  border-radius: 0;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: default;
+}
+
+.verse-arabic.word-by-word-meanings .word-arabic-text,
+.mushaf-ayah-text.word-by-word-meanings .word-arabic-text {
+  display: block;
+  white-space: nowrap;
+  line-height: 1.45;
+  color: inherit;
+}
+
+.verse-arabic.word-by-word-meanings .word-meaning,
+.mushaf-ayah-text.word-by-word-meanings .word-meaning {
+  display: block;
+  color: #5c5c5c;
+  font-size: calc(0.72rem * var(--en-scale, 1));
+  font-weight: 400;
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  line-height: 1.25;
+  max-width: 8.5em;
+  width: max-content;
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: center;
+  white-space: normal;
+  margin: 0 auto;
+}
+
+.verse-arabic.word-by-word-meanings .wbw-word.highlighted .word-meaning,
+.verse-arabic.word-by-word-meanings word.highlighted .word-meaning,
+.mushaf-ayah-text.word-by-word-meanings .wbw-word.highlighted .word-meaning,
+.mushaf-ayah-text.word-by-word-meanings word.highlighted .word-meaning {
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .verse-arabic:empty {
@@ -12426,6 +12606,197 @@ body.memorisation-page nav.navbar.app-navbar {
   font-variant-ligatures: contextual;
 }
 
+.mushaf-page--madani {
+  background: #ffffff;
+  color: #000000;
+  --mushaf-bg: #ffffff;
+  --mushaf-text: #000000;
+  --mushaf-line-rule: #ececec;
+  --mushaf-hover: rgba(0, 0, 0, 0.06);
+  min-height: auto;
+  padding: clamp(1.4rem, 3vw, 2.4rem) clamp(1rem, 4vw, 2.8rem) clamp(1.6rem, 3vw, 2.8rem);
+}
+
+.mushaf-page--madani.mushaf-bg-contrast,
+.mushaf-page--madani.mushaf-bg-paper,
+.mushaf-page--madani.mushaf-bg-warm,
+.mushaf-page--madani.mushaf-bg-mist,
+.mushaf-viewport.mushaf-bg-contrast .mushaf-page--madani {
+  --mushaf-bg: #ffffff;
+  --mushaf-text: #000000;
+  --mushaf-line-rule: #ececec;
+  background: #ffffff;
+  color: #000000;
+}
+
+.madani-page-sheet {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0;
+  width: min(100%, 38rem);
+  margin-inline: auto;
+  padding: 0;
+  text-align: center;
+  line-height: 1;
+  direction: rtl;
+}
+
+.madani-line {
+  display: block;
+  width: 100%;
+  text-align: center;
+  min-height: calc((var(--verse-font-percent, 120) / 100) * 2.55rem);
+  padding: 0.28em 0.1em 0.32em;
+  border-bottom: 1px solid var(--mushaf-line-rule, #ececec);
+  color: #000000;
+  white-space: nowrap;
+  line-height: 1.55;
+}
+
+.madani-line--empty {
+  min-height: calc((var(--verse-font-percent, 120) / 100) * 2.2rem);
+}
+
+.madani-line--surah_name,
+.madani-line--basmala {
+  white-space: normal;
+}
+
+.madani-line--glyphs {
+  letter-spacing: 0;
+}
+
+.madani-surah-name {
+  display: inline-block;
+  font-family: surahnames, serif !important;
+  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(2.1rem, 4.2vw, 3.2rem));
+  line-height: 1.25;
+  color: #000000;
+  letter-spacing: 0;
+  font-weight: 400 !important;
+}
+
+.madani-basmala {
+  display: inline-block;
+  font-family: 'UthmanicHafs', 'Amiri Quran', 'Amiri', serif !important;
+  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.65rem, 3.2vw, 2.55rem));
+  line-height: 1.4;
+  color: #000000;
+  font-weight: 400 !important;
+}
+
+.madani-word {
+  display: inline;
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: #000000;
+  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.75rem, 3.2vw, 2.7rem));
+  font-weight: 400 !important;
+  line-height: inherit;
+  letter-spacing: 0;
+  word-spacing: 0;
+  cursor: pointer;
+  border-radius: 0.08em;
+  transition: background 140ms ease, opacity 140ms ease, filter 140ms ease;
+}
+
+.madani-word--glyph {
+  font-family: var(--madani-page-font) !important;
+}
+
+.madani-word--fallback {
+  font-family: 'UthmanicHafs', 'Amiri Quran', 'Amiri', serif !important;
+  margin-inline: 0.08em;
+}
+
+.main.focus-mode-active .madani-word:not(.active):not(.is-playing) {
+  opacity: 0.38;
+}
+
+.main.blur-mode-active .madani-word.blur-upcoming:not(.peek-revealed) {
+  filter: blur(calc(var(--blur-intensity, 10) * 0.08px + 2px));
+}
+
+.main.blur-mode-active .madani-word.blur-upcoming.peek-revealed,
+.main.blur-mode-active .madani-word.active {
+  filter: none;
+}
+
+.madani-word--end {
+  padding-inline: 0.02em 0.04em;
+}
+
+.madani-word--out {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.madani-word:hover,
+.madani-word.active,
+.madani-word.is-playing {
+  background: var(--mushaf-hover, rgba(0, 0, 0, 0.06));
+}
+
+.madani-word.review-priority {
+  box-shadow: inset 0 -2px 0 rgba(245, 158, 11, 0.48);
+}
+
+.madani-word.blur-upcoming:not(.peek-revealed) {
+  filter: blur(calc(var(--blur-intensity, 10) * 0.08px + 2px));
+}
+
+.madani-page-loading {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  padding: 2rem 1rem;
+  color: var(--mushaf-muted, #6b7280);
+  font-size: 0.9rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 767.98px) {
+  .madani-page-sheet {
+    width: 100%;
+  }
+
+  .madani-line {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .madani-line::-webkit-scrollbar {
+    display: none;
+  }
+
+  .madani-word {
+    font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.4rem, 5vw, 2.05rem));
+  }
+
+  .madani-surah-name {
+    font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.7rem, 6vw, 2.5rem));
+  }
+
+  .madani-basmala {
+    font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.3rem, 4.8vw, 1.95rem));
+  }
+}
+
 .mushaf-ayah {
   position: relative;
   display: inline;
@@ -12486,9 +12857,50 @@ body.memorisation-page nav.navbar.app-navbar {
   vertical-align: baseline;
 }
 
-.mushaf-ayah-text .tajweed-mark, .mushaf-ayah-text .wbw-word *, .mushaf-ayah-text word * {
+.mushaf-ayah-text.word-by-word-meanings word,
+.mushaf-ayah-text.word-by-word-meanings .wbw-word {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  vertical-align: top;
+  white-space: normal;
+  text-align: center;
+  margin: 0 0.08em 0.2em;
+  padding: 0;
+  line-height: 1.1;
+  gap: 0.08em;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.mushaf-ayah-text .tajweed-mark, .mushaf-ayah-text .wbw-word *:not(.word-meaning), .mushaf-ayah-text word *:not(.word-meaning) {
   font-size: 1em;
   line-height: inherit;
+}
+
+.mushaf-ayah-text.word-by-word-meanings .word-arabic-text {
+  display: block;
+  white-space: nowrap;
+  font-size: 1em;
+  line-height: 1.45;
+}
+
+.mushaf-ayah-text.word-by-word-meanings .word-meaning {
+  display: block;
+  color: #4a4a4a;
+  font-size: 0.38em;
+  font-weight: 400;
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  line-height: 1.25;
+  max-width: 9em;
+  width: max-content;
+  margin: 0 auto;
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: center;
+  white-space: normal;
 }
 
 .mushaf-ayah-text .wbw-word.highlighted, .mushaf-ayah-text word.highlighted {
@@ -16394,6 +16806,13 @@ button:active {
 
 .mushaf-ayah, .mushaf-ayah *, .mushaf-page, .mushaf-page * {
   font-weight: 430;
+}
+
+.mushaf-page--madani .madani-word,
+.mushaf-page--madani .madani-surah-name,
+.mushaf-page--madani .madani-basmala,
+.mushaf-page--madani .madani-word * {
+  font-weight: 400 !important;
 }
 
 .mushaf-page .ayah-number, .mushaf-ayah-number, .mushaf-word-chip {
@@ -22373,6 +22792,14 @@ textarea {
   transform: none;
 }
 
+.verse-arabic.word-by-word-meanings .wbw-word.highlighted,
+.verse-arabic.word-by-word-meanings word.highlighted,
+.mushaf-ayah-text.word-by-word-meanings .wbw-word.highlighted,
+.mushaf-ayah-text.word-by-word-meanings word.highlighted {
+  background: transparent;
+  box-shadow: none;
+}
+
 .workspace-shell-actions {
   display: flex !important;
   align-items: center !important;
@@ -22645,7 +23072,7 @@ textarea {
   white-space: normal;
 }
 
-.verse-arabic .wbw-word.highlighted, .verse-arabic word.highlighted, .mushaf-ayah-text .wbw-word.highlighted, .mushaf-ayah-text word.highlighted, .self-check-modal-ayah .wbw-word.highlighted, .self-check-modal-ayah word.highlighted, .memorisation-checker-ayah .wbw-word.highlighted, .memorisation-checker-ayah word.highlighted {
+.verse-arabic:not(.word-by-word-meanings) .wbw-word.highlighted, .verse-arabic:not(.word-by-word-meanings) word.highlighted, .mushaf-ayah-text:not(.word-by-word-meanings) .wbw-word.highlighted, .mushaf-ayah-text:not(.word-by-word-meanings) word.highlighted, .self-check-modal-ayah .wbw-word.highlighted, .self-check-modal-ayah word.highlighted, .memorisation-checker-ayah .wbw-word.highlighted, .memorisation-checker-ayah word.highlighted {
   background: transparent;
   color: inherit;
   box-shadow: inset 0 -0.08em 0 color-mix(in srgb, var(--accent) 68%, transparent);
@@ -25844,10 +26271,10 @@ textarea {
   border-top: 1px solid rgba(196, 163, 126, 0.2);
 }
 
-.verse-arabic .wbw-word.highlighted,
-.verse-arabic word.highlighted,
-.mushaf-ayah-text .wbw-word.highlighted,
-.mushaf-ayah-text word.highlighted {
+.verse-arabic:not(.word-by-word-meanings) .wbw-word.highlighted,
+.verse-arabic:not(.word-by-word-meanings) word.highlighted,
+.mushaf-ayah-text:not(.word-by-word-meanings) .wbw-word.highlighted,
+.mushaf-ayah-text:not(.word-by-word-meanings) word.highlighted {
   background: color-mix(in srgb, var(--accent) 14%, rgba(255, 255, 255, 0.96)) !important;
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent),
@@ -26269,12 +26696,12 @@ textarea {
   box-shadow: 0 4px 14px rgba(120, 216, 164, 0.18);
 }
 
-[data-theme="light"] .verse-arabic .wbw-word.highlighted,
-[data-theme="light"] .verse-arabic word.highlighted,
-[data-theme="light"] .mushaf-ayah-text .wbw-word.highlighted,
-[data-theme="light"] .mushaf-ayah-text word.highlighted,
-[data-theme="light"] .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
-[data-theme="light"] .mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
+[data-theme="light"] .verse-arabic:not(.word-by-word-meanings) .wbw-word.highlighted,
+[data-theme="light"] .verse-arabic:not(.word-by-word-meanings) word.highlighted,
+[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings) .wbw-word.highlighted,
+[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings) word.highlighted,
+[data-theme="light"] .verse-arabic:not(.word-by-word-meanings).tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings).tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
   background: linear-gradient(180deg, rgba(191, 141, 92, 0.24), rgba(176, 125, 74, 0.18)) !important;
   color: #3d2716 !important;
   border-radius: 0.28em;
@@ -27901,10 +28328,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: var(--text);
 }
 
-.mushaf-ayah-text.word-highlight-enabled .wbw-word.highlighted,
-.mushaf-ayah-text.word-highlight-enabled word.highlighted,
-.mushaf-ayah-text.word-highlight-enabled .wbw-word.phrase-highlighted,
-.mushaf-ayah-text.word-highlight-enabled word.phrase-highlighted {
+.mushaf-ayah-text.word-highlight-enabled:not(.word-by-word-meanings) .wbw-word.highlighted,
+.mushaf-ayah-text.word-highlight-enabled:not(.word-by-word-meanings) word.highlighted,
+.mushaf-ayah-text.word-highlight-enabled:not(.word-by-word-meanings) .wbw-word.phrase-highlighted,
+.mushaf-ayah-text.word-highlight-enabled:not(.word-by-word-meanings) word.phrase-highlighted {
   background: color-mix(in srgb, var(--accent, #2f8f6b) 28%, transparent);
   box-shadow: inset 0 -0.12em 0 var(--accent, #2f8f6b);
   border-radius: 0.14em;
@@ -36880,14 +37307,14 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .post-session-simple__dialog {
   pointer-events: auto;
-  width: min(40rem, calc(100vw - 2rem));
-  max-width: min(40rem, calc(100vw - 2rem));
-  max-height: calc(100dvh - 2rem);
+  width: min(52rem, calc(100vw - 2rem));
+  max-width: min(52rem, calc(100vw - 2rem));
+  max-height: 90vh;
   margin: auto;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border-radius: 1.25rem;
+  border-radius: 1.35rem;
   border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   background: var(--mutqin-modal-surface-bg);
   box-shadow:
@@ -41431,4 +41858,1374 @@ body:has(.post-session-simple) {
   .post-session-simple__check-note {
     margin-inline-start: 0.9rem;
   }
+}
+
+
+/* Calm post-session practice coach */
+.post-session-simple--calm-v2 .post-session-simple__dialog {
+  width: min(640px, calc(100vw - 1.25rem));
+  max-width: min(640px, calc(100vw - 1.25rem));
+  background: linear-gradient(180deg, #fbf8f2 0%, #f4efe6 100%);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  box-shadow: 0 18px 48px rgba(28, 24, 18, 0.12);
+  overflow: hidden;
+}
+
+.ps-calm__build-tag {
+  margin: 0;
+  padding: 0.75rem 1.35rem 0;
+  font-size: 0.68rem;
+  font-weight: 550;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-muted, #6b6258) 90%, transparent);
+}
+
+.post-session-simple--calm-v2 .post-session-simple__title {
+  font-size: 1.15rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text) 68%, transparent);
+}
+
+.post-session-simple--calm-v2 .post-session-simple__check {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, #2e9d62 12%, #fff);
+  color: #1f6b45;
+  border: 1px solid color-mix(in srgb, #2e9d62 18%, transparent);
+  font-size: 0.95rem;
+}
+
+.post-session-simple__stack--calm {
+  gap: 0;
+  padding: 0.1rem 0 0.25rem;
+}
+
+.ps-plan--calm {
+  padding: 1rem 1.05rem 1.1rem;
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, #fff 78%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  box-shadow: none;
+}
+
+.ps-calm__hero-range {
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.ps-calm__range {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.ps-calm__focus {
+  margin: 0.3rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
+}
+
+.ps-calm__why {
+  margin-bottom: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, #fff 70%, #f7f3eb);
+  border: 1px solid color-mix(in srgb, var(--border) 48%, transparent);
+}
+
+.ps-calm__why p {
+  margin: 0.2rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.ps-calm__method-how,
+.ps-calm__method-with {
+  margin: 0.25rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--text) 72%, transparent);
+  font-weight: 400;
+}
+
+.ps-calm__next-hint {
+  margin: 0.65rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-weight: 400;
+  color: color-mix(in srgb, #1f6b45 70%, var(--text));
+}
+
+.ps-calm__method {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.75rem;
+}
+
+.ps-calm__label {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 550;
+  color: color-mix(in srgb, var(--text-muted, #6b6258) 92%, transparent);
+}
+
+.ps-calm__method strong {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.ps-calm__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.ps-plan__chip--time {
+  background: color-mix(in srgb, var(--ps-mint, #2e9d62) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--ps-mint, #2e9d62) 22%, transparent);
+}
+
+.ps-calm__guidance {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text) 80%, transparent);
+}
+
+.ps-calm__feedback {
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--ps-mint, #2e9d62) 8%, #fff);
+  border: 1px solid color-mix(in srgb, var(--ps-mint, #2e9d62) 16%, transparent);
+}
+
+.ps-calm__feedback p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.ps-calm__weak {
+  margin-top: 0.85rem;
+}
+
+.ps-calm__weak-list {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ps-calm__weak-row {
+  width: 100%;
+  display: grid;
+  gap: 0.1rem;
+  text-align: start;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  background: color-mix(in srgb, #fff 88%, transparent);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.ps-calm__weak-row:hover,
+.ps-calm__weak-row.active {
+  border-color: color-mix(in srgb, #c4a35a 45%, var(--border));
+  background: color-mix(in srgb, #c4a35a 10%, #fff);
+}
+
+.ps-calm__weak-ar {
+  font-size: 1.15rem;
+  line-height: 1.55;
+  font-weight: 400;
+  font-family: var(--quran-font, inherit);
+}
+
+.ps-calm__weak-meta {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text-muted, #6b6258) 95%, transparent);
+}
+
+.ps-calm__weak-action {
+  font-size: 0.75rem;
+  font-weight: 550;
+  color: color-mix(in srgb, var(--ps-mint, #2e9d62) 80%, var(--text));
+}
+
+.ps-calm__ai-btn {
+  margin-top: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ps-mint, #2e9d62) 30%, transparent);
+  background: color-mix(in srgb, var(--ps-mint, #2e9d62) 10%, var(--surface));
+  color: color-mix(in srgb, var(--ps-mint, #2e9d62) 75%, #143024);
+  font-weight: 550;
+  font-size: 0.9rem;
+}
+
+.ps-calm__ai-card {
+  margin-top: 0.9rem;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.7rem;
+  text-align: start;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, #2e9d62 22%, transparent);
+  background: color-mix(in srgb, #2e9d62 8%, #fff);
+  color: inherit;
+  cursor: pointer;
+  box-shadow: none;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.ps-calm__ai-card:hover:not(:disabled) {
+  border-color: color-mix(in srgb, #2e9d62 36%, transparent);
+  background: color-mix(in srgb, #2e9d62 12%, #fff);
+}
+
+.ps-calm__ai-card:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.ps-calm__ai-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, #2e9d62 14%, #fff);
+  color: #1f6b45;
+  font-size: 0.95rem;
+}
+
+.ps-calm__ai-card-copy {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.ps-calm__ai-card-copy strong {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #143024;
+}
+
+.ps-calm__ai-card-copy span {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text) 68%, transparent);
+}
+
+.ps-calm__ai-card-chevron {
+  font-size: 0.95rem;
+  color: color-mix(in srgb, #1f6b45 65%, transparent);
+}
+
+.post-session-simple--calm-v2 .post-session-simple__btn--ghost {
+  color: color-mix(in srgb, var(--text) 70%, transparent) !important;
+  background: transparent !important;
+  border-color: color-mix(in srgb, var(--border) 70%, transparent) !important;
+  box-shadow: none !important;
+  font-weight: 500 !important;
+  font-size: 0.88rem !important;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__btn--ai {
+  color: #143024 !important;
+  background: color-mix(in srgb, #2e9d62 12%, #fff) !important;
+  border-color: color-mix(in srgb, #2e9d62 28%, transparent) !important;
+  font-weight: 550 !important;
+  font-size: 0.88rem !important;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__btn--ai:hover:not(:disabled) {
+  background: color-mix(in srgb, #2e9d62 18%, #fff) !important;
+  border-color: color-mix(in srgb, #2e9d62 38%, transparent) !important;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__btn--primary {
+  font-weight: 550 !important;
+  font-size: 0.9rem !important;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.15fr) minmax(0, 1.15fr);
+}
+
+@media (max-width: 640px) {
+  .post-session-simple--calm-v2 .post-session-simple__actions--3 {
+    grid-template-columns: 1fr;
+  }
+
+  .ps-calm__ai-card {
+    grid-template-columns: auto 1fr;
+  }
+
+  .ps-calm__ai-card-chevron {
+    display: none;
+  }
+}
+
+.live-practice-method {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0.55rem 0.85rem 0;
+  padding: 0.55rem 0.75rem 0.45rem;
+  border-radius: 0.7rem 0.7rem 0 0;
+  background: color-mix(in srgb, #eef6f0 70%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  border-bottom: none;
+}
+
+.live-practice-method__label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text) 92%, #1f4d36);
+}
+
+.live-practice-method__hint {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--text) 68%, transparent);
+}
+
+.live-practice-coach {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0.85rem 0.3rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, #f7f3eb 78%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  color: color-mix(in srgb, var(--text) 82%, transparent);
+  font-size: 0.88rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.live-practice-method + .live-practice-coach {
+  margin-top: 0;
+  border-top: none;
+  border-radius: 0 0 0.7rem 0.7rem;
+}
+
+.live-practice-coach i {
+  color: color-mix(in srgb, var(--ps-mint, #2e9d62) 75%, #143024);
+}
+
+.wbw-word.practice-focus-word,
+word.practice-focus-word {
+  background: color-mix(in srgb, #c4a35a 22%, transparent);
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, #8a6a2b 70%, transparent);
+  border-radius: 0.25rem;
+  padding-inline: 0.08em;
+}
+
+.wbw-word.practice-focus-word--active,
+word.practice-focus-word--active {
+  background: color-mix(in srgb, #c4a35a 34%, transparent);
+  outline: 2px solid color-mix(in srgb, #8a6a2b 45%, transparent);
+  outline-offset: 1px;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__header {
+  padding: 1rem 1.35rem 0.75rem;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__body {
+  padding-left: 1.35rem;
+  padding-right: 1.35rem;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__footer {
+  padding: 0.85rem 1.35rem 1.1rem;
+}
+
+@media (max-width: 720px) {
+  .post-session-simple--calm-v2 .post-session-simple__dialog {
+    width: min(100%, calc(100vw - 0.75rem));
+    max-width: min(100%, calc(100vw - 0.75rem));
+    max-height: 96dvh;
+    border-radius: 1.1rem 1.1rem 0.75rem 0.75rem;
+  }
+
+  .post-session-simple--calm-v2 .post-session-simple__footer {
+    position: sticky;
+    bottom: 0;
+    background: color-mix(in srgb, var(--mutqin-modal-surface-bg, #fbf8f2) 94%, transparent);
+    backdrop-filter: blur(8px);
+  }
+
+  .live-practice-coach {
+    margin-inline: 0.55rem;
+  }
+}
+
+/* AI Recite dynamic practice plan */
+.self-check-post-session-attempts {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text-muted, #6b6258) 95%, transparent);
+}
+
+.ai-recite-start-btn {
+  margin-top: 0.85rem;
+  min-height: 2.6rem;
+  width: min(100%, 20rem);
+  font-size: 0.95rem;
+  font-weight: 550;
+  border-radius: 999px;
+}
+
+.ps-ai-returning {
+  margin: 0.5rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text) 72%, transparent);
+}
+
+.ai-recite-final-plan {
+  width: 100%;
+  display: grid;
+  gap: 0.75rem;
+  text-align: start;
+}
+
+.ai-recite-final-plan__head {
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--ps-mint, #2e9d62) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--ps-mint, #2e9d62) 18%, transparent);
+}
+
+.ai-recite-final-plan__score {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.ai-recite-final-plan__feedback {
+  margin: 0.25rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.ai-recite-final-plan__range {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ai-recite-final-plan__focus {
+  margin: 0.25rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text) 72%, transparent);
+}
+
+.ai-recite-final-plan__why,
+.ai-recite-final-plan__tech {
+  margin-top: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, #fff 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.ai-recite-final-plan__why p,
+.ai-recite-final-plan__tech p {
+  margin: 0.2rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.ai-recite-final-plan__actions {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ai-recite-final-plan__start {
+  min-height: 2.6rem;
+  font-weight: 550;
+}
+
+
+/* Recommendation plan — clean rows (pre-AI) */
+.ps-rec {
+  display: grid;
+  gap: 0.9rem;
+  text-align: start;
+}
+
+.ps-rec__head {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.ps-rec__range {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.ps-rec__focus {
+  margin: 0.3rem 0 0;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text) 68%, transparent);
+}
+
+.ps-rec__meta {
+  margin: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.ps-rec__row {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.ps-rec__row dt {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 550;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-muted, #6b6258) 92%, transparent);
+}
+
+.ps-rec__row dd {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.ps-rec__note {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.84rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--text) 68%, transparent);
+}
+
+.ps-rec__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ps-rec__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.55rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--text) 75%, transparent);
+}
+
+.ps-rec__chip--time {
+  border-color: color-mix(in srgb, #2e9d62 22%, transparent);
+  color: color-mix(in srgb, #1f6b45 85%, transparent);
+}
+
+.ps-rec__note-block {
+  font-size: 0.86rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--text) 75%, transparent);
+}
+
+.ps-rec__words {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ps-rec__words-label {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 550;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-muted, #6b6258) 92%, transparent);
+}
+
+.ps-rec__word-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ps-rec__word {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.65rem;
+  border: 1px solid color-mix(in srgb, #c4a35a 28%, transparent);
+  background: color-mix(in srgb, #c4a35a 8%, #fff);
+  color: inherit;
+  cursor: pointer;
+}
+
+.ps-rec__word span {
+  font-size: 1.05rem;
+  line-height: 1.45;
+  font-weight: 400;
+  font-family: var(--quran-font, inherit);
+}
+
+.ps-rec__word:hover,
+.ps-rec__word.active {
+  border-color: color-mix(in srgb, #8a6a2b 40%, transparent);
+  background: color-mix(in srgb, #c4a35a 14%, #fff);
+}
+
+.ps-rec__ai {
+  margin-top: 0.15rem;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: start;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, #2e9d62 24%, transparent);
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.ps-rec--ai-first .ps-rec__ai-first-copy {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--text-muted, #6b6258) 92%, transparent);
+}
+
+.ps-rec--ai-first .ps-rec__head {
+  margin-bottom: 0.35rem;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.ps-rec--ai-first .ps-rec__ai {
+  margin-top: 0;
+}
+
+.ps-rec__ai:hover:not(:disabled) {
+  border-color: color-mix(in srgb, #2e9d62 40%, transparent);
+  background: color-mix(in srgb, #2e9d62 6%, #fff);
+}
+
+.ps-rec__ai:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.ps-rec__ai-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, #2e9d62 12%, #fff);
+  color: #1f6b45;
+  font-size: 0.9rem;
+}
+
+.ps-rec__ai-copy {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.ps-rec__ai-copy strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #143024;
+}
+
+.ps-rec__ai-copy span {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text) 65%, transparent);
+}
+
+.ps-rec__ai-arrow {
+  font-size: 0.95rem;
+  color: color-mix(in srgb, #1f6b45 70%, transparent);
+}
+
+.post-session-simple--calm-v2 .post-session-simple__actions--stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__actions--stack .post-session-simple__btn--primary {
+  order: 1;
+  min-height: 2.75rem !important;
+  border-radius: 0.75rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__actions--stack .post-session-simple__btn--ghost {
+  order: 2;
+  min-height: 2.35rem !important;
+  border-radius: 0.75rem !important;
+  justify-content: center;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.2fr);
+  align-items: stretch;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__btn {
+  border-radius: 0.75rem !important;
+  min-height: 2.55rem !important;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__btn--primary {
+  box-shadow: none !important;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__btn--ai {
+  border-radius: 0.75rem !important;
+}
+
+@media (max-width: 640px) {
+  .ps-rec__ai {
+    grid-template-columns: auto 1fr;
+  }
+
+  .ps-rec__ai-arrow {
+    display: none;
+  }
+
+  .post-session-simple--calm-v2 .post-session-simple__actions--3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Compact AI Recite result inside success modal */
+.ps-ai-result {
+  display: grid;
+  gap: 0.85rem;
+  text-align: start;
+}
+
+.ps-ai-result__head {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, #2e9d62 7%, #fff);
+  border: 1px solid color-mix(in srgb, #2e9d62 16%, transparent);
+}
+
+.ps-ai-result__score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.ps-ai-result__score-value {
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: #143024;
+  font-variant-numeric: tabular-nums;
+}
+
+.ps-ai-result__score-label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: color-mix(in srgb, #1f6b45 75%, transparent);
+}
+
+.ps-ai-result__feedback {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+}
+
+.ps-ai-result__mastery {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  font-weight: 500;
+  color: #1f6b45;
+}
+
+.ps-ai-result__mastery--retry {
+  color: color-mix(in srgb, #8a6a2b 88%, #3d2716);
+}
+
+.ps-ai-result__meta {
+  margin: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.ps-ai-result__row {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.ps-ai-result__row dt {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 550;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-muted, #6b6258) 92%, transparent);
+}
+
+.ps-ai-result__row dd {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.ps-ai-result__note {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--text) 68%, transparent);
+}
+
+.ps-ai-result__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ps-ai-result__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.6rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  background: color-mix(in srgb, #fff 80%, transparent);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--text) 75%, transparent);
+}
+
+.ps-ai-result__words {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ps-ai-result__words-label {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 550;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-muted, #6b6258) 92%, transparent);
+}
+
+.ps-ai-result__word-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ps-ai-result__word {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.65rem;
+  border: 1px solid color-mix(in srgb, #c4a35a 28%, transparent);
+  background: color-mix(in srgb, #c4a35a 8%, #fff);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.ps-ai-result__word span {
+  font-size: 1.05rem;
+  line-height: 1.45;
+  font-weight: 400;
+  font-family: var(--quran-font, inherit);
+}
+
+.ps-ai-result__word:hover,
+.ps-ai-result__word.active {
+  border-color: color-mix(in srgb, #8a6a2b 40%, transparent);
+  background: color-mix(in srgb, #c4a35a 14%, #fff);
+}
+
+.post-session-simple--calm-v2 .ps-plan--calm:has(.ps-ai-result) {
+  padding: 0.95rem 1rem 1.05rem;
+}
+
+/*
+ * Word-by-word meanings — Quran.com-style interlinear.
+ * Must win over later display:inline / nowrap resets that otherwise
+ * stretch each word full-width (Arabic left, English far right).
+ *
+ * Stacked verse cards: block container is fine.
+ * Mushaf: ayah text MUST stay inline so verses flow continuously and
+ * ayah numbers sit after the last word (not alone on the next line).
+ */
+.verse-arabic.word-by-word-meanings {
+  display: block !important;
+  line-height: 1 !important;
+  white-space: normal !important;
+  text-align: right !important;
+  overflow: visible !important;
+}
+
+.mushaf-ayah-text.word-by-word-meanings {
+  display: inline !important;
+  line-height: inherit !important;
+  white-space: normal !important;
+  text-align: inherit !important;
+  overflow: visible !important;
+}
+
+.mushaf-page-body.word-by-word-meanings {
+  text-align: start !important;
+  text-align-last: auto !important;
+  line-height: 2.85 !important;
+}
+
+.verse-arabic.word-by-word-meanings word,
+.verse-arabic.word-by-word-meanings .wbw-word,
+.mushaf-ayah-text.word-by-word-meanings word,
+.mushaf-ayah-text.word-by-word-meanings .wbw-word {
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  vertical-align: top !important;
+  width: auto !important;
+  max-width: none !important;
+  white-space: normal !important;
+  text-align: center !important;
+  direction: rtl;
+  unicode-bidi: isolate;
+  margin: 0 0.12em 0.2em !important;
+  padding: 0 !important;
+  gap: 0.08em !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  font-size: inherit !important;
+  line-height: 1.1 !important;
+  overflow: visible !important;
+}
+
+.mushaf-page-body.word-by-word-meanings .mushaf-ayah-number,
+.mushaf-page-body.word-by-word-meanings .mushaf-ayah-number.mushaf-ayah-number,
+html body .mushaf-page-body.word-by-word-meanings .mushaf-ayah-number {
+  vertical-align: top !important;
+  margin-top: 0.2em !important;
+}
+
+.verse-arabic.word-by-word-meanings .word-arabic-text,
+.mushaf-ayah-text.word-by-word-meanings .word-arabic-text {
+  display: block !important;
+  position: relative !important;
+  z-index: 0 !important;
+  white-space: nowrap !important;
+  line-height: 1.35 !important;
+  font-size: 1em !important;
+  text-align: center !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0.15em !important;
+  padding: 0 0.04em !important;
+}
+
+.verse-arabic.word-by-word-meanings .word-meaning,
+.mushaf-ayah-text.word-by-word-meanings .word-meaning {
+  display: block !important;
+  position: relative !important;
+  z-index: 2 !important;
+  width: max-content !important;
+  max-width: 7.5em !important;
+  margin: 0 auto !important;
+  padding: 0.05em 0 0 !important;
+  color: #5c5c5c !important;
+  font-size: calc(0.68rem * var(--en-scale, 1)) !important;
+  font-weight: 400 !important;
+  font-family: 'Outfit', 'Segoe UI', sans-serif !important;
+  line-height: 1.2 !important;
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  text-align: center !important;
+  white-space: normal !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+.mushaf-ayah-text.word-by-word-meanings .word-meaning {
+  font-size: 0.36em !important;
+  max-width: 8em !important;
+  color: #4a4a4a !important;
+}
+
+/* Never show interlinear English inside AI reciter / memorisation checker modals */
+.self-check-modal .word-meaning,
+.memorisation-checker-modal .word-meaning,
+.self-check-modal-ayah .word-meaning,
+.memorisation-checker-ayah .word-meaning,
+.recitation-review-ayah .word-meaning {
+  display: none !important;
+}
+
+.self-check-modal .wbw-word,
+.self-check-modal word,
+.memorisation-checker-modal .wbw-word,
+.memorisation-checker-modal word,
+.self-check-modal-ayah .wbw-word,
+.self-check-modal-ayah word,
+.memorisation-checker-ayah .wbw-word,
+.memorisation-checker-ayah word {
+  display: inline !important;
+  flex-direction: row !important;
+  align-items: baseline !important;
+  vertical-align: baseline !important;
+  margin: 0 0.06em !important;
+  gap: 0 !important;
+}
+
+.self-check-modal .word-arabic-text,
+.memorisation-checker-modal .word-arabic-text,
+.self-check-modal-ayah .word-arabic-text,
+.memorisation-checker-ayah .word-arabic-text {
+  display: inline !important;
+  white-space: normal !important;
+}
+
+.verse-arabic.word-by-word-meanings .wbw-word:hover,
+.verse-arabic.word-by-word-meanings word:hover,
+.mushaf-ayah-text.word-by-word-meanings .wbw-word:hover,
+.mushaf-ayah-text.word-by-word-meanings word:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Word-by-word: keep soft highlight, drop only dark outline/underline bars. */
+html body .verse-arabic.word-by-word-meanings .wbw-word,
+html body .verse-arabic.word-by-word-meanings word,
+html body .mushaf-ayah-text.word-by-word-meanings .wbw-word,
+html body .mushaf-ayah-text.word-by-word-meanings word,
+html body .verse-arabic.word-by-word-meanings .wbw-word.highlighted,
+html body .verse-arabic.word-by-word-meanings word.highlighted,
+html body .mushaf-ayah-text.word-by-word-meanings .wbw-word.highlighted,
+html body .mushaf-ayah-text.word-by-word-meanings word.highlighted,
+html body .verse-arabic.word-by-word-meanings.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+html body .verse-arabic.word-by-word-meanings.tajweed-enabled.word-highlight-enabled word.highlighted,
+html body .mushaf-ayah-text.word-by-word-meanings.word-highlight-enabled .wbw-word.highlighted,
+html body .mushaf-ayah-text.word-by-word-meanings.word-highlight-enabled word.highlighted,
+html body [data-theme="light"] .verse-arabic.word-by-word-meanings .wbw-word.highlighted,
+html body [data-theme="light"] .verse-arabic.word-by-word-meanings word.highlighted,
+html body [data-theme="light"] .mushaf-ayah-text.word-by-word-meanings .wbw-word.highlighted,
+html body [data-theme="light"] .mushaf-ayah-text.word-by-word-meanings word.highlighted,
+html body [data-theme="light"] .verse-arabic.word-by-word-meanings.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+html body [data-theme="light"] .mushaf-ayah-text.word-by-word-meanings.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+html body .verse-arabic.word-by-word-meanings .wbw-word.phrase-highlighted,
+html body .verse-arabic.word-by-word-meanings word.phrase-highlighted {
+  box-shadow: none !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  outline: none !important;
+  text-decoration: none !important;
+  transform: none !important;
+}
+
+html body .verse-arabic.word-by-word-meanings .wbw-word.highlighted,
+html body .verse-arabic.word-by-word-meanings word.highlighted,
+html body .mushaf-ayah-text.word-by-word-meanings .wbw-word.highlighted,
+html body .mushaf-ayah-text.word-by-word-meanings word.highlighted,
+html body [data-theme="light"] .verse-arabic.word-by-word-meanings .wbw-word.highlighted,
+html body [data-theme="light"] .verse-arabic.word-by-word-meanings word.highlighted,
+html body [data-theme="light"] .verse-arabic.word-by-word-meanings.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
+  background: color-mix(in srgb, var(--accent) 16%, transparent) !important;
+  background-image: none !important;
+  color: inherit !important;
+  border-radius: 0.2em !important;
+}
+
+html body .verse-arabic.word-by-word-meanings .wbw-word.highlighted .word-arabic-text,
+html body .verse-arabic.word-by-word-meanings word.highlighted .word-arabic-text,
+html body .mushaf-ayah-text.word-by-word-meanings .wbw-word.highlighted .word-arabic-text,
+html body .mushaf-ayah-text.word-by-word-meanings word.highlighted .word-arabic-text {
+  box-shadow: none !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+}
+
+html body .verse-arabic.word-by-word-meanings .wbw-word .word-meaning,
+html body .verse-arabic.word-by-word-meanings word .word-meaning,
+html body .mushaf-ayah-text.word-by-word-meanings .wbw-word .word-meaning,
+html body .mushaf-ayah-text.word-by-word-meanings word .word-meaning,
+html body .verse-arabic.word-by-word-meanings .wbw-word.highlighted .word-meaning,
+html body .verse-arabic.word-by-word-meanings word.highlighted .word-meaning,
+html body .mushaf-ayah-text.word-by-word-meanings .wbw-word.highlighted .word-meaning,
+html body .mushaf-ayah-text.word-by-word-meanings word.highlighted .word-meaning {
+  color: #5c5c5c !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  outline: none !important;
+  text-decoration: none !important;
+}
+
+/* AI simpler-plan weak words: persistent gold marks inside ayah cards */
+@keyframes practice-focus-pulse {
+  0%, 100% { box-shadow: inset 0 -2.5px 0 #a67c1a, 0 0 0 0 color-mix(in srgb, #c9a227 0%, transparent); }
+  50% { box-shadow: inset 0 -2.5px 0 #8a6a2b, 0 0 0 3px color-mix(in srgb, #c9a227 22%, transparent); }
+}
+
+html body .verse-arabic .wbw-word.practice-focus-word,
+html body .verse-arabic word.practice-focus-word,
+html body .mushaf-ayah-text .wbw-word.practice-focus-word,
+html body .mushaf-ayah-text word.practice-focus-word,
+html body .verse-arabic.word-by-word-meanings .wbw-word.practice-focus-word,
+html body .verse-arabic.word-by-word-meanings word.practice-focus-word {
+  position: relative;
+  background: color-mix(in srgb, #c9a227 26%, transparent) !important;
+  background-image: none !important;
+  box-shadow: inset 0 -2.5px 0 #a67c1a !important;
+  border-radius: 0.28em !important;
+  padding-inline: 0.1em;
+}
+
+html body .verse-arabic .wbw-word.practice-focus-word .word-arabic-text,
+html body .verse-arabic word.practice-focus-word .word-arabic-text,
+html body .mushaf-ayah-text .wbw-word.practice-focus-word .word-arabic-text,
+html body .verse-arabic.word-by-word-meanings .wbw-word.practice-focus-word .word-arabic-text {
+  box-shadow: none !important;
+}
+
+html body .verse-arabic .wbw-word.practice-focus-word--active,
+html body .verse-arabic word.practice-focus-word--active,
+html body .mushaf-ayah-text .wbw-word.practice-focus-word--active,
+html body .mushaf-ayah-text word.practice-focus-word--active,
+html body .verse-arabic.word-by-word-meanings .wbw-word.practice-focus-word--active,
+html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
+  background: color-mix(in srgb, #c9a227 40%, transparent) !important;
+  outline: 2px solid color-mix(in srgb, #a67c1a 55%, transparent) !important;
+  outline-offset: 2px;
+  animation: practice-focus-pulse 1.15s ease-in-out infinite;
+  z-index: 1;
+}
+
+.live-practice-coach--focus {
+  border-color: color-mix(in srgb, #c9a227 45%, transparent);
+  background: color-mix(in srgb, #c9a227 10%, var(--surface, #fff));
+}
+
+.live-practice-coach--focus i {
+  color: #a67c1a;
+}
+
+.verse-status-badge-focus {
+  background: color-mix(in srgb, #c9a227 22%, transparent);
+  color: #6b5210;
+  border: 1px solid color-mix(in srgb, #c9a227 40%, transparent);
+}
+
+.verse-focus-words {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+  margin: 0.15rem 0 0.55rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, #c9a227 12%, transparent);
+  border: 1px solid color-mix(in srgb, #c9a227 28%, transparent);
+}
+
+.verse-focus-words__label {
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #6b5210;
+}
+
+.verse-focus-words__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.verse-focus-words__chip {
+  font-family: inherit;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  padding: 0.12rem 0.45rem;
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, #c9a227 22%, #fff);
+  color: #1f1a12;
+  box-shadow: inset 0 -2px 0 #a67c1a;
+}
+
+.verse-arabic.verse-practice-focus .wbw-word.practice-focus-word,
+.verse-arabic.verse-practice-focus word.practice-focus-word {
+  background: color-mix(in srgb, #c9a227 28%, transparent) !important;
+  box-shadow: inset 0 -2.5px 0 #a67c1a !important;
+}
+
+.ps-ai-result--beginner,
+.ps-ai-result--surah-recap {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.ps-ai-result__block {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ps-ai-result__block-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text, #1f1a12) 55%, transparent);
+}
+
+.ps-ai-result__verdict {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: color-mix(in srgb, var(--ps-mint, #2e9d62) 80%, #143024);
+}
+
+.ps-ai-result__range,
+.ps-ai-result__method {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.ps-ai-result__method-how,
+.ps-ai-result__tip {
+  margin: 0;
+  font-size: 0.92rem;
+  color: color-mix(in srgb, var(--text, #1f1a12) 72%, transparent);
+}
+
+.ps-ai-result__steps {
+  margin: 0.15rem 0 0;
+  padding-inline-start: 1.15rem;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.92rem;
+}
+
+.ps-ai-result__word-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ps-ai-result__word {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, #c9a227 16%, transparent);
+  box-shadow: inset 0 -2px 0 #a67c1a;
+  font-size: 1.05rem;
 }

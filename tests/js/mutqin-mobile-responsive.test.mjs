@@ -24,7 +24,7 @@ const viewports = process.env.MUTQIN_TEST_QUICK === '1'
 const stateSelectors = {
   workspace: ['.workspace-shell', '.workspace-shell-head', '.workspace-shell-actions', '.workspace-shell-metadata', '.verses-grid', '.verse-card', '.verse-header', '.verse-actions', '.verse-arabic'],
   active: ['.workspace-shell', '.workspace-shell-head', '.workspace-shell-actions', '.workspace-shell-metadata', '.verse-card', '.verse-header', '.verse-statuses', '.verse-actions', '.verse-arabic'],
-  mushaf: ['.workspace-shell', '.mushaf-workspace', '.mushaf-frame', '.mushaf-pill-toolbar', '.mushaf-stage', '.mushaf-viewport', '.mushaf-page', '.mushaf-ayah-text'],
+  mushaf: ['.workspace-shell', '.mushaf-workspace', '.mushaf-frame', '.mushaf-pill-toolbar', '.mushaf-stage', '.mushaf-viewport', '.mushaf-page', '.madani-page-sheet', '.madani-word'],
   controls: ['.tools', '.tools-top', '.tools-tabs', '.tools-body', '.sheet', '.sheet-toggle', '.sheet-content', '.tools-footer'],
   practice: ['.tools', '.tools-top', '.tools-tabs', '.tools-body', '.sheet', '.sheet-toggle', '.st-txt', '.st-right-group', '.tools-footer'],
   saved: ['.tools', '.tools-top', '.tools-tabs', '.tools-body', '.sheet', '.saved-sessions-list', '.saved-session-row', '.saved-session-row-main', '.saved-session-row-actions', '.tools-footer'],

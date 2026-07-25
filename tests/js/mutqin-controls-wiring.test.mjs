@@ -465,7 +465,7 @@ includesAll('anchor visual updates are scheduled', [
   /scheduleAnchorHighlights\(\) \{/,
   /requestAnimationFrame/,
   /cancelAnchorHighlightFrame\(\) \{/,
-  /activeTargets = document\.querySelectorAll\('\.verse-card\.active, \.mushaf-ayah\.active'\)/
+  /activeTargets = document\.querySelectorAll\('\.verse-card\.active, \.mushaf-ayah\.active, \.madani-word\.active'\)/
 ])
 
 assert.doesNotMatch(

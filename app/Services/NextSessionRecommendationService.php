@@ -7,6 +7,7 @@ use App\Enums\RecommendationReasonCode;
 use App\Enums\RecommendationStatus;
 use App\Enums\RecommendationType;
 use App\Enums\UserSessionStatus;
+use App\Models\AiReciteAttempt;
 use App\Models\MemorisationProgress;
 use App\Models\SessionRecommendation;
 use App\Models\User;
@@ -155,9 +156,10 @@ class NextSessionRecommendationService
 
         $settings = $this->resolvedSettings($recommendation);
         $payload = is_array($recommendation->payload) ? $recommendation->payload : [];
-        $surah = (int) ($recommendation->surah_number ?? ($payload['surah']['id'] ?? 0));
-        $from = (int) ($recommendation->ayah_start ?? ($payload['ayah_range']['from'] ?? 1));
-        $to = (int) ($recommendation->ayah_end ?? ($payload['ayah_range']['to'] ?? $from));
+        // Prefer payload range (what the UI shows) over possibly-stale columns.
+        $surah = (int) (($payload['surah']['id'] ?? null) ?: ($recommendation->surah_number ?? 0));
+        $from = (int) (($payload['ayah_range']['from'] ?? null) ?: ($recommendation->ayah_start ?? 1));
+        $to = (int) (($payload['ayah_range']['to'] ?? null) ?: ($recommendation->ayah_end ?? $from));
         if ($from > 0 && $to >= $from && ($to - $from + 1) > self::MAX_SESSION_SIZE) {
             $to = $from + self::MAX_SESSION_SIZE - 1;
         }
@@ -221,7 +223,11 @@ class NextSessionRecommendationService
                     'reason_code' => $recommendation->reason_code,
                     'session_mode' => $mode,
                 ],
-                'settings' => $settings,
+                'settings' => array_merge($settings, [
+                    'practice_weak_words' => is_array($settings['practice_weak_words'] ?? null)
+                        ? array_values($settings['practice_weak_words'])
+                        : (is_array($settings['weak_words'] ?? null) ? array_values($settings['weak_words']) : []),
+                ]),
                 'queue' => $this->buildQueueKeys($surah, $from, $to),
                 'updated_at' => now()->toIso8601String(),
                 'started_at' => now()->toIso8601String(),
@@ -454,6 +460,11 @@ class NextSessionRecommendationService
                 'sequence_errors' => (int) ($assessment['sequence_errors'] ?? 0),
                 'missed_words' => (int) ($assessment['missed_words'] ?? 0),
                 'color_counts' => $colorCounts,
+                'average_accuracy' => isset($assessment['average_accuracy'])
+                    ? (float) $assessment['average_accuracy']
+                    : (isset($assessment['accuracy_percent']) ? (float) $assessment['accuracy_percent'] : null),
+                'attempt_count' => isset($assessment['attempt_count']) ? (int) $assessment['attempt_count'] : null,
+                'weak_words' => is_array($assessment['weak_words'] ?? null) ? array_values($assessment['weak_words']) : [],
                 'assessed_at' => now()->toIso8601String(),
             ]),
         ])->save();
@@ -470,28 +481,31 @@ class NextSessionRecommendationService
             'pronunciation_issues' => (bool) ($assessment['pronunciation_issues'] ?? false),
             'color_counts' => $colorCounts,
             'confidence' => $confidence ?: null,
+            'client_settings' => is_array($assessment['settings'] ?? null) ? $assessment['settings'] : null,
+            'weak_words' => is_array($assessment['weak_words'] ?? null) ? array_values($assessment['weak_words']) : [],
         ], $this->planExtrasForAdaptation($assessment));
 
         if ($result === 'strong') {
             if ($confidence === ConfidenceFeedback::NeedsPractice->value) {
-                // Prioritise the learner's confidence with lighter revision settings.
-                return $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::ConfidenceNeedsPractice);
+                $payload = $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::ConfidenceNeedsPractice);
+            } else {
+                $payload = $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteStrong, $assessment);
             }
-
-            return $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteStrong, $assessment);
-        }
-
-        if ($result === 'mixed') {
+        } elseif ($result === 'mixed') {
             if ($confidence === ConfidenceFeedback::Confident->value) {
-                // Allow progression with a smaller / review-first next set rather than forcing a full repeat.
-                return $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteMixed, $assessment);
+                $payload = $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteMixed, $assessment);
+            } else {
+                $payload = $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::AiReciteMixed);
             }
-
-            return $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::AiReciteMixed);
+        } else {
+            $payload = $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::AiReciteWeak);
         }
 
-        // Weak AI may move to revision even when Confident was selected — learner can still override.
-        return $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::AiReciteWeak);
+        $finalId = (int) ($payload['id'] ?? $recommendation->id);
+        $finalRecommendation = SessionRecommendation::query()->find($finalId) ?: $recommendation;
+        $this->persistAiReciteAttempts($user, $finalRecommendation, $assessment);
+
+        return $payload;
     }
 
     /**
@@ -847,7 +861,7 @@ class NextSessionRecommendationService
         $next = QuranMetadata::nextSurah((int) $context['surah']['id']);
 
         if (! $next) {
-            return $this->buildPayload(
+            $payload = $this->buildPayload(
                 type: RecommendationType::PlanComplete,
                 surah: $context['surah'],
                 from: null,
@@ -859,6 +873,11 @@ class NextSessionRecommendationService
                 memorisationMode: $context['memorisation_mode'],
                 rangeKind: null,
             );
+            $payload['plan_detail'] = [
+                'surah_recap' => $this->buildSurahRecap($context, null, null),
+            ];
+
+            return $payload;
         }
 
         $balanced = AyahWorkload::selectBalancedRange(
@@ -867,7 +886,7 @@ class NextSessionRecommendationService
             self::DEFAULT_SESSION_SIZE,
         );
 
-        return $this->buildPayload(
+        $payload = $this->buildPayload(
             type: RecommendationType::NextSurah,
             surah: $context['surah'],
             from: null,
@@ -884,6 +903,125 @@ class NextSessionRecommendationService
             ],
             rangeKind: 'new',
         );
+        $payload['proposed_next_range'] = [
+            'from' => $balanced['from'],
+            'to' => $balanced['to'],
+            'count' => $balanced['count'],
+        ];
+        $payload['plan_detail'] = [
+            'surah_recap' => $this->buildSurahRecap($context, $next, $balanced),
+        ];
+        $payload['settings'] = [
+            'technique' => 'talqin',
+            'talqin_enabled' => true,
+            'playback_speed' => 0.85,
+            'repetitions' => 3,
+            'source' => 'surah_complete_recap',
+        ];
+
+        return $payload;
+    }
+
+    /**
+     * Beginner-friendly surah completion recap from recent AI / session history.
+     *
+     * @param  array<string, mixed>  $context
+     * @param  array<string, mixed>|null  $nextSurah
+     * @param  array<string, mixed>|null  $nextRange
+     * @return array<string, mixed>
+     */
+    private function buildSurahRecap(array $context, ?array $nextSurah, ?array $nextRange): array
+    {
+        $surah = is_array($context['surah'] ?? null) ? $context['surah'] : [];
+        $surahId = (int) ($surah['id'] ?? 0);
+        $surahName = (string) ($surah['name'] ?? '');
+        $userId = (int) ($context['user_id'] ?? 0);
+
+        $sessionCount = 0;
+        $lastAccuracy = null;
+        $technique = null;
+        $weakItems = [];
+
+        if ($userId > 0 && $surahId > 0) {
+            $sessionCount = (int) UserSession::query()
+                ->where('user_id', $userId)
+                ->where('surah_number', $surahId)
+                ->count();
+
+            $recentRec = SessionRecommendation::query()
+                ->where('user_id', $userId)
+                ->where('surah_number', $surahId)
+                ->whereNotNull('ai_assessment')
+                ->orderByDesc('id')
+                ->first();
+
+            if ($recentRec) {
+                $assessment = is_array($recentRec->ai_assessment) ? $recentRec->ai_assessment : [];
+                if (isset($assessment['average_accuracy']) && is_numeric($assessment['average_accuracy'])) {
+                    $lastAccuracy = (int) round((float) $assessment['average_accuracy']);
+                }
+                $settings = is_array($recentRec->recommended_settings) ? $recentRec->recommended_settings : [];
+                $technique = $settings['technique']
+                    ?? ($recentRec->recommended_technique ?: null);
+                $weakWords = is_array($assessment['weak_words'] ?? null) ? $assessment['weak_words'] : [];
+                foreach (array_slice($weakWords, 0, 5) as $word) {
+                    $text = trim((string) ($word['text'] ?? ''));
+                    if ($text !== '') {
+                        $weakItems[] = $text;
+                    }
+                }
+            }
+
+            if (! $technique) {
+                $technique = $context['base_settings']['technique']
+                    ?? ($context['settings']['technique'] ?? 'talqin');
+            }
+        }
+
+        $bullets = [];
+        if ($sessionCount > 0) {
+            $bullets[] = "You practised this surah across {$sessionCount} sessions.";
+        }
+        if ($lastAccuracy !== null) {
+            $bullets[] = "Last AI Recite accuracy: {$lastAccuracy}%.";
+        }
+        if ($technique) {
+            $bullets[] = 'Technique that helped: '.$technique.'.';
+        }
+        if ($weakItems !== []) {
+            $bullets[] = 'Still watch: '.implode(' · ', array_slice($weakItems, 0, 4)).'.';
+        }
+        if ($bullets === []) {
+            $bullets[] = 'May Allah make what you finished firm in your heart.';
+        }
+
+        $nextLabel = '';
+        if ($nextSurah && $nextRange) {
+            $nextLabel = sprintf(
+                'Next: start %s · āyahs %d–%d',
+                (string) ($nextSurah['name'] ?? ''),
+                (int) ($nextRange['from'] ?? 1),
+                (int) ($nextRange['to'] ?? 1),
+            );
+        }
+
+        return [
+            'surah_id' => $surahId ?: null,
+            'surah_name' => $surahName,
+            'title' => $surahName !== '' ? "You finished {$surahName}" : 'Surah complete',
+            'summary' => 'Here is a calm look at your progress on this surah.',
+            'bullets' => $bullets,
+            'session_count' => $sessionCount,
+            'last_accuracy' => $lastAccuracy,
+            'technique' => $technique,
+            'weak_items' => $weakItems,
+            'next_label' => $nextLabel,
+            'next_surah' => $nextSurah ? [
+                'id' => $nextSurah['id'] ?? null,
+                'name' => $nextSurah['name'] ?? null,
+            ] : null,
+            'next_range' => $nextRange,
+        ];
     }
 
     /**
@@ -1039,6 +1177,7 @@ class NextSessionRecommendationService
 
         return [
             'session' => $session,
+            'user_id' => $user->id,
             'session_meta' => $meta,
             'session_completed' => $sessionCompleted,
             'surah' => $surah,
@@ -1749,6 +1888,17 @@ class NextSessionRecommendationService
             'mode' => 'revision',
         ], $adaptationContext));
 
+        // Prefer the client AI Recite dynamic plan settings when present.
+        $clientSettings = is_array($adaptationContext['client_settings'] ?? null)
+            ? $adaptationContext['client_settings']
+            : null;
+        $planSource = is_array($adaptationContext['plan_detail'] ?? null)
+            ? (string) ($adaptationContext['plan_detail']['source'] ?? '')
+            : '';
+        if ($clientSettings && $planSource === 'ai_recite_dynamic') {
+            $adapted = array_merge($adapted, $clientSettings);
+        }
+
         $payload = $this->buildPayload(
             type: RecommendationType::RepeatCurrentRange,
             surah: $surah,
@@ -2027,6 +2177,82 @@ class NextSessionRecommendationService
         $payload = $this->payloadFromRecord($recommendation);
         $type = RecommendationType::tryFrom((string) ($payload['type'] ?? ''));
 
+        $shouldRefreshContinue = in_array($reasonCode, [
+            RecommendationReasonCode::AiReciteStrong,
+            RecommendationReasonCode::AdaptiveCheckStrong,
+        ], true);
+
+        // Strong AI / adaptive success: always rebuild continue from the completed
+        // source session so the started range matches the “next session” CTA
+        // (never reuse a stale current/previous window).
+        if (
+            $shouldRefreshContinue
+            && ($type?->isContinue() || $type === RecommendationType::NextSurah || $type === RecommendationType::CompleteSurah)
+        ) {
+            $source = $recommendation->sourceSession;
+            if ($source) {
+                $context = $this->buildContext($user, $source);
+                if ($context['session_completed']) {
+                    $continue = $context['is_end_of_surah']
+                        ? $this->endOfSurahPayload($context)
+                        : $this->continuePayload($context);
+                    $continue = $this->attachSettings($continue, array_merge($context, [
+                        'performance' => array_merge(
+                            is_array($context['performance'] ?? null) ? $context['performance'] : [],
+                            [
+                                'confidence' => ConfidenceFeedback::Confident->value,
+                                'ai_result' => 'strong',
+                            ]
+                        ),
+                    ]));
+                    $continue['reason_code'] = $reasonCode->value;
+                    if (empty($continue['user_reason'])) {
+                        $continue['reason'] = $this->defaultReasonText(
+                            $reasonCode,
+                            $continue['ayah_range'] ?? null,
+                            $continue['surah'] ?? null,
+                            $continue['next_surah'] ?? null,
+                        );
+                    }
+                    $continue['technique'] = $this->techniquePayload($continue);
+                    if (is_array($planExtras['plan_detail'] ?? null)) {
+                        $detail = $planExtras['plan_detail'];
+                        // Keep mastery evidence, drop practice-window fields that
+                        // would point the UI back at the completed range.
+                        unset($detail['range'], $detail['weakWords'], $detail['source']);
+                        $detail['mastery'] = 'achieved';
+                        $continue['plan_detail'] = array_merge(
+                            is_array($continue['plan_detail'] ?? null) ? $continue['plan_detail'] : [],
+                            $detail,
+                        );
+                    } else {
+                        $continue['plan_detail'] = array_merge(
+                            is_array($continue['plan_detail'] ?? null) ? $continue['plan_detail'] : [],
+                            ['mastery' => 'achieved'],
+                        );
+                    }
+
+                    $this->markSuperseded($recommendation);
+                    $record = $this->persistRecommendation($user, $source, $continue);
+                    if ($record) {
+                        $prevPayload = is_array($recommendation->payload) ? $recommendation->payload : [];
+                        $mergedPayload = is_array($record->payload) ? $record->payload : [];
+                        if (isset($prevPayload['adaptive_assessment'])) {
+                            $mergedPayload['adaptive_assessment'] = $prevPayload['adaptive_assessment'];
+                        }
+                        $record->forceFill([
+                            'confidence_feedback' => $recommendation->confidence_feedback,
+                            'ai_assessment' => $recommendation->ai_assessment,
+                            'supersedes_recommendation_id' => $recommendation->id,
+                            'payload' => $mergedPayload,
+                        ])->save();
+
+                        return $this->payloadFromRecord($record->fresh());
+                    }
+                }
+            }
+        }
+
         if ($type?->isContinue() || $type === RecommendationType::NextSurah || $type === RecommendationType::CompleteSurah) {
             $source = $recommendation->sourceSession;
             $context = $source ? $this->buildContext($user, $source) : [];
@@ -2064,8 +2290,14 @@ class NextSessionRecommendationService
             if (is_array($planExtras['plan_detail'] ?? null)) {
                 $payload['plan_detail'] = $planExtras['plan_detail'];
             }
+            $ayahFrom = (int) ($payload['ayah_range']['from'] ?? $recommendation->ayah_start ?? 0);
+            $ayahTo = (int) ($payload['ayah_range']['to'] ?? $recommendation->ayah_end ?? $ayahFrom);
+            $surahNumber = (int) ($payload['surah']['id'] ?? $recommendation->surah_number ?? 0);
             $recommendation->forceFill([
                 'reason_code' => $reasonCode->value,
+                'surah_number' => $surahNumber ?: $recommendation->surah_number,
+                'ayah_start' => $ayahFrom ?: $recommendation->ayah_start,
+                'ayah_end' => $ayahTo ?: $recommendation->ayah_end,
                 'recommended_technique' => $payload['settings']['technique'] ?? null,
                 'recommended_reciter' => $payload['settings']['reciter'] ?? null,
                 'recommended_playback_speed' => $payload['settings']['playback_speed'] ?? null,
@@ -2184,5 +2416,173 @@ class NextSessionRecommendationService
             ->where('accepted', true)
             ->where('accepted_at', '>=', now()->subDays(2))
             ->count();
+    }
+
+    /**
+     * Persist each AI Recite attempt (idempotent on recommendation + attempt_number).
+     *
+     * @param  array<string, mixed>  $assessment
+     */
+    private function persistAiReciteAttempts(User $user, SessionRecommendation $recommendation, array $assessment): void
+    {
+        $attempts = is_array($assessment['attempts'] ?? null) ? $assessment['attempts'] : [];
+        if ($attempts === []) {
+            // Fallback: synthesise one row from the aggregate assessment.
+            $attempts = [[
+                'attempt_number' => max(1, (int) ($assessment['attempt_count'] ?? 1)),
+                'accuracy' => $assessment['average_accuracy'] ?? $assessment['accuracy_percent'] ?? null,
+                'band' => $assessment['result'] ?? null,
+                'color_counts' => $assessment['color_counts'] ?? null,
+                'weak_words' => $assessment['weak_words'] ?? [],
+                'ayah_range' => $assessment['ayah_range'] ?? null,
+                'plan_snapshot' => $assessment['plan_detail'] ?? null,
+                'word_statuses' => [],
+            ]];
+        }
+
+        foreach (array_values($attempts) as $index => $attempt) {
+            if (! is_array($attempt)) {
+                continue;
+            }
+            $attemptNumber = max(1, (int) ($attempt['attempt_number'] ?? ($index + 1)));
+            $accuracyRaw = $attempt['accuracy']
+                ?? $attempt['accuracyPercent']
+                ?? $attempt['accuracy_percent']
+                ?? $attempt['accuracyScore']
+                ?? null;
+            $accuracy = null;
+            if (is_numeric($accuracyRaw)) {
+                $accuracy = (int) round(((float) $accuracyRaw) <= 1 ? ((float) $accuracyRaw) * 100 : (float) $accuracyRaw);
+            }
+
+            AiReciteAttempt::query()->updateOrCreate(
+                [
+                    'session_recommendation_id' => $recommendation->id,
+                    'attempt_number' => $attemptNumber,
+                ],
+                [
+                    'user_id' => $user->id,
+                    'user_session_id' => $recommendation->source_session_id
+                        ?: $recommendation->started_session_id,
+                    'accuracy_percent' => $accuracy,
+                    'band' => isset($attempt['band']) ? (string) $attempt['band'] : (string) ($assessment['result'] ?? ''),
+                    'ayah_range' => is_array($attempt['ayah_range'] ?? null)
+                        ? $attempt['ayah_range']
+                        : (is_array($assessment['ayah_range'] ?? null) ? $assessment['ayah_range'] : null),
+                    'color_counts' => is_array($attempt['color_counts'] ?? null)
+                        ? $attempt['color_counts']
+                        : (is_array($assessment['color_counts'] ?? null) ? $assessment['color_counts'] : null),
+                    'weak_words' => is_array($attempt['weak_words'] ?? null)
+                        ? array_values($attempt['weak_words'])
+                        : (is_array($assessment['weak_words'] ?? null) ? array_values($assessment['weak_words']) : []),
+                    'word_statuses' => is_array($attempt['word_statuses'] ?? null)
+                        ? array_slice(array_values($attempt['word_statuses']), 0, 200)
+                        : (is_array($attempt['result']['wordStatuses'] ?? null)
+                            ? array_slice(array_values($attempt['result']['wordStatuses']), 0, 200)
+                            : []),
+                    'plan_snapshot' => is_array($attempt['plan_snapshot'] ?? null)
+                        ? $attempt['plan_snapshot']
+                        : (is_array($assessment['plan_detail'] ?? null) ? $assessment['plan_detail'] : null),
+                ]
+            );
+        }
+
+        $this->rollupAiReciteProgress($user, $recommendation, $assessment);
+    }
+
+    /**
+     * Compact ayah-level rollup so progress APIs retain AI Recite history.
+     *
+     * @param  array<string, mixed>  $assessment
+     */
+    private function rollupAiReciteProgress(User $user, SessionRecommendation $recommendation, array $assessment): void
+    {
+        $surah = (int) ($recommendation->surah_number ?? 0);
+        $weakAyahs = is_array($assessment['weak_ayahs'] ?? null) ? $assessment['weak_ayahs'] : [];
+        $accuracy = isset($assessment['average_accuracy'])
+            ? (float) $assessment['average_accuracy']
+            : (isset($assessment['accuracy_percent']) ? (float) $assessment['accuracy_percent'] : null);
+        $range = is_array($assessment['ayah_range'] ?? null) ? $assessment['ayah_range'] : null;
+        $from = (int) ($range['from'] ?? $recommendation->ayah_start ?? 0);
+        $to = (int) ($range['to'] ?? $recommendation->ayah_end ?? $from);
+        if (! $surah || ! $from || ! $to || $to < $from) {
+            return;
+        }
+
+        for ($ayah = $from; $ayah <= $to; $ayah++) {
+            if (! QuranMetadata::isValidAyah($surah, $ayah)) {
+                break;
+            }
+            $row = MemorisationProgress::query()->firstOrNew([
+                'user_id' => $user->id,
+                'surah_number' => $surah,
+                'ayah_number' => $ayah,
+            ]);
+            $meta = is_array($row->metadata) ? $row->metadata : [];
+            $meta['ai_recite'] = [
+                'last_accuracy' => $accuracy,
+                'weak' => in_array($ayah, array_map('intval', $weakAyahs), true),
+                'recommendation_id' => $recommendation->id,
+                'updated_at' => now()->toIso8601String(),
+            ];
+            $row->metadata = $meta;
+            if (! $row->exists) {
+                $row->status = 'learning';
+                $row->mastery_level = 0;
+            }
+            $row->save();
+        }
+    }
+
+    /**
+     * Chronological recommendation history with nested AI Recite attempts.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function history(User $user, int $limit = 20): array
+    {
+        $limit = max(1, min(50, $limit));
+        $rows = SessionRecommendation::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+
+        $recommendationIds = $rows->pluck('id')->all();
+        $attemptsByRec = AiReciteAttempt::query()
+            ->where('user_id', $user->id)
+            ->whereIn('session_recommendation_id', $recommendationIds)
+            ->orderBy('attempt_number')
+            ->get()
+            ->groupBy('session_recommendation_id');
+
+        return $rows->map(function (SessionRecommendation $row) use ($attemptsByRec) {
+            $attempts = ($attemptsByRec->get($row->id) ?? collect())->map(function (AiReciteAttempt $attempt) {
+                return [
+                    'id' => $attempt->id,
+                    'attempt_number' => $attempt->attempt_number,
+                    'accuracy_percent' => $attempt->accuracy_percent,
+                    'band' => $attempt->band,
+                    'ayah_range' => $attempt->ayah_range,
+                    'color_counts' => $attempt->color_counts,
+                    'weak_words' => $attempt->weak_words,
+                    'created_at' => optional($attempt->created_at)?->toIso8601String(),
+                ];
+            })->values()->all();
+
+            return [
+                'id' => $row->id,
+                'type' => $row->recommendation_type,
+                'status' => $row->status?->value ?? $row->status,
+                'reason_code' => $row->reason_code,
+                'surah_number' => $row->surah_number,
+                'ayah_start' => $row->ayah_start,
+                'ayah_end' => $row->ayah_end,
+                'ai_assessment' => $row->ai_assessment,
+                'plan_detail' => is_array($row->payload) ? ($row->payload['plan_detail'] ?? null) : null,
+                'attempts' => $attempts,
+                'created_at' => optional($row->created_at)?->toIso8601String(),
+            ];
+        })->values()->all();
     }
 }

@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Personalised next-session recommendations.
     Route::get('/recommendations/next', [RecommendationController::class, 'show'])->name('api.recommendations.next');
+    Route::get('/recommendations/history', [RecommendationController::class, 'history'])->name('api.recommendations.history');
     Route::post('/recommendations/start', [RecommendationController::class, 'start'])->name('api.recommendations.start');
     Route::post('/recommendations/reject', [RecommendationController::class, 'reject'])->name('api.recommendations.reject');
     Route::post('/recommendations/confidence', [RecommendationController::class, 'confidence'])->name('api.recommendations.confidence');

@@ -125,6 +125,9 @@ function syncDisplayModeClass() {
 export function initPwa() {
     syncDisplayModeClass();
 
+    // Always clear stale Mutqin caches on boot so local UI updates are not stuck.
+    unregisterServiceWorkers().catch(() => {});
+
     const media = window.matchMedia(MOBILE_MQ);
     const onViewportChange = () => {
         syncDisplayModeClass();

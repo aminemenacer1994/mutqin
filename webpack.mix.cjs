@@ -8,9 +8,8 @@ mix.js('resources/js/app.js', 'public/js')
    })
    .webpackConfig({
        output: {
-           // Stable lazy-chunk names. Cache busting comes from mix.version()
-           // on the entry (app.js embeds the chunk mapping) — hashed chunk
-           // filenames caused mix-manifest / watch mismatches and stale loads.
+           // Stable chunk name. Cache bust via mix.version() on app.js + no-store headers.
+           // Contenthashed chunk names raced with `mix watch` and blanked the workspace.
            chunkFilename: 'js/[name].js'
        }
    })

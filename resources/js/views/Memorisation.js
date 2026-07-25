@@ -12,7 +12,26 @@ import {
 } from '../utils/emotionalTouches'
 import diff from 'fast-diff'
 import { markRaw } from 'vue'
-import { getEditions, getQuranEdition, getSurahEdition, getSurahEditions } from '../scripts/lib/quranApis'
+import {
+  getChapterWordByWordMeanings,
+  getEditions,
+  getMadaniPagesForChapterRange,
+  getMadaniPageVerses,
+  getQuranEdition,
+  getSurahEdition,
+  getSurahEditions
+} from '../scripts/lib/quranApis'
+import {
+  buildMadaniPageLayout,
+  isVerseInteractiveOnPage
+} from '../scripts/mushaf/madaniPageLayout'
+import {
+  loadQcfPageFont,
+  loadSurahNamesFont,
+  prefetchQcfPageFonts,
+  isQcfFontLoaded,
+  SURAH_NAMES_FONT_FAMILY
+} from '../scripts/mushaf/qcfFontLoader'
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
 import {
@@ -41,6 +60,21 @@ import {
   applyPersonalPlanToRecommendation,
 } from '../scripts/recommendations/nextSessionRecommendation'
 import { buildAiReviewDetails } from '../scripts/recommendations/aiReviewDetails'
+import {
+  AI_RECITE_MAX_ATTEMPTS,
+  averageAttemptAccuracy,
+  buildAiReciteDynamicPlan,
+  buildFriendlyReciteFeedback,
+  extractWeakWordsFromResult,
+} from '../scripts/recommendations/aiRecitePracticePlan'
+import {
+  estimatePracticeDuration,
+  buildPostPracticeGuidance,
+  buildLiveSessionGuidance,
+  resolveLiveTechniqueGuide,
+  normaliseWeakWordRecords,
+  weakWordReasonLabel,
+} from '../scripts/session/sessionPracticeCoach'
 import {
   getTechniqueDescription,
   getTechniqueLabel,
@@ -89,6 +123,7 @@ import {
   completeAssessment,
   buildAssessmentResultViewModel,
   loadAssessmentSession,
+  clearAssessmentSession,
   requestHint,
   pauseAssessment,
   resumeAssessment,
@@ -500,6 +535,13 @@ export default {
       mushafBackground: 'warm',
       mushafBorder: 'classic',
       hoveredMushafVerseKey: '',
+      madaniPageNumbers: [],
+      madaniPageLayouts: {},
+      madaniPageByVerseKey: {},
+      madaniPagesLoading: false,
+      madaniPagesError: '',
+      madaniLoadRequestId: 0,
+      madaniFontsReady: {},
       mushafBackgroundOptions: [
         { value: 'warm', label: 'Warm' },
         { value: 'paper', label: 'Paper' },
@@ -559,6 +601,21 @@ export default {
       postSessionAiReciteActive: false,
       postSessionAiFeedback: '',
       postSessionAiReviewDetails: null,
+      recommendedPracticePending: false,
+      recommendedPracticeCompleted: false,
+      // Mastery loop: keep re-testing the same range until AI Recite is strong.
+      awaitingMasteryRetest: false,
+      masteryTargetRange: null,
+      practiceFocusWeakWords: [],
+      selectedPracticeWeakWordKey: '',
+      livePracticeCoachPhase: 'before',
+      aiReciteAttempts: [],
+      aiReciteFinalPlan: null,
+      aiReciteShowFinalPlan: false,
+      aiReciteAverageAccuracy: null,
+      // Durable flag: strong AI Recite should start the recommended NEXT range
+      // even after aiReciteFinalPlan is cleared for the confirm/start flow.
+      aiReciteAdvanceToNextSession: false,
       postSessionAdaptiveCheckActive: false,
       postSessionAdaptiveCheckBusy: false,
       postSessionAdaptiveSession: null,
@@ -639,6 +696,7 @@ export default {
       audioElement: null,
       recitationCheckRecording: false,
       recitationCheckPreparing: false,
+      recitationCheckDiscardOnStop: false,
       recitationCheckError: '',
       recitationCheckMediaRecorder: null,
       recitationCheckMediaStream: null,
@@ -2870,6 +2928,394 @@ export default {
       // Prefer freshly built plan; keep stored minutes/source if identical range.
       return built
     },
+    postSessionHasAiEvidence() {
+      return !!(
+        this.aiReciteFinalPlan
+        || this.postSessionAiReviewDetails
+        || this.postSessionRecommendation?.ai_assessment?.result
+        || this.practiceFocusWeakWords.length
+      )
+    },
+    aiReciteAttemptCount() {
+      return Array.isArray(this.aiReciteAttempts) ? this.aiReciteAttempts.length : 0
+    },
+    aiReciteAttemptsRemaining() {
+      return Math.max(0, AI_RECITE_MAX_ATTEMPTS - this.aiReciteAttemptCount)
+    },
+    aiReciteCanRetry() {
+      return this.postSessionAiReciteActive
+        && !this.aiReciteShowFinalPlan
+        && this.aiReciteAttemptCount > 0
+        && this.aiReciteAttemptCount < AI_RECITE_MAX_ATTEMPTS
+    },
+    aiReciteCanRetryFromSuccess() {
+      return !!this.aiReciteFinalPlan
+        && this.aiReciteAttemptCount > 0
+        && this.aiReciteAttemptCount < AI_RECITE_MAX_ATTEMPTS
+        && !this.postSessionAiReciteActive
+    },
+    aiReciteRangeLabel() {
+      const snap = this.postSessionSnapshot || {}
+      const surah = snap.chapterName
+        || this.postSessionRecommendation?.surah?.name
+        || this.currentChapter?.name_simple
+        || ''
+      const from = Number(snap.rangeStart || this.rangeStart || 0)
+      const to = Number(snap.rangeEnd || this.rangeEnd || from)
+      if (!from) return surah || ''
+      const range = from === to
+        ? this.t('memorisation.postSession.coach.ayahLabel', { ayah: from })
+        : this.t('memorisation.postSession.coach.ayahRangeLabel', { from, to })
+      return surah ? `${surah} · ${range}` : range
+    },
+    aiRecitePrimaryTechnique() {
+      const fromApproach = this.aiReciteFinalPlan?.planDetail?.practiceApproach
+      if (fromApproach?.id) {
+        return {
+          id: fromApproach.id,
+          title: fromApproach.title,
+          how: fromApproach.how,
+          steps: Array.isArray(fromApproach.steps) ? fromApproach.steps : [],
+        }
+      }
+      const techniques = this.aiReciteFinalPlan?.techniques
+      return Array.isArray(techniques) && techniques.length ? techniques[0] : null
+    },
+    postSessionSurahRecap() {
+      const rec = this.postSessionRecommendation
+      if (!rec || this.aiReciteFinalPlan) return null
+      const reason = String(rec.reason_code || rec.reasonCode || '').toLowerCase()
+      const type = String(rec.type || rec.recommendation_type || '').toLowerCase()
+      const detail = rec.plan_detail || rec.planDetail || {}
+      const surahRecap = detail.surah_recap || detail.surahRecap || null
+      const isSurahComplete = reason.includes('surah_completed')
+        || reason === 'surah_completed'
+        || type.includes('next_surah')
+        || !!rec.is_end_of_surah
+      if (!isSurahComplete && !surahRecap) return null
+      const surahName = rec.surah?.name
+        || this.postSessionSnapshot?.chapterName
+        || ''
+      const next = rec.next_surah || rec.proposed_next_range || {}
+      const nextFrom = Number(rec.proposed_next_range?.from || next.from || 1)
+      const nextTo = Number(rec.proposed_next_range?.to || next.to || nextFrom)
+      const nextName = rec.next_surah?.name || next.name || ''
+      if (surahRecap && typeof surahRecap === 'object') {
+        return {
+          title: surahRecap.title
+            || this.t('memorisation.aiRecitePlan.surahRecap.title', { surah: surahName }),
+          summary: surahRecap.summary
+            || this.t('memorisation.aiRecitePlan.surahRecap.summary'),
+          bullets: Array.isArray(surahRecap.bullets) ? surahRecap.bullets : [],
+          nextLabel: surahRecap.next_label
+            || (nextName
+              ? this.t('memorisation.aiRecitePlan.surahRecap.next', {
+                surah: nextName,
+                from: nextFrom,
+                to: nextTo,
+              })
+              : ''),
+        }
+      }
+      return {
+        title: this.t('memorisation.aiRecitePlan.surahRecap.title', { surah: surahName }),
+        summary: this.t('memorisation.aiRecitePlan.surahRecap.summary'),
+        bullets: [],
+        nextLabel: nextName
+          ? this.t('memorisation.aiRecitePlan.surahRecap.next', {
+            surah: nextName,
+            from: nextFrom,
+            to: nextTo,
+          })
+          : '',
+      }
+    },
+    aiReciteResultSetupChips() {
+      const setup = this.aiReciteFinalPlan?.planDetail?.setup
+      if (!Array.isArray(setup)) return []
+      return setup.slice(0, 3)
+    },
+    aiReciteFriendlyFeedback() {
+      if (this.aiReciteFinalPlan?.feedback) return this.aiReciteFinalPlan.feedback
+      return buildFriendlyReciteFeedback(this.aiReciteAverageAccuracy, this.t.bind(this))
+    },
+    aiReciteMasteryAchieved() {
+      if (this.aiReciteAdvanceToNextSession) return true
+      const plan = this.aiReciteFinalPlan
+      if (!plan) return false
+      return plan.outcome === 'strong' || plan.band === 'strong'
+    },
+    liveSessionTechniqueId() {
+      if (this.talqinModeEnabled) return 'talqin'
+      if (this.focusModeEnabled) return 'focus'
+      if (this.blurModeEnabled) return 'blur'
+      if (this.chainingEnabled) return 'chaining'
+      if (this.anchorModeEnabled) return 'anchor'
+      const fromSettings = String(
+        this.sessionConfig?.technique
+        || this.postSessionRecommendation?.settings?.technique
+        || this.postSessionRecommendation?.technique?.id
+        || '',
+      ).toLowerCase()
+      if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(fromSettings)) {
+        return fromSettings
+      }
+      return 'listen'
+    },
+    liveTechniqueGuide() {
+      if (!this.hasSessionStarted || this.isSessionCompleted || this.showPostSessionModal) {
+        return null
+      }
+      return resolveLiveTechniqueGuide(this.liveSessionTechniqueId, this.t.bind(this))
+    },
+    aiReciteNeedsSimplerPlan() {
+      return !!this.aiReciteFinalPlan && !this.aiReciteMasteryAchieved
+    },
+    postSessionEstimatedAudioSeconds() {
+      const from = Number(this.postSessionRecommendation?.ayah_range?.from || this.postSessionSnapshot?.rangeStart || 0)
+      const to = Number(this.postSessionRecommendation?.ayah_range?.to || this.postSessionSnapshot?.rangeEnd || from)
+      const chapterId = Number(
+        this.postSessionRecommendation?.surah?.id
+        || this.postSessionSnapshot?.chapterId
+        || this.chapterId
+        || 0,
+      )
+      const verses = Array.isArray(this.verses) ? this.verses : []
+      let total = 0
+      let counted = 0
+      for (const verse of verses) {
+        const surah = Number(verse.surah || String(verse.key || '').split(':')[0] || 0)
+        const ayah = Number(verse.number || verse.ayah || String(verse.key || '').split(':')[1] || 0)
+        if (chapterId && surah && surah !== chapterId) continue
+        if (from && to && ayah && (ayah < from || ayah > to)) continue
+        const dur = Number(verse.duration || verse.audioDuration || 0)
+        if (Number.isFinite(dur) && dur > 0) {
+          total += dur
+          counted += 1
+        } else {
+          try {
+            const estimated = this.estimateVerseDuration?.(verse)
+            if (Number.isFinite(estimated) && estimated > 0) {
+              total += estimated
+              counted += 1
+            }
+          } catch (_) { /* ignore */ }
+        }
+      }
+      return counted > 0 ? total : 0
+    },
+    postSessionEstimatedTimeLabel() {
+      const settings = this.postSessionRecommendation?.settings || {}
+      const ayahCount = Number(
+        this.postSessionRecommendation?.ayah_range?.count
+        || this.postSessionPersonalPlan?.range?.count
+        || 1,
+      )
+      const estimated = estimatePracticeDuration({
+        audioDurationSeconds: this.postSessionEstimatedAudioSeconds,
+        playbackSpeed: Number(settings.playback_speed) || Number(this.speed) || 1,
+        repetitions: Number(settings.repetitions) || 3,
+        pauseBetweenRepeats: 1.5,
+        technique: settings.technique || this.postSessionPersonalPlan?.practiceApproach?.id || 'talqin',
+        ayahCount: Math.max(1, ayahCount),
+      })
+      const localized = this.t('memorisation.postSession.recommendation.planDetail.aboutMinutes', {
+        minutes: estimated.minutes,
+      })
+      if (localized && !String(localized).includes('aboutMinutes')) return localized
+      return estimated.label
+    },
+    postSessionCoachGuidance() {
+      if (this.postSessionHasAiEvidence) {
+        return this.t('memorisation.postSession.coach.guidance.afterAi')
+      }
+      if (this.recommendedPracticeCompleted) {
+        return this.t('memorisation.postSession.coach.guidance.afterPractice')
+      }
+      return this.t('memorisation.postSession.coach.guidance.recommended')
+    },
+    postSessionPostPracticeGuidance() {
+      const completion = this.buildCompletionPerformancePayload?.() || {}
+      const replayHeavy = Array.isArray(completion.replayHeavyAyahs)
+        ? completion.replayHeavyAyahs[0]
+        : (completion.heaviestReplayAyah || null)
+      return buildPostPracticeGuidance({
+        completed: !!completion.completedAll || !!this.postSessionSnapshot?.completedAll,
+        replayHeavyAyah: replayHeavy,
+        pausedOften: Number(completion.pauseCount || completion.pauses || 0) >= 3,
+        speedChanged: !!completion.speedChanged,
+        hasAiResult: this.postSessionHasAiEvidence,
+        t: this.t.bind(this),
+      })
+    },
+    practiceFocusWeakWordRows() {
+      return normaliseWeakWordRecords(this.practiceFocusWeakWords).map((word) => ({
+        ...word,
+        key: `${word.verseKey || ''}:${word.wordIndex}`,
+        reasonLabel: weakWordReasonLabel(word.reason, this.t.bind(this)),
+      }))
+    },
+    practiceFocusSignature() {
+      const words = Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []
+      if (!words.length) return '0'
+      const normalize = typeof this.normalizePracticeFocusWordText === 'function'
+        ? (text) => this.normalizePracticeFocusWordText(text)
+        : (text) => String(text || '').replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '').replace(/[^\u0621-\u064A\u0671]/g, '').trim()
+      return words
+        .map((w) => `${w.verseKey || w.ayahNumber || ''}:${w.wordIndex}:${normalize(w.text)}`)
+        .join('|')
+    },
+    postSessionCalmPrimaryLabel() {
+      if (this.postSessionRecommendationStarting) {
+        return this.postSessionRecommendationPrimaryLabel
+      }
+      if (this.aiReciteMasteryAchieved) {
+        return this.t('memorisation.aiRecitePlan.continueNextSession')
+      }
+      if (this.aiReciteNeedsSimplerPlan) {
+        return this.t('memorisation.aiRecitePlan.startSimplerPlan')
+      }
+      if (this.postSessionSurahRecap) {
+        return this.t('memorisation.aiRecitePlan.surahRecap.cta')
+      }
+      return this.t('memorisation.postSession.recommendation.testWithAiRecite')
+    },
+    postSessionCalmHeaderTitle() {
+      if (this.aiReciteMasteryAchieved) {
+        return this.t('memorisation.aiRecitePlan.masteryTitle')
+      }
+      if (this.aiReciteNeedsSimplerPlan) {
+        return this.t('memorisation.postSession.title')
+      }
+      if (this.postSessionSurahRecap) {
+        return this.t('memorisation.aiRecitePlan.surahRecap.kicker')
+      }
+      if (this.awaitingMasteryRetest || this.recommendedPracticeCompleted) {
+        return this.t('memorisation.postSession.coach.headers.practiceDone')
+      }
+      return this.t('memorisation.postSession.title')
+    },
+    postSessionCalmHeaderSubtitle() {
+      if (this.aiReciteMasteryAchieved) {
+        return this.t('memorisation.aiRecitePlan.masterySubtitle')
+      }
+      if (this.aiReciteNeedsSimplerPlan) {
+        return this.t('memorisation.aiRecitePlan.simplerSubtitle')
+      }
+      if (this.postSessionSurahRecap) {
+        return this.postSessionSurahRecap.summary
+          || this.t('memorisation.aiRecitePlan.surahRecap.summary')
+      }
+      if (this.awaitingMasteryRetest || this.recommendedPracticeCompleted) {
+        return this.t('memorisation.postSession.coach.subtitles.retestAfterPractice')
+      }
+      return this.t('memorisation.postSession.coach.subtitles.aiFirst')
+    },
+    postSessionStatusBodyCopy() {
+      if (this.aiReciteMasteryAchieved) {
+        return this.t('memorisation.aiRecitePlan.masteryBanner')
+      }
+      if (this.aiReciteNeedsSimplerPlan) {
+        return this.t('memorisation.aiRecitePlan.simplerBanner')
+      }
+      if (this.postSessionSurahRecap) {
+        return this.postSessionSurahRecap.summary
+          || this.t('memorisation.aiRecitePlan.surahRecap.summary')
+      }
+      if (this.awaitingMasteryRetest || this.recommendedPracticeCompleted) {
+        return this.t('memorisation.postSession.coach.aiRetestBody')
+      }
+      return this.t('memorisation.postSession.coach.aiFirstBody')
+    },
+    postSessionStatusRangeCaption() {
+      if (this.aiReciteMasteryAchieved) {
+        return this.t('memorisation.postSession.coach.rangeCaption.next')
+      }
+      if (this.aiReciteNeedsSimplerPlan) {
+        return this.t('memorisation.postSession.coach.rangeCaption.practice')
+      }
+      if (this.awaitingMasteryRetest || this.recommendedPracticeCompleted) {
+        return this.t('memorisation.postSession.coach.rangeCaption.retest')
+      }
+      return this.t('memorisation.postSession.coach.rangeCaption.test')
+    },
+    liveKeyWordHooks() {
+      const fromPlan = Array.isArray(this.practiceFocusWeakWords)
+        ? this.practiceFocusWeakWords.filter((w) => String(w?.text || '').trim())
+        : []
+      if (fromPlan.length) {
+        return normaliseWeakWordRecords(fromPlan).slice(0, 6)
+      }
+      if (!this.anchorModeEnabled && this.liveSessionTechniqueId !== 'anchor') return []
+      // Derive visible hooks from the active ayah so "hold onto key words" is never empty talk.
+      const verse = (this.verses || []).find((v) => v.key === this.currentHighlightedVerseKey)
+        || (this.verses || []).find((v) => Number(v.number) === Number(this.rangeStart))
+        || (this.verses || [])[0]
+      if (!verse) return []
+      const tokens = this.tokenizeRecitationDisplayWords?.(verse.arabic || verse.text || '')
+        || String(verse.arabic || '').trim().split(/\s+/).filter(Boolean)
+      if (!tokens.length) return []
+      const indices = typeof this.getAnchorIndices === 'function'
+        ? this.getAnchorIndices(tokens.length)
+        : [0, Math.max(0, tokens.length - 1)]
+      const unique = [...new Set(indices.filter((i) => i >= 0 && i < tokens.length))]
+      return unique.map((wordIndex) => ({
+        text: tokens[wordIndex],
+        wordIndex,
+        ayahNumber: Number(verse.number || 0) || null,
+        verseKey: verse.key || null,
+        reason: 'anchor',
+      }))
+    },
+    postSessionCalmWhyText() {
+      const why = String(
+        this.postSessionPersonalPlan?.personalWhy
+        || this.postSessionWhyDisclosureText
+        || this.postSessionSimpleReason
+        || '',
+      ).trim()
+      if (!why) return ''
+      // Keep one short paragraph for beginners.
+      const first = why.split(/(?<=[.!?])\s+/)[0] || why
+      return first.length > 160 ? `${first.slice(0, 157).trim()}…` : first
+    },
+    livePracticeCoachText() {
+      if (!this.hasSessionStarted || this.isSessionCompleted || this.showPostSessionModal) return ''
+      const activeFocus = this.activePracticeFocusWord
+      const ayahNumber = Number(
+        String(this.currentHighlightedVerseKey || '').split(':')[1]
+        || this.currentAyahNumber
+        || 0,
+      )
+      return buildLiveSessionGuidance({
+        isPlaying: !!this.isPlaying,
+        isPaused: !this.isPlaying && !!this.playerVisible && !!this.hasLoadedAudio,
+        isCompleted: false,
+        technique: this.liveSessionTechniqueId,
+        readyToTest: false,
+        difficulty: this.livePracticeCoachPhase === 'difficulty',
+        suggestedSpeed: 0.75,
+        focusWordText: activeFocus?.text || '',
+        hasFocusWords: (
+          (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length > 0)
+          || this.liveKeyWordHooks.length > 0
+        ),
+        ayahNumber: Number.isFinite(ayahNumber) && ayahNumber > 0 ? ayahNumber : null,
+        t: this.t.bind(this),
+      })
+    },
+    activePracticeFocusWord() {
+      const words = Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []
+      if (!words.length) return null
+      const key = String(this.currentHighlightedVerseKey || '')
+      const index = Number(this.currentWordIndex)
+      if (!key || !Number.isFinite(index) || index < 0) return null
+      const byIndex = words.find((word) => (
+        this.practiceFocusVerseKeyMatches(word, key) && Number(word.wordIndex) === index
+      ))
+      if (byIndex) return byIndex
+      return null
+    },
     postSessionWhyDisclosureText() {
       const personal = this.postSessionPersonalPlan?.personalWhy
       if (personal) return personal
@@ -3867,26 +4313,40 @@ export default {
         || null
     },
     recitationCheckVisible() {
-      return (this.recitationCheckPreparing && !!this.recitationCheckStartedAt && !this.recitationCheckRecording)
+      // Keep the idle Start controls available whenever the panel is open
+      // (post-session AI Recite was hiding the CTA because only preparing/result counted).
+      return !!this.recitationCheckPanelOpen
+        || !!this.recitationCheckRecording
+        || (this.recitationCheckPreparing && !!this.recitationCheckStartedAt)
         || !!this.recitationCheckError
         || !!this.recitationCheckResult
     },
     selfCheckReviewVisible() {
+      // AI Recite: only mount the lower panel while listening / reviewing — never as an idle “recording” card.
+      if (this.postSessionAiReciteActive || this.recitationCheckPanelOpen) {
+        return !!this.recitationCheckRecording
+          || (this.recitationCheckPreparing && !!this.recitationCheckStartedAt)
+          || !!this.recitationCheckResult
+          || !!this.recitationCheckError
+      }
       if (this.recitationCheckRecording) return false
       return (this.recitationCheckPreparing && !!this.recitationCheckStartedAt)
         || !!this.recitationCheckResult
         || !!this.recitationCheckError
-        || this.isSelfCheckRecording
         || this.selfCheckPreparing
         || !!this.selfCheckActiveDraft
         || !!this.selfCheckError
-        || this.selfCheckSavedAttemptsVisible
     },
     showSelfCheckLibraryShortcut() {
-      if (!this.showSelfCheckModal) return false
-      return this.selfCheckReviewVisible
-        || this.selfCheckLastSavedAyahKey === this.selfCheckModalVerse?.key
-        || this.hasRecordingsLibraryEntries
+      // Recordings library is permanently removed from AI Recite / self-check.
+      return false
+    },
+    showAiReciteStartCta() {
+      if (!this.showSelfCheckModal || !this.selfCheckModalVerse) return false
+      if (this.recitationCheckRecording || this.recitationCheckPreparing) return false
+      if (this.recitationCheckResult || this.recitationCheckError) return false
+      if (this.isSelfCheckRecording || this.selfCheckPreparing || this.selfCheckActiveDraft) return false
+      return this.postSessionAiReciteActive || this.recitationCheckPanelOpen
     },
     recitationCheckTitle() {
       const targets = this.getRecitationCheckTargetVerses()
@@ -4055,6 +4515,9 @@ export default {
       return this.selfCheckVerseRef || null
     },
     selfCheckModalTitle() {
+      if (this.postSessionAiReciteActive) {
+        return this.t('memorisation.reading.aiRecite')
+      }
       const targets = this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
         ? this.recitationCheckPendingTargets
         : (this.selfCheckModalVerse ? [this.selfCheckModalVerse] : [])
@@ -5277,6 +5740,7 @@ export default {
       labels.push(this.t('memorisation.common.fontLabel', { font: this.getCurrentFontLabel() }))
       if (this.showTranslation) labels.push(this.t('memorisation.common.translationOn'))
       if (this.showTransliteration) labels.push(this.t('memorisation.common.transliterationOn'))
+      if (this.showWordByWord) labels.push(this.t('memorisation.common.wordByWordOn'))
       if (this.wordByWordAudioEnabled) labels.push(this.t('memorisation.common.wordAudioOn'))
       if (this.tajweedEnabled) labels.push(this.t('memorisation.common.tajweedOn'))
       return labels.length ? labels.join(' • ') : this.t('memorisation.common.noReadingAids')
@@ -5285,6 +5749,7 @@ export default {
       const pills = [`${this.guidedPhaseLabel} mode`, `Font: ${this.getCurrentFontLabel()}`]
       if (this.showTranslation) pills.push('Translation')
       if (this.showTransliteration) pills.push('Transliteration')
+      if (this.showWordByWord) pills.push(this.t('memorisation.reading.wordByWord'))
       if (this.wordByWordAudioEnabled) pills.push(this.t('memorisation.reading.wordAudio'))
       if (this.tajweedEnabled) pills.push('Tajweed')
       return pills
@@ -5370,38 +5835,56 @@ export default {
       return this.activeVerseIndex >= 0 && this.activeVerseIndex < this.verses.length - 1
     },
 
-    mushafPageSize() {
-      if (typeof window !== 'undefined' && window.innerWidth < 680) return 3
-      if (typeof window !== 'undefined' && window.innerWidth < 980) return 4
-      return 5
-    },
-
     mushafDisplayVerses() {
       const modeVerses = Array.isArray(this.currentConfig?.verses) ? this.currentConfig.verses : []
       const localVerses = Array.isArray(this.verses) ? this.verses : []
       return modeVerses.length ? modeVerses : localVerses
     },
 
+    mushafSessionVerseKeys() {
+      return new Set((this.mushafDisplayVerses || []).map(verse => verse?.key).filter(Boolean))
+    },
+
     mushafPages() {
-      const sourceVerses = this.mushafDisplayVerses
-      if (!sourceVerses.length) return []
-      const pageSize = Math.max(1, Number(this.mushafPageSize || 5))
-      const pages = []
-      for (let index = 0; index < sourceVerses.length; index += pageSize) {
-        const verses = sourceVerses.slice(index, index + pageSize)
-        pages.push({
-          id: `mushaf-${verses[0].key}-${verses[verses.length - 1].key}`,
-          verses,
-          startNumber: verses[0].number,
-          endNumber: verses[verses.length - 1].number
+      const pageNumbers = Array.isArray(this.madaniPageNumbers) ? this.madaniPageNumbers : []
+      if (!pageNumbers.length) return []
+      const sessionKeys = this.mushafSessionVerseKeys
+      return pageNumbers.map(pageNumber => {
+        const layout = this.madaniPageLayouts?.[pageNumber] || null
+        const layoutVerses = Array.isArray(layout?.verses) ? layout.verses : []
+        const sessionVerses = (this.mushafDisplayVerses || []).filter(verse => {
+          if (layout?.verseKeys?.includes(verse.key)) return true
+          return Number(this.madaniPageByVerseKey?.[verse.key]) === Number(pageNumber)
         })
-      }
-      return pages
+        const verses = sessionVerses.length
+          ? sessionVerses
+          : layoutVerses.map(item => ({
+            key: item.key,
+            number: item.number,
+            chapterId: Number(String(item.key).split(':')[0]) || 0
+          }))
+        return {
+          id: `madani-${pageNumber}`,
+          pageNumber,
+          layout,
+          lines: layout?.lines || [],
+          fontFamily: layout?.fontFamily || `p${pageNumber}-v2`,
+          verseKeys: layout?.verseKeys || [...sessionKeys],
+          verses,
+          startNumber: verses[0]?.number || layoutVerses[0]?.number || null,
+          endNumber: verses[verses.length - 1]?.number || layoutVerses[layoutVerses.length - 1]?.number || null,
+          loading: !layout && !!this.madaniPagesLoading
+        }
+      })
     },
 
     currentMushafPage() {
       if (!this.mushafPages.length) return null
       return this.mushafPages[this.safeMushafPageIndex] || null
+    },
+
+    currentMadaniPageNumber() {
+      return Number(this.currentMushafPage?.pageNumber || this.madaniPageNumbers?.[this.safeMushafPageIndex] || 0) || null
     },
 
     mushafDisplayCacheKey() {
@@ -5411,7 +5894,9 @@ export default {
         this.anchorModeEnabled ? 1 : 0,
         this.showWordByWord ? 1 : 0,
         this.wordByWordAudioEnabled ? 1 : 0,
-        this.defaultFontSize
+        this.defaultFontSize,
+        this.practiceFocusSignature,
+        this.currentMadaniPageNumber || 0,
       ].join('|')
     },
 
@@ -5427,12 +5912,11 @@ export default {
     },
 
     showMushafBismillahOnPage() {
-      const chapterId = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
-      if (chapterId === 9) return false
-      const rangeStart = Number(this.rangeStart || this.currentConfig?.rangeStart || 1)
-      if (rangeStart !== 1) return false
-      const firstVerse = this.currentMushafPage?.verses?.[0]
-      return Number(firstVerse?.number) === 1
+      return false
+    },
+
+    surahNamesFontFamily() {
+      return SURAH_NAMES_FONT_FAMILY
     },
 
     mushafPageMetaLabel() {
@@ -5460,12 +5944,6 @@ export default {
 
     canGoNextMushafPage() {
       return this.safeMushafPageIndex < this.mushafPages.length - 1
-    },
-
-    mushafPaginationLabel() {
-      const total = this.mushafPages.length
-      if (!total) return ''
-      return `${this.safeMushafPageIndex + 1} / ${total}`
     },
 
     workspaceLoadingLabel() {
@@ -5665,31 +6143,63 @@ export default {
     },
 
     currentMushafVerseRows() {
+      return []
+    },
+
+    currentMadaniLines() {
       const page = this.currentMushafPage
-      if (!page?.verses?.length) return []
+      const lines = Array.isArray(page?.lines) ? page.lines : []
+      if (!lines.length) return []
+      const sessionKeys = this.mushafSessionVerseKeys
       const hasStarted = this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback
       const effectiveKey = this.effectiveActiveVerseKey
-      return page.verses.map(verse => {
-        const key = verse.key
-        const hasActiveReview = this.shouldShowRecitationReviewHighlights(key)
+      const fontFamily = page.fontFamily || `p${page.pageNumber}-v2`
+      // Only treat as ready after a successful FontFace.load — never document.fonts.check().
+      const fontReady = !!this.madaniFontsReady?.[page.pageNumber]
+        && isQcfFontLoaded(page.pageNumber, { tajweed: !!this.tajweedEnabled })
+
+      return lines.map(line => {
+        const words = (line.words || []).map(word => {
+          const verseKey = word.verseKey
+          const inSession = isVerseInteractiveOnPage(verseKey, sessionKeys)
+          const hasActiveReview = this.shouldShowRecitationReviewHighlights(verseKey)
+          const isActive = inSession && ((hasStarted && effectiveKey === verseKey) || hasActiveReview)
+          // NEVER paint code_v2 without the page font — Presentation Forms look like garbage ligatures.
+          const html = fontReady
+            ? (word.codeV2 || word.textQpc || '')
+            : (word.textQpc || '')
+          return {
+            ...word,
+            html,
+            useGlyph: fontReady && !!word.codeV2,
+            inSession,
+            isActive,
+            isWeak: inSession && this.isWeakAyah(verseKey),
+            isMastered: inSession && this.isMasteredAyah(verseKey),
+            isBlurred: inSession && this.blurModeEnabled && this.isVerseBlurred(verseKey),
+            isPeekRevealed: inSession && this.isVersePeekRevealed(verseKey),
+            isPlayingAyah: inSession && this.activeVerseKey === verseKey && this.isPlaying,
+            isNew: inSession && this.isNewHifzAyah(verseKey),
+            isDue: inSession && this.isDueHifzAyah(verseKey),
+            isReviewPriority: inSession && this.isReviewPriorityAyah(verseKey)
+          }
+        })
         return {
-          key,
-          verse,
-          html: this.getMushafAyahHtml(verse),
-          fontPercent: this.getVerseFontSize(key),
-          numberStyle: this.getMushafAyahNumberStyle(verse.number),
-          numberDigits: Math.min(3, String(verse.number || '').length || 1),
-          isActive: (hasStarted && effectiveKey === key) || hasActiveReview,
-          isNew: this.isNewHifzAyah(key),
-          isDue: this.isDueHifzAyah(key),
-          isWeak: this.isWeakAyah(key),
-          isMastered: this.isMasteredAyah(key),
-          isBlurred: this.blurModeEnabled && this.isVerseBlurred(key),
-          isPeekRevealed: this.isVersePeekRevealed(key),
-          isReviewPriority: this.isReviewPriorityAyah(key),
-          isPlayingAyah: this.activeVerseKey === key && this.isPlaying
+          ...line,
+          key: `madani-${page.pageNumber}-line-${line.lineNumber}`,
+          fontFamily,
+          fontReady,
+          words
         }
       })
+    },
+
+    mushafPaginationLabel() {
+      const total = this.mushafPages.length
+      if (!total) return ''
+      const pageNumber = this.currentMadaniPageNumber
+      if (pageNumber) return `${pageNumber} / 604`
+      return `${this.safeMushafPageIndex + 1} / ${total}`
     },
 
     quizAccuracy() {
@@ -6116,8 +6626,14 @@ export default {
       if (this.readingViewMode === 'mushaf') this.applyMushafThemeDefault(newVal)
     },
     readingViewMode(newVal) {
-      if (newVal === 'mushaf') this.applyMushafThemeDefault(this.theme)
+      if (newVal === 'mushaf') {
+        this.applyMushafThemeDefault(this.theme)
+        this.showWordByWord = false
+        this.quranFont = 'uthmanic'
+        this.ensureMadaniPagesLoaded().then(() => this.syncMushafPageToActiveVerse())
+      }
       this.persistUiState()
+      if (this.practiceFocusWeakWords?.length) this.schedulePracticeFocusWordDomSync()
     },
     showTools(newVal) {
       this.syncBodyScrollLock(newVal)
@@ -6341,7 +6857,12 @@ export default {
     queueIndex: 'persistSessionState',
     playerVisible: 'persistAudioState',
     playerCompact: 'persistUiState',
-    isPlaying: 'persistAudioState',
+    isPlaying(val) {
+      this.persistAudioState()
+      if (val && this.practiceFocusWeakWords?.length) {
+        this.schedulePracticeFocusWordDomSync([0, 200, 600])
+      }
+    },
     currentTime: 'persistAudioState',
     flowStep: 'persistUiState',
     sectionOpen: { handler: 'persistUiState', deep: true },
@@ -6406,8 +6927,18 @@ export default {
       if (this.practiceTurnCalloutVisible) this.$nextTick(() => this.schedulePracticeTurnCalloutSync())
     },
 
-    readingViewMode() {
-      if (this.practiceTurnCalloutVisible) this.$nextTick(() => this.schedulePracticeTurnCalloutSync())
+    practiceFocusSignature() {
+      this.clearMushafAyahHtmlCache()
+      if (this.hasSessionStarted && this.practiceFocusWeakWords?.length) {
+        this.schedulePracticeFocusWordDomSync()
+      }
+    },
+
+    isSessionLive(val) {
+      if (val && this.practiceFocusWeakWords?.length) {
+        this.restorePracticeFocusWeakWords()
+        this.schedulePracticeFocusWordDomSync([0, 250, 700, 1500, 2500])
+      }
     },
 
     recitationWindowRemaining() {
@@ -8257,7 +8788,7 @@ export default {
       if (!this.anchorModeEnabled) return
 
       this.$nextTick(() => {
-        const activeTargets = document.querySelectorAll('.verse-card.active, .mushaf-ayah.active')
+        const activeTargets = document.querySelectorAll('.verse-card.active, .mushaf-ayah.active, .madani-word.active')
         if (activeTargets.length) {
           activeTargets.forEach(card => {
             this.highlightAnchorsForCard(card)
@@ -9493,6 +10024,17 @@ export default {
     openPostSessionModal(snapshot = null, options = {}) {
       this.postSessionSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
       if (!this.postSessionSnapshot) return
+      // Mastery re-test: keep the learner on the same range until AI Recite is strong.
+      if (this.awaitingMasteryRetest && this.masteryTargetRange) {
+        const target = this.masteryTargetRange
+        this.postSessionSnapshot = {
+          ...this.postSessionSnapshot,
+          chapterId: Number(target.chapterId || this.postSessionSnapshot.chapterId || 0),
+          chapterName: target.surahName || this.postSessionSnapshot.chapterName || '',
+          rangeStart: Number(target.from || this.postSessionSnapshot.rangeStart || 0),
+          rangeEnd: Number(target.to || this.postSessionSnapshot.rangeEnd || 0),
+        }
+      }
       this.postSessionActionsUnlocked = true
       this.pendingPostSessionModalPayload = null
       this.postSessionAutoSaved = false
@@ -9519,7 +10061,13 @@ export default {
       const preservedRecommendation = this.postSessionRecommendation
       const preservedStatus = this.postSessionRecommendationStatus
       const preservedSessionId = this.postSessionCompletedSessionId
+      const keepMasteryLoop = this.awaitingMasteryRetest && this.masteryTargetRange
+      const masteryTarget = keepMasteryLoop ? { ...this.masteryTargetRange } : null
       this.resetPostSessionRecommendationState()
+      if (keepMasteryLoop && masteryTarget) {
+        this.awaitingMasteryRetest = true
+        this.masteryTargetRange = masteryTarget
+      }
       if (preservedSessionId) {
         this.postSessionCompletedSessionId = preservedSessionId
       }
@@ -9529,19 +10077,66 @@ export default {
         this.postSessionViewState = 'recommendation_ready'
         this.syncPostSessionConfidenceFromRecommendation(preservedRecommendation, { force: true })
       }
+      if (keepMasteryLoop && masteryTarget && this.postSessionRecommendation) {
+        this.postSessionRecommendation = this.enrichPostSessionRecommendation({
+          ...this.postSessionRecommendation,
+          type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
+          ayah_range: {
+            from: masteryTarget.from,
+            to: masteryTarget.to,
+            count: Math.max(1, masteryTarget.to - masteryTarget.from + 1),
+          },
+          settings: {
+            ...(this.postSessionRecommendation.settings || {}),
+            ...(masteryTarget.settings || {}),
+          },
+          plan_detail: masteryTarget.planDetail || this.postSessionRecommendation.plan_detail,
+        })
+        this.postSessionRecommendationStatus = 'ready'
+      }
       this.showPostSessionConfetti = true
       this.showPostSessionModal = true
       this.postSessionActionsUnlocked = true
       this.showTools = false
       this.postSessionOffcanvasOpen = false
+      // Quiz removed from this flow — never leave an old adaptive overlay covering the calm modal.
+      this.postSessionAdaptiveCheckActive = false
+      this.postSessionAdaptiveCheckBusy = false
+      this.postSessionAdaptiveSession = null
+      this.postSessionAdaptiveResultView = null
+      try { clearAssessmentSession() } catch (_) { /* ignore */ }
+      if (this.recommendedPracticePending) {
+        this.recommendedPracticeCompleted = true
+        this.recommendedPracticePending = false
+      }
       if (!this.onboardingSampleSessionActive) {
-        if (this.postSessionRecommendationStatus === 'ready' && this.postSessionRecommendation) {
+        if (keepMasteryLoop) {
+          // Stay on the mastery range — do not fetch a forward CONTINUE yet.
+          if (!(this.postSessionRecommendationStatus === 'ready' && this.postSessionRecommendation)) {
+            this.postSessionRecommendationStatus = 'ready'
+            this.postSessionRecommendation = this.enrichPostSessionRecommendation({
+              type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
+              surah: {
+                id: Number(masteryTarget.chapterId || this.postSessionSnapshot?.chapterId || 0),
+                name: masteryTarget.surahName || this.postSessionSnapshot?.chapterName || '',
+              },
+              ayah_range: {
+                from: masteryTarget.from,
+                to: masteryTarget.to,
+                count: Math.max(1, masteryTarget.to - masteryTarget.from + 1),
+              },
+              settings: { ...(masteryTarget.settings || {}) },
+              plan_detail: masteryTarget.planDetail || null,
+              user_reason: this.t('memorisation.postSession.coach.subtitles.retestAfterPractice'),
+            })
+            this.postSessionViewState = 'recommendation_ready'
+          }
+        } else if (this.postSessionRecommendationStatus === 'ready' && this.postSessionRecommendation) {
           // Already finalised with the completion response — keep stable.
         } else {
           this.loadPostSessionRecommendation()
         }
       }
-      this.$nextTick(() => this.restoreAdaptiveCheckIfNeeded())
       window.setTimeout(() => {
         this.showPostSessionConfetti = false
       }, this.onboardingSampleSessionActive ? 6600 : 5600)
@@ -9562,10 +10157,23 @@ export default {
       this.postSessionAiReciteActive = false
       this.postSessionAiFeedback = ''
       this.postSessionAiReviewDetails = null
+      // Every session must re-test with AI Recite before a plan is shown.
+      this.aiReciteAttempts = []
+      this.aiReciteFinalPlan = null
+      this.aiReciteShowFinalPlan = false
+      this.aiReciteAverageAccuracy = null
+      this.practiceFocusWeakWords = []
+      this.selectedPracticeWeakWordKey = ''
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.removeItem('mutqin.practiceFocusWeakWords')
+        }
+      } catch (_) { /* ignore */ }
       this.postSessionAdaptiveCheckActive = false
       this.postSessionAdaptiveCheckBusy = false
       this.postSessionAdaptiveSession = null
       this.postSessionAdaptiveResultView = null
+      try { clearAssessmentSession() } catch (_) { /* ignore */ }
       this.postSessionAdaptiveAnswer = ''
       this.postSessionAdaptiveSelectedOption = null
       this.postSessionAdaptiveOrdering = []
@@ -10055,11 +10663,22 @@ export default {
         this.postSessionViewState = 'recommendation_ready'
       }
     },
-    async openPostSessionAiRecite() {
+    async openPostSessionAiRecite(options = {}) {
       if (this.postSessionActionsBusy) return
+      const resetAttempts = options.resetAttempts !== false
       this.postSessionAiReciteBusy = true
       this.postSessionViewState = 'opening_ai_recite'
       this.postSessionRecommendationStartError = ''
+      if (resetAttempts) {
+        this.aiReciteAttempts = []
+        this.aiReciteFinalPlan = null
+        this.aiReciteShowFinalPlan = false
+        this.aiReciteAverageAccuracy = null
+        this.practiceFocusWeakWords = []
+      } else {
+        // Retry from the success modal — keep prior attempts for averaging.
+        this.aiReciteShowFinalPlan = false
+      }
       try {
         const snap = this.postSessionSnapshot || {}
         const chapterId = Number(snap.chapterId || this.chapterId || this.sessionConfig?.chapterId || 0)
@@ -10080,6 +10699,15 @@ export default {
             rangeStart: from,
             rangeEnd: to,
           }
+        }
+
+        // A prior post-session finalize can leave preparing=true while onstop
+        // still awaits submit — that silently blocks every later open.
+        this.resetStuckRecitationCheckGate()
+
+        // Session cleanup clears the queue; reload verses if the workspace is empty.
+        if (!this.getSessionCheckTargetVerses().length) {
+          await this.ensurePostSessionAiReciteVerses(chapterId, from, to)
         }
 
         this.postSessionAiReciteActive = true
@@ -10118,6 +10746,49 @@ export default {
           this.postSessionViewState = 'recommendation_ready'
         }
       }
+    },
+    resetStuckRecitationCheckGate() {
+      let stoppedRecorder = false
+      if (this.recitationCheckRecording || this.recitationCheckPreparing) {
+        this.recitationCheckDiscardOnStop = true
+        try {
+          if (['recording', 'paused'].includes(this.recitationCheckMediaRecorder?.state)) {
+            this.recitationCheckMediaRecorder.stop()
+            stoppedRecorder = true
+          }
+        } catch (_) { /* ignore */ }
+        try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
+        try { this.stopRecitationSpeechRecognition?.() } catch (_) { /* ignore */ }
+      }
+      this.recitationCheckRecording = false
+      this.recitationCheckPreparing = false
+      // Keep discard armed until onstop consumes it when we stopped a live recorder.
+      if (!stoppedRecorder) this.recitationCheckDiscardOnStop = false
+    },
+    async ensurePostSessionAiReciteVerses(chapterId, from, to) {
+      const id = Number(chapterId || 0)
+      const start = Number(from || 0)
+      const end = Number(to || start || 0)
+      if (!id || !start || !end) return
+      const store = this.getModeStore(this.currentMode)
+      if (store) {
+        store.chapterId = id
+        store.rangeStart = start
+        store.rangeEnd = end
+      }
+      this.chapterId = id
+      this.rangeStart = start
+      this.rangeEnd = end
+      try {
+        await this.loadChapter(this.currentMode)
+      } catch (error) {
+        console.warn('Failed to reload verses for post-session AI Recite:', error)
+      }
+    },
+    async retryPostSessionAiRecite() {
+      if (this.postSessionActionsBusy) return
+      if (this.aiReciteAttemptCount >= AI_RECITE_MAX_ATTEMPTS) return
+      await this.openPostSessionAiRecite({ resetAttempts: false })
     },
     returnFromPostSessionAiRecite() {
       if (!this.postSessionAiReciteActive) return
@@ -10725,6 +11396,12 @@ export default {
       this.postSessionRecommendationStep = 'main'
     },
     async chooseOtherFromRecommendation() {
+      this.aiReciteShowFinalPlan = false
+      this.aiReciteAdvanceToNextSession = false
+      this.postSessionAiReciteActive = false
+      this.showSelfCheckModal = false
+      this.awaitingMasteryRetest = false
+      this.masteryTargetRange = null
       await this.dismissPostSessionRecommendation(true)
       this.openPostSessionNewSessionOffcanvas()
     },
@@ -10764,53 +11441,150 @@ export default {
         }
 
         let sessionPayload = null
+        let activeRecommendation = recommendation
         if (recommendation?.id && this.isLoggedIn && this.learningBackendEnabled()) {
-          const result = await learningApi.startRecommendedSession(
-            recommendation.id,
-            recommendation.settings || null
-          )
-          sessionPayload = result?.session || null
-          if (result?.recommendation) {
-            this.postSessionRecommendation = this.enrichPostSessionRecommendation(result.recommendation)
+          try {
+            const result = await learningApi.startRecommendedSession(
+              recommendation.id,
+              recommendation.settings || null
+            )
+            sessionPayload = result?.session || null
+            if (result?.recommendation) {
+              activeRecommendation = this.enrichPostSessionRecommendation(result.recommendation)
+              this.postSessionRecommendation = activeRecommendation
+            }
+          } catch (apiError) {
+            // AI assessment may have superseded the old id, or settings may have
+            // been rejected — fall back to starting from the local plan range.
+            console.warn('Recommended session API start failed, falling back locally:', apiError)
+            if (apiError?.response?.status === 422) {
+              try {
+                const refreshed = await learningApi.getNextRecommendation({
+                  completed_session_id: this.postSessionCompletedSessionId || undefined,
+                })
+                if (refreshed?.id) {
+                  const retry = await learningApi.startRecommendedSession(
+                    refreshed.id,
+                    recommendation.settings || refreshed.settings || null,
+                  )
+                  sessionPayload = retry?.session || null
+                  if (retry?.recommendation) {
+                    activeRecommendation = this.enrichPostSessionRecommendation(retry.recommendation)
+                    this.postSessionRecommendation = activeRecommendation
+                  }
+                }
+              } catch (retryError) {
+                console.warn('Recommended session retry failed:', retryError)
+              }
+            }
           }
         }
 
         const config = sessionPayload?.metadata?.config || {}
-        const chapterId = Number(
-          config.chapterId
-          || recommendation?.surah?.id
-          || recommendation?.next_surah?.id
+        // Prefer AI dynamic range only for practice (mixed/weak). On STRONG,
+        // trust the continue / next-surah range from the adapted recommendation.
+        const isStrongAiOutcome = !!(
+          this.aiReciteAdvanceToNextSession
+          || this.aiReciteMasteryAchieved
+          || this.aiReciteFinalPlan?.outcome === 'strong'
+          || this.aiReciteFinalPlan?.band === 'strong'
+          || activeRecommendation?.ai_assessment?.result === 'strong'
+          || activeRecommendation?.plan_detail?.mastery === 'achieved'
+        )
+        const isAiDynamicPlan = !isStrongAiOutcome && (
+          this.aiReciteFinalPlan?.planDetail?.source === 'ai_recite_dynamic'
+          || activeRecommendation?.plan_detail?.source === 'ai_recite_dynamic'
+          || activeRecommendation?.settings?.source === 'ai_recite_dynamic'
+        )
+        const aiRange = this.aiReciteFinalPlan?.ayah_range
+          || this.masteryTargetRange
+        const snap = this.postSessionSnapshot || {}
+        const snapStart = Number(snap.rangeStart || 0)
+        const snapEnd = Number(snap.rangeEnd || snapStart || 0)
+
+        let chapterId = Number(
+          (isAiDynamicPlan && (aiRange?.surahId || this.masteryTargetRange?.chapterId))
+          || config.chapterId
+          || activeRecommendation?.surah?.id
+          || activeRecommendation?.next_surah?.id
+          || (!isStrongAiOutcome && (snap.chapterId || this.chapterId))
           || 0
         )
-        const rangeStart = Number(
-          config.rangeStart
-          || recommendation?.ayah_range?.from
-          || 1
+        let rangeStart = Number(
+          (isAiDynamicPlan && (aiRange?.from || this.masteryTargetRange?.from))
+          || config.rangeStart
+          || activeRecommendation?.ayah_range?.from
+          || activeRecommendation?.proposed_next_range?.from
+          || 0
         )
-        const rangeEnd = Number(
-          config.rangeEnd
-          || recommendation?.ayah_range?.to
-          || rangeStart
+        let rangeEnd = Number(
+          (isAiDynamicPlan && (aiRange?.to || this.masteryTargetRange?.to))
+          || config.rangeEnd
+          || activeRecommendation?.ayah_range?.to
+          || activeRecommendation?.proposed_next_range?.to
+          || 0
         )
+
+        // Strong success must never restart the completed window.
+        if (isStrongAiOutcome && snapStart > 0 && rangeStart > 0 && rangeStart <= snapEnd) {
+          const advanced = adaptRecommendationForAiAssessment(
+            {
+              ...(activeRecommendation || {}),
+              type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
+              ayah_range: { from: snapStart, to: snapEnd },
+            },
+            'strong',
+            {
+              ...snap,
+              totalAyahsInSurah: snap.totalAyahsInSurah
+                || snap.versesInSurah
+                || this.currentChapter?.verses_count
+                || 0,
+            },
+          )
+          chapterId = Number(
+            advanced?.surah?.id
+            || advanced?.next_surah?.id
+            || chapterId
+            || snap.chapterId
+            || this.chapterId
+            || 0,
+          )
+          rangeStart = Number(advanced?.ayah_range?.from || 0)
+          rangeEnd = Number(advanced?.ayah_range?.to || rangeStart)
+        }
+
+        if (!isStrongAiOutcome && (!rangeStart || !rangeEnd)) {
+          rangeStart = Number(rangeStart || snap.rangeStart || 1)
+          rangeEnd = Number(rangeEnd || snap.rangeEnd || rangeStart)
+          if (!chapterId) {
+            chapterId = Number(snap.chapterId || this.chapterId || 0)
+          }
+        }
 
         if (!chapterId || !rangeStart || !rangeEnd) {
           throw new Error('invalid_recommendation_range')
         }
 
+        this.recommendedPracticePending = true
         await this.startSessionFromRecommendationPayload({
           chapterId,
           rangeStart,
           rangeEnd,
-          sessionMode: recommendation?.session_mode
+          sessionMode: activeRecommendation?.session_mode
             || sessionPayload?.metadata?.recommendation?.session_mode
-            || 'new_learning',
+            || (isStrongAiOutcome ? 'new_learning' : 'new_learning'),
           techniqueId: null,
-          settings: this.resolveRecommendationStartSettings(recommendation, sessionPayload),
+          settings: this.resolveRecommendationStartSettings(activeRecommendation, sessionPayload),
           sessionPayload,
         })
+        this.aiReciteAdvanceToNextSession = false
+        this.aiReciteFinalPlan = null
+        this.aiReciteShowFinalPlan = false
       } catch (error) {
         console.error('Failed to start recommended session:', error)
         this.postSessionRecommendationStarting = false
+        this.recommendedPracticePending = false
         if (error?.response?.status === 422) {
           try {
             await this.loadPostSessionRecommendation()
@@ -10819,6 +11593,287 @@ export default {
         this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.startError')
         this.postSessionRecommendationStep = 'confirm'
         this.postSessionViewState = 'action_failed'
+      }
+    },
+    async onPostSessionCalmPrimaryAction() {
+      if (this.postSessionActionsBusy) return
+      // Practice plan is only available after AI Recite analyzes this session.
+      if (this.aiReciteFinalPlan) {
+        await this.startAiRecitePracticePlan()
+        return
+      }
+      await this.openPostSessionAiRecite({ resetAttempts: true })
+    },
+    practiceWeakWordKey(word) {
+      if (!word) return ''
+      return `${word.verseKey || ''}:${word.wordIndex}`
+    },
+    normalizePracticeFocusWordText(text) {
+      return String(text || '')
+        .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
+        .replace(/[^\u0621-\u064A\u0671]/g, '')
+        .trim()
+    },
+    practiceFocusVerseKeyMatches(word, verseKey) {
+      const key = String(verseKey || '')
+      if (!key) return false
+      if (word?.verseKey && String(word.verseKey) === key) return true
+      const ayahFromKey = Number(String(key).split(':')[1])
+      if (Number.isFinite(Number(word?.ayahNumber)) && Number(word.ayahNumber) === ayahFromKey) {
+        return true
+      }
+      return !!(word?.ayahNumber && key.endsWith(`:${word.ayahNumber}`))
+    },
+    getPracticeFocusWordsForVerse(verseKey) {
+      const words = Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []
+      if (!words.length || !verseKey) return []
+      return words.filter((word) => this.practiceFocusVerseKeyMatches(word, verseKey))
+    },
+    persistPracticeFocusWeakWords() {
+      try {
+        if (typeof sessionStorage === 'undefined') return
+        const words = Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []
+        if (!words.length) {
+          sessionStorage.removeItem('mutqin.practiceFocusWeakWords')
+          return
+        }
+        sessionStorage.setItem('mutqin.practiceFocusWeakWords', JSON.stringify(words))
+      } catch (_) { /* ignore */ }
+    },
+    restorePracticeFocusWeakWords() {
+      if (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length) return
+      try {
+        if (typeof sessionStorage === 'undefined') return
+        const raw = JSON.parse(sessionStorage.getItem('mutqin.practiceFocusWeakWords') || '[]')
+        if (Array.isArray(raw) && raw.length) {
+          this.practiceFocusWeakWords = normaliseWeakWordRecords(raw)
+        }
+      } catch (_) { /* ignore */ }
+    },
+    getActivePracticeFocusWord() {
+      return this.activePracticeFocusWord
+    },
+    isPracticeFocusWeakWord(verseKey, wordIndex, wordText = '') {
+      const words = Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []
+      const key = String(verseKey || '')
+      if (words.length && key) {
+        const verseWords = words.filter((word) => this.practiceFocusVerseKeyMatches(word, key))
+        if (verseWords.length) {
+          // Prefer normalised Arabic text — indexes often diverge across tokenisers.
+          const needle = this.normalizePracticeFocusWordText(wordText)
+          if (needle && verseWords.some((word) => this.normalizePracticeFocusWordText(word.text) === needle)) {
+            return true
+          }
+
+          const index = Number(wordIndex)
+          if (Number.isFinite(index) && index >= 0) {
+            if (verseWords.some((word) => Number(word.wordIndex) === index)) return true
+          }
+        }
+      }
+
+      // Anchor mode must still mark hooks even when no AI weak-word list exists.
+      if (!(this.anchorModeEnabled || this.liveSessionTechniqueId === 'anchor')) return false
+      const verse = (this.verses || []).find((item) => item.key === key)
+        || (this.mushafDisplayVerses || []).find((item) => item.key === key)
+      if (!verse) return false
+      const tokens = this.tokenizeRecitationDisplayWords?.(verse.arabic || '')
+        || String(verse.arabic || '').trim().split(/\s+/).filter(Boolean)
+      if (!tokens.length) return false
+      const indices = typeof this.getAnchorIndices === 'function'
+        ? this.getAnchorIndices(tokens.length)
+        : [0, Math.max(0, tokens.length - 1)]
+      const index = Number(wordIndex)
+      if (Number.isFinite(index) && indices.includes(index)) return true
+      const needle = this.normalizePracticeFocusWordText(wordText)
+      if (!needle) return false
+      return indices.some((i) => this.normalizePracticeFocusWordText(tokens[i]) === needle)
+    },
+    seedAnchorPracticeFocusWordsIfNeeded() {
+      if (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length) return
+      if (!(this.anchorModeEnabled || this.liveSessionTechniqueId === 'anchor')) return
+      const from = Number(this.rangeStart || this.sessionConfig?.rangeStart || 0)
+      const to = Number(this.rangeEnd || this.sessionConfig?.rangeEnd || from)
+      const chapterId = Number(this.chapterId || this.sessionConfig?.chapterId || 0)
+      const verses = (this.verses || []).filter((verse) => {
+        const surah = Number(verse.surah || String(verse.key || '').split(':')[0] || 0)
+        const ayah = Number(verse.number || verse.ayah || String(verse.key || '').split(':')[1] || 0)
+        if (chapterId && surah && surah !== chapterId) return false
+        if (from && to && ayah && (ayah < from || ayah > to)) return false
+        return true
+      })
+      const seeded = []
+      verses.forEach((verse) => {
+        const tokens = this.tokenizeRecitationDisplayWords?.(verse.arabic || '')
+          || String(verse.arabic || '').trim().split(/\s+/).filter(Boolean)
+        if (!tokens.length) return
+        const indices = typeof this.getAnchorIndices === 'function'
+          ? this.getAnchorIndices(tokens.length)
+          : [0, Math.max(0, tokens.length - 1)]
+        ;[...new Set(indices)].forEach((wordIndex) => {
+          if (wordIndex < 0 || wordIndex >= tokens.length) return
+          seeded.push({
+            text: tokens[wordIndex],
+            wordIndex,
+            ayahNumber: Number(verse.number || 0) || null,
+            surahId: Number(String(verse.key || '').split(':')[0] || chapterId || 0) || null,
+            verseKey: verse.key || null,
+            reason: 'anchor',
+          })
+        })
+      })
+      if (!seeded.length) return
+      this.practiceFocusWeakWords = normaliseWeakWordRecords(seeded)
+      this.persistPracticeFocusWeakWords()
+      this.clearMushafAyahHtmlCache?.()
+      this.schedulePracticeFocusWordDomSync?.([0, 200, 600, 1200])
+      this.scheduleAnchorHighlights?.()
+    },
+    schedulePracticeFocusWordDomSync(delays = [0, 120, 450, 1100, 2200]) {
+      const run = () => {
+        try { this.syncPracticeFocusWordDomMarks() } catch (_) { /* ignore */ }
+      }
+      run()
+      this.$nextTick(run)
+      delays.forEach((ms) => {
+        const delay = Number(ms)
+        if (!Number.isFinite(delay) || delay <= 0) return
+        window.setTimeout(run, delay)
+      })
+    },
+    syncPracticeFocusWordDomMarks() {
+      const words = Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []
+      const root = this.$refs?.workspaceMain || this.$el || (typeof document !== 'undefined' ? document : null)
+      if (!root?.querySelectorAll) return
+
+      const focusTitle = this.t?.('memorisation.postSession.coach.live.focusCueTitle')
+        || 'Focus on this word'
+      const needlesByVerse = new Map()
+      words.forEach((word) => {
+        const verseKey = word.verseKey || (
+          word.surahId && word.ayahNumber ? `${word.surahId}:${word.ayahNumber}` : ''
+        )
+        const ayahOnly = Number.isFinite(Number(word.ayahNumber)) ? `:${word.ayahNumber}` : ''
+        const keys = [verseKey, ayahOnly].filter(Boolean)
+        const needle = this.normalizePracticeFocusWordText(word.text)
+        keys.forEach((key) => {
+          if (!needlesByVerse.has(key)) needlesByVerse.set(key, new Set())
+          if (needle) needlesByVerse.get(key).add(needle)
+          if (Number.isFinite(Number(word.wordIndex))) {
+            needlesByVerse.get(key).add(`idx:${Number(word.wordIndex)}`)
+          }
+        })
+      })
+
+      root.querySelectorAll('.wbw-word, word.wbw-word').forEach((el) => {
+        el.classList.remove('practice-focus-word', 'practice-focus-word--active')
+        el.removeAttribute('data-practice-focus')
+        if (el.getAttribute('title') === focusTitle) el.removeAttribute('title')
+      })
+
+      if (!words.length) return
+
+      root.querySelectorAll('.wbw-word[data-verse-key], word.wbw-word[data-verse-key]').forEach((el) => {
+        const verseKey = String(el.getAttribute('data-verse-key') || '')
+        const wordIndex = Number(el.getAttribute('data-word-index'))
+        const text = this.normalizePracticeFocusWordText(
+          el.querySelector?.('.word-arabic-text')?.textContent || el.textContent || '',
+        )
+        const bucket = needlesByVerse.get(verseKey)
+          || needlesByVerse.get(`:${String(verseKey).split(':')[1] || ''}`)
+        if (!bucket || !bucket.size) return
+        const byIndex = Number.isFinite(wordIndex) && bucket.has(`idx:${wordIndex}`)
+        const byText = text && bucket.has(text)
+        if (!byIndex && !byText) return
+        el.classList.add('practice-focus-word')
+        el.setAttribute('data-practice-focus', 'true')
+        el.setAttribute('title', focusTitle)
+      })
+    },
+    ensurePracticeFocusWeakWordsFromPlan(settings = null) {
+      const fromSettings = settings?.practice_weak_words || settings?.weak_words
+      if (Array.isArray(fromSettings) && fromSettings.length) {
+        this.practiceFocusWeakWords = normaliseWeakWordRecords(fromSettings)
+        this.persistPracticeFocusWeakWords()
+        this.clearMushafAyahHtmlCache()
+        return
+      }
+      this.restorePracticeFocusWeakWords()
+      if (this.practiceFocusWeakWords?.length) {
+        this.clearMushafAyahHtmlCache()
+        return
+      }
+      const fromPlan = this.aiReciteFinalPlan?.weakWords
+        || this.aiReciteFinalPlan?.planDetail?.weakWords
+        || this.masteryTargetRange?.settings?.practice_weak_words
+        || this.postSessionRecommendation?.settings?.practice_weak_words
+        || this.postSessionRecommendation?.plan_detail?.weakWords
+      if (Array.isArray(fromPlan) && fromPlan.length) {
+        this.practiceFocusWeakWords = normaliseWeakWordRecords(fromPlan)
+        this.persistPracticeFocusWeakWords()
+        this.clearMushafAyahHtmlCache()
+      }
+    },
+    focusPracticeWeakWord(word) {
+      if (!word) return
+      this.selectedPracticeWeakWordKey = this.practiceWeakWordKey(word)
+      this.practiceFocusWeakWords = normaliseWeakWordRecords(
+        this.practiceFocusWeakWords.length ? this.practiceFocusWeakWords : [word],
+      )
+      this.showPostSessionModal = false
+      this.$nextTick(() => {
+        const verseKey = word.verseKey || (
+          word.surahId && word.ayahNumber ? `${word.surahId}:${word.ayahNumber}` : null
+        )
+        if (!verseKey) return
+        const root = this.$refs?.workspaceMain || this.$el
+        const verseEl = root?.querySelector?.(
+          `[data-verse-key="${verseKey}"], .verse-card[data-verse-key="${verseKey}"]`,
+        )
+        verseEl?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+        const words = verseEl?.querySelectorAll?.('.wbw-word, word.wbw-word') || []
+        words.forEach((el, index) => {
+          el.classList.remove('practice-focus-word', 'practice-focus-word--active')
+          if (Number(word.wordIndex) === index || Number(el.dataset?.wordIndex) === Number(word.wordIndex)) {
+            el.classList.add('practice-focus-word', 'practice-focus-word--active')
+          }
+        })
+        const ayah = Number(word.ayahNumber || String(verseKey).split(':')[1] || 0)
+        if (ayah > 0 && typeof this.playAyahByNumber === 'function') {
+          try { this.playAyahByNumber(ayah) } catch (_) { /* ignore */ }
+        } else if (typeof this.playVerseByKey === 'function') {
+          try { this.playVerseByKey(verseKey) } catch (_) { /* ignore */ }
+        }
+      })
+    },
+    capturePracticeFocusWeakWordsFromResult(result) {
+      if (!result) return
+      const statuses = this.getRecitationWordStatuses?.(result) || result.wordStatuses || []
+      const ayahKey = result.ayahKey || result.ayahRange?.keys?.[0] || this.recitationCheckTargetVerseKey || ''
+      const [surahPart, ayahPart] = String(ayahKey).split(':')
+      const raw = (Array.isArray(statuses) ? statuses : [])
+        .map((word, index) => {
+          const status = String(word?.status || '').toLowerCase()
+          if (!status || status === 'correct' || status.includes('word-correct') || status === 'green') {
+            return null
+          }
+          return {
+            text: word.text || word.word || '',
+            wordIndex: Number(word.ayahWordIndex ?? word.index ?? word.wordIndex ?? index),
+            verseKey: ayahKey || null,
+            surahId: Number(surahPart) || null,
+            ayahNumber: Number(ayahPart) || null,
+            reason: status.includes('partial') || status.includes('amber') ? 'hesitation' : 'pronunciation',
+            confidence: word.confidence,
+          }
+        })
+        .filter(Boolean)
+      const normalised = normaliseWeakWordRecords(raw, {
+        surahId: Number(surahPart) || undefined,
+        ayahNumber: Number(ayahPart) || undefined,
+      })
+      if (normalised.length) {
+        this.practiceFocusWeakWords = normalised
       }
     },
     resolveRecommendationStartSettings(recommendation = null, sessionPayload = null) {
@@ -10926,6 +11981,8 @@ export default {
         sessionMode,
         mergedSettings
       )
+      this.ensurePracticeFocusWeakWordsFromPlan(mergedSettings)
+      this.seedAnchorPracticeFocusWordsIfNeeded()
       this.persistModeState(this.currentMode)
       this.persistUiState()
       this.persistCentralSessionState()
@@ -10936,6 +11993,8 @@ export default {
         sessionMode,
         mergedSettings
       )
+      this.ensurePracticeFocusWeakWordsFromPlan(mergedSettings)
+      this.seedAnchorPracticeFocusWordsIfNeeded()
       if (mergedSettings.playback_speed != null) {
         this.setPlaybackSpeed(Number(mergedSettings.playback_speed), { silent: true })
       }
@@ -10950,7 +12009,10 @@ export default {
       this.showTools = false
       this.postSessionViewState = 'idle'
       this.$nextTick(() => {
+        this.schedulePracticeFocusWordDomSync()
+        this.scheduleAnchorHighlights?.()
         this.startSessionWithCountdown({ skipPrime: true })
+        this.schedulePracticeFocusWordDomSync([300, 800, 1600, 2800])
       })
     },
     applyRecommendedTechnique(techniqueId, sessionMode = 'new_learning', settings = null) {
@@ -10990,6 +12052,10 @@ export default {
         if (settings.chaining_method) this.chainingMethod = settings.chaining_method
         if (settings.chaining_repetitions) this.chainingRepetitions = Number(settings.chaining_repetitions)
         if (settings.anchor_count) this.anchorCount = Number(settings.anchor_count)
+        const weak = settings.practice_weak_words || settings.weak_words
+        if (Array.isArray(weak) && weak.length) {
+          this.practiceFocusWeakWords = normaliseWeakWordRecords(weak)
+        }
       }
 
       if (this.chainingEnabled && !['linking', 'cumulative'].includes(String(this.chainingMethod || ''))) {
@@ -12954,10 +14020,10 @@ export default {
     getSelfCheckModalArabic(verse) {
       if (!verse?.arabic) return ''
       if (this.shouldShowRecitationReviewHighlights(verse.key)) {
-        return this.splitRecitationDisplayIntoWords(verse)
+        return this.splitRecitationDisplayIntoWords(verse, { suppressMeanings: true })
       }
       if (this.selfCheckTajweedEnabled && verse.arabic_tajweed) {
-        return this.renderWordLevelTajweedMarkup(verse)
+        return this.renderWordLevelTajweedMarkup(verse, { suppressMeanings: true })
       }
       return this.cleanRecitationDisplayText(verse.arabic)
     },
@@ -13490,7 +14556,7 @@ export default {
           || 'Listening now. Recite the highlighted word to continue.'
       }
       return this.t('memorisation.aiCheck.guidanceFreeFlow')
-        || 'Listening now. Recite to the end — colours update as you go, and final results appear after you stop.'
+        || 'Listening with you. Take your time — finish the whole passage, then tap Stop when you are done.'
     },
     rebuildRecitationResultFromStatuses(result = null) {
       if (!result) return null
@@ -13508,10 +14574,10 @@ export default {
         .filter(word => word.status === 'partial')
         .reduce((sum, word) => {
           const confidence = Number.isFinite(Number(word?.confidence)) ? Number(word.confidence) : 1
-          return sum + (0.45 * Math.max(0.35, Math.min(1, confidence)))
+          return sum + (0.65 * Math.max(0.4, Math.min(1, confidence)))
         }, 0)
-      const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * 0.35
-      const extraPenalty = (mistakes.extra.length || 0) * 0.35
+      const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * 0.2
+      const extraPenalty = (mistakes.extra.length || 0) * 0.2
       result.wordStatuses = statuses
       result.mistakes = mistakes
       result.mistakeBreakdown = mistakes
@@ -13603,7 +14669,14 @@ export default {
       this.seedRecitationLiveWords(this.recitationCheckPendingTargets)
     },
     openAiRecitationCheckForSession() {
-      if (this.recitationCheckRecording || this.recitationCheckPreparing) return
+      if (this.recitationCheckRecording || this.recitationCheckPreparing) {
+        // Post-session reopen must not be blocked by a stale preparing gate.
+        if (this.postSessionAiReciteActive || this.showPostSessionModal) {
+          this.resetStuckRecitationCheckGate()
+        } else {
+          return
+        }
+      }
       const targets = this.getSessionCheckTargetVerses()
       if (!targets.length) {
         this.showBanner(this.t('toasts.chooseASessionRangeBeforeStarting'), 'info', 2200)
@@ -13753,11 +14826,11 @@ export default {
           : ''
         let html = ''
         if (showMarkers || this.aiMemorisationCheckerScope === 'session' || this.aiMemorisationCheckerTargets.length > 1) {
-          html = this.splitRecitationDisplayIntoWords(liveVerse)
+          html = this.splitRecitationDisplayIntoWords(liveVerse, { suppressMeanings: true })
         } else if (this.isAiMemorisationCheckerReviewActive) {
-          html = this.splitRecitationDisplayIntoWords(liveVerse)
+          html = this.splitRecitationDisplayIntoWords(liveVerse, { suppressMeanings: true })
         } else if (this.aiMemorisationCheckerTajweedEnabled && liveVerse.arabic_tajweed) {
-          html = this.renderWordLevelTajweedMarkup(liveVerse)
+          html = this.renderWordLevelTajweedMarkup(liveVerse, { suppressMeanings: true })
         } else {
           html = this.cleanRecitationDisplayText(liveVerse.arabic || liveVerse.arabic_tajweed || '')
         }
@@ -13784,35 +14857,70 @@ export default {
     },
     startAiMemorisationCheckerSpeechRecognition() {
       const SpeechRecognition = this.getSpeechRecognitionConstructor()
-      this.aiMemorisationCheckerSpeechRecognition = null
-      if (!SpeechRecognition) return false
-      try {
-        const recognition = new SpeechRecognition()
-        recognition.lang = 'ar-SA'
-        recognition.continuous = true
-        recognition.interimResults = true
-        recognition.maxAlternatives = 3
-        recognition.onresult = event => {
-          const entries = this.extractSpeechRecognitionEntries(event)
-          const finalEntries = entries.filter(entry => entry.final)
-          const interimEntries = entries.filter(entry => !entry.final)
-          if (finalEntries.length) this.applyRecognizedEntries('memorisation', finalEntries, true, { provider: 'web-speech' })
-          if (interimEntries.length) this.applyRecognizedEntries('memorisation', interimEntries, false, { provider: 'web-speech' })
-        }
-        recognition.onerror = event => console.warn('Memorisation checker speech recognition error:', event?.error || event)
-        recognition.start()
-        this.aiMemorisationCheckerSpeechRecognition = recognition
-        return true
-      } catch (error) {
-        console.warn('Failed to start memorisation checker speech recognition:', error)
+      if (!SpeechRecognition) {
+        this.aiMemorisationCheckerSpeechRecognition = null
         return false
       }
+      if (this.aiMemorisationCheckerSpeechRecognition) {
+        try {
+          this.aiMemorisationCheckerSpeechRecognition.onresult = null
+          this.aiMemorisationCheckerSpeechRecognition.onerror = null
+          this.aiMemorisationCheckerSpeechRecognition.onend = null
+          this.aiMemorisationCheckerSpeechRecognition.stop()
+        } catch (_) { /* ignore */ }
+        this.aiMemorisationCheckerSpeechRecognition = null
+      }
+
+      const attach = () => {
+        if (!this.aiMemorisationCheckerRecording) return false
+        try {
+          const recognition = new SpeechRecognition()
+          recognition.lang = 'ar-SA'
+          recognition.continuous = true
+          recognition.interimResults = true
+          recognition.maxAlternatives = 3
+          recognition.onresult = (event) => {
+            const entries = this.extractSpeechRecognitionEntries(event)
+            const finalEntries = entries.filter(entry => entry.final)
+            const interimEntries = entries.filter(entry => !entry.final)
+            if (finalEntries.length) {
+              this.applyRecognizedEntries('memorisation', finalEntries, true, { provider: 'web-speech' })
+            }
+            if (interimEntries.length) {
+              this.applyRecognizedEntries('memorisation', interimEntries, false, { provider: 'web-speech' })
+            }
+          }
+          recognition.onerror = (event) => {
+            const code = String(event?.error || '')
+            if (code === 'no-speech' || code === 'aborted') return
+            console.warn('Memorisation checker speech recognition error:', code || event)
+          }
+          recognition.onend = () => {
+            if (this.aiMemorisationCheckerSpeechRecognition !== recognition) return
+            this.aiMemorisationCheckerSpeechRecognition = null
+            if (!this.aiMemorisationCheckerRecording) return
+            window.setTimeout(() => {
+              if (!this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerSpeechRecognition) return
+              attach()
+            }, 140)
+          }
+          recognition.start()
+          this.aiMemorisationCheckerSpeechRecognition = recognition
+          return true
+        } catch (error) {
+          console.warn('Failed to start memorisation checker speech recognition:', error)
+          return false
+        }
+      }
+
+      return attach()
     },
     stopAiMemorisationCheckerSpeechRecognition() {
       if (!this.aiMemorisationCheckerSpeechRecognition) return
       try {
         this.aiMemorisationCheckerSpeechRecognition.onresult = null
         this.aiMemorisationCheckerSpeechRecognition.onerror = null
+        this.aiMemorisationCheckerSpeechRecognition.onend = null
         this.aiMemorisationCheckerSpeechRecognition.stop()
       } catch (error) {
         console.warn('Failed to stop memorisation checker speech recognition:', error)
@@ -15020,9 +16128,12 @@ export default {
     },
     shouldAutoStopRecitationCheckFromAlignment(alignment = null) {
       if (!this.recitationCheckRecording || !alignment?.progression?.complete) return false
-      if (!this.isSessionRecitationCheckActive()) return true
-      const targetWordCount = this.getRecitationCheckTargetWordCount('recitation')
-      return targetWordCount > 0 && this.getCommittedRecognitionWords('recitation').length >= targetWordCount
+      // Multi-ayah and post-session: never cut the learner off when soft
+      // alignment marks every word evaluated — let them finish and press Stop.
+      if (this.postSessionAiReciteActive || this.isSessionRecitationCheckActive()) {
+        return false
+      }
+      return true
     },
     shouldAutoStopRecitationCheckFromSilence() {
       if (!this.recitationCheckRecording) return false
@@ -15032,6 +16143,12 @@ export default {
       // Never cut off before the final word has been heard — that caused last-word lag/misses.
       if (!this.hasRecitationCheckHeardThroughEnd('recitation') && !this.recitationAlignmentState?.complete) {
         return false
+      }
+      // Session / post-session: only stop after the range is fully heard AND
+      // alignment looks complete — silence alone must not end early.
+      if (this.postSessionAiReciteActive || this.isSessionRecitationCheckActive()) {
+        return !!this.recitationAlignmentState?.complete
+          && this.hasRecitationCheckHeardThroughEnd('recitation')
       }
       if (!this.isSessionRecitationCheckActive()) return true
       return !!this.recitationAlignmentState?.complete
@@ -15334,16 +16451,22 @@ export default {
       const entries = []
       for (let index = event.resultIndex; index < event.results.length; index += 1) {
         const result = event.results[index]
-        const alternatives = Array.from(result || []).slice(0, 1)
-        alternatives.forEach(item => {
-          const words = this.tokenizeRecitationWords(item?.transcript || '')
-          words.forEach(word => entries.push({
-            word,
-            confidence: Number.isFinite(Number(item?.confidence)) ? Number(item.confidence) : (result?.isFinal ? 1 : 0.72),
-            final: !!result?.isFinal,
-            provider: 'web-speech'
-          }))
-        })
+        const alternatives = Array.from(result || [])
+        // Prefer the highest-confidence alternative (maxAlternatives is 3).
+        const best = alternatives
+          .slice()
+          .sort((a, b) => (Number(b?.confidence) || 0) - (Number(a?.confidence) || 0))[0]
+          || alternatives[0]
+        if (!best) continue
+        const words = this.tokenizeRecitationWords(best?.transcript || '')
+        words.forEach(word => entries.push({
+          word,
+          confidence: Number.isFinite(Number(best?.confidence))
+            ? Number(best.confidence)
+            : (result?.isFinal ? 1 : 0.72),
+          final: !!result?.isFinal,
+          provider: 'web-speech',
+        }))
       }
       return entries
     },
@@ -15651,7 +16774,7 @@ export default {
             sum += centered * centered
           }
           const rms = Math.sqrt(sum / samples.length) / 128
-          const speaking = rms > 0.035
+          const speaking = rms > 0.028
           const now = Date.now()
           if (speaking) {
             vad.lastSpeechAt = now
@@ -15659,7 +16782,10 @@ export default {
             vad.throttled = false
           } else {
             if (!vad.silenceStartedAt) vad.silenceStartedAt = now
-            if (!vad.throttled && vad.lastSpeechAt && now - vad.silenceStartedAt >= RECITATION_SILENCE_THROTTLE_MS) {
+            const silenceMs = this.postSessionAiReciteActive || this.isSessionRecitationCheckActive?.()
+              ? Math.max(RECITATION_SILENCE_THROTTLE_MS, 3800)
+              : RECITATION_SILENCE_THROTTLE_MS
+            if (!vad.throttled && vad.lastSpeechAt && now - vad.silenceStartedAt >= silenceMs) {
               vad.throttled = true
               this.handleAiRecitationSilenceAutoStop()
             }
@@ -15726,39 +16852,75 @@ export default {
     },
     startRecitationSpeechRecognition() {
       const SpeechRecognition = this.getSpeechRecognitionConstructor()
-      this.recitationSpeechRecognition = null
-      if (!SpeechRecognition) return false
-
-      try {
-        const recognition = new SpeechRecognition()
-        recognition.lang = 'ar-SA'
-        recognition.continuous = true
-        recognition.interimResults = true
-        recognition.maxAlternatives = 3
-        recognition.onresult = event => {
-          const entries = this.extractSpeechRecognitionEntries(event)
-          const finalEntries = entries.filter(entry => entry.final)
-          const interimEntries = entries.filter(entry => !entry.final)
-          if (finalEntries.length) this.applyRecognizedEntries('recitation', finalEntries, true, { provider: 'web-speech' })
-          if (interimEntries.length) this.applyRecognizedEntries('recitation', interimEntries, false, { provider: 'web-speech' })
-        }
-        recognition.onerror = event => {
-          console.warn('Speech recognition error:', event?.error || event)
-        }
-        recognition.start()
-        this.recitationSpeechRecognition = recognition
-        return true
-      } catch (error) {
-        console.warn('Failed to start speech recognition fallback:', error)
+      if (!SpeechRecognition) {
         this.recitationSpeechRecognition = null
         return false
       }
+
+      // Tear down any prior instance without triggering a restart loop.
+      if (this.recitationSpeechRecognition) {
+        try {
+          this.recitationSpeechRecognition.onresult = null
+          this.recitationSpeechRecognition.onerror = null
+          this.recitationSpeechRecognition.onend = null
+          this.recitationSpeechRecognition.stop()
+        } catch (_) { /* ignore */ }
+        this.recitationSpeechRecognition = null
+      }
+
+      const attach = () => {
+        if (!this.recitationCheckRecording) return false
+        try {
+          const recognition = new SpeechRecognition()
+          recognition.lang = 'ar-SA'
+          recognition.continuous = true
+          recognition.interimResults = true
+          recognition.maxAlternatives = 3
+          recognition.onresult = (event) => {
+            const entries = this.extractSpeechRecognitionEntries(event)
+            const finalEntries = entries.filter(entry => entry.final)
+            const interimEntries = entries.filter(entry => !entry.final)
+            if (finalEntries.length) {
+              this.applyRecognizedEntries('recitation', finalEntries, true, { provider: 'web-speech' })
+            }
+            if (interimEntries.length) {
+              this.applyRecognizedEntries('recitation', interimEntries, false, { provider: 'web-speech' })
+            }
+          }
+          recognition.onerror = (event) => {
+            const code = String(event?.error || '')
+            // Benign: browser pause / no audio yet — onend will restart.
+            if (code === 'no-speech' || code === 'aborted') return
+            console.warn('Speech recognition error:', code || event)
+          }
+          recognition.onend = () => {
+            if (this.recitationSpeechRecognition !== recognition) return
+            this.recitationSpeechRecognition = null
+            if (!this.recitationCheckRecording) return
+            // Chrome ends continuous sessions after natural pauses — resume.
+            window.setTimeout(() => {
+              if (!this.recitationCheckRecording || this.recitationSpeechRecognition) return
+              attach()
+            }, 140)
+          }
+          recognition.start()
+          this.recitationSpeechRecognition = recognition
+          return true
+        } catch (error) {
+          console.warn('Failed to start speech recognition fallback:', error)
+          this.recitationSpeechRecognition = null
+          return false
+        }
+      }
+
+      return attach()
     },
     stopRecitationSpeechRecognition() {
       if (!this.recitationSpeechRecognition) return
       try {
         this.recitationSpeechRecognition.onresult = null
         this.recitationSpeechRecognition.onerror = null
+        this.recitationSpeechRecognition.onend = null
         this.recitationSpeechRecognition.stop()
       } catch (error) {
         console.warn('Failed to stop speech recognition fallback:', error)
@@ -15821,8 +16983,8 @@ export default {
       let outcome = 'mixed'
       if (Number.isFinite(accuracy)) {
         const normalized = accuracy <= 1 ? accuracy * 100 : accuracy
-        if (normalized >= 85) outcome = 'strong'
-        else if (normalized < 60) outcome = 'weak'
+        if (normalized >= 80) outcome = 'strong'
+        else if (normalized < 55) outcome = 'weak'
       } else if (result.passed === true || result.strong === true) {
         outcome = 'strong'
       } else if (result.passed === false || result.weak === true) {
@@ -15833,9 +16995,9 @@ export default {
           + (colorCounts.red || 0) + (colorCounts.black || 0) + (colorCounts.gray || 0))
         const hardIssues = (colorCounts.red || 0) + (colorCounts.black || 0)
         const softIssues = colorCounts.amber || 0
-        if (hardIssues === 0 && softIssues <= 1 && (colorCounts.green || 0) / total >= 0.85) {
+        if (hardIssues === 0 && softIssues <= 2 && (colorCounts.green || 0) / total >= 0.78) {
           outcome = 'strong'
-        } else if (hardIssues / total >= 0.35 || (hardIssues + softIssues) / total >= 0.5) {
+        } else if (hardIssues / total >= 0.4 || (hardIssues + softIssues) / total >= 0.55) {
           outcome = 'weak'
         }
       }
@@ -15860,6 +17022,7 @@ export default {
       )
       const summary = this.buildPostSessionAiReviewSummary(result, outcome)
       this.postSessionAiFeedback = summary
+      this.capturePracticeFocusWeakWordsFromResult(result)
       await this.applyPostSessionAiAssessment(outcome, summary, {
         weak_ayahs: weakAyahs,
         sequence_errors: listCount(mistakes.sequenceErrors) + listCount(mistakes.verseJumps) + listCount(mistakes.skippedAyahs),
@@ -15873,40 +17036,371 @@ export default {
     },
     async finalizePostSessionAiReciteFromResult(result) {
       if (!result || !this.postSessionAiReciteActive) return false
-      const adaptiveWaiting = !!(
-        this.postSessionAdaptiveCheckActive
-        && this.postSessionAdaptiveSession?.currentQuestion?.requiresAiRecite
-      )
 
-      try {
-        await this.maybeApplyPostSessionAiAssessmentFromResult(result)
-      } catch (error) {
-        console.warn('Post-session AI assessment failed:', error)
+      // Track attempts for the dynamic practice plan (max 3).
+      this.recordAiReciteAttempt(result)
+
+      // Never keep results inside the AI Recite modal — always return to the
+      // session-complete success modal with the updated practice plan.
+      this.recitationCheckResult = null
+      this.recitationCheckError = ''
+      await this.buildAndPersistAiReciteFinalPlan()
+      await this.returnToSuccessWithAiPlan()
+      return true
+    },
+    recordAiReciteAttempt(result) {
+      if (!result) return
+      const wordStatuses = (this.getRecitationWordStatuses?.(result) || result.wordStatuses || [])
+        .map((word, index) => {
+          const raw = String(word?.status || word?.visualStatus || '').toLowerCase()
+          // Finalised unspoken words must count as omitted for the plan engine.
+          const status = raw === 'pending' ? 'omitted' : (word?.status || word?.visualStatus || raw)
+          return {
+            ...word,
+            index: Number(word?.ayahWordIndex ?? word?.index ?? word?.wordIndex ?? index),
+            wordIndex: Number(word?.ayahWordIndex ?? word?.wordIndex ?? word?.index ?? index),
+            status,
+          }
+        })
+      const resolved = Number(this.getResolvedRecitationScore?.(result))
+      let accuracyRaw = Number.isFinite(resolved) ? resolved : NaN
+      if (!Number.isFinite(accuracyRaw)) {
+        accuracyRaw = Number(
+          result.accuracyScore
+          ?? result.accuracy
+          ?? result.score
+          ?? result.percent
+          ?? result.overallAccuracy
+          ?? result.matchPercent
+          ?? NaN,
+        )
+      }
+      const accuracy = Number.isFinite(accuracyRaw)
+        ? Math.round(accuracyRaw <= 1 ? accuracyRaw * 100 : accuracyRaw)
+        : null
+      const colorCounts = {
+        green: wordStatuses.filter((w) => String(w.status).toLowerCase() === 'correct').length,
+        amber: wordStatuses.filter((w) => String(w.status).toLowerCase() === 'partial').length,
+        red: wordStatuses.filter((w) => String(w.status).toLowerCase() === 'incorrect').length,
+        black: wordStatuses.filter((w) => ['omitted', 'omission', 'pending', 'black'].includes(String(w.status).toLowerCase())).length,
+        gray: wordStatuses.filter((w) => ['skipped', 'notattempted', 'gray', 'grey'].includes(String(w.status).toLowerCase())).length,
+      }
+      const attempt = {
+        accuracy,
+        accuracyPercent: accuracy,
+        result: {
+          ...result,
+          accuracyScore: accuracy ?? result.accuracyScore,
+          wordStatuses,
+          weakAyahs: result.weakAyahs || [],
+          colorCounts,
+        },
+        at: Date.now(),
+      }
+      this.aiReciteAttempts = [...(this.aiReciteAttempts || []), attempt].slice(0, AI_RECITE_MAX_ATTEMPTS)
+      this.aiReciteAverageAccuracy = averageAttemptAccuracy(this.aiReciteAttempts)
+      this.capturePracticeFocusWeakWordsFromResult(attempt.result)
+    },
+    async buildAndPersistAiReciteFinalPlan() {
+      const snap = this.postSessionSnapshot || {}
+      const plan = buildAiReciteDynamicPlan({
+        attempts: this.aiReciteAttempts,
+        range: {
+          from: Number(this.masteryTargetRange?.from || snap.rangeStart || this.rangeStart || 1),
+          to: Number(this.masteryTargetRange?.to || snap.rangeEnd || this.rangeEnd || snap.rangeStart || 1),
+          surahId: Number(this.masteryTargetRange?.chapterId || snap.chapterId || this.chapterId || 0),
+          surahName: this.masteryTargetRange?.surahName
+            || snap.chapterName
+            || this.currentChapter?.name_simple
+            || '',
+        },
+        t: this.t.bind(this),
+      })
+      this.aiReciteFinalPlan = plan
+      this.aiReciteShowFinalPlan = true
+      this.aiReciteAverageAccuracy = plan.averageAccuracy
+      this.practiceFocusWeakWords = normaliseWeakWordRecords(plan.weakWords || [])
+      this.persistPracticeFocusWeakWords()
+      this.clearMushafAyahHtmlCache()
+      this.postSessionAiFeedback = plan.feedback
+
+      const achieved = plan.outcome === 'strong'
+      if (achieved) {
+        this.awaitingMasteryRetest = false
+        this.aiReciteAdvanceToNextSession = true
       }
 
+      if (this.postSessionRecommendation) {
+        if (achieved) {
+          const adapted = adaptRecommendationForAiAssessment(
+            this.postSessionRecommendation,
+            'strong',
+            {
+              ...snap,
+              weakAyahs: plan.weakAyahs,
+              weak_ayahs: plan.weakAyahs,
+              aiDetails: { outcome: 'strong', averageAccuracy: plan.averageAccuracy },
+            },
+          )
+          this.postSessionRecommendation = this.enrichPostSessionRecommendation({
+            ...(adapted || this.postSessionRecommendation),
+            plan_detail: {
+              ...((adapted || this.postSessionRecommendation).plan_detail || {}),
+              mastery: 'achieved',
+              average_accuracy: plan.averageAccuracy,
+              attempt_count: plan.planDetail?.attempt_count,
+              band: plan.band,
+              feedback: plan.feedback,
+              beginner: plan.planDetail?.beginner || null,
+            },
+            ai_assessment: {
+              ...((adapted || this.postSessionRecommendation).ai_assessment || {}),
+              result: 'strong',
+              summary: plan.feedback,
+              average_accuracy: plan.averageAccuracy,
+            },
+          })
+        } else {
+          const adapted = adaptRecommendationForAiAssessment(
+            this.postSessionRecommendation,
+            plan.outcome,
+            {
+              ...snap,
+              weakAyahs: plan.weakAyahs,
+              weak_ayahs: plan.weakAyahs,
+              aiDetails: { outcome: plan.outcome, averageAccuracy: plan.averageAccuracy },
+            },
+          )
+          this.postSessionRecommendation = this.enrichPostSessionRecommendation({
+            ...(adapted || this.postSessionRecommendation),
+            settings: {
+              ...((adapted || this.postSessionRecommendation).settings || {}),
+              ...plan.settings,
+            },
+            plan_detail: {
+              ...((adapted || this.postSessionRecommendation).plan_detail || {}),
+              ...plan.planDetail,
+              mastery: 'needs_practice',
+            },
+            ayah_range: {
+              ...((adapted || this.postSessionRecommendation).ayah_range || {}),
+              ...plan.ayah_range,
+            },
+            technique: {
+              ...((adapted || this.postSessionRecommendation).technique || {}),
+              id: plan.settings.technique,
+              complementary: plan.settings.complementary_technique,
+            },
+            ai_assessment: {
+              ...((adapted || this.postSessionRecommendation).ai_assessment || {}),
+              result: plan.outcome,
+              summary: plan.feedback,
+              average_accuracy: plan.averageAccuracy,
+            },
+          })
+        }
+      }
+
+      // Persist to Laravel when logged in.
+      if (this.postSessionRecommendation?.id && this.isLoggedIn) {
+        try {
+          const updated = await learningApi.submitRecommendationAiAssessment(
+            this.postSessionRecommendation.id,
+            {
+              result: plan.outcome,
+              summary: plan.feedback,
+              weak_ayahs: plan.weakAyahs,
+              average_accuracy: plan.averageAccuracy,
+              accuracy_percent: plan.averageAccuracy,
+              attempt_count: plan.planDetail.attempt_count,
+              weak_words: plan.weakWords,
+              plan_detail: plan.planDetail,
+              ayah_range: achieved
+                ? (this.postSessionRecommendation.ayah_range || plan.ayah_range)
+                : plan.ayah_range,
+              focus_ayahs: plan.weakAyahs,
+              settings: plan.settings,
+              color_counts: plan.colorCounts,
+              attempts: (this.aiReciteAttempts || []).map((attempt, index) => ({
+                attempt_number: index + 1,
+                accuracy: attempt.accuracy ?? attempt.accuracyPercent,
+                band: plan.band,
+                ayah_range: plan.ayah_range,
+                color_counts: attempt.result?.colorCounts || plan.colorCounts,
+                weak_words: plan.weakWords,
+                word_statuses: attempt.result?.wordStatuses || [],
+                plan_snapshot: plan.planDetail,
+              })),
+            },
+          )
+          if (updated) {
+            if (achieved) {
+              // Trust server continue / next-range for advancement.
+              // Do not re-apply the practice plan_detail (it still holds the
+              // completed/weak window and would restart the wrong session).
+              this.postSessionRecommendation = this.enrichPostSessionRecommendation({
+                ...updated,
+                plan_detail: {
+                  ...(updated.plan_detail || {}),
+                  mastery: 'achieved',
+                  average_accuracy: plan.averageAccuracy,
+                  attempt_count: plan.planDetail?.attempt_count,
+                  band: plan.band,
+                  feedback: plan.feedback,
+                  beginner: plan.planDetail?.beginner || null,
+                },
+              })
+              this.aiReciteAdvanceToNextSession = true
+            } else {
+              // Keep the simpler dynamic plan authoritative for practice.
+              this.postSessionRecommendation = this.enrichPostSessionRecommendation({
+                ...updated,
+                settings: {
+                  ...(updated.settings || {}),
+                  ...plan.settings,
+                },
+                plan_detail: {
+                  ...(updated.plan_detail || {}),
+                  ...plan.planDetail,
+                  mastery: 'needs_practice',
+                },
+                ayah_range: {
+                  ...(updated.ayah_range || {}),
+                  ...plan.ayah_range,
+                },
+                technique: {
+                  ...(updated.technique || {}),
+                  id: plan.settings.technique,
+                  complementary: plan.settings.complementary_technique,
+                },
+              })
+            }
+            this.aiReciteFinalPlan = plan
+          }
+        } catch (error) {
+          console.warn('Failed to persist AI Recite dynamic plan:', error)
+        }
+      }
+    },
+    async showAiRecitePlanEarly() {
+      if (!this.aiReciteAttemptCount) return
+      await this.returnToSuccessWithAiPlan()
+    },
+    async returnToSuccessWithAiPlan() {
+      if (!this.aiReciteFinalPlan) {
+        await this.buildAndPersistAiReciteFinalPlan()
+      }
+      this.aiReciteShowFinalPlan = true
+      this.showPostSessionModal = true
+      this.postSessionRecommendationStep = 'ready'
       await this.releasePostSessionAiReciteSurface({
-        adaptiveWaiting,
         scrollToResult: true,
+        reason: 'plan_ready',
       })
-      return true
+    },
+    async startAiRecitePracticePlan() {
+      if (!this.aiReciteFinalPlan && this.aiReciteAttemptCount) {
+        await this.buildAndPersistAiReciteFinalPlan()
+      }
+      const plan = this.aiReciteFinalPlan
+      const achieved = plan?.outcome === 'strong' || plan?.band === 'strong'
+
+      if (achieved) {
+        this.awaitingMasteryRetest = false
+        this.masteryTargetRange = null
+        this.aiReciteAdvanceToNextSession = true
+        this.aiReciteShowFinalPlan = false
+        // Keep mastery flag via aiReciteAdvanceToNextSession; clear plan so the
+        // confirm flow cannot prefer the practice ayah_range.
+        this.aiReciteFinalPlan = null
+        this.practiceFocusWeakWords = []
+        this.persistPracticeFocusWeakWords?.()
+        this.showSelfCheckModal = false
+        this.postSessionAiReciteActive = false
+        await this.openPostSessionRecommendationConfirm()
+        return
+      }
+
+      if (plan?.settings) {
+        const snap = this.postSessionSnapshot || {}
+        this.awaitingMasteryRetest = true
+        this.masteryTargetRange = {
+          chapterId: Number(snap.chapterId || this.chapterId || 0),
+          from: Number(plan.ayah_range?.from || snap.rangeStart || this.rangeStart || 1),
+          to: Number(plan.ayah_range?.to || snap.rangeEnd || this.rangeEnd || snap.rangeStart || 1),
+          surahName: snap.chapterName || this.currentChapter?.name_simple || '',
+          settings: { ...plan.settings },
+          planDetail: plan.planDetail ? { ...plan.planDetail } : null,
+        }
+        if (this.postSessionRecommendation) {
+          this.postSessionRecommendation = {
+            ...this.postSessionRecommendation,
+            settings: {
+              ...(this.postSessionRecommendation.settings || {}),
+              ...plan.settings,
+            },
+            plan_detail: plan.planDetail,
+            ayah_range: {
+              ...(this.postSessionRecommendation.ayah_range || {}),
+              ...plan.ayah_range,
+            },
+          }
+        }
+        this.practiceFocusWeakWords = normaliseWeakWordRecords(plan.weakWords || [])
+        this.persistPracticeFocusWeakWords()
+        this.clearMushafAyahHtmlCache()
+      }
+      this.aiReciteShowFinalPlan = false
+      this.showSelfCheckModal = false
+      this.postSessionAiReciteActive = false
+      await this.openPostSessionRecommendationConfirm()
+    },
+    async continuePostSessionAiReciteToPlan() {
+      if (!this.postSessionAiReciteActive) {
+        this.showSelfCheckModal = false
+        return
+      }
+      if (this.aiReciteAttemptCount) {
+        await this.returnToSuccessWithAiPlan()
+        return
+      }
+      try {
+        await this.releasePostSessionAiReciteSurface({
+          scrollToResult: true,
+          reason: 'continue',
+        })
+      } catch (error) {
+        console.warn('Failed to return from AI Recite to plan:', error)
+        this.postSessionAiReciteActive = false
+        this.showSelfCheckModal = false
+      }
     },
     async releasePostSessionAiReciteSurface({ adaptiveWaiting = false, scrollToResult = false, reason = '' } = {}) {
       // Always release the AI Recite surface — never leave the learner stuck.
       this.postSessionAiReciteBusy = false
       this.postSessionAiReciteActive = false
+      const wasRecording = !!this.recitationCheckRecording
+        || ['recording', 'paused'].includes(this.recitationCheckMediaRecorder?.state)
+      // Prevent recorder.onstop from re-entering preparing/submit after we already
+      // handed control back to the success modal (recognition can finalize first).
+      if (wasRecording) this.recitationCheckDiscardOnStop = true
       if (this.isSelfCheckRecording) {
         try { this.stopSelfCheckRecording?.({ silent: true }) } catch (_) { /* ignore */ }
       }
-      if (this.recitationCheckRecording) {
+      if (wasRecording) {
         try { this.stopRecitationCheckRecording?.() } catch (_) { /* ignore */ }
       }
       this.recitationCheckPreparing = false
+      this.recitationCheckRecording = false
       this.showSelfCheckModal = false
       this.selfCheckPeekActive = false
       this.selfCheckModeChoiceVisible = false
       this.recitationCheckPanelOpen = false
       this.stopSelfCheckDraftAudio?.()
       this.clearRecitationReviewState?.()
+      try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
+      try { this.stopRecitationSpeechRecognition?.() } catch (_) { /* ignore */ }
+      if (!wasRecording) this.recitationCheckDiscardOnStop = false
       this.syncBodyScrollLock(!!(this.showPostSessionModal || this.postSessionAdaptiveCheckActive))
 
       if (adaptiveWaiting || this.postSessionAdaptiveCheckActive) {
@@ -15926,10 +17420,12 @@ export default {
       this.postSessionViewState = 'recommendation_ready'
 
       await this.$nextTick()
-      const reviewEl = this.$el?.querySelector?.('.post-session-simple__ai-review')
+      const reviewEl = this.$el?.querySelector?.('.ps-ai-result')
+        || this.$el?.querySelector?.('.post-session-simple__ai-review')
         || this.$el?.querySelector?.('.post-session-simple__panel--hero')
         || this.$el?.querySelector?.('.post-session-simple__review')
-      if ((scrollToResult || reason === 'error' || this.postSessionAiReviewDetails) && reviewEl?.scrollIntoView) {
+        || document.querySelector?.('.ps-ai-result')
+      if ((scrollToResult || reason === 'error' || reason === 'plan_ready' || this.postSessionAiReviewDetails) && reviewEl?.scrollIntoView) {
         reviewEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
       }
     },
@@ -16054,6 +17550,7 @@ export default {
       }
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return
 
+      this.recitationCheckDiscardOnStop = false
       this.recitationCheckError = ''
       this.recitationCheckResult = null
       this.resetReviewResultAudio({ revokeOwned: true })
@@ -16110,6 +17607,15 @@ export default {
         recorder.onstop = async () => {
           // Allow the final dataavailable from stop() to land before we snapshot chunks.
           await new Promise(resolve => queueMicrotask(resolve))
+          const discard = this.recitationCheckDiscardOnStop
+          this.recitationCheckDiscardOnStop = false
+          if (discard) {
+            this.recitationCheckRecording = false
+            this.recitationCheckPreparing = false
+            this.stopRecitationSpeechRecognition()
+            this.cleanupRecitationCheckMedia()
+            return
+          }
           const chunks = [...this.recitationCheckChunks]
           const settleMs = this.postSessionAiReciteActive ? 2500 : undefined
           try {
@@ -16132,17 +17638,14 @@ export default {
             if (!blob.size) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
             audioSrc = await this.createStableRecordingSrc(blob)
             const submitPromise = this.submitRecitationCheck(blob, targets, audioSrc)
-            // Never leave post-session AI Recite spinning forever.
-            if (this.postSessionAiReciteActive) {
-              await Promise.race([
-                submitPromise,
-                new Promise((_, reject) => {
-                  window.setTimeout(() => reject(new Error(this.t('memorisation.aiCheck.recitationCheckFailed'))), 12000)
-                }),
-              ])
-            } else {
-              await submitPromise
-            }
+            // Always bound submit — a hung transcription previously left preparing=true
+            // and blocked every later "Test with AI Recite" open.
+            await Promise.race([
+              submitPromise,
+              new Promise((_, reject) => {
+                window.setTimeout(() => reject(new Error(this.t('memorisation.aiCheck.recitationCheckFailed'))), 12000)
+              }),
+            ])
           } catch (error) {
             console.error('Failed to process recitation check:', error)
             const serverMessage = error?.response?.data?.message
@@ -16204,7 +17707,9 @@ export default {
       const audioHash = await this.hashAudioBlob(blob)
       this.recitationInputAudioHash = audioHash
       const cached = await this.readRecitationSessionCache(sessionId, audioHash)
-      if (cached?.analysisResult) {
+      // Post-session AI Recite must always use a fresh assessment — cached
+      // replays made every attempt look identical.
+      if (cached?.analysisResult && !this.postSessionAiReciteActive) {
         let resolvedAudioSrc = audioSrc || ''
         if (!resolvedAudioSrc && cached.audioBlob) {
           resolvedAudioSrc = await this.createStableRecordingSrc(cached.audioBlob, cached.audioSrc || '')
@@ -16223,8 +17728,7 @@ export default {
         this.recitationCheckAutoStopArmed = false
         this.playUiTone('complete')
         this.showBanner(this.t('toasts.loadedCachedReciteCheck'), 'success', 2200)
-        const handledPostSession = await this.finalizePostSessionAiReciteFromResult(cachedResult)
-        if (!handledPostSession) this.scrollToRecitationResults()
+        this.scrollToRecitationResults()
         return
       }
       const committedWords = (() => {
@@ -16251,15 +17755,19 @@ export default {
       result.analysisVersion = RECITATION_ANALYSIS_VERSION
       result.sessionId = sessionId
       result.audioHash = audioHash
-      this.recitationCheckResult = result
       this.recitationLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
       this.syncSessionEvaluationMaps('recitation', targetVerses, this.recitationLiveWords, true)
       this.persistAiRecitationReviewHighlights(result, targetVerses)
       this.recitationCheckAutoStopArmed = false
       this.playUiTone('complete')
       this.showBanner(this.t('toasts.reciteCheckComplete'), 'success', 2200)
-      const handledPostSession = await this.finalizePostSessionAiReciteFromResult(result)
-      if (!handledPostSession) this.scrollToRecitationResults()
+      if (this.postSessionAiReciteActive) {
+        // Do not park results in the AI Recite modal — hand off to success modal.
+        await this.finalizePostSessionAiReciteFromResult(result)
+      } else {
+        this.recitationCheckResult = result
+        this.scrollToRecitationResults()
+      }
       const cachePayload = {
         analysisVersion: RECITATION_ANALYSIS_VERSION,
         sessionId,
@@ -16313,16 +17821,22 @@ export default {
       const chapterId = Number(this.chapterId || this.currentChapter?.id || 0)
       const rangeStart = Number(this.rangeStart || 0)
       const rangeEnd = Number(this.rangeEnd || rangeStart || 0)
+      const resolveVerseNumber = (verse) => Number(
+        verse?.number
+        || verse?.ayah
+        || String(verse?.key || '').split(':')[1]
+        || 0
+      )
       const source = (this.mushafDisplayVerses?.length ? this.mushafDisplayVerses : this.verses || [])
         .filter(verse => {
-          const verseNumber = Number(verse?.number || 0)
+          const verseNumber = resolveVerseNumber(verse)
           if (!verse?.key || !verseNumber) return false
-          if (chapterId && Number(verse?.chapterId || chapterId) !== chapterId) return false
+          if (chapterId && Number(verse?.chapterId || verse?.surah || chapterId) !== chapterId) return false
           if (rangeStart && verseNumber < rangeStart) return false
           if (rangeEnd && verseNumber > rangeEnd) return false
           return true
         })
-        .sort((left, right) => Number(left?.number || 0) - Number(right?.number || 0))
+        .sort((left, right) => resolveVerseNumber(left) - resolveVerseNumber(right))
 
       return source.map((verse, index) => {
         const canonical = this.getCanonicalVerseForCheck(verse) || verse
@@ -16330,6 +17844,7 @@ export default {
           ...this.buildSelfCheckVerseRef(canonical || verse),
           ...canonical,
           key: canonical?.key || verse?.key || '',
+          number: resolveVerseNumber(canonical || verse),
           sessionQueueIndex: index,
           sessionTargetKey: `${canonical?.key || verse?.key || `session-target-${index}`}::${index}`
         }
@@ -17013,22 +18528,6 @@ export default {
       return this.getRecitationWordsToReview(result, limit * 2)
         .filter((word) => ['incorrect', 'omitted', 'partial'].includes(String(word.visualStatus || word.status || '')))
         .slice(0, limit)
-    },
-    async continuePostSessionAiReciteToPlan() {
-      if (!this.postSessionAiReciteActive) {
-        this.showSelfCheckModal = false
-        return
-      }
-      try {
-        await this.releasePostSessionAiReciteSurface({
-          scrollToResult: true,
-          reason: 'continue',
-        })
-      } catch (error) {
-        console.warn('Failed to return from AI Recite to plan:', error)
-        this.postSessionAiReciteActive = false
-        this.showSelfCheckModal = false
-      }
     },
     getTajweedRuleCatalog() {
       return {
@@ -17733,7 +19232,7 @@ export default {
         tajweedEnabled: !!this.tajweedEnabled,
         showTranslation: !!this.showTranslation,
         showTransliteration: !!this.showTransliteration,
-        showWordByWord: false,
+        showWordByWord: !!this.showWordByWord,
         wordByWordAudioEnabled: !!this.wordByWordAudioEnabled,
         defaultFontSize: Math.max(
           this.minFontSize,
@@ -19283,8 +20782,12 @@ export default {
       this.readingViewMode = nextMode
       if (nextMode === 'mushaf') {
         this.wordByWordAudioEnabled = true
+        this.showWordByWord = false
+        this.quranFont = 'uthmanic'
         this.applyMushafThemeDefault(this.theme)
-        this.syncMushafPageToActiveVerse()
+        this.ensureMadaniPagesLoaded({ force: false }).then(() => {
+          this.syncMushafPageToActiveVerse()
+        })
       } else {
         this.fontOpen = false
         this.bgOpen = false
@@ -19296,7 +20799,7 @@ export default {
       this.persistUiState()
     },
     getDefaultMushafBackgroundForTheme(theme = this.theme) {
-      return theme === 'dark' ? 'night' : 'paper'
+      return theme === 'dark' ? 'night' : 'contrast'
     },
     applyMushafThemeDefault(theme = this.theme) {
       const nextBackground = this.getDefaultMushafBackgroundForTheme(theme)
@@ -19310,9 +20813,23 @@ export default {
         return
       }
       const activeKey = this.effectiveActiveVerseKey || this.activeVerseKey
-      const pageIndex = this.mushafPages.findIndex(page => page.verses.some(verse => verse.key === activeKey))
+      const mappedPage = Number(this.madaniPageByVerseKey?.[activeKey] || 0)
+      if (mappedPage > 0) {
+        const pageIndex = this.madaniPageNumbers.findIndex(page => Number(page) === mappedPage)
+        if (pageIndex >= 0) {
+          this.mushafPageIndex = pageIndex
+          this.ensureMadaniPageLoaded(mappedPage)
+          return
+        }
+      }
+      const pageIndex = this.mushafPages.findIndex(page => (
+        page.verses?.some(verse => verse.key === activeKey)
+        || page.verseKeys?.includes(activeKey)
+      ))
       if (pageIndex >= 0) {
         this.mushafPageIndex = pageIndex
+        const pageNumber = this.mushafPages[pageIndex]?.pageNumber
+        if (pageNumber) this.ensureMadaniPageLoaded(pageNumber)
         return
       }
       this.mushafPageIndex = this.safeMushafPageIndex
@@ -19323,6 +20840,11 @@ export default {
         return
       }
       this.mushafPageIndex = Math.max(0, Math.min(Number(index || 0), this.mushafPages.length - 1))
+      const pageNumber = this.currentMadaniPageNumber
+      if (pageNumber) {
+        this.ensureMadaniPageLoaded(pageNumber)
+        this.prefetchAdjacentMadaniFonts(pageNumber)
+      }
       this.persistUiState()
     },
     goToPreviousMushafPage() {
@@ -19336,10 +20858,162 @@ export default {
       const nextEntry = this.queue?.[this.queueIndex + 1]
       const nextKey = nextEntry?.verse?.key || nextEntry?.key
       if (!nextKey) return
-      const nextPageIndex = this.mushafPages.findIndex(page => page.verses.some(verse => verse.key === nextKey))
+      const mappedPage = Number(this.madaniPageByVerseKey?.[nextKey] || 0)
+      const nextPageIndex = mappedPage > 0
+        ? this.madaniPageNumbers.findIndex(page => Number(page) === mappedPage)
+        : this.mushafPages.findIndex(page => page.verses.some(verse => verse.key === nextKey) || page.verseKeys?.includes(nextKey))
       if (nextPageIndex >= 0 && nextPageIndex !== this.safeMushafPageIndex) {
         this.goToMushafPage(nextPageIndex)
       }
+    },
+    async ensureMadaniPagesLoaded(options = {}) {
+      const verses = this.mushafDisplayVerses || []
+      const chapterId = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
+      if (!chapterId || !verses.length) {
+        this.madaniPageNumbers = []
+        this.madaniPageLayouts = {}
+        this.madaniPageByVerseKey = {}
+        return []
+      }
+
+      const rangeStart = Number(this.rangeStart || this.currentConfig?.rangeStart || verses[0]?.number || 1)
+      const rangeEnd = Number(this.rangeEnd || this.currentConfig?.rangeEnd || verses[verses.length - 1]?.number || rangeStart)
+      const requestId = ++this.madaniLoadRequestId
+      this.madaniPagesLoading = true
+      this.madaniPagesError = ''
+
+      try {
+        const { pages, pageByVerseKey } = await getMadaniPagesForChapterRange(chapterId, rangeStart, rangeEnd, {
+          force: !!options.force
+        })
+        if (requestId !== this.madaniLoadRequestId) return []
+
+        const pageMap = {}
+        if (pageByVerseKey instanceof Map) {
+          pageByVerseKey.forEach((page, key) => {
+            pageMap[key] = page
+          })
+        }
+        this.madaniPageByVerseKey = pageMap
+        this.madaniPageNumbers = pages.length ? pages : [1]
+        await loadSurahNamesFont()
+
+        const currentIndex = this.safeMushafPageIndex
+        const primaryPage = this.madaniPageNumbers[currentIndex] || this.madaniPageNumbers[0]
+        await this.ensureMadaniPageLoaded(primaryPage, { force: !!options.force })
+        this.prefetchAdjacentMadaniFonts(primaryPage)
+        return this.madaniPageNumbers
+      } catch (error) {
+        console.error('Madani page load failed:', error)
+        this.madaniPagesError = error?.message || 'Failed to load Madani pages'
+        return []
+      } finally {
+        if (requestId === this.madaniLoadRequestId) {
+          this.madaniPagesLoading = false
+        }
+      }
+    },
+    async ensureMadaniPageLoaded(pageNumber, options = {}) {
+      const page = Math.max(1, Math.min(604, Number(pageNumber) || 0))
+      if (!page) return null
+      if (!options.force && this.madaniPageLayouts?.[page]?.lines?.length) {
+        await this.ensureMadaniFontForPage(page)
+        return this.madaniPageLayouts[page]
+      }
+
+      try {
+        const verses = await getMadaniPageVerses(page, { force: !!options.force })
+        const layout = buildMadaniPageLayout(page, verses, { tajweed: !!this.tajweedEnabled })
+        this.madaniPageLayouts = {
+          ...this.madaniPageLayouts,
+          [page]: layout
+        }
+        const nextMap = { ...this.madaniPageByVerseKey }
+        for (const key of layout.verseKeys || []) {
+          nextMap[key] = page
+        }
+        this.madaniPageByVerseKey = nextMap
+        await this.ensureMadaniFontForPage(page)
+        return layout
+      } catch (error) {
+        console.error(`Madani page ${page} load failed:`, error)
+        return null
+      }
+    },
+    async ensureMadaniFontForPage(pageNumber) {
+      const page = Number(pageNumber)
+      if (!page) return false
+      try {
+        await loadQcfPageFont(page, { tajweed: !!this.tajweedEnabled })
+        if (!isQcfFontLoaded(page, { tajweed: !!this.tajweedEnabled })) {
+          throw new Error(`QCF font not registered after load for page ${page}`)
+        }
+        this.madaniFontsReady = {
+          ...this.madaniFontsReady,
+          [page]: true
+        }
+        return true
+      } catch (error) {
+        console.warn(`QCF font load failed for page ${page}`, error)
+        const next = { ...this.madaniFontsReady }
+        delete next[page]
+        this.madaniFontsReady = next
+        return false
+      }
+    },
+    prefetchAdjacentMadaniFonts(pageNumber) {
+      const page = Number(pageNumber)
+      if (!page) return
+      const neighbors = [page - 1, page + 1].filter(n => n >= 1 && n <= 604)
+      prefetchQcfPageFonts(neighbors, { tajweed: !!this.tajweedEnabled }).catch(() => {})
+      neighbors.forEach(neighbor => {
+        if (!this.madaniPageLayouts?.[neighbor] && this.madaniPageNumbers.includes(neighbor)) {
+          this.ensureMadaniPageLoaded(neighbor).catch(() => {})
+        }
+      })
+    },
+    rebuildCurrentMadaniLayoutsForTajweed() {
+      const pages = Object.keys(this.madaniPageLayouts || {}).map(Number).filter(Boolean)
+      if (!pages.length) return
+      const nextLayouts = { ...this.madaniPageLayouts }
+      pages.forEach(page => {
+        const existing = nextLayouts[page]
+        if (!existing) return
+        nextLayouts[page] = {
+          ...existing,
+          tajweed: !!this.tajweedEnabled,
+          fontFamily: `p${page}-${this.tajweedEnabled ? 'v4' : 'v2'}`
+        }
+      })
+      this.madaniPageLayouts = nextLayouts
+      this.madaniFontsReady = {}
+      const current = this.currentMadaniPageNumber
+      if (current) {
+        this.ensureMadaniFontForPage(current)
+        this.prefetchAdjacentMadaniFonts(current)
+      }
+    },
+    resolveVerseFromMadaniKey(verseKey) {
+      if (!verseKey) return null
+      return (this.mushafDisplayVerses || []).find(verse => verse.key === verseKey)
+        || (this.verses || []).find(verse => verse.key === verseKey)
+        || null
+    },
+    onMadaniWordClick(word) {
+      if (!word?.verseKey || word.inSession === false) return
+      const verse = this.resolveVerseFromMadaniKey(word.verseKey)
+      if (!verse) return
+      this.onMushafAyahClick(verse)
+    },
+    onMadaniWordEnter(word) {
+      if (!word?.verseKey || word.inSession === false) return
+      const verse = this.resolveVerseFromMadaniKey(word.verseKey)
+      if (!verse) return
+      this.onMushafAyahEnter(verse)
+    },
+    onMadaniWordLeave(word) {
+      const verse = this.resolveVerseFromMadaniKey(word?.verseKey)
+      this.onMushafAyahLeave(verse || { key: word?.verseKey })
     },
     toggleMushafActiveAyahPlayback() {
       const verse = this.activeVerseRef
@@ -19473,7 +21147,7 @@ export default {
 
     getVerseCacheKey(mode = this.currentMode, config = null) {
       const targetConfig = config || this.buildSessionConfig(mode)
-      return `${mode}:${this.getConfigFingerprint(targetConfig)}`
+      return `${mode}:${this.getConfigFingerprint(targetConfig)}:wbw2`
     },
 
     getCachedVerses(mode = this.currentMode, config = null) {
@@ -19722,8 +21396,10 @@ export default {
       this.script = config.script || this.script
       this.showTranslation = config.showTranslation ?? this.showTranslation
       this.showTransliteration = config.showTransliteration ?? this.showTransliteration
-      this.showWordByWord = false
+      this.showWordByWord = !!config.showWordByWord
       this.wordByWordAudioEnabled = true
+      if (this.showWordByWord && this.fadingVerseEnabled) this.fadingVerseEnabled = false
+      this.clearMushafAyahHtmlCache()
       this.focusModeEnabled = !!config.focusModeEnabled
       this.focusDimPercent = Math.max(30, Math.min(75, Number(config.focusDimPercent || this.focusDimPercent || 54)))
       this.blurModeEnabled = !!config.blurModeEnabled
@@ -21530,6 +23206,9 @@ export default {
       this.syncSettingsDraft()
       this.persistUiState()
       this.persistCentralSessionState()
+      if (this.readingViewMode === 'mushaf') {
+        this.rebuildCurrentMadaniLayoutsForTajweed()
+      }
 
       this.showBanner(
         this.tajweedEnabled ? 'Tajweed text enabled' : 'Tajweed text disabled',
@@ -21722,6 +23401,12 @@ export default {
       this.closeTopCardSubmenus()
     },
     selectFont(fontValue) {
+      if (this.readingViewMode === 'mushaf' && fontValue !== 'uthmanic') {
+        this.fontOpen = false
+        this.fontDropdownOpen = false
+        this.showBanner('Madani Mushaf uses the official QCF page font', 'info', 1800)
+        return
+      }
       this.quranFont = fontValue
       this.fontDropdownOpen = false
       this.fontOpen = false
@@ -22096,6 +23781,11 @@ export default {
     getDisplayArabic(verse) {
       if (!verse?.arabic) return ''
       const forceMushafWords = this.readingViewMode === 'mushaf'
+      const forceWrapForFocus = (
+        (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length > 0)
+        || !!this.anchorModeEnabled
+        || this.liveSessionTechniqueId === 'anchor'
+      )
       // Source-guard reference:
       // if (this.tajweedEnabled && verse.arabic_tajweed) { return this.renderWordLevelTajweedMarkup(verse, { wrapWords: this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled }) }
       // if (this.showWordByWord || this.anchorModeEnabled || this.wordByWordAudioEnabled) { return this.splitArabicIntoWords(verse) }
@@ -22108,14 +23798,14 @@ export default {
         return this.splitRecitationDisplayIntoWords(verse)
       }
       if (this.tajweedEnabled && verse.arabic_tajweed) {
-        if (forceMushafWords) {
+        if (forceMushafWords || forceWrapForFocus) {
           return this.renderWordLevelTajweedMarkup(verse, { wrapWords: true })
         }
         return this.renderWordLevelTajweedMarkup(verse, {
-          wrapWords: this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled
+          wrapWords: this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled || forceWrapForFocus
         })
       }
-      if (forceMushafWords) {
+      if (forceMushafWords || forceWrapForFocus) {
         return this.splitArabicIntoWords(verse)
       }
       if (this.showWordByWord || this.anchorModeEnabled || this.wordByWordAudioEnabled) {
@@ -22134,11 +23824,17 @@ export default {
         .replace(/'/g, '&#39;')
     },
 
-    buildWordTokenHtml(verse, word, idx, innerHtml) {
+    buildWordTokenHtml(verse, word, idx, innerHtml, options = {}) {
       const wordData = typeof word === 'string' ? { ar: word, en: '', audio: null } : (word || {})
       const isActive = this.currentHighlightedVerseKey === verse.key && this.currentWordIndex === idx
       const activeClass = isActive ? ' highlighted phrase-highlighted' : ''
-      const weakClass = this.isWeakAyah(verse.key) ? ' weak-word' : ''
+      const plainText = String(wordData.ar || wordData.text || wordData.word || '').trim()
+        || String(innerHtml || '').replace(/<[^>]+>/g, '')
+      const focusWeak = this.isPracticeFocusWeakWord(verse.key, idx, plainText)
+      // Prefer exact weak-word marks from AI evidence over whole-ayah shading.
+      const weakClass = focusWeak
+        ? ` practice-focus-word${isActive ? ' practice-focus-word--active' : ''}`
+        : (this.practiceFocusWeakWords?.length ? '' : (this.isWeakAyah(verse.key) ? ' weak-word' : ''))
       const masteredClass = this.isMasteredAyah(verse.key) ? ' mastered-word' : ''
       const recitationStatus = this.getRenderedRecitationWordStatusForVerse(verse.key, idx, verse.sessionTargetKey || '')
       const recitationClass = recitationStatus ? ` recitation-word-${recitationStatus}` : ''
@@ -22148,8 +23844,22 @@ export default {
         : ''
       const tajweedAttr = wordData?.tajweedWord ? ' data-tajweed-word="true"' : ''
       const wordAudio = ''
+      const focusTitle = focusWeak
+        ? (this.t?.('memorisation.postSession.coach.live.focusCueTitle') || 'Focus on this word')
+        : ''
+      const focusAttr = focusWeak
+        ? ` data-practice-focus="true" title="${this.escapeHtml(focusTitle)}"`
+        : ''
+      const includeMeanings = options.includeMeanings === true
+        || (options.includeMeanings !== false && this.showWordByWord && !options.suppressMeanings)
+      const gloss = includeMeanings
+        ? String(wordData.en || verse?.words?.[idx]?.en || '').trim()
+        : ''
+      const meaningHtml = gloss
+        ? `<span class="word-meaning" dir="ltr" lang="en">${this.escapeHtml(gloss)}</span>`
+        : ''
 
-      return `<word class="wbw-word${activeClass}${weakClass}${masteredClass}${recitationClass}${tajweedClass}" data-word-index="${idx}" data-verse-key="${verse.key}"${sessionTargetAttr}${tajweedAttr} data-word-audio="${this.escapeHtml(wordData.audio || '')}">${innerHtml}${wordAudio}</word>`
+      return `<word class="wbw-word${activeClass}${weakClass}${masteredClass}${recitationClass}${tajweedClass}" data-word-index="${idx}" data-verse-key="${verse.key}"${sessionTargetAttr}${tajweedAttr}${focusAttr} data-word-audio="${this.escapeHtml(wordData.audio || '')}"><span class="word-arabic-text">${innerHtml}</span>${meaningHtml}${wordAudio}</word>`
     },
 
     isArabicBaseLetterForTajweed(char) {
@@ -22264,16 +23974,22 @@ export default {
       const tokens = this.splitTajweedMarkupIntoWordHtml(normalizedMarkup)
       if (!tokens.length) return this.cleanRecitationDisplayText(verse.arabic || verse.arabic_tajweed || '')
       const useInteractiveWords = !!options.wrapWords
+      const tokenOptions = {
+        includeMeanings: options.includeMeanings,
+        suppressMeanings: options.suppressMeanings
+      }
       return tokens.map((token, idx) => {
         const wordText = this.cleanRecitationDisplayText(this.stripTajweedMarkup(token))
         if (!wordText) return ''
         const tajweedClass = this.getTajweedClassesForMarkupToken(token).join(' ')
         if (useInteractiveWords) {
+          const gloss = verse?.words?.[idx]?.en || ''
           return this.buildWordTokenHtml(
             verse,
-            { ar: wordText, en: '', audio: null, tajweedWord: true, tajweedClass },
+            { ar: wordText, en: gloss, audio: verse?.words?.[idx]?.audio || null, tajweedWord: true, tajweedClass },
             idx,
-            this.escapeHtml(wordText)
+            this.escapeHtml(wordText),
+            tokenOptions
           )
         }
         const className = ['tajweed-word', tajweedClass].filter(Boolean).join(' ')
@@ -22303,7 +24019,7 @@ export default {
       return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     },
 
-    splitArabicIntoWords(verse) {
+    splitArabicIntoWords(verse, options = {}) {
       if (!verse || !verse.arabic) return ''
 
       // Get words from the verse object or tokenize
@@ -22327,19 +24043,24 @@ export default {
       // Regular mode (without tajweed)
       words.forEach((word, idx) => {
         const wordText = typeof word === 'string' ? word : word.ar
-        html += `${this.buildWordTokenHtml(verse, word, idx, this.escapeHtml(wordText))} `
+        html += `${this.buildWordTokenHtml(verse, word, idx, this.escapeHtml(wordText), options)} `
       })
 
       return html
     },
-    splitRecitationDisplayIntoWords(verse) {
+    splitRecitationDisplayIntoWords(verse, options = {}) {
       if (!verse?.key) return ''
       const sourceText = this.getPlainVerseArabicForCheck(verse)
       const useTajweedMarkup = this.shouldUseTajweedWordMarkup(verse)
-      const tajweedMarkup = useTajweedMarkup ? this.renderWordLevelTajweedMarkup(verse, { wrapWords: true }) : ''
+      const tajweedMarkup = useTajweedMarkup
+        ? this.renderWordLevelTajweedMarkup(verse, { wrapWords: true, ...options })
+        : ''
       const livePatchMode = this.isLiveRecitationDomPatchModeForVerse(verse.key)
       const cacheSeed = useTajweedMarkup ? tajweedMarkup : sourceText
-      const cacheKey = livePatchMode ? `${verse.sessionTargetKey || verse.key}|${useTajweedMarkup ? 'tajweed' : 'plain'}|${cacheSeed}|live` : ''
+      const meaningFlag = options.suppressMeanings ? 'nom' : (options.includeMeanings === false ? 'nom' : 'm')
+      const cacheKey = livePatchMode
+        ? `${verse.sessionTargetKey || verse.key}|${useTajweedMarkup ? 'tajweed' : 'plain'}|${meaningFlag}|${cacheSeed}|live`
+        : ''
       if (cacheKey && this.recitationDisplayHtmlCache?.has?.(cacheKey)) return this.recitationDisplayHtmlCache.get(cacheKey)
       if (useTajweedMarkup) {
         if (cacheKey) this.recitationDisplayHtmlCache.set(cacheKey, tajweedMarkup)
@@ -22348,7 +24069,13 @@ export default {
       const words = this.tokenizeRecitationDisplayWords(sourceText)
       if (!words.length) return this.cleanRecitationDisplayText(verse.arabic || verse.arabic_tajweed || '')
       const html = words
-        .map((word, idx) => this.buildWordTokenHtml(verse, { ar: word, en: '', audio: null }, idx, this.escapeHtml(word)))
+        .map((word, idx) => this.buildWordTokenHtml(
+          verse,
+          { ar: word, en: verse?.words?.[idx]?.en || '', audio: null },
+          idx,
+          this.escapeHtml(word),
+          options
+        ))
         .join(' ')
       if (cacheKey) {
         this.recitationDisplayHtmlCache.set(cacheKey, html)
@@ -22545,6 +24272,7 @@ export default {
         if (node?.classList) {
           node.classList.remove('highlighted')
           node.classList.remove('phrase-highlighted')
+          node.classList.remove('practice-focus-word--active')
         }
       })
       this.lastHighlightedWordNodes = []
@@ -22555,6 +24283,15 @@ export default {
       this.getWordHighlightNodes(verseKey, activeIndex).forEach(node => {
         node.classList.add('highlighted')
         node.classList.add('phrase-highlighted')
+        if (
+          node.classList.contains('practice-focus-word')
+          || node.getAttribute?.('data-practice-focus') === 'true'
+          || this.isPracticeFocusWeakWord(verseKey, activeIndex)
+        ) {
+          node.classList.add('practice-focus-word')
+          node.classList.add('practice-focus-word--active')
+          node.setAttribute('data-practice-focus', 'true')
+        }
         nextNodes.add(node)
       })
       this.lastHighlightedWordNodes = Array.from(nextNodes)
@@ -23252,15 +24989,22 @@ export default {
           this.isDataReady = true
           this.isWorkspaceRefreshing = false
           this.workspaceRefreshReason = ''
+          if (this.readingViewMode === 'mushaf') {
+            this.ensureMadaniPagesLoaded().then(() => this.syncMushafPageToActiveVerse())
+          }
           return
         }
 
-        const [audioRes, translationRes, translitRes, arabicRes, tajweedRes] = await Promise.all([
+        const [audioRes, translationRes, translitRes, arabicRes, tajweedRes, wbwByNumber] = await Promise.all([
           getSurahEdition(chapterId, reciterId),
           getSurahEdition(chapterId, 'en.asad'),
           getSurahEdition(chapterId, 'en.transliteration'),
           getSurahEdition(chapterId, 'quran-uthmani'),
-          getSurahEditions(chapterId, reciterId)
+          getSurahEditions(chapterId, reciterId),
+          getChapterWordByWordMeanings(chapterId, rangeStart, rangeEnd).catch(error => {
+            console.warn('Word-by-word meanings unavailable:', error)
+            return new Map()
+          })
         ])
 
         if (requestId !== this.verseRequestId) return
@@ -23296,7 +25040,7 @@ export default {
 
             const arabicWords = tokenizeArabicText(arabic)
             const translitWords = String(transliteration).split(/\s+/).filter(Boolean)
-            const translationWords = String(translation).split(/\s+/).filter(Boolean)
+            const wbwWords = wbwByNumber.get(ayah.numberInSurah) || []
 
             return {
               key,
@@ -23309,9 +25053,9 @@ export default {
               audio: this.resolveAyahAudioUrl(ayah),
               words: arabicWords.map((word, index) => ({
                 ar: word,
-                en: translationWords[index] || '',
-                transliteration: translitWords[index] || '',
-                audio: null
+                en: wbwWords[index]?.en || '',
+                transliteration: wbwWords[index]?.transliteration || translitWords[index] || '',
+                audio: wbwWords[index]?.audio || null
               }))
             }
           })
@@ -23338,6 +25082,9 @@ export default {
 
         // Set ready after data loads
         this.isDataReady = true
+        if (this.readingViewMode === 'mushaf') {
+          this.ensureMadaniPagesLoaded({ force: true }).then(() => this.syncMushafPageToActiveVerse())
+        }
 
       } catch (e) {
         console.error('Error loading verses:', e)
@@ -24411,7 +26158,13 @@ export default {
         this.showTransliteration = !this.showTransliteration
         nextState = this.showTransliteration
       } else if (kind === 'wbw') {
-        return
+        this.showWordByWord = !this.showWordByWord
+        nextState = this.showWordByWord
+        if (nextState && this.fadingVerseEnabled) {
+          this.fadingVerseEnabled = false
+          this.showBanner(this.t('toasts.wordByWordModeFadingDisabled'), 'info', 2800)
+        }
+        this.clearMushafAyahHtmlCache()
       } else {
         return
       }
@@ -24424,7 +26177,11 @@ export default {
       const nextState = !!enabled
       if (kind === 'translation') this.showTranslation = nextState
       else if (kind === 'transliteration') this.showTransliteration = nextState
-      else return
+      else if (kind === 'wbw') {
+        this.showWordByWord = nextState
+        if (nextState && this.fadingVerseEnabled) this.fadingVerseEnabled = false
+        this.clearMushafAyahHtmlCache()
+      } else return
       this.syncSettingsDraft()
       this.persistUiState()
     },
@@ -24478,8 +26235,10 @@ export default {
       this.tajweedEnabled = !!next.tajweedEnabled
       this.showTranslation = !!next.showTranslation
       this.showTransliteration = !!next.showTransliteration
-      this.showWordByWord = false
+      this.showWordByWord = !!next.showWordByWord
       this.wordByWordAudioEnabled = true
+      if (this.showWordByWord && this.fadingVerseEnabled) this.fadingVerseEnabled = false
+      this.clearMushafAyahHtmlCache()
       this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(next.defaultFontSize || 100)))
       this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', this.defaultFontSize)
       this.persistVerseFontSizes()
@@ -24513,7 +26272,7 @@ export default {
           this.flowListenPlays = Math.max(0, Number(state.flowListenPlays || 0))
           this.showTranslation = state.showTranslation ?? this.showTranslation
           this.showTransliteration = state.showTransliteration ?? this.showTransliteration
-          this.showWordByWord = false
+          this.showWordByWord = !!state.showWordByWord
           this.wordByWordAudioEnabled = true
           this.readingViewMode = ['stacked', 'mushaf'].includes(state.readingViewMode)
             ? state.readingViewMode
