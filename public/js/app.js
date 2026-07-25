@@ -27245,9 +27245,9 @@ function loadMemorisationChunk() {
   return __webpack_require__.e(/*! import() | memorisation */ "memorisation").then(__webpack_require__.bind(__webpack_require__, /*! ./views/Memorisation.vue */ "./resources/js/views/Memorisation.vue")).then(function (mod) {
     if (typeof window !== 'undefined') {
       window.__MUTQIN_PRACTICE_COACH__ = 'v18';
-      window.__MUTQIN_AI_RECITE_UI__ = 'v48-clean-ui';
+      window.__MUTQIN_AI_RECITE_UI__ = 'v54-no-live-panel';
       document.documentElement.dataset.practiceCoach = 'v2';
-      document.documentElement.dataset.aiReciteUi = 'v48';
+      document.documentElement.dataset.aiReciteUi = 'v54';
     }
     return mod;
   })["catch"](function (error) {

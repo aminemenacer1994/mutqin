@@ -2,11 +2,15 @@ import { qcfFontFamily } from './qcfFontLoader.js'
 
 export const MADANI_LINES_PER_PAGE = 15
 export const MADANI_TOTAL_PAGES = 604
+export const MADANI_LAYOUT_VERSION = 3
 
-/** Chapters that print a standalone basmala line before ayah 1 (not Al-Fatihah, not At-Tawbah). */
+/**
+ * Standalone basmala before ayah 1 for every surah except Al-Fatihah
+ * (ayah 1 is the basmala) — including At-Tawbah per product requirement.
+ */
 export function chapterHasBismillahPre(chapterId) {
   const id = Number(chapterId)
-  return Number.isFinite(id) && id >= 2 && id !== 9
+  return Number.isFinite(id) && id >= 2
 }
 
 export function surahNameGlyphText(chapterId) {
@@ -60,76 +64,162 @@ export function normalizeMadaniWord(word = {}, verseKey = '') {
  * Detect which chapter (if any) begins on this Madani page.
  */
 export function findSurahStartOnPage(verses = []) {
+  return findAllSurahStartsOnPage(verses)[0] || null
+}
+
+/** Every surah that begins on this page, ordered by first ayah line. */
+export function findAllSurahStartsOnPage(verses = []) {
+  const starts = []
+  const seen = new Set()
+
   for (const verse of verses) {
     const key = String(verse?.verse_key || verse?.key || '')
     const match = key.match(/^(\d+):1$/)
     if (!match) continue
     const chapterId = Number(match[1])
+    if (seen.has(chapterId)) continue
+    seen.add(chapterId)
     const firstWord = (verse.words || []).find(w => Number(w?.position) === 1) || verse.words?.[0]
     const lineNumber = Number(firstWord?.line_number)
-    return {
+    starts.push({
       chapterId,
       verseKey: key,
       firstAyahLine: Number.isFinite(lineNumber) ? lineNumber : 1
-    }
+    })
   }
-  return null
+
+  return starts.sort((a, b) => a.firstAyahLine - b.firstAyahLine)
+}
+
+function lineIsOccupied(lineNumber, ayahLineMap, claimedLines) {
+  return lineNumber < 1 || ayahLineMap.has(lineNumber) || claimedLines.has(lineNumber)
 }
 
 /**
- * Build a full 15-line Madani page model with surah header / basmala injection.
+ * Place surah name (+ basmala) on the reserved Madani blank rows that sit
+ * immediately above the first ayah line. Falls back to packing directly
+ * before the ayah when those slots already hold ayah text.
+ */
+export function resolveSurahHeaderPlacement(start, ayahLineMap, claimedLines = new Set()) {
+  const firstAyahLine = Number(start?.firstAyahLine) || 1
+  const hasBasmalah = chapterHasBismillahPre(start?.chapterId)
+  const preferredNameLine = hasBasmalah ? firstAyahLine - 2 : firstAyahLine - 1
+  const preferredBasmalaLine = hasBasmalah ? firstAyahLine - 1 : null
+
+  const reservedFree = !lineIsOccupied(preferredNameLine, ayahLineMap, claimedLines)
+    && (preferredBasmalaLine == null || !lineIsOccupied(preferredBasmalaLine, ayahLineMap, claimedLines))
+
+  if (reservedFree) {
+    return {
+      chapterId: start.chapterId,
+      firstAyahLine,
+      surahNameLine: preferredNameLine,
+      basmalaLine: preferredBasmalaLine,
+      mode: 'reserved'
+    }
+  }
+
+  return {
+    chapterId: start.chapterId,
+    firstAyahLine,
+    surahNameLine: firstAyahLine,
+    basmalaLine: hasBasmalah ? firstAyahLine : null,
+    mode: 'inline'
+  }
+}
+
+/**
+ * Build a Madani page model with surah header + basmala before every surah start.
+ * Headers occupy the printed blank rows above the first ayah whenever possible,
+ * so surah transitions never leave empty bordered slots.
  */
 export function buildMadaniPageLayout(pageNumber, verses = [], options = {}) {
   const page = Math.max(1, Math.min(MADANI_TOTAL_PAGES, Number(pageNumber) || 1))
   const tajweed = !!options.tajweed
   const ayahLines = groupWordsByLine(verses)
   const ayahLineMap = new Map(ayahLines.map(line => [line.lineNumber, line]))
-  const surahStart = findSurahStartOnPage(verses)
+  const surahStarts = findAllSurahStartsOnPage(verses)
 
-  const decorative = []
-  if (surahStart) {
-    decorative.push({
-      lineNumber: Math.max(1, surahStart.firstAyahLine - (chapterHasBismillahPre(surahStart.chapterId) ? 2 : 1)),
-      type: 'surah_name',
-      chapterId: surahStart.chapterId,
-      glyphText: surahNameGlyphText(surahStart.chapterId),
-      words: []
-    })
-    if (chapterHasBismillahPre(surahStart.chapterId)) {
-      decorative.push({
-        lineNumber: Math.max(1, surahStart.firstAyahLine - 1),
-        type: 'basmala',
-        chapterId: surahStart.chapterId,
+  const claimedLines = new Set()
+  const placements = surahStarts.map(start => {
+    const placement = resolveSurahHeaderPlacement(start, ayahLineMap, claimedLines)
+    claimedLines.add(placement.surahNameLine)
+    if (placement.basmalaLine != null) claimedLines.add(placement.basmalaLine)
+    return placement
+  })
+
+  const surahNameByLine = new Map()
+  const basmalaByLine = new Map()
+  const inlineByLine = new Map()
+
+  for (const placement of placements) {
+    if (placement.mode === 'reserved') {
+      surahNameByLine.set(placement.surahNameLine, placement)
+      if (placement.basmalaLine != null) {
+        basmalaByLine.set(placement.basmalaLine, placement)
+      }
+    } else {
+      inlineByLine.set(placement.firstAyahLine, placement)
+    }
+  }
+
+  const maxLine = Math.max(
+    0,
+    ...ayahLines.map(line => line.lineNumber),
+    ...placements.map(placement => placement.firstAyahLine),
+    ...placements.map(placement => placement.surahNameLine),
+    ...[...basmalaByLine.keys()]
+  )
+
+  const lines = []
+  for (let lineNumber = 1; lineNumber <= maxLine; lineNumber += 1) {
+    const reservedSurah = surahNameByLine.get(lineNumber)
+    if (reservedSurah) {
+      lines.push({
+        lineNumber,
+        type: 'surah_name',
+        chapterId: reservedSurah.chapterId,
+        glyphText: surahNameGlyphText(reservedSurah.chapterId),
         words: []
       })
     }
-  }
 
-  const lines = []
-  for (let lineNumber = 1; lineNumber <= MADANI_LINES_PER_PAGE; lineNumber += 1) {
-    const deco = decorative.find(item => item.lineNumber === lineNumber)
-    if (deco) {
-      lines.push({ ...deco, lineNumber })
-      continue
+    const reservedBasmala = basmalaByLine.get(lineNumber)
+    if (reservedBasmala) {
+      lines.push({
+        lineNumber,
+        type: 'basmala',
+        chapterId: reservedBasmala.chapterId,
+        words: []
+      })
     }
+
+    const inlinePlacement = inlineByLine.get(lineNumber)
+    if (inlinePlacement) {
+      lines.push({
+        lineNumber,
+        type: 'surah_name',
+        chapterId: inlinePlacement.chapterId,
+        glyphText: surahNameGlyphText(inlinePlacement.chapterId),
+        words: []
+      })
+      if (inlinePlacement.basmalaLine != null) {
+        lines.push({
+          lineNumber,
+          type: 'basmala',
+          chapterId: inlinePlacement.chapterId,
+          words: []
+        })
+      }
+    }
+
     const ayahLine = ayahLineMap.get(lineNumber)
     if (ayahLine) {
       lines.push(ayahLine)
-      continue
     }
-    lines.push({
-      lineNumber,
-      type: 'empty',
-      words: []
-    })
   }
 
-  // Match printed/screenshot pages: drop trailing empty ruled rows after last content.
-  let lastContentIndex = lines.length - 1
-  while (lastContentIndex >= 0 && lines[lastContentIndex].type === 'empty') {
-    lastContentIndex -= 1
-  }
-  const visibleLines = lastContentIndex >= 0 ? lines.slice(0, lastContentIndex + 1) : lines
+  const visibleLines = lines.filter(line => line && line.type !== 'empty')
 
   const verseKeys = [...new Set(
     ayahLines.flatMap(line => line.words.map(word => word.verseKey).filter(Boolean))
@@ -137,13 +227,14 @@ export function buildMadaniPageLayout(pageNumber, verses = [], options = {}) {
 
   const firstVerse = verses[0] || null
   const firstKey = String(firstVerse?.verse_key || firstVerse?.key || verseKeys[0] || '')
-  const primaryChapterId = Number(firstKey.split(':')[0]) || surahStart?.chapterId || null
+  const primaryChapterId = Number(firstKey.split(':')[0]) || surahStarts[0]?.chapterId || null
   const juzNumber = Number(firstVerse?.juz_number)
     || Number(verses.find(verse => Number(verse?.juz_number) > 0)?.juz_number)
     || null
 
   return {
     pageNumber: page,
+    layoutVersion: MADANI_LAYOUT_VERSION,
     fontFamily: qcfFontFamily(page, { tajweed }),
     tajweed,
     lines: visibleLines,

@@ -23,7 +23,8 @@ import {
 } from '../scripts/lib/quranApis'
 import {
   buildMadaniPageLayout,
-  isVerseInteractiveOnPage
+  isVerseInteractiveOnPage,
+  MADANI_LAYOUT_VERSION
 } from '../scripts/mushaf/madaniPageLayout'
 import {
   loadQcfPageFont,
@@ -432,7 +433,7 @@ export default {
       verseFontSizes: {},
       defaultFontSize: 100,
       fontSizeStep: 10,
-      minFontSize: 100,
+      minFontSize: 70,
       maxFontSize: 280,
       tajweedEnabled: false,
       beginner: createBeginnerState(),
@@ -530,7 +531,7 @@ export default {
       ],
       tab: 'tools',
       showTools: false,
-      readingViewMode: 'stacked',
+      readingViewMode: 'mushaf',
       mushafPageIndex: 0,
       mushafBorder: 'classic',
       hoveredMushafVerseKey: '',
@@ -4324,14 +4325,13 @@ export default {
       return false
     },
     showSelfCheckLibraryShortcut() {
-      // Recordings library is permanently removed from AI Recite / self-check.
+      // Recordings library / manual self-assessment removed — AI Recite only.
       return false
     },
     showAiReciteStartCta() {
       if (!this.showSelfCheckModal || !this.selfCheckModalVerse) return false
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return false
       if (this.recitationCheckResult || this.recitationCheckError) return false
-      if (this.isSelfCheckRecording || this.selfCheckPreparing || this.selfCheckActiveDraft) return false
       return this.postSessionAiReciteActive || this.recitationCheckPanelOpen
     },
     recitationCheckTitle() {
@@ -4501,13 +4501,14 @@ export default {
       return this.selfCheckVerseRef || null
     },
     selfCheckModalTitle() {
-      if (this.postSessionAiReciteActive) {
-        return this.t('memorisation.reading.aiRecite')
-      }
       const targets = this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
         ? this.recitationCheckPendingTargets
         : (this.selfCheckModalVerse ? [this.selfCheckModalVerse] : [])
-      const prefix = this.recitationCheckPanelOpen || this.recitationCheckRecording || this.recitationCheckPreparing || this.recitationCheckResult
+      const prefix = this.postSessionAiReciteActive
+        || this.recitationCheckPanelOpen
+        || this.recitationCheckRecording
+        || this.recitationCheckPreparing
+        || this.recitationCheckResult
         ? 'AI Recite'
         : 'Self-Check'
       if (targets.length > 1) {
@@ -5639,11 +5640,11 @@ export default {
 
     quranFontFamily() {
       const fonts = {
-        amiri: "'Amiri', 'Noto Naskh Arabic', serif",
+        amiri: "'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', serif",
         naskh: "'Noto Naskh Arabic', 'Amiri', serif",
         scheherazade: "'Scheherazade New', 'Noto Naskh Arabic', serif",
         lateef: "'Lateef', 'Amiri', serif",
-        uthmanic: "'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif"
+        uthmanic: "'UthmanicHafs', 'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', serif"
       }
       return fonts[this.quranFont] || fonts.uthmanic
     },
@@ -6156,41 +6157,43 @@ export default {
         && !!this.madaniFontsReady?.[page.pageNumber]
         && isQcfFontLoaded(page.pageNumber, { tajweed: !!this.tajweedEnabled })
 
-      return lines.map(line => {
-        const words = (line.words || []).map(word => {
-          const verseKey = word.verseKey
-          const inSession = isVerseInteractiveOnPage(verseKey, sessionKeys)
-          const hasActiveReview = this.shouldShowRecitationReviewHighlights(verseKey)
-          const isActive = inSession && ((hasStarted && effectiveKey === verseKey) || hasActiveReview)
-          const useGlyph = useGlyphs && fontReady && !!word.codeV2
-          const html = useGlyph
-            ? (word.codeV2 || word.textQpc || '')
-            : (word.textQpc || word.codeV2 || '')
+      return lines
+        .filter(line => line && line.type !== 'empty')
+        .map((line, lineIndex) => {
+          const words = (line.words || []).map(word => {
+            const verseKey = word.verseKey
+            const inSession = isVerseInteractiveOnPage(verseKey, sessionKeys)
+            const hasActiveReview = this.shouldShowRecitationReviewHighlights(verseKey)
+            const isActive = inSession && ((hasStarted && effectiveKey === verseKey) || hasActiveReview)
+            const useGlyph = useGlyphs && fontReady && !!word.codeV2
+            const html = useGlyph
+              ? (word.codeV2 || word.textQpc || '')
+              : (word.textQpc || word.codeV2 || '')
+            return {
+              ...word,
+              html,
+              useGlyph,
+              inSession,
+              isActive,
+              isWeak: inSession && this.isWeakAyah(verseKey),
+              isMastered: inSession && this.isMasteredAyah(verseKey),
+              isBlurred: inSession && this.blurModeEnabled && this.isVerseBlurred(verseKey),
+              isPeekRevealed: inSession && this.isVersePeekRevealed(verseKey),
+              isPlayingAyah: inSession && this.activeVerseKey === verseKey && this.isPlaying,
+              isNew: inSession && this.isNewHifzAyah(verseKey),
+              isDue: inSession && this.isDueHifzAyah(verseKey),
+              isReviewPriority: inSession && this.isReviewPriorityAyah(verseKey)
+            }
+          })
           return {
-            ...word,
-            html,
-            useGlyph,
-            inSession,
-            isActive,
-            isWeak: inSession && this.isWeakAyah(verseKey),
-            isMastered: inSession && this.isMasteredAyah(verseKey),
-            isBlurred: inSession && this.blurModeEnabled && this.isVerseBlurred(verseKey),
-            isPeekRevealed: inSession && this.isVersePeekRevealed(verseKey),
-            isPlayingAyah: inSession && this.activeVerseKey === verseKey && this.isPlaying,
-            isNew: inSession && this.isNewHifzAyah(verseKey),
-            isDue: inSession && this.isDueHifzAyah(verseKey),
-            isReviewPriority: inSession && this.isReviewPriorityAyah(verseKey)
+            ...line,
+            key: `madani-${page.pageNumber}-line-${line.lineNumber}-${line.type}-${lineIndex}`,
+            fontFamily,
+            fontReady,
+            useGlyphs,
+            words
           }
         })
-        return {
-          ...line,
-          key: `madani-${page.pageNumber}-line-${line.lineNumber}`,
-          fontFamily,
-          fontReady,
-          useGlyphs,
-          words
-        }
-      })
     },
 
     mushafPaginationLabel() {
@@ -7501,7 +7504,7 @@ export default {
         showTransliteration: false,
         showWordByWord: false,
         wordByWordAudioEnabled: true,
-        readingViewMode: 'stacked'
+        readingViewMode: 'mushaf'
       }
     },
 
@@ -12301,7 +12304,7 @@ export default {
       this.blurIntensity = 10
       this.anchorModeEnabled = false
       this.anchorCount = 2
-      this.readingViewMode = 'stacked'
+      this.readingViewMode = 'mushaf'
       this.tab = 'tools'
       this.showTools = false
     },
@@ -13945,21 +13948,8 @@ export default {
       }
     },
     openRecordingsLibraryFromSelfCheck() {
-      const ayahKey = this.selfCheckVerseKey || this.selfCheckModalVerse?.key || ''
-      if (!ayahKey && !this.hasRecordingsLibraryEntries) {
-        this.showBanner(this.t('toasts.selectAnAyahBeforeOpeningThe'), 'info', 2200)
-        return
-      }
-      if (this.isSelfCheckRecording) {
-        this.showBanner(this.t('toasts.stopTheCurrentRecordingBeforeOpening'), 'info', 2200)
-        return
-      }
-      this.showSelfCheckModal = false
-      this.selfCheckPeekActive = false
-      this.pendingRecordingDeleteId = ''
-      this.stopRecordingsPlayback({ clearSource: true })
-      this.syncBodyScrollLock(false)
-      this.openRecordingsLibrary({ ayahKey, returnToSelfCheck: true })
+      // Manual / recordings library removed from AI Recite.
+      return
     },
     adjustSelfCheckFont(delta) {
       const next = Math.max(280, Math.min(420, Number(this.selfCheckFontSize || 320) + Number(delta || 0)))
@@ -13993,14 +13983,21 @@ export default {
       this.selfCheckPeekActive = false
     },
     getSelfCheckModalArabic(verse) {
-      if (!verse?.arabic) return ''
-      if (this.shouldShowRecitationReviewHighlights(verse.key)) {
-        return this.splitRecitationDisplayIntoWords(verse, { suppressMeanings: true })
+      const arabic = this.getPlainVerseArabicForCheck(verse)
+        || this.cleanRecitationDisplayText(verse?.arabic || verse?.arabic_tajweed || verse?.text || '')
+      if (!arabic) return ''
+      const enriched = {
+        ...verse,
+        arabic,
+        arabic_tajweed: verse?.arabic_tajweed || ''
       }
-      if (this.selfCheckTajweedEnabled && verse.arabic_tajweed) {
-        return this.renderWordLevelTajweedMarkup(verse, { suppressMeanings: true })
+      if (this.shouldShowRecitationReviewHighlights(enriched.key)) {
+        return this.splitRecitationDisplayIntoWords(enriched, { suppressMeanings: true }) || this.escapeHtml(arabic)
       }
-      return this.cleanRecitationDisplayText(verse.arabic)
+      if (this.selfCheckTajweedEnabled && enriched.arabic_tajweed) {
+        return this.renderWordLevelTajweedMarkup(enriched, { suppressMeanings: true }) || this.escapeHtml(arabic)
+      }
+      return this.cleanRecitationDisplayText(arabic)
     },
     getSelfCheckDisplayArabic(verse) {
       const targets = this.recitationCheckScope === 'session' && this.recitationCheckPendingTargets.length
@@ -14010,7 +14007,18 @@ export default {
       const rendered = []
       for (let index = 0; index < targets.length; index += 1) {
         const item = targets[index]
-        const canonical = { ...(this.getCanonicalVerseForCheck(item) || item), ...item }
+        const fromCanonical = this.getCanonicalVerseForCheck(item) || {}
+        // Canonical arabic wins — sparse session targets must not wipe text.
+        const canonical = {
+          ...item,
+          ...fromCanonical,
+          key: fromCanonical.key || item?.key || '',
+          number: fromCanonical.number || item?.number,
+          arabic: fromCanonical.arabic || item?.arabic || '',
+          arabic_tajweed: fromCanonical.arabic_tajweed || item?.arabic_tajweed || '',
+          sessionTargetKey: item?.sessionTargetKey || fromCanonical.sessionTargetKey || '',
+          sessionQueueIndex: item?.sessionQueueIndex ?? fromCanonical.sessionQueueIndex
+        }
         const html = this.getSelfCheckModalArabic(canonical)
         if (!html) continue
         const number = canonical?.number || String(canonical?.key || '').split(':')[1] || ''
@@ -17521,11 +17529,8 @@ export default {
       this.toggleRecitationCheckForVerse(this.selfCheckModalVerse, { prompt: false })
     },
     toggleManualSelfCheckRecording(verse) {
-      if (this.isSelfCheckRecording) {
-        this.stopSelfCheckRecording()
-        return
-      }
-      this.startSelfCheckRecording(verse)
+      // Manual self-assessment recording removed — AI Recite only.
+      if (verse?.key) this.openAiRecitationCheckForVerse(verse)
     },
     async startRecitationCheckRecording(targetVerse = null) {
       if (!this.supportsSelfCheckRecording()) {
@@ -18955,117 +18960,8 @@ export default {
       this.selfCheckStartedAt = 0
     },
     async startSelfCheckRecording(verse) {
-      if (!verse?.key) return
-      if (!this.supportsSelfCheckRecording()) {
-        this.selfCheckError = this.t('memorisation.selfCheckRecorder.unsupportedBrowser')
-        return
-      }
-      if (this.isSelfCheckRecording) return
-
-      this.loadRecordingsLibrary()
-      this.selfCheckModeChoiceVisible = false
-      this.selfCheckVerseRef = this.buildSelfCheckVerseRef(verse)
-      this.selfCheckVerseKey = verse.key
-      this.selfCheckFontSize = this.getSelfCheckInitialFontSize(verse)
-      this.showSelfCheckModal = true
-      this.selfCheckError = ''
-      this.selfCheckLastSavedAyahKey = ''
-      this.selfCheckDraft = null
-      this.clearRecitationReviewState()
-      this.selfCheckPreparing = true
-      this.selfCheckPreparingLabel = this.t('memorisation.aiCheck.preparingMic')
-      this.selfCheckSavedAttemptsVisible = false
-      this.selfCheckSavedAttemptsFilter = 'all'
-      this.selfCheckPermissionState = 'prompt'
-      this.selfCheckDiscardOnStop = false
-      this.selfCheckPeekActive = false
-      this.stopRecordingsPlayback({ clearSource: true })
-      if (this.audioElement && !this.audioElement.paused) {
-        this.audioElement.pause()
-        this.isPlaying = false
-      }
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        const mimeType = this.chooseRecorderMimeType()
-        this.selfCheckRecordingMimeType = mimeType
-        const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
-        this.selfCheckMediaStream = stream
-        this.selfCheckMediaRecorder = recorder
-        this.selfCheckChunks = []
-        this.selfCheckPermissionState = 'granted'
-
-        recorder.ondataavailable = event => {
-          if (event.data?.size) this.selfCheckChunks.push(event.data)
-        }
-        recorder.onerror = () => {
-          this.selfCheckError = this.t('memorisation.aiCheck.micStoppedUnexpectedly')
-          this.selfCheckPreparing = false
-          this.isSelfCheckRecording = false
-          this.cleanupSelfCheckMedia()
-        }
-        recorder.onstop = async () => {
-          await new Promise(resolve => queueMicrotask(resolve))
-          const durationSeconds = Math.max(1, Math.round((Date.now() - Number(this.selfCheckStartedAt || Date.now())) / 1000))
-          const chunks = [...this.selfCheckChunks]
-          const discard = this.selfCheckDiscardOnStop
-          this.selfCheckPreparing = false
-          this.isSelfCheckRecording = false
-          this.selfCheckDiscardOnStop = false
-          this.clearRecitationStartCue()
-
-          try {
-            if (!discard && chunks.length) {
-              this.selfCheckPreparing = true
-              this.selfCheckPreparingLabel = 'Processing recording…'
-              const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' })
-              if (!blob.size) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
-              const audioSrc = await this.createStableRecordingSrc(blob)
-              const persistedRating = this.selfCheckRatingsByAyahKey[verse.key] || 'Needs Review'
-              this.selfCheckDraft = {
-                id: `draft-${verse.key}-${Date.now()}`,
-                ayahKey: verse.key,
-                ayahNumber: verse.number,
-                chapterId: verse.chapterId,
-                chapterName: this.currentChapter?.name_simple || this.activeChapterName || `Surah ${verse.chapterId}`,
-                recordedAt: new Date().toISOString(),
-                durationSeconds,
-                result: normalizeRecordingResult(persistedRating),
-                audioSrc
-              }
-              this.selfCheckDraftAudioPlaying = false
-              this.selfCheckDraftAudioCurrentTime = 0
-              this.selfCheckDraftAudioDuration = 0
-              this.selfCheckSavedAttemptsVisible = false
-              this.showBanner(this.t('toasts.recordingReadyForAyah', { number: verse.number }), 'success', 1800)
-              this.scrollToSelfCheckReview()
-            } else if (discard) {
-              this.collapseSelfCheckReviewSection({ scrollTop: true })
-            }
-          } catch (error) {
-            console.error('Failed to process self-check recording:', error)
-            this.selfCheckError = 'The recording could not be prepared for review.'
-          } finally {
-            this.selfCheckPreparing = false
-            this.selfCheckPreparingLabel = ''
-            this.cleanupSelfCheckMedia()
-          }
-        }
-
-        recorder.start()
-        this.selfCheckStartedAt = Date.now()
-        this.isSelfCheckRecording = true
-        this.selfCheckPreparing = false
-        this.selfCheckPreparingLabel = ''
-        this.playRecitationStartCue({ inModal: true })
-      } catch (error) {
-        console.error('Failed to start self-check recording:', error)
-        this.selfCheckPermissionState = 'denied'
-        this.selfCheckPreparing = false
-        this.selfCheckPreparingLabel = ''
-        this.selfCheckError = this.t('memorisation.aiCheck.micBlocked')
-        this.cleanupSelfCheckMedia()
-      }
+      // Manual self-assessment recording removed — AI Recite only.
+      if (verse?.key) this.openAiRecitationCheckForVerse(verse)
     },
     stopSelfCheckRecording() {
       if (!this.selfCheckMediaRecorder || this.selfCheckMediaRecorder.state !== 'recording') return
@@ -19096,21 +18992,8 @@ export default {
       this.collapseSelfCheckReviewSection({ scrollTop: true })
     },
     restartSelfCheckRecording(verse) {
-      this.stopSelfCheckDraftAudio()
-      if (this.isSelfCheckRecording && this.selfCheckMediaRecorder) {
-        this.selfCheckDiscardOnStop = true
-        this.selfCheckPreparing = true
-        this.selfCheckPreparingLabel = 'Discarding recording…'
-        this.selfCheckMediaRecorder.stop()
-        window.setTimeout(() => {
-          this.startSelfCheckRecording(verse)
-        }, 120)
-        return
-      }
-      this.selfCheckDraft = null
-      this.selfCheckError = ''
-      this.scrollSelfCheckModalToTop()
-      this.startSelfCheckRecording(verse)
+      // Manual self-assessment removed — open AI Recite instead.
+      if (verse?.key) this.openAiRecitationCheckForVerse(verse)
     },
     setSelfCheckDraftResult(result) {
       if (!this.selfCheckDraft) return
@@ -20762,7 +20645,7 @@ export default {
     },
     setReadingViewMode(mode) {
       const allowedModes = ['stacked', 'mushaf']
-      const nextMode = allowedModes.includes(mode) ? mode : 'stacked'
+      const nextMode = allowedModes.includes(mode) ? mode : 'mushaf'
       if (this.readingViewMode === nextMode) {
         this.topCardMenuOpen = false
         this.fontDropdownOpen = false
@@ -20908,9 +20791,14 @@ export default {
     async ensureMadaniPageLoaded(pageNumber, options = {}) {
       const page = Math.max(1, Math.min(604, Number(pageNumber) || 0))
       if (!page) return null
-      if (!options.force && this.madaniPageLayouts?.[page]?.lines?.length) {
+      const cached = this.madaniPageLayouts?.[page]
+      if (
+        !options.force
+        && cached?.lines?.length
+        && Number(cached.layoutVersion) === MADANI_LAYOUT_VERSION
+      ) {
         await this.ensureMadaniFontForPage(page)
-        return this.madaniPageLayouts[page]
+        return cached
       }
 
       try {
@@ -21026,31 +20914,45 @@ export default {
       this.onVersePeekLeave(verse?.key)
     },
     increaseMushafFontSize() {
-      this.defaultFontSize = Math.min(this.maxFontSize, Number(this.defaultFontSize || 120) + this.fontSizeStep)
-      this.applyMushafFontSizeChange()
+      const current = Number(this.defaultFontSize || 100)
+      const next = Math.min(this.maxFontSize, current + Number(this.fontSizeStep || 10))
+      this.defaultFontSize = next
+      this.applyMushafFontSizeChange({ silent: false })
     },
     decreaseMushafFontSize() {
-      this.defaultFontSize = Math.max(this.minFontSize, Number(this.defaultFontSize || 120) - this.fontSizeStep)
-      this.applyMushafFontSizeChange()
+      const current = Number(this.defaultFontSize || 100)
+      const next = Math.max(this.minFontSize, current - Number(this.fontSizeStep || 10))
+      this.defaultFontSize = next
+      this.applyMushafFontSizeChange({ silent: false })
     },
     applyMushafFontSizeChange(options = {}) {
       const { silent = true } = options
-      this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(this.defaultFontSize || 120)))
-      const pageVerses = this.currentMushafPage?.verses || []
-      if (pageVerses.length) {
-        const nextVerseFontSizes = { ...this.verseFontSizes }
-        pageVerses.forEach(verse => {
-          if (verse?.key) delete nextVerseFontSizes[verse.key]
-        })
-        this.verseFontSizes = nextVerseFontSizes
-      }
+      const nextSize = Math.max(
+        this.minFontSize,
+        Math.min(this.maxFontSize, Number(this.defaultFontSize || 100))
+      )
+      this.defaultFontSize = nextSize
+      // Clear per-ayah overrides so mushaf page follows the shared size.
+      this.verseFontSizes = {}
       this.clearMushafAyahHtmlCache()
-      this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', this.defaultFontSize)
+      this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', nextSize)
+      if (this.settingsDraft && typeof this.settingsDraft === 'object') {
+        this.settingsDraft = {
+          ...this.settingsDraft,
+          defaultFontSize: nextSize
+        }
+      }
       this.syncSettingsDraft()
       this.persistVerseFontSizes()
       this.persistUiState()
+      this.$nextTick(() => {
+        const root = this.$refs.mushafViewport
+        if (root?.style) root.style.setProperty('--verse-font-percent', String(nextSize))
+        const sheet = root?.querySelector?.('.madani-page-sheet, .mushaf-page')
+        if (sheet?.style) sheet.style.setProperty('--verse-font-percent', String(nextSize))
+      })
       if (!silent) {
-        this.showBanner(this.t('toasts.fontSize', { defaultFontSize: this.defaultFontSize }), 'info', 600)
+        this.showBanner(this.t('toasts.fontSize', { defaultFontSize: nextSize }), 'info', 600)
       }
     },
     setMushafBorder(value) {
@@ -21378,7 +21280,9 @@ export default {
         : this.chainingMethod
       this.chainingRepetitions = Math.max(1, Math.min(5, Number(config.chainingRepetitions || this.chainingRepetitions || 1)))
       this.tajweedEnabled = !!config.tajweedEnabled
-      this.quranFont = config.quranFont || this.quranFont
+      this.quranFont = ['uthmanic', 'amiri', 'naskh', 'scheherazade', 'lateef'].includes(config.quranFont)
+        ? config.quranFont
+        : this.quranFont
       this.fontScale = Number(config.fontScale || 1)
       this.script = config.script || this.script
       this.showTranslation = config.showTranslation ?? this.showTranslation
@@ -23195,6 +23099,14 @@ export default {
       this.persistCentralSessionState()
       if (this.readingViewMode === 'mushaf') {
         this.rebuildCurrentMadaniLayoutsForTajweed()
+        if (this.quranFont === 'uthmanic') {
+          const page = this.currentMadaniPageNumber
+          if (page) {
+            this.madaniFontsReady = {}
+            this.ensureMadaniFontForPage(page)
+            this.prefetchAdjacentMadaniFonts(page)
+          }
+        }
       }
 
       this.showBanner(
@@ -23402,7 +23314,11 @@ export default {
       this.persistUiState()
       if (this.readingViewMode === 'mushaf' && fontValue === 'uthmanic') {
         const page = this.currentMadaniPageNumber
-        if (page) this.ensureMadaniFontForPage(page)
+        if (page) {
+          this.madaniFontsReady = { ...this.madaniFontsReady, [page]: false }
+          this.ensureMadaniFontForPage(page)
+          this.prefetchAdjacentMadaniFonts(page)
+        }
       }
     },
     getCurrentFontLabel() {
@@ -26190,10 +26106,14 @@ export default {
     },
 
     setQuranFont(font) {
-      this.quranFont = font
+      this.quranFont = ['uthmanic', 'amiri', 'naskh', 'scheherazade', 'lateef'].includes(font) ? font : 'uthmanic'
       this.script = 'uthmani'
       this.fontPickerOpen = false
       this.persistUiState()
+      if (this.readingViewMode === 'mushaf' && this.quranFont === 'uthmanic') {
+        const page = this.currentMadaniPageNumber
+        if (page) this.ensureMadaniFontForPage(page)
+      }
     },
 
     toggleFontPicker() {
@@ -26267,7 +26187,7 @@ export default {
           this.wordByWordAudioEnabled = true
           this.readingViewMode = ['stacked', 'mushaf'].includes(state.readingViewMode)
             ? state.readingViewMode
-            : 'stacked'
+            : 'mushaf'
           this.mushafPageIndex = Number.isFinite(Number(state.mushafPageIndex))
             ? Math.max(0, Number(state.mushafPageIndex))
             : 0
@@ -26320,7 +26240,9 @@ export default {
             defaultFontSize: Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
           }
           this.uiScale = Number(state.uiScale ?? this.uiScale)
-          this.quranFont = state.quranFont || this.quranFont
+          this.quranFont = ['uthmanic', 'amiri', 'naskh', 'scheherazade', 'lateef'].includes(state.quranFont)
+            ? state.quranFont
+            : 'uthmanic'
           this.script = state.script || this.script
           this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
           this.tajweedEnabled = state.tajweedEnabled ?? false

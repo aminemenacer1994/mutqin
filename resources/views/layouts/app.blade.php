@@ -30,8 +30,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-    <meta name="mutqin-build" content="v48-ai-recite-clean">
-    <style id="mutqin-ai-recite-force-v48">
+    <meta name="mutqin-build" content="v54-no-live-panel">
+    <style id="mutqin-ai-recite-force-v54">
       #mutqin-build-stamp {
         position: fixed !important;
         bottom: 10px !important;
@@ -45,46 +45,46 @@
         font: 700 12px/1.2 Inter, system-ui, sans-serif !important;
         pointer-events: none !important;
       }
+      .ai-recite-clean,
+      .ai-recite-clean-overlay,
       .recordings-library-overlay,
       .self-check-library-shortcut-btn:not(.self-check-back-to-session-btn),
-      .self-check-ayah-action-manual {
+      .self-check-ayah-action-manual,
+      .self-check-modal-overlay .self-check-mobile-recording-card,
+      .self-check-modal-overlay .recitation-live-review,
+      .self-check-modal-overlay .recitation-live-review-compact,
+      .self-check-modal-overlay .recitation-check-actions,
+      .self-check-modal-overlay .recitation-start-cue,
+      .self-check-modal-overlay .ai-recite-start-row {
         display: none !important;
       }
       .self-check-modal-overlay .ai-check-step-guide {
         display: none !important;
       }
-      .self-check-modal-overlay .self-check-modal-ayah-shell,
-      .self-check-modal-overlay .ai-recite-ayah-shell,
-      .self-check-modal-overlay .self-check-modal-ayah,
-      .self-check-modal-overlay .ai-recite-ayah,
-      .self-check-modal-overlay .session-evaluation-ayah,
-      .self-check-modal-overlay .recitation-review-ayah,
-      .self-check-modal-overlay .recitation-live-word-stream {
-        direction: rtl !important;
-        unicode-bidi: isolate !important;
-        text-align: right !important;
-      }
-      .self-check-modal-overlay .self-check-modal-ayah-shell,
-      .self-check-modal-overlay .ai-recite-ayah-shell,
-      .self-check-modal-overlay .self-check-modal-ayah,
-      .self-check-modal-overlay .ai-recite-ayah {
+      .self-check-modal-overlay .self-check-modal-ayah-shell {
         display: block !important;
-        width: 100% !important;
-        max-width: none !important;
-        min-height: 0 !important;
-        place-items: unset !important;
-        justify-content: unset !important;
-        align-items: unset !important;
-        align-content: unset !important;
-        text-wrap: unset !important;
+        min-height: 7.5rem !important;
+        padding: 1.1rem 1.15rem !important;
+        border-radius: 16px !important;
+        background: #ffffff !important;
+        border: 1px solid rgba(120, 80, 40, 0.12) !important;
+      }
+      .self-check-modal-overlay .self-check-modal-ayah,
+      .self-check-modal-overlay .self-check-modal-ayah .session-evaluation-ayah {
+        direction: rtl !important;
+        text-align: right !important;
+        color: #2c1d12 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
       }
     </style>
     <script>
       (function () {
-        var KEY = 'mutqin.force.ui.v48';
         try {
-          if (sessionStorage.getItem(KEY) === '1') return;
-          sessionStorage.setItem(KEY, '1');
+          Object.keys(sessionStorage).forEach(function (k) {
+            if (k.indexOf('mutqin.force') === 0) sessionStorage.removeItem(k);
+          });
+          sessionStorage.setItem('mutqin.force.ui.v54', '1');
         } catch (e) {}
         var tasks = [];
         if ('serviceWorker' in navigator) {
@@ -99,8 +99,8 @@
         }
         Promise.all(tasks).then(function () {
           var url = new URL(window.location.href);
-          if (url.searchParams.get('mutqin_force') === '48') return;
-          url.searchParams.set('mutqin_force', '48');
+          if (url.searchParams.get('mutqin_force') === '54') return;
+          url.searchParams.set('mutqin_force', '54');
           window.location.replace(url.toString());
         }).catch(function () {});
       })();
@@ -2813,7 +2813,7 @@
             @yield('content')
         </main>
     </div>
-    <div id="mutqin-build-stamp" aria-hidden="true">Mutqin build v48 · AI Recite clean</div>
+    <div id="mutqin-build-stamp" aria-hidden="true">Mutqin build v54 · no live panel</div>
 
     <script src="{{ mix('js/app.js') }}" defer></script>
     

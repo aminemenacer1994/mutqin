@@ -59,7 +59,7 @@ const baqarahPageVerses = [
 
 assert.equal(chapterHasBismillahPre(1), false)
 assert.equal(chapterHasBismillahPre(2), true)
-assert.equal(chapterHasBismillahPre(9), false)
+assert.equal(chapterHasBismillahPre(9), true)
 assert.equal(surahNameGlyphText(1), '001surah')
 assert.equal(surahNameGlyphText(2), '002surah')
 assert.equal(qcfFontFamily(1), 'p1-v2')
@@ -80,6 +80,7 @@ const fatihahLayout = buildMadaniPageLayout(1, fatihahPageVerses)
 assert.equal(fatihahLayout.pageNumber, 1)
 assert.equal(fatihahLayout.fontFamily, 'p1-v2')
 assert.equal(fatihahLayout.lines[0].type, 'surah_name')
+assert.equal(fatihahLayout.lines[0].lineNumber, 1)
 assert.equal(fatihahLayout.lines[0].glyphText, '001surah')
 assert.equal(fatihahLayout.lines[1].type, 'ayah')
 assert.equal(fatihahLayout.lines[1].words[0].verseKey, '1:1')
@@ -91,10 +92,41 @@ assert.equal(fatihahLayout.primaryChapterId, 1)
 
 const baqarahLayout = buildMadaniPageLayout(2, baqarahPageVerses)
 assert.equal(baqarahLayout.lines[0].type, 'surah_name')
+assert.equal(baqarahLayout.lines[0].lineNumber, 1)
 assert.equal(baqarahLayout.lines[0].chapterId, 2)
 assert.equal(baqarahLayout.lines[1].type, 'basmala')
+assert.equal(baqarahLayout.lines[1].lineNumber, 2)
 assert.equal(baqarahLayout.lines[2].type, 'ayah')
+assert.equal(baqarahLayout.lines[2].lineNumber, 3)
 assert.equal(baqarahLayout.lines[2].words[0].codeV2, 'ALIF')
+
+const surahTransitionVerses = [
+  {
+    verse_key: '98:8',
+    verse_number: 8,
+    page_number: 599,
+    words: [
+      { position: 1, char_type_name: 'word', code_v2: 'A', text_qpc_hafs: 'جَزَاؤُهُمْ', line_number: 5, page_number: 599 },
+      { position: 2, char_type_name: 'end', code_v2: 'E8', text_qpc_hafs: '٨', line_number: 5, page_number: 599 }
+    ]
+  },
+  {
+    verse_key: '99:1',
+    verse_number: 1,
+    page_number: 599,
+    words: [
+      { position: 1, char_type_name: 'word', code_v2: 'B', text_qpc_hafs: 'إِذَا', line_number: 8, page_number: 599 },
+      { position: 2, char_type_name: 'end', code_v2: 'E1', text_qpc_hafs: '١', line_number: 8, page_number: 599 }
+    ]
+  }
+]
+const transitionLayout = buildMadaniPageLayout(599, surahTransitionVerses)
+assert.deepEqual(
+  transitionLayout.lines.map(line => `${line.lineNumber}:${line.type}`),
+  ['5:ayah', '6:surah_name', '7:basmala', '8:ayah']
+)
+assert.ok(transitionLayout.lines.every(line => line.type !== 'empty'))
+assert.equal(transitionLayout.lines[1].chapterId, 99)
 
 assert.deepEqual(madaniPageRange(2, 4), [2, 3, 4])
 assert.deepEqual(
