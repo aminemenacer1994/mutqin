@@ -2307,7 +2307,10 @@
     gap: 0.15rem !important;
   }
 
-  .main.mushaf-mode-active .mushaf-shell__size-value,
+  .main.mushaf-mode-active .mushaf-shell__size-value {
+    display: none !important;
+  }
+
   .main.mushaf-mode-active .mushaf-shell__pager-label {
     font-size: 0.65rem !important;
     min-width: 2.2rem !important;
@@ -3058,6 +3061,21 @@
     display: none !important;
   }
 
+  /* Pills + toggles are hidden on mobile — drop empty bottom chrome */
+  .workspace-shell-bottom,
+  .workspace-shell-bottom-pills,
+  .workspace-shell-metadata,
+  .workspace-shell-compact-meta {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+  }
+
+  .workspace-shell {
+    padding-bottom: 0.7rem !important;
+  }
+
   .workspace-shell-head {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
@@ -3106,6 +3124,7 @@
 
   .top-card-icon-controls .top-card-layout-icons,
   .top-card-icon-controls .top-card-font-wrap,
+  .top-card-icon-controls .top-card-controls-wrap,
   .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
     align-items: center !important;
@@ -3119,6 +3138,11 @@
     flex: 0 0 36px !important;
     position: relative !important;
     pointer-events: auto !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
   }
 
   .top-card-icon-controls .top-card-icon-control,
@@ -3126,7 +3150,8 @@
   .top-card-icon-controls .top-card-ellipsis,
   .top-card-icon-controls .view-mode-btn,
   .top-card-icon-controls .font-dropdown-trigger,
-  .top-card-icon-controls .workspace-layout-btn {
+  .top-card-icon-controls .workspace-layout-btn,
+  .top-card-icon-controls .action-btn.top-card-controls-trigger {
     flex: 0 0 36px !important;
     inline-size: 36px !important;
     block-size: 36px !important;
@@ -3139,9 +3164,29 @@
     padding: 0 !important;
     margin: 0 !important;
     border-radius: 999px !important;
+    border-width: 1px !important;
+    box-sizing: border-box !important;
     gap: 0 !important;
+    line-height: 1 !important;
+    font-size: 1rem !important;
     pointer-events: auto !important;
     cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .top-card-icon-controls .top-card-icon-control i,
+  .top-card-icon-controls .view-mode-btn i,
+  .top-card-icon-controls .font-dropdown-trigger i,
+  .top-card-icon-controls .top-card-controls-trigger i,
+  .top-card-icon-controls .top-card-ellipsis i {
+    font-size: 1.05rem !important;
+    line-height: 1 !important;
+    width: 1em !important;
+    height: 1em !important;
   }
 
   .top-card-icon-controls .view-mode-btn span,
@@ -3167,8 +3212,11 @@
     display: none !important;
   }
 
-  .verses-grid .verse-actions:has(.verse-ai-check-btn) {
-    grid-template-columns: 36px !important;
+  .verses-grid .verse-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    grid-template-columns: none !important;
   }
 
   /* Compact translation / transliteration */
@@ -3230,7 +3278,7 @@
     -webkit-text-fill-color: #f3ebe1 !important;
   }
 
-  /* Mushaf: hide focus/AI toolbar buttons; fix side crop */
+  /* Mushaf: hide focus/AI/layout/controls; keep page fully inside container */
   .main.mushaf-mode-active .mushaf-shell__focus-toggle,
   .main.mushaf-mode-active .mushaf-shell__btn[aria-label*="AI"],
   .main.mushaf-mode-active .mushaf-shell__btn[title*="AI"],
@@ -3247,24 +3295,62 @@
     display: none !important;
   }
 
+  .main.mushaf-mode-active .mushaf-workspace,
+  .main.mushaf-mode-active .mushaf-workspace__fluid {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-inline: auto !important;
+    padding-inline: 0 !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-workspace__fluid {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell,
   .main.mushaf-mode-active .mushaf-shell__page,
   .main.mushaf-mode-active .mushaf-page,
   .main.mushaf-mode-active .madani-ornate,
   .main.mushaf-mode-active .madani-ornate__frame,
-  .main.mushaf-mode-active .madani-ornate__inner,
-  .main.mushaf-mode-active .madani-page-sheet,
-  .main.mushaf-mode-active .madani-line {
-    overflow: visible !important;
+  .main.mushaf-mode-active .madani-ornate__inner {
+    width: 100% !important;
     max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
     box-sizing: border-box !important;
   }
 
+  .main.mushaf-mode-active .mushaf-shell {
+    margin-inline: auto !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__page {
+    display: flex !important;
+    justify-content: center !important;
+    overflow-y: auto !important;
+  }
+
   .main.mushaf-mode-active .madani-ornate__inner {
-    padding-inline: 0.55rem !important;
+    padding-inline: 0.45rem !important;
   }
 
   .main.mushaf-mode-active .madani-page-sheet {
-    padding-inline: 0.2rem !important;
+    max-width: 100% !important;
+    margin-inline: auto !important;
+    padding-inline: 0.15rem !important;
+    overflow-x: hidden !important;
+    transform-origin: top center !important;
+    box-sizing: border-box !important;
+  }
+
+  .main.mushaf-mode-active .madani-line {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .main.mushaf-mode-active .madani-word--out {
@@ -3273,21 +3359,29 @@
 
   .main.mushaf-mode-active .mushaf-shell__size {
     gap: 0 !important;
-    transform: scale(0.88);
-    transform-origin: inline-start center;
   }
 
-  .main.mushaf-mode-active .mushaf-shell__size-value {
-    font-size: 0.58rem !important;
-    min-width: 1.85rem !important;
+  .main.mushaf-mode-active .mushaf-shell__size-value,
+  .verse-font-size-value {
+    display: none !important;
+  }
+
+  .verse-font-size-control,
+  .verse-font-size-control--mobile {
+    display: inline-flex !important;
   }
 
   .main.mushaf-mode-active .mushaf-shell__btn,
   .main.mushaf-mode-active .mushaf-shell__btn--icon {
-    min-inline-size: 30px !important;
-    min-block-size: 30px !important;
-    inline-size: 30px !important;
-    block-size: 30px !important;
+    min-inline-size: 40px !important;
+    min-block-size: 40px !important;
+    inline-size: 40px !important;
+    block-size: 40px !important;
+    font-size: 1.05rem !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__btn i {
+    font-size: 1.15rem !important;
   }
 
   /* Offcanvas: setup structured list */
@@ -3579,8 +3673,8 @@
   /* End session progress block dark mode */
   [data-theme="dark"] .session-exit-modal .session-exit-progress-block,
   [data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-block {
-    background: color-mix(in srgb, var(--zone-elevated, #2a241c) 88%, #12100c 12%) !important;
-    border-color: color-mix(in srgb, var(--border, #5a4a3a) 70%, transparent) !important;
+    background: #2a241c !important;
+    border-color: rgba(232, 210, 180, 0.22) !important;
   }
 
   [data-theme="dark"] .session-exit-modal .session-exit-progress-summary,
@@ -3594,5 +3688,323 @@
   .verses-grid .verse-number.verse-ayah-pill {
     display: inline-flex !important;
     order: -2;
+  }
+}
+
+/* ==== FINAL mobile overrides (win against earlier 4-col rules) ==== */
+@media (max-width: 767.98px) {
+  /* Offcanvas: force single-column structured lists */
+  .app .tools-body .sheet-content > .field-stack,
+  .app .tools-body .sheet-content > .field-stack-compact,
+  .app .tools-body .setup-field-list,
+  .app .tools-body .sheet .sheet-content .field-stack,
+  .app .tools-body .sheet .sheet-content .field-stack-compact {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    gap: 0.7rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .app .tools-body .sheet-content > .field-stack > .field,
+  .app .tools-body .sheet-content > .field-stack-compact > .field,
+  .app .tools-body .setup-field-list > .field,
+  .app .tools-body .setup-field-row,
+  .app .tools-body .sheet .sheet-content .field {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .app .tools-body .setup-field-row {
+    padding: 0.7rem 0.75rem !important;
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent) !important;
+    border-radius: 0.7rem !important;
+    background: color-mix(in srgb, var(--zone-elevated, #2a241c) 92%, transparent) !important;
+  }
+
+  .app .tools-body .setup-field-row .select,
+  .app .tools-body .setup-field-row .input,
+  .app .tools-body .setup-field-row .range,
+  .app .tools-body .setup-field-row .range-control,
+  .app .tools-body .setup-field-row .radio-group,
+  .app .tools-body .setup-field-row .field-hint,
+  .app .tools-body .sheet .sheet-content .select,
+  .app .tools-body .sheet .sheet-content .input,
+  .app .tools-body .sheet .sheet-content .range-control,
+  .app .tools-body .sheet .sheet-content .radio-group,
+  .app .tools-body .sheet .sheet-content .techniques-choice-group,
+  .app .tools-body .sheet .sheet-content .technique-description,
+  .app .tools-body .sheet .sheet-content .technique-best,
+  .app .tools-body .sheet .sheet-content .technique-description span,
+  .app .tools-body .sheet .sheet-content .technique-best span,
+  .app .tools-body .sheet .sheet-content .field-hint {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;
+  }
+
+  .app .tools-body .sheet .sheet-content .technique-description,
+  .app .tools-body .sheet .sheet-content .technique-best {
+    display: flex !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    align-self: stretch !important;
+  }
+
+  .app .tools-body .sheet .sheet-content .radio-group,
+  .app .tools-body .sheet .sheet-content .techniques-choice-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.4rem !important;
+  }
+
+  .app .tools-body .saved-sessions-list,
+  .app .tools-body .saved-sessions-list.list-group {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 0 !important;
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent) !important;
+    border-radius: 0.55rem !important;
+    overflow: hidden !important;
+  }
+
+  .app .tools-body .saved-sessions-list .saved-session-row,
+  .app .tools-body .saved-sessions-list .list-group-item {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 0.5rem !important;
+    padding: 0.75rem 0.85rem !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent) !important;
+    border-radius: 0 !important;
+  }
+
+  /* Stacked verse header: Ayah pill left, play right */
+  .app .verses-grid .verse-header {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.5rem !important;
+    grid-template-columns: none !important;
+  }
+
+  .app .verses-grid .verse-badges {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    min-width: 0 !important;
+  }
+
+  .app .verses-grid .verse-number,
+  .app .verses-grid .verse-number.verse-ayah-pill {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 1.7rem !important;
+    padding: 0.22rem 0.65rem !important;
+    border-radius: 999px !important;
+    background: var(--accent, #c48a4a) !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    max-width: none !important;
+    order: -3 !important;
+  }
+
+  .app .verses-grid .verse-actions {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: auto !important;
+    margin-left: auto !important;
+    justify-content: flex-end !important;
+  }
+
+  /* Translation title > content */
+  .app .verses-grid .verse-aid-title {
+    display: block !important;
+    font-size: 0.88rem !important;
+    font-weight: 740 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    color: var(--accent, #c48a4a) !important;
+    margin-bottom: 0.3rem !important;
+  }
+
+  .app .verses-grid .verse-translation.verse-aid,
+  .app .verses-grid .verse-transliteration.verse-aid,
+  .app .verses-grid .verse-aid {
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+    width: 100% !important;
+  }
+
+  /* Force 130% ayah sizing */
+  .app .verses-grid .verse-arabic,
+  .app .verses-grid .verse-arabic-primary,
+  .app .verses-grid .verse-arabic-with-end {
+    --verse-font-percent: 130 !important;
+    font-size: calc(1.3 * clamp(1.3rem, 5.6vw, 1.9rem)) !important;
+    line-height: 1.65 !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-page-sheet,
+  .app .main.mushaf-mode-active .madani-word,
+  .app .main.mushaf-mode-active .madani-line {
+    --verse-font-percent: 145 !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-word,
+  .app .main.mushaf-mode-active .madani-word--glyph,
+  .app .main.mushaf-mode-active .madani-word--unicode,
+  .app .main.mushaf-mode-active .madani-word--fallback {
+    font-size: calc(1.45 * clamp(1.12rem, 4.6vw, 1.72rem)) !important;
+    padding-inline: 0.08em !important;
+    letter-spacing: 0.014em !important;
+    word-spacing: 0.1em !important;
+  }
+
+  /* Mushaf: contain + space lines; JS scales to fit */
+  .app .main.mushaf-mode-active .mushaf-shell__page {
+    overflow-x: hidden !important;
+    padding-inline: 0.55rem !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-ornate,
+  .app .main.mushaf-mode-active .madani-ornate__frame {
+    overflow: hidden !important;
+    max-width: 100% !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-ornate__inner {
+    overflow: hidden !important;
+    padding: 0.7rem 0.55rem 0.85rem !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-page-sheet {
+    width: 100% !important;
+    max-width: none !important;
+    transform-origin: top center !important;
+    overflow: visible !important;
+    gap: 0.28rem !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-line--ayah,
+  .app .main.mushaf-mode-active .madani-line--glyphs {
+    overflow: visible !important;
+    padding-block: 0.3em !important;
+    padding-inline: 0.15em !important;
+    letter-spacing: 0.02em !important;
+    line-height: 1.75 !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
+  .app .main.mushaf-mode-active .madani-word--end.madani-word--fallback,
+  .app .main.mushaf-mode-active .madani-word--end {
+    margin-inline: 0.5em 0.48em !important;
+  }
+
+  .app .verses-grid .verse-arabic .verse-ayah-end-number,
+  .app .verses-grid .verse-arabic-with-end .verse-ayah-end-number {
+    margin-inline: 0.55em 0.3em !important;
+  }
+
+  .app .verses-grid .verse-font-size-control {
+    display: inline-flex !important;
+  }
+
+  .app .verses-grid .verse-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    flex-wrap: nowrap !important;
+  }
+
+  /* Mini player always renderable + themed text */
+  .app .player-dock {
+    z-index: 13000 !important;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .app .player-bar {
+    display: block !important;
+  }
+
+  .app .player-bar .player-main {
+    display: none !important;
+  }
+
+  .app .player-bar .player-mini,
+  .app .player-bar.compact .player-mini {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    min-height: 48px !important;
+  }
+
+  .app .player-mini .player-chapter,
+  .app .player-mini .player-verse {
+    color: var(--text) !important;
+    -webkit-text-fill-color: var(--text) !important;
+    opacity: 1 !important;
+  }
+
+  [data-theme="dark"] .app .player-mini .player-chapter,
+  [data-theme="dark"] .app .player-mini .player-verse,
+  [data-theme="dark"] .app .playback-pill-copy strong,
+  [data-theme="dark"] .app .playback-pill-copy small {
+    color: #f3ebe1 !important;
+    -webkit-text-fill-color: #f3ebe1 !important;
+  }
+
+  [data-theme="light"] .app .player-mini .player-chapter {
+    color: #1f1812 !important;
+    -webkit-text-fill-color: #1f1812 !important;
+  }
+
+  [data-theme="light"] .app .player-mini .player-verse {
+    color: rgba(72, 54, 38, 0.78) !important;
+    -webkit-text-fill-color: rgba(72, 54, 38, 0.78) !important;
+  }
+
+  /* End-session progress readable in dark mode */
+  [data-theme="dark"] .app .session-exit-progress-block,
+  [data-theme="dark"] .app .session-exit-modal .session-exit-progress-block,
+  [data-theme="dark"] .app .mutqin-modal-surface.session-exit-modal .session-exit-progress-block {
+    background: #2a241c !important;
+    border: 1px solid rgba(232, 210, 180, 0.24) !important;
+  }
+
+  [data-theme="dark"] .app .session-exit-progress-summary,
+  [data-theme="dark"] .app .session-exit-progress-summary--ayah {
+    color: #f3ebe1 !important;
+    -webkit-text-fill-color: #f3ebe1 !important;
   }
 }

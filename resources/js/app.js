@@ -53,11 +53,12 @@ const MemorisationLoadError = {
 function loadMemorisationChunk(attempt = 0) {
     return import(/* webpackChunkName: "memorisation" */ './views/Memorisation.vue').then((mod) => {
         if (typeof window !== 'undefined') {
-            window.__MUTQIN_PRACTICE_COACH__ = 'v22';
-            window.__MUTQIN_AI_RECITE_UI__ = 'v63';
+            window.__MUTQIN_PRACTICE_COACH__ = 'v24';
+            window.__MUTQIN_AI_RECITE_UI__ = 'v71';
             document.documentElement.dataset.practiceCoach = 'v2';
-            document.documentElement.dataset.aiReciteUi = 'v63';
-            document.documentElement.dataset.stackedAyahEnd = 'v4';        }
+            document.documentElement.dataset.aiReciteUi = 'v71';
+            document.documentElement.dataset.stackedAyahEnd = 'v5';
+            document.documentElement.dataset.mutqinUi = 'v70';        }
         return mod;
     }).catch((error) => {
         const name = String(error?.name || '');

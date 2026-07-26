@@ -27238,11 +27238,12 @@ function loadMemorisationChunk() {
   var attempt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
   return __webpack_require__.e(/*! import() | memorisation */ "memorisation").then(__webpack_require__.bind(__webpack_require__, /*! ./views/Memorisation.vue */ "./resources/js/views/Memorisation.vue")).then(function (mod) {
     if (typeof window !== 'undefined') {
-      window.__MUTQIN_PRACTICE_COACH__ = 'v22';
-      window.__MUTQIN_AI_RECITE_UI__ = 'v63';
+      window.__MUTQIN_PRACTICE_COACH__ = 'v24';
+      window.__MUTQIN_AI_RECITE_UI__ = 'v71';
       document.documentElement.dataset.practiceCoach = 'v2';
-      document.documentElement.dataset.aiReciteUi = 'v63';
-      document.documentElement.dataset.stackedAyahEnd = 'v4';
+      document.documentElement.dataset.aiReciteUi = 'v71';
+      document.documentElement.dataset.stackedAyahEnd = 'v5';
+      document.documentElement.dataset.mutqinUi = 'v70';
     }
     return mod;
   })["catch"](function (error) {
@@ -47259,7 +47260,7 @@ module.exports = JSON.parse('{"common":{"on":"On","off":"Off","reset":"Reset","s
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
-/******/ 			return "js/" + chunkId + ".js";
+/******/ 			return "js/" + chunkId + "." + {"memorisation":"db3b72ee","resources_js_locales_ar_json":"c6d25c16","resources_js_locales_es_json":"dd349ed5","resources_js_locales_fr_json":"01d08651","resources_js_locales_id_json":"0164e28a","resources_js_locales_tr_json":"6f36aead","resources_js_locales_ur_json":"c0978a55"}[chunkId] + ".js";
 /******/ 		};
 /******/ 	})();
 /******/ 	

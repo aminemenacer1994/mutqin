@@ -8,9 +8,9 @@ mix.js('resources/js/app.js', 'public/js')
    })
    .webpackConfig({
        output: {
-           // Stable chunk name. Cache bust via mix.version() on app.js + no-store headers.
-           // Contenthashed chunk names raced with `mix watch` and blanked the workspace.
-           chunkFilename: 'js/[name].js'
+           // Contenthash so browsers cannot keep a stale memorisation chunk forever.
+           // (Stable `memorisation.js` was cached indefinitely by Safari/Chrome.)
+           chunkFilename: 'js/[name].[contenthash:8].js'
        }
    })
    .version();

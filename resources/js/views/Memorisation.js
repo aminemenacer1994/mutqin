@@ -412,7 +412,7 @@ export default {
       topCardLayoutSubmenuOpen: false,
       openVerseActionKey: '',
       verseFontSizes: {},
-      defaultFontSize: 100,
+      defaultFontSize: 150,
       fontSizeStep: 10,
       minFontSize: 70,
       maxFontSize: 280,
@@ -753,7 +753,7 @@ export default {
         showTransliteration: false,
         showWordByWord: false,
         wordByWordAudioEnabled: true,
-        defaultFontSize: 100
+        defaultFontSize: 150
       },
 
       // Quiz state
@@ -7167,34 +7167,102 @@ export default {
 
     applyMobileLayoutFontDefault(mode = this.readingViewMode) {
       if (!this.isMobileViewport()) return
-      const next = 130
-      if (Number(this.defaultFontSize) === next) return
-      this.defaultFontSize = next
+      // Pin mobile ayah size higher for readable mushaf + stacked cards.
+      if (Number(this.defaultFontSize) !== 150) this.defaultFontSize = 150
+      if (this.settingsDraft && Number(this.settingsDraft.defaultFontSize) !== 150) {
+        this.settingsDraft.defaultFontSize = 150
+      }
     },
 
     scheduleMadaniPageFit() {
       if (typeof window === 'undefined') return
       if (this._madaniFitRaf) window.cancelAnimationFrame(this._madaniFitRaf)
+      if (this._madaniFitTimers?.length) {
+        this._madaniFitTimers.forEach((id) => window.clearTimeout(id))
+      }
+      this._madaniFitTimers = []
       this._madaniFitRaf = window.requestAnimationFrame(() => {
         this._madaniFitRaf = null
         this.fitMadaniPageToViewport()
+        // Re-fit after glyph fonts / layout settle so long lines do not stay cropped.
+        ;[120, 360, 900].forEach((ms) => {
+          this._madaniFitTimers.push(window.setTimeout(() => this.fitMadaniPageToViewport(), ms))
+        })
       })
     },
 
     fitMadaniPageToViewport() {
       if (!this.isMobileViewport() || this.readingViewMode !== 'mushaf') return
       const viewport = this.$refs.mushafViewport
+      const shell = viewport?.closest?.('.mushaf-shell') || viewport?.closest?.('.mushaf-workspace__fluid')
       const sheet = viewport?.querySelector?.('.madani-page-sheet')
       if (!viewport || !sheet) return
-      sheet.style.removeProperty('--madani-fit-scale')
+
       sheet.style.removeProperty('transform')
-      const available = Math.max(0, viewport.clientWidth - 24)
-      const needed = Math.max(sheet.scrollWidth, sheet.clientWidth)
+      sheet.style.removeProperty('zoom')
+      sheet.style.removeProperty('--madani-fit-scale')
+      sheet.style.removeProperty('width')
+      sheet.style.removeProperty('margin-inline')
+
+      const lines = sheet.querySelectorAll('.madani-line--ayah, .madani-line--glyphs, .madani-line--surah_name, .madani-line--basmala')
+      let needed = 0
+      lines.forEach((line) => {
+        // Force scrollWidth to reflect overflowing nowrap content (visible overflow
+        // often reports scrollWidth === clientWidth and skips scaling).
+        const prevOverflow = line.style.overflow
+        const prevWhiteSpace = line.style.whiteSpace
+        line.style.overflow = 'scroll'
+        line.style.whiteSpace = 'nowrap'
+        needed = Math.max(needed, Number(line.scrollWidth || 0))
+
+        try {
+          const range = document.createRange()
+          range.selectNodeContents(line)
+          const rects = range.getClientRects()
+          for (let i = 0; i < rects.length; i += 1) {
+            needed = Math.max(needed, Number(rects[i].width || 0))
+          }
+          range.detach?.()
+        } catch (_) { /* ignore */ }
+
+        if (prevOverflow) line.style.overflow = prevOverflow
+        else line.style.removeProperty('overflow')
+        if (prevWhiteSpace) line.style.whiteSpace = prevWhiteSpace
+        else line.style.removeProperty('white-space')
+      })
+
+      const measureEl = shell || viewport
+      const measureStyles = typeof window !== 'undefined' ? window.getComputedStyle(measureEl) : null
+      const padX = measureStyles
+        ? (parseFloat(measureStyles.paddingLeft) || 0) + (parseFloat(measureStyles.paddingRight) || 0)
+        : 0
+      const available = Math.max(0, measureEl.clientWidth - padX - 16)
       if (!available || !needed) return
-      const scale = Math.min(1, available / needed)
-      sheet.style.setProperty('--madani-fit-scale', String(Number(scale.toFixed(4))))
-      sheet.style.transform = `scale(${scale})`
+
+      // Only scale down when content is actually wider than the container.
+      if (needed <= available + 1) {
+        const parent = sheet.parentElement
+        if (parent) parent.style.minHeight = ''
+        viewport.style.overflowX = 'hidden'
+        if (shell) shell.style.overflowX = 'hidden'
+        return
+      }
+
+      const scale = Math.min(1, Math.max(0.48, available / needed))
+      const rounded = Number(scale.toFixed(4))
+      sheet.style.setProperty('--madani-fit-scale', String(rounded))
       sheet.style.transformOrigin = 'top center'
+      sheet.style.transform = `scale(${rounded})`
+      sheet.style.width = `${(100 / rounded).toFixed(3)}%`
+      sheet.style.marginInline = 'auto'
+
+      const parent = sheet.parentElement
+      if (parent) {
+        parent.style.minHeight = `${Math.ceil(sheet.getBoundingClientRect().height)}px`
+        parent.style.overflowX = 'hidden'
+      }
+      viewport.style.overflowX = 'hidden'
+      if (shell) shell.style.overflowX = 'hidden'
     },
 
     resolveCsrfToken() {
@@ -9672,14 +9740,8 @@ export default {
     },
 
     getDisplayArabic(verse) {
-      if (!verse || !verse.arabic) return ''
-
-      // Word-aware rendering supports both plain and tajweed-marked Arabic.
-      if (this.showWordByWord || this.anchorModeEnabled || this.wordByWordAudioEnabled) {
-        return this.splitArabicIntoWords(verse)
-      }
-
-      // Fallback to plain Arabic
+      // Canonical implementation lives later in methods (stacked end-marker aware).
+      if (!verse?.arabic) return ''
       return this.stripTajweedMarkup(verse.arabic || '')
     },
 
@@ -14193,7 +14255,7 @@ export default {
       }
     },
     getSelfCheckInitialFontSize(verse) {
-      const verseFont = Number(this.getVerseFontSize(verse?.key) || this.defaultFontSize || 120)
+      const verseFont = Number(this.getVerseFontSize(verse?.key) || this.defaultFontSize || 150)
       return Math.max(280, Math.min(420, verseFont + 120))
     },
     openSelfCheckModal(verse) {
@@ -19381,7 +19443,7 @@ export default {
         wordByWordAudioEnabled: !!this.wordByWordAudioEnabled,
         defaultFontSize: Math.max(
           this.minFontSize,
-          Math.min(this.maxFontSize, Number(this.defaultFontSize || 100))
+          Math.min(this.maxFontSize, Number(this.defaultFontSize || 150))
         )
       }
     },
@@ -21261,13 +21323,13 @@ export default {
       this.onVersePeekLeave(verse?.key)
     },
     increaseMushafFontSize() {
-      const current = Number(this.defaultFontSize || 100)
+      const current = Number(this.defaultFontSize || 150)
       const next = Math.min(this.maxFontSize, current + Number(this.fontSizeStep || 10))
       this.defaultFontSize = next
       this.applyMushafFontSizeChange({ silent: false })
     },
     decreaseMushafFontSize() {
-      const current = Number(this.defaultFontSize || 100)
+      const current = Number(this.defaultFontSize || 150)
       const next = Math.max(this.minFontSize, current - Number(this.fontSizeStep || 10))
       this.defaultFontSize = next
       this.applyMushafFontSizeChange({ silent: false })
@@ -21276,7 +21338,7 @@ export default {
       const { silent = true } = options
       const nextSize = Math.max(
         this.minFontSize,
-        Math.min(this.maxFontSize, Number(this.defaultFontSize || 100))
+        Math.min(this.maxFontSize, Number(this.defaultFontSize || 150))
       )
       this.defaultFontSize = nextSize
       // Clear per-ayah overrides so mushaf page follows the shared size.
@@ -21297,6 +21359,7 @@ export default {
         if (root?.style) root.style.setProperty('--verse-font-percent', String(nextSize))
         const sheet = root?.querySelector?.('.madani-page-sheet, .mushaf-page')
         if (sheet?.style) sheet.style.setProperty('--verse-font-percent', String(nextSize))
+        this.scheduleMadaniPageFit()
       })
       if (!silent) {
         this.showBanner(this.t('toasts.fontSize', { defaultFontSize: nextSize }), 'info', 600)
@@ -23733,7 +23796,7 @@ export default {
     },
 
     resetDefaultFontSize() {
-      this.defaultFontSize = 100
+      this.defaultFontSize = 150
       this.updateDefaultFontSize()
     },
 
@@ -23796,7 +23859,7 @@ export default {
     },
 
     getVerseFontSize(verseKey) {
-      const size = this.verseFontSizes[verseKey] || this.defaultFontSize || 120
+      const size = this.verseFontSizes[verseKey] || this.defaultFontSize || 150
       // Ensure size is within bounds
       return Math.max(this.minFontSize, Math.min(this.maxFontSize, size))
     },
@@ -23861,8 +23924,8 @@ export default {
             this.defaultFontSize = parsed
           }
         } else {
-          this.defaultFontSize = 100
-          this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', 100)
+          this.defaultFontSize = 150
+          this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', 150)
         }
       } catch (e) {
         console.error('Failed to load font sizes:', e)
@@ -26533,7 +26596,7 @@ export default {
       this.wordByWordAudioEnabled = true
       if (this.showWordByWord && this.fadingVerseEnabled) this.fadingVerseEnabled = false
       this.clearMushafAyahHtmlCache()
-      this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(next.defaultFontSize || 100)))
+      this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(next.defaultFontSize || 150)))
       this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', this.defaultFontSize)
       this.persistVerseFontSizes()
       this.persistUiState()
@@ -26601,7 +26664,7 @@ export default {
             ? state.gapBetweenVerses
             : this.gapBetweenVerses
           this.customGapSeconds = Math.max(0.5, Math.min(10, Number(state.customGapSeconds || this.customGapSeconds || 2)))
-          this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
+          this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 150)
           this.fontScale = Math.max(0.9, Math.min(1.2, Number(state.fontScale ?? this.fontScale ?? 1)))
           this.enScale = this.fontScale
           this.quizType = ['mixed', 'flashcard', 'mcq', 'audio_mcq', 'blank'].includes(state.quizType)
@@ -26621,7 +26684,7 @@ export default {
             showTransliteration: state.showTransliteration ?? this.showTransliteration,
             showWordByWord: state.showWordByWord ?? this.showWordByWord,
             wordByWordAudioEnabled: state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled,
-            defaultFontSize: Number(state.defaultFontSize ?? this.defaultFontSize ?? 100)
+            defaultFontSize: Number(state.defaultFontSize ?? this.defaultFontSize ?? 150)
           }
           this.uiScale = Number(state.uiScale ?? this.uiScale)
           this.quranFont = ['uthmanic', 'amiri', 'naskh', 'scheherazade', 'lateef'].includes(state.quranFont)

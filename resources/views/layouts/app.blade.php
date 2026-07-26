@@ -75,13 +75,16 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v66';
-        var FORCE = '66';
+        var BUILD = 'v71';
+        var FORCE = '71';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
         try {
           if (localStorage.getItem(STORE) === BUILD) return;
+          Object.keys(localStorage).forEach(function (k) {
+            if (k.indexOf('mutqin.asset') === 0) localStorage.removeItem(k);
+          });
           Object.keys(sessionStorage).forEach(function (k) {
             if (k.indexOf('mutqin.force') === 0) sessionStorage.removeItem(k);
           });
@@ -123,22 +126,22 @@
     {{-- Survives stale memorisation JS chunks: HTML is network-first / not JS-chunk-cached --}}
     <style id="mutqin-button-colour-semantics">
       :root {
-        --bs-danger: #b55041;
-        --bs-danger-rgb: 181, 80, 65;
+        --bs-danger: #d49186;
+        --bs-danger-rgb: 212, 145, 134;
         --success: #2e7d64;
         --success-strong: #23624e;
-        --danger: #b55041;
-        --danger-strong: #9a4336;
+        --danger: #d49186;
+        --danger-strong: #c97f74;
         --destructive: var(--danger);
         --destructive-strong: var(--danger-strong);
       }
       [data-theme="dark"] {
-        --bs-danger: #d4786a;
-        --bs-danger-rgb: 212, 120, 106;
+        --bs-danger: #e0a79c;
+        --bs-danger-rgb: 224, 167, 156;
         --success: #3f8f6f;
         --success-strong: #2f6f58;
-        --danger: #d4786a;
-        --danger-strong: #c45f50;
+        --danger: #e0a79c;
+        --danger-strong: #d49186;
       }
       .app .mutqin-modal-btn--primary,
       .app .btn-primary,
@@ -183,16 +186,123 @@
       .app .session-exit-action-chip--end,
       .app .workspace-shell-actions .action-btn-exit {
         color: #fff !important;
-        background: var(--bs-danger, #b55041) !important;
-        border-color: var(--bs-danger, #b55041) !important;
+        background: #d49186 !important;
+        border-color: #d49186 !important;
+      }
+      .app .action-btn-exit:hover,
+      .app .action-btn.mutqin-btn--destructive:hover,
+      .app .workspace-shell-actions .action-btn-exit:hover {
+        background: #c97f74 !important;
+        border-color: #c97f74 !important;
       }
     </style>
+    <style id="mutqin-memorisation-hotfix-v70">
+      /* Network-first hotfix — beats stale cached memorisation.js CSS */
+      #mutqin-ui-build-pill {
+        position: fixed;
+        z-index: 2147483000;
+        inset-inline-start: 10px;
+        bottom: 10px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #1c1917;
+        color: #fffdf9;
+        font: 700 11px/1 system-ui, sans-serif;
+        letter-spacing: 0.02em;
+        pointer-events: none;
+        opacity: 0.92;
+        box-shadow: 0 6px 18px rgba(0,0,0,.22);
+      }
+      @media (max-width: 767.98px) {
+        .app .workspace-shell-bottom,
+        .app .workspace-shell-bottom-pills,
+        .app .workspace-shell-reading-toggles,
+        .app .workspace-shell-compact-meta {
+          display: none !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        .app .workspace-shell {
+          padding-bottom: 0.7rem !important;
+        }
+        .app .top-card-icon-controls {
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 0.3rem !important;
+        }
+        .app .top-card-icon-controls .top-card-layout-icons,
+        .app .top-card-icon-controls .top-card-font-wrap,
+        .app .top-card-icon-controls .top-card-controls-wrap,
+        .app .top-card-icon-controls .top-card-menu-wrap {
+          width: 36px !important;
+          height: 36px !important;
+          min-width: 36px !important;
+          min-height: 36px !important;
+          max-width: 36px !important;
+          max-height: 36px !important;
+          flex: 0 0 36px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          box-sizing: border-box !important;
+        }
+        .app .top-card-icon-controls .top-card-icon-control,
+        .app .top-card-icon-controls .top-card-controls-trigger,
+        .app .top-card-icon-controls .top-card-ellipsis,
+        .app .top-card-icon-controls .view-mode-btn,
+        .app .top-card-icon-controls .font-dropdown-trigger,
+        .app .top-card-icon-controls .workspace-layout-btn {
+          width: 36px !important;
+          height: 36px !important;
+          min-width: 36px !important;
+          min-height: 36px !important;
+          max-width: 36px !important;
+          max-height: 36px !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          border-radius: 999px !important;
+          box-sizing: border-box !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+        .app .verses-grid .verse-ai-check-btn,
+        .app .verses-grid .verse-ai-recite-btn {
+          display: none !important;
+        }
+        .app .main.mushaf-mode-active .mushaf-shell__btn--icon,
+        .app .main.mushaf-mode-active .mushaf-shell__btn {
+          width: 40px !important;
+          height: 40px !important;
+          min-width: 40px !important;
+          min-height: 40px !important;
+        }
+        .app .main.mushaf-mode-active .mushaf-shell__page,
+        .app .main.mushaf-mode-active .madani-ornate__inner {
+          overflow-x: hidden !important;
+        }
+        .app .main.mushaf-mode-active .madani-word--end,
+        .app .verse-arabic .verse-ayah-end-number {
+          margin-inline: 0.5em 0.35em !important;
+        }
+      }
+      .app.main.mushaf-mode-active,
+      .app .main.mushaf-mode-active.container-fluid,
+      .app .main.mushaf-mode-active .mushaf-workspace {
+        width: 100% !important;
+        max-width: none !important;
+      }
+    </style>
+    <div id="mutqin-ui-build-pill" aria-hidden="true">UI v70</div>
     <script>
-      // Re-assert colour lock after Vue injects chunk CSS (beats stale cached chunks).
+      // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          var el = document.getElementById('mutqin-button-colour-semantics');
-          if (el && el.parentNode) el.parentNode.appendChild(el);
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v70'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el && el.parentNode) el.parentNode.appendChild(el);
+          });
         }
         window.addEventListener('load', function () {
           pin();

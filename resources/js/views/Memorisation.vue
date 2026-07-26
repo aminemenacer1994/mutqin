@@ -30,10 +30,7 @@
     </div>
 
     <!-- Main Content -->
-    <div v-if="appReady && isLoggedIn" class="main" :class="{
-      'w-100': readingViewMode === 'mushaf',
-      'container-fluid': readingViewMode === 'mushaf',
-      'container': readingViewMode !== 'mushaf',
+    <div v-if="appReady && isLoggedIn" class="main container" :class="{
       'tools-open': showTools,
       'player-visible': playbackShellActive,
       'playback-pill-visible': playbackPillVisible,
@@ -190,17 +187,19 @@
                     </div>
                   </transition>
                 </div>
-                <div
-                  class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger top-card-icon-control"
-                  role="button"
-                  tabindex="0"
-                  @click="openAdvancedControls"
-                  @keydown.enter.prevent="openAdvancedControls"
-                  @keydown.space.prevent="openAdvancedControls"
-                  :title="t('memorisation.open_controls')"
-                  :aria-label="t('memorisation.open_controls')"
-                >
-                  <i class="bi bi-sliders" aria-hidden="true"></i>
+                <div class="top-card-controls-wrap">
+                  <div
+                    class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger top-card-icon-control"
+                    role="button"
+                    tabindex="0"
+                    @click="openAdvancedControls"
+                    @keydown.enter.prevent="openAdvancedControls"
+                    @keydown.space.prevent="openAdvancedControls"
+                    :title="t('memorisation.open_controls')"
+                    :aria-label="t('memorisation.open_controls')"
+                  >
+                    <i class="bi bi-sliders" aria-hidden="true"></i>
+                  </div>
                 </div>
                 <div class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
                   <div
@@ -224,7 +223,7 @@
                       @click.stop="toggleReadingOption('translation')"
                     >
                       <i class="bi bi-translate" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.reading.translation') }}</span>
+                      <span>{{ readingViewMode === 'mushaf' ? 'English translation' : t('memorisation.reading.translation') }}</span>
                       <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
                     <button
@@ -300,7 +299,10 @@
             {{ t('memorisation.techniques.chooseChainingMethod') }}
           </button>
         </p>
-        <div v-if="hasVerses" class="workspace-shell-bottom">
+        <div
+          v-if="hasVerses && (topCardMetadataPills.length || !isMobileViewport())"
+          class="workspace-shell-bottom"
+        >
           <!-- Source-guard reference: class="workspace-header-view-controls quick-right-controls" -->
           <div
             v-if="topCardMetadataPills.length"
@@ -459,6 +461,7 @@
               </div>
             </section>
             <div v-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace">
+              <div class="container-fluid mushaf-workspace__fluid px-0">
               <section
                 class="mushaf-shell"
                 :class="{ 'is-madani-skin': isMadaniMushafSkin }"
@@ -467,23 +470,22 @@
               >
                 <header class="mushaf-shell__bar" :aria-label="t('memorisation.a11y.mushafTools')">
                   <div class="mushaf-shell__bar-group">
-                    <div class="mushaf-shell__size" role="group" :aria-label="t('memorisation.a11y.decreaseFontSize')">
+                    <div class="mushaf-shell__size" role="group" :aria-label="t('common.fontSize')">
                       <button
                         type="button"
                         class="mushaf-shell__btn mushaf-shell__btn--icon"
                         @click.stop.prevent="decreaseMushafFontSize"
-                        :disabled="Number(defaultFontSize || 100) <= minFontSize"
+                        :disabled="Number(defaultFontSize || 150) <= minFontSize"
                         :title="t('memorisation.a11y.decreaseFontSize')"
                         :aria-label="t('memorisation.a11y.decreaseFontSize')"
                       >
                         <i class="bi bi-dash-lg" aria-hidden="true"></i>
                       </button>
-                      <span class="mushaf-shell__size-value" aria-live="polite">{{ defaultFontSize }}%</span>
                       <button
                         type="button"
                         class="mushaf-shell__btn mushaf-shell__btn--icon"
                         @click.stop.prevent="increaseMushafFontSize"
-                        :disabled="Number(defaultFontSize || 100) >= maxFontSize"
+                        :disabled="Number(defaultFontSize || 150) >= maxFontSize"
                         :title="t('memorisation.a11y.increaseFontSize')"
                         :aria-label="t('memorisation.a11y.increaseFontSize')"
                       >
@@ -495,66 +497,9 @@
                   <div class="mushaf-shell__bar-group mushaf-shell__bar-group--end">
                     <button
                       type="button"
-                      class="mushaf-shell__btn mushaf-shell__btn--icon mushaf-shell__controls-btn"
-                      @click.stop="openAdvancedControls"
-                      :title="t('memorisation.a11y.sessionControls')"
-                      :aria-label="t('memorisation.a11y.openSessionControls')"
-                    >
-                      <i class="bi bi-sliders" aria-hidden="true"></i>
-                    </button>
-                    <div class="mushaf-toolbar-dropdown mushaf-layout-dropdown">
-                      <button
-                        type="button"
-                        class="mushaf-shell__btn mushaf-shell__btn--icon"
-                        :class="{ 'is-active': mushafLayoutMenuOpen || isMadaniMushafSkin }"
-                        @click.stop="toggleMushafLayoutMenu"
-                        :aria-expanded="mushafLayoutMenuOpen ? 'true' : 'false'"
-                        :aria-haspopup="true"
-                        :aria-label="t('memorisation.a11y.mushafLayoutMenu')"
-                        :title="t('memorisation.a11y.mushafLayoutMenu')"
-                      >
-                        <i class="bi bi-journal-richtext" aria-hidden="true"></i>
-                      </button>
-                      <div
-                        v-if="mushafLayoutMenuOpen"
-                        class="mushaf-layout-menu"
-                        role="menu"
-                        :aria-label="t('memorisation.a11y.mushafLayoutMenu')"
-                        @click.stop
-                      >
-                        <span class="mushaf-layout-menu__label">{{ t('memorisation.a11y.mushafLayoutMenu') }}</span>
-                        <button
-                          v-for="layout in mushafLayoutOptions"
-                          :key="layout.id"
-                          type="button"
-                          class="mushaf-layout-option"
-                          :class="{ 'is-active': (activeMadaniSkin || 'standard') === layout.id }"
-                          role="menuitemradio"
-                          :aria-checked="(activeMadaniSkin || 'standard') === layout.id ? 'true' : 'false'"
-                          @click="setMushafUiSkin(layout.id)"
-                        >
-                          <span class="mushaf-layout-option__swatches" aria-hidden="true">
-                            <span
-                              v-for="(swatch, swatchIndex) in layout.swatches"
-                              :key="`${layout.id}-${swatchIndex}`"
-                              class="mushaf-layout-option__swatch"
-                              :style="{ background: swatch }"
-                            ></span>
-                          </span>
-                          <span>{{ layout.label }}</span>
-                          <i
-                            v-if="(activeMadaniSkin || 'standard') === layout.id"
-                            class="bi bi-check2 mushaf-layout-option__check"
-                            aria-hidden="true"
-                          ></i>
-                        </button>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
                       class="mushaf-shell__btn mushaf-shell__btn--icon"
                       :class="{ 'is-active': tajweedEnabled }"
-                      @click.stop="mushafLayoutMenuOpen = false; toggleTajweed()"
+                      @click.stop="toggleTajweed()"
                       :aria-pressed="tajweedEnabled ? 'true' : 'false'"
                       :aria-label="t('memorisation.a11y.toggleTajweed')"
                       :title="t('memorisation.a11y.tajweedLabel')"
@@ -809,8 +754,9 @@
                     </div>
 
                     <div
-                      v-if="mushafAidVerse && (showTransliteration || showWordByWord || activeWordTooltip)"
+                      v-if="mushafAidVerse && (showTranslation || showTransliteration || showWordByWord || activeWordTooltip)"
                       class="mushaf-verse-aids"
+                      :class="{ 'mushaf-verse-aids--translation': showTranslation && mushafAidVerse.translation }"
                     >
                       <div v-if="activeWordTooltip?.text" class="mushaf-word-tooltip" dir="ltr" lang="en">
                         {{ activeWordTooltip.text }}
@@ -831,6 +777,19 @@
                           <span v-if="word.en" class="mushaf-wbw-chip__en" dir="ltr" lang="en">{{ word.en }}</span>
                         </button>
                       </div>
+                      <div
+                        v-if="showTranslation && mushafAidVerse.translation"
+                        class="mushaf-translation-panel verse-aid-block"
+                        dir="ltr"
+                        lang="en"
+                      >
+                        <div class="verse-aid-title">
+                          <i class="bi bi-translate" aria-hidden="true"></i>
+                          <span>English translation</span>
+                          <em v-if="mushafAidVerse.number">Āyah {{ mushafAidVerse.number }}</em>
+                        </div>
+                        <div class="verse-translation verse-aid mushaf-translation-text">{{ mushafAidVerse.translation }}</div>
+                      </div>
                       <div v-if="showTransliteration && mushafAidVerse.transliteration" class="verse-aid-block" dir="ltr" lang="en">
                         <div class="verse-aid-title">{{ t('memorisation.reading.transliteration') }}</div>
                         <div class="verse-transliteration verse-aid">{{ mushafAidVerse.transliteration }}</div>
@@ -839,6 +798,7 @@
                   </article>
                 </div>
               </section>
+              </div>
             </div>
             <div v-else-if="shouldShowReadingWorkspace" class="verses-grid">
               <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{
@@ -871,24 +831,28 @@
                     >{{ t('memorisation.postSession.coach.live.focusBadge') }}</span>
                   </div>
                   <div class="verse-actions">
-                    <button v-if="showAiMemorisationButton" class="verse-self-check-btn verse-ai-check-btn"
-                      :class="{ active: shouldShowRecitationReviewHighlights(verse.key) && aiMemorisationCheckerVerseKey === verse.key }"
-                      @click.stop="openAiMemorisationCheckerForVerse(verse)"
-                      :disabled="aiMemorisationCheckerPreparing || aiMemorisationCheckerRecording || !supportsSelfCheckRecording()"
-                      title="Open AI memorisation checker for this ayah">
-                      <i class="bi bi-eye-slash" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.reading.aiRecite') }}</span>
-                    </button>
-
-                    <button class="verse-self-check-btn verse-ai-check-btn verse-ai-recite-btn"
-                      :class="{ active: isRecitationCheckTargetVerse(verse.key), saved: getAyahRecordingCount(verse.key) }"
-                      @click.stop="openAiRecitationCheckForVerse(verse)"
-                      :disabled="recitationCheckPreparing || recitationCheckRecording || !supportsSelfCheckRecording()"
-                      :title="isRecitationCheckTargetVerse(verse.key) ? 'AI recitation check is active' : 'Open AI recitation check for this ayah'">
-                      <i class="bi bi-stars" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.reading.aiRecite') }}</span>
-                      <em v-if="getAyahRecordingCount(verse.key)">{{ getAyahRecordingCount(verse.key) }}</em>
-                    </button>
+                    <div class="verse-font-size-control verse-font-size-control--mobile" role="group" :aria-label="t('common.fontSize')">
+                      <button
+                        type="button"
+                        class="verse-inline-action-btn verse-font-size-btn"
+                        @click.stop="decreaseVerseFont(verse.key, $event)"
+                        :disabled="getVerseFontSize(verse.key) <= minFontSize"
+                        :title="t('memorisation.a11y.decreaseFontSize')"
+                        :aria-label="t('memorisation.a11y.decreaseFontSize')"
+                      >
+                        <i class="bi bi-dash-lg" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="verse-inline-action-btn verse-font-size-btn"
+                        @click.stop="increaseVerseFont(verse.key, $event)"
+                        :disabled="getVerseFontSize(verse.key) >= maxFontSize"
+                        :title="t('memorisation.a11y.increaseFontSize')"
+                        :aria-label="t('memorisation.a11y.increaseFontSize')"
+                      >
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                      </button>
+                    </div>
                     <button class="verse-inline-action-btn verse-inline-play-btn" type="button"
                       @click.stop="playAyahCardAudio(verse)"
                       :disabled="!resolveAyahAudioUrl(verse)"
