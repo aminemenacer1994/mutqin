@@ -889,6 +889,7 @@
                 :aria-label="`Open ayah ${verse.number}${isVerseVisuallyActive(verse.key) ? ', active ayah' : ''}`">
                 <div class="verse-header">
                   <div class="verse-badges">
+                    <span class="verse-number">Ayah {{ verse.number }}</span>
                     <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge verse-status-badge-active">{{ t('memorisation.badges.active') }}</span>
                     <span v-if="isNewHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-new">{{ t('memorisation.badges.new') }}</span>
                     <span v-if="isDueHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-due">{{ t('memorisation.due') }}</span>
@@ -945,36 +946,21 @@
                   </ul>
                 </div>
 
-                <div
-                  v-if="verse.arabic && isDataReady"
-                  class="verse-arabic-with-end"
-                  dir="rtl"
-                  lang="ar"
-                  :style="{ '--verse-font-percent': getVerseFontSize(verse.key) }"
-                >
-                  <div class="verse-arabic verse-arabic-primary" @click.stop
-                    :key="`ar-${verse.key}-${practiceFocusSignature}`"
-                    v-html="getDisplayArabic(verse)" :class="{
-                      'tajweed-enabled': tajweedEnabled,
-                      'word-highlight-enabled': true,
-                      'word-by-word-meanings': showWordByWord,
-                      'verse-weak': isWeakAyah(verse.key),
-                      'verse-mastered': isMasteredAyah(verse.key),
-                      'verse-practice-focus': getPracticeFocusWordsForVerse(verse.key).length > 0,
-                      'recitation-word-review-active': shouldShowRecitationReviewHighlights(verse.key)
-                    }" :style="{
-                      '--verse-font-percent': getVerseFontSize(verse.key),
-                      'font-family': quranFontFamily
-                    }">
-                  </div>
-                  <span
-                    class="verse-ayah-end-number"
-                    :class="`verse-ayah-number-digits-${Math.min(3, String(verse.number || '').length || 1)}`"
-                    :style="getMushafAyahNumberStyle(verse.number)"
-                    :aria-label="getMushafAyahNumberAriaLabel(verse.number)"
-                  >
-                    <span class="verse-ayah-end-number__digit" aria-hidden="true">{{ formatEasternAyahNumber(verse.number) }}</span>
-                  </span>
+                <div class="verse-arabic verse-arabic-primary" dir="rtl" lang="ar" v-if="verse.arabic && isDataReady"
+                  @click.stop
+                  :key="`ar-${verse.key}-${practiceFocusSignature}`"
+                  v-html="getDisplayArabic(verse)" :class="{
+                    'tajweed-enabled': tajweedEnabled,
+                    'word-highlight-enabled': true,
+                    'word-by-word-meanings': showWordByWord,
+                    'verse-weak': isWeakAyah(verse.key),
+                    'verse-mastered': isMasteredAyah(verse.key),
+                    'verse-practice-focus': getPracticeFocusWordsForVerse(verse.key).length > 0,
+                    'recitation-word-review-active': shouldShowRecitationReviewHighlights(verse.key)
+                  }" :style="{
+                    '--verse-font-percent': getVerseFontSize(verse.key),
+                    'font-family': quranFontFamily
+                  }">
                 </div>
 
                 <!-- Keep in-workspace aids available, but visually quieter -->

@@ -461,7 +461,6 @@
   }
 
   .verse-arabic-wrap,
-  .verse-arabic-with-end,
   .verse-arabic,
   .verse-arabic-primary,
   .verse-aid,
@@ -470,16 +469,6 @@
     inline-size: 100%;
     min-inline-size: 0;
     max-inline-size: 100%;
-  }
-
-  .verse-arabic-with-end {
-    display: block !important;
-    margin: 8px 0 !important;
-    padding: 8px 4px 10px !important;
-    border-radius: 14px;
-    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(1.55rem, 7.2vw, 2.35rem)) !important;
-    line-height: 1.35 !important;
-    text-align: right !important;
   }
 
   .verse-arabic,
@@ -503,40 +492,8 @@
     text-align: right !important;
   }
 
-  /* Keep ayah number glued to the last word of the ayah on mobile stacked */
-  .verse-arabic-with-end > .verse-arabic,
-  .verse-arabic-with-end > .verse-arabic.verse-arabic-primary,
-  .verse-arabic-with-end > .verse-arabic.word-by-word-meanings {
-    display: inline !important;
-    width: auto !important;
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: transparent !important;
-    font-size: inherit !important;
-    line-height: inherit !important;
-  }
-
-  .verse-arabic-with-end > .verse-ayah-end-number {
-    display: inline-flex !important;
-    vertical-align: middle;
-    margin-inline: 0.32em 0.02em !important;
-    min-width: 1.4em;
-    min-height: 1.4em;
-    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(0.72rem, 3.4vw, 0.9rem)) !important;
-  }
-
   .verse-arabic.word-by-word-meanings {
     line-height: 1.15 !important;
-  }
-
-  .verse-arabic-with-end > .verse-arabic.word-by-word-meanings {
-    line-height: 1.15 !important;
-  }
-
-  .verse-arabic-with-end > .verse-arabic.word-by-word-meanings ~ .verse-ayah-end-number {
-    vertical-align: top;
-    margin-block-start: 0.12em;
   }
 
   .verse-arabic :where(.wbw-word, word),

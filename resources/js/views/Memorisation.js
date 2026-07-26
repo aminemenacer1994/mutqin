@@ -25,8 +25,7 @@ import {
   buildMadaniPageLayout,
   formatMadaniAyahEndLabel,
   isVerseInteractiveOnPage,
-  MADANI_LAYOUT_VERSION,
-  toEasternArabicDigits
+  MADANI_LAYOUT_VERSION
 } from '../scripts/mushaf/madaniPageLayout'
 import {
   buildAudioIndexMap as buildMadaniAudioIndexMapHelper,
@@ -20839,9 +20838,6 @@ export default {
       return {
         '--mushaf-ayah-digits': String(digits),
       }
-    },
-    formatEasternAyahNumber(number) {
-      return toEasternArabicDigits(number)
     },
     setReadingViewMode(mode) {
       const allowedModes = ['stacked', 'mushaf']
