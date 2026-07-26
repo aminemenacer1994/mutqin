@@ -112,16 +112,17 @@
     align-items: center !important;
   }
 
-  .workspace-shell-kicker {
-    display: none !important;
-  }
-
   .workspace-shell-copy {
-    grid-column: 1 / span 2;
+    grid-column: 1 / -1;
     grid-row: 1;
     display: grid;
     gap: 3px;
     align-self: center;
+  }
+
+  .workspace-shell-kicker {
+    inline-size: max-content;
+    max-inline-size: 100%;
   }
 
   .workspace-shell-main-title,
@@ -150,7 +151,7 @@
     gap: var(--mq-grid-gap) !important;
   }
 
-  .workspace-shell-actions :where(.top-card-session-actions, .top-card-icon-controls, .top-card-icon-control, .top-card-controls-trigger, .top-card-menu-wrap) {
+  .workspace-shell-actions :where(.top-card-session-actions, .top-card-controls-trigger, .top-card-menu-wrap) {
     pointer-events: auto;
   }
 
@@ -186,38 +187,30 @@
     line-height: 1.2;
   }
 
-  .top-card-icon-controls {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: var(--mq-grid-gap) !important;
-    justify-items: end;
-    align-items: center;
-  }
-
-  .top-card-session-actions:not(.has-paired-actions) ~ .top-card-icon-controls {
-    grid-column: 3 / -1;
-    grid-row: 1;
-    grid-template-columns: repeat(4, 44px) !important;
-    justify-self: end;
-    width: auto;
-  }
-
-  .top-card-session-actions.has-paired-actions ~ .top-card-icon-controls {
-    grid-column: 3 / -1;
+  .workspace-shell-actions .top-card-controls-trigger {
+    grid-column: 3;
     grid-row: 2;
-    grid-template-columns: repeat(4, 44px) !important;
-    justify-self: end;
-    width: auto;
   }
 
-  .workspace-shell-actions .top-card-icon-control,
+  .workspace-shell-actions .top-card-menu-wrap {
+    grid-column: 4;
+    grid-row: 2;
+    position: relative;
+  }
+
+  .top-card-session-actions:not(.has-paired-actions) ~ .top-card-controls-trigger {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .top-card-session-actions:not(.has-paired-actions) ~ .top-card-menu-wrap {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
   .workspace-shell-actions .top-card-controls-trigger,
   .workspace-shell-actions .top-card-menu-wrap,
-  .workspace-shell-actions .top-card-ellipsis,
-  .workspace-shell-actions .top-card-layout-trigger,
-  .workspace-shell-actions .top-card-font-trigger {
+  .workspace-shell-actions .top-card-ellipsis {
     justify-self: end;
     inline-size: 44px !important;
     min-inline-size: 44px !important;
@@ -225,22 +218,6 @@
     block-size: 44px !important;
     min-block-size: 44px !important;
     padding: 0 !important;
-  }
-
-  .workspace-shell-actions .top-card-layout-wrap,
-  .workspace-shell-actions .top-card-font-wrap,
-  .workspace-shell-actions .top-card-menu-wrap {
-    position: relative;
-  }
-
-  .workspace-shell-actions .top-card-layout-trigger span,
-  .workspace-shell-actions .top-card-font-trigger span,
-  .workspace-shell-actions .top-card-controls-trigger span {
-    display: none !important;
-  }
-
-  .workspace-shell-reading-toggles--desktop {
-    display: none !important;
   }
 
   .workspace-shell-actions-minimal {
@@ -428,26 +405,39 @@
     grid-column: 2 / -1;
     grid-row: 1;
     display: grid !important;
-    grid-template-columns: 40px !important;
-    justify-content: end !important;
+    grid-template-columns: minmax(0, 1fr) 40px !important;
     gap: 6px !important;
     align-items: start !important;
     inline-size: 100%;
   }
 
-  .verse-ai-check-btn--desktop,
+  .verse-actions:has(.verse-ai-check-btn + .verse-ai-check-btn) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) 40px !important;
+  }
+
   .verse-ai-check-btn,
-  .verse-self-check-btn.verse-ai-check-btn {
-    display: none !important;
+  .verse-self-check-btn {
+    inline-size: 100% !important;
+    min-inline-size: 0 !important;
+    max-inline-size: 100%;
+    min-block-size: 44px;
+    padding: 7px 8px;
+    white-space: normal;
   }
 
   .verse-inline-action-btn,
   .verse-inline-play-btn,
   .verse-inline-download-btn {
-    inline-size: 40px !important;
-    min-inline-size: 40px !important;
-    block-size: 40px !important;
-    min-block-size: 40px !important;
+    inline-size: 36px !important;
+    min-inline-size: 36px !important;
+    block-size: 36px !important;
+    min-block-size: 36px !important;
+  }
+
+  .verse-ai-check-btn.verse-ai-recite-btn {
+    min-block-size: 40px;
+    padding: 6px 8px;
+    font-size: 0.74rem;
   }
 
   .workspace-shell-bottom {
@@ -458,7 +448,12 @@
   }
 
   .workspace-shell-reading-toggles {
-    display: none !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100%;
+    margin-inline-start: 0 !important;
+    justify-content: flex-start !important;
+    gap: 0.45rem 0.75rem !important;
   }
 
   .workspace-reading-check .form-check-label {
@@ -466,6 +461,7 @@
   }
 
   .verse-arabic-wrap,
+  .verse-arabic-with-end,
   .verse-arabic,
   .verse-arabic-primary,
   .verse-aid,
@@ -476,42 +472,14 @@
     max-inline-size: 100%;
   }
 
-  .verse-card,
-  .verses-grid .verse-card {
-    gap: 8px !important;
-    padding: 12px !important;
-  }
-
-  .verse-header {
-    margin-bottom: 2px;
-    gap: 8px !important;
-  }
-
-  .verse-number {
-    margin-inline-end: 0.35rem;
-  }
-
-  .verse-aid-block {
-    margin: 0 !important;
-    padding: 0.2rem 0 0 !important;
-    gap: 0.15rem !important;
-  }
-
-  .verse-aid-title {
-    font-size: 0.62rem !important;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    opacity: 0.72;
-    margin: 0 !important;
-  }
-
-  .verse-transliteration.verse-aid,
-  .verse-translation.verse-aid,
-  .verse-aid {
-    font-size: 0.78rem !important;
+  .verse-arabic-with-end {
+    display: block !important;
+    margin: 8px 0 !important;
+    padding: 8px 4px 10px !important;
+    border-radius: 14px;
+    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(1.55rem, 7.2vw, 2.35rem)) !important;
     line-height: 1.35 !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    text-align: right !important;
   }
 
   .verse-arabic,
@@ -526,18 +494,49 @@
     block-size: auto !important;
     grid-template-columns: none !important;
     grid-auto-rows: auto !important;
-    margin-top: 0.35rem !important;
-    padding: 6px 2px 8px !important;
+    padding: 8px 4px 10px !important;
     font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(1.55rem, 7.2vw, 2.35rem)) !important;
-    line-height: 1.45 !important;
+    line-height: 1.35 !important;
     white-space: normal !important;
     word-break: normal !important;
     overflow-wrap: normal !important;
     text-align: right !important;
   }
 
+  /* Keep ayah number glued to the last word of the ayah on mobile stacked */
+  .verse-arabic-with-end > .verse-arabic,
+  .verse-arabic-with-end > .verse-arabic.verse-arabic-primary,
+  .verse-arabic-with-end > .verse-arabic.word-by-word-meanings {
+    display: inline !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+  }
+
+  .verse-arabic-with-end > .verse-ayah-end-number {
+    display: inline-flex !important;
+    vertical-align: middle;
+    margin-inline: 0.32em 0.02em !important;
+    min-width: 1.4em;
+    min-height: 1.4em;
+    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(0.72rem, 3.4vw, 0.9rem)) !important;
+  }
+
   .verse-arabic.word-by-word-meanings {
     line-height: 1.15 !important;
+  }
+
+  .verse-arabic-with-end > .verse-arabic.word-by-word-meanings {
+    line-height: 1.15 !important;
+  }
+
+  .verse-arabic-with-end > .verse-arabic.word-by-word-meanings ~ .verse-ayah-end-number {
+    vertical-align: top;
+    margin-block-start: 0.12em;
   }
 
   .verse-arabic :where(.wbw-word, word),
@@ -3079,202 +3078,5 @@
 
   .self-check-mobile-start-actions > * {
     grid-column: 1 / -1;
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/* Mobile polish: mushaf focus, phase guidance, offcanvas, desktop icon hide  */
-/* -------------------------------------------------------------------------- */
-@media (max-width: 767.98px) {
-  .main.mushaf-mode-active .mushaf-shell__quranic-font {
-    display: none !important;
-  }
-
-  .main.mushaf-mode-active .mushaf-shell__bar {
-    gap: 0.3rem !important;
-    padding: 0.35rem 0.4rem !important;
-  }
-
-  .main.mushaf-mode-active .mushaf-shell__btn,
-  .main.mushaf-mode-active .mushaf-shell__btn--icon {
-    min-inline-size: 34px !important;
-    min-block-size: 34px !important;
-    inline-size: 34px !important;
-    block-size: 34px !important;
-    font-size: 0.85rem !important;
-  }
-
-  .main.mushaf-mode-active .mushaf-shell__focus-toggle.is-active {
-    color: var(--primary, #1f4d36) !important;
-    background: rgba(31, 77, 54, 0.12) !important;
-  }
-
-  .live-practice-guidance--mushaf {
-    margin: 0.35rem 0 0.55rem !important;
-    padding: 0.45rem 0.65rem !important;
-    gap: 0.35rem !important;
-  }
-
-  .live-practice-guidance--mushaf .live-practice-coach--phase {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.45rem;
-    font-size: 0.82rem !important;
-    line-height: 1.35 !important;
-  }
-
-  .live-practice-guidance--mushaf .live-practice-method--collapsed {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-  }
-
-  .live-practice-guidance--mushaf .live-practice-method--collapsed > summary {
-    list-style: none;
-    cursor: pointer;
-    font-size: 0.72rem;
-    opacity: 0.75;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-
-  .live-practice-guidance--mushaf .live-practice-method--collapsed > summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .live-practice-guidance--mushaf .live-practice-method--collapsed .live-practice-method__hint {
-    display: block;
-    margin-top: 0.25rem;
-    font-size: 0.72rem;
-    line-height: 1.3;
-    opacity: 0.82;
-  }
-
-  .mushaf-nav-meta {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.35rem;
-    align-items: start;
-    width: 100%;
-    margin-bottom: 0.45rem;
-  }
-
-  .mushaf-nav-meta > span {
-    display: grid;
-    gap: 0.1rem;
-    min-width: 0;
-    text-align: center;
-    padding: 0.3rem 0.25rem;
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.04);
-  }
-
-  .mushaf-nav-meta__label {
-    font-style: normal;
-    font-size: 0.58rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    opacity: 0.7;
-  }
-
-  .mushaf-nav-meta strong {
-    font-size: 0.78rem;
-    line-height: 1.2;
-    overflow-wrap: anywhere;
-  }
-
-  .main.mushaf-mode-active .madani-word.ayah-marker,
-  .main.mushaf-mode-active .mushaf-ayah-number,
-  .main.mushaf-mode-active .madani-word.is-ayah-number {
-    margin-inline: 0.18em 0.28em !important;
-  }
-
-  /* Setup tab: match Practice accordion density / full-width controls */
-  .tools-body > .sheet > .sheet-section .field-stack,
-  .tools-body > .sheet > .sheet-section .field-stack-compact {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
-  }
-
-  .tools-body > .sheet > .sheet-section .field-stack > .field,
-  .tools-body > .sheet > .sheet-section .field-stack-compact > .field {
-    grid-column: 1 / -1 !important;
-  }
-
-  .tools-body .sheet-content .field :where(.select, .input, .range-control, .radio-group, .techniques-choice-group) {
-    inline-size: 100% !important;
-    max-inline-size: 100% !important;
-  }
-
-  .tools-body .sheet-content .radio-group,
-  .tools-body .sheet-content .techniques-choice-group {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-  }
-
-  .tools-body .sheet-content .radio-group.radio-group-tight,
-  .tools-body .sheet-content .radio-group.radio-group-compact {
-    grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr)) !important;
-  }
-
-  /* Saved tab: compact bootstrap-like list */
-  .saved-sessions-list {
-    gap: 0 !important;
-    border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  .saved-session-row {
-    border-radius: 0 !important;
-    border: 0 !important;
-    border-bottom: 1px solid var(--border, rgba(0, 0, 0, 0.08)) !important;
-    padding: 0.65rem 0.75rem !important;
-    margin: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-
-  .saved-session-row:last-child {
-    border-bottom: 0 !important;
-  }
-
-  .saved-session-row-meta {
-    font-size: 0.72rem !important;
-    opacity: 0.78;
-  }
-
-  .saved-session-row-actions .saved-session-row-btn span {
-    display: none;
-  }
-
-  .saved-session-row-actions {
-    grid-template-columns: 44px 44px !important;
-    justify-content: end;
-  }
-
-  .player-mini .player-chapter,
-  .player-mini .player-verse {
-    font-size: 0.78rem !important;
-    opacity: 1 !important;
-  }
-
-  [data-theme="dark"] .player-mini .player-chapter,
-  [data-theme="dark"] .player-mini .player-verse {
-    color: rgba(248, 244, 238, 0.96) !important;
-  }
-}
-
-@media (min-width: 768px) {
-  .top-card-layout-wrap,
-  .top-card-font-wrap {
-    display: none !important;
-  }
-
-  .top-card-icon-controls {
-    display: contents;
   }
 }

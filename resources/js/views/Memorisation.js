@@ -410,7 +410,6 @@ export default {
       topCardMenuOpen: false,
       topCardFontSubmenuOpen: false,
       topCardLayoutSubmenuOpen: false,
-      topCardLayoutMenuOpen: false,
       openVerseActionKey: '',
       verseFontSizes: {},
       defaultFontSize: 100,
@@ -617,7 +616,7 @@ export default {
       showConfirmModal: false,
       showSessionExitModal: false,
       sessionExitEndingBusy: false,
-      sessionExitAutoSave: false,
+      sessionExitAutoSave: true,
       sessionExitSnapshot: null,
       sessionExitPreviewSnapshot: null,
       confirmModal: {
@@ -3280,37 +3279,6 @@ export default {
         t: this.t.bind(this),
       })
     },
-    mushafPhaseGuidanceId() {
-      if (this.blurModeEnabled || this.guidedUiStep === 'recall') return 'memory'
-      if (
-        this.talqinRecitationTurnActive
-        || this.reciterFollowModeActive
-        || (!this.isPlaying && !!this.playerVisible && !!this.hasLoadedAudio)
-      ) {
-        return 'following'
-      }
-      return 'listening'
-    },
-    mushafPhaseGuidanceText() {
-      if (!this.hasSessionStarted || this.isSessionCompleted || this.showPostSessionModal) return ''
-      const id = this.mushafPhaseGuidanceId
-      if (id === 'memory') {
-        return this.t('memorisation.postSession.coach.live.memory')
-          || 'Close your eyes if you can. Recite from the heart.'
-      }
-      if (id === 'following') {
-        return this.t('memorisation.postSession.coach.live.pause')
-          || 'Now recite aloud with presence.'
-      }
-      return this.t('memorisation.postSession.coach.live.before')
-        || 'Bismillāh. Listen once and follow the words.'
-    },
-    mushafPhaseGuidanceIcon() {
-      const id = this.mushafPhaseGuidanceId
-      if (id === 'memory') return 'bi-eye-slash'
-      if (id === 'following') return 'bi-mic'
-      return 'bi-headphones'
-    },
     activePracticeFocusWord() {
       const words = Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []
       if (!words.length) return null
@@ -4337,7 +4305,8 @@ export default {
       return false
     },
     showSelfCheckLibraryShortcut() {
-      return !!(this.showSelfCheckModal && this.selfCheckModalVerse)
+      // Recordings library / manual self-assessment removed — AI Recite only.
+      return false
     },
     showAiReciteStartCta() {
       if (!this.showSelfCheckModal || !this.selfCheckModalVerse) return false
@@ -6307,47 +6276,33 @@ export default {
     },
 
     mushafLayoutOptions() {
-      // Standard Mushaf only — coloured variants removed from desktop/tablet chrome.
       return [
         {
           id: 'standard',
           label: this.t('memorisation.a11y.mushafLayoutStandard') || 'Standard',
           swatches: ['#ffffff', '#161311']
+        },
+        {
+          id: 'green',
+          label: this.t('memorisation.a11y.mushafLayoutGreen') || 'Madani Green',
+          swatches: ['#1f5c3c', '#c4a35a', '#f7f2e4']
+        },
+        {
+          id: 'blue',
+          label: this.t('memorisation.a11y.mushafLayoutBlue') || 'Madani Blue',
+          swatches: ['#7eafdb', '#d95d81', '#c5a06b']
+        },
+        {
+          id: 'lavender',
+          label: this.t('memorisation.a11y.mushafLayoutLavender') || 'Madani Lavender',
+          swatches: ['#9a95a8', '#c5a06b', '#fdfcf0']
+        },
+        {
+          id: 'gold',
+          label: this.t('memorisation.a11y.mushafLayoutGold') || 'Madani Gold',
+          swatches: ['#b8924a', '#c94b6a', '#fffaf0']
         }
       ]
-    },
-
-    mushafNavJuzOptions() {
-      const pages = Array.isArray(this.mushafPages) ? this.mushafPages : []
-      const seen = new Set()
-      const options = []
-      pages.forEach((page) => {
-        const juz = Number(page?.juzNumber || page?.layout?.juzNumber || 0)
-        if (!juz || seen.has(juz)) return
-        seen.add(juz)
-        options.push({ value: juz, label: `Juz ${juz}` })
-      })
-      return options
-    },
-
-    mushafNavPageOptions() {
-      const pages = Array.isArray(this.mushafPages) ? this.mushafPages : []
-      return pages.map((page, index) => ({
-        value: index,
-        pageNumber: Number(page?.pageNumber || 0),
-        label: page?.pageNumber ? `Page ${page.pageNumber}` : `Page ${index + 1}`
-      }))
-    },
-
-    mushafNavSurahLabel() {
-      return this.currentChapter?.name_simple
-        || this.activeChapterName
-        || this.mushafSurahTitle
-        || 'Surah'
-    },
-
-    mushafCurrentJuzValue() {
-      return Number(this.currentMushafPage?.juzNumber || this.currentMushafPage?.layout?.juzNumber || 0) || ''
     },
 
     madaniJuzLabel() {
@@ -8809,14 +8764,15 @@ export default {
     },
 
     saveCurrentSessionSilently(name = this.buildAutoSaveSessionName()) {
-      // Named session auto-save is disabled — confirmation is always required.
-      void name
-      return null
+      if (!this.canSaveCurrentSession()) return null
+      const session = this.buildSessionRecord(name, { archived: true, autoSaved: true })
+      this.addSavedSession(session)
+      return session
     },
 
     async saveCurrentSessionSilentlyAsync(name = this.buildAutoSaveSessionName()) {
-      void name
-      return null
+      await this.ensureSaveableWorkspaceState()
+      return this.saveCurrentSessionSilently(name)
     },
 
     confirmSaveSession() {
@@ -9622,16 +9578,6 @@ export default {
       this.showSaveNameModal = true
       this.closeToolsPanel()
     },
-    confirmSaveCurrentSessionFromTools() {
-      if (this.showSaveNameModal || this.showConfirmModal) return
-      this.openConfirmModal({
-        title: this.t('memorisation.confirmModals.saveSession.title'),
-        message: this.t('memorisation.confirmModals.saveSession.message'),
-        confirmLabel: this.t('memorisation.confirmModals.saveSession.confirm'),
-        cancelLabel: this.t('memorisation.confirmModals.saveSession.cancel'),
-        action: 'save-named-session'
-      })
-    },
     toggleFullScreen() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
@@ -9671,12 +9617,13 @@ export default {
     },
 
     saveCurrentSession() {
-      // Never auto-save named sessions — always ask for confirmation first.
-      if (!this.hasVerses && !this.canSaveCurrentSession()) {
+      if (!this.hasVerses) {
         this.showBanner(this.t('toasts.noActiveSessionToSave'), 'warning', 2000)
         return
       }
-      this.confirmSaveCurrentSessionFromTools()
+
+      this.addSavedSession(this.buildSessionRecord(`${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`))
+      this.showBanner(this.t('toasts.sessionSaved2'), 'success', 1500)
     },
 
     setRepetitionsFromSlider(value) {
@@ -12431,6 +12378,25 @@ export default {
         action: 'save-session-after-end'
       })
     },
+    logoutFromPostSession() {
+      if (typeof document === 'undefined') return
+      this.prepareLogoutSessionCleanup()
+      this.postSessionSnapshot = null
+      this.postSessionEmotionalContext = null
+      this.showPostSessionModal = false
+      this.showPostSessionConfetti = false
+      this.postSessionOffcanvasOpen = false
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = this.auth?.logout_url || '/logout'
+      const token = document.createElement('input')
+      token.type = 'hidden'
+      token.name = '_token'
+      token.value = this.auth?.csrf_token || ''
+      form.appendChild(token)
+      document.body.appendChild(form)
+      form.submit()
+    },
     continueFromOnboardingPostSession() {
       this.exitOnboardingSampleMode({ discard: true, markCompleted: true })
       this.clearContinueSessionQuietly()
@@ -14099,56 +14065,24 @@ export default {
       this.reviewResultAudioCurrentTime = nextTime
     },
     getSelfCheckRecorderDescription() {
-      if (this.recitationCheckRecording) {
-        return 'Listening now — words colour live as you recite.'
+      if (this.recitationCheckPanelOpen && !this.recitationCheckRecording && !this.recitationCheckPreparing && !this.recitationCheckResult) {
+        return this.recitationCheckScope === 'session'
+          ? 'AI review is ready for this range.'
+          : 'AI review is ready for this ayah.'
       }
-      if (this.recitationCheckPreparing) {
-        return 'Checking your recitation…'
+      if (this.isSelfCheckRecording) {
+        return 'Recording now.'
       }
-      if (this.recitationCheckResult) {
-        return 'Compare your attempt against the coloured words above.'
+      if (this.selfCheckActiveDraft) {
+        return 'Review this attempt.'
+      }
+      if (this.selfCheckPreparing) {
+        return 'Preparing microphone.'
       }
       if (!this.supportsSelfCheckRecording()) {
         return 'Recording is not supported in this browser.'
       }
-      return 'Record yourself reciting this ayah, then compare your attempt against the text above.'
-    },
-    getClassicRecitationResultStats(result) {
-      const statuses = this.getRecitationWordStatuses(result)
-      const colorCounts = result?.colorCounts && typeof result.colorCounts === 'object'
-        ? result.colorCounts
-        : getRecitationColorCounts(statuses)
-      const greyCount = Number(colorCounts.gray || 0) + Number(colorCounts.black || 0)
-      return [
-        {
-          key: 'green',
-          label: 'GREEN',
-          value: `${colorCounts.green || 0}`,
-          description: 'Clear words heard correctly.',
-          tone: 'tone-green',
-        },
-        {
-          key: 'amber',
-          label: 'AMBER',
-          value: `${colorCounts.amber || 0}`,
-          description: 'Close words to repeat slowly.',
-          tone: 'tone-amber',
-        },
-        {
-          key: 'red',
-          label: 'RED',
-          value: `${colorCounts.red || 0}`,
-          description: 'Words to stop and fix.',
-          tone: 'tone-red',
-        },
-        {
-          key: 'grey',
-          label: 'GREY',
-          value: `${greyCount}`,
-          description: 'Words not heard yet.',
-          tone: 'tone-grey',
-        },
-      ]
+      return 'Choose AI review or manual recording.'
     },
     getAyahTranslation(ayahKey) {
       if (!ayahKey) return ''
@@ -14218,21 +14152,8 @@ export default {
       }
     },
     openRecordingsLibraryFromSelfCheck() {
-      const ayahKey = this.selfCheckVerseKey || this.selfCheckModalVerse?.key || ''
-      if (!ayahKey && !this.hasRecordingsLibraryEntries) {
-        this.showBanner(this.t('toasts.selectAnAyahBeforeOpeningThe'), 'info', 2200)
-        return
-      }
-      if (this.recitationCheckRecording) {
-        this.showBanner(this.t('toasts.stopTheCurrentRecordingBeforeOpening'), 'info', 2200)
-        return
-      }
-      this.showSelfCheckModal = false
-      this.selfCheckPeekActive = false
-      this.pendingRecordingDeleteId = ''
-      this.stopRecordingsPlayback({ clearSource: true })
-      this.syncBodyScrollLock(false)
-      this.openRecordingsLibrary({ ayahKey, returnToSelfCheck: true })
+      // Manual / recordings library removed from AI Recite.
+      return
     },
     adjustSelfCheckFont(delta) {
       const next = Math.max(280, Math.min(420, Number(this.selfCheckFontSize || 320) + Number(delta || 0)))
@@ -16162,57 +16083,56 @@ export default {
       else node.removeAttribute('title')
     },
     getLiveWordPresentation(status = 'notAttempted', mode = 'verse') {
-      // Classic Mutqin palette: coloured pill fills on ayah words + live chips.
+      // Subtle palette: coloured text + a thin underline. No background fills,
+      // borders, padding or opacity changes on the ayah words, so a status
+      // update is paint-only and never reflows the RTL line (this is what keeps
+      // the live colouring in lock-step with the voice instead of lagging).
       const palette = {
-        correct: {
-          color: '#146443',
-          background: 'rgba(32, 126, 87, 0.16)',
-          border: 'rgba(32, 126, 87, 0.28)',
-        },
-        partial: {
-          color: '#946118',
-          background: 'rgba(237, 179, 71, 0.22)',
-          border: 'rgba(176, 105, 12, 0.28)',
-        },
-        incorrect: {
-          color: '#982f22',
-          background: 'rgba(226, 96, 77, 0.18)',
-          border: 'rgba(177, 63, 50, 0.28)',
-        },
-        omitted: {
-          color: '#1a1a1a',
-          background: 'rgba(26, 26, 26, 0.12)',
-          border: 'rgba(26, 26, 26, 0.22)',
-        },
-        pending: {
-          color: 'inherit',
-          background: 'rgba(116, 126, 141, 0.10)',
-          border: 'rgba(116, 126, 141, 0.18)',
-        },
-        skipped: {
-          color: 'inherit',
-          background: 'rgba(116, 126, 141, 0.10)',
-          border: 'rgba(116, 126, 141, 0.18)',
-        },
-        notAttempted: {
-          color: 'inherit',
-          background: 'transparent',
-          border: 'transparent',
-        },
+        correct: { color: '#15724c', underline: 'rgba(26, 133, 79, 0.85)' },
+        partial: { color: '#9a6207', underline: 'rgba(204, 138, 11, 0.85)' },
+        incorrect: { color: '#a83327', underline: 'rgba(193, 63, 45, 0.85)' },
+        omitted: { color: '#1a1a1a', underline: 'rgba(26, 26, 26, 0.88)' },
+        pending: { color: 'inherit', underline: 'rgba(116, 126, 141, 0.42)' },
+        skipped: { color: 'inherit', underline: 'rgba(116, 126, 141, 0.32)' },
+        notAttempted: { color: 'inherit', underline: 'transparent' }
       }
-      return palette[status] || palette.notAttempted
+      const resolved = palette[status] || palette.notAttempted
+      if (mode === 'chip') {
+        // The live word-stream chips are standalone pills; a light tint reads
+        // better there than an underline.
+        const chipTint = {
+          correct: 'rgba(34, 166, 98, 0.16)',
+          partial: 'rgba(237, 179, 71, 0.18)',
+          incorrect: 'rgba(226, 96, 77, 0.16)',
+          omitted: 'rgba(26, 26, 26, 0.14)',
+          pending: 'rgba(116, 126, 141, 0.10)',
+          skipped: 'rgba(116, 126, 141, 0.10)',
+          notAttempted: 'transparent'
+        }
+        return { color: resolved.color, background: chipTint[status] || 'transparent' }
+      }
+      return resolved
     },
     applyLiveWordPresentation(node, status = 'notAttempted', mode = 'verse') {
       if (!node?.style?.setProperty) return
       const presentation = this.getLiveWordPresentation(status, mode)
       node.dataset.liveWordStatus = status || 'notAttempted'
+      if (mode === 'chip') {
+        node.style.setProperty('color', presentation.color, 'important')
+        node.style.setProperty('background', presentation.background, 'important')
+        node.style.setProperty('transition', 'background-color 90ms ease, color 90ms ease', 'important')
+        return
+      }
+      // Verse words: only colour + underline change → compositor-friendly,
+      // zero layout reflow.
+      const underline = presentation.underline === 'transparent'
+        ? 'none'
+        : `inset 0 -0.085em 0 ${presentation.underline}`
       node.style.setProperty('color', presentation.color, 'important')
-      node.style.setProperty('background', presentation.background, 'important')
-      node.style.setProperty('border-color', presentation.border, 'important')
-      node.style.setProperty('box-shadow', 'none', 'important')
-      node.style.setProperty('border-radius', mode === 'chip' ? '0.55rem' : '0.35em', 'important')
-      node.style.setProperty('padding', mode === 'chip' ? '' : '0.08em 0.18em', 'important')
-      node.style.setProperty('transition', 'background-color 90ms ease, color 90ms ease', 'important')
+      node.style.setProperty('box-shadow', underline, 'important')
+      node.style.setProperty('background', 'transparent', 'important')
+      node.style.setProperty('border-color', 'transparent', 'important')
+      node.style.setProperty('transition', 'color 90ms linear, box-shadow 90ms linear', 'important')
     },
     hasLiveWordChanged(currentWord = {}, nextWord = {}) {
       return currentWord.status !== nextWord.status
@@ -19877,41 +19797,11 @@ export default {
     },
 
     logoutFromWelcomeBack() {
+      if (typeof document === 'undefined') return
+      this.prepareLogoutSessionCleanup()
       this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
       this.welcomeBackWorkspaceHidden = false
-      this.submitLogoutForm()
-    },
-
-    logoutFromSessionExit() {
-      this.closeSessionExitModal({ restore: false })
-      this.sessionExitOffcanvasOpen = false
-      this.submitLogoutForm()
-    },
-
-    logoutFromPostSession() {
-      this.postSessionSnapshot = null
-      this.postSessionEmotionalContext = null
-      this.showPostSessionModal = false
-      this.showPostSessionConfetti = false
-      this.postSessionOffcanvasOpen = false
-      this.submitLogoutForm()
-    },
-
-    async submitLogoutForm() {
-      if (typeof document === 'undefined') return
-      try {
-        await this.prepareLogoutSessionCleanup()
-      } catch (_) { /* continue logout even if cleanup fails */ }
-
-      try {
-        if (typeof window !== 'undefined') {
-          window.mutqinAuthCheck = false
-          sessionStorage.setItem('mutqin.logout.at', String(Date.now()))
-          sessionStorage.setItem('mutqin.logout.block-bfcache', '1')
-        }
-      } catch (_) { /* ignore */ }
-
       const form = document.createElement('form')
       form.method = 'POST'
       form.action = this.auth?.logout_url || '/logout'
@@ -19922,32 +19812,6 @@ export default {
       form.appendChild(token)
       document.body.appendChild(form)
       form.submit()
-    },
-
-    prepareLogoutSessionCleanup() {
-      this.stopSessionMediaResources()
-      this.clearContinueSessionQuietly()
-      this.clearInMemorySessionLifecycleState()
-      if (this.auth && typeof this.auth === 'object') {
-        this.auth.check = false
-      }
-      try {
-        localStorage.removeItem(this.continueSessionLocalStorageKey?.() || 'telawa.continueSession')
-        localStorage.removeItem('telawa.continueSession')
-        localStorage.removeItem('telawa.audioState')
-      } catch (_) { /* ignore */ }
-      this.sessionBroadcast?.publish('session-logout', { at: Date.now() })
-
-      const endPromise = (async () => {
-        if (!this.learningBackendEnabled?.()) return
-        try {
-          await Promise.race([
-            learningApi.endSession({ reason: 'logout' }),
-            new Promise((resolve) => setTimeout(resolve, 1200)),
-          ])
-        } catch (_) { /* best-effort */ }
-      })()
-      return endPromise
     },
 
     async repeatLastSessionFromStart() {
@@ -20467,12 +20331,17 @@ export default {
       })
     },
 
+    prepareLogoutSessionCleanup() {
+      this.stopSessionMediaResources()
+      this.clearInMemorySessionLifecycleState()
+      this.sessionBroadcast?.publish('session-logout', { at: Date.now() })
+    },
+
     openSessionExitModalFromMenu() {
       this.resetStuckSessionLifecycleControls()
       this.topCardMenuOpen = false
       this.topCardFontSubmenuOpen = false
       this.topCardLayoutSubmenuOpen = false
-      this.topCardLayoutMenuOpen = false
       this.openSessionExitModal()
     },
     promptTapToPlay(message = '') {
@@ -20971,6 +20840,9 @@ export default {
         '--mushaf-ayah-digits': String(digits),
       }
     },
+    formatEasternAyahNumber(number) {
+      return toEasternArabicDigits(number)
+    },
     setReadingViewMode(mode) {
       const allowedModes = ['stacked', 'mushaf']
       const nextMode = allowedModes.includes(mode) ? mode : 'mushaf'
@@ -20983,9 +20855,6 @@ export default {
       this.readingViewMode = nextMode
       if (nextMode === 'mushaf') {
         this.wordByWordAudioEnabled = true
-        this.showTranslation = true
-        this.mushafUiSkin = 'standard'
-        this.mushafLayoutMenuOpen = false
         this.ensureMadaniPagesLoaded({ force: false }).then(() => {
           this.syncMushafPageToActiveVerse()
         })
@@ -21256,42 +21125,15 @@ export default {
       if (!word?.verseKey || word.inSession === false) return
       const verse = this.resolveVerseFromMadaniKey(word.verseKey)
       if (!verse) return
-
-      // Circular ayah number / end marker: select, highlight, and play the full ayah.
-      if (word.isEnd) {
-        this.onMushafAyahClick(verse)
-        this.ensureActiveMushafAyahVisible(verse.key)
-        return
-      }
-
-      // Individual Arabic words play word-level audio and keep the ayah selected.
-      this.focusLinkedAyah(verse.key)
-      const wordIndex = Number.isFinite(Number(word.wordIndex))
-        ? Number(word.wordIndex)
-        : this.resolveMadaniAudioWordIndex(word)
-      const sessionWord = Number.isFinite(wordIndex) ? verse?.words?.[wordIndex] : null
-      const wordAudio = sessionWord?.audio || ''
-      if (Number.isFinite(wordIndex) && wordIndex >= 0) {
-        this.ensureWordAudioHighlighting?.()
-        this.playWordAudio(wordAudio, verse, wordIndex)
-        this.ensureActiveMushafAyahVisible(verse.key)
-        return
-      }
       this.onMushafAyahClick(verse)
-      this.ensureActiveMushafAyahVisible(verse.key)
     },
     onMadaniAidWordClick(verse, wordIndex) {
       if (!verse?.key) return
-      this.focusLinkedAyah(verse.key)
-      const index = Number(wordIndex)
-      if (Number.isFinite(index) && index >= 0) {
-        const wordAudio = verse?.words?.[index]?.audio || ''
-        this.playWordAudio(wordAudio, verse, index)
-        this.ensureActiveMushafAyahVisible(verse.key)
-        return
-      }
       this.onMushafAyahClick(verse)
-      this.ensureActiveMushafAyahVisible(verse.key)
+      if (Number.isFinite(Number(wordIndex))) {
+        this.currentHighlightedVerseKey = verse.key
+        this.currentWordIndex = Number(wordIndex)
+      }
     },
     onMadaniWordEnter(word) {
       if (!word?.verseKey || word.inSession === false) return
@@ -21606,17 +21448,7 @@ export default {
           const el = document.querySelector(`.verse-card[data-verse-key="${verseKey}"], .mushaf-ayah[data-verse-key="${verseKey}"], .madani-word[data-verse-key="${verseKey}"]`)
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
           if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
-          this.ensureActiveMushafAyahVisible(verseKey)
         })
-      } else if (this.readingViewMode === 'mushaf') {
-        // Keep the active ayah in view while audio progresses (desktop/tablet + mobile).
-        this.ensureActiveMushafAyahVisible(verseKey)
-        if (this.isMobileViewport?.()) {
-          this.$nextTick(() => {
-            const el = document.querySelector(`.madani-word[data-verse-key="${verseKey}"]`)
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          })
-        }
       }
 
       return verseKey
@@ -21945,10 +21777,9 @@ export default {
       // Add inside handleGlobalKeydown after the existing shortcuts
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
         event.preventDefault()
-        if (this.hasVerses || this.canSaveCurrentSession()) {
-          this.confirmSaveCurrentSessionFromTools()
-        } else {
-          this.showBanner(this.t('toasts.noActiveSessionToSave'), 'warning', 2000)
+        if (this.hasVerses) {
+          this.saveCurrentSession()
+          this.showBanner(this.t('toasts.sessionSavedWithCtrlS'), 'success', 1500)
         }
         return
       }
@@ -22434,6 +22265,23 @@ export default {
       this.sessionExitOffcanvasOpen = true
       this.startingFreshSessionSelection = true
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
+    },
+
+    logoutFromSessionExit() {
+      if (typeof document === 'undefined') return
+      this.prepareLogoutSessionCleanup()
+      this.closeSessionExitModal({ restore: false })
+      this.sessionExitOffcanvasOpen = false
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = this.auth?.logout_url || '/logout'
+      const token = document.createElement('input')
+      token.type = 'hidden'
+      token.name = '_token'
+      token.value = this.auth?.csrf_token || ''
+      form.appendChild(token)
+      document.body.appendChild(form)
+      form.submit()
     },
 
     restoreSessionFromSnapshot(snapshot, options = {}) {
@@ -23229,7 +23077,6 @@ export default {
       if (action === 'delete-ayah-recordings' && actionData?.ayahKey) this.deleteAyahRecordings(actionData.ayahKey)
       if (action === 'delete-pending-recitation-check') this.performDeleteRecitationCheckAttempt(actionData?.attemptId)
       if (action === 'save-session-after-end') this.saveCurrentSessionWithName()
-      if (action === 'save-named-session') this.saveCurrentSessionWithName()
     },
 
     confirmDiscardContinueSession() {
@@ -23547,56 +23394,40 @@ export default {
       }
     },
     normalizeMushafUiSkin(value) {
-      // Keep only the standard Mushaf presentation.
-      void value
+      const raw = String(value || '').trim()
+      if (raw === 'madani') return 'green'
+      if (['standard', 'green', 'blue', 'lavender', 'gold'].includes(raw)) return raw
       return 'standard'
     },
     toggleMushafLayoutMenu() {
-      this.mushafLayoutMenuOpen = false
+      this.mushafLayoutMenuOpen = !this.mushafLayoutMenuOpen
+      if (this.mushafLayoutMenuOpen) {
+        this.fontOpen = false
+        this.bgOpen = false
+        this.borderOpen = false
+      }
     },
     setMushafUiSkin(skin, options = {}) {
-      void skin
-      void options
-      this.mushafUiSkin = 'standard'
+      const { announce = true } = options
+      const next = this.normalizeMushafUiSkin(skin)
+      if (this.mushafUiSkin === next) {
+        this.mushafLayoutMenuOpen = false
+        return
+      }
+      this.mushafUiSkin = next
       this.mushafLayoutMenuOpen = false
       this.persistUiState()
+      if (announce) {
+        const selected = (this.mushafLayoutOptions || []).find(item => item.id === next)
+        this.showBanner(
+          selected?.label ? `${selected.label} layout` : 'Mushaf layout updated',
+          'info',
+          1200
+        )
+      }
     },
     toggleMushafColouredLayout() {
-      this.setMushafUiSkin('standard')
-    },
-    formatEasternAyahNumber(number) {
-      return toEasternArabicDigits(number)
-    },
-    onMushafNavJuzChange(event) {
-      const juz = Number(event?.target?.value || 0)
-      if (!juz) return
-      const pages = Array.isArray(this.mushafPages) ? this.mushafPages : []
-      const pageIndex = pages.findIndex(page => Number(page?.juzNumber || page?.layout?.juzNumber || 0) === juz)
-      if (pageIndex >= 0) this.goToMushafPage(pageIndex)
-    },
-    onMushafNavPageChange(event) {
-      const pageIndex = Number(event?.target?.value)
-      if (!Number.isFinite(pageIndex)) return
-      this.goToMushafPage(pageIndex)
-    },
-    ensureActiveMushafAyahVisible(verseKey = null) {
-      if (this.readingViewMode !== 'mushaf' || this.isMobileViewport?.()) return
-      const key = String(verseKey || this.effectiveActiveVerseKey || this.activeVerseKey || '')
-      if (!key) return
-      this.$nextTick(() => {
-        const highlighted = document.querySelector(
-          `.madani-word.highlighted[data-verse-key="${key}"], .madani-word.is-playing[data-verse-key="${key}"], .madani-word.active[data-verse-key="${key}"]`
-        )
-        if (!highlighted) return
-        const viewport = this.$refs.mushafViewport
-        if (viewport && typeof highlighted.getBoundingClientRect === 'function') {
-          const viewRect = viewport.getBoundingClientRect()
-          const elRect = highlighted.getBoundingClientRect()
-          const outOfView = elRect.top < viewRect.top + 24 || elRect.bottom > viewRect.bottom - 24
-          if (!outOfView) return
-        }
-        highlighted.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
-      })
+      this.setMushafUiSkin(this.isMadaniMushafSkin ? 'standard' : 'green')
     },
     cycleQuranFontPill() {
       const options = this.quranFontOptions || []
@@ -23744,7 +23575,6 @@ export default {
     closeTopCardSubmenus() {
       this.topCardFontSubmenuOpen = false
       this.topCardLayoutSubmenuOpen = false
-      this.topCardLayoutMenuOpen = false
     },
     toggleTopCardMenu() {
       const nextOpen = !this.topCardMenuOpen
@@ -23761,7 +23591,6 @@ export default {
       this.topCardFontSubmenuOpen = !this.topCardFontSubmenuOpen
       if (this.topCardFontSubmenuOpen) {
         this.topCardLayoutSubmenuOpen = false
-        this.topCardLayoutMenuOpen = false
         this.fontDropdownOpen = false
       }
     },
@@ -23769,19 +23598,7 @@ export default {
       this.topCardLayoutSubmenuOpen = !this.topCardLayoutSubmenuOpen
       if (this.topCardLayoutSubmenuOpen) {
         this.topCardFontSubmenuOpen = false
-        this.topCardLayoutMenuOpen = false
         this.fontDropdownOpen = false
-      }
-    },
-    toggleTopCardLayoutMenu() {
-      const nextOpen = !this.topCardLayoutMenuOpen
-      this.topCardLayoutMenuOpen = nextOpen
-      if (nextOpen) {
-        this.topCardMenuOpen = false
-        this.fontDropdownOpen = false
-        this.topCardFontSubmenuOpen = false
-        this.topCardLayoutSubmenuOpen = false
-        this.openVerseActionKey = ''
       }
     },
     toggleVerseActionMenu(verseKey) {
@@ -24622,9 +24439,6 @@ export default {
       this.currentWordIndex = Number.isFinite(Number(activeIndex)) ? Number(activeIndex) : -1
       this.currentPhraseIndex = this.currentWordIndex
       this.scheduleWordHighlightDomUpdate(verseKey, this.currentWordIndex)
-      if (this.readingViewMode === 'mushaf' && this.isPlaying) {
-        this.ensureActiveMushafAyahVisible(verseKey)
-      }
     },
 
     scheduleWordHighlightDomUpdate(verseKey, activeIndex) {

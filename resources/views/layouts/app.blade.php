@@ -30,55 +30,53 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-    <meta name="mutqin-build" content="v59-classic-recite">
-    <style id="mutqin-ai-recite-force-v59">
-      /* Keep Manual out. Do NOT hide Library / recordings / live colour UI. */
+    <meta name="mutqin-build" content="v58">
+    <style id="mutqin-ai-recite-force-v58">
+      #mutqin-build-stamp {
+        display: none !important;
+      }
       .ai-recite-clean,
       .ai-recite-clean-overlay,
+      .recordings-library-overlay,
+      .self-check-library-shortcut-btn:not(.self-check-back-to-session-btn),
       .self-check-ayah-action-manual,
       .self-check-modal-overlay .recitation-check-error,
+      .self-check-modal-overlay .recitation-check-error-card {
+        display: none !important;
+      }
       .self-check-modal-overlay .ai-check-step-guide {
         display: none !important;
       }
-      .self-check-modal-overlay .recitation-result-stats--classic {
-        display: grid !important;
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-        gap: 10px !important;
+      .self-check-modal-overlay .self-check-modal-ayah-shell {
+        display: block !important;
+        min-height: 7.5rem !important;
+        padding: 1.1rem 1.15rem !important;
+        border-radius: 16px !important;
+        background: #ffffff !important;
+        border: 1px solid rgba(120, 80, 40, 0.12) !important;
       }
-      .self-check-modal-overlay .recitation-review-ayah .wbw-word,
-      .self-check-modal-overlay .recitation-review-ayah word,
-      .self-check-modal-overlay .self-check-modal-ayah.recitation-word-review-active .wbw-word,
-      .self-check-modal-overlay .self-check-modal-ayah.recitation-word-review-active word {
-        display: inline-block !important;
-        border-radius: 0.4em !important;
-        padding: 0.08em 0.2em !important;
-        margin: 0.08em 0.06em !important;
+      .self-check-modal-overlay .self-check-modal-ayah,
+      .self-check-modal-overlay .self-check-modal-ayah .session-evaluation-ayah {
+        direction: rtl !important;
+        text-align: right !important;
+        color: #2c1d12 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
       }
-      .self-check-modal-overlay .recitation-word-correct {
-        background: rgba(32, 126, 87, 0.16) !important;
-        color: #146443 !important;
-        box-shadow: none !important;
-      }
-      .self-check-modal-overlay .recitation-word-partial {
-        background: rgba(237, 179, 71, 0.22) !important;
-        color: #946118 !important;
-        box-shadow: none !important;
-      }
-      .self-check-modal-overlay .recitation-word-incorrect {
-        background: rgba(226, 96, 77, 0.18) !important;
-        color: #982f22 !important;
-        box-shadow: none !important;
-      }
-      .self-check-modal-overlay .recitation-word-pending,
-      .self-check-modal-overlay .recitation-word-notAttempted {
-        background: rgba(116, 126, 141, 0.10) !important;
-        box-shadow: none !important;
+      .self-check-modal-overlay .recitation-live-review-compact .recitation-word-stream,
+      .self-check-modal-overlay .recitation-live-review-compact .recitation-live-word-stream,
+      .self-check-modal-overlay .recitation-live-review-compact .recitation-word-chip {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        visibility: visible !important;
       }
     </style>
     <script>
       (function () {
-        var BUILD = 'v59-classic-recite';
-        var FORCE = '59';
+        // One-shot unfreeze per build. Older scripts marked "done" before refresh and
+        // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
+        var BUILD = 'v58';
+        var FORCE = '58';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
@@ -2673,6 +2671,7 @@
     </style>
 </head>
 <body dir="{{ $appDirection }}">
+    <a class="skip-link" href="#mainContent">{{ __('ui.skip_main') }}</a>
     <nav class="navbar navbar-expand-lg app-navbar" aria-label="{{ __('ui.primary_navigation') }}">
         <div class="container-fluid shell navbar-shell">
             <a class="navbar-brand" href="{{ route('home') }}">
@@ -2828,20 +2827,11 @@
             @yield('content')
         </main>
     </div>
+    <div id="mutqin-build-stamp" hidden aria-hidden="true"></div>
 
     <script src="{{ mix('js/app.js') }}" defer></script>
     
     <script>
-        // Prevent restoring authenticated shells from bfcache after logout.
-        window.addEventListener('pageshow', function (event) {
-            try {
-                if (event.persisted && sessionStorage.getItem('mutqin.logout.block-bfcache') === '1') {
-                    sessionStorage.removeItem('mutqin.logout.block-bfcache');
-                    window.location.reload();
-                }
-            } catch (e) { /* ignore */ }
-        });
-
         window.mutqinInitialLocale = @json($appLocale);
         window.mutqinInitialDirection = @json($appDirection);
         window.mutqinForceInitialLocale = @json(request()->query('lang') ? true : false);

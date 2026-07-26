@@ -41,11 +41,7 @@ class LoginController extends Controller
      */
     protected function loggedOut($request): RedirectResponse
     {
-        return redirect()
-            ->route('login')
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
+        return redirect()->route('memorisation');
     }
 
     protected function authenticated(Request $request, $user): void

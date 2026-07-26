@@ -1873,7 +1873,10 @@
 @media (max-width: 767.98px) {
   .vue-onboarding {
     --home-mobile-grid: repeat(4, minmax(0, 1fr));
-    --home-mobile-gap: clamp(8px, 2.3vw, 12px);
+    --home-mobile-gap: clamp(10px, 2.6vw, 14px);
+    --home-mobile-section-pad-y: clamp(1.75rem, 6vw, 2.5rem);
+    --home-mobile-section-pad-x: clamp(1rem, 4.2vw, 1.25rem);
+    overflow-x: clip;
   }
 
   .hero-layout,
@@ -1897,14 +1900,41 @@
     min-width: 0;
   }
 
+  .hero {
+    padding:
+      calc(var(--home-mobile-section-pad-y) * 0.85)
+      var(--home-mobile-section-pad-x)
+      var(--home-mobile-section-pad-y);
+  }
+
+  .section-container {
+    padding: var(--home-mobile-section-pad-y) var(--home-mobile-section-pad-x);
+  }
+
+  .section-divider {
+    margin-block: 0.35rem;
+    padding-inline: var(--home-mobile-section-pad-x);
+  }
+
   .hero-copy-column,
   .hero-visual-column {
     grid-column: 1 / -1;
     min-width: 0;
   }
 
+  .hero-content {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .problem-solution {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.75rem !important;
+    margin: 0.15rem 0 0.35rem;
+  }
+
   .problem-solution > * {
-    grid-column: span 2;
+    grid-column: 1 / -1;
     min-width: 0;
   }
 
@@ -1918,16 +1948,25 @@
     margin-inline-end: 6px;
   }
 
+  .hero-buttons {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.7rem !important;
+    margin-top: 0.15rem;
+  }
+
   .hero-buttons > *,
   .pricing-actions > *,
   .cta-actions > * {
-    grid-column: span 2;
+    grid-column: 1 / -1;
     min-width: 0;
   }
 
   .demo-card {
     align-items: center;
     text-align: start;
+    grid-template-columns: 3.25rem minmax(0, 1fr) !important;
+    gap: 0.55rem 0.75rem !important;
+    margin-top: 0.35rem;
   }
 
   .demo-card > .bi-mic {
@@ -1936,7 +1975,7 @@
     align-self: center;
     justify-self: center;
     margin: 0;
-    font-size: clamp(2.35rem, 11vw, 3.25rem);
+    font-size: clamp(2.2rem, 10vw, 2.9rem);
   }
 
   .demo-card > h3 {
@@ -1965,8 +2004,13 @@
     display: grid;
     grid-template-columns: 44px minmax(0, 1fr);
     justify-content: stretch;
-    margin: 0;
+    margin: 0.15rem 0 0;
     min-width: 0;
+  }
+
+  .hero-image {
+    display: grid;
+    gap: 0.7rem;
   }
 
   .floating-card {
@@ -1977,11 +2021,22 @@
   .features-grid > .feature-grid-item,
   .steps-grid > .step-grid-item,
   .testimonials-grid > .testimonial-grid-item {
-    grid-column: span 2;
+    grid-column: 1 / -1;
     width: auto !important;
     max-width: none !important;
     min-width: 0;
     margin: 0 !important;
+  }
+
+  .feature-card,
+  .step-card,
+  .testimonial-card,
+  .pricing-card,
+  .contact-card,
+  .faq-shell,
+  .cta-block {
+    height: 100%;
+    padding: 1.1rem !important;
   }
 
   .feature-card,
@@ -1999,55 +2054,100 @@
 
   .pricing-features {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px 12px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem 0;
   }
 
-  .contact-copy-column {
-    grid-column: 1 / span 2;
+  .pricing-actions,
+  .cta-actions {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 
-  .contact-form-column {
-    grid-column: 3 / -1;
+  .contact-copy-column,
+  .contact-form-column,
+  .cta-layout > :first-child,
+  .cta-layout > :last-child {
+    grid-column: 1 / -1;
+    min-width: 0;
   }
 
   .contact-form-grid > .contact-field {
     grid-column: 1 / -1;
   }
 
-  .contact-form-grid > .contact-field:not(.contact-field-full):nth-of-type(-n + 2) {
-    grid-column: span 2;
+  .cta-block {
+    margin-inline: var(--home-mobile-section-pad-x);
+    margin-block: 1rem 1.6rem;
+    width: auto;
+    max-width: none;
+    border-radius: 24px;
   }
 
-  .cta-layout > :first-child {
-    grid-column: 1 / span 2;
+  .cta-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1rem !important;
   }
 
-  .cta-layout > :last-child {
-    grid-column: 3 / -1;
+  .cta-actions {
+    width: 100%;
+    max-width: none;
   }
 
-  .cta-layout .cta-actions > * {
-    grid-column: 1 / -1;
+  .footer {
+    padding-inline: var(--home-mobile-section-pad-x);
+    padding-block: 1.5rem 1.75rem;
   }
 
   .footer-grid > * {
-    grid-column: span 2;
+    grid-column: 1 / -1;
     min-width: 0;
+  }
+
+  .footer-legal {
+    gap: 0.65rem;
   }
 }
 
 @media (min-width: 560px) and (max-width: 767.98px) {
   .features-grid > .feature-grid-item,
   .steps-grid > .step-grid-item,
-  .testimonials-grid > .testimonial-grid-item,
-  .pricing-grid > .pricing-grid-item,
-  .pricing-grid > .pricing-card {
+  .testimonials-grid > .testimonial-grid-item {
     grid-column: span 2;
+  }
+
+  .hero-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .hero-buttons > * {
+    grid-column: auto;
+  }
+
+  .floating-card {
+    grid-column: span 2;
+  }
+
+  .pricing-features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+  }
+
+  .footer-grid > * {
+    grid-column: span 2;
+  }
+
+  .footer-grid > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
 }
 
 @media (max-width: 349.98px) {
+  .floating-card,
+  .comparison-card-tier {
+    flex-basis: 100%;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .contact-copy-column,
   .contact-form-column,
   .cta-layout > :first-child,
@@ -2057,35 +2157,17 @@
 }
 
 @media (max-width: 559.98px) {
-  .steps-grid > .step-grid-item:last-child:nth-child(odd),
-  .testimonials-grid > .testimonial-grid-item:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-  }
-
-  .contact-copy-column,
-  .contact-form-column {
-    grid-column: 1 / -1;
-  }
-
   .contact-copy {
     display: grid;
-    grid-template-columns: var(--home-mobile-grid);
-    gap: var(--home-mobile-gap);
-    align-items: end;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.45rem;
+    align-items: start;
   }
 
-  .contact-copy > .section-title {
-    grid-column: 1 / span 2;
-    margin: 0;
-  }
-
+  .contact-copy > .section-title,
   .contact-copy > .section-subtitle {
-    grid-column: 3 / -1;
-    margin: 0;
-  }
-
-  .footer-grid > :last-child:nth-child(odd) {
     grid-column: 1 / -1;
+    margin: 0;
   }
 }
 
