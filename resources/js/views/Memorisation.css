@@ -7685,12 +7685,12 @@ html {
 
 .verse-aid-title {
   margin-bottom: 6px;
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  font-weight: 700;
+  color: var(--accent-strong, var(--accent));
+  font-size: 0.84rem;
+  font-weight: 720;
   font-style: normal;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   display: inline-flex;
   align-items: center;
 }
@@ -33034,6 +33034,16 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   border-radius: 14px;
   background: color-mix(in srgb, var(--surface-muted, #f3ebe0) 88%, transparent);
   border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+[data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-block {
+  background: color-mix(in srgb, var(--zone-elevated, #2a241c) 90%, #12100c 10%);
+  border-color: color-mix(in srgb, var(--border, #5a4a3a) 75%, transparent);
+}
+
+[data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-summary,
+[data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-summary--ayah {
+  color: #f3ebe1 !important;
 }
 
 .mutqin-modal-surface.session-exit-modal .session-exit-progress-summary--ayah {

@@ -942,35 +942,28 @@
     align-content: start;
   }
 
-  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(1) {
-    grid-column: 1 / span 2;
-    grid-row: 1;
+  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(1),
+  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(2),
+  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(3),
+  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(4),
+  .tools-body > .sheet > .sheet-section .field-stack > .field,
+  .tools-body > .sheet > .sheet-section .field-stack-compact > .field,
+  .tools-body .setup-field-list > .field,
+  .tools-body .setup-field-row {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
-  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(2) {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
-  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(3) {
-    grid-column: 3 / -1;
-    grid-row: 1;
-  }
-
-  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(4) {
-    grid-column: 1 / -1;
-    grid-row: 3;
-  }
-
-  .field-stack > .field:has(.range.range-single),
-  .field-stack-compact > .field:has(.range.range-single),
-  .field-stack > .field-repetitions-clean,
-  .field-stack-compact > .field-repetitions-clean,
-  .field-stack > .technique-preview-block,
-  .field-stack-compact > .technique-preview-block,
-  .field-stack > .quiz-launch-btn,
-  .field-stack-compact > .quiz-launch-btn {
-    grid-column: 1 / -1;
+  .sheet-content > .field-stack,
+  .sheet-content > .field-stack-compact,
+  .planner-controls-content > .field-stack,
+  .tools-body .setup-field-list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.65rem !important;
+    width: 100% !important;
   }
 
   .range.range-single {
@@ -3191,9 +3184,10 @@
   }
 
   .verses-grid .verse-aid-title {
-    font-size: 0.65rem !important;
-    margin-bottom: 0.1rem !important;
-    letter-spacing: 0.02em;
+    font-size: 0.82rem !important;
+    margin-bottom: 0.28rem !important;
+    letter-spacing: 0.06em;
+    font-weight: 720 !important;
   }
 
   .verses-grid .verse-arabic,
@@ -3308,21 +3302,28 @@
     display: grid !important;
     gap: 0.35rem !important;
     width: 100% !important;
+    max-width: 100% !important;
     padding: 0.65rem 0.7rem !important;
     border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
     border-radius: 0.65rem;
     background: color-mix(in srgb, var(--zone-reading, #fff) 92%, var(--zone-elevated, #f7f4ef) 8%);
     box-sizing: border-box !important;
+    grid-column: 1 / -1 !important;
   }
 
   .tools-body .setup-field-row > .select,
   .tools-body .setup-field-row > .input,
   .tools-body .setup-field-row .range,
   .tools-body .setup-field-row .range-control,
-  .tools-body .setup-field-row .radio-group {
+  .tools-body .setup-field-row .radio-group,
+  .tools-body .setup-field-row .field-hint {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+  }
+
+  .tools-body .setup-field-row .field-hint {
+    white-space: normal !important;
   }
 
   /* Practice: technique dropdown contents full width */
@@ -3340,6 +3341,22 @@
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+  }
+
+  .tools-body .sheet .sheet-content .technique-description,
+  .tools-body .sheet .sheet-content .technique-best {
+    display: flex !important;
+    margin-inline: 0 !important;
+    align-self: stretch !important;
+  }
+
+  .tools-body .sheet .sheet-content .technique-description span,
+  .tools-body .sheet .sheet-content .technique-best span,
+  .tools-body .sheet .sheet-content .field-hint,
+  .tools-body .sheet .sheet-content .st-sub {
+    width: 100% !important;
+    max-width: 100% !important;
+    white-space: normal !important;
   }
 
   .tools-body .sheet .sheet-content .radio-group,
@@ -3416,5 +3433,166 @@
     font-size: 0.72rem !important;
     opacity: 0.78;
     margin-top: 0.15rem;
+  }
+
+  /* Translation / transliteration titles larger than content */
+  .verses-grid .verse-aid-title {
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    margin-bottom: 0.28rem !important;
+    color: var(--accent, #c48a4a) !important;
+  }
+
+  .verses-grid .verse-translation,
+  .verses-grid .verse-transliteration,
+  .verses-grid .verse-aid {
+    font-size: 0.78rem !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Stacked + mushaf ayah font 130% */
+  .verses-grid .verse-arabic,
+  .verses-grid .verse-arabic.verse-arabic-primary,
+  .verses-grid .verse-arabic.verse-arabic-with-end {
+    font-size: calc((var(--verse-font-percent, 130) / 100) * clamp(1.35rem, 5.8vw, 1.95rem)) !important;
+    line-height: 1.6 !important;
+    padding: 0.45rem 0.35rem 0.55rem !important;
+  }
+
+  .main.mushaf-mode-active .madani-word,
+  .main.mushaf-mode-active .madani-word--glyph,
+  .main.mushaf-mode-active .madani-word--unicode,
+  .main.mushaf-mode-active .madani-word--fallback {
+    font-size: calc((var(--verse-font-percent, 130) / 100) * clamp(1.2rem, 4.6vw, 1.75rem)) !important;
+  }
+
+  .main.mushaf-mode-active .madani-line--glyphs {
+    font-size: calc((var(--verse-font-percent, 130) / 100) * clamp(1.25rem, 4.8vw, 1.85rem)) !important;
+  }
+
+  /* Mushaf crop fix + breathing room */
+  .main.mushaf-mode-active .mushaf-shell__page {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding-inline: 0.35rem !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-page,
+  .main.mushaf-mode-active .mushaf-page--ornate {
+    overflow: visible !important;
+    padding: 0.55rem 0.4rem 0.85rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .main.mushaf-mode-active .madani-ornate,
+  .main.mushaf-mode-active .madani-ornate__frame {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .main.mushaf-mode-active .madani-ornate__inner {
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    padding: 0.55rem 0.65rem 0.7rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .main.mushaf-mode-active .madani-page-sheet {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    padding-inline: 0.2rem !important;
+    gap: 0.18rem !important;
+    transform-origin: top center;
+    will-change: transform;
+  }
+
+  .main.mushaf-mode-active .madani-line,
+  .main.mushaf-mode-active .madani-line--ayah,
+  .main.mushaf-mode-active .madani-line--glyphs {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding-block: 0.18em !important;
+    padding-inline: 0.15em !important;
+    letter-spacing: 0.01em;
+  }
+
+  .main.mushaf-mode-active .madani-word {
+    padding-inline: 0.04em !important;
+  }
+
+  .main.mushaf-mode-active .madani-word--out {
+    display: none !important;
+  }
+
+  /* Restore mini player + theme-safe text */
+  .player-dock,
+  .player-dock.tools-open {
+    z-index: 12600 !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+  }
+
+  .player-dock > *,
+  .player-dock-card,
+  .player-bar,
+  .playback-pill {
+    pointer-events: auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .player-bar.compact .player-mini,
+  .player-bar .player-mini {
+    display: flex !important;
+  }
+
+  .player-mini .player-chapter {
+    color: var(--text) !important;
+    -webkit-text-fill-color: var(--text) !important;
+    font-weight: 700 !important;
+  }
+
+  .player-mini .player-verse {
+    color: color-mix(in srgb, var(--text) 72%, var(--text-muted)) !important;
+    -webkit-text-fill-color: color-mix(in srgb, var(--text) 72%, var(--text-muted)) !important;
+  }
+
+  [data-theme="dark"] .player-mini .player-chapter,
+  [data-theme="dark"] .player-mini .player-verse,
+  [data-theme="dark"] .player-bar .player-chapter,
+  [data-theme="dark"] .player-bar .player-verse,
+  [data-theme="dark"] .playback-pill-copy strong,
+  [data-theme="dark"] .playback-pill-copy small {
+    color: #f3ebe1 !important;
+    -webkit-text-fill-color: #f3ebe1 !important;
+    opacity: 1 !important;
+  }
+
+  /* End session progress block dark mode */
+  [data-theme="dark"] .session-exit-modal .session-exit-progress-block,
+  [data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-block {
+    background: color-mix(in srgb, var(--zone-elevated, #2a241c) 88%, #12100c 12%) !important;
+    border-color: color-mix(in srgb, var(--border, #5a4a3a) 70%, transparent) !important;
+  }
+
+  [data-theme="dark"] .session-exit-modal .session-exit-progress-summary,
+  [data-theme="dark"] .session-exit-modal .session-exit-progress-summary--ayah,
+  [data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-summary,
+  [data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-summary--ayah {
+    color: #f3ebe1 !important;
+    -webkit-text-fill-color: #f3ebe1 !important;
+  }
+
+  .verses-grid .verse-number.verse-ayah-pill {
+    display: inline-flex !important;
+    order: -2;
   }
 }

@@ -859,7 +859,8 @@
                 :aria-label="`Open ayah ${verse.number}${isVerseVisuallyActive(verse.key) ? ', active ayah' : ''}`">
                 <div class="verse-header">
                   <div class="verse-badges">
-                                        <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge verse-status-badge-active">{{ t('memorisation.badges.active') }}</span>
+                    <span class="verse-number verse-ayah-pill">{{ t('memorisation.a11y.ayahNumberLabel', { number: verse.number }) }}</span>
+                    <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge verse-status-badge-active">{{ t('memorisation.badges.active') }}</span>
                     <span v-if="isNewHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-new">{{ t('memorisation.badges.new') }}</span>
                     <span v-if="isDueHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-due">{{ t('memorisation.due') }}</span>
                     <span v-if="isWeakAyah(verse.key)" class="verse-status-badge verse-status-badge-weak">{{ t('memorisation.badges.weak') }}</span>

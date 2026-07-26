@@ -6643,6 +6643,7 @@ export default {
     window.addEventListener('scroll', this.handleWindowScroll, { passive: true })
     this.handlePracticeTurnCalloutResize = () => {
       if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
+      this.scheduleMadaniPageFit()
     }
     window.addEventListener('resize', this.handlePracticeTurnCalloutResize, { passive: true })
     document.addEventListener('click', this.handleClickOutside)
@@ -6777,7 +6778,10 @@ export default {
     readingViewMode(newVal) {
       if (newVal === 'mushaf') {
         this.applyMushafThemeDefault(this.theme, { force: !this.mushafBackgroundTouched })
-        this.ensureMadaniPagesLoaded().then(() => this.syncMushafPageToActiveVerse())
+        this.ensureMadaniPagesLoaded().then(() => {
+          this.syncMushafPageToActiveVerse()
+          this.$nextTick(() => this.scheduleMadaniPageFit())
+        })
       }
       this.applyMobileLayoutFontDefault(newVal)
       if (this.isMobileViewport()) {
@@ -6790,6 +6794,19 @@ export default {
         // Mobile: single deferred sync instead of multi-timeout DOM walks
         this.$nextTick(() => this.schedulePracticeFocusWordDomSync())
       }
+      this.$nextTick(() => this.scheduleMadaniPageFit())
+    },
+    defaultFontSize() {
+      this.$nextTick(() => this.scheduleMadaniPageFit())
+    },
+    mushafPageIndex() {
+      this.$nextTick(() => this.scheduleMadaniPageFit())
+    },
+    tajweedEnabled() {
+      this.$nextTick(() => this.scheduleMadaniPageFit())
+    },
+    quranFont() {
+      this.$nextTick(() => this.scheduleMadaniPageFit())
     },
     showTools(newVal) {
       this.syncBodyScrollLock(newVal)
@@ -7150,9 +7167,34 @@ export default {
 
     applyMobileLayoutFontDefault(mode = this.readingViewMode) {
       if (!this.isMobileViewport()) return
-      const next = mode === 'mushaf' ? 130 : 95
+      const next = 130
       if (Number(this.defaultFontSize) === next) return
       this.defaultFontSize = next
+    },
+
+    scheduleMadaniPageFit() {
+      if (typeof window === 'undefined') return
+      if (this._madaniFitRaf) window.cancelAnimationFrame(this._madaniFitRaf)
+      this._madaniFitRaf = window.requestAnimationFrame(() => {
+        this._madaniFitRaf = null
+        this.fitMadaniPageToViewport()
+      })
+    },
+
+    fitMadaniPageToViewport() {
+      if (!this.isMobileViewport() || this.readingViewMode !== 'mushaf') return
+      const viewport = this.$refs.mushafViewport
+      const sheet = viewport?.querySelector?.('.madani-page-sheet')
+      if (!viewport || !sheet) return
+      sheet.style.removeProperty('--madani-fit-scale')
+      sheet.style.removeProperty('transform')
+      const available = Math.max(0, viewport.clientWidth - 24)
+      const needed = Math.max(sheet.scrollWidth, sheet.clientWidth)
+      if (!available || !needed) return
+      const scale = Math.min(1, available / needed)
+      sheet.style.setProperty('--madani-fit-scale', String(Number(scale.toFixed(4))))
+      sheet.style.transform = `scale(${scale})`
+      sheet.style.transformOrigin = 'top center'
     },
 
     resolveCsrfToken() {
@@ -21006,6 +21048,7 @@ export default {
         const primaryPage = this.madaniPageNumbers[currentIndex] || this.madaniPageNumbers[0]
         await this.ensureMadaniPageLoaded(primaryPage, { force: !!options.force })
         this.prefetchAdjacentMadaniFonts(primaryPage)
+        this.$nextTick(() => this.scheduleMadaniPageFit())
         return this.madaniPageNumbers
       } catch (error) {
         console.error('Madani page load failed:', error)
@@ -21014,6 +21057,7 @@ export default {
       } finally {
         if (requestId === this.madaniLoadRequestId) {
           this.madaniPagesLoading = false
+          this.$nextTick(() => this.scheduleMadaniPageFit())
         }
       }
     },
@@ -21027,6 +21071,7 @@ export default {
         && Number(cached.layoutVersion) === MADANI_LAYOUT_VERSION
       ) {
         await this.ensureMadaniFontForPage(page)
+        this.$nextTick(() => this.scheduleMadaniPageFit())
         return cached
       }
 
@@ -21043,6 +21088,7 @@ export default {
         }
         this.madaniPageByVerseKey = nextMap
         await this.ensureMadaniFontForPage(page)
+        this.$nextTick(() => this.scheduleMadaniPageFit())
         return layout
       } catch (error) {
         console.error(`Madani page ${page} load failed:`, error)
@@ -24975,7 +25021,7 @@ export default {
       }
       this.playerVisible = true
       this.playerDismissed = false
-      this.playerCompact = false
+      this.playerCompact = this.isMobileViewport() ? true : false
 
       try {
         await this.waitForAudioElementReady(this.audioElement)
