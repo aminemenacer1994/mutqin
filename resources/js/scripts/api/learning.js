@@ -293,6 +293,26 @@ export const learningApi = {
     })
     return Array.isArray(data?.history) ? data.history : []
   },
+  async createMemorisationAssessment(payload) {
+    const { data } = await http.post('/memorisation/assessments', payload)
+    return data
+  },
+  async adjustMemorisationPracticePlan(planId, adjustments) {
+    const { data } = await http.patch(`/memorisation/practice-plans/${planId}`, adjustments)
+    return data?.practice_plan ?? data
+  },
+  async startMemorisationPracticePlan(planId) {
+    const { data } = await http.post(`/memorisation/practice-plans/${planId}/start`)
+    return data
+  },
+  async completeMemorisationPracticePlan(planId, completion = {}) {
+    const { data } = await http.post(`/memorisation/practice-plans/${planId}/complete`, completion)
+    return data?.practice_plan ?? data
+  },
+  async retestMemorisationPracticePlan(planId, payload) {
+    const { data } = await http.post(`/memorisation/practice-plans/${planId}/retest`, payload)
+    return data
+  },
   async submitRecommendationAdaptiveAssessment(recommendationId, assessment) {
     const { data } = await http.post('/recommendations/adaptive-assessment', {
       recommendation_id: recommendationId,
@@ -333,13 +353,13 @@ function sanitizeRecommendationSettings(settings) {
   if (!settings || typeof settings !== 'object') return null
   const clean = {}
   const technique = String(settings.technique || '').toLowerCase().trim()
-  if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(technique)) clean.technique = technique
+  if (['talqin', 'focus', 'blur', 'chaining', 'anchor', 'chunking'].includes(technique)) clean.technique = technique
   const complementary = String(settings.complementary_technique || '').toLowerCase().trim()
-  if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(complementary)) {
+  if (['talqin', 'focus', 'blur', 'chaining', 'anchor', 'chunking'].includes(complementary)) {
     clean.complementary_technique = complementary
   }
   const tipTechnique = String(settings.tip_technique || '').toLowerCase().trim()
-  if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(tipTechnique)) {
+  if (['talqin', 'focus', 'blur', 'chaining', 'anchor', 'chunking'].includes(tipTechnique)) {
     clean.tip_technique = tipTechnique
   }
   if (settings.reciter) clean.reciter = String(settings.reciter)

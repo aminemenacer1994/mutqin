@@ -1,0 +1,99 @@
+<?php
+
+namespace Tests\Unit;
+
+use App\Services\Memorisation\QuranAlignmentService;
+use App\Services\Memorisation\PracticePlanRecommendationService;
+use App\Services\Memorisation\WeaknessAnalysisService;
+use PHPUnit\Framework\TestCase;
+
+class QuranAlignmentServiceTest extends TestCase
+{
+    public function test_normalize_strips_diacritics_and_unifies_alef(): void
+    {
+        $service = new QuranAlignmentService;
+        $this->assertSame('الله', $service->normalizeArabic('اللَّهَ'));
+        $this->assertSame('الرحمن', $service->normalizeArabic('الرَّحْمَٰنِ'));
+    }
+
+    public function test_perfect_recitation_marks_words_correct(): void
+    {
+        $service = new QuranAlignmentService;
+        $result = $service->align(
+            [[
+                'ayah_number' => 1,
+                'surah_number' => 1,
+                'text' => 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+            ]],
+            [
+                ['word' => 'بسم', 'confidence' => 0.95],
+                ['word' => 'الله', 'confidence' => 0.94],
+                ['word' => 'الرحمن', 'confidence' => 0.93],
+                ['word' => 'الرحيم', 'confidence' => 0.96],
+            ]
+        );
+
+        $this->assertGreaterThanOrEqual(90, $result['accuracy']);
+        $this->assertSame('correct', $result['word_results'][0]['status']);
+        $this->assertSame(4, $result['color_counts']['green']);
+    }
+
+    public function test_missing_word_is_detected(): void
+    {
+        $service = new QuranAlignmentService;
+        $result = $service->align(
+            [[
+                'ayah_number' => 1,
+                'surah_number' => 1,
+                'words' => ['بسم', 'الله', 'الرحمن', 'الرحيم'],
+            ]],
+            [
+                ['word' => 'بسم', 'confidence' => 0.9],
+                ['word' => 'الله', 'confidence' => 0.9],
+                ['word' => 'الرحيم', 'confidence' => 0.9],
+            ]
+        );
+
+        $statuses = array_column($result['word_results'], 'status');
+        $this->assertContains('missing', $statuses);
+    }
+
+    public function test_weakness_and_plan_select_anchor_for_few_weak_words(): void
+    {
+        $alignment = new QuranAlignmentService;
+        $weakness = new WeaknessAnalysisService;
+        $plans = new PracticePlanRecommendationService;
+
+        $aligned = $alignment->align(
+            [[
+                'ayah_number' => 134,
+                'surah_number' => 2,
+                'words' => ['قال', 'اهم', 'اسلمت', 'لرب', 'العالمين'],
+            ]],
+            [
+                ['word' => 'قال', 'confidence' => 0.9],
+                ['word' => 'اهم', 'confidence' => 0.9],
+                ['word' => 'كتب', 'confidence' => 0.9],
+                ['word' => 'لرب', 'confidence' => 0.9],
+                ['word' => 'العالمين', 'confidence' => 0.9],
+            ]
+        );
+        $analysis = $weakness->analyse(
+            $aligned['word_results'],
+            $aligned['extra_words'],
+            $aligned['color_counts'],
+            $aligned['accuracy']
+        );
+        $plan = $plans->recommend($analysis, [
+            'surah_number' => 2,
+            'surah_name' => 'Al-Baqarah',
+            'start_ayah' => 134,
+            'end_ayah' => 134,
+        ], $aligned['accuracy']);
+
+        $this->assertNotEmpty($plan['techniques']);
+        $this->assertArrayHasKey('title', $plan);
+        $this->assertArrayHasKey('explanation', $plan);
+        $this->assertGreaterThanOrEqual(1, (int) ($plan['repetitions']['target'] ?? 0));
+    }
+}

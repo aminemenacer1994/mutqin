@@ -1,0 +1,413 @@
+/* AI Memorisation Detection — calm modal + practice HUD */
+
+.amd-overlay {
+  z-index: 12050;
+}
+
+.amd-modal {
+  max-width: 720px;
+  width: min(720px, calc(100vw - 1.5rem));
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #f7f4ef 0%, #fbfaf7 42%, #ffffff 100%);
+  box-shadow: 0 24px 60px rgba(28, 25, 23, 0.18);
+}
+
+.amd-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.35rem 1.5rem 0.75rem;
+}
+
+.amd-header-copy h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: #1c1917;
+}
+
+.amd-range {
+  margin: 0.35rem 0 0;
+  color: #57534e;
+  font-size: 0.95rem;
+}
+
+.amd-body {
+  padding: 0.5rem 1.5rem 1.5rem;
+}
+
+.amd-panel {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.amd-lead {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: #292524;
+  max-width: 38rem;
+}
+
+.amd-meta {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.amd-meta li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(68, 64, 60, 0.08);
+}
+
+.amd-meta span {
+  color: #78716c;
+  font-size: 0.9rem;
+}
+
+.amd-meta strong {
+  color: #1c1917;
+  font-weight: 600;
+}
+
+.amd-meta strong[data-status="denied"],
+.amd-meta strong[data-status="unsupported"] {
+  color: #b45309;
+}
+
+.amd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.amd-actions--inline {
+  margin-top: 0.5rem;
+}
+
+.amd-error {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  background: #fff7ed;
+  color: #9a3412;
+  border: 1px solid rgba(194, 65, 12, 0.18);
+}
+
+.amd-live-status {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(68, 64, 60, 0.08);
+}
+
+.amd-live-status strong {
+  font-size: 1.1rem;
+  color: #1c1917;
+}
+
+.amd-live-status p {
+  margin: 0;
+  color: #57534e;
+}
+
+.amd-live-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: #16a34a;
+  box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45);
+  animation: amd-pulse 1.8s ease-out infinite;
+}
+
+.amd-live-status[data-stage="processing"] .amd-live-dot,
+.amd-live-status[data-stage="analysing"] .amd-live-dot,
+.amd-live-status[data-stage="starting"] .amd-live-dot {
+  background: #ca8a04;
+}
+
+@keyframes amd-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(22, 163, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+}
+
+.amd-live-words,
+.amd-word-review {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: flex-start;
+}
+
+.amd-live-word,
+.amd-word-chip {
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.45rem;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.amd-live-word.is-correct,
+.amd-word-chip.is-correct { color: #15803d; background: rgba(22, 163, 74, 0.1); }
+.amd-live-word.is-minor,
+.amd-word-chip.is-minor { color: #b45309; background: rgba(245, 158, 11, 0.14); }
+.amd-live-word.is-wrong,
+.amd-word-chip.is-wrong { color: #b91c1c; background: rgba(239, 68, 68, 0.12); }
+.amd-live-word.is-missing,
+.amd-word-chip.is-missing { color: #111827; background: rgba(17, 24, 39, 0.08); }
+.amd-live-word.is-extra,
+.amd-word-chip.is-extra { color: #6b7280; background: rgba(107, 114, 128, 0.12); }
+.amd-live-word.is-uncertain,
+.amd-word-chip.is-uncertain { color: #57534e; background: rgba(120, 113, 108, 0.1); }
+
+.amd-summary {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.amd-summary-kicker {
+  margin: 0;
+  color: #78716c;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.amd-summary-title {
+  font-size: 1.15rem;
+  line-height: 1.45;
+  color: #1c1917;
+}
+
+.amd-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.amd-stats article {
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(68, 64, 60, 0.08);
+  display: grid;
+  gap: 0.2rem;
+}
+
+.amd-stats span {
+  color: #78716c;
+  font-size: 0.8rem;
+}
+
+.amd-stats strong {
+  font-size: 1.2rem;
+  color: #1c1917;
+}
+
+.amd-improvement {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(22, 163, 74, 0.08);
+  border: 1px solid rgba(22, 163, 74, 0.16);
+}
+
+.amd-improvement-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+  color: #166534;
+}
+
+.amd-ayah-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.amd-ayah-card {
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(68, 64, 60, 0.08);
+}
+
+.amd-ayah-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.amd-ayah-card[data-priority="priority"] {
+  border-color: rgba(185, 28, 28, 0.22);
+  background: rgba(254, 242, 242, 0.85);
+}
+
+.amd-ayah-card[data-priority="attention"] {
+  border-color: rgba(180, 83, 9, 0.22);
+  background: rgba(255, 247, 237, 0.9);
+}
+
+.amd-ayah-card p {
+  margin: 0;
+  color: #57534e;
+  font-size: 0.9rem;
+}
+
+.amd-plan-card {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.1rem;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid rgba(68, 64, 60, 0.1);
+}
+
+.amd-plan-kicker {
+  color: #78716c;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.amd-plan-card h3 {
+  margin: 0.25rem 0 0;
+  font-size: 1.2rem;
+  color: #1c1917;
+}
+
+.amd-plan-why {
+  margin: 0;
+  color: #44403c;
+  line-height: 1.5;
+}
+
+.amd-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.amd-plan-grid div,
+.amd-weak-words,
+.amd-techniques article {
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  background: #fafaf9;
+}
+
+.amd-plan-grid span,
+.amd-weak-words > span {
+  display: block;
+  color: #78716c;
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
+}
+
+.amd-weak-words em {
+  font-style: normal;
+  margin-inline-start: 0.35rem;
+  color: #9a3412;
+}
+
+.amd-techniques {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.amd-techniques strong {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.amd-techniques p {
+  margin: 0;
+  color: #57534e;
+  font-size: 0.92rem;
+}
+
+.amd-adjust {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 12px;
+  background: #fafaf9;
+}
+
+.amd-adjust label {
+  display: grid;
+  gap: 0.35rem;
+  color: #44403c;
+  font-size: 0.92rem;
+}
+
+.amd-adjust input[type="number"],
+.amd-adjust select {
+  border: 1px solid rgba(68, 64, 60, 0.18);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  background: #fff;
+}
+
+.amd-checkbox {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  grid-template-columns: none;
+}
+
+.amd-practice-hud {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(180deg, #f7f4ef 0%, #fff 100%);
+  border-bottom: 1px solid rgba(68, 64, 60, 0.1);
+}
+
+.amd-practice-hud-kicker {
+  display: block;
+  color: #78716c;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.15rem;
+}
+
+.amd-practice-hud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .amd-stats,
+  .amd-plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .amd-header,
+  .amd-body {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}

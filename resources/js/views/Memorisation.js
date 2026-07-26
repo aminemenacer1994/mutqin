@@ -146,6 +146,14 @@ import { scoreRetention } from '../scripts/composables/useRetentionZones'
 import { updateAyahProgress } from '../scripts/engine/spaced_repetition_memory'
 import { WordSyncEngine } from '../scripts/audioSync'
 import HifzPlanCreatorModal from '../components/HifzPlanCreatorModal.vue'
+import AiMemorisationDetectionModal from '../components/AiMemorisationDetectionModal.vue'
+import {
+  AMD_STAGES,
+  amdStageLabel,
+  buildAssessmentAyahs,
+  buildRecognitionWords,
+  memorisationDetectionApi,
+} from '../scripts/memorisationDetection'
 import {
   generateTodaySession,
   HIFZ_PLAN_STORAGE_KEY,
@@ -286,8 +294,8 @@ const HELP_LEARNING_FALLBACKS = {
       }
     },
     aiRecitation: {
-      title: 'AI Recitation',
-      description: 'AI Recitation listens to your recitation and gives instant feedback so you can identify mistakes and improve accuracy while memorising.',
+      title: 'AI Memorisation Detection',
+      description: 'Mutqin listens to your memorisation, identifies exact weak words and ayahs, and builds a personalised practice plan with the right technique.',
       bestFor: 'Students who want guided practice and immediate feedback.'
     },
     talqinMode: {
@@ -306,7 +314,8 @@ const HELP_LEARNING_FALLBACKS = {
 export default {
   name: 'TelawaApp',
   components: {
-    HifzPlanCreatorModal
+    HifzPlanCreatorModal,
+    AiMemorisationDetectionModal,
   },
   props: {
     auth: { type: Object, default: () => ({ check: false, id: null }) }
@@ -823,6 +832,24 @@ export default {
       recordingsAudioElement: null,
       recordingsAudioBound: false,
       ignoreRecordingsAudioPauseEvent: false,
+      // AI Memorisation Detection (replaces dual AI Recitation / Checker modals)
+      amdOpen: false,
+      amdStage: AMD_STAGES.IDLE,
+      amdScope: 'session',
+      amdMicStatus: 'unknown',
+      amdError: '',
+      amdBusy: false,
+      amdAssessment: null,
+      amdAnalysis: null,
+      amdPracticePlan: null,
+      amdImprovement: null,
+      amdAdjustOpen: false,
+      amdStartedAt: 0,
+      amdPreviousAssessmentId: null,
+      amdRecommendationId: null,
+      amdPracticeHud: null,
+      amdActiveChunkIndex: 0,
+      amdStrengthenedWords: 0,
       showSelfCheckModal: false,
       selfCheckVerseRef: null,
       selfCheckVerseKey: '',
@@ -4500,6 +4527,86 @@ export default {
       const single = formatAyahRangeLabel({ start: this.selfCheckModalVerse?.number }, this.t.bind(this))
       return single ? `${prefix} for ${single}` : prefix
     },
+    amdTitle() {
+      return this.t?.('memorisation.amd.title') || 'AI Memorisation Detection'
+    },
+    amdRangeLabel() {
+      const surah = this.currentChapter?.name_simple || this.activeChapterName || `Surah ${this.chapterId || ''}`.trim()
+      const targets = this.getRecitationCheckTargetVerses()
+      const numbers = targets.map((v) => Number(v?.number || String(v?.key || '').split(':')[1] || 0)).filter(Boolean)
+      const start = numbers[0] || Number(this.rangeStart || 0)
+      const end = numbers[numbers.length - 1] || Number(this.rangeEnd || start)
+      if (!start) return surah
+      return start === end ? `${surah} · Ayah ${start}` : `${surah} · Ayahs ${start}–${end}`
+    },
+    amdAyahCount() {
+      const targets = this.getRecitationCheckTargetVerses()
+      if (targets.length) return targets.length
+      const start = Number(this.rangeStart || 0)
+      const end = Number(this.rangeEnd || start)
+      return start && end ? Math.max(1, end - start + 1) : 0
+    },
+    amdAssessmentType() {
+      return this.t?.('memorisation.amd.assessmentType') || 'From memory'
+    },
+    amdMicStatusLabel() {
+      const map = {
+        granted: this.t?.('memorisation.amd.micGranted') || 'Ready',
+        denied: this.t?.('memorisation.amd.micDenied') || 'Permission needed',
+        unsupported: this.t?.('memorisation.amd.micUnsupported') || 'Not supported in this browser',
+        unknown: this.t?.('memorisation.amd.micChecking') || 'Checking…',
+      }
+      return map[this.amdMicStatus] || map.unknown
+    },
+    amdStageLabel() {
+      return amdStageLabel(this.amdStage, this.t?.bind(this))
+    },
+    amdLiveHint() {
+      if (this.amdStage === AMD_STAGES.STARTING) {
+        return this.t?.('memorisation.amd.hintStarting') || 'Preparing the microphone…'
+      }
+      if (this.amdStage === AMD_STAGES.LISTENING) {
+        return this.t?.('memorisation.amd.hintListening') || 'Recite calmly. Mutqin is listening.'
+      }
+      if (this.amdStage === AMD_STAGES.PROCESSING) {
+        return this.t?.('memorisation.amd.hintProcessing') || 'Processing your recitation…'
+      }
+      if (this.amdStage === AMD_STAGES.ANALYSING) {
+        return this.t?.('memorisation.amd.hintAnalysing') || 'Comparing with the Quran text…'
+      }
+      return ''
+    },
+    amdVisibleLiveWords() {
+      const words = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
+      return words
+        .filter((word) => word && word.status && word.status !== 'pending')
+        .slice(-18)
+        .map((word, index) => ({
+          text: word.text || word.word || '',
+          status: word.status || word.visualStatus || 'uncertain',
+          index,
+        }))
+    },
+    amdReadyCopy() {
+      return this.t?.('memorisation.amd.readyCopy')
+        || 'Recite this passage from memory. Mutqin will listen and identify the areas that may need strengthening.'
+    },
+    amdLabels() {
+      return {
+        start: this.t?.('memorisation.amd.startAssessment') || 'Start Assessment',
+        stop: this.t?.('memorisation.stop_check') || 'Stop',
+        cancel: this.t?.('common.cancel') || 'Cancel',
+        close: this.t?.('common.close') || 'Close',
+        startPlan: this.t?.('memorisation.amd.startPlan') || 'Start This Practice Plan',
+        adjustPlan: this.t?.('memorisation.amd.adjustPlan') || 'Adjust Plan',
+        chooseOther: this.t?.('memorisation.amd.chooseOther') || 'Choose Different Session',
+        retest: this.t?.('memorisation.amd.retest') || 'Re-test weak areas',
+        retry: this.t?.('memorisation.aiCheck.tryAgain') || 'Try again',
+      }
+    },
+    amdPracticeHudVisible() {
+      return !!(this.amdPracticeHud && this.amdStage === AMD_STAGES.PRACTICE_ACTIVE)
+    },
     aiMemorisationCheckerVerse() {
       if (!this.aiMemorisationCheckerVerseKey) return null
       const liveVerse = this.verses.find(verse => verse.key === this.aiMemorisationCheckerVerseKey) || null
@@ -5020,6 +5127,7 @@ export default {
         || this.showSessionAnalyticsModal
         || this.showRecordingsLibrary
         || this.showSelfCheckModal
+        || this.amdOpen
         || this.showPlannerCompletionModal
         || this.showSessionEndedModal
         || this.showPlannerModal
@@ -6827,6 +6935,27 @@ export default {
     },
     isAnyModalOverlayActive() {
       this.syncBodyScrollLock()
+    },
+    amdOpen(newVal) {
+      this.syncBodyScrollLock(!!newVal || this.isAnyModalOverlayActive)
+    },
+    recitationCheckRecording(newVal) {
+      if (!this.amdOpen) return
+      if (newVal) {
+        this.amdStage = AMD_STAGES.LISTENING
+        this.amdBusy = false
+        this.amdMicStatus = 'granted'
+      } else if ([AMD_STAGES.LISTENING, AMD_STAGES.STARTING].includes(this.amdStage)) {
+        this.amdStage = AMD_STAGES.PROCESSING
+        this.amdBusy = true
+      }
+    },
+    recitationCheckPreparing(newVal) {
+      if (!this.amdOpen) return
+      if (newVal) {
+        this.amdStage = AMD_STAGES.STARTING
+        this.amdBusy = true
+      }
     },
     showPostSessionModal(newVal) {
       this.syncBodyScrollLock(newVal)
@@ -11025,18 +11154,18 @@ export default {
         this.postSessionAiReciteActive = true
         // Post-session Quiz AI should never hard-lock word progression.
         this.aiRecitationStrictProgression = false
-        // Wait one tick so the completion Teleport unmounts before AI Recite mounts.
+        // Wait one tick so the completion Teleport unmounts before detection mounts.
         await this.$nextTick()
-        this.openAiRecitationCheckForSession()
+        await this.openAiMemorisationDetection({ scope: 'session' })
         await this.$nextTick()
-        if (!this.showSelfCheckModal) {
+        if (!this.amdOpen) {
           throw new Error('ai_recite_unavailable')
         }
-        const overlay = document.querySelector('.self-check-modal-overlay')
+        const overlay = document.querySelector('.amd-overlay')
         if (overlay) {
           overlay.style.zIndex = '20000'
         }
-        const title = overlay?.querySelector?.('#selfCheckModalTitle')
+        const title = overlay?.querySelector?.('#amdModalTitle')
         if (title && typeof title.focus === 'function') {
           title.setAttribute('tabindex', '-1')
           title.focus()
@@ -14955,120 +15084,470 @@ export default {
       }
     },
     openAiRecitationCheckForVerse(verse) {
-      if (!verse?.key) return
-      if (this.recitationCheckRecording || this.recitationCheckPreparing) {
-        this.showBanner(this.t('toasts.stopTheCurrentSelfCheckBefore'), 'info', 2200)
-        return
-      }
-      this.showTools = false
-      this.recitationCheckScope = 'ayah'
-      this.selfCheckVerseRef = this.buildSelfCheckVerseRef(verse)
-      this.selfCheckVerseKey = verse.key
-      this.selfCheckFontSize = this.getSelfCheckInitialFontSize(verse)
-      this.selfCheckTajweedEnabled = !!this.tajweedEnabled
-      this.selfCheckError = ''
-      this.selfCheckLastSavedAyahKey = ''
-      this.selfCheckPeekActive = false
-      this.selfCheckModeChoiceVisible = false
-      this.selfCheckSavedAttemptsVisible = false
-      this.selfCheckBlurEnabled = false
-      const target = this.selfCheckVerseRef
-      this.recitationCheckPendingTargets = target ? [target] : []
-      this.recitationCheckPanelOpen = true
-      this.recitationCheckError = ''
-      this.recitationCheckResult = null
-      this.syncSessionEvaluationMaps('recitation', this.recitationCheckPendingTargets, [], false)
-      this.seedRecitationLiveWords(this.recitationCheckPendingTargets)
-      this.showSelfCheckModal = true
-      this.syncBodyScrollLock(true)
+      this.openAiMemorisationDetection({ verse, scope: 'ayah' })
     },
     openAiRecitationCheckForSession() {
+      this.openAiMemorisationDetection({ scope: 'session' })
+    },
+    openAiMemorisationCheckerForVerse(verse) {
+      this.openAiMemorisationDetection({ verse, scope: 'ayah' })
+    },
+    openAiMemorisationCheckerForSession() {
+      this.openAiMemorisationDetection({ scope: 'session' })
+    },
+    async openAiMemorisationDetection({ verse = null, scope = 'session', previousAssessmentId = null } = {}) {
       if (this.recitationCheckRecording || this.recitationCheckPreparing) {
-        // Post-session reopen must not be blocked by a stale preparing gate.
         if (this.postSessionAiReciteActive || this.showPostSessionModal) {
           this.resetStuckRecitationCheckGate()
         } else {
+          this.showBanner(this.t('toasts.stopTheCurrentSelfCheckBefore'), 'info', 2200)
           return
         }
       }
-      const targets = this.getSessionCheckTargetVerses()
+      this.showTools = false
+      this.showSelfCheckModal = false
+      this.showAiMemorisationCheckerModal = false
+
+      let targets = []
+      if (scope === 'ayah' && verse?.key) {
+        const ref = this.buildSelfCheckVerseRef(verse)
+        targets = ref ? [ref] : []
+        this.recitationCheckScope = 'ayah'
+      } else {
+        targets = this.getSessionCheckTargetVerses()
+        this.recitationCheckScope = 'session'
+      }
       if (!targets.length) {
         this.showBanner(this.t('toasts.chooseASessionRangeBeforeStarting'), 'info', 2200)
         return
       }
-      this.recitationCheckScope = 'session'
-      this.selfCheckModeChoiceVisible = false
+
       this.selfCheckVerseRef = this.buildSelfCheckVerseRef(targets[0])
       this.selfCheckVerseKey = targets[0].key
       this.recitationCheckPendingTargets = targets
-      this.selfCheckBlurEnabled = false
-      this.selfCheckSavedAttemptsVisible = false
       this.recitationCheckPanelOpen = true
       this.recitationCheckError = ''
       this.recitationCheckResult = null
-      this.syncSessionEvaluationMaps('recitation', this.recitationCheckPendingTargets, [], false)
-      this.seedRecitationLiveWords(this.recitationCheckPendingTargets)
-      this.showSelfCheckModal = true
+      this.syncSessionEvaluationMaps('recitation', targets, [], false)
+      this.seedRecitationLiveWords(targets)
+
+      this.amdScope = this.recitationCheckScope
+      this.amdError = ''
+      this.amdBusy = false
+      this.amdAssessment = null
+      this.amdAnalysis = null
+      this.amdPracticePlan = null
+      this.amdImprovement = null
+      this.amdAdjustOpen = false
+      this.amdPreviousAssessmentId = previousAssessmentId || null
+      this.amdRecommendationId = this.postSessionRecommendation?.id || null
+      this.amdPracticeHud = null
+      this.amdActiveChunkIndex = 0
+      this.amdStrengthenedWords = 0
+      this.amdStage = AMD_STAGES.READY
+      this.amdOpen = true
       this.syncBodyScrollLock(true)
+      this.playUiTone?.('open')
+      await this.refreshAmdMicStatus()
     },
-    openAiMemorisationCheckerForVerse(verse) {
-      if (!verse?.key) return
-      if (this.aiMemorisationCheckerRecording) {
-        this.showBanner(this.t('toasts.stopTheCurrentMemorisationCheckBefore'), 'info', 2200)
+    async refreshAmdMicStatus() {
+      if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+        this.amdMicStatus = 'unsupported'
         return
       }
-      this.showTools = false
-      this.aiMemorisationCheckerScope = 'ayah'
-      this.aiMemorisationCheckerVerseRef = this.buildSelfCheckVerseRef(verse)
-      this.aiMemorisationCheckerVerseKey = verse.key
-      this.aiMemorisationCheckerTargetVerses = this.aiMemorisationCheckerVerseRef ? [this.aiMemorisationCheckerVerseRef] : []
-      this.aiMemorisationCheckerMode = 'ayah'
-      this.aiMemorisationCheckerTajweedEnabled = false
-      this.aiMemorisationCheckerBlurEnabled = true
-      this.aiMemorisationCheckerPeekActive = false
-      this.aiMemorisationCheckerError = ''
-      this.aiMemorisationCheckerResult = null
-      this.aiMemorisationCheckerSavedNotice = false
-      this.aiMemorisationCheckerDiscardOnStop = false
-      this.selfCheckFontSize = this.getSelfCheckInitialFontSize(verse)
-      this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargetVerses, [], false)
-      this.prepareAiMemorisationCheckerWords()
-      this.loadAiMemorisationCheckerHistory()
-      this.showAiMemorisationCheckerModal = true
-      this.playUiTone('open')
-      this.syncBodyScrollLock(true)
-      this.persistAiMemorisationCheckerSession()
+      try {
+        if (navigator.permissions?.query) {
+          const status = await navigator.permissions.query({ name: 'microphone' })
+          this.amdMicStatus = status.state === 'granted' ? 'granted' : (status.state === 'denied' ? 'denied' : 'unknown')
+          return
+        }
+      } catch (_) { /* ignore */ }
+      this.amdMicStatus = 'unknown'
     },
-    openAiMemorisationCheckerForSession() {
-      if (this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing) return
-      const targets = this.getSessionCheckTargetVerses()
-      if (!targets.length) {
-        this.showBanner(this.t('toasts.chooseASessionRangeBeforeOpening'), 'info', 2200)
+    closeAmdModal() {
+      if (this.amdBusy && [AMD_STAGES.PROCESSING, AMD_STAGES.ANALYSING].includes(this.amdStage)) {
         return
       }
-      const builtTargets = targets
-      const first = builtTargets[0]
-      this.showTools = false
-      this.aiMemorisationCheckerScope = builtTargets.length > 1 ? 'session' : 'ayah'
-      this.aiMemorisationCheckerVerseRef = first
-      this.aiMemorisationCheckerVerseKey = first.key
-      this.aiMemorisationCheckerTargetVerses = builtTargets
-      this.aiMemorisationCheckerMode = builtTargets.length > 1 ? 'session' : 'ayah'
-      this.aiMemorisationCheckerTajweedEnabled = false
-      this.aiMemorisationCheckerBlurEnabled = true
-      this.aiMemorisationCheckerPeekActive = false
-      this.aiMemorisationCheckerError = ''
-      this.aiMemorisationCheckerResult = null
-      this.aiMemorisationCheckerSavedNotice = false
-      this.aiMemorisationCheckerDiscardOnStop = false
-      this.selfCheckFontSize = this.getSelfCheckInitialFontSize(first)
-      this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargetVerses, [], false)
-      this.prepareAiMemorisationCheckerWords()
-      this.loadAiMemorisationCheckerHistory()
-      this.showAiMemorisationCheckerModal = true
-      this.playUiTone('open')
+      if (this.recitationCheckRecording || this.recitationCheckPreparing) {
+        try { this.stopRecitationCheckRecording?.() } catch (_) { /* ignore */ }
+      }
+      this.amdOpen = false
+      this.amdStage = AMD_STAGES.IDLE
+      this.amdBusy = false
+      this.amdError = ''
+      this.amdAdjustOpen = false
+      this.recitationCheckPanelOpen = false
+      this.showSelfCheckModal = false
+      this.postSessionAiReciteActive = false
+      this.syncBodyScrollLock(false)
+    },
+    async startAmdAssessment() {
+      if (this.amdBusy || this.recitationCheckRecording) return
+      this.amdError = ''
+      this.amdBusy = true
+      this.amdStage = AMD_STAGES.STARTING
+      this.amdStartedAt = Date.now()
+      try {
+        await this.refreshAmdMicStatus()
+        if (this.amdMicStatus === 'unsupported') {
+          throw new Error(this.t?.('memorisation.amd.micUnsupported') || 'Speech recognition is not supported in this browser.')
+        }
+        // Reuse the existing Speechmatics / browser STT recording pipeline.
+        await this.toggleRecitationCheckForCurrentModal?.()
+        if (this.recitationCheckRecording) {
+          this.amdStage = AMD_STAGES.LISTENING
+          this.amdMicStatus = 'granted'
+        } else if (this.recitationCheckPreparing) {
+          this.amdStage = AMD_STAGES.STARTING
+        } else {
+          this.amdStage = AMD_STAGES.READY
+        }
+      } catch (error) {
+        this.amdStage = AMD_STAGES.ERROR
+        this.amdError = error?.message || (this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.')
+        if (/Permission|NotAllowed|denied/i.test(String(error?.name || error?.message || ''))) {
+          this.amdMicStatus = 'denied'
+        }
+      } finally {
+        this.amdBusy = false
+      }
+    },
+    stopAmdAssessment() {
+      if (!this.recitationCheckRecording) return
+      this.amdStage = AMD_STAGES.PROCESSING
+      this.amdBusy = true
+      try {
+        this.stopRecitationCheckRecording?.()
+      } catch (error) {
+        this.amdBusy = false
+        this.amdStage = AMD_STAGES.ERROR
+        this.amdError = error?.message || 'Could not stop recording.'
+      }
+    },
+    retryAmdAssessment() {
+      this.amdAssessment = null
+      this.amdAnalysis = null
+      this.amdPracticePlan = null
+      this.amdImprovement = null
+      this.amdError = ''
+      this.amdAdjustOpen = false
+      this.recitationCheckResult = null
+      this.seedRecitationLiveWords(this.recitationCheckPendingTargets || [])
+      this.amdStage = AMD_STAGES.READY
+    },
+    setAmdAdjustOpen(open) {
+      this.amdAdjustOpen = !!open
+      if (open) this.amdStage = AMD_STAGES.PLAN_ADJUSTED
+      else if (this.amdPracticePlan) this.amdStage = AMD_STAGES.PLAN
+    },
+    async submitAmdAssessmentToBackend(result) {
+      if (!this.isLoggedIn) {
+        // Offline / guest: surface local alignment result without Laravel plan.
+        this.amdAssessment = {
+          id: null,
+          accuracy: Math.round(Number(result?.accuracyScore ?? result?.accuracy ?? 0)),
+          friendly_summary: result?.feedback || (this.t?.('memorisation.amd.guestSummary') || 'May Allah strengthen what you have memorised.'),
+          word_results: (result?.wordStatuses || []).map((word) => ({
+            text: word.text,
+            status: word.status === 'partial' ? 'minor_mistake'
+              : (word.status === 'incorrect' ? 'wrong'
+                : (word.status === 'omitted' ? 'missing' : word.status)),
+            note: word.note,
+            ayah_number: word.ayahNumber,
+            visual_status: word.visualStatus,
+          })),
+          ayahs: [],
+        }
+        this.amdStage = AMD_STAGES.RESULTS
+        this.amdBusy = false
+        return null
+      }
+
+      this.amdStage = AMD_STAGES.ANALYSING
+      this.amdBusy = true
+      const targets = this.getRecitationCheckTargetVerses()
+      const getArabic = (verse) => String(
+        this.cleanRecitationDisplayText?.(verse?.arabic || verse?.text || '')
+        || verse?.arabic
+        || verse?.text
+        || ''
+      )
+      const ayahs = buildAssessmentAyahs(targets, getArabic)
+      const committed = this.getCommittedRecognitionWords?.('recitation') || result?.committedWords || []
+      const recognitionWords = buildRecognitionWords(committed.length ? committed : (result?.transcript || '').split(/\s+/))
+      const numbers = ayahs.map((a) => a.ayah_number).filter(Boolean)
+      const payload = {
+        surah_number: Number(this.chapterId || ayahs[0]?.surah_number || 0),
+        surah_name: this.currentChapter?.name_simple || this.activeChapterName || '',
+        start_ayah: numbers[0] || Number(this.rangeStart || 1),
+        end_ayah: numbers[numbers.length - 1] || Number(this.rangeEnd || numbers[0] || 1),
+        assessment_type: 'memorisation_detection',
+        ayahs,
+        recognition_words: recognitionWords,
+        transcript: result?.transcript || '',
+        duration_ms: this.amdStartedAt ? Math.max(0, Date.now() - this.amdStartedAt) : null,
+        provider: result?.transcriptionSource || 'speechmatics',
+        session_recommendation_id: this.amdRecommendationId || undefined,
+        previous_assessment_id: this.amdPreviousAssessmentId || undefined,
+        user_session_id: this.mutqinState?.sessionState?.backendSessionId || undefined,
+      }
+
+      try {
+        const data = await memorisationDetectionApi.createAssessment(payload)
+        this.amdAssessment = data.assessment || null
+        this.amdAnalysis = data.analysis || null
+        this.amdPracticePlan = data.practice_plan || null
+        this.amdImprovement = data.improvement || null
+        this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
+        this.amdError = ''
+        this.playUiTone?.('complete')
+
+        // Keep post-session recommendation shell in sync when present.
+        if (data.practice_plan && this.postSessionRecommendation) {
+          this.postSessionRecommendation = this.enrichPostSessionRecommendation({
+            ...this.postSessionRecommendation,
+            settings: {
+              ...(this.postSessionRecommendation.settings || {}),
+              ...(data.practice_plan.config || {}),
+            },
+            plan_detail: {
+              ...(this.postSessionRecommendation.plan_detail || {}),
+              source: 'memorisation_detection',
+              title: data.practice_plan.title,
+              personalWhy: data.practice_plan.why,
+              practice_plan_id: data.practice_plan.id,
+              assessment_id: data.assessment?.id,
+              weakWords: data.practice_plan.weak_words,
+              techniques: data.practice_plan.techniques,
+              range: data.practice_plan.range,
+            },
+            ai_assessment: {
+              ...(this.postSessionRecommendation.ai_assessment || {}),
+              result: (data.assessment?.accuracy ?? 0) >= 80 ? 'strong' : ((data.assessment?.accuracy ?? 0) >= 55 ? 'mixed' : 'weak'),
+              summary: data.assessment?.friendly_summary,
+              average_accuracy: data.assessment?.accuracy,
+            },
+          })
+        }
+        return data
+      } catch (error) {
+        console.error('AMD assessment failed', error)
+        this.amdStage = AMD_STAGES.ERROR
+        this.amdError = error?.response?.data?.message
+          || error?.message
+          || (this.t?.('memorisation.amd.analyseFailed') || 'Could not analyse this recitation. Please try again.')
+        return null
+      } finally {
+        this.amdBusy = false
+      }
+    },
+    async adjustAmdPracticePlan(adjustments = {}) {
+      if (!this.amdPracticePlan?.id || !this.isLoggedIn) {
+        this.amdAdjustOpen = false
+        return
+      }
+      this.amdBusy = true
+      try {
+        const plan = await memorisationDetectionApi.adjustPlan(this.amdPracticePlan.id, adjustments)
+        this.amdPracticePlan = plan
+        this.amdAdjustOpen = false
+        this.amdStage = AMD_STAGES.PLAN
+      } catch (error) {
+        this.amdError = error?.response?.data?.message || error?.message || 'Could not adjust plan.'
+      } finally {
+        this.amdBusy = false
+      }
+    },
+    async startAmdPracticePlan() {
+      if (!this.amdPracticePlan) return
+      this.amdBusy = true
+      try {
+        let session = null
+        let plan = this.amdPracticePlan
+        if (this.isLoggedIn && plan.id) {
+          const result = await memorisationDetectionApi.startPlan(plan.id)
+          plan = result.practice_plan || plan
+          session = result.session || null
+          this.amdPracticePlan = plan
+        } else {
+          session = {
+            chapterId: Number(this.chapterId || 0),
+            rangeStart: Number(plan.range?.from || plan.start_ayah || this.rangeStart || 1),
+            rangeEnd: Number(plan.range?.to || plan.end_ayah || this.rangeEnd || 1),
+            sessionMode: 'revision',
+            techniqueId: plan.config?.technique === 'chunking' ? 'focus' : (plan.config?.technique || 'talqin'),
+            settings: plan.config || {},
+            hud: {
+              title: plan.title,
+              technique: plan.config?.technique || 'talqin',
+              repetitions_target: plan.repetitions?.target || 3,
+              weak_words: plan.weak_words || [],
+              chunks: plan.config?.chunks || [],
+              priority_ayahs: plan.priority_ayahs || [],
+            },
+          }
+        }
+
+        this.amdPracticeHud = {
+          ...(session?.hud || {}),
+          title: plan.title,
+          technique: session?.hud?.technique || plan.config?.technique || 'talqin',
+          repetitionsTarget: Number(session?.hud?.repetitions_target || plan.repetitions?.target || 3),
+          repetitionCurrent: 1,
+          weakWords: plan.weak_words || [],
+          chunks: plan.config?.chunks || session?.hud?.chunks || [],
+          chunkIndex: 0,
+          talqinPhase: 'listen',
+          strengthened: 0,
+        }
+        this.amdActiveChunkIndex = 0
+        this.amdStrengthenedWords = 0
+        this.practiceFocusWeakWords = normaliseWeakWordRecords(plan.weak_words || [])
+        this.persistPracticeFocusWeakWords?.()
+        this.amdOpen = false
+        this.amdStage = AMD_STAGES.PRACTICE_ACTIVE
+        this.postSessionAiReciteActive = false
+        this.showPostSessionModal = false
+
+        const techniqueId = session?.techniqueId || plan.config?.technique || 'talqin'
+        if (techniqueId === 'anchor' || plan.config?.anchor_mode_enabled) {
+          this.anchorModeEnabled = true
+        }
+        if (techniqueId === 'blur' || plan.config?.blur_enabled) {
+          this.blurModeEnabled = true
+        }
+
+        await this.startSessionFromRecommendationPayload({
+          chapterId: Number(session?.chapterId || this.chapterId || 0),
+          rangeStart: Number(session?.rangeStart || plan.range?.from || 1),
+          rangeEnd: Number(session?.rangeEnd || plan.range?.to || 1),
+          sessionMode: 'revision',
+          techniqueId,
+          settings: {
+            ...(session?.settings || plan.config || {}),
+            practice_weak_words: plan.weak_words || [],
+          },
+        })
+
+        // Apply chunking window if present.
+        const chunks = this.amdPracticeHud.chunks || []
+        if ((this.amdPracticeHud.technique === 'chunking' || plan.config?.technique === 'chunking') && chunks.length) {
+          this.applyAmdChunk(0)
+        }
+      } catch (error) {
+        console.error('Failed to start AMD practice plan', error)
+        this.amdOpen = true
+        this.amdStage = AMD_STAGES.PLAN
+        this.amdError = error?.response?.data?.message || error?.message || 'Could not start the practice plan.'
+      } finally {
+        this.amdBusy = false
+        this.syncBodyScrollLock(this.amdOpen)
+      }
+    },
+    applyAmdChunk(index = 0) {
+      const chunks = this.amdPracticeHud?.chunks || []
+      if (!chunks.length) return
+      const chunk = chunks[Math.max(0, Math.min(chunks.length - 1, index))]
+      if (!chunk) return
+      this.amdActiveChunkIndex = index
+      this.amdPracticeHud = {
+        ...this.amdPracticeHud,
+        chunkIndex: index,
+      }
+      if (Number(chunk.from) && Number(chunk.to)) {
+        this.rangeStart = Number(chunk.from)
+        this.rangeEnd = Number(chunk.to)
+      }
+    },
+    advanceAmdChunk() {
+      const chunks = this.amdPracticeHud?.chunks || []
+      if (!chunks.length) return
+      const next = Math.min(chunks.length - 1, (this.amdActiveChunkIndex || 0) + 1)
+      this.applyAmdChunk(next)
+    },
+    async completeAmdPracticePlan() {
+      const planId = this.amdPracticePlan?.id
+      if (planId && this.isLoggedIn) {
+        try {
+          await memorisationDetectionApi.completePlan(planId, {
+            repetitions_completed: this.amdPracticeHud?.repetitionCurrent || 0,
+            chunks_completed: (this.amdActiveChunkIndex || 0) + 1,
+            strengthened_words: this.amdStrengthenedWords || 0,
+          })
+        } catch (error) {
+          console.warn('Failed to complete practice plan', error)
+        }
+      }
+      this.amdStage = AMD_STAGES.PRACTICE_COMPLETE
+      this.amdOpen = true
       this.syncBodyScrollLock(true)
-      this.persistAiMemorisationCheckerSession()
+    },
+    async retestAmdFromPlan() {
+      const plan = this.amdPracticePlan
+      this.amdPreviousAssessmentId = plan?.assessment_id || this.amdAssessment?.id || null
+      await this.openAiMemorisationDetection({
+        scope: 'session',
+        previousAssessmentId: this.amdPreviousAssessmentId,
+      })
+      // Narrow targets to plan range when available.
+      if (plan?.range?.from && plan?.range?.to) {
+        const all = this.getSessionCheckTargetVerses()
+        const focused = all.filter((verse) => {
+          const n = Number(verse?.number || String(verse?.key || '').split(':')[1] || 0)
+          return n >= Number(plan.range.from) && n <= Number(plan.range.to)
+        })
+        if (focused.length) {
+          this.recitationCheckPendingTargets = focused
+          this.selfCheckVerseRef = this.buildSelfCheckVerseRef(focused[0])
+          this.selfCheckVerseKey = focused[0].key
+          this.seedRecitationLiveWords(focused)
+        }
+      }
+      this.amdStage = AMD_STAGES.READY
+    },
+    chooseOtherFromAmd() {
+      this.closeAmdModal()
+      if (typeof this.chooseOtherFromRecommendation === 'function') {
+        void this.chooseOtherFromRecommendation()
+        return
+      }
+      this.openPostSessionNewSessionOffcanvas?.()
+    },
+    bumpAmdRepetition() {
+      if (!this.amdPracticeHud) return
+      const current = Number(this.amdPracticeHud.repetitionCurrent || 1)
+      const target = Number(this.amdPracticeHud.repetitionsTarget || 3)
+      const next = Math.min(target, current + 1)
+      let phase = this.amdPracticeHud.talqinPhase || 'listen'
+      if (this.amdPracticeHud.technique === 'talqin') {
+        phase = phase === 'listen' ? 'repeat' : (phase === 'repeat' ? 'recite' : 'listen')
+      }
+      this.amdPracticeHud = {
+        ...this.amdPracticeHud,
+        repetitionCurrent: next,
+        talqinPhase: phase,
+      }
+      if (this.amdPracticeHud.technique === 'blur') {
+        // Progressive blur: increase blur intensity with each repetition.
+        this.blurModeEnabled = true
+      }
+      if (next >= target && this.amdPracticeHud.technique === 'chunking') {
+        const chunks = this.amdPracticeHud.chunks || []
+        if ((this.amdActiveChunkIndex || 0) < chunks.length - 1) {
+          this.advanceAmdChunk()
+          this.amdPracticeHud = { ...this.amdPracticeHud, repetitionCurrent: 1 }
+        }
+      }
+    },
+    markAmdWeakWordStrengthened() {
+      const total = (this.amdPracticeHud?.weakWords || []).length
+      this.amdStrengthenedWords = Math.min(total, (this.amdStrengthenedWords || 0) + 1)
+      if (this.amdPracticeHud) {
+        this.amdPracticeHud = {
+          ...this.amdPracticeHud,
+          strengthened: this.amdStrengthenedWords,
+        }
+      }
     },
     closeAiMemorisationCheckerModal() {
       if (this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing) {
@@ -17245,7 +17724,14 @@ export default {
       return `${this.recitationSpeechTranscript || ''} ${this.recitationSpeechInterim || ''}`.replace(/\s+/g, ' ').trim()
     },
     completeRecitationCheckFromRecognitionWords(recognitionWords = [], targetVerses, source = 'stabilised speech input', audioSrc = '', options = {}) {
-      if (!recognitionWords.length) return null
+      if (!recognitionWords.length) {
+        if (this.amdOpen) {
+          this.amdBusy = false
+          this.amdStage = AMD_STAGES.ERROR
+          this.amdError = this.t?.('memorisation.amd.noSpeech') || 'No speech was detected. Please try again.'
+        }
+        return null
+      }
       this.cancelLiveWordDomPatchFrame()
       this.clearRecitationDisplayHtmlCache()
       const result = {
@@ -17259,6 +17745,14 @@ export default {
       this.persistAiRecitationReviewHighlights(result, targetVerses)
       this.recitationCheckAutoStopArmed = false
       this.recitationCheckError = ''
+
+      // New AI Memorisation Detection flow owns results inside its modal.
+      if (this.amdOpen) {
+        this.amdStage = AMD_STAGES.PROCESSING
+        void this.submitAmdAssessmentToBackend(result)
+        return result
+      }
+
       this.playUiTone('complete')
       this.showBanner(this.t('toasts.reciteCheckComplete'), 'success', 2200)
       void this.finalizePostSessionAiReciteFromResult(result).then(handled => {
@@ -17351,15 +17845,12 @@ export default {
     async finalizePostSessionAiReciteFromResult(result) {
       if (!result || !this.postSessionAiReciteActive) return false
 
-      // Track attempts for the dynamic practice plan (max 3).
+      // New flow: open / keep AI Memorisation Detection and analyse on Laravel.
       this.recordAiReciteAttempt(result)
-
-      // Never keep results inside the AI Recite modal — always return to the
-      // session-complete success modal with the updated practice plan.
-      this.recitationCheckResult = null
-      this.recitationCheckError = ''
-      await this.buildAndPersistAiReciteFinalPlan()
-      await this.returnToSuccessWithAiPlan()
+      if (!this.amdOpen) {
+        await this.openAiMemorisationDetection({ scope: 'session' })
+      }
+      await this.submitAmdAssessmentToBackend(result)
       return true
     },
     recordAiReciteAttempt(result) {
@@ -17416,7 +17907,45 @@ export default {
       this.capturePracticeFocusWeakWordsFromResult(attempt.result)
     },
     async buildAndPersistAiReciteFinalPlan() {
+      // Prefer Laravel-authored AI Memorisation Detection plan when available.
+      if (this.amdPracticePlan?.id) {
+        this.aiReciteFinalPlan = {
+          averageAccuracy: this.amdAssessment?.accuracy ?? null,
+          band: this.amdPracticePlan.band,
+          feedback: this.amdAssessment?.friendly_summary || this.amdPracticePlan.why,
+          why: this.amdPracticePlan.why,
+          weakWords: this.amdPracticePlan.weak_words || [],
+          weakAyahs: this.amdPracticePlan.priority_ayahs || [],
+          techniques: this.amdPracticePlan.techniques || [],
+          settings: this.amdPracticePlan.config || {},
+          planDetail: {
+            source: 'memorisation_detection',
+            personalWhy: this.amdPracticePlan.why,
+            range: this.amdPracticePlan.range,
+            weakWords: this.amdPracticePlan.weak_words || [],
+            techniques: this.amdPracticePlan.techniques || [],
+            practice_plan_id: this.amdPracticePlan.id,
+          },
+          ayah_range: {
+            from: this.amdPracticePlan.range?.from || this.amdPracticePlan.start_ayah,
+            to: this.amdPracticePlan.range?.to || this.amdPracticePlan.end_ayah,
+            count: this.amdPracticePlan.range?.count,
+            focus_ayahs: this.amdPracticePlan.priority_ayahs || [],
+          },
+          outcome: (this.amdAssessment?.accuracy ?? 0) >= 80 ? 'strong' : ((this.amdAssessment?.accuracy ?? 0) >= 55 ? 'mixed' : 'weak'),
+          colorCounts: this.amdAnalysis?.error_types || {},
+        }
+        this.aiReciteShowFinalPlan = true
+        this.aiReciteAverageAccuracy = this.aiReciteFinalPlan.averageAccuracy
+        this.practiceFocusWeakWords = normaliseWeakWordRecords(this.aiReciteFinalPlan.weakWords || [])
+        this.persistPracticeFocusWeakWords()
+        this.clearMushafAyahHtmlCache()
+        this.postSessionAiFeedback = this.aiReciteFinalPlan.feedback
+        return
+      }
+
       const snap = this.postSessionSnapshot || {}
+      // Legacy offline fallback only — authoritative plans come from Laravel AMD.
       const plan = buildAiReciteDynamicPlan({
         attempts: this.aiReciteAttempts,
         range: {

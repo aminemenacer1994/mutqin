@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Learning\ProgressController;
 use App\Http\Controllers\Api\Learning\RecommendationController;
 use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
+use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/stripe/webhook', [BillingController::class, 'webhook'])->name('stripe.webhook');
@@ -43,6 +44,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/recommendations/settings', [RecommendationController::class, 'settings'])->name('api.recommendations.settings');
     Route::post('/recommendations/ai-assessment', [RecommendationController::class, 'aiAssessment'])->name('api.recommendations.ai-assessment');
     Route::post('/recommendations/adaptive-assessment', [RecommendationController::class, 'adaptiveAssessment'])->name('api.recommendations.adaptive-assessment');
+
+    // AI Memorisation Detection — assessment, personalised plan, practice execution.
+    Route::post('/memorisation/assessments', [MemorisationDetectionController::class, 'storeAssessment'])
+        ->name('api.memorisation.assessments.store');
+    Route::patch('/memorisation/practice-plans/{practicePlan}', [MemorisationDetectionController::class, 'adjustPlan'])
+        ->name('api.memorisation.practice-plans.adjust');
+    Route::post('/memorisation/practice-plans/{practicePlan}/start', [MemorisationDetectionController::class, 'startPlan'])
+        ->name('api.memorisation.practice-plans.start');
+    Route::post('/memorisation/practice-plans/{practicePlan}/complete', [MemorisationDetectionController::class, 'completePlan'])
+        ->name('api.memorisation.practice-plans.complete');
+    Route::post('/memorisation/practice-plans/{practicePlan}/retest', [MemorisationDetectionController::class, 'retestPlan'])
+        ->name('api.memorisation.practice-plans.retest');
 
     // Full-fidelity state blob used as the live persistence boundary.
     Route::get('/state', [StateSyncController::class, 'show'])->name('api.state.show');

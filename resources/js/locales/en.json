@@ -2140,7 +2140,53 @@
         "description": "Add one ayah at a time to build a longer run"
       }
     },
-    "reduce_distracted_around_the_active_ayah": "Concentrate on one ayah before moving forward"
+    "reduce_distracted_around_the_active_ayah": "Concentrate on one ayah before moving forward",
+    "amd": {
+      "title": "AI Memorisation Detection",
+      "assessmentType": "From memory",
+      "readyCopy": "Recite this passage from memory. Mutqin will listen and identify the areas that may need strengthening.",
+      "startAssessment": "Start Assessment",
+      "startPlan": "Start This Practice Plan",
+      "adjustPlan": "Adjust Plan",
+      "chooseOther": "Choose Different Session",
+      "retest": "Re-test weak areas",
+      "micGranted": "Ready",
+      "micDenied": "Permission needed",
+      "micUnsupported": "Not supported in this browser",
+      "micChecking": "Checking…",
+      "hintStarting": "Preparing the microphone…",
+      "hintListening": "Recite calmly. Mutqin is listening.",
+      "hintProcessing": "Processing your recitation…",
+      "hintAnalysing": "Comparing with the Quran text…",
+      "startFailed": "Could not start assessment.",
+      "analyseFailed": "Could not analyse this recitation. Please try again.",
+      "noSpeech": "No speech was detected. Please try again.",
+      "guestSummary": "May Allah strengthen what you have memorised.",
+      "stages": {
+        "idle": "Ready",
+        "ready": "Ready",
+        "starting": "Starting",
+        "listening": "Listening",
+        "processing": "Processing",
+        "analysing": "Analysing",
+        "results": "Assessment results",
+        "plan": "Practice plan",
+        "plan_adjusted": "Plan adjusted",
+        "practice_active": "Practice active",
+        "practice_complete": "Practice complete",
+        "retest": "Re-test",
+        "error": "Something went wrong"
+      },
+      "hud": {
+        "talqin": "Ayah {ayah} · Repetition {current} of {total} · {phase}",
+        "chunking": "Chunk {current} of {total}",
+        "anchor": "Focus words: {strengthened} / {total} strengthened",
+        "generic": "Practice · {current} / {total}",
+        "nextRep": "Next repetition",
+        "markWord": "Word strengthened",
+        "finish": "Finish & re-test"
+      }
+    }
   },
   "toasts": {
     "saved": "Saved successfully.",
@@ -2573,9 +2619,9 @@
           }
         },
         "aiRecitation": {
-          "title": "AI Recitation",
-          "description": "AI Recitation listens to your recitation and provides instant feedback to help you identify mistakes and improve accuracy while memorising.",
-          "bestFor": "Students who want guided practice and immediate feedback."
+          "title": "AI Memorisation Detection",
+          "description": "Mutqin listens to your memorisation, identifies exact weak words and ayahs, and builds a personalised practice plan with the right technique.",
+          "bestFor": "Students who want clear weakness detection and a guided next practice plan."
         },
         "talqinMode": {
           "title": "Talqin Mode Guide",

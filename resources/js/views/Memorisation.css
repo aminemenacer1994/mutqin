@@ -19628,9 +19628,7 @@ button:active {
   box-shadow: none;
 }
 
-[data-theme="dark"] .main .content {
-  color: #f5eee4;
-}
+
 
 [data-theme="dark"] .self-check-icon-btn {
   background: rgba(38, 35, 31, 0.9);
@@ -34294,9 +34292,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 /* Zone hierarchy — subtle functional shading across main surfaces */
 
-.main .content {
-  background: var(--zone-canvas);
-}
+
 
 .main.mushaf-mode-active .workspace-main {
   background: transparent;
