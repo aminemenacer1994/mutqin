@@ -7166,12 +7166,14 @@ export default {
     },
 
     applyMobileLayoutFontDefault(mode = this.readingViewMode) {
-      if (!this.isMobileViewport()) return
-      // Pin mobile ayah size higher for readable mushaf + stacked cards.
+      // Product default is 150% for mushaf and mobile stacked cards.
+      const shouldPin = mode === 'mushaf' || this.isMobileViewport()
+      if (!shouldPin) return
       if (Number(this.defaultFontSize) !== 150) this.defaultFontSize = 150
       if (this.settingsDraft && Number(this.settingsDraft.defaultFontSize) !== 150) {
         this.settingsDraft.defaultFontSize = 150
       }
+      this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', 150)
     },
 
     scheduleMadaniPageFit() {
@@ -7184,8 +7186,7 @@ export default {
       this._madaniFitRaf = window.requestAnimationFrame(() => {
         this._madaniFitRaf = null
         this.fitMadaniPageToViewport()
-        // Re-fit after glyph fonts / layout settle so long lines do not stay cropped.
-        ;[120, 360, 900].forEach((ms) => {
+        ;[80, 240, 700].forEach((ms) => {
           this._madaniFitTimers.push(window.setTimeout(() => this.fitMadaniPageToViewport(), ms))
         })
       })
@@ -7194,7 +7195,6 @@ export default {
     fitMadaniPageToViewport() {
       if (!this.isMobileViewport() || this.readingViewMode !== 'mushaf') return
       const viewport = this.$refs.mushafViewport
-      const shell = viewport?.closest?.('.mushaf-shell') || viewport?.closest?.('.mushaf-workspace__fluid')
       const sheet = viewport?.querySelector?.('.madani-page-sheet')
       if (!viewport || !sheet) return
 
@@ -7203,66 +7203,43 @@ export default {
       sheet.style.removeProperty('--madani-fit-scale')
       sheet.style.removeProperty('width')
       sheet.style.removeProperty('margin-inline')
+      sheet.style.removeProperty('marginInline')
 
       const lines = sheet.querySelectorAll('.madani-line--ayah, .madani-line--glyphs, .madani-line--surah_name, .madani-line--basmala')
       let needed = 0
       lines.forEach((line) => {
-        // Force scrollWidth to reflect overflowing nowrap content (visible overflow
-        // often reports scrollWidth === clientWidth and skips scaling).
         const prevOverflow = line.style.overflow
         const prevWhiteSpace = line.style.whiteSpace
         line.style.overflow = 'scroll'
         line.style.whiteSpace = 'nowrap'
         needed = Math.max(needed, Number(line.scrollWidth || 0))
-
-        try {
-          const range = document.createRange()
-          range.selectNodeContents(line)
-          const rects = range.getClientRects()
-          for (let i = 0; i < rects.length; i += 1) {
-            needed = Math.max(needed, Number(rects[i].width || 0))
-          }
-          range.detach?.()
-        } catch (_) { /* ignore */ }
-
         if (prevOverflow) line.style.overflow = prevOverflow
         else line.style.removeProperty('overflow')
         if (prevWhiteSpace) line.style.whiteSpace = prevWhiteSpace
         else line.style.removeProperty('white-space')
       })
+      needed = Math.max(needed, Number(sheet.scrollWidth || 0))
 
-      const measureEl = shell || viewport
-      const measureStyles = typeof window !== 'undefined' ? window.getComputedStyle(measureEl) : null
-      const padX = measureStyles
-        ? (parseFloat(measureStyles.paddingLeft) || 0) + (parseFloat(measureStyles.paddingRight) || 0)
-        : 0
-      const available = Math.max(0, measureEl.clientWidth - padX - 16)
+      const available = Math.max(0, viewport.clientWidth - 20)
       if (!available || !needed) return
 
-      // Only scale down when content is actually wider than the container.
+      const parent = sheet.parentElement
       if (needed <= available + 1) {
-        const parent = sheet.parentElement
         if (parent) parent.style.minHeight = ''
         viewport.style.overflowX = 'hidden'
-        if (shell) shell.style.overflowX = 'hidden'
         return
       }
 
-      const scale = Math.min(1, Math.max(0.48, available / needed))
+      const scale = Math.min(1, Math.max(0.55, available / needed))
       const rounded = Number(scale.toFixed(4))
       sheet.style.setProperty('--madani-fit-scale', String(rounded))
       sheet.style.transformOrigin = 'top center'
       sheet.style.transform = `scale(${rounded})`
-      sheet.style.width = `${(100 / rounded).toFixed(3)}%`
-      sheet.style.marginInline = 'auto'
-
-      const parent = sheet.parentElement
       if (parent) {
-        parent.style.minHeight = `${Math.ceil(sheet.getBoundingClientRect().height)}px`
+        parent.style.minHeight = `${Math.ceil(Number(sheet.scrollHeight || 0) * rounded)}px`
         parent.style.overflowX = 'hidden'
       }
       viewport.style.overflowX = 'hidden'
-      if (shell) shell.style.overflowX = 'hidden'
     },
 
     resolveCsrfToken() {
@@ -20988,8 +20965,10 @@ export default {
       this.readingViewMode = nextMode
       if (nextMode === 'mushaf') {
         this.wordByWordAudioEnabled = true
+        this.applyMobileLayoutFontDefault('mushaf')
         this.ensureMadaniPagesLoaded({ force: false }).then(() => {
           this.syncMushafPageToActiveVerse()
+          this.$nextTick(() => this.scheduleMadaniPageFit())
         })
       } else {
         this.fontOpen = false
@@ -23494,24 +23473,29 @@ export default {
     toggleTajweed() {
       this.setTajweedEnabled(!this.tajweedEnabled, { announce: true })
     },
-    setTajweedEnabled(enabled, options = {}) {
+    async setTajweedEnabled(enabled, options = {}) {
       const { announce = false } = options
       const next = !!enabled
       if (this.tajweedEnabled === next) return
       this.tajweedEnabled = next
+      // QCF tajweed colours require the Uthmani page fonts.
+      if (next && this.readingViewMode === 'mushaf' && this.quranFont !== 'uthmanic') {
+        this.quranFont = 'uthmanic'
+      }
       this.syncSettingsDraft()
       this.persistUiState()
       this.persistCentralSessionState()
       if (this.readingViewMode === 'mushaf') {
         this.rebuildCurrentMadaniLayoutsForTajweed()
-        if (this.quranFont === 'uthmanic') {
-          const page = this.currentMadaniPageNumber
-          if (page) {
-            this.madaniFontsReady = {}
-            this.ensureMadaniFontForPage(page)
-            this.prefetchAdjacentMadaniFonts(page)
-          }
+        const page = this.currentMadaniPageNumber
+        if (page) {
+          this.madaniFontsReady = {}
+          try {
+            await this.ensureMadaniFontForPage(page)
+          } catch (_) { /* banner below still reports state */ }
+          this.prefetchAdjacentMadaniFonts(page)
         }
+        this.$nextTick(() => this.scheduleMadaniPageFit())
       }
       if (announce) {
         this.showBanner(

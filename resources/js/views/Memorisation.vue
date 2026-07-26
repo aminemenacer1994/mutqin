@@ -216,6 +216,7 @@
                 <transition name="dropdown-fade">
                   <div v-if="topCardMenuOpen" class="top-card-menu">
                     <button
+                      v-if="readingViewMode !== 'mushaf'"
                       type="button"
                       class="top-card-menu-toggle"
                       :class="{ active: showTranslation }"
@@ -223,7 +224,7 @@
                       @click.stop="toggleReadingOption('translation')"
                     >
                       <i class="bi bi-translate" aria-hidden="true"></i>
-                      <span>{{ readingViewMode === 'mushaf' ? 'English translation' : t('memorisation.reading.translation') }}</span>
+                      <span>{{ t('memorisation.reading.translation') }}</span>
                       <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
                     <button
@@ -754,9 +755,8 @@
                     </div>
 
                     <div
-                      v-if="mushafAidVerse && (showTranslation || showTransliteration || showWordByWord || activeWordTooltip)"
+                      v-if="mushafAidVerse && (showTransliteration || showWordByWord || activeWordTooltip)"
                       class="mushaf-verse-aids"
-                      :class="{ 'mushaf-verse-aids--translation': showTranslation && mushafAidVerse.translation }"
                     >
                       <div v-if="activeWordTooltip?.text" class="mushaf-word-tooltip" dir="ltr" lang="en">
                         {{ activeWordTooltip.text }}
@@ -776,19 +776,6 @@
                           <span class="mushaf-wbw-chip__ar" lang="ar">{{ word.ar }}</span>
                           <span v-if="word.en" class="mushaf-wbw-chip__en" dir="ltr" lang="en">{{ word.en }}</span>
                         </button>
-                      </div>
-                      <div
-                        v-if="showTranslation && mushafAidVerse.translation"
-                        class="mushaf-translation-panel verse-aid-block"
-                        dir="ltr"
-                        lang="en"
-                      >
-                        <div class="verse-aid-title">
-                          <i class="bi bi-translate" aria-hidden="true"></i>
-                          <span>English translation</span>
-                          <em v-if="mushafAidVerse.number">Āyah {{ mushafAidVerse.number }}</em>
-                        </div>
-                        <div class="verse-translation verse-aid mushaf-translation-text">{{ mushafAidVerse.translation }}</div>
                       </div>
                       <div v-if="showTransliteration && mushafAidVerse.transliteration" class="verse-aid-block" dir="ltr" lang="en">
                         <div class="verse-aid-title">{{ t('memorisation.reading.transliteration') }}</div>

@@ -3983,30 +3983,34 @@ body > .self-check-modal-overlay--above-post-session,
   box-shadow: var(--shadow-md);
 }
 
-/* End Session trigger — clear crimson red */
+/* End Session trigger — prominent solid red */
 .action-btn-exit,
 .action-btn.mutqin-btn--destructive {
   color: #fff;
-  background: #c0392b;
-  border: 1px solid #c0392b;
+  background: #dc2626;
+  border: 1px solid #b91c1c;
+  box-shadow: 0 2px 0 #991b1b, 0 6px 14px rgba(220, 38, 38, 0.28);
+  font-weight: 800;
 }
 
 .action-btn-exit:hover,
 .action-btn.mutqin-btn--destructive:hover {
   color: #fff;
-  background: #a93226;
-  border-color: #a93226;
+  background: #b91c1c;
+  border-color: #991b1b;
+  box-shadow: 0 2px 0 #7f1d1d, 0 8px 18px rgba(185, 28, 28, 0.34);
 }
 
 .action-btn-exit:active,
 .action-btn.mutqin-btn--destructive:active {
-  background: #922b21;
-  border-color: #922b21;
+  background: #991b1b;
+  border-color: #7f1d1d;
+  box-shadow: none;
 }
 
 .action-btn-exit:focus-visible,
 .action-btn.mutqin-btn--destructive:focus-visible {
-  outline: 2px solid color-mix(in srgb, #c0392b 55%, transparent);
+  outline: 2px solid color-mix(in srgb, #dc2626 60%, transparent);
   outline-offset: 2px;
 }
 
@@ -18408,12 +18412,12 @@ button:active {
 }
 
 .top-card-menu-end-session {
-  color: color-mix(in srgb, var(--text) 88%, #c0392b 12%);
+  color: color-mix(in srgb, var(--text) 88%, #dc2626 12%);
 }
 
 .top-card-menu-end-session:hover {
-  color: #c0392b;
-  background: color-mix(in srgb, #c0392b 10%, var(--surface));
+  color: #dc2626;
+  background: color-mix(in srgb, #dc2626 10%, var(--surface));
 }
 
 .mushaf-pill-bar {

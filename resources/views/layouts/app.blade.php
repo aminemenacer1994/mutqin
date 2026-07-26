@@ -75,8 +75,9 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v71';
-        var FORCE = '71';
+        // Permanent product UI label is v70; revision suffix only busts stale shells.
+        var BUILD = 'v70r3';
+        var FORCE = '70r3';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
@@ -126,22 +127,22 @@
     {{-- Survives stale memorisation JS chunks: HTML is network-first / not JS-chunk-cached --}}
     <style id="mutqin-button-colour-semantics">
       :root {
-        --bs-danger: #d49186;
-        --bs-danger-rgb: 212, 145, 134;
+        --bs-danger: #dc2626;
+        --bs-danger-rgb: 220, 38, 38;
         --success: #2e7d64;
         --success-strong: #23624e;
-        --danger: #d49186;
-        --danger-strong: #c97f74;
+        --danger: #dc2626;
+        --danger-strong: #b91c1c;
         --destructive: var(--danger);
         --destructive-strong: var(--danger-strong);
       }
       [data-theme="dark"] {
-        --bs-danger: #e0a79c;
-        --bs-danger-rgb: 224, 167, 156;
+        --bs-danger: #ef4444;
+        --bs-danger-rgb: 239, 68, 68;
         --success: #3f8f6f;
         --success-strong: #2f6f58;
-        --danger: #e0a79c;
-        --danger-strong: #d49186;
+        --danger: #ef4444;
+        --danger-strong: #dc2626;
       }
       .app .mutqin-modal-btn--primary,
       .app .btn-primary,
@@ -186,14 +187,16 @@
       .app .session-exit-action-chip--end,
       .app .workspace-shell-actions .action-btn-exit {
         color: #fff !important;
-        background: #d49186 !important;
-        border-color: #d49186 !important;
+        background: #dc2626 !important;
+        border-color: #b91c1c !important;
+        box-shadow: 0 2px 0 #991b1b, 0 6px 14px rgba(220, 38, 38, 0.28) !important;
+        font-weight: 800 !important;
       }
       .app .action-btn-exit:hover,
       .app .action-btn.mutqin-btn--destructive:hover,
       .app .workspace-shell-actions .action-btn-exit:hover {
-        background: #c97f74 !important;
-        border-color: #c97f74 !important;
+        background: #b91c1c !important;
+        border-color: #991b1b !important;
       }
     </style>
     <style id="mutqin-memorisation-hotfix-v70">
@@ -213,6 +216,26 @@
         opacity: 0.92;
         box-shadow: 0 6px 18px rgba(0,0,0,.22);
       }
+      .app .main.mushaf-mode-active {
+        width: 100% !important;
+        max-width: 1320px !important;
+        margin-inline: auto !important;
+      }
+      .app .main.mushaf-mode-active .mushaf-workspace,
+      .app .main.mushaf-mode-active .mushaf-workspace__fluid,
+      .app .main.mushaf-mode-active .mushaf-shell {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+      }
+      .app .main.mushaf-mode-active .mushaf-shell__size-value,
+      .app .verse-font-size-value {
+        display: none !important;
+      }
+      .app .main.mushaf-mode-active .mushaf-translation-panel {
+        display: none !important;
+      }
       @media (max-width: 767.98px) {
         .app .workspace-shell-bottom,
         .app .workspace-shell-bottom-pills,
@@ -226,22 +249,33 @@
         .app .workspace-shell {
           padding-bottom: 0.7rem !important;
         }
+        .app .workspace-shell-head {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) auto !important;
+          gap: 0.45rem 0.55rem !important;
+        }
         .app .top-card-icon-controls {
-          display: inline-flex !important;
+          display: flex !important;
           align-items: center !important;
-          gap: 0.3rem !important;
+          justify-content: space-evenly !important;
+          gap: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          grid-column: 1 / -1 !important;
+          grid-row: 3 !important;
+          margin-top: 0.35rem !important;
         }
         .app .top-card-icon-controls .top-card-layout-icons,
         .app .top-card-icon-controls .top-card-font-wrap,
         .app .top-card-icon-controls .top-card-controls-wrap,
         .app .top-card-icon-controls .top-card-menu-wrap {
-          width: 36px !important;
-          height: 36px !important;
-          min-width: 36px !important;
-          min-height: 36px !important;
-          max-width: 36px !important;
-          max-height: 36px !important;
-          flex: 0 0 36px !important;
+          width: 40px !important;
+          height: 40px !important;
+          min-width: 40px !important;
+          min-height: 40px !important;
+          max-width: 40px !important;
+          max-height: 40px !important;
+          flex: 0 0 40px !important;
           display: inline-flex !important;
           align-items: center !important;
           justify-content: center !important;
@@ -253,12 +287,12 @@
         .app .top-card-icon-controls .view-mode-btn,
         .app .top-card-icon-controls .font-dropdown-trigger,
         .app .top-card-icon-controls .workspace-layout-btn {
-          width: 36px !important;
-          height: 36px !important;
-          min-width: 36px !important;
-          min-height: 36px !important;
-          max-width: 36px !important;
-          max-height: 36px !important;
+          width: 40px !important;
+          height: 40px !important;
+          min-width: 40px !important;
+          min-height: 40px !important;
+          max-width: 40px !important;
+          max-height: 40px !important;
           padding: 0 !important;
           margin: 0 !important;
           border-radius: 999px !important;
@@ -271,6 +305,33 @@
         .app .verses-grid .verse-ai-recite-btn {
           display: none !important;
         }
+        .app .main.mushaf-mode-active {
+          max-width: 100% !important;
+          padding-inline: clamp(0.65rem, 3vw, 1rem) !important;
+        }
+        .app .main.mushaf-mode-active .mushaf-workspace,
+        .app .main.mushaf-mode-active .mushaf-workspace__fluid,
+        .app .main.mushaf-mode-active .mushaf-shell,
+        .app .main.mushaf-mode-active .mushaf-shell__page,
+        .app .main.mushaf-mode-active .mushaf-page,
+        .app .main.mushaf-mode-active .madani-ornate,
+        .app .main.mushaf-mode-active .madani-ornate__frame,
+        .app .main.mushaf-mode-active .madani-ornate__inner,
+        .app .main.mushaf-mode-active .madani-page-sheet {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          overflow-x: hidden !important;
+          box-sizing: border-box !important;
+        }
+        .app .main.mushaf-mode-active .mushaf-shell__page {
+          display: flex !important;
+          justify-content: center !important;
+        }
+        .app .main.mushaf-mode-active .madani-page-sheet {
+          transform-origin: top center !important;
+          margin-inline: auto !important;
+        }
         .app .main.mushaf-mode-active .mushaf-shell__btn--icon,
         .app .main.mushaf-mode-active .mushaf-shell__btn {
           width: 40px !important;
@@ -278,20 +339,14 @@
           min-width: 40px !important;
           min-height: 40px !important;
         }
-        .app .main.mushaf-mode-active .mushaf-shell__page,
-        .app .main.mushaf-mode-active .madani-ornate__inner {
-          overflow-x: hidden !important;
-        }
         .app .main.mushaf-mode-active .madani-word--end,
         .app .verse-arabic .verse-ayah-end-number {
           margin-inline: 0.5em 0.35em !important;
         }
-      }
-      .app.main.mushaf-mode-active,
-      .app .main.mushaf-mode-active.container-fluid,
-      .app .main.mushaf-mode-active .mushaf-workspace {
-        width: 100% !important;
-        max-width: none !important;
+        .app .verse-font-size-control,
+        .app .verse-font-size-control--mobile {
+          display: inline-flex !important;
+        }
       }
     </style>
     <div id="mutqin-ui-build-pill" aria-hidden="true">UI v70</div>
