@@ -492,6 +492,18 @@
     text-align: right !important;
   }
 
+  .verse-arabic .verse-ayah-end-number,
+  .verse-arabic-with-end .verse-ayah-end-number {
+    display: inline-flex !important;
+    vertical-align: middle;
+    margin-inline: 0.32em 0.02em !important;
+    min-width: 1.4em;
+    min-height: 1.4em;
+    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(0.78rem, 3.4vw, 0.95rem)) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
   .verse-arabic.word-by-word-meanings {
     line-height: 1.15 !important;
   }

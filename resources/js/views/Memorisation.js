@@ -25,7 +25,8 @@ import {
   buildMadaniPageLayout,
   formatMadaniAyahEndLabel,
   isVerseInteractiveOnPage,
-  MADANI_LAYOUT_VERSION
+  MADANI_LAYOUT_VERSION,
+  toEasternArabicDigits
 } from '../scripts/mushaf/madaniPageLayout'
 import {
   buildAudioIndexMap as buildMadaniAudioIndexMapHelper,
@@ -20838,6 +20839,17 @@ export default {
       return {
         '--mushaf-ayah-digits': String(digits),
       }
+    },
+    formatEasternAyahNumber(number) {
+      return toEasternArabicDigits(number)
+    },
+    buildStackedAyahEndMarkerHtml(verse) {
+      const number = verse?.number
+      if (number == null || number === '') return ''
+      const digits = Math.min(3, String(number).length || 1)
+      const label = this.escapeHtml(this.getMushafAyahNumberAriaLabel(number))
+      const eastern = this.escapeHtml(this.formatEasternAyahNumber(number))
+      return `<span class="verse-ayah-end-number verse-ayah-number-digits-${digits}" aria-label="${label}"><span class="verse-ayah-end-number__digit" aria-hidden="true">${eastern}</span></span>`
     },
     setReadingViewMode(mode) {
       const allowedModes = ['stacked', 'mushaf']

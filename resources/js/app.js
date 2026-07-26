@@ -45,19 +45,19 @@ const MemorisationLoadError = {
 };
 
 /**
- * Mix watch rewrites public/js/memorisation*.js while the browser may still be
+ * Mix watch rewrites public/js/memorisation.js while the browser may still be
  * requesting it — that surfaces as ChunkLoadError. Retry a few times before failing.
- * Chunk URLs are contenthashed (see webpack.mix.cjs) so a new app.js always pulls
- * a fresh Memorisation bundle.
+ * Chunk name is stable (see webpack.mix.cjs); cache busting comes from mix.version()
+ * on app.js, which embeds the chunk mapping.
  */
 function loadMemorisationChunk(attempt = 0) {
     return import(/* webpackChunkName: "memorisation" */ './views/Memorisation.vue').then((mod) => {
         if (typeof window !== 'undefined') {
             window.__MUTQIN_PRACTICE_COACH__ = 'v22';
-            window.__MUTQIN_AI_RECITE_UI__ = 'v62';
+            window.__MUTQIN_AI_RECITE_UI__ = 'v63';
             document.documentElement.dataset.practiceCoach = 'v2';
-            document.documentElement.dataset.aiReciteUi = 'v62';
-            document.documentElement.dataset.stackedAyahEnd = 'v3';        }
+            document.documentElement.dataset.aiReciteUi = 'v63';
+            document.documentElement.dataset.stackedAyahEnd = 'v4';        }
         return mod;
     }).catch((error) => {
         const name = String(error?.name || '');
