@@ -284,3 +284,25 @@ export function isVerseInteractiveOnPage(verseKey, sessionKeys) {
   if (Array.isArray(sessionKeys)) return sessionKeys.includes(verseKey)
   return true
 }
+
+const EASTERN_ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩'
+
+/** Convert Western digits in a string to Eastern Arabic numerals. */
+export function toEasternArabicDigits(value) {
+  return String(value ?? '').replace(/[0-9]/g, digit => EASTERN_ARABIC_DIGITS[Number(digit)])
+}
+
+/**
+ * Label for ayah-end markers when not using QCF page glyphs.
+ * Prefers API `textQpc` digits; falls back to the ayah number from verseKey.
+ */
+export function formatMadaniAyahEndLabel(word = {}) {
+  const raw = String(word.textQpc || word.text_qpc_hafs || word.text || '').trim()
+  const digits = raw.replace(/[^\d٠-٩]/g, '')
+  if (digits) return toEasternArabicDigits(digits)
+
+  const ayah = Number(String(word.verseKey || word.verse_key || '').split(':')[1])
+  if (Number.isFinite(ayah) && ayah > 0) return toEasternArabicDigits(ayah)
+
+  return raw
+}

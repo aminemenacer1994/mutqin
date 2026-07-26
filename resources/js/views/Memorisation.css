@@ -17099,6 +17099,39 @@ button:active {
   font-size: 0.9rem;
 }
 
+/* Keep header chrome in one warm family with Resume / End */
+.workspace-shell-actions .action-btn.primary,
+.workspace-shell-actions .action-btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: transparent;
+  color: #fffaf3;
+}
+
+.workspace-shell-actions .action-btn-exit,
+.workspace-shell-actions .action-btn.mutqin-btn--destructive {
+  background: color-mix(in srgb, var(--danger) 88%, var(--accent-strong));
+  border-color: color-mix(in srgb, var(--danger) 88%, var(--accent-strong));
+  color: #fffaf3;
+}
+
+.workspace-shell-actions .action-btn-secondary,
+.workspace-shell-actions .tools-btn,
+.workspace-shell-actions .top-card-ellipsis,
+.workspace-shell-actions .action-icon-btn {
+  background: color-mix(in srgb, var(--surface-strong) 88%, var(--accent-wash));
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  color: var(--accent-strong);
+}
+
+.workspace-shell-actions .action-btn-secondary:hover,
+.workspace-shell-actions .tools-btn:hover,
+.workspace-shell-actions .top-card-ellipsis:hover,
+.workspace-shell-actions .action-icon-btn:hover {
+  background: var(--accent-light);
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  color: var(--accent-strong);
+}
+
 .quick-ai-action i, .mushaf-ai-button i {
   width: auto;
   height: auto;
@@ -17609,7 +17642,7 @@ button:active {
 }
 
 .view-mode-btn.active {
-  background: rgba(47, 111, 88, 0.12);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--accent-strong);
   box-shadow: none;
 }
@@ -21833,10 +21866,37 @@ button:active {
   overflow-x: clip;
 }
 
-.main.container, .main.container-fluid:not(.mushaf-mode-active) {
+.main.container-fluid:not(.mushaf-mode-active) {
   width: 100%;
   max-width: 100%;
   padding-inline: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+/* Stacked layout: Bootstrap-style container on large desktops */
+.main.container {
+  width: 100%;
+  max-width: 1320px !important;
+  margin-inline: auto;
+  padding-inline: clamp(0.9rem, 3vw, 2.25rem);
+}
+
+@media (max-width: 1399.98px) {
+  .main.container {
+    max-width: 1140px !important;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .main.container {
+    max-width: 960px !important;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .main.container {
+    max-width: 100% !important;
+    padding-inline: clamp(0.75rem, 2vw, 1.5rem);
+  }
 }
 
 .main.container-fluid.mushaf-mode-active {
@@ -23784,25 +23844,23 @@ textarea {
   will-change: text-shadow, opacity;
 }
 
-.main.container, .main.container .content, .main.container .workspace, .main.container .workspace-main, .main.container .workspace-shell, .main.container .workspace-shell-body {
+.main.container .content,
+.main.container .workspace,
+.main.container .workspace-main,
+.main.container .workspace-shell,
+.main.container .workspace-shell-body {
   width: 100%;
 }
 
-.main.container {
-  max-width: 1320px;
-  padding-inline: clamp(0.9rem, 3vw, 2.25rem);
-}
-
-.main.container .content, .main.container .workspace {
+.main.container .content,
+.main.container .workspace {
   margin: 0;
 }
 
-.main.container .workspace-main {
-  max-width: 1180px;
-  margin-inline: auto;
-}
-
-.main.container .workspace-shell, .main.container .workspace-shell-body {
+.main.container .workspace-main,
+.main.container .workspace-shell,
+.main.container .workspace-shell-body {
+  max-width: 100% !important;
   margin-inline: auto;
 }
 
@@ -28788,8 +28846,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   gap: 0;
   padding: 0.18rem;
   border-radius: 999px;
-  border: 1px solid rgba(154, 103, 56, 0.22);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  background: color-mix(in srgb, var(--surface-strong) 88%, var(--accent-wash));
   box-shadow: none;
 }
 
@@ -28851,7 +28909,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: #57534e;
+  color: var(--text-muted);
   font-size: 0.8rem;
   font-weight: 700;
   line-height: 1;
@@ -28861,15 +28919,15 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .workspace-layout-btn.view-mode-btn:hover {
-  color: #1c1917;
-  background: rgba(154, 103, 56, 0.1);
+  color: var(--accent-strong);
+  background: var(--accent-light);
   transform: none;
 }
 
 .workspace-layout-btn.view-mode-btn.active {
-  background: #1c1917;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #fffaf3;
-  box-shadow: 0 6px 14px rgba(28, 25, 23, 0.18);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .workspace-layout-btn.view-mode-btn i {
@@ -28877,7 +28935,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 [data-theme="dark"] .workspace-layout-toggle {
-  background: rgba(24, 24, 27, 0.72);
+  background: rgba(47, 40, 34, 0.72);
   border-color: rgba(212, 175, 110, 0.28);
 }
 
@@ -28891,7 +28949,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 [data-theme="dark"] .workspace-layout-btn.view-mode-btn.active {
-  background: rgba(212, 175, 110, 0.92);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #1a1208;
   box-shadow: none;
 }
@@ -28917,11 +28975,22 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   padding: 0.35rem 0.75rem;
   gap: 0.45rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(154, 103, 56, 0.22);
-  color: #1c1917;
+  background: color-mix(in srgb, var(--surface-strong) 88%, var(--accent-wash));
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  color: var(--accent-strong);
   font-size: 0.875rem;
   font-weight: 600;
+}
+
+.workspace-font-dropdown .font-dropdown-trigger:hover {
+  background: var(--accent-light);
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  color: var(--accent-strong);
+  box-shadow: none;
+}
+
+.workspace-font-dropdown .font-dropdown-trigger i {
+  color: color-mix(in srgb, var(--accent) 72%, var(--text-muted));
 }
 
 .workspace-font-dropdown .font-dropdown-menu {
@@ -44021,6 +44090,54 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
   font-family: var(--mushaf-selected-font) !important;
 }
 
+/* Unicode / fallback Quranic fonts: ornate ayah-end badges (QCF glyphs keep built-in markers) */
+.main.mushaf-mode-active .madani-word--end.madani-word--unicode,
+.main.mushaf-mode-active .madani-word--end.madani-word--fallback {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 1.4em !important;
+  min-height: 1.4em !important;
+  margin-inline: 0.2em 0.28em !important;
+  padding: 0.14em 0.22em !important;
+  border-radius: 999px !important;
+  border: 1.5px solid color-mix(in srgb, #1f6f4a 72%, #c4a35a) !important;
+  background:
+    radial-gradient(circle at 50% 42%, #fffdf7 0%, #f4ecdb 58%, #e8d7b2 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #c4a35a 58%, transparent),
+    0 1px 2px rgba(40, 30, 16, 0.1) !important;
+  color: #1a3d2e !important;
+  -webkit-text-fill-color: #1a3d2e !important;
+  font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", "Traditional Arabic", serif !important;
+  font-size: calc(clamp(0.7rem, 1.35vw, 0.95rem) * (var(--verse-font-percent, 100) * 0.01)) !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  vertical-align: middle;
+  unicode-bidi: isolate;
+  direction: ltr;
+  cursor: default;
+}
+
+.main.mushaf-mode-active .mushaf-page--ornate .madani-word--end.madani-word--unicode,
+.main.mushaf-mode-active .mushaf-page--ornate .madani-word--end.madani-word--fallback {
+  border-color: color-mix(in srgb, var(--madani-border, #1f5c3c) 85%, var(--madani-accent, #c4a35a)) !important;
+  color: var(--madani-border-deep, #184a30) !important;
+  -webkit-text-fill-color: var(--madani-border-deep, #184a30) !important;
+  background:
+    radial-gradient(circle at 50% 42%, #fffdf7 0%, color-mix(in srgb, var(--madani-paper, #f7f2e4) 70%, #fff) 55%, #ecd9b0 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--madani-accent-soft, #d8c086) 80%, transparent),
+    0 1px 2px rgba(40, 30, 16, 0.1) !important;
+}
+
+.main.mushaf-mode-active .madani-word--end.madani-word--unicode.madani-word--out,
+.main.mushaf-mode-active .madani-word--end.madani-word--fallback.madani-word--out {
+  opacity: 0.42 !important;
+}
+
 .main.mushaf-mode-active .madani-basmala {
   font-size: calc(clamp(1.35rem, 2.6vw, 2.1rem) * (var(--verse-font-percent, 100) * 0.01)) !important;
 }
@@ -44246,6 +44363,17 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
   filter: none !important;
 }
 
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word--end.madani-word--unicode,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word--end.madani-word--fallback {
+  background: radial-gradient(circle at 50% 42%, #2c323c 0%, #181c22 100%) !important;
+  border-color: color-mix(in srgb, #4ade80 50%, #d4af6e) !important;
+  color: #e8f0ea !important;
+  -webkit-text-fill-color: #e8f0ea !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #d4af6e 40%, transparent),
+    0 1px 3px rgba(0, 0, 0, 0.35) !important;
+}
+
 [data-theme="dark"] .main.mushaf-mode-active .live-practice-guidance--mushaf .live-practice-method,
 [data-theme="dark"] .main.mushaf-mode-active .live-practice-guidance--mushaf .live-practice-coach {
   background: color-mix(in srgb, #1c2a22 88%, #0f1012);
@@ -44264,14 +44392,19 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
   }
 
   .main.mushaf-mode-active .mushaf-shell__bar {
-    gap: 0.45rem;
-    padding: 0.55rem 0.6rem;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.5rem;
+    overflow-x: auto;
   }
 
   .main.mushaf-mode-active .mushaf-shell__bar-group--end {
-    margin-inline-start: 0;
-    width: 100%;
+    margin-inline-start: auto;
+    width: auto;
     justify-content: flex-end;
+    flex: 0 0 auto;
   }
 
   .main.mushaf-mode-active .mushaf-shell__pager-label {

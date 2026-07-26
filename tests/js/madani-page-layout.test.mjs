@@ -3,10 +3,12 @@ import {
   buildMadaniPageLayout,
   chapterHasBismillahPre,
   findSurahStartOnPage,
+  formatMadaniAyahEndLabel,
   groupWordsByLine,
   madaniPageRange,
   resolveMadaniPagesForVerses,
-  surahNameGlyphText
+  surahNameGlyphText,
+  toEasternArabicDigits
 } from '../../resources/js/scripts/mushaf/madaniPageLayout.js'
 import {
   qcfFontFamily,
@@ -136,5 +138,10 @@ assert.deepEqual(
   ]),
   [2, 3]
 )
+
+assert.equal(toEasternArabicDigits('67'), '٦٧')
+assert.equal(formatMadaniAyahEndLabel({ textQpc: '6' }), '٦')
+assert.equal(formatMadaniAyahEndLabel({ text_qpc_hafs: '٧' }), '٧')
+assert.equal(formatMadaniAyahEndLabel({ verseKey: '2:7', textQpc: '' }), '٧')
 
 console.log('Madani page layout tests passed')

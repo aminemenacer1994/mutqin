@@ -23,6 +23,7 @@ import {
 } from '../scripts/lib/quranApis'
 import {
   buildMadaniPageLayout,
+  formatMadaniAyahEndLabel,
   isVerseInteractiveOnPage,
   MADANI_LAYOUT_VERSION
 } from '../scripts/mushaf/madaniPageLayout'
@@ -4312,14 +4313,6 @@ export default {
       if (this.recitationCheckResult) return false
       return this.postSessionAiReciteActive || this.recitationCheckPanelOpen
     },
-    reportRecitationCheckFailure(message = '', options = {}) {
-      const text = String(message || this.t('memorisation.aiCheck.recitationCheckFailed')).trim()
-      // Never mount the sticky mic/error session banner — toast only, keep Start Reciting.
-      this.recitationCheckError = ''
-      this.recitationCheckPreparing = false
-      this.recitationCheckRecording = false
-      if (text) this.showBanner(text, 'error', options.durationMs || 4200)
-    },
     recitationCheckTitle() {
       const targets = this.getRecitationCheckTargetVerses()
       if (!targets.length) return this.t('memorisation.aiCheck.currentAyah')
@@ -6168,7 +6161,9 @@ export default {
             const useGlyph = useGlyphs && fontReady && !!word.codeV2
             const html = useGlyph
               ? (word.codeV2 || word.textQpc || '')
-              : (word.textQpc || word.codeV2 || '')
+              : (word.isEnd
+                ? formatMadaniAyahEndLabel(word)
+                : (word.textQpc || word.codeV2 || ''))
             const wordIndex = word.isEnd ? null : this.resolveMadaniAudioWordIndex(word, audioIndexMap)
             const isHighlighted = inSession
               && !word.isEnd
@@ -6523,6 +6518,8 @@ export default {
         this.migrateLocalStorage()
       }
       this.loadUiState()
+      this.applyMobileLayoutFontDefault(this.readingViewMode)
+      if (this.isMobileViewport()) this.playerCompact = true
       if (this.auth?.check && this.auth.ai_recall_mode_enabled !== undefined) {
         this.aiRecallModeEnabled = !!this.auth.ai_recall_mode_enabled
       }
@@ -6762,8 +6759,17 @@ export default {
         this.applyMushafThemeDefault(this.theme, { force: !this.mushafBackgroundTouched })
         this.ensureMadaniPagesLoaded().then(() => this.syncMushafPageToActiveVerse())
       }
+      this.applyMobileLayoutFontDefault(newVal)
+      if (this.isMobileViewport()) {
+        this.playerCompact = true
+      }
       this.persistUiState()
-      if (this.practiceFocusWeakWords?.length) this.schedulePracticeFocusWordDomSync()
+      if (this.practiceFocusWeakWords?.length && !this.isMobileViewport()) {
+        this.schedulePracticeFocusWordDomSync()
+      } else if (this.practiceFocusWeakWords?.length) {
+        // Mobile: single deferred sync instead of multi-timeout DOM walks
+        this.$nextTick(() => this.schedulePracticeFocusWordDomSync())
+      }
     },
     showTools(newVal) {
       this.syncBodyScrollLock(newVal)
@@ -6986,12 +6992,20 @@ export default {
     focusDimPercent: 'persistUiState',
     activeKey: 'persistSessionState',
     queueIndex: 'persistSessionState',
-    playerVisible: 'persistAudioState',
+    playerVisible(visible) {
+      this.persistAudioState()
+      if (visible && this.isMobileViewport()) this.playerCompact = true
+    },
     playerCompact: 'persistUiState',
     isPlaying(val) {
       this.persistAudioState()
       if (val && this.practiceFocusWeakWords?.length) {
-        this.schedulePracticeFocusWordDomSync([0, 200, 600])
+        // Mobile: avoid multi-timeout focus sync storms during playback
+        if (this.isMobileViewport()) {
+          this.schedulePracticeFocusWordDomSync([0])
+        } else {
+          this.schedulePracticeFocusWordDomSync([0, 200, 600])
+        }
       }
     },
     currentTime: 'persistAudioState',
@@ -7083,6 +7097,44 @@ export default {
   },
 
   methods: {
+    isMobileViewport() {
+      if (typeof window === 'undefined' || !window.matchMedia) return false
+      return window.matchMedia('(max-width: 767.98px)').matches
+    },
+
+    safeErrorText(value, fallback = '') {
+      if (value == null) return fallback
+      if (typeof value === 'string') return value
+      if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+      if (value instanceof Error) return value.message || fallback
+      if (typeof value?.message === 'string') return value.message
+      try {
+        const asString = value?.toString?.()
+        if (typeof asString === 'string' && asString && asString !== '[object Object]') return asString
+      } catch (_) { /* ignore broken primitives */ }
+      return fallback
+    },
+
+    reportRecitationCheckFailure(message = '', options = {}) {
+      const fallback = this.safeErrorText(
+        this.t('memorisation.aiCheck.recitationCheckFailed'),
+        'Recitation check failed. Please try again.'
+      )
+      const text = this.safeErrorText(message, fallback).trim() || fallback
+      // Never mount the sticky mic/error session banner — toast only, keep Start Reciting.
+      this.recitationCheckError = ''
+      this.recitationCheckPreparing = false
+      this.recitationCheckRecording = false
+      if (text) this.showBanner(text, 'error', Number(options?.durationMs) || 4200)
+    },
+
+    applyMobileLayoutFontDefault(mode = this.readingViewMode) {
+      if (!this.isMobileViewport()) return
+      const next = mode === 'mushaf' ? 150 : 100
+      if (Number(this.defaultFontSize) === next) return
+      this.defaultFontSize = next
+    },
+
     normalizeThemeToken(value = 'light') {
       return normalizeThemeValue(value)
     },
@@ -17798,7 +17850,7 @@ export default {
               ? this.t('memorisation.aiCheck.speechRecognitionFailed')
               : (serverMessage || error?.message || this.t('memorisation.aiCheck.recitationCheckFailed'))
             // Keep AI Recite recommendation open — toast only, never eject the surface.
-            this.reportRecitationCheckFailure(failureText)
+            this.reportRecitationCheckFailure(this.safeErrorText(failureText, this.t('memorisation.aiCheck.recitationCheckFailed')))
           } finally {
             this.recitationCheckPreparing = false
             this.cleanupRecitationCheckMedia()
@@ -20988,6 +21040,8 @@ export default {
     prefetchAdjacentMadaniFonts(pageNumber) {
       const page = Number(pageNumber)
       if (!page) return
+      // Mobile: skip neighbor prefetch to cut network + decode cost.
+      if (this.isMobileViewport()) return
       const neighbors = [page - 1, page + 1].filter(n => n >= 1 && n <= 604)
       prefetchQcfPageFonts(neighbors, { tajweed: !!this.tajweedEnabled }).catch(() => {})
       neighbors.forEach(neighbor => {
@@ -25078,8 +25132,9 @@ export default {
     },
 
     setPlayerCompact(compact = false) {
-      this.playerCompact = !!compact
-      if (!compact) this.playerDismissed = false
+      // Mobile always stays on the minimised one-row player.
+      this.playerCompact = this.isMobileViewport() ? true : !!compact
+      if (!this.playerCompact) this.playerDismissed = false
       this.persistUiState()
     },
 
@@ -25097,7 +25152,7 @@ export default {
     restorePlayer() {
       this.playerDismissed = false
       this.playerVisible = true
-      this.playerCompact = false
+      this.playerCompact = this.isMobileViewport() ? true : false
       this.persistUiState()
     },
 
@@ -26518,6 +26573,10 @@ export default {
       this.planner = this.loadModeState('planner')
       this.syncGlobalTheme(getSavedTheme())
       if (this.readingViewMode === 'mushaf') this.applyMushafThemeDefault(this.theme, { force: !this.mushafBackgroundTouched })
+      if (this.isMobileViewport()) {
+        this.playerCompact = true
+        this.applyMobileLayoutFontDefault(this.readingViewMode)
+      }
     },
 
     persistUiState() {

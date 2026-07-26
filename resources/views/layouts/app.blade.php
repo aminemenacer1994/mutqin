@@ -30,20 +30,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-    <meta name="mutqin-build" content="v57-unfreeze">
-    <style id="mutqin-ai-recite-force-v57">
+    <meta name="mutqin-build" content="v58">
+    <style id="mutqin-ai-recite-force-v58">
       #mutqin-build-stamp {
-        position: fixed !important;
-        bottom: 10px !important;
-        left: 10px !important;
-        z-index: 2147483647 !important;
-        display: inline-flex !important;
-        padding: 0.45rem 0.7rem !important;
-        border-radius: 0.55rem !important;
-        background: #1f4d36 !important;
-        color: #f4faf6 !important;
-        font: 700 12px/1.2 Inter, system-ui, sans-serif !important;
-        pointer-events: none !important;
+        display: none !important;
       }
       .ai-recite-clean,
       .ai-recite-clean-overlay,
@@ -85,8 +75,8 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v57-unfreeze';
-        var FORCE = '57';
+        var BUILD = 'v58';
+        var FORCE = '58';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
@@ -2837,7 +2827,7 @@
             @yield('content')
         </main>
     </div>
-    <div id="mutqin-build-stamp" aria-hidden="true">Mutqin build v57 · unfreeze live words</div>
+    <div id="mutqin-build-stamp" hidden aria-hidden="true"></div>
 
     <script src="{{ mix('js/app.js') }}" defer></script>
     

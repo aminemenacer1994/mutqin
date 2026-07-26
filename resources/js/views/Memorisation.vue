@@ -30,7 +30,8 @@
     </div>
 
     <!-- Main Content -->
-    <div v-if="appReady && isLoggedIn" class="main w-100" :class="{
+    <div v-if="appReady && isLoggedIn" class="main" :class="{
+      'w-100': readingViewMode === 'mushaf',
       'container-fluid': readingViewMode === 'mushaf',
       'container': readingViewMode !== 'mushaf',
       'tools-open': showTools,
@@ -838,7 +839,7 @@
                     </div>
 
                     <div
-                      v-if="mushafAidVerse && (showTranslation || showTransliteration || showWordByWord || activeWordTooltip)"
+                      v-if="mushafAidVerse && (showTransliteration || showWordByWord || activeWordTooltip)"
                       class="mushaf-verse-aids"
                     >
                       <div v-if="activeWordTooltip?.text" class="mushaf-word-tooltip" dir="ltr" lang="en">
@@ -863,10 +864,6 @@
                       <div v-if="showTransliteration && mushafAidVerse.transliteration" class="verse-aid-block" dir="ltr" lang="en">
                         <div class="verse-aid-title">{{ t('memorisation.reading.transliteration') }}</div>
                         <div class="verse-transliteration verse-aid">{{ mushafAidVerse.transliteration }}</div>
-                      </div>
-                      <div v-if="showTranslation && mushafAidVerse.translation" class="verse-aid-block" dir="ltr" lang="en">
-                        <div class="verse-aid-title">{{ t('memorisation.reading.translation') }}</div>
-                        <div class="verse-translation verse-aid">{{ mushafAidVerse.translation }}</div>
                       </div>
                     </div>
                   </article>
@@ -2809,7 +2806,7 @@
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full">
       <div
         class="modal-content mutqin-modal-surface self-check-modal recitation-review-modal"
-        data-ai-recite-ui="v57-unfreeze"
+        data-ai-recite-ui="v58"
         role="dialog"
         aria-modal="true"
         aria-labelledby="selfCheckModalTitle"
