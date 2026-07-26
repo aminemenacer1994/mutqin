@@ -27238,10 +27238,11 @@ function loadMemorisationChunk() {
   var attempt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
   return __webpack_require__.e(/*! import() | memorisation */ "memorisation").then(__webpack_require__.bind(__webpack_require__, /*! ./views/Memorisation.vue */ "./resources/js/views/Memorisation.vue")).then(function (mod) {
     if (typeof window !== 'undefined') {
-      window.__MUTQIN_PRACTICE_COACH__ = 'v20';
-      window.__MUTQIN_AI_RECITE_UI__ = 'v60';
+      window.__MUTQIN_PRACTICE_COACH__ = 'v21';
+      window.__MUTQIN_AI_RECITE_UI__ = 'v61';
       document.documentElement.dataset.practiceCoach = 'v2';
-      document.documentElement.dataset.aiReciteUi = 'v60';
+      document.documentElement.dataset.aiReciteUi = 'v61';
+      document.documentElement.dataset.stackedAyahEnd = 'v2';
     }
     return mod;
   })["catch"](function (error) {
