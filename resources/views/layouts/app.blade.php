@@ -75,8 +75,8 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v58';
-        var FORCE = '58';
+        var BUILD = 'v60';
+        var FORCE = '60';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;

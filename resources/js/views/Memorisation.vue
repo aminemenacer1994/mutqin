@@ -889,7 +889,6 @@
                 :aria-label="`Open ayah ${verse.number}${isVerseVisuallyActive(verse.key) ? ', active ayah' : ''}`">
                 <div class="verse-header">
                   <div class="verse-badges">
-                    <span class="verse-number">Ayah {{ verse.number }}</span>
                     <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge verse-status-badge-active">{{ t('memorisation.badges.active') }}</span>
                     <span v-if="isNewHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-new">{{ t('memorisation.badges.new') }}</span>
                     <span v-if="isDueHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-due">{{ t('memorisation.due') }}</span>
@@ -946,7 +945,8 @@
                   </ul>
                 </div>
 
-                <div class="verse-arabic verse-arabic-primary" dir="rtl" lang="ar" v-if="verse.arabic && isDataReady"
+                <div class="verse-arabic verse-arabic-primary verse-arabic-with-end" dir="rtl" lang="ar"
+                  v-if="verse.arabic && isDataReady"
                   @click.stop
                   :key="`ar-${verse.key}-${practiceFocusSignature}`"
                   v-html="getDisplayArabic(verse)" :class="{
