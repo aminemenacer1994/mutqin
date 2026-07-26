@@ -3102,36 +3102,69 @@
   .top-card-icon-controls {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 0.28rem !important;
+    gap: 0.3rem !important;
     grid-column: 2 !important;
     grid-row: 1 !important;
     justify-self: end;
+    position: relative !important;
+    z-index: 80 !important;
+    pointer-events: auto !important;
   }
 
   .top-card-icon-controls .top-card-layout-icons,
-  .top-card-icon-controls .top-card-font-wrap {
+  .top-card-icon-controls .top-card-font-wrap,
+  .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    max-width: 36px !important;
+    max-height: 36px !important;
+    flex: 0 0 36px !important;
+    position: relative !important;
+    pointer-events: auto !important;
   }
 
   .top-card-icon-controls .top-card-icon-control,
   .top-card-icon-controls .top-card-controls-trigger,
   .top-card-icon-controls .top-card-ellipsis,
   .top-card-icon-controls .view-mode-btn,
-  .top-card-icon-controls .font-dropdown-trigger {
-    flex: 0 0 34px !important;
-    inline-size: 34px !important;
-    block-size: 34px !important;
-    min-inline-size: 34px !important;
-    min-block-size: 34px !important;
-    max-inline-size: 34px !important;
+  .top-card-icon-controls .font-dropdown-trigger,
+  .top-card-icon-controls .workspace-layout-btn {
+    flex: 0 0 36px !important;
+    inline-size: 36px !important;
+    block-size: 36px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-inline-size: 36px !important;
+    min-block-size: 36px !important;
+    max-inline-size: 36px !important;
+    max-block-size: 36px !important;
     padding: 0 !important;
+    margin: 0 !important;
     border-radius: 999px !important;
+    gap: 0 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
   }
 
   .top-card-icon-controls .view-mode-btn span,
   .top-card-icon-controls .font-dropdown-trigger span,
   .top-card-icon-controls .font-dropdown-trigger .bi-chevron-down {
     display: none !important;
+  }
+
+  .top-card-icon-controls .top-card-font-menu,
+  .top-card-icon-controls .font-dropdown-menu,
+  .top-card-icon-controls .top-card-menu {
+    position: absolute !important;
+    inset-inline-end: 0 !important;
+    top: calc(100% + 0.4rem) !important;
+    z-index: 120 !important;
+    min-width: 12rem;
   }
 
   /* Stacked: hide AI recite on ayah cards */
@@ -3164,15 +3197,25 @@
   }
 
   .verses-grid .verse-arabic,
-  .verses-grid .verse-arabic.verse-arabic-primary {
+  .verses-grid .verse-arabic.verse-arabic-primary,
+  .verses-grid .verse-arabic.verse-arabic-with-end {
     font-size: calc((var(--verse-font-percent, 95) / 100) * clamp(1.45rem, 6.6vw, 2.05rem)) !important;
-    line-height: 1.45 !important;
+    line-height: 1.55 !important;
     padding: 6px 2px 8px !important;
+    overflow: visible !important;
   }
 
+  /* Stacked ayah end number — mushaf-identical circular badge at end of ayah */
   .verses-grid .verse-arabic .verse-ayah-end-number,
-  .verses-grid .verse-arabic-with-end .verse-ayah-end-number {
-    margin-inline: 0.55em 0.08em !important;
+  .verses-grid .verse-arabic-with-end .verse-ayah-end-number,
+  .verses-grid .verse-arabic .mushaf-ayah-number.verse-ayah-end-number {
+    display: inline-flex !important;
+    vertical-align: middle !important;
+    margin-inline: 0.45em 0.05em !important;
+    float: none !important;
+    position: static !important;
+    top: auto !important;
+    inset: auto !important;
   }
 
   .main.mushaf-mode-active .mushaf-ayah-number,
@@ -3185,18 +3228,52 @@
   [data-theme="dark"] .player-mini .player-verse,
   [data-theme="dark"] .player-bar .player-chapter,
   [data-theme="dark"] .player-bar .player-verse,
+  [data-theme="dark"] .player-bar .player-mini-info,
   [data-theme="dark"] .playback-pill-copy strong,
   [data-theme="dark"] .playback-pill-copy small {
     color: #f3ebe1 !important;
     opacity: 1 !important;
+    -webkit-text-fill-color: #f3ebe1 !important;
   }
 
-  /* Mushaf toolbar density */
+  /* Mushaf: hide focus/AI toolbar buttons; fix side crop */
+  .main.mushaf-mode-active .mushaf-shell__focus-toggle,
+  .main.mushaf-mode-active .mushaf-shell__btn[aria-label*="AI"],
+  .main.mushaf-mode-active .mushaf-shell__btn[title*="AI"],
+  .main.mushaf-mode-active .mushaf-shell__btn[title*="memorisation check"],
+  .main.mushaf-mode-active .mushaf-shell__btn[title*="Hide the ayah"] {
+    display: none !important;
+  }
+
   .main.mushaf-mode-active .live-practice-guidance,
   .main.mushaf-mode-active .live-practice-guidance--mushaf,
   .main.mushaf-mode-active .madani-ornate__meta,
   .main.mushaf-mode-active .mushaf-layout-dropdown,
   .main.mushaf-mode-active .mushaf-shell__controls-btn {
+    display: none !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__page,
+  .main.mushaf-mode-active .mushaf-page,
+  .main.mushaf-mode-active .madani-ornate,
+  .main.mushaf-mode-active .madani-ornate__frame,
+  .main.mushaf-mode-active .madani-ornate__inner,
+  .main.mushaf-mode-active .madani-page-sheet,
+  .main.mushaf-mode-active .madani-line {
+    overflow: visible !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .main.mushaf-mode-active .madani-ornate__inner {
+    padding-inline: 0.55rem !important;
+  }
+
+  .main.mushaf-mode-active .madani-page-sheet {
+    padding-inline: 0.2rem !important;
+  }
+
+  .main.mushaf-mode-active .madani-word--out {
     display: none !important;
   }
 
@@ -3219,32 +3296,7 @@
     block-size: 30px !important;
   }
 
-  .main.mushaf-mode-active .mushaf-shell__focus-toggle {
-    display: inline-grid !important;
-  }
-
-  .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word,
-  .main.mushaf-mode-active .mushaf-ayah-text.tajweed-enabled {
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .main.mushaf-mode-active .madani-word.is-active,
-  .main.mushaf-mode-active .mushaf-ayah.active .mushaf-ayah-text {
-    scroll-margin-block: 28vh;
-  }
-
-  /* Offcanvas: setup as structured list/grid like practice */
-  .tools-body .sheet[data-tab],
-  .tools-body > .sheet {
-    display: grid;
-    gap: 0.55rem;
-  }
-
-  .tools-body > .sheet > .sheet-section.sheet-section-compact {
-    display: grid;
-    gap: 0;
-  }
-
+  /* Offcanvas: setup structured list */
   .tools-body .setup-field-list {
     display: grid !important;
     grid-template-columns: 1fr !important;
@@ -3260,6 +3312,7 @@
     border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
     border-radius: 0.65rem;
     background: color-mix(in srgb, var(--zone-reading, #fff) 92%, var(--zone-elevated, #f7f4ef) 8%);
+    box-sizing: border-box !important;
   }
 
   .tools-body .setup-field-row > .select,
@@ -3268,9 +3321,12 @@
   .tools-body .setup-field-row .range-control,
   .tools-body .setup-field-row .radio-group {
     width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* Practice: technique dropdown contents full width */
+  .tools-body .sheet .sheet-content,
   .tools-body .sheet .sheet-content .field-stack,
   .tools-body .sheet .sheet-content .field-stack > .field,
   .tools-body .sheet .sheet-content .select,
@@ -3278,7 +3334,9 @@
   .tools-body .sheet .sheet-content .range-control,
   .tools-body .sheet .sheet-content .radio-group,
   .tools-body .sheet .sheet-content .techniques-choice-group,
-  .tools-body .sheet .sheet-content .technique-preview-block {
+  .tools-body .sheet .sheet-content .technique-preview-block,
+  .tools-body .sheet .sheet-content .technique-description,
+  .tools-body .sheet .sheet-content .technique-best {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -3295,18 +3353,24 @@
   .tools-body .sheet .sheet-content .radio-group .radio {
     width: 100% !important;
     margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
   }
 
-  /* Saved: clean Bootstrap list */
+  /* Saved: clean Bootstrap list (override earlier dense grid) */
+  .tools-body .saved-sessions-list,
   .tools-body .saved-sessions-list.list-group {
     display: flex !important;
     flex-direction: column !important;
+    grid-template-columns: none !important;
     gap: 0 !important;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+    border-radius: 0.5rem !important;
+    overflow: hidden !important;
+    border: 1px solid var(--border, rgba(0, 0, 0, 0.12)) !important;
+    background: color-mix(in srgb, var(--zone-reading, #fff) 96%, transparent) !important;
   }
 
+  .tools-body .saved-sessions-list .saved-session-row,
   .tools-body .saved-sessions-list .list-group-item.saved-session-row {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
@@ -3317,15 +3381,26 @@
     border-bottom: 1px solid var(--border, rgba(0, 0, 0, 0.1)) !important;
     background: transparent !important;
     margin: 0 !important;
+    border-radius: 0 !important;
   }
 
-  .tools-body .saved-sessions-list .list-group-item.saved-session-row:last-child {
+  .tools-body .saved-sessions-list .list-group-item.saved-session-row:last-child,
+  .tools-body .saved-sessions-list .saved-session-row:last-child {
     border-bottom: 0 !important;
   }
 
   .tools-body .saved-sessions-list .saved-session-row-main {
+    grid-column: 1 !important;
     min-inline-size: 0 !important;
     text-align: start !important;
+  }
+
+  .tools-body .saved-sessions-list .saved-session-row-actions {
+    grid-column: 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    width: auto !important;
   }
 
   .tools-body .saved-sessions-list .saved-session-row-title {

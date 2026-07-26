@@ -5820,7 +5820,7 @@ export default {
       const pageNumbers = Array.isArray(this.madaniPageNumbers) ? this.madaniPageNumbers : []
       if (!pageNumbers.length) return []
       const sessionKeys = this.mushafSessionVerseKeys
-      return pageNumbers.map(pageNumber => {
+      const pages = pageNumbers.map(pageNumber => {
         const layout = this.madaniPageLayouts?.[pageNumber] || null
         const layoutVerses = Array.isArray(layout?.verses) ? layout.verses : []
         const sessionVerses = (this.mushafDisplayVerses || []).filter(verse => {
@@ -5829,11 +5829,13 @@ export default {
         })
         const verses = sessionVerses.length
           ? sessionVerses
-          : layoutVerses.map(item => ({
-            key: item.key,
-            number: item.number,
-            chapterId: Number(String(item.key).split(':')[0]) || 0
-          }))
+          : (sessionKeys.size
+            ? []
+            : layoutVerses.map(item => ({
+              key: item.key,
+              number: item.number,
+              chapterId: Number(String(item.key).split(':')[0]) || 0
+            })))
         return {
           id: `madani-${pageNumber}`,
           pageNumber,
@@ -5849,6 +5851,11 @@ export default {
           loading: !layout && !!this.madaniPagesLoading
         }
       })
+      // Strictly only pages that intersect the selected session range.
+      if (sessionKeys.size > 0) {
+        return pages.filter(page => Array.isArray(page.verses) && page.verses.length > 0)
+      }
+      return pages
     },
 
     currentMushafPage() {
@@ -6133,6 +6140,7 @@ export default {
       const lines = Array.isArray(page?.lines) ? page.lines : []
       if (!lines.length) return []
       const sessionKeys = this.mushafSessionVerseKeys
+      const filterToSession = sessionKeys.size > 0
       const hasStarted = this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback
       const effectiveKey = this.effectiveActiveVerseKey
       const fontFamily = page.fontFamily || `p${page.pageNumber}-v2`
@@ -6215,7 +6223,7 @@ export default {
               isReviewPriority: inSession && this.isReviewPriorityAyah(verseKey),
               hasAiReview: hasActiveReview
             }
-          })
+          }).filter(word => !filterToSession || word.inSession !== false)
           return {
             ...line,
             key: `madani-${page.pageNumber}-line-${line.lineNumber}-${line.type}-${lineIndex}`,
@@ -6224,6 +6232,17 @@ export default {
             useGlyphs,
             words
           }
+        })
+        .filter(line => {
+          if (!filterToSession) return true
+          if (line.type === 'ayah') return Array.isArray(line.words) && line.words.length > 0
+          // Keep surah/basmala headers only when the page still has session ayah text.
+          return true
+        })
+        .filter((line, _idx, all) => {
+          if (!filterToSession) return true
+          if (line.type === 'ayah') return true
+          return all.some(other => other.type === 'ayah' && other.words?.length)
         })
     },
 
@@ -8786,10 +8805,10 @@ export default {
     },
 
     saveCurrentSessionSilently(name = this.buildAutoSaveSessionName()) {
+      // Never auto-save named sessions — always prompt the learner instead.
       if (!this.canSaveCurrentSession()) return null
-      const session = this.buildSessionRecord(name, { archived: true, autoSaved: true })
-      this.addSavedSession(session)
-      return session
+      this.promptSaveSessionAfterEnd()
+      return null
     },
 
     async saveCurrentSessionSilentlyAsync(name = this.buildAutoSaveSessionName()) {
@@ -20851,7 +20870,7 @@ export default {
       const digits = Math.min(3, String(number).length || 1)
       const label = this.escapeHtml(this.getMushafAyahNumberAriaLabel(number))
       const eastern = this.escapeHtml(this.formatEasternAyahNumber(number))
-      return `<span class="verse-ayah-end-number verse-ayah-number-digits-${digits}" aria-label="${label}"><span class="verse-ayah-end-number__digit" aria-hidden="true">${eastern}</span></span>`
+      return `<span class="verse-ayah-end-number mushaf-ayah-number verse-ayah-number-digits-${digits} mushaf-ayah-number-digits-${digits}" aria-label="${label}"><span class="verse-ayah-end-number__digit mushaf-ayah-number-digit" aria-hidden="true">${eastern}</span></span>`
     },
     setReadingViewMode(mode) {
       const allowedModes = ['stacked', 'mushaf']
@@ -24008,32 +24027,29 @@ export default {
         || !!this.anchorModeEnabled
         || this.liveSessionTechniqueId === 'anchor'
       )
-      // Source-guard reference:
-      // if (this.tajweedEnabled && verse.arabic_tajweed) { return this.renderWordLevelTajweedMarkup(verse, { wrapWords: this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled }) }
-      // if (this.showWordByWord || this.anchorModeEnabled || this.wordByWordAudioEnabled) { return this.splitArabicIntoWords(verse) }
-      // topCardAppliedPills() { return [] }
-      // reviewPriorityLabel() { return '' }
-      // this.syncSettingsDraft() this.persistUiState()
-      // selectFont(fontValue) { this.quranFont = fontValue this.fontDropdownOpen = false this.syncSettingsDraft() }
-      // updateDefaultFontSize() { this.syncSettingsDraft() }
+      let html = ''
       if (this.shouldShowRecitationReviewHighlights(verse.key)) {
-        return this.splitRecitationDisplayIntoWords(verse)
-      }
-      if (this.tajweedEnabled && verse.arabic_tajweed) {
+        html = this.splitRecitationDisplayIntoWords(verse)
+      } else if (this.tajweedEnabled && verse.arabic_tajweed) {
         if (forceMushafWords || forceWrapForFocus) {
-          return this.renderWordLevelTajweedMarkup(verse, { wrapWords: true })
+          html = this.renderWordLevelTajweedMarkup(verse, { wrapWords: true })
+        } else {
+          html = this.renderWordLevelTajweedMarkup(verse, {
+            wrapWords: this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled || forceWrapForFocus
+          })
         }
-        return this.renderWordLevelTajweedMarkup(verse, {
-          wrapWords: this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled || forceWrapForFocus
-        })
+      } else if (forceMushafWords || forceWrapForFocus) {
+        html = this.splitArabicIntoWords(verse)
+      } else if (this.showWordByWord || this.anchorModeEnabled || this.wordByWordAudioEnabled) {
+        html = this.splitArabicIntoWords(verse)
+      } else {
+        html = this.stripTajweedMarkup(verse.arabic)
       }
-      if (forceMushafWords || forceWrapForFocus) {
-        return this.splitArabicIntoWords(verse)
+      // Stacked layout: circular Eastern ayah number immediately after the ayah text (mushaf-style).
+      if (this.readingViewMode !== 'mushaf') {
+        html = `${html || ''}${this.buildStackedAyahEndMarkerHtml(verse)}`
       }
-      if (this.showWordByWord || this.anchorModeEnabled || this.wordByWordAudioEnabled) {
-        return this.splitArabicIntoWords(verse)
-      }
-      return this.stripTajweedMarkup(verse.arabic)
+      return html
     },
 
     escapeHtml(str) {

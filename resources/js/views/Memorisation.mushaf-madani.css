@@ -169,7 +169,7 @@
 }
 
 .main.mushaf-mode-active .mushaf-page--ornate .madani-line {
-  overflow: hidden;
+  overflow: visible;
   padding-block: 0.06em;
 }
 
@@ -425,21 +425,36 @@
   }
 
   .main.mushaf-mode-active .madani-ornate__inner {
-    padding: 0.4rem 0.35rem 0.55rem;
+    padding: 0.4rem 0.55rem 0.55rem;
     min-height: min(62vh, 640px);
-    overflow-x: hidden;
+    overflow-x: visible;
     box-sizing: border-box;
   }
 
   .main.mushaf-mode-active .mushaf-page--ornate {
-    padding: 0.45rem 0.3rem 0.7rem !important;
+    padding: 0.45rem 0.45rem 0.7rem !important;
+    box-sizing: border-box;
+    overflow: visible !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet,
+  .main.mushaf-mode-active .madani-page-sheet {
+    overflow: visible !important;
+    padding-inline: 0.15rem !important;
+    max-width: 100%;
     box-sizing: border-box;
   }
 
-  .main.mushaf-mode-active .mushaf-page--ornate .madani-line {
-    overflow-x: auto;
-    overflow-y: hidden;
+  .main.mushaf-mode-active .mushaf-page--ornate .madani-line,
+  .main.mushaf-mode-active .madani-line {
+    overflow: visible !important;
     max-width: 100%;
+    padding-inline: 0.08em;
+    box-sizing: border-box;
+  }
+
+  .main.mushaf-mode-active .madani-word {
+    overflow: visible !important;
   }
 
   .main.mushaf-mode-active .mushaf-layout-menu {

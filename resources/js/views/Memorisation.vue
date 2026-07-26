@@ -495,18 +495,6 @@
                   <div class="mushaf-shell__bar-group mushaf-shell__bar-group--end">
                     <button
                       type="button"
-                      class="mushaf-shell__btn mushaf-shell__btn--icon mushaf-shell__focus-toggle"
-                      :class="{ 'is-active': focusModeEnabled }"
-                      @click.stop="toggleFocusModeRadio"
-                      :aria-pressed="focusModeEnabled ? 'true' : 'false'"
-                      :aria-label="t('memorisation.a11y.useFocusMode')"
-                      :title="t('memorisation.a11y.useFocusMode')"
-                    >
-                      <i class="bi bi-bullseye" aria-hidden="true"></i>
-                      <span class="mushaf-shell__focus-label">{{ t('memorisation.a11y.useFocusMode') }}</span>
-                    </button>
-                    <button
-                      type="button"
                       class="mushaf-shell__btn mushaf-shell__btn--icon mushaf-shell__controls-btn"
                       @click.stop="openAdvancedControls"
                       :title="t('memorisation.a11y.sessionControls')"
@@ -572,29 +560,6 @@
                       :title="t('memorisation.a11y.tajweedLabel')"
                     >
                       <i class="bi bi-palette" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      v-if="showAiMemorisationButton"
-                      type="button"
-                      class="mushaf-shell__btn mushaf-shell__btn--icon"
-                      :class="{ 'is-active': aiMemorisationCheckerRecording }"
-                      @click.stop="openAiMemorisationCheckerForVerse(activeVerseRef)"
-                      :disabled="!activeVerseRef || aiMemorisationCheckerPreparing || !supportsSelfCheckRecording()"
-                      :title="activeVerseRef ? 'Hide the ayah and recite from memory' : 'Tap an ayah first'"
-                      :aria-label="aiMemorisationCheckerRecording ? 'Stop AI memorisation check' : 'Start AI memorisation check'"
-                    >
-                      <i class="bi" :class="aiMemorisationCheckerRecording ? 'bi-stop-circle' : 'bi-eye-slash'" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      type="button"
-                      class="mushaf-shell__btn mushaf-shell__btn--icon"
-                      :class="{ 'is-active': recitationCheckRecording }"
-                      @click.stop="openAiRecitationCheckForVerse(activeVerseRef)"
-                      :disabled="!activeVerseRef || recitationCheckPreparing || !supportsSelfCheckRecording()"
-                      :title="activeVerseRef ? 'AI Recite' : 'Tap an ayah first'"
-                      :aria-label="recitationCheckRecording ? 'Stop AI recitation check' : (activeVerseRef ? 'Start AI recitation check' : 'Tap an ayah first')"
-                    >
-                      <i class="bi" :class="recitationCheckRecording ? 'bi-stop-circle' : 'bi-stars'" aria-hidden="true"></i>
                     </button>
 
                     <div v-if="mushafPages.length > 1" class="mushaf-shell__pager">

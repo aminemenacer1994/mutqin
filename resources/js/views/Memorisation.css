@@ -7984,7 +7984,7 @@ html {
 
 .player-verse {
   font-size: 0.78rem;
-  color: rgba(72, 54, 38, 0.72);
+  color: color-mix(in srgb, var(--text) 72%, var(--text-muted, #6b5a48));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -44684,29 +44684,68 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   align-items: center;
   gap: 0.35rem;
   flex: 0 0 auto;
+  position: relative;
+  z-index: 60;
+  pointer-events: auto;
+}
+
+@media (min-width: 768px) {
+  .top-card-icon-controls .top-card-layout-icons,
+  .top-card-icon-controls .top-card-font-wrap {
+    display: none !important;
+  }
 }
 
 .top-card-icon-controls .top-card-layout-icons,
-.top-card-icon-controls .top-card-font-wrap {
-  display: none;
+.top-card-icon-controls .top-card-font-wrap,
+.top-card-icon-controls .top-card-menu-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  flex: 0 0 2.25rem;
+  pointer-events: auto;
 }
 
 .top-card-icon-controls .top-card-icon-control,
 .top-card-icon-controls .top-card-controls-trigger,
-.top-card-icon-controls .top-card-ellipsis {
-  display: inline-grid;
-  place-items: center;
-  width: 2.35rem;
-  height: 2.35rem;
-  min-width: 2.35rem;
-  min-height: 2.35rem;
-  padding: 0;
-  border-radius: 999px;
+.top-card-icon-controls .top-card-ellipsis,
+.top-card-icon-controls .view-mode-btn,
+.top-card-icon-controls .font-dropdown-trigger {
+  display: inline-grid !important;
+  place-items: center !important;
+  box-sizing: border-box !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  min-width: 2.25rem !important;
+  min-height: 2.25rem !important;
+  max-width: 2.25rem !important;
+  max-height: 2.25rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 999px !important;
+  gap: 0 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  flex: 0 0 2.25rem !important;
 }
 
 .top-card-icon-controls .font-dropdown-trigger.top-card-icon-control span,
-.top-card-icon-controls .view-mode-btn span {
-  display: none;
+.top-card-icon-controls .view-mode-btn span,
+.top-card-icon-controls .font-dropdown-trigger .bi-chevron-down {
+  display: none !important;
+}
+
+.top-card-icon-controls .top-card-font-menu,
+.top-card-icon-controls .top-card-menu {
+  position: absolute;
+  inset-inline-end: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 90;
 }
 
 .mushaf-shell__focus-label {
@@ -44722,12 +44761,12 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 [data-theme="dark"] .player-mini .player-verse,
 [data-theme="dark"] .player-bar .player-chapter,
 [data-theme="dark"] .player-bar .player-verse,
+[data-theme="dark"] .player-bar .player-mini-info,
+[data-theme="dark"] .player-dock-card .player-mini-info,
+[data-theme="dark"] .player-bar.compact .player-mini-info,
 [data-theme="dark"] .playback-pill-copy strong,
 [data-theme="dark"] .playback-pill-copy small {
-  color: var(--text, #f4ede4) !important;
-}
-
-[data-theme="dark"] .player-dock-card .player-mini-info,
-[data-theme="dark"] .player-bar.compact .player-mini-info {
-  color: var(--text, #f4ede4);
+  color: #f3ebe1 !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #f3ebe1 !important;
 }
