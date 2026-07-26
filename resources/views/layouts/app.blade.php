@@ -75,8 +75,8 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v63';
-        var FORCE = '63';
+        var BUILD = 'v64';
+        var FORCE = '64';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
@@ -2671,7 +2671,6 @@
     </style>
 </head>
 <body dir="{{ $appDirection }}">
-    <a class="skip-link" href="#mainContent">{{ __('ui.skip_main') }}</a>
     <nav class="navbar navbar-expand-lg app-navbar" aria-label="{{ __('ui.primary_navigation') }}">
         <div class="container-fluid shell navbar-shell">
             <a class="navbar-brand" href="{{ route('home') }}">
@@ -2827,7 +2826,6 @@
             @yield('content')
         </main>
     </div>
-    <div id="mutqin-build-stamp" hidden aria-hidden="true"></div>
 
     <script src="{{ mix('js/app.js') }}" defer></script>
     

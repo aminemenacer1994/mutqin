@@ -3049,3 +3049,297 @@
     grid-column: 1 / -1;
   }
 }
+
+/* ---- Mobile responsiveness pass (phones only) ---- */
+@media (max-width: 767.98px) {
+  .skip-link,
+  #mutqin-build-stamp {
+    display: none !important;
+  }
+
+  .workspace-shell-kicker {
+    display: none !important;
+  }
+
+  .workspace-shell-reading-toggles {
+    display: none !important;
+  }
+
+  .workspace-shell-head {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.45rem 0.55rem !important;
+  }
+
+  .workspace-shell-copy {
+    min-inline-size: 0 !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  .workspace-shell-main-title {
+    font-size: clamp(0.95rem, 4.2vw, 1.1rem) !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+  }
+
+  .workspace-shell-actions,
+  .workspace-shell-actions .action-buttons-group {
+    display: contents !important;
+  }
+
+  .workspace-shell-actions .top-card-session-actions,
+  .workspace-shell-actions .top-card-session-actions.has-paired-actions {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 0.4rem !important;
+    margin-top: 0.15rem;
+  }
+
+  .top-card-icon-controls {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.28rem !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: end;
+  }
+
+  .top-card-icon-controls .top-card-layout-icons,
+  .top-card-icon-controls .top-card-font-wrap {
+    display: inline-flex !important;
+  }
+
+  .top-card-icon-controls .top-card-icon-control,
+  .top-card-icon-controls .top-card-controls-trigger,
+  .top-card-icon-controls .top-card-ellipsis,
+  .top-card-icon-controls .view-mode-btn,
+  .top-card-icon-controls .font-dropdown-trigger {
+    flex: 0 0 34px !important;
+    inline-size: 34px !important;
+    block-size: 34px !important;
+    min-inline-size: 34px !important;
+    min-block-size: 34px !important;
+    max-inline-size: 34px !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+  }
+
+  .top-card-icon-controls .view-mode-btn span,
+  .top-card-icon-controls .font-dropdown-trigger span,
+  .top-card-icon-controls .font-dropdown-trigger .bi-chevron-down {
+    display: none !important;
+  }
+
+  /* Stacked: hide AI recite on ayah cards */
+  .verses-grid .verse-ai-check-btn,
+  .verses-grid .verse-ai-check-btn.verse-ai-recite-btn,
+  .verses-grid .verse-self-check-btn.verse-ai-check-btn {
+    display: none !important;
+  }
+
+  .verses-grid .verse-actions:has(.verse-ai-check-btn) {
+    grid-template-columns: 36px !important;
+  }
+
+  /* Compact translation / transliteration */
+  .verses-grid .verse-translation,
+  .verses-grid .verse-transliteration,
+  .verses-grid .verse-aid,
+  .verses-grid .verse-aid-block {
+    margin-top: 0.28rem !important;
+    margin-bottom: 0 !important;
+    padding: 0.2rem 0 !important;
+    font-size: 0.78rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .verses-grid .verse-aid-title {
+    font-size: 0.65rem !important;
+    margin-bottom: 0.1rem !important;
+    letter-spacing: 0.02em;
+  }
+
+  .verses-grid .verse-arabic,
+  .verses-grid .verse-arabic.verse-arabic-primary {
+    font-size: calc((var(--verse-font-percent, 95) / 100) * clamp(1.45rem, 6.6vw, 2.05rem)) !important;
+    line-height: 1.45 !important;
+    padding: 6px 2px 8px !important;
+  }
+
+  .verses-grid .verse-arabic .verse-ayah-end-number,
+  .verses-grid .verse-arabic-with-end .verse-ayah-end-number {
+    margin-inline: 0.55em 0.08em !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-ayah-number,
+  .main.mushaf-mode-active .mushaf-page .ayah-number {
+    margin-inline: 0.42em 0.28em !important;
+  }
+
+  /* Mini player dark-mode text */
+  [data-theme="dark"] .player-mini .player-chapter,
+  [data-theme="dark"] .player-mini .player-verse,
+  [data-theme="dark"] .player-bar .player-chapter,
+  [data-theme="dark"] .player-bar .player-verse,
+  [data-theme="dark"] .playback-pill-copy strong,
+  [data-theme="dark"] .playback-pill-copy small {
+    color: #f3ebe1 !important;
+    opacity: 1 !important;
+  }
+
+  /* Mushaf toolbar density */
+  .main.mushaf-mode-active .live-practice-guidance,
+  .main.mushaf-mode-active .live-practice-guidance--mushaf,
+  .main.mushaf-mode-active .madani-ornate__meta,
+  .main.mushaf-mode-active .mushaf-layout-dropdown,
+  .main.mushaf-mode-active .mushaf-shell__controls-btn {
+    display: none !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__size {
+    gap: 0 !important;
+    transform: scale(0.88);
+    transform-origin: inline-start center;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__size-value {
+    font-size: 0.58rem !important;
+    min-width: 1.85rem !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__btn,
+  .main.mushaf-mode-active .mushaf-shell__btn--icon {
+    min-inline-size: 30px !important;
+    min-block-size: 30px !important;
+    inline-size: 30px !important;
+    block-size: 30px !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__focus-toggle {
+    display: inline-grid !important;
+  }
+
+  .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word,
+  .main.mushaf-mode-active .mushaf-ayah-text.tajweed-enabled {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .main.mushaf-mode-active .madani-word.is-active,
+  .main.mushaf-mode-active .mushaf-ayah.active .mushaf-ayah-text {
+    scroll-margin-block: 28vh;
+  }
+
+  /* Offcanvas: setup as structured list/grid like practice */
+  .tools-body .sheet[data-tab],
+  .tools-body > .sheet {
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .tools-body > .sheet > .sheet-section.sheet-section-compact {
+    display: grid;
+    gap: 0;
+  }
+
+  .tools-body .setup-field-list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.65rem !important;
+    width: 100% !important;
+  }
+
+  .tools-body .setup-field-row {
+    display: grid !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
+    padding: 0.65rem 0.7rem !important;
+    border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+    border-radius: 0.65rem;
+    background: color-mix(in srgb, var(--zone-reading, #fff) 92%, var(--zone-elevated, #f7f4ef) 8%);
+  }
+
+  .tools-body .setup-field-row > .select,
+  .tools-body .setup-field-row > .input,
+  .tools-body .setup-field-row .range,
+  .tools-body .setup-field-row .range-control,
+  .tools-body .setup-field-row .radio-group {
+    width: 100% !important;
+  }
+
+  /* Practice: technique dropdown contents full width */
+  .tools-body .sheet .sheet-content .field-stack,
+  .tools-body .sheet .sheet-content .field-stack > .field,
+  .tools-body .sheet .sheet-content .select,
+  .tools-body .sheet .sheet-content .input,
+  .tools-body .sheet .sheet-content .range-control,
+  .tools-body .sheet .sheet-content .radio-group,
+  .tools-body .sheet .sheet-content .techniques-choice-group,
+  .tools-body .sheet .sheet-content .technique-preview-block {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .tools-body .sheet .sheet-content .radio-group,
+  .tools-body .sheet .sheet-content .techniques-choice-group {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.4rem !important;
+  }
+
+  .tools-body .sheet .sheet-content .techniques-choice-group .radio,
+  .tools-body .sheet .sheet-content .radio-group .radio {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* Saved: clean Bootstrap list */
+  .tools-body .saved-sessions-list.list-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+  }
+
+  .tools-body .saved-sessions-list .list-group-item.saved-session-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 0.55rem !important;
+    align-items: center !important;
+    padding: 0.75rem 0.85rem !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--border, rgba(0, 0, 0, 0.1)) !important;
+    background: transparent !important;
+    margin: 0 !important;
+  }
+
+  .tools-body .saved-sessions-list .list-group-item.saved-session-row:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .tools-body .saved-sessions-list .saved-session-row-main {
+    min-inline-size: 0 !important;
+    text-align: start !important;
+  }
+
+  .tools-body .saved-sessions-list .saved-session-row-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+  }
+
+  .tools-body .saved-sessions-list .saved-session-row-meta {
+    display: block !important;
+    font-size: 0.72rem !important;
+    opacity: 0.78;
+    margin-top: 0.15rem;
+  }
+}

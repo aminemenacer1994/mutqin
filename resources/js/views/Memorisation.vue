@@ -144,30 +144,76 @@
                   <span>{{ t('sessionStatus.end') }}</span>
                 </button>
               </div>
-              <div
-                class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger"
-                role="button"
-                tabindex="0"
-                @click="openAdvancedControls"
-                @keydown.enter.prevent="openAdvancedControls"
-                @keydown.space.prevent="openAdvancedControls"
-                :title="t('memorisation.open_controls')"
-                :aria-label="t('memorisation.open_controls')"
-              >
-                <i class="bi bi-sliders" aria-hidden="true"></i>
-              </div>
-              <div class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
+              <div class="top-card-icon-controls" aria-label="Reading tools">
                 <div
-                  class="top-card-ellipsis top-card-action-trigger"
+                  class="workspace-layout-toggle view-mode-toggle top-card-layout-icons"
+                  role="group"
+                  :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')}`"
+                >
+                  <button
+                    type="button"
+                    class="view-mode-btn workspace-layout-btn top-card-icon-control"
+                    :class="{ active: readingViewMode === 'mushaf' }"
+                    :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'"
+                    @click.stop="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
+                    :title="readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf')"
+                    :aria-label="readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf')"
+                  >
+                    <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-view-stacked' : 'bi-journal-richtext'" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <div class="font-dropdown workspace-font-dropdown top-card-font-wrap">
+                  <button
+                    class="font-dropdown-trigger top-card-icon-control"
+                    type="button"
+                    @click.stop="toggleFontDropdown"
+                    :title="t('memorisation.a11y.changeQuranFont')"
+                    :aria-label="t('memorisation.a11y.changeQuranFont')"
+                    :aria-expanded="fontDropdownOpen ? 'true' : 'false'"
+                  >
+                    <i class="bi bi-fonts" aria-hidden="true"></i>
+                  </button>
+                  <transition name="dropdown-fade">
+                    <div v-if="fontDropdownOpen" class="font-dropdown-menu top-card-font-menu" @click.stop>
+                      <button
+                        v-for="font in quranFontOptions"
+                        :key="font.value"
+                        type="button"
+                        class="font-option"
+                        :class="{ active: quranFont === font.value }"
+                        @click="selectFont(font.value)"
+                      >
+                        <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
+                        <span>{{ font.label }}</span>
+                        <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </transition>
+                </div>
+                <div
+                  class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger top-card-icon-control"
                   role="button"
                   tabindex="0"
-                  @click="toggleTopCardMenu"
-                  @keydown.enter.prevent="toggleTopCardMenu"
-                  @keydown.space.prevent="toggleTopCardMenu"
-                  :aria-label="t('memorisation.a11y.openReadingOptions')"
+                  @click="openAdvancedControls"
+                  @keydown.enter.prevent="openAdvancedControls"
+                  @keydown.space.prevent="openAdvancedControls"
+                  :title="t('memorisation.open_controls')"
+                  :aria-label="t('memorisation.open_controls')"
                 >
-                  <i class="bi bi-three-dots-vertical"></i>
+                  <i class="bi bi-sliders" aria-hidden="true"></i>
                 </div>
+                <div class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
+                  <div
+                    class="top-card-ellipsis top-card-action-trigger top-card-icon-control"
+                    role="button"
+                    tabindex="0"
+                    @click="toggleTopCardMenu"
+                    @keydown.enter.prevent="toggleTopCardMenu"
+                    @keydown.space.prevent="toggleTopCardMenu"
+                    :aria-label="t('memorisation.a11y.openReadingOptions')"
+                  >
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </div>
                 <transition name="dropdown-fade">
                   <div v-if="topCardMenuOpen" class="top-card-menu">
                     <button
@@ -214,33 +260,6 @@
                       <span>{{ t('memorisation.reading.tajweed') }}</span>
                       <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
-                    <div class="top-card-submenu-wrap">
-                      <button
-                        type="button"
-                        class="top-card-submenu-trigger"
-                        :class="{ active: topCardLayoutSubmenuOpen }"
-                        :aria-expanded="topCardLayoutSubmenuOpen ? 'true' : 'false'"
-                        @click.stop="toggleTopCardLayoutSubmenu"
-                      >
-                        <i class="bi bi-layout-split" aria-hidden="true"></i>
-                        <span>{{ t('memorisation.reading.selectLayout') }}</span>
-                        <i class="bi bi-chevron-right top-card-submenu-chevron" aria-hidden="true"></i>
-                      </button>
-                      <transition name="dropdown-fade">
-                        <div v-if="topCardLayoutSubmenuOpen" class="top-card-submenu top-card-layout-submenu" @click.stop>
-                          <button
-                            type="button"
-                            class="top-card-submenu-option"
-                            :class="{ active: readingViewMode === 'stacked' }"
-                            @click="setReadingViewMode('stacked')"
-                          >
-                            <i class="bi bi-view-stacked" aria-hidden="true"></i>
-                            <span>{{ t('memorisation.view.stacked') }}</span>
-                            <i v-if="readingViewMode === 'stacked'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                          </button>
-                        </div>
-                      </transition>
-                    </div>
                     <button type="button" @click="openOnboardingFromTopMenu">
                       <i class="bi bi-compass"></i><span>{{ t('memorisation.revisitOnboarding') }}</span>
                     </button>
@@ -249,6 +268,7 @@
                     </button>
                   </div>
                 </transition>
+              </div>
               </div>
             </div>
           </div>
@@ -447,33 +467,6 @@
               >
                 <header class="mushaf-shell__bar" :aria-label="t('memorisation.a11y.mushafTools')">
                   <div class="mushaf-shell__bar-group">
-                    <div class="mushaf-toolbar-dropdown font-dropdown-region">
-                      <button
-                        type="button"
-                        class="mushaf-shell__btn mushaf-shell__btn--font"
-                        @click.stop="fontOpen = !fontOpen; bgOpen = false; borderOpen = false; mushafLayoutMenuOpen = false"
-                        :aria-expanded="fontOpen ? 'true' : 'false'"
-                        :aria-label="t('memorisation.a11y.chooseMushafFont')"
-                        :title="getCurrentFontLabel()"
-                      >
-                        <span class="mushaf-shell__aa" aria-hidden="true"><em>Aa</em> <strong>Aa</strong></span>
-                      </button>
-                      <div v-if="fontOpen" @click.stop class="mushaf-toolbar-menu mushaf-shell__menu">
-                        <button
-                          v-for="f in quranFontOptions"
-                          :key="f.value"
-                          type="button"
-                          class="mushaf-toolbar-option"
-                          :class="{ active: quranFont === f.value }"
-                          @click="selectFont(f.value); fontOpen = false"
-                        >
-                          <i class="bi" :class="getFontIcon(f.value)" aria-hidden="true"></i>
-                          <span>{{ f.label }}</span>
-                          <i v-if="quranFont === f.value" class="bi bi-check2 mushaf-toolbar-check" aria-hidden="true"></i>
-                        </button>
-                      </div>
-                    </div>
-
                     <div class="mushaf-shell__size" role="group" :aria-label="t('memorisation.a11y.decreaseFontSize')">
                       <button
                         type="button"
@@ -502,7 +495,19 @@
                   <div class="mushaf-shell__bar-group mushaf-shell__bar-group--end">
                     <button
                       type="button"
-                      class="mushaf-shell__btn mushaf-shell__btn--icon"
+                      class="mushaf-shell__btn mushaf-shell__btn--icon mushaf-shell__focus-toggle"
+                      :class="{ 'is-active': focusModeEnabled }"
+                      @click.stop="toggleFocusModeRadio"
+                      :aria-pressed="focusModeEnabled ? 'true' : 'false'"
+                      :aria-label="t('memorisation.a11y.useFocusMode')"
+                      :title="t('memorisation.a11y.useFocusMode')"
+                    >
+                      <i class="bi bi-bullseye" aria-hidden="true"></i>
+                      <span class="mushaf-shell__focus-label">{{ t('memorisation.a11y.useFocusMode') }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="mushaf-shell__btn mushaf-shell__btn--icon mushaf-shell__controls-btn"
                       @click.stop="openAdvancedControls"
                       :title="t('memorisation.a11y.sessionControls')"
                       :aria-label="t('memorisation.a11y.openSessionControls')"
@@ -1106,8 +1111,8 @@
                     class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content" v-show="sectionOpen.advanced_setup">
-                <div class="field-stack field-stack-compact">
-                  <div class="field">
+                <div class="field-stack field-stack-compact setup-field-list">
+                  <div class="field setup-field-row">
                     <label><i class="bi bi-journal-text"></i> {{ t('sessionSetup.surah') }}</label>
                     <select :value="chapterId" @change="onChapterChange" class="select">
                       <option :value="0">{{ t('sessionSetup.chooseSurah') }}</option>
@@ -1115,7 +1120,7 @@
                     </select>
                     <small class="field-hint">{{ t('sessionSetup.surahHint') }}</small>
                   </div>
-                  <div class="field">
+                  <div class="field setup-field-row">
                     <label><i class="bi bi-bounding-box"></i> {{ t('sessionSetup.ayahRange') }}</label>
                     <div class="range range-single">
                       <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
@@ -1124,7 +1129,7 @@
                     </div>
                     <small class="field-hint">{{ t('sessionSetup.rangeHint') }}</small>
                   </div>
-                  <div class="field">
+                  <div class="field setup-field-row">
                     <label><i class="bi bi-mic-fill"></i> {{ t('sessionSetup.reciter') }}</label>
                     <select v-model="reciterId" @change="refreshVerses" class="select" :disabled="isWorkspaceRefreshing && workspaceRefreshReason === 'reciter'">
                       <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
@@ -1135,7 +1140,7 @@
                     </small>
                     <small v-else class="field-hint">{{ t('sessionSetup.reciterHint') }}</small>
                   </div>
-                  <div class="field field-repetitions-clean">
+                  <div class="field field-repetitions-clean setup-field-row">
                     <div class="field-header">
                       <label><i class="bi bi-arrow-repeat"></i> {{ t('sessionSetup.repetitions') }}</label>
                       <span class="range-value-pill">{{ repetitionDisplayValue }}</span>
@@ -1166,8 +1171,8 @@
                     class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content offcanvas-audio-panel" v-show="sectionOpen.advanced_playback">
-                <div class="field-stack field-stack-compact">
-                  <div class="field">
+                <div class="field-stack field-stack-compact setup-field-list">
+                  <div class="field setup-field-row">
                     <label>{{ t('memorisation.speed') }}</label>
                     <div class="radio-group radio-group-tight radio-group-compact">
                       <label class="radio" v-for="option in speedOptions" :key="`tool-speed-${option}`">
@@ -1177,21 +1182,21 @@
                     </div>
                     <small class="field-hint">{{ t('memorisation.use_slower_speed_for_early_memorisation') }}</small>
                   </div>
-                  <div class="field">
+                  <div class="field setup-field-row">
                     <label>{{ t('memorisation.auto_advance') }}</label>
                     <div class="radio-group radio-group-tight radio-group-compact">
                       <label class="radio"><input type="radio" name="session-auto-advance" value="auto" v-model="playMode"> {{ t('common.yes') }}</label>
                       <label class="radio"><input type="radio" name="session-auto-advance" value="manual" v-model="playMode"> {{ t('common.no') }}</label>
                     </div>
                   </div>
-                  <div v-if="talqinModeEnabled" class="field">
+                  <div v-if="talqinModeEnabled" class="field setup-field-row">
                     <label><i class="bi bi-hourglass-top"></i> {{ t('memorisation.recitation_window_secs') }}</label>
                     <select v-model.number="recitationWindowSeconds" class="select select-compact">
                       <option v-for="option in recitationWindowOptions" :key="`recitation-window-${option}`" :value="option">{{ option }}s</option>
                     </select>
                     <small class="field-hint">{{ t('memorisation.recitation_window_hint') }}</small>
                   </div>
-                  <div class="field">
+                  <div class="field setup-field-row">
                     <label><i class="bi bi-hourglass-split"></i> {{ t('memorisation.delay_between_recitations_secs') }}</label>
                     <select v-model.number="delay" class="select">
                       <option v-for="option in delayOptions" :key="`tool-delay-${option}`" :value="option">{{ option }}s
@@ -1542,11 +1547,11 @@
                 <span class="st-chev" :class="{ open: sectionOpen.saved_sessions }"><i class="bi bi-chevron-down"></i></span>
               </button>
               <div class="sheet-content saved-sessions-sheet" v-show="sectionOpen.saved_sessions">
-                <div v-if="savedSessions.length > 0" class="saved-sessions-list" role="list">
+                <div v-if="savedSessions.length > 0" class="list-group saved-sessions-list" role="list">
                   <article
                     v-for="session in sortedSavedSessions"
                     :key="session.id"
-                    class="saved-session-row"
+                    class="list-group-item saved-session-row"
                     :class="{
                       'is-complete': isSavedSessionComplete(session),
                       'is-active': sessionMatchesCurrentLiveConfig(session)

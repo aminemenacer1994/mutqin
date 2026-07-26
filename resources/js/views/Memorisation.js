@@ -616,7 +616,7 @@ export default {
       showConfirmModal: false,
       showSessionExitModal: false,
       sessionExitEndingBusy: false,
-      sessionExitAutoSave: true,
+      sessionExitAutoSave: false,
       sessionExitSnapshot: null,
       sessionExitPreviewSnapshot: null,
       confirmModal: {
@@ -7131,9 +7131,31 @@ export default {
 
     applyMobileLayoutFontDefault(mode = this.readingViewMode) {
       if (!this.isMobileViewport()) return
-      const next = mode === 'mushaf' ? 150 : 100
+      const next = mode === 'mushaf' ? 130 : 95
       if (Number(this.defaultFontSize) === next) return
       this.defaultFontSize = next
+    },
+
+    resolveCsrfToken() {
+      if (typeof document === 'undefined') return this.auth?.csrf_token || ''
+      return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+        || this.auth?.csrf_token
+        || ''
+    },
+
+    submitLogoutForm() {
+      if (typeof document === 'undefined') return
+      this.prepareLogoutSessionCleanup()
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = this.auth?.logout_url || '/logout'
+      const token = document.createElement('input')
+      token.type = 'hidden'
+      token.name = '_token'
+      token.value = this.resolveCsrfToken()
+      form.appendChild(token)
+      document.body.appendChild(form)
+      form.submit()
     },
 
     normalizeThemeToken(value = 'light') {
@@ -12380,22 +12402,12 @@ export default {
     },
     logoutFromPostSession() {
       if (typeof document === 'undefined') return
-      this.prepareLogoutSessionCleanup()
       this.postSessionSnapshot = null
       this.postSessionEmotionalContext = null
       this.showPostSessionModal = false
       this.showPostSessionConfetti = false
       this.postSessionOffcanvasOpen = false
-      const form = document.createElement('form')
-      form.method = 'POST'
-      form.action = this.auth?.logout_url || '/logout'
-      const token = document.createElement('input')
-      token.type = 'hidden'
-      token.name = '_token'
-      token.value = this.auth?.csrf_token || ''
-      form.appendChild(token)
-      document.body.appendChild(form)
-      form.submit()
+      this.submitLogoutForm()
     },
     continueFromOnboardingPostSession() {
       this.exitOnboardingSampleMode({ discard: true, markCompleted: true })
@@ -19798,20 +19810,10 @@ export default {
 
     logoutFromWelcomeBack() {
       if (typeof document === 'undefined') return
-      this.prepareLogoutSessionCleanup()
       this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
       this.welcomeBackWorkspaceHidden = false
-      const form = document.createElement('form')
-      form.method = 'POST'
-      form.action = this.auth?.logout_url || '/logout'
-      const token = document.createElement('input')
-      token.type = 'hidden'
-      token.name = '_token'
-      token.value = this.auth?.csrf_token || ''
-      form.appendChild(token)
-      document.body.appendChild(form)
-      form.submit()
+      this.submitLogoutForm()
     },
 
     async repeatLastSessionFromStart() {
@@ -22277,19 +22279,9 @@ export default {
 
     logoutFromSessionExit() {
       if (typeof document === 'undefined') return
-      this.prepareLogoutSessionCleanup()
       this.closeSessionExitModal({ restore: false })
       this.sessionExitOffcanvasOpen = false
-      const form = document.createElement('form')
-      form.method = 'POST'
-      form.action = this.auth?.logout_url || '/logout'
-      const token = document.createElement('input')
-      token.type = 'hidden'
-      token.name = '_token'
-      token.value = this.auth?.csrf_token || ''
-      form.appendChild(token)
-      document.body.appendChild(form)
-      form.submit()
+      this.submitLogoutForm()
     },
 
     restoreSessionFromSnapshot(snapshot, options = {}) {
@@ -24525,6 +24517,17 @@ export default {
         nextNodes.add(node)
       })
       this.lastHighlightedWordNodes = Array.from(nextNodes)
+      if (this.readingViewMode === 'mushaf' && nextNodes.size) {
+        const lead = this.lastHighlightedWordNodes[0]
+        if (lead && typeof lead.scrollIntoView === 'function') {
+          const rect = lead.getBoundingClientRect?.()
+          const viewH = typeof window !== 'undefined' ? window.innerHeight : 0
+          const outOfView = !rect || rect.top < viewH * 0.18 || rect.bottom > viewH * 0.82
+          if (outOfView) {
+            lead.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+          }
+        }
+      }
     },
 
     findWordTimingIndex(currentTime, timestamps = this.wordHighlightTimestamps) {

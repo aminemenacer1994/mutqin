@@ -41,7 +41,7 @@ class LoginController extends Controller
      */
     protected function loggedOut($request): RedirectResponse
     {
-        return redirect()->route('memorisation');
+        return redirect()->route('login');
     }
 
     protected function authenticated(Request $request, $user): void
