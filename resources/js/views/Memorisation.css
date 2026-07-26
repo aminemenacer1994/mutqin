@@ -44640,3 +44640,452 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   -webkit-text-fill-color: unset !important;
   filter: invert(1) hue-rotate(180deg) sepia(1) saturate(6) hue-rotate(-18deg) brightness(1.15);
 }
+
+/* -------------------------------------------------------------------------- */
+/* Classic AI Recite restore — GREEN/AMBER/RED/GREY + pill word colours       */
+/* -------------------------------------------------------------------------- */
+.self-check-modal .recitation-result-stats--classic {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 767.98px) {
+  .self-check-modal .recitation-result-stats--classic {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.self-check-modal .recitation-review-ayah .wbw-word,
+.self-check-modal .recitation-review-ayah word,
+.self-check-modal .self-check-modal-ayah.recitation-word-review-active .wbw-word,
+.self-check-modal .self-check-modal-ayah.recitation-word-review-active word {
+  display: inline-block !important;
+  border-radius: 0.4em !important;
+  padding: 0.08em 0.2em !important;
+  margin: 0.08em 0.06em !important;
+  border: 1px solid transparent;
+}
+
+.self-check-modal .recitation-review-ayah .recitation-word-correct,
+.self-check-modal .recitation-review-ayah .wbw-word.recitation-word-correct,
+.self-check-modal .recitation-review-ayah word.recitation-word-correct,
+.self-check-modal .self-check-modal-ayah.recitation-word-review-active .recitation-word-correct {
+  background: rgba(32, 126, 87, 0.16) !important;
+  color: #146443 !important;
+  box-shadow: none !important;
+  border-color: rgba(32, 126, 87, 0.22) !important;
+}
+
+.self-check-modal .recitation-review-ayah .recitation-word-partial,
+.self-check-modal .recitation-review-ayah .wbw-word.recitation-word-partial,
+.self-check-modal .recitation-review-ayah word.recitation-word-partial,
+.self-check-modal .self-check-modal-ayah.recitation-word-review-active .recitation-word-partial {
+  background: rgba(237, 179, 71, 0.22) !important;
+  color: #946118 !important;
+  box-shadow: none !important;
+  border-color: rgba(176, 105, 12, 0.24) !important;
+}
+
+.self-check-modal .recitation-review-ayah .recitation-word-incorrect,
+.self-check-modal .recitation-review-ayah .wbw-word.recitation-word-incorrect,
+.self-check-modal .recitation-review-ayah word.recitation-word-incorrect,
+.self-check-modal .self-check-modal-ayah.recitation-word-review-active .recitation-word-incorrect {
+  background: rgba(226, 96, 77, 0.18) !important;
+  color: #982f22 !important;
+  box-shadow: none !important;
+  border-color: rgba(177, 63, 50, 0.24) !important;
+}
+
+.self-check-modal .recitation-review-ayah .recitation-word-pending,
+.self-check-modal .recitation-review-ayah .recitation-word-notAttempted,
+.self-check-modal .self-check-modal-ayah.recitation-word-review-active .recitation-word-pending,
+.self-check-modal .self-check-modal-ayah.recitation-word-review-active .recitation-word-notAttempted {
+  background: rgba(116, 126, 141, 0.10) !important;
+  box-shadow: none !important;
+}
+
+/* Dark mode mini audio player — readable text + controls */
+[data-theme="dark"] .player-mini .player-chapter,
+[data-theme="dark"] .player-mini .player-verse,
+[data-theme="dark"] .player-bar.compact .player-mini .player-chapter,
+[data-theme="dark"] .player-bar.compact .player-mini .player-verse {
+  color: rgba(248, 244, 238, 0.96) !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .player-mini .player-btn,
+[data-theme="dark"] .player-bar.compact .player-mini .player-btn {
+  color: rgba(248, 244, 238, 0.96) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 236, 216, 0.28) !important;
+}
+
+#mutqin-build-stamp {
+  display: none !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Desktop / tablet session UI (≥768px) — do not alter phone layout           */
+/* -------------------------------------------------------------------------- */
+@media (max-width: 767.98px) {
+  .session-guidance-desktop {
+    display: none !important;
+  }
+
+  .mushaf-nav-meta--shell,
+  .mushaf-shell__focus-label {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .session-guidance-mobile {
+    display: none !important;
+  }
+
+  .session-guidance-desktop {
+    display: flex;
+  }
+
+  .session-guidance-desktop.live-practice-guidance,
+  .session-guidance-desktop.verse-font-inline-controls {
+    display: inline-flex;
+  }
+
+  .session-guidance-desktop.verse-ayah-number,
+  .session-guidance-desktop.verse-number--badge {
+    display: inline-flex !important;
+  }
+
+  /* Wider Mushaf reading surface */
+  .main.mushaf-mode-active .mushaf-workspace {
+    width: min(100%, 1680px);
+    max-width: 1680px;
+    padding-inline: clamp(0.5rem, 1.4vw, 1.1rem);
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__page,
+  .main.mushaf-mode-active .madani-page-sheet {
+    max-width: none;
+    width: 100%;
+  }
+
+  /* Compact toolbar grouping */
+  .main.mushaf-mode-active .mushaf-shell__bar {
+    gap: 0.55rem;
+    padding: 0.5rem 0.75rem;
+    flex-wrap: nowrap;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__bar-group {
+    gap: 0.32rem;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__btn {
+    min-height: 2rem;
+    min-width: 2rem;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__focus-toggle {
+    gap: 0.35rem;
+    padding-inline: 0.65rem;
+    min-width: auto;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__focus-label {
+    display: inline;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .main.mushaf-mode-active .mushaf-layout-dropdown {
+    display: none !important;
+  }
+
+  /* Surah / Juz / Page selector strip */
+  .main.mushaf-mode-active .mushaf-nav-meta--selectors {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+    gap: 0.55rem;
+    width: 100%;
+    margin: 0 0 0.65rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid rgba(28, 25, 23, 0.1);
+    border-radius: 14px;
+    background: color-mix(in srgb, #f7f2e8 88%, #fff);
+    box-sizing: border-box;
+  }
+
+  .main.mushaf-mode-active .mushaf-nav-meta--shell {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+
+  .main.mushaf-mode-active .mushaf-nav-meta__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .main.mushaf-mode-active .mushaf-nav-meta__label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--text-muted, #6b635a) 92%, #1c1917);
+    font-style: normal;
+  }
+
+  .main.mushaf-mode-active .mushaf-nav-meta__value,
+  .main.mushaf-mode-active .mushaf-nav-meta__select {
+    min-height: 2rem;
+    padding: 0.28rem 0.55rem;
+    border-radius: 10px;
+    border: 1px solid rgba(28, 25, 23, 0.12);
+    background: #fffdf9;
+    color: #1c1917;
+    font-size: 0.86rem;
+    font-weight: 650;
+    line-height: 1.2;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .main.mushaf-mode-active .mushaf-nav-meta__value {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Full active-ayah highlight while preserving tajweed ink */
+  .main.mushaf-mode-active .madani-word.active,
+  .main.mushaf-mode-active .madani-word.is-playing {
+    background: color-mix(in srgb, #c4a35a 18%, transparent) !important;
+    border-radius: 0.28em;
+    box-shadow:
+      inset 0 -0.1em 0 color-mix(in srgb, #8b5a2b 42%, transparent),
+      0 0 0 1px color-mix(in srgb, #c4a35a 22%, transparent);
+  }
+
+  .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.active.madani-word--glyph,
+  .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.is-playing.madani-word--glyph {
+    color: unset !important;
+    -webkit-text-fill-color: unset !important;
+    filter: none;
+  }
+
+  .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.highlighted.madani-word--glyph,
+  .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.phrase-highlighted.madani-word--glyph {
+    /* Keep tajweed COLR colours; mark active word with a soft plate only */
+    color: unset !important;
+    -webkit-text-fill-color: unset !important;
+    filter: none;
+    background: color-mix(in srgb, #f59e0b 22%, transparent) !important;
+    box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #b45309 55%, transparent);
+  }
+
+  /* Slightly larger gap between circular ayah numbers and Quran text */
+  .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
+  .main.mushaf-mode-active .madani-word--end.madani-word--fallback,
+  .main.mushaf-mode-active .mushaf-ayah-number {
+    margin-inline: 0.42em 0.55em !important;
+    cursor: pointer !important;
+  }
+
+  /* Phase guidance: one message, visually consistent modes */
+  .live-practice-guidance.session-guidance-desktop,
+  .live-practice-guidance--mushaf {
+    margin: 0.45rem 0 0.55rem;
+  }
+
+  .live-practice-coach--phase {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.55rem 0.8rem;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .live-practice-guidance[data-phase="listening"] .live-practice-coach--phase,
+  .live-practice-guidance--mushaf[data-phase="listening"] .live-practice-coach--phase {
+    background: color-mix(in srgb, #e8f1ff 82%, #fff);
+    border-color: color-mix(in srgb, #3b82f6 18%, transparent);
+    color: #1e3a5f;
+  }
+
+  .live-practice-guidance[data-phase="following"] .live-practice-coach--phase,
+  .live-practice-guidance--mushaf[data-phase="following"] .live-practice-coach--phase {
+    background: color-mix(in srgb, #eaf7ef 82%, #fff);
+    border-color: color-mix(in srgb, #2e9d62 18%, transparent);
+    color: #1f4d36;
+  }
+
+  .live-practice-guidance[data-phase="memory"] .live-practice-coach--phase,
+  .live-practice-guidance--mushaf[data-phase="memory"] .live-practice-coach--phase {
+    background: color-mix(in srgb, #f4eefc 82%, #fff);
+    border-color: color-mix(in srgb, #7c5cbf 18%, transparent);
+    color: #3b2f5c;
+  }
+
+  .main.mushaf-mode-active .live-practice-guidance--mushaf .live-practice-method {
+    display: none !important;
+  }
+
+  /* Stacked: circular ayah numbers matching Mushaf end-marker style */
+  .verses-grid .verse-number--badge.verse-ayah-number {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 1.55em;
+    min-height: 1.55em;
+    margin-inline: 0.1em 0.35em;
+    padding: 0.14em 0.22em;
+    border: 1.5px solid color-mix(in srgb, #1f6f4a 72%, #c4a35a);
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 50% 42%, #fffdf7 0%, #f4ecdb 58%, #e8d7b2 100%);
+    color: #1a3d2e;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, #c4a35a 58%, transparent),
+      0 1px 2px rgba(40, 30, 16, 0.1);
+    font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", "Traditional Arabic", serif;
+    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(0.72rem, 1.2vw, 0.95rem));
+    font-weight: 700;
+    line-height: 1;
+    unicode-bidi: isolate;
+    direction: ltr;
+  }
+
+  .verses-grid .verse-ayah-number-digits-2 {
+    min-width: 1.75em;
+  }
+
+  .verses-grid .verse-ayah-number-digits-3 {
+    min-width: 2.05em;
+    padding-inline: 0.34em;
+  }
+
+  .verses-grid .verse-ayah-number-visual,
+  .verses-grid .verse-ayah-number-digit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+    font: inherit;
+    line-height: 1;
+  }
+
+  .verses-grid .verse-font-inline-controls {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.12rem;
+    border-radius: 999px;
+    border: 1px solid rgba(28, 25, 23, 0.1);
+    background: rgba(255, 255, 255, 0.78);
+  }
+
+  .verses-grid .verse-font-inline-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(154, 103, 56, 0.1);
+    color: var(--accent-strong, #7a4f24);
+    cursor: pointer;
+  }
+
+  .verses-grid .verse-font-inline-value {
+    min-width: 2.6rem;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text, #1c1917);
+  }
+
+  /* Hide AI Recite from stacked ayah cards on desktop/tablet */
+  .verses-grid .verse-ai-check-btn--desktop,
+  .verses-grid .verse-ai-recite-btn {
+    display: none !important;
+  }
+
+  /* Compact translation / transliteration; Arabic stays dominant */
+  .verses-grid .verse-aid-block--compact {
+    margin-top: 0.35rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .verses-grid .verse-aid-block--compact .verse-aid-title {
+    margin-bottom: 0.15rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    opacity: 0.78;
+  }
+
+  .verses-grid .verse-aid-block--compact .verse-aid {
+    margin: 0;
+    padding: 0;
+    font-size: 0.86rem;
+    line-height: 1.4;
+    opacity: 0.78;
+  }
+
+  .verses-grid .verse-arabic-primary {
+    font-size: clamp(2.15rem, 2.6vw, 3.1rem);
+    line-height: 2.2;
+  }
+
+  .main.mushaf-mode-active .mushaf-verse-aids .mushaf-aid-compact {
+    margin-top: 0.35rem;
+  }
+
+  .main.mushaf-mode-active .mushaf-verse-aids .mushaf-aid-compact .verse-aid-title {
+    margin-bottom: 0.12rem;
+    font-size: 0.62rem;
+  }
+
+  .main.mushaf-mode-active .mushaf-verse-aids .mushaf-aid-compact .verse-aid {
+    font-size: 0.86rem;
+    line-height: 1.4;
+    opacity: 0.84;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .main.mushaf-mode-active .mushaf-shell__focus-label {
+    display: none;
+  }
+
+  .main.mushaf-mode-active .mushaf-nav-meta--selectors {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .main.mushaf-mode-active .mushaf-nav-meta__value,
+  .main.mushaf-mode-active .mushaf-nav-meta__select {
+    font-size: 0.8rem;
+    min-height: 1.85rem;
+  }
+}

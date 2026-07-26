@@ -36,13 +36,13 @@ class MemorisationRoutingTest extends TestCase
             ->assertRedirect(route('memorisation'));
     }
 
-    public function test_logout_returns_to_memorisation_workspace(): void
+    public function test_logout_returns_to_login(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
             ->post(route('logout'))
-            ->assertRedirect(route('memorisation'));
+            ->assertRedirect(route('login'));
 
         $this->assertGuest();
     }

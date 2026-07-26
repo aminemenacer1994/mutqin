@@ -651,7 +651,7 @@
         "title": "Save this session?",
         "message": "Would you like to save this session so you can return to it later?",
         "confirm": "Save session",
-        "cancel": "Don't save"
+        "cancel": "Cancel"
       },
       "deleteSession": {
         "title": "Delete saved session?",
@@ -806,16 +806,16 @@
       "guidanceHiddenReveal": "Listening now. Recite the highlighted word to continue.",
       "guidanceFixWord": "Mistake at {word}. Try that word again.",
       "wordsToRevisit": "Revisit",
-      "colourCorrect": "Correct",
-      "colourClose": "Close",
-      "colourIncorrect": "Incorrect",
-      "colourSkipped": "Skipped",
-      "colourWaiting": "Waiting",
-      "colourCorrectHint": "Words heard clearly.",
-      "colourCloseHint": "Near misses to polish.",
-      "colourIncorrectHint": "Words said incorrectly.",
-      "colourSkippedHint": "Words not recited.",
-      "colourWaitingHint": "Not evaluated yet."
+      "colourCorrect": "GREEN",
+      "colourClose": "AMBER",
+      "colourIncorrect": "RED",
+      "colourSkipped": "GREY",
+      "colourWaiting": "GREY",
+      "colourCorrectHint": "Clear words heard correctly.",
+      "colourCloseHint": "Close words to repeat slowly.",
+      "colourIncorrectHint": "Words to stop and fix.",
+      "colourSkippedHint": "Words not heard yet.",
+      "colourWaitingHint": "Words not heard yet."
     },
     "analyticsHeatmap": {
       "confidence": "Confidence: {value}%",
@@ -1255,6 +1255,7 @@
           "hooksLabel": "Your key words",
           "pause": "Now recite aloud with presence.",
           "pauseFocus": "Repeat the gold-marked words aloud, then the full āyah.",
+          "memory": "Close your eyes if you can. Recite from the heart.",
           "difficulty": "Take it slower — try this āyah at {speed}×.",
           "after": "Alḥamdulillāh. Now try reciting without looking.",
           "ready": "Mā shā’ Allāh — when you feel ready, test from memory.",
