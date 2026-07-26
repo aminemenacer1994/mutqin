@@ -321,30 +321,39 @@
     overflow-wrap: anywhere;
   }
 
-  /* Ayah cards: badge rail and action rail remain in the same header row. */
+  /* Ayah cards: stack sections vertically — never let the 4-col page grid
+     leak into word-by-word chips (that stretched each word into a tall column). */
   .verses-grid {
-    display: grid !important;
-    grid-template-columns: var(--mq-grid) !important;
-    gap: 14px var(--mq-grid-gap) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
   }
 
   .verse-card,
   .verses-grid .verse-card {
-    grid-column: 1 / -1;
-    display: grid !important;
-    grid-template-columns: var(--mq-grid);
-    gap: 12px var(--mq-grid-gap) !important;
+    grid-column: auto;
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    gap: 12px !important;
     inline-size: 100% !important;
     min-block-size: 0 !important;
     block-size: auto !important;
+    height: auto !important;
     margin: 0 !important;
     padding: var(--mq-card-pad) !important;
     border-radius: 18px;
+    align-items: stretch !important;
+    align-content: start !important;
   }
 
   .verse-card > * {
-    grid-column: 1 / -1;
+    grid-column: auto;
     min-inline-size: 0;
+    width: 100%;
+    max-width: 100%;
+    min-block-size: 0;
+    height: auto;
   }
 
   .verse-header {
@@ -462,13 +471,29 @@
     max-inline-size: 100%;
   }
 
-  .verse-arabic {
+  .verse-arabic,
+  .verse-arabic.verse-arabic-primary,
+  .verse-arabic.word-by-word-meanings {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    min-block-size: 0 !important;
+    block-size: auto !important;
+    grid-template-columns: none !important;
+    grid-auto-rows: auto !important;
     padding: 8px 4px 10px !important;
-    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(2rem, 9.5vw, 3rem)) !important;
-    line-height: 2.05 !important;
+    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(1.55rem, 7.2vw, 2.35rem)) !important;
+    line-height: 1.35 !important;
     white-space: normal !important;
     word-break: normal !important;
     overflow-wrap: normal !important;
+    text-align: right !important;
+  }
+
+  .verse-arabic.word-by-word-meanings {
+    line-height: 1.15 !important;
   }
 
   .verse-arabic :where(.wbw-word, word),
@@ -477,6 +502,49 @@
   .recitation-review-ayah :where(.wbw-word, word) {
     white-space: nowrap !important;
     word-break: keep-all !important;
+  }
+
+  /* Word-by-word chips: compact inline columns that wrap — never full-height stripes */
+  .verse-arabic.word-by-word-meanings :where(.wbw-word, word),
+  .verse-arabic.word-by-word-meanings .wbw-word {
+    display: inline-flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    align-self: flex-start !important;
+    vertical-align: top !important;
+    width: auto !important;
+    max-width: min(46%, 9.5rem) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    min-block-size: 0 !important;
+    block-size: auto !important;
+    flex: 0 0 auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    margin: 0 0.18em 0.55em !important;
+    padding: 0.15em 0.2em !important;
+    gap: 0.1em !important;
+    background: transparent !important;
+    border-radius: 0.3em !important;
+    box-shadow: none !important;
+  }
+
+  .verse-arabic.word-by-word-meanings .word-arabic-text {
+    display: block !important;
+    height: auto !important;
+    white-space: nowrap !important;
+    line-height: 1.35 !important;
+  }
+
+  .verse-arabic.word-by-word-meanings .word-meaning {
+    display: block !important;
+    width: max-content !important;
+    max-width: 8.5em !important;
+    height: auto !important;
+    margin: 0 auto !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
   }
 
   /* Mushaf controls use two compact utility rails above the reading surface. */
@@ -2296,32 +2364,21 @@
     display: none !important;
   }
 
-  /* Paint/perf: skip offscreen verse work */
-  .verses-grid .verse-card {
+  /* Paint/perf: skip offscreen verse work (avoid contain that breaks WBW wrap) */
+  .verses-grid .verse-card:not(.active) {
     content-visibility: auto;
-    contain-intrinsic-size: 220px;
-    contain: layout paint style;
+    contain-intrinsic-size: auto 280px;
   }
 
-  .main.mushaf-mode-active .madani-line--out-only,
-  .main.mushaf-mode-active .madani-word--out {
-    content-visibility: auto;
-  }
-
-  .main.mushaf-mode-active .mushaf-shell__page,
-  .main.mushaf-mode-active .madani-page-sheet {
+  .main.mushaf-mode-active .mushaf-shell__page {
     contain: layout style;
-  }
-
-  .live-practice-guidance--mushaf,
-  .mushaf-verse-aids {
-    content-visibility: auto;
   }
 }
 
 @media (min-width: 560px) and (max-width: 767.98px) {
   .verses-grid .verse-card {
-    grid-column: span 2;
+    grid-column: auto;
+    width: 100%;
   }
 
   .shared-result-flow > .shared-result-section--summary {
