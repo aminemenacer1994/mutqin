@@ -3,16 +3,25 @@
 .amd-overlay {
   position: fixed;
   inset: 0;
-  z-index: 14000;
+  z-index: 30000 !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: auto;
+  pointer-events: auto !important;
+}
+
+.amd-overlay .mutqin-modal-dialog,
+.amd-overlay .amd-modal,
+.amd-overlay .amd-modal button,
+.amd-overlay .amd-tool,
+.amd-overlay .amd-actions,
+.amd-overlay .btn-primary,
+.amd-overlay .btn-secondary {
+  pointer-events: auto !important;
 }
 
 .amd-overlay .mutqin-modal-dialog,
 .amd-overlay .amd-modal {
-  pointer-events: auto;
   position: relative;
   z-index: 1;
 }
@@ -64,6 +73,14 @@
   margin: 0.3rem 0 0;
   color: #57534e;
   font-size: 0.95rem;
+}
+
+.amd-range--title {
+  margin: 0;
+  font-size: 1.28rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: #1c1917;
 }
 
 .amd-body {
@@ -547,7 +564,8 @@
 [data-theme="dark"] .amd-live-banner strong,
 [data-theme="dark"] .amd-meta strong,
 [data-theme="dark"] .amd-stats strong,
-[data-theme="dark"] .amd-mushaf-ayah {
+[data-theme="dark"] .amd-mushaf-ayah,
+[data-theme="dark"] .amd-range--title {
   color: #fafaf9;
 }
 

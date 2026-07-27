@@ -149,6 +149,8 @@ import HifzPlanCreatorModal from '../components/HifzPlanCreatorModal.vue'
 import AiMemorisationDetectionModal from '../components/AiMemorisationDetectionModal.vue'
 import {
   AMD_STAGES,
+  AMD_HOWTO_SEEN_KEY,
+  AI_TEST_MODALS_ENABLED,
   amdStageLabel,
   buildAssessmentAyahs,
   buildRecognitionWords,
@@ -836,9 +838,12 @@ export default {
       amdOpen: false,
       amdStage: AMD_STAGES.IDLE,
       amdScope: 'session',
-      amdMicStatus: 'unknown',
+      amdMicStatus: 'prompt',
       amdError: '',
       amdBusy: false,
+      amdHowtoSeen: (() => {
+        try { return localStorage.getItem(AMD_HOWTO_SEEN_KEY) === '1' } catch { return false }
+      })(),
       amdAssessment: null,
       amdAnalysis: null,
       amdPracticePlan: null,
@@ -1252,6 +1257,9 @@ export default {
     },
     showAiMemorisationButton() {
       return false
+    },
+    aiTestModalsEnabled() {
+      return AI_TEST_MODALS_ENABLED === true
     },
     buildLiveRecitationReviewResult(kind = 'recitation') {
       const liveWords = kind === 'memorisation' ? this.aiMemorisationCheckerLiveWords : this.recitationLiveWords
@@ -3185,6 +3193,12 @@ export default {
       if (this.postSessionSurahRecap) {
         return this.t('memorisation.aiRecitePlan.surahRecap.cta')
       }
+      if (!this.aiTestModalsEnabled) {
+        return this.postSessionRecommendationPrimaryLabel
+          || this.t('memorisation.postSession.recommendation.continue')
+          || this.t('memorisation.postSession.coach.continue')
+          || 'Continue'
+      }
       return this.t('memorisation.postSession.recommendation.testWithAiRecite')
     },
     postSessionCalmHeaderTitle() {
@@ -4559,9 +4573,10 @@ export default {
         granted: this.t?.('memorisation.amd.micGranted') || 'Ready',
         denied: this.t?.('memorisation.amd.micDenied') || 'Permission needed',
         unsupported: this.t?.('memorisation.amd.micUnsupported') || 'Not supported in this browser',
-        unknown: this.t?.('memorisation.amd.micChecking') || 'Checking…',
+        prompt: this.t?.('memorisation.amd.micPrompt') || 'Tap Start to enable',
+        unknown: this.t?.('memorisation.amd.micPrompt') || 'Tap Start to enable',
       }
-      return map[this.amdMicStatus] || map.unknown
+      return map[this.amdMicStatus] || map.prompt
     },
     amdStageLabel() {
       return amdStageLabel(this.amdStage, this.t?.bind(this))
@@ -6597,6 +6612,17 @@ export default {
   async mounted() {
     document.body.classList.add('memorisation-page')
     document.addEventListener('click', this.handleClickOutside);
+    // Hard-close any leftover AI test overlays from a prior broken session.
+    if (!AI_TEST_MODALS_ENABLED) {
+      this.amdOpen = false
+      this.amdStage = AMD_STAGES.IDLE
+      this.amdBusy = false
+      this.amdError = ''
+      this.amdPracticeHud = null
+      this.postSessionAiReciteActive = false
+      this.showAiMemorisationCheckerModal = false
+      this.showSelfCheckModal = false
+    }
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme || 'light'
     document.documentElement.setAttribute('data-theme', this.theme)
     this.activeLocale = this.$i18n?.locale?.value || 'en'
@@ -7342,19 +7368,19 @@ export default {
       this.clearAmdElapsedTimer?.()
       this.amdBusy = false
       this.amdPeekActive = false
-      this.amdStage = AMD_STAGES.READY
+      this.amdStage = AMD_STAGES.ERROR
       this.amdError = this.safeErrorText(
         message,
         this.t?.('memorisation.amd.noSpeech')
           || this.t?.('memorisation.aiCheck.noArabicWords')
           || 'No speech was detected. Please try again.'
       )
-      // Force a paint out of the live/processing panel even if a watcher races.
+      // Force a paint out of a stuck live/processing panel even if a watcher races.
       this.$nextTick(() => {
         if (!this.amdOpen) return
-        if ([AMD_STAGES.PROCESSING, AMD_STAGES.ANALYSING, AMD_STAGES.STARTING, AMD_STAGES.LISTENING].includes(this.amdStage)
+        if ([AMD_STAGES.PROCESSING, AMD_STAGES.ANALYSING, AMD_STAGES.STARTING, AMD_STAGES.LISTENING, AMD_STAGES.READY].includes(this.amdStage)
           && !this.amdAssessment) {
-          this.amdStage = AMD_STAGES.READY
+          this.amdStage = AMD_STAGES.ERROR
           this.amdBusy = false
         }
       })
@@ -7362,14 +7388,16 @@ export default {
     },
 
     applyMobileLayoutFontDefault(mode = this.readingViewMode) {
-      // Product default is 150% for mushaf and mobile stacked cards.
-      const shouldPin = mode === 'mushaf' || this.isMobileViewport()
-      if (!shouldPin) return
-      if (Number(this.defaultFontSize) !== 150) this.defaultFontSize = 150
-      if (this.settingsDraft && Number(this.settingsDraft.defaultFontSize) !== 150) {
-        this.settingsDraft.defaultFontSize = 150
+      // Mushaf +/- controls own font size on every viewport — never force-pin it.
+      if (mode === 'mushaf') return
+      const isMobile = this.isMobileViewport?.() === true
+      if (!isMobile) return
+      const target = 130
+      if (Number(this.defaultFontSize) !== target) this.defaultFontSize = target
+      if (this.settingsDraft && Number(this.settingsDraft.defaultFontSize) !== target) {
+        this.settingsDraft.defaultFontSize = target
       }
-      this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', 150)
+      this.writeScopedStorageValue('defaultFontSize', 'telawa.defaultFontSize', target)
     },
 
     scheduleMadaniPageFit() {
@@ -7407,70 +7435,28 @@ export default {
       }
       clearFit()
 
-      // Unicode wraps to the full reading width — no horizontal scale/crop.
-      if (sheet.classList.contains('madani-page-sheet--unicode')) {
-        sheet.style.setProperty('width', '100%', 'important')
-        sheet.style.setProperty('max-width', '100%', 'important')
-        sheet.style.setProperty('overflow', 'visible', 'important')
-        viewport.style.overflowX = 'hidden'
-        return
-      }
-
-      // Measure natural mushaf line width without CSS max-width clipping.
-      sheet.style.setProperty('width', 'max-content', 'important')
-      sheet.style.setProperty('max-width', 'none', 'important')
-      sheet.style.setProperty('overflow', 'visible', 'important')
-
-      const lines = sheet.querySelectorAll('.madani-line--glyphs, .madani-line--surah_name, .madani-line--basmala, .madani-line--ayah')
-      let needed = 0
-      lines.forEach((line) => {
-        const prevOverflow = line.style.overflow
-        const prevMaxWidth = line.style.maxWidth
-        const prevWhiteSpace = line.style.whiteSpace
-        line.style.setProperty('overflow', 'visible', 'important')
-        line.style.setProperty('max-width', 'none', 'important')
-        line.style.setProperty('white-space', 'nowrap', 'important')
-        needed = Math.max(needed, Number(line.scrollWidth || line.getBoundingClientRect?.().width || 0))
-        if (prevOverflow) line.style.overflow = prevOverflow
-        else line.style.removeProperty('overflow')
-        if (prevMaxWidth) line.style.maxWidth = prevMaxWidth
-        else line.style.removeProperty('max-width')
-        if (prevWhiteSpace) line.style.whiteSpace = prevWhiteSpace
-        else line.style.removeProperty('white-space')
-      })
-      needed = Math.max(needed, Number(sheet.scrollWidth || 0), Number(sheet.getBoundingClientRect?.().width || 0))
-
-      // Use nearly the full viewport — tiny gutter only.
-      const available = Math.max(0, Number(viewport.clientWidth || 0) - 8)
-      if (!available || !needed) {
-        clearFit()
-        sheet.style.setProperty('width', '100%', 'important')
-        sheet.style.setProperty('max-width', '100%', 'important')
-        return
-      }
-
-      if (needed <= available + 1) {
-        sheet.style.setProperty('width', '100%', 'important')
-        sheet.style.setProperty('max-width', '100%', 'important')
-        sheet.style.setProperty('overflow', 'visible', 'important')
-        viewport.style.overflowX = 'hidden'
-        return
-      }
-
-      // Exact fit: expand sheet to natural width, then scale to viewport (no crop floor).
-      const scale = Math.min(1, available / needed)
-      const rounded = Number(scale.toFixed(4))
-      sheet.style.setProperty('width', `${Math.ceil(needed)}px`, 'important')
-      sheet.style.setProperty('max-width', 'none', 'important')
-      sheet.style.setProperty('overflow', 'visible', 'important')
-      sheet.style.setProperty('--madani-fit-scale', String(rounded))
-      sheet.style.transformOrigin = 'top center'
-      sheet.style.transform = `scale(${rounded})`
-      if (parent) {
-        parent.style.minHeight = `${Math.ceil(Number(sheet.scrollHeight || 0) * rounded)}px`
-        parent.style.overflowX = 'hidden'
-      }
+      sheet.style.setProperty('width', '100%', 'important')
+      sheet.style.setProperty('max-width', '100%', 'important')
+      sheet.style.setProperty('overflow-x', 'hidden', 'important')
+      sheet.style.setProperty('transform', 'none', 'important')
+      sheet.style.setProperty('text-align', 'center', 'important')
+      sheet.style.setProperty('text-justify', 'none', 'important')
       viewport.style.overflowX = 'hidden'
+
+      // Continuous natural word flow — no full-width line boxes that create gaps.
+      sheet.querySelectorAll('.madani-line--ayah, .madani-line--glyphs').forEach((line) => {
+        if (!line?.style) return
+        line.style.setProperty('display', 'contents', 'important')
+      })
+      sheet.querySelectorAll('.madani-word').forEach((word) => {
+        if (!word?.style) return
+        word.style.setProperty('display', 'inline-block', 'important')
+        word.style.setProperty('margin-inline', '0.1em 0.02em', 'important')
+        word.style.setProperty('padding-inline', '0', 'important')
+        word.style.setProperty('white-space', 'nowrap', 'important')
+        word.style.removeProperty('width')
+        word.style.removeProperty('flex')
+      })
     },
 
     resolveCsrfToken() {
@@ -11207,6 +11193,13 @@ export default {
       }
     },
     async openPostSessionAiRecite(options = {}) {
+      if (!this.aiTestModalsEnabled) {
+        this.postSessionAiReciteBusy = false
+        this.postSessionAiReciteActive = false
+        this.closeAmdModal?.()
+        this.postSessionViewState = 'recommendation_ready'
+        return
+      }
       if (this.postSessionActionsBusy) return
       const resetAttempts = options.resetAttempts !== false
       this.postSessionAiReciteBusy = true
@@ -12143,6 +12136,16 @@ export default {
       // Practice plan is only available after AI Recite analyzes this session.
       if (this.aiReciteFinalPlan) {
         await this.startAiRecitePracticePlan()
+        return
+      }
+      if (!this.aiTestModalsEnabled) {
+        if (typeof this.openPostSessionRecommendationConfirm === 'function') {
+          await this.openPostSessionRecommendationConfirm()
+          return
+        }
+        if (typeof this.confirmPostSessionRecommendation === 'function') {
+          await this.confirmPostSessionRecommendation()
+        }
         return
       }
       await this.openPostSessionAiRecite({ resetAttempts: true })
@@ -15207,6 +15210,15 @@ export default {
       this.openAiMemorisationDetection({ scope: 'session' })
     },
     async openAiMemorisationDetection({ verse = null, scope = 'session', previousAssessmentId = null } = {}) {
+      if (!this.aiTestModalsEnabled) {
+        this.amdOpen = false
+        this.amdStage = AMD_STAGES.IDLE
+        this.amdBusy = false
+        this.amdError = ''
+        this.postSessionAiReciteActive = false
+        this.syncBodyScrollLock?.(false)
+        return
+      }
       if (this.recitationCheckRecording || this.recitationCheckPreparing) {
         if (this.postSessionAiReciteActive || this.showPostSessionModal) {
           this.resetStuckRecitationCheckGate()
@@ -15268,12 +15280,17 @@ export default {
       this.recitationCheckDiscardOnStop = false
       // AMD uses CSS-only hidden text (no aiRecallMode DOM mutation — that crashes Vue Teleport).
       this._amdSeedHtml = this.buildAmdMushafHtml({ live: true })
-      this.amdStage = AMD_STAGES.READY
+      // Never show the Ready / Start Assessment setup screen — go straight to listening.
+      this.amdStage = AMD_STAGES.STARTING
       this.amdOpen = true
       this.syncBodyScrollLock(true)
       this.playUiTone?.('open')
-      await this.refreshAmdMicStatus()
       this.$nextTick(() => this.syncAmdMushafSurface())
+      await this.startAmdAssessment()
+    },
+    markAmdHowtoSeen() {
+      this.amdHowtoSeen = true
+      try { localStorage.setItem(AMD_HOWTO_SEEN_KEY, '1') } catch { /* ignore */ }
     },
     clearAmdElapsedTimer() {
       if (this.amdElapsedTimer) {
@@ -15394,8 +15411,13 @@ export default {
     },
     resetAmdLiveSurface() {
       if (this.recitationCheckRecording || this.recitationCheckPreparing) {
+        this.recitationCheckDiscardOnStop = true
         try { this.stopRecitationCheckRecording?.() } catch (_) { /* ignore */ }
+        try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
       }
+      this.recitationCheckPreparing = false
+      this.recitationCheckRecording = false
+      this.amdBusy = false
       this.amdAssessment = null
       this.amdAnalysis = null
       this.amdPracticePlan = null
@@ -15406,8 +15428,9 @@ export default {
       this.resetDisplayedRecitationAyah?.()
       this.seedRecitationLiveWords(this.recitationCheckPendingTargets || [])
       this._amdSeedHtml = this.buildAmdMushafHtml({ live: true })
-      this.amdStage = AMD_STAGES.READY
+      this.amdStage = AMD_STAGES.STARTING
       this.$nextTick(() => this.syncAmdMushafSurface())
+      void this.startAmdAssessment()
     },
     handleAmdWordClick({ index } = {}) {
       if (!Number.isFinite(Number(index))) return
@@ -15422,14 +15445,22 @@ export default {
         this.amdMicStatus = 'unsupported'
         return
       }
+      // Default to prompt — never leave the UI stuck on "Checking…" if Permissions API hangs.
+      this.amdMicStatus = 'prompt'
       try {
-        if (navigator.permissions?.query) {
-          const status = await navigator.permissions.query({ name: 'microphone' })
-          this.amdMicStatus = status.state === 'granted' ? 'granted' : (status.state === 'denied' ? 'denied' : 'unknown')
-          return
-        }
-      } catch (_) { /* ignore */ }
-      this.amdMicStatus = 'unknown'
+        if (!navigator.permissions?.query) return
+        const status = await Promise.race([
+          navigator.permissions.query({ name: 'microphone' }),
+          new Promise((_, reject) => {
+            window.setTimeout(() => reject(new Error('mic_permission_timeout')), 900)
+          }),
+        ])
+        if (status?.state === 'granted') this.amdMicStatus = 'granted'
+        else if (status?.state === 'denied') this.amdMicStatus = 'denied'
+        else this.amdMicStatus = 'prompt'
+      } catch (_) {
+        this.amdMicStatus = 'prompt'
+      }
     },
     closeAmdModal() {
       if (this.recitationCheckRecording || this.recitationCheckPreparing) {
@@ -15452,33 +15483,45 @@ export default {
       this.syncBodyScrollLock(false)
     },
     async startAmdAssessment() {
-      if (this.amdBusy || this.recitationCheckRecording) return
+      if (this.amdBusy || this.recitationCheckRecording || this.recitationCheckPreparing) return
+      this.markAmdHowtoSeen()
       this.amdError = ''
       this.amdBusy = true
       this.amdStage = AMD_STAGES.STARTING
       this.amdStartedAt = Date.now()
       this.startAmdElapsedTimer()
       try {
-        await this.refreshAmdMicStatus()
-        if (this.amdMicStatus === 'unsupported') {
+        // Never await Permissions API before getUserMedia — that breaks the user-gesture chain
+        // and leaves Start Assessment looking dead (mic never prompts).
+        if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+          this.amdMicStatus = 'unsupported'
           throw new Error(this.t?.('memorisation.amd.micUnsupported') || 'Speech recognition is not supported in this browser.')
         }
         // Start the shared Speechmatics / browser STT pipeline and await mic ready.
+        let startPromise
         if (this.recitationCheckScope !== 'session' && this.selfCheckModalVerse?.key) {
           this.recitationCheckScope = 'ayah'
-          await this.startRecitationCheckRecording(this.selfCheckModalVerse)
+          startPromise = this.startRecitationCheckRecording(this.selfCheckModalVerse)
         } else {
           this.recitationCheckScope = 'session'
-          await this.startRecitationCheckRecording()
+          startPromise = this.startRecitationCheckRecording()
         }
+        await Promise.race([
+          startPromise,
+          new Promise((_, reject) => {
+            window.setTimeout(() => reject(new Error(
+              this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.'
+            )), 20000)
+          }),
+        ])
         if (this.recitationCheckRecording) {
           this.amdStage = AMD_STAGES.LISTENING
           this.amdMicStatus = 'granted'
         } else if (this.recitationCheckPreparing) {
           this.amdStage = AMD_STAGES.STARTING
         } else {
-          this.amdStage = AMD_STAGES.READY
           this.clearAmdElapsedTimer()
+          this.amdStage = AMD_STAGES.ERROR
           if (!this.amdError) {
             this.amdError = this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.'
           }
@@ -15487,7 +15530,7 @@ export default {
         this.clearAmdElapsedTimer()
         this.amdStage = AMD_STAGES.ERROR
         this.amdError = error?.message || (this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.')
-        if (/Permission|NotAllowed|denied/i.test(String(error?.name || error?.message || ''))) {
+        if (/Permission|NotAllowed|denied|micBlocked/i.test(String(error?.name || error?.message || ''))) {
           this.amdMicStatus = 'denied'
         }
       } finally {
@@ -15495,7 +15538,18 @@ export default {
       }
     },
     stopAmdAssessment() {
-      if (!this.recitationCheckRecording) return
+      if (!this.recitationCheckRecording && !this.recitationCheckPreparing) {
+        // Starting may still be awaiting getUserMedia — cancel cleanly.
+        if (this.amdStage === AMD_STAGES.STARTING) {
+          this.recitationCheckDiscardOnStop = true
+          try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
+          this.clearAmdElapsedTimer()
+          this.amdBusy = false
+          this.amdStage = AMD_STAGES.ERROR
+          this.amdError = this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.'
+        }
+        return
+      }
       this.amdStage = AMD_STAGES.PROCESSING
       this.amdBusy = true
       this.clearAmdElapsedTimer()
@@ -15514,9 +15568,14 @@ export default {
       this.amdImprovement = null
       this.amdError = ''
       this.amdAdjustOpen = false
+      this.amdBusy = false
+      this.recitationCheckPreparing = false
+      this.recitationCheckRecording = false
       this.recitationCheckResult = null
       this.seedRecitationLiveWords(this.recitationCheckPendingTargets || [])
-      this.amdStage = AMD_STAGES.READY
+      this.amdStage = AMD_STAGES.STARTING
+      this.$nextTick(() => this.syncAmdMushafSurface())
+      void this.startAmdAssessment()
     },
     setAmdAdjustOpen(open) {
       this.amdAdjustOpen = !!open
@@ -15797,7 +15856,9 @@ export default {
           this.seedRecitationLiveWords(focused)
         }
       }
-      this.amdStage = AMD_STAGES.READY
+      this.amdStage = AMD_STAGES.STARTING
+      this.amdBusy = false
+      void this.startAmdAssessment()
     },
     chooseOtherFromAmd() {
       this.closeAmdModal()
@@ -19037,7 +19098,7 @@ export default {
               && [AMD_STAGES.PROCESSING, AMD_STAGES.ANALYSING, AMD_STAGES.STARTING].includes(this.amdStage)
             ) {
               this.amdBusy = false
-              this.amdStage = AMD_STAGES.READY
+              this.amdStage = AMD_STAGES.ERROR
               if (!this.amdError) {
                 this.amdError = this.t?.('memorisation.amd.noSpeech')
                   || this.t('memorisation.aiCheck.noArabicWords')
@@ -22433,9 +22494,13 @@ export default {
       this.persistUiState()
       this.$nextTick(() => {
         const root = this.$refs.mushafViewport
-        if (root?.style) root.style.setProperty('--verse-font-percent', String(nextSize))
-        const sheet = root?.querySelector?.('.madani-page-sheet, .mushaf-page')
-        if (sheet?.style) sheet.style.setProperty('--verse-font-percent', String(nextSize))
+        const applyVar = (el) => {
+          if (!el?.style) return
+          el.style.setProperty('--verse-font-percent', String(nextSize), 'important')
+        }
+        applyVar(root)
+        applyVar(root?.querySelector?.('.madani-page-sheet, .mushaf-page'))
+        root?.querySelectorAll?.('.mushaf-page, .madani-page-sheet').forEach(applyVar)
         this.scheduleMadaniPageFit()
       })
       if (!silent) {

@@ -20,6 +20,15 @@ export const AMD_STAGES = Object.freeze({
   ERROR: 'error',
 })
 
+/**
+ * Kill-switch for AI Memorisation Detection / AI Recite test modals.
+ * Set true only when the live speech + assessment flow is stable again.
+ */
+export const AI_TEST_MODALS_ENABLED = false
+
+/** localStorage: hide the Ready howto after the learner has started once. */
+export const AMD_HOWTO_SEEN_KEY = 'mutqin.amd.howtoSeen'
+
 export function createAmdState() {
   return {
     open: false,

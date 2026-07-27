@@ -30,7 +30,7 @@
     </div>
 
     <aside
-      v-if="amdPracticeHudVisible && amdPracticeHud"
+      v-if="aiTestModalsEnabled && amdPracticeHudVisible && amdPracticeHud"
       class="amd-practice-hud"
       role="status"
       aria-live="polite"
@@ -546,7 +546,7 @@
                   </div>
                 </header>
 
-                <div ref="mushafViewport" class="mushaf-shell__page">
+                <div ref="mushafViewport" >
                   <div v-if="!currentMushafPage" class="mushaf-empty-page">
                     <i class="bi bi-hourglass-split" aria-hidden="true"></i>
                     <strong>{{ workspaceLoadingLabel }}</strong>
@@ -3151,11 +3151,11 @@
                   :aria-busy="(postSessionRecommendationStarting || postSessionAiReciteBusy) ? 'true' : 'false'"
                   @click="onPostSessionCalmPrimaryAction"
                 >
-                  <i v-if="!aiReciteFinalPlan" class="bi bi-mic-fill" aria-hidden="true"></i>
+                  <i v-if="aiTestModalsEnabled && !aiReciteFinalPlan" class="bi bi-mic-fill" aria-hidden="true"></i>
                   <span>{{ postSessionCalmPrimaryLabel }}</span>
                 </button>
                 <button
-                  v-if="aiReciteCanRetryFromSuccess"
+                  v-if="aiTestModalsEnabled && aiReciteCanRetryFromSuccess"
                   type="button"
                   class="post-session-simple__btn post-session-simple__btn--ai"
                   :disabled="postSessionActionsBusy || postSessionAiReciteBusy"
@@ -3471,6 +3471,7 @@
   </div>
 
     <AiMemorisationDetectionModal
+      v-if="aiTestModalsEnabled"
       ref="amdModal"
       :open="amdOpen"
       :stage="amdStage"
@@ -3496,6 +3497,7 @@
       :busy="amdBusy"
       :adjust-open="amdAdjustOpen"
       :how-steps="amdHowSteps"
+      :show-howto="false"
       :ready-copy="amdReadyCopy"
       :how-it-works-kicker="amdHowKicker"
       :start-label="amdLabels.start"
@@ -3698,6 +3700,7 @@
                 {{ t('memorisation.postSession.adaptiveCheck.aiReciteNotRun') }}
               </p>
               <button
+                v-if="aiTestModalsEnabled"
                 type="button"
                 class="quiz-ai-result__link"
                 :disabled="postSessionActionsBusy"
@@ -3810,9 +3813,12 @@
           ></textarea>
         </div>
 
-        <div v-else-if="postSessionAdaptiveQuestion.renderer === 'ai_recite'" class="memory-check-ai-panel">
+        <div v-else-if="aiTestModalsEnabled && postSessionAdaptiveQuestion.renderer === 'ai_recite'" class="memory-check-ai-panel">
           <div class="memory-check-ai-icon" aria-hidden="true"><i class="bi bi-stars"></i></div>
           <p>{{ t('memorisation.postSession.adaptiveCheck.aiRecitePrompt') }}</p>
+        </div>
+        <div v-else-if="!aiTestModalsEnabled && postSessionAdaptiveQuestion.renderer === 'ai_recite'" class="memory-check-ai-panel">
+          <p>{{ t('memorisation.postSession.adaptiveCheck.aiReciteNotRun') || 'Voice check is temporarily unavailable. Continue with your plan.' }}</p>
         </div>
 
         <p
@@ -3855,7 +3861,7 @@
               aria-hidden="true"
             ></span>
             <span>
-              {{ postSessionAdaptiveQuestion.requiresAiRecite
+              {{ (aiTestModalsEnabled && postSessionAdaptiveQuestion.requiresAiRecite)
                 ? t('memorisation.postSession.adaptiveCheck.startAiRecite')
                 : t('memorisation.postSession.adaptiveCheck.submit') }}
             </span>

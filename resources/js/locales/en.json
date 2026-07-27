@@ -2154,6 +2154,7 @@
       "micDenied": "Permission needed",
       "micUnsupported": "Not supported in this browser",
       "micChecking": "Checking…",
+      "micPrompt": "Tap Start to enable",
       "hintStarting": "Preparing the microphone…",
       "hintListening": "Recite from memory. Correct words reveal; mistakes highlight immediately.",
       "hintListeningLive": "Listening with live transcription. Recite from memory — correct words reveal as you go.",

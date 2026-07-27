@@ -3608,11 +3608,11 @@
   .main.mushaf-mode-active .madani-word--glyph,
   .main.mushaf-mode-active .madani-word--unicode,
   .main.mushaf-mode-active .madani-word--fallback {
-    font-size: calc((var(--verse-font-percent, 150) / 100) * clamp(1.35rem, 5.4vw, 2rem)) !important;
+    font-size: calc(clamp(1.28rem, 5.2vw, 1.85rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 
   .main.mushaf-mode-active .madani-line--glyphs {
-    font-size: calc((var(--verse-font-percent, 150) / 100) * clamp(1.4rem, 5.6vw, 2.1rem)) !important;
+    font-size: calc(clamp(1.32rem, 5.4vw, 1.95rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 
   /* Mushaf: centered full-width ayat with small side gutters */
@@ -3667,9 +3667,9 @@
     width: 100% !important;
     max-width: 100% !important;
     white-space: normal !important;
-    text-align: justify !important;
+    text-align: center !important;
     text-align-last: center !important;
-    line-height: 2.15 !important;
+    line-height: 1.9 !important;
   }
 
   .main.mushaf-mode-active .madani-line,
@@ -3950,29 +3950,23 @@
     line-height: 1.65 !important;
   }
 
-  .app .main.mushaf-mode-active .madani-page-sheet,
-  .app .main.mushaf-mode-active .madani-word,
-  .app .main.mushaf-mode-active .madani-line {
-    --verse-font-percent: 155 !important;
-  }
-
   .app .main.mushaf-mode-active .madani-word,
   .app .main.mushaf-mode-active .madani-word--glyph,
   .app .main.mushaf-mode-active .madani-word--unicode,
-  .app .main.mushaf-mode-active .madani-word--fallback {
-    font-size: calc(1.55 * clamp(1.22rem, 5vw, 1.85rem)) !important;
-    padding-inline: 0.08em !important;
-    letter-spacing: 0.014em !important;
-    word-spacing: 0.12em !important;
+  .app .main.mushaf-mode-active .madani-word--fallback,
+  .app .main.mushaf-mode-active .madani-basmala {
+    font-size: calc(clamp(1.28rem, 5.2vw, 1.85rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    padding-inline: 0.05em !important;
+    letter-spacing: 0.01em !important;
+    word-spacing: 0.08em !important;
   }
 
-  /* Mushaf: centered full-width ayat */
+  /* Mushaf portrait: full-bleed continuous page (no short centered Madani rows) */
   .app .main.mushaf-mode-active .mushaf-shell__page {
     overflow-x: hidden !important;
-    padding-inline: 0.28rem !important;
+    padding-inline: 0 !important;
     width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
+    display: block !important;
   }
 
   .app .main.mushaf-mode-active .madani-ornate,
@@ -3983,39 +3977,53 @@
 
   .app .main.mushaf-mode-active .madani-ornate__inner {
     overflow-x: hidden !important;
-    padding: 0.45rem 0.22rem 0.65rem !important;
+    padding: 0.45rem 0.55rem 0.65rem !important;
   }
 
   .app .main.mushaf-mode-active .madani-page-sheet,
   .app .main.mushaf-mode-active .madani-page-sheet--unicode {
-    width: 100% !important;
-    max-width: 100% !important;
-    transform-origin: top center !important;
-    overflow: visible !important;
-    gap: 0.28rem !important;
-    padding-inline: 0.08rem !important;
-    margin-inline: auto !important;
-  }
-
-  .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
-    white-space: normal !important;
-    text-align: justify !important;
+    transform: none !important;
+    overflow: visible !important;
+    gap: 0 !important;
+    padding-inline: 0 !important;
+    margin-inline: 0 !important;
+    text-align: center !important;
     text-align-last: center !important;
-    line-height: 2.15 !important;
+    direction: rtl !important;
+    line-height: 2.05 !important;
   }
 
   .app .main.mushaf-mode-active .madani-line--ayah,
   .app .main.mushaf-mode-active .madani-line--glyphs {
-    overflow: visible !important;
+    display: block !important;
     width: 100% !important;
     max-width: 100% !important;
-    padding-block: 0.28em !important;
-    padding-inline: 0.06em !important;
-    letter-spacing: 0.01em !important;
-    line-height: 1.9 !important;
+    white-space: normal !important;
+    text-align: center !important;
+    text-align-last: center !important;
+    line-height: 1.85 !important;
+    overflow: visible !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
+    display: block !important;
+    white-space: normal !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-line--surah_name,
+  .app .main.mushaf-mode-active .madani-line--basmala {
+    display: flex !important;
+    width: 100% !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    margin: 0.2rem 0 !important;
+    padding: 0.2rem 0.15rem !important;
+    border: 0 !important;
+    background: transparent !important;
   }
 
   .app .verses-grid .verse-font-size-control,
@@ -4107,5 +4115,53 @@
   [data-theme="dark"] .app .session-exit-progress-summary--ayah {
     color: #f3ebe1 !important;
     -webkit-text-fill-color: #f3ebe1 !important;
+  }
+}
+
+/* —— Final: natural continuous mushaf text (wins over earlier mobile rules) —— */
+@media (max-width: 767.98px) {
+  .app .main.mushaf-mode-active .madani-page-sheet,
+  .app .main.mushaf-mode-active .madani-page-sheet--unicode {
+    display: block !important;
+    text-align: center !important;
+    text-align-last: center !important;
+    text-justify: none !important;
+    line-height: 1.85 !important;
+    padding-inline: 0.85rem !important;
+    overflow-x: hidden !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-line--ayah,
+  .app .main.mushaf-mode-active .madani-line--glyphs,
+  .main.mushaf-mode-active .madani-line--ayah,
+  .main.mushaf-mode-active .madani-line--glyphs,
+  .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
+    display: contents !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-word,
+  .app .main.mushaf-mode-active .madani-word--glyph,
+  .app .main.mushaf-mode-active .madani-word--unicode,
+  .app .main.mushaf-mode-active .madani-word--fallback,
+  .main.mushaf-mode-active .madani-word,
+  .main.mushaf-mode-active .madani-word--glyph,
+  .main.mushaf-mode-active .madani-word--unicode,
+  .main.mushaf-mode-active .madani-word--fallback {
+    display: inline-block !important;
+    width: auto !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    margin-inline: 0.1em 0.02em !important;
+    padding: 0 !important;
+    white-space: nowrap !important;
+    word-spacing: normal !important;
+    letter-spacing: normal !important;
+    vertical-align: baseline !important;
+    font-size: calc(clamp(1.2rem, 4.8vw, 1.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-word--end,
+  .main.mushaf-mode-active .madani-word--end {
+    margin-inline: 0.28em 0.12em !important;
   }
 }

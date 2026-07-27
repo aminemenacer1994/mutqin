@@ -92,7 +92,7 @@
 }
 
 .main.mushaf-mode-active .madani-ornate {
-  width: min(100%, 48rem);
+  width: min(100%, 64rem);
   margin: 0 auto;
   display: block;
 }
@@ -178,7 +178,7 @@
   display: block;
   width: 100%;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal;
   direction: rtl;
 }
 

@@ -1,4 +1,5 @@
 <template>
+  <Teleport to="body">
   <div
     v-show="open"
     class="modal-overlay mutqin-modal-overlay amd-overlay"
@@ -13,67 +14,15 @@
       >
         <header class="amd-header">
           <div class="amd-header-copy">
-            <p class="amd-kicker">{{ howItWorksKicker }}</p>
-            <h2 id="amdModalTitle">{{ title }}</h2>
-            <p class="amd-range">{{ rangeLabel }}</p>
+            <h2 id="amdModalTitle" class="visually-hidden">{{ title }}</h2>
+            <p class="amd-range amd-range--title">{{ rangeLabel }}</p>
           </div>
-          <button class="modal-close-btn" type="button" :aria-label="closeLabel" @click="onCancel">
+          <button class="modal-close-btn" type="button" :aria-label="closeLabel" @click.stop="onCancel">
             <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
         </header>
 
         <div class="amd-body amd-body--mushaf">
-          <!-- Ready -->
-          <section v-show="isReady" class="amd-panel amd-panel--ready">
-            <p class="amd-lead">{{ readyCopy }}</p>
-            <ol class="amd-howto">
-              <li v-for="(step, index) in howSteps" :key="`how-${index}`">{{ step }}</li>
-            </ol>
-
-            <div class="amd-toolbar" role="toolbar" :aria-label="toolsLabel">
-              <button type="button" class="amd-tool" :class="{ active: hiddenText }" :aria-pressed="hiddenText ? 'true' : 'false'" @click="$emit('toggle-hidden')">
-                <i class="bi" :class="hiddenText ? 'bi-eye-slash-fill' : 'bi-eye-fill'" aria-hidden="true"></i>
-                <span>{{ memorizingLabel }}</span>
-              </button>
-              <button
-                type="button"
-                class="amd-tool"
-                :disabled="!hiddenText"
-                @mousedown="$emit('peek-start')"
-                @mouseup="$emit('peek-end')"
-                @mouseleave="$emit('peek-end')"
-                @touchstart.prevent="$emit('peek-start')"
-                @touchend="$emit('peek-end')"
-                @touchcancel="$emit('peek-end')"
-              >
-                <i class="bi bi-eye" aria-hidden="true"></i>
-                <span>{{ peekLabel }}</span>
-              </button>
-              <button type="button" class="amd-tool" :class="{ active: tajweed }" :aria-pressed="tajweed ? 'true' : 'false'" @click="$emit('toggle-tajweed')">
-                <i class="bi bi-highlighter" aria-hidden="true"></i>
-                <span>{{ tajweedLabel }}</span>
-              </button>
-              <button type="button" class="amd-tool" :disabled="!canPlayAudio" @click="$emit('play-audio')">
-                <i class="bi" :class="audioPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
-                <span>{{ audioToolLabel }}</span>
-              </button>
-            </div>
-
-            <ul class="amd-meta">
-              <li><span>{{ rangeMetaLabel }}</span><strong>{{ rangeLabel }}</strong></li>
-              <li><span>{{ ayahCountLabel }}</span><strong>{{ ayahCount }}</strong></li>
-              <li><span>{{ micLabel }}</span><strong :data-status="micStatus">{{ micStatusLabel }}</strong></li>
-            </ul>
-            <p v-if="error && isReady" class="amd-error" role="alert">{{ error }}</p>
-            <div class="amd-actions">
-              <button class="btn-primary" type="button" :disabled="busy || micStatus === 'unsupported'" @click="$emit('start')">
-                <i class="bi bi-mic-fill" aria-hidden="true"></i>
-                <span>{{ startLabel }}</span>
-              </button>
-              <button class="btn-secondary" type="button" :disabled="busy" @click="onCancel">{{ cancelLabel }}</button>
-            </div>
-          </section>
-
           <!-- Live -->
           <section v-show="isLive" class="amd-panel amd-panel--mushaf-live">
             <div class="amd-toolbar" role="toolbar" :aria-label="toolsLabel">
@@ -82,12 +31,12 @@
                 class="amd-tool"
                 :class="{ active: stage === 'listening' || stage === 'starting', recording: stage === 'listening' }"
                 :disabled="busy && stage !== 'listening'"
-                @click="stage === 'listening' || stage === 'starting' ? $emit('stop') : $emit('start')"
+                @click.stop="stage === 'listening' || stage === 'starting' ? $emit('stop') : $emit('start')"
               >
                 <i class="bi" :class="stage === 'listening' ? 'bi-stop-circle-fill' : 'bi-stars'" aria-hidden="true"></i>
                 <span>{{ stage === 'listening' ? stopLabel : reciteToolLabel }}</span>
               </button>
-              <button type="button" class="amd-tool" :disabled="!canPlayAudio" @click="$emit('play-audio')">
+              <button type="button" class="amd-tool" :disabled="!canPlayAudio" @click.stop="$emit('play-audio')">
                 <i class="bi" :class="audioPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
                 <span>{{ audioToolLabel }}</span>
               </button>
@@ -96,7 +45,7 @@
                 class="amd-tool"
                 :class="{ active: hiddenText }"
                 :aria-pressed="hiddenText ? 'true' : 'false'"
-                @click="$emit('toggle-hidden')"
+                @click.stop="$emit('toggle-hidden')"
               >
                 <i class="bi" :class="hiddenText ? 'bi-eye-slash-fill' : 'bi-eye-fill'" aria-hidden="true"></i>
                 <span>{{ memorizingLabel }}</span>
@@ -105,21 +54,21 @@
                 type="button"
                 class="amd-tool"
                 :disabled="!hiddenText"
-                @mousedown="$emit('peek-start')"
-                @mouseup="$emit('peek-end')"
+                @mousedown.prevent="$emit('peek-start')"
+                @mouseup.prevent="$emit('peek-end')"
                 @mouseleave="$emit('peek-end')"
                 @touchstart.prevent="$emit('peek-start')"
-                @touchend="$emit('peek-end')"
+                @touchend.prevent="$emit('peek-end')"
                 @touchcancel="$emit('peek-end')"
               >
                 <i class="bi bi-eye" aria-hidden="true"></i>
                 <span>{{ peekLabel }}</span>
               </button>
-              <button type="button" class="amd-tool" :class="{ active: tajweed }" :aria-pressed="tajweed ? 'true' : 'false'" @click="$emit('toggle-tajweed')">
+              <button type="button" class="amd-tool" :class="{ active: tajweed }" :aria-pressed="tajweed ? 'true' : 'false'" @click.stop="$emit('toggle-tajweed')">
                 <i class="bi bi-highlighter" aria-hidden="true"></i>
                 <span>{{ tajweedLabel }}</span>
               </button>
-              <button type="button" class="amd-tool" :disabled="busy" @click="$emit('reset')">
+              <button type="button" class="amd-tool" :disabled="busy" @click.stop="$emit('reset')">
                 <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
                 <span>{{ resetLabel }}</span>
               </button>
@@ -144,11 +93,11 @@
                 type="button"
                 class="amd-stop-btn"
                 :aria-label="stopLabel"
-                @click="$emit('stop')"
+                @click.stop="$emit('stop')"
               >
                 <i class="bi bi-stop-fill" aria-hidden="true"></i>
               </button>
-              <button v-show="stage !== 'listening' && stage !== 'starting'" type="button" class="btn-secondary" @click="onCancel">{{ cancelLabel }}</button>
+              <button v-show="stage !== 'listening' && stage !== 'starting'" type="button" class="btn-secondary" @click.stop="onCancel">{{ cancelLabel }}</button>
             </div>
           </section>
 
@@ -297,14 +246,24 @@
           <section v-show="isError" class="amd-panel amd-panel--error">
             <p class="amd-error" role="alert">{{ error || genericError }}</p>
             <div class="amd-actions">
-              <button class="btn-primary" type="button" @click="$emit('retry')">{{ retryLabel }}</button>
-              <button class="btn-secondary" type="button" @click="onCancel">{{ cancelLabel }}</button>
+              <button
+                class="btn-primary"
+                type="button"
+                :disabled="busy || micStatus === 'unsupported'"
+                @click.stop="$emit('start')"
+              >
+                <i class="bi bi-mic-fill" aria-hidden="true"></i>
+                <span>{{ startLabel }}</span>
+              </button>
+              <button class="btn-secondary" type="button" :disabled="busy" @click.stop="$emit('retry')">{{ retryLabel }}</button>
+              <button class="btn-secondary" type="button" @click.stop="onCancel">{{ cancelLabel }}</button>
             </div>
           </section>
         </div>
       </div>
     </div>
   </div>
+  </Teleport>
 </template>
 
 <script>
@@ -316,8 +275,8 @@ export default {
     title: { type: String, default: 'AI Memorisation Detection' },
     rangeLabel: { type: String, default: '' },
     ayahCount: { type: Number, default: 0 },
-    micStatus: { type: String, default: 'unknown' },
-    micStatusLabel: { type: String, default: 'Checking…' },
+    micStatus: { type: String, default: 'prompt' },
+    micStatusLabel: { type: String, default: 'Tap Start to enable' },
     stageLabel: { type: String, default: '' },
     liveHint: { type: String, default: '' },
     elapsedLabel: { type: String, default: '00:00' },
@@ -343,6 +302,8 @@ export default {
         'Save the result and practise the weak areas again.',
       ]),
     },
+    /** First-run educational copy; hidden after the user has started once. */
+    showHowto: { type: Boolean, default: true },
     readyCopy: { type: String, default: 'Recite this passage from memory. Mutqin will listen and identify the areas that may need strengthening.' },
     howItWorksKicker: { type: String, default: 'How mistake detection works' },
     rangeMetaLabel: { type: String, default: 'Selected range' },
@@ -401,7 +362,7 @@ export default {
   },
   computed: {
     isReady() {
-      return this.stage === 'ready' || this.stage === 'idle'
+      return false
     },
     isLive() {
       return ['starting', 'listening', 'processing', 'analysing'].includes(this.stage)
@@ -410,7 +371,8 @@ export default {
       return ['results', 'plan', 'plan_adjusted', 'retest', 'practice_complete'].includes(this.stage)
     },
     isError() {
-      return this.stage === 'error'
+      // Ready/idle must never render a setup screen — treat as recoverable error.
+      return this.stage === 'error' || this.stage === 'ready' || this.stage === 'idle'
     },
     activeHtml() {
       return this.isResults ? (this.resultAyahHtml || this.ayahHtml || '') : (this.ayahHtml || '')
