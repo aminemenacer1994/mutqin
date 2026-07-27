@@ -15,6 +15,41 @@ function readCsrfToken() {
   return meta?.content || ''
 }
 
+function readXsrfCookie() {
+  if (typeof document === 'undefined') return ''
+  const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/)
+  if (!match?.[1]) return ''
+  try {
+    return decodeURIComponent(match[1])
+  } catch (_) {
+    return match[1]
+  }
+}
+
+function syncCsrfHeaders(config = {}) {
+  const headers = { ...(config.headers || {}) }
+  const meta = readCsrfToken()
+  const xsrf = readXsrfCookie()
+  if (meta) headers['X-CSRF-TOKEN'] = meta
+  if (xsrf) headers['X-XSRF-TOKEN'] = xsrf
+  return { ...config, headers }
+}
+
+let csrfCookiePromise = null
+
+async function ensureCsrfCookie({ force = false } = {}) {
+  if (!force && readXsrfCookie()) return
+  if (!csrfCookiePromise) {
+    csrfCookiePromise = axios
+      .get('/sanctum/csrf-cookie', { withCredentials: true })
+      .catch(() => null)
+      .finally(() => {
+        csrfCookiePromise = null
+      })
+  }
+  await csrfCookiePromise
+}
+
 const http = axios.create({
   baseURL: '/api',
   withCredentials: true,
@@ -22,7 +57,31 @@ const http = axios.create({
     'X-Requested-With': 'XMLHttpRequest',
     Accept: 'application/json',
   },
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
 })
+
+http.interceptors.request.use(async (config) => {
+  const method = String(config.method || 'get').toLowerCase()
+  if (['post', 'put', 'patch', 'delete'].includes(method) && !readXsrfCookie()) {
+    await ensureCsrfCookie()
+  }
+  return syncCsrfHeaders(config)
+})
+
+http.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error?.config
+    const status = error?.response?.status
+    if (status === 419 && config && !config.__csrfRetried) {
+      config.__csrfRetried = true
+      await ensureCsrfCookie({ force: true })
+      return http.request(syncCsrfHeaders(config))
+    }
+    return Promise.reject(error)
+  }
+)
 
 const csrf = readCsrfToken()
 if (csrf) http.defaults.headers.common['X-CSRF-TOKEN'] = csrf

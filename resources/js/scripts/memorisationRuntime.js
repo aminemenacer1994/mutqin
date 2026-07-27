@@ -33,7 +33,9 @@ export const RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS = 5000
 export const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 1800
 export const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.82
 export const SPEECHMATICS_AUDIO_BUFFER_SIZE = 2048
-export const SPEECHMATICS_MAX_DELAY_SECONDS = 0.02
+// Speechmatics realtime requires max_delay in [0.7, 4]. Values below 0.7
+// (we previously used 0.02) are rejected as invalid_config.
+export const SPEECHMATICS_MAX_DELAY_SECONDS = 0.7
 // Natural pauses between āyahs need more than half a second.
 export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 1.05
 export const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0
@@ -463,10 +465,28 @@ export function createTranscriptionAudioBridge(stream = null) {
   source.connect(processor)
   processor.connect(sink)
   sink.connect(audioContext.destination)
-  audioContext.resume?.().catch(() => {})
+
+  const ensureRunning = async () => {
+    if (audioContext.state === 'closed') return false
+    if (audioContext.state === 'suspended') {
+      try {
+        await audioContext.resume()
+      } catch (_) {
+        return false
+      }
+    }
+    return audioContext.state === 'running'
+  }
+
+  // Kick resume immediately (user gesture from getUserMedia/start button).
+  void ensureRunning()
 
   return {
     sampleRate: Number(audioContext.sampleRate || 48000),
+    getState() {
+      return audioContext.state
+    },
+    ensureRunning,
     flush() {
       const merged = mergeArrayBuffers(pendingBuffers)
       pendingBuffers.length = 0
@@ -527,7 +547,10 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
       message = 'Live transcription authorisation failed.'
       category = 'auth'
     } else if (['invalid_audio_type', 'invalid_config', 'invalid_message', 'protocol_error'].includes(type)) {
-      message = 'Live transcription could not process the audio stream.'
+      const reason = String(payload?.reason || '').trim()
+      message = reason
+        ? `Live transcription rejected the stream config (${type}: ${reason}).`
+        : `Live transcription rejected the stream config (${type || 'invalid_config'}).`
       category = 'stream'
     } else if (['quota_exceeded', 'timelimit_exceeded', 'job_error'].includes(type)) {
       message = 'Live transcription is temporarily unavailable.'
@@ -626,9 +649,10 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
               },
               transcription_config: {
                 language: 'ar',
+                model: 'enhanced',
                 enable_partials: true,
                 max_delay: SPEECHMATICS_MAX_DELAY_SECONDS,
-                max_delay_mode: 'fixed',
+                max_delay_mode: 'flexible',
                 conversation_config: {
                   end_of_utterance_silence_trigger: SPEECHMATICS_END_OF_UTTERANCE_SECONDS
                 }

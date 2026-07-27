@@ -151,7 +151,7 @@
     gap: var(--mq-grid-gap) !important;
   }
 
-  .workspace-shell-actions :where(.top-card-session-actions, .top-card-controls-trigger, .top-card-menu-wrap) {
+  .workspace-shell-actions :where(.top-card-session-actions, .top-card-icon-controls, .top-card-controls-trigger, .top-card-menu-wrap) {
     pointer-events: auto;
   }
 
@@ -2241,13 +2241,23 @@
     flex: 1 1 0 !important;
     inline-size: auto !important;
     min-inline-size: 0 !important;
-    min-block-size: 36px !important;
-    block-size: 36px !important;
-    padding: 0 0.45rem !important;
-    font-size: 0.72rem !important;
+    min-block-size: 32px !important;
+    block-size: 32px !important;
+    padding: 0 0.5rem !important;
+    font-size: 0.7rem !important;
+    font-weight: 650 !important;
     white-space: nowrap !important;
     overflow: hidden;
     text-overflow: ellipsis;
+    border-radius: 9px !important;
+    gap: 0.25rem !important;
+    box-shadow: none !important;
+  }
+
+  .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
+    background: #b42318 !important;
+    border-color: #912018 !important;
+    font-weight: 650 !important;
   }
 
   .workspace-shell-actions .top-card-controls-trigger,
@@ -3080,7 +3090,7 @@
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
     align-items: center !important;
-    gap: 0.45rem 0.55rem !important;
+    gap: 0.4rem 0.45rem !important;
   }
 
   .workspace-shell-copy {
@@ -3090,9 +3100,12 @@
   }
 
   .workspace-shell-main-title {
-    font-size: clamp(0.95rem, 4.2vw, 1.1rem) !important;
-    line-height: 1.25 !important;
+    font-size: clamp(1.05rem, 4.6vw, 1.28rem) !important;
+    line-height: 1.2 !important;
     margin: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
 
   .workspace-shell-actions,
@@ -3107,48 +3120,55 @@
     display: flex !important;
     flex-wrap: nowrap !important;
     gap: 0.4rem !important;
-    margin-top: 0.15rem;
+    margin-top: 0.1rem;
   }
 
   .top-card-icon-controls {
+    --mq-top-icon: 36px;
     display: flex !important;
+    flex-flow: row nowrap !important;
     align-items: center !important;
-    justify-content: space-evenly !important;
-    gap: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    grid-column: 1 / -1 !important;
-    grid-row: 3 !important;
-    justify-self: stretch !important;
-    margin-top: 0.35rem !important;
-    padding: 0.15rem 0.1rem !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
+    width: max-content !important;
+    min-width: calc((var(--mq-top-icon) * 4) + 18px) !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
     position: relative !important;
     z-index: 80 !important;
     pointer-events: auto !important;
     box-sizing: border-box !important;
+    overflow: visible !important;
   }
 
   .top-card-icon-controls .top-card-layout-icons,
   .top-card-icon-controls .top-card-font-wrap,
   .top-card-icon-controls .top-card-controls-wrap,
   .top-card-icon-controls .top-card-menu-wrap {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    max-width: 40px !important;
-    max-height: 40px !important;
-    flex: 0 0 40px !important;
+    display: block !important;
     position: relative !important;
+    width: var(--mq-top-icon) !important;
+    height: var(--mq-top-icon) !important;
+    min-width: var(--mq-top-icon) !important;
+    min-height: var(--mq-top-icon) !important;
+    max-width: var(--mq-top-icon) !important;
+    max-height: var(--mq-top-icon) !important;
+    flex: 0 0 var(--mq-top-icon) !important;
     pointer-events: auto !important;
     box-sizing: border-box !important;
     padding: 0 !important;
     margin: 0 !important;
     border: 0 !important;
     background: transparent !important;
+    overflow: visible !important;
+    z-index: 1 !important;
   }
 
   .top-card-icon-controls .top-card-icon-control,
@@ -3157,16 +3177,20 @@
   .top-card-icon-controls .view-mode-btn,
   .top-card-icon-controls .font-dropdown-trigger,
   .top-card-icon-controls .workspace-layout-btn,
-  .top-card-icon-controls .action-btn.top-card-controls-trigger {
-    flex: 0 0 40px !important;
-    inline-size: 40px !important;
-    block-size: 40px !important;
-    width: 40px !important;
-    height: 40px !important;
-    min-inline-size: 40px !important;
-    min-block-size: 40px !important;
-    max-inline-size: 40px !important;
-    max-block-size: 40px !important;
+  .top-card-icon-controls .action-btn.top-card-controls-trigger,
+  .workspace-shell-actions .top-card-icon-controls .top-card-ellipsis,
+  .workspace-shell-actions .top-card-icon-controls .top-card-controls-trigger {
+    position: absolute !important;
+    inset: 0 !important;
+    flex: none !important;
+    inline-size: var(--mq-top-icon) !important;
+    block-size: var(--mq-top-icon) !important;
+    width: var(--mq-top-icon) !important;
+    height: var(--mq-top-icon) !important;
+    min-inline-size: var(--mq-top-icon) !important;
+    min-block-size: var(--mq-top-icon) !important;
+    max-inline-size: var(--mq-top-icon) !important;
+    max-block-size: var(--mq-top-icon) !important;
     padding: 0 !important;
     margin: 0 !important;
     border-radius: 999px !important;
@@ -3174,14 +3198,18 @@
     box-sizing: border-box !important;
     gap: 0 !important;
     line-height: 1 !important;
-    font-size: 1rem !important;
+    font-size: 0.95rem !important;
     pointer-events: auto !important;
     cursor: pointer !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     transform: none !important;
+    scale: none !important;
+    zoom: 1 !important;
     box-shadow: none !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
   }
 
   .top-card-icon-controls .top-card-icon-control i,
@@ -3189,10 +3217,11 @@
   .top-card-icon-controls .font-dropdown-trigger i,
   .top-card-icon-controls .top-card-controls-trigger i,
   .top-card-icon-controls .top-card-ellipsis i {
-    font-size: 1.05rem !important;
+    font-size: 0.95rem !important;
     line-height: 1 !important;
     width: 1em !important;
     height: 1em !important;
+    margin: 0 !important;
   }
 
   .top-card-icon-controls .view-mode-btn span,
@@ -3327,36 +3356,51 @@
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    overflow-x: hidden !important;
     box-sizing: border-box !important;
   }
 
   .main.mushaf-mode-active .mushaf-shell {
     margin-inline: auto !important;
+    overflow-x: hidden !important;
   }
 
   .main.mushaf-mode-active .mushaf-shell__page {
     display: flex !important;
     justify-content: center !important;
+    overflow-x: hidden !important;
     overflow-y: auto !important;
   }
 
   .main.mushaf-mode-active .madani-ornate__inner {
-    padding-inline: 0.45rem !important;
+    padding-inline: 0.35rem !important;
+    overflow-x: hidden !important;
   }
 
+  /* Prefer full-width sheet; glyph fit JS may expand then scale */
   .main.mushaf-mode-active .madani-page-sheet {
+    width: 100% !important;
     max-width: 100% !important;
     margin-inline: auto !important;
-    padding-inline: 0.15rem !important;
-    overflow-x: hidden !important;
+    padding-inline: 0.08rem !important;
+    overflow: visible !important;
     transform-origin: top center !important;
     box-sizing: border-box !important;
   }
 
-  .main.mushaf-mode-active .madani-line {
+  .main.mushaf-mode-active .madani-page-sheet--unicode {
+    width: 100% !important;
     max-width: 100% !important;
+  }
+
+  .main.mushaf-mode-active .madani-line {
     box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line {
+    max-width: 100% !important;
   }
 
   .main.mushaf-mode-active .madani-word--out {
@@ -3374,7 +3418,7 @@
 
   .verse-font-size-control,
   .verse-font-size-control--mobile {
-    display: inline-flex !important;
+    display: none !important;
   }
 
   .main.mushaf-mode-active .mushaf-shell__btn,
@@ -3564,26 +3608,31 @@
   .main.mushaf-mode-active .madani-word--glyph,
   .main.mushaf-mode-active .madani-word--unicode,
   .main.mushaf-mode-active .madani-word--fallback {
-    font-size: calc((var(--verse-font-percent, 130) / 100) * clamp(1.2rem, 4.6vw, 1.75rem)) !important;
+    font-size: calc((var(--verse-font-percent, 150) / 100) * clamp(1.35rem, 5.4vw, 2rem)) !important;
   }
 
   .main.mushaf-mode-active .madani-line--glyphs {
-    font-size: calc((var(--verse-font-percent, 130) / 100) * clamp(1.25rem, 4.8vw, 1.85rem)) !important;
+    font-size: calc((var(--verse-font-percent, 150) / 100) * clamp(1.4rem, 5.6vw, 2.1rem)) !important;
   }
 
-  /* Mushaf crop fix + breathing room */
+  /* Mushaf: centered full-width ayat with small side gutters */
   .main.mushaf-mode-active .mushaf-shell__page {
     overflow-x: hidden !important;
     overflow-y: auto !important;
-    padding-inline: 0.35rem !important;
+    padding-inline: 0.28rem !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
   }
 
   .main.mushaf-mode-active .mushaf-page,
   .main.mushaf-mode-active .mushaf-page--ornate {
-    overflow: visible !important;
-    padding: 0.55rem 0.4rem 0.85rem !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    padding: 0.55rem 0.28rem 0.9rem !important;
     width: 100% !important;
     max-width: 100% !important;
+    margin-inline: auto !important;
     box-sizing: border-box !important;
   }
 
@@ -3592,38 +3641,60 @@
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
+    overflow-x: hidden !important;
   }
 
   .main.mushaf-mode-active .madani-ornate__inner {
     overflow-x: hidden !important;
     overflow-y: visible !important;
-    padding: 0.55rem 0.65rem 0.7rem !important;
+    padding: 0.45rem 0.22rem 0.65rem !important;
     box-sizing: border-box !important;
   }
 
-  .main.mushaf-mode-active .madani-page-sheet {
+  .main.mushaf-mode-active .madani-page-sheet,
+  .main.mushaf-mode-active .madani-page-sheet--unicode {
     width: 100% !important;
     max-width: 100% !important;
     overflow: visible !important;
-    padding-inline: 0.2rem !important;
-    gap: 0.18rem !important;
+    padding-inline: 0.08rem !important;
+    gap: 0.28rem !important;
     transform-origin: top center;
-    will-change: transform;
+    margin-inline: auto !important;
+  }
+
+  .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    text-align: justify !important;
+    text-align-last: center !important;
+    line-height: 2.15 !important;
   }
 
   .main.mushaf-mode-active .madani-line,
   .main.mushaf-mode-active .madani-line--ayah,
   .main.mushaf-mode-active .madani-line--glyphs {
+    width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    padding-block: 0.18em !important;
-    padding-inline: 0.15em !important;
+    padding-block: 0.28em !important;
+    padding-inline: 0.06em !important;
     letter-spacing: 0.01em;
+    line-height: 1.9 !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  .main.mushaf-mode-active .madani-line--surah_name,
+  .main.mushaf-mode-active .madani-line--basmala {
+    display: flex !important;
+    justify-content: center !important;
+    text-align: center !important;
   }
 
   .main.mushaf-mode-active .madani-word {
-    padding-inline: 0.04em !important;
+    padding-inline: 0.06em !important;
   }
 
   .main.mushaf-mode-active .madani-word--out {
@@ -3882,51 +3953,75 @@
   .app .main.mushaf-mode-active .madani-page-sheet,
   .app .main.mushaf-mode-active .madani-word,
   .app .main.mushaf-mode-active .madani-line {
-    --verse-font-percent: 145 !important;
+    --verse-font-percent: 155 !important;
   }
 
   .app .main.mushaf-mode-active .madani-word,
   .app .main.mushaf-mode-active .madani-word--glyph,
   .app .main.mushaf-mode-active .madani-word--unicode,
   .app .main.mushaf-mode-active .madani-word--fallback {
-    font-size: calc(1.45 * clamp(1.12rem, 4.6vw, 1.72rem)) !important;
+    font-size: calc(1.55 * clamp(1.22rem, 5vw, 1.85rem)) !important;
     padding-inline: 0.08em !important;
     letter-spacing: 0.014em !important;
-    word-spacing: 0.1em !important;
+    word-spacing: 0.12em !important;
   }
 
-  /* Mushaf: contain + space lines; JS scales to fit */
+  /* Mushaf: centered full-width ayat */
   .app .main.mushaf-mode-active .mushaf-shell__page {
     overflow-x: hidden !important;
-    padding-inline: 0.55rem !important;
+    padding-inline: 0.28rem !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
   }
 
   .app .main.mushaf-mode-active .madani-ornate,
   .app .main.mushaf-mode-active .madani-ornate__frame {
-    overflow: hidden !important;
+    overflow-x: hidden !important;
     max-width: 100% !important;
   }
 
   .app .main.mushaf-mode-active .madani-ornate__inner {
-    overflow: hidden !important;
-    padding: 0.7rem 0.55rem 0.85rem !important;
+    overflow-x: hidden !important;
+    padding: 0.45rem 0.22rem 0.65rem !important;
   }
 
-  .app .main.mushaf-mode-active .madani-page-sheet {
+  .app .main.mushaf-mode-active .madani-page-sheet,
+  .app .main.mushaf-mode-active .madani-page-sheet--unicode {
     width: 100% !important;
-    max-width: none !important;
+    max-width: 100% !important;
     transform-origin: top center !important;
     overflow: visible !important;
     gap: 0.28rem !important;
+    padding-inline: 0.08rem !important;
+    margin-inline: auto !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    text-align: justify !important;
+    text-align-last: center !important;
+    line-height: 2.15 !important;
   }
 
   .app .main.mushaf-mode-active .madani-line--ayah,
   .app .main.mushaf-mode-active .madani-line--glyphs {
     overflow: visible !important;
-    padding-block: 0.3em !important;
-    padding-inline: 0.15em !important;
-    letter-spacing: 0.02em !important;
-    line-height: 1.75 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-block: 0.28em !important;
+    padding-inline: 0.06em !important;
+    letter-spacing: 0.01em !important;
+    line-height: 1.9 !important;
+  }
+
+  .app .verses-grid .verse-font-size-control,
+  .app .verse-font-size-control,
+  .app .verse-font-size-control--mobile {
+    display: none !important;
   }
 
   .app .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
@@ -3941,7 +4036,7 @@
   }
 
   .app .verses-grid .verse-font-size-control {
-    display: inline-flex !important;
+    display: none !important;
   }
 
   .app .verses-grid .verse-actions {

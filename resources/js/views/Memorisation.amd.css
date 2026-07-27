@@ -1,16 +1,38 @@
-/* AI Memorisation Detection — calm modal + practice HUD */
+/* AI Memorisation Detection — mushaf hidden-text surface + practice HUD */
 
 .amd-overlay {
-  z-index: 12050;
+  position: fixed;
+  inset: 0;
+  z-index: 14000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.amd-overlay .mutqin-modal-dialog,
+.amd-overlay .amd-modal {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .amd-modal {
-  max-width: 720px;
-  width: min(720px, calc(100vw - 1.5rem));
+  max-width: 920px;
+  width: min(920px, calc(100vw - 1rem));
+  max-height: min(94vh, 980px);
   border-radius: 20px;
   overflow: hidden;
-  background: linear-gradient(180deg, #f7f4ef 0%, #fbfaf7 42%, #ffffff 100%);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #f7f4ef 0%, #fbfaf7 36%, #ffffff 100%);
+  color: #1c1917;
   box-shadow: 0 24px 60px rgba(28, 25, 23, 0.18);
+}
+
+.amd-modal--mushaf .amd-body {
+  overflow: auto;
+  flex: 1;
 }
 
 .amd-header {
@@ -18,30 +40,39 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.35rem 1.5rem 0.75rem;
+  padding: 1.15rem 1.35rem 0.65rem;
+  border-bottom: 1px solid rgba(68, 64, 60, 0.08);
+}
+
+.amd-kicker {
+  margin: 0 0 0.2rem;
+  color: #78716c;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .amd-header-copy h2 {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.28rem;
   font-weight: 650;
   letter-spacing: -0.02em;
   color: #1c1917;
 }
 
 .amd-range {
-  margin: 0.35rem 0 0;
+  margin: 0.3rem 0 0;
   color: #57534e;
   font-size: 0.95rem;
 }
 
 .amd-body {
-  padding: 0.5rem 1.5rem 1.5rem;
+  padding: 0.75rem 1.35rem 1.35rem;
 }
 
 .amd-panel {
   display: grid;
-  gap: 1.15rem;
+  gap: 1rem;
 }
 
 .amd-lead {
@@ -49,7 +80,19 @@
   font-size: 1.05rem;
   line-height: 1.55;
   color: #292524;
-  max-width: 38rem;
+  max-width: 42rem;
+}
+
+.amd-howto {
+  margin: 0;
+  padding: 0.85rem 0.85rem 0.85rem 1.4rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(68, 64, 60, 0.08);
+  color: #44403c;
+  display: grid;
+  gap: 0.45rem;
+  line-height: 1.45;
 }
 
 .amd-meta {
@@ -57,7 +100,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.65rem;
+  gap: 0.55rem;
 }
 
 .amd-meta li {
@@ -70,20 +113,10 @@
   border: 1px solid rgba(68, 64, 60, 0.08);
 }
 
-.amd-meta span {
-  color: #78716c;
-  font-size: 0.9rem;
-}
-
-.amd-meta strong {
-  color: #1c1917;
-  font-weight: 600;
-}
-
+.amd-meta span { color: #78716c; font-size: 0.9rem; }
+.amd-meta strong { color: #1c1917; font-weight: 600; }
 .amd-meta strong[data-status="denied"],
-.amd-meta strong[data-status="unsupported"] {
-  color: #b45309;
-}
+.amd-meta strong[data-status="unsupported"] { color: #b45309; }
 
 .amd-actions {
   display: flex;
@@ -91,8 +124,11 @@
   gap: 0.65rem;
 }
 
-.amd-actions--inline {
-  margin-top: 0.5rem;
+.amd-actions .btn-primary,
+.amd-actions .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .amd-error {
@@ -104,37 +140,82 @@
   border: 1px solid rgba(194, 65, 12, 0.18);
 }
 
-.amd-live-status {
-  display: grid;
+/* Tools */
+.amd-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.amd-tool {
+  display: inline-flex;
+  align-items: center;
   gap: 0.35rem;
-  padding: 1.1rem 1.15rem;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(68, 64, 60, 0.14);
+  background: rgba(255, 255, 255, 0.85);
+  color: #44403c;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.amd-tool:hover:not(:disabled) {
+  background: #fff;
+  border-color: rgba(68, 64, 60, 0.28);
+}
+
+.amd-tool.active,
+.amd-tool.recording {
+  background: rgba(22, 163, 74, 0.12);
+  border-color: rgba(22, 163, 74, 0.35);
+  color: #166534;
+}
+
+.amd-tool.recording {
+  background: rgba(185, 28, 28, 0.1);
+  border-color: rgba(185, 28, 28, 0.28);
+  color: #991b1b;
+}
+
+.amd-tool:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.amd-live-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(68, 64, 60, 0.08);
 }
 
-.amd-live-status strong {
-  font-size: 1.1rem;
-  color: #1c1917;
+.amd-live-banner strong { display: block; color: #1c1917; }
+.amd-live-banner p { margin: 0.15rem 0 0; color: #57534e; font-size: 0.92rem; }
+.amd-timer {
+  margin-inline-start: auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: #166534;
 }
 
-.amd-live-status p {
-  margin: 0;
-  color: #57534e;
-}
-
-.amd-live-dot {
+.amd-live-dot,
+.amd-rec-dot {
   width: 0.65rem;
   height: 0.65rem;
   border-radius: 999px;
   background: #16a34a;
+  flex-shrink: 0;
   box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45);
   animation: amd-pulse 1.8s ease-out infinite;
 }
 
-.amd-live-status[data-stage="processing"] .amd-live-dot,
-.amd-live-status[data-stage="analysing"] .amd-live-dot,
-.amd-live-status[data-stage="starting"] .amd-live-dot {
+.amd-live-banner[data-stage="processing"] .amd-live-dot,
+.amd-live-banner[data-stage="analysing"] .amd-live-dot,
+.amd-live-banner[data-stage="starting"] .amd-live-dot {
   background: #ca8a04;
 }
 
@@ -144,41 +225,142 @@
   100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
 }
 
-.amd-live-words,
-.amd-word-review {
+/* Mushaf shell */
+.amd-mushaf-shell {
+  padding: 1.1rem 1rem 1.25rem;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid rgba(68, 64, 60, 0.1);
+  min-height: 220px;
+}
+
+.amd-mushaf-ayah {
+  font-size: clamp(1.35rem, 3.2vw, 1.85rem);
+  line-height: 2.15;
+  color: #111827;
+}
+
+.amd-ayah-block {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  justify-content: flex-start;
+  flex-direction: row-reverse;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
 }
 
-.amd-live-word,
-.amd-word-chip {
-  padding: 0.2rem 0.45rem;
-  border-radius: 0.45rem;
-  font-size: 1.15rem;
-  line-height: 1.6;
-  background: rgba(255, 255, 255, 0.7);
+.amd-ayah-marker {
+  flex-shrink: 0;
+  width: 1.7rem;
+  height: 1.7rem;
+  margin-top: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(68, 64, 60, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: #57534e;
+  background: #fafaf9;
 }
 
-.amd-live-word.is-correct,
-.amd-word-chip.is-correct { color: #15803d; background: rgba(22, 163, 74, 0.1); }
-.amd-live-word.is-minor,
-.amd-word-chip.is-minor { color: #b45309; background: rgba(245, 158, 11, 0.14); }
-.amd-live-word.is-wrong,
-.amd-word-chip.is-wrong { color: #b91c1c; background: rgba(239, 68, 68, 0.12); }
-.amd-live-word.is-missing,
-.amd-word-chip.is-missing { color: #111827; background: rgba(17, 24, 39, 0.08); }
-.amd-live-word.is-extra,
-.amd-word-chip.is-extra { color: #6b7280; background: rgba(107, 114, 128, 0.12); }
-.amd-live-word.is-uncertain,
-.amd-word-chip.is-uncertain { color: #57534e; background: rgba(120, 113, 108, 0.1); }
+.amd-ayah-words {
+  flex: 1;
+  text-align: right;
+}
 
-.amd-summary {
-  display: grid;
+.amd-mushaf-ayah .wbw-word,
+.amd-mushaf-ayah word {
+  display: inline;
+  padding: 0.05rem 0.12rem;
+  border-radius: 0.35rem;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.amd-mushaf-ayah .recitation-word-correct {
+  color: #15803d;
+  background: rgba(22, 163, 74, 0.12);
+}
+
+.amd-mushaf-ayah .recitation-word-partial {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.16);
+}
+
+.amd-mushaf-ayah .recitation-word-incorrect {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.14);
+}
+
+.amd-mushaf-ayah .recitation-word-omitted {
+  color: #111827;
+  background: rgba(17, 24, 39, 0.08);
+}
+
+.amd-mushaf-ayah .amd-word-hidden,
+.amd-mushaf-shell.is-hidden-text .recitation-word-notAttempted,
+.amd-mushaf-shell.is-hidden-text .recitation-word-pending {
+  color: transparent !important;
+  background: transparent !important;
+  border-bottom: 2px dashed rgba(120, 113, 108, 0.55);
+  border-radius: 0;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.amd-mushaf-shell.is-peeking .amd-word-hidden,
+.amd-mushaf-shell.is-peeking .recitation-word-notAttempted,
+.amd-mushaf-shell.is-peeking .recitation-word-pending {
+  color: #44403c !important;
+  border-bottom-color: transparent;
+  background: rgba(245, 158, 11, 0.08) !important;
+}
+
+.amd-mushaf-ayah .amd-word-frequent {
+  box-shadow: inset 0 -3px 0 rgba(185, 28, 28, 0.55);
+}
+
+.amd-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
+  padding-top: 0.25rem;
 }
 
+.amd-rec-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  background: #1c1917;
+  color: #fafaf9;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.amd-rec-pill.recording .amd-rec-dot {
+  background: #ef4444;
+}
+
+.amd-stop-btn {
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 999px;
+  border: none;
+  background: #1c1917;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.amd-stop-btn:hover { background: #292524; }
+
+/* Results / plan (keep prior tokens) */
+.amd-summary { display: grid; gap: 0.75rem; }
 .amd-summary-kicker {
   margin: 0;
   color: #78716c;
@@ -186,19 +368,16 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-
 .amd-summary-title {
-  font-size: 1.15rem;
+  font-size: 1.12rem;
   line-height: 1.45;
   color: #1c1917;
 }
-
 .amd-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.65rem;
 }
-
 .amd-stats article {
   padding: 0.75rem;
   border-radius: 12px;
@@ -207,16 +386,8 @@
   display: grid;
   gap: 0.2rem;
 }
-
-.amd-stats span {
-  color: #78716c;
-  font-size: 0.8rem;
-}
-
-.amd-stats strong {
-  font-size: 1.2rem;
-  color: #1c1917;
-}
+.amd-stats span { color: #78716c; font-size: 0.8rem; }
+.amd-stats strong { font-size: 1.2rem; color: #1c1917; }
 
 .amd-improvement {
   padding: 0.9rem 1rem;
@@ -224,7 +395,6 @@
   background: rgba(22, 163, 74, 0.08);
   border: 1px solid rgba(22, 163, 74, 0.16);
 }
-
 .amd-improvement-row {
   display: flex;
   gap: 0.5rem;
@@ -233,40 +403,28 @@
   color: #166534;
 }
 
-.amd-ayah-list {
-  display: grid;
-  gap: 0.55rem;
-}
-
+.amd-ayah-list { display: grid; gap: 0.55rem; }
 .amd-ayah-card {
   padding: 0.75rem 0.9rem;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(68, 64, 60, 0.08);
 }
-
 .amd-ayah-card header {
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 0.25rem;
 }
-
 .amd-ayah-card[data-priority="priority"] {
   border-color: rgba(185, 28, 28, 0.22);
   background: rgba(254, 242, 242, 0.85);
 }
-
 .amd-ayah-card[data-priority="attention"] {
   border-color: rgba(180, 83, 9, 0.22);
   background: rgba(255, 247, 237, 0.9);
 }
-
-.amd-ayah-card p {
-  margin: 0;
-  color: #57534e;
-  font-size: 0.9rem;
-}
+.amd-ayah-card p { margin: 0; color: #57534e; font-size: 0.9rem; }
 
 .amd-plan-card {
   display: grid;
@@ -276,32 +434,23 @@
   background: #fff;
   border: 1px solid rgba(68, 64, 60, 0.1);
 }
-
 .amd-plan-kicker {
   color: #78716c;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-
 .amd-plan-card h3 {
   margin: 0.25rem 0 0;
   font-size: 1.2rem;
   color: #1c1917;
 }
-
-.amd-plan-why {
-  margin: 0;
-  color: #44403c;
-  line-height: 1.5;
-}
-
+.amd-plan-why { margin: 0; color: #44403c; line-height: 1.5; }
 .amd-plan-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
 }
-
 .amd-plan-grid div,
 .amd-weak-words,
 .amd-techniques article {
@@ -309,7 +458,6 @@
   border-radius: 12px;
   background: #fafaf9;
 }
-
 .amd-plan-grid span,
 .amd-weak-words > span {
   display: block;
@@ -317,28 +465,14 @@
   font-size: 0.8rem;
   margin-bottom: 0.2rem;
 }
-
 .amd-weak-words em {
   font-style: normal;
   margin-inline-start: 0.35rem;
   color: #9a3412;
 }
-
-.amd-techniques {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.amd-techniques strong {
-  display: block;
-  margin-bottom: 0.2rem;
-}
-
-.amd-techniques p {
-  margin: 0;
-  color: #57534e;
-  font-size: 0.92rem;
-}
+.amd-techniques { display: grid; gap: 0.55rem; }
+.amd-techniques strong { display: block; margin-bottom: 0.2rem; }
+.amd-techniques p { margin: 0; color: #57534e; font-size: 0.92rem; }
 
 .amd-adjust {
   display: grid;
@@ -347,27 +481,24 @@
   border-radius: 12px;
   background: #fafaf9;
 }
-
 .amd-adjust label {
   display: grid;
   gap: 0.35rem;
   color: #44403c;
   font-size: 0.92rem;
 }
-
 .amd-adjust input[type="number"],
 .amd-adjust select {
   border: 1px solid rgba(68, 64, 60, 0.18);
   border-radius: 10px;
   padding: 0.55rem 0.7rem;
   background: #fff;
+  color: #1c1917;
 }
-
 .amd-checkbox {
   display: flex !important;
   align-items: center;
   gap: 0.5rem;
-  grid-template-columns: none;
 }
 
 .amd-practice-hud {
@@ -381,8 +512,8 @@
   padding: 0.85rem 1rem;
   background: linear-gradient(180deg, #f7f4ef 0%, #fff 100%);
   border-bottom: 1px solid rgba(68, 64, 60, 0.1);
+  color: #1c1917;
 }
-
 .amd-practice-hud-kicker {
   display: block;
   color: #78716c;
@@ -391,12 +522,121 @@
   letter-spacing: 0.04em;
   margin-bottom: 0.15rem;
 }
-
 .amd-practice-hud-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+}
+
+/* Dark mode */
+[data-theme="dark"] .amd-modal,
+.app[data-theme="dark"] .amd-modal {
+  background: linear-gradient(180deg, #1c1917 0%, #221f1c 45%, #292524 100%);
+  color: #f5f5f4;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .amd-header {
+  border-bottom-color: rgba(245, 245, 244, 0.08);
+}
+
+[data-theme="dark"] .amd-header-copy h2,
+[data-theme="dark"] .amd-summary-title,
+[data-theme="dark"] .amd-plan-card h3,
+[data-theme="dark"] .amd-live-banner strong,
+[data-theme="dark"] .amd-meta strong,
+[data-theme="dark"] .amd-stats strong,
+[data-theme="dark"] .amd-mushaf-ayah {
+  color: #fafaf9;
+}
+
+[data-theme="dark"] .amd-kicker,
+[data-theme="dark"] .amd-range,
+[data-theme="dark"] .amd-lead,
+[data-theme="dark"] .amd-howto,
+[data-theme="dark"] .amd-live-banner p,
+[data-theme="dark"] .amd-plan-why,
+[data-theme="dark"] .amd-techniques p,
+[data-theme="dark"] .amd-ayah-card p {
+  color: #d6d3d1;
+}
+
+[data-theme="dark"] .amd-howto,
+[data-theme="dark"] .amd-meta li,
+[data-theme="dark"] .amd-live-banner,
+[data-theme="dark"] .amd-mushaf-shell,
+[data-theme="dark"] .amd-plan-card,
+[data-theme="dark"] .amd-stats article,
+[data-theme="dark"] .amd-ayah-card,
+[data-theme="dark"] .amd-plan-grid div,
+[data-theme="dark"] .amd-weak-words,
+[data-theme="dark"] .amd-techniques article,
+[data-theme="dark"] .amd-adjust {
+  background: rgba(41, 37, 36, 0.92);
+  border-color: rgba(245, 245, 244, 0.1);
+}
+
+[data-theme="dark"] .amd-tool {
+  background: rgba(41, 37, 36, 0.95);
+  border-color: rgba(245, 245, 244, 0.14);
+  color: #e7e5e4;
+}
+
+[data-theme="dark"] .amd-tool.active {
+  background: rgba(34, 197, 94, 0.16);
+  border-color: rgba(34, 197, 94, 0.35);
+  color: #86efac;
+}
+
+[data-theme="dark"] .amd-tool.recording {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .amd-ayah-marker {
+  background: #1c1917;
+  border-color: rgba(245, 245, 244, 0.2);
+  color: #d6d3d1;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah .amd-word-hidden,
+[data-theme="dark"] .amd-mushaf-shell.is-hidden-text .recitation-word-notAttempted,
+[data-theme="dark"] .amd-mushaf-shell.is-hidden-text .recitation-word-pending {
+  border-bottom-color: rgba(168, 162, 158, 0.55);
+}
+
+[data-theme="dark"] .amd-mushaf-shell.is-peeking .amd-word-hidden,
+[data-theme="dark"] .amd-mushaf-shell.is-peeking .recitation-word-notAttempted,
+[data-theme="dark"] .amd-mushaf-shell.is-peeking .recitation-word-pending {
+  color: #e7e5e4 !important;
+  background: rgba(245, 158, 11, 0.14) !important;
+}
+
+[data-theme="dark"] .amd-rec-pill,
+[data-theme="dark"] .amd-stop-btn {
+  background: #fafaf9;
+  color: #1c1917;
+}
+
+[data-theme="dark"] .amd-error {
+  background: rgba(127, 29, 29, 0.28);
+  border-color: rgba(248, 113, 113, 0.28);
+  color: #fecaca;
+}
+
+[data-theme="dark"] .amd-practice-hud {
+  background: linear-gradient(180deg, #1c1917 0%, #292524 100%);
+  border-bottom-color: rgba(245, 245, 244, 0.1);
+  color: #fafaf9;
+}
+
+[data-theme="dark"] .amd-adjust input[type="number"],
+[data-theme="dark"] .amd-adjust select {
+  background: #1c1917;
+  color: #fafaf9;
+  border-color: rgba(245, 245, 244, 0.18);
 }
 
 @media (max-width: 640px) {
@@ -407,7 +647,15 @@
 
   .amd-header,
   .amd-body {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+
+  .amd-tool span {
+    display: none;
+  }
+
+  .amd-tool {
+    padding: 0.55rem;
   }
 }

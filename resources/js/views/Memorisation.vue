@@ -446,39 +446,6 @@
             <span>{{ workspaceLoadingLabel }}</span>
           </div>
           <div
-            v-if="isDataReady && liveTechniqueGuide && hasSessionStarted && !isSessionCompleted && !talqinRecitationTurnActive && readingViewMode !== 'mushaf'"
-            class="live-practice-method"
-            role="status"
-            aria-live="polite"
-          >
-            <span class="live-practice-method__label">{{ liveTechniqueGuide.label }}</span>
-            <span class="live-practice-method__hint">{{ liveTechniqueGuide.hint }}</span>
-            <div
-              v-if="liveKeyWordHooks.length"
-              class="live-practice-method__hooks"
-            >
-              <span class="live-practice-method__hooks-label">
-                {{ t('memorisation.postSession.coach.live.hooksLabel') }}
-              </span>
-              <ul class="live-practice-method__hooks-list" dir="rtl" lang="ar">
-                <li
-                  v-for="(word, idx) in liveKeyWordHooks"
-                  :key="`hook-${word.verseKey || ''}-${word.wordIndex}-${idx}`"
-                >{{ word.text }}</li>
-              </ul>
-            </div>
-          </div>
-          <div
-            v-if="isDataReady && livePracticeCoachText && hasSessionStarted && !isSessionCompleted && !talqinRecitationTurnActive && readingViewMode !== 'mushaf'"
-            class="live-practice-coach"
-            :class="{ 'live-practice-coach--focus': !!activePracticeFocusWord }"
-            role="status"
-            aria-live="polite"
-          >
-            <i class="bi" :class="activePracticeFocusWord ? 'bi-bullseye' : 'bi-moon-stars'" aria-hidden="true"></i>
-            <span>{{ livePracticeCoachText }}</span>
-          </div>
-          <div
             v-if="isDataReady && practiceTurnCalloutVisible && !talqinRecitationTurnActive"
             class="practice-turn-callout practice-turn-callout--tracked"
             :style="practiceTurnCalloutStyle"
@@ -578,50 +545,6 @@
                     </div>
                   </div>
                 </header>
-
-                <div
-                  v-if="(liveTechniqueGuide || livePracticeCoachText) && hasSessionStarted && !isSessionCompleted && !talqinRecitationTurnActive"
-                  class="live-practice-guidance live-practice-guidance--mushaf"
-                >
-                  <div
-                    v-if="liveTechniqueGuide"
-                    class="live-practice-method"
-                    role="status"
-                    aria-live="polite"
-                  >
-                    <span class="live-practice-method__label">{{ liveTechniqueGuide.label }}</span>
-                    <span class="live-practice-method__hint">{{ liveTechniqueGuide.hint }}</span>
-                    <div v-if="liveKeyWordHooks.length" class="live-practice-method__hooks">
-                      <span class="live-practice-method__hooks-label">
-                        {{ t('memorisation.postSession.coach.live.hooksLabel') }}
-                      </span>
-                      <ul class="live-practice-method__hooks-list" dir="rtl" lang="ar">
-                        <li
-                          v-for="(word, idx) in liveKeyWordHooks"
-                          :key="`mushaf-hook-${word.verseKey || ''}-${word.wordIndex}-${idx}`"
-                        >{{ word.text }}</li>
-                      </ul>
-                    </div>
-                  </div>
-                  <div
-                    v-if="livePracticeCoachText"
-                    class="live-practice-coach"
-                    :class="{ 'live-practice-coach--focus': !!activePracticeFocusWord }"
-                    role="status"
-                    aria-live="polite"
-                  >
-                    <i class="bi" :class="activePracticeFocusWord ? 'bi-bullseye' : 'bi-moon-stars'" aria-hidden="true"></i>
-                    <span>{{ livePracticeCoachText }}</span>
-                  </div>
-                  <div v-if="reviewPriorityLabel" class="live-practice-coach live-practice-coach--meta" role="status">
-                    <i class="bi bi-flag" aria-hidden="true"></i>
-                    <span>{{ reviewPriorityLabel }}</span>
-                  </div>
-                  <div v-if="chainingEnabled && chainingProgressLabel" class="live-practice-coach live-practice-coach--meta" role="status">
-                    <i class="bi bi-link-45deg" aria-hidden="true"></i>
-                    <span>{{ chainingProgressLabel }}</span>
-                  </div>
-                </div>
 
                 <div ref="mushafViewport" class="mushaf-shell__page">
                   <div v-if="!currentMushafPage" class="mushaf-empty-page">
@@ -865,28 +788,6 @@
                     >{{ t('memorisation.postSession.coach.live.focusBadge') }}</span>
                   </div>
                   <div class="verse-actions">
-                    <div class="verse-font-size-control verse-font-size-control--mobile" role="group" :aria-label="t('common.fontSize')">
-                      <button
-                        type="button"
-                        class="verse-inline-action-btn verse-font-size-btn"
-                        @click.stop="decreaseVerseFont(verse.key, $event)"
-                        :disabled="getVerseFontSize(verse.key) <= minFontSize"
-                        :title="t('memorisation.a11y.decreaseFontSize')"
-                        :aria-label="t('memorisation.a11y.decreaseFontSize')"
-                      >
-                        <i class="bi bi-dash-lg" aria-hidden="true"></i>
-                      </button>
-                      <button
-                        type="button"
-                        class="verse-inline-action-btn verse-font-size-btn"
-                        @click.stop="increaseVerseFont(verse.key, $event)"
-                        :disabled="getVerseFontSize(verse.key) >= maxFontSize"
-                        :title="t('memorisation.a11y.increaseFontSize')"
-                        :aria-label="t('memorisation.a11y.increaseFontSize')"
-                      >
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                      </button>
-                    </div>
                     <button class="verse-inline-action-btn verse-inline-play-btn" type="button"
                       @click.stop="playAyahCardAudio(verse)"
                       :disabled="!resolveAyahAudioUrl(verse)"
@@ -2489,44 +2390,6 @@
       </div>
     </div>
 
-    <AiMemorisationDetectionModal
-      :open="amdOpen"
-      :stage="amdStage"
-      :title="amdTitle"
-      :range-label="amdRangeLabel"
-      :ayah-count="amdAyahCount"
-      :assessment-type="amdAssessmentType"
-      :mic-status="amdMicStatus"
-      :mic-status-label="amdMicStatusLabel"
-      :stage-label="amdStageLabel"
-      :live-hint="amdLiveHint"
-      :live-words="amdVisibleLiveWords"
-      :assessment="amdAssessment"
-      :practice-plan="amdPracticePlan"
-      :improvement="amdImprovement"
-      :error="amdError"
-      :busy="amdBusy"
-      :adjust-open="amdAdjustOpen"
-      :ready-copy="amdReadyCopy"
-      :start-label="amdLabels.start"
-      :stop-label="amdLabels.stop"
-      :cancel-label="amdLabels.cancel"
-      :close-label="amdLabels.close"
-      :start-plan-label="amdLabels.startPlan"
-      :adjust-plan-label="amdLabels.adjustPlan"
-      :choose-other-label="amdLabels.chooseOther"
-      :retest-label="amdLabels.retest"
-      :retry-label="amdLabels.retry"
-      @start="startAmdAssessment"
-      @stop="stopAmdAssessment"
-      @cancel="closeAmdModal"
-      @start-plan="startAmdPracticePlan"
-      @toggle-adjust="setAmdAdjustOpen"
-      @adjust="adjustAmdPracticePlan"
-      @choose-other="chooseOtherFromAmd"
-      @retry="retryAmdAssessment"
-      @retest="retestAmdFromPlan"
-    />
 
     <div v-if="false && showRecordingsLibrary" class="modal-overlay mutqin-modal-overlay recordings-library-overlay"
       @click.self="closeRecordingsLibrary">
@@ -3606,6 +3469,67 @@
     </div>
 
   </div>
+
+    <AiMemorisationDetectionModal
+      ref="amdModal"
+      :open="amdOpen"
+      :stage="amdStage"
+      :title="amdTitle"
+      :range-label="amdRangeLabel"
+      :ayah-count="amdAyahCount"
+      :mic-status="amdMicStatus"
+      :mic-status-label="amdMicStatusLabel"
+      :stage-label="amdStageLabel"
+      :live-hint="amdLiveHint"
+      :elapsed-label="amdElapsedLabel"
+      :ayah-html="amdStaticAyahHtml"
+      :result-ayah-html="amdResultAyahHtml"
+      :hidden-text="amdHiddenTextEnabled"
+      :peeking="amdPeekActive"
+      :tajweed="amdTajweedEnabled"
+      :audio-playing="!!activeSelfCheckAyahPlaybackKey"
+      :can-play-audio="amdCanPlayAudio"
+      :assessment="amdAssessment"
+      :practice-plan="amdPracticePlan"
+      :improvement="amdImprovement"
+      :error="amdError"
+      :busy="amdBusy"
+      :adjust-open="amdAdjustOpen"
+      :how-steps="amdHowSteps"
+      :ready-copy="amdReadyCopy"
+      :how-it-works-kicker="amdHowKicker"
+      :start-label="amdLabels.start"
+      :stop-label="amdLabels.stop"
+      :cancel-label="amdLabels.cancel"
+      :close-label="amdLabels.close"
+      :recite-tool-label="amdLabels.recite"
+      :audio-tool-label="amdLabels.audio"
+      :memorizing-label="amdLabels.memorizing"
+      :peek-label="amdLabels.peek"
+      :tajweed-label="amdLabels.tajweed"
+      :reset-label="amdLabels.reset"
+      :start-plan-label="amdLabels.startPlan"
+      :adjust-plan-label="amdLabels.adjustPlan"
+      :choose-other-label="amdLabels.chooseOther"
+      :retest-label="amdLabels.retest"
+      :retry-label="amdLabels.retry"
+      @start="startAmdAssessment"
+      @stop="stopAmdAssessment"
+      @cancel="closeAmdModal"
+      @start-plan="startAmdPracticePlan"
+      @toggle-adjust="setAmdAdjustOpen"
+      @adjust="adjustAmdPracticePlan"
+      @choose-other="chooseOtherFromAmd"
+      @retry="retryAmdAssessment"
+      @retest="retestAmdFromPlan"
+      @toggle-hidden="toggleAmdHiddenText"
+      @toggle-tajweed="toggleAmdTajweed"
+      @peek-start="startAmdPeek"
+      @peek-end="stopAmdPeek"
+      @play-audio="playAmdAudioHelp"
+      @reset="resetAmdLiveSurface"
+      @word-click="handleAmdWordClick"
+    />
 
   <div
     v-if="postSessionAdaptiveCheckActive"

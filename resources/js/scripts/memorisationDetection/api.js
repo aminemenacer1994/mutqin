@@ -1,51 +1,28 @@
-import axios from 'axios'
-
-function readCsrfToken() {
-  const meta = typeof document !== 'undefined'
-    ? document.head?.querySelector('meta[name="csrf-token"]')
-    : null
-  return meta?.content || ''
-}
-
-const http = axios.create({
-  baseURL: '/api',
-  withCredentials: true,
-  headers: {
-    'X-Requested-With': 'XMLHttpRequest',
-    Accept: 'application/json',
-  },
-})
-
-const csrf = readCsrfToken()
-if (csrf) http.defaults.headers.common['X-CSRF-TOKEN'] = csrf
+import learningApi from '../api/learning'
 
 /**
  * AI Memorisation Detection API client.
+ * Uses the shared learning API axios instance (Sanctum cookie + CSRF).
  */
 export const memorisationDetectionApi = {
   async createAssessment(payload) {
-    const { data } = await http.post('/memorisation/assessments', payload)
-    return data
+    return learningApi.createMemorisationAssessment(payload)
   },
 
   async adjustPlan(planId, adjustments) {
-    const { data } = await http.patch(`/memorisation/practice-plans/${planId}`, adjustments)
-    return data?.practice_plan ?? data
+    return learningApi.adjustMemorisationPracticePlan(planId, adjustments)
   },
 
   async startPlan(planId) {
-    const { data } = await http.post(`/memorisation/practice-plans/${planId}/start`)
-    return data
+    return learningApi.startMemorisationPracticePlan(planId)
   },
 
   async completePlan(planId, completion = {}) {
-    const { data } = await http.post(`/memorisation/practice-plans/${planId}/complete`, completion)
-    return data?.practice_plan ?? data
+    return learningApi.completeMemorisationPracticePlan(planId, completion)
   },
 
   async retestPlan(planId, payload) {
-    const { data } = await http.post(`/memorisation/practice-plans/${planId}/retest`, payload)
-    return data
+    return learningApi.retestMemorisationPracticePlan(planId, payload)
   },
 }
 

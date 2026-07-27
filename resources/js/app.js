@@ -54,11 +54,11 @@ function loadMemorisationChunk(attempt = 0) {
     return import(/* webpackChunkName: "memorisation" */ './views/Memorisation.vue').then((mod) => {
         if (typeof window !== 'undefined') {
             window.__MUTQIN_PRACTICE_COACH__ = 'v24';
-            window.__MUTQIN_AI_RECITE_UI__ = 'v70';
+            window.__MUTQIN_AI_RECITE_UI__ = 'v74';
             document.documentElement.dataset.practiceCoach = 'v2';
-            document.documentElement.dataset.aiReciteUi = 'v70';
+            document.documentElement.dataset.aiReciteUi = 'v74';
             document.documentElement.dataset.stackedAyahEnd = 'v5';
-            document.documentElement.dataset.mutqinUi = 'v70';
+            document.documentElement.dataset.mutqinUi = 'v74';
         }
         return mod;
     }).catch((error) => {

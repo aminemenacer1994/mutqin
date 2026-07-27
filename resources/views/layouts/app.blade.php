@@ -75,9 +75,8 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        // Permanent product UI label is v70; revision suffix only busts stale shells.
-        var BUILD = 'v70r3';
-        var FORCE = '70r3';
+        var BUILD = 'v74';
+        var FORCE = '74';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
@@ -187,34 +186,41 @@
       .app .session-exit-action-chip--end,
       .app .workspace-shell-actions .action-btn-exit {
         color: #fff !important;
-        background: #dc2626 !important;
-        border-color: #b91c1c !important;
-        box-shadow: 0 2px 0 #991b1b, 0 6px 14px rgba(220, 38, 38, 0.28) !important;
-        font-weight: 800 !important;
+        background: #b42318 !important;
+        border-color: #912018 !important;
+        box-shadow: none !important;
+        font-weight: 650 !important;
       }
       .app .action-btn-exit:hover,
       .app .action-btn.mutqin-btn--destructive:hover,
       .app .workspace-shell-actions .action-btn-exit:hover {
-        background: #b91c1c !important;
-        border-color: #991b1b !important;
+        background: #912018 !important;
+        border-color: #7a1510 !important;
+        box-shadow: none !important;
       }
     </style>
-    <style id="mutqin-memorisation-hotfix-v70">
-      /* Network-first hotfix — beats stale cached memorisation.js CSS */
-      #mutqin-ui-build-pill {
-        position: fixed;
-        z-index: 2147483000;
-        inset-inline-start: 10px;
-        bottom: 10px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        background: #1c1917;
-        color: #fffdf9;
-        font: 700 11px/1 system-ui, sans-serif;
-        letter-spacing: 0.02em;
-        pointer-events: none;
-        opacity: 0.92;
-        box-shadow: 0 6px 18px rgba(0,0,0,.22);
+    <style id="mutqin-memorisation-hotfix-v74">
+      /* Network-first hotfix v74 — beats stale cached memorisation.js CSS */
+      #mutqin-ui-build-pill { display: none !important; }
+      .app .verse-font-size-control,
+      .app .verse-font-size-control--mobile,
+      .app .verses-grid .verse-font-size-control {
+        display: none !important;
+      }
+      .app .action-btn-exit,
+      .app .action-btn.mutqin-btn--destructive,
+      .app .workspace-shell-actions .action-btn-exit {
+        color: #fff !important;
+        background: #b42318 !important;
+        border: 1px solid #912018 !important;
+        box-shadow: none !important;
+        font-weight: 650 !important;
+      }
+      .app .action-btn-exit:hover,
+      .app .workspace-shell-actions .action-btn-exit:hover {
+        background: #912018 !important;
+        border-color: #7a1510 !important;
+        box-shadow: none !important;
       }
       .app .main.mushaf-mode-active {
         width: 100% !important;
@@ -236,6 +242,12 @@
       .app .main.mushaf-mode-active .mushaf-translation-panel {
         display: none !important;
       }
+      .live-practice-method,
+      .live-practice-coach,
+      .live-practice-guidance,
+      .live-practice-guidance--mushaf {
+        display: none !important;
+      }
       @media (max-width: 767.98px) {
         .app .workspace-shell-bottom,
         .app .workspace-shell-bottom-pills,
@@ -252,33 +264,63 @@
         .app .workspace-shell-head {
           display: grid !important;
           grid-template-columns: minmax(0, 1fr) auto !important;
-          gap: 0.45rem 0.55rem !important;
+          gap: 0.4rem 0.45rem !important;
+          align-items: center !important;
+        }
+        .app .workspace-shell-actions,
+        .app .workspace-shell-actions .action-buttons-group {
+          display: contents !important;
+        }
+        .app .workspace-shell-copy {
+          grid-column: 1 !important;
+          grid-row: 1 !important;
+          min-inline-size: 0 !important;
+        }
+        .app .workspace-shell-main-title {
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
         }
         .app .top-card-icon-controls {
+          --mq-top-icon: 36px;
           display: flex !important;
+          flex-flow: row nowrap !important;
           align-items: center !important;
-          justify-content: space-evenly !important;
-          gap: 0 !important;
-          width: 100% !important;
-          max-width: 100% !important;
+          justify-content: flex-end !important;
+          gap: 6px !important;
+          width: max-content !important;
+          min-width: calc((36px * 4) + 18px) !important;
+          max-width: none !important;
+          flex-shrink: 0 !important;
+          grid-column: 2 !important;
+          grid-row: 1 !important;
+          margin: 0 !important;
+          justify-self: end !important;
+          overflow: visible !important;
+        }
+        .app .workspace-shell-actions .top-card-session-actions,
+        .app .workspace-shell-actions .top-card-session-actions.has-paired-actions {
           grid-column: 1 / -1 !important;
-          grid-row: 3 !important;
-          margin-top: 0.35rem !important;
+          grid-row: 2 !important;
+          display: flex !important;
+          gap: 0.35rem !important;
         }
         .app .top-card-icon-controls .top-card-layout-icons,
         .app .top-card-icon-controls .top-card-font-wrap,
         .app .top-card-icon-controls .top-card-controls-wrap,
         .app .top-card-icon-controls .top-card-menu-wrap {
-          width: 40px !important;
-          height: 40px !important;
-          min-width: 40px !important;
-          min-height: 40px !important;
-          max-width: 40px !important;
-          max-height: 40px !important;
-          flex: 0 0 40px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
+          position: relative !important;
+          display: block !important;
+          width: 36px !important;
+          height: 36px !important;
+          min-width: 36px !important;
+          min-height: 36px !important;
+          max-width: 36px !important;
+          max-height: 36px !important;
+          flex: 0 0 36px !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: visible !important;
           box-sizing: border-box !important;
         }
         .app .top-card-icon-controls .top-card-icon-control,
@@ -286,13 +328,17 @@
         .app .top-card-icon-controls .top-card-ellipsis,
         .app .top-card-icon-controls .view-mode-btn,
         .app .top-card-icon-controls .font-dropdown-trigger,
-        .app .top-card-icon-controls .workspace-layout-btn {
-          width: 40px !important;
-          height: 40px !important;
-          min-width: 40px !important;
-          min-height: 40px !important;
-          max-width: 40px !important;
-          max-height: 40px !important;
+        .app .top-card-icon-controls .workspace-layout-btn,
+        .app .workspace-shell-actions .top-card-icon-controls .top-card-ellipsis,
+        .app .workspace-shell-actions .top-card-icon-controls .top-card-controls-trigger {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 36px !important;
+          height: 36px !important;
+          min-width: 36px !important;
+          min-height: 36px !important;
+          max-width: 36px !important;
+          max-height: 36px !important;
           padding: 0 !important;
           margin: 0 !important;
           border-radius: 999px !important;
@@ -300,6 +346,19 @@
           display: inline-flex !important;
           align-items: center !important;
           justify-content: center !important;
+          transform: none !important;
+          grid-column: auto !important;
+          grid-row: auto !important;
+        }
+        .app .workspace-shell-actions .top-card-action-trigger.session-primary-action,
+        .app .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
+          min-height: 32px !important;
+          height: 32px !important;
+          padding: 0 0.5rem !important;
+          font-size: 0.7rem !important;
+          font-weight: 650 !important;
+          border-radius: 9px !important;
+          box-shadow: none !important;
         }
         .app .verses-grid .verse-ai-check-btn,
         .app .verses-grid .verse-ai-recite-btn {
@@ -307,7 +366,7 @@
         }
         .app .main.mushaf-mode-active {
           max-width: 100% !important;
-          padding-inline: clamp(0.65rem, 3vw, 1rem) !important;
+          padding-inline: 0.28rem !important;
         }
         .app .main.mushaf-mode-active .mushaf-workspace,
         .app .main.mushaf-mode-active .mushaf-workspace__fluid,
@@ -316,45 +375,97 @@
         .app .main.mushaf-mode-active .mushaf-page,
         .app .main.mushaf-mode-active .madani-ornate,
         .app .main.mushaf-mode-active .madani-ornate__frame,
-        .app .main.mushaf-mode-active .madani-ornate__inner,
-        .app .main.mushaf-mode-active .madani-page-sheet {
+        .app .main.mushaf-mode-active .madani-ornate__inner {
           width: 100% !important;
           max-width: 100% !important;
           min-width: 0 !important;
-          overflow-x: hidden !important;
           box-sizing: border-box !important;
+          overflow-x: hidden !important;
         }
         .app .main.mushaf-mode-active .mushaf-shell__page {
           display: flex !important;
           justify-content: center !important;
+          padding-inline: 0.28rem !important;
         }
-        .app .main.mushaf-mode-active .madani-page-sheet {
-          transform-origin: top center !important;
+        .app .main.mushaf-mode-active .mushaf-page--madani {
+          padding: 0.55rem 0.28rem 0.9rem !important;
+          width: 100% !important;
+          max-width: 100% !important;
           margin-inline: auto !important;
         }
-        .app .main.mushaf-mode-active .mushaf-shell__btn--icon,
-        .app .main.mushaf-mode-active .mushaf-shell__btn {
-          width: 40px !important;
-          height: 40px !important;
-          min-width: 40px !important;
-          min-height: 40px !important;
+        .app .main.mushaf-mode-active .madani-page-sheet,
+        .app .main.mushaf-mode-active .madani-page-sheet--unicode {
+          width: 100% !important;
+          max-width: 100% !important;
+          overflow: visible !important;
+          transform-origin: top center !important;
+          margin-inline: auto !important;
+          padding-inline: 0.08rem !important;
         }
-        .app .main.mushaf-mode-active .madani-word--end,
-        .app .verse-arabic .verse-ayah-end-number {
-          margin-inline: 0.5em 0.35em !important;
+        .app .main.mushaf-mode-active .madani-line,
+        .app .main.mushaf-mode-active .madani-line--ayah,
+        .app .main.mushaf-mode-active .madani-line--glyphs {
+          width: 100% !important;
+          max-width: 100% !important;
+          overflow: visible !important;
+          box-sizing: border-box !important;
         }
-        .app .verse-font-size-control,
-        .app .verse-font-size-control--mobile {
-          display: inline-flex !important;
+        .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          white-space: normal !important;
+          text-align: justify !important;
+          text-align-last: center !important;
+          line-height: 2.15 !important;
+        }
+        .app .main.mushaf-mode-active .madani-line--surah_name,
+        .app .main.mushaf-mode-active .madani-line--basmala {
+          display: flex !important;
+          justify-content: center !important;
+          text-align: center !important;
+          width: 100% !important;
+        }
+        [data-theme="dark"] .app .top-card-icon-controls .top-card-icon-control,
+        [data-theme="dark"] .app .top-card-icon-controls .view-mode-btn,
+        [data-theme="dark"] .app .top-card-icon-controls .font-dropdown-trigger,
+        [data-theme="dark"] .app .top-card-icon-controls .top-card-controls-trigger,
+        [data-theme="dark"] .app .top-card-icon-controls .top-card-ellipsis {
+          background: #2a241c !important;
+          border-color: rgba(245, 242, 234, 0.14) !important;
+          color: #f3ebe1 !important;
+        }
+      }
+      @media (min-width: 768px) {
+        .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) {
+          background:
+            linear-gradient(180deg, rgba(255, 252, 245, 0.55), rgba(236, 220, 185, 0.22)),
+            #f6ecd8 !important;
+          border: 7px double rgba(140, 98, 48, 0.42) !important;
+          border-radius: 10px !important;
+          box-shadow:
+            inset 0 0 0 1px rgba(255, 250, 240, 0.7),
+            inset 0 0 0 0.85rem rgba(246, 236, 216, 0.72),
+            0 18px 42px rgba(40, 28, 12, 0.12) !important;
+          padding: 1.55rem 1.65rem 1.9rem !important;
+        }
+        .app .main.mushaf-mode-active .madani-line--surah_name {
+          padding: 0.22em 0.35em !important;
+          margin-top: 0.1rem !important;
+          margin-bottom: 0.15rem !important;
+          min-height: 0 !important;
+        }
+        .app .main.mushaf-mode-active .madani-surah-name {
+          font-size: calc(clamp(1.25rem, 1.8vw, 1.75rem) * (var(--verse-font-percent, 100) * 0.01)) !important;
+          line-height: 1.15 !important;
         }
       }
     </style>
-    <div id="mutqin-ui-build-pill" aria-hidden="true">UI v70</div>
     <script>
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v70'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v74'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
