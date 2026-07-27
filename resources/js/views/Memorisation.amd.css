@@ -1335,39 +1335,78 @@
 .amd-start-wrap {
   display: flex;
   justify-content: center;
-  padding: 0.15rem 0 0.35rem;
+  width: 100%;
+  max-width: 22rem;
+  margin: 0.35rem auto 0.15rem;
+  padding: 0;
 }
 
-.amd-start-fab {
+.amd-start-cta {
   appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  min-height: 3.4rem;
+  padding: 0.7rem 0.95rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, #1c1917 10%, transparent);
+  background: #1c1917;
+  color: #fafaf9;
+  text-align: start;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(28, 25, 23, 0.18);
+  transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease, background 150ms ease;
+}
+
+.amd-start-cta__icon {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.55rem;
-  min-height: 3.15rem;
-  padding: 0.7rem 1.35rem;
-  border-radius: 999px;
-  border: 0;
-  background: #1c1917;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.75rem;
+  background: rgba(250, 250, 249, 0.12);
   color: #fafaf9;
-  font-size: 0.95rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  cursor: pointer;
-  box-shadow: 0 14px 30px rgba(28, 25, 23, 0.22);
-  transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 }
 
-.amd-start-fab i {
-  font-size: 1.15rem;
+.amd-start-cta__icon i {
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
-.amd-start-fab:hover:not(:disabled) {
+.amd-start-cta__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.amd-start-cta__title {
+  font-size: 0.98rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.amd-start-cta__hint {
+  font-size: 0.78rem;
+  font-weight: 450;
+  line-height: 1.25;
+  opacity: 0.72;
+}
+
+.amd-start-cta:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 16px 34px rgba(28, 25, 23, 0.28);
+  box-shadow: 0 14px 32px rgba(28, 25, 23, 0.24);
 }
 
-.amd-start-fab:disabled {
+.amd-start-cta:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.amd-start-cta:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -1456,9 +1495,20 @@
   -webkit-text-fill-color: #f5f0e6;
 }
 
-[data-theme="dark"] .amd-start-fab {
+[data-theme="dark"] .amd-start-cta {
   background: #fafaf9;
   color: #0a0a0a;
+  border-color: rgba(250, 250, 249, 0.14);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .amd-start-cta__icon {
+  background: rgba(10, 10, 10, 0.08);
+  color: #0a0a0a;
+}
+
+[data-theme="dark"] .amd-start-cta:hover:not(:disabled) {
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42);
 }
 
 [data-theme="dark"] .amd-complete--premium {
@@ -1500,20 +1550,30 @@
     gap: 0.9rem;
   }
 
-  .amd-start-fab span {
-    display: none;
+  .amd-start-wrap {
+    max-width: none;
+    width: 100%;
+    margin-top: 0.55rem;
   }
 
-  .amd-start-fab {
-    width: 3.4rem;
-    height: 3.4rem;
-    min-height: 3.4rem;
-    padding: 0;
-    border-radius: 999px;
+  .amd-start-cta {
+    min-height: 3.55rem;
+    padding: 0.8rem 0.95rem;
+    border-radius: 0.95rem;
+    gap: 0.75rem;
   }
 
-  .amd-start-fab i {
-    font-size: 1.35rem;
+  .amd-start-cta__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .amd-start-cta__title {
+    font-size: 1rem;
+  }
+
+  .amd-start-cta__hint {
+    font-size: 0.76rem;
   }
 }
 

@@ -183,7 +183,16 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   const partialSimilarity = Number.isFinite(Number(options.partialSimilarity))
     ? Number(options.partialSimilarity)
     : 0.35
-  const matchThresholds = { correctSimilarity, partialSimilarity }
+  const minConfidenceForCorrect = Number.isFinite(Number(options.minConfidenceForCorrect))
+    ? Number(options.minConfidenceForCorrect)
+    : 0
+  const allowArticleMatch = options.allowArticleMatch !== false
+  const matchThresholds = {
+    correctSimilarity,
+    partialSimilarity,
+    minConfidenceForCorrect,
+    allowArticleMatch,
+  }
   const extraWords = []
   let cursor = 0
   let firstBlockingIndex = -1
@@ -215,9 +224,14 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       ...matchThresholds,
     })
 
-    if (classified.status === 'correct' || classified.status === 'partial') {
+    if (classified.status === 'correct' || (classified.status === 'partial' && options.partialAdvances !== false)) {
       statuses[cursor] = classified
       cursor += 1
+      continue
+    }
+    if (classified.status === 'partial') {
+      // Stricter modes keep amber feedback without advancing the cursor.
+      statuses[cursor] = classified
       continue
     }
 
@@ -365,6 +379,10 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
         targetUnit: targetUnits[targetIndex - 1] || null,
         correctSimilarity: Number.isFinite(Number(options.correctSimilarity)) ? Number(options.correctSimilarity) : 0.78,
         partialSimilarity: Number.isFinite(Number(options.partialSimilarity)) ? Number(options.partialSimilarity) : 0.35,
+        minConfidenceForCorrect: Number.isFinite(Number(options.minConfidenceForCorrect))
+          ? Number(options.minConfidenceForCorrect)
+          : 0,
+        allowArticleMatch: options.allowArticleMatch !== false,
       })
       operations.unshift({ op: 'match', targetIndex: targetIndex - 1, heardIndex: heardIndex - 1, similarity: cell.similarity })
     } else if (cell.op === 'extra') {
@@ -624,7 +642,9 @@ function projectRecognitionSegments(segments = {}, interimSegment = null) {
 
 function findExactWordIndexWithinWindow(words = [], word = '', fromIndex = 0, lookahead = 5) {
   if (!word) return -1
-  const end = Math.min(words.length, Math.max(fromIndex, 0) + Math.max(1, lookahead))
+  const windowSize = Number(lookahead)
+  if (!Number.isFinite(windowSize) || windowSize <= 0) return -1
+  const end = Math.min(words.length, Math.max(fromIndex, 0) + windowSize)
   for (let index = Math.max(0, fromIndex); index < end; index += 1) {
     if (words[index] === word) return index
   }
@@ -867,6 +887,8 @@ function classifyWordMatch({
   targetUnit = null,
   correctSimilarity = 0.78,
   partialSimilarity = 0.35,
+  minConfidenceForCorrect = 0,
+  allowArticleMatch = true,
 }) {
   const expected = String(targetWord || '')
   const actual = String(heardWord.word || '')
@@ -877,13 +899,18 @@ function classifyWordMatch({
     ayahIndex: Number.isFinite(Number(targetUnit?.ayahIndex)) ? Number(targetUnit.ayahIndex) : 0,
     ayahWordIndex: Number.isFinite(Number(targetUnit?.ayahWordIndex)) ? Number(targetUnit.ayahWordIndex) : targetIndex
   }
-  const articleMatch = expected
+  const articleMatch = allowArticleMatch
+    && expected
     && actual
     && stripArabicDefiniteArticle(expected) === stripArabicDefiniteArticle(actual)
   const correctFloor = Number.isFinite(Number(correctSimilarity)) ? Number(correctSimilarity) : 0.78
   const partialFloor = Number.isFinite(Number(partialSimilarity)) ? Number(partialSimilarity) : 0.35
-  // Soften ASR near-misses (common on ayah-final words) without accepting weak guesses.
-  if (expected && (expected === actual || articleMatch || similarity >= correctFloor)) {
+  const minCorrectConfidence = Number.isFinite(Number(minConfidenceForCorrect))
+    ? Number(minConfidenceForCorrect)
+    : 0
+  const confidenceOk = confidence >= minCorrectConfidence
+  // Exact / article-stripped equals still require a minimum confidence when asked.
+  if (expected && confidenceOk && (expected === actual || articleMatch || similarity >= correctFloor)) {
     return {
       text: displayText,
       targetWord: expected,
@@ -891,7 +918,7 @@ function classifyWordMatch({
       note: 'Correct.',
       actual,
       confidence,
-      similarity: 1,
+      similarity: expected === actual || articleMatch ? 1 : similarity,
       targetIndex,
       heardIndex: heardWord.commitIndex,
       ...location

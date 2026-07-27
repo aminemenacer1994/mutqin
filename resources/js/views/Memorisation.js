@@ -4745,7 +4745,8 @@ export default {
         blur: this.t?.('memorisation.amd.toolBlur') || 'Blur',
         peek: this.t?.('memorisation.peek') || 'Peek',
         stop: this.t?.('memorisation.amd.toolStop') || 'Stop',
-        start: this.t?.('memorisation.amd.startRecitation') || 'Start recitation',
+        start: this.t?.('memorisation.amd.startRecitation') || 'Start reciting',
+        startHint: this.t?.('memorisation.amd.startRecitationHint') || 'Tap once, then recite from memory',
         reset: this.t?.('common.reset') || 'Reset',
         difficulty: this.t?.('memorisation.amd.difficulty') || 'Difficulty',
         completeTitle: this.t?.('memorisation.amd.completeTitle')
@@ -15793,12 +15794,11 @@ export default {
     maybeCompleteAmdMemorisationTest() {
       if (!this.amdOpen || this._amdCompleting || this.amdEndingSoon) return false
       if (this.amdStage === AMD_STAGES.COMPLETE) return true
-      const hiddenDone = areAllHiddenWordsRevealed(this.amdHiddenWordIndexes, this.recitationLiveWords)
-      const lastDone = this.isAmdLastSessionWordCorrect()
-      if (!hiddenDone && !lastDone) return false
-      void this.completeAmdTestAndReturnToRecommendation({
-        reason: lastDone ? 'last-word' : 'hidden-complete',
-      })
+      // Every hidden target must be correct — never end on last-word alone.
+      if (!areAllHiddenWordsRevealed(this.amdHiddenWordIndexes, this.recitationLiveWords)) return false
+      // Sparse masks can finish early mid-range; also require the session's last word.
+      if (!this.isAmdLastSessionWordCorrect()) return false
+      void this.completeAmdTestAndReturnToRecommendation({ reason: 'hidden-complete' })
       return true
     },
     finishAmdMemorisationTest() {
@@ -16000,24 +16000,20 @@ export default {
     async restartAmdListeningPreserveProgress() {
       if (!this.amdOpen || this.amdEndingSoon || this._amdCompleting) return
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return
-      this.amdBusy = true
       this.amdError = ''
-      this.amdStage = AMD_STAGES.STARTING
+      // Stay on LISTENING so a brief MediaRecorder restart does not feel like the test ended.
+      this.amdStage = AMD_STAGES.LISTENING
       try {
         await this.startRecitationCheckRecording(null, { preserveProgress: true })
         if (this.recitationCheckRecording) {
-          this.amdStage = AMD_STAGES.LISTENING
           this.amdMicStatus = 'granted'
           this.syncAmdMushafSurface()
-        } else if (!this.recitationCheckPreparing) {
-          this.amdStage = AMD_STAGES.LISTENING
+          this.noteAmdRecognitionActivity?.()
         }
       } catch (error) {
         console.warn('AMD soft recover failed', error)
         this.amdStage = AMD_STAGES.READY
         this.amdError = this.t?.('memorisation.amd.startFailed') || 'Could not restart listening.'
-      } finally {
-        this.amdBusy = false
       }
     },
     stopAmdAssessment() {
@@ -17688,16 +17684,22 @@ export default {
         liveAlignmentOptions.strictProgression = true
         livePreviewAlignmentOptions.strictProgression = true
       }
-      // Memorisation test: stricter match floors + tighter progression so amber/red/grey are meaningful.
+      // Memorisation test: strict match; amber does not advance; no skip-ahead.
       if (this.amdOpen && kind === 'recitation') {
         liveAlignmentOptions.strictProgression = true
-        liveAlignmentOptions.lookahead = 2
-        liveAlignmentOptions.correctSimilarity = 0.90
-        liveAlignmentOptions.partialSimilarity = 0.58
+        liveAlignmentOptions.lookahead = 0
+        liveAlignmentOptions.partialAdvances = false
+        liveAlignmentOptions.allowArticleMatch = false
+        liveAlignmentOptions.correctSimilarity = 0.97
+        liveAlignmentOptions.partialSimilarity = 0.78
+        liveAlignmentOptions.minConfidenceForCorrect = 0.62
         livePreviewAlignmentOptions.strictProgression = true
-        livePreviewAlignmentOptions.lookahead = 2
-        livePreviewAlignmentOptions.correctSimilarity = 0.90
-        livePreviewAlignmentOptions.partialSimilarity = 0.58
+        livePreviewAlignmentOptions.lookahead = 0
+        livePreviewAlignmentOptions.partialAdvances = false
+        livePreviewAlignmentOptions.allowArticleMatch = false
+        livePreviewAlignmentOptions.correctSimilarity = 0.97
+        livePreviewAlignmentOptions.partialSimilarity = 0.78
+        livePreviewAlignmentOptions.minConfidenceForCorrect = 0.5
       }
       const committedSignature = this.getLiveAlignmentInputSignature(kind, targetVerses, committedWords, committedWords)
       const committedAlignment = this.getCachedCommittedAlignment(
@@ -18517,16 +18519,20 @@ export default {
         }
         if (!this.recitationCheckRecording || this.amdStage !== AMD_STAGES.LISTENING) return
         const idleMs = Date.now() - Number(this._amdLastRecognitionAt || 0)
-        if (idleMs < 4200) return
+        // Long pause while thinking / breathing mid-ayah is normal — do not disrupt listening.
+        if (idleMs < 12000) return
         this._amdLastRecognitionAt = Date.now()
         if (this.getTranscriptionProvider?.('recitation')?.isOpen?.()) {
-          this.failoverTranscriptionToBrowserStt('recitation')
+          // Prefer soft browser attach alongside Speechmatics only when STT is truly idle.
+          if (!this.recitationSpeechRecognition) {
+            this.startRecitationSpeechRecognition()
+          }
           return
         }
         if (!this.recitationSpeechRecognition) {
           this.startRecitationSpeechRecognition()
         }
-      }, 1200)
+      }, 2000)
     },
     stopAmdRecognitionHeartbeat() {
       if (this._amdRecognitionHeartbeat) {

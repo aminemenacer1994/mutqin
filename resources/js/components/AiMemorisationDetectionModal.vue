@@ -143,14 +143,19 @@
             <div v-if="isReady && !isComplete && !isError" class="amd-start-wrap">
               <button
                 type="button"
-                class="amd-start-fab"
+                class="amd-start-cta"
                 :aria-label="startLabel"
                 :title="startLabel"
                 :disabled="busy"
                 @click.stop="$emit('start')"
               >
-                <i class="bi bi-mic-fill" aria-hidden="true"></i>
-                <span>{{ startLabel }}</span>
+                <span class="amd-start-cta__icon" aria-hidden="true">
+                  <i class="bi bi-mic-fill"></i>
+                </span>
+                <span class="amd-start-cta__copy">
+                  <strong class="amd-start-cta__title">{{ startLabel }}</strong>
+                  <small v-if="startHint" class="amd-start-cta__hint">{{ startHint }}</small>
+                </span>
               </button>
             </div>
 
@@ -232,7 +237,8 @@ export default {
     blurLabel: { type: String, default: 'Blur' },
     peekLabel: { type: String, default: 'Peek' },
     stopLabel: { type: String, default: 'Stop' },
-    startLabel: { type: String, default: 'Start recitation' },
+    startLabel: { type: String, default: 'Start reciting' },
+    startHint: { type: String, default: 'Tap once, then recite from memory' },
     resetLabel: { type: String, default: 'Reset' },
     difficultyLabel: { type: String, default: 'Difficulty' },
     completeTitle: { type: String, default: 'Mā shā’ Allāh — test complete' },

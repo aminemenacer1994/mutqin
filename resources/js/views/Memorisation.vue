@@ -3472,6 +3472,7 @@
       :peek-label="amdLabels.peek"
       :stop-label="amdLabels.stop"
       :start-label="amdLabels.start"
+      :start-hint="amdLabels.startHint"
       :reset-label="amdLabels.reset"
       :difficulty-label="amdLabels.difficulty"
       :complete-title="amdLabels.completeTitle"
