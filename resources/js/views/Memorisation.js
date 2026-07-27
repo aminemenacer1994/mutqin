@@ -1124,14 +1124,21 @@ export default {
         { key: 'green', tone: 'tone-green', count: Number(counts.green || 0), labelKey: 'colourCorrect', fallback: 'Correct' },
         { key: 'amber', tone: 'tone-amber', count: Number(counts.amber || 0), labelKey: 'colourClose', fallback: 'Close' },
         { key: 'red', tone: 'tone-red', count: Number(counts.red || 0), labelKey: 'colourIncorrect', fallback: 'Incorrect' },
+        { key: 'gray', tone: 'tone-grey', count: Number(counts.gray || 0), labelKey: 'colourWaiting', fallback: 'Waiting' },
         { key: 'black', tone: 'tone-black', count: Number(counts.black || 0), labelKey: 'colourSkipped', fallback: 'Skipped' },
       ]
+      const total = defs.reduce((sum, row) => sum + Math.max(0, row.count), 0)
       return defs
         .filter((row) => row.count > 0)
-        .map((row) => ({
-          ...row,
-          label: this.t(`memorisation.aiCheck.${row.labelKey}`) || row.fallback,
-        }))
+        .map((row) => {
+          const percent = total > 0 ? Math.round((row.count / total) * 100) : 0
+          const base = this.t(`memorisation.aiCheck.${row.labelKey}`) || row.fallback
+          return {
+            ...row,
+            percent,
+            label: `${base} ${percent}%`,
+          }
+        })
     },
     tajweedColorLegend() {
       const colors = HELP_LEARNING_FALLBACKS.sections.tajweed.colors || {}
@@ -2837,12 +2844,21 @@ export default {
     },
     postSessionSimpleActionLabel() {
       if (this.postSessionIsRepeatRecommendation) {
-        return this.t('memorisation.postSession.recommendation.repeatThisRange')
+        return this.stripAiDashes(this.t('memorisation.postSession.recommendation.repeatThisRange'))
       }
       if (this.postSessionRecommendation?.type === RECOMMENDATION_TYPES.NEXT_SURAH) {
-        return this.t('memorisation.postSession.recommendation.continueNextSurahShort')
+        return this.stripAiDashes(this.t('memorisation.postSession.recommendation.continueNextSurahShort'))
       }
-      return this.t('memorisation.postSession.recommendation.continueNextSet')
+      return this.stripAiDashes(this.t('memorisation.postSession.recommendation.continueNextSet'))
+    },
+    postSessionShowRecommendationPlan() {
+      // Curated plan appears only after the AI memorisation test has finished.
+      return !!(
+        this.postSessionAiReviewDetails
+        || this.postSessionHasAiCheck
+        || this.aiReciteFinalPlan
+        || (Array.isArray(this.aiReciteAttempts) && this.aiReciteAttempts.length)
+      )
     },
     postSessionPlanKind() {
       if (this.postSessionIsRepeatRecommendation) return 'repeat'
@@ -2859,39 +2875,50 @@ export default {
     postSessionSimpleReason() {
       const rec = this.postSessionRecommendation
       if (!rec) return ''
-      const confidence = this.postSessionSelectedConfidence
       const isRepeat = this.postSessionIsRepeatRecommendation
       const reasonCode = String(rec.reason_code || '')
       const nextSurahReason = () => this.t('memorisation.postSession.recommendation.reasons.simpleNextSurah', {
         surah: this.resolveRecommendationSurahName(rec.next_surah || rec.surah),
       })
 
-      // Confidence owns the visible why — one short line that matches the plan on screen.
-      // Do not surface long backend essays (they contradict the toggle and crowd the modal).
-      if (confidence === 'confident') {
-        if (rec.type === RECOMMENDATION_TYPES.NEXT_SURAH || rec.is_end_of_surah) {
-          return nextSurahReason()
+      // After AI test: keep one static why from the curated AI plan (no confidence reshuffle).
+      if (this.postSessionShowRecommendationPlan) {
+        const frozen = String(
+          this.aiReciteFinalPlan?.why
+          || this.aiReciteFinalPlan?.feedback
+          || this.amdPracticePlan?.why
+          || this.postSessionAiFeedback
+          || rec.user_reason
+          || rec.balance_message
+          || rec.reason
+          || ''
+        ).trim()
+        if (frozen && !/skipped|optional|without ai recite/i.test(frozen)) {
+          return this.stripAiDashes(frozen)
         }
-        return this.t('memorisation.postSession.recommendation.reasons.confidenceConfident')
-      }
-      if (confidence === 'needs_practice') {
-        return this.t('memorisation.postSession.recommendation.reasons.confidenceNeedsPractice')
+        if (isRepeat) {
+          return this.stripAiDashes(this.t('memorisation.postSession.recommendation.reasons.aiReciteWeak'))
+        }
+        if (rec.type === RECOMMENDATION_TYPES.NEXT_SURAH || rec.is_end_of_surah) {
+          return this.stripAiDashes(nextSurahReason())
+        }
+        return this.stripAiDashes(this.t('memorisation.postSession.recommendation.reasons.aiReciteStrong'))
       }
 
       const localized = this.postSessionRecommendationReasonText
       if (localized && !/^based on this session\.?$/i.test(String(localized))) {
-        return localized
+        return this.stripAiDashes(localized)
       }
       if (isRepeat) {
-        return this.t('memorisation.postSession.recommendation.reasons.simpleRepeat')
+        return this.stripAiDashes(this.t('memorisation.postSession.recommendation.reasons.simpleRepeat'))
       }
       if (rec.type === RECOMMENDATION_TYPES.NEXT_SURAH || rec.is_end_of_surah) {
-        return nextSurahReason()
+        return this.stripAiDashes(nextSurahReason())
       }
       if (reasonCode === 'manual_fallback' || reasonCode === 'learning_plan_complete' || !this.postSessionRecommendationActionable) {
-        return this.t('memorisation.postSession.recommendation.reasons.manualFallback')
+        return this.stripAiDashes(this.t('memorisation.postSession.recommendation.reasons.manualFallback'))
       }
-      return this.t('memorisation.postSession.recommendation.reasons.simpleContinue')
+      return this.stripAiDashes(this.t('memorisation.postSession.recommendation.reasons.simpleContinue'))
     },
     postSessionHasAiCheck() {
       if (this.postSessionAiReviewDetails?.summaryLine || this.postSessionAiReviewDetails?.outcome) {
@@ -2907,7 +2934,7 @@ export default {
     },
     postSessionAiResultLine() {
       const fromDetails = String(this.postSessionAiReviewDetails?.summaryLine || '').trim()
-      if (fromDetails) return fromDetails
+      if (fromDetails) return this.stripAiDashes(fromDetails)
       const summary = String(
         this.postSessionRecommendation?.ai_assessment?.summary
         || this.postSessionAiFeedback
@@ -2915,7 +2942,7 @@ export default {
       ).trim()
       if (summary && !/skipped|optional|without ai recite/i.test(summary)) {
         // Keep one line even if backend sent a longer paragraph.
-        return summary.split(/(?<=\.)\s+/)[0].slice(0, 140)
+        return this.stripAiDashes(summary.split(/(?<=\.)\s+/)[0].slice(0, 140))
       }
       return ''
     },
@@ -3589,14 +3616,14 @@ export default {
       if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(technique)) {
         pills.push({
           key: 'technique',
-          label: this.getTechniqueDisplayLabel(technique),
+          label: this.stripTechniqueJargon(this.getTechniqueDisplayLabel(technique)),
         })
       }
       const complementary = String(settings.complementary_technique || '').toLowerCase()
       if (['talqin', 'focus', 'blur', 'chaining', 'anchor'].includes(complementary) && complementary !== technique) {
         pills.push({
           key: 'complementary',
-          label: this.getTechniqueDisplayLabel(complementary),
+          label: this.stripTechniqueJargon(this.getTechniqueDisplayLabel(complementary)),
         })
       }
       const speed = Number(settings.playback_speed)
@@ -3828,6 +3855,21 @@ export default {
       }
       return this.postSessionSimpleActionLabel
     },
+    postSessionRecommendationCardTitle() {
+      const rec = this.postSessionRecommendation
+      if (!rec) return this.postSessionRecommendationTitle
+      const surah = this.resolveRecommendationSurahName(
+        rec.type === RECOMMENDATION_TYPES.NEXT_SURAH ? (rec.next_surah || rec.surah) : rec.surah
+      )
+      const range = formatAyahRangeLabel(
+        rec.type === RECOMMENDATION_TYPES.NEXT_SURAH
+          ? (rec.next_surah?.ayah_range || rec.ayah_range)
+          : rec.ayah_range,
+        this.t.bind(this)
+      )
+      if (surah && range) return `${surah} · ${range}`
+      return this.postSessionRecommendationTitle
+    },
     postSessionSettingsSummary() {
       const settings = this.postSessionRecommendation?.settings
       if (!settings) return ''
@@ -3842,16 +3884,7 @@ export default {
     postSessionSupportingMessage() {
       const snap = this.postSessionSnapshot
       if (snap?.chapterName && snap?.rangeStart && snap?.rangeEnd) {
-        const range = formatAyahRangeLabel({
-          start: snap.rangeStart,
-          end: snap.rangeEnd,
-        }, this.t.bind(this))
-        return this.t('memorisation.postSession.recommendation.supportingCompletedRange', {
-          surah: snap.chapterName,
-          range,
-          start: snap.rangeStart,
-          end: snap.rangeEnd,
-        }) || formatCompletedSurahAyahLabel(snap.chapterName, {
+        return formatCompletedSurahAyahLabel(snap.chapterName, {
           start: snap.rangeStart,
           end: snap.rangeEnd,
         }, this.t.bind(this))
@@ -4575,14 +4608,14 @@ export default {
       return DIFFICULTY_PERCENTS.slice()
     },
     postSessionContinueToAyahsLabel() {
-      const rec = this.postSessionRecommendation
-      if (rec?.ayah_range) {
-        return formatContinueToAyahLabel(rec.ayah_range, this.t.bind(this))
-          || this.postSessionRecommendationPrimaryLabel
+      if (this.postSessionIsRepeatRecommendation) {
+        return this.t('memorisation.postSession.recommendation.startRecommendedRevision')
+          || 'Practice again'
       }
-      return this.postSessionRecommendationPrimaryLabel
-        || this.t('memorisation.postSession.actions.continueToAyahsFallback')
-        || 'Continue to next ayahs'
+      if (this.postSessionShowRecommendationPlan) {
+        return this.t('common.continue') || 'Continue'
+      }
+      return this.t('common.continue') || 'Continue'
     },
     amdLearnerMicStatus() {
       if (this.amdMicStatus === 'unsupported') return 'unavailable'
@@ -4594,9 +4627,15 @@ export default {
     },
     amdLearnerMicStatusLabel() {
       const key = this.amdLearnerMicStatus
+      if (key === 'listening') {
+        const live = !!this.getTranscriptionProvider?.('recitation')?.isOpen?.()
+        if (live) {
+          return this.t?.('memorisation.amd.micListeningLive') || 'Listening · live'
+        }
+        return this.t?.('memorisation.amd.micListening') || 'Listening'
+      }
       const map = {
         ready: this.t?.('memorisation.amd.micReady') || 'Ready',
-        listening: this.t?.('memorisation.amd.micListening') || 'Listening',
         need_access: this.t?.('memorisation.amd.micNeedAccess') || 'Microphone access needed',
         paused: this.t?.('memorisation.amd.micPaused') || 'Paused',
         unavailable: this.t?.('memorisation.amd.micUnavailable') || 'Unavailable',
@@ -7038,10 +7077,16 @@ export default {
     },
     readingViewMode(newVal) {
       if (newVal === 'mushaf') {
+        this.wordByWordAudioEnabled = true
         this.applyMushafThemeDefault(this.theme, { force: !this.mushafBackgroundTouched })
         this.ensureMadaniPagesLoaded().then(() => {
           this.syncMushafPageToActiveVerse()
-          this.$nextTick(() => this.scheduleMadaniPageFit())
+          this.$nextTick(() => {
+            this.scheduleMadaniPageFit()
+            if (!this.isMobileViewport() && this.isPlaying && this.activeVerseRef?.key) {
+              this.startWordHighlighting(this.activeVerseRef)
+            }
+          })
         })
       }
       this.applyMobileLayoutFontDefault(newVal)
@@ -9186,10 +9231,22 @@ export default {
     },
 
     saveCurrentSessionSilently(name = this.buildAutoSaveSessionName()) {
-      // Never auto-save named sessions — always prompt the learner instead.
       if (!this.canSaveCurrentSession()) return null
-      this.promptSaveSessionAfterEnd()
-      return null
+      const key = [
+        this.chapterId || this.sessionConfig?.chapterId || '',
+        this.rangeStart || this.sessionConfig?.rangeStart || '',
+        this.rangeEnd || this.sessionConfig?.rangeEnd || '',
+        this.sessionStartedAt || this.postSessionSnapshot?.startedAt || '',
+      ].join(':')
+      if (this.postSessionAutoSaved && this.lastAutoSavedPostSessionKey === key) {
+        return this.savedSessions.find((session) => session.autoSaved && session.name === name) || this.savedSessions[0] || null
+      }
+      const session = this.addSavedSession(this.buildSessionRecord(name, { autoSaved: true }))
+      this.postSessionAutoSaved = true
+      this.lastAutoSavedPostSessionKey = key
+      this.sessionExitAutoSave = true
+      this.showSaveNameModal = false
+      return session
     },
 
     async saveCurrentSessionSilentlyAsync(name = this.buildAutoSaveSessionName()) {
@@ -9995,10 +10052,9 @@ export default {
       this.startSessionWithCountdown()
     },
     saveCurrentSessionWithName() {
-      const defaultName = `${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`
-      this.saveSessionName = defaultName
-      this.showSaveNameModal = true
+      // Auto-save with a generated name — do not open the naming modal.
       this.closeToolsPanel()
+      void this.saveCurrentSessionSilentlyAsync()
     },
     toggleFullScreen() {
       if (!document.fullscreenElement) {
@@ -12809,21 +12865,13 @@ export default {
       }
     },
     savePostSession() {
-      this.saveCurrentSessionWithName()
+      void this.saveCurrentSessionSilentlyAsync()
     },
 
     promptSaveSessionAfterEnd({ wasSample = false } = {}) {
       if (wasSample || this.onboardingSampleSessionActive) return
-      if (this.sessionExitAutoSave) return
-      if (!this.canSaveCurrentSession()) return
-      if (this.showSaveNameModal || this.showConfirmModal) return
-      this.openConfirmModal({
-        title: this.t('memorisation.confirmModals.saveSession.title'),
-        message: this.t('memorisation.confirmModals.saveSession.message'),
-        confirmLabel: this.t('memorisation.confirmModals.saveSession.confirm'),
-        cancelLabel: this.t('memorisation.confirmModals.saveSession.cancel'),
-        action: 'save-session-after-end'
-      })
+      // Always auto-save after session end — never open the save/name confirm modal.
+      void this.saveCurrentSessionSilentlyAsync()
     },
     logoutFromPostSession() {
       if (typeof document === 'undefined') return
@@ -15512,7 +15560,18 @@ export default {
       const maskOn = !this.amdPeekActive && live
       const expectedIndex = this.getAmdExpectedWordIndex(statuses, hiddenSet)
 
-      const parts = []
+      const firstVerse = this.getCanonicalVerseForCheck(targets[0]) || targets[0]
+      const firstAyahNumber = Number(firstVerse?.number || String(firstVerse?.key || '').split(':')[1] || 0)
+      const chapterId = Number(
+        firstVerse?.chapterId
+        || String(firstVerse?.key || '').split(':')[0]
+        || this.chapterId
+        || 0
+      )
+      // Mushaf convention: basmala when the range opens at ayah 1 (except At-Tawbah).
+      const showBasmala = firstAyahNumber === 1 && chapterId !== 9
+
+      const runs = []
       let offset = 0
       for (let tIndex = 0; tIndex < targets.length; tIndex += 1) {
         const verse = this.getCanonicalVerseForCheck(targets[tIndex]) || targets[tIndex]
@@ -15528,11 +15587,14 @@ export default {
           const visual = this.resolveAmdWordVisual(statusEntry, live)
           const isHiddenTarget = hiddenSet.has(globalIndex)
           const isCorrect = visual === 'correct'
-          const shouldMask = maskOn && isHiddenTarget && !isCorrect
+          const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(String(visual || ''))
+          // Keep grey blanks only until the learner attempts the word; then show amber/red/green.
+          const shouldMask = maskOn && isHiddenTarget && !attempted
           const isCurrent = live && globalIndex === expectedIndex
+          const displayStatus = shouldMask ? 'notAttempted' : (visual || 'notAttempted')
           const classes = [
             'wbw-word',
-            `recitation-word-${this.escapeHtml(isCorrect ? 'correct' : (shouldMask ? 'notAttempted' : (visual || 'notAttempted')))}`,
+            `recitation-word-${this.escapeHtml(displayStatus)}`,
             shouldMask ? 'amd-word-hidden' : '',
             isCorrect && isHiddenTarget ? 'amd-word-revealed' : '',
             isCurrent ? 'amd-word-current' : '',
@@ -15544,14 +15606,25 @@ export default {
           return `<word class="${classes}" data-recitation-word-index="${globalIndex}" data-verse-key="${this.escapeHtml(verse?.key || '')}" data-word-index="${index}"${safeAttrs}>${this.escapeHtml(word)}</word>`
         }).join(' ')
         offset += words.length
-        parts.push(
-          `<div class="amd-ayah-block${ayahActive ? ' is-active' : ''}" data-ayah-key="${this.escapeHtml(verse?.key || '')}">`
-          + `<span class="amd-ayah-marker" aria-hidden="true">${ayahNumber}</span>`
-          + `<div class="amd-ayah-words">${wordHtml}</div>`
-          + `</div>`
+        const endMarker = this.buildStackedAyahEndMarkerHtml?.(verse)
+          || `<span class="verse-ayah-end-number mushaf-ayah-number" aria-hidden="true">${this.escapeHtml(this.formatEasternAyahNumber?.(ayahNumber) || String(ayahNumber))}</span>`
+        runs.push(
+          `<span class="amd-ayah-run${ayahActive ? ' is-active' : ''}" data-ayah-key="${this.escapeHtml(verse?.key || '')}">`
+          + `${wordHtml}${wordHtml ? ' ' : ''}${endMarker}`
+          + `</span>`
         )
       }
-      return parts.join('')
+
+      const basmalaHtml = showBasmala
+        ? `<div class="amd-basmala" dir="rtl" lang="ar" aria-hidden="true">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>`
+        : ''
+
+      return (
+        `<div class="amd-mushaf-page">`
+        + basmalaHtml
+        + `<div class="amd-mushaf-stream verse-arabic" dir="rtl" lang="ar">${runs.join(' ')}</div>`
+        + `</div>`
+      )
     },
     getAmdExpectedWordIndex(statuses = [], hiddenSet = null) {
       const words = Array.isArray(statuses) ? statuses : []
@@ -15595,15 +15668,19 @@ export default {
         const visual = this.resolveAmdWordVisual(statusEntry, true)
         const isHiddenTarget = hiddenSet.has(index)
         const isCorrect = visual === 'correct'
-        const shouldMask = maskOn && isHiddenTarget && !isCorrect
+        const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(String(visual || ''))
+        const shouldMask = maskOn && isHiddenTarget && !attempted
         return {
           index,
-          status: isCorrect ? 'correct' : (shouldMask ? 'notAttempted' : (visual || 'notAttempted')),
+          status: shouldMask ? 'notAttempted' : (visual || 'notAttempted'),
           current: index === expectedIndex,
+          revealed: isCorrect && isHiddenTarget,
+          masked: shouldMask,
         }
       })
       const ok = modal.patchWordStatuses(patches)
       if (!ok) this.syncAmdMushafSurface()
+      if (patches.length) this.noteAmdRecognitionActivity?.()
       return ok
     },
     isAmdLastSessionWordCorrect() {
@@ -15635,8 +15712,16 @@ export default {
       })
       const accuracyScore = this.computeAmdLiveAccuracy(wordStatuses)
       const committedWords = this.getBestRecognitionWordsForAssessment?.('recitation') || []
+      const colorCounts = {
+        green: wordStatuses.filter((w) => String(w.status).toLowerCase() === 'correct').length,
+        amber: wordStatuses.filter((w) => String(w.status).toLowerCase() === 'partial').length,
+        red: wordStatuses.filter((w) => String(w.status).toLowerCase() === 'incorrect').length,
+        black: wordStatuses.filter((w) => ['omitted', 'omission', 'black'].includes(String(w.status).toLowerCase())).length,
+        gray: wordStatuses.filter((w) => ['skipped', 'notattempted', 'pending', 'gray', 'grey'].includes(String(w.status).toLowerCase())).length,
+      }
       return {
         wordStatuses,
+        colorCounts,
         accuracyScore,
         accuracy: accuracyScore,
         transcript: wordsToTranscript?.(committedWords) || committedWords.map((w) => w.word || w.text || '').join(' '),
@@ -15654,6 +15739,8 @@ export default {
       this.amdError = ''
       this.amdAssessOnStop = false
       this.clearAmdElapsedTimer()
+      this.stopAmdRecognitionHeartbeat?.()
+      // Quiet handoff — no bulky processing copy while we sync the plan.
       this.amdStage = AMD_STAGES.PROCESSING
 
       this.recitationCheckDiscardOnStop = true
@@ -15669,24 +15756,31 @@ export default {
       this.syncAmdMushafSurface()
       try { this.recordAiReciteAttempt?.(result) } catch (_) { /* ignore */ }
 
+      // Sync colour meter + recommendation with the live AI test before returning.
+      try {
+        await this.maybeApplyPostSessionAiAssessmentFromResult(result)
+      } catch (error) {
+        console.warn('AMD → recommendation sync failed', error)
+      }
+
       try {
         await this.submitAmdAssessmentToBackend(result)
       } catch (error) {
         console.warn('AMD recommendation submit failed', error)
       }
-      // Keep the ending banner while backend stage flips to results/plan.
-      this.amdEndingSoon = true
       try { await this.buildAndPersistAiReciteFinalPlan?.() } catch (_) { /* ignore */ }
 
       this.playUiTone?.('complete')
+      // Brief settle so the completion modal paints cleanly, then leave AMD.
       await new Promise((resolve) => {
-        window.setTimeout(resolve, 1300)
+        window.setTimeout(resolve, 180)
       })
 
-      this.amdStage = AMD_STAGES.COMPLETE
       this.closeAmdModal({ returnToCompletion: true })
+      this.amdStage = AMD_STAGES.IDLE
       this._amdCompleting = false
       this.amdEndingSoon = false
+      this.amdBusy = false
     },
     async stopAmdAndAssess() {
       if (!this.amdOpen || this._amdCompleting || this.amdEndingSoon) return
@@ -15859,7 +15953,9 @@ export default {
           this.amdMicStatus = 'unsupported'
           throw new Error(this.t?.('memorisation.amd.micUnsupported') || 'Speech recognition is not supported in this browser.')
         }
-        if (!this.getSpeechRecognitionConstructor?.() && !(window.SpeechRecognition || window.webkitSpeechRecognition)) {
+        const hasBrowserStt = !!(this.getSpeechRecognitionConstructor?.() || window.SpeechRecognition || window.webkitSpeechRecognition)
+        // Browser STT is optional when Speechmatics can be used; require one path.
+        if (!hasBrowserStt && !this.isLoggedIn) {
           this.amdMicStatus = 'unsupported'
           throw new Error(this.t?.('memorisation.amd.micUnsupported') || 'Speech recognition is not supported in this browser.')
         }
@@ -15897,6 +15993,29 @@ export default {
           this.amdMicStatus = 'denied'
           this.amdError = this.t?.('memorisation.amd.micNeedAccess') || 'Microphone access needed'
         }
+      } finally {
+        this.amdBusy = false
+      }
+    },
+    async restartAmdListeningPreserveProgress() {
+      if (!this.amdOpen || this.amdEndingSoon || this._amdCompleting) return
+      if (this.recitationCheckRecording || this.recitationCheckPreparing) return
+      this.amdBusy = true
+      this.amdError = ''
+      this.amdStage = AMD_STAGES.STARTING
+      try {
+        await this.startRecitationCheckRecording(null, { preserveProgress: true })
+        if (this.recitationCheckRecording) {
+          this.amdStage = AMD_STAGES.LISTENING
+          this.amdMicStatus = 'granted'
+          this.syncAmdMushafSurface()
+        } else if (!this.recitationCheckPreparing) {
+          this.amdStage = AMD_STAGES.LISTENING
+        }
+      } catch (error) {
+        console.warn('AMD soft recover failed', error)
+        this.amdStage = AMD_STAGES.READY
+        this.amdError = this.t?.('memorisation.amd.startFailed') || 'Could not restart listening.'
       } finally {
         this.amdBusy = false
       }
@@ -16494,11 +16613,8 @@ export default {
         if (bridgeReady) await this.ensureTranscriptionAudioBridgeRunning('memorisation')
         const transcriptionReady = bridgeReady && await this.startTranscriptionRecognition('memorisation')
         if (!transcriptionReady) {
+          // Browser STT starts after recording=true — attach() guards on the flag.
           this.stopTranscriptionAudioBridge('memorisation')
-          this.startAiMemorisationCheckerSpeechRecognition()
-        } else {
-          this.startSpeechRecognitionWatchdog('memorisation')
-          this.startTranscriptionAudioPump('memorisation')
         }
         recorder.ondataavailable = event => {
           if (event.data?.size) {
@@ -16547,6 +16663,13 @@ export default {
         this.aiMemorisationCheckerStartedAt = Date.now()
         this.aiMemorisationCheckerRecording = true
         this.aiMemorisationCheckerPreparing = false
+        // Start STT after recording=true — attach() no-ops when the flag is still false.
+        if (!transcriptionReady) {
+          this.startAiMemorisationCheckerSpeechRecognition()
+        } else {
+          this.startSpeechRecognitionWatchdog('memorisation')
+          this.startTranscriptionAudioPump('memorisation')
+        }
         this.persistAiMemorisationCheckerSession()
       } catch (error) {
         console.error('Failed to start memorisation check:', error)
@@ -17565,6 +17688,17 @@ export default {
         liveAlignmentOptions.strictProgression = true
         livePreviewAlignmentOptions.strictProgression = true
       }
+      // Memorisation test: stricter match floors + tighter progression so amber/red/grey are meaningful.
+      if (this.amdOpen && kind === 'recitation') {
+        liveAlignmentOptions.strictProgression = true
+        liveAlignmentOptions.lookahead = 2
+        liveAlignmentOptions.correctSimilarity = 0.90
+        liveAlignmentOptions.partialSimilarity = 0.58
+        livePreviewAlignmentOptions.strictProgression = true
+        livePreviewAlignmentOptions.lookahead = 2
+        livePreviewAlignmentOptions.correctSimilarity = 0.90
+        livePreviewAlignmentOptions.partialSimilarity = 0.58
+      }
       const committedSignature = this.getLiveAlignmentInputSignature(kind, targetVerses, committedWords, committedWords)
       const committedAlignment = this.getCachedCommittedAlignment(
         kind,
@@ -18358,7 +18492,8 @@ export default {
     startSpeechRecognitionWatchdog(kind = 'recitation') {
       this.stopSpeechRecognitionWatchdog(kind)
       const key = kind === 'memorisation' ? '_aiMemorisationSttWatchdog' : '_recitationSttWatchdog'
-      // Give Speechmatics enough time to emit the first Arabic partial before failover.
+      // AMD needs a quicker Speechmatics → browser handoff so listening never feels stalled.
+      const delayMs = (kind === 'recitation' && this.amdOpen) ? 1600 : 3200
       this[key] = window.setTimeout(() => {
         this[key] = null
         const recording = kind === 'memorisation'
@@ -18370,7 +18505,38 @@ export default {
         if (Number(meta?.messageCount || 0) > 0 || words.length) return
         // Speechmatics connected but produced nothing — exclusive browser STT handoff.
         this.failoverTranscriptionToBrowserStt(kind)
-      }, 3200)
+      }, delayMs)
+    },
+    startAmdRecognitionHeartbeat() {
+      this.stopAmdRecognitionHeartbeat()
+      this._amdLastRecognitionAt = Date.now()
+      this._amdRecognitionHeartbeat = window.setInterval(() => {
+        if (!this.amdOpen || this.amdEndingSoon || this._amdCompleting) {
+          this.stopAmdRecognitionHeartbeat()
+          return
+        }
+        if (!this.recitationCheckRecording || this.amdStage !== AMD_STAGES.LISTENING) return
+        const idleMs = Date.now() - Number(this._amdLastRecognitionAt || 0)
+        if (idleMs < 4200) return
+        this._amdLastRecognitionAt = Date.now()
+        if (this.getTranscriptionProvider?.('recitation')?.isOpen?.()) {
+          this.failoverTranscriptionToBrowserStt('recitation')
+          return
+        }
+        if (!this.recitationSpeechRecognition) {
+          this.startRecitationSpeechRecognition()
+        }
+      }, 1200)
+    },
+    stopAmdRecognitionHeartbeat() {
+      if (this._amdRecognitionHeartbeat) {
+        window.clearInterval(this._amdRecognitionHeartbeat)
+        this._amdRecognitionHeartbeat = null
+      }
+    },
+    noteAmdRecognitionActivity() {
+      if (!this.amdOpen) return
+      this._amdLastRecognitionAt = Date.now()
     },
     stopSpeechRecognitionWatchdog(kind = 'recitation') {
       const key = kind === 'memorisation' ? '_aiMemorisationSttWatchdog' : '_recitationSttWatchdog'
@@ -18432,6 +18598,7 @@ export default {
       })).filter(item => item.word)
       const isFinal = !!payload?.isFinal
       this.markTranscriptionMessage(kind, { isFinal })
+      if (kind === 'recitation' && this.amdOpen) this.noteAmdRecognitionActivity?.()
       this.applyRecognizedEntries(kind, entries, isFinal, {
         provider: 'speechmatics',
         speechFinal: !!payload?.speechFinal,
@@ -18609,6 +18776,7 @@ export default {
             const entries = this.extractSpeechRecognitionEntries(event)
             const finalEntries = entries.filter(entry => entry.final)
             const interimEntries = entries.filter(entry => !entry.final)
+            if (finalEntries.length || interimEntries.length) this.noteAmdRecognitionActivity?.()
             if (finalEntries.length) {
               this.applyRecognizedEntries('recitation', finalEntries, true, { provider: 'web-speech' })
             }
@@ -18621,6 +18789,14 @@ export default {
             // Benign: browser pause / no audio yet — onend will restart.
             if (code === 'no-speech' || code === 'aborted') return
             console.warn('Speech recognition error:', code || event)
+            if (this.amdOpen && code === 'network') {
+              // Soft recovery for flaky Web Speech while AMD is open.
+              window.setTimeout(() => {
+                if (!this.recitationCheckRecording || this.recitationSpeechRecognition) return
+                if (this.amdEndingSoon || this._amdCompleting) return
+                this.startRecitationSpeechRecognition()
+              }, 180)
+            }
           }
           recognition.onend = () => {
             if (this.recitationSpeechRecognition !== recognition) return
@@ -18628,7 +18804,7 @@ export default {
             if (!this.recitationCheckRecording) return
             if (this.amdEndingSoon || this._amdCompleting) return
             // Chrome ends continuous sessions after natural pauses — resume ASAP.
-            const resumeMs = this.amdOpen ? 40 : 140
+            const resumeMs = this.amdOpen ? 60 : 140
             window.setTimeout(() => {
               if (!this.recitationCheckRecording || this.recitationSpeechRecognition) return
               if (this.amdEndingSoon || this._amdCompleting) return
@@ -18710,8 +18886,19 @@ export default {
     },
     async maybeApplyPostSessionAiAssessmentFromResult(result) {
       if (!result) return
-      if (!this.postSessionAiReciteActive && !this.showPostSessionModal) return
-      if (!this.postSessionRecommendation?.id && !this.postSessionAiReciteActive) return
+      // Allow AMD completion to sync while the test modal is still open.
+      if (
+        !this.postSessionAiReciteActive
+        && !this.showPostSessionModal
+        && !this.amdOpen
+        && !this._amdCompleting
+      ) return
+      if (
+        !this.postSessionRecommendation?.id
+        && !this.postSessionAiReciteActive
+        && !this.amdOpen
+        && !this._amdCompleting
+      ) return
 
       const wordStatuses = this.getRecitationWordStatuses(result)
       const colorCounts = result?.colorCounts && typeof result.colorCounts === 'object'
@@ -18888,6 +19075,36 @@ export default {
         this.persistPracticeFocusWeakWords()
         this.clearMushafAyahHtmlCache()
         this.postSessionAiFeedback = this.aiReciteFinalPlan.feedback
+
+        // Keep Session Complete colour review + plan in sync with Laravel AMD plan.
+        const latestAttempt = Array.isArray(this.aiReciteAttempts) && this.aiReciteAttempts.length
+          ? this.aiReciteAttempts[this.aiReciteAttempts.length - 1]?.result
+          : this.recitationCheckResult
+        if (latestAttempt && !this.postSessionAiReviewDetails) {
+          try {
+            await this.maybeApplyPostSessionAiAssessmentFromResult(latestAttempt)
+          } catch (_) { /* ignore */ }
+        }
+        if (this.postSessionRecommendation && this.aiReciteFinalPlan) {
+          const planSettings = this.amdPracticePlan.config || this.postSessionRecommendation.settings || {}
+          this.postSessionRecommendation = this.enrichPostSessionRecommendation({
+            ...this.postSessionRecommendation,
+            settings: {
+              ...(this.postSessionRecommendation.settings || {}),
+              ...planSettings,
+            },
+            reason: this.amdPracticePlan.why || this.postSessionRecommendation.reason,
+            user_reason: this.amdPracticePlan.why || this.postSessionRecommendation.user_reason,
+            balance_message: this.amdPracticePlan.why || this.postSessionRecommendation.balance_message,
+            ai_assessment: {
+              ...(this.postSessionRecommendation.ai_assessment || {}),
+              result: this.aiReciteFinalPlan.outcome,
+              summary: this.aiReciteFinalPlan.feedback,
+              average_accuracy: this.aiReciteFinalPlan.averageAccuracy,
+            },
+          })
+          this.postSessionRecommendationStatus = 'ready'
+        }
         return
       }
 
@@ -19324,7 +19541,7 @@ export default {
       // Manual self-assessment recording removed — AI Recite only.
       if (verse?.key) this.openAiRecitationCheckForVerse(verse)
     },
-    async startRecitationCheckRecording(targetVerse = null) {
+    async startRecitationCheckRecording(targetVerse = null, options = {}) {
       if (!this.supportsSelfCheckRecording()) {
         this.reportRecitationCheckFailure('Recording is not supported in this browser.')
         return
@@ -19346,8 +19563,11 @@ export default {
       this.recitationCheckAutoStopArmed = false
       this.recitationCheckPanelOpen = true
       this.selfCheckSavedAttemptsVisible = false
-      this.seedRecitationLiveWords(targets)
-      this.resetRecognitionPipelineState('recitation')
+      const preserveProgress = !!(options.preserveProgress && this.amdOpen && Array.isArray(this.recitationLiveWords) && this.recitationLiveWords.length)
+      if (!preserveProgress) {
+        this.seedRecitationLiveWords(targets)
+        this.resetRecognitionPipelineState('recitation')
+      }
       this.recitationCheckPreparing = true
       this.stopRecordingsPlayback({ clearSource: true })
       if (this.audioElement && !this.audioElement.paused) {
@@ -19374,19 +19594,13 @@ export default {
         this.recitationInputSessionId = this.getCurrentRecitationSessionId()
         const bridgeReady = this.startTranscriptionAudioBridge('recitation', stream)
         if (bridgeReady) await this.ensureTranscriptionAudioBridgeRunning('recitation')
-        // Memorisation test: prefer browser STT (requirement). Skip Speechmatics for amdOpen.
-        const useBrowserSttOnly = !!this.amdOpen
-        const transcriptionReady = !useBrowserSttOnly
-          && bridgeReady
+        // Prefer Speechmatics for AMD (more reliable Arabic STT); browser STT is exclusive failover.
+        const transcriptionReady = bridgeReady
           && await this.startTranscriptionRecognition('recitation')
         if (!transcriptionReady) {
+          // Tear the unused bridge down now; browser STT starts after recording=true
+          // because attach() guards on recitationCheckRecording.
           this.stopTranscriptionAudioBridge('recitation')
-          this.startRecitationSpeechRecognition()
-        } else {
-          // Keep a delayed exclusive browser STT backup if Speechmatics stays silent,
-          // and pump PCM even when MediaRecorder chunks are sparse.
-          this.startSpeechRecognitionWatchdog('recitation')
-          this.startTranscriptionAudioPump('recitation')
         }
 
         recorder.ondataavailable = event => {
@@ -19435,7 +19649,7 @@ export default {
               window.setTimeout(() => {
                 if (!this.amdOpen || this.amdStage === AMD_STAGES.COMPLETE || this.amdEndingSoon) return
                 if (this.recitationCheckRecording || this.recitationCheckPreparing) return
-                void this.startAmdAssessment()
+                void this.restartAmdListeningPreserveProgress()
               }, 220)
             }
             return
@@ -19513,10 +19727,27 @@ export default {
         }
 
         recorder.start(RECITATION_CHUNK_TIMESLICE_MS)
-        this.startRecitationVad(stream)
+        // VAD silence auto-stop is disabled for AMD; skip analyser overhead mid-test.
+        if (!this.amdOpen) {
+          this.startRecitationVad(stream)
+        }
         this.recitationCheckStartedAt = Date.now()
         this.recitationCheckRecording = true
         this.recitationCheckPreparing = false
+        // Browser STT / Speechmatics watchdog must start AFTER recording=true —
+        // startRecitationSpeechRecognition().attach() no-ops when the flag is false,
+        // which left Test AI in "Listening" with no recognition (fully non-responsive).
+        if (!transcriptionReady) {
+          this.startRecitationSpeechRecognition()
+        } else {
+          // Keep a delayed exclusive browser STT backup if Speechmatics stays silent,
+          // and pump PCM even when MediaRecorder chunks are sparse.
+          this.startSpeechRecognitionWatchdog('recitation')
+          this.startTranscriptionAudioPump('recitation')
+        }
+        if (this.amdOpen) {
+          this.startAmdRecognitionHeartbeat()
+        }
         // Ensure ayah word nodes exist before the first live colour patches land.
         await this.$nextTick()
         this.playRecitationStartCue({
@@ -19531,6 +19762,7 @@ export default {
     },
     stopRecitationCheckRecording() {
       this.clearRecitationStartCue()
+      this.stopAmdRecognitionHeartbeat?.()
       if (!this.recitationCheckMediaRecorder || !['recording', 'paused'].includes(this.recitationCheckMediaRecorder.state)) return
       this.recitationCheckAutoStopArmed = false
       this.recitationCheckPreparing = true
@@ -22454,6 +22686,19 @@ export default {
     getTechniqueDisplayLabel(techniqueId, options = {}) {
       return getTechniqueLabel(techniqueId, this.t.bind(this), options)
     },
+    stripTechniqueJargon(label = '') {
+      return String(label || '')
+        .replace(/\s*\([^)]*\)\s*/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim()
+    },
+    stripAiDashes(text = '') {
+      return String(text || '')
+        .replace(/\s*[—–―]+\s*/g, '. ')
+        .replace(/\.\s*\./g, '.')
+        .replace(/\s{2,}/g, ' ')
+        .trim()
+    },
     getTechniqueDisplayDescription(techniqueId) {
       return getTechniqueDescription(techniqueId, this.t.bind(this))
     },
@@ -22538,7 +22783,17 @@ export default {
         this.applyMobileLayoutFontDefault('mushaf')
         this.ensureMadaniPagesLoaded({ force: false }).then(() => {
           this.syncMushafPageToActiveVerse()
-          this.$nextTick(() => this.scheduleMadaniPageFit())
+          this.$nextTick(() => {
+            this.scheduleMadaniPageFit()
+            // Desktop mushaf: keep word-audio highlighting armed and restart if already playing.
+            if (!this.isMobileViewport()) {
+              this.wordByWordAudioEnabled = true
+              const verse = this.activeVerseRef
+              if (verse?.key && this.isPlaying) {
+                this.startWordHighlighting(verse)
+              }
+            }
+          })
         })
       } else {
         this.fontOpen = false
@@ -22552,17 +22807,17 @@ export default {
       this.persistUiState()
     },
     getDefaultMushafBackgroundForTheme() {
-      return 'contrast'
+      return 'paper'
     },
     applyMushafThemeDefault() {
-      // Mushaf uses a fixed white / black page; no theme switching.
+      // Desktop uses soft paper / charcoal; mobile keeps its own palette.
     },
     resolveSystemPreferredTheme() {
       if (typeof window === 'undefined' || !window.matchMedia) return this.theme
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     },
     syncMushafColorsToAppTheme() {
-      // Fixed white / black mushaf palette — ignore app theme color sync.
+      // Desktop palette is CSS-driven (paper / charcoal), not plain white / black.
     },
     syncMushafPageToActiveVerse() {
       if (!this.mushafPages.length) {
@@ -24757,7 +25012,10 @@ export default {
       if (action === 'delete-recording' && actionData?.recordingId) this.deleteRecording(actionData.recordingId)
       if (action === 'delete-ayah-recordings' && actionData?.ayahKey) this.deleteAyahRecordings(actionData.ayahKey)
       if (action === 'delete-pending-recitation-check') this.performDeleteRecitationCheckAttempt(actionData?.attemptId)
-      if (action === 'save-session-after-end') this.saveCurrentSessionWithName()
+      if (action === 'save-session-after-end') {
+        void this.saveCurrentSessionSilentlyAsync()
+        return
+      }
     },
 
     confirmDiscardContinueSession() {

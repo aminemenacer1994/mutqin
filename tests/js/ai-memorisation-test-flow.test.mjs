@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   AI_TEST_MODALS_ENABLED,
   AMD_STAGES,
@@ -306,6 +309,37 @@ import {
   })
   assert.equal(completeOnly, COMPLETION_FLOW.COMPLETION)
   assert.equal(primarySurfaceForPhase(completeOnly), 'completion')
+}
+
+// Regression: browser STT must start AFTER recording=true.
+// attach() no-ops when the flag is still false, which left Test AI "Listening"
+// with no recognition (fully non-responsive).
+{
+  const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
+  const source = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
+
+  const extractMethod = (name, stopName) => {
+    const start = source.indexOf(`    async ${name}(`)
+    assert.ok(start >= 0, `${name} must exist`)
+    const end = source.indexOf(`\n    ${stopName}(`, start + 1)
+    assert.ok(end > start, `${name} body must be extractable`)
+    return source.slice(start, end)
+  }
+
+  for (const [method, stopName, flag, sttCall] of [
+    ['startRecitationCheckRecording', 'stopRecitationCheckRecording', 'this.recitationCheckRecording = true', 'this.startRecitationSpeechRecognition()'],
+    ['startAiMemorisationCheckerRecording', 'stopAiMemorisationCheckerRecording', 'this.aiMemorisationCheckerRecording = true', 'this.startAiMemorisationCheckerSpeechRecognition()'],
+  ]) {
+    const body = extractMethod(method, stopName)
+    const flagAt = body.indexOf(flag)
+    const sttAt = body.indexOf(sttCall)
+    assert.ok(flagAt >= 0, `${method} must set ${flag}`)
+    assert.ok(sttAt >= 0, `${method} must call ${sttCall}`)
+    assert.ok(
+      sttAt > flagAt,
+      `${method} must start browser STT after ${flag} (was the Listening-but-deaf bug)`
+    )
+  }
 }
 
 console.log('ai-memorisation-test-flow.test.mjs: ok')

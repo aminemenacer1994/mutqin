@@ -155,15 +155,23 @@
             </div>
 
             <section
-              v-if="isComplete || endingSoon"
+              v-if="endingSoon"
+              class="amd-complete amd-complete--handoff"
+              aria-hidden="true"
+            >
+              <span class="amd-complete__spinner" aria-hidden="true"></span>
+            </section>
+
+            <section
+              v-else-if="isComplete"
               class="amd-complete amd-complete--premium"
               role="status"
               aria-live="assertive"
               aria-atomic="true"
             >
-              <p class="amd-complete__title">{{ endingSoon ? sessionEndedLabel : completeTitle }}</p>
-              <p class="amd-complete__body">{{ endingSoon ? sessionEndedBody : completeBody }}</p>
-              <div v-if="isComplete && !endingSoon" class="amd-complete__actions">
+              <p class="amd-complete__title">{{ completeTitle }}</p>
+              <p class="amd-complete__body">{{ completeBody }}</p>
+              <div class="amd-complete__actions">
                 <button type="button" class="btn-secondary" @click.stop="$emit('test-again')">
                   {{ testAgainLabel }}
                 </button>
@@ -333,12 +341,20 @@ export default {
           node.classList.remove(`recitation-word-${name}`)
         })
         node.classList.add(`recitation-word-${status}`)
-        if (status === 'correct') {
+        const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(status)
+        if (attempted) {
           node.classList.remove('amd-word-hidden')
           node.removeAttribute('aria-hidden')
           node.removeAttribute('data-masked')
-          node.classList.add('amd-word-revealed')
+        } else {
+          // Keep grey blank presentation for untouched hidden targets.
+          if (patch.masked) {
+            node.classList.add('amd-word-hidden')
+            node.setAttribute('aria-hidden', 'true')
+            node.setAttribute('data-masked', '1')
+          }
         }
+        node.classList.toggle('amd-word-revealed', status === 'correct' || !!patch.revealed)
         node.classList.toggle('amd-word-current', !!patch.current)
         changed = true
       }
@@ -362,7 +378,7 @@ export default {
     scrollActiveIntoView(root) {
       if (typeof window === 'undefined') return
       const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
-      const active = root.querySelector('.amd-word-current, .amd-ayah-block.is-active')
+      const active = root.querySelector('.amd-word-current, .amd-ayah-run.is-active, .amd-ayah-block.is-active')
       if (!active || typeof active.scrollIntoView !== 'function') return
       const shell = root.closest('.amd-mushaf-shell')
       if (!shell) return

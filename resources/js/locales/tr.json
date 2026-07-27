@@ -1528,7 +1528,8 @@
         "aiFocusPronunciation": "Slow slightly and articulate the {count} close words.",
         "aiFocusSequence": "Restart from the first ayah and keep the order steady.",
         "aiFocusWeakAyah": "Spend the next pass on ayah {ayah} with Focus mode.",
-        "aiFocusWeakAyahs": "Revisit ayahs {ayahs} before continuing."
+        "aiFocusWeakAyahs": "Revisit ayahs {ayahs} before continuing.",
+        "aiFirstBody": "Önce yapay zeka ile test edin. Skorunuz ve planınız dinledikten sonra burada görünür."
       },
       "viewStats": "View stats",
       "hideStats": "Hide stats",

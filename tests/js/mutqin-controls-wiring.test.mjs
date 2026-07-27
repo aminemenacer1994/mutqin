@@ -352,28 +352,23 @@ assert.doesNotMatch(
   const vueOnly = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
   assert.match(
     vueOnly,
-    /ps-quiz/,
-    'completion modal must expose a beginner Quiz AI card'
-  )
-  assert.match(
-    vueOnly,
-    /startPostSessionAdaptiveCheck/,
-    'completion modal must keep an optional memory check'
-  )
-  assert.match(
-    vueOnly,
-    /memoryCheckTitle/,
-    'completion modal must present a unified Memory check'
-  )
-  assert.match(
-    vueOnly,
-    /@click="openPostSessionAiRecite"/,
-    'AI Recite remains a secondary entry inside the Memory check card'
-  )
-  assert.doesNotMatch(
-    vueOnly,
     /post-session-simple__confidence/,
-    'confidence Step 2 must be removed from the completion UI'
+    'completion modal must expose confidence feedback'
+  )
+  assert.match(
+    vueOnly,
+    /submitPostSessionConfidence/,
+    'completion modal must keep confidence actions'
+  )
+  assert.match(
+    vueOnly,
+    /openPostSessionAdjustPlan/,
+    'completion modal must allow adjusting the recommended plan'
+  )
+  assert.match(
+    vueOnly,
+    /onPostSessionTestWithAi/,
+    'Test with AI remains available from the completion footer'
   )
   assert.match(vueOnly, /post-session-simple--builder-open/)
   assert.match(

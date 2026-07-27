@@ -1687,8 +1687,8 @@
       </aside>
     </div>
 
-    <!-- Save Session Name Modal - Clean & Updated Version -->
-    <div class="modal-overlay mutqin-modal-overlay save-name-modal-overlay" v-if="showSaveNameModal" @click.self="closeSaveModal">
+    <!-- Save Session Name Modal (manual only — post-session auto-saves silently) -->
+    <div class="modal-overlay mutqin-modal-overlay save-name-modal-overlay" v-if="false && showSaveNameModal" @click.self="closeSaveModal">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
       <div class="modal-content mutqin-modal-surface save-name-modal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
         <div class="modal-header">
@@ -2864,9 +2864,8 @@
     <transition name="mutqin-flow">
     <div
       v-if="showPostSessionModal && !postSessionAiReciteActive"
-      class="post-session-simple"
+      class="post-session-simple post-session-simple--calm-v2 post-session-simple--premium"
       :class="{
-        'post-session-simple--calm-v2': true,
         'post-session-simple--sample': onboardingSampleSessionActive,
         'post-session-simple--builder-open': postSessionOffcanvasOpen && showTools,
       }"
@@ -2882,7 +2881,7 @@
         aria-modal="true"
         aria-labelledby="postSessionTitle"
       >
-        <div class="post-session-simple__dialog post-session-simple__dialog--actions-3 post-session-simple__dialog--lg">
+        <div class="post-session-simple__dialog post-session-simple__dialog--lg">
           <div
             v-if="showPostSessionConfetti"
             class="onboarding-post-session-confetti-layer"
@@ -2896,19 +2895,20 @@
               :style="piece.style"
             ></span>
           </div>
+
           <header class="post-session-simple__header post-session-simple__header--calm">
             <span class="post-session-simple__check" aria-hidden="true">
               <i class="bi bi-check-lg"></i>
             </span>
             <div class="post-session-simple__header-copy">
               <h2 id="postSessionTitle" class="post-session-simple__title">
-                {{ t('memorisation.sessionComplete.title') }}
+                {{ postSessionSupportingMessage || postSessionModalTitle }}
               </h2>
               <p
-                v-if="!onboardingSampleSessionActive"
+                v-if="postSessionDuaMessage && !onboardingSampleSessionActive"
                 class="post-session-simple__subtitle"
               >
-                {{ t('memorisation.postSession.message') }}
+                {{ postSessionDuaMessage }}
               </p>
             </div>
           </header>
@@ -2917,18 +2917,167 @@
             <template v-if="onboardingSampleSessionActive">
               <p v-if="postSessionNextStep" class="post-session-simple__sample-copy">{{ postSessionNextStep }}</p>
             </template>
-            <p
-              v-else-if="postSessionRecommendationStartError"
-              class="post-session-simple__error"
-              role="alert"
-            >
-              {{ postSessionRecommendationStartError }}
-            </p>
+
+            <template v-else-if="postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
+              <section class="post-session-simple__panel post-session-simple__panel--hero" aria-labelledby="postSessionConfirmTitle">
+                <h3 id="postSessionConfirmTitle" class="post-session-simple__panel-title" tabindex="-1">
+                  {{ postSessionConfirmationTitle }}
+                </h3>
+                <p class="post-session-simple__range">
+                  <strong>{{ postSessionRecommendationDisplaySurahName }}</strong>
+                  <span v-if="postSessionRecommendation?.ayah_range">
+                    · {{ formatAyahRangeDisplay(
+                      postSessionRecommendation.ayah_range.from,
+                      postSessionRecommendation.ayah_range.to
+                    ) }}
+                  </span>
+                </p>
+                <div v-if="postSessionSimpleReason" class="post-session-simple__why">
+                  <p class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
+                </div>
+                <p v-if="postSessionRecommendationStartError" class="post-session-simple__error" role="alert">
+                  {{ postSessionRecommendationStartError }}
+                </p>
+              </section>
+            </template>
+
+            <template v-else>
+              <p class="post-session-simple__flow-guide">
+                {{ t('memorisation.postSession.flowGuide') }}
+              </p>
+
+              <section
+                v-if="postSessionAiReviewDetails || postSessionAiResultLine"
+                class="post-session-simple__ai-review"
+                aria-label="AI memorisation result"
+              >
+                <div class="post-session-simple__ai-review-head">
+                  <span
+                    class="memory-check-band-pill"
+                    :data-band="postSessionAiReviewDetails?.outcome || 'mixed'"
+                  >
+                    {{ postSessionAiReviewDetails?.outcomeLabel || t('memorisation.postSession.recommendation.aiOutcomeMixed') }}
+                  </span>
+                  <p class="post-session-simple__ai-review-summary">
+                    {{ postSessionAiReviewDetails?.summaryLine || postSessionAiResultLine }}
+                  </p>
+                </div>
+                <div
+                  v-if="postSessionAiColourSegments.length"
+                  class="post-session-simple__check-meter"
+                  role="img"
+                  :aria-label="t('memorisation.aiCheck.colourMeterAria')"
+                >
+                  <div class="post-session-simple__check-meter-track" aria-hidden="true">
+                    <span
+                      v-for="segment in postSessionAiColourSegments"
+                      :key="`ps-ai-meter-${segment.key}`"
+                      class="post-session-simple__check-meter-segment"
+                      :class="segment.tone"
+                      :style="{ flexGrow: Math.max(segment.percent || segment.count, 1), flexBasis: 0 }"
+                    ></span>
+                  </div>
+                  <ul class="post-session-simple__check-meter-legend">
+                    <li
+                      v-for="segment in postSessionAiColourSegments"
+                      :key="`ps-ai-legend-${segment.key}`"
+                      :class="segment.tone"
+                    >
+                      <span aria-hidden="true"></span>
+                      {{ segment.label }}
+                    </li>
+                  </ul>
+                </div>
+                <ul v-if="postSessionAiResultMetrics.length" class="post-session-simple__ai-metrics">
+                  <li
+                    v-for="metric in postSessionAiResultMetrics"
+                    :key="metric.key"
+                    :data-tone="metric.tone || undefined"
+                  >
+                    <span>{{ metric.label }}</span>
+                    <strong>{{ metric.value }}</strong>
+                  </li>
+                </ul>
+              </section>
+
+              <section
+                v-if="postSessionShowRecommendationPlan"
+                class="post-session-simple__panel post-session-simple__panel--hero ps-rec-card"
+                :class="{
+                  'is-loading': postSessionRecommendationStatus === 'loading',
+                  'is-empty': postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable
+                }"
+                :data-plan="postSessionPlanKind"
+                :aria-busy="postSessionRecommendationStatus === 'loading' ? 'true' : 'false'"
+                :aria-label="postSessionSimpleActionLabel"
+              >
+                <div v-if="postSessionRecommendationStatus === 'loading'" class="post-session-simple__skeleton" aria-hidden="true">
+                  <span></span><span></span><span></span>
+                </div>
+                <template v-else-if="postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable">
+                  <p class="post-session-simple__reason">
+                    {{ postSessionSimpleReason || t('memorisation.postSession.recommendation.reasons.manualFallback') }}
+                  </p>
+                </template>
+                <template v-else>
+                  <div class="post-session-simple__panel-head">
+                    <p class="post-session-simple__action-label">{{ postSessionSimpleActionLabel }}</p>
+                    <p class="post-session-simple__range">{{ postSessionRecommendationCardTitle }}</p>
+                  </div>
+                  <div v-if="postSessionSimpleReason" class="post-session-simple__why">
+                    <p class="post-session-simple__why-label">
+                      {{ t('memorisation.postSession.recommendation.whyThisPlan') }}
+                    </p>
+                    <p class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
+                  </div>
+                  <div v-if="postSessionStaticPills.length" class="post-session-simple__combo">
+                    <p class="post-session-simple__combo-label">
+                      {{ t('memorisation.postSession.recommendation.tryThisCombination') }}
+                    </p>
+                    <div class="post-session-simple__pills">
+                      <span
+                        v-for="pill in postSessionStaticPills"
+                        :key="pill.key"
+                        class="post-session-simple__pill"
+                      >{{ pill.label }}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="post-session-simple__adjust-link"
+                    :disabled="postSessionActionsBusy"
+                    @click="openPostSessionAdjustPlan"
+                  >
+                    {{ t('memorisation.postSession.recommendation.adjustPlan') }}
+                  </button>
+                </template>
+                <p
+                  v-if="postSessionRecommendationStatus === 'error' && postSessionRecommendationError"
+                  class="post-session-simple__error"
+                  role="status"
+                >
+                  {{ postSessionRecommendationError }}
+                  <button type="button" class="post-session-simple__link" @click="retryPostSessionRecommendation">
+                    {{ t('memorisation.postSession.recommendation.retry') }}
+                  </button>
+                </p>
+                <p v-if="postSessionRecommendationStartError" class="post-session-simple__error" role="alert">
+                  {{ postSessionRecommendationStartError }}
+                </p>
+              </section>
+
+              <p
+                v-else
+                class="post-session-simple__plan-prompt"
+              >
+                {{ t('memorisation.postSession.recommendation.aiFirstBody') }}
+              </p>
+            </template>
           </div>
 
           <footer class="post-session-simple__footer">
             <div
-              class="post-session-simple__actions post-session-simple__actions--3 post-session-simple__actions--cards"
+              class="post-session-simple__actions post-session-simple__actions--3"
               data-testid="post-session-actions"
             >
               <template v-if="onboardingSampleSessionActive">
@@ -2943,38 +3092,64 @@
                 </button>
               </template>
 
-              <template v-else>
+              <template v-else-if="postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
                 <button
                   type="button"
-                  class="post-session-simple__action-card"
-                  :disabled="postSessionActionsBusy || postSessionRecommendationStarting"
-                  :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
-                  data-action="continue"
-                  @click="onPostSessionContinueToAyahs"
+                  class="post-session-simple__btn post-session-simple__btn--secondary"
+                  :disabled="postSessionRecommendationStarting"
+                  @click="chooseOtherFromRecommendation"
                 >
-                  <i class="bi bi-arrow-right-circle" aria-hidden="true"></i>
-                  <span>{{ postSessionContinueToAyahsLabel }}</span>
+                  <span>{{ t('memorisation.postSession.recommendation.startDifferentSession') }}</span>
                 </button>
                 <button
                   type="button"
-                  class="post-session-simple__action-card post-session-simple__action-card--recommended"
+                  class="post-session-simple__btn post-session-simple__btn--ai"
+                  :disabled="postSessionActionsBusy || postSessionAiReciteBusy || !aiTestModalsEnabled"
+                  :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
+                  @click="onPostSessionTestWithAi"
+                >
+                  <span>{{ t('memorisation.postSession.actions.testWithAi') }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="post-session-simple__btn post-session-simple__btn--primary"
+                  :disabled="postSessionRecommendationStarting"
+                  :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
+                  @click="confirmPostSessionRecommendation"
+                >
+                  <span>{{ postSessionConfirmationPrimaryLabel }}</span>
+                </button>
+              </template>
+
+              <template v-else>
+                <button
+                  type="button"
+                  class="post-session-simple__btn post-session-simple__btn--secondary"
+                  :disabled="postSessionActionsBusy"
+                  data-action="choose-session"
+                  @click="chooseOtherFromRecommendation"
+                >
+                  <span>{{ t('memorisation.postSession.recommendation.startDifferentSession') }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="post-session-simple__btn post-session-simple__btn--ai"
                   :disabled="postSessionActionsBusy || postSessionAiReciteBusy || !aiTestModalsEnabled"
                   :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
                   data-action="test-with-ai"
                   @click="onPostSessionTestWithAi"
                 >
-                  <i class="bi bi-mic-fill" aria-hidden="true"></i>
                   <span>{{ t('memorisation.postSession.actions.testWithAi') }}</span>
                 </button>
                 <button
                   type="button"
-                  class="post-session-simple__action-card"
-                  :disabled="postSessionActionsBusy"
-                  data-action="choose-session"
-                  @click="chooseOtherFromRecommendation"
+                  class="post-session-simple__btn post-session-simple__btn--primary"
+                  :disabled="postSessionActionsBusy || !postSessionRecommendationActionable"
+                  :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
+                  data-action="continue"
+                  @click="onPostSessionContinueToAyahs"
                 >
-                  <i class="bi bi-grid" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.postSession.actions.chooseAnotherSession') }}</span>
+                  <span>{{ postSessionContinueToAyahsLabel }}</span>
                 </button>
               </template>
             </div>

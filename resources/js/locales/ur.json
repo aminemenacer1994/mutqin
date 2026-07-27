@@ -1258,7 +1258,8 @@
         "aiFocusPronunciation": "Slow slightly and articulate the {count} close words.",
         "aiFocusSequence": "Restart from the first ayah and keep the order steady.",
         "aiFocusWeakAyah": "Spend the next pass on ayah {ayah} with Focus mode.",
-        "aiFocusWeakAyahs": "Revisit ayahs {ayahs} before continuing."
+        "aiFocusWeakAyahs": "Revisit ayahs {ayahs} before continuing.",
+        "aiFirstBody": "پہلے AI کے ساتھ آزمائیں۔ آپ کا اسکور اور منصوبہ سننے کے بعد یہاں ظاہر ہوگا۔"
       },
       "viewStats": "View stats",
       "hideStats": "Hide stats",

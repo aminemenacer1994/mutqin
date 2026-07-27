@@ -177,6 +177,13 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   }))
   const strict = options.strictProgression !== false
   const lookahead = Math.max(1, Math.min(8, Number(options.lookahead || 5)))
+  const correctSimilarity = Number.isFinite(Number(options.correctSimilarity))
+    ? Number(options.correctSimilarity)
+    : 0.78
+  const partialSimilarity = Number.isFinite(Number(options.partialSimilarity))
+    ? Number(options.partialSimilarity)
+    : 0.35
+  const matchThresholds = { correctSimilarity, partialSimilarity }
   const extraWords = []
   let cursor = 0
   let firstBlockingIndex = -1
@@ -204,7 +211,8 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       similarity,
       outOfOrderIndex: -1,
       targetIndex: cursor,
-      targetUnit
+      targetUnit,
+      ...matchThresholds,
     })
 
     if (classified.status === 'correct' || classified.status === 'partial') {
@@ -250,7 +258,8 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
         similarity: 1,
         outOfOrderIndex: exactAheadIndex,
         targetIndex: exactAheadIndex,
-        targetUnit: aheadUnit
+        targetUnit: aheadUnit,
+        ...matchThresholds,
       })
       cursor = exactAheadIndex + 1
       continue
@@ -353,7 +362,9 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
         similarity: cell.similarity,
         outOfOrderIndex: laterIndex,
         targetIndex: targetIndex - 1,
-        targetUnit: targetUnits[targetIndex - 1] || null
+        targetUnit: targetUnits[targetIndex - 1] || null,
+        correctSimilarity: Number.isFinite(Number(options.correctSimilarity)) ? Number(options.correctSimilarity) : 0.78,
+        partialSimilarity: Number.isFinite(Number(options.partialSimilarity)) ? Number(options.partialSimilarity) : 0.35,
       })
       operations.unshift({ op: 'match', targetIndex: targetIndex - 1, heardIndex: heardIndex - 1, similarity: cell.similarity })
     } else if (cell.op === 'extra') {
@@ -846,7 +857,17 @@ function levenshteinSimilarity(a, b) {
   return 1 - (matrix[a.length][b.length] / Math.max(a.length, b.length))
 }
 
-function classifyWordMatch({ displayText, targetWord, heardWord = {}, similarity = 0, outOfOrderIndex = -1, targetIndex = 0, targetUnit = null }) {
+function classifyWordMatch({
+  displayText,
+  targetWord,
+  heardWord = {},
+  similarity = 0,
+  outOfOrderIndex = -1,
+  targetIndex = 0,
+  targetUnit = null,
+  correctSimilarity = 0.78,
+  partialSimilarity = 0.35,
+}) {
   const expected = String(targetWord || '')
   const actual = String(heardWord.word || '')
   const confidence = Number.isFinite(Number(heardWord.confidence)) ? Number(heardWord.confidence) : 1
@@ -859,9 +880,10 @@ function classifyWordMatch({ displayText, targetWord, heardWord = {}, similarity
   const articleMatch = expected
     && actual
     && stripArabicDefiniteArticle(expected) === stripArabicDefiniteArticle(actual)
+  const correctFloor = Number.isFinite(Number(correctSimilarity)) ? Number(correctSimilarity) : 0.78
+  const partialFloor = Number.isFinite(Number(partialSimilarity)) ? Number(partialSimilarity) : 0.35
   // Soften ASR near-misses (common on ayah-final words) without accepting weak guesses.
-  // 0.78 keeps clear substitutions partial while treating close matches as correct.
-  if (expected && (expected === actual || articleMatch || similarity >= 0.78)) {
+  if (expected && (expected === actual || articleMatch || similarity >= correctFloor)) {
     return {
       text: displayText,
       targetWord: expected,
@@ -875,7 +897,7 @@ function classifyWordMatch({ displayText, targetWord, heardWord = {}, similarity
       ...location
     }
   }
-  if (expected && actual && similarity >= 0.35) {
+  if (expected && actual && similarity >= partialFloor) {
     return {
       text: displayText,
       targetWord: expected,
