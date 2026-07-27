@@ -4,30 +4,48 @@ export {
   buildRecognitionWords,
 } from './api'
 
-export const AMD_STAGES = Object.freeze({
-  IDLE: 'idle',
-  READY: 'ready',
-  STARTING: 'starting',
-  LISTENING: 'listening',
-  PROCESSING: 'processing',
-  ANALYSING: 'analysing',
-  RESULTS: 'results',
-  PLAN: 'plan',
-  PLAN_ADJUSTED: 'plan_adjusted',
-  PRACTICE_ACTIVE: 'practice_active',
-  PRACTICE_COMPLETE: 'practice_complete',
-  RETEST: 'retest',
-  ERROR: 'error',
-})
+export {
+  DIFFICULTY_PERCENTS,
+  DEFAULT_DIFFICULTY_PERCENT,
+  AMD_DIFFICULTY_PREF_KEY,
+  normaliseDifficultyPercent,
+  createSeededRng,
+  buildHiddenWordSeed,
+  selectHiddenWordIndexes,
+  isWordHidden,
+  areAllHiddenWordsRevealed,
+  readStoredDifficultyPercent,
+  storeDifficultyPercent,
+} from './hiddenWords'
 
-/**
- * Kill-switch for AI Memorisation Detection / AI Recite test modals.
- * Set true only when the live speech + assessment flow is stable again.
- */
-export const AI_TEST_MODALS_ENABLED = false
+export {
+  normalizeForMatch,
+  tokenizeForMatch,
+  tokensMatch,
+  dedupeInterimAgainstCommitted,
+  matchSequentialTokens,
+  applyMatchedIndexesToLiveWords,
+  DEFAULT_FORWARD_WINDOW,
+  DEFAULT_MATCH_THRESHOLD,
+} from './speechMatch'
 
-/** localStorage: hide the Ready howto after the learner has started once. */
-export const AMD_HOWTO_SEEN_KEY = 'mutqin.amd.howtoSeen'
+export {
+  MEM_TEST_FLOW,
+  MIC_STATUS,
+  createMemTestState,
+  deriveMemTestPhase,
+  primarySurfaceForMemTest,
+  shouldHideCompletionUnderTest,
+  resolveMicStatus,
+} from './testFlow'
+
+export {
+  AMD_STAGES,
+  AI_TEST_MODALS_ENABLED,
+  AMD_HOWTO_SEEN_KEY,
+} from './stages'
+
+import { AMD_STAGES, AMD_HOWTO_SEEN_KEY } from './stages'
 
 export function createAmdState() {
   return {
@@ -39,7 +57,7 @@ export function createAmdState() {
     startAyah: 0,
     endAyah: 0,
     ayahCount: 0,
-    micStatus: 'unknown', // unknown | granted | denied | unsupported
+    micStatus: 'unknown',
     error: '',
     liveStatus: '',
     assessment: null,
@@ -53,6 +71,10 @@ export function createAmdState() {
     previousAssessmentId: null,
     recommendationId: null,
     practiceHud: null,
+    difficulty: 50,
+    hiddenWordIndexes: [],
+    peekActive: false,
+    blurActive: true,
   }
 }
 
@@ -65,6 +87,8 @@ export function amdStageLabel(stage, t = null) {
     ready: 'Ready',
     starting: 'Starting',
     listening: 'Listening',
+    paused: 'Paused',
+    complete: 'Complete',
     processing: 'Processing',
     analysing: 'Analysing',
     results: 'Assessment results',
@@ -87,3 +111,5 @@ export function wordVisualClass(status = '') {
   if (value === 'extra' || value === 'grey' || value === 'gray') return 'is-extra'
   return 'is-uncertain'
 }
+
+void AMD_HOWTO_SEEN_KEY

@@ -1,23 +1,42 @@
 import axios from 'axios'
 
-const alquranClient = axios.create({
-  baseURL: 'https://api.alquran.cloud/v1',
-  headers: {
-    Accept: 'application/json'
-  }
-})
+/**
+ * Quran text clients.
+ *
+ * Upstream hosts (api.alquran.cloud / api.quran.com) often block browser CORS
+ * from localhost / app origins. All requests go through the Laravel same-origin
+ * proxy at /memorisation/quran-proxy/{provider}/...
+ */
 
-const quranComClient = axios.create({
-  baseURL: 'https://api.quran.com/api/v4',
-  headers: {
-    Accept: 'application/json'
-  }
-})
+function readCsrfToken() {
+  if (typeof document === 'undefined') return ''
+  return document.head?.querySelector('meta[name="csrf-token"]')?.content || ''
+}
 
-delete alquranClient.defaults.headers.common['X-Requested-With']
-delete alquranClient.defaults.headers.common['X-CSRF-TOKEN']
-delete quranComClient.defaults.headers.common['X-Requested-With']
-delete quranComClient.defaults.headers.common['X-CSRF-TOKEN']
+function createProxyClient(provider) {
+  const client = axios.create({
+    baseURL: `/memorisation/quran-proxy/${provider}`,
+    headers: {
+      Accept: 'application/json',
+    },
+    withCredentials: true,
+  })
+
+  client.interceptors.request.use((config) => {
+    const csrf = readCsrfToken()
+    if (csrf) {
+      config.headers = config.headers || {}
+      config.headers['X-CSRF-TOKEN'] = csrf
+      config.headers['X-Requested-With'] = 'XMLHttpRequest'
+    }
+    return config
+  })
+
+  return client
+}
+
+const alquranClient = createProxyClient('alquran')
+const quranComClient = createProxyClient('qurancom')
 
 const MADANI_MUSHAF_ID = 1
 const madaniPageCache = new Map()
@@ -36,7 +55,7 @@ export function getEditionsByLanguage(language, params = {}) {
 }
 
 export function getChapterRecitation(recitationId, normalizedSurah) {
-  return axios.get(`https://api.quran.com/api/v4/chapter_recitations/${recitationId}/${normalizedSurah}`)
+  return quranComClient.get(`/chapter_recitations/${recitationId}/${normalizedSurah}`)
 }
 
 export function getSurahEdition(surahNumber, edition) {
@@ -69,7 +88,7 @@ export async function getChapterWordByWordMeanings(chapterId, rangeStart = 1, ra
   const byVerseNumber = new Map()
 
   for (let page = startPage; page <= endPage; page += 1) {
-    const response = await axios.get(`https://api.quran.com/api/v4/verses/by_chapter/${chapterId}`, {
+    const response = await quranComClient.get(`/verses/by_chapter/${chapterId}`, {
       params: {
         language: 'en',
         words: true,

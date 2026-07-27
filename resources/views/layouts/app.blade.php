@@ -75,8 +75,8 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v86';
-        var FORCE = '86';
+        var BUILD = 'v93';
+        var FORCE = '93';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
@@ -428,7 +428,9 @@
           justify-content: unset !important;
           line-height: 1.85 !important;
         }
-        .app .main.mushaf-mode-active .madani-line--surah_name,
+        .app .main.mushaf-mode-active .madani-line--surah_name {
+          display: none !important;
+        }
         .app .main.mushaf-mode-active .madani-line--basmala {
           display: flex !important;
           justify-content: center !important;
@@ -440,13 +442,6 @@
           border: 0 !important;
           background: transparent !important;
           white-space: normal !important;
-        }
-        .app .main.mushaf-mode-active .madani-line--surah_name {
-          border-block: 1px solid rgba(17, 24, 39, 0.12) !important;
-        }
-        .app[data-theme="dark"] .main.mushaf-mode-active .madani-line--surah_name,
-        [data-theme="dark"] .main.mushaf-mode-active .madani-line--surah_name {
-          border-block-color: rgba(255, 255, 255, 0.14) !important;
         }
         .app .main.mushaf-mode-active .madani-word,
         .app .main.mushaf-mode-active .madani-word--glyph,
@@ -487,29 +482,42 @@
       }
       @media (min-width: 768px) {
         .app .main.mushaf-mode-active .mushaf-workspace {
-          margin-top: 0.25rem !important;
-          margin-bottom: 0.65rem !important;
-          padding-inline: clamp(0.75rem, 1.6vw, 1.35rem) !important;
+          margin: 0 !important;
+          padding-inline: 0 !important;
+          width: 100% !important;
+          max-width: none !important;
         }
+        .app .main.mushaf-mode-active .mushaf-shell,
         .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) {
-          background: #ffffff !important;
-          border-color: rgba(17, 24, 39, 0.12) !important;
+          background: transparent !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          width: 100% !important;
+          max-width: none !important;
         }
-        .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__bar,
-        .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__page {
+        .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__bar {
           background: #ffffff !important;
+          border-bottom: 1px solid rgba(17, 24, 39, 0.1) !important;
+        }
+        .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__page {
+          background: transparent !important;
+          border: 0 !important;
+          box-shadow: none !important;
+          padding-inline: 0 !important;
         }
         .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) {
           background: #ffffff !important;
-          border: 1px solid rgba(17, 24, 39, 0.14) !important;
-          border-radius: 12px !important;
-          box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05) !important;
-          padding: 0.85rem 1.5rem 1.1rem !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          padding: 1rem clamp(1.25rem, 3.5vw, 2.75rem) 1.35rem !important;
           color: #000000 !important;
           --mushaf-bg: #ffffff;
           --mushaf-text: #000000;
-          max-width: min(100%, 52rem) !important;
-          margin-inline: auto !important;
+          max-width: none !important;
+          width: 100% !important;
+          margin-inline: 0 !important;
         }
         .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate)::before,
         .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate)::after {
@@ -518,51 +526,45 @@
         }
         .app .main.mushaf-mode-active .madani-page-sheet,
         .app .main.mushaf-mode-active .madani-page-sheet--unicode {
-          gap: 0.1rem !important;
+          display: block !important;
+          gap: 0 !important;
           overflow-x: hidden !important;
-          width: min(100%, 48rem) !important;
-          max-width: 48rem !important;
-          margin-inline: auto !important;
-          padding-inline: 0.75rem !important;
+          width: 100% !important;
+          max-width: none !important;
+          margin-inline: 0 !important;
+          padding-inline: 0 !important;
           text-align: center !important;
           text-align-last: center !important;
-          justify-content: flex-start !important;
+          text-justify: none !important;
+          justify-content: unset !important;
+          line-height: 1.75 !important;
         }
         .app .main.mushaf-mode-active .madani-line--ayah,
         .app .main.mushaf-mode-active .madani-line--glyphs {
-          display: block !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          padding-block: 0.08em !important;
-          min-height: 0 !important;
-          line-height: 1.8 !important;
-          white-space: normal !important;
-          text-align: center !important;
-          text-align-last: center !important;
-          text-justify: auto !important;
-          justify-content: center !important;
-          overflow: visible !important;
-          word-spacing: normal !important;
+          display: contents !important;
         }
         .app .main.mushaf-mode-active .madani-word,
         .app .main.mushaf-mode-active .madani-basmala,
         .app .main.mushaf-mode-active .madani-word--unicode,
         .app .main.mushaf-mode-active .madani-word--fallback {
-          font-size: calc(clamp(1.35rem, 2.05vw, 1.95rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+          display: inline-block !important;
+          font-size: calc(clamp(1.45rem, 2.2vw, 2.1rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
           margin-block: 0 !important;
-          margin-inline: 0.08em !important;
-          padding-inline: 0.04em !important;
-          letter-spacing: 0.01em !important;
-          line-height: 1.8 !important;
-          white-space: normal !important;
+          margin-inline: 0.12em 0.04em !important;
+          padding-inline: 0 !important;
+          letter-spacing: normal !important;
+          line-height: 1.75 !important;
+          white-space: nowrap !important;
           flex: none !important;
           width: auto !important;
+          max-width: 100% !important;
           word-spacing: normal !important;
+          vertical-align: baseline !important;
         }
         .app .main.mushaf-mode-active .madani-word--glyph {
-          font-size: calc(clamp(1.4rem, 2.15vw, 2.05rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
-          margin-inline: 0.04em !important;
-          padding-inline: 0.02em !important;
+          font-size: calc(clamp(1.5rem, 2.3vw, 2.2rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+          margin-inline: 0.05em 0.02em !important;
+          padding-inline: 0 !important;
           flex: none !important;
         }
         .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word,
@@ -573,36 +575,41 @@
           -webkit-text-fill-color: #000000 !important;
         }
         .app .main.mushaf-mode-active .madani-line--surah_name {
-          padding: 0.12em 0.25em !important;
-          margin-top: 0.05rem !important;
-          margin-bottom: 0.08rem !important;
-          min-height: 0 !important;
-        }
-        .app .main.mushaf-mode-active .madani-surah-name {
-          font-size: calc(clamp(1.4rem, 2.1vw, 2rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
-          line-height: 1.15 !important;
-          margin-inline: 0 !important;
+          display: none !important;
         }
         .app .main.mushaf-mode-active .madani-line--basmala {
-          padding: 0.12em 0.15em 0.08em !important;
+          display: flex !important;
+          justify-content: center !important;
+          align-items: center !important;
+          text-align: center !important;
+          width: 100% !important;
+          margin: 0.35rem 0 0.25rem !important;
+          padding: 0.15rem 0 !important;
+          border: 0 !important;
+          background: transparent !important;
+          white-space: normal !important;
         }
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin),
         .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) {
-          background: #000000 !important;
-          border-color: rgba(255, 255, 255, 0.12) !important;
+          background: transparent !important;
+          border: 0 !important;
+          box-shadow: none !important;
         }
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__bar,
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__page,
         .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__bar,
         .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__page {
           background: #000000 !important;
+          border: 0 !important;
+          box-shadow: none !important;
         }
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate),
         .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate),
         [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) {
           background: #000000 !important;
-          border-color: rgba(255, 255, 255, 0.14) !important;
-          box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35) !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
           color: #ffffff !important;
           --mushaf-bg: #000000;
           --mushaf-text: #ffffff;

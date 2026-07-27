@@ -50,8 +50,19 @@ import {
     showPostSessionModal: true,
     postSessionRecommendationStatus: 'ready',
   })
-  assert.equal(phase, COMPLETION_FLOW.RECOMMENDATION)
+  assert.equal(phase, COMPLETION_FLOW.COMPLETION)
   assert.equal(primarySurfaceForPhase(phase), 'completion')
+}
+
+{
+  const testing = deriveCompletionFlowPhase({
+    showPostSessionModal: true,
+    amdOpen: true,
+    postSessionAiReciteActive: true,
+  })
+  assert.equal(testing, COMPLETION_FLOW.AI_MEMORISATION_TEST)
+  assert.equal(primarySurfaceForPhase(testing), 'amd_test')
+  assert.equal(shouldHideCompletionUnderAi(testing), true)
 }
 
 {

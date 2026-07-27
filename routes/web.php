@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MemorisationSyncController;
+use App\Http\Controllers\QuranProxyController;
 
 // Authentication routes (from laravel/ui)
 Auth::routes();
@@ -38,6 +39,13 @@ Route::get('/billing/success', [BillingController::class, 'success'])->name('bil
 Route::get('/memorisation', function () {
     return view('memorisation');
 })->middleware('auth')->name('memorisation');
+
+// Same-origin proxy — browsers cannot call alquran.cloud / quran.com due to CORS.
+Route::get('/memorisation/quran-proxy/{provider}/{path}', QuranProxyController::class)
+    ->where('provider', 'alquran|qurancom')
+    ->where('path', '.*')
+    ->middleware('auth')
+    ->name('memorisation.quran-proxy');
 
 Route::view('/about', 'content.about-us')->name('about');
 Route::view('/about-us', 'content.about-us')->name('about-us');

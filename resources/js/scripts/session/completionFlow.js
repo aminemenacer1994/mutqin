@@ -8,6 +8,7 @@ export const COMPLETION_FLOW = Object.freeze({
   COMPLETION: 'completion',
   AI_RECITE_RECORDING: 'ai_recite_recording',
   AI_RECITE_REVIEW: 'ai_recite_review',
+  AI_MEMORISATION_TEST: 'ai_memorisation_test',
   ADAPTIVE_CHECK: 'adaptive_check',
   ADAPTIVE_CHECK_RESULT: 'adaptive_check_result',
   RECOMMENDATION: 'recommendation',
@@ -32,12 +33,14 @@ export const COMPLETION_FLOW = Object.freeze({
  *   postSessionRecommendationFailed?: boolean,
  *   postSessionAdaptiveCheckActive?: boolean,
  *   postSessionAdaptiveCheckResult?: boolean,
+ *   amdOpen?: boolean,
  * }} state
  * @returns {string}
  */
 export function deriveCompletionFlowPhase(state = {}) {
   const starting = !!state.postSessionRecommendationStarting
   const aiActive = !!state.postSessionAiReciteActive
+  const amdOpen = !!state.amdOpen
   const adaptiveActive = !!state.postSessionAdaptiveCheckActive
   const adaptiveResult = !!state.postSessionAdaptiveCheckResult
   const selfCheckOpen = !!state.showSelfCheckModal
@@ -52,6 +55,11 @@ export function deriveCompletionFlowPhase(state = {}) {
     return state.isRepeatRecommendation
       ? COMPLETION_FLOW.CREATING_REPEAT
       : COMPLETION_FLOW.CREATING_SESSION
+  }
+
+  // Streamlined AI memorisation test owns the surface while open.
+  if (amdOpen || (aiActive && viewState === 'opening_ai_recite')) {
+    return COMPLETION_FLOW.AI_MEMORISATION_TEST
   }
 
   if (adaptiveActive && !adaptiveResult) {
@@ -92,10 +100,8 @@ export function deriveCompletionFlowPhase(state = {}) {
     return COMPLETION_FLOW.ERROR
   }
 
-  if (status === 'ready' || status === 'empty' || status === 'error') {
-    return COMPLETION_FLOW.RECOMMENDATION
-  }
-
+  // Streamlined Session Complete shows three actions immediately —
+  // recommendation status must not insert intermediate screens.
   return COMPLETION_FLOW.COMPLETION
 }
 
@@ -103,10 +109,12 @@ export function deriveCompletionFlowPhase(state = {}) {
  * Which surface owns the backdrop / focus trap.
  * Exactly one primary surface unless a lightweight confirmation sits on top.
  * @param {string} phase
- * @returns {'none'|'completion'|'self_check'|'builder'|'adaptive_check'}
+ * @returns {'none'|'completion'|'self_check'|'builder'|'adaptive_check'|'amd_test'}
  */
 export function primarySurfaceForPhase(phase) {
   switch (phase) {
+    case COMPLETION_FLOW.AI_MEMORISATION_TEST:
+      return 'amd_test'
     case COMPLETION_FLOW.AI_RECITE_RECORDING:
     case COMPLETION_FLOW.AI_RECITE_REVIEW:
       return 'self_check'
@@ -161,12 +169,13 @@ export function shouldKeepCompletionMounted(phase) {
 }
 
 /**
- * Whether the completion dialog should be visually hidden under AI Recite.
+ * Whether the completion dialog should be visually hidden under AI Recite / test.
  * @param {string} phase
  */
 export function shouldHideCompletionUnderAi(phase) {
   return phase === COMPLETION_FLOW.AI_RECITE_RECORDING
     || phase === COMPLETION_FLOW.AI_RECITE_REVIEW
+    || phase === COMPLETION_FLOW.AI_MEMORISATION_TEST
     || phase === COMPLETION_FLOW.ADAPTIVE_CHECK
     || phase === COMPLETION_FLOW.ADAPTIVE_CHECK_RESULT
 }

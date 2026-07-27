@@ -78,7 +78,7 @@ assert.match(css, /\.post-session-simple__btn[\s\S]*?var\(--mutqin-modal-btn-rad
 assert.match(css, /\.post-session-simple__btn--primary[\s\S]*?linear-gradient\(135deg, var\(--accent\), var\(--accent-strong\)\)/)
 assert.match(css, /\.mutqin-modal-btn--primary[\s\S]*?linear-gradient\(135deg, var\(--accent\), var\(--accent-strong\)\)/)
 assert.match(css, /\.session-exit-backdrop[\s\S]*?backdrop-filter:\s*blur\(var\(--mutqin-modal-backdrop-blur\)/)
-assert.match(css, /\.modal-content\.self-check-modal[\s\S]*?var\(--mutqin-modal-surface-bg\)/)
+assert.match(css, /\.amd-modal[\s\S]*?background:|\.modal-content\.self-check-modal[\s\S]*?var\(--mutqin-modal-surface-bg\)/)
 assert.doesNotMatch(
   css,
   /\.modal-content\.self-check-modal,\s*\.modal-content\.memorisation-checker-modal\s*\{[^}]*background:\s*#fff\s*!important/,
@@ -92,7 +92,7 @@ const modalSurfaces = [
   'post-onboarding-modal',
   'confirm-modal',
   'save-name-modal',
-  'self-check-modal',
+  'AiMemorisationDetectionModal',
   'help-learning-modal',
   'recordings-library-modal',
 ]

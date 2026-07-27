@@ -2864,13 +2864,14 @@
     <transition name="mutqin-flow">
     <div
       v-if="showPostSessionModal && !postSessionAiReciteActive"
-      class="post-session-simple post-session-simple--calm-v2"
-      data-ui="practice-coach-v3"
-      :data-theme="theme"
+      class="post-session-simple"
       :class="{
+        'post-session-simple--calm-v2': true,
         'post-session-simple--sample': onboardingSampleSessionActive,
         'post-session-simple--builder-open': postSessionOffcanvasOpen && showTools,
       }"
+      data-ui="practice-coach-v3"
+      :data-theme="theme"
       aria-live="polite"
     >
       <div class="post-session-simple__backdrop" aria-hidden="true"></div>
@@ -2881,23 +2882,33 @@
         aria-modal="true"
         aria-labelledby="postSessionTitle"
       >
-        <div class="post-session-simple__dialog">
-          <p class="ps-calm__build-tag">
-            {{ t('memorisation.postSession.coach.yourNextPractice') }}
-          </p>
-          <header class="post-session-simple__header">
+        <div class="post-session-simple__dialog post-session-simple__dialog--actions-3 post-session-simple__dialog--lg">
+          <div
+            v-if="showPostSessionConfetti"
+            class="onboarding-post-session-confetti-layer"
+            :class="{ 'onboarding-post-session-confetti-layer--sample': onboardingSampleSessionActive }"
+            aria-hidden="true"
+          >
+            <span
+              v-for="piece in postSessionConfettiPieces"
+              :key="piece.id"
+              :class="piece.className"
+              :style="piece.style"
+            ></span>
+          </div>
+          <header class="post-session-simple__header post-session-simple__header--calm">
             <span class="post-session-simple__check" aria-hidden="true">
               <i class="bi bi-check-lg"></i>
             </span>
             <div class="post-session-simple__header-copy">
               <h2 id="postSessionTitle" class="post-session-simple__title">
-                {{ postSessionCalmHeaderTitle }}
+                {{ t('memorisation.sessionComplete.title') }}
               </h2>
               <p
                 v-if="!onboardingSampleSessionActive"
                 class="post-session-simple__subtitle"
               >
-                {{ postSessionCalmHeaderSubtitle }}
+                {{ t('memorisation.postSession.message') }}
               </p>
             </div>
           </header>
@@ -2906,207 +2917,19 @@
             <template v-if="onboardingSampleSessionActive">
               <p v-if="postSessionNextStep" class="post-session-simple__sample-copy">{{ postSessionNextStep }}</p>
             </template>
-
-            <template v-else-if="postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
-              <section class="post-session-simple__panel post-session-simple__panel--hero" aria-labelledby="postSessionConfirmTitle">
-                <h3 id="postSessionConfirmTitle" class="post-session-simple__panel-title" tabindex="-1">
-                  {{ postSessionConfirmationTitle }}
-                </h3>
-                <p class="post-session-simple__range">
-                  <strong>{{ postSessionRecommendationDisplaySurahName }}</strong>
-                  <span v-if="postSessionRecommendation?.ayah_range">
-                    · {{ formatAyahRangeDisplay(
-                      postSessionRecommendation.ayah_range.from,
-                      postSessionRecommendation.ayah_range.to
-                    ) }}
-                  </span>
-                </p>
-                <div v-if="postSessionSimpleReason" class="post-session-simple__why">
-                  <p class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
-                </div>
-                <p v-if="postSessionRecommendationStartError" class="post-session-simple__error" role="alert">
-                  {{ postSessionRecommendationStartError }}
-                </p>
-              </section>
-            </template>
-
-            <template v-else>
-              <div class="post-session-simple__stack post-session-simple__stack--calm ps-calm">
-                <section
-                  class="ps-plan ps-plan--calm"
-                  :class="{
-                    'is-loading': postSessionRecommendationStatus === 'loading',
-                    'is-empty': postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable
-                  }"
-                  :data-plan="postSessionPlanKind"
-                  :aria-busy="postSessionRecommendationStatus === 'loading' ? 'true' : 'false'"
-                  :aria-label="t('memorisation.postSession.recommendation.suggestedNextStep')"
-                >
-                  <div v-if="postSessionRecommendationStatus === 'loading'" class="post-session-simple__skeleton" aria-hidden="true">
-                    <span></span><span></span><span></span>
-                  </div>
-
-                  <!-- AI Recite result — beginner What / How / Result -->
-                  <template v-else-if="aiReciteFinalPlan">
-                    <section
-                      class="ps-ai-result ps-ai-result--beginner"
-                      :aria-label="t('memorisation.aiRecitePlan.resultAria')"
-                    >
-                      <header class="ps-ai-result__block">
-                        <p class="ps-ai-result__block-label">
-                          {{ t('memorisation.aiRecitePlan.beginner.yourResult') }}
-                        </p>
-                        <p class="ps-ai-result__score" aria-live="polite">
-                          <span class="ps-ai-result__score-value">
-                            {{ aiReciteFinalPlan.averageAccuracy ?? '—' }}%
-                          </span>
-                          <span class="ps-ai-result__score-label">
-                            {{ t('memorisation.aiRecitePlan.accuracyLabel') }}
-                          </span>
-                        </p>
-                        <p class="ps-ai-result__verdict">
-                          {{ aiReciteMasteryAchieved
-                            ? t('memorisation.aiRecitePlan.beginner.strong')
-                            : t('memorisation.aiRecitePlan.beginner.notFirm') }}
-                        </p>
-                        <p class="ps-ai-result__feedback">{{ aiReciteFriendlyFeedback }}</p>
-                      </header>
-
-                      <template v-if="!aiReciteMasteryAchieved">
-                        <div class="ps-ai-result__block">
-                          <p class="ps-ai-result__block-label">
-                            {{ t('memorisation.aiRecitePlan.beginner.what') }}
-                          </p>
-                          <p class="ps-ai-result__range">
-                            {{ aiReciteFinalPlan.planDetail?.range?.label || aiReciteRangeLabel }}
-                          </p>
-                        </div>
-
-                        <div class="ps-ai-result__block" v-if="aiRecitePrimaryTechnique">
-                          <p class="ps-ai-result__block-label">
-                            {{ t('memorisation.aiRecitePlan.beginner.how') }}
-                          </p>
-                          <p class="ps-ai-result__method">{{ aiRecitePrimaryTechnique.title }}</p>
-                          <p
-                            v-if="aiRecitePrimaryTechnique.how"
-                            class="ps-ai-result__method-how"
-                          >{{ aiRecitePrimaryTechnique.how }}</p>
-                          <ol
-                            v-if="aiRecitePrimaryTechnique.steps?.length"
-                            class="ps-ai-result__steps"
-                          >
-                            <li
-                              v-for="(step, idx) in aiRecitePrimaryTechnique.steps.slice(0, 3)"
-                              :key="`step-${idx}`"
-                            >{{ step }}</li>
-                          </ol>
-                          <div
-                            v-if="aiReciteResultSetupChips.length"
-                            class="ps-ai-result__chips"
-                          >
-                            <span
-                              v-for="row in aiReciteResultSetupChips"
-                              :key="row.key"
-                              class="ps-ai-result__chip"
-                            >{{ row.label }}</span>
-                          </div>
-                          <p
-                            v-if="aiReciteFinalPlan.planDetail?.practiceApproach?.with"
-                            class="ps-ai-result__tip"
-                          >{{ aiReciteFinalPlan.planDetail.practiceApproach.with }}</p>
-                        </div>
-
-                        <div
-                          v-if="practiceFocusWeakWordRows.length"
-                          class="ps-ai-result__block ps-ai-result__words"
-                        >
-                          <p class="ps-ai-result__block-label">
-                            {{ t('memorisation.aiRecitePlan.beginner.words') }}
-                          </p>
-                          <ul class="ps-ai-result__word-list">
-                            <li
-                              v-for="word in practiceFocusWeakWordRows.slice(0, 8)"
-                              :key="word.key"
-                            >
-                              <span class="ps-ai-result__word" dir="rtl" lang="ar">{{ word.text }}</span>
-                            </li>
-                          </ul>
-                        </div>
-                      </template>
-                    </section>
-                  </template>
-
-                  <!-- Surah-complete AI recap -->
-                  <template v-else-if="postSessionSurahRecap">
-                    <section
-                      class="ps-ai-result ps-ai-result--surah-recap"
-                      :aria-label="t('memorisation.aiRecitePlan.surahRecap.aria')"
-                    >
-                      <header class="ps-ai-result__block">
-                        <p class="ps-ai-result__block-label">
-                          {{ t('memorisation.aiRecitePlan.surahRecap.kicker') }}
-                        </p>
-                        <h3 class="ps-ai-result__range">{{ postSessionSurahRecap.title }}</h3>
-                        <p class="ps-ai-result__feedback">{{ postSessionSurahRecap.summary }}</p>
-                      </header>
-                      <ul class="ps-ai-result__steps" v-if="postSessionSurahRecap.bullets?.length">
-                        <li
-                          v-for="(bullet, idx) in postSessionSurahRecap.bullets.slice(0, 4)"
-                          :key="`recap-${idx}`"
-                        >{{ bullet }}</li>
-                      </ul>
-                      <p
-                        v-if="postSessionSurahRecap.nextLabel"
-                        class="ps-ai-result__tip"
-                      >{{ postSessionSurahRecap.nextLabel }}</p>
-                    </section>
-                  </template>
-
-                  <!-- Before AI Recite: range + status-aware copy. -->
-                  <template v-else>
-                    <div class="ps-rec ps-rec--ai-first">
-                      <p class="ps-rec__caption">{{ postSessionStatusRangeCaption }}</p>
-                      <header class="ps-rec__head">
-                        <h3 class="ps-rec__range">
-                          {{ aiReciteRangeLabel || postSessionRecommendationTitle }}
-                        </h3>
-                      </header>
-
-                      <p class="ps-rec__ai-first-copy">
-                        {{ postSessionStatusBodyCopy }}
-                      </p>
-                    </div>
-                  </template>
-
-                  <p
-                    v-if="postSessionRecommendationStatus === 'error' && postSessionRecommendationError"
-                    class="post-session-simple__error"
-                    role="status"
-                  >
-                    {{ postSessionRecommendationError }}
-                    <button type="button" class="post-session-simple__link" @click="retryPostSessionRecommendation">
-                      {{ t('memorisation.postSession.recommendation.retry') }}
-                    </button>
-                  </p>
-                  <p v-if="postSessionRecommendationStartError" class="post-session-simple__error" role="alert">
-                    {{ postSessionRecommendationStartError }}
-                  </p>
-                </section>
-              </div>
-            </template>
+            <p
+              v-else-if="postSessionRecommendationStartError"
+              class="post-session-simple__error"
+              role="alert"
+            >
+              {{ postSessionRecommendationStartError }}
+            </p>
           </div>
 
           <footer class="post-session-simple__footer">
             <div
-              class="post-session-simple__actions"
-              :class="{
-                'post-session-simple__actions--3': onboardingSampleSessionActive
-                  || (aiReciteCanRetryFromSuccess && postSessionRecommendationStep !== 'confirm'),
-                'post-session-simple__actions--stack': !onboardingSampleSessionActive
-                  && postSessionRecommendationStep !== 'confirm'
-                  && !aiReciteCanRetryFromSuccess
-                  && postSessionRecommendationActionable,
-              }"
+              class="post-session-simple__actions post-session-simple__actions--3 post-session-simple__actions--cards"
+              data-testid="post-session-actions"
             >
               <template v-if="onboardingSampleSessionActive">
                 <button type="button" class="post-session-simple__btn post-session-simple__btn--secondary" @click="repeatPostSession">
@@ -3120,60 +2943,38 @@
                 </button>
               </template>
 
-              <template v-else-if="postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
-                <button
-                  type="button"
-                  class="post-session-simple__btn post-session-simple__btn--secondary"
-                  :disabled="postSessionRecommendationStarting"
-                  @click="chooseOtherFromRecommendation"
-                >
-                  <span>{{ t('memorisation.postSession.recommendation.startDifferentSession') }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="post-session-simple__btn post-session-simple__btn--primary"
-                  :disabled="postSessionRecommendationStarting"
-                  :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
-                  @click="confirmPostSessionRecommendation"
-                >
-                  <span>{{ postSessionConfirmationPrimaryLabel }}</span>
-                </button>
-              </template>
-
               <template v-else>
                 <button
                   type="button"
-                  class="post-session-simple__btn"
-                  :class="aiReciteFinalPlan
-                    ? 'post-session-simple__btn--primary'
-                    : 'post-session-simple__btn--ai'"
-                  :disabled="postSessionActionsBusy || (!aiReciteFinalPlan && postSessionAiReciteBusy)"
-                  :aria-busy="(postSessionRecommendationStarting || postSessionAiReciteBusy) ? 'true' : 'false'"
-                  @click="onPostSessionCalmPrimaryAction"
+                  class="post-session-simple__action-card"
+                  :disabled="postSessionActionsBusy || postSessionRecommendationStarting"
+                  :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
+                  data-action="continue"
+                  @click="onPostSessionContinueToAyahs"
                 >
-                  <i v-if="aiTestModalsEnabled && !aiReciteFinalPlan" class="bi bi-mic-fill" aria-hidden="true"></i>
-                  <span>{{ postSessionCalmPrimaryLabel }}</span>
+                  <i class="bi bi-arrow-right-circle" aria-hidden="true"></i>
+                  <span>{{ postSessionContinueToAyahsLabel }}</span>
                 </button>
                 <button
-                  v-if="aiTestModalsEnabled && aiReciteCanRetryFromSuccess"
                   type="button"
-                  class="post-session-simple__btn post-session-simple__btn--ai"
-                  :disabled="postSessionActionsBusy || postSessionAiReciteBusy"
+                  class="post-session-simple__action-card post-session-simple__action-card--recommended"
+                  :disabled="postSessionActionsBusy || postSessionAiReciteBusy || !aiTestModalsEnabled"
                   :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
-                  @click="retryPostSessionAiRecite"
+                  data-action="test-with-ai"
+                  @click="onPostSessionTestWithAi"
                 >
                   <i class="bi bi-mic-fill" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.aiRecitePlan.tryAgainRemaining', {
-                    remaining: aiReciteAttemptsRemaining,
-                  }) }}</span>
+                  <span>{{ t('memorisation.postSession.actions.testWithAi') }}</span>
                 </button>
                 <button
                   type="button"
-                  class="post-session-simple__btn post-session-simple__btn--ghost"
+                  class="post-session-simple__action-card"
                   :disabled="postSessionActionsBusy"
+                  data-action="choose-session"
                   @click="chooseOtherFromRecommendation"
                 >
-                  <span>{{ t('memorisation.postSession.coach.differentSession') }}</span>
+                  <i class="bi bi-grid" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.postSession.actions.chooseAnotherSession') }}</span>
                 </button>
               </template>
             </div>
@@ -3471,70 +3272,57 @@
   </div>
 
     <AiMemorisationDetectionModal
-      v-if="aiTestModalsEnabled"
+      v-if="aiTestModalsEnabled && amdOpen && amdEntrySource === 'test-with-ai'"
       ref="amdModal"
-      :open="amdOpen"
+      :open="true"
       :stage="amdStage"
       :title="amdTitle"
       :range-label="amdRangeLabel"
-      :ayah-count="amdAyahCount"
-      :mic-status="amdMicStatus"
-      :mic-status-label="amdMicStatusLabel"
-      :stage-label="amdStageLabel"
-      :live-hint="amdLiveHint"
-      :elapsed-label="amdElapsedLabel"
+      :mic-status="amdLearnerMicStatus"
+      :mic-status-label="amdLearnerMicStatusLabel"
+      :mic-guidance="amdMicGuidance"
       :ayah-html="amdStaticAyahHtml"
-      :result-ayah-html="amdResultAyahHtml"
-      :hidden-text="amdHiddenTextEnabled"
+      :blur-active="amdHiddenTextEnabled"
       :peeking="amdPeekActive"
       :tajweed="amdTajweedEnabled"
-      :audio-playing="!!activeSelfCheckAyahPlaybackKey"
-      :can-play-audio="amdCanPlayAudio"
-      :assessment="amdAssessment"
-      :practice-plan="amdPracticePlan"
-      :improvement="amdImprovement"
+      :difficulty="amdDifficultyPercent"
+      :difficulty-options="amdDifficultyOptions"
       :error="amdError"
       :busy="amdBusy"
-      :adjust-open="amdAdjustOpen"
-      :how-steps="amdHowSteps"
-      :show-howto="false"
-      :ready-copy="amdReadyCopy"
-      :how-it-works-kicker="amdHowKicker"
-      :start-label="amdLabels.start"
-      :stop-label="amdLabels.stop"
-      :cancel-label="amdLabels.cancel"
+      :ending-soon="amdEndingSoon"
+      :error-action="amdErrorAction"
       :close-label="amdLabels.close"
-      :recite-tool-label="amdLabels.recite"
-      :audio-tool-label="amdLabels.audio"
-      :memorizing-label="amdLabels.memorizing"
+      :tools-label="amdLabels.tools"
+      :blur-label="amdLabels.blur"
       :peek-label="amdLabels.peek"
-      :tajweed-label="amdLabels.tajweed"
+      :stop-label="amdLabels.stop"
+      :start-label="amdLabels.start"
       :reset-label="amdLabels.reset"
-      :start-plan-label="amdLabels.startPlan"
-      :adjust-plan-label="amdLabels.adjustPlan"
-      :choose-other-label="amdLabels.chooseOther"
-      :retest-label="amdLabels.retest"
-      :retry-label="amdLabels.retry"
-      @start="startAmdAssessment"
-      @stop="stopAmdAssessment"
-      @cancel="closeAmdModal"
-      @start-plan="startAmdPracticePlan"
-      @toggle-adjust="setAmdAdjustOpen"
-      @adjust="adjustAmdPracticePlan"
-      @choose-other="chooseOtherFromAmd"
-      @retry="retryAmdAssessment"
-      @retest="retestAmdFromPlan"
-      @toggle-hidden="toggleAmdHiddenText"
-      @toggle-tajweed="toggleAmdTajweed"
+      :difficulty-label="amdLabels.difficulty"
+      :complete-title="amdLabels.completeTitle"
+      :complete-body="amdLabels.completeBody"
+      :session-ended-label="amdLabels.sessionEnded"
+      :session-ended-body="amdLabels.sessionEndedBody"
+      :test-again-label="amdLabels.testAgain"
+      :done-label="amdLabels.done"
+      :enable-mic-label="amdLabels.enableMic"
+      :try-again-label="amdLabels.retry"
+      @cancel="closeAmdModalToCompletion"
+      @toggle-blur="toggleAmdHiddenText"
       @peek-start="startAmdPeek"
       @peek-end="stopAmdPeek"
-      @play-audio="playAmdAudioHelp"
       @reset="resetAmdLiveSurface"
-      @word-click="handleAmdWordClick"
+      @set-difficulty="setAmdDifficulty"
+      @start="startAmdAssessment"
+      @stop="stopAmdAndAssess"
+      @test-again="resetAmdLiveSurface"
+      @done="doneAmdTest"
+      @retry="retryAmdAssessment"
+      @enable-mic="startAmdAssessment"
     />
 
   <div
-    v-if="postSessionAdaptiveCheckActive"
+    v-if="postSessionAdaptiveCheckActive && !postSessionAiReciteActive && !amdOpen"
     class="memory-check-overlay"
     :data-theme="theme"
     role="dialog"
@@ -3700,11 +3488,11 @@
                 {{ t('memorisation.postSession.adaptiveCheck.aiReciteNotRun') }}
               </p>
               <button
-                v-if="aiTestModalsEnabled"
+                v-if="false"
                 type="button"
                 class="quiz-ai-result__link"
                 :disabled="postSessionActionsBusy"
-                @click="openPostSessionAiRecite"
+                @click="onPostSessionTestWithAi"
               >
                 <i class="bi bi-mic" aria-hidden="true"></i>
                 {{ t('memorisation.postSession.adaptiveCheck.voiceOnlyCta') }}
