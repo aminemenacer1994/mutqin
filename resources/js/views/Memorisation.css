@@ -12878,12 +12878,12 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .madani-word.highlighted,
 .madani-word.phrase-highlighted {
-  background: transparent !important;
-  color: #b45309 !important;
-  -webkit-text-fill-color: #b45309;
-  border-radius: 0;
-  box-shadow: none !important;
-  padding-inline: 0;
+  background: color-mix(in srgb, #f0b35a 28%, transparent) !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit;
+  border-radius: 0.18em;
+  box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #c47c1a 55%, transparent) !important;
+  padding-inline: 0.04em;
   z-index: 2;
 }
 
@@ -39993,7 +39993,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
   .post-session-simple__actions,
   .post-session-simple__actions--3 {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
 
   .post-session-simple__segment {
@@ -45782,12 +45782,65 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   color: #f7efdf;
 }
 
-/* Presence coaching cards removed from live session UI */
+/* Presence coaching: restored as scrolling mini-card on the active ayah */
 .live-practice-method,
 .live-practice-coach,
 .live-practice-guidance,
 .live-practice-guidance--mushaf {
   display: none !important;
+}
+
+.live-coach-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0.55rem 0 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, #e8f3ec 78%, var(--surface, #fff));
+  border: 1px solid color-mix(in srgb, #2e9d62 18%, transparent);
+  color: color-mix(in srgb, var(--text, #1c1917) 88%, #143024);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset;
+  animation: live-coach-mini-in 220ms ease-out;
+}
+
+.live-coach-mini__method {
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #1f6b45 82%, var(--text, #1c1917));
+}
+
+.live-coach-mini__text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  font-weight: 450;
+}
+
+.live-coach-mini--mushaf {
+  position: sticky;
+  top: 0.35rem;
+  z-index: 6;
+  margin: 0.35rem 0.55rem 0.55rem;
+  backdrop-filter: blur(8px);
+}
+
+@keyframes live-coach-mini-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+[data-theme="dark"] .live-coach-mini {
+  background: color-mix(in srgb, #1a2a22 82%, #0c0c0c);
+  border-color: color-mix(in srgb, #6ec9a4 22%, transparent);
+  color: #e8f5ee;
+  box-shadow: none;
+}
+
+[data-theme="dark"] .live-coach-mini__method {
+  color: #9fd9b8;
 }
 
 .mushaf-shell__focus-label {
@@ -46628,7 +46681,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 0.5rem;
+  gap: 0.55rem;
   width: 100%;
   align-items: stretch;
 }
@@ -46637,22 +46690,22 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  min-height: 2.35rem !important;
+  min-height: 2.75rem !important;
   height: auto !important;
   min-width: 0;
   width: 100%;
-  border-radius: 0.75rem !important;
-  font-size: clamp(0.72rem, 1.5vw, 0.84rem) !important;
+  border-radius: 0.65rem !important;
+  font-size: clamp(0.72rem, 1.35vw, 0.88rem) !important;
   font-weight: 600 !important;
   letter-spacing: -0.01em;
-  line-height: 1.2;
+  line-height: 1.25;
   white-space: normal !important;
   overflow: visible !important;
   text-overflow: clip !important;
   text-align: center;
-  padding: 0.45rem 0.5rem !important;
+  padding: 0.55rem 0.45rem !important;
   overflow-wrap: break-word;
-  hyphens: manual;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn span {
@@ -46666,10 +46719,33 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--secondary {
-  background: var(--ps-card);
-  border: 1px solid var(--ps-line);
-  color: var(--ps-ink);
+  background: transparent !important;
+  border: 1px solid color-mix(in srgb, var(--ps-line, #d6d3d1) 90%, transparent) !important;
+  color: var(--ps-ink, #1c1917) !important;
   box-shadow: none !important;
+  font-weight: 550 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ps-card, #fff) 70%, var(--ps-cream, #f7f3eb)) !important;
+  border-color: color-mix(in srgb, var(--ps-ink, #1c1917) 22%, transparent) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ghost {
+  background: transparent !important;
+  border: 0 !important;
+  color: color-mix(in srgb, var(--ps-ink, #1c1917) 62%, transparent) !important;
+  box-shadow: none !important;
+  font-weight: 500 !important;
+  min-height: 2.2rem !important;
+  padding: 0.35rem 0.75rem !important;
+  font-size: 0.86rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ghost:hover:not(:disabled) {
+  color: var(--ps-ink, #1c1917) !important;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ai {
@@ -46683,10 +46759,24 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   border-color: transparent !important;
   color: #fff !important;
   box-shadow: none !important;
+  font-weight: 650 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--primary:hover:not(:disabled) {
+  filter: brightness(0.96);
 }
 
 [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--primary {
   color: #10241c !important;
+}
+
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--secondary {
+  border-color: rgba(245, 242, 234, 0.16) !important;
+  color: #f4f4f5 !important;
+}
+
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ghost {
+  color: rgba(244, 244, 245, 0.68) !important;
 }
 
 @media (max-width: 720px) {
@@ -46710,13 +46800,13 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   }
 
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
-    gap: 0.35rem;
+    gap: 0.45rem;
   }
 
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn {
-    min-height: 2.45rem !important;
-    font-size: clamp(0.66rem, 2.6vw, 0.78rem) !important;
-    padding: 0.4rem 0.3rem !important;
+    min-height: 2.65rem !important;
+    font-size: 0.9rem !important;
+    padding: 0.6rem 0.9rem !important;
     border-radius: 0.65rem !important;
   }
 
@@ -46731,9 +46821,9 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   }
 
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn {
-    font-size: 0.64rem !important;
-    min-height: 2.55rem !important;
-    padding: 0.35rem 0.25rem !important;
+    font-size: 0.88rem !important;
+    min-height: 2.7rem !important;
+    padding: 0.55rem 0.85rem !important;
   }
 
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__footer {
@@ -47340,10 +47430,10 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 
 /* —— Post-session CTA hierarchy + evidence + live guidance (v114) —— */
 .post-session-simple__actions--3 {
-  display: flex;
-  flex-direction: column;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   align-items: stretch;
-  gap: 0.65rem;
+  gap: 0.55rem;
 }
 
 .post-session-simple__text-link {
@@ -47473,4 +47563,263 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 [data-theme="dark"] .workspace-shell-actions .action-btn.action-btn-exit:hover {
   color: #fafaf9 !important;
   background: #35302c !important;
+}
+
+/* Desktop: highlight word backgrounds, never recolour tajweed text */
+@media (min-width: 768px) {
+  .verse-arabic .wbw-word.highlighted,
+  .verse-arabic word.highlighted,
+  .mushaf-ayah-text .wbw-word.highlighted,
+  .mushaf-ayah-text word.highlighted,
+  .wbw-word.highlighted {
+    background: color-mix(in srgb, var(--accent, #c48a4a) 22%, transparent) !important;
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
+    box-shadow: inset 0 -0.12em 0 color-mix(in srgb, var(--accent, #c48a4a) 55%, transparent);
+    transform: none;
+    border-radius: 0.2em;
+    padding-inline: 0.06em;
+  }
+
+  .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+  .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*="tajweed-"],
+  .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {
+    background: color-mix(in srgb, var(--accent, #c48a4a) 20%, transparent);
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
+    box-shadow: inset 0 -0.12em 0 color-mix(in srgb, var(--accent, #c48a4a) 50%, transparent);
+    transform: none;
+  }
+
+  .wbw-word.phrase-highlighted,
+  .verse-arabic word.phrase-highlighted {
+    background: color-mix(in srgb, var(--accent, #c48a4a) 14%, transparent) !important;
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
+    box-shadow: inset 0 -0.1em 0 color-mix(in srgb, var(--accent, #c48a4a) 40%, transparent);
+  }
+
+  [data-theme="dark"] .verse-arabic .wbw-word.highlighted,
+  [data-theme="dark"] .verse-arabic word.highlighted,
+  [data-theme="dark"] .wbw-word.highlighted {
+    background: color-mix(in srgb, #d4a24a 28%, transparent) !important;
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
+    box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #f0b35a 50%, transparent);
+  }
+}
+
+.mushaf-viewport-scroll {
+  position: relative;
+  min-height: 0;
+}
+
+.mushaf-workspace .mushaf-viewport-scroll {
+  overflow: auto;
+}
+
+/* —— CRITICAL: always keep post-session CTAs in a 3-col grid —— */
+.post-session-simple__actions--3,
+.post-session-simple--calm-v2 .post-session-simple__actions--3,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  gap: 0.5rem !important;
+}
+
+@media (max-width: 720px) {
+  .post-session-simple__actions--3,
+  .post-session-simple--calm-v2 .post-session-simple__actions--3,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn {
+    font-size: clamp(0.64rem, 2.4vw, 0.78rem) !important;
+    padding: 0.45rem 0.3rem !important;
+    min-height: 2.55rem !important;
+  }
+}
+
+/* —— Unified top-card icons (layout/font/controls/menu) —— */
+.top-card-icon-controls .top-card-icon-control,
+.top-card-icon-controls .view-mode-btn.workspace-layout-btn,
+.top-card-icon-controls .view-mode-btn,
+.top-card-icon-controls .font-dropdown-trigger,
+.top-card-icon-controls .top-card-controls-trigger,
+.top-card-icon-controls .top-card-ellipsis {
+  background: #ffffff !important;
+  border: 1px solid color-mix(in srgb, var(--accent, #c48a4a) 22%, transparent) !important;
+  color: color-mix(in srgb, var(--accent, #9a6738) 82%, #3f3f46) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.top-card-icon-controls .top-card-icon-control:hover,
+.top-card-icon-controls .view-mode-btn:hover,
+.top-card-icon-controls .font-dropdown-trigger:hover,
+.top-card-icon-controls .top-card-controls-trigger:hover,
+.top-card-icon-controls .top-card-ellipsis:hover {
+  background: color-mix(in srgb, var(--accent, #c48a4a) 10%, #ffffff) !important;
+  border-color: color-mix(in srgb, var(--accent, #c48a4a) 40%, transparent) !important;
+  color: var(--accent-strong, #8a5a2b) !important;
+}
+
+.top-card-icon-controls .top-card-icon-control.active,
+.top-card-icon-controls .view-mode-btn.active {
+  background: color-mix(in srgb, var(--accent, #c48a4a) 16%, #ffffff) !important;
+  border-color: color-mix(in srgb, var(--accent, #c48a4a) 45%, transparent) !important;
+  color: var(--accent-strong, #8a5a2b) !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .top-card-icon-controls .top-card-icon-control,
+[data-theme="dark"] .top-card-icon-controls .view-mode-btn.workspace-layout-btn,
+[data-theme="dark"] .top-card-icon-controls .view-mode-btn,
+[data-theme="dark"] .top-card-icon-controls .font-dropdown-trigger,
+[data-theme="dark"] .top-card-icon-controls .top-card-controls-trigger,
+[data-theme="dark"] .top-card-icon-controls .top-card-ellipsis {
+  background: #18181b !important;
+  border: 1px solid rgba(245, 242, 234, 0.14) !important;
+  color: #f4f4f5 !important;
+}
+
+[data-theme="dark"] .top-card-icon-controls .top-card-icon-control.active,
+[data-theme="dark"] .top-card-icon-controls .view-mode-btn.active {
+  background: color-mix(in srgb, #d4af6e 28%, #18181b) !important;
+  border-color: color-mix(in srgb, #d4af6e 45%, transparent) !important;
+  color: #f7efdf !important;
+}
+
+/* —— Ornate ayah end markers (match mushaf medallion examples) —— */
+.verse-arabic .verse-ayah-end-number,
+.verse-arabic-with-end .verse-ayah-end-number,
+.mushaf-ayah-number,
+.amd-mushaf-stream .verse-ayah-end-number,
+.amd-mushaf-ayah--premium .verse-ayah-end-number,
+.main.mushaf-mode-active .mushaf-ayah-number {
+  --ayah-mark-ink: #1a1712;
+  --ayah-mark-ring: #2a241c;
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  min-width: 1.55em !important;
+  min-height: 1.55em !important;
+  width: 1.55em !important;
+  height: 1.55em !important;
+  margin-inline: 0.28em 0.12em !important;
+  padding: 0.12em !important;
+  border-radius: 50% !important;
+  border: 1.35px solid var(--ayah-mark-ring) !important;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 58%, color-mix(in srgb, var(--ayah-mark-ring) 35%, transparent) 59% 62%, transparent 63%),
+    radial-gradient(circle at 50% 8%, var(--ayah-mark-ring) 0 0.08em, transparent 0.1em),
+    radial-gradient(circle at 50% 92%, var(--ayah-mark-ring) 0 0.08em, transparent 0.1em),
+    radial-gradient(circle at 8% 50%, var(--ayah-mark-ring) 0 0.07em, transparent 0.09em),
+    radial-gradient(circle at 92% 50%, var(--ayah-mark-ring) 0 0.07em, transparent 0.09em),
+    radial-gradient(circle at 50% 42%, #fffdf8 0%, #f7f1e4 58%, #efe4cb 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--ayah-mark-ring) 28%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--ayah-mark-ring) 18%, transparent) !important;
+  color: var(--ayah-mark-ink) !important;
+  -webkit-text-fill-color: var(--ayah-mark-ink) !important;
+  font-family: "KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif !important;
+  font-size: 0.42em !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  font-variant-numeric: normal !important;
+  letter-spacing: 0 !important;
+}
+
+.verse-arabic .verse-ayah-end-number__digit,
+.mushaf-ayah-number-digit,
+.amd-mushaf-stream .verse-ayah-end-number__digit {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+[data-theme="dark"] .verse-arabic .verse-ayah-end-number,
+[data-theme="dark"] .verse-arabic-with-end .verse-ayah-end-number,
+[data-theme="dark"] .mushaf-ayah-number,
+[data-theme="dark"] .amd-mushaf-stream .verse-ayah-end-number,
+[data-theme="dark"] .amd-mushaf-ayah--premium .verse-ayah-end-number,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-ayah-number {
+  --ayah-mark-ink: #f5f0e6;
+  --ayah-mark-ring: #e8d7b2;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 58%, color-mix(in srgb, var(--ayah-mark-ring) 40%, transparent) 59% 62%, transparent 63%),
+    radial-gradient(circle at 50% 8%, var(--ayah-mark-ring) 0 0.08em, transparent 0.1em),
+    radial-gradient(circle at 50% 92%, var(--ayah-mark-ring) 0 0.08em, transparent 0.1em),
+    radial-gradient(circle at 8% 50%, var(--ayah-mark-ring) 0 0.07em, transparent 0.09em),
+    radial-gradient(circle at 92% 50%, var(--ayah-mark-ring) 0 0.07em, transparent 0.09em),
+    radial-gradient(circle at 50% 42%, #2a261c 0%, #1a1712 58%, #0d0c0a 100%) !important;
+  color: var(--ayah-mark-ink) !important;
+  -webkit-text-fill-color: var(--ayah-mark-ink) !important;
+  border-color: var(--ayah-mark-ring) !important;
+}
+
+/* Stacked/mushaf Arabic body uses Uthmani family */
+.verse-arabic,
+.verse-arabic.verse-arabic-primary,
+.amd-mushaf-ayah--premium {
+  font-family: "KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif !important;
+}
+
+.post-session-simple__evidence-ayah {
+  font-family: inherit !important;
+  font-size: 0.92rem;
+  font-weight: 550;
+  color: color-mix(in srgb, var(--ps-ink, #1c1917) 78%, transparent);
+  margin-inline-end: 0.45rem;
+}
+
+.post-session-simple__evidence-ar {
+  font-family: "KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Amiri Quran", "Amiri", serif !important;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.post-session-simple__evidence-row[data-key="focus"] dd {
+  font-family: inherit !important;
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* AMD live colours: amber + grey clearly applied */
+.amd-mushaf-ayah--premium .recitation-word-partial,
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-partial {
+  color: #b7791f !important;
+  -webkit-text-fill-color: #b7791f !important;
+}
+
+.amd-mushaf-ayah--premium .recitation-word-pending:not(.amd-word-hidden),
+.amd-mushaf-ayah--premium .recitation-word-notAttempted:not(.amd-word-hidden),
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-pending:not(.amd-word-hidden),
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-notAttempted:not(.amd-word-hidden) {
+  color: #78716c !important;
+  -webkit-text-fill-color: #78716c !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-partial,
+[data-theme="dark"] .amd-mushaf-ayah--premium .wbw-word.recitation-word-partial {
+  color: #e4a76a !important;
+  -webkit-text-fill-color: #e4a76a !important;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-pending:not(.amd-word-hidden),
+[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-notAttempted:not(.amd-word-hidden),
+[data-theme="dark"] .amd-mushaf-ayah--premium .wbw-word.recitation-word-pending:not(.amd-word-hidden),
+[data-theme="dark"] .amd-mushaf-ayah--premium .wbw-word.recitation-word-notAttempted:not(.amd-word-hidden) {
+  color: #a8a29e !important;
+  -webkit-text-fill-color: #a8a29e !important;
 }

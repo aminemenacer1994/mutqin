@@ -43,16 +43,19 @@
 
           <div class="amd-body amd-body--premium">
             <div
-              v-if="isListening || isReady"
-              class="amd-focus-hint"
+              v-if="!isComplete"
+              class="amd-toolbar amd-toolbar--icons"
+              role="toolbar"
+              :aria-label="toolsLabel"
             >
               <button
-                v-if="!isComplete && !isError"
                 type="button"
-                class="amd-peek-link"
+                class="amd-icon-btn amd-icon-btn--peek"
                 :class="{ active: peeking }"
                 :disabled="isComplete"
                 :aria-pressed="peeking ? 'true' : 'false'"
+                :aria-label="peekLabel"
+                :title="peekHintLabel || peekLabel"
                 @mousedown.prevent="onPeekStart"
                 @mouseup.prevent="onPeekEnd"
                 @mouseleave="onPeekEnd"
@@ -64,13 +67,62 @@
                 @keyup.space.prevent="onPeekEnd"
                 @keyup.enter.prevent="onPeekEnd"
                 @blur="onPeekEnd"
-              >{{ peekHintLabel }}</button>
+              >
+                <i class="bi bi-eye" aria-hidden="true"></i>
+              </button>
+
+              <div class="amd-difficulty amd-difficulty--icon">
+                <label class="visually-hidden" :for="difficultyId">{{ wordsShownLabel }}</label>
+                <select
+                  :id="difficultyId"
+                  class="amd-difficulty__select amd-difficulty__select--compact"
+                  :value="difficulty"
+                  :aria-label="wordsShownLabel"
+                  :title="wordsShownLabel"
+                  @change="onDifficultyChange"
+                >
+                  <option
+                    v-for="pct in difficultyOptions"
+                    :key="pct"
+                    :value="pct"
+                  >{{ formatShownPercent(pct) }}</option>
+                </select>
+              </div>
+
+              <div class="amd-text-size" role="group" :aria-label="textSizeLabel">
+                <button
+                  type="button"
+                  class="amd-icon-btn amd-icon-btn--text"
+                  :aria-label="textSizeDecreaseLabel"
+                  :title="textSizeDecreaseLabel"
+                  :disabled="fontScale <= minFontScale"
+                  @click.stop="decreaseFontScale"
+                >
+                  <span aria-hidden="true">A−</span>
+                </button>
+                <button
+                  type="button"
+                  class="amd-icon-btn amd-icon-btn--text"
+                  :aria-label="textSizeIncreaseLabel"
+                  :title="textSizeIncreaseLabel"
+                  :disabled="fontScale >= maxFontScale"
+                  @click.stop="increaseFontScale"
+                >
+                  <span aria-hidden="true">A+</span>
+                </button>
+              </div>
+
               <button
-                v-if="isListening && canStop"
+                v-if="canStop"
                 type="button"
-                class="amd-stop-link"
+                class="amd-icon-btn amd-icon-btn--stop"
+                :class="{ active: isListening }"
+                :aria-label="stopLabel"
+                :title="stopLabel"
                 @click.stop="$emit('stop')"
-              >{{ stopLabel }}</button>
+              >
+                <i class="bi bi-stop-fill" aria-hidden="true"></i>
+              </button>
             </div>
 
             <div
@@ -90,6 +142,7 @@
                 ref="mushafSurface"
                 class="amd-mushaf-ayah amd-mushaf-ayah--premium"
                 :class="{ 'tajweed-enabled': tajweed }"
+                :style="{ '--amd-font-scale': fontScale }"
               ></div>
             </div>
 
@@ -195,6 +248,10 @@ export default {
     resetLabel: { type: String, default: 'Reset' },
     peekHintLabel: { type: String, default: 'Need a hint? Peek at the text' },
     difficultyLabel: { type: String, default: 'Difficulty' },
+    wordsShownLabel: { type: String, default: 'Words shown' },
+    textSizeLabel: { type: String, default: 'Text size' },
+    textSizeIncreaseLabel: { type: String, default: 'Increase text size' },
+    textSizeDecreaseLabel: { type: String, default: 'Decrease text size' },
     completeTitle: { type: String, default: 'Mā shā’ Allāh — test complete' },
     completeBody: { type: String, default: 'You recalled this range successfully.' },
     sessionEndedLabel: { type: String, default: 'Session complete' },
@@ -224,13 +281,14 @@ export default {
       difficultyId: `amd-diff-${Math.random().toString(36).slice(2, 9)}`,
       _htmlSyncTimer: null,
       _peekKeyHeld: false,
+      fontScale: 1.12,
+      minFontScale: 0.9,
+      maxFontScale: 1.45,
+      themeAttr: 'light',
+      _themeObserver: null,
     }
   },
   computed: {
-    themeAttr() {
-      if (typeof document === 'undefined') return 'light'
-      return document.documentElement.getAttribute('data-theme') || 'light'
-    },
     isComplete() {
       return this.stage === 'complete'
     },
@@ -264,6 +322,7 @@ export default {
   watch: {
     open(isOpen) {
       if (isOpen) {
+        this.syncThemeAttr()
         this.$nextTick(() => this.scheduleMushafHtml(this.ayahHtml, true))
       } else {
         this.onPeekEnd()
@@ -276,14 +335,46 @@ export default {
       if (this.open) this.$nextTick(() => this.scheduleMushafHtml(this.ayahHtml, true))
     },
   },
+  mounted() {
+    this.syncThemeAttr()
+    if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined') {
+      this._themeObserver = new MutationObserver(() => this.syncThemeAttr())
+      this._themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme'],
+      })
+    }
+  },
   beforeUnmount() {
     if (this._htmlSyncTimer) {
       clearTimeout(this._htmlSyncTimer)
       this._htmlSyncTimer = null
     }
+    if (this._themeObserver) {
+      this._themeObserver.disconnect()
+      this._themeObserver = null
+    }
     this.onPeekEnd()
   },
   methods: {
+    syncThemeAttr() {
+      if (typeof document === 'undefined') {
+        this.themeAttr = 'light'
+        return
+      }
+      this.themeAttr = document.documentElement.getAttribute('data-theme') || 'light'
+    },
+    formatShownPercent(hidePercent) {
+      const hide = Number(hidePercent)
+      const shown = hide === 100 ? 0 : Math.max(0, 100 - hide)
+      return `${shown}%`
+    },
+    increaseFontScale() {
+      this.fontScale = Math.min(this.maxFontScale, Math.round((this.fontScale + 0.08) * 100) / 100)
+    },
+    decreaseFontScale() {
+      this.fontScale = Math.max(this.minFontScale, Math.round((this.fontScale - 0.08) * 100) / 100)
+    },
     setMushafHtml(html = '') {
       this.scheduleMushafHtml(html)
     },

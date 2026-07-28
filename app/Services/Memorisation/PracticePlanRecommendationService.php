@@ -460,7 +460,7 @@ class PracticePlanRecommendationService
             'blur' => [
                 'id' => 'blur',
                 'title' => 'Progressive Blur',
-                'why' => 'Your foundation is strong — light recall will firm it.',
+                'why' => 'Your foundation is strong. Light recall will firm it.',
                 'how' => 'Begin with more text visible, then hide more each repeat.',
                 'steps' => [
                     'Read once with the text clear.',
@@ -542,7 +542,7 @@ class PracticePlanRecommendationService
             $ayahPart = $ayah > 0 ? " in Āyah {$ayah}" : '';
 
             return "One phrase{$ayahPart} was unclear ({$focus}). Practise the surrounding phrase with {$method}"
-                .($methodHow !== '' ? " — {$methodHow}" : '')
+                .($methodHow !== '' ? ". {$methodHow}" : '')
                 .', then continue.';
         }
         if (count($weakWords) === 1) {
@@ -575,7 +575,7 @@ class PracticePlanRecommendationService
     private function friendlySummary(int $accuracy): string
     {
         if ($accuracy >= 85) {
-            return 'Mā shā’ Allāh — strong recall. A light review will keep it firm, then continue.';
+            return 'Mā shā’ Allāh. Strong recall. A light review will keep it firm, then continue.';
         }
         if ($accuracy >= 60) {
             return 'Good effort. A few marked words need another calm pass before you move on.';
@@ -586,7 +586,7 @@ class PracticePlanRecommendationService
 
     private function rangeLabel(?string $surahName, int $from, int $to): string
     {
-        $range = $from === $to ? "Ayah {$from}" : "Ayahs {$from}–{$to}";
+        $range = $from === $to ? "Ayah {$from}" : "Ayahs {$from}-{$to}";
 
         return $surahName ? "{$surahName} · {$range}" : $range;
     }

@@ -575,7 +575,16 @@
                   </div>
                 </header>
 
-                <div ref="mushafViewport" >
+                <div ref="mushafViewport" class="mushaf-viewport-scroll">
+                  <aside
+                    v-if="liveCoachMiniVisible && readingViewMode === 'mushaf'"
+                    class="live-coach-mini live-coach-mini--mushaf"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <span v-if="liveTechniqueGuide?.label" class="live-coach-mini__method">{{ liveTechniqueGuide.label }}</span>
+                    <p class="live-coach-mini__text">{{ livePracticeCoachText }}</p>
+                  </aside>
                   <div v-if="!currentMushafPage" class="mushaf-empty-page">
                     <i class="bi bi-hourglass-split" aria-hidden="true"></i>
                     <strong>{{ workspaceLoadingLabel }}</strong>
@@ -806,6 +815,16 @@
                     </button>
                   </div>
                 </div>
+
+                <aside
+                  v-if="isVerseVisuallyActive(verse.key) && liveCoachMiniVisible"
+                  class="live-coach-mini"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span v-if="liveTechniqueGuide?.label" class="live-coach-mini__method">{{ liveTechniqueGuide.label }}</span>
+                  <p class="live-coach-mini__text">{{ livePracticeCoachText }}</p>
+                </aside>
 
                 <div
                   v-if="getPracticeFocusWordsForVerse(verse.key).length"
@@ -2959,13 +2978,13 @@
             </span>
             <div class="post-session-simple__header-copy">
               <h2 id="postSessionTitle" class="post-session-simple__title">
-                {{ postSessionSupportingMessage || postSessionModalTitle }}
+                {{ postSessionHeaderTitle }}
               </h2>
               <p
-                v-if="postSessionDuaMessage && !onboardingSampleSessionActive"
+                v-if="postSessionHeaderSubtitle"
                 class="post-session-simple__subtitle"
               >
-                {{ postSessionDuaMessage }}
+                {{ postSessionHeaderSubtitle }}
               </p>
             </div>
           </header>
@@ -2999,8 +3018,11 @@
             </template>
 
             <template v-else>
-              <p class="post-session-simple__flow-guide">
-                {{ t('memorisation.postSession.flowGuide') }}
+              <p
+                v-if="postSessionFlowGuideText && (postSessionShowRecommendationPlan || postSessionHasAiCheck)"
+                class="post-session-simple__flow-guide"
+              >
+                {{ postSessionFlowGuideText }}
               </p>
 
               <section
@@ -3098,7 +3120,16 @@
                       :data-key="row.key"
                     >
                       <dt>{{ row.label }}</dt>
-                      <dd :dir="row.key === 'focus' ? 'rtl' : undefined" :lang="row.key === 'focus' ? 'ar' : undefined">{{ row.value }}</dd>
+                      <dd v-if="row.key === 'focus' && (row.word || row.ayahLabel)">
+                        <span v-if="row.ayahLabel" class="post-session-simple__evidence-ayah">{{ row.ayahLabel }}</span>
+                        <span
+                          v-if="row.word"
+                          class="post-session-simple__evidence-ar"
+                          dir="rtl"
+                          lang="ar"
+                        >{{ row.word }}</span>
+                      </dd>
+                      <dd v-else>{{ row.value }}</dd>
                     </div>
                   </dl>
                   <div v-else-if="postSessionStaticPills.length" class="post-session-simple__combo">
@@ -3138,10 +3169,12 @@
               </section>
 
               <p
-                v-else
+                v-else-if="!postSessionHasAiCheck"
                 class="post-session-simple__plan-prompt"
               >
-                {{ t('memorisation.postSession.recommendation.aiFirstBody') }}
+                {{ postSessionIsRepeatRecommendation
+                  ? (t('memorisation.postSession.coach.subtitles.retestAfterPractice') || t('memorisation.postSession.recommendation.aiFirstBody'))
+                  : t('memorisation.postSession.recommendation.aiFirstBody') }}
               </p>
             </template>
           </div>
@@ -3175,7 +3208,7 @@
                 </button>
                 <button
                   type="button"
-                  class="post-session-simple__btn post-session-simple__btn--primary"
+                  class="post-session-simple__btn post-session-simple__btn--secondary"
                   :disabled="postSessionActionsBusy || postSessionAiReciteBusy || !aiTestModalsEnabled"
                   :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
                   @click="onPostSessionTestWithAi"
@@ -3184,11 +3217,11 @@
                 </button>
                 <button
                   type="button"
-                  class="post-session-simple__text-link post-session-simple__text-link--tertiary"
+                  class="post-session-simple__btn post-session-simple__btn--ghost"
                   :disabled="postSessionRecommendationStarting"
                   @click="chooseOtherFromRecommendation"
                 >
-                  {{ postSessionChooseRangeLabel }}
+                  <span>{{ postSessionChooseRangeLabel }}</span>
                 </button>
               </template>
 
@@ -3205,7 +3238,7 @@
                 </button>
                 <button
                   type="button"
-                  class="post-session-simple__btn post-session-simple__btn--primary"
+                  class="post-session-simple__btn post-session-simple__btn--secondary"
                   :disabled="postSessionActionsBusy || !postSessionRecommendationActionable"
                   :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
                   data-action="continue"
@@ -3215,12 +3248,12 @@
                 </button>
                 <button
                   type="button"
-                  class="post-session-simple__text-link post-session-simple__text-link--tertiary"
+                  class="post-session-simple__btn post-session-simple__btn--ghost"
                   :disabled="postSessionActionsBusy"
                   data-action="choose-session"
                   @click="chooseOtherFromRecommendation"
                 >
-                  {{ postSessionChooseRangeLabel }}
+                  <span>{{ postSessionChooseRangeLabel }}</span>
                 </button>
               </template>
 
@@ -3237,21 +3270,21 @@
                 </button>
                 <button
                   type="button"
-                  class="post-session-simple__text-link"
+                  class="post-session-simple__btn post-session-simple__btn--secondary"
                   :disabled="postSessionActionsBusy || !postSessionRecommendationActionable"
                   data-action="skip-for-now"
                   @click="onPostSessionContinueToAyahs"
                 >
-                  {{ postSessionSkipForNowLabel }}
+                  <span>{{ postSessionSkipForNowLabel }}</span>
                 </button>
                 <button
                   type="button"
-                  class="post-session-simple__text-link post-session-simple__text-link--tertiary"
+                  class="post-session-simple__btn post-session-simple__btn--ghost"
                   :disabled="postSessionActionsBusy"
                   data-action="choose-session"
                   @click="chooseOtherFromRecommendation"
                 >
-                  {{ postSessionChooseRangeLabel }}
+                  <span>{{ postSessionChooseRangeLabel }}</span>
                 </button>
               </template>
             </div>
@@ -3331,7 +3364,7 @@
           :class="{ 'is-talqin-only': playerDockShowsTalqinOnly, 'is-unified': talqinRecitationTurnActive && playerVisible }"
         >
           <p
-            v-if="livePracticeCoachText && !talqinRecitationTurnActive"
+            v-if="false"
             class="live-practice-guidance"
             role="status"
             aria-live="polite"
@@ -3584,6 +3617,10 @@
       :start-hint="amdLabels.startHint"
       :reset-label="amdLabels.reset"
       :difficulty-label="amdLabels.difficulty"
+      :words-shown-label="amdLabels.wordsShown"
+      :text-size-label="amdLabels.textSize"
+      :text-size-increase-label="amdLabels.textSizeIncrease"
+      :text-size-decrease-label="amdLabels.textSizeDecrease"
       :complete-title="amdLabels.completeTitle"
       :complete-body="amdLabels.completeBody"
       :session-ended-label="amdLabels.sessionEnded"

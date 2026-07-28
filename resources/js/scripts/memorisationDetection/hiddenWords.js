@@ -108,8 +108,9 @@ export function areAllHiddenWordsRevealed(hiddenIndexes, liveWords = []) {
   const words = Array.isArray(liveWords) ? liveWords : []
   return list.every((index) => {
     const status = String(words[index]?.status || '').toLowerCase()
-    // Accept amber on a recalled slot so the final ayah can still complete.
-    return status === 'correct' || status === 'partial'
+    // Green or amber settle a slot. Red does not block finishing once attempted —
+    // the learner may continue through the full session without being frozen.
+    return status === 'correct' || status === 'partial' || status === 'incorrect'
   })
 }
 

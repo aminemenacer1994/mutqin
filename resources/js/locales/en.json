@@ -1207,11 +1207,14 @@
       "message": "Choose how to continue.",
       "actions": {
         "testWithAi": "Test with AI",
+        "testWithAiAgain": "Test with AI",
         "chooseAnotherSession": "Choose another session",
         "continueToAyahsFallback": "Continue with barakah",
         "retest": "Retest",
         "skipForNow": "Skip for now",
-        "chooseAnotherRange": "Choose another range"
+        "keepPractising": "Keep practising",
+        "chooseAnotherRange": "Choose another range",
+        "chooseDifferentRange": "Choose another range"
       },
       "coach": {
         "yourNextPractice": "Next step",
@@ -1241,6 +1244,7 @@
         "firstPracticeDone": "Practice done. Test when ready.",
         "headers": {
           "practiceDone": "Practice complete",
+          "repeatDone": "Another pass complete",
           "aiDone": "What to strengthen next"
         },
         "subtitles": {
@@ -1347,6 +1351,13 @@
       "duaStrengthen": "May Allah strengthen what you have memorised and make it firm in your heart.",
       "duaStrengthenShort": "May Allah strengthen what you have memorised.",
       "flowGuide": "Test with AI to unlock your next plan, or continue when you are ready.",
+      "flowGuideRepeat": "Test with AI when ready, keep practising this range, or choose another.",
+      "headers": {
+        "repeatPass": "Revision pass complete"
+      },
+      "subtitles": {
+        "repeatPass": "Steady repetition builds lasting memorisation."
+      },
       "sessionStats": "Session stats",
       "statsCompleteShort": "Complete",
       "statsRange": "Ayahs",
@@ -1781,7 +1792,7 @@
         "what": "What to practise",
         "how": "How",
         "words": "Words to watch",
-        "strong": "Strong — ready to move on",
+        "strong": "Strong: ready to move on",
         "notFirm": "Not firm yet"
       },
       "surahRecap": {
@@ -2211,6 +2222,9 @@
       "startRecitation": "Start reciting",
       "startRecitationHint": "Tap once, then recite from memory",
       "difficulty": "Difficulty",
+      "wordsShown": "Words shown",
+      "textSizeIncrease": "Increase text size",
+      "textSizeDecrease": "Decrease text size",
       "completeTitle": "Mā shā’ Allāh. Test complete",
       "completeBody": "You recalled this range successfully.",
       "sessionEnded": "Session complete",

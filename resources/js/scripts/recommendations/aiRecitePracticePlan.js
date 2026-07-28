@@ -620,7 +620,7 @@ export function buildAiReciteDynamicPlan(input = {}) {
     time: null,
     beginner: {
       resultLabel: band === ACCURACY_BAND.STRONG
-        ? (t?.('memorisation.aiRecitePlan.beginner.strong') || 'Strong — ready to move on')
+        ? (t?.('memorisation.aiRecitePlan.beginner.strong') || 'Strong: ready to move on')
         : (t?.('memorisation.aiRecitePlan.beginner.notFirm') || 'Not firm yet'),
       whatLabel: t?.('memorisation.aiRecitePlan.beginner.what') || 'What to practise',
       howLabel: t?.('memorisation.aiRecitePlan.beginner.how') || 'How',
@@ -662,7 +662,7 @@ export function buildFriendlyReciteFeedback(accuracy, t = null) {
   }
   if (n >= 85) {
     return t?.('memorisation.aiRecitePlan.feedbackStrong')
-      || 'Mā shā’ Allāh — beautiful work. A light review will keep it firm.'
+      || 'Mā shā’ Allāh. Beautiful work. A light review will keep it firm.'
   }
   if (n >= 60) {
     return t?.('memorisation.aiRecitePlan.feedbackFocused')
@@ -675,7 +675,10 @@ export function buildFriendlyReciteFeedback(accuracy, t = null) {
 function buildWhyThisPlan({ band, averageAccuracy, weakWords, techniques, t }) {
   const primary = techniques?.[0] || null
   const methodTitle = primary?.title || 'a calm method'
-  const methodHow = primary?.how || primary?.description || ''
+  const methodHow = String(primary?.how || primary?.description || '')
+    .replace(/\s*[—–―‐‑‒−]+\s*/g, ', ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
   if (weakWords?.length) {
     const first = weakWords[0] || {}
     const word = String(first.text || '').trim()
@@ -683,17 +686,19 @@ function buildWhyThisPlan({ band, averageAccuracy, weakWords, techniques, t }) {
     const count = weakWords.length
     const msg = t?.('memorisation.aiRecitePlan.whyEvidence', {
       count,
-      word: word || '—',
-      ayah: ayah || '—',
+      word: word || '',
+      ayah: ayah || '',
       method: methodTitle,
-      accuracy: averageAccuracy ?? '—',
+      accuracy: averageAccuracy ?? '',
     })
-    if (msg && !String(msg).includes('whyEvidence')) return msg
+    if (msg && !String(msg).includes('whyEvidence')) {
+      return String(msg).replace(/\s*[—–―‐‑‒−]+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim()
+    }
     if (count === 1 && word && ayah) {
       return `One word in Āyah ${ayah} was unclear (${word}). Practise the surrounding phrase with ${methodTitle}, then continue.`
     }
     const sample = weakWords.slice(0, 3).map((w) => w.text).filter(Boolean).join(' · ')
-    return `${count} word${count === 1 ? '' : 's'} need care${sample ? ` (${sample})` : ''}. Use ${methodTitle}${methodHow ? ` — ${methodHow}` : ''} before moving on.`
+    return `${count} word${count === 1 ? '' : 's'} need care${sample ? ` (${sample})` : ''}. Use ${methodTitle}${methodHow ? `: ${methodHow}` : ''} before moving on.`
   }
   if (band === ACCURACY_BAND.STRONG) {
     return t?.('memorisation.aiRecitePlan.whyStrong')
@@ -706,6 +711,6 @@ function buildWhyThisPlan({ band, averageAccuracy, weakWords, techniques, t }) {
 function formatPlanRangeLabel(surahName, from, to, t) {
   const range = from === to
     ? (t?.('memorisation.labels.ayah', { ayah: from }) || `Ayah ${from}`)
-    : (t?.('memorisation.labels.ayahs', { start: from, end: to }) || `Ayahs ${from}–${to}`)
+    : (t?.('memorisation.labels.ayahs', { start: from, end: to }) || `Ayahs ${from} to ${to}`)
   return surahName ? `${surahName} · ${range}` : range
 }

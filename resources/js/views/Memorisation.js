@@ -3370,6 +3370,12 @@ export default {
         t: this.t.bind(this),
       })
     },
+    liveCoachMiniVisible() {
+      if (!this.hasSessionStarted || this.isSessionCompleted || this.showPostSessionModal) return false
+      if (this.talqinRecitationTurnActive) return false
+      if (!this.livePracticeCoachText) return false
+      return !!(this.isPlaying || this.playerVisible || this.hasLoadedAudio)
+    },
     activePracticeFocusWord() {
       const words = Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []
       if (!words.length) return null
@@ -3694,12 +3700,13 @@ export default {
         })
       }
       if (methodLabel || methodHow) {
+        const methodValue = methodHow && methodLabel && methodHow !== methodLabel
+          ? `${methodLabel}: ${methodHow}`
+          : (methodHow || methodLabel)
         rows.push({
           key: 'method',
           label: this.t('memorisation.postSession.coach.methodLabel') || 'Method',
-          value: methodHow && methodLabel && methodHow !== methodLabel
-            ? `${methodLabel} — ${methodHow}`
-            : (methodHow || methodLabel),
+          value: this.stripAiDashes(methodValue),
         })
       }
       if (from && to) {
@@ -3707,25 +3714,51 @@ export default {
           ? (this.t('memorisation.postSession.coach.evidenceThenAyah', { ayah: from })
             || `Continue with Āyah ${from}`)
           : (this.t('memorisation.postSession.coach.evidenceThenRange', { from, to })
-            || `Continue to Āyahs ${from}–${to}`)
+            || `Continue to Āyahs ${from} to ${to}`)
         rows.push({
           key: 'then',
           label: this.t('memorisation.postSession.coach.evidenceThen') || 'Then',
-          value: thenValue,
+          value: this.stripAiDashes(thenValue),
         })
       }
-      return rows
+      return rows.map((row) => (
+        row.key === 'focus'
+          ? {
+            ...row,
+            word: word || '',
+            ayahLabel: ayah
+              ? (this.t('memorisation.postSession.coach.ayahLabel', { ayah }) || `Āyah ${ayah}`)
+              : '',
+            value: this.stripAiDashes(row.value),
+          }
+          : { ...row, value: this.stripAiDashes(row.value) }
+      ))
     },
     postSessionTestWithAiLabel() {
       if (this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck) {
         return this.t('memorisation.postSession.actions.retest') || 'Retest'
       }
+      if (this.postSessionIsRepeatRecommendation) {
+        return this.t('memorisation.postSession.actions.testWithAiAgain')
+          || this.t('memorisation.postSession.actions.testWithAi')
+          || 'Test with AI'
+      }
       return this.t('memorisation.postSession.actions.testWithAi') || 'Test with AI'
     },
     postSessionSkipForNowLabel() {
+      if (this.postSessionIsRepeatRecommendation) {
+        return this.t('memorisation.postSession.actions.keepPractising')
+          || this.t('memorisation.postSession.actions.skipForNow')
+          || 'Keep practising'
+      }
       return this.t('memorisation.postSession.actions.skipForNow') || 'Skip for now'
     },
     postSessionChooseRangeLabel() {
+      if (this.postSessionIsRepeatRecommendation) {
+        return this.t('memorisation.postSession.actions.chooseDifferentRange')
+          || this.t('memorisation.postSession.actions.chooseAnotherRange')
+          || 'Choose another range'
+      }
       return this.t('memorisation.postSession.actions.chooseAnotherRange')
         || this.t('memorisation.postSession.recommendation.startDifferentSession')
         || 'Choose another range'
@@ -3967,16 +4000,86 @@ export default {
     },
     postSessionSupportingMessage() {
       const snap = this.postSessionSnapshot
-      if (snap?.chapterName && snap?.rangeStart && snap?.rangeEnd) {
-        return formatCompletedSurahAyahLabel(snap.chapterName, {
-          start: snap.rangeStart,
-          end: snap.rangeEnd,
-        }, this.t.bind(this))
+      if (!snap?.completedAll) return ''
+      if (!(snap?.chapterName && snap?.rangeStart && snap?.rangeEnd)) return ''
+      // Only after a full pass of the selected range — never for partial exits.
+      return formatCompletedSurahAyahLabel(snap.chapterName, {
+        start: snap.rangeStart,
+        end: snap.rangeEnd,
+      }, this.t.bind(this))
+    },
+    postSessionHeaderTitle() {
+      if (this.onboardingSampleSessionActive) {
+        return this.postSessionUi?.title || this.postSessionModalTitle
       }
-      if (this.postSessionAutoSaved) {
-        return this.t('memorisation.postSession.recommendation.supportingProgressSaved')
+      if (this.postSessionRecommendationStep === 'confirm' && this.postSessionRecommendationActionable) {
+        const completed = this.postSessionSupportingMessage
+        if (completed) return completed
+        if (this.postSessionIsRepeatRecommendation) {
+          return this.t('memorisation.postSession.headers.repeatPass')
+            || 'Revision pass complete'
+        }
+        return this.postSessionModalTitle
       }
-      return ''
+      if (this.postSessionHasAiCheck || this.postSessionShowRecommendationPlan) {
+        if (this.postSessionIsRepeatRecommendation) {
+          return this.t('memorisation.postSession.coach.headers.repeatDone')
+            || this.t('memorisation.postSession.coach.headers.practiceDone')
+            || 'Another pass complete'
+        }
+        return this.t('memorisation.postSession.coach.headers.aiDone')
+          || this.t('memorisation.postSession.coach.headers.practiceDone')
+          || this.postSessionModalTitle
+      }
+      if (this.postSessionIsRepeatRecommendation) {
+        return this.t('memorisation.postSession.headers.repeatPass')
+          || 'Revision pass complete'
+      }
+      const completed = this.postSessionSupportingMessage
+      if (completed) return completed
+      return this.postSessionModalTitle
+    },
+    postSessionHeaderSubtitle() {
+      if (this.onboardingSampleSessionActive) return ''
+      if (this.postSessionRecommendationStep === 'confirm') {
+        return this.postSessionEncouragement || this.postSessionDuaMessage || ''
+      }
+      if (this.postSessionIsRepeatRecommendation) {
+        return this.t('memorisation.postSession.subtitles.repeatPass')
+          || this.postSessionEncouragement
+          || this.t('memorisation.postSession.duaStrengthenShort')
+          || ''
+      }
+      if (this.postSessionHasAiCheck || this.postSessionShowRecommendationPlan) {
+        return this.t('memorisation.postSession.coach.subtitles.aiDone')
+          || this.postSessionEncouragement
+          || ''
+      }
+      if (this.postSessionSupportingMessage) {
+        return this.postSessionEncouragement || this.postSessionDuaMessage || ''
+      }
+      return this.postSessionEncouragement || this.postSessionDuaMessage || ''
+    },
+    postSessionFlowGuideText() {
+      if (this.onboardingSampleSessionActive) return ''
+      if (this.postSessionRecommendationStep === 'confirm') return ''
+      // Avoid repeating the header / AI summary.
+      if (this.postSessionHasAiCheck || this.postSessionShowRecommendationPlan) {
+        if (this.postSessionIsRepeatRecommendation) {
+          return this.t('memorisation.postSession.coach.subtitles.retestAfterPractice')
+            || this.t('memorisation.postSession.flowGuideRepeat')
+            || 'Test again when ready, or keep practising this range.'
+        }
+        return this.t('memorisation.postSession.coach.guidance.afterAi')
+          || this.t('memorisation.postSession.flowGuide')
+          || ''
+      }
+      if (this.postSessionIsRepeatRecommendation) {
+        return this.t('memorisation.postSession.flowGuideRepeat')
+          || 'Test with AI when ready, skip to keep this range, or choose another.'
+      }
+      return this.t('memorisation.postSession.flowGuide')
+        || 'Test with AI to unlock your next plan, or continue when you are ready.'
     },
     postSessionActionsBusy() {
       return this.postSessionRecommendationStarting
@@ -4837,6 +4940,10 @@ export default {
         startHint: this.t?.('memorisation.amd.startRecitationHint') || 'Tap once, then recite from memory',
         reset: this.t?.('common.reset') || 'Reset',
         difficulty: this.t?.('memorisation.amd.difficulty') || 'Difficulty',
+        wordsShown: this.t?.('memorisation.amd.wordsShown') || 'Words shown',
+        textSize: this.t?.('common.fontSize') || 'Text size',
+        textSizeIncrease: this.t?.('memorisation.amd.textSizeIncrease') || 'Increase text size',
+        textSizeDecrease: this.t?.('memorisation.amd.textSizeDecrease') || 'Decrease text size',
         completeTitle: this.t?.('memorisation.amd.completeTitle')
           || 'Mā shā’ Allāh — test complete',
         completeBody: this.t?.('memorisation.amd.completeBody')
@@ -5979,7 +6086,7 @@ export default {
         naskh: "'Noto Naskh Arabic', 'Amiri', serif",
         scheherazade: "'Scheherazade New', 'Noto Naskh Arabic', serif",
         lateef: "'Lateef', 'Amiri', serif",
-        uthmanic: "'UthmanicHafs', 'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', serif"
+        uthmanic: "'KFGQPC Uthmanic Script HAFS', 'UthmanicHafs', 'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', serif"
       }
       return fonts[this.quranFont] || fonts.uthmanic
     },
@@ -15876,32 +15983,24 @@ export default {
       const words = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
       if (!words.length) return false
       const status = String(words[words.length - 1]?.status || '').toLowerCase()
-      // Accept green or strong amber on the final word so the last ayah can complete.
-      return status === 'correct' || status === 'partial'
+      // Allow finish after the final word is attempted (green/amber/red) so red never freezes the session.
+      return status === 'correct' || status === 'partial' || status === 'incorrect'
     },
     getAmdExpectedWordIndex(statuses = [], hiddenSet = null) {
       const words = Array.isArray(statuses) ? statuses : []
       const hidden = hiddenSet || new Set(this.amdHiddenWordIndexes || [])
-      // Cursor waits on red; amber/green settle so the learner can continue.
-      // Soft-continue: a red is consumed once a later green/amber proves progress.
+      // Never freeze on red: incorrect is marked but does not block progress.
+      // Cursor advances to the next unsettled (pending) word so the learner can finish the range.
       const isSettled = (status) => {
         const s = String(status || '').toLowerCase()
-        return s === 'correct' || s === 'partial'
-      }
-      const isBlocking = (status, index) => {
-        const s = String(status || '').toLowerCase()
-        if (isSettled(s)) return false
-        if (s === 'incorrect') {
-          return !words.slice(index + 1).some(entry => isSettled(entry?.status))
-        }
-        return true
+        return s === 'correct' || s === 'partial' || s === 'incorrect' || s === 'omitted' || s === 'skipped'
       }
       for (let i = 0; i < words.length; i += 1) {
         if (!hidden.has(i)) continue
-        if (isBlocking(words[i]?.status, i)) return i
+        if (!isSettled(words[i]?.status)) return i
       }
       for (let i = 0; i < words.length; i += 1) {
-        if (isBlocking(words[i]?.status, i)) return i
+        if (!isSettled(words[i]?.status)) return i
       }
       return Math.max(0, words.length - 1)
     },
@@ -22984,10 +23083,20 @@ export default {
     },
     stripAiDashes(text = '') {
       return String(text || '')
-        .replace(/\s*[—–―]+\s*/g, '. ')
-        .replace(/\.\s*\./g, '.')
+        // Em/en/figure dashes and hyphen-as-dash between clauses
+        .replace(/\s*[—–―‐‑‒−]+\s*/g, ', ')
+        // Standalone dash lines left by AI formatting
+        .replace(/(?:^|\n)\s*[-−]+\s*(?=\n|$)/g, ' ')
+        // Spaced ASCII hyphen used as a dash (keep hyphenated-words intact)
+        .replace(/(\w)\s+-\s+(\w)/g, '$1, $2')
+        .replace(/,\s*,+/g, ',')
+        .replace(/\.\s*,/g, '.')
+        .replace(/,\s*\./g, '.')
+        .replace(/\.{2,}/g, '.')
         .replace(/\s{2,}/g, ' ')
+        .replace(/\s+([,.;:])/g, '$1')
         .trim()
+        .replace(/^[,.;:\s]+|[,.;:\s]+$/g, '')
     },
     getTechniqueDisplayDescription(techniqueId) {
       return getTechniqueDescription(techniqueId, this.t.bind(this))

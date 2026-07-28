@@ -1077,7 +1077,8 @@
 
 .amd-mushaf-ayah--premium .recitation-word-omitted,
 .amd-mushaf-ayah--premium .recitation-word-notAttempted:not(.amd-word-hidden) {
-  color: #111111 !important;
+  color: #78716c !important;
+  -webkit-text-fill-color: #78716c !important;
 }
 
 [data-theme="dark"] .amd-modal--premium,
@@ -1263,8 +1264,8 @@
 
 .amd-mushaf-ayah--premium .wbw-word.recitation-word-notAttempted:not(.amd-word-hidden),
 .amd-mushaf-ayah--premium .wbw-word.recitation-word-pending:not(.amd-word-hidden) {
-  color: #111111;
-  -webkit-text-fill-color: #111111;
+  color: #78716c;
+  -webkit-text-fill-color: #78716c;
   opacity: 1;
 }
 
@@ -1746,5 +1747,45 @@
 }
 
 .amd-modal--premium .amd-toolbar--icons {
-  display: none !important;
+  display: flex !important;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-bottom: 0.15rem;
+}
+
+.amd-text-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-inline-start: auto;
+}
+
+.amd-icon-btn--text {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  width: 2.35rem;
+  min-width: 2.35rem;
+  height: 2.35rem;
+  min-height: 2.35rem;
+}
+
+.amd-mushaf-ayah--premium {
+  font-size: calc(clamp(1.85rem, 4.6vw, 2.65rem) * var(--amd-font-scale, 1.12));
+}
+
+[data-theme="dark"] .amd-difficulty__select--compact,
+.app[data-theme="dark"] .amd-difficulty__select--compact {
+  background: #171717;
+  color: #e7e5e4;
+  border-color: rgba(245, 245, 244, 0.14);
+}
+
+[data-theme="dark"] .amd-icon-btn.active,
+.app[data-theme="dark"] .amd-icon-btn.active {
+  background: color-mix(in srgb, #6ec9a4 18%, #171717);
+  border-color: color-mix(in srgb, #6ec9a4 36%, transparent);
+  color: #b8e6cf;
 }
