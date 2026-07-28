@@ -42,27 +42,17 @@
           </header>
 
           <div class="amd-body amd-body--premium">
-            <div class="amd-toolbar amd-toolbar--icons" role="toolbar" :aria-label="toolsLabel">
+            <div
+              v-if="isListening || isReady"
+              class="amd-focus-hint"
+            >
               <button
+                v-if="!isComplete && !isError"
                 type="button"
-                class="amd-icon-btn"
-                :class="{ active: blurActive }"
-                :aria-pressed="blurActive ? 'true' : 'false'"
-                :aria-label="blurLabel"
-                :title="blurLabel"
-                @click.stop="$emit('toggle-blur')"
-              >
-                <i class="bi" :class="blurActive ? 'bi-eye-slash' : 'bi-eye'" aria-hidden="true"></i>
-              </button>
-
-              <button
-                type="button"
-                class="amd-icon-btn amd-icon-btn--peek"
+                class="amd-peek-link"
                 :class="{ active: peeking }"
                 :disabled="isComplete"
                 :aria-pressed="peeking ? 'true' : 'false'"
-                :aria-label="peekLabel"
-                :title="peekLabel"
                 @mousedown.prevent="onPeekStart"
                 @mouseup.prevent="onPeekEnd"
                 @mouseleave="onPeekEnd"
@@ -74,50 +64,13 @@
                 @keyup.space.prevent="onPeekEnd"
                 @keyup.enter.prevent="onPeekEnd"
                 @blur="onPeekEnd"
-              >
-                <i class="bi bi-eye" aria-hidden="true"></i>
-              </button>
-
+              >{{ peekHintLabel }}</button>
               <button
+                v-if="isListening && canStop"
                 type="button"
-                class="amd-icon-btn amd-icon-btn--stop"
-                :class="{ active: isListening }"
-                :disabled="!canStop"
-                :aria-label="stopLabel"
-                :title="stopLabel"
+                class="amd-stop-link"
                 @click.stop="$emit('stop')"
-              >
-                <i class="bi bi-stop-fill" aria-hidden="true"></i>
-              </button>
-
-              <button
-                type="button"
-                class="amd-icon-btn"
-                :aria-label="resetLabel"
-                :title="resetLabel"
-                :disabled="busy && !isComplete && !isError"
-                @click.stop="$emit('reset')"
-              >
-                <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-              </button>
-
-              <div class="amd-difficulty amd-difficulty--icon">
-                <label class="visually-hidden" :for="difficultyId">{{ difficultyLabel }}</label>
-                <select
-                  :id="difficultyId"
-                  class="amd-difficulty__select amd-difficulty__select--compact"
-                  :value="difficulty"
-                  :aria-label="difficultyLabel"
-                  :title="difficultyLabel"
-                  @change="onDifficultyChange"
-                >
-                  <option
-                    v-for="pct in difficultyOptions"
-                    :key="pct"
-                    :value="pct"
-                  >{{ pct }}%</option>
-                </select>
-              </div>
+              >{{ stopLabel }}</button>
             </div>
 
             <div
@@ -240,6 +193,7 @@ export default {
     startLabel: { type: String, default: 'Start reciting' },
     startHint: { type: String, default: 'Tap once, then recite from memory' },
     resetLabel: { type: String, default: 'Reset' },
+    peekHintLabel: { type: String, default: 'Need a hint? Peek at the text' },
     difficultyLabel: { type: String, default: 'Difficulty' },
     completeTitle: { type: String, default: 'Mā shā’ Allāh — test complete' },
     completeBody: { type: String, default: 'You recalled this range successfully.' },

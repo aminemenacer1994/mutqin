@@ -9,6 +9,9 @@ import {
 } from '../techniques/techniqueDisplay.js'
 import { formatRepetitionCountLabel } from '../formatting/ayahLabels.js'
 import { estimatePracticeDuration } from '../session/sessionPracticeCoach.js'
+import {
+  resolveRecommendedPlaybackSpeed,
+} from './playbackSpeedPolicy.js'
 
 export {
   formatAyahRangeLabel,
@@ -324,7 +327,7 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
     confirmation: null,
     settings: {
       technique: 'talqin',
-      playback_speed: 1,
+      playback_speed: resolveRecommendedPlaybackSpeed({ isNew: true, rangeKind: 'new', sessionMode: 'new_learning' }),
       repetitions: 3,
     },
     primary_action_label_key: 'continueToAyat',
@@ -361,7 +364,6 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
   )
 
   if (confidence === 'needs_practice') {
-    const speed = Number(settings.playback_speed || 1)
     const reps = Number(settings.repetitions || 3)
     const baseRange = range || (snapshotStart
       ? {
@@ -405,7 +407,12 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
       settings: {
         ...settings,
         technique: settings.technique || 'talqin',
-        playback_speed: Math.min(0.75, Number.isFinite(speed) && speed > 0 ? speed : 1),
+        playback_speed: resolveRecommendedPlaybackSpeed({
+          isReview: true,
+          rangeKind: 'repeated',
+          sessionMode: 'revision',
+          accuracyPercent: Number(snapshot.aiDetails?.accuracyPercent || snapshot.completion?.accuracy || 0) || null,
+        }),
         repetitions: Math.max(4, Number.isFinite(reps) ? reps : 3),
       },
     }
@@ -481,7 +488,11 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
         ...settings,
         technique: settings.technique || 'focus',
         complementary_technique: settings.complementary_technique || 'anchor',
-        playback_speed: Math.max(1, Number(settings.playback_speed || 1)),
+        playback_speed: resolveRecommendedPlaybackSpeed({
+          isNew: true,
+          rangeKind: 'new',
+          sessionMode: 'new_learning',
+        }),
         repetitions: Math.min(3, Math.max(2, Number(settings.repetitions || 3))),
       },
     }
@@ -518,7 +529,11 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
           ...settings,
           technique: settings.technique || 'focus',
           complementary_technique: settings.complementary_technique || 'anchor',
-          playback_speed: Math.max(1, Number(settings.playback_speed || 1)),
+          playback_speed: resolveRecommendedPlaybackSpeed({
+            isNew: true,
+            rangeKind: 'new',
+            sessionMode: 'new_learning',
+          }),
           repetitions: Math.min(3, Math.max(2, Number(settings.repetitions || 3))),
         },
       }

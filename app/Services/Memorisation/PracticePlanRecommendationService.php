@@ -74,15 +74,13 @@ class PracticePlanRecommendationService
         };
 
         $playbackSpeed = match ($band) {
-            self::BAND_GENTLE => 0.75,
-            self::BAND_FOCUSED => 0.85,
-            default => 1.0,
+            self::BAND_STRONG => $accuracy >= 90 ? 1.5 : 1.25,
+            default => 1.25,
         };
+        // AI assessment always covers a just-tested range → review speed band (1.25×–1.5×).
         $hard = (int) ($colorCounts['red'] ?? 0) + (int) ($colorCounts['black'] ?? 0);
-        if ($hard >= 6) {
-            $playbackSpeed = min($playbackSpeed, 0.75);
-        } elseif ($hard >= 3) {
-            $playbackSpeed = min($playbackSpeed, 0.85);
+        if ($hard >= 3 && $playbackSpeed > 1.25) {
+            $playbackSpeed = 1.25;
         }
 
         $config = [
@@ -534,41 +532,56 @@ class PracticePlanRecommendationService
         array $primary,
         string $pattern
     ): string {
+        $method = (string) ($primary['title'] ?? 'focused practice');
+        $methodHow = (string) ($primary['how'] ?? $primary['description'] ?? '');
+
         if ($weakPhrases !== []) {
             $phrase = (string) ($weakPhrases[0]['text'] ?? '');
             $ayah = (int) ($weakPhrases[0]['ayah_number'] ?? 0);
+            $focus = $phrase !== '' ? "«{$phrase}»" : 'this phrase';
+            $ayahPart = $ayah > 0 ? " in Āyah {$ayah}" : '';
 
-            return "Most of your mistakes clustered around a phrase in Ayah {$ayah}".
-                ($phrase !== '' ? " («{$phrase}»). " : '. ').
-                "This plan uses {$primary['title']} there first instead of repeating the entire passage equally.";
+            return "One phrase{$ayahPart} was unclear ({$focus}). Practise the surrounding phrase with {$method}"
+                .($methodHow !== '' ? " — {$methodHow}" : '')
+                .', then continue.';
         }
-        if (count($weakWords) >= 1 && count($weakWords) <= 4) {
-            $sample = implode(' · ', array_map(fn ($w) => (string) ($w['text'] ?? ''), array_slice($weakWords, 0, 3)));
+        if (count($weakWords) === 1) {
+            $word = (string) ($weakWords[0]['text'] ?? '');
+            $ayah = (int) ($weakWords[0]['ayahNumber'] ?? $weakWords[0]['ayah_number'] ?? 0);
+            $wordPart = $word !== '' ? $word : 'this word';
+            $ayahPart = $ayah > 0 ? " in Āyah {$ayah}" : '';
 
-            return "Your memorisation is developing well ({$accuracy}%). ".
-                "A few words need strengthening".($sample !== '' ? " ({$sample})" : '').
-                ". {$primary['title']} focuses there first.";
+            return "One word{$ayahPart} was unclear ({$wordPart}). Practise the surrounding phrase twice with {$method}, then continue.";
+        }
+        if (count($weakWords) >= 2 && count($weakWords) <= 4) {
+            $first = $weakWords[0];
+            $word = (string) ($first['text'] ?? '');
+            $ayah = (int) ($first['ayahNumber'] ?? $first['ayah_number'] ?? 0);
+            $sample = implode(' · ', array_map(fn ($w) => (string) ($w['text'] ?? ''), array_slice($weakWords, 0, 3)));
+            $ayahPart = $ayah > 0 ? "Āyah {$ayah}" : 'this range';
+
+            return "Focus: {$sample} · {$ayahPart}. Method: {$method}. Practise the surrounding phrases, then continue.";
         }
         if ($pattern === 'scattered') {
-            return "Mistakes were spread across several ayahs. Chunking breaks the range into smaller sections so each part can settle before you combine them.";
+            return "Mistakes were spread across several āyahs. Use {$method} on small chunks so each part settles before you combine them.";
         }
         if ($band === self::BAND_STRONG) {
-            return 'Your foundation is developing well. We found only light areas to reinforce with progressive recall.';
+            return 'Recall was strong on this range. Keep a light review at a steady pace, then continue to the next āyahs.';
         }
 
-        return "Based on this assessment ({$accuracy}%), {$primary['title']} is the most appropriate next step. May Allah strengthen what you have memorised.";
+        return "Based on this assessment ({$accuracy}%), {$method} is the next step. May Allah strengthen what you have memorised.";
     }
 
     private function friendlySummary(int $accuracy): string
     {
         if ($accuracy >= 85) {
-            return 'Mā shā’ Allāh — your memorisation is developing well. A light review will keep it firm.';
+            return 'Mā shā’ Allāh — strong recall. A light review will keep it firm, then continue.';
         }
         if ($accuracy >= 60) {
-            return 'Your foundation is developing well. We found a few areas that can become stronger.';
+            return 'Good effort. A few marked words need another calm pass before you move on.';
         }
 
-        return 'May Allah strengthen what you have memorised. Let’s strengthen these areas calmly before moving on.';
+        return 'May Allah strengthen what you have memorised. Rebuild the unclear words slowly, then continue.';
     }
 
     private function rangeLabel(?string $surahName, int $from, int $to): string

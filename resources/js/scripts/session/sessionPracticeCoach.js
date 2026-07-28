@@ -142,7 +142,7 @@ export function buildLiveSessionGuidance(input = {}) {
   if (focusWord && (input.isPlaying || input.isPaused)) {
     return pick(
       'memorisation.postSession.coach.live.focusWord',
-      `Hold this word gently: ${focusWord}`,
+      `Focus on the highlighted word: ${focusWord}`,
       { word: focusWord },
     )
   }
@@ -150,13 +150,13 @@ export function buildLiveSessionGuidance(input = {}) {
   if (input.readyToTest) {
     return pick(
       'memorisation.postSession.coach.live.ready',
-      'Mā shā’ Allāh — when you feel ready, test from memory.',
+      'Mā shā’ Allāh. You are ready to test.',
     )
   }
   if (input.isCompleted) {
     return pick(
       'memorisation.postSession.coach.live.after',
-      'Alḥamdulillāh. Now try reciting without looking.',
+      'Recite this āyah without looking.',
     )
   }
   if (input.difficulty && Number(input.suggestedSpeed) > 0) {
@@ -168,12 +168,21 @@ export function buildLiveSessionGuidance(input = {}) {
   }
 
   if (input.isPaused) {
+    if (String(input.technique || '').toLowerCase() === 'talqin') {
+      return pick(
+        'memorisation.postSession.coach.live.talqin.pause',
+        'Now repeat this phrase aloud.',
+      )
+    }
     return pickTechniqueGuidance(technique, 'pause', pick, input)
   }
   if (input.isPlaying) {
     return pickTechniqueGuidance(technique, 'playing', pick, input)
   }
-  return pickTechniqueGuidance(technique, 'before', pick, input)
+  return pick(
+    'memorisation.postSession.coach.live.before',
+    'Listen once and follow the words.',
+  )
 }
 
 /**

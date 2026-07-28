@@ -3355,9 +3355,12 @@ export default {
         isPaused: !this.isPlaying && !!this.playerVisible && !!this.hasLoadedAudio,
         isCompleted: false,
         technique: this.liveSessionTechniqueId,
-        readyToTest: false,
+        readyToTest: !!(
+          this.practiceFocusWeakWords?.length
+          && this.livePracticeCoachPhase === 'ready'
+        ),
         difficulty: this.livePracticeCoachPhase === 'difficulty',
-        suggestedSpeed: 0.75,
+        suggestedSpeed: Number(this.speed) || 0.75,
         focusWordText: activeFocus?.text || '',
         hasFocusWords: (
           (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length > 0)
@@ -3611,6 +3614,9 @@ export default {
       return shouldHideCompletionUnderAi(this.postSessionFlowPhase)
     },
     postSessionStaticPills() {
+      // Prefer evidence rows (Focus / Method / Then) when AI weak-word data exists.
+      const evidence = this.postSessionEvidenceRows
+      if (evidence.length) return []
       const settings = this.postSessionRecommendation?.settings
       if (!settings || typeof settings !== 'object') return []
       const pills = []
@@ -3647,6 +3653,82 @@ export default {
         })
       }
       return pills.slice(0, 4)
+    },
+    postSessionEvidenceRows() {
+      const plan = this.aiReciteFinalPlan || this.amdPracticePlan || null
+      const weakWords = Array.isArray(plan?.weakWords)
+        ? plan.weakWords
+        : (Array.isArray(plan?.weak_words) ? plan.weak_words : (
+          Array.isArray(this.postSessionRecommendation?.settings?.practice_weak_words)
+            ? this.postSessionRecommendation.settings.practice_weak_words
+            : []
+        ))
+      const first = weakWords[0] || null
+      const word = String(first?.text || first?.word || '').trim()
+      const ayah = Number(first?.ayahNumber || first?.ayah || first?.ayah_number || 0)
+      const techniqueId = String(
+        plan?.techniques?.[0]?.id
+        || this.postSessionRecommendation?.settings?.technique
+        || ''
+      ).toLowerCase()
+      const methodLabel = techniqueId
+        ? this.stripTechniqueJargon(this.getTechniqueDisplayLabel(techniqueId))
+        : (plan?.techniques?.[0]?.title || '')
+      const methodHow = String(
+        plan?.techniques?.[0]?.how
+        || this.t?.('memorisation.postSession.coach.replayPhrase')
+        || 'Replay surrounding phrase'
+      ).trim()
+      const rec = this.postSessionRecommendation
+      const from = Number(rec?.ayah_range?.from || plan?.range?.from || 0)
+      const to = Number(rec?.ayah_range?.to || plan?.range?.to || from)
+      const rows = []
+      if (word || ayah) {
+        const ayahLabel = ayah
+          ? (this.t('memorisation.postSession.coach.ayahLabel', { ayah }) || `Āyah ${ayah}`)
+          : ''
+        rows.push({
+          key: 'focus',
+          label: this.t('memorisation.postSession.coach.evidenceFocus') || 'Focus',
+          value: [word, ayahLabel].filter(Boolean).join(' · '),
+        })
+      }
+      if (methodLabel || methodHow) {
+        rows.push({
+          key: 'method',
+          label: this.t('memorisation.postSession.coach.methodLabel') || 'Method',
+          value: methodHow && methodLabel && methodHow !== methodLabel
+            ? `${methodLabel} — ${methodHow}`
+            : (methodHow || methodLabel),
+        })
+      }
+      if (from && to) {
+        const thenValue = from === to
+          ? (this.t('memorisation.postSession.coach.evidenceThenAyah', { ayah: from })
+            || `Continue with Āyah ${from}`)
+          : (this.t('memorisation.postSession.coach.evidenceThenRange', { from, to })
+            || `Continue to Āyahs ${from}–${to}`)
+        rows.push({
+          key: 'then',
+          label: this.t('memorisation.postSession.coach.evidenceThen') || 'Then',
+          value: thenValue,
+        })
+      }
+      return rows
+    },
+    postSessionTestWithAiLabel() {
+      if (this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck) {
+        return this.t('memorisation.postSession.actions.retest') || 'Retest'
+      }
+      return this.t('memorisation.postSession.actions.testWithAi') || 'Test with AI'
+    },
+    postSessionSkipForNowLabel() {
+      return this.t('memorisation.postSession.actions.skipForNow') || 'Skip for now'
+    },
+    postSessionChooseRangeLabel() {
+      return this.t('memorisation.postSession.actions.chooseAnotherRange')
+        || this.t('memorisation.postSession.recommendation.startDifferentSession')
+        || 'Choose another range'
     },
     postSessionAiAssistHint() {
       if (this.postSessionRecommendation?.ai_assessment?.summary || this.postSessionAiFeedback) {
@@ -4749,7 +4831,8 @@ export default {
         tools: this.t?.('memorisation.amd.tools') || 'Test tools',
         blur: this.t?.('memorisation.amd.toolBlur') || 'Blur',
         peek: this.t?.('memorisation.peek') || 'Peek',
-        stop: this.t?.('memorisation.amd.toolStop') || 'Stop',
+        peekHint: this.t?.('memorisation.amd.peekHint') || 'Need a hint? Peek at the text',
+        stop: this.t?.('memorisation.amd.toolStop') || 'Stop listening',
         start: this.t?.('memorisation.amd.startRecitation') || 'Start reciting',
         startHint: this.t?.('memorisation.amd.startRecitationHint') || 'Tap once, then recite from memory',
         reset: this.t?.('common.reset') || 'Reset',

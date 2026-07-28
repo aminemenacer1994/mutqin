@@ -1208,7 +1208,10 @@
       "actions": {
         "testWithAi": "Test with AI",
         "chooseAnotherSession": "Choose another session",
-        "continueToAyahsFallback": "Continue with barakah"
+        "continueToAyahsFallback": "Continue with barakah",
+        "retest": "Retest",
+        "skipForNow": "Skip for now",
+        "chooseAnotherRange": "Choose another range"
       },
       "coach": {
         "yourNextPractice": "Next step",
@@ -1230,7 +1233,7 @@
         "weakWordsFocus": "Weak words",
         "ayahLabel": "Āyah {ayah}",
         "ayahRangeLabel": "Āyahs {from}–{to}",
-        "replayPhrase": "Replay",
+        "replayPhrase": "Replay surrounding phrase",
         "ayahNeededMore": "Āyah {ayah} needs another slow pass.",
         "takeItSlow": "You paused often. Slow down on one āyah.",
         "speedSettled": "Keep this pace when you test.",
@@ -1261,26 +1264,26 @@
           "hesitation": "Hesitation"
         },
         "live": {
-          "before": "Bismillāh. Listen once and follow the words.",
+          "before": "Listen once and follow the words.",
           "beforeTalqin": "Listen once, then recite aloud.",
           "beforeFocus": "Listen once — gold-marked words need extra care.",
           "playing": "Follow the words calmly — may Allah open your heart.",
-          "playingFocus": "Gold marks need your care — listen with presence.",
-          "focusWord": "Hold this word gently: {word}",
+          "playingFocus": "Focus on the highlighted word.",
+          "focusWord": "Focus on the highlighted word: {word}",
           "focusCueTitle": "Focus on this word",
           "focusBadge": "Words to watch",
           "focusStripLabel": "Hold onto",
           "hooksLabel": "Your key words",
-          "pause": "Now recite aloud with presence.",
+          "pause": "Now repeat this phrase aloud.",
           "pauseFocus": "Repeat the gold-marked words aloud, then the full āyah.",
           "difficulty": "Take it slower — try this āyah at {speed}×.",
-          "after": "Alḥamdulillāh. Now try reciting without looking.",
-          "ready": "Mā shā’ Allāh — when you feel ready, test from memory.",
+          "after": "Recite this āyah without looking.",
+          "ready": "Mā shā’ Allāh. You are ready to test.",
           "ayahCue": "Āyah {ayah}",
           "talqin": {
-            "before": "Bismillāh. Listen once, then recite aloud.",
+            "before": "Listen once and follow the words.",
             "playing": "Listen carefully. Your turn comes after the audio.",
-            "pause": "Your turn — recite this āyah aloud, slowly."
+            "pause": "Now repeat this phrase aloud."
           },
           "focus": {
             "before": "We stay with one āyah. Do not rush ahead.",
@@ -1328,7 +1331,11 @@
               "hint": "Follow the words calmly and recite with sincerity."
             }
           }
-        }
+        },
+        "evidenceFocus": "Focus",
+        "evidenceThen": "Then",
+        "evidenceThenAyah": "Continue with Āyah {ayah}",
+        "evidenceThenRange": "Continue to Āyahs {from}–{to}"
       },
       "summaryTitle": "Session summary",
       "progressLabel": "Range progress",
@@ -1794,7 +1801,7 @@
       "feedbackGentle": "Take it slow. One step at a time.",
       "feedbackMixed": "A short focused plan will help.",
       "whyWeakWords": "Accuracy {accuracy}% · {count} words · {techniques}",
-      "whyStrong": "Strong recall. This light plan keeps it fresh.",
+      "whyStrong": "Your recall is strong. A light review at a steady pace will keep it firm, then continue.",
       "whyDefault": "Built from your AI Recite result.",
       "setup": {
         "speed": "{speed}× speed",
@@ -1812,7 +1819,8 @@
         "blurHow": "Hide words step by step.",
         "focusTitle": "Focus",
         "focusHow": "One verse at a time."
-      }
+      },
+      "whyEvidence": "One word in Āyah {ayah} was unclear ({word}). Practise the surrounding phrase with {method}, then continue."
     },
     "emotional": {
       "postSession": {
@@ -2197,7 +2205,7 @@
       "guestSummary": "May Allah strengthen what you have memorised.",
       "tools": "Test tools",
       "toolBlur": "Blur",
-      "toolStop": "Stop",
+      "toolStop": "Stop listening",
       "toolHelp": "Help",
       "helpCopy": "Recite aloud. Correct words will appear as Mutqin follows you.",
       "startRecitation": "Start reciting",
@@ -2243,7 +2251,9 @@
       "how4": "Save the result and practise the weak areas again.",
       "toolRecite": "Recite",
       "toolAudio": "Audio help",
-      "toolMemorizing": "Memorizing"
+      "toolMemorizing": "Memorizing",
+      "peekHint": "Need a hint? Peek at the text",
+      "toolPeek": "Peek at the text"
     }
   },
   "toasts": {

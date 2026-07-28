@@ -223,7 +223,7 @@ test('buildAiReciteDynamicPlan returns Laravel-ready settings and weak words', (
   assert.ok(Array.isArray(plan.weakWords) && plan.weakWords.length >= 2)
   assert.equal(plan.planDetail.source, 'ai_recite_dynamic')
   assert.ok(plan.settings.repetitions >= 4)
-  assert.ok(plan.settings.playback_speed <= 0.85)
+  assert.ok(plan.settings.playback_speed >= 1.25)
   assert.match(plan.feedback, /Allah|strengthen|time|effort|Mā|Allah|Take|Good|gently/i)
   assert.equal(plan.ayah_range.from, 1)
   assert.equal(plan.ayah_range.to, 1)

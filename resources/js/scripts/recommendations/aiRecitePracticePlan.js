@@ -5,6 +5,7 @@
  */
 
 import { resolveTechniqueDisplay } from '../techniques/techniqueDisplay.js'
+import { resolveRecommendedPlaybackSpeed } from './playbackSpeedPolicy.js'
 
 export const AI_RECITE_MAX_ATTEMPTS = 3
 export const MAX_PRACTICE_AYAH_SPAN = 3
@@ -496,28 +497,32 @@ export function buildAiReciteDynamicPlan(input = {}) {
   const tip = techniques.find((tech) => tech.tipOnly) || null
 
   let repetitions = 3
-  let playbackSpeed = 1
+  // AI test always covers a range just recited → review/mastery speed band.
+  let playbackSpeed = resolveRecommendedPlaybackSpeed({
+    isReview: true,
+    accuracyPercent: averageAccuracy,
+  })
   if (band === ACCURACY_BAND.GENTLE) {
     repetitions = 5
-    playbackSpeed = 0.75
+    playbackSpeed = 1.25
   } else if (band === ACCURACY_BAND.FOCUSED) {
     repetitions = 4
-    playbackSpeed = 0.85
+    playbackSpeed = 1.25
   } else {
     repetitions = uniqueWeak.length ? 3 : 2
-    playbackSpeed = 1
+    playbackSpeed = averageAccuracy >= 90 ? 1.5 : 1.25
   }
 
   const hard = Number(colorCounts.red || 0) + Number(colorCounts.black || 0)
   if (hard >= 6) {
     repetitions = Math.max(repetitions, 5)
-    playbackSpeed = Math.min(playbackSpeed, 0.75)
+    playbackSpeed = 1.25
   } else if (hard >= 3) {
     repetitions = Math.max(repetitions, 4)
-    playbackSpeed = Math.min(playbackSpeed, 0.85)
+    playbackSpeed = 1.25
   } else if (hard === 0 && Number(colorCounts.amber || 0) <= 1 && band === ACCURACY_BAND.STRONG) {
     repetitions = Math.min(repetitions, 2)
-    playbackSpeed = 1
+    playbackSpeed = 1.5
   }
 
   const sessionFrom = Number(input.range?.from || weakAyahs[0] || 1)
@@ -668,24 +673,34 @@ export function buildFriendlyReciteFeedback(accuracy, t = null) {
 }
 
 function buildWhyThisPlan({ band, averageAccuracy, weakWords, techniques, t }) {
-  const techniqueNames = (techniques || []).map((x) => x.title).filter(Boolean).join(' + ')
+  const primary = techniques?.[0] || null
+  const methodTitle = primary?.title || 'a calm method'
+  const methodHow = primary?.how || primary?.description || ''
   if (weakWords?.length) {
-    const sample = weakWords.slice(0, 3).map((w) => w.text).filter(Boolean).join(' · ')
-    const msg = t?.('memorisation.aiRecitePlan.whyWeakWords', {
-      count: weakWords.length,
-      words: sample,
-      techniques: techniqueNames,
+    const first = weakWords[0] || {}
+    const word = String(first.text || '').trim()
+    const ayah = Number(first.ayahNumber || first.ayah || first.ayah_number || 0)
+    const count = weakWords.length
+    const msg = t?.('memorisation.aiRecitePlan.whyEvidence', {
+      count,
+      word: word || '—',
+      ayah: ayah || '—',
+      method: methodTitle,
       accuracy: averageAccuracy ?? '—',
     })
-    if (msg && !String(msg).includes('whyWeakWords')) return msg
-    return `Based on your recitation (${averageAccuracy ?? '—'}%), we marked ${weakWords.length} weak word${weakWords.length === 1 ? '' : 's'}${sample ? ` (${sample})` : ''} and chose ${techniqueNames || 'a calm method'}.`
+    if (msg && !String(msg).includes('whyEvidence')) return msg
+    if (count === 1 && word && ayah) {
+      return `One word in Āyah ${ayah} was unclear (${word}). Practise the surrounding phrase with ${methodTitle}, then continue.`
+    }
+    const sample = weakWords.slice(0, 3).map((w) => w.text).filter(Boolean).join(' · ')
+    return `${count} word${count === 1 ? '' : 's'} need care${sample ? ` (${sample})` : ''}. Use ${methodTitle}${methodHow ? ` — ${methodHow}` : ''} before moving on.`
   }
   if (band === ACCURACY_BAND.STRONG) {
     return t?.('memorisation.aiRecitePlan.whyStrong')
-      || 'Your recall is strong. This light plan keeps it fresh without overloading you.'
+      || 'Your recall is strong. A light review at a steady pace will keep it firm, then continue.'
   }
   return t?.('memorisation.aiRecitePlan.whyDefault')
-    || 'This plan follows your AI Recite result so practice stays personal and peaceful.'
+    || 'This plan follows your AI test so practice stays personal and peaceful.'
 }
 
 function formatPlanRangeLabel(surahName, from, to, t) {

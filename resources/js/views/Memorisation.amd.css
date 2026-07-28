@@ -1682,3 +1682,69 @@
     gap: 1.35rem;
   }
 }
+
+/* Minimal AMD focus chrome — text + listening only */
+.amd-focus-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1.25rem;
+  margin: 0 0 0.65rem;
+  min-height: 1.25rem;
+}
+
+.amd-peek-link,
+.amd-stop-link {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, #57534e 88%, #0c0a09);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.amd-peek-link:hover,
+.amd-stop-link:hover,
+.amd-peek-link.active {
+  color: #0c0a09;
+}
+
+.amd-peek-link:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.amd-stop-link {
+  color: color-mix(in srgb, #78716c 90%, #0c0a09);
+  text-decoration: none;
+}
+
+.amd-stop-link:hover {
+  text-decoration: underline;
+}
+
+[data-theme="dark"] .amd-peek-link,
+[data-theme="dark"] .amd-stop-link,
+.app[data-theme="dark"] .amd-peek-link,
+.app[data-theme="dark"] .amd-stop-link {
+  color: color-mix(in srgb, #a8a29e 88%, #fafaf9);
+}
+
+[data-theme="dark"] .amd-peek-link:hover,
+[data-theme="dark"] .amd-peek-link.active,
+[data-theme="dark"] .amd-stop-link:hover,
+.app[data-theme="dark"] .amd-peek-link:hover,
+.app[data-theme="dark"] .amd-peek-link.active {
+  color: #fafaf9;
+}
+
+.amd-modal--premium .amd-toolbar--icons {
+  display: none !important;
+}

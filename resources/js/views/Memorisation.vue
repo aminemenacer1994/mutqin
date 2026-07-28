@@ -3087,7 +3087,21 @@
                     </p>
                     <p class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
                   </div>
-                  <div v-if="postSessionStaticPills.length" class="post-session-simple__combo">
+                  <dl
+                    v-if="postSessionEvidenceRows.length"
+                    class="post-session-simple__evidence"
+                  >
+                    <div
+                      v-for="row in postSessionEvidenceRows"
+                      :key="row.key"
+                      class="post-session-simple__evidence-row"
+                      :data-key="row.key"
+                    >
+                      <dt>{{ row.label }}</dt>
+                      <dd :dir="row.key === 'focus' ? 'rtl' : undefined" :lang="row.key === 'focus' ? 'ar' : undefined">{{ row.value }}</dd>
+                    </div>
+                  </dl>
+                  <div v-else-if="postSessionStaticPills.length" class="post-session-simple__combo">
                     <p class="post-session-simple__combo-label">
                       {{ t('memorisation.postSession.recommendation.tryThisCombination') }}
                     </p>
@@ -3152,23 +3166,6 @@
               <template v-else-if="postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
                 <button
                   type="button"
-                  class="post-session-simple__btn post-session-simple__btn--secondary"
-                  :disabled="postSessionRecommendationStarting"
-                  @click="chooseOtherFromRecommendation"
-                >
-                  <span>{{ t('memorisation.postSession.recommendation.startDifferentSession') }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="post-session-simple__btn post-session-simple__btn--ai"
-                  :disabled="postSessionActionsBusy || postSessionAiReciteBusy || !aiTestModalsEnabled"
-                  :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
-                  @click="onPostSessionTestWithAi"
-                >
-                  <span>{{ t('memorisation.postSession.actions.testWithAi') }}</span>
-                </button>
-                <button
-                  type="button"
                   class="post-session-simple__btn post-session-simple__btn--primary"
                   :disabled="postSessionRecommendationStarting"
                   :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
@@ -3176,27 +3173,35 @@
                 >
                   <span>{{ postSessionConfirmationPrimaryLabel }}</span>
                 </button>
-              </template>
-
-              <template v-else>
                 <button
                   type="button"
-                  class="post-session-simple__btn post-session-simple__btn--secondary"
-                  :disabled="postSessionActionsBusy"
-                  data-action="choose-session"
-                  @click="chooseOtherFromRecommendation"
+                  class="post-session-simple__btn post-session-simple__btn--primary"
+                  :disabled="postSessionActionsBusy || postSessionAiReciteBusy || !aiTestModalsEnabled"
+                  :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
+                  @click="onPostSessionTestWithAi"
                 >
-                  <span>{{ t('memorisation.postSession.recommendation.startDifferentSession') }}</span>
+                  <span>{{ postSessionTestWithAiLabel }}</span>
                 </button>
                 <button
                   type="button"
-                  class="post-session-simple__btn post-session-simple__btn--ai"
+                  class="post-session-simple__text-link post-session-simple__text-link--tertiary"
+                  :disabled="postSessionRecommendationStarting"
+                  @click="chooseOtherFromRecommendation"
+                >
+                  {{ postSessionChooseRangeLabel }}
+                </button>
+              </template>
+
+              <template v-else-if="postSessionShowRecommendationPlan || postSessionHasAiCheck">
+                <button
+                  type="button"
+                  class="post-session-simple__btn post-session-simple__btn--primary"
                   :disabled="postSessionActionsBusy || postSessionAiReciteBusy || !aiTestModalsEnabled"
                   :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
                   data-action="test-with-ai"
                   @click="onPostSessionTestWithAi"
                 >
-                  <span>{{ t('memorisation.postSession.actions.testWithAi') }}</span>
+                  <span>{{ postSessionTestWithAiLabel }}</span>
                 </button>
                 <button
                   type="button"
@@ -3207,6 +3212,46 @@
                   @click="onPostSessionContinueToAyahs"
                 >
                   <span>{{ postSessionContinueToAyahsLabel }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="post-session-simple__text-link post-session-simple__text-link--tertiary"
+                  :disabled="postSessionActionsBusy"
+                  data-action="choose-session"
+                  @click="chooseOtherFromRecommendation"
+                >
+                  {{ postSessionChooseRangeLabel }}
+                </button>
+              </template>
+
+              <template v-else>
+                <button
+                  type="button"
+                  class="post-session-simple__btn post-session-simple__btn--primary"
+                  :disabled="postSessionActionsBusy || postSessionAiReciteBusy || !aiTestModalsEnabled"
+                  :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
+                  data-action="test-with-ai"
+                  @click="onPostSessionTestWithAi"
+                >
+                  <span>{{ postSessionTestWithAiLabel }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="post-session-simple__text-link"
+                  :disabled="postSessionActionsBusy || !postSessionRecommendationActionable"
+                  data-action="skip-for-now"
+                  @click="onPostSessionContinueToAyahs"
+                >
+                  {{ postSessionSkipForNowLabel }}
+                </button>
+                <button
+                  type="button"
+                  class="post-session-simple__text-link post-session-simple__text-link--tertiary"
+                  :disabled="postSessionActionsBusy"
+                  data-action="choose-session"
+                  @click="chooseOtherFromRecommendation"
+                >
+                  {{ postSessionChooseRangeLabel }}
                 </button>
               </template>
             </div>
@@ -3285,6 +3330,12 @@
           class="player-dock-card"
           :class="{ 'is-talqin-only': playerDockShowsTalqinOnly, 'is-unified': talqinRecitationTurnActive && playerVisible }"
         >
+          <p
+            v-if="livePracticeCoachText && !talqinRecitationTurnActive"
+            class="live-practice-guidance"
+            role="status"
+            aria-live="polite"
+          >{{ livePracticeCoachText }}</p>
           <div
             v-if="talqinRecitationTurnActive"
             class="player-talqin-strip"
@@ -3527,6 +3578,7 @@
       :tools-label="amdLabels.tools"
       :blur-label="amdLabels.blur"
       :peek-label="amdLabels.peek"
+      :peek-hint-label="amdLabels.peekHint"
       :stop-label="amdLabels.stop"
       :start-label="amdLabels.start"
       :start-hint="amdLabels.startHint"

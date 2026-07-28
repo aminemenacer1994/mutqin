@@ -428,7 +428,7 @@ function t(key, params = {}) {
   assert.equal(needsPractice.type, RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE)
   assert.equal(needsPractice.confidence_feedback, 'needs_practice')
   assert.equal(needsPractice.reason_code, 'confidence_needs_practice')
-  assert.equal(needsPractice.settings.playback_speed, 0.75)
+  assert.equal(needsPractice.settings.playback_speed, 1.25)
   assert.ok(needsPractice.settings.repetitions >= 4)
 }
 
