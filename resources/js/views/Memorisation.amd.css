@@ -610,13 +610,15 @@
   }
 
   .amd-toolbar {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
   }
 
   .amd-difficulty {
-    width: 100%;
-    margin-inline-start: 0;
-    justify-content: space-between;
+    width: auto;
+    margin-inline-start: auto;
+    flex: 0 0 auto;
+    justify-content: flex-end;
   }
 
   .amd-mushaf-shell {
@@ -1047,32 +1049,35 @@
 
 .amd-mushaf-ayah--premium {
   width: 100%;
-  max-width: 38rem;
+  max-width: 42rem;
   margin: 0 auto;
   text-align: center;
-  font-size: clamp(1.45rem, 3.4vw, 1.95rem);
-  line-height: 2.2;
+  font-size: clamp(1.85rem, 4.6vw, 2.65rem);
+  line-height: 2.55;
 }
 
 /* Clear live colour feedback for AMD */
 .amd-mushaf-ayah--premium .recitation-word-correct {
   color: #1b7a4c !important;
+  -webkit-text-fill-color: #1b7a4c !important;
   text-decoration-color: rgba(27, 122, 76, 0.75);
 }
 
 .amd-mushaf-ayah--premium .recitation-word-partial {
   color: #b7791f !important;
+  -webkit-text-fill-color: #b7791f !important;
   text-decoration-color: rgba(183, 121, 31, 0.8);
 }
 
 .amd-mushaf-ayah--premium .recitation-word-incorrect {
   color: #b42318 !important;
+  -webkit-text-fill-color: #b42318 !important;
   text-decoration-color: rgba(180, 35, 24, 0.8);
 }
 
 .amd-mushaf-ayah--premium .recitation-word-omitted,
 .amd-mushaf-ayah--premium .recitation-word-notAttempted:not(.amd-word-hidden) {
-  color: #8a847c !important;
+  color: #111111 !important;
 }
 
 [data-theme="dark"] .amd-modal--premium,
@@ -1104,14 +1109,17 @@
 
 [data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-correct {
   color: #6ec9a4 !important;
+  -webkit-text-fill-color: #6ec9a4 !important;
 }
 
 [data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-partial {
   color: #e4a76a !important;
+  -webkit-text-fill-color: #e4a76a !important;
 }
 
 [data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-incorrect {
   color: #f07167 !important;
+  -webkit-text-fill-color: #f07167 !important;
 }
 
 [data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-omitted,
@@ -1146,8 +1154,10 @@
 
   .amd-mushaf-ayah--premium {
     max-width: 100%;
-    font-size: clamp(1.35rem, 5.8vw, 1.75rem);
-    line-height: 2.25;
+    font-size: clamp(1.95rem, 7vw, 2.55rem);
+    line-height: 2.55;
+    color: #000000;
+    -webkit-text-fill-color: #000000;
   }
 }
 
@@ -1155,7 +1165,8 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  width: 100%;
 }
 
 .amd-icon-btn {
@@ -1232,13 +1243,48 @@
 
 .amd-mushaf-ayah--premium {
   width: 100%;
-  max-width: 44rem;
+  max-width: 42rem;
   margin-inline: auto;
   font-family: "KFGQPC Uthmanic Script HAFS", "Scheherazade New", "Amiri Quran", "Amiri", serif;
-  font-size: clamp(1.65rem, 4.2vw, 2.65rem);
+  font-size: clamp(1.85rem, 4.6vw, 2.65rem);
+  font-weight: 500;
   line-height: 2.55;
+  letter-spacing: 0;
   text-align: center;
   color: #000000;
+  -webkit-text-fill-color: #000000;
+}
+
+.amd-mushaf-ayah--premium .wbw-word:not(.amd-word-hidden):not(.recitation-word-correct):not(.recitation-word-partial):not(.recitation-word-incorrect),
+.amd-mushaf-ayah--premium .amd-basmala {
+  color: #000000;
+  -webkit-text-fill-color: #000000;
+}
+
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-notAttempted:not(.amd-word-hidden),
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-pending:not(.amd-word-hidden) {
+  color: #111111;
+  -webkit-text-fill-color: #111111;
+  opacity: 1;
+}
+
+/* Keep hide/gap masks winning over the black base ink */
+.amd-mushaf-ayah--premium .amd-word-hidden,
+.amd-mushaf-shell.is-blur-active .amd-mushaf-ayah--premium .amd-word-hidden,
+.amd-mushaf-shell.is-gap-mask .amd-mushaf-ayah--premium .amd-word-hidden {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.amd-mushaf-shell.is-gap-mask .amd-mushaf-ayah--premium .amd-word-hidden {
+  filter: none !important;
+  background: color-mix(in srgb, #a8a29e 26%, transparent) !important;
+  box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #a8a29e 48%, transparent) !important;
+}
+
+.amd-mushaf-shell.is-blur-active .amd-mushaf-ayah--premium .amd-word-hidden {
+  filter: blur(8px) !important;
+  background: transparent !important;
 }
 
 .amd-mushaf-page {
@@ -1267,7 +1313,25 @@
   text-wrap: pretty;
 }
 
+/* Continuous mushaf flow — ayahs wrap inline with end markers (match reference) */
+.amd-mushaf-page--flow .amd-mushaf-stream {
+  display: block;
+  max-width: 100%;
+  margin-inline: auto;
+  line-height: inherit;
+  text-align: center;
+}
+
 .amd-ayah-run {
+  display: inline;
+}
+
+.amd-mushaf-page--flow .amd-ayah-run {
+  display: inline;
+  line-height: inherit;
+}
+
+.amd-mushaf-page--flow .amd-ayah-run__text {
   display: inline;
 }
 
@@ -1282,16 +1346,19 @@
 
 .amd-mushaf-ayah--premium .recitation-word-correct {
   color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
   background: transparent !important;
 }
 
 .amd-mushaf-ayah--premium .recitation-word-partial {
   color: #b45309 !important;
+  -webkit-text-fill-color: #b45309 !important;
   background: transparent !important;
 }
 
 .amd-mushaf-ayah--premium .recitation-word-incorrect {
   color: #b91c1c !important;
+  -webkit-text-fill-color: #b91c1c !important;
   background: transparent !important;
 }
 
@@ -1451,9 +1518,30 @@
   font-size: clamp(0.95rem, 2.4vw, 1.05rem);
 }
 
-[data-theme="dark"] .amd-modal--premium,
-.app[data-theme="dark"] .amd-modal--premium {
-  background: #0a0a0a;
+[data-theme="dark"] .amd-mushaf-shell--premium,
+.app[data-theme="dark"] .amd-mushaf-shell--premium {
+  background: #000000;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .amd-mushaf-ayah--premium,
+.app[data-theme="dark"] .amd-mushaf-ayah--premium {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah--premium .wbw-word:not(.amd-word-hidden):not(.recitation-word-correct):not(.recitation-word-partial):not(.recitation-word-incorrect),
+[data-theme="dark"] .amd-mushaf-ayah--premium .amd-basmala,
+.app[data-theme="dark"] .amd-mushaf-ayah--premium .wbw-word:not(.amd-word-hidden):not(.recitation-word-correct):not(.recitation-word-partial):not(.recitation-word-incorrect),
+.app[data-theme="dark"] .amd-mushaf-ayah--premium .amd-basmala {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah--premium .wbw-word.recitation-word-notAttempted:not(.amd-word-hidden),
+[data-theme="dark"] .amd-mushaf-ayah--premium .wbw-word.recitation-word-pending:not(.amd-word-hidden) {
+  color: #f5f5f4;
+  -webkit-text-fill-color: #f5f5f4;
 }
 
 [data-theme="dark"] .amd-header--premium {
@@ -1583,9 +1671,11 @@
   }
 
   .amd-mushaf-ayah--premium {
-    max-width: 46rem;
-    font-size: clamp(2rem, 2.55vw, 2.8rem);
-    line-height: 2.6;
+    max-width: 44rem;
+    font-size: clamp(2.05rem, 2.6vw, 2.75rem);
+    line-height: 2.55;
+    color: #000000;
+    -webkit-text-fill-color: #000000;
   }
 
   .amd-mushaf-page {

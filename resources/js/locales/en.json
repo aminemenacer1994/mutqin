@@ -582,6 +582,9 @@
       "mushafLayoutBlue": "Madani Blue",
       "mushafLayoutLavender": "Madani Lavender",
       "mushafLayoutGold": "Madani Gold",
+      "mushafFramePaper": "Paper",
+      "mushafFrameParchment": "Parchment",
+      "mushafFrameMadani": "Madani",
       "enableWordAudio": "Enable audio for individual word chips",
       "guestAuthShell": "Login",
       "ayahNumberLabel": "Ayah {number}",
@@ -659,6 +662,11 @@
         "messageFallback": "This will permanently remove this session and its export snapshot from this device.",
         "confirm": "Delete session",
         "cancel": "Keep session"
+      },
+      "deleteSessions": {
+        "title": "Delete selected sessions?",
+        "message": "This will permanently remove {count} saved sessions from this device.",
+        "confirm": "Delete selected"
       },
       "deleteRecording": {
         "title": "Delete recording?",
@@ -992,7 +1000,7 @@
     "revisitOnboarding": "Revisit onboarding",
     "onboarding": {
       "stepCounter": "Step {current} of {total}",
-      "intro": "A short tour of Mutqin’s memorisation workspace: session setup, reading aids, practice techniques, AI checks, and your saved library.",
+      "intro": "A short tour of Mutqin’s memorisation workspace: session setup, reading aids, practice techniques, and AI checks.",
       "finish": "Finish",
       "confirmChoice": "Confirm choice",
       "useSampleSession": "Play sample session",
@@ -1098,6 +1106,11 @@
     "session": "Session",
     "practice": "Practice",
     "saved": "Saved",
+    "selectSessions": "Select",
+    "selectSession": "Select session",
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all",
+    "deleteSelected": "Delete",
     "insights": "Insights",
     "view_and_font_controls_stay_here_while_planner_mod": "View and font controls stay here while planner mode is active.",
     "available_after_you_start_todays_session": "Available after you start today&apos;s session",

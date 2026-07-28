@@ -856,6 +856,22 @@
     gap: 10px var(--mq-grid-gap);
   }
 
+  .sheet.saved-sheet--beige,
+  .tools-body > .sheet.saved-sheet--beige {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    gap: 0.85rem !important;
+  }
+
+  .sheet.saved-sheet--beige > *,
+  .tools-body > .sheet.saved-sheet--beige > * {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
   .sheet > .sheet-section,
   .sheet > .technique-group-copy,
   .sheet > .stats-sessions-container {
@@ -1145,23 +1161,26 @@
     grid-template-rows: auto auto minmax(0, 1fr) auto !important;
   }
 
-  .post-onboarding-modal .onboarding-hero {
+  .post-onboarding-modal .onboarding-hero,
+  .post-onboarding-modal .onboarding-hero--compact {
     display: grid !important;
-    grid-template-columns: var(--mq-grid) !important;
-    gap: var(--mq-grid-gap) !important;
-    padding: 12px 14px 10px !important;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    gap: 0.55rem !important;
+    padding: 0.7rem 0.85rem 0.55rem !important;
+    align-items: center !important;
   }
 
   .onboarding-step-icon {
-    grid-column: 1;
+    grid-column: auto !important;
   }
 
   .onboarding-hero-copy {
-    grid-column: 2 / span 2;
+    grid-column: auto !important;
+    min-width: 0 !important;
   }
 
   .onboarding-close-btn {
-    grid-column: 4;
+    grid-column: auto !important;
     justify-self: end;
   }
 
@@ -3324,10 +3343,27 @@
 
   .main.mushaf-mode-active .live-practice-guidance,
   .main.mushaf-mode-active .live-practice-guidance--mushaf,
-  .main.mushaf-mode-active .madani-ornate__meta,
+  .main.mushaf-mode-active .madani-ornate__meta {
+    display: none !important;
+  }
+
+  /* Keep page-layout + controls icons visible; allow layout menu to escape the bar */
   .main.mushaf-mode-active .mushaf-layout-dropdown,
   .main.mushaf-mode-active .mushaf-shell__controls-btn {
-    display: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell.is-layout-menu-open,
+  .main.mushaf-mode-active .mushaf-shell.is-layout-menu-open .mushaf-shell__bar {
+    overflow: visible !important;
+  }
+
+  .main.mushaf-mode-active .mushaf-shell__bar.is-layout-menu-open {
+    overflow: visible !important;
   }
 
   .main.mushaf-mode-active .mushaf-workspace,

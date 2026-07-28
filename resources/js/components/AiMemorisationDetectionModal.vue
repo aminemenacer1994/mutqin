@@ -223,7 +223,7 @@ export default {
     blurActive: { type: Boolean, default: true },
     peeking: { type: Boolean, default: false },
     tajweed: { type: Boolean, default: false },
-    difficulty: { type: Number, default: 50 },
+    difficulty: { type: Number, default: 100 },
     difficultyOptions: {
       type: Array,
       default: () => [25, 50, 75, 100],
@@ -347,21 +347,20 @@ export default {
           node.classList.remove(`recitation-word-${name}`)
         })
         node.classList.add(`recitation-word-${status}`)
-        const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(status)
-        if (attempted) {
+        // Prefer explicit mask flags — status may stay notAttempted (no colour paint).
+        const shouldMask = patch.masked === true || patch.hidden === true
+        if (shouldMask) {
+          node.classList.add('amd-word-hidden')
+          node.setAttribute('aria-hidden', 'true')
+          node.setAttribute('data-masked', '1')
+        } else {
           node.classList.remove('amd-word-hidden')
           node.removeAttribute('aria-hidden')
           node.removeAttribute('data-masked')
-        } else {
-          // Keep grey blank presentation for untouched hidden targets.
-          if (patch.masked) {
-            node.classList.add('amd-word-hidden')
-            node.setAttribute('aria-hidden', 'true')
-            node.setAttribute('data-masked', '1')
-          }
         }
-        node.classList.toggle('amd-word-revealed', status === 'correct' || !!patch.revealed)
+        node.classList.toggle('amd-word-revealed', !!patch.revealed)
         node.classList.toggle('amd-word-current', !!patch.current)
+        node.classList.toggle('amd-word-peeked', !!patch.peeked)
         changed = true
       }
       if (changed) this.scrollActiveIntoView(el)

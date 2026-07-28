@@ -275,6 +275,7 @@
                       <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
                     <button
+                      v-if="readingViewMode !== 'mushaf'"
                       type="button"
                       class="top-card-menu-toggle"
                       :class="{ active: showTransliteration }"
@@ -286,6 +287,7 @@
                       <i v-if="showTransliteration" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
                     <button
+                      v-if="readingViewMode !== 'mushaf'"
                       type="button"
                       class="top-card-menu-toggle"
                       :class="{ active: showWordByWord }"
@@ -403,36 +405,6 @@
                 <span>{{ t('memorisation.view.mushaf') }}</span>
               </button>
             </div>
-
-            <div class="font-dropdown workspace-font-dropdown">
-              <button
-                class="font-dropdown-trigger"
-                type="button"
-                @click.stop="toggleFontDropdown"
-                :title="t('memorisation.a11y.changeQuranFont')"
-                :aria-expanded="fontDropdownOpen ? 'true' : 'false'"
-              >
-                <i class="bi bi-text-paragraph" aria-hidden="true"></i>
-                <span>{{ getCurrentFontLabel() }}</span>
-                <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }" aria-hidden="true"></i>
-              </button>
-              <transition name="dropdown-fade">
-                <div v-if="fontDropdownOpen" class="font-dropdown-menu" @click.stop>
-                  <button
-                    v-for="font in quranFontOptions"
-                    :key="font.value"
-                    type="button"
-                    class="font-option"
-                    :class="{ active: quranFont === font.value }"
-                    @click="selectFont(font.value)"
-                  >
-                    <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
-                    <span>{{ font.label }}</span>
-                    <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                  </button>
-                </div>
-              </transition>
-            </div>
           </div>
         </div>
         <div v-if="reviewPriorityLabel" class="workspace-shell-compact-meta">
@@ -479,11 +451,18 @@
               <div class="container-fluid mushaf-workspace__fluid px-0">
               <section
                 class="mushaf-shell"
-                :class="{ 'is-madani-skin': isMadaniMushafSkin }"
+                :class="{
+                  'is-madani-skin': isMadaniMushafSkin,
+                  'is-layout-menu-open': mushafLayoutMenuOpen,
+                }"
                 :data-madani-skin="activeMadaniSkin"
                 aria-label="Mushaf"
               >
-                <header class="mushaf-shell__bar" :aria-label="t('memorisation.a11y.mushafTools')">
+                <header
+                  class="mushaf-shell__bar"
+                  :class="{ 'is-layout-menu-open': mushafLayoutMenuOpen }"
+                  :aria-label="t('memorisation.a11y.mushafTools')"
+                >
                   <div class="mushaf-shell__bar-group">
                     <div class="mushaf-shell__size" role="group" :aria-label="t('common.fontSize')">
                       <button
@@ -510,6 +489,56 @@
                   </div>
 
                   <div class="mushaf-shell__bar-group mushaf-shell__bar-group--end">
+                    <div class="mushaf-layout-dropdown" @click.stop>
+                      <button
+                        type="button"
+                        class="mushaf-shell__btn mushaf-shell__btn--icon"
+                        :class="{ 'is-active': mushafLayoutMenuOpen || isMadaniMushafSkin }"
+                        @click.stop="toggleMushafLayoutMenu"
+                        :aria-expanded="mushafLayoutMenuOpen ? 'true' : 'false'"
+                        :aria-label="t('memorisation.a11y.mushafLayoutMenu')"
+                        :title="t('memorisation.a11y.mushafLayoutMenu')"
+                      >
+                        <i class="bi bi-bounding-box-circles" aria-hidden="true"></i>
+                      </button>
+                      <transition name="dropdown-fade">
+                        <div v-if="mushafLayoutMenuOpen" class="mushaf-layout-menu" role="menu">
+                          <span class="mushaf-layout-menu__label">{{ t('memorisation.a11y.mushafLayoutMenu') }}</span>
+                          <button
+                            v-for="option in mushafDesktopFrameOptions"
+                            :key="option.id"
+                            type="button"
+                            class="mushaf-layout-option"
+                            :class="{ 'is-active': mushafUiSkin === option.id }"
+                            role="menuitemradio"
+                            :aria-checked="mushafUiSkin === option.id ? 'true' : 'false'"
+                            @click.stop="setMushafUiSkin(option.id)"
+                          >
+                            <span class="mushaf-layout-option__swatches" aria-hidden="true">
+                              <span
+                                v-for="(swatch, swatchIndex) in option.swatches"
+                                :key="`${option.id}-${swatchIndex}`"
+                                class="mushaf-layout-option__swatch"
+                                :style="{ background: swatch }"
+                              ></span>
+                            </span>
+                            <span>{{ option.label }}</span>
+                            <i v-if="mushafUiSkin === option.id" class="bi bi-check-lg mushaf-layout-option__check" aria-hidden="true"></i>
+                          </button>
+                        </div>
+                      </transition>
+                    </div>
+
+                    <button
+                      type="button"
+                      class="mushaf-shell__btn mushaf-shell__btn--icon mushaf-shell__controls-btn"
+                      @click.stop="openAdvancedControls"
+                      :title="t('memorisation.open_controls')"
+                      :aria-label="t('memorisation.open_controls')"
+                    >
+                      <i class="bi bi-sliders" aria-hidden="true"></i>
+                    </button>
+
                     <button
                       type="button"
                       class="mushaf-shell__btn mushaf-shell__btn--icon"
@@ -574,7 +603,7 @@
                               'madani-page-sheet--glyphs-ready': useMadaniQcfGlyphs && !!madaniFontsReady[currentMushafPage.pageNumber],
                               'madani-page-sheet--unicode': !useMadaniQcfGlyphs,
                               'madani-page-sheet--tajweed': !!tajweedEnabled && useMadaniQcfGlyphs,
-                              'word-by-word-meanings': !!showWordByWord,
+                              'word-by-word-meanings': false,
                               'recitation-word-review-active': !!(mushafAidVerse && shouldShowRecitationReviewHighlights(mushafAidVerse.key))
                             }"
                             :style="{
@@ -656,7 +685,7 @@
                         'madani-page-sheet--glyphs-ready': useMadaniQcfGlyphs && !!madaniFontsReady[currentMushafPage.pageNumber],
                         'madani-page-sheet--unicode': !useMadaniQcfGlyphs,
                         'madani-page-sheet--tajweed': !!tajweedEnabled && useMadaniQcfGlyphs,
-                        'word-by-word-meanings': !!showWordByWord,
+                        'word-by-word-meanings': false,
                         'recitation-word-review-active': !!(mushafAidVerse && shouldShowRecitationReviewHighlights(mushafAidVerse.key))
                       }"
                       :style="{
@@ -725,31 +754,11 @@
                     </div>
 
                     <div
-                      v-if="mushafAidVerse && (showTransliteration || showWordByWord || activeWordTooltip)"
+                      v-if="mushafAidVerse && activeWordTooltip"
                       class="mushaf-verse-aids"
                     >
                       <div v-if="activeWordTooltip?.text" class="mushaf-word-tooltip" dir="ltr" lang="en">
                         {{ activeWordTooltip.text }}
-                      </div>
-                      <div v-if="showWordByWord && mushafAidWords.length" class="mushaf-wbw-strip" dir="rtl">
-                        <button
-                          v-for="word in mushafAidWords"
-                          :key="`mushaf-wbw-${mushafAidVerse.key}-${word.index}`"
-                          type="button"
-                          class="mushaf-wbw-chip"
-                          :class="{
-                            highlighted: currentHighlightedVerseKey === mushafAidVerse.key && currentWordIndex === word.index,
-                            'practice-focus-word': isPracticeFocusWeakWord(mushafAidVerse.key, word.index, word.ar)
-                          }"
-                          @click="onMadaniAidWordClick(mushafAidVerse, word.index)"
-                        >
-                          <span class="mushaf-wbw-chip__ar" lang="ar">{{ word.ar }}</span>
-                          <span v-if="word.en" class="mushaf-wbw-chip__en" dir="ltr" lang="en">{{ word.en }}</span>
-                        </button>
-                      </div>
-                      <div v-if="showTransliteration && mushafAidVerse.transliteration" class="verse-aid-block" dir="ltr" lang="en">
-                        <div class="verse-aid-title">{{ t('memorisation.reading.transliteration') }}</div>
-                        <div class="verse-transliteration verse-aid">{{ mushafAidVerse.transliteration }}</div>
                       </div>
                     </div>
                   </article>
@@ -1399,72 +1408,121 @@
           </div>
 
           <!-- SAVED TAB -->
-          <div v-else-if="tab === 'saved'" class="sheet">
-            <section class="sheet-section sheet-section-compact">
-              <button class="sheet-toggle" type="button" @click="toggleSection('saved_sessions')">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-clock-history"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">{{ t('memorisation.saved_sessions') }}</span>
-                    <span class="st-sub">{{ t('memorisation.saved_sessions_intro') }}</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.saved_sessions }"><i class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content saved-sessions-sheet" v-show="sectionOpen.saved_sessions">
-                <div v-if="savedSessions.length > 0" class="list-group saved-sessions-list" role="list">
-                  <article
-                    v-for="session in sortedSavedSessions"
-                    :key="session.id"
-                    class="list-group-item saved-session-row"
-                    :class="{
-                      'is-complete': isSavedSessionComplete(session),
-                      'is-active': sessionMatchesCurrentLiveConfig(session)
-                    }"
-                    role="listitem"
-                  >
-                    <button type="button" class="saved-session-row-main" @click="loadSavedSession(session.id)">
-                      <span class="saved-session-row-title">
-                        <i class="bi" :class="isSavedSessionComplete(session) ? 'bi-check-circle' : 'bi-bookmark'" aria-hidden="true"></i>
-                        <span>{{ getSavedSessionName(session) }}</span>
-                      </span>
-                      <span class="saved-session-row-meta">
-                        {{ getSavedSessionSurah(session) }} · {{ t('memorisation.last_opened', { date: formatDate(session.savedAt) }) }}
-                      </span>
-                    </button>
-                    <div class="saved-session-row-actions">
-                      <button class="saved-session-row-btn saved-session-row-btn-primary" @click="loadSavedSession(session.id)" type="button">
-                        <i class="bi bi-play-fill" aria-hidden="true"></i>
-                        <span>{{ t('common.resume') }}</span>
-                      </button>
-                      <button class="saved-session-row-btn" @click.stop="deleteSavedSession(session.id)" :title="t('common.delete')" :aria-label="t('common.delete')" type="button">
-                        <i class="bi bi-trash3" aria-hidden="true"></i>
-                      </button>
-                    </div>
-                  </article>
-                </div>
-
-                <div v-else class="saved-empty-sheet">
-                  <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
-                  <p>{{ t('memorisation.no_saved_sessions_yet') }}</p>
-                  <span>{{ t('memorisation.save_your_current_session_to_get_started') }}</span>
-                </div>
+          <div v-else-if="tab === 'saved'" class="sheet saved-sheet saved-sheet--beige">
+            <header class="saved-sheet__header">
+              <div class="saved-sheet__header-copy">
+                <h3 class="saved-sheet__title">{{ t('memorisation.saved_sessions') }}</h3>
+                <p class="saved-sheet__intro">{{ t('memorisation.saved_sessions_intro') }}</p>
               </div>
+              <div v-if="savedSessions.length > 0" class="saved-sheet__toolbar">
+                <button
+                  type="button"
+                  class="saved-sheet__toolbar-btn"
+                  :class="{ 'is-active': savedSelectMode }"
+                  @click="toggleSavedSelectMode"
+                >
+                  <i class="bi" :class="savedSelectMode ? 'bi-x-lg' : 'bi-check2-square'" aria-hidden="true"></i>
+                  <span>{{ savedSelectMode ? (t('common.cancel') || 'Cancel') : (t('memorisation.selectSessions') || 'Select') }}</span>
+                </button>
+                <button
+                  v-if="savedSelectMode"
+                  type="button"
+                  class="saved-sheet__toolbar-btn"
+                  @click="toggleSelectAllSavedSessions"
+                >
+                  <i class="bi bi-list-check" aria-hidden="true"></i>
+                  <span>{{ allSavedSessionsSelected ? (t('memorisation.deselectAll') || 'Deselect all') : (t('memorisation.selectAll') || 'Select all') }}</span>
+                </button>
+                <button
+                  v-if="savedSelectMode"
+                  type="button"
+                  class="saved-sheet__toolbar-btn saved-sheet__toolbar-btn--danger"
+                  :disabled="!selectedSavedSessionIds.length"
+                  @click="deleteSelectedSavedSessions"
+                >
+                  <i class="bi bi-trash3" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.deleteSelected') || 'Delete' }}{{ selectedSavedSessionIds.length ? ` (${selectedSavedSessionIds.length})` : '' }}</span>
+                </button>
+              </div>
+            </header>
+
+            <section v-if="hasVerses" class="saved-sheet__card saved-sheet__card--current" aria-label="Current session">
+              <div class="saved-sheet__current-copy">
+                <span class="saved-sheet__eyebrow">{{ t('memorisation.current_session') }}</span>
+                <strong>{{ currentChapter?.name_simple || t('memorisation.no_surah_selected') }}</strong>
+                <small>{{ rangeStart }}–{{ rangeEnd }}</small>
+              </div>
+              <button class="saved-sheet__save-btn" @click="saveCurrentSessionWithName()" type="button">
+                <i class="bi bi-bookmark-plus" aria-hidden="true"></i>
+                <span>{{ t('common.save') }}</span>
+              </button>
             </section>
 
-            <section v-if="hasVerses" class="sheet-section sheet-section-compact">
-              <div class="sheet-content saved-current-session-sheet">
-                <div class="saved-current-session-copy">
-                  <i class="bi bi-play-circle" aria-hidden="true"></i>
-                  <div>
-                    <strong>{{ t('memorisation.current_session') }}</strong>
-                    <small>{{ currentChapter?.name_simple || t('memorisation.no_surah_selected') }} · {{ rangeStart }}-{{ rangeEnd }}</small>
+            <section class="saved-sheet__section" aria-label="Saved sessions">
+              <div v-if="savedSessions.length > 0" class="saved-sheet__list" role="list">
+                <article
+                  v-for="session in sortedSavedSessions"
+                  :key="session.id"
+                  class="saved-sheet__row"
+                  :class="{
+                    'is-complete': isSavedSessionComplete(session),
+                    'is-active': sessionMatchesCurrentLiveConfig(session),
+                    'is-selected': isSavedSessionSelected(session.id)
+                  }"
+                  role="listitem"
+                >
+                  <label
+                    v-if="savedSelectMode"
+                    class="saved-sheet__check"
+                    @click.stop
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="isSavedSessionSelected(session.id)"
+                      :aria-label="t('memorisation.selectSession') || 'Select session'"
+                      @change="toggleSavedSessionSelection(session.id)"
+                    >
+                    <span aria-hidden="true"></span>
+                  </label>
+
+                  <button
+                    type="button"
+                    class="saved-sheet__row-main"
+                    @click="savedSelectMode ? toggleSavedSessionSelection(session.id) : loadSavedSession(session.id)"
+                  >
+                    <span class="saved-sheet__row-icon" aria-hidden="true">
+                      <i class="bi" :class="isSavedSessionComplete(session) ? 'bi-check-circle-fill' : 'bi-bookmark-fill'"></i>
+                    </span>
+                    <span class="saved-sheet__row-copy">
+                      <span class="saved-sheet__row-title">{{ getSavedSessionName(session) }}</span>
+                      <span class="saved-sheet__row-meta">
+                        {{ getSavedSessionSurah(session) }} · {{ t('memorisation.last_opened', { date: formatDate(session.savedAt) }) }}
+                      </span>
+                    </span>
+                  </button>
+
+                  <div v-if="!savedSelectMode" class="saved-sheet__row-actions">
+                    <button class="saved-sheet__action saved-sheet__action--primary" @click="loadSavedSession(session.id)" type="button">
+                      <i class="bi bi-play-fill" aria-hidden="true"></i>
+                      <span>{{ t('common.resume') }}</span>
+                    </button>
+                    <button
+                      class="saved-sheet__action saved-sheet__action--ghost"
+                      @click.stop="deleteSavedSession(session.id)"
+                      :title="t('common.delete')"
+                      :aria-label="t('common.delete')"
+                      type="button"
+                    >
+                      <i class="bi bi-trash3" aria-hidden="true"></i>
+                    </button>
                   </div>
-                </div>
-                <button class="saved-current-session-btn" @click="saveCurrentSessionWithName()" type="button">
-                  <i class="bi bi-save" aria-hidden="true"></i>
-                  <span>{{ t('common.save') }}</span>
-                </button>
+                </article>
+              </div>
+
+              <div v-else class="saved-sheet__empty">
+                <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
+                <p>{{ t('memorisation.no_saved_sessions_yet') }}</p>
+                <span>{{ t('memorisation.save_your_current_session_to_get_started') }}</span>
               </div>
             </section>
           </div>
@@ -1624,7 +1682,7 @@
               <div class="sheet-content" v-show="sectionOpen.reading_settings">
 
                 <!-- Translation -->
-                <div class="setting-item">
+                <div v-if="readingViewMode !== 'mushaf'" class="setting-item">
                   <div class="setting-info">
                     <div class="setting-label">{{ t('memorisation.reading.translation') }}</div>
                     <div class="setting-description">{{ t('sessionSetup.translationDesc') }}</div>
@@ -1636,7 +1694,7 @@
                 </div>
 
                 <!-- Transliteration -->
-                <div class="setting-item">
+                <div v-if="readingViewMode !== 'mushaf'" class="setting-item">
                   <div class="setting-info">
                     <div class="setting-label">{{ t('sessionSetup.transliteration') }}</div>
                     <div class="setting-description">{{ t('sessionSetup.transliterationDesc') }}</div>
@@ -1648,7 +1706,7 @@
                 </div>
 
                 <!-- Word by word -->
-                <div class="setting-item">
+                <div v-if="readingViewMode !== 'mushaf'" class="setting-item">
                   <div class="setting-info">
                     <div class="setting-label">{{ t('sessionSetup.wordByWord') }}</div>
                     <div class="setting-description">{{ t('sessionSetup.wordByWordDesc') }}</div>
@@ -1779,9 +1837,9 @@
         aria-modal="true"
         aria-labelledby="welcomeBackModalTitle"
       >
-        <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
-          <div class="modal-content mutqin-modal-surface welcome-back-modal">
-            <div class="welcome-back-hero">
+        <div class="modal-dialog modal-dialog-centered modal-lg mutqin-modal-dialog">
+          <div class="modal-content mutqin-modal-surface welcome-back-modal welcome-back-modal--v2">
+            <div class="welcome-back-hero welcome-back-hero--compact">
               <div class="welcome-back-hero-copy">
                 <span class="welcome-back-kicker">
                   {{ t('memorisation.welcomeBack.kicker') }}
@@ -1795,7 +1853,7 @@
               </div>
             </div>
 
-            <div class="modal-body welcome-back-body">
+            <div class="modal-body welcome-back-body welcome-back-body--compact">
               <div
                 v-if="welcomeBackDetailRows.length"
                 class="welcome-back-details"
@@ -1819,7 +1877,7 @@
                 {{ welcomeBackConsistencyNudge }}
               </p>
 
-              <blockquote class="welcome-back-reminder" :aria-label="t('memorisation.welcomeBack.reminderLabel')">
+              <blockquote class="welcome-back-reminder welcome-back-reminder--card" :aria-label="t('memorisation.welcomeBack.reminderLabel')">
                 <span class="welcome-back-reminder-kicker">{{ t('memorisation.welcomeBack.reminderLabel') }}</span>
                 <p class="welcome-back-reminder-quote">{{ welcomeBackIslamicContent.translation }}</p>
                 <footer class="welcome-back-reminder-footer">
@@ -1829,9 +1887,9 @@
               </blockquote>
             </div>
 
-            <div class="modal-footer mutqin-modal-footer">
+            <div class="modal-footer mutqin-modal-footer welcome-back-footer">
               <div
-                class="mutqin-modal-actions welcome-back-actions-grid"
+                class="mutqin-modal-actions welcome-back-actions-grid welcome-back-actions-grid--v2"
                 :class="{ 'mutqin-modal-actions--3': canResumePreviousSession }"
               >
                 <button
@@ -1847,7 +1905,7 @@
                   <i class="bi bi-plus-circle" aria-hidden="true"></i>
                   <span>{{ t('memorisation.welcomeBack.startNewSession') }}</span>
                 </button>
-                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate" @click="logoutFromWelcomeBack">
+                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate welcome-back-logout" @click="logoutFromWelcomeBack">
                   <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                   <span>{{ t('common.logout') }}</span>
                 </button>
@@ -2681,15 +2739,13 @@
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
       <div class="modal-content mutqin-modal-surface post-onboarding-modal" role="dialog" aria-modal="true"
         aria-labelledby="postOnboardingTitle">
-        <div class="onboarding-hero">
+        <div class="onboarding-hero onboarding-hero--compact">
           <span class="onboarding-step-icon" aria-hidden="true">
             <i class="bi" :class="onboardingStepContent.icon"></i>
           </span>
           <div class="onboarding-hero-copy">
             <span class="onboarding-kicker">{{ onboardingStepCounterLabel }}</span>
-            <span class="onboarding-step-label">{{ onboardingStepContent.stepLabel }}</span>
             <h2 id="postOnboardingTitle" class="onboarding-title">{{ onboardingStepContent.title }}</h2>
-            <p v-if="onboardingStepIndex === 0" class="onboarding-intro">{{ t('memorisation.onboarding.intro') }}</p>
           </div>
           <button
             v-if="!requiresFirstTimeOnboarding"
@@ -2718,6 +2774,7 @@
         </div>
 
         <div class="modal-body onboarding-body">
+          <p v-if="onboardingStepIndex === 0" class="onboarding-intro onboarding-intro--body">{{ t('memorisation.onboarding.intro') }}</p>
           <p class="onboarding-lead">{{ onboardingStepContent.body }}</p>
 
           <ul v-if="onboardingStepContent.points.length" class="onboarding-points">

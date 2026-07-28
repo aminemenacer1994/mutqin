@@ -71,7 +71,7 @@ export function createAmdState() {
     previousAssessmentId: null,
     recommendationId: null,
     practiceHud: null,
-    difficulty: 50,
+    difficulty: 100,
     hiddenWordIndexes: [],
     peekActive: false,
     blurActive: true,

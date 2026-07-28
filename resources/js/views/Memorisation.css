@@ -32765,6 +32765,381 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   cursor: pointer;
 }
 
+/* Saved tab — clean beige structured list layout */
+.saved-sheet--beige,
+.tools-body .sheet.saved-sheet--beige,
+.tools-body.compact .sheet.saved-sheet--beige {
+  --saved-bg: #f3eee6;
+  --saved-card: #faf7f1;
+  --saved-card-strong: #fffaf3;
+  --saved-border: rgba(154, 103, 56, 0.14);
+  --saved-text: #1f1a17;
+  --saved-muted: #6c6258;
+  --saved-accent: #9a6738;
+  --saved-accent-strong: #6e4726;
+  display: flex !important;
+  flex-direction: column !important;
+  grid-template-columns: none !important;
+  gap: 0.85rem !important;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0.15rem 0.05rem 0.85rem;
+  color: var(--saved-text);
+}
+
+.saved-sheet--beige > * {
+  grid-column: 1 / -1 !important;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.saved-sheet__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.15rem 0.1rem 0.05rem;
+}
+
+.saved-sheet__header-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.saved-sheet__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--saved-text);
+}
+
+.saved-sheet__intro {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--saved-muted);
+}
+
+.saved-sheet__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.saved-sheet__toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--saved-border);
+  background: var(--saved-card-strong);
+  color: var(--saved-text);
+  font-size: 0.74rem;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.saved-sheet__toolbar-btn.is-active {
+  border-color: color-mix(in srgb, var(--saved-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--saved-accent) 12%, var(--saved-card-strong));
+  color: var(--saved-accent-strong);
+}
+
+.saved-sheet__toolbar-btn--danger {
+  border-color: color-mix(in srgb, var(--danger, #b55041) 28%, transparent);
+  color: var(--danger, #b55041);
+}
+
+.saved-sheet__toolbar-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.saved-sheet__card,
+.saved-sheet__section {
+  border: 1px solid var(--saved-border);
+  border-radius: 14px;
+  background: var(--saved-card);
+  box-shadow: 0 8px 18px rgba(63, 39, 18, 0.04);
+}
+
+.saved-sheet__card--current {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 0.9rem;
+  background: linear-gradient(180deg, var(--saved-card-strong), var(--saved-card));
+}
+
+.saved-sheet__current-copy {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+  flex: 1 1 12rem;
+}
+
+.saved-sheet__eyebrow {
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--saved-accent);
+}
+
+.saved-sheet__current-copy strong {
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--saved-text);
+}
+
+.saved-sheet__current-copy small {
+  font-size: 0.76rem;
+  color: var(--saved-muted);
+}
+
+.saved-sheet__save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--saved-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--saved-accent) 12%, var(--saved-card-strong));
+  color: var(--saved-accent-strong);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.saved-sheet__section {
+  padding: 0.45rem;
+}
+
+.saved-sheet__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.saved-sheet__row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.65rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--saved-card-strong) 88%, transparent);
+}
+
+.saved-sheet__row.is-active,
+.saved-sheet__row.is-selected {
+  border-color: color-mix(in srgb, var(--saved-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--saved-accent) 8%, var(--saved-card-strong));
+}
+
+.saved-sheet__row.is-complete .saved-sheet__row-icon {
+  color: var(--success, #2e7d64);
+}
+
+.saved-sheet__check {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}
+
+.saved-sheet__check input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.saved-sheet__check span {
+  display: block;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 0.35rem;
+  border: 1.5px solid color-mix(in srgb, var(--saved-accent) 35%, var(--saved-border));
+  background: var(--saved-card-strong);
+}
+
+.saved-sheet__check input:checked + span {
+  background: var(--saved-accent);
+  border-color: var(--saved-accent);
+  box-shadow: inset 0 0 0 2px var(--saved-card-strong);
+}
+
+.saved-sheet__row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: start;
+  color: inherit;
+  cursor: pointer;
+}
+
+.saved-sheet__row-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--saved-accent) 10%, transparent);
+  color: var(--saved-accent);
+  font-size: 0.9rem;
+}
+
+.saved-sheet__row-copy {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.saved-sheet__row-title {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--saved-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-sheet__row-meta {
+  font-size: 0.72rem;
+  color: var(--saved-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-sheet__row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.saved-sheet__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 2rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--saved-border);
+  background: var(--saved-card-strong);
+  color: var(--saved-text);
+  font-size: 0.72rem;
+  font-weight: 550;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.saved-sheet__action--primary {
+  border-color: color-mix(in srgb, var(--saved-accent) 26%, transparent);
+  background: color-mix(in srgb, var(--saved-accent) 12%, var(--saved-card-strong));
+  color: var(--saved-accent-strong);
+}
+
+.saved-sheet__action--ghost {
+  width: 2rem;
+  min-width: 2rem;
+  padding: 0;
+  color: var(--saved-muted);
+}
+
+.saved-sheet__empty {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: start;
+  padding: 1.1rem 0.75rem;
+  color: var(--saved-muted);
+  font-size: 0.8rem;
+}
+
+.saved-sheet__empty i {
+  font-size: 1.2rem;
+  color: var(--saved-accent);
+}
+
+.saved-sheet__empty p {
+  margin: 0;
+  font-weight: 600;
+  color: var(--saved-text);
+}
+
+[data-theme="dark"] .saved-sheet--beige,
+.app[data-theme="dark"] .saved-sheet--beige,
+[data-theme="dark"] .tools-body .sheet.saved-sheet--beige,
+.app[data-theme="dark"] .tools-body .sheet.saved-sheet--beige {
+  --saved-bg: #171513;
+  --saved-card: #1f1c19;
+  --saved-card-strong: #26221e;
+  --saved-border: rgba(232, 214, 188, 0.12);
+  --saved-text: #f5f0e8;
+  --saved-muted: #b3a89b;
+  --saved-accent: #d2b08a;
+  --saved-accent-strong: #f0d7b5;
+}
+
+[data-theme="dark"] .saved-sheet__card,
+[data-theme="dark"] .saved-sheet__section,
+.app[data-theme="dark"] .saved-sheet__card,
+.app[data-theme="dark"] .saved-sheet__section {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+@media (max-width: 560px) {
+  .saved-sheet__card--current {
+    align-items: stretch;
+  }
+
+  .saved-sheet__save-btn {
+    width: 100%;
+  }
+
+  .saved-sheet__row {
+    flex-wrap: nowrap;
+  }
+
+  .saved-sheet__action--primary span {
+    display: none;
+  }
+
+  .saved-sheet__action--primary {
+    width: 2rem;
+    min-width: 2rem;
+    padding: 0;
+  }
+}
+
 .tools-body .offcanvas-audio-panel .radio-group-compact {
   gap: 4px;
 }
@@ -44375,17 +44750,17 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
     display: contents !important;
   }
 
-  /* Word spans are adjacent in the DOM — modest gaps, never stretched */
+  /* Word spans are adjacent in the DOM — keep gaps tight like a printed mushaf */
   .main.mushaf-mode-active .madani-word,
   .main.mushaf-mode-active .madani-basmala,
   .main.mushaf-mode-active .madani-word--unicode,
   .main.mushaf-mode-active .madani-word--fallback {
     display: inline-block !important;
     font-size: calc(clamp(1.45rem, 2.2vw, 2.1rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
-    margin-inline: 0.12em 0.04em !important;
+    margin-inline: 0.015em 0.01em !important;
     padding-inline: 0 !important;
-    letter-spacing: normal !important;
-    word-spacing: normal !important;
+    letter-spacing: 0 !important;
+    word-spacing: 0 !important;
     line-height: 1.75 !important;
     white-space: nowrap !important;
     width: auto !important;
@@ -44395,14 +44770,14 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
 
   .main.mushaf-mode-active .madani-word--glyph {
     font-size: calc(clamp(1.4rem, 2.15vw, 2.05rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
-    margin-inline: 0.04em !important;
-    padding-inline: 0.02em !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
     letter-spacing: 0 !important;
   }
 
   .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
   .main.mushaf-mode-active .madani-word--end.madani-word--fallback {
-    margin-inline: 0.2em 0.15em !important;
+    margin-inline: 0.12em 0.08em !important;
     min-width: 1.2em !important;
     min-height: 1.2em !important;
     font-size: calc(clamp(0.78rem, 1.2vw, 1.05rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
@@ -44479,6 +44854,85 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
   }
 }
 
+/* Mushaf page layouts — available on mobile + desktop, dark-mode optimised */
+.main.mushaf-mode-active .mushaf-layout-dropdown {
+  display: inline-flex;
+  position: relative;
+}
+
+.main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) {
+  background: linear-gradient(180deg, #f7f7f8 0%, #f0f0f2 100%) !important;
+  border: 1px solid rgba(24, 24, 27, 0.12) !important;
+  box-shadow: 0 12px 30px rgba(24, 24, 27, 0.07) !important;
+}
+
+.main.mushaf-mode-active .mushaf-shell.is-madani-skin[data-madani-skin="gold"] {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 250, 240, 0.9), transparent 42%),
+    linear-gradient(180deg, #f3e7d2 0%, #e8d7b8 100%) !important;
+  border: 1px solid rgba(120, 90, 40, 0.22) !important;
+  box-shadow: 0 14px 34px rgba(84, 58, 18, 0.12) !important;
+}
+
+.main.mushaf-mode-active .mushaf-shell.is-madani-skin[data-madani-skin="green"] {
+  background:
+    radial-gradient(circle at 80% 0%, rgba(247, 242, 228, 0.55), transparent 40%),
+    linear-gradient(180deg, #e7e0ce 0%, #d9d0b8 100%) !important;
+  border: 1px solid rgba(30, 70, 48, 0.22) !important;
+  box-shadow: 0 14px 34px rgba(24, 48, 32, 0.12) !important;
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin),
+.app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) {
+  background: linear-gradient(180deg, #1c1c1f 0%, #141416 100%) !important;
+  border-color: rgba(244, 244, 245, 0.14) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell.is-madani-skin[data-madani-skin="gold"],
+.app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell.is-madani-skin[data-madani-skin="gold"] {
+  background: linear-gradient(180deg, #2a2418 0%, #1c1810 100%) !important;
+  border-color: rgba(212, 179, 106, 0.28) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell.is-madani-skin[data-madani-skin="green"],
+.app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell.is-madani-skin[data-madani-skin="green"] {
+  background: linear-gradient(180deg, #18221b 0%, #121814 100%) !important;
+  border-color: rgba(110, 168, 130, 0.28) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell.is-madani-skin .mushaf-shell__bar,
+.app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell.is-madani-skin .mushaf-shell__bar {
+  background: color-mix(in srgb, #1a1c20 88%, transparent) !important;
+  border-bottom-color: rgba(245, 242, 234, 0.1) !important;
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-layout-menu,
+.app[data-theme="dark"] .main.mushaf-mode-active .mushaf-layout-menu {
+  background: #1c1a17;
+  border-color: rgba(245, 242, 234, 0.12);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-layout-menu__label,
+.app[data-theme="dark"] .main.mushaf-mode-active .mushaf-layout-menu__label {
+  color: rgba(245, 242, 234, 0.45);
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-layout-option,
+.app[data-theme="dark"] .main.mushaf-mode-active .mushaf-layout-option {
+  color: #f5f0e8;
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-layout-option:hover,
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-layout-option.is-active,
+.app[data-theme="dark"] .main.mushaf-mode-active .mushaf-layout-option:hover,
+.app[data-theme="dark"] .main.mushaf-mode-active .mushaf-layout-option.is-active {
+  background: rgba(245, 242, 234, 0.08);
+}
+
 .main.mushaf-mode-active .madani-page-sheet {
   display: flex;
   flex-direction: column;
@@ -44535,13 +44989,13 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
 .main.mushaf-mode-active .madani-surah-name {
   display: inline !important;
   margin-block: 0 !important;
-  margin-inline: 0.12em !important;
-  padding: 0 0.08em !important;
+  margin-inline: 0.02em !important;
+  padding: 0 0.02em !important;
   background: transparent !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-  letter-spacing: 0.015em !important;
-  word-spacing: 0.1em !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0.02em !important;
   opacity: 1 !important;
   filter: none !important;
   font-size: calc(clamp(1.45rem, 2.8vw, 2.35rem) * (var(--verse-font-percent, 100) * 0.01)) !important;
@@ -45202,38 +45656,56 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   filter: invert(1) hue-rotate(180deg) sepia(1) saturate(6) hue-rotate(-18deg) brightness(1.15);
 }
 
-/* Top-card icon controls (layout/fonts are mobile-only; controls + ellipsis stay) */
+/* Top-card icon controls — four equal icons on one perfect row */
 .top-card-icon-controls {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 0.35rem !important;
   flex: 0 0 auto;
   position: relative;
   z-index: 60;
   pointer-events: auto;
+  height: 2.25rem;
+  min-height: 2.25rem;
 }
 
-@media (min-width: 768px) {
-  .top-card-icon-controls .top-card-layout-icons,
-  .top-card-icon-controls .top-card-font-wrap {
-    display: none !important;
-  }
-}
+/* Keep all four top-card icons (layout, font, controls, menu) on one row — desktop + mobile */
 
 .top-card-icon-controls .top-card-layout-icons,
 .top-card-icon-controls .top-card-font-wrap,
 .top-card-icon-controls .top-card-controls-wrap,
 .top-card-icon-controls .top-card-menu-wrap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   position: relative;
-  width: 2.25rem;
-  height: 2.25rem;
-  min-width: 2.25rem;
-  min-height: 2.25rem;
-  flex: 0 0 2.25rem;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  min-width: 2.25rem !important;
+  min-height: 2.25rem !important;
+  max-width: 2.25rem !important;
+  max-height: 2.25rem !important;
+  flex: 0 0 2.25rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
   pointer-events: auto;
+}
+
+.top-card-icon-controls .workspace-layout-toggle.top-card-layout-icons,
+.top-card-icon-controls .view-mode-toggle.top-card-layout-icons {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  gap: 0 !important;
+  align-items: center !important;
 }
 
 .top-card-icon-controls .top-card-icon-control,
@@ -45241,8 +45713,9 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 .top-card-icon-controls .top-card-ellipsis,
 .top-card-icon-controls .view-mode-btn,
 .top-card-icon-controls .font-dropdown-trigger {
-  display: inline-grid !important;
-  place-items: center !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   box-sizing: border-box !important;
   width: 2.25rem !important;
   height: 2.25rem !important;
@@ -45254,9 +45727,23 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   margin: 0 !important;
   border-radius: 999px !important;
   gap: 0 !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
   pointer-events: auto !important;
   cursor: pointer !important;
   flex: 0 0 2.25rem !important;
+  transform: none !important;
+}
+
+.top-card-icon-controls .top-card-icon-control i,
+.top-card-icon-controls .view-mode-btn i,
+.top-card-icon-controls .font-dropdown-trigger i,
+.top-card-icon-controls .top-card-controls-trigger i,
+.top-card-icon-controls .top-card-ellipsis i {
+  display: block !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+  font-size: 1rem !important;
 }
 
 .top-card-icon-controls .font-dropdown-trigger.top-card-icon-control span,
@@ -45273,13 +45760,18 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   z-index: 90;
 }
 
+.workspace-shell-actions .action-buttons-group {
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+}
+
 [data-theme="dark"] .top-card-icon-controls .top-card-icon-control,
 [data-theme="dark"] .top-card-icon-controls .view-mode-btn,
 [data-theme="dark"] .top-card-icon-controls .font-dropdown-trigger,
 [data-theme="dark"] .top-card-icon-controls .top-card-controls-trigger,
 [data-theme="dark"] .top-card-icon-controls .top-card-ellipsis {
   background: #18181b;
-  border-color: rgba(245, 242, 234, 0.14);
+  border: 1px solid rgba(245, 242, 234, 0.14);
   color: #f4f4f5;
 }
 
@@ -46370,31 +46862,51 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
     border-bottom: 1px solid rgba(244, 244, 245, 0.12) !important;
   }
 
-  [data-theme="dark"] .app .main.mushaf-mode-active .madani-word:not(.highlighted):not(.phrase-highlighted),
-  [data-theme="dark"] .app .main.mushaf-mode-active .madani-basmala,
-  [data-theme="dark"] .app .main.mushaf-mode-active .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
-  [data-theme="dark"] .app .main.mushaf-mode-active .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
-  [data-theme="dark"] .app .main.mushaf-mode-active .madani-word--fallback:not(.highlighted):not(.phrase-highlighted),
-  .app[data-theme="dark"] .main.mushaf-mode-active .madani-word:not(.highlighted):not(.phrase-highlighted),
-  .app[data-theme="dark"] .main.mushaf-mode-active .madani-basmala,
-  .app[data-theme="dark"] .main.mushaf-mode-active .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
-  .app[data-theme="dark"] .main.mushaf-mode-active .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
-  .app[data-theme="dark"] .main.mushaf-mode-active .madani-word--fallback:not(.highlighted):not(.phrase-highlighted),
-  [data-theme="dark"] .main.mushaf-mode-active .madani-word:not(.highlighted):not(.phrase-highlighted),
-  [data-theme="dark"] .main.mushaf-mode-active .madani-basmala,
-  [data-theme="dark"] .main.mushaf-mode-active .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
-  [data-theme="dark"] .main.mushaf-mode-active .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
-  [data-theme="dark"] .main.mushaf-mode-active .madani-word--fallback:not(.highlighted):not(.phrase-highlighted) {
+  /* Light ink only on charcoal Paper frames — never on cream parchment/Madani pages */
+  [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-basmala,
+  [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word--fallback:not(.highlighted):not(.phrase-highlighted),
+  .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word:not(.highlighted):not(.phrase-highlighted),
+  .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-basmala,
+  .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
+  .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
+  .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word--fallback:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-basmala,
+  [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word--fallback:not(.highlighted):not(.phrase-highlighted) {
     color: #f4f4f5 !important;
     -webkit-text-fill-color: #f4f4f5 !important;
   }
 
-  [data-theme="dark"] .app .main.mushaf-mode-active .madani-word.highlighted,
-  [data-theme="dark"] .app .main.mushaf-mode-active .madani-word.phrase-highlighted,
-  .app[data-theme="dark"] .main.mushaf-mode-active .madani-word.highlighted,
-  .app[data-theme="dark"] .main.mushaf-mode-active .madani-word.phrase-highlighted,
-  [data-theme="dark"] .main.mushaf-mode-active .madani-word.highlighted,
-  [data-theme="dark"] .main.mushaf-mode-active .madani-word.phrase-highlighted {
+  [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+  [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--fallback:not(.highlighted):not(.phrase-highlighted),
+  .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
+  .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+  .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
+  .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
+  .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--fallback:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+  [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
+  [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--fallback:not(.highlighted):not(.phrase-highlighted) {
+    color: #14110e !important;
+    -webkit-text-fill-color: #14110e !important;
+  }
+
+  [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word.highlighted,
+  [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word.phrase-highlighted,
+  .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word.highlighted,
+  .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word.phrase-highlighted,
+  [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word.highlighted,
+  [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-word.phrase-highlighted {
     color: #fbbf24 !important;
     -webkit-text-fill-color: #fbbf24 !important;
     background: transparent !important;
@@ -46416,5 +46928,412 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
     color: unset !important;
     -webkit-text-fill-color: unset !important;
     filter: sepia(1) saturate(6) hue-rotate(-18deg) brightness(1.05);
+  }
+}
+
+
+/* FORCE: stacked layout never shows AI red/green/amber word colours */
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-correct,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-partial,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-incorrect,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-omitted,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-pending,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-notAttempted,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic.recitation-word-review-active .wbw-word,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic.recitation-word-review-active word,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-correct,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-partial,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-incorrect,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-omitted,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.recitation-word-review-active .wbw-word,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.recitation-word-review-active word {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+  border-color: transparent !important;
+  filter: none !important;
+}
+
+[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-correct,
+[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-partial,
+[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-incorrect,
+[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-omitted,
+[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic.recitation-word-review-active .wbw-word,
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-correct,
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-partial,
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-incorrect,
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic.recitation-word-review-active .wbw-word {
+  color: #f5f2ea !important;
+  -webkit-text-fill-color: #f5f2ea !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Stacked card layout — smaller, readable ayah text */
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic-primary,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic-with-end {
+  font-size: calc((var(--verse-font-percent, 130) / 100) * clamp(1.35rem, 3.4vw, 1.85rem)) !important;
+  line-height: 2.1 !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+}
+
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic,
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic-primary,
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic-with-end {
+  color: #f8f5ef !important;
+  -webkit-text-fill-color: #f8f5ef !important;
+}
+
+/* —— Mushaf readability + frames + modal polish (v108) —— */
+
+/* Page-layout menu must not be clipped by shell/bar overflow */
+.main.mushaf-mode-active .mushaf-shell.is-layout-menu-open,
+.main.mushaf-mode-active .mushaf-shell.is-layout-menu-open .mushaf-shell__bar,
+.main.mushaf-mode-active .mushaf-shell.is-layout-menu-open .mushaf-shell__bar-group,
+.main.mushaf-mode-active .mushaf-shell.is-layout-menu-open .mushaf-shell__bar-group--end,
+.main.mushaf-mode-active .mushaf-shell.is-layout-menu-open .mushaf-layout-dropdown {
+  overflow: visible !important;
+}
+
+.main.mushaf-mode-active .mushaf-layout-dropdown {
+  position: relative !important;
+  z-index: 80;
+}
+
+.main.mushaf-mode-active .mushaf-layout-menu {
+  z-index: 260 !important;
+  position: absolute !important;
+  top: calc(100% + 0.35rem) !important;
+  right: 0 !important;
+  left: auto !important;
+  min-width: 15.5rem !important;
+  max-width: min(18rem, calc(100vw - 1.5rem)) !important;
+  pointer-events: auto !important;
+}
+
+/* Always keep dark ink on cream parchment / Madani frames (light + dark theme) */
+.main.mushaf-mode-active .mushaf-page--ornate,
+.main.mushaf-mode-active .mushaf-page--ornate .madani-ornate__inner,
+.main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet {
+  --madani-ink: #14110e;
+  --mushaf-text: #14110e;
+  color: #14110e !important;
+}
+
+.main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
+.main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+.main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-surah-name,
+.main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
+.main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
+.main.mushaf-mode-active .mushaf-page--ornate .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--fallback:not(.highlighted):not(.phrase-highlighted) {
+  color: #14110e !important;
+  -webkit-text-fill-color: #14110e !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Paper frame (standard): light ink only when theme is dark */
+[data-theme="light"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
+[data-theme="light"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+[data-theme="light"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
+[data-theme="light"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
+[data-theme="light"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--fallback:not(.highlighted):not(.phrase-highlighted) {
+  color: #18181b !important;
+  -webkit-text-fill-color: #18181b !important;
+}
+
+/* Stronger, clearer mushaf frame chrome */
+.main.mushaf-mode-active .madani-ornate__frame {
+  padding: clamp(0.75rem, 1.6vw, 1.05rem) !important;
+  border-radius: 6px !important;
+  box-shadow:
+    0 16px 40px rgba(28, 32, 40, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28) !important;
+}
+
+.main.mushaf-mode-active .madani-ornate__frame::before {
+  inset: 0.38rem !important;
+  border-width: 1.75px !important;
+  border-radius: 3px !important;
+}
+
+.main.mushaf-mode-active .madani-ornate__inner {
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(28, 25, 23, 0.06);
+}
+
+.main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__page {
+  padding: 0.55rem 0.65rem 0.85rem;
+}
+
+.main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) {
+  border: 1px solid rgba(24, 24, 27, 0.1) !important;
+  border-radius: 14px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent 42%),
+    #f4f4f5 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.65),
+    0 8px 22px rgba(24, 24, 27, 0.06) !important;
+}
+
+[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) {
+  border-color: rgba(244, 244, 245, 0.12) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 40%),
+    #18181b !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 10px 26px rgba(0, 0, 0, 0.28) !important;
+}
+
+.main.mushaf-mode-active .mushaf-shell__bar-group--end {
+  display: inline-flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+}
+
+.main.mushaf-mode-active .mushaf-layout-dropdown,
+.main.mushaf-mode-active .mushaf-shell__controls-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex: 0 0 auto !important;
+}
+
+/* Compact onboarding header */
+.onboarding-hero.onboarding-hero--compact,
+.post-onboarding-modal .onboarding-hero--compact {
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 0.65rem !important;
+  padding: 0.75rem 1rem 0.65rem !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent) !important;
+}
+
+.onboarding-hero--compact .onboarding-step-icon {
+  width: 2rem !important;
+  height: 2rem !important;
+  border-radius: 10px !important;
+  font-size: 0.9rem !important;
+}
+
+.onboarding-hero--compact .onboarding-kicker {
+  padding: 0.22rem 0.58rem !important;
+  font-size: 0.64rem !important;
+  margin: 0 !important;
+}
+
+.onboarding-hero--compact .onboarding-title {
+  margin: 0.28rem 0 0 !important;
+  font-size: clamp(1.02rem, 2.4vw, 1.22rem) !important;
+  line-height: 1.25 !important;
+}
+
+.onboarding-hero--compact .onboarding-close-btn {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 10px !important;
+}
+
+.onboarding-progress {
+  padding: 0.35rem 1rem 0 !important;
+  gap: 0.35rem !important;
+}
+
+.onboarding-intro--body {
+  margin: 0 0 0.15rem !important;
+  font-size: 0.84rem !important;
+  line-height: 1.5 !important;
+  color: var(--text-muted);
+  max-width: 54ch;
+}
+
+.onboarding-body {
+  padding: 0.85rem 1rem 1rem !important;
+  gap: 0.75rem !important;
+}
+
+[data-theme="dark"] .onboarding-hero--compact {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #58b68e 8%, transparent), transparent) !important;
+  border-bottom-color: rgba(245, 242, 234, 0.1) !important;
+}
+
+/* Welcome back modal — denser, clearer hierarchy */
+.welcome-back-modal.welcome-back-modal--v2 {
+  border-radius: 18px !important;
+  overflow: hidden;
+}
+
+.welcome-back-modal--v2 .welcome-back-hero--compact {
+  padding: 1rem 1.15rem 0.85rem !important;
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in srgb, #58b68e 12%, transparent), transparent 46%),
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 4%, transparent), transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+}
+
+.welcome-back-modal--v2 .welcome-back-kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: color-mix(in srgb, #2f6f58 88%, var(--text));
+  background: color-mix(in srgb, #58b68e 14%, var(--surface));
+  border: 1px solid color-mix(in srgb, #58b68e 24%, var(--border));
+}
+
+.welcome-back-modal--v2 .welcome-back-title {
+  margin: 0.55rem 0 0.28rem !important;
+  font-size: clamp(1.15rem, 2.8vw, 1.45rem) !important;
+  line-height: 1.22 !important;
+  font-weight: 720;
+  color: var(--text);
+}
+
+.welcome-back-modal--v2 .welcome-back-message {
+  margin: 0 !important;
+  font-size: 0.88rem !important;
+  line-height: 1.45 !important;
+  color: color-mix(in srgb, var(--text) 78%, var(--text-muted)) !important;
+}
+
+.welcome-back-modal--v2 .welcome-back-body--compact {
+  padding: 0.9rem 1.15rem 0.35rem !important;
+  gap: 0.7rem !important;
+}
+
+.welcome-back-modal--v2 .welcome-back-reminder--card {
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--accent) 7%, var(--surface)), var(--surface));
+}
+
+.welcome-back-modal--v2 .welcome-back-reminder-kicker {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 78%, var(--text-muted));
+}
+
+.welcome-back-modal--v2 .welcome-back-reminder-quote {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  font-style: italic;
+  color: var(--text);
+}
+
+.welcome-back-modal--v2 .welcome-back-reminder-footer cite {
+  font-size: 0.72rem;
+  font-style: normal;
+  color: var(--text-muted);
+}
+
+.welcome-back-modal--v2 .welcome-back-reminder-intention {
+  margin: 0.55rem 0 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--text) 82%, var(--text-muted));
+}
+
+.welcome-back-modal--v2 .welcome-back-footer {
+  padding: 0.75rem 1.15rem 1.05rem !important;
+}
+
+.welcome-back-actions-grid--v2 {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0.5rem !important;
+}
+
+.welcome-back-actions-grid--v2.mutqin-modal-actions--3 {
+  grid-template-columns: 1fr !important;
+}
+
+.welcome-back-actions-grid--v2 .mutqin-modal-btn--primary {
+  min-height: 2.65rem !important;
+  font-weight: 680;
+}
+
+.welcome-back-actions-grid--v2 .mutqin-modal-btn--secondary {
+  min-height: 2.55rem !important;
+}
+
+.welcome-back-actions-grid--v2 .welcome-back-logout,
+.welcome-back-actions-grid--v2 .mutqin-modal-btn--ghost {
+  min-height: 2.35rem !important;
+  opacity: 0.92;
+  border-style: dashed !important;
+}
+
+@media (min-width: 640px) {
+  .welcome-back-actions-grid--v2:not(.mutqin-modal-actions--3) {
+    grid-template-columns: 1.35fr 1fr !important;
+  }
+
+  .welcome-back-actions-grid--v2.mutqin-modal-actions--3 {
+    grid-template-columns: 1.25fr 1fr 0.85fr !important;
+  }
+
+  .welcome-back-actions-grid--v2 .welcome-back-logout {
+    order: 0;
+  }
+}
+
+[data-theme="dark"] .welcome-back-modal--v2 .welcome-back-hero--compact {
+  background:
+    radial-gradient(circle at 14% 0%, rgba(88, 182, 142, 0.14), transparent 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+  border-bottom-color: rgba(245, 242, 234, 0.1);
+}
+
+[data-theme="dark"] .welcome-back-modal--v2 .welcome-back-kicker {
+  color: #9fd9b8;
+  background: rgba(88, 182, 142, 0.12);
+  border-color: rgba(88, 182, 142, 0.28);
+}
+
+[data-theme="dark"] .welcome-back-modal--v2 .welcome-back-reminder--card {
+  background: linear-gradient(160deg, rgba(88, 182, 142, 0.08), rgba(28, 26, 22, 0.9));
+  border-color: rgba(245, 242, 234, 0.12);
+}
+
+@media (max-width: 767.98px) {
+  .onboarding-hero.onboarding-hero--compact {
+    padding: 0.7rem 0.85rem 0.55rem !important;
+    gap: 0.55rem !important;
+  }
+
+  .welcome-back-modal--v2 .welcome-back-hero--compact,
+  .welcome-back-modal--v2 .welcome-back-body--compact,
+  .welcome-back-modal--v2 .welcome-back-footer {
+    padding-inline: 0.95rem !important;
+  }
+
+  .main.mushaf-mode-active .madani-ornate__frame {
+    padding: 0.5rem !important;
+  }
+
+  .main.mushaf-mode-active .madani-ornate__frame::before {
+    inset: 0.28rem !important;
   }
 }

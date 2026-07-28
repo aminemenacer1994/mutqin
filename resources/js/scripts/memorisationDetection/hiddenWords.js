@@ -4,7 +4,7 @@
  */
 
 export const DIFFICULTY_PERCENTS = Object.freeze([25, 50, 75, 100])
-export const DEFAULT_DIFFICULTY_PERCENT = 50
+export const DEFAULT_DIFFICULTY_PERCENT = 100
 export const AMD_DIFFICULTY_PREF_KEY = 'mutqin.amd.hidePercent'
 
 /**
@@ -108,7 +108,8 @@ export function areAllHiddenWordsRevealed(hiddenIndexes, liveWords = []) {
   const words = Array.isArray(liveWords) ? liveWords : []
   return list.every((index) => {
     const status = String(words[index]?.status || '').toLowerCase()
-    return status === 'correct'
+    // Accept amber on a recalled slot so the final ayah can still complete.
+    return status === 'correct' || status === 'partial'
   })
 }
 

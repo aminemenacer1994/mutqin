@@ -176,7 +176,11 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
     ayahWordIndex: Number.isFinite(Number(targetUnits[index]?.ayahWordIndex)) ? Number(targetUnits[index].ayahWordIndex) : index
   }))
   const strict = options.strictProgression !== false
-  const lookahead = Math.max(1, Math.min(8, Number(options.lookahead || 5)))
+  // Preserve explicit 0 so strict AMD modes can disable skip-ahead entirely.
+  const lookaheadRaw = Number(options.lookahead)
+  const lookahead = Number.isFinite(lookaheadRaw)
+    ? Math.max(0, Math.min(8, lookaheadRaw))
+    : 5
   const correctSimilarity = Number.isFinite(Number(options.correctSimilarity))
     ? Number(options.correctSimilarity)
     : 0.78
@@ -212,7 +216,7 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
 
     const targetWord = targetWords[cursor] || ''
     const targetUnit = targetUnits[cursor] || null
-    const similarity = getRecitationWordSimilarity(targetWord, heardWord.word)
+    const similarity = getRecitationWordSimilarity(targetWord, heardWord.word, { allowArticleMatch })
     const classified = classifyWordMatch({
       displayText: displayWords[cursor] || targetWord,
       targetWord,
@@ -224,7 +228,8 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       ...matchThresholds,
     })
 
-    if (classified.status === 'correct' || (classified.status === 'partial' && options.partialAdvances !== false)) {
+    if (classified.status === 'correct'
+      || (classified.status === 'partial' && options.partialAdvances !== false)) {
       statuses[cursor] = classified
       cursor += 1
       continue
@@ -233,6 +238,30 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       // Stricter modes keep amber feedback without advancing the cursor.
       statuses[cursor] = classified
       continue
+    }
+
+    // Soft continue: if the learner already moved on, mark current red and
+    // match this hear against the next word — never burn ahead on junk ASR.
+    if (options.advanceOnIncorrect && cursor + 1 < targetWords.length) {
+      const nextTarget = targetWords[cursor + 1] || ''
+      const nextSimilarity = getRecitationWordSimilarity(nextTarget, heardWord.word, { allowArticleMatch })
+      const nextClassified = classifyWordMatch({
+        displayText: displayWords[cursor + 1] || nextTarget,
+        targetWord: nextTarget,
+        heardWord,
+        similarity: nextSimilarity,
+        outOfOrderIndex: -1,
+        targetIndex: cursor + 1,
+        targetUnit: targetUnits[cursor + 1] || null,
+        ...matchThresholds,
+      })
+      if (nextClassified.status === 'correct'
+        || (nextClassified.status === 'partial' && options.partialAdvances !== false)) {
+        statuses[cursor] = classified
+        statuses[cursor + 1] = nextClassified
+        cursor += 2
+        continue
+      }
     }
 
     const exactAheadIndex = findExactWordIndexWithinWindow(targetWords, heardWord.word, cursor + 1, lookahead)
@@ -281,7 +310,13 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
 
     statuses[cursor] = classified
     firstBlockingIndex = cursor
-    if (strict) break
+    // Stay on the current word for reds unless a next-word match already advanced.
+    // Soft continue: keep the cursor put and try later heard tokens against the
+    // same word (retry) or the next word — never discard the rest of the hear.
+    if (strict) {
+      if (options.advanceOnIncorrect) continue
+      break
+    }
     cursor += 1
   }
 
@@ -330,9 +365,12 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     for (let heardIndex = 1; heardIndex <= heardCount; heardIndex += 1) {
       const targetWord = targetWords[targetIndex - 1]
       const heardWord = heardWords[heardIndex - 1]
-      const similarity = getRecitationWordSimilarity(targetWord, heardWord.word)
+      const allowArticleMatch = options.allowArticleMatch !== false
+      const similarity = getRecitationWordSimilarity(targetWord, heardWord.word, { allowArticleMatch })
       const confidenceWeight = Math.max(0.35, Math.min(1, Number(heardWord.confidence ?? 1)))
-      const matchCost = getWeightedMatchCost(targetWord, heardWord.word, similarity, confidenceWeight)
+      const matchCost = getWeightedMatchCost(targetWord, heardWord.word, similarity, confidenceWeight, {
+        allowArticleMatch,
+      })
       const candidates = [
         { cost: matrix[targetIndex - 1][heardIndex - 1].cost + matchCost, prev: [targetIndex - 1, heardIndex - 1], op: 'match', similarity },
         { cost: matrix[targetIndex - 1][heardIndex].cost + 1.02, prev: [targetIndex - 1, heardIndex], op: 'omission', similarity: 0 },
@@ -820,12 +858,27 @@ function isNearbyWord(left = {}, right = {}) {
   return false
 }
 
-function getWeightedMatchCost(targetWord, heardWord, similarity, confidence) {
+function getWeightedMatchCost(targetWord, heardWord, similarity, confidence, options = {}) {
   if (targetWord === heardWord) return 0
-  if (stripArabicDefiniteArticle(targetWord) === stripArabicDefiniteArticle(heardWord)) return 0
-  if (similarity >= 0.85) return 0.16 + ((1 - confidence) * 0.1)
-  if (similarity >= 0.35) return 0.68 + ((1 - confidence) * 0.22)
-  return 1.34
+  const allowArticleMatch = options.allowArticleMatch !== false
+  if (
+    allowArticleMatch
+    && stripArabicDefiniteArticle(targetWord) === stripArabicDefiniteArticle(heardWord)
+  ) {
+    return 0
+  }
+  // Without article matching, treat article-only equals as a near-miss, not free.
+  if (
+    !allowArticleMatch
+    && stripArabicDefiniteArticle(targetWord) === stripArabicDefiniteArticle(heardWord)
+    && targetWord !== heardWord
+  ) {
+    return 0.55 + ((1 - confidence) * 0.2)
+  }
+  if (similarity >= 0.92) return 0.22 + ((1 - confidence) * 0.12)
+  if (similarity >= 0.85) return 0.42 + ((1 - confidence) * 0.16)
+  if (similarity >= 0.35) return 0.78 + ((1 - confidence) * 0.24)
+  return 1.45
 }
 
 function duplicateAdjustedExtraCost(words = [], index = 0) {
@@ -843,16 +896,18 @@ function operationTieBreak(op) {
   return 2
 }
 
-export function getRecitationWordSimilarity(left, right) {
+export function getRecitationWordSimilarity(left, right, options = {}) {
   const a = String(left || '')
   const b = String(right || '')
   if (!a || !b) return 0
   if (a === b) return 1
+  const allowArticleMatch = options.allowArticleMatch !== false
   const strippedA = stripArabicDefiniteArticle(a)
   const strippedB = stripArabicDefiniteArticle(b)
-  if (strippedA && strippedA === strippedB) return 1
+  // Article-stripped equals only count as exact when article matching is allowed.
+  if (allowArticleMatch && strippedA && strippedA === strippedB) return 1
   const base = levenshteinSimilarity(a, b)
-  if (strippedA === a && strippedB === b) return base
+  if (!allowArticleMatch || (strippedA === a && strippedB === b)) return base
   return Math.max(base, levenshteinSimilarity(strippedA, strippedB))
 }
 
@@ -902,6 +957,7 @@ function classifyWordMatch({
   const articleMatch = allowArticleMatch
     && expected
     && actual
+    && expected !== actual
     && stripArabicDefiniteArticle(expected) === stripArabicDefiniteArticle(actual)
   const correctFloor = Number.isFinite(Number(correctSimilarity)) ? Number(correctSimilarity) : 0.78
   const partialFloor = Number.isFinite(Number(partialSimilarity)) ? Number(partialSimilarity) : 0.35
@@ -909,8 +965,16 @@ function classifyWordMatch({
     ? Number(minConfidenceForCorrect)
     : 0
   const confidenceOk = confidence >= minCorrectConfidence
-  // Exact / article-stripped equals still require a minimum confidence when asked.
-  if (expected && confidenceOk && (expected === actual || articleMatch || similarity >= correctFloor)) {
+  // Exact match (or allowed article-only match) / high similarity → green.
+  // When article matching is disabled, article-stripped equals must not sneak in via similarity=1.
+  const effectiveSimilarity = (!allowArticleMatch
+    && expected
+    && actual
+    && expected !== actual
+    && stripArabicDefiniteArticle(expected) === stripArabicDefiniteArticle(actual))
+    ? Math.min(Number(similarity) || 0, Math.max(0, correctFloor - 0.05))
+    : Number(similarity) || 0
+  if (expected && confidenceOk && (expected === actual || articleMatch || effectiveSimilarity >= correctFloor)) {
     return {
       text: displayText,
       targetWord: expected,
@@ -924,7 +988,7 @@ function classifyWordMatch({
       ...location
     }
   }
-  if (expected && actual && similarity >= partialFloor) {
+  if (expected && actual && effectiveSimilarity >= partialFloor) {
     return {
       text: displayText,
       targetWord: expected,
@@ -932,7 +996,7 @@ function classifyWordMatch({
       note: `Close. Expected ${displayText}; heard ${actual}.`,
       actual,
       confidence,
-      similarity,
+      similarity: effectiveSimilarity,
       targetIndex,
       heardIndex: heardWord.commitIndex,
       ...location
@@ -982,7 +1046,9 @@ function applyWrongOrderGuard(statuses = [], targetWords = [], transcriptWords =
   })
 }
 
-function isProgressionAdvanceStatus(status = '') {
+function isProgressionAdvanceStatus(status = '', options = {}) {
+  // Amber may advance when partialAdvances is enabled; red never unlocks later words.
+  if (options.partialAdvances === false) return status === 'correct'
   return status === 'correct' || status === 'partial'
 }
 
@@ -996,16 +1062,25 @@ function isOmissionWordStatus(status = '') {
 
 function buildStableProgression(statuses = [], extraWords = [], options = {}) {
   const strict = options.strictProgression !== false
-  // Partials must not freeze the live cursor — ASR near-misses on last words
-  // were locking the whole range behind "Recite it correctly before moving on."
-  const firstBlockingIndex = statuses.findIndex(word => !isProgressionAdvanceStatus(word.status))
+  // Soft-continue reds stay visible, but unlock later words only once a later
+  // green/amber proves the learner moved on (never unlock from a lone red).
+  const firstBlockingIndex = statuses.findIndex((word, index) => {
+    if (isProgressionAdvanceStatus(word.status, options)) return false
+    if (word.status === 'incorrect' && options.advanceOnIncorrect) {
+      const laterSettled = statuses
+        .slice(index + 1)
+        .some(entry => isProgressionAdvanceStatus(entry.status, options))
+      return !laterSettled
+    }
+    return true
+  })
   const visibleStatuses = strict && firstBlockingIndex >= 0
     ? statuses.map((word, index) => index <= firstBlockingIndex
       ? word
       : { ...word, status: 'pending', note: 'Locked until the previous word is clear.' })
     : statuses
   const advancedCount = visibleStatuses.filter(word => word.status && word.status !== 'pending').length
-  const completedWords = statuses.filter(word => isProgressionAdvanceStatus(word.status)).length
+  const completedWords = statuses.filter(word => isProgressionAdvanceStatus(word.status, options)).length
   const evaluatedWords = statuses.filter(word => isEvaluatedWordStatus(word.status)).length
   return {
     owner: 'quran-alignment-engine',
@@ -1020,7 +1095,7 @@ function buildStableProgression(statuses = [], extraWords = [], options = {}) {
     complete: statuses.length > 0
       && (
         strict
-          ? statuses.every(word => isProgressionAdvanceStatus(word.status))
+          ? statuses.every(word => isProgressionAdvanceStatus(word.status, options))
           : evaluatedWords >= statuses.length
       )
       && !extraWords.length,

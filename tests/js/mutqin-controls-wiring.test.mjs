@@ -95,16 +95,21 @@ const onboardingStepsBlock = (() => {
   return match[1]
 })()
 
-assert.equal((onboardingStepsBlock.match(/buildOnboardingStep/g) || []).length, 1, 'onboarding must build steps from locale keys')
+  assert.equal((onboardingStepsBlock.match(/buildOnboardingStep/g) || []).length, 1, 'onboarding must build steps from locale keys')
 
 includesAll('onboarding system steps', [
   /memorisation\.onboarding\.steps\.\$\{key\}/,
   /buildOnboardingStep\(key, icon\)/,
   /key: 'setup'/,
   /key: 'reading'/,
-  /key: 'practice'/,
-  /key: 'review'/
+  /key: 'practice'/
 ])
+
+assert.doesNotMatch(
+  onboardingStepsBlock,
+  /key: 'review'/,
+  'onboarding step 4 (review/library) should be removed'
+)
 
 assert.doesNotMatch(
   onboardingStepsBlock,
