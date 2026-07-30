@@ -34701,7 +34701,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .workspace-shell-head {
   padding-bottom: 2px;
-  border-bottom: 1px solid color-mix(in srgb, var(--zone-divider) 72%, transparent);
+  border-bottom: 0;
 }
 
 .workspace-shell-bottom {
@@ -34762,7 +34762,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 [data-theme="dark"] .workspace-shell-head,
 [data-theme="dark"] .workspace-shell-bottom {
-  border-color: var(--zone-divider);
+  border-bottom: 0;
+  border-color: transparent;
 }
 
 [data-theme="dark"] .tools-top {
@@ -48145,7 +48146,7 @@ html body .app .workspace-shell-main-title {
   width: fit-content !important;
   max-width: 100% !important;
   margin: 0 !important;
-  padding-bottom: 0 !important;
+  padding-bottom: 0.35rem !important;
   color: color-mix(in srgb, var(--text, #1f1a17) 78%, var(--accent, #8b5e3c) 22%) !important;
   font-family: "Amiri Quran", "Amiri", "Scheherazade New", "Noto Naskh Arabic", serif !important;
   font-size: clamp(1.2rem, 0.95rem + 1.2vw, 1.6rem) !important;
@@ -48185,8 +48186,23 @@ html body .app .workspace-shell-main-title {
 .workspace-shell .workspace-shell-main-title::after,
 .workspace-shell .workspace-shell-copy h1.workspace-shell-main-title::after,
 html body .app .workspace-shell-main-title::after {
-  content: none !important;
-  display: none !important;
+  content: "";
+  position: absolute;
+  inset-inline: 8%;
+  bottom: 0;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent, #8b5e3c) 55%, transparent) 22%,
+    color-mix(in srgb, var(--accent-strong, #a86a3f) 70%, transparent) 50%,
+    color-mix(in srgb, var(--accent, #8b5e3c) 55%, transparent) 78%,
+    transparent 100%
+  );
+  transform-origin: center;
+  animation: workspaceSurahUnderline 780ms cubic-bezier(0.22, 1, 0.36, 1) 180ms both;
+  pointer-events: none;
 }
 
 [data-theme="dark"] .workspace-shell .workspace-shell-main-title,
@@ -48199,8 +48215,14 @@ html body .app[data-theme="dark"] .workspace-shell-main-title {
 [data-theme="dark"] .workspace-shell .workspace-shell-main-title::after,
 [data-theme="dark"] .workspace-shell .workspace-shell-copy h1.workspace-shell-main-title::after,
 html body .app[data-theme="dark"] .workspace-shell-main-title::after {
-  content: none !important;
-  display: none !important;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent, #c49a6c) 40%, transparent) 22%,
+    color-mix(in srgb, var(--accent-strong, #e0b07f) 58%, transparent) 50%,
+    color-mix(in srgb, var(--accent, #c49a6c) 40%, transparent) 78%,
+    transparent 100%
+  );
 }
 
 .workspace-shell .workspace-shell-kicker {
