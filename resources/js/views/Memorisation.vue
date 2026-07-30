@@ -166,47 +166,43 @@
             </h1>
           </div>
           <div class="workspace-shell-actions">
-            <div
-              v-if="isPostSessionChoiceVisible"
-              class="top-card-session-actions has-paired-actions post-session-choice-actions"
-              data-testid="post-session-choice"
-              role="group"
-              :aria-label="t('memorisation.postSessionChoice.title')"
-            >
-              <button
-                v-if="canShowRepeatRecommendedAction"
-                type="button"
-                class="action-btn btn btn-primary session-primary-action top-card-action-trigger"
-                data-testid="post-session-repeat-recommended"
-                data-action="repeat_recommended"
-                :title="t('memorisation.postSessionChoice.repeatRecommendedDesc')"
-                :aria-label="t('memorisation.postSessionChoice.repeatRecommended')"
-                @click="repeatRecommendedSessionFromChoice"
-              >
-                <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                <span>{{ t('memorisation.postSessionChoice.repeatRecommended') }}</span>
-              </button>
-              <button
-                type="button"
-                class="action-btn top-card-action-trigger"
-                :class="canShowRepeatRecommendedAction
-                  ? 'action-btn-secondary'
-                  : 'btn btn-primary session-primary-action'"
-                data-testid="post-session-create-custom"
-                data-action="create_custom"
-                :title="t('memorisation.postSessionChoice.createCustomDesc')"
-                :aria-label="t('memorisation.postSessionChoice.createCustom')"
-                @click="createCustomSessionFromChoice"
-              >
-                <i class="bi bi-sliders" aria-hidden="true"></i>
-                <span>{{ t('memorisation.postSessionChoice.createCustom') }}</span>
-              </button>
-            </div>
-            <div
-              v-else
-              class="action-buttons-group"
-            >
+            <div class="action-buttons-group">
               <div
+                v-if="isPostSessionChoiceVisible"
+                class="top-card-session-actions has-paired-actions post-session-choice-pair"
+                data-testid="post-session-choice"
+                role="group"
+                :aria-label="t('memorisation.postSessionChoice.title')"
+              >
+                <button
+                  v-if="canShowRepeatRecommendedAction"
+                  type="button"
+                  class="action-btn btn btn-primary session-primary-action top-card-action-trigger"
+                  data-testid="post-session-repeat-recommended"
+                  data-action="repeat_recommended"
+                  :title="t('memorisation.postSessionChoice.repeatRecommendedDesc')"
+                  :aria-label="t('memorisation.postSessionChoice.repeatRecommended')"
+                  @click="repeatRecommendedSessionFromChoice"
+                >
+                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.postSessionChoice.repeatRecommended') }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="action-btn top-card-action-trigger action-btn-exit"
+                  :class="{ 'btn btn-primary session-primary-action': !canShowRepeatRecommendedAction }"
+                  data-testid="post-session-create-custom"
+                  data-action="create_custom"
+                  :title="t('memorisation.postSessionChoice.createCustomDesc')"
+                  :aria-label="t('memorisation.postSessionChoice.createCustom')"
+                  @click="createCustomSessionFromChoice"
+                >
+                  <i class="bi bi-sliders" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.postSessionChoice.createCustom') }}</span>
+                </button>
+              </div>
+              <div
+                v-else
                 class="top-card-session-actions"
                 :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
               >
@@ -285,20 +281,6 @@
                       </button>
                     </div>
                   </transition>
-                </div>
-                <div class="top-card-controls-wrap">
-                  <div
-                    class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger top-card-icon-control"
-                    role="button"
-                    tabindex="0"
-                    @click="openAdvancedControls"
-                    @keydown.enter.prevent="openAdvancedControls"
-                    @keydown.space.prevent="openAdvancedControls"
-                    :title="t('memorisation.open_controls')"
-                    :aria-label="t('memorisation.open_controls')"
-                  >
-                    <i class="bi bi-sliders" aria-hidden="true"></i>
-                  </div>
                 </div>
                 <div class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
                   <div
@@ -402,7 +384,7 @@
           </button>
         </p>
         <div
-          v-if="hasVerses && !isPostSessionChoiceVisible && (topCardMetadataPills.length || !isMobileViewport())"
+          v-if="hasVerses && (topCardMetadataPills.length || !isMobileViewport())"
           class="workspace-shell-bottom"
         >
           <!-- Source-guard reference: class="workspace-header-view-controls quick-right-controls" -->

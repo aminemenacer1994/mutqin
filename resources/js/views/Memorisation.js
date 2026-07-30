@@ -1338,9 +1338,8 @@ export default {
       if (this.showPostSessionModal || this.postSessionAiReciteActive || this.postSessionAdaptiveCheckActive) {
         return false
       }
-      if (this.showPostSessionChoice) return true
-      // Ended sessions must never fall back to a lone "Start Session" CTA.
-      return !!this.isSessionCompleted && !this.isSessionLive && !this.sessionPaused
+      // Only after End session confirm — do not replace the normal Start/End layout otherwise.
+      return !!this.showPostSessionChoice
     },
     canShowRepeatRecommendedAction() {
       return canRepeatRecommendedSession({
@@ -5956,7 +5955,6 @@ export default {
       return !!this.sessionCompleted || this.centralSession?.sessionStatus === 'completed'
     },
     shouldShowReadingWorkspace() {
-      if (this.isPostSessionChoiceVisible) return false
       return this.hasVerses
     },
     resumeFeedback() {

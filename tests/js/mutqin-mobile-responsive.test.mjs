@@ -454,7 +454,7 @@ async function inspectState(page, state) {
         expectParallel('.workspace-shell-metadata > :nth-child(1)', '.workspace-shell-metadata > :nth-child(2)', 'metadata')
       }
       if (state === 'active') {
-        expectParallel('.action-btn-exit', '.top-card-controls-trigger', 'secondary action rail')
+        expectParallel('.action-btn-exit', '.top-card-ellipsis', 'secondary action rail')
         const primary = visibleElements('.top-card-session-actions.has-paired-actions > .session-primary-action')[0]?.getBoundingClientRect()
         const exit = visibleElements('.top-card-session-actions.has-paired-actions > .action-btn-exit')[0]?.getBoundingClientRect()
         if (!primary || !exit || exit.top < primary.bottom - 2) issues.push('active: primary and end-session actions did not reflow to separate rows')

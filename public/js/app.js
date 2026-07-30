@@ -27087,9 +27087,9 @@ function loadMemorisationChunk() {
       document.documentElement.dataset.practiceCoach = 'v2';
       document.documentElement.dataset.aiReciteUi = 'v75';
       document.documentElement.dataset.stackedAyahEnd = 'v5';
-      document.documentElement.dataset.mutqinUi = 'v76';
+      document.documentElement.dataset.mutqinUi = 'v77';
       document.documentElement.dataset.amdTestGate = 'test-with-ai-only';
-      document.documentElement.dataset.postSessionChoice = 'v1';
+      document.documentElement.dataset.postSessionChoice = 'v2';
     }
     return mod;
   })["catch"](function (error) {
@@ -46950,7 +46950,7 @@ module.exports = JSON.parse('{"common":{"on":"On","off":"Off","reset":"Reset","s
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
-/******/ 			return "js/" + chunkId + "." + {"memorisation":"1c1f0382","resources_js_locales_ar_json":"238c8c8d","resources_js_locales_es_json":"31ebab45","resources_js_locales_fr_json":"a7790e16","resources_js_locales_id_json":"07297912","resources_js_locales_tr_json":"d364e165","resources_js_locales_ur_json":"bfffe026"}[chunkId] + ".js";
+/******/ 			return "js/" + chunkId + "." + {"memorisation":"1ef4540f","resources_js_locales_ar_json":"238c8c8d","resources_js_locales_es_json":"31ebab45","resources_js_locales_fr_json":"a7790e16","resources_js_locales_id_json":"07297912","resources_js_locales_tr_json":"d364e165","resources_js_locales_ur_json":"bfffe026"}[chunkId] + ".js";
 /******/ 		};
 /******/ 	})();
 /******/ 	

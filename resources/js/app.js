@@ -59,9 +59,9 @@ function loadMemorisationChunk(attempt = 0) {
             document.documentElement.dataset.practiceCoach = 'v2';
             document.documentElement.dataset.aiReciteUi = 'v75';
             document.documentElement.dataset.stackedAyahEnd = 'v5';
-            document.documentElement.dataset.mutqinUi = 'v76';
+            document.documentElement.dataset.mutqinUi = 'v77';
             document.documentElement.dataset.amdTestGate = 'test-with-ai-only';
-            document.documentElement.dataset.postSessionChoice = 'v1';
+            document.documentElement.dataset.postSessionChoice = 'v2';
         }
         return mod;
     }).catch((error) => {

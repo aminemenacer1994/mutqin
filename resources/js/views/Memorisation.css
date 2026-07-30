@@ -31363,6 +31363,42 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   justify-content: center !important;
 }
 
+/* Post-session choice labels are longer than Start/End — size to content, never clip. */
+.top-card-session-actions.has-paired-actions.post-session-choice-pair {
+  display: inline-flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.top-card-session-actions.has-paired-actions.post-session-choice-pair > .top-card-action-trigger.session-primary-action,
+.top-card-session-actions.has-paired-actions.post-session-choice-pair > .top-card-action-trigger.action-btn-exit {
+  width: auto !important;
+  min-width: max-content !important;
+  max-width: 100% !important;
+  flex: 0 1 auto !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.top-card-session-actions.has-paired-actions.post-session-choice-pair > .top-card-action-trigger span {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+}
+
+.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .top-card-action-trigger.session-primary-action,
+.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .top-card-action-trigger.action-btn-exit {
+  height: auto !important;
+  min-height: 38px !important;
+  max-height: none !important;
+  padding: 0.55rem 0.9rem !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+}
+
 .workspace-shell-bottom {
   justify-content: flex-start !important;
   align-items: flex-start !important;
@@ -37373,6 +37409,13 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     min-inline-size: 0;
   }
 
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
+  .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.55rem !important;
+  }
+
   .workspace-shell-actions .action-buttons-group .top-card-action-trigger.session-primary-action,
   .workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit {
     inline-size: 100% !important;
@@ -37384,6 +37427,14 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     padding: 0.7rem 0.9rem !important;
     white-space: normal !important;
     line-height: 1.2 !important;
+  }
+
+  .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .top-card-action-trigger.session-primary-action,
+  .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .top-card-action-trigger.action-btn-exit {
+    inline-size: auto !important;
+    min-inline-size: max-content !important;
+    max-inline-size: 100% !important;
+    overflow: visible !important;
   }
 
   .workspace-shell-actions .top-card-action-trigger.top-card-controls-trigger,
@@ -46169,6 +46220,18 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
     font-weight: 650 !important;
     border-radius: 10px !important;
     gap: 0.28rem !important;
+  }
+
+  .workspace-shell-actions .post-session-choice-pair > .top-card-action-trigger.session-primary-action,
+  .workspace-shell-actions .post-session-choice-pair > .top-card-action-trigger.action-btn-exit {
+    min-block-size: 36px !important;
+    block-size: auto !important;
+    max-block-size: none !important;
+    padding: 0.45rem 0.7rem !important;
+    font-size: 0.74rem !important;
+    overflow: visible !important;
+    white-space: nowrap !important;
+    min-inline-size: max-content !important;
   }
 
   .workspace-shell-actions .top-card-action-trigger.session-primary-action i,

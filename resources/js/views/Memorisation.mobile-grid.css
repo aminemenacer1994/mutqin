@@ -164,6 +164,24 @@
     display: contents !important;
   }
 
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
+  .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    grid-column: 1 / -1;
+    gap: 0.45rem !important;
+    min-inline-size: 0 !important;
+  }
+
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair > .top-card-action-trigger.session-primary-action,
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair > .top-card-action-trigger.action-btn-exit {
+    flex: 1 1 auto !important;
+    inline-size: auto !important;
+    min-inline-size: max-content !important;
+    overflow: visible !important;
+    white-space: nowrap !important;
+  }
+
   .top-card-session-actions.has-paired-actions > .session-primary-action {
     grid-column: 1 / -1;
     grid-row: 1;
@@ -2289,6 +2307,29 @@
     border-radius: 9px !important;
     gap: 0.25rem !important;
     box-shadow: none !important;
+  }
+
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
+  .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-wrap: wrap !important;
+    gap: 0.4rem !important;
+  }
+
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair > .top-card-action-trigger.session-primary-action,
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair > .top-card-action-trigger.action-btn-exit {
+    flex: 1 1 auto !important;
+    inline-size: auto !important;
+    min-inline-size: max-content !important;
+    min-block-size: 36px !important;
+    block-size: auto !important;
+    max-block-size: none !important;
+    padding: 0.45rem 0.7rem !important;
+    font-size: 0.74rem !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
   }
 
   .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
