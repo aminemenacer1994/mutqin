@@ -2779,7 +2779,6 @@
         </div>
 
         <div class="modal-body onboarding-body">
-          <p v-if="onboardingStepIndex === 0" class="onboarding-intro onboarding-intro--body">{{ t('memorisation.onboarding.intro') }}</p>
           <p class="onboarding-lead">{{ onboardingStepContent.body }}</p>
 
           <ul v-if="onboardingStepContent.points.length" class="onboarding-points">
@@ -3617,6 +3616,9 @@
       :text-size-label="amdLabels.textSize"
       :text-size-increase-label="amdLabels.textSizeIncrease"
       :text-size-decrease-label="amdLabels.textSizeDecrease"
+      :peek-hint-short="amdLabels.peekHintShort"
+      :words-shown-short="amdLabels.wordsShownShort"
+      :text-size-short="amdLabels.textSizeShort"
       :complete-title="amdLabels.completeTitle"
       :complete-body="amdLabels.completeBody"
       :session-ended-label="amdLabels.sessionEnded"

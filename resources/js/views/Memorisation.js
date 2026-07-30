@@ -3768,9 +3768,9 @@ export default {
       if (this.postSessionIsRepeatRecommendation) {
         return this.t('memorisation.postSession.actions.testWithAiAgain')
           || this.t('memorisation.postSession.actions.testWithAi')
-          || 'Check my memorisation'
+          || 'Check memorisation'
       }
-      return this.t('memorisation.postSession.actions.testWithAi') || 'Check my memorisation'
+      return this.t('memorisation.postSession.actions.testWithAi') || 'Check memorisation'
     },
     postSessionSkipForNowLabel() {
       if (this.postSessionIsRepeatRecommendation) {
@@ -4817,7 +4817,10 @@ export default {
       return this.t?.('memorisation.amd.title') || 'Check your memorisation'
     },
     amdRangeLabel() {
-      const surah = this.currentChapter?.name_simple || this.activeChapterName || `Surah ${this.chapterId || ''}`.trim()
+      const surah = this.getChapterDisplayName(this.currentChapter || this.chapterId)
+        || this.currentChapter?.name_simple
+        || this.activeChapterName
+        || `Surah ${this.chapterId || ''}`.trim()
       const targets = this.getRecitationCheckTargetVerses()
       const numbers = targets.map((v) => Number(v?.number || String(v?.key || '').split(':')[1] || 0)).filter(Boolean)
       const start = numbers[0] || Number(this.rangeStart || 0)
@@ -4968,16 +4971,20 @@ export default {
         peekHint: this.t?.('memorisation.amd.peekHint') || 'Need a hint? Peek at the text',
         stop: this.t?.('memorisation.amd.toolStop') || 'Stop',
         start: this.t?.('memorisation.amd.startRecitation') || 'Start recording',
-        startHint: this.t?.('memorisation.amd.startRecitationHint') || 'Tap the red button, then recite from memory',
+        startHint: this.t?.('memorisation.amd.startRecitationHint') || '',
         betaBadge: this.t?.('memorisation.amd.betaBadge') || 'Beta',
-        disclaimer: this.t?.('memorisation.amd.disclaimer')
-          || 'This check is a practice aid. It may mishear words and does not replace a teacher’s guidance.',
+        disclaimer: this.t?.('memorisation.amd.disclaimerShort')
+          || this.t?.('memorisation.amd.disclaimer')
+          || 'Practice aid — may mishear; does not replace a teacher.',
         reset: this.t?.('common.reset') || 'Reset',
         difficulty: this.t?.('memorisation.amd.difficulty') || 'Difficulty',
         wordsShown: this.t?.('memorisation.amd.wordsShown') || 'Words shown',
-        textSize: this.t?.('common.fontSize') || 'Text size',
+        textSize: this.t?.('common.fontSize') || this.t?.('memorisation.amd.textSizeShort') || 'Text size',
         textSizeIncrease: this.t?.('memorisation.amd.textSizeIncrease') || 'Increase text size',
         textSizeDecrease: this.t?.('memorisation.amd.textSizeDecrease') || 'Decrease text size',
+        peekHintShort: this.t?.('memorisation.amd.peekHintShort') || 'Hold to reveal',
+        wordsShownShort: this.t?.('memorisation.amd.wordsShownShort') || 'Words shown',
+        textSizeShort: this.t?.('memorisation.amd.textSizeShort') || 'Text size',
         completeTitle: this.t?.('memorisation.amd.completeTitle')
           || 'Mā shā’ Allāh — check complete',
         completeBody: this.t?.('memorisation.amd.completeBody')

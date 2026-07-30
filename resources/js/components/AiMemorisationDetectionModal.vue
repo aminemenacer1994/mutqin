@@ -15,24 +15,26 @@
       >
         <div class="modal-content mutqin-modal-surface amd-modal amd-modal--mushaf amd-modal--test amd-modal--premium">
           <header class="amd-header amd-header--premium amd-header--compact">
-            <div class="amd-header-brand" aria-hidden="true">
-              <img src="/images/logo_main.png" alt="" width="28" height="40" class="amd-header-logo">
-            </div>
             <div class="amd-header-copy">
               <div class="amd-title-row">
                 <h2 id="amdModalTitle" class="amd-title amd-title--premium">{{ title }}</h2>
-                <span v-if="betaBadge" class="amd-beta-badge">{{ betaBadge }}</span>
+                <span
+                  v-if="betaBadge"
+                  class="amd-beta-badge"
+                  :title="disclaimer || undefined"
+                >{{ betaBadge }}</span>
               </div>
               <p v-if="rangeLabel" class="amd-range amd-range--premium">{{ rangeLabel }}</p>
-              <p v-if="disclaimer" class="amd-disclaimer">{{ disclaimer }}</p>
+              <p v-if="disclaimer" class="amd-disclaimer amd-disclaimer--compact">{{ disclaimer }}</p>
             </div>
             <div class="amd-header-aside">
               <div
-                class="amd-mic-status amd-mic-status--header"
+                class="amd-mic-status amd-mic-status--header amd-mic-status--compact"
                 :data-status="micStatusKey"
                 role="status"
                 aria-live="polite"
                 aria-atomic="true"
+                :title="disclaimer || undefined"
               >
                 <span class="amd-mic-dot" aria-hidden="true"></span>
                 <span class="amd-mic-status__label">{{ micStatusLabel }}</span>
@@ -51,14 +53,14 @@
           <div class="amd-body amd-body--premium amd-body--compact">
             <div
               v-if="!isComplete"
-              class="amd-toolbar amd-toolbar--icons amd-toolbar--labelled"
+              class="amd-toolbar amd-toolbar--icons amd-toolbar--tools"
               role="toolbar"
               :aria-label="toolsLabel"
             >
-              <div class="amd-tool">
+              <div class="amd-tool-cell">
                 <button
                   type="button"
-                  class="amd-icon-btn amd-icon-btn--peek"
+                  class="amd-tool-btn"
                   :class="{ active: peeking }"
                   :disabled="isComplete"
                   :aria-pressed="peeking ? 'true' : 'false'"
@@ -77,68 +79,72 @@
                   @blur="onPeekEnd"
                 >
                   <i class="bi bi-eye" aria-hidden="true"></i>
+                  <span class="amd-tool-btn__name">{{ peekShortLabel }}</span>
                 </button>
-                <span class="amd-tool__label">{{ peekShortLabel }}</span>
+                <span class="amd-tool-cell__hint">{{ peekHintShortLabel }}</span>
               </div>
 
-              <div class="amd-tool amd-tool--select">
+              <div class="amd-tool-cell">
                 <label class="visually-hidden" :for="difficultyId">{{ wordsShownLabel }}</label>
-                <select
-                  :id="difficultyId"
-                  class="amd-difficulty__select amd-difficulty__select--compact"
-                  :value="difficulty"
-                  :aria-label="wordsShownLabel"
-                  :title="wordsShownLabel"
-                  @change="onDifficultyChange"
-                >
-                  <option
-                    v-for="pct in difficultyOptions"
-                    :key="pct"
-                    :value="pct"
-                  >{{ formatShownPercent(pct) }}</option>
-                </select>
-                <span class="amd-tool__label">{{ wordsShownShortLabel }}</span>
+                <div class="amd-tool-btn amd-tool-btn--select">
+                  <select
+                    :id="difficultyId"
+                    class="amd-tool-select"
+                    :value="difficulty"
+                    :aria-label="wordsShownLabel"
+                    :title="wordsShownLabel"
+                    @change="onDifficultyChange"
+                  >
+                    <option
+                      v-for="pct in difficultyOptions"
+                      :key="pct"
+                      :value="pct"
+                    >{{ formatShownPercent(pct) }}</option>
+                  </select>
+                </div>
+                <span class="amd-tool-cell__hint">{{ wordsShownShortLabel }}</span>
               </div>
 
-              <div class="amd-tool">
+              <div class="amd-tool-cell">
+                <div class="amd-tool-btn amd-tool-btn--size" role="group" :aria-label="textSizeLabel">
+                  <button
+                    type="button"
+                    class="amd-tool-seg"
+                    :aria-label="textSizeDecreaseLabel"
+                    :title="textSizeDecreaseLabel"
+                    :disabled="fontScale <= minFontScale"
+                    @click.stop="decreaseFontScale"
+                  >
+                    <span aria-hidden="true">A−</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="amd-tool-seg"
+                    :aria-label="textSizeIncreaseLabel"
+                    :title="textSizeIncreaseLabel"
+                    :disabled="fontScale >= maxFontScale"
+                    @click.stop="increaseFontScale"
+                  >
+                    <span aria-hidden="true">A+</span>
+                  </button>
+                </div>
+                <span class="amd-tool-cell__hint">{{ textSizeShortLabel }}</span>
+              </div>
+
+              <div v-if="canStop" class="amd-tool-cell amd-tool-cell--stop">
                 <button
                   type="button"
-                  class="amd-icon-btn amd-icon-btn--text"
-                  :aria-label="textSizeDecreaseLabel"
-                  :title="textSizeDecreaseLabel"
-                  :disabled="fontScale <= minFontScale"
-                  @click.stop="decreaseFontScale"
+                  class="amd-tool-btn amd-tool-btn--stop"
+                  :class="{ active: isListening }"
+                  :aria-label="stopLabel"
+                  :title="stopLabel"
+                  @click.stop="$emit('stop')"
                 >
-                  <span aria-hidden="true">A−</span>
+                  <i class="bi bi-stop-fill" aria-hidden="true"></i>
+                  <span class="amd-tool-btn__name">{{ stopLabel }}</span>
                 </button>
-                <span class="amd-tool__label">{{ textSmallerShortLabel }}</span>
+                <span class="amd-tool-cell__hint">{{ stopLabel }}</span>
               </div>
-
-              <div class="amd-tool">
-                <button
-                  type="button"
-                  class="amd-icon-btn amd-icon-btn--text"
-                  :aria-label="textSizeIncreaseLabel"
-                  :title="textSizeIncreaseLabel"
-                  :disabled="fontScale >= maxFontScale"
-                  @click.stop="increaseFontScale"
-                >
-                  <span aria-hidden="true">A+</span>
-                </button>
-                <span class="amd-tool__label">{{ textLargerShortLabel }}</span>
-              </div>
-
-              <button
-                v-if="canStop"
-                type="button"
-                class="amd-icon-btn amd-icon-btn--stop"
-                :class="{ active: isListening }"
-                :aria-label="stopLabel"
-                :title="stopLabel"
-                @click.stop="$emit('stop')"
-              >
-                <i class="bi bi-stop-fill" aria-hidden="true"></i>
-              </button>
             </div>
 
             <div
@@ -162,24 +168,20 @@
               ></div>
             </div>
 
-            <div v-if="isReady && !isComplete && !isError" class="amd-start-wrap">
+            <div v-if="isReady && !isComplete && !isError" class="amd-start-wrap amd-start-wrap--inline">
               <button
                 type="button"
-                class="amd-record-btn"
+                class="amd-record-btn amd-record-btn--inline"
                 :class="{ 'is-busy': busy }"
                 :aria-label="startLabel"
-                :title="startLabel"
+                :title="startHint || startLabel"
                 :disabled="busy"
                 @click.stop="$emit('start')"
               >
-                <span class="amd-record-btn__ring" aria-hidden="true"></span>
                 <span class="amd-record-btn__core" aria-hidden="true">
                   <i class="bi bi-mic-fill"></i>
                 </span>
-                <span class="amd-record-btn__copy">
-                  <strong>{{ startLabel }}</strong>
-                  <small v-if="startHint">{{ startHint }}</small>
-                </span>
+                <strong class="amd-record-btn__label">{{ startLabel }}</strong>
               </button>
             </div>
 
@@ -272,6 +274,9 @@ export default {
     textSizeLabel: { type: String, default: 'Text size' },
     textSizeIncreaseLabel: { type: String, default: 'Increase text size' },
     textSizeDecreaseLabel: { type: String, default: 'Decrease text size' },
+    peekHintShort: { type: String, default: 'Hold to reveal' },
+    wordsShownShort: { type: String, default: 'Words shown' },
+    textSizeShort: { type: String, default: 'Text size' },
     completeTitle: { type: String, default: 'Mā shā’ Allāh — check complete' },
     completeBody: { type: String, default: 'You recalled this range successfully.' },
     sessionEndedLabel: { type: String, default: 'Session complete' },
@@ -332,16 +337,16 @@ export default {
         && ['need_access', 'unsupported', 'unavailable', 'denied'].includes(this.micStatusKey)
     },
     peekShortLabel() {
-      return 'Peek text'
+      return this.peekLabel || 'Peek'
+    },
+    peekHintShortLabel() {
+      return this.peekHintShort || 'Hold to reveal'
     },
     wordsShownShortLabel() {
-      return 'Words shown'
+      return this.wordsShownShort || 'Words shown'
     },
-    textSmallerShortLabel() {
-      return 'Smaller text'
-    },
-    textLargerShortLabel() {
-      return 'Larger text'
+    textSizeShortLabel() {
+      return this.textSizeShort || 'Text size'
     },
     micStatusKey() {
       const raw = String(this.micStatus || 'ready').toLowerCase()
