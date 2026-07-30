@@ -5700,7 +5700,7 @@ body.has-navbar .tools-top {
   display: inline-block !important;
   white-space: nowrap !important;
   box-sizing: content-box;
-  vertical-align: -0.28em;
+  vertical-align: -0.42em;
   width: 1.45em;
   height: 1.55em;
   margin-inline: 0.14em 0.08em;
@@ -5715,8 +5715,8 @@ body.has-navbar .tools-top {
   font-size: 1em;
   opacity: 1 !important;
   visibility: visible !important;
-  overflow: visible !important;
-  transform: none !important;
+  overflow: hidden !important;
+  transform: translateY(0.12em);
   float: none !important;
   z-index: 2;
 }
@@ -5735,12 +5735,14 @@ body.has-navbar .tools-top {
   height: 100% !important;
   max-width: none !important;
   object-fit: contain;
-  object-position: center;
+  object-position: center center;
   pointer-events: none;
   user-select: none;
   border: 0;
   margin: 0;
   padding: 0;
+  position: absolute;
+  inset: 0;
 }
 .verse-arabic .verse-ayah-end-number__digit,
 .verse-arabic-with-end .verse-ayah-end-number__digit {
@@ -49079,8 +49081,11 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   top: auto !important;
   inset: auto !important;
   float: none !important;
-  overflow: visible !important;
-  transform: none !important;
+  overflow: hidden !important;
+  transform: translateY(0.12em) !important;
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
 }
 
 .verse-arabic .verse-ayah-number-digits-2.verse-ayah-end-number,
@@ -49115,6 +49120,11 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 .amd-mushaf-stream .verse-ayah-end-number__img--dark,
 .amd-mushaf-ayah--premium .verse-ayah-end-number__img--dark {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
 }
 
 [data-theme="dark"] .verse-arabic .verse-ayah-end-number__img--light,

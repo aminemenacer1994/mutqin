@@ -239,37 +239,97 @@
         border-color: #b56a56 !important;
       }
     </style>
-    <style id="mutqin-memorisation-hotfix-v97">
-      /* Network-first hotfix v96 — mobile mushaf toggle + ellipsis */
+    <style id="mutqin-memorisation-hotfix-v99">
+      /* Network-first hotfix v99 — ayah markers visible, no dark-img ghost, digit nudged down */
       #mutqin-ui-build-pill { display: none !important; }
       html body .app .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .verse-ayah-end-number,
       html body .app .main:not(.mushaf-mode-active) .verses-grid .verse-arabic-with-end .verse-ayah-end-number,
       html body .app .main:not(.mushaf-mode-active) .verse-arabic .verse-ayah-end-number,
       html body .app .verses-grid .verse-arabic .verse-ayah-end-number,
-      html body .app .verses-grid .verse-arabic-with-end .verse-ayah-end-number {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-        max-width: 0 !important;
-        max-height: 0 !important;
-        margin: 0 !important;
+      html body .app .verses-grid .verse-arabic-with-end .verse-ayah-end-number,
+      html body .app .amd-mushaf-stream .verse-ayah-end-number,
+      html body .app .amd-mushaf-ayah--premium .verse-ayah-end-number {
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 1.45em !important;
+        height: 1.55em !important;
+        max-width: none !important;
+        max-height: none !important;
+        margin-inline: 0.14em 0.08em !important;
         padding: 0 !important;
         border: 0 !important;
         overflow: hidden !important;
+        pointer-events: none !important;
+        font-size: 1em !important;
+        line-height: 0 !important;
+        vertical-align: -0.42em !important;
+        background: transparent !important;
+        background-image: none !important;
+        box-shadow: none !important;
+        filter: none !important;
+        text-shadow: none !important;
+        transform: translateY(0.12em) !important;
+      }
+      /* Only one theme image — never stack light+dark (dark was the ghost shadow) */
+      html body .app .verse-ayah-end-number__img--light {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        object-position: center center !important;
+        position: absolute !important;
+        inset: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        filter: none !important;
+        box-shadow: none !important;
+      }
+      html body .app .verse-ayah-end-number__img--dark,
+      html body .app .verse-ayah-end-number__digit {
+        display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
-        pointer-events: none !important;
-        font-size: 0 !important;
-        line-height: 0 !important;
-      }
-      html body .app .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .verse-ayah-end-number img,
-      html body .app .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .verse-ayah-end-number__digit,
-      html body .app .verses-grid .verse-arabic .verse-ayah-end-number img,
-      html body .app .verses-grid .verse-arabic .verse-ayah-end-number__digit {
-        display: none !important;
         width: 0 !important;
         height: 0 !important;
+      }
+      html[data-theme="dark"] body .app .verse-ayah-end-number__img--light {
+        display: none !important;
         visibility: hidden !important;
+        opacity: 0 !important;
+      }
+      html[data-theme="dark"] body .app .verse-ayah-end-number__img--dark {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        object-position: center center !important;
+        position: absolute !important;
+        inset: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        filter: none !important;
+        box-shadow: none !important;
+      }
+      /* Mushaf unicode/fallback end marks — LTR + slight downward nudge */
+      html body .app .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
+      html body .app .main.mushaf-mode-active .madani-word--end.madani-word--fallback {
+        display: inline !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        direction: ltr !important;
+        unicode-bidi: isolate;
+        font-family: "Amiri Quran", "Amiri", "Scheherazade New", "Noto Naskh Arabic", serif !important;
+        vertical-align: -0.22em !important;
+        text-shadow: none !important;
+        filter: none !important;
+        box-shadow: none !important;
       }
       .amd-overlay {
         z-index: 20000 !important;
@@ -1091,7 +1151,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v97'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v99'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });

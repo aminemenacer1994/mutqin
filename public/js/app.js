@@ -27087,7 +27087,7 @@ function loadMemorisationChunk() {
       document.documentElement.dataset.practiceCoach = 'v2';
       document.documentElement.dataset.aiReciteUi = 'v75';
       document.documentElement.dataset.stackedAyahEnd = 'v8-removed';
-      document.documentElement.dataset.mutqinUi = 'v97';
+      document.documentElement.dataset.mutqinUi = 'v99';
       document.documentElement.dataset.amdTestGate = 'test-with-ai-only';
       document.documentElement.dataset.postSessionChoice = 'v14';
     }
@@ -46950,7 +46950,7 @@ module.exports = JSON.parse('{"common":{"on":"On","off":"Off","reset":"Reset","s
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
-/******/ 			return "js/" + chunkId + "." + {"memorisation":"67ed9f98","resources_js_locales_ar_json":"974b4033","resources_js_locales_es_json":"1e3f497f","resources_js_locales_fr_json":"077d6537","resources_js_locales_id_json":"0377c442","resources_js_locales_tr_json":"73abae86","resources_js_locales_ur_json":"9759da6e"}[chunkId] + ".js";
+/******/ 			return "js/" + chunkId + "." + {"memorisation":"f7c0b8a3","resources_js_locales_ar_json":"974b4033","resources_js_locales_es_json":"1e3f497f","resources_js_locales_fr_json":"077d6537","resources_js_locales_id_json":"0377c442","resources_js_locales_tr_json":"73abae86","resources_js_locales_ur_json":"9759da6e"}[chunkId] + ".js";
 /******/ 		};
 /******/ 	})();
 /******/ 	
