@@ -1,41 +1,39 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="auth-shell">
-    <div class="auth-card auth-card-sm">
-        <div class="auth-copy">
-            <div class="auth-eyebrow"><i class="bi bi-shield-lock"></i> Confirm access</div>
-            <h1 class="auth-title">{{ __('Confirm Password') }}</h1>
-            <p class="auth-subtitle">{{ __('Please confirm your password before continuing.') }}</p>
-        </div>
-        <div class="auth-form-wrap">
-            <form method="POST" action="{{ route('password.confirm') }}">
-                @csrf
+<div class="auth-page">
+    <div class="auth-panel">
+        <a class="auth-brand" href="{{ route('home') }}" aria-label="Mutqin home">
+            <img src="/images/logo_main.png" alt="" class="auth-brand-img">
+            <span>Mutqin</span>
+        </a>
 
-                <div class="mb-3">
-                    <label for="password" class="form-label">{{ __('Password') }}</label>
-                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
+        <h1 class="auth-heading">{{ __('Confirm Password') }}</h1>
 
-                    @error('password')
-                        <span class="invalid-feedback" role="alert">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                    @enderror
-                </div>
+        <form method="POST" action="{{ route('password.confirm') }}" class="auth-form">
+            @csrf
 
-                <div class="auth-actions">
-                    <button type="submit" class="btn auth-btn-primary">
-                        {{ __('Confirm Password') }}
+            <div class="auth-field">
+                <label for="password" class="form-label">{{ __('Password') }}</label>
+                <div class="auth-password-wrap">
+                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" autofocus>
+                    <button type="button" class="auth-password-toggle" data-password-toggle="password" aria-label="{{ __('ui.show_password') }}">
+                        <i class="bi bi-eye" aria-hidden="true"></i>
                     </button>
-
-                    @if (Route::has('password.request'))
-                        <a class="auth-form-link" href="{{ route('password.request') }}">
-                            {{ __('Forgot Your Password?') }}
-                        </a>
-                    @endif
                 </div>
-            </form>
-        </div>
+                @error('password')
+                    <span class="invalid-feedback" role="alert">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <button type="submit" class="btn auth-submit">{{ __('Confirm Password') }}</button>
+
+            @if (Route::has('password.request'))
+                <p class="auth-footer">
+                    <a href="{{ route('password.request') }}">{{ __('ui.forgot_password') }}</a>
+                </p>
+            @endif
+        </form>
     </div>
 </div>
 @endsection

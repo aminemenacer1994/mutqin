@@ -187,37 +187,38 @@
     line-height: 1.2;
   }
 
-  .workspace-shell-actions .top-card-controls-trigger {
-    grid-column: 3;
-    grid-row: 2;
-  }
-
-  .workspace-shell-actions .top-card-menu-wrap {
-    grid-column: 4;
-    grid-row: 2;
-    position: relative;
-  }
-
-  .top-card-session-actions:not(.has-paired-actions) ~ .top-card-controls-trigger {
-    grid-column: 3;
+  /* Icon controls stay as one flex row — do not grid-place menu/controls separately */
+  .workspace-shell-actions .top-card-icon-controls {
+    grid-column: 3 / -1;
     grid-row: 1;
-  }
-
-  .top-card-session-actions:not(.has-paired-actions) ~ .top-card-menu-wrap {
-    grid-column: 4;
-    grid-row: 1;
-  }
-
-  .workspace-shell-actions .top-card-controls-trigger,
-  .workspace-shell-actions .top-card-menu-wrap,
-  .workspace-shell-actions .top-card-ellipsis {
     justify-self: end;
-    inline-size: 44px !important;
-    min-inline-size: 44px !important;
-    max-inline-size: 44px !important;
-    block-size: 44px !important;
-    min-block-size: 44px !important;
+    display: inline-flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    gap: 0.3rem !important;
+  }
+
+  .top-card-session-actions.has-paired-actions ~ .top-card-icon-controls {
+    grid-column: 3 / -1;
+    grid-row: 2;
+  }
+
+  .workspace-shell-actions .top-card-icon-controls .top-card-controls-trigger,
+  .workspace-shell-actions .top-card-icon-controls .top-card-menu-wrap,
+  .workspace-shell-actions .top-card-icon-controls .top-card-ellipsis {
+    justify-self: auto;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    inline-size: 36px !important;
+    min-inline-size: 36px !important;
+    max-inline-size: 36px !important;
+    block-size: 36px !important;
+    min-block-size: 36px !important;
     padding: 0 !important;
+    transform: none !important;
   }
 
   .workspace-shell-actions-minimal {
@@ -3171,7 +3172,9 @@
   .top-card-icon-controls .top-card-font-wrap,
   .top-card-icon-controls .top-card-controls-wrap,
   .top-card-icon-controls .top-card-menu-wrap {
-    display: block !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     position: relative !important;
     width: var(--mq-top-icon) !important;
     height: var(--mq-top-icon) !important;
@@ -3199,9 +3202,13 @@
   .top-card-icon-controls .action-btn.top-card-controls-trigger,
   .workspace-shell-actions .top-card-icon-controls .top-card-ellipsis,
   .workspace-shell-actions .top-card-icon-controls .top-card-controls-trigger {
-    position: absolute !important;
-    inset: 0 !important;
-    flex: none !important;
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    flex: 0 0 var(--mq-top-icon) !important;
     inline-size: var(--mq-top-icon) !important;
     block-size: var(--mq-top-icon) !important;
     width: var(--mq-top-icon) !important;
@@ -3229,6 +3236,15 @@
     box-shadow: none !important;
     grid-column: auto !important;
     grid-row: auto !important;
+  }
+
+  .top-card-icon-controls .top-card-layout-icons,
+  .top-card-icon-controls .top-card-font-wrap,
+  .top-card-icon-controls .top-card-controls-wrap,
+  .top-card-icon-controls .top-card-menu-wrap {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .top-card-icon-controls .top-card-icon-control i,
@@ -3301,15 +3317,15 @@
     overflow: visible !important;
   }
 
-  /* Stacked ayah end number — mushaf-identical circular badge at end of ayah */
+  /* Stacked ayah end number — Unicode ۝ glyph (shared styles in Memorisation.css) */
   .verses-grid .verse-arabic .verse-ayah-end-number,
   .verses-grid .verse-arabic-with-end .verse-ayah-end-number,
   .verses-grid .verse-arabic .mushaf-ayah-number.verse-ayah-end-number {
-    display: inline-flex !important;
+    display: inline-block !important;
     vertical-align: middle !important;
-    margin-inline: 0.45em 0.05em !important;
+    margin-inline: 0.12em 0.04em !important;
     float: none !important;
-    position: static !important;
+    position: relative !important;
     top: auto !important;
     inset: auto !important;
   }

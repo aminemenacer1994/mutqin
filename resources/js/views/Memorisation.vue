@@ -577,7 +577,7 @@
 
                 <div ref="mushafViewport" class="mushaf-viewport-scroll">
                   <aside
-                    v-if="liveCoachMiniVisible && readingViewMode === 'mushaf'"
+                    v-if="false"
                     class="live-coach-mini live-coach-mini--mushaf"
                     role="status"
                     aria-live="polite"
@@ -817,7 +817,7 @@
                 </div>
 
                 <aside
-                  v-if="isVerseVisuallyActive(verse.key) && liveCoachMiniVisible"
+                  v-if="false"
                   class="live-coach-mini"
                   role="status"
                   aria-live="polite"
@@ -827,7 +827,7 @@
                 </aside>
 
                 <div
-                  v-if="getPracticeFocusWordsForVerse(verse.key).length"
+                  v-if="false"
                   class="verse-focus-words"
                   role="note"
                 >
@@ -854,9 +854,10 @@
                     'verse-mastered': isMasteredAyah(verse.key),
                     'verse-practice-focus': getPracticeFocusWordsForVerse(verse.key).length > 0,
                     'recitation-word-review-active': shouldShowRecitationReviewHighlights(verse.key)
-                  }" :style="{
+                  }"                   :style="{
                     '--verse-font-percent': getVerseFontSize(verse.key),
-                    'font-family': quranFontFamily
+                    '--quran-font': quranFontFamily,
+                    'font-family': 'var(--quran-font, ' + quranFontFamily + ')'
                   }">
                 </div>
 
@@ -1847,17 +1848,22 @@
     </div>
 
     <transition name="mutqin-flow">
-    <div v-if="showWelcomeBackModal" class="welcome-back-flow mutqin-modal-flow" :class="{ 'welcome-back-flow--ready': welcomeBackModalReady }" aria-live="polite">
-      <div class="modal-backdrop fade show welcome-back-backdrop"></div>
+    <div
+      v-if="showWelcomeBackModal"
+      class="welcome-back-flow mutqin-modal-flow"
+      :class="{ 'welcome-back-flow--ready': welcomeBackModalReady }"
+      aria-live="polite"
+    >
+      <div class="welcome-back-backdrop" @click.self="welcomeBackStartNewSession"></div>
       <div
-        class="modal fade show d-block welcome-back-modal-wrap"
+        class="welcome-back-modal-wrap"
         tabindex="-1"
         role="dialog"
         aria-modal="true"
         aria-labelledby="welcomeBackModalTitle"
       >
-        <div class="modal-dialog modal-dialog-centered modal-lg mutqin-modal-dialog">
-          <div class="modal-content mutqin-modal-surface welcome-back-modal welcome-back-modal--v2">
+        <div class="welcome-back-dialog mutqin-modal-dialog">
+          <div class="mutqin-modal-surface welcome-back-modal welcome-back-modal--v2 welcome-back-modal--lean">
             <div class="welcome-back-hero welcome-back-hero--compact">
               <div class="welcome-back-hero-copy">
                 <span class="welcome-back-kicker">
@@ -1872,55 +1878,24 @@
               </div>
             </div>
 
-            <div class="modal-body welcome-back-body welcome-back-body--compact">
+            <div class="modal-footer mutqin-modal-footer welcome-back-footer welcome-back-footer--lean">
               <div
-                v-if="welcomeBackDetailRows.length"
-                class="welcome-back-details"
-                :aria-label="t('memorisation.postSession.detailsLabel')"
-              >
-                <div
-                  v-for="row in welcomeBackDetailRows"
-                  :key="row.key"
-                  class="welcome-back-detail-row"
-                >
-                  <span class="welcome-back-detail-label">{{ row.label }}</span>
-                  <strong class="welcome-back-detail-value">{{ row.value }}</strong>
-                </div>
-              </div>
-
-              <p
-                v-if="welcomeBackConsistencyNudge"
-                class="emotional-touch emotional-touch--nudge"
-                role="status"
-              >
-                {{ welcomeBackConsistencyNudge }}
-              </p>
-
-              <blockquote class="welcome-back-reminder welcome-back-reminder--card" :aria-label="t('memorisation.welcomeBack.reminderLabel')">
-                <span class="welcome-back-reminder-kicker">{{ t('memorisation.welcomeBack.reminderLabel') }}</span>
-                <p class="welcome-back-reminder-quote">{{ welcomeBackIslamicContent.translation }}</p>
-                <footer class="welcome-back-reminder-footer">
-                  <cite>{{ welcomeBackIslamicContent.source }}</cite>
-                </footer>
-                <p class="welcome-back-reminder-intention">{{ welcomeBackIslamicContent.intention }}</p>
-              </blockquote>
-            </div>
-
-            <div class="modal-footer mutqin-modal-footer welcome-back-footer">
-              <div
-                class="mutqin-modal-actions welcome-back-actions-grid welcome-back-actions-grid--v2"
-                :class="{ 'mutqin-modal-actions--3': canResumePreviousSession }"
+                class="mutqin-modal-actions welcome-back-actions-grid welcome-back-actions-grid--v2 mutqin-modal-actions--3"
               >
                 <button
-                  v-if="canResumePreviousSession"
                   type="button"
                   class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate"
+                  data-testid="welcome-back-continue"
                   @click="welcomeBackContinueSession"
                 >
                   <i class="bi bi-play-circle" aria-hidden="true"></i>
                   <span>{{ t('memorisation.welcomeBack.continuePreviousSession') }}</span>
                 </button>
-                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate" @click="welcomeBackStartNewSession">
+                <button
+                  type="button"
+                  class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate"
+                  @click="welcomeBackStartNewSession"
+                >
                   <i class="bi bi-plus-circle" aria-hidden="true"></i>
                   <span>{{ t('memorisation.welcomeBack.startNewSession') }}</span>
                 </button>
@@ -3102,7 +3077,15 @@
                   <div class="post-session-simple__panel-head">
                     <p class="post-session-simple__action-label">{{ postSessionSimpleActionLabel }}</p>
                     <p class="post-session-simple__range">{{ postSessionRecommendationCardTitle }}</p>
+                    <span
+                      class="post-session-simple__plan-status"
+                      :data-status="memorisationPlanStatus"
+                    >{{ memorisationPlanStatusLabel }}</span>
                   </div>
+                  <p
+                    v-if="postSessionPlanEncouragement"
+                    class="post-session-simple__plan-encouragement"
+                  >{{ postSessionPlanEncouragement }}</p>
                   <div v-if="postSessionSimpleReason" class="post-session-simple__why">
                     <p class="post-session-simple__why-label">
                       {{ t('memorisation.postSession.recommendation.whyThisPlan') }}
@@ -3594,6 +3577,8 @@
       :stage="amdStage"
       :title="amdTitle"
       :range-label="amdRangeLabel"
+      :beta-badge="amdLabels.betaBadge"
+      :disclaimer="amdLabels.disclaimer"
       :mic-status="amdLearnerMicStatus"
       :mic-status-label="amdLearnerMicStatusLabel"
       :mic-guidance="amdMicGuidance"

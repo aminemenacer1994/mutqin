@@ -26,7 +26,7 @@ const TECHNIQUE_I18N = Object.freeze({
     descriptionKey: 'memorisation.techniqueDisplay.talqin.description',
     fallbackLabel: 'Listen and repeat',
     fallbackShort: 'Listen and repeat',
-    fallbackDescription: 'Listen to each section, then repeat it',
+    fallbackDescription: 'Listen, follow and repeat at a comfortable pace.',
   },
   focus: {
     labelKey: 'memorisation.techniqueDisplay.focus.label',
@@ -34,7 +34,7 @@ const TECHNIQUE_I18N = Object.freeze({
     descriptionKey: 'memorisation.techniqueDisplay.focus.description',
     fallbackLabel: 'One ayah at a time',
     fallbackShort: 'One ayah at a time',
-    fallbackDescription: 'Concentrate on one ayah before moving forward',
+    fallbackDescription: 'Focus on one ayah before moving on.',
   },
   blur: {
     labelKey: 'memorisation.techniqueDisplay.blur.label',
@@ -42,7 +42,7 @@ const TECHNIQUE_I18N = Object.freeze({
     descriptionKey: 'memorisation.techniqueDisplay.blur.description',
     fallbackLabel: 'Gradually hide the text',
     fallbackShort: 'Gradually hide the text',
-    fallbackDescription: 'Hide more of the text gradually to strengthen recall',
+    fallbackDescription: 'Hide more of the text gradually to strengthen recall.',
   },
   chaining: {
     labelKey: 'memorisation.techniqueDisplay.chaining.label',
@@ -50,15 +50,15 @@ const TECHNIQUE_I18N = Object.freeze({
     descriptionKey: 'memorisation.techniqueDisplay.chaining.description',
     fallbackLabel: 'Join ayahs together',
     fallbackShort: 'Join ayahs together',
-    fallbackDescription: 'Link each ayah to the next and practise the range as one continuous sequence.',
+    fallbackDescription: 'Link neighbouring ayahs so the passage flows more smoothly.',
   },
   anchor: {
     labelKey: 'memorisation.techniqueDisplay.anchor.label',
     shortKey: 'memorisation.techniqueDisplay.anchor.short',
     descriptionKey: 'memorisation.techniqueDisplay.anchor.description',
-    fallbackLabel: 'Highlight memory words',
-    fallbackShort: 'Highlight memory words',
-    fallbackDescription: 'Use key words as hooks to recall each ayah',
+    fallbackLabel: 'Word focus',
+    fallbackShort: 'Word focus',
+    fallbackDescription: 'See which words may need a little more attention.',
   },
   linking: {
     labelKey: 'memorisation.techniqueDisplay.linking.label',
@@ -66,7 +66,7 @@ const TECHNIQUE_I18N = Object.freeze({
     descriptionKey: 'memorisation.techniqueDisplay.linking.description',
     fallbackLabel: 'Practice ayah pairs',
     fallbackShort: 'Practice ayah pairs',
-    fallbackDescription: 'Practise each ayah, then join it with the next',
+    fallbackDescription: 'Practise each ayah, then join it with the next.',
   },
   cumulative: {
     labelKey: 'memorisation.techniqueDisplay.cumulative.label',
@@ -74,7 +74,7 @@ const TECHNIQUE_I18N = Object.freeze({
     descriptionKey: 'memorisation.techniqueDisplay.cumulative.description',
     fallbackLabel: 'Grow the passage step by step',
     fallbackShort: 'Grow the passage step by step',
-    fallbackDescription: 'Add one ayah at a time to build a longer run',
+    fallbackDescription: 'Add one ayah at a time while keeping earlier ones warm.',
   },
 })
 

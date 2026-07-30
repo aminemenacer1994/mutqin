@@ -1657,8 +1657,9 @@
 
   .hero-title {
     margin-bottom: 0.8rem;
-    font-size: clamp(2.05rem, 11vw, 2.85rem);
-    line-height: 1.03;
+    font-size: clamp(1.55rem, 7.5vw, 2.1rem);
+    line-height: 1.15;
+    font-weight: 620;
     overflow-wrap: break-word;
   }
 
@@ -2175,5 +2176,27 @@
   .contact-copy > .section-title,
   .contact-copy > .section-subtitle {
     grid-column: 1 / -1;
+  }
+}
+
+
+/* mutqin-mobile-content-pass */
+@media (max-width: 767.98px) {
+  .hero-title,
+  .section-title {
+    font-size: clamp(1.45rem, 7vw, 1.9rem) !important;
+    font-weight: 620 !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.2 !important;
+  }
+  .section-subtitle,
+  .hero-lead,
+  .feature-card p {
+    font-size: 0.95rem !important;
+    line-height: 1.55 !important;
+  }
+  .feature-card {
+    padding: 1rem !important;
+    border-radius: 18px !important;
   }
 }

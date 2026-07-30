@@ -14,10 +14,17 @@
         aria-labelledby="amdModalTitle"
       >
         <div class="modal-content mutqin-modal-surface amd-modal amd-modal--mushaf amd-modal--test amd-modal--premium">
-          <header class="amd-header amd-header--premium">
+          <header class="amd-header amd-header--premium amd-header--compact">
+            <div class="amd-header-brand" aria-hidden="true">
+              <img src="/images/logo_main.png" alt="" width="28" height="40" class="amd-header-logo">
+            </div>
             <div class="amd-header-copy">
+              <div class="amd-title-row">
+                <h2 id="amdModalTitle" class="amd-title amd-title--premium">{{ title }}</h2>
+                <span v-if="betaBadge" class="amd-beta-badge">{{ betaBadge }}</span>
+              </div>
               <p v-if="rangeLabel" class="amd-range amd-range--premium">{{ rangeLabel }}</p>
-              <h2 id="amdModalTitle" class="amd-title amd-title--premium">{{ title }}</h2>
+              <p v-if="disclaimer" class="amd-disclaimer">{{ disclaimer }}</p>
             </div>
             <div class="amd-header-aside">
               <div
@@ -41,37 +48,40 @@
             </div>
           </header>
 
-          <div class="amd-body amd-body--premium">
+          <div class="amd-body amd-body--premium amd-body--compact">
             <div
               v-if="!isComplete"
-              class="amd-toolbar amd-toolbar--icons"
+              class="amd-toolbar amd-toolbar--icons amd-toolbar--labelled"
               role="toolbar"
               :aria-label="toolsLabel"
             >
-              <button
-                type="button"
-                class="amd-icon-btn amd-icon-btn--peek"
-                :class="{ active: peeking }"
-                :disabled="isComplete"
-                :aria-pressed="peeking ? 'true' : 'false'"
-                :aria-label="peekLabel"
-                :title="peekHintLabel || peekLabel"
-                @mousedown.prevent="onPeekStart"
-                @mouseup.prevent="onPeekEnd"
-                @mouseleave="onPeekEnd"
-                @touchstart.prevent="onPeekStart"
-                @touchend.prevent="onPeekEnd"
-                @touchcancel="onPeekEnd"
-                @keydown.space.prevent="onPeekStart"
-                @keydown.enter.prevent="onPeekStart"
-                @keyup.space.prevent="onPeekEnd"
-                @keyup.enter.prevent="onPeekEnd"
-                @blur="onPeekEnd"
-              >
-                <i class="bi bi-eye" aria-hidden="true"></i>
-              </button>
+              <div class="amd-tool">
+                <button
+                  type="button"
+                  class="amd-icon-btn amd-icon-btn--peek"
+                  :class="{ active: peeking }"
+                  :disabled="isComplete"
+                  :aria-pressed="peeking ? 'true' : 'false'"
+                  :aria-label="peekLabel"
+                  :title="peekHintLabel || peekLabel"
+                  @mousedown.prevent="onPeekStart"
+                  @mouseup.prevent="onPeekEnd"
+                  @mouseleave="onPeekEnd"
+                  @touchstart.prevent="onPeekStart"
+                  @touchend.prevent="onPeekEnd"
+                  @touchcancel="onPeekEnd"
+                  @keydown.space.prevent="onPeekStart"
+                  @keydown.enter.prevent="onPeekStart"
+                  @keyup.space.prevent="onPeekEnd"
+                  @keyup.enter.prevent="onPeekEnd"
+                  @blur="onPeekEnd"
+                >
+                  <i class="bi bi-eye" aria-hidden="true"></i>
+                </button>
+                <span class="amd-tool__label">{{ peekShortLabel }}</span>
+              </div>
 
-              <div class="amd-difficulty amd-difficulty--icon">
+              <div class="amd-tool amd-tool--select">
                 <label class="visually-hidden" :for="difficultyId">{{ wordsShownLabel }}</label>
                 <select
                   :id="difficultyId"
@@ -87,9 +97,10 @@
                     :value="pct"
                   >{{ formatShownPercent(pct) }}</option>
                 </select>
+                <span class="amd-tool__label">{{ wordsShownShortLabel }}</span>
               </div>
 
-              <div class="amd-text-size" role="group" :aria-label="textSizeLabel">
+              <div class="amd-tool">
                 <button
                   type="button"
                   class="amd-icon-btn amd-icon-btn--text"
@@ -100,6 +111,10 @@
                 >
                   <span aria-hidden="true">A−</span>
                 </button>
+                <span class="amd-tool__label">{{ textSmallerShortLabel }}</span>
+              </div>
+
+              <div class="amd-tool">
                 <button
                   type="button"
                   class="amd-icon-btn amd-icon-btn--text"
@@ -110,6 +125,7 @@
                 >
                   <span aria-hidden="true">A+</span>
                 </button>
+                <span class="amd-tool__label">{{ textLargerShortLabel }}</span>
               </div>
 
               <button
@@ -149,18 +165,20 @@
             <div v-if="isReady && !isComplete && !isError" class="amd-start-wrap">
               <button
                 type="button"
-                class="amd-start-cta"
+                class="amd-record-btn"
+                :class="{ 'is-busy': busy }"
                 :aria-label="startLabel"
                 :title="startLabel"
                 :disabled="busy"
                 @click.stop="$emit('start')"
               >
-                <span class="amd-start-cta__icon" aria-hidden="true">
+                <span class="amd-record-btn__ring" aria-hidden="true"></span>
+                <span class="amd-record-btn__core" aria-hidden="true">
                   <i class="bi bi-mic-fill"></i>
                 </span>
-                <span class="amd-start-cta__copy">
-                  <strong class="amd-start-cta__title">{{ startLabel }}</strong>
-                  <small v-if="startHint" class="amd-start-cta__hint">{{ startHint }}</small>
+                <span class="amd-record-btn__copy">
+                  <strong>{{ startLabel }}</strong>
+                  <small v-if="startHint">{{ startHint }}</small>
                 </span>
               </button>
             </div>
@@ -220,8 +238,10 @@ export default {
   props: {
     open: { type: Boolean, default: false },
     stage: { type: String, default: 'ready' },
-    title: { type: String, default: 'Test your memorisation' },
+    title: { type: String, default: 'Check your memorisation' },
     rangeLabel: { type: String, default: '' },
+    betaBadge: { type: String, default: 'Beta' },
+    disclaimer: { type: String, default: '' },
     micStatus: { type: String, default: 'ready' },
     micStatusLabel: { type: String, default: 'Ready' },
     micGuidance: { type: String, default: '' },
@@ -239,12 +259,12 @@ export default {
     endingSoon: { type: Boolean, default: false },
     errorAction: { type: String, default: 'retry' },
     closeLabel: { type: String, default: 'Close' },
-    toolsLabel: { type: String, default: 'Test tools' },
+    toolsLabel: { type: String, default: 'Memorisation tools' },
     blurLabel: { type: String, default: 'Blur' },
     peekLabel: { type: String, default: 'Peek' },
     stopLabel: { type: String, default: 'Stop' },
-    startLabel: { type: String, default: 'Start reciting' },
-    startHint: { type: String, default: 'Tap once, then recite from memory' },
+    startLabel: { type: String, default: 'Start recording' },
+    startHint: { type: String, default: 'Tap the red button, then recite from memory' },
     resetLabel: { type: String, default: 'Reset' },
     peekHintLabel: { type: String, default: 'Need a hint? Peek at the text' },
     difficultyLabel: { type: String, default: 'Difficulty' },
@@ -252,11 +272,11 @@ export default {
     textSizeLabel: { type: String, default: 'Text size' },
     textSizeIncreaseLabel: { type: String, default: 'Increase text size' },
     textSizeDecreaseLabel: { type: String, default: 'Decrease text size' },
-    completeTitle: { type: String, default: 'Mā shā’ Allāh — test complete' },
+    completeTitle: { type: String, default: 'Mā shā’ Allāh — check complete' },
     completeBody: { type: String, default: 'You recalled this range successfully.' },
     sessionEndedLabel: { type: String, default: 'Session complete' },
     sessionEndedBody: { type: String, default: 'Returning to your next-step plan…' },
-    testAgainLabel: { type: String, default: 'Test again' },
+    testAgainLabel: { type: String, default: 'Check again' },
     doneLabel: { type: String, default: 'Done' },
     enableMicLabel: { type: String, default: 'Enable microphone' },
     tryAgainLabel: { type: String, default: 'Try again' },
@@ -310,6 +330,18 @@ export default {
     showInlineError() {
       return !!this.error && !this.isComplete
         && ['need_access', 'unsupported', 'unavailable', 'denied'].includes(this.micStatusKey)
+    },
+    peekShortLabel() {
+      return 'Peek text'
+    },
+    wordsShownShortLabel() {
+      return 'Words shown'
+    },
+    textSmallerShortLabel() {
+      return 'Smaller text'
+    },
+    textLargerShortLabel() {
+      return 'Larger text'
     },
     micStatusKey() {
       const raw = String(this.micStatus || 'ready').toLowerCase()

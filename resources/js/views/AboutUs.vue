@@ -1,533 +1,143 @@
 <template>
-  <section class="story-page">
-    <div class="story-shell">
-      <div class="story-hero">
-        <div class="story-copy">
-          <span class="story-kicker">{{ t('aboutUs.kicker') }}</span>
-          <h1>{{ t('aboutUs.built_for_focused_quran_practice') }}</h1>
-          <p class="story-lead">
-            Mutqin helps students memorise, revise, and return to weak ayahs without getting lost in clutter.
-            The experience is designed to feel calm, direct, and supportive from the first session onward.
-          </p>
+  <section class="info-page">
+    <div class="info-shell">
+      <header class="info-header info-reveal">
+        <span class="info-kicker"><i class="bi bi-book-half" aria-hidden="true"></i> About</span>
+        <h1>About Mutqin</h1>
+        <p>
+          Mutqin helps you practise and strengthen Qur’an memorisation with guided practice,
+          thoughtful repetition, and optional recitation help — at a calm, steady pace.
+        </p>
+      </header>
 
-          <div class="story-signals">
-            <span><i class="bi bi-stars"></i> {{ t('aboutUs.calm_study_flow') }}</span>
-            <span><i class="bi bi-arrow-repeat"></i> {{ t('aboutUs.revision_led_learning') }}</span>
-            <span><i class="bi bi-shield-check"></i> {{ t('aboutUs.built_around_consistency') }}</span>
-          </div>
-        </div>
+      <section class="info-section info-reveal" style="--d: 60ms">
+        <div class="info-icon" aria-hidden="true"><i class="bi bi-compass"></i></div>
+        <h2>What Mutqin is for</h2>
+        <p>
+          Many learners can repeat well in one sitting, then lose track of what to revise next.
+          Mutqin keeps the next useful step clear so returning each day feels simpler.
+        </p>
+      </section>
 
-        <aside class="story-panel" aria-label="Mutqin summary">
-          <span class="story-panel-label">{{ t('aboutUs.why_people_stay') }}</span>
-          <strong>{{ t('aboutUs.less_friction_clearer_progress_better_return_point') }}</strong>
-          <ul>
-            <li><i class="bi bi-check2-circle"></i> {{ t('aboutUs.session_setup_is_simple_enough_for_daily_use') }}</li>
-            <li><i class="bi bi-check2-circle"></i> {{ t('aboutUs.revision_signals_help_learners_revisit_what_needs_') }}</li>
-            <li><i class="bi bi-check2-circle"></i> {{ t('aboutUs.the_interface_stays_focused_instead_of_overwhelmin') }}</li>
-          </ul>
-        </aside>
-      </div>
+      <section class="info-section info-reveal" style="--d: 120ms">
+        <div class="info-icon" aria-hidden="true"><i class="bi bi-headphones"></i></div>
+        <h2>How practice works</h2>
+        <p>
+          You listen, follow, and repeat at a comfortable pace. After a session, Mutqin can suggest
+          a focused next step based on how the practice went.
+        </p>
+      </section>
 
-      <div class="story-columns">
-        <article>
-          <span class="story-icon"><i class="bi bi-compass"></i></span>
-          <h2>{{ t('aboutUs.why_it_exists') }}</h2>
-          <p>
-            Many learners can repeat well in one sitting but struggle to keep review organised over time.
-            Mutqin reduces that uncertainty and makes the next useful step easier to spot.
-          </p>
-        </article>
-        <article>
-          <span class="story-icon"><i class="bi bi-journal-text"></i></span>
-          <h2>{{ t('aboutUs.what_it_does') }}</h2>
-          <p>
-            It brings session setup, saved progress, recitation checks, and revision signals into one
-            calmer workspace that supports everyday memorisation.
-          </p>
-        </article>
-        <article>
-          <span class="story-icon"><i class="bi bi-people"></i></span>
-          <h2>{{ t('aboutUs.what_it_respects') }}</h2>
-          <p>
-            It supports real study, teacher guidance, and consistent revision. The product is there to
-            clarify the routine, not replace it.
-          </p>
-        </article>
-      </div>
+      <section class="info-section info-reveal" style="--d: 180ms">
+        <div class="info-icon" aria-hidden="true"><i class="bi bi-heart"></i></div>
+        <h2>What Mutqin respects</h2>
+        <p>
+          Mutqin supports consistency. It does not replace a qualified teacher.
+          Accuracy, respect for the Qur’an, and a calm learning experience come first.
+        </p>
+      </section>
 
-      <div class="story-band">
-        <div>
-          <span class="story-band-label">{{ t('aboutUs.the_product_principle') }}</span>
-          <p>
-            Every part of Mutqin is shaped around one question: does this make the student more likely to
-            return tomorrow with confidence?
-          </p>
-        </div>
-        <div class="story-band-metrics">
-          <span>{{ t('aboutUs.focused_workflow') }}</span>
-          <span>{{ t('aboutUs.reliable_revision') }}</span>
-          <span>{{ t('aboutUs.cleaner_decisions') }}</span>
-        </div>
+      <div class="info-actions info-reveal" style="--d: 240ms">
+        <a class="info-btn info-btn--primary" href="/memorisation">Start practising</a>
+        <a class="info-btn info-btn--ghost" href="/our-mission">Our mission</a>
       </div>
     </div>
   </section>
 </template>
 
 <script>
-export default {
-  name: 'AboutUsPage'
-};
+export default { name: 'AboutUsPage' };
 </script>
 
 <style scoped>
-.story-page {
-  position: relative;
-  overflow: hidden;
-  padding: calc(var(--nav-h, 70px) + clamp(24px, 4vw, 44px)) 0 72px;
+.info-page {
+  padding: calc(var(--nav-h, 70px) + clamp(1.1rem, 3vw, 1.75rem)) 0 clamp(2.25rem, 5vw, 3.5rem);
 }
-
-.story-page::before,
-.story-page::after {
-  content: '';
-  position: absolute;
-  border-radius: 999px;
-  pointer-events: none;
-  filter: blur(2px);
-}
-
-.story-page::before {
-  top: 48px;
-  right: -120px;
-  width: 340px;
-  height: 340px;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, transparent), transparent 68%);
-  animation: storyDrift 9s ease-in-out infinite;
-}
-
-.story-page::after {
-  left: -90px;
-  bottom: 40px;
-  width: 280px;
-  height: 280px;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent-strong) 12%, transparent), transparent 70%);
-  animation: storyDrift 11s ease-in-out infinite reverse;
-}
-
-.story-shell {
-  position: relative;
-  z-index: 1;
-  width: min(1120px, calc(100% - 32px));
+.info-shell {
+  width: min(40rem, calc(100% - clamp(1.5rem, 5vw, 2.5rem)));
   margin: 0 auto;
   display: grid;
-  gap: 20px;
+  gap: clamp(1.1rem, 2.8vw, 1.5rem);
 }
-
-.story-hero {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
-  gap: 20px;
-  align-items: stretch;
-}
-
-.story-copy,
-.story-panel,
-.story-columns article,
-.story-band {
-  animation: storyReveal 0.65s ease both;
-}
-
-.story-copy {
-  padding: clamp(20px, 3vw, 30px);
-  border-radius: 34px;
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--field-bg-strong) 72%, transparent), transparent 34%),
-    linear-gradient(135deg, color-mix(in srgb, var(--surface-strong) 92%, var(--surface-elevated, var(--surface))), color-mix(in srgb, var(--surface-soft, var(--surface)) 72%, var(--surface)));
-  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
-  box-shadow: var(--shadow-md);
-}
-
-.story-kicker,
-.story-panel-label,
-.story-band-label {
+.info-kicker {
   display: inline-flex;
   align-items: center;
-  width: fit-content;
-  padding: 8px 12px;
+  gap: 0.4rem;
+  min-height: 1.75rem;
+  padding: 0.2rem 0.65rem;
   border-radius: 999px;
   background: var(--accent-light);
   color: var(--accent-strong);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 650;
 }
-
-.story-copy h1 {
-  margin: 18px 0 16px;
-  font-size: clamp(2.5rem, 5vw, 4.35rem);
-  line-height: 0.98;
-  letter-spacing: -0.05em;
+.info-header h1,
+.info-section h2 {
+  margin: 0.55rem 0 0.55rem;
   color: var(--text);
+  font-weight: 620;
+  letter-spacing: -0.02em;
 }
-
-.story-lead {
-  max-width: 62ch;
+.info-header h1 { font-size: clamp(1.55rem, 4.2vw, 2rem); line-height: 1.2; }
+.info-section h2 { font-size: 1.05rem; line-height: 1.35; }
+.info-header p,
+.info-section p {
   margin: 0;
+  max-width: 58ch;
   color: var(--text-muted);
-  font-size: 1.05rem;
-  line-height: 1.9;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  font-weight: 450;
 }
-
-.story-signals {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 20px;
+.info-section {
+  padding-top: 0.95rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
 }
-
-.story-signals span {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 13px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-strong) 72%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
-  color: var(--text);
-  font-size: 0.94rem;
-  font-weight: 700;
-  box-shadow: var(--shadow-sm);
-}
-
-.story-signals i,
-.story-panel li i,
-.story-icon i {
-  color: var(--accent);
-}
-
-.story-panel {
-  display: grid;
-  gap: 14px;
-  align-content: start;
-  padding: clamp(18px, 2.6vw, 24px);
-  border-radius: 30px;
-  background: color-mix(in srgb, var(--surface-strong) 78%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border));
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(14px);
-}
-
-.story-panel strong {
-  font-size: 1.4rem;
-  line-height: 1.2;
-  color: var(--text);
-}
-
-.story-panel ul {
-  display: grid;
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.story-panel li {
-  display: flex;
-  gap: 10px;
-  color: var(--text-muted);
-  line-height: 1.75;
-}
-
-.story-columns {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-  gap: 16px;
-}
-
-.story-columns article {
-  padding: 22px 20px 20px;
-  border-radius: 28px;
-  background: color-mix(in srgb, var(--surface-strong) 76%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
-}
-
-.story-columns article:hover {
-  transform: translateY(-4px);
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
-  box-shadow: var(--shadow-md);
-}
-
-.story-icon {
-  width: 52px;
-  height: 52px;
-  margin-bottom: 18px;
+.info-icon {
+  width: 2.4rem;
+  height: 2.4rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 18px;
+  border-radius: 12px;
   background: var(--accent-light);
-  font-size: 1.35rem;
+  color: var(--accent);
+  font-size: 1.05rem;
 }
-
-.story-columns h2 {
-  margin: 0 0 12px;
-  color: var(--text);
-  font-size: 1.35rem;
-  letter-spacing: -0.02em;
-}
-
-.story-columns p,
-.story-band p {
-  margin: 0;
-  color: var(--text-muted);
-  line-height: 1.88;
-}
-
-.story-band {
-  display: grid;
-  gap: 14px;
-  padding: 20px 22px;
-  border-radius: 30px;
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--field-bg-strong) 16%, transparent), transparent 28%),
-    linear-gradient(135deg, color-mix(in srgb, var(--accent-strong) 72%, var(--surface-strong)), color-mix(in srgb, var(--accent) 82%, var(--surface)));
-  color: var(--text-on-accent, #fffaf5);
-  box-shadow: var(--shadow-lg);
-}
-
-.story-band p {
-  margin-top: 14px;
-  color: var(--text-on-accent-muted, rgba(255, 250, 245, 0.82));
-  max-width: 62ch;
-}
-
-.story-band-metrics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.story-band-metrics span {
+.info-actions { display: grid; gap: 0.7rem; margin-top: 0.25rem; }
+.info-btn {
   display: inline-flex;
   align-items: center;
-  min-height: 42px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--text-on-accent, #fffaf5) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--text-on-accent, #fffaf5) 22%, transparent);
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.7rem 1.1rem;
+  border-radius: 14px;
+  text-decoration: none;
+  font-weight: 600;
+}
+.info-btn--primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: var(--text-on-accent, #fffaf5);
-  font-weight: 700;
 }
-
-@keyframes storyReveal {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.info-btn--ghost {
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  background: color-mix(in srgb, var(--surface-strong) 80%, transparent);
+  color: var(--text);
 }
-
-@keyframes storyDrift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  50% {
-    transform: translate3d(0, 14px, 0);
+.info-reveal {
+  animation: infoIn 0.55s var(--ease-out, ease) both;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes infoIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (min-width: 560px) {
+  .info-actions {
+    grid-template-columns: repeat(2, minmax(0, max-content));
   }
 }
-
-@media (max-width: 767.98px) {
-  .story-page {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100%;
-    padding: 1.25rem 0 2.25rem;
-  }
-
-  .story-page::before,
-  .story-page::after {
-    width: min(68vw, 220px);
-    height: min(68vw, 220px);
-  }
-
-  .story-page::before {
-    right: 0;
-  }
-
-  .story-page::after {
-    left: 0;
-  }
-
-  .story-shell,
-  .story-hero,
-  .story-copy,
-  .story-panel,
-  .story-columns,
-  .story-columns article,
-  .story-band {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  .story-shell {
-    width: calc(100% - clamp(1.5rem, 7.6vw, 2rem));
-    gap: 0.85rem;
-  }
-
-  .story-hero,
-  .story-columns {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.85rem;
-  }
-
-  .story-copy,
-  .story-panel,
-  .story-columns article,
-  .story-band {
-    padding: 1rem;
-    border-radius: 20px;
-  }
-
-  .story-copy h1 {
-    margin: 0.9rem 0 0.75rem;
-    font-size: clamp(2rem, 11vw, 2.8rem);
-    line-height: 1.03;
-    letter-spacing: -0.035em;
-    overflow-wrap: break-word;
-  }
-
-  .story-lead,
-  .story-panel li,
-  .story-columns p,
-  .story-band p,
-  .story-band-metrics span {
-    min-width: 0;
-    line-height: 1.65;
-    overflow-wrap: break-word;
-  }
-
-  .story-signals,
-  .story-band-metrics {
-    gap: 0.5rem;
-  }
-
-  .story-signals span,
-  .story-band-metrics span {
-    max-width: 100%;
-    min-width: 0;
-    min-height: 44px;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-
-  .story-panel,
-  .story-panel ul {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .story-panel strong,
-  .story-panel li {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .story-page {
-    --story-mobile-grid: repeat(4, minmax(0, 1fr));
-    --story-mobile-gap: clamp(8px, 2.3vw, 12px);
-  }
-
-  .story-shell,
-  .story-hero,
-  .story-columns,
-  .story-signals,
-  .story-band,
-  .story-band-metrics {
-    display: grid !important;
-    grid-template-columns: var(--story-mobile-grid) !important;
-    gap: var(--story-mobile-gap) !important;
-  }
-
-  .story-shell > * {
-    grid-column: 1 / -1;
-  }
-
-  .story-copy {
-    grid-column: 1 / span 2;
-  }
-
-  .story-panel {
-    grid-column: 3 / -1;
-  }
-
-  .story-columns > article,
-  .story-signals > span,
-  .story-band-metrics > span {
-    grid-column: span 2;
-    min-width: 0;
-  }
-
-  .story-band > :first-child {
-    grid-column: 1 / span 2;
-  }
-
-  .story-band > :last-child {
-    grid-column: 3 / -1;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .info-reveal { animation: none; }
 }
-
-@media (max-width: 349.98px) {
-  .story-copy,
-  .story-panel,
-  .story-band > :first-child,
-  .story-band > :last-child {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 559.98px) {
-  .story-copy,
-  .story-panel,
-  .story-band > :first-child,
-  .story-band > :last-child {
-    grid-column: 1 / -1;
-  }
-
-  .story-panel ul {
-    display: grid;
-    grid-template-columns: var(--story-mobile-grid);
-    gap: var(--story-mobile-gap);
-  }
-
-  .story-panel li {
-    grid-column: span 2;
-  }
-
-  .story-panel li:last-child:nth-child(odd),
-  .story-signals > span:last-child:nth-child(odd),
-  .story-columns > article:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-  }
-
-  .story-band-metrics > span {
-    grid-column: span 1;
-    padding-inline: 8px;
-  }
-}
-
-@media (min-width: 560px) and (max-width: 767.98px) {
-  .story-columns > article {
-    grid-column: span 2;
-  }
-}
-
 </style>

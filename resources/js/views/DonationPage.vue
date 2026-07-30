@@ -1,524 +1,164 @@
 <template>
-  <section class="donation-page">
-    <div class="donation-shell">
-      <div class="donation-hero">
-        <div class="donation-copy">
-          <span class="donation-kicker">{{ t('donate.donate') }}</span>
-          <h1>{{ t('donate.support_a_simpler_memorisation_experience') }}</h1>
-          <p class="donation-lead">
-            Support helps improve the product, refine the learning flow, and keep Mutqin easier to use for
-            students returning every day. The goal is thoughtful iteration that makes study feel calmer.
-          </p>
+  <section class="info-page support-page">
+    <div class="info-shell">
+      <header class="info-header info-reveal">
+        <span class="info-kicker"><i class="bi bi-life-preserver" aria-hidden="true"></i> Support</span>
+        <h1>Support</h1>
+        <p>
+          Help with getting started, your account, memorisation sessions, and recitation checks —
+          or contact us if something still feels unclear.
+        </p>
+      </header>
 
-          <div class="donation-signals">
-            <span><i class="bi bi-tools"></i> {{ t('donate.product_maintenance') }}</span>
-            <span><i class="bi bi-lightning-charge"></i> {{ t('donate.faster_iteration') }}</span>
-            <span><i class="bi bi-heart"></i> {{ t('donate.better_student_experience') }}</span>
-          </div>
-        </div>
+      <section class="info-section info-reveal" style="--d: 40ms">
+        <div class="info-icon" aria-hidden="true"><i class="bi bi-play-circle"></i></div>
+        <h2>Getting started</h2>
+        <p>Open Memorisation, choose a short range, and begin with listen-and-repeat.</p>
+        <a class="info-inline-link" href="/memorisation">Go to Memorisation</a>
+      </section>
 
-        <aside class="donation-focus">
-          <span class="donation-focus-label">{{ t('donate.support_focus') }}</span>
-          <strong>{{ t('donate.fund_the_next_practical_improvements_students_feel') }}</strong>
-          <p>
-            Contributions help shape onboarding, revision clarity, and the everyday usability details that
-            make Mutqin easier to return to.
-          </p>
-        </aside>
-      </div>
+      <section class="info-section info-reveal" style="--d: 80ms">
+        <div class="info-icon" aria-hidden="true"><i class="bi bi-person"></i></div>
+        <h2>Account help</h2>
+        <p>Sign in to keep sessions synced. Use the password reset link if you cannot access your account.</p>
+        <a class="info-inline-link" href="/login">Sign in</a>
+      </section>
 
-      <div class="donation-grid">
-        <article class="donation-tier">
-          <span class="donation-tier-badge">{{ t('donate.flexible') }}</span>
-          <strong>{{ t('donate.one_time_support') }}</strong>
-          <p>{{ t('donate.help_with_ongoing_improvements_maintenance_and_car') }}</p>
-        </article>
-        <article class="donation-tier donation-tier-featured">
-          <span class="donation-tier-badge">{{ t('memorisation.badges.steady') }}</span>
-          <strong>{{ t('donate.monthly_support') }}</strong>
-          <p>{{ t('donate.support_steady_iteration_on_onboarding_revision_an') }}</p>
-        </article>
-        <article class="donation-tier">
-          <span class="donation-tier-badge">{{ t('donate.targeted') }}</span>
-          <strong>{{ t('donate.project_support') }}</strong>
-          <p>{{ t('donate.back_focused_improvements_for_a_specific_part_of_t') }}</p>
-        </article>
-      </div>
+      <section class="info-section info-reveal" style="--d: 120ms">
+        <div class="info-icon" aria-hidden="true"><i class="bi bi-journal-bookmark"></i></div>
+        <h2>Memorisation session help</h2>
+        <p>Use guided practice to listen, follow, and repeat. After a session, follow the suggested next step.</p>
+      </section>
 
-      <div class="donation-cta">
-        <div>
-          <span class="donation-cta-label">{{ t('donate.start_the_conversation') }}</span>
-          <p>{{ t('donate.if_you_want_to_support_mutqin_contact_us_with_the_') }}</p>
-        </div>
-        <a href="/#contact">{{ t('donate.contact_us') }}</a>
+      <section class="info-section info-reveal" style="--d: 160ms">
+        <div class="info-icon" aria-hidden="true"><i class="bi bi-mic"></i></div>
+        <h2>Recitation feature help</h2>
+        <p>
+          Check my memorisation lets you recite while Mutqin follows along.
+          It is a beta practice aid and does not replace a teacher.
+        </p>
+      </section>
+
+      <section class="info-section info-reveal" style="--d: 200ms">
+        <div class="info-icon" aria-hidden="true"><i class="bi bi-wrench"></i></div>
+        <h2>Technical support</h2>
+        <p>If audio or login fails, refresh once, then sign out and back in. Allow microphone access for recitation checks.</p>
+      </section>
+
+      <section class="info-section info-reveal" style="--d: 240ms">
+        <div class="info-icon" aria-hidden="true"><i class="bi bi-chat-heart"></i></div>
+        <h2>Feedback and contact</h2>
+        <p>Share what worked, what felt confusing, or how we can support your memorisation better.</p>
+      </section>
+
+      <div class="info-actions info-reveal" style="--d: 280ms">
+        <a class="info-btn info-btn--primary" href="/#contact">Contact us</a>
+        <a class="info-btn info-btn--ghost" href="/donate">Support the project</a>
       </div>
     </div>
   </section>
 </template>
 
 <script>
-export default {
-  name: 'DonationPage'
-};
+export default { name: 'DonationPage' };
 </script>
 
 <style scoped>
-.donation-page {
-  position: relative;
-  overflow: hidden;
-  padding: calc(var(--nav-h, 70px) + clamp(24px, 4vw, 44px)) 0 72px;
+.info-page {
+  padding: calc(var(--nav-h, 70px) + clamp(1.1rem, 3vw, 1.75rem)) 0 clamp(2.25rem, 5vw, 3.5rem);
 }
-
-.donation-page::before,
-.donation-page::after {
-  content: '';
-  position: absolute;
-  border-radius: 999px;
-  pointer-events: none;
-}
-
-.donation-page::before {
-  top: 44px;
-  right: -120px;
-  width: 340px;
-  height: 340px;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, transparent), transparent 68%);
-  animation: donationFloat 10s ease-in-out infinite;
-}
-
-.donation-page::after {
-  left: -80px;
-  bottom: 36px;
-  width: 260px;
-  height: 260px;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent-strong) 12%, transparent), transparent 70%);
-  animation: donationFloat 12s ease-in-out infinite reverse;
-}
-
-.donation-shell {
-  position: relative;
-  z-index: 1;
-  width: min(1120px, calc(100% - 32px));
+.info-shell {
+  width: min(40rem, calc(100% - clamp(1.5rem, 5vw, 2.5rem)));
   margin: 0 auto;
   display: grid;
-  gap: 20px;
+  gap: clamp(1rem, 2.6vw, 1.4rem);
 }
-
-.donation-hero {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
-  gap: 20px;
-  align-items: stretch;
-}
-
-.donation-copy,
-.donation-focus,
-.donation-tier,
-.donation-cta {
-  animation: donationReveal 0.7s ease both;
-}
-
-.donation-copy {
-  padding: clamp(20px, 3vw, 30px);
-  border-radius: 34px;
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--field-bg-strong) 72%, transparent), transparent 34%),
-    linear-gradient(135deg, color-mix(in srgb, var(--surface-strong) 92%, var(--surface-elevated, var(--surface))), color-mix(in srgb, var(--surface-soft, var(--surface)) 72%, var(--surface)));
-  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
-  box-shadow: var(--shadow-md);
-}
-
-.donation-kicker,
-.donation-focus-label,
-.donation-cta-label {
+.info-kicker {
   display: inline-flex;
   align-items: center;
-  width: fit-content;
-  padding: 8px 12px;
+  gap: 0.4rem;
+  min-height: 1.75rem;
+  padding: 0.2rem 0.65rem;
   border-radius: 999px;
   background: var(--accent-light);
   color: var(--accent-strong);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 650;
 }
-
-.donation-copy h1 {
-  margin: 18px 0 16px;
-  font-size: clamp(2.5rem, 5vw, 4.4rem);
-  line-height: 0.98;
-  letter-spacing: -0.05em;
+.info-header h1,
+.info-section h2 {
+  margin: 0.55rem 0 0.55rem;
   color: var(--text);
-}
-
-.donation-lead {
-  max-width: 62ch;
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 1.05rem;
-  line-height: 1.9;
-}
-
-.donation-signals {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.donation-signals span {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 13px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-strong) 72%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
-  color: var(--text);
-  font-size: 0.94rem;
-  font-weight: 700;
-  box-shadow: var(--shadow-sm);
-}
-
-.donation-signals i {
-  color: var(--accent);
-}
-
-.donation-focus {
-  display: grid;
-  gap: 12px;
-  align-content: start;
-  padding: clamp(18px, 2.6vw, 24px);
-  border-radius: 30px;
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--text-on-accent, #fffaf5) 14%, transparent), transparent 24%),
-    linear-gradient(135deg, color-mix(in srgb, var(--accent-strong) 72%, var(--surface-strong)), color-mix(in srgb, var(--accent) 82%, var(--surface)));
-  color: var(--text-on-accent, #fffaf5);
-  box-shadow: var(--shadow-lg);
-}
-
-.donation-focus strong {
-  font-size: 1.4rem;
-  line-height: 1.2;
-}
-
-.donation-focus p {
-  margin: 0;
-  color: var(--text-on-accent-muted, rgba(255, 250, 245, 0.82));
-  line-height: 1.82;
-}
-
-.donation-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-  gap: 16px;
-}
-
-.donation-tier {
-  padding: 20px;
-  border-radius: 28px;
-  background: color-mix(in srgb, var(--surface-strong) 76%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
-}
-
-.donation-tier:hover {
-  transform: translateY(-4px);
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
-  box-shadow: var(--shadow-md);
-}
-
-.donation-tier-featured {
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--field-bg-strong) 58%, transparent), transparent 26%),
-    linear-gradient(135deg, color-mix(in srgb, var(--surface-elevated, var(--surface)) 94%, transparent), color-mix(in srgb, var(--surface-soft, var(--surface)) 82%, var(--surface)));
-  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
-}
-
-.donation-tier-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 12px;
-  margin-bottom: 16px;
-  border-radius: 999px;
-  background: var(--accent-light);
-  color: var(--accent-strong);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.donation-tier strong {
-  display: block;
-  margin-bottom: 10px;
-  color: var(--text);
-  font-size: 1.3rem;
+  font-weight: 620;
   letter-spacing: -0.02em;
 }
-
-.donation-tier p {
+.info-header h1 { font-size: clamp(1.55rem, 4.2vw, 2rem); line-height: 1.2; }
+.info-section h2 { font-size: 1.05rem; line-height: 1.35; }
+.info-header p,
+.info-section p {
   margin: 0;
+  max-width: 58ch;
   color: var(--text-muted);
-  line-height: 1.82;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  font-weight: 450;
 }
-
-.donation-cta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-  gap: 16px;
-  align-items: center;
-  padding: 20px 22px;
-  border-radius: 30px;
-  background: color-mix(in srgb, var(--surface-strong) 78%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border));
-  box-shadow: var(--shadow-sm);
+.info-section {
+  padding-top: 0.9rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
 }
-
-.donation-cta p {
-  margin: 14px 0 0;
-  color: var(--text-muted);
-  line-height: 1.82;
-}
-
-.donation-cta a {
+.info-icon {
+  width: 2.4rem;
+  height: 2.4rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  min-width: 152px;
-  min-height: 48px;
-  padding: 0 18px;
-  border-radius: 16px;
+  border-radius: 12px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 1.05rem;
+}
+.info-inline-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 0.25rem;
+  color: var(--accent-strong);
+  font-weight: 600;
+  text-decoration: none;
+}
+.info-actions { display: grid; gap: 0.7rem; margin-top: 0.25rem; }
+.info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.7rem 1.1rem;
+  border-radius: 14px;
+  text-decoration: none;
+  font-weight: 600;
+}
+.info-btn--primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: var(--text-on-accent, #fffaf5);
-  text-decoration: none;
-  font-weight: 800;
-  box-shadow: var(--shadow-md);
-  transition: transform 0.28s ease, box-shadow 0.28s ease;
 }
-
-.donation-cta a:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+.info-btn--ghost {
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  background: color-mix(in srgb, var(--surface-strong) 80%, transparent);
+  color: var(--text);
 }
-
-@keyframes donationReveal {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.info-reveal {
+  animation: infoIn 0.55s var(--ease-out, ease) both;
+  animation-delay: var(--d, 0ms);
 }
-
-@keyframes donationFloat {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  50% {
-    transform: translate3d(0, 16px, 0);
-  }
+@keyframes infoIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
-@media (max-width: 767.98px) {
-  .donation-page {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100%;
-    padding: 1.25rem 0 2.25rem;
-  }
-
-  .donation-page::before,
-  .donation-page::after {
-    width: min(68vw, 220px);
-    height: min(68vw, 220px);
-  }
-
-  .donation-page::before {
-    right: 0;
-  }
-
-  .donation-page::after {
-    left: 0;
-  }
-
-  .donation-shell,
-  .donation-hero,
-  .donation-copy,
-  .donation-focus,
-  .donation-grid,
-  .donation-tier,
-  .donation-cta {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  .donation-shell {
-    width: calc(100% - clamp(1.5rem, 7.6vw, 2rem));
-    gap: 0.85rem;
-  }
-
-  .donation-hero,
-  .donation-grid,
-  .donation-cta {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.85rem;
-  }
-
-  .donation-copy,
-  .donation-focus,
-  .donation-tier,
-  .donation-cta {
-    padding: 1rem;
-    border-radius: 20px;
-  }
-
-  .donation-copy h1 {
-    margin: 0.9rem 0 0.75rem;
-    font-size: clamp(2rem, 11vw, 2.8rem);
-    line-height: 1.03;
-    letter-spacing: -0.035em;
-    overflow-wrap: break-word;
-  }
-
-  .donation-lead,
-  .donation-focus p,
-  .donation-tier p,
-  .donation-cta p,
-  .donation-signals span {
-    min-width: 0;
-    line-height: 1.65;
-    overflow-wrap: break-word;
-  }
-
-  .donation-signals {
-    gap: 0.5rem;
-  }
-
-  .donation-signals span,
-  .donation-cta a {
-    max-width: 100%;
-    min-width: 0;
-    min-height: 44px;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-
-  .donation-focus {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .donation-focus > *,
-  .donation-focus strong,
-  .donation-focus p {
-    min-width: 0;
-    max-width: 100%;
-    overflow-wrap: anywhere;
-  }
-
-  .donation-page {
-    --donation-mobile-grid: repeat(4, minmax(0, 1fr));
-    --donation-mobile-gap: clamp(8px, 2.3vw, 12px);
-  }
-
-  .donation-shell,
-  .donation-hero,
-  .donation-grid,
-  .donation-signals,
-  .donation-cta {
-    display: grid !important;
-    grid-template-columns: var(--donation-mobile-grid) !important;
-    gap: var(--donation-mobile-gap) !important;
-  }
-
-  .donation-shell > * {
-    grid-column: 1 / -1;
-  }
-
-  .donation-copy {
-    grid-column: 1 / span 2;
-  }
-
-  .donation-focus {
-    grid-column: 3 / -1;
-  }
-
-  .donation-grid > .donation-tier,
-  .donation-signals > span {
-    grid-column: span 2;
-    min-width: 0;
-  }
-
-  .donation-cta > :first-child {
-    grid-column: 1 / span 2;
-  }
-
-  .donation-cta > :last-child,
-  .donation-cta > a {
-    grid-column: 3 / -1;
-  }
+@media (min-width: 560px) {
+  .info-actions { grid-template-columns: repeat(2, minmax(0, max-content)); }
 }
-
-@media (min-width: 560px) and (max-width: 767.98px) {
-  .donation-grid > .donation-tier {
-    grid-column: span 2;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .info-reveal { animation: none; }
 }
-
-@media (max-width: 349.98px) {
-  .donation-copy,
-  .donation-focus,
-  .donation-cta > :first-child,
-  .donation-cta > :last-child,
-  .donation-cta > a {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 559.98px) {
-  .donation-copy,
-  .donation-focus {
-    grid-column: 1 / -1;
-  }
-
-  .donation-signals > span:last-child:nth-child(odd),
-  .donation-grid > .donation-tier:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-  }
-
-  .donation-focus > .donation-focus-label {
-    grid-column: 1 / -1;
-    width: max-content;
-    max-width: 100%;
-    overflow-wrap: normal;
-    word-break: normal;
-  }
-
-  .donation-focus > strong {
-    grid-column: 1 / span 2;
-  }
-
-  .donation-focus > p {
-    grid-column: 3 / -1;
-  }
-}
-
-@media (max-width: 349.98px) {
-  .donation-focus > strong,
-  .donation-focus > p {
-    grid-column: 1 / -1;
-  }
-}
-
 </style>

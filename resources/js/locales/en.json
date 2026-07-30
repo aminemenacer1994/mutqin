@@ -167,67 +167,67 @@
       "recording": "Recording... → 96% accuracy"
     },
     "features": {
-      "kicker": "Built for daily recitation",
-      "title": "Everything you need to master recitation",
-      "subtitle": "From first recording to long-term revision, each tool closes a real feedback gap.",
+      "kicker": "Built for daily practice",
+      "title": "Tools that keep memorisation steady",
+      "subtitle": "Clear steps for listening, repeating, checking, and returning before ayahs fade.",
       "items": {
         "recitationReview": {
-          "title": "AI Recitation Review",
-          "description": "Record an ayah and compare your attempt against the text with clear word-level feedback.",
-          "result": "Spot the section to repeat next.",
+          "title": "Recitation check",
+          "description": "Recite from memory and let Mutqin follow your progress.",
+          "result": "See which words may need a little more attention.",
           "badge": "free"
         },
         "smartMemorisation": {
-          "title": "Smart Memorisation",
-          "description": "Use blur, chaining, anchors, and review signals to strengthen recall without clutter.",
-          "result": "Practise the ayahs that need attention.",
+          "title": "Guided practice",
+          "description": "Listen, follow and repeat at a comfortable pace.",
+          "result": "Build a calm, repeatable session rhythm.",
           "badge": "pro"
         },
         "stackedMushaf": {
-          "title": "Stacked & Mushaf Views",
-          "description": "Move between clean ayah cards and page-style mushaf layouts while keeping controls nearby.",
-          "result": "Read, listen, and self-check in one flow.",
+          "title": "Stacked & Mushaf views",
+          "description": "Choose clear ayah cards or a page-style layout while you practise.",
+          "result": "Read and revise in the view that feels natural.",
           "badge": "free"
         },
         "transitionTraining": {
-          "title": "Transition Training",
-          "description": "Build confidence between neighbouring ayahs with linking and cumulative repetition.",
-          "result": "Reduce pauses between verses.",
+          "title": "Memorisation plans",
+          "description": "Receive a focused next step based on how your session went.",
+          "result": "Know what to practise next without guessing.",
           "badge": "pro"
         },
         "recordingLibrary": {
-          "title": "Recording Library",
-          "description": "Save attempts by surah and ayah so older reviews remain easy to find.",
-          "result": "Keep your recitation history organised.",
+          "title": "Word focus",
+          "description": "See which words may need a little more attention.",
+          "result": "Return to the places that still feel uncertain.",
           "badge": "freeLimited"
         },
         "reviewAnalytics": {
-          "title": "Review Analytics",
-          "description": "Track weak ayahs, repeated attempts, and review priority across your sessions.",
-          "result": "Know what to fix before the next session.",
+          "title": "Review scheduling",
+          "description": "Return to memorised ayahs before they begin to fade.",
+          "result": "Keep earlier memorisation strong over time.",
           "badge": "pro"
         }
       }
     },
     "steps": {
       "kicker": "The practice loop",
-      "title": "Three steps to fluent recitation",
-      "subtitle": "A short loop you can repeat every day: recite, diagnose, review exactly what needs work.",
+      "title": "Three simple steps",
+      "subtitle": "A short loop you can repeat every day: practise, notice, then return to what needs care.",
       "items": {
         "record": {
-          "title": "Record",
-          "description": "Recite the selected ayah or session directly in the browser.",
-          "microcopy": "Fast self-checks without uploads"
+          "title": "Practise",
+          "description": "Listen, follow and repeat your chosen ayahs at a comfortable pace.",
+          "microcopy": "Short sessions are enough"
         },
         "review": {
-          "title": "Review",
-          "description": "See which words were strong, close, or missed after the recitation.",
-          "microcopy": "Clear feedback you can act on"
+          "title": "Notice",
+          "description": "See which words may need a little more attention after you recite.",
+          "microcopy": "Clear, gentle feedback"
         },
         "repeat": {
-          "title": "Repeat",
-          "description": "Use blur, chaining, anchors, and saved attempts to revisit weak ayahs.",
-          "microcopy": "Practice follows your weak spots"
+          "title": "Return",
+          "description": "Follow a focused next step so memorised ayahs stay strong.",
+          "microcopy": "Review before it fades"
         }
       }
     },
@@ -450,6 +450,48 @@
       "freshReminderTranslation": "My Lord, increase me in knowledge.",
       "freshReminderSource": "Qur'an 20:114",
       "freshIntention": "Even a few ayahs, done consistently, are beloved to Allah.",
+      "reminders": {
+        "1": {
+          "translation": "My Lord, increase me in knowledge.",
+          "source": "Qur'an 20:114",
+          "intention": "Even a few ayahs, done consistently, are beloved to Allah."
+        },
+        "2": {
+          "translation": "As for those who strive for Us, We shall guide them to Our paths.",
+          "source": "Qur'an 29:69",
+          "intention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time."
+        },
+        "3": {
+          "translation": "So remember Me; I will remember you.",
+          "source": "Qur'an 2:152",
+          "intention": "A quiet return to the Qur’an is already a form of remembrance."
+        },
+        "4": {
+          "translation": "Indeed, with hardship comes ease.",
+          "source": "Qur'an 94:6",
+          "intention": "If today’s session feels hard, keep it small and sincere."
+        },
+        "5": {
+          "translation": "And We have certainly made the Qur’an easy for remembrance.",
+          "source": "Qur'an 54:17",
+          "intention": "Repetition with calm attention is enough for today."
+        },
+        "6": {
+          "translation": "And be patient, for indeed Allah does not allow the reward of those who do good to be lost.",
+          "source": "Qur'an 11:115",
+          "intention": "Showing up again matters more than finishing quickly."
+        },
+        "7": {
+          "translation": "Our Lord, give us good in this world and good in the Hereafter.",
+          "source": "Qur'an 2:201",
+          "intention": "Ask Allah for benefit in what you memorise, then begin gently."
+        },
+        "8": {
+          "translation": "And whoever puts their trust in Allah — He is sufficient for them.",
+          "source": "Qur'an 65:3",
+          "intention": "Begin with trust, then take the next ayah with care."
+        }
+      },
       "resumeTitle": "Continue with {chapter}",
       "resumeTitleNamed": "{chapter}, {name}",
       "resumeGeneric": "Pick up where you left off",
@@ -1000,43 +1042,43 @@
     "revisitOnboarding": "Revisit onboarding",
     "onboarding": {
       "stepCounter": "Step {current} of {total}",
-      "intro": "A short tour of Mutqin’s memorisation workspace: session setup, reading aids, practice techniques, and AI checks.",
+      "intro": "A short tour of what you can do in Mutqin: set a range, practise calmly, and optionally check your memorisation.",
       "finish": "Finish",
-      "confirmChoice": "Confirm choice",
-      "useSampleSession": "Play sample session",
-      "playSampleSession": "Play sample session",
+      "confirmChoice": "Continue",
+      "useSampleSession": "Try a short sample",
+      "playSampleSession": "Try a short sample",
       "choices": {
-        "groupLabel": "Choose how to begin",
+        "groupLabel": "How would you like to begin?",
         "sample": {
-          "title": "Try Guided Sample (Recommended)",
-          "description": "Walk through a short guided session to see how memorisation flows work."
+          "title": "Try a guided sample",
+          "description": "A short practice so you can feel the flow before choosing your own range."
         },
         "setup": {
-          "title": "Set Up My Own Session",
-          "description": "Choose your surah, range, and reciter before you begin."
+          "title": "Set up my own session",
+          "description": "Choose a surah, ayah range, and reciter, then begin when ready."
         },
         "explore": {
-          "title": "Explore the Workspace First",
-          "description": "Look around the workspace and open setup when you are ready."
+          "title": "Look around first",
+          "description": "Explore the workspace and open setup when you feel ready."
         }
       },
       "postSession": {
-        "kicker": "Sample session complete",
-        "title": "Session complete",
-        "message": "You finished the guided sample. Choose your next step below.",
-        "repeat": "Repeat this session",
-        "newSession": "Start new session",
+        "kicker": "Sample complete",
+        "title": "Well done",
+        "message": "You finished the guided sample. Choose what to do next.",
+        "repeat": "Repeat this sample",
+        "newSession": "Start a new session",
         "save": "Save this session",
-        "savedToast": "This session has been successfully saved."
+        "savedToast": "Session saved."
       },
       "steps": {
         "setup": {
           "title": "Set up your session",
           "stepLabel": "Session setup",
-          "body": "Pick a surah, ayah range, and reciter. Open Controls any time to refine playback, delays, and session targets.",
+          "body": "Pick a surah, ayah range, and reciter. Keep the first range short so it feels easy to finish.",
           "points": [
-            "Start with a short ayah range you can finish in one sitting",
-            "Saved setup stays in Controls under Setup and Saved"
+            "Start with a short ayah range",
+            "Open Controls any time to adjust playback"
           ],
           "previewTitle": "Session inputs",
           "previewSubtitle": "Live from your current setup.",
@@ -1063,12 +1105,12 @@
           ]
         },
         "practice": {
-          "title": "Practice with built-in tools",
+          "title": "Practise with calm tools",
           "stepLabel": "Practice tools",
-          "body": "Focus, blur, chaining, and Talqin structure each ayah. AI Recite checks pronunciation and recall; your attempts land in the recordings library.",
+          "body": "Focus, blur, chaining, and Talqin help you listen and repeat steadily. You can also check your memorisation aloud when ready.",
           "points": [
-            "Focus and blur guide attention; Talqin gives you a recite turn matching ayah length",
-            "AI Recite saves feedback you can revisit later"
+            "Focus and blur guide attention; Talqin gives you a recite turn",
+            "Memorisation checks are optional and still in beta"
           ],
           "previewTitle": "Technique controls",
           "previewSubtitle": "Reflects your current practice settings.",
@@ -1081,10 +1123,10 @@
         "review": {
           "title": "Review and return",
           "stepLabel": "Review & return",
-          "body": "Resume saved sessions, replay recordings, and let smart revision surface ayahs that need work next visit.",
+          "body": "Resume saved sessions and return to ayahs that need a little more care.",
           "points": [
             "Continue exactly where you left off",
-            "Recordings and insights keep weak ayahs visible"
+            "Review scheduling helps before memorised ayahs fade"
           ],
           "previewTitle": "Your library",
           "previewSubtitle": "Pulled from your account activity.",
@@ -1206,11 +1248,11 @@
       "title": "Session complete",
       "message": "Choose how to continue.",
       "actions": {
-        "testWithAi": "Test with AI",
-        "testWithAiAgain": "Test with AI",
+        "testWithAi": "Check my memorisation",
+        "testWithAiAgain": "Check again",
         "chooseAnotherSession": "Choose another session",
         "continueToAyahsFallback": "Continue with barakah",
-        "retest": "Retest",
+        "retest": "Check again",
         "skipForNow": "Skip for now",
         "keepPractising": "Keep practising",
         "chooseAnotherRange": "Choose another range",
@@ -1221,37 +1263,37 @@
         "whyLabel": "Why",
         "methodLabel": "Method",
         "aiCardHint": "Recite from memory so we can build your plan.",
-        "aiFirstBody": "Test yourself with AI Recite first. Your score and practice plan will appear here after we hear you.",
-        "aiRetestBody": "You finished the practice plan. Test with AI Recite again — pass to unlock the next session.",
-        "aiRetestHint": "Pass this test to unlock the next session.",
+        "aiFirstBody": "Check your memorisation first. Your practice plan will appear here afterwards.",
+        "aiRetestBody": "You finished the practice plan. Check your memorisation again to unlock the next session.",
+        "aiRetestHint": "Pass this check to unlock the next session.",
         "differentSession": "Other session",
-        "nextHintAi": "Test with AI Recite to unlock your next plan.",
+        "nextHintAi": "Check your memorisation to unlock your next plan.",
         "rangeCaption": {
-          "test": "Test this range",
-          "retest": "Retest this range",
+          "test": "Check this range",
+          "retest": "Check this range again",
           "practice": "Practise this range",
           "next": "Ready for the next session"
         },
         "chooseWhenReady": "Choose a session when ready.",
-        "weakWordsFocus": "Weak words",
+        "weakWordsFocus": "Words to focus on",
         "ayahLabel": "Āyah {ayah}",
         "ayahRangeLabel": "Āyahs {from}–{to}",
         "replayPhrase": "Replay surrounding phrase",
         "ayahNeededMore": "Āyah {ayah} needs another slow pass.",
         "takeItSlow": "You paused often. Slow down on one āyah.",
-        "speedSettled": "Keep this pace when you test.",
-        "readyToTest": "Ready to test.",
-        "firstPracticeDone": "Practice done. Test when ready.",
+        "speedSettled": "Keep this pace when you check.",
+        "readyToTest": "Ready to check.",
+        "firstPracticeDone": "Practice done. Check when ready.",
         "headers": {
           "practiceDone": "Practice complete",
           "repeatDone": "Another pass complete",
           "aiDone": "What to strengthen next"
         },
         "subtitles": {
-          "practiceDone": "Test with AI Recite to unlock your next plan.",
+          "practiceDone": "Check your memorisation to unlock your next plan.",
           "aiDone": "Focus on these words next.",
-          "aiFirst": "Test with AI Recite first, then your plan appears here.",
-          "retestAfterPractice": "Test again with AI Recite. Pass to unlock the next session."
+          "aiFirst": "Check your memorisation first, then your plan appears here.",
+          "retestAfterPractice": "Check again when ready. Pass to unlock the next session."
         },
         "guidance": {
           "recommended": "Listen once, then repeat.",
@@ -1350,8 +1392,8 @@
       "celebrationMessage": "Your effort is recorded with sincerity.",
       "duaStrengthen": "May Allah strengthen what you have memorised and make it firm in your heart.",
       "duaStrengthenShort": "May Allah strengthen what you have memorised.",
-      "flowGuide": "Test with AI to unlock your next plan, or continue when you are ready.",
-      "flowGuideRepeat": "Test with AI when ready, keep practising this range, or choose another.",
+      "flowGuide": "Check your memorisation to unlock your next plan, or continue when you are ready.",
+      "flowGuideRepeat": "Check your memorisation when ready, keep practising this range, or choose another.",
       "headers": {
         "repeatPass": "Revision pass complete"
       },
@@ -1519,13 +1561,16 @@
         "modeNextSurah": "Next surah",
         "startRecommendedNextSession": "Start recommended session",
         "startRecommendedRevision": "Revise now",
+        "planRecommended": "Recommended",
+        "planApplied": "Applied",
+        "planManual": "Manually adjusted",
         "continueToNextSurah": "Next surah",
         "continueToAyat": "Continue to Ayahs {start}–{end}",
         "repeatAyat": "Repeat Ayahs {start}–{end}",
         "repeatThisSession": "Repeat this session",
         "adjustSettings": "Adjust plan",
         "resetSettings": "Reset to recommended",
-        "testWithAiRecite": "Test with AI Recite",
+        "testWithAiRecite": "Check my memorisation",
         "testMyMemorisation": "Test my memorisation",
         "aiReciteSubtitle": "Recite this range from memory and receive a focused review before moving forward",
         "aiReciteHint": "Recite this completed range. Your result will update the next-step recommendation.",
@@ -2181,10 +2226,12 @@
     },
     "reduce_distracted_around_the_active_ayah": "Concentrate on one ayah before moving forward",
     "amd": {
-      "title": "Test your memorisation",
-      "onlyFromTestWithAi": "Finish your session, then choose Test with AI to open this check.",
+      "title": "Check your memorisation",
+      "betaBadge": "Beta",
+      "disclaimer": "This check is a practice aid. It may mishear words and does not replace a teacher’s guidance.",
+      "onlyFromTestWithAi": "Finish your session, then choose Check my memorisation to open this check.",
       "assessmentType": "From memory",
-      "readyCopy": "Recite aloud. Correct words will appear as Mutqin follows you.",
+      "readyCopy": "Recite aloud from memory. Mutqin will follow along gently as you go.",
       "startAssessment": "Start",
       "startPlan": "Start This Practice Plan",
       "adjustPlan": "Adjust Plan",
@@ -2204,32 +2251,37 @@
       "micGuidanceDenied": "Allow microphone access in your browser settings, then try again.",
       "micGuidanceUnsupported": "Speech recognition is unavailable here. You can still use Peek.",
       "hintStarting": "Preparing the microphone…",
-      "hintListening": "Recite aloud. Correct words will appear as Mutqin follows you.",
-      "hintListeningLive": "Recite aloud. Correct words will appear as Mutqin follows you.",
+      "hintListening": "Recite aloud. Mutqin will follow along as best it can.",
+      "hintListeningLive": "Recite aloud. Mutqin will follow along as best it can.",
       "hintProcessing": "Finishing…",
-      "hintAnalysing": "Comparing with the Quran text…",
-      "startFailed": "Could not start the test.",
-      "analyseFailed": "Could not analyse this recitation. Please try again.",
+      "hintAnalysing": "Comparing with the Qur’an text…",
+      "startFailed": "Could not start the check.",
+      "analyseFailed": "Could not review this recitation. Please try again.",
       "sessionExpired": "Your session expired. Refresh the page, then try again.",
       "noSpeech": "No speech was detected. Please try again.",
-      "recognitionStopped": "Recognition temporarily stopped. Please try again.",
+      "recognitionStopped": "Listening paused. Please try again.",
       "guestSummary": "May Allah strengthen what you have memorised.",
-      "tools": "Test tools",
+      "tools": "Memorisation tools",
       "toolBlur": "Blur",
-      "toolStop": "Stop listening",
+      "toolStop": "Stop",
       "toolHelp": "Help",
-      "helpCopy": "Recite aloud. Correct words will appear as Mutqin follows you.",
-      "startRecitation": "Start reciting",
-      "startRecitationHint": "Tap once, then recite from memory",
+      "helpCopy": "Recite from memory. Mutqin follows along to highlight words that may need more care. This feature is still in beta.",
+      "startRecitation": "Start recording",
+      "startRecitationHint": "Tap the red button, then recite from memory",
+      "stopRecitation": "Stop recording",
       "difficulty": "Difficulty",
       "wordsShown": "Words shown",
+      "peekShort": "Peek text",
+      "wordsShownShort": "Words shown",
+      "textSmallerShort": "Smaller text",
+      "textLargerShort": "Larger text",
       "textSizeIncrease": "Increase text size",
       "textSizeDecrease": "Decrease text size",
-      "completeTitle": "Mā shā’ Allāh. Test complete",
+      "completeTitle": "Mā shā’ Allāh — check complete",
       "completeBody": "You recalled this range successfully.",
       "sessionEnded": "Session complete",
       "sessionEndedBody": "Returning…",
-      "testAgain": "Test again",
+      "testAgain": "Check again",
       "done": "Done",
       "enableMic": "Enable microphone",
       "stages": {
@@ -2625,15 +2677,15 @@
     },
     "helpLearning": {
       "title": "Help & Learning",
-      "subtitle": "Learn how to use Mutqin's tools to memorise more effectively.",
+      "subtitle": "Short guides for calm, steady Qur’an memorisation.",
       "bestFor": "Best for:",
       "sections": {
         "tajweed": {
-          "title": "Tajweed Rules",
-          "description": "Tajweed is the set of rules that helps you recite the Quran correctly and beautifully. Mutqin highlights these rules so you can recognise and practise them while memorising.",
-          "bestFor": "Students improving pronunciation and recitation quality.",
+          "title": "Tajweed colours",
+          "description": "When Tajweed is on, Mutqin colours letters so you can notice pronunciation patterns while you listen and repeat.",
+          "bestFor": "Students improving pronunciation gently while memorising.",
           "legendTitle": "What each colour means",
-          "legendIntro": "When Tajweed is on, letters are coloured by rule. Use this legend while you listen and repeat.",
+          "legendIntro": "Use this legend while you listen and repeat. It is a guide, not a replacement for a teacher.",
           "colors": {
             "gray": {
               "label": "Silent / connection marks",
@@ -2662,66 +2714,66 @@
           }
         },
         "srs": {
-          "title": "Smart Revision (SRS)",
-          "description": "Mutqin automatically reminds you to review verses at the right time so they stay strong in your memory. Difficult verses appear more often, while stronger verses are reviewed less frequently.",
-          "bestFor": "Long-term retention and preventing memorisation loss."
+          "title": "Review scheduling",
+          "description": "Return to memorised ayahs before they begin to fade. Verses that need more care appear sooner.",
+          "bestFor": "Keeping earlier memorisation strong over time."
         },
         "techniques": {
-          "title": "Memorisation Techniques",
-          "description": "Choose the method that helps you stay steady, then adjust it as your range becomes more familiar.",
-          "bestFor": "Students discovering which learning style works best for them.",
+          "title": "Guided practice",
+          "description": "Listen, follow and repeat at a comfortable pace. Choose the method that helps you stay steady.",
+          "bestFor": "Students building a calm daily rhythm.",
           "details": {
             "repetition": {
-              "label": "Repetition Method",
-              "text": "Repeat the same verse multiple times before moving on."
+              "label": "Repetition",
+              "text": "Repeat the same verse a few times before moving on."
             },
             "linking": {
-              "label": "Linking Method",
-              "text": "Connect each verse to the next to improve flow and continuity."
+              "label": "Linking",
+              "text": "Connect each verse to the next to improve flow."
             },
             "cumulative": {
-              "label": "Cumulative Method",
-              "text": "Continuously add new verses while revising previous ones."
+              "label": "Cumulative",
+              "text": "Add new verses while gently revising earlier ones."
             }
           }
         },
         "layouts": {
-          "title": "Reading Layouts",
-          "description": "Switch between two reading styles depending on the device and the kind of memorisation you want to do.",
-          "bestFor": "Choosing the reading experience that feels most natural to you.",
+          "title": "Reading layouts",
+          "description": "Switch between stacked cards and a Mushaf-style page depending on what feels easiest to follow.",
+          "bestFor": "Choosing a reading view that stays comfortable.",
           "details": {
             "stacked": {
-              "label": "Stacked Layout",
-              "text": "Displays each verse in a simple vertical format that is easier to follow on mobile devices."
+              "label": "Stacked layout",
+              "text": "Shows each ayah clearly, one after another — helpful on smaller screens."
             },
             "mushaf": {
-              "label": "Mushaf Layout",
-              "text": "Displays verses in a traditional Mushaf-inspired style for students who prefer familiar page memorisation."
+              "label": "Mushaf layout",
+              "text": "Shows ayahs in a familiar page-inspired style."
             }
           }
         },
         "aiRecitation": {
-          "title": "AI Memorisation Detection",
-          "description": "Mutqin listens to your memorisation, identifies exact weak words and ayahs, and builds a personalised practice plan with the right technique.",
-          "bestFor": "Students who want clear weakness detection and a guided next practice plan."
+          "title": "Recitation check",
+          "description": "Recite from memory and let Mutqin follow your progress. See which words may need a little more attention.",
+          "bestFor": "Students who want gentle feedback after practising aloud."
         },
         "talqinMode": {
-          "title": "Talqin Mode Guide",
-          "description": "Talqin Mode automates the listen, pause, repeat, and extend cycle after you submit a practice session, so the timing stays consistent without extra manual control.",
-          "bestFor": "Students building verse retention through guided listening and repetition.",
-          "workflowTitle": "Talqin Workflow Guide (Listen, Pause, Repeat, Extend)",
-          "workflowIntro": "Activated seamlessly right after you submit a practice session. The platform handles the timing so you can focus entirely on your retention:",
-          "workflowListen": "1. Listen Phase:",
-          "workflowListenText": "The app streams the correct pronunciation of the verse. Focus on Tajweed tracking.",
-          "workflowPause": "2. Pause & Repeat Phase:",
-          "workflowPauseText": "The audio pauses automatically. A live on-screen alert prompts you to recite what you just heard.",
-          "workflowExtend": "3. Extend Phase:",
-          "workflowExtendText": "The sequence systematically links verses together to build long-term memory capacity automatically."
+          "title": "Talqin mode",
+          "description": "Listen, pause, repeat, and extend at a steady pace so you can focus on the ayahs themselves.",
+          "bestFor": "Students building retention through guided listening and repetition.",
+          "workflowTitle": "How Talqin flows",
+          "workflowIntro": "After you begin, Mutqin keeps a steady listen–repeat rhythm so you can focus on the ayahs:",
+          "workflowListen": "1. Listen:",
+          "workflowListenText": "Hear the ayah clearly, then prepare to repeat.",
+          "workflowPause": "2. Pause and repeat:",
+          "workflowPauseText": "Playback pauses so you can recite what you just heard.",
+          "workflowExtend": "3. Extend:",
+          "workflowExtendText": "Join ayahs gradually so the passage stays connected."
         },
         "manualAssessment": {
-          "title": "Manual Assessment",
-          "description": "Manual Assessment allows you to evaluate your own memorisation after each session and track your confidence and progress over time.",
-          "bestFor": "Students who prefer self-reflection and independent revision."
+          "title": "Self assessment",
+          "description": "After a session, note how confident you felt so the next step can stay useful.",
+          "bestFor": "Students who prefer simple self-reflection."
         }
       }
     },

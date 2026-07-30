@@ -1,51 +1,36 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="auth-shell">
-    <div class="auth-card auth-card-sm">
-        <div class="auth-copy">
-            <div class="auth-eyebrow" data-i18n="resetKicker"><i class="bi bi-envelope-check"></i> Password reset</div>
-            <h1 class="auth-title" data-i18n="resetTitle">Reset your password</h1>
-            <p class="auth-subtitle" data-i18n="resetSubtitle">Enter your account email and Mutqin will send you a secure reset link.</p>
-        </div>
-        <div class="auth-form-wrap">
-            @if (session('status'))
-                <div class="alert alert-success auth-alert" role="alert">
-                    {{ session('status') }}
-                </div>
-            @endif
+<div class="auth-page">
+    <div class="auth-panel">
+        <a class="auth-brand" href="{{ route('home') }}" aria-label="Mutqin home">
+            <img src="/images/logo_main.png" alt="" class="auth-brand-img">
+            <span>Mutqin</span>
+        </a>
 
-            @if ($errors->any())
-                <div class="alert alert-danger auth-alert" role="alert">
-                    {{ $errors->first() }}
-                </div>
-            @endif
+        <h1 class="auth-heading">{{ __('ui.reset_title') }}</h1>
 
-            <form method="POST" action="{{ route('password.email') }}">
-                @csrf
+        @if (session('status'))
+            <div class="alert alert-success auth-alert" role="alert">{{ session('status') }}</div>
+        @endif
 
-                <div class="mb-3">
-                    <label for="email" class="form-label" data-i18n="email_address">{{ __('ui.email_address') }}</label>
-                    <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+        <form method="POST" action="{{ route('password.email') }}" class="auth-form">
+            @csrf
 
-                    @error('email')
-                        <span class="invalid-feedback" role="alert">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                    @enderror
-                </div>
+            <div class="auth-field">
+                <label for="email" class="form-label">{{ __('ui.email_address') }}</label>
+                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+                @error('email')
+                    <span class="invalid-feedback" role="alert">{{ $message }}</span>
+                @enderror
+            </div>
 
-                <div class="auth-actions">
-                    <button type="submit" class="btn auth-btn-primary">
-                        <span data-i18n="sendResetLink">Send reset link</span>
-                    </button>
-                </div>
-            </form>
-            <p class="auth-switch">
-                Remembered it?
-                <a href="{{ route('login') }}">Back to login</a>
-            </p>
-        </div>
+            <button type="submit" class="btn auth-submit">{{ __('ui.send_reset_link') }}</button>
+        </form>
+
+        <p class="auth-footer">
+            <a href="{{ route('login') }}">{{ __('ui.auth_sign_in') }}</a>
+        </p>
     </div>
 </div>
 @endsection

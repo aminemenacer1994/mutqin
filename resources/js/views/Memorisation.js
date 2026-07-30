@@ -8,7 +8,8 @@ import {
 } from '../utils/theme'
 import {
   buildPostSessionEmotionalContext,
-  buildWelcomeBackConsistencyNudge
+  buildWelcomeBackConsistencyNudge,
+  buildWelcomeBackRemembrance,
 } from '../utils/emotionalTouches'
 import diff from 'fast-diff'
 import { markRaw } from 'vue'
@@ -67,6 +68,18 @@ import {
   buildPersonalPracticePlan,
   applyPersonalPlanToRecommendation,
 } from '../scripts/recommendations/nextSessionRecommendation'
+import {
+  PLAN_STATUS,
+  buildMemorisationPlan,
+  memorisationPlanToSettings,
+  memorisationPlansEqual,
+  withPlanStatus,
+} from '../scripts/recommendations/memorisationPlan'
+import {
+  applyQuranFontCssVariable,
+  normaliseQuranFontId,
+  resolveQuranFontFamily,
+} from '../scripts/quran/quranFonts'
 import { buildAiReviewDetails } from '../scripts/recommendations/aiReviewDetails'
 import {
   AI_RECITE_MAX_ATTEMPTS,
@@ -245,15 +258,15 @@ function activeSessionSnapshotStorageKey(userId = null) {
 
 const HELP_LEARNING_FALLBACKS = {
   title: 'Help & Learning',
-  subtitle: 'Learn how to use Mutqin\'s tools to memorise more effectively.',
+  subtitle: 'Short guides for calm, steady Qur’an memorisation.',
   bestFor: 'Best for',
   sections: {
     tajweed: {
-      title: 'Tajweed Rules',
-      description: 'Tajweed is the set of rules that helps you recite the Quran correctly and beautifully. Mutqin highlights these rules so you can recognise and practise them while memorising.',
-      bestFor: 'Students improving pronunciation and recitation quality.',
+      title: 'Tajweed colours',
+      description: 'When Tajweed is on, Mutqin colours letters so you can notice pronunciation patterns while you listen and repeat.',
+      bestFor: 'Students improving pronunciation gently while memorising.',
       legendTitle: 'What each colour means',
-      legendIntro: 'When Tajweed is on, letters are coloured by rule. Use this legend while you listen and repeat.',
+      legendIntro: 'Use this legend while you listen and repeat. It is a guide, not a replacement for a teacher.',
       colors: {
         gray: { label: 'Silent / connection marks', description: 'Hamzat al-wasl and silent letters that are not pronounced.' },
         green: { label: 'Ghunnah / Idgham with ghunnah', description: 'Nasalisation and joining with a nasal sound.' },
@@ -264,58 +277,58 @@ const HELP_LEARNING_FALLBACKS = {
       }
     },
     srs: {
-      title: 'Smart Revision (SRS)',
-      description: 'Mutqin automatically reminds you to review verses at the right time so they stay strong in your memory. Difficult verses appear more often, while stronger verses are reviewed less frequently.',
-      bestFor: 'Long-term retention and preventing memorisation loss.'
+      title: 'Review scheduling',
+      description: 'Return to memorised ayahs before they begin to fade. Verses that need more care appear sooner.',
+      bestFor: 'Keeping earlier memorisation strong over time.'
     },
     techniques: {
-      title: 'Memorisation Techniques',
-      description: 'Choose the method that helps you stay steady, then adjust it as your range becomes more familiar.',
-      bestFor: 'Students discovering which learning style works best for them.',
+      title: 'Guided practice',
+      description: 'Listen, follow and repeat at a comfortable pace. Choose the method that helps you stay steady.',
+      bestFor: 'Students building a calm daily rhythm.',
       details: {
         repetition: {
-          label: 'Repetition Method',
-          text: 'Repeat the same verse multiple times before moving on.'
+          label: 'Repetition',
+          text: 'Repeat the same verse a few times before moving on.'
         },
         linking: {
-          label: 'Linking Method',
-          text: 'Connect each verse to the next to improve flow and continuity.'
+          label: 'Linking',
+          text: 'Connect each verse to the next to improve flow.'
         },
         cumulative: {
-          label: 'Cumulative Method',
-          text: 'Continuously add new verses while revising previous ones.'
+          label: 'Cumulative',
+          text: 'Add new verses while gently revising earlier ones.'
         }
       }
     },
     layouts: {
-      title: 'Reading Layouts',
-      description: 'Switch between stacked cards and a Mushaf-style page depending on the device and the kind of memorisation you want to do.',
-      bestFor: 'Choosing the reading experience that feels most natural to you.',
+      title: 'Reading layouts',
+      description: 'Switch between stacked cards and a Mushaf-style page depending on what feels easiest to follow.',
+      bestFor: 'Choosing a reading view that stays comfortable.',
       details: {
         stacked: {
-          label: 'Stacked Layout',
-          text: 'Displays each ayah in a clear vertical format that is easier to follow on smaller screens.'
+          label: 'Stacked layout',
+          text: 'Shows each ayah clearly, one after another — helpful on smaller screens.'
         },
         mushaf: {
-          label: 'Mushaf Layout',
-          text: 'Displays ayahs in a traditional page-inspired style for students who prefer familiar page memorisation.'
+          label: 'Mushaf layout',
+          text: 'Shows ayahs in a familiar page-inspired style.'
         }
       }
     },
     aiRecitation: {
-      title: 'AI Memorisation Detection',
-      description: 'Mutqin listens to your memorisation, identifies exact weak words and ayahs, and builds a personalised practice plan with the right technique.',
-      bestFor: 'Students who want guided practice and immediate feedback.'
+      title: 'Recitation check',
+      description: 'Recite from memory and let Mutqin follow your progress. See which words may need a little more attention.',
+      bestFor: 'Students who want gentle feedback after practising aloud.'
     },
     talqinMode: {
-      title: 'Talqin Mode Guide',
-      description: 'Talqin Mode automates the listen, pause, repeat, and extend cycle after you submit a practice session, so the timing stays consistent without extra manual control.',
-      bestFor: 'Students building verse retention through guided listening and repetition.'
+      title: 'Talqin mode',
+      description: 'Listen, pause, repeat, and extend at a steady pace so you can focus on the ayahs themselves.',
+      bestFor: 'Students building retention through guided listening and repetition.'
     },
     manualAssessment: {
-      title: 'Manual Assessment',
-      description: 'Manual Assessment lets you evaluate your own memorisation after each session and track confidence over time.',
-      bestFor: 'Students who prefer self-reflection and independent revision.'
+      title: 'Self assessment',
+      description: 'After a session, note how confident you felt so the next step can stay useful.',
+      bestFor: 'Students who prefer simple self-reflection.'
     }
   }
 }
@@ -596,6 +609,10 @@ export default {
       postSessionAiReviewDetails: null,
       recommendedPracticePending: false,
       recommendedPracticeCompleted: false,
+      /** @type {import('../scripts/recommendations/memorisationPlan').MemorisationPlan|null} */
+      activeMemorisationPlan: null,
+      memorisationPlanStatus: 'recommended', // recommended | applied | manual
+      memorisationPlanManualOverride: false,
       // Mastery loop: keep re-testing the same range until AI Recite is strong.
       awaitingMasteryRetest: false,
       masteryTargetRange: null,
@@ -1274,6 +1291,9 @@ export default {
     shouldShowOffcanvasTabs() {
       return true
     },
+    showPracticeToolsTab() {
+      return true
+    },
     showHifzPlannerUi() {
       return false
     },
@@ -1327,11 +1347,6 @@ export default {
           tone: 'accent'
         }
       ]
-    },
-    sortedSavedSessions() {
-      return [...this.savedSessions].sort((a, b) => {
-        return new Date(b.savedAt) - new Date(a.savedAt);
-      });
     },
     isSessionFullyCompleted() {
     // Check if all verses in the range have been completed
@@ -2298,18 +2313,12 @@ export default {
       return rows.filter(row => row.value)
     },
     welcomeBackIslamicContent() {
-      if (this.canResumePreviousSession) {
-        return {
-          translation: this.t('memorisation.welcomeBack.resumeReminderTranslation'),
-          source: this.t('memorisation.welcomeBack.resumeReminderSource'),
-          intention: this.t('memorisation.welcomeBack.resumeIntention')
-        }
-      }
-      return {
-        translation: this.t('memorisation.welcomeBack.freshReminderTranslation'),
-        source: this.t('memorisation.welcomeBack.freshReminderSource'),
-        intention: this.t('memorisation.welcomeBack.freshIntention')
-      }
+      return buildWelcomeBackRemembrance({
+        mode: this.canResumePreviousSession ? 'resume' : 'fresh',
+        now: Date.now(),
+        userId: this.auth?.id ?? null,
+        t: this.t.bind(this),
+      })
     },
     welcomeBackConsistencyNudge() {
       return buildWelcomeBackConsistencyNudge(
@@ -2868,6 +2877,15 @@ export default {
       if (this.postSessionRecommendationStatus === 'empty' || !this.postSessionRecommendationActionable) return 'empty'
       return 'continue'
     },
+    memorisationPlanStatusLabel() {
+      if (this.memorisationPlanStatus === PLAN_STATUS.APPLIED) {
+        return this.t('memorisation.postSession.recommendation.planApplied') || 'Applied'
+      }
+      if (this.memorisationPlanStatus === PLAN_STATUS.MANUAL) {
+        return this.t('memorisation.postSession.recommendation.planManual') || 'Manually adjusted'
+      }
+      return this.t('memorisation.postSession.recommendation.planRecommended') || 'Recommended'
+    },
     postSessionPlanSealIcon() {
       if (this.postSessionPlanKind === 'repeat') return 'bi-arrow-repeat'
       if (this.postSessionPlanKind === 'next-surah') return 'bi-book'
@@ -3371,10 +3389,8 @@ export default {
       })
     },
     liveCoachMiniVisible() {
-      if (!this.hasSessionStarted || this.isSessionCompleted || this.showPostSessionModal) return false
-      if (this.talqinRecitationTurnActive) return false
-      if (!this.livePracticeCoachText) return false
-      return !!(this.isPlaying || this.playerVisible || this.hasLoadedAudio)
+      // Live list/practice coach bootstrap removed — keep recitation undistracted.
+      return false
     },
     activePracticeFocusWord() {
       const words = Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []
@@ -3736,14 +3752,14 @@ export default {
     },
     postSessionTestWithAiLabel() {
       if (this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck) {
-        return this.t('memorisation.postSession.actions.retest') || 'Retest'
+        return this.t('memorisation.postSession.actions.retest') || 'Check again'
       }
       if (this.postSessionIsRepeatRecommendation) {
         return this.t('memorisation.postSession.actions.testWithAiAgain')
           || this.t('memorisation.postSession.actions.testWithAi')
-          || 'Test with AI'
+          || 'Check my memorisation'
       }
-      return this.t('memorisation.postSession.actions.testWithAi') || 'Test with AI'
+      return this.t('memorisation.postSession.actions.testWithAi') || 'Check my memorisation'
     },
     postSessionSkipForNowLabel() {
       if (this.postSessionIsRepeatRecommendation) {
@@ -4041,24 +4057,28 @@ export default {
     },
     postSessionHeaderSubtitle() {
       if (this.onboardingSampleSessionActive) return ''
+      // Encouragement belongs on the recommendation plan card only — never as a
+      // distracting end-of-session / recitation subtitle.
       if (this.postSessionRecommendationStep === 'confirm') {
-        return this.postSessionEncouragement || this.postSessionDuaMessage || ''
+        return this.postSessionDuaMessage || ''
       }
       if (this.postSessionIsRepeatRecommendation) {
         return this.t('memorisation.postSession.subtitles.repeatPass')
-          || this.postSessionEncouragement
           || this.t('memorisation.postSession.duaStrengthenShort')
           || ''
       }
       if (this.postSessionHasAiCheck || this.postSessionShowRecommendationPlan) {
-        return this.t('memorisation.postSession.coach.subtitles.aiDone')
-          || this.postSessionEncouragement
-          || ''
+        return this.t('memorisation.postSession.coach.subtitles.aiDone') || ''
       }
       if (this.postSessionSupportingMessage) {
-        return this.postSessionEncouragement || this.postSessionDuaMessage || ''
+        return this.postSessionDuaMessage || ''
       }
-      return this.postSessionEncouragement || this.postSessionDuaMessage || ''
+      return this.postSessionDuaMessage || ''
+    },
+    postSessionPlanEncouragement() {
+      if (!this.postSessionShowRecommendationPlan) return ''
+      if (this.postSessionRecommendationStatus === 'loading') return ''
+      return this.postSessionEncouragement || ''
     },
     postSessionFlowGuideText() {
       if (this.onboardingSampleSessionActive) return ''
@@ -4783,7 +4803,7 @@ export default {
       return single ? `${prefix} for ${single}` : prefix
     },
     amdTitle() {
-      return this.t?.('memorisation.amd.title') || 'Test your memorisation'
+      return this.t?.('memorisation.amd.title') || 'Check your memorisation'
     },
     amdRangeLabel() {
       const surah = this.currentChapter?.name_simple || this.activeChapterName || `Surah ${this.chapterId || ''}`.trim()
@@ -4931,13 +4951,16 @@ export default {
     amdLabels() {
       return {
         close: this.t?.('common.close') || 'Close',
-        tools: this.t?.('memorisation.amd.tools') || 'Test tools',
+        tools: this.t?.('memorisation.amd.tools') || 'Memorisation tools',
         blur: this.t?.('memorisation.amd.toolBlur') || 'Blur',
         peek: this.t?.('memorisation.peek') || 'Peek',
         peekHint: this.t?.('memorisation.amd.peekHint') || 'Need a hint? Peek at the text',
-        stop: this.t?.('memorisation.amd.toolStop') || 'Stop listening',
-        start: this.t?.('memorisation.amd.startRecitation') || 'Start reciting',
-        startHint: this.t?.('memorisation.amd.startRecitationHint') || 'Tap once, then recite from memory',
+        stop: this.t?.('memorisation.amd.toolStop') || 'Stop',
+        start: this.t?.('memorisation.amd.startRecitation') || 'Start recording',
+        startHint: this.t?.('memorisation.amd.startRecitationHint') || 'Tap the red button, then recite from memory',
+        betaBadge: this.t?.('memorisation.amd.betaBadge') || 'Beta',
+        disclaimer: this.t?.('memorisation.amd.disclaimer')
+          || 'This check is a practice aid. It may mishear words and does not replace a teacher’s guidance.',
         reset: this.t?.('common.reset') || 'Reset',
         difficulty: this.t?.('memorisation.amd.difficulty') || 'Difficulty',
         wordsShown: this.t?.('memorisation.amd.wordsShown') || 'Words shown',
@@ -4945,21 +4968,22 @@ export default {
         textSizeIncrease: this.t?.('memorisation.amd.textSizeIncrease') || 'Increase text size',
         textSizeDecrease: this.t?.('memorisation.amd.textSizeDecrease') || 'Decrease text size',
         completeTitle: this.t?.('memorisation.amd.completeTitle')
-          || 'Mā shā’ Allāh — test complete',
+          || 'Mā shā’ Allāh — check complete',
         completeBody: this.t?.('memorisation.amd.completeBody')
           || 'You recalled this range successfully.',
         sessionEnded: this.t?.('memorisation.amd.sessionEnded')
           || 'Session complete',
         sessionEndedBody: this.t?.('memorisation.amd.sessionEndedBody')
           || 'Returning to your next-step plan…',
-        testAgain: this.t?.('memorisation.amd.testAgain') || 'Test again',
+        testAgain: this.t?.('memorisation.amd.testAgain') || 'Check again',
         done: this.t?.('memorisation.amd.done') || 'Done',
         enableMic: this.t?.('memorisation.amd.enableMic') || 'Enable microphone',
         retry: this.t?.('memorisation.aiCheck.tryAgain') || 'Try again',
       }
     },
     amdPracticeHudVisible() {
-      return !!(this.amdPracticeHud && this.amdStage === AMD_STAGES.PRACTICE_ACTIVE)
+      // Practice bootstrap HUD disabled in all states
+      return false
     },
     aiMemorisationCheckerVerse() {
       if (!this.aiMemorisationCheckerVerseKey) return null
@@ -6081,18 +6105,11 @@ export default {
     },
 
     quranFontFamily() {
-      const fonts = {
-        amiri: "'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', serif",
-        naskh: "'Noto Naskh Arabic', 'Amiri', serif",
-        scheherazade: "'Scheherazade New', 'Noto Naskh Arabic', serif",
-        lateef: "'Lateef', 'Amiri', serif",
-        uthmanic: "'KFGQPC Uthmanic Script HAFS', 'UthmanicHafs', 'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', serif"
-      }
-      return fonts[this.quranFont] || fonts.uthmanic
+      return resolveQuranFontFamily(this.quranFont)
     },
 
     useMadaniQcfGlyphs() {
-      return this.readingViewMode === 'mushaf' && this.quranFont === 'uthmanic'
+      return this.readingViewMode === 'mushaf' && normaliseQuranFontId(this.quranFont) === 'uthmanic'
     },
 
     collapsedPlayerTitle() {
@@ -6968,6 +6985,7 @@ export default {
     }
     this.theme = document.documentElement.getAttribute('data-theme') || this.theme || 'light'
     document.documentElement.setAttribute('data-theme', this.theme)
+    applyQuranFontCssVariable(this.quranFont)
     this.activeLocale = this.$i18n?.locale?.value || 'en'
     this.ensureWordAudioHighlighting()
 
@@ -7327,7 +7345,8 @@ export default {
     tajweedEnabled() {
       this.$nextTick(() => this.scheduleMadaniPageFit())
     },
-    quranFont() {
+    quranFont(newVal) {
+      applyQuranFontCssVariable(newVal)
       this.$nextTick(() => this.scheduleMadaniPageFit())
     },
     showTools(newVal) {
@@ -7551,7 +7570,8 @@ export default {
       this.persistUiState()
     },
     fontScale: 'persistUiState',
-    quranFont() {
+    quranFont(newVal) {
+      applyQuranFontCssVariable(newVal)
       this.clearMushafAyahHtmlCache()
       this.persistUiState()
     },
@@ -8046,20 +8066,8 @@ export default {
       if (!this.isExistingUserLogin) return
       if (!this.getReadyToBeginLoginEventId()) return
       if (this.hasShownWelcomeBackModalForCurrentLogin()) return
-      // Re-assert continue eligibility from the latest backend snapshot so the
-      // Continue CTA is not missing when hydrate finished slightly earlier.
-      if (
-        this.learningBackendEnabled()
-        && this.backendUnfinishedSession
-        && this.backendSessionSnapshot
-        && !this.continueSessionPayload?.config?.chapterId
-      ) {
-        const fromBackend = this.buildContinuePayloadFromBackendSession(this.backendSessionSnapshot)
-        if (fromBackend) {
-          this.continueSessionPayload = fromBackend
-          this.hasContinueSession = true
-        }
-      }
+      // Sync Continue CTA with backend + frontend resume state before reveal.
+      this.syncWelcomeBackResumeFromBackend()
       this.markWelcomeBackModalShownForCurrentLogin()
       this.returningUserChoicePending = true
       this.welcomeBackWorkspaceHidden = false
@@ -8070,6 +8078,8 @@ export default {
         window.clearTimeout(this.welcomeBackRevealTimer)
       }
       this.welcomeBackRevealTimer = window.setTimeout(() => {
+        // Re-sync once more in case hydrate finished during the reveal delay.
+        this.syncWelcomeBackResumeFromBackend()
         this.showWelcomeBackModal = true
         this.$nextTick(() => {
           window.requestAnimationFrame(() => {
@@ -8077,6 +8087,32 @@ export default {
           })
         })
       }, 900)
+    },
+
+    syncWelcomeBackResumeFromBackend() {
+      if (
+        this.learningBackendEnabled()
+        && this.sessionLifecycleHydrated
+        && this.backendUnfinishedSession
+        && this.backendSessionSnapshot
+      ) {
+        const fromBackend = this.buildContinuePayloadFromBackendSession(this.backendSessionSnapshot)
+        if (fromBackend) {
+          this.continueSessionPayload = fromBackend
+          this.hasContinueSession = true
+        }
+        return
+      }
+      if (
+        this.learningBackendEnabled()
+        && this.sessionLifecycleHydrated
+        && !this.backendUnfinishedSession
+      ) {
+        // Backend says nothing to resume — clear stale frontend continue hints.
+        if (this.continueSessionPayload) this.clearContinueSessionQuietly()
+        return
+      }
+      // Frontend-only / pre-hydrate: keep existing validated local continue payload.
     },
 
     hasShownWelcomeBackModalForCurrentLogin() {
@@ -10599,7 +10635,7 @@ export default {
           blurIntensity: 10,
           anchorModeEnabled: false,
           anchorCount: 2,
-          quranFont: 'uthmani',
+          quranFont: 'uthmanic',
           activeVerseKey: null,
           queueIndex: 0,
           currentTime: 0,
@@ -11260,7 +11296,10 @@ export default {
 
       const applyResult = (recommendation, status = 'ready') => {
         if (requestId !== this.postSessionRecommendationRequestId) return
-        this.postSessionRecommendation = this.enrichPostSessionRecommendation(recommendation)
+        this.memorisationPlanManualOverride = false
+        this.postSessionRecommendation = this.syncPersonalPlanOntoRecommendation(
+          this.enrichPostSessionRecommendation(recommendation),
+        )
         this.postSessionRecommendationStatus = status
         this.postSessionViewState = status === 'error' ? 'recommendation_failed' : 'recommendation_ready'
         this.postSessionRecommendationFailed = status === 'error'
@@ -11361,9 +11400,50 @@ export default {
         isRepeat: isRepeatRecommendation(recommendation),
         t: this.t.bind(this),
       })
-      return this.enrichPostSessionRecommendation(
+      const enriched = this.enrichPostSessionRecommendation(
         applyPersonalPlanToRecommendation(recommendation, plan),
       )
+      if (!this.memorisationPlanManualOverride) {
+        this.activeMemorisationPlan = withPlanStatus(
+          this.buildActiveMemorisationPlan(enriched),
+          PLAN_STATUS.RECOMMENDED,
+        )
+        this.memorisationPlanStatus = PLAN_STATUS.RECOMMENDED
+      }
+      return enriched
+    },
+    buildActiveMemorisationPlan(recommendation = this.postSessionRecommendation, sessionPayload = null) {
+      return buildMemorisationPlan({
+        settings: recommendation?.settings || null,
+        config: sessionPayload?.metadata?.config || null,
+        planDetail: recommendation?.plan_detail || this.postSessionPersonalPlan || null,
+        ayahRange: recommendation?.ayah_range || null,
+        techniqueId: recommendation?.technique?.id || null,
+        chapterId: recommendation?.surah?.id
+          || recommendation?.next_surah?.id
+          || recommendation?.ayah_range?.surah_id
+          || this.postSessionSnapshot?.chapterId
+          || null,
+        focusWordIds: this.practiceFocusWeakWords?.map((w) => this.practiceWeakWordKey(w)).filter(Boolean),
+        focusAyahs: recommendation?.ayah_range?.focus_ayahs || recommendation?.plan_detail?.focus_ayahs,
+      })
+    },
+    markMemorisationPlanApplied(plan) {
+      this.activeMemorisationPlan = withPlanStatus(plan || this.activeMemorisationPlan, PLAN_STATUS.APPLIED)
+      this.memorisationPlanStatus = PLAN_STATUS.APPLIED
+      this.memorisationPlanManualOverride = false
+    },
+    markMemorisationPlanManual() {
+      this.memorisationPlanManualOverride = true
+      this.memorisationPlanStatus = PLAN_STATUS.MANUAL
+      if (this.activeMemorisationPlan) {
+        this.activeMemorisationPlan = withPlanStatus(this.activeMemorisationPlan, PLAN_STATUS.MANUAL)
+      }
+    },
+    resetMemorisationPlanLifecycle() {
+      this.activeMemorisationPlan = null
+      this.memorisationPlanStatus = PLAN_STATUS.RECOMMENDED
+      this.memorisationPlanManualOverride = false
     },
     personalPlanPersistPayload(recommendation = this.postSessionRecommendation) {
       const plan = recommendation?.plan_detail || this.postSessionPersonalPlan
@@ -11422,7 +11502,9 @@ export default {
           this.personalPlanPersistPayload(),
         )
         if (updated) {
-          this.postSessionRecommendation = this.enrichPostSessionRecommendation(updated)
+          this.postSessionRecommendation = this.syncPersonalPlanOntoRecommendation(
+            this.enrichPostSessionRecommendation(updated),
+          )
           this.postSessionRecommendationStatus = 'ready'
           this.postSessionViewState = 'recommendation_ready'
           this.syncPostSessionConfidenceFromRecommendation(this.postSessionRecommendation)
@@ -11516,6 +11598,7 @@ export default {
     },
     async updatePostSessionInlineSetting(key, value) {
       if (!this.postSessionRecommendation?.id || this.postSessionActionsBusy) return
+      this.markMemorisationPlanManual()
       const current = { ...(this.postSessionRecommendation.settings || {}) }
       if (key === 'technique') {
         current.technique = value
@@ -12526,6 +12609,7 @@ export default {
         }
 
         this.recommendedPracticePending = true
+        const planSettings = this.resolveRecommendationStartSettings(activeRecommendation, sessionPayload)
         await this.startSessionFromRecommendationPayload({
           chapterId,
           rangeStart,
@@ -12533,8 +12617,8 @@ export default {
           sessionMode: activeRecommendation?.session_mode
             || sessionPayload?.metadata?.recommendation?.session_mode
             || (isStrongAiOutcome ? 'new_learning' : 'new_learning'),
-          techniqueId: null,
-          settings: this.resolveRecommendationStartSettings(activeRecommendation, sessionPayload),
+          techniqueId: planSettings.technique || activeRecommendation?.technique?.id || null,
+          settings: planSettings,
           sessionPayload,
         })
         this.aiReciteAdvanceToNextSession = false
@@ -12847,6 +12931,8 @@ export default {
       }
     },
     resolveRecommendationStartSettings(recommendation = null, sessionPayload = null) {
+      const plan = this.buildActiveMemorisationPlan(recommendation, sessionPayload)
+      const fromPlan = memorisationPlanToSettings(plan)
       const config = sessionPayload?.metadata?.config || {}
       const fromConfig = {
         technique: config.technique || null,
@@ -12866,13 +12952,19 @@ export default {
       }
       const settings = {
         ...fromConfig,
+        ...fromPlan,
         ...(recommendation?.settings && typeof recommendation.settings === 'object' ? recommendation.settings : {}),
         ...(sessionPayload?.metadata?.settings && typeof sessionPayload.metadata.settings === 'object'
           ? sessionPayload.metadata.settings
           : {}),
       }
+      // Canonical plan wins for the fields the UI advertised as recommended,
+      // unless the user already marked a manual override.
+      if (!this.memorisationPlanManualOverride && plan) {
+        Object.assign(settings, fromPlan)
+      }
       if (!settings.technique) {
-        settings.technique = recommendation?.technique?.id || null
+        settings.technique = recommendation?.technique?.id || plan?.techniqueIds?.[0] || null
       }
       if (!settings.complementary_technique && recommendation?.technique?.complementary) {
         settings.complementary_technique = recommendation.technique.complementary
@@ -12908,14 +13000,43 @@ export default {
       sessionPayload = null,
     }) {
       this.primeAudioPlaybackUnlock()
-      const mergedSettings = this.resolveRecommendationStartSettings(
-        {
+      const recommendationForPlan = {
+        settings: settings && typeof settings === 'object' ? settings : null,
+        technique: techniqueId ? { id: techniqueId } : null,
+        session_mode: sessionMode,
+        ayah_range: { from: rangeStart, to: rangeEnd, surah_id: chapterId },
+        plan_detail: this.postSessionRecommendation?.plan_detail || null,
+        surah: { id: chapterId },
+      }
+      const plan = withPlanStatus(
+        buildMemorisationPlan({
           settings: settings && typeof settings === 'object' ? settings : null,
-          technique: techniqueId ? { id: techniqueId } : null,
-          session_mode: sessionMode,
-        },
-        sessionPayload
+          config: sessionPayload?.metadata?.config || null,
+          planDetail: this.postSessionRecommendation?.plan_detail || null,
+          ayahRange: recommendationForPlan.ayah_range,
+          techniqueId,
+          chapterId,
+          rangeStart,
+          rangeEnd,
+          focusWordIds: this.practiceFocusWeakWords?.map((w) => this.practiceWeakWordKey(w)).filter(Boolean),
+        }),
+        PLAN_STATUS.RECOMMENDED,
       )
+      this.activeMemorisationPlan = plan
+
+      const mergedSettings = {
+        ...memorisationPlanToSettings(plan),
+        ...this.resolveRecommendationStartSettings(
+          {
+            settings: settings && typeof settings === 'object' ? settings : null,
+            technique: techniqueId ? { id: techniqueId } : null,
+            session_mode: sessionMode,
+            plan_detail: this.postSessionRecommendation?.plan_detail || null,
+            ayah_range: recommendationForPlan.ayah_range,
+          },
+          sessionPayload
+        ),
+      }
 
       const baseConfig = this.buildSessionConfig(this.currentMode) || {}
       this.applySessionConfig({
@@ -12947,7 +13068,7 @@ export default {
       }
 
       this.applyRecommendedTechnique(
-        techniqueId || mergedSettings.technique || this.postSessionRecommendation?.technique?.id || null,
+        techniqueId || mergedSettings.technique || this.postSessionRecommendation?.technique?.id || plan.techniqueIds?.[0] || null,
         sessionMode,
         mergedSettings
       )
@@ -12956,6 +13077,21 @@ export default {
       this.persistModeState(this.currentMode)
       this.persistUiState()
       this.persistCentralSessionState()
+
+      // Only mark applied after settings are committed into live session state.
+      const appliedPlan = this.buildActiveMemorisationPlan(
+        {
+          settings: mergedSettings,
+          technique: { id: mergedSettings.technique },
+          ayah_range: { from: rangeStart, to: rangeEnd, surah_id: chapterId, focus_ayahs: plan.focusAyahs },
+          plan_detail: this.postSessionRecommendation?.plan_detail || null,
+        },
+        sessionPayload,
+      )
+      if (memorisationPlansEqual(plan, appliedPlan) || !this.memorisationPlanManualOverride) {
+        this.markMemorisationPlanApplied(appliedPlan)
+      }
+
       await this.loadChapter(this.currentMode)
       // Re-apply after chapter load so mode-store hydration cannot drop recommended tools.
       this.applyRecommendedTechnique(
@@ -15888,7 +16024,7 @@ export default {
         }).join(' ')
         offset += words.length
         const endMarker = this.buildStackedAyahEndMarkerHtml?.(verse)
-          || `<span class="verse-ayah-end-number mushaf-ayah-number" aria-hidden="true">${this.escapeHtml(this.formatEasternAyahNumber?.(ayahNumber) || String(ayahNumber))}</span>`
+          || `<span class="verse-ayah-end-number mushaf-ayah-number" dir="rtl" lang="ar" aria-hidden="true">\u06DD${this.escapeHtml(this.formatEasternAyahNumber?.(ayahNumber) || String(ayahNumber))}</span>`
         // Inline runs so ayahs wrap continuously like a printed mushaf page.
         runs.push(
           `<span class="amd-ayah-run${ayahActive ? ' is-active' : ''}" data-ayah-key="${this.escapeHtml(verse?.key || '')}">`
@@ -22073,7 +22209,25 @@ export default {
     },
 
     async welcomeBackContinueSession() {
-      if (!this.canResumePreviousSession) return
+      // Keep Continue synced with backend + frontend before resuming.
+      this.syncWelcomeBackResumeFromBackend()
+      if (!this.canResumePreviousSession) {
+        // One more backend pull if hydrate finished with unfinished work.
+        if (this.learningBackendEnabled()) {
+          try {
+            await this.validateSessionLifecycleAgainstBackend()
+            this.syncWelcomeBackResumeFromBackend()
+          } catch (e) { /* keep going */ }
+        }
+      }
+      if (!this.canResumePreviousSession) {
+        this.showBanner?.(
+          this.t('memorisation.welcomeBack.freshSubtitle') || 'No previous session to continue. Start a new one when ready.',
+          'info',
+          2600
+        )
+        return
+      }
       this.primeAudioPlaybackUnlock()
       const audioState = this.learningBackendEnabled()
         ? this.readWorkspaceStateValue('audioState', null)
@@ -23165,7 +23319,13 @@ export default {
       const digits = Math.min(3, String(number).length || 1)
       const label = this.escapeHtml(this.getMushafAyahNumberAriaLabel(number))
       const eastern = this.escapeHtml(this.formatEasternAyahNumber(number))
-      return `<span class="verse-ayah-end-number mushaf-ayah-number verse-ayah-number-digits-${digits} mushaf-ayah-number-digits-${digits}" aria-label="${label}"><span class="verse-ayah-end-number__digit mushaf-ayah-number-digit" aria-hidden="true">${eastern}</span></span>`
+      // U+06DD ARABIC END OF AYAH — Amiri/Scheherazade draw the exact ornate frame
+      // from the reference, with Eastern digits subtended inside the circle.
+      return (
+        `<span class="verse-ayah-end-number mushaf-ayah-number verse-ayah-number-digits-${digits} mushaf-ayah-number-digits-${digits}" dir="rtl" lang="ar" aria-label="${label}">`
+        + `\u06DD${eastern}`
+        + `</span>`
+      )
     },
     setReadingViewMode(mode) {
       const allowedModes = ['stacked', 'mushaf']
@@ -23897,9 +24057,8 @@ export default {
         : this.chainingMethod
       this.chainingRepetitions = Math.max(1, Math.min(5, Number(config.chainingRepetitions || this.chainingRepetitions || 1)))
       this.tajweedEnabled = !!config.tajweedEnabled
-      this.quranFont = ['uthmanic', 'amiri', 'naskh', 'scheherazade', 'lateef'].includes(config.quranFont)
-        ? config.quranFont
-        : this.quranFont
+      this.quranFont = normaliseQuranFontId(config.quranFont || this.quranFont)
+      applyQuranFontCssVariable(this.quranFont)
       this.fontScale = Number(config.fontScale || 1)
       this.script = config.script || this.script
       this.showTranslation = config.showTranslation ?? this.showTranslation
@@ -25966,14 +26125,15 @@ export default {
     selectFont(fontValue) {
       const allowed = (this.quranFontOptions || []).some(font => font.value === fontValue)
       if (!allowed) return
-      this.quranFont = fontValue
+      this.quranFont = normaliseQuranFontId(fontValue)
+      applyQuranFontCssVariable(this.quranFont)
       this.fontDropdownOpen = false
       this.fontOpen = false
       this.topCardMenuOpen = false
       this.closeTopCardSubmenus()
       this.syncSettingsDraft()
       this.persistUiState()
-      if (this.readingViewMode === 'mushaf' && fontValue === 'uthmanic') {
+      if (this.readingViewMode === 'mushaf' && this.quranFont === 'uthmanic') {
         const page = this.currentMadaniPageNumber
         if (page) {
           this.madaniFontsReady = { ...this.madaniFontsReady, [page]: false }
@@ -28804,7 +28964,8 @@ export default {
     },
 
     setQuranFont(font) {
-      this.quranFont = ['uthmanic', 'amiri', 'naskh', 'scheherazade', 'lateef'].includes(font) ? font : 'uthmanic'
+      this.quranFont = normaliseQuranFontId(font)
+      applyQuranFontCssVariable(this.quranFont)
       this.script = 'uthmani'
       this.fontPickerOpen = false
       this.persistUiState()
@@ -28939,9 +29100,8 @@ export default {
             defaultFontSize: Number(state.defaultFontSize ?? this.defaultFontSize ?? 150)
           }
           this.uiScale = Number(state.uiScale ?? this.uiScale)
-          this.quranFont = ['uthmanic', 'amiri', 'naskh', 'scheherazade', 'lateef'].includes(state.quranFont)
-            ? state.quranFont
-            : 'uthmanic'
+          this.quranFont = normaliseQuranFontId(state.quranFont || this.quranFont)
+          applyQuranFontCssVariable(this.quranFont)
           this.script = state.script || this.script
           this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
           this.tajweedEnabled = state.tajweedEnabled ?? false

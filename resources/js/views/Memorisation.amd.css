@@ -1218,7 +1218,7 @@
 }
 
 .amd-difficulty--icon {
-  margin-inline-start: auto;
+  margin-inline-start: 0;
 }
 
 .amd-difficulty__select--compact {
@@ -1363,41 +1363,10 @@
   background: transparent !important;
 }
 
-/* Ornate inline ayah end markers (match mushaf end badges) */
+/* Ayah end markers inherit mushaf SVG styles from Memorisation.css */
 .amd-mushaf-stream .verse-ayah-end-number,
 .amd-mushaf-ayah--premium .verse-ayah-end-number {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  vertical-align: middle;
-  min-width: 1.45em;
-  min-height: 1.45em;
-  margin-inline: 0.35em 0.2em;
-  padding: 0.14em 0.22em;
-  border-radius: 999px;
-  border: 1.5px solid color-mix(in srgb, #1f6f4a 72%, #c4a35a);
-  background: radial-gradient(circle at 50% 42%, #fffdf7 0%, #f4ecdb 58%, #e8d7b2 100%);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, #c4a35a 58%, transparent),
-    0 1px 2px rgba(40, 30, 16, 0.1);
-  color: #1a3d2e !important;
-  -webkit-text-fill-color: #1a3d2e;
-  font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", "Traditional Arabic", serif;
-  font-size: 0.42em;
-  font-weight: 700;
-  line-height: 1;
-  unicode-bidi: isolate;
-  direction: ltr;
-  user-select: none;
-  pointer-events: none;
-}
-
-.amd-mushaf-stream .verse-ayah-end-number__digit {
-  display: inline-flex;
-  color: inherit;
-  font: inherit;
-  line-height: 1;
+  /* sizing handled by shared mushaf marker rules */
 }
 
 .amd-start-wrap {
@@ -1405,8 +1374,141 @@
   justify-content: center;
   width: 100%;
   max-width: 22rem;
-  margin: 0.35rem auto 0.15rem;
+  margin: 0.45rem auto 0.2rem;
   padding: 0;
+}
+
+.amd-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+}
+
+.amd-beta-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.4rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent, #8b5e3c) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent, #8b5e3c) 28%, transparent);
+  color: var(--accent-strong, #a86a3f);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.amd-disclaimer {
+  margin: 0.35rem 0 0;
+  max-width: 42ch;
+  color: color-mix(in srgb, var(--text-muted, #78716c) 92%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  font-weight: 450;
+}
+
+.amd-record-btn {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 7.5rem;
+  padding: 1rem 1rem 0.95rem;
+  border: 0;
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--surface, #fff) 88%, #f6f3ee);
+  color: var(--text, #1c1917);
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border, #e7e5e4) 80%, transparent);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.amd-record-btn__ring {
+  position: relative;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.35), transparent 55%);
+  box-shadow: 0 0 0 6px color-mix(in srgb, #b55041 16%, transparent);
+}
+
+.amd-record-btn__core {
+  width: 3.55rem;
+  height: 3.55rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #d4786a 0%, #b55041 55%, #9a4336 100%);
+  color: #fffaf8;
+  box-shadow:
+    0 10px 22px rgba(181, 80, 65, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.amd-record-btn__core i {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.amd-record-btn__copy {
+  display: grid;
+  gap: 0.15rem;
+  text-align: center;
+}
+
+.amd-record-btn__copy strong {
+  font-size: 0.98rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.amd-record-btn__copy small {
+  font-size: 0.78rem;
+  color: var(--text-muted, #78716c);
+  font-weight: 450;
+}
+
+.amd-record-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.amd-record-btn:active:not(:disabled) .amd-record-btn__core {
+  transform: scale(0.96);
+}
+
+.amd-record-btn:disabled,
+.amd-record-btn.is-busy {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.amd-record-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring, 0 0 0 3px rgba(139, 94, 60, 0.34));
+}
+
+@media (max-width: 560px) {
+  .amd-record-btn {
+    min-height: 8rem;
+  }
+
+  .amd-record-btn__ring {
+    width: 4.85rem;
+    height: 4.85rem;
+  }
+
+  .amd-record-btn__core {
+    width: 3.85rem;
+    height: 3.85rem;
+  }
 }
 
 .amd-start-cta {
@@ -1575,13 +1677,11 @@
 
 [data-theme="dark"] .amd-mushaf-stream .verse-ayah-end-number,
 [data-theme="dark"] .amd-mushaf-ayah--premium .verse-ayah-end-number {
-  border-color: color-mix(in srgb, #e8d7b2 70%, #ffffff);
-  background: radial-gradient(circle at 50% 42%, #2a261c 0%, #1a1712 58%, #0d0c0a 100%);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, #e8d7b2 40%, transparent),
-    0 0 0 1px color-mix(in srgb, #ffffff 18%, transparent);
-  color: #f5f0e6 !important;
-  -webkit-text-fill-color: #f5f0e6;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #f0e6d4 !important;
+  -webkit-text-fill-color: #f0e6d4;
 }
 
 [data-theme="dark"] .amd-start-cta {
@@ -1759,7 +1859,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  margin-inline-start: auto;
+  margin-inline-start: 0;
 }
 
 .amd-icon-btn--text {
@@ -1788,4 +1888,170 @@
   background: color-mix(in srgb, #6ec9a4 18%, #171717);
   border-color: color-mix(in srgb, #6ec9a4 36%, transparent);
   color: #b8e6cf;
+}
+
+/* —— Compact AI modal (header + tools + mic) —— */
+.amd-header--premium.amd-header--compact {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.55rem 0.65rem;
+  padding: 0.65rem 0.85rem 0.45rem !important;
+}
+
+.amd-header-brand {
+  display: grid;
+  place-items: center;
+  padding-top: 0.1rem;
+}
+
+.amd-header-logo {
+  width: 1.55rem;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.amd-header--compact .amd-title--premium {
+  font-size: clamp(0.95rem, 2.2vw, 1.05rem) !important;
+  line-height: 1.25 !important;
+}
+
+.amd-header--compact .amd-range--premium {
+  margin: 0.1rem 0 0 !important;
+  font-size: 0.72rem !important;
+}
+
+.amd-header--compact .amd-disclaimer {
+  margin-top: 0.25rem !important;
+  font-size: 0.7rem !important;
+  line-height: 1.35 !important;
+  max-width: 48ch;
+}
+
+.amd-body--premium.amd-body--compact {
+  gap: 0.55rem !important;
+  padding: 0.55rem 0.85rem 0.85rem !important;
+  min-height: min(52vh, 520px) !important;
+}
+
+.amd-toolbar--labelled {
+  display: flex !important;
+  flex-flow: row nowrap !important;
+  align-items: flex-end !important;
+  justify-content: flex-start !important;
+  gap: 0.45rem !important;
+  width: 100% !important;
+  margin: 0 0 0.15rem !important;
+}
+
+.amd-toolbar--labelled .amd-difficulty--icon,
+.amd-toolbar--labelled .amd-text-size {
+  margin-inline-start: 0 !important;
+}
+
+.amd-tool {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.22rem;
+  flex: 0 0 auto;
+  min-width: 2.6rem;
+}
+
+.amd-tool--select {
+  min-width: 4.5rem;
+}
+
+.amd-tool__label {
+  font-size: 0.62rem;
+  line-height: 1.1;
+  font-weight: 550;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--text-muted, #78716c) 92%, transparent);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.amd-tool .amd-icon-btn,
+.amd-tool .amd-difficulty__select--compact {
+  margin: 0;
+}
+
+.amd-mushaf-shell--premium {
+  padding: clamp(0.7rem, 2.2vw, 1.15rem) !important;
+  min-height: 0;
+}
+
+.amd-start-wrap {
+  max-width: 16rem !important;
+  margin: 0.2rem auto 0 !important;
+}
+
+.amd-record-btn {
+  min-height: 0 !important;
+  gap: 0.45rem !important;
+  padding: 0.65rem 0.75rem 0.7rem !important;
+  border-radius: 1rem !important;
+}
+
+.amd-record-btn__ring {
+  width: 3.35rem !important;
+  height: 3.35rem !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, #b55041 14%, transparent) !important;
+}
+
+.amd-record-btn__core {
+  width: 2.7rem !important;
+  height: 2.7rem !important;
+}
+
+.amd-record-btn__core i {
+  font-size: 1.15rem !important;
+}
+
+.amd-record-btn__copy strong {
+  font-size: 0.9rem !important;
+}
+
+.amd-record-btn__copy small {
+  font-size: 0.72rem !important;
+}
+
+[data-theme="dark"] .amd-tool__label,
+.app[data-theme="dark"] .amd-tool__label {
+  color: color-mix(in srgb, #a8a29e 90%, transparent);
+}
+
+[data-theme="dark"] .amd-header--premium.amd-header--compact,
+.app[data-theme="dark"] .amd-header--premium.amd-header--compact {
+  background: color-mix(in srgb, #171412 88%, #000);
+  border-bottom-color: rgba(245, 245, 244, 0.08);
+}
+
+@media (max-width: 560px) {
+  .amd-header--premium.amd-header--compact {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 0.55rem 0.7rem 0.4rem !important;
+  }
+
+  .amd-header-logo {
+    width: 1.35rem;
+  }
+
+  .amd-toolbar--labelled {
+    gap: 0.35rem !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.1rem;
+  }
+
+  .amd-tool__label {
+    font-size: 0.58rem;
+  }
+
+  .amd-body--premium.amd-body--compact {
+    padding: 0.45rem 0.7rem 0.75rem !important;
+    min-height: min(48vh, 460px) !important;
+  }
 }

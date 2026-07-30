@@ -5550,7 +5550,7 @@ body.has-navbar .tools-top {
 
 .verse-arabic.tajweed-enabled {
   line-height: 2.2;
-  font-family: var(--font-ar);
+  font-family: var(--quran-font, var(--font-ar));
 }
 
 .verse-arabic.tajweed-enabled .tajweed-ham_wasl, .verse-arabic.tajweed-enabled .tajweed-slnt {
@@ -5571,7 +5571,7 @@ body.has-navbar .tools-top {
   /* Force Arabic ayah text to be comfortably large by default. */
   --verse-font-percent: 120;
   --verse-font-size: clamp(2.2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 4rem);
-  font-family: var(--font-ar);
+  font-family: var(--quran-font, var(--font-ar));
   /* If we scale UI, apply it to Arabic too. */
   font-size: calc(var(--verse-font-size) * var(--ui-scale, 1) * var(--text-scale, 1));
   line-height: 2.1;
@@ -5589,39 +5589,36 @@ body.has-navbar .tools-top {
 
 .verse-arabic .verse-ayah-end-number,
 .verse-arabic-with-end .verse-ayah-end-number {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
+  /* Unicode ayah-end (۝) — frame + digit come from the font glyph */
+  display: inline-block !important;
   box-sizing: border-box;
   vertical-align: middle;
-  min-width: 1.55em;
-  min-height: 1.55em;
-  margin-inline: 0.55em 0.28em;
-  padding: 0.16em 0.24em;
-  border-radius: 999px;
-  border: 1.5px solid color-mix(in srgb, #1f6f4a 72%, #c4a35a);
-  background: radial-gradient(circle at 50% 42%, #fffdf7 0%, #f4ecdb 58%, #e8d7b2 100%);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #c4a35a 58%, transparent), 0 1px 2px rgba(40, 30, 16, 0.1);
-  color: #1a3d2e !important;
-  -webkit-text-fill-color: #1a3d2e;
-  font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", "Traditional Arabic", serif;
-  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(0.82rem, 1.5vw, 1.05rem));
-  font-weight: 700;
+  margin-inline: 0.12em 0.04em;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #1a1712 !important;
+  -webkit-text-fill-color: #1a1712;
+  font-family: "Amiri Quran", "Amiri", "Scheherazade New", "Noto Naskh Arabic", serif;
+  font-size: 1.15em;
+  font-weight: 400;
   line-height: 1;
   unicode-bidi: isolate;
-  direction: ltr;
+  direction: rtl;
   opacity: 1 !important;
   visibility: visible !important;
   z-index: 2;
 }
-.verse-arabic .verse-ayah-number-digits-2.verse-ayah-end-number { min-width: 1.7em; }
-.verse-arabic .verse-ayah-number-digits-3.verse-ayah-end-number { min-width: 2em; padding-inline: 0.32em; }
-.verse-arabic .verse-ayah-end-number__digit { display: inline-flex; color: inherit; font: inherit; line-height: 1; }
+.verse-arabic .verse-ayah-number-digits-2.verse-ayah-end-number { font-size: 1.2em; }
+.verse-arabic .verse-ayah-number-digits-3.verse-ayah-end-number { font-size: 1.28em; }
+.verse-arabic .verse-ayah-end-number__digit { display: none; }
 [data-theme="dark"] .verse-arabic .verse-ayah-end-number {
-  border-color: color-mix(in srgb, #c4a35a 55%, #7d9b88);
-  background: radial-gradient(circle at 50% 42%, #3a3428 0%, #2a261c 58%, #1f1b14 100%);
-  color: #e8d7b2 !important;
-  -webkit-text-fill-color: #e8d7b2;
+  border: 0;
+  background: transparent;
+  color: #f0e6d4 !important;
+  -webkit-text-fill-color: #f0e6d4;
 }
 
 .verse-arabic.tajweed-enabled, .verse-arabic:not(.tajweed-enabled) {
@@ -7485,10 +7482,15 @@ html {
 
 .workspace-shell-main-title {
   margin: 0;
-  color: var(--text);
-  font-size: clamp(1.05rem, 1.5vw, 1.35rem);
-  line-height: 1.18;
-  font-weight: 750;
+  color: color-mix(in srgb, var(--text) 72%, var(--text-muted));
+  font-size: clamp(1rem, 1.35vw, 1.2rem);
+  line-height: 1.25;
+  font-weight: 520;
+  letter-spacing: 0.01em;
+}
+
+[data-theme="dark"] .workspace-shell-main-title {
+  color: color-mix(in srgb, var(--text) 78%, transparent);
 }
 
 .workspace-shell-kicker {
@@ -10611,7 +10613,7 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .post-session-meta-calligraphy {
   margin: 0;
-  font-family: "Amiri Quran", "Scheherazade New", serif;
+  font-family: var(--quran-font, "Amiri Quran", "Scheherazade New", serif);
   font-size: clamp(1.15rem, 2.4vw, 1.45rem);
   line-height: 1.5;
   color: color-mix(in srgb, var(--accent-strong) 82%, var(--text));
@@ -12695,7 +12697,7 @@ body.memorisation-page nav.navbar.app-navbar {
 .mushaf-page-header h2 {
   margin: 0;
   color: var(--mushaf-text);
-  font-family: "Amiri Quran", "Amiri", "Scheherazade New", serif;
+  font-family: var(--quran-font, "Amiri Quran", "Amiri", "Scheherazade New", serif);
   font-size: clamp(1.8rem, 3.8vw, 3.35rem);
   font-weight: 700;
   line-height: 1.2;
@@ -12703,7 +12705,7 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .mushaf-bismillah {
   color: var(--mushaf-text);
-  font-family: "Amiri Quran", "Amiri", "Scheherazade New", serif;
+  font-family: var(--quran-font, "Amiri Quran", "Amiri", "Scheherazade New", serif);
   font-size: clamp(1.45rem, 3vw, 2.55rem);
   font-weight: 600;
   line-height: 1.45;
@@ -39064,6 +39066,44 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   min-width: 0;
 }
 
+.post-session-simple__plan-encouragement {
+  margin: 0.15rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
+  color: color-mix(in srgb, var(--text) 78%, var(--text-muted));
+  font-size: 0.86rem;
+  line-height: 1.45;
+  font-weight: 450;
+  font-style: italic;
+}
+
+.post-session-simple__plan-status[data-status="applied"] {
+  border-color: color-mix(in srgb, var(--success) 28%, var(--border));
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+  color: var(--success-strong, var(--success));
+}
+
+.post-session-simple__plan-status[data-status="manual"] {
+  border-color: color-mix(in srgb, var(--text-muted) 35%, var(--border));
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  color: var(--text-muted);
+}
+
+.post-session-simple__plan-encouragement {
+  margin: 0.15rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
+  color: color-mix(in srgb, var(--text) 78%, var(--text-muted));
+  font-size: 0.86rem;
+  line-height: 1.45;
+  font-weight: 450;
+  font-style: italic;
+}
+
 .post-session-simple__plan-seal {
   width: 2.2rem;
   height: 2.2rem;
@@ -43322,7 +43362,14 @@ body:has(.post-session-simple) {
 
 @media (max-width: 640px) {
   .post-session-simple--calm-v2 .post-session-simple__actions--3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.55rem !important;
+  }
+
+  .post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn,
+  .post-session-simple--calm-v2 .post-session-simple__actions--3 > button {
+    width: 100% !important;
+    min-height: 48px !important;
   }
 
   .ps-calm__ai-card {
@@ -47693,83 +47740,87 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   color: #f7efdf !important;
 }
 
-/* —— Ornate ayah end markers (match mushaf medallion examples) —— */
+/* —— Ayah-end marker: Unicode U+06DD (۝) + Eastern digits — exact mushaf glyph —— */
+.verses-grid .verse-arabic .verse-ayah-end-number,
+.verses-grid .verse-arabic-with-end .verse-ayah-end-number,
 .verse-arabic .verse-ayah-end-number,
 .verse-arabic-with-end .verse-ayah-end-number,
-.mushaf-ayah-number,
+.mushaf-ayah-number.verse-ayah-end-number,
 .amd-mushaf-stream .verse-ayah-end-number,
-.amd-mushaf-ayah--premium .verse-ayah-end-number,
-.main.mushaf-mode-active .mushaf-ayah-number {
+.amd-mushaf-ayah--premium .verse-ayah-end-number {
   --ayah-mark-ink: #1a1712;
-  --ayah-mark-ring: #2a241c;
   position: relative !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  display: inline-block !important;
   box-sizing: border-box !important;
-  min-width: 1.55em !important;
-  min-height: 1.55em !important;
-  width: 1.55em !important;
-  height: 1.55em !important;
-  margin-inline: 0.28em 0.12em !important;
-  padding: 0.12em !important;
-  border-radius: 50% !important;
-  border: 1.35px solid var(--ayah-mark-ring) !important;
-  background:
-    radial-gradient(circle at 50% 50%, transparent 58%, color-mix(in srgb, var(--ayah-mark-ring) 35%, transparent) 59% 62%, transparent 63%),
-    radial-gradient(circle at 50% 8%, var(--ayah-mark-ring) 0 0.08em, transparent 0.1em),
-    radial-gradient(circle at 50% 92%, var(--ayah-mark-ring) 0 0.08em, transparent 0.1em),
-    radial-gradient(circle at 8% 50%, var(--ayah-mark-ring) 0 0.07em, transparent 0.09em),
-    radial-gradient(circle at 92% 50%, var(--ayah-mark-ring) 0 0.07em, transparent 0.09em),
-    radial-gradient(circle at 50% 42%, #fffdf8 0%, #f7f1e4 58%, #efe4cb 100%) !important;
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--ayah-mark-ring) 28%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--ayah-mark-ring) 18%, transparent) !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin-inline: 0.12em 0.04em !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
   color: var(--ayah-mark-ink) !important;
   -webkit-text-fill-color: var(--ayah-mark-ink) !important;
-  font-family: "KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif !important;
-  font-size: 0.42em !important;
-  font-weight: 700 !important;
+  vertical-align: middle !important;
   line-height: 1 !important;
-  font-variant-numeric: normal !important;
+  font-family: "Amiri Quran", "Amiri", "Scheherazade New", "Noto Naskh Arabic", serif !important;
+  font-size: 1.15em !important;
+  font-weight: 400 !important;
+  font-feature-settings: normal !important;
+  font-variant-ligatures: normal !important;
   letter-spacing: 0 !important;
+  user-select: none;
+  pointer-events: none;
+  unicode-bidi: isolate;
+  direction: rtl !important;
+  text-align: center;
+  z-index: 1;
+  top: auto !important;
+  inset: auto !important;
+  float: none !important;
+  overflow: visible !important;
 }
 
-.verse-arabic .verse-ayah-end-number__digit,
-.mushaf-ayah-number-digit,
-.amd-mushaf-stream .verse-ayah-end-number__digit {
-  font-family: inherit !important;
-  font-size: inherit !important;
-  font-weight: inherit !important;
-  color: inherit !important;
-  -webkit-text-fill-color: inherit !important;
+.verse-arabic .verse-ayah-number-digits-2.verse-ayah-end-number,
+.amd-mushaf-stream .verse-ayah-number-digits-2.verse-ayah-end-number {
+  font-size: 1.2em !important;
 }
 
+.verse-arabic .verse-ayah-number-digits-3.verse-ayah-end-number,
+.amd-mushaf-stream .verse-ayah-number-digits-3.verse-ayah-end-number {
+  font-size: 1.28em !important;
+}
+
+[data-theme="dark"] .verses-grid .verse-arabic .verse-ayah-end-number,
 [data-theme="dark"] .verse-arabic .verse-ayah-end-number,
 [data-theme="dark"] .verse-arabic-with-end .verse-ayah-end-number,
-[data-theme="dark"] .mushaf-ayah-number,
+[data-theme="dark"] .mushaf-ayah-number.verse-ayah-end-number,
 [data-theme="dark"] .amd-mushaf-stream .verse-ayah-end-number,
-[data-theme="dark"] .amd-mushaf-ayah--premium .verse-ayah-end-number,
-[data-theme="dark"] .main.mushaf-mode-active .mushaf-ayah-number {
-  --ayah-mark-ink: #f5f0e6;
-  --ayah-mark-ring: #e8d7b2;
-  background:
-    radial-gradient(circle at 50% 50%, transparent 58%, color-mix(in srgb, var(--ayah-mark-ring) 40%, transparent) 59% 62%, transparent 63%),
-    radial-gradient(circle at 50% 8%, var(--ayah-mark-ring) 0 0.08em, transparent 0.1em),
-    radial-gradient(circle at 50% 92%, var(--ayah-mark-ring) 0 0.08em, transparent 0.1em),
-    radial-gradient(circle at 8% 50%, var(--ayah-mark-ring) 0 0.07em, transparent 0.09em),
-    radial-gradient(circle at 92% 50%, var(--ayah-mark-ring) 0 0.07em, transparent 0.09em),
-    radial-gradient(circle at 50% 42%, #2a261c 0%, #1a1712 58%, #0d0c0a 100%) !important;
+[data-theme="dark"] .amd-mushaf-ayah--premium .verse-ayah-end-number {
+  --ayah-mark-ink: #f0e6d4;
   color: var(--ayah-mark-ink) !important;
   -webkit-text-fill-color: var(--ayah-mark-ink) !important;
-  border-color: var(--ayah-mark-ring) !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
-/* Stacked/mushaf Arabic body uses Uthmani family */
+/* Stacked/mushaf Arabic body inherits the selected Qur’anic font (--quran-font). */
 .verse-arabic,
 .verse-arabic.verse-arabic-primary,
 .amd-mushaf-ayah--premium {
-  font-family: "KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif !important;
+  font-family: var(--quran-font, var(--font-ar, 'UthmanicHafs', 'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', serif));
+}
+
+.verse-arabic .wbw-word,
+.verse-arabic word,
+.verse-arabic .tajweed-mark,
+.verse-arabic [class*="tajweed-"] {
+  font-family: inherit;
 }
 
 .post-session-simple__evidence-ayah {
@@ -47822,4 +47873,263 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 [data-theme="dark"] .amd-mushaf-ayah--premium .wbw-word.recitation-word-notAttempted:not(.amd-word-hidden) {
   color: #a8a29e !important;
   -webkit-text-fill-color: #a8a29e !important;
+}
+
+/* —— Welcome back: lean overlay (previous stacking, no white logo tile) —— */
+.welcome-back-flow {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 12600 !important;
+  pointer-events: none;
+}
+
+.welcome-back-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 12600 !important;
+  pointer-events: auto !important;
+  background: color-mix(in srgb, #0c0a08 52%, transparent) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.welcome-back-flow--ready .welcome-back-backdrop {
+  opacity: 1 !important;
+}
+
+[data-theme="light"] .welcome-back-backdrop {
+  background: color-mix(in srgb, #1a1410 48%, transparent) !important;
+}
+
+[data-theme="dark"] .welcome-back-backdrop,
+.app[data-theme="dark"] .welcome-back-backdrop {
+  background: color-mix(in srgb, #000 72%, transparent) !important;
+}
+
+.welcome-back-modal-wrap {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 12610 !important;
+  pointer-events: none;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+.welcome-back-dialog {
+  pointer-events: auto;
+  width: min(26rem, calc(100vw - 1.5rem));
+  margin: auto;
+}
+
+.welcome-back-modal--lean {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--border, #e7e5e4) 80%, transparent);
+  background: color-mix(in srgb, var(--surface-strong, #fffefb) 96%, #f7f3eb);
+  box-shadow: 0 22px 56px rgba(28, 20, 12, 0.28);
+}
+
+.welcome-back-modal--lean .welcome-back-hero--compact {
+  padding: 1.15rem 1.2rem 0.85rem;
+  background: transparent;
+  border: 0;
+}
+
+.welcome-back-modal--lean .welcome-back-title {
+  margin: 0;
+  font-size: clamp(1.15rem, 3.2vw, 1.35rem);
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.welcome-back-modal--lean .welcome-back-message {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text-muted, #78716c);
+}
+
+.welcome-back-footer--lean {
+  padding: 0.85rem 1.2rem 1.15rem !important;
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: transparent !important;
+}
+
+.welcome-back-modal--lean .welcome-back-actions-grid--v2 {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: 1fr;
+}
+
+.welcome-back-modal--lean .mutqin-modal-btn {
+  min-height: 44px;
+  width: 100%;
+  justify-content: center;
+}
+
+[data-theme="dark"] .welcome-back-modal--lean,
+.app[data-theme="dark"] .welcome-back-modal--lean {
+  background: color-mix(in srgb, #171412 96%, #000);
+  border-color: rgba(245, 245, 244, 0.1);
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] .welcome-back-modal--lean .welcome-back-title {
+  color: #f5f5f4;
+}
+
+@media (max-width: 560px) {
+  .welcome-back-dialog {
+    width: min(100%, calc(100vw - 1rem));
+  }
+
+  .welcome-back-modal--lean .welcome-back-hero--compact {
+    padding: 1rem 1rem 0.7rem;
+  }
+}
+
+/* —— Top four icons: one strict row (kill legacy absolute/grid offsets) —— */
+.workspace-shell-actions .action-buttons-group {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.75rem;
+}
+
+.workspace-shell-actions .top-card-icon-controls {
+  display: inline-flex !important;
+  flex-flow: row nowrap !important;
+  align-items: center !important;
+  align-self: center !important;
+  gap: 0.35rem !important;
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+  max-height: 2.25rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+}
+
+.workspace-shell-actions .top-card-icon-controls > * {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+  align-self: center !important;
+  transform: none !important;
+  margin: 0 !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+
+.workspace-shell-actions .top-card-icon-controls .top-card-menu-wrap,
+.workspace-shell-actions .top-card-icon-controls .top-card-ellipsis,
+.workspace-shell-actions .top-card-icon-controls .top-card-controls-trigger,
+.workspace-shell-actions .top-card-icon-controls .top-card-icon-control {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  transform: none !important;
+  align-self: center !important;
+  vertical-align: middle !important;
+}
+
+/* —— Success modal 3-action grid —— */
+.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 0.55rem !important;
+  align-items: stretch !important;
+  width: 100%;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn {
+  min-height: 3rem !important;
+  height: 100% !important;
+  padding: 0.65rem 0.7rem !important;
+  text-align: center;
+  white-space: normal !important;
+  line-height: 1.25 !important;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--primary {
+  background: #1f6b45 !important;
+  border-color: #1f6b45 !important;
+  color: #fff !important;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--secondary {
+  background: transparent !important;
+  border: 1.5px solid color-mix(in srgb, #c5a075 55%, var(--border)) !important;
+  color: var(--text) !important;
+}
+
+.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--ghost {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-muted) !important;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--primary,
+.app[data-theme="dark"] .post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--primary {
+  background: #2e9d62 !important;
+  border-color: #2e9d62 !important;
+  color: #04140c !important;
+}
+
+[data-theme="dark"] .post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--secondary,
+.app[data-theme="dark"] .post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--secondary {
+  border-color: color-mix(in srgb, #c5a075 40%, rgba(255,255,255,0.18)) !important;
+  color: #f5f5f4 !important;
+}
+
+@media (max-width: 720px) {
+  .post-session-simple--calm-v2 .post-session-simple__actions--3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--ghost {
+    order: 3;
+    min-height: 44px !important;
+  }
+}
+
+/* —— Top tile surah name: refined subtle premium —— */
+.workspace-shell .workspace-shell-main-title,
+.workspace-shell .workspace-shell-copy h1.workspace-shell-main-title,
+html body .app .workspace-shell-main-title {
+  margin: 0 !important;
+  color: color-mix(in srgb, var(--text-muted, #78716c) 78%, var(--text, #1c1917)) !important;
+  font-size: clamp(0.98rem, 1.5vw, 1.12rem) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.015em !important;
+  line-height: 1.3 !important;
+  text-wrap: balance;
+}
+
+[data-theme="dark"] .workspace-shell .workspace-shell-main-title,
+[data-theme="dark"] .workspace-shell .workspace-shell-copy h1.workspace-shell-main-title,
+html body .app[data-theme="dark"] .workspace-shell-main-title {
+  color: color-mix(in srgb, #a8a29e 82%, #f5f5f4) !important;
+  font-weight: 450 !important;
+}
+
+.workspace-shell .workspace-shell-kicker {
+  font-weight: 600 !important;
+  letter-spacing: 0.07em !important;
+  opacity: 0.9;
 }

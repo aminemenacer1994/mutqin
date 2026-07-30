@@ -20,18 +20,23 @@
     <meta name="description" content="Quran memorisation and recitation workspace for focused hifz practice.">
     <title>{{ __('ui.app_title') }}</title>
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-    <link id="appFaviconLight" rel="icon" type="image/svg+xml" href="/favicon-light.svg" media="(prefers-color-scheme: light)">
-    <link id="appFaviconDark" rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)">
-    <link id="appThemeFavicon" rel="icon" type="image/svg+xml" href="/favicon-light.svg">
-    <link id="appThemeFaviconIco" rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=20260730b">
+    <link id="appThemeFavicon" rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png?v=20260730b">
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=20260730b">
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=20260730b">
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=20260730b">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=20260730b">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=20260730b">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png?v=20260730b">
+    <link id="appThemeFaviconIco" rel="shortcut icon" href="/favicon.ico?v=20260730b">
+    <link rel="icon" href="/favicon.ico?v=20260730b" sizes="any">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-    <meta name="mutqin-build" content="v58">
-    <style id="mutqin-ai-recite-force-v58">
+    <meta name="mutqin-build" content="v59">
+    <style id="mutqin-ai-recite-force-v59">
       #mutqin-build-stamp {
         display: none !important;
       }
@@ -995,6 +1000,16 @@
             mix-blend-mode: normal;
             opacity: 0.98;
             image-rendering: auto;
+            object-fit: contain;
+        }
+
+        .app-navbar-logo--mark {
+            display: none;
+            width: auto;
+            height: 48px;
+            max-width: 40px;
+            max-height: 48px;
+            object-fit: contain;
         }
 
         .navbar-quick-actions {
@@ -1338,14 +1353,6 @@
             .navbar-shell {
                 gap: 8px;
             }
-
-            .auth-shell {
-                padding-inline: var(--gutter-tight);
-            }
-
-            .auth-card {
-                width: 100%;
-            }
         }
 
         @media (max-width: 480px) {
@@ -1374,380 +1381,13 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .auth-shell, .landing-page {
+        .landing-page {
             animation: fadeIn 0.4s ease-out;
         }
 
-        .auth-shell {
-            --auth-form-max-width: 520px;
-            --auth-form-min-height: 640px;
-            --auth-form-title-size: 2rem;
-            --auth-form-copy-size: 0.95rem;
-            --auth-form-label-size: 0.95rem;
-            min-height: calc(100dvh - var(--nav-h) - 8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 6px var(--gutter) 6px;
-            position: relative;
-        }
-
-        .auth-shell::before,
-        .auth-shell::after {
-            display: none;
-        }
-
-        .auth-card {
-            width: min(100%, 720px);
-            display: grid;
-            gap: 22px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .auth-card-sm {
-            max-width: 640px;
-            margin-inline: auto;
-        }
-
-        .auth-stage {
-            width: min(100%, var(--auth-form-max-width));
-            display: grid;
-            grid-template-columns: minmax(0, 1fr);
-            gap: 0;
-            position: relative;
-            z-index: 1;
-        }
-
-        .auth-stage-single {
-            width: min(100%, var(--auth-form-max-width));
-            grid-template-columns: minmax(0, 1fr);
-            margin-inline: auto;
-        }
-
-        .auth-panel {
-            min-width: 0;
-            border: 1px solid color-mix(in srgb, var(--accent) 8%, var(--border));
-            border-radius: 24px;
-            background: color-mix(in srgb, var(--surface-strong) 98%, transparent);
-        }
-
-        .auth-panel-form {
-            display: flex;
-            justify-content: center;
-        }
-
-        .auth-copy {
-            display: grid;
-            gap: 14px;
-            align-content: start;
-        }
-
-        .auth-copy-compact {
-            gap: 0.5rem;
-            margin-bottom: 0.1rem;
-        }
-
-        .auth-brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            width: fit-content;
-            color: inherit;
-            text-decoration: none;
-        }
-
-        .auth-brand:hover {
-            color: inherit;
-        }
-
-        .auth-brand-mobile {
-            display: none;
-        }
-
-        .auth-brand-static {
-            display: inline-flex;
-        }
-
-        .auth-brand-mark {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            background: color-mix(in srgb, var(--surface-elevated) 88%, transparent);
-            border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
-            color: var(--accent-strong);
-            font-size: 18px;
-        }
-
-        .auth-brand-text {
-            display: grid;
-            gap: 2px;
-            line-height: 1.1;
-        }
-
-        .auth-brand-text strong {
-            font-size: 18px;
-            font-weight: 600;
-            letter-spacing: -0.01em;
-            color: var(--text);
-        }
-
-        .auth-brand-text small {
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-
-        .auth-title {
-            margin: 0;
-            overflow: visible;
-            font-size: clamp(2rem, 3vw, 2.5rem);
-            line-height: 1.08;
-            letter-spacing: -0.02em;
-            color: var(--text);
-        }
-
-        .auth-subtitle,
-        .auth-form-subtitle {
-            margin: 0;
-            color: var(--text-muted);
-            font-size: var(--auth-form-copy-size);
-            line-height: 1.65;
-        }
-
-        .auth-subtitle {
-            max-width: 36rem;
-            font-size: clamp(15px, 1.35vw, 18px);
-        }
-
-        .auth-form-title {
-            margin: 0;
-            font-size: var(--auth-form-title-size);
-            line-height: 1.1;
-            letter-spacing: -0.015em;
-            font-weight: 500;
-            color: var(--text);
-        }
-
-        .auth-form-wrap {
-            min-width: 0;
-            width: min(100%, var(--auth-form-max-width));
-            max-width: var(--auth-form-max-width);
-            min-height: var(--auth-form-min-height);
-            display: grid;
-            align-content: start;
-            gap: 12px;
-            padding: clamp(16px, 1.6vw, 20px);
-            border-radius: 24px;
-            background: color-mix(in srgb, var(--surface-strong) 98%, transparent);
-        }
-
-        .auth-stage-single .auth-panel-form {
-            justify-content: center;
-        }
-
-        .auth-stage-single .auth-form-wrap {
-            margin-inline: auto;
-        }
-
-        .auth-alert {
-            margin: 0;
-            border-radius: 18px;
-            padding: 14px 16px;
-        }
-
-        .auth-divider {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-            gap: 14px;
-            align-items: center;
-            color: var(--text-muted);
-            font-size: 13px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-
-        .auth-divider::before,
-        .auth-divider::after {
-            content: "";
-            height: 1px;
-            background: color-mix(in srgb, var(--accent) 10%, var(--border));
-        }
-
-        .auth-form-grid {
-            display: grid;
-            gap: 14px;
-        }
-
-        .auth-field {
-            display: grid;
-            gap: 8px;
-        }
-
-        .auth-field-split {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
-        }
-
-        .auth-field-split > div {
-            display: grid;
-            gap: 8px;
-            min-width: 0;
-        }
-
-        .auth-form-wrap .form-label {
-            color: var(--text);
-            font-weight: 500;
-            font-size: var(--auth-form-label-size);
-        }
-
-        .auth-form-wrap .form-control {
-            min-height: 50px;
-            border-radius: 18px;
-            border: 1px solid color-mix(in srgb, var(--accent) 7%, var(--border));
-            background: color-mix(in srgb, var(--surface) 88%, var(--field-bg));
-            color: var(--text);
-            padding-inline: 16px;
-            box-shadow: none !important;
-        }
-
-        .auth-form-wrap .form-control:focus {
-            border-color: color-mix(in srgb, var(--accent) 56%, var(--border));
-            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-light) 72%, transparent);
-        }
-
-        .auth-google-btn,
-        .auth-btn-primary {
-            min-height: 50px;
-            border-radius: 18px;
-        }
-
-        .auth-google-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            width: 100%;
-            padding: 0 18px;
-            border: 1px solid color-mix(in srgb, var(--accent) 8%, var(--border));
-            background: color-mix(in srgb, var(--surface) 88%, var(--surface-strong));
-            color: var(--text);
-            font-weight: 500;
-            font-size: var(--auth-form-label-size);
-            text-decoration: none;
-        }
-
-        .auth-google-btn:hover {
-            color: var(--text);
-            background: color-mix(in srgb, var(--surface-soft) 90%, var(--surface));
-        }
-
-        .auth-google-icon {
-            display: inline-flex;
-            width: 20px;
-            height: 20px;
-        }
-
-        .auth-form-wrap .invalid-feedback {
-            display: block;
-            margin-top: 2px;
-        }
-
-        .auth-meta-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .auth-check {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-muted);
-            font-weight: 400;
-            font-size: var(--auth-form-label-size);
-            cursor: pointer;
-        }
-
-        .auth-check .form-check-input {
-            margin: 0;
-        }
-
-        .auth-text-link,
-        .auth-switch a {
-            color: var(--accent-strong);
-            font-weight: 500;
-            text-decoration: none;
-        }
-
-        .auth-text-link:hover,
-        .auth-switch a:hover {
-            color: var(--accent);
-        }
-
-        .auth-actions {
-            display: grid;
-            gap: 12px;
-        }
-
-        .auth-submit {
-            width: 100%;
-            border: 0;
-            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-            color: var(--text-on-accent);
-            font-weight: 500;
-            font-size: var(--auth-form-label-size);
-            letter-spacing: 0.01em;
-        }
-
-        .auth-submit:hover,
-        .auth-submit:focus {
-            background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 90%, white 10%), var(--accent-strong));
-            color: var(--text-on-accent);
-        }
-
-        .auth-switch {
-            margin: 0;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: var(--auth-form-copy-size);
-        }
-
-        @media (max-width: 991.98px) {
-            .auth-form-wrap {
-                padding: 16px;
-            }
-        }
+        /* Auth page styles live in resources/sass/app.scss (.auth-page) */
 
         @media (max-width: 767.98px) {
-            .auth-shell {
-                padding-block: 4px 6px;
-                padding-inline: var(--gutter-tight);
-            }
-
-            .auth-shell {
-                --auth-form-min-height: auto;
-            }
-
-            .auth-panel,
-            .auth-form-wrap {
-                border-radius: 26px;
-            }
-
-            .auth-field-split {
-                grid-template-columns: minmax(0, 1fr);
-            }
-
-            .auth-meta-row {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-
             .navbar-shell {
                 min-height: calc(var(--nav-h) + env(safe-area-inset-top, 0px));
                 padding: 10px max(12px, env(safe-area-inset-left, 0px)) 10px max(12px, env(safe-area-inset-right, 0px));
@@ -1761,10 +1401,18 @@
             }
 
             .app-navbar-logo {
-                height: 38px;
+                height: 34px;
                 width: auto;
-                max-width: min(44vw, 156px);
+                max-width: min(52vw, 168px);
                 object-fit: contain;
+            }
+
+            .app-navbar-logo--full {
+                display: block;
+            }
+
+            .app-navbar-logo--mark {
+                display: none;
             }
 
             .navbar-quick-actions {
@@ -1833,49 +1481,6 @@
             .nav-link:hover::after {
                 left: 14px;
                 right: 14px;
-            }
-
-            .auth-shell {
-                min-height: calc(100dvh - var(--nav-h));
-                align-items: flex-start;
-                padding-top: max(8px, env(safe-area-inset-top, 0px));
-                padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
-            }
-
-            .auth-card,
-            .auth-stage,
-            .auth-stage-single,
-            .auth-panel,
-            .auth-form-wrap {
-                width: 100%;
-                max-width: none;
-            }
-
-            .auth-form-wrap {
-                gap: 14px;
-                padding: 16px;
-                min-height: auto;
-                border-radius: 22px;
-            }
-
-            .auth-form-title {
-                font-size: clamp(1.7rem, 9vw, 2.15rem);
-                line-height: 1.05;
-            }
-
-            .auth-form-wrap .form-control,
-            .auth-google-btn,
-            .auth-btn-primary {
-                min-height: 46px;
-                border-radius: 16px;
-            }
-
-            .auth-alert,
-            .auth-form-wrap .invalid-feedback,
-            .auth-switch,
-            .auth-text-link,
-            .auth-divider {
-                overflow-wrap: anywhere;
             }
         }
 
@@ -2483,8 +2088,6 @@
         .nav-links-desktop .nav-link-copy small,
         .offcanvas-body .app-lang-toggle > span,
         .offcanvas-body .app-lang-toggle > .bi-chevron-down,
-        .mobile-nav-identity > img,
-        .mobile-nav-identity > div > span,
         .mobile-nav-only {
             display: none !important;
         }
@@ -2511,6 +2114,10 @@
 
             .app-navbar-logo {
                 max-width: min(44vw, 148px);
+            }
+
+            .app-navbar-logo--mark {
+                max-width: 40px;
             }
 
             .app-navbar .offcanvas-lg {
@@ -2739,39 +2346,22 @@
                 grid-template-columns: minmax(0, 1fr) 44px;
                 gap: 10px;
                 align-items: center;
-                min-height: 82px;
-                padding: max(14px, env(safe-area-inset-top)) 16px 14px;
+                min-height: 56px;
+                padding: max(12px, env(safe-area-inset-top)) 16px 12px;
                 border-bottom: 1px solid var(--border);
             }
 
             .mobile-nav-identity {
-                display: grid;
-                grid-template-columns: 78px minmax(0, 1fr);
-                gap: 10px;
+                display: flex;
                 align-items: center;
                 min-width: 0;
             }
 
-            .mobile-nav-identity img {
-                display: block !important;
-                width: 78px;
-                height: auto;
-                max-height: 40px;
-                object-fit: contain;
-            }
-
-            .mobile-nav-identity > div {
-                min-width: 0;
-            }
-
-            .mobile-nav-identity > div > span {
-                display: none !important;
-            }
-
-            .mobile-nav-identity h2 {
+            .mobile-nav-identity .offcanvas-title {
+                margin: 0;
                 color: var(--text);
-                font-size: 1.05rem !important;
-                font-weight: 800;
+                font-size: 1.05rem;
+                font-weight: 650;
             }
 
             .app-navbar .offcanvas-body {
@@ -2943,51 +2533,6 @@
                 grid-template-columns: 44px minmax(0, 1fr);
                 border: 0;
                 background: transparent;
-            }
-
-            .auth-stage,
-            .auth-stage-single,
-            .auth-form-wrap,
-            .auth-form-grid {
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                column-gap: clamp(8px, 2.4vw, 12px);
-            }
-
-            .auth-stage > *,
-            .auth-stage-single > *,
-            .auth-form-wrap > *,
-            .auth-form-grid > * {
-                grid-column: 1 / -1;
-                min-width: 0;
-            }
-
-            .auth-field-split {
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                gap: 10px;
-            }
-
-            .auth-field-split > * {
-                grid-column: span 2;
-                min-width: 0;
-            }
-
-            .auth-meta-row {
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                gap: 8px;
-                align-items: center;
-            }
-
-            .auth-meta-row > :first-child {
-                grid-column: 1 / span 2;
-            }
-
-            .auth-meta-row > :last-child {
-                grid-column: 3 / -1;
-                justify-self: end;
-                text-align: end;
             }
 
             .profile-stage,
@@ -3168,7 +2713,6 @@
                 grid-column: 1 / -1;
             }
 
-            .auth-field-split > *,
             .profile-subscription-grid > *,
             .billing-actions > * {
                 grid-column: 1 / -1;
@@ -3179,25 +2723,28 @@
 <body dir="{{ $appDirection }}">
     <nav class="navbar navbar-expand-lg app-navbar" aria-label="{{ __('ui.primary_navigation') }}">
         <div class="container-fluid shell navbar-shell">
-            <a class="navbar-brand" href="{{ route('home') }}">
+            <a class="navbar-brand" href="{{ route('home') }}" aria-label="Mutqin">
                 <img
                     id="appNavbarLogo"
                     src="/images/logo.png"
                     data-logo-light="/images/logo.png"
                     data-logo-dark="/images/dark_logo.png"
-                    alt="Mutqin"
-                    class="app-navbar-logo"
+                    data-logo-mark="/images/logo_main.png"
+                    alt=""
+                    class="app-navbar-logo app-navbar-logo--full"
+                >
+                <img
+                    id="appNavbarLogoMark"
+                    src="/images/logo_main.png"
+                    alt=""
+                    class="app-navbar-logo app-navbar-logo--mark"
                 >
             </a>
 
             <div class="offcanvas offcanvas-end offcanvas-lg" tabindex="-1" id="primaryNavbar" aria-labelledby="primaryNavbarLabel">
                 <div class="offcanvas-header">
                     <div class="mobile-nav-identity">
-                        <img src="/images/logo.png" alt="" aria-hidden="true">
-                        <div>
-                            <span>Mutqin</span>
-                            <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ __('ui.primary_navigation') }}</h2>
-                        </div>
+                        <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ __('ui.menu') }}</h2>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#primaryNavbar" aria-label="{{ __('ui.close_navigation') }}"></button>
                 </div>
@@ -3408,9 +2955,19 @@
                     logo.src = normalizedTheme === 'dark' ? darkSrc : lightSrc;
                 }
 
+                document.querySelectorAll('.mobile-nav-brand-wordmark, [data-logo-light][data-logo-dark]').forEach((el) => {
+                    if (el === logo) return;
+                    const lightSrc = el.getAttribute('data-logo-light');
+                    const darkSrc = el.getAttribute('data-logo-dark');
+                    if (!lightSrc && !darkSrc) return;
+                    el.src = normalizedTheme === 'dark'
+                        ? (darkSrc || lightSrc)
+                        : (lightSrc || darkSrc);
+                });
+
                 const favicon = document.getElementById('appThemeFavicon');
                 if (favicon) {
-                    favicon.setAttribute('href', normalizedTheme === 'dark' ? '/favicon-dark.svg' : '/favicon-light.svg');
+                    favicon.setAttribute('href', '/favicon-512.png?v=20260730b');
                 }
             }
             
@@ -3431,6 +2988,29 @@
                 if (themeButton) {
                     themeButton.addEventListener('click', cycleTheme);
                 }
+            });
+        })();
+
+        // Auth password visibility toggles
+        (function() {
+            runWhenReady(function() {
+                document.querySelectorAll('[data-password-toggle]').forEach(function(button) {
+                    button.addEventListener('click', function() {
+                        const inputId = button.getAttribute('data-password-toggle');
+                        const input = inputId ? document.getElementById(inputId) : null;
+                        if (!input) return;
+                        const showing = input.type === 'text';
+                        input.type = showing ? 'password' : 'text';
+                        const icon = button.querySelector('i');
+                        if (icon) {
+                            icon.className = showing ? 'bi bi-eye' : 'bi bi-eye-slash';
+                        }
+                        button.setAttribute(
+                            'aria-label',
+                            showing ? @json(__('ui.show_password')) : @json(__('ui.hide_password'))
+                        );
+                    });
+                });
             });
         })();
 
