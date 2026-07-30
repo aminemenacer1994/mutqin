@@ -27087,9 +27087,9 @@ function loadMemorisationChunk() {
       document.documentElement.dataset.practiceCoach = 'v2';
       document.documentElement.dataset.aiReciteUi = 'v75';
       document.documentElement.dataset.stackedAyahEnd = 'v5';
-      document.documentElement.dataset.mutqinUi = 'v88';
+      document.documentElement.dataset.mutqinUi = 'v90';
       document.documentElement.dataset.amdTestGate = 'test-with-ai-only';
-      document.documentElement.dataset.postSessionChoice = 'v12';
+      document.documentElement.dataset.postSessionChoice = 'v13';
     }
     return mod;
   })["catch"](function (error) {
@@ -46950,7 +46950,7 @@ module.exports = JSON.parse('{"common":{"on":"On","off":"Off","reset":"Reset","s
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
-/******/ 			return "js/" + chunkId + "." + {"memorisation":"07a409ac","resources_js_locales_ar_json":"df40eb10","resources_js_locales_es_json":"1bd74deb","resources_js_locales_fr_json":"9c063f81","resources_js_locales_id_json":"03c9b432","resources_js_locales_tr_json":"4848ceae","resources_js_locales_ur_json":"88dfb553"}[chunkId] + ".js";
+/******/ 			return "js/" + chunkId + "." + {"memorisation":"40d46f73","resources_js_locales_ar_json":"df40eb10","resources_js_locales_es_json":"1bd74deb","resources_js_locales_fr_json":"9c063f81","resources_js_locales_id_json":"03c9b432","resources_js_locales_tr_json":"4848ceae","resources_js_locales_ur_json":"88dfb553"}[chunkId] + ".js";
 /******/ 		};
 /******/ 	})();
 /******/ 	

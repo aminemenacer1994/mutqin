@@ -4052,17 +4052,19 @@ body > .self-check-modal-overlay--above-post-session,
 
 .action-btn-exit:not(.post-session-choice-custom):hover,
 .action-btn.mutqin-btn--destructive:hover {
-  color: #6a3227;
-  background: #eddcd5;
-  border-color: #c99a8c;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  background: #9a4f3d;
+  border-color: #8a4535;
   box-shadow: none;
   transform: none;
 }
 
 .action-btn-exit:active,
 .action-btn.mutqin-btn--destructive:active {
-  background: #7a1510;
-  border-color: #69140f;
+  background: #834335;
+  border-color: #73402f;
+  color: #fff;
   box-shadow: none;
 }
 
@@ -28638,9 +28640,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 .workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom):hover,
 .workspace-shell-actions .action-btn.mutqin-btn--destructive:hover {
-  color: #6a3227 !important;
-  background: #eddcd5 !important;
-  border-color: #c99a8c !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: #9a4f3d !important;
+  border-color: #8a4535 !important;
 }
 
 .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
@@ -28658,15 +28661,16 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   border-color: color-mix(in srgb, var(--accent, #8b6914) 28%, var(--border, #cfc8bf)) !important;
 }
 
-[data-theme="dark"] .workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit,
-.dark-mode .workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit,
-[data-theme="dark"] .workspace-shell-actions .action-btn.action-btn-exit,
-.dark-mode .workspace-shell-actions .action-btn.action-btn-exit,
+[data-theme="dark"] .workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit:not(.post-session-choice-custom),
+.dark-mode .workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit:not(.post-session-choice-custom),
+[data-theme="dark"] .workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom),
+.dark-mode .workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom),
 [data-theme="dark"] .workspace-shell-actions .action-btn.mutqin-btn--destructive,
 .dark-mode .workspace-shell-actions .action-btn.mutqin-btn--destructive {
-  color: #fff !important;
-  background: var(--bs-danger, var(--destructive, #d4786a)) !important;
-  border-color: var(--bs-danger, var(--destructive, #d4786a)) !important;
+  color: #f0d2c8 !important;
+  -webkit-text-fill-color: #f0d2c8 !important;
+  background: rgba(154, 79, 61, 0.22) !important;
+  border-color: rgba(240, 210, 200, 0.28) !important;
 }
 
 @keyframes workspaceMetadataSlideIn {
@@ -41103,8 +41107,6 @@ body:has(.post-session-simple) {
 
 .mutqin-modal-btn--danger,
 .mutqin-modal-btn--destructive,
-.action-btn-exit,
-.action-btn.mutqin-btn--destructive,
 .session-exit-action-chip--end {
   color: #fff !important;
   background: var(--bs-danger, var(--destructive, var(--danger, #b55041))) !important;
@@ -41113,11 +41115,28 @@ body:has(.post-session-simple) {
 
 .mutqin-modal-btn--danger:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]),
 .mutqin-modal-btn--destructive:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]),
-.action-btn-exit:hover:not(:disabled),
-.action-btn.mutqin-btn--destructive:hover:not(:disabled),
 .session-exit-action-chip--end:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
   color: #fff !important;
   background: var(--destructive-strong, var(--danger-strong, #9a4336)) !important;
+}
+
+/* Workspace End session — soft rose (not alarm red / not gray). */
+.action-btn-exit:not(.post-session-choice-custom),
+.action-btn.mutqin-btn--destructive:not(.post-session-choice-custom) {
+  color: #7a3b2e !important;
+  background: #f4ebe7 !important;
+  border: 1px solid #d7b2a7 !important;
+  box-shadow: none !important;
+  font-weight: 650 !important;
+}
+
+.action-btn-exit:not(.post-session-choice-custom):hover:not(:disabled),
+.action-btn.mutqin-btn--destructive:not(.post-session-choice-custom):hover:not(:disabled) {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: #9a4f3d !important;
+  border-color: #8a4535 !important;
+  box-shadow: none !important;
 }
 
 /* Post-session optional checks — unified matched rows */
@@ -48684,59 +48703,130 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   color: color-mix(in srgb, var(--text, #1c1917) 82%, transparent);
 }
 
-/* End Session — calm resting state; hover keeps white label on a darker fill */
-.action-btn-exit,
+/* End Session — soft rose resting; solid rose + white label on hover.
+   Exclude post-session Custom CTA (shares action-btn-exit class, not destructive). */
+.action-btn-exit:not(.post-session-choice-custom),
 .action-btn.mutqin-btn--destructive,
-.workspace-shell-actions .action-btn.action-btn-exit,
+.workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom),
 .workspace-shell-actions .action-btn.mutqin-btn--destructive,
-.workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit {
-  color: color-mix(in srgb, #44403c 92%, #fff) !important;
-  background: color-mix(in srgb, #f5f5f4 88%, #e7e5e4) !important;
-  border: 1px solid color-mix(in srgb, #a8a29e 35%, transparent) !important;
+.workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit:not(.post-session-choice-custom) {
+  color: #7a3b2e !important;
+  -webkit-text-fill-color: #7a3b2e !important;
+  background: #f4ebe7 !important;
+  border: 1px solid #d7b2a7 !important;
   box-shadow: none !important;
-  font-weight: 550 !important;
+  font-weight: 650 !important;
 }
 
-.action-btn-exit:hover,
+.action-btn-exit:not(.post-session-choice-custom):hover,
 .action-btn.mutqin-btn--destructive:hover:not(:disabled),
-.workspace-shell-actions .action-btn.action-btn-exit:hover,
+.workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom):hover,
 .workspace-shell-actions .action-btn.mutqin-btn--destructive:hover,
-.workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit:hover {
+.workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit:not(.post-session-choice-custom):hover {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
-  background: #57534e !important;
-  border-color: #44403c !important;
+  background: #9a4f3d !important;
+  border-color: #8a4535 !important;
 }
 
-.action-btn-exit:hover span,
+.action-btn-exit:not(.post-session-choice-custom) span,
+.action-btn-exit:not(.post-session-choice-custom) i,
+.workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom) span,
+.workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom) i,
+.workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit:not(.post-session-choice-custom) span,
+.workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit:not(.post-session-choice-custom) i {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+.action-btn-exit:not(.post-session-choice-custom):hover span,
 .action-btn.mutqin-btn--destructive:hover:not(:disabled) span,
-.workspace-shell-actions .action-btn.action-btn-exit:hover span,
+.workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom):hover span,
 .workspace-shell-actions .action-btn.mutqin-btn--destructive:hover span,
-.workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit:hover span,
-.action-btn-exit:hover i,
+.workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit:not(.post-session-choice-custom):hover span,
+.action-btn-exit:not(.post-session-choice-custom):hover i,
 .action-btn.mutqin-btn--destructive:hover:not(:disabled) i,
-.workspace-shell-actions .action-btn.action-btn-exit:hover i,
-.workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit:hover i {
+.workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom):hover i,
+.workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit:not(.post-session-choice-custom):hover i {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
 }
 
-[data-theme="dark"] .action-btn-exit,
+[data-theme="dark"] .action-btn-exit:not(.post-session-choice-custom),
 [data-theme="dark"] .action-btn.mutqin-btn--destructive,
-[data-theme="dark"] .workspace-shell-actions .action-btn.action-btn-exit,
-.dark-mode .workspace-shell-actions .action-btn.action-btn-exit {
-  color: #e7e5e4 !important;
-  background: #292524 !important;
-  border-color: rgba(231, 229, 228, 0.14) !important;
+[data-theme="dark"] .workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom),
+.dark-mode .workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom) {
+  color: #f0d2c8 !important;
+  -webkit-text-fill-color: #f0d2c8 !important;
+  background: rgba(154, 79, 61, 0.22) !important;
+  border-color: rgba(240, 210, 200, 0.28) !important;
 }
 
-[data-theme="dark"] .action-btn-exit:hover,
-[data-theme="dark"] .workspace-shell-actions .action-btn.action-btn-exit:hover,
-[data-theme="dark"] .workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit:hover {
+[data-theme="dark"] .action-btn-exit:not(.post-session-choice-custom):hover,
+[data-theme="dark"] .workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom):hover,
+[data-theme="dark"] .workspace-shell-actions .action-buttons-group .top-card-action-trigger.action-btn-exit:not(.post-session-choice-custom):hover {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
-  background: #44403c !important;
-  border-color: #57534e !important;
+  background: #9a4f3d !important;
+  border-color: #b56a56 !important;
+}
+
+/* Post-session CTAs — keep label contrast on hover (never white-on-white). */
+.workspace-shell-actions .post-session-choice-pair > .session-primary-action:hover,
+.workspace-shell-actions .post-session-choice-pair > .session-primary-action:hover span,
+.workspace-shell-actions .post-session-choice-pair > .session-primary-action:hover i {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .session-primary-action:hover,
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .session-primary-action:hover span,
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .session-primary-action:hover i {
+  color: #1a120c !important;
+  -webkit-text-fill-color: #1a120c !important;
+}
+
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom,
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom:hover,
+.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
+.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit:hover {
+  color: #2b241c !important;
+  -webkit-text-fill-color: #2b241c !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(31, 24, 18, 0.16) !important;
+  box-shadow: none !important;
+}
+
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom:hover,
+.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit:hover {
+  background: #f7f3ec !important;
+  border-color: rgba(31, 24, 18, 0.22) !important;
+}
+
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i,
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom:hover span,
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom:hover i,
+.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit:hover span,
+.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit:hover i {
+  color: #2b241c !important;
+  -webkit-text-fill-color: #2b241c !important;
+}
+
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom,
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom:hover {
+  color: #f6efe6 !important;
+  -webkit-text-fill-color: #f6efe6 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(246, 239, 230, 0.22) !important;
+}
+
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i,
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom:hover span,
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom:hover i {
+  color: #f6efe6 !important;
+  -webkit-text-fill-color: #f6efe6 !important;
 }
 
 /* Desktop: highlight word backgrounds, never recolour tajweed text */

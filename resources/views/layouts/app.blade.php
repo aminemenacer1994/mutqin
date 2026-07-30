@@ -186,11 +186,16 @@
       }
       .app .mutqin-modal-btn--danger,
       .app .mutqin-modal-btn--destructive,
+      .app .session-exit-action-chip--end {
+        color: #fff !important;
+        background: var(--bs-danger, #dc2626) !important;
+        border-color: var(--bs-danger, #dc2626) !important;
+      }
       .app .action-btn-exit:not(.post-session-choice-custom),
       .app .action-btn.mutqin-btn--destructive,
-      .app .session-exit-action-chip--end,
       .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom) {
         color: #7a3b2e !important;
+        -webkit-text-fill-color: #7a3b2e !important;
         background: #f4ebe7 !important;
         border: 1px solid #d7b2a7 !important;
         box-shadow: none !important;
@@ -199,13 +204,42 @@
       .app .action-btn-exit:not(.post-session-choice-custom):hover,
       .app .action-btn.mutqin-btn--destructive:hover,
       .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom):hover {
-        color: #6a3227 !important;
-        background: #eddcd5 !important;
-        border-color: #c99a8c !important;
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
+        background: #9a4f3d !important;
+        border-color: #8a4535 !important;
         box-shadow: none !important;
       }
+      .app .action-btn-exit:not(.post-session-choice-custom) span,
+      .app .action-btn-exit:not(.post-session-choice-custom) i,
+      .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom) span,
+      .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom) i {
+        color: inherit !important;
+        -webkit-text-fill-color: inherit !important;
+      }
+      .app .action-btn-exit:not(.post-session-choice-custom):hover span,
+      .app .action-btn-exit:not(.post-session-choice-custom):hover i,
+      .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom):hover span,
+      .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom):hover i {
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
+      }
+      [data-theme="dark"] .app .action-btn-exit:not(.post-session-choice-custom),
+      [data-theme="dark"] .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom) {
+        color: #f0d2c8 !important;
+        -webkit-text-fill-color: #f0d2c8 !important;
+        background: rgba(154, 79, 61, 0.22) !important;
+        border-color: rgba(240, 210, 200, 0.28) !important;
+      }
+      [data-theme="dark"] .app .action-btn-exit:not(.post-session-choice-custom):hover,
+      [data-theme="dark"] .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom):hover {
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
+        background: #9a4f3d !important;
+        border-color: #b56a56 !important;
+      }
     </style>
-    <style id="mutqin-memorisation-hotfix-v86">
+    <style id="mutqin-memorisation-hotfix-v88">
       /* Network-first hotfix v83 — content-sized CTAs + restore after refresh */
       #mutqin-ui-build-pill { display: none !important; }
       .amd-overlay {
@@ -226,6 +260,7 @@
       .app .action-btn.mutqin-btn--destructive,
       .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom) {
         color: #7a3b2e !important;
+        -webkit-text-fill-color: #7a3b2e !important;
         background: #f4ebe7 !important;
         border: 1px solid #d7b2a7 !important;
         box-shadow: none !important;
@@ -233,10 +268,25 @@
       }
       .app .action-btn-exit:not(.post-session-choice-custom):hover,
       .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom):hover {
-        color: #6a3227 !important;
-        background: #eddcd5 !important;
-        border-color: #c99a8c !important;
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
+        background: #9a4f3d !important;
+        border-color: #8a4535 !important;
         box-shadow: none !important;
+      }
+      .app .action-btn-exit:not(.post-session-choice-custom) span,
+      .app .action-btn-exit:not(.post-session-choice-custom) i,
+      .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom) span,
+      .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom) i {
+        color: inherit !important;
+        -webkit-text-fill-color: inherit !important;
+      }
+      .app .action-btn-exit:not(.post-session-choice-custom):hover span,
+      .app .action-btn-exit:not(.post-session-choice-custom):hover i,
+      .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom):hover span,
+      .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom):hover i {
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
       }
 
       /* Post-session choice — desktop: content-sized pills (like Start/End).
@@ -320,6 +370,7 @@
       .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom,
       .app .workspace-shell--post-session-choice .post-session-choice-pair > .action-btn-exit.post-session-choice-custom {
         color: #2b241c !important;
+        -webkit-text-fill-color: #2b241c !important;
         background: #ffffff !important;
         border: 1px solid rgba(31, 24, 18, 0.16) !important;
         box-shadow: none !important;
@@ -327,12 +378,42 @@
       .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom:hover,
       .app .workspace-shell--post-session-choice .post-session-choice-pair > .action-btn-exit.post-session-choice-custom:hover {
         color: #2b241c !important;
+        -webkit-text-fill-color: #2b241c !important;
         background: #f7f3ec !important;
         border-color: rgba(31, 24, 18, 0.22) !important;
       }
       .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom i,
-      .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom span {
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom span,
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom:hover i,
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom:hover span {
         color: #2b241c !important;
+        -webkit-text-fill-color: #2b241c !important;
+      }
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .session-primary-action:hover,
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .session-primary-action:hover span,
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .session-primary-action:hover i {
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
+      }
+      [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .session-primary-action:hover,
+      [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .session-primary-action:hover span,
+      [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .session-primary-action:hover i {
+        color: #1a120c !important;
+        -webkit-text-fill-color: #1a120c !important;
+      }
+      [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom,
+      [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom:hover {
+        color: #f6efe6 !important;
+        -webkit-text-fill-color: #f6efe6 !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(246, 239, 230, 0.22) !important;
+      }
+      [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom i,
+      [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom span,
+      [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom:hover i,
+      [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom:hover span {
+        color: #f6efe6 !important;
+        -webkit-text-fill-color: #f6efe6 !important;
       }
       @media (max-width: 767.98px) {
         .app .workspace-shell--post-session-choice .workspace-shell-head {
@@ -925,7 +1006,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v86'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v88'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
