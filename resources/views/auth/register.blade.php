@@ -3,11 +3,6 @@
 @section('content')
 <div class="auth-page">
     <div class="auth-panel">
-        <a class="auth-brand" href="{{ route('home') }}" aria-label="Mutqin home">
-            <img src="/images/logo_main.png" alt="" class="auth-brand-img">
-            <span>Mutqin</span>
-        </a>
-
         <h1 class="auth-heading">{{ __('ui.auth_register_heading') }}</h1>
 
         @error('google')

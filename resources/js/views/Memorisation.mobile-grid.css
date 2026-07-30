@@ -495,12 +495,12 @@
 
   .verse-arabic .verse-ayah-end-number,
   .verse-arabic-with-end .verse-ayah-end-number {
-    display: inline-flex !important;
-    vertical-align: middle;
-    margin-inline: 0.32em 0.02em !important;
-    min-width: 1.4em;
-    min-height: 1.4em;
-    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(0.78rem, 3.4vw, 0.95rem)) !important;
+    display: inline-block !important;
+    vertical-align: -0.08em !important;
+    margin-inline: 0.04em 0.02em !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    font-size: 1.05em !important;
     opacity: 1 !important;
     visibility: visible !important;
   }
@@ -3312,8 +3312,8 @@
   .verses-grid .verse-arabic.verse-arabic-primary,
   .verses-grid .verse-arabic.verse-arabic-with-end {
     font-size: calc((var(--verse-font-percent, 95) / 100) * clamp(1.45rem, 6.6vw, 2.05rem)) !important;
-    line-height: 1.55 !important;
-    padding: 6px 2px 8px !important;
+    line-height: 1.45 !important;
+    padding: 4px 2px 6px !important;
     overflow: visible !important;
   }
 
@@ -3322,8 +3322,8 @@
   .verses-grid .verse-arabic-with-end .verse-ayah-end-number,
   .verses-grid .verse-arabic .mushaf-ayah-number.verse-ayah-end-number {
     display: inline-block !important;
-    vertical-align: middle !important;
-    margin-inline: 0.12em 0.04em !important;
+    vertical-align: -0.08em !important;
+    margin-inline: 0.04em 0.02em !important;
     float: none !important;
     position: relative !important;
     top: auto !important;
@@ -3999,7 +3999,7 @@
   .app .verses-grid .verse-arabic-with-end {
     --verse-font-percent: 130 !important;
     font-size: calc(1.3 * clamp(1.3rem, 5.6vw, 1.9rem)) !important;
-    line-height: 1.65 !important;
+    line-height: 1.5 !important;
   }
 
   .app .main.mushaf-mode-active .madani-word,
@@ -4092,7 +4092,9 @@
 
   .app .verses-grid .verse-arabic .verse-ayah-end-number,
   .app .verses-grid .verse-arabic-with-end .verse-ayah-end-number {
-    margin-inline: 0.55em 0.3em !important;
+    margin-inline: 0.04em 0.02em !important;
+    vertical-align: -0.08em !important;
+    font-size: 1.05em !important;
   }
 
   .app .verses-grid .verse-font-size-control {
