@@ -20,16 +20,16 @@
     <meta name="description" content="Quran memorisation and recitation workspace for focused hifz practice.">
     <title>{{ __('ui.app_title') }}</title>
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=20260730b">
-    <link id="appThemeFavicon" rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png?v=20260730b">
-    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=20260730b">
-    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=20260730b">
-    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=20260730b">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=20260730b">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=20260730b">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png?v=20260730b">
-    <link id="appThemeFaviconIco" rel="shortcut icon" href="/favicon.ico?v=20260730b">
-    <link rel="icon" href="/favicon.ico?v=20260730b" sizes="any">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=20260730c">
+    <link id="appThemeFavicon" rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png?v=20260730c">
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=20260730c">
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=20260730c">
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=20260730c">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=20260730c">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=20260730c">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png?v=20260730c">
+    <link id="appThemeFaviconIco" rel="shortcut icon" href="/favicon.ico?v=20260730c">
+    <link rel="icon" href="/favicon.ico?v=20260730c" sizes="any">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;500&display=swap" rel="stylesheet">
@@ -2761,20 +2761,20 @@
                                 <span class="nav-link-copy"><strong data-i18n="memorisation">{{ __('ui.memorisation') }}</strong><small class="d-lg-none">Continue your Quran practice</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
-                            <a class="nav-link mobile-nav-only {{ request()->routeIs('about', 'about-us') ? 'active' : '' }}" href="{{ route('about-us') }}">
+                            <a class="nav-link {{ request()->routeIs('about', 'about-us') ? 'active' : '' }}" href="{{ route('about-us') }}">
                                 <i class="bi bi-people nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong>About Mutqin</strong><small>Our story and approach</small></span>
-                                <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>About</strong><small class="d-lg-none">Our story and approach</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
-                            <a class="nav-link mobile-nav-only {{ request()->routeIs('our-mission') ? 'active' : '' }}" href="{{ route('our-mission') }}">
+                            <a class="nav-link {{ request()->routeIs('our-mission') ? 'active' : '' }}" href="{{ route('our-mission') }}">
                                 <i class="bi bi-compass nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong>Our Mission</strong><small>Why deliberate memorisation matters</small></span>
-                                <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>Our Mission</strong><small class="d-lg-none">Why deliberate memorisation matters</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
-                            <a class="nav-link mobile-nav-only {{ request()->routeIs('donate') ? 'active' : '' }}" href="{{ route('donate') }}">
+                            <a class="nav-link {{ request()->routeIs('donate') ? 'active' : '' }}" href="{{ route('donate') }}">
                                 <i class="bi bi-heart nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong>Support Mutqin</strong><small>Help make learning accessible</small></span>
-                                <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>Support</strong><small class="d-lg-none">Help make learning accessible</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                         </div>
                     </div>
@@ -2967,7 +2967,7 @@
 
                 const favicon = document.getElementById('appThemeFavicon');
                 if (favicon) {
-                    favicon.setAttribute('href', '/favicon-512.png?v=20260730b');
+                    favicon.setAttribute('href', '/favicon-512.png?v=20260730c');
                 }
             }
             

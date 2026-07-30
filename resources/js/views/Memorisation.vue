@@ -6,6 +6,8 @@
     'post-session-adaptive-check-open': postSessionAdaptiveCheckActive,
     'overlay-onboarding-active': isOnboardingExperienceActive,
     'onboarding-post-session-offcanvas-open': showPostSessionModal && postSessionOffcanvasOpen && showTools,
+    'post-session-choice-active': isPostSessionChoiceVisible,
+    'post-session-choice-offcanvas-open': isPostSessionChoiceVisible && postSessionChoiceOffcanvasOpen && showTools,
     'session-exit-flow-active': showSessionExitModal,
     'session-exit-offcanvas-open': showSessionExitModal && sessionExitOffcanvasOpen && showTools
   }" :style="appStyleVars" v-cloak>
@@ -140,14 +142,14 @@
         <div class="workspace">
           <!-- In your template, replace the workspace-shell section -->
         <section
-          v-show="(hasVerses || showSessionOverviewIdleActions) && !isWelcomeBackWorkspaceHidden && !isOnboardingExperienceActive"
+          v-show="(hasVerses || showSessionOverviewIdleActions || isPostSessionChoiceVisible) && !isWelcomeBackWorkspaceHidden && !isOnboardingExperienceActive"
           class="workspace-shell"
-          :class="{ collapsed: mainCardCollapsed }"
+          :class="{ collapsed: mainCardCollapsed, 'workspace-shell--post-session-choice': isPostSessionChoiceVisible }"
           :data-reading-mode="readingViewMode"
           :aria-label="t('memorisation.a11y.sessionOverview')"
         >
         <div class="workspace-shell-head" :class="{ 'is-idle': showSessionOverviewIdleActions }">
-          <template v-if="hasVerses">
+          <template v-if="hasVerses || isPostSessionChoiceVisible">
           <div class="workspace-shell-copy">
             <span class="workspace-shell-kicker">{{ t('memorisation.sessionOverview.kicker') }}</span>
             <h1 class="workspace-shell-main-title" :aria-label="topCardSessionLabel">
@@ -164,7 +166,46 @@
             </h1>
           </div>
           <div class="workspace-shell-actions">
-            <div class="action-buttons-group">
+            <div
+              v-if="isPostSessionChoiceVisible"
+              class="top-card-session-actions has-paired-actions post-session-choice-actions"
+              data-testid="post-session-choice"
+              role="group"
+              :aria-label="t('memorisation.postSessionChoice.title')"
+            >
+              <button
+                v-if="canShowRepeatRecommendedAction"
+                type="button"
+                class="action-btn btn btn-primary session-primary-action top-card-action-trigger"
+                data-testid="post-session-repeat-recommended"
+                data-action="repeat_recommended"
+                :title="t('memorisation.postSessionChoice.repeatRecommendedDesc')"
+                :aria-label="t('memorisation.postSessionChoice.repeatRecommended')"
+                @click="repeatRecommendedSessionFromChoice"
+              >
+                <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                <span>{{ t('memorisation.postSessionChoice.repeatRecommended') }}</span>
+              </button>
+              <button
+                type="button"
+                class="action-btn top-card-action-trigger"
+                :class="canShowRepeatRecommendedAction
+                  ? 'action-btn-secondary'
+                  : 'btn btn-primary session-primary-action'"
+                data-testid="post-session-create-custom"
+                data-action="create_custom"
+                :title="t('memorisation.postSessionChoice.createCustomDesc')"
+                :aria-label="t('memorisation.postSessionChoice.createCustom')"
+                @click="createCustomSessionFromChoice"
+              >
+                <i class="bi bi-sliders" aria-hidden="true"></i>
+                <span>{{ t('memorisation.postSessionChoice.createCustom') }}</span>
+              </button>
+            </div>
+            <div
+              v-else
+              class="action-buttons-group"
+            >
               <div
                 class="top-card-session-actions"
                 :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
@@ -361,7 +402,7 @@
           </button>
         </p>
         <div
-          v-if="hasVerses && (topCardMetadataPills.length || !isMobileViewport())"
+          v-if="hasVerses && !isPostSessionChoiceVisible && (topCardMetadataPills.length || !isMobileViewport())"
           class="workspace-shell-bottom"
         >
           <!-- Source-guard reference: class="workspace-header-view-controls quick-right-controls" -->
@@ -899,11 +940,13 @@
       <div class="tools-backdrop" :class="{
         open: showTools,
         'onboarding-post-session-tools-backdrop': showPostSessionModal && postSessionOffcanvasOpen,
+        'post-session-choice-tools-backdrop': isPostSessionChoiceVisible && postSessionChoiceOffcanvasOpen,
         'session-exit-tools-backdrop': showSessionExitModal && sessionExitOffcanvasOpen
       }" @click="closeToolsPanel" aria-hidden="true"></div>
       <aside id="memorisationToolsPanel" ref="toolsPanel" class="tools offcanvas-section offcanvas-end h-100" :class="{
         open: showTools,
         'onboarding-post-session-tools': showPostSessionModal && postSessionOffcanvasOpen,
+        'post-session-choice-tools': isPostSessionChoiceVisible && postSessionChoiceOffcanvasOpen,
         'session-exit-tools': showSessionExitModal && sessionExitOffcanvasOpen
       }"
         @click.stop role="dialog" aria-modal="true" aria-labelledby="memorisationToolsTitle"
@@ -1769,7 +1812,7 @@
             </button>
             <button class="tools-btn btn btn-primary session-primary-action" @click="startSessionAndClose">
               <i class="bi bi-play-fill" aria-hidden="true"></i>
-              <span>{{ t('memorisation.welcomeBack.startNewSession') }}</span>
+              <span>{{ toolsPrimaryStartLabel }}</span>
             </button>
           </template>
         </div>
@@ -2277,11 +2320,11 @@
                 <div class="heatmap-header">
                   <h3><i class="bi bi-grid-3x3-gap-fill"></i> {{ t('memorisation.recitation_confidence_heatmap') }}</h3>
                   <div class="heatmap-legend">
-                    <span class="legend-dot excellent"></span><span>90-100</span>
-                    <span class="legend-dot strong"></span><span>75-89</span>
-                    <span class="legend-dot needs"></span><span>60-74</span>
-                    <span class="legend-dot weak"></span><span>40-59</span>
-                    <span class="legend-dot critical"></span><span>&lt;40</span>
+                    <span class="legend-dot excellent" aria-hidden="true"></span><span>90-100</span>
+                    <span class="legend-dot strong" aria-hidden="true"></span><span>75-89</span>
+                    <span class="legend-dot needs" aria-hidden="true"></span><span>60-74</span>
+                    <span class="legend-dot weak" aria-hidden="true"></span><span>40-59</span>
+                    <span class="legend-dot critical" aria-hidden="true"></span><span>&lt;40</span>
                   </div>
                 </div>
                 
@@ -3013,12 +3056,23 @@
               <section
                 v-if="postSessionAiReviewDetails || postSessionAiResultLine"
                 class="post-session-simple__ai-review"
+                :class="{
+                  'post-session-simple__ai-review--zero-match': postSessionAiPresentationMode === 'valid_zero_match',
+                  'post-session-simple__ai-review--insufficient': postSessionAiPresentationMode === 'insufficient_audio',
+                  'post-session-simple__ai-review--compact': true,
+                }"
+                :data-presentation="postSessionAiPresentationMode"
                 aria-label="AI memorisation result"
               >
+                <!-- ResultSummary -->
                 <div class="post-session-simple__ai-review-head">
                   <span
                     class="memory-check-band-pill"
-                    :data-band="postSessionAiReviewDetails?.outcome || 'mixed'"
+                    :data-band="postSessionAiPresentationMode === 'valid_zero_match'
+                      ? 'soft-warn'
+                      : (postSessionAiPresentationMode === 'insufficient_audio'
+                        ? 'insufficient'
+                        : (postSessionAiReviewDetails?.outcome || 'mixed'))"
                   >
                     {{ postSessionAiReviewDetails?.outcomeLabel || t('memorisation.postSession.recommendation.aiOutcomeMixed') }}
                   </span>
@@ -3026,42 +3080,100 @@
                     {{ postSessionAiReviewDetails?.summaryLine || postSessionAiResultLine }}
                   </p>
                 </div>
+
+                <!-- RecommendedAction + FocusPhrase (before technical details) -->
                 <div
-                  v-if="postSessionAiColourSegments.length"
-                  class="post-session-simple__check-meter"
-                  role="img"
-                  :aria-label="t('memorisation.aiCheck.colourMeterAria')"
+                  v-if="postSessionInlineRecommendationRows.length"
+                  class="post-session-simple__ai-recommendation"
+                  aria-label="Recommended next step"
                 >
-                  <div class="post-session-simple__check-meter-track" aria-hidden="true">
-                    <span
-                      v-for="segment in postSessionAiColourSegments"
-                      :key="`ps-ai-meter-${segment.key}`"
-                      class="post-session-simple__check-meter-segment"
-                      :class="segment.tone"
-                      :style="{ flexGrow: Math.max(segment.percent || segment.count, 1), flexBasis: 0 }"
-                    ></span>
-                  </div>
-                  <ul class="post-session-simple__check-meter-legend">
-                    <li
-                      v-for="segment in postSessionAiColourSegments"
-                      :key="`ps-ai-legend-${segment.key}`"
-                      :class="segment.tone"
+                  <p
+                    v-if="postSessionRecommendationReasonLine"
+                    class="post-session-simple__ai-recommendation-lead"
+                  >{{ postSessionRecommendationReasonLine }}</p>
+                  <dl class="post-session-simple__evidence post-session-simple__evidence--inline">
+                    <div
+                      v-for="row in postSessionInlineRecommendationRows"
+                      :key="`inline-${row.key}`"
+                      class="post-session-simple__evidence-row"
+                      :data-key="row.key"
                     >
-                      <span aria-hidden="true"></span>
-                      {{ segment.label }}
-                    </li>
-                  </ul>
+                      <dt>{{ row.label }}</dt>
+                      <dd v-if="row.key === 'focus' && row.word">
+                        <button
+                          type="button"
+                          class="post-session-simple__focus-phrase"
+                          :aria-label="t('memorisation.postSession.recommendation.playFocusPhrase') || 'Play focus phrase'"
+                          :disabled="postSessionActionsBusy"
+                          @click="onPostSessionFocusPhraseActivate(row)"
+                        >
+                          <span
+                            class="post-session-simple__evidence-ar"
+                            dir="rtl"
+                            lang="ar"
+                          >{{ row.word }}</span>
+                          <i class="bi bi-play-circle post-session-simple__focus-phrase-icon" aria-hidden="true"></i>
+                        </button>
+                      </dd>
+                      <dd v-else>{{ row.value }}</dd>
+                    </div>
+                  </dl>
                 </div>
-                <ul v-if="postSessionAiResultMetrics.length" class="post-session-simple__ai-metrics">
-                  <li
-                    v-for="metric in postSessionAiResultMetrics"
-                    :key="metric.key"
-                    :data-tone="metric.tone || undefined"
+
+                <!-- DetailsDisclosure: technical metrics collapsed by default -->
+                <div v-if="postSessionShowAiDetailsToggle" class="post-session-simple__ai-details">
+                  <button
+                    type="button"
+                    class="post-session-simple__ai-details-toggle"
+                    :aria-expanded="postSessionAiDetailsExpanded ? 'true' : 'false'"
+                    @click="postSessionAiDetailsExpanded = !postSessionAiDetailsExpanded"
                   >
-                    <span>{{ metric.label }}</span>
-                    <strong>{{ metric.value }}</strong>
-                  </li>
-                </ul>
+                    {{ postSessionAiDetailsExpanded
+                      ? (t('memorisation.postSession.recommendation.hideDetails') || 'Hide details')
+                      : (t('memorisation.postSession.recommendation.viewDetails') || 'View details') }}
+                  </button>
+                  <div
+                    v-if="postSessionAiDetailsExpanded"
+                    class="post-session-simple__ai-details-body"
+                  >
+                    <div
+                      v-if="postSessionAiColourSegments.length"
+                      class="post-session-simple__check-meter"
+                      role="img"
+                      :aria-label="t('memorisation.aiCheck.colourMeterAria')"
+                    >
+                      <div class="post-session-simple__check-meter-track" aria-hidden="true">
+                        <span
+                          v-for="segment in postSessionAiColourSegments"
+                          :key="`ps-ai-meter-${segment.key}`"
+                          class="post-session-simple__check-meter-segment"
+                          :class="segment.tone"
+                          :style="{ flexGrow: Math.max(segment.percent || segment.count, 1), flexBasis: 0 }"
+                        ></span>
+                      </div>
+                      <ul class="post-session-simple__check-meter-legend">
+                        <li
+                          v-for="segment in postSessionAiColourSegments"
+                          :key="`ps-ai-legend-${segment.key}`"
+                          :class="segment.tone"
+                        >
+                          <span aria-hidden="true"></span>
+                          {{ segment.label }}
+                        </li>
+                      </ul>
+                    </div>
+                    <ul class="post-session-simple__ai-metrics post-session-simple__ai-metrics--details">
+                      <li
+                        v-for="metric in postSessionAiDetailsMetrics"
+                        :key="`detail-${metric.key}`"
+                        :data-tone="metric.tone || 'soft'"
+                      >
+                        <span>{{ metric.label }}</span>
+                        <strong>{{ metric.value }}</strong>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
               </section>
 
               <section
@@ -3069,7 +3181,8 @@
                 class="post-session-simple__panel post-session-simple__panel--hero ps-rec-card"
                 :class="{
                   'is-loading': postSessionRecommendationStatus === 'loading',
-                  'is-empty': postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable
+                  'is-empty': postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable,
+                  'ps-rec-card--slim': postSessionInlineRecommendationRows.length > 0,
                 }"
                 :data-plan="postSessionPlanKind"
                 :aria-busy="postSessionRecommendationStatus === 'loading' ? 'true' : 'false'"
@@ -3085,25 +3198,19 @@
                 </template>
                 <template v-else>
                   <div class="post-session-simple__panel-head">
-                    <p class="post-session-simple__action-label">{{ postSessionSimpleActionLabel }}</p>
+                    <p class="post-session-simple__action-label" id="postSessionRecTitle">{{ postSessionSimpleActionLabel }}</p>
                     <p class="post-session-simple__range">{{ postSessionRecommendationCardTitle }}</p>
-                    <span
-                      class="post-session-simple__plan-status"
-                      :data-status="memorisationPlanStatus"
-                    >{{ memorisationPlanStatusLabel }}</span>
+                    <p
+                      v-if="postSessionPlanEncouragement && !postSessionInlineRecommendationRows.length"
+                      class="post-session-simple__plan-encouragement"
+                    >{{ postSessionPlanEncouragement }}</p>
                   </div>
                   <p
-                    v-if="postSessionPlanEncouragement"
-                    class="post-session-simple__plan-encouragement"
-                  >{{ postSessionPlanEncouragement }}</p>
-                  <div v-if="postSessionSimpleReason" class="post-session-simple__why">
-                    <p class="post-session-simple__why-label">
-                      {{ t('memorisation.postSession.recommendation.whyThisPlan') }}
-                    </p>
-                    <p class="post-session-simple__reason">{{ postSessionSimpleReason }}</p>
-                  </div>
+                    v-if="postSessionRecommendationReasonLine && !postSessionInlineRecommendationRows.length"
+                    class="post-session-simple__reason post-session-simple__reason--compact"
+                  >{{ postSessionRecommendationReasonLine }}</p>
                   <dl
-                    v-if="postSessionEvidenceRows.length"
+                    v-if="postSessionEvidenceRows.length && !postSessionInlineRecommendationRows.length"
                     class="post-session-simple__evidence"
                   >
                     <div
@@ -3113,19 +3220,26 @@
                       :data-key="row.key"
                     >
                       <dt>{{ row.label }}</dt>
-                      <dd v-if="row.key === 'focus' && (row.word || row.ayahLabel)">
-                        <span v-if="row.ayahLabel" class="post-session-simple__evidence-ayah">{{ row.ayahLabel }}</span>
-                        <span
-                          v-if="row.word"
-                          class="post-session-simple__evidence-ar"
-                          dir="rtl"
-                          lang="ar"
-                        >{{ row.word }}</span>
+                      <dd v-if="row.key === 'focus' && row.word">
+                        <button
+                          type="button"
+                          class="post-session-simple__focus-phrase"
+                          :aria-label="t('memorisation.postSession.recommendation.playFocusPhrase') || 'Play focus phrase'"
+                          :disabled="postSessionActionsBusy"
+                          @click="onPostSessionFocusPhraseActivate(row)"
+                        >
+                          <span
+                            class="post-session-simple__evidence-ar"
+                            dir="rtl"
+                            lang="ar"
+                          >{{ row.word }}</span>
+                          <i class="bi bi-play-circle post-session-simple__focus-phrase-icon" aria-hidden="true"></i>
+                        </button>
                       </dd>
                       <dd v-else>{{ row.value }}</dd>
                     </div>
                   </dl>
-                  <div v-else-if="postSessionStaticPills.length" class="post-session-simple__combo">
+                  <div v-else-if="postSessionStaticPills.length && !postSessionInlineRecommendationRows.length" class="post-session-simple__combo">
                     <p class="post-session-simple__combo-label">
                       {{ t('memorisation.postSession.recommendation.tryThisCombination') }}
                     </p>
@@ -3176,6 +3290,7 @@
             <div
               class="post-session-simple__actions post-session-simple__actions--3"
               data-testid="post-session-actions"
+              :data-cta-state="postSessionCtaState || undefined"
             >
               <template v-if="onboardingSampleSessionActive">
                 <button type="button" class="post-session-simple__btn post-session-simple__btn--secondary" @click="repeatPostSession">
@@ -3189,95 +3304,19 @@
                 </button>
               </template>
 
-              <template v-else-if="postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
-                <button
-                  type="button"
-                  class="post-session-simple__btn post-session-simple__btn--primary"
-                  :disabled="postSessionRecommendationStarting"
-                  :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
-                  @click="confirmPostSessionRecommendation"
-                >
-                  <span>{{ postSessionConfirmationPrimaryLabel }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="post-session-simple__btn post-session-simple__btn--secondary"
-                  :disabled="postSessionActionsBusy || postSessionAiReciteBusy || !aiTestModalsEnabled"
-                  :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
-                  @click="onPostSessionTestWithAi"
-                >
-                  <span>{{ postSessionTestWithAiLabel }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="post-session-simple__btn post-session-simple__btn--ghost"
-                  :disabled="postSessionRecommendationStarting"
-                  @click="chooseOtherFromRecommendation"
-                >
-                  <span>{{ postSessionChooseRangeLabel }}</span>
-                </button>
-              </template>
-
-              <template v-else-if="postSessionShowRecommendationPlan || postSessionHasAiCheck">
-                <button
-                  type="button"
-                  class="post-session-simple__btn post-session-simple__btn--primary"
-                  :disabled="postSessionActionsBusy || postSessionAiReciteBusy || !aiTestModalsEnabled"
-                  :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
-                  data-action="test-with-ai"
-                  @click="onPostSessionTestWithAi"
-                >
-                  <span>{{ postSessionTestWithAiLabel }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="post-session-simple__btn post-session-simple__btn--secondary"
-                  :disabled="postSessionActionsBusy || !postSessionRecommendationActionable"
-                  :aria-busy="postSessionRecommendationStarting ? 'true' : 'false'"
-                  data-action="continue"
-                  @click="onPostSessionContinueToAyahs"
-                >
-                  <span>{{ postSessionContinueToAyahsLabel }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="post-session-simple__btn post-session-simple__btn--ghost"
-                  :disabled="postSessionActionsBusy"
-                  data-action="choose-session"
-                  @click="chooseOtherFromRecommendation"
-                >
-                  <span>{{ postSessionChooseRangeLabel }}</span>
-                </button>
-              </template>
-
               <template v-else>
                 <button
+                  v-for="btn in postSessionCtaButtons"
+                  :key="btn.id"
                   type="button"
-                  class="post-session-simple__btn post-session-simple__btn--primary"
-                  :disabled="postSessionActionsBusy || postSessionAiReciteBusy || !aiTestModalsEnabled"
-                  :aria-busy="postSessionAiReciteBusy ? 'true' : 'false'"
-                  data-action="test-with-ai"
-                  @click="onPostSessionTestWithAi"
+                  class="post-session-simple__btn"
+                  :class="`post-session-simple__btn--${btn.variant}`"
+                  :disabled="postSessionCtaButtonDisabled(btn)"
+                  :aria-busy="postSessionCtaButtonBusy(btn) ? 'true' : 'false'"
+                  :data-action="btn.dataAction"
+                  @click="onPostSessionCtaAction(btn.action)"
                 >
-                  <span>{{ postSessionTestWithAiLabel }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="post-session-simple__btn post-session-simple__btn--secondary"
-                  :disabled="postSessionActionsBusy || !postSessionRecommendationActionable"
-                  data-action="skip-for-now"
-                  @click="onPostSessionContinueToAyahs"
-                >
-                  <span>{{ postSessionSkipForNowLabel }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="post-session-simple__btn post-session-simple__btn--ghost"
-                  :disabled="postSessionActionsBusy"
-                  data-action="choose-session"
-                  @click="chooseOtherFromRecommendation"
-                >
-                  <span>{{ postSessionChooseRangeLabel }}</span>
+                  <span>{{ btn.label }}</span>
                 </button>
               </template>
             </div>
@@ -3742,6 +3781,7 @@
             <section
               v-if="postSessionAiReviewDetails || postSessionAiResultLine"
               class="quiz-ai-result__panel quiz-ai-result__panel--ai"
+              :data-presentation="postSessionAiPresentationMode"
             >
               <p class="quiz-ai-result__label">
                 {{ t('memorisation.postSession.adaptiveCheck.aiReciteTitle') }}
@@ -3749,52 +3789,69 @@
               <div class="quiz-ai-result__ai-head">
                 <span
                   class="memory-check-band-pill"
-                  :data-band="postSessionAiReviewDetails?.outcome || 'mixed'"
+                  :data-band="postSessionAiPresentationMode === 'valid_zero_match'
+                    ? 'soft-warn'
+                    : (postSessionAiPresentationMode === 'insufficient_audio'
+                      ? 'insufficient'
+                      : (postSessionAiReviewDetails?.outcome || 'mixed'))"
                 >
                   {{ postSessionAiReviewDetails?.outcomeLabel || t('memorisation.postSession.recommendation.aiOutcomeMixed') }}
                 </span>
                 <p>{{ postSessionAiReviewDetails?.summaryLine || postSessionAiResultLine }}</p>
               </div>
-              <div
-                v-if="postSessionAiColourSegments.length"
-                class="post-session-simple__check-meter quiz-ai-result__meter"
-                role="img"
-                :aria-label="t('memorisation.aiCheck.colourMeterAria')"
-              >
-                <div class="post-session-simple__check-meter-track" aria-hidden="true">
-                  <span
-                    v-for="segment in postSessionAiColourSegments"
-                    :key="`quiz-ai-meter-${segment.key}`"
-                    class="post-session-simple__check-meter-segment"
-                    :class="segment.tone"
-                    :style="{ flexGrow: segment.count, flexBasis: 0 }"
-                  ></span>
-                </div>
-                <ul class="post-session-simple__check-meter-legend">
-                  <li
-                    v-for="segment in postSessionAiColourSegments"
-                    :key="`quiz-ai-legend-${segment.key}`"
-                    :class="segment.tone"
+              <div v-if="postSessionShowAiDetailsToggle" class="post-session-simple__ai-details">
+                <button
+                  type="button"
+                  class="post-session-simple__ai-details-toggle"
+                  :aria-expanded="postSessionAiDetailsExpanded ? 'true' : 'false'"
+                  @click="postSessionAiDetailsExpanded = !postSessionAiDetailsExpanded"
+                >
+                  {{ postSessionAiDetailsExpanded
+                    ? (t('memorisation.postSession.recommendation.hideDetails') || 'Hide details')
+                    : (t('memorisation.postSession.recommendation.viewDetails') || 'View details') }}
+                </button>
+                <div
+                  v-if="postSessionAiDetailsExpanded"
+                  class="post-session-simple__ai-details-body"
+                >
+                  <div
+                    v-if="postSessionAiColourSegments.length"
+                    class="post-session-simple__check-meter quiz-ai-result__meter"
+                    role="img"
+                    :aria-label="t('memorisation.aiCheck.colourMeterAria')"
                   >
-                    <span aria-hidden="true"></span>
-                    {{ segment.label }} {{ segment.count }}
-                  </li>
-                </ul>
+                    <div class="post-session-simple__check-meter-track" aria-hidden="true">
+                      <span
+                        v-for="segment in postSessionAiColourSegments"
+                        :key="`quiz-ai-meter-${segment.key}`"
+                        class="post-session-simple__check-meter-segment"
+                        :class="segment.tone"
+                        :style="{ flexGrow: segment.count, flexBasis: 0 }"
+                      ></span>
+                    </div>
+                    <ul class="post-session-simple__check-meter-legend">
+                      <li
+                        v-for="segment in postSessionAiColourSegments"
+                        :key="`quiz-ai-legend-${segment.key}`"
+                        :class="segment.tone"
+                      >
+                        <span aria-hidden="true"></span>
+                        {{ segment.label }}
+                      </li>
+                    </ul>
+                  </div>
+                  <ul class="quiz-ai-result__metrics">
+                    <li
+                      v-for="metric in postSessionAiDetailsMetrics"
+                      :key="`quiz-detail-${metric.key}`"
+                      data-tone="soft"
+                    >
+                      <span>{{ metric.label }}</span>
+                      <strong>{{ metric.value }}</strong>
+                    </li>
+                  </ul>
+                </div>
               </div>
-              <ul v-if="postSessionAiResultMetrics.length" class="quiz-ai-result__metrics">
-                <li v-for="metric in postSessionAiResultMetrics" :key="metric.key" :data-tone="metric.tone || undefined">
-                  <span>{{ metric.label }}</span>
-                  <strong>{{ metric.value }}</strong>
-                </li>
-              </ul>
-              <p v-if="postSessionAiReviewDetails?.focus" class="quiz-ai-result__focus">
-                {{ postSessionAiReviewDetails.focus }}
-              </p>
-              <ul v-if="postSessionQuizAiHighlights.length" class="quiz-ai-result__highlights">
-                <li v-for="(item, idx) in postSessionQuizAiHighlights" :key="`hl-${idx}`">
-                  {{ item.text || item }}
-                </li>
-              </ul>
             </section>
 
             <section

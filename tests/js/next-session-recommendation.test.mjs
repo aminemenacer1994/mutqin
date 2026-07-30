@@ -241,15 +241,36 @@ function t(key, params = {}) {
   const vue = await fs.readFile(path.join(root, 'views/Memorisation.vue'), 'utf8')
   const js = await fs.readFile(path.join(root, 'views/Memorisation.js'), 'utf8')
   const css = await fs.readFile(path.join(root, 'views/Memorisation.css'), 'utf8')
+  const en = await fs.readFile(path.join(root, 'locales/en.json'), 'utf8')
   const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>/)?.[0] || ''
 
   assert.match(vue, /Teleport to="body"/)
   assert.match(vue, /post-session-simple/)
   assert.match(vue, /post-session-simple__actions--3|post-session-simple__btn--primary/)
   assert.match(vue, /data-testid="post-session-actions"/)
-  assert.match(vue, /data-action="test-with-ai"/)
-  assert.match(vue, /data-action="continue"/)
-  assert.match(vue, /data-action="choose-session"/)
+  assert.match(vue, /postSessionPlanEncouragement/)
+  assert.match(vue, /postSessionRecommendationReasonLine/)
+  assert.match(vue, /post-session-simple__focus-phrase/)
+  assert.match(vue, /onPostSessionFocusPhraseActivate/)
+  assert.match(js, /resolvePostSessionFocusPhrase/)
+  assert.match(js, /resolvePostSessionReturnCopy/)
+  assert.match(js, /steadyRepetitionEncouragement/)
+  assert.match(js, /evidenceReturnTomorrow/)
+  assert.doesNotMatch(
+    String(js.match(/resolvePostSessionReturnCopy[\s\S]*?onPostSessionFocusPhraseActivate/)?.[0] || ''),
+    /return 'Tomorrow'|return \"Tomorrow\"/,
+    'Return row must not fabricate tomorrow without a schedule',
+  )
+  assert.match(css, /\.post-session-simple__plan-encouragement[\s\S]*?background:\s*transparent/)
+  assert.match(css, /\.post-session-simple__focus-phrase/)
+  assert.match(en, /Practise these āyāt again|Practise these ayat again/)
+  assert.match(en, /Steady repetition builds lasting memorisation/)
+  assert.match(vue, /postSessionCtaButtons/)
+  assert.match(vue, /onPostSessionCtaAction/)
+  assert.match(vue, /data-cta-state/)
+  assert.match(js, /resolvePostSessionCtaState|mapPostSessionCtas/)
+  assert.match(js, /reviseFocusPhraseFromRecommendation/)
+  assert.match(js, /isMeaningfulFocusPhraseRevision/)
   assert.doesNotMatch(vue, /post-session-simple__confidence/, 'confidence prompt removed from completion UI')
   assert.doesNotMatch(vue, /confidencePrompt/, 'confidence prompt copy removed from completion UI')
   assert.doesNotMatch(vue, /SESSION COMPLETE|Alhamdulillah/)
@@ -257,8 +278,11 @@ function t(key, params = {}) {
   assert.doesNotMatch(vue, /post-session-inline-select/)
   assert.doesNotMatch(vue, /postSessionWhyLabel/, 'always-visible why label removed')
   assert.match(vue, /post-session-simple__ai-review/, 'AI result syncs into Session Complete')
-  assert.match(vue, /post-session-simple__check-meter/, 'AI colour meter shown on Session Complete')
-  assert.match(vue, /post-session-simple__ai-metrics/, 'AI performance metrics shown on Session Complete')
+  assert.match(vue, /post-session-simple__ai-recommendation/, 'recommendation appears inside AI result card')
+  assert.match(vue, /post-session-simple__ai-details/, 'technical metrics behind View details')
+  assert.match(vue, /postSessionInlineRecommendationRows/, 'inline Focus/Method/Next before details')
+  assert.match(vue, /post-session-simple__check-meter/, 'AI colour meter available behind details')
+  assert.match(vue, /post-session-simple__ai-metrics/, 'AI performance metrics available behind details')
   assert.ok(completionModal.length > 0, 'premium completion modal present')
   assert.doesNotMatch(completionModal, /ps-quiz/, 'quiz section removed from completion modal')
   assert.doesNotMatch(completionModal, /startPostSessionAdaptiveCheck/, 'quiz CTA removed from completion modal')
@@ -276,9 +300,9 @@ function t(key, params = {}) {
   assert.match(js, /preferVisible/)
   assert.match(js, /amdDifficultyPercent = 100/)
   assert.match(js, /rebuildAmdHiddenWordMask\(\)/)
-  assert.match(completionModal, /postSessionRecommendationStep === 'confirm'/, 'confirm step available when needed')
+  assert.match(js, /postSessionCtaState/, 'confirm step available when needed')
   assert.match(vue, /testWithAi|openPostSessionAiRecite|onPostSessionTestWithAi/)
-  assert.match(vue, /onPostSessionContinueToAyahs|onPostSessionCalmPrimaryAction/)
+  assert.match(vue, /onPostSessionContinueToAyahs|onPostSessionCalmPrimaryAction|onPostSessionCtaAction/)
   assert.match(js, /aiReciteAdvanceToNextSession/)
   assert.match(js, /resolveLiveTechniqueGuide|liveTechniqueGuide/)
   assert.match(js, /practice-focus-word|focusPracticeWeakWord|practiceFocusWeakWords/)
@@ -312,7 +336,8 @@ function t(key, params = {}) {
     /post-session-simple__plan-start/,
     'plan card must not duplicate the footer primary CTA'
   )
-  assert.match(vue, /onPostSessionContinueToAyahs|onPostSessionCalmPrimaryAction/)
+  assert.match(vue, /onPostSessionCtaAction|onPostSessionContinueToAyahs|onPostSessionCalmPrimaryAction/)
+  assert.match(js, /onPostSessionContinueToAyahs|onPostSessionCalmPrimaryAction|reviseFocusPhraseFromRecommendation/)
   assert.match(
     css,
     /\.post-session-simple\.post-session-simple--premium\.post-session-simple--calm-v2 \.post-session-simple__dialog[\s\S]*?width:\s*min\(42rem/,

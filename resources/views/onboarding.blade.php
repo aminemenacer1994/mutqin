@@ -15,14 +15,14 @@
     <meta name="apple-mobile-web-app-title" content="Mutqin">
     <title>Mutqin - AI-Powered Quran Memorization | Master Tajweed with Artificial Intelligence</title>
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=20260730b">
-    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png?v=20260730b">
-    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=20260730b">
-    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=20260730b">
-    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=20260730b">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=20260730b">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=20260730b">
-    <link rel="shortcut icon" href="/favicon.ico?v=20260730b">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=20260730c">
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png?v=20260730c">
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=20260730c">
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=20260730c">
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=20260730c">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=20260730c">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=20260730c">
+    <link rel="shortcut icon" href="/favicon.ico?v=20260730c">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">

@@ -36,6 +36,10 @@ import {
   primarySurfaceForPhase,
   shouldHideCompletionUnderAi,
 } from '../../resources/js/scripts/session/completionFlow.js'
+import {
+  mapPostSessionCtas,
+  POST_SESSION_CTA_STATES,
+} from '../../resources/js/scripts/recommendations/postSessionCtaMapping.js'
 
 // 1. Finishing a session automatically opens Session Complete.
 {
@@ -48,12 +52,15 @@ import {
   assert.equal(primarySurfaceForPhase(phase), 'completion')
 }
 
-// 2–3. Session Complete contains exactly three primary actions (Continue / Test with AI / Choose)
-//     and desktop uses a three-column action layout (CSS class contract).
+// 2–3. Session Complete contains exactly three actions from the central CTA mapper
+//     (primary / secondary / tertiary) and uses the --3 action layout contract.
 {
-  const actions = ['continue', 'test-with-ai', 'choose-session']
-  assert.equal(actions.length, 3)
-  assert.deepEqual(actions, ['continue', 'test-with-ai', 'choose-session'])
+  const needsPractice = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE)
+  assert.equal(needsPractice.length, 3)
+  assert.equal(needsPractice[0].variant, 'primary')
+  assert.equal(needsPractice[0].labelKey, 'reviseFocusPhrase')
+  assert.equal(needsPractice[1].variant, 'secondary')
+  assert.equal(needsPractice[2].variant, 'ghost')
   // Layout contract used by Memorisation.css / Memorisation.vue
   const desktopGridClass = 'post-session-simple__actions--3'
   const cardClass = 'post-session-simple__action-card'

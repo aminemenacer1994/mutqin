@@ -115,7 +115,7 @@ export function formatSurahAyahLabel(surahName, rangeOrStart, endOrT, maybeT) {
   }) || `${surah} ${MIDDLE_DOT} ${rangeLabel}`
 }
 
-/** Continue to Ayah 7 | Continue to Ayahs 4–6 */
+/** Continue with Ayah 7 | Continue with Ayahs 4–6 */
 export function formatContinueToAyahLabel(rangeOrStart, endOrT, maybeT) {
   const hasSeparateEnd = typeof endOrT === 'number' || (endOrT != null && typeof endOrT !== 'function')
   const range = hasSeparateEnd
@@ -126,13 +126,114 @@ export function formatContinueToAyahLabel(rangeOrStart, endOrT, maybeT) {
 
   if (range.isSingle) {
     return translate(t, `${LABELS_PREFIX}.continueToAyah`, { ayah: range.start })
-      || `Continue to Ayah ${range.start}`
+      || `Continue with Ayah ${range.start}`
   }
 
   return translate(t, `${LABELS_PREFIX}.continueToAyahs`, {
     start: range.start,
     end: range.end,
-  }) || `Continue to Ayahs ${range.start}${EN_DASH}${range.end}`
+  }) || `Continue with Ayahs ${range.start}${EN_DASH}${range.end}`
+}
+
+/**
+ * Bare number spans for templates that already say “ayahs …”.
+ *   [1, 2, 3] → 1–3
+ *   [1, 3]    → 1, 3
+ *   [7]       → 7
+ * Contiguous runs never use comma lists (never `1, 2, 3`).
+ *
+ * @param {Array<number|string>|null|undefined} ayahNumbers
+ * @returns {string}
+ */
+export function formatAyahNumberSpans(ayahNumbers) {
+  const nums = [...new Set(
+    (Array.isArray(ayahNumbers) ? ayahNumbers : [])
+      .map((n) => Number(n))
+      .filter((n) => isValidAyahNumber(n)),
+  )].sort((a, b) => a - b)
+
+  if (!nums.length) return ''
+
+  const runs = []
+  let runStart = nums[0]
+  let runEnd = nums[0]
+  for (let i = 1; i < nums.length; i += 1) {
+    if (nums[i] === runEnd + 1) {
+      runEnd = nums[i]
+      continue
+    }
+    runs.push([runStart, runEnd])
+    runStart = nums[i]
+    runEnd = nums[i]
+  }
+  runs.push([runStart, runEnd])
+
+  return runs
+    .map(([start, end]) => (start === end ? String(start) : `${start}${EN_DASH}${end}`))
+    .join(', ')
+}
+
+/**
+ * Format a list of ayah numbers so consecutive runs use en-dash ranges.
+ *   [1, 2, 3] → Ayahs 1–3
+ *   [1, 3]    → Ayah 1, Ayah 3
+ *   [1]       → Ayah 1
+ * Never emits "Ayahs 1, 2, 3" for a contiguous set.
+ *
+ * @param {Array<number|string>|null|undefined} ayahNumbers
+ * @param {Function} [t]
+ * @returns {string}
+ */
+export function formatAyahNumbersLabel(ayahNumbers, t) {
+  const nums = [...new Set(
+    (Array.isArray(ayahNumbers) ? ayahNumbers : [])
+      .map((n) => Number(n))
+      .filter((n) => isValidAyahNumber(n)),
+  )].sort((a, b) => a - b)
+
+  if (!nums.length) return ''
+  if (nums.length === 1) return formatAyahRangeLabel(nums[0], t)
+
+  const runs = []
+  let runStart = nums[0]
+  let runEnd = nums[0]
+  for (let i = 1; i < nums.length; i += 1) {
+    if (nums[i] === runEnd + 1) {
+      runEnd = nums[i]
+      continue
+    }
+    runs.push([runStart, runEnd])
+    runStart = nums[i]
+    runEnd = nums[i]
+  }
+  runs.push([runStart, runEnd])
+
+  // Single contiguous run → canonical “Ayahs 1–3”
+  if (runs.length === 1) {
+    return formatAyahRangeLabel(runs[0][0], runs[0][1], t)
+  }
+
+  return runs.map(([start, end]) => formatAyahRangeLabel(start, end, t)).join(', ')
+}
+
+/** Check Ayah 7 again. | Check Ayahs 1–3 again. */
+export function formatCheckAyahsAgainLabel(rangeOrStart, endOrT, maybeT) {
+  const hasSeparateEnd = typeof endOrT === 'number' || (endOrT != null && typeof endOrT !== 'function')
+  const range = hasSeparateEnd
+    ? normalizeAyahRange(rangeOrStart, endOrT)
+    : normalizeAyahRange(rangeOrStart)
+  const t = hasSeparateEnd ? maybeT : endOrT
+  if (!range) return ''
+
+  const rangeLabel = formatAyahRangeLabel(range, t)
+  if (!rangeLabel) return ''
+
+  return translate(t, `${LABELS_PREFIX}.checkAyahsAgain`, {
+    range: rangeLabel,
+    start: range.start,
+    end: range.end,
+    ayah: range.start,
+  }) || `Check ${rangeLabel} again.`
 }
 
 /** Repeat Ayah 7 | Repeat Ayahs 4–6 */

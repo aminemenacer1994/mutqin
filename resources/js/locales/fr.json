@@ -1186,7 +1186,7 @@
           "mixed": "Needs review",
           "weak": "Needs practice"
         },
-        "repeatThisRange": "Recommended plan",
+        "repeatThisRange": "Pratiquer ces ayahs à nouveau",
         "continueNextSet": "Recommended plan",
         "continueNextSurahShort": "Recommended plan",
         "repeatRangeTitle": "{surah} · {range}",
@@ -1259,7 +1259,40 @@
         "aiFocusSequence": "Restart from the first ayah and keep the order steady.",
         "aiFocusWeakAyah": "Spend the next pass on ayah {ayah} with Focus mode.",
         "aiFocusWeakAyahs": "Revisit ayahs {ayahs} before continuing.",
-        "aiFirstBody": "Testez d’abord avec l’IA. Votre score et votre plan apparaîtront ici après l’écoute."
+        "aiFirstBody": "Testez d’abord avec l’IA. Votre score et votre plan apparaîtront ici après l’écoute.",
+        "steadyRepetitionEncouragement": "Une répétition régulière construit une mémorisation durable.",
+        "phraseNeedsAttention": "Une phrase de l’ayah {ayah} n’était pas claire.",
+        "phrasesNeedAttention": "Quelques phrases demandent encore de l’attention.",
+        "ayahNeedsAttention": "L’ayah {ayah} n’était pas claire.",
+        "evidenceReviewNow": "Revérifiez cette plage.",
+        "evidenceReturnTomorrow": "Réviser demain",
+        "evidenceReturnOn": "Réviser le {date}",
+        "playFocusPhrase": "Écouter la phrase ciblée",
+        "openFocusPhrase": "Ouvrir la phrase ciblée en pratique",
+        "aiSummaryMatchedWords": "Nous avons clairement reconnu {matched} mots sur {total}.",
+        "aiSummaryFocusPhrase": "Concentrez-vous sur la phrase surlignée avant de revérifier.",
+        "aiSummaryFocusRange": "Révisez cette plage, puis revérifiez.",
+        "aiSummaryStrongFollowUp": "Bel effort — continuez tant que c’est encore frais.",
+        "aiMetricConfidence": "Confiance de reconnaissance",
+        "zeroMatchStatus": "Pratiquons cette plage à nouveau",
+        "zeroMatchSummary": "Nous avons entendu votre récitation, mais n’avons pas encore pu reconnaître les mots avec confiance.",
+        "zeroMatchProgressLabel": "Pas encore reconnu",
+        "zeroMatchHint": "Une courte révision aidera les mots à se fixer avant de revérifier.",
+        "zeroMatchFocus": "Révisez cette plage lentement, puis revérifiez.",
+        "insufficientAudioStatus": "Impossible d’évaluer cette tentative",
+        "insufficientAudioSummary": "Nous n’avons pas entendu assez de récitation claire pour évaluer cette tentative. Réessayez.",
+        "insufficientAudioMicSummary": "L’accès au microphone est bloqué. Autorisez le micro, puis réessayez.",
+        "insufficientAudioShortSummary": "Cet enregistrement est trop court. Récitez un peu plus longtemps, puis réessayez.",
+        "insufficientAudioProcessingSummary": "Impossible de traiter cet enregistrement. Réessayez.",
+        "insufficientAudioHint": "Récitez clairement dans le microphone, puis réessayez.",
+        "insufficientAudioFocus": "Vérifiez votre microphone, puis réessayez.",
+        "aiMetricDetectedWords": "Mots détectés",
+        "aiMetricMissedWords": "Mots manqués",
+        "aiMetricSequence": "Séquence",
+        "aiMetricOrderNotAssessed": "Non évalué",
+        "aiMetricSequenceNotEnough": "Pas assez de mots reconnus pour évaluer",
+        "viewDetails": "Voir les détails",
+        "hideDetails": "Masquer les détails"
       },
       "viewStats": "View stats",
       "hideStats": "Hide stats",
@@ -1268,7 +1301,38 @@
       "celebrationMessage": "Your effort is recorded with sincerity.",
       "duaStrengthen": "May Allah strengthen what you have memorised and make it firm in your heart.",
       "duaStrengthenShort": "Qu’Allah renforce ce que vous avez mémorisé.",
-      "sessionStats": "Statistiques"
+      "sessionStats": "Statistiques",
+      "actions": {
+        "testWithAi": "Vérifier la mémorisation",
+        "testWithAiAgain": "Revérifier",
+        "chooseAnotherSession": "Choisir une autre session",
+        "continueToAyahsFallback": "Continuer avec barakah",
+        "retest": "Revérifier",
+        "tryRecordingAgain": "Réessayer l’enregistrement",
+        "checkMicrophone": "Vérifier le micro",
+        "close": "Fermer",
+        "skipForNow": "Passer",
+        "keepPractising": "Continuer à pratiquer",
+        "continuePractising": "Poursuivre la pratique",
+        "reviseFocusPhrase": "Réviser la phrase ciblée",
+        "reviseThisRange": "Réviser cette plage",
+        "continueToNextRange": "Passer à la plage suivante",
+        "reviewOnceMore": "Réviser encore une fois",
+        "chooseAnotherRange": "Autre plage",
+        "chooseDifferentRange": "Autre plage"
+      },
+      "coach": {
+        "subtitles": {
+          "retestAfterPractice": "Renforcez cette plage avant d’avancer."
+        },
+        "evidenceMethod": "Méthode",
+        "evidenceReview": "Ensuite",
+        "evidenceNext": "Ensuite",
+        "evidenceReturn": "Retour",
+        "evidenceThen": "Ensuite",
+        "evidenceThenAyah": "Continuer avec l’ayah {ayah}",
+        "evidenceThenRange": "Continuer avec les ayahs {from}–{to}"
+      }
     },
     "start_reciting_prompt": "Commencez à réciter",
     "view_all_recording_library": "Voir toute la bibliothèque",
@@ -1670,6 +1734,28 @@
       "toolRecite": "Recite",
       "toolAudio": "Audio help",
       "toolMemorizing": "Memorizing"
+    },
+    "labels": {
+      "continueToAyah": "Continuer avec l’ayah {ayah}",
+      "continueToAyahs": "Continuer avec les ayahs {start}–{end}",
+      "checkAyahsAgain": "Revérifier {range}."
+    },
+    "postSessionChoice": {
+      "title": "Que souhaitez-vous pratiquer ensuite ?",
+      "desc": "Répétez le plan recommandé ou créez votre propre session.",
+      "repeatRecommended": "Répéter la session recommandée",
+      "repeatRecommendedDesc": "Pratiquez à nouveau la même plage et les mêmes réglages recommandés.",
+      "createCustom": "Créer une session personnalisée",
+      "createCustomDesc": "Choisissez votre sourate, votre plage d’ayahs et vos réglages.",
+      "startCustomSession": "Démarrer la session personnalisée"
+    },
+    "aiRecitePlan": {
+      "whyStrong": "Votre rappel est solide. Une révision légère à un rythme régulier le maintiendra.",
+      "tech": {
+        "chainingHow": "Pratiquez-la en deux courtes parties, puis reliez-les.",
+        "phrasePartsHow": "Pratiquez la phrase en petites parties, puis récitez-la d’un trait."
+      },
+      "whyEvidence": "Une phrase de l’ayah {ayah} n’était pas claire."
     }
   },
   "toasts": {

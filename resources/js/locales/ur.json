@@ -1186,7 +1186,7 @@
           "mixed": "Needs review",
           "weak": "Needs practice"
         },
-        "repeatThisRange": "Recommended plan",
+        "repeatThisRange": "ان آیات کی دوبارہ مشق کریں",
         "continueNextSet": "Recommended plan",
         "continueNextSurahShort": "Recommended plan",
         "repeatRangeTitle": "{surah} · {range}",
@@ -1259,7 +1259,40 @@
         "aiFocusSequence": "Restart from the first ayah and keep the order steady.",
         "aiFocusWeakAyah": "Spend the next pass on ayah {ayah} with Focus mode.",
         "aiFocusWeakAyahs": "Revisit ayahs {ayahs} before continuing.",
-        "aiFirstBody": "پہلے AI کے ساتھ آزمائیں۔ آپ کا اسکور اور منصوبہ سننے کے بعد یہاں ظاہر ہوگا۔"
+        "aiFirstBody": "پہلے AI کے ساتھ آزمائیں۔ آپ کا اسکور اور منصوبہ سننے کے بعد یہاں ظاہر ہوگا۔",
+        "steadyRepetitionEncouragement": "مستقل تکرار پائیدار حفظ بناتی ہے۔",
+        "phraseNeedsAttention": "آیت {ayah} کی ایک عبارت واضح نہیں تھی۔",
+        "phrasesNeedAttention": "کچھ عبارات اب بھی توجہ مانگتی ہیں۔",
+        "ayahNeedsAttention": "آیت {ayah} واضح نہیں تھی۔",
+        "evidenceReviewNow": "اس دائرے کو دوبارہ چیک کریں۔",
+        "evidenceReturnTomorrow": "کل دوبارہ جائزہ لیں",
+        "evidenceReturnOn": "{date} کو دوبارہ جائزہ لیں",
+        "playFocusPhrase": "مرکوزی عبارت چلائیں",
+        "openFocusPhrase": "مشق میں مرکزی عبارت کھولیں",
+        "aiSummaryMatchedWords": "ہم نے {total} میں سے {matched} الفاظ واضح طور پر پہچانے۔",
+        "aiSummaryFocusPhrase": "دوبارہ چیک کرنے سے پہلے نمایاں عبارت پر توجہ دیں۔",
+        "aiSummaryFocusRange": "اس دائرے کا اعادہ کریں، پھر دوبارہ چیک کریں۔",
+        "aiSummaryStrongFollowUp": "اچھا کام — جب تک تازہ ہے آگے بڑھ سکتے ہیں۔",
+        "aiMetricConfidence": "شناخت کا اعتماد",
+        "zeroMatchStatus": "آئیے اس دائرے کی دوبارہ مشق کریں",
+        "zeroMatchSummary": "ہم نے آپ کی تلاوت سنی، مگر الفاظ کو ابھی اعتماد سے نہیں پہچان سکے۔",
+        "zeroMatchProgressLabel": "ابھی نہیں پہچانا گیا",
+        "zeroMatchHint": "مختصر اعادہ الفاظ کو دوبارہ چیک سے پہلے مستحکم کرنے میں مدد دے گا۔",
+        "zeroMatchFocus": "اس دائرے کا آہستہ اعادہ کریں، پھر دوبارہ چیک کریں۔",
+        "insufficientAudioStatus": "ہم اس کوشش کا جائزہ نہیں لے سکے",
+        "insufficientAudioSummary": "اس کوشش کا جائزہ لینے کے لیے کافی واضح تلاوت نہیں سنی۔ براہِ کرم دوبارہ کوشش کریں۔",
+        "insufficientAudioMicSummary": "مائیکروفون تک رسائی بند ہے۔ مائیکروفون کی اجازت دیں، پھر دوبارہ ریکارڈ کریں۔",
+        "insufficientAudioShortSummary": "ریکارڈنگ جائزے کے لیے بہت مختصر تھی۔ تھوڑی دیر اور تلاوت کریں، پھر دوبارہ کوشش کریں۔",
+        "insufficientAudioProcessingSummary": "ہم اس ریکارڈنگ پر کارروائی نہیں کر سکے۔ براہِ کرم دوبارہ ریکارڈ کریں۔",
+        "insufficientAudioHint": "مائیکروفون میں واضح تلاوت کریں، پھر دوبارہ ریکارڈ کریں۔",
+        "insufficientAudioFocus": "اپنا مائیکروفون چیک کریں، پھر دوبارہ ریکارڈ کریں۔",
+        "aiMetricDetectedWords": "پہچانے گئے الفاظ",
+        "aiMetricMissedWords": "چھوٹے ہوئے الفاظ",
+        "aiMetricSequence": "ترتیب",
+        "aiMetricOrderNotAssessed": "جائزہ نہیں ہوا",
+        "aiMetricSequenceNotEnough": "جائزے کے لیے کافی الفاظ نہیں ملے",
+        "viewDetails": "تفصیلات دیکھیں",
+        "hideDetails": "تفصیلات چھپائیں"
       },
       "viewStats": "View stats",
       "hideStats": "Hide stats",
@@ -1268,7 +1301,38 @@
       "celebrationMessage": "Your effort is recorded with sincerity.",
       "duaStrengthen": "May Allah strengthen what you have memorised and make it firm in your heart.",
       "duaStrengthenShort": "اللہ محفوظ کردہ کو مضبوط فرمائے۔",
-      "sessionStats": "سیشن کے اعداد"
+      "sessionStats": "سیشن کے اعداد",
+      "actions": {
+        "testWithAi": "حفظ چیک کریں",
+        "testWithAiAgain": "دوبارہ چیک کریں",
+        "chooseAnotherSession": "کوئی اور نشست منتخب کریں",
+        "continueToAyahsFallback": "برکت کے ساتھ جاری رکھیں",
+        "retest": "دوبارہ چیک کریں",
+        "tryRecordingAgain": "دوبارہ ریکارڈ کریں",
+        "checkMicrophone": "مائیکروفون چیک کریں",
+        "close": "بند کریں",
+        "skipForNow": "ابھی چھوڑیں",
+        "keepPractising": "مشق جاری رکھیں",
+        "continuePractising": "مشق جاری رکھیں",
+        "reviseFocusPhrase": "مرکوزی عبارت کا اعادہ",
+        "reviseThisRange": "اس دائرے کا اعادہ",
+        "continueToNextRange": "اگلے دائرے کی طرف جائیں",
+        "reviewOnceMore": "ایک بار پھر جائزہ لیں",
+        "chooseAnotherRange": "دوسرا دائرہ",
+        "chooseDifferentRange": "دوسرا دائرہ"
+      },
+      "coach": {
+        "subtitles": {
+          "retestAfterPractice": "آگے بڑھنے سے پہلے اس دائرے کو مضبوط کریں۔"
+        },
+        "evidenceMethod": "طریقہ",
+        "evidenceReview": "اگلا",
+        "evidenceNext": "اگلا",
+        "evidenceReturn": "واپسی",
+        "evidenceThen": "اگلا",
+        "evidenceThenAyah": "آیت {ayah} کے ساتھ جاری رکھیں",
+        "evidenceThenRange": "آیات {from}–{to} کے ساتھ جاری رکھیں"
+      }
     },
     "start_reciting_prompt": "تلاوت شروع کریں",
     "view_all_recording_library": "تمام ریکارڈنگ لائبریری دیکھیں",
@@ -1670,6 +1734,28 @@
       "toolRecite": "Recite",
       "toolAudio": "Audio help",
       "toolMemorizing": "Memorizing"
+    },
+    "labels": {
+      "continueToAyah": "آیت {ayah} کے ساتھ جاری رکھیں",
+      "continueToAyahs": "آیات {start}–{end} کے ساتھ جاری رکھیں",
+      "checkAyahsAgain": "{range} دوبارہ چیک کریں۔"
+    },
+    "postSessionChoice": {
+      "title": "آگے آپ کیا مشق کرنا چاہتے ہیں؟",
+      "desc": "تجویز کردہ منصوبہ دہرائیں یا اپنی نشست بنائیں۔",
+      "repeatRecommended": "تجویز کردہ نشست دہرائیں",
+      "repeatRecommendedDesc": "وہی تجویز کردہ دائرہ اور ترتیبات دوبارہ مشق کریں۔",
+      "createCustom": "حسبِ ضرورت نشست بنائیں",
+      "createCustomDesc": "اپنی سورہ، آیات کا دائرہ اور مشق کی ترتیبات خود منتخب کریں۔",
+      "startCustomSession": "حسبِ ضرورت نشست شروع کریں"
+    },
+    "aiRecitePlan": {
+      "whyStrong": "آپ کا یاد رکھنا مضبوط ہے۔ ہلکا سا مستقل اعادہ اسے قائم رکھے گا۔",
+      "tech": {
+        "chainingHow": "اسے دو مختصر حصوں میں مشق کریں، پھر جوڑیں۔",
+        "phrasePartsHow": "عبارت کے چھوٹے حصے مشق کریں، پھر اسے ایک بار میں پڑھیں۔"
+      },
+      "whyEvidence": "آیت {ayah} کی ایک عبارت واضح نہیں تھی۔"
     }
   },
   "toasts": {

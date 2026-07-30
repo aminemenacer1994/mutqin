@@ -295,14 +295,16 @@ export function toEasternArabicDigits(value) {
 /**
  * Label for ayah-end markers when not using QCF page glyphs.
  * Prefers API `textQpc` digits; falls back to the ayah number from verseKey.
+ * Prefixed with U+06DD so Amiri/Scheherazade draw the ornate frame with
+ * the Eastern digit centered inside (same as stacked layout markers).
  */
 export function formatMadaniAyahEndLabel(word = {}) {
   const raw = String(word.textQpc || word.text_qpc_hafs || word.text || '').trim()
   const digits = raw.replace(/[^\d٠-٩]/g, '')
-  if (digits) return toEasternArabicDigits(digits)
+  if (digits) return `\u06DD${toEasternArabicDigits(digits)}`
 
   const ayah = Number(String(word.verseKey || word.verse_key || '').split(':')[1])
-  if (Number.isFinite(ayah) && ayah > 0) return toEasternArabicDigits(ayah)
+  if (Number.isFinite(ayah) && ayah > 0) return `\u06DD${toEasternArabicDigits(ayah)}`
 
   return raw
 }

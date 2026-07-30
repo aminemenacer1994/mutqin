@@ -140,8 +140,8 @@ assert.deepEqual(
 )
 
 assert.equal(toEasternArabicDigits('67'), '٦٧')
-assert.equal(formatMadaniAyahEndLabel({ textQpc: '6' }), '٦')
-assert.equal(formatMadaniAyahEndLabel({ text_qpc_hafs: '٧' }), '٧')
-assert.equal(formatMadaniAyahEndLabel({ verseKey: '2:7', textQpc: '' }), '٧')
+assert.equal(formatMadaniAyahEndLabel({ textQpc: '6' }), '\u06DD٦')
+assert.equal(formatMadaniAyahEndLabel({ text_qpc_hafs: '٧' }), '\u06DD٧')
+assert.equal(formatMadaniAyahEndLabel({ verseKey: '2:7', textQpc: '' }), '\u06DD٧')
 
 console.log('Madani page layout tests passed')

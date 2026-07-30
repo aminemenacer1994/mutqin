@@ -7,7 +7,7 @@ import {
   getTechniqueDescription,
   getTechniqueShortLabel,
 } from '../techniques/techniqueDisplay.js'
-import { formatRepetitionCountLabel } from '../formatting/ayahLabels.js'
+import { formatRepetitionCountLabel, formatAyahNumberSpans } from '../formatting/ayahLabels.js'
 import { estimatePracticeDuration } from '../session/sessionPracticeCoach.js'
 import {
   resolveRecommendedPlaybackSpeed,
@@ -15,6 +15,9 @@ import {
 
 export {
   formatAyahRangeLabel,
+  formatAyahNumbersLabel,
+  formatAyahNumberSpans,
+  formatCheckAyahsAgainLabel,
   formatContinueToAyahLabel,
   formatRepeatAyahLabel,
   formatSurahAyahLabel,
@@ -974,8 +977,8 @@ export function buildPersonalPracticePlan(input = {}) {
   const focusLabel = focusAyahs.length === 1
     ? translate('planDetail.focusOne', 'Focus on ayah {ayah}', { ayah: focusAyahs[0] })
     : focusAyahs.length > 1
-      ? translate('planDetail.focusMany', 'Focus on ayahs {ayahs}', {
-        ayahs: focusAyahs.join(', '),
+      ? translate('planDetail.focusMany', 'Focus on {ayahs}', {
+        ayahs: formatAyahNumberSpans(focusAyahs) || focusAyahs.join(', '),
       })
       : ''
 

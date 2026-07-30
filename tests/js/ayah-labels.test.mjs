@@ -3,8 +3,11 @@ import en from '../../resources/js/locales/en.json' with { type: 'json' }
 import {
   EN_DASH,
   formatAyahCountLabel,
+  formatAyahNumbersLabel,
+  formatAyahNumberSpans,
   formatAyahRangeLabel,
   formatAttemptCountLabel,
+  formatCheckAyahsAgainLabel,
   formatCompletedSurahAyahLabel,
   formatContinueToAyahLabel,
   formatRepeatAyahLabel,
@@ -60,10 +63,23 @@ const t = makeT(en)
 }
 
 {
-  assert.equal(formatContinueToAyahLabel({ from: 7, to: 7 }, t), 'Continue to Ayah 7')
-  assert.equal(formatContinueToAyahLabel({ from: 4, to: 6 }, t), `Continue to Ayahs 4${EN_DASH}6`)
+  assert.equal(formatContinueToAyahLabel({ from: 7, to: 7 }, t), 'Continue with Ayah 7')
+  assert.equal(formatContinueToAyahLabel({ from: 4, to: 6 }, t), `Continue with Ayahs 4${EN_DASH}6`)
   assert.equal(formatRepeatAyahLabel({ from: 7, to: 7 }, t), 'Repeat Ayah 7')
   assert.equal(formatRepeatAyahLabel({ from: 4, to: 6 }, t), `Repeat Ayahs 4${EN_DASH}6`)
+}
+
+{
+  assert.equal(formatAyahNumbersLabel([1, 2, 3], t), `Ayahs 1${EN_DASH}3`)
+  assert.equal(formatAyahNumbersLabel([1, 3], t), 'Ayah 1, Ayah 3')
+  assert.equal(formatAyahNumbersLabel([7], t), 'Ayah 7')
+  assert.equal(formatAyahNumbersLabel([4, 5, 6, 9], t), `Ayahs 4${EN_DASH}6, Ayah 9`)
+  assert.equal(formatAyahNumbersLabel([]), '')
+  assert.equal(formatAyahNumberSpans([1, 2, 3]), `1${EN_DASH}3`)
+  assert.equal(formatAyahNumberSpans([1, 3]), '1, 3')
+  assert.equal(formatAyahNumberSpans([1, 2, 3, 5, 6]), `1${EN_DASH}3, 5${EN_DASH}6`)
+  assert.equal(formatCheckAyahsAgainLabel({ from: 1, to: 3 }, t), `Check Ayahs 1${EN_DASH}3 again.`)
+  assert.equal(formatCheckAyahsAgainLabel({ from: 7, to: 7 }, t), 'Check Ayah 7 again.')
 }
 
 {

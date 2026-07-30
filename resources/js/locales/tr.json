@@ -1456,7 +1456,7 @@
           "mixed": "Needs review",
           "weak": "Needs practice"
         },
-        "repeatThisRange": "Recommended plan",
+        "repeatThisRange": "Bu ayetleri tekrar çalış",
         "continueNextSet": "Recommended plan",
         "continueNextSurahShort": "Recommended plan",
         "repeatRangeTitle": "{surah} · {range}",
@@ -1529,7 +1529,40 @@
         "aiFocusSequence": "Restart from the first ayah and keep the order steady.",
         "aiFocusWeakAyah": "Spend the next pass on ayah {ayah} with Focus mode.",
         "aiFocusWeakAyahs": "Revisit ayahs {ayahs} before continuing.",
-        "aiFirstBody": "Önce yapay zeka ile test edin. Skorunuz ve planınız dinledikten sonra burada görünür."
+        "aiFirstBody": "Önce yapay zeka ile test edin. Skorunuz ve planınız dinledikten sonra burada görünür.",
+        "steadyRepetitionEncouragement": "Düzenli tekrar kalıcı ezber oluşturur.",
+        "phraseNeedsAttention": "Ayet {ayah} içindeki bir ifade net değildi.",
+        "phrasesNeedAttention": "Birkaç ifade hâlâ dikkat istiyor.",
+        "ayahNeedsAttention": "Ayet {ayah} net değildi.",
+        "evidenceReviewNow": "Bu aralığı tekrar kontrol et.",
+        "evidenceReturnTomorrow": "Yarın tekrar gözden geçir",
+        "evidenceReturnOn": "{date} tarihinde tekrar gözden geçir",
+        "playFocusPhrase": "Odak cümlesini dinle",
+        "openFocusPhrase": "Odak cümlesini pratikte aç",
+        "aiSummaryMatchedWords": "{total} kelimeden {matched} tanesini net biçimde eşleştirdik.",
+        "aiSummaryFocusPhrase": "Tekrar kontrol etmeden önce vurgulanan ifadeye odaklan.",
+        "aiSummaryFocusRange": "Bu aralığı gözden geçir, sonra tekrar kontrol et.",
+        "aiSummaryStrongFollowUp": "Güzel — henüz taze iken devam edebilirsin.",
+        "aiMetricConfidence": "Tanıma güveni",
+        "zeroMatchStatus": "Bu aralığı birlikte yeniden çalışalım",
+        "zeroMatchSummary": "Tilavetini duyduk ama kelimeleri henüz güvenle eşleştiremedik.",
+        "zeroMatchProgressLabel": "Henüz eşleşmedi",
+        "zeroMatchHint": "Kısa bir tekrar, tekrar kontrol etmeden önce kelimelerin yerleşmesine yardımcı olur.",
+        "zeroMatchFocus": "Bu aralığı yavaşça gözden geçir, sonra tekrar kontrol et.",
+        "insufficientAudioStatus": "Bu denemeyi değerlendiremedik",
+        "insufficientAudioSummary": "Bu denemeyi değerlendirmek için yeterince net tilavet duymadık. Lütfen tekrar dene.",
+        "insufficientAudioMicSummary": "Mikrofon erişimi engelli. Mikrofona izin ver, sonra tekrar kaydet.",
+        "insufficientAudioShortSummary": "Kayıt değerlendirme için çok kısaydı. Biraz daha uzun tilavet et, sonra tekrar dene.",
+        "insufficientAudioProcessingSummary": "Bu kaydı işleyemedik. Lütfen tekrar kaydet.",
+        "insufficientAudioHint": "Mikrofona net tilavet et, sonra tekrar kaydet.",
+        "insufficientAudioFocus": "Mikrofonunu kontrol et, sonra tekrar kaydet.",
+        "aiMetricDetectedWords": "Algılanan kelimeler",
+        "aiMetricMissedWords": "Eksik kelimeler",
+        "aiMetricSequence": "Sıra",
+        "aiMetricOrderNotAssessed": "Değerlendirilmedi",
+        "aiMetricSequenceNotEnough": "Değerlendirme için yeterli eşleşen kelime yok",
+        "viewDetails": "Ayrıntıları göster",
+        "hideDetails": "Ayrıntıları gizle"
       },
       "viewStats": "View stats",
       "hideStats": "Hide stats",
@@ -1538,7 +1571,38 @@
       "celebrationMessage": "Your effort is recorded with sincerity.",
       "duaStrengthen": "May Allah strengthen what you have memorised and make it firm in your heart.",
       "duaStrengthenShort": "Allah ezberlediğinizi sağlamlaştırsın.",
-      "sessionStats": "Oturum istatistikleri"
+      "sessionStats": "Oturum istatistikleri",
+      "actions": {
+        "testWithAi": "Ezberi kontrol et",
+        "testWithAiAgain": "Tekrar kontrol et",
+        "chooseAnotherSession": "Başka oturum seç",
+        "continueToAyahsFallback": "Bereketle devam et",
+        "retest": "Tekrar kontrol et",
+        "tryRecordingAgain": "Tekrar kaydet",
+        "checkMicrophone": "Mikrofonu kontrol et",
+        "close": "Kapat",
+        "skipForNow": "Atla",
+        "keepPractising": "Pratiğe devam et",
+        "continuePractising": "Çalışmaya devam et",
+        "reviseFocusPhrase": "Odak cümlesini gözden geçir",
+        "reviseThisRange": "Bu aralığı gözden geçir",
+        "continueToNextRange": "Sonraki aralığa geç",
+        "reviewOnceMore": "Bir kez daha gözden geçir",
+        "chooseAnotherRange": "Başka aralık",
+        "chooseDifferentRange": "Başka aralık"
+      },
+      "coach": {
+        "subtitles": {
+          "retestAfterPractice": "İlerlemeden önce bu aralığı güçlendir."
+        },
+        "evidenceMethod": "Yöntem",
+        "evidenceReview": "Sonraki",
+        "evidenceNext": "Sonraki",
+        "evidenceReturn": "Dönüş",
+        "evidenceThen": "Sonraki",
+        "evidenceThenAyah": "Ayet {ayah} ile devam et",
+        "evidenceThenRange": "Ayetler {from}–{to} ile devam et"
+      }
     },
     "start_reciting_prompt": "Tilavete başla",
     "view_all_recording_library": "Tüm kayıt kütüphanesini gör",
@@ -1940,6 +2004,28 @@
       "toolRecite": "Recite",
       "toolAudio": "Audio help",
       "toolMemorizing": "Memorizing"
+    },
+    "labels": {
+      "continueToAyah": "Ayet {ayah} ile devam et",
+      "continueToAyahs": "Ayetler {start}–{end} ile devam et",
+      "checkAyahsAgain": "{range} aralığını tekrar kontrol et."
+    },
+    "postSessionChoice": {
+      "title": "Sırada neyi pratik etmek istersiniz?",
+      "desc": "Önerilen planı tekrarla veya kendi oturumunu oluştur.",
+      "repeatRecommended": "Önerilen oturumu tekrarla",
+      "repeatRecommendedDesc": "Aynı önerilen aralığı ve ayarları yeniden çalış.",
+      "createCustom": "Özel oturum oluştur",
+      "createCustomDesc": "Kendi sureni, ayet aralığını ve pratik ayarlarını seç.",
+      "startCustomSession": "Özel oturumu başlat"
+    },
+    "aiRecitePlan": {
+      "whyStrong": "Hatırlaman güçlü. Düzenli tempolu hafif bir tekrar bunu sağlam tutar.",
+      "tech": {
+        "chainingHow": "İki kısa parçada çalış, sonra birleştir.",
+        "phrasePartsHow": "İfadeyi küçük parçalarda çalış, sonra tek parça olarak oku."
+      },
+      "whyEvidence": "Ayet {ayah} içindeki bir ifade net değildi."
     }
   },
   "toasts": {

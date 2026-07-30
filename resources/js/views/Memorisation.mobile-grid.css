@@ -500,13 +500,26 @@
   .verse-arabic .verse-ayah-end-number,
   .verse-arabic-with-end .verse-ayah-end-number {
     display: inline-block !important;
-    vertical-align: -0.08em !important;
-    margin-inline: 0.04em 0.02em !important;
+    white-space: nowrap !important;
+    vertical-align: -0.28em !important;
+    width: 1.45em !important;
+    height: 1.55em !important;
+    margin-inline: 0.14em 0.08em !important;
     min-width: 0 !important;
     min-height: 0 !important;
-    font-size: 1.05em !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    background-image: none !important;
+    font-size: 1em !important;
+    line-height: 0 !important;
     opacity: 1 !important;
     visibility: visible !important;
+  }
+
+  .verse-arabic .verse-ayah-end-number__digit,
+  .verse-arabic-with-end .verse-ayah-end-number__digit {
+    display: none !important;
   }
 
   .verse-arabic.word-by-word-meanings {
@@ -3316,22 +3329,36 @@
   .verses-grid .verse-arabic.verse-arabic-primary,
   .verses-grid .verse-arabic.verse-arabic-with-end {
     font-size: calc((var(--verse-font-percent, 95) / 100) * clamp(1.45rem, 6.6vw, 2.05rem)) !important;
-    line-height: 1.45 !important;
-    padding: 4px 2px 6px !important;
+    line-height: 1.85 !important;
+    padding: 6px 2px 8px !important;
     overflow: visible !important;
   }
 
-  /* Stacked ayah end number — Unicode ۝ glyph (shared styles in Memorisation.css) */
+  /* Stacked ayah end number — pre-rendered PNG (digit centered in asset) */
   .verses-grid .verse-arabic .verse-ayah-end-number,
-  .verses-grid .verse-arabic-with-end .verse-ayah-end-number,
-  .verses-grid .verse-arabic .mushaf-ayah-number.verse-ayah-end-number {
+  .verses-grid .verse-arabic-with-end .verse-ayah-end-number {
     display: inline-block !important;
-    vertical-align: -0.08em !important;
-    margin-inline: 0.04em 0.02em !important;
+    white-space: nowrap !important;
+    vertical-align: -0.28em !important;
+    width: 1.45em !important;
+    height: 1.55em !important;
+    margin-inline: 0.14em 0.08em !important;
     float: none !important;
     position: relative !important;
     top: auto !important;
     inset: auto !important;
+    background: transparent !important;
+    background-image: none !important;
+    border-radius: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    font-size: 1em !important;
+    line-height: 0 !important;
+  }
+
+  .verses-grid .verse-arabic .verse-ayah-end-number__digit {
+    display: none !important;
   }
 
   .main.mushaf-mode-active .mushaf-ayah-number,
@@ -4003,7 +4030,8 @@
   .app .verses-grid .verse-arabic-with-end {
     --verse-font-percent: 130 !important;
     font-size: calc(1.3 * clamp(1.3rem, 5.6vw, 1.9rem)) !important;
-    line-height: 1.5 !important;
+    line-height: 1.9 !important;
+    overflow: visible !important;
   }
 
   .app .main.mushaf-mode-active .madani-word,
@@ -4091,14 +4119,33 @@
   .app .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
   .app .main.mushaf-mode-active .madani-word--end.madani-word--fallback,
   .app .main.mushaf-mode-active .madani-word--end {
-    margin-inline: 0.5em 0.48em !important;
+    margin-inline: 0.14em 0.08em !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    font-family: "Amiri Quran", "Amiri", "Scheherazade New", "Noto Naskh Arabic", serif !important;
+    font-size: 1.28em !important;
+    font-weight: 400 !important;
+    vertical-align: -0.12em !important;
+    direction: rtl !important;
   }
 
   .app .verses-grid .verse-arabic .verse-ayah-end-number,
   .app .verses-grid .verse-arabic-with-end .verse-ayah-end-number {
-    margin-inline: 0.04em 0.02em !important;
-    vertical-align: -0.08em !important;
-    font-size: 1.05em !important;
+    display: inline-block !important;
+    width: 1.45em !important;
+    height: 1.55em !important;
+    margin-inline: 0.14em 0.08em !important;
+    vertical-align: -0.28em !important;
+    background: transparent !important;
+    background-image: none !important;
+    font-size: 1em !important;
+    line-height: 0 !important;
   }
 
   .app .verses-grid .verse-font-size-control {
@@ -4221,5 +4268,35 @@
   .app .main.mushaf-mode-active .madani-word--end,
   .main.mushaf-mode-active .madani-word--end {
     margin-inline: 0.28em 0.12em !important;
+  }
+
+  .workspace-empty-state--post-session {
+    min-height: min(70vh, 640px);
+    padding: 1rem var(--mq-mobile-gutter) calc(1.5rem + var(--mq-safe-bottom));
+  }
+
+  .workspace-empty-card--choice {
+    width: 100%;
+    max-width: none;
+    padding: var(--mq-card-pad);
+    border-radius: var(--mq-radius-card);
+  }
+
+  .workspace-empty-choice-grid {
+    gap: var(--mq-grid-gap);
+  }
+
+  .workspace-empty-choice-card {
+    min-height: 72px;
+    padding: 0.95rem 1rem;
+    border-radius: var(--mq-radius-compact);
+  }
+
+  .workspace-empty-choice-card strong {
+    font-size: 0.98rem;
+  }
+
+  .workspace-empty-choice-card span {
+    font-size: 0.86rem;
   }
 }

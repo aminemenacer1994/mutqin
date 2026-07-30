@@ -416,8 +416,8 @@
       "ayahs": "الآيات {start}–{end}",
       "surahAyah": "{surah} · الآية {ayah}",
       "surahAyahs": "{surah} · الآيات {start}–{end}",
-      "continueToAyah": "تابع إلى الآية {ayah}",
-      "continueToAyahs": "تابع إلى الآيات {start}–{end}",
+      "continueToAyah": "تابع مع الآية {ayah}",
+      "continueToAyahs": "تابع مع الآيات {start}–{end}",
       "repeatAyah": "أعد الآية {ayah}",
       "repeatAyahs": "أعد الآيات {start}–{end}",
       "completedSurahAyah": "أتممتَ {surah}، الآية {ayah}.",
@@ -427,7 +427,8 @@
       "repetitionCountOne": "تكرار واحد",
       "repetitionCountOther": "{count} تكرارات",
       "attemptCountOne": "محاولة واحدة",
-      "attemptCountOther": "{count} محاولات"
+      "attemptCountOther": "{count} محاولات",
+      "checkAyahsAgain": "تحقّق من {range} مرة أخرى."
     },
     "workspaceEmpty": {
       "kicker": "جاهز للبدء",
@@ -1129,7 +1130,7 @@
           "practiceDone": "اختبر بالتلاوة الذكية لفتح خطتك التالية.",
           "aiDone": "ركّز على هذه الكلمات تاليًا.",
           "aiFirst": "اختبر بالتلاوة الذكية أولًا — ثم تظهر خطتك هنا.",
-          "retestAfterPractice": "اختبر مجددًا بالتلاوة الذكية. اجتز الاختبار لفتح الجلسة التالية."
+          "retestAfterPractice": "ثبّت هذا النطاق قبل الانتقال."
         },
         "guidance": {
           "recommended": "استمع مرة ثم كرّر.",
@@ -1208,7 +1209,14 @@
               "hint": "اتبع الكلمات بهدوء واتلُ بإخلاص."
             }
           }
-        }
+        },
+        "evidenceMethod": "الطريقة",
+        "evidenceReview": "التالي",
+        "evidenceNext": "التالي",
+        "evidenceReturn": "العودة",
+        "evidenceThen": "التالي",
+        "evidenceThenAyah": "تابع مع الآية {ayah}",
+        "evidenceThenRange": "تابع مع الآيات {from}–{to}"
       },
       "repeat": "إعادة هذه الجلسة",
       "newSession": "بدء جلسة جديدة",
@@ -1479,7 +1487,7 @@
           "mixed": "يحتاج مراجعة",
           "weak": "يحتاج تمرينًا"
         },
-        "repeatThisRange": "خطة مقترحة",
+        "repeatThisRange": "تمرّن على هذه الآيات مرة أخرى",
         "continueNextSet": "خطة مقترحة",
         "continueNextSurahShort": "التالي في خطتك",
         "repeatRangeTitle": "{surah} · {range}",
@@ -1594,7 +1602,40 @@
         "aiFocusWeakAyah": "خصص التمريرة التالية للآية {ayah} بوضع التركيز.",
         "aiFocusWeakAyahs": "راجع الآيات {ayahs} قبل المتابعة.",
         "aiWeakAyahsLabel": "آيات للتركيز",
-        "aiFirstBody": "اختبر بالتلاوة الذكية أولًا. ستظهر نتيجتك وخطة التدريب هنا بعد الاستماع إليك."
+        "aiFirstBody": "اختبر بالتلاوة الذكية أولًا. ستظهر نتيجتك وخطة التدريب هنا بعد الاستماع إليك.",
+        "steadyRepetitionEncouragement": "التكرار الثابت يبني حفظًا يدوم.",
+        "phraseNeedsAttention": "عبارة في الآية {ayah} لم تكن واضحة.",
+        "phrasesNeedAttention": "بعض العبارات ما زالت تحتاج انتباهًا.",
+        "ayahNeedsAttention": "الآية {ayah} لم تكن واضحة.",
+        "evidenceReviewNow": "تحقّق من هذا النطاق مرة أخرى.",
+        "evidenceReturnTomorrow": "راجع مرة أخرى غدًا",
+        "evidenceReturnOn": "راجع مرة أخرى في {date}",
+        "playFocusPhrase": "تشغيل العبارة المركّزة",
+        "openFocusPhrase": "افتح العبارة المركّزة في التمرين",
+        "aiSummaryMatchedWords": "طابقنا بوضوح {matched} من أصل {total} كلمات.",
+        "aiSummaryFocusPhrase": "ركّز على العبارة المميزة قبل التحقق مرة أخرى.",
+        "aiSummaryFocusRange": "راجع هذا النطاق، ثم تحقّق مرة أخرى.",
+        "aiSummaryStrongFollowUp": "أحسنت — يمكنك المتابعة بينما ما زال هذا طازجًا.",
+        "aiMetricConfidence": "ثقة التعرف",
+        "zeroMatchStatus": "لنتمرّن على هذا النطاق مرة أخرى",
+        "zeroMatchSummary": "سمعنا تلاوتك، لكن لم نتمكّن بعد من مطابقة الكلمات بثقة.",
+        "zeroMatchProgressLabel": "لم تُطابق بعد",
+        "zeroMatchHint": "مراجعة قصيرة ستساعد الكلمات على الاستقرار قبل التحقق مرة أخرى.",
+        "zeroMatchFocus": "راجع هذا النطاق ببطء، ثم تحقّق مرة أخرى.",
+        "insufficientAudioStatus": "تعذّر تقييم هذه المحاولة",
+        "insufficientAudioSummary": "لم نسمع تلاوة واضحة كافية لتقييم هذه المحاولة. حاول مرة أخرى.",
+        "insufficientAudioMicSummary": "الوصول إلى الميكروفون محظور. اسمح بالميكروفون ثم سجّل مرة أخرى.",
+        "insufficientAudioShortSummary": "التسجيل قصير جدًا للتقييم. اتلُ قليلًا أطول ثم حاول مرة أخرى.",
+        "insufficientAudioProcessingSummary": "تعذّر معالجة هذا التسجيل. حاول التسجيل مرة أخرى.",
+        "insufficientAudioHint": "اتلُ بوضوح في الميكروفون، ثم سجّل مرة أخرى.",
+        "insufficientAudioFocus": "تحقّق من الميكروفون، ثم سجّل مرة أخرى.",
+        "aiMetricDetectedWords": "الكلمات المكتشفة",
+        "aiMetricMissedWords": "الكلمات الناقصة",
+        "aiMetricSequence": "التسلسل",
+        "aiMetricOrderNotAssessed": "لم يُقيَّم",
+        "aiMetricSequenceNotEnough": "لا توجد كلمات مطابقة كافية للتقييم",
+        "viewDetails": "عرض التفاصيل",
+        "hideDetails": "إخفاء التفاصيل"
       },
       "viewStats": "عرض الإحصاءات",
       "hideStats": "إخفاء الإحصاءات",
@@ -1609,7 +1650,26 @@
       "statsRetries": "إعادة المحاولة",
       "statsAttempt": "الجلسة",
       "statsNew": "جديدة",
-      "statsRepeated": "مكررة"
+      "statsRepeated": "مكررة",
+      "actions": {
+        "testWithAi": "تحقّق من الحفظ",
+        "testWithAiAgain": "تحقّق مرة أخرى",
+        "chooseAnotherSession": "اختر جلسة أخرى",
+        "continueToAyahsFallback": "تابع بالبركة",
+        "retest": "تحقّق مرة أخرى",
+        "tryRecordingAgain": "حاول التسجيل مرة أخرى",
+        "checkMicrophone": "فحص الميكروفون",
+        "close": "إغلاق",
+        "skipForNow": "تخطَّ",
+        "keepPractising": "واصل التمرين",
+        "continuePractising": "تابع التمرين",
+        "reviseFocusPhrase": "راجع العبارة المركّزة",
+        "reviseThisRange": "راجع هذا النطاق",
+        "continueToNextRange": "تابع إلى النطاق التالي",
+        "reviewOnceMore": "راجع مرة أخرى",
+        "chooseAnotherRange": "نطاق آخر",
+        "chooseDifferentRange": "نطاق آخر"
+      }
     },
     "aiRecitePlan": {
       "startReciting": "ابدأ التلاوة",
@@ -1664,7 +1724,7 @@
       "feedbackGentle": "بهدوء. خطوةً خطوة.",
       "feedbackMixed": "خطة قصيرة مركّزة ستساعد.",
       "whyWeakWords": "دقة {accuracy}% · {count} كلمات · {techniques}",
-      "whyStrong": "استرجاع قوي. خطة خفيفة تبقيه حيًّا.",
+      "whyStrong": "استرجاعك قوي. مراجعة خفيفة بإيقاع ثابت ستبقيه راسخًا.",
       "whyDefault": "مبنية على نتيجة التلاوة الذكية.",
       "setup": {
         "speed": "سرعة {speed}×",
@@ -1677,12 +1737,14 @@
         "talqinTitle": "تلقين",
         "talqinHow": "استمع ثم كرّر — آيةً آية.",
         "chainingTitle": "تجزئة",
-        "chainingHow": "أجزاء قصيرة ثم ربط بطيء.",
+        "chainingHow": "تمرّن عليه في جزأين قصيرين، ثم اجمعهما.",
         "blurTitle": "إخفاء",
         "blurHow": "إخفاء الكلمات تدريجيًا.",
         "focusTitle": "تركيز",
-        "focusHow": "آية واحدة في كل مرة."
-      }
+        "focusHow": "آية واحدة في كل مرة.",
+        "phrasePartsHow": "تمرّن على العبارة بأجزاء صغيرة، ثم اتلُها كاملة."
+      },
+      "whyEvidence": "عبارة في الآية {ayah} لم تكن واضحة."
     },
     "start_reciting_prompt": "ابدأ التلاوة",
     "view_all_recording_library": "عرض كل مكتبة التسجيلات",
@@ -2122,6 +2184,15 @@
       "toolRecite": "Recite",
       "toolAudio": "Audio help",
       "toolMemorizing": "Memorizing"
+    },
+    "postSessionChoice": {
+      "title": "ماذا تريد أن تتمرّن عليه بعد ذلك؟",
+      "desc": "أعد الجلسة المقترحة أو أنشئ جلسة خاصة بك.",
+      "repeatRecommended": "إعادة الجلسة المقترحة",
+      "repeatRecommendedDesc": "تمرّن على نفس النطاق والإعدادات المقترحة مرة أخرى.",
+      "createCustom": "إنشاء جلسة مخصصة",
+      "createCustomDesc": "اختر السورة ونطاق الآيات وإعدادات التمرين بنفسك.",
+      "startCustomSession": "بدء جلسة مخصصة"
     }
   },
   "toasts": {

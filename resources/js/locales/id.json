@@ -1186,7 +1186,7 @@
           "mixed": "Needs review",
           "weak": "Needs practice"
         },
-        "repeatThisRange": "Recommended plan",
+        "repeatThisRange": "Latih ayat-ayat ini lagi",
         "continueNextSet": "Recommended plan",
         "continueNextSurahShort": "Recommended plan",
         "repeatRangeTitle": "{surah} · {range}",
@@ -1259,7 +1259,40 @@
         "aiFocusSequence": "Restart from the first ayah and keep the order steady.",
         "aiFocusWeakAyah": "Spend the next pass on ayah {ayah} with Focus mode.",
         "aiFocusWeakAyahs": "Revisit ayahs {ayahs} before continuing.",
-        "aiFirstBody": "Uji dulu dengan AI. Skor dan rencana latihan muncul di sini setelah kami mendengar Anda."
+        "aiFirstBody": "Uji dulu dengan AI. Skor dan rencana latihan muncul di sini setelah kami mendengar Anda.",
+        "steadyRepetitionEncouragement": "Pengulangan yang stabil membangun hafalan yang bertahan.",
+        "phraseNeedsAttention": "Satu frasa di ayat {ayah} belum jelas.",
+        "phrasesNeedAttention": "Beberapa frasa masih perlu perhatian.",
+        "ayahNeedsAttention": "Ayat {ayah} belum jelas.",
+        "evidenceReviewNow": "Periksa rentang ini lagi.",
+        "evidenceReturnTomorrow": "Tinjau lagi besok",
+        "evidenceReturnOn": "Tinjau lagi pada {date}",
+        "playFocusPhrase": "Putar frasa fokus",
+        "openFocusPhrase": "Buka frasa fokus di latihan",
+        "aiSummaryMatchedWords": "Kami mengenali dengan jelas {matched} dari {total} kata.",
+        "aiSummaryFocusPhrase": "Fokus pada frasa yang disorot sebelum memeriksa lagi.",
+        "aiSummaryFocusRange": "Revisi rentang ini, lalu periksa lagi.",
+        "aiSummaryStrongFollowUp": "Bagus — Anda bisa lanjut sementara masih segar.",
+        "aiMetricConfidence": "Keyakinan pengenalan",
+        "zeroMatchStatus": "Mari latih rentang ini lagi",
+        "zeroMatchSummary": "Kami mendengar tilawah Anda, tetapi belum bisa mengenali kata-katanya dengan yakin.",
+        "zeroMatchProgressLabel": "Belum dikenali",
+        "zeroMatchHint": "Revisi singkat akan membantu kata-kata menetap sebelum Anda memeriksa lagi.",
+        "zeroMatchFocus": "Revisi rentang ini perlahan, lalu periksa lagi.",
+        "insufficientAudioStatus": "Kami tidak dapat menilai percobaan ini",
+        "insufficientAudioSummary": "Kami tidak mendengar tilawah yang cukup jelas untuk menilai percobaan ini. Silakan coba lagi.",
+        "insufficientAudioMicSummary": "Akses mikrofon diblokir. Izinkan mikrofon, lalu rekam lagi.",
+        "insufficientAudioShortSummary": "Rekaman terlalu pendek untuk dinilai. Tilawah sedikit lebih lama, lalu coba lagi.",
+        "insufficientAudioProcessingSummary": "Kami tidak dapat memproses rekaman ini. Silakan rekam lagi.",
+        "insufficientAudioHint": "Tilawah dengan jelas ke mikrofon, lalu rekam lagi.",
+        "insufficientAudioFocus": "Periksa mikrofon Anda, lalu rekam lagi.",
+        "aiMetricDetectedWords": "Kata terdeteksi",
+        "aiMetricMissedWords": "Kata terlewat",
+        "aiMetricSequence": "Urutan",
+        "aiMetricOrderNotAssessed": "Belum dinilai",
+        "aiMetricSequenceNotEnough": "Kata yang dikenali belum cukup untuk dinilai",
+        "viewDetails": "Lihat detail",
+        "hideDetails": "Sembunyikan detail"
       },
       "viewStats": "View stats",
       "hideStats": "Hide stats",
@@ -1268,7 +1301,38 @@
       "celebrationMessage": "Your effort is recorded with sincerity.",
       "duaStrengthen": "May Allah strengthen what you have memorised and make it firm in your heart.",
       "duaStrengthenShort": "Semoga Allah menguatkan apa yang telah dihafal.",
-      "sessionStats": "Statistik sesi"
+      "sessionStats": "Statistik sesi",
+      "actions": {
+        "testWithAi": "Periksa hafalan",
+        "testWithAiAgain": "Periksa lagi",
+        "chooseAnotherSession": "Pilih sesi lain",
+        "continueToAyahsFallback": "Lanjutkan dengan barakah",
+        "retest": "Periksa lagi",
+        "tryRecordingAgain": "Coba rekam lagi",
+        "checkMicrophone": "Periksa mikrofon",
+        "close": "Tutup",
+        "skipForNow": "Lewati",
+        "keepPractising": "Terus berlatih",
+        "continuePractising": "Lanjutkan latihan",
+        "reviseFocusPhrase": "Revisi frasa fokus",
+        "reviseThisRange": "Revisi rentang ini",
+        "continueToNextRange": "Lanjut ke rentang berikutnya",
+        "reviewOnceMore": "Tinjau sekali lagi",
+        "chooseAnotherRange": "Rentang lain",
+        "chooseDifferentRange": "Rentang lain"
+      },
+      "coach": {
+        "subtitles": {
+          "retestAfterPractice": "Perkuat rentang ini sebelum maju."
+        },
+        "evidenceMethod": "Metode",
+        "evidenceReview": "Berikutnya",
+        "evidenceNext": "Berikutnya",
+        "evidenceReturn": "Kembali",
+        "evidenceThen": "Berikutnya",
+        "evidenceThenAyah": "Lanjutkan dengan ayat {ayah}",
+        "evidenceThenRange": "Lanjutkan dengan ayat {from}–{to}"
+      }
     },
     "start_reciting_prompt": "Mulai tilawah",
     "view_all_recording_library": "Lihat semua perpustakaan rekaman",
@@ -1670,6 +1734,28 @@
       "toolRecite": "Recite",
       "toolAudio": "Audio help",
       "toolMemorizing": "Memorizing"
+    },
+    "labels": {
+      "continueToAyah": "Lanjutkan dengan ayat {ayah}",
+      "continueToAyahs": "Lanjutkan dengan ayat {start}–{end}",
+      "checkAyahsAgain": "Periksa {range} lagi."
+    },
+    "postSessionChoice": {
+      "title": "Apa yang ingin Anda latih selanjutnya?",
+      "desc": "Ulangi rencana yang direkomendasikan atau buat sesi sendiri.",
+      "repeatRecommended": "Ulangi sesi yang direkomendasikan",
+      "repeatRecommendedDesc": "Latih lagi rentang dan pengaturan yang sama.",
+      "createCustom": "Buat sesi khusus",
+      "createCustomDesc": "Pilih sendiri surah, rentang ayat, dan pengaturan latihan.",
+      "startCustomSession": "Mulai sesi khusus"
+    },
+    "aiRecitePlan": {
+      "whyStrong": "Ingatan Anda kuat. Tinjauan ringan dengan tempo stabil akan menjaganya.",
+      "tech": {
+        "chainingHow": "Latih dalam dua bagian pendek, lalu gabungkan.",
+        "phrasePartsHow": "Latih frasa dalam bagian kecil, lalu tilawah sebagai satu kesatuan."
+      },
+      "whyEvidence": "Satu frasa di ayat {ayah} belum jelas."
     }
   },
   "toasts": {

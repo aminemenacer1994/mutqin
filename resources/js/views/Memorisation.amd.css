@@ -141,10 +141,15 @@
   border: 1px solid rgba(68, 64, 60, 0.08);
 }
 
-.amd-meta span { color: #78716c; font-size: 0.9rem; }
+.amd-meta span { color: #57534e; font-size: 0.9rem; }
 .amd-meta strong { color: #1c1917; font-weight: 600; }
 .amd-meta strong[data-status="denied"],
-.amd-meta strong[data-status="unsupported"] { color: #b45309; }
+.amd-meta strong[data-status="unsupported"] {
+  color: #9a3412;
+  text-decoration: underline dashed;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.12em;
+}
 
 .amd-actions {
   display: flex;
@@ -165,7 +170,8 @@
   border-radius: 12px;
   background: #fff7ed;
   color: #9a3412;
-  border: 1px solid rgba(194, 65, 12, 0.18);
+  border: 1px solid rgba(154, 52, 18, 0.36);
+  border-style: solid;
 }
 
 /* Tools */
@@ -324,27 +330,56 @@
   background: rgba(17, 24, 39, 0.08);
 }
 
+/* Hidden words keep their original inline box — never display:none / collapse. */
 .amd-mushaf-ayah .amd-word-hidden,
-.amd-mushaf-shell.is-blur-active .amd-word-hidden,
 .amd-mushaf-shell.is-hidden-text .recitation-word-notAttempted,
 .amd-mushaf-shell.is-hidden-text .recitation-word-pending {
+  display: inline !important;
+  visibility: visible;
   color: transparent !important;
-  background: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  background: color-mix(in srgb, #a8a29e 22%, transparent) !important;
   border-bottom: none;
-  border-radius: 0.2em;
+  border-radius: 0.28em;
   text-shadow: none !important;
-  box-shadow: none !important;
-  filter: blur(7px);
-  user-select: none;
-  -webkit-user-select: none;
+  box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #a8a29e 45%, transparent);
+  filter: none !important;
+  opacity: 1 !important;
+  font-size: inherit !important;
+  letter-spacing: inherit !important;
+  word-spacing: inherit !important;
+  line-height: inherit !important;
+  padding: 0.04rem 0.12rem;
+  margin: 0;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none;
   pointer-events: none;
-  transition: filter 180ms ease, color 180ms ease, opacity 180ms ease;
+  caret-color: transparent;
+  transition: background-color 180ms ease, box-shadow 180ms ease, color 180ms ease;
+}
+
+.amd-mushaf-ayah .amd-word-hidden::selection,
+.amd-mushaf-shell.is-hidden-text .recitation-word-notAttempted::selection,
+.amd-mushaf-shell.is-hidden-text .recitation-word-pending::selection {
+  background: transparent !important;
+  color: transparent !important;
+}
+
+/* Soft blur is opt-in only — default gap mask must not reflow or float glyphs. */
+.amd-mushaf-shell.is-blur-active .amd-word-hidden {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: blur(6px) !important;
 }
 
 /* Gap mask: stable-width hidden slots without leaking Arabic via soft blur. */
 .amd-mushaf-shell.is-gap-mask .amd-word-hidden {
   color: transparent !important;
-  filter: none;
+  -webkit-text-fill-color: transparent !important;
+  filter: none !important;
   background: color-mix(in srgb, #a8a29e 22%, transparent) !important;
   border-radius: 0.28em;
   box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #a8a29e 45%, transparent);
@@ -1271,10 +1306,12 @@
 
 /* Keep hide/gap masks winning over the black base ink */
 .amd-mushaf-ayah--premium .amd-word-hidden,
-.amd-mushaf-shell.is-blur-active .amd-mushaf-ayah--premium .amd-word-hidden,
 .amd-mushaf-shell.is-gap-mask .amd-mushaf-ayah--premium .amd-word-hidden {
+  display: inline !important;
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
 }
 
 .amd-mushaf-shell.is-gap-mask .amd-mushaf-ayah--premium .amd-word-hidden {
@@ -1284,8 +1321,9 @@
 }
 
 .amd-mushaf-shell.is-blur-active .amd-mushaf-ayah--premium .amd-word-hidden {
-  filter: blur(8px) !important;
+  filter: blur(6px) !important;
   background: transparent !important;
+  box-shadow: none !important;
 }
 
 .amd-mushaf-page {
@@ -1336,6 +1374,24 @@
   display: inline;
 }
 
+/* Keep āyah markers tied to their verse run — avoid orphaned end numbers. */
+.amd-mushaf-stream .verse-ayah-end-number,
+.amd-mushaf-ayah--premium .verse-ayah-end-number {
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: -0.28em;
+  width: 1.45em;
+  height: 1.55em;
+  line-height: 0;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+.amd-mushaf-stream .verse-ayah-end-number__digit,
+.amd-mushaf-ayah--premium .verse-ayah-end-number__digit {
+  display: none !important;
+}
+
 .amd-mushaf-ayah--premium .wbw-word,
 .amd-mushaf-ayah--premium word {
   display: inline;
@@ -1361,12 +1417,6 @@
   color: #b91c1c !important;
   -webkit-text-fill-color: #b91c1c !important;
   background: transparent !important;
-}
-
-/* Ayah end markers inherit mushaf SVG styles from Memorisation.css */
-.amd-mushaf-stream .verse-ayah-end-number,
-.amd-mushaf-ayah--premium .verse-ayah-end-number {
-  /* sizing handled by shared mushaf marker rules */
 }
 
 .amd-start-wrap {
@@ -1486,13 +1536,16 @@
 
 .amd-record-btn:disabled,
 .amd-record-btn.is-busy {
-  opacity: 0.65;
+  opacity: var(--control-disabled-opacity, 0.72);
+  color: var(--text-disabled, var(--text-muted));
+  border-color: var(--border-strong, var(--border));
   cursor: not-allowed;
 }
 
 .amd-record-btn:focus-visible {
-  outline: none;
-  box-shadow: var(--ring, 0 0 0 3px rgba(139, 94, 60, 0.34));
+  outline: 3px solid var(--focus-ring-color, var(--accent));
+  outline-offset: 3px;
+  box-shadow: var(--ring, 0 0 0 3px rgba(139, 94, 60, 0.48));
 }
 
 @media (max-width: 560px) {
@@ -1679,6 +1732,7 @@
 [data-theme="dark"] .amd-mushaf-ayah--premium .verse-ayah-end-number {
   border: 0 !important;
   background: transparent !important;
+  background-image: none !important;
   box-shadow: none !important;
   color: #f0e6d4 !important;
   -webkit-text-fill-color: #f0e6d4;

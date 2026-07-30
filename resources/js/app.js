@@ -6,6 +6,7 @@ import About from './views/About.vue';
 import AboutUsPage from './views/AboutUs.vue';
 import OurMissionPage from './views/OurMission.vue';
 import DonationPage from './views/DonationPage.vue';
+import './styles/info-pages.css';
 import { setupI18n, setLocale } from './i18n';
 import { i18nMixin } from './mixins/i18nMixin';
 import { initPwa } from './pwa';
@@ -58,8 +59,9 @@ function loadMemorisationChunk(attempt = 0) {
             document.documentElement.dataset.practiceCoach = 'v2';
             document.documentElement.dataset.aiReciteUi = 'v75';
             document.documentElement.dataset.stackedAyahEnd = 'v5';
-            document.documentElement.dataset.mutqinUi = 'v75';
+            document.documentElement.dataset.mutqinUi = 'v76';
             document.documentElement.dataset.amdTestGate = 'test-with-ai-only';
+            document.documentElement.dataset.postSessionChoice = 'v1';
         }
         return mod;
     }).catch((error) => {

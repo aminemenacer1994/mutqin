@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'mutqin-shell-v76';
-const RUNTIME_CACHE = 'mutqin-runtime-v76';
+const SHELL_CACHE = 'mutqin-shell-v77';
+const RUNTIME_CACHE = 'mutqin-runtime-v77';
 // Do NOT precache /memorisation — stale HTML shells freeze AI Recite UI updates.
 const SHELL_URLS = [
   '/',

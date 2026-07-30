@@ -20,14 +20,16 @@
 // Bootstrap
 @import 'bootstrap/scss/bootstrap';
 
-/* Global theme tokens (light/sepia/dark) */
+/* Global theme tokens (light/sepia/dark) — WCAG AA contrast targets */
 :root {
   --bg: #f6f3ee;
   --surface: rgba(255, 255, 255, 0.82);
   --surface-strong: rgba(255, 255, 255, 0.92);
-  --border: rgba(78, 58, 38, 0.10);
+  --border: rgba(78, 58, 38, 0.22);
+  --border-strong: rgba(78, 58, 38, 0.36);
   --text: #1f1a17;
-  --text-muted: rgba(31, 26, 23, 0.62);
+  --text-muted: #5a5048;
+  --text-disabled: #6e645c;
   --accent: #8b5e3c;
   --accent-strong: #a86a3f;
   --accent-light: rgba(139, 94, 60, 0.12);
@@ -36,13 +38,20 @@
   --bs-danger-rgb: 181, 80, 65;
   --success: #2e7d64;
   --success-strong: #23624e;
-  --success-soft: rgba(46, 125, 100, 0.12);
+  --success-soft: rgba(46, 125, 100, 0.14);
+  --warning: #9a6207;
+  --warning-strong: #7a4d05;
+  --warning-soft: rgba(154, 98, 7, 0.14);
   --danger: #b55041;
   --danger-strong: #9a4336;
-  --danger-soft: rgba(181, 80, 65, 0.12);
+  --danger-soft: rgba(181, 80, 65, 0.14);
+  --error: var(--danger);
+  --error-strong: var(--danger-strong);
+  --error-soft: var(--danger-soft);
   --destructive: var(--danger);
   --destructive-strong: var(--danger-strong);
   --destructive-soft: var(--danger-soft);
+  --control-disabled-opacity: 0.72;
   --shadow-sm: 0 10px 22px rgba(45, 32, 20, 0.08);
   --shadow-md: 0 18px 44px rgba(45, 32, 20, 0.12);
   --shadow-lg: -40px 0 120px rgba(0, 0, 0, 0.18);
@@ -60,16 +69,19 @@
   --dur-fast: 120ms;
   --dur: 180ms;
   --dur-slow: 260ms;
-  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 34%, transparent);
+  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 48%, transparent);
+  --focus-ring-color: var(--accent);
 }
 
 html[data-theme="sepia"] {
   --bg: #f1e7d8;
   --surface: rgba(255, 250, 243, 0.86);
   --surface-strong: rgba(255, 255, 255, 0.92);
-  --border: rgba(78, 58, 38, 0.14);
+  --border: rgba(78, 58, 38, 0.26);
+  --border-strong: rgba(78, 58, 38, 0.4);
   --text: #201812;
-  --text-muted: rgba(32, 24, 18, 0.62);
+  --text-muted: #5c4a3a;
+  --text-disabled: #6f5a48;
   --accent: #8b5e3c;
   --accent-strong: #a86a3f;
 }
@@ -78,26 +90,37 @@ html[data-theme="dark"] {
   --bg: #0f1115;
   --surface: rgba(18, 18, 18, 0.78);
   --surface-strong: rgba(18, 18, 18, 0.92);
-  --border: rgba(255, 255, 255, 0.10);
-  --text: rgba(255, 255, 255, 0.92);
-  --text-muted: rgba(255, 255, 255, 0.62);
-  --accent: #c49a6c;
-  --accent-strong: #e0b07f;
-  --accent-light: rgba(196, 154, 108, 0.14);
-  --success: #3f8f6f;
-  --success-strong: #2f6f58;
-  --success-soft: rgba(63, 143, 111, 0.16);
-  --bs-danger: #d4786a;
-  --bs-danger-rgb: 212, 120, 106;
-  --danger: #d4786a;
-  --danger-strong: #c45f50;
-  --danger-soft: rgba(212, 120, 106, 0.16);
+  --border: rgba(255, 255, 255, 0.22);
+  --border-strong: rgba(255, 255, 255, 0.34);
+  --text: rgba(255, 255, 255, 0.94);
+  --text-muted: rgba(255, 255, 255, 0.78);
+  --text-disabled: rgba(255, 255, 255, 0.58);
+  --accent: #d4a574;
+  --accent-strong: #e8bf8f;
+  --accent-light: rgba(212, 165, 116, 0.16);
+  --success: #6fbf98;
+  --success-strong: #8fd4a8;
+  --success-soft: rgba(111, 191, 152, 0.18);
+  --warning: #e0b35a;
+  --warning-strong: #f0c56e;
+  --warning-soft: rgba(224, 179, 90, 0.18);
+  --bs-danger: #e08a7c;
+  --bs-danger-rgb: 224, 138, 124;
+  --danger: #e08a7c;
+  --danger-strong: #f0a090;
+  --danger-soft: rgba(224, 138, 124, 0.18);
+  --error: var(--danger);
+  --error-strong: var(--danger-strong);
+  --error-soft: var(--danger-soft);
   --destructive: var(--danger);
   --destructive-strong: var(--danger-strong);
   --destructive-soft: var(--danger-soft);
+  --control-disabled-opacity: 0.68;
   --shadow-sm: 0 10px 22px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 18px 44px rgba(0, 0, 0, 0.45);
   --shadow-lg: -40px 0 120px rgba(0, 0, 0, 0.55);
+  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 58%, transparent);
+  --focus-ring-color: var(--accent);
 }
 
 body {
@@ -148,7 +171,7 @@ canvas {
 
 /* Consistent focus and press feedback across the app */
 :where(a, button, input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--focus-ring-color, var(--accent));
   outline-offset: 3px;
   box-shadow: var(--ring);
 }

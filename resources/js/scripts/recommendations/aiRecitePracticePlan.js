@@ -6,6 +6,7 @@
 
 import { resolveTechniqueDisplay } from '../techniques/techniqueDisplay.js'
 import { resolveRecommendedPlaybackSpeed } from './playbackSpeedPolicy.js'
+import { formatAyahNumberSpans } from '../formatting/ayahLabels.js'
 
 export const AI_RECITE_MAX_ATTEMPTS = 3
 export const MAX_PRACTICE_AYAH_SPAN = 3
@@ -590,8 +591,10 @@ export function buildAiReciteDynamicPlan(input = {}) {
         : (focusAyahs.length === 1
           ? (t?.('memorisation.aiRecitePlan.focusAyah', { ayah: focusAyahs[0] })
             || `Focus on āyah ${focusAyahs[0]}`)
-          : (t?.('memorisation.aiRecitePlan.focusAyahs', { ayahs: focusAyahs.join(', ') })
-            || `Focus on āyahs ${focusAyahs.join(', ')}`)),
+          : (t?.('memorisation.aiRecitePlan.focusAyahs', {
+            ayahs: formatAyahNumberSpans(focusAyahs) || focusAyahs.join(', '),
+          })
+            || `Focus on āyahs ${formatAyahNumberSpans(focusAyahs) || focusAyahs.join(', ')}`)),
       focus_ayahs: focusAyahs,
     },
     weakWords: uniqueWeak,
@@ -675,10 +678,6 @@ export function buildFriendlyReciteFeedback(accuracy, t = null) {
 function buildWhyThisPlan({ band, averageAccuracy, weakWords, techniques, t }) {
   const primary = techniques?.[0] || null
   const methodTitle = primary?.title || 'a calm method'
-  const methodHow = String(primary?.how || primary?.description || '')
-    .replace(/\s*[—–―‐‑‒−]+\s*/g, ', ')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
   if (weakWords?.length) {
     const first = weakWords[0] || {}
     const word = String(first.text || '').trim()
@@ -692,17 +691,19 @@ function buildWhyThisPlan({ band, averageAccuracy, weakWords, techniques, t }) {
       accuracy: averageAccuracy ?? '',
     })
     if (msg && !String(msg).includes('whyEvidence')) {
-      return String(msg).replace(/\s*[—–―‐‑‒−]+\s*/g, ', ').replace(/\s{2,}/g, ' ').trim()
+      return String(msg).replace(/\s{2,}/g, ' ').trim()
     }
-    if (count === 1 && word && ayah) {
-      return `One word in Āyah ${ayah} was unclear (${word}). Practise the surrounding phrase with ${methodTitle}, then continue.`
+    if (count === 1 && ayah) {
+      return `One phrase in Āyah ${ayah} was unclear.`
     }
-    const sample = weakWords.slice(0, 3).map((w) => w.text).filter(Boolean).join(' · ')
-    return `${count} word${count === 1 ? '' : 's'} need care${sample ? ` (${sample})` : ''}. Use ${methodTitle}${methodHow ? `: ${methodHow}` : ''} before moving on.`
+    if (count === 1 && word) {
+      return 'One phrase was unclear.'
+    }
+    return 'A few phrases still need attention.'
   }
   if (band === ACCURACY_BAND.STRONG) {
     return t?.('memorisation.aiRecitePlan.whyStrong')
-      || 'Your recall is strong. A light review at a steady pace will keep it firm, then continue.'
+      || 'Your recall is strong. A light review at a steady pace will keep it firm.'
   }
   return t?.('memorisation.aiRecitePlan.whyDefault')
     || 'This plan follows your AI test so practice stays personal and peaceful.'

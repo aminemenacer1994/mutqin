@@ -51,6 +51,7 @@ import {
   clampRecommendationRange,
   buildLocalFallbackRecommendation,
   formatAyahRangeLabel,
+  formatCheckAyahsAgainLabel,
   formatContinueToAyahLabel,
   formatRepeatAyahLabel,
   formatSurahAyahLabel,
@@ -69,6 +70,22 @@ import {
   applyPersonalPlanToRecommendation,
 } from '../scripts/recommendations/nextSessionRecommendation'
 import {
+  POST_SESSION_CTA_ACTIONS,
+  POST_SESSION_CTA_STATES,
+  isMeaningfulFocusPhraseRevision,
+  mapPostSessionCtas,
+  resolvePostSessionCtaState,
+} from '../scripts/recommendations/postSessionCtaMapping'
+import {
+  POST_SESSION_ACTION,
+  buildRecommendedSessionTemplate,
+  canRepeatRecommendedSession,
+  isValidRecommendedTemplate,
+  rememberRecommendedSessionTemplate,
+  resolveProductSessionStatus,
+  resolveRepeatRecommendedTemplate,
+} from '../scripts/recommendations/postSessionChoice'
+import {
   PLAN_STATUS,
   buildMemorisationPlan,
   memorisationPlanToSettings,
@@ -80,7 +97,21 @@ import {
   normaliseQuranFontId,
   resolveQuranFontFamily,
 } from '../scripts/quran/quranFonts'
-import { buildAiReviewDetails } from '../scripts/recommendations/aiReviewDetails'
+import {
+  ASSESSMENT_QUALITY,
+  buildAiReviewDetails,
+  classifyRecitationAssessmentQuality,
+  resolveInsufficientAudioCopy,
+} from '../scripts/recommendations/aiReviewDetails'
+import {
+  RECITATION_AUDIO_THRESHOLDS,
+  RECITATION_RESULT_STATE,
+  INSUFFICIENT_AUDIO_REASONS,
+  buildInsufficientAudioResult,
+  resolveInsufficientAudioReason,
+  resolveRecitationResultState,
+  resultStateToLegacyOutcome,
+} from '../scripts/recommendations/recitationResultState'
 import {
   AI_RECITE_MAX_ATTEMPTS,
   averageAttemptAccuracy,
@@ -191,6 +222,11 @@ import {
   resolvePlanScope
 } from '../scripts/engine/hifz_session_engine'
 import { buildHifzAnalyticsSnapshot } from '../scripts/engine/hifz_analytics'
+import {
+  applyLiveWordPresentationStyles,
+  clearLiveWordPresentationStyles,
+  getLiveWordPresentation as resolveLiveWordPresentation,
+} from '../scripts/formatting/liveWordPresentation'
 import {
   buildRealtimePreviewAlignment,
   buildDeterministicRecitationResult,
@@ -583,6 +619,12 @@ export default {
       onboardingSampleSessionActive: false,
       onboardingFinishChoice: '',
       showPostSessionModal: false,
+      showPostSessionChoice: false,
+      postSessionChoiceAction: null, // repeat_recommended | create_custom | null
+      postSessionChoiceOffcanvasOpen: false,
+      postSessionChoiceJustEndedTemplate: null,
+      recommendedSessionTemplates: [],
+      currentSessionRecommendationMeta: null,
       postSessionActionsUnlocked: false,
       showPostSessionConfetti: false,
       postSessionSnapshot: null,
@@ -607,8 +649,11 @@ export default {
       postSessionAiReciteActive: false,
       postSessionAiFeedback: '',
       postSessionAiReviewDetails: null,
+      postSessionAiDetailsExpanded: false,
       recommendedPracticePending: false,
       recommendedPracticeCompleted: false,
+      focusPhraseRevisionActive: false,
+      focusPhraseMeaningfulInteraction: false,
       /** @type {import('../scripts/recommendations/memorisationPlan').MemorisationPlan|null} */
       activeMemorisationPlan: null,
       memorisationPlanStatus: 'recommended', // recommended | applied | manual
@@ -1137,6 +1182,9 @@ export default {
     },
     postSessionAiColourSegments() {
       const details = this.postSessionAiReviewDetails
+      const mode = String(details?.presentationMode || '')
+      // Colour mix only belongs behind "View details".
+      if (mode === 'valid_zero_match' || mode === 'insufficient_audio') return []
       const counts = details?.colorCounts
       if (!counts || typeof counts !== 'object') return []
       const defs = [
@@ -1152,10 +1200,11 @@ export default {
         .map((row) => {
           const percent = total > 0 ? Math.round((row.count / total) * 100) : 0
           const base = this.t(`memorisation.aiCheck.${row.labelKey}`) || row.fallback
+          // Use word counts — avoid a second accuracy-style percentage beside Match %.
           return {
             ...row,
             percent,
-            label: `${base} ${percent}%`,
+            label: `${base} ${row.count}`,
           }
         })
     },
@@ -1285,8 +1334,53 @@ export default {
     shouldShowWorkspaceEmptyState() {
       return false
     },
+    isPostSessionChoiceVisible() {
+      if (this.showPostSessionModal || this.postSessionAiReciteActive || this.postSessionAdaptiveCheckActive) {
+        return false
+      }
+      if (this.showPostSessionChoice) return true
+      // Ended sessions must never fall back to a lone "Start Session" CTA.
+      return !!this.isSessionCompleted && !this.isSessionLive && !this.sessionPaused
+    },
+    canShowRepeatRecommendedAction() {
+      return canRepeatRecommendedSession({
+        justEndedTemplate: this.postSessionChoiceJustEndedTemplate,
+        templates: this.recommendedSessionTemplates,
+      })
+    },
+    postSessionRepeatTemplate() {
+      return resolveRepeatRecommendedTemplate({
+        justEndedTemplate: this.postSessionChoiceJustEndedTemplate,
+        templates: this.recommendedSessionTemplates,
+      })
+    },
+    productSessionStatus() {
+      return resolveProductSessionStatus({
+        showPostSessionChoice: !!this.isPostSessionChoiceVisible
+          && this.postSessionChoiceAction !== POST_SESSION_ACTION.CREATE_CUSTOM,
+        creatingCustomDraft: !!this.isPostSessionChoiceVisible
+          && this.postSessionChoiceAction === POST_SESSION_ACTION.CREATE_CUSTOM
+          && !!this.postSessionChoiceOffcanvasOpen,
+        sessionCompleted: !!this.isSessionCompleted && !this.isPostSessionChoiceVisible,
+        sessionPaused: !!this.sessionPaused,
+        sessionActive: !!this.isSessionLive,
+        hasReadySession: !this.isSessionLive
+          && !this.isSessionCompleted
+          && !this.isPostSessionChoiceVisible
+          && !!this.hasVerses,
+      })
+    },
+    toolsPrimaryStartLabel() {
+      if (
+        this.isPostSessionChoiceVisible
+        && this.postSessionChoiceAction === POST_SESSION_ACTION.CREATE_CUSTOM
+      ) {
+        return this.t('memorisation.postSessionChoice.startCustomSession')
+      }
+      return this.t('memorisation.welcomeBack.startNewSession')
+    },
     showSessionOverviewIdleActions() {
-      return !this.hasVerses && !this.isRestoringWorkspace && this.isDataReady
+      return !this.hasVerses && !this.isRestoringWorkspace && this.isDataReady && !this.isPostSessionChoiceVisible
     },
     shouldShowOffcanvasTabs() {
       return true
@@ -1974,6 +2068,7 @@ export default {
       }
     },
     showHeaderSessionAction() {
+      if (this.isPostSessionChoiceVisible) return false
       if (this.primarySessionAction === PRIMARY_SESSION_ACTION.NONE) return false
       // Keep a stable control during hydration even before verses load.
       if (this.primarySessionAction === PRIMARY_SESSION_ACTION.LOADING) return true
@@ -2874,7 +2969,8 @@ export default {
       return this.stripAiDashes(this.t('memorisation.postSession.recommendation.continueNextSet'))
     },
     postSessionShowRecommendationPlan() {
-      // Curated plan appears only after the AI memorisation test has finished.
+      // Curated plan appears only after a fair AI memorisation assessment.
+      if (this.postSessionAiPresentationMode === 'insufficient_audio') return false
       return !!(
         this.postSessionAiReviewDetails
         || this.postSessionHasAiCheck
@@ -3504,10 +3600,35 @@ export default {
       return fromView
     },
     postSessionAiResultMetrics() {
+      // Compact result card: technical metrics stay behind "View details".
+      return []
+    },
+    postSessionAiDetailsMetrics() {
       const details = this.postSessionAiReviewDetails
       if (!details) return []
-      const metrics = Array.isArray(details.metrics) ? details.metrics.slice(0, 4) : []
+      const metrics = Array.isArray(details.detailsMetrics) && details.detailsMetrics.length
+        ? details.detailsMetrics
+        : (Array.isArray(details.metrics) ? details.metrics : [])
+      // Prefer a single Match % — drop approximate %-matched word chips that duplicate it.
+      const hasAccuracy = metrics.some((m) => m.key === 'accuracy')
       return metrics
+        .filter((m) => !(hasAccuracy && m.key === 'words' && /%/.test(String(m.value || ''))))
+        .slice(0, 6)
+    },
+    postSessionAiPresentationMode() {
+      return String(this.postSessionAiReviewDetails?.presentationMode || 'standard')
+    },
+    postSessionShowAiDetailsToggle() {
+      return this.postSessionAiDetailsMetrics.length > 0
+        && this.postSessionAiPresentationMode !== 'insufficient_audio'
+    },
+    postSessionInlineRecommendationRows() {
+      // Surface Focus / Method / Next inside the result card, above details.
+      if (!(this.postSessionAiReviewDetails || this.postSessionAiResultLine)) return []
+      if (this.postSessionAiPresentationMode === 'insufficient_audio') return []
+      const rows = this.postSessionEvidenceRows
+      if (!Array.isArray(rows) || !rows.length) return []
+      return rows.filter((row) => row.key === 'focus' || row.key === 'method' || row.key === 'next')
     },
     postSessionQuizAiHighlights() {
       const details = this.postSessionAiReviewDetails
@@ -3689,77 +3810,92 @@ export default {
     },
     postSessionEvidenceRows() {
       const plan = this.aiReciteFinalPlan || this.amdPracticePlan || null
-      const weakWords = Array.isArray(plan?.weakWords)
-        ? plan.weakWords
-        : (Array.isArray(plan?.weak_words) ? plan.weak_words : (
-          Array.isArray(this.postSessionRecommendation?.settings?.practice_weak_words)
-            ? this.postSessionRecommendation.settings.practice_weak_words
-            : []
-        ))
-      const first = weakWords[0] || null
-      const word = String(first?.text || first?.word || '').trim()
-      const ayah = Number(first?.ayahNumber || first?.ayah || first?.ayah_number || 0)
-      const techniqueId = String(
-        plan?.techniques?.[0]?.id
-        || this.postSessionRecommendation?.settings?.technique
-        || ''
-      ).toLowerCase()
-      const methodLabel = techniqueId
-        ? this.stripTechniqueJargon(this.getTechniqueDisplayLabel(techniqueId))
-        : (plan?.techniques?.[0]?.title || '')
-      const methodHow = String(
-        plan?.techniques?.[0]?.how
-        || this.t?.('memorisation.postSession.coach.replayPhrase')
-        || 'Replay surrounding phrase'
-      ).trim()
-      const rec = this.postSessionRecommendation
-      const from = Number(rec?.ayah_range?.from || plan?.range?.from || 0)
-      const to = Number(rec?.ayah_range?.to || plan?.range?.to || from)
+      const focus = this.resolvePostSessionFocusPhrase()
+      const methodValue = this.resolvePostSessionMethodCopy(plan)
+      const rec = this.postSessionRecommendation || {}
+      const from = Number(rec.ayah_range?.from || plan?.range?.from || this.postSessionSnapshot?.rangeStart || 0)
+      const to = Number(rec.ayah_range?.to || plan?.range?.to || this.postSessionSnapshot?.rangeEnd || from)
+      const nextValue = (from && to)
+        ? (formatCheckAyahsAgainLabel({ from, to }, this.t.bind(this))
+          || `Check ${formatAyahRangeLabel({ from, to }, this.t.bind(this))} again.`)
+        : (this.t('memorisation.postSession.recommendation.evidenceReviewNow')
+          || 'Check this range again.')
+      const returnValue = this.resolvePostSessionReturnCopy()
       const rows = []
-      if (word || ayah) {
-        const ayahLabel = ayah
-          ? (this.t('memorisation.postSession.coach.ayahLabel', { ayah }) || `Āyah ${ayah}`)
-          : ''
+      if (focus?.phrase) {
         rows.push({
           key: 'focus',
           label: this.t('memorisation.postSession.coach.evidenceFocus') || 'Focus',
-          value: [word, ayahLabel].filter(Boolean).join(' · '),
+          value: focus.phrase,
+          word: focus.phrase,
+          ayahLabel: focus.ayahLabel || '',
+          ayahNumber: focus.ayahNumber || 0,
+          verseKey: focus.verseKey || '',
+          wordIndex: focus.wordIndex,
+          weakWord: focus.weakWord || null,
         })
       }
-      if (methodLabel || methodHow) {
-        const methodValue = methodHow && methodLabel && methodHow !== methodLabel
-          ? `${methodLabel}: ${methodHow}`
-          : (methodHow || methodLabel)
+      if (methodValue) {
         rows.push({
           key: 'method',
-          label: this.t('memorisation.postSession.coach.methodLabel') || 'Method',
+          label: this.t('memorisation.postSession.coach.evidenceMethod')
+            || this.t('memorisation.postSession.coach.methodLabel')
+            || 'Method',
           value: this.stripAiDashes(methodValue),
         })
       }
-      if (from && to) {
-        const thenValue = from === to
-          ? (this.t('memorisation.postSession.coach.evidenceThenAyah', { ayah: from })
-            || `Continue with Āyah ${from}`)
-          : (this.t('memorisation.postSession.coach.evidenceThenRange', { from, to })
-            || `Continue to Āyahs ${from} to ${to}`)
+      rows.push({
+        key: 'next',
+        label: this.t('memorisation.postSession.coach.evidenceNext')
+          || this.t('memorisation.postSession.coach.evidenceReview')
+          || 'Next',
+        value: this.stripAiDashes(nextValue),
+      })
+      if (returnValue) {
         rows.push({
-          key: 'then',
-          label: this.t('memorisation.postSession.coach.evidenceThen') || 'Then',
-          value: this.stripAiDashes(thenValue),
+          key: 'return',
+          label: this.t('memorisation.postSession.coach.evidenceReturn') || 'Return',
+          value: this.stripAiDashes(returnValue),
         })
       }
-      return rows.map((row) => (
-        row.key === 'focus'
-          ? {
-            ...row,
-            word: word || '',
-            ayahLabel: ayah
-              ? (this.t('memorisation.postSession.coach.ayahLabel', { ayah }) || `Āyah ${ayah}`)
-              : '',
-            value: this.stripAiDashes(row.value),
-          }
-          : { ...row, value: this.stripAiDashes(row.value) }
-      ))
+      return rows
+    },
+    postSessionRecommendationReasonLine() {
+      const focus = this.resolvePostSessionFocusPhrase()
+      const details = this.postSessionAiReviewDetails
+      const matched = Number(details?.matchedWords)
+      const total = Number(details?.totalWords || 0)
+      const hasWordEvidence = !!focus?.weakWord
+        || (total > 0 && Number.isFinite(matched) && matched < total)
+        || (Array.isArray(details?.weakAyahs) && details.weakAyahs.length > 0)
+      // Never claim a phrase was weak without word-level assessment evidence.
+      if (focus?.phrase && focus?.ayahNumber && hasWordEvidence) {
+        return this.stripAiDashes(
+          this.t('memorisation.postSession.recommendation.phraseNeedsAttention', {
+            ayah: focus.ayahNumber,
+          }) || `One phrase in Āyah ${focus.ayahNumber} was unclear.`,
+        )
+      }
+      const weakAyahs = Array.isArray(this.aiReciteFinalPlan?.weakAyahs)
+        ? this.aiReciteFinalPlan.weakAyahs
+        : (Array.isArray(details?.weakAyahs) ? details.weakAyahs : [])
+      if (hasWordEvidence && weakAyahs.length === 1) {
+        return this.stripAiDashes(
+          this.t('memorisation.postSession.recommendation.ayahNeedsAttention', {
+            ayah: weakAyahs[0],
+          }) || `Āyah ${weakAyahs[0]} needs attention.`,
+        )
+      }
+      if (hasWordEvidence && weakAyahs.length > 1) {
+        return this.stripAiDashes(
+          this.t('memorisation.postSession.recommendation.phrasesNeedAttention')
+            || 'A few phrases still need attention.',
+        )
+      }
+      const reason = String(this.postSessionSimpleReason || '').trim()
+      if (!reason) return ''
+      // Keep one short line — drop long plan essays from the compact reason slot.
+      return this.stripAiDashes(reason.split(/(?<=\.)\s+/)[0].slice(0, 120))
     },
     postSessionTestWithAiLabel() {
       if (this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck) {
@@ -3788,7 +3924,88 @@ export default {
       }
       return this.t('memorisation.postSession.actions.chooseAnotherRange')
         || this.t('memorisation.postSession.recommendation.startDifferentSession')
-        || 'Choose another range'
+        || 'Other range'
+    },
+    postSessionCtaState() {
+      if (this.onboardingSampleSessionActive) return null
+      if (this.postSessionAiPresentationMode === 'insufficient_audio') {
+        return POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO
+      }
+      const outcome = this.postSessionMemoryCheckOutcome
+        || this.postSessionAiReviewDetails?.resultState
+        || this.postSessionAiReviewDetails?.outcome
+        || this.aiReciteFinalPlan?.outcome
+        || this.postSessionRecommendation?.ai_assessment?.result
+        || null
+      // Treat calm zero-match as needs_practice so Revise leads.
+      const resolvedOutcome = this.postSessionAiPresentationMode === 'valid_zero_match'
+        ? 'needs_practice'
+        : outcome
+      return resolvePostSessionCtaState({
+        isConfirmStep: this.postSessionRecommendationStep === 'confirm'
+          && this.postSessionRecommendationActionable,
+        hasAiCheck: !!(this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck),
+        outcome: resolvedOutcome,
+        presentationMode: this.postSessionAiPresentationMode,
+        masteryAchieved: !!(
+          this.aiReciteMasteryAchieved
+          || this.aiReciteAdvanceToNextSession
+        ),
+        revisionCompleted: !!this.recommendedPracticeCompleted,
+        awaitingMasteryRetest: !!this.awaitingMasteryRetest,
+      })
+    },
+    postSessionCtaButtons() {
+      const state = this.postSessionCtaState
+      if (!state) return []
+      const confirmKey = (() => {
+        const rec = this.postSessionRecommendation
+        return rec?.confirmation?.primary_action_key
+          || (rec?.type === RECOMMENDATION_TYPES.NEXT_SURAH
+            ? 'continueToNextSurah'
+            : (isRepeatRecommendation(rec) ? 'startRevision' : 'startSession'))
+      })()
+      const mapped = mapPostSessionCtas(state, {
+        isRepeat: this.postSessionIsRepeatRecommendation,
+        confirmLabelKey: confirmKey,
+        preferReviseRange: this.postSessionAiPresentationMode === 'valid_zero_match',
+        insufficientReason: this.postSessionAiReviewDetails?.insufficientReason || '',
+        showMicrophoneCheck: this.postSessionAiReviewDetails?.showMicrophoneCheck === true
+          || String(this.postSessionAiReviewDetails?.insufficientReason || '') === 'mic_permission',
+      })
+      const actionFallbacks = {
+        reviseFocusPhrase: 'Revise focus phrase',
+        reviseThisRange: 'Revise this range',
+        retest: 'Check again',
+        tryRecordingAgain: 'Try recording again',
+        checkMicrophone: 'Check microphone',
+        close: 'Close',
+        testWithAi: 'Check memorisation',
+        continuePractising: 'Continue practising',
+        continueToNextRange: 'Continue to next range',
+        reviewOnceMore: 'Review once more',
+        chooseAnotherRange: 'Other range',
+        skipForNow: 'Skip',
+        keepPractising: 'Keep practising',
+      }
+      return mapped.map((btn) => {
+        let label = ''
+        if (state === POST_SESSION_CTA_STATES.CONFIRM
+          && btn.action === POST_SESSION_CTA_ACTIONS.CONFIRM_START) {
+          label = this.t(`memorisation.postSession.recommendation.confirm.${btn.labelKey}`)
+            || this.postSessionConfirmationPrimaryLabel
+        } else {
+          label = this.t(`memorisation.postSession.actions.${btn.labelKey}`)
+        }
+        if (!label || label === `memorisation.postSession.actions.${btn.labelKey}`
+          || label === `memorisation.postSession.recommendation.confirm.${btn.labelKey}`) {
+          label = actionFallbacks[btn.labelKey] || this.postSessionConfirmationPrimaryLabel || btn.labelKey
+        }
+        return {
+          ...btn,
+          label: this.stripAiDashes(label),
+        }
+      })
     },
     postSessionAiAssistHint() {
       if (this.postSessionRecommendation?.ai_assessment?.summary || this.postSessionAiFeedback) {
@@ -4089,13 +4306,18 @@ export default {
     postSessionPlanEncouragement() {
       if (!this.postSessionShowRecommendationPlan) return ''
       if (this.postSessionRecommendationStatus === 'loading') return ''
-      return this.postSessionEncouragement || ''
+      // One short muted line under the title — never a competing bordered essay.
+      return this.stripAiDashes(
+        this.t('memorisation.postSession.recommendation.steadyRepetitionEncouragement')
+          || 'Steady repetition builds lasting memorisation.',
+      )
     },
     postSessionFlowGuideText() {
       if (this.onboardingSampleSessionActive) return ''
       if (this.postSessionRecommendationStep === 'confirm') return ''
-      // Avoid repeating the header / AI summary.
-      if (this.postSessionHasAiCheck || this.postSessionShowRecommendationPlan) {
+      // Recommendation card already carries title + encouragement + reason.
+      if (this.postSessionShowRecommendationPlan) return ''
+      if (this.postSessionHasAiCheck) {
         if (this.postSessionIsRepeatRecommendation) {
           return this.t('memorisation.postSession.coach.subtitles.retestAfterPractice')
             || this.t('memorisation.postSession.flowGuideRepeat')
@@ -5734,6 +5956,7 @@ export default {
       return !!this.sessionCompleted || this.centralSession?.sessionStatus === 'completed'
     },
     shouldShowReadingWorkspace() {
+      if (this.isPostSessionChoiceVisible) return false
       return this.hasVerses
     },
     resumeFeedback() {
@@ -7090,6 +7313,7 @@ export default {
         this.loadSavedSessions()
         this.migrateLocalStorage()
       }
+      this.loadRecommendedSessionTemplates()
       this.loadUiState()
       this.applyMobileLayoutFontDefault(this.readingViewMode)
       if (this.isMobileViewport()) this.playerCompact = true
@@ -7328,6 +7552,7 @@ export default {
     theme(newVal) {
       this.persistUiState()
       this.syncMushafColorsToAppTheme(newVal)
+      this.$nextTick(() => this.refreshLiveWordPresentationForTheme())
     },
     readingViewMode(newVal) {
       if (newVal === 'mushaf') {
@@ -9410,6 +9635,8 @@ export default {
         name,
         archived: !!archived,
         autoSaved: !!autoSaved,
+        fromRecommendation: !!this.currentSessionRecommendationMeta,
+        recommendationId: this.currentSessionRecommendationMeta?.recommendationId || null,
         savedAt: new Date().toISOString(),
         stats: this.buildCurrentSessionStatsSnapshot(),
         config: {
@@ -9419,6 +9646,7 @@ export default {
           rangeEnd: this.rangeEnd,
           reciterId: this.reciterId,
           speed: this.speed,
+          delay: this.delay,
           playMode: this.playMode,
           talqinModeEnabled: this.talqinModeEnabled,
           recitationWindowSeconds: this.recitationWindowSeconds,
@@ -10242,6 +10470,7 @@ export default {
       }
       this.showPostSessionConfetti = false
       this.pendingPostSessionModalPayload = null
+      this.closePostSessionChoice()
       if (!options.skipPrime) {
         this.primeAudioPlaybackUnlock()
       }
@@ -10303,6 +10532,12 @@ export default {
         this.showBanner(this.t('toasts.pleaseSelectAValidSurahAnd'), 'info', 3600)
         return
       }
+      if (
+        this.postSessionChoiceAction === POST_SESSION_ACTION.CREATE_CUSTOM
+        || this.startingFreshSessionSelection
+      ) {
+        this.clearCurrentSessionRecommendationMeta()
+      }
       this.primeAudioPlaybackUnlock()
       this.talqinModeEnabled = this.getTalqinModeToggleValue()
       this.applySessionConfig(this.buildSessionConfig(this.currentMode))
@@ -10310,6 +10545,7 @@ export default {
       this.persistUiState()
       this.persistCentralSessionState()
       await this.applyWorkspaceControls({ mode: this.currentMode })
+      this.closePostSessionChoice()
       this.closeToolsPanel()
       setTimeout(() => {
         this.startSessionWithCountdown({ skipPrime: true })
@@ -11104,8 +11340,33 @@ export default {
       this.postSessionAdaptiveResultView = null
       try { clearAssessmentSession() } catch (_) { /* ignore */ }
       if (this.recommendedPracticePending) {
-        this.recommendedPracticeCompleted = true
+        const performance = this.buildCompletionPerformancePayload?.() || {}
+        const focusKeys = new Set(
+          (Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : [])
+            .map((word) => String(word?.verseKey || '').trim())
+            .filter(Boolean),
+        )
+        const playCounts = performance.verse_play_counts || {}
+        let focusAyahPlayCount = 0
+        let totalPlayCount = 0
+        Object.entries(playCounts).forEach(([key, value]) => {
+          const plays = Math.max(0, Number(value || 0))
+          totalPlayCount += plays
+          if (focusKeys.has(String(key))) focusAyahPlayCount += plays
+        })
+        const meaningful = isMeaningfulFocusPhraseRevision({
+          focusPhraseRevisionActive: !!this.focusPhraseRevisionActive,
+          meaningfulInteraction: !!this.focusPhraseMeaningfulInteraction,
+          focusAyahPlayCount,
+          totalPlayCount,
+          sessionDurationSeconds: Number(performance.session_duration_seconds || 0),
+        })
+        if (meaningful) {
+          this.recommendedPracticeCompleted = true
+        }
         this.recommendedPracticePending = false
+        this.focusPhraseRevisionActive = false
+        this.focusPhraseMeaningfulInteraction = false
       }
       if (!this.onboardingSampleSessionActive) {
         if (keepMasteryLoop) {
@@ -11153,8 +11414,13 @@ export default {
       this.postSessionSettingsError = ''
       this.postSessionAiReciteBusy = false
       this.postSessionAiReciteActive = false
+      this.recommendedPracticePending = false
+      this.recommendedPracticeCompleted = false
+      this.focusPhraseRevisionActive = false
+      this.focusPhraseMeaningfulInteraction = false
       this.postSessionAiFeedback = ''
       this.postSessionAiReviewDetails = null
+      this.postSessionAiDetailsExpanded = false
       // Every session must re-test with AI Recite before a plan is shown.
       this.aiReciteAttempts = []
       this.aiReciteFinalPlan = null
@@ -11729,12 +11995,16 @@ export default {
       this.postSessionAiReciteBusy = true
       this.postSessionViewState = 'opening_ai_recite'
       this.postSessionRecommendationStartError = ''
+      // Retry / re-open must clear the failed recording while keeping the completed range.
+      this.clearFailedRecitationRecordingState({ preserveRange: true })
       if (resetAttempts) {
         this.aiReciteAttempts = []
         this.aiReciteFinalPlan = null
         this.aiReciteShowFinalPlan = false
         this.aiReciteAverageAccuracy = null
         this.practiceFocusWeakWords = []
+        this.postSessionAiReviewDetails = null
+        this.postSessionAiFeedback = ''
       } else {
         // Retry from the success modal — keep prior attempts for averaging.
         this.aiReciteShowFinalPlan = false
@@ -12212,6 +12482,31 @@ export default {
       }
     },
     async applyPostSessionAiAssessment(result, summary = '', extras = {}) {
+      const isInsufficient = result === 'insufficient_audio'
+        || extras.insufficient_audio
+        || extras.assessment_quality === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO
+        || resolveRecitationResultState(extras._result || null, { ...extras, outcome: result })
+          === RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO
+
+      // Insufficient audio is not a memorisation score — show UI only, no plan/progress side effects.
+      if (isInsufficient) {
+        const reviewExtras = {
+          ...extras,
+          insufficient_audio: true,
+          assessment_quality: ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO,
+          accuracy_percent: null,
+        }
+        this.postSessionAiReviewDetails = this.buildPostSessionAiReviewDetails(
+          'insufficient_audio',
+          reviewExtras,
+          extras._result || buildInsufficientAudioResult({ durationSeconds: extras.duration_seconds }),
+        )
+        if (summary) this.postSessionAiFeedback = summary
+        this.postSessionAiDetailsExpanded = false
+        this.postSessionViewState = 'recommendation_ready'
+        return
+      }
+
       // If adaptive check is waiting on an AI Recite question, fold evidence there first.
       if (
         this.postSessionAdaptiveCheckActive
@@ -12660,6 +12955,174 @@ export default {
         this.postSessionViewState = 'action_failed'
       }
     },
+    resolvePostSessionFocusPhrase() {
+      const plan = this.aiReciteFinalPlan || this.amdPracticePlan || null
+      const weakWords = normaliseWeakWordRecords(
+        Array.isArray(plan?.weakWords)
+          ? plan.weakWords
+          : (Array.isArray(plan?.weak_words)
+            ? plan.weak_words
+            : (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length
+              ? this.practiceFocusWeakWords
+              : (this.postSessionRecommendation?.settings?.practice_weak_words || []))),
+      )
+      const first = weakWords[0] || null
+      if (!first) return null
+      const ayahNumber = Number(first.ayahNumber || first.ayah || first.ayah_number || 0)
+      const chapterId = Number(
+        first.surahId
+        || String(first.verseKey || '').split(':')[0]
+        || this.postSessionSnapshot?.chapterId
+        || this.postSessionRecommendation?.surah?.id
+        || this.chapterId
+        || 0,
+      )
+      const verseKey = first.verseKey
+        || (chapterId && ayahNumber ? `${chapterId}:${ayahNumber}` : '')
+      const verse = (Array.isArray(this.verses) ? this.verses : []).find((v) => (
+        String(v.key) === String(verseKey)
+        || (Number(v.number) === ayahNumber && (!chapterId || Number(v.surah || v.chapterId || 0) === chapterId || !v.surah))
+      ))
+      const tokens = verse
+        ? (this.tokenizeRecitationDisplayWords?.(verse.arabic || verse.text || '')
+          || String(verse.arabic || '').replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean))
+        : []
+      const wordIndex = Number(first.wordIndex)
+      let phrase = String(first.phrase || first.phraseText || first.surroundingPhrase || '').trim()
+      if (!phrase && tokens.length) {
+        if (tokens.length <= 6) {
+          phrase = tokens.join(' ')
+        } else if (Number.isFinite(wordIndex) && wordIndex >= 0 && wordIndex < tokens.length) {
+          const start = Math.max(0, wordIndex - 2)
+          const end = Math.min(tokens.length, wordIndex + 3)
+          phrase = tokens.slice(start, end).join(' ')
+        } else {
+          phrase = String(first.text || first.word || tokens[0] || '').trim()
+        }
+      }
+      if (!phrase) phrase = String(first.text || first.word || '').trim()
+      if (!phrase) return null
+      return {
+        phrase,
+        ayahNumber,
+        verseKey,
+        wordIndex: Number.isFinite(wordIndex) ? wordIndex : null,
+        ayahLabel: ayahNumber
+          ? (this.t('memorisation.postSession.coach.ayahLabel', { ayah: ayahNumber }) || `Āyah ${ayahNumber}`)
+          : '',
+        weakWord: first,
+      }
+    },
+    resolvePostSessionMethodCopy(plan = null) {
+      const approach = plan?.planDetail?.practiceApproach
+        || plan?.practiceApproach
+        || this.aiReciteFinalPlan?.planDetail?.practiceApproach
+        || null
+      const techniqueId = String(
+        approach?.id
+        || plan?.techniques?.[0]?.id
+        || this.postSessionRecommendation?.settings?.technique
+        || '',
+      ).toLowerCase()
+      const chainingHow = this.t('memorisation.aiRecitePlan.tech.chainingHow')
+        || 'Practise it in two short parts, then join them.'
+      if (techniqueId === 'chaining' || techniqueId === 'chunking') {
+        return chainingHow
+      }
+      const how = this.stripAiDashes(String(approach?.how || plan?.techniques?.[0]?.how || '').trim())
+      if (how) {
+        // Prefer concise phrase-practice wording over generic AI/chunking paste.
+        if (/smaller sections|combine them/i.test(how)) {
+          return this.t('memorisation.aiRecitePlan.tech.phrasePartsHow')
+            || 'Practise the phrase in small parts, then recite it as one.'
+        }
+        return how
+      }
+      const steps = Array.isArray(approach?.steps) ? approach.steps.filter(Boolean) : []
+      if (steps.length >= 2) {
+        return this.stripAiDashes(
+          `${steps[0].replace(/\.$/, '')}, then ${String(steps[1] || '').replace(/\.$/, '').toLowerCase()}.`,
+        )
+      }
+      if (steps[0]) return this.stripAiDashes(steps[0])
+      if (techniqueId) {
+        return this.stripTechniqueJargon(this.getTechniqueDisplayLabel(techniqueId))
+      }
+      return ''
+    },
+    resolvePostSessionReturnScheduleToken() {
+      const rec = this.postSessionRecommendation || {}
+      const detail = rec.plan_detail || rec.planDetail || {}
+      const explicit = rec.next_review
+        || rec.nextReview
+        || detail.next_review
+        || detail.nextReview
+        || rec.settings?.next_review
+        || null
+      if (explicit) {
+        const token = this.getHifzDateToken(explicit)
+        if (token) return token
+      }
+      const chapterId = Number(
+        rec.surah?.id
+        || this.postSessionSnapshot?.chapterId
+        || this.chapterId
+        || 0,
+      )
+      const from = Number(rec.ayah_range?.from || this.postSessionSnapshot?.rangeStart || 0)
+      const to = Number(rec.ayah_range?.to || this.postSessionSnapshot?.rangeEnd || from)
+      if (!chapterId || !from || !to) return ''
+      const tokens = []
+      for (let ayah = from; ayah <= to; ayah += 1) {
+        const key = `${chapterId}:${ayah}`
+        const progress = this.getHifzAyahProgress?.(key)
+          || this.hifzAyahProgress?.[key]
+          || null
+        const raw = progress?.nextReview || progress?.next_review || null
+        const token = raw ? this.getHifzDateToken(raw) : ''
+        if (token) tokens.push(token)
+      }
+      if (!tokens.length) return ''
+      return tokens.sort()[0]
+    },
+    resolvePostSessionReturnCopy() {
+      const token = this.resolvePostSessionReturnScheduleToken()
+      if (!token) return ''
+      const today = this.getHifzDateToken(new Date())
+      // Review row already covers “check now” — omit Return when due today.
+      if (token === today) return ''
+      const tomorrowDate = new Date()
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1)
+      const tomorrow = this.getHifzDateToken(tomorrowDate)
+      if (token === tomorrow) {
+        return this.t('memorisation.postSession.recommendation.evidenceReturnTomorrow')
+          || 'Review again tomorrow'
+      }
+      const parsed = new Date(`${token}T12:00:00`)
+      const dateLabel = Number.isNaN(parsed.getTime())
+        ? token
+        : parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+      return this.t('memorisation.postSession.recommendation.evidenceReturnOn', { date: dateLabel })
+        || `Review again on ${dateLabel}`
+    },
+    onPostSessionFocusPhraseActivate(row) {
+      if (!row || this.postSessionActionsBusy) return
+      const weakWord = row.weakWord || {
+        text: row.word,
+        verseKey: row.verseKey,
+        ayahNumber: row.ayahNumber,
+        wordIndex: row.wordIndex,
+      }
+      // Prefer full revise flow so technique + highlights apply; fall back to phrase open.
+      if (typeof this.reviseFocusPhraseFromRecommendation === 'function'
+        && this.postSessionRecommendationActionable) {
+        this.reviseFocusPhraseFromRecommendation()
+        return
+      }
+      if (typeof this.focusPracticeWeakWord === 'function') {
+        this.focusPracticeWeakWord(weakWord, { userInitiated: true })
+      }
+    },
     async onPostSessionContinueToAyahs() {
       if (this.postSessionActionsBusy) return
       if (typeof this.confirmPostSessionRecommendation === 'function') {
@@ -12676,6 +13139,234 @@ export default {
       // Primary calm action continues the session — never auto-opens Test with AI.
       if (typeof this.confirmPostSessionRecommendation === 'function') {
         await this.confirmPostSessionRecommendation()
+      }
+    },
+    postSessionCtaButtonDisabled(btn) {
+      if (!btn) return true
+      const action = btn.action
+      if (action === POST_SESSION_CTA_ACTIONS.CHECK_AGAIN
+        || action === POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN
+        || action === POST_SESSION_CTA_ACTIONS.CHECK_MICROPHONE
+        || action === POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION) {
+        return this.postSessionActionsBusy || this.postSessionAiReciteBusy || !this.aiTestModalsEnabled
+      }
+      if (action === POST_SESSION_CTA_ACTIONS.CLOSE) {
+        return !!this.postSessionActionsBusy
+      }
+      if (action === POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE
+        || action === POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING
+        || action === POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE) {
+        const hasSnapshotRange = !!(
+          Number(this.postSessionSnapshot?.chapterId || 0)
+          && Number(this.postSessionSnapshot?.rangeStart || 0)
+        )
+        return this.postSessionActionsBusy
+          || !(this.postSessionRecommendationActionable || hasSnapshotRange)
+      }
+      if (action === POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE
+        || action === POST_SESSION_CTA_ACTIONS.CONFIRM_START
+        || action === POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW) {
+        return this.postSessionActionsBusy || !this.postSessionRecommendationActionable
+      }
+      if (action === POST_SESSION_CTA_ACTIONS.OTHER_RANGE) {
+        return this.postSessionActionsBusy || this.postSessionRecommendationStarting
+      }
+      return this.postSessionActionsBusy
+    },
+    postSessionCtaButtonBusy(btn) {
+      if (!btn) return false
+      const action = btn.action
+      if (action === POST_SESSION_CTA_ACTIONS.CHECK_AGAIN
+        || action === POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN
+        || action === POST_SESSION_CTA_ACTIONS.CHECK_MICROPHONE
+        || action === POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION) {
+        return !!this.postSessionAiReciteBusy
+      }
+      if (action === POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE
+        || action === POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING
+        || action === POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE
+        || action === POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE
+        || action === POST_SESSION_CTA_ACTIONS.CONFIRM_START
+        || action === POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW) {
+        return !!this.postSessionRecommendationStarting
+      }
+      return false
+    },
+    async onPostSessionCtaAction(action) {
+      if (!action || this.postSessionActionsBusy) return
+      switch (action) {
+        case POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE:
+          await this.reviseFocusPhraseFromRecommendation()
+          return
+        case POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN:
+          await this.retryInsufficientAudioRecording()
+          return
+        case POST_SESSION_CTA_ACTIONS.CHECK_MICROPHONE:
+          await this.checkMicrophoneForInsufficientAudio()
+          return
+        case POST_SESSION_CTA_ACTIONS.CLOSE:
+          this.closeInsufficientAudioResult()
+          return
+        case POST_SESSION_CTA_ACTIONS.CHECK_AGAIN:
+        case POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION:
+          await this.onPostSessionTestWithAi()
+          return
+        case POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE:
+        case POST_SESSION_CTA_ACTIONS.CONFIRM_START:
+        case POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW:
+          await this.onPostSessionContinueToAyahs()
+          return
+        case POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING:
+        case POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE:
+          await this.continuePractisingCurrentRange()
+          return
+        case POST_SESSION_CTA_ACTIONS.OTHER_RANGE:
+          await this.chooseOtherFromRecommendation()
+          return
+        default:
+          break
+      }
+    },
+    resolveFocusPhraseRevisionRange() {
+      const snap = this.postSessionSnapshot || {}
+      const planRange = this.aiReciteFinalPlan?.ayah_range
+        || this.masteryTargetRange
+        || null
+      const recRange = this.postSessionRecommendation?.ayah_range || null
+      // Preserve the completed session window; never advance on revise.
+      const chapterId = Number(
+        snap.chapterId
+        || planRange?.surahId
+        || planRange?.chapterId
+        || recRange?.surah_id
+        || this.postSessionRecommendation?.surah?.id
+        || this.chapterId
+        || 0,
+      )
+      let rangeStart = Number(snap.rangeStart || 0)
+      let rangeEnd = Number(snap.rangeEnd || rangeStart || 0)
+      if (!rangeStart || !rangeEnd) {
+        rangeStart = Number(planRange?.from || recRange?.from || this.rangeStart || 1)
+        rangeEnd = Number(planRange?.to || recRange?.to || this.rangeEnd || rangeStart)
+      }
+      return { chapterId, rangeStart, rangeEnd }
+    },
+    resolveRecommendedFocusPhraseWord() {
+      this.ensurePracticeFocusWeakWordsFromPlan(
+        this.postSessionRecommendation?.settings
+        || this.aiReciteFinalPlan?.planDetail
+        || null,
+      )
+      const words = Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []
+      if (!words.length) return null
+      const selected = words.find((word) => this.practiceWeakWordKey(word) === this.selectedPracticeWeakWordKey)
+      return selected || words[0] || null
+    },
+    markFocusPhraseMeaningfulInteraction(source = 'interaction') {
+      if (!this.focusPhraseRevisionActive && !this.recommendedPracticePending) return
+      this.focusPhraseMeaningfulInteraction = true
+      try {
+        this.livePracticeCoachPhase = source === 'replay' ? 'replayPhrase' : (this.livePracticeCoachPhase || 'playing')
+      } catch (_) { /* ignore */ }
+    },
+    async reviseFocusPhraseFromRecommendation() {
+      if (this.postSessionActionsBusy || !this.postSessionRecommendationActionable) return
+      this.postSessionRecommendationStarting = true
+      this.postSessionRecommendationStartError = ''
+      this.postSessionViewState = 'starting_repeat'
+      try {
+        const { chapterId, rangeStart, rangeEnd } = this.resolveFocusPhraseRevisionRange()
+        if (!chapterId || !rangeStart || !rangeEnd) {
+          throw new Error('invalid_focus_phrase_range')
+        }
+        const focusWord = this.resolveRecommendedFocusPhraseWord()
+        const activeRecommendation = this.postSessionRecommendation || {}
+        const planSettings = {
+          ...this.resolveRecommendationStartSettings(activeRecommendation, null),
+        }
+        const techniqueId = planSettings.technique
+          || activeRecommendation?.technique?.id
+          || this.aiReciteFinalPlan?.technique
+          || 'talqin'
+        if (focusWord) {
+          planSettings.practice_weak_words = normaliseWeakWordRecords(
+            this.practiceFocusWeakWords.length ? this.practiceFocusWeakWords : [focusWord],
+          )
+        }
+        this.focusPhraseRevisionActive = true
+        this.focusPhraseMeaningfulInteraction = false
+        this.recommendedPracticePending = true
+        this.awaitingMasteryRetest = true
+        this.masteryTargetRange = {
+          chapterId,
+          from: rangeStart,
+          to: rangeEnd,
+          surahName: this.postSessionSnapshot?.chapterName || activeRecommendation?.surah?.name || '',
+          settings: planSettings,
+          planDetail: activeRecommendation?.plan_detail || this.aiReciteFinalPlan?.planDetail || null,
+        }
+        await this.startSessionFromRecommendationPayload({
+          chapterId,
+          rangeStart,
+          rangeEnd,
+          sessionMode: 'revision',
+          techniqueId,
+          settings: planSettings,
+          sessionPayload: null,
+        })
+        this.$nextTick(() => {
+          if (focusWord) {
+            // Open the weak phrase with audio available; completion still requires practice evidence.
+            this.focusPracticeWeakWord(focusWord, { userInitiated: false })
+          }
+          this.schedulePracticeFocusWordDomSync?.([0, 200, 600, 1200, 2400])
+        })
+      } catch (error) {
+        console.error('Failed to open focus phrase revision:', error)
+        this.postSessionRecommendationStarting = false
+        this.recommendedPracticePending = false
+        this.focusPhraseRevisionActive = false
+        this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.startError')
+        this.postSessionViewState = 'action_failed'
+      }
+    },
+    async continuePractisingCurrentRange() {
+      if (this.postSessionActionsBusy) return
+      // Same-window practice without advancing — used after revision or for strong “review once more”.
+      const { chapterId, rangeStart, rangeEnd } = this.resolveFocusPhraseRevisionRange()
+      if (!chapterId || !rangeStart || !rangeEnd) {
+        await this.onPostSessionContinueToAyahs()
+        return
+      }
+      this.postSessionRecommendationStarting = true
+      this.postSessionRecommendationStartError = ''
+      try {
+        const activeRecommendation = this.postSessionRecommendation || {}
+        const planSettings = this.resolveRecommendationStartSettings(activeRecommendation, null)
+        const techniqueId = planSettings.technique
+          || activeRecommendation?.technique?.id
+          || 'talqin'
+        this.recommendedPracticePending = true
+        this.focusPhraseRevisionActive = !!this.practiceFocusWeakWords?.length
+        this.focusPhraseMeaningfulInteraction = false
+        await this.startSessionFromRecommendationPayload({
+          chapterId,
+          rangeStart,
+          rangeEnd,
+          sessionMode: 'revision',
+          techniqueId,
+          settings: planSettings,
+          sessionPayload: null,
+        })
+        const focusWord = this.resolveRecommendedFocusPhraseWord()
+        if (focusWord) {
+          this.$nextTick(() => this.focusPracticeWeakWord(focusWord))
+        }
+      } catch (error) {
+        console.error('Failed to continue practising current range:', error)
+        this.postSessionRecommendationStarting = false
+        this.recommendedPracticePending = false
+        this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.startError')
       }
     },
     practiceWeakWordKey(word) {
@@ -12888,8 +13579,9 @@ export default {
         this.clearMushafAyahHtmlCache()
       }
     },
-    focusPracticeWeakWord(word) {
+    focusPracticeWeakWord(word, options = {}) {
       if (!word) return
+      const userInitiated = options.userInitiated !== false
       this.selectedPracticeWeakWordKey = this.practiceWeakWordKey(word)
       this.practiceFocusWeakWords = normaliseWeakWordRecords(
         this.practiceFocusWeakWords.length ? this.practiceFocusWeakWords : [word],
@@ -12920,10 +13612,20 @@ export default {
         } else if (typeof this.playVerseByKey === 'function') {
           try { this.playVerseByKey(verseKey) } catch (_) { /* ignore */ }
         }
+        // Phrase-level replay from the learner counts as meaningful revision.
+        if (userInitiated) {
+          this.markFocusPhraseMeaningfulInteraction('replay')
+        }
       })
     },
     capturePracticeFocusWeakWordsFromResult(result) {
       if (!result) return
+      if (
+        resolveRecitationResultState(result) === RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO
+        || classifyRecitationAssessmentQuality(result) === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO
+      ) {
+        return
+      }
       const statuses = this.getRecitationWordStatuses?.(result) || result.wordStatuses || []
       const ayahKey = result.ayahKey || result.ayahRange?.keys?.[0] || this.recitationCheckTargetVerseKey || ''
       const [surahPart, ayahPart] = String(ayahKey).split(':')
@@ -13136,6 +13838,13 @@ export default {
       this.postSessionOffcanvasOpen = false
       this.showTools = false
       this.postSessionViewState = 'idle'
+      this.closePostSessionChoice()
+      this.markCurrentSessionAsRecommended({
+        recommendationId: this.postSessionRecommendation?.id || null,
+        technique: techniqueId || mergedSettings.technique || this.postSessionRecommendation?.technique?.id || null,
+        sessionMode,
+        settings: mergedSettings,
+      })
       this.$nextTick(() => {
         this.schedulePracticeFocusWordDomSync()
         this.scheduleAnchorHighlights?.()
@@ -13284,6 +13993,268 @@ export default {
         this.postSessionOffcanvasOpen = true
       }
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
+    },
+    buildCurrentRecommendedSessionTemplate(overrides = {}) {
+      const meta = this.currentSessionRecommendationMeta || {}
+      return buildRecommendedSessionTemplate({
+        chapterId: this.chapterId || this.sessionConfig?.chapterId || overrides.chapterId,
+        chapterName: this.currentChapter?.name_simple
+          || this.postSessionSnapshot?.chapterName
+          || overrides.chapterName
+          || '',
+        rangeStart: this.rangeStart || this.sessionConfig?.rangeStart || overrides.rangeStart,
+        rangeEnd: this.rangeEnd || this.sessionConfig?.rangeEnd || overrides.rangeEnd,
+        reciterId: this.reciterId,
+        playbackSpeed: this.speed,
+        repetitions: this.repetitionsPerStep,
+        delay: this.delay,
+        gapBetweenVerses: this.gapBetweenVerses,
+        customGapSeconds: this.customGapSeconds,
+        talqinModeEnabled: this.talqinModeEnabled,
+        focusModeEnabled: this.focusModeEnabled,
+        blurModeEnabled: this.blurModeEnabled,
+        chainingEnabled: this.chainingEnabled,
+        chainingMethod: this.chainingMethod,
+        chainingRepetitions: this.chainingRepetitions,
+        anchorModeEnabled: this.anchorModeEnabled,
+        anchorCount: this.anchorCount,
+        technique: meta.technique
+          || (this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : null))),
+        sessionMode: meta.sessionMode || 'revision',
+        recommendationId: meta.recommendationId || null,
+        practiceWeakWords: this.practiceFocusWeakWords || [],
+        settings: meta.settings || null,
+        endedAt: new Date().toISOString(),
+        ...overrides,
+      })
+    },
+    markCurrentSessionAsRecommended(meta = {}) {
+      this.currentSessionRecommendationMeta = {
+        recommendationId: meta.recommendationId == null ? null : String(meta.recommendationId),
+        technique: meta.technique || null,
+        sessionMode: meta.sessionMode || 'revision',
+        settings: meta.settings && typeof meta.settings === 'object' ? { ...meta.settings } : null,
+        markedAt: Date.now(),
+      }
+    },
+    clearCurrentSessionRecommendationMeta() {
+      this.currentSessionRecommendationMeta = null
+    },
+    persistRecommendedSessionTemplates() {
+      try {
+        if (this.learningBackendEnabled()) {
+          this.writeWorkspaceStateValue('recommendedSessionTemplates', this.recommendedSessionTemplates)
+        } else {
+          localStorage.setItem(
+            this.userStorageKey('recommendedSessionTemplates'),
+            JSON.stringify(this.recommendedSessionTemplates || [])
+          )
+        }
+      } catch (_) { /* ignore persistence failures */ }
+    },
+    loadRecommendedSessionTemplates() {
+      try {
+        let templates = []
+        if (this.learningBackendEnabled()) {
+          templates = this.readWorkspaceStateValue('recommendedSessionTemplates', [])
+        } else {
+          templates = JSON.parse(localStorage.getItem(this.userStorageKey('recommendedSessionTemplates')) || '[]')
+        }
+        this.recommendedSessionTemplates = (Array.isArray(templates) ? templates : [])
+          .map((entry) => buildRecommendedSessionTemplate(entry))
+          .filter(isValidRecommendedTemplate)
+      } catch (_) {
+        this.recommendedSessionTemplates = []
+      }
+    },
+    archiveEndedRecommendedSession(snapshot = null) {
+      if (!this.currentSessionRecommendationMeta) {
+        this.postSessionChoiceJustEndedTemplate = null
+        return null
+      }
+      const template = this.buildCurrentRecommendedSessionTemplate({
+        chapterId: snapshot?.chapterId,
+        chapterName: snapshot?.chapterName,
+        rangeStart: snapshot?.rangeStart,
+        rangeEnd: snapshot?.rangeEnd,
+      })
+      if (!template) {
+        this.postSessionChoiceJustEndedTemplate = null
+        return null
+      }
+      this.postSessionChoiceJustEndedTemplate = template
+      this.recommendedSessionTemplates = rememberRecommendedSessionTemplate(
+        this.recommendedSessionTemplates,
+        template,
+      )
+      this.persistRecommendedSessionTemplates()
+      return template
+    },
+    openPostSessionChoice(snapshot = null) {
+      this.archiveEndedRecommendedSession(snapshot)
+      this.showPostSessionChoice = true
+      this.postSessionChoiceAction = null
+      this.postSessionChoiceOffcanvasOpen = false
+      this.showTools = false
+      this.showPostSessionModal = false
+      this.showPostSessionConfetti = false
+      this.postSessionOffcanvasOpen = false
+      this.playerVisible = false
+      try {
+        this.closePlayer()
+      } catch (_) { /* player may already be closed */ }
+      this.syncBodyScrollLock(false)
+    },
+    closePostSessionChoice() {
+      this.showPostSessionChoice = false
+      this.postSessionChoiceAction = null
+      this.postSessionChoiceOffcanvasOpen = false
+      this.postSessionChoiceJustEndedTemplate = null
+    },
+    focusPostSessionCustomSetupField() {
+      this.$nextTick(() => {
+        const panel = this.$refs.toolsPanel
+        const body = this.$refs.toolsBody
+        const surahSelect = body?.querySelector?.('.setup-field-list select.select')
+          || body?.querySelector?.('select.select')
+          || null
+        if (surahSelect && typeof surahSelect.focus === 'function') {
+          surahSelect.focus({ preventScroll: true })
+          return
+        }
+        if (panel && typeof panel.focus === 'function') {
+          panel.focus({ preventScroll: true })
+        }
+      })
+    },
+    createCustomSessionFromChoice() {
+      this.postSessionChoiceAction = POST_SESSION_ACTION.CREATE_CUSTOM
+      this.postSessionChoiceOffcanvasOpen = true
+      this.startingFreshSessionSelection = true
+      // Clear ended-session resume affordances without creating a session yet.
+      this.clearContinueSessionQuietly()
+      this.clearActiveSessionSnapshot()
+      this.sessionPaused = false
+      this.backendUnfinishedSession = false
+      this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
+      if (!this.sectionOpen?.advanced_setup) {
+        this.sectionOpen = { ...(this.sectionOpen || {}), advanced_setup: true }
+      }
+      this.focusPostSessionCustomSetupField()
+    },
+    async prepareReadySessionFromRecommendedTemplate(template) {
+      if (!isValidRecommendedTemplate(template)) return false
+
+      const settings = {
+        ...(template.settings && typeof template.settings === 'object' ? template.settings : {}),
+        technique: template.technique || template.settings?.technique || null,
+        reciter: template.reciterId || template.settings?.reciter || null,
+        playback_speed: template.playbackSpeed,
+        repetitions: template.repetitions,
+        talqin_enabled: !!template.talqinModeEnabled,
+        focus_enabled: !!template.focusModeEnabled,
+        blur_enabled: !!template.blurModeEnabled,
+        chaining_enabled: !!template.chainingEnabled,
+        chaining_method: template.chainingMethod,
+        chaining_repetitions: template.chainingRepetitions,
+        anchor_mode_enabled: !!template.anchorModeEnabled,
+        anchor_count: template.anchorCount,
+        practice_weak_words: template.practiceWeakWords || [],
+      }
+
+      const baseConfig = this.buildSessionConfig(this.currentMode) || {}
+      this.applySessionConfig({
+        ...baseConfig,
+        chapterId: Number(template.chapterId),
+        rangeStart: Number(template.rangeStart),
+        rangeEnd: Number(template.rangeEnd),
+        reciterId: settings.reciter || baseConfig.reciterId,
+        speed: this.normalizePlaybackSpeed(settings.playback_speed ?? baseConfig.speed ?? 1),
+        delay: Number.isFinite(Number(template.delay)) ? Number(template.delay) : (baseConfig.delay ?? this.delay),
+        repetitionsPerStep: Number(settings.repetitions || baseConfig.repetitionsPerStep || 3),
+        gapBetweenVerses: template.gapBetweenVerses || baseConfig.gapBetweenVerses,
+        customGapSeconds: template.customGapSeconds ?? baseConfig.customGapSeconds,
+        talqinModeEnabled: !!settings.talqin_enabled,
+        focusModeEnabled: !!settings.focus_enabled,
+        blurModeEnabled: !!settings.blur_enabled,
+        chainingEnabled: !!settings.chaining_enabled,
+        chainingMethod: settings.chaining_method || 'linking',
+        chainingRepetitions: Number(settings.chaining_repetitions || baseConfig.chainingRepetitions || 2),
+        anchorModeEnabled: !!settings.anchor_mode_enabled,
+        anchorCount: Number(settings.anchor_count || baseConfig.anchorCount || 2),
+      })
+
+      if (settings.reciter) this.reciterId = settings.reciter
+      if (settings.playback_speed != null) {
+        this.setPlaybackSpeed(Number(settings.playback_speed), { silent: true })
+      }
+      if (settings.repetitions) this.repetitionsPerStep = Number(settings.repetitions)
+      if (Number.isFinite(Number(template.delay))) this.delay = Number(template.delay)
+
+      this.applyRecommendedTechnique(
+        settings.technique,
+        template.sessionMode || 'revision',
+        settings,
+      )
+      this.ensurePracticeFocusWeakWordsFromPlan(settings)
+      this.seedAnchorPracticeFocusWordsIfNeeded()
+      this.persistModeState(this.currentMode)
+      this.persistUiState()
+      this.persistCentralSessionState()
+
+      await this.loadChapter(this.currentMode)
+      this.applyRecommendedTechnique(
+        settings.technique,
+        template.sessionMode || 'revision',
+        settings,
+      )
+      this.ensurePracticeFocusWeakWordsFromPlan(settings)
+      this.seedAnchorPracticeFocusWordsIfNeeded()
+
+      // New instance: wipe progress / completion from the ended record.
+      this.prepareRangeRestart()
+      this.sessionCompleted = false
+      this.sessionCompletedAt = null
+      this.sessionStartedAt = null
+      this.sessionPaused = false
+      this.backendUnfinishedSession = false
+      this.backendSessionSnapshot = null
+      this.clearContinueSessionQuietly()
+      this.clearActiveSessionSnapshot()
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'idle'
+        this.centralSession.sessionCompletedAt = null
+      }
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.completed = false
+        this.mutqinState.sessionState.completed_at = null
+        this.mutqinState.sessionState.paused = false
+      }
+      this.markCurrentSessionAsRecommended({
+        recommendationId: template.recommendationId,
+        technique: settings.technique,
+        sessionMode: template.sessionMode || 'revision',
+        settings,
+      })
+      this.transitionSessionLifecycle(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
+      this.playerVisible = false
+      try {
+        this.closePlayer()
+      } catch (_) { /* ignore */ }
+      return true
+    },
+    async repeatRecommendedSessionFromChoice() {
+      const template = this.postSessionRepeatTemplate
+      if (!template) return
+      this.postSessionChoiceAction = POST_SESSION_ACTION.REPEAT_RECOMMENDED
+      const prepared = await this.prepareReadySessionFromRecommendedTemplate(template)
+      if (!prepared) {
+        this.postSessionChoiceAction = null
+        return
+      }
+      this.closePostSessionChoice()
+      // Ready session — learner uses the normal Start session control.
     },
     exitOnboardingSampleMode({ discard = true, markCompleted = true } = {}) {
       const wasSample = !!this.onboardingSampleSessionActive
@@ -13760,6 +14731,19 @@ export default {
       }
       this.persistMutqinStateLocally()
       this.persistCentralSessionState()
+      if (this.focusPhraseRevisionActive || this.recommendedPracticePending) {
+        const focusKeys = new Set(
+          (Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : [])
+            .map((word) => String(word?.verseKey || '').trim())
+            .filter(Boolean),
+        )
+        // Second+ play on a focus ayah (or any replay after the auto-open) counts.
+        if (focusKeys.has(String(verseKey)) && current + 1 >= 2) {
+          this.markFocusPhraseMeaningfulInteraction('replay')
+        } else if (!focusKeys.size && current + 1 >= 1) {
+          this.markFocusPhraseMeaningfulInteraction('play')
+        }
+      }
     },
 
     validateSessionForExport(session) {
@@ -16046,7 +17030,7 @@ export default {
         }).join(' ')
         offset += words.length
         const endMarker = this.buildStackedAyahEndMarkerHtml?.(verse)
-          || `<span class="verse-ayah-end-number mushaf-ayah-number" dir="rtl" lang="ar" aria-hidden="true">\u06DD${this.escapeHtml(this.formatEasternAyahNumber?.(ayahNumber) || String(ayahNumber))}</span>`
+          || `<span class="verse-ayah-end-number verse-ayah-number-digits-1" role="img" aria-hidden="true"><img class="verse-ayah-end-number__img" src="/images/ayah-markers/${Number(ayahNumber) || 1}.png" alt="" width="90" height="96" draggable="false" decoding="async"></span>`
         // Inline runs so ayahs wrap continuously like a printed mushaf page.
         runs.push(
           `<span class="amd-ayah-run${ayahActive ? ' is-active' : ''}" data-ayah-key="${this.escapeHtml(verse?.key || '')}">`
@@ -16193,6 +17177,11 @@ export default {
         black: wordStatuses.filter((w) => ['omitted', 'omission', 'black'].includes(String(w.status).toLowerCase())).length,
         gray: wordStatuses.filter((w) => ['skipped', 'notattempted', 'pending', 'gray', 'grey'].includes(String(w.status).toLowerCase())).length,
       }
+      const startedAt = Number(this.recitationCheckStartedAt || 0)
+      const endedAt = Date.now()
+      const durationSeconds = startedAt > 0
+        ? Math.max(0, (endedAt - startedAt) / 1000)
+        : null
       return {
         wordStatuses,
         colorCounts,
@@ -16201,6 +17190,9 @@ export default {
         transcript: wordsToTranscript?.(committedWords) || committedWords.map((w) => w.word || w.text || '').join(' '),
         transcriptionSource: 'live-amd',
         committedWords,
+        startedAt: startedAt || null,
+        endedAt,
+        durationSeconds,
         reason,
       }
     },
@@ -16479,6 +17471,13 @@ export default {
         if (/Permission|NotAllowed|denied|micBlocked/i.test(String(error?.name || error?.message || ''))) {
           this.amdMicStatus = 'denied'
           this.amdError = this.t?.('memorisation.amd.micNeedAccess') || 'Microphone access needed'
+          if (this.postSessionAiReciteActive || this.showPostSessionModal) {
+            void this.applyInsufficientAudioAssessment(null, {
+              reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
+              micPermissionFailed: true,
+              failureReason: String(error?.name || error?.message || 'mic_permission_denied'),
+            })
+          }
         }
       } finally {
         this.amdBusy = false
@@ -17691,17 +18690,41 @@ export default {
         displayWords: Array.isArray(displayWords) && displayWords.length ? displayWords : committedWords
       }
     },
+    liveWordStatusSeverity(status = '') {
+      const value = String(status || '').toLowerCase()
+      // Higher = stickier issue. Once red/amber/black/grey lands, do not upgrade to green mid-session.
+      if (value === 'incorrect' || value === 'omitted') return 3
+      if (value === 'partial' || value === 'skipped') return 2
+      if (value === 'correct') return 1
+      return 0
+    },
+    isStickyLiveIssueStatus(status = '') {
+      const value = String(status || '').toLowerCase()
+      return value === 'incorrect'
+        || value === 'partial'
+        || value === 'omitted'
+        || value === 'skipped'
+    },
+    pickStickyLiveWordStatus(current = null, incoming = null) {
+      if (!current) return incoming
+      if (!incoming) return current
+      if (!this.isStickyLiveIssueStatus(current.status)) return incoming
+      // Allow severity to worsen (amber → red) but never improve back to green.
+      if (this.liveWordStatusSeverity(incoming.status) > this.liveWordStatusSeverity(current.status)) {
+        return { ...current, ...incoming }
+      }
+      return {
+        ...incoming,
+        ...current,
+        status: current.status,
+        note: current.note || incoming.note,
+      }
+    },
     mergeLiveRecitationStatuses(committedStatuses = [], displayStatuses = [], options = {}) {
       const committed = Array.isArray(committedStatuses) ? committedStatuses : []
       const display = Array.isArray(displayStatuses) ? displayStatuses : []
       const maxLength = Math.max(committed.length, display.length)
       const protectAgainstInterimRed = options.protectAgainstInterimRed === true
-      const rank = status => {
-        if (status === 'correct') return 3
-        if (status === 'partial') return 2
-        if (status === 'incorrect') return 1
-        return 0
-      }
       return Array.from({ length: maxLength }, (_, index) => {
         const confirmed = committed[index] || null
         const live = display[index] || null
@@ -17712,8 +18735,17 @@ export default {
             ? confirmed
             : { ...(confirmed || live), status: 'pending', note: confirmed?.note || 'Waiting for confirmation.' }
         }
-        // Prefer a stronger live/interim hear so the final word does not lag behind speech.
-        if (live && rank(live.status) > rank(confirmed?.status)) return live
+        // Once either stream has marked an issue, keep the worse colour for the session.
+        if (this.isStickyLiveIssueStatus(confirmed?.status) || this.isStickyLiveIssueStatus(live?.status)) {
+          return this.pickStickyLiveWordStatus(confirmed, live)
+            || this.pickStickyLiveWordStatus(live, confirmed)
+        }
+        // Prefer live/interim when it has already evaluated the word so colouring
+        // keeps pace with speech — but never over a sticky issue (handled above).
+        if (live && ['correct', 'partial', 'incorrect', 'omitted'].includes(live.status)
+          && (!confirmed || confirmed.status === 'pending')) {
+          return live
+        }
         if (confirmed && confirmed.status && confirmed.status !== 'pending') return confirmed
         if (!live && !confirmed) return { status: 'pending', note: 'Waiting for this word.' }
         if (live && ['correct', 'partial', 'incorrect'].includes(live.status)) return live
@@ -18028,66 +19060,31 @@ export default {
       else node.removeAttribute('title')
     },
     getLiveWordPresentation(status = 'notAttempted', mode = 'verse') {
-      // Subtle palette: coloured text + a thin underline. No background fills,
-      // borders, padding or opacity changes on the ayah words, so a status
-      // update is paint-only and never reflows the RTL line (this is what keeps
-      // the live colouring in lock-step with the voice instead of lagging).
-      const palette = {
-        correct: { color: '#15724c', underline: 'rgba(26, 133, 79, 0.85)' },
-        partial: { color: '#9a6207', underline: 'rgba(204, 138, 11, 0.85)' },
-        incorrect: { color: '#a83327', underline: 'rgba(193, 63, 45, 0.85)' },
-        omitted: { color: '#1a1a1a', underline: 'rgba(26, 26, 26, 0.88)' },
-        pending: { color: 'inherit', underline: 'rgba(116, 126, 141, 0.42)' },
-        skipped: { color: 'inherit', underline: 'rgba(116, 126, 141, 0.32)' },
-        notAttempted: { color: 'inherit', underline: 'transparent' }
-      }
-      const resolved = palette[status] || palette.notAttempted
-      if (mode === 'chip') {
-        // The live word-stream chips are standalone pills; a light tint reads
-        // better there than an underline.
-        const chipTint = {
-          correct: 'rgba(34, 166, 98, 0.16)',
-          partial: 'rgba(237, 179, 71, 0.18)',
-          incorrect: 'rgba(226, 96, 77, 0.16)',
-          omitted: 'rgba(26, 26, 26, 0.14)',
-          pending: 'rgba(116, 126, 141, 0.10)',
-          skipped: 'rgba(116, 126, 141, 0.10)',
-          notAttempted: 'transparent'
-        }
-        return { color: resolved.color, background: chipTint[status] || 'transparent' }
-      }
-      return resolved
+      // Colour + distinct underline/border style (solid/dashed/double/dotted).
+      // Paint-only properties so live updates never reflow the RTL line.
+      return resolveLiveWordPresentation(status, mode, this.theme || 'light')
+    },
+    refreshLiveWordPresentationForTheme() {
+      const nodes = typeof document !== 'undefined'
+        ? document.querySelectorAll('[data-live-word-status]')
+        : []
+      nodes.forEach((node) => {
+        const status = node.dataset?.liveWordStatus || 'notAttempted'
+        const mode = node.classList?.contains('recitation-word-chip') ? 'chip' : 'verse'
+        this.applyLiveWordPresentation(node, status, mode)
+      })
     },
     applyLiveWordPresentation(node, status = 'notAttempted', mode = 'verse') {
       if (!node?.style?.setProperty) return
       // FORCE: never colour stacked verse words during AI review/live patches.
       if (mode === 'verse' && this.readingViewMode === 'stacked') {
         node.dataset.liveWordStatus = 'notAttempted'
-        node.style.removeProperty('color')
-        node.style.removeProperty('box-shadow')
-        node.style.removeProperty('background')
-        node.style.removeProperty('border-color')
-        node.style.removeProperty('-webkit-text-fill-color')
+        clearLiveWordPresentationStyles(node)
         return
       }
       const presentation = this.getLiveWordPresentation(status, mode)
       node.dataset.liveWordStatus = status || 'notAttempted'
-      if (mode === 'chip') {
-        node.style.setProperty('color', presentation.color, 'important')
-        node.style.setProperty('background', presentation.background, 'important')
-        node.style.setProperty('transition', 'background-color 90ms ease, color 90ms ease', 'important')
-        return
-      }
-      // Verse words: only colour + underline change → compositor-friendly,
-      // zero layout reflow.
-      const underline = presentation.underline === 'transparent'
-        ? 'none'
-        : `inset 0 -0.085em 0 ${presentation.underline}`
-      node.style.setProperty('color', presentation.color, 'important')
-      node.style.setProperty('box-shadow', underline, 'important')
-      node.style.setProperty('background', 'transparent', 'important')
-      node.style.setProperty('border-color', 'transparent', 'important')
-      node.style.setProperty('transition', 'color 90ms linear, box-shadow 90ms linear', 'important')
+      applyLiveWordPresentationStyles(node, presentation, mode)
     },
     hasLiveWordChanged(currentWord = {}, nextWord = {}) {
       return currentWord.status !== nextWord.status
@@ -18104,10 +19101,18 @@ export default {
       for (let index = 0; index < current.length; index += 1) {
         const word = current[index] || {}
         const status = statuses[index] || {}
+        const incomingStatus = status.status || 'pending'
+        // Lock red/amber/black for the whole live session so rematches cannot
+        // briefly flash an issue then repaint the word green.
+        const sticky = this.pickStickyLiveWordStatus(
+          { ...word, status: word.status || 'pending' },
+          { ...status, status: incomingStatus },
+        )
         const nextWord = {
           ...word,
-          status: status.status || 'pending',
-          note: status.note || 'Waiting for this word.',
+          ...sticky,
+          status: sticky?.status || incomingStatus,
+          note: sticky?.note || status.note || 'Waiting for this word.',
           confidence: status.confidence ?? word.confidence,
           actual: status.actual ?? word.actual,
           similarity: status.similarity ?? word.similarity
@@ -18298,12 +19303,20 @@ export default {
         ? displayWords
         : committedWords
       if (!Array.isArray(words) || !words.length) return []
-      // Prefer Speechmatics when it produced a meaningful share of the stream.
+      // Prefer Speechmatics only when it is the clear majority. Dropping browser
+      // ASR words at a low share caused empty/"no mic" assessments despite speech.
       const speechmatics = words.filter(word => word?.provider === 'speechmatics')
-      if (speechmatics.length && speechmatics.length >= Math.max(1, Math.ceil(words.length * 0.35))) {
+      if (speechmatics.length && speechmatics.length >= Math.max(1, Math.ceil(words.length * 0.7))) {
         return speechmatics
       }
       return words
+    },
+    getLiveSpokenRecitationEvidence(kind = 'recitation') {
+      const liveWords = kind === 'memorisation'
+        ? this.aiMemorisationCheckerLiveWords
+        : this.recitationLiveWords
+      return (Array.isArray(liveWords) ? liveWords : [])
+        .filter((word) => ['correct', 'partial', 'incorrect'].includes(String(word?.status || '').toLowerCase()))
     },
     recoverArabicRecognitionWords(kind = 'recitation') {
       const best = this.getBestRecognitionWordsForAssessment(kind)
@@ -19450,50 +20463,65 @@ export default {
         .filter(n => Number.isFinite(n) && n > 0)
         .sort((a, b) => a - b)
 
-      const accuracy = Number(
-        result.accuracyScore
-        ?? result.accuracy
-        ?? result.score
-        ?? result.percent
-        ?? result.overallAccuracy
-        ?? result.matchPercent
-        ?? NaN
-      )
-      let outcome = 'mixed'
-      if (Number.isFinite(accuracy)) {
-        const normalized = accuracy <= 1 ? accuracy * 100 : accuracy
-        if (normalized >= 80) outcome = 'strong'
-        else if (normalized < 55) outcome = 'weak'
-      } else if (result.passed === true || result.strong === true) {
-        outcome = 'strong'
-      } else if (result.passed === false || result.weak === true) {
-        outcome = 'weak'
-      } else {
-        // Colour mix fallback when accuracy is unavailable.
-        const total = Math.max(1, (colorCounts.green || 0) + (colorCounts.amber || 0)
-          + (colorCounts.red || 0) + (colorCounts.black || 0) + (colorCounts.gray || 0))
-        const hardIssues = (colorCounts.red || 0) + (colorCounts.black || 0)
-        const softIssues = colorCounts.amber || 0
-        if (hardIssues === 0 && softIssues <= 2 && (colorCounts.green || 0) / total >= 0.78) {
-          outcome = 'strong'
-        } else if (hardIssues / total >= 0.4 || (hardIssues + softIssues) / total >= 0.55) {
-          outcome = 'weak'
+      const accuracyPercent = (() => {
+        const raw = Number(
+          result.accuracyScore
+          ?? result.accuracy
+          ?? result.score
+          ?? result.percent
+          ?? result.overallAccuracy
+          ?? result.matchPercent
+          ?? NaN
+        )
+        if (!Number.isFinite(raw)) return null
+        return Math.round(raw <= 1 ? raw * 100 : raw)
+      })()
+
+      const durationSeconds = (() => {
+        const fromResult = Number(result?.durationSeconds)
+        if (Number.isFinite(fromResult) && fromResult > 0) return fromResult
+        const startedAt = Number(result?.startedAt || this.recitationCheckStartedAt || 0)
+        if (startedAt > 0) {
+          return Math.max(0, (Date.now() - startedAt) / 1000)
         }
+        return null
+      })()
+
+      const assessmentQuality = classifyRecitationAssessmentQuality(result, {
+        color_counts: colorCounts,
+        accuracy_percent: accuracyPercent,
+        duration_seconds: durationSeconds,
+        wordStatuses,
+      })
+      const resultState = resolveRecitationResultState(result, {
+        color_counts: colorCounts,
+        accuracy_percent: accuracyPercent,
+        duration_seconds: durationSeconds,
+        wordStatuses,
+      })
+
+      // Silence / unusable audio never becomes a scored 0% weak result.
+      if (
+        assessmentQuality === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO
+        || resultState === RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO
+      ) {
+        await this.applyInsufficientAudioAssessment(result, {
+          reason: resolveInsufficientAudioReason(result, {
+            accuracy_percent: accuracyPercent,
+            duration_seconds: durationSeconds,
+            wordStatuses,
+          }),
+          durationSeconds,
+        })
+        return
+      }
+
+      let outcome = resultStateToLegacyOutcome(resultState) || 'mixed'
+      if (assessmentQuality === ASSESSMENT_QUALITY.VALID_ZERO_MATCH) {
+        outcome = 'weak'
       }
 
       const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
-      const accuracyRaw = Number(
-        result.accuracyScore
-        ?? result.accuracy
-        ?? result.score
-        ?? result.percent
-        ?? result.overallAccuracy
-        ?? result.matchPercent
-        ?? NaN
-      )
-      const accuracyPercent = Number.isFinite(accuracyRaw)
-        ? Math.round(accuracyRaw <= 1 ? accuracyRaw * 100 : accuracyRaw)
-        : null
       const listCount = (value) => (Array.isArray(value) ? value.length : (Number.isFinite(Number(value)) ? Math.max(0, Math.round(Number(value))) : 0))
       const missedWords = Math.max(
         listCount(mistakes.missing) + listCount(mistakes.incorrect),
@@ -19501,6 +20529,7 @@ export default {
       )
       const summary = this.buildPostSessionAiReviewSummary(result, outcome)
       this.postSessionAiFeedback = summary
+      this.postSessionAiDetailsExpanded = false
       this.capturePracticeFocusWeakWordsFromResult(result)
       await this.applyPostSessionAiAssessment(outcome, summary, {
         weak_ayahs: weakAyahs,
@@ -19508,10 +20537,148 @@ export default {
         missed_words: missedWords,
         pronunciation_issues: listCount(mistakes.partial) >= 2 || (colorCounts.amber || 0) >= 2,
         accuracy_percent: accuracyPercent,
-        duration_seconds: Number(result?.durationSeconds || 0),
+        duration_seconds: durationSeconds,
         color_counts: colorCounts,
-        _result: { ...result, colorCounts, weakAyahs },
+        assessment_quality: assessmentQuality,
+        result_state: resultState,
+        _result: { ...result, colorCounts, weakAyahs, assessmentQuality, resultState, durationSeconds },
       })
+    },
+    async applyInsufficientAudioAssessment(result = null, options = {}) {
+      const durationSeconds = Number(
+        result?.durationSeconds
+        || options.durationSeconds
+        || 0,
+      )
+      const reason = options.reason
+        || result?.failureReason
+        || INSUFFICIENT_AUDIO_REASONS.NO_SPEECH
+      const synthetic = result?.insufficient_audio || result?.resultState === RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO
+        ? result
+        : buildInsufficientAudioResult({
+          reason,
+          durationSeconds,
+          failureReason: options.failureReason || options.reason || reason,
+          micPermissionFailed: !!options.micPermissionFailed,
+          processingFailed: !!options.processingFailed,
+          noSpeech: options.noSpeech !== false,
+        })
+      const copy = resolveInsufficientAudioCopy(this.t.bind(this), reason)
+      const summary = copy.summaryLine
+      this.postSessionAiFeedback = summary
+      this.postSessionAiDetailsExpanded = false
+      // Never create weak-word data or schedule review from unusable audio.
+      await this.applyPostSessionAiAssessment('insufficient_audio', summary, {
+        assessment_quality: ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO,
+        result_state: RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO,
+        insufficient_audio: true,
+        insufficientReason: reason,
+        failure_reason: reason,
+        accuracy_percent: null,
+        duration_seconds: durationSeconds,
+        color_counts: { green: 0, amber: 0, red: 0, black: 0, gray: 0 },
+        _result: {
+          ...synthetic,
+          colorCounts: { green: 0, amber: 0, red: 0, black: 0, gray: 0 },
+          assessmentQuality: ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO,
+          resultState: RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO,
+          failureReason: reason,
+        },
+      })
+    },
+    clearFailedRecitationRecordingState({ preserveRange = true } = {}) {
+      const snap = this.postSessionSnapshot || {}
+      const chapterId = preserveRange
+        ? Number(snap.chapterId || this.chapterId || this.sessionConfig?.chapterId || 0)
+        : 0
+      const rangeStart = preserveRange
+        ? Number(snap.rangeStart || this.rangeStart || this.sessionConfig?.rangeStart || 0)
+        : 0
+      const rangeEnd = preserveRange
+        ? Number(snap.rangeEnd || this.rangeEnd || this.sessionConfig?.rangeEnd || rangeStart || 0)
+        : 0
+
+      try { this.stopRecitationCheckRecording?.() } catch (_) { /* ignore */ }
+      try { this.stopRecitationSpeechRecognition?.() } catch (_) { /* ignore */ }
+      try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
+      this.recitationCheckDiscardOnStop = true
+      this.recitationCheckPreparing = false
+      this.recitationCheckRecording = false
+      this.recitationCheckAutoStopArmed = false
+      this.recitationCheckError = ''
+      this.recitationCheckResult = null
+      this.recitationCheckChunks = []
+      this.recitationSpeechTranscript = ''
+      this.recitationSpeechInterim = ''
+      this.postSessionAiDetailsExpanded = false
+
+      if (preserveRange && chapterId && rangeStart && rangeEnd) {
+        this.chapterId = chapterId
+        this.rangeStart = rangeStart
+        this.rangeEnd = rangeEnd
+        if (this.sessionConfig) {
+          this.sessionConfig = {
+            ...this.sessionConfig,
+            chapterId,
+            rangeStart,
+            rangeEnd,
+          }
+        }
+      }
+    },
+    async retryInsufficientAudioRecording() {
+      this.clearFailedRecitationRecordingState({ preserveRange: true })
+      this.postSessionAiReviewDetails = null
+      this.postSessionAiFeedback = ''
+      await this.onPostSessionTestWithAi()
+    },
+    async checkMicrophoneForInsufficientAudio() {
+      this.clearFailedRecitationRecordingState({ preserveRange: true })
+      try {
+        if (!navigator?.mediaDevices?.getUserMedia) {
+          this.showBanner(
+            this.t('memorisation.aiCheck.micBlocked')
+              || 'Microphone access was blocked. Allow microphone permission, then try again.',
+            'error',
+            4200,
+          )
+          return
+        }
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        try {
+          stream.getTracks().forEach((track) => track.stop())
+        } catch (_) { /* ignore */ }
+        this.showBanner(
+          this.t('memorisation.amd.enableMic') || 'Microphone ready',
+          'success',
+          2400,
+        )
+        await this.retryInsufficientAudioRecording()
+      } catch (error) {
+        this.showBanner(
+          this.t('memorisation.aiCheck.micBlocked')
+            || 'Microphone access was blocked. Allow microphone permission, then try again.',
+          'error',
+          4200,
+        )
+        await this.applyInsufficientAudioAssessment(null, {
+          reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
+          micPermissionFailed: true,
+          failureReason: String(error?.name || error?.message || 'mic_permission_denied'),
+        })
+      }
+    },
+    closeInsufficientAudioResult() {
+      this.clearFailedRecitationRecordingState({ preserveRange: true })
+      this.postSessionAiReviewDetails = null
+      this.postSessionAiFeedback = ''
+      this.postSessionAiDetailsExpanded = false
+      this.postSessionViewState = 'recommendation_ready'
+      if (this.amdOpen) {
+        try { this.closeAmdModal?.() } catch (_) { /* ignore */ }
+      }
+      this.postSessionAiReciteActive = false
+      this.showPostSessionModal = true
     },
     async finalizePostSessionAiReciteFromResult(result) {
       if (!result || !this.postSessionAiReciteActive) return false
@@ -19527,6 +20694,12 @@ export default {
     },
     recordAiReciteAttempt(result) {
       if (!result) return
+      const insufficient = resolveRecitationResultState(result) === RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO
+        || classifyRecitationAssessmentQuality(result) === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO
+      if (insufficient) {
+        // Do not count silence / mic failures toward attempt averages or weak words.
+        return
+      }
       const wordStatuses = (this.getRecitationWordStatuses?.(result) || result.wordStatuses || [])
         .map((word, index) => {
           const raw = String(word?.status || word?.visualStatus || '').toLowerCase()
@@ -19672,7 +20845,11 @@ export default {
       const achieved = plan.outcome === 'strong'
       if (achieved) {
         this.awaitingMasteryRetest = false
+        this.recommendedPracticeCompleted = false
         this.aiReciteAdvanceToNextSession = true
+      } else {
+        // Fresh needs-practice result after a prior revision → revise again first.
+        this.recommendedPracticeCompleted = false
       }
 
       if (this.postSessionRecommendation) {
@@ -19853,6 +21030,7 @@ export default {
       if (achieved) {
         this.awaitingMasteryRetest = false
         this.masteryTargetRange = null
+        this.recommendedPracticeCompleted = false
         this.aiReciteAdvanceToNextSession = true
         this.aiReciteShowFinalPlan = false
         // Keep mastery flag via aiReciteAdvanceToNextSession; clear plan so the
@@ -20245,10 +21423,29 @@ export default {
             const failureText = providerUnavailable
               ? this.t('memorisation.aiCheck.speechRecognitionFailed')
               : (serverMessage || error?.message || this.t('memorisation.aiCheck.recitationCheckFailed'))
+            const isInsufficientFailure = /noArabicWords|noAudioCaptured|no speech|empty|micBlocked|Permission|NotAllowed|denied|process|failed/i
+              .test(String(failureText || error?.message || ''))
             if (this.amdOpen) {
               this.failAmdAssessment(this.safeErrorText(failureText, this.t('memorisation.aiCheck.recitationCheckFailed')))
             } else {
               this.reportRecitationCheckFailure(this.safeErrorText(failureText, this.t('memorisation.aiCheck.recitationCheckFailed')))
+            }
+            if (isInsufficientFailure && (this.postSessionAiReciteActive || this.showPostSessionModal)) {
+              const micDenied = /micBlocked|Permission|NotAllowed|denied/i.test(String(failureText || error?.message || ''))
+              const noSpeech = /noArabicWords|no speech|empty|noAudioCaptured/i.test(String(failureText || error?.message || ''))
+              void this.applyInsufficientAudioAssessment(null, {
+                reason: micDenied
+                  ? INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION
+                  : (noSpeech ? INSUFFICIENT_AUDIO_REASONS.NO_SPEECH : INSUFFICIENT_AUDIO_REASONS.PROCESSING_FAILED),
+                micPermissionFailed: micDenied,
+                processingFailed: !micDenied && !noSpeech,
+                noSpeech,
+                failureReason: String(error?.message || failureText || 'processing_failed'),
+                durationSeconds: this.getRecitationElapsedSeconds({
+                  startedAt: this.recitationCheckStartedAt || 0,
+                  endedAt: Date.now(),
+                }),
+              })
             }
           } finally {
             this.recitationCheckPreparing = false
@@ -20301,7 +21498,16 @@ export default {
         console.error('Failed to start recitation check:', error)
         this.recitationCheckAutoStopArmed = false
         this.cleanupRecitationCheckMedia()
+        const micDenied = /Permission|NotAllowed|denied|micBlocked|NotFound|NotReadable/i
+          .test(String(error?.name || error?.message || ''))
         this.reportRecitationCheckFailure(this.t('memorisation.aiCheck.micBlocked'))
+        if (micDenied && (this.postSessionAiReciteActive || this.showPostSessionModal)) {
+          void this.applyInsufficientAudioAssessment(null, {
+            reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
+            micPermissionFailed: true,
+            failureReason: String(error?.name || error?.message || 'mic_permission_denied'),
+          })
+        }
       }
     },
     stopRecitationCheckRecording() {
@@ -20363,17 +21569,93 @@ export default {
         if (best.length) return best
         return this.recoverArabicRecognitionWords('recitation')
       })()
+      const liveSpokenEvidence = this.getLiveSpokenRecitationEvidence('recitation')
+      const liveWordStatuses = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
       const transcript = wordsToTranscript(committedWords)
+      const recordingSeconds = this.getRecitationElapsedSeconds({
+        startedAt: this.recitationCheckStartedAt || 0,
+        endedAt: Date.now(),
+      })
       if (!committedWords.length) {
+        // Live colouring already proved speech was heard — do not blame the mic.
+        if (liveSpokenEvidence.length && (this.postSessionAiReciteActive || this.showPostSessionModal || this.amdOpen)) {
+          const result = {
+            audioSrc,
+            durationSeconds: recordingSeconds,
+            committedWords: [],
+            transcript: liveSpokenEvidence
+              .map((word) => word?.actual || word?.text || '')
+              .filter(Boolean)
+              .join(' '),
+            wordStatuses: liveWordStatuses,
+            transcriptionSource: 'live recognition recovery',
+            sessionId,
+            audioHash,
+            analysisVersion: RECITATION_ANALYSIS_VERSION,
+          }
+          this.rebuildRecitationResultFromStatuses(result)
+          this.recitationCheckResult = result
+          this.recitationLiveWords = liveWordStatuses
+          this.syncSessionEvaluationMaps('recitation', targetVerses, this.recitationLiveWords, true)
+          this.persistAiRecitationReviewHighlights(result, targetVerses)
+          this.recitationCheckAutoStopArmed = false
+          this.playUiTone('complete')
+          if (this.amdOpen) {
+            this.syncAmdMushafSurface()
+            if (!this.maybeCompleteAmdMemorisationTest()) {
+              this.amdBusy = false
+              if (this.amdStage !== AMD_STAGES.COMPLETE) this.amdStage = AMD_STAGES.READY
+            }
+            return result
+          }
+          this.showBanner(this.t('toasts.reciteCheckComplete'), 'success', 2200)
+          if (this.postSessionAiReciteActive || this.showPostSessionModal) {
+            await this.finalizePostSessionAiReciteFromResult(result)
+            await this.maybeApplyPostSessionAiAssessmentFromResult(result)
+          }
+          return result
+        }
         if (this.amdOpen) {
           this.failAmdAssessment(
             this.t?.('memorisation.amd.noSpeech')
               || this.t('memorisation.aiCheck.noArabicWords')
               || 'No speech was detected. Please try again.'
           )
+          if (this.postSessionAiReciteActive || this.showPostSessionModal) {
+            await this.applyInsufficientAudioAssessment(null, {
+              reason: INSUFFICIENT_AUDIO_REASONS.NO_SPEECH,
+              durationSeconds: recordingSeconds,
+              noSpeech: true,
+            })
+          }
+          return null
+        }
+        if (this.postSessionAiReciteActive || this.showPostSessionModal) {
+          await this.applyInsufficientAudioAssessment(null, {
+            reason: INSUFFICIENT_AUDIO_REASONS.EMPTY_TRANSCRIPT,
+            durationSeconds: recordingSeconds,
+            noSpeech: true,
+            failureReason: 'empty_transcript',
+          })
           return null
         }
         throw new Error(this.t('memorisation.aiCheck.noArabicWords'))
+      }
+      if (recordingSeconds != null && recordingSeconds < RECITATION_AUDIO_THRESHOLDS.minRecordingSeconds) {
+        // If live feedback already coloured spoken words, keep the attempt assessable.
+        if (!liveSpokenEvidence.length && (this.postSessionAiReciteActive || this.showPostSessionModal || this.amdOpen)) {
+          if (this.amdOpen) {
+            this.failAmdAssessment(
+              resolveInsufficientAudioCopy(this.t.bind(this), INSUFFICIENT_AUDIO_REASONS.SHORT_RECORDING).summaryLine
+            )
+          }
+          await this.applyInsufficientAudioAssessment(null, {
+            reason: INSUFFICIENT_AUDIO_REASONS.SHORT_RECORDING,
+            durationSeconds: recordingSeconds,
+            failureReason: 'short_recording',
+          })
+          return null
+        }
       }
       const result = this.assessRecitationRecognitionWords(committedWords, targetVerses, {
         sessionId,
@@ -20381,6 +21663,39 @@ export default {
         id: `recitation-${audioHash.slice(0, 16)}`
       })
       result.audioSrc = audioSrc
+      result.durationSeconds = recordingSeconds
+      result.committedWords = committedWords
+      result.transcript = transcript || result.transcript || ''
+      if ((!Array.isArray(result.wordStatuses) || !result.wordStatuses.length) && liveWordStatuses.length) {
+        result.wordStatuses = liveWordStatuses
+      }
+      const meanConfidence = committedWords
+        .map((word) => Number(word?.confidence))
+        .filter((value) => Number.isFinite(value))
+      if (meanConfidence.length) {
+        result.recognitionConfidence = meanConfidence.reduce((sum, value) => sum + value, 0) / meanConfidence.length
+      }
+      const insufficientReason = resolveInsufficientAudioReason(result, {
+        duration_seconds: recordingSeconds,
+        transcript,
+        wordStatuses: result.wordStatuses || liveWordStatuses,
+      })
+      if (insufficientReason && (this.postSessionAiReciteActive || this.showPostSessionModal || this.amdOpen)) {
+        if (this.amdOpen) {
+          this.failAmdAssessment(
+            resolveInsufficientAudioCopy(this.t.bind(this), insufficientReason).summaryLine
+          )
+        }
+        await this.applyInsufficientAudioAssessment({
+          ...result,
+          insufficient_audio: true,
+          failureReason: insufficientReason,
+        }, {
+          reason: insufficientReason,
+          durationSeconds: recordingSeconds,
+        })
+        return null
+      }
       const provider = this.getDominantRecognitionProvider(committedWords)
       result.transcriptionSource = provider === 'speechmatics' ? 'speechmatics streaming' : 'browser speech recognition'
       result.committedWords = committedWords
@@ -22173,6 +23488,12 @@ export default {
       if (this.showSessionExitModal) {
         this.sessionExitOffcanvasOpen = false
       }
+      if (this.isPostSessionChoiceVisible && this.postSessionChoiceOffcanvasOpen) {
+        // Closing custom setup returns to the choice screen without creating a session.
+        this.postSessionChoiceOffcanvasOpen = false
+        this.postSessionChoiceAction = null
+        this.startingFreshSessionSelection = false
+      }
       this.persistUiState()
       this.restoreToolsFocus()
     },
@@ -23258,13 +24579,19 @@ export default {
         .trim()
     },
     stripAiDashes(text = '') {
+      const RANGE_TOKEN = '\uE000'
       return String(text || '')
+        // Preserve numeric ranges (Āyahs 1–3) before scrubbing clause dashes.
+        .replace(/(\d)\s*[–—−‐‑‒―]\s*(\d)/g, `$1${RANGE_TOKEN}$2`)
         // Em/en/figure dashes and hyphen-as-dash between clauses
         .replace(/\s*[—–―‐‑‒−]+\s*/g, ', ')
+        .replace(new RegExp(RANGE_TOKEN, 'g'), '\u2013')
         // Standalone dash lines left by AI formatting
         .replace(/(?:^|\n)\s*[-−]+\s*(?=\n|$)/g, ' ')
         // Spaced ASCII hyphen used as a dash (keep hyphenated-words intact)
         .replace(/(\w)\s+-\s+(\w)/g, '$1, $2')
+        // Drop duplicated trailing “then continue” from stacked AI copy.
+        .replace(/(?:[,.\s]+then\s+continue)+\.?/gi, '.')
         .replace(/,\s*,+/g, ',')
         .replace(/\.\s*,/g, '.')
         .replace(/,\s*\./g, '.')
@@ -23272,7 +24599,7 @@ export default {
         .replace(/\s{2,}/g, ' ')
         .replace(/\s+([,.;:])/g, '$1')
         .trim()
-        .replace(/^[,.;:\s]+|[,.;:\s]+$/g, '')
+        .replace(/^[,;:\s]+|[,;:\s]+$/g, '')
     },
     getTechniqueDisplayDescription(techniqueId) {
       return getTechniqueDescription(techniqueId, this.t.bind(this))
@@ -23389,14 +24716,16 @@ export default {
     buildStackedAyahEndMarkerHtml(verse) {
       const number = verse?.number
       if (number == null || number === '') return ''
-      const digits = Math.min(3, String(number).length || 1)
-      const label = this.escapeHtml(this.getMushafAyahNumberAriaLabel(number))
-      const eastern = this.escapeHtml(this.formatEasternAyahNumber(number))
-      // U+06DD ARABIC END OF AYAH — Amiri/Scheherazade draw the exact ornate frame
-      // from the reference, with Eastern digits subtended inside the circle.
+      const n = Number(number)
+      if (!Number.isFinite(n) || n < 1) return ''
+      const safe = Math.min(286, Math.max(1, Math.floor(n)))
+      const digits = Math.min(3, String(safe).length)
+      const label = this.escapeHtml(this.getMushafAyahNumberAriaLabel(safe))
+      // Pre-rendered ornate frame + Eastern digit (bbox-centered in asset).
       return (
-        `<span class="verse-ayah-end-number mushaf-ayah-number verse-ayah-number-digits-${digits} mushaf-ayah-number-digits-${digits}" dir="rtl" lang="ar" aria-label="${label}">`
-        + `\u06DD${eastern}`
+        `<span class="verse-ayah-end-number verse-ayah-number-digits-${digits}" role="img" aria-label="${label}">`
+        + `<img class="verse-ayah-end-number__img verse-ayah-end-number__img--light" src="/images/ayah-markers/${safe}.png" alt="" width="90" height="96" draggable="false" decoding="async">`
+        + `<img class="verse-ayah-end-number__img verse-ayah-end-number__img--dark" src="/images/ayah-markers/dark/${safe}.png" alt="" width="90" height="96" draggable="false" decoding="async">`
         + `</span>`
       )
     },
@@ -24806,9 +26135,12 @@ export default {
     async confirmEndSessionFromExitModal() {
       const decision = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION)
       if (!decision.completeSession) return
-      // End Session confirm ends practice and returns to the workspace —
-      // the recommendation success modal is only for natural completion.
-      await this.confirmSessionExit({ showSummary: false, openCompletion: false })
+      // End Session confirm ends practice and opens the post-session choice panel.
+      await this.confirmSessionExit({
+        showSummary: false,
+        openCompletion: false,
+        openPostSessionChoice: true,
+      })
     },
 
     softPausePlayback() {
@@ -25203,6 +26535,10 @@ export default {
       this.persistModeState(this.currentMode)
       this.persistUiState()
       this.persistCentralSessionState()
+      // Keep the post-session choice CTAs visible after cleanup.
+      if (!this.showPostSessionModal && !this.postSessionAiReciteActive) {
+        this.showPostSessionChoice = true
+      }
     },
 
     exitSessionAnyway() {
@@ -25215,7 +26551,7 @@ export default {
     },
 
     confirmSessionExit(options = {}) {
-      const { showSummary = false, openCompletion = true } = options
+      const { showSummary = false, openCompletion = true, openPostSessionChoice = false } = options
       // Stuck pause/end locks previously made "End session" a silent no-op.
       if (
         this.sessionLifecycleMutation === SESSION_MUTATION.ENDING
@@ -25350,9 +26686,11 @@ export default {
           this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
           this.sessionBroadcast?.publish('session-ended', { at: Date.now() })
 
-          // Always open the success modal after a manual/natural end once local
-          // completion is applied — backend sync failure must not strand the user.
-          if ((openCompletion || showSummary) && gate.openCompletionScreen && gate.showPostCompletionActions) {
+          if (openPostSessionChoice) {
+            this.openPostSessionChoice(endedSnapshot)
+          } else if ((openCompletion || showSummary) && gate.openCompletionScreen && gate.showPostCompletionActions) {
+            // Always open the success modal after a natural end once local
+            // completion is applied — backend sync failure must not strand the user.
             this.postSessionActionsUnlocked = true
             this.openPostSessionModal(endedSnapshot, { previousStreak })
           }

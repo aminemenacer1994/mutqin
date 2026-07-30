@@ -450,11 +450,11 @@ class PracticePlanRecommendationService
                 'id' => 'chunking',
                 'title' => 'Chunking',
                 'why' => 'Mistakes are spread across a longer passage.',
-                'how' => 'Practise smaller sections, then combine them.',
+                'how' => 'Practise the phrase in small parts, then recite it as one.',
                 'steps' => [
-                    'Practise each small section separately.',
-                    'Master one chunk before the next.',
-                    'Gradually combine the chunks.',
+                    'Practise the phrase in two short parts.',
+                    'Join the parts and recite as one.',
+                    'Repeat the full phrase smoothly.',
                 ],
             ],
             'blur' => [
@@ -472,7 +472,7 @@ class PracticePlanRecommendationService
                 'id' => 'chaining',
                 'title' => 'Linking',
                 'why' => 'Transitions between ayahs need practice.',
-                'how' => 'Join the end of one ayah to the start of the next.',
+                'how' => 'Practise it in two short parts, then join them.',
                 'steps' => [
                     'Practise the first ayah alone.',
                     'Add the next ayah and join them.',
@@ -533,40 +533,30 @@ class PracticePlanRecommendationService
         string $pattern
     ): string {
         $method = (string) ($primary['title'] ?? 'focused practice');
-        $methodHow = (string) ($primary['how'] ?? $primary['description'] ?? '');
 
         if ($weakPhrases !== []) {
-            $phrase = (string) ($weakPhrases[0]['text'] ?? '');
             $ayah = (int) ($weakPhrases[0]['ayah_number'] ?? 0);
-            $focus = $phrase !== '' ? "«{$phrase}»" : 'this phrase';
             $ayahPart = $ayah > 0 ? " in Āyah {$ayah}" : '';
 
-            return "One phrase{$ayahPart} was unclear ({$focus}). Practise the surrounding phrase with {$method}"
-                .($methodHow !== '' ? ". {$methodHow}" : '')
-                .', then continue.';
+            return "One phrase{$ayahPart} was unclear.";
         }
         if (count($weakWords) === 1) {
-            $word = (string) ($weakWords[0]['text'] ?? '');
             $ayah = (int) ($weakWords[0]['ayahNumber'] ?? $weakWords[0]['ayah_number'] ?? 0);
-            $wordPart = $word !== '' ? $word : 'this word';
             $ayahPart = $ayah > 0 ? " in Āyah {$ayah}" : '';
 
-            return "One word{$ayahPart} was unclear ({$wordPart}). Practise the surrounding phrase twice with {$method}, then continue.";
+            return "One phrase{$ayahPart} was unclear.";
         }
         if (count($weakWords) >= 2 && count($weakWords) <= 4) {
-            $first = $weakWords[0];
-            $word = (string) ($first['text'] ?? '');
-            $ayah = (int) ($first['ayahNumber'] ?? $first['ayah_number'] ?? 0);
-            $sample = implode(' · ', array_map(fn ($w) => (string) ($w['text'] ?? ''), array_slice($weakWords, 0, 3)));
-            $ayahPart = $ayah > 0 ? "Āyah {$ayah}" : 'this range';
+            $ayah = (int) ($weakWords[0]['ayahNumber'] ?? $weakWords[0]['ayah_number'] ?? 0);
+            $ayahPart = $ayah > 0 ? " in Āyah {$ayah}" : '';
 
-            return "Focus: {$sample} · {$ayahPart}. Method: {$method}. Practise the surrounding phrases, then continue.";
+            return "One phrase{$ayahPart} was unclear.";
         }
         if ($pattern === 'scattered') {
-            return "Mistakes were spread across several āyahs. Use {$method} on small chunks so each part settles before you combine them.";
+            return 'A few phrases still need attention.';
         }
         if ($band === self::BAND_STRONG) {
-            return 'Recall was strong on this range. Keep a light review at a steady pace, then continue to the next āyahs.';
+            return 'Recall was strong on this range. Keep a light review at a steady pace.';
         }
 
         return "Based on this assessment ({$accuracy}%), {$method} is the next step. May Allah strengthen what you have memorised.";
@@ -575,18 +565,18 @@ class PracticePlanRecommendationService
     private function friendlySummary(int $accuracy): string
     {
         if ($accuracy >= 85) {
-            return 'Mā shā’ Allāh. Strong recall. A light review will keep it firm, then continue.';
+            return 'Mā shā’ Allāh. Strong recall. A light review will keep it firm.';
         }
         if ($accuracy >= 60) {
             return 'Good effort. A few marked words need another calm pass before you move on.';
         }
 
-        return 'May Allah strengthen what you have memorised. Rebuild the unclear words slowly, then continue.';
+        return 'May Allah strengthen what you have memorised. Rebuild the unclear words slowly.';
     }
 
     private function rangeLabel(?string $surahName, int $from, int $to): string
     {
-        $range = $from === $to ? "Ayah {$from}" : "Ayahs {$from}-{$to}";
+        $range = $from === $to ? "Ayah {$from}" : "Ayahs {$from}–{$to}";
 
         return $surahName ? "{$surahName} · {$range}" : $range;
     }
