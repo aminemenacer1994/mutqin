@@ -62,7 +62,7 @@
     "ready": "Session ready",
     "progress": "{current} of {total} ayahs · {percent}% complete",
     "left": "{eta} left",
-    "end": "End Session"
+    "end": "End session"
   },
   "recordings": {
     "viewAll": "View All Recordings"
@@ -1739,9 +1739,9 @@
     "postSessionChoice": {
       "title": "¿Qué te gustaría practicar a continuación?",
       "desc": "Repite el plan recomendado o crea tu propia sesión.",
-      "repeatRecommended": "Repetir la sesión recomendada",
+      "repeatRecommended": "Repetir sesión",
       "repeatRecommendedDesc": "Practica otra vez el mismo rango y ajustes recomendados.",
-      "createCustom": "Crear una sesión personalizada",
+      "createCustom": "Sesión personalizada",
       "createCustomDesc": "Elige tu propia sura, rango de aleyas y ajustes de práctica.",
       "startCustomSession": "Iniciar sesión personalizada"
     },

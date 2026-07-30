@@ -159,40 +159,63 @@
     pointer-events: auto;
   }
 
-  .workspace-shell-actions .top-card-session-actions,
-  .workspace-shell-actions .top-card-session-actions.has-paired-actions {
+  .workspace-shell-actions .top-card-session-actions:not(.post-session-choice-pair),
+  .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
     display: contents !important;
   }
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
   .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
-    display: flex !important;
-    flex-wrap: wrap !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     grid-column: 1 / -1;
-    gap: 0.45rem !important;
+    gap: 0.35rem !important;
     min-inline-size: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    flex-wrap: nowrap !important;
+    box-sizing: border-box !important;
   }
 
-  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair > .top-card-action-trigger.session-primary-action,
-  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair > .top-card-action-trigger.action-btn-exit {
-    flex: 1 1 auto !important;
-    inline-size: auto !important;
-    min-inline-size: max-content !important;
-    overflow: visible !important;
+  .workspace-shell--post-session-choice .top-card-icon-controls {
+    display: none !important;
+  }
+
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair > .top-card-action-trigger {
+    grid-column: auto !important;
+    grid-row: 1 !important;
+    flex: none !important;
+    inline-size: 100% !important;
+    width: 100% !important;
+    min-inline-size: 0 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
     white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    font-size: 0.7rem !important;
+    padding: 9px 0.4rem !important;
+    box-sizing: border-box !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
-  .top-card-session-actions.has-paired-actions > .session-primary-action {
+  .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action {
     grid-column: 1 / -1;
     grid-row: 1;
   }
 
-  .top-card-session-actions.has-paired-actions > .action-btn-exit {
+  .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit {
     grid-column: 1 / span 2;
     grid-row: 2;
   }
 
-  .top-card-session-actions:not(.has-paired-actions) > .session-primary-action {
+  .top-card-session-actions:not(.has-paired-actions):not(.post-session-choice-pair) > .session-primary-action {
     grid-column: 1 / span 2;
     grid-row: 1;
   }
@@ -2311,31 +2334,50 @@
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
   .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
-    display: flex !important;
+    display: grid !important;
     flex: 1 1 auto !important;
-    flex-wrap: wrap !important;
-    gap: 0.4rem !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    flex-wrap: nowrap !important;
+    gap: 0.35rem !important;
   }
 
-  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair > .top-card-action-trigger.session-primary-action,
-  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair > .top-card-action-trigger.action-btn-exit {
-    flex: 1 1 auto !important;
-    inline-size: auto !important;
-    min-inline-size: max-content !important;
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair > .top-card-action-trigger {
+    flex: none !important;
+    grid-column: auto !important;
+    grid-row: 1 !important;
+    inline-size: 100% !important;
+    min-inline-size: 0 !important;
     min-block-size: 36px !important;
-    block-size: auto !important;
-    max-block-size: none !important;
-    padding: 0.45rem 0.7rem !important;
-    font-size: 0.74rem !important;
+    block-size: 36px !important;
+    max-block-size: 36px !important;
+    padding: 0 0.45rem !important;
+    font-size: 0.7rem !important;
     white-space: nowrap !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
-  .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
-    background: #b42318 !important;
-    border-color: #912018 !important;
+  .workspace-shell-actions .top-card-action-trigger.action-btn-exit:not(.post-session-choice-custom) {
+    background: #f4ebe7 !important;
+    border-color: #d7b2a7 !important;
+    color: #7a3b2e !important;
     font-weight: 650 !important;
+  }
+
+  .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
+  .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom {
+    background: #ffffff !important;
+    border-color: rgba(31, 24, 18, 0.14) !important;
+    color: #2b241c !important;
+    box-shadow: none !important;
+  }
+
+  .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span {
+    display: inline !important;
   }
 
   .workspace-shell-actions .top-card-controls-trigger,

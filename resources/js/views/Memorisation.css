@@ -4039,22 +4039,22 @@ body > .self-check-modal-overlay--above-post-session,
   box-shadow: var(--shadow-md);
 }
 
-/* End Session — clean, professional destructive action */
-.action-btn-exit,
+/* End Session — soft destructive, cleaner than alarm red */
+.action-btn-exit:not(.post-session-choice-custom),
 .action-btn.mutqin-btn--destructive {
-  color: #fff;
-  background: #b42318;
-  border: 1px solid #912018;
+  color: #7a3b2e;
+  background: #f4ebe7;
+  border: 1px solid #d7b2a7;
   box-shadow: none;
   font-weight: 650;
   letter-spacing: 0.01em;
 }
 
-.action-btn-exit:hover,
+.action-btn-exit:not(.post-session-choice-custom):hover,
 .action-btn.mutqin-btn--destructive:hover {
-  color: #fff;
-  background: #912018;
-  border-color: #7a1510;
+  color: #6a3227;
+  background: #eddcd5;
+  border-color: #c99a8c;
   box-shadow: none;
   transform: none;
 }
@@ -17671,11 +17671,11 @@ button:active {
   color: #fffaf3;
 }
 
-.workspace-shell-actions .action-btn-exit,
+.workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom),
 .workspace-shell-actions .action-btn.mutqin-btn--destructive {
-  background: color-mix(in srgb, var(--danger) 88%, var(--accent-strong));
-  border-color: color-mix(in srgb, var(--danger) 88%, var(--accent-strong));
-  color: #fffaf3;
+  background: #f4ebe7;
+  border-color: #d7b2a7;
+  color: #7a3b2e;
 }
 
 .workspace-shell-actions .action-btn-secondary,
@@ -25232,8 +25232,34 @@ textarea {
 }
 
 .workspace-shell-actions .session-primary-action span,
-.workspace-shell-actions .action-btn-exit span {
+.workspace-shell-actions .action-btn-exit span,
+.workspace-shell-actions .post-session-choice-custom span {
   display: inline;
+}
+
+.workspace-shell-actions .post-session-choice-pair > .action-btn,
+.workspace-shell-actions .post-session-choice-pair > .top-card-action-trigger {
+  width: auto !important;
+  min-width: max-content !important;
+  max-width: none !important;
+  padding-inline: 0.9rem !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 767.98px) {
+  .workspace-shell-actions .post-session-choice-pair > .action-btn,
+  .workspace-shell-actions .post-session-choice-pair > .top-card-action-trigger {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding-inline: 0.4rem !important;
+  }
+}
+
+.workspace-shell-actions .post-session-choice-pair > .action-btn span,
+.workspace-shell-actions .post-session-choice-pair > .top-card-action-trigger span {
+  display: inline !important;
 }
 
 /* Keep the mushaf controls in grid tracks that compress rather than stack. */
@@ -25485,16 +25511,41 @@ textarea {
 .workspace-shell-actions .action-btn.primary,
 .workspace-shell-actions .action-btn.btn-primary,
 .workspace-shell-actions .session-primary-action,
-.workspace-shell-actions .action-btn-exit {
+.workspace-shell-actions .action-btn-exit,
+.workspace-shell-actions .post-session-choice-custom {
   min-width: max-content !important;
   width: auto !important;
   padding-inline: 0.9rem !important;
 }
 
+/* Post-session pair: content-sized on desktop; mobile media query forces equal columns. */
+.workspace-shell-actions .post-session-choice-pair > .session-primary-action,
+.workspace-shell-actions .post-session-choice-pair > .action-btn-exit,
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom,
+.workspace-shell-actions .post-session-choice-pair > .top-card-action-trigger {
+  min-width: max-content !important;
+  width: auto !important;
+  max-width: none !important;
+  padding-inline: 0.9rem !important;
+}
+
+@media (max-width: 767.98px) {
+  .workspace-shell-actions .post-session-choice-pair > .session-primary-action,
+  .workspace-shell-actions .post-session-choice-pair > .action-btn-exit,
+  .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom,
+  .workspace-shell-actions .post-session-choice-pair > .top-card-action-trigger {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-inline: 0.4rem !important;
+  }
+}
+
 .workspace-shell-actions .action-btn.primary span,
 .workspace-shell-actions .action-btn.btn-primary span,
 .workspace-shell-actions .session-primary-action span,
-.workspace-shell-actions .action-btn-exit span {
+.workspace-shell-actions .action-btn-exit span,
+.workspace-shell-actions .post-session-choice-custom span {
   display: inline;
 }
 
@@ -27079,6 +27130,25 @@ textarea {
   box-shadow: 0 10px 24px rgba(88, 59, 29, 0.08);
 }
 
+.workspace-shell-actions .post-session-choice-pair > .session-primary-action,
+.workspace-shell-actions .post-session-choice-pair > .action-btn-exit,
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom {
+  min-width: max-content !important;
+  width: auto !important;
+  max-width: none !important;
+  box-shadow: none;
+}
+
+@media (max-width: 767.98px) {
+  .workspace-shell-actions .post-session-choice-pair > .session-primary-action,
+  .workspace-shell-actions .post-session-choice-pair > .action-btn-exit,
+  .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
 .workspace-shell-actions .action-btn.action-btn-session {
   background: linear-gradient(135deg, rgba(43, 120, 89, 0.14), rgba(255, 255, 255, 0.95));
   border-color: rgba(43, 120, 89, 0.22);
@@ -28558,18 +28628,34 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: inherit !important;
 }
 
-.workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit,
-.workspace-shell-actions .action-btn.action-btn-exit,
+.workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit:not(.post-session-choice-custom),
+.workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom),
 .workspace-shell-actions .action-btn.mutqin-btn--destructive {
-  color: #fff !important;
-  background: var(--bs-danger, var(--destructive, var(--danger, #b55041))) !important;
-  border: 1px solid var(--bs-danger, var(--destructive, var(--danger, #b55041))) !important;
+  color: #7a3b2e !important;
+  background: #f4ebe7 !important;
+  border: 1px solid #d7b2a7 !important;
 }
 
-.workspace-shell-actions .action-btn.action-btn-exit:hover,
+.workspace-shell-actions .action-btn.action-btn-exit:not(.post-session-choice-custom):hover,
 .workspace-shell-actions .action-btn.mutqin-btn--destructive:hover {
-  color: #fff !important;
-  background: var(--destructive-strong, var(--danger-strong, #9a4336)) !important;
+  color: #6a3227 !important;
+  background: #eddcd5 !important;
+  border-color: #c99a8c !important;
+}
+
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
+.workspace-shell-actions .post-session-choice-pair > .action-btn.post-session-choice-custom {
+  color: var(--text, #2b241c) !important;
+  background: #ffffff !important;
+  border: 1px solid color-mix(in srgb, var(--border, #cfc8bf) 85%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit:hover,
+.workspace-shell-actions .post-session-choice-pair > .action-btn.post-session-choice-custom:hover {
+  color: var(--text, #2b241c) !important;
+  background: color-mix(in srgb, #ffffff 90%, var(--accent, #8b6914) 10%) !important;
+  border-color: color-mix(in srgb, var(--accent, #8b6914) 28%, var(--border, #cfc8bf)) !important;
 }
 
 [data-theme="dark"] .workspace-shell-actions .action-btn.btn.btn-outline-secondary.action-btn-exit,
@@ -31363,40 +31449,174 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   justify-content: center !important;
 }
 
-/* Post-session choice labels are longer than Start/End — size to content, never clip. */
-.top-card-session-actions.has-paired-actions.post-session-choice-pair {
-  display: inline-flex !important;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  max-width: 100%;
+/* Post-session choice: desktop content-sized (like Start/End); mobile equal 2-col. */
+.workspace-shell--post-session-choice .workspace-shell-head {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 0.55rem !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
 }
 
-.top-card-session-actions.has-paired-actions.post-session-choice-pair > .top-card-action-trigger.session-primary-action,
-.top-card-session-actions.has-paired-actions.post-session-choice-pair > .top-card-action-trigger.action-btn-exit {
+.workspace-shell--post-session-choice .workspace-shell-copy {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.workspace-shell--post-session-choice .workspace-shell-actions,
+.workspace-shell--post-session-choice .action-buttons-group {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  flex: 0 0 auto !important;
+  overflow: visible !important;
+}
+
+.workspace-shell--post-session-choice .top-card-icon-controls {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+
+.workspace-shell--post-session-choice .post-session-choice-pair,
+.top-card-session-actions.has-paired-actions.post-session-choice-pair,
+.top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) {
+  display: inline-flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  flex: 0 0 auto !important;
+  overflow: visible !important;
+}
+
+.top-card-session-actions.post-session-choice-pair > .top-card-action-trigger {
   width: auto !important;
   min-width: max-content !important;
-  max-width: 100% !important;
-  flex: 0 1 auto !important;
+  max-width: none !important;
+  flex: 0 0 auto !important;
   white-space: nowrap !important;
   overflow: visible !important;
-  text-overflow: clip !important;
+  justify-content: center !important;
+  padding-inline: 0.9rem !important;
+  box-sizing: border-box !important;
 }
 
-.top-card-session-actions.has-paired-actions.post-session-choice-pair > .top-card-action-trigger span {
-  overflow: visible !important;
-  text-overflow: clip !important;
+@media (max-width: 767.98px) {
+  .workspace-shell--post-session-choice .workspace-shell-head {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    gap: 0.45rem !important;
+    overflow: hidden !important;
+  }
+
+  .workspace-shell--post-session-choice .workspace-shell-copy {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+  }
+
+  .workspace-shell--post-session-choice .workspace-shell-actions,
+  .workspace-shell--post-session-choice .action-buttons-group {
+    display: contents !important;
+  }
+
+  .workspace-shell--post-session-choice .top-card-icon-controls {
+    display: none !important;
+  }
+
+  .workspace-shell--post-session-choice .post-session-choice-pair,
+  .workspace-shell--post-session-choice .top-card-session-actions.has-paired-actions.post-session-choice-pair,
+  .top-card-session-actions.has-paired-actions.post-session-choice-pair,
+  .top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    gap: 0.35rem !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .workspace-shell--post-session-choice .post-session-choice-pair:not(.has-paired-actions),
+  .top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .workspace-shell--post-session-choice .post-session-choice-pair > .top-card-action-trigger,
+  .top-card-session-actions.post-session-choice-pair > .top-card-action-trigger {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: none !important;
+    padding-inline: 0.4rem !important;
+    font-size: 0.7rem !important;
+    overflow: hidden !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+
+.top-card-session-actions.post-session-choice-pair > .top-card-action-trigger span {
   white-space: nowrap !important;
 }
 
-.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .top-card-action-trigger.session-primary-action,
-.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .top-card-action-trigger.action-btn-exit {
-  height: auto !important;
+.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .top-card-action-trigger {
+  height: 38px !important;
   min-height: 38px !important;
-  max-height: none !important;
-  padding: 0.55rem 0.9rem !important;
-  overflow: visible !important;
+  max-height: 38px !important;
+  padding: 0 0.9rem !important;
   white-space: nowrap !important;
+  width: auto !important;
+  min-width: max-content !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 767.98px) {
+  .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .top-card-action-trigger {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 0 0.4rem !important;
+    overflow: hidden !important;
+  }
+}
+
+/* Custom must share End's text-button layout, but not its destructive red. */
+.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom {
+  background: color-mix(in srgb, var(--surface-strong, #fff) 94%, var(--border, #ddd)) !important;
+  border: 1px solid color-mix(in srgb, var(--border, #cfc8bf) 85%, transparent) !important;
+  color: var(--text, #2b241c) !important;
+  box-shadow: none !important;
+}
+
+.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit:hover,
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom:hover {
+  background: color-mix(in srgb, var(--surface-strong, #fff) 88%, var(--accent, #8b6914) 12%) !important;
+  border-color: color-mix(in srgb, var(--accent, #8b6914) 28%, var(--border, #cfc8bf)) !important;
+  color: var(--text, #2b241c) !important;
+}
+
+.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom i,
+.workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom span,
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i,
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span {
+  color: inherit !important;
+  display: inline !important;
 }
 
 .workspace-shell-bottom {
@@ -37411,9 +37631,14 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
   .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 0.55rem !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    flex-wrap: nowrap !important;
+    gap: 0.45rem !important;
+  }
+
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 
   .workspace-shell-actions .action-buttons-group .top-card-action-trigger.session-primary-action,
@@ -37429,12 +37654,15 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     line-height: 1.2 !important;
   }
 
-  .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .top-card-action-trigger.session-primary-action,
-  .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .top-card-action-trigger.action-btn-exit {
-    inline-size: auto !important;
-    min-inline-size: max-content !important;
-    max-inline-size: 100% !important;
-    overflow: visible !important;
+  .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .top-card-action-trigger {
+    grid-column: auto !important;
+    grid-row: 1 !important;
+    inline-size: 100% !important;
+    min-inline-size: 0 !important;
+    max-inline-size: none !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
   }
 
   .workspace-shell-actions .top-card-action-trigger.top-card-controls-trigger,
@@ -46222,16 +46450,16 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
     gap: 0.28rem !important;
   }
 
-  .workspace-shell-actions .post-session-choice-pair > .top-card-action-trigger.session-primary-action,
-  .workspace-shell-actions .post-session-choice-pair > .top-card-action-trigger.action-btn-exit {
+  .workspace-shell-actions .post-session-choice-pair > .top-card-action-trigger {
     min-block-size: 36px !important;
-    block-size: auto !important;
-    max-block-size: none !important;
-    padding: 0.45rem 0.7rem !important;
-    font-size: 0.74rem !important;
-    overflow: visible !important;
+    block-size: 36px !important;
+    max-block-size: 36px !important;
+    padding: 0 0.45rem !important;
+    font-size: 0.7rem !important;
+    overflow: hidden !important;
     white-space: nowrap !important;
-    min-inline-size: max-content !important;
+    text-overflow: ellipsis !important;
+    min-inline-size: 0 !important;
   }
 
   .workspace-shell-actions .top-card-action-trigger.session-primary-action i,

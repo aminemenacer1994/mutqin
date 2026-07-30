@@ -62,7 +62,7 @@
     "ready": "Session ready",
     "progress": "{current} of {total} ayahs · {percent}% complete",
     "left": "{eta} left",
-    "end": "End Session"
+    "end": "End session"
   },
   "recordings": {
     "viewAll": "View All Recordings"
@@ -2013,9 +2013,9 @@
     "postSessionChoice": {
       "title": "Sırada neyi pratik etmek istersiniz?",
       "desc": "Önerilen planı tekrarla veya kendi oturumunu oluştur.",
-      "repeatRecommended": "Önerilen oturumu tekrarla",
+      "repeatRecommended": "Oturumu tekrarla",
       "repeatRecommendedDesc": "Aynı önerilen aralığı ve ayarları yeniden çalış.",
-      "createCustom": "Özel oturum oluştur",
+      "createCustom": "Özel oturum",
       "createCustomDesc": "Kendi sureni, ayet aralığını ve pratik ayarlarını seç.",
       "startCustomSession": "Özel oturumu başlat"
     },

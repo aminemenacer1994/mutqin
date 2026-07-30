@@ -62,7 +62,7 @@
     "ready": "الجلسة جاهزة",
     "progress": "{current} من {total} آية · {percent}% مكتمل",
     "left": "متبقٍ {eta}",
-    "end": "End Session"
+    "end": "End session"
   },
   "recordings": {
     "viewAll": "عرض كل التسجيلات"
@@ -1743,9 +1743,9 @@
     "postSessionChoice": {
       "title": "آگے آپ کیا مشق کرنا چاہتے ہیں؟",
       "desc": "تجویز کردہ منصوبہ دہرائیں یا اپنی نشست بنائیں۔",
-      "repeatRecommended": "تجویز کردہ نشست دہرائیں",
+      "repeatRecommended": "نشست دہرائیں",
       "repeatRecommendedDesc": "وہی تجویز کردہ دائرہ اور ترتیبات دوبارہ مشق کریں۔",
-      "createCustom": "حسبِ ضرورت نشست بنائیں",
+      "createCustom": "حسبِ ضرورت نشست",
       "createCustomDesc": "اپنی سورہ، آیات کا دائرہ اور مشق کی ترتیبات خود منتخب کریں۔",
       "startCustomSession": "حسبِ ضرورت نشست شروع کریں"
     },

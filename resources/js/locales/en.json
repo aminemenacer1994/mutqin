@@ -64,7 +64,7 @@
     "ready": "Session ready",
     "progress": "{current} of {total} ayahs · {percent}% complete",
     "left": "{eta} left",
-    "end": "End Session"
+    "end": "End session"
   },
   "recordings": {
     "viewAll": "View All Recordings"
@@ -443,9 +443,9 @@
     "postSessionChoice": {
       "title": "What would you like to practise next?",
       "desc": "Repeat your recommended plan or create a session of your own.",
-      "repeatRecommended": "Repeat recommended session",
+      "repeatRecommended": "Repeat session",
       "repeatRecommendedDesc": "Practise the same recommended range and settings again.",
-      "createCustom": "Create a custom session",
+      "createCustom": "Custom session",
       "createCustomDesc": "Choose your own sūrah, āyah range and practice settings.",
       "startCustomSession": "Start custom session"
     },

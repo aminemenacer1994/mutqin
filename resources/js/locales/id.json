@@ -1743,9 +1743,9 @@
     "postSessionChoice": {
       "title": "Apa yang ingin Anda latih selanjutnya?",
       "desc": "Ulangi rencana yang direkomendasikan atau buat sesi sendiri.",
-      "repeatRecommended": "Ulangi sesi yang direkomendasikan",
+      "repeatRecommended": "Ulangi sesi",
       "repeatRecommendedDesc": "Latih lagi rentang dan pengaturan yang sama.",
-      "createCustom": "Buat sesi khusus",
+      "createCustom": "Sesi khusus",
       "createCustomDesc": "Pilih sendiri surah, rentang ayat, dan pengaturan latihan.",
       "startCustomSession": "Mulai sesi khusus"
     },

@@ -2156,6 +2156,7 @@ export default {
       return !!this.primarySessionActionPresentation.showEndCompanion
         && !this.showPostSessionModal
         && !this.isSessionCompleted
+        && !this.isPostSessionChoiceVisible
     },
     hasValidatedResumableSession() {
       if (this.onboardingSampleSessionActive) return false
@@ -7320,6 +7321,7 @@ export default {
       }
       this.loadCentralSessionState()
       this.restoreSessionState()
+      this.applyRestoredPostSessionChoice({ clearPending: false })
       await this.loadChapters()
       await this.loadReciters()
       this.loadOfflineCatalog()
@@ -7337,6 +7339,8 @@ export default {
       await this.validateSessionLifecycleAgainstBackend()
       this.loadContinueSessionPrompt()
       this.demoteLiveSessionToResumableOnBootstrap()
+      // Re-apply after demote/reconcile so refresh still shows Repeat / Custom.
+      this.applyRestoredPostSessionChoice({ clearPending: false })
       this.bindSessionLifecycleBroadcast()
       this.updateMasteredWeekly()
       this.loadRecordingsLibrary()
@@ -7407,6 +7411,7 @@ export default {
         this.markActiveSessionSnapshot()
       }
       this.reconcilePersistedSessionCompletion()
+      this.applyRestoredPostSessionChoice({ clearPending: true })
     }
 
     window.addEventListener('online', this.handleOnline)
@@ -14098,16 +14103,60 @@ export default {
       this.showPostSessionConfetti = false
       this.postSessionOffcanvasOpen = false
       this.playerVisible = false
+      this.topCardMenuOpen = false
+      this.fontDropdownOpen = false
       try {
         this.closePlayer()
       } catch (_) { /* player may already be closed */ }
       this.syncBodyScrollLock(false)
+      this.persistUiState()
     },
     closePostSessionChoice() {
       this.showPostSessionChoice = false
       this.postSessionChoiceAction = null
       this.postSessionChoiceOffcanvasOpen = false
       this.postSessionChoiceJustEndedTemplate = null
+      this.startingFreshSessionSelection = false
+      this.persistUiState()
+    },
+    applyRestoredPostSessionChoice({ clearPending = true } = {}) {
+      const pending = this._pendingPostSessionChoiceRestore
+      if (!pending?.show) {
+        if (clearPending) this._pendingPostSessionChoiceRestore = null
+        return
+      }
+      // Don't interrupt a live/paused session after refresh.
+      if (this.isSessionLive || this.sessionPaused || this.showPostSessionModal) {
+        return
+      }
+
+      // Trust the persisted choice flag. Bootstrap can clear sessionCompleted
+      // (no in-memory ended snapshot), which previously forced Start again.
+      this.sessionCompleted = true
+      this.sessionCompletedAt = this.sessionCompletedAt || new Date().toISOString()
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'completed'
+        this.centralSession.sessionCompletedAt = this.sessionCompletedAt
+      }
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.paused = false
+        this.mutqinState.sessionState.completed = true
+        this.mutqinState.sessionState.completed_at = this.sessionCompletedAt
+      }
+
+      const restored = pending.template
+        ? buildRecommendedSessionTemplate(pending.template)
+        : null
+      this.postSessionChoiceJustEndedTemplate = isValidRecommendedTemplate(restored)
+        ? restored
+        : (this.recommendedSessionTemplates?.[0] || null)
+      this.showPostSessionChoice = true
+      this.postSessionChoiceAction = null
+      this.postSessionChoiceOffcanvasOpen = false
+      this.showTools = false
+      this.playerVisible = false
+      if (clearPending) this._pendingPostSessionChoiceRestore = null
     },
     focusPostSessionCustomSetupField() {
       this.$nextTick(() => {
@@ -14252,7 +14301,11 @@ export default {
         return
       }
       this.closePostSessionChoice()
-      // Ready session — learner uses the normal Start session control.
+      this.persistUiState()
+      // Start immediately — don't leave the learner on an extra Start click.
+      this.$nextTick(() => {
+        this.startSessionWithCountdown()
+      })
     },
     exitOnboardingSampleMode({ discard = true, markCompleted = true } = {}) {
       const wasSample = !!this.onboardingSampleSessionActive
@@ -26533,10 +26586,7 @@ export default {
       this.persistModeState(this.currentMode)
       this.persistUiState()
       this.persistCentralSessionState()
-      // Keep the post-session choice CTAs visible after cleanup.
-      if (!this.showPostSessionModal && !this.postSessionAiReciteActive) {
-        this.showPostSessionChoice = true
-      }
+      // Do not invent post-session choice here — openPostSessionChoice() owns that flag.
     },
 
     exitSessionAnyway() {
@@ -27134,6 +27184,8 @@ export default {
 
     reconcilePersistedSessionCompletion() {
       if (!this.isSessionCompleted) return
+      // Keep ended post-session choice CTAs across refresh — don't demote to Start.
+      if (this.showPostSessionChoice || this._pendingPostSessionChoiceRestore?.show) return
       const hasSnapshot = !!(this.sessionEndedSnapshot && Object.keys(this.sessionEndedSnapshot).length)
       if (hasSnapshot) return
 
@@ -30517,6 +30569,10 @@ export default {
           this.mainCardCollapsed = !!state.mainCardCollapsed
           this.feedbackCollapsed = !!state.feedbackCollapsed
           this.playerCompact = !!state.playerCompact
+          this._pendingPostSessionChoiceRestore = {
+            show: !!state.showPostSessionChoice,
+            template: state.postSessionChoiceJustEndedTemplate || null,
+          }
         }
       } catch (e) {
         console.error('Error loading UI state:', e)
@@ -30603,6 +30659,8 @@ export default {
           mainCardCollapsed: this.mainCardCollapsed,
           feedbackCollapsed: this.feedbackCollapsed,
           playerCompact: this.playerCompact,
+          showPostSessionChoice: !!this.showPostSessionChoice,
+          postSessionChoiceJustEndedTemplate: this.postSessionChoiceJustEndedTemplate || null,
         }
 
         if (this.learningBackendEnabled()) {

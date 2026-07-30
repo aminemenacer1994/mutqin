@@ -169,7 +169,8 @@
             <div class="action-buttons-group">
               <div
                 v-if="isPostSessionChoiceVisible"
-                class="top-card-session-actions has-paired-actions post-session-choice-pair"
+                class="top-card-session-actions post-session-choice-pair"
+                :class="{ 'has-paired-actions': canShowRepeatRecommendedAction }"
                 data-testid="post-session-choice"
                 role="group"
                 :aria-label="t('memorisation.postSessionChoice.title')"
@@ -181,7 +182,7 @@
                   data-testid="post-session-repeat-recommended"
                   data-action="repeat_recommended"
                   :title="t('memorisation.postSessionChoice.repeatRecommendedDesc')"
-                  :aria-label="t('memorisation.postSessionChoice.repeatRecommended')"
+                  :aria-label="t('memorisation.postSessionChoice.repeatRecommendedDesc')"
                   @click="repeatRecommendedSessionFromChoice"
                 >
                   <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
@@ -189,12 +190,12 @@
                 </button>
                 <button
                   type="button"
-                  class="action-btn top-card-action-trigger action-btn-exit"
+                  class="action-btn top-card-action-trigger action-btn-exit post-session-choice-custom"
                   :class="{ 'btn btn-primary session-primary-action': !canShowRepeatRecommendedAction }"
                   data-testid="post-session-create-custom"
                   data-action="create_custom"
                   :title="t('memorisation.postSessionChoice.createCustomDesc')"
-                  :aria-label="t('memorisation.postSessionChoice.createCustom')"
+                  :aria-label="t('memorisation.postSessionChoice.createCustomDesc')"
                   @click="createCustomSessionFromChoice"
                 >
                   <i class="bi bi-sliders" aria-hidden="true"></i>

@@ -62,7 +62,7 @@
     "ready": "Session prête",
     "progress": "{current} sur {total} ayahs · {percent}% terminé",
     "left": "{eta} restant",
-    "end": "End Session"
+    "end": "End session"
   },
   "recordings": {
     "viewAll": "Voir tous les enregistrements"
@@ -1743,9 +1743,9 @@
     "postSessionChoice": {
       "title": "Que souhaitez-vous pratiquer ensuite ?",
       "desc": "Répétez le plan recommandé ou créez votre propre session.",
-      "repeatRecommended": "Répéter la session recommandée",
+      "repeatRecommended": "Répéter la session",
       "repeatRecommendedDesc": "Pratiquez à nouveau la même plage et les mêmes réglages recommandés.",
-      "createCustom": "Créer une session personnalisée",
+      "createCustom": "Session perso",
       "createCustomDesc": "Choisissez votre sourate, votre plage d’ayahs et vos réglages.",
       "startCustomSession": "Démarrer la session personnalisée"
     },

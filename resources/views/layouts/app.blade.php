@@ -186,26 +186,27 @@
       }
       .app .mutqin-modal-btn--danger,
       .app .mutqin-modal-btn--destructive,
-      .app .action-btn-exit,
+      .app .action-btn-exit:not(.post-session-choice-custom),
       .app .action-btn.mutqin-btn--destructive,
       .app .session-exit-action-chip--end,
-      .app .workspace-shell-actions .action-btn-exit {
-        color: #fff !important;
-        background: #b42318 !important;
-        border-color: #912018 !important;
+      .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom) {
+        color: #7a3b2e !important;
+        background: #f4ebe7 !important;
+        border: 1px solid #d7b2a7 !important;
         box-shadow: none !important;
         font-weight: 650 !important;
       }
-      .app .action-btn-exit:hover,
+      .app .action-btn-exit:not(.post-session-choice-custom):hover,
       .app .action-btn.mutqin-btn--destructive:hover,
-      .app .workspace-shell-actions .action-btn-exit:hover {
-        background: #912018 !important;
-        border-color: #7a1510 !important;
+      .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom):hover {
+        color: #6a3227 !important;
+        background: #eddcd5 !important;
+        border-color: #c99a8c !important;
         box-shadow: none !important;
       }
     </style>
-    <style id="mutqin-memorisation-hotfix-v79">
-      /* Network-first hotfix v79 — mushaf wrap + compact type */
+    <style id="mutqin-memorisation-hotfix-v86">
+      /* Network-first hotfix v83 — content-sized CTAs + restore after refresh */
       #mutqin-ui-build-pill { display: none !important; }
       .amd-overlay {
         z-index: 20000 !important;
@@ -221,20 +222,180 @@
       .app .verses-grid .verse-font-size-control {
         display: none !important;
       }
-      .app .action-btn-exit,
+      .app .action-btn-exit:not(.post-session-choice-custom),
       .app .action-btn.mutqin-btn--destructive,
-      .app .workspace-shell-actions .action-btn-exit {
-        color: #fff !important;
-        background: #b42318 !important;
-        border: 1px solid #912018 !important;
+      .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom) {
+        color: #7a3b2e !important;
+        background: #f4ebe7 !important;
+        border: 1px solid #d7b2a7 !important;
         box-shadow: none !important;
         font-weight: 650 !important;
       }
-      .app .action-btn-exit:hover,
-      .app .workspace-shell-actions .action-btn-exit:hover {
-        background: #912018 !important;
-        border-color: #7a1510 !important;
+      .app .action-btn-exit:not(.post-session-choice-custom):hover,
+      .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom):hover {
+        color: #6a3227 !important;
+        background: #eddcd5 !important;
+        border-color: #c99a8c !important;
         box-shadow: none !important;
+      }
+
+      /* Post-session choice — desktop: content-sized pills (like Start/End).
+         Mobile: equal 2-col grid so both CTAs stay visible. */
+      .app .workspace-shell--post-session-choice .workspace-shell-head {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+      }
+      .app .workspace-shell--post-session-choice .workspace-shell-copy {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+      }
+      .app .workspace-shell--post-session-choice .workspace-shell-actions,
+      .app .workspace-shell--post-session-choice .workspace-shell-actions .action-buttons-group {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        flex: 0 0 auto !important;
+        overflow: visible !important;
+      }
+      .app .workspace-shell--post-session-choice .top-card-icon-controls {
+        display: inline-flex !important;
+        flex: 0 0 auto !important;
+        margin: 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+      }
+      .app .workspace-shell--post-session-choice .post-session-choice-pair,
+      .app .workspace-shell--post-session-choice .post-session-choice-pair.has-paired-actions {
+        display: inline-flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        flex: 0 0 auto !important;
+        overflow: visible !important;
+      }
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .top-card-action-trigger,
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .action-btn,
+      .app .workspace-shell-actions .post-session-choice-pair > .session-primary-action,
+      .app .workspace-shell-actions .post-session-choice-pair > .action-btn-exit,
+      .app .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.35rem !important;
+        width: auto !important;
+        min-width: max-content !important;
+        max-width: none !important;
+        flex: 0 0 auto !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        max-height: 38px !important;
+        padding: 0 0.9rem !important;
+        border-radius: 11px !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+        font-size: 0.8rem !important;
+      }
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .top-card-action-trigger span,
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .action-btn span {
+        display: inline !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
+        color: inherit !important;
+      }
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom,
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .action-btn-exit.post-session-choice-custom {
+        color: #2b241c !important;
+        background: #ffffff !important;
+        border: 1px solid rgba(31, 24, 18, 0.16) !important;
+        box-shadow: none !important;
+      }
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom:hover,
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .action-btn-exit.post-session-choice-custom:hover {
+        color: #2b241c !important;
+        background: #f7f3ec !important;
+        border-color: rgba(31, 24, 18, 0.22) !important;
+      }
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom i,
+      .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom span {
+        color: #2b241c !important;
+      }
+      @media (max-width: 767.98px) {
+        .app .workspace-shell--post-session-choice .workspace-shell-head {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) !important;
+          grid-template-rows: auto auto !important;
+          gap: 0.45rem !important;
+          overflow: hidden !important;
+        }
+        .app .workspace-shell--post-session-choice .workspace-shell-copy {
+          grid-column: 1 / -1 !important;
+          grid-row: 1 !important;
+        }
+        .app .workspace-shell--post-session-choice .workspace-shell-actions,
+        .app .workspace-shell--post-session-choice .workspace-shell-actions .action-buttons-group {
+          display: contents !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls {
+          display: none !important;
+          width: 0 !important;
+          min-width: 0 !important;
+          height: 0 !important;
+          overflow: hidden !important;
+          pointer-events: none !important;
+        }
+        .app .workspace-shell--post-session-choice .post-session-choice-pair,
+        .app .workspace-shell--post-session-choice .post-session-choice-pair.has-paired-actions,
+        .app .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
+        .app .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
+          grid-column: 1 / -1 !important;
+          grid-row: 2 !important;
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          gap: 0.35rem !important;
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+        }
+        .app .workspace-shell--post-session-choice .post-session-choice-pair:not(.has-paired-actions) {
+          grid-template-columns: minmax(0, 1fr) !important;
+        }
+        .app .workspace-shell--post-session-choice .post-session-choice-pair > .top-card-action-trigger,
+        .app .workspace-shell--post-session-choice .post-session-choice-pair > .action-btn,
+        .app .workspace-shell-actions .post-session-choice-pair > .session-primary-action,
+        .app .workspace-shell-actions .post-session-choice-pair > .action-btn-exit,
+        .app .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom,
+        .app .workspace-shell-actions .post-session-choice-pair .top-card-action-trigger {
+          display: inline-flex !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          width: 100% !important;
+          min-width: 0 !important;
+          max-width: 100% !important;
+          flex: none !important;
+          height: 36px !important;
+          min-height: 36px !important;
+          max-height: 36px !important;
+          padding: 0 0.4rem !important;
+          font-size: 0.7rem !important;
+          overflow: hidden !important;
+        }
       }
       .app .main.mushaf-mode-active {
         width: 100% !important;
@@ -285,6 +446,25 @@
         .app .workspace-shell-actions .action-buttons-group {
           display: contents !important;
         }
+        /* Keep display:contents so the pair is a head-grid child (both CTAs visible). */
+        .app .workspace-shell--post-session-choice .workspace-shell-actions,
+        .app .workspace-shell--post-session-choice .workspace-shell-actions .action-buttons-group {
+          display: contents !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls {
+          display: none !important;
+          min-width: 0 !important;
+          width: 0 !important;
+          height: 0 !important;
+          overflow: hidden !important;
+          pointer-events: none !important;
+        }
+        .app .workspace-shell--post-session-choice .post-session-choice-pair {
+          grid-column: 1 / -1 !important;
+          grid-row: 2 !important;
+          width: 100% !important;
+          min-width: 0 !important;
+        }
         .app .workspace-shell-copy {
           grid-column: 1 !important;
           grid-row: 1 !important;
@@ -312,8 +492,8 @@
           justify-self: end !important;
           overflow: visible !important;
         }
-        .app .workspace-shell-actions .top-card-session-actions,
-        .app .workspace-shell-actions .top-card-session-actions.has-paired-actions {
+        .app .workspace-shell-actions .top-card-session-actions:not(.post-session-choice-pair),
+        .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
           grid-column: 1 / -1 !important;
           grid-row: 2 !important;
           display: flex !important;
@@ -373,6 +553,51 @@
           font-weight: 650 !important;
           border-radius: 9px !important;
           box-shadow: none !important;
+          width: auto !important;
+          min-width: 0 !important;
+          max-width: none !important;
+        }
+        .app .workspace-shell-actions .post-session-choice-pair .top-card-action-trigger {
+          min-height: 32px !important;
+          height: 32px !important;
+          padding: 0 0.4rem !important;
+          font-size: 0.68rem !important;
+          font-weight: 650 !important;
+          border-radius: 9px !important;
+          box-shadow: none !important;
+          width: 100% !important;
+          min-width: 0 !important;
+          max-width: 100% !important;
+        }
+        .app .workspace-shell-actions .post-session-choice-pair .top-card-action-trigger span {
+          display: inline !important;
+        }
+        .app .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit {
+          background: #ffffff !important;
+          border: 1px solid rgba(31, 24, 18, 0.14) !important;
+          color: #2b241c !important;
+        }
+        .app .workspace-shell--post-session-choice .workspace-shell-head {
+          grid-template-columns: minmax(0, 1fr) !important;
+        }
+        .app .workspace-shell--post-session-choice .workspace-shell-copy {
+          grid-column: 1 / -1 !important;
+        }
+        .app .workspace-shell--post-session-choice .post-session-choice-pair {
+          grid-column: 1 / -1 !important;
+          grid-row: 2 !important;
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          width: 100% !important;
+          min-width: 0 !important;
+          gap: 0.35rem !important;
+        }
+        .app .workspace-shell--post-session-choice .post-session-choice-pair:not(.has-paired-actions) {
+          grid-template-columns: minmax(0, 1fr) !important;
+        }
+        .app .workspace-shell--post-session-choice .post-session-choice-pair > .top-card-action-trigger {
+          width: 100% !important;
+          min-width: 0 !important;
         }
         .app .verses-grid .verse-ai-check-btn,
         .app .verses-grid .verse-ai-recite-btn {
@@ -700,7 +925,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v79'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v86'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });

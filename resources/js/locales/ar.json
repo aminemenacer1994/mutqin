@@ -64,7 +64,7 @@
     "ready": "الجلسة جاهزة",
     "progress": "{current} من {total} آية · {percent}% مكتمل",
     "left": "متبقٍ {eta}",
-    "end": "End Session"
+    "end": "End session"
   },
   "recordings": {
     "viewAll": "عرض كل التسجيلات"
@@ -2188,9 +2188,9 @@
     "postSessionChoice": {
       "title": "ماذا تريد أن تتمرّن عليه بعد ذلك؟",
       "desc": "أعد الجلسة المقترحة أو أنشئ جلسة خاصة بك.",
-      "repeatRecommended": "إعادة الجلسة المقترحة",
+      "repeatRecommended": "إعادة الجلسة",
       "repeatRecommendedDesc": "تمرّن على نفس النطاق والإعدادات المقترحة مرة أخرى.",
-      "createCustom": "إنشاء جلسة مخصصة",
+      "createCustom": "جلسة مخصصة",
       "createCustomDesc": "اختر السورة ونطاق الآيات وإعدادات التمرين بنفسك.",
       "startCustomSession": "بدء جلسة مخصصة"
     }
