@@ -58,10 +58,10 @@ function loadMemorisationChunk(attempt = 0) {
             window.__MUTQIN_AI_RECITE_UI__ = 'v75';
             document.documentElement.dataset.practiceCoach = 'v2';
             document.documentElement.dataset.aiReciteUi = 'v75';
-            document.documentElement.dataset.stackedAyahEnd = 'v5';
-            document.documentElement.dataset.mutqinUi = 'v90';
+            document.documentElement.dataset.stackedAyahEnd = 'v8-removed';
+            document.documentElement.dataset.mutqinUi = 'v97';
             document.documentElement.dataset.amdTestGate = 'test-with-ai-only';
-            document.documentElement.dataset.postSessionChoice = 'v13';
+            document.documentElement.dataset.postSessionChoice = 'v14';
         }
         return mod;
     }).catch((error) => {

@@ -239,9 +239,38 @@
         border-color: #b56a56 !important;
       }
     </style>
-    <style id="mutqin-memorisation-hotfix-v88">
-      /* Network-first hotfix v83 — content-sized CTAs + restore after refresh */
+    <style id="mutqin-memorisation-hotfix-v97">
+      /* Network-first hotfix v96 — mobile mushaf toggle + ellipsis */
       #mutqin-ui-build-pill { display: none !important; }
+      html body .app .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .verse-ayah-end-number,
+      html body .app .main:not(.mushaf-mode-active) .verses-grid .verse-arabic-with-end .verse-ayah-end-number,
+      html body .app .main:not(.mushaf-mode-active) .verse-arabic .verse-ayah-end-number,
+      html body .app .verses-grid .verse-arabic .verse-ayah-end-number,
+      html body .app .verses-grid .verse-arabic-with-end .verse-ayah-end-number {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        overflow: hidden !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        font-size: 0 !important;
+        line-height: 0 !important;
+      }
+      html body .app .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .verse-ayah-end-number img,
+      html body .app .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .verse-ayah-end-number__digit,
+      html body .app .verses-grid .verse-arabic .verse-ayah-end-number img,
+      html body .app .verses-grid .verse-arabic .verse-ayah-end-number__digit {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        visibility: hidden !important;
+      }
       .amd-overlay {
         z-index: 20000 !important;
         pointer-events: auto !important;
@@ -418,26 +447,49 @@
       @media (max-width: 767.98px) {
         .app .workspace-shell--post-session-choice .workspace-shell-head {
           display: grid !important;
-          grid-template-columns: minmax(0, 1fr) !important;
+          grid-template-columns: minmax(0, 1fr) auto !important;
           grid-template-rows: auto auto !important;
           gap: 0.45rem !important;
-          overflow: hidden !important;
+          overflow: visible !important;
         }
         .app .workspace-shell--post-session-choice .workspace-shell-copy {
-          grid-column: 1 / -1 !important;
+          grid-column: 1 !important;
           grid-row: 1 !important;
+          min-width: 0 !important;
         }
         .app .workspace-shell--post-session-choice .workspace-shell-actions,
         .app .workspace-shell--post-session-choice .workspace-shell-actions .action-buttons-group {
           display: contents !important;
         }
         .app .workspace-shell--post-session-choice .top-card-icon-controls {
-          display: none !important;
-          width: 0 !important;
+          display: flex !important;
+          flex-flow: row nowrap !important;
+          align-items: center !important;
+          justify-content: flex-end !important;
+          gap: 6px !important;
+          grid-column: 2 !important;
+          grid-row: 1 !important;
+          justify-self: end !important;
+          align-self: start !important;
+          width: auto !important;
           min-width: 0 !important;
-          height: 0 !important;
-          overflow: hidden !important;
-          pointer-events: none !important;
+          height: auto !important;
+          overflow: visible !important;
+          pointer-events: auto !important;
+          z-index: 90 !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap,
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap {
+          display: none !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap,
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-ellipsis,
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .view-mode-btn {
+          display: inline-flex !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
         }
         .app .workspace-shell--post-session-choice .post-session-choice-pair,
         .app .workspace-shell--post-session-choice .post-session-choice-pair.has-paired-actions,
@@ -533,12 +585,34 @@
           display: contents !important;
         }
         .app .workspace-shell--post-session-choice .top-card-icon-controls {
-          display: none !important;
+          display: flex !important;
+          flex-flow: row nowrap !important;
+          align-items: center !important;
+          justify-content: flex-end !important;
+          gap: 6px !important;
+          grid-column: 2 !important;
+          grid-row: 1 !important;
+          justify-self: end !important;
+          align-self: start !important;
+          width: auto !important;
           min-width: 0 !important;
-          width: 0 !important;
-          height: 0 !important;
-          overflow: hidden !important;
-          pointer-events: none !important;
+          height: auto !important;
+          overflow: visible !important;
+          pointer-events: auto !important;
+          z-index: 90 !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap,
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap {
+          display: none !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap,
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .view-mode-btn,
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-ellipsis {
+          display: inline-flex !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
         }
         .app .workspace-shell--post-session-choice .post-session-choice-pair {
           grid-column: 1 / -1 !important;
@@ -556,6 +630,7 @@
           text-overflow: ellipsis !important;
           white-space: nowrap !important;
         }
+        /* Mobile: mushaf layout toggle + ellipsis top-right. */
         .app .top-card-icon-controls {
           --mq-top-icon: 36px;
           display: flex !important;
@@ -563,15 +638,27 @@
           align-items: center !important;
           justify-content: flex-end !important;
           gap: 6px !important;
-          width: max-content !important;
-          min-width: calc((36px * 4) + 18px) !important;
+          width: auto !important;
+          min-width: 0 !important;
           max-width: none !important;
           flex-shrink: 0 !important;
           grid-column: 2 !important;
           grid-row: 1 !important;
           margin: 0 !important;
           justify-self: end !important;
+          align-self: start !important;
           overflow: visible !important;
+          z-index: 90 !important;
+          pointer-events: auto !important;
+        }
+        .app .top-card-icon-controls .top-card-font-wrap,
+        .app .top-card-icon-controls .top-card-controls-wrap {
+          display: none !important;
+          width: 0 !important;
+          min-width: 0 !important;
+          height: 0 !important;
+          overflow: hidden !important;
+          pointer-events: none !important;
         }
         .app .workspace-shell-actions .top-card-session-actions:not(.post-session-choice-pair),
         .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
@@ -581,11 +668,9 @@
           gap: 0.35rem !important;
         }
         .app .top-card-icon-controls .top-card-layout-icons,
-        .app .top-card-icon-controls .top-card-font-wrap,
-        .app .top-card-icon-controls .top-card-controls-wrap,
         .app .top-card-icon-controls .top-card-menu-wrap {
           position: relative !important;
-          display: block !important;
+          display: inline-flex !important;
           width: 36px !important;
           height: 36px !important;
           min-width: 36px !important;
@@ -597,17 +682,14 @@
           padding: 0 !important;
           overflow: visible !important;
           box-sizing: border-box !important;
+          pointer-events: auto !important;
         }
-        .app .top-card-icon-controls .top-card-icon-control,
-        .app .top-card-icon-controls .top-card-controls-trigger,
-        .app .top-card-icon-controls .top-card-ellipsis,
         .app .top-card-icon-controls .view-mode-btn,
-        .app .top-card-icon-controls .font-dropdown-trigger,
         .app .top-card-icon-controls .workspace-layout-btn,
-        .app .workspace-shell-actions .top-card-icon-controls .top-card-ellipsis,
-        .app .workspace-shell-actions .top-card-icon-controls .top-card-controls-trigger {
-          position: absolute !important;
-          inset: 0 !important;
+        .app .top-card-icon-controls .top-card-ellipsis,
+        .app .workspace-shell-actions .top-card-icon-controls .top-card-ellipsis {
+          position: relative !important;
+          inset: auto !important;
           width: 36px !important;
           height: 36px !important;
           min-width: 36px !important;
@@ -624,6 +706,9 @@
           transform: none !important;
           grid-column: auto !important;
           grid-row: auto !important;
+        }
+        .app .top-card-menu .top-card-menu-toggle--layout {
+          display: none !important;
         }
         .app .workspace-shell-actions .top-card-action-trigger.session-primary-action,
         .app .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
@@ -1006,7 +1091,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v88'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v97'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });

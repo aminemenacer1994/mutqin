@@ -29,6 +29,7 @@ assert.match(css, /\.madani-word--end\.madani-word--unicode/)
 assert.match(css, /\.madani-word--end\.madani-word--fallback/)
 assert.match(css, /Unicode \/ fallback Quranic fonts: U\+06DD ornate marker/)
 assert.match(css, /madani-word--end\.madani-word--unicode[\s\S]*?font-family:\s*"Amiri Quran"/)
+assert.match(css, /madani-word--end\.madani-word--unicode[\s\S]*?direction:\s*ltr\s*!important/)
 assert.doesNotMatch(
   css,
   /\.madani-word--end\.madani-word--unicode,\s*\n\.main\.mushaf-mode-active \.madani-word--end\.madani-word--fallback \{\s*\n\s*display: inline-flex/

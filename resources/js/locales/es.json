@@ -441,7 +441,8 @@
       "resumeIntention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time.",
       "reminderLabel": "A word of remembrance",
       "startNewSession": "Iniciar nueva sesión",
-      "continuePreviousSession": "Continuar sesión anterior"
+      "continuePreviousSession": "Continuar sesión anterior",
+      "continueSessionShort": "Continuar sesión"
     },
     "sessionExit": {
       "kicker": "Sesión en pausa",

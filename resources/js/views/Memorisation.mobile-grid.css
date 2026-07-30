@@ -178,8 +178,29 @@
     box-sizing: border-box !important;
   }
 
+  /* Post-session: keep the ellipsis visible top-right (hide the other tool icons). */
   .workspace-shell--post-session-choice .top-card-icon-controls {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    width: auto !important;
+    min-width: 0 !important;
+    pointer-events: auto !important;
+    z-index: 80 !important;
+  }
+
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap,
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap {
     display: none !important;
+  }
+
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
+    display: inline-flex !important;
   }
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) {
@@ -3428,8 +3449,6 @@
     margin-inline: 0.14em 0.08em !important;
     float: none !important;
     position: relative !important;
-    top: auto !important;
-    inset: auto !important;
     background: transparent !important;
     background-image: none !important;
     border-radius: 0 !important;
@@ -3438,6 +3457,9 @@
     padding: 0 !important;
     font-size: 1em !important;
     line-height: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow: visible !important;
   }
 
   .verses-grid .verse-arabic .verse-ayah-end-number__digit {
@@ -4215,7 +4237,13 @@
     font-size: 1.28em !important;
     font-weight: 400 !important;
     vertical-align: -0.12em !important;
-    direction: rtl !important;
+  }
+
+  /* U+06DD subtending needs LTR; RTL misplaces/doubles the digit inside the mark */
+  .app .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
+  .app .main.mushaf-mode-active .madani-word--end.madani-word--fallback {
+    direction: ltr !important;
+    unicode-bidi: isolate;
   }
 
   .app .verses-grid .verse-arabic .verse-ayah-end-number,
@@ -4229,6 +4257,14 @@
     background-image: none !important;
     font-size: 1em !important;
     line-height: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+  }
+
+  .app .verses-grid .verse-arabic .verse-ayah-end-number__digit,
+  .app .verses-grid .verse-arabic-with-end .verse-ayah-end-number__digit {
+    display: none !important;
   }
 
   .app .verses-grid .verse-font-size-control {
@@ -4381,5 +4417,118 @@
 
   .workspace-empty-choice-card span {
     font-size: 0.86rem;
+  }
+
+  /*
+   * Mobile-only: mushaf layout toggle + ellipsis in the top-right.
+   * Font/sliders stay in the menu path; desktop keeps the full icon row.
+   */
+  .workspace-shell-head {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    align-items: center !important;
+    column-gap: 0.45rem !important;
+  }
+
+  .workspace-shell-copy {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls,
+  .workspace-shell--post-session-choice .workspace-shell-head > .top-card-icon-controls {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    align-self: start !important;
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 6px !important;
+    z-index: 90 !important;
+    pointer-events: auto !important;
+    overflow: visible !important;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls .top-card-font-wrap,
+  .workspace-shell-head > .top-card-icon-controls .top-card-controls-wrap {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls .top-card-layout-icons,
+  .workspace-shell-head > .top-card-icon-controls .top-card-menu-wrap {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    flex: 0 0 36px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    pointer-events: auto !important;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls .top-card-icon-control,
+  .workspace-shell-head > .top-card-icon-controls .view-mode-btn,
+  .workspace-shell-head > .top-card-icon-controls .workspace-layout-btn,
+  .workspace-shell-head > .top-card-icon-controls .top-card-ellipsis {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 999px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls .top-card-icon-control i,
+  .workspace-shell-head > .top-card-icon-controls .view-mode-btn i,
+  .workspace-shell-head > .top-card-icon-controls .top-card-ellipsis i {
+    display: inline-block !important;
+    font-size: 1.05rem !important;
+    line-height: 1 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls .view-mode-btn span {
+    display: none !important;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls .top-card-menu {
+    position: absolute !important;
+    inset-inline-end: 0 !important;
+    top: calc(100% + 0.35rem) !important;
+    z-index: 140 !important;
+  }
+
+  /* Mushaf/Stacked lives on the icon toggle — not in the ellipsis menu on mobile. */
+  .top-card-menu .top-card-menu-toggle--layout {
+    display: none !important;
   }
 }

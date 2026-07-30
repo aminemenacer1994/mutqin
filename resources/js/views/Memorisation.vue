@@ -1,4 +1,5 @@
 <template>
+  <!-- mutqin-ui-build: v97 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'onboarding-post-session-active': showPostSessionModal,
@@ -165,6 +166,149 @@
               <template v-else>{{ topCardSessionLabel }}</template>
             </h1>
           </div>
+          <!-- Direct child of head so mobile grid placement cannot swallow these icons -->
+          <div class="top-card-icon-controls" aria-label="Reading tools">
+            <div
+              class="workspace-layout-toggle view-mode-toggle top-card-layout-icons"
+              role="group"
+              :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')}`"
+            >
+              <button
+                type="button"
+                class="view-mode-btn workspace-layout-btn top-card-icon-control"
+                :class="{ active: readingViewMode === 'mushaf' }"
+                :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'"
+                @click.stop="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
+                :title="readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf')"
+                :aria-label="readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf')"
+              >
+                <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-view-stacked' : 'bi-journal-richtext'" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="font-dropdown workspace-font-dropdown top-card-font-wrap">
+              <button
+                class="font-dropdown-trigger top-card-icon-control"
+                type="button"
+                @click.stop="toggleFontDropdown"
+                :title="t('memorisation.a11y.changeQuranFont')"
+                :aria-label="t('memorisation.a11y.changeQuranFont')"
+                :aria-expanded="fontDropdownOpen ? 'true' : 'false'"
+              >
+                <i class="bi bi-fonts" aria-hidden="true"></i>
+              </button>
+              <transition name="dropdown-fade">
+                <div v-if="fontDropdownOpen" class="font-dropdown-menu top-card-font-menu" @click.stop>
+                  <button
+                    v-for="font in quranFontOptions"
+                    :key="font.value"
+                    type="button"
+                    class="font-option"
+                    :class="{ active: quranFont === font.value }"
+                    @click="selectFont(font.value)"
+                  >
+                    <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
+                    <span>{{ font.label }}</span>
+                    <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </transition>
+            </div>
+            <div class="top-card-controls-wrap">
+              <div
+                class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger top-card-icon-control"
+                role="button"
+                tabindex="0"
+                @click="openAdvancedControls"
+                @keydown.enter.prevent="openAdvancedControls"
+                @keydown.space.prevent="openAdvancedControls"
+                :title="t('memorisation.open_controls')"
+                :aria-label="t('memorisation.open_controls')"
+              >
+                <i class="bi bi-sliders" aria-hidden="true"></i>
+              </div>
+            </div>
+            <div class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
+              <div
+                class="top-card-ellipsis top-card-action-trigger top-card-icon-control"
+                role="button"
+                tabindex="0"
+                @click="toggleTopCardMenu"
+                @keydown.enter.prevent="toggleTopCardMenu"
+                @keydown.space.prevent="toggleTopCardMenu"
+                :aria-label="t('memorisation.a11y.openReadingOptions')"
+              >
+                <i class="bi bi-three-dots-vertical"></i>
+              </div>
+              <transition name="dropdown-fade">
+                <div v-if="topCardMenuOpen" class="top-card-menu">
+                  <button
+                    type="button"
+                    class="top-card-menu-toggle top-card-menu-toggle--layout"
+                    :class="{ active: readingViewMode === 'mushaf' }"
+                    :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'"
+                    @click.stop="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf'); topCardMenuOpen = false"
+                  >
+                    <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-view-stacked' : 'bi-journal-richtext'" aria-hidden="true"></i>
+                    <span>{{ readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf') }}</span>
+                    <i v-if="readingViewMode === 'mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    v-if="readingViewMode !== 'mushaf'"
+                    type="button"
+                    class="top-card-menu-toggle"
+                    :class="{ active: showTranslation }"
+                    :aria-pressed="showTranslation ? 'true' : 'false'"
+                    @click.stop="toggleReadingOption('translation')"
+                  >
+                    <i class="bi bi-translate" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.reading.translation') }}</span>
+                    <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    v-if="readingViewMode !== 'mushaf'"
+                    type="button"
+                    class="top-card-menu-toggle"
+                    :class="{ active: showTransliteration }"
+                    :aria-pressed="showTransliteration ? 'true' : 'false'"
+                    @click.stop="toggleReadingOption('transliteration')"
+                  >
+                    <i class="bi bi-type" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.reading.transliteration') }}</span>
+                    <i v-if="showTransliteration" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    v-if="readingViewMode !== 'mushaf'"
+                    type="button"
+                    class="top-card-menu-toggle"
+                    :class="{ active: showWordByWord }"
+                    :aria-pressed="showWordByWord ? 'true' : 'false'"
+                    @click.stop="toggleReadingOption('wbw')"
+                  >
+                    <i class="bi bi-grid-3x2-gap" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.reading.wordByWord') }}</span>
+                    <i v-if="showWordByWord" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="top-card-menu-toggle"
+                    :class="{ active: tajweedEnabled }"
+                    :aria-pressed="tajweedEnabled ? 'true' : 'false'"
+                    @click.stop="toggleTajweed"
+                  >
+                    <i class="bi bi-palette" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.reading.tajweed') }}</span>
+                    <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" @click="openOnboardingFromTopMenu">
+                    <i class="bi bi-compass"></i><span>{{ t('memorisation.revisitOnboarding') }}</span>
+                  </button>
+                  <button @click="toggleFullScreen" type="button">
+                    <i class="bi bi-arrows-fullscreen"></i><span>{{ t('memorisation.reading.fullScreen') }}</span>
+                  </button>
+                </div>
+              </transition>
+            </div>
+          </div>
           <div class="workspace-shell-actions">
             <div class="action-buttons-group">
               <div
@@ -236,123 +380,6 @@
                   <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                   <span>{{ t('sessionStatus.end') }}</span>
                 </button>
-              </div>
-              <div class="top-card-icon-controls" aria-label="Reading tools">
-                <div
-                  class="workspace-layout-toggle view-mode-toggle top-card-layout-icons"
-                  role="group"
-                  :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')}`"
-                >
-                  <button
-                    type="button"
-                    class="view-mode-btn workspace-layout-btn top-card-icon-control"
-                    :class="{ active: readingViewMode === 'mushaf' }"
-                    :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'"
-                    @click.stop="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
-                    :title="readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf')"
-                    :aria-label="readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf')"
-                  >
-                    <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-view-stacked' : 'bi-journal-richtext'" aria-hidden="true"></i>
-                  </button>
-                </div>
-                <div class="font-dropdown workspace-font-dropdown top-card-font-wrap">
-                  <button
-                    class="font-dropdown-trigger top-card-icon-control"
-                    type="button"
-                    @click.stop="toggleFontDropdown"
-                    :title="t('memorisation.a11y.changeQuranFont')"
-                    :aria-label="t('memorisation.a11y.changeQuranFont')"
-                    :aria-expanded="fontDropdownOpen ? 'true' : 'false'"
-                  >
-                    <i class="bi bi-fonts" aria-hidden="true"></i>
-                  </button>
-                  <transition name="dropdown-fade">
-                    <div v-if="fontDropdownOpen" class="font-dropdown-menu top-card-font-menu" @click.stop>
-                      <button
-                        v-for="font in quranFontOptions"
-                        :key="font.value"
-                        type="button"
-                        class="font-option"
-                        :class="{ active: quranFont === font.value }"
-                        @click="selectFont(font.value)"
-                      >
-                        <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
-                        <span>{{ font.label }}</span>
-                        <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                      </button>
-                    </div>
-                  </transition>
-                </div>
-                <div class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
-                  <div
-                    class="top-card-ellipsis top-card-action-trigger top-card-icon-control"
-                    role="button"
-                    tabindex="0"
-                    @click="toggleTopCardMenu"
-                    @keydown.enter.prevent="toggleTopCardMenu"
-                    @keydown.space.prevent="toggleTopCardMenu"
-                    :aria-label="t('memorisation.a11y.openReadingOptions')"
-                  >
-                    <i class="bi bi-three-dots-vertical"></i>
-                  </div>
-                <transition name="dropdown-fade">
-                  <div v-if="topCardMenuOpen" class="top-card-menu">
-                    <button
-                      v-if="readingViewMode !== 'mushaf'"
-                      type="button"
-                      class="top-card-menu-toggle"
-                      :class="{ active: showTranslation }"
-                      :aria-pressed="showTranslation ? 'true' : 'false'"
-                      @click.stop="toggleReadingOption('translation')"
-                    >
-                      <i class="bi bi-translate" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.reading.translation') }}</span>
-                      <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      v-if="readingViewMode !== 'mushaf'"
-                      type="button"
-                      class="top-card-menu-toggle"
-                      :class="{ active: showTransliteration }"
-                      :aria-pressed="showTransliteration ? 'true' : 'false'"
-                      @click.stop="toggleReadingOption('transliteration')"
-                    >
-                      <i class="bi bi-type" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.reading.transliteration') }}</span>
-                      <i v-if="showTransliteration" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      v-if="readingViewMode !== 'mushaf'"
-                      type="button"
-                      class="top-card-menu-toggle"
-                      :class="{ active: showWordByWord }"
-                      :aria-pressed="showWordByWord ? 'true' : 'false'"
-                      @click.stop="toggleReadingOption('wbw')"
-                    >
-                      <i class="bi bi-grid-3x2-gap" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.reading.wordByWord') }}</span>
-                      <i v-if="showWordByWord" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      type="button"
-                      class="top-card-menu-toggle"
-                      :class="{ active: tajweedEnabled }"
-                      :aria-pressed="tajweedEnabled ? 'true' : 'false'"
-                      @click.stop="toggleTajweed"
-                    >
-                      <i class="bi bi-palette" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.reading.tajweed') }}</span>
-                      <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                    </button>
-                    <button type="button" @click="openOnboardingFromTopMenu">
-                      <i class="bi bi-compass"></i><span>{{ t('memorisation.revisitOnboarding') }}</span>
-                    </button>
-                    <button @click="toggleFullScreen" type="button">
-                      <i class="bi bi-arrows-fullscreen"></i><span>{{ t('memorisation.reading.fullScreen') }}</span>
-                    </button>
-                  </div>
-                </transition>
-              </div>
               </div>
             </div>
           </div>
@@ -829,7 +856,7 @@
                 :aria-label="`Open ayah ${verse.number}${isVerseVisuallyActive(verse.key) ? ', active ayah' : ''}`">
                 <div class="verse-header">
                   <div class="verse-badges">
-                    <span class="verse-number verse-ayah-pill">{{ t('memorisation.a11y.ayahNumberLabel', { number: verse.number }) }}</span>
+                    <span class="verse-number verse-ayah-pill">{{ t('memorisation.a11y.ayahNumberLabel', { number: resolveVerseAyahNumber(verse) || verse.number }) }}</span>
                     <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge verse-status-badge-active">{{ t('memorisation.badges.active') }}</span>
                     <span v-if="isNewHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-new">{{ t('memorisation.badges.new') }}</span>
                     <span v-if="isDueHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-due">{{ t('memorisation.due') }}</span>
@@ -880,7 +907,7 @@
 
                 <div class="verse-arabic verse-arabic-primary verse-arabic-with-end" dir="rtl" lang="ar" v-if="verse.arabic && isDataReady"
                   @click.stop
-                  :key="`ar-${verse.key}-${practiceFocusSignature}`"
+                  :key="`ar-${verse.key}-${practiceFocusSignature}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}`"
                   v-html="getDisplayArabic(verse)" :class="{
                     'tajweed-enabled': tajweedEnabled,
                     'word-highlight-enabled': true,
@@ -1923,20 +1950,24 @@
                   type="button"
                   class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate"
                   data-testid="welcome-back-continue"
+                  :disabled="welcomeBackContinueInFlight"
+                  :aria-busy="welcomeBackContinueInFlight ? 'true' : 'false'"
                   @click="welcomeBackContinueSession"
                 >
                   <i class="bi bi-play-circle" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.welcomeBack.continuePreviousSession') }}</span>
+                  <span class="welcome-back-continue-label welcome-back-continue-label--full">{{ t('memorisation.welcomeBack.continuePreviousSession') }}</span>
+                  <span class="welcome-back-continue-label welcome-back-continue-label--short">{{ t('memorisation.welcomeBack.continueSessionShort') }}</span>
                 </button>
                 <button
                   type="button"
                   class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate"
+                  :disabled="welcomeBackContinueInFlight"
                   @click="welcomeBackStartNewSession"
                 >
                   <i class="bi bi-plus-circle" aria-hidden="true"></i>
                   <span>{{ t('memorisation.welcomeBack.startNewSession') }}</span>
                 </button>
-                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate welcome-back-logout" @click="logoutFromWelcomeBack">
+                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate welcome-back-logout" :disabled="welcomeBackContinueInFlight" @click="logoutFromWelcomeBack">
                   <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                   <span>{{ t('common.logout') }}</span>
                 </button>

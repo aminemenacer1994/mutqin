@@ -1796,26 +1796,28 @@
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {
-  display: inline-block;
-  transition: all 0.15s ease;
-  border-radius: 4px;
-  padding: 0 2px;
+  /* inline (not inline-block) preserves Arabic cursive joining */
+  display: inline;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 0;
+  padding: 0;
   cursor: pointer;
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
-  background: var(--accent);
-  color: white;
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+  background: transparent;
+  color: inherit;
+  transform: none;
+  box-shadow: inset 0 -0.08em 0 color-mix(in srgb, var(--accent) 68%, transparent);
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {
-  background: var(--accent-light);
+  background: transparent;
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*="tajweed-"], .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {
-  color: inherit;
+  /* Keep rule colours while a word is highlighted */
+  color: unset;
   background: transparent;
 }
 
@@ -5684,8 +5686,10 @@ body.has-navbar .tools-top {
   border-radius: 16px;
   margin: 10px 0;
   display: block;
-  overflow-wrap: anywhere;
-  word-break: normal;
+  /* anywhere fractures Arabic joining / shows stray tatweel dashes */
+  overflow-wrap: normal;
+  word-break: keep-all;
+  line-break: strict;
 }
 
 .verse-arabic .verse-ayah-end-number,
@@ -5742,6 +5746,7 @@ body.has-navbar .tools-top {
 .verse-arabic-with-end .verse-ayah-end-number__digit {
   display: none !important;
 }
+
 [data-theme="dark"] .verse-arabic .verse-ayah-end-number,
 [data-theme="dark"] .verse-arabic-with-end .verse-ayah-end-number {
   --ayah-mark-ink: #f0e6d4;
@@ -5774,31 +5779,31 @@ body.has-navbar .tools-top {
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {
-  display: inline-block;
-  transition: all 0.15s ease;
-  border-radius: 4px;
-  padding: 0 2px;
+  display: inline;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 0;
+  padding: 0;
   cursor: pointer;
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
-  background: var(--accent);
-  color: white;
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
+  background: transparent;
+  color: inherit;
+  transform: none;
+  box-shadow: inset 0 -0.08em 0 color-mix(in srgb, var(--accent) 68%, transparent);
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {
-  background: var(--accent-light);
+  background: transparent;
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {
-  color: inherit;
+  color: unset;
   background: transparent;
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*="tajweed-"] {
-  color: white;
+  color: unset;
   background: transparent;
 }
 
@@ -5891,9 +5896,19 @@ html {
 }
 
 .verse-arabic word, .verse-arabic .wbw-word {
-  display: inline-block;
-  transition: all 0.15s ease;
+  display: inline;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
   vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.verse-arabic.tajweed-enabled word,
+.verse-arabic.tajweed-enabled .wbw-word,
+.verse-arabic.tajweed-enabled .word-arabic-text {
+  display: inline !important;
+  unicode-bidi: normal !important;
+  letter-spacing: inherit !important;
+  word-spacing: inherit !important;
   white-space: nowrap;
 }
 
@@ -6372,7 +6387,9 @@ html {
 .verse-arabic.tajweed-enabled {
   line-height: 2;
   white-space: normal;
-  overflow-wrap: anywhere;
+  /* anywhere fractures Arabic joining / shows stray tatweel dashes */
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 .verse-arabic.tajweed-enabled .tajweed-mark, .mushaf-ayah-text.tajweed-enabled .tajweed-mark {
@@ -21917,6 +21934,7 @@ button:active {
   box-shadow: none;
   border: 0;
   line-height: inherit;
+  -webkit-text-fill-color: currentColor !important;
 }
 
 .verse-arabic.tajweed-enabled .tajweed-mark[class*="tajweed-"], .mushaf-ayah-text.tajweed-enabled .tajweed-mark[class*="tajweed-"], .self-check-modal-ayah.tajweed-enabled .tajweed-mark[class*="tajweed-"], .memorisation-checker-ayah.tajweed-enabled .tajweed-mark[class*="tajweed-"] {
@@ -21924,33 +21942,33 @@ button:active {
 }
 
 .verse-arabic.tajweed-enabled .tajweed-ham_wasl, .verse-arabic.tajweed-enabled .tajweed-slnt, .mushaf-ayah-text.tajweed-enabled .tajweed-ham_wasl, .mushaf-ayah-text.tajweed-enabled .tajweed-slnt, .self-check-modal-ayah.tajweed-enabled .tajweed-ham_wasl, .self-check-modal-ayah.tajweed-enabled .tajweed-slnt, .memorisation-checker-ayah.tajweed-enabled .tajweed-ham_wasl, .memorisation-checker-ayah.tajweed-enabled .tajweed-slnt {
-  color: #7e8a97;
-  background: transparent;
+  color: #7e8a97 !important;
+  background: transparent !important;
 }
 
 .verse-arabic.tajweed-enabled .tajweed-ghn, .verse-arabic.tajweed-enabled .tajweed-idgh_ghn, .verse-arabic.tajweed-enabled .tajweed-iqlb, .mushaf-ayah-text.tajweed-enabled .tajweed-ghn, .mushaf-ayah-text.tajweed-enabled .tajweed-idgh_ghn, .mushaf-ayah-text.tajweed-enabled .tajweed-iqlb, .self-check-modal-ayah.tajweed-enabled .tajweed-ghn, .self-check-modal-ayah.tajweed-enabled .tajweed-idgh_ghn, .self-check-modal-ayah.tajweed-enabled .tajweed-iqlb, .memorisation-checker-ayah.tajweed-enabled .tajweed-ghn, .memorisation-checker-ayah.tajweed-enabled .tajweed-idgh_ghn, .memorisation-checker-ayah.tajweed-enabled .tajweed-iqlb {
-  color: #2e9d62;
-  background: transparent;
+  color: #2e9d62 !important;
+  background: transparent !important;
 }
 
 .verse-arabic.tajweed-enabled .tajweed-idgh_w_ghn, .verse-arabic.tajweed-enabled .tajweed-ikhf, .verse-arabic.tajweed-enabled .tajweed-ikhf_shfw, .mushaf-ayah-text.tajweed-enabled .tajweed-idgh_w_ghn, .mushaf-ayah-text.tajweed-enabled .tajweed-ikhf, .mushaf-ayah-text.tajweed-enabled .tajweed-ikhf_shfw, .self-check-modal-ayah.tajweed-enabled .tajweed-idgh_w_ghn, .self-check-modal-ayah.tajweed-enabled .tajweed-ikhf, .self-check-modal-ayah.tajweed-enabled .tajweed-ikhf_shfw, .memorisation-checker-ayah.tajweed-enabled .tajweed-idgh_w_ghn, .memorisation-checker-ayah.tajweed-enabled .tajweed-ikhf, .memorisation-checker-ayah.tajweed-enabled .tajweed-ikhf_shfw {
-  color: #9b59b6;
-  background: transparent;
+  color: #9b59b6 !important;
+  background: transparent !important;
 }
 
 .verse-arabic.tajweed-enabled .tajweed-qlq, .verse-arabic.tajweed-enabled .tajweed-lqlq, .mushaf-ayah-text.tajweed-enabled .tajweed-qlq, .mushaf-ayah-text.tajweed-enabled .tajweed-lqlq, .self-check-modal-ayah.tajweed-enabled .tajweed-qlq, .self-check-modal-ayah.tajweed-enabled .tajweed-lqlq, .memorisation-checker-ayah.tajweed-enabled .tajweed-qlq, .memorisation-checker-ayah.tajweed-enabled .tajweed-lqlq {
-  color: #d98824;
-  background: transparent;
+  color: #d98824 !important;
+  background: transparent !important;
 }
 
 .verse-arabic.tajweed-enabled .tajweed-madda_normal, .verse-arabic.tajweed-enabled .tajweed-madda_permissible, .verse-arabic.tajweed-enabled .tajweed-madda_necessary, .verse-arabic.tajweed-enabled .tajweed-madda_obligatory, .verse-arabic.tajweed-enabled .tajweed-madda_pbligatory, .mushaf-ayah-text.tajweed-enabled .tajweed-madda_normal, .mushaf-ayah-text.tajweed-enabled .tajweed-madda_permissible, .mushaf-ayah-text.tajweed-enabled .tajweed-madda_necessary, .mushaf-ayah-text.tajweed-enabled .tajweed-madda_obligatory, .mushaf-ayah-text.tajweed-enabled .tajweed-madda_pbligatory, .self-check-modal-ayah.tajweed-enabled .tajweed-madda_normal, .self-check-modal-ayah.tajweed-enabled .tajweed-madda_permissible, .self-check-modal-ayah.tajweed-enabled .tajweed-madda_necessary, .self-check-modal-ayah.tajweed-enabled .tajweed-madda_obligatory, .self-check-modal-ayah.tajweed-enabled .tajweed-madda_pbligatory, .memorisation-checker-ayah.tajweed-enabled .tajweed-madda_normal, .memorisation-checker-ayah.tajweed-enabled .tajweed-madda_permissible, .memorisation-checker-ayah.tajweed-enabled .tajweed-madda_necessary, .memorisation-checker-ayah.tajweed-enabled .tajweed-madda_obligatory, .memorisation-checker-ayah.tajweed-enabled .tajweed-madda_pbligatory {
-  color: #d55245;
-  background: transparent;
+  color: #d55245 !important;
+  background: transparent !important;
 }
 
 .verse-arabic.tajweed-enabled .tajweed-idgh_mus, .verse-arabic.tajweed-enabled .tajweed-idghm_shfw, .verse-arabic.tajweed-enabled .tajweed-idgh_shfw, .verse-arabic.tajweed-enabled .tajweed-ghn + .tajweed-mark, .mushaf-ayah-text.tajweed-enabled .tajweed-idgh_mus, .mushaf-ayah-text.tajweed-enabled .tajweed-idghm_shfw, .mushaf-ayah-text.tajweed-enabled .tajweed-idgh_shfw, .mushaf-ayah-text.tajweed-enabled .tajweed-ghn + .tajweed-mark, .self-check-modal-ayah.tajweed-enabled .tajweed-idgh_mus, .self-check-modal-ayah.tajweed-enabled .tajweed-idghm_shfw, .self-check-modal-ayah.tajweed-enabled .tajweed-idgh_shfw, .self-check-modal-ayah.tajweed-enabled .tajweed-ghn + .tajweed-mark, .memorisation-checker-ayah.tajweed-enabled .tajweed-idgh_mus, .memorisation-checker-ayah.tajweed-enabled .tajweed-idghm_shfw, .memorisation-checker-ayah.tajweed-enabled .tajweed-idgh_shfw, .memorisation-checker-ayah.tajweed-enabled .tajweed-ghn + .tajweed-mark {
-  color: #2b7bbb;
-  background: transparent;
+  color: #2b7bbb !important;
+  background: transparent !important;
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word, .verse-arabic.tajweed-enabled .wbw-word[data-tajweed-word="true"], .mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word, .mushaf-ayah-text.tajweed-enabled .wbw-word[data-tajweed-word="true"], .self-check-modal-ayah.tajweed-enabled .wbw-word[data-tajweed-word="true"], .memorisation-checker-ayah.tajweed-enabled .wbw-word[data-tajweed-word="true"], .verse-arabic.tajweed-enabled word, .mushaf-ayah-text.tajweed-enabled word {
@@ -21962,6 +21980,7 @@ button:active {
   box-shadow: none;
   border-radius: 0;
   transform: none;
+  unicode-bidi: normal;
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted, .mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
@@ -22587,7 +22606,8 @@ button:active {
 
 .verse-arabic, .mushaf-ayah-text, .recitation-live-word-stream, .recitation-word-stream {
   max-width: 100%;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 .verse-arabic, .mushaf-ayah-text {
@@ -24004,7 +24024,7 @@ textarea {
 }
 
 .verse-arabic span.tajweed-mark, .verse-arabic span[class*="tajweed-"], .mushaf-ayah-text span.tajweed-mark, .mushaf-ayah-text span[class*="tajweed-"], .self-check-modal-ayah span.tajweed-mark, .self-check-modal-ayah span[class*="tajweed-"], .memorisation-checker-ayah span.tajweed-mark, .memorisation-checker-ayah span[class*="tajweed-"], .recitation-review-ayah span.tajweed-mark, .recitation-review-ayah span[class*="tajweed-"], .session-evaluation-ayah span.tajweed-mark, .session-evaluation-ayah span[class*="tajweed-"] {
-  display: contents !important;
+  display: inline !important;
   margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
@@ -24013,6 +24033,19 @@ textarea {
   word-spacing: inherit !important;
   line-height: inherit !important;
   vertical-align: baseline !important;
+}
+
+/* Tajweed colors require real inline boxes — display:contents drops color. */
+.verse-arabic.tajweed-enabled span.tajweed-mark,
+.verse-arabic.tajweed-enabled span[class*="tajweed-"],
+.mushaf-ayah-text.tajweed-enabled span.tajweed-mark,
+.mushaf-ayah-text.tajweed-enabled span[class*="tajweed-"],
+.self-check-modal-ayah.tajweed-enabled span.tajweed-mark,
+.self-check-modal-ayah.tajweed-enabled span[class*="tajweed-"],
+.memorisation-checker-ayah.tajweed-enabled span.tajweed-mark,
+.memorisation-checker-ayah.tajweed-enabled span[class*="tajweed-"] {
+  display: inline !important;
+  background: transparent !important;
 }
 
 .modal-content.self-check-modal:not(.recitation-review-modal) .self-check-modal-body, .modal-content.memorisation-checker-modal:not(.recitation-review-modal) .memorisation-checker-body {
@@ -24090,8 +24123,16 @@ textarea {
   max-width: none !important;
   text-overflow: clip !important;
   white-space: normal !important;
-  word-break: normal !important;
-  overflow-wrap: anywhere !important;
+  word-break: keep-all !important;
+  /* anywhere fractures Arabic joining / shows stray tatweel dashes */
+  overflow-wrap: normal !important;
+}
+
+.verse-arabic.tajweed-enabled,
+.mushaf-ayah-text.tajweed-enabled {
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  line-break: strict !important;
 }
 
 .verse-card .verse-arabic-wrap, .self-check-modal .self-check-modal-ayah-shell, .memorisation-checker-modal .self-check-modal-ayah-shell {
@@ -24345,8 +24386,9 @@ textarea {
 }
 
 .verse-arabic .tajweed-mark, .verse-arabic [class*="tajweed-"], .mushaf-ayah-text .tajweed-mark, .mushaf-ayah-text [class*="tajweed-"], .self-check-modal-ayah .tajweed-mark, .self-check-modal-ayah [class*="tajweed-"], .memorisation-checker-ayah .tajweed-mark, .memorisation-checker-ayah [class*="tajweed-"], .recitation-review-ayah .tajweed-mark, .recitation-review-ayah [class*="tajweed-"], .session-evaluation-ayah .tajweed-mark, .session-evaluation-ayah [class*="tajweed-"] {
-  display: contents;
-  unicode-bidi: isolate;
+  display: inline;
+  /* isolate breaks Arabic cursive joining and shows stray tatweel dashes */
+  unicode-bidi: normal;
   white-space: normal;
   font: inherit;
   line-height: inherit;
@@ -25510,11 +25552,10 @@ textarea {
   padding-inline: 0 !important;
 }
 
-.workspace-shell-actions .action-btn.primary,
-.workspace-shell-actions .action-btn.btn-primary,
-.workspace-shell-actions .session-primary-action,
-.workspace-shell-actions .action-btn-exit,
-.workspace-shell-actions .post-session-choice-custom {
+.workspace-shell-actions .top-card-session-actions:not(.post-session-choice-pair) .action-btn.primary,
+.workspace-shell-actions .top-card-session-actions:not(.post-session-choice-pair) .action-btn.btn-primary,
+.workspace-shell-actions .top-card-session-actions:not(.post-session-choice-pair) .session-primary-action,
+.workspace-shell-actions .top-card-session-actions:not(.post-session-choice-pair) .action-btn-exit {
   min-width: max-content !important;
   width: auto !important;
   padding-inline: 0.9rem !important;
@@ -31468,8 +31509,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .workspace-shell--post-session-choice .workspace-shell-copy {
   flex: 1 1 auto !important;
   min-width: 0 !important;
+  order: 1 !important;
 }
 
+/* Desktop: session buttons first, then the four icon controls */
 .workspace-shell--post-session-choice .workspace-shell-actions,
 .workspace-shell--post-session-choice .action-buttons-group {
   display: flex !important;
@@ -31481,12 +31524,14 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   min-width: 0 !important;
   flex: 0 0 auto !important;
   overflow: visible !important;
+  order: 2 !important;
 }
 
 .workspace-shell--post-session-choice .top-card-icon-controls {
   display: inline-flex !important;
   flex: 0 0 auto !important;
   margin: 0 !important;
+  order: 3 !important;
 }
 
 .workspace-shell--post-session-choice .post-session-choice-pair,
@@ -46073,8 +46118,9 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
   line-height: 1 !important;
   letter-spacing: 0 !important;
   vertical-align: -0.12em !important;
+  /* U+06DD subtending needs LTR; RTL misplaces/doubles the digit inside the mark */
+  direction: ltr !important;
   unicode-bidi: isolate;
-  direction: rtl !important;
   cursor: default;
   user-select: none;
   pointer-events: none;
@@ -47256,7 +47302,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   max-width: 100% !important;
   overflow-x: hidden !important;
   box-sizing: border-box !important;
-  line-height: 1.85 !important;
+  line-height: 1.68 !important;
   word-spacing: normal !important;
   letter-spacing: normal !important;
 }
@@ -47303,7 +47349,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   width: auto !important;
   max-width: 100% !important;
   margin: 0 !important;
-  margin-inline: 0.1em 0.02em !important;
+  margin-inline: 0.06em 0.01em !important;
   padding: 0 !important;
   padding-inline: 0 !important;
   word-spacing: normal !important;
@@ -47311,6 +47357,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   white-space: nowrap !important;
   vertical-align: baseline !important;
   box-sizing: border-box !important;
+  line-height: 1.68 !important;
 }
 
 .app .main.mushaf-mode-active .madani-basmala,
@@ -47338,7 +47385,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    padding-inline: 0.85rem !important;
+    padding-inline: 0.55rem !important;
     overflow-x: hidden !important;
     box-sizing: border-box !important;
   }
@@ -47351,8 +47398,9 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   .main.mushaf-mode-active .madani-word--glyph,
   .main.mushaf-mode-active .madani-word--unicode,
   .main.mushaf-mode-active .madani-word--fallback {
-    font-size: calc(clamp(1.2rem, 4.8vw, 1.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
-    margin-inline: 0.1em 0.02em !important;
+    font-size: calc(clamp(1.25rem, 4.6vw, 1.65rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    margin-inline: 0.05em 0.01em !important;
+    line-height: 1.65 !important;
   }
 
   .app .main.mushaf-mode-active .madani-line--ayah,
@@ -48196,21 +48244,22 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 }
 
 
-/* FORCE: stacked layout never shows AI red/green/amber word colours */
-.workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-correct,
-.workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-partial,
-.workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-incorrect,
-.workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-omitted,
-.workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-pending,
-.workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-notAttempted,
-.workspace-shell[data-reading-mode="stacked"] .verse-arabic.recitation-word-review-active .wbw-word,
-.workspace-shell[data-reading-mode="stacked"] .verse-arabic.recitation-word-review-active word,
-.main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-correct,
-.main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-partial,
-.main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-incorrect,
-.main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-omitted,
-.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.recitation-word-review-active .wbw-word,
-.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.recitation-word-review-active word {
+/* FORCE: stacked layout never shows AI red/green/amber word colours.
+   Do not flatten when Tajweed is on — rule colours must keep working. */
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled) .recitation-word-correct,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled) .recitation-word-partial,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled) .recitation-word-incorrect,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled) .recitation-word-omitted,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled) .recitation-word-pending,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled) .recitation-word-notAttempted,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled).recitation-word-review-active .wbw-word,
+.workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled).recitation-word-review-active word,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic:not(.tajweed-enabled) .recitation-word-correct,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic:not(.tajweed-enabled) .recitation-word-partial,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic:not(.tajweed-enabled) .recitation-word-incorrect,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic:not(.tajweed-enabled) .recitation-word-omitted,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic:not(.tajweed-enabled).recitation-word-review-active .wbw-word,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic:not(.tajweed-enabled).recitation-word-review-active word {
   color: #111111 !important;
   -webkit-text-fill-color: #111111 !important;
   background: transparent !important;
@@ -48221,15 +48270,15 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   filter: none !important;
 }
 
-[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-correct,
-[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-partial,
-[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-incorrect,
-[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic .recitation-word-omitted,
-[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic.recitation-word-review-active .wbw-word,
-[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-correct,
-[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-partial,
-[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .recitation-word-incorrect,
-[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic.recitation-word-review-active .wbw-word {
+[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled) .recitation-word-correct,
+[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled) .recitation-word-partial,
+[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled) .recitation-word-incorrect,
+[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled) .recitation-word-omitted,
+[data-theme="dark"] .workspace-shell[data-reading-mode="stacked"] .verse-arabic:not(.tajweed-enabled).recitation-word-review-active .wbw-word,
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic:not(.tajweed-enabled) .recitation-word-correct,
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic:not(.tajweed-enabled) .recitation-word-partial,
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic:not(.tajweed-enabled) .recitation-word-incorrect,
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic:not(.tajweed-enabled).recitation-word-review-active .wbw-word {
   color: #f5f2ea !important;
   -webkit-text-fill-color: #f5f2ea !important;
   background: transparent !important;
@@ -48252,6 +48301,37 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 [data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic-with-end {
   color: #f8f5ef !important;
   -webkit-text-fill-color: #f8f5ef !important;
+}
+
+/*
+ * Forced text-fill on .verse-arabic paints EVERY glyph the same colour and
+ * ignores child `color` — so Tajweed rule colours never show. Unset the fill
+ * when Tajweed is on, then let rule spans use currentColor.
+ */
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled.verse-arabic-primary,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled.verse-arabic-with-end {
+  -webkit-text-fill-color: unset !important;
+  color: #111111 !important;
+}
+
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled,
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled.verse-arabic-primary,
+[data-theme="dark"] .main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled.verse-arabic-with-end {
+  -webkit-text-fill-color: unset !important;
+  color: #f8f5ef !important;
+}
+
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled .wbw-word,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled word,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled .word-arabic-text {
+  color: inherit !important;
+  -webkit-text-fill-color: unset !important;
+}
+
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled span.tajweed-mark,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.tajweed-enabled span[class*="tajweed-"] {
+  -webkit-text-fill-color: currentColor !important;
 }
 
 /* —— Mushaf readability + frames + modal polish (v108) —— */
@@ -48845,14 +48925,19 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
     padding-inline: 0.06em;
   }
 
-  .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
-  .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*="tajweed-"],
-  .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {
+  .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
     background: color-mix(in srgb, var(--accent, #c48a4a) 20%, transparent);
     color: inherit !important;
-    -webkit-text-fill-color: inherit !important;
+    -webkit-text-fill-color: unset !important;
     box-shadow: inset 0 -0.12em 0 color-mix(in srgb, var(--accent, #c48a4a) 50%, transparent);
     transform: none;
+  }
+
+  /* Keep rule colours while a word is highlighted — never flatten to ink */
+  .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*="tajweed-"],
+  .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {
+    background: transparent !important;
+    -webkit-text-fill-color: currentColor !important;
   }
 
   .wbw-word.phrase-highlighted,
@@ -48969,6 +49054,8 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   --ayah-mark-ink: #1a1712;
   position: relative !important;
   display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
   white-space: nowrap !important;
   box-sizing: content-box !important;
   width: 1.45em !important;
@@ -49216,16 +49303,47 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   background: transparent !important;
 }
 
-.welcome-back-modal--lean .welcome-back-actions-grid--v2 {
-  display: grid;
-  gap: 0.55rem;
-  grid-template-columns: 1fr;
+.welcome-back-modal--lean .welcome-back-actions-grid--v2,
+.welcome-back-modal--lean .welcome-back-actions-grid--v2.mutqin-modal-actions--3 {
+  display: grid !important;
+  gap: 0.55rem !important;
+  grid-template-columns: 1.2fr 1fr !important;
+  align-items: stretch !important;
+  width: 100%;
+}
+
+.welcome-back-modal--lean .welcome-back-actions-grid--v2 > .mutqin-modal-btn--primary {
+  grid-column: 1 / 2 !important;
+  order: 1;
+}
+
+.welcome-back-modal--lean .welcome-back-actions-grid--v2 > .mutqin-modal-btn--secondary {
+  grid-column: 2 / 3 !important;
+  order: 2;
+}
+
+.welcome-back-modal--lean .welcome-back-actions-grid--v2 > .welcome-back-logout,
+.welcome-back-modal--lean .welcome-back-actions-grid--v2 > .mutqin-modal-btn--ghost {
+  grid-column: 1 / -1 !important;
+  order: 3;
 }
 
 .welcome-back-modal--lean .mutqin-modal-btn {
   min-height: 44px;
   width: 100%;
   justify-content: center;
+  white-space: normal;
+  line-height: 1.2;
+  text-align: center;
+  font-size: 0.88rem;
+}
+
+.welcome-back-continue-label--short {
+  display: none;
+}
+
+.welcome-back-continue-label--full {
+  display: inline;
 }
 
 [data-theme="dark"] .welcome-back-modal--lean,
@@ -49249,31 +49367,96 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   }
 }
 
-/* —— Top four icons: one strict row (kill legacy absolute/grid offsets) —— */
+/* —— Top four icons: direct child of head (desktop + mobile) —— */
+.workspace-shell-head {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  grid-template-rows: auto auto !important;
+  align-items: center !important;
+  column-gap: 0.65rem !important;
+  row-gap: 0.55rem !important;
+}
+
+.workspace-shell-head > .workspace-shell-copy {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  min-width: 0 !important;
+}
+
+/* Desktop default: icons top-right; swapped below at min-width 768 */
+.workspace-shell-head > .top-card-icon-controls {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  display: inline-flex !important;
+  flex-flow: row nowrap !important;
+  align-items: center !important;
+  justify-self: end !important;
+  gap: 0.35rem !important;
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+  z-index: 80 !important;
+  pointer-events: auto !important;
+}
+
+.workspace-shell-head > .workspace-shell-actions {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  display: flex !important;
+  width: 100% !important;
+}
+
+/* Desktop: session action buttons left of the four icon controls (same row) */
+@media (min-width: 768px) {
+  .workspace-shell-head {
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
+    grid-template-rows: auto !important;
+  }
+
+  .workspace-shell-head > .workspace-shell-copy {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  .workspace-shell-head > .workspace-shell-actions {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: auto !important;
+    justify-self: end !important;
+    align-self: center !important;
+  }
+
+  .workspace-shell-head > .workspace-shell-actions .action-buttons-group {
+    width: auto !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-end !important;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    width: auto !important;
+  }
+
+  /* Post-session choice stays flex; order already puts buttons before icons */
+  .workspace-shell--post-session-choice .workspace-shell-head {
+    display: flex !important;
+    grid-template-columns: none !important;
+  }
+}
+
 .workspace-shell-actions .action-buttons-group {
   display: flex !important;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.55rem 0.75rem;
+  width: 100%;
 }
 
-.workspace-shell-actions .top-card-icon-controls {
-  display: inline-flex !important;
-  flex-flow: row nowrap !important;
-  align-items: center !important;
-  align-self: center !important;
-  gap: 0.35rem !important;
-  height: 2.25rem !important;
-  min-height: 2.25rem !important;
-  max-height: 2.25rem !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  position: relative !important;
-  inset: auto !important;
-  transform: none !important;
-}
-
-.workspace-shell-actions .top-card-icon-controls > * {
+.workspace-shell-head > .top-card-icon-controls > * {
   position: relative !important;
   inset: auto !important;
   top: auto !important;
@@ -49287,10 +49470,10 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   grid-row: auto !important;
 }
 
-.workspace-shell-actions .top-card-icon-controls .top-card-menu-wrap,
-.workspace-shell-actions .top-card-icon-controls .top-card-ellipsis,
-.workspace-shell-actions .top-card-icon-controls .top-card-controls-trigger,
-.workspace-shell-actions .top-card-icon-controls .top-card-icon-control {
+.workspace-shell-head > .top-card-icon-controls .top-card-menu-wrap,
+.workspace-shell-head > .top-card-icon-controls .top-card-ellipsis,
+.workspace-shell-head > .top-card-icon-controls .top-card-controls-trigger,
+.workspace-shell-head > .top-card-icon-controls .top-card-icon-control {
   position: relative !important;
   inset: auto !important;
   top: auto !important;
@@ -49575,5 +49758,134 @@ html body .app[data-theme="dark"] .workspace-shell-main-title::after {
   .workspace-shell .workspace-shell-copy h1.workspace-shell-main-title::after,
   html body .app .workspace-shell-main-title::after {
     animation: none !important;
+  }
+}
+
+/* Final mobile overrides: welcome-back CTA row + top-card reading icons */
+@media (max-width: 767.98px) {
+  .welcome-back-modal--lean .welcome-back-actions-grid--v2,
+  .welcome-back-modal--lean .welcome-back-actions-grid--v2.mutqin-modal-actions--3,
+  .welcome-back-modal--lean .mutqin-modal-actions.welcome-back-actions-grid {
+    display: grid !important;
+    grid-template-columns: 1.15fr 1fr !important;
+    gap: 0.5rem !important;
+  }
+
+  /* Primary + secondary share one row; logout full-width beneath */
+  .welcome-back-modal--lean .welcome-back-actions-grid--v2 > .mutqin-modal-btn--primary {
+    grid-column: 1 / 2 !important;
+    order: 1 !important;
+  }
+
+  .welcome-back-modal--lean .welcome-back-actions-grid--v2 > .mutqin-modal-btn--secondary {
+    grid-column: 2 / 3 !important;
+    order: 2 !important;
+  }
+
+  .welcome-back-modal--lean .welcome-back-actions-grid--v2 > .welcome-back-logout,
+  .welcome-back-modal--lean .welcome-back-actions-grid--v2 > .mutqin-modal-btn--ghost {
+    grid-column: 1 / -1 !important;
+    order: 3 !important;
+  }
+
+  .welcome-back-continue-label--full {
+    display: none !important;
+  }
+
+  .welcome-back-continue-label--short {
+    display: inline !important;
+  }
+
+  .welcome-back-modal--lean .mutqin-modal-btn {
+    min-height: 44px !important;
+    padding-inline: 0.55rem !important;
+    font-size: 0.82rem !important;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls,
+  .workspace-shell-head .top-card-icon-controls,
+  .workspace-shell--post-session-choice .top-card-icon-controls {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+  }
+
+  /* Mobile keeps icons top-right; actions stay on row 2 (no desktop swap) */
+  .workspace-shell-head > .workspace-shell-actions {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    order: 2 !important;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls,
+  .workspace-shell--post-session-choice .top-card-icon-controls {
+    order: 0 !important;
+  }
+
+  .workspace-shell--post-session-choice .workspace-shell-actions {
+    order: 2 !important;
+  }
+
+  .top-card-icon-controls .top-card-icon-control,
+  .top-card-icon-controls .view-mode-btn,
+  .top-card-icon-controls .font-dropdown-trigger,
+  .top-card-icon-controls .top-card-controls-trigger,
+  .top-card-icon-controls .top-card-ellipsis {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .app .verses-grid .verse-arabic .verse-ayah-end-number,
+  .app .verses-grid .verse-arabic-with-end .verse-ayah-end-number {
+    display: inline-block !important;
+    width: 1.45em !important;
+    height: 1.55em !important;
+    margin-inline: 0.14em 0.08em !important;
+    vertical-align: -0.28em !important;
+    background: transparent !important;
+    background-image: none !important;
+    font-size: 1em !important;
+    line-height: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+  }
+
+  /* PNG already includes the digit — never overlay text */
+  .app .verses-grid .verse-arabic .verse-ayah-end-number__digit,
+  .app .verses-grid .verse-arabic-with-end .verse-ayah-end-number__digit {
+    display: none !important;
+  }
+
+  /* Mushaf: never override QCF page font on glyph end markers */
+  .app .main.mushaf-mode-active .madani-word--end.madani-word--glyph {
+    font-family: inherit !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
+  .app .main.mushaf-mode-active .madani-word--end.madani-word--fallback {
+    font-family: "Amiri Quran", "Amiri", "Scheherazade New", "Noto Naskh Arabic", serif !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .app .main.mushaf-mode-active .mushaf-page--madani,
+  .app .main.mushaf-mode-active .madani-ornate__inner,
+  .main.mushaf-mode-active .mushaf-page--madani,
+  .main.mushaf-mode-active .madani-ornate__inner {
+    padding-inline: 0.55rem !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-page-sheet,
+  .main.mushaf-mode-active .madani-page-sheet {
+    line-height: 1.65 !important;
+    gap: 0.08rem !important;
   }
 }

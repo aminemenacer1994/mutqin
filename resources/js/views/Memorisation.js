@@ -401,6 +401,7 @@ export default {
       startingFreshSessionSelection: false,
       returningUserChoicePending: false,
       welcomeBackWorkspaceHidden: false,
+      welcomeBackContinueInFlight: false,
       pendingResumeDefaultTab: '',
       showHifzPlanModal: false,
       hifzPlanExists: false,
@@ -5915,6 +5916,9 @@ export default {
       if (this.isPlaying) return 'Listen to the active ayah and follow calmly.'
       return 'Press play, then recite and repeat at your pace.'
     },
+    topCardAppliedPills() {
+      return []
+    },
     reviewPriorityLabel() {
       return ''
     },
@@ -6888,12 +6892,17 @@ export default {
             const hasActiveReview = this.shouldShowRecitationReviewHighlights(verseKey)
             const isActive = inSession && ((hasStarted && effectiveKey === verseKey) || hasActiveReview)
             const isPlayingAyah = inSession && this.activeVerseKey === verseKey && this.isPlaying
-            const useGlyph = useGlyphs && fontReady && !!word.codeV2
-            const html = useGlyph
+            let useGlyph = useGlyphs && fontReady && !!word.codeV2
+            let html = useGlyph
               ? (word.codeV2 || word.textQpc || '')
               : (word.isEnd
                 ? formatMadaniAyahEndLabel(word)
                 : (word.textQpc || word.codeV2 || ''))
+            // Never leave ayah-end markers blank when a glyph slot is empty.
+            if (word.isEnd && !String(html || '').trim()) {
+              html = formatMadaniAyahEndLabel(word)
+              useGlyph = false
+            }
             const wordIndex = word.isEnd ? null : this.resolveMadaniAudioWordIndex(word, audioIndexMap)
             const isHighlighted = inSession
               && !word.isEnd
@@ -23603,48 +23612,155 @@ export default {
     },
 
     async welcomeBackContinueSession() {
-      // Keep Continue synced with backend + frontend before resuming.
-      this.syncWelcomeBackResumeFromBackend()
-      if (!this.canResumePreviousSession) {
-        // One more backend pull if hydrate finished with unfinished work.
+      if (this.welcomeBackContinueInFlight) return
+      this.welcomeBackContinueInFlight = true
+      this.primeAudioPlaybackUnlock()
+      this.sessionActionLock?.reset?.()
+
+      try {
         if (this.learningBackendEnabled()) {
           try {
             await this.validateSessionLifecycleAgainstBackend()
-            this.syncWelcomeBackResumeFromBackend()
-          } catch (e) { /* keep going */ }
+          } catch (e) { /* keep going with whatever we have */ }
         }
-      }
-      if (!this.canResumePreviousSession) {
-        this.showBanner?.(
-          this.t('memorisation.welcomeBack.freshSubtitle') || 'No previous session to continue. Start a new one when ready.',
-          'info',
-          2600
+        this.syncWelcomeBackResumeFromBackend()
+
+        // Ended / missing sessions must not be resumed.
+        const backendStatus = String(this.backendSessionSnapshot?.status || '').toLowerCase()
+        const backendEnded = backendStatus === 'completed' || backendStatus === 'abandoned'
+        if (backendEnded && !this.backendUnfinishedSession) {
+          this.continueSessionPayload = null
+          this.hasContinueSession = false
+        }
+
+        if (!this.continueSessionPayload && this.backendUnfinishedSession && this.backendSessionSnapshot) {
+          this.continueSessionPayload = this.buildContinuePayloadFromBackendSession(this.backendSessionSnapshot)
+          this.hasContinueSession = !!this.continueSessionPayload
+        }
+
+        const payload = this.continueSessionPayload
+        const resumable = isResumableSessionPayload(payload, {
+          backendStatus: this.backendSessionSnapshot?.status || null,
+          isSample: false,
+        }) || (
+          this.learningBackendEnabled()
+          && !!this.backendUnfinishedSession
+          && !!this.backendSessionSnapshot
+          && !backendEnded
         )
-        return
-      }
-      this.primeAudioPlaybackUnlock()
-      const audioState = this.learningBackendEnabled()
-        ? this.readWorkspaceStateValue('audioState', null)
-        : (() => {
-          try {
-            return JSON.parse(localStorage.getItem('telawa.audioState') || 'null')
-          } catch {
-            return null
-          }
-        })()
-      if (audioState && this.continueSessionPayload) {
-        this.continueSessionPayload = {
-          ...this.continueSessionPayload,
-          currentTime: Number(this.continueSessionPayload.currentTime ?? audioState.currentTime ?? 0),
-          audioSrc: this.continueSessionPayload.audioSrc || audioState.src || '',
-          playerVisible: this.continueSessionPayload.playerVisible ?? audioState.playerVisible,
-          isPlaying: false
+
+        if (!resumable || !payload?.config?.chapterId) {
+          this.showWelcomeBackModal = false
+          this.returningUserChoicePending = false
+          this.welcomeBackWorkspaceHidden = false
+          this.showBanner?.(
+            this.t('memorisation.welcomeBack.freshSubtitle')
+              || 'No previous session to continue. Start a new one when ready.',
+            'info',
+            2800
+          )
+          this.startingFreshSessionSelection = true
+          this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
+          return
         }
+
+        // Clear stale completed flags only when we have a validated resumable session.
+        this.sessionCompleted = false
+        this.sessionCompletedAt = null
+        if (this.centralSession) {
+          this.centralSession.sessionCompletedAt = null
+          if (this.centralSession.sessionStatus === 'completed') {
+            this.centralSession.sessionStatus = this.backendSessionSnapshot?.status === 'paused'
+              ? 'paused'
+              : 'active'
+          }
+        }
+
+        const audioState = this.learningBackendEnabled()
+          ? this.readWorkspaceStateValue('audioState', null)
+          : (() => {
+            try {
+              return JSON.parse(localStorage.getItem('telawa.audioState') || 'null')
+            } catch {
+              return null
+            }
+          })()
+        let resumePayload = payload
+        if (audioState && resumePayload) {
+          resumePayload = {
+            ...resumePayload,
+            currentTime: Number(resumePayload.currentTime ?? audioState.currentTime ?? 0),
+            audioSrc: resumePayload.audioSrc || audioState.src || '',
+            playerVisible: resumePayload.playerVisible ?? audioState.playerVisible,
+            isPlaying: false
+          }
+          this.continueSessionPayload = resumePayload
+        }
+
+        const chapterId = Number(resumePayload?.config?.chapterId || 0)
+
+        // Close the gate before hydrate so overlays cannot block the next section.
+        this.showWelcomeBackModal = false
+        this.returningUserChoicePending = false
+        this.welcomeBackWorkspaceHidden = false
+        this.welcomeBackModalReady = false
+
+        if (this.canSoftResumePausedSession()) {
+          this.softResumePausedSession()
+          this.flowStep = 'learn'
+          this.showTools = false
+          return
+        }
+
+        const hydrated = await this.hydrateSessionFromPayload(resumePayload, {
+          bannerText: 'Session restored',
+          banner: true,
+          forcePlayback: false
+        })
+        if (hydrated === false) {
+          throw new Error('hydrateSessionFromPayload returned false')
+        }
+
+        this.applyLocalActiveSessionState()
+        this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
+        this.flowStep = 'learn'
+        this.showTools = false
+        this.startingFreshSessionSelection = false
+        this.$nextTick(() => {
+          this.resumePlaybackFromRestoredState?.()
+          this.scrollToWorkspaceMain?.()
+        })
+
+        if (this.learningBackendEnabled() && this.backendUnfinishedSession) {
+          Promise.resolve().then(async () => {
+            try {
+              await learningApi.resumeSession({
+                idempotency_key: `resume-${this.backendSessionSnapshot?.id || 'welcome'}`,
+                surah_number: chapterId,
+                ayah_number: Number(resumePayload?.config?.rangeStart || 0) || null,
+                memorisation_mode: resumePayload?.mode || this.currentMode,
+              })
+            } catch (error) {
+              this.noteLearningBackendFailure?.(error, 'resume')
+            }
+          })
+        }
+      } catch (error) {
+        console.error('welcomeBackContinueSession hydrate failed', error)
+        this.showWelcomeBackModal = false
+        this.returningUserChoicePending = false
+        this.welcomeBackWorkspaceHidden = false
+        this.showBanner?.(
+          this.t('memorisation.welcomeBack.freshSubtitle')
+            || 'Could not restore the previous session. Start a new one when ready.',
+          'info',
+          3000
+        )
+        this.startingFreshSessionSelection = true
+        this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
+      } finally {
+        this.welcomeBackContinueInFlight = false
       }
-      this.showWelcomeBackModal = false
-      this.returningUserChoicePending = false
-      this.welcomeBackWorkspaceHidden = false
-      await this.resumeSessionFromPrimaryAction()
     },
 
     logoutFromWelcomeBack() {
@@ -23786,9 +23902,29 @@ export default {
     },
 
     async resumeSessionFromPrimaryAction() {
-      if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return
-      if (this.sessionCompleted || this.isSessionCompleted) return
-      if (String(this.backendSessionSnapshot?.status || '') === 'completed') return
+      if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return false
+      // Prefer unfinished backend / continue payload over a stale local completed flag.
+      if (
+        (this.sessionCompleted || this.isSessionCompleted)
+        && !this.backendUnfinishedSession
+        && !this.continueSessionPayload
+      ) return false
+      if (
+        String(this.backendSessionSnapshot?.status || '') === 'completed'
+        && !this.backendUnfinishedSession
+      ) return false
+      if (this.sessionCompleted || this.isSessionCompleted) {
+        this.sessionCompleted = false
+        this.sessionCompletedAt = null
+        if (this.centralSession) {
+          this.centralSession.sessionCompletedAt = null
+          if (this.centralSession.sessionStatus === 'completed') {
+            this.centralSession.sessionStatus = this.backendSessionSnapshot?.status === 'paused'
+              ? 'paused'
+              : 'active'
+          }
+        }
+      }
       const locked = await this.sessionActionLock.run('resume', async () => {
         const softResume = this.canSoftResumePausedSession()
         // Avoid PAUSING/RESUMING → LOADING label flicker; resume in place when possible.
@@ -24764,19 +24900,27 @@ export default {
       if (!chapter) return ''
       return this.getChapterDisplayName(chapter) || `Surah ${chapter.id || ''}`.trim()
     },
+    resolveVerseAyahNumber(verse) {
+      const direct = Number(verse?.number ?? verse?.ayah ?? verse?.ayah_number)
+      if (Number.isFinite(direct) && direct >= 1) return Math.floor(direct)
+      const fromKey = Number(String(verse?.key || verse?.verse_key || '').split(':')[1])
+      if (Number.isFinite(fromKey) && fromKey >= 1) return Math.floor(fromKey)
+      return null
+    },
     buildStackedAyahEndMarkerHtml(verse) {
-      const number = verse?.number
-      if (number == null || number === '') return ''
-      const n = Number(number)
-      if (!Number.isFinite(n) || n < 1) return ''
-      const safe = Math.min(286, Math.max(1, Math.floor(n)))
+      // Always use Qur'an ayah number from verse data / verse key — never a list index.
+      const n = this.resolveVerseAyahNumber(verse)
+      if (n == null) return ''
+      const safe = Math.min(286, Math.max(1, n))
       const digits = Math.min(3, String(safe).length)
       const label = this.escapeHtml(this.getMushafAyahNumberAriaLabel(safe))
-      // Pre-rendered ornate frame + Eastern digit (bbox-centered in asset).
+      const eastern = String(safe).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)])
+      // Pre-rendered ornate frame + Eastern digit fallback for mobile/PNG misses.
       return (
         `<span class="verse-ayah-end-number verse-ayah-number-digits-${digits}" role="img" aria-label="${label}">`
         + `<img class="verse-ayah-end-number__img verse-ayah-end-number__img--light" src="/images/ayah-markers/${safe}.png" alt="" width="90" height="96" draggable="false" decoding="async">`
         + `<img class="verse-ayah-end-number__img verse-ayah-end-number__img--dark" src="/images/ayah-markers/dark/${safe}.png" alt="" width="90" height="96" draggable="false" decoding="async">`
+        + `<span class="verse-ayah-end-number__digit" aria-hidden="true">${eastern}</span>`
         + `</span>`
       )
     },
@@ -27350,6 +27494,15 @@ export default {
           this.prefetchAdjacentMadaniFonts(page)
         }
         this.$nextTick(() => this.scheduleMadaniPageFit())
+      } else if (next) {
+        // Stacked HTML Tajweed needs arabic_tajweed markup — reload if cache lacks it.
+        const missingTajweed = (this.verses || []).some(verse => !String(verse?.arabic_tajweed || '').trim())
+        if (missingTajweed && this.chapterId) {
+          try {
+            this.clearVerseCache?.(this.currentMode)
+            await this.loadVerses(this.currentMode)
+          } catch (_) { /* keep whatever markup we have */ }
+        }
       }
       if (announce) {
         this.showBanner(
@@ -27967,33 +28120,47 @@ export default {
       }
     },
 
+    /**
+     * Remove embedded Qur’anic end-of-ayah ornaments (۝ etc.) from HTML/text.
+     * Stacked layout uses our PNG marker instead — API glyphs often paint as a
+     * solid/dashed red circle when tajweed madda colour is applied.
+     */
+    stripEmbeddedAyahEndMarkers(html = '') {
+      if (!html) return ''
+      return String(html)
+        // U+06DD ARABIC END OF AYAH and common companion marks used as end ornaments
+        .replace(/\u06DD/g, '')
+        .replace(/&#x06[Dd][Dd];/gi, '')
+        .replace(/&#1757;/g, '')
+        // Empty tajweed spans left after the glyph is removed
+        .replace(/<span\b[^>]*\btajweed-[^>]*>\s*<\/span>/gi, '')
+        .replace(/\s+<\/span>/g, '</span>')
+    },
+
     getDisplayArabic(verse) {
       if (!verse?.arabic) return ''
-      const forceMushafWords = this.readingViewMode === 'mushaf'
-      const forceWrapForFocus = (
-        (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length > 0)
-        || !!this.anchorModeEnabled
+      // Word wrappers are token-level (never character-split). CSS keeps them
+      // display:inline so Arabic joining / tajweed colours stay intact.
+      const needsInteractiveWords = !!(
+        this.showWordByWord
+        || this.anchorModeEnabled
         || this.liveSessionTechniqueId === 'anchor'
+        || this.wordByWordAudioEnabled
+        || (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length > 0)
       )
       let html = ''
       if (this.shouldShowRecitationReviewHighlights(verse.key)) {
         html = this.splitRecitationDisplayIntoWords(verse)
       } else if (this.tajweedEnabled && verse.arabic_tajweed) {
-        if (forceMushafWords || forceWrapForFocus) {
-          html = this.renderWordLevelTajweedMarkup(verse, { wrapWords: true })
-        } else {
-          html = this.renderWordLevelTajweedMarkup(verse, {
-            wrapWords: this.wordByWordAudioEnabled || this.showWordByWord || this.anchorModeEnabled || forceWrapForFocus
-          })
-        }
-      } else if (forceMushafWords || forceWrapForFocus) {
-        html = this.splitArabicIntoWords(verse)
-      } else if (this.showWordByWord || this.anchorModeEnabled || this.wordByWordAudioEnabled) {
+        html = this.renderWordLevelTajweedMarkup(verse, { wrapWords: needsInteractiveWords })
+      } else if (needsInteractiveWords) {
         html = this.splitArabicIntoWords(verse)
       } else {
         html = this.stripTajweedMarkup(verse.arabic)
       }
-      // Stacked layout: circular Eastern ayah number immediately after the ayah text (mushaf-style).
+      html = this.stripEmbeddedAyahEndMarkers(html)
+      // Stacked layout: ornate PNG ayah number after the ayah text.
+      // Mushaf layout keeps its own page glyphs / end marks.
       if (this.readingViewMode !== 'mushaf') {
         html = `${html || ''}${this.buildStackedAyahEndMarkerHtml(verse)}`
       }
@@ -28159,9 +28326,18 @@ export default {
     renderWordLevelTajweedMarkup(verse = {}, options = {}) {
       if (!verse?.arabic_tajweed) return this.cleanRecitationDisplayText(verse?.arabic || '')
       const normalizedMarkup = this.normalizeTajweedMarkup(verse.arabic_tajweed || '')
-      const tokens = this.splitTajweedMarkupIntoWordHtml(normalizedMarkup)
-      if (!tokens.length) return this.cleanRecitationDisplayText(verse.arabic || verse.arabic_tajweed || '')
+      if (!normalizedMarkup) return this.cleanRecitationDisplayText(verse.arabic || verse.arabic_tajweed || '')
       const useInteractiveWords = !!options.wrapWords
+      // Continuous markup preserves Arabic joining; word wrappers break cursive shaping.
+      if (!useInteractiveWords) {
+        return this.sanitizeHtml(normalizedMarkup)
+          || this.cleanRecitationDisplayText(verse.arabic || verse.arabic_tajweed || '')
+      }
+      const tokens = this.splitTajweedMarkupIntoWordHtml(normalizedMarkup)
+      if (!tokens.length) {
+        return this.sanitizeHtml(normalizedMarkup)
+          || this.cleanRecitationDisplayText(verse.arabic || verse.arabic_tajweed || '')
+      }
       const tokenOptions = {
         includeMeanings: options.includeMeanings,
         suppressMeanings: options.suppressMeanings
@@ -28169,19 +28345,16 @@ export default {
       return tokens.map((token, idx) => {
         const wordText = this.cleanRecitationDisplayText(this.stripTajweedMarkup(token))
         if (!wordText) return ''
-        const tajweedClass = this.getTajweedClassesForMarkupToken(token).join(' ')
-        if (useInteractiveWords) {
-          const gloss = verse?.words?.[idx]?.en || ''
-          return this.buildWordTokenHtml(
-            verse,
-            { ar: wordText, en: gloss, audio: verse?.words?.[idx]?.audio || null, tajweedWord: true, tajweedClass },
-            idx,
-            this.escapeHtml(wordText),
-            tokenOptions
-          )
-        }
-        const className = ['tajweed-word', tajweedClass].filter(Boolean).join(' ')
-        return `<span class="${this.escapeHtml(className)}" data-tajweed-word="true">${this.escapeHtml(wordText)}</span>`
+        // Keep character-level tajweed spans so rule colors paint correctly.
+        const tokenHtml = this.sanitizeHtml(token) || this.escapeHtml(wordText)
+        const gloss = verse?.words?.[idx]?.en || ''
+        return this.buildWordTokenHtml(
+          verse,
+          { ar: wordText, en: gloss, audio: verse?.words?.[idx]?.audio || null, tajweedWord: true },
+          idx,
+          tokenHtml,
+          tokenOptions
+        )
       }).filter(Boolean).join(' ')
     },
     shouldUseTajweedWordMarkup(verse) {

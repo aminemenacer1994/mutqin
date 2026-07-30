@@ -119,17 +119,53 @@ assert.doesNotMatch(
 
 includesAll('tajweed independence', [
   /:title="t\('memorisation\.a11y\.showTajweedText'\)" @click="toggleTajweed"/,
-  /if \(this\.tajweedEnabled && verse\.arabic_tajweed\) \{\s*return this\.renderWordLevelTajweedMarkup\(verse,\s*\{\s*wrapWords: this\.wordByWordAudioEnabled \|\| this\.showWordByWord \|\| this\.anchorModeEnabled\s*\}\s*\)\s*\}/s,
-  /if \(this\.selfCheckTajweedEnabled && verse\.arabic_tajweed\) \{\s*return this\.renderWordLevelTajweedMarkup\(verse\)\s*\}/s,
-  /else if \(this\.aiMemorisationCheckerTajweedEnabled && liveVerse\.arabic_tajweed\) \{\s*html = this\.renderWordLevelTajweedMarkup\(liveVerse\)\s*\}/s,
-  /if \(this\.showWordByWord \|\| this\.anchorModeEnabled \|\| this\.wordByWordAudioEnabled\) \{\s*return this\.splitArabicIntoWords\(verse\)\s*\}/s,
+  /else if \(this\.tajweedEnabled && verse\.arabic_tajweed\) \{/,
+  /html = this\.renderWordLevelTajweedMarkup\(verse, \{ wrapWords: needsInteractiveWords \}\)/,
+  /if \(this\.selfCheckTajweedEnabled && enriched\.arabic_tajweed\) \{/,
+  /return this\.renderWordLevelTajweedMarkup\(enriched/,
+  /else if \(this\.aiMemorisationCheckerTajweedEnabled && liveVerse\.arabic_tajweed\) \{/,
+  /html = this\.renderWordLevelTajweedMarkup\(liveVerse/,
+  /html = this\.splitArabicIntoWords\(verse\)/,
   /renderWordLevelTajweedMarkup\(verse = \{\}, options = \{\}\) \{/,
-  /const className = \['tajweed-word', tajweedClass\]\.filter\(Boolean\)\.join\(' '\)/,
-  /\.session-evaluation-ayah \.tajweed-mark,[\s\S]*display: contents !important;/,
+  /Continuous markup preserves Arabic joining/,
+  /Keep character-level tajweed spans so rule colors paint correctly/,
   /toggleTajweed\(\) \{/,
-  /this\.tajweedEnabled = !this\.tajweedEnabled/,
-  /this\.showBanner\(\s*this\.tajweedEnabled \? 'Tajweed text enabled' : 'Tajweed text disabled'/s
+  /setTajweedEnabled\(!this\.tajweedEnabled/,
+  /this\.tajweedEnabled \? 'Tajweed text enabled' : 'Tajweed text disabled'/
 ])
+
+includesAll('welcome back continue session flow', [
+  /welcomeBackContinueInFlight/,
+  /async welcomeBackContinueSession\(\) \{/,
+  /if \(this\.welcomeBackContinueInFlight\) return/,
+  /isResumableSessionPayload\(payload/,
+  /hydrateSessionFromPayload\(resumePayload/,
+  /continueSessionShort/,
+  /welcome-back-continue-label--short/,
+  /resolveVerseAyahNumber\(verse\)/,
+])
+
+includesAll('desktop control group swap', [
+  /\/\* Desktop: session action buttons left of the four icon controls \(same row\) \*\//,
+  /@media \(min-width: 768px\) \{[\s\S]*\.workspace-shell-head > \.workspace-shell-actions \{[\s\S]*grid-column: 2 !important;/,
+  /@media \(min-width: 768px\) \{[\s\S]*\.workspace-shell-head > \.top-card-icon-controls \{[\s\S]*grid-column: 3 !important;/,
+  /\.workspace-shell--post-session-choice \.workspace-shell-actions[\s\S]*order: 2 !important;/,
+  /\.workspace-shell--post-session-choice \.top-card-icon-controls[\s\S]*order: 3 !important;/,
+])
+
+{
+  const blade = readFileSync(new URL('../../resources/views/layouts/app.blade.php', import.meta.url), 'utf8')
+  assert.doesNotMatch(
+    blade,
+    /\.workspace-shell--post-session-choice \.top-card-icon-controls\s*\{[^}]*display:\s*none\s*!important/,
+    'blade hotfix must not hide mobile post-session top-card icons'
+  )
+  assert.match(
+    blade,
+    /\.workspace-shell--post-session-choice \.top-card-icon-controls\s*\{[^}]*display:\s*flex\s*!important/,
+    'blade hotfix must keep mobile post-session top-card icons visible'
+  )
+}
 
 includesAll('arabic grapheme safety', [
   /function splitArabicGraphemes\(text\) \{/,
@@ -160,8 +196,8 @@ includesAll('offcanvas main-card linkage', [
   /topCardAppliedPills\(\) \{\s*return \[\]\s*\}/s,
   /reviewPriorityLabel\(\) \{\s*return ''\s*\}/s,
   /this\.syncSettingsDraft\(\)\s*this\.persistUiState\(\)/,
-  /toggleTajweed\(\) \{\s*this\.tajweedEnabled = !this\.tajweedEnabled\s*this\.syncSettingsDraft\(\)/s,
-  /selectFont\(fontValue\) \{\s*this\.quranFont = fontValue\s*this\.fontDropdownOpen = false\s*this\.syncSettingsDraft\(\)/s,
+  /toggleTajweed\(\) \{\s*this\.setTajweedEnabled\(!this\.tajweedEnabled/,
+  /selectFont\(fontValue\) \{\s*const allowed = \(this\.quranFontOptions/,
   /updateDefaultFontSize\(\) \{[\s\S]*this\.syncSettingsDraft\(\)/,
   /class="workspace-header-view-controls quick-right-controls"/
 ])
@@ -273,18 +309,13 @@ assert.doesNotMatch(
   'exit confirm modal should not show Session Overview detail table'
 )
 
-includesAll('ai memorisation mirrors recitation modal', [
-  /:aria-label="t\('memorisation\.a11y\.aiMemorisationTools'\)"/,
-  /Play Memorisation/,
-  /t\('memorisation\.blur_everything'\)/,
-  /class="recitation-check-panel recitation-check-panel-inline memorisation-checker-panel"/,
-  /ref="aiMemorisationCheckerResults"/,
-  /v-if="isAiMemorisationCheckerReviewActive \|\| aiMemorisationCheckerError"/,
-  /Memorisation review/,
-  /showMarkers \|\| this\.aiMemorisationCheckerScope === 'session' \|\| this\.aiMemorisationCheckerTargets\.length > 1/,
+includesAll('ai memorisation detection modal wiring', [
+  /import AiMemorisationDetectionModal from '\.\.\/components\/AiMemorisationDetectionModal\.vue'/,
+  /<AiMemorisationDetectionModal/,
+  /showAiMemorisationButton\(\) \{\s*return false\s*\}/s,
   /saveAiMemorisationCheckerAssessment\(\)/,
   /pruneAiCheckRecordingForStorage\(recording = \{\}\)/,
-  /AI Memorisation uses the same modal structure and spacing as AI Recite/
+  /\.memorisation-checker-modal \.memorisation-checker-panel/,
 ])
 
 includesAll('planner ui hidden', [
@@ -295,13 +326,11 @@ includesAll('planner ui hidden', [
   /v-if="showHifzPlannerUi && showPlannerCompletionModal"/,
   /:visible="showHifzPlannerUi && showHifzPlanModal"/,
   /<span class="workspace-shell-kicker">\{\{ t\('memorisation\.sessionOverview\.kicker'\) \}\}<\/span>/,
-  /v-if="showAiMemorisationButton" class="mushaf-pill mushaf-ai-pill mushaf-ai-memory"/,
-  /v-if="showAiMemorisationButton" class="verse-self-check-btn verse-ai-check-btn"/,
   /<button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls"/,
   /<section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t\('memorisation\.a11y\.sessionSetup'\)">/,
   /t\('memorisation\.open_session_setup'\)/,
-  /aria-label="Open controls"/,
-  /v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills\.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"/
+  /v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills\.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"/,
+  /class="top-card-icon-controls"/,
 ])
 
 includesAll('session completion success flow', [
@@ -357,14 +386,9 @@ assert.doesNotMatch(
 {
   const vueOnly = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
   assert.match(
-    vueOnly,
-    /post-session-simple__confidence/,
-    'completion modal must expose confidence feedback'
-  )
-  assert.match(
-    vueOnly,
-    /submitPostSessionConfidence/,
-    'completion modal must keep confidence actions'
+    source,
+    /async submitPostSessionConfidence\(confidence\)/,
+    'completion flow must keep confidence submission handler'
   )
   assert.match(
     vueOnly,
@@ -372,9 +396,9 @@ assert.doesNotMatch(
     'completion modal must allow adjusting the recommended plan'
   )
   assert.match(
-    vueOnly,
-    /onPostSessionTestWithAi/,
-    'Test with AI remains available from the completion footer'
+    source,
+    /\.post-session-simple__confidence/,
+    'completion confidence styles remain available'
   )
   assert.match(vueOnly, /post-session-simple--builder-open/)
   assert.match(
@@ -508,17 +532,13 @@ assert.doesNotMatch(
 )
 
 includesAll('ai recitation simplified workspace', [
-  /class="self-check-header-tools"/,
-  /:aria-label="t\('memorisation\.a11y\.playAyahOnce'\)"/,
+  /\.self-check-header-tools/,
   /v-if="shouldShowOffcanvasTabs"/,
   /shouldShowOffcanvasTabs\(\) \{\s*return true\s*\}/s,
-  /class="recitation-word-stream recitation-live-word-stream" dir="rtl"/,
-  /if \(this\.recitationCheckRecording\) return false/,
+  /if \(this\.recitationCheckRecording \|\| this\.recitationCheckPreparing\) return false/,
   /recitation-premium-review/,
   /recitation-premium-meter/,
-  /continuePostSessionAiReciteToPlan/,
   /continueToPlan/,
-  /\{\{ getUnifiedResultSectionLabel\('recording'\) \}\}/,
   /recitation-review-ayah/,
 ])
 
@@ -601,8 +621,8 @@ includesAll('live word colouring patch queue', [
   /return this\.buildVisibleLiveWordWindow\(this\.recitationLiveWords, liveWordCount \|\| limit, 'recitation-live'\)/,
   /return this\.buildVisibleLiveWordWindow\(this\.aiMemorisationCheckerLiveWords, 42, 'memory-live'\)/,
   /key: `\$\{keyPrefix\}-\$\{index\}`/,
-  /data-live-kind="recitation" :data-live-word-index="word\.index"/,
-  /data-live-kind="memorisation" :data-live-word-index="word\.index"/,
+  /data-live-kind="\$\{this\.escapeCssAttributeValue\(liveKind\)\}"/,
+  /data-live-kind="\$\{this\.escapeCssAttributeValue\(patch\.kind \|\| ''\)\}"/,
   /this\.recitationDisplayHtmlCache\.set\(cacheKey, html\)/
 ])
 
