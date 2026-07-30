@@ -150,7 +150,18 @@
           <template v-if="hasVerses">
           <div class="workspace-shell-copy">
             <span class="workspace-shell-kicker">{{ t('memorisation.sessionOverview.kicker') }}</span>
-            <h1 class="workspace-shell-main-title">{{ topCardSessionLabel }}</h1>
+            <h1 class="workspace-shell-main-title" :aria-label="topCardSessionLabel">
+              <template v-if="topCardSurahArabic || topCardSurahLatin">
+                <span v-if="topCardSurahLatin" class="workspace-shell-surah-en" lang="en">{{ topCardSurahLatin }}</span>
+                <span
+                  v-if="topCardSurahArabic && topCardSurahLatin && topCardSurahArabic !== topCardSurahLatin"
+                  class="workspace-shell-surah-sep"
+                  aria-hidden="true"
+                >·</span>
+                <span v-if="topCardSurahArabic" class="workspace-shell-surah-ar" dir="rtl" lang="ar">{{ topCardSurahArabic }}</span>
+              </template>
+              <template v-else>{{ topCardSessionLabel }}</template>
+            </h1>
           </div>
           <div class="workspace-shell-actions">
             <div class="action-buttons-group">
@@ -1010,7 +1021,7 @@
                     <label><i class="bi bi-journal-text"></i> {{ t('sessionSetup.surah') }}</label>
                     <select :value="chapterId" @change="onChapterChange" class="select">
                       <option :value="0">{{ t('sessionSetup.chooseSurah') }}</option>
-                      <option v-for="c in chapters" :key="c.id" :value="c.id">{{ c.name_simple }}</option>
+                      <option v-for="c in chapters" :key="c.id" :value="c.id">{{ chapterOptionLabel(c) }}</option>
                     </select>
                     <small class="field-hint">{{ t('sessionSetup.surahHint') }}</small>
                   </div>
@@ -1469,7 +1480,7 @@
             <section v-if="hasVerses" class="saved-sheet__card saved-sheet__card--current" aria-label="Current session">
               <div class="saved-sheet__current-copy">
                 <span class="saved-sheet__eyebrow">{{ t('memorisation.current_session') }}</span>
-                <strong>{{ currentChapter?.name_simple || t('memorisation.no_surah_selected') }}</strong>
+                <strong>{{ getChapterDisplayName(currentChapter) || t('memorisation.no_surah_selected') }}</strong>
                 <small>{{ rangeStart }}–{{ rangeEnd }}</small>
               </div>
               <button class="saved-sheet__save-btn" @click="saveCurrentSessionWithName()" type="button">
@@ -1785,11 +1796,11 @@
               {{ t('memorisation.session_name') }}
             </label>
             <input id="sessionName" type="text" v-model="saveSessionName" class="name-input"
-              :class="{ 'error': nameError }" :placeholder="`${currentChapter?.name_simple || 'Session'} ${rangeStart}-${rangeEnd}`"
+              :class="{ 'error': nameError }" :placeholder="`${getChapterDisplayName(currentChapter) || 'Session'} ${rangeStart}-${rangeEnd}`"
               @keyup.enter="confirmSaveSession" @input="clearNameError" autofocus maxlength="50" />
             <div class="input-hint">
               <span class="char-count">{{ saveSessionName.length }}/50</span>
-              <span class="hint-text">{{ formatSurahAyahDisplay(currentChapter?.name_simple || 'Current session', rangeStart, rangeEnd) }}</span>
+              <span class="hint-text">{{ formatSurahAyahDisplay(getChapterDisplayName(currentChapter) || 'Current session', rangeStart, rangeEnd) }}</span>
             </div>
             <div v-if="nameError" class="error-message">
               <i class="bi bi-exclamation-circle-fill"></i>
@@ -2452,7 +2463,7 @@
           <div class="recordings-library-head-copy">
             <h2 id="recordingsLibraryTitle">{{ t('memorisation.recordings_library') }}</h2>
             <div class="recordings-library-hierarchy">
-              <span>{{ currentChapter?.name_simple || 'Saved session' }}</span>
+              <span>{{ getChapterDisplayName(currentChapter) || 'Saved session' }}</span>
               <span>{{ rangeStart }}-{{ rangeEnd }}</span>
               <span v-if="selectedRecordingsAyahGroup">Ayah {{ selectedRecordingsAyahGroup.ayahNumber }}</span>
               <span v-if="selectedRecordingsEntry">{{ getRecordingAttemptLabel(selectedRecordingsEntry) }}</span>
@@ -2494,7 +2505,7 @@
               <div class="recordings-library-nav-head">
                 <div class="recordings-library-nav-intro">
                   <span class="recordings-library-nav-kicker">{{ t('memorisation.saved_session') }}</span>
-                  <strong>{{ currentChapter?.name_simple || 'Session recordings' }}</strong>
+                  <strong>{{ getChapterDisplayName(currentChapter) || 'Session recordings' }}</strong>
                   <div class="recordings-library-nav-meta">
                     <span>{{ formatAyahRangeDisplay(rangeStart, rangeEnd) }}</span>
                     <span>{{ filteredRecordingsList.length === 1 ? '1 recording' : `${filteredRecordingsList.length} recordings` }}</span>
@@ -3381,7 +3392,7 @@
 
           <div v-if="!playerCompact" class="player-main">
             <div class="player-info">
-              <div class="player-chapter">{{ currentChapter?.name_simple || t('memorisation.player.quranFallback') }}</div>
+              <div class="player-chapter">{{ getChapterDisplayName(currentChapter) || t('memorisation.player.quranFallback') }}</div>
               <div class="player-verse">
                 {{ activeAyahLabel }}
                 <span v-if="etaLabel && isPlaying" class="player-eta" :title="getEtaTooltip()">
@@ -3517,7 +3528,7 @@
               <select v-else v-model.number="quranSearchFilterValue" class="quran-search-select">
                 <option value="">{{ t('memorisation.any_surah') }}</option>
                 <option v-for="chapter in chapters" :key="chapter.id" :value="chapter.id">
-                  {{ chapter.name_simple }}
+                  {{ chapterOptionLabel(chapter) }}
                 </option>
               </select>
             </label>

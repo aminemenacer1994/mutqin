@@ -128,8 +128,12 @@
   .workspace-shell-main-title,
   .workspace-shell-copy h1 {
     margin: 0;
-    font-size: clamp(1.18rem, 5.7vw, 1.5rem) !important;
-    line-height: 1.15 !important;
+    font-family: "Amiri", "Scheherazade New", "Times New Roman", serif !important;
+    font-size: clamp(1.15rem, 0.95rem + 2.4vw, 1.4rem) !important;
+    line-height: 1.22 !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.03em !important;
+    color: color-mix(in srgb, var(--text) 78%, var(--accent) 22%) !important;
     white-space: normal !important;
     overflow-wrap: anywhere;
   }

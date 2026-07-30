@@ -1802,13 +1802,24 @@ export default {
       if (!this.hasVerses) {
         return this.t('memorisation.workspaceEmpty.title')
       }
-      const surah = this.currentChapter?.name_simple || this.activeChapterName || 'Casual Session'
-      return surah
+      return this.getChapterDisplayName(this.currentChapter || this.chapterId)
+        || this.activeChapterName
+        || 'Casual Session'
+    },
+    topCardSurahArabic() {
+      if (!this.hasVerses) return ''
+      return this.getChapterArabicName(this.currentChapter || this.chapterId)
+    },
+    topCardSurahLatin() {
+      if (!this.hasVerses) return ''
+      return this.getChapterLatinName(this.currentChapter || this.chapterId)
     },
     topCardMetadataPills() {
       if (!this.hasVerses) return []
 
-      const surahName = this.currentChapter?.name_simple || this.activeChapterName || this.topCardSessionLabel
+      const surahName = this.getChapterDisplayName(this.currentChapter || this.chapterId)
+        || this.activeChapterName
+        || this.topCardSessionLabel
       const start = Math.max(1, Number(this.rangeStart || 1))
       const end = Math.max(start, Number(this.rangeEnd || start))
       const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
@@ -5885,7 +5896,7 @@ export default {
     },
 
     activeChapterName() {
-      return this.activeChapter?.name_simple || 'Choose surah'
+      return this.getChapterDisplayName(this.activeChapter || this.chapterId) || 'Choose surah'
     },
 
     versesMasteredDeltaThisWeek() {
@@ -6598,7 +6609,9 @@ export default {
     },
 
     mushafCornerSurahLabel() {
-      return this.currentChapter?.name_simple || this.activeChapterName || this.mushafSurahTitle
+      return this.getChapterDisplayName(this.currentChapter || this.chapterId)
+        || this.mushafSurahTitle
+        || this.activeChapterName
     },
 
     isMushafActiveAyahPlaying() {
@@ -11173,11 +11186,13 @@ export default {
     },
     resolveRecommendationSurahName(surah) {
       if (!surah) return ''
-      if (surah.name) return surah.name
       const id = Number(surah.id || 0)
+      const arabic = this.getChapterArabicName(id || surah)
+      if (arabic) return arabic
+      if (surah.name_arabic) return String(surah.name_arabic)
+      if (surah.name) return surah.name
       if (!id) return ''
-      const chapter = (this.chapters || []).find(item => Number(item.id) === id)
-      return chapter?.name_simple || chapter?.name_arabic || `Surah ${id}`
+      return `Surah ${id}`
     },
     enrichPostSessionRecommendation(recommendation) {
       if (!recommendation || typeof recommendation !== 'object') return recommendation
@@ -23313,6 +23328,57 @@ export default {
     formatEasternAyahNumber(number) {
       return toEasternArabicDigits(number)
     },
+    /**
+     * Canonical Arabic surah name for UI (Quran.com `name_arabic`).
+     * Accepts a chapter object, id, or anything with name_arabic / id.
+     */
+    getChapterArabicName(chapterOrId) {
+      if (chapterOrId == null || chapterOrId === '') return ''
+      if (typeof chapterOrId === 'object') {
+        const arabic = String(chapterOrId.name_arabic || '').trim()
+        if (arabic) return arabic
+        const id = Number(chapterOrId.id || chapterOrId.chapterId || 0)
+        if (id > 0) {
+          const found = (this.chapters || []).find(item => Number(item.id) === id)
+          const fromList = String(found?.name_arabic || '').trim()
+          if (fromList) return fromList
+        }
+        return ''
+      }
+      const id = Number(chapterOrId)
+      if (!Number.isFinite(id) || id < 1) return ''
+      const found = (this.chapters || []).find(item => Number(item.id) === id)
+      return String(found?.name_arabic || '').trim()
+    },
+    getChapterLatinName(chapterOrId) {
+      if (chapterOrId == null || chapterOrId === '') return ''
+      if (typeof chapterOrId === 'object') {
+        const latin = String(chapterOrId.name_simple || chapterOrId.name_complex || '').trim()
+        if (latin) return latin
+        const id = Number(chapterOrId.id || chapterOrId.chapterId || 0)
+        if (id > 0) {
+          const found = (this.chapters || []).find(item => Number(item.id) === id)
+          return String(found?.name_simple || found?.name_complex || '').trim()
+        }
+        return ''
+      }
+      const id = Number(chapterOrId)
+      if (!Number.isFinite(id) || id < 1) return ''
+      const found = (this.chapters || []).find(item => Number(item.id) === id)
+      return String(found?.name_simple || found?.name_complex || '').trim()
+    },
+    /** Latin + Arabic together, e.g. "Al-Fatihah · الفاتحة" (English left, Arabic right). */
+    getChapterDisplayName(chapterOrId) {
+      const arabic = this.getChapterArabicName(chapterOrId)
+      const latin = this.getChapterLatinName(chapterOrId)
+      if (arabic && latin && latin !== arabic) return `${latin} · ${arabic}`
+      return latin || arabic || ''
+    },
+    /** Surah picker / list label — same bilingual format. */
+    chapterOptionLabel(chapter) {
+      if (!chapter) return ''
+      return this.getChapterDisplayName(chapter) || `Surah ${chapter.id || ''}`.trim()
+    },
     buildStackedAyahEndMarkerHtml(verse) {
       const number = verse?.number
       if (number == null || number === '') return ''
@@ -29576,8 +29642,8 @@ export default {
     async loadChapters() {
       // The chapter list is effectively static; serve it from a short-lived
       // cache so startup does not block on a network round-trip every visit.
-      const cached = this.readApiCache('chapters.en')
-      if (Array.isArray(cached) && cached.length) {
+      const cached = this.readApiCache('chapters.en.v2')
+      if (Array.isArray(cached) && cached.length && cached.some(c => c?.name_arabic)) {
         this.chapters = cached
         if (this.chapterId) await this.loadChapter()
         return
@@ -29585,7 +29651,7 @@ export default {
       try {
         const res = await axios.get('https://api.quran.com/api/v4/chapters', { params: { language: 'en' } })
         this.chapters = res.data?.chapters || []
-        if (this.chapters.length) this.writeApiCache('chapters.en', this.chapters)
+        if (this.chapters.length) this.writeApiCache('chapters.en.v2', this.chapters)
         if (this.chapterId) await this.loadChapter()
       } catch (e) {
         console.error('Failed to load chapters:', e)
