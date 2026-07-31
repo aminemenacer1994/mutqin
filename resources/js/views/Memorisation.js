@@ -28235,7 +28235,7 @@ export default {
     },
 
     async downloadVerseAudio(verse) {
-      const audioUrl = this.normalizeAudioUrl(verse?.audio || '')
+      const audioUrl = this.resolveAyahAudioUrl(verse)
       if (!audioUrl) {
         this.showBanner(this.t('memorisation.offlineDownload.unavailable'), 'info', 5000, null, { important: true })
         return
