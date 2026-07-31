@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v97 -->
+  <!-- mutqin-ui-build: v103 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'onboarding-post-session-active': showPostSessionModal,
@@ -3511,6 +3511,19 @@
         </div>
         </div>
       </div>
+    </transition>
+
+    <transition name="back-to-top">
+      <button
+        v-if="showBackToTop"
+        type="button"
+        class="back-to-top-fab fab-btn"
+        :aria-label="t('common.backToTop')"
+        :title="t('common.backToTop')"
+        @click="scrollPageToTop"
+      >
+        <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
+      </button>
     </transition>
 
     <!-- Audio System -->

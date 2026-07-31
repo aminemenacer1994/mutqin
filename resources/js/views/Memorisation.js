@@ -739,6 +739,7 @@ export default {
       renameRecordingName: '',
       renameRecordingError: '',
       lastScrollY: 0,
+      showBackToTop: false,
       scrollFrame: null,
       pendingDeleteId: '',
       verseRequestId: 0,
@@ -4752,7 +4753,10 @@ export default {
         '--en-scale': this.enScale,
         '--text-scale': this.fontScale,
         '--recall-blur': `${this.blurIntensity}px`,
-        '--focus-dim-opacity': `${Math.max(0.25, Math.min(0.85, Number(this.focusDimPercent || 54) / 100))}`
+        '--focus-dim-opacity': `${Math.max(0.25, Math.min(0.85, Number(this.focusDimPercent || 54) / 100))}`,
+        '--fixed-player-height': this.playbackShellActive
+          ? 'calc(96px + env(safe-area-inset-bottom, 0px))'
+          : '0px'
       }
     },
     chainingMethodDescription() {
@@ -7430,9 +7434,11 @@ export default {
     window.addEventListener('keydown', this.handleGlobalKeydown)
     window.addEventListener('keyup', this.handleGlobalKeyup)
     window.addEventListener('scroll', this.handleWindowScroll, { passive: true })
+    this.updateBackToTopVisibility()
     this.handlePracticeTurnCalloutResize = () => {
       if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
       this.scheduleMadaniPageFit()
+      this.updateBackToTopVisibility()
     }
     window.addEventListener('resize', this.handlePracticeTurnCalloutResize, { passive: true })
     document.addEventListener('click', this.handleClickOutside)
@@ -26028,10 +26034,43 @@ export default {
         : callback => window.setTimeout(callback, 16)
       this.scrollFrame = schedule(() => {
         this.scrollFrame = null
+        this.updateBackToTopVisibility()
         if (this.practiceTurnCalloutVisible && !this.talqinRecitationTurnActive) {
           this.schedulePracticeTurnCalloutSync()
         }
       })
+    },
+
+    updateBackToTopVisibility() {
+      if (typeof window === 'undefined') return
+      if (this.isMobileViewport()) {
+        if (this.showBackToTop) this.showBackToTop = false
+        return
+      }
+      const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0
+      this.lastScrollY = scrollY
+      const threshold = Math.min(500, Math.round(window.innerHeight || 500))
+      const shouldShow = scrollY >= threshold
+      if (this.showBackToTop !== shouldShow) this.showBackToTop = shouldShow
+    },
+
+    scrollPageToTop() {
+      if (typeof window === 'undefined') return
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+      const behavior = reduceMotion ? 'auto' : 'smooth'
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior })
+      } catch (_) {
+        window.scrollTo(0, 0)
+      }
+      if (typeof document !== 'undefined') {
+        document.documentElement.scrollTop = 0
+        document.body.scrollTop = 0
+        document.querySelectorAll('.mushaf-viewport-scroll').forEach((el) => {
+          if (el && el.scrollTop) el.scrollTop = 0
+        })
+      }
+      this.showBackToTop = false
     },
 
     buildContinueSessionPayload() {
