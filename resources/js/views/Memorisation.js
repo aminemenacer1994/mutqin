@@ -28337,6 +28337,13 @@ export default {
       this.ayahNoteCountsSurah = surah
     },
 
+    onAyahNotesToast({ message, kind } = {}) {
+      const text = String(message || '').trim()
+      if (!text) return
+      const tone = kind === 'error' ? 'error' : (kind === 'warning' ? 'warning' : 'success')
+      this.showBanner(text, tone, 2800, null, { important: true })
+    },
+
     async refreshAyahNoteCounts(surahNumber = this.chapterId) {
       const surah = Number(surahNumber || 0)
       if (!surah || !this.isLoggedIn || !this.learningBackendEnabled()) {

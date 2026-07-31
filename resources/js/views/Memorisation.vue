@@ -877,7 +877,7 @@
                         class="verse-notes-count-badge"
                         aria-hidden="true"
                       >{{ ayahNotesBadgeLabel(verse) }}</span>
-                      <i class="bi bi-journal-text" aria-hidden="true"></i>
+                      <i class="bi bi-chat-quote" aria-hidden="true"></i>
                     </button>
                     <button class="verse-inline-action-btn verse-inline-download-btn" type="button"
                       @click.stop="downloadVerseAudio(verse)"
@@ -3413,6 +3413,7 @@
       :surah-name="ayahNotesTarget?.surahName || ''"
       @close="closeAyahNotes"
       @changed="onAyahNotesChanged"
+      @toast="onAyahNotesToast"
     />
 
     <!-- Global Audio Player -->
