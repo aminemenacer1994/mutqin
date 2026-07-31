@@ -27474,6 +27474,412 @@ textarea {
   font-size: 0.88rem;
 }
 
+.verse-inline-notes-btn {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 14%, var(--surface-strong) 86%),
+    color-mix(in srgb, var(--surface-strong) 96%, transparent)
+  );
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  color: color-mix(in srgb, var(--accent-strong) 72%, var(--text) 28%);
+}
+
+.verse-inline-notes-btn i {
+  font-size: 0.9rem;
+}
+
+.verse-inline-notes-btn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  color: var(--accent);
+}
+
+.verse-notes-count-badge {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  z-index: 2;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.22rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  color: #fff;
+  background: var(--accent-strong);
+  border: 1.5px solid color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 28%, transparent);
+  pointer-events: none;
+}
+
+.ayah-notes-modal-overlay {
+  z-index: 1080;
+  padding:
+    max(0.75rem, env(safe-area-inset-top, 0px))
+    max(0.75rem, env(safe-area-inset-right, 0px))
+    max(0.75rem, env(safe-area-inset-bottom, 0px))
+    max(0.75rem, env(safe-area-inset-left, 0px)) !important;
+}
+
+.mutqin-modal-surface.ayah-notes-modal {
+  width: 100% !important;
+  max-width: none !important;
+  max-height: calc(100dvh - 2rem);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden !important;
+}
+
+.ayah-notes-modal .modal-header {
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.ayah-notes-modal .modal-header-text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ayah-notes-modal .modal-header-text h2 {
+  margin: 0.15rem 0 0;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.ayah-notes-modal .modal-header-text p {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.ayah-notes-modal .modal-close-btn {
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+}
+
+.ayah-notes-modal-body {
+  display: grid;
+  gap: 1.15rem;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
+}
+
+.ayah-notes-composer,
+.ayah-notes-list-section {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.ayah-notes-composer {
+  padding: 0.95rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, var(--accent) 22%);
+  background: color-mix(in srgb, var(--surface) 88%, var(--surface-strong) 12%);
+}
+
+.ayah-notes-field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.ayah-notes-field > span {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.ayah-notes-input,
+.ayah-notes-textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--accent) 18%);
+  border-radius: 12px;
+  background: var(--surface-strong);
+  color: var(--text);
+  padding: 0.75rem 0.9rem;
+  font: inherit;
+  line-height: 1.45;
+  resize: vertical;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.ayah-notes-input::placeholder,
+.ayah-notes-textarea::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 82%, transparent);
+  opacity: 1;
+}
+
+.ayah-notes-input:hover:not(:disabled),
+.ayah-notes-textarea:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+}
+
+.ayah-notes-input:focus,
+.ayah-notes-textarea:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
+  box-shadow: var(--ring);
+}
+
+.ayah-notes-input:disabled,
+.ayah-notes-textarea:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+  color: var(--text-disabled);
+}
+
+.ayah-notes-textarea {
+  min-height: 7.5rem;
+  line-height: 1.55;
+}
+
+.ayah-notes-char-count {
+  justify-self: end;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.ayah-notes-composer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.ayah-notes-composer-actions .mutqin-modal-btn {
+  min-height: var(--mutqin-modal-btn-min-height, 2.55rem);
+}
+
+.ayah-notes-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--border));
+  background: var(--danger-soft);
+  color: var(--danger-strong);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.ayah-notes-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.ayah-notes-list-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text);
+  min-width: 0;
+}
+
+.ayah-notes-list-count {
+  flex: 0 0 auto;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding-inline: 0.35rem;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--accent-light);
+  color: var(--accent-strong);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.ayah-notes-empty {
+  display: grid;
+  place-items: center;
+  gap: 0.45rem;
+  padding: 1.4rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  border: 1px dashed color-mix(in srgb, var(--border) 72%, var(--accent) 28%);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent-light) 55%, transparent);
+}
+
+.ayah-notes-empty i {
+  font-size: 1.35rem;
+  color: var(--accent);
+  opacity: 0.9;
+}
+
+.ayah-notes-empty p {
+  margin: 0;
+  max-width: 28rem;
+  line-height: 1.45;
+}
+
+.ayah-notes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.ayah-notes-item {
+  border: 1px solid color-mix(in srgb, var(--border) 80%, var(--accent) 20%);
+  border-radius: 14px;
+  background: var(--surface-strong);
+  padding: 0.9rem 0.95rem;
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.ayah-notes-item.is-editing {
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+  background: color-mix(in srgb, var(--accent-light) 42%, var(--surface-strong));
+}
+
+.ayah-notes-item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.45rem 0.85rem;
+  min-width: 0;
+}
+
+.ayah-notes-item-head strong {
+  font-size: 0.95rem;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.ayah-notes-item-head time {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.ayah-notes-item-body {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.ayah-notes-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ayah-notes-item-btn {
+  min-height: 2.4rem;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.82rem;
+}
+
+[data-theme="dark"] .ayah-notes-composer {
+  background: color-mix(in srgb, rgba(34, 29, 26, 0.96) 88%, var(--accent) 12%);
+  border-color: color-mix(in srgb, rgba(239, 193, 141, 0.16) 70%, var(--border));
+}
+
+[data-theme="dark"] .ayah-notes-input,
+[data-theme="dark"] .ayah-notes-textarea {
+  background: rgba(28, 24, 21, 0.98);
+  border-color: rgba(239, 193, 141, 0.18);
+  color: #f7ebdf;
+  caret-color: #f7ebdf;
+}
+
+[data-theme="dark"] .ayah-notes-input::placeholder,
+[data-theme="dark"] .ayah-notes-textarea::placeholder {
+  color: rgba(247, 235, 223, 0.48);
+}
+
+[data-theme="dark"] .ayah-notes-input:focus,
+[data-theme="dark"] .ayah-notes-textarea:focus {
+  border-color: color-mix(in srgb, var(--accent) 62%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+[data-theme="dark"] .ayah-notes-item {
+  background: rgba(34, 29, 26, 0.94);
+  border-color: rgba(239, 193, 141, 0.14);
+}
+
+[data-theme="dark"] .ayah-notes-item.is-editing {
+  background: color-mix(in srgb, rgba(212, 165, 116, 0.12) 70%, rgba(34, 29, 26, 0.96));
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+[data-theme="dark"] .ayah-notes-list-count {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: #f5ddbb;
+  border-color: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+[data-theme="dark"] .ayah-notes-empty {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: rgba(239, 193, 141, 0.2);
+  color: rgba(247, 235, 223, 0.78);
+}
+
+[data-theme="dark"] .ayah-notes-empty i {
+  color: var(--accent-strong);
+}
+
+[data-theme="dark"] .ayah-notes-error {
+  background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 34%, transparent);
+  color: var(--danger-strong);
+}
+
+[data-theme="dark"] .ayah-notes-modal .modal-header-text p,
+[data-theme="dark"] .ayah-notes-item-head time,
+[data-theme="dark"] .ayah-notes-char-count,
+[data-theme="dark"] .ayah-notes-field > span {
+  color: rgba(247, 235, 223, 0.72);
+}
+
+[data-theme="sepia"] .ayah-notes-composer {
+  background: color-mix(in srgb, var(--surface-strong) 90%, var(--accent-light));
+}
+
+[data-theme="sepia"] .ayah-notes-item {
+  background: color-mix(in srgb, var(--surface-strong) 94%, #fff8ef);
+}
+
 .verse-arabic,
 .mushaf-ayah-text {
   cursor: default;
@@ -27543,6 +27949,28 @@ textarea {
   background: linear-gradient(135deg, rgba(184, 130, 78, 0.28), rgba(46, 40, 36, 0.98));
   border-color: rgba(239, 193, 141, 0.2);
   color: #f5ddbb;
+}
+
+[data-theme="dark"] .verse-inline-notes-btn {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 24%, rgba(46, 40, 36, 0.98)),
+    rgba(46, 40, 36, 0.98)
+  );
+  border-color: color-mix(in srgb, var(--accent) 22%, rgba(239, 193, 141, 0.16));
+  color: #f1d8bd;
+}
+
+[data-theme="dark"] .verse-inline-notes-btn:hover:not(:disabled) {
+  color: #ffe8c8;
+  border-color: color-mix(in srgb, var(--accent) 36%, rgba(239, 193, 141, 0.22));
+}
+
+[data-theme="dark"] .verse-notes-count-badge {
+  background: var(--accent-strong);
+  color: #1a1410;
+  border-color: color-mix(in srgb, #1e1a17 88%, transparent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .workspace-shell-actions {
@@ -33412,7 +33840,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .mutqin-modal-surface.save-name-modal,
 .mutqin-modal-surface.confirm-modal,
 .mutqin-modal-surface.keyboard-shortcuts-modal,
-.mutqin-modal-surface.rename-recording-modal {
+.mutqin-modal-surface.rename-recording-modal,
+.mutqin-modal-surface.ayah-notes-modal {
   width: 100% !important;
   max-width: none !important;
 }
@@ -37156,6 +37585,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   .verse-inline-action-btn,
   .verse-inline-play-btn,
   .verse-inline-download-btn,
+  .verse-inline-notes-btn,
   .verse-font-inline-controls,
   .verse-small-play-btn,
   .verse-download-btn {
@@ -37585,7 +38015,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   .session-exit-modal-wrap .modal-dialog.modal-xl,
   .onboarding-post-session-modal-wrap .modal-dialog.modal-xl,
   .post-onboarding-overlay .modal-dialog.modal-xl,
-  .help-learning-dialog {
+  .help-learning-dialog,
+  .ayah-notes-dialog {
     width: 100vw !important;
     max-width: 100vw !important;
     min-height: 100dvh;
@@ -37604,7 +38035,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   .mutqin-modal-surface.save-name-modal,
   .mutqin-modal-surface.confirm-modal,
   .mutqin-modal-surface.rename-recording-modal,
-  .mutqin-modal-surface.keyboard-shortcuts-modal {
+  .mutqin-modal-surface.keyboard-shortcuts-modal,
+  .mutqin-modal-surface.ayah-notes-modal {
     width: 100% !important;
     max-width: 100% !important;
     max-height: 100dvh;
@@ -37621,7 +38053,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   .welcome-back-modal,
   .post-onboarding-modal,
   .session-analytics-modal,
-  .planner-completion-modal {
+  .planner-completion-modal,
+  .mutqin-modal-surface.ayah-notes-modal {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr) auto;
   }
@@ -37699,8 +38132,105 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   .keyboard-shortcuts-modal,
   .save-name-modal,
   .confirm-modal,
-  .rename-recording-modal {
+  .rename-recording-modal,
+  .ayah-notes-modal {
     min-height: auto;
+  }
+
+  .ayah-notes-modal-overlay {
+    padding: 0 !important;
+    place-items: stretch !important;
+    align-content: stretch !important;
+  }
+
+  .ayah-notes-dialog {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .mutqin-modal-surface.ayah-notes-modal {
+    max-height: 100dvh !important;
+    min-height: 100dvh !important;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .ayah-notes-modal .modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 0.9rem 1rem !important;
+    padding-top: calc(0.9rem + var(--mobile-safe-top)) !important;
+  }
+
+  .ayah-notes-modal-body {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.85rem 1rem calc(1rem + var(--mobile-safe-bottom)) !important;
+    gap: 1rem;
+  }
+
+  .ayah-notes-composer {
+    padding: 0.85rem;
+    border-radius: 14px;
+  }
+
+  .ayah-notes-composer-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+
+  .ayah-notes-composer-actions .mutqin-modal-btn,
+  .ayah-notes-item-btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .ayah-notes-item-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .ayah-notes-input,
+  .ayah-notes-textarea {
+    font-size: 16px; /* avoid iOS zoom on focus */
+    min-height: 44px;
+  }
+
+  .ayah-notes-textarea {
+    min-height: 8.5rem;
+  }
+
+  .ayah-notes-item-head time {
+    white-space: normal;
+  }
+
+  .verse-notes-count-badge {
+    top: -4px;
+    left: -4px;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    font-size: 0.62rem;
+  }
+
+  @media (orientation: landscape) and (max-height: 500px) {
+    .mutqin-modal-surface.ayah-notes-modal {
+      min-height: 100dvh !important;
+    }
+
+    .ayah-notes-textarea {
+      min-height: 5.5rem;
+    }
+
+    .ayah-notes-composer-actions {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ayah-notes-composer-actions .mutqin-modal-btn:only-child {
+      grid-column: 1 / -1;
+    }
   }
 
   .session-exit-body,
@@ -38011,7 +38541,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
   .verse-inline-action-btn,
   .verse-inline-play-btn,
-  .verse-inline-download-btn {
+  .verse-inline-download-btn,
+  .verse-inline-notes-btn {
     flex: 0 0 44px;
     inline-size: 44px !important;
     min-inline-size: 44px !important;

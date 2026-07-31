@@ -697,6 +697,28 @@
       "failed": "Download did not start. Check your connection, then tap download again.",
       "unavailable": "Audio is not available for this ayah yet. Try another reciter or refresh the session."
     },
+    "ayahNotes": {
+      "buttonHint": "Notes & reflections for this ayah",
+      "title": "Notes & Reflections",
+      "subtitle": "Private to you — only you can see these notes.",
+      "contextBadge": "{surah} · Ayah {ayah}",
+      "surahFallback": "Surah {number}",
+      "titleLabel": "Title (optional)",
+      "titlePlaceholder": "A short label for this reflection",
+      "bodyLabel": "Reflection",
+      "bodyPlaceholder": "Write your thoughts, reminders, or lessons from this ayah…",
+      "addNote": "Add note",
+      "saveChanges": "Save changes",
+      "yourNotes": "Your notes",
+      "empty": "No notes yet for this ayah. Add your first reflection above.",
+      "loading": "Loading your notes…",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this note permanently?",
+      "loadFailed": "Could not load your notes. Please try again.",
+      "saveFailed": "Could not save this note. Please try again.",
+      "deleteFailed": "Could not delete this note. Please try again."
+    },
     "confirmModals": {
       "defaultTitle": "Confirm action",
       "confirm": "Confirm",

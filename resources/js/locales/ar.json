@@ -2093,6 +2093,28 @@
       "failed": "Download did not start. Check your connection, then tap download again.",
       "unavailable": "Audio is not available for this ayah yet. Try another reciter or refresh the session."
     },
+    "ayahNotes": {
+      "buttonHint": "ملاحظات وتأملات لهذه الآية",
+      "title": "الملاحظات والتأملات",
+      "subtitle": "خاصة بك — أنت وحدك من يرى هذه الملاحظات.",
+      "contextBadge": "{surah} · الآية {ayah}",
+      "surahFallback": "سورة {number}",
+      "titleLabel": "العنوان (اختياري)",
+      "titlePlaceholder": "تسمية قصيرة لهذا التأمل",
+      "bodyLabel": "التأمل",
+      "bodyPlaceholder": "اكتب خواطرك أو تذكيراتك أو دروسك من هذه الآية…",
+      "addNote": "إضافة ملاحظة",
+      "saveChanges": "حفظ التعديلات",
+      "yourNotes": "ملاحظاتك",
+      "empty": "لا توجد ملاحظات لهذه الآية بعد. أضف أول تأمل أعلاه.",
+      "loading": "جارٍ تحميل ملاحظاتك…",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "deleteConfirm": "حذف هذه الملاحظة نهائياً؟",
+      "loadFailed": "تعذّر تحميل ملاحظاتك. حاول مرة أخرى.",
+      "saveFailed": "تعذّر حفظ هذه الملاحظة. حاول مرة أخرى.",
+      "deleteFailed": "تعذّر حذف هذه الملاحظة. حاول مرة أخرى."
+    },
     "saveAttemptConfirm": {
       "aiRecite": "Your AI recitation attempt has been saved.",
       "selfCheck": "Your recording for Ayah {ayahNumber} has been saved."

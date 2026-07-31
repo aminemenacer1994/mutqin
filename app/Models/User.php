@@ -93,6 +93,11 @@ class User extends Authenticatable
         return $this->hasMany(LearningAnalytic::class);
     }
 
+    public function ayahNotes(): HasMany
+    {
+        return $this->hasMany(AyahNote::class);
+    }
+
     public function hasPaidAccess(): bool
     {
         return in_array($this->subscription_status, ['trialing', 'active'], true);

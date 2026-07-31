@@ -868,6 +868,17 @@
                     >{{ t('memorisation.postSession.coach.live.focusBadge') }}</span>
                   </div>
                   <div class="verse-actions" dir="ltr">
+                    <button class="verse-inline-action-btn verse-inline-notes-btn" type="button"
+                      @click.stop="openAyahNotes(verse)"
+                      :title="t('memorisation.ayahNotes.buttonHint')"
+                      :aria-label="ayahNotesButtonAriaLabel(verse)">
+                      <span
+                        v-if="ayahNotesBadgeLabel(verse)"
+                        class="verse-notes-count-badge"
+                        aria-hidden="true"
+                      >{{ ayahNotesBadgeLabel(verse) }}</span>
+                      <i class="bi bi-journal-text" aria-hidden="true"></i>
+                    </button>
                     <button class="verse-inline-action-btn verse-inline-download-btn" type="button"
                       @click.stop="downloadVerseAudio(verse)"
                       :disabled="!resolveAyahAudioUrl(verse)"
@@ -3393,6 +3404,15 @@
       :speed-options="speedOptions"
       @close="closeHifzPlanModal"
       @saved="handleHifzPlanSaved"
+    />
+
+    <AyahNotesModal
+      :visible="showAyahNotesModal"
+      :surah-number="Number(ayahNotesTarget?.surahNumber || 0)"
+      :ayah-number="Number(ayahNotesTarget?.ayahNumber || 0)"
+      :surah-name="ayahNotesTarget?.surahName || ''"
+      @close="closeAyahNotes"
+      @changed="onAyahNotesChanged"
     />
 
     <!-- Global Audio Player -->

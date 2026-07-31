@@ -211,6 +211,30 @@ export const learningApi = {
     return data
   },
 
+  // Private āyah notes & reflections --------------------------------------
+  async getAyahNotes(params = {}) {
+    const { data } = await http.get('/ayah-notes', { params })
+    return Array.isArray(data?.notes) ? data.notes : []
+  },
+  async getAyahNoteCounts(surahNumber) {
+    const { data } = await http.get('/ayah-notes/counts', {
+      params: { surah_number: Number(surahNumber) },
+    })
+    return data?.counts && typeof data.counts === 'object' ? data.counts : {}
+  },
+  async createAyahNote(payload) {
+    const { data } = await http.post('/ayah-notes', payload)
+    return data?.note ?? null
+  },
+  async updateAyahNote(noteId, payload) {
+    const { data } = await http.put(`/ayah-notes/${noteId}`, payload)
+    return data?.note ?? null
+  },
+  async deleteAyahNote(noteId) {
+    const { data } = await http.delete(`/ayah-notes/${noteId}`)
+    return data
+  },
+
   // Analytics -------------------------------------------------------------
   async getAnalytics(params = {}) {
     const { data } = await http.get('/analytics', { params })

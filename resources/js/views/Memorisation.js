@@ -191,6 +191,7 @@ import { updateAyahProgress } from '../scripts/engine/spaced_repetition_memory'
 import { WordSyncEngine } from '../scripts/audioSync'
 import HifzPlanCreatorModal from '../components/HifzPlanCreatorModal.vue'
 import AiMemorisationDetectionModal from '../components/AiMemorisationDetectionModal.vue'
+import AyahNotesModal from '../components/AyahNotesModal.vue'
 import {
   AMD_STAGES,
   AMD_HOWTO_SEEN_KEY,
@@ -376,6 +377,7 @@ export default {
   components: {
     HifzPlanCreatorModal,
     AiMemorisationDetectionModal,
+    AyahNotesModal,
   },
   props: {
     auth: { type: Object, default: () => ({ check: false, id: null }) }
@@ -411,6 +413,11 @@ export default {
       hifzAyahProgress: {},
       hifzTodayQueue: [],
       hifzPlannerAnalyticsOpen: false,
+      showAyahNotesModal: false,
+      ayahNotesTarget: null,
+      ayahNoteCounts: {},
+      ayahNoteCountsSurah: 0,
+      ayahNoteCountsLoading: false,
       // Hidden Reveal Mode State
       hiddenRevealModeEnabled: false,
       hiddenRevealSession: {
@@ -5758,6 +5765,7 @@ export default {
         || this.showPlannerModal
         || this.showHifzPlanModal
         || this.showAiMemorisationCheckerModal
+        || this.showAyahNotesModal
       )
     },
     onboardingStepStats() {
@@ -28263,6 +28271,97 @@ export default {
       }
     },
 
+    resolveVerseKeyParts(verse) {
+      const fromKey = String(verse?.key || '').split(':')
+      const surahNumber = Number(verse?.chapterId || verse?.surah_number || fromKey[0] || this.chapterId || 0)
+      const ayahNumber = Number(verse?.number || verse?.ayah_number || fromKey[1] || 0)
+      return {
+        surahNumber: Number.isFinite(surahNumber) ? surahNumber : 0,
+        ayahNumber: Number.isFinite(ayahNumber) ? ayahNumber : 0,
+        key: (Number.isFinite(surahNumber) && Number.isFinite(ayahNumber) && surahNumber && ayahNumber)
+          ? `${surahNumber}:${ayahNumber}`
+          : '',
+      }
+    },
+
+    ayahNotesCountForVerse(verse) {
+      const { key } = this.resolveVerseKeyParts(verse)
+      if (!key) return 0
+      return Math.max(0, Number(this.ayahNoteCounts?.[key] || 0))
+    },
+
+    ayahNotesBadgeLabel(verse) {
+      const count = this.ayahNotesCountForVerse(verse)
+      if (count <= 0) return ''
+      if (count > 99) return '99+'
+      return String(count)
+    },
+
+    ayahNotesButtonAriaLabel(verse) {
+      const count = this.ayahNotesCountForVerse(verse)
+      const base = this.t('memorisation.ayahNotes.buttonHint')
+      if (count <= 0) return base
+      const badge = this.ayahNotesBadgeLabel(verse)
+      return `${base} (${badge})`
+    },
+
+    openAyahNotes(verse) {
+      const { surahNumber, ayahNumber, key } = this.resolveVerseKeyParts(verse)
+      if (!surahNumber || !ayahNumber || !key) return
+      this.ayahNotesTarget = {
+        surahNumber,
+        ayahNumber,
+        key,
+        surahName: this.getChapterDisplayName(this.currentChapter || surahNumber)
+          || this.currentChapter?.name_simple
+          || '',
+      }
+      this.showAyahNotesModal = true
+    },
+
+    closeAyahNotes() {
+      this.showAyahNotesModal = false
+      this.ayahNotesTarget = null
+    },
+
+    onAyahNotesChanged({ surahNumber, ayahNumber, count } = {}) {
+      const surah = Number(surahNumber || 0)
+      const ayah = Number(ayahNumber || 0)
+      if (!surah || !ayah) return
+      const key = `${surah}:${ayah}`
+      const next = { ...(this.ayahNoteCounts || {}) }
+      const safeCount = Math.max(0, Number(count || 0))
+      if (safeCount > 0) next[key] = safeCount
+      else delete next[key]
+      this.ayahNoteCounts = next
+      this.ayahNoteCountsSurah = surah
+    },
+
+    async refreshAyahNoteCounts(surahNumber = this.chapterId) {
+      const surah = Number(surahNumber || 0)
+      if (!surah || !this.isLoggedIn || !this.learningBackendEnabled()) {
+        if (!surah) {
+          this.ayahNoteCounts = {}
+          this.ayahNoteCountsSurah = 0
+        }
+        return
+      }
+      this.ayahNoteCountsLoading = true
+      try {
+        const counts = await withRetry(() => learningApi.getAyahNoteCounts(surah), { retries: 2, baseDelay: 400 })
+        this.ayahNoteCounts = counts && typeof counts === 'object' ? counts : {}
+        this.ayahNoteCountsSurah = surah
+      } catch (error) {
+        if (this.isLearningBackendAuthError(error)) {
+          this.noteLearningBackendFailure(error, 'ayah-note-counts')
+        } else {
+          console.warn('Failed to load ayah note counts', error)
+        }
+      } finally {
+        this.ayahNoteCountsLoading = false
+      }
+    },
+
     getMushafAyahHtml(verse) {
       if (!verse?.key) return ''
       const cacheKey = `${verse.key}::${this.mushafDisplayCacheKey}`
@@ -29539,6 +29638,7 @@ export default {
           if (this.readingViewMode === 'mushaf') {
             this.ensureMadaniPagesLoaded().then(() => this.syncMushafPageToActiveVerse())
           }
+          this.refreshAyahNoteCounts(chapterId)
           return
         }
 
@@ -29658,6 +29758,7 @@ export default {
         if (this.readingViewMode === 'mushaf') {
           this.ensureMadaniPagesLoaded({ force: true }).then(() => this.syncMushafPageToActiveVerse())
         }
+        this.refreshAyahNoteCounts(chapterId)
 
       } catch (e) {
         console.error('Error loading verses:', e)

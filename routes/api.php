@@ -4,6 +4,7 @@ use App\Http\Controllers\ContactSubmissionController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Api\Learning\AnalyticsController;
+use App\Http\Controllers\Api\Learning\AyahNoteController;
 use App\Http\Controllers\Api\Learning\ContinueController;
 use App\Http\Controllers\Api\Learning\MigrateLocalStorageController;
 use App\Http\Controllers\Api\Learning\ProgressController;
@@ -31,6 +32,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/progress', [ProgressController::class, 'index'])->name('api.progress.index');
     Route::post('/progress', [ProgressController::class, 'store'])->name('api.progress.store');
+
+    // Private per-āyah notes & reflections (user-scoped).
+    Route::get('/ayah-notes/counts', [AyahNoteController::class, 'counts'])->name('api.ayah-notes.counts');
+    Route::get('/ayah-notes', [AyahNoteController::class, 'index'])->name('api.ayah-notes.index');
+    Route::post('/ayah-notes', [AyahNoteController::class, 'store'])->name('api.ayah-notes.store');
+    Route::put('/ayah-notes/{ayahNote}', [AyahNoteController::class, 'update'])->name('api.ayah-notes.update');
+    Route::delete('/ayah-notes/{ayahNote}', [AyahNoteController::class, 'destroy'])->name('api.ayah-notes.destroy');
 
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('api.analytics.index');
     Route::post('/analytics', [AnalyticsController::class, 'store'])->name('api.analytics.store');
