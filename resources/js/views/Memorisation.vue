@@ -1952,7 +1952,7 @@
                   data-testid="welcome-back-continue"
                   :disabled="welcomeBackContinueInFlight"
                   :aria-busy="welcomeBackContinueInFlight ? 'true' : 'false'"
-                  @click="welcomeBackContinueSession"
+                  @click.stop.prevent="welcomeBackContinueSession"
                 >
                   <i class="bi bi-play-circle" aria-hidden="true"></i>
                   <span class="welcome-back-continue-label welcome-back-continue-label--full">{{ t('memorisation.welcomeBack.continuePreviousSession') }}</span>

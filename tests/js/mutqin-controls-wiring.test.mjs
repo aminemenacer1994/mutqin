@@ -138,12 +138,38 @@ includesAll('welcome back continue session flow', [
   /welcomeBackContinueInFlight/,
   /async welcomeBackContinueSession\(\) \{/,
   /if \(this\.welcomeBackContinueInFlight\) return/,
-  /isResumableSessionPayload\(payload/,
-  /hydrateSessionFromPayload\(resumePayload/,
+  /resolveWelcomeBackContinuePayload/,
+  /buildPayloadFromLoadedWorkspaceSession/,
+  /revealLoadedPreviousSession/,
+  /dismissWelcomeBackAfterContinue\(\)/,
+  /hydrateSessionFromPayload\(payload/,
+  /queueBackendResumeAfterWelcomeContinue/,
+  /Choose how you'd like to begin/,
+  /Continue must never auto-open the tools offcanvas/,
   /continueSessionShort/,
   /welcome-back-continue-label--short/,
   /resolveVerseAyahNumber\(verse\)/,
+  /\.welcome-back-modal-wrap \.welcome-back-dialog/,
+  /@click\.stop\.prevent="welcomeBackContinueSession"/,
 ])
+
+{
+  const js = readFileSync(new URL('../../resources/js/views/Memorisation.js', import.meta.url), 'utf8')
+  const continueFn = js.match(/async welcomeBackContinueSession\(\) \{[\s\S]*?\n    \},\n\n    logoutFromWelcomeBack/)?.[0] || ''
+  assert.ok(continueFn, 'welcomeBackContinueSession body not found')
+  assert.match(continueFn, /dismissWelcomeBackAfterContinue\(\)/)
+  assert.match(continueFn, /revealLoadedPreviousSession|hydrateSessionFromPayload\(payload/)
+  assert.doesNotMatch(
+    continueFn,
+    /openToolsPanel/,
+    'welcomeBackContinueSession must not auto-open the tools offcanvas'
+  )
+  assert.doesNotMatch(
+    continueFn,
+    /showWelcomeBackModal = true/,
+    'failed continue must not reopen the choose-how-to-begin modal'
+  )
+}
 
 includesAll('desktop control group swap', [
   /\/\* Desktop: session action buttons left of the four icon controls \(same row\) \*\//,

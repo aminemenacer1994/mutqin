@@ -30288,6 +30288,15 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   transform: translateY(0) scale(1);
 }
 
+/* Current markup uses .welcome-back-dialog (not .modal-dialog). Keep it clickable/visible. */
+.welcome-back-modal-wrap .welcome-back-dialog {
+  pointer-events: auto !important;
+  margin: auto;
+  min-height: auto;
+  opacity: 1 !important;
+  transform: none;
+}
+
 .welcome-back-modal {
   border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
   border-radius: 20px;
@@ -49272,9 +49281,15 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 }
 
 .welcome-back-dialog {
-  pointer-events: auto;
+  pointer-events: auto !important;
   width: min(26rem, calc(100vw - 1.5rem));
   margin: auto;
+}
+
+.welcome-back-dialog .mutqin-modal-btn {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 2;
 }
 
 .welcome-back-modal--lean {

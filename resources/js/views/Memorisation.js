@@ -23611,69 +23611,183 @@ export default {
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
     },
 
+    resolveWelcomeBackContinuePayload(localCandidates = []) {
+      if (Number(this.continueSessionPayload?.config?.chapterId || 0) > 0) {
+        return this.continueSessionPayload
+      }
+      if (this.backendUnfinishedSession && this.backendSessionSnapshot) {
+        const fromBackend = this.buildContinuePayloadFromBackendSession(this.backendSessionSnapshot)
+        if (Number(fromBackend?.config?.chapterId || 0) > 0) return fromBackend
+      }
+      const usable = (localCandidates || []).find((candidate) => (
+        Number(candidate?.config?.chapterId || 0) > 0
+        && isResumableSessionPayload(candidate, {
+          backendStatus: this.backendSessionSnapshot?.status || null,
+          isSample: false,
+        })
+      ))
+      if (usable) return usable
+      const withChapter = (localCandidates || []).find((candidate) => Number(candidate?.config?.chapterId || 0) > 0)
+      if (withChapter) return withChapter
+      return this.buildPayloadFromLoadedWorkspaceSession()
+    },
+
+    buildPayloadFromLoadedWorkspaceSession() {
+      const mode = Number(this.advanced?.chapterId || 0) > 0
+        ? 'advanced'
+        : (Number(this.beginner?.chapterId || 0) > 0 ? 'beginner' : (this.currentMode || 'advanced'))
+      const store = this.getModeStore?.(mode) || (mode === 'beginner' ? this.beginner : this.advanced)
+      const chapterId = Number(store?.chapterId || this.chapterId || this.sessionConfig?.chapterId || 0)
+      if (!chapterId) return null
+      const rangeStart = Math.max(1, Number(store?.rangeStart || this.rangeStart || 1))
+      const rangeEnd = Math.max(rangeStart, Number(store?.rangeEnd || this.rangeEnd || rangeStart))
+      const activeVerseKey = this.activeVerseKey
+        || this.effectiveActiveVerseKey
+        || `${chapterId}:${Math.min(rangeEnd, Math.max(rangeStart, Number(this.currentPosition || rangeStart)))}`
+      const config = typeof this.cloneModeState === 'function'
+        ? this.cloneModeState(store || {})
+        : { ...(store || {}) }
+      return {
+        timestamp: Date.now(),
+        mode,
+        tab: 'tools',
+        activeKey: activeVerseKey,
+        activeVerseKey,
+        queueIndex: Math.max(0, Number(this.queueIndex || 0)),
+        currentTime: Number(this.currentTime || 0),
+        duration: Number(this.duration || 0),
+        isPlaying: false,
+        playerVisible: true,
+        audioSrc: this.audioElement?.currentSrc || '',
+        readingViewMode: this.readingViewMode,
+        mushafPageIndex: this.mushafPageIndex,
+        config: {
+          ...config,
+          chapterId,
+          rangeStart,
+          rangeEnd,
+        },
+      }
+    },
+
+    dismissWelcomeBackAfterContinue() {
+      this.showWelcomeBackModal = false
+      this.returningUserChoicePending = false
+      this.welcomeBackWorkspaceHidden = false
+      this.welcomeBackModalReady = false
+      this.showTools = false
+      this.startingFreshSessionSelection = false
+    },
+
+    revealLoadedPreviousSession() {
+      // Continue must never auto-open the tools offcanvas.
+      this.dismissWelcomeBackAfterContinue()
+      this.sessionCompleted = false
+      this.sessionCompletedAt = null
+      this.sessionPaused = false
+      if (this.centralSession) {
+        this.centralSession.sessionCompletedAt = null
+        this.centralSession.sessionStatus = 'active'
+      }
+      this.applyLocalActiveSessionState()
+      this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
+      this.flowStep = 'learn'
+      this.showTools = false
+      this.$nextTick(() => {
+        this.resumePlaybackFromRestoredState?.()
+        this.scrollToWorkspaceMain?.()
+      })
+    },
+
+    queueBackendResumeAfterWelcomeContinue(payload = this.continueSessionPayload) {
+      if (!this.learningBackendEnabled() || !this.backendUnfinishedSession) return
+      const chapterId = Number(payload?.config?.chapterId || this.chapterId || 0)
+      Promise.resolve().then(async () => {
+        try {
+          await learningApi.resumeSession({
+            idempotency_key: `resume-${this.backendSessionSnapshot?.id || 'welcome'}`,
+            surah_number: chapterId || null,
+            ayah_number: Number(payload?.config?.rangeStart || this.rangeStart || 0) || null,
+            memorisation_mode: payload?.mode || this.currentMode,
+          })
+          this.backendUnfinishedSession = true
+          this.backendSessionSnapshot = {
+            ...(this.backendSessionSnapshot || {}),
+            status: 'active',
+          }
+        } catch (error) {
+          this.noteLearningBackendFailure?.(error, 'resume')
+        }
+      })
+    },
+
     async welcomeBackContinueSession() {
       if (this.welcomeBackContinueInFlight) return
       this.welcomeBackContinueInFlight = true
       this.primeAudioPlaybackUnlock()
+      // Unstick any leftover lifecycle/action locks so Resume is never a no-op.
       this.sessionActionLock?.reset?.()
+      this.sessionLifecycleMutation = SESSION_MUTATION.IDLE
+      this.sessionLifecycleError = null
+
+      // Capture resume candidates before validate/sync can wipe them.
+      const localCandidates = [
+        this.continueSessionPayload,
+        this.readPersistedContinueSession?.(),
+        this.readActiveSessionSnapshot?.(),
+        this.buildFallbackContinueSessionPayload?.(),
+        this.buildPayloadFromLoadedWorkspaceSession(),
+      ].filter((payload) => Number(payload?.config?.chapterId || 0) > 0)
+
+      // Dismiss immediately so "Choose how you'd like to begin" never lingers,
+      // and Continue never auto-opens the tools offcanvas.
+      this.dismissWelcomeBackAfterContinue()
 
       try {
         if (this.learningBackendEnabled()) {
           try {
             await this.validateSessionLifecycleAgainstBackend()
-          } catch (e) { /* keep going with whatever we have */ }
+          } catch (e) { /* keep local candidates */ }
         }
         this.syncWelcomeBackResumeFromBackend()
 
-        // Ended / missing sessions must not be resumed.
-        const backendStatus = String(this.backendSessionSnapshot?.status || '').toLowerCase()
-        const backendEnded = backendStatus === 'completed' || backendStatus === 'abandoned'
-        if (backendEnded && !this.backendUnfinishedSession) {
-          this.continueSessionPayload = null
-          this.hasContinueSession = false
+        let payload = this.resolveWelcomeBackContinuePayload(localCandidates)
+        if (payload?.config?.chapterId) {
+          this.continueSessionPayload = payload
+          this.hasContinueSession = true
         }
 
-        if (!this.continueSessionPayload && this.backendUnfinishedSession && this.backendSessionSnapshot) {
-          this.continueSessionPayload = this.buildContinuePayloadFromBackendSession(this.backendSessionSnapshot)
-          this.hasContinueSession = !!this.continueSessionPayload
+        const chapterReady = Number(
+          this.chapterId
+          || this.sessionConfig?.chapterId
+          || this.advanced?.chapterId
+          || this.beginner?.chapterId
+          || payload?.config?.chapterId
+          || 0
+        ) > 0
+
+        // Fast path: previous session is already loaded behind the welcome gate.
+        if (this.hasVerses && chapterReady) {
+          this.revealLoadedPreviousSession()
+          this.queueBackendResumeAfterWelcomeContinue(payload)
+          return
         }
 
-        const payload = this.continueSessionPayload
-        const resumable = isResumableSessionPayload(payload, {
-          backendStatus: this.backendSessionSnapshot?.status || null,
-          isSample: false,
-        }) || (
-          this.learningBackendEnabled()
-          && !!this.backendUnfinishedSession
-          && !!this.backendSessionSnapshot
-          && !backendEnded
-        )
+        if (this.canSoftResumePausedSession()) {
+          this.revealLoadedPreviousSession()
+          this.softResumePausedSession()
+          this.queueBackendResumeAfterWelcomeContinue(payload)
+          return
+        }
 
-        if (!resumable || !payload?.config?.chapterId) {
-          this.showWelcomeBackModal = false
-          this.returningUserChoicePending = false
-          this.welcomeBackWorkspaceHidden = false
+        if (!payload?.config?.chapterId) {
           this.showBanner?.(
-            this.t('memorisation.welcomeBack.freshSubtitle')
+            this.t('toasts.sessionResumeFailed')
               || 'No previous session to continue. Start a new one when ready.',
             'info',
             2800
           )
-          this.startingFreshSessionSelection = true
-          this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
           return
-        }
-
-        // Clear stale completed flags only when we have a validated resumable session.
-        this.sessionCompleted = false
-        this.sessionCompletedAt = null
-        if (this.centralSession) {
-          this.centralSession.sessionCompletedAt = null
-          if (this.centralSession.sessionStatus === 'completed') {
-            this.centralSession.sessionStatus = this.backendSessionSnapshot?.status === 'paused'
-              ? 'paused'
-              : 'active'
-          }
         }
 
         const audioState = this.learningBackendEnabled()
@@ -23685,34 +23799,30 @@ export default {
               return null
             }
           })()
-        let resumePayload = payload
-        if (audioState && resumePayload) {
-          resumePayload = {
-            ...resumePayload,
-            currentTime: Number(resumePayload.currentTime ?? audioState.currentTime ?? 0),
-            audioSrc: resumePayload.audioSrc || audioState.src || '',
-            playerVisible: resumePayload.playerVisible ?? audioState.playerVisible,
+        if (audioState) {
+          payload = {
+            ...payload,
+            currentTime: Number(payload.currentTime ?? audioState.currentTime ?? 0),
+            audioSrc: payload.audioSrc || audioState.src || '',
+            playerVisible: payload.playerVisible ?? audioState.playerVisible,
             isPlaying: false
           }
-          this.continueSessionPayload = resumePayload
+          this.continueSessionPayload = payload
         }
 
-        const chapterId = Number(resumePayload?.config?.chapterId || 0)
-
-        // Close the gate before hydrate so overlays cannot block the next section.
-        this.showWelcomeBackModal = false
-        this.returningUserChoicePending = false
-        this.welcomeBackWorkspaceHidden = false
-        this.welcomeBackModalReady = false
-
-        if (this.canSoftResumePausedSession()) {
-          this.softResumePausedSession()
-          this.flowStep = 'learn'
-          this.showTools = false
-          return
+        this.sessionCompleted = false
+        this.sessionCompletedAt = null
+        if (this.centralSession) {
+          this.centralSession.sessionCompletedAt = null
+          if (this.centralSession.sessionStatus === 'completed') {
+            this.centralSession.sessionStatus = this.backendSessionSnapshot?.status === 'paused'
+              ? 'paused'
+              : 'active'
+          }
         }
 
-        const hydrated = await this.hydrateSessionFromPayload(resumePayload, {
+        // Local-first restore. Do not hard-depend on /session/resume succeeding first.
+        const hydrated = await this.hydrateSessionFromPayload(payload, {
           bannerText: 'Session restored',
           banner: true,
           forcePlayback: false
@@ -23720,44 +23830,28 @@ export default {
         if (hydrated === false) {
           throw new Error('hydrateSessionFromPayload returned false')
         }
-
-        this.applyLocalActiveSessionState()
-        this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
-        this.flowStep = 'learn'
-        this.showTools = false
-        this.startingFreshSessionSelection = false
-        this.$nextTick(() => {
-          this.resumePlaybackFromRestoredState?.()
-          this.scrollToWorkspaceMain?.()
-        })
-
-        if (this.learningBackendEnabled() && this.backendUnfinishedSession) {
-          Promise.resolve().then(async () => {
-            try {
-              await learningApi.resumeSession({
-                idempotency_key: `resume-${this.backendSessionSnapshot?.id || 'welcome'}`,
-                surah_number: chapterId,
-                ayah_number: Number(resumePayload?.config?.rangeStart || 0) || null,
-                memorisation_mode: resumePayload?.mode || this.currentMode,
-              })
-            } catch (error) {
-              this.noteLearningBackendFailure?.(error, 'resume')
-            }
-          })
+        if (!this.hasVerses) {
+          await this.loadVerses?.(payload.mode || this.currentMode)
         }
+        if (!this.hasVerses) {
+          throw new Error('continue restored without verses')
+        }
+
+        this.revealLoadedPreviousSession()
+        this.queueBackendResumeAfterWelcomeContinue(payload)
       } catch (error) {
-        console.error('welcomeBackContinueSession hydrate failed', error)
+        console.error('welcomeBackContinueSession failed', error)
+        // Keep workspace visible; never reopen the choose-how-to-begin modal or offcanvas.
         this.showWelcomeBackModal = false
         this.returningUserChoicePending = false
         this.welcomeBackWorkspaceHidden = false
+        this.showTools = false
         this.showBanner?.(
-          this.t('memorisation.welcomeBack.freshSubtitle')
+          this.t('toasts.sessionResumeFailed')
             || 'Could not restore the previous session. Start a new one when ready.',
           'info',
           3000
         )
-        this.startingFreshSessionSelection = true
-        this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
       } finally {
         this.welcomeBackContinueInFlight = false
       }
@@ -24020,7 +24114,15 @@ export default {
             }
           }
           // Mid-session / primary Resume never uses the start-session countdown.
-          await this.continueLastSession({ skipCountdown: true })
+          const continued = await this.continueLastSession({ skipCountdown: true })
+          if (!continued) {
+            this.sessionLifecycleError = 'resume_invalid'
+            this.transitionSessionLifecycle(
+              this.hasValidatedResumableSession ? SESSION_STATUS.RESUMABLE : SESSION_STATUS.READY,
+              SESSION_MUTATION.IDLE
+            )
+            return false
+          }
           this.applyLocalActiveSessionState()
           this.transitionSessionLifecycle(
             SESSION_STATUS.ACTIVE,
@@ -24040,7 +24142,7 @@ export default {
           return false
         }
       })
-      return locked
+      return !!(locked?.ok && locked.result)
     },
 
     transitionSessionLifecycle(nextStatus, mutation = SESSION_MUTATION.IDLE) {
@@ -26190,7 +26292,7 @@ export default {
         isSample: !!this.onboardingSampleSessionActive,
       })) {
         this.clearContinueSessionQuietly()
-        return
+        return false
       }
       this.primeAudioPlaybackUnlock()
       this.startingFreshSessionSelection = false
@@ -26200,13 +26302,15 @@ export default {
       this.welcomeBackWorkspaceHidden = false
       if (!payload.config?.chapterId) {
         this.clearContinueSession()
-        return
+        return false
       }
-      await this.hydrateSessionFromPayload(payload, {
+      const hydrated = await this.hydrateSessionFromPayload(payload, {
         bannerText: 'Session restored',
         banner: !skipCountdown,
         forcePlayback: false
       })
+      if (hydrated === false) return false
+      this.showTools = false
       this.$nextTick(() => {
         if (this.effectiveActiveVerseKey) {
           const el = document.querySelector(`.verse-card[data-verse-key="${this.effectiveActiveVerseKey}"]`)
@@ -26215,11 +26319,12 @@ export default {
       })
       if (skipCountdown) {
         this.resumePlaybackFromRestoredState()
-        return
+        return true
       }
       this.showCountdown(() => {
         this.resumePlaybackFromRestoredState()
       })
+      return true
     },
     toggleSessionEndedMetaCard(key = '') {
       if (!key) return
