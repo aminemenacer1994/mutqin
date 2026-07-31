@@ -178,7 +178,7 @@
     box-sizing: border-box !important;
   }
 
-  /* Post-session: keep the ellipsis visible top-right (hide the other tool icons). */
+  /* Post-session: sliders + layout + ellipsis top-right (font stays in the menu path). */
   .workspace-shell--post-session-choice .top-card-icon-controls {
     display: flex !important;
     flex-flow: row nowrap !important;
@@ -193,14 +193,26 @@
     z-index: 80 !important;
   }
 
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap,
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap {
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap {
     display: none !important;
   }
 
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap,
   .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
   .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
+  }
+
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap {
+    order: 0;
+  }
+
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
+    order: 1;
+  }
+
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
+    order: 2;
   }
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) {
@@ -2344,7 +2356,7 @@
     block-size: 32px !important;
     padding: 0 0.5rem !important;
     font-size: 0.7rem !important;
-    font-weight: 650 !important;
+    font-weight: 400 !important;
     white-space: nowrap !important;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2386,7 +2398,7 @@
     background: #f4ebe7 !important;
     border-color: #d7b2a7 !important;
     color: #7a3b2e !important;
-    font-weight: 650 !important;
+    font-weight: 400 !important;
   }
 
   .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
@@ -2394,11 +2406,31 @@
     background: #ffffff !important;
     border-color: rgba(31, 24, 18, 0.14) !important;
     color: #2b241c !important;
+    font-weight: 400 !important;
     box-shadow: none !important;
   }
 
   .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span {
     display: inline !important;
+  }
+
+  /* Dark mode: keep Custom session readable (mobile white bg was winning over dark text styles). */
+  [data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
+  [data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom,
+  .dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
+  .dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(246, 239, 230, 0.22) !important;
+    color: #f6efe6 !important;
+    -webkit-text-fill-color: #f6efe6 !important;
+  }
+
+  [data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
+  [data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i,
+  .dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
+  .dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i {
+    color: #f6efe6 !important;
+    -webkit-text-fill-color: #f6efe6 !important;
   }
 
   .workspace-shell-actions .top-card-controls-trigger,
@@ -4420,8 +4452,9 @@
   }
 
   /*
-   * Mobile-only: mushaf layout toggle + ellipsis in the top-right.
-   * Font/sliders stay in the menu path; desktop keeps the full icon row.
+   * Mobile-only: sliders + mushaf layout toggle + ellipsis in the top-right.
+   * Font stays in the menu path; desktop keeps the full icon row.
+   * Sliders sit to the left of the stacked/mushaf icon.
    */
   .workspace-shell-head {
     display: grid !important;
@@ -4458,8 +4491,7 @@
     overflow: visible !important;
   }
 
-  .workspace-shell-head > .top-card-icon-controls .top-card-font-wrap,
-  .workspace-shell-head > .top-card-icon-controls .top-card-controls-wrap {
+  .workspace-shell-head > .top-card-icon-controls .top-card-font-wrap {
     display: none !important;
     width: 0 !important;
     min-width: 0 !important;
@@ -4468,6 +4500,7 @@
     pointer-events: none !important;
   }
 
+  .workspace-shell-head > .top-card-icon-controls .top-card-controls-wrap,
   .workspace-shell-head > .top-card-icon-controls .top-card-layout-icons,
   .workspace-shell-head > .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
@@ -4483,6 +4516,18 @@
     padding: 0 !important;
     overflow: visible !important;
     pointer-events: auto !important;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls .top-card-controls-wrap {
+    order: 0;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls .top-card-layout-icons {
+    order: 1;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls .top-card-menu-wrap {
+    order: 2;
   }
 
   .workspace-shell-head > .top-card-icon-controls .top-card-icon-control,

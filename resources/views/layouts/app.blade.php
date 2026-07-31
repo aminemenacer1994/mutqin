@@ -199,7 +199,7 @@
         background: #f4ebe7 !important;
         border: 1px solid #d7b2a7 !important;
         box-shadow: none !important;
-        font-weight: 650 !important;
+        font-weight: 400 !important;
       }
       .app .action-btn-exit:not(.post-session-choice-custom):hover,
       .app .action-btn.mutqin-btn--destructive:hover,
@@ -239,7 +239,7 @@
         border-color: #b56a56 !important;
       }
     </style>
-    <style id="mutqin-memorisation-hotfix-v99">
+    <style id="mutqin-memorisation-hotfix-v100">
       /* Network-first hotfix v99 — ayah markers visible, no dark-img ghost, digit nudged down */
       #mutqin-ui-build-pill { display: none !important; }
       html body .app .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .verse-ayah-end-number,
@@ -353,7 +353,7 @@
         background: #f4ebe7 !important;
         border: 1px solid #d7b2a7 !important;
         box-shadow: none !important;
-        font-weight: 650 !important;
+        font-weight: 400 !important;
       }
       .app .action-btn-exit:not(.post-session-choice-custom):hover,
       .app .workspace-shell-actions .action-btn-exit:not(.post-session-choice-custom):hover {
@@ -538,10 +538,10 @@
           pointer-events: auto !important;
           z-index: 90 !important;
         }
-        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap,
-        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap {
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap {
           display: none !important;
         }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-ellipsis,
@@ -550,6 +550,15 @@
           visibility: visible !important;
           opacity: 1 !important;
           pointer-events: auto !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap {
+          order: 0 !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
+          order: 1 !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
+          order: 2 !important;
         }
         .app .workspace-shell--post-session-choice .post-session-choice-pair,
         .app .workspace-shell--post-session-choice .post-session-choice-pair.has-paired-actions,
@@ -661,10 +670,10 @@
           pointer-events: auto !important;
           z-index: 90 !important;
         }
-        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap,
-        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap {
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap {
           display: none !important;
         }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .view-mode-btn,
@@ -673,6 +682,15 @@
           visibility: visible !important;
           opacity: 1 !important;
           pointer-events: auto !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap {
+          order: 0 !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
+          order: 1 !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
+          order: 2 !important;
         }
         .app .workspace-shell--post-session-choice .post-session-choice-pair {
           grid-column: 1 / -1 !important;
@@ -690,7 +708,7 @@
           text-overflow: ellipsis !important;
           white-space: nowrap !important;
         }
-        /* Mobile: mushaf layout toggle + ellipsis top-right. */
+        /* Mobile: sliders + mushaf layout toggle + ellipsis top-right (sliders left of stacked). */
         .app .top-card-icon-controls {
           --mq-top-icon: 36px;
           display: flex !important;
@@ -711,8 +729,7 @@
           z-index: 90 !important;
           pointer-events: auto !important;
         }
-        .app .top-card-icon-controls .top-card-font-wrap,
-        .app .top-card-icon-controls .top-card-controls-wrap {
+        .app .top-card-icon-controls .top-card-font-wrap {
           display: none !important;
           width: 0 !important;
           min-width: 0 !important;
@@ -727,6 +744,7 @@
           display: flex !important;
           gap: 0.35rem !important;
         }
+        .app .top-card-icon-controls .top-card-controls-wrap,
         .app .top-card-icon-controls .top-card-layout-icons,
         .app .top-card-icon-controls .top-card-menu-wrap {
           position: relative !important;
@@ -744,6 +762,16 @@
           box-sizing: border-box !important;
           pointer-events: auto !important;
         }
+        .app .top-card-icon-controls .top-card-controls-wrap {
+          order: 0 !important;
+        }
+        .app .top-card-icon-controls .top-card-layout-icons {
+          order: 1 !important;
+        }
+        .app .top-card-icon-controls .top-card-menu-wrap {
+          order: 2 !important;
+        }
+        .app .top-card-icon-controls .top-card-controls-trigger,
         .app .top-card-icon-controls .view-mode-btn,
         .app .top-card-icon-controls .workspace-layout-btn,
         .app .top-card-icon-controls .top-card-ellipsis,
@@ -776,7 +804,7 @@
           height: 32px !important;
           padding: 0 0.5rem !important;
           font-size: 0.7rem !important;
-          font-weight: 650 !important;
+          font-weight: 400 !important;
           border-radius: 9px !important;
           box-shadow: none !important;
           width: auto !important;
@@ -788,7 +816,7 @@
           height: 32px !important;
           padding: 0 0.4rem !important;
           font-size: 0.68rem !important;
-          font-weight: 650 !important;
+          font-weight: 400 !important;
           border-radius: 9px !important;
           box-shadow: none !important;
           width: 100% !important;
@@ -802,6 +830,25 @@
           background: #ffffff !important;
           border: 1px solid rgba(31, 24, 18, 0.14) !important;
           color: #2b241c !important;
+          font-weight: 400 !important;
+        }
+        [data-theme="dark"] .app .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
+        [data-theme="dark"] .app .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom,
+        [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
+        [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom {
+          background: rgba(255, 255, 255, 0.08) !important;
+          border-color: rgba(246, 239, 230, 0.22) !important;
+          color: #f6efe6 !important;
+          -webkit-text-fill-color: #f6efe6 !important;
+        }
+        [data-theme="dark"] .app .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit i,
+        [data-theme="dark"] .app .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit span,
+        [data-theme="dark"] .app .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i,
+        [data-theme="dark"] .app .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
+        [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom i,
+        [data-theme="dark"] .app .workspace-shell--post-session-choice .post-session-choice-pair > .post-session-choice-custom span {
+          color: #f6efe6 !important;
+          -webkit-text-fill-color: #f6efe6 !important;
         }
         .app .workspace-shell--post-session-choice .workspace-shell-head {
           grid-template-columns: minmax(0, 1fr) !important;
@@ -1151,7 +1198,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v99'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v100'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
