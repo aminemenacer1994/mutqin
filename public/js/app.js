@@ -46950,7 +46950,7 @@ module.exports = JSON.parse('{"common":{"on":"On","off":"Off","reset":"Reset","s
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
-/******/ 			return "js/" + chunkId + "." + {"memorisation":"9ef8fbcd","resources_js_locales_ar_json":"b5e1dce2","resources_js_locales_es_json":"26142ac3","resources_js_locales_fr_json":"2165ec93","resources_js_locales_id_json":"41285fb5","resources_js_locales_tr_json":"0e563bea","resources_js_locales_ur_json":"7c6c87df"}[chunkId] + ".js";
+/******/ 			return "js/" + chunkId + "." + {"memorisation":"65ed1102","resources_js_locales_ar_json":"b5e1dce2","resources_js_locales_es_json":"26142ac3","resources_js_locales_fr_json":"2165ec93","resources_js_locales_id_json":"41285fb5","resources_js_locales_tr_json":"0e563bea","resources_js_locales_ur_json":"7c6c87df"}[chunkId] + ".js";
 /******/ 		};
 /******/ 	})();
 /******/ 	

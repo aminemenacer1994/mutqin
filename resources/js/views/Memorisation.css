@@ -47000,6 +47000,17 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   z-index: 90;
 }
 
+/* Desktop: layout switch lives in workspace reading toggles — hide top-card icon + ellipsis layout item */
+@media (min-width: 768px) {
+  .top-card-icon-controls .top-card-layout-icons {
+    display: none !important;
+  }
+
+  .top-card-menu .top-card-menu-toggle--layout {
+    display: none !important;
+  }
+}
+
 .workspace-shell-actions .action-buttons-group {
   flex-wrap: nowrap !important;
   align-items: center !important;
