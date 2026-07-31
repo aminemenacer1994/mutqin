@@ -13,7 +13,7 @@
         </div>
         <div class="info-header-aside">
           <p>
-            Mutqin helps you memorise the Qur’an with calm daily practice.
+            Mutqin helps you memorise the Qur’an through daily practice.
             Listen, repeat, and always know what to do next.
           </p>
           <div class="info-actions">
@@ -34,8 +34,8 @@
             <h2>Know what to practise next</h2>
           </div>
           <p>
-            It’s easy to practise well today and forget what to revise tomorrow.
-            Mutqin keeps the next step clear, so coming back each day feels simple.
+            It is easy to practise well today and forget what to revise tomorrow.
+            Mutqin keeps the next step clear so coming back each day is simple.
           </p>
         </section>
 
@@ -46,7 +46,7 @@
           </div>
           <p>
             Play the ayah, follow along, and repeat at your own pace.
-            When you finish, Mutqin suggests a clear next step.
+            When you finish, Mutqin suggests what to do next.
           </p>
         </section>
 
@@ -57,7 +57,7 @@
           </div>
           <p>
             Mutqin helps you stay consistent. It does not replace a qualified teacher.
-            Getting it right, and respecting the Qur’an, comes first.
+            Accuracy and respect for the Qur’an come first.
           </p>
         </section>
       </div>

@@ -13,15 +13,15 @@
         </div>
         <div class="info-header-aside">
           <p>
-            Need a hand with practice, your account, or a session?
-            Find quick answers here, or write to us anytime.
+            Need help with practice, your account, or a session?
+            Find answers here, or write to us anytime.
           </p>
           <div class="info-actions">
             <a class="info-btn info-btn--primary" href="/#contact">
               <i class="bi bi-envelope" aria-hidden="true"></i> Contact us
             </a>
-            <a class="info-btn info-btn--ghost" href="/donate">
-              <i class="bi bi-heart" aria-hidden="true"></i> Support the project
+            <a class="info-btn info-btn--ghost" href="/memorisation">
+              <i class="bi bi-play-fill" aria-hidden="true"></i> Start practising
             </a>
           </div>
         </div>
@@ -82,7 +82,7 @@
             <div class="info-icon" aria-hidden="true"><i class="bi bi-chat-heart"></i></div>
             <h2>Share feedback</h2>
           </div>
-          <p>Tell us what helped, what felt unclear, or how we can make practice easier for you.</p>
+          <p>Tell us what helped, what was unclear, or how practice could be easier.</p>
           <a class="info-inline-link" href="/#contact">
             Write to us <i class="bi bi-arrow-right" aria-hidden="true"></i>
           </a>
@@ -93,8 +93,8 @@
         <a class="info-btn info-btn--primary" href="/#contact">
           <i class="bi bi-envelope" aria-hidden="true"></i> Contact us
         </a>
-        <a class="info-btn info-btn--ghost" href="/donate">
-          <i class="bi bi-heart" aria-hidden="true"></i> Support the project
+        <a class="info-btn info-btn--ghost" href="/memorisation">
+          <i class="bi bi-play-fill" aria-hidden="true"></i> Start practising
         </a>
       </div>
     </div>

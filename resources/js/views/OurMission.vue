@@ -8,7 +8,7 @@
           <ul class="info-highlights" aria-label="Mission focus">
             <li><i class="bi bi-flag" aria-hidden="true"></i> Begin</li>
             <li><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Continue</li>
-            <li><i class="bi bi-heart" aria-hidden="true"></i> Return calmly</li>
+            <li><i class="bi bi-heart" aria-hidden="true"></i> Return</li>
           </ul>
         </div>
         <div class="info-header-aside">
@@ -18,10 +18,10 @@
           </p>
           <div class="info-actions">
             <a class="info-btn info-btn--primary" href="/memorisation">
-              <i class="bi bi-play-fill" aria-hidden="true"></i> Begin a session
+              <i class="bi bi-play-fill" aria-hidden="true"></i> Start a session
             </a>
             <a class="info-btn info-btn--ghost" href="/donate">
-              <i class="bi bi-heart" aria-hidden="true"></i> Support Mutqin
+              <i class="bi bi-life-preserver" aria-hidden="true"></i> Get help
             </a>
           </div>
         </div>
@@ -31,11 +31,11 @@
         <section class="info-section info-reveal" style="--d: 60ms">
           <div class="info-section-head">
             <div class="info-icon" aria-hidden="true"><i class="bi bi-bookmark-check"></i></div>
-            <h2>Practise with care</h2>
+            <h2>Practise carefully</h2>
           </div>
           <p>
             Listen, repeat, and check your recitation so what you memorise
-            stays with you, not just for one sitting.
+            stays with you beyond one sitting.
           </p>
         </section>
 
@@ -46,7 +46,7 @@
           </div>
           <p>
             After every session you get a clear next step,
-            so ayahs don’t fade between days.
+            so ayahs do not fade between days.
           </p>
         </section>
 
@@ -64,10 +64,10 @@
 
       <div class="info-actions info-reveal" style="--d: 240ms">
         <a class="info-btn info-btn--primary" href="/memorisation">
-          <i class="bi bi-play-fill" aria-hidden="true"></i> Begin a session
+          <i class="bi bi-play-fill" aria-hidden="true"></i> Start a session
         </a>
         <a class="info-btn info-btn--ghost" href="/donate">
-          <i class="bi bi-heart" aria-hidden="true"></i> Support Mutqin
+          <i class="bi bi-life-preserver" aria-hidden="true"></i> Get help
         </a>
       </div>
     </div>

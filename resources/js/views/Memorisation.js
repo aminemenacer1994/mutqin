@@ -253,6 +253,8 @@ import {
   SESSION_STORAGE_KEYS,
   CENTRAL_SESSION_STORAGE_KEY,
   DEFAULT_ALQURAN_RECITER,
+  ALQURAN_RECITER_OPTIONS,
+  reciterSupportsWordHighlighting,
   RECITATION_IDB_NAME,
   RECITATION_IDB_VERSION,
   RECITATION_IDB_STORE,
@@ -858,7 +860,7 @@ export default {
       chapters: [],
       currentChapter: null,
       offlineSurahs: [],
-      reciters: [{ id: 7, name: 'Alafasy' }],
+      reciters: [{ id: DEFAULT_ALQURAN_RECITER, name: 'Mishari Rashid al-Afasy', supportsWordHighlighting: true }],
       savedSessions: [],
       savedSelectMode: false,
       selectedSavedSessionIds: [],
@@ -6179,6 +6181,18 @@ export default {
       }
     },
 
+    recitersWithWordHighlight() {
+      return (this.reciters || []).filter(reciter => reciter?.supportsWordHighlighting !== false)
+    },
+
+    recitersAudioOnly() {
+      return (this.reciters || []).filter(reciter => reciter?.supportsWordHighlighting === false)
+    },
+
+    currentReciterSupportsWordHighlighting() {
+      return reciterSupportsWordHighlighting(this.reciterId, this.reciters)
+    },
+
     speed: {
       get() { return this.currentConfig.speed },
       set(val) {
@@ -7826,11 +7840,18 @@ export default {
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
     wordByWordAudioEnabled(val) {
-      if (!val) {
+      if (!val && this.currentReciterSupportsWordHighlighting) {
         this.wordByWordAudioEnabled = true
         return
       }
+      if (val && !this.currentReciterSupportsWordHighlighting) {
+        this.wordByWordAudioEnabled = false
+        return
+      }
       this.persistUiState()
+    },
+    reciterId(newVal) {
+      this.syncWordHighlightingForReciter(newVal)
     },
     fontScale: 'persistUiState',
     quranFont(newVal) {
@@ -9798,13 +9819,22 @@ export default {
       this.closeSaveModal()
     },
     toggleWordAudio() {
-      this.wordByWordAudioEnabled = true
+      this.ensureWordAudioHighlighting()
       this.persistUiState()
       this.persistCentralSessionState()
-      this.showBanner(this.t('memorisation.common.wordAudioOn'), 'info', 1000)
+      if (this.wordByWordAudioEnabled) {
+        this.showBanner(this.t('memorisation.common.wordAudioOn'), 'info', 1000)
+      } else {
+        this.showBanner(this.t('sessionSetup.reciterNoWordHighlight'), 'info', 1600)
+      }
     },
     ensureWordAudioHighlighting() {
-      this.wordByWordAudioEnabled = true
+      this.wordByWordAudioEnabled = this.currentReciterSupportsWordHighlighting
+    },
+    syncWordHighlightingForReciter(reciterId = this.reciterId) {
+      const supported = reciterSupportsWordHighlighting(reciterId, this.reciters)
+      this.wordByWordAudioEnabled = supported
+      if (!supported) this.stopWordHighlighting()
     },
     applyRecommendedSetup() {
       this.playMode = 'auto'
@@ -28712,7 +28742,7 @@ export default {
     },
 
     async startWordHighlighting(verse, options = {}) {
-      if (!verse?.key || !this.wordByWordAudioEnabled) return
+      if (!verse?.key || !this.wordByWordAudioEnabled || !this.currentReciterSupportsWordHighlighting) return
       const timestamps = await this.ensureWordHighlightTrack(verse, options)
       if (!timestamps.length) return
       this.queueWordHighlightFrame(verse)
@@ -28855,7 +28885,7 @@ export default {
 
     async ensureWordHighlightTrack(verse, options = {}) {
       const { force = false } = options
-      if (!verse?.key || !this.wordByWordAudioEnabled) return []
+      if (!verse?.key || !this.wordByWordAudioEnabled || !this.currentReciterSupportsWordHighlighting) return []
       if (!force && this.currentHighlightedVerseKey === verse.key && this.wordHighlightTimestamps?.length) {
         return this.wordHighlightTimestamps
       }
@@ -31394,12 +31424,13 @@ export default {
     },
 
     async loadReciters() {
-      const cachedReciters = this.readApiCache('reciters')
+      const cachedReciters = this.readApiCache('reciters.v3')
       if (Array.isArray(cachedReciters) && cachedReciters.length) {
         this.reciters = cachedReciters
         if (!this.reciters.some(reciter => reciter.id === this.reciterId)) {
           this.reciterId = this.reciters[0]?.id || DEFAULT_ALQURAN_RECITER
         }
+        this.syncWordHighlightingForReciter(this.reciterId)
         return
       }
       try {
@@ -31407,35 +31438,31 @@ export default {
         const list = res.data?.data || []
         if (!list.length) return
 
-        const allow = [
-          { id: 'ar.alafasy', label: 'Alafasy' },
-          { id: 'ar.abdulbasitmurattal', label: 'Abdul basit' },
-          { id: 'ar.abdurrahmaansudais', label: 'al sudais' },
-          { id: 'ar.hanirifai', label: 'hani rifai' },
-          { id: 'ar.husary', label: 'husari' },
-          { id: 'ar.minshawi', label: 'minshawi' },
-          { id: 'ar.saoodshuraym', label: 'ash-shuraym' }
-        ]
-
         const available = new Map(list.map(edition => [edition.identifier, edition]))
-        const filtered = allow
+        const filtered = ALQURAN_RECITER_OPTIONS
           .filter(entry => available.has(entry.id))
-          .map(entry => ({ id: entry.id, name: entry.label }))
+          .map(entry => ({
+            id: entry.id,
+            name: entry.name,
+            supportsWordHighlighting: entry.supportsWordHighlighting !== false
+          }))
 
         this.reciters = filtered.length
           ? filtered
           : list
-            .filter(edition => edition.format === 'audio')
+            .filter(edition => edition.format === 'audio' && String(edition.identifier || '').startsWith('ar.') && !String(edition.identifier).endsWith('-2'))
             .map(edition => ({
               id: edition.identifier,
-              name: edition.englishName || edition.name || edition.identifier
+              name: edition.englishName || edition.name || edition.identifier,
+              supportsWordHighlighting: reciterSupportsWordHighlighting(edition.identifier)
             }))
 
-        if (this.reciters.length) this.writeApiCache('reciters', this.reciters)
+        if (this.reciters.length) this.writeApiCache('reciters.v3', this.reciters)
 
         if (!this.reciters.some(reciter => reciter.id === this.reciterId)) {
           this.reciterId = this.reciters[0]?.id || DEFAULT_ALQURAN_RECITER
         }
+        this.syncWordHighlightingForReciter(this.reciterId)
       } catch (e) { console.error(e) }
     },
 

@@ -125,7 +125,10 @@
     "noAudioPlayed": "لم يُشغَّل صوت آية بعد في هذه الجلسة.",
     "to": "إلى",
     "rangeHint": "اجعل النطاقات صغيرة لحفظ مركّز.",
-    "reciterHint": "يغيّر صوت القارئ للجلسة.",
+    "reciterHint": "يغيّر صوت القارئ للجلسة. يبقى تمييز الكلمات مفعّلاً لهذا القارئ.",
+    "reciterNoWordHighlight": "صوت فقط لهذا القارئ — تمييز الكلمات غير متاح.",
+    "recitersWithWordHighlight": "مع تمييز الكلمات",
+    "recitersAudioOnly": "صوت فقط",
     "repeatHint": "كرّر كل آية {count} مرة/مرات قبل المتابعة.",
     "surah": "السورة",
     "ayahRange": "نطاق الآيات",
@@ -150,117 +153,117 @@
   },
   "homepage": {
     "hero": {
-      "badge": "تعلّم القرآن بالذكاء الاصطناعي",
-      "title": "احفظ القرآن بحلقة تدريب أكثر هدوءاً ودقة.",
-      "desc": "متقن يجمع آياتك وتسجيلاتك وفحوص الذكاء الاصطناعي والمراجعة ورؤى نقاط الضعف في مساحة واحدة.",
+      "badge": "حفظ القرآن",
+      "title": "احفظ القرآن بممارسة يومية واضحة.",
+      "desc": "استمع، كرّر، وافحص تلاوتك. متقن يجمع آياتك وتقدمك والخطوة التالية في مكان واحد.",
       "problem": "المشكلة:",
-      "problemText": "ينهار الحفظ عندما تعيش الآيات الضعيفة والتسجيلات وخطط المراجعة في أماكن منفصلة.",
+      "problemText": "الآيات الضعيفة والتسجيلات وخطط المراجعة غالباً تكون في أماكن مختلفة، فتتفكك الممارسة.",
       "solution": "الحل:",
-      "solutionText": "تدرّب على نطاقات صغيرة، افحص التلاوة والاستذكار، ثم راجع الآيات التي تحتاج اهتماماً.",
+      "solutionText": "تدرّب على نطاق قصير، افحص ما تلوت، ثم راجع الآيات التي تحتاج عملاً.",
       "startFree": "ابدأ مجاناً",
       "seeFeatures": "عرض الميزات"
     },
     "demo": {
-      "title": "تحليل الذكاء الاصطناعي المباشر",
-      "quote": "\"إخفاء ضعيف — أمسك الغنة لمدة نبضتين.\"",
-      "recording": "جاري التسجيل... ← دقة 96%"
+      "title": "فحص التلاوة",
+      "quote": "\"الإخفاء يحتاج عملاً. أمسك الغنة لمدتين.\"",
+      "recording": "جاري التسجيل... تطابق 96%"
     },
     "features": {
-      "kicker": "مصمّم للتلاوة اليومية",
-      "title": "كل ما تحتاجه لإتقان التلاوة",
-      "subtitle": "من أول تسجيل إلى مراجعة طويلة الأمد، كل أداة تسد فجوة تغذية راجعة حقيقية.",
+      "kicker": "ممارسة يومية",
+      "title": "ما تحصل عليه",
+      "subtitle": "أدوات للاستماع والتكرار والفحص والمراجعة.",
       "items": {
         "recitationReview": {
-          "title": "مراجعة التلاوة بالذكاء الاصطناعي",
-          "description": "سجّل آية وقارن محاولتك بالنص مع تغذية راجعة على مستوى الكلمة.",
-          "result": "حدد القسم الذي تكرره بعد ذلك.",
+          "title": "فحص التلاوة",
+          "description": "اتلُ من حفظك بينما يتابعك متقن.",
+          "result": "اعرف الكلمات التي تحتاج مزيداً من العمل.",
           "badge": "مجاني"
         },
         "smartMemorisation": {
-          "title": "حفظ ذكي",
-          "description": "استخدم التمويه والتسلسل والمراسي وإشارات المراجعة لتقوية الاستذكار دون فوضى.",
-          "result": "تدرّب على الآيات التي تحتاج اهتماماً.",
+          "title": "تدريب موجّه",
+          "description": "استمع واتبع وكرّر بوتيرتك.",
+          "result": "جلسة يمكنك تكرارها كل يوم.",
           "badge": "احترافي"
         },
         "stackedMushaf": {
           "title": "عرض مكدّس ومصحف",
-          "description": "انتقل بين بطاقات الآيات وتخطيط المصحف مع بقاء عناصر التحكم قريبة.",
-          "result": "اقرأ واستمع وافحص نفسك في تدفق واحد.",
+          "description": "استخدم بطاقات الآيات أو تخطيط المصحف أثناء التدريب.",
+          "result": "اختر العرض الذي يناسبك.",
           "badge": "مجاني"
         },
         "transitionTraining": {
-          "title": "تدريب الانتقال",
-          "description": "ابنِ الثقة بين الآيات المتجاورة بالربط والتكرار التراكمي.",
-          "result": "قلّل التوقف بين الآيات.",
+          "title": "خطط الحفظ",
+          "description": "احصل على خطوة تالية واضحة حسب نتيجة جلستك.",
+          "result": "اعرف ماذا تتدرب عليه بعد ذلك.",
           "badge": "احترافي"
         },
         "recordingLibrary": {
-          "title": "مكتبة التسجيلات",
-          "description": "احفظ المحاولات حسب السورة والآية لتسهيل العثور على المراجعات القديمة.",
-          "result": "حافظ على سجل تلاوتك منظماً.",
+          "title": "التركيز على الكلمات",
+          "description": "اعرف الكلمات التي ما زالت تحتاج انتباهاً.",
+          "result": "ارجع إلى الأجزاء الصعبة أولاً.",
           "badge": "مجاني محدود"
         },
         "reviewAnalytics": {
-          "title": "تحليلات المراجعة",
-          "description": "تتبع الآيات الضعيفة والمحاولات المتكررة وأولوية المراجعة عبر جلساتك.",
-          "result": "اعرف ما يجب إصلاحه قبل الجلسة التالية.",
+          "title": "جدولة المراجعة",
+          "description": "عد إلى الآيات المحفوظة قبل أن تضعف.",
+          "result": "أبقِ عملك السابق قوياً.",
           "badge": "احترافي"
         }
       }
     },
     "steps": {
-      "kicker": "حلقة التدريب",
-      "title": "ثلاث خطوات لتلاوة طليقة",
-      "subtitle": "حلقة قصيرة تكررها يومياً: تلاوة، تشخيص، مراجعة ما يحتاج عملاً.",
+      "kicker": "كيف يعمل",
+      "title": "ثلاث خطوات",
+      "subtitle": "تدرّب، لاحظ نقاط الضعف، ثم ارجع إليها.",
       "items": {
         "record": {
-          "title": "سجّل",
-          "description": "تلاوَ الآية أو الجلسة المختارة مباشرة في المتصفح.",
-          "microcopy": "فحوص ذاتية سريعة دون رفع"
+          "title": "تدرّب",
+          "description": "استمع واتبع وكرّر الآيات التي اخترتها.",
+          "microcopy": "جلسات قصيرة تكفي"
         },
         "review": {
-          "title": "راجع",
-          "description": "اعرف الكلمات القوية والقريبة والفائتة بعد التلاوة.",
-          "microcopy": "تغذية راجعة واضحة يمكنك التصرف بناءً عليها"
+          "title": "لاحظ",
+          "description": "اعرف الكلمات التي تحتاج انتباهاً بعد التلاوة.",
+          "microcopy": "تغذية راجعة واضحة"
         },
         "repeat": {
-          "title": "كرّر",
-          "description": "استخدم التمويه والتسلسل والمراسي والمحاولات المحفوظة لإعادة الآيات الضعيفة.",
-          "microcopy": "التدريب يتبع نقاط ضعفك"
+          "title": "ارجع",
+          "description": "اتبع الخطوة التالية لتبقى الآيات المحفوظة قوية.",
+          "microcopy": "راجع قبل أن تضعف"
         }
       }
     },
     "testimonials": {
-      "kicker": "إشارات تعلّم حقيقية",
-      "title": "موثوق من طلاب ومعلّمين مركّزين",
+      "kicker": "طلاب ومعلّمون",
+      "title": "ماذا يقول الناس",
       "items": {
         "abdullah": {
-          "quote": "أصلح متقن حرف الضاد خلال أسبوعين بعد 5 سنوات من المعاناة. الحمد لله.",
-          "proof": "تغذية راجعة مركّزة على المخارج",
+          "quote": "ساعدني متقن على إصلاح حرف الضاد بعد سنوات من المعاناة. الحمد لله.",
+          "proof": "تمرين على الحروف",
           "author": "عبد الله خان",
           "role": "12 جزءاً محفوظاً",
           "initials": "AK"
         },
         "fatima": {
-          "quote": "المراجعة المتباعدة أنقذت حفظي. لم أعد أنسى. ضروري لكل حافظ.",
-          "proof": "مراجعة يومية للآيات الضعيفة",
+          "quote": "المراجعة اليومية تحفظ حفظي من التراجع. أستخدمه كل يوم.",
+          "proof": "مراجعة يومية",
           "author": "فاطمة السيد",
           "role": "حافظة قيد التقدم",
           "initials": "FE"
         },
         "hisham": {
-          "quote": "كمعلّم تجويد، أستخدم متقن لتتبع نقاط ضعف الطلاب فوراً.",
-          "proof": "رؤية للمعلّم",
+          "quote": "أستخدم متقن لمعرفة مواضع حاجة طلابي إلى مزيد من العمل.",
+          "proof": "استخدام المعلّم",
           "author": "الأستاذ هشام",
-          "role": "قارئ معتمد",
+          "role": "معلّم تجويد",
           "initials": "UH"
         }
       }
     },
     "pricing": {
-      "kicker": "أسعار تتناسب مع الممارسة",
-      "title": "أسعار بسيطة وشفافة",
-      "subtitle": "ابدأ مجاناً. ترقّ فقط عند الحاجة لتغذية راجعة أعمق.",
+      "kicker": "الأسعار",
+      "title": "أسعار بسيطة",
+      "subtitle": "ابدأ مجاناً. ترقَّ عندما تريد تغذية راجعة وسجلاً أكثر.",
       "starter": "المبتدئ",
       "premium": "المميز",
       "monthly": "شهري",
@@ -269,42 +272,43 @@
       "premiumYearly": "أو 17.99 £ سنوياً",
       "proYearly": "أو 49.99 £ سنوياً",
       "featureColumn": "الميزة",
-      "freeTrial": "تجربة مجانية 7 أيام"
+      "freeTrial": "تجربة مجانية 7 أيام",
+      "accountNote": "يمكنك بدء الدفع لـ Premium أو Pro دون حساب. بعد الدفع، أنشئ حساباً أو سجّل الدخول بنفس البريد ليربط متقن خطتك."
     },
     "faq": {
       "kicker": "أسئلة شائعة",
-      "title": "إجابات قبل أن تبدأ",
-      "subtitle": "نظرة سريعة على كيف يدعم متقن التلاوة والحفظ والاست retention.",
+      "title": "الأسئلة الشائعة",
+      "subtitle": "كيف يساعد متقن في التلاوة والحفظ والمراجعة.",
       "items": {
         "whatIsMutqin": {
           "question": "ما هو متقن؟",
-          "answer": "متقن مساحة لحفظ القرآن وتلاوته تجمع أدوات التدريب والتسجيلات وإشارات المراجعة وتتبع التقدم في مكان واحد."
+          "answer": "متقن تطبيق لحفظ القرآن. تتدرب، تفحص تلاوتك، وتتابع ما يجب مراجعته لاحقاً."
         },
         "howMemorisation": {
           "question": "كيف يعمل الحفظ؟",
-          "answer": "تختار سورة ونطاق آيات، تكرر في كتل صغيرة، وتستخدم التمويه والتسلسل والجلسات المحفوظة لتقوية الاستذكار تدريجياً."
+          "answer": "اختر سورة ونطاق آيات، تدرّب في كتل قصيرة، واستخدم أدوات مثل التمويه والتسلسل والجلسات المحفوظة لتقوية الاستذكار."
         },
         "howAiFeedback": {
-          "question": "كيف تعمل تغذية الذكاء الاصطناعي الراجعة؟",
-          "answer": "تستمع تغذية الذكاء الاصطناعي بعد تدربك، تبرز الكلمات الضعيفة أو الفائتة المحتملة، وتعطيك تكراراً أوضح بدلاً من درجة عامة مبهمة."
+          "question": "كيف تعمل التغذية الراجعة؟",
+          "answer": "بعد التدريب، يبرز متقن الكلمات التي قد تكون ضعيفة أو فائتة، فتعرف ماذا تكرر بعد ذلك."
         },
         "whatIsPro": {
           "question": "ما هي خطة Pro؟",
-          "answer": "Pro هي خطة متقن الكاملة للطلاب الذين يريدون مراجعة تلاوة بالذكاء الاصطناعي وفحوص الحفظ وتحليلات متقدمة وجلسات غير محدودة وأدوات تخطيط أعمق."
+          "answer": "تتضمن Pro فحص التلاوة وفحص الحفظ وتحليلاً أوفى وجلسات محفوظة غير محدودة وأدوات تخطيط."
         },
         "howRevision": {
           "question": "كيف تعمل المراجعة؟",
-          "answer": "يتتبع متقن الآيات الضعيفة والتدريب الأخير والمراجعات المستحقة لإعادة ما قد ينزلق قبل أن يصبح تراكماً أكبر."
+          "answer": "يتتبع متقن الآيات الضعيفة والتدريب الأخير والمراجعات المستحقة لتعيد ما يرجح أن يضعف."
         }
       }
     },
     "contact": {
-      "title": "أخبرنا بما تحتاج مساعدة فيه",
-      "subtitle": "أسئلة الفوترة وسير الحفظ أو ملاحظات المنتج هنا.",
+      "title": "تواصل معنا",
+      "subtitle": "اسأل عن الفوترة أو التدريب أو الملاحظات.",
       "email": "البريد الإلكتروني",
       "subject": "الموضوع",
       "message": "الرسالة",
-      "extendedSubtitle": "أسئلة الفوترة وسير الحفظ أو ملاحظات المنتج هنا. سنبقي الرد بسيطاً وقابلاً للتطبيق.",
+      "extendedSubtitle": "اسأل عن الفوترة أو التدريب أو الملاحظات. سنرد بإجابة واضحة.",
       "sending": "جاري الإرسال...",
       "sendMessage": "إرسال الرسالة",
       "errors": {
@@ -314,13 +318,13 @@
         "subject": "يرجى إدخال الموضوع.",
         "message": "يرجى إدخال رسالة."
       },
-      "success": "تم إرسال رسالتك بنجاح.",
+      "success": "تم إرسال رسالتك.",
       "errorFields": "راجع الحقول المميزة وحاول مرة أخرى.",
       "errorSend": "تعذر إرسال الرسالة. يرجى المحاولة مرة أخرى."
     },
     "cta": {
-      "title": "حوّل الآيات الضعيفة إلى مسار مراجعة واضح.",
-      "subtitle": "سجّل آية، راجع المشكلات المميزة، وركّز الجلسة التالية على ما يحتاج عملاً.",
+      "title": "اعرف ماذا تتدرب عليه بعد ذلك.",
+      "subtitle": "سجّل آية، راجع نقاط الضعف، وركّز الجلسة التالية.",
       "button": "إنشاء حساب مجاني",
       "note": "لا حاجة لبطاقة للخطة المجانية."
     },
@@ -334,7 +338,7 @@
       "connect": "تواصل",
       "privacy": "الخصوصية",
       "terms": "الشروط",
-      "tagline": "2026 متقن · « ورتل القرآن ترتيلاً » 🤍",
+      "tagline": "2026 متقن · « ورتل القرآن ترتيلاً »",
       "aboutUs": "من نحن",
       "ourMission": "مهمتنا"
     },
@@ -345,8 +349,8 @@
     },
     "floatingBadges": {
       "tajweedScore": "درجة التجويد: +27%",
-      "weakVerses": "آيات ضعيفة مجدولة تلقائياً",
-      "dailyMinutes": "15 دقيقة/يوم للحفظ"
+      "weakVerses": "آيات ضعيفة في قائمة المراجعة",
+      "dailyMinutes": "15 دقيقة/يوم للتدريب"
     },
     "planFeatures": {
       "sessionSetup": "إعداد جلسة أساسي كامل",
@@ -360,16 +364,16 @@
       "anchorMode": "وضع المراسي",
       "manualSelfAssessment": "تسجيل تقييم ذاتي يدوي",
       "manualSelfAssessmentPlus": "تقييم ذاتي يدوي + تسجيل شخصي",
-      "hifzPlan": "خطة حفظ مخصصة منظمة",
+      "hifzPlan": "خطة حفظ مخصصة",
       "spacedRetention": "احتفاظ متباعد بالجلسات",
       "adaptiveRevision": "جدولة مراجعة تكيفية",
       "progressTracking": "تتبع التقدم",
-      "allTechniques": "كل تقنيات الحفظ مشمولة",
-      "aiRecitation": "تلاوة بالذكاء الاصطناعي",
-      "aiMemorisationChecker": "فاحص الحفظ بالذكاء الاصطناعي",
+      "allTechniques": "كل تقنيات الحفظ",
+      "aiRecitation": "فحص التلاوة",
+      "aiMemorisationChecker": "فحص الحفظ",
       "advancedAnalysis": "تحليل متقدم",
       "offlineDownloads": "تنزيل للاستماع دون اتصال",
-      "voiceHifzBuilder": "منشئ خطة حفظ صوتي"
+      "voiceHifzBuilder": "منشئ خطة حفظ صوتية"
     },
     "comparison": {
       "sessionSetup": "إعداد الجلسة وأدوات نطاق الآيات",
@@ -380,31 +384,31 @@
       "chainingPractice": "التسلسل وتدريب الانتقال",
       "anchorMode": "وضع المراسي",
       "manualRecording": "تسجيل تقييم ذاتي يدوي",
-      "aiRecitationReview": "مراجعة التلاوة بالذكاء الاصطناعي",
-      "aiMemorisationChecker": "فاحص الحفظ بالذكاء الاصطناعي",
-      "hifzPlan": "خطة حفظ مخصصة منظمة",
+      "aiRecitationReview": "فحص التلاوة",
+      "aiMemorisationChecker": "فحص الحفظ",
+      "hifzPlan": "خطة حفظ مخصصة",
       "spacedRetention": "احتفاظ متباعد بالجلسات",
-      "voiceHifzBuilder": "منشئ خطة حفظ صوتي",
+      "voiceHifzBuilder": "منشئ خطة حفظ صوتية",
       "adaptiveRevision": "جدولة مراجعة تكيفية",
       "progressTracking": "تتبع التقدم",
-      "advancedAnalytics": "تحليلات مراجعة متقدمة",
+      "advancedAnalytics": "تحليلات المراجعة",
       "offlineDownloads": "تنزيلات صوتية دون اتصال",
       "unlimited": "غير محدود"
     },
-    "a_short_loop_you_can_repeat_every_day_recite_diagn": "حلقة قصيرة تكررها يومياً: تلاوة، تشخيص، مراجعة ما يحتاج عملاً.",
-    "start_free_upgrade_only_when_you_need_deeper_recit": "ابدأ مجاناً. ترقّ فقط عند الحاجة لتغذية راجعة أعمق للتلاوة والسجل وأدوات التدريب.",
+    "a_short_loop_you_can_repeat_every_day_recite_diagn": "تدرّب، لاحظ نقاط الضعف، ثم راجع ما يحتاج عملاً.",
+    "start_free_upgrade_only_when_you_need_deeper_recit": "ابدأ مجاناً. ترقَّ عندما تريد تغذية راجعة وسجلاً أكثر.",
     "free": "مجاني",
-    "for_trying_the_workflow": "لتجربة سير العمل",
+    "for_trying_the_workflow": "لتجربة متقن",
     "start_free": "ابدأ مجاناً",
     "most_useful": "الأكثر فائدة",
-    "teacher_ready": "جاهز للمعلّمين",
+    "teacher_ready": "للمعلّمين",
     "pro": "احترافي",
     "feature_comparison": "مقارنة الميزات",
-    "everything_included_in_each_subscription_at_a_glan": "كل ما يتضمنه كل اشتراك في لمحة.",
-    "a_quick_overview_of_how_mutqin_supports_recitation": "نظرة سريعة على كيف يدعم متقن التلاوة والحفظ والاحتفاظ طويل الأمد.",
+    "everything_included_in_each_subscription_at_a_glan": "ما تتضمنه كل خطة.",
+    "a_quick_overview_of_how_mutqin_supports_recitation": "كيف يساعد متقن في التلاوة والحفظ والمراجعة.",
     "name": "الاسم",
-    "record_a_verse_review_the_highlighted_issues_and_k": "سجّل آية، راجع المشكلات المميزة، واجعل الجلسة التالية مركّزة على ما يحتاج عملاً فعلاً.",
-    "focused_quran_memorisation_tools_for_recitation_ch": "أدوات حفظ قرآن مركّزة لفحوص التلاوة وتخطيط المراجعة والممارسة اليومية الثابتة.",
+    "record_a_verse_review_the_highlighted_issues_and_k": "سجّل آية، راجع نقاط الضعف، وركّز الجلسة التالية.",
+    "focused_quran_memorisation_tools_for_recitation_ch": "أدوات حفظ قرآن للممارسة وفحص التلاوة والمراجعة.",
     "roadmap": "خارطة الطريق",
     "tajweed_guide": "دليل التجويد",
     "memorization_tips": "نصائح الحفظ",
@@ -2312,81 +2316,81 @@
     "network": "خطأ في الشبكة. تحقق من اتصالك."
   },
   "about": {
-    "tag": "متقن • رفيق الحفظ",
-    "heroTitle": "مسار منظم لإتقان القرآن",
-    "heroDesc": "متقن مصمم لمساعدتك على حفظ القرآن ومراجعته والاحتفاظ به بوضوح وثبات.",
-    "ctaPrimary": "ابدأ رحلتك",
-    "ctaSecondary": "اعرف المزيد",
+    "tag": "متقن",
+    "heroTitle": "عن متقن",
+    "heroDesc": "يساعدك متقن على حفظ القرآن ومراجعته والاحتفاظ به عبر ممارسة يومية. استمع، كرّر، واعرف دائماً ماذا تفعل بعد ذلك.",
+    "ctaPrimary": "ابدأ التدريب",
+    "ctaSecondary": "مهمتنا",
     "purposeTitle": "الهدف",
-    "purposeDesc": "جعل حفظ القرآن منظماً ومستداماً وشخصياً.",
+    "purposeDesc": "جعل حفظ القرآن واضحاً بما يكفي للاستخدام اليومي.",
     "approachTitle": "المنهج",
-    "approachDesc": "تعلم مدعوم بالذكاء الاصطناعي يحترم الأساليب التقليدية.",
+    "approachDesc": "أدوات تدريب تعمل إلى جانب معلّم حقيقي، لا بديلاً عنه.",
     "outcomeTitle": "النتيجة",
-    "outcomeDesc": "احتفاظ أقوى ومراجعة منتظمة ودقة أفضل.",
-    "verse": "\"ولقد يسرنا القرآن للذكر فهل من مدكر\" — 54:17",
+    "outcomeDesc": "مراجعة منتظمة وخطوات تالية أوضح ودقة أفضل.",
+    "verse": "\"ولقد يسرنا القرآن للذكر فهل من مدكر\" (54:17)",
     "title": "عن متقن"
   },
   "aboutUs": {
     "title": "من نحن",
     "kicker": "عن متقن",
-    "built_for_focused_quran_practice": "مصمّم لممارسة قرآنية مركّزة.",
-    "calm_study_flow": "تدفّق دراسة هادئ",
-    "revision_led_learning": "تعلّم يقوده المراجعة",
-    "built_around_consistency": "مبني على الاستمرارية",
+    "built_for_focused_quran_practice": "مصمّم لممارسة قرآنية يومية.",
+    "calm_study_flow": "تدفّق دراسة بسيط",
+    "revision_led_learning": "مراجعة تثبت",
+    "built_around_consistency": "مبني على الاستمرار",
     "why_people_stay": "لماذا يبقى الناس",
-    "less_friction_clearer_progress_better_return_point": "احتكاك أقل، تقدم أوضح، نقاط عودة أفضل.",
+    "less_friction_clearer_progress_better_return_point": "عناء أقل، تقدم أوضح، ومكان واضح للعودة.",
     "session_setup_is_simple_enough_for_daily_use": "إعداد الجلسة بسيط بما يكفي للاستخدام اليومي.",
-    "revision_signals_help_learners_revisit_what_needs_": "إشارات المراجعة تساعد المتعلمين على إعادة ما يحتاج اهتماماً.",
-    "the_interface_stays_focused_instead_of_overwhelmin": "الواجهة تبقى مركّزة بدلاً من أن تكون مربكة.",
+    "revision_signals_help_learners_revisit_what_needs_": "تذكيرات المراجعة تساعدك على العودة لما يحتاج انتباهاً.",
+    "the_interface_stays_focused_instead_of_overwhelmin": "الواجهة تبقى مركّزة بدلاً من أن تكون مزدحمة.",
     "why_it_exists": "لماذا وُجد",
     "what_it_does": "ماذا يفعل",
     "what_it_respects": "ما يحترمه",
-    "the_product_principle": "مبدأ المنتج",
-    "focused_workflow": "سير عمل مركّز",
+    "the_product_principle": "المبدأ",
+    "focused_workflow": "تدريب مركّز",
     "reliable_revision": "مراجعة موثوقة",
-    "cleaner_decisions": "قرارات أوضح"
+    "cleaner_decisions": "خيارات أوضح"
   },
   "mission": {
     "title": "مهمتنا",
     "kicker": "مهمتنا",
-    "make_consistent_quran_practice_easier_to_understan": "جعل ممارسة القرآن المنتظمة أسهل للفهم.",
+    "make_consistent_quran_practice_easier_to_understan": "جعل ممارسة القرآن المنتظمة أسهل للبدء والاستمرار.",
     "what_that_means": "ماذا يعني ذلك",
-    "clear_entry_point": "نقطة دخول واضحة",
+    "clear_entry_point": "نقطة بداية واضحة",
     "beginners_should_know_what_to_do_in_the_first_minu": "يجب أن يعرف المبتدئون ماذا يفعلون في الدقيقة الأولى.",
-    "reliable_revision_loop": "حلقة مراجعة موثوقة",
+    "reliable_revision_loop": "مراجعة موثوقة",
     "weak_ayahs_should_surface_before_they_become_large": "يجب أن تظهر الآيات الضعيفة قبل أن تصبح فجوات أكبر.",
     "respect_for_real_study": "احترام الدراسة الحقيقية",
     "the_product_should_support_teachers_halaqah_and_pe": "يجب أن يدعم المنتج المعلّمين والحلقات والروتين الشخصي.",
     "lower_the_barrier": "خفض الحاجز",
-    "make_the_first_minute_simple_enough_for_beginners_": "اجعل الدقيقة الأولى بسيطة بما يكفي للمبتدئين وثابتة بما يكفي للعائدين.",
-    "improve_retention": "تحسين الاحتفاظ",
-    "surface_weak_ayahs_before_they_turn_into_larger_re": "أظهر الآيات الضعيفة قبل أن تتحول إلى فجوات مراجعة أكبر يصعب التعافي منها.",
+    "make_the_first_minute_simple_enough_for_beginners_": "اجعل الدقيقة الأولى بسيطة للمبتدئين وثابتة للعائدين.",
+    "improve_retention": "تحسين الثبات",
+    "surface_weak_ayahs_before_they_turn_into_larger_re": "أظهر الآيات الضعيفة قبل أن تتحول إلى فجوات مراجعة أكبر.",
     "respect_real_study": "احترام الدراسة الحقيقية",
-    "fit_naturally_alongside_a_teacher_halaqah_or_perso": "يتكامل طبيعياً مع معلّم أو حلقة أو روتين شخصي دون ضجيج غير ضروري.",
+    "fit_naturally_alongside_a_teacher_halaqah_or_perso": "يعمل إلى جانب معلّم أو حلقة أو روتين شخصي دون ضجيج إضافي.",
     "how_success_looks": "كيف يبدو النجاح",
     "simpler_starts": "بدايات أبسط",
-    "stronger_retention": "احتفاظ أقوى",
+    "stronger_retention": "ثبات أقوى",
     "more_confidence": "ثقة أكبر"
   },
   "donate": {
-    "title": "ادعم متقن",
-    "donate": "تبرّع",
-    "support_a_simpler_memorisation_experience": "ادعم تجربة حفظ أبسط.",
-    "product_maintenance": "صيانة المنتج",
-    "faster_iteration": "تطوير أسرع",
-    "better_student_experience": "تجربة طالب أفضل",
-    "support_focus": "دعم التركيز",
-    "fund_the_next_practical_improvements_students_feel": "موّل التحسينات العملية التالية التي يشعر بها الطلاب فوراً.",
-    "flexible": "مرن",
-    "one_time_support": "دعم لمرة واحدة",
-    "help_with_ongoing_improvements_maintenance_and_car": "ساعد في التحسينات المستمرة والصيانة والصقل الدقيق عبر المنصة.",
-    "monthly_support": "دعم شهري",
-    "support_steady_iteration_on_onboarding_revision_an": "ادعم التطوير المستمر في الإعداد الأولي والمراجعة وسهولة الاستخدام بمساهمة متوقعة.",
-    "targeted": "موجّه",
-    "project_support": "دعم مشروع",
-    "back_focused_improvements_for_a_specific_part_of_t": "ادعم تحسينات مركّزة لجزء محدد من تجربة متقن يحتاج اهتماماً إضافياً.",
-    "start_the_conversation": "ابدأ المحادثة",
-    "if_you_want_to_support_mutqin_contact_us_with_the_": "إذا أردت دعم متقن، تواصل معنا بموضوع \"Donation\".",
+    "title": "الدعم",
+    "donate": "الدعم",
+    "support_a_simpler_memorisation_experience": "تحتاج مساعدة في التدريب أو حسابك أو جلسة؟",
+    "product_maintenance": "البداية",
+    "faster_iteration": "حسابك",
+    "better_student_experience": "أثناء الجلسة",
+    "support_focus": "مواضيع المساعدة",
+    "fund_the_next_practical_improvements_students_feel": "اعثر على إجابات هنا، أو اكتب لنا في أي وقت.",
+    "flexible": "التدريب",
+    "one_time_support": "فحص التلاوة",
+    "help_with_ongoing_improvements_maintenance_and_car": "اتلُ بينما يتابعك متقن. هو مساعد للتدريب، وليس بديلاً عن المعلّم.",
+    "monthly_support": "شيء لا يعمل؟",
+    "support_steady_iteration_on_onboarding_revision_an": "حدّث الصفحة مرة. إن لم ينجح، سجّل الخروج ثم الدخول. للتلاوة، اسمح بالوصول إلى الميكروفون في المتصفح.",
+    "targeted": "ملاحظات",
+    "project_support": "شاركنا رأيك",
+    "back_focused_improvements_for_a_specific_part_of_t": "أخبرنا بما ساعد، وما كان غير واضح، أو كيف يمكن أن يكون التدريب أسهل.",
+    "start_the_conversation": "تواصل معنا",
+    "if_you_want_to_support_mutqin_contact_us_with_the_": "اسأل عن الفوترة أو التدريب أو الملاحظات في أي وقت.",
     "contact_us": "تواصل معنا"
   },
   "hifzPlan": {

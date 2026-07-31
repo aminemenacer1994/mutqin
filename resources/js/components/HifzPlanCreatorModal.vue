@@ -220,7 +220,12 @@
                     :value="draft.reciterId"
                     @change="setPlaybackField('reciterId', $event.target.value)"
                   >
-                    <option v-for="reciter in reciterChoices" :key="reciter.id" :value="reciter.id">{{ reciter.name }}</option>
+                    <optgroup v-if="recitersWithWordHighlight.length" :label="t('sessionSetup.recitersWithWordHighlight')">
+                      <option v-for="reciter in recitersWithWordHighlight" :key="reciter.id" :value="reciter.id">{{ reciter.name }}</option>
+                    </optgroup>
+                    <optgroup v-if="recitersAudioOnly.length" :label="t('sessionSetup.recitersAudioOnly')">
+                      <option v-for="reciter in recitersAudioOnly" :key="reciter.id" :value="reciter.id">{{ reciter.name }}</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div class="col-4">
@@ -423,13 +428,29 @@ export default {
     reciterChoices() {
       const normalized = (this.reciters || [])
         .map(reciter => {
-          if (typeof reciter === 'string') return { id: reciter, name: reciter }
+          if (typeof reciter === 'string') {
+            return { id: reciter, name: reciter, supportsWordHighlighting: true }
+          }
           const id = String(reciter?.id ?? '')
           const name = String(reciter?.name || reciter?.label || id)
-          return id ? { id, name } : null
+          return id
+            ? {
+                id,
+                name,
+                supportsWordHighlighting: reciter?.supportsWordHighlighting !== false
+              }
+            : null
         })
         .filter(Boolean)
-      return normalized.length ? normalized : [{ id: 'ar.alafasy', name: 'Alafasy' }]
+      return normalized.length
+        ? normalized
+        : [{ id: 'ar.alafasy', name: 'Alafasy', supportsWordHighlighting: true }]
+    },
+    recitersWithWordHighlight() {
+      return this.reciterChoices.filter(reciter => reciter.supportsWordHighlighting !== false)
+    },
+    recitersAudioOnly() {
+      return this.reciterChoices.filter(reciter => reciter.supportsWordHighlighting === false)
     },
     dailyGoalLabel() {
       const exact = Number(this.draft.dailyNewAyahs?.exact)

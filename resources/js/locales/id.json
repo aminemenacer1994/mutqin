@@ -123,7 +123,10 @@
     "noAudioPlayed": "Belum ada audio ayah yang diputar untuk sesi ini.",
     "to": "sampai",
     "rangeHint": "Gunakan rentang kecil untuk hafalan yang fokus.",
-    "reciterHint": "Mengubah suara audio untuk sesi.",
+    "reciterHint": "Mengubah suara audio untuk sesi. Penyorotan kata tetap aktif untuk qari ini.",
+    "reciterNoWordHighlight": "Hanya audio untuk qari ini — penyorotan kata tidak tersedia.",
+    "recitersWithWordHighlight": "Dengan penyorotan kata",
+    "recitersAudioOnly": "Hanya audio",
     "repeatHint": "Ulangi setiap ayat {count} kali sebelum lanjut.",
     "surah": "Surah",
     "ayahRange": "Rentang ayah",
@@ -148,117 +151,117 @@
   },
   "homepage": {
     "hero": {
-      "badge": "Pembelajaran Al-Quran Berbasis AI",
-      "title": "Hafalkan Al-Quran dengan siklus latihan yang lebih tenang dan tajam.",
-      "desc": "Mutqin menggabungkan ayah, rekaman, pemeriksaan AI, alur muraja'ah, dan wawasan titik lemah dalam satu ruang kerja fokus sehingga setiap sesi berakhir dengan langkah berikutnya yang jelas.",
-      "problem": "Masalahnya:",
-      "problemText": "Hafalan runtuh ketika ayah lemah, rekaman, dan rencana muraja'ah berada di tempat terpisah.",
-      "solution": "Solusinya:",
-      "solutionText": "Berlatih dalam rentang kecil, periksa tilawah dan hafalan, lalu muraja'ah ayah yang tepat perlu perhatian.",
-      "startFree": "Mulai Gratis",
-      "seeFeatures": "Lihat Fitur"
+      "badge": "Quran memorisation",
+      "title": "Memorise the Quran with clear daily practice.",
+      "desc": "Listen, repeat, and check your recitation. Mutqin keeps your ayahs, progress, and next step in one place.",
+      "problem": "The problem:",
+      "problemText": "Weak ayahs, recordings, and review plans often sit in different places, so practice falls apart.",
+      "solution": "The solution:",
+      "solutionText": "Practise a short range, check what you recited, then review the ayahs that need work.",
+      "startFree": "Start free",
+      "seeFeatures": "See features"
     },
     "demo": {
-      "title": "Analisis AI Langsung",
-      "quote": "\"Ikhfa' lemah — tahan nasal 2 ketuk.\"",
-      "recording": "Merekam... → akurasi 96%"
+      "title": "Recitation check",
+      "quote": "\"Ikhfa' needs work. Hold the nasal sound for two counts.\"",
+      "recording": "Recording... 96% match"
     },
     "features": {
-      "kicker": "Dibuat untuk tilawah harian",
-      "title": "Semua yang Anda butuhkan untuk menguasai tilawah",
-      "subtitle": "Dari rekaman pertama hingga muraja'ah jangka panjang, setiap alat menutup celah umpan balik nyata.",
+      "kicker": "Daily practice",
+      "title": "What you get",
+      "subtitle": "Tools for listening, repeating, checking, and reviewing.",
       "items": {
         "recitationReview": {
-          "title": "Muraja'ah Tilawah AI",
-          "description": "Rekam ayah dan bandingkan usaha Anda dengan teks beserta umpan balik per kata yang jelas.",
-          "result": "Temukan bagian yang perlu diulang berikutnya.",
-          "badge": "gratis"
+          "title": "Recitation check",
+          "description": "Recite from memory while Mutqin follows along.",
+          "result": "See which words need more work.",
+          "badge": "free"
         },
         "smartMemorisation": {
-          "title": "Hafalan Cerdas",
-          "description": "Gunakan blur, chaining, anchor, dan sinyal muraja'ah untuk memperkuat hafalan tanpa kekacauan.",
-          "result": "Latih ayah yang perlu perhatian.",
+          "title": "Guided practice",
+          "description": "Listen, follow, and repeat at your own pace.",
+          "result": "A session you can repeat each day.",
           "badge": "pro"
         },
         "stackedMushaf": {
-          "title": "Tampilan Stacked & Mushaf",
-          "description": "Beralih antara kartu ayah bersih dan tata letak mushaf bergaya halaman sambil menjaga kontrol tetap dekat.",
-          "result": "Baca, dengar, dan periksa diri dalam satu alur.",
-          "badge": "gratis"
+          "title": "Stacked and Mushaf views",
+          "description": "Use ayah cards or a page-style layout while you practise.",
+          "result": "Pick the view that suits you.",
+          "badge": "free"
         },
         "transitionTraining": {
-          "title": "Latihan Transisi",
-          "description": "Bangun kepercayaan diri antar ayah tetangga dengan linking dan pengulangan kumulatif.",
-          "result": "Kurangi jeda antar ayat.",
+          "title": "Memorisation plans",
+          "description": "Get a clear next step based on how your session went.",
+          "result": "Know what to practise next.",
           "badge": "pro"
         },
         "recordingLibrary": {
-          "title": "Perpustakaan Rekaman",
-          "description": "Simpan usaha per surah dan ayah agar muraja'ah lama mudah ditemukan.",
-          "result": "Jaga riwayat tilawah Anda tetap terorganisir.",
+          "title": "Word focus",
+          "description": "See which words still need attention.",
+          "result": "Return to the hard parts first.",
           "badge": "freeLimited"
         },
         "reviewAnalytics": {
-          "title": "Analitik Muraja'ah",
-          "description": "Lacak ayah lemah, usaha berulang, dan prioritas muraja'ah di seluruh sesi.",
-          "result": "Ketahui apa yang perlu diperbaiki sebelum sesi berikutnya.",
+          "title": "Review scheduling",
+          "description": "Come back to memorised ayahs before they fade.",
+          "result": "Keep earlier work strong.",
           "badge": "pro"
         }
       }
     },
     "steps": {
-      "kicker": "Siklus latihan",
-      "title": "Tiga langkah menuju tilawah lancar",
-      "subtitle": "Siklus singkat yang bisa diulang setiap hari: tilawah, diagnosis, muraja'ah tepat yang perlu dikerjakan.",
+      "kicker": "How it works",
+      "title": "Three steps",
+      "subtitle": "Practise, notice weak spots, then come back to them.",
       "items": {
         "record": {
-          "title": "Rekam",
-          "description": "Tilawah ayah atau sesi terpilih langsung di browser.",
-          "microcopy": "Pemeriksaan diri cepat tanpa unggahan"
+          "title": "Practise",
+          "description": "Listen, follow, and repeat your chosen ayahs.",
+          "microcopy": "Short sessions are enough"
         },
         "review": {
-          "title": "Muraja'ah",
-          "description": "Lihat kata mana yang kuat, hampir benar, atau terlewat setelah tilawah.",
-          "microcopy": "Umpan balik jelas yang bisa ditindaklanjuti"
+          "title": "Notice",
+          "description": "See which words need more attention after you recite.",
+          "microcopy": "Clear feedback"
         },
         "repeat": {
-          "title": "Ulangi",
-          "description": "Gunakan blur, chaining, anchor, dan usaha tersimpan untuk mengunjungi kembali ayah lemah.",
-          "microcopy": "Latihan mengikuti titik lemah Anda"
+          "title": "Return",
+          "description": "Follow the next step so memorised ayahs stay strong.",
+          "microcopy": "Review before it fades"
         }
       }
     },
     "testimonials": {
-      "kicker": "Sinyal pembelajaran nyata",
-      "title": "Dipercaya oleh siswa dan guru yang fokus",
+      "kicker": "Students and teachers",
+      "title": "What people say",
       "items": {
         "abdullah": {
-          "quote": "Mutqin memperbaiki 'ض' saya dalam 2 minggu setelah 5 tahun perjuangan. Alhamdulillah.",
-          "proof": "Umpan balik makhraj yang fokus",
+          "quote": "Mutqin helped me fix my ض after years of struggle. Alhamdulillah.",
+          "proof": "Letter practice",
           "author": "Abdullah Khan",
-          "role": "12 Juz Dihafal",
+          "role": "12 juz memorised",
           "initials": "AK"
         },
         "fatima": {
-          "quote": "Pengulangan berjarak menyelamatkan hifdz saya. Saya tidak lupa lagi. Wajib untuk setiap hafidz.",
-          "proof": "Muraja'ah ayat lemah harian",
+          "quote": "Daily review keeps my hifdh from slipping. I use it every day.",
+          "proof": "Daily review",
           "author": "Fatima El-Sayed",
-          "role": "Hafidzah dalam Proses",
+          "role": "Hafidha in progress",
           "initials": "FE"
         },
         "hisham": {
-          "quote": "Sebagai guru tajwid, saya menggunakan Mutqin untuk melacak titik lemah siswa secara instan.",
-          "proof": "Visibilitas guru",
+          "quote": "I use Mutqin to see where my students need more work.",
+          "proof": "Teacher use",
           "author": "Ustadh Hisham",
-          "role": "Qari Bersertifikat",
+          "role": "Tajweed teacher",
           "initials": "UH"
         }
       }
     },
     "pricing": {
-      "kicker": "Harga yang mengikuti latihan",
-      "title": "Harga sederhana dan transparan",
-      "subtitle": "Mulai gratis. Upgrade hanya saat Anda butuh umpan balik tilawah lebih dalam, riwayat, dan alat bimbingan.",
+      "kicker": "Pricing",
+      "title": "Simple pricing",
+      "subtitle": "Start free. Upgrade when you want more feedback and history.",
       "starter": "Starter",
       "premium": "Premium",
       "monthly": "Bulanan",
@@ -267,44 +270,45 @@
       "premiumYearly": "atau £17,99/tahun",
       "proYearly": "atau £49,99/tahun",
       "featureColumn": "Fitur",
-      "freeTrial": "COBA GRATIS 7 HARI"
+      "freeTrial": "COBA GRATIS 7 HARI",
+      "accountNote": "You can start Premium or Pro checkout without an account. After paying, create an account or sign in with the same email so Mutqin can link your plan."
     },
     "faq": {
-      "kicker": "Pertanyaan umum",
-      "title": "Jawaban sebelum Anda mulai",
-      "subtitle": "Ikhtisar singkat bagaimana Mutqin mendukung tilawah, hafalan, dan retensi jangka panjang.",
+      "kicker": "Common questions",
+      "title": "FAQ",
+      "subtitle": "How Mutqin helps with recitation, memorisation, and review.",
       "items": {
         "whatIsMutqin": {
-          "question": "Apa itu Mutqin?",
-          "answer": "Mutqin adalah ruang kerja hafalan dan tilawah Al-Quran yang menggabungkan alat latihan, rekaman, sinyal muraja'ah, dan pelacakan progres dalam satu tempat."
+          "question": "What is Mutqin?",
+          "answer": "Mutqin is a Quran memorisation app. You practise, check your recitation, and keep track of what to review next."
         },
         "howMemorisation": {
-          "question": "Bagaimana hafalan bekerja?",
-          "answer": "Anda memilih surah dan rentang ayah, mengulang dalam blok kecil, dan menggunakan alat latihan seperti blur, chaining, dan sesi tersimpan untuk memperkuat hafalan secara bertahap."
+          "question": "How does memorisation work?",
+          "answer": "Choose a surah and ayah range, practise in short blocks, and use tools like blur, chaining, and saved sessions to build recall."
         },
         "howAiFeedback": {
-          "question": "Bagaimana umpan balik AI bekerja?",
-          "answer": "Umpan balik AI mendengarkan setelah Anda berlatih, menyorot kata lemah atau terlewat, dan memberi pengulangan berikutnya yang lebih jelas alih-alih skor keseluruhan yang samar."
+          "question": "How does feedback work?",
+          "answer": "After you practise, Mutqin highlights words that may be weak or missed, so you know what to repeat next."
         },
         "whatIsPro": {
-          "question": "Apa itu Pro?",
-          "answer": "Pro adalah paket Mutqin lengkap untuk siswa yang menginginkan muraja'ah tilawah AI, pemeriksaan hafalan AI, analitik lanjutan, sesi tersimpan tanpa batas, dan alat perencanaan lebih dalam."
+          "question": "What is Pro?",
+          "answer": "Pro includes recitation review, memorisation checks, fuller analytics, unlimited saved sessions, and planning tools."
         },
         "howRevision": {
-          "question": "Bagaimana muraja'ah bekerja?",
-          "answer": "Mutqin melacak ayah lemah, latihan terbaru, dan muraja'ah jatuh tempo agar Anda dapat mengunjungi kembali yang paling mungkin terlupa sebelum menjadi backlog lebih besar."
+          "question": "How does revision work?",
+          "answer": "Mutqin tracks weak ayahs, recent practice, and due reviews so you can revisit what is most likely to slip."
         }
       }
     },
     "contact": {
-      "title": "Ceritakan apa yang Anda butuhkan",
-      "subtitle": "Pertanyaan tentang tagihan, alur hafalan, atau umpan balik produk bisa melalui sini.",
+      "title": "Contact us",
+      "subtitle": "Ask about billing, practice, or feedback.",
       "email": "Email",
       "subject": "Subjek",
       "message": "Pesan",
-      "extendedSubtitle": "Pertanyaan tentang tagihan, alur hafalan, atau umpan balik produk bisa melalui sini. Kami akan menjawab dengan sederhana dan dapat ditindaklanjuti.",
+      "extendedSubtitle": "Ask about billing, practice, or feedback. We will reply with a clear answer.",
       "sending": "Mengirim...",
-      "sendMessage": "Kirim Pesan",
+      "sendMessage": "Send message",
       "errors": {
         "name": "Silakan masukkan nama Anda.",
         "email": "Silakan masukkan alamat email Anda.",
@@ -312,15 +316,15 @@
         "subject": "Silakan masukkan subjek.",
         "message": "Silakan masukkan pesan."
       },
-      "success": "Pesan Anda berhasil dikirim.",
+      "success": "Your message has been sent.",
       "errorFields": "Silakan periksa kolom yang disorot dan coba lagi.",
       "errorSend": "Tidak dapat mengirim pesan. Silakan coba lagi."
     },
     "cta": {
-      "title": "Ubah ayah lemah menjadi jalur muraja'ah yang jelas.",
-      "subtitle": "Rekam ayat, muraja'ah masalah yang disorot, dan jaga sesi berikutnya fokus pada yang benar-benar perlu dikerjakan.",
-      "button": "Buat Akun Gratis",
-      "note": "Tidak perlu kartu untuk Gratis."
+      "title": "Know what to practise next.",
+      "subtitle": "Record a verse, review the weak spots, and keep the next session focused.",
+      "button": "Create free account",
+      "note": "No card needed for Free."
     },
     "footer": {
       "product": "Produk",
@@ -332,7 +336,7 @@
       "connect": "Terhubung",
       "privacy": "Privasi",
       "terms": "Ketentuan",
-      "tagline": "2026 Mutqin · \"Dan bacalah Al-Quran itu dengan tartil.\" 🤍",
+      "tagline": "2026 Mutqin · \"And recite the Quran with measured recitation.\"",
       "aboutUs": "Tentang Kami",
       "ourMission": "Misi Kami"
     },
@@ -342,9 +346,9 @@
       "freeLimited": "Gratis terbatas"
     },
     "floatingBadges": {
-      "tajweedScore": "Skor tajwid: +27%",
-      "weakVerses": "Ayat lemah dijadwalkan otomatis",
-      "dailyMinutes": "15 menit/hari hafalan"
+      "tajweedScore": "Tajweed score: +27%",
+      "weakVerses": "Weak verses queued for review",
+      "dailyMinutes": "15 min/day practice"
     },
     "planFeatures": {
       "sessionSetup": "Pengaturan sesi dasar lengkap",
@@ -358,16 +362,16 @@
       "anchorMode": "Mode anchor",
       "manualSelfAssessment": "Rekaman penilaian diri manual",
       "manualSelfAssessmentPlus": "Rekaman penilaian diri manual + rekaman mandiri",
-      "hifzPlan": "Rencana Hifz Kustom Terstruktur",
-      "spacedRetention": "Retensi Sesi Berjarak",
-      "adaptiveRevision": "Penjadwalan Muraja'ah Adaptif",
-      "progressTracking": "Pelacakan Progres",
-      "allTechniques": "Semua teknik hafalan disertakan",
-      "aiRecitation": "Tilawah AI",
-      "aiMemorisationChecker": "Pemeriksa hafalan AI",
+      "hifzPlan": "Custom Hifz plan",
+      "spacedRetention": "Spaced session retention",
+      "adaptiveRevision": "Adaptive revision scheduling",
+      "progressTracking": "Progress tracking",
+      "allTechniques": "All memorisation techniques",
+      "aiRecitation": "Recitation check",
+      "aiMemorisationChecker": "Memorisation check",
       "advancedAnalysis": "Analisis lanjutan",
       "offlineDownloads": "Unduh untuk mendengarkan offline",
-      "voiceHifzBuilder": "Pembangun Rencana Hifz Suara"
+      "voiceHifzBuilder": "Voice Hifz plan builder"
     },
     "comparison": {
       "sessionSetup": "Pengaturan sesi dan alat rentang ayah",
@@ -378,31 +382,31 @@
       "chainingPractice": "Chaining dan latihan transisi",
       "anchorMode": "Mode anchor",
       "manualRecording": "Rekaman penilaian diri manual",
-      "aiRecitationReview": "Muraja'ah tilawah AI",
-      "aiMemorisationChecker": "Pemeriksa hafalan AI",
-      "hifzPlan": "Rencana Hifz Kustom Terstruktur",
-      "spacedRetention": "Retensi Sesi Berjarak",
-      "voiceHifzBuilder": "Pembangun Rencana Hifz Suara",
-      "adaptiveRevision": "Penjadwalan Muraja'ah Adaptif",
-      "progressTracking": "Pelacakan Progres",
-      "advancedAnalytics": "Analitik muraja'ah lanjutan",
+      "aiRecitationReview": "Recitation check",
+      "aiMemorisationChecker": "Memorisation check",
+      "hifzPlan": "Custom Hifz plan",
+      "spacedRetention": "Spaced session retention",
+      "voiceHifzBuilder": "Voice Hifz plan builder",
+      "adaptiveRevision": "Adaptive revision scheduling",
+      "progressTracking": "Progress tracking",
+      "advancedAnalytics": "Review analytics",
       "offlineDownloads": "Unduhan audio offline",
       "unlimited": "Tanpa batas"
     },
-    "a_short_loop_you_can_repeat_every_day_recite_diagn": "Siklus singkat yang bisa diulang setiap hari: tilawah, diagnosis, muraja'ah tepat yang perlu dikerjakan.",
-    "start_free_upgrade_only_when_you_need_deeper_recit": "Mulai gratis. Upgrade hanya saat Anda butuh umpan balik tilawah lebih dalam, riwayat, dan alat bimbingan.",
+    "a_short_loop_you_can_repeat_every_day_recite_diagn": "Practise, notice weak spots, then review what needs work.",
+    "start_free_upgrade_only_when_you_need_deeper_recit": "Start free. Upgrade when you want more feedback and history.",
     "free": "Gratis",
-    "for_trying_the_workflow": "Untuk mencoba alur kerja",
+    "for_trying_the_workflow": "To try Mutqin",
     "start_free": "Mulai Gratis",
     "most_useful": "Paling berguna",
-    "teacher_ready": "Siap untuk guru",
+    "teacher_ready": "For teachers",
     "pro": "Pro",
     "feature_comparison": "Perbandingan fitur",
-    "everything_included_in_each_subscription_at_a_glan": "Semua yang disertakan dalam setiap langganan sekilas.",
-    "a_quick_overview_of_how_mutqin_supports_recitation": "Ikhtisar singkat bagaimana Mutqin mendukung tilawah, hafalan, dan retensi jangka panjang.",
+    "everything_included_in_each_subscription_at_a_glan": "What each plan includes.",
+    "a_quick_overview_of_how_mutqin_supports_recitation": "How Mutqin helps with recitation, memorisation, and review.",
     "name": "Nama",
-    "record_a_verse_review_the_highlighted_issues_and_k": "Rekam ayat, muraja'ah masalah yang disorot, dan jaga sesi berikutnya fokus pada yang benar-benar perlu dikerjakan.",
-    "focused_quran_memorisation_tools_for_recitation_ch": "Alat hafalan Al-Quran fokus untuk pemeriksaan tilawah, perencanaan muraja'ah, dan latihan harian yang stabil.",
+    "record_a_verse_review_the_highlighted_issues_and_k": "Record a verse, review the weak spots, and keep the next session focused.",
+    "focused_quran_memorisation_tools_for_recitation_ch": "Quran memorisation tools for practice, recitation checks, and review.",
     "roadmap": "Peta Jalan",
     "tajweed_guide": "Panduan Tajwid",
     "memorization_tips": "Tips Hafalan",
@@ -1875,82 +1879,82 @@
     "network": "Kesalahan jaringan. Periksa koneksi Anda."
   },
   "about": {
-    "tag": "Mutqin • Teman Hifz",
-    "heroTitle": "Jalan terstruktur menuju penguasaan Al-Qur'an",
-    "heroDesc": "Mutqin dirancang untuk membantu Anda menghafal, muraja'ah, dan mempertahankan Al-Qur'an dengan kejelasan dan konsistensi — didukung bimbingan cerdas dan koreksi lembut.",
-    "ctaPrimary": "Mulai Perjalanan Anda",
-    "ctaSecondary": "Pelajari Lebih Lanjut",
-    "purposeTitle": "Tujuan",
-    "purposeDesc": "Membuat hafalan Al-Qur'an terstruktur, berkelanjutan, dan sangat personal.",
-    "approachTitle": "Pendekatan",
-    "approachDesc": "Pembelajaran berbasis AI yang menghormati metode pengajaran tradisional.",
-    "outcomeTitle": "Hasil",
-    "outcomeDesc": "Retensi lebih kuat, muraja'ah konsisten, dan akurasi lebih baik.",
-    "verse": "\"Sesungguhnya Kami telah memudahkan Al-Qur'an untuk diingat.\" — 54:17",
-    "title": "Tentang Mutqin"
+    "tag": "Mutqin",
+    "heroTitle": "About Mutqin",
+    "heroDesc": "Mutqin helps you memorise, revise, and retain the Qur'an through daily practice. Listen, repeat, and always know what to do next.",
+    "ctaPrimary": "Start practising",
+    "ctaSecondary": "Our mission",
+    "purposeTitle": "Purpose",
+    "purposeDesc": "Make Qur'an memorisation clear enough for daily use.",
+    "approachTitle": "Approach",
+    "approachDesc": "Practice tools that sit alongside a real teacher, not in place of one.",
+    "outcomeTitle": "Outcome",
+    "outcomeDesc": "Steady revision, clearer next steps, and better accuracy.",
+    "verse": "\"Indeed, We have made the Qur'an easy to remember.\" (54:17)",
+    "title": "About Mutqin"
   },
   "aboutUs": {
-    "title": "Tentang Kami",
-    "kicker": "Tentang Mutqin",
-    "built_for_focused_quran_practice": "Dibuat untuk latihan Al-Quran yang fokus.",
-    "calm_study_flow": "Alur belajar tenang",
-    "revision_led_learning": "Pembelajaran berbasis muraja'ah",
-    "built_around_consistency": "Dibangun di sekitar konsistensi",
-    "why_people_stay": "Mengapa orang tetap",
-    "less_friction_clearer_progress_better_return_point": "Lebih sedikit hambatan, progres lebih jelas, titik kembali lebih baik.",
-    "session_setup_is_simple_enough_for_daily_use": "Pengaturan sesi cukup sederhana untuk penggunaan harian.",
-    "revision_signals_help_learners_revisit_what_needs_": "Sinyal muraja'ah membantu pelajar mengunjungi kembali yang perlu perhatian.",
-    "the_interface_stays_focused_instead_of_overwhelmin": "Antarmuka tetap fokus alih-alih membebani.",
-    "why_it_exists": "Mengapa ada",
-    "what_it_does": "Apa yang dilakukannya",
-    "what_it_respects": "Apa yang dihormatinya",
-    "the_product_principle": "Prinsip produk",
-    "focused_workflow": "Alur kerja fokus",
-    "reliable_revision": "Muraja'ah andal",
-    "cleaner_decisions": "Keputusan lebih bersih"
+    "title": "About",
+    "kicker": "About Mutqin",
+    "built_for_focused_quran_practice": "Built for daily Quran practice.",
+    "calm_study_flow": "Simple study flow",
+    "revision_led_learning": "Review that sticks",
+    "built_around_consistency": "Built for consistency",
+    "why_people_stay": "Why people stay",
+    "less_friction_clearer_progress_better_return_point": "Less fuss, clearer progress, and a clear place to return.",
+    "session_setup_is_simple_enough_for_daily_use": "Session setup is simple enough for daily use.",
+    "revision_signals_help_learners_revisit_what_needs_": "Review reminders help you revisit what needs attention.",
+    "the_interface_stays_focused_instead_of_overwhelmin": "The interface stays focused instead of crowded.",
+    "why_it_exists": "Why it exists",
+    "what_it_does": "What it does",
+    "what_it_respects": "What it respects",
+    "the_product_principle": "The principle",
+    "focused_workflow": "Focused practice",
+    "reliable_revision": "Reliable review",
+    "cleaner_decisions": "Clearer choices"
   },
   "mission": {
-    "title": "Misi Kami",
-    "kicker": "Misi Kami",
-    "make_consistent_quran_practice_easier_to_understan": "Membuat latihan Al-Quran konsisten lebih mudah dipahami.",
-    "what_that_means": "Apa artinya",
-    "clear_entry_point": "Titik masuk jelas",
-    "beginners_should_know_what_to_do_in_the_first_minu": "Pemula harus tahu apa yang harus dilakukan di menit pertama.",
-    "reliable_revision_loop": "Siklus muraja'ah andal",
-    "weak_ayahs_should_surface_before_they_become_large": "Ayah lemah harus muncul sebelum menjadi celah lebih besar.",
-    "respect_for_real_study": "Menghormati belajar nyata",
-    "the_product_should_support_teachers_halaqah_and_pe": "Produk harus mendukung guru, halaqah, dan rutinitas pribadi.",
-    "lower_the_barrier": "Turunkan hambatan",
-    "make_the_first_minute_simple_enough_for_beginners_": "Buat menit pertama cukup sederhana untuk pemula dan cukup stabil untuk pelajar yang kembali.",
-    "improve_retention": "Tingkatkan retensi",
-    "surface_weak_ayahs_before_they_turn_into_larger_re": "Tampilkan ayah lemah sebelum menjadi celah muraja'ah lebih besar yang sulit dipulihkan.",
-    "respect_real_study": "Hormati belajar nyata",
-    "fit_naturally_alongside_a_teacher_halaqah_or_perso": "Cocok secara alami di samping guru, halaqah, atau rutinitas pribadi tanpa kebisingan yang tidak perlu.",
-    "how_success_looks": "Seperti apa kesuksesan",
-    "simpler_starts": "Awal lebih sederhana",
-    "stronger_retention": "Retensi lebih kuat",
-    "more_confidence": "Lebih percaya diri"
+    "title": "Our mission",
+    "kicker": "Our mission",
+    "make_consistent_quran_practice_easier_to_understan": "Make consistent Quran practice easier to start and keep going.",
+    "what_that_means": "What that means",
+    "clear_entry_point": "Clear starting point",
+    "beginners_should_know_what_to_do_in_the_first_minu": "Beginners should know what to do in the first minute.",
+    "reliable_revision_loop": "Reliable review",
+    "weak_ayahs_should_surface_before_they_become_large": "Weak ayahs should show up before they become larger gaps.",
+    "respect_for_real_study": "Respect for real study",
+    "the_product_should_support_teachers_halaqah_and_pe": "The product should support teachers, halaqah, and personal routines.",
+    "lower_the_barrier": "Lower the barrier",
+    "make_the_first_minute_simple_enough_for_beginners_": "Make the first minute simple for beginners and steady for returning learners.",
+    "improve_retention": "Improve retention",
+    "surface_weak_ayahs_before_they_turn_into_larger_re": "Surface weak ayahs before they turn into larger review gaps.",
+    "respect_real_study": "Respect real study",
+    "fit_naturally_alongside_a_teacher_halaqah_or_perso": "Fit alongside a teacher, halaqah, or personal routine without extra noise.",
+    "how_success_looks": "How success looks",
+    "simpler_starts": "Simpler starts",
+    "stronger_retention": "Stronger retention",
+    "more_confidence": "More confidence"
   },
   "donate": {
-    "title": "Dukung Mutqin",
-    "donate": "Donasi",
-    "support_a_simpler_memorisation_experience": "Dukung pengalaman hafalan yang lebih sederhana.",
-    "product_maintenance": "Pemeliharaan produk",
-    "faster_iteration": "Iterasi lebih cepat",
-    "better_student_experience": "Pengalaman siswa lebih baik",
-    "support_focus": "Fokus dukungan",
-    "fund_the_next_practical_improvements_students_feel": "Danai perbaikan praktis berikutnya yang langsung dirasakan siswa.",
-    "flexible": "Fleksibel",
-    "one_time_support": "Dukungan sekali",
-    "help_with_ongoing_improvements_maintenance_and_car": "Bantu perbaikan berkelanjutan, pemeliharaan, dan penyempurnaan di seluruh platform.",
-    "monthly_support": "Dukungan bulanan",
-    "support_steady_iteration_on_onboarding_revision_an": "Dukung iterasi stabil pada onboarding, muraja'ah, dan kegunaan dengan kontribusi terprediksi.",
-    "targeted": "Tertarget",
-    "project_support": "Dukungan proyek",
-    "back_focused_improvements_for_a_specific_part_of_t": "Dukung perbaikan fokus untuk bagian tertentu dari pengalaman Mutqin yang perlu perhatian ekstra.",
-    "start_the_conversation": "Mulai percakapan",
-    "if_you_want_to_support_mutqin_contact_us_with_the_": "Jika ingin mendukung Mutqin, hubungi kami dengan subjek \"Donation\".",
-    "contact_us": "Hubungi Kami"
+    "title": "Support",
+    "donate": "Support",
+    "support_a_simpler_memorisation_experience": "Need help with practice, your account, or a session?",
+    "product_maintenance": "Getting started",
+    "faster_iteration": "Your account",
+    "better_student_experience": "During a session",
+    "support_focus": "Help topics",
+    "fund_the_next_practical_improvements_students_feel": "Find answers here, or write to us anytime.",
+    "flexible": "Practice",
+    "one_time_support": "Checking recitation",
+    "help_with_ongoing_improvements_maintenance_and_car": "Recite while Mutqin follows along. It is a practice helper, not a replacement for a teacher.",
+    "monthly_support": "Something not working?",
+    "support_steady_iteration_on_onboarding_revision_an": "Refresh once. If that fails, sign out and back in. For recitation, allow microphone access in your browser.",
+    "targeted": "Feedback",
+    "project_support": "Share feedback",
+    "back_focused_improvements_for_a_specific_part_of_t": "Tell us what helped, what was unclear, or how practice could be easier.",
+    "start_the_conversation": "Contact us",
+    "if_you_want_to_support_mutqin_contact_us_with_the_": "Ask about billing, practice, or feedback anytime.",
+    "contact_us": "Contact us"
   },
   "hifzPlan": {
     "choose_your_daily_goal": "Pilih Target Harian Anda",

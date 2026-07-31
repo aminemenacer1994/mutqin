@@ -20,6 +20,47 @@ export const SESSION_STORAGE_KEYS = {
 export const CENTRAL_SESSION_STORAGE_KEY = 'mutqin.sessionState'
 
 export const DEFAULT_ALQURAN_RECITER = 'ar.alafasy'
+
+/**
+ * Curated Arabic verse-by-verse editions from api.alquran.cloud.
+ * `supportsWordHighlighting` marks clear murattal voices where estimated
+ * word sync is useful; mujawwad / low-bitrate / niche voices stay audio-only.
+ * The first group aligns with quran.com `/resources/recitations` where mapped.
+ */
+export const ALQURAN_RECITER_OPTIONS = [
+  { id: 'ar.alafasy', name: 'Mishari Rashid al-Afasy', supportsWordHighlighting: true },
+  { id: 'ar.abdulbasitmurattal', name: 'Abdul Basit (Murattal)', supportsWordHighlighting: true },
+  { id: 'ar.abdurrahmaansudais', name: 'Abdur-Rahman as-Sudais', supportsWordHighlighting: true },
+  { id: 'ar.hanirifai', name: 'Hani ar-Rifai', supportsWordHighlighting: true },
+  { id: 'ar.husary', name: 'Mahmoud Khalil Al-Husary', supportsWordHighlighting: true },
+  { id: 'ar.minshawi', name: 'Mohamed Siddiq al-Minshawi', supportsWordHighlighting: true },
+  { id: 'ar.saoodshuraym', name: 'Sa\'ud ash-Shuraym', supportsWordHighlighting: true },
+  { id: 'ar.shaatree', name: 'Abu Bakr ash-Shatri', supportsWordHighlighting: true },
+  { id: 'ar.mahermuaiqly', name: 'Maher Al Muaiqly', supportsWordHighlighting: true },
+  { id: 'ar.hudhaify', name: 'Ali Al-Hudhaify', supportsWordHighlighting: true },
+  { id: 'ar.abdullahbasfar', name: 'Abdullah Basfar', supportsWordHighlighting: true },
+  { id: 'ar.muhammadayyoub', name: 'Muhammad Ayyoub', supportsWordHighlighting: true },
+  { id: 'ar.muhammadjibreel', name: 'Muhammad Jibreel', supportsWordHighlighting: true },
+  { id: 'ar.ahmedajamy', name: 'Ahmed ibn Ali al-Ajamy', supportsWordHighlighting: true },
+  { id: 'ar.husarymujawwad', name: 'Husary (Mujawwad)', supportsWordHighlighting: false },
+  { id: 'ar.minshawimujawwad', name: 'Minshawi (Mujawwad)', supportsWordHighlighting: false },
+  { id: 'ar.abdulsamad', name: 'Abdul Basit (Mujawwad)', supportsWordHighlighting: false },
+  { id: 'ar.ibrahimakhbar', name: 'Ibrahim Akhdar', supportsWordHighlighting: false },
+  { id: 'ar.parhizgar', name: 'Shahriar Parhizgar', supportsWordHighlighting: false },
+  { id: 'ar.aymanswoaid', name: 'Ayman Sowaid', supportsWordHighlighting: false }
+]
+
+export function reciterSupportsWordHighlighting(reciterId, reciters = ALQURAN_RECITER_OPTIONS) {
+  const id = String(reciterId || '')
+  if (!id) return false
+  const list = Array.isArray(reciters) ? reciters : ALQURAN_RECITER_OPTIONS
+  const fromList = list.find(entry => entry?.id === id)
+  if (fromList && typeof fromList.supportsWordHighlighting === 'boolean') {
+    return fromList.supportsWordHighlighting
+  }
+  const fromDefaults = ALQURAN_RECITER_OPTIONS.find(entry => entry.id === id)
+  return fromDefaults?.supportsWordHighlighting === true
+}
 export const RECITATION_IDB_NAME = 'mutqin-recitation-sessions'
 export const RECITATION_IDB_VERSION = 2
 export const RECITATION_IDB_STORE = 'sessions'

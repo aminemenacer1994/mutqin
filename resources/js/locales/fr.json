@@ -123,7 +123,10 @@
     "noAudioPlayed": "Aucun audio d'ayah joué pour cette session.",
     "to": "à",
     "rangeHint": "Gardez des plages courtes pour un hifz ciblé.",
-    "reciterHint": "Change la voix audio de la session.",
+    "reciterHint": "Change la voix audio de la session. Le surlignage des mots reste activé pour ce récitateur.",
+    "reciterNoWordHighlight": "Audio uniquement pour ce récitateur — le surlignage des mots n’est pas disponible.",
+    "recitersWithWordHighlight": "Avec surlignage des mots",
+    "recitersAudioOnly": "Audio uniquement",
     "repeatHint": "Répétez chaque verset {count} fois avant de continuer.",
     "surah": "Sourate",
     "ayahRange": "Plage d'ayahs",
@@ -148,117 +151,117 @@
   },
   "homepage": {
     "hero": {
-      "badge": "Apprentissage du Coran par IA",
-      "title": "Mémorisez le Coran avec une boucle de pratique plus calme et précise.",
-      "desc": "Mutqin réunit ayahs, enregistrements, vérifications IA, révision et points faibles dans un espace focalisé.",
+      "badge": "Mémorisation du Coran",
+      "title": "Mémorisez le Coran avec une pratique quotidienne claire.",
+      "desc": "Écoutez, répétez et vérifiez votre récitation. Mutqin regroupe vos ayahs, votre progression et la prochaine étape.",
       "problem": "Le problème :",
-      "problemText": "Le hifz se fragmente quand ayahs faibles, enregistrements et plans de révision sont séparés.",
+      "problemText": "Les ayahs faibles, les enregistrements et les plans de révision sont souvent séparés, et la pratique s’effondre.",
       "solution": "La solution :",
-      "solutionText": "Pratiquez par petites plages, vérifiez récitation et rappel, puis révisez les ayahs exactes à retravailler.",
+      "solutionText": "Pratiquez une courte plage, vérifiez ce que vous avez récité, puis révisez les ayahs à retravailler.",
       "startFree": "Commencer gratuitement",
       "seeFeatures": "Voir les fonctionnalités"
     },
     "demo": {
-      "title": "Analyse IA en direct",
-      "quote": "\"Ikhfa' faible — maintenez la nasalisation 2 temps.\"",
-      "recording": "Enregistrement... → 96 % de précision"
+      "title": "Vérification de récitation",
+      "quote": "\"L’ikhfa’ demande du travail. Tenez le son nasal sur deux temps.\"",
+      "recording": "Enregistrement... 96 % de correspondance"
     },
     "features": {
-      "kicker": "Conçu pour la récitation quotidienne",
-      "title": "Tout ce qu'il faut pour maîtriser la récitation",
-      "subtitle": "Du premier enregistrement à la révision à long terme, chaque outil comble un vrai manque de retour.",
+      "kicker": "Pratique quotidienne",
+      "title": "Ce que vous obtenez",
+      "subtitle": "Des outils pour écouter, répéter, vérifier et réviser.",
       "items": {
         "recitationReview": {
-          "title": "Revue de récitation IA",
-          "description": "Enregistrez une ayah et comparez votre tentative au texte avec un retour mot par mot.",
-          "result": "Repérez la section à répéter ensuite.",
+          "title": "Vérification de récitation",
+          "description": "Récitez de mémoire pendant que Mutqin suit.",
+          "result": "Voyez quels mots demandent plus de travail.",
           "badge": "gratuit"
         },
         "smartMemorisation": {
-          "title": "Mémorisation intelligente",
-          "description": "Utilisez flou, enchaînement, ancres et signaux de révision pour renforcer le rappel sans encombrement.",
-          "result": "Pratiquez les ayahs qui demandent attention.",
+          "title": "Pratique guidée",
+          "description": "Écoutez, suivez et répétez à votre rythme.",
+          "result": "Une session à répéter chaque jour.",
           "badge": "pro"
         },
         "stackedMushaf": {
           "title": "Vues empilées et Mushaf",
-          "description": "Passez entre cartes d'ayahs et mise en page mushaf en gardant les contrôles à portée.",
-          "result": "Lisez, écoutez et auto-vérifiez en un flux.",
+          "description": "Utilisez des cartes d’ayahs ou une mise en page mushaf.",
+          "result": "Choisissez la vue qui vous convient.",
           "badge": "gratuit"
         },
         "transitionTraining": {
-          "title": "Entraînement aux transitions",
-          "description": "Renforcez la confiance entre ayahs voisines avec liaison et répétition cumulative.",
-          "result": "Réduisez les pauses entre versets.",
+          "title": "Plans de mémorisation",
+          "description": "Recevez une prochaine étape claire selon votre session.",
+          "result": "Sachez quoi pratiquer ensuite.",
           "badge": "pro"
         },
         "recordingLibrary": {
-          "title": "Bibliothèque d'enregistrements",
-          "description": "Enregistrez les tentatives par sourate et ayah pour retrouver facilement les anciennes révisions.",
-          "result": "Gardez votre historique de récitation organisé.",
+          "title": "Focus sur les mots",
+          "description": "Voyez quels mots demandent encore de l’attention.",
+          "result": "Revenez d’abord aux passages difficiles.",
           "badge": "gratuit limité"
         },
         "reviewAnalytics": {
-          "title": "Analyses de révision",
-          "description": "Suivez ayahs faibles, tentatives répétées et priorité de révision entre sessions.",
-          "result": "Sachez quoi corriger avant la prochaine session.",
+          "title": "Planification de révision",
+          "description": "Revenez aux ayahs mémorisées avant qu’elles ne s’effacent.",
+          "result": "Gardez le travail antérieur solide.",
           "badge": "pro"
         }
       }
     },
     "steps": {
-      "kicker": "La boucle de pratique",
-      "title": "Trois étapes vers une récitation fluide",
-      "subtitle": "Une boucle courte à répéter chaque jour : réciter, diagnostiquer, réviser ce qui doit l'être.",
+      "kicker": "Comment ça marche",
+      "title": "Trois étapes",
+      "subtitle": "Pratiquez, repérez les points faibles, puis y revenir.",
       "items": {
         "record": {
-          "title": "Enregistrer",
-          "description": "Récitez l'ayah ou la session sélectionnée directement dans le navigateur.",
-          "microcopy": "Auto-vérifications rapides sans envoi"
+          "title": "Pratiquer",
+          "description": "Écoutez, suivez et répétez les ayahs choisies.",
+          "microcopy": "De courtes sessions suffisent"
         },
         "review": {
-          "title": "Réviser",
-          "description": "Voyez quels mots étaient forts, proches ou manqués après la récitation.",
-          "microcopy": "Retour clair et actionnable"
+          "title": "Repérer",
+          "description": "Voyez quels mots demandent plus d’attention après la récitation.",
+          "microcopy": "Retour clair"
         },
         "repeat": {
-          "title": "Répéter",
-          "description": "Utilisez flou, enchaînement, ancres et tentatives enregistrées pour reprendre les ayahs faibles.",
-          "microcopy": "La pratique suit vos points faibles"
+          "title": "Revenir",
+          "description": "Suivez la prochaine étape pour garder les ayahs solides.",
+          "microcopy": "Révisez avant qu’elles ne s’effacent"
         }
       }
     },
     "testimonials": {
-      "kicker": "Signaux d'apprentissage réels",
-      "title": "Approuvé par des élèves et enseignants engagés",
+      "kicker": "Élèves et enseignants",
+      "title": "Ce que disent les gens",
       "items": {
         "abdullah": {
-          "quote": "Mutqin a corrigé mon « ض » en 2 semaines après 5 ans de difficulté. Alhamdulillah.",
-          "proof": "Retour ciblé sur les makharij",
+          "quote": "Mutqin m’a aidé à corriger mon ض après des années de difficulté. Alhamdulillah.",
+          "proof": "Pratique des lettres",
           "author": "Abdullah Khan",
           "role": "12 juz mémorisés",
           "initials": "AK"
         },
         "fatima": {
-          "quote": "La répétition espacée a sauvé mon hifdh. Je n'oublie plus. Essentiel pour chaque hafidh.",
-          "proof": "Révision quotidienne des versets faibles",
+          "quote": "La révision quotidienne empêche mon hifdh de glisser. Je l’utilise chaque jour.",
+          "proof": "Révision quotidienne",
           "author": "Fatima El-Sayed",
           "role": "Hafidha en cours",
           "initials": "FE"
         },
         "hisham": {
-          "quote": "En tant qu'enseignant de tajwid, j'utilise Mutqin pour repérer instantanément les points faibles des élèves.",
-          "proof": "Visibilité pour l'enseignant",
+          "quote": "J’utilise Mutqin pour voir où mes élèves ont besoin de plus de travail.",
+          "proof": "Usage enseignant",
           "author": "Ustadh Hisham",
-          "role": "Qari certifié",
+          "role": "Enseignant de tajwid",
           "initials": "UH"
         }
       }
     },
     "pricing": {
-      "kicker": "Des tarifs qui évoluent avec la pratique",
-      "title": "Tarification simple et transparente",
-      "subtitle": "Commencez gratuitement. Passez à la version supérieure seulement si besoin.",
+      "kicker": "Tarifs",
+      "title": "Tarification simple",
+      "subtitle": "Commencez gratuitement. Passez à la version supérieure quand vous voulez plus de retours et d’historique.",
       "starter": "Starter",
       "premium": "Premium",
       "monthly": "Mensuel",
@@ -271,38 +274,38 @@
     },
     "faq": {
       "kicker": "Questions fréquentes",
-      "title": "Des réponses avant de commencer",
-      "subtitle": "Aperçu rapide de la façon dont Mutqin soutient récitation, mémorisation et rétention.",
+      "title": "FAQ",
+      "subtitle": "Comment Mutqin aide à la récitation, à la mémorisation et à la révision.",
       "items": {
         "whatIsMutqin": {
-          "question": "Qu'est-ce que Mutqin ?",
-          "answer": "Mutqin est un espace de mémorisation et récitation du Coran qui combine outils de pratique, enregistrements, signaux de révision et suivi de progression."
+          "question": "Qu’est-ce que Mutqin ?",
+          "answer": "Mutqin est une application de mémorisation du Coran. Vous pratiquez, vérifiez votre récitation et suivez ce qu’il faut réviser ensuite."
         },
         "howMemorisation": {
           "question": "Comment fonctionne la mémorisation ?",
-          "answer": "Vous choisissez une sourate et une plage d'ayahs, répétez par petits blocs et utilisez flou, enchaînement et sessions enregistrées pour renforcer le rappel."
+          "answer": "Choisissez une sourate et une plage d’ayahs, pratiquez par courts blocs, et utilisez le flou, l’enchaînement et les sessions enregistrées."
         },
         "howAiFeedback": {
-          "question": "Comment fonctionne le retour IA ?",
-          "answer": "Le retour IA écoute après votre pratique, signale les mots faibles ou manqués probables et propose une répétition plus claire qu'un score global vague."
+          "question": "Comment fonctionne le retour ?",
+          "answer": "Après la pratique, Mutqin signale les mots qui peuvent être faibles ou manqués, pour que vous sachiez quoi répéter."
         },
         "whatIsPro": {
-          "question": "Qu'est-ce que Pro ?",
-          "answer": "Pro est le plan Mutqin complet pour les étudiants qui veulent révision IA, vérifications de mémorisation, analyses avancées, sessions illimitées et outils de planification."
+          "question": "Qu’est-ce que Pro ?",
+          "answer": "Pro inclut la vérification de récitation, les contrôles de mémorisation, plus d’analyses, des sessions illimitées et des outils de planification."
         },
         "howRevision": {
           "question": "Comment fonctionne la révision ?",
-          "answer": "Mutqin suit ayahs faibles, pratique récente et révisions dues pour revisiter ce qui risque de s'effacer avant un backlog plus large."
+          "answer": "Mutqin suit les ayahs faibles, la pratique récente et les révisions dues pour revenir à ce qui risque de s’effacer."
         }
       }
     },
     "contact": {
-      "title": "Dites-nous ce pour quoi vous avez besoin d'aide",
-      "subtitle": "Questions sur facturation, workflows de mémorisation ou retours produit.",
+      "title": "Contactez-nous",
+      "subtitle": "Questions sur la facturation, la pratique ou vos retours.",
       "email": "E-mail",
       "subject": "Objet",
       "message": "Message",
-      "extendedSubtitle": "Questions sur facturation, workflows de mémorisation ou retours produit. Réponse simple et actionnable.",
+      "extendedSubtitle": "Questions sur la facturation, la pratique ou vos retours. Nous répondrons clairement.",
       "sending": "Envoi...",
       "sendMessage": "Envoyer le message",
       "errors": {
@@ -312,13 +315,13 @@
         "subject": "Veuillez entrer un objet.",
         "message": "Veuillez entrer un message."
       },
-      "success": "Votre message a été envoyé avec succès.",
+      "success": "Votre message a été envoyé.",
       "errorFields": "Vérifiez les champs signalés et réessayez.",
       "errorSend": "Impossible d'envoyer le message. Réessayez."
     },
     "cta": {
-      "title": "Transformez les ayahs faibles en un parcours de révision clair.",
-      "subtitle": "Enregistrez un verset, révisez les points signalés, et concentrez la prochaine session.",
+      "title": "Sachez quoi pratiquer ensuite.",
+      "subtitle": "Enregistrez un verset, révisez les points faibles, et gardez la prochaine session ciblée.",
       "button": "Créer un compte gratuit",
       "note": "Aucune carte requise pour le plan gratuit."
     },
@@ -332,7 +335,7 @@
       "connect": "Réseaux",
       "privacy": "Confidentialité",
       "terms": "Conditions",
-      "tagline": "2026 Mutqin · « Récite le Coran avec mesure. » 🤍",
+      "tagline": "2026 Mutqin · « Récite le Coran avec mesure. »",
       "aboutUs": "À propos",
       "ourMission": "Notre mission"
     },
@@ -343,8 +346,8 @@
     },
     "floatingBadges": {
       "tajweedScore": "Score tajwid : +27%",
-      "weakVerses": "Versets faibles planifiés auto",
-      "dailyMinutes": "15 min/jour de mémorisation"
+      "weakVerses": "Versets faibles en file pour révision",
+      "dailyMinutes": "15 min/jour de pratique"
     },
     "planFeatures": {
       "sessionSetup": "Configuration de session de base complète",
@@ -358,13 +361,13 @@
       "anchorMode": "Mode ancre",
       "manualSelfAssessment": "Enregistrement d'auto-évaluation manuelle",
       "manualSelfAssessmentPlus": "Auto-évaluation manuelle + enregistrement personnel",
-      "hifzPlan": "Plan Hifz personnalisé structuré",
+      "hifzPlan": "Plan Hifz personnalisé",
       "spacedRetention": "Rétention espacée des sessions",
       "adaptiveRevision": "Planification adaptative de révision",
       "progressTracking": "Suivi de progression",
-      "allTechniques": "Toutes les techniques de mémorisation incluses",
-      "aiRecitation": "Récitation IA",
-      "aiMemorisationChecker": "Vérificateur de mémorisation IA",
+      "allTechniques": "Toutes les techniques de mémorisation",
+      "aiRecitation": "Vérification de récitation",
+      "aiMemorisationChecker": "Vérification de mémorisation",
       "advancedAnalysis": "Analyse avancée",
       "offlineDownloads": "Téléchargement pour écoute hors ligne",
       "voiceHifzBuilder": "Créateur de plan Hifz vocal"
@@ -378,31 +381,31 @@
       "chainingPractice": "Enchaînement et pratique de transition",
       "anchorMode": "Mode ancre",
       "manualRecording": "Enregistrement d'auto-évaluation manuelle",
-      "aiRecitationReview": "Revue de récitation IA",
-      "aiMemorisationChecker": "Vérificateur de mémorisation IA",
-      "hifzPlan": "Plan Hifz personnalisé structuré",
+      "aiRecitationReview": "Vérification de récitation",
+      "aiMemorisationChecker": "Vérification de mémorisation",
+      "hifzPlan": "Plan Hifz personnalisé",
       "spacedRetention": "Rétention espacée des sessions",
       "voiceHifzBuilder": "Créateur de plan Hifz vocal",
       "adaptiveRevision": "Planification adaptative de révision",
       "progressTracking": "Suivi de progression",
-      "advancedAnalytics": "Analyses de révision avancées",
+      "advancedAnalytics": "Analyses de révision",
       "offlineDownloads": "Téléchargements audio hors ligne",
       "unlimited": "Illimité"
     },
-    "a_short_loop_you_can_repeat_every_day_recite_diagn": "Une boucle courte à répéter chaque jour : réciter, diagnostiquer, revoir ce qui demande du travail.",
-    "start_free_upgrade_only_when_you_need_deeper_recit": "Commencez gratuitement. Passez au supérieur seulement si vous avez besoin d'un retour plus approfondi, d'historique et d'outils de coaching.",
+    "a_short_loop_you_can_repeat_every_day_recite_diagn": "Pratiquez, repérez les points faibles, puis révisez ce qui demande du travail.",
+    "start_free_upgrade_only_when_you_need_deeper_recit": "Commencez gratuitement. Passez à la version supérieure quand vous voulez plus de retours et d’historique.",
     "free": "Gratuit",
-    "for_trying_the_workflow": "Pour essayer le flux de travail",
+    "for_trying_the_workflow": "Pour essayer Mutqin",
     "start_free": "Commencer gratuitement",
     "most_useful": "Le plus utile",
-    "teacher_ready": "Prêt pour les enseignants",
+    "teacher_ready": "Pour les enseignants",
     "pro": "Pro",
     "feature_comparison": "Comparaison des fonctionnalités",
-    "everything_included_in_each_subscription_at_a_glan": "Tout ce qui est inclus dans chaque abonnement en un coup d'œil.",
-    "a_quick_overview_of_how_mutqin_supports_recitation": "Un aperçu rapide de la façon dont Mutqin soutient la récitation, la mémorisation et la rétention à long terme.",
+    "everything_included_in_each_subscription_at_a_glan": "Ce que chaque plan inclut.",
+    "a_quick_overview_of_how_mutqin_supports_recitation": "Comment Mutqin aide à la récitation, à la mémorisation et à la révision.",
     "name": "Nom",
-    "record_a_verse_review_the_highlighted_issues_and_k": "Enregistrez un verset, examinez les problèmes signalés et gardez la prochaine session centrée sur ce qui demande vraiment du travail.",
-    "focused_quran_memorisation_tools_for_recitation_ch": "Outils de mémorisation du Coran axés sur les vérifications de récitation, la planification de révision et une pratique quotidienne régulière.",
+    "record_a_verse_review_the_highlighted_issues_and_k": "Enregistrez un verset, révisez les points faibles, et gardez la prochaine session ciblée.",
+    "focused_quran_memorisation_tools_for_recitation_ch": "Outils de mémorisation du Coran pour la pratique, la vérification et la révision.",
     "roadmap": "Feuille de route",
     "tajweed_guide": "Guide du tajweed",
     "memorization_tips": "Conseils de mémorisation",
@@ -1875,82 +1878,82 @@
     "network": "Erreur réseau. Vérifiez votre connexion."
   },
   "about": {
-    "tag": "Mutqin • Compagnon de Hifz",
-    "heroTitle": "Un chemin structuré vers la maîtrise du Coran",
-    "heroDesc": "Mutqin vous aide à mémoriser, réviser et retenir le Coran avec clarté et régularité.",
-    "ctaPrimary": "Commencez votre parcours",
-    "ctaSecondary": "En savoir plus",
+    "tag": "Mutqin",
+    "heroTitle": "À propos de Mutqin",
+    "heroDesc": "Mutqin vous aide à mémoriser, réviser et retenir le Coran par une pratique quotidienne. Écoutez, répétez, et sachez toujours quoi faire ensuite.",
+    "ctaPrimary": "Commencer à pratiquer",
+    "ctaSecondary": "Notre mission",
     "purposeTitle": "Objectif",
-    "purposeDesc": "Rendre la mémorisation du Coran structurée, durable et personnelle.",
+    "purposeDesc": "Rendre la mémorisation du Coran assez claire pour un usage quotidien.",
     "approachTitle": "Approche",
-    "approachDesc": "Apprentissage assisté par IA respectant les méthodes traditionnelles.",
+    "approachDesc": "Des outils de pratique qui accompagnent un vrai enseignant, sans le remplacer.",
     "outcomeTitle": "Résultat",
-    "outcomeDesc": "Meilleure rétention, révision régulière et précision accrue.",
-    "verse": "\"Et certes, Nous avons rendu le Coran facile à retenir.\" — 54:17",
+    "outcomeDesc": "Révision régulière, prochaines étapes plus claires, et meilleure précision.",
+    "verse": "« Oui, Nous avons rendu le Coran facile à méditer. » (54:17)",
     "title": "À propos de Mutqin"
   },
   "aboutUs": {
-    "title": "À propos de nous",
+    "title": "À propos",
     "kicker": "À propos de Mutqin",
-    "built_for_focused_quran_practice": "Conçu pour une pratique coranique concentrée.",
-    "calm_study_flow": "Flux d'étude calme",
-    "revision_led_learning": "Apprentissage guidé par la révision",
-    "built_around_consistency": "Construit autour de la régularité",
+    "built_for_focused_quran_practice": "Conçu pour une pratique coranique quotidienne.",
+    "calm_study_flow": "Flux d’étude simple",
+    "revision_led_learning": "Révision qui tient",
+    "built_around_consistency": "Pensé pour la régularité",
     "why_people_stay": "Pourquoi les gens restent",
-    "less_friction_clearer_progress_better_return_point": "Moins de friction, progression plus claire, meilleurs points de retour.",
+    "less_friction_clearer_progress_better_return_point": "Moins de friction, progression plus claire, et un endroit clair pour revenir.",
     "session_setup_is_simple_enough_for_daily_use": "La configuration de session est assez simple pour un usage quotidien.",
-    "revision_signals_help_learners_revisit_what_needs_": "Les signaux de révision aident les apprenants à revisiter ce qui demande attention.",
-    "the_interface_stays_focused_instead_of_overwhelmin": "L'interface reste concentrée au lieu d'être écrasante.",
+    "revision_signals_help_learners_revisit_what_needs_": "Les rappels de révision aident à revenir sur ce qui demande attention.",
+    "the_interface_stays_focused_instead_of_overwhelmin": "L’interface reste claire plutôt que surchargée.",
     "why_it_exists": "Pourquoi il existe",
-    "what_it_does": "Ce qu'il fait",
-    "what_it_respects": "Ce qu'il respecte",
-    "the_product_principle": "Le principe du produit",
-    "focused_workflow": "Flux de travail concentré",
+    "what_it_does": "Ce qu’il fait",
+    "what_it_respects": "Ce qu’il respecte",
+    "the_product_principle": "Le principe",
+    "focused_workflow": "Pratique ciblée",
     "reliable_revision": "Révision fiable",
-    "cleaner_decisions": "Décisions plus claires"
+    "cleaner_decisions": "Choix plus clairs"
   },
   "mission": {
     "title": "Notre mission",
     "kicker": "Notre mission",
-    "make_consistent_quran_practice_easier_to_understan": "Rendre la pratique régulière du Coran plus facile à comprendre.",
+    "make_consistent_quran_practice_easier_to_understan": "Rendre la pratique coranique régulière plus facile à commencer et à poursuivre.",
     "what_that_means": "Ce que cela signifie",
-    "clear_entry_point": "Point d'entrée clair",
-    "beginners_should_know_what_to_do_in_the_first_minu": "Les débutants doivent savoir quoi faire dans la première minute.",
-    "reliable_revision_loop": "Boucle de révision fiable",
-    "weak_ayahs_should_surface_before_they_become_large": "Les ayahs faibles doivent remonter avant de devenir de grands écarts.",
-    "respect_for_real_study": "Respect de l'étude réelle",
+    "clear_entry_point": "Point de départ clair",
+    "beginners_should_know_what_to_do_in_the_first_minu": "Les débutants doivent savoir quoi faire dès la première minute.",
+    "reliable_revision_loop": "Révision fiable",
+    "weak_ayahs_should_surface_before_they_become_large": "Les ayahs faibles doivent apparaître avant de devenir de plus grands écarts.",
+    "respect_for_real_study": "Respect de l’étude réelle",
     "the_product_should_support_teachers_halaqah_and_pe": "Le produit doit soutenir les enseignants, les halaqah et les routines personnelles.",
-    "lower_the_barrier": "Abaisser la barrière",
-    "make_the_first_minute_simple_enough_for_beginners_": "Rendre la première minute assez simple pour les débutants et assez stable pour les apprenants qui reviennent.",
+    "lower_the_barrier": "Baisser la barrière",
+    "make_the_first_minute_simple_enough_for_beginners_": "Rendre la première minute simple pour les débutants et stable pour ceux qui reviennent.",
     "improve_retention": "Améliorer la rétention",
-    "surface_weak_ayahs_before_they_turn_into_larger_re": "Faire remonter les ayahs faibles avant qu'elles ne deviennent de grands écarts de révision difficiles à rattraper.",
-    "respect_real_study": "Respecter l'étude réelle",
-    "fit_naturally_alongside_a_teacher_halaqah_or_perso": "S'intègre naturellement avec un enseignant, une halaqah ou une routine personnelle sans bruit inutile.",
+    "surface_weak_ayahs_before_they_turn_into_larger_re": "Faire apparaître les ayahs faibles avant qu’elles ne deviennent de plus grands écarts de révision.",
+    "respect_real_study": "Respecter l’étude réelle",
+    "fit_naturally_alongside_a_teacher_halaqah_or_perso": "S’intégrer auprès d’un enseignant, d’une halaqah ou d’une routine personnelle, sans bruit inutile.",
     "how_success_looks": "À quoi ressemble le succès",
-    "simpler_starts": "Des départs plus simples",
-    "stronger_retention": "Rétention plus forte",
+    "simpler_starts": "Départs plus simples",
+    "stronger_retention": "Meilleure rétention",
     "more_confidence": "Plus de confiance"
   },
   "donate": {
-    "title": "Soutenir Mutqin",
-    "donate": "Faire un don",
-    "support_a_simpler_memorisation_experience": "Soutenez une expérience de mémorisation plus simple.",
-    "product_maintenance": "Maintenance du produit",
-    "faster_iteration": "Itération plus rapide",
-    "better_student_experience": "Meilleure expérience étudiante",
-    "support_focus": "Soutenir le focus",
-    "fund_the_next_practical_improvements_students_feel": "Financez les prochaines améliorations pratiques que les étudiants ressentent immédiatement.",
-    "flexible": "Flexible",
-    "one_time_support": "Soutien ponctuel",
-    "help_with_ongoing_improvements_maintenance_and_car": "Aidez aux améliorations continues, à la maintenance et au peaufinage soigné de la plateforme.",
-    "monthly_support": "Soutien mensuel",
-    "support_steady_iteration_on_onboarding_revision_an": "Soutenez l'itération régulière sur l'intégration, la révision et l'ergonomie avec une contribution prévisible.",
-    "targeted": "Ciblé",
-    "project_support": "Soutien de projet",
-    "back_focused_improvements_for_a_specific_part_of_t": "Soutenez des améliorations ciblées pour une partie spécifique de l'expérience Mutqin qui demande plus d'attention.",
-    "start_the_conversation": "Commencer la conversation",
-    "if_you_want_to_support_mutqin_contact_us_with_the_": "Si vous souhaitez soutenir Mutqin, contactez-nous avec l'objet « Donation ».",
-    "contact_us": "Contactez-nous"
+    "title": "Support",
+    "donate": "Support",
+    "support_a_simpler_memorisation_experience": "Besoin d’aide pour la pratique, votre compte ou une session ?",
+    "product_maintenance": "Pour commencer",
+    "faster_iteration": "Votre compte",
+    "better_student_experience": "Pendant une session",
+    "support_focus": "Sujets d’aide",
+    "fund_the_next_practical_improvements_students_feel": "Trouvez des réponses ici, ou écrivez-nous à tout moment.",
+    "flexible": "Pratique",
+    "one_time_support": "Vérifier la récitation",
+    "help_with_ongoing_improvements_maintenance_and_car": "Récitez pendant que Mutqin suit. C’est une aide à la pratique, pas un remplacement d’enseignant.",
+    "monthly_support": "Quelque chose ne marche pas ?",
+    "support_steady_iteration_on_onboarding_revision_an": "Actualisez une fois. Sinon, déconnectez-vous puis reconnectez-vous. Pour la récitation, autorisez le micro dans le navigateur.",
+    "targeted": "Retours",
+    "project_support": "Partager un avis",
+    "back_focused_improvements_for_a_specific_part_of_t": "Dites-nous ce qui a aidé, ce qui était flou, ou comment faciliter la pratique.",
+    "start_the_conversation": "Nous contacter",
+    "if_you_want_to_support_mutqin_contact_us_with_the_": "Posez vos questions sur la facturation, la pratique ou vos retours à tout moment.",
+    "contact_us": "Nous contacter"
   },
   "hifzPlan": {
     "choose_your_daily_goal": "Choisissez votre objectif quotidien",

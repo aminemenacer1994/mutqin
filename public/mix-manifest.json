@@ -1,7 +1,7 @@
 {
-    "/js/app.js": "/js/app.js",
+    "/js/app.js": "/js/app.js?id=40224eb7cd4f186dcbb2dba6c49248ae",
     "/js/memorisation.74ef4f9f.js": "/js/memorisation.74ef4f9f.js?id=c9f4bbad974782887e7f9aac5f79ff0c",
-    "/css/app.css": "/css/app.css",
+    "/css/app.css": "/css/app.css?id=8f451e26e3fdf574408dd14e5a98dc90",
     "/js/memorisation.cf8d5b16.js": "/js/memorisation.cf8d5b16.js?id=63280e6a23630780db785f5feb061885",
     "/js/memorisation.955d3c50.js": "/js/memorisation.955d3c50.js?id=80d0e8c2313b22610366b7ebe7981464",
     "/js/memorisation.b345a163.js": "/js/memorisation.b345a163.js?id=1df96fd821432f0d6de99db52470c13d",
@@ -173,5 +173,7 @@
     "/js/memorisation.b8602ab9.js": "/js/memorisation.b8602ab9.js?id=71913f805043d2ed7cc0d19ac6e0495d",
     "/js/memorisation.7b5474b9.js": "/js/memorisation.7b5474b9.js?id=ade8c7ac4364a625d4e6ba9f0065adea",
     "/js/memorisation.51ec56ed.js": "/js/memorisation.51ec56ed.js?id=d7c860db1fae4f34b7b13887433271ab",
-    "/js/memorisation.540cee53.js": "/js/memorisation.540cee53.js"
+    "/js/memorisation.540cee53.js": "/js/memorisation.540cee53.js?id=f5757fafd34ebdeeb974b89ddf1288e9",
+    "/js/memorisation.c2eae04e.js": "/js/memorisation.c2eae04e.js?id=56d3def7df0228a46a97898c899d3d33",
+    "/js/memorisation.e29df771.js": "/js/memorisation.e29df771.js?id=56b5f20eb30fa5bac0660cb33cfb305b"
 }

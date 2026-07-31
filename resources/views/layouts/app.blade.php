@@ -3261,17 +3261,17 @@
                             </a>
                             <a class="nav-link {{ request()->routeIs('about', 'about-us') ? 'active' : '' }}" href="{{ route('about-us') }}">
                                 <i class="bi bi-people nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong>About</strong><small class="d-lg-none">Our story and approach</small></span>
+                                <span class="nav-link-copy"><strong>About</strong><small class="d-lg-none">What Mutqin is</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             <a class="nav-link {{ request()->routeIs('our-mission') ? 'active' : '' }}" href="{{ route('our-mission') }}">
                                 <i class="bi bi-compass nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong>Our Mission</strong><small class="d-lg-none">Why deliberate memorisation matters</small></span>
+                                <span class="nav-link-copy"><strong>Our mission</strong><small class="d-lg-none">What we aim for</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             <a class="nav-link {{ request()->routeIs('donate') ? 'active' : '' }}" href="{{ route('donate') }}">
-                                <i class="bi bi-heart nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong>Support</strong><small class="d-lg-none">Help make learning accessible</small></span>
+                                <i class="bi bi-life-preserver nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>Support</strong><small class="d-lg-none">Help and answers</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                         </div>
