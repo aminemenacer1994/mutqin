@@ -1349,6 +1349,19 @@ export default {
       if (this.showPostSessionModal || this.postSessionAiReciteActive || this.postSessionAdaptiveCheckActive) {
         return false
       }
+      // Live / paused / resumable practice must show Pause/End (or Resume) — never Return/Custom.
+      if (
+        this.isSessionLive
+        || this.sessionPaused
+        || this.showWelcomeBackModal
+        || this.returningUserChoicePending
+        || this.backendUnfinishedSession
+        || this.hasValidatedResumableSession
+        || this.primarySessionAction === PRIMARY_SESSION_ACTION.PAUSE_SESSION
+        || this.primarySessionAction === PRIMARY_SESSION_ACTION.RESUME_SESSION
+      ) {
+        return false
+      }
       // Only after End session confirm — do not replace the normal Start/End layout otherwise.
       return !!this.showPostSessionChoice
     },
@@ -7693,6 +7706,11 @@ export default {
       if (newVal) {
         this.showTools = false
         this.topCardMenuOpen = false
+        // Never keep ended-session CTAs under the welcome-back gate.
+        this.showPostSessionChoice = false
+        this.postSessionChoiceAction = null
+        this.postSessionChoiceOffcanvasOpen = false
+        this._pendingPostSessionChoiceRestore = null
       } else {
         this.welcomeBackModalReady = false
       }
@@ -7972,9 +7990,16 @@ export default {
     },
 
     isSessionLive(val) {
-      if (val && this.practiceFocusWeakWords?.length) {
-        this.restorePracticeFocusWeakWords()
-        this.schedulePracticeFocusWordDomSync([0, 250, 700, 1500, 2500])
+      if (val) {
+        // Live practice must never keep ended-session Return/Custom CTAs.
+        if (this.showPostSessionChoice || this._pendingPostSessionChoiceRestore?.show) {
+          this.closePostSessionChoice()
+          this._pendingPostSessionChoiceRestore = null
+        }
+        if (this.practiceFocusWeakWords?.length) {
+          this.restorePracticeFocusWeakWords()
+          this.schedulePracticeFocusWordDomSync([0, 250, 700, 1500, 2500])
+        }
       }
     },
 
@@ -14124,15 +14149,15 @@ export default {
       }
     },
     archiveEndedRecommendedSession(snapshot = null) {
-      if (!this.currentSessionRecommendationMeta) {
-        this.postSessionChoiceJustEndedTemplate = null
-        return null
-      }
+      // Always keep the just-ended session so "Return to previous session" is available
+      // after End session — not only when the session came from a recommendation.
       const template = this.buildCurrentRecommendedSessionTemplate({
         chapterId: snapshot?.chapterId,
         chapterName: snapshot?.chapterName,
         rangeStart: snapshot?.rangeStart,
         rangeEnd: snapshot?.rangeEnd,
+        fromRecommendation: !!this.currentSessionRecommendationMeta,
+        recommendationId: this.currentSessionRecommendationMeta?.recommendationId || null,
       })
       if (!template) {
         this.postSessionChoiceJustEndedTemplate = null
@@ -14178,8 +14203,21 @@ export default {
         if (clearPending) this._pendingPostSessionChoiceRestore = null
         return
       }
-      // Don't interrupt a live/paused session after refresh.
-      if (this.isSessionLive || this.sessionPaused || this.showPostSessionModal) {
+      // Don't interrupt a live/paused/resumable session after refresh or welcome-back.
+      if (
+        this.isSessionLive
+        || this.sessionPaused
+        || this.showPostSessionModal
+        || this.showWelcomeBackModal
+        || this.returningUserChoicePending
+        || this.backendUnfinishedSession
+        || this.hasValidatedResumableSession
+        || this.hasPersistedInProgressSession
+      ) {
+        this.showPostSessionChoice = false
+        this.postSessionChoiceAction = null
+        this.postSessionChoiceOffcanvasOpen = false
+        if (clearPending) this._pendingPostSessionChoiceRestore = null
         return
       }
 
@@ -23726,6 +23764,9 @@ export default {
     revealLoadedPreviousSession() {
       // Continue must never auto-open the tools offcanvas.
       this.dismissWelcomeBackAfterContinue()
+      // Never keep ended-session CTAs (Return / Custom) over a live resumed session.
+      this.closePostSessionChoice()
+      this._pendingPostSessionChoiceRestore = null
       this.sessionCompleted = false
       this.sessionCompletedAt = null
       this.sessionPaused = false
@@ -28401,20 +28442,52 @@ export default {
     },
 
     /**
-     * Remove embedded Qur’anic end-of-ayah ornaments (۝ etc.) from HTML/text.
-     * Stacked layout uses our PNG marker instead — API glyphs often paint as a
-     * solid/dashed red circle when tajweed madda colour is applied.
+     * Remove redundant circle ornaments from display HTML/text.
+     * - U+06DD end-of-ayah (stacked uses PNG markers)
+     * - U+25CC dotted-circle placeholders from orphaned combining marks
+     * - U+06DF small high rounded zero (often paints as solid+dashed circle)
      */
     stripEmbeddedAyahEndMarkers(html = '') {
       if (!html) return ''
       return String(html)
-        // U+06DD ARABIC END OF AYAH and common companion marks used as end ornaments
         .replace(/\u06DD/g, '')
         .replace(/&#x06[Dd][Dd];/gi, '')
         .replace(/&#1757;/g, '')
+        .replace(/\u25CC/g, '')
+        .replace(/&#x25[Cc][Cc];/gi, '')
+        .replace(/&#9676;/g, '')
+        .replace(/\u06DF/g, '')
+        .replace(/&#x06[Dd][Ff];/gi, '')
+        .replace(/&#1759;/g, '')
         // Empty tajweed spans left after the glyph is removed
         .replace(/<span\b[^>]*\btajweed-[^>]*>\s*<\/span>/gi, '')
         .replace(/\s+<\/span>/g, '</span>')
+    },
+
+    /**
+     * Quran-tajweed markup often opens a coloured span on a vowel that belongs
+     * to the previous letter (e.g. م[p[ِي] → <span>ِي</span>). Isolated marks
+     * force a U+25CC dotted circle, which tajweed then paints red/black.
+     * Move leading combining marks out of the span so they reattach to the base.
+     */
+    repairTajweedOrphanMarks(html = '') {
+      if (!html) return ''
+      const leadingMarks = /^[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u08D3-\u08FF\uFE70-\uFE7F]+/
+      return String(html).replace(
+        /(<span\b[^>]*\btajweed-[^>]*>)([\s\S]*?)(<\/span>)/gi,
+        (full, openTag, inner, closeTag) => {
+          const text = String(inner || '')
+          const match = text.match(leadingMarks)
+          if (!match) return full
+          const marks = match[0]
+          const rest = text.slice(marks.length)
+          if (!rest) {
+            // Mark-only span: keep the marks, drop the empty coloured wrapper.
+            return marks
+          }
+          return `${marks}${openTag}${rest}${closeTag}`
+        }
+      )
     },
 
     getDisplayArabic(verse) {
@@ -28560,7 +28633,7 @@ export default {
         .replace(/<\/span><\/span>/g, '</span>')
         .replace(/(?:class=|data-tajweed=)&quot;[^&]*&quot;/g, '')
 
-      return normalized
+      return this.repairTajweedOrphanMarks(normalized)
     },
 
     stripTajweedMarkup(text) {
@@ -29447,6 +29520,33 @@ export default {
       this.isPlaying = false
     },
 
+    /**
+     * Keep the top Pause/Resume control aligned with the audio player.
+     * Player pause → Resume Session; player play → Pause Session.
+     */
+    syncSessionControlsWithPlayback(playing) {
+      if (this.sessionCompleted || this.isSessionCompleted) return
+      if (this.showPostSessionModal || this.isPostSessionChoiceVisible) return
+      const practiceActive = !!this.isSessionLive
+        || !!this.sessionPaused
+        || !!this.mutqinState?.sessionState?.active
+        || !!this.mutqinState?.sessionState?.paused
+      if (!practiceActive) return
+
+      if (playing) {
+        if (this.sessionPaused || !this.mutqinState?.sessionState?.active) {
+          this.applyLocalActiveSessionState()
+          this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
+        }
+        return
+      }
+
+      if (!this.sessionPaused) {
+        this.applyLocalPausedSessionState()
+        this.transitionSessionLifecycle(SESSION_STATUS.PAUSED, SESSION_MUTATION.IDLE)
+      }
+    },
+
     togglePlay() {
       if (this.recitationWindowActive && this.activeQueueEntry) {
         this.playQueueEntry(this.activeQueueEntry, { force: true, queueIndex: this.queueIndex })
@@ -29461,6 +29561,7 @@ export default {
         this.audioElement.play()
           .then(() => {
             this.isPlaying = true
+            this.syncSessionControlsWithPlayback(true)
             const verse = this.activeVerseRef
             if (verse && this.wordByWordAudioEnabled) {
               this.ensureWordHighlightTrack(verse, { force: true }).then(() => {
@@ -29478,6 +29579,7 @@ export default {
       } else {
         this.audioElement.pause()
         this.isPlaying = false
+        this.syncSessionControlsWithPlayback(false)
       }
     },
 

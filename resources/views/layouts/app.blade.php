@@ -239,7 +239,7 @@
         border-color: #b56a56 !important;
       }
     </style>
-    <style id="mutqin-memorisation-hotfix-v100">
+    <style id="mutqin-memorisation-hotfix-v105">
       /* Network-first hotfix v99 — ayah markers visible, no dark-img ghost, digit nudged down */
       #mutqin-ui-build-pill { display: none !important; }
       html body .app .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .verse-ayah-end-number,
@@ -1198,7 +1198,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v100'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v105'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });

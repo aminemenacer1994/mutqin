@@ -672,8 +672,8 @@
       },
       "intro": "Four quick steps to get oriented before your first session.",
       "confirmChoice": "Confirm choice",
-      "startOnboarding": "Start Onboarding",
-      "continueOnboarding": "Continue Onboarding"
+      "startOnboarding": "Get started",
+      "continueOnboarding": "Continue setup"
     },
     "open_session_setup": "Buka pengaturan sesi",
     "open_controls": "Buka kontrol",

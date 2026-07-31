@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v103 -->
+  <!-- mutqin-ui-build: v105 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'onboarding-post-session-active': showPostSessionModal,
@@ -329,7 +329,7 @@
                   :aria-label="t('memorisation.postSessionChoice.repeatRecommendedDesc')"
                   @click="repeatRecommendedSessionFromChoice"
                 >
-                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                  <i class="bi bi-arrow-return-left" aria-hidden="true"></i>
                   <span>{{ t('memorisation.postSessionChoice.repeatRecommended') }}</span>
                 </button>
                 <button
@@ -1833,20 +1833,20 @@
 
         <div class="tools-footer" :class="{ 'settings-footer': tab === 'settings' }">
           <template v-if="showHifzPlannerUi">
-            <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="openHifzPlanModal">
-              <i class="bi bi-pencil-square"></i><span>{{ t('memorisation.edit_plan') }}</span>
-            </button>
             <button class="tools-btn btn btn-primary session-primary-action" @click="startPlannerPrimaryAction">
               <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i><span>{{ plannerPrimaryActionLabel }}</span>
             </button>
+            <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="openHifzPlanModal">
+              <i class="bi bi-pencil-square"></i><span>{{ t('memorisation.edit_plan') }}</span>
+            </button>
           </template>
           <template v-else>
-            <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls">
-              <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
-            </button>
             <button class="tools-btn btn btn-primary session-primary-action" @click="startSessionAndClose">
               <i class="bi bi-play-fill" aria-hidden="true"></i>
               <span>{{ toolsPrimaryStartLabel }}</span>
+            </button>
+            <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls">
+              <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
             </button>
           </template>
         </div>

@@ -1113,12 +1113,20 @@
     padding: 10px var(--mq-mobile-gutter) calc(10px + var(--mq-safe-bottom)) !important;
   }
 
-  .tools-footer > :first-child {
-    grid-column: 1;
+  /* Primary start action first (wider); Reset second (narrower). */
+  .tools-footer > .session-primary-action,
+  .tools-footer > .tools-btn-primary,
+  .tools-footer > .btn-primary {
+    grid-column: 1 / span 3 !important;
+    order: 1 !important;
+    flex: unset !important;
   }
 
-  .tools-footer > :last-child {
-    grid-column: 2 / -1;
+  .tools-footer > .tools-btn-soft,
+  .tools-footer > .tools-btn-ghost {
+    grid-column: 4 !important;
+    order: 2 !important;
+    flex: unset !important;
   }
 
   .tools-footer :where(.tools-btn, .session-primary-action, .btn) {

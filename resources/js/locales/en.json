@@ -446,9 +446,9 @@
     },
     "postSessionChoice": {
       "title": "What would you like to practise next?",
-      "desc": "Repeat your recommended plan or create a session of your own.",
-      "repeatRecommended": "Repeat session",
-      "repeatRecommendedDesc": "Practise the same recommended range and settings again.",
+      "desc": "Return to your previous session or create a session of your own.",
+      "repeatRecommended": "Return to previous session",
+      "repeatRecommendedDesc": "Practise the same range and settings from your previous session again.",
       "createCustom": "Custom session",
       "createCustomDesc": "Choose your own sūrah, āyah range and practice settings.",
       "startCustomSession": "Start custom session"
@@ -1185,8 +1185,8 @@
           ]
         }
       },
-      "startOnboarding": "Start Onboarding",
-      "continueOnboarding": "Continue Onboarding"
+      "startOnboarding": "Get started",
+      "continueOnboarding": "Continue setup"
     },
     "open_session_setup": "Open session setup",
     "open_controls": "Open controls",

@@ -693,8 +693,8 @@
       },
       "intro": "Four quick steps to get oriented before your first session.",
       "confirmChoice": "Confirm choice",
-      "startOnboarding": "Start Onboarding",
-      "continueOnboarding": "Continue Onboarding"
+      "startOnboarding": "ابدأ",
+      "continueOnboarding": "متابعة الإعداد"
     },
     "open_session_setup": "فتح إعداد الجلسة",
     "open_controls": "فتح عناصر التحكم",
@@ -2226,9 +2226,9 @@
     },
     "postSessionChoice": {
       "title": "ماذا تريد أن تتمرّن عليه بعد ذلك؟",
-      "desc": "أعد الجلسة المقترحة أو أنشئ جلسة خاصة بك.",
-      "repeatRecommended": "إعادة الجلسة",
-      "repeatRecommendedDesc": "تمرّن على نفس النطاق والإعدادات المقترحة مرة أخرى.",
+      "desc": "عُد إلى جلستك السابقة أو أنشئ جلسة خاصة بك.",
+      "repeatRecommended": "العودة إلى الجلسة السابقة",
+      "repeatRecommendedDesc": "تمرّن على نفس النطاق والإعدادات من جلستك السابقة مرة أخرى.",
       "createCustom": "جلسة مخصصة",
       "createCustomDesc": "اختر السورة ونطاق الآيات وإعدادات التمرين بنفسك.",
       "startCustomSession": "بدء جلسة مخصصة"

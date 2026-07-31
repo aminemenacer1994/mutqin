@@ -999,8 +999,8 @@
           ]
         }
       },
-      "startOnboarding": "Start Onboarding",
-      "continueOnboarding": "Continue Onboarding"
+      "startOnboarding": "Get started",
+      "continueOnboarding": "Continue setup"
     },
     "open_session_setup": "Open session setup",
     "open_controls": "Open controls",

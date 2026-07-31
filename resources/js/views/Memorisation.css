@@ -5681,7 +5681,7 @@ body.has-navbar .tools-top {
   text-align: right;
   direction: rtl;
   unicode-bidi: isolate;
-  background: var(--bg-elevated);
+  background: transparent;
   padding: 14px 16px;
   border-radius: 16px;
   margin: 10px 0;
@@ -6827,7 +6827,7 @@ html {
   text-align: right;
   direction: rtl;
   unicode-bidi: isolate;
-  background: var(--bg-elevated);
+  background: transparent;
   padding: 20px;
   border-radius: 16px;
   margin: 12px 0;
@@ -7554,6 +7554,55 @@ html {
   z-index: 1;
 }
 
+.tools-footer > .session-primary-action,
+.tools-footer > .tools-btn-primary,
+.tools-footer > .btn-primary {
+  flex: 2.1 1 0;
+  min-width: 0;
+}
+
+.tools-footer > .tools-btn-soft,
+.tools-footer > .tools-btn-ghost {
+  flex: 0.9 1 0;
+  min-width: 0;
+}
+
+/* Keep Reset readable on light offcanvas (never white-on-white). */
+:root:not([data-theme="dark"]) .tools-footer > .tools-btn-soft,
+:root:not([data-theme="dark"]) .tools-footer > .tools-btn-ghost,
+.app:not([data-theme="dark"]) .tools-footer > .tools-btn-soft,
+.app:not([data-theme="dark"]) .tools-footer > .tools-btn-ghost {
+  background: #f3ebe1;
+  border: 1px solid rgba(74, 55, 40, 0.22);
+  color: #3f3228;
+  box-shadow: none;
+}
+
+:root:not([data-theme="dark"]) .tools-footer > .tools-btn-soft:hover,
+:root:not([data-theme="dark"]) .tools-footer > .tools-btn-ghost:hover,
+.app:not([data-theme="dark"]) .tools-footer > .tools-btn-soft:hover,
+.app:not([data-theme="dark"]) .tools-footer > .tools-btn-ghost:hover {
+  background: #ebe0d2;
+  border-color: rgba(74, 55, 40, 0.32);
+  color: #2b211a;
+}
+
+.tools-footer > .session-primary-action.btn-primary,
+.tools-footer > .tools-btn.btn-primary,
+.tools-footer > .btn.btn-primary {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+  border-color: transparent !important;
+}
+
+[data-theme="dark"] .tools-footer > .session-primary-action.btn-primary,
+[data-theme="dark"] .tools-footer > .tools-btn.btn-primary,
+[data-theme="dark"] .tools-footer > .btn.btn-primary {
+  color: #1a120c !important;
+  -webkit-text-fill-color: #1a120c !important;
+}
+
 .tools-btn {
   flex: 1;
   min-height: 44px;
@@ -7563,13 +7612,21 @@ html {
   border: 1px solid rgba(0, 0, 0, 0.1);
   cursor: pointer;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
+  color: var(--text, #2b241c);
   box-shadow: var(--shadow-sm);
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background 140ms ease, color 140ms ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   line-height: 1;
+}
+
+.tools-btn.btn-primary,
+.tools-btn.session-primary-action {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  border-color: transparent;
 }
 
 .tools-btn-soft {
@@ -9452,9 +9509,15 @@ body.memorisation-page nav.navbar.app-navbar {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
 }
 
-[data-theme="dark"] .workspace-shell, [data-theme="dark"] .session-feedback-panel, [data-theme="dark"] .workspace-fab, [data-theme="dark"] .verse-card, [data-theme="dark"] .verse-arabic, [data-theme="dark"] .player-bar, [data-theme="dark"] .modal-content, [data-theme="dark"] .shortcuts-modal, [data-theme="dark"] .setting-section, [data-theme="dark"] .settings-group {
+[data-theme="dark"] .workspace-shell, [data-theme="dark"] .session-feedback-panel, [data-theme="dark"] .workspace-fab, [data-theme="dark"] .player-bar, [data-theme="dark"] .modal-content, [data-theme="dark"] .shortcuts-modal, [data-theme="dark"] .setting-section, [data-theme="dark"] .settings-group {
   background: linear-gradient(180deg, rgba(34, 29, 26, 0.96), rgba(22, 19, 17, 0.94));
   border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .verse-card,
+[data-theme="dark"] .verse-arabic {
+  background: transparent;
   color: var(--text);
 }
 
@@ -9593,13 +9656,13 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 [data-theme="dark"] .verse-card::before {
-  background: linear-gradient(180deg, rgba(208, 160, 107, 0.04), transparent 22%),
-    radial-gradient(circle at top right, rgba(208, 160, 107, 0.06), transparent 28%);
+  background: none;
 }
 
 [data-theme="dark"] .verse-card.active {
-  background: linear-gradient(145deg, rgba(208, 160, 107, 0.12), rgba(255, 255, 255, 0.02));
-  box-shadow: 0 0 0 1px rgba(208, 160, 107, 0.42), 0 16px 34px rgba(0, 0, 0, 0.34);
+  background: transparent;
+  box-shadow: none;
+  border-color: rgba(208, 160, 107, 0.34);
 }
 
 [data-theme="dark"] .verse-number, [data-theme="dark"] .verse-status-badge, [data-theme="dark"] .player-chapter, [data-theme="dark"] .player-verse, [data-theme="dark"] .preview-stat, [data-theme="dark"] .preview-surah, [data-theme="dark"] .preview-range {
@@ -23770,10 +23833,38 @@ textarea {
   font-feature-settings: "liga" 1, "calt" 1, "rlig" 1, "ccmp" 1, "mark" 1, "mkmk" 1;
 }
 
-.verse-arabic .wbw-word, .verse-arabic word, .verse-arabic .tajweed-mark, .verse-arabic [class*="tajweed-"], .mushaf-ayah-text .wbw-word, .mushaf-ayah-text word, .mushaf-ayah-text .tajweed-mark, .mushaf-ayah-text [class*="tajweed-"], .self-check-modal-ayah .wbw-word, .self-check-modal-ayah word, .self-check-modal-ayah .tajweed-mark, .self-check-modal-ayah [class*="tajweed-"], .memorisation-checker-ayah .wbw-word, .memorisation-checker-ayah word, .memorisation-checker-ayah .tajweed-mark, .memorisation-checker-ayah [class*="tajweed-"], .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word, .verse-arabic.tajweed-enabled .wbw-word[data-tajweed-word="true"], .mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word, .mushaf-ayah-text.tajweed-enabled .wbw-word[data-tajweed-word="true"], .self-check-modal-ayah.tajweed-enabled .wbw-word[data-tajweed-word="true"], .memorisation-checker-ayah.tajweed-enabled .wbw-word[data-tajweed-word="true"], .verse-arabic.tajweed-enabled word, .mushaf-ayah-text.tajweed-enabled word, .verse-arabic.recitation-word-review-active .wbw-word, .verse-arabic.recitation-word-review-active word, .self-check-modal-ayah.recitation-word-review-active .wbw-word, .self-check-modal-ayah.recitation-word-review-active word, .memorisation-checker-ayah.recitation-word-review-active .wbw-word, .memorisation-checker-ayah.recitation-word-review-active word, .self-check-modal-ayah .session-evaluation-ayah, .memorisation-checker-ayah .session-evaluation-ayah, .session-evaluation-ayah[lang="ar"] {
+.verse-arabic .wbw-word, .verse-arabic word, .mushaf-ayah-text .wbw-word, .mushaf-ayah-text word, .self-check-modal-ayah .wbw-word, .self-check-modal-ayah word, .memorisation-checker-ayah .wbw-word, .memorisation-checker-ayah word, .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word, .verse-arabic.tajweed-enabled .wbw-word[data-tajweed-word="true"], .mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word, .mushaf-ayah-text.tajweed-enabled .wbw-word[data-tajweed-word="true"], .self-check-modal-ayah.tajweed-enabled .wbw-word[data-tajweed-word="true"], .memorisation-checker-ayah.tajweed-enabled .wbw-word[data-tajweed-word="true"], .verse-arabic.tajweed-enabled word, .mushaf-ayah-text.tajweed-enabled word, .verse-arabic.recitation-word-review-active .wbw-word, .verse-arabic.recitation-word-review-active word, .self-check-modal-ayah.recitation-word-review-active .wbw-word, .self-check-modal-ayah.recitation-word-review-active word, .memorisation-checker-ayah.recitation-word-review-active .wbw-word, .memorisation-checker-ayah.recitation-word-review-active word, .self-check-modal-ayah .session-evaluation-ayah, .memorisation-checker-ayah .session-evaluation-ayah, .session-evaluation-ayah[lang="ar"] {
   display: inline;
   direction: rtl;
   unicode-bidi: isolate;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+  letter-spacing: 0;
+  word-spacing: normal;
+  white-space: normal;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  font-variant-ligatures: inherit;
+  font-feature-settings: inherit;
+}
+
+/* Never isolate tajweed mark spans — isolate orphans harakat onto U+25CC circles. */
+.verse-arabic .tajweed-mark,
+.verse-arabic [class*="tajweed-"],
+.mushaf-ayah-text .tajweed-mark,
+.mushaf-ayah-text [class*="tajweed-"],
+.self-check-modal-ayah .tajweed-mark,
+.self-check-modal-ayah [class*="tajweed-"],
+.memorisation-checker-ayah .tajweed-mark,
+.memorisation-checker-ayah [class*="tajweed-"] {
+  display: inline;
+  direction: rtl;
+  unicode-bidi: normal !important;
   margin: 0;
   padding: 0;
   border: 0;
@@ -24509,8 +24600,8 @@ textarea {
 
 .verse-arabic .tajweed-mark, .verse-arabic [class*="tajweed-"], .mushaf-ayah-text .tajweed-mark, .mushaf-ayah-text [class*="tajweed-"], .self-check-modal-ayah .tajweed-mark, .self-check-modal-ayah [class*="tajweed-"], .memorisation-checker-ayah .tajweed-mark, .memorisation-checker-ayah [class*="tajweed-"], .recitation-review-ayah .tajweed-mark, .recitation-review-ayah [class*="tajweed-"], .session-evaluation-ayah .tajweed-mark, .session-evaluation-ayah [class*="tajweed-"] {
   display: inline;
-  /* isolate breaks Arabic cursive joining and shows stray tatweel dashes */
-  unicode-bidi: normal;
+  /* isolate breaks Arabic cursive joining and shows stray dotted-circle placeholders */
+  unicode-bidi: normal !important;
   white-space: normal;
   font: inherit;
   line-height: inherit;
@@ -28387,11 +28478,13 @@ textarea {
 }
 
 [data-theme="dark"] .verse-card {
-  background:
-    radial-gradient(circle at top right, rgba(206, 169, 124, 0.1), transparent 24%),
-    linear-gradient(180deg, rgba(34, 29, 26, 0.98), rgba(24, 21, 19, 0.97));
-  border-color: rgba(239, 193, 141, 0.12);
-  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.24) !important;
+  background: transparent;
+  border-color: rgba(239, 193, 141, 0.1);
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .verse-card::before {
+  background: none;
 }
 
 [data-theme="dark"] .verse-inline-action-btn {
@@ -28413,15 +28506,23 @@ textarea {
 }
 
 [data-theme="dark"] .verse-inline-notes-btn {
-  background: linear-gradient(135deg, rgba(212, 165, 116, 0.28), rgba(46, 40, 36, 0.98));
-  border-color: color-mix(in srgb, var(--accent) 28%, rgba(239, 193, 141, 0.2));
-  color: #f5ddbb;
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.34), rgba(46, 40, 36, 0.98));
+  border-color: color-mix(in srgb, var(--accent) 36%, rgba(239, 193, 141, 0.28));
+  color: #f8e7cf;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
+[data-theme="dark"] .verse-inline-notes-btn i {
+  color: #f8e7cf;
+}
+
 [data-theme="dark"] .verse-inline-notes-btn:hover:not(:disabled) {
-  color: #ffe8c8;
-  border-color: color-mix(in srgb, var(--accent) 42%, rgba(239, 193, 141, 0.28));
+  color: #fff1da;
+  border-color: color-mix(in srgb, var(--accent) 48%, rgba(239, 193, 141, 0.34));
+}
+
+[data-theme="dark"] .verse-inline-notes-btn:hover:not(:disabled) i {
+  color: #fff1da;
 }
 
 [data-theme="dark"] .verse-notes-count-badge {
@@ -32514,6 +32615,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   display: inline-grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
+  min-width: min(100%, 22rem);
 }
 
 .top-card-session-actions.has-paired-actions .top-card-action-trigger.session-primary-action,
@@ -32522,6 +32624,12 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   min-width: 0 !important;
   max-width: none !important;
   justify-content: center !important;
+}
+
+/* Keep paired header actions the same height/width track. */
+.top-card-session-actions.has-paired-actions > .top-card-action-trigger {
+  min-height: 2.65rem;
+  box-sizing: border-box;
 }
 
 /* Post-session choice: desktop content-sized (like Start/End); mobile equal 2-col. */
@@ -32565,7 +32673,18 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 }
 
 .workspace-shell--post-session-choice .post-session-choice-pair,
-.top-card-session-actions.has-paired-actions.post-session-choice-pair,
+.top-card-session-actions.has-paired-actions.post-session-choice-pair {
+  display: inline-grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  gap: 0.4rem !important;
+  width: min(100%, 26rem) !important;
+  max-width: 100% !important;
+  min-width: min(100%, 20rem) !important;
+  flex: 0 1 auto !important;
+  overflow: hidden !important;
+}
+
 .top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) {
   display: inline-flex !important;
   flex-wrap: nowrap !important;
@@ -32578,7 +32697,21 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   overflow: visible !important;
 }
 
-.top-card-session-actions.post-session-choice-pair > .top-card-action-trigger {
+.top-card-session-actions.post-session-choice-pair.has-paired-actions > .top-card-action-trigger {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  flex: unset !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  justify-content: center !important;
+  padding-inline: 0.75rem !important;
+  box-sizing: border-box !important;
+  min-height: 2.65rem;
+}
+
+.top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) > .top-card-action-trigger {
   width: auto !important;
   min-width: max-content !important;
   max-width: none !important;
@@ -50979,4 +51112,128 @@ html body .app[data-theme="dark"] .workspace-shell-main-title::after {
     line-height: 1.65 !important;
     gap: 0.08rem !important;
   }
+}
+
+/* ===== Hotfix overrides (v104): force visible layout + contrast ===== */
+
+/* Offcanvas footer: primary first/wider, Reset second/narrower, readable contrast */
+.tools-footer {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+}
+
+.tools-footer > .session-primary-action,
+.tools-footer > .btn-primary,
+.tools-footer > .tools-btn-primary,
+.tools-footer > .tools-btn-soft,
+.tools-footer > .tools-btn-ghost,
+.tools-footer > .tools-btn {
+  border-radius: 15px !important;
+}
+
+.tools-footer > .session-primary-action,
+.tools-footer > .btn-primary,
+.tools-footer > .tools-btn-primary {
+  order: 1 !important;
+  flex: 2.2 1 0 !important;
+  min-width: 0 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: linear-gradient(135deg, var(--accent, #9a6738), var(--accent-strong, #7b4b22)) !important;
+  border: 1px solid transparent !important;
+  border-radius: 15px !important;
+}
+
+.tools-footer > .tools-btn-soft,
+.tools-footer > .tools-btn-ghost {
+  order: 2 !important;
+  flex: 0.85 1 0 !important;
+  min-width: 0 !important;
+  background: #efe4d6 !important;
+  border: 1px solid rgba(74, 55, 40, 0.28) !important;
+  color: #3a2c22 !important;
+  -webkit-text-fill-color: #3a2c22 !important;
+  box-shadow: none !important;
+  border-radius: 15px !important;
+}
+
+.tools-footer > .tools-btn-soft span,
+.tools-footer > .tools-btn-soft i,
+.tools-footer > .tools-btn-ghost span,
+.tools-footer > .tools-btn-ghost i {
+  color: #3a2c22 !important;
+  -webkit-text-fill-color: #3a2c22 !important;
+}
+
+[data-theme="dark"] .tools-footer > .session-primary-action,
+[data-theme="dark"] .tools-footer > .btn-primary,
+[data-theme="dark"] .tools-footer > .tools-btn-primary {
+  color: #1a120c !important;
+  -webkit-text-fill-color: #1a120c !important;
+  background: linear-gradient(135deg, var(--accent, #d4a574), var(--accent-strong, #efc18d)) !important;
+}
+
+[data-theme="dark"] .tools-footer > .tools-btn-soft,
+[data-theme="dark"] .tools-footer > .tools-btn-ghost {
+  background: linear-gradient(180deg, rgba(54, 46, 40, 0.98), rgba(34, 30, 27, 0.96)) !important;
+  border: 1px solid rgba(239, 193, 141, 0.22) !important;
+  color: #f6efe6 !important;
+  -webkit-text-fill-color: #f6efe6 !important;
+}
+
+[data-theme="dark"] .tools-footer > .tools-btn-soft span,
+[data-theme="dark"] .tools-footer > .tools-btn-soft i,
+[data-theme="dark"] .tools-footer > .tools-btn-ghost span,
+[data-theme="dark"] .tools-footer > .tools-btn-ghost i {
+  color: #f6efe6 !important;
+  -webkit-text-fill-color: #f6efe6 !important;
+}
+
+/* Remove brown fills behind ayah text (stacked view) */
+[data-theme="dark"] .verse-card,
+[data-theme="dark"] .verse-card.active,
+[data-theme="dark"] .verse-card:hover,
+[data-theme="dark"] .verse-arabic,
+[data-theme="dark"] .verse-arabic.verse-arabic-primary,
+[data-theme="dark"] .verses-grid .verse-card,
+[data-theme="dark"] .verses-grid .verse-arabic {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .verse-card::before,
+[data-theme="dark"] .verse-card::after {
+  display: none !important;
+  background: none !important;
+}
+
+/* Paired header actions: equal tracks */
+.top-card-session-actions.has-paired-actions {
+  display: inline-grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.4rem !important;
+  min-width: min(100%, 22rem) !important;
+}
+
+.top-card-session-actions.has-paired-actions > .top-card-action-trigger {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 2.65rem !important;
+  justify-content: center !important;
+}
+
+/* Notes / inline action contrast on dark */
+[data-theme="dark"] .verse-inline-notes-btn,
+[data-theme="dark"] .verse-inline-action-btn {
+  background: #3a3129 !important;
+  border: 1px solid rgba(246, 231, 208, 0.35) !important;
+  color: #f8e7cf !important;
+}
+
+[data-theme="dark"] .verse-inline-notes-btn i,
+[data-theme="dark"] .verse-inline-action-btn i {
+  color: #f8e7cf !important;
 }

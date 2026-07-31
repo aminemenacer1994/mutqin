@@ -457,12 +457,12 @@ export function resolveSessionActionPresentation(action, t = (key) => key, optio
     [PRIMARY_SESSION_ACTION.START_ONBOARDING]: {
       labelKey: 'memorisation.onboarding.startOnboarding',
       icon: 'bi-play-fill',
-      fallback: 'Start Onboarding',
+      fallback: 'Get started',
     },
     [PRIMARY_SESSION_ACTION.CONTINUE_ONBOARDING]: {
       labelKey: 'memorisation.onboarding.continueOnboarding',
       icon: 'bi-play-fill',
-      fallback: 'Continue Onboarding',
+      fallback: 'Continue setup',
     },
     [PRIMARY_SESSION_ACTION.TRY_EXAMPLE]: {
       labelKey: 'memorisation.onboarding.playSampleSession',

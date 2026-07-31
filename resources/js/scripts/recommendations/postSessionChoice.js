@@ -5,7 +5,7 @@
  *   draft | ready | active | paused | ended
  *
  * Actions:
- *   repeat_recommended | create_custom
+ *   repeat_recommended (return to previous session) | create_custom
  */
 
 /** @typedef {'draft'|'ready'|'active'|'paused'|'ended'} ProductSessionStatus */
@@ -70,7 +70,7 @@ export function buildRecommendedSessionTemplate(input = {}) {
     id: String(input.id || `rec-tpl-${chapterId}-${rangeStart}-${rangeEnd}-${Date.now()}`),
     createdAt: input.createdAt || new Date().toISOString(),
     endedAt: input.endedAt || null,
-    fromRecommendation: true,
+    fromRecommendation: input.fromRecommendation !== false,
     recommendationId: recommendationId == null ? null : String(recommendationId),
     chapterId,
     chapterName: input.chapterName || input.surahName || input.surah_name || '',
