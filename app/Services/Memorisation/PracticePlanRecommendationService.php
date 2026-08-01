@@ -536,21 +536,24 @@ class PracticePlanRecommendationService
 
         if ($weakPhrases !== []) {
             $ayah = (int) ($weakPhrases[0]['ayah_number'] ?? 0);
-            $ayahPart = $ayah > 0 ? " in Āyah {$ayah}" : '';
 
-            return "One phrase{$ayahPart} was unclear.";
+            return $ayah > 0
+                ? "One phrase in Ayah {$ayah} needs a little reinforcement."
+                : 'One phrase needs a little reinforcement.';
         }
         if (count($weakWords) === 1) {
             $ayah = (int) ($weakWords[0]['ayahNumber'] ?? $weakWords[0]['ayah_number'] ?? 0);
-            $ayahPart = $ayah > 0 ? " in Āyah {$ayah}" : '';
 
-            return "One phrase{$ayahPart} was unclear.";
+            return $ayah > 0
+                ? "One phrase in Ayah {$ayah} needs a little reinforcement."
+                : 'One phrase needs a little reinforcement.';
         }
         if (count($weakWords) >= 2 && count($weakWords) <= 4) {
             $ayah = (int) ($weakWords[0]['ayahNumber'] ?? $weakWords[0]['ayah_number'] ?? 0);
-            $ayahPart = $ayah > 0 ? " in Āyah {$ayah}" : '';
 
-            return "One phrase{$ayahPart} was unclear.";
+            return $ayah > 0
+                ? "One phrase in Ayah {$ayah} needs a little reinforcement."
+                : 'One phrase needs a little reinforcement.';
         }
         if ($pattern === 'scattered') {
             return 'A few phrases still need attention.';

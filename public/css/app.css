@@ -12696,7 +12696,8 @@ html[data-theme=dark] .onboarding-btn--primary {
   border-color: color-mix(in srgb, var(--border) 82%, transparent) !important;
 }
 
-.mutqin-modal-btn--success {
+.mutqin-modal-btn--success,
+.post-session-simple__btn--success {
   color: #fff !important;
   background: linear-gradient(135deg, var(--success), var(--success-strong)) !important;
   border-color: color-mix(in srgb, var(--success) 52%, transparent) !important;

@@ -15,7 +15,7 @@ class UpdateAyahNoteRequest extends FormRequest
     {
         return [
             'title' => ['nullable', 'string', 'max:120'],
-            'body' => ['required', 'string', 'min:1', 'max:10000'],
+            'body' => ['required', 'string', 'min:1', 'max:2000'],
         ];
     }
 }

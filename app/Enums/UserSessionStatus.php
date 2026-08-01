@@ -8,6 +8,7 @@ enum UserSessionStatus: string
     case Active = 'active';
     case Paused = 'paused';
     case Interrupted = 'interrupted';
+    case EndedEarly = 'ended_early';
     case Completed = 'completed';
     case Abandoned = 'abandoned';
 
@@ -18,6 +19,18 @@ enum UserSessionStatus: string
             self::Paused,
             self::Interrupted,
         ], true);
+    }
+
+    /** Deliberately finished before completing the selected range. */
+    public function isEndedEarly(): bool
+    {
+        return $this === self::EndedEarly;
+    }
+
+    /** Fully completed every required ayah/repetition in the selected range. */
+    public function isFullyCompleted(): bool
+    {
+        return $this === self::Completed;
     }
 
     public static function tryFromMixed(mixed $value): ?self

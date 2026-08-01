@@ -126,6 +126,98 @@ class SessionLifecycleTest extends TestCase
         $this->assertSame(1, UserSession::where('user_id', $user->id)->count());
     }
 
+    public function test_incomplete_range_ends_as_ended_early_not_completed(): void
+    {
+        $user = User::factory()->create();
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'ayah_number' => 1,
+            'status' => UserSessionStatus::Active,
+            'is_onboarding_example' => false,
+            'last_activity_at' => now(),
+            'started_at' => now()->subMinute(),
+            'metadata' => [
+                'active' => true,
+                'config' => [
+                    'chapterId' => 2,
+                    'rangeStart' => 1,
+                    'rangeEnd' => 7,
+                ],
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/session/end', [
+                'idempotency_key' => 'end-early-1',
+                'range_complete' => false,
+                'ayah_number' => 1,
+                'metadata' => [
+                    'completed' => false,
+                    'range_complete' => false,
+                    'ended_early' => true,
+                    'covered_through' => 1,
+                    'config' => [
+                        'chapterId' => 2,
+                        'rangeStart' => 1,
+                        'rangeEnd' => 7,
+                    ],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('session.status', UserSessionStatus::EndedEarly->value)
+            ->assertJsonPath('session.metadata.completed', false)
+            ->assertJsonPath('session.metadata.ended_early', true);
+
+        $this->assertSame(0, UserSession::where('user_id', $user->id)
+            ->where('status', UserSessionStatus::Completed->value)
+            ->count());
+    }
+
+    public function test_complete_range_ends_as_completed(): void
+    {
+        $user = User::factory()->create();
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'ayah_number' => 7,
+            'status' => UserSessionStatus::Active,
+            'is_onboarding_example' => false,
+            'last_activity_at' => now(),
+            'started_at' => now()->subMinute(),
+            'metadata' => [
+                'active' => true,
+                'config' => [
+                    'chapterId' => 1,
+                    'rangeStart' => 1,
+                    'rangeEnd' => 7,
+                ],
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/session/end', [
+                'idempotency_key' => 'end-complete-1',
+                'range_complete' => true,
+                'ayah_number' => 7,
+                'metadata' => [
+                    'completed' => true,
+                    'range_complete' => true,
+                    'covered_through' => 7,
+                    'config' => [
+                        'chapterId' => 1,
+                        'rangeStart' => 1,
+                        'rangeEnd' => 7,
+                    ],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('session.status', UserSessionStatus::Completed->value)
+            ->assertJsonPath('session.metadata.completed', true);
+    }
+
     public function test_end_without_unfinished_session_does_not_create_ghost(): void
     {
         $user = User::factory()->create();

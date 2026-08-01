@@ -19,7 +19,7 @@ class SaveSessionRequest extends FormRequest
             'ayah_number' => ['nullable', 'integer', 'min:1', 'max:300'],
             'current_step' => ['nullable', 'integer', 'min:0'],
             'memorisation_mode' => ['nullable', 'string', 'max:32'],
-            'status' => ['nullable', 'string', 'in:none,active,paused,interrupted,completed,abandoned'],
+            'status' => ['nullable', 'string', 'in:none,active,paused,interrupted,ended_early,completed,abandoned'],
             'is_onboarding_example' => ['nullable', 'boolean'],
             'repetitions_completed' => ['nullable', 'integer', 'min:0'],
             'session_duration_seconds' => ['nullable', 'integer', 'min:0'],

@@ -268,15 +268,18 @@ class SessionLifecycleService
                 : null;
 
             if ($endKey !== null && $endKey !== '') {
-                $completed = UserSession::query()
+                $finished = UserSession::query()
                     ->where('user_id', $user->id)
-                    ->where('status', UserSessionStatus::Completed->value)
+                    ->whereIn('status', [
+                        UserSessionStatus::Completed->value,
+                        UserSessionStatus::EndedEarly->value,
+                    ])
                     ->orderByDesc('id')
                     ->lockForUpdate()
                     ->limit(20)
                     ->get();
 
-                foreach ($completed as $candidate) {
+                foreach ($finished as $candidate) {
                     $meta = is_array($candidate->metadata) ? $candidate->metadata : [];
                     if (($meta['end_idempotency_key'] ?? null) === $endKey) {
                         return $candidate;
@@ -293,9 +296,13 @@ class SessionLifecycleService
                     ->lockForUpdate()
                     ->first();
 
-                // Idempotent end: a prior state-sync/deriver completion (or a
-                // completed row missing ended_at) must not 422 the client.
-                if ($latest && $latest->status === UserSessionStatus::Completed) {
+                // Idempotent end: a prior state-sync/deriver finish (or a
+                // finished row missing ended_at) must not 422 the client.
+                $latestStatus = UserSessionStatus::tryFromMixed($latest?->status);
+                if ($latest && (
+                    $latestStatus === UserSessionStatus::Completed
+                    || $latestStatus === UserSessionStatus::EndedEarly
+                )) {
                     if (! $latest->ended_at) {
                         $latest->forceFill([
                             'ended_at' => $attributes['ended_at'] ?? $now,
@@ -314,7 +321,11 @@ class SessionLifecycleService
                 ]);
             }
 
-            if ($session->status === UserSessionStatus::Completed) {
+            $currentStatus = UserSessionStatus::tryFromMixed($session->status);
+            if (
+                $currentStatus === UserSessionStatus::Completed
+                || $currentStatus === UserSessionStatus::EndedEarly
+            ) {
                 if (! $session->ended_at) {
                     $session->forceFill([
                         'ended_at' => $attributes['ended_at'] ?? $now,
@@ -330,9 +341,16 @@ class SessionLifecycleService
             $meta = is_array($session->metadata) ? $session->metadata : [];
             $incomingMeta = is_array($attributes['metadata'] ?? null) ? $attributes['metadata'] : [];
             $completionSettings = $this->extractCompletionSettings($attributes, $meta, $incomingMeta);
+            $rangeComplete = $this->resolveRangeCompletion($attributes, $meta, $incomingMeta, $session);
+            $endStatus = $rangeComplete
+                ? UserSessionStatus::Completed
+                : UserSessionStatus::EndedEarly;
+            $endedAtIso = ($attributes['ended_at'] ?? $now) instanceof Carbon
+                ? ($attributes['ended_at'] ?? $now)->toIso8601String()
+                : Carbon::parse($attributes['ended_at'] ?? $now)->toIso8601String();
 
             $session->fill($this->sessionAttributes($attributes, [
-                'status' => UserSessionStatus::Completed->value,
+                'status' => $endStatus->value,
                 'is_onboarding_example' => false,
                 'ended_at' => $attributes['ended_at'] ?? $now,
                 'paused_at' => null,
@@ -340,10 +358,11 @@ class SessionLifecycleService
                 'completion_settings' => $completionSettings,
                 'metadata' => array_merge($meta, $incomingMeta, [
                     'active' => false,
-                    'completed' => true,
-                    'completed_at' => ($attributes['ended_at'] ?? $now) instanceof Carbon
-                        ? ($attributes['ended_at'] ?? $now)->toIso8601String()
-                        : Carbon::parse($attributes['ended_at'] ?? $now)->toIso8601String(),
+                    'completed' => $rangeComplete,
+                    'ended_early' => ! $rangeComplete,
+                    'range_complete' => $rangeComplete,
+                    'completed_at' => $rangeComplete ? $endedAtIso : ($meta['completed_at'] ?? null),
+                    'ended_at' => $endedAtIso,
                     'final_settings' => $completionSettings,
                     'end_idempotency_key' => $endKey ?: ($meta['end_idempotency_key'] ?? null),
                 ]),
@@ -352,6 +371,50 @@ class SessionLifecycleService
 
             return $session->fresh();
         });
+    }
+
+    /**
+     * Decide whether the selected ayah range was fully completed.
+     * Incomplete ranges must never be stored as completed.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $meta
+     * @param  array<string, mixed>  $incomingMeta
+     */
+    private function resolveRangeCompletion(
+        array $attributes,
+        array $meta,
+        array $incomingMeta,
+        UserSession $session
+    ): bool {
+        if (array_key_exists('range_complete', $attributes)) {
+            return (bool) $attributes['range_complete'];
+        }
+        if (array_key_exists('range_complete', $incomingMeta)) {
+            return (bool) $incomingMeta['range_complete'];
+        }
+        if (array_key_exists('completed', $incomingMeta)) {
+            return (bool) $incomingMeta['completed'];
+        }
+
+        $config = is_array($incomingMeta['config'] ?? null)
+            ? $incomingMeta['config']
+            : (is_array($meta['config'] ?? null) ? $meta['config'] : []);
+        $rangeStart = (int) ($config['rangeStart'] ?? $meta['range_start'] ?? 0);
+        $rangeEnd = (int) ($config['rangeEnd'] ?? $meta['range_end'] ?? 0);
+        $coveredThrough = (int) (
+            $incomingMeta['covered_through']
+            ?? $attributes['ayah_number']
+            ?? $session->ayah_number
+            ?? 0
+        );
+
+        if ($rangeStart > 0 && $rangeEnd >= $rangeStart && $coveredThrough > 0) {
+            return $coveredThrough >= $rangeEnd;
+        }
+
+        // Legacy clients without range metadata keep prior “end = completed” behaviour.
+        return true;
     }
 
     /**

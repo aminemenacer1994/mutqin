@@ -1140,13 +1140,26 @@ class NextSessionRecommendationService
             $coveredThrough = (int) $session->ayah_number;
         }
 
-        $sessionCompleted = (bool) ($meta['completed'] ?? false)
-            || (($meta['active'] ?? null) === false && ! empty($meta['completed_at']))
-            || ($session?->status === UserSessionStatus::Completed);
+        $status = UserSessionStatus::tryFromMixed($session?->status);
+        $endedEarly = $status === UserSessionStatus::EndedEarly
+            || (bool) ($meta['ended_early'] ?? false)
+            || (($meta['range_complete'] ?? null) === false && ! empty($meta['ended_at']));
 
-        if (! $sessionCompleted && isset($meta['active']) && $meta['active'] === false && $rangeStart && $rangeEnd) {
+        // Only fully completed ranges count as completed. Ended-early must never.
+        $sessionCompleted = ! $endedEarly && (
+            (bool) ($meta['completed'] ?? false)
+            || (bool) ($meta['range_complete'] ?? false)
+            || $status === UserSessionStatus::Completed
+        );
+
+        if (! $sessionCompleted && ! $endedEarly && isset($meta['active']) && $meta['active'] === false && $rangeStart && $rangeEnd) {
             $coveredComplete = $coveredThrough !== null && $coveredThrough >= $rangeEnd;
             $sessionCompleted = $coveredComplete || (bool) ($meta['completed'] ?? false);
+        }
+
+        // For incomplete / ended-early sessions, recommend from actual content covered.
+        if ($endedEarly && $coveredThrough && $rangeStart && $coveredThrough < ($rangeEnd ?: $coveredThrough)) {
+            $rangeEnd = max($rangeStart, $coveredThrough);
         }
 
         $technique = $completionSettings['technique']

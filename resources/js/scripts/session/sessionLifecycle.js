@@ -86,6 +86,7 @@ export const BACKEND_SESSION_STATUS = Object.freeze({
   ACTIVE: 'active',
   PAUSED: 'paused',
   INTERRUPTED: 'interrupted',
+  ENDED_EARLY: 'ended_early',
   COMPLETED: 'completed',
   ABANDONED: 'abandoned',
 })

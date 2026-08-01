@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v105 -->
+  <!-- mutqin-ui-build: v109 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'onboarding-post-session-active': showPostSessionModal,
@@ -213,7 +213,7 @@
                 </div>
               </transition>
             </div>
-            <div class="top-card-controls-wrap">
+            <div v-if="!isPostSessionChoiceVisible" class="top-card-controls-wrap">
               <div
                 class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger top-card-icon-control"
                 role="button"
@@ -2071,7 +2071,7 @@
                     @click="confirmEndSessionFromExitModal"
                   >
                     <i class="bi" :class="sessionExitEndingBusy ? 'bi-hourglass-split' : 'bi-box-arrow-right'" aria-hidden="true"></i>
-                    <span>{{ sessionExitEndingBusy ? t('common.endingSession') : t('memorisation.sessionExit.confirmEnd') }}</span>
+                    <span>{{ sessionExitConfirmEndLabel }}</span>
                   </button>
                 </div>
               </div>
@@ -3239,7 +3239,7 @@
                     <p class="post-session-simple__action-label" id="postSessionRecTitle">{{ postSessionSimpleActionLabel }}</p>
                     <p class="post-session-simple__range">{{ postSessionRecommendationCardTitle }}</p>
                     <p
-                      v-if="postSessionPlanEncouragement && !postSessionInlineRecommendationRows.length"
+                      v-if="postSessionPlanEncouragement"
                       class="post-session-simple__plan-encouragement"
                     >{{ postSessionPlanEncouragement }}</p>
                   </div>
@@ -3277,7 +3277,11 @@
                       <dd v-else>{{ row.value }}</dd>
                     </div>
                   </dl>
-                  <div v-else-if="postSessionStaticPills.length && !postSessionInlineRecommendationRows.length" class="post-session-simple__combo">
+                  <!-- Settings pills when evidence is in the AI card (slim) or unavailable here -->
+                  <div
+                    v-if="postSessionStaticPills.length && (!postSessionEvidenceRows.length || postSessionInlineRecommendationRows.length)"
+                    class="post-session-simple__combo"
+                  >
                     <p class="post-session-simple__combo-label">
                       {{ t('memorisation.postSession.recommendation.tryThisCombination') }}
                     </p>

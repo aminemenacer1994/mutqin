@@ -178,7 +178,7 @@
     box-sizing: border-box !important;
   }
 
-  /* Post-session: sliders + layout + ellipsis top-right (font stays in the menu path). */
+  /* Post-session: layout + ellipsis top-right (font stays in the menu path; controls via Custom session). */
   .workspace-shell--post-session-choice .top-card-icon-controls {
     display: flex !important;
     flex-flow: row nowrap !important;
@@ -197,22 +197,17 @@
     display: none !important;
   }
 
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap,
   .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
   .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
   }
 
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap {
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
     order: 0;
   }
 
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
-    order: 1;
-  }
-
   .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
-    order: 2;
+    order: 1;
   }
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) {
@@ -4461,9 +4456,9 @@
   }
 
   /*
-   * Mobile-only: sliders + mushaf layout toggle + ellipsis in the top-right.
+   * Mobile-only: mushaf layout toggle + ellipsis in the top-right
+   * (sliders when not in post-session choice; Custom session covers controls there).
    * Font stays in the menu path; desktop keeps the full icon row.
-   * Sliders sit to the left of the stacked/mushaf icon.
    */
   .workspace-shell-head {
     display: grid !important;

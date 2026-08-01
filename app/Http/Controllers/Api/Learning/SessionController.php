@@ -152,6 +152,8 @@ class SessionController extends Controller
             'metadata' => ['nullable', 'array'],
             'completion_settings' => ['nullable', 'array'],
             'idempotency_key' => ['nullable', 'string', 'max:128'],
+            'range_complete' => ['nullable', 'boolean'],
+            'ayah_number' => ['nullable', 'integer', 'min:1', 'max:300'],
         ]);
 
         $session = $this->lifecycle->end($request->user(), $data);

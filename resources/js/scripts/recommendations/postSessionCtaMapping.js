@@ -3,10 +3,17 @@
  *
  * One state → primary / secondary / tertiary hierarchy so button order and
  * labels stay consistent across the Session Complete footer.
+ *
+ * Colour variants:
+ *   primary  — warm brown (normal actions)
+ *   success  — green (verified / strong progression only)
+ *   secondary / ghost — neutral outline
  */
 
 export const POST_SESSION_CTA_STATES = Object.freeze({
   NEEDS_PRACTICE: 'needs_practice',
+  REVIEW_RECOMMENDED: 'review_recommended',
+  MOSTLY_SECURE: 'mostly_secure',
   REVISION_COMPLETED: 'revision_completed',
   STRONG: 'strong',
   AWAITING_CHECK: 'awaiting_check',
@@ -16,6 +23,7 @@ export const POST_SESSION_CTA_STATES = Object.freeze({
 
 export const POST_SESSION_CTA_ACTIONS = Object.freeze({
   REVISE_FOCUS_PHRASE: 'revise_focus_phrase',
+  REVIEW_WEAK_AYAH: 'review_weak_ayah',
   CHECK_AGAIN: 'check_again',
   TRY_RECORDING_AGAIN: 'try_recording_again',
   CHECK_MICROPHONE: 'check_microphone',
@@ -31,6 +39,7 @@ export const POST_SESSION_CTA_ACTIONS = Object.freeze({
 
 const LABEL_KEYS = Object.freeze({
   reviseFocusPhrase: 'reviseFocusPhrase',
+  reviewAyahOnce: 'reviewAyahOnce',
   retest: 'retest',
   tryRecordingAgain: 'tryRecordingAgain',
   checkMicrophone: 'checkMicrophone',
@@ -38,6 +47,7 @@ const LABEL_KEYS = Object.freeze({
   testWithAi: 'testWithAi',
   continuePractising: 'continuePractising',
   continueToNextRange: 'continueToNextRange',
+  continueToAyahs: 'continueToAyahs',
   reviewOnceMore: 'reviewOnceMore',
   chooseAnotherRange: 'chooseAnotherRange',
   skipForNow: 'skipForNow',
@@ -51,10 +61,53 @@ const LABEL_KEYS = Object.freeze({
 export function normaliseCtaOutcome(outcome) {
   const value = String(outcome || '').toLowerCase().trim()
   if (value === 'insufficient_audio' || value === 'insufficient audio') return 'insufficient_audio'
-  if (value === 'strong' || value === 'confident' || value === 'good') return 'strong'
-  if (value === 'weak' || value === 'needs_practice' || value === 'needs practice') return 'weak'
-  if (value === 'mixed' || value === 'okay' || value === 'developing') return 'mixed'
+  if (value === 'strong' || value === 'confident' || value === 'good' || value === 'ready_to_continue') {
+    return 'strong'
+  }
+  if (value === 'weak' || value === 'needs_practice' || value === 'needs practice' || value === 'more_practice_needed') {
+    return 'weak'
+  }
+  if (
+    value === 'mixed'
+    || value === 'okay'
+    || value === 'developing'
+    || value === 'mostly_secure'
+    || value === 'review_recommended'
+  ) {
+    return 'mixed'
+  }
   return null
+}
+
+/**
+ * Detect a minor isolated weakness (single phrase/ayah) that should not block progression.
+ *
+ * @param {{
+ *   weakAyahCount?: number,
+ *   hardWordCount?: number,
+ *   hasFocusPhrase?: boolean,
+ *   outcome?: string|null,
+ *   weaknessSeverity?: 'minor'|'significant'|null,
+ * }} evidence
+ */
+export function isMinorIsolatedWeakness(evidence = {}) {
+  if (evidence.weaknessSeverity === 'minor') return true
+  if (evidence.weaknessSeverity === 'significant') return false
+
+  const outcome = normaliseCtaOutcome(evidence.outcome)
+  if (outcome === 'weak') return false
+  if (outcome !== 'mixed' && outcome !== 'strong') return false
+
+  const weakAyahs = Math.max(0, Number(evidence.weakAyahCount || 0))
+  const hardWords = Math.max(0, Number(evidence.hardWordCount || 0))
+  const hasFocus = !!evidence.hasFocusPhrase
+
+  if (weakAyahs > 1) return false
+  if (hardWords >= 4) return false
+  if (weakAyahs === 1 || hasFocus) {
+    return hardWords <= 3
+  }
+  return false
 }
 
 /**
@@ -64,9 +117,10 @@ export function normaliseCtaOutcome(outcome) {
  * 1. confirm step
  * 2. insufficient audio (retry / mic check — never revise-as-weak)
  * 3. revision completed (practice done → retest)
- * 4. strong result → advance
- * 5. needs practice (weak/mixed AI) → revise focus phrase first
- * 6. awaiting first check
+ * 4. strong result → advance (green success)
+ * 5. minor isolated weakness → allow progression + schedule/review once
+ * 6. significant weakness → focused review first
+ * 7. awaiting first check
  *
  * @param {{
  *   isConfirmStep?: boolean,
@@ -75,8 +129,12 @@ export function normaliseCtaOutcome(outcome) {
  *   masteryAchieved?: boolean,
  *   revisionCompleted?: boolean,
  *   awaitingMasteryRetest?: boolean,
+ *   presentationMode?: string|null,
+ *   weakAyahCount?: number,
+ *   hardWordCount?: number,
+ *   hasFocusPhrase?: boolean,
+ *   weaknessSeverity?: 'minor'|'significant'|null,
  * }} input
- * @returns {keyof typeof POST_SESSION_CTA_STATES extends string ? string : never}
  */
 export function resolvePostSessionCtaState(input = {}) {
   if (input.isConfirmStep) return POST_SESSION_CTA_STATES.CONFIRM
@@ -87,14 +145,40 @@ export function resolvePostSessionCtaState(input = {}) {
   }
 
   const strong = !!(input.masteryAchieved || outcome === 'strong')
+  const minorWeakness = isMinorIsolatedWeakness({
+    outcome,
+    weakAyahCount: input.weakAyahCount,
+    hardWordCount: input.hardWordCount,
+    hasFocusPhrase: input.hasFocusPhrase,
+    weaknessSeverity: input.weaknessSeverity,
+  })
 
-  // Fresh strong result always wins over a prior revision-completed flag.
+  // Fresh strong result with no meaningful weakness → verified progression.
+  if (input.hasAiCheck && strong && !minorWeakness && !input.hasFocusPhrase) {
+    return POST_SESSION_CTA_STATES.STRONG
+  }
+
+  // Strong/mixed with a minor isolated phrase/ayah weakness → allow progression.
+  if (input.hasAiCheck && (strong || outcome === 'mixed') && minorWeakness) {
+    return POST_SESSION_CTA_STATES.MOSTLY_SECURE
+  }
+
+  // Strong overall but a significant focused weakness → review before advancing.
+  if (input.hasAiCheck && strong && input.hasFocusPhrase && !minorWeakness) {
+    return POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED
+  }
+
+  // Strong with no weakness signal.
   if (input.hasAiCheck && strong) return POST_SESSION_CTA_STATES.STRONG
 
   const revisionDone = !!(input.revisionCompleted || input.awaitingMasteryRetest)
   if (revisionDone) return POST_SESSION_CTA_STATES.REVISION_COMPLETED
 
-  if (input.hasAiCheck && (outcome === 'weak' || outcome === 'mixed' || !strong)) {
+  if (input.hasAiCheck && outcome === 'mixed') {
+    return POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED
+  }
+
+  if (input.hasAiCheck && (outcome === 'weak' || !strong)) {
     return POST_SESSION_CTA_STATES.NEEDS_PRACTICE
   }
 
@@ -103,26 +187,29 @@ export function resolvePostSessionCtaState(input = {}) {
 
 /**
  * @param {string} id
- * @param {'primary'|'secondary'|'ghost'} variant
+ * @param {'primary'|'success'|'secondary'|'ghost'} variant
  * @param {string} labelKey
  * @param {string} action
+ * @param {object} [extra]
  */
-function cta(id, variant, labelKey, action) {
-  return { id, variant, labelKey, action, dataAction: action }
+function cta(id, variant, labelKey, action, extra = {}) {
+  return { id, variant, labelKey, action, dataAction: action, ...extra }
 }
 
 /**
  * Map a CTA state to ordered primary → secondary → tertiary buttons.
  *
  * @param {string} state
- * @param {{ isRepeat?: boolean, confirmLabelKey?: string|null }=} options
- * @returns {Array<{
- *   id: string,
- *   variant: 'primary'|'secondary'|'ghost',
- *   labelKey: string,
- *   action: string,
- *   dataAction: string,
- * }>}
+ * @param {{
+ *   isRepeat?: boolean,
+ *   confirmLabelKey?: string|null,
+ *   preferReviseRange?: boolean,
+ *   insufficientReason?: string,
+ *   showMicrophoneCheck?: boolean,
+ *   weakAyahNumber?: number|null,
+ *   nextRangeStart?: number|null,
+ *   nextRangeEnd?: number|null,
+ * }=} options
  */
 export function mapPostSessionCtas(state, options = {}) {
   const otherRange = cta(
@@ -135,11 +222,47 @@ export function mapPostSessionCtas(state, options = {}) {
     ? 'reviseThisRange'
     : LABEL_KEYS.reviseFocusPhrase
 
+  const nextRangeLabelKey = (
+    Number(options.nextRangeStart) > 0 && Number(options.nextRangeEnd) > 0
+  )
+    ? LABEL_KEYS.continueToAyahs
+    : LABEL_KEYS.continueToNextRange
+
+  const reviewWeakLabelKey = Number(options.weakAyahNumber) > 0
+    ? LABEL_KEYS.reviewAyahOnce
+    : LABEL_KEYS.reviseFocusPhrase
+
   switch (state) {
     case POST_SESSION_CTA_STATES.NEEDS_PRACTICE:
       return [
         cta('revise_focus_phrase', 'primary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE),
         cta('check_again', 'secondary', LABEL_KEYS.retest, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN),
+        otherRange,
+      ]
+
+    case POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED:
+      return [
+        cta('revise_focus_phrase', 'primary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE),
+        cta('continue_next_range', 'secondary', nextRangeLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
+          labelParams: {
+            start: options.nextRangeStart,
+            end: options.nextRangeEnd,
+          },
+        }),
+        otherRange,
+      ]
+
+    case POST_SESSION_CTA_STATES.MOSTLY_SECURE:
+      return [
+        cta('continue_next_range', 'primary', nextRangeLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
+          labelParams: {
+            start: options.nextRangeStart,
+            end: options.nextRangeEnd,
+          },
+        }),
+        cta('review_weak_ayah', 'secondary', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
+          labelParams: { ayah: options.weakAyahNumber },
+        }),
         otherRange,
       ]
 
@@ -152,14 +275,18 @@ export function mapPostSessionCtas(state, options = {}) {
 
     case POST_SESSION_CTA_STATES.STRONG:
       return [
-        cta('continue_next_range', 'primary', LABEL_KEYS.continueToNextRange, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE),
+        // Green only when assessment confirms ready to progress.
+        cta('continue_next_range', 'success', nextRangeLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
+          labelParams: {
+            start: options.nextRangeStart,
+            end: options.nextRangeEnd,
+          },
+        }),
         cta('review_once_more', 'secondary', LABEL_KEYS.reviewOnceMore, POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE),
         otherRange,
       ]
 
     case POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO: {
-      // Only offer "Check microphone" for real permission failures — empty ASR /
-      // short clips must not imply the mic is broken.
       const reason = String(options.insufficientReason || '').toLowerCase().trim()
       const showMic = options.showMicrophoneCheck === true
         || reason === 'mic_permission'

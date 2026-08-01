@@ -180,9 +180,11 @@
         background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
         border-color: color-mix(in srgb, var(--border) 82%, transparent) !important;
       }
-      .app .mutqin-modal-btn--success {
+      .app .mutqin-modal-btn--success,
+      .app .post-session-simple__btn--success {
         color: #fff !important;
         background: linear-gradient(135deg, var(--success), var(--success-strong)) !important;
+        border-color: color-mix(in srgb, var(--success) 52%, transparent) !important;
       }
       .app .mutqin-modal-btn--danger,
       .app .mutqin-modal-btn--destructive,
@@ -239,8 +241,41 @@
         border-color: #b56a56 !important;
       }
     </style>
-    <style id="mutqin-memorisation-hotfix-v105">
-      /* Network-first hotfix v99 — ayah markers visible, no dark-img ghost, digit nudged down */
+    <style id="mutqin-memorisation-hotfix-v109">
+      /* Network-first hotfix v109 — hide U+06DF solid+dashed circles + ayah marker layout */
+      /* Blank font wins only for ornament codepoints (unicode-range); rest stays UthmanicHafs. */
+      @font-face {
+        font-family: 'MutqinHideQuranCircles';
+        src: url('{{ asset('fonts/MutqinHideQuranCircles.ttf') }}') format('truetype');
+        unicode-range: U+06DD, U+06DE, U+06DF, U+06E0, U+06E3, U+06E9, U+25CC;
+        font-display: block;
+      }
+      html body .app .verse-arabic,
+      html body .app .verse-arabic .wbw-word,
+      html body .app .verse-arabic word,
+      html body .app .verse-arabic .word-arabic-text,
+      html body .app .verse-arabic .tajweed-mark,
+      html body .app .verse-arabic [class*="tajweed-"],
+      html body .app .mushaf-ayah-text,
+      html body .app .amd-mushaf-stream,
+      html body .app .self-check-modal-ayah,
+      html body .app .memorisation-checker-ayah,
+      html body .app .session-evaluation-ayah,
+      html body .app .recitation-review-ayah {
+        font-family: 'MutqinHideQuranCircles', 'UthmanicHafs', 'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', serif !important;
+      }
+      /* WBW + tajweed: keep each Arabic chip on one horizontal line */
+      html body .app .verse-arabic.word-by-word-meanings .word-arabic-text,
+      html body .app .verse-arabic.tajweed-enabled.word-by-word-meanings .word-arabic-text {
+        display: block !important;
+        white-space: nowrap !important;
+      }
+      html body .app .verse-arabic.word-by-word-meanings .word-arabic-text [class*="tajweed"],
+      html body .app .verse-arabic.word-by-word-meanings .word-arabic-text .tajweed-mark {
+        display: inline !important;
+        white-space: nowrap !important;
+        unicode-bidi: normal !important;
+      }
       #mutqin-ui-build-pill { display: none !important; }
       html body .app .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .verse-ayah-end-number,
       html body .app .main:not(.mushaf-mode-active) .verses-grid .verse-arabic-with-end .verse-ayah-end-number,
@@ -1198,7 +1233,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v105'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v109'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
@@ -1208,6 +1243,85 @@
           setTimeout(pin, 0);
           setTimeout(pin, 500);
           setTimeout(pin, 2000);
+        });
+      })();
+    </script>
+    <script id="mutqin-strip-quran-circles">
+      /**
+       * Network-first DOM scrubber — survives stale memorisation.*.js chunks.
+       * UthmanicHafs paints U+06DF as a solid disc + dashed ring (plain + tajweed).
+       */
+      (function () {
+        var CIRCLE_RE = /[\u06DF\u06E0\u06E3\u06DD\u06DE\u06E9\u25CC]/g;
+        var ROOT_SEL = [
+          '.verse-arabic',
+          '.mushaf-ayah-text',
+          '.amd-mushaf-stream',
+          '.self-check-modal-ayah',
+          '.memorisation-checker-ayah',
+          '.session-evaluation-ayah',
+          '.recitation-review-ayah',
+          '.verses-grid',
+          '.quiz-prompt'
+        ].join(',');
+        var locking = false;
+        var scheduled = false;
+
+        function scrubRoot(root) {
+          if (!root || root.nodeType !== 1) return;
+          var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+          var node;
+          while ((node = walker.nextNode())) {
+            var value = node.nodeValue;
+            if (!value || value.search(CIRCLE_RE) === -1) continue;
+            CIRCLE_RE.lastIndex = 0;
+            node.nodeValue = value.replace(CIRCLE_RE, '');
+          }
+        }
+
+        function scrubAll() {
+          if (locking || !document.body) return;
+          locking = true;
+          try {
+            document.querySelectorAll(ROOT_SEL).forEach(scrubRoot);
+          } finally {
+            locking = false;
+          }
+        }
+
+        function scheduleScrub() {
+          if (scheduled) return;
+          scheduled = true;
+          requestAnimationFrame(function () {
+            scheduled = false;
+            scrubAll();
+          });
+        }
+
+        function start() {
+          scrubAll();
+          if (!window.MutationObserver || !document.body) return;
+          var obs = new MutationObserver(scheduleScrub);
+          obs.observe(document.body, {
+            childList: true,
+            subtree: true,
+            characterData: true
+          });
+          window.__mutqinStripQuranCircles = scrubAll;
+          document.documentElement.dataset.mutqinCircleScrub = 'v109';
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', start);
+        } else {
+          start();
+        }
+        window.addEventListener('load', function () {
+          scrubAll();
+          setTimeout(scrubAll, 300);
+          setTimeout(scrubAll, 1200);
+          setTimeout(scrubAll, 3000);
+          setTimeout(scrubAll, 6000);
         });
       })();
     </script>

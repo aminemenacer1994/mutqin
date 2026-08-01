@@ -130,4 +130,39 @@ class AyahNoteTest extends TestCase
             ->assertStatus(422)
             ->assertJsonValidationErrors(['surah_number', 'ayah_number', 'body']);
     }
+
+    public function test_store_and_update_reject_bodies_over_2000_characters(): void
+    {
+        $user = User::factory()->create();
+        $oversized = str_repeat('a', 2001);
+
+        $this->actingAs($user)
+            ->postJson('/api/ayah-notes', [
+                'surah_number' => 1,
+                'ayah_number' => 1,
+                'body' => $oversized,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['body']);
+
+        $note = AyahNote::query()->create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'title' => null,
+            'body' => str_repeat('b', 2500),
+        ]);
+
+        $this->actingAs($user)
+            ->putJson("/api/ayah-notes/{$note->id}", [
+                'body' => $oversized,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['body']);
+
+        $this->assertDatabaseHas('ayah_notes', [
+            'id' => $note->id,
+            'body' => str_repeat('b', 2500),
+        ]);
+    }
 }

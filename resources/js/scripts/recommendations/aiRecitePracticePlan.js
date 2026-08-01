@@ -694,10 +694,10 @@ function buildWhyThisPlan({ band, averageAccuracy, weakWords, techniques, t }) {
       return String(msg).replace(/\s{2,}/g, ' ').trim()
     }
     if (count === 1 && ayah) {
-      return `One phrase in Āyah ${ayah} was unclear.`
+      return `One phrase in Ayah ${ayah} needs a little reinforcement.`
     }
     if (count === 1 && word) {
-      return 'One phrase was unclear.'
+      return 'One phrase needs a little reinforcement.'
     }
     return 'A few phrases still need attention.'
   }

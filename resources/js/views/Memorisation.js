@@ -1151,6 +1151,7 @@ export default {
       currentVerseIndex: 0,
       isAudioLoading: false,
       sessionCompleted: false,
+      sessionEndedEarly: false,
       sessionCompletedAt: null,
       hybridPendingKey: null,
       quizSkill: 'recite_text',
@@ -2205,8 +2206,19 @@ export default {
         && !!this.backendSessionSnapshot
       )
     },
+    sessionExitRangeComplete() {
+      const snapshot = this.sessionExitPreviewSnapshot || {}
+      if (typeof snapshot.completedAll === 'boolean') return snapshot.completedAll
+      const rangeStart = Math.max(1, Number(snapshot.rangeStart || this.rangeStart || 1))
+      const rangeEnd = Math.max(rangeStart, Number(snapshot.rangeEnd || this.rangeEnd || rangeStart))
+      const covered = Math.max(0, Number(snapshot.coveredAyahCount || this.currentPosition || 0))
+      const progressPercent = Math.max(0, Number(snapshot.progressPercent || this.progressPercent || 0))
+      return covered >= rangeEnd && progressPercent >= 100
+    },
     sessionExitModalTitle() {
-      return this.t('memorisation.sessionExit.confirmTitle')
+      return this.sessionExitRangeComplete
+        ? (this.t('memorisation.sessionExit.confirmTitleComplete') || this.t('memorisation.sessionExit.confirmTitle'))
+        : (this.t('memorisation.sessionExit.confirmTitleEarly') || 'Finish for now?')
     },
     sessionExitModalBadge() {
       if (this.showSessionExitModal && !this.hasSessionStarted && this.sessionExitPreviewSnapshot) {
@@ -2332,7 +2344,17 @@ export default {
         : this.t('memorisation.sessionEnded.title')
     },
     sessionExitMotivationMessage() {
-      return this.t('memorisation.sessionExit.confirmDescription')
+      return this.sessionExitRangeComplete
+        ? (this.t('memorisation.sessionExit.confirmDescriptionComplete')
+          || this.t('memorisation.sessionExit.confirmDescription'))
+        : (this.t('memorisation.sessionExit.confirmDescriptionEarly')
+          || 'Your progress will be saved. This session will remain incomplete, and you can continue it later.')
+    },
+    sessionExitConfirmEndLabel() {
+      if (this.sessionExitEndingBusy) return this.t('common.endingSession')
+      return this.sessionExitRangeComplete
+        ? (this.t('memorisation.sessionExit.confirmEndComplete') || this.t('memorisation.sessionExit.confirmEnd'))
+        : (this.t('memorisation.sessionExit.confirmEndEarly') || 'Finish for now')
     },
     sessionExitStatusPills() {
       return []
@@ -3792,9 +3814,8 @@ export default {
       return shouldHideCompletionUnderAi(this.postSessionFlowPhase)
     },
     postSessionStaticPills() {
-      // Prefer evidence rows (Focus / Method / Then) when AI weak-word data exists.
-      const evidence = this.postSessionEvidenceRows
-      if (evidence.length) return []
+      // Practice-plan settings (technique / speed / reps). Shown in the plan card
+      // when Focus/Method/Next evidence is already surfaced in the AI review card.
       const settings = this.postSessionRecommendation?.settings
       if (!settings || typeof settings !== 'object') return []
       const pills = []
@@ -3837,13 +3858,32 @@ export default {
       const focus = this.resolvePostSessionFocusPhrase()
       const methodValue = this.resolvePostSessionMethodCopy(plan)
       const rec = this.postSessionRecommendation || {}
-      const from = Number(rec.ayah_range?.from || plan?.range?.from || this.postSessionSnapshot?.rangeStart || 0)
-      const to = Number(rec.ayah_range?.to || plan?.range?.to || this.postSessionSnapshot?.rangeEnd || from)
-      const nextValue = (from && to)
-        ? (formatCheckAyahsAgainLabel({ from, to }, this.t.bind(this))
-          || `Check ${formatAyahRangeLabel({ from, to }, this.t.bind(this))} again.`)
-        : (this.t('memorisation.postSession.recommendation.evidenceReviewNow')
-          || 'Check this range again.')
+      const snap = this.postSessionSnapshot || {}
+      const nextFrom = Number(rec.ayah_range?.from || 0)
+      const nextTo = Number(rec.ayah_range?.to || nextFrom)
+      const ctaState = this.postSessionCtaState
+      const allowProgress = ctaState === POST_SESSION_CTA_STATES.MOSTLY_SECURE
+        || ctaState === POST_SESSION_CTA_STATES.STRONG
+      let nextValue = ''
+      if (allowProgress && focus?.ayahNumber && nextFrom && nextTo) {
+        nextValue = this.t('memorisation.postSession.recommendation.evidenceReviewThenContinue', {
+          start: nextFrom,
+          end: nextTo,
+        }) || `Review the weak phrase once, then continue to Ayahs ${nextFrom}–${nextTo}.`
+      } else if (allowProgress && nextFrom && nextTo) {
+        nextValue = this.t('memorisation.postSession.actions.continueToAyahs', {
+          start: nextFrom,
+          end: nextTo,
+        }) || `Continue to Ayahs ${nextFrom}–${nextTo}.`
+      } else {
+        const from = Number(plan?.range?.from || snap.rangeStart || focus?.ayahNumber || 0)
+        const to = Number(plan?.range?.to || from)
+        nextValue = (from && to)
+          ? (formatCheckAyahsAgainLabel({ from, to }, this.t.bind(this))
+            || `Check ${formatAyahRangeLabel({ from, to }, this.t.bind(this))} again.`)
+          : (this.t('memorisation.postSession.recommendation.evidenceReviewNow')
+            || 'Check this range again.')
+      }
       const returnValue = this.resolvePostSessionReturnCopy()
       const rows = []
       if (focus?.phrase) {
@@ -3859,7 +3899,7 @@ export default {
           weakWord: focus.weakWord || null,
         })
       }
-      if (methodValue) {
+      if (methodValue && !allowProgress) {
         rows.push({
           key: 'method',
           label: this.t('memorisation.postSession.coach.evidenceMethod')
@@ -3892,23 +3932,43 @@ export default {
       const hasWordEvidence = !!focus?.weakWord
         || (total > 0 && Number.isFinite(matched) && matched < total)
         || (Array.isArray(details?.weakAyahs) && details.weakAyahs.length > 0)
+      const rec = this.postSessionRecommendation || {}
+      const nextFrom = Number(rec.ayah_range?.from || 0)
+      const nextTo = Number(rec.ayah_range?.to || nextFrom)
+      const ctaState = this.postSessionCtaState
+      const allowProgress = ctaState === POST_SESSION_CTA_STATES.MOSTLY_SECURE
+        || ctaState === POST_SESSION_CTA_STATES.STRONG
       // Never claim a phrase was weak without word-level assessment evidence.
       if (focus?.phrase && focus?.ayahNumber && hasWordEvidence) {
-        return this.stripAiDashes(
-          this.t('memorisation.postSession.recommendation.phraseNeedsAttention', {
-            ayah: focus.ayahNumber,
-          }) || `One phrase in Āyah ${focus.ayahNumber} was unclear.`,
-        )
+        const primary = this.t('memorisation.postSession.recommendation.phraseNeedsAttention', {
+          ayah: focus.ayahNumber,
+        }) || `One phrase in Ayah ${focus.ayahNumber} needs a little reinforcement.`
+        if (allowProgress && nextFrom && nextTo) {
+          const follow = this.t('memorisation.postSession.recommendation.phraseNeedsAttentionNext', {
+            start: nextFrom,
+            end: nextTo,
+          }) || `Review it once, then continue to Ayahs ${nextFrom}–${nextTo}.`
+          return this.stripAiDashes(`${primary} ${follow}`)
+        }
+        return this.stripAiDashes(primary)
       }
       const weakAyahs = Array.isArray(this.aiReciteFinalPlan?.weakAyahs)
         ? this.aiReciteFinalPlan.weakAyahs
         : (Array.isArray(details?.weakAyahs) ? details.weakAyahs : [])
       if (hasWordEvidence && weakAyahs.length === 1) {
-        return this.stripAiDashes(
-          this.t('memorisation.postSession.recommendation.ayahNeedsAttention', {
-            ayah: weakAyahs[0],
-          }) || `Āyah ${weakAyahs[0]} needs attention.`,
-        )
+        const ayah = weakAyahs[0]
+        const primary = this.t('memorisation.postSession.recommendation.ayahNeedsAttention', {
+          ayah,
+        }) || `Ayah ${ayah} needs a little reinforcement.`
+        if (allowProgress && nextFrom && nextTo) {
+          const follow = this.t('memorisation.postSession.recommendation.ayahNeedsAttentionNext', {
+            ayah,
+            start: nextFrom,
+            end: nextTo,
+          }) || `Review Ayah ${ayah} once, then continue to Ayahs ${nextFrom}–${nextTo}.`
+          return this.stripAiDashes(`${primary} ${follow}`)
+        }
+        return this.stripAiDashes(primary)
       }
       if (hasWordEvidence && weakAyahs.length > 1) {
         return this.stripAiDashes(
@@ -3919,7 +3979,7 @@ export default {
       const reason = String(this.postSessionSimpleReason || '').trim()
       if (!reason) return ''
       // Keep one short line — drop long plan essays from the compact reason slot.
-      return this.stripAiDashes(reason.split(/(?<=\.)\s+/)[0].slice(0, 120))
+      return this.stripAiDashes(reason.split(/(?<=\.)\s+/)[0].slice(0, 160))
     },
     postSessionTestWithAiLabel() {
       if (this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck) {
@@ -3965,6 +4025,12 @@ export default {
       const resolvedOutcome = this.postSessionAiPresentationMode === 'valid_zero_match'
         ? 'needs_practice'
         : outcome
+      const focus = this.resolvePostSessionFocusPhrase?.() || null
+      const weakAyahs = Array.isArray(this.postSessionAiReviewDetails?.weakAyahs)
+        ? this.postSessionAiReviewDetails.weakAyahs
+        : (Array.isArray(this.aiReciteFinalPlan?.weakAyahs) ? this.aiReciteFinalPlan.weakAyahs : [])
+      const colorCounts = this.postSessionAiReviewDetails?.colorCounts || {}
+      const hardWordCount = Number(colorCounts.red || 0) + Number(colorCounts.black || 0)
       return resolvePostSessionCtaState({
         isConfirmStep: this.postSessionRecommendationStep === 'confirm'
           && this.postSessionRecommendationActionable,
@@ -3977,6 +4043,9 @@ export default {
         ),
         revisionCompleted: !!this.recommendedPracticeCompleted,
         awaitingMasteryRetest: !!this.awaitingMasteryRetest,
+        weakAyahCount: weakAyahs.length || (focus?.ayahNumber ? 1 : 0),
+        hardWordCount,
+        hasFocusPhrase: !!focus?.phrase,
       })
     },
     postSessionCtaButtons() {
@@ -3989,6 +4058,11 @@ export default {
             ? 'continueToNextSurah'
             : (isRepeatRecommendation(rec) ? 'startRevision' : 'startSession'))
       })()
+      const focus = this.resolvePostSessionFocusPhrase?.() || null
+      const rec = this.postSessionRecommendation || {}
+      const snap = this.postSessionSnapshot || {}
+      const nextFrom = Number(rec.ayah_range?.from || 0)
+      const nextTo = Number(rec.ayah_range?.to || nextFrom)
       const mapped = mapPostSessionCtas(state, {
         isRepeat: this.postSessionIsRepeatRecommendation,
         confirmLabelKey: confirmKey,
@@ -3996,10 +4070,14 @@ export default {
         insufficientReason: this.postSessionAiReviewDetails?.insufficientReason || '',
         showMicrophoneCheck: this.postSessionAiReviewDetails?.showMicrophoneCheck === true
           || String(this.postSessionAiReviewDetails?.insufficientReason || '') === 'mic_permission',
+        weakAyahNumber: Number(focus?.ayahNumber || 0) || null,
+        nextRangeStart: nextFrom || Number(snap.rangeEnd || 0) + 1 || null,
+        nextRangeEnd: nextTo || null,
       })
       const actionFallbacks = {
         reviseFocusPhrase: 'Revise focus phrase',
         reviseThisRange: 'Revise this range',
+        reviewAyahOnce: 'Review Ayah once',
         retest: 'Check again',
         tryRecordingAgain: 'Try recording again',
         checkMicrophone: 'Check microphone',
@@ -4007,6 +4085,7 @@ export default {
         testWithAi: 'Check memorisation',
         continuePractising: 'Continue practising',
         continueToNextRange: 'Continue to next range',
+        continueToAyahs: 'Continue to Ayahs',
         reviewOnceMore: 'Review once more',
         chooseAnotherRange: 'Other range',
         skipForNow: 'Skip',
@@ -4014,16 +4093,23 @@ export default {
       }
       return mapped.map((btn) => {
         let label = ''
+        const params = btn.labelParams || {}
         if (state === POST_SESSION_CTA_STATES.CONFIRM
           && btn.action === POST_SESSION_CTA_ACTIONS.CONFIRM_START) {
           label = this.t(`memorisation.postSession.recommendation.confirm.${btn.labelKey}`)
             || this.postSessionConfirmationPrimaryLabel
         } else {
-          label = this.t(`memorisation.postSession.actions.${btn.labelKey}`)
+          label = this.t(`memorisation.postSession.actions.${btn.labelKey}`, params)
         }
         if (!label || label === `memorisation.postSession.actions.${btn.labelKey}`
           || label === `memorisation.postSession.recommendation.confirm.${btn.labelKey}`) {
-          label = actionFallbacks[btn.labelKey] || this.postSessionConfirmationPrimaryLabel || btn.labelKey
+          if (btn.labelKey === 'continueToAyahs' && params.start && params.end) {
+            label = `Continue to Ayahs ${params.start}–${params.end}`
+          } else if (btn.labelKey === 'reviewAyahOnce' && params.ayah) {
+            label = `Review Ayah ${params.ayah} once`
+          } else {
+            label = actionFallbacks[btn.labelKey] || this.postSessionConfirmationPrimaryLabel || btn.labelKey
+          }
         }
         return {
           ...btn,
@@ -5981,10 +6067,24 @@ export default {
       return this.isSessionLive
     },
     isSessionLive() {
-      return !!this.mutqinState?.sessionState?.active && this.hasSessionFeedback && !this.sessionCompleted
+      return !!this.mutqinState?.sessionState?.active
+        && this.hasSessionFeedback
+        && !this.sessionCompleted
+        && !this.sessionEndedEarly
+        && this.centralSession?.sessionStatus !== 'ended_early'
+        && this.centralSession?.sessionStatus !== 'completed'
     },
     isSessionCompleted() {
-      return !!this.sessionCompleted || this.centralSession?.sessionStatus === 'completed'
+      // UI “session finished” — includes ended_early. Stats must use sessionCompleted / range flags.
+      return !!this.sessionCompleted
+        || !!this.sessionEndedEarly
+        || this.centralSession?.sessionStatus === 'completed'
+        || this.centralSession?.sessionStatus === 'ended_early'
+    },
+    isSessionFullyCompleted() {
+      return (!!this.sessionCompleted || this.centralSession?.sessionStatus === 'completed')
+        && !this.sessionEndedEarly
+        && this.centralSession?.sessionStatus !== 'ended_early'
     },
     shouldShowReadingWorkspace() {
       return this.hasVerses
@@ -6275,7 +6375,7 @@ export default {
       get() { return this.currentConfig.verses },
       set(val) {
         const store = this.getModeStore(this.currentMode)
-        if (store) store.verses = val
+        if (store) store.verses = this.sanitizeVersesDisplayText(val)
       }
     },
 
@@ -9969,7 +10069,6 @@ export default {
     },
     removeBasmala(arabicText) {
       if (!arabicText) return ''
-      const basmala = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ'
       // Also handle common variations
       const basmalaVariants = [
         'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
@@ -9977,12 +10076,68 @@ export default {
         'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'
       ]
 
+      let text = String(arabicText)
       for (const variant of basmalaVariants) {
-        if (arabicText.startsWith(variant)) {
-          return arabicText.slice(variant.length).trim()
+        if (text.startsWith(variant)) {
+          text = text.slice(variant.length).trim()
+          break
         }
       }
-      return arabicText
+      // UthmanicHafs paints U+06DF as a solid+dashed circle — drop it from all display text.
+      return this.stripRedundantQuranCircles(text)
+    },
+
+    /**
+     * UthmanicHafs paints these as solid disc + dashed ring (or the same glyph):
+     * U+06DF small high rounded zero, U+06E0 rectangular zero, U+06E3 (same glyph slot).
+     * Also drop end-of-ayah / dotted-circle placeholders.
+     */
+    stripRedundantQuranCircles(text = '') {
+      if (!text) return ''
+      return String(text)
+        // Literal code points (including after HTML decode)
+        .replace(/[\u06DF\u06E0\u06E3\u06DD\u06DE\u06E9\u25CC]/g, '')
+        // Hex entities (with or without leading zeros / semicolon)
+        .replace(/&#x0*6[Dd][DdEeFf];?/gi, '')
+        .replace(/&#x0*6[Ee][039];?/gi, '')
+        .replace(/&#x0*25[Cc][Cc];?/gi, '')
+        // Decimal entities
+        .replace(/&#0*1757;?/g, '') // 06DD
+        .replace(/&#0*1758;?/g, '') // 06DE
+        .replace(/&#0*1759;?/g, '') // 06DF
+        .replace(/&#0*1760;?/g, '') // 06E0
+        .replace(/&#0*1763;?/g, '') // 06E3
+        .replace(/&#0*1769;?/g, '') // 06E9
+        .replace(/&#0*9676;?/g, '') // 25CC
+        .replace(/\uFEFF/g, '')
+    },
+
+    sanitizeVerseDisplayText(verse = {}) {
+      if (!verse || typeof verse !== 'object') return verse
+      const words = Array.isArray(verse.words)
+        ? verse.words.map((word) => {
+          if (typeof word === 'string') return this.stripRedundantQuranCircles(word)
+          if (!word || typeof word !== 'object') return word
+          return {
+            ...word,
+            ar: this.stripRedundantQuranCircles(word.ar || word.text || word.word || ''),
+            text: word.text != null ? this.stripRedundantQuranCircles(word.text) : word.text,
+            word: word.word != null ? this.stripRedundantQuranCircles(word.word) : word.word
+          }
+        })
+        : verse.words
+      return {
+        ...verse,
+        arabic: this.stripRedundantQuranCircles(verse.arabic || ''),
+        arabic_tajweed: this.stripRedundantQuranCircles(verse.arabic_tajweed || ''),
+        text: verse.text != null ? this.stripRedundantQuranCircles(verse.text) : verse.text,
+        words
+      }
+    },
+
+    sanitizeVersesDisplayText(verses = []) {
+      if (!Array.isArray(verses)) return []
+      return verses.map(verse => this.sanitizeVerseDisplayText(verse))
     },
     toggleAnchorMode() {
       this.anchorModeEnabled = !this.anchorModeEnabled
@@ -10655,12 +10810,6 @@ export default {
       }
     },
 
-    getDisplayArabic(verse) {
-      // Canonical implementation lives later in methods (stacked end-marker aware).
-      if (!verse?.arabic) return ''
-      return this.stripTajweedMarkup(verse.arabic || '')
-    },
-
     // Fix banner positioning - update CSS
     toggleKeyboardShortcuts() {
       this.topCardMenuOpen = false
@@ -10779,6 +10928,7 @@ export default {
       }
 
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
       this.sessionCompletedAt = null
       this.sessionStartedAt = Number(payload.sessionStartedAt || 0) || Date.now()
       if (this.centralSession) {
@@ -13235,6 +13385,7 @@ export default {
         return !!this.postSessionActionsBusy
       }
       if (action === POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE
+        || action === POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH
         || action === POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING
         || action === POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE) {
         const hasSnapshotRange = !!(
@@ -13264,6 +13415,7 @@ export default {
         return !!this.postSessionAiReciteBusy
       }
       if (action === POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE
+        || action === POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH
         || action === POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING
         || action === POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE
         || action === POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE
@@ -13277,6 +13429,7 @@ export default {
       if (!action || this.postSessionActionsBusy) return
       switch (action) {
         case POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE:
+        case POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH:
           await this.reviseFocusPhraseFromRecommendation()
           return
         case POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN:
@@ -14352,6 +14505,7 @@ export default {
       // New instance: wipe progress / completion from the ended record.
       this.prepareRangeRestart()
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
       this.sessionCompletedAt = null
       this.sessionStartedAt = null
       this.sessionPaused = false
@@ -23768,6 +23922,7 @@ export default {
       this.closePostSessionChoice()
       this._pendingPostSessionChoiceRestore = null
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
       this.sessionCompletedAt = null
       this.sessionPaused = false
       if (this.centralSession) {
@@ -23896,6 +24051,7 @@ export default {
         }
 
         this.sessionCompleted = false
+      this.sessionEndedEarly = false
         this.sessionCompletedAt = null
         if (this.centralSession) {
           this.centralSession.sessionCompletedAt = null
@@ -24065,6 +24221,7 @@ export default {
       }
       this.sessionPaused = false
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
     },
 
     softResumePausedSession() {
@@ -24094,6 +24251,7 @@ export default {
       ) return false
       if (this.sessionCompleted || this.isSessionCompleted) {
         this.sessionCompleted = false
+      this.sessionEndedEarly = false
         this.sessionCompletedAt = null
         if (this.centralSession) {
           this.centralSession.sessionCompletedAt = null
@@ -24393,6 +24551,7 @@ export default {
       this.onboardingSampleSessionActive = false
       this.onboardingExampleRejected = false
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
       this.sessionCompletedAt = null
       this.sessionStartedAt = 0
       if (this.centralSession) {
@@ -24456,6 +24615,7 @@ export default {
       }
       this.sessionStartedAt = 0
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
       this.sessionPaused = !!reconciled.sessionPaused
       if (!reconciled.resumable) {
         this.clearContinueSessionQuietly()
@@ -25597,7 +25757,8 @@ export default {
 
     getVerseCacheKey(mode = this.currentMode, config = null) {
       const targetConfig = config || this.buildSessionConfig(mode)
-      return `${mode}:${this.getConfigFingerprint(targetConfig)}:wbw2`
+      // bump when display scrubbing changes so stale localStorage verse caches are ignored
+      return `${mode}:${this.getConfigFingerprint(targetConfig)}:wbw3-nocircle`
     },
 
     getCachedVerses(mode = this.currentMode, config = null) {
@@ -25874,6 +26035,9 @@ export default {
         if (!saved) return this.cloneModeState(defaults)
 
         const merged = { ...defaults, ...this.cloneModeState(saved) }
+        if (Array.isArray(merged.verses)) {
+          merged.verses = this.sanitizeVersesDisplayText(merged.verses)
+        }
 
         if (typeof merged.reciterId !== 'string' || !merged.reciterId) {
           merged.reciterId = DEFAULT_ALQURAN_RECITER
@@ -26676,6 +26840,7 @@ export default {
       const firstVerseKey = store?.verses?.[0]?.key || this.verses?.[0]?.key || null
 
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
       this.sessionCompletedAt = null
       this.pendingPostSessionModalPayload = null
       if (this.centralSession) {
@@ -26994,6 +27159,8 @@ export default {
         versesInSurah: Number(this.currentChapter?.verses_count || 0),
         endedManually: true,
       }
+      const rangeComplete = !!endedSnapshot.completedAll
+      const endStatus = rangeComplete ? 'completed' : 'ended_early'
       const wasSample = !!this.onboardingSampleSessionActive
       const backendSessionId = this.backendSessionSnapshot?.id || this.postSessionCompletedSessionId || 'current'
       const previousStreak = Number(this.analytics?.currentStreak || 0)
@@ -27018,10 +27185,15 @@ export default {
                 try {
                   endResult = await learningApi.endSession({
                     idempotency_key: `end-${backendSessionId}`,
+                    range_complete: rangeComplete,
+                    ayah_number: Number(endedSnapshot.coveredAyahCount || this.currentPosition || 0) || undefined,
                     metadata: {
-                      completed: true,
+                      completed: rangeComplete,
+                      range_complete: rangeComplete,
+                      ended_early: !rangeComplete,
                       active: false,
                       ended_manually: true,
+                      covered_through: Number(endedSnapshot.coveredAyahCount || this.currentPosition || 0) || null,
                       config: {
                         chapterId: endedSnapshot.chapterId || this.chapterId || this.sessionConfig?.chapterId,
                         rangeStart: endedSnapshot.rangeStart || this.sessionConfig?.rangeStart,
@@ -27039,7 +27211,7 @@ export default {
                   })
                 } catch (endError) {
                   if (endError?.response?.status !== 422) throw endError
-                  // Already completed by state sync — recover recommendation so the CTA still appears.
+                  // Already finished by state sync — recover recommendation so the CTA still appears.
                   const params = {}
                   if (this.backendSessionSnapshot?.id) {
                     params.source_session_id = this.backendSessionSnapshot.id
@@ -27048,7 +27220,7 @@ export default {
                   endResult = {
                     saved: true,
                     unfinished: false,
-                    session: { ...(this.backendSessionSnapshot || {}), status: 'completed' },
+                    session: { ...(this.backendSessionSnapshot || {}), status: endStatus },
                     recommendation,
                     recovered_from_end_conflict: true,
                   }
@@ -27079,20 +27251,30 @@ export default {
           }
 
           const gate = resolveCompletionGate({ persistenceSucceeded: true })
-          this.sessionCompleted = true
+          this.sessionCompleted = rangeComplete
+          this.sessionEndedEarly = !rangeComplete
           this.sessionCompletedAt = new Date().toISOString()
           this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
-          this.centralSession.sessionStatus = 'completed'
+          this.centralSession.sessionStatus = endStatus
           this.centralSession.sessionCompletedAt = this.sessionCompletedAt
-          completeMutqinSession(this.mutqinState)
-          this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+          if (rangeComplete) {
+            completeMutqinSession(this.mutqinState)
+            this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+          } else {
+            this.addActivityEvent({ ts: Date.now(), type: 'session_ended_early' })
+            if (this.mutqinState?.sessionState) {
+              this.mutqinState.sessionState.completed = false
+              this.mutqinState.sessionState.ended_early = true
+              this.mutqinState.sessionState.ended_at = this.sessionCompletedAt
+            }
+          }
           // Keep sample flag through the post-session modal so Finish / sample CTAs
           // still render; exitOnboardingSampleMode clears it when leaving that flow.
           this.sessionPaused = false
           this.backendUnfinishedSession = false
           this.backendSessionSnapshot = {
             ...(this.backendSessionSnapshot || {}),
-            status: 'completed',
+            status: endStatus,
           }
           this.clearContinueSessionQuietly()
           this.clearActiveSessionSnapshot()
@@ -27267,6 +27449,7 @@ export default {
       }
       this.sessionPaused = true
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
       this.isPlaying = false
       this.playerVisible = !!this.playerVisible
     },
@@ -27559,6 +27742,7 @@ export default {
       // Completed flag without in-memory summary must not reopen as active/resumable.
       // Drop to idle workspace (not active, not paused, not continue-able).
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
       this.sessionCompletedAt = null
       this.sessionPaused = false
       if (this.centralSession) {
@@ -28240,16 +28424,17 @@ export default {
         if (!data) throw new Error('No data')
 
         // Load into current view
+        const cleanVerses = this.sanitizeVersesDisplayText(data.verses || [])
         if (this.currentMode === 'beginner') {
           this.beginner.chapterId = data.metadata.surahId
           this.beginner.rangeStart = data.metadata.rangeStart
           this.beginner.rangeEnd = data.metadata.rangeEnd
-          this.beginner.verses = data.verses
+          this.beginner.verses = cleanVerses
         } else {
           this.advanced.chapterId = data.metadata.surahId
           this.advanced.rangeStart = data.metadata.rangeStart
           this.advanced.rangeEnd = data.metadata.rangeEnd
-          this.advanced.verses = data.verses
+          this.advanced.verses = cleanVerses
         }
 
         this.currentChapter = this.chapters.find(c => c.id === data.metadata.surahId)
@@ -28443,22 +28628,11 @@ export default {
 
     /**
      * Remove redundant circle ornaments from display HTML/text.
-     * - U+06DD end-of-ayah (stacked uses PNG markers)
-     * - U+25CC dotted-circle placeholders from orphaned combining marks
-     * - U+06DF small high rounded zero (often paints as solid+dashed circle)
+     * UthmanicHafs draws U+06DF as a solid disc + dashed ring (plain + tajweed).
      */
     stripEmbeddedAyahEndMarkers(html = '') {
       if (!html) return ''
-      return String(html)
-        .replace(/\u06DD/g, '')
-        .replace(/&#x06[Dd][Dd];/gi, '')
-        .replace(/&#1757;/g, '')
-        .replace(/\u25CC/g, '')
-        .replace(/&#x25[Cc][Cc];/gi, '')
-        .replace(/&#9676;/g, '')
-        .replace(/\u06DF/g, '')
-        .replace(/&#x06[Dd][Ff];/gi, '')
-        .replace(/&#1759;/g, '')
+      return this.stripRedundantQuranCircles(String(html))
         // Empty tajweed spans left after the glyph is removed
         .replace(/<span\b[^>]*\btajweed-[^>]*>\s*<\/span>/gi, '')
         .replace(/\s+<\/span>/g, '</span>')
@@ -28492,6 +28666,8 @@ export default {
 
     getDisplayArabic(verse) {
       if (!verse?.arabic) return ''
+      // Always scrub first so persisted/cached ayahs cannot leak U+06DF circles.
+      const cleanVerse = this.sanitizeVerseDisplayText(verse)
       // Word wrappers are token-level (never character-split). CSS keeps them
       // display:inline so Arabic joining / tajweed colours stay intact.
       const needsInteractiveWords = !!(
@@ -28502,20 +28678,20 @@ export default {
         || (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length > 0)
       )
       let html = ''
-      if (this.shouldShowRecitationReviewHighlights(verse.key)) {
-        html = this.splitRecitationDisplayIntoWords(verse)
-      } else if (this.tajweedEnabled && verse.arabic_tajweed) {
-        html = this.renderWordLevelTajweedMarkup(verse, { wrapWords: needsInteractiveWords })
+      if (this.shouldShowRecitationReviewHighlights(cleanVerse.key)) {
+        html = this.splitRecitationDisplayIntoWords(cleanVerse)
+      } else if (this.tajweedEnabled && cleanVerse.arabic_tajweed) {
+        html = this.renderWordLevelTajweedMarkup(cleanVerse, { wrapWords: needsInteractiveWords })
       } else if (needsInteractiveWords) {
-        html = this.splitArabicIntoWords(verse)
+        html = this.splitArabicIntoWords(cleanVerse)
       } else {
-        html = this.stripTajweedMarkup(verse.arabic)
+        html = this.stripTajweedMarkup(cleanVerse.arabic)
       }
       html = this.stripEmbeddedAyahEndMarkers(html)
       // Stacked layout: ornate PNG ayah number after the ayah text.
       // Mushaf layout keeps its own page glyphs / end marks.
       if (this.readingViewMode !== 'mushaf') {
-        html = `${html || ''}${this.buildStackedAyahEndMarkerHtml(verse)}`
+        html = `${html || ''}${this.buildStackedAyahEndMarkerHtml(cleanVerse)}`
       }
       return html
     },
@@ -28633,43 +28809,83 @@ export default {
         .replace(/<\/span><\/span>/g, '</span>')
         .replace(/(?:class=|data-tajweed=)&quot;[^&]*&quot;/g, '')
 
-      return this.repairTajweedOrphanMarks(normalized)
+      // Drop circle ornaments before reattaching marks so U+06DF is never preserved.
+      return this.repairTajweedOrphanMarks(this.stripRedundantQuranCircles(normalized))
     },
 
     stripTajweedMarkup(text) {
       if (!text) return ''
-      return String(text)
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/<\s*\/?\s*tajweed[^>]*>/gi, '')
-        .replace(/<[^>]*>/g, '')
-        .replace(/\[(?:[a-z]|\/)[^\]]*\]/gi, '')
-        .trim()
+      return this.stripRedundantQuranCircles(
+        String(text)
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/<\s*\/?\s*tajweed[^>]*>/gi, '')
+          .replace(/<[^>]*>/g, '')
+          .replace(/\[(?:[a-z]|\/)[^\]]*\]/gi, '')
+          .trim()
+      )
     },
     splitTajweedMarkupIntoWordHtml(markup = '') {
       if (!markup) return []
+      // Quran-tajweed often colours across word boundaries (e.g. "...تٌ مّ...").
+      // A naive whitespace split then cuts inside open <span>s, so the closing
+      // </span> lands in the next token and closes .word-arabic-text early —
+      // remaining letters become flex-column children of .wbw-word (vertical shred).
       const segments = []
       let buffer = ''
-      let inTag = false
-      for (const char of String(markup)) {
+      const openStack = []
+      const closeOpenTags = () => openStack
+        .slice()
+        .reverse()
+        .map((tag) => {
+          const name = String(tag).match(/^<\/?\s*([a-z0-9:-]+)/i)?.[1]
+          return name ? `</${name}>` : ''
+        })
+        .join('')
+      const reopenTags = () => openStack.join('')
+      const hasVisibleText = (html) => String(html || '')
+        .replace(/<[^>]*>/g, '')
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .trim()
+        .length > 0
+
+      const source = String(markup)
+      let i = 0
+      while (i < source.length) {
+        const char = source[i]
         if (char === '<') {
-          inTag = true
-          buffer += char
+          const end = source.indexOf('>', i)
+          if (end === -1) {
+            buffer += source.slice(i)
+            break
+          }
+          const tag = source.slice(i, end + 1)
+          if (/^<\s*\//.test(tag)) {
+            openStack.pop()
+            buffer += tag
+          } else if (!/^<\s*!/.test(tag) && !/\/>\s*$/.test(tag)) {
+            openStack.push(tag)
+            buffer += tag
+          } else {
+            buffer += tag
+          }
+          i = end + 1
           continue
         }
-        if (char === '>') {
-          inTag = false
-          buffer += char
-          continue
-        }
-        if (!inTag && /\s/.test(char)) {
-          if (buffer.trim()) segments.push(buffer.trim())
-          buffer = ''
+        if (/\s/.test(char)) {
+          if (hasVisibleText(buffer)) {
+            segments.push(`${buffer}${closeOpenTags()}`)
+            buffer = reopenTags()
+          }
+          while (i < source.length && /\s/.test(source[i])) i += 1
           continue
         }
         buffer += char
+        i += 1
       }
-      if (buffer.trim()) segments.push(buffer.trim())
+      if (hasVisibleText(buffer)) {
+        segments.push(`${buffer}${closeOpenTags()}`)
+      }
       return segments
     },
     getTajweedClassesForMarkupToken(token = '') {
@@ -28756,8 +28972,12 @@ export default {
 
       // Regular mode (without tajweed)
       words.forEach((word, idx) => {
-        const wordText = typeof word === 'string' ? word : word.ar
-        html += `${this.buildWordTokenHtml(verse, word, idx, this.escapeHtml(wordText), options)} `
+        const raw = typeof word === 'string' ? word : word.ar
+        const wordText = this.stripRedundantQuranCircles(raw)
+        const cleanedWord = typeof word === 'string'
+          ? wordText
+          : { ...word, ar: wordText }
+        html += `${this.buildWordTokenHtml(verse, cleanedWord, idx, this.escapeHtml(wordText), options)} `
       })
 
       return html
@@ -29606,6 +29826,7 @@ export default {
 
       if (this.canNext) {
         this.sessionCompleted = false
+      this.sessionEndedEarly = false
         this.queueIndex++
         moveMutqinSession(this.mutqinState, this.queueIndex + 1)
         this.centralSession.chaining.index = this.queueIndex
@@ -29643,6 +29864,7 @@ export default {
       this.clearTalqinPauseTimer()
       this.advanceLocked = true
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
       this.queueIndex--
       moveMutqinSession(this.mutqinState, this.queueIndex + 1)
       this.centralSession.chaining.index = this.queueIndex
@@ -29736,11 +29958,12 @@ export default {
       try {
         const cached = this.getCachedVerses(mode, targetConfig)
         if (cached?.verses?.length) {
-          target.verses = cached.verses
+          // Re-scrub circles — older cache entries still contain U+06DF ornaments.
+          target.verses = cached.verses.map(verse => this.sanitizeVerseDisplayText(verse))
           target.loadedConfig = cached.loadedConfig
           this.buildQueue(mode)
           this.syncActiveVerseState(mode)
-          this.syncMutqinAyahs(cached.verses)
+          this.syncMutqinAyahs(target.verses)
           this.isDataReady = true
           this.isWorkspaceRefreshing = false
           this.workspaceRefreshReason = ''
@@ -29805,7 +30028,7 @@ export default {
             let arabic = arabicByNumber.get(ayah.numberInSurah) || ayah.text || ''
             let tajweed = tajweedByNumber.get(ayah.numberInSurah) || ''
 
-            // Remove Basmala from Arabic text
+            // Remove Basmala + solid/dashed circle ornaments (U+06DF etc.)
             arabic = this.removeBasmala(arabic)
             tajweed = this.removeBasmala(tajweed)
 
@@ -29830,7 +30053,7 @@ export default {
               transliteration,
               audio: fallbackAudio,
               words: arabicWords.map((word, index) => ({
-                ar: word,
+                ar: this.stripRedundantQuranCircles(word),
                 en: wbwWords[index]?.en || '',
                 transliteration: wbwWords[index]?.transliteration || translitWords[index] || '',
                 audio: wbwWords[index]?.audio || null
@@ -29842,7 +30065,7 @@ export default {
           throw new Error('No ayahs in the selected range')
         }
 
-        target.verses = mappedVerses
+        target.verses = this.sanitizeVersesDisplayText(mappedVerses)
         target.loadedConfig = {
           chapterId,
           rangeStart: start,
@@ -30172,6 +30395,7 @@ export default {
       this.persistUiState()
 
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
       this.sessionCompletedAt = null
       this.sessionStartedAt = Date.now()
       this.sessionErrorCount = 0
@@ -32022,6 +32246,7 @@ export default {
 
     openRetentionQuiz() {
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
       this.studyMode = 'quiz'
       this.startQuiz()
     },
@@ -32129,6 +32354,7 @@ export default {
         return
       }
       this.sessionCompleted = false
+      this.sessionEndedEarly = false
       const skill = this.resolveQuizPoolSkill()
       this.quizSkill = skill
       const targetCount = [4, 6, 8, 10, 12].includes(Number(this.quizLength)) ? Number(this.quizLength) : 6

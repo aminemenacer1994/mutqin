@@ -392,14 +392,29 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     t,
   })
 
-  const outcomeLabel = resolvedState === RECITATION_RESULT_STATE.STRONG
-    ? t('memorisation.postSession.recommendation.aiOutcomeStrong')
-    : ((resolvedState === RECITATION_RESULT_STATE.NEEDS_PRACTICE
-      || (hasWordLevelEvidence && (missed > 0 || amberCount > 0)))
-      ? (t('memorisation.postSession.recommendation.confidenceNeedsPractice')
-        || t('memorisation.postSession.recommendation.aiOutcomeWeak')
-        || 'Needs more practice')
-      : t('memorisation.postSession.recommendation.aiOutcomeMixed'))
+  const hasMinorWeakness = hasWordLevelEvidence
+    && (missed > 0 || amberCount > 0 || (Array.isArray(weakAyahs) && weakAyahs.length > 0))
+    && resolvedState !== RECITATION_RESULT_STATE.NEEDS_PRACTICE
+  const outcomeLabel = resolvedState === RECITATION_RESULT_STATE.STRONG && !hasMinorWeakness
+    ? (t('memorisation.postSession.recommendation.statusReadyToContinue')
+      || t('memorisation.postSession.recommendation.aiOutcomeStrong')
+      || 'Ready to continue')
+    : resolvedState === RECITATION_RESULT_STATE.STRONG && hasMinorWeakness
+      ? (t('memorisation.postSession.recommendation.statusMostlySecure')
+        || t('memorisation.postSession.recommendation.aiOutcomeMixed')
+        || 'Mostly secure')
+      : ((resolvedState === RECITATION_RESULT_STATE.NEEDS_PRACTICE
+        || (hasWordLevelEvidence && missed >= 3))
+        ? (t('memorisation.postSession.recommendation.statusMorePracticeNeeded')
+          || t('memorisation.postSession.recommendation.aiOutcomeWeak')
+          || 'More practice needed')
+        : (hasMinorWeakness
+          ? (t('memorisation.postSession.recommendation.statusReviewRecommended')
+            || t('memorisation.postSession.recommendation.aiOutcomeReviewRecommended')
+            || 'Review recommended')
+          : (t('memorisation.postSession.recommendation.statusMostlySecure')
+            || t('memorisation.postSession.recommendation.aiOutcomeMixed')
+            || 'Mostly secure')))
 
   const summaryLine = buildAiSummaryLine({
     outcome: resolvedOutcome,

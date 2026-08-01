@@ -64,16 +64,28 @@
                 ref="bodyInput"
                 v-model="draftBody"
                 class="form-control ayah-notes-textarea"
+                :class="{ 'is-over-limit': isOverLimit }"
                 rows="4"
-                maxlength="10000"
+                :maxlength="textareaMaxLength"
                 autocomplete="off"
                 enterkeyhint="done"
                 :placeholder="t('memorisation.ayahNotes.bodyPlaceholder')"
                 :disabled="busy"
+                :aria-invalid="isOverLimit ? 'true' : 'false'"
+                :aria-describedby="isAtOrOverLimit ? 'ayahNotesBodyLimit' : undefined"
                 @keydown.meta.enter.prevent="saveDraft"
                 @keydown.ctrl.enter.prevent="saveDraft"
               ></textarea>
-              <span class="ayah-notes-char-count">{{ draftBody.length }}/10000</span>
+              <span
+                class="ayah-notes-char-count"
+                :class="{ 'is-limit': isAtOrOverLimit }"
+              >{{ formattedCharCount }}</span>
+              <span
+                v-if="isAtOrOverLimit"
+                id="ayahNotesBodyLimit"
+                class="ayah-notes-limit-msg"
+                role="alert"
+              >{{ t('memorisation.ayahNotes.bodyLimitReached') }}</span>
             </label>
 
             <div v-if="formError" class="alert alert-danger ayah-notes-form-alert" role="alert">
@@ -93,69 +105,101 @@
             </div>
           </section>
 
-          <section class="ayah-notes-list-section" :class="{ 'is-empty': !loading && !notes.length }">
+          <section
+            class="ayah-notes-list-section"
+            :class="{ 'is-empty': !loading && !notes.length, 'is-collapsed': !notesExpanded && notes.length > 0 }"
+          >
             <div class="ayah-notes-list-head">
-              <h3>{{ t('memorisation.ayahNotes.yourNotes') }}</h3>
-              <span v-if="!loading && notes.length" class="ayah-notes-list-count">{{ notes.length }}</span>
-            </div>
-
-            <div v-if="loading" class="ayah-notes-empty ayah-notes-empty--loading" role="status">
-              <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-              <p>{{ t('memorisation.ayahNotes.loading') }}</p>
-            </div>
-
-            <div v-else-if="!notes.length" class="ayah-notes-empty">
-              <span class="ayah-notes-empty-icon" aria-hidden="true">
-                <i class="bi bi-journal-text"></i>
-              </span>
-              <strong>{{ t('memorisation.ayahNotes.emptyTitle') }}</strong>
-              <p>{{ t('memorisation.ayahNotes.empty') }}</p>
-            </div>
-
-            <ul v-else class="ayah-notes-list" role="list">
-              <li
-                v-for="note in notes"
-                :key="note.id"
-                class="ayah-notes-item"
-                :class="{ 'is-editing': editingNoteId === note.id }"
+              <h3 id="ayahNotesListHeading">
+                {{ t('memorisation.ayahNotes.yourNotes') }}
+                <span v-if="!loading && notes.length" class="ayah-notes-list-count-inline">({{ notes.length }})</span>
+              </h3>
+              <button
+                v-if="!loading && notes.length"
+                type="button"
+                class="ayah-notes-collapse-btn"
+                :aria-expanded="notesExpanded ? 'true' : 'false'"
+                aria-controls="ayahNotesListPanel"
+                :aria-label="notesExpanded
+                  ? t('memorisation.ayahNotes.collapseNotes')
+                  : t('memorisation.ayahNotes.expandNotes')"
+                @click="toggleNotesExpanded"
               >
-                <div class="ayah-notes-item-main">
-                  <div class="ayah-notes-item-copy">
-                    <div class="ayah-notes-item-title-row">
-                      <span class="ayah-notes-item-title">{{ noteTitle(note) }}</span>
-                      <span
-                        v-if="editingNoteId === note.id"
-                        class="ayah-notes-editing-badge"
-                      >{{ t('memorisation.ayahNotes.editingBadge') }}</span>
+                <span>{{ notesExpanded
+                  ? t('memorisation.ayahNotes.collapse')
+                  : t('memorisation.ayahNotes.expand') }}</span>
+                <i
+                  class="bi"
+                  :class="notesExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"
+                  aria-hidden="true"
+                ></i>
+              </button>
+            </div>
+
+            <div
+              id="ayahNotesListPanel"
+              class="ayah-notes-list-panel"
+              role="region"
+              aria-labelledby="ayahNotesListHeading"
+            >
+              <div v-if="loading" class="ayah-notes-empty ayah-notes-empty--loading" role="status">
+                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                <p>{{ t('memorisation.ayahNotes.loading') }}</p>
+              </div>
+
+              <div v-else-if="!notes.length" class="ayah-notes-empty">
+                <span class="ayah-notes-empty-icon" aria-hidden="true">
+                  <i class="bi bi-journal-text"></i>
+                </span>
+                <strong>{{ t('memorisation.ayahNotes.emptyTitle') }}</strong>
+                <p>{{ t('memorisation.ayahNotes.empty') }}</p>
+              </div>
+
+              <ul v-else class="ayah-notes-list" role="list">
+                <li
+                  v-for="note in notes"
+                  :key="note.id"
+                  class="ayah-notes-item"
+                  :class="{ 'is-editing': editingNoteId === note.id }"
+                >
+                  <div class="ayah-notes-item-main">
+                    <div class="ayah-notes-item-copy">
+                      <div class="ayah-notes-item-title-row">
+                        <span class="ayah-notes-item-title">{{ noteTitle(note) }}</span>
+                        <span
+                          v-if="editingNoteId === note.id"
+                          class="ayah-notes-editing-badge"
+                        >{{ t('memorisation.ayahNotes.editingBadge') }}</span>
+                      </div>
+                      <p v-if="notePreview(note)" class="ayah-notes-item-body">{{ notePreview(note) }}</p>
+                      <time class="ayah-notes-item-time" :datetime="note.updated_at || note.created_at">
+                        {{ formatNoteDate(note.updated_at || note.created_at) }}
+                      </time>
                     </div>
-                    <p v-if="notePreview(note)" class="ayah-notes-item-body">{{ notePreview(note) }}</p>
-                    <time class="ayah-notes-item-time" :datetime="note.updated_at">
-                      {{ formatNoteDate(note.updated_at) }}
-                    </time>
+                    <div class="ayah-notes-item-actions">
+                      <button
+                        type="button"
+                        class="ayah-notes-item-action"
+                        :disabled="busy || !!pendingDeleteNote || editingNoteId === note.id"
+                        @click="startEdit(note)"
+                      >
+                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.ayahNotes.edit') }}</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="ayah-notes-item-action ayah-notes-item-action--danger"
+                        :disabled="busy || !!pendingDeleteNote"
+                        @click="requestDelete(note)"
+                      >
+                        <i class="bi bi-trash3" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.ayahNotes.delete') }}</span>
+                      </button>
+                    </div>
                   </div>
-                  <div class="ayah-notes-item-actions">
-                    <button
-                      type="button"
-                      class="ayah-notes-item-action"
-                      :disabled="busy || !!pendingDeleteNote || editingNoteId === note.id"
-                      @click="startEdit(note)"
-                    >
-                      <i class="bi bi-pencil" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.ayahNotes.edit') }}</span>
-                    </button>
-                    <button
-                      type="button"
-                      class="ayah-notes-item-action ayah-notes-item-action--danger"
-                      :disabled="busy || !!pendingDeleteNote"
-                      @click="requestDelete(note)"
-                    >
-                      <i class="bi bi-trash3" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.ayahNotes.delete') }}</span>
-                    </button>
-                  </div>
-                </div>
-              </li>
-            </ul>
+                </li>
+              </ul>
+            </div>
           </section>
         </div>
       </div>
@@ -223,6 +267,9 @@
 <script>
 import learningApi from '../scripts/api/learning'
 
+const BODY_MAX_LENGTH = 2000
+const NOTES_COLLAPSE_THRESHOLD = 3
+
 export default {
   name: 'AyahNotesModal',
   props: {
@@ -242,6 +289,9 @@ export default {
       editingNoteId: null,
       formError: '',
       pendingDeleteNote: null,
+      notesExpanded: true,
+      /** When editing a legacy note over the limit, allow viewing full text until shortened. */
+      allowOversizedDraft: false,
     }
   },
   computed: {
@@ -252,8 +302,28 @@ export default {
         ayah: this.ayahNumber,
       })
     },
+    draftLength() {
+      return String(this.draftBody || '').length
+    },
+    isOverLimit() {
+      return this.draftLength > BODY_MAX_LENGTH
+    },
+    isAtOrOverLimit() {
+      return this.draftLength >= BODY_MAX_LENGTH
+    },
+    formattedCharCount() {
+      const current = this.draftLength.toLocaleString()
+      const max = BODY_MAX_LENGTH.toLocaleString()
+      return `${current} / ${max}`
+    },
+    textareaMaxLength() {
+      // Preserve oversized legacy notes while editing; block save until shortened.
+      if (this.allowOversizedDraft && this.isOverLimit) return undefined
+      return BODY_MAX_LENGTH
+    },
     canSave() {
-      return String(this.draftBody || '').trim().length > 0
+      const body = String(this.draftBody || '').trim()
+      return body.length > 0 && body.length <= BODY_MAX_LENGTH && !this.isOverLimit
     },
   },
   watch: {
@@ -265,6 +335,11 @@ export default {
         this.$nextTick(() => this.focusComposerIfAppropriate())
       } else {
         this.pendingDeleteNote = null
+      }
+    },
+    draftBody(next) {
+      if (this.allowOversizedDraft && String(next || '').length <= BODY_MAX_LENGTH) {
+        this.allowOversizedDraft = false
       }
     },
   },
@@ -299,6 +374,7 @@ export default {
       this.draftBody = ''
       this.editingNoteId = null
       this.formError = ''
+      this.allowOversizedDraft = false
     },
     cancelEdit() {
       this.resetDraft()
@@ -334,9 +410,16 @@ export default {
       if (!title) return ''
       return body
     },
+    syncNotesExpandedDefault() {
+      this.notesExpanded = this.notes.length <= NOTES_COLLAPSE_THRESHOLD
+    },
+    toggleNotesExpanded() {
+      this.notesExpanded = !this.notesExpanded
+    },
     async loadNotes() {
       if (!this.surahNumber || !this.ayahNumber) {
         this.notes = []
+        this.syncNotesExpandedDefault()
         return
       }
       this.loading = true
@@ -346,10 +429,12 @@ export default {
           surah_number: this.surahNumber,
           ayah_number: this.ayahNumber,
         })
+        this.syncNotesExpandedDefault()
       } catch (error) {
         console.error('Failed to load ayah notes', error)
         this.formError = this.t('memorisation.ayahNotes.loadFailed')
         this.notes = []
+        this.syncNotesExpandedDefault()
       } finally {
         this.loading = false
       }
@@ -359,7 +444,11 @@ export default {
       this.editingNoteId = note.id
       this.draftTitle = note.title || ''
       this.draftBody = note.body || ''
-      this.formError = ''
+      this.allowOversizedDraft = String(note.body || '').length > BODY_MAX_LENGTH
+      this.formError = this.allowOversizedDraft
+        ? this.t('memorisation.ayahNotes.bodyMustShorten')
+        : ''
+      if (!this.notesExpanded) this.notesExpanded = true
       this.$nextTick(() => {
         this.$refs.bodyInput?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
         this.focusComposerIfAppropriate()
@@ -368,6 +457,10 @@ export default {
     async saveDraft() {
       const body = String(this.draftBody || '').trim()
       if (!body || this.busy) return
+      if (body.length > BODY_MAX_LENGTH) {
+        this.formError = this.t('memorisation.ayahNotes.bodyLimitReached')
+        return
+      }
       this.busy = true
       this.formError = ''
       const wasEditing = !!this.editingNoteId
