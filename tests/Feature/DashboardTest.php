@@ -193,6 +193,8 @@ class DashboardTest extends TestCase
             'reason_code' => 'performance_review',
             'status' => RecommendationStatus::Generated,
             'session_mode' => 'revision',
+            'recommended_technique' => 'talqin',
+            'recommended_playback_speed' => 0.85,
         ]);
 
         UserLastPosition::create([
@@ -208,11 +210,20 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.meta.owner_id', $user->id)
             ->assertJsonPath('data.continue.action_type', 'resume_session')
             ->assertJsonPath('data.continue.cta_key', 'cta_resume')
-            ->assertJsonPath('data.continue.surah_number', 113);
+            ->assertJsonPath('data.continue.surah_number', 113)
+            ->assertJsonPath('data.recommended_next.surah_number', 114)
+            ->assertJsonPath('data.recommended_next.ayah_start', 1)
+            ->assertJsonPath('data.recommended_next.ayah_end', 6)
+            ->assertJsonPath('data.recommended_next.technique_label', 'Talqin')
+            ->assertJsonPath('data.recommended_next.speed_label', '0.85x');
 
         $href = (string) $response->json('data.continue.href');
         $this->assertStringContainsString('resume=1', $href);
         $this->assertStringContainsString('session=', $href);
+
+        $recommendHref = (string) $response->json('data.recommended_next.href');
+        $this->assertStringContainsString('recommendation=', $recommendHref);
+        $this->assertStringContainsString('surah=114', $recommendHref);
     }
 
     public function test_dashboard_api_ignores_client_supplied_user_id(): void
@@ -323,6 +334,125 @@ class DashboardTest extends TestCase
         $this->assertLessThanOrEqual(3, count($points));
     }
 
+    public function test_chart_days_toggle_returns_matching_range_and_labels(): void
+    {
+        $user = User::factory()->create();
+
+        foreach ([20, 10, 2] as $daysAgo) {
+            $at = now()->subDays($daysAgo)->setTime(11, 0);
+            UserSession::create([
+                'user_id' => $user->id,
+                'surah_number' => 112,
+                'ayah_number' => 1,
+                'status' => UserSessionStatus::Completed,
+                'is_onboarding_example' => false,
+                'ended_at' => $at,
+                'last_activity_at' => $at,
+                'metadata' => ['completed' => true],
+            ]);
+            LearningAnalytic::create([
+                'user_id' => $user->id,
+                'session_date' => $at->toDateString(),
+                'sessions_completed' => 1,
+                'total_minutes' => 6,
+                'ayahs_memorised' => 1,
+                'ayahs_reviewed' => 0,
+                'streak_day' => 1,
+            ]);
+        }
+
+        $seven = $this->actingAs($user)
+            ->getJson('/api/dashboard?days=7')
+            ->assertOk()
+            ->assertJsonPath('data.chart.days', 7)
+            ->assertJsonPath('data.meta.chart_days', 7)
+            ->json('data.chart.points');
+
+        $thirty = $this->actingAs($user)
+            ->getJson('/api/dashboard?days=30')
+            ->assertOk()
+            ->assertJsonPath('data.chart.days', 30)
+            ->assertJsonPath('data.meta.chart_days', 30)
+            ->json('data.chart.points');
+
+        $this->assertNotEmpty($seven);
+        $this->assertNotEmpty($thirty);
+        $this->assertGreaterThan(count($seven), count($thirty));
+        $this->assertSame(now()->subDays(2)->toDateString(), $seven[0]['date']);
+        $this->assertSame(now()->subDays(20)->toDateString(), $thirty[0]['date']);
+        $this->assertArrayHasKey('date', $seven[0]);
+        $this->assertArrayHasKey('primary', $seven[0]);
+        $this->assertArrayHasKey('secondary', $seven[0]);
+    }
+
+    public function test_activity_log_returns_sessions_ai_checks_and_notes_chronologically(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 4,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now()->subHours(3),
+            'last_activity_at' => now()->subHours(3),
+            'metadata' => [
+                'completed' => true,
+                'config' => ['chapterId' => 112, 'rangeStart' => 1, 'rangeEnd' => 4],
+            ],
+        ]);
+
+        $ai = AiReciteAttempt::create([
+            'user_id' => $user->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 81,
+            'band' => 'strong',
+            'ayah_range' => ['surah' => 112, 'from' => 1, 'to' => 4],
+        ]);
+        $ai->forceFill([
+            'created_at' => now()->subHours(2),
+            'updated_at' => now()->subHours(2),
+        ])->save();
+
+        $note = AyahNote::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 2,
+            'body' => 'Review the middle carefully.',
+        ]);
+        $note->forceFill([
+            'created_at' => now()->subHour(),
+            'updated_at' => now()->subHour(),
+        ])->save();
+
+        // Other user's activity must never leak.
+        UserSession::create([
+            'user_id' => $other->id,
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now(),
+            'last_activity_at' => now(),
+            'metadata' => ['completed' => true],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/dashboard/activity')
+            ->assertOk();
+
+        $items = $response->json('activity');
+        $this->assertCount(3, $items);
+        $this->assertSame('note', $items[0]['type']);
+        $this->assertSame('Review the middle carefully.', $items[0]['outcome']);
+        $this->assertSame('ai_check', $items[1]['type']);
+        $this->assertStringContainsString('81%', $items[1]['outcome']);
+        $this->assertSame('session', $items[2]['type']);
+        $this->assertSame('Completed', $items[2]['outcome']);
+    }
+
     public function test_memorised_count_increments_when_range_marked_memorised(): void
     {
         $user = User::factory()->create();
@@ -368,6 +498,38 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.snapshot.memorised_ayahs.value', 2)
             ->assertJsonPath('data.progress.memorised_ayah_count', 2)
             ->assertJsonPath('data.progress.learning_ayah_count', 1);
+    }
+
+    public function test_surah_progress_uses_practised_ayahs_and_stays_visible_at_low_percent(): void
+    {
+        $user = User::factory()->create();
+
+        UserLastPosition::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'ayah_number' => 3,
+            'last_opened_at' => now(),
+        ]);
+
+        // 3 practised ayahs of Al-Baqarah (286) ≈ 1% — must not round to 0.
+        foreach ([1, 2, 3] as $ayah) {
+            MemorisationProgress::create([
+                'user_id' => $user->id,
+                'surah_number' => 2,
+                'ayah_number' => $ayah,
+                'status' => $ayah === 3 ? 'learning' : 'memorised',
+                'mastery_level' => $ayah === 3 ? 20 : 80,
+                'repetitions' => 1,
+            ]);
+        }
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.progress.current_surah_number', 2)
+            ->assertJsonPath('data.progress.surah_ayah_count', 286)
+            ->assertJsonPath('data.progress.surah_practised_ayah_count', 3)
+            ->assertJsonPath('data.progress.surah_completion_percent', 1);
     }
 
     public function test_session_history_is_scoped_to_authenticated_user(): void
@@ -447,5 +609,208 @@ class DashboardTest extends TestCase
         $this->assertSame(4, $attempts[0]['ayah_end']);
         $this->assertSame('strong', $attempts[0]['band']);
         $this->assertSame(81, $attempts[0]['accuracy_percent']);
+    }
+
+    public function test_week_summary_reflects_current_week_activity(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.week_summary.is_empty', true)
+            ->assertJsonPath('data.week_summary.sessions', 0)
+            ->assertJsonPath('data.week_summary.ai_checks', 0)
+            ->assertJsonPath('data.week_summary.ayahs_practised', 0);
+
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 2,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now(),
+            'last_activity_at' => now(),
+            'metadata' => ['completed' => true],
+        ]);
+
+        AiReciteAttempt::create([
+            'user_id' => $user->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 70,
+            'band' => 'mixed',
+            'ayah_range' => ['surah' => 112, 'from' => 1, 'to' => 2],
+        ]);
+
+        LearningAnalytic::create([
+            'user_id' => $user->id,
+            'session_date' => now()->toDateString(),
+            'sessions_completed' => 1,
+            'total_minutes' => 10,
+            'ayahs_memorised' => 2,
+            'ayahs_reviewed' => 1,
+            'streak_day' => 1,
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.week_summary.is_empty', false)
+            ->assertJsonPath('data.week_summary.sessions', 1)
+            ->assertJsonPath('data.week_summary.ai_checks', 1)
+            ->assertJsonPath('data.week_summary.ayahs_practised', 3);
+    }
+
+    public function test_recommended_next_is_hidden_without_recommendation(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.recommended_next', null);
+    }
+
+    public function test_recommended_next_prefers_last_completed_session_recommendation(): void
+    {
+        $user = User::factory()->create();
+
+        $older = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 108,
+            'ayah_number' => 1,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now()->subDays(2),
+            'last_activity_at' => now()->subDays(2),
+            'metadata' => ['completed' => true],
+        ]);
+
+        $latest = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 4,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now()->subHour(),
+            'last_activity_at' => now()->subHour(),
+            'metadata' => ['completed' => true],
+        ]);
+
+        SessionRecommendation::create([
+            'user_id' => $user->id,
+            'source_session_id' => $older->id,
+            'surah_number' => 108,
+            'ayah_start' => 1,
+            'ayah_end' => 3,
+            'recommendation_type' => 'revision',
+            'reason_code' => 'performance_review',
+            'status' => RecommendationStatus::Generated,
+            'session_mode' => 'revision',
+            'recommended_technique' => 'blur',
+            'recommended_playback_speed' => 1,
+        ]);
+
+        SessionRecommendation::create([
+            'user_id' => $user->id,
+            'source_session_id' => $latest->id,
+            'surah_number' => 112,
+            'ayah_start' => 1,
+            'ayah_end' => 4,
+            'recommendation_type' => 'revision',
+            'reason_code' => 'performance_review',
+            'status' => RecommendationStatus::Generated,
+            'session_mode' => 'revision',
+            'recommended_technique' => 'focus',
+            'recommended_playback_speed' => 0.75,
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.recommended_next.surah_number', 112)
+            ->assertJsonPath('data.recommended_next.technique_label', 'Focus')
+            ->assertJsonPath('data.recommended_next.speed_label', '0.75x');
+    }
+
+    public function test_streak_state_marks_broken_when_no_session_yesterday(): void
+    {
+        $user = User::factory()->create();
+
+        LearningAnalytic::create([
+            'user_id' => $user->id,
+            'session_date' => now()->subDays(3)->toDateString(),
+            'sessions_completed' => 1,
+            'total_minutes' => 8,
+            'ayahs_memorised' => 1,
+            'ayahs_reviewed' => 0,
+            'streak_day' => 1,
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.retention.streak_days', 0)
+            ->assertJsonPath('data.retention.streak_broken', true)
+            ->assertJsonPath('data.retention.streak_has_history', true);
+    }
+
+    public function test_needs_review_items_include_ai_strength_labels(): void
+    {
+        $user = User::factory()->create();
+
+        MemorisationAssessment::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'start_ayah' => 1,
+            'end_ayah' => 4,
+            'surah_name' => 'Al-Ikhlas',
+            'weakness_analysis' => [
+                'weak_ayahs' => [1, 2, 3],
+            ],
+            'overall_accuracy' => 55,
+        ]);
+
+        AiReciteAttempt::create([
+            'user_id' => $user->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 42,
+            'band' => 'weak',
+            'ayah_range' => ['surah' => 112, 'from' => 1, 'to' => 1],
+            'weak_words' => [
+                ['ayahNumber' => 1, 'text' => 'أحد'],
+                ['ayahNumber' => 1, 'text' => 'الصمد'],
+                ['ayahNumber' => 1, 'text' => 'ولم'],
+            ],
+        ]);
+
+        AiReciteAttempt::create([
+            'user_id' => $user->id,
+            'attempt_number' => 2,
+            'accuracy_percent' => 68,
+            'band' => 'mixed',
+            'ayah_range' => ['surah' => 112, 'from' => 2, 'to' => 2],
+            'weak_words' => [
+                ['ayahNumber' => 2, 'text' => 'الله'],
+            ],
+        ]);
+
+        AiReciteAttempt::create([
+            'user_id' => $user->id,
+            'attempt_number' => 3,
+            'accuracy_percent' => 88,
+            'band' => 'strong',
+            'ayah_range' => ['surah' => 112, 'from' => 3, 'to' => 3],
+            'weak_words' => [],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk();
+
+        $items = collect($response->json('data.weaknesses.items'));
+        $this->assertSame('fragile', $items->firstWhere('ayah_number', 1)['strength'] ?? null);
+        $this->assertSame('building', $items->firstWhere('ayah_number', 2)['strength'] ?? null);
+        $this->assertSame('strong', $items->firstWhere('ayah_number', 3)['strength'] ?? null);
     }
 }

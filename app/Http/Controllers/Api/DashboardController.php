@@ -29,4 +29,23 @@ class DashboardController extends Controller
             ->header('Pragma', 'no-cache')
             ->header('Vary', 'Cookie');
     }
+
+    public function activity(Request $request, DashboardService $dashboard): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user !== null, 401);
+
+        $limit = (int) $request->query('limit', 100);
+        if ($limit < 1 || $limit > 200) {
+            $limit = 100;
+        }
+
+        return response()
+            ->json([
+                'activity' => $dashboard->activityLog($user, $limit),
+            ])
+            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Vary', 'Cookie');
+    }
 }

@@ -169,6 +169,18 @@ export const learningApi = {
     // Laravel JsonResource wraps the payload under `data`.
     return data?.data && typeof data.data === 'object' ? data.data : data
   },
+  async getActivityLog(limit = 100) {
+    const { data } = await withRetry(() =>
+      http.get('/dashboard/activity', {
+        params: { limit },
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      })
+    )
+    return Array.isArray(data?.activity) ? data.activity : []
+  },
 
   // Session ---------------------------------------------------------------
   async getSession() {

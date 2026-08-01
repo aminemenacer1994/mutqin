@@ -918,7 +918,8 @@ export default {
       ignoreRecordingsAudioPauseEvent: false,
       // AI Memorisation Detection (post-session "Test with AI" only)
       amdOpen: false,
-      amdEntrySource: null, // 'test-with-ai' | null — modal must not open from other paths
+      amdEntrySource: null, // 'test-with-ai' | 'dashboard-review' | null
+      dashboardAiCheckReturnTo: null,
       amdStage: AMD_STAGES.IDLE,
       amdScope: 'session',
       amdMicStatus: 'prompt',
@@ -8494,19 +8495,23 @@ export default {
         const params = new URLSearchParams(window.location.search || '')
         const resume = params.get('resume') === '1'
         const setup = params.get('setup') === '1'
+        const aiCheck = params.get('ai_check') === '1'
         const recommendationId = String(params.get('recommendation') || '').trim()
         const sessionId = String(params.get('session') || '').trim()
         const panel = String(params.get('panel') || '').trim().toLowerCase()
+        const returnTo = String(params.get('return') || '').trim().toLowerCase()
         const surah = Number(params.get('surah') || 0)
         const from = Number(params.get('from') || params.get('ayah') || 0)
         const to = Number(params.get('to') || from || 0)
-        if (!resume && !setup && !recommendationId && !(surah > 0) && panel !== 'saved') return null
+        if (!resume && !setup && !recommendationId && !(surah > 0) && panel !== 'saved' && !aiCheck) return null
         return {
           resume,
           setup,
+          aiCheck,
           recommendationId: recommendationId || null,
           sessionId: sessionId || null,
           panel: panel || null,
+          returnTo: returnTo || null,
           surah: surah > 0 ? surah : 0,
           from: from > 0 ? from : 0,
           to: to > 0 ? to : 0,
@@ -8520,7 +8525,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'return']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -8543,6 +8548,15 @@ export default {
       this.markWelcomeBackModalShownForCurrentLogin()
 
       try {
+        if (entry.aiCheck && entry.surah > 0 && entry.from > 0) {
+          await this.openDashboardAiMemoryCheck({
+            surah: entry.surah,
+            ayah: entry.from,
+            returnTo: entry.returnTo,
+          })
+          return true
+        }
+
         if (entry.panel === 'saved') {
           this.openSavedSessionsPanel()
           return true
@@ -12407,7 +12421,7 @@ export default {
         await this.$nextTick()
         await this.openAiMemorisationDetection({ scope: 'session', fromTestWithAi: true })
         await this.$nextTick()
-        if (!this.amdOpen || this.amdEntrySource !== 'test-with-ai') {
+        if (!this.amdOpen || !this.isAmdEntryActive(this.amdEntrySource)) {
           throw new Error('ai_recite_unavailable')
         }
         // Only now hand ownership to the test modal (hides Session Complete).
@@ -12482,7 +12496,7 @@ export default {
       // Retries must still come from the explicit Test with AI journey only.
       if (this.postSessionActionsBusy) return
       if (this.aiReciteAttemptCount >= AI_RECITE_MAX_ATTEMPTS) return
-      if (!(this.showPostSessionModal || this.amdEntrySource === 'test-with-ai')) return
+      if (!(this.showPostSessionModal || this.isAmdEntryActive(this.amdEntrySource))) return
       await this.openPostSessionAiRecite({ resetAttempts: false, fromTestWithAi: true })
     },
     returnFromPostSessionAiRecite() {
@@ -17180,7 +17194,7 @@ export default {
     },
     openAiRecitationCheckForVerse(verse) {
       // Memorisation-test modal is reserved for Session Complete → Test with AI.
-      if (this.amdOpen && this.amdEntrySource === 'test-with-ai') return
+      if (this.amdOpen && this.isAmdEntryActive(this.amdEntrySource)) return
       this.showBanner?.(
         this.t?.('memorisation.amd.onlyFromTestWithAi')
           || 'Finish your session, then choose Test with AI to open this check.',
@@ -17203,10 +17217,70 @@ export default {
     openAiMemorisationCheckerForSession() {
       this.openAiRecitationCheckForSession()
     },
-    async openAiMemorisationDetection({ verse = null, scope = 'session', previousAssessmentId = null, fromTestWithAi = false } = {}) {
-      // Hard gate: never open this modal except from Session Complete → Test with AI.
-      if (!fromTestWithAi) {
-        console.warn('Blocked openAiMemorisationDetection — fromTestWithAi required.')
+    async openDashboardAiMemoryCheck({ surah = 0, ayah = 0, returnTo = null } = {}) {
+      const chapterId = Number(surah || 0)
+      const ayahNumber = Number(ayah || 0)
+      if (!(chapterId > 0 && ayahNumber > 0) || !this.aiTestModalsEnabled) return false
+
+      this.dashboardAiCheckReturnTo = returnTo === 'dashboard' ? '/dashboard' : null
+      this.welcomeBackWorkspaceHidden = true
+      this.showTools = false
+      this.showWelcomeBackModal = false
+
+      try {
+        const baseConfig = this.buildSessionConfig(this.currentMode || 'beginner') || {}
+        this.applySessionConfig({
+          ...baseConfig,
+          chapterId,
+          rangeStart: ayahNumber,
+          rangeEnd: ayahNumber,
+        })
+        this.currentMode = this.currentMode === 'advanced' ? 'advanced' : 'beginner'
+        await this.loadVerses(this.currentMode)
+        this.isDataReady = true
+
+        const verseKey = `${chapterId}:${ayahNumber}`
+        const verse = (Array.isArray(this.verses) ? this.verses : []).find((row) => (
+          String(row?.key) === verseKey || Number(row?.number) === ayahNumber
+        )) || (Array.isArray(this.mushafDisplayVerses) ? this.mushafDisplayVerses : []).find((row) => (
+          String(row?.key) === verseKey || Number(row?.number) === ayahNumber
+        )) || {
+          key: verseKey,
+          number: ayahNumber,
+          surah: chapterId,
+          chapterId,
+          chapterName: this.currentChapter?.name_simple || `Surah ${chapterId}`,
+        }
+
+        await this.openAiMemorisationDetection({
+          verse,
+          scope: 'ayah',
+          fromDashboardReview: true,
+        })
+        return true
+      } catch (error) {
+        console.error('Dashboard AI memory check failed', error)
+        this.welcomeBackWorkspaceHidden = false
+        this.dashboardAiCheckReturnTo = null
+        this.showBanner?.(
+          this.t?.('memorisation.amd.startFailed') || 'Could not open the memory check.',
+          'error',
+          2800,
+        )
+        return false
+      }
+    },
+
+    async openAiMemorisationDetection({
+      verse = null,
+      scope = 'session',
+      previousAssessmentId = null,
+      fromTestWithAi = false,
+      fromDashboardReview = false,
+    } = {}) {
+      // Hard gate: Session Complete → Test with AI, or dashboard Needs Review.
+      if (!fromTestWithAi && !fromDashboardReview) {
+        console.warn('Blocked openAiMemorisationDetection — authorised entry required.')
         return
       }
       if (!this.aiTestModalsEnabled) {
@@ -17292,13 +17366,17 @@ export default {
       this._amdSeedHtml = this.buildAmdMushafHtml({ live: true })
       // Ready state — learner starts listening via the Start recitation icon.
       this.amdStage = AMD_STAGES.READY
-      this.amdEntrySource = 'test-with-ai'
+      this.amdEntrySource = fromDashboardReview ? 'dashboard-review' : 'test-with-ai'
       this.amdOpen = true
       this.syncBodyScrollLock(true)
       this.playUiTone?.('open')
       await this.$nextTick()
       this.syncAmdMushafSurface()
       void this.refreshAmdMicStatus?.()
+    },
+
+    isAmdEntryActive(source = this.amdEntrySource) {
+      return source === 'test-with-ai' || source === 'dashboard-review'
     },
     rebuildAmdHiddenWordMask({ bumpAttempt = false } = {}) {
       if (bumpAttempt) this.amdHiddenSeedAttempt = Number(this.amdHiddenSeedAttempt || 0) + 1
@@ -17790,6 +17868,8 @@ export default {
     },
     closeAmdModal(options = {}) {
       const returnToCompletion = options.returnToCompletion !== false
+      const returnToDashboard = this.amdEntrySource === 'dashboard-review' || !!this.dashboardAiCheckReturnTo
+      const dashboardHref = this.dashboardAiCheckReturnTo || '/dashboard'
       if (this.recitationCheckRecording || this.recitationCheckPreparing) {
         this.recitationCheckDiscardOnStop = true
         try { this.stopRecitationCheckRecording?.() } catch (_) { /* ignore */ }
@@ -17817,7 +17897,13 @@ export default {
       this.postSessionAdaptiveCheckActive = false
       this.postSessionAdaptiveQuestion = null
       this.postSessionAdaptiveResultView = null
+      this.welcomeBackWorkspaceHidden = false
+      this.dashboardAiCheckReturnTo = null
       this.syncBodyScrollLock(!!this.showPostSessionModal)
+      if (returnToDashboard && typeof window !== 'undefined') {
+        window.location.assign(dashboardHref)
+        return
+      }
       if (returnToCompletion && this.sessionCompleted) {
         this.showPostSessionModal = true
         this.postSessionViewState = 'recommendation_ready'
@@ -18157,15 +18243,15 @@ export default {
         }
       } catch (error) {
         console.error('Failed to start AMD practice plan', error)
-        // Do not reopen the modal for plan errors unless already in Test with AI.
-        if (this.amdEntrySource === 'test-with-ai') {
+        // Do not reopen the modal for plan errors unless already in an authorised AMD entry.
+        if (this.isAmdEntryActive(this.amdEntrySource)) {
           this.amdOpen = true
           this.amdStage = AMD_STAGES.PLAN
           this.amdError = error?.response?.data?.message || error?.message || 'Could not start the practice plan.'
         }
       } finally {
         this.amdBusy = false
-        this.syncBodyScrollLock(this.amdOpen && this.amdEntrySource === 'test-with-ai')
+        this.syncBodyScrollLock(this.amdOpen && this.isAmdEntryActive(this.amdEntrySource))
       }
     },
     applyAmdChunk(index = 0) {

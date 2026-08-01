@@ -3685,7 +3685,7 @@
   </div>
 
     <AiMemorisationDetectionModal
-      v-if="aiTestModalsEnabled && amdOpen && amdEntrySource === 'test-with-ai'"
+      v-if="aiTestModalsEnabled && amdOpen && isAmdEntryActive(amdEntrySource)"
       ref="amdModal"
       :open="true"
       :stage="amdStage"

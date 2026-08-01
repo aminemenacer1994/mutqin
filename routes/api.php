@@ -22,6 +22,7 @@ Route::post('/contact', [ContactSubmissionController::class, 'store'])->name('ap
 // Backend-driven learning persistence (Sanctum SPA cookie auth, user scoped).
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
+    Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('api.dashboard.activity');
 
     Route::get('/session', [SessionController::class, 'show'])->name('api.session.show');
     Route::get('/session/current', [SessionController::class, 'current'])->name('api.session.current');

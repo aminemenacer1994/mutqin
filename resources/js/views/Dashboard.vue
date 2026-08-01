@@ -21,7 +21,15 @@
               <h1 id="dash-welcome-heading">{{ greetingText }}</h1>
               <div class="dash-rule" aria-hidden="true"></div>
               <p v-if="retentionChips.length" class="dash-hero__meta">
-                <span v-for="chip in retentionChips" :key="chip.key">{{ chip.label }}</span>
+                <span
+                  v-for="chip in retentionChips"
+                  :key="chip.key"
+                  class="dash-chip"
+                  :class="chip.toneClass"
+                >
+                  <i v-if="chip.icon" :class="chip.icon" aria-hidden="true"></i>
+                  {{ chip.label }}
+                </span>
               </p>
             </div>
 
@@ -36,28 +44,55 @@
             </button>
           </div>
 
-          <a v-if="data.continue" class="dash-continue" :href="continueHref">
-            <div class="dash-continue__body">
-              <span class="dash-continue__label">{{ continueCta }}</span>
-              <span class="dash-continue__title">
-                <template v-if="data.continue.surah_name">
-                  {{ data.continue.surah_name }}
-                </template>
-                <template v-else>{{ t('dashboard.start_session') }}</template>
-              </span>
-              <div v-if="ayahRangeLabel(data.continue) || data.continue.last_ayah" class="dash-pills">
-                <span v-if="ayahRangeLabel(data.continue)" class="dash-pill">
-                  {{ t('dashboard.current_range') }}: {{ ayahRangeLabel(data.continue) }}
+          <div class="dash-hero__actions">
+            <a v-if="data.continue" class="dash-continue" :href="continueHref">
+              <div class="dash-continue__body">
+                <span class="dash-continue__label">{{ continueCta }}</span>
+                <span class="dash-continue__title">
+                  <template v-if="data.continue.surah_name">
+                    {{ data.continue.surah_name }}
+                  </template>
+                  <template v-else>{{ t('dashboard.start_session') }}</template>
                 </span>
-                <span v-if="data.continue.last_ayah" class="dash-pill">
-                  {{ t('dashboard.last_ayah', { n: data.continue.last_ayah }) }}
-                </span>
+                <div v-if="ayahRangeLabel(data.continue) || data.continue.last_ayah" class="dash-pills">
+                  <span v-if="ayahRangeLabel(data.continue)" class="dash-pill">
+                    {{ t('dashboard.current_range') }}: {{ ayahRangeLabel(data.continue) }}
+                  </span>
+                  <span v-if="data.continue.last_ayah" class="dash-pill">
+                    {{ t('dashboard.last_ayah', { n: data.continue.last_ayah }) }}
+                  </span>
+                </div>
               </div>
-            </div>
-            <span class="dash-continue__cta" aria-hidden="true">
-              <i class="bi bi-play-fill"></i>
-            </span>
-          </a>
+              <span class="dash-continue__cta" aria-hidden="true">
+                <i class="bi bi-play-fill"></i>
+              </span>
+            </a>
+
+            <a
+              v-if="recommendedNext"
+              class="dash-recommend"
+              :href="recommendedNext.href"
+            >
+              <div class="dash-recommend__body">
+                <span class="dash-recommend__label">{{ t('dashboard.recommended_next') }}</span>
+                <span class="dash-recommend__title">{{ recommendedNext.surah_name }}</span>
+                <div class="dash-pills">
+                  <span v-if="ayahRangeLabel(recommendedNext)" class="dash-pill">
+                    {{ t('dashboard.current_range') }}: {{ ayahRangeLabel(recommendedNext) }}
+                  </span>
+                  <span v-if="recommendedNext.technique_label" class="dash-pill">
+                    {{ recommendedNext.technique_label }}
+                  </span>
+                  <span v-if="recommendedNext.speed_label" class="dash-pill">
+                    {{ recommendedNext.speed_label }}
+                  </span>
+                </div>
+              </div>
+              <span class="dash-recommend__cta" :aria-label="t('dashboard.recommended_next_start')">
+                <i class="bi bi-play-fill" aria-hidden="true"></i>
+              </span>
+            </a>
+          </div>
         </header>
 
         <section class="dash-panel dash-reveal" aria-labelledby="dash-snapshot-heading" style="--dash-delay: 30ms">
@@ -95,6 +130,7 @@
                 type="button"
                 class="dash-btn dash-btn--ghost dash-btn--sm"
                 :class="{ 'is-active': chartDays === 7 }"
+                :aria-pressed="chartDays === 7 ? 'true' : 'false'"
                 :disabled="loading"
                 @click="setChartDays(7)"
               >
@@ -104,6 +140,7 @@
                 type="button"
                 class="dash-btn dash-btn--ghost dash-btn--sm"
                 :class="{ 'is-active': chartDays === 30 }"
+                :aria-pressed="chartDays === 30 ? 'true' : 'false'"
                 :disabled="loading"
                 @click="setChartDays(30)"
               >
@@ -118,6 +155,22 @@
               <h3 class="dash-position__surah">
                 {{ data.progress?.current_surah_name || t('dashboard.not_started') }}
               </h3>
+              <div v-if="surahProgress" class="dash-surah-progress">
+                <div
+                  class="dash-progress-bar dash-progress-bar--inline"
+                  role="progressbar"
+                  :aria-valuenow="surahProgress.value"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  :aria-label="t('dashboard.surah_completion')"
+                >
+                  <span
+                    :class="{ 'is-nonzero': surahProgress.value > 0 }"
+                    :style="{ width: surahProgress.fillWidth }"
+                  ></span>
+                </div>
+                <span class="dash-surah-progress__pct">{{ surahProgress.value }}%</span>
+              </div>
               <div class="dash-rule" aria-hidden="true"></div>
               <div v-if="ayahRangeLabel(data.progress) || data.progress?.current_ayah" class="dash-pills">
                 <span v-if="ayahRangeLabel(data.progress)" class="dash-pill">
@@ -140,19 +193,22 @@
                 </div>
               </div>
 
-              <div v-if="primaryCompletion != null" class="dash-completion">
+              <div v-if="secondaryCompletion != null" class="dash-completion">
                 <div class="dash-completion__row">
-                  <span>{{ primaryCompletion.label }}</span>
-                  <span>{{ primaryCompletion.value }}%</span>
+                  <span>{{ secondaryCompletion.label }}</span>
+                  <span>{{ secondaryCompletion.value }}%</span>
                 </div>
                 <div
                   class="dash-progress-bar"
                   role="progressbar"
-                  :aria-valuenow="primaryCompletion.value"
+                  :aria-valuenow="secondaryCompletion.value"
                   aria-valuemin="0"
                   aria-valuemax="100"
                 >
-                  <span :style="{ width: primaryCompletion.value + '%' }"></span>
+                  <span
+                    :class="{ 'is-nonzero': secondaryCompletion.value > 0 }"
+                    :style="{ width: secondaryCompletion.fillWidth }"
+                  ></span>
                 </div>
               </div>
             </div>
@@ -165,11 +221,13 @@
               <div v-else class="dash-chart__wrap" :class="{ 'is-loading': loading }">
                 <Bar
                   v-if="chartReady"
+                  :key="chartInstanceKey"
                   :data="chartData"
                   :options="chartOptions"
                   :aria-label="t('dashboard.chart_aria')"
                 />
               </div>
+              <p class="dash-chart__week">{{ weekSummaryText }}</p>
             </div>
           </div>
         </section>
@@ -190,21 +248,44 @@
               </a>
             </div>
 
-            <p v-if="!data.weaknesses?.items?.length" class="dash-empty">
+            <p v-if="!data.weaknesses?.items?.length" class="dash-empty" role="status">
               {{ t('dashboard.weak_empty_message') }}
             </p>
 
             <ul v-else class="dash-list">
-              <li v-for="item in data.weaknesses.items" :key="item.key">
-                <a class="dash-list__row" :href="item.href || memorisationUrl">
-                  <span class="dash-list__main">
-                    <span class="dash-list__title">
-                      {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
+              <li v-for="item in data.weaknesses.items" :key="item.key" class="dash-list__item">
+                <div class="dash-list__row dash-list__row--static">
+                  <a class="dash-list__main dash-list__main--link" :href="item.href || memorisationUrl">
+                    <span class="dash-list__title-row">
+                      <span class="dash-list__title">
+                        {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
+                      </span>
+                      <span
+                        v-if="item.strength"
+                        class="dash-strength"
+                        :class="`dash-strength--${item.strength}`"
+                      >
+                        {{ strengthLabel(item) }}
+                      </span>
                     </span>
                     <span v-if="item.phrase" class="dash-list__phrase" lang="ar" dir="rtl">{{ item.phrase }}</span>
-                  </span>
-                  <i class="bi bi-chevron-right" aria-hidden="true"></i>
-                </a>
+                  </a>
+                  <div class="dash-list__actions">
+                    <a
+                      class="dash-btn dash-btn--ghost dash-btn--sm"
+                      :href="reviewNowHref(item)"
+                    >
+                      {{ t('dashboard.review_now') }}
+                    </a>
+                    <a
+                      class="dash-list__chevron"
+                      :href="item.href || memorisationUrl"
+                      :aria-label="t('dashboard.open')"
+                    >
+                      <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    </a>
+                  </div>
+                </div>
               </li>
             </ul>
           </section>
@@ -215,10 +296,16 @@
                 <h2 id="dash-activity-heading">{{ t('dashboard.activity_title') }}</h2>
                 <p class="dash-panel__hint">{{ t('dashboard.activity_subtitle') }}</p>
               </div>
-              <a class="dash-link" :href="memorisationUrl">{{ t('dashboard.go_to_workspace') }}</a>
+              <button
+                type="button"
+                class="dash-link"
+                @click="openDrawer('activity')"
+              >
+                {{ t('dashboard.view_all_activity') }}
+              </button>
             </div>
 
-            <p v-if="!data.activity?.length" class="dash-empty">
+            <p v-if="!data.activity?.length" class="dash-empty" role="status">
               {{ t('dashboard.activity_empty_message') }}
             </p>
 
@@ -276,6 +363,25 @@
           <p v-else-if="!drawerItems.length" class="dash-drawer__status">
             {{ drawerEmptyMessage }}
           </p>
+
+          <ul v-else-if="drawerMode === 'activity'" class="dash-drawer__list">
+            <li
+              v-for="item in drawerItems"
+              :key="item.id || `${item.type}-${item.occurred_at}`"
+              class="dash-drawer__row"
+            >
+              <div class="dash-drawer__row-main">
+                <span class="dash-drawer__row-title">
+                  <span class="dash-drawer__type">{{ activityTypeLabel(item.type) }}</span>
+                  {{ item.title }}
+                </span>
+                <span v-if="item.outcome" class="dash-drawer__row-meta">{{ item.outcome }}</span>
+              </div>
+              <time class="dash-drawer__row-time" :datetime="item.occurred_at">
+                {{ formatRelative(item.occurred_at) }}
+              </time>
+            </li>
+          </ul>
 
           <ul v-else-if="drawerMode === 'sessions'" class="dash-drawer__list">
             <li v-for="item in drawerItems" :key="`session-${item.id}`" class="dash-drawer__row">
@@ -365,6 +471,7 @@ const METRIC_META = [
 ]
 
 const DRAWER_TITLES = {
+  activity: 'drawer_activity_title',
   sessions: 'drawer_sessions_title',
   ai_checks: 'drawer_ai_title',
   notes: 'drawer_notes_title',
@@ -372,6 +479,7 @@ const DRAWER_TITLES = {
 }
 
 const DRAWER_EMPTY = {
+  activity: 'drawer_activity_empty',
   sessions: 'drawer_sessions_empty',
   ai_checks: 'drawer_ai_empty',
   notes: 'drawer_notes_empty',
@@ -404,6 +512,9 @@ export default {
       drawerLoading: false,
       drawerError: false,
       drawerRequestId: 0,
+      dashboardRequestId: 0,
+      darkTheme: false,
+      themeObserver: null,
     }
   },
   computed: {
@@ -435,6 +546,11 @@ export default {
     continueHref() {
       const href = String(this.data?.continue?.href || '').trim()
       return href || this.memorisationUrl
+    },
+    recommendedNext() {
+      const next = this.data?.recommended_next
+      if (!next || !next.surah_number || !next.ayah_start || !next.href) return null
+      return next
     },
     snapshotCards() {
       const snap = this.data?.snapshot || {}
@@ -477,17 +593,35 @@ export default {
 
       return promoteLearning ? [learningStat, memorisedStat] : [memorisedStat, learningStat]
     },
-    primaryCompletion() {
+    surahProgress() {
+      const progress = this.data?.progress
+      if (!progress?.current_surah_number) return null
+      const total = Number(progress.surah_ayah_count || 0)
+      if (total <= 0) return null
+      const practised = Number(
+        progress.surah_practised_ayah_count
+        ?? ((progress.memorised_ayah_count || 0) + (progress.learning_ayah_count || 0))
+      )
+      const raw = (Math.max(0, practised) / total) * 100
+      // Keep 1–5% fills readable: never round a non-zero practised count down to 0%.
+      const value = practised <= 0 ? 0 : Math.max(1, Math.min(100, Math.round(raw)))
+      const fill = practised <= 0 ? 0 : Math.max(value, 2)
+      return {
+        value,
+        practised,
+        total,
+        fillWidth: fill > 0 ? `${fill}%` : '0%',
+      }
+    },
+    secondaryCompletion() {
+      // Range/plan bars stay below; surah progress lives under the surah name.
       const progress = this.data?.progress
       if (!progress) return null
       if (progress.range_completion_percent != null) {
-        return { label: this.t('dashboard.range_completion'), value: progress.range_completion_percent }
+        return this.completionBar(this.t('dashboard.range_completion'), progress.range_completion_percent)
       }
       if (progress.active_plan_completion_percent != null) {
-        return { label: this.t('dashboard.plan_completion'), value: progress.active_plan_completion_percent }
-      }
-      if (progress.surah_completion_percent != null) {
-        return { label: this.t('dashboard.surah_completion'), value: progress.surah_completion_percent }
+        return this.completionBar(this.t('dashboard.plan_completion'), progress.active_plan_completion_percent)
       }
       return null
     },
@@ -495,32 +629,87 @@ export default {
       const retention = this.data?.retention
       if (!retention) return []
       const chips = []
-      if (retention.streak_days > 0) {
-        chips.push({ key: 'streak', label: this.t('dashboard.streak', { n: retention.streak_days }) })
+      const streakDays = Number(retention.streak_days || 0)
+      if (streakDays > 0) {
+        const label = streakDays === 1
+          ? this.t('dashboard.streak_keep_going')
+          : this.t('dashboard.streak', { n: streakDays })
+        chips.push({
+          key: 'streak',
+          label,
+          icon: 'bi bi-fire',
+          toneClass: streakDays >= 7 ? 'dash-chip--streak-strong' : 'dash-chip--streak',
+        })
+      } else if (retention.streak_broken || retention.streak_has_history) {
+        chips.push({
+          key: 'streak_restart',
+          label: this.t('dashboard.streak_restart'),
+          icon: null,
+          toneClass: 'dash-chip--streak-soft',
+        })
       }
       if (retention.incomplete_session) {
-        chips.push({ key: 'incomplete', label: this.t('dashboard.incomplete_reminder') })
+        chips.push({
+          key: 'incomplete',
+          label: this.t('dashboard.incomplete_reminder'),
+          icon: null,
+          toneClass: '',
+        })
       }
       return chips.slice(0, 2)
     },
+    chartPalette() {
+      // Warm terracotta (ayahs) + muted green (sessions); brighter in dark mode for legend contrast.
+      if (this.darkTheme) {
+        return {
+          ayahs: '#D48462',
+          ayahsHover: '#E09878',
+          sessions: '#7AAB86',
+          sessionsHover: '#8FBC99',
+          muted: '#c9b8a8',
+          ink: '#f0e7dc',
+          tooltipBg: '#221e1a',
+          tooltipBorder: 'rgba(240, 231, 220, 0.16)',
+          grid: 'rgba(240, 231, 220, 0.08)',
+        }
+      }
+      return {
+        ayahs: '#C46B4A',
+        ayahsHover: '#B25A3A',
+        sessions: '#5F8F6B',
+        sessionsHover: '#4E7A59',
+        muted: '#6d6258',
+        ink: '#3c3530',
+        tooltipBg: '#f7f1ea',
+        tooltipBorder: '#e8ded1',
+        grid: 'rgba(60, 53, 48, 0.06)',
+      }
+    },
+    chartInstanceKey() {
+      const points = this.data?.chart?.points || []
+      const first = points[0]?.date || 'none'
+      const last = points[points.length - 1]?.date || 'none'
+      return `chart-${this.chartDays}-${points.length}-${first}-${last}`
+    },
     chartData() {
       const points = this.data?.chart?.points || []
+      const palette = this.chartPalette
       return {
         labels: points.map((point) => this.shortDate(point.date)),
         datasets: [
           {
             label: this.t('dashboard.chart_ayahs'),
             data: points.map((point) => Number(point.primary || point.ayahs_memorised || 0)),
-            backgroundColor: 'rgba(60, 53, 48, 0.55)',
-            hoverBackgroundColor: 'rgba(60, 53, 48, 0.75)',
+            backgroundColor: palette.ayahs,
+            hoverBackgroundColor: palette.ayahsHover,
             borderRadius: 4,
             maxBarThickness: 12,
           },
           {
             label: this.t('dashboard.chart_sessions'),
             data: points.map((point) => Number(point.secondary || point.sessions_completed || 0)),
-            backgroundColor: 'rgba(201, 184, 164, 0.85)',
-            hoverBackgroundColor: 'rgba(201, 184, 164, 1)',
+            backgroundColor: palette.sessions,
+            hoverBackgroundColor: palette.sessionsHover,
             borderRadius: 4,
             maxBarThickness: 12,
           },
@@ -529,8 +718,7 @@ export default {
     },
     chartOptions() {
       const points = this.data?.chart?.points || []
-      const muted = '#6d6258'
-      const ink = '#3c3530'
+      const palette = this.chartPalette
       return {
         responsive: true,
         maintainAspectRatio: false,
@@ -540,24 +728,39 @@ export default {
           legend: {
             display: true,
             labels: {
-              boxWidth: 7,
-              boxHeight: 7,
-              color: muted,
-              font: { size: 10, weight: '450' },
-              padding: 8,
+              boxWidth: 10,
+              boxHeight: 10,
+              color: palette.ink,
+              font: { size: 11, weight: '500' },
+              padding: 10,
+              usePointStyle: true,
+              pointStyle: 'rectRounded',
             },
           },
           tooltip: {
-            backgroundColor: '#f7f1ea',
-            titleColor: ink,
-            bodyColor: muted,
-            borderColor: '#e8ded1',
+            backgroundColor: palette.tooltipBg,
+            titleColor: palette.ink,
+            bodyColor: palette.ink,
+            borderColor: palette.tooltipBorder,
             borderWidth: 1,
-            padding: 8,
+            padding: 10,
             cornerRadius: 10,
-            titleFont: { weight: '500' },
+            displayColors: false,
+            titleFont: { weight: '500', size: 12 },
+            filter: (item) => item.datasetIndex === 0,
             callbacks: {
-              title: (items) => points[items?.[0]?.dataIndex ?? 0]?.date || '',
+              title: (items) => {
+                const index = items?.[0]?.dataIndex ?? 0
+                const point = points[index] || {}
+                const ayahs = Number(point.primary ?? point.ayahs_memorised ?? 0)
+                const sessions = Number(point.secondary ?? point.sessions_completed ?? 0)
+                return this.t('dashboard.chart_tooltip', {
+                  date: this.tooltipDate(point.date),
+                  ayahs,
+                  sessions,
+                })
+              },
+              label: () => null,
             },
           },
         },
@@ -568,7 +771,7 @@ export default {
               maxRotation: 0,
               autoSkip: true,
               maxTicksLimit: this.chartDays === 7 ? 7 : 6,
-              color: muted,
+              color: palette.muted,
               font: { size: 10, weight: '400' },
             },
           },
@@ -576,10 +779,10 @@ export default {
             beginAtZero: true,
             ticks: {
               precision: 0,
-              color: muted,
+              color: palette.muted,
               font: { size: 10, weight: '400' },
             },
-            grid: { color: 'rgba(60, 53, 48, 0.06)' },
+            grid: { color: palette.grid },
           },
         },
       }
@@ -598,10 +801,33 @@ export default {
       const key = DRAWER_EMPTY[this.drawerMode]
       return key ? this.t(`dashboard.${key}`) : ''
     },
+    weekSummaryText() {
+      const week = this.data?.week_summary
+      if (!week || week.is_empty) {
+        return this.t('dashboard.week_summary_empty')
+      }
+      return this.t('dashboard.week_summary', {
+        sessions: Number(week.sessions || 0),
+        ai_checks: Number(week.ai_checks || 0),
+        ayahs: Number(week.ayahs_practised || 0),
+      })
+    },
   },
   mounted() {
     this.reduceMotion = typeof window !== 'undefined'
       && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    this.syncTheme()
+    if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined') {
+      this.themeObserver = new MutationObserver(() => {
+        this.syncTheme()
+        this.chartReady = false
+        this.$nextTick(() => { this.chartReady = true })
+      })
+      this.themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme', 'class'],
+      })
+    }
 
     if (!this.data) {
       this.fetchDashboard(this.chartDays, { initial: true })
@@ -626,6 +852,7 @@ export default {
     if (this.visibilityHandler) document.removeEventListener('visibilitychange', this.visibilityHandler)
     if (this.focusHandler) window.removeEventListener('focus', this.focusHandler)
     if (this.escapeHandler) document.removeEventListener('keydown', this.escapeHandler)
+    if (this.themeObserver) this.themeObserver.disconnect()
   },
   methods: {
     t(key, params) {
@@ -646,6 +873,13 @@ export default {
       if (!item) return ''
       if (item.context) return item.context
       return item.title || ''
+    },
+    activityTypeLabel(type) {
+      const key = String(type || '').toLowerCase()
+      if (key === 'session') return this.t('dashboard.activity_type_session')
+      if (key === 'ai_check' || key === 'ai_recite') return this.t('dashboard.activity_type_ai_check')
+      if (key === 'note') return this.t('dashboard.activity_type_note')
+      return ''
     },
     ayahRangeLabel(row) {
       if (!row) return ''
@@ -683,6 +917,50 @@ export default {
       const date = new Date(value)
       if (Number.isNaN(date.getTime())) return String(value)
       return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+    },
+    tooltipDate(value) {
+      if (!value) return ''
+      const date = new Date(`${value}T12:00:00`)
+      if (Number.isNaN(date.getTime())) return this.shortDate(value)
+      return date.toLocaleDateString([], { day: 'numeric', month: 'short' })
+    },
+    syncTheme() {
+      if (typeof document === 'undefined') {
+        this.darkTheme = false
+        return
+      }
+      this.darkTheme = document.documentElement.getAttribute('data-theme') === 'dark'
+    },
+    reviewNowHref(item) {
+      const surah = Number(item?.surah_number || 0)
+      const ayah = Number(item?.ayah_number || 0)
+      const base = this.memorisationUrl.split('?')[0]
+      if (!(surah > 0 && ayah > 0)) return item?.href || base
+      const params = new URLSearchParams({
+        ai_check: '1',
+        surah: String(surah),
+        ayah: String(ayah),
+        from: String(ayah),
+        to: String(ayah),
+        return: 'dashboard',
+      })
+      return `${base}?${params.toString()}`
+    },
+    strengthLabel(item) {
+      const key = String(item?.strength || '').toLowerCase()
+      if (key === 'fragile') return this.t('dashboard.strength_fragile')
+      if (key === 'building') return this.t('dashboard.strength_building')
+      if (key === 'strong') return this.t('dashboard.strength_strong')
+      return item?.strength_label || ''
+    },
+    completionBar(label, value) {
+      const pct = Math.max(0, Math.min(100, Number(value) || 0))
+      const fill = pct > 0 ? Math.max(pct, 2) : 0
+      return {
+        label,
+        value: pct,
+        fillWidth: fill > 0 ? `${fill}%` : '0%',
+      }
     },
     sessionStatusLabel(status) {
       if (status === 'ended_early') return this.t('dashboard.drawer_status_ended_early')
@@ -731,7 +1009,9 @@ export default {
       const requestId = ++this.drawerRequestId
       try {
         let items = []
-        if (mode === 'sessions') {
+        if (mode === 'activity') {
+          items = await learningApi.getActivityLog()
+        } else if (mode === 'sessions') {
           items = await learningApi.getSessionHistory()
         } else if (mode === 'ai_checks') {
           items = await learningApi.getAiReciteAttempts()
@@ -796,18 +1076,23 @@ export default {
       this.fetchDashboard(this.chartDays, { force })
     },
     setChartDays(days) {
-      if (days === this.chartDays) return
-      this.chartDays = days
-      this.fetchDashboard(days)
+      const next = days === 7 ? 7 : 30
+      if (next === this.chartDays && this.data?.chart?.days === next && !this.loading) return
+      this.chartDays = next
+      this.chartReady = false
+      this.fetchDashboard(next)
     },
     async fetchDashboard(days = this.chartDays, options = {}) {
       const { quiet = false, initial = false, force = false } = options
+      const safeDays = days === 7 ? 7 : 30
+      const requestId = ++this.dashboardRequestId
       if (!quiet) {
         this.loading = true
         this.syncState = 'loading'
       }
       try {
-        const payload = await learningApi.getDashboard(days)
+        const payload = await learningApi.getDashboard(safeDays)
+        if (requestId !== this.dashboardRequestId) return
         const sanitized = this.sanitizePayload(payload)
         if (!sanitized) throw new Error('Dashboard payload owner mismatch')
         this.data = sanitized
@@ -816,18 +1101,28 @@ export default {
         this.syncState = 'ready'
         if (sanitized?.chart?.days === 7 || sanitized?.chart?.days === 30) {
           this.chartDays = sanitized.chart.days
+        } else {
+          this.chartDays = safeDays
         }
+        // Remount Chart.js so labels/datasets fully refresh for the new range.
         this.chartReady = false
-        this.$nextTick(() => { this.chartReady = true })
+        await this.$nextTick()
+        if (requestId === this.dashboardRequestId) {
+          this.chartReady = true
+        }
       } catch (error) {
         console.error('Dashboard fetch failed', error)
+        if (requestId !== this.dashboardRequestId) return
         if (initial || force || !this.data) {
           this.error = true
           this.data = null
         }
         this.syncState = 'error'
+        this.chartReady = true
       } finally {
-        this.loading = false
+        if (requestId === this.dashboardRequestId) {
+          this.loading = false
+        }
       }
     },
   },
