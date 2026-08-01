@@ -19,6 +19,7 @@ return [
     'user' => 'مستخدم',
     'home' => 'الرئيسية',
     'memorisation' => 'الحفظ',
+    'dashboard' => 'ڈیش بورڈ',
     'profile' => 'الملف الشخصي',
     'subscription' => 'الاشتراك',
     'settings' => 'الإعدادات',

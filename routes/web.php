@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MemorisationSyncController;
 use App\Http\Controllers\QuranProxyController;
@@ -88,7 +89,7 @@ Route::get('/memorisation/audio-download', function (Request $request) {
 
 // Protected routes (require authentication)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');

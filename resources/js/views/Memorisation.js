@@ -7513,8 +7513,14 @@ export default {
         this.markOnboardingCompleted()
       }
       const needsFirstTimeOnboarding = authenticatedWorkspace && this.requiresFirstTimeOnboarding
+      const dashboardEntryIntent = this.readDashboardEntryIntent()
 
-      if (this.isLoggedIn && !needsFirstTimeOnboarding && this.isExistingUserLogin) {
+      if (
+        !dashboardEntryIntent
+        && this.isLoggedIn
+        && !needsFirstTimeOnboarding
+        && this.isExistingUserLogin
+      ) {
         this.maybeShowWelcomeBackModal()
       }
 
@@ -7539,6 +7545,10 @@ export default {
           this.showTools = false
           this.isDataReady = true
         }
+
+      if (dashboardEntryIntent && !needsFirstTimeOnboarding) {
+        await this.consumeDashboardEntryIntent(dashboardEntryIntent)
+      }
 
       } catch (error) {
       console.error('Memorisation bootstrap failed:', error)
@@ -8476,6 +8486,116 @@ export default {
       if (this.centralSession) {
         this.centralSession.sessionStatus = 'active'
       }
+    },
+
+    readDashboardEntryIntent() {
+      if (typeof window === 'undefined') return null
+      try {
+        const params = new URLSearchParams(window.location.search || '')
+        const resume = params.get('resume') === '1'
+        const setup = params.get('setup') === '1'
+        const recommendationId = String(params.get('recommendation') || '').trim()
+        const sessionId = String(params.get('session') || '').trim()
+        const surah = Number(params.get('surah') || 0)
+        const from = Number(params.get('from') || params.get('ayah') || 0)
+        const to = Number(params.get('to') || from || 0)
+        if (!resume && !setup && !recommendationId && !(surah > 0)) return null
+        return {
+          resume,
+          setup,
+          recommendationId: recommendationId || null,
+          sessionId: sessionId || null,
+          surah: surah > 0 ? surah : 0,
+          from: from > 0 ? from : 0,
+          to: to > 0 ? to : 0,
+        }
+      } catch (_) {
+        return null
+      }
+    },
+
+    clearDashboardEntryIntentFromUrl() {
+      if (typeof window === 'undefined') return
+      try {
+        const url = new URL(window.location.href)
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action']
+          .forEach((key) => url.searchParams.delete(key))
+        const next = `${url.pathname}${url.search}${url.hash}`
+        window.history.replaceState({}, '', next)
+      } catch (_) { /* ignore */ }
+    },
+
+    async consumeDashboardEntryIntent(intent = null) {
+      const entry = intent || this.readDashboardEntryIntent()
+      if (!entry) return false
+
+      this.clearDashboardEntryIntentFromUrl()
+      if (this.welcomeBackRevealTimer) {
+        window.clearTimeout(this.welcomeBackRevealTimer)
+        this.welcomeBackRevealTimer = null
+      }
+      this.showWelcomeBackModal = false
+      this.welcomeBackModalReady = false
+      this.returningUserChoicePending = false
+      this.welcomeBackWorkspaceHidden = false
+      this.markWelcomeBackModalShownForCurrentLogin()
+
+      try {
+        if (entry.resume) {
+          this.syncWelcomeBackResumeFromBackend()
+          if (this.hasContinueSession || this.backendUnfinishedSession || this.continueSessionPayload) {
+            await this.welcomeBackContinueSession()
+            return true
+          }
+        }
+
+        if (entry.recommendationId && this.learningBackendEnabled()) {
+          try {
+            const result = await learningApi.startRecommendedSession(entry.recommendationId)
+            const config = result?.session?.metadata?.config || {}
+            const chapterId = Number(config.chapterId || entry.surah || 0)
+            const rangeStart = Number(config.rangeStart || entry.from || 0)
+            const rangeEnd = Number(config.rangeEnd || entry.to || rangeStart || 0)
+            if (chapterId > 0 && rangeStart > 0 && rangeEnd >= rangeStart) {
+              await this.startSessionFromRecommendationPayload({
+                chapterId,
+                rangeStart,
+                rangeEnd,
+                sessionMode: result?.recommendation?.session_mode || 'revision',
+                techniqueId: config.technique || result?.recommendation?.settings?.technique || null,
+                settings: result?.recommendation?.settings || null,
+                sessionPayload: result?.session || null,
+              })
+              return true
+            }
+          } catch (error) {
+            console.warn('Dashboard recommendation deep-link failed', error)
+          }
+        }
+
+        if (entry.surah > 0 && entry.from > 0) {
+          const rangeEnd = Math.max(entry.from, entry.to || entry.from)
+          await this.startSessionFromRecommendationPayload({
+            chapterId: entry.surah,
+            rangeStart: entry.from,
+            rangeEnd,
+            sessionMode: entry.resume ? 'revision' : 'new_learning',
+          })
+          return true
+        }
+
+        if (entry.setup || entry.resume) {
+          this.startingFreshSessionSelection = true
+          this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
+          return true
+        }
+      } catch (error) {
+        console.error('Dashboard entry intent failed', error)
+        this.openToolsPanel({ tab: 'tools' })
+        return false
+      }
+
+      return false
     },
 
     maybeShowWelcomeBackModal() {

@@ -19,6 +19,7 @@ return [
     'user' => 'Kullanıcı',
     'home' => 'Home',
     'memorisation' => 'Memorisation',
+    'dashboard' => 'Kontrol paneli',
     'profile' => 'Profile',
     'subscription' => 'Subscription',
     'settings' => 'Settings',

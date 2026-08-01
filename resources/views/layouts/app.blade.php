@@ -1729,6 +1729,11 @@
         .app-navbar .nav-link-home:focus,
         .app-navbar .nav-link-home:focus-visible,
         .app-navbar .nav-link-home.active,
+        .app-navbar .nav-link-dashboard,
+        .app-navbar .nav-link-dashboard:hover,
+        .app-navbar .nav-link-dashboard:focus,
+        .app-navbar .nav-link-dashboard:focus-visible,
+        .app-navbar .nav-link-dashboard.active,
         .app-navbar .nav-link-memorisation,
         .app-navbar .nav-link-memorisation:hover,
         .app-navbar .nav-link-memorisation:focus,
@@ -3373,11 +3378,19 @@
                                 <span class="nav-link-copy"><strong data-i18n="memorisation">{{ __('ui.memorisation') }}</strong><small class="d-lg-none">Continue your Quran practice</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
+                            @auth
+                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                                <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong data-i18n="dashboard">{{ __('ui.dashboard') }}</strong><small class="d-lg-none">Your memorisation overview</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
+                            @else
                             <a class="nav-link {{ request()->routeIs('about', 'about-us') ? 'active' : '' }}" href="{{ route('about-us') }}">
                                 <i class="bi bi-people nav-link-icon" aria-hidden="true"></i>
                                 <span class="nav-link-copy"><strong>About</strong><small class="d-lg-none">What Mutqin is</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
+                            @endauth
                         </div>
                     </div>
 
@@ -3450,6 +3463,11 @@
                             <i class="bi bi-chevron-down" aria-hidden="true"></i>
                         </button>
                         <ul class="dropdown-menu" id="dropdownMenu" role="menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ route('dashboard') }}" role="menuitem">
+                                    <i class="bi bi-speedometer2" aria-hidden="true"></i> <span data-i18n="dashboard">{{ __('ui.dashboard') }}</span>
+                                </a>
+                            </li>
                             @if (Auth::user()->isAdmin())
                                 <li>
                                     <a class="dropdown-item" href="{{ route('admin.contact-messages.index') }}">

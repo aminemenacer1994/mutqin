@@ -19,6 +19,7 @@ return [
     'user' => 'Pengguna',
     'home' => 'Beranda',
     'memorisation' => 'Hafalan',
+    'dashboard' => 'Dasbor',
     'profile' => 'Profil',
     'subscription' => 'Langganan',
     'settings' => 'Pengaturan',

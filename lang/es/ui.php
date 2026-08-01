@@ -19,6 +19,7 @@ return [
     'user' => 'Utilisateur',
     'home' => 'Home',
     'memorisation' => 'Memorisation',
+    'dashboard' => 'Panel',
     'profile' => 'Profile',
     'subscription' => 'Subscription',
     'settings' => 'Settings',

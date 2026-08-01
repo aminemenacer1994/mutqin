@@ -3,6 +3,7 @@
 use App\Http\Controllers\ContactSubmissionController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\Learning\AnalyticsController;
 use App\Http\Controllers\Api\Learning\AyahNoteController;
 use App\Http\Controllers\Api\Learning\ContinueController;
@@ -19,6 +20,8 @@ Route::post('/contact', [ContactSubmissionController::class, 'store'])->name('ap
 
 // Backend-driven learning persistence (Sanctum SPA cookie auth, user scoped).
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
+
     Route::get('/session', [SessionController::class, 'show'])->name('api.session.show');
     Route::get('/session/current', [SessionController::class, 'current'])->name('api.session.current');
     Route::post('/session', [SessionController::class, 'store'])->name('api.session.store');

@@ -154,6 +154,22 @@ export async function withRetry(fn, { retries = 3, baseDelay = 800 } = {}) {
 }
 
 export const learningApi = {
+  // Dashboard -------------------------------------------------------------
+  async getDashboard(days = 30) {
+    const safeDays = days === 7 ? 7 : 30
+    const { data } = await withRetry(() =>
+      http.get('/dashboard', {
+        params: { days: safeDays },
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      })
+    )
+    // Laravel JsonResource wraps the payload under `data`.
+    return data?.data && typeof data.data === 'object' ? data.data : data
+  },
+
   // Session ---------------------------------------------------------------
   async getSession() {
     const { data } = await http.get('/session')
