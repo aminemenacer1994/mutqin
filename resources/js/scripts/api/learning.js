@@ -182,6 +182,14 @@ export const learningApi = {
       unfinished: !!data?.unfinished,
     }
   },
+  async getSessionHistory() {
+    const { data } = await http.get('/sessions/history')
+    return Array.isArray(data?.sessions) ? data.sessions : []
+  },
+  async getAiReciteAttempts() {
+    const { data } = await http.get('/ai-recite-attempts')
+    return Array.isArray(data?.attempts) ? data.attempts : []
+  },
   async saveSession(payload) {
     const { data } = await http.post('/session', payload)
     return data

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Learning;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveProgressRequest;
 use App\Models\MemorisationProgress;
+use App\Support\QuranMetadata;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,7 +17,23 @@ class ProgressController extends Controller
             ->where('user_id', $request->user()->id)
             ->orderBy('surah_number')
             ->orderBy('ayah_number')
-            ->get();
+            ->get()
+            ->map(function (MemorisationProgress $row) {
+                $surah = (int) $row->surah_number;
+
+                return [
+                    'id' => $row->id,
+                    'surah_number' => $surah,
+                    'surah_name' => $surah > 0 ? (QuranMetadata::name($surah) ?: ('Surah '.$surah)) : null,
+                    'ayah_number' => (int) $row->ayah_number,
+                    'status' => $row->status,
+                    'mastery_level' => (int) $row->mastery_level,
+                    'repetitions' => (int) $row->repetitions,
+                    'completed_at' => optional($row->completed_at)->toIso8601String(),
+                    'updated_at' => optional($row->updated_at)->toIso8601String(),
+                ];
+            })
+            ->values();
 
         return response()->json(['progress' => $progress]);
     }
@@ -28,17 +45,23 @@ class ProgressController extends Controller
         $rows = [];
 
         foreach ($request->validated()['items'] as $item) {
+            $status = (string) ($item['status'] ?? 'learning');
+            $completedAt = $item['completed_at'] ?? null;
+            if (! $completedAt && in_array($status, ['memorised', 'mastered'], true)) {
+                $completedAt = $now->toIso8601String();
+            }
+
             $rows[] = [
                 'user_id' => $userId,
                 'surah_number' => (int) $item['surah_number'],
                 'ayah_number' => (int) $item['ayah_number'],
-                'status' => $item['status'] ?? 'learning',
+                'status' => $status,
                 'mastery_level' => (int) ($item['mastery_level'] ?? 0),
                 'repetitions' => (int) ($item['repetitions'] ?? 0),
                 'metadata' => isset($item['metadata'])
                     ? json_encode($item['metadata'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
                     : null,
-                'completed_at' => $item['completed_at'] ?? null,
+                'completed_at' => $completedAt,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

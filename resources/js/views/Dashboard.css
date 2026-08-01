@@ -268,6 +268,12 @@
   border-radius: var(--dash-radius-sm);
   background: var(--dash-soft);
   box-shadow: var(--dash-shadow-soft);
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 140ms var(--dash-ease), background-color 140ms var(--dash-ease), box-shadow 140ms var(--dash-ease);
 }
 
 .dash-metric--success,
@@ -275,6 +281,14 @@
 .dash-metric--info,
 .dash-metric--neutral {
   background: var(--dash-soft);
+}
+
+.dash-metric:hover,
+.dash-metric:focus-visible {
+  border-color: rgba(60, 53, 48, 0.22);
+  background: var(--dash-card);
+  box-shadow: var(--dash-shadow);
+  outline: none;
 }
 
 .dash-metric__value {
@@ -363,6 +377,7 @@
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
+  color: var(--dash-ink);
 }
 
 .dash-stat span {
@@ -370,6 +385,24 @@
   font-size: 0.74rem;
   font-weight: 400;
   line-height: 1.3;
+}
+
+.dash-stat--primary strong {
+  font-size: 1.45rem;
+}
+
+.dash-stat--primary span {
+  color: var(--dash-ink);
+  font-weight: 450;
+}
+
+.dash-stat--secondary {
+  opacity: 0.72;
+}
+
+.dash-stat--secondary strong {
+  font-size: 1.05rem;
+  color: var(--dash-muted);
 }
 
 .dash-completion {
@@ -424,12 +457,8 @@
 .dash-chart__empty {
   display: grid;
   place-items: center;
-  gap: 0.65rem;
   min-height: 180px;
   padding: 1rem;
-  border: 1px dashed color-mix(in srgb, var(--dash-line) 85%, var(--dash-ink));
-  border-radius: var(--dash-radius-sm);
-  background: var(--dash-card);
   color: var(--dash-muted);
   font-size: 0.84rem;
   text-align: center;
@@ -647,6 +676,132 @@ html[data-theme="dark"] .user-dashboard {
   --dash-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.24), 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
+.dash-drawer-root {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  justify-items: end;
+}
+
+.dash-drawer__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: rgba(60, 53, 48, 0.28);
+  cursor: pointer;
+}
+
+.dash-drawer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(28rem, 100%);
+  height: 100%;
+  background: var(--dash-cream);
+  border-left: 1px solid var(--dash-line);
+  box-shadow: var(--dash-shadow);
+  overflow: hidden;
+}
+
+.dash-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--dash-line);
+  background: var(--dash-card);
+}
+
+.dash-drawer__title {
+  margin: 0;
+  font-family: var(--dash-serif);
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--dash-ink);
+}
+
+.dash-drawer__body {
+  flex: 1;
+  overflow: auto;
+  padding: 0.85rem 1rem 1.25rem;
+}
+
+.dash-drawer__status {
+  margin: 2.5rem 0 0;
+  text-align: center;
+  color: var(--dash-muted);
+  font-size: 0.88rem;
+}
+
+.dash-drawer__list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dash-drawer__row,
+.dash-drawer__group {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--dash-line);
+  border-radius: var(--dash-radius-sm);
+  background: var(--dash-soft);
+  box-shadow: var(--dash-shadow-soft);
+}
+
+.dash-drawer__group {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.dash-drawer__group-head {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.dash-drawer__row-main {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.dash-drawer__row-title {
+  color: var(--dash-ink);
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.dash-drawer__row-meta {
+  color: var(--dash-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.dash-drawer__row-time {
+  flex-shrink: 0;
+  color: var(--dash-muted);
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.dash-drawer__ayahs {
+  margin: 0.35rem 0 0;
+  color: var(--dash-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dash-reveal,
   .dash-spinner,
@@ -654,7 +809,8 @@ html[data-theme="dark"] .user-dashboard {
   .dash-progress-bar > span,
   .dash-btn,
   .dash-continue,
-  .dash-list__row {
+  .dash-list__row,
+  .dash-metric {
     animation: none !important;
     transition: none !important;
   }

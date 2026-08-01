@@ -172,7 +172,9 @@ class LearningStateDeriver
             $engineStatus = (string) ($ayah['status'] ?? 'new');
             $status = self::STATUS_MAP[$engineStatus] ?? 'learning';
             $masteryLevel = (int) round(max(0, min(5, (float) ($ayah['mastery_level'] ?? 0))) / 5 * 100);
-            $completedAt = ($status === 'mastered')
+            // Count reviewed/mastered ayahs as completed so the dashboard Memorised
+            // counter increments after a range is confirmed in the session flow.
+            $completedAt = in_array($status, ['memorised', 'mastered'], true)
                 ? ($this->parseDate($ayah['last_review'] ?? null) ?? $now)
                 : null;
 

@@ -4,6 +4,7 @@ use App\Http\Controllers\ContactSubmissionController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\Learning\AiReciteAttemptController;
 use App\Http\Controllers\Api\Learning\AnalyticsController;
 use App\Http\Controllers\Api\Learning\AyahNoteController;
 use App\Http\Controllers\Api\Learning\ContinueController;
@@ -24,11 +25,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/session', [SessionController::class, 'show'])->name('api.session.show');
     Route::get('/session/current', [SessionController::class, 'current'])->name('api.session.current');
+    Route::get('/sessions/history', [SessionController::class, 'history'])->name('api.sessions.history');
     Route::post('/session', [SessionController::class, 'store'])->name('api.session.store');
     Route::post('/session/start', [SessionController::class, 'start'])->name('api.session.start');
     Route::post('/session/pause', [SessionController::class, 'pause'])->name('api.session.pause');
     Route::post('/session/resume', [SessionController::class, 'resume'])->name('api.session.resume');
     Route::post('/session/end', [SessionController::class, 'end'])->name('api.session.end');
+
+    Route::get('/ai-recite-attempts', [AiReciteAttemptController::class, 'index'])->name('api.ai-recite-attempts.index');
 
     Route::get('/continue', [ContinueController::class, 'show'])->name('api.continue.show');
     Route::post('/continue', [ContinueController::class, 'store'])->name('api.continue.store');

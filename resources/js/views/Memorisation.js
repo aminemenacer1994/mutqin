@@ -8496,15 +8496,17 @@ export default {
         const setup = params.get('setup') === '1'
         const recommendationId = String(params.get('recommendation') || '').trim()
         const sessionId = String(params.get('session') || '').trim()
+        const panel = String(params.get('panel') || '').trim().toLowerCase()
         const surah = Number(params.get('surah') || 0)
         const from = Number(params.get('from') || params.get('ayah') || 0)
         const to = Number(params.get('to') || from || 0)
-        if (!resume && !setup && !recommendationId && !(surah > 0)) return null
+        if (!resume && !setup && !recommendationId && !(surah > 0) && panel !== 'saved') return null
         return {
           resume,
           setup,
           recommendationId: recommendationId || null,
           sessionId: sessionId || null,
+          panel: panel || null,
           surah: surah > 0 ? surah : 0,
           from: from > 0 ? from : 0,
           to: to > 0 ? to : 0,
@@ -8518,7 +8520,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -8541,6 +8543,11 @@ export default {
       this.markWelcomeBackModalShownForCurrentLogin()
 
       try {
+        if (entry.panel === 'saved') {
+          this.openSavedSessionsPanel()
+          return true
+        }
+
         if (entry.resume) {
           this.syncWelcomeBackResumeFromBackend()
           if (this.hasContinueSession || this.backendUnfinishedSession || this.continueSessionPayload) {

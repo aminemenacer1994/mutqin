@@ -274,4 +274,178 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.snapshot.completed_sessions.value', 1);
     }
+
+    public function test_chart_is_empty_when_user_has_no_sessions(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard?days=7')
+            ->assertOk()
+            ->assertJsonPath('data.chart.is_empty', true)
+            ->assertJsonPath('data.chart.points', []);
+    }
+
+    public function test_chart_starts_at_first_session_when_sparse(): void
+    {
+        $user = User::factory()->create();
+        $firstSessionAt = now()->subDays(2)->setTime(10, 0);
+
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 1,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => $firstSessionAt,
+            'last_activity_at' => $firstSessionAt,
+            'metadata' => ['completed' => true],
+        ]);
+
+        LearningAnalytic::create([
+            'user_id' => $user->id,
+            'session_date' => $firstSessionAt->toDateString(),
+            'sessions_completed' => 1,
+            'total_minutes' => 8,
+            'ayahs_memorised' => 1,
+            'ayahs_reviewed' => 0,
+            'streak_day' => 1,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/dashboard?days=7')
+            ->assertOk()
+            ->assertJsonPath('data.chart.is_empty', false);
+
+        $points = $response->json('data.chart.points');
+        $this->assertNotEmpty($points);
+        $this->assertSame($firstSessionAt->toDateString(), $points[0]['date']);
+        $this->assertLessThanOrEqual(3, count($points));
+    }
+
+    public function test_memorised_count_increments_when_range_marked_memorised(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.snapshot.memorised_ayahs.value', 0);
+
+        $this->actingAs($user)
+            ->postJson('/api/progress', [
+                'items' => [
+                    [
+                        'surah_number' => 112,
+                        'ayah_number' => 1,
+                        'status' => 'memorised',
+                        'mastery_level' => 80,
+                        'repetitions' => 3,
+                    ],
+                    [
+                        'surah_number' => 112,
+                        'ayah_number' => 2,
+                        'status' => 'mastered',
+                        'mastery_level' => 95,
+                        'repetitions' => 5,
+                    ],
+                    [
+                        'surah_number' => 112,
+                        'ayah_number' => 3,
+                        'status' => 'learning',
+                        'mastery_level' => 20,
+                        'repetitions' => 1,
+                    ],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('saved', true)
+            ->assertJsonPath('count', 3);
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.snapshot.memorised_ayahs.value', 2)
+            ->assertJsonPath('data.progress.memorised_ayah_count', 2)
+            ->assertJsonPath('data.progress.learning_ayah_count', 1);
+    }
+
+    public function test_session_history_is_scoped_to_authenticated_user(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 4,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now()->subHour(),
+            'last_activity_at' => now()->subHour(),
+            'metadata' => [
+                'completed' => true,
+                'config' => ['chapterId' => 112, 'rangeStart' => 1, 'rangeEnd' => 4],
+            ],
+        ]);
+
+        UserSession::create([
+            'user_id' => $other->id,
+            'surah_number' => 1,
+            'ayah_number' => 7,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now(),
+            'last_activity_at' => now(),
+            'metadata' => [
+                'completed' => true,
+                'config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/sessions/history')
+            ->assertOk();
+
+        $sessions = $response->json('sessions');
+        $this->assertCount(1, $sessions);
+        $this->assertSame(112, $sessions[0]['surah_number']);
+        $this->assertSame(1, $sessions[0]['ayah_start']);
+        $this->assertSame(4, $sessions[0]['ayah_end']);
+        $this->assertSame('completed', $sessions[0]['status']);
+    }
+
+    public function test_ai_recite_attempts_list_is_scoped_to_authenticated_user(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        AiReciteAttempt::create([
+            'user_id' => $user->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 81,
+            'band' => 'strong',
+            'ayah_range' => ['surah' => 112, 'from' => 1, 'to' => 4],
+        ]);
+
+        AiReciteAttempt::create([
+            'user_id' => $other->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 40,
+            'band' => 'weak',
+            'ayah_range' => ['surah' => 1, 'from' => 1, 'to' => 7],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/ai-recite-attempts')
+            ->assertOk();
+
+        $attempts = $response->json('attempts');
+        $this->assertCount(1, $attempts);
+        $this->assertSame(112, $attempts[0]['surah_number']);
+        $this->assertSame(1, $attempts[0]['ayah_start']);
+        $this->assertSame(4, $attempts[0]['ayah_end']);
+        $this->assertSame('strong', $attempts[0]['band']);
+        $this->assertSame(81, $attempts[0]['accuracy_percent']);
+    }
 }

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\Learning;
 
+use App\Enums\UserSessionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveSessionRequest;
 use App\Models\UserSession;
 use App\Services\NextSessionRecommendationService;
 use App\Services\SessionLifecycleService;
+use App\Support\QuranMetadata;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -45,6 +47,44 @@ class SessionController extends Controller
             'session' => $session,
             'unfinished' => (bool) $session,
         ]);
+    }
+
+    public function history(Request $request): JsonResponse
+    {
+        $sessions = UserSession::query()
+            ->where('user_id', $request->user()->id)
+            ->where('is_onboarding_example', false)
+            ->whereIn('status', [
+                UserSessionStatus::Completed->value,
+                UserSessionStatus::EndedEarly->value,
+            ])
+            ->orderByDesc('ended_at')
+            ->orderByDesc('id')
+            ->limit(100)
+            ->get();
+
+        $items = $sessions->map(function (UserSession $session) {
+            $meta = is_array($session->metadata) ? $session->metadata : [];
+            $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
+            $surah = (int) ($session->surah_number ?: ($config['chapterId'] ?? 0));
+            $from = (int) ($config['rangeStart'] ?? 0);
+            $to = (int) ($config['rangeEnd'] ?? $from);
+            $status = $session->status instanceof UserSessionStatus
+                ? $session->status->value
+                : (string) $session->status;
+
+            return [
+                'id' => $session->id,
+                'surah_number' => $surah,
+                'surah_name' => $surah > 0 ? (QuranMetadata::name($surah) ?: ('Surah '.$surah)) : null,
+                'ayah_start' => $from > 0 ? $from : null,
+                'ayah_end' => $to > 0 ? $to : null,
+                'status' => $status,
+                'occurred_at' => optional($session->ended_at ?? $session->last_activity_at)->toIso8601String(),
+            ];
+        })->values();
+
+        return response()->json(['sessions' => $items]);
     }
 
     public function store(SaveSessionRequest $request): JsonResponse

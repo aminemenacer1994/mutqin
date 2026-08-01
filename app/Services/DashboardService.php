@@ -512,6 +512,23 @@ class DashboardService
         $totalSessions = array_sum(array_column($points, 'secondary'));
         $activeDays = count(array_filter($points, fn ($p) => ($p['primary'] ?? 0) > 0 || ($p['secondary'] ?? 0) > 0));
 
+        // Start the x-axis at the user's first session day in range so new users
+        // don't see a mostly empty axis beginning far before any practice.
+        if ($activeDays > 0) {
+            $firstActiveIndex = null;
+            foreach ($points as $index => $point) {
+                if (($point['primary'] ?? 0) > 0 || ($point['secondary'] ?? 0) > 0) {
+                    $firstActiveIndex = $index;
+                    break;
+                }
+            }
+            if ($firstActiveIndex !== null && $firstActiveIndex > 0) {
+                $points = array_values(array_slice($points, $firstActiveIndex));
+            }
+        } else {
+            $points = [];
+        }
+
         $summary = $activeDays === 0
             ? 'No memorisation yet in this period. Even a few quiet minutes with the Qur’an bring barakah.'
             : sprintf(

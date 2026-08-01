@@ -68,15 +68,19 @@
             </div>
           </div>
           <div class="dash-metrics">
-            <article
+            <component
+              :is="metric.href ? 'a' : 'button'"
               v-for="metric in snapshotCards"
               :key="metric.key"
+              :type="metric.href ? undefined : 'button'"
+              :href="metric.href || undefined"
               class="dash-metric"
               :class="[`dash-metric--${metric.tone}`, { 'is-empty': metric.value === 0 }]"
+              @click="onMetricActivate($event, metric)"
             >
               <p class="dash-metric__value">{{ metric.value }}</p>
               <p class="dash-metric__label">{{ metric.label }}</p>
-            </article>
+            </component>
           </div>
         </section>
 
@@ -125,13 +129,14 @@
               </div>
 
               <div class="dash-progress-counts">
-                <div class="dash-stat">
-                  <strong>{{ data.progress?.memorised_ayah_count ?? 0 }}</strong>
-                  <span>{{ t('dashboard.memorised_count') }}</span>
-                </div>
-                <div class="dash-stat">
-                  <strong>{{ data.progress?.learning_ayah_count ?? 0 }}</strong>
-                  <span>{{ t('dashboard.learning_count') }}</span>
+                <div
+                  v-for="stat in currentSurahStats"
+                  :key="stat.key"
+                  class="dash-stat"
+                  :class="stat.emphasis"
+                >
+                  <strong>{{ stat.value }}</strong>
+                  <span>{{ stat.label }}</span>
                 </div>
               </div>
 
@@ -156,9 +161,6 @@
               <p class="dash-chart__label">{{ t('dashboard.activity_chart_title') }}</p>
               <div v-if="data.chart?.is_empty" class="dash-chart__empty">
                 <span>{{ t('dashboard.chart_empty_message') }}</span>
-                <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="memorisationUrl">
-                  {{ t('dashboard.start_session') }}
-                </a>
               </div>
               <div v-else class="dash-chart__wrap" :class="{ 'is-loading': loading }">
                 <Bar
@@ -239,6 +241,103 @@
         </div>
       </template>
     </div>
+
+    <div
+      v-if="drawerOpen"
+      class="dash-drawer-root"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="drawerTitleId"
+    >
+      <button
+        type="button"
+        class="dash-drawer__backdrop"
+        :aria-label="t('dashboard.drawer_close')"
+        @click="closeDrawer"
+      ></button>
+      <aside class="dash-drawer" tabindex="-1">
+        <header class="dash-drawer__head">
+          <h2 :id="drawerTitleId" class="dash-drawer__title">{{ drawerTitle }}</h2>
+          <button
+            type="button"
+            class="dash-icon-btn"
+            :aria-label="t('dashboard.drawer_close')"
+            @click="closeDrawer"
+          >
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <div class="dash-drawer__body">
+          <p v-if="drawerLoading" class="dash-drawer__status">{{ t('dashboard.drawer_loading') }}</p>
+          <p v-else-if="drawerError" class="dash-drawer__status" role="alert">
+            {{ t('dashboard.drawer_load_error') }}
+          </p>
+          <p v-else-if="!drawerItems.length" class="dash-drawer__status">
+            {{ drawerEmptyMessage }}
+          </p>
+
+          <ul v-else-if="drawerMode === 'sessions'" class="dash-drawer__list">
+            <li v-for="item in drawerItems" :key="`session-${item.id}`" class="dash-drawer__row">
+              <div class="dash-drawer__row-main">
+                <span class="dash-drawer__row-title">
+                  {{ item.surah_name || t('dashboard.not_started') }}
+                  <template v-if="formatItemRange(item)"> · {{ formatItemRange(item) }}</template>
+                </span>
+                <span class="dash-drawer__row-meta">{{ sessionStatusLabel(item.status) }}</span>
+              </div>
+              <time class="dash-drawer__row-time" :datetime="item.occurred_at">
+                {{ formatRelative(item.occurred_at) }}
+              </time>
+            </li>
+          </ul>
+
+          <ul v-else-if="drawerMode === 'ai_checks'" class="dash-drawer__list">
+            <li v-for="item in drawerItems" :key="`ai-${item.id}`" class="dash-drawer__row">
+              <div class="dash-drawer__row-main">
+                <span class="dash-drawer__row-title">
+                  {{ item.surah_name || t('dashboard.not_started') }}
+                  <template v-if="formatItemRange(item)"> · {{ formatItemRange(item) }}</template>
+                </span>
+                <span class="dash-drawer__row-meta">{{ aiResultLabel(item) }}</span>
+              </div>
+              <time class="dash-drawer__row-time" :datetime="item.occurred_at">
+                {{ formatRelative(item.occurred_at) }}
+              </time>
+            </li>
+          </ul>
+
+          <ul v-else-if="drawerMode === 'notes'" class="dash-drawer__list">
+            <li v-for="item in drawerItems" :key="`note-${item.id}`" class="dash-drawer__row">
+              <div class="dash-drawer__row-main">
+                <span class="dash-drawer__row-title">
+                  {{ noteHeading(item) }}
+                </span>
+                <span v-if="noteSnippet(item)" class="dash-drawer__row-meta">{{ noteSnippet(item) }}</span>
+              </div>
+              <time class="dash-drawer__row-time" :datetime="item.updated_at || item.created_at">
+                {{ formatRelative(item.updated_at || item.created_at) }}
+              </time>
+            </li>
+          </ul>
+
+          <ul v-else-if="drawerMode === 'hifz'" class="dash-drawer__list">
+            <li v-for="group in drawerItems" :key="`hifz-${group.surah_number}`" class="dash-drawer__group">
+              <div class="dash-drawer__group-head">
+                <span class="dash-drawer__row-title">{{ group.surah_name }}</span>
+                <span class="dash-drawer__row-meta">
+                  {{ t('dashboard.drawer_hifz_memorised', { n: group.memorised_count }) }}
+                  · {{ t('dashboard.drawer_hifz_in_progress', { n: group.learning_count }) }}
+                </span>
+              </div>
+              <p v-if="group.memorised_ayahs.length" class="dash-drawer__ayahs">
+                {{ group.memorised_ayahs.map((n) => t('dashboard.ayah_n', { n })).join(' · ') }}
+              </p>
+            </li>
+          </ul>
+        </div>
+      </aside>
+    </div>
   </main>
 </template>
 
@@ -258,12 +357,26 @@ import './Dashboard.css'
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
 const METRIC_META = [
-  { key: 'completed_sessions', tone: 'success', labelKey: 'metric_completed' },
-  { key: 'saved_sessions', tone: 'accent', labelKey: 'metric_saved' },
-  { key: 'memorised_ayahs', tone: 'success', labelKey: 'metric_memorised' },
-  { key: 'ai_recite_attempts', tone: 'info', labelKey: 'metric_ai_recite' },
-  { key: 'notes', tone: 'neutral', labelKey: 'metric_notes' },
+  { key: 'completed_sessions', tone: 'success', labelKey: 'metric_completed', drawer: 'sessions' },
+  { key: 'saved_sessions', tone: 'accent', labelKey: 'metric_saved', hrefPanel: 'saved' },
+  { key: 'memorised_ayahs', tone: 'success', labelKey: 'metric_memorised', drawer: 'hifz' },
+  { key: 'ai_recite_attempts', tone: 'info', labelKey: 'metric_ai_recite', drawer: 'ai_checks' },
+  { key: 'notes', tone: 'neutral', labelKey: 'metric_notes', drawer: 'notes' },
 ]
+
+const DRAWER_TITLES = {
+  sessions: 'drawer_sessions_title',
+  ai_checks: 'drawer_ai_title',
+  notes: 'drawer_notes_title',
+  hifz: 'drawer_hifz_title',
+}
+
+const DRAWER_EMPTY = {
+  sessions: 'drawer_sessions_empty',
+  ai_checks: 'drawer_ai_empty',
+  notes: 'drawer_notes_empty',
+  hifz: 'drawer_hifz_empty',
+}
 
 export default {
   name: 'UserDashboard',
@@ -285,11 +398,21 @@ export default {
       syncState: initial ? 'ready' : 'loading',
       visibilityHandler: null,
       focusHandler: null,
+      escapeHandler: null,
+      drawerMode: null,
+      drawerItems: [],
+      drawerLoading: false,
+      drawerError: false,
+      drawerRequestId: 0,
     }
   },
   computed: {
     memorisationUrl() {
       return this.auth?.memorisation_url || '/memorisation'
+    },
+    savedSessionsHref() {
+      const base = this.memorisationUrl.split('?')[0]
+      return `${base}?panel=saved`
     },
     ownerId() {
       return Number(this.auth?.id || 0)
@@ -317,13 +440,42 @@ export default {
       const snap = this.data?.snapshot || {}
       return METRIC_META.map((meta) => {
         const row = snap[meta.key] || {}
+        const value = Number(row.value ?? 0)
+        let labelKey = meta.labelKey
+        if (meta.key === 'memorised_ayahs' && value === 0) {
+          labelKey = 'metric_completed_ayahs'
+        }
         return {
           key: meta.key,
           tone: meta.tone,
-          label: this.t(`dashboard.${meta.labelKey}`),
-          value: Number(row.value ?? 0),
+          label: this.t(`dashboard.${labelKey}`),
+          value,
+          drawer: meta.drawer || null,
+          href: meta.hrefPanel === 'saved' ? this.savedSessionsHref : null,
         }
       })
+    },
+    currentSurahStats() {
+      const memorised = Number(this.data?.progress?.memorised_ayah_count ?? 0)
+      const learning = Number(this.data?.progress?.learning_ayah_count ?? 0)
+      const promoteLearning = memorised === 0 && learning > 0
+
+      const memorisedStat = {
+        key: 'memorised',
+        value: memorised,
+        label: memorised === 0
+          ? this.t('dashboard.completed_count')
+          : this.t('dashboard.memorised_count'),
+        emphasis: promoteLearning ? 'dash-stat--secondary' : 'dash-stat--primary',
+      }
+      const learningStat = {
+        key: 'learning',
+        value: learning,
+        label: this.t('dashboard.in_progress_count'),
+        emphasis: promoteLearning ? 'dash-stat--primary' : 'dash-stat--secondary',
+      }
+
+      return promoteLearning ? [learningStat, memorisedStat] : [memorisedStat, learningStat]
     },
     primaryCompletion() {
       const progress = this.data?.progress
@@ -432,6 +584,20 @@ export default {
         },
       }
     },
+    drawerOpen() {
+      return !!this.drawerMode
+    },
+    drawerTitleId() {
+      return 'dash-drawer-title'
+    },
+    drawerTitle() {
+      const key = DRAWER_TITLES[this.drawerMode]
+      return key ? this.t(`dashboard.${key}`) : ''
+    },
+    drawerEmptyMessage() {
+      const key = DRAWER_EMPTY[this.drawerMode]
+      return key ? this.t(`dashboard.${key}`) : ''
+    },
   },
   mounted() {
     this.reduceMotion = typeof window !== 'undefined'
@@ -449,12 +615,17 @@ export default {
       }
     }
     this.focusHandler = () => this.fetchDashboard(this.chartDays, { quiet: true })
+    this.escapeHandler = (event) => {
+      if (event.key === 'Escape' && this.drawerOpen) this.closeDrawer()
+    }
     document.addEventListener('visibilitychange', this.visibilityHandler)
     window.addEventListener('focus', this.focusHandler)
+    document.addEventListener('keydown', this.escapeHandler)
   },
   beforeUnmount() {
     if (this.visibilityHandler) document.removeEventListener('visibilitychange', this.visibilityHandler)
     if (this.focusHandler) window.removeEventListener('focus', this.focusHandler)
+    if (this.escapeHandler) document.removeEventListener('keydown', this.escapeHandler)
   },
   methods: {
     t(key, params) {
@@ -473,7 +644,6 @@ export default {
     },
     activityLabel(item) {
       if (!item) return ''
-      // Prefer short context (surah · range) over long sentence titles.
       if (item.context) return item.context
       return item.title || ''
     },
@@ -487,6 +657,12 @@ export default {
       if (start > 0) return this.t('dashboard.ayah_n', { n: start })
       if (end > 0) return this.t('dashboard.ayah_n', { n: end })
       return ''
+    },
+    formatItemRange(item) {
+      return this.ayahRangeLabel({
+        ayah_start: item?.ayah_start,
+        ayah_end: item?.ayah_end,
+      })
     },
     formatRelative(value) {
       if (!value) return ''
@@ -507,6 +683,114 @@ export default {
       const date = new Date(value)
       if (Number.isNaN(date.getTime())) return String(value)
       return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+    },
+    sessionStatusLabel(status) {
+      if (status === 'ended_early') return this.t('dashboard.drawer_status_ended_early')
+      return this.t('dashboard.drawer_status_completed')
+    },
+    aiResultLabel(item) {
+      const band = String(item?.band || '').toLowerCase()
+      let bandLabel = ''
+      if (band === 'strong') bandLabel = this.t('dashboard.drawer_result_strong')
+      else if (band === 'mixed') bandLabel = this.t('dashboard.drawer_result_mixed')
+      else if (band === 'weak') bandLabel = this.t('dashboard.drawer_result_weak')
+      else bandLabel = band ? band.charAt(0).toUpperCase() + band.slice(1) : ''
+
+      const accuracy = Number(item?.accuracy_percent)
+      if (Number.isFinite(accuracy) && accuracy >= 0) {
+        const pct = this.t('dashboard.drawer_accuracy', { n: accuracy })
+        return bandLabel ? `${bandLabel} · ${pct}` : pct
+      }
+      return bandLabel || '—'
+    },
+    noteHeading(item) {
+      const surah = Number(item?.surah_number || 0)
+      const ayah = Number(item?.ayah_number || 0)
+      const ref = surah > 0 && ayah > 0 ? `${surah}:${ayah}` : ''
+      const title = String(item?.title || '').trim()
+      if (title && ref) return `${ref} · ${title}`
+      if (title) return title
+      return ref || this.t('dashboard.metric_notes')
+    },
+    noteSnippet(item) {
+      const body = String(item?.body || '').replace(/\s+/g, ' ').trim()
+      if (!body) return ''
+      return body.length > 96 ? `${body.slice(0, 96)}…` : body
+    },
+    onMetricActivate(event, metric) {
+      if (metric?.href) return
+      event?.preventDefault?.()
+      if (metric?.drawer) this.openDrawer(metric.drawer)
+    },
+    async openDrawer(mode) {
+      if (!mode) return
+      this.drawerMode = mode
+      this.drawerItems = []
+      this.drawerError = false
+      this.drawerLoading = true
+      const requestId = ++this.drawerRequestId
+      try {
+        let items = []
+        if (mode === 'sessions') {
+          items = await learningApi.getSessionHistory()
+        } else if (mode === 'ai_checks') {
+          items = await learningApi.getAiReciteAttempts()
+        } else if (mode === 'notes') {
+          items = await learningApi.getAyahNotes()
+        } else if (mode === 'hifz') {
+          const progress = await learningApi.getProgress()
+          items = this.groupHifzProgress(progress)
+        }
+        if (requestId !== this.drawerRequestId) return
+        this.drawerItems = Array.isArray(items) ? items : []
+      } catch (error) {
+        console.error('Dashboard drawer fetch failed', error)
+        if (requestId !== this.drawerRequestId) return
+        this.drawerError = true
+        this.drawerItems = []
+      } finally {
+        if (requestId === this.drawerRequestId) this.drawerLoading = false
+      }
+    },
+    closeDrawer() {
+      this.drawerRequestId += 1
+      this.drawerMode = null
+      this.drawerItems = []
+      this.drawerLoading = false
+      this.drawerError = false
+    },
+    groupHifzProgress(rows) {
+      const list = Array.isArray(rows) ? rows : []
+      const groups = new Map()
+      list.forEach((row) => {
+        const surah = Number(row?.surah_number || 0)
+        const ayah = Number(row?.ayah_number || 0)
+        if (surah <= 0 || ayah <= 0) return
+        const status = String(row?.status || '').toLowerCase()
+        if (!groups.has(surah)) {
+          groups.set(surah, {
+            surah_number: surah,
+            surah_name: row?.surah_name || `Surah ${surah}`,
+            memorised_count: 0,
+            learning_count: 0,
+            memorised_ayahs: [],
+          })
+        }
+        const group = groups.get(surah)
+        if (status === 'memorised' || status === 'mastered') {
+          group.memorised_count += 1
+          group.memorised_ayahs.push(ayah)
+        } else if (status === 'learning' || status === 'reviewing') {
+          group.learning_count += 1
+        }
+      })
+
+      return Array.from(groups.values())
+        .map((group) => ({
+          ...group,
+          memorised_ayahs: group.memorised_ayahs.sort((a, b) => a - b),
+        }))
+        .sort((a, b) => a.surah_number - b.surah_number)
     },
     reload(force = false) {
       this.fetchDashboard(this.chartDays, { force })
