@@ -1609,30 +1609,8 @@
             margin-inline-end: 0;
         }
 
-        .nav-admin-badge {
-            display: inline-flex;
-            align-items: center;
-            flex-shrink: 0;
-            margin-inline-start: 0;
-            padding: 0.18rem 0.5rem;
-            border-radius: 999px;
-            border: 1px solid var(--border);
-            background: color-mix(in srgb, var(--surface) 70%, var(--text-muted));
-            color: var(--text-muted);
-            font-size: 0.68rem;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            line-height: 1.2;
-        }
-
-        [data-theme="dark"] .nav-admin-badge {
-            background: color-mix(in srgb, var(--surface-strong) 80%, transparent);
-            color: var(--text-muted);
-        }
-
         .app-navbar-logo {
-            height: 56px;
+            height: 64px;
             width: auto;
             filter: none !important;
             mix-blend-mode: normal;
@@ -1984,25 +1962,27 @@
             }
 
             .app-navbar-logo {
-                height: 48px;
+                height: 64px;
             }
         }
 
         @media (max-width: 768px) {
             :root {
-                --nav-h: 64px;
+                --nav-h: 88px;
             }
 
             .navbar-shell {
                 gap: 8px;
             }
+
+            .app-navbar-logo {
+                height: 72px;
+                max-width: none;
+                flex-shrink: 0;
+            }
         }
 
         @media (max-width: 480px) {
-            .app-navbar-logo {
-                height: 42px;
-            }
-
             .nav-link {
                 padding: 10px 14px;
             }
@@ -2043,20 +2023,15 @@
             .navbar-brand {
                 flex: 1 1 auto;
                 min-width: 0;
-                max-width: calc(100% - 9.5rem);
-            }
-
-            .nav-admin-badge {
-                font-size: 0.58rem;
-                padding: 0.12rem 0.4rem;
+                max-width: calc(100% - 9rem);
             }
 
             .app-navbar-logo {
-                height: 34px;
+                height: 72px;
                 width: auto;
-                max-width: min(36vw, 132px);
+                max-width: none;
                 object-fit: contain;
-                flex-shrink: 1;
+                flex-shrink: 0;
             }
 
             .app-navbar-logo--full {
@@ -2765,7 +2740,8 @@
             }
 
             .app-navbar-logo {
-                max-width: min(44vw, 148px);
+                height: 72px;
+                max-width: none;
             }
 
             .app-navbar-logo--mark {
@@ -3343,10 +3319,6 @@
         }
 
         @media (max-width: 349.98px) {
-            .app-navbar-logo {
-                max-width: 40vw;
-            }
-
             .profile-subscription-grid,
             .billing-actions {
                 grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3391,11 +3363,6 @@
                     alt=""
                     class="app-navbar-logo app-navbar-logo--mark"
                 >
-                @auth
-                    @if (Auth::user()->isAdmin() && request()->routeIs('admin.*'))
-                        <span class="nav-admin-badge">Admin</span>
-                    @endif
-                @endauth
             </a>
 
             <div class="offcanvas offcanvas-end offcanvas-lg" tabindex="-1" id="primaryNavbar" aria-labelledby="primaryNavbarLabel">

@@ -12,9 +12,12 @@
       </div>
 
       <template v-else>
-        <header class="admin-console__top">
+        <header class="admin-console__top admin-reveal" style="--admin-delay: 0ms">
           <div class="admin-console__brand">
-            <h1>{{ t('admin.console_title') }}</h1>
+            <p class="admin-eyebrow">{{ t('admin.eyebrow') }}</p>
+            <h1>{{ t('admin.greeting', { name: greetingName }) }}</h1>
+            <div class="admin-rule" aria-hidden="true"></div>
+            <p class="admin-supporting">{{ t('admin.supporting_message') }}</p>
           </div>
           <div class="admin-console__top-actions">
             <div class="admin-range" role="group" :aria-label="t('admin.days_range')">
@@ -47,11 +50,12 @@
           </div>
           <div class="admin-kpis" :aria-label="t('admin.snapshot_title')">
             <button
-              v-for="metric in snapshotCards"
+              v-for="(metric, index) in snapshotCards"
               :key="metric.key"
               type="button"
-              class="admin-kpi"
+              class="admin-kpi admin-reveal"
               :class="metric.toneClass"
+              :style="{ '--admin-delay': `${60 + index * 40}ms` }"
               :title="metric.tooltip || undefined"
               @click="onKpiClick(metric)"
             >
@@ -65,9 +69,10 @@
         </header>
 
         <!-- USERS -->
-        <section class="admin-users" :aria-label="t('admin.users_title')">
+        <section ref="usersSection" class="admin-users admin-reveal" style="--admin-delay: 120ms" :aria-label="t('admin.users_title')">
           <header class="admin-users__header">
             <div class="admin-users__title-block">
+              <p class="admin-eyebrow">{{ t('admin.learners_title') }}</p>
               <div class="admin-users__title-row">
                 <h2 class="admin-users__title">{{ t('admin.users_title') }}</h2>
                 <span class="admin-users__count">{{ usersTotal }}</span>
@@ -87,80 +92,87 @@
           </header>
 
           <div class="admin-toolbar">
-            <div class="admin-toolbar__search-wrap">
-              <i class="bi bi-search admin-toolbar__search-icon" aria-hidden="true"></i>
-              <input
-                ref="searchInput"
-                v-model.trim="filters.q"
-                type="search"
-                class="admin-toolbar__search"
-                :placeholder="t('admin.users_search')"
-                @input="onSearchInput"
-              >
+            <div class="admin-toolbar__row">
+              <div class="admin-toolbar__search-wrap">
+                <i class="bi bi-search admin-toolbar__search-icon" aria-hidden="true"></i>
+                <input
+                  ref="searchInput"
+                  v-model.trim="filters.q"
+                  type="search"
+                  class="admin-toolbar__search"
+                  :placeholder="t('admin.users_search')"
+                  @input="onSearchInput"
+                >
+              </div>
+              <div class="admin-toolbar__controls">
+                <select
+                  v-model="filters.activity"
+                  class="admin-toolbar__select admin-toolbar__select--active"
+                  :aria-label="t('admin.filter_last_active')"
+                  @change="onFilterChange"
+                >
+                  <option value="">{{ t('admin.filter_all_time') }}</option>
+                  <option value="today">{{ t('admin.filter_active_today') }}</option>
+                  <option value="active_7d">{{ t('admin.filter_active_7d') }}</option>
+                  <option value="active_30d">{{ t('admin.filter_active_30d') }}</option>
+                  <option value="inactive_30d">{{ t('admin.filter_inactive_30d') }}</option>
+                  <option value="never">{{ t('admin.filter_never') }}</option>
+                </select>
+                <select
+                  v-model="filters.progress"
+                  class="admin-toolbar__select admin-toolbar__select--progress"
+                  :aria-label="t('admin.filter_progress_all')"
+                  @change="onFilterChange"
+                >
+                  <option value="">{{ t('admin.filter_progress_all') }}</option>
+                  <option value="has">{{ t('admin.filter_progress_has') }}</option>
+                  <option value="none">{{ t('admin.filter_progress_none') }}</option>
+                </select>
+                <select
+                  v-model="sortKey"
+                  class="admin-toolbar__select admin-toolbar__select--sort"
+                  :aria-label="t('admin.sort_last_active')"
+                  @change="onFilterChange"
+                >
+                  <option value="last_active">{{ t('admin.sort_last_active') }}</option>
+                  <option value="sessions">{{ t('admin.sort_sessions') }}</option>
+                  <option value="accuracy">{{ t('admin.sort_accuracy') }}</option>
+                  <option value="memorised">{{ t('admin.sort_memorised') }}</option>
+                </select>
+                <button
+                  type="button"
+                  class="admin-toolbar__sort-dir"
+                  :aria-pressed="sortDir === 'asc' ? 'true' : 'false'"
+                  :aria-label="sortDir === 'asc' ? t('admin.sort_asc') : t('admin.sort_desc')"
+                  @click="toggleSortDir"
+                >
+                  <i
+                    class="bi"
+                    :class="sortDir === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"
+                    aria-hidden="true"
+                  ></i>
+                  <span>{{ sortDir === 'asc' ? t('admin.sort_asc') : t('admin.sort_desc') }}</span>
+                </button>
+                <button
+                  v-if="activeFilterCount > 0"
+                  type="button"
+                  class="admin-filter-badge"
+                  @click="clearFilters"
+                >
+                  <span>{{ t('admin.filters_active_count', { n: activeFilterCount }) }}</span>
+                  <i class="bi bi-x" aria-hidden="true"></i>
+                </button>
+              </div>
             </div>
-            <div class="admin-toolbar__controls">
-              <select
-                v-model="filters.activity"
-                class="admin-toolbar__select admin-toolbar__select--active"
-                :aria-label="t('admin.filter_last_active')"
-                @change="onFilterChange"
-              >
-                <option value="">{{ t('admin.filter_all_time') }}</option>
-                <option value="today">{{ t('admin.filter_active_today') }}</option>
-                <option value="active_7d">{{ t('admin.filter_active_7d') }}</option>
-                <option value="active_30d">{{ t('admin.filter_active_30d') }}</option>
-                <option value="inactive_30d">{{ t('admin.filter_inactive_30d') }}</option>
-                <option value="never">{{ t('admin.filter_never') }}</option>
-              </select>
-              <select
-                v-model="filters.progress"
-                class="admin-toolbar__select admin-toolbar__select--progress"
-                :aria-label="t('admin.filter_progress_all')"
-                @change="onFilterChange"
-              >
-                <option value="">{{ t('admin.filter_progress_all') }}</option>
-                <option value="has">{{ t('admin.filter_progress_has') }}</option>
-                <option value="none">{{ t('admin.filter_progress_none') }}</option>
-              </select>
-              <select
-                v-model="sortKey"
-                class="admin-toolbar__select admin-toolbar__select--sort"
-                :aria-label="t('admin.sort_last_active')"
-                @change="onFilterChange"
-              >
-                <option value="last_active">{{ t('admin.sort_last_active') }}</option>
-                <option value="sessions">{{ t('admin.sort_sessions') }}</option>
-                <option value="accuracy">{{ t('admin.sort_accuracy') }}</option>
-                <option value="memorised">{{ t('admin.sort_memorised') }}</option>
-              </select>
-              <button
-                type="button"
-                class="admin-toolbar__sort-dir"
-                :aria-pressed="sortDir === 'asc' ? 'true' : 'false'"
-                @click="toggleSortDir"
-              >
-                {{ sortDir === 'asc' ? t('admin.sort_asc') : t('admin.sort_desc') }}
-              </button>
-              <button
-                v-if="activeFilterCount > 0"
-                type="button"
-                class="admin-filter-badge"
-                @click="clearFilters"
-              >
-                <span>{{ t('admin.filters_active_count', { n: activeFilterCount }) }}</span>
-                <i class="bi bi-x" aria-hidden="true"></i>
-              </button>
-            </div>
+            <p class="admin-results-count">
+              <template v-if="filtersActive">
+                {{ t('admin.showing_x_of_y_filtered', { shown: users.length, total: usersTotal }) }}
+              </template>
+              <template v-else>
+                {{ t('admin.showing_x_of_y', { shown: users.length, total: usersTotal }) }}
+              </template>
+            </p>
           </div>
-
-          <p class="admin-results-count">
-            <template v-if="filtersActive">
-              {{ t('admin.showing_x_of_y_filtered', { shown: users.length, total: usersTotal }) }}
-            </template>
-            <template v-else>
-              {{ t('admin.showing_x_of_y', { shown: users.length, total: usersTotal }) }}
-            </template>
-          </p>
 
           <div v-if="selectedIds.length" class="admin-bulkbar">
             <span>{{ t('admin.bulk_selected', { n: selectedIds.length }) }}</span>
@@ -225,7 +237,9 @@
                     </button>
                   </th>
                   <th class="admin-col--desktop">{{ t('admin.col_last_ai') }}</th>
-                  <th>{{ t('admin.col_status') }}</th>
+                  <th class="admin-table__status" :title="t('admin.col_status')">
+                    <span class="visually-hidden">{{ t('admin.col_status') }}</span>
+                  </th>
                   <th class="admin-table__actions"></th>
                 </tr>
               </thead>
@@ -423,135 +437,160 @@
             <p v-if="detailLoading" class="admin-empty">{{ t('admin.drawer_loading') }}</p>
             <p v-else-if="detailError" class="admin-empty" role="alert">{{ t('admin.drawer_load_error') }}</p>
             <div v-else-if="detail" class="admin-drawer__body">
-              <div class="admin-drawer__quick" role="group" :aria-label="t('admin.row_actions')">
-                <button type="button" class="admin-quick-btn" @click="askResetPassword(detail.user || selectedListRow)">
-                  <i class="bi bi-key" aria-hidden="true"></i>
-                  <span>{{ t('admin.action_reset_password') }}</span>
-                </button>
-                <a class="admin-quick-btn" :href="`mailto:${detail.user?.email || selectedListRow?.email || ''}`">
-                  <i class="bi bi-envelope" aria-hidden="true"></i>
-                  <span>{{ t('admin.action_send_email') }}</span>
-                </a>
-                <button
-                  type="button"
-                  class="admin-quick-btn admin-quick-btn--danger"
-                  :disabled="isSelfSelected || (detail.user || selectedListRow)?.subscription_status === 'canceled'"
-                  @click="askDeactivate(detail.user || selectedListRow)"
-                >
-                  <i class="bi bi-pause-circle" aria-hidden="true"></i>
-                  <span>{{ t('admin.action_deactivate') }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="admin-quick-btn admin-quick-btn--danger"
-                  :disabled="deletingUser || isSelfSelected"
-                  @click="openDeleteModal"
-                >
-                  <i class="bi bi-trash" aria-hidden="true"></i>
-                  <span>{{ t('admin.delete_account') }}</span>
-                </button>
-              </div>
-
-              <div class="admin-statstrip">
-                <div v-for="stat in detailStats" :key="stat.key">
-                  <strong>{{ stat.value }}</strong>
-                  <span>{{ stat.label }}</span>
+              <section class="admin-drawer-section">
+                <div class="admin-drawer__quick" role="group" :aria-label="t('admin.row_actions')">
+                  <button type="button" class="admin-quick-btn" @click="askResetPassword(detail.user || selectedListRow)">
+                    <i class="bi bi-key" aria-hidden="true"></i>
+                    <span>{{ t('admin.action_reset_password') }}</span>
+                  </button>
+                  <a class="admin-quick-btn" :href="`mailto:${detail.user?.email || selectedListRow?.email || ''}`">
+                    <i class="bi bi-envelope" aria-hidden="true"></i>
+                    <span>{{ t('admin.action_send_email') }}</span>
+                  </a>
                 </div>
-              </div>
+                <div class="admin-drawer__quick admin-drawer__quick--danger" role="group" :aria-label="t('admin.danger_zone')">
+                  <button
+                    type="button"
+                    class="admin-quick-btn admin-quick-btn--danger"
+                    :disabled="isSelfSelected || (detail.user || selectedListRow)?.subscription_status === 'canceled'"
+                    @click="askDeactivate(detail.user || selectedListRow)"
+                  >
+                    <i class="bi bi-pause-circle" aria-hidden="true"></i>
+                    <span>{{ t('admin.action_deactivate') }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="admin-quick-btn admin-quick-btn--danger"
+                    :disabled="deletingUser || isSelfSelected"
+                    @click="openDeleteModal"
+                  >
+                    <i class="bi bi-trash" aria-hidden="true"></i>
+                    <span>{{ t('admin.delete_account') }}</span>
+                  </button>
+                </div>
+              </section>
 
-              <section class="admin-drawer-panel">
-                <h3>{{ t('admin.user_surahs') }}</h3>
+              <section class="admin-drawer-section">
+                <div class="admin-statstrip">
+                  <div v-for="stat in detailStats" :key="stat.key" class="admin-statstrip__item">
+                    <strong>{{ stat.value }}</strong>
+                    <span>{{ stat.label }}</span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="admin-drawer-section">
+                <div class="admin-drawer-section__head">
+                  <h3 class="admin-drawer-section__title">{{ t('admin.user_surahs') }}</h3>
+                </div>
                 <p v-if="!detail.surah_progress?.length" class="admin-muted">{{ t('admin.user_surahs_empty_soft') }}</p>
                 <ul v-else class="admin-surah-list">
-                  <li v-for="row in detail.surah_progress" :key="row.surah_number" class="admin-surah-progress">
-                    <div class="admin-surah-progress__head">
-                      <span class="admin-surah-progress__name">{{ row.surah_name }}</span>
-                      <span class="admin-surah-progress__meta">
-                        {{ t('admin.user_surah_fraction', { practised: row.practised, total: row.total_ayahs }) }}
-                        · {{ t('admin.user_surah_percent', { n: row.percent }) }}
-                      </span>
-                    </div>
-                    <div
-                      class="admin-surah-progress__track"
-                      role="progressbar"
-                      :aria-valuenow="row.percent"
-                      aria-valuemin="0"
-                      aria-valuemax="100"
-                      :aria-label="row.surah_name"
+                  <li
+                    v-for="row in detail.surah_progress"
+                    :key="row.surah_number"
+                    class="admin-surah-card"
+                    :class="{ 'is-open': expandedSurah === row.surah_number }"
+                  >
+                    <button
+                      type="button"
+                      class="admin-surah-card__main"
+                      :aria-expanded="expandedSurah === row.surah_number ? 'true' : 'false'"
+                      :aria-label="expandedSurah === row.surah_number ? t('admin.user_surah_collapse') : t('admin.user_surah_expand')"
+                      @click="toggleSurahExpand(row.surah_number)"
                     >
+                      <div class="admin-surah-card__top">
+                        <span class="admin-surah-card__name">{{ row.surah_name }}</span>
+                        <span class="admin-surah-card__meta">
+                          {{ t('admin.user_surah_fraction', { practised: row.practised, total: row.total_ayahs }) }}
+                          · {{ t('admin.user_surah_percent', { n: row.percent }) }}
+                        </span>
+                        <i
+                          class="bi bi-chevron-down admin-surah-card__chevron"
+                          aria-hidden="true"
+                        ></i>
+                      </div>
                       <div
-                        class="admin-surah-progress__fill"
-                        :class="{ 'is-zero': !row.percent }"
-                        :style="{ width: surahBarWidth(row) }"
-                      ></div>
-                    </div>
-                  </li>
-                </ul>
-              </section>
-
-              <section class="admin-drawer-panel">
-                <h3>{{ t('admin.user_activity') }}</h3>
-                <p v-if="!detailSessions.length && !detailAiChecks.length" class="admin-muted">{{ t('admin.user_activity_empty') }}</p>
-                <ul v-else class="admin-session-list">
-                  <li v-for="row in detailSessions" :key="`s-${row.id}`">
-                    <div class="admin-session-list__line1">
-                      <span class="admin-session-list__kind">{{ t('admin.activity_type_session') }}</span>
-                      <span>{{ row.surah_name || '—' }}</span>
-                      <span v-if="formatItemRange(row)">{{ formatItemRange(row) }}</span>
-                    </div>
-                    <div class="admin-session-list__line2">
-                      <span class="admin-outcome" :data-outcome="sessionOutcomeKey(row)">{{ sessionOutcomeLabel(row) }}</span>
-                      <time>{{ formatDateShort(row.occurred_at) || formatRelative(row.occurred_at) }}</time>
-                    </div>
-                  </li>
-                  <li v-for="row in detailAiChecks" :key="`a-${row.id}`">
-                    <div class="admin-session-list__line1">
-                      <span class="admin-session-list__kind">{{ t('admin.activity_type_ai') }}</span>
-                      <span>{{ row.surah_name || '—' }}</span>
-                      <span v-if="formatItemRange(row)">{{ formatItemRange(row) }}</span>
-                    </div>
-                    <div class="admin-session-list__line2">
-                      <span
-                        v-if="row.accuracy_percent != null"
-                        :class="accuracyToneClass(row.accuracy_percent)"
-                      >{{ t('admin.accuracy', { n: Number(row.accuracy_percent) }) }}</span>
-                      <time>{{ formatDateShort(row.occurred_at) || formatRelative(row.occurred_at) }}</time>
-                    </div>
-                  </li>
-                </ul>
-              </section>
-
-              <section class="admin-drawer-panel admin-drawer-panel--meta">
-                <dl class="admin-account-info__list">
-                  <div>
-                    <dt>{{ t('admin.field_created_at') }}</dt>
-                    <dd>{{ formatDateShort(detail.user?.created_at) || '—' }}</dd>
-                  </div>
-                  <div>
-                    <dt>{{ t('admin.col_active') }}</dt>
-                    <dd :title="formatDateShort(detail.user?.last_activity_at) || undefined">
-                      {{ formatRelative(detail.user?.last_activity_at) || '—' }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>{{ t('admin.field_subscription') }}</dt>
-                    <dd>
-                      <select
-                        v-model="editForm.subscription_status"
-                        class="admin-account-info__select"
-                        @change="onEditBlur"
+                        class="admin-surah-progress__track"
+                        role="progressbar"
+                        :aria-valuenow="row.percent"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        :aria-label="row.surah_name"
                       >
-                        <option v-for="status in subscriptionOptions" :key="status" :value="status">
-                          {{ subscriptionLabel(status) }}
-                        </option>
-                      </select>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>{{ t('admin.user_notes') }}</dt>
-                    <dd>{{ t('admin.notes_written', { n: Number(detail.stats?.notes || 0) }) }}</dd>
-                  </div>
-                </dl>
+                        <div
+                          class="admin-surah-progress__fill"
+                          :class="{ 'is-zero': !row.percent }"
+                          :style="{ width: surahBarWidth(row) }"
+                        ></div>
+                      </div>
+                    </button>
+                    <div v-if="expandedSurah === row.surah_number" class="admin-surah-card__details">
+                      <div class="admin-surah-card__stats">
+                        <span>{{ t('admin.user_surah_memorised', { n: Number(row.memorised || 0) }) }}</span>
+                        <span>{{ t('admin.user_surah_learning', { n: Number(row.in_progress || 0) }) }}</span>
+                      </div>
+                      <a
+                        class="admin-surah-card__action"
+                        :href="surahPracticeHref(row)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        @click.stop
+                      >
+                        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                        <span>{{ t('admin.user_surah_open') }}</span>
+                      </a>
+                    </div>
+                  </li>
+                </ul>
+              </section>
+
+              <section class="admin-drawer-section admin-drawer-section--last">
+                <div class="admin-drawer-section__head">
+                  <h3 class="admin-drawer-section__title">{{ t('admin.user_activity') }}</h3>
+                  <p class="admin-drawer-section__hint">{{ t('admin.user_activity_hint') }}</p>
+                </div>
+                <p v-if="!detailRecentActivity.length" class="admin-muted">{{ t('admin.user_activity_empty') }}</p>
+                <ul v-else class="admin-session-list">
+                  <li v-for="row in detailRecentActivity" :key="row.key">
+                    <a
+                      class="admin-activity-card"
+                      :href="activityHref(row)"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      :aria-label="activityActionLabel(row)"
+                    >
+                      <div class="admin-activity-card__body">
+                        <div class="admin-session-list__line1">
+                          <span
+                            class="admin-session-list__kind"
+                            :class="{ 'admin-session-list__kind--ai': row.kind === 'ai' }"
+                          >
+                            {{ row.kind === 'ai' ? t('admin.activity_type_ai') : t('admin.activity_type_session') }}
+                          </span>
+                          <span class="admin-activity-card__title">
+                            {{ row.surah_name || '—' }}
+                            <template v-if="formatItemRange(row)"> {{ formatItemRange(row) }}</template>
+                          </span>
+                        </div>
+                        <div class="admin-session-list__line2">
+                          <template v-if="row.kind === 'session'">
+                            <span class="admin-outcome" :data-outcome="sessionOutcomeKey(row)">{{ sessionOutcomeLabel(row) }}</span>
+                          </template>
+                          <span
+                            v-else-if="row.accuracy_percent != null"
+                            class="admin-outcome"
+                            :class="accuracyToneClass(row.accuracy_percent)"
+                          >{{ t('admin.accuracy', { n: Number(row.accuracy_percent) }) }}</span>
+                          <time>{{ formatDateShort(row.occurred_at) || formatRelative(row.occurred_at) }}</time>
+                        </div>
+                      </div>
+                      <span class="admin-activity-card__cta">
+                        <span>{{ activityActionLabel(row) }}</span>
+                        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                      </span>
+                    </a>
+                  </li>
+                </ul>
               </section>
             </div>
           </div>
@@ -717,6 +756,7 @@ export default {
       detailError: false,
       detailRequestId: 0,
       detailCache: {},
+      expandedSurah: null,
       editForm: emptyEdit(),
       editFormBaseline: emptyEdit(),
       formSaving: false,
@@ -742,6 +782,10 @@ export default {
   computed: {
     ownerId() {
       return Number(this.auth?.id || 0)
+    },
+    greetingName() {
+      const name = String(this.auth?.name || this.data?.meta?.greeting_name || '').trim()
+      return name || this.t('admin.dear_friend')
     },
     isSelfSelected() {
       return !!this.selectedUserId && Number(this.selectedUserId) === this.ownerId
@@ -849,11 +893,24 @@ export default {
         },
       ]
     },
-    detailSessions() {
-      return (this.detail?.recent_sessions || []).slice(0, 3)
-    },
-    detailAiChecks() {
-      return (this.detail?.recent_ai_checks || []).slice(0, 3)
+    detailRecentActivity() {
+      const sessions = (this.detail?.recent_sessions || []).map((row) => ({
+        ...row,
+        kind: 'session',
+        key: `s-${row.id}`,
+      }))
+      const aiChecks = (this.detail?.recent_ai_checks || []).map((row) => ({
+        ...row,
+        kind: 'ai',
+        key: `a-${row.id}`,
+      }))
+      return [...sessions, ...aiChecks]
+        .sort((a, b) => {
+          const aTime = Date.parse(a.occurred_at || '') || 0
+          const bTime = Date.parse(b.occurred_at || '') || 0
+          return bTime - aTime
+        })
+        .slice(0, 4)
     },
     confirmTitle() {
       if (this.confirmKind === 'reset') return this.t('admin.action_reset_password')
@@ -961,7 +1018,15 @@ export default {
         this.filters.activity = 'active_7d'
         this.usersPage = 1
         this.reloadUsers()
+      } else if (metric.action === 'users') {
+        this.clearFilters()
       }
+      this.$nextTick(() => {
+        const el = this.$refs.usersSection
+        if (el && typeof el.scrollIntoView === 'function') {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      })
     },
     onFilterChange() {
       this.usersPage = 1
@@ -1051,8 +1116,65 @@ export default {
       return 'admin-acc--low'
     },
     sessionOutcomeKey(row) {
-      if (row?.status === 'completed') return 'completed'
+      const status = String(row?.status || '').toLowerCase()
+      if (status === 'completed') return 'completed'
+      if (status === 'paused') return 'paused'
       return 'incomplete'
+    },
+    toggleSurahExpand(surahNumber) {
+      const num = Number(surahNumber)
+      this.expandedSurah = this.expandedSurah === num ? null : num
+    },
+    memorisationHref({ surah, from, to, aiCheck = false, resume = false, sessionId = null } = {}) {
+      const params = new URLSearchParams()
+      if (surah) params.set('surah', String(surah))
+      if (from) params.set('from', String(from))
+      if (to) params.set('to', String(to))
+      if (aiCheck) params.set('ai_check', '1')
+      if (resume && sessionId) {
+        params.set('resume', '1')
+        params.set('session', String(sessionId))
+      }
+      if (!from && !to && surah && !resume) {
+        params.set('setup', '1')
+      }
+      params.set('return', 'dashboard')
+      const query = params.toString()
+      return query ? `/memorisation?${query}` : '/memorisation'
+    },
+    surahPracticeHref(row) {
+      const surah = Number(row?.surah_number || 0)
+      const total = Number(row?.total_ayahs || 0)
+      return this.memorisationHref({
+        surah,
+        from: total > 0 ? 1 : null,
+        to: total > 0 ? total : null,
+      })
+    },
+    activityHref(row) {
+      const surah = Number(row?.surah_number || 0)
+      const from = Number(row?.ayah_start || 0) || null
+      const to = Number(row?.ayah_end || row?.ayah_start || 0) || null
+      if (row?.kind === 'session' && String(row?.status || '').toLowerCase() === 'paused' && row?.id) {
+        return this.memorisationHref({
+          surah,
+          from,
+          to,
+          resume: true,
+          sessionId: row.id,
+        })
+      }
+      return this.memorisationHref({
+        surah,
+        from,
+        to,
+        aiCheck: row?.kind === 'ai',
+      })
+    },
+    activityActionLabel(row) {
+      if (row?.kind === 'ai') return this.t('admin.user_activity_open_ai')
+      if (String(row?.status || '').toLowerCase() === 'paused') return this.t('admin.user_activity_resume')
+      return this.t('admin.user_activity_open_practice')
     },
     truncateId(id) {
       const text = String(id || '')
@@ -1234,7 +1356,9 @@ export default {
       this.saveUser()
     },
     sessionOutcomeLabel(row) {
-      if (row?.status === 'completed') return this.t('admin.outcome_session_completed')
+      const status = String(row?.status || '').toLowerCase()
+      if (status === 'completed') return this.t('admin.outcome_session_completed')
+      if (status === 'paused') return this.t('admin.outcome_session_paused')
       return this.t('admin.outcome_session_incomplete')
     },
     tierLabel(tier) {
@@ -1440,8 +1564,10 @@ export default {
     },
     closeDrawer() {
       this.drawerOpen = false
+      this.expandedSurah = null
     },
     async loadDetail(id) {
+      this.expandedSurah = null
       if (this.detailCache[id]) {
         this.detail = this.detailCache[id]
         this.hydrateEditForm(this.detail.user)

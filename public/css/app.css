@@ -12225,7 +12225,7 @@ html[data-theme=dark] .app-navbar {
 }
 
 .app-navbar-logo {
-  height: 52px;
+  height: 64px;
 }
 
 .app-navbar-brand-text {
@@ -12616,7 +12616,7 @@ html[data-theme=dark] .app-navbar {
 
 @media (max-width: 1024px) {
   .app-navbar-logo {
-    height: 44px;
+    height: 64px;
   }
   .app-navbar .nav-link {
     padding: 0.65rem 0.75rem;
@@ -12624,7 +12624,9 @@ html[data-theme=dark] .app-navbar {
 }
 @media (max-width: 768px) {
   .app-navbar-logo {
-    height: 40px;
+    height: 72px;
+    max-width: none;
+    flex-shrink: 0;
   }
   .app-user-toggle span:not(.app-user-avatar) {
     max-width: 8rem;

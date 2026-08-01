@@ -18,8 +18,15 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'locale' => 'en',
+            'subscription_tier' => 'free',
+            'subscription_plan' => 'free',
+            'subscription_status' => 'free',
         ]);
 
-        $this->call(PracticeAccountSeeder::class);
+        $this->call([
+            PracticeAccountSeeder::class,
+            DemoDataSeeder::class,
+        ]);
     }
 }
