@@ -537,6 +537,18 @@ html[data-theme="dark"] .dash-chip--streak-strong i {
   gap: 0.7rem;
 }
 
+.dash-chart__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem 0.75rem;
+}
+
+.dash-chart__head .dash-chart__label {
+  margin: 0;
+}
+
 .dash-chart__wrap {
   height: 180px;
   min-height: 180px;
@@ -655,6 +667,14 @@ html[data-theme="dark"] .dash-chip--streak-strong i {
   font-weight: 500;
   line-height: 1.35;
   color: var(--dash-ink);
+}
+
+.dash-list__meta {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--dash-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .dash-strength {
@@ -929,6 +949,35 @@ html[data-theme="dark"] .user-dashboard {
   padding: 0.85rem 1rem 1.25rem;
 }
 
+.dash-drawer__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.85rem;
+}
+
+.dash-drawer__filter {
+  appearance: none;
+  border: 1px solid var(--dash-line);
+  border-radius: 999px;
+  background: var(--dash-soft);
+  color: var(--dash-muted);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+}
+
+.dash-drawer__filter.is-active,
+.dash-drawer__filter:hover,
+.dash-drawer__filter:focus-visible {
+  color: var(--dash-ink);
+  background: var(--dash-card);
+  border-color: color-mix(in srgb, var(--dash-line) 70%, var(--dash-ink));
+}
+
 .dash-drawer__status {
   margin: 2.5rem 0 0;
   text-align: center;
@@ -957,6 +1006,18 @@ html[data-theme="dark"] .user-dashboard {
   box-shadow: var(--dash-shadow-soft);
 }
 
+a.dash-drawer__row--link {
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 160ms var(--dash-ease), background 160ms var(--dash-ease);
+}
+
+a.dash-drawer__row--link:hover,
+a.dash-drawer__row--link:focus-visible {
+  border-color: color-mix(in srgb, var(--dash-line) 65%, var(--dash-ink));
+  background: var(--dash-card);
+}
+
 .dash-drawer__group {
   flex-direction: column;
   align-items: stretch;
@@ -982,7 +1043,7 @@ html[data-theme="dark"] .user-dashboard {
 
 .dash-drawer__type {
   display: inline-block;
-  margin-right: 0.4rem;
+  margin-inline-end: 0.4rem;
   color: var(--dash-muted);
   font-size: 0.72rem;
   font-weight: 600;

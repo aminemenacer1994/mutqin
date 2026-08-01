@@ -50,7 +50,7 @@ async function ensureCsrfCookie({ force = false } = {}) {
   await csrfCookiePromise
 }
 
-const http = axios.create({
+export const http = axios.create({
   baseURL: '/api',
   withCredentials: true,
   headers: {

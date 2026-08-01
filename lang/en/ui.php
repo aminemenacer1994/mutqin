@@ -24,6 +24,7 @@ return [
     'profile' => 'Profile',
     'subscription' => 'Subscription',
     'settings' => 'Settings',
+    'admin_dashboard' => 'Admin Dashboard',
     'contact_inbox' => 'Contact Inbox',
     'open_navigation' => 'Open navigation menu',
     'close_navigation' => 'Close navigation menu',

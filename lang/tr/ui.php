@@ -23,6 +23,7 @@ return [
     'profile' => 'Profile',
     'subscription' => 'Subscription',
     'settings' => 'Settings',
+    'admin_dashboard' => 'Yönetici Paneli',
     'contact_inbox' => 'İletişim Gelen Kutusu',
     'open_navigation' => 'Gezinme menüsünü aç',
     'close_navigation' => 'Gezinme menüsünü kapat',

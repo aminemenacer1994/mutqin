@@ -15,6 +15,10 @@ const UserDashboard = defineAsyncComponent(() =>
   import(/* webpackChunkName: "dashboard" */ './views/Dashboard.vue')
 );
 
+const AdminDashboard = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "admin-dashboard" */ './views/AdminDashboard.vue')
+);
+
 // The memorisation workspace is by far the heaviest component. It is only used
 // on the memorisation page, so load it as a separate async chunk to keep the
 // main bundle (and every other page) lean.
@@ -109,6 +113,7 @@ async function bootstrapApp() {
     app.component('homepage', Homepage);
     app.component('memorisation', Memorisation);
     app.component('user-dashboard', UserDashboard);
+    app.component('admin-dashboard', AdminDashboard);
     app.component('about', About);
     app.component('about-us-page', AboutUsPage);
     app.component('our-mission-page', OurMissionPage);

@@ -23,6 +23,7 @@ return [
     'profile' => 'Profil',
     'subscription' => 'Langganan',
     'settings' => 'Pengaturan',
+    'admin_dashboard' => 'Dasbor Admin',
     'contact_inbox' => 'Kotak Masuk Kontak',
     'open_navigation' => 'Buka menu navigasi',
     'close_navigation' => 'Tutup menu navigasi',

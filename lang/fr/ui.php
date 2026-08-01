@@ -23,6 +23,7 @@ return [
     'profile' => 'Profil',
     'subscription' => 'Abonnement',
     'settings' => 'Paramètres',
+    'admin_dashboard' => 'Tableau de bord admin',
     'contact_inbox' => 'Boîte de contact',
     'open_navigation' => 'Ouvrir le menu de navigation',
     'close_navigation' => 'Fermer le menu de navigation',

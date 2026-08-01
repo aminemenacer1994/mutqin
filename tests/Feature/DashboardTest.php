@@ -446,11 +446,17 @@ class DashboardTest extends TestCase
         $items = $response->json('activity');
         $this->assertCount(3, $items);
         $this->assertSame('note', $items[0]['type']);
-        $this->assertSame('Review the middle carefully.', $items[0]['outcome']);
+        $this->assertSame('note_body', $items[0]['outcome_key']);
+        $this->assertSame('Review the middle carefully.', $items[0]['outcome_params']['body']);
         $this->assertSame('ai_check', $items[1]['type']);
-        $this->assertStringContainsString('81%', $items[1]['outcome']);
+        $this->assertSame('ai_result', $items[1]['outcome_key']);
+        $this->assertSame('strong', $items[1]['outcome_params']['band']);
+        $this->assertSame(81, $items[1]['outcome_params']['accuracy']);
         $this->assertSame('session', $items[2]['type']);
-        $this->assertSame('Completed', $items[2]['outcome']);
+        $this->assertSame('session_completed', $items[2]['outcome_key']);
+        $this->assertSame(112, $items[2]['surah_number']);
+        $this->assertSame(1, $items[2]['ayah_start']);
+        $this->assertSame(4, $items[2]['ayah_end']);
     }
 
     public function test_memorised_count_increments_when_range_marked_memorised(): void

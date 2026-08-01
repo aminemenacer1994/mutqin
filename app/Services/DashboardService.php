@@ -92,6 +92,8 @@ class DashboardService
      * Full chronological activity log for the dashboard drawer.
      * Includes sessions, AI Recite checks, and notes with dates/outcomes.
      *
+     * Copy is client-localised via outcome_key / structured surah+ayah fields.
+     *
      * @return list<array<string, mixed>>
      */
     public function activityLog(User $user, int $limit = 100): array
@@ -116,49 +118,48 @@ class DashboardService
                 $meta = is_array($session->metadata) ? $session->metadata : [];
                 $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
                 $surah = (int) ($session->surah_number ?? $config['chapterId'] ?? 0);
-                $name = $surah ? QuranMetadata::name($surah) : 'Session';
                 $start = (int) ($config['rangeStart'] ?? 0);
                 $end = (int) ($config['rangeEnd'] ?? 0);
-                $range = ($start > 0 && $end > 0)
-                    ? ($start === $end ? "Ayah {$start}" : "Ayahs {$start}–{$end}")
-                    : ($session->ayah_number ? 'Ayah '.$session->ayah_number : null);
+                if ($start <= 0 && $session->ayah_number) {
+                    $start = (int) $session->ayah_number;
+                    $end = $start;
+                }
 
-                [$type, $outcome, $at] = match (true) {
+                [$outcomeKey, $at] = match (true) {
                     $status === UserSessionStatus::Completed => [
-                        'session',
-                        'Completed',
+                        'session_completed',
                         $session->ended_at ?? $session->last_activity_at,
                     ],
                     $status === UserSessionStatus::EndedEarly => [
-                        'session',
-                        'Ended early',
+                        'session_ended_early',
                         $session->ended_at ?? $session->last_activity_at,
                     ],
                     $status === UserSessionStatus::Paused => [
-                        'session',
-                        'Saved',
+                        'session_saved',
                         $session->paused_at ?? $session->last_activity_at,
                     ],
-                    default => [null, null, null],
+                    default => [null, null],
                 };
 
-                if (! $type || ! $at) {
+                if (! $outcomeKey || ! $at) {
                     return;
                 }
 
-                $title = trim($name.($range ? ' · '.$range : ''));
-                $events->push([
+                $events->push($this->activityEvent([
                     'id' => 'session-'.$session->id,
-                    'type' => $type,
-                    'title' => $title,
-                    'outcome' => $outcome,
+                    'type' => 'session',
+                    'surah_number' => $surah ?: null,
+                    'surah_name' => $surah ? QuranMetadata::name($surah) : null,
+                    'ayah_start' => $start > 0 ? $start : null,
+                    'ayah_end' => $end > 0 ? $end : null,
+                    'outcome_key' => $outcomeKey,
                     'occurred_at' => Carbon::parse($at)->toIso8601String(),
                     'href' => $this->memorisationHref(array_filter([
                         'surah' => $surah ?: null,
                         'from' => $start ?: null,
                         'to' => ($end ?: $start) ?: null,
                     ])),
-                ]);
+                ]));
             });
 
         AiReciteAttempt::query()
@@ -169,32 +170,31 @@ class DashboardService
             ->each(function (AiReciteAttempt $attempt) use ($events) {
                 $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
                 $surah = (int) ($range['surah'] ?? $range['surahId'] ?? $range['surah_number'] ?? 0);
-                $name = $surah ? QuranMetadata::name($surah) : 'AI Recite';
                 $from = (int) ($range['from'] ?? $range['start'] ?? $range['ayah_start'] ?? 0);
                 $to = (int) ($range['to'] ?? $range['end'] ?? $range['ayah_end'] ?? $from);
-                $context = $from > 0
-                    ? ($from === $to ? "{$name} · Ayah {$from}" : "{$name} · Ayahs {$from}–{$to}")
-                    : $name;
+                $band = is_string($attempt->band) ? strtolower($attempt->band) : null;
+                $accuracy = $attempt->accuracy_percent !== null ? (int) $attempt->accuracy_percent : null;
+                $hasResult = ($band !== null && $band !== '') || $accuracy !== null;
 
-                $band = is_string($attempt->band) ? ucfirst(strtolower($attempt->band)) : null;
-                $accuracy = $attempt->accuracy_percent;
-                $outcomeParts = array_filter([
-                    $band,
-                    $accuracy !== null ? ((int) $accuracy).'%' : null,
-                ]);
-
-                $events->push([
+                $events->push($this->activityEvent([
                     'id' => 'ai-'.$attempt->id,
                     'type' => 'ai_check',
-                    'title' => $context,
-                    'outcome' => $outcomeParts !== [] ? implode(' · ', $outcomeParts) : 'AI check',
+                    'surah_number' => $surah ?: null,
+                    'surah_name' => $surah ? QuranMetadata::name($surah) : null,
+                    'ayah_start' => $from > 0 ? $from : null,
+                    'ayah_end' => $to > 0 ? $to : null,
+                    'outcome_key' => $hasResult ? 'ai_result' : 'ai_check',
+                    'outcome_params' => array_filter([
+                        'band' => $band,
+                        'accuracy' => $accuracy,
+                    ], fn ($value) => $value !== null && $value !== ''),
                     'occurred_at' => optional($attempt->created_at)->toIso8601String(),
                     'href' => $this->memorisationHref(array_filter([
                         'surah' => $surah ?: null,
                         'from' => $from ?: null,
                         'to' => ($to ?: $from) ?: null,
                     ])),
-                ]);
+                ]));
             });
 
         AyahNote::query()
@@ -204,32 +204,120 @@ class DashboardService
             ->limit($limit)
             ->get()
             ->each(function (AyahNote $note) use ($events) {
-                $name = QuranMetadata::name((int) $note->surah_number) ?: 'Note';
                 $body = trim((string) preg_replace('/\s+/u', ' ', (string) $note->body));
                 $snippet = $body !== ''
                     ? (mb_strlen($body) > 96 ? mb_substr($body, 0, 96).'…' : $body)
-                    : 'Note saved';
+                    : null;
 
-                $events->push([
+                $events->push($this->activityEvent([
                     'id' => 'note-'.$note->id,
                     'type' => 'note',
-                    'title' => "{$name} · Ayah {$note->ayah_number}",
-                    'outcome' => $snippet,
+                    'surah_number' => (int) $note->surah_number ?: null,
+                    'surah_name' => QuranMetadata::name((int) $note->surah_number),
+                    'ayah_start' => (int) $note->ayah_number ?: null,
+                    'ayah_end' => (int) $note->ayah_number ?: null,
+                    'outcome_key' => $snippet !== null ? 'note_body' : 'note_saved',
+                    'outcome_params' => $snippet !== null ? ['body' => $snippet] : [],
                     'occurred_at' => optional($note->updated_at ?? $note->created_at)->toIso8601String(),
                     'href' => $this->memorisationHref([
                         'surah' => (int) $note->surah_number,
                         'from' => (int) $note->ayah_number,
                         'to' => (int) $note->ayah_number,
                     ]),
-                ]);
+                ]));
             });
 
         return $events
-            ->filter(fn ($event) => ! empty($event['occurred_at']) && ! empty($event['title']))
+            ->filter(fn ($event) => ! empty($event['occurred_at']))
             ->sortByDesc('occurred_at')
             ->take($limit)
             ->values()
             ->all();
+    }
+
+    /**
+     * Normalise an activity event with stable keys for client-side i18n.
+     *
+     * @param  array<string, mixed>  $event
+     * @return array<string, mixed>
+     */
+    private function activityEvent(array $event): array
+    {
+        $event['outcome_key'] = (string) ($event['outcome_key'] ?? '');
+        $event['outcome_params'] = is_array($event['outcome_params'] ?? null)
+            ? $event['outcome_params']
+            : [];
+        $event['surah_number'] = isset($event['surah_number']) ? (int) $event['surah_number'] ?: null : null;
+        $event['ayah_start'] = isset($event['ayah_start']) ? (int) $event['ayah_start'] ?: null : null;
+        $event['ayah_end'] = isset($event['ayah_end']) ? (int) $event['ayah_end'] ?: null : null;
+
+        // English fallbacks kept for older clients / debugging.
+        $event['title'] = $event['title'] ?? $this->activityTitleFallback($event);
+        $event['outcome'] = $event['outcome'] ?? $this->activityOutcomeFallback($event);
+
+        return $event;
+    }
+
+    /**
+     * @param  array<string, mixed>  $event
+     */
+    private function activityTitleFallback(array $event): string
+    {
+        $name = (string) ($event['surah_name'] ?? '');
+        $start = (int) ($event['ayah_start'] ?? 0);
+        $end = (int) ($event['ayah_end'] ?? 0);
+        $range = '';
+        if ($start > 0 && $end > 0 && $start !== $end) {
+            $range = "Ayahs {$start}–{$end}";
+        } elseif ($start > 0) {
+            $range = "Ayah {$start}";
+        }
+
+        if ($name !== '' && $range !== '') {
+            return "{$name} · {$range}";
+        }
+        if ($name !== '') {
+            return $name;
+        }
+        if ($range !== '') {
+            return $range;
+        }
+
+        return match ((string) ($event['type'] ?? '')) {
+            'session', 'session_completed', 'session_ended_early', 'session_saved', 'session_resumed' => 'Session',
+            'ai_check', 'ai_recite' => 'AI check',
+            'note' => 'Note',
+            'assessment' => 'Assessment',
+            'recommendation' => 'Recommendation',
+            'ayah_memorised' => 'Memorised ayah',
+            default => 'Activity',
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $event
+     */
+    private function activityOutcomeFallback(array $event): string
+    {
+        $params = is_array($event['outcome_params'] ?? null) ? $event['outcome_params'] : [];
+
+        return match ((string) ($event['outcome_key'] ?? '')) {
+            'session_completed' => 'Completed',
+            'session_ended_early' => 'Ended early',
+            'session_saved' => 'Saved',
+            'session_resumed' => 'Resumed',
+            'ai_result' => trim(implode(' · ', array_filter([
+                isset($params['band']) ? ucfirst((string) $params['band']) : null,
+                isset($params['accuracy']) ? ((int) $params['accuracy']).'%' : null,
+            ]))),
+            'ai_check' => 'AI check',
+            'note_body' => (string) ($params['body'] ?? ''),
+            'note_saved' => 'Note saved',
+            'assessment_completed' => 'Assessment completed',
+            'recommendation_ready' => 'Recommendation ready',
+            'ayah_memorised' => 'Memorised',
+            default => '',
+        };
     }
 
     private function resolveOpenRecommendation(User $user): ?SessionRecommendation
@@ -1266,55 +1354,62 @@ class DashboardService
                 $meta = is_array($session->metadata) ? $session->metadata : [];
                 $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
                 $surah = (int) ($session->surah_number ?? $config['chapterId'] ?? 0);
-                $name = $surah ? QuranMetadata::name($surah) : 'your session';
                 $start = (int) ($config['rangeStart'] ?? 0);
                 $end = (int) ($config['rangeEnd'] ?? 0);
-                $range = ($start > 0 && $end > 0)
-                    ? ($start === $end ? "Ayah {$start}" : "Ayahs {$start}–{$end}")
-                    : ($session->ayah_number ? 'Ayah '.$session->ayah_number : null);
+                if ($start <= 0 && $session->ayah_number) {
+                    $start = (int) $session->ayah_number;
+                    $end = $start;
+                }
 
-                [$title, $at, $type] = match (true) {
+                [$outcomeKey, $at] = match (true) {
                     $status === UserSessionStatus::Completed => [
-                        trim('Completed '.($name).($range ? ', '.$range : '')),
-                        $session->ended_at ?? $session->last_activity_at,
                         'session_completed',
+                        $session->ended_at ?? $session->last_activity_at,
                     ],
                     $status === UserSessionStatus::EndedEarly => [
-                        trim('Ended early on '.($name).($range ? ', '.$range : '')),
-                        $session->ended_at ?? $session->last_activity_at,
                         'session_ended_early',
+                        $session->ended_at ?? $session->last_activity_at,
                     ],
                     $status === UserSessionStatus::Paused => [
-                        trim('Saved '.($name).($range ? ', '.$range : '')),
-                        $session->paused_at ?? $session->last_activity_at,
                         'session_saved',
+                        $session->paused_at ?? $session->last_activity_at,
                     ],
                     $session->resumed_at !== null && $status === UserSessionStatus::Active => [
-                        trim('Resumed '.($name).($range ? ', '.$range : '')),
-                        $session->resumed_at ?? $session->last_activity_at,
                         'session_resumed',
+                        $session->resumed_at ?? $session->last_activity_at,
                     ],
-                    default => [null, null, null],
+                    default => [null, null],
                 };
 
-                if (! $title || ! $at) {
+                if (! $outcomeKey || ! $at) {
                     return;
                 }
 
                 $hrefQuery = match (true) {
-                    in_array($type, ['session_saved', 'session_resumed'], true) => ['resume' => 1, 'session' => (int) $session->id],
+                    in_array($outcomeKey, ['session_saved', 'session_resumed'], true) => [
+                        'resume' => 1,
+                        'session' => (int) $session->id,
+                    ],
                     $surah > 0 && $start > 0 => ['surah' => $surah, 'from' => $start, 'to' => ($end ?: $start)],
-                    $surah > 0 && $session->ayah_number => ['surah' => $surah, 'from' => (int) $session->ayah_number, 'to' => (int) $session->ayah_number],
+                    $surah > 0 && $session->ayah_number => [
+                        'surah' => $surah,
+                        'from' => (int) $session->ayah_number,
+                        'to' => (int) $session->ayah_number,
+                    ],
                     default => [],
                 };
 
-                $events->push([
-                    'type' => $type,
-                    'title' => $title,
-                    'context' => $range ? ($name.' · '.$range) : $name,
+                $events->push($this->activityEvent([
+                    'id' => 'session-'.$session->id,
+                    'type' => $outcomeKey,
+                    'surah_number' => $surah ?: null,
+                    'surah_name' => $surah ? QuranMetadata::name($surah) : null,
+                    'ayah_start' => $start > 0 ? $start : null,
+                    'ayah_end' => $end > 0 ? $end : null,
+                    'outcome_key' => $outcomeKey,
                     'occurred_at' => Carbon::parse($at)->toIso8601String(),
                     'href' => $this->memorisationHref($hrefQuery),
-                ]);
+                ]));
             });
 
         AiReciteAttempt::query()
@@ -1325,24 +1420,31 @@ class DashboardService
             ->each(function (AiReciteAttempt $attempt) use ($events) {
                 $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
                 $surah = (int) ($range['surah'] ?? $range['surahId'] ?? $range['surah_number'] ?? 0);
-                $name = $surah ? QuranMetadata::name($surah) : null;
                 $from = (int) ($range['from'] ?? $range['start'] ?? $range['ayah_start'] ?? 0);
                 $to = (int) ($range['to'] ?? $range['end'] ?? $range['ayah_end'] ?? $from);
-                $context = $name
-                    ? ($from > 0 ? ($from === $to ? "{$name} · Ayah {$from}" : "{$name} · Ayahs {$from}–{$to}") : $name)
-                    : null;
+                $band = is_string($attempt->band) ? strtolower($attempt->band) : null;
+                $accuracy = $attempt->accuracy_percent !== null ? (int) $attempt->accuracy_percent : null;
+                $hasResult = ($band !== null && $band !== '') || $accuracy !== null;
 
-                $events->push([
+                $events->push($this->activityEvent([
+                    'id' => 'ai-'.$attempt->id,
                     'type' => 'ai_recite',
-                    'title' => 'Completed an AI Recite attempt'.($name ? ' on '.$name : ''),
-                    'context' => $context,
+                    'surah_number' => $surah ?: null,
+                    'surah_name' => $surah ? QuranMetadata::name($surah) : null,
+                    'ayah_start' => $from > 0 ? $from : null,
+                    'ayah_end' => $to > 0 ? $to : null,
+                    'outcome_key' => $hasResult ? 'ai_result' : 'ai_check',
+                    'outcome_params' => array_filter([
+                        'band' => $band,
+                        'accuracy' => $accuracy,
+                    ], fn ($value) => $value !== null && $value !== ''),
                     'occurred_at' => optional($attempt->created_at)->toIso8601String(),
                     'href' => $this->memorisationHref(array_filter([
                         'surah' => $surah ?: null,
                         'from' => $from ?: null,
                         'to' => ($to ?: $from) ?: null,
                     ])),
-                ]);
+                ]));
             });
 
         MemorisationAssessment::query()
@@ -1351,24 +1453,24 @@ class DashboardService
             ->limit(8)
             ->get()
             ->each(function (MemorisationAssessment $assessment) use ($events) {
-                $name = $assessment->surah_name ?: QuranMetadata::name((int) $assessment->surah_number);
                 $from = (int) $assessment->start_ayah;
                 $to = (int) $assessment->end_ayah;
-                $range = $from > 0
-                    ? ($from === $to ? "Ayah {$from}" : "Ayahs {$from}–{$to}")
-                    : null;
 
-                $events->push([
+                $events->push($this->activityEvent([
+                    'id' => 'assessment-'.$assessment->id,
                     'type' => 'assessment',
-                    'title' => 'Completed a memorisation assessment'.($name ? ' on '.$name : ''),
-                    'context' => $name ? ($range ? "{$name} · {$range}" : $name) : $range,
+                    'surah_number' => (int) $assessment->surah_number ?: null,
+                    'surah_name' => $assessment->surah_name ?: QuranMetadata::name((int) $assessment->surah_number),
+                    'ayah_start' => $from > 0 ? $from : null,
+                    'ayah_end' => $to > 0 ? $to : null,
+                    'outcome_key' => 'assessment_completed',
                     'occurred_at' => optional($assessment->created_at)->toIso8601String(),
                     'href' => $this->memorisationHref(array_filter([
                         'surah' => (int) $assessment->surah_number ?: null,
                         'from' => $from ?: null,
                         'to' => ($to ?: $from) ?: null,
                     ])),
-                ]);
+                ]));
             });
 
         SessionRecommendation::query()
@@ -1377,17 +1479,17 @@ class DashboardService
             ->limit(6)
             ->get()
             ->each(function (SessionRecommendation $recommendation) use ($events) {
-                $name = QuranMetadata::name((int) $recommendation->surah_number);
                 $from = (int) $recommendation->ayah_start;
                 $to = (int) $recommendation->ayah_end;
-                $range = $from > 0
-                    ? ($from === $to ? "Ayah {$from}" : "Ayahs {$from}–{$to}")
-                    : null;
 
-                $events->push([
+                $events->push($this->activityEvent([
+                    'id' => 'recommendation-'.$recommendation->id,
                     'type' => 'recommendation',
-                    'title' => 'New recommendation ready'.($name ? ' for '.$name : ''),
-                    'context' => $name ? ($range ? "{$name} · {$range}" : $name) : $range,
+                    'surah_number' => (int) $recommendation->surah_number ?: null,
+                    'surah_name' => QuranMetadata::name((int) $recommendation->surah_number),
+                    'ayah_start' => $from > 0 ? $from : null,
+                    'ayah_end' => $to > 0 ? $to : null,
+                    'outcome_key' => 'recommendation_ready',
                     'occurred_at' => optional($recommendation->created_at)->toIso8601String(),
                     'href' => $this->memorisationHref(array_filter([
                         'recommendation' => (int) $recommendation->id,
@@ -1395,7 +1497,7 @@ class DashboardService
                         'from' => $from ?: null,
                         'to' => ($to ?: $from) ?: null,
                     ])),
-                ]);
+                ]));
             });
 
         AyahNote::query()
@@ -1404,18 +1506,27 @@ class DashboardService
             ->limit(8)
             ->get()
             ->each(function (AyahNote $note) use ($events) {
-                $name = QuranMetadata::name((int) $note->surah_number);
-                $events->push([
+                $body = trim((string) preg_replace('/\s+/u', ' ', (string) $note->body));
+                $snippet = $body !== ''
+                    ? (mb_strlen($body) > 96 ? mb_substr($body, 0, 96).'…' : $body)
+                    : null;
+
+                $events->push($this->activityEvent([
+                    'id' => 'note-'.$note->id,
                     'type' => 'note',
-                    'title' => 'Added a note'.($name ? ' on '.$name.', Ayah '.$note->ayah_number : ''),
-                    'context' => $name ? "{$name} · Ayah {$note->ayah_number}" : 'Ayah '.$note->ayah_number,
+                    'surah_number' => (int) $note->surah_number ?: null,
+                    'surah_name' => QuranMetadata::name((int) $note->surah_number),
+                    'ayah_start' => (int) $note->ayah_number ?: null,
+                    'ayah_end' => (int) $note->ayah_number ?: null,
+                    'outcome_key' => $snippet !== null ? 'note_body' : 'note_saved',
+                    'outcome_params' => $snippet !== null ? ['body' => $snippet] : [],
                     'occurred_at' => optional($note->created_at)->toIso8601String(),
                     'href' => $this->memorisationHref([
                         'surah' => (int) $note->surah_number,
                         'from' => (int) $note->ayah_number,
                         'to' => (int) $note->ayah_number,
                     ]),
-                ]);
+                ]));
             });
 
         MemorisationProgress::query()
@@ -1430,25 +1541,28 @@ class DashboardService
             ->limit(8)
             ->get()
             ->each(function (MemorisationProgress $row) use ($events) {
-                $name = QuranMetadata::name((int) $row->surah_number);
                 $at = $row->completed_at ?? $row->updated_at;
-                $events->push([
+                $events->push($this->activityEvent([
+                    'id' => 'progress-'.$row->id,
                     'type' => 'ayah_memorised',
-                    'title' => 'Marked '.$name.', Ayah '.$row->ayah_number.' as memorised',
-                    'context' => "{$name} · Ayah {$row->ayah_number}",
+                    'surah_number' => (int) $row->surah_number ?: null,
+                    'surah_name' => QuranMetadata::name((int) $row->surah_number),
+                    'ayah_start' => (int) $row->ayah_number ?: null,
+                    'ayah_end' => (int) $row->ayah_number ?: null,
+                    'outcome_key' => 'ayah_memorised',
                     'occurred_at' => optional($at)->toIso8601String(),
                     'href' => $this->memorisationHref([
                         'surah' => (int) $row->surah_number,
                         'from' => (int) $row->ayah_number,
                         'to' => (int) $row->ayah_number,
                     ]),
-                ]);
+                ]));
             });
 
         return $events
-            ->filter(fn ($event) => ! empty($event['occurred_at']) && ! empty($event['title']))
+            ->filter(fn ($event) => ! empty($event['occurred_at']))
             ->sortByDesc('occurred_at')
-            ->unique(fn ($event) => $event['title'].'|'.$event['occurred_at'])
+            ->unique(fn ($event) => ($event['id'] ?? $event['type']).'|'.$event['occurred_at'])
             ->take(5)
             ->values()
             ->all();

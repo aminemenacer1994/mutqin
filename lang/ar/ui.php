@@ -23,6 +23,7 @@ return [
     'profile' => 'الملف الشخصي',
     'subscription' => 'الاشتراك',
     'settings' => 'الإعدادات',
+    'admin_dashboard' => 'لوحة المشرف',
     'contact_inbox' => 'صندوق الرسائل',
     'open_navigation' => 'فتح قائمة التنقل',
     'close_navigation' => 'إغلاق قائمة التنقل',

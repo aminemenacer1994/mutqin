@@ -125,28 +125,6 @@
               <h2 id="dash-progress-heading">{{ t('dashboard.progress_title') }}</h2>
               <p class="dash-panel__hint">{{ t('dashboard.progress_subtitle') }}</p>
             </div>
-            <div class="dash-range-toggle" role="group" :aria-label="t('dashboard.chart_range')">
-              <button
-                type="button"
-                class="dash-btn dash-btn--ghost dash-btn--sm"
-                :class="{ 'is-active': chartDays === 7 }"
-                :aria-pressed="chartDays === 7 ? 'true' : 'false'"
-                :disabled="loading"
-                @click="setChartDays(7)"
-              >
-                {{ t('dashboard.days_7') }}
-              </button>
-              <button
-                type="button"
-                class="dash-btn dash-btn--ghost dash-btn--sm"
-                :class="{ 'is-active': chartDays === 30 }"
-                :aria-pressed="chartDays === 30 ? 'true' : 'false'"
-                :disabled="loading"
-                @click="setChartDays(30)"
-              >
-                {{ t('dashboard.days_30') }}
-              </button>
-            </div>
           </div>
 
           <div class="dash-progress-grid">
@@ -214,7 +192,31 @@
             </div>
 
             <div class="dash-chart">
-              <p class="dash-chart__label">{{ t('dashboard.activity_chart_title') }}</p>
+              <div class="dash-chart__head">
+                <p class="dash-chart__label">{{ t('dashboard.activity_chart_title') }}</p>
+                <div class="dash-range-toggle" role="group" :aria-label="t('dashboard.chart_range')">
+                  <button
+                    type="button"
+                    class="dash-btn dash-btn--ghost dash-btn--sm"
+                    :class="{ 'is-active': chartDays === 7 }"
+                    :aria-pressed="chartDays === 7 ? 'true' : 'false'"
+                    :disabled="loading"
+                    @click="setChartDays(7)"
+                  >
+                    {{ t('dashboard.days_7') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="dash-btn dash-btn--ghost dash-btn--sm"
+                    :class="{ 'is-active': chartDays === 30 }"
+                    :aria-pressed="chartDays === 30 ? 'true' : 'false'"
+                    :disabled="loading"
+                    @click="setChartDays(30)"
+                  >
+                    {{ t('dashboard.days_30') }}
+                  </button>
+                </div>
+              </div>
               <div v-if="data.chart?.is_empty" class="dash-chart__empty">
                 <span>{{ t('dashboard.chart_empty_message') }}</span>
               </div>
@@ -244,7 +246,7 @@
                 class="dash-link"
                 :href="data.weaknesses.view_all_href"
               >
-                {{ t('dashboard.view_all') }}
+                {{ t('dashboard.view_all_reviews') }}
               </a>
             </div>
 
@@ -316,7 +318,8 @@
               >
                 <a class="dash-list__row" :href="item.href || memorisationUrl">
                   <span class="dash-list__main">
-                    <span class="dash-list__title">{{ activityLabel(item) }}</span>
+                    <span class="dash-list__title">{{ activityTitle(item) }}</span>
+                    <span v-if="activityOutcome(item)" class="dash-list__meta">{{ activityOutcome(item) }}</span>
                   </span>
                   <time class="dash-list__time" :datetime="item.occurred_at">
                     {{ formatRelative(item.occurred_at) }}
@@ -356,35 +359,59 @@
         </header>
 
         <div class="dash-drawer__body">
+          <div
+            v-if="drawerMode === 'activity' && !drawerLoading && !drawerError"
+            class="dash-drawer__filters"
+            role="tablist"
+            :aria-label="t('dashboard.drawer_activity_title')"
+          >
+            <button
+              v-for="filter in activityFilters"
+              :key="filter.key"
+              type="button"
+              role="tab"
+              class="dash-drawer__filter"
+              :class="{ 'is-active': activityFilter === filter.key }"
+              :aria-selected="activityFilter === filter.key ? 'true' : 'false'"
+              @click="activityFilter = filter.key"
+            >
+              {{ filter.label }}
+            </button>
+          </div>
+
           <p v-if="drawerLoading" class="dash-drawer__status">{{ t('dashboard.drawer_loading') }}</p>
           <p v-else-if="drawerError" class="dash-drawer__status" role="alert">
             {{ t('dashboard.drawer_load_error') }}
           </p>
-          <p v-else-if="!drawerItems.length" class="dash-drawer__status">
+          <p v-else-if="!visibleDrawerItems.length" class="dash-drawer__status">
             {{ drawerEmptyMessage }}
           </p>
 
           <ul v-else-if="drawerMode === 'activity'" class="dash-drawer__list">
             <li
-              v-for="item in drawerItems"
+              v-for="item in visibleDrawerItems"
               :key="item.id || `${item.type}-${item.occurred_at}`"
-              class="dash-drawer__row"
             >
-              <div class="dash-drawer__row-main">
-                <span class="dash-drawer__row-title">
-                  <span class="dash-drawer__type">{{ activityTypeLabel(item.type) }}</span>
-                  {{ item.title }}
-                </span>
-                <span v-if="item.outcome" class="dash-drawer__row-meta">{{ item.outcome }}</span>
-              </div>
-              <time class="dash-drawer__row-time" :datetime="item.occurred_at">
-                {{ formatRelative(item.occurred_at) }}
-              </time>
+              <a
+                class="dash-drawer__row dash-drawer__row--link"
+                :href="item.href || memorisationUrl"
+              >
+                <div class="dash-drawer__row-main">
+                  <span class="dash-drawer__row-title">
+                    <span class="dash-drawer__type">{{ activityTypeLabel(item.type) }}</span>
+                    {{ activityTitle(item) }}
+                  </span>
+                  <span v-if="activityOutcome(item)" class="dash-drawer__row-meta">{{ activityOutcome(item) }}</span>
+                </div>
+                <time class="dash-drawer__row-time" :datetime="item.occurred_at">
+                  {{ formatActivityDate(item.occurred_at) }}
+                </time>
+              </a>
             </li>
           </ul>
 
           <ul v-else-if="drawerMode === 'sessions'" class="dash-drawer__list">
-            <li v-for="item in drawerItems" :key="`session-${item.id}`" class="dash-drawer__row">
+            <li v-for="item in visibleDrawerItems" :key="`session-${item.id}`" class="dash-drawer__row">
               <div class="dash-drawer__row-main">
                 <span class="dash-drawer__row-title">
                   {{ item.surah_name || t('dashboard.not_started') }}
@@ -393,13 +420,13 @@
                 <span class="dash-drawer__row-meta">{{ sessionStatusLabel(item.status) }}</span>
               </div>
               <time class="dash-drawer__row-time" :datetime="item.occurred_at">
-                {{ formatRelative(item.occurred_at) }}
+                {{ formatActivityDate(item.occurred_at) }}
               </time>
             </li>
           </ul>
 
           <ul v-else-if="drawerMode === 'ai_checks'" class="dash-drawer__list">
-            <li v-for="item in drawerItems" :key="`ai-${item.id}`" class="dash-drawer__row">
+            <li v-for="item in visibleDrawerItems" :key="`ai-${item.id}`" class="dash-drawer__row">
               <div class="dash-drawer__row-main">
                 <span class="dash-drawer__row-title">
                   {{ item.surah_name || t('dashboard.not_started') }}
@@ -408,13 +435,13 @@
                 <span class="dash-drawer__row-meta">{{ aiResultLabel(item) }}</span>
               </div>
               <time class="dash-drawer__row-time" :datetime="item.occurred_at">
-                {{ formatRelative(item.occurred_at) }}
+                {{ formatActivityDate(item.occurred_at) }}
               </time>
             </li>
           </ul>
 
           <ul v-else-if="drawerMode === 'notes'" class="dash-drawer__list">
-            <li v-for="item in drawerItems" :key="`note-${item.id}`" class="dash-drawer__row">
+            <li v-for="item in visibleDrawerItems" :key="`note-${item.id}`" class="dash-drawer__row">
               <div class="dash-drawer__row-main">
                 <span class="dash-drawer__row-title">
                   {{ noteHeading(item) }}
@@ -422,13 +449,13 @@
                 <span v-if="noteSnippet(item)" class="dash-drawer__row-meta">{{ noteSnippet(item) }}</span>
               </div>
               <time class="dash-drawer__row-time" :datetime="item.updated_at || item.created_at">
-                {{ formatRelative(item.updated_at || item.created_at) }}
+                {{ formatActivityDate(item.updated_at || item.created_at) }}
               </time>
             </li>
           </ul>
 
           <ul v-else-if="drawerMode === 'hifz'" class="dash-drawer__list">
-            <li v-for="group in drawerItems" :key="`hifz-${group.surah_number}`" class="dash-drawer__group">
+            <li v-for="group in visibleDrawerItems" :key="`hifz-${group.surah_number}`" class="dash-drawer__group">
               <div class="dash-drawer__group-head">
                 <span class="dash-drawer__row-title">{{ group.surah_name }}</span>
                 <span class="dash-drawer__row-meta">
@@ -513,6 +540,7 @@ export default {
       drawerError: false,
       drawerRequestId: 0,
       dashboardRequestId: 0,
+      activityFilter: 'all',
       darkTheme: false,
       themeObserver: null,
     }
@@ -798,8 +826,40 @@ export default {
       return key ? this.t(`dashboard.${key}`) : ''
     },
     drawerEmptyMessage() {
+      if (
+        this.drawerMode === 'activity'
+        && this.activityFilter !== 'all'
+        && this.drawerItems.length
+        && !this.visibleDrawerItems.length
+      ) {
+        return this.t('dashboard.activity_filter_empty')
+      }
       const key = DRAWER_EMPTY[this.drawerMode]
       return key ? this.t(`dashboard.${key}`) : ''
+    },
+    activityFilters() {
+      return [
+        { key: 'all', label: this.t('dashboard.activity_filter_all') },
+        { key: 'session', label: this.t('dashboard.activity_filter_sessions') },
+        { key: 'ai_check', label: this.t('dashboard.activity_filter_ai') },
+        { key: 'note', label: this.t('dashboard.activity_filter_notes') },
+      ]
+    },
+    visibleDrawerItems() {
+      if (this.drawerMode !== 'activity' || this.activityFilter === 'all') {
+        return this.drawerItems
+      }
+      return this.drawerItems.filter((item) => {
+        const type = String(item?.type || '').toLowerCase()
+        if (this.activityFilter === 'session') {
+          return type === 'session' || type.startsWith('session_')
+        }
+        if (this.activityFilter === 'ai_check') {
+          return type === 'ai_check' || type === 'ai_recite'
+        }
+        if (this.activityFilter === 'note') return type === 'note'
+        return true
+      })
     },
     weekSummaryText() {
       const week = this.data?.week_summary
@@ -869,16 +929,62 @@ export default {
       if (this.ownerId && owner && owner !== this.ownerId) return null
       return payload
     },
-    activityLabel(item) {
+    activityTitle(item) {
       if (!item) return ''
-      if (item.context) return item.context
-      return item.title || ''
+      const type = String(item.type || '').toLowerCase()
+      const name = item.surah_name
+        || (type.startsWith('session') ? this.t('dashboard.activity_type_session') : '')
+        || (type === 'ai_check' || type === 'ai_recite' ? this.t('dashboard.activity_type_ai_check') : '')
+        || (type === 'note' ? this.t('dashboard.activity_type_note') : '')
+        || (type === 'assessment' ? this.t('dashboard.activity_type_assessment') : '')
+        || (type === 'recommendation' ? this.t('dashboard.activity_type_recommendation') : '')
+        || (type === 'ayah_memorised' ? this.t('dashboard.activity_type_memorised') : '')
+      const range = this.formatItemRange(item)
+      if (name && range) return `${name} · ${range}`
+      if (name) return name
+      if (range) return range
+      return item.title || item.context || ''
+    },
+    activityOutcome(item) {
+      if (!item) return ''
+      const key = String(item.outcome_key || '').toLowerCase()
+      const params = item.outcome_params && typeof item.outcome_params === 'object'
+        ? item.outcome_params
+        : {}
+
+      if (key === 'session_completed') return this.t('dashboard.drawer_status_completed')
+      if (key === 'session_ended_early') return this.t('dashboard.drawer_status_ended_early')
+      if (key === 'session_saved') return this.t('dashboard.activity_outcome_saved')
+      if (key === 'session_resumed') return this.t('dashboard.activity_outcome_resumed')
+      if (key === 'ai_result') {
+        const band = String(params.band || '').toLowerCase()
+        let bandLabel = ''
+        if (band === 'strong') bandLabel = this.t('dashboard.drawer_result_strong')
+        else if (band === 'mixed') bandLabel = this.t('dashboard.drawer_result_mixed')
+        else if (band === 'weak') bandLabel = this.t('dashboard.drawer_result_weak')
+        const parts = []
+        if (bandLabel) parts.push(bandLabel)
+        if (params.accuracy != null && params.accuracy !== '') {
+          parts.push(this.t('dashboard.drawer_accuracy', { n: Number(params.accuracy) }))
+        }
+        return parts.join(' · ') || this.t('dashboard.activity_type_ai_check')
+      }
+      if (key === 'ai_check') return this.t('dashboard.activity_type_ai_check')
+      if (key === 'note_body') return String(params.body || item.outcome || '')
+      if (key === 'note_saved') return this.t('dashboard.activity_note_saved')
+      if (key === 'assessment_completed') return this.t('dashboard.activity_outcome_assessment')
+      if (key === 'recommendation_ready') return this.t('dashboard.activity_outcome_recommendation')
+      if (key === 'ayah_memorised') return this.t('dashboard.activity_outcome_memorised')
+      return item.outcome || ''
     },
     activityTypeLabel(type) {
       const key = String(type || '').toLowerCase()
-      if (key === 'session') return this.t('dashboard.activity_type_session')
+      if (key === 'session' || key.startsWith('session_')) return this.t('dashboard.activity_type_session')
       if (key === 'ai_check' || key === 'ai_recite') return this.t('dashboard.activity_type_ai_check')
       if (key === 'note') return this.t('dashboard.activity_type_note')
+      if (key === 'assessment') return this.t('dashboard.activity_type_assessment')
+      if (key === 'recommendation') return this.t('dashboard.activity_type_recommendation')
+      if (key === 'ayah_memorised') return this.t('dashboard.activity_type_memorised')
       return ''
     },
     ayahRangeLabel(row) {
@@ -910,7 +1016,26 @@ export default {
       const days = Math.round(hours / 24)
       if (days === 1) return this.t('dashboard.yesterday')
       if (days < 8) return this.t('dashboard.days_ago', { n: days })
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+      return this.formatAbsoluteDate(date)
+    },
+    formatAbsoluteDate(value) {
+      const date = value instanceof Date ? value : new Date(value)
+      if (Number.isNaN(date.getTime())) return ''
+      const locale = this.$i18n?.locale?.value || this.$i18n?.locale || undefined
+      const sameYear = date.getFullYear() === new Date().getFullYear()
+      return date.toLocaleDateString(locale, {
+        day: 'numeric',
+        month: 'short',
+        ...(sameYear ? {} : { year: 'numeric' }),
+      })
+    },
+    formatActivityDate(value) {
+      if (!value) return ''
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return ''
+      const days = Math.round((Date.now() - date.getTime()) / 86400000)
+      if (days < 8) return this.formatRelative(value)
+      return this.formatAbsoluteDate(date)
     },
     shortDate(value) {
       if (!value) return ''
@@ -1006,6 +1131,7 @@ export default {
       this.drawerItems = []
       this.drawerError = false
       this.drawerLoading = true
+      this.activityFilter = 'all'
       const requestId = ++this.drawerRequestId
       try {
         let items = []
@@ -1038,6 +1164,7 @@ export default {
       this.drawerItems = []
       this.drawerLoading = false
       this.drawerError = false
+      this.activityFilter = 'all'
     },
     groupHifzProgress(rows) {
       const list = Array.isArray(rows) ? rows : []

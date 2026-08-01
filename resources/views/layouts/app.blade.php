@@ -1601,8 +1601,34 @@
         }
 
         .navbar-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            min-width: 0;
             padding: 0;
             margin-inline-end: 0;
+        }
+
+        .nav-admin-badge {
+            display: inline-flex;
+            align-items: center;
+            flex-shrink: 0;
+            margin-inline-start: 0;
+            padding: 0.18rem 0.5rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: color-mix(in srgb, var(--surface) 70%, var(--text-muted));
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+
+        [data-theme="dark"] .nav-admin-badge {
+            background: color-mix(in srgb, var(--surface-strong) 80%, transparent);
+            color: var(--text-muted);
         }
 
         .app-navbar-logo {
@@ -2010,18 +2036,27 @@
                 padding: 10px max(12px, env(safe-area-inset-left, 0px)) 10px max(12px, env(safe-area-inset-right, 0px));
                 gap: 8px;
                 flex-wrap: nowrap;
+                align-items: center;
+                overflow: hidden;
             }
 
             .navbar-brand {
-                flex: 0 1 auto;
+                flex: 1 1 auto;
                 min-width: 0;
+                max-width: calc(100% - 9.5rem);
+            }
+
+            .nav-admin-badge {
+                font-size: 0.58rem;
+                padding: 0.12rem 0.4rem;
             }
 
             .app-navbar-logo {
                 height: 34px;
                 width: auto;
-                max-width: min(52vw, 168px);
+                max-width: min(36vw, 132px);
                 object-fit: contain;
+                flex-shrink: 1;
             }
 
             .app-navbar-logo--full {
@@ -3356,6 +3391,11 @@
                     alt=""
                     class="app-navbar-logo app-navbar-logo--mark"
                 >
+                @auth
+                    @if (Auth::user()->isAdmin() && request()->routeIs('admin.*'))
+                        <span class="nav-admin-badge">Admin</span>
+                    @endif
+                @endauth
             </a>
 
             <div class="offcanvas offcanvas-end offcanvas-lg" tabindex="-1" id="primaryNavbar" aria-labelledby="primaryNavbarLabel">
@@ -3379,11 +3419,19 @@
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @auth
+                            @if (Auth::user()->isAdmin())
+                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
+                                <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong data-i18n="dashboard">{{ __('ui.dashboard') }}</strong><small class="d-lg-none">Platform overview</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
+                            @else
                             <a class="nav-link nav-link-dashboard {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                                 <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
                                 <span class="nav-link-copy"><strong data-i18n="dashboard">{{ __('ui.dashboard') }}</strong><small class="d-lg-none">Your memorisation overview</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
+                            @endif
                             @else
                             <a class="nav-link {{ request()->routeIs('about', 'about-us') ? 'active' : '' }}" href="{{ route('about-us') }}">
                                 <i class="bi bi-people nav-link-icon" aria-hidden="true"></i>
@@ -3464,8 +3512,18 @@
                         </button>
                         <ul class="dropdown-menu" id="dropdownMenu" role="menu">
                             <li>
-                                <a class="dropdown-item" href="{{ route('dashboard') }}" role="menuitem">
-                                    <i class="bi bi-speedometer2" aria-hidden="true"></i> <span data-i18n="dashboard">{{ __('ui.dashboard') }}</span>
+                                <a
+                                    class="dropdown-item"
+                                    href="{{ Auth::user()->isAdmin() ? route('admin.dashboard') : route('dashboard') }}"
+                                    role="menuitem"
+                                >
+                                    <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                                    <span data-i18n="dashboard">{{ __('ui.dashboard') }}</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('profile.show') }}" role="menuitem">
+                                    <i class="bi bi-person" aria-hidden="true"></i> <span>{{ __('ui.profile') }}</span>
                                 </a>
                             </li>
                             @if (Auth::user()->isAdmin())
