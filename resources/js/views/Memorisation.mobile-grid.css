@@ -216,20 +216,31 @@
   }
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
-  .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
+  .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair,
+  .workspace-shell--post-session-choice .post-session-choice-pair,
+  .workspace-shell--post-session-choice .post-session-choice-pair.has-paired-actions {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    grid-column: 1 / -1;
+    grid-template-columns: 1fr 1fr !important;
+    grid-column: 1 / -1 !important;
     gap: 0.35rem !important;
     min-inline-size: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+    flex: none !important;
     overflow: hidden !important;
-    flex-wrap: nowrap !important;
     box-sizing: border-box !important;
   }
 
-  /* Post-session: layout + ellipsis top-right (font stays in the menu path; controls via Custom session). */
+  .workspace-shell--post-session-choice .workspace-shell-actions,
+  .workspace-shell--post-session-choice .action-buttons-group {
+    display: block !important;
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+  }
+
+  /* Post-session: dashboard + layout + ellipsis top-right (controls via Custom session). */
   .workspace-shell--post-session-choice .top-card-icon-controls {
     display: flex !important;
     flex-flow: row nowrap !important;
@@ -248,21 +259,40 @@
     display: none !important;
   }
 
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-wrap,
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-trigger,
   .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
   .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
 
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-wrap {
     order: 0;
   }
 
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
     order: 1;
+  }
+
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
+    order: 2;
   }
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) {
     grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
+  .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
   }
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair > .top-card-action-trigger {
@@ -282,6 +312,7 @@
     box-sizing: border-box !important;
     visibility: visible !important;
     opacity: 1 !important;
+    justify-content: center !important;
   }
 
   .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action {
@@ -1483,15 +1514,9 @@
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
-  .session-exit-actions-secondary > * {
+  .session-exit-actions-secondary > .mutqin-modal-btn {
     min-inline-size: 0;
-    min-block-size: 2.45rem !important;
-    height: 2.45rem !important;
-    max-height: 2.45rem !important;
-    padding: 0 0.55rem !important;
-    white-space: nowrap !important;
-    border-radius: 999px !important;
-    flex-direction: row !important;
+    width: 100% !important;
     justify-content: center !important;
   }
 
@@ -2740,11 +2765,9 @@
     grid-column: auto;
   }
 
-  .session-exit-actions-secondary > * {
-    justify-content: flex-start !important;
-    min-block-size: 2.55rem !important;
-    height: 2.55rem !important;
-    padding-inline: 0.9rem !important;
+  .session-exit-actions-secondary > .mutqin-modal-btn {
+    width: 100% !important;
+    justify-content: center !important;
   }
 
   .self-check-section-head > :first-child {

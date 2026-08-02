@@ -227,7 +227,7 @@
                 <i class="bi bi-sliders" aria-hidden="true"></i>
               </div>
             </div>
-            <div v-if="!isPostSessionChoiceVisible" class="top-card-dashboard-wrap">
+            <div class="top-card-dashboard-wrap">
               <div
                 class="action-btn action-btn-secondary top-card-action-trigger top-card-dashboard-trigger top-card-icon-control"
                 role="button"
@@ -2082,7 +2082,7 @@
                 >
                   <button
                     type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--secondary session-exit-action-chip mutqin-btn-animate"
+                    class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate"
                     :disabled="sessionExitEndingBusy"
                     @click="keepPractisingFromExitModal"
                   >
@@ -2091,7 +2091,7 @@
                   </button>
                   <button
                     type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--destructive session-exit-action-chip session-exit-action-chip--end mutqin-btn-animate"
+                    class="mutqin-modal-btn mutqin-modal-btn--destructive mutqin-btn-animate"
                     :disabled="sessionExitEndingBusy"
                     :aria-busy="sessionExitEndingBusy ? 'true' : 'false'"
                     :class="{ 'is-loading': sessionExitEndingBusy }"
