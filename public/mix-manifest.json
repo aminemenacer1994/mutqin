@@ -1,8 +1,8 @@
 {
-    "/js/app.js": "/js/app.js",
+    "/js/app.js": "/js/app.js?id=285b64558a413620ca145bc15eb846fe",
     "/js/dashboard.bd529173.js": "/js/dashboard.bd529173.js?id=d757323eb932ae4c9a609be6fe64f431",
     "/js/memorisation.ef1d059f.js": "/js/memorisation.ef1d059f.js?id=d3d792239da935f9ba29e4fdd25e8638",
-    "/css/app.css": "/css/app.css",
+    "/css/app.css": "/css/app.css?id=e34131569bd9daf22942eea6f5c855fa",
     "/js/dashboard.c01ac1c0.js": "/js/dashboard.c01ac1c0.js?id=cdedb37b4b8719c3ef5fbb1692d0b4ca",
     "/js/dashboard.3c6cc318.js": "/js/dashboard.3c6cc318.js?id=26bc302960a0ebd10cc1f29edd32231c",
     "/js/dashboard.530c706a.js": "/js/dashboard.530c706a.js?id=377fbd166ad0794c17335934d8785a98",
@@ -207,7 +207,7 @@
     "/js/admin-dashboard.27ab09dd.js": "/js/admin-dashboard.27ab09dd.js?id=d3a11b3bf7a938800c49eab78f0baad3",
     "/js/admin-dashboard.3a1bfb28.js": "/js/admin-dashboard.3a1bfb28.js?id=2e7019742209f597e140e7a394078093",
     "/js/admin-dashboard.4d5137ef.js": "/js/admin-dashboard.4d5137ef.js?id=9f50976f3a66153582e1834dd630b3a6",
-    "/js/admin-dashboard.95eac46f.js": "/js/admin-dashboard.95eac46f.js",
+    "/js/admin-dashboard.95eac46f.js": "/js/admin-dashboard.95eac46f.js?id=b3ce7ae040755b6ab5820844412059be",
     "/js/memorisation.f7078d03.js": "/js/memorisation.f7078d03.js?id=705c2f3699b89fe97404ac0865af31e4",
     "/js/memorisation.76a4a7cf.js": "/js/memorisation.76a4a7cf.js?id=5f434ed813efef73fccc61a9b211e234",
     "/js/memorisation.e28eeefd.js": "/js/memorisation.e28eeefd.js?id=f9d424f320144ee7a8623322e103904d",
@@ -273,7 +273,7 @@
     "/js/memorisation.20f771dd.js": "/js/memorisation.20f771dd.js?id=0eb0bc90bb69aa6e39ef558e312ca0d3",
     "/js/memorisation.d60927fb.js": "/js/memorisation.d60927fb.js?id=326d05c7a5afd85309775c5c55c42929",
     "/js/memorisation.1d590fb7.js": "/js/memorisation.1d590fb7.js?id=f850155f90aa8e4170b220ca1fbb829e",
-    "/js/dashboard.3a5e518d.js": "/js/dashboard.3a5e518d.js",
+    "/js/dashboard.3a5e518d.js": "/js/dashboard.3a5e518d.js?id=c62e24f04ea668b9b9d8564934f7dd2b",
     "/js/memorisation.8c6c6a70.js": "/js/memorisation.8c6c6a70.js?id=4d4f1e73aa9bc87ade69a07e36f0ec53",
     "/js/memorisation.3dac203f.js": "/js/memorisation.3dac203f.js?id=50654ef82e683db5e54668524382f386",
     "/js/memorisation.2c2e79d9.js": "/js/memorisation.2c2e79d9.js?id=a1f81d6dec49e8b35f60577e3a57c8f5",
@@ -293,5 +293,7 @@
     "/js/memorisation.b3f7469d.js": "/js/memorisation.b3f7469d.js?id=0d66036df66170e0f7ed6f39b025f250",
     "/js/memorisation.d7862048.js": "/js/memorisation.d7862048.js?id=648b12a102eb2d2334b3e8599442787b",
     "/js/memorisation.35657016.js": "/js/memorisation.35657016.js?id=9a198a0f23c9c27bf13629f3dd0f295e",
-    "/js/memorisation.48fd6817.js": "/js/memorisation.48fd6817.js"
+    "/js/memorisation.48fd6817.js": "/js/memorisation.48fd6817.js?id=caba213b01e1e2a19df1e36134dd9cab",
+    "/js/memorisation.c4139776.js": "/js/memorisation.c4139776.js?id=3de4f6baaae7dfc702bfd31cb3210ffc",
+    "/js/memorisation.e48fa145.js": "/js/memorisation.e48fa145.js?id=03b09fa31f3efe82d98ae4869a4f0a33"
 }

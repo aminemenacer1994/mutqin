@@ -2439,8 +2439,13 @@ export default {
         number: ayahNumber
       })
     },
+    welcomeBackDisplayName() {
+      const full = String(this.auth?.name || '').trim()
+      if (!full) return ''
+      return full.split(/\s+/)[0] || full
+    },
     welcomeBackModalTitle() {
-      const name = String(this.auth?.name || '').trim()
+      const name = this.welcomeBackDisplayName
       if (this.canResumePreviousSession) {
         if (name) {
           return this.t('memorisation.welcomeBack.resumeGenericNamed', { name })
@@ -2466,12 +2471,11 @@ export default {
       if (!this.canResumePreviousSession) return []
       const detailRows = this.welcomeBackDetailRows || []
       const byKey = new Map(detailRows.map(row => [row.key, row]))
-      const place = this.welcomeBackResumePlaceLabel
+      // Place already lives in the subtitle — keep the meta line for supporting facts only.
       const parts = []
-      if (place) parts.push(place)
       if (byKey.get('range')?.value) parts.push(byKey.get('range').value)
+      if (byKey.get('progress')?.value) parts.push(byKey.get('progress').value)
       if (byKey.get('saved')?.value) parts.push(byKey.get('saved').value)
-      else if (byKey.get('progress')?.value) parts.push(byKey.get('progress').value)
       return parts.filter(Boolean).slice(0, 3)
     },
     welcomeBackMetaLine() {

@@ -462,36 +462,36 @@
       "greetingTranslation": "Peace be upon you",
       "freshTitle": "Ready when you are",
       "freshTitleNamed": "Welcome back, {name}",
-      "freshSubtitle": "Continue a previous session, or start a new one.",
+      "freshSubtitle": "Continue where you left off, or begin something new.",
       "freshReminderArabic": "رَبِّ زِدْنِى عِلْمًا",
       "freshReminderTranslation": "My Lord, increase me in knowledge.",
       "freshReminderSource": "Qur'an 20:114",
-      "freshIntention": "Even a few ayahs, done consistently, are beloved to Allah.",
+      "freshIntention": "Even a few ayahs, done with sincerity, are beloved to Allah.",
       "reminders": {
         "1": {
           "translation": "My Lord, increase me in knowledge.",
           "source": "Qur'an 20:114",
-          "intention": "Even a few ayahs, done consistently, are beloved to Allah."
+          "intention": "Even a few ayahs, done with sincerity, are beloved to Allah."
         },
         "2": {
           "translation": "As for those who strive for Us, We shall guide them to Our paths.",
           "source": "Qur'an 29:69",
-          "intention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time."
+          "intention": "Returning with steadiness is part of the path — one ayah at a time."
         },
         "3": {
           "translation": "So remember Me; I will remember you.",
           "source": "Qur'an 2:152",
-          "intention": "A quiet return to the Qur’an is already a form of remembrance."
+          "intention": "A quiet return to the Qur’an is already remembrance."
         },
         "4": {
           "translation": "Indeed, with hardship comes ease.",
           "source": "Qur'an 94:6",
-          "intention": "If today’s session feels hard, keep it small and sincere."
+          "intention": "If today feels heavy, keep the session small and sincere."
         },
         "5": {
           "translation": "And We have certainly made the Qur’an easy for remembrance.",
           "source": "Qur'an 54:17",
-          "intention": "Repetition with calm attention is enough for today."
+          "intention": "Calm repetition is enough for today."
         },
         "6": {
           "translation": "And be patient, for indeed Allah does not allow the reward of those who do good to be lost.",
@@ -511,26 +511,26 @@
       },
       "resumeTitle": "Continue with {chapter}",
       "resumeTitleNamed": "{chapter}, {name}",
-      "resumeGeneric": "Assalamu alaikum",
-      "resumeGenericNamed": "Assalamu alaikum, {name}",
-      "resumeSubtitle": "Your previous session is ready — may Allah make your return easy.",
-      "resumeSubtitleAtPlace": "You paused at {place}. May Allah make your return gentle and blessed.",
-      "resumeSubtitleDetail": "You paused at {detail}. May Allah make your return gentle and blessed.",
+      "resumeGeneric": "Welcome back",
+      "resumeGenericNamed": "Welcome back, {name}",
+      "resumeSubtitle": "Your last session is waiting — may Allah make every ayah easy.",
+      "resumeSubtitleAtPlace": "You left off at {place}. May Allah make your return light and blessed.",
+      "resumeSubtitleDetail": "You left off at {detail}. May Allah make your return light and blessed.",
       "resumePlaceAyah": "{chapter}, ayah {number}",
-      "resumePlaceBeginning": "{chapter}, at the beginning",
-      "stoppedAt": "Stopped at",
+      "resumePlaceBeginning": "{chapter}, from the start",
+      "stoppedAt": "Left off at",
       "stoppedAtAyah": "Ayah {number}",
-      "stoppedAtBeginning": "Beginning of Surah",
+      "stoppedAtBeginning": "Start of the surah",
       "lastSaved": "Last saved",
       "resumeReminderArabic": "وَٱلَّذِينَ جَـٰهَدُوا۟ فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا",
       "resumeReminderTranslation": "As for those who strive for Us, We shall guide them to Our paths.",
       "resumeReminderSource": "Qur'an 29:69",
-      "resumeIntention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time.",
+      "resumeIntention": "Returning with steadiness is part of the path — one ayah at a time.",
       "reminderLabel": "A word of remembrance",
       "startNewSession": "Start new session",
       "continuePreviousSession": "Continue this session",
       "continueSessionShort": "Continue",
-      "hint": "Continue where you left off, or start fresh.",
+      "hint": "Continue where you left off, or begin something new.",
       "closeLabel": "Close"
     },
     "sessionExit": {

@@ -116,27 +116,27 @@ const WELCOME_BACK_REMEMBRANCE_FALLBACKS = Object.freeze([
   {
     translation: 'My Lord, increase me in knowledge.',
     source: "Qur'an 20:114",
-    intention: 'Even a few ayahs, done consistently, are beloved to Allah.',
+    intention: 'Even a few ayahs, done with sincerity, are beloved to Allah.',
   },
   {
     translation: 'As for those who strive for Us, We shall guide them to Our paths.',
     source: "Qur'an 29:69",
-    intention: 'Returning to your ayahs with steadiness is part of the path — take it one verse at a time.',
+    intention: 'Returning with steadiness is part of the path — one ayah at a time.',
   },
   {
     translation: 'So remember Me; I will remember you.',
     source: "Qur'an 2:152",
-    intention: 'A quiet return to the Qur’an is already a form of remembrance.',
+    intention: 'A quiet return to the Qur’an is already remembrance.',
   },
   {
     translation: 'Indeed, with hardship comes ease.',
     source: "Qur'an 94:6",
-    intention: 'If today’s session feels hard, keep it small and sincere.',
+    intention: 'If today feels heavy, keep the session small and sincere.',
   },
   {
     translation: 'And We have certainly made the Qur’an easy for remembrance.',
     source: "Qur'an 54:17",
-    intention: 'Repetition with calm attention is enough for today.',
+    intention: 'Calm repetition is enough for today.',
   },
   {
     translation: 'And be patient, for indeed Allah does not allow the reward of those who do good to be lost.',
