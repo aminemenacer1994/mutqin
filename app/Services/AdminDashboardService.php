@@ -101,7 +101,7 @@ class AdminDashboardService
         if ($sessions !== 'gt0') {
             $sessions = '';
         }
-        if (! in_array($sort, ['created', 'last_active', 'memorised', 'sessions', 'name', 'email', 'accuracy', 'last_ai'], true)) {
+        if (! in_array($sort, ['created', 'last_active', 'memorised', 'sessions', 'learning', 'name', 'email', 'accuracy', 'last_ai'], true)) {
             $sort = 'created';
         }
 
@@ -207,7 +207,7 @@ class AdminDashboardService
         }
 
         // Fetch a bounded set then sort in PHP for progress-derived columns.
-        $derivedSort = in_array($sort, ['memorised', 'sessions', 'last_active', 'accuracy', 'last_ai'], true);
+        $derivedSort = in_array($sort, ['memorised', 'sessions', 'learning', 'last_active', 'accuracy', 'last_ai'], true);
         $fetchLimit = $derivedSort
             ? min(500, max($perPage, $total))
             : min(500, $total > 0 ? $total : $perPage);
@@ -238,6 +238,10 @@ class AdminDashboardService
             $enriched = $dir === 'asc'
                 ? $enriched->sortBy(fn ($row) => [(int) ($row['sessions_completed'] ?? 0), (int) $row['id']])
                 : $enriched->sortByDesc(fn ($row) => [(int) ($row['sessions_completed'] ?? 0), (int) $row['id']]);
+        } elseif ($sort === 'learning') {
+            $enriched = $dir === 'asc'
+                ? $enriched->sortBy(fn ($row) => [(int) ($row['learning_ayahs'] ?? 0), (int) $row['id']])
+                : $enriched->sortByDesc(fn ($row) => [(int) ($row['learning_ayahs'] ?? 0), (int) $row['id']]);
         } elseif ($sort === 'last_active') {
             $enriched = $dir === 'asc'
                 ? $enriched->sortBy(fn ($row) => [$row['last_activity_at'] ?? '1970-01-01', (int) $row['id']])

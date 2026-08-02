@@ -128,17 +128,17 @@
                   <option value="has">{{ t('admin.filter_progress_has') }}</option>
                   <option value="none">{{ t('admin.filter_progress_none') }}</option>
                 </select>
-                <select
-                  v-model="sortKey"
-                  class="admin-toolbar__select admin-toolbar__select--sort"
-                  :aria-label="t('admin.sort_last_active')"
-                  @change="onFilterChange"
-                >
-                  <option value="last_active">{{ t('admin.sort_last_active') }}</option>
-                  <option value="sessions">{{ t('admin.sort_sessions') }}</option>
-                  <option value="accuracy">{{ t('admin.sort_accuracy') }}</option>
-                  <option value="memorised">{{ t('admin.sort_memorised') }}</option>
-                </select>
+              <select
+                v-model="sortKey"
+                class="admin-toolbar__select admin-toolbar__select--sort"
+                :aria-label="t('admin.sort_last_active')"
+                @change="onFilterChange"
+              >
+                <option value="last_active">{{ t('admin.sort_last_active') }}</option>
+                <option value="sessions">{{ t('admin.sort_sessions') }}</option>
+                <option value="memorised">{{ t('admin.sort_memorised') }}</option>
+                <option value="learning">{{ t('admin.sort_learning') }}</option>
+              </select>
                 <button
                   type="button"
                   class="admin-toolbar__sort-dir"
@@ -205,7 +205,7 @@
                 <col class="admin-col-learner">
                 <col class="admin-col-num admin-col-memorised admin-col--desktop">
                 <col class="admin-col-num admin-col-sessions">
-                <col class="admin-col-num admin-col-accuracy admin-col--desktop">
+                <col class="admin-col-num admin-col-learning admin-col--desktop">
                 <col class="admin-col-date admin-col--desktop">
                 <col class="admin-col-status">
                 <col class="admin-col-actions">
@@ -232,11 +232,15 @@
                     </button>
                   </th>
                   <th class="admin-col--desktop">
-                    <button type="button" class="admin-th-sort" :class="{ 'is-active': sortKey === 'accuracy' }" @click="setSort('accuracy')">
-                      {{ t('admin.col_accuracy') }}
+                    <button type="button" class="admin-th-sort" :class="{ 'is-active': sortKey === 'learning' }" @click="setSort('learning')">
+                      {{ t('admin.col_learning') }}
                     </button>
                   </th>
-                  <th class="admin-col--desktop">{{ t('admin.col_last_ai') }}</th>
+                  <th class="admin-col--desktop">
+                    <button type="button" class="admin-th-sort" :class="{ 'is-active': sortKey === 'last_active' }" @click="setSort('last_active')">
+                      {{ t('admin.col_active') }}
+                    </button>
+                  </th>
                   <th class="admin-table__status" :title="t('admin.col_status')">
                     <span class="visually-hidden">{{ t('admin.col_status') }}</span>
                   </th>
@@ -275,14 +279,11 @@
                   </td>
                   <td class="admin-num admin-col--desktop">{{ row.memorised_ayahs }}</td>
                   <td class="admin-num">{{ row.sessions_completed }}</td>
+                  <td class="admin-num admin-col--desktop">{{ row.learning_ayahs }}</td>
                   <td class="admin-num admin-col--desktop">
-                    <span v-if="row.avg_ai_accuracy != null" :class="accuracyToneClass(row.avg_ai_accuracy)">
-                      {{ t('admin.accuracy', { n: row.avg_ai_accuracy }) }}
+                    <span v-if="row.last_activity_at" :title="formatDateShort(row.last_activity_at) || undefined">
+                      {{ formatRelative(row.last_activity_at) }}
                     </span>
-                    <span v-else class="admin-dash">—</span>
-                  </td>
-                  <td class="admin-num admin-col--desktop">
-                    <span v-if="row.last_ai_check_at">{{ formatDateShort(row.last_ai_check_at) }}</span>
                     <span v-else class="admin-dash">—</span>
                   </td>
                   <td class="admin-table__status">
@@ -840,16 +841,6 @@ export default {
           trendLabel: this.formatTrend(snapshot.sessions_completed?.trend_percent),
           trendDir: this.trendDir(snapshot.sessions_completed?.trend_percent),
         },
-        {
-          key: 'pending_contacts',
-          label: this.t('admin.metric_pending'),
-          value: Number(snapshot.pending_contacts?.value || 0),
-          action: 'inbox',
-          toneClass: 'admin-kpi--pending',
-          tooltip: this.t('admin.metric_pending_hint'),
-          trendLabel: this.formatTrend(snapshot.pending_contacts?.trend_percent),
-          trendDir: this.trendDir(snapshot.pending_contacts?.trend_percent),
-        },
       ]
     },
     allVisibleSelected() {
@@ -1232,7 +1223,7 @@ export default {
         const rows = result.users || []
         const headers = [
           'name', 'email', 'subscription_status', 'sessions_completed',
-          'memorised_ayahs', 'avg_ai_accuracy', 'last_activity_at',
+          'memorised_ayahs', 'learning_ayahs', 'last_activity_at',
         ]
         const escape = (value) => `"${String(value == null ? '' : value).replace(/"/g, '""')}"`
         const lines = [
@@ -1479,7 +1470,7 @@ export default {
       if (!rows.length) return
       const headers = [
         'id', 'name', 'email', 'subscription_status', 'memorised_ayahs',
-        'sessions_completed', 'avg_ai_accuracy', 'last_ai_check_at', 'last_activity_at',
+        'learning_ayahs', 'sessions_completed', 'last_activity_at',
       ]
       const escape = (value) => {
         const text = value == null ? '' : String(value)

@@ -3493,13 +3493,6 @@
                                     <i class="bi bi-person" aria-hidden="true"></i> <span>{{ __('ui.profile') }}</span>
                                 </a>
                             </li>
-                            @if (Auth::user()->isAdmin())
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('admin.contact-messages.index') }}">
-                                        <i class="bi bi-inbox"></i> <span data-i18n="contact_inbox">{{ __('ui.contact_inbox') }}</span>
-                                    </a>
-                                </li>
-                            @endif
                             <li>
                                 <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                                     @csrf
