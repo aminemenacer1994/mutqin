@@ -715,7 +715,11 @@
           gap: 0.4rem 0.45rem !important;
           align-items: center !important;
         }
-        /* Mobile progress pills — full-width row under Surah title */
+        /*
+         * Mobile session overview stack (must not share a grid row):
+         * 1 = Surah title + icons · 2 = progress pills · 3 = Resume/End actions
+         * Keep actions as a real box — display:contents let CTAs collide with pills.
+         */
         .app .workspace-shell-head > .workspace-shell-progress-pills {
           grid-column: 1 / -1 !important;
           grid-row: 2 !important;
@@ -757,9 +761,25 @@
           pointer-events: none !important;
           user-select: none !important;
         }
-        .app .workspace-shell-actions,
-        .app .workspace-shell-actions .action-buttons-group {
-          display: contents !important;
+        html body .app .workspace-shell-head > .workspace-shell-actions {
+          grid-column: 1 / -1 !important;
+          grid-row: 3 !important;
+          display: flex !important;
+          flex-flow: row nowrap !important;
+          align-items: center !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          pointer-events: auto !important;
+        }
+        html body .app .workspace-shell-actions .action-buttons-group {
+          display: flex !important;
+          flex-flow: row nowrap !important;
+          align-items: center !important;
+          width: 100% !important;
+          min-width: 0 !important;
+          gap: 0.35rem !important;
         }
         /* Post-session mobile: full-width 50/50 CTAs (avoid display:contents shrink-wrap). */
         html body .app .workspace-shell--post-session-choice .workspace-shell-actions,
@@ -876,12 +896,38 @@
           overflow: hidden !important;
           pointer-events: none !important;
         }
-        .app .workspace-shell-actions .top-card-session-actions:not(.post-session-choice-pair),
-        .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
-          grid-column: 1 / -1 !important;
-          grid-row: 3 !important;
+        .app .workspace-shell-actions .top-card-session-actions:not(.has-paired-actions):not(.post-session-choice-pair) {
           display: flex !important;
+          flex: 1 1 auto !important;
+          flex-wrap: nowrap !important;
+          align-items: center !important;
           gap: 0.35rem !important;
+          min-width: 0 !important;
+          /* Stay inside the row-3 actions box — do not re-grid onto the head */
+          grid-column: auto !important;
+          grid-row: auto !important;
+        }
+        .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          flex: 1 1 auto !important;
+          gap: 0.35rem !important;
+          width: 100% !important;
+          min-width: 0 !important;
+          grid-column: auto !important;
+          grid-row: auto !important;
+        }
+        .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action {
+          grid-column: 1 !important;
+          grid-row: 1 !important;
+          width: 100% !important;
+          min-width: 0 !important;
+        }
+        .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit {
+          grid-column: 2 !important;
+          grid-row: 1 !important;
+          width: 100% !important;
+          min-width: 0 !important;
         }
         .app .top-card-icon-controls .top-card-controls-wrap,
         .app .top-card-icon-controls .top-card-dashboard-wrap,
@@ -1036,33 +1082,20 @@
         }
         .app .main.mushaf-mode-active {
           max-width: 100% !important;
-          padding-inline: 0 !important;
-        }
-        .app .main.mushaf-mode-active .mushaf-workspace,
-        .app .main.mushaf-mode-active .mushaf-workspace__fluid,
-        .app .main.mushaf-mode-active .mushaf-shell,
-        .app .main.mushaf-mode-active .mushaf-shell__page,
-        .app .main.mushaf-mode-active .mushaf-page,
-        .app .main.mushaf-mode-active .madani-ornate,
-        .app .main.mushaf-mode-active .madani-ornate__frame,
-        .app .main.mushaf-mode-active .madani-ornate__inner {
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 0 !important;
-          box-sizing: border-box !important;
-          overflow-x: hidden !important;
+          /* Mobile side breathing room (was forced to 0, which cancelled gutters) */
+          padding-inline: clamp(16px, 4.8vw, 22px) !important;
         }
         .app .main.mushaf-mode-active .mushaf-shell {
-          border-radius: 0 !important;
-          border-inline: 0 !important;
+          border-radius: 18px !important;
+          border-inline: 1px solid var(--border, rgba(120, 78, 40, 0.18)) !important;
         }
         .app .main.mushaf-mode-active .mushaf-shell__page {
           display: block !important;
           justify-content: stretch !important;
-          padding-inline: 0 !important;
+          padding-inline: 0.35rem !important;
         }
         .app .main.mushaf-mode-active .mushaf-page--madani {
-          padding: 0.55rem 0.7rem 1.1rem !important;
+          padding: 0.55rem 0.85rem 1.1rem !important;
           width: 100% !important;
           max-width: 100% !important;
           margin-inline: 0 !important;
@@ -1080,7 +1113,7 @@
           overflow-x: hidden !important;
           transform: none !important;
           margin-inline: 0 !important;
-          padding-inline: 0.85rem !important;
+          padding-inline: 1.15rem !important;
           direction: rtl !important;
           gap: 0 !important;
           text-align: center !important;
@@ -1229,7 +1262,7 @@
           box-sizing: border-box !important;
         }
         .app .main.mushaf-mode-active .mushaf-shell,
-        .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) {
+        .app .main.mushaf-mode-active .mushaf-shell {
           background: #f4f4f5 !important;
           background-color: #f4f4f5 !important;
           border: 1px solid rgba(24, 24, 27, 0.12) !important;
@@ -1242,18 +1275,18 @@
           --mushaf-text: #18181b;
           color: #18181b !important;
         }
-        .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__bar {
+        .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar {
           background: transparent !important;
           border-bottom: 1px solid rgba(24, 24, 27, 0.1) !important;
         }
-        .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__page {
+        .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page {
           background: transparent !important;
           border: 0 !important;
           box-shadow: none !important;
           border-radius: 0 !important;
           padding-inline: 0 !important;
         }
-        .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) {
+        .app .main.mushaf-mode-active .mushaf-page--madani {
           background: transparent !important;
           border: 0 !important;
           border-radius: 0 !important;
@@ -1266,8 +1299,8 @@
           width: 100% !important;
           margin-inline: 0 !important;
         }
-        .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate)::before,
-        .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate)::after {
+        .app .main.mushaf-mode-active .mushaf-page--madani::before,
+        .app .main.mushaf-mode-active .mushaf-page--madani::after {
           display: none !important;
           content: none !important;
         }
@@ -1316,10 +1349,10 @@
           padding-inline: 0 !important;
           flex: none !important;
         }
-        .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
-        .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
-        .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-surah-name,
-        .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted) {
+        .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
+        .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+        .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-surah-name,
+        .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted) {
           color: #18181b !important;
           -webkit-text-fill-color: #18181b !important;
         }
@@ -1351,9 +1384,9 @@
           white-space: normal !important;
         }
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell,
-        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin),
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell,
         .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell,
-        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) {
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell {
           background: #18181b !important;
           background-color: #18181b !important;
           border: 1px solid rgba(244, 244, 245, 0.14) !important;
@@ -1364,22 +1397,22 @@
           --mushaf-text: #f4f4f5;
           color: #f4f4f5 !important;
         }
-        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__bar,
-        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__page,
-        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__bar,
-        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__page {
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar,
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page {
           background: transparent !important;
           border: 0 !important;
           box-shadow: none !important;
           border-radius: 0 !important;
         }
-        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__bar,
-        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell:not(.is-madani-skin) .mushaf-shell__bar {
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar {
           border-bottom: 1px solid rgba(244, 244, 245, 0.12) !important;
         }
-        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate),
-        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate),
-        [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) {
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani,
+        [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani {
           background: transparent !important;
           border: 0 !important;
           border-radius: 0 !important;
@@ -1388,18 +1421,18 @@
           --mushaf-bg: #18181b;
           --mushaf-text: #f4f4f5;
         }
-        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
-        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
-        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-surah-name,
-        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
-        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
-        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
-        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-surah-name,
-        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
-        [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
-        [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
-        [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-surah-name,
-        [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:not(.mushaf-page--ornate) .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted) {
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-surah-name,
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-surah-name,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
+        [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
+        [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+        [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-surah-name,
+        [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted) {
           color: #f4f4f5 !important;
           -webkit-text-fill-color: #f4f4f5 !important;
         }
@@ -1626,22 +1659,24 @@
             --warning-text: #8b653b;
             
             /* Responsive system tokens */
-            --nav-h: 70px;
+            --nav-h: 64px;
             --shell-max: 1400px;
             --profile-max: 1080px;
             --gutter: clamp(14px, 3.6vw, 32px);
             --gutter-tight: clamp(12px, 3vw, 24px);
             --radius: clamp(12px, 1.4vw, 16px);
             --tap: 44px;
+            --nav-icon: 40px;
             --text-base: clamp(14px, 0.95vw + 10px, 16px);
             --text-sm: clamp(12px, 0.65vw + 9px, 14px);
         }
 
+        html[data-theme="dark"],
         [data-theme="dark"] {
             color-scheme: dark;
             --bg: #111315;
-            --surface: rgba(24, 22, 20, 0.96);
-            --surface-strong: #1b1a18;
+            --surface: #181614;
+            --surface-strong: #121212;
             --surface-elevated: #24211d;
             --surface-soft: rgba(48, 40, 33, 0.42);
             --border: rgba(230, 207, 181, 0.14);
@@ -1764,8 +1799,29 @@
             filter: none;
         }
 
+        html[data-theme="dark"] .btn-close,
         [data-theme="dark"] .btn-close {
-            filter: invert(1) grayscale(1) brightness(1.6);
+            --bs-btn-close-filter: invert(1) grayscale(100%) brightness(200%);
+            filter: invert(1) grayscale(100%) brightness(200%);
+            opacity: 0.85;
+        }
+
+        /* Keep the mobile menu X visible on the solid-black drawer */
+        html[data-theme="dark"] #primaryNavbar .btn-close,
+        [data-theme="dark"] #primaryNavbar .btn-close {
+            width: 1.25rem;
+            height: 1.25rem;
+            padding: 0.65rem;
+            box-sizing: content-box;
+            margin: 0;
+            opacity: 0.9 !important;
+            --bs-btn-close-filter: invert(1) grayscale(100%) brightness(200%);
+            filter: invert(1) grayscale(100%) brightness(200%) !important;
+            background-color: transparent !important;
+            background-image: var(--bs-btn-close-bg) !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-size: 1em auto !important;
         }
 
         .modal-content,
@@ -1839,7 +1895,7 @@
         .app-navbar {
             background: var(--surface-strong);
             border-bottom: 1px solid var(--border);
-            padding: 3px;
+            padding: 0;
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -1860,9 +1916,10 @@
         .navbar-shell {
             max-width: var(--shell-max);
             margin: 0 auto;
-            padding: 12px var(--gutter);
+            padding: 8px var(--gutter);
             min-height: var(--nav-h);
-            gap: 12px;
+            gap: 10px;
+            align-items: center;
         }
 
         .navbar-brand {
@@ -1872,10 +1929,11 @@
             min-width: 0;
             padding: 0;
             margin-inline-end: 0;
+            line-height: 0;
         }
 
         .app-navbar-logo {
-            height: 64px;
+            height: 46px;
             width: auto;
             filter: none !important;
             mix-blend-mode: normal;
@@ -1887,23 +1945,30 @@
         .app-navbar-logo--mark {
             display: none;
             width: auto;
-            height: 48px;
-            max-width: 40px;
-            max-height: 48px;
+            height: 36px;
+            max-width: 36px;
+            max-height: 36px;
             object-fit: contain;
         }
 
         .navbar-quick-actions {
             margin-inline-start: auto;
+            align-items: center;
+            gap: 4px !important;
         }
 
         .navbar-toggler {
             border: 1px solid var(--border);
             background: var(--surface);
-            padding: 10px 14px;
-            border-radius: 12px;
+            padding: 0;
+            width: var(--nav-icon);
+            height: var(--nav-icon);
+            border-radius: 10px;
             color: var(--text);
             transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             min-width: var(--tap);
             min-height: var(--tap);
         }
@@ -1914,7 +1979,7 @@
         }
 
         .navbar-toggler i {
-            font-size: 22px;
+            font-size: 20px;
         }
 
         .nav-links-desktop {
@@ -2012,9 +2077,9 @@
         }
 
         .app-theme-toggle {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
+            width: var(--nav-icon);
+            height: var(--nav-icon);
+            border-radius: 10px;
             background: var(--surface);
             border: 1px solid var(--border);
             color: var(--text);
@@ -2025,6 +2090,7 @@
             transition: all 0.2s ease;
             min-width: var(--tap);
             min-height: var(--tap);
+            padding: 0;
         }
 
         .app-theme-toggle:hover {
@@ -2034,22 +2100,25 @@
         }
 
         .app-lang-toggle {
-            min-height: 42px;
-            border-radius: 12px;
+            min-height: var(--tap);
+            height: var(--nav-icon);
+            border-radius: 10px;
             background: var(--surface);
             border: 1px solid var(--border);
             color: var(--text);
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
-            padding: 0 0.75rem;
+            padding: 0 0.65rem;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .app-lang-toggle.icon-only {
-            width: 42px;
-            min-width: 42px;
+            width: var(--nav-icon);
+            min-width: var(--tap);
+            height: var(--nav-icon);
+            min-height: var(--tap);
             padding: 0;
             justify-content: center;
         }
@@ -2107,8 +2176,9 @@
         .app-user-toggle {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 8px 16px 8px 12px;
+            gap: 8px;
+            padding: 4px 12px 4px 6px;
+            min-height: var(--tap);
             border-radius: 48px;
             background: var(--surface);
             border: 1px solid var(--border);
@@ -2137,8 +2207,8 @@
         }
 
         .app-user-avatar {
-            width: 36px;
-            height: 36px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             background: var(--accent);
             color: white;
@@ -2146,7 +2216,7 @@
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 15px;
+            font-size: 13px;
         }
 
         .dropdown-menu {
@@ -2223,17 +2293,17 @@
             }
 
             .navbar-shell {
-                padding: 10px var(--gutter-tight);
+                padding: 7px var(--gutter-tight);
             }
 
             .app-navbar-logo {
-                height: 64px;
+                height: 46px;
             }
         }
 
         @media (max-width: 768px) {
             :root {
-                --nav-h: 88px;
+                --nav-h: 64px;
             }
 
             .navbar-shell {
@@ -2241,7 +2311,7 @@
             }
 
             .app-navbar-logo {
-                height: 72px;
+                height: 46px;
                 max-width: none;
                 flex-shrink: 0;
             }
@@ -2278,7 +2348,7 @@
         @media (max-width: 767.98px) {
             .navbar-shell {
                 min-height: calc(var(--nav-h) + env(safe-area-inset-top, 0px));
-                padding: 10px max(12px, env(safe-area-inset-left, 0px)) 10px max(12px, env(safe-area-inset-right, 0px));
+                padding: 6px max(10px, env(safe-area-inset-left, 0px)) 6px max(10px, env(safe-area-inset-right, 0px));
                 gap: 8px;
                 flex-wrap: nowrap;
                 align-items: center;
@@ -2292,7 +2362,7 @@
             }
 
             .app-navbar-logo {
-                height: 72px;
+                height: 46px;
                 width: auto;
                 max-width: none;
                 object-fit: contain;
@@ -2310,24 +2380,32 @@
             .navbar-quick-actions {
                 flex: 0 0 auto;
                 min-width: 0;
-                gap: 8px !important;
+                gap: 2px !important;
+                align-items: center;
             }
 
             .app-theme-toggle,
             .navbar-toggler,
             .app-user-toggle,
             .app-lang-toggle.icon-only {
-                width: 44px;
-                min-width: 44px;
-                height: 44px;
-                min-height: 44px;
+                width: var(--nav-icon);
+                min-width: var(--tap);
+                height: var(--nav-icon);
+                min-height: var(--tap);
                 padding: 0;
-                border-radius: 14px;
+                border-radius: 10px;
                 justify-content: center;
             }
 
             .app-user-toggle {
                 gap: 0;
+                width: var(--tap);
+                min-width: var(--tap);
+                height: var(--tap);
+                min-height: var(--tap);
+                padding: 0;
+                border-radius: 10px;
+                justify-content: center;
             }
 
             .app-user-toggle > span:last-of-type,
@@ -2336,13 +2414,13 @@
             }
 
             .app-user-avatar {
-                width: 34px;
-                height: 34px;
-                font-size: 14px;
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
             }
 
             .app-navbar .offcanvas-lg {
-                --bs-offcanvas-width: min(88vw, 360px);
+                --bs-offcanvas-width: 100vw;
             }
 
             .app-navbar .offcanvas-header {
@@ -3119,7 +3197,7 @@
 
         .profile-toast {
             position: sticky;
-            top: calc(var(--nav-h, 70px) + 12px);
+            top: calc(var(--nav-h, 64px) + 12px);
             z-index: 20;
             width: fit-content;
             max-width: min(100%, 28rem);
@@ -3542,6 +3620,14 @@
                 z-index: var(--bs-offcanvas-zindex, 1045);
             }
 
+            /* Solid black navbar + drawer on mobile dark mode */
+            html[data-theme="dark"] .app-navbar,
+            [data-theme="dark"] .app-navbar {
+                background: #000000 !important;
+                background-color: #000000 !important;
+                background-image: none !important;
+            }
+
             .navbar-shell {
                 box-sizing: border-box;
                 width: 100%;
@@ -3550,17 +3636,18 @@
             }
 
             .app-navbar-logo {
-                height: 72px;
+                height: 40px;
                 max-width: none;
             }
 
             .app-navbar-logo--mark {
-                max-width: 40px;
+                max-width: 32px;
             }
 
             .app-navbar .offcanvas-lg {
-                --bs-offcanvas-width: min(88vw, 360px);
-                max-width: 100vw;
+                --bs-offcanvas-width: 100vw;
+                width: 100vw !important;
+                max-width: 100vw !important;
                 z-index: var(--bs-offcanvas-zindex, 1045) !important;
             }
 
@@ -3821,12 +3908,36 @@
             .app-navbar .offcanvas-lg {
                 display: grid;
                 grid-template-rows: auto minmax(0, 1fr);
-                --bs-offcanvas-width: min(88vw, 360px);
-                width: var(--bs-offcanvas-width) !important;
-                max-width: min(88vw, 360px) !important;
-                background: var(--surface);
-                border-inline-start: 1px solid var(--border);
-                box-shadow: -18px 0 50px rgba(31, 42, 35, 0.14);
+                --bs-offcanvas-width: 100vw;
+                --bs-offcanvas-bg: var(--surface-strong);
+                width: 100vw !important;
+                max-width: 100vw !important;
+                background: var(--surface-strong);
+                background-image: none;
+                border-inline-start: 0;
+                box-shadow: none;
+            }
+
+            /* Solid black menu panel — translucent --surface was showing mushaf through */
+            html[data-theme="dark"] .app-navbar .offcanvas-lg,
+            [data-theme="dark"] .app-navbar .offcanvas-lg,
+            html[data-theme="dark"] .app-navbar .offcanvas-lg.show,
+            [data-theme="dark"] .app-navbar .offcanvas-lg.show,
+            html[data-theme="dark"] .app-navbar .offcanvas-lg .offcanvas-header,
+            [data-theme="dark"] .app-navbar .offcanvas-lg .offcanvas-header,
+            html[data-theme="dark"] .app-navbar .offcanvas-lg .offcanvas-body,
+            [data-theme="dark"] .app-navbar .offcanvas-lg .offcanvas-body,
+            html[data-theme="dark"] #primaryNavbar,
+            [data-theme="dark"] #primaryNavbar,
+            html[data-theme="dark"] #primaryNavbar .offcanvas-header,
+            [data-theme="dark"] #primaryNavbar .offcanvas-header,
+            html[data-theme="dark"] #primaryNavbar .offcanvas-body,
+            [data-theme="dark"] #primaryNavbar .offcanvas-body {
+                --bs-offcanvas-bg: #000000;
+                background: #000000 !important;
+                background-color: #000000 !important;
+                background-image: none !important;
+                opacity: 1 !important;
             }
 
             .app-navbar .offcanvas-header {
@@ -4266,6 +4377,90 @@
             }
         }
     </style>
+    <style id="mutqin-mobile-fullbleed-nav-notes">
+      /* Force full-bleed mobile menu + notes modal (last-wins over Bootstrap / inset chrome). */
+      @media (max-width: 991.98px) {
+        #primaryNavbar.offcanvas,
+        #primaryNavbar.offcanvas-lg,
+        .app-navbar #primaryNavbar {
+          --bs-offcanvas-width: 100% !important;
+          --bs-offcanvas-border-width: 0 !important;
+          position: fixed !important;
+          inset: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          height: 100% !important;
+          max-height: 100% !important;
+          border: 0 !important;
+          transform: translateX(100%);
+        }
+
+        html[dir="rtl"] #primaryNavbar.offcanvas-end {
+          transform: translateX(-100%);
+        }
+
+        #primaryNavbar.offcanvas.show,
+        #primaryNavbar.offcanvas.showing,
+        #primaryNavbar.offcanvas-lg.show,
+        #primaryNavbar.offcanvas-lg.showing,
+        html[dir="rtl"] #primaryNavbar.offcanvas-end.show,
+        html[dir="rtl"] #primaryNavbar.offcanvas-end.showing {
+          transform: none !important;
+        }
+
+        html[data-theme="dark"] #primaryNavbar,
+        html[data-theme="dark"] #primaryNavbar .offcanvas-header,
+        html[data-theme="dark"] #primaryNavbar .offcanvas-body,
+        [data-theme="dark"] #primaryNavbar,
+        [data-theme="dark"] #primaryNavbar .offcanvas-header,
+        [data-theme="dark"] #primaryNavbar .offcanvas-body {
+          --bs-offcanvas-bg: #000 !important;
+          background: #000 !important;
+          background-color: #000 !important;
+          background-image: none !important;
+        }
+
+        .ayah-notes-modal-overlay.modal-overlay.mutqin-modal-overlay {
+          padding: 0 !important;
+          place-items: stretch !important;
+          align-items: stretch !important;
+          justify-items: stretch !important;
+        }
+
+        .ayah-notes-modal-overlay > .ayah-notes-dialog.mutqin-modal-dialog,
+        .ayah-notes-dialog.mutqin-modal-dialog,
+        .ayah-notes-dialog {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          inline-size: 100% !important;
+          max-inline-size: 100% !important;
+          height: 100% !important;
+          max-height: 100dvh !important;
+          margin: 0 !important;
+          border-radius: 0 !important;
+        }
+
+        .mutqin-modal-surface.ayah-notes-modal {
+          width: 100% !important;
+          max-width: 100% !important;
+          height: 100% !important;
+          max-height: 100dvh !important;
+          border-radius: 0 !important;
+          border: 0 !important;
+        }
+
+        .ayah-notes-modal .ayah-notes-header,
+        .mutqin-modal-surface.ayah-notes-modal > .ayah-notes-header.modal-header {
+          padding-top: max(1rem, env(safe-area-inset-top, 0px)) !important;
+        }
+
+        .ayah-notes-modal-body,
+        .mutqin-modal-surface.ayah-notes-modal .ayah-notes-modal-body {
+          padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px)) !important;
+        }
+      }
+    </style>
 </head>
 <body dir="{{ $appDirection }}">
     <nav class="navbar navbar-expand-lg app-navbar" aria-label="{{ __('ui.primary_navigation') }}">
@@ -4293,7 +4488,7 @@
                     <div class="mobile-nav-identity">
                         <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ __('ui.menu') }}</h2>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#primaryNavbar" aria-label="{{ __('ui.close_navigation') }}"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#primaryNavbar" aria-label="{{ __('ui.close_navigation') }}"></button>
                 </div>
                 <div class="offcanvas-body d-flex flex-column flex-lg-row align-items-lg-center gap-3 pt-3 pt-lg-0">
                     <div class="navbar-nav-shell d-flex justify-content-lg-center">

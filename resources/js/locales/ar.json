@@ -31,13 +31,14 @@
     "tajweed": "Tajweed",
     "dismiss": "Dismiss",
     "backToTop": "العودة إلى الأعلى",
-    "skipOnboarding": "Skip onboarding",
+    "skipOnboarding": "تخطّي الجولة",
     "resumeSession": "استئناف الجلسة",
     "pauseSession": "إيقاف الجلسة مؤقتًا",
     "resumingSession": "جارٍ الاستئناف…",
     "pausingSession": "جارٍ الإيقاف المؤقت…",
     "endingSession": "جارٍ الإنهاء…",
-    "startingSession": "جارٍ البدء…"
+    "startingSession": "جارٍ البدء…",
+    "closeTour": "إغلاق الجولة"
   },
   "auth": {
     "continueGoogle": "المتابعة باستخدام Google",
@@ -594,8 +595,8 @@
     "view_recording": "عرض التسجيل",
     "onboarding": {
       "stepCounter": "الخطوة {current} من {total}",
-      "finish": "إنهاء",
-      "useSampleSession": "استخدام جلسة نموذجية",
+      "finish": "أنا مستعد",
+      "useSampleSession": "جرّب نموذجاً قصيراً",
       "steps": {
         "setup": {
           "title": "إعداد جلسة",
@@ -607,12 +608,13 @@
             "يمكنك إعادة فتح الإعداد في أي وقت"
           ],
           "previewTitle": "مدخلات جلسة حقيقية",
-          "previewSubtitle": "إعداد الجلسة موجود بالفعل في لوحة الأدوات.",
+          "previewSubtitle": "بناءً على إعداداتك الحالية.",
           "previewItems": [
             "سورة",
             "نطاق",
             "قارئ"
-          ]
+          ],
+          "hint": "نصيحة: بضع آيات تكفي لأول جلسة — يمكنك توسيع النطاق لاحقاً من عناصر التحكم."
         },
         "reading": {
           "title": "اختر طريقة العرض",
@@ -624,12 +626,13 @@
             "الخطوط متاحة من شريط الأدوات"
           ],
           "previewTitle": "عناصر التحكم في القراءة",
-          "previewSubtitle": "تبديل العرض ومساعدات القراءة مدمجة.",
+          "previewSubtitle": "بناءً على إعدادات العرض الحالية.",
           "previewItems": [
             "مكدّس",
             "مصحف",
             "تجويد"
-          ]
+          ],
+          "hint": "نصيحة: اجعل العربية في الواجهة، وفعّل الترجمة أو التجويد فقط عند الحاجة."
         },
         "practice": {
           "title": "تدرب بالأدوات المدمجة",
@@ -641,12 +644,13 @@
             "السلسلة ووضع المرساة يدعمان المقاطع الأصعب"
           ],
           "previewTitle": "عناصر التحكم في التقنيات",
-          "previewSubtitle": "تبويب التقنيات جزء من مساحة العمل.",
+          "previewSubtitle": "بناءً على إعدادات التدريب الحالية.",
           "previewItems": [
             "تركيز",
             "ضبابية",
             "مرساة"
-          ]
+          ],
+          "hint": "نصيحة: ابدأ بأداة واحدة بسيطة. فحوصات الحفظ اختيارية — جرّبها عندما تشعر بالاستعداد."
         },
         "review": {
           "title": "راجع وعد",
@@ -658,43 +662,48 @@
             "فحص التلاوة والذاكرة متاحان دائماً"
           ],
           "previewTitle": "ما يمكنك العودة إليه",
-          "previewSubtitle": "المراجعة والاستئناف مدمجان في النظام.",
+          "previewSubtitle": "من نشاطك الأخير.",
           "previewItems": [
             "جلسات محفوظة",
             "تسجيلات",
             "رؤى"
-          ]
+          ],
+          "hint": "نصيحة: عد إلى الجلسات المحفوظة في أي وقت من مكتبتك."
         }
       },
-      "playSampleSession": "تشغيل جلسة نموذجية",
+      "playSampleSession": "جرّب نموذجاً قصيراً",
       "postSession": {
         "kicker": "اكتملت الجلسة النموذجية",
-        "title": "ما شاء الله!",
-        "message": "ما شاء الله! بارك الله في جهدك وسهّل عليك رحلتك مع القرآن.",
-        "repeat": "إعادة هذه الجلسة",
+        "title": "أحسنت",
+        "message": "أنهيت النموذج الموجّه. اختر ماذا تفعل بعد ذلك.",
+        "repeat": "إعادة هذا النموذج",
         "newSession": "بدء جلسة جديدة",
         "save": "حفظ هذه الجلسة",
-        "savedToast": "تم حفظ هذه الجلسة بنجاح."
+        "savedToast": "تم حفظ الجلسة.",
+        "hint": "أعد النموذج، ابدأ جلستك، أو تابع إلى متقن عندما تكون جاهزاً.",
+        "continue": "المتابعة إلى متقن"
       },
       "choices": {
-        "groupLabel": "Choose how to begin",
+        "groupLabel": "كيف تود أن تبدأ؟",
         "sample": {
-          "title": "Try Guided Sample (Recommended)",
-          "description": "Walk through a short guided session to see how memorisation flows work."
+          "title": "جرّب نموذجاً موجّهاً",
+          "description": "تدريب قصير لتشعر بتدفّق الجلسة قبل اختيار نطاقك."
         },
         "setup": {
-          "title": "Set Up My Own Session",
-          "description": "Choose your surah, range, and reciter before you begin."
+          "title": "إعداد جلستي بنفسي",
+          "description": "اختر سورة ونطاقاً وقارئاً، ثم ابدأ عندما تكون جاهزاً."
         },
         "explore": {
-          "title": "Explore the Workspace First",
-          "description": "Look around the workspace and open setup when you are ready."
+          "title": "استكشاف أولاً",
+          "description": "تجوّل في مساحة العمل وافتح الإعداد عندما تشاء."
         }
       },
-      "intro": "Four quick steps to get oriented before your first session.",
-      "confirmChoice": "Confirm choice",
+      "intro": "خطوات قصيرة لتجهيز نطاقك، والتدرّب بهدوء، والتعرّف على متقن.",
+      "confirmChoice": "متابعة",
       "startOnboarding": "ابدأ",
-      "continueOnboarding": "متابعة الإعداد"
+      "continueOnboarding": "متابعة الإعداد",
+      "skipTour": "تخطّي الجولة",
+      "finishHint": "اختر كيف تود أن تبدأ — يمكنك تغيير ذلك في أي وقت."
     },
     "open_session_setup": "فتح إعداد الجلسة",
     "open_controls": "فتح عناصر التحكم",
@@ -1050,16 +1059,19 @@
     "welcomeBack": {
       "kicker": "مرحبًا بعودتك",
       "startNewSession": "بدء جلسة جديدة",
-      "continuePreviousSession": "متابعة الجلسة السابقة",
+      "continuePreviousSession": "متابعة هذه الجلسة",
       "freshTitle": "Ready when you are",
       "freshTitleNamed": "Welcome back, {name}",
-      "freshSubtitle": "Take a breath, settle in, and choose whether to start fresh or pick up where you left off.",
+      "freshSubtitle": "تابع جلسة سابقة، أو ابدأ جلسة جديدة.",
       "resumeTitle": "Continue with {chapter}",
       "resumeTitleNamed": "{chapter}, {name}",
-      "resumeGeneric": "Pick up where you left off",
-      "resumeGenericNamed": "Welcome back, {name}",
-      "resumeSubtitle": "Your last session is still here whenever you are ready.",
-      "resumeSubtitleDetail": "{detail} — continue whenever it suits you.",
+      "resumeGeneric": "السلام عليكم",
+      "resumeGenericNamed": "السلام عليكم، {name}",
+      "resumeSubtitle": "جلستك السابقة جاهزة — يسّر الله عودتك.",
+      "resumeSubtitleAtPlace": "توقّفت عند {place}. يسّر الله عودتك وبارك فيها.",
+      "resumeSubtitleDetail": "توقّفت عند {detail}. يسّر الله عودتك وبارك فيها.",
+      "resumePlaceAyah": "{chapter}، الآية {number}",
+      "resumePlaceBeginning": "{chapter}، من البداية",
       "greetingArabic": "ٱلسَّلَامُ عَلَيْكُمْ",
       "greetingTranslation": "Peace be upon you",
       "freshReminderArabic": "رَبِّ زِدْنِى عِلْمًا",
@@ -1071,9 +1083,13 @@
       "resumeReminderSource": "Qur'an 29:69",
       "resumeIntention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time.",
       "reminderLabel": "A word of remembrance",
-      "stoppedAt": "Stopped at",
-      "lastSaved": "Last saved",
-      "continueSessionShort": "متابعة الجلسة"
+      "stoppedAt": "توقفت عند",
+      "stoppedAtAyah": "الآية {number}",
+      "stoppedAtBeginning": "بداية السورة",
+      "lastSaved": "آخر حفظ",
+      "continueSessionShort": "متابعة",
+      "hint": "تابع من حيث توقفت، أو ابدأ من جديد.",
+      "closeLabel": "إغلاق"
     },
     "sessionExit": {
       "kicker": "الجلسة متوقفة",
@@ -1084,13 +1100,13 @@
       "confirmTitle": "إنهاء هذه الجلسة؟",
       "confirmTitleComplete": "إنهاء هذه الجلسة؟",
       "confirmTitleEarly": "إنهاء الآن؟",
-      "confirmDescription": "ستُكمل هذه الجلسة وتُضاف إلى تقدّمك.",
-      "confirmDescriptionComplete": "ستُكمل هذه الجلسة وتُضاف إلى تقدّمك.",
-      "confirmDescriptionEarly": "سيُحفظ تقدّمك. ستبقى هذه الجلسة غير مكتملة ويمكنك متابعتها لاحقًا.",
+      "confirmDescription": "سيؤدي هذا إلى إنهاء تمرينك الحالي. سيُحفظ التقدّم المحرز وتُسجَّل الجلسة كمكتملة.",
+      "confirmDescriptionComplete": "سيؤدي هذا إلى إنهاء تمرينك الحالي. سيُحفظ التقدّم المحرز وتُسجَّل الجلسة كمكتملة.",
+      "confirmDescriptionEarly": "سيؤدي هذا إلى إنهاء تمرينك الحالي. سيُحفظ التقدّم المحرز، وستبقى الجلسة غير مكتملة ويمكنك متابعتها لاحقًا.",
       "confirmContext": "{surah} · {range}",
       "confirmEnd": "إنهاء الجلسة",
       "confirmEndComplete": "إنهاء الجلسة",
-      "confirmEndEarly": "إنهاء الآن",
+      "confirmEndEarly": "إنهاء الجلسة",
       "confirmContinue": "متابعة التمرين",
       "keepPractising": "متابعة التمرين",
       "repetitionsProgress": "اكتملت {completed} من {total} تكرارات",
@@ -1866,21 +1882,15 @@
       "loginShell": "Login",
       "setupTab": "Session setup",
       "tajweedLabel": "التجويد",
-      "toggleMadaniMushaf": "تبديل عرض المصحف المدني الملوّن",
-      "madaniMushafLabel": "المصحف المدني",
-      "mushafLayoutMenu": "تخطيطات الصفحة",
-      "mushafLayoutStandard": "قياسي",
-      "mushafLayoutGreen": "مدني أخضر",
-      "mushafLayoutBlue": "مدني أزرق",
-      "mushafLayoutLavender": "مدني بنفسجي",
-      "mushafLayoutGold": "مدني ذهبي",
       "enableWordAudio": "Enable audio for individual word chips",
       "guestAuthShell": "Login",
       "ayahNumberLabel": "آية {number}",
       "playRecording": "تشغيل التسجيل",
       "pauseRecording": "إيقاف التسجيل مؤقتاً",
       "replayRecording": "إعادة تشغيل التسجيل",
-      "loadingRecording": "جارٍ تحميل التسجيل"
+      "loadingRecording": "جارٍ تحميل التسجيل",
+      "aiMemorisationResult": "نتيجة فحص الحفظ",
+      "recommendedNextStep": "الخطوة التالية المقترحة"
     },
     "calligraphy": {
       "onboarding": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",

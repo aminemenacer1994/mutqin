@@ -45,7 +45,49 @@
           </div>
 
           <div class="dash-hero__actions">
-            <a v-if="data.continue" class="dash-continue" :href="continueHref">
+            <div
+              v-if="liveReturnSession"
+              class="dash-return-session"
+              role="region"
+              :aria-label="t('dashboard.return_session_aria')"
+            >
+              <div class="dash-return-session__copy">
+                <span class="dash-return-session__label">{{ t('dashboard.return_session_label') }}</span>
+                <strong class="dash-return-session__title">
+                  {{ liveReturnSession.surah_name || t('dashboard.start_session') }}
+                </strong>
+                <div class="dash-pills">
+                  <span v-if="ayahRangeLabel(liveReturnSession)" class="dash-pill">
+                    {{ t('dashboard.current_range') }}: {{ ayahRangeLabel(liveReturnSession) }}
+                  </span>
+                  <span v-if="liveReturnSession.last_ayah" class="dash-pill">
+                    {{ t('dashboard.last_ayah', { n: liveReturnSession.last_ayah }) }}
+                  </span>
+                  <span v-if="liveReturnSession.last_activity_at" class="dash-pill">
+                    {{ formatRelative(liveReturnSession.last_activity_at) }}
+                  </span>
+                </div>
+                <p class="dash-return-session__hint">
+                  {{ t('dashboard.return_session_hint') }}
+                </p>
+              </div>
+              <div class="dash-return-session__actions">
+                <button
+                  type="button"
+                  class="dash-btn dash-btn--primary dash-return-session__go"
+                  @click="goToLiveSession"
+                >
+                  <i class="bi bi-play-fill" aria-hidden="true"></i>
+                  <span>{{ t('dashboard.return_session_now') }}</span>
+                </button>
+              </div>
+            </div>
+
+            <a
+              v-else-if="data.continue"
+              class="dash-continue"
+              :href="continueHref"
+            >
               <div class="dash-continue__body">
                 <span class="dash-continue__label">{{ continueCta }}</span>
                 <span class="dash-continue__title">
@@ -543,6 +585,7 @@ export default {
       activityFilter: 'all',
       darkTheme: false,
       themeObserver: null,
+      activeSessionSnapshot: null,
     }
   },
   computed: {
@@ -574,6 +617,25 @@ export default {
     continueHref() {
       const href = String(this.data?.continue?.href || '').trim()
       return href || this.memorisationUrl
+    },
+    isLiveContinueAction() {
+      const type = String(this.data?.continue?.action_type || '')
+      return type === 'resume_session' || type === 'continue_session'
+    },
+    liveReturnSession() {
+      if (!this.isLiveContinueAction || !this.data?.continue) return null
+      const snap = this.activeSessionSnapshot
+      const base = this.data.continue
+      const fromKey = String(snap?.activeVerseKey || snap?.activeKey || '')
+      const snapAyah = Number(fromKey.split(':')[1] || 0)
+      const lastAyah = Number(base.last_ayah || snapAyah || 0) || null
+      return {
+        ...base,
+        surah_name: base.surah_name || null,
+        last_ayah: lastAyah,
+        last_activity_at: base.last_activity_at
+          || (snap?.savedAt ? new Date(Number(snap.savedAt)).toISOString() : null),
+      }
     },
     recommendedNext() {
       const next = this.data?.recommended_next
@@ -889,6 +951,7 @@ export default {
       })
     }
 
+    this.refreshActiveSessionSnapshot()
     if (!this.data) {
       this.fetchDashboard(this.chartDays, { initial: true })
     } else {
@@ -897,6 +960,7 @@ export default {
 
     this.visibilityHandler = () => {
       if (document.visibilityState === 'visible') {
+        this.refreshActiveSessionSnapshot()
         this.fetchDashboard(this.chartDays, { quiet: true })
       }
     }
@@ -918,6 +982,27 @@ export default {
     t(key, params) {
       if (typeof this.$t === 'function') return this.$t(key, params)
       return key
+    },
+    activeSessionSnapshotKey() {
+      const id = this.ownerId > 0 ? String(this.ownerId) : 'guest'
+      return `telawa.activeSession.v1.${id}`
+    },
+    refreshActiveSessionSnapshot() {
+      if (typeof sessionStorage === 'undefined') {
+        this.activeSessionSnapshot = null
+        return
+      }
+      try {
+        const raw = sessionStorage.getItem(this.activeSessionSnapshotKey())
+        this.activeSessionSnapshot = raw ? JSON.parse(raw) : null
+      } catch {
+        this.activeSessionSnapshot = null
+      }
+    },
+    goToLiveSession() {
+      const href = this.continueHref
+      if (!href) return
+      window.location.assign(href)
     },
     cssVar(name, fallback = '') {
       if (typeof window === 'undefined') return fallback
@@ -1236,6 +1321,7 @@ export default {
         await this.$nextTick()
         if (requestId === this.dashboardRequestId) {
           this.chartReady = true
+          this.refreshActiveSessionSnapshot()
         }
       } catch (error) {
         console.error('Dashboard fetch failed', error)

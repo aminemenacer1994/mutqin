@@ -39,7 +39,7 @@ const stateSelectors = {
   recordingsLoading: ['.recordings-library-modal', '.recordings-library-header', '.recordings-library-body', '.recordings-library-loading'],
   recordingsEmpty: ['.recordings-library-modal', '.recordings-library-header', '.recordings-library-body', '.recordings-library-empty'],
   onboarding: ['.post-onboarding-modal', '.onboarding-hero', '.onboarding-progress', '.onboarding-body', '.mutqin-modal-footer'],
-  paused: ['.session-exit-modal', '.session-exit-hero', '.session-exit-body', '.mutqin-modal-footer', '.session-exit-actions-layout'],
+  paused: ['.session-exit-modal', '.modal-header', '.session-exit-body', '.mutqin-modal-footer', '.session-exit-confirm-actions'],
   complete: ['.post-session-simple', '.post-session-simple__header', '.post-session-simple__body', '.post-session-simple__footer', '.post-session-simple__actions']
 }
 
@@ -61,7 +61,7 @@ const touchTargetSelectors = {
   recordingsLoading: '.recordings-library-header button',
   recordingsEmpty: '.recordings-library-header button',
   onboarding: '.onboarding-close-btn, .onboarding-nav-actions button',
-  paused: '.session-exit-actions-layout button',
+  paused: '.session-exit-confirm-actions button, .session-exit-modal .modal-close-btn',
   complete: '.post-session-simple__footer button'
 }
 
@@ -439,7 +439,7 @@ async function inspectState(page, state) {
       recordingsLoading: ['.recordings-library-header', '.recordings-library-body'],
       recordingsEmpty: ['.recordings-library-header', '.recordings-library-body'],
       onboarding: ['.onboarding-hero', '.onboarding-body', '.onboarding-preview-grid', '.onboarding-nav-actions'],
-      paused: ['.session-exit-body', '.session-exit-actions-layout', ['.session-exit-actions-secondary', 2], '.session-exit-progress-summary'],
+      paused: ['.session-exit-body', ['.session-exit-confirm-actions', 1], '.session-exit-progress-summary'],
       complete: ['.post-session-simple__header', '.post-session-simple__body', '.post-session-simple__row', '.post-session-simple__actions']
     }
 
@@ -455,9 +455,11 @@ async function inspectState(page, state) {
       }
       if (state === 'active') {
         expectParallel('.action-btn-exit', '.top-card-ellipsis', 'secondary action rail')
-        const primary = visibleElements('.top-card-session-actions.has-paired-actions > .session-primary-action')[0]?.getBoundingClientRect()
-        const exit = visibleElements('.top-card-session-actions.has-paired-actions > .action-btn-exit')[0]?.getBoundingClientRect()
-        if (!primary || !exit || exit.top < primary.bottom - 2) issues.push('active: primary and end-session actions did not reflow to separate rows')
+        expectParallel(
+          '.top-card-session-actions.has-paired-actions > .session-primary-action',
+          '.top-card-session-actions.has-paired-actions > .action-btn-exit',
+          'primary and end-session actions'
+        )
       }
       if (state === 'controls') expectParallel('.sheet-content > .field-stack-compact > .field:nth-child(1)', '.sheet-content > .field-stack-compact > .field:nth-child(3)', 'Surah and reciter fields')
       if (state === 'practice') expectParallel('.sheet-toggle > .st-left .st-txt', '.sheet-toggle > .st-right-group', 'practice copy and controls')
@@ -484,13 +486,18 @@ async function inspectState(page, state) {
       if (state === 'recordings') expectParallel('.recordings-library-nav-intro', '.recordings-library-nav-toggle', 'recordings navigation')
       if (state === 'onboarding') expectParallel('.onboarding-step-icon', '.onboarding-hero-copy', 'onboarding hero')
       if (state === 'paused' && viewportWidth >= 350) {
-        expectParallel('.session-exit-actions-secondary > :nth-child(1)', '.session-exit-actions-secondary > :nth-child(2)', 'paused secondary actions')
-        const keepBtn = Array.from(document.querySelectorAll('.session-exit-actions-layout button')).find(btn => /keep practising/i.test(btn.textContent || ''))
-        const endBtn = Array.from(document.querySelectorAll('.session-exit-actions-layout button')).find(btn => /end session/i.test(btn.textContent || ''))
+        const keepBtn = Array.from(document.querySelectorAll('.session-exit-confirm-actions button')).find(btn => /keep practising/i.test(btn.textContent || ''))
+        const endBtn = Array.from(document.querySelectorAll('.session-exit-confirm-actions button')).find(btn => /end session/i.test(btn.textContent || ''))
         if (!keepBtn) issues.push('paused: Keep practising button missing')
         if (!endBtn) issues.push('paused: End session button missing')
-        const startNew = Array.from(document.querySelectorAll('.session-exit-actions-layout button')).find(btn => /start new session/i.test(btn.textContent || ''))
-        const repeat = Array.from(document.querySelectorAll('.session-exit-actions-layout button')).find(btn => /repeat session/i.test(btn.textContent || ''))
+        if (endBtn && !endBtn.classList.contains('mutqin-modal-btn--destructive')) {
+          issues.push('paused: End session must use destructive danger styling')
+        }
+        if (keepBtn && !keepBtn.classList.contains('mutqin-modal-btn--secondary')) {
+          issues.push('paused: Keep practising must use secondary styling')
+        }
+        const startNew = Array.from(document.querySelectorAll('.session-exit-confirm-actions button')).find(btn => /start new session/i.test(btn.textContent || ''))
+        const repeat = Array.from(document.querySelectorAll('.session-exit-confirm-actions button')).find(btn => /repeat session/i.test(btn.textContent || ''))
         if (startNew) issues.push('paused: Start new session must wait until completion succeeds')
         if (repeat) issues.push('paused: Repeat session must wait until completion succeeds')
         if (document.querySelector('.mutqin-session-summary-row')) {

@@ -144,14 +144,36 @@ includesAll('welcome back continue session flow', [
   /dismissWelcomeBackAfterContinue\(\)/,
   /hydrateSessionFromPayload\(payload/,
   /queueBackendResumeAfterWelcomeContinue/,
-  /Choose how you'd like to begin/,
+  /memorisation\.welcomeBack\.freshSubtitle/,
   /Continue must never auto-open the tools offcanvas/,
   /continueSessionShort/,
   /welcome-back-continue-label--short/,
   /resolveVerseAyahNumber\(verse\)/,
   /\.welcome-back-modal-wrap \.welcome-back-dialog/,
   /@click\.stop\.prevent="welcomeBackContinueSession"/,
+  /@click="closeWelcomeBackModal"/,
+  /closeWelcomeBackModal\(\) \{/,
+  /if \(this\.showWelcomeBackModal\) \{[\s\S]*this\.closeWelcomeBackModal\(\)/,
 ])
+
+{
+  const vue = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
+  const en = readFileSync(new URL('../../resources/js/locales/en.json', import.meta.url), 'utf8')
+  const welcomeBlock = vue.match(/v-if="showWelcomeBackModal"[\s\S]*?<\/transition>/)?.[0] || ''
+  assert.ok(welcomeBlock, 'welcome-back modal block not found')
+  assert.doesNotMatch(welcomeBlock, /welcome-back-hint|welcome-back-kicker/, 'welcome-back modal must not show redundant hint/kicker copy')
+  assert.match(welcomeBlock, /@click="closeWelcomeBackModal"/)
+  assert.doesNotMatch(welcomeBlock, /welcome-back-backdrop"[^>]*welcomeBackStartNewSession/)
+  assert.match(en, /"freshSubtitle": "Continue a previous session, or start a new one\."/)
+  assert.match(en, /"resumeSubtitleAtPlace": "You paused at \{place\}\. May Allah make your return gentle and blessed\."/)
+  assert.match(en, /"resumePlaceAyah": "\{chapter\}, ayah \{number\}"/)
+  assert.match(welcomeBlock, /container-fluid welcome-back-fluid/)
+  assert.match(welcomeBlock, /welcomeBackMetaParts/)
+  assert.match(welcomeBlock, /welcome-back-salam/)
+  assert.match(welcomeBlock, /welcome-back-meta-line/)
+  assert.doesNotMatch(welcomeBlock, /welcome-back-context/)
+  assert.match(en, /"continuePreviousSession": "Continue this session"/)
+}
 
 {
   const js = readFileSync(new URL('../../resources/js/views/Memorisation.js', import.meta.url), 'utf8')
@@ -180,7 +202,10 @@ includesAll('desktop control group swap', [
 ])
 
 {
+  const memorisationCss = readFileSync(new URL('../../resources/js/views/Memorisation.css', import.meta.url), 'utf8')
+  const mobileGridCss = readFileSync(new URL('../../resources/js/views/Memorisation.mobile-grid.css', import.meta.url), 'utf8')
   const blade = readFileSync(new URL('../../resources/views/layouts/app.blade.php', import.meta.url), 'utf8')
+
   assert.doesNotMatch(
     blade,
     /\.workspace-shell--post-session-choice \.top-card-icon-controls\s*\{[^}]*display:\s*none\s*!important/,
@@ -190,6 +215,53 @@ includesAll('desktop control group swap', [
     blade,
     /\.workspace-shell--post-session-choice \.top-card-icon-controls\s*\{[^}]*display:\s*flex\s*!important/,
     'blade hotfix must keep mobile post-session top-card icons visible'
+  )
+
+  // Progress pills (row 2) must not share a grid row with Resume/End actions (row 3)
+  assert.match(
+    memorisationCss,
+    /row 2 = progress pills[\s\S]*?row 3 = Resume \/ End session actions[\s\S]*?\.workspace-shell-head > \.workspace-shell-actions \{[\s\S]*?grid-row:\s*3\s*!important/,
+    'mobile actions must occupy grid-row 3 below progress pills'
+  )
+  assert.match(
+    memorisationCss,
+    /row 2 = progress pills[\s\S]*?\.workspace-shell-head > \.workspace-shell-progress-pills \{[\s\S]*?grid-row:\s*2\s*!important/,
+    'progress pills must occupy grid-row 2'
+  )
+  assert.match(
+    mobileGridCss,
+    /Progress pills = row 2; session actions = real row-3 box[\s\S]*?\.workspace-shell-head > \.workspace-shell-actions \{[\s\S]*?grid-row:\s*3\s*!important/,
+    'mobile-grid must place actions on row 3 as a real box'
+  )
+  assert.match(
+    mobileGridCss,
+    /\.workspace-shell-head > \.workspace-shell-progress-pills \{[\s\S]*?overflow-x:\s*auto/,
+    'progress pills row must keep horizontal scroll'
+  )
+  assert.match(
+    blade,
+    /html body \.app \.workspace-shell-head > \.workspace-shell-actions \{[\s\S]*?grid-row:\s*3\s*!important[\s\S]*?display:\s*flex\s*!important/,
+    'blade hotfix must pin actions to row 3 as a flex box (beats Vue chunk CSS)'
+  )
+  assert.doesNotMatch(
+    blade,
+    /\.app \.workspace-shell-actions,\s*\n\s*\.app \.workspace-shell-actions \.action-buttons-group \{\s*\n\s*display:\s*contents\s*!important/,
+    'blade hotfix must not use display:contents for active-session actions (causes pill/button overlap)'
+  )
+  assert.match(
+    blade,
+    /\.app \.workspace-shell-actions \.top-card-session-actions\.has-paired-actions:not\(\.post-session-choice-pair\) \{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)\s*!important/,
+    'blade hotfix must keep Resume/End as a 2-column grid (not stacked)'
+  )
+  assert.match(
+    blade,
+    /\.app \.workspace-shell-actions \.top-card-session-actions\.has-paired-actions:not\(\.post-session-choice-pair\) > \.action-btn-exit \{[\s\S]*?grid-column:\s*2\s*!important[\s\S]*?grid-row:\s*1\s*!important/,
+    'blade hotfix must place End session beside Resume on row 1'
+  )
+  assert.match(
+    mobileGridCss,
+    /\.top-card-session-actions\.has-paired-actions:not\(\.post-session-choice-pair\) > \.action-btn-exit \{[\s\S]*?grid-column:\s*2\s*!important[\s\S]*?grid-row:\s*1\s*!important/,
+    'mobile-grid must place End session beside Resume on row 1'
   )
 }
 
@@ -263,14 +335,14 @@ includesAll('ai recitation full-session recording', [
 ])
 
 includesAll('session exit confirmation modal', [
-  /class="session-exit-actions-layout"/,
-  /session-exit-actions-secondary/,
-  /session-exit-action-chip/,
-  /session-exit-action-chip--end/,
+  /session-exit-confirm-actions/,
+  /mutqin-modal-actions--end/,
   /mutqin-modal-btn--destructive/,
   /mutqin-modal-btn--secondary/,
   /mutqin-btn--destructive/,
   /session-exit-progress-summary/,
+  /session-exit-backdrop/,
+  /@click="keepPractisingFromExitModal"/,
   /keepPractisingFromExitModal/,
   /confirmEndSessionFromExitModal/,
   /pauseSessionFromPrimaryAction/,

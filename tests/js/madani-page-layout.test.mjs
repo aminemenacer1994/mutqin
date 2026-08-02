@@ -144,4 +144,17 @@ assert.equal(formatMadaniAyahEndLabel({ textQpc: '6' }), '\u06DD٦')
 assert.equal(formatMadaniAyahEndLabel({ text_qpc_hafs: '٧' }), '\u06DD٧')
 assert.equal(formatMadaniAyahEndLabel({ verseKey: '2:7', textQpc: '' }), '\u06DD٧')
 
+// Per-surah numbering: verseKey wins over stale/global digits in textQpc.
+// Al-Baqarah 1 must show 1 (not global id 8); short surahs must reset at 1.
+assert.equal(formatMadaniAyahEndLabel({ verseKey: '2:1', textQpc: '8' }), '\u06DD١')
+assert.equal(formatMadaniAyahEndLabel({ verseKey: '2:1', textQpc: '٨' }), '\u06DD١')
+assert.equal(formatMadaniAyahEndLabel({ verseKey: '112:1', textQpc: '6222' }), '\u06DD١')
+assert.equal(formatMadaniAyahEndLabel({ verseKey: '112:4', textQpc: '6225' }), '\u06DD٤')
+assert.equal(formatMadaniAyahEndLabel({ verseKey: '114:1', textQpc: '6231' }), '\u06DD١')
+assert.equal(formatMadaniAyahEndLabel({ verseKey: '1:7', textQpc: '7' }), '\u06DD٧')
+assert.equal(
+  formatMadaniAyahEndLabel({ verse_key: '99:1', text_qpc_hafs: '5980' }),
+  '\u06DD١'
+)
+
 console.log('Madani page layout tests passed')

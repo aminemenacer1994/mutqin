@@ -106,16 +106,16 @@
           </section>
 
           <section
+            v-if="notes.length"
             class="ayah-notes-list-section"
-            :class="{ 'is-empty': !loading && !notes.length, 'is-collapsed': !notesExpanded && notes.length > 0 }"
+            :class="{ 'is-collapsed': !notesExpanded }"
           >
             <div class="ayah-notes-list-head">
               <h3 id="ayahNotesListHeading">
                 {{ t('memorisation.ayahNotes.yourNotes') }}
-                <span v-if="!loading && notes.length" class="ayah-notes-list-count-inline">({{ notes.length }})</span>
+                <span class="ayah-notes-list-count-inline">({{ notes.length }})</span>
               </h3>
               <button
-                v-if="!loading && notes.length"
                 type="button"
                 class="ayah-notes-collapse-btn"
                 :aria-expanded="notesExpanded ? 'true' : 'false'"
@@ -145,14 +145,6 @@
               <div v-if="loading" class="ayah-notes-empty ayah-notes-empty--loading" role="status">
                 <i class="bi bi-hourglass-split" aria-hidden="true"></i>
                 <p>{{ t('memorisation.ayahNotes.loading') }}</p>
-              </div>
-
-              <div v-else-if="!notes.length" class="ayah-notes-empty">
-                <span class="ayah-notes-empty-icon" aria-hidden="true">
-                  <i class="bi bi-journal-text"></i>
-                </span>
-                <strong>{{ t('memorisation.ayahNotes.emptyTitle') }}</strong>
-                <p>{{ t('memorisation.ayahNotes.empty') }}</p>
               </div>
 
               <ul v-else class="ayah-notes-list" role="list">

@@ -458,7 +458,6 @@ export default {
       fontOpen: false,
       bgOpen: false,
       borderOpen: false,
-      mushafLayoutMenuOpen: false,
       mushafToolbarCollapsed: true,
       mushafAyahHtmlCache: null,
       
@@ -591,7 +590,7 @@ export default {
       showTools: false,
       readingViewMode: 'mushaf',
       mushafPageIndex: 0,
-      mushafUiSkin: 'standard', // standard | green | blue | lavender | gold
+      mushafUiSkin: 'standard', // Paper/standard only; legacy skins remap here
       mushafBorder: 'classic',
       hoveredMushafVerseKey: '',
       madaniPageNumbers: [],
@@ -2419,8 +2418,35 @@ export default {
     isWelcomeBackWorkspaceHidden() {
       return !!(this.welcomeBackWorkspaceHidden || this.shouldGateWorkspaceForResumeChoice)
     },
+    welcomeBackResumePlaceLabel() {
+      if (!this.canResumePreviousSession) return ''
+      const payload = this.continueSessionPayload || {}
+      const config = payload.config || {}
+      const chapter = this.chapters.find(item => Number(item.id) === Number(config.chapterId))
+      const chapterName = String(chapter?.name_simple || '').trim()
+      if (!chapterName) {
+        return this.formatResumeStoppedAyahLabel(payload) || ''
+      }
+      if (!this.hasResumePlaybackPosition(payload)) {
+        return this.t('memorisation.welcomeBack.resumePlaceBeginning', { chapter: chapterName })
+      }
+      const ayahNumber = this.resolveResumeStoppedAyahNumber(payload)
+      if (ayahNumber == null) {
+        return this.t('memorisation.welcomeBack.resumePlaceBeginning', { chapter: chapterName })
+      }
+      return this.t('memorisation.welcomeBack.resumePlaceAyah', {
+        chapter: chapterName,
+        number: ayahNumber
+      })
+    },
     welcomeBackModalTitle() {
       const name = String(this.auth?.name || '').trim()
+      if (this.canResumePreviousSession) {
+        if (name) {
+          return this.t('memorisation.welcomeBack.resumeGenericNamed', { name })
+        }
+        return this.t('memorisation.welcomeBack.resumeGeneric')
+      }
       if (name) {
         return this.t('memorisation.welcomeBack.freshTitleNamed', { name })
       }
@@ -2428,9 +2454,28 @@ export default {
     },
     welcomeBackModalSubtitle() {
       if (this.canResumePreviousSession) {
+        const place = this.welcomeBackResumePlaceLabel
+        if (place) {
+          return this.t('memorisation.welcomeBack.resumeSubtitleAtPlace', { place })
+        }
         return this.t('memorisation.welcomeBack.resumeSubtitle')
       }
       return this.t('memorisation.welcomeBack.freshSubtitle')
+    },
+    welcomeBackMetaParts() {
+      if (!this.canResumePreviousSession) return []
+      const detailRows = this.welcomeBackDetailRows || []
+      const byKey = new Map(detailRows.map(row => [row.key, row]))
+      const place = this.welcomeBackResumePlaceLabel
+      const parts = []
+      if (place) parts.push(place)
+      if (byKey.get('range')?.value) parts.push(byKey.get('range').value)
+      if (byKey.get('saved')?.value) parts.push(byKey.get('saved').value)
+      else if (byKey.get('progress')?.value) parts.push(byKey.get('progress').value)
+      return parts.filter(Boolean).slice(0, 3)
+    },
+    welcomeBackMetaLine() {
+      return this.welcomeBackMetaParts.join(' · ')
     },
     welcomeBackDetailRows() {
       if (!this.canResumePreviousSession) return []
@@ -7055,6 +7100,7 @@ export default {
                 ? formatMadaniAyahEndLabel(word)
                 : (word.textQpc || word.codeV2 || ''))
             // Never leave ayah-end markers blank when a glyph slot is empty.
+            // End labels always resolve from verseKey (per-surah), not global ids.
             if (word.isEnd && !String(html || '').trim()) {
               html = formatMadaniAyahEndLabel(word)
               useGlyph = false
@@ -7180,94 +7226,6 @@ export default {
       const pageNumber = this.currentMadaniPageNumber
       if (pageNumber) return `${pageNumber} / 604`
       return `${this.safeMushafPageIndex + 1} / ${total}`
-    },
-
-    mushafCornerChapterLabel() {
-      const pageChapterId = Number(this.currentMushafPage?.primaryChapterId || 0)
-      const chapterId = pageChapterId || Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
-      if (!chapterId) return this.mushafSurahTitle || ''
-      return `سورة ${chapterId}`
-    },
-
-    activeMadaniSkin() {
-      const skin = this.normalizeMushafUiSkin(this.mushafUiSkin)
-      return skin === 'standard' ? null : skin
-    },
-
-    isMadaniMushafSkin() {
-      return !!this.activeMadaniSkin
-    },
-
-    mushafLayoutOptions() {
-      return [
-        {
-          id: 'standard',
-          label: this.t('memorisation.a11y.mushafLayoutStandard') || 'Standard',
-          swatches: ['#ffffff', '#161311']
-        },
-        {
-          id: 'green',
-          label: this.t('memorisation.a11y.mushafLayoutGreen') || 'Madani Green',
-          swatches: ['#1f5c3c', '#c4a35a', '#f7f2e4']
-        },
-        {
-          id: 'blue',
-          label: this.t('memorisation.a11y.mushafLayoutBlue') || 'Madani Blue',
-          swatches: ['#7eafdb', '#d95d81', '#c5a06b']
-        },
-        {
-          id: 'lavender',
-          label: this.t('memorisation.a11y.mushafLayoutLavender') || 'Madani Lavender',
-          swatches: ['#9a95a8', '#c5a06b', '#fdfcf0']
-        },
-        {
-          id: 'gold',
-          label: this.t('memorisation.a11y.mushafLayoutGold') || 'Madani Gold',
-          swatches: ['#b8924a', '#c94b6a', '#fffaf0']
-        }
-      ]
-    },
-
-    mushafDesktopFrameOptions() {
-      return [
-        {
-          id: 'standard',
-          label: this.t('memorisation.a11y.mushafFramePaper') || 'Paper',
-          swatches: ['#f4f4f5', '#18181b']
-        },
-        {
-          id: 'gold',
-          label: this.t('memorisation.a11y.mushafFrameParchment') || 'Parchment',
-          swatches: ['#f7f2e4', '#b8924a', '#1c1917']
-        },
-        {
-          id: 'green',
-          label: this.t('memorisation.a11y.mushafFrameMadani') || 'Madani',
-          swatches: ['#1f5c3c', '#c4a35a', '#f7f2e4']
-        }
-      ]
-    },
-
-    madaniJuzLabel() {
-      const juz = Number(this.currentMushafPage?.juzNumber || this.currentMushafPage?.layout?.juzNumber || 0)
-      const ordinals = {
-        1: 'الأَوَّلُ', 2: 'الثَّانِي', 3: 'الثَّالِثُ', 4: 'الرَّابِعُ', 5: 'الخَامِسُ',
-        6: 'السَّادِسُ', 7: 'السَّابِعُ', 8: 'الثَّامِنُ', 9: 'التَّاسِعُ', 10: 'العَاشِرُ',
-        11: 'الحَادِي عَشَرَ', 12: 'الثَّانِي عَشَرَ', 13: 'الثَّالِثَ عَشَرَ', 14: 'الرَّابِعَ عَشَرَ',
-        15: 'الخَامِسَ عَشَرَ', 16: 'السَّادِسَ عَشَرَ', 17: 'السَّابِعَ عَشَرَ', 18: 'الثَّامِنَ عَشَرَ',
-        19: 'التَّاسِعَ عَشَرَ', 20: 'العِشْرُونَ', 21: 'الحَادِي وَالعِشْرُونَ', 22: 'الثَّانِي وَالعِشْرُونَ',
-        23: 'الثَّالِثُ وَالعِشْرُونَ', 24: 'الرَّابِعُ وَالعِشْرُونَ', 25: 'الخَامِسُ وَالعِشْرُونَ',
-        26: 'السَّادِسُ وَالعِشْرُونَ', 27: 'السَّابِعُ وَالعِشْرُونَ', 28: 'الثَّامِنُ وَالعِشْرُونَ',
-        29: 'التَّاسِعُ وَالعِشْرُونَ', 30: 'الثَّلَاثُونَ'
-      }
-      if (!juz || !ordinals[juz]) return ''
-      return `الجُزْءُ ${ordinals[juz]}`
-    },
-
-    madaniPageNumberArabic() {
-      const page = Number(this.currentMadaniPageNumber || 0)
-      if (!page) return ''
-      return String(page).replace(/\d/g, digit => '٠١٢٣٤٥٦٧٨٩'[Number(digit)])
     },
 
     quizAccuracy() {
@@ -7620,9 +7578,6 @@ export default {
       }
       if (this.borderOpen && !e.target.closest('.border-dropdown-region')) {
         this.borderOpen = false
-      }
-      if (this.mushafLayoutMenuOpen && !e.target.closest('.mushaf-layout-dropdown')) {
-        this.mushafLayoutMenuOpen = false
       }
     }
     document.addEventListener('click', this.handleMushafToolbarDocumentClick)
@@ -9027,12 +8982,15 @@ export default {
     buildOnboardingStep(key, icon) {
       const base = `memorisation.onboarding.steps.${key}`
       const pointsRaw = typeof this.$tm === 'function' ? this.$tm(`${base}.points`) : []
+      const hintKey = `${base}.hint`
+      const hint = this.t(hintKey)
       const step = {
         key,
         icon,
         title: this.t(`${base}.title`),
         stepLabel: this.t(`${base}.stepLabel`),
         body: this.t(`${base}.body`),
+        hint: hint && hint !== hintKey ? hint : '',
         points: Array.isArray(pointsRaw) ? pointsRaw.filter(Boolean) : []
       }
       if (key === 'practice') {
@@ -11594,6 +11552,15 @@ export default {
       this.sessionEndedSnapshot = null
       this.restoreOnboardingDemo()
       this.onboardingManualLaunch = false
+    },
+    /** UI dismiss: revisit uses skip; first-time soft-skips via existing explore path. */
+    dismissOnboardingTour() {
+      if (!this.requiresFirstTimeOnboarding) {
+        this.skipOnboarding()
+        return
+      }
+      this.selectOnboardingFinishChoice('explore')
+      this.confirmOnboardingFinishChoice()
     },
     async playOnboardingSampleSession() {
       this.primeAudioPlaybackUnlock()
@@ -24063,9 +24030,11 @@ export default {
     },
 
     closeWelcomeBackModal() {
+      if (this.welcomeBackContinueInFlight) return
       this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
       this.welcomeBackWorkspaceHidden = false
+      this.welcomeBackModalReady = false
     },
 
     welcomeBackStartNewSession() {
@@ -24208,7 +24177,7 @@ export default {
         this.buildPayloadFromLoadedWorkspaceSession(),
       ].filter((payload) => Number(payload?.config?.chapterId || 0) > 0)
 
-      // Dismiss immediately so "Choose how you'd like to begin" never lingers,
+      // Dismiss immediately so the welcome-back choice never lingers,
       // and Continue never auto-opens the tools offcanvas.
       this.dismissWelcomeBackAfterContinue()
 
@@ -24375,6 +24344,12 @@ export default {
       this.openToolsPanel()
     },
     openDashboardView() {
+      try {
+        this.persistContinueSession?.()
+        this.markActiveSessionSnapshot?.()
+      } catch (error) {
+        console.error('Failed to snapshot session before dashboard:', error)
+      }
       window.location.assign('/dashboard')
     },
     handleHeaderSessionAction() {
@@ -25480,10 +25455,14 @@ export default {
       return this.getChapterDisplayName(chapter) || `Surah ${chapter.id || ''}`.trim()
     },
     resolveVerseAyahNumber(verse) {
-      const direct = Number(verse?.number ?? verse?.ayah ?? verse?.ayah_number)
-      if (Number.isFinite(direct) && direct >= 1) return Math.floor(direct)
+      // Prefer verseKey / numberInSurah (per-surah). Never treat global Quran ids
+      // (alquran ayah.number / Quran.com verse.id) as the display ayah number.
       const fromKey = Number(String(verse?.key || verse?.verse_key || '').split(':')[1])
       if (Number.isFinite(fromKey) && fromKey >= 1) return Math.floor(fromKey)
+      const fromInSurah = Number(verse?.numberInSurah ?? verse?.verse_number)
+      if (Number.isFinite(fromInSurah) && fromInSurah >= 1) return Math.floor(fromInSurah)
+      const direct = Number(verse?.number ?? verse?.ayah ?? verse?.ayah_number)
+      if (Number.isFinite(direct) && direct >= 1) return Math.floor(direct)
       return null
     },
     buildStackedAyahEndMarkerHtml(verse) {
@@ -25534,7 +25513,6 @@ export default {
         this.fontOpen = false
         this.bgOpen = false
         this.borderOpen = false
-        this.mushafLayoutMenuOpen = false
       }
       this.topCardMenuOpen = false
       this.fontDropdownOpen = false
@@ -26324,6 +26302,11 @@ export default {
         this.blurPeekHoldingSpace = false
         this.clearTouchPeek()
         this.hoverPeekVerseKey = null
+        if (this.showWelcomeBackModal) {
+          event.preventDefault()
+          this.closeWelcomeBackModal()
+          return
+        }
         if (this.showSelfCheckModal) {
           event.preventDefault()
           this.closeSelfCheckModal()
@@ -28151,41 +28134,9 @@ export default {
         )
       }
     },
-    normalizeMushafUiSkin(value) {
-      const raw = String(value || '').trim()
-      if (raw === 'madani') return 'green'
-      if (['standard', 'green', 'blue', 'lavender', 'gold'].includes(raw)) return raw
+    normalizeMushafUiSkin(_value) {
+      // Legacy coloured frame skins removed — always Paper/standard.
       return 'standard'
-    },
-    toggleMushafLayoutMenu() {
-      this.mushafLayoutMenuOpen = !this.mushafLayoutMenuOpen
-      if (this.mushafLayoutMenuOpen) {
-        this.fontOpen = false
-        this.bgOpen = false
-        this.borderOpen = false
-      }
-    },
-    setMushafUiSkin(skin, options = {}) {
-      const { announce = true } = options
-      const next = this.normalizeMushafUiSkin(skin)
-      if (this.mushafUiSkin === next) {
-        this.mushafLayoutMenuOpen = false
-        return
-      }
-      this.mushafUiSkin = next
-      this.mushafLayoutMenuOpen = false
-      this.persistUiState()
-      if (announce) {
-        const selected = (this.mushafLayoutOptions || []).find(item => item.id === next)
-        this.showBanner(
-          selected?.label ? `${selected.label} layout` : 'Mushaf layout updated',
-          'info',
-          1200
-        )
-      }
-    },
-    toggleMushafColouredLayout() {
-      this.setMushafUiSkin(this.isMadaniMushafSkin ? 'standard' : 'green')
     },
     cycleQuranFontPill() {
       const options = this.quranFontOptions || []
@@ -28324,7 +28275,6 @@ export default {
         this.bgOpen = false
         this.fontOpen = false
         this.borderOpen = false
-        this.mushafLayoutMenuOpen = false
         this.topCardMenuOpen = false
         this.closeTopCardSubmenus()
         this.openVerseActionKey = ''
@@ -30277,7 +30227,11 @@ export default {
 
             return {
               key,
+              // Display / session ayah index within the surah (resets per surah).
               number: ayah.numberInSurah,
+              numberInSurah: ayah.numberInSurah,
+              // Quran-wide index — audio CDN / APIs only; never show in markers.
+              globalNumber: Number(ayah.number) || null,
               chapterId,
               arabic,
               arabic_tajweed: tajweed,

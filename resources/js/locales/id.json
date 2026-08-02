@@ -31,11 +31,12 @@
     "tajweed": "Tajweed",
     "dismiss": "Dismiss",
     "backToTop": "Kembali ke atas",
-    "skipOnboarding": "Skip onboarding",
+    "skipOnboarding": "Lewati tur",
     "resumeSession": "Lanjutkan Sesi",
     "resumingSession": "Melanjutkan…",
     "endingSession": "Mengakhiri…",
-    "startingSession": "Memulai…"
+    "startingSession": "Memulai…",
+    "closeTour": "Tutup tur"
   },
   "auth": {
     "continueGoogle": "Lanjutkan dengan Google",
@@ -573,8 +574,8 @@
     "view_recording": "Lihat Rekaman",
     "onboarding": {
       "stepCounter": "Langkah {current} dari {total}",
-      "finish": "Selesai",
-      "useSampleSession": "Gunakan sesi contoh",
+      "finish": "Saya siap",
+      "useSampleSession": "Coba contoh singkat",
       "steps": {
         "setup": {
           "title": "Siapkan sesi",
@@ -586,12 +587,13 @@
             "Anda bisa membuka kembali pengaturan kapan saja"
           ],
           "previewTitle": "Input sesi nyata",
-          "previewSubtitle": "Pengaturan sesi sudah ada di panel alat.",
+          "previewSubtitle": "Berdasarkan pengaturan Anda saat ini.",
           "previewItems": [
             "Surah",
             "Rentang",
             "Qari"
-          ]
+          ],
+          "hint": "Tips: beberapa ayah cukup untuk sesi pertama — Anda bisa memperluas rentang nanti di Kontrol."
         },
         "reading": {
           "title": "Pilih tampilan baca",
@@ -603,12 +605,13 @@
             "Font tetap tersedia dari toolbar"
           ],
           "previewTitle": "Kontrol membaca",
-          "previewSubtitle": "Toggle tampilan dan bantuan membaca sudah terintegrasi.",
+          "previewSubtitle": "Berdasarkan pengaturan tampilan Anda.",
           "previewItems": [
             "Stacked",
             "Mushaf",
             "Tajwid"
-          ]
+          ],
+          "hint": "Tips: utamakan teks Arab; aktifkan terjemahan atau tajwid hanya jika membantu."
         },
         "practice": {
           "title": "Berlatih dengan alat bawaan",
@@ -620,12 +623,13 @@
             "Chaining dan mode anchor mendukung bagian yang lebih sulit"
           ],
           "previewTitle": "Kontrol teknik",
-          "previewSubtitle": "Tab teknik sudah menjadi bagian ruang kerja.",
+          "previewSubtitle": "Berdasarkan pengaturan latihan Anda.",
           "previewItems": [
             "Fokus",
             "Blur",
             "Anchor"
-          ]
+          ],
+          "hint": "Tips: mulai dengan satu alat yang lembut. Pemeriksaan hafalan bersifat opsional."
         },
         "review": {
           "title": "Muraja'ah dan kembali",
@@ -637,43 +641,48 @@
             "Tilawah AI dan pemeriksaan hafalan AI selalu tersedia dari ruang kerja"
           ],
           "previewTitle": "Yang bisa Anda kembali kunjungi",
-          "previewSubtitle": "Muraja'ah dan lanjutkan sudah terintegrasi dalam sistem.",
+          "previewSubtitle": "Dari aktivitas terbaru Anda.",
           "previewItems": [
             "Sesi tersimpan",
             "Rekaman",
             "Wawasan"
-          ]
+          ],
+          "hint": "Tips: kembali ke sesi tersimpan kapan saja dari pustaka Anda."
         }
       },
-      "playSampleSession": "Putar sesi contoh",
+      "playSampleSession": "Coba contoh singkat",
       "postSession": {
-        "kicker": "Sesi contoh selesai",
-        "title": "Masha'Allah!",
-        "message": "Masha'Allah! Semoga Allah memberkahi usaha Anda dan memudahkan perjalanan Quran.",
-        "repeat": "Ulangi sesi ini",
+        "kicker": "Contoh selesai",
+        "title": "Bagus",
+        "message": "Anda menyelesaikan contoh terpandu. Pilih langkah berikutnya.",
+        "repeat": "Ulangi contoh ini",
         "newSession": "Mulai sesi baru",
         "save": "Simpan sesi ini",
-        "savedToast": "Sesi ini berhasil disimpan."
+        "savedToast": "Sesi disimpan.",
+        "hint": "Ulangi contoh, mulai sesi Anda, atau lanjut ke Mutqin saat siap.",
+        "continue": "Lanjut ke Mutqin"
       },
       "choices": {
-        "groupLabel": "Choose how to begin",
+        "groupLabel": "Bagaimana Anda ingin memulai?",
         "sample": {
-          "title": "Try Guided Sample (Recommended)",
-          "description": "Walk through a short guided session to see how memorisation flows work."
+          "title": "Coba contoh terpandu",
+          "description": "Latihan singkat agar Anda merasakan alurnya sebelum memilih rentang sendiri."
         },
         "setup": {
-          "title": "Set Up My Own Session",
-          "description": "Choose your surah, range, and reciter before you begin."
+          "title": "Siapkan sesi saya sendiri",
+          "description": "Pilih surah, rentang ayah, dan qari, lalu mulai saat siap."
         },
         "explore": {
-          "title": "Explore the Workspace First",
-          "description": "Look around the workspace and open setup when you are ready."
+          "title": "Jelajahi dulu",
+          "description": "Lihat ruang kerja dan buka pengaturan kapan Anda siap."
         }
       },
-      "intro": "Four quick steps to get oriented before your first session.",
-      "confirmChoice": "Confirm choice",
+      "intro": "Beberapa langkah singkat untuk menyiapkan rentang, berlatih dengan tenang, dan mengenal Mutqin.",
+      "confirmChoice": "Lanjutkan",
       "startOnboarding": "Get started",
-      "continueOnboarding": "Continue setup"
+      "continueOnboarding": "Continue setup",
+      "skipTour": "Lewati tur",
+      "finishHint": "Pilih cara memulai — Anda bisa mengubahnya kapan saja."
     },
     "open_session_setup": "Buka pengaturan sesi",
     "open_controls": "Buka kontrol",
@@ -1029,16 +1038,19 @@
     "welcomeBack": {
       "kicker": "Selamat datang kembali",
       "startNewSession": "Mulai sesi baru",
-      "continuePreviousSession": "Lanjutkan sesi sebelumnya",
+      "continuePreviousSession": "Lanjutkan sesi ini",
       "freshTitle": "Ready when you are",
       "freshTitleNamed": "Welcome back, {name}",
-      "freshSubtitle": "Take a breath, settle in, and choose whether to start fresh or pick up where you left off.",
+      "freshSubtitle": "Lanjutkan sesi sebelumnya, atau mulai yang baru.",
       "resumeTitle": "Continue with {chapter}",
       "resumeTitleNamed": "{chapter}, {name}",
-      "resumeGeneric": "Pick up where you left off",
-      "resumeGenericNamed": "Welcome back, {name}",
-      "resumeSubtitle": "Your last session is still here whenever you are ready.",
-      "resumeSubtitleDetail": "{detail} — continue whenever it suits you.",
+      "resumeGeneric": "Assalamu alaikum",
+      "resumeGenericNamed": "Assalamu alaikum, {name}",
+      "resumeSubtitle": "Sesi sebelumnya siap — semoga Allah mudahkan kembalimu.",
+      "resumeSubtitleAtPlace": "Kamu berhenti di {place}. Semoga Allah membuat kembalimu lembut dan diberkahi.",
+      "resumeSubtitleDetail": "Kamu berhenti di {detail}. Semoga Allah membuat kembalimu lembut dan diberkahi.",
+      "resumePlaceAyah": "{chapter}, ayat {number}",
+      "resumePlaceBeginning": "{chapter}, di awal",
       "greetingArabic": "ٱلسَّلَامُ عَلَيْكُمْ",
       "greetingTranslation": "Peace be upon you",
       "freshReminderArabic": "رَبِّ زِدْنِى عِلْمًا",
@@ -1050,9 +1062,13 @@
       "resumeReminderSource": "Qur'an 29:69",
       "resumeIntention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time.",
       "reminderLabel": "A word of remembrance",
-      "stoppedAt": "Stopped at",
-      "lastSaved": "Last saved",
-      "continueSessionShort": "Lanjutkan sesi"
+      "stoppedAt": "Berhenti di",
+      "stoppedAtAyah": "Ayat {number}",
+      "stoppedAtBeginning": "Awal surah",
+      "lastSaved": "Terakhir disimpan",
+      "continueSessionShort": "Lanjutkan",
+      "hint": "Lanjutkan dari tempat terakhir, atau mulai baru.",
+      "closeLabel": "Tutup"
     },
     "sessionExit": {
       "kicker": "Sesi dijeda",
@@ -1445,7 +1461,9 @@
       "playRecording": "Play recording",
       "pauseRecording": "Pause recording",
       "replayRecording": "Replay recording",
-      "loadingRecording": "Loading recording"
+      "loadingRecording": "Loading recording",
+      "aiMemorisationResult": "Hasil pemeriksaan hafalan",
+      "recommendedNextStep": "Langkah berikutnya yang disarankan"
     },
     "calligraphy": {
       "onboarding": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",

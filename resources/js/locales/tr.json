@@ -31,11 +31,12 @@
     "tajweed": "Tajweed",
     "dismiss": "Dismiss",
     "backToTop": "Yukarı çık",
-    "skipOnboarding": "Skip onboarding",
+    "skipOnboarding": "Turu atla",
     "resumeSession": "Oturumu Sürdür",
     "resumingSession": "Sürdürülüyor…",
     "endingSession": "Sonlandırılıyor…",
-    "startingSession": "Başlatılıyor…"
+    "startingSession": "Başlatılıyor…",
+    "closeTour": "Turu kapat"
   },
   "auth": {
     "continueGoogle": "Google ile devam et",
@@ -579,8 +580,8 @@
     "view_recording": "View Recording",
     "onboarding": {
       "stepCounter": "Step {current} of {total}",
-      "finish": "Finish",
-      "useSampleSession": "Use sample session",
+      "finish": "Hazırım",
+      "useSampleSession": "Kısa bir örnek dene",
       "steps": {
         "setup": {
           "title": "Set up a session",
@@ -592,12 +593,13 @@
             "You can reopen setup at any time"
           ],
           "previewTitle": "Real session inputs",
-          "previewSubtitle": "Session setup already exists in the tools panel.",
+          "previewSubtitle": "Mevcut ayarlarınıza göre.",
           "previewItems": [
             "Surah",
             "Range",
             "Reciter"
-          ]
+          ],
+          "hint": "İpucu: ilk oturum için birkaç ayet yeter — aralığı sonra Controls’tan genişletebilirsiniz."
         },
         "reading": {
           "title": "Pick a reading view",
@@ -609,12 +611,13 @@
             "Fonts stay available from the toolbar"
           ],
           "previewTitle": "Reading controls",
-          "previewSubtitle": "The view toggle and reading aids are built in.",
+          "previewSubtitle": "Mevcut görünüm ayarlarınıza göre.",
           "previewItems": [
             "Stacked",
             "Mushaf",
             "Tajweed"
-          ]
+          ],
+          "hint": "İpucu: Arapçayı önde tutun; çeviri veya tecvidi yalnızca yardımcı olduğunda açın."
         },
         "practice": {
           "title": "Practice with built-in tools",
@@ -626,12 +629,13 @@
             "Chaining and anchor mode support harder passages"
           ],
           "previewTitle": "Technique controls",
-          "previewSubtitle": "The techniques tab is already part of the workspace.",
+          "previewSubtitle": "Mevcut pratik ayarlarınıza göre.",
           "previewItems": [
             "Focus",
             "Blur",
             "Anchor"
-          ]
+          ],
+          "hint": "İpucu: nazik bir araçla başlayın. Ezber kontrolleri isteğe bağlıdır."
         },
         "review": {
           "title": "Review and return",
@@ -643,43 +647,48 @@
             "AI recite and AI Recite checks are always available from the workspace"
           ],
           "previewTitle": "What you can return to",
-          "previewSubtitle": "Review and resume are already built into the system.",
+          "previewSubtitle": "Son etkinliğinizden.",
           "previewItems": [
             "Saved sessions",
             "Recordings",
             "Insights"
-          ]
+          ],
+          "hint": "İpucu: kayıtlı oturumlara kütüphanenizden istediğiniz zaman dönebilirsiniz."
         }
       },
-      "playSampleSession": "Örnek oturumu oynat",
+      "playSampleSession": "Kısa bir örnek dene",
       "postSession": {
-        "kicker": "Örnek oturum tamamlandı",
-        "title": "Maşaallah!",
-        "message": "Maşaallah! Allah çabanızı bereketlendirsin ve Kuran yolculuğunuzu kolaylaştırsın.",
-        "repeat": "Bu oturumu tekrarla",
+        "kicker": "Örnek tamamlandı",
+        "title": "Aferin",
+        "message": "Rehberli örneği bitirdiniz. Sırada ne yapmak istediğinizi seçin.",
+        "repeat": "Bu örneği tekrarla",
         "newSession": "Yeni oturum başlat",
         "save": "Bu oturumu kaydet",
-        "savedToast": "Bu oturum başarıyla kaydedildi."
+        "savedToast": "Oturum kaydedildi.",
+        "hint": "Örneği tekrarlayın, kendi oturumunuzu başlatın veya hazır olduğunuzda Mutqin’e devam edin.",
+        "continue": "Mutqin’e devam et"
       },
       "choices": {
-        "groupLabel": "Choose how to begin",
+        "groupLabel": "Nasıl başlamak istersiniz?",
         "sample": {
-          "title": "Try Guided Sample (Recommended)",
-          "description": "Walk through a short guided session to see how memorisation flows work."
+          "title": "Rehberli örneği dene",
+          "description": "Kendi aralığınızı seçmeden önce akışı hissetmeniz için kısa bir pratik."
         },
         "setup": {
-          "title": "Set Up My Own Session",
-          "description": "Choose your surah, range, and reciter before you begin."
+          "title": "Kendi oturumumu kur",
+          "description": "Sure, ayet aralığı ve kari seçin, hazır olduğunuzda başlayın."
         },
         "explore": {
-          "title": "Explore the Workspace First",
-          "description": "Look around the workspace and open setup when you are ready."
+          "title": "Önce bakayım",
+          "description": "Çalışma alanını gezin ve hazır olduğunuzda kurulumu açın."
         }
       },
-      "intro": "Four quick steps to get oriented before your first session.",
-      "confirmChoice": "Confirm choice",
+      "intro": "Aralığı ayarlamak, sakinçe çalışmak ve Mutqin’e alışmak için kısa adımlar.",
+      "confirmChoice": "Devam",
       "startOnboarding": "Get started",
-      "continueOnboarding": "Continue setup"
+      "continueOnboarding": "Continue setup",
+      "skipTour": "Turu atla",
+      "finishHint": "Nasıl başlamak istediğinizi seçin — istediğiniz zaman değiştirebilirsiniz."
     },
     "open_session_setup": "Open session setup",
     "open_controls": "Open controls",
@@ -1299,16 +1308,19 @@
     "welcomeBack": {
       "kicker": "Tekrar hoş geldiniz",
       "startNewSession": "Yeni oturum başlat",
-      "continuePreviousSession": "Önceki oturuma devam et",
+      "continuePreviousSession": "Bu oturuma devam et",
       "freshTitle": "Ready when you are",
       "freshTitleNamed": "Welcome back, {name}",
-      "freshSubtitle": "Take a breath, settle in, and choose whether to start fresh or pick up where you left off.",
+      "freshSubtitle": "Önceki oturuma devam edin veya yeni bir oturum başlatın.",
       "resumeTitle": "Continue with {chapter}",
       "resumeTitleNamed": "{chapter}, {name}",
-      "resumeGeneric": "Pick up where you left off",
-      "resumeGenericNamed": "Welcome back, {name}",
-      "resumeSubtitle": "Your last session is still here whenever you are ready.",
-      "resumeSubtitleDetail": "{detail} — continue whenever it suits you.",
+      "resumeGeneric": "Assalamu alaikum",
+      "resumeGenericNamed": "Assalamu alaikum, {name}",
+      "resumeSubtitle": "Önceki oturumunuz hazır — Allah dönüşünüzü kolaylaştırsın.",
+      "resumeSubtitleAtPlace": "Durakladığınız yer: {place}. Allah dönüşünüzü yumuşak ve bereketli kılsın.",
+      "resumeSubtitleDetail": "Durakladığınız yer: {detail}. Allah dönüşünüzü yumuşak ve bereketli kılsın.",
+      "resumePlaceAyah": "{chapter}, ayet {number}",
+      "resumePlaceBeginning": "{chapter}, başlangıçta",
       "greetingArabic": "ٱلسَّلَامُ عَلَيْكُمْ",
       "greetingTranslation": "Peace be upon you",
       "freshReminderArabic": "رَبِّ زِدْنِى عِلْمًا",
@@ -1320,9 +1332,13 @@
       "resumeReminderSource": "Qur'an 29:69",
       "resumeIntention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time.",
       "reminderLabel": "A word of remembrance",
-      "stoppedAt": "Stopped at",
-      "lastSaved": "Last saved",
-      "continueSessionShort": "Oturuma devam et"
+      "stoppedAt": "Duraklanan yer",
+      "stoppedAtAyah": "Ayet {number}",
+      "stoppedAtBeginning": "Surenin başı",
+      "lastSaved": "Son kayıt",
+      "continueSessionShort": "Devam et",
+      "hint": "Kaldığınız yerden devam edin veya yeniden başlayın.",
+      "closeLabel": "Kapat"
     },
     "sessionExit": {
       "kicker": "Oturum duraklatıldı",
@@ -1715,7 +1731,9 @@
       "playRecording": "Play recording",
       "pauseRecording": "Pause recording",
       "replayRecording": "Replay recording",
-      "loadingRecording": "Loading recording"
+      "loadingRecording": "Loading recording",
+      "aiMemorisationResult": "Ezber kontrolü sonucu",
+      "recommendedNextStep": "Önerilen sonraki adım"
     },
     "calligraphy": {
       "onboarding": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",

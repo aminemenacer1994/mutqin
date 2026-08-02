@@ -39,11 +39,25 @@ assert.match(js, /useMadaniQcfGlyphs/)
 assert.match(js, /formatMadaniAyahEndLabel/)
 assert.match(js, /getDefaultMushafBackgroundForTheme/)
 assert.match(js, /mushafBackgroundTouched/)
+assert.match(js, /numberInSurah:\s*ayah\.numberInSurah/)
+assert.match(js, /globalNumber:\s*Number\(ayah\.number\)/)
+assert.match(js, /Prefer verseKey \/ numberInSurah \(per-surah\)/)
 assert.doesNotMatch(js, /Madani Mushaf uses the official QCF page font/)
 
 const layoutPath = path.join(root, 'resources/js/scripts/mushaf/madaniPageLayout.js')
 const layout = await fs.readFile(layoutPath, 'utf8')
 assert.match(layout, /\\u06DD\$\{toEasternArabicDigits/)
+assert.match(layout, /Always prefer the per-surah ayah index from verseKey/)
+// verseKey must be resolved before textQpc digits (guards against global ids).
+const keyFirst = layout.indexOf('word.verseKey || word.verse_key')
+const textQpcDigits = layout.indexOf("word.textQpc || word.text_qpc_hafs || word.text")
+assert.ok(keyFirst > 0 && textQpcDigits > keyFirst, 'formatMadaniAyahEndLabel must prefer verseKey over textQpc')
+
+assert.match(css, /madani-word--end\.madani-word--glyph[\s\S]*?font-family:\s*var\(--madani-page-font\)/)
+assert.doesNotMatch(
+  css,
+  /\.madani-word--end\.madani-word--glyph \{\s*\n\s*font-family:\s*inherit\s*!important/
+)
 
 console.log('Madani mushaf rendering tests passed')
 

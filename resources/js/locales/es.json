@@ -31,11 +31,12 @@
     "tajweed": "Tajwid",
     "dismiss": "Dismiss",
     "backToTop": "Volver arriba",
-    "skipOnboarding": "Skip onboarding",
+    "skipOnboarding": "Omitir el recorrido",
     "resumeSession": "Reanudar sesión",
     "resumingSession": "Reanudando…",
     "endingSession": "Finalizando…",
-    "startingSession": "Iniciando…"
+    "startingSession": "Iniciando…",
+    "closeTour": "Cerrar el recorrido"
   },
   "auth": {
     "continueGoogle": "Continue with Google",
@@ -427,27 +428,34 @@
       "greetingTranslation": "Peace be upon you",
       "freshTitle": "Ready when you are",
       "freshTitleNamed": "Welcome back, {name}",
-      "freshSubtitle": "Choose how you'd like to begin.",
+      "freshSubtitle": "Continúa una sesión anterior o empieza una nueva.",
       "freshReminderArabic": "رَبِّ زِدْنِى عِلْمًا",
       "freshReminderTranslation": "My Lord, increase me in knowledge.",
       "freshReminderSource": "Qur'an 20:114",
       "freshIntention": "Even a few ayahs, done consistently, are beloved to Allah.",
       "resumeTitle": "Continue with {chapter}",
       "resumeTitleNamed": "{chapter}, {name}",
-      "resumeGeneric": "Pick up where you left off",
-      "resumeGenericNamed": "Welcome back, {name}",
-      "resumeSubtitle": "Here's where you left off.",
-      "resumeSubtitleDetail": "{detail} — continue whenever it suits you.",
-      "stoppedAt": "Stopped at",
-      "lastSaved": "Last saved",
+      "resumeGeneric": "Assalamu alaikum",
+      "resumeGenericNamed": "Assalamu alaikum, {name}",
+      "resumeSubtitle": "Tu sesión anterior está lista — que Allah facilite tu regreso.",
+      "resumeSubtitleAtPlace": "Pausaste en {place}. Que Allah haga tu regreso suave y bendecido.",
+      "resumeSubtitleDetail": "Te detuviste en {detail}. Que Allah haga tu regreso suave y bendecido.",
+      "resumePlaceAyah": "{chapter}, aleya {number}",
+      "resumePlaceBeginning": "{chapter}, al principio",
+      "stoppedAt": "Detenido en",
+      "stoppedAtAyah": "Aleya {number}",
+      "stoppedAtBeginning": "Inicio de la sura",
+      "lastSaved": "Último guardado",
       "resumeReminderArabic": "وَٱلَّذِينَ جَـٰهَدُوا۟ فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا",
       "resumeReminderTranslation": "As for those who strive for Us, We shall guide them to Our paths.",
       "resumeReminderSource": "Qur'an 29:69",
       "resumeIntention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time.",
       "reminderLabel": "A word of remembrance",
       "startNewSession": "Iniciar nueva sesión",
-      "continuePreviousSession": "Continuar sesión anterior",
-      "continueSessionShort": "Continuar sesión"
+      "continuePreviousSession": "Continuar esta sesión",
+      "continueSessionShort": "Continuar",
+      "hint": "Continúa donde lo dejaste, o empieza de nuevo.",
+      "closeLabel": "Cerrar"
     },
     "sessionExit": {
       "kicker": "Sesión en pausa",
@@ -549,7 +557,9 @@
       "playRecording": "Play recording",
       "pauseRecording": "Pause recording",
       "replayRecording": "Replay recording",
-      "loadingRecording": "Loading recording"
+      "loadingRecording": "Loading recording",
+      "aiMemorisationResult": "Resultado de la comprobación de memorización",
+      "recommendedNextStep": "Siguiente paso recomendado"
     },
     "onboardingLabel": "Intégration",
     "player": {
@@ -904,34 +914,36 @@
     "revisitOnboarding": "Revisit onboarding",
     "onboarding": {
       "stepCounter": "Step {current} of {total}",
-      "intro": "Four quick steps to get oriented before your first session.",
-      "finish": "Finish",
-      "confirmChoice": "Confirm choice",
-      "useSampleSession": "Play sample session",
-      "playSampleSession": "Reproducir sesión de ejemplo",
+      "intro": "Unos pasos breves para elegir un rango, practicar con calma y conocer Mutqin.",
+      "finish": "Estoy listo",
+      "confirmChoice": "Continuar",
+      "useSampleSession": "Probar un ejemplo corto",
+      "playSampleSession": "Probar un ejemplo corto",
       "choices": {
-        "groupLabel": "Choose how to begin",
+        "groupLabel": "¿Cómo te gustaría empezar?",
         "sample": {
-          "title": "Try Guided Sample (Recommended)",
-          "description": "Walk through a short guided session to see how memorisation flows work."
+          "title": "Probar un ejemplo guiado",
+          "description": "Una práctica breve para sentir el flujo antes de elegir tu propio rango."
         },
         "setup": {
-          "title": "Set Up My Own Session",
-          "description": "Choose your surah, range, and reciter before you begin."
+          "title": "Configurar mi sesión",
+          "description": "Elige sura, rango de aleyas y recitador, y empieza cuando quieras."
         },
         "explore": {
-          "title": "Explore the Workspace First",
-          "description": "Look around the workspace and open setup when you are ready."
+          "title": "Mirar primero",
+          "description": "Explora el espacio de trabajo y abre la configuración cuando estés listo."
         }
       },
       "postSession": {
-        "kicker": "Sesión de ejemplo completada",
-        "title": "¡Masha'Allah!",
-        "message": "¡Masha'Allah! Que Allah bendiga tus esfuerzos y facilite tu camino con el Corán.",
-        "repeat": "Repetir esta sesión",
+        "kicker": "Ejemplo completado",
+        "title": "Bien hecho",
+        "message": "Terminaste el ejemplo guiado. Elige qué hacer a continuación.",
+        "repeat": "Repetir este ejemplo",
         "newSession": "Iniciar nueva sesión",
         "save": "Guardar esta sesión",
-        "savedToast": "Esta sesión se guardó correctamente."
+        "savedToast": "Sesión guardada.",
+        "hint": "Repite el ejemplo, empieza tu sesión, o continúa en Mutqin cuando te sientas listo.",
+        "continue": "Continuar a Mutqin"
       },
       "steps": {
         "setup": {
@@ -943,12 +955,13 @@
             "Reopen setup any time from the tools panel"
           ],
           "previewTitle": "Session inputs",
-          "previewSubtitle": "Live from your current setup.",
+          "previewSubtitle": "Según tu configuración actual.",
           "previewItems": [
             "Surah",
             "Range",
             "Reciter"
-          ]
+          ],
+          "hint": "Consejo: unas pocas aleyas bastan para la primera sesión — puedes ampliar el rango después en Controles."
         },
         "reading": {
           "title": "Choose your reading view",
@@ -959,12 +972,13 @@
             "Translation, transliteration, and tajweed stay one tap away"
           ],
           "previewTitle": "Reading controls",
-          "previewSubtitle": "Based on your current view settings.",
+          "previewSubtitle": "Según tu vista actual.",
           "previewItems": [
             "Stacked",
             "Mushaf",
             "Tajweed"
-          ]
+          ],
+          "hint": "Consejo: mantén el árabe al frente; activa traducción o tayyīd solo si te ayudan."
         },
         "practice": {
           "title": "Practice with built-in tools",
@@ -975,12 +989,13 @@
             "Talqin pauses audio so you can recite your turn"
           ],
           "previewTitle": "Technique controls",
-          "previewSubtitle": "Reflects your current practice settings.",
+          "previewSubtitle": "Según tus ajustes de práctica.",
           "previewItems": [
             "Focus",
             "Blur",
             "Talqin"
-          ]
+          ],
+          "hint": "Consejo: empieza con una sola herramienta suave. Las comprobaciones de memorización son opcionales."
         },
         "review": {
           "title": "Review and return",
@@ -991,16 +1006,19 @@
             "Insights highlight what needs review"
           ],
           "previewTitle": "Your library",
-          "previewSubtitle": "Pulled from your account activity.",
+          "previewSubtitle": "Según tu actividad reciente.",
           "previewItems": [
             "Saved sessions",
             "Recordings",
             "Insights"
-          ]
+          ],
+          "hint": "Consejo: vuelve a las sesiones guardadas cuando quieras desde tu biblioteca."
         }
       },
       "startOnboarding": "Get started",
-      "continueOnboarding": "Continue setup"
+      "continueOnboarding": "Continue setup",
+      "skipTour": "Omitir el recorrido",
+      "finishHint": "Elige cómo quieres empezar — puedes cambiarlo cuando quieras."
     },
     "open_session_setup": "Open session setup",
     "open_controls": "Open controls",

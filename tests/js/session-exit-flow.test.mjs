@@ -243,7 +243,11 @@ const t = (key, params = {}) => {
   assert.equal(en.memorisation.sessionExit.confirmTitle, 'End this session?')
   assert.equal(
     en.memorisation.sessionExit.confirmDescription,
-    'Your progress will be saved and this session will be marked as complete.'
+    'This will end your current practice. Progress already made will be saved and the session will be marked complete.'
+  )
+  assert.equal(
+    en.memorisation.sessionExit.confirmDescriptionEarly,
+    'This will end your current practice. Progress already made will be saved, the session will remain incomplete, and you can continue it later.'
   )
   assert.equal(en.memorisation.sessionExit.keepPractising, 'Keep practising')
   assert.equal(en.memorisation.sessionExit.confirmEnd, 'End session')

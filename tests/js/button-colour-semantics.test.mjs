@@ -79,8 +79,9 @@ function sliceVariant(name) {
 // End Session trigger + confirm use destructive, not green
 {
   assert.match(vue, /action-btn-exit mutqin-btn--destructive/)
-  assert.match(vue, /mutqin-modal-btn--destructive session-exit-action-chip session-exit-action-chip--end/)
-  assert.match(vue, /mutqin-modal-btn--secondary session-exit-action-chip/)
+  assert.match(vue, /mutqin-modal-btn--destructive mutqin-btn-animate/)
+  assert.match(vue, /mutqin-modal-btn--secondary mutqin-btn-animate/)
+  assert.match(vue, /session-exit-confirm-actions/)
   assert.doesNotMatch(vue, /session-exit-action-chip--continue/)
   assert.match(css, /--danger:\s*#b55041/)
   assert.match(css, /--bs-danger:\s*#b55041/)
@@ -112,6 +113,28 @@ function sliceVariant(name) {
   assert.match(hifz, /class="btn btn-primary hifz-plan-save-btn"/)
   assert.doesNotMatch(hifz, /btn-success/)
   assert.match(hifz, /--plan-accent:\s*var\(--accent,\s*#9a6738\)/)
+}
+
+// Tools offcanvas tabs (Setup / Practice / Saved) use brand accent, not mint green
+{
+  const tabActive = css.match(
+    /\.tools-tabs button\[aria-selected="true"\],\s*\.tools-tabs button\.active \{([^}]+)\}/
+  )
+  assert.ok(tabActive, 'expected tools-tabs active colour rule')
+  assert.match(tabActive[1], /var\(--accent\)/)
+  assert.doesNotMatch(tabActive[1], /#78dda2|#215a46|#78d8a4|#2f6f58|#58b68e|#8b5a2c|47,\s*111,\s*88/)
+
+  assert.match(css, /\.tools-tabs button:hover:not\(\[aria-selected="true"\]\):not\(\.active\)/)
+  assert.match(css, /\.tools-tabs button:focus-visible/)
+  assert.match(css, /\.tools-tabs button\[aria-selected="true"\]:hover/)
+  assert.match(css, /\.tools-tabs button\[aria-selected="true"\]:focus-visible/)
+
+  const darkTabActive = css.match(
+    /\[data-theme="dark"\] \.tools-tabs button\[aria-selected="true"\],\s*\[data-theme="dark"\] \.tools-tabs button\.active \{([^}]+)\}/
+  )
+  assert.ok(darkTabActive, 'expected dark tools-tabs active colour rule')
+  assert.match(darkTabActive[1], /var\(--accent\)/)
+  assert.doesNotMatch(darkTabActive[1], /#78dda2|#215a46|#78d8a4|#2f6f58/)
 }
 
 console.log('button-colour-semantics.test.mjs: all assertions passed')

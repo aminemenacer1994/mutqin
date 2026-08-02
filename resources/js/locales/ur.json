@@ -31,11 +31,12 @@
     "tajweed": "تجوید",
     "dismiss": "Dismiss",
     "backToTop": "اوپر جائیں",
-    "skipOnboarding": "Skip onboarding",
+    "skipOnboarding": "دورہ چھوڑیں",
     "resumeSession": "سیشن جاری رکھیں",
     "resumingSession": "جاری ہو رہا ہے…",
     "endingSession": "ختم ہو رہا ہے…",
-    "startingSession": "شروع ہو رہا ہے…"
+    "startingSession": "شروع ہو رہا ہے…",
+    "closeTour": "دورہ بند کریں"
   },
   "auth": {
     "continueGoogle": "المتابعة باستخدام Google",
@@ -573,8 +574,8 @@
     "view_recording": "عرض التسجيل",
     "onboarding": {
       "stepCounter": "الخطوة {current} من {total}",
-      "finish": "إنهاء",
-      "useSampleSession": "استخدام جلسة نموذجية",
+      "finish": "میں تیار ہوں",
+      "useSampleSession": "مختصر نمونہ آزمائیں",
       "steps": {
         "setup": {
           "title": "إعداد جلسة",
@@ -586,12 +587,13 @@
             "يمكنك إعادة فتح الإعداد في أي وقت"
           ],
           "previewTitle": "مدخلات جلسة حقيقية",
-          "previewSubtitle": "إعداد الجلسة موجود بالفعل في لوحة الأدوات.",
+          "previewSubtitle": "آپ کی موجودہ ترتیبات کے مطابق۔",
           "previewItems": [
             "سورة",
             "نطاق",
             "قارئ"
-          ]
+          ],
+          "hint": "مشورہ: پہلی نشست کے لیے چند آیات کافی ہیں — بعد میں کنٹرولز سے دائرہ بڑھا سکتے ہیں۔"
         },
         "reading": {
           "title": "اختر طريقة العرض",
@@ -603,12 +605,13 @@
             "الخطوط متاحة من شريط الأدوات"
           ],
           "previewTitle": "عناصر التحكم في القراءة",
-          "previewSubtitle": "تبديل العرض ومساعدات القراءة مدمجة.",
+          "previewSubtitle": "آپ کی موجودہ نمائش ترتیبات کے مطابق۔",
           "previewItems": [
             "مكدّس",
             "مصحف",
             "تجويد"
-          ]
+          ],
+          "hint": "مشورہ: عربی کو مرکزی رکھیں؛ ترجمہ یا تجوید صرف ضرورت پر آن کریں۔"
         },
         "practice": {
           "title": "تدرب بالأدوات المدمجة",
@@ -620,12 +623,13 @@
             "السلسلة ووضع المرساة يدعمان المقاطع الأصعب"
           ],
           "previewTitle": "عناصر التحكم في التقنيات",
-          "previewSubtitle": "تبويب التقنيات جزء من مساحة العمل.",
+          "previewSubtitle": "آپ کی موجودہ مشق ترتیبات کے مطابق۔",
           "previewItems": [
             "تركيز",
             "ضبابية",
             "مرساة"
-          ]
+          ],
+          "hint": "مشورہ: ایک نرم آلے سے شروع کریں۔ حفظ کی جانچ اختیاری ہے۔"
         },
         "review": {
           "title": "راجع وعد",
@@ -637,43 +641,48 @@
             "فحص التلاوة والذاكرة متاحان دائماً"
           ],
           "previewTitle": "ما يمكنك العودة إليه",
-          "previewSubtitle": "المراجعة والاستئناف مدمجان في النظام.",
+          "previewSubtitle": "آپ کی حالیہ سرگرمی سے۔",
           "previewItems": [
             "جلسات محفوظة",
             "تسجيلات",
             "رؤى"
-          ]
+          ],
+          "hint": "مشورہ: محفوظ نشستوں پر اپنی لائبریری سے کبھی بھی واپس آ سکتے ہیں۔"
         }
       },
-      "playSampleSession": "تشغيل جلسة نموذجية",
+      "playSampleSession": "مختصر نمونہ آزمائیں",
       "postSession": {
-        "kicker": "اكتملت الجلسة النموذجية",
-        "title": "ما شاء الله!",
-        "message": "ما شاء الله! بارك الله في جهدك وسهّل عليك رحلتك مع القرآن.",
-        "repeat": "إعادة هذه الجلسة",
-        "newSession": "بدء جلسة جديدة",
-        "save": "حفظ هذه الجلسة",
-        "savedToast": "تم حفظ هذه الجلسة بنجاح."
+        "kicker": "نمونہ مکمل",
+        "title": "شاباش",
+        "message": "آپ نے رہنما نمونہ مکمل کر لیا۔ آگے کیا کرنا ہے منتخب کریں۔",
+        "repeat": "یہ نمونہ دہرائیں",
+        "newSession": "نیا سیشن شروع کریں",
+        "save": "یہ سیشن محفوظ کریں",
+        "savedToast": "سیشن محفوظ ہو گیا۔",
+        "hint": "نمونہ دہرائیں، اپنا سیشن شروع کریں، یا تیار ہونے پر متقن میں جاری رکھیں۔",
+        "continue": "متقن میں جاری رکھیں"
       },
       "choices": {
-        "groupLabel": "Choose how to begin",
+        "groupLabel": "آپ کیسے شروع کرنا چاہیں گے؟",
         "sample": {
-          "title": "Try Guided Sample (Recommended)",
-          "description": "Walk through a short guided session to see how memorisation flows work."
+          "title": "رہنما نمونہ آزمائیں",
+          "description": "اپنا دائرہ منتخب کرنے سے پہلے ایک مختصر مشق تاکہ بہاؤ محسوس ہو۔"
         },
         "setup": {
-          "title": "Set Up My Own Session",
-          "description": "Choose your surah, range, and reciter before you begin."
+          "title": "اپنا سیشن ترتیب دیں",
+          "description": "سورت، آیات کا دائرہ اور قاری منتخب کریں، پھر تیار ہونے پر شروع کریں۔"
         },
         "explore": {
-          "title": "Explore the Workspace First",
-          "description": "Look around the workspace and open setup when you are ready."
+          "title": "پہلے دیکھیں",
+          "description": "ورک اسپیس گھومیں اور جب چاہیں ترتیب کھولیں۔"
         }
       },
-      "intro": "Four quick steps to get oriented before your first session.",
-      "confirmChoice": "Confirm choice",
+      "intro": "مختصر قدم تاکہ آپ دائرہ منتخب کریں، سکون سے مشق کریں، اور متقن سے مانوس ہوں۔",
+      "confirmChoice": "جاری رکھیں",
       "startOnboarding": "Get started",
-      "continueOnboarding": "Continue setup"
+      "continueOnboarding": "Continue setup",
+      "skipTour": "دورہ چھوڑیں",
+      "finishHint": "منتخب کریں آپ کیسے شروع کرنا چاہتے ہیں — بعد میں تبدیل کر سکتے ہیں۔"
     },
     "open_session_setup": "فتح إعداد الجلسة",
     "open_controls": "فتح عناصر التحكم",
@@ -1029,16 +1038,19 @@
     "welcomeBack": {
       "kicker": "خوش آمدید",
       "startNewSession": "بدء جلسة جديدة",
-      "continuePreviousSession": "متابعة الجلسة السابقة",
+      "continuePreviousSession": "اس سیشن کو جاری رکھیں",
       "freshTitle": "Ready when you are",
       "freshTitleNamed": "Welcome back, {name}",
-      "freshSubtitle": "Take a breath, settle in, and choose whether to start fresh or pick up where you left off.",
+      "freshSubtitle": "پچھلا سیشن جاری رکھیں، یا نیا شروع کریں۔",
       "resumeTitle": "Continue with {chapter}",
       "resumeTitleNamed": "{chapter}, {name}",
-      "resumeGeneric": "Pick up where you left off",
-      "resumeGenericNamed": "Welcome back, {name}",
-      "resumeSubtitle": "Your last session is still here whenever you are ready.",
-      "resumeSubtitleDetail": "{detail} — continue whenever it suits you.",
+      "resumeGeneric": "السلام علیکم",
+      "resumeGenericNamed": "السلام علیکم، {name}",
+      "resumeSubtitle": "آپ کا پچھلا سیشن تیار ہے — اللہ واپسی آسان فرمائے۔",
+      "resumeSubtitleAtPlace": "آپ {place} پر رکے تھے۔ اللہ واپسی نرم اور بابرکت بنائے۔",
+      "resumeSubtitleDetail": "آپ {detail} پر رکے تھے۔ اللہ آپ کی واپسی نرم اور بابرکت بنائے۔",
+      "resumePlaceAyah": "{chapter}، آیت {number}",
+      "resumePlaceBeginning": "{chapter}، شروع میں",
       "greetingArabic": "ٱلسَّلَامُ عَلَيْكُمْ",
       "greetingTranslation": "Peace be upon you",
       "freshReminderArabic": "رَبِّ زِدْنِى عِلْمًا",
@@ -1050,9 +1062,13 @@
       "resumeReminderSource": "Qur'an 29:69",
       "resumeIntention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time.",
       "reminderLabel": "A word of remembrance",
-      "stoppedAt": "Stopped at",
-      "lastSaved": "Last saved",
-      "continueSessionShort": "متابعة الجلسة"
+      "stoppedAt": "رکے تھے",
+      "stoppedAtAyah": "آیت {number}",
+      "stoppedAtBeginning": "سورہ کی ابتدا",
+      "lastSaved": "آخری محفوظ",
+      "continueSessionShort": "جاری رکھیں",
+      "hint": "جہاں چھوڑا تھا وہیں سے جاری رکھیں، یا نیا آغاز کریں۔",
+      "closeLabel": "بند کریں"
     },
     "sessionExit": {
       "kicker": "سیشن روکا گیا",
@@ -1445,7 +1461,9 @@
       "playRecording": "Play recording",
       "pauseRecording": "Pause recording",
       "replayRecording": "Replay recording",
-      "loadingRecording": "Loading recording"
+      "loadingRecording": "Loading recording",
+      "aiMemorisationResult": "حفظ جانچ کا نتیجہ",
+      "recommendedNextStep": "تجویز کردہ اگلا قدم"
     },
     "calligraphy": {
       "onboarding": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",

@@ -7,7 +7,7 @@
  */
 @media (max-width: 767.98px) {
   .app {
-    --mq-mobile-gutter: clamp(12px, 3.6vw, 16px);
+    --mq-mobile-gutter: clamp(16px, 4.8vw, 22px);
     --mq-grid-gap: clamp(6px, 1.8vw, 10px);
     --mq-grid: repeat(4, minmax(0, 1fr));
     --mq-card-pad: clamp(12px, 3.6vw, 16px);
@@ -26,9 +26,9 @@
   }
 
   .app,
-  .app *,
-  .app *::before,
-  .app *::after {
+.app *,
+.app *::before,
+.app *::after {
     box-sizing: border-box;
   }
 
@@ -83,8 +83,8 @@
   }
 
   .content,
-  .workspace,
-  .workspace-main {
+.workspace,
+.workspace-main {
     inline-size: 100%;
     margin-inline: 0 !important;
     padding-inline: 0 !important;
@@ -92,7 +92,7 @@
 
   /* Workspace overview: title/utilities, actions, and metadata share one grid. */
   .workspace-shell,
-  .main.mushaf-mode-active .workspace-shell {
+.main.mushaf-mode-active .workspace-shell {
     display: grid !important;
     grid-template-columns: var(--mq-grid);
     gap: 12px var(--mq-grid-gap) !important;
@@ -104,7 +104,7 @@
   }
 
   .workspace-shell-head,
-  .workspace-shell-head.is-idle {
+.workspace-shell-head.is-idle {
     grid-column: 1 / -1;
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
@@ -126,7 +126,7 @@
   }
 
   .workspace-shell-main-title,
-  .workspace-shell-copy h1 {
+.workspace-shell-copy h1 {
     margin: 0;
     font-family: "Amiri", "Scheherazade New", "Times New Roman", serif !important;
     font-size: clamp(1.15rem, 0.95rem + 2.4vw, 1.4rem) !important;
@@ -138,9 +138,10 @@
     overflow-wrap: anywhere;
   }
 
-  /* Compact session progress pills under Surah title (mobile only) */
+  /* Compact session progress pills under Surah title (mobile only) — own grid row */
   .workspace-shell-progress-pills {
     grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
     display: flex !important;
     flex-flow: row nowrap !important;
     align-items: center;
@@ -189,9 +190,10 @@
     color: color-mix(in srgb, var(--text) 78%, transparent);
   }
 
+  /* Session CTAs sit on their own row below the pills (not shared with row 2) */
   .workspace-shell-actions {
     grid-column: 1 / -1;
-    grid-row: 2;
+    grid-row: 3;
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     gap: 10px var(--mq-grid-gap) !important;
@@ -210,15 +212,28 @@
     pointer-events: auto;
   }
 
-  .workspace-shell-actions .top-card-session-actions:not(.post-session-choice-pair),
+  .workspace-shell-actions .top-card-session-actions:not(.post-session-choice-pair):not(.has-paired-actions) {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    min-width: 0 !important;
+  }
+
   .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
-    display: contents !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    flex: none !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
   }
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
-  .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair,
-  .workspace-shell--post-session-choice .post-session-choice-pair,
-  .workspace-shell--post-session-choice .post-session-choice-pair.has-paired-actions {
+.workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair,
+.workspace-shell--post-session-choice .post-session-choice-pair,
+.workspace-shell--post-session-choice .post-session-choice-pair.has-paired-actions {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     grid-column: 1 / -1 !important;
@@ -232,12 +247,16 @@
   }
 
   .workspace-shell--post-session-choice .workspace-shell-actions,
-  .workspace-shell--post-session-choice .action-buttons-group {
-    display: block !important;
+.workspace-shell--post-session-choice .action-buttons-group {
+    display: contents !important;
     grid-column: 1 / -1 !important;
     width: 100% !important;
     max-width: 100% !important;
     flex: none !important;
+  }
+
+  .workspace-shell--post-session-choice .workspace-shell-head > .workspace-shell-progress-pills {
+    display: none !important;
   }
 
   /* Post-session: dashboard + layout + ellipsis top-right (controls via Custom session). */
@@ -260,9 +279,9 @@
   }
 
   .workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-wrap,
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-trigger,
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
+.workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-trigger,
+.workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
+.workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -286,7 +305,7 @@
   }
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
-  .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
+.workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     width: 100% !important;
@@ -315,31 +334,46 @@
     justify-content: center !important;
   }
 
+  /* Paired Resume / End session CTAs side by side */
+  .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    gap: 0.4rem !important;
+  }
+
   .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action {
-    grid-column: 1 / -1;
-    grid-row: 1;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
   }
 
   .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit {
-    grid-column: 1 / span 2;
-    grid-row: 2;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
   }
 
   .top-card-session-actions:not(.has-paired-actions):not(.post-session-choice-pair) > .session-primary-action {
-    grid-column: 1 / span 2;
-    grid-row: 1;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
   }
 
   .workspace-shell-actions .top-card-action-trigger.session-primary-action,
-  .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
+.workspace-shell-actions .top-card-action-trigger.action-btn-exit {
     inline-size: 100% !important;
     min-inline-size: 0 !important;
     min-block-size: 44px !important;
     block-size: auto !important;
-    padding: 9px clamp(8px, 3vw, 14px) !important;
+    padding: 9px clamp(6px, 2.4vw, 12px) !important;
     justify-content: center !important;
-    white-space: normal !important;
+    white-space: nowrap !important;
     line-height: 1.2;
+    overflow: hidden !important;
+  }
+
+  .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .top-card-action-trigger span {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
 
   /* Icon controls stay as one flex row — do not grid-place menu/controls separately */
@@ -359,8 +393,8 @@
   }
 
   .workspace-shell-actions .top-card-icon-controls .top-card-controls-trigger,
-  .workspace-shell-actions .top-card-icon-controls .top-card-menu-wrap,
-  .workspace-shell-actions .top-card-icon-controls .top-card-ellipsis {
+.workspace-shell-actions .top-card-icon-controls .top-card-menu-wrap,
+.workspace-shell-actions .top-card-icon-controls .top-card-ellipsis {
     justify-self: auto;
     grid-column: auto !important;
     grid-row: auto !important;
@@ -400,13 +434,13 @@
   }
 
   .workspace-setup-hint,
-  .workspace-shell-bottom,
-  .workspace-shell-compact-meta {
+.workspace-shell-bottom,
+.workspace-shell-compact-meta {
     grid-column: 1 / -1;
   }
 
   .workspace-shell-bottom,
-  .workspace-shell-bottom-pills {
+.workspace-shell-bottom-pills {
     display: grid !important;
     grid-template-columns: var(--mq-grid);
     gap: var(--mq-grid-gap);
@@ -472,7 +506,7 @@
   }
 
   .workspace-shell-metadata-pill strong,
-  .workspace-shell-metadata-pill span {
+.workspace-shell-metadata-pill span {
     min-inline-size: 0;
     overflow-wrap: anywhere;
   }
@@ -486,7 +520,7 @@
   }
 
   .verse-card,
-  .verses-grid .verse-card {
+.verses-grid .verse-card {
     grid-column: auto;
     display: flex !important;
     flex-direction: column !important;
@@ -572,7 +606,7 @@
   }
 
   .verse-ai-check-btn,
-  .verse-self-check-btn {
+.verse-self-check-btn {
     inline-size: 100% !important;
     min-inline-size: 0 !important;
     max-inline-size: 100%;
@@ -582,8 +616,8 @@
   }
 
   .verse-inline-action-btn,
-  .verse-inline-play-btn,
-  .verse-inline-download-btn {
+.verse-inline-play-btn,
+.verse-inline-download-btn {
     inline-size: 36px !important;
     min-inline-size: 36px !important;
     block-size: 36px !important;
@@ -617,19 +651,19 @@
   }
 
   .verse-arabic-wrap,
-  .verse-arabic,
-  .verse-arabic-primary,
-  .verse-aid,
-  .verse-transliteration,
-  .verse-translation {
+.verse-arabic,
+.verse-arabic-primary,
+.verse-aid,
+.verse-transliteration,
+.verse-translation {
     inline-size: 100%;
     min-inline-size: 0;
     max-inline-size: 100%;
   }
 
   .verse-arabic,
-  .verse-arabic.verse-arabic-primary,
-  .verse-arabic.word-by-word-meanings {
+.verse-arabic.verse-arabic-primary,
+.verse-arabic.word-by-word-meanings {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -649,7 +683,7 @@
   }
 
   .verse-arabic .verse-ayah-end-number,
-  .verse-arabic-with-end .verse-ayah-end-number {
+.verse-arabic-with-end .verse-ayah-end-number {
     display: inline-block !important;
     white-space: nowrap !important;
     vertical-align: -0.28em !important;
@@ -669,7 +703,7 @@
   }
 
   .verse-arabic .verse-ayah-end-number__digit,
-  .verse-arabic-with-end .verse-ayah-end-number__digit {
+.verse-arabic-with-end .verse-ayah-end-number__digit {
     display: none !important;
   }
 
@@ -678,16 +712,16 @@
   }
 
   .verse-arabic :where(.wbw-word, word),
-  .mushaf-ayah-text :where(.wbw-word, word),
-  .self-check-modal-ayah :where(.wbw-word, word),
-  .recitation-review-ayah :where(.wbw-word, word) {
+.mushaf-ayah-text :where(.wbw-word, word),
+.self-check-modal-ayah :where(.wbw-word, word),
+.recitation-review-ayah :where(.wbw-word, word) {
     white-space: nowrap !important;
     word-break: keep-all !important;
   }
 
   /* Word-by-word chips: compact inline columns that wrap — never full-height stripes */
   .verse-arabic.word-by-word-meanings :where(.wbw-word, word),
-  .verse-arabic.word-by-word-meanings .wbw-word {
+.verse-arabic.word-by-word-meanings .wbw-word {
     display: inline-flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -730,10 +764,10 @@
 
   /* Mushaf controls use two compact utility rails above the reading surface. */
   .mushaf-workspace,
-  .mushaf-frame,
-  .mushaf-toolbar-rail,
-  .mushaf-stage,
-  .mushaf-viewport {
+.mushaf-frame,
+.mushaf-toolbar-rail,
+.mushaf-stage,
+.mushaf-viewport {
     inline-size: 100% !important;
     min-inline-size: 0 !important;
     max-inline-size: 100% !important;
@@ -773,8 +807,8 @@
   }
 
   .mushaf-toolbar-cluster,
-  .mushaf-toolbar-cluster-start,
-  .mushaf-toolbar-cluster-end {
+.mushaf-toolbar-cluster-start,
+.mushaf-toolbar-cluster-end {
     display: grid !important;
     grid-template-columns: repeat(5, minmax(44px, 1fr));
     gap: 6px !important;
@@ -782,7 +816,7 @@
   }
 
   .mushaf-toolbar-trigger,
-  .mushaf-pill-toolbar .mushaf-pill {
+.mushaf-pill-toolbar .mushaf-pill {
     inline-size: 100% !important;
     min-inline-size: 44px !important;
     min-block-size: 44px;
@@ -833,20 +867,20 @@
   }
 
   .mushaf-page-body,
-  .mushaf-ayah-text,
-  .main.mushaf-mode-active .mushaf-ayah-text {
+.mushaf-ayah-text,
+.main.mushaf-mode-active .mushaf-ayah-text {
     font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(1.6rem, 7.1vw, 2.4rem)) !important;
     line-height: 2.08 !important;
   }
 
   /* Bottom player: bento rows at narrow widths, one compact rail when possible. */
   .main.player-visible,
-  .main.playback-pill-visible {
+.main.playback-pill-visible {
     padding-bottom: calc(154px + var(--mq-safe-bottom)) !important;
   }
 
   .player-dock,
-  .player-dock.tools-open {
+.player-dock.tools-open {
     inset-inline: max(var(--mq-mobile-gutter), var(--mq-safe-left)) max(var(--mq-mobile-gutter), var(--mq-safe-right)) !important;
     inset-block-end: calc(8px + var(--mq-safe-bottom)) !important;
     inline-size: auto !important;
@@ -897,7 +931,7 @@
   }
 
   .player-chapter,
-  .player-verse {
+.player-verse {
     min-inline-size: 0;
     white-space: normal;
     overflow-wrap: anywhere;
@@ -1014,7 +1048,7 @@
   }
 
   .tools-body > .sheet,
-  .tools-body > * {
+.tools-body > * {
     grid-column: 1 / -1;
     min-inline-size: 0;
   }
@@ -1026,7 +1060,7 @@
   }
 
   .sheet.saved-sheet--beige,
-  .tools-body > .sheet.saved-sheet--beige {
+.tools-body > .sheet.saved-sheet--beige {
     display: flex !important;
     flex-direction: column !important;
     grid-template-columns: none !important;
@@ -1034,7 +1068,7 @@
   }
 
   .sheet.saved-sheet--beige > *,
-  .tools-body > .sheet.saved-sheet--beige > * {
+.tools-body > .sheet.saved-sheet--beige > * {
     grid-column: 1 / -1 !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -1042,22 +1076,78 @@
   }
 
   .sheet > .sheet-section,
-  .sheet > .technique-group-copy,
-  .sheet > .stats-sessions-container {
+.sheet > .technique-group-copy,
+.sheet > .technique-presets,
+.sheet > .stats-sessions-container {
     grid-column: 1 / -1;
   }
 
+  /* Practice preset chips: full-width wrap, never a 1-col squeeze */
+  .sheet > .technique-presets,
+.tools-body .sheet .technique-presets {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: 0.45rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .sheet > .technique-presets > .technique-preset-chip,
+.tools-body .sheet .technique-presets > .technique-preset-chip {
+    display: inline-flex !important;
+    flex: 1 1 calc(50% - 0.45rem) !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.4rem !important;
+    min-width: min(100%, 9.5rem) !important;
+    max-width: 100% !important;
+    width: auto !important;
+    min-height: 44px !important;
+    padding: 0.55rem 0.75rem !important;
+    border-radius: 14px !important;
+    border: 1px solid color-mix(in srgb, var(--border) 72%, transparent) !important;
+    white-space: normal !important;
+    text-align: start !important;
+    line-height: 1.25 !important;
+  }
+
+  .sheet > .technique-presets > .technique-preset-chip > i,
+.tools-body .sheet .technique-presets > .technique-preset-chip > i {
+    flex: 0 0 auto !important;
+    font-size: 1rem !important;
+  }
+
+  .sheet > .technique-presets > .technique-preset-chip > span,
+.tools-body .sheet .technique-presets > .technique-preset-chip > span {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+    hyphens: auto;
+  }
+
   .sheet-section,
-  .sheet-content,
-  .tools-body .sheet-content {
+.sheet-content,
+.tools-body .sheet-content {
     inline-size: 100%;
     block-size: auto !important;
     max-block-size: none !important;
     overflow: visible !important;
   }
 
+  /* Setup + Practice accordion cards: keep visible border + radius on mobile */
+  .tools .sheet-section,
+.tools-body .sheet > .sheet-section {
+    border: 1px solid color-mix(in srgb, var(--border) 72%, transparent) !important;
+    border-radius: 14px !important;
+  }
+
   .sheet-toggle,
-  .tools-body .sheet-toggle {
+.tools-body .sheet-toggle {
     display: grid !important;
     grid-template-columns: 36px minmax(0, 1fr) 44px 44px !important;
     gap: var(--mq-grid-gap) !important;
@@ -1079,7 +1169,7 @@
   }
 
   .sheet-toggle > .st-right-group,
-  .sheet-toggle > .st-chev {
+.sheet-toggle > .st-chev {
     grid-column: 4;
     justify-self: end;
   }
@@ -1092,7 +1182,7 @@
   }
 
   .sheet-toggle .mode-radio,
-  .sheet-toggle .st-chev {
+.sheet-toggle .st-chev {
     inline-size: 44px;
     min-inline-size: 44px;
     block-size: 44px;
@@ -1100,11 +1190,11 @@
   }
 
   .sheet-toggle .st-txt,
-  .sheet-toggle .st-sub,
-  .setting-copy,
-  .setting-description,
-  .field-hint,
-  .technique-group-copy p {
+.sheet-toggle .st-sub,
+.setting-copy,
+.setting-description,
+.field-hint,
+.technique-group-copy p {
     min-inline-size: 0;
     max-inline-size: 100%;
     white-space: normal !important;
@@ -1113,28 +1203,28 @@
   }
 
   .sheet-content > .field-stack,
-  .sheet-content > .field-stack-compact,
-  .planner-controls-content > .field-stack {
+.sheet-content > .field-stack-compact,
+.planner-controls-content > .field-stack {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     gap: 12px var(--mq-grid-gap) !important;
   }
 
   .field-stack > .field,
-  .field-stack-compact > .field {
+.field-stack-compact > .field {
     grid-column: span 2;
     min-inline-size: 0;
     align-content: start;
   }
 
   .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(1),
-  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(2),
-  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(3),
-  .tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(4),
-  .tools-body > .sheet > .sheet-section .field-stack > .field,
-  .tools-body > .sheet > .sheet-section .field-stack-compact > .field,
-  .tools-body .setup-field-list > .field,
-  .tools-body .setup-field-row {
+.tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(2),
+.tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(3),
+.tools-body > .sheet > .sheet-section:first-child .field-stack-compact > .field:nth-child(4),
+.tools-body > .sheet > .sheet-section .field-stack > .field,
+.tools-body > .sheet > .sheet-section .field-stack-compact > .field,
+.tools-body .setup-field-list > .field,
+.tools-body .setup-field-row {
     grid-column: 1 / -1 !important;
     grid-row: auto !important;
     width: 100% !important;
@@ -1142,9 +1232,9 @@
   }
 
   .sheet-content > .field-stack,
-  .sheet-content > .field-stack-compact,
-  .planner-controls-content > .field-stack,
-  .tools-body .setup-field-list {
+.sheet-content > .field-stack-compact,
+.planner-controls-content > .field-stack,
+.tools-body .setup-field-list {
     display: grid !important;
     grid-template-columns: 1fr !important;
     gap: 0.65rem !important;
@@ -1159,15 +1249,15 @@
   }
 
   .range.range-single :where(.input, input),
-  .tools-body :where(.select, .input) {
+.tools-body :where(.select, .input) {
     inline-size: 100%;
     min-inline-size: 0;
     max-inline-size: 100%;
   }
 
   .radio-group,
-  .techniques-choice-group,
-  .planner-controls-inline {
+.techniques-choice-group,
+.planner-controls-inline {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 84px), 1fr));
     gap: 6px !important;
@@ -1181,7 +1271,7 @@
   }
 
   .tools-footer,
-  .tools-footer.settings-footer {
+.tools-footer.settings-footer {
     position: relative !important;
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
@@ -1192,15 +1282,15 @@
 
   /* Primary start action first (wider); Reset second (narrower). */
   .tools-footer > .session-primary-action,
-  .tools-footer > .tools-btn-primary,
-  .tools-footer > .btn-primary {
+.tools-footer > .tools-btn-primary,
+.tools-footer > .btn-primary {
     grid-column: 1 / span 3 !important;
     order: 1 !important;
     flex: unset !important;
   }
 
   .tools-footer > .tools-btn-soft,
-  .tools-footer > .tools-btn-ghost {
+.tools-footer > .tools-btn-ghost {
     grid-column: 4 !important;
     order: 2 !important;
     flex: unset !important;
@@ -1237,7 +1327,7 @@
   }
 
   .saved-session-row-title,
-  .saved-session-row-meta {
+.saved-session-row-meta {
     min-inline-size: 0;
     max-inline-size: 100%;
     white-space: normal !important;
@@ -1281,11 +1371,11 @@
   }
 
   /* Shared overlay shells use one scroll owner and grid-composed internals.
-     Ayah notes is a dedicated full-bleed sheet — exclude it from the inset shell. */
-  .modal-overlay.mutqin-modal-overlay:not(.ayah-notes-modal-overlay):not(.ayah-notes-delete-overlay),
-  .welcome-back-modal-wrap,
-  .session-exit-modal-wrap,
-  .onboarding-post-session-modal-wrap {
+     Delete confirm stays separately centered; ayah notes joins the inset shell. */
+  .modal-overlay.mutqin-modal-overlay:not(.ayah-notes-delete-overlay),
+.welcome-back-modal-wrap,
+.session-exit-modal-wrap,
+.onboarding-post-session-modal-wrap {
     padding:
       max(10px, var(--mq-safe-top))
       max(10px, var(--mq-safe-right))
@@ -1293,14 +1383,14 @@
       max(10px, var(--mq-safe-left)) !important;
   }
 
-  .mutqin-modal-dialog:not(.ayah-notes-dialog):not(.ayah-notes-delete-dialog),
-  .mutqin-modal-dialog--wide:not(.ayah-notes-dialog):not(.ayah-notes-delete-dialog),
-  .mutqin-modal-overlay:not(.ayah-notes-modal-overlay):not(.ayah-notes-delete-overlay) > .mutqin-modal-dialog,
-  .mutqin-modal-flow .mutqin-modal-dialog:not(.ayah-notes-dialog):not(.ayah-notes-delete-dialog),
-  .welcome-back-modal-wrap .modal-dialog,
-  .session-exit-modal-wrap .modal-dialog,
-  .onboarding-post-session-modal-wrap .modal-dialog,
-  .post-onboarding-overlay .modal-dialog {
+  .mutqin-modal-dialog:not(.ayah-notes-delete-dialog),
+.mutqin-modal-dialog--wide:not(.ayah-notes-delete-dialog),
+.mutqin-modal-overlay:not(.ayah-notes-delete-overlay) > .mutqin-modal-dialog,
+.mutqin-modal-flow .mutqin-modal-dialog:not(.ayah-notes-delete-dialog),
+.welcome-back-modal-wrap .modal-dialog,
+.session-exit-modal-wrap .modal-dialog,
+.onboarding-post-session-modal-wrap .modal-dialog,
+.post-onboarding-overlay .modal-dialog {
     inline-size: min(100%, 720px) !important;
     max-inline-size: 720px !important;
     min-block-size: 0 !important;
@@ -1308,15 +1398,21 @@
     margin: 0 !important;
   }
 
-  .mutqin-modal-surface:not(.self-check-modal):not(.recordings-library-modal):not(.ayah-notes-modal):not(.ayah-notes-delete-modal) {
+  .mutqin-modal-surface:not(.self-check-modal):not(.recordings-library-modal):not(.ayah-notes-delete-modal) {
     display: grid !important;
     grid-template-rows: auto minmax(0, 1fr) auto;
     inline-size: 100% !important;
     min-block-size: 0 !important;
     block-size: auto !important;
     max-block-size: calc(100dvh - max(20px, var(--mq-safe-top) + var(--mq-safe-bottom))) !important;
-    border-radius: 18px !important;
+    border-radius: var(--mq-radius-card, 18px) !important;
     overflow: hidden !important;
+  }
+
+  .mutqin-modal-surface.ayah-notes-modal {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-rows: none !important;
   }
 
   .mutqin-modal-surface :where(
@@ -1340,7 +1436,7 @@
   }
 
   .post-onboarding-modal .onboarding-hero,
-  .post-onboarding-modal .onboarding-hero--compact {
+.post-onboarding-modal .onboarding-hero--compact {
     display: grid !important;
     grid-template-columns: auto minmax(0, 1fr) auto !important;
     gap: 0.55rem !important;
@@ -1374,15 +1470,15 @@
   }
 
   .onboarding-preview-grid,
-  .onboarding-choice-grid,
-  .onboarding-finish-choice-grid {
+.onboarding-choice-grid,
+.onboarding-finish-choice-grid {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     gap: var(--mq-grid-gap) !important;
   }
 
   .onboarding-preview-item,
-  .onboarding-choice-card {
+.onboarding-choice-card {
     grid-column: span 2;
     min-inline-size: 0;
   }
@@ -1392,10 +1488,10 @@
   }
 
   .onboarding-nav-actions,
-  .mutqin-modal-actions,
-  .mutqin-modal-actions--end,
-  .mutqin-modal-actions--3,
-  .welcome-back-actions-grid {
+.mutqin-modal-actions,
+.mutqin-modal-actions--end,
+.mutqin-modal-actions--3,
+.welcome-back-actions-grid {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     gap: var(--mq-grid-gap) !important;
@@ -1403,8 +1499,8 @@
   }
 
   .onboarding-nav-actions > *,
-  .mutqin-modal-actions > *,
-  .welcome-back-actions-grid > * {
+.mutqin-modal-actions > *,
+.welcome-back-actions-grid > * {
     grid-column: span 2;
     min-inline-size: 0;
     min-block-size: 44px;
@@ -1412,8 +1508,8 @@
   }
 
   .onboarding-nav-actions > :only-child,
-  .mutqin-modal-actions > :only-child,
-  .welcome-back-actions-grid > :only-child {
+.mutqin-modal-actions > :only-child,
+.welcome-back-actions-grid > :only-child {
     grid-column: 1 / -1;
   }
 
@@ -1429,9 +1525,57 @@
     grid-column: 1 / -1;
   }
 
+  /* Welcome-back lean: compact primary full-width, then secondary + logout */
+  .welcome-back-modal--lean .welcome-back-actions-grid--trio,
+  .welcome-back-modal--lean .welcome-back-actions-grid--v2.mutqin-modal-actions--3 {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.45rem !important;
+  }
+
+  .welcome-back-modal--lean .welcome-back-actions-grid--trio > .welcome-back-action--primary,
+  .welcome-back-modal--lean .welcome-back-actions-grid--v2 > .mutqin-modal-btn--primary,
+  .welcome-back-modal--lean .mutqin-modal-actions--3 > :nth-child(1) {
+    grid-column: 1 / -1 !important;
+    min-block-size: 2.45rem;
+  }
+
+  .welcome-back-modal--lean .welcome-back-actions-grid--trio > .welcome-back-action--secondary,
+  .welcome-back-modal--lean .welcome-back-actions-grid--v2 > .mutqin-modal-btn--secondary,
+  .welcome-back-modal--lean .mutqin-modal-actions--3 > :nth-child(2) {
+    grid-column: 1 / 2 !important;
+    min-block-size: 2.35rem;
+  }
+
+  .welcome-back-modal--lean .welcome-back-actions-grid--trio > .welcome-back-logout,
+  .welcome-back-modal--lean .welcome-back-actions-grid--v2 > .welcome-back-logout,
+  .welcome-back-modal--lean .mutqin-modal-actions--3 > :nth-child(3) {
+    grid-column: 2 / 3 !important;
+    min-block-size: 2.35rem;
+  }
+
+  .welcome-back-modal--lean .welcome-back-action {
+    white-space: nowrap;
+    font-size: 0.76rem;
+    font-weight: 560;
+  }
+
+  .welcome-back-modal--lean .welcome-back-continue-label--full {
+    display: inline !important;
+  }
+
+  .welcome-back-modal--lean .welcome-back-continue-label--short {
+    display: none !important;
+  }
+
+  .welcome-back-modal--lean .welcome-back-hero--compact,
+  .welcome-back-modal--lean .welcome-back-hero-copy {
+    text-align: start;
+    justify-items: start;
+  }
+
   /* Paused and complete summaries use label/value tracks, not stacked rows. */
   .session-exit-body,
-  .post-session-body {
+.post-session-body {
     display: grid !important;
     grid-template-columns: var(--mq-grid);
     gap: 10px var(--mq-grid-gap) !important;
@@ -1439,7 +1583,7 @@
   }
 
   .session-exit-body > *,
-  .post-session-body > * {
+.post-session-body > * {
     grid-column: 1 / -1;
     min-inline-size: 0;
   }
@@ -1455,7 +1599,7 @@
   }
 
   .post-session-body > .post-session-stats-toggle,
-  .post-session-body > .post-session-stats-panel {
+.post-session-body > .post-session-stats-panel {
     grid-column: 1 / -1;
   }
 
@@ -1502,8 +1646,21 @@
     gap: var(--mq-grid-gap) !important;
   }
 
+  .session-exit-confirm-actions.mutqin-modal-actions--end {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.55rem !important;
+  }
+
+  .session-exit-confirm-actions .mutqin-modal-btn {
+    width: 100% !important;
+    min-inline-size: 0;
+    justify-content: center !important;
+  }
+
   .session-exit-actions-secondary,
-  .session-exit-actions-secondary--with-continue {
+.session-exit-actions-secondary--with-continue {
     grid-column: 1 / -1;
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -1522,13 +1679,13 @@
 
   /* AI Recite: full-height shell, compact stage, and sequential report flow. */
   .self-check-modal-overlay,
-  .recordings-library-overlay {
+.recordings-library-overlay {
     padding: 0 !important;
     align-items: stretch !important;
   }
 
   .self-check-modal-overlay > .mutqin-modal-dialog,
-  .recordings-library-overlay > .mutqin-modal-dialog {
+.recordings-library-overlay > .mutqin-modal-dialog {
     inline-size: 100vw !important;
     max-inline-size: 100vw !important;
     block-size: 100dvh !important;
@@ -1536,7 +1693,7 @@
   }
 
   .modal-content.self-check-modal,
-  .modal-content.recordings-library-modal {
+.modal-content.recordings-library-modal {
     display: grid !important;
     grid-template-rows: auto minmax(0, 1fr);
     inline-size: 100% !important;
@@ -1548,7 +1705,7 @@
   }
 
   .self-check-modal-header,
-  .recordings-library-header {
+.recordings-library-header {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     gap: var(--mq-grid-gap) !important;
@@ -1557,13 +1714,13 @@
   }
 
   .self-check-modal-head-copy,
-  .recordings-library-head-copy {
+.recordings-library-head-copy {
     grid-column: 1 / span 2;
     min-inline-size: 0;
   }
 
   .self-check-modal-header-actions,
-  .recordings-library-header-actions {
+.recordings-library-header-actions {
     grid-column: 3 / -1;
     display: grid !important;
     grid-auto-flow: column;
@@ -1578,7 +1735,7 @@
   }
 
   .self-check-modal-head-copy h2,
-  .recordings-library-head-copy h2 {
+.recordings-library-head-copy h2 {
     margin: 0;
     font-size: clamp(1.14rem, 5.2vw, 1.45rem) !important;
     line-height: 1.15;
@@ -1587,7 +1744,7 @@
   }
 
   .self-check-modal-body,
-  .recordings-library-body {
+.recordings-library-body {
     display: grid !important;
     grid-template-columns: var(--mq-grid);
     grid-auto-rows: max-content !important;
@@ -1600,7 +1757,7 @@
   }
 
   .self-check-modal-body > *,
-  .recordings-library-body > * {
+.recordings-library-body > * {
     grid-column: 1 / -1;
     min-inline-size: 0;
   }
@@ -1671,7 +1828,7 @@
   }
 
   .self-check-header-tools .self-check-toolbar-btn,
-  .self-check-header-tools .self-check-toolbar-btn.self-check-ai-recite-btn {
+.self-check-header-tools .self-check-toolbar-btn.self-check-ai-recite-btn {
     inline-size: 100% !important;
     min-inline-size: 44px !important;
     max-inline-size: none !important;
@@ -1708,7 +1865,7 @@
   }
 
   .self-check-mobile-start-copy,
-  .self-check-mobile-start-unavailable {
+.self-check-mobile-start-unavailable {
     grid-column: 1 / -1;
     min-inline-size: 0;
   }
@@ -1719,7 +1876,7 @@
   }
 
   .self-check-mobile-start-copy :where(strong, p),
-  .self-check-mobile-start-unavailable {
+.self-check-mobile-start-unavailable {
     margin: 0;
     white-space: normal;
     word-break: normal;
@@ -1727,7 +1884,7 @@
   }
 
   .self-check-mobile-start-copy p,
-  .self-check-mobile-start-unavailable {
+.self-check-mobile-start-unavailable {
     color: var(--text-muted);
     font-size: 0.8rem;
     line-height: 1.4;
@@ -1815,8 +1972,8 @@
   }
 
   .self-check-modal-ayah,
-  .recitation-review-ayah,
-  .shared-result-ayah {
+.recitation-review-ayah,
+.shared-result-ayah {
     inline-size: 100%;
     min-inline-size: 0;
     max-inline-size: 100%;
@@ -1826,10 +1983,10 @@
   }
 
   .self-check-modal-recorder-grid,
-  .self-check-recorder-card,
-  .recitation-check-panel-inline,
-  .recitation-check-body,
-  .shared-result-flow {
+.self-check-recorder-card,
+.recitation-check-panel-inline,
+.recitation-check-body,
+.shared-result-flow {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     grid-auto-rows: max-content !important;
@@ -1842,16 +1999,16 @@
   }
 
   .self-check-modal-recorder-grid > *,
-  .self-check-recorder-card > *,
-  .recitation-check-panel-inline > *,
-  .recitation-check-body > *,
-  .shared-result-flow > * {
+.self-check-recorder-card > *,
+.recitation-check-panel-inline > *,
+.recitation-check-body > *,
+.shared-result-flow > * {
     grid-column: 1 / -1;
     min-inline-size: 0;
   }
 
   .recitation-check-head,
-  .self-check-recorder-head {
+.self-check-recorder-head {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
     gap: 8px !important;
@@ -1877,12 +2034,12 @@
   }
 
   .shared-result-support-grid > :first-child,
-  .shared-result-support-grid > :last-child {
+.shared-result-support-grid > :last-child {
     grid-column: 1 / -1;
   }
 
   .shared-result-section,
-  .shared-result-section--summary {
+.shared-result-section--summary {
     min-inline-size: 0;
     padding: 10px !important;
   }
@@ -1903,11 +2060,11 @@
   }
 
   .shared-result-section-head,
-  .shared-result-section-head strong,
-  .shared-result-section-head p,
-  .shared-result-support-title,
-  .shared-result-support-copy,
-  .recitation-result-stat :where(span, strong, small) {
+.shared-result-section-head strong,
+.shared-result-section-head p,
+.shared-result-support-title,
+.shared-result-support-copy,
+.recitation-result-stat :where(span, strong, small) {
     min-inline-size: 0;
     white-space: normal !important;
     overflow-wrap: break-word;
@@ -1921,7 +2078,7 @@
   }
 
   .recitation-result-actions,
-  .recitation-result-actions-compact {
+.recitation-result-actions-compact {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     gap: var(--mq-grid-gap) !important;
@@ -1948,9 +2105,9 @@
   }
 
   .self-check-rating-grid,
-  .self-check-assessment-rating-grid,
-  .self-check-review-actions,
-  .self-check-live-actions {
+.self-check-assessment-rating-grid,
+.self-check-review-actions,
+.self-check-live-actions {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     gap: var(--mq-grid-gap) !important;
@@ -1961,7 +2118,7 @@
   }
 
   .self-check-review-actions > *,
-  .self-check-live-actions > * {
+.self-check-live-actions > * {
     grid-column: span 2;
   }
 
@@ -1975,10 +2132,10 @@
   }
 
   .recordings-library-hierarchy,
-  .recordings-library-nav-meta,
-  .recordings-library-detail-meta,
-  .recording-history-inline-meta,
-  .recording-history-meta {
+.recordings-library-nav-meta,
+.recordings-library-detail-meta,
+.recording-history-inline-meta,
+.recording-history-meta {
     display: flex !important;
     flex-wrap: wrap !important;
     gap: 0.45rem !important;
@@ -1986,7 +2143,7 @@
   }
 
   .recordings-library-back-btn,
-  .recordings-library-header .modal-close-btn {
+.recordings-library-header .modal-close-btn {
     inline-size: 44px;
     min-inline-size: 44px;
     block-size: 44px;
@@ -2051,18 +2208,18 @@
   }
 
   .recordings-library-nav,
-  .recordings-library-detail {
+.recordings-library-detail {
     grid-column: 1 / -1;
     inline-size: 100%;
     min-inline-size: 0;
   }
 
   .recordings-library-nav-head,
-  .recordings-library-detail-head,
-  .recording-history-top,
-  .recording-history-footer,
-  .recording-history-actions,
-  .recording-history-actions--utility {
+.recordings-library-detail-head,
+.recording-history-top,
+.recording-history-footer,
+.recording-history-actions,
+.recording-history-actions--utility {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     gap: var(--mq-grid-gap) !important;
@@ -2070,7 +2227,7 @@
   }
 
   .recordings-library-nav-intro,
-  .recordings-library-detail-head-copy {
+.recordings-library-detail-head-copy {
     grid-column: 1 / span 3;
     min-inline-size: 0;
   }
@@ -2081,8 +2238,8 @@
   }
 
   .recordings-library-nav-toggle,
-  .recording-history-actions,
-  .recording-history-actions--utility {
+.recording-history-actions,
+.recording-history-actions--utility {
     grid-column: 4;
   }
 
@@ -2093,7 +2250,7 @@
   }
 
   .recording-history-action-primary,
-  .recording-history-utility-link {
+.recording-history-utility-link {
     inline-size: 100%;
     min-inline-size: 0;
     min-block-size: 44px;
@@ -2101,10 +2258,10 @@
   }
 
   .recordings-library-recording-title,
-  .recordings-library-recording-meta,
-  .recording-history-copy,
-  .recording-history-copy strong,
-  .recording-history-copy span {
+.recordings-library-recording-meta,
+.recording-history-copy,
+.recording-history-copy strong,
+.recording-history-copy span {
     min-inline-size: 0;
     white-space: normal !important;
     overflow-wrap: break-word;
@@ -2112,10 +2269,10 @@
   }
 
   .recordings-library-detail,
-  .recordings-library-history,
-  .recording-history-card,
-  .recording-history-ai-detail,
-  .recording-history-ai-detail > * {
+.recordings-library-history,
+.recording-history-card,
+.recording-history-ai-detail,
+.recording-history-ai-detail > * {
     inline-size: 100% !important;
     max-inline-size: none !important;
     min-inline-size: 0 !important;
@@ -2148,26 +2305,26 @@
 
   /* Secondary overlays and analytics inherit the same grid discipline. */
   .help-learning-shell,
-  .keyboard-shortcuts-grid,
-  .session-analytics-summary-grid,
-  .advanced-metrics-grid,
-  .controls-analytics-grid,
-  .completion-stats,
-  .session-exit-stats,
-  .session-exit-remaining-grid {
+.keyboard-shortcuts-grid,
+.session-analytics-summary-grid,
+.advanced-metrics-grid,
+.controls-analytics-grid,
+.completion-stats,
+.session-exit-stats,
+.session-exit-remaining-grid {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     gap: var(--mq-grid-gap) !important;
   }
 
   .help-learning-shell > *,
-  .keyboard-shortcuts-grid > *,
-  .session-analytics-summary-grid > *,
-  .advanced-metrics-grid > *,
-  .controls-analytics-grid > *,
-  .completion-stats > *,
-  .session-exit-stats > *,
-  .session-exit-remaining-grid > * {
+.keyboard-shortcuts-grid > *,
+.session-analytics-summary-grid > *,
+.advanced-metrics-grid > *,
+.controls-analytics-grid > *,
+.completion-stats > *,
+.session-exit-stats > *,
+.session-exit-remaining-grid > * {
     grid-column: span 2;
     min-inline-size: 0;
   }
@@ -2205,7 +2362,7 @@
   }
 
   .keyboard-shortcuts-header-icon,
-  .keyboard-shortcuts-header .modal-close-btn {
+.keyboard-shortcuts-header .modal-close-btn {
     inline-size: 44px !important;
     block-size: 44px !important;
   }
@@ -2312,7 +2469,7 @@
   }
 
   .keyboard-shortcuts-label,
-  .keyboard-shortcut-keys {
+.keyboard-shortcut-keys {
     min-inline-size: 0;
     white-space: normal !important;
     word-break: normal !important;
@@ -2348,25 +2505,25 @@
   }
 
   .top-card-menu,
-  .font-dropdown-menu,
-  .quick-font-menu,
-  .mushaf-toolbar-menu,
-  .verse-action-menu {
+.font-dropdown-menu,
+.quick-font-menu,
+.mushaf-toolbar-menu,
+.verse-action-menu {
     max-inline-size: calc(100vw - 2 * var(--mq-mobile-gutter));
   }
 
   /* ---- Mobile polish: hide clutter, one-row chrome, faster paint ---- */
 
   .workspace-shell-bottom-pills,
-  .workspace-shell-metadata,
-  .workspace-shell-metadata-pill,
-  .verse-status-badge-active {
+.workspace-shell-metadata,
+.workspace-shell-metadata-pill,
+.verse-status-badge-active {
     display: none !important;
   }
 
   .verse-ai-check-btn,
-  .verse-ai-check-btn.verse-ai-recite-btn,
-  .verse-self-check-btn.verse-ai-check-btn {
+.verse-ai-check-btn.verse-ai-recite-btn,
+.verse-self-check-btn.verse-ai-check-btn {
     min-block-size: 30px !important;
     block-size: 30px !important;
     min-inline-size: 30px !important;
@@ -2379,13 +2536,13 @@
   }
 
   .verse-ai-check-btn span,
-  .verse-ai-recite-btn span {
+.verse-ai-recite-btn span {
     font-size: inherit !important;
     line-height: 1 !important;
   }
 
   .verse-ai-check-btn i,
-  .verse-ai-recite-btn i {
+.verse-ai-recite-btn i {
     font-size: 0.78rem !important;
   }
 
@@ -2394,19 +2551,17 @@
     justify-content: end;
   }
 
-  /* Session controls: force a single dense row */
+  /* Session controls: keep CTAs inside the actions box (row 3 of the head) */
   .workspace-shell-actions,
-  .workspace-shell-actions .action-buttons-group,
-  .workspace-shell-actions-minimal {
+.workspace-shell-actions .action-buttons-group,
+.workspace-shell-actions-minimal {
     display: flex !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
     gap: 0.35rem !important;
-    grid-template-columns: none !important;
   }
 
-  .workspace-shell-actions .top-card-session-actions,
-  .workspace-shell-actions .top-card-session-actions.has-paired-actions {
+  .workspace-shell-actions .top-card-session-actions:not(.has-paired-actions) {
     display: flex !important;
     flex: 1 1 auto !important;
     flex-wrap: nowrap !important;
@@ -2415,20 +2570,37 @@
     min-inline-size: 0 !important;
   }
 
-  .top-card-session-actions.has-paired-actions > .session-primary-action,
-  .top-card-session-actions.has-paired-actions > .action-btn-exit,
+  .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    flex: 1 1 auto !important;
+    gap: 0.35rem !important;
+    min-inline-size: 0 !important;
+    width: 100% !important;
+  }
+
+  .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
   .top-card-session-actions:not(.has-paired-actions) > .session-primary-action,
-  .workspace-shell-actions .top-card-controls-trigger,
-  .workspace-shell-actions .top-card-menu-wrap,
-  .workspace-shell-actions-minimal .session-idle-action,
-  .workspace-shell-actions-minimal .session-idle-controls {
+.workspace-shell-actions .top-card-controls-trigger,
+.workspace-shell-actions .top-card-menu-wrap,
+.workspace-shell-actions-minimal .session-idle-action,
+.workspace-shell-actions-minimal .session-idle-controls {
     grid-column: auto !important;
     grid-row: auto !important;
   }
 
   .workspace-shell-actions .top-card-action-trigger.session-primary-action,
-  .workspace-shell-actions .top-card-action-trigger.action-btn-exit,
-  .workspace-shell-actions-minimal .session-idle-action {
+.workspace-shell-actions .top-card-action-trigger.action-btn-exit,
+.workspace-shell-actions-minimal .session-idle-action {
     flex: 1 1 0 !important;
     inline-size: auto !important;
     min-inline-size: 0 !important;
@@ -2446,7 +2618,7 @@
   }
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
-  .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
+.workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
     display: grid !important;
     flex: 1 1 auto !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -2482,7 +2654,7 @@
   }
 
   .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
-  .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom {
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom {
     background: #ffffff !important;
     border-color: rgba(31, 24, 18, 0.14) !important;
     color: #2b241c !important;
@@ -2496,9 +2668,9 @@
 
   /* Dark mode: keep Custom session readable (mobile white bg was winning over dark text styles). */
   [data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
-  [data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom,
-  .dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
-  .dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom {
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom,
+.dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
+.dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom {
     background: rgba(255, 255, 255, 0.08) !important;
     border-color: rgba(246, 239, 230, 0.22) !important;
     color: #f6efe6 !important;
@@ -2506,17 +2678,17 @@
   }
 
   [data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
-  [data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i,
-  .dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
-  .dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i {
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i,
+.dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
+.dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i {
     color: #f6efe6 !important;
     -webkit-text-fill-color: #f6efe6 !important;
   }
 
   .workspace-shell-actions .top-card-controls-trigger,
-  .workspace-shell-actions .top-card-menu-wrap,
-  .workspace-shell-actions .top-card-ellipsis,
-  .workspace-shell-actions-minimal .session-idle-controls {
+.workspace-shell-actions .top-card-menu-wrap,
+.workspace-shell-actions .top-card-ellipsis,
+.workspace-shell-actions-minimal .session-idle-controls {
     flex: 0 0 36px !important;
     inline-size: 36px !important;
     min-inline-size: 36px !important;
@@ -2543,7 +2715,7 @@
   }
 
   .main.mushaf-mode-active .mushaf-shell__bar-group,
-  .main.mushaf-mode-active .mushaf-shell__bar-group--end {
+.main.mushaf-mode-active .mushaf-shell__bar-group--end {
     display: flex !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
@@ -2558,7 +2730,7 @@
   }
 
   .main.mushaf-mode-active .mushaf-shell__btn,
-  .main.mushaf-mode-active .mushaf-shell__btn--icon {
+.main.mushaf-mode-active .mushaf-shell__btn--icon {
     min-inline-size: 34px !important;
     min-block-size: 34px !important;
     inline-size: 34px !important;
@@ -2579,15 +2751,15 @@
     min-width: 2.2rem !important;
   }
 
-  /* Audio player: always mini + single row */
+  /* Audio player: always mini + single row — taller / more prominent on phone */
   .main.player-visible,
-  .main.playback-pill-visible {
-    padding-bottom: calc(72px + var(--mq-safe-bottom)) !important;
+.main.playback-pill-visible {
+    padding-bottom: calc(100px + var(--mq-safe-bottom)) !important;
   }
 
   .player-bar {
-    padding: 0.35rem 0.5rem !important;
-    border-radius: 14px !important;
+    padding: 0.7rem 0.85rem !important;
+    border-radius: 18px !important;
   }
 
   .player-bar .player-main {
@@ -2595,44 +2767,103 @@
   }
 
   .player-bar .player-mini,
-  .player-bar.compact .player-mini {
+.player-bar.compact .player-mini {
     display: flex !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 0.35rem !important;
-    min-block-size: 44px;
+    gap: 0.55rem !important;
+    min-block-size: 58px;
   }
 
   .player-mini .player-btn {
-    inline-size: 34px !important;
-    block-size: 34px !important;
-    min-inline-size: 34px !important;
-    min-block-size: 34px !important;
-    flex: 0 0 34px;
+    inline-size: 40px !important;
+    block-size: 40px !important;
+    min-inline-size: 40px !important;
+    min-block-size: 40px !important;
+    flex: 0 0 40px;
+    font-size: 1.1rem;
+  }
+
+  .player-mini .player-play {
+    inline-size: 52px !important;
+    block-size: 52px !important;
+    min-inline-size: 52px !important;
+    min-block-size: 52px !important;
+    flex: 0 0 52px !important;
+    border-radius: 16px !important;
+    font-size: 1.35rem !important;
   }
 
   .player-mini .player-mini-info {
     flex: 1 1 auto;
     min-inline-size: 0;
     overflow: hidden;
+    padding-block: 0.15rem;
   }
 
-  .player-mini .player-chapter,
+  .player-mini .player-chapter {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.92rem !important;
+    line-height: 1.25 !important;
+  }
+
   .player-mini .player-verse {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 0.72rem !important;
-    line-height: 1.15 !important;
+    font-size: 0.8rem !important;
+    line-height: 1.25 !important;
   }
 
   .player-mini .player-layout-toggle {
     display: none !important;
   }
 
-  .player-accent,
-  .player-talqin-strip {
+  .player-accent {
     display: none !important;
+  }
+
+  /* Listen-then-recite / Talqin turn prompt — taller / more prominent on phone */
+  .player-talqin-strip {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem 0.8rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 0.95rem 1rem;
+    min-block-size: 68px;
+    overflow: visible;
+  }
+
+  .player-talqin-strip .talqin-callout-number {
+    font-size: clamp(2rem, 8.5vw, 2.8rem);
+    line-height: 1;
+  }
+
+  .player-talqin-strip .talqin-callout-text {
+    font-size: clamp(0.95rem, 4vw, 1.12rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.35;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+
+  .player-dock-card.is-talqin-only {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .main.player-visible:has(.player-talqin-strip),
+  .main.playback-pill-visible:has(.player-talqin-strip) {
+    padding-bottom: calc(188px + var(--mq-safe-bottom)) !important;
   }
 
   /* Paint/perf: skip offscreen verse work (avoid contain that breaks WBW wrap) */
@@ -2665,7 +2896,7 @@
   }
 
   .onboarding-preview-item,
-  .onboarding-choice-card {
+.onboarding-choice-card {
     grid-column: span 2;
   }
 
@@ -2676,7 +2907,7 @@
 
 @media (max-width: 429.98px) {
   .post-session-body > .post-session-autosaved-note,
-  .post-session-body > .post-session-next-step-card {
+.post-session-body > .post-session-next-step-card {
     grid-column: 1 / -1;
   }
 
@@ -2701,7 +2932,7 @@
   }
 
   .workspace-shell-metadata > .workspace-shell-metadata-pill,
-  .workspace-shell-metadata:has(> :nth-child(5)) > :nth-child(n + 3) {
+.workspace-shell-metadata:has(> :nth-child(5)) > :nth-child(n + 3) {
     grid-column: 1 / -1;
   }
 
@@ -2724,14 +2955,14 @@
   }
 
   .verse-inline-action-btn,
-  .verse-inline-play-btn,
-  .verse-inline-download-btn {
+.verse-inline-play-btn,
+.verse-inline-download-btn {
     inline-size: 40px !important;
     min-inline-size: 40px !important;
   }
 
   .field-stack > .field,
-  .field-stack-compact > .field {
+.field-stack-compact > .field {
     grid-column: 1 / -1 !important;
     grid-row: auto !important;
   }
@@ -2747,7 +2978,7 @@
   }
 
   .post-session-body > .post-session-autosaved-note,
-  .post-session-body > .post-session-next-step-card {
+.post-session-body > .post-session-next-step-card {
     grid-column: 1 / -1;
   }
 
@@ -2756,7 +2987,7 @@
   }
 
   .session-exit-actions-secondary,
-  .session-exit-actions-secondary--with-continue {
+.session-exit-actions-secondary--with-continue {
     grid-template-columns: 1fr !important;
     gap: 0.42rem !important;
   }
@@ -2822,12 +3053,13 @@
 /* Specificity locks for legacy modal selectors that also use !important. */
 @media (max-width: 767.98px) {
   @keyframes selfCheckMobileRecordingPulse {
-    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger) 20%, transparent); }
+    0%,
+100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger) 20%, transparent); }
     50% { box-shadow: 0 0 0 7px transparent; }
   }
 
   .app .main.container-fluid.mushaf-mode-active .mushaf-frame,
-  .app .main.mushaf-mode-active .mushaf-frame.mushaf-frame-toolbar-collapsed {
+.app .main.mushaf-mode-active .mushaf-frame.mushaf-frame-toolbar-collapsed {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     gap: 10px var(--mq-grid-gap) !important;
@@ -2842,7 +3074,7 @@
   }
 
   .app .main.mushaf-mode-active .mushaf-pill-toolbar,
-  .app .main.mushaf-mode-active .mushaf-pill-toolbar.is-collapsed {
+.app .main.mushaf-mode-active .mushaf-pill-toolbar.is-collapsed {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     gap: 6px var(--mq-grid-gap) !important;
@@ -2852,8 +3084,8 @@
   }
 
   .app .main.mushaf-mode-active .mushaf-toolbar-cluster,
-  .app .main.mushaf-mode-active .mushaf-toolbar-cluster-start,
-  .app .main.mushaf-mode-active .mushaf-toolbar-cluster-end {
+.app .main.mushaf-mode-active .mushaf-toolbar-cluster-start,
+.app .main.mushaf-mode-active .mushaf-toolbar-cluster-end {
     grid-column: 1 / -1;
     display: grid !important;
     grid-template-columns: repeat(5, minmax(44px, 1fr)) !important;
@@ -2862,7 +3094,7 @@
   }
 
   .app .main.mushaf-mode-active .mushaf-toolbar-rail .bg-dropdown-region,
-  .app .main.mushaf-mode-active .mushaf-toolbar-rail .border-dropdown-region {
+.app .main.mushaf-mode-active .mushaf-toolbar-rail .border-dropdown-region {
     display: block !important;
     min-inline-size: 0;
   }
@@ -2878,8 +3110,8 @@
   }
 
   .app .main.mushaf-mode-active .mushaf-toolbar-trigger,
-  .app .main.mushaf-mode-active .mushaf-pill-toolbar .mushaf-pill,
-  .app .verse-actions .verse-ai-check-btn {
+.app .main.mushaf-mode-active .mushaf-pill-toolbar .mushaf-pill,
+.app .verse-actions .verse-ai-check-btn {
     min-inline-size: 44px !important;
     block-size: 44px !important;
     min-block-size: 44px !important;
@@ -2962,19 +3194,19 @@
   }
 
   .app .workspace-shell .workspace-shell-actions .top-card-action-trigger.session-primary-action,
-  .app .workspace-shell .workspace-shell-actions .top-card-action-trigger.action-btn-exit,
-  .app .tools-footer :where(.tools-btn, .session-primary-action, .btn),
-  .app .mutqin-modal-footer .mutqin-modal-btn {
+.app .workspace-shell .workspace-shell-actions .top-card-action-trigger.action-btn-exit,
+.app .tools-footer :where(.tools-btn, .session-primary-action, .btn),
+.app .mutqin-modal-footer .mutqin-modal-btn {
     block-size: 44px !important;
     min-block-size: 44px !important;
     min-height: 44px !important;
   }
 
   .app .workspace-shell .workspace-shell-actions .top-card-controls-trigger,
-  .app .workspace-shell .workspace-shell-actions .top-card-menu-wrap,
-  .app .workspace-shell .workspace-shell-actions .top-card-ellipsis,
-  .app .modal-content.self-check-modal .self-check-library-shortcut-btn,
-  .app .recordings-library-nav-toggle {
+.app .workspace-shell .workspace-shell-actions .top-card-menu-wrap,
+.app .workspace-shell .workspace-shell-actions .top-card-ellipsis,
+.app .modal-content.self-check-modal .self-check-library-shortcut-btn,
+.app .recordings-library-nav-toggle {
     inline-size: 44px !important;
     min-inline-size: 44px !important;
     block-size: 44px !important;
@@ -3015,14 +3247,14 @@
   }
 
   .app .modal-content.self-check-modal .self-check-modal-body,
-  .app .modal-content.self-check-modal .self-check-modal-stage,
-  .app .modal-content.self-check-modal .self-check-section-head,
-  .app .modal-content.self-check-modal .self-check-modal-recorder-grid,
-  .app .modal-content.self-check-modal .self-check-recorder-card,
-  .app .modal-content.self-check-modal .recitation-check-panel-inline,
-  .app .modal-content.self-check-modal .recitation-check-body,
-  .app .modal-content.self-check-modal .shared-result-flow,
-  .app .modal-content.self-check-modal .recitation-result-stats {
+.app .modal-content.self-check-modal .self-check-modal-stage,
+.app .modal-content.self-check-modal .self-check-section-head,
+.app .modal-content.self-check-modal .self-check-modal-recorder-grid,
+.app .modal-content.self-check-modal .self-check-recorder-card,
+.app .modal-content.self-check-modal .recitation-check-panel-inline,
+.app .modal-content.self-check-modal .recitation-check-body,
+.app .modal-content.self-check-modal .shared-result-flow,
+.app .modal-content.self-check-modal .recitation-result-stats {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
     grid-auto-rows: max-content !important;
@@ -3031,12 +3263,12 @@
   }
 
   .app .modal-content.self-check-modal .self-check-modal-body > *,
-  .app .modal-content.self-check-modal .self-check-modal-stage > .self-check-modal-ayah-shell,
-  .app .modal-content.self-check-modal .self-check-modal-recorder-grid > *,
-  .app .modal-content.self-check-modal .self-check-recorder-card > *,
-  .app .modal-content.self-check-modal .recitation-check-panel-inline > *,
-  .app .modal-content.self-check-modal .recitation-check-body > *,
-  .app .modal-content.self-check-modal .shared-result-flow > * {
+.app .modal-content.self-check-modal .self-check-modal-stage > .self-check-modal-ayah-shell,
+.app .modal-content.self-check-modal .self-check-modal-recorder-grid > *,
+.app .modal-content.self-check-modal .self-check-recorder-card > *,
+.app .modal-content.self-check-modal .recitation-check-panel-inline > *,
+.app .modal-content.self-check-modal .recitation-check-body > *,
+.app .modal-content.self-check-modal .shared-result-flow > * {
     grid-column: 1 / -1;
     min-inline-size: 0;
   }
@@ -3056,8 +3288,8 @@
   }
 
   .app .modal-content.self-check-modal .self-check-header-tools .self-check-toolbar-btn,
-  .app .modal-content.self-check-modal .self-check-header-tools .self-check-toolbar-btn.self-check-ai-recite-btn,
-  .app .modal-content.self-check-modal .self-check-header-tools .self-check-toolbar-btn.self-check-toolbar-btn-icon-only.self-check-ai-recite-btn {
+.app .modal-content.self-check-modal .self-check-header-tools .self-check-toolbar-btn.self-check-ai-recite-btn,
+.app .modal-content.self-check-modal .self-check-header-tools .self-check-toolbar-btn.self-check-toolbar-btn-icon-only.self-check-ai-recite-btn {
     inline-size: 100% !important;
     min-inline-size: 42px !important;
     max-inline-size: none !important;
@@ -3082,8 +3314,8 @@
   }
 
   .modal-content.self-check-modal.recitation-review-modal .self-check-section-head,
-  .modal-content.self-check-modal.recitation-review-modal .self-check-recorder-head,
-  .modal-content.self-check-modal.recitation-review-modal .recitation-check-head {
+.modal-content.self-check-modal.recitation-review-modal .self-check-recorder-head,
+.modal-content.self-check-modal.recitation-review-modal .recitation-check-head {
     gap: 8px var(--mq-grid-gap) !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -3107,7 +3339,7 @@
   }
 
   .modal-content.self-check-modal.recitation-review-modal .recitation-check-panel,
-  .modal-content.self-check-modal.recitation-review-modal .recitation-check-panel-inline {
+.modal-content.self-check-modal.recitation-review-modal .recitation-check-panel-inline {
     gap: 10px var(--mq-grid-gap) !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -3160,7 +3392,7 @@
   }
 
   .app .recitation-check-error-copy strong,
-  .app .recitation-check-error-copy span {
+.app .recitation-check-error-copy span {
     min-inline-size: 0;
     white-space: normal;
     word-break: normal;
@@ -3257,7 +3489,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .app .recordings-library-loading > .bi,
-    .app .recordings-library-loading-skeleton > span {
+.app .recordings-library-loading-skeleton > span {
       animation: none;
     }
   }
@@ -3265,7 +3497,7 @@
 
 @media (max-width: 349.98px) {
   .app .workspace-shell .workspace-shell-metadata,
-  .app .workspace-shell .workspace-shell-bottom-pills .workspace-shell-metadata {
+.app .workspace-shell .workspace-shell-bottom-pills .workspace-shell-metadata {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
   }
@@ -3310,7 +3542,7 @@
 /* ---- Mobile responsiveness pass (phones only) ---- */
 @media (max-width: 767.98px) {
   .skip-link,
-  #mutqin-build-stamp {
+#mutqin-build-stamp {
     display: none !important;
   }
 
@@ -3324,9 +3556,9 @@
 
   /* Pills + toggles are hidden on mobile — drop empty bottom chrome */
   .workspace-shell-bottom,
-  .workspace-shell-bottom-pills,
-  .workspace-shell-metadata,
-  .workspace-shell-compact-meta {
+.workspace-shell-bottom-pills,
+.workspace-shell-metadata,
+.workspace-shell-compact-meta {
     display: none !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -3360,7 +3592,7 @@
     white-space: nowrap !important;
   }
 
-  /* Progress pills own row 2; session actions (via display:contents) sit on row 3 */
+  /* Progress pills = row 2; session actions = real row-3 box (avoid display:contents overlap) */
   .workspace-shell-head > .workspace-shell-progress-pills {
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
@@ -3383,19 +3615,73 @@
     display: none;
   }
 
-  .workspace-shell-actions,
-  .workspace-shell-actions .action-buttons-group {
-    display: contents !important;
-  }
-
-  .workspace-shell-actions .top-card-session-actions,
-  .workspace-shell-actions .top-card-session-actions.has-paired-actions {
+  .workspace-shell-head > .workspace-shell-actions {
     grid-column: 1 / -1 !important;
     grid-row: 3 !important;
     display: flex !important;
     flex-wrap: nowrap !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    pointer-events: auto !important;
+  }
+
+  .workspace-shell-actions .action-buttons-group {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
     gap: 0.4rem !important;
-    margin-top: 0.1rem;
+  }
+
+  .workspace-shell-actions .top-card-session-actions:not(.has-paired-actions) {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-wrap: nowrap !important;
+    gap: 0.4rem !important;
+    min-width: 0 !important;
+    margin-top: 0;
+  }
+
+  .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    flex: 1 1 auto !important;
+    gap: 0.4rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-top: 0;
+  }
+
+  /* Keep post-session pair as a real 2-col grid (do not inherit flex from above). */
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
+.workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair,
+.workspace-shell--post-session-choice .workspace-shell-actions .top-card-session-actions.post-session-choice-pair {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    align-items: stretch !important;
+    gap: 0.4rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .workspace-shell--post-session-choice .workspace-shell-head > .workspace-shell-progress-pills {
+    display: none !important;
+  }
+
+  .workspace-shell--post-session-choice .workspace-shell-actions .post-session-choice-pair > .top-card-action-trigger {
+    position: relative !important;
+    z-index: 1 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
   }
 
   .top-card-icon-controls {
@@ -3424,10 +3710,10 @@
   }
 
   .top-card-icon-controls .top-card-layout-icons,
-  .top-card-icon-controls .top-card-font-wrap,
-  .top-card-icon-controls .top-card-controls-wrap,
-  .top-card-icon-controls .top-card-dashboard-wrap,
-  .top-card-icon-controls .top-card-menu-wrap {
+.top-card-icon-controls .top-card-font-wrap,
+.top-card-icon-controls .top-card-controls-wrap,
+.top-card-icon-controls .top-card-dashboard-wrap,
+.top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -3450,17 +3736,17 @@
   }
 
   .top-card-icon-controls .top-card-icon-control,
-  .top-card-icon-controls .top-card-controls-trigger,
-  .top-card-icon-controls .top-card-dashboard-trigger,
-  .top-card-icon-controls .top-card-ellipsis,
-  .top-card-icon-controls .view-mode-btn,
-  .top-card-icon-controls .font-dropdown-trigger,
-  .top-card-icon-controls .workspace-layout-btn,
-  .top-card-icon-controls .action-btn.top-card-controls-trigger,
-  .top-card-icon-controls .action-btn.top-card-dashboard-trigger,
-  .workspace-shell-actions .top-card-icon-controls .top-card-ellipsis,
-  .workspace-shell-actions .top-card-icon-controls .top-card-controls-trigger,
-  .workspace-shell-actions .top-card-icon-controls .top-card-dashboard-trigger {
+.top-card-icon-controls .top-card-controls-trigger,
+.top-card-icon-controls .top-card-dashboard-trigger,
+.top-card-icon-controls .top-card-ellipsis,
+.top-card-icon-controls .view-mode-btn,
+.top-card-icon-controls .font-dropdown-trigger,
+.top-card-icon-controls .workspace-layout-btn,
+.top-card-icon-controls .action-btn.top-card-controls-trigger,
+.top-card-icon-controls .action-btn.top-card-dashboard-trigger,
+.workspace-shell-actions .top-card-icon-controls .top-card-ellipsis,
+.workspace-shell-actions .top-card-icon-controls .top-card-controls-trigger,
+.workspace-shell-actions .top-card-icon-controls .top-card-dashboard-trigger {
     position: relative !important;
     inset: auto !important;
     top: auto !important;
@@ -3498,21 +3784,21 @@
   }
 
   .top-card-icon-controls .top-card-layout-icons,
-  .top-card-icon-controls .top-card-font-wrap,
-  .top-card-icon-controls .top-card-controls-wrap,
-  .top-card-icon-controls .top-card-dashboard-wrap,
-  .top-card-icon-controls .top-card-menu-wrap {
+.top-card-icon-controls .top-card-font-wrap,
+.top-card-icon-controls .top-card-controls-wrap,
+.top-card-icon-controls .top-card-dashboard-wrap,
+.top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
   }
 
   .top-card-icon-controls .top-card-icon-control i,
-  .top-card-icon-controls .view-mode-btn i,
-  .top-card-icon-controls .font-dropdown-trigger i,
-  .top-card-icon-controls .top-card-controls-trigger i,
-  .top-card-icon-controls .top-card-dashboard-trigger i,
-  .top-card-icon-controls .top-card-ellipsis i {
+.top-card-icon-controls .view-mode-btn i,
+.top-card-icon-controls .font-dropdown-trigger i,
+.top-card-icon-controls .top-card-controls-trigger i,
+.top-card-icon-controls .top-card-dashboard-trigger i,
+.top-card-icon-controls .top-card-ellipsis i {
     font-size: 0.95rem !important;
     line-height: 1 !important;
     width: 1em !important;
@@ -3521,14 +3807,14 @@
   }
 
   .top-card-icon-controls .view-mode-btn span,
-  .top-card-icon-controls .font-dropdown-trigger span,
-  .top-card-icon-controls .font-dropdown-trigger .bi-chevron-down {
+.top-card-icon-controls .font-dropdown-trigger span,
+.top-card-icon-controls .font-dropdown-trigger .bi-chevron-down {
     display: none !important;
   }
 
   .top-card-icon-controls .top-card-font-menu,
-  .top-card-icon-controls .font-dropdown-menu,
-  .top-card-icon-controls .top-card-menu {
+.top-card-icon-controls .font-dropdown-menu,
+.top-card-icon-controls .top-card-menu {
     position: absolute !important;
     inset-inline-end: 0 !important;
     top: calc(100% + 0.4rem) !important;
@@ -3538,8 +3824,8 @@
 
   /* Stacked: hide AI recite on ayah cards */
   .verses-grid .verse-ai-check-btn,
-  .verses-grid .verse-ai-check-btn.verse-ai-recite-btn,
-  .verses-grid .verse-self-check-btn.verse-ai-check-btn {
+.verses-grid .verse-ai-check-btn.verse-ai-recite-btn,
+.verses-grid .verse-self-check-btn.verse-ai-check-btn {
     display: none !important;
   }
 
@@ -3552,9 +3838,9 @@
 
   /* Compact translation / transliteration */
   .verses-grid .verse-translation,
-  .verses-grid .verse-transliteration,
-  .verses-grid .verse-aid,
-  .verses-grid .verse-aid-block {
+.verses-grid .verse-transliteration,
+.verses-grid .verse-aid,
+.verses-grid .verse-aid-block {
     margin-top: 0.28rem !important;
     margin-bottom: 0 !important;
     padding: 0.2rem 0 !important;
@@ -3570,8 +3856,8 @@
   }
 
   .verses-grid .verse-arabic,
-  .verses-grid .verse-arabic.verse-arabic-primary,
-  .verses-grid .verse-arabic.verse-arabic-with-end {
+.verses-grid .verse-arabic.verse-arabic-primary,
+.verses-grid .verse-arabic.verse-arabic-with-end {
     font-size: calc((var(--verse-font-percent, 95) / 100) * clamp(1.45rem, 6.6vw, 2.05rem)) !important;
     line-height: 1.85 !important;
     padding: 6px 2px 8px !important;
@@ -3580,7 +3866,7 @@
 
   /* Stacked ayah end number — pre-rendered PNG (digit centered in asset) */
   .verses-grid .verse-arabic .verse-ayah-end-number,
-  .verses-grid .verse-arabic-with-end .verse-ayah-end-number {
+.verses-grid .verse-arabic-with-end .verse-ayah-end-number {
     display: inline-block !important;
     white-space: nowrap !important;
     vertical-align: -0.28em !important;
@@ -3607,18 +3893,18 @@
   }
 
   .main.mushaf-mode-active .mushaf-ayah-number,
-  .main.mushaf-mode-active .mushaf-page .ayah-number {
+.main.mushaf-mode-active .mushaf-page .ayah-number {
     margin-inline: 0.42em 0.28em !important;
   }
 
   /* Mini player dark-mode text */
   [data-theme="dark"] .player-mini .player-chapter,
-  [data-theme="dark"] .player-mini .player-verse,
-  [data-theme="dark"] .player-bar .player-chapter,
-  [data-theme="dark"] .player-bar .player-verse,
-  [data-theme="dark"] .player-bar .player-mini-info,
-  [data-theme="dark"] .playback-pill-copy strong,
-  [data-theme="dark"] .playback-pill-copy small {
+[data-theme="dark"] .player-mini .player-verse,
+[data-theme="dark"] .player-bar .player-chapter,
+[data-theme="dark"] .player-bar .player-verse,
+[data-theme="dark"] .player-bar .player-mini-info,
+[data-theme="dark"] .playback-pill-copy strong,
+[data-theme="dark"] .playback-pill-copy small {
     color: #f3ebe1 !important;
     opacity: 1 !important;
     -webkit-text-fill-color: #f3ebe1 !important;
@@ -3626,21 +3912,19 @@
 
   /* Mushaf: hide focus/AI/layout/controls; keep page fully inside container */
   .main.mushaf-mode-active .mushaf-shell__focus-toggle,
-  .main.mushaf-mode-active .mushaf-shell__btn[aria-label*="AI"],
-  .main.mushaf-mode-active .mushaf-shell__btn[title*="AI"],
-  .main.mushaf-mode-active .mushaf-shell__btn[title*="memorisation check"],
-  .main.mushaf-mode-active .mushaf-shell__btn[title*="Hide the ayah"] {
+.main.mushaf-mode-active .mushaf-shell__btn[aria-label*="AI"],
+.main.mushaf-mode-active .mushaf-shell__btn[title*="AI"],
+.main.mushaf-mode-active .mushaf-shell__btn[title*="memorisation check"],
+.main.mushaf-mode-active .mushaf-shell__btn[title*="Hide the ayah"] {
     display: none !important;
   }
 
   .main.mushaf-mode-active .live-practice-guidance,
-  .main.mushaf-mode-active .live-practice-guidance--mushaf,
-  .main.mushaf-mode-active .madani-ornate__meta {
+.main.mushaf-mode-active .live-practice-guidance--mushaf {
     display: none !important;
   }
 
-  /* Keep page-layout + controls icons visible; allow layout menu to escape the bar */
-  .main.mushaf-mode-active .mushaf-layout-dropdown,
+  
   .main.mushaf-mode-active .mushaf-shell__controls-btn {
     display: inline-flex !important;
     align-items: center !important;
@@ -3649,17 +3933,8 @@
     overflow: visible !important;
   }
 
-  .main.mushaf-mode-active .mushaf-shell.is-layout-menu-open,
-  .main.mushaf-mode-active .mushaf-shell.is-layout-menu-open .mushaf-shell__bar {
-    overflow: visible !important;
-  }
-
-  .main.mushaf-mode-active .mushaf-shell__bar.is-layout-menu-open {
-    overflow: visible !important;
-  }
-
   .main.mushaf-mode-active .mushaf-workspace,
-  .main.mushaf-mode-active .mushaf-workspace__fluid {
+.main.mushaf-mode-active .mushaf-workspace__fluid {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -3676,11 +3951,8 @@
   }
 
   .main.mushaf-mode-active .mushaf-shell,
-  .main.mushaf-mode-active .mushaf-shell__page,
-  .main.mushaf-mode-active .mushaf-page,
-  .main.mushaf-mode-active .madani-ornate,
-  .main.mushaf-mode-active .madani-ornate__frame,
-  .main.mushaf-mode-active .madani-ornate__inner {
+.main.mushaf-mode-active .mushaf-shell__page,
+.main.mushaf-mode-active .mushaf-page {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -3697,11 +3969,6 @@
     justify-content: center !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
-  }
-
-  .main.mushaf-mode-active .madani-ornate__inner {
-    padding-inline: 0.35rem !important;
-    overflow-x: hidden !important;
   }
 
   /* Prefer full-width sheet; glyph fit JS may expand then scale */
@@ -3740,17 +4007,17 @@
   }
 
   .main.mushaf-mode-active .mushaf-shell__size-value,
-  .verse-font-size-value {
+.verse-font-size-value {
     display: none !important;
   }
 
   .verse-font-size-control,
-  .verse-font-size-control--mobile {
+.verse-font-size-control--mobile {
     display: none !important;
   }
 
   .main.mushaf-mode-active .mushaf-shell__btn,
-  .main.mushaf-mode-active .mushaf-shell__btn--icon {
+.main.mushaf-mode-active .mushaf-shell__btn--icon {
     min-inline-size: 40px !important;
     min-block-size: 40px !important;
     inline-size: 40px !important;
@@ -3776,19 +4043,20 @@
     width: 100% !important;
     max-width: 100% !important;
     padding: 0.65rem 0.7rem !important;
-    border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+    border: 1px solid transparent;
     border-radius: 0.65rem;
-    background: color-mix(in srgb, var(--zone-reading, #fff) 92%, var(--zone-elevated, #f7f4ef) 8%);
+    background: color-mix(in srgb, var(--zone-reading, #fff) 88%, var(--zone-elevated, #f7f4ef) 12%);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--border, rgba(0, 0, 0, 0.1)) 45%, transparent);
     box-sizing: border-box !important;
     grid-column: 1 / -1 !important;
   }
 
   .tools-body .setup-field-row > .select,
-  .tools-body .setup-field-row > .input,
-  .tools-body .setup-field-row .range,
-  .tools-body .setup-field-row .range-control,
-  .tools-body .setup-field-row .radio-group,
-  .tools-body .setup-field-row .field-hint {
+.tools-body .setup-field-row > .input,
+.tools-body .setup-field-row .range,
+.tools-body .setup-field-row .range-control,
+.tools-body .setup-field-row .radio-group,
+.tools-body .setup-field-row .field-hint {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -3800,46 +4068,46 @@
 
   /* Practice: technique dropdown contents full width */
   .tools-body .sheet .sheet-content,
-  .tools-body .sheet .sheet-content .field-stack,
-  .tools-body .sheet .sheet-content .field-stack > .field,
-  .tools-body .sheet .sheet-content .select,
-  .tools-body .sheet .sheet-content .input,
-  .tools-body .sheet .sheet-content .range-control,
-  .tools-body .sheet .sheet-content .radio-group,
-  .tools-body .sheet .sheet-content .techniques-choice-group,
-  .tools-body .sheet .sheet-content .technique-preview-block,
-  .tools-body .sheet .sheet-content .technique-description,
-  .tools-body .sheet .sheet-content .technique-best {
+.tools-body .sheet .sheet-content .field-stack,
+.tools-body .sheet .sheet-content .field-stack > .field,
+.tools-body .sheet .sheet-content .select,
+.tools-body .sheet .sheet-content .input,
+.tools-body .sheet .sheet-content .range-control,
+.tools-body .sheet .sheet-content .radio-group,
+.tools-body .sheet .sheet-content .techniques-choice-group,
+.tools-body .sheet .sheet-content .technique-preview-block,
+.tools-body .sheet .sheet-content .technique-description,
+.tools-body .sheet .sheet-content .technique-best {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
   }
 
   .tools-body .sheet .sheet-content .technique-description,
-  .tools-body .sheet .sheet-content .technique-best {
+.tools-body .sheet .sheet-content .technique-best {
     display: flex !important;
     margin-inline: 0 !important;
     align-self: stretch !important;
   }
 
   .tools-body .sheet .sheet-content .technique-description span,
-  .tools-body .sheet .sheet-content .technique-best span,
-  .tools-body .sheet .sheet-content .field-hint,
-  .tools-body .sheet .sheet-content .st-sub {
+.tools-body .sheet .sheet-content .technique-best span,
+.tools-body .sheet .sheet-content .field-hint,
+.tools-body .sheet .sheet-content .st-sub {
     width: 100% !important;
     max-width: 100% !important;
     white-space: normal !important;
   }
 
   .tools-body .sheet .sheet-content .radio-group,
-  .tools-body .sheet .sheet-content .techniques-choice-group {
+.tools-body .sheet .sheet-content .techniques-choice-group {
     display: grid !important;
     grid-template-columns: 1fr !important;
     gap: 0.4rem !important;
   }
 
   .tools-body .sheet .sheet-content .techniques-choice-group .radio,
-  .tools-body .sheet .sheet-content .radio-group .radio {
+.tools-body .sheet .sheet-content .radio-group .radio {
     width: 100% !important;
     margin: 0 !important;
     display: flex !important;
@@ -3848,7 +4116,7 @@
 
   /* Saved: clean Bootstrap list (override earlier dense grid) */
   .tools-body .saved-sessions-list,
-  .tools-body .saved-sessions-list.list-group {
+.tools-body .saved-sessions-list.list-group {
     display: flex !important;
     flex-direction: column !important;
     grid-template-columns: none !important;
@@ -3860,7 +4128,7 @@
   }
 
   .tools-body .saved-sessions-list .saved-session-row,
-  .tools-body .saved-sessions-list .list-group-item.saved-session-row {
+.tools-body .saved-sessions-list .list-group-item.saved-session-row {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
     gap: 0.55rem !important;
@@ -3874,7 +4142,7 @@
   }
 
   .tools-body .saved-sessions-list .list-group-item.saved-session-row:last-child,
-  .tools-body .saved-sessions-list .saved-session-row:last-child {
+.tools-body .saved-sessions-list .saved-session-row:last-child {
     border-bottom: 0 !important;
   }
 
@@ -3917,25 +4185,25 @@
   }
 
   .verses-grid .verse-translation,
-  .verses-grid .verse-transliteration,
-  .verses-grid .verse-aid {
+.verses-grid .verse-transliteration,
+.verses-grid .verse-aid {
     font-size: 0.78rem !important;
     line-height: 1.4 !important;
   }
 
   /* Stacked + mushaf ayah font 130% */
   .verses-grid .verse-arabic,
-  .verses-grid .verse-arabic.verse-arabic-primary,
-  .verses-grid .verse-arabic.verse-arabic-with-end {
+.verses-grid .verse-arabic.verse-arabic-primary,
+.verses-grid .verse-arabic.verse-arabic-with-end {
     font-size: calc((var(--verse-font-percent, 130) / 100) * clamp(1.35rem, 5.8vw, 1.95rem)) !important;
     line-height: 1.6 !important;
     padding: 0.45rem 0.35rem 0.55rem !important;
   }
 
   .main.mushaf-mode-active .madani-word,
-  .main.mushaf-mode-active .madani-word--glyph,
-  .main.mushaf-mode-active .madani-word--unicode,
-  .main.mushaf-mode-active .madani-word--fallback {
+.main.mushaf-mode-active .madani-word--glyph,
+.main.mushaf-mode-active .madani-word--unicode,
+.main.mushaf-mode-active .madani-word--fallback {
     font-size: calc(clamp(1.28rem, 5.2vw, 1.85rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 
@@ -3953,8 +4221,7 @@
     justify-content: center !important;
   }
 
-  .main.mushaf-mode-active .mushaf-page,
-  .main.mushaf-mode-active .mushaf-page--ornate {
+  .main.mushaf-mode-active .mushaf-page {
     overflow-x: hidden !important;
     overflow-y: visible !important;
     padding: 0.55rem 0.28rem 0.9rem !important;
@@ -3964,23 +4231,8 @@
     box-sizing: border-box !important;
   }
 
-  .main.mushaf-mode-active .madani-ornate,
-  .main.mushaf-mode-active .madani-ornate__frame {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    overflow-x: hidden !important;
-  }
-
-  .main.mushaf-mode-active .madani-ornate__inner {
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
-    padding: 0.45rem 0.22rem 0.65rem !important;
-    box-sizing: border-box !important;
-  }
-
   .main.mushaf-mode-active .madani-page-sheet,
-  .main.mushaf-mode-active .madani-page-sheet--unicode {
+.main.mushaf-mode-active .madani-page-sheet--unicode {
     width: 100% !important;
     max-width: 100% !important;
     overflow: visible !important;
@@ -4001,8 +4253,8 @@
   }
 
   .main.mushaf-mode-active .madani-line,
-  .main.mushaf-mode-active .madani-line--ayah,
-  .main.mushaf-mode-active .madani-line--glyphs {
+.main.mushaf-mode-active .madani-line--ayah,
+.main.mushaf-mode-active .madani-line--glyphs {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -4015,7 +4267,7 @@
   }
 
   .main.mushaf-mode-active .madani-line--surah_name,
-  .main.mushaf-mode-active .madani-line--basmala {
+.main.mushaf-mode-active .madani-line--basmala {
     display: flex !important;
     justify-content: center !important;
     text-align: center !important;
@@ -4031,7 +4283,7 @@
 
   /* Restore mini player + theme-safe text */
   .player-dock,
-  .player-dock.tools-open {
+.player-dock.tools-open {
     z-index: 12600 !important;
     display: flex !important;
     visibility: visible !important;
@@ -4040,16 +4292,16 @@
   }
 
   .player-dock > *,
-  .player-dock-card,
-  .player-bar,
-  .playback-pill {
+.player-dock-card,
+.player-bar,
+.playback-pill {
     pointer-events: auto !important;
     visibility: visible !important;
     opacity: 1 !important;
   }
 
   .player-bar.compact .player-mini,
-  .player-bar .player-mini {
+.player-bar .player-mini {
     display: flex !important;
   }
 
@@ -4065,11 +4317,11 @@
   }
 
   [data-theme="dark"] .player-mini .player-chapter,
-  [data-theme="dark"] .player-mini .player-verse,
-  [data-theme="dark"] .player-bar .player-chapter,
-  [data-theme="dark"] .player-bar .player-verse,
-  [data-theme="dark"] .playback-pill-copy strong,
-  [data-theme="dark"] .playback-pill-copy small {
+[data-theme="dark"] .player-mini .player-verse,
+[data-theme="dark"] .player-bar .player-chapter,
+[data-theme="dark"] .player-bar .player-verse,
+[data-theme="dark"] .playback-pill-copy strong,
+[data-theme="dark"] .playback-pill-copy small {
     color: #f3ebe1 !important;
     -webkit-text-fill-color: #f3ebe1 !important;
     opacity: 1 !important;
@@ -4077,15 +4329,15 @@
 
   /* End session progress block dark mode */
   [data-theme="dark"] .session-exit-modal .session-exit-progress-block,
-  [data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-block {
+[data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-block {
     background: #2a241c !important;
     border-color: rgba(232, 210, 180, 0.22) !important;
   }
 
   [data-theme="dark"] .session-exit-modal .session-exit-progress-summary,
-  [data-theme="dark"] .session-exit-modal .session-exit-progress-summary--ayah,
-  [data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-summary,
-  [data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-summary--ayah {
+[data-theme="dark"] .session-exit-modal .session-exit-progress-summary--ayah,
+[data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-summary,
+[data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-summary--ayah {
     color: #f3ebe1 !important;
     -webkit-text-fill-color: #f3ebe1 !important;
   }
@@ -4100,10 +4352,10 @@
 @media (max-width: 767.98px) {
   /* Offcanvas: force single-column structured lists */
   .app .tools-body .sheet-content > .field-stack,
-  .app .tools-body .sheet-content > .field-stack-compact,
-  .app .tools-body .setup-field-list,
-  .app .tools-body .sheet .sheet-content .field-stack,
-  .app .tools-body .sheet .sheet-content .field-stack-compact {
+.app .tools-body .sheet-content > .field-stack-compact,
+.app .tools-body .setup-field-list,
+.app .tools-body .sheet .sheet-content .field-stack,
+.app .tools-body .sheet .sheet-content .field-stack-compact {
     display: flex !important;
     flex-direction: column !important;
     grid-template-columns: none !important;
@@ -4113,10 +4365,10 @@
   }
 
   .app .tools-body .sheet-content > .field-stack > .field,
-  .app .tools-body .sheet-content > .field-stack-compact > .field,
-  .app .tools-body .setup-field-list > .field,
-  .app .tools-body .setup-field-row,
-  .app .tools-body .sheet .sheet-content .field {
+.app .tools-body .sheet-content > .field-stack-compact > .field,
+.app .tools-body .setup-field-list > .field,
+.app .tools-body .setup-field-row,
+.app .tools-body .sheet .sheet-content .field {
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
@@ -4129,27 +4381,28 @@
 
   .app .tools-body .setup-field-row {
     padding: 0.7rem 0.75rem !important;
-    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent) !important;
+    border: 1px solid transparent !important;
     border-radius: 0.7rem !important;
     background: color-mix(in srgb, var(--zone-elevated, #2a241c) 92%, transparent) !important;
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 42%, transparent) !important;
   }
 
   .app .tools-body .setup-field-row .select,
-  .app .tools-body .setup-field-row .input,
-  .app .tools-body .setup-field-row .range,
-  .app .tools-body .setup-field-row .range-control,
-  .app .tools-body .setup-field-row .radio-group,
-  .app .tools-body .setup-field-row .field-hint,
-  .app .tools-body .sheet .sheet-content .select,
-  .app .tools-body .sheet .sheet-content .input,
-  .app .tools-body .sheet .sheet-content .range-control,
-  .app .tools-body .sheet .sheet-content .radio-group,
-  .app .tools-body .sheet .sheet-content .techniques-choice-group,
-  .app .tools-body .sheet .sheet-content .technique-description,
-  .app .tools-body .sheet .sheet-content .technique-best,
-  .app .tools-body .sheet .sheet-content .technique-description span,
-  .app .tools-body .sheet .sheet-content .technique-best span,
-  .app .tools-body .sheet .sheet-content .field-hint {
+.app .tools-body .setup-field-row .input,
+.app .tools-body .setup-field-row .range,
+.app .tools-body .setup-field-row .range-control,
+.app .tools-body .setup-field-row .radio-group,
+.app .tools-body .setup-field-row .field-hint,
+.app .tools-body .sheet .sheet-content .select,
+.app .tools-body .sheet .sheet-content .input,
+.app .tools-body .sheet .sheet-content .range-control,
+.app .tools-body .sheet .sheet-content .radio-group,
+.app .tools-body .sheet .sheet-content .techniques-choice-group,
+.app .tools-body .sheet .sheet-content .technique-description,
+.app .tools-body .sheet .sheet-content .technique-best,
+.app .tools-body .sheet .sheet-content .technique-description span,
+.app .tools-body .sheet .sheet-content .technique-best span,
+.app .tools-body .sheet .sheet-content .field-hint {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -4158,7 +4411,7 @@
   }
 
   .app .tools-body .sheet .sheet-content .technique-description,
-  .app .tools-body .sheet .sheet-content .technique-best {
+.app .tools-body .sheet .sheet-content .technique-best {
     display: flex !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -4166,14 +4419,14 @@
   }
 
   .app .tools-body .sheet .sheet-content .radio-group,
-  .app .tools-body .sheet .sheet-content .techniques-choice-group {
+.app .tools-body .sheet .sheet-content .techniques-choice-group {
     display: flex !important;
     flex-direction: column !important;
     gap: 0.4rem !important;
   }
 
   .app .tools-body .saved-sessions-list,
-  .app .tools-body .saved-sessions-list.list-group {
+.app .tools-body .saved-sessions-list.list-group {
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
@@ -4184,7 +4437,7 @@
   }
 
   .app .tools-body .saved-sessions-list .saved-session-row,
-  .app .tools-body .saved-sessions-list .list-group-item {
+.app .tools-body .saved-sessions-list .list-group-item {
     width: 100% !important;
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
@@ -4219,7 +4472,7 @@
   }
 
   .app .verses-grid .verse-number,
-  .app .verses-grid .verse-number.verse-ayah-pill {
+.app .verses-grid .verse-number.verse-ayah-pill {
     display: inline-flex !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -4262,8 +4515,8 @@
   }
 
   .app .verses-grid .verse-translation.verse-aid,
-  .app .verses-grid .verse-transliteration.verse-aid,
-  .app .verses-grid .verse-aid {
+.app .verses-grid .verse-transliteration.verse-aid,
+.app .verses-grid .verse-aid {
     font-size: 0.78rem !important;
     line-height: 1.45 !important;
     width: 100% !important;
@@ -4271,8 +4524,8 @@
 
   /* Force 130% ayah sizing */
   .app .verses-grid .verse-arabic,
-  .app .verses-grid .verse-arabic-primary,
-  .app .verses-grid .verse-arabic-with-end {
+.app .verses-grid .verse-arabic-primary,
+.app .verses-grid .verse-arabic-with-end {
     --verse-font-percent: 130 !important;
     font-size: calc(1.3 * clamp(1.3rem, 5.6vw, 1.9rem)) !important;
     line-height: 1.9 !important;
@@ -4280,44 +4533,33 @@
   }
 
   .app .main.mushaf-mode-active .madani-word,
-  .app .main.mushaf-mode-active .madani-word--glyph,
-  .app .main.mushaf-mode-active .madani-word--unicode,
-  .app .main.mushaf-mode-active .madani-word--fallback,
-  .app .main.mushaf-mode-active .madani-basmala {
+.app .main.mushaf-mode-active .madani-word--glyph,
+.app .main.mushaf-mode-active .madani-word--unicode,
+.app .main.mushaf-mode-active .madani-word--fallback,
+.app .main.mushaf-mode-active .madani-basmala {
     font-size: calc(clamp(1.28rem, 5.2vw, 1.85rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     padding-inline: 0.05em !important;
     letter-spacing: 0.01em !important;
     word-spacing: 0.08em !important;
   }
 
-  /* Mushaf portrait: full-bleed continuous page (no short centered Madani rows) */
+  /* Mushaf portrait: continuous page with slight side breathing room */
   .app .main.mushaf-mode-active .mushaf-shell__page {
     overflow-x: hidden !important;
-    padding-inline: 0 !important;
+    padding-inline: 0.35rem !important;
     width: 100% !important;
     display: block !important;
   }
 
-  .app .main.mushaf-mode-active .madani-ornate,
-  .app .main.mushaf-mode-active .madani-ornate__frame {
-    overflow-x: hidden !important;
-    max-width: 100% !important;
-  }
-
-  .app .main.mushaf-mode-active .madani-ornate__inner {
-    overflow-x: hidden !important;
-    padding: 0.45rem 0.55rem 0.65rem !important;
-  }
-
   .app .main.mushaf-mode-active .madani-page-sheet,
-  .app .main.mushaf-mode-active .madani-page-sheet--unicode {
+.app .main.mushaf-mode-active .madani-page-sheet--unicode {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
     transform: none !important;
     overflow: visible !important;
     gap: 0 !important;
-    padding-inline: 0 !important;
+    padding-inline: 1.15rem !important;
     margin-inline: 0 !important;
     text-align: center !important;
     text-align-last: center !important;
@@ -4326,7 +4568,7 @@
   }
 
   .app .main.mushaf-mode-active .madani-line--ayah,
-  .app .main.mushaf-mode-active .madani-line--glyphs {
+.app .main.mushaf-mode-active .madani-line--glyphs {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -4343,7 +4585,7 @@
   }
 
   .app .main.mushaf-mode-active .madani-line--surah_name,
-  .app .main.mushaf-mode-active .madani-line--basmala {
+.app .main.mushaf-mode-active .madani-line--basmala {
     display: flex !important;
     width: 100% !important;
     justify-content: center !important;
@@ -4356,14 +4598,14 @@
   }
 
   .app .verses-grid .verse-font-size-control,
-  .app .verse-font-size-control,
-  .app .verse-font-size-control--mobile {
+.app .verse-font-size-control,
+.app .verse-font-size-control--mobile {
     display: none !important;
   }
 
   .app .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
-  .app .main.mushaf-mode-active .madani-word--end.madani-word--fallback,
-  .app .main.mushaf-mode-active .madani-word--end {
+.app .main.mushaf-mode-active .madani-word--end.madani-word--fallback,
+.app .main.mushaf-mode-active .madani-word--end {
     margin-inline: 0.14em 0.08em !important;
     min-width: 0 !important;
     min-height: 0 !important;
@@ -4381,13 +4623,13 @@
 
   /* U+06DD subtending needs LTR; RTL misplaces/doubles the digit inside the mark */
   .app .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
-  .app .main.mushaf-mode-active .madani-word--end.madani-word--fallback {
+.app .main.mushaf-mode-active .madani-word--end.madani-word--fallback {
     direction: ltr !important;
     unicode-bidi: isolate;
   }
 
   .app .verses-grid .verse-arabic .verse-ayah-end-number,
-  .app .verses-grid .verse-arabic-with-end .verse-ayah-end-number {
+.app .verses-grid .verse-arabic-with-end .verse-ayah-end-number {
     display: inline-block !important;
     width: 1.45em !important;
     height: 1.55em !important;
@@ -4403,7 +4645,7 @@
   }
 
   .app .verses-grid .verse-arabic .verse-ayah-end-number__digit,
-  .app .verses-grid .verse-arabic-with-end .verse-ayah-end-number__digit {
+.app .verses-grid .verse-arabic-with-end .verse-ayah-end-number__digit {
     display: none !important;
   }
 
@@ -4435,24 +4677,56 @@
   }
 
   .app .player-bar .player-mini,
-  .app .player-bar.compact .player-mini {
+.app .player-bar.compact .player-mini {
     display: flex !important;
     align-items: center !important;
-    gap: 0.4rem !important;
-    min-height: 48px !important;
+    gap: 0.55rem !important;
+    min-height: 58px !important;
+  }
+
+  .app .player-mini .player-play {
+    inline-size: 52px !important;
+    block-size: 52px !important;
+    min-inline-size: 52px !important;
+    min-block-size: 52px !important;
+    flex: 0 0 52px !important;
+    border-radius: 16px !important;
+    font-size: 1.35rem !important;
+  }
+
+  .app .player-mini .player-chapter {
+    font-size: 0.92rem !important;
+  }
+
+  .app .player-mini .player-verse {
+    font-size: 0.8rem !important;
+  }
+
+  .app .player-talqin-strip {
+    padding: 0.95rem 1rem !important;
+    min-block-size: 68px !important;
+  }
+
+  .app .player-talqin-strip .talqin-callout-number {
+    font-size: clamp(2rem, 8.5vw, 2.8rem) !important;
+  }
+
+  .app .player-talqin-strip .talqin-callout-text {
+    font-size: clamp(0.95rem, 4vw, 1.12rem) !important;
+    font-weight: 700 !important;
   }
 
   .app .player-mini .player-chapter,
-  .app .player-mini .player-verse {
+.app .player-mini .player-verse {
     color: var(--text) !important;
     -webkit-text-fill-color: var(--text) !important;
     opacity: 1 !important;
   }
 
   [data-theme="dark"] .app .player-mini .player-chapter,
-  [data-theme="dark"] .app .player-mini .player-verse,
-  [data-theme="dark"] .app .playback-pill-copy strong,
-  [data-theme="dark"] .app .playback-pill-copy small {
+[data-theme="dark"] .app .player-mini .player-verse,
+[data-theme="dark"] .app .playback-pill-copy strong,
+[data-theme="dark"] .app .playback-pill-copy small {
     color: #f3ebe1 !important;
     -webkit-text-fill-color: #f3ebe1 !important;
   }
@@ -4469,14 +4743,14 @@
 
   /* End-session progress readable in dark mode */
   [data-theme="dark"] .app .session-exit-progress-block,
-  [data-theme="dark"] .app .session-exit-modal .session-exit-progress-block,
-  [data-theme="dark"] .app .mutqin-modal-surface.session-exit-modal .session-exit-progress-block {
+[data-theme="dark"] .app .session-exit-modal .session-exit-progress-block,
+[data-theme="dark"] .app .mutqin-modal-surface.session-exit-modal .session-exit-progress-block {
     background: #2a241c !important;
     border: 1px solid rgba(232, 210, 180, 0.24) !important;
   }
 
   [data-theme="dark"] .app .session-exit-progress-summary,
-  [data-theme="dark"] .app .session-exit-progress-summary--ayah {
+[data-theme="dark"] .app .session-exit-progress-summary--ayah {
     color: #f3ebe1 !important;
     -webkit-text-fill-color: #f3ebe1 !important;
   }
@@ -4484,33 +4758,51 @@
 
 /* —— Final: natural continuous mushaf text (wins over earlier mobile rules) —— */
 @media (max-width: 767.98px) {
+  /* Side breathing room must beat legacy full-bleed mushaf overrides */
+  .app .main.mushaf-mode-active,
+.main.mushaf-mode-active {
+    padding-inline: clamp(16px, 4.8vw, 22px) !important;
+  }
+
+  .app .main.mushaf-mode-active .mushaf-shell,
+.main.mushaf-mode-active .mushaf-shell {
+    border-radius: 18px !important;
+    border-inline: 1px solid var(--border, rgba(120, 78, 40, 0.18)) !important;
+  }
+
   .app .main.mushaf-mode-active .madani-page-sheet,
-  .app .main.mushaf-mode-active .madani-page-sheet--unicode {
+.app .main.mushaf-mode-active .madani-page-sheet--unicode {
     display: block !important;
     text-align: center !important;
     text-align-last: center !important;
     text-justify: none !important;
     line-height: 1.85 !important;
-    padding-inline: 0.85rem !important;
+    padding-inline: 1.15rem !important;
     overflow-x: hidden !important;
   }
 
+  /* Slight outer breathing room for mushaf page chrome on phone */
+  .app .main.mushaf-mode-active .mushaf-shell__page,
+.main.mushaf-mode-active .mushaf-shell__page {
+    padding-inline: 0.35rem !important;
+  }
+
   .app .main.mushaf-mode-active .madani-line--ayah,
-  .app .main.mushaf-mode-active .madani-line--glyphs,
-  .main.mushaf-mode-active .madani-line--ayah,
-  .main.mushaf-mode-active .madani-line--glyphs,
-  .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
+.app .main.mushaf-mode-active .madani-line--glyphs,
+.main.mushaf-mode-active .madani-line--ayah,
+.main.mushaf-mode-active .madani-line--glyphs,
+.app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
     display: contents !important;
   }
 
   .app .main.mushaf-mode-active .madani-word,
-  .app .main.mushaf-mode-active .madani-word--glyph,
-  .app .main.mushaf-mode-active .madani-word--unicode,
-  .app .main.mushaf-mode-active .madani-word--fallback,
-  .main.mushaf-mode-active .madani-word,
-  .main.mushaf-mode-active .madani-word--glyph,
-  .main.mushaf-mode-active .madani-word--unicode,
-  .main.mushaf-mode-active .madani-word--fallback {
+.app .main.mushaf-mode-active .madani-word--glyph,
+.app .main.mushaf-mode-active .madani-word--unicode,
+.app .main.mushaf-mode-active .madani-word--fallback,
+.main.mushaf-mode-active .madani-word,
+.main.mushaf-mode-active .madani-word--glyph,
+.main.mushaf-mode-active .madani-word--unicode,
+.main.mushaf-mode-active .madani-word--fallback {
     display: inline-block !important;
     width: auto !important;
     max-width: 100% !important;
@@ -4525,7 +4817,7 @@
   }
 
   .app .main.mushaf-mode-active .madani-word--end,
-  .main.mushaf-mode-active .madani-word--end {
+.main.mushaf-mode-active .madani-word--end {
     margin-inline: 0.28em 0.12em !important;
   }
 
@@ -4581,14 +4873,19 @@
   .workspace-shell-head > .workspace-shell-progress-pills {
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
+    display: flex !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
   }
 
   .workspace-shell-head > .workspace-shell-actions {
+    grid-column: 1 / -1 !important;
     grid-row: 3 !important;
+    display: flex !important;
   }
 
   .workspace-shell-head > .top-card-icon-controls,
-  .workspace-shell--post-session-choice .workspace-shell-head > .top-card-icon-controls {
+.workspace-shell--post-session-choice .workspace-shell-head > .top-card-icon-controls {
     grid-column: 2 !important;
     grid-row: 1 !important;
     justify-self: end !important;
@@ -4618,9 +4915,9 @@
   }
 
   .workspace-shell-head > .top-card-icon-controls .top-card-controls-wrap,
-  .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-wrap,
-  .workspace-shell-head > .top-card-icon-controls .top-card-layout-icons,
-  .workspace-shell-head > .top-card-icon-controls .top-card-menu-wrap {
+.workspace-shell-head > .top-card-icon-controls .top-card-dashboard-wrap,
+.workspace-shell-head > .top-card-icon-controls .top-card-layout-icons,
+.workspace-shell-head > .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -4653,9 +4950,9 @@
   }
 
   .workspace-shell-head > .top-card-icon-controls .top-card-icon-control,
-  .workspace-shell-head > .top-card-icon-controls .view-mode-btn,
-  .workspace-shell-head > .top-card-icon-controls .workspace-layout-btn,
-  .workspace-shell-head > .top-card-icon-controls .top-card-ellipsis {
+.workspace-shell-head > .top-card-icon-controls .view-mode-btn,
+.workspace-shell-head > .top-card-icon-controls .workspace-layout-btn,
+.workspace-shell-head > .top-card-icon-controls .top-card-ellipsis {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -4674,8 +4971,8 @@
   }
 
   .workspace-shell-head > .top-card-icon-controls .top-card-icon-control i,
-  .workspace-shell-head > .top-card-icon-controls .view-mode-btn i,
-  .workspace-shell-head > .top-card-icon-controls .top-card-ellipsis i {
+.workspace-shell-head > .top-card-icon-controls .view-mode-btn i,
+.workspace-shell-head > .top-card-icon-controls .top-card-ellipsis i {
     display: inline-block !important;
     font-size: 1.05rem !important;
     line-height: 1 !important;
@@ -4701,7 +4998,7 @@
 
   /* Delete confirm: keep Cancel / Delete side-by-side (Teleport is outside .app). */
   .ayah-notes-delete-actions.mutqin-modal-actions,
-  .ayah-notes-delete-actions {
+.ayah-notes-delete-actions {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 0.55rem !important;
@@ -4712,7 +5009,7 @@
     min-block-size: 44px;
   }
 
-  /* Notes modal: edge-to-edge (must beat shared inset modal shell above). */
+  /* Notes modal: full-bleed on phone. */
   .ayah-notes-modal-overlay.modal-overlay.mutqin-modal-overlay {
     padding: 0 !important;
     place-items: stretch !important;
@@ -4721,14 +5018,14 @@
   }
 
   .ayah-notes-modal-overlay > .ayah-notes-dialog.mutqin-modal-dialog,
-  .ayah-notes-dialog.mutqin-modal-dialog {
-    inline-size: 100vw !important;
-    max-inline-size: 100vw !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-block-size: 100dvh !important;
+.ayah-notes-dialog.mutqin-modal-dialog {
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-block-size: 0 !important;
     max-block-size: 100dvh !important;
-    height: 100dvh !important;
+    height: 100% !important;
     max-height: 100dvh !important;
     margin: 0 !important;
   }
@@ -4738,21 +5035,55 @@
     flex-direction: column !important;
     inline-size: 100% !important;
     max-inline-size: 100% !important;
-    min-block-size: 100dvh !important;
+    min-block-size: 0 !important;
     max-block-size: 100dvh !important;
-    block-size: 100dvh !important;
-    height: 100dvh !important;
+    block-size: 100% !important;
+    height: 100% !important;
     max-height: 100dvh !important;
+    border: 0 !important;
     border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  .ayah-notes-modal .ayah-notes-header,
+.mutqin-modal-surface.ayah-notes-modal > .ayah-notes-header.modal-header {
+    padding: 1rem var(--mq-card-pad, 14px) !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--mutqin-modal-surface-border) 72%, transparent) !important;
+  }
+
+  .ayah-notes-modal-body,
+.mutqin-modal-surface.ayah-notes-modal .ayah-notes-modal-body {
+    padding: var(--mq-card-pad, 14px) !important;
+    gap: 0.9rem !important;
+  }
+
+  .ayah-notes-composer,
+.ayah-notes-list-section {
+    padding: var(--mq-card-pad, 14px) !important;
+    border-radius: var(--mq-radius-compact, 14px) !important;
+    border: 1px solid color-mix(in srgb, var(--mutqin-modal-surface-border) 88%, transparent) !important;
+  }
+
+  .ayah-notes-input.form-control,
+.ayah-notes-textarea.form-control,
+.ayah-notes-item-main {
+    border-radius: var(--mq-radius-compact, 14px) !important;
+    border: 1px solid color-mix(in srgb, var(--mutqin-modal-surface-border) 90%, transparent) !important;
+  }
+
+  .ayah-notes-item-main {
+    padding: 0.85rem var(--mq-card-pad, 14px) 0.8rem !important;
     box-shadow: none !important;
   }
 }
 
 /*
-  Phone landscape / short touch viewports often exceed 768px CSS width,
-  so the desktop inset modal used to appear. Keep notes full-bleed there too.
+  Phone landscape / short touch viewports often exceed 768px CSS width.
+  Keep the same inset notes chrome there so radius/border stay visible.
 */
-@media (max-width: 991.98px), (hover: none) and (pointer: coarse) and (max-height: 540px) {
+@media (max-width: 991.98px),
+(hover: none) and (pointer: coarse) and (max-height: 540px) {
   .ayah-notes-modal-overlay.modal-overlay.mutqin-modal-overlay {
     padding: 0 !important;
     place-items: stretch !important;
@@ -4761,14 +5092,14 @@
   }
 
   .ayah-notes-modal-overlay > .ayah-notes-dialog.mutqin-modal-dialog,
-  .ayah-notes-dialog.mutqin-modal-dialog {
-    inline-size: 100vw !important;
-    max-inline-size: 100vw !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-block-size: 100dvh !important;
+.ayah-notes-dialog.mutqin-modal-dialog {
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-block-size: 0 !important;
     max-block-size: 100dvh !important;
-    height: 100dvh !important;
+    height: 100% !important;
     max-height: 100dvh !important;
     margin: 0 !important;
   }
@@ -4778,12 +5109,14 @@
     flex-direction: column !important;
     inline-size: 100% !important;
     max-inline-size: 100% !important;
-    min-block-size: 100dvh !important;
+    min-block-size: 0 !important;
     max-block-size: 100dvh !important;
-    block-size: 100dvh !important;
-    height: 100dvh !important;
+    block-size: 100% !important;
+    height: 100% !important;
     max-height: 100dvh !important;
+    border: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+    overflow: hidden !important;
   }
 }

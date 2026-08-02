@@ -141,7 +141,6 @@
 
         <!-- Verses Grid -->
         <div class="workspace">
-          <!-- In your template, replace the workspace-shell section -->
         <section
           v-show="(hasVerses || showSessionOverviewIdleActions || isPostSessionChoiceVisible) && !isWelcomeBackWorkspaceHidden && !isOnboardingExperienceActive"
           class="workspace-shell"
@@ -227,20 +226,6 @@
                 <i class="bi bi-sliders" aria-hidden="true"></i>
               </div>
             </div>
-            <div class="top-card-dashboard-wrap">
-              <div
-                class="action-btn action-btn-secondary top-card-action-trigger top-card-dashboard-trigger top-card-icon-control"
-                role="button"
-                tabindex="0"
-                @click="openDashboardView"
-                @keydown.enter.prevent="openDashboardView"
-                @keydown.space.prevent="openDashboardView"
-                :title="t('memorisation.open_dashboard')"
-                :aria-label="t('memorisation.open_dashboard')"
-              >
-                <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
-              </div>
-            </div>
             <div class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
               <div
                 class="top-card-ellipsis top-card-action-trigger top-card-icon-control"
@@ -324,7 +309,7 @@
             </div>
           </div>
           <div
-            v-if="mobileProgressPills.length"
+            v-if="mobileProgressPills.length && !isPostSessionChoiceVisible"
             class="workspace-shell-progress-pills w-100"
             :aria-label="t('memorisation.a11y.sessionMetadata')"
           >
@@ -439,7 +424,7 @@
           </button>
         </p>
         <div
-          v-if="hasVerses && (topCardMetadataPills.length || !isMobileViewport())"
+          v-if="hasVerses && !isPostSessionChoiceVisible && (topCardMetadataPills.length || !isMobileViewport())"
           class="workspace-shell-bottom"
         >
           <!-- Source-guard reference: class="workspace-header-view-controls quick-right-controls" -->
@@ -540,16 +525,10 @@
               <div class="container-fluid mushaf-workspace__fluid px-0">
               <section
                 class="mushaf-shell"
-                :class="{
-                  'is-madani-skin': isMadaniMushafSkin,
-                  'is-layout-menu-open': mushafLayoutMenuOpen,
-                }"
-                :data-madani-skin="activeMadaniSkin"
                 aria-label="Mushaf"
               >
                 <header
                   class="mushaf-shell__bar"
-                  :class="{ 'is-layout-menu-open': mushafLayoutMenuOpen }"
                   :aria-label="t('memorisation.a11y.mushafTools')"
                 >
                   <div class="mushaf-shell__bar-group">
@@ -578,46 +557,6 @@
                   </div>
 
                   <div class="mushaf-shell__bar-group mushaf-shell__bar-group--end">
-                    <div class="mushaf-layout-dropdown" @click.stop>
-                      <button
-                        type="button"
-                        class="mushaf-shell__btn mushaf-shell__btn--icon"
-                        :class="{ 'is-active': mushafLayoutMenuOpen || isMadaniMushafSkin }"
-                        @click.stop="toggleMushafLayoutMenu"
-                        :aria-expanded="mushafLayoutMenuOpen ? 'true' : 'false'"
-                        :aria-label="t('memorisation.a11y.mushafLayoutMenu')"
-                        :title="t('memorisation.a11y.mushafLayoutMenu')"
-                      >
-                        <i class="bi bi-bounding-box-circles" aria-hidden="true"></i>
-                      </button>
-                      <transition name="dropdown-fade">
-                        <div v-if="mushafLayoutMenuOpen" class="mushaf-layout-menu" role="menu">
-                          <span class="mushaf-layout-menu__label">{{ t('memorisation.a11y.mushafLayoutMenu') }}</span>
-                          <button
-                            v-for="option in mushafDesktopFrameOptions"
-                            :key="option.id"
-                            type="button"
-                            class="mushaf-layout-option"
-                            :class="{ 'is-active': mushafUiSkin === option.id }"
-                            role="menuitemradio"
-                            :aria-checked="mushafUiSkin === option.id ? 'true' : 'false'"
-                            @click.stop="setMushafUiSkin(option.id)"
-                          >
-                            <span class="mushaf-layout-option__swatches" aria-hidden="true">
-                              <span
-                                v-for="(swatch, swatchIndex) in option.swatches"
-                                :key="`${option.id}-${swatchIndex}`"
-                                class="mushaf-layout-option__swatch"
-                                :style="{ background: swatch }"
-                              ></span>
-                            </span>
-                            <span>{{ option.label }}</span>
-                            <i v-if="mushafUiSkin === option.id" class="bi bi-check-lg mushaf-layout-option__check" aria-hidden="true"></i>
-                          </button>
-                        </div>
-                      </transition>
-                    </div>
-
                     <button
                       type="button"
                       class="mushaf-shell__btn mushaf-shell__btn--icon mushaf-shell__controls-btn"
@@ -681,102 +620,11 @@
                   </div>
                   <article
                     v-else
-                    :key="`${currentMushafPage.id}-${safeMushafPageIndex}-${defaultFontSize}-${tajweedEnabled}-${quranFont}-${mushafUiSkin}`"
+                    :key="`${currentMushafPage.id}-${safeMushafPageIndex}-${defaultFontSize}-${tajweedEnabled}-${quranFont}`"
                     class="mushaf-page mushaf-page--madani"
-                    :class="{ 'mushaf-page--ornate': isMadaniMushafSkin }"
-                    :data-madani-skin="activeMadaniSkin"
                     :style="{ '--verse-font-percent': String(defaultFontSize), '--mushaf-quran-font': quranFontFamily, '--mushaf-selected-font': quranFontFamily }"
                   >
-                    <div class="madani-ornate" v-if="isMadaniMushafSkin">
-                      <div class="madani-ornate__frame">
-                        <div class="madani-ornate__inner">
-                          <div class="madani-ornate__meta" dir="rtl">
-                            <span class="madani-ornate__meta-surah">{{ mushafSurahTitle }}</span>
-                            <span class="madani-ornate__meta-juz">{{ madaniJuzLabel }}</span>
-                          </div>
-                          <div
-                            class="mushaf-page-body madani-page-sheet"
-                            dir="rtl"
-                            :class="{
-                              'madani-page-sheet--glyphs-ready': useMadaniQcfGlyphs && !!madaniFontsReady[currentMushafPage.pageNumber],
-                              'madani-page-sheet--unicode': !useMadaniQcfGlyphs,
-                              'madani-page-sheet--tajweed': !!tajweedEnabled && useMadaniQcfGlyphs,
-                              'word-by-word-meanings': false,
-                              'recitation-word-review-active': !!(mushafAidVerse && shouldShowRecitationReviewHighlights(mushafAidVerse.key))
-                            }"
-                            :style="{
-                              '--verse-font-percent': String(defaultFontSize),
-                              '--madani-page-font': `'${currentMushafPage.fontFamily || ('p' + currentMushafPage.pageNumber + (tajweedEnabled ? '-v4' : '-v2'))}'`,
-                              '--mushaf-selected-font': quranFontFamily
-                            }"
-                          >
-                            <div
-                              v-for="line in currentMadaniLines"
-                              :key="line.key"
-                              class="madani-line"
-                              :class="[
-                                `madani-line--${line.type}`,
-                                {
-                                  'madani-line--empty': line.type === 'empty',
-                                  'madani-line--glyphs': line.useGlyphs && line.fontReady && line.type === 'ayah',
-                                  'madani-line--ayah': line.type === 'ayah'
-                                }
-                              ]"
-                              :data-line-number="line.lineNumber"
-                            >
-                              <template v-if="line.type === 'surah_name'">
-                                <span
-                                  class="madani-surah-name"
-                                  :style="{ fontFamily: `'${surahNamesFontFamily}'` }"
-                                  aria-hidden="true"
-                                >{{ line.glyphText }}</span>
-                                <span class="sr-only">{{ mushafSurahTitle }}</span>
-                              </template>
-                              <template v-else-if="line.type === 'basmala'">
-                                <span
-                                  class="madani-basmala"
-                                  aria-label="بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"
-                                >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</span>
-                              </template>
-                              <template v-else-if="line.type === 'ayah'">
-                                <span
-                                  v-for="(word, wordIndex) in line.words"
-                                  :key="`${line.key}-w-${word.position || wordIndex}-${word.verseKey}`"
-                                  class="madani-word"
-                                  :class="madaniWordClassList(word)"
-                                  :data-verse-key="word.verseKey"
-                                  :data-word-index="word.wordIndex != null ? word.wordIndex : null"
-                                  :data-practice-focus="word.isPracticeFocus ? 'true' : null"
-                                  :title="word.meaningLabel || null"
-                                  :style="word.useGlyph ? { fontFamily: `'${line.fontFamily}'` } : null"
-                                  role="button"
-                                  tabindex="0"
-                                  @click="onMadaniWordClick(word)"
-                                  @mouseenter="onMadaniWordEnter(word)"
-                                  @mouseleave="onMadaniWordLeave(word)"
-                                  @touchstart.passive="onMadaniWordTouchStart($event, word)"
-                                  @touchend.passive="onMadaniWordTouchEnd($event, word)"
-                                  @touchcancel.passive="clearTouchPeek"
-                                  @keydown.enter.prevent="onMadaniWordClick(word)"
-                                  @keydown.space.prevent="onMadaniWordClick(word)"
-                                  v-html="word.html"
-                                ></span>
-                              </template>
-                            </div>
-                            <div v-if="madaniPagesLoading && !currentMadaniLines.length" class="madani-page-loading">
-                              <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-                              <span>{{ workspaceLoadingLabel }}</span>
-                            </div>
-                          </div>
-                          <div class="madani-ornate__footer">
-                            <span class="madani-ornate__page-no">{{ madaniPageNumberArabic }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                     <div
-                      v-else
                       class="mushaf-page-body madani-page-sheet"
                       dir="rtl"
                       :class="{
@@ -1969,7 +1817,7 @@
       :class="{ 'welcome-back-flow--ready': welcomeBackModalReady }"
       aria-live="polite"
     >
-      <div class="welcome-back-backdrop" @click.self="welcomeBackStartNewSession"></div>
+      <div class="welcome-back-backdrop" @click="closeWelcomeBackModal"></div>
       <div
         class="welcome-back-modal-wrap"
         tabindex="-1"
@@ -1979,49 +1827,81 @@
       >
         <div class="welcome-back-dialog mutqin-modal-dialog">
           <div class="mutqin-modal-surface welcome-back-modal welcome-back-modal--v2 welcome-back-modal--lean">
-            <div class="welcome-back-hero welcome-back-hero--compact">
-              <div class="welcome-back-hero-copy">
-                <span class="welcome-back-kicker">
-                  {{ t('memorisation.welcomeBack.kicker') }}
-                </span>
-                <h2 id="welcomeBackModalTitle" class="welcome-back-title">
-                  {{ welcomeBackModalTitle }}
-                </h2>
-                <p class="welcome-back-message">
-                  {{ welcomeBackModalSubtitle }}
-                </p>
-              </div>
-            </div>
+            <button
+              type="button"
+              class="modal-close-btn onboarding-close-btn welcome-back-close-btn"
+              :disabled="welcomeBackContinueInFlight"
+              :aria-label="t('memorisation.welcomeBack.closeLabel')"
+              @click="closeWelcomeBackModal"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
 
-            <div class="modal-footer mutqin-modal-footer welcome-back-footer welcome-back-footer--lean">
-              <div
-                class="mutqin-modal-actions welcome-back-actions-grid welcome-back-actions-grid--v2 mutqin-modal-actions--3"
-              >
-                <button
-                  type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate"
-                  data-testid="welcome-back-continue"
-                  :disabled="welcomeBackContinueInFlight"
-                  :aria-busy="welcomeBackContinueInFlight ? 'true' : 'false'"
-                  @click.stop.prevent="welcomeBackContinueSession"
+            <div class="container-fluid welcome-back-fluid">
+              <div class="welcome-back-hero welcome-back-hero--compact">
+                <div class="welcome-back-hero-copy">
+                  <p class="welcome-back-salam" lang="ar" dir="rtl">
+                    {{ t('memorisation.welcomeBack.greetingArabic') }}
+                  </p>
+                  <h2 id="welcomeBackModalTitle" class="welcome-back-title">
+                    {{ welcomeBackModalTitle }}
+                  </h2>
+                  <p class="welcome-back-message">
+                    {{ welcomeBackModalSubtitle }}
+                  </p>
+                  <p
+                    v-if="welcomeBackMetaLine"
+                    class="welcome-back-meta-line"
+                  >
+                    <template v-for="(part, index) in welcomeBackMetaParts" :key="`${part}-${index}`">
+                      <span v-if="index > 0" class="welcome-back-meta-sep" aria-hidden="true">·</span>
+                      <span>{{ part }}</span>
+                    </template>
+                  </p>
+                  <p
+                    v-if="welcomeBackIslamicContent?.intention"
+                    class="welcome-back-intention"
+                  >
+                    {{ welcomeBackIslamicContent.intention }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="modal-footer mutqin-modal-footer welcome-back-footer welcome-back-footer--lean">
+                <div
+                  class="mutqin-modal-actions welcome-back-actions-grid welcome-back-actions-grid--v2 welcome-back-actions-grid--trio mutqin-modal-actions--3"
                 >
-                  <i class="bi bi-play-circle" aria-hidden="true"></i>
-                  <span class="welcome-back-continue-label welcome-back-continue-label--full">{{ t('memorisation.welcomeBack.continuePreviousSession') }}</span>
-                  <span class="welcome-back-continue-label welcome-back-continue-label--short">{{ t('memorisation.welcomeBack.continueSessionShort') }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate"
-                  :disabled="welcomeBackContinueInFlight"
-                  @click="welcomeBackStartNewSession"
-                >
-                  <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.welcomeBack.startNewSession') }}</span>
-                </button>
-                <button type="button" class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate welcome-back-logout" :disabled="welcomeBackContinueInFlight" @click="logoutFromWelcomeBack">
-                  <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                  <span>{{ t('common.logout') }}</span>
-                </button>
+                  <button
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate welcome-back-action welcome-back-action--primary"
+                    data-testid="welcome-back-continue"
+                    :disabled="welcomeBackContinueInFlight"
+                    :aria-busy="welcomeBackContinueInFlight ? 'true' : 'false'"
+                    @click.stop.prevent="welcomeBackContinueSession"
+                  >
+                    <i class="bi bi-play-fill" aria-hidden="true"></i>
+                    <span class="welcome-back-continue-label welcome-back-continue-label--full">{{ t('memorisation.welcomeBack.continuePreviousSession') }}</span>
+                    <span class="welcome-back-continue-label welcome-back-continue-label--short">{{ t('memorisation.welcomeBack.continueSessionShort') }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate welcome-back-action welcome-back-action--secondary"
+                    :disabled="welcomeBackContinueInFlight"
+                    @click="welcomeBackStartNewSession"
+                  >
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.welcomeBack.startNewSession') }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--ghost mutqin-btn-animate welcome-back-action welcome-back-action--ghost welcome-back-logout"
+                    :disabled="welcomeBackContinueInFlight"
+                    @click="logoutFromWelcomeBack"
+                  >
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                    <span>{{ t('common.logout') }}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -2032,31 +1912,44 @@
 
     <transition name="mutqin-flow">
     <div v-if="showSessionExitModal" class="session-exit-flow mutqin-modal-flow" aria-live="polite">
-      <div class="modal-backdrop fade show session-exit-backdrop"></div>
+      <div
+        class="modal-backdrop fade show session-exit-backdrop"
+        @click="keepPractisingFromExitModal"
+      ></div>
       <div
         class="modal fade show d-block session-exit-modal-wrap"
         tabindex="-1"
         role="dialog"
         aria-modal="true"
         aria-labelledby="sessionExitTitle"
+        aria-describedby="sessionExitDescription"
       >
-        <div class="modal-dialog modal-dialog-centered modal-lg mutqin-modal-dialog">
-          <div class="modal-content mutqin-modal-surface session-exit-modal">
-            <div class="session-exit-hero">
-              <div class="session-exit-hero-copy">
+        <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog">
+          <div class="modal-content mutqin-modal-surface session-exit-modal confirm-modal">
+            <div class="modal-header">
+              <div class="modal-header-text">
+                <div v-if="sessionExitContextLabel" class="modal-context-badge">
+                  {{ sessionExitContextLabel }}
+                </div>
                 <h2 id="sessionExitTitle" class="session-exit-title">
                   {{ sessionExitModalTitle }}
                 </h2>
-                <p v-if="sessionExitContextLabel" class="session-exit-context">
-                  {{ sessionExitContextLabel }}
-                </p>
-                <p class="session-exit-message">
-                  {{ sessionExitMotivationMessage }}
-                </p>
               </div>
+              <button
+                class="modal-close-btn"
+                type="button"
+                :disabled="sessionExitEndingBusy"
+                :aria-label="t('memorisation.confirmModals.closeDialog')"
+                @click="keepPractisingFromExitModal"
+              >
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+              </button>
             </div>
 
             <div class="modal-body session-exit-body">
+              <p id="sessionExitDescription" class="confirm-copy session-exit-message">
+                {{ sessionExitMotivationMessage }}
+              </p>
               <div class="session-exit-progress-block" role="status">
                 <p
                   v-if="sessionExitAyahProgressLabel"
@@ -2074,33 +1967,30 @@
             </div>
 
             <div class="modal-footer mutqin-modal-footer">
-              <div class="session-exit-actions-layout">
-                <div
-                  class="session-exit-actions-secondary"
-                  role="group"
-                  :aria-label="t('memorisation.sessionExit.confirmTitle')"
+              <div
+                class="mutqin-modal-actions mutqin-modal-actions--end session-exit-confirm-actions"
+                role="group"
+                :aria-label="t('memorisation.sessionExit.confirmTitle')"
+              >
+                <button
+                  type="button"
+                  class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate"
+                  :disabled="sessionExitEndingBusy"
+                  @click="keepPractisingFromExitModal"
                 >
-                  <button
-                    type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate"
-                    :disabled="sessionExitEndingBusy"
-                    @click="keepPractisingFromExitModal"
-                  >
-                    <i class="bi bi-arrow-return-left" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.sessionExit.keepPractising') }}</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--destructive mutqin-btn-animate"
-                    :disabled="sessionExitEndingBusy"
-                    :aria-busy="sessionExitEndingBusy ? 'true' : 'false'"
-                    :class="{ 'is-loading': sessionExitEndingBusy }"
-                    @click="confirmEndSessionFromExitModal"
-                  >
-                    <i class="bi" :class="sessionExitEndingBusy ? 'bi-hourglass-split' : 'bi-box-arrow-right'" aria-hidden="true"></i>
-                    <span>{{ sessionExitConfirmEndLabel }}</span>
-                  </button>
-                </div>
+                  <span>{{ t('memorisation.sessionExit.keepPractising') }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="mutqin-modal-btn mutqin-modal-btn--destructive mutqin-btn-animate"
+                  :disabled="sessionExitEndingBusy"
+                  :aria-busy="sessionExitEndingBusy ? 'true' : 'false'"
+                  :class="{ 'is-loading': sessionExitEndingBusy }"
+                  @click="confirmEndSessionFromExitModal"
+                >
+                  <i class="bi" :class="sessionExitEndingBusy ? 'bi-hourglass-split' : 'bi-box-arrow-right'" aria-hidden="true"></i>
+                  <span>{{ sessionExitConfirmEndLabel }}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -2848,7 +2738,7 @@
     </div>
 
     <div v-if="showPostLoginOnboarding" class="modal-overlay mutqin-modal-overlay post-onboarding-overlay"
-      @click.self="!requiresFirstTimeOnboarding && skipOnboarding()">
+      @click.self="dismissOnboardingTour">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
       <div class="modal-content mutqin-modal-surface post-onboarding-modal" role="dialog" aria-modal="true"
         aria-labelledby="postOnboardingTitle">
@@ -2861,12 +2751,12 @@
             <h2 id="postOnboardingTitle" class="onboarding-title">{{ onboardingStepContent.title }}</h2>
           </div>
           <button
-            v-if="!requiresFirstTimeOnboarding"
+            type="button"
             class="modal-close-btn onboarding-close-btn"
-            @click="skipOnboarding"
-            :aria-label="t('common.skipOnboarding')"
+            @click="dismissOnboardingTour"
+            :aria-label="t('common.closeTour')"
           >
-            <i class="bi bi-x-lg"></i>
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
         </div>
 
@@ -2883,11 +2773,21 @@
             :key="step.key"
             class="onboarding-progress-dot"
             :class="{ active: index === onboardingStepIndex, complete: index < onboardingStepIndex }"
+            :title="step.stepLabel"
+            :aria-label="step.stepLabel"
           ></span>
         </div>
 
         <div class="modal-body onboarding-body">
           <p class="onboarding-lead">{{ onboardingStepContent.body }}</p>
+
+          <p
+            v-if="onboardingStepContent.hint"
+            class="onboarding-step-hint"
+            role="note"
+          >
+            {{ onboardingStepContent.hint }}
+          </p>
 
           <ul v-if="onboardingStepContent.points.length" class="onboarding-points">
             <li v-for="(point, pointIndex) in onboardingStepContent.points" :key="`${onboardingStepContent.key}-point-${pointIndex}`">
@@ -2936,6 +2836,9 @@
             role="group"
             :aria-label="t('memorisation.onboarding.choices.groupLabel')"
           >
+            <p class="onboarding-step-hint onboarding-finish-hint" role="note">
+              {{ t('memorisation.onboarding.finishHint') }}
+            </p>
             <button
               type="button"
               class="onboarding-choice-card onboarding-choice-card--recommended"
@@ -2975,54 +2878,63 @@
           </div>
         </div>
 
-        <div class="modal-footer mutqin-modal-footer">
-          <div class="mutqin-modal-actions mutqin-modal-actions--end onboarding-nav-actions">
+        <div class="modal-footer mutqin-modal-footer onboarding-footer">
+          <div class="mutqin-modal-actions onboarding-nav-actions">
             <button
-              v-if="onboardingStepIndex > 0"
               type="button"
-              class="mutqin-modal-btn mutqin-modal-btn--secondary"
-              @click="prevOnboardingStep"
+              class="mutqin-modal-btn mutqin-modal-btn--ghost onboarding-skip-btn"
+              @click="dismissOnboardingTour"
             >
-              <i class="bi bi-arrow-left" aria-hidden="true"></i>
-              <span>{{ t('common.back') }}</span>
+              <span>{{ t('memorisation.onboarding.skipTour') }}</span>
             </button>
-            <button
-              v-if="requiresFirstTimeOnboarding && onboardingStepIndex === onboardingSteps.length - 1"
-              type="button"
-              class="mutqin-modal-btn mutqin-modal-btn--primary"
-              :disabled="!onboardingFinishChoice"
-              @click="confirmOnboardingFinishChoice"
-            >
-              <i class="bi bi-check2-circle" aria-hidden="true"></i>
-              <span>{{ t('memorisation.onboarding.confirmChoice') }}</span>
-            </button>
-            <button
-              v-else-if="onboardingStepIndex < onboardingSteps.length - 1"
-              type="button"
-              class="mutqin-modal-btn mutqin-modal-btn--primary"
-              @click="nextOnboardingStep"
-            >
-              <span>{{ t('memorisation.next') }}</span>
-              <i class="bi bi-arrow-right" aria-hidden="true"></i>
-            </button>
-            <button
-              v-else-if="onboardingManualLaunch"
-              type="button"
-              class="mutqin-modal-btn mutqin-modal-btn--primary"
-              @click="completeOnboardingAndStart"
-            >
-              <i class="bi bi-check2-circle" aria-hidden="true"></i>
-              <span>{{ t('memorisation.onboarding.finish') }}</span>
-            </button>
-            <button
-              v-else
-              type="button"
-              class="mutqin-modal-btn mutqin-modal-btn--primary"
-              @click="completeOnboardingWithDefaultSession"
-            >
-              <i class="bi bi-play-circle" aria-hidden="true"></i>
-              <span>{{ t('common.startSession') }}</span>
-            </button>
+            <div class="onboarding-nav-actions__end">
+              <button
+                v-if="onboardingStepIndex > 0"
+                type="button"
+                class="mutqin-modal-btn mutqin-modal-btn--secondary"
+                @click="prevOnboardingStep"
+              >
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                <span>{{ t('common.back') }}</span>
+              </button>
+              <button
+                v-if="requiresFirstTimeOnboarding && onboardingStepIndex === onboardingSteps.length - 1"
+                type="button"
+                class="mutqin-modal-btn mutqin-modal-btn--primary"
+                :disabled="!onboardingFinishChoice"
+                @click="confirmOnboardingFinishChoice"
+              >
+                <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                <span>{{ t('memorisation.onboarding.confirmChoice') }}</span>
+              </button>
+              <button
+                v-else-if="onboardingStepIndex < onboardingSteps.length - 1"
+                type="button"
+                class="mutqin-modal-btn mutqin-modal-btn--primary"
+                @click="nextOnboardingStep"
+              >
+                <span>{{ t('memorisation.next') }}</span>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+              </button>
+              <button
+                v-else-if="onboardingManualLaunch"
+                type="button"
+                class="mutqin-modal-btn mutqin-modal-btn--primary"
+                @click="completeOnboardingAndStart"
+              >
+                <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                <span>{{ t('memorisation.onboarding.finish') }}</span>
+              </button>
+              <button
+                v-else
+                type="button"
+                class="mutqin-modal-btn mutqin-modal-btn--primary"
+                @click="completeOnboardingWithDefaultSession"
+              >
+                <i class="bi bi-play-circle" aria-hidden="true"></i>
+                <span>{{ t('common.startSession') }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -3038,7 +2950,6 @@
         'post-session-simple--sample': onboardingSampleSessionActive,
         'post-session-simple--builder-open': postSessionOffcanvasOpen && showTools,
       }"
-      data-ui="practice-coach-v3"
       :data-theme="theme"
       aria-live="polite"
     >
@@ -3085,6 +2996,9 @@
           <div class="post-session-simple__body">
             <template v-if="onboardingSampleSessionActive">
               <p v-if="postSessionNextStep" class="post-session-simple__sample-copy">{{ postSessionNextStep }}</p>
+              <p class="onboarding-step-hint post-session-simple__sample-hint" role="note">
+                {{ t('memorisation.onboarding.postSession.hint') }}
+              </p>
             </template>
 
             <template v-else-if="postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
@@ -3127,7 +3041,7 @@
                   'post-session-simple__ai-review--compact': true,
                 }"
                 :data-presentation="postSessionAiPresentationMode"
-                aria-label="AI memorisation result"
+                :aria-label="t('memorisation.a11y.aiMemorisationResult')"
               >
                 <!-- ResultSummary -->
                 <div class="post-session-simple__ai-review-head">
@@ -3150,7 +3064,7 @@
                 <div
                   v-if="postSessionInlineRecommendationRows.length"
                   class="post-session-simple__ai-recommendation"
-                  aria-label="Recommended next step"
+                  :aria-label="t('memorisation.a11y.recommendedNextStep')"
                 >
                   <p
                     v-if="postSessionRecommendationReasonLine"
@@ -3369,7 +3283,7 @@
                   <span>{{ postSessionUi.newSession }}</span>
                 </button>
                 <button type="button" class="post-session-simple__btn post-session-simple__btn--primary" @click="continueFromOnboardingPostSession">
-                  <span>{{ t('memorisation.onboarding.finish') }}</span>
+                  <span>{{ t('memorisation.onboarding.postSession.continue') }}</span>
                 </button>
               </template>
 
@@ -4402,6 +4316,5 @@
 <script src="./Memorisation.js"></script>
 
 <style src="./Memorisation.css"></style>
-<style src="./Memorisation.mushaf-madani.css"></style>
 <style src="./Memorisation.mobile-grid.css"></style>
 <style src="./Memorisation.amd.css"></style>

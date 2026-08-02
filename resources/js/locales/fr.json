@@ -31,11 +31,12 @@
     "tajweed": "Tajweed",
     "dismiss": "Dismiss",
     "backToTop": "Retour en haut",
-    "skipOnboarding": "Skip onboarding",
+    "skipOnboarding": "Passer le tour",
     "resumeSession": "Reprendre la session",
     "resumingSession": "Reprise…",
     "endingSession": "Fin…",
-    "startingSession": "Démarrage…"
+    "startingSession": "Démarrage…",
+    "closeTour": "Fermer le tour"
   },
   "auth": {
     "continueGoogle": "Continuer avec Google",
@@ -572,8 +573,8 @@
     "view_recording": "Voir l'enregistrement",
     "onboarding": {
       "stepCounter": "Étape {current} sur {total}",
-      "finish": "Terminer",
-      "useSampleSession": "Utiliser une session exemple",
+      "finish": "Je suis prêt",
+      "useSampleSession": "Essayer un court exemple",
       "steps": {
         "setup": {
           "title": "Configurer une session",
@@ -585,12 +586,13 @@
             "Vous pouvez rouvrir la configuration à tout moment"
           ],
           "previewTitle": "Entrées de session réelles",
-          "previewSubtitle": "La configuration existe déjà dans le panneau Outils.",
+          "previewSubtitle": "D’après vos réglages actuels.",
           "previewItems": [
             "Sourate",
             "Plage",
             "Récitateur"
-          ]
+          ],
+          "hint": "Astuce : quelques ayahs suffisent pour la première session — élargissez la plage plus tard dans Contrôles."
         },
         "reading": {
           "title": "Choisir une vue de lecture",
@@ -602,12 +604,13 @@
             "Les polices restent accessibles depuis la barre d'outils"
           ],
           "previewTitle": "Contrôles de lecture",
-          "previewSubtitle": "Le basculement de vue et les aides sont intégrés.",
+          "previewSubtitle": "D’après vos réglages d’affichage.",
           "previewItems": [
             "Empilé",
             "Mushaf",
             "Tajwid"
-          ]
+          ],
+          "hint": "Astuce : gardez l’arabe au centre ; activez traduction ou tajwid seulement si cela aide."
         },
         "practice": {
           "title": "Pratiquer avec les outils intégrés",
@@ -619,60 +622,65 @@
             "Enchaînement et ancre aident les passages difficiles"
           ],
           "previewTitle": "Contrôles de technique",
-          "previewSubtitle": "L'onglet Techniques fait partie de l'espace de travail.",
+          "previewSubtitle": "D’après vos réglages de pratique.",
           "previewItems": [
             "Focus",
             "Flou",
             "Ancre"
-          ]
+          ],
+          "hint": "Astuce : commencez avec un seul outil doux. Les contrôles de mémorisation sont optionnels."
         },
         "review": {
           "title": "Revoir et revenir",
           "stepLabel": "Revue et retour",
           "body": "Sessions sauvegardées, enregistrements et analyses guident la prochaine session.",
           "points": [
-            "Les sessions sauvegardées permettent de reprendre",
-            "L'historique garde les tentatives visibles",
-            "AI Recite et AI Recite restent disponibles"
+            "Continuer exactement où vous vous êtes arrêté",
+            "Les rappels aident avant que les ayahs mémorisés ne s’effacent"
           ],
           "previewTitle": "Ce à quoi vous revenez",
-          "previewSubtitle": "Revue et reprise sont intégrées au système.",
+          "previewSubtitle": "D’après votre activité récente.",
           "previewItems": [
             "Sessions sauvegardées",
             "Enregistrements",
             "Analyses"
-          ]
+          ],
+          "hint": "Astuce : retrouvez vos sessions sauvegardées à tout moment dans votre bibliothèque."
         }
       },
-      "playSampleSession": "Jouer une session d'exemple",
+      "playSampleSession": "Essayer un court exemple",
       "postSession": {
-        "kicker": "Session d'exemple terminée",
-        "title": "Masha'Allah !",
-        "message": "Masha'Allah ! Qu'Allah bénisse vos efforts et facilite votre parcours coranique.",
-        "repeat": "Répéter cette session",
+        "kicker": "Exemple terminé",
+        "title": "Bravo",
+        "message": "Vous avez terminé l’exemple guidé. Choisissez la suite.",
+        "repeat": "Répéter cet exemple",
         "newSession": "Commencer une nouvelle session",
         "save": "Enregistrer cette session",
-        "savedToast": "Cette session a été enregistrée avec succès."
+        "savedToast": "Session enregistrée.",
+        "hint": "Répétez l’exemple, démarrez votre session, ou continuez dans Mutqin quand vous êtes prêt.",
+        "continue": "Continuer vers Mutqin"
       },
       "choices": {
-        "groupLabel": "Choose how to begin",
+        "groupLabel": "Comment souhaitez-vous commencer ?",
         "sample": {
-          "title": "Try Guided Sample (Recommended)",
-          "description": "Walk through a short guided session to see how memorisation flows work."
+          "title": "Essayer un exemple guidé",
+          "description": "Une courte pratique pour sentir le flux avant de choisir votre plage."
         },
         "setup": {
-          "title": "Set Up My Own Session",
-          "description": "Choose your surah, range, and reciter before you begin."
+          "title": "Configurer ma session",
+          "description": "Choisissez une sourate, une plage et un récitateur, puis commencez."
         },
         "explore": {
-          "title": "Explore the Workspace First",
-          "description": "Look around the workspace and open setup when you are ready."
+          "title": "Explorer d’abord",
+          "description": "Parcourez l’espace de travail et ouvrez la configuration quand vous êtes prêt."
         }
       },
-      "intro": "Four quick steps to get oriented before your first session.",
-      "confirmChoice": "Confirm choice",
+      "intro": "Quelques étapes courtes pour définir une plage, pratiquer calmement et découvrir Mutqin.",
+      "confirmChoice": "Continuer",
       "startOnboarding": "Get started",
-      "continueOnboarding": "Continue setup"
+      "continueOnboarding": "Continue setup",
+      "skipTour": "Passer le tour",
+      "finishHint": "Choisissez comment commencer — vous pourrez changer plus tard."
     },
     "open_session_setup": "Ouvrir la configuration de session",
     "open_controls": "Ouvrir les contrôles",
@@ -1028,16 +1036,19 @@
     "welcomeBack": {
       "kicker": "Bon retour",
       "startNewSession": "Commencer une nouvelle session",
-      "continuePreviousSession": "Continuer la session précédente",
+      "continuePreviousSession": "Continuer cette session",
       "freshTitle": "Ready when you are",
       "freshTitleNamed": "Welcome back, {name}",
-      "freshSubtitle": "Take a breath, settle in, and choose whether to start fresh or pick up where you left off.",
+      "freshSubtitle": "Continuez une session précédente, ou commencez-en une nouvelle.",
       "resumeTitle": "Continue with {chapter}",
       "resumeTitleNamed": "{chapter}, {name}",
-      "resumeGeneric": "Pick up where you left off",
-      "resumeGenericNamed": "Welcome back, {name}",
-      "resumeSubtitle": "Your last session is still here whenever you are ready.",
-      "resumeSubtitleDetail": "{detail} — continue whenever it suits you.",
+      "resumeGeneric": "Assalamu alaikum",
+      "resumeGenericNamed": "Assalamu alaikum, {name}",
+      "resumeSubtitle": "Votre session précédente est prête — qu'Allah facilite votre retour.",
+      "resumeSubtitleAtPlace": "Vous vous êtes arrêté à {place}. Qu'Allah rende votre retour doux et béni.",
+      "resumeSubtitleDetail": "Vous vous êtes arrêté à {detail}. Qu'Allah rende votre retour doux et béni.",
+      "resumePlaceAyah": "{chapter}, ayah {number}",
+      "resumePlaceBeginning": "{chapter}, au début",
       "greetingArabic": "ٱلسَّلَامُ عَلَيْكُمْ",
       "greetingTranslation": "Peace be upon you",
       "freshReminderArabic": "رَبِّ زِدْنِى عِلْمًا",
@@ -1049,9 +1060,13 @@
       "resumeReminderSource": "Qur'an 29:69",
       "resumeIntention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time.",
       "reminderLabel": "A word of remembrance",
-      "stoppedAt": "Stopped at",
-      "lastSaved": "Last saved",
-      "continueSessionShort": "Continuer"
+      "stoppedAt": "Arrêt à",
+      "stoppedAtAyah": "Ayah {number}",
+      "stoppedAtBeginning": "Début de la sourate",
+      "lastSaved": "Dernier enregistrement",
+      "continueSessionShort": "Continuer",
+      "hint": "Reprenez où vous vous êtes arrêté, ou recommencez.",
+      "closeLabel": "Fermer"
     },
     "sessionExit": {
       "kicker": "Session en pause",
@@ -1444,7 +1459,9 @@
       "playRecording": "Play recording",
       "pauseRecording": "Pause recording",
       "replayRecording": "Replay recording",
-      "loadingRecording": "Loading recording"
+      "loadingRecording": "Loading recording",
+      "aiMemorisationResult": "Résultat du contrôle de mémorisation",
+      "recommendedNextStep": "Prochaine étape recommandée"
     },
     "calligraphy": {
       "onboarding": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
