@@ -677,6 +677,7 @@
     },
     "open_session_setup": "فتح إعداد الجلسة",
     "open_controls": "فتح عناصر التحكم",
+    "open_dashboard": "فتح لوحة المعلومات",
     "mushaf_page_is_preparing": "صفحة المصحف قيد التحضير",
     "session_setup_in_progress": "جارٍ إعداد جلستك، يرجى الانتظار…",
     "text": "النص",

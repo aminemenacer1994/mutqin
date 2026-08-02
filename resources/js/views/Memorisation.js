@@ -24374,6 +24374,9 @@ export default {
       // Keep power features accessible, but behind a tertiary surface.
       this.openToolsPanel()
     },
+    openDashboardView() {
+      window.location.assign('/dashboard')
+    },
     handleHeaderSessionAction() {
       if (this.headerSessionActionDisabled) {
         this.resetStuckSessionLifecycleControls()

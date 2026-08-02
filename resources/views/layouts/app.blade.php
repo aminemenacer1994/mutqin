@@ -80,8 +80,8 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v117';
-        var FORCE = '117';
+        var BUILD = 'v119';
+        var FORCE = '119';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
@@ -827,6 +827,7 @@
           gap: 0.35rem !important;
         }
         .app .top-card-icon-controls .top-card-controls-wrap,
+        .app .top-card-icon-controls .top-card-dashboard-wrap,
         .app .top-card-icon-controls .top-card-layout-icons,
         .app .top-card-icon-controls .top-card-menu-wrap {
           position: relative !important;
@@ -847,13 +848,17 @@
         .app .top-card-icon-controls .top-card-controls-wrap {
           order: 0 !important;
         }
-        .app .top-card-icon-controls .top-card-layout-icons {
+        .app .top-card-icon-controls .top-card-dashboard-wrap {
           order: 1 !important;
         }
-        .app .top-card-icon-controls .top-card-menu-wrap {
+        .app .top-card-icon-controls .top-card-layout-icons {
           order: 2 !important;
         }
+        .app .top-card-icon-controls .top-card-menu-wrap {
+          order: 3 !important;
+        }
         .app .top-card-icon-controls .top-card-controls-trigger,
+        .app .top-card-icon-controls .top-card-dashboard-trigger,
         .app .top-card-icon-controls .view-mode-btn,
         .app .top-card-icon-controls .workspace-layout-btn,
         .app .top-card-icon-controls .top-card-ellipsis,

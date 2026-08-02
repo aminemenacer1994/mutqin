@@ -3403,6 +3403,7 @@
   .top-card-icon-controls .top-card-layout-icons,
   .top-card-icon-controls .top-card-font-wrap,
   .top-card-icon-controls .top-card-controls-wrap,
+  .top-card-icon-controls .top-card-dashboard-wrap,
   .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
     align-items: center !important;
@@ -3427,13 +3428,16 @@
 
   .top-card-icon-controls .top-card-icon-control,
   .top-card-icon-controls .top-card-controls-trigger,
+  .top-card-icon-controls .top-card-dashboard-trigger,
   .top-card-icon-controls .top-card-ellipsis,
   .top-card-icon-controls .view-mode-btn,
   .top-card-icon-controls .font-dropdown-trigger,
   .top-card-icon-controls .workspace-layout-btn,
   .top-card-icon-controls .action-btn.top-card-controls-trigger,
+  .top-card-icon-controls .action-btn.top-card-dashboard-trigger,
   .workspace-shell-actions .top-card-icon-controls .top-card-ellipsis,
-  .workspace-shell-actions .top-card-icon-controls .top-card-controls-trigger {
+  .workspace-shell-actions .top-card-icon-controls .top-card-controls-trigger,
+  .workspace-shell-actions .top-card-icon-controls .top-card-dashboard-trigger {
     position: relative !important;
     inset: auto !important;
     top: auto !important;
@@ -3473,6 +3477,7 @@
   .top-card-icon-controls .top-card-layout-icons,
   .top-card-icon-controls .top-card-font-wrap,
   .top-card-icon-controls .top-card-controls-wrap,
+  .top-card-icon-controls .top-card-dashboard-wrap,
   .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
     align-items: center !important;
@@ -3483,6 +3488,7 @@
   .top-card-icon-controls .view-mode-btn i,
   .top-card-icon-controls .font-dropdown-trigger i,
   .top-card-icon-controls .top-card-controls-trigger i,
+  .top-card-icon-controls .top-card-dashboard-trigger i,
   .top-card-icon-controls .top-card-ellipsis i {
     font-size: 0.95rem !important;
     line-height: 1 !important;
@@ -4589,6 +4595,7 @@
   }
 
   .workspace-shell-head > .top-card-icon-controls .top-card-controls-wrap,
+  .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-wrap,
   .workspace-shell-head > .top-card-icon-controls .top-card-layout-icons,
   .workspace-shell-head > .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
@@ -4610,12 +4617,16 @@
     order: 0;
   }
 
-  .workspace-shell-head > .top-card-icon-controls .top-card-layout-icons {
+  .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-wrap {
     order: 1;
   }
 
-  .workspace-shell-head > .top-card-icon-controls .top-card-menu-wrap {
+  .workspace-shell-head > .top-card-icon-controls .top-card-layout-icons {
     order: 2;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls .top-card-menu-wrap {
+    order: 3;
   }
 
   .workspace-shell-head > .top-card-icon-controls .top-card-icon-control,

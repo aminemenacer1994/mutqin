@@ -48097,6 +48097,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 .top-card-icon-controls .top-card-layout-icons,
 .top-card-icon-controls .top-card-font-wrap,
 .top-card-icon-controls .top-card-controls-wrap,
+.top-card-icon-controls .top-card-dashboard-wrap,
 .top-card-icon-controls .top-card-menu-wrap {
   display: inline-flex !important;
   align-items: center !important;
@@ -48130,6 +48131,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 
 .top-card-icon-controls .top-card-icon-control,
 .top-card-icon-controls .top-card-controls-trigger,
+.top-card-icon-controls .top-card-dashboard-trigger,
 .top-card-icon-controls .top-card-ellipsis,
 .top-card-icon-controls .view-mode-btn,
 .top-card-icon-controls .font-dropdown-trigger {
@@ -48159,6 +48161,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 .top-card-icon-controls .view-mode-btn i,
 .top-card-icon-controls .font-dropdown-trigger i,
 .top-card-icon-controls .top-card-controls-trigger i,
+.top-card-icon-controls .top-card-dashboard-trigger i,
 .top-card-icon-controls .top-card-ellipsis i {
   display: block !important;
   margin: 0 !important;
@@ -48200,6 +48203,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 [data-theme="dark"] .top-card-icon-controls .view-mode-btn,
 [data-theme="dark"] .top-card-icon-controls .font-dropdown-trigger,
 [data-theme="dark"] .top-card-icon-controls .top-card-controls-trigger,
+[data-theme="dark"] .top-card-icon-controls .top-card-dashboard-trigger,
 [data-theme="dark"] .top-card-icon-controls .top-card-ellipsis {
   background: #18181b;
   border: 1px solid rgba(245, 242, 234, 0.14);

@@ -227,6 +227,20 @@
                 <i class="bi bi-sliders" aria-hidden="true"></i>
               </div>
             </div>
+            <div v-if="!isPostSessionChoiceVisible" class="top-card-dashboard-wrap">
+              <div
+                class="action-btn action-btn-secondary top-card-action-trigger top-card-dashboard-trigger top-card-icon-control"
+                role="button"
+                tabindex="0"
+                @click="openDashboardView"
+                @keydown.enter.prevent="openDashboardView"
+                @keydown.space.prevent="openDashboardView"
+                :title="t('memorisation.open_dashboard')"
+                :aria-label="t('memorisation.open_dashboard')"
+              >
+                <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+              </div>
+            </div>
             <div class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
               <div
                 class="top-card-ellipsis top-card-action-trigger top-card-icon-control"
