@@ -1955,6 +1955,22 @@ export default {
         { key: 'delay', label: 'Delay', value: delayValue }
       ]
     },
+    mobileProgressPills() {
+      const pills = this.topCardMetadataPills
+      if (!pills.length) return []
+
+      const start = Math.max(1, Number(this.rangeStart || 1))
+      const end = Math.max(start, Number(this.rangeEnd || start))
+      const compactRange = start === end ? String(start) : `${start}-${end}`
+
+      return pills
+        .filter((pill) => pill.key !== 'delay')
+        .map((pill) => {
+          if (pill.key === 'range') return { ...pill, value: `Range ${compactRange}` }
+          if (pill.key === 'repetition') return { ...pill, value: `Repetition ${pill.value}` }
+          return pill
+        })
+    },
     workspaceProgressSummary() {
       const sessionTotal = Math.max(0, Number(this.totalVerses || 0))
       const sessionCovered = this.hasVerses

@@ -309,6 +309,19 @@
               </transition>
             </div>
           </div>
+          <div
+            v-if="mobileProgressPills.length"
+            class="workspace-shell-progress-pills w-100"
+            :aria-label="t('memorisation.a11y.sessionMetadata')"
+          >
+            <span
+              v-for="item in mobileProgressPills"
+              :key="item.key"
+              class="badge rounded-pill workspace-shell-progress-pill"
+              :title="`${item.label}: ${item.value}`"
+              :aria-label="`${item.label}: ${item.value}`"
+            >{{ item.value }}</span>
+          </div>
           <div class="workspace-shell-actions">
             <div class="action-buttons-group">
               <div

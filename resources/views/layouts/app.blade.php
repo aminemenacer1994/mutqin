@@ -80,8 +80,8 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v114';
-        var FORCE = '114';
+        var BUILD = 'v117';
+        var FORCE = '117';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
@@ -543,7 +543,7 @@
         .app .workspace-shell--post-session-choice .workspace-shell-head {
           display: grid !important;
           grid-template-columns: minmax(0, 1fr) auto !important;
-          grid-template-rows: auto auto !important;
+          grid-template-rows: auto auto auto !important;
           gap: 0.45rem !important;
           overflow: visible !important;
         }
@@ -600,7 +600,7 @@
         .app .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
         .app .workspace-shell-actions .top-card-session-actions.has-paired-actions.post-session-choice-pair {
           grid-column: 1 / -1 !important;
-          grid-row: 2 !important;
+          grid-row: 3 !important;
           display: grid !important;
           grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           width: 100% !important;
@@ -660,6 +660,10 @@
       .live-practice-guidance--mushaf {
         display: none !important;
       }
+      /* Progress pills are mobile-only; desktop keeps the bottom metadata row */
+      .app .workspace-shell-progress-pills {
+        display: none !important;
+      }
       @media (max-width: 767.98px) {
         .app .workspace-shell-bottom,
         .app .workspace-shell-bottom-pills,
@@ -676,8 +680,51 @@
         .app .workspace-shell-head {
           display: grid !important;
           grid-template-columns: minmax(0, 1fr) auto !important;
+          grid-template-rows: auto auto auto !important;
           gap: 0.4rem 0.45rem !important;
           align-items: center !important;
+        }
+        /* Mobile progress pills — full-width row under Surah title */
+        .app .workspace-shell-head > .workspace-shell-progress-pills {
+          grid-column: 1 / -1 !important;
+          grid-row: 2 !important;
+          display: flex !important;
+          flex-flow: row nowrap !important;
+          align-items: center !important;
+          gap: 0.35rem !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          padding: 0.55rem 0 !important;
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .app .workspace-shell-head > .workspace-shell-progress-pills::-webkit-scrollbar {
+          display: none !important;
+        }
+        .app .workspace-shell-progress-pill {
+          display: inline-flex !important;
+          align-items: center !important;
+          flex: 0 0 auto !important;
+          max-width: 9.5rem !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          padding: 0.18rem 0.55rem !important;
+          border: 1px solid color-mix(in srgb, var(--border) 85%, transparent) !important;
+          border-radius: 999px !important;
+          background: color-mix(in srgb, var(--surface) 92%, var(--bg)) !important;
+          color: color-mix(in srgb, var(--text) 72%, transparent) !important;
+          font-size: 0.68rem !important;
+          font-weight: 600 !important;
+          line-height: 1.2 !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          pointer-events: none !important;
+          user-select: none !important;
         }
         .app .workspace-shell-actions,
         .app .workspace-shell-actions .action-buttons-group {
@@ -729,7 +776,7 @@
         }
         .app .workspace-shell--post-session-choice .post-session-choice-pair {
           grid-column: 1 / -1 !important;
-          grid-row: 2 !important;
+          grid-row: 3 !important;
           width: 100% !important;
           min-width: 0 !important;
         }
@@ -775,7 +822,7 @@
         .app .workspace-shell-actions .top-card-session-actions:not(.post-session-choice-pair),
         .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
           grid-column: 1 / -1 !important;
-          grid-row: 2 !important;
+          grid-row: 3 !important;
           display: flex !important;
           gap: 0.35rem !important;
         }

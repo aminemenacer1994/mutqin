@@ -25707,6 +25707,11 @@ textarea {
   line-height: 1.16;
 }
 
+/* Mobile-only progress pills under Surah title — hidden on desktop */
+.workspace-shell-progress-pills {
+  display: none;
+}
+
 .workspace-shell-actions {
   flex: 0 1 auto;
   min-width: min(100%, 18rem);
@@ -50745,7 +50750,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
 .workspace-shell-head {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) auto !important;
-  grid-template-rows: auto auto !important;
+  grid-template-rows: auto auto auto !important;
   align-items: center !important;
   column-gap: 0.65rem !important;
   row-gap: 0.55rem !important;
@@ -50775,9 +50780,14 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani:
   pointer-events: auto !important;
 }
 
-.workspace-shell-head > .workspace-shell-actions {
+.workspace-shell-head > .workspace-shell-progress-pills {
   grid-column: 1 / -1 !important;
   grid-row: 2 !important;
+}
+
+.workspace-shell-head > .workspace-shell-actions {
+  grid-column: 1 / -1 !important;
+  grid-row: 3 !important;
   display: flex !important;
   width: 100% !important;
 }

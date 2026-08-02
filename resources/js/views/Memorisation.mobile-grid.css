@@ -138,6 +138,57 @@
     overflow-wrap: anywhere;
   }
 
+  /* Compact session progress pills under Surah title (mobile only) */
+  .workspace-shell-progress-pills {
+    grid-column: 1 / -1 !important;
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100% !important;
+    inline-size: 100% !important;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0.55rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .workspace-shell-progress-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  .workspace-shell-progress-pill {
+    display: inline-flex !important;
+    align-items: center;
+    flex: 0 0 auto;
+    max-inline-size: 9.5rem;
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0.18rem 0.55rem;
+    border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 92%, var(--bg));
+    color: color-mix(in srgb, var(--text) 72%, transparent);
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  [data-theme="dark"] .workspace-shell-progress-pill {
+    border-color: color-mix(in srgb, var(--border) 90%, transparent);
+    background: color-mix(in srgb, var(--surface) 88%, #1a1613);
+    color: color-mix(in srgb, var(--text) 78%, transparent);
+  }
+
   .workspace-shell-actions {
     grid-column: 1 / -1;
     grid-row: 2;
@@ -3266,6 +3317,7 @@
   .workspace-shell-head {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto auto !important;
     align-items: center !important;
     gap: 0.4rem 0.45rem !important;
   }
@@ -3285,6 +3337,29 @@
     white-space: nowrap !important;
   }
 
+  /* Progress pills own row 2; session actions (via display:contents) sit on row 3 */
+  .workspace-shell-head > .workspace-shell-progress-pills {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0.55rem 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .workspace-shell-head > .workspace-shell-progress-pills::-webkit-scrollbar {
+    display: none;
+  }
+
   .workspace-shell-actions,
   .workspace-shell-actions .action-buttons-group {
     display: contents !important;
@@ -3293,7 +3368,7 @@
   .workspace-shell-actions .top-card-session-actions,
   .workspace-shell-actions .top-card-session-actions.has-paired-actions {
     grid-column: 1 / -1 !important;
-    grid-row: 2 !important;
+    grid-row: 3 !important;
     display: flex !important;
     flex-wrap: nowrap !important;
     gap: 0.4rem !important;
@@ -4463,7 +4538,7 @@
   .workspace-shell-head {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
-    grid-template-rows: auto auto !important;
+    grid-template-rows: auto auto auto !important;
     align-items: center !important;
     column-gap: 0.45rem !important;
   }
@@ -4472,6 +4547,15 @@
     grid-column: 1 !important;
     grid-row: 1 !important;
     min-width: 0 !important;
+  }
+
+  .workspace-shell-head > .workspace-shell-progress-pills {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+  }
+
+  .workspace-shell-head > .workspace-shell-actions {
+    grid-row: 3 !important;
   }
 
   .workspace-shell-head > .top-card-icon-controls,
