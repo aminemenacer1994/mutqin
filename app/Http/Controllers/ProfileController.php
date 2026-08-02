@@ -5,14 +5,18 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
     public function show(Request $request)
     {
+        $user = $request->user();
+
         return view('profile', [
-            'user' => $request->user(),
+            'user' => $user,
+            'isAdmin' => $user->isAdmin(),
             'planLabels' => $this->planLabels(),
         ]);
     }
@@ -24,6 +28,11 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+        ], [
+            'name.required' => __('profile.name_required'),
+            'email.required' => __('profile.email_required'),
+            'email.email' => __('profile.email_invalid'),
+            'email.unique' => __('profile.email_taken'),
         ]);
 
         $emailChanged = strtolower($validated['email']) !== strtolower((string) $user->email);
@@ -34,7 +43,7 @@ class ProfileController extends Controller
             'email_verified_at' => $emailChanged ? null : $user->email_verified_at,
         ])->save();
 
-        return back()->with('profile_status', 'Profile updated successfully.');
+        return back()->with('profile_status', __('profile.saved_success'));
     }
 
     public function updateLocale(Request $request): JsonResponse
@@ -55,26 +64,58 @@ class ProfileController extends Controller
     public function updatePassword(Request $request): RedirectResponse
     {
         $user = $request->user();
+        $isChange = $user->hasSetPassword();
 
         $rules = [
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ];
 
-        if (!$user->google_id) {
+        if ($isChange) {
             $rules['current_password'] = ['required', 'current_password'];
-        } elseif ($request->filled('current_password')) {
-            $rules['current_password'] = ['current_password'];
         }
 
         $validated = $request->validate($rules, [
-            'current_password.current_password' => 'The current password is incorrect.',
+            'current_password.required' => __('profile.current_password_required'),
+            'current_password.current_password' => __('profile.current_password_incorrect'),
+            'password.required' => __('profile.new_password_required'),
+            'password.min' => __('profile.password_min'),
+            'password.confirmed' => __('profile.passwords_dont_match'),
         ]);
 
         $user->forceFill([
             'password' => $validated['password'],
+            'password_set_at' => now(),
         ])->save();
 
-        return back()->with('password_status', 'Password updated successfully.');
+        return back()->with('password_status', __('profile.password_updated'));
+    }
+
+    public function destroy(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->isAdmin()) {
+            return back()->with('billing_error', __('profile.delete_admin_blocked'));
+        }
+
+        $confirmation = trim((string) $request->input('confirmation', ''));
+        $emailMatches = strcasecmp($confirmation, (string) $user->email) === 0;
+        $phraseMatches = $confirmation === 'DELETE';
+
+        if ($confirmation === '' || (! $emailMatches && ! $phraseMatches)) {
+            return back()
+                ->withErrors(['confirmation' => __('profile.delete_confirm_required')])
+                ->withInput();
+        }
+
+        Auth::logout();
+
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('home')->with('status', __('profile.account_deleted'));
     }
 
     private function planLabels(): array

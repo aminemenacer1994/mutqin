@@ -339,6 +339,7 @@ class AdminDashboardService
             'name' => trim((string) ($data['name'] ?? '')),
             'email' => strtolower(trim((string) ($data['email'] ?? ''))),
             'password' => $password,
+            'password_set_at' => now(),
             'locale' => $this->normalizeLocale($data['locale'] ?? 'en'),
             'subscription_status' => $this->normalizeSubscriptionStatus($data['subscription_status'] ?? 'none'),
             'subscription_tier' => $this->normalizeSubscriptionTier($data['subscription_tier'] ?? 'none'),
@@ -373,6 +374,7 @@ class AdminDashboardService
         }
         if (! empty($data['password'])) {
             $payload['password'] = $data['password'];
+            $payload['password_set_at'] = now();
         }
 
         if ($payload !== []) {

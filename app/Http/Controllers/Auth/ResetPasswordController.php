@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Foundation\Auth\ResetsPasswords;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class ResetPasswordController extends Controller
 {
@@ -28,6 +30,22 @@ class ResetPasswordController extends Controller
      * @var string
      */
     protected $redirectTo = '/memorisation';
+
+    /**
+     * @param  \Illuminate\Contracts\Auth\CanResetPassword  $user
+     */
+    protected function resetPassword($user, $password): void
+    {
+        $user->forceFill([
+            'password' => $password,
+            'password_set_at' => now(),
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        event(new PasswordReset($user));
+
+        $this->guard()->login($user);
+    }
 
     protected function sendResetResponse($request, $response): RedirectResponse
     {

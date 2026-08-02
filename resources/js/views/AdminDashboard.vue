@@ -1,5 +1,11 @@
 <template>
-  <main id="mainContent" class="admin-console" tabindex="-1" @keydown="onConsoleKeydown">
+  <main
+    id="mainContent"
+    class="admin-console"
+    :class="{ 'has-bulkbar': selectedIds.length > 0 }"
+    tabindex="-1"
+    @keydown="onConsoleKeydown"
+  >
     <div class="admin-console__shell">
       <div v-if="bootLoading" class="admin-console__state" role="status">
         <div class="admin-spinner" aria-hidden="true"></div>
@@ -59,9 +65,14 @@
               :title="metric.tooltip || undefined"
               @click="onKpiClick(metric)"
             >
-              <strong>{{ metric.value }}</strong>
-              <span>{{ metric.label }}</span>
+              <span class="admin-kpi__label">{{ metric.label }}</span>
+              <strong class="admin-kpi__value">{{ metric.value }}</strong>
               <em v-if="metric.trendLabel" class="admin-kpi__trend" :data-dir="metric.trendDir">
+                <i
+                  class="bi"
+                  :class="metric.trendDir === 'up' ? 'bi-arrow-up-short' : metric.trendDir === 'down' ? 'bi-arrow-down-short' : 'bi-dash'"
+                  aria-hidden="true"
+                ></i>
                 {{ metric.trendLabel }}
               </em>
             </button>
@@ -79,14 +90,14 @@
               </div>
               <p class="admin-users__subtitle">{{ t('admin.users_subtitle') }}</p>
             </div>
-            <div class="admin-users__actions">
-              <button type="button" class="admin-btn admin-btn--ghost admin-users__action" @click="exportVisibleUsersCsv">
-                <i class="bi bi-download" aria-hidden="true"></i>
-                <span>{{ t('admin.export_csv') }}</span>
-              </button>
+            <div class="admin-users__actions mobile-actions">
               <button type="button" class="admin-btn admin-btn--primary admin-users__action" @click="openCreateModal">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i>
                 <span>{{ t('admin.add_user') }}</span>
+              </button>
+              <button type="button" class="admin-btn admin-btn--ghost admin-users__action" @click="exportVisibleUsersCsv">
+                <i class="bi bi-download" aria-hidden="true"></i>
+                <span>{{ t('admin.export_csv') }}</span>
               </button>
             </div>
           </header>
@@ -174,162 +185,248 @@
             </p>
           </div>
 
-          <div v-if="selectedIds.length" class="admin-bulkbar">
-            <span>{{ t('admin.bulk_selected', { n: selectedIds.length }) }}</span>
-            <button type="button" class="admin-btn admin-btn--sm" :disabled="bulkBusy" @click="bulkSendEmail">
-              {{ t('admin.bulk_send_email') }}
-            </button>
-            <select v-model="bulkStatus" class="admin-toolbar__select" :aria-label="t('admin.bulk_change_subscription')">
-              <option v-for="status in subscriptionOptions" :key="status" :value="status">
-                {{ subscriptionLabel(status) }}
-              </option>
-            </select>
-            <button type="button" class="admin-btn admin-btn--sm" :disabled="bulkBusy" @click="runBulkStatus">
-              {{ t('admin.bulk_change_subscription') }}
-            </button>
-            <button type="button" class="admin-btn admin-btn--sm" :disabled="bulkBusy" @click="exportSelectedCsv">
-              {{ t('admin.bulk_export_csv') }}
-            </button>
-            <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" :disabled="bulkBusy" @click="bulkDeactivate">
-              {{ t('admin.bulk_deactivate') }}
-            </button>
-            <button type="button" class="admin-link" @click="selectedIds = []">{{ t('admin.bulk_clear') }}</button>
-          </div>
-
           <p v-if="usersLoading" class="admin-empty">{{ t('admin.drawer_loading') }}</p>
           <p v-else-if="usersError" class="admin-empty" role="alert">{{ t('admin.drawer_load_error') }}</p>
-          <div v-else class="admin-table-wrap" role="listbox" :aria-label="t('admin.users_title')">
-            <table class="admin-table">
-              <colgroup>
-                <col class="admin-col-check">
-                <col class="admin-col-learner">
-                <col class="admin-col-num admin-col-memorised admin-col--desktop">
-                <col class="admin-col-num admin-col-sessions">
-                <col class="admin-col-num admin-col-learning admin-col--desktop">
-                <col class="admin-col-date admin-col--desktop">
-                <col class="admin-col-status">
-                <col class="admin-col-actions">
-              </colgroup>
-              <thead>
-                <tr>
-                  <th class="admin-table__check">
-                    <input
-                      type="checkbox"
-                      :checked="allVisibleSelected"
-                      :aria-label="t('admin.select_all')"
-                      @change="toggleSelectAll"
-                    >
-                  </th>
-                  <th>{{ t('admin.col_learner') }}</th>
-                  <th class="admin-col--desktop">
-                    <button type="button" class="admin-th-sort" :class="{ 'is-active': sortKey === 'memorised' }" @click="setSort('memorised')">
-                      {{ t('admin.col_memorised') }}
-                    </button>
-                  </th>
-                  <th>
-                    <button type="button" class="admin-th-sort" :class="{ 'is-active': sortKey === 'sessions' }" @click="setSort('sessions')">
-                      {{ t('admin.col_sessions') }}
-                    </button>
-                  </th>
-                  <th class="admin-col--desktop">
-                    <button type="button" class="admin-th-sort" :class="{ 'is-active': sortKey === 'learning' }" @click="setSort('learning')">
-                      {{ t('admin.col_learning') }}
-                    </button>
-                  </th>
-                  <th class="admin-col--desktop">
-                    <button type="button" class="admin-th-sort" :class="{ 'is-active': sortKey === 'last_active' }" @click="setSort('last_active')">
-                      {{ t('admin.col_active') }}
-                    </button>
-                  </th>
-                  <th class="admin-table__status" :title="t('admin.col_status')">
-                    <span class="visually-hidden">{{ t('admin.col_status') }}</span>
-                  </th>
-                  <th class="admin-table__actions"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="!users.length">
-                  <td colspan="8" class="admin-table__empty">
-                    <p>{{ t('admin.users_empty') }}</p>
-                    <button v-if="filtersActive" type="button" class="admin-link" @click="clearFilters">
-                      {{ t('admin.filters_clear') }}
-                    </button>
-                  </td>
-                </tr>
-                <tr
-                  v-for="row in users"
-                  :key="row.id"
-                  :class="{ 'is-selected': selectedUserId === row.id, 'has-menu-open': rowMenuId === row.id }"
-                  tabindex="0"
-                  @click="selectUser(row.id)"
-                  @keydown.enter.prevent="selectUser(row.id)"
-                >
-                  <td class="admin-table__check" @click.stop>
+          <div v-else-if="!users.length" class="admin-users-empty" role="status">
+            <i
+              class="bi admin-users-empty__icon"
+              :class="filtersActive ? 'bi-search' : 'bi-people'"
+              aria-hidden="true"
+            ></i>
+            <p class="admin-users-empty__title">
+              {{ filtersActive ? t('admin.users_empty_search') : t('admin.learners_empty') }}
+            </p>
+            <button
+              v-if="filtersActive"
+              type="button"
+              class="admin-btn admin-btn--ghost admin-btn--sm"
+              @click="clearFilters"
+            >
+              {{ t('admin.clear_filters') }}
+            </button>
+          </div>
+          <div v-else class="admin-users-list">
+            <ul class="admin-user-cards" role="list" :aria-label="t('admin.users_title')">
+              <li
+                v-for="row in users"
+                :key="`card-${row.id}`"
+                class="admin-user-card"
+                :class="{
+                  'is-selected': selectedUserId === row.id,
+                  'is-expanded': isCardExpanded(row.id),
+                }"
+              >
+                <div class="admin-user-card__row">
+                  <label class="admin-user-card__check" @click.stop>
                     <input
                       type="checkbox"
                       :checked="selectedIds.includes(row.id)"
+                      :aria-label="row.name || t('admin.unnamed')"
                       @change="toggleSelect(row.id)"
                     >
-                  </td>
-                  <td class="admin-table__learner">
-                    <div class="admin-table__who">
-                      <strong :title="row.name || t('admin.unnamed')">{{ row.name || t('admin.unnamed') }}</strong>
-                      <span class="admin-table__email" :title="row.email">{{ row.email }}</span>
+                  </label>
+                  <button
+                    type="button"
+                    class="admin-user-card__main"
+                    :aria-expanded="isCardExpanded(row.id) ? 'true' : 'false'"
+                    :aria-controls="`admin-user-card-details-${row.id}`"
+                    :aria-label="isCardExpanded(row.id) ? t('admin.card_collapse') : t('admin.card_expand')"
+                    @click="toggleCardExpand(row.id)"
+                  >
+                    <div class="admin-user-card__top">
+                      <div class="admin-user-card__who">
+                        <strong :title="row.name || t('admin.unnamed')">{{ row.name || t('admin.unnamed') }}</strong>
+                        <span class="admin-user-card__email" :title="row.email">{{ row.email }}</span>
+                      </div>
+                      <i
+                        class="bi bi-chevron-down admin-user-card__chevron"
+                        aria-hidden="true"
+                      ></i>
                     </div>
-                  </td>
-                  <td class="admin-num admin-col--desktop">{{ row.memorised_ayahs }}</td>
-                  <td class="admin-num">{{ row.sessions_completed }}</td>
-                  <td class="admin-num admin-col--desktop">{{ row.learning_ayahs }}</td>
-                  <td class="admin-num admin-col--desktop">
-                    <span v-if="row.last_activity_at" :title="formatDateShort(row.last_activity_at) || undefined">
-                      {{ formatRelative(row.last_activity_at) }}
-                    </span>
-                    <span v-else class="admin-dash">—</span>
-                  </td>
-                  <td class="admin-table__status">
-                    <i
-                      class="admin-status-dot"
-                      :data-status="activityStatus(row)"
-                      :title="activityStatusLabel(row)"
-                      :aria-label="activityStatusLabel(row)"
-                    ></i>
-                  </td>
-                  <td class="admin-table__actions" @click.stop>
-                    <div class="admin-row-menu" :class="{ 'is-open': rowMenuId === row.id }">
-                      <button
-                        type="button"
-                        class="admin-row-menu__btn"
-                        :aria-label="t('admin.row_actions')"
-                        :aria-expanded="rowMenuId === row.id ? 'true' : 'false'"
-                        @click="toggleRowMenu(row.id)"
+                    <div class="admin-user-card__pills">
+                      <span
+                        class="admin-user-card__pill"
+                        :class="{ 'is-empty': !Number(row.sessions_completed) }"
                       >
-                        <span aria-hidden="true">⋮</span>
-                      </button>
-                      <div v-if="rowMenuId === row.id" class="admin-row-menu__panel" role="menu">
-                        <button type="button" role="menuitem" @click="askResetPassword(row)">
-                          {{ t('admin.action_reset_password') }}
-                        </button>
-                        <a role="menuitem" :href="`mailto:${row.email}`" @click="rowMenuId = null">
-                          {{ t('admin.action_send_email') }}
-                        </a>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          class="is-danger"
-                          :disabled="Number(row.id) === ownerId || row.subscription_status === 'canceled'"
-                          @click="askDeactivate(row)"
-                        >
-                          {{ t('admin.action_deactivate') }}
-                        </button>
-                        <button type="button" role="menuitem" @click="viewAsLearner">
-                          {{ t('admin.action_view_as_learner') }}
-                        </button>
+                        {{ sessionsPill(row) }}
+                      </span>
+                    </div>
+                    <div class="admin-user-card__footer">
+                      <span
+                        class="admin-user-card__active"
+                        :class="{ 'is-empty': !row.last_activity_at }"
+                        :title="row.last_activity_at ? (formatDateShort(row.last_activity_at) || undefined) : undefined"
+                      >
+                        {{ lastActivePill(row) }}
+                      </span>
+                      <i
+                        class="admin-status-dot"
+                        :data-status="activityStatus(row)"
+                        :title="activityStatusLabel(row)"
+                        :aria-label="activityStatusLabel(row)"
+                      ></i>
+                    </div>
+                  </button>
+                </div>
+                <div
+                  :id="`admin-user-card-details-${row.id}`"
+                  class="admin-user-card__details"
+                >
+                  <div class="admin-user-card__details-inner">
+                    <div class="admin-user-card__metrics">
+                      <div class="admin-user-card__metric" :class="{ 'is-empty': !Number(row.memorised_ayahs) }">
+                        <span>{{ t('admin.col_memorised') }}</span>
+                        <strong>{{ memorisedLabel(row.memorised_ayahs) }}</strong>
+                      </div>
+                      <div class="admin-user-card__metric" :class="{ 'is-empty': !Number(row.learning_ayahs) }">
+                        <span>{{ t('admin.col_learning') }}</span>
+                        <strong>{{ learningLabel(row.learning_ayahs) }}</strong>
                       </div>
                     </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                    <button
+                      type="button"
+                      class="admin-btn admin-btn--ghost admin-btn--sm admin-user-card__open"
+                      @click="selectUser(row.id)"
+                    >
+                      {{ t('admin.card_view_details') }}
+                    </button>
+                  </div>
+                </div>
+              </li>
+            </ul>
+
+            <div class="admin-table-shell">
+              <div class="admin-table-wrap" role="listbox" :aria-label="t('admin.users_title')">
+                <table class="admin-table">
+                  <colgroup>
+                    <col class="admin-col-check">
+                    <col class="admin-col-learner">
+                    <col class="admin-col-num admin-col-memorised">
+                    <col class="admin-col-num admin-col-sessions">
+                    <col class="admin-col-num admin-col-learning">
+                    <col class="admin-col-date">
+                    <col class="admin-col-status">
+                    <col class="admin-col-actions">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th class="admin-table__check">
+                        <input
+                          type="checkbox"
+                          :checked="allVisibleSelected"
+                          :aria-label="t('admin.select_all')"
+                          @change="toggleSelectAll"
+                        >
+                      </th>
+                      <th class="admin-table__learner">{{ t('admin.col_learner') }}</th>
+                      <th>
+                        <button type="button" class="admin-th-sort" :class="{ 'is-active': sortKey === 'memorised' }" @click="setSort('memorised')">
+                          {{ t('admin.col_memorised') }}
+                        </button>
+                      </th>
+                      <th>
+                        <button type="button" class="admin-th-sort" :class="{ 'is-active': sortKey === 'sessions' }" @click="setSort('sessions')">
+                          {{ t('admin.col_sessions') }}
+                        </button>
+                      </th>
+                      <th>
+                        <button type="button" class="admin-th-sort" :class="{ 'is-active': sortKey === 'learning' }" @click="setSort('learning')">
+                          {{ t('admin.col_learning') }}
+                        </button>
+                      </th>
+                      <th>
+                        <button type="button" class="admin-th-sort" :class="{ 'is-active': sortKey === 'last_active' }" @click="setSort('last_active')">
+                          {{ t('admin.col_active') }}
+                        </button>
+                      </th>
+                      <th class="admin-table__status" :title="t('admin.col_status')">
+                        <span class="visually-hidden">{{ t('admin.col_status') }}</span>
+                      </th>
+                      <th class="admin-table__actions"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="row in users"
+                      :key="row.id"
+                      :class="{ 'is-selected': selectedUserId === row.id, 'has-menu-open': rowMenuId === row.id }"
+                      tabindex="0"
+                      @click="selectUser(row.id)"
+                      @keydown.enter.prevent="selectUser(row.id)"
+                    >
+                      <td class="admin-table__check" @click.stop>
+                        <input
+                          type="checkbox"
+                          :checked="selectedIds.includes(row.id)"
+                          @change="toggleSelect(row.id)"
+                        >
+                      </td>
+                      <td class="admin-table__learner">
+                        <div class="admin-table__who">
+                          <strong :title="row.name || t('admin.unnamed')">{{ row.name || t('admin.unnamed') }}</strong>
+                          <span class="admin-table__email" :title="row.email">{{ row.email }}</span>
+                        </div>
+                      </td>
+                      <td class="admin-num" :class="{ 'is-empty': !Number(row.memorised_ayahs) }">
+                        {{ memorisedLabel(row.memorised_ayahs) }}
+                      </td>
+                      <td class="admin-num" :class="{ 'is-empty': !Number(row.sessions_completed) }">
+                        {{ sessionsLabel(row.sessions_completed) }}
+                      </td>
+                      <td class="admin-num" :class="{ 'is-empty': !Number(row.learning_ayahs) }">
+                        {{ learningLabel(row.learning_ayahs) }}
+                      </td>
+                      <td class="admin-num" :class="{ 'is-empty': !row.last_activity_at }">
+                        <span :title="row.last_activity_at ? (formatDateShort(row.last_activity_at) || undefined) : undefined">
+                          {{ lastActiveLabel(row.last_activity_at) }}
+                        </span>
+                      </td>
+                      <td class="admin-table__status">
+                        <i
+                          class="admin-status-dot"
+                          :data-status="activityStatus(row)"
+                          :title="activityStatusLabel(row)"
+                          :aria-label="activityStatusLabel(row)"
+                        ></i>
+                      </td>
+                      <td class="admin-table__actions" @click.stop>
+                        <div class="admin-row-menu" :class="{ 'is-open': rowMenuId === row.id }">
+                          <button
+                            type="button"
+                            class="admin-row-menu__btn"
+                            :aria-label="t('admin.row_actions')"
+                            :aria-expanded="rowMenuId === row.id ? 'true' : 'false'"
+                            @click="toggleRowMenu(row.id)"
+                          >
+                            <span aria-hidden="true">⋮</span>
+                          </button>
+                          <div v-if="rowMenuId === row.id" class="admin-row-menu__panel" role="menu">
+                            <button type="button" role="menuitem" @click="askResetPassword(row)">
+                              {{ t('admin.action_reset_password') }}
+                            </button>
+                            <a role="menuitem" :href="`mailto:${row.email}`" @click="rowMenuId = null">
+                              {{ t('admin.action_send_email') }}
+                            </a>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              class="is-danger"
+                              :disabled="Number(row.id) === ownerId || row.subscription_status === 'canceled'"
+                              @click="askDeactivate(row)"
+                            >
+                              {{ t('admin.action_deactivate') }}
+                            </button>
+                            <button type="button" role="menuitem" @click="viewAsLearner">
+                              {{ t('admin.action_view_as_learner') }}
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           <div v-if="usersTotal > 0" class="admin-pagination">
@@ -473,7 +570,12 @@
 
               <section class="admin-drawer-section">
                 <div class="admin-statstrip">
-                  <div v-for="stat in detailStats" :key="stat.key" class="admin-statstrip__item">
+                  <div
+                    v-for="stat in detailStats"
+                    :key="stat.key"
+                    class="admin-statstrip__item"
+                    :class="{ 'is-empty': stat.empty }"
+                  >
                     <strong>{{ stat.value }}</strong>
                     <span>{{ stat.label }}</span>
                   </div>
@@ -697,6 +799,75 @@
       </div>
     </div>
 
+    <!-- Floating bulk actions (fixed; kept in console for theme tokens) -->
+    <Transition name="admin-bulkbar">
+      <div
+        v-if="selectedIds.length"
+        class="admin-bulkbar-float"
+        role="toolbar"
+        :aria-label="t('admin.bulk_selected', { n: selectedIds.length })"
+      >
+        <div class="admin-bulkbar-float__inner">
+          <span class="admin-bulkbar-float__count">
+            {{ t('admin.bulk_selected', { n: selectedIds.length }) }}
+          </span>
+          <div class="admin-bulkbar-float__actions">
+            <button
+              type="button"
+              class="admin-btn admin-btn--sm admin-bulkbar-float__btn"
+              :disabled="bulkBusy"
+              @click="bulkSendEmail"
+            >
+              {{ t('admin.bulk_message_selected') }}
+            </button>
+            <div class="admin-bulkbar-float__sub">
+              <select
+                v-model="bulkStatus"
+                class="admin-toolbar__select admin-bulkbar-float__select"
+                :aria-label="t('admin.bulk_change_subscription')"
+              >
+                <option v-for="status in subscriptionOptions" :key="status" :value="status">
+                  {{ subscriptionLabel(status) }}
+                </option>
+              </select>
+              <button
+                type="button"
+                class="admin-btn admin-btn--sm admin-bulkbar-float__btn"
+                :disabled="bulkBusy"
+                @click="runBulkStatus"
+              >
+                {{ t('admin.bulk_change_subscription') }}
+              </button>
+            </div>
+            <button
+              type="button"
+              class="admin-btn admin-btn--danger admin-btn--sm admin-bulkbar-float__btn"
+              :disabled="bulkBusy"
+              @click="bulkDeactivate"
+            >
+              {{ t('admin.bulk_deactivate_short') }}
+            </button>
+            <button
+              type="button"
+              class="admin-btn admin-btn--sm admin-bulkbar-float__btn"
+              :disabled="bulkBusy"
+              @click="exportSelectedCsv"
+            >
+              {{ t('admin.bulk_export_selected') }}
+            </button>
+          </div>
+          <button
+            type="button"
+            class="admin-bulkbar-float__close"
+            :aria-label="t('admin.bulk_dismiss')"
+            @click="selectedIds = []"
+          >
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Toast -->
     <div v-if="toastMessage" class="admin-toast" role="status" aria-live="polite">
       {{ toastMessage }}
@@ -758,6 +929,7 @@ export default {
       detailRequestId: 0,
       detailCache: {},
       expandedSurah: null,
+      expandedCardIds: {},
       editForm: emptyEdit(),
       editFormBaseline: emptyEdit(),
       formSaving: false,
@@ -874,13 +1046,14 @@ export default {
       const aiChecks = Number(listRow?.ai_checks ?? stats.ai_checks ?? user.ai_checks ?? 0)
       const accuracy = listRow?.avg_ai_accuracy ?? stats.avg_ai_accuracy ?? user.avg_ai_accuracy ?? null
       return [
-        { key: 's', value: sessions, label: this.t('admin.col_sessions') },
-        { key: 'm', value: memorised, label: this.t('admin.col_memorised') },
-        { key: 'ai', value: aiChecks, label: this.t('admin.chart_ai') },
+        { key: 's', value: this.sessionsLabel(sessions), label: this.t('admin.col_sessions'), empty: sessions <= 0 },
+        { key: 'm', value: this.memorisedLabel(memorised), label: this.t('admin.col_memorised'), empty: memorised <= 0 },
+        { key: 'ai', value: aiChecks > 0 ? aiChecks : this.t('admin.empty_ai_checks'), label: this.t('admin.chart_ai'), empty: aiChecks <= 0 },
         {
           key: 'acc',
-          value: accuracy != null ? this.t('admin.accuracy', { n: Number(accuracy) }) : '—',
+          value: accuracy != null ? this.t('admin.accuracy', { n: Number(accuracy) }) : this.t('admin.empty_accuracy'),
           label: this.t('admin.col_accuracy'),
+          empty: accuracy == null,
         },
       ]
     },
@@ -1115,6 +1288,16 @@ export default {
     toggleSurahExpand(surahNumber) {
       const num = Number(surahNumber)
       this.expandedSurah = this.expandedSurah === num ? null : num
+    },
+    isCardExpanded(id) {
+      return !!this.expandedCardIds[String(id)]
+    },
+    toggleCardExpand(id) {
+      const key = String(id)
+      const next = { ...this.expandedCardIds }
+      if (next[key]) delete next[key]
+      else next[key] = true
+      this.expandedCardIds = next
     },
     memorisationHref({ surah, from, to, aiCheck = false, resume = false, sessionId = null } = {}) {
       const params = new URLSearchParams()
@@ -1784,6 +1967,36 @@ export default {
       if (days === 1) return this.t('admin.yesterday')
       if (days < 8) return this.t('admin.days_ago', { n: days })
       return date.toLocaleDateString([], { day: 'numeric', month: 'short' })
+    },
+    memorisedLabel(value) {
+      const n = Number(value || 0)
+      return n > 0 ? String(n) : this.t('admin.empty_memorised')
+    },
+    sessionsLabel(value) {
+      const n = Number(value || 0)
+      return n > 0 ? String(n) : this.t('admin.empty_sessions')
+    },
+    learningLabel(value) {
+      const n = Number(value || 0)
+      return n > 0 ? String(n) : this.t('admin.empty_learning')
+    },
+    lastActiveLabel(value) {
+      if (!value) return this.t('admin.empty_last_active')
+      return this.formatRelative(value) || this.t('admin.empty_last_active')
+    },
+    sessionsPill(row) {
+      const n = Number(row?.sessions_completed || 0)
+      if (n <= 0) return this.t('admin.empty_sessions')
+      return this.t('admin.card_sessions', { n })
+    },
+    memorisedPill(row) {
+      const n = Number(row?.memorised_ayahs || 0)
+      if (n <= 0) return this.t('admin.empty_memorised')
+      return this.t('admin.card_memorised', { n })
+    },
+    lastActivePill(row) {
+      if (!row?.last_activity_at) return this.t('admin.empty_last_active')
+      return this.t('admin.card_last_active', { n: this.lastActiveLabel(row.last_activity_at) })
     },
   },
 }

@@ -94,6 +94,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
     Route::post('/memorisation/transcription-token', function () {
         $apiKey = trim((string) config('services.speechmatics.api_key', ''));

@@ -28,6 +28,7 @@ class User extends Authenticatable
         'google_id',
         'avatar',
         'password',
+        'password_set_at',
         'stripe_customer_id',
         'stripe_subscription_id',
         'subscription_tier',
@@ -58,9 +59,20 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'password_set_at' => 'datetime',
             'subscription_trial_ends_at' => 'datetime',
             'subscription_current_period_ends_at' => 'datetime',
         ];
+    }
+
+    public function hasSetPassword(): bool
+    {
+        return $this->password_set_at !== null;
+    }
+
+    public function connectedWithGoogle(): bool
+    {
+        return filled($this->google_id);
     }
 
     public function memorisationSyncState(): HasOne

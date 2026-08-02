@@ -128,7 +128,9 @@ class GoogleAuthControllerTest extends TestCase
         $this->assertNotNull($user);
         $this->assertSame('google-789', $user->google_id);
         $this->assertSame('https://example.com/new-user.png', $user->avatar);
-        $this->assertNotEmpty($user->password);
+        $this->assertNull($user->getAttributes()['password'] ?? null);
+        $this->assertNull($user->password_set_at);
+        $this->assertFalse($user->hasSetPassword());
         $this->assertAuthenticatedAs($user);
         $this->assertSame(1, User::count());
     }
