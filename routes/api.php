@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Learning\RecommendationController;
 use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
 use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
+use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/stripe/webhook', [BillingController::class, 'webhook'])->name('stripe.webhook');
@@ -83,8 +84,30 @@ Route::middleware('auth:sanctum')->group(function () {
     // AI Memorisation Detection — assessment, personalised plan, practice execution.
     Route::post('/memorisation/assessments', [MemorisationDetectionController::class, 'storeAssessment'])
         ->name('api.memorisation.assessments.store');
+    Route::post('/memorisation/assessments/failed', [MemorisationDetectionController::class, 'storeFailedAssessment'])
+        ->name('api.memorisation.assessments.failed');
+    Route::get('/memorisation/assessments', [MemorisationHistoryController::class, 'attemptIndex'])
+        ->name('api.memorisation.assessments.index');
+    Route::get('/memorisation/assessments/{assessment}', [MemorisationHistoryController::class, 'attemptShow'])
+        ->name('api.memorisation.assessments.show');
+    Route::get('/memorisation/sessions/history', [MemorisationHistoryController::class, 'sessionIndex'])
+        ->name('api.memorisation.sessions.history');
+    Route::get('/memorisation/weak-spots', [MemorisationHistoryController::class, 'weakSpots'])
+        ->name('api.memorisation.weak-spots');
+    Route::get('/memorisation/practice-plans', [MemorisationHistoryController::class, 'recommendations'])
+        ->name('api.memorisation.practice-plans.index');
+    Route::get('/memorisation/comparisons/lookup', [MemorisationHistoryController::class, 'comparisonLookup'])
+        ->name('api.memorisation.comparisons.lookup');
+    Route::get('/memorisation/comparisons/{comparison}', [MemorisationHistoryController::class, 'comparisonShow'])
+        ->name('api.memorisation.comparisons.show');
+    Route::get('/memorisation/history/dashboard', [MemorisationHistoryController::class, 'dashboard'])
+        ->name('api.memorisation.history.dashboard');
     Route::patch('/memorisation/practice-plans/{practicePlan}', [MemorisationDetectionController::class, 'adjustPlan'])
         ->name('api.memorisation.practice-plans.adjust');
+    Route::post('/memorisation/practice-plans/{practicePlan}/accept', [MemorisationDetectionController::class, 'acceptPlan'])
+        ->name('api.memorisation.practice-plans.accept');
+    Route::post('/memorisation/practice-plans/{practicePlan}/dismiss', [MemorisationDetectionController::class, 'dismissPlan'])
+        ->name('api.memorisation.practice-plans.dismiss');
     Route::post('/memorisation/practice-plans/{practicePlan}/start', [MemorisationDetectionController::class, 'startPlan'])
         ->name('api.memorisation.practice-plans.start');
     Route::post('/memorisation/practice-plans/{practicePlan}/complete', [MemorisationDetectionController::class, 'completePlan'])

@@ -106,9 +106,11 @@ class PracticePlanExecutionService
         $plan->update([
             'status' => MemorisationPracticePlan::STATUS_ACTIVE,
             'started_at' => now(),
+            'accepted_at' => $plan->accepted_at ?? now(),
+            'dismissed_at' => null,
         ]);
 
-        $technique = (string) ($config['technique'] ?? 'talqin');
+        $technique = (string) ($config['technique'] ?? $plan->recommended_technique ?? 'talqin');
         $session = [
             'chapterId' => (int) $plan->surah_number,
             'rangeStart' => (int) $plan->start_ayah,
@@ -117,8 +119,8 @@ class PracticePlanExecutionService
             'techniqueId' => $technique === 'chunking' ? 'focus' : $technique,
             'settings' => [
                 'technique' => $technique === 'chunking' ? 'focus' : $technique,
-                'playback_speed' => (float) ($config['playback_speed'] ?? 1),
-                'repetitions' => (int) (($plan->repetitions['target'] ?? $config['repetitions'] ?? 3)),
+                'playback_speed' => (float) ($config['playback_speed'] ?? $plan->recommended_playback_speed ?? 1),
+                'repetitions' => (int) (($plan->repetitions['target'] ?? $plan->recommended_repetitions ?? $config['repetitions'] ?? 3)),
                 'talqin_enabled' => (bool) ($config['talqin_enabled'] ?? false),
                 'blur_enabled' => (bool) ($config['blur_enabled'] ?? false),
                 'focus_enabled' => (bool) ($config['focus_enabled'] ?? false) || $technique === 'chunking',
@@ -133,12 +135,13 @@ class PracticePlanExecutionService
                 'chunks' => $config['chunks'] ?? [],
                 'practice_plan_id' => $plan->id,
                 'assessment_id' => $plan->assessment_id,
+                'practice_scope' => $plan->practice_scope,
                 'source' => 'memorisation_detection',
             ],
             'hud' => [
                 'title' => $plan->title,
                 'technique' => $technique,
-                'repetitions_target' => (int) ($plan->repetitions['target'] ?? 3),
+                'repetitions_target' => (int) ($plan->repetitions['target'] ?? $plan->recommended_repetitions ?? 3),
                 'weak_words' => $plan->weak_words ?? [],
                 'chunks' => $config['chunks'] ?? [],
                 'priority_ayahs' => $plan->priority_ayahs ?? [],
@@ -152,15 +155,48 @@ class PracticePlanExecutionService
     }
 
     /**
+     * @return array<string,mixed>
+     */
+    public function accept(User $user, MemorisationPracticePlan $plan): array
+    {
+        $this->assertOwned($user, $plan);
+        $plan->update([
+            'accepted_at' => $plan->accepted_at ?? now(),
+            'dismissed_at' => null,
+            'status' => $plan->status === MemorisationPracticePlan::STATUS_DISMISSED
+                ? MemorisationPracticePlan::STATUS_DRAFT
+                : $plan->status,
+        ]);
+
+        return $this->assessments->transformPlan($plan->fresh());
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function dismiss(User $user, MemorisationPracticePlan $plan): array
+    {
+        $this->assertOwned($user, $plan);
+        $plan->update([
+            'dismissed_at' => now(),
+            'status' => MemorisationPracticePlan::STATUS_DISMISSED,
+        ]);
+
+        return $this->assessments->transformPlan($plan->fresh());
+    }
+
+    /**
      * @param  array<string,mixed>  $completion
      * @return array<string,mixed>
      */
     public function complete(User $user, MemorisationPracticePlan $plan, array $completion = []): array
     {
         $this->assertOwned($user, $plan);
+        $outcome = (string) ($completion['outcome'] ?? $completion['completion_outcome'] ?? 'completed');
         $plan->update([
             'status' => MemorisationPracticePlan::STATUS_COMPLETED,
             'completed_at' => now(),
+            'completion_outcome' => mb_substr($outcome, 0, 32),
             'completion_data' => $completion,
         ]);
 
@@ -169,7 +205,7 @@ class PracticePlanExecutionService
 
     private function assertOwned(User $user, MemorisationPracticePlan $plan): void
     {
-        if ((int) $plan->user_id !== (int) $user->id) {
+        if ((int) $plan->user_id !== (int) $user->id && ! $user->isAdmin()) {
             abort(404);
         }
     }

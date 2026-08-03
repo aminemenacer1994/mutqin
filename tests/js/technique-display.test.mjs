@@ -36,10 +36,9 @@ const tAr = makeT(ar)
 
 {
   const focus = resolveTechniqueDisplay('focus', tEn)
-  assert.equal(focus.label, 'One ayah at a time (Focus)')
-  assert.match(focus.label, /\(Focus\)/)
-  assert.equal(getTechniqueLabel('talqin', tEn), 'Listen and repeat (Talqin)')
-  assert.equal(getTechniqueLabel('blur', tEn), 'Gradually hide the text (Blur)')
+  assert.equal(focus.label, 'One ayah at a time')
+  assert.equal(getTechniqueLabel('talqin', tEn), 'Listen and repeat')
+  assert.equal(getTechniqueLabel('blur', tEn), 'Gradually hide the text')
   assert.equal(getTechniqueDescription('talqin', tEn), 'Listen to each section, then repeat it')
   assert.equal(getTechniqueDescription('focus', tEn), 'Concentrate on one ayah before moving forward')
   assert.equal(getTechniqueDescription('blur', tEn), 'Hide more of the text gradually to strengthen recall')
@@ -48,7 +47,7 @@ const tAr = makeT(ar)
 {
   const chaining = resolveTechniqueDisplay('chaining', tEn)
   const anchor = resolveTechniqueDisplay('anchor', tEn)
-  assert.match(chaining.label, /\(Chaining\)/)
+  assert.equal(chaining.label, 'Join ayahs together')
   assert.equal(
     chaining.description,
     'Link each ayah to the next and practise the range as one continuous sequence.'
@@ -61,9 +60,9 @@ const tAr = makeT(ar)
     en.memorisation.techniques.chainingOffSub,
     chaining.description
   )
-  assert.match(anchor.label, /\(Anchor\)/)
-  assert.match(getTechniqueLabel('linking', tEn), /\(Linking\)/)
-  assert.match(getTechniqueLabel('cumulative', tEn), /\(Cumulative\)/)
+  assert.equal(anchor.label, 'Highlight memory words')
+  assert.equal(getTechniqueLabel('linking', tEn), 'Practice ayah pairs')
+  assert.equal(getTechniqueLabel('cumulative', tEn), 'Grow the passage step by step')
 }
 
 {
@@ -71,8 +70,7 @@ const tAr = makeT(ar)
     const short = getTechniqueShortLabel(id, tEn)
     const full = getTechniqueLabel(id, tEn)
     assert.equal(short, full)
-    assert.match(full, /\(/)
-    assert.match(full, /\)/)
+    assert.ok(!/\(Focus\)|\(Blur\)|\(Talqin\)/.test(full), `plain label expected for ${id}`)
   }
 }
 
@@ -83,9 +81,9 @@ const tAr = makeT(ar)
 }
 
 {
-  assert.equal(getTechniqueLabel('talqin', tAr), 'استمع وكرّر (تلقين)')
-  assert.equal(getTechniqueLabel('focus', tAr), 'آية واحدة في كل مرة (تركيز)')
-  assert.equal(getTechniqueLabel('blur', tAr), 'أخفِ النص تدريجياً (تمويه)')
+  assert.match(getTechniqueLabel('talqin', tAr), /استمع/)
+  assert.match(getTechniqueLabel('focus', tAr), /آية/)
+  assert.match(getTechniqueLabel('blur', tAr), /أخف/)
 }
 
 {

@@ -32,6 +32,15 @@
       </div>
     </div>
 
+    <div
+      v-if="practiceSetupStatusMessage"
+      class="practice-setup-status-toast"
+      role="status"
+      aria-live="polite"
+    >
+      {{ practiceSetupStatusMessage }}
+    </div>
+
     <aside
       v-if="aiTestModalsEnabled && amdPracticeHudVisible && amdPracticeHud"
       class="amd-practice-hud"
@@ -144,6 +153,7 @@
         <section
           v-show="(hasVerses || showSessionOverviewIdleActions || isPostSessionChoiceVisible) && !isWelcomeBackWorkspaceHidden && !isOnboardingExperienceActive"
           class="workspace-shell"
+          data-session-scroll-target
           :class="{ collapsed: mainCardCollapsed, 'workspace-shell--post-session-choice': isPostSessionChoiceVisible }"
           :data-reading-mode="readingViewMode"
           :aria-label="t('memorisation.a11y.sessionOverview')"
@@ -3161,42 +3171,110 @@
 
               <section
                 v-if="postSessionAiReviewDetails || postSessionAiResultLine"
-                class="post-session-simple__ai-review"
+                class="post-session-simple__ai-review post-session-simple__ai-review--guided"
                 :class="{
                   'post-session-simple__ai-review--zero-match': postSessionAiPresentationMode === 'valid_zero_match',
                   'post-session-simple__ai-review--insufficient': postSessionAiPresentationMode === 'insufficient_audio',
-                  'post-session-simple__ai-review--compact': true,
                 }"
                 :data-presentation="postSessionAiPresentationMode"
+                :data-outcome="postSessionAiReviewDetails?.outcome || 'mixed'"
                 :aria-label="t('memorisation.a11y.aiMemorisationResult')"
               >
-                <!-- ResultSummary -->
-                <div class="post-session-simple__ai-review-head">
-                  <span
-                    class="memory-check-band-pill"
-                    :data-band="postSessionAiPresentationMode === 'valid_zero_match'
-                      ? 'soft-warn'
-                      : (postSessionAiPresentationMode === 'insufficient_audio'
-                        ? 'insufficient'
-                        : (postSessionAiReviewDetails?.outcome || 'mixed'))"
-                  >
-                    {{ postSessionAiReviewDetails?.outcomeLabel || t('memorisation.postSession.recommendation.aiOutcomeMixed') }}
-                  </span>
-                  <p class="post-session-simple__ai-review-summary">
+                <!-- 1. Outcome summary -->
+                <div class="post-session-simple__outcome" data-testid="post-session-outcome">
+                  <div class="post-session-simple__outcome-top">
+                    <span class="post-session-simple__generated-badge">
+                      {{ t('memorisation.postSession.recommendation.softwareGenerated') || 'Software-generated recommendation' }}
+                    </span>
+                  </div>
+                  <h3 class="post-session-simple__outcome-title">
+                    {{ postSessionOutcomeHeadline }}
+                  </h3>
+                  <p class="post-session-simple__outcome-summary post-session-simple__ai-review-summary">
                     {{ postSessionAiReviewDetails?.summaryLine || postSessionAiResultLine }}
                   </p>
                 </div>
 
-                <!-- RecommendedAction + FocusPhrase (before technical details) -->
+                <!-- 2. Main focus (Quran text prominent) -->
                 <div
-                  v-if="postSessionInlineRecommendationRows.length"
+                  v-if="postSessionFocusHighlightParts.length"
+                  class="post-session-simple__focus-block"
+                  data-testid="post-session-main-focus"
+                >
+                  <p class="post-session-simple__section-kicker">
+                    {{ t('memorisation.postSession.recommendation.mainFocus') || 'Main focus' }}
+                  </p>
+                  <p
+                    v-if="postSessionFocusHighlightMeta"
+                    class="post-session-simple__focus-meta"
+                  >{{ postSessionFocusHighlightMeta }}</p>
+                  <button
+                    type="button"
+                    class="post-session-simple__quran-focus"
+                    :aria-label="t('memorisation.postSession.recommendation.playFocusPhrase') || 'Play focus phrase'"
+                    :disabled="postSessionActionsBusy"
+                    @click="onPostSessionFocusPhraseActivate(postSessionFocusActivatePayload)"
+                  >
+                    <span
+                      class="post-session-simple__quran-focus-text"
+                      dir="rtl"
+                      lang="ar"
+                    >
+                      <span
+                        v-for="(part, idx) in postSessionFocusHighlightParts"
+                        :key="`focus-part-${idx}`"
+                        class="post-session-simple__quran-token"
+                        :class="{ 'is-weak': part.weak }"
+                      >
+                        <span class="post-session-simple__quran-token-text">{{ part.text }}</span>
+                        <i
+                          v-if="part.weak"
+                          class="bi bi-exclamation-circle post-session-simple__weak-icon"
+                          :aria-label="t('memorisation.postSession.recommendation.weakWordMark') || 'Needs practice'"
+                        ></i>
+                      </span>
+                    </span>
+                    <i class="bi bi-play-circle post-session-simple__focus-phrase-icon" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <!-- 3. Why this was recommended -->
+                <div
+                  v-if="postSessionRecommendationReasonLine"
+                  class="post-session-simple__why-block"
+                  data-testid="post-session-why"
+                >
+                  <p class="post-session-simple__section-kicker">
+                    {{ t('memorisation.postSession.recommendation.whyRecommended') || 'Why this was recommended' }}
+                  </p>
+                  <p class="post-session-simple__why-copy">{{ postSessionRecommendationReasonLine }}</p>
+                </div>
+
+                <!-- Inline method / next when focus block already shows the phrase -->
+                <div
+                  v-if="postSessionGuidedMethodRows.length"
                   class="post-session-simple__ai-recommendation"
                   :aria-label="t('memorisation.a11y.recommendedNextStep')"
                 >
-                  <p
-                    v-if="postSessionRecommendationReasonLine"
-                    class="post-session-simple__ai-recommendation-lead"
-                  >{{ postSessionRecommendationReasonLine }}</p>
+                  <dl class="post-session-simple__evidence post-session-simple__evidence--inline">
+                    <div
+                      v-for="row in postSessionGuidedMethodRows"
+                      :key="`guided-${row.key}`"
+                      class="post-session-simple__evidence-row"
+                      :data-key="row.key"
+                    >
+                      <dt>{{ row.label }}</dt>
+                      <dd>{{ row.value }}</dd>
+                    </div>
+                  </dl>
+                </div>
+
+                <!-- Fallback: previous inline rows when no highlight parts -->
+                <div
+                  v-else-if="postSessionInlineRecommendationRows.length"
+                  class="post-session-simple__ai-recommendation"
+                  :aria-label="t('memorisation.a11y.recommendedNextStep')"
+                >
                   <dl class="post-session-simple__evidence post-session-simple__evidence--inline">
                     <div
                       v-for="row in postSessionInlineRecommendationRows"
@@ -3226,7 +3304,7 @@
                   </dl>
                 </div>
 
-                <!-- DetailsDisclosure: technical metrics collapsed by default -->
+                <!-- 6. Expandable details -->
                 <div v-if="postSessionShowAiDetailsToggle" class="post-session-simple__ai-details">
                   <button
                     type="button"
@@ -3241,6 +3319,7 @@
                   <div
                     v-if="postSessionAiDetailsExpanded"
                     class="post-session-simple__ai-details-body"
+                    data-testid="post-session-details"
                   >
                     <div
                       v-if="postSessionAiColourSegments.length"
@@ -3278,8 +3357,44 @@
                         <strong>{{ metric.value }}</strong>
                       </li>
                     </ul>
+                    <p
+                      v-if="postSessionPreviousAttemptNote"
+                      class="post-session-simple__previous-note"
+                      data-testid="post-session-previous-attempt"
+                    >{{ postSessionPreviousAttemptNote }}</p>
+                    <div
+                      v-if="postSessionRevisionComparison?.available"
+                      class="post-session-simple__attempt-compare"
+                      data-testid="post-session-attempt-compare"
+                    >
+                      <p class="post-session-simple__section-kicker">
+                        {{ t('memorisation.postSession.recommendation.attemptCompareTitle') || 'Compared with earlier attempt' }}
+                      </p>
+                      <p class="post-session-simple__why-copy">{{ postSessionRevisionComparison.summary }}</p>
+                      <ul
+                        v-if="postSessionRevisionComparison.improved.length || postSessionRevisionComparison.continuedWeak.length"
+                        class="post-session-simple__compare-list"
+                      >
+                        <li v-if="postSessionRevisionComparison.improved.length">
+                          {{ t('memorisation.postSession.recommendation.attemptImproved', {
+                            count: postSessionRevisionComparison.improved.length,
+                          }) || `${postSessionRevisionComparison.improved.length} improved` }}
+                        </li>
+                        <li v-if="postSessionRevisionComparison.continuedWeak.length">
+                          {{ t('memorisation.postSession.recommendation.attemptContinued', {
+                            count: postSessionRevisionComparison.continuedWeak.length,
+                          }) || `${postSessionRevisionComparison.continuedWeak.length} still need practice` }}
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
+
+                <p class="post-session-simple__soft-disclaimer">
+                  {{ t('memorisation.postSession.recommendation.teacherComplement')
+                    || 'A practice aid to complement a teacher — not a substitute for one.' }}
+                  <span class="post-session-simple__beta-tag">{{ t('memorisation.amd.betaBadge') || 'Beta' }}</span>
+                </p>
               </section>
 
               <section
@@ -3288,22 +3403,29 @@
                 :class="{
                   'is-loading': postSessionRecommendationStatus === 'loading',
                   'is-empty': postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable,
-                  'ps-rec-card--slim': postSessionInlineRecommendationRows.length > 0,
+                  'ps-rec-card--slim': postSessionInlineRecommendationRows.length > 0 || postSessionFocusHighlightParts.length > 0,
                 }"
                 :data-plan="postSessionPlanKind"
                 :aria-busy="postSessionRecommendationStatus === 'loading' ? 'true' : 'false'"
                 :aria-label="postSessionSimpleActionLabel"
+                data-testid="post-session-practice-method"
               >
                 <div v-if="postSessionRecommendationStatus === 'loading'" class="post-session-simple__skeleton" aria-hidden="true">
                   <span></span><span></span><span></span>
                 </div>
                 <template v-else-if="postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable">
+                  <p class="post-session-simple__section-kicker">
+                    {{ t('memorisation.postSession.recommendation.recommendedPlan') || 'Recommended plan' }}
+                  </p>
                   <p class="post-session-simple__reason">
                     {{ postSessionSimpleReason || t('memorisation.postSession.recommendation.reasons.manualFallback') }}
                   </p>
                 </template>
                 <template v-else>
                   <div class="post-session-simple__panel-head">
+                    <p class="post-session-simple__section-kicker">
+                      {{ t('memorisation.postSession.recommendation.practiceMethod') || 'Recommended practice method' }}
+                    </p>
                     <p class="post-session-simple__action-label" id="postSessionRecTitle">{{ postSessionSimpleActionLabel }}</p>
                     <p class="post-session-simple__range">{{ postSessionRecommendationCardTitle }}</p>
                     <p
@@ -3312,11 +3434,11 @@
                     >{{ postSessionPlanEncouragement }}</p>
                   </div>
                   <p
-                    v-if="postSessionRecommendationReasonLine && !postSessionInlineRecommendationRows.length"
+                    v-if="postSessionRecommendationReasonLine && !postSessionInlineRecommendationRows.length && !postSessionFocusHighlightParts.length"
                     class="post-session-simple__reason post-session-simple__reason--compact"
                   >{{ postSessionRecommendationReasonLine }}</p>
                   <dl
-                    v-if="postSessionEvidenceRows.length && !postSessionInlineRecommendationRows.length"
+                    v-if="postSessionEvidenceRows.length && !postSessionInlineRecommendationRows.length && !postSessionFocusHighlightParts.length"
                     class="post-session-simple__evidence"
                   >
                     <div
@@ -3345,9 +3467,50 @@
                       <dd v-else>{{ row.value }}</dd>
                     </div>
                   </dl>
-                  <!-- Settings pills when evidence is in the AI card (slim) or unavailable here -->
                   <div
-                    v-if="postSessionStaticPills.length && (!postSessionEvidenceRows.length || postSessionInlineRecommendationRows.length)"
+                    v-if="postSessionShowRevisionScopePicker"
+                    class="post-session-simple__scope-picker"
+                    data-testid="post-session-scope-picker"
+                    role="radiogroup"
+                    :aria-label="t('memorisation.postSession.recommendation.scopePickerLabel') || 'Choose how to revise'"
+                  >
+                    <p class="post-session-simple__section-kicker">
+                      {{ t('memorisation.postSession.recommendation.revisionOptions') || 'Revision options' }}
+                    </p>
+                    <p class="post-session-simple__scope-reason">
+                      {{ postSessionScopeRecommendReason }}
+                    </p>
+                    <div class="post-session-simple__scope-cards">
+                      <button
+                        v-for="option in postSessionRevisionScopeOptions"
+                        :key="option.id"
+                        type="button"
+                        class="post-session-simple__scope-card"
+                        role="radio"
+                        :aria-checked="postSessionSelectedPracticeScope === option.id ? 'true' : 'false'"
+                        :class="{
+                          'is-selected': postSessionSelectedPracticeScope === option.id,
+                          'is-recommended': option.recommended,
+                        }"
+                        :disabled="postSessionActionsBusy"
+                        :data-scope="option.id"
+                        @click="selectPostSessionPracticeScope(option.id)"
+                      >
+                        <span class="post-session-simple__scope-card-top">
+                          <span class="post-session-simple__scope-card-label">{{ option.label }}</span>
+                          <span
+                            v-if="option.recommended"
+                            class="post-session-simple__scope-recommended"
+                          >{{ t('memorisation.postSession.recommendation.recommendedTag') || 'Recommended' }}</span>
+                        </span>
+                        <span class="post-session-simple__scope-card-desc">{{ option.description }}</span>
+                        <span class="post-session-simple__scope-card-benefit">{{ option.benefit }}</span>
+                        <span v-if="option.meta" class="post-session-simple__scope-card-meta">{{ option.meta }}</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    v-if="postSessionStaticPills.length || postSessionPracticeScopeLabel"
                     class="post-session-simple__combo"
                   >
                     <p class="post-session-simple__combo-label">
@@ -3358,7 +3521,13 @@
                         v-for="pill in postSessionStaticPills"
                         :key="pill.key"
                         class="post-session-simple__pill"
+                        :data-pill="pill.key"
                       >{{ pill.label }}</span>
+                      <span
+                        v-if="postSessionPracticeScopeLabel && !postSessionShowRevisionScopePicker"
+                        class="post-session-simple__pill post-session-simple__pill--scope"
+                        data-pill="scope"
+                      >{{ postSessionPracticeScopeLabel }}</span>
                     </div>
                   </div>
                   <button
@@ -3791,6 +3960,20 @@
       :peek-hint-short="amdLabels.peekHintShort"
       :words-shown-short="amdLabels.wordsShownShort"
       :text-size-short="amdLabels.textSizeShort"
+      :mistake-sound-enabled="amdMistakeSoundEnabled"
+      :mistake-sound-label="amdLabels.mistakeSound"
+      :mistake-sound-on-label="amdLabels.mistakeSoundOn"
+      :mistake-sound-off-label="amdLabels.mistakeSoundOff"
+      :mistake-sound-hint="amdLabels.mistakeSoundHint"
+      :mistake-sound-short="amdLabels.mistakeSound"
+      :mistake-visual-active="amdMistakeVisualActive"
+      :mistake-visual-label="amdLabels.mistakeVisualLabel"
+      :auto-follow-label="amdLabels.autoFollow"
+      :auto-follow-on-label="amdLabels.autoFollowOn"
+      :auto-follow-off-label="amdLabels.autoFollowOff"
+      :auto-follow-paused-label="amdLabels.autoFollowPaused"
+      :auto-follow-resume-label="amdLabels.autoFollowResume"
+      :auto-follow-hint="amdLabels.autoFollowHint"
       :complete-title="amdLabels.completeTitle"
       :complete-body="amdLabels.completeBody"
       :session-ended-label="amdLabels.sessionEnded"
@@ -3811,6 +3994,7 @@
       @done="doneAmdTest"
       @retry="retryAmdAssessment"
       @enable-mic="startAmdAssessment"
+      @toggle-mistake-sound="toggleAmdMistakeSound"
     />
 
   <div

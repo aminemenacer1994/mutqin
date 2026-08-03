@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\UserSessionStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UserSession extends Model
 {
@@ -66,6 +67,11 @@ class UserSession extends Model
     public function recommendation(): BelongsTo
     {
         return $this->belongsTo(SessionRecommendation::class, 'recommendation_id');
+    }
+
+    public function assessments(): HasMany
+    {
+        return $this->hasMany(MemorisationAssessment::class, 'user_session_id');
     }
 
     public function isUnfinished(): bool

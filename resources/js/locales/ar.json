@@ -1166,6 +1166,48 @@
       "advanced": "أدوات متقدمة",
       "advancedDesc": "تقنيات لربط الآيات وتذكر الكلمات المفتاحية."
     },
+    "activePracticeSetup": {
+      "title": "إعداد التمرين النشط",
+      "openTools": "أدوات التمرين",
+      "showLess": "عرض أقل",
+      "moreCount": "+{count} المزيد",
+      "emptyOptional": "لم تُختر أدوات اختيارية — الاستماع والتكرار فقط.",
+      "recommendedLabel": "موصى به لهذه الجلسة",
+      "recommendedReasonDefault": "موصى به لأنه يساعد المواضع التي تحتاج عناية.",
+      "recommendedReasonWeak": "موصى به لأن هذه الكلمات احتاجت مزيدًا من العناية في فحوصات حديثة.",
+      "repetitions": "التكرارات",
+      "repetitionsValue": "{count} تكرارات",
+      "playbackSpeed": "سرعة التشغيل",
+      "visibility": "ظهور النص",
+      "weakFocus": "التركيز على المواضع الضعيفة",
+      "weakFocusShort": "مواضع ضعيفة",
+      "fullRange": "مراجعة النطاق كاملًا",
+      "fullRangeShort": "النطاق كاملًا",
+      "mistakeHandling": "معالجة الأخطاء",
+      "mistakePause": "إيقاف مؤقت عند الخطأ",
+      "mistakePauseShort": "إيقاف",
+      "mistakeContinue": "المتابعة ثم المراجعة",
+      "mistakeContinueShort": "متابعة",
+      "autoFollow": "المتابعة التلقائية",
+      "mistakeSound": "صوت الخطأ",
+      "pausedShort": "متوقف",
+      "states": {
+        "available": "متاح",
+        "selected": "محدد",
+        "active_now": "نشط الآن",
+        "paused": "متوقف",
+        "completed": "مكتمل",
+        "recommended": "موصى به"
+      },
+      "confirm": {
+        "title": "ستستخدم جلستك",
+        "primary": "ابدأ بهذه الإعدادات",
+        "secondary": "تعديل الأدوات"
+      },
+      "toasts": {
+        "restored": "تمت استعادة إعداد التمرين السابق."
+      }
+    },
     "saved_sessions_intro": "رحلات حفظك المحفوظة — تابع ختمًا مكتملًا أو نطاقًا قيد التقدم.",
     "completed_sessions": "الجلسات المكتملة",
     "completed_sessions_desc": "جلسات وصلت فيها إلى نهاية نطاق الآيات. راجعها للمراجعة وتقوية الحفظ.",

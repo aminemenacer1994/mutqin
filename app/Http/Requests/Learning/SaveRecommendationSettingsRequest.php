@@ -77,6 +77,84 @@ class SaveRecommendationSettingsRequest extends FormRequest
             }
         }
 
+        $scopeRaw = strtolower(trim((string) ($settings['practice_scope'] ?? $settings['scope'] ?? '')));
+        if (in_array($scopeRaw, ['weak_areas', 'weak', 'weak_words', 'weak_only'], true)) {
+            $clean['practice_scope'] = 'weak_areas';
+            $clean['practice_weak_words_only'] = true;
+            $clean['weak_words_only'] = true;
+        } elseif (in_array($scopeRaw, ['full_range', 'full', 'full_session'], true)) {
+            $clean['practice_scope'] = 'full_range';
+            $clean['practice_weak_words_only'] = false;
+            $clean['weak_words_only'] = false;
+        } elseif (array_key_exists('practice_weak_words_only', $settings)) {
+            $weakOnly = filter_var($settings['practice_weak_words_only'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+                ?? (bool) $settings['practice_weak_words_only'];
+            $clean['practice_weak_words_only'] = $weakOnly;
+            $clean['weak_words_only'] = $weakOnly;
+            $clean['practice_scope'] = $weakOnly ? 'weak_areas' : 'full_range';
+        }
+        if (array_key_exists('emphasize_weak_areas', $settings)) {
+            $clean['emphasize_weak_areas'] = filter_var($settings['emphasize_weak_areas'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+                ?? (bool) $settings['emphasize_weak_areas'];
+        }
+        if (array_key_exists('source_attempt_id', $settings) && $settings['source_attempt_id'] !== null && $settings['source_attempt_id'] !== '') {
+            $clean['source_attempt_id'] = mb_substr((string) $settings['source_attempt_id'], 0, 64);
+        }
+        if (array_key_exists('focus_ayahs', $settings) && is_array($settings['focus_ayahs'])) {
+            $ayahIds = [];
+            foreach (array_slice(array_values($settings['focus_ayahs']), 0, 40) as $ayah) {
+                if (is_numeric($ayah) && (int) $ayah >= 1 && (int) $ayah <= 300) {
+                    $ayahIds[] = (int) $ayah;
+                }
+            }
+            if ($ayahIds !== []) {
+                $clean['focus_ayahs'] = array_values(array_unique($ayahIds));
+            }
+        }
+        if (array_key_exists('practice_focus_items', $settings) && is_array($settings['practice_focus_items'])) {
+            $items = [];
+            foreach (array_slice(array_values($settings['practice_focus_items']), 0, 16) as $item) {
+                if (! is_array($item)) {
+                    continue;
+                }
+                if (! isset($item['ayahNumber']) || ! is_numeric($item['ayahNumber']) || (int) $item['ayahNumber'] < 1) {
+                    continue;
+                }
+                $type = (string) ($item['type'] ?? 'phrase');
+                if (! in_array($type, ['word', 'phrase', 'ayah'], true)) {
+                    $type = 'phrase';
+                }
+                $entry = [
+                    'type' => $type,
+                    'ayahNumber' => (int) $item['ayahNumber'],
+                    'startWordIndex' => max(0, (int) ($item['startWordIndex'] ?? 0)),
+                    'endWordIndex' => max(0, (int) ($item['endWordIndex'] ?? 0)),
+                ];
+                if (isset($item['surahId']) && is_numeric($item['surahId'])) {
+                    $entry['surahId'] = (int) $item['surahId'];
+                }
+                if (! empty($item['verseKey'])) {
+                    $entry['verseKey'] = mb_substr((string) $item['verseKey'], 0, 32);
+                }
+                if (isset($item['weakWordIndexes']) && is_array($item['weakWordIndexes'])) {
+                    $entry['weakWordIndexes'] = array_values(array_filter(
+                        array_map(static fn ($n) => is_numeric($n) ? (int) $n : null, array_slice($item['weakWordIndexes'], 0, 40)),
+                        static fn ($n) => $n !== null && $n >= 0
+                    ));
+                }
+                if (isset($item['wordIds']) && is_array($item['wordIds'])) {
+                    $entry['wordIds'] = array_values(array_map(
+                        static fn ($id) => mb_substr((string) $id, 0, 40),
+                        array_slice($item['wordIds'], 0, 24)
+                    ));
+                }
+                $items[] = $entry;
+            }
+            if ($items !== []) {
+                $clean['practice_focus_items'] = $items;
+            }
+        }
+
         $weakSource = null;
         if (array_key_exists('practice_weak_words', $settings) && is_array($settings['practice_weak_words'])) {
             $weakSource = $settings['practice_weak_words'];
@@ -145,6 +223,20 @@ class SaveRecommendationSettingsRequest extends FormRequest
             'settings.chaining_repetitions' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:5'],
             'settings.anchor_count' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:4'],
             'settings.tip_technique' => ['sometimes', 'nullable', 'string', 'in:talqin,focus,blur,chaining,anchor'],
+            'settings.practice_scope' => ['sometimes', 'nullable', 'string', 'in:weak_areas,full_range'],
+            'settings.practice_weak_words_only' => ['sometimes', 'boolean'],
+            'settings.weak_words_only' => ['sometimes', 'boolean'],
+            'settings.emphasize_weak_areas' => ['sometimes', 'boolean'],
+            'settings.source_attempt_id' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'settings.focus_ayahs' => ['sometimes', 'array', 'max:40'],
+            'settings.focus_ayahs.*' => ['integer', 'min:1', 'max:300'],
+            'settings.practice_focus_items' => ['sometimes', 'array', 'max:16'],
+            'settings.practice_focus_items.*.type' => ['sometimes', 'string', 'in:word,phrase,ayah'],
+            'settings.practice_focus_items.*.ayahNumber' => ['sometimes', 'integer', 'min:1', 'max:300'],
+            'settings.practice_focus_items.*.surahId' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:114'],
+            'settings.practice_focus_items.*.verseKey' => ['sometimes', 'nullable', 'string', 'max:32'],
+            'settings.practice_focus_items.*.startWordIndex' => ['sometimes', 'integer', 'min:0', 'max:200'],
+            'settings.practice_focus_items.*.endWordIndex' => ['sometimes', 'integer', 'min:0', 'max:200'],
             'settings.practice_weak_words' => ['sometimes', 'array', 'max:12'],
             'settings.practice_weak_words.*.text' => ['sometimes', 'nullable', 'string', 'max:120'],
             'settings.practice_weak_words.*.wordIndex' => ['sometimes', 'integer', 'min:0', 'max:200'],

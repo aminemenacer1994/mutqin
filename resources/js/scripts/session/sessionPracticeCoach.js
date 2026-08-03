@@ -344,7 +344,10 @@ export function normaliseWeakWordRecords(raw = [], fallback = {}) {
     seen.add(key)
     const reasonRaw = String(item.reason || item.status || 'pronunciation').toLowerCase()
     let reason = 'pronunciation'
-    if (reasonRaw.includes('replay') || reasonRaw.includes('frequent')) reason = 'frequent_replay'
+    if (reasonRaw === 'anchor' || reasonRaw.includes('anchor')) reason = 'anchor'
+    else if (reasonRaw === 'weak_ayah' || reasonRaw.includes('weak_ayah') || reasonRaw.includes('weak ayah')) {
+      reason = 'weak_ayah'
+    } else if (reasonRaw.includes('replay') || reasonRaw.includes('frequent')) reason = 'frequent_replay'
     else if (reasonRaw.includes('hesitat') || reasonRaw.includes('partial') || reasonRaw.includes('amber')) {
       reason = 'hesitation'
     } else if (
@@ -369,7 +372,7 @@ export function normaliseWeakWordRecords(raw = [], fallback = {}) {
           : (item.ayahKey || null)
       ),
     })
-    if (out.length >= 12) break
+    if (out.length >= 48) break
   }
   return out
 }

@@ -4,9 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MemorisationPracticePlan extends Model
 {
+    use SoftDeletes;
+
     public const STATUS_DRAFT = 'draft';
 
     public const STATUS_ACTIVE = 'active';
@@ -15,15 +19,30 @@ class MemorisationPracticePlan extends Model
 
     public const STATUS_ABANDONED = 'abandoned';
 
+    public const STATUS_DISMISSED = 'dismissed';
+
+    public const SCOPE_WEAK_AREAS = 'weak_areas';
+
+    public const SCOPE_FULL_RANGE = 'full_range';
+
     protected $fillable = [
         'user_id',
         'assessment_id',
         'session_recommendation_id',
+        'follow_up_assessment_id',
         'title',
         'explanation',
         'band',
         'difficulty',
         'status',
+        'practice_scope',
+        'recommended_technique',
+        'recommended_repetitions',
+        'recommended_playback_speed',
+        'recommended_review_at',
+        'accepted_at',
+        'dismissed_at',
+        'completion_outcome',
         'surah_number',
         'start_ayah',
         'end_ayah',
@@ -46,6 +65,8 @@ class MemorisationPracticePlan extends Model
             'surah_number' => 'integer',
             'start_ayah' => 'integer',
             'end_ayah' => 'integer',
+            'recommended_repetitions' => 'integer',
+            'recommended_playback_speed' => 'float',
             'priority_ayahs' => 'array',
             'weak_words' => 'array',
             'weak_phrases' => 'array',
@@ -55,6 +76,9 @@ class MemorisationPracticePlan extends Model
             'user_adjustments' => 'array',
             'completion_data' => 'array',
             'retest_metrics' => 'array',
+            'recommended_review_at' => 'datetime',
+            'accepted_at' => 'datetime',
+            'dismissed_at' => 'datetime',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
@@ -70,8 +94,18 @@ class MemorisationPracticePlan extends Model
         return $this->belongsTo(MemorisationAssessment::class, 'assessment_id');
     }
 
+    public function followUpAssessment(): BelongsTo
+    {
+        return $this->belongsTo(MemorisationAssessment::class, 'follow_up_assessment_id');
+    }
+
     public function recommendation(): BelongsTo
     {
         return $this->belongsTo(SessionRecommendation::class, 'session_recommendation_id');
+    }
+
+    public function comparisons(): HasMany
+    {
+        return $this->hasMany(MemorisationAttemptComparison::class, 'practice_plan_id');
     }
 }

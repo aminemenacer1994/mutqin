@@ -327,16 +327,16 @@ const t = (key, params = {}) => {
 // Template order: ResultSummary → recommendation → details disclosure.
 {
   const vue = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
-  const aiReviewStart = vue.indexOf('class="post-session-simple__ai-review"')
+  const aiReviewStart = vue.indexOf('post-session-simple__ai-review')
   assert.ok(aiReviewStart > 0)
-  const slice = vue.slice(aiReviewStart, aiReviewStart + 4500)
+  const slice = vue.slice(aiReviewStart, aiReviewStart + 9000)
   const summaryIdx = slice.indexOf('post-session-simple__ai-review-summary')
   const recommendationIdx = slice.indexOf('post-session-simple__ai-recommendation')
   const detailsIdx = slice.indexOf('post-session-simple__ai-details')
   assert.ok(summaryIdx > 0)
   assert.ok(recommendationIdx > summaryIdx, 'recommendation appears after summary')
   assert.ok(detailsIdx > recommendationIdx, 'details disclosure appears after recommendation')
-  assert.match(slice, /postSessionInlineRecommendationRows/)
+  assert.match(slice, /postSessionInlineRecommendationRows|postSessionGuidedMethodRows/)
   assert.match(slice, /viewDetails/)
   // Colour meter / metrics only inside expanded details body.
   const meterIdx = slice.indexOf('post-session-simple__check-meter')

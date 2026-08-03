@@ -40,6 +40,41 @@ export {
 } from './testFlow'
 
 export {
+  AMD_MISTAKE_SOUND_PREF_KEY,
+  MISTAKE_HANDLING_MODES,
+  CONFIRMED_MISTAKE_STATUSES,
+  UNCERTAIN_STATUSES,
+  MISTAKE_CUE_MIN_CONFIDENCE,
+  MISTAKE_CUE_DEBOUNCE_MS,
+  MISTAKE_CUE_PEAK_GAIN,
+  MISTAKE_VISUAL_MS,
+  normaliseMistakeSoundEnabled,
+  readStoredMistakeSoundEnabled,
+  storeMistakeSoundEnabled,
+  isConfirmedMistakeStatus,
+  isUncertainWordStatus,
+  shouldPlayMistakeCue,
+  createMistakeFeedbackController,
+} from './mistakeFeedback'
+
+export {
+  AMD_AUTO_FOLLOW_PREF_KEY,
+  AUTO_FOLLOW_TARGET_RATIO,
+  AUTO_FOLLOW_MIN_RATIO,
+  AUTO_FOLLOW_MAX_RATIO,
+  AUTO_FOLLOW_MIN_DELTA_PX,
+  AUTO_FOLLOW_IDLE_RESUME_MS,
+  normaliseAutoFollowEnabled,
+  readStoredAutoFollowEnabled,
+  storeAutoFollowEnabled,
+  computeAutoFollowScroll,
+  buildWordElementCache,
+  resolveActiveWordElement,
+  prefersReducedMotion,
+  createLiveAutoFollowController,
+} from './liveAutoFollow'
+
+export {
   AMD_STAGES,
   AI_TEST_MODALS_ENABLED,
   AMD_HOWTO_SEEN_KEY,

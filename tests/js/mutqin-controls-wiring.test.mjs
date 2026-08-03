@@ -34,7 +34,11 @@ includesAll('offcanvas to workspace link', [
   /ref="toolsPanel"/,
   /id="memorisationWorkspaceMain"/,
   /ref="workspaceMain"/,
-  /scrollToWorkspaceMain\(\)/
+  /scrollToWorkspaceMain\(\)/,
+  /data-session-scroll-target/,
+  /scheduleSessionWorkspaceScroll\(/,
+  /createSessionWorkspaceScrollController/,
+  /SESSION_WORKSPACE_SCROLL_REASON/,
 ])
 
 includesAll('session setup controls', [
@@ -491,6 +495,38 @@ includesAll('ai memorisation detection modal wiring', [
   /\.memorisation-checker-modal \.memorisation-checker-panel/,
 ])
 
+{
+  const amdVue = readFileSync(new URL('../../resources/js/components/AiMemorisationDetectionModal.vue', import.meta.url), 'utf8')
+  const amdCss = readFileSync(new URL('../../resources/js/views/Memorisation.amd.css', import.meta.url), 'utf8')
+  assert.match(amdVue, /amd-dialog--spacious/)
+  assert.match(amdVue, /amd-footer--sticky/)
+  assert.match(amdVue, /trapFocus\(/)
+  assert.match(amdVue, /restoreReturnFocus\(/)
+  assert.match(amdVue, /toggle-mistake-sound/)
+  assert.match(amdVue, /amd-mistake-visual/)
+  assert.doesNotMatch(amdVue, /amd-follow-bar/)
+  assert.doesNotMatch(amdVue, /amd-follow-toggle/)
+  assert.doesNotMatch(amdVue, /is-auto-follow-paused/)
+  assert.match(amdVue, /createLiveAutoFollowController/)
+  assert.match(amdVue, /autoFollowEnabled:\s*true/)
+  assert.match(amdVue, /:data-theme="themeAttr"/)
+  assert.match(amdCss, /--amd-modal-width:\s*min\(88vw,\s*1500px\)/)
+  assert.match(amdCss, /\.amd-modal--spacious \.amd-body--scroll[\s\S]*?overflow-y:\s*hidden/)
+  assert.match(amdCss, /\.amd-modal--spacious \.amd-mushaf-shell--primary[\s\S]*?overflow-y:\s*auto/)
+  assert.match(amdCss, /@media \(max-width:\s*720px\)[\s\S]*?height:\s*100dvh\s*!important/)
+  assert.match(amdCss, /padding-top:\s*calc\(0\.75rem \+ env\(safe-area-inset-top/)
+  assert.match(amdCss, /\.amd-overlay\[data-theme="dark"\] \.amd-complete__title/)
+  assert.match(amdCss, /\.amd-overlay\[data-theme="dark"\] \.amd-mic-status/)
+  assert.match(amdCss, /\.amd-overlay\[data-theme="dark"\] \.amd-inline-error/)
+  assert.match(amdCss, /\.amd-overlay\[data-theme="sepia"\] \.amd-modal--premium/)
+  assert.match(amdCss, /\.amd-mistake-visual/)
+  assert.match(source, /createMistakeFeedbackController/)
+  assert.match(source, /prepareAmdMistakeSoundForRecording\(/)
+  assert.match(source, /maybeNotifyAmdConfirmedMistake\(/)
+  assert.match(source, /toggleAmdMistakeSound\(/)
+  assert.match(source, /MISTAKE_HANDLING_MODES/)
+}
+
 includesAll('planner ui hidden', [
   /showHifzPlannerUi\(\) \{\s*return false\s*\}/s,
   /showAiMemorisationButton\(\) \{\s*return false\s*\}/s,
@@ -591,7 +627,9 @@ includesAll('audio unlock flow', [
   /learningBackendEnabled\(\) \{\s*return !!this\.auth\?\.check && !this\.learningBackendUnavailable/,
   /preloadQueueEntryAudio\(entry, options = \{\}\) \{[\s\S]*this\.claimAudioElement\(audio\)/,
   /normalizeAudioUrl\(url\) \{[\s\S]*cdn\.islamic\.network/,
-  /startSessionAndClose\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
+  /startSessionAndClose\(options = \{\}\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
+  /captureAppliedPracticeSetup/,
+  /appliedPracticeSetup/,
   /repeatPostSession\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true, sampleSession: keepSample \}\)/,
   /toggleRecordingPlayback\(recording\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: source \}\)[\s\S]*await audio\.play\(\)/,
   /toggleReviewResultAudio\(result = null\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: source \}\)[\s\S]*await playAudioElement\(audio\)/,

@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
 use App\Support\QuranMetadata;
+use App\Services\Memorisation\LearningHistoryRetentionService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -315,7 +316,7 @@ class AdminDashboardService
 
                     continue;
                 }
-                $user->delete();
+                app(LearningHistoryRetentionService::class)->deleteUserAccount($user, $actor);
                 $deleted++;
             }
 
@@ -391,7 +392,7 @@ class AdminDashboardService
             abort(422, 'You cannot delete your own admin account.');
         }
 
-        $user->delete();
+        app(LearningHistoryRetentionService::class)->deleteUserAccount($user, $actor);
     }
 
     public function deleteNote(AyahNote $note): void

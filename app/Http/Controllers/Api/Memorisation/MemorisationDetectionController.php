@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Memorisation;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Memorisation\AdjustMemorisationPracticePlanRequest;
 use App\Http\Requests\Memorisation\CompleteMemorisationPracticePlanRequest;
+use App\Http\Requests\Memorisation\StoreFailedMemorisationAssessmentRequest;
 use App\Http\Requests\Memorisation\StoreMemorisationAssessmentRequest;
 use App\Models\MemorisationPracticePlan;
 use App\Services\Memorisation\PracticePlanExecutionService;
@@ -20,7 +21,24 @@ class MemorisationDetectionController extends Controller
     ): JsonResponse {
         $result = $service->create($request->user(), $request->validated());
 
-        return response()->json($result, 201);
+        return response()->json($result, ! empty($result['idempotent']) ? 200 : 201);
+    }
+
+    public function storeFailedAssessment(
+        StoreFailedMemorisationAssessmentRequest $request,
+        RecitationAssessmentService $service,
+    ): JsonResponse {
+        $payload = $request->validated();
+        $assessment = $service->recordFailed(
+            $request->user(),
+            $payload,
+            $payload['idempotency_key'] ?? null,
+            (string) ($payload['failure_reason'] ?? 'processing_failed')
+        );
+
+        return response()->json([
+            'assessment' => $service->transformAssessment($assessment),
+        ], 201);
     }
 
     public function adjustPlan(
@@ -28,10 +46,35 @@ class MemorisationDetectionController extends Controller
         MemorisationPracticePlan $practicePlan,
         PracticePlanExecutionService $execution,
     ): JsonResponse {
+        $this->authorize('update', $practicePlan);
         $plan = $execution->adjust($request->user(), $practicePlan, $request->validated());
 
         return response()->json([
             'practice_plan' => $plan,
+        ]);
+    }
+
+    public function acceptPlan(
+        Request $request,
+        MemorisationPracticePlan $practicePlan,
+        PracticePlanExecutionService $execution,
+    ): JsonResponse {
+        $this->authorize('update', $practicePlan);
+
+        return response()->json([
+            'practice_plan' => $execution->accept($request->user(), $practicePlan),
+        ]);
+    }
+
+    public function dismissPlan(
+        Request $request,
+        MemorisationPracticePlan $practicePlan,
+        PracticePlanExecutionService $execution,
+    ): JsonResponse {
+        $this->authorize('update', $practicePlan);
+
+        return response()->json([
+            'practice_plan' => $execution->dismiss($request->user(), $practicePlan),
         ]);
     }
 
@@ -40,6 +83,7 @@ class MemorisationDetectionController extends Controller
         MemorisationPracticePlan $practicePlan,
         PracticePlanExecutionService $execution,
     ): JsonResponse {
+        $this->authorize('update', $practicePlan);
         $result = $execution->start($request->user(), $practicePlan);
 
         return response()->json($result);
@@ -50,6 +94,7 @@ class MemorisationDetectionController extends Controller
         MemorisationPracticePlan $practicePlan,
         PracticePlanExecutionService $execution,
     ): JsonResponse {
+        $this->authorize('update', $practicePlan);
         $plan = $execution->complete($request->user(), $practicePlan, $request->validated());
 
         return response()->json([
@@ -62,9 +107,7 @@ class MemorisationDetectionController extends Controller
         MemorisationPracticePlan $practicePlan,
         RecitationAssessmentService $service,
     ): JsonResponse {
-        if ((int) $practicePlan->user_id !== (int) $request->user()->id) {
-            abort(404);
-        }
+        $this->authorize('update', $practicePlan);
 
         $payload = $request->validated();
         $payload['previous_assessment_id'] = $practicePlan->assessment_id;
@@ -73,6 +116,6 @@ class MemorisationDetectionController extends Controller
 
         $result = $service->create($request->user(), $payload);
 
-        return response()->json($result, 201);
+        return response()->json($result, ! empty($result['idempotent']) ? 200 : 201);
     }
 }

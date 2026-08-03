@@ -294,7 +294,9 @@ function t(key, params = {}) {
   assert.match(js, /partialSimilarity\s*=\s*0\.52/)
   assert.match(js, /partialAdvances\s*=\s*true/)
   assert.match(js, /allowArticleMatch\s*=\s*true/)
-  assert.match(js, /advanceOnIncorrect\s*=\s*true/)
+  assert.match(js, /advanceOnIncorrect\s*=\s*!stopOnMistake|advanceOnIncorrect\s*=\s*true/)
+  assert.match(js, /amdFrozenAtWordIndex/)
+  assert.match(js, /freezeAmdLiveWordColoring/)
   assert.match(js, /lookahead\s*=\s*0/)
   assert.match(js, /buildRealtimePreviewAlignment\(targetText, committedWords/)
   assert.match(js, /preferVisible/)
@@ -340,7 +342,7 @@ function t(key, params = {}) {
   assert.match(js, /onPostSessionContinueToAyahs|onPostSessionCalmPrimaryAction|reviseFocusPhraseFromRecommendation/)
   assert.match(
     css,
-    /\.post-session-simple\.post-session-simple--premium\.post-session-simple--calm-v2 \.post-session-simple__dialog[\s\S]*?width:\s*min\(42rem/,
+    /\.post-session-simple\.post-session-simple--premium\.post-session-simple--calm-v2 \.post-session-simple__dialog[\s\S]*?width:\s*min\(44rem/,
     'success modal should use a wider premium width'
   )
   assert.match(css, /text-overflow:\s*clip\s*!important/)

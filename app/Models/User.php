@@ -110,6 +110,41 @@ class User extends Authenticatable
         return $this->hasMany(AyahNote::class);
     }
 
+    public function memorisationAssessments(): HasMany
+    {
+        return $this->hasMany(MemorisationAssessment::class);
+    }
+
+    public function memorisationPracticePlans(): HasMany
+    {
+        return $this->hasMany(MemorisationPracticePlan::class);
+    }
+
+    public function memorisationWeakSpots(): HasMany
+    {
+        return $this->hasMany(MemorisationWeakSpot::class);
+    }
+
+    public function memorisationAttemptComparisons(): HasMany
+    {
+        return $this->hasMany(MemorisationAttemptComparison::class);
+    }
+
+    public function memorisationAssessmentWords(): HasMany
+    {
+        return $this->hasMany(MemorisationAssessmentWord::class);
+    }
+
+    public function aiReciteAttempts(): HasMany
+    {
+        return $this->hasMany(AiReciteAttempt::class);
+    }
+
+    public function learningHistoryAuditLogs(): HasMany
+    {
+        return $this->hasMany(LearningHistoryAuditLog::class, 'subject_user_id');
+    }
+
     public function hasPaidAccess(): bool
     {
         return in_array($this->subscription_status, ['trialing', 'active'], true);

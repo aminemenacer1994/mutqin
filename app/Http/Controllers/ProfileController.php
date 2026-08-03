@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use App\Services\Memorisation\LearningHistoryRetentionService;
 
 class ProfileController extends Controller
 {
@@ -110,7 +111,7 @@ class ProfileController extends Controller
 
         Auth::logout();
 
-        $user->delete();
+        app(LearningHistoryRetentionService::class)->deleteUserAccount($user);
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

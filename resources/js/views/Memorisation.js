@@ -77,6 +77,18 @@ import {
   resolvePostSessionCtaState,
 } from '../scripts/recommendations/postSessionCtaMapping'
 import {
+  PRACTICE_SCOPE,
+  applyScopeToRecommendationSettings,
+  buildRevisionScopeOptions,
+  buildWeakOnlyPracticeSequence,
+  canMarkAyahMasteredFromPractice,
+  compareRevisionAttempts,
+  normalisePracticeScope,
+  readPracticeScopeFromSettings,
+  recommendPracticeScope,
+  resolveRevisionSessionRange,
+} from '../scripts/recommendations/revisionPracticeScope'
+import {
   POST_SESSION_ACTION,
   buildRecommendedSessionTemplate,
   canRepeatRecommendedSession,
@@ -163,6 +175,14 @@ import {
   shouldRunDeferredTalqinAdvance,
 } from '../scripts/session/pausePlaybackGuards'
 import {
+  SESSION_WORKSPACE_SCROLL_REASON,
+  createSessionWorkspaceScrollController,
+  buildSessionScrollIdentity,
+  measureStickyNavOffset,
+  resolveSessionScrollTarget,
+  prefersReducedMotion as prefersSessionScrollReducedMotion,
+} from '../scripts/session/sessionWorkspaceScroll'
+import {
   COMPLETION_FLOW,
   deriveCompletionFlowPhase,
   primarySurfaceForPhase,
@@ -193,6 +213,13 @@ import HifzPlanCreatorModal from '../components/HifzPlanCreatorModal.vue'
 import AiMemorisationDetectionModal from '../components/AiMemorisationDetectionModal.vue'
 import AyahNotesModal from '../components/AyahNotesModal.vue'
 import {
+  buildActivePracticeSetup,
+  buildPracticeSetupStatusMessage,
+  collectPracticeSetupInputFromSession,
+  canChangePracticeSetting,
+} from '../scripts/session/activePracticeSetup'
+import { readStoredAutoFollowEnabled } from '../scripts/memorisationDetection/liveAutoFollow'
+import {
   AMD_STAGES,
   AMD_HOWTO_SEEN_KEY,
   AI_TEST_MODALS_ENABLED,
@@ -202,11 +229,16 @@ import {
   buildAssessmentAyahs,
   buildHiddenWordSeed,
   buildRecognitionWords,
+  createMistakeFeedbackController,
   memorisationDetectionApi,
+  MISTAKE_HANDLING_MODES,
+  MISTAKE_VISUAL_MS,
   normaliseDifficultyPercent,
   readStoredDifficultyPercent,
+  readStoredMistakeSoundEnabled,
   selectHiddenWordIndexes,
   storeDifficultyPercent,
+  storeMistakeSoundEnabled,
 } from '../scripts/memorisationDetection'
 import {
   generateTodaySession,
@@ -504,6 +536,13 @@ export default {
       sessionLifecycleMutation: SESSION_MUTATION.IDLE,
       sessionLifecycleError: null,
       sessionLifecycleMutationWatchdog: null,
+      /** @type {ReturnType<typeof createSessionWorkspaceScrollController> | null} */
+      sessionWorkspaceScrollController: null,
+      pendingSessionWorkspaceScrollReason: null,
+      practiceSetupStatusMessage: '',
+      practiceSetupStatusTimer: null,
+      practiceSetupRestoredNotice: '',
+      appliedPracticeSetupSnapshot: null,
       backendUnfinishedSession: false,
       backendSessionSnapshot: null,
       sessionPaused: false,
@@ -663,6 +702,9 @@ export default {
       recommendedPracticeCompleted: false,
       focusPhraseRevisionActive: false,
       focusPhraseMeaningfulInteraction: false,
+      revisionBaselineAttempt: null,
+      postSessionRevisionComparison: null,
+      postSessionPracticeScopeOverride: null,
       /** @type {import('../scripts/recommendations/memorisationPlan').MemorisationPlan|null} */
       activeMemorisationPlan: null,
       memorisationPlanStatus: 'recommended', // recommended | applied | manual
@@ -942,9 +984,15 @@ export default {
       amdTajweedEnabled: false,
       amdPeekActive: false,
       amdDifficultyPercent: readStoredDifficultyPercent(),
+      amdMistakeSoundEnabled: readStoredMistakeSoundEnabled(),
+      amdMistakeVisualActive: false,
+      amdMistakeVisualTimer: null,
+      amdMistakeHandlingMode: MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
+      amdMistakeFeedback: null,
       amdHiddenWordIndexes: [],
       amdHiddenSeedAttempt: 0,
       amdExpectedCursor: 0,
+      amdFrozenAtWordIndex: null,
       amdEndingSoon: false,
       amdElapsedSeconds: 0,
       amdElapsedTimer: null,
@@ -3742,6 +3790,238 @@ export default {
       if (!Array.isArray(rows) || !rows.length) return []
       return rows.filter((row) => row.key === 'focus' || row.key === 'method' || row.key === 'next')
     },
+    postSessionOutcomeHeadline() {
+      if (this.postSessionAiPresentationMode === 'insufficient_audio') {
+        return this.postSessionAiReviewDetails?.outcomeLabel
+          || this.t('memorisation.postSession.recommendation.insufficientAudioStatus')
+          || 'Attempt could not be assessed'
+      }
+      const outcome = String(this.postSessionAiReviewDetails?.outcome || '').toLowerCase()
+      if (outcome === 'strong') {
+        return this.t('memorisation.postSession.recommendation.headlineStrong')
+          || this.postSessionAiReviewDetails?.outcomeLabel
+          || 'Strong recall'
+      }
+      if (outcome === 'weak') {
+        return this.t('memorisation.postSession.recommendation.headlineWeak')
+          || this.postSessionAiReviewDetails?.outcomeLabel
+          || 'Focused revision recommended'
+      }
+      if (outcome === 'mixed') {
+        return this.t('memorisation.postSession.recommendation.headlineMixed')
+          || this.postSessionAiReviewDetails?.outcomeLabel
+          || 'Minor reinforcement needed'
+      }
+      return this.postSessionAiReviewDetails?.outcomeLabel
+        || this.t('memorisation.postSession.recommendation.aiOutcomeMixed')
+        || 'Continue with care'
+    },
+    postSessionFocusActivatePayload() {
+      const focusRow = (this.postSessionEvidenceRows || []).find((row) => row.key === 'focus')
+      if (focusRow) return focusRow
+      const focus = this.resolvePostSessionFocusPhrase?.() || null
+      if (!focus?.phrase) return null
+      return {
+        key: 'focus',
+        word: focus.phrase,
+        weakWord: focus.weakWord || null,
+        ayahNumber: focus.ayahNumber || null,
+        verseKey: focus.verseKey || '',
+      }
+    },
+    postSessionFocusHighlightMeta() {
+      const focus = this.resolvePostSessionFocusPhrase?.() || null
+      if (!focus?.ayahLabel && !focus?.ayahNumber) return ''
+      return focus.ayahLabel
+        || (this.t('memorisation.postSession.coach.ayahLabel', { ayah: focus.ayahNumber }) || `Āyah ${focus.ayahNumber}`)
+    },
+    postSessionFocusHighlightParts() {
+      if (this.postSessionAiPresentationMode === 'insufficient_audio') return []
+      const focus = this.resolvePostSessionFocusPhrase?.() || null
+      const phrase = String(focus?.phrase || '').trim()
+      if (!phrase) return []
+      const weakNeedles = new Set()
+      const pushNeedle = (value) => {
+        const text = this.normalizePracticeFocusWordText?.(value) || String(value || '').trim()
+        if (text) weakNeedles.add(text)
+      }
+      const weakList = Array.isArray(this.postSessionRevisionWeakWords)
+        ? this.postSessionRevisionWeakWords
+        : []
+      weakList.forEach((word) => {
+        if (focus?.ayahNumber && Number(word.ayahNumber) && Number(word.ayahNumber) !== Number(focus.ayahNumber)) {
+          return
+        }
+        pushNeedle(word.text || word.word || word.arabic)
+      })
+      pushNeedle(focus?.weakWord?.text || focus?.weakWord?.word || focus?.weakWord?.arabic)
+      const tokens = phrase.split(/\s+/).filter(Boolean).slice(0, 12)
+      if (!tokens.length) return []
+      const matched = tokens.map((text) => {
+        const needle = this.normalizePracticeFocusWordText?.(text) || text
+        return { text, weak: weakNeedles.has(needle) }
+      })
+      // If we only know the ayah is weak (no word-level hits), mark the whole phrase.
+      if (!matched.some((part) => part.weak) && (focus?.ayahNumber || weakNeedles.size === 0)) {
+        const ayahs = this.postSessionRevisionWeakAyahs || []
+        if (focus?.ayahNumber && ayahs.map(Number).includes(Number(focus.ayahNumber))) {
+          return tokens.map((text) => ({ text, weak: true }))
+        }
+      }
+      return matched
+    },
+    postSessionGuidedMethodRows() {
+      if (!this.postSessionFocusHighlightParts.length) return []
+      return (this.postSessionInlineRecommendationRows || [])
+        .filter((row) => row.key === 'method' || row.key === 'next' || row.key === 'return')
+    },
+    postSessionPracticeScopeLabel() {
+      const scope = this.postSessionSelectedPracticeScope
+      if (scope === PRACTICE_SCOPE.WEAK_AREAS) {
+        return this.t('memorisation.postSession.recommendation.scopeWeakAreasLabel')
+          || 'Focus on weak areas'
+      }
+      if (!(this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck)) return ''
+      return this.t('memorisation.postSession.recommendation.scopeFullRangeLabel')
+        || 'Practise the full range'
+    },
+    postSessionShowRevisionScopePicker() {
+      if (!(this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck)) return false
+      if (this.postSessionAiPresentationMode === 'insufficient_audio') return false
+      const words = this.postSessionRevisionWeakWords
+      const ayahs = this.postSessionRevisionWeakAyahs
+      return words.length > 0 || ayahs.length > 0
+    },
+    postSessionRevisionWeakWords() {
+      const fromAi = normaliseWeakWordRecords(
+        this.aiReciteFinalPlan?.weakWords
+        || this.postSessionRecommendation?.settings?.practice_weak_words
+        || this.postSessionRecommendation?.ai_assessment?.weak_words
+        || [],
+      ).filter((word) => String(word.reason || '') !== 'anchor')
+      if (fromAi.length) return fromAi
+      const fromLive = normaliseWeakWordRecords(this.practiceFocusWeakWords || [])
+        .filter((word) => String(word.reason || '') !== 'anchor')
+      return fromLive
+    },
+    postSessionRevisionWeakAyahs() {
+      const fromDetails = Array.isArray(this.postSessionAiReviewDetails?.weakAyahs)
+        ? this.postSessionAiReviewDetails.weakAyahs
+        : []
+      const fromPlan = Array.isArray(this.aiReciteFinalPlan?.weakAyahs)
+        ? this.aiReciteFinalPlan.weakAyahs
+        : []
+      const fromWords = this.postSessionRevisionWeakWords
+        .map((w) => Number(w.ayahNumber))
+        .filter((n) => Number.isFinite(n) && n > 0)
+      return [...new Set([...fromDetails, ...fromPlan, ...fromWords].map(Number))]
+        .filter((n) => Number.isFinite(n) && n > 0)
+        .sort((a, b) => a - b)
+    },
+    postSessionRevisionScopeRecommendation() {
+      const snap = this.postSessionSnapshot || {}
+      return recommendPracticeScope({
+        weakWords: this.postSessionRevisionWeakWords,
+        weakAyahs: this.postSessionRevisionWeakAyahs,
+        sessionFrom: Number(snap.rangeStart || this.rangeStart || 1),
+        sessionTo: Number(snap.rangeEnd || this.rangeEnd || snap.rangeStart || 1),
+        outcome: this.postSessionAiReviewDetails?.outcome
+          || this.aiReciteFinalPlan?.outcome
+          || this.postSessionRecommendation?.ai_assessment?.result
+          || null,
+      })
+    },
+    postSessionSelectedPracticeScope() {
+      const override = normalisePracticeScope(this.postSessionPracticeScopeOverride)
+      if (override) return override
+      const fromSettings = readPracticeScopeFromSettings(this.postSessionRecommendation?.settings || {})
+      if (fromSettings) return fromSettings
+      return this.postSessionRevisionScopeRecommendation.scope || PRACTICE_SCOPE.WEAK_AREAS
+    },
+    postSessionRevisionScopeOptions() {
+      const recommended = this.postSessionRevisionScopeRecommendation
+      const sequence = this.postSessionWeakOnlySequence
+      return buildRevisionScopeOptions(this.t?.bind?.(this) || null).map((option) => {
+        const isWeak = option.id === PRACTICE_SCOPE.WEAK_AREAS
+        const meta = isWeak && sequence.focusItemCount
+          ? (this.t('memorisation.postSession.recommendation.scopeFocusMeta', {
+            count: sequence.focusItemCount,
+            minutes: sequence.estimatedDuration?.minutes || 1,
+          }) || `${sequence.focusItemCount} focus items · about ${sequence.estimatedDuration?.minutes || 1} min`)
+          : (this.t('memorisation.postSession.recommendation.scopeFullMeta')
+            || 'Full session with stronger emphasis on weak areas')
+        return {
+          ...option,
+          recommended: option.id === recommended.scope,
+          meta,
+        }
+      })
+    },
+    postSessionScopeRecommendReason() {
+      const rec = this.postSessionRevisionScopeRecommendation
+      const key = rec?.reasonKey
+        ? `memorisation.postSession.recommendation.scopeReason.${rec.reasonKey}`
+        : ''
+      const localized = key ? this.t(key) : ''
+      if (localized && !String(localized).includes('scopeReason.')) return localized
+      return rec?.reason
+        || 'Mutqin recommends this option based on where your last attempt needed attention.'
+    },
+    postSessionWeakOnlySequence() {
+      const snap = this.postSessionSnapshot || {}
+      const surahId = Number(snap.chapterId || this.chapterId || 0) || null
+      const tokensByKey = {}
+      const wordCounts = {}
+      ;(Array.isArray(this.verses) ? this.verses : []).forEach((verse) => {
+        const key = String(verse.key || '')
+        if (!key) return
+        const tokens = this.tokenizeRecitationDisplayWords?.(verse.arabic || verse.text || '')
+          || String(verse.arabic || '').replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean)
+        if (tokens.length) {
+          tokensByKey[key] = tokens
+          wordCounts[key] = tokens.length
+          const ayah = Number(String(key).split(':')[1] || verse.number)
+          if (Number.isFinite(ayah)) wordCounts[ayah] = tokens.length
+        }
+      })
+      return buildWeakOnlyPracticeSequence({
+        weakWords: this.postSessionRevisionWeakWords,
+        weakAyahs: this.postSessionRevisionWeakAyahs,
+        ayahTokensByKey: tokensByKey,
+        ayahWordCounts: wordCounts,
+        sessionFrom: Number(snap.rangeStart || this.rangeStart || 1),
+        sessionTo: Number(snap.rangeEnd || this.rangeEnd || snap.rangeStart || 1),
+        surahId,
+      })
+    },
+    postSessionPracticeEmphasizeWeakAreas() {
+      const settings = this.postSessionRecommendation?.settings || {}
+      if (settings.emphasize_weak_areas === true) return true
+      return this.postSessionSelectedPracticeScope === PRACTICE_SCOPE.FULL_RANGE
+        && this.postSessionRevisionWeakWords.length > 0
+    },
+    postSessionPreviousAttemptNote() {
+      const history = this.postSessionRecommendation?.previous_attempts
+        || this.postSessionRecommendation?.related_attempts
+        || this.postSessionRecommendation?.history
+        || null
+      if (Array.isArray(history) && history.length) {
+        const latest = history[0]
+        const label = latest?.summary || latest?.label || latest?.outcome || ''
+        if (label) {
+          return this.t('memorisation.postSession.recommendation.previousAttemptNote', {
+            summary: label,
+          }) || `Previous related attempt: ${label}`
+        }
+        return this.t('memorisation.postSession.recommendation.previousAttemptsAvailable')
+          || 'Previous related attempts are saved with this recommendation.'
+      }
+      if (this.postSessionRecommendation?.id || this.postSessionRecommendation?.uuid) {
+        return this.t('memorisation.postSession.recommendation.persistedForLater')
+          || 'This recommendation is saved and remains available from your dashboard and session history.'
+      }
+      return ''
+    },
     postSessionQuizAiHighlights() {
       const details = this.postSessionAiReviewDetails
       const highlights = Array.isArray(details?.highlights) ? details.highlights.slice(0, 3) : []
@@ -4141,8 +4421,8 @@ export default {
         nextRangeEnd: nextTo || null,
       })
       const actionFallbacks = {
-        reviseFocusPhrase: 'Revise focus phrase',
-        reviseThisRange: 'Revise this range',
+        reviseFocusPhrase: 'Start recommended revision',
+        reviseThisRange: 'Start recommended revision',
         reviewAyahOnce: 'Review Ayah once',
         retest: 'Check again',
         tryRecordingAgain: 'Try recording again',
@@ -4153,7 +4433,7 @@ export default {
         continueToNextRange: 'Continue to next range',
         continueToAyahs: 'Continue to Ayahs',
         reviewOnceMore: 'Review once more',
-        chooseAnotherRange: 'Other range',
+        chooseAnotherRange: 'Choose another range',
         skipForNow: 'Skip',
         keepPractising: 'Keep practising',
       }
@@ -4182,6 +4462,10 @@ export default {
           label: this.stripAiDashes(label),
         }
       })
+    },
+    postSessionShowCloseTextAction() {
+      // Header close (X) is enough — no footer text hyperlink.
+      return false
     },
     postSessionAiAssistHint() {
       if (this.postSessionRecommendation?.ai_assessment?.summary || this.postSessionAiFeedback) {
@@ -5500,6 +5784,17 @@ export default {
         peekHintShort: this.t?.('memorisation.amd.peekHintShort') || 'Hold to reveal',
         wordsShownShort: this.t?.('memorisation.amd.wordsShownShort') || 'Words shown',
         textSizeShort: this.t?.('memorisation.amd.textSizeShort') || 'Text size',
+        mistakeSound: this.t?.('memorisation.amd.mistakeSound') || 'Mistake sound',
+        mistakeSoundOn: this.t?.('memorisation.amd.mistakeSoundOn') || 'On',
+        mistakeSoundOff: this.t?.('memorisation.amd.mistakeSoundOff') || 'Off',
+        mistakeSoundHint: this.t?.('memorisation.amd.mistakeSoundHint') || 'Soft cue when a mistake is confirmed',
+        mistakeVisualLabel: this.t?.('memorisation.amd.mistakeVisual') || 'Mistake confirmed',
+        autoFollow: this.t?.('memorisation.amd.autoFollow') || 'Auto-follow',
+        autoFollowOn: this.t?.('memorisation.amd.autoFollowOn') || 'Auto-follow on',
+        autoFollowOff: this.t?.('memorisation.amd.autoFollowOff') || 'Auto-follow off',
+        autoFollowPaused: this.t?.('memorisation.amd.autoFollowPaused') || 'Auto-follow paused',
+        autoFollowResume: this.t?.('memorisation.amd.autoFollowResume') || 'Resume auto-follow',
+        autoFollowHint: this.t?.('memorisation.amd.autoFollowHint') || 'Keep the active word near eye level',
         completeTitle: this.t?.('memorisation.amd.completeTitle')
           || 'Mā shā’ Allāh — check complete',
         completeBody: this.t?.('memorisation.amd.completeBody')
@@ -7233,6 +7528,12 @@ export default {
               && !word.isEnd
               && wordIndex != null
               && this.isPracticeFocusWeakWord(verseKey, wordIndex, plainText)
+            const emphasizeWeak = isPracticeFocus && (
+              this.postSessionPracticeEmphasizeWeakAreas
+              || this.postSessionRecommendation?.settings?.emphasize_weak_areas === true
+              || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
+              || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.FULL_RANGE
+            )
             const recitationStatus = inSession && !word.isEnd && wordIndex != null
               ? this.getRenderedRecitationWordStatusForVerse(verseKey, wordIndex, sessionVerse?.sessionTargetKey || '')
               : ''
@@ -7251,6 +7552,7 @@ export default {
               isHighlighted,
               isAnchor,
               isPracticeFocus,
+              isPracticeFocusEmphasis: !!emphasizeWeak,
               isPracticeFocusActive: isPracticeFocus && isHighlighted,
               recitationStatus,
               isFocusDimmed: focusOn && inSession && !isActive && !isPlayingAyah && !isHighlighted && !isPracticeFocus,
@@ -7437,6 +7739,7 @@ export default {
 
   async mounted() {
     document.body.classList.add('memorisation-page')
+    this.initSessionWorkspaceScrollController()
     document.addEventListener('click', this.handleClickOutside);
     // Hard-close any leftover AI test overlays — this modal must never
     // appear unless the user clicks Session Complete → Test with AI.
@@ -7690,6 +7993,12 @@ export default {
 
   beforeUnmount() {
     document.body.classList.remove('memorisation-page')
+    this.sessionWorkspaceScrollController?.dispose?.()
+    this.sessionWorkspaceScrollController = null
+    if (this.practiceSetupStatusTimer) {
+      clearTimeout(this.practiceSetupStatusTimer)
+      this.practiceSetupStatusTimer = null
+    }
     this.clearAmdElapsedTimer?.()
     if (this.anchorHighlightObserver) {
       this.anchorHighlightObserver.disconnect()
@@ -10970,6 +11279,9 @@ export default {
             )
             this.sessionLifecycleError = null
             this.sessionBroadcast?.publish('session-started', { at: Date.now() })
+            this.scheduleSessionWorkspaceScroll(
+              this.pendingSessionWorkspaceScrollReason || SESSION_WORKSPACE_SCROLL_REASON.NEW_SESSION
+            )
             return true
           } catch (error) {
             console.error(error)
@@ -10983,12 +11295,13 @@ export default {
         }
       })
     },
-    async startSessionAndClose() {
+    async startSessionAndClose(options = {}) {
       if (!this.canStartSession) {
         this.showTools = true
         this.showBanner(this.t('toasts.pleaseSelectAValidSurahAnd'), 'info', 3600)
         return
       }
+      void options
       if (
         this.postSessionChoiceAction === POST_SESSION_ACTION.CREATE_CUSTOM
         || this.startingFreshSessionSelection
@@ -11001,6 +11314,7 @@ export default {
       this.persistModeState(this.currentMode)
       this.persistUiState()
       this.persistCentralSessionState()
+      this.captureAppliedPracticeSetup()
       await this.applyWorkspaceControls({ mode: this.currentMode })
       this.closePostSessionChoice()
       this.closeToolsPanel()
@@ -11120,6 +11434,9 @@ export default {
         this.mushafPageIndex = savedMushafPageIndex
       }
       this.applySessionConfig({ ...(payload.config || {}), mode })
+      if (payload.appliedPracticeSetup && typeof payload.appliedPracticeSetup === 'object') {
+        this.appliedPracticeSetupSnapshot = payload.appliedPracticeSetup
+      }
       this[target] = {
         ...(target === 'planner' ? createPlannerState() : (target === 'beginner' ? createBeginnerState() : createAdvancedState())),
         ...this.cloneModeState(payload.config || {})
@@ -11215,6 +11532,7 @@ export default {
           }
         await this.hydrateSessionFromPayload(restorePayload, { bannerText: `Loaded: ${session.name}`, forcePlayback: false })
         this.showTools = false
+        this.queueSessionWorkspaceScrollReason(SESSION_WORKSPACE_SCROLL_REASON.SAVED_SESSION)
         this.$nextTick(() => {
           this.startSessionWithCountdown({ skipPrime: true })
         })
@@ -11788,6 +12106,9 @@ export default {
         this.postSessionViewState = 'recommendation_ready'
         this.syncPostSessionConfidenceFromRecommendation(preservedRecommendation, { force: true })
       }
+      this.$nextTick?.(() => {
+        try { this.ensurePostSessionPracticeScopeDefault?.() } catch (_) { /* ignore */ }
+      })
       if (keepMasteryLoop && masteryTarget && this.postSessionRecommendation) {
         this.postSessionRecommendation = this.enrichPostSessionRecommendation({
           ...this.postSessionRecommendation,
@@ -12386,10 +12707,101 @@ export default {
         current.reciter = value
       } else if (key === 'ayat_per_step') {
         current.ayat_per_step = value === '' || value == null ? null : Number(value)
+      } else if (key === 'practice_scope') {
+        const scope = normalisePracticeScope(value) || PRACTICE_SCOPE.FULL_RANGE
+        this.postSessionPracticeScopeOverride = scope
+        Object.assign(current, this.buildRevisionScopedSettings(scope, current))
       } else {
         return
       }
       await this.persistPostSessionRecommendationSettings(current)
+    },
+    buildRevisionScopedSettings(scope = null, baseSettings = null) {
+      const selected = normalisePracticeScope(scope)
+        || this.postSessionSelectedPracticeScope
+        || PRACTICE_SCOPE.FULL_RANGE
+      const sequence = this.postSessionWeakOnlySequence
+      const latestAttempt = Array.isArray(this.aiReciteAttempts) && this.aiReciteAttempts.length
+        ? this.aiReciteAttempts[this.aiReciteAttempts.length - 1]
+        : null
+      const attemptRef = latestAttempt
+        ? {
+          id: latestAttempt.id || latestAttempt.attempt_id || `local-${this.aiReciteAttempts.length}`,
+          accuracy: latestAttempt.accuracy ?? latestAttempt.accuracyPercent ?? latestAttempt.result?.accuracyScore,
+          outcome: latestAttempt.result?.outcome || this.aiReciteFinalPlan?.outcome || null,
+          at: latestAttempt.at || latestAttempt.created_at || null,
+          wordStatuses: latestAttempt.result?.wordStatuses || latestAttempt.wordStatuses || [],
+        }
+        : null
+      return applyScopeToRecommendationSettings(
+        baseSettings || this.postSessionRecommendation?.settings || {},
+        selected,
+        {
+          weakWords: this.postSessionRevisionWeakWords,
+          focusItems: sequence.items,
+          ayahIds: sequence.ayahIds.length ? sequence.ayahIds : this.postSessionRevisionWeakAyahs,
+          attemptId: attemptRef?.id || null,
+          attemptReference: attemptRef,
+          bumpRepsForEmphasis: selected === PRACTICE_SCOPE.FULL_RANGE,
+        },
+      )
+    },
+    async selectPostSessionPracticeScope(scope) {
+      const normalised = normalisePracticeScope(scope)
+      if (!normalised || this.postSessionActionsBusy) return
+      this.postSessionPracticeScopeOverride = normalised
+      if (!this.postSessionRecommendation) return
+      const nextSettings = this.buildRevisionScopedSettings(normalised)
+      this.postSessionRecommendation = {
+        ...this.postSessionRecommendation,
+        settings: nextSettings,
+      }
+      if (this.postSessionRecommendation?.id) {
+        await this.persistPostSessionRecommendationSettings(nextSettings)
+      }
+    },
+    ensurePostSessionPracticeScopeDefault() {
+      if (!this.postSessionShowRevisionScopePicker) return
+      if (readPracticeScopeFromSettings(this.postSessionRecommendation?.settings || {})) return
+      if (this.postSessionPracticeScopeOverride) return
+      const recommended = this.postSessionRevisionScopeRecommendation?.scope || PRACTICE_SCOPE.WEAK_AREAS
+      this.postSessionPracticeScopeOverride = recommended
+      if (this.postSessionRecommendation) {
+        this.postSessionRecommendation = {
+          ...this.postSessionRecommendation,
+          settings: this.buildRevisionScopedSettings(recommended),
+        }
+      }
+    },
+    captureRevisionBaselineAttempt() {
+      const latest = Array.isArray(this.aiReciteAttempts) && this.aiReciteAttempts.length
+        ? this.aiReciteAttempts[this.aiReciteAttempts.length - 1]
+        : null
+      const result = latest?.result || this.recitationCheckResult || null
+      const wordIds = this.postSessionWeakOnlySequence?.wordIds
+        || this.postSessionRevisionWeakWords.map((w) => this.practiceWeakWordKey(w)).filter(Boolean)
+      this.revisionBaselineAttempt = {
+        id: latest?.id || this.postSessionRecommendation?.settings?.source_attempt_id || null,
+        accuracy: latest?.accuracy ?? result?.accuracyScore ?? null,
+        weakWordIds: wordIds,
+        wordStatuses: result?.wordStatuses || latest?.wordStatuses || [],
+        outcome: this.aiReciteFinalPlan?.outcome || result?.outcome || null,
+      }
+      this.postSessionRevisionComparison = null
+    },
+    updateRevisionAttemptComparison(result = null) {
+      if (!this.revisionBaselineAttempt || !result) return null
+      const comparison = compareRevisionAttempts({
+        previous: this.revisionBaselineAttempt,
+        current: {
+          accuracy: result.accuracyScore ?? result.accuracy ?? null,
+          wordStatuses: result.wordStatuses || [],
+          weakWordIds: this.revisionBaselineAttempt.weakWordIds || [],
+        },
+        trackedWordIds: this.revisionBaselineAttempt.weakWordIds || [],
+      })
+      this.postSessionRevisionComparison = comparison
+      return comparison
     },
     async persistPostSessionRecommendationSettings(overrides = null) {
       if (!this.postSessionRecommendation?.id || !this.isLoggedIn || !this.learningBackendEnabled()) {
@@ -13718,7 +14130,7 @@ export default {
         || this.masteryTargetRange
         || null
       const recRange = this.postSessionRecommendation?.ayah_range || null
-      // Preserve the completed session window; never advance on revise.
+      // Preserve the completed session window as the outer bound; never advance on revise.
       const chapterId = Number(
         snap.chapterId
         || planRange?.surahId
@@ -13734,7 +14146,22 @@ export default {
         rangeStart = Number(planRange?.from || recRange?.from || this.rangeStart || 1)
         rangeEnd = Number(planRange?.to || recRange?.to || this.rangeEnd || rangeStart)
       }
-      return { chapterId, rangeStart, rangeEnd }
+      const scope = this.postSessionSelectedPracticeScope
+      const scoped = resolveRevisionSessionRange({
+        scope,
+        sessionFrom: rangeStart,
+        sessionTo: rangeEnd,
+        weakWords: this.postSessionRevisionWeakWords,
+        weakAyahs: this.postSessionRevisionWeakAyahs,
+        focusItems: this.postSessionWeakOnlySequence?.items || [],
+      })
+      return {
+        chapterId,
+        rangeStart: Number(scoped.from || rangeStart),
+        rangeEnd: Number(scoped.to || rangeEnd),
+        scope: scoped.scope,
+        focusAyahs: scoped.focus_ayahs || [],
+      }
     },
     resolveRecommendedFocusPhraseWord() {
       this.ensurePracticeFocusWeakWordsFromPlan(
@@ -13760,28 +14187,39 @@ export default {
       this.postSessionRecommendationStartError = ''
       this.postSessionViewState = 'starting_repeat'
       try {
-        const { chapterId, rangeStart, rangeEnd } = this.resolveFocusPhraseRevisionRange()
+        this.ensurePostSessionPracticeScopeDefault()
+        const { chapterId, rangeStart, rangeEnd, scope } = this.resolveFocusPhraseRevisionRange()
         if (!chapterId || !rangeStart || !rangeEnd) {
           throw new Error('invalid_focus_phrase_range')
         }
         const focusWord = this.resolveRecommendedFocusPhraseWord()
         const activeRecommendation = this.postSessionRecommendation || {}
-        const planSettings = {
-          ...this.resolveRecommendationStartSettings(activeRecommendation, null),
-        }
+        const planSettings = this.buildRevisionScopedSettings(
+          scope,
+          this.resolveRecommendationStartSettings(activeRecommendation, null),
+        )
         const techniqueId = planSettings.technique
           || activeRecommendation?.technique?.id
           || this.aiReciteFinalPlan?.technique
           || 'talqin'
-        if (focusWord) {
-          planSettings.practice_weak_words = normaliseWeakWordRecords(
-            this.practiceFocusWeakWords.length ? this.practiceFocusWeakWords : [focusWord],
-          )
+        if (this.postSessionRevisionWeakWords.length) {
+          planSettings.practice_weak_words = normaliseWeakWordRecords(this.postSessionRevisionWeakWords)
+        } else if (focusWord) {
+          planSettings.practice_weak_words = normaliseWeakWordRecords([focusWord])
         }
-        this.focusPhraseRevisionActive = true
+        this.captureRevisionBaselineAttempt()
+        this.focusPhraseRevisionActive = scope === PRACTICE_SCOPE.WEAK_AREAS
+          || !!this.practiceFocusWeakWords?.length
         this.focusPhraseMeaningfulInteraction = false
         this.recommendedPracticePending = true
         this.awaitingMasteryRetest = true
+        if (!canMarkAyahMasteredFromPractice({
+          practiceScope: scope,
+          settings: planSettings,
+          focusPhraseRevisionActive: true,
+        })) {
+          this.aiReciteAdvanceToNextSession = false
+        }
         this.masteryTargetRange = {
           chapterId,
           from: rangeStart,
@@ -13789,6 +14227,12 @@ export default {
           surahName: this.postSessionSnapshot?.chapterName || activeRecommendation?.surah?.name || '',
           settings: planSettings,
           planDetail: activeRecommendation?.plan_detail || this.aiReciteFinalPlan?.planDetail || null,
+        }
+        if (activeRecommendation) {
+          this.postSessionRecommendation = {
+            ...activeRecommendation,
+            settings: planSettings,
+          }
         }
         await this.startSessionFromRecommendationPayload({
           chapterId,
@@ -13906,8 +14350,10 @@ export default {
     isPracticeFocusWeakWord(verseKey, wordIndex, wordText = '') {
       const words = Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []
       const key = String(verseKey || '')
-      if (words.length && key) {
-        const verseWords = words.filter((word) => this.practiceFocusVerseKeyMatches(word, key))
+      const nonAnchorWords = words.filter((word) => String(word?.reason || '') !== 'anchor')
+      const focusWords = nonAnchorWords.length ? nonAnchorWords : words
+      if (focusWords.length && key) {
+        const verseWords = focusWords.filter((word) => this.practiceFocusVerseKeyMatches(word, key))
         if (verseWords.length) {
           // Prefer normalised Arabic text — indexes often diverge across tokenisers.
           const needle = this.normalizePracticeFocusWordText(wordText)
@@ -13919,11 +14365,24 @@ export default {
           if (Number.isFinite(index) && index >= 0) {
             if (verseWords.some((word) => Number(word.wordIndex) === index)) return true
           }
+          // Weak words are known for this verse — do not fall back to first/last anchors.
+          return false
         }
       }
 
+      // Weak-area / recommended revision must never fall back to first+last anchors.
+      const weakPracticeActive = !!(
+        this.focusPhraseRevisionActive
+        || this.postSessionSelectedPracticeScope === PRACTICE_SCOPE.WEAK_AREAS
+        || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.WEAK_AREAS
+        || nonAnchorWords.length
+        || (Array.isArray(this.postSessionRevisionWeakAyahs) && this.postSessionRevisionWeakAyahs.length)
+      )
+      if (weakPracticeActive || nonAnchorWords.length) return false
+
       // Anchor mode must still mark hooks even when no AI weak-word list exists.
       if (!(this.anchorModeEnabled || this.liveSessionTechniqueId === 'anchor')) return false
+      if (focusWords.length) return false
       const verse = (this.verses || []).find((item) => item.key === key)
         || (this.mushafDisplayVerses || []).find((item) => item.key === key)
       if (!verse) return false
@@ -13939,8 +14398,58 @@ export default {
       if (!needle) return false
       return indices.some((i) => this.normalizePracticeFocusWordText(tokens[i]) === needle)
     },
+    seedWeakAyahPracticeFocusWordsIfNeeded(ayahNumbers = null) {
+      if (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.some((w) => String(w?.reason || '') !== 'anchor')) {
+        return
+      }
+      const ayahs = (Array.isArray(ayahNumbers) && ayahNumbers.length
+        ? ayahNumbers
+        : (this.postSessionRevisionWeakAyahs
+          || this.aiReciteFinalPlan?.weakAyahs
+          || this.masteryTargetRange?.settings?.focus_ayahs
+          || this.postSessionRecommendation?.settings?.focus_ayahs
+          || []))
+        .map(Number)
+        .filter((n) => Number.isFinite(n) && n > 0)
+      if (!ayahs.length) return
+      const chapterId = Number(this.chapterId || this.sessionConfig?.chapterId || 0)
+      const ayahSet = new Set(ayahs)
+      const seeded = []
+      ;(this.verses || []).forEach((verse) => {
+        const ayah = Number(verse.number || verse.ayah || String(verse.key || '').split(':')[1] || 0)
+        if (!ayahSet.has(ayah)) return
+        const surah = Number(verse.surah || String(verse.key || '').split(':')[0] || chapterId || 0)
+        const tokens = this.tokenizeRecitationDisplayWords?.(verse.arabic || '')
+          || String(verse.arabic || '').trim().split(/\s+/).filter(Boolean)
+        tokens.forEach((text, wordIndex) => {
+          seeded.push({
+            text,
+            wordIndex,
+            ayahNumber: ayah,
+            surahId: surah || null,
+            verseKey: verse.key || (surah && ayah ? `${surah}:${ayah}` : null),
+            reason: 'weak_ayah',
+          })
+        })
+      })
+      if (!seeded.length) return
+      this.practiceFocusWeakWords = normaliseWeakWordRecords(seeded)
+      this.persistPracticeFocusWeakWords()
+      this.clearMushafAyahHtmlCache?.()
+      this.schedulePracticeFocusWordDomSync?.([0, 200, 600, 1200])
+    },
     seedAnchorPracticeFocusWordsIfNeeded() {
       if (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length) return
+      // Never seed first/last anchors when revising weak ayahs/words.
+      if (
+        this.focusPhraseRevisionActive
+        || this.postSessionSelectedPracticeScope === PRACTICE_SCOPE.WEAK_AREAS
+        || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.WEAK_AREAS
+        || (Array.isArray(this.postSessionRevisionWeakAyahs) && this.postSessionRevisionWeakAyahs.length)
+      ) {
+        this.seedWeakAyahPracticeFocusWordsIfNeeded()
+        return
+      }
       if (!(this.anchorModeEnabled || this.liveSessionTechniqueId === 'anchor')) return
       const from = Number(this.rangeStart || this.sessionConfig?.rangeStart || 0)
       const to = Number(this.rangeEnd || this.sessionConfig?.rangeEnd || from)
@@ -14016,12 +14525,18 @@ export default {
       })
 
       root.querySelectorAll('.wbw-word, word.wbw-word, .madani-word[data-word-index]').forEach((el) => {
-        el.classList.remove('practice-focus-word', 'practice-focus-word--active')
+        el.classList.remove('practice-focus-word', 'practice-focus-word--active', 'practice-focus-word--emphasis')
         el.removeAttribute('data-practice-focus')
+        el.removeAttribute('data-practice-emphasis')
         if (el.getAttribute('title') === focusTitle) el.removeAttribute('title')
       })
 
       if (!words.length) return
+
+      const emphasize = this.postSessionPracticeEmphasizeWeakAreas
+        || this.postSessionRecommendation?.settings?.emphasize_weak_areas === true
+        || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
+        || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.FULL_RANGE
 
       root.querySelectorAll('.wbw-word[data-verse-key], word.wbw-word[data-verse-key], .madani-word[data-verse-key][data-word-index]').forEach((el) => {
         const verseKey = String(el.getAttribute('data-verse-key') || '')
@@ -14036,6 +14551,10 @@ export default {
         const byText = text && bucket.has(text)
         if (!byIndex && !byText) return
         el.classList.add('practice-focus-word')
+        if (emphasize) {
+          el.classList.add('practice-focus-word--emphasis')
+          el.setAttribute('data-practice-emphasis', 'true')
+        }
         el.setAttribute('data-practice-focus', 'true')
         if (!el.classList.contains('madani-word')) el.setAttribute('title', focusTitle)
       })
@@ -14043,15 +14562,14 @@ export default {
     ensurePracticeFocusWeakWordsFromPlan(settings = null) {
       const fromSettings = settings?.practice_weak_words || settings?.weak_words
       if (Array.isArray(fromSettings) && fromSettings.length) {
-        this.practiceFocusWeakWords = normaliseWeakWordRecords(fromSettings)
-        this.persistPracticeFocusWeakWords()
-        this.clearMushafAyahHtmlCache()
-        return
-      }
-      this.restorePracticeFocusWeakWords()
-      if (this.practiceFocusWeakWords?.length) {
-        this.clearMushafAyahHtmlCache()
-        return
+        const normalised = normaliseWeakWordRecords(fromSettings)
+          .filter((word) => String(word.reason || '') !== 'anchor')
+        if (normalised.length) {
+          this.practiceFocusWeakWords = normalised
+          this.persistPracticeFocusWeakWords()
+          this.clearMushafAyahHtmlCache()
+          return
+        }
       }
       const fromPlan = this.aiReciteFinalPlan?.weakWords
         || this.aiReciteFinalPlan?.planDetail?.weakWords
@@ -14059,10 +14577,41 @@ export default {
         || this.postSessionRecommendation?.settings?.practice_weak_words
         || this.postSessionRecommendation?.plan_detail?.weakWords
       if (Array.isArray(fromPlan) && fromPlan.length) {
-        this.practiceFocusWeakWords = normaliseWeakWordRecords(fromPlan)
-        this.persistPracticeFocusWeakWords()
-        this.clearMushafAyahHtmlCache()
+        const normalised = normaliseWeakWordRecords(fromPlan)
+          .filter((word) => String(word.reason || '') !== 'anchor')
+        if (normalised.length) {
+          this.practiceFocusWeakWords = normalised
+          this.persistPracticeFocusWeakWords()
+          this.clearMushafAyahHtmlCache()
+          return
+        }
       }
+      const focusAyahs = settings?.focus_ayahs
+        || this.masteryTargetRange?.settings?.focus_ayahs
+        || this.postSessionRecommendation?.settings?.focus_ayahs
+        || this.aiReciteFinalPlan?.weakAyahs
+        || this.postSessionRevisionWeakAyahs
+      if (Array.isArray(focusAyahs) && focusAyahs.length) {
+        this.seedWeakAyahPracticeFocusWordsIfNeeded(focusAyahs)
+        if (this.practiceFocusWeakWords?.length) return
+      }
+      this.restorePracticeFocusWeakWords()
+      if (this.practiceFocusWeakWords?.length) {
+        // Drop stale first/last anchor seeds when we are in weak-area practice.
+        if (
+          this.focusPhraseRevisionActive
+          || readPracticeScopeFromSettings(settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.WEAK_AREAS
+        ) {
+          const real = this.practiceFocusWeakWords.filter((word) => String(word.reason || '') !== 'anchor')
+          if (real.length) this.practiceFocusWeakWords = real
+          else this.practiceFocusWeakWords = []
+        }
+        if (this.practiceFocusWeakWords?.length) {
+          this.clearMushafAyahHtmlCache()
+          return
+        }
+      }
+      this.seedWeakAyahPracticeFocusWordsIfNeeded(focusAyahs)
     },
     focusPracticeWeakWord(word, options = {}) {
       if (!word) return
@@ -14282,6 +14831,7 @@ export default {
         mergedSettings
       )
       this.ensurePracticeFocusWeakWordsFromPlan(mergedSettings)
+      this.seedWeakAyahPracticeFocusWordsIfNeeded(mergedSettings?.focus_ayahs)
       this.seedAnchorPracticeFocusWordsIfNeeded()
       this.persistModeState(this.currentMode)
       this.persistUiState()
@@ -14309,6 +14859,7 @@ export default {
         mergedSettings
       )
       this.ensurePracticeFocusWeakWordsFromPlan(mergedSettings)
+      this.seedWeakAyahPracticeFocusWordsIfNeeded(mergedSettings?.focus_ayahs)
       this.seedAnchorPracticeFocusWordsIfNeeded()
       if (mergedSettings.playback_speed != null) {
         this.setPlaybackSpeed(Number(mergedSettings.playback_speed), { silent: true })
@@ -14330,6 +14881,11 @@ export default {
         sessionMode,
         settings: mergedSettings,
       })
+      this.queueSessionWorkspaceScrollReason(
+        sessionMode === 'revision' || isRepeatRecommendation({ session_mode: sessionMode })
+          ? SESSION_WORKSPACE_SCROLL_REASON.RECOMMENDED_REVISION
+          : SESSION_WORKSPACE_SCROLL_REASON.SESSION_SWITCH
+      )
       this.$nextTick(() => {
         this.schedulePracticeFocusWordDomSync()
         this.scheduleAnchorHighlights?.()
@@ -14391,6 +14947,19 @@ export default {
       // Enforce product mutual exclusions.
       if (this.blurModeEnabled && this.focusModeEnabled) this.focusModeEnabled = false
       if (this.blurModeEnabled && this.chainingEnabled) this.chainingEnabled = false
+
+      // Weak-ayah / weak-word revision must highlight those spots — not first/last anchors.
+      const hasWeakFocus = !!(
+        (Array.isArray(settings?.practice_weak_words) && settings.practice_weak_words.length)
+        || (Array.isArray(settings?.weak_words) && settings.weak_words.length)
+        || (Array.isArray(settings?.focus_ayahs) && settings.focus_ayahs.length)
+        || settings?.practice_weak_words_only === true
+        || settings?.weak_words_only === true
+        || (sessionMode === 'revision' && this.focusPhraseRevisionActive)
+      )
+      if (hasWeakFocus) {
+        this.anchorModeEnabled = false
+      }
     },
     queuePostSessionModalAfterAiReview(snapshot = null, previousStreak = 0) {
       if (!snapshot || !this.isLoggedIn) return
@@ -14739,6 +15308,7 @@ export default {
         settings,
       )
       this.ensurePracticeFocusWeakWordsFromPlan(settings)
+      this.seedWeakAyahPracticeFocusWordsIfNeeded(settings?.focus_ayahs)
       this.seedAnchorPracticeFocusWordsIfNeeded()
       this.persistModeState(this.currentMode)
       this.persistUiState()
@@ -14751,6 +15321,7 @@ export default {
         settings,
       )
       this.ensurePracticeFocusWeakWordsFromPlan(settings)
+      this.seedWeakAyahPracticeFocusWordsIfNeeded(settings?.focus_ayahs)
       this.seedAnchorPracticeFocusWordsIfNeeded()
 
       // New instance: wipe progress / completion from the ended record.
@@ -17472,6 +18043,7 @@ export default {
       this.amdOpen = true
       this.syncBodyScrollLock(true)
       this.playUiTone?.('open')
+      try { this.ensureAmdMistakeFeedbackController().preload() } catch (_) { /* ignore */ }
       await this.$nextTick()
       this.syncAmdMushafSurface()
       void this.refreshAmdMicStatus?.()
@@ -17696,15 +18268,21 @@ export default {
         }
       }
       const isFutureWord = (index) => {
+        if (Number.isFinite(this.amdFrozenAtWordIndex) && index > Number(this.amdFrozenAtWordIndex)) {
+          return true
+        }
         const ayah = ayahBounds.find((bound) => index >= bound.start && index < bound.end)
         if (!ayah) return false
         return expectedIndex < ayah.start
       }
       const patches = [...indexes].map((index) => {
         const statusEntry = statuses[index] || {}
-        const visual = isFutureWord(index)
+        let visual = isFutureWord(index)
           ? 'notAttempted'
           : this.resolveAmdWordVisual(statusEntry, true)
+        if (Number.isFinite(this.amdFrozenAtWordIndex) && index > Number(this.amdFrozenAtWordIndex)) {
+          visual = 'notAttempted'
+        }
         const isHiddenTarget = hiddenSet.has(index)
         const isCorrect = visual === 'correct' || visual === 'partial'
         const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(String(visual || ''))
@@ -17732,10 +18310,13 @@ export default {
       return status === 'correct' || status === 'partial' || status === 'incorrect'
     },
     getAmdExpectedWordIndex(statuses = [], hiddenSet = null) {
+      if (Number.isFinite(this.amdFrozenAtWordIndex)) {
+        return Math.max(0, Number(this.amdFrozenAtWordIndex))
+      }
       const words = Array.isArray(statuses) ? statuses : []
       const hidden = hiddenSet || new Set(this.amdHiddenWordIndexes || [])
-      // Never freeze on red: incorrect is marked but does not block progress.
-      // Cursor advances to the next unsettled (pending) word so the learner can finish the range.
+      // In continue-and-review, incorrect is marked but does not block progress.
+      // Stop-on-mistake freezes via amdFrozenAtWordIndex above.
       const isSettled = (status) => {
         const s = String(status || '').toLowerCase()
         return s === 'correct' || s === 'partial' || s === 'incorrect' || s === 'omitted' || s === 'skipped'
@@ -17895,6 +18476,95 @@ export default {
       this.amdTajweedEnabled = !this.amdTajweedEnabled
       this.syncAmdMushafSurface()
     },
+    ensureAmdMistakeFeedbackController() {
+      if (this.amdMistakeFeedback) return this.amdMistakeFeedback
+      const controller = createMistakeFeedbackController({
+        enabled: this.amdMistakeSoundEnabled,
+        mode: this.amdMistakeHandlingMode || MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
+      })
+      this.amdMistakeFeedback = controller
+      return controller
+    },
+    toggleAmdMistakeSound() {
+      const controller = this.ensureAmdMistakeFeedbackController()
+      const next = !this.amdMistakeSoundEnabled
+      this.amdMistakeSoundEnabled = controller.setEnabled(next, { persist: true })
+      storeMistakeSoundEnabled(this.amdMistakeSoundEnabled)
+    },
+    setAmdMistakeHandlingMode(mode) {
+      const next = Object.values(MISTAKE_HANDLING_MODES).includes(mode)
+        ? mode
+        : MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW
+      this.amdMistakeHandlingMode = next
+      this.ensureAmdMistakeFeedbackController().setMode(next)
+    },
+    clearAmdMistakeVisual() {
+      if (this.amdMistakeVisualTimer) {
+        clearTimeout(this.amdMistakeVisualTimer)
+        this.amdMistakeVisualTimer = null
+      }
+      this.amdMistakeVisualActive = false
+    },
+    flashAmdMistakeVisual() {
+      this.clearAmdMistakeVisual()
+      this.amdMistakeVisualActive = true
+      this.amdMistakeVisualTimer = setTimeout(() => {
+        this.amdMistakeVisualActive = false
+        this.amdMistakeVisualTimer = null
+      }, MISTAKE_VISUAL_MS)
+    },
+    prepareAmdMistakeSoundForRecording() {
+      const controller = this.ensureAmdMistakeFeedbackController()
+      controller.setEnabled(this.amdMistakeSoundEnabled, { persist: false })
+      controller.setMode(this.amdMistakeHandlingMode || MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW)
+      controller.resetSessionSignals()
+      this.amdFrozenAtWordIndex = null
+      controller.preload()
+      return controller.prepareAfterUserGesture()
+    },
+    freezeAmdLiveWordColoring(wordIndex) {
+      const freezeAt = Number(wordIndex)
+      if (!Number.isFinite(freezeAt) || freezeAt < 0) return
+      if (!Number.isFinite(this.amdFrozenAtWordIndex) || freezeAt < this.amdFrozenAtWordIndex) {
+        this.amdFrozenAtWordIndex = freezeAt
+      }
+      try { this.cancelLiveWordsUpdate?.('recitation') } catch (_) { /* ignore */ }
+      try { this.cancelLiveWordDomPatchFrame?.() } catch (_) { /* ignore */ }
+    },
+    maybeNotifyAmdConfirmedMistake({
+      wordIndex,
+      previousStatus,
+      nextStatus,
+      confidence,
+      interim = false,
+    } = {}) {
+      if (!this.amdOpen) return null
+      if (Number.isFinite(this.amdFrozenAtWordIndex)) {
+        return { played: false, visual: false, shouldStop: true, reason: 'already_frozen' }
+      }
+      const reviewing = this.amdStage === AMD_STAGES.COMPLETE
+        || this.amdStage === AMD_STAGES.RESULTS
+        || this.amdEndingSoon
+      const micActive = !!this.recitationCheckRecording
+        && (this.amdStage === AMD_STAGES.LISTENING || this.amdStage === AMD_STAGES.STARTING)
+      const controller = this.ensureAmdMistakeFeedbackController()
+      const result = controller.notifyWordTransition({
+        wordIndex,
+        previousStatus,
+        nextStatus,
+        confidence,
+        micActive,
+        reviewing,
+        interim,
+      })
+      if (result?.visual) this.flashAmdMistakeVisual()
+      if (result?.shouldStop && this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE) {
+        // Freeze coloring immediately so later words in this same status batch stay pending.
+        this.freezeAmdLiveWordColoring(wordIndex)
+        try { this.stopAmdAndAssess?.() } catch (_) { /* ignore */ }
+      }
+      return result
+    },
     startAmdPeek() {
       if (this.amdStage === AMD_STAGES.COMPLETE || this.amdEndingSoon) return
       this.amdPeekActive = true
@@ -17926,7 +18596,10 @@ export default {
       this.amdEndingSoon = false
       this._amdCompleting = false
       this._amdLastExpectedIndex = null
+      this.amdFrozenAtWordIndex = null
       this.clearAmdElapsedTimer()
+      this.clearAmdMistakeVisual()
+      try { this.amdMistakeFeedback?.resetSessionSignals?.() } catch (_) { /* ignore */ }
       this.resetDisplayedRecitationAyah?.()
       this.seedRecitationLiveWords(this.recitationCheckPendingTargets || [])
       if (!options.preserveDifficulty) {
@@ -17979,6 +18652,8 @@ export default {
       }
       try { this.stopRecitationSpeechRecognition?.() } catch (_) { /* ignore */ }
       this.clearAmdElapsedTimer()
+      this.clearAmdMistakeVisual()
+      try { this.amdMistakeFeedback?.resetSessionSignals?.() } catch (_) { /* ignore */ }
       this.amdPeekActive = false
       this.amdEndingSoon = false
       this._amdCompleting = false
@@ -18031,6 +18706,8 @@ export default {
       this.amdBusy = true
       this.amdStage = AMD_STAGES.STARTING
       this.amdStartedAt = Date.now()
+      // Unlock / preload soft mistake cue after the Start gesture (autoplay policy).
+      try { void this.prepareAmdMistakeSoundForRecording() } catch (_) { /* ignore */ }
       // Re-apply the chosen visibility mask the moment listening starts.
       this.rebuildAmdHiddenWordMask()
       this.syncAmdMushafSurface()
@@ -18096,6 +18773,7 @@ export default {
     },
     async restartAmdListeningPreserveProgress() {
       if (!this.amdOpen || this.amdEndingSoon || this._amdCompleting) return
+      if (Number.isFinite(this.amdFrozenAtWordIndex)) return
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return
       this.amdError = ''
       // Stay on LISTENING so a brief MediaRecorder restart does not feel like the test ended.
@@ -19709,7 +20387,36 @@ export default {
       if (!current.length) return false
       let next = current
       const changedWords = []
+      const freezeAt = (this.amdOpen && targetKey === 'recitationLiveWords' && Number.isFinite(this.amdFrozenAtWordIndex))
+        ? Number(this.amdFrozenAtWordIndex)
+        : null
+      const ending = !!(this.amdOpen && targetKey === 'recitationLiveWords' && (this.amdEndingSoon || this._amdCompleting))
+
       for (let index = 0; index < current.length; index += 1) {
+        // Stop-on-mistake: never paint words after the confirmed mistake.
+        if (freezeAt != null && index > freezeAt) {
+          const word = current[index] || {}
+          const statusValue = String(word.status || 'pending').toLowerCase()
+          if (statusValue && statusValue !== 'pending' && statusValue !== 'notattempted') {
+            const pendingWord = {
+              ...word,
+              status: 'pending',
+              note: 'Waiting for this word.',
+              actual: undefined,
+              similarity: undefined,
+              confidence: undefined,
+            }
+            if (next === current) next = current.slice()
+            next[index] = pendingWord
+            changedWords.push({ index, word: pendingWord })
+          }
+          continue
+        }
+        // Once ending after a freeze, keep the mistaken word stable against late ASR.
+        if (ending && freezeAt != null && index === freezeAt) {
+          continue
+        }
+
         const word = current[index] || {}
         const status = statuses[index] || {}
         const incomingStatus = status.status || 'pending'
@@ -19732,6 +20439,38 @@ export default {
         if (next === current) next = current.slice()
         next[index] = nextWord
         changedWords.push({ index, word: nextWord })
+        if (this.amdOpen && targetKey === 'recitationLiveWords') {
+          const cue = this.maybeNotifyAmdConfirmedMistake({
+            wordIndex: index,
+            previousStatus: word.status || 'pending',
+            nextStatus: nextWord.status || 'pending',
+            confidence: nextWord.confidence,
+            interim: status.interim === true || status.hypothesis === true,
+          })
+          if (cue?.shouldStop || Number.isFinite(this.amdFrozenAtWordIndex)) {
+            const stopAt = Number.isFinite(this.amdFrozenAtWordIndex)
+              ? Number(this.amdFrozenAtWordIndex)
+              : index
+            this.freezeAmdLiveWordColoring(stopAt)
+            for (let j = stopAt + 1; j < current.length; j += 1) {
+              const later = (next === current ? current : next)[j] || current[j] || {}
+              const laterStatus = String(later.status || 'pending').toLowerCase()
+              if (!laterStatus || laterStatus === 'pending' || laterStatus === 'notattempted') continue
+              if (next === current) next = current.slice()
+              const pendingWord = {
+                ...later,
+                status: 'pending',
+                note: 'Waiting for this word.',
+                actual: undefined,
+                similarity: undefined,
+                confidence: undefined,
+              }
+              next[j] = pendingWord
+              changedWords.push({ index: j, word: pendingWord })
+            }
+            break
+          }
+        }
       }
       if (next === current) return false
       this[targetKey] = next
@@ -19783,6 +20522,17 @@ export default {
       return true
     },
     updateLiveWordsFromCommittedRecognition(kind = 'recitation') {
+      if (
+        this.amdOpen
+        && kind === 'recitation'
+        && (
+          Number.isFinite(this.amdFrozenAtWordIndex)
+          || this.amdEndingSoon
+          || this._amdCompleting
+        )
+      ) {
+        return
+      }
       const targetVerses = kind === 'memorisation'
         ? this.aiMemorisationCheckerTargets
         : (this.recitationCheckPendingTargets?.length ? this.recitationCheckPendingTargets : this.getRecitationCheckTargetVerses())
@@ -19812,12 +20562,13 @@ export default {
         livePreviewAlignmentOptions.strictProgression = true
       }
       // Memorisation test: fair ASR thresholds, no skip-ahead, article-tolerant.
-      // advanceOnIncorrect only consumes a red when the NEXT word is clearly heard.
+      // Continue-and-review may soft-advance past a red; stop-on-mistake must not.
       if (this.amdOpen && kind === 'recitation') {
+        const stopOnMistake = this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
         liveAlignmentOptions.strictProgression = true
         liveAlignmentOptions.lookahead = 0
         liveAlignmentOptions.partialAdvances = true
-        liveAlignmentOptions.advanceOnIncorrect = true
+        liveAlignmentOptions.advanceOnIncorrect = !stopOnMistake
         liveAlignmentOptions.allowArticleMatch = true
         liveAlignmentOptions.correctSimilarity = 0.82
         liveAlignmentOptions.partialSimilarity = 0.52
@@ -20282,6 +21033,17 @@ export default {
       }
     },
     applyRecognitionEvent(kind = 'recitation', event = {}) {
+      if (
+        this.amdOpen
+        && kind === 'recitation'
+        && (
+          Number.isFinite(this.amdFrozenAtWordIndex)
+          || this.amdEndingSoon
+          || this._amdCompleting
+        )
+      ) {
+        return this.getRecognitionPipelineState(kind)
+      }
       const nextState = stabilizeRecognitionEvent(this.getRecognitionPipelineState(kind), event, {
         confidenceThreshold: Number.isFinite(Number(event?.confidenceThreshold))
           ? Number(event.confidenceThreshold)
@@ -21291,6 +22053,16 @@ export default {
       this.postSessionAiReciteActive = false
       this.showPostSessionModal = true
     },
+    closePostSessionRecommendationModal() {
+      // Closing must not discard a saved recommendation — it stays on dashboard / history.
+      this.showPostSessionModal = false
+      this.showPostSessionConfetti = false
+      this.postSessionOffcanvasOpen = false
+      this.postSessionAiDetailsExpanded = false
+      this.postSessionViewState = this.postSessionRecommendation
+        ? 'recommendation_ready'
+        : (this.postSessionViewState || 'idle')
+    },
     async finalizePostSessionAiReciteFromResult(result) {
       if (!result || !this.postSessionAiReciteActive) return false
 
@@ -21361,6 +22133,9 @@ export default {
       this.aiReciteAttempts = [...(this.aiReciteAttempts || []), attempt].slice(0, AI_RECITE_MAX_ATTEMPTS)
       this.aiReciteAverageAccuracy = averageAttemptAccuracy(this.aiReciteAttempts)
       this.capturePracticeFocusWeakWordsFromResult(attempt.result)
+      if (this.revisionBaselineAttempt) {
+        this.updateRevisionAttemptComparison(attempt.result)
+      }
     },
     async buildAndPersistAiReciteFinalPlan() {
       // Prefer Laravel-authored AI Memorisation Detection plan when available.
@@ -21562,7 +22337,11 @@ export default {
                 color_counts: attempt.result?.colorCounts || plan.colorCounts,
                 weak_words: plan.weakWords,
                 word_statuses: attempt.result?.wordStatuses || [],
-                plan_snapshot: plan.planDetail,
+                plan_snapshot: {
+                  ...(plan.planDetail || {}),
+                  applied_practice_setup: this.appliedPracticeSetupSnapshot
+                    || this.captureAppliedPracticeSetup({ aiCheckSurface: true }),
+                },
               })),
             },
           )
@@ -24250,6 +25029,8 @@ export default {
       this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
       this.flowStep = 'learn'
       this.showTools = false
+      this.queueSessionWorkspaceScrollReason(SESSION_WORKSPACE_SCROLL_REASON.DASHBOARD_RETURN)
+      this.markPracticeSetupRestored()
       this.$nextTick(() => {
         this.resumePlaybackFromRestoredState?.()
         this.scrollToWorkspaceMain?.()
@@ -24555,6 +25336,8 @@ export default {
       this.applyLocalActiveSessionState()
       this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
       this.resumePlaybackFromRestoredState()
+      this.markPracticeSetupRestored()
+      this.scheduleSessionWorkspaceScroll(SESSION_WORKSPACE_SCROLL_REASON.RESUME_SESSION)
       this.$nextTick(async () => {
         const playbackStarted = await this.ensureSessionPlaybackStarted()
         if (!playbackStarted && this.queue?.length) {
@@ -24699,6 +25482,7 @@ export default {
           )
           this.sessionLifecycleError = null
           this.sessionBroadcast?.publish('session-resumed', { at: Date.now() })
+          this.scheduleSessionWorkspaceScroll(SESSION_WORKSPACE_SCROLL_REASON.RESUME_SESSION)
           return true
         } catch (error) {
           console.error(error)
@@ -25889,6 +26673,7 @@ export default {
         'anchor-pulse': !!word.isAnchor,
         'is-focus-dim': !!word.isFocusDimmed,
         'practice-focus-word': !!word.isPracticeFocus,
+        'practice-focus-word--emphasis': !!word.isPracticeFocusEmphasis,
         'practice-focus-word--active': !!word.isPracticeFocusActive,
         'ai-recitation-active': !!word.hasAiReview,
         [status]: !!status
@@ -26633,7 +27418,7 @@ export default {
 
     scrollPageToTop() {
       if (typeof window === 'undefined') return
-      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+      const reduceMotion = prefersSessionScrollReducedMotion()
       const behavior = reduceMotion ? 'auto' : 'smooth'
       try {
         window.scrollTo({ top: 0, left: 0, behavior })
@@ -26643,11 +27428,160 @@ export default {
       if (typeof document !== 'undefined') {
         document.documentElement.scrollTop = 0
         document.body.scrollTop = 0
-        document.querySelectorAll('.mushaf-viewport-scroll').forEach((el) => {
-          if (el && el.scrollTop) el.scrollTop = 0
-        })
       }
       this.showBackToTop = false
+    },
+
+    initSessionWorkspaceScrollController() {
+      if (this.sessionWorkspaceScrollController) return
+      this.sessionWorkspaceScrollController = createSessionWorkspaceScrollController({
+        getTarget: () => {
+          const shell = this.$el?.querySelector?.('[data-session-scroll-target], .workspace-shell')
+          if (shell) return shell
+          return this.$refs.workspaceMain
+            || resolveSessionScrollTarget(this.$el || document)
+        },
+        getNavOffset: () => measureStickyNavOffset(document),
+        isBlocked: () => this.isSessionWorkspaceScrollBlocked(),
+        prefersReducedMotion: prefersSessionScrollReducedMotion,
+        schedule: (fn) => {
+          this.$nextTick(() => {
+            if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+              window.requestAnimationFrame(() => window.requestAnimationFrame(fn))
+            } else {
+              setTimeout(fn, 32)
+            }
+          })
+        },
+      })
+    },
+
+    isSessionWorkspaceScrollBlocked() {
+      // Never fight live recitation, AMD auto-follow, or modal-owned scrolling.
+      if (this.isSelfCheckRecording || this.recitationCheckRecording || this.recitationCheckPreparing) {
+        return true
+      }
+      if (this.amdOpen && (this.amdStage === AMD_STAGES.LISTENING || this.amdStage === AMD_STAGES.PROCESSING)) {
+        return true
+      }
+      if (this.postSessionAiReciteActive && this.isSelfCheckRecording) {
+        return true
+      }
+      return false
+    },
+
+    /**
+     * Queue a calm scroll to the session chrome after an explicit navigation event.
+     * Deduped centrally — safe to call once per entry; ignored for reactive noise.
+     */
+    scheduleSessionWorkspaceScroll(reason, options = {}) {
+      const resolvedReason = String(
+        reason
+        || this.pendingSessionWorkspaceScrollReason
+        || SESSION_WORKSPACE_SCROLL_REASON.NEW_SESSION
+      )
+      this.pendingSessionWorkspaceScrollReason = null
+      this.initSessionWorkspaceScrollController()
+      const identity = buildSessionScrollIdentity({
+        reason: resolvedReason,
+        chapterId: options.chapterId ?? this.chapterId ?? this.sessionConfig?.chapterId,
+        rangeStart: options.rangeStart ?? this.rangeStart ?? this.sessionConfig?.rangeStart,
+        rangeEnd: options.rangeEnd ?? this.rangeEnd ?? this.sessionConfig?.rangeEnd,
+        sessionId: options.sessionId
+          ?? this.loadingSessionId
+          ?? this.selectedSessionId
+          ?? this.backendSessionSnapshot?.id
+          ?? '',
+        recommendationId: options.recommendationId
+          ?? this.postSessionRecommendation?.id
+          ?? '',
+      })
+      return this.sessionWorkspaceScrollController?.requestScroll({
+        reason: resolvedReason,
+        identity,
+        force: !!options.force,
+      })
+    },
+
+    queueSessionWorkspaceScrollReason(reason) {
+      if (!reason) return
+      this.pendingSessionWorkspaceScrollReason = String(reason)
+    },
+
+    collectActivePracticeSetupInput(extras = {}) {
+      const reciter = this.reciters?.find?.((item) => String(item.id) === String(this.reciterId || ''))
+      const surahName = this.getChapterDisplayName?.(this.currentChapter || this.chapterId) || ''
+      return collectPracticeSetupInputFromSession(this, {
+        autoFollowEnabled: extras.autoFollowEnabled !== undefined
+          ? extras.autoFollowEnabled
+          : readStoredAutoFollowEnabled(),
+        autoFollowPaused: !!extras.autoFollowPaused,
+        aiCheckSurface: !!extras.aiCheckSurface || !!this.amdOpen,
+        surahName,
+        reciterName: reciter?.name || 'Alafasy',
+        restoredFromResume: !!extras.restoredFromResume || !!this.practiceSetupRestoredNotice,
+        selectionSource: extras.selectionSource,
+        recommendedTechniqueIds: extras.recommendedTechniqueIds,
+        recommendedReasons: extras.recommendedReasons,
+        practiceScope: extras.practiceScope,
+        scopeRecommended: extras.scopeRecommended,
+        scopeRecommendedReason: extras.scopeRecommendedReason,
+        isRecording: extras.isRecording,
+        sessionActive: extras.sessionActive,
+        sessionPaused: extras.sessionPaused,
+      })
+    },
+
+    captureAppliedPracticeSetup(extras = {}) {
+      const model = buildActivePracticeSetup(this.collectActivePracticeSetupInput(extras), this.t.bind(this))
+      this.appliedPracticeSetupSnapshot = model.snapshot
+      return model.snapshot
+    },
+
+    showPracticeSetupStatus(change = {}) {
+      const message = buildPracticeSetupStatusMessage(change, this.t.bind(this))
+      if (!message) return
+      this.practiceSetupStatusMessage = message
+      if (this.practiceSetupStatusTimer) {
+        clearTimeout(this.practiceSetupStatusTimer)
+      }
+      this.practiceSetupStatusTimer = setTimeout(() => {
+        this.practiceSetupStatusMessage = ''
+        this.practiceSetupStatusTimer = null
+      }, Number(change.durationMs) || 3200)
+    },
+
+    guardPracticeSettingChange(settingId) {
+      const gate = canChangePracticeSetting(settingId, {
+        isRecording: !!(this.isSelfCheckRecording || this.recitationCheckRecording),
+        sessionActive: !!(this.isSessionActive || this.centralSession?.sessionStatus === 'active'),
+      })
+      if (!gate.allowed) {
+        this.showPracticeSetupStatus({ message: gate.reason })
+        return false
+      }
+      if (gate.warn) {
+        this.showPracticeSetupStatus({ message: gate.reason })
+      }
+      return true
+    },
+
+    markPracticeSetupRestored() {
+      const notice = buildPracticeSetupStatusMessage({ type: 'restored' }, this.t.bind(this))
+      this.practiceSetupRestoredNotice = notice
+      this.showPracticeSetupStatus({ type: 'restored' })
+      this.captureAppliedPracticeSetup({ restoredFromResume: true })
+      setTimeout(() => {
+        if (this.practiceSetupRestoredNotice === notice) {
+          this.practiceSetupRestoredNotice = ''
+        }
+      }, 5000)
+    },
+
+    scrollToWorkspaceMain() {
+      this.scheduleSessionWorkspaceScroll(
+        this.pendingSessionWorkspaceScrollReason || SESSION_WORKSPACE_SCROLL_REASON.RESUME_SESSION
+      )
     },
 
     buildContinueSessionPayload() {
@@ -26682,7 +27616,9 @@ export default {
         readingViewMode: this.readingViewMode,
         mushafPageIndex: this.mushafPageIndex,
         sessionStartedAt: Number(this.sessionStartedAt || 0) || null,
-        config
+        config,
+        appliedPracticeSetup: this.appliedPracticeSetupSnapshot
+          || this.captureAppliedPracticeSetup(),
       }
     },
 
@@ -28061,11 +28997,6 @@ export default {
       })
     },
 
-    scrollToWorkspaceMain() {
-      const target = this.$refs.workspaceMain || document.getElementById('memorisationWorkspaceMain')
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    },
-
     reconcilePersistedSessionCompletion() {
       if (!this.isSessionCompleted) return
       // Keep ended post-session choice CTAs across refresh — don't demote to Start.
@@ -29019,9 +29950,15 @@ export default {
       const plainText = String(wordData.ar || wordData.text || wordData.word || '').trim()
         || String(innerHtml || '').replace(/<[^>]+>/g, '')
       const focusWeak = this.isPracticeFocusWeakWord(verse.key, idx, plainText)
+      const emphasizeWeak = focusWeak && (
+        this.postSessionPracticeEmphasizeWeakAreas
+        || this.postSessionRecommendation?.settings?.emphasize_weak_areas === true
+        || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
+        || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.FULL_RANGE
+      )
       // Prefer exact weak-word marks from AI evidence over whole-ayah shading.
       const weakClass = focusWeak
-        ? ` practice-focus-word${isActive ? ' practice-focus-word--active' : ''}`
+        ? ` practice-focus-word${emphasizeWeak ? ' practice-focus-word--emphasis' : ''}${isActive ? ' practice-focus-word--active' : ''}`
         : (this.practiceFocusWeakWords?.length ? '' : (this.isWeakAyah(verse.key) ? ' weak-word' : ''))
       const masteredClass = this.isMasteredAyah(verse.key) ? ' mastered-word' : ''
       const recitationStatus = this.readingViewMode === 'stacked'
@@ -29038,7 +29975,7 @@ export default {
         ? (this.t?.('memorisation.postSession.coach.live.focusCueTitle') || 'Focus on this word')
         : ''
       const focusAttr = focusWeak
-        ? ` data-practice-focus="true" title="${this.escapeHtml(focusTitle)}"`
+        ? ` data-practice-focus="true"${emphasizeWeak ? ' data-practice-emphasis="true"' : ''} aria-description="${this.escapeHtml(focusTitle)}" title="${this.escapeHtml(focusTitle)}"`
         : ''
       const includeMeanings = options.includeMeanings === true
         || (options.includeMeanings !== false && this.showWordByWord && !options.suppressMeanings)

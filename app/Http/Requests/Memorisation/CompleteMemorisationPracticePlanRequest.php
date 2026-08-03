@@ -20,6 +20,8 @@ class CompleteMemorisationPracticePlanRequest extends FormRequest
             'repetitions_completed' => ['sometimes', 'integer', 'min:0', 'max:50'],
             'chunks_completed' => ['sometimes', 'integer', 'min:0', 'max:50'],
             'strengthened_words' => ['sometimes', 'integer', 'min:0', 'max:200'],
+            'outcome' => ['sometimes', 'nullable', 'string', 'max:32'],
+            'completion_outcome' => ['sometimes', 'nullable', 'string', 'max:32'],
             'notes' => ['sometimes', 'nullable', 'string', 'max:500'],
         ];
     }

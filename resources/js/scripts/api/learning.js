@@ -502,6 +502,54 @@ function sanitizeRecommendationSettings(settings) {
   if (Number.isFinite(chainingReps)) clean.chaining_repetitions = Math.max(1, Math.min(5, Math.round(chainingReps)))
   const anchorCount = Number(settings.anchor_count)
   if (Number.isFinite(anchorCount)) clean.anchor_count = Math.max(1, Math.min(4, Math.round(anchorCount)))
+  const scopeRaw = String(settings.practice_scope || settings.scope || '').toLowerCase().trim()
+  if (scopeRaw === 'weak_areas' || scopeRaw === 'weak' || scopeRaw === 'weak_words' || scopeRaw === 'weak_only') {
+    clean.practice_scope = 'weak_areas'
+    clean.practice_weak_words_only = true
+    clean.weak_words_only = true
+  } else if (scopeRaw === 'full_range' || scopeRaw === 'full' || scopeRaw === 'full_session') {
+    clean.practice_scope = 'full_range'
+    clean.practice_weak_words_only = false
+    clean.weak_words_only = false
+  }
+  if (typeof settings.practice_weak_words_only === 'boolean' && clean.practice_scope == null) {
+    clean.practice_weak_words_only = settings.practice_weak_words_only
+    clean.weak_words_only = settings.practice_weak_words_only
+    clean.practice_scope = settings.practice_weak_words_only ? 'weak_areas' : 'full_range'
+  }
+  if (typeof settings.emphasize_weak_areas === 'boolean') {
+    clean.emphasize_weak_areas = settings.emphasize_weak_areas
+  }
+  if (settings.source_attempt_id != null && settings.source_attempt_id !== '') {
+    clean.source_attempt_id = String(settings.source_attempt_id).slice(0, 64)
+  }
+  if (Array.isArray(settings.focus_ayahs)) {
+    clean.focus_ayahs = settings.focus_ayahs
+      .map((n) => Number(n))
+      .filter((n) => Number.isFinite(n) && n >= 1 && n <= 300)
+      .slice(0, 40)
+  }
+  if (Array.isArray(settings.practice_focus_items)) {
+    clean.practice_focus_items = settings.practice_focus_items.slice(0, 16).map((item) => {
+      if (!item || typeof item !== 'object') return null
+      const ayahNumber = Number(item.ayahNumber)
+      if (!Number.isFinite(ayahNumber) || ayahNumber < 1) return null
+      return {
+        type: ['word', 'phrase', 'ayah'].includes(String(item.type)) ? String(item.type) : 'phrase',
+        surahId: Number.isFinite(Number(item.surahId)) ? Number(item.surahId) : undefined,
+        ayahNumber,
+        verseKey: item.verseKey ? String(item.verseKey).slice(0, 32) : undefined,
+        startWordIndex: Math.max(0, Number(item.startWordIndex) || 0),
+        endWordIndex: Math.max(0, Number(item.endWordIndex) || 0),
+        weakWordIndexes: Array.isArray(item.weakWordIndexes)
+          ? item.weakWordIndexes.map(Number).filter((n) => Number.isFinite(n) && n >= 0).slice(0, 40)
+          : [],
+        wordIds: Array.isArray(item.wordIds)
+          ? item.wordIds.map((id) => String(id).slice(0, 40)).slice(0, 24)
+          : [],
+      }
+    }).filter(Boolean)
+  }
   const weakSource = Array.isArray(settings.practice_weak_words)
     ? settings.practice_weak_words
     : (Array.isArray(settings.weak_words) ? settings.weak_words : null)

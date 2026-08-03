@@ -2,22 +2,24 @@
   <Teleport to="body">
     <div
       v-show="open"
+      ref="overlay"
       class="modal-overlay mutqin-modal-overlay amd-overlay"
       :data-theme="themeAttr"
       @click.self="onCancel"
-      @keydown.esc.stop.prevent="onCancel"
+      @keydown="onOverlayKeydown"
     >
       <div
-        class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full amd-dialog"
+        ref="dialog"
+        class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full amd-dialog amd-dialog--spacious"
         role="dialog"
         aria-modal="true"
         aria-labelledby="amdModalTitle"
       >
-        <div class="modal-content mutqin-modal-surface amd-modal amd-modal--mushaf amd-modal--test amd-modal--premium">
-          <header class="amd-header amd-header--premium amd-header--compact">
+        <div class="modal-content mutqin-modal-surface amd-modal amd-modal--mushaf amd-modal--test amd-modal--premium amd-modal--spacious">
+          <header class="amd-header amd-header--premium amd-header--compact amd-header--sticky">
             <div class="amd-header-copy">
               <div class="amd-title-row">
-                <h2 id="amdModalTitle" class="amd-title amd-title--premium">{{ title }}</h2>
+                <h2 id="amdModalTitle" class="amd-title amd-title--premium" tabindex="-1">{{ title }}</h2>
                 <span
                   v-if="betaBadge"
                   class="amd-beta-badge"
@@ -50,7 +52,7 @@
             </div>
           </header>
 
-          <div class="amd-body amd-body--premium amd-body--compact">
+          <div class="amd-body amd-body--premium amd-body--compact amd-body--scroll">
             <div
               v-if="!isComplete"
               class="amd-toolbar amd-toolbar--icons amd-toolbar--tools"
@@ -131,24 +133,30 @@
                 <span class="amd-tool-cell__hint">{{ textSizeShortLabel }}</span>
               </div>
 
-              <div v-if="canStop" class="amd-tool-cell amd-tool-cell--stop">
+              <div class="amd-tool-cell">
                 <button
                   type="button"
-                  class="amd-tool-btn amd-tool-btn--stop"
-                  :class="{ active: isListening }"
-                  :aria-label="stopLabel"
-                  :title="stopLabel"
-                  @click.stop="$emit('stop')"
+                  class="amd-tool-btn amd-tool-btn--sound"
+                  :class="{ active: mistakeSoundEnabled }"
+                  :aria-pressed="mistakeSoundEnabled ? 'true' : 'false'"
+                  :aria-label="mistakeSoundLabel"
+                  :title="mistakeSoundHint || mistakeSoundLabel"
+                  @click.stop="$emit('toggle-mistake-sound')"
                 >
-                  <i class="bi bi-stop-fill" aria-hidden="true"></i>
-                  <span class="amd-tool-btn__name">{{ stopLabel }}</span>
+                  <i
+                    class="bi"
+                    :class="mistakeSoundEnabled ? 'bi-volume-up' : 'bi-volume-mute'"
+                    aria-hidden="true"
+                  ></i>
+                  <span class="amd-tool-btn__name">{{ mistakeSoundEnabled ? mistakeSoundOnLabel : mistakeSoundOffLabel }}</span>
                 </button>
-                <span class="amd-tool-cell__hint">{{ stopLabel }}</span>
+                <span class="amd-tool-cell__hint">{{ mistakeSoundShortLabel }}</span>
               </div>
             </div>
 
             <div
-              class="amd-mushaf-shell amd-mushaf-shell--premium"
+              ref="mushafShell"
+              class="amd-mushaf-shell amd-mushaf-shell--premium amd-mushaf-shell--primary"
               :class="{
                 'is-blur-active': blurActive && !peeking && !isComplete,
                 'is-gap-mask': !blurActive && !peeking && !isComplete,
@@ -156,33 +164,27 @@
                 'is-listening': isListening,
                 'is-ready': isReady,
                 'is-complete': isComplete,
+                'is-mistake-flash': mistakeVisualActive,
               }"
               dir="rtl"
               lang="ar"
+              @scroll.passive="onMushafShellScroll"
             >
+              <div
+                v-if="mistakeVisualActive"
+                class="amd-mistake-visual"
+                role="status"
+                aria-live="polite"
+              >
+                <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                <span class="amd-mistake-visual__label">{{ mistakeVisualLabel }}</span>
+              </div>
               <div
                 ref="mushafSurface"
                 class="amd-mushaf-ayah amd-mushaf-ayah--premium"
                 :class="{ 'tajweed-enabled': tajweed }"
                 :style="{ '--amd-font-scale': fontScale }"
               ></div>
-            </div>
-
-            <div v-if="isReady && !isComplete && !isError" class="amd-start-wrap amd-start-wrap--inline">
-              <button
-                type="button"
-                class="amd-record-btn amd-record-btn--inline"
-                :class="{ 'is-busy': busy }"
-                :aria-label="startLabel"
-                :title="startHint || startLabel"
-                :disabled="busy"
-                @click.stop="$emit('start')"
-              >
-                <span class="amd-record-btn__core" aria-hidden="true">
-                  <i class="bi bi-mic-fill"></i>
-                </span>
-                <strong class="amd-record-btn__label">{{ startLabel }}</strong>
-              </button>
             </div>
 
             <section
@@ -195,14 +197,61 @@
 
             <section
               v-else-if="isComplete"
-              class="amd-complete amd-complete--premium"
+              class="amd-complete amd-complete--premium amd-complete--body"
               role="status"
               aria-live="assertive"
               aria-atomic="true"
             >
               <p class="amd-complete__title">{{ completeTitle }}</p>
               <p class="amd-complete__body">{{ completeBody }}</p>
-              <div class="amd-complete__actions">
+            </section>
+
+            <section
+              v-else-if="isError || showInlineError"
+              class="amd-inline-error amd-inline-error--body"
+              role="alert"
+            >
+              <p>{{ error || genericError }}</p>
+            </section>
+          </div>
+
+          <footer class="amd-footer amd-footer--sticky" data-amd-footer>
+            <div class="amd-footer__inner">
+              <div
+                v-if="isReady && !isComplete && !isError && !showInlineError"
+                class="amd-start-wrap amd-start-wrap--inline amd-start-wrap--footer"
+              >
+                <button
+                  type="button"
+                  class="amd-record-btn amd-record-btn--inline"
+                  :class="{ 'is-busy': busy }"
+                  :aria-label="startLabel"
+                  :title="startHint || startLabel"
+                  :disabled="busy"
+                  @click.stop="$emit('start')"
+                >
+                  <span class="amd-record-btn__core" aria-hidden="true">
+                    <i class="bi bi-mic-fill"></i>
+                  </span>
+                  <strong class="amd-record-btn__label">{{ startLabel }}</strong>
+                </button>
+              </div>
+
+              <div v-else-if="canStop" class="amd-footer__stop">
+                <button
+                  type="button"
+                  class="amd-tool-btn amd-tool-btn--stop amd-footer-stop-btn"
+                  :class="{ active: isListening }"
+                  :aria-label="stopLabel"
+                  :title="stopLabel"
+                  @click.stop="$emit('stop')"
+                >
+                  <i class="bi bi-stop-fill" aria-hidden="true"></i>
+                  <span class="amd-tool-btn__name">{{ stopLabel }}</span>
+                </button>
+              </div>
+
+              <div v-else-if="isComplete" class="amd-complete__actions amd-complete__actions--footer">
                 <button type="button" class="btn-secondary" @click.stop="$emit('test-again')">
                   {{ testAgainLabel }}
                 </button>
@@ -210,24 +259,25 @@
                   {{ doneLabel }}
                 </button>
               </div>
-            </section>
 
-            <section v-else-if="isError || showInlineError" class="amd-inline-error" role="alert">
-              <p>{{ error || genericError }}</p>
-              <button
-                v-if="errorAction === 'enable-mic'"
-                type="button"
-                class="btn-primary"
-                @click.stop="$emit('enable-mic')"
-              >{{ enableMicLabel }}</button>
-              <button
-                v-else
-                type="button"
-                class="btn-secondary"
-                @click.stop="$emit('retry')"
-              >{{ tryAgainLabel }}</button>
-            </section>
-          </div>
+              <div v-else-if="isError || showInlineError" class="amd-footer__error-actions">
+                <button
+                  v-if="errorAction === 'enable-mic'"
+                  type="button"
+                  class="btn-primary"
+                  @click.stop="$emit('enable-mic')"
+                >{{ enableMicLabel }}</button>
+                <button
+                  v-else
+                  type="button"
+                  class="btn-secondary"
+                  @click.stop="$emit('retry')"
+                >{{ tryAgainLabel }}</button>
+              </div>
+
+              <div v-else class="amd-footer__spacer" aria-hidden="true"></div>
+            </div>
+          </footer>
         </div>
       </div>
     </div>
@@ -235,6 +285,21 @@
 </template>
 
 <script>
+import {
+  createLiveAutoFollowController,
+  prefersReducedMotion,
+  readStoredAutoFollowEnabled,
+} from '../scripts/memorisationDetection/liveAutoFollow'
+
+const AMD_FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'textarea:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ')
+
 export default {
   name: 'AiMemorisationDetectionModal',
   props: {
@@ -277,6 +342,20 @@ export default {
     peekHintShort: { type: String, default: 'Hold to reveal' },
     wordsShownShort: { type: String, default: 'Words shown' },
     textSizeShort: { type: String, default: 'Text size' },
+    mistakeSoundEnabled: { type: Boolean, default: true },
+    mistakeSoundLabel: { type: String, default: 'Mistake sound' },
+    mistakeSoundOnLabel: { type: String, default: 'On' },
+    mistakeSoundOffLabel: { type: String, default: 'Off' },
+    mistakeSoundHint: { type: String, default: 'Soft cue when a mistake is confirmed' },
+    mistakeSoundShort: { type: String, default: 'Mistake sound' },
+    mistakeVisualActive: { type: Boolean, default: false },
+    mistakeVisualLabel: { type: String, default: 'Mistake confirmed' },
+    autoFollowLabel: { type: String, default: 'Auto-follow' },
+    autoFollowOnLabel: { type: String, default: 'Auto-follow on' },
+    autoFollowOffLabel: { type: String, default: 'Auto-follow off' },
+    autoFollowPausedLabel: { type: String, default: 'Auto-follow paused' },
+    autoFollowResumeLabel: { type: String, default: 'Resume auto-follow' },
+    autoFollowHint: { type: String, default: 'Keep the active word near eye level' },
     completeTitle: { type: String, default: 'Mā shā’ Allāh — check complete' },
     completeBody: { type: String, default: 'You recalled this range successfully.' },
     sessionEndedLabel: { type: String, default: 'Session complete' },
@@ -300,6 +379,7 @@ export default {
     'done',
     'retry',
     'enable-mic',
+    'toggle-mistake-sound',
   ],
   data() {
     return {
@@ -311,6 +391,13 @@ export default {
       maxFontScale: 1.45,
       themeAttr: 'light',
       _themeObserver: null,
+      _returnFocusEl: null,
+      autoFollowEnabled: true,
+      autoFollowPaused: false,
+      _autoFollow: null,
+      _activeWordIndex: null,
+      _shellResizeObserver: null,
+      _orientationHandler: null,
     }
   },
   computed: {
@@ -348,6 +435,14 @@ export default {
     textSizeShortLabel() {
       return this.textSizeShort || 'Text size'
     },
+    mistakeSoundShortLabel() {
+      return this.mistakeSoundShort || this.mistakeSoundLabel || 'Mistake sound'
+    },
+    autoFollowStatusLabel() {
+      if (!this.autoFollowEnabled) return this.autoFollowOffLabel || 'Auto-follow off'
+      if (this.autoFollowPaused) return this.autoFollowPausedLabel || 'Auto-follow paused'
+      return this.autoFollowOnLabel || 'Auto-follow on'
+    },
     micStatusKey() {
       const raw = String(this.micStatus || 'ready').toLowerCase()
       if (raw === 'granted' || raw === 'prompt' || raw === 'unknown') return 'ready'
@@ -359,10 +454,18 @@ export default {
   watch: {
     open(isOpen) {
       if (isOpen) {
+        this.captureReturnFocus()
         this.syncThemeAttr()
-        this.$nextTick(() => this.scheduleMushafHtml(this.ayahHtml, true))
+        this.ensureAutoFollowController()
+        this.$nextTick(() => {
+          this.bindAutoFollowShell()
+          this.scheduleMushafHtml(this.ayahHtml, true)
+          this.focusInitialElement()
+        })
       } else {
         this.onPeekEnd()
+        this.unbindAutoFollowShell()
+        this.restoreReturnFocus()
       }
     },
     ayahHtml(html) {
@@ -371,14 +474,25 @@ export default {
     stage() {
       if (this.open) this.$nextTick(() => this.scheduleMushafHtml(this.ayahHtml, true))
     },
+    fontScale() {
+      if (this.open) this.scheduleAutoFollow()
+    },
   },
   mounted() {
     this.syncThemeAttr()
+    this.ensureAutoFollowController()
     if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined') {
       this._themeObserver = new MutationObserver(() => this.syncThemeAttr())
       this._themeObserver.observe(document.documentElement, {
         attributes: true,
         attributeFilter: ['data-theme'],
+      })
+    }
+    if (this.open) {
+      this.captureReturnFocus()
+      this.$nextTick(() => {
+        this.bindAutoFollowShell()
+        this.focusInitialElement()
       })
     }
   },
@@ -391,7 +505,11 @@ export default {
       this._themeObserver.disconnect()
       this._themeObserver = null
     }
+    this.unbindAutoFollowShell()
+    this._autoFollow?.dispose?.()
+    this._autoFollow = null
     this.onPeekEnd()
+    if (this.open) this.restoreReturnFocus()
   },
   methods: {
     syncThemeAttr() {
@@ -415,21 +533,90 @@ export default {
     setMushafHtml(html = '') {
       this.scheduleMushafHtml(html)
     },
+    ensureAutoFollowController() {
+      if (this._autoFollow) return this._autoFollow
+      this._autoFollow = createLiveAutoFollowController({
+        enabled: true,
+        onPauseChange: ({ paused }) => {
+          this.autoFollowEnabled = true
+          this.autoFollowPaused = !!paused
+        },
+        followNow: () => this.scrollActiveIntoView(this.$refs.mushafSurface, { force: true }),
+      })
+      return this._autoFollow
+    },
+    bindAutoFollowShell() {
+      const shell = this.$refs.mushafShell
+      if (!shell) return
+      if (typeof ResizeObserver !== 'undefined') {
+        this._shellResizeObserver?.disconnect?.()
+        this._shellResizeObserver = new ResizeObserver(() => this.scheduleAutoFollow())
+        this._shellResizeObserver.observe(shell)
+      }
+      if (typeof window !== 'undefined') {
+        this._orientationHandler = () => this.scheduleAutoFollow()
+        window.addEventListener('orientationchange', this._orientationHandler)
+        window.addEventListener('resize', this._orientationHandler)
+      }
+    },
+    unbindAutoFollowShell() {
+      this._shellResizeObserver?.disconnect?.()
+      this._shellResizeObserver = null
+      if (typeof window !== 'undefined' && this._orientationHandler) {
+        window.removeEventListener('orientationchange', this._orientationHandler)
+        window.removeEventListener('resize', this._orientationHandler)
+      }
+      this._orientationHandler = null
+    },
+    onMushafShellScroll() {
+      const controller = this.ensureAutoFollowController()
+      if (controller.isProgrammaticScroll) return
+      controller.onContainerScroll()
+    },
+    onToggleAutoFollow() {
+      // Auto-follow is always on; resume if paused by a manual scroll.
+      const controller = this.ensureAutoFollowController()
+      if (this.autoFollowPaused) {
+        controller.resume({ followNow: true })
+      }
+      controller.setEnabled(true, { persist: true })
+      this.autoFollowEnabled = true
+      if (!this.autoFollowPaused) this.scheduleAutoFollow({ force: true })
+    },
+    onResumeAutoFollow() {
+      this.ensureAutoFollowController().resume({ followNow: true })
+      this.autoFollowEnabled = true
+    },
+    scheduleAutoFollow(options = {}) {
+      const controller = this.ensureAutoFollowController()
+      controller.scheduleFollow({
+        container: this.$refs.mushafShell,
+        root: this.$refs.mushafSurface,
+        activeIndex: this._activeWordIndex,
+        force: !!options.force,
+        reducedMotion: prefersReducedMotion(),
+      })
+    },
     patchWordStatuses(patches = []) {
       const el = this.$refs.mushafSurface
       if (!el || !Array.isArray(patches) || !patches.length) return false
+      const controller = this.ensureAutoFollowController()
       let changed = false
+      let currentIndex = null
       for (const patch of patches) {
         const index = Number(patch?.index)
         if (!Number.isFinite(index)) continue
-        const node = el.querySelector(`[data-recitation-word-index="${index}"]`)
+        let node = controller.wordCache.get(index)
+        if (!node?.isConnected) {
+          node = el.querySelector(`[data-recitation-word-index="${index}"]`)
+          if (node) controller.wordCache.set(index, node)
+        }
         if (!node?.classList) continue
         const status = String(patch.status || 'notAttempted')
         ;['correct', 'partial', 'incorrect', 'omitted', 'notAttempted', 'pending'].forEach((name) => {
           node.classList.remove(`recitation-word-${name}`)
         })
         node.classList.add(`recitation-word-${status}`)
-        // Prefer explicit mask flags — status may stay notAttempted (no colour paint).
         const shouldMask = patch.masked === true || patch.hidden === true
         if (shouldMask) {
           node.classList.add('amd-word-hidden')
@@ -443,14 +630,15 @@ export default {
         node.classList.toggle('amd-word-revealed', !!patch.revealed)
         node.classList.toggle('amd-word-current', !!patch.current)
         node.classList.toggle('amd-word-peeked', !!patch.peeked)
+        if (patch.current) currentIndex = index
         changed = true
       }
+      if (currentIndex != null) this._activeWordIndex = currentIndex
       if (changed) this.scrollActiveIntoView(el)
       return changed
     },
     scheduleMushafHtml(html = '', immediate = false) {
       if (this._htmlSyncTimer) clearTimeout(this._htmlSyncTimer)
-      // Keep live colouring snappy — only tiny coalesce while listening.
       const delay = immediate ? 0 : (this.stage === 'listening' ? 16 : 0)
       this._htmlSyncTimer = setTimeout(() => {
         this._htmlSyncTimer = null
@@ -459,24 +647,100 @@ export default {
         const next = html || ''
         if (el.innerHTML === next) return
         el.innerHTML = next
+        const controller = this.ensureAutoFollowController()
+        controller.rebuildWordCache(el)
+        const current = el.querySelector('.amd-word-current')
+        if (current) {
+          const idx = Number(current.getAttribute('data-recitation-word-index'))
+          if (Number.isFinite(idx)) this._activeWordIndex = idx
+        }
         this.scrollActiveIntoView(el)
       }, delay)
     },
-    scrollActiveIntoView(root) {
+    scrollActiveIntoView(root, options = {}) {
       if (typeof window === 'undefined') return
-      const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
-      const active = root.querySelector('.amd-word-current, .amd-ayah-run.is-active, .amd-ayah-block.is-active')
-      if (!active || typeof active.scrollIntoView !== 'function') return
-      const shell = root.closest('.amd-mushaf-shell')
-      if (!shell) return
-      const shellRect = shell.getBoundingClientRect()
-      const activeRect = active.getBoundingClientRect()
-      const outside = activeRect.top < shellRect.top + 24 || activeRect.bottom > shellRect.bottom - 24
-      if (!outside) return
-      active.scrollIntoView({
-        behavior: reduce ? 'auto' : 'smooth',
-        block: 'nearest',
+      const surface = root || this.$refs.mushafSurface
+      const shell = this.$refs.mushafShell || surface?.closest?.('.amd-mushaf-shell')
+      if (!surface || !shell) return
+      // Never use Element.scrollIntoView — it can scroll the underlying page.
+      const controller = this.ensureAutoFollowController()
+      controller.followActive({
+        container: shell,
+        root: surface,
+        activeIndex: this._activeWordIndex,
+        force: !!options.force,
+        reducedMotion: prefersReducedMotion(),
       })
+    },
+    captureReturnFocus() {
+      if (typeof document === 'undefined') return
+      const active = document.activeElement
+      if (active instanceof HTMLElement && !this.$refs.overlay?.contains(active)) {
+        this._returnFocusEl = active
+      }
+    },
+    restoreReturnFocus() {
+      const target = this._returnFocusEl
+      this._returnFocusEl = null
+      if (!target || typeof target.focus !== 'function') return
+      if (typeof document !== 'undefined' && !document.contains(target)) return
+      try {
+        target.focus({ preventScroll: true })
+      } catch (_) {
+        try { target.focus() } catch (__) { /* ignore */ }
+      }
+    },
+    getFocusableElements() {
+      const root = this.$refs.dialog
+      if (!root || typeof root.querySelectorAll !== 'function') return []
+      return Array.from(root.querySelectorAll(AMD_FOCUSABLE_SELECTOR)).filter((el) => {
+        if (!(el instanceof HTMLElement)) return false
+        if (el.hasAttribute('disabled') || el.getAttribute('aria-hidden') === 'true') return false
+        if (el.tabIndex < 0) return false
+        const style = typeof window !== 'undefined' ? window.getComputedStyle(el) : null
+        if (style && (style.visibility === 'hidden' || style.display === 'none')) return false
+        return true
+      })
+    },
+    focusInitialElement() {
+      const title = this.$refs.dialog?.querySelector?.('#amdModalTitle')
+      if (title && typeof title.focus === 'function') {
+        title.focus({ preventScroll: true })
+        return
+      }
+      const first = this.getFocusableElements()[0]
+      if (first && typeof first.focus === 'function') first.focus({ preventScroll: true })
+    },
+    trapFocus(event) {
+      if (!this.open || event.key !== 'Tab') return
+      const focusable = this.getFocusableElements()
+      if (!focusable.length) {
+        event.preventDefault()
+        this.focusInitialElement()
+        return
+      }
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = typeof document !== 'undefined' ? document.activeElement : null
+      if (event.shiftKey) {
+        if (active === first || !this.$refs.dialog?.contains(active)) {
+          event.preventDefault()
+          last.focus()
+        }
+      } else if (active === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    },
+    onOverlayKeydown(event) {
+      if (!this.open) return
+      if (event.key === 'Escape') {
+        event.stopPropagation()
+        event.preventDefault()
+        this.onCancel()
+        return
+      }
+      this.trapFocus(event)
     },
     onCancel() {
       this.$emit('cancel')
