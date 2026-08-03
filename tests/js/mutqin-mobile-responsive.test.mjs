@@ -38,7 +38,7 @@ const stateSelectors = {
   recordings: ['.recordings-library-modal', '.recordings-library-header', '.recordings-library-body', '.recordings-library-shell', '.recordings-library-detail', '.recording-history-card'],
   recordingsLoading: ['.recordings-library-modal', '.recordings-library-header', '.recordings-library-body', '.recordings-library-loading'],
   recordingsEmpty: ['.recordings-library-modal', '.recordings-library-header', '.recordings-library-body', '.recordings-library-empty'],
-  onboarding: ['.post-onboarding-modal', '.onboarding-hero', '.onboarding-progress', '.onboarding-body', '.mutqin-modal-footer'],
+  onboarding: ['.post-onboarding-modal', '.onboarding-fluid', '.onboarding-hero', '.onboarding-path-grid'],
   paused: ['.session-exit-modal', '.modal-header', '.session-exit-body', '.mutqin-modal-footer', '.session-exit-confirm-actions'],
   complete: ['.post-session-simple', '.post-session-simple__header', '.post-session-simple__body', '.post-session-simple__footer', '.post-session-simple__actions']
 }
@@ -60,7 +60,7 @@ const touchTargetSelectors = {
   recordings: '.recordings-library-header button, .recordings-library-nav-toggle, .recording-history-actions button',
   recordingsLoading: '.recordings-library-header button',
   recordingsEmpty: '.recordings-library-header button',
-  onboarding: '.onboarding-close-btn, .onboarding-nav-actions button',
+  onboarding: '.onboarding-close-btn, .onboarding-path-card',
   paused: '.session-exit-confirm-actions button, .session-exit-modal .modal-close-btn',
   complete: '.post-session-simple__footer button'
 }
@@ -334,6 +334,7 @@ async function setState(page, state) {
         vm.showSelfCheckModal = true
       }
     } else if (state === 'onboarding') {
+      vm.onboardingPhase = 'welcome'
       vm.onboardingStepIndex = 0
       vm.showPostLoginOnboarding = true
     } else if (state === 'paused') {
@@ -438,7 +439,7 @@ async function inspectState(page, state) {
       recordings: ['.recordings-library-header', '.recordings-library-body', '.recordings-library-shell', '.recordings-library-nav-head', '.recordings-library-detail-head', '.recording-history-top'],
       recordingsLoading: ['.recordings-library-header', '.recordings-library-body'],
       recordingsEmpty: ['.recordings-library-header', '.recordings-library-body'],
-      onboarding: ['.onboarding-hero', '.onboarding-body', '.onboarding-preview-grid', '.onboarding-nav-actions'],
+      onboarding: ['.onboarding-hero', '.onboarding-fluid', '.onboarding-path-grid'],
       paused: ['.session-exit-body', ['.session-exit-confirm-actions', 1], '.session-exit-progress-summary'],
       complete: ['.post-session-simple__header', '.post-session-simple__body', '.post-session-simple__row', '.post-session-simple__actions']
     }

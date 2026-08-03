@@ -102,14 +102,10 @@ includesAll('onboarding system steps', [
   /buildOnboardingStep\(key, icon\)/,
   /key: 'setup'/,
   /key: 'reading'/,
-  /key: 'practice'/
+  /key: 'practice'/,
+  /key: 'coach'/,
+  /key: 'review'/
 ])
-
-assert.doesNotMatch(
-  onboardingStepsBlock,
-  /key: 'review'/,
-  'onboarding step 4 (review/library) should be removed'
-)
 
 assert.doesNotMatch(
   onboardingStepsBlock,
@@ -117,15 +113,68 @@ assert.doesNotMatch(
   'old onboarding copy should be removed'
 )
 
+includesAll('onboarding guided welcome/ready flow', [
+  /onboardingPhase: 'welcome'/,
+  /onboardingWelcomeChoice: ''/,
+  /selectOnboardingWelcomeChoice\(/,
+  /confirmOnboardingWelcomeChoice\(\)/,
+  /startOnboardingTour\(\)/,
+  /showOnboardingReady\(\)/,
+  /toggleOnboardingPracticeChip\(/,
+  /selectOnboardingReadingChip\(/,
+  /goToOnboardingStep\(/,
+  /onboarding-fluid/,
+  /post-onboarding-modal--guided/,
+  /onboarding-step-rail--five/,
+  /onboarding-path-grid/,
+  /onboarding-actions-grid--trio-row onboarding-nav-actions/,
+  /onboarding-body--guided/,
+  /onboardingIsWelcome/,
+  /onboardingIsReady/,
+  /memorisation\.onboarding\.welcome\.title/,
+  /memorisation\.onboarding\.steps\.coach/,
+  /memorisation\.onboarding\.actions\.guidedTour/,
+  /memorisation\.onboarding\.actions\.trySample/,
+  /container-fluid onboarding-fluid/,
+  /onboarding-salam/,
+  /onboarding-meta-line/,
+  /onboarding-practice-chips/,
+  /onboarding-ready-list/,
+  /v-if="!onboardingIsWelcome"/
+])
+
+assert.doesNotMatch(
+  source,
+  /v-if="onboardingIsWelcome"\s*\n\s*class="mutqin-modal-actions onboarding-actions-grid onboarding-actions-grid--trio-row"/,
+  'welcome step must not render duplicate footer action buttons'
+)
+
+assert.doesNotMatch(
+  source,
+  /onboarding-path-card--primary/,
+  'sample path card must not be permanently primary/auto-selected'
+)
+
+assert.doesNotMatch(
+  memorisationDataBlock,
+  /onboardingFinishChoice|onboardingPath:/,
+  'legacy finish-choice / path onboarding state should be removed'
+)
+assert.doesNotMatch(
+  source,
+  /selectOnboardingFinishChoice|confirmOnboardingFinishChoice|onboarding-finish-choice-grid"/,
+  'legacy finish-choice onboarding handlers/UI should be removed'
+)
+
 includesAll('tajweed independence', [
   /:title="t\('memorisation\.a11y\.showTajweedText'\)" @click="toggleTajweed"/,
-  /else if \(this\.tajweedEnabled && verse\.arabic_tajweed\) \{/,
-  /html = this\.renderWordLevelTajweedMarkup\(verse, \{ wrapWords: needsInteractiveWords \}\)/,
+  /else if \(this\.tajweedEnabled && cleanVerse\.arabic_tajweed\) \{/,
+  /html = this\.renderWordLevelTajweedMarkup\(cleanVerse, \{ wrapWords: needsInteractiveWords \}\)/,
   /if \(this\.selfCheckTajweedEnabled && enriched\.arabic_tajweed\) \{/,
   /return this\.renderWordLevelTajweedMarkup\(enriched/,
   /else if \(this\.aiMemorisationCheckerTajweedEnabled && liveVerse\.arabic_tajweed\) \{/,
   /html = this\.renderWordLevelTajweedMarkup\(liveVerse/,
-  /html = this\.splitArabicIntoWords\(verse\)/,
+  /html = this\.splitArabicIntoWords\(cleanVerse\)/,
   /renderWordLevelTajweedMarkup\(verse = \{\}, options = \{\}\) \{/,
   /Continuous markup preserves Arabic joining/,
   /Keep character-level tajweed spans so rule colors paint correctly/,

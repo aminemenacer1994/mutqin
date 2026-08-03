@@ -948,11 +948,12 @@
       "steps": {
         "setup": {
           "title": "Set up your session",
-          "stepLabel": "Session setup",
-          "body": "Choose a surah, ayah range, and reciter before you begin.",
+          "stepLabel": "Sesión",
+          "body": "Cada práctica empieza aquí: elige sura, un rango corto y un recitador.",
           "points": [
-            "Start with a short ayah range",
-            "Reopen setup any time from the tools panel"
+            "Elige sura, rango y recitador en Controles",
+            "Empieza con un rango corto",
+            "Ajusta repeticiones cuando quieras"
           ],
           "previewTitle": "Session inputs",
           "previewSubtitle": "Según tu configuración actual.",
@@ -965,11 +966,12 @@
         },
         "reading": {
           "title": "Choose your reading view",
-          "stepLabel": "Reading view",
-          "body": "Switch between stacked and mushaf layouts, and toggle aids only when you need them.",
+          "stepLabel": "Lectura",
+          "body": "Lee en tarjetas apiladas o Mushaf. Activa traducción o tajweed solo si ayuda.",
           "points": [
-            "Keep the main text clean by default",
-            "Translation, transliteration, and tajweed stay one tap away"
+            "Apilado para rangos cortos; Mushaf conserva la página",
+            "Activa ayudas desde la barra de sesión",
+            "Los colores de tajweed siguen las reglas"
           ],
           "previewTitle": "Reading controls",
           "previewSubtitle": "Según tu vista actual.",
@@ -982,11 +984,12 @@
         },
         "practice": {
           "title": "Practice with built-in tools",
-          "stepLabel": "Practice tools",
-          "body": "Use focus, blur, chaining, and Talqin when you want more structure around each ayah.",
+          "stepLabel": "Práctica",
+          "body": "Focus, Blur y Talqin ayudan a escuchar y repetir. Toca una herramienta para previsualizarla.",
           "points": [
-            "Focus narrows attention to the active ayah",
-            "Talqin pauses audio so you can recite your turn"
+            "Focus centra la aleya activa",
+            "Blur suaviza el texto siguiente",
+            "Talqin da un turno de escuchar y recitar"
           ],
           "previewTitle": "Technique controls",
           "previewSubtitle": "Según tus ajustes de práctica.",
@@ -998,12 +1001,13 @@
           "hint": "Consejo: empieza con una sola herramienta suave. Las comprobaciones de memorización son opcionales."
         },
         "review": {
-          "title": "Review and return",
-          "stepLabel": "Review & return",
-          "body": "Saved sessions and recordings keep your next visit close to the ayahs that need work.",
+          "title": "Volver y continuar",
+          "stepLabel": "Volver",
+          "body": "Las sesiones guardadas y Welcome Back te ayudan a retomar con calma.",
           "points": [
-            "Resume exactly where you left off",
-            "Insights highlight what needs review"
+            "Continúa exactamente donde pausaste",
+            "Las sesiones guardan rango y ajustes",
+            "Welcome Back recuerda la aleya"
           ],
           "previewTitle": "Your library",
           "previewSubtitle": "Según tu actividad reciente.",
@@ -1013,12 +1017,59 @@
             "Insights"
           ],
           "hint": "Consejo: vuelve a las sesiones guardadas cuando quieras desde tu biblioteca."
+        },
+        "coach": {
+          "title": "Memorización IA y recomendaciones",
+          "stepLabel": "Coach IA",
+          "body": "Tras practicar, la memorización IA revisa tu recuerdo y Mutqin recomienda un plan personalizado con las herramientas y el asistente adecuados.",
+          "hint": "Consejo: usa la comprobación cuando quieras feedback y sigue el plan recomendado.",
+          "points": [
+            "La memorización IA escucha y marca lo que necesita cuidado",
+            "Las recomendaciones sugieren el siguiente rango y objetivo",
+            "Las herramientas y el asistente coinciden con esa sesión"
+          ],
+          "previewTitle": "Mejora personalizada",
+          "previewSubtitle": "Cómo Mutqin orienta tu siguiente sesión.",
+          "previewItems": [
+            "Memorización IA",
+            "Plan recomendado",
+            "Herramientas"
+          ],
+          "stats": {
+            "aiLabel": "Memorización IA",
+            "aiValue": "Comprobación",
+            "planLabel": "Recomendación",
+            "planValue": "Plan personalizado",
+            "toolsLabel": "Herramientas",
+            "toolsValue": "Asistentes"
+          }
         }
       },
       "startOnboarding": "Get started",
       "continueOnboarding": "Continue setup",
-      "skipTour": "Omitir el recorrido",
-      "finishHint": "Elige cómo quieres empezar — puedes cambiarlo cuando quieras."
+      "skipTour": "Explorar por mi cuenta",
+      "finishHint": "Elige cómo quieres empezar — puedes cambiarlo cuando quieras.",
+      "welcome": {
+        "salam": "ٱلسَّلَامُ عَلَيْكُمْ",
+        "title": "Bienvenido a Mutqin",
+        "body": "Elige un camino para empezar. El recorrido guiado pasa por sesión, lectura, práctica y cómo volver.",
+        "metaHint": "Una sesión suave está lista: rango corto, recitador claro, ritmo calmado.",
+        "tourDescription": "Cinco pasos: sesión, lectura, práctica, coach IA y retorno."
+      },
+      "ready": {
+        "title": "Ya puedes empezar",
+        "body": "Has visto cómo se organiza Mutqin. Configura tu sesión, explora o prueba el ejemplo guiado.",
+        "kicker": "Recorrido completo",
+        "hint": "Puedes reabrir este recorrido desde el menú en cualquier momento."
+      },
+      "actions": {
+        "trySample": "Probar un ejemplo guiado",
+        "quickTour": "Recorrido guiado",
+        "exploreMyself": "Explorar por mi cuenta",
+        "setupSession": "Configurar mi sesión",
+        "exploreWorkspace": "Explorar el espacio",
+        "guidedTour": "Hacer el recorrido guiado"
+      }
     },
     "open_session_setup": "Open session setup",
     "open_controls": "Open controls",

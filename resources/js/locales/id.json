@@ -579,12 +579,12 @@
       "steps": {
         "setup": {
           "title": "Siapkan sesi",
-          "stepLabel": "Pengaturan sesi",
-          "body": "Pilih surah, atur rentang ayah, dan pilih qari dari kontrol sesi sebelum mulai.",
+          "stepLabel": "Sesi",
+          "body": "Setiap latihan dimulai di sini: pilih surah, rentang ayat pendek, dan qari.",
           "points": [
-            "Sesi contoh dimulai dengan rentang pendek",
-            "Jumlah pengulangan dan kecepatan pemutaran ada di kontrol",
-            "Anda bisa membuka kembali pengaturan kapan saja"
+            "Pilih surah, rentang, dan qari di Kontrol",
+            "Mulai dengan rentang pendek",
+            "Sesuaikan pengulangan kapan saja"
           ],
           "previewTitle": "Input sesi nyata",
           "previewSubtitle": "Berdasarkan pengaturan Anda saat ini.",
@@ -597,12 +597,12 @@
         },
         "reading": {
           "title": "Pilih tampilan baca",
-          "stepLabel": "Tampilan baca",
-          "body": "Beralih antara tata letak stacked dan mushaf, lalu gunakan terjemahan, transliterasi, tajwid, dan kontrol font bila perlu.",
+          "stepLabel": "Bacaan",
+          "body": "Baca dalam kartu bertumpuk atau Mushaf. Nyalakan terjemahan atau tajwid hanya jika membantu.",
           "points": [
-            "Jaga teks utama tetap bersih saat bantuan tambahan tidak diperlukan",
-            "Mode mushaf menjaga tata letak halaman dekat dengan tampilan Al-Quran",
-            "Font tetap tersedia dari toolbar"
+            "Bertumpuk untuk rentang pendek; Mushaf menjaga halaman",
+            "Nyalakan bantuan dari bilah sesi",
+            "Warna tajwid mengikuti kaidah"
           ],
           "previewTitle": "Kontrol membaca",
           "previewSubtitle": "Berdasarkan pengaturan tampilan Anda.",
@@ -615,12 +615,12 @@
         },
         "practice": {
           "title": "Berlatih dengan alat bawaan",
-          "stepLabel": "Alat latihan",
-          "body": "Gunakan mode fokus, mode blur, chaining, dan mode anchor saat Anda ingin struktur lebih di sekitar ayah aktif.",
+          "stepLabel": "Latihan",
+          "body": "Fokus, Blur, dan Talqin membantu mendengar dan mengulang. Ketuk alat untuk pratinjau.",
           "points": [
-            "Mode fokus mempersempit perhatian ke ayah aktif",
-            "Mode blur menyembunyikan ayah berikutnya sampai Anda siap",
-            "Chaining dan mode anchor mendukung bagian yang lebih sulit"
+            "Fokus memusatkan ayat aktif",
+            "Blur melembutkan teks berikutnya",
+            "Talqin memberi giliran dengar lalu baca"
           ],
           "previewTitle": "Kontrol teknik",
           "previewSubtitle": "Berdasarkan pengaturan latihan Anda.",
@@ -632,13 +632,13 @@
           "hint": "Tips: mulai dengan satu alat yang lembut. Pemeriksaan hafalan bersifat opsional."
         },
         "review": {
-          "title": "Muraja'ah dan kembali",
-          "stepLabel": "Muraja'ah & kembali",
-          "body": "Sesi tersimpan, rekaman, dan wawasan menjaga sesi berikutnya dekat dengan ayah yang tepat perlu dikerjakan.",
+          "title": "Kembali dan lanjutkan",
+          "stepLabel": "Kembali",
+          "body": "Sesi tersimpan dan Welcome Back membantu Anda melanjutkan dengan tenang.",
           "points": [
-            "Sesi tersimpan memungkinkan melanjutkan dari tempat berhenti",
-            "Riwayat rekaman menjaga usaha sebelumnya tetap terlihat",
-            "Tilawah AI dan pemeriksaan hafalan AI selalu tersedia dari ruang kerja"
+            "Lanjutkan tepat di mana Anda berhenti",
+            "Sesi tersimpan menjaga rentang dan pengaturan",
+            "Welcome Back mengingatkan ayat terakhir"
           ],
           "previewTitle": "Yang bisa Anda kembali kunjungi",
           "previewSubtitle": "Dari aktivitas terbaru Anda.",
@@ -648,6 +648,32 @@
             "Wawasan"
           ],
           "hint": "Tips: kembali ke sesi tersimpan kapan saja dari pustaka Anda."
+        },
+        "coach": {
+          "title": "Hafalan AI dan rekomendasi",
+          "stepLabel": "Pelatih AI",
+          "body": "Setelah latihan, Hafalan AI memeriksa daya ingat Anda dan Mutqin merekomendasikan rencana pribadi dengan alat serta asisten yang tepat untuk sesi itu.",
+          "hint": "Tips: gunakan pemeriksaan saat ingin umpan balik, lalu ikuti rencana yang disarankan.",
+          "points": [
+            "Hafalan AI mendengar dan menandai bagian yang perlu perhatian",
+            "Rekomendasi menyarankan rentang dan tujuan berikutnya",
+            "Alat dan asisten yang disarankan sesuai kebutuhan sesi"
+          ],
+          "previewTitle": "Perbaikan personal",
+          "previewSubtitle": "Bagaimana Mutqin membimbing sesi berikutnya.",
+          "previewItems": [
+            "Hafalan AI",
+            "Rencana rekomendasi",
+            "Alat cocok"
+          ],
+          "stats": {
+            "aiLabel": "Hafalan AI",
+            "aiValue": "Cek hafalan",
+            "planLabel": "Rekomendasi",
+            "planValue": "Rencana pribadi",
+            "toolsLabel": "Alat sesi",
+            "toolsValue": "Asisten cocok"
+          }
         }
       },
       "playSampleSession": "Coba contoh singkat",
@@ -681,8 +707,29 @@
       "confirmChoice": "Lanjutkan",
       "startOnboarding": "Get started",
       "continueOnboarding": "Continue setup",
-      "skipTour": "Lewati tur",
-      "finishHint": "Pilih cara memulai — Anda bisa mengubahnya kapan saja."
+      "skipTour": "Jelajahi sendiri",
+      "finishHint": "Pilih cara memulai — Anda bisa mengubahnya kapan saja.",
+      "welcome": {
+        "salam": "ٱلسَّلَامُ عَلَيْكُمْ",
+        "title": "Selamat datang di Mutqin",
+        "body": "Pilih jalur untuk mulai. Tur terpandu membahas sesi, bacaan, latihan, dan cara kembali.",
+        "metaHint": "Sesi bawaan yang lembut siap. rentang pendek, qari jelas, tempo tenang.",
+        "tourDescription": "Lima langkah: sesi, bacaan, latihan, pelatih AI, dan kembali."
+      },
+      "ready": {
+        "title": "Anda siap memulai",
+        "body": "Anda sudah melihat cara Mutqin diatur. Atur sesi, jelajahi, atau coba contoh terpandu.",
+        "kicker": "Tur selesai",
+        "hint": "Anda dapat membuka tur ini lagi kapan saja dari menu."
+      },
+      "actions": {
+        "trySample": "Coba contoh terpandu",
+        "quickTour": "Tur terpandu",
+        "exploreMyself": "Jelajahi sendiri",
+        "setupSession": "Atur sesi saya",
+        "exploreWorkspace": "Jelajahi ruang kerja",
+        "guidedTour": "Ikuti tur terpandu"
+      }
     },
     "open_session_setup": "Buka pengaturan sesi",
     "open_controls": "Buka kontrol",

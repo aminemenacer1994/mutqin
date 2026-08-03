@@ -585,12 +585,12 @@
       "steps": {
         "setup": {
           "title": "Set up a session",
-          "stepLabel": "Session setup",
-          "body": "Choose a surah, set the ayah range, and pick a reciter from the session controls before you begin.",
+          "stepLabel": "Oturum",
+          "body": "Her pratik burada başlar: sure, kısa ayet aralığı ve kari seçin.",
           "points": [
-            "The sample session starts with a short range",
-            "Repeat counts and playback speed stay in the controls",
-            "You can reopen setup at any time"
+            "Kontroller’den sure, aralık ve kari seçin",
+            "İlk aralığı kısa tutun",
+            "Tekrarları istediğiniz zaman ayarlayın"
           ],
           "previewTitle": "Real session inputs",
           "previewSubtitle": "Mevcut ayarlarınıza göre.",
@@ -603,12 +603,12 @@
         },
         "reading": {
           "title": "Pick a reading view",
-          "stepLabel": "Reading view",
-          "body": "Switch between stacked and mushaf layouts, then use translation, transliteration, tajweed, and font controls when needed.",
+          "stepLabel": "Okuma",
+          "body": "Kart veya Mushaf görünümünde okuyun. Çeviri veya tecvidi yalnızca yardımcıysa açın.",
           "points": [
-            "Keep the main text clean when you do not need extra aids",
-            "Mushaf mode keeps the page layout close to the Quran view",
-            "Fonts stay available from the toolbar"
+            "Kısa aralıklar için kart; sayfa için Mushaf",
+            "Yardımcıları oturum çubuğundan açın",
+            "Tecvid renkleri kuralları izler"
           ],
           "previewTitle": "Reading controls",
           "previewSubtitle": "Mevcut görünüm ayarlarınıza göre.",
@@ -621,12 +621,12 @@
         },
         "practice": {
           "title": "Practice with built-in tools",
-          "stepLabel": "Practice tools",
-          "body": "Use focus mode, blur mode, chaining, and anchor mode when you want more structure around the active ayah.",
+          "stepLabel": "Pratik",
+          "body": "Odak, Bulanıklık ve Talqin dinleyip tekrar etmenize yardım eder. Bir araca dokunun.",
           "points": [
-            "Focus mode narrows attention to the active ayah",
-            "Blur mode hides the next ayahs until you are ready",
-            "Chaining and anchor mode support harder passages"
+            "Odak aktif ayete dikkat verir",
+            "Bulanıklık sonraki metni yumuşatır",
+            "Talqin dinle-sonra-oku turu verir"
           ],
           "previewTitle": "Technique controls",
           "previewSubtitle": "Mevcut pratik ayarlarınıza göre.",
@@ -638,13 +638,13 @@
           "hint": "İpucu: nazik bir araçla başlayın. Ezber kontrolleri isteğe bağlıdır."
         },
         "review": {
-          "title": "Review and return",
-          "stepLabel": "Review & return",
-          "body": "Saved sessions, recordings, and insights keep the next session close to the exact ayahs that need work.",
+          "title": "Dön ve devam et",
+          "stepLabel": "Dönüş",
+          "body": "Kayıtlı oturumlar ve Welcome Back kaldığınız yerden nazikçe devam etmenizi sağlar.",
           "points": [
-            "Saved sessions let you resume where you left off",
-            "Recording history keeps prior attempts visible",
-            "AI recite and AI Recite checks are always available from the workspace"
+            "Tam kaldığınız yerden devam",
+            "Kayıtlı oturumlar aralık ve ayarları tutar",
+            "Welcome Back durduğunuz ayeti hatırlatır"
           ],
           "previewTitle": "What you can return to",
           "previewSubtitle": "Son etkinliğinizden.",
@@ -654,6 +654,32 @@
             "Insights"
           ],
           "hint": "İpucu: kayıtlı oturumlara kütüphanenizden istediğiniz zaman dönebilirsiniz."
+        },
+        "coach": {
+          "title": "YZ ezber ve öneriler",
+          "stepLabel": "YZ koç",
+          "body": "Pratikten sonra YZ ezber kontrolü hatırlamanızı ölçer ve Mutqin o oturum için doğru araçlarla kişiselleştirilmiş bir plan önerir.",
+          "hint": "İpucu: geri bildirim istediğinizde kontrolü kullanın, sonra önerilen planı izleyin.",
+          "points": [
+            "YZ ezber zayıf noktaları dinler ve işaretler",
+            "Öneriler sonraki aralığı ve hedefi önerir",
+            "Önerilen araçlar o oturuma uyar"
+          ],
+          "previewTitle": "Kişisel gelişim",
+          "previewSubtitle": "Mutqin sonraki oturumu nasıl yönlendirir.",
+          "previewItems": [
+            "YZ ezber",
+            "Önerilen plan",
+            "Uygun araçlar"
+          ],
+          "stats": {
+            "aiLabel": "YZ ezber",
+            "aiValue": "Hatırlama kontrolü",
+            "planLabel": "Öneri",
+            "planValue": "Kişisel plan",
+            "toolsLabel": "Oturum araçları",
+            "toolsValue": "Uygun yardımcılar"
+          }
         }
       },
       "playSampleSession": "Kısa bir örnek dene",
@@ -687,8 +713,29 @@
       "confirmChoice": "Devam",
       "startOnboarding": "Get started",
       "continueOnboarding": "Continue setup",
-      "skipTour": "Turu atla",
-      "finishHint": "Nasıl başlamak istediğinizi seçin — istediğiniz zaman değiştirebilirsiniz."
+      "skipTour": "Kendim keşfedeyim",
+      "finishHint": "Nasıl başlamak istediğinizi seçin — istediğiniz zaman değiştirebilirsiniz.",
+      "welcome": {
+        "salam": "ٱلسَّلَامُ عَلَيْكُمْ",
+        "title": "Mutqin’e hoş geldiniz",
+        "body": "Başlamak için bir yol seçin. Rehberli tur oturum, okuma, pratik ve dönüşü gösterir.",
+        "metaHint": "Nazik bir varsayılan oturum hazır. kısa aralık, net kari, sakin tempo.",
+        "tourDescription": "Beş adım: oturum, okuma, pratik, YZ koç ve dönüş."
+      },
+      "ready": {
+        "title": "Başlamaya hazırsınız",
+        "body": "Mutqin’in nasıl kurulduğunu gördünüz. Oturumunuzu kurun, keşfedin veya örnek deneyin.",
+        "kicker": "Tur tamam",
+        "hint": "Bu turu menüden istediğiniz zaman yeniden açabilirsiniz."
+      },
+      "actions": {
+        "trySample": "Rehberli örnek dene",
+        "quickTour": "Rehberli tur",
+        "exploreMyself": "Kendim keşfedeyim",
+        "setupSession": "Oturumumu kur",
+        "exploreWorkspace": "Çalışma alanını keşfet",
+        "guidedTour": "Rehberli tura başla"
+      }
     },
     "open_session_setup": "Open session setup",
     "open_controls": "Open controls",

@@ -619,14 +619,14 @@ export default {
       flowListenPlays: 0,
       showPlannerModal: false,
       showPostLoginOnboarding: false,
+      onboardingPhase: 'welcome', // welcome | tour | ready
       onboardingStepIndex: 0,
+      onboardingWelcomeChoice: '', // sample | tour | explore
       onboardingDemoSnapshot: null,
       onboardingDemoActive: false,
       onboardingManualLaunch: false,
-      onboardingPath: 'casual',
       onboardingGoal: 'small',
       onboardingSampleSessionActive: false,
-      onboardingFinishChoice: '',
       showPostSessionModal: false,
       showPostSessionChoice: false,
       postSessionChoiceAction: null, // repeat_recommended | create_custom | null
@@ -4960,12 +4960,126 @@ export default {
       }))
     },
     onboardingSteps() {
+      // Logical journey: configure → read → practise → improve with AI → return
       const defs = [
         { key: 'setup', icon: 'bi-journal-text' },
         { key: 'reading', icon: 'bi-layout-text-window-reverse' },
-        { key: 'practice', icon: 'bi-stars' }
+        { key: 'practice', icon: 'bi-stars' },
+        { key: 'coach', icon: 'bi-lightbulb' },
+        { key: 'review', icon: 'bi-bookmark-heart' }
       ]
       return defs.map(({ key, icon }) => this.buildOnboardingStep(key, icon))
+    },
+    onboardingIsWelcome() {
+      return this.onboardingPhase === 'welcome'
+    },
+    onboardingIsTour() {
+      return this.onboardingPhase === 'tour'
+    },
+    onboardingIsReady() {
+      return this.onboardingPhase === 'ready'
+    },
+    onboardingModalTitle() {
+      if (this.onboardingIsWelcome) return this.t('memorisation.onboarding.welcome.title')
+      if (this.onboardingIsReady) return this.t('memorisation.onboarding.ready.title')
+      return this.onboardingStepContent?.title || this.t('memorisation.onboarding.welcome.title')
+    },
+    onboardingModalBody() {
+      if (this.onboardingIsWelcome) return this.t('memorisation.onboarding.welcome.body')
+      if (this.onboardingIsReady) return this.t('memorisation.onboarding.ready.body')
+      return this.onboardingStepContent?.body || ''
+    },
+    onboardingModalIcon() {
+      if (this.onboardingIsWelcome) return 'bi-moon-stars'
+      if (this.onboardingIsReady) return 'bi-check2-circle'
+      return this.onboardingStepContent?.icon || 'bi-compass'
+    },
+    onboardingMetaParts() {
+      if (!this.onboardingIsWelcome && !(this.onboardingIsTour && this.onboardingStepContent?.key === 'setup')) {
+        return []
+      }
+      const chapter = this.chapters.find(item => Number(item.id) === Number(this.chapterId || this.currentConfig?.chapterId))
+      const chapterName = chapter?.name_simple || ''
+      const rangeStart = Math.max(1, Number(this.rangeStart || 1))
+      const rangeEnd = Math.max(rangeStart, Number(this.rangeEnd || rangeStart))
+      const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
+      const parts = []
+      if (chapterName) parts.push(chapterName)
+      parts.push(this.t('memorisation.common.rangeLabel', { start: rangeStart, end: rangeEnd }))
+      if (reciter?.name) parts.push(reciter.name)
+      return parts.filter(Boolean).slice(0, 3)
+    },
+    onboardingMetaLine() {
+      return this.onboardingMetaParts.join(', ')
+    },
+    onboardingStepPreview() {
+      if (!this.onboardingIsTour) return null
+      const step = this.onboardingStepContent
+      if (!step?.key) return null
+      const items = (this.onboardingStepStats || []).map(stat => ({
+        key: stat.key,
+        label: stat.label,
+        value: stat.value || '—'
+      }))
+      if (!items.length) return null
+      const base = `memorisation.onboarding.steps.${step.key}`
+      return {
+        title: this.t(`${base}.previewTitle`),
+        subtitle: this.t(`${base}.previewSubtitle`),
+        items
+      }
+    },
+    onboardingReadingChips() {
+      return [
+        {
+          key: 'stacked',
+          label: this.t('memorisation.view.stacked'),
+          active: this.readingViewMode !== 'mushaf',
+          icon: 'bi-card-text'
+        },
+        {
+          key: 'mushaf',
+          label: this.t('memorisation.view.mushaf'),
+          active: this.readingViewMode === 'mushaf',
+          icon: 'bi-book'
+        },
+        {
+          key: 'tajweed',
+          label: this.t('memorisation.reading.tajweed'),
+          active: !!this.tajweedEnabled,
+          icon: 'bi-palette',
+          toggle: true
+        }
+      ]
+    },
+    onboardingPracticeChips() {
+      return [
+        {
+          key: 'focus',
+          label: this.getTechniqueDisplayLabel('focus'),
+          active: !!this.focusModeEnabled,
+          icon: 'bi-bullseye'
+        },
+        {
+          key: 'blur',
+          label: this.getTechniqueDisplayLabel('blur'),
+          active: !!this.blurModeEnabled,
+          icon: 'bi-droplet-half'
+        },
+        {
+          key: 'talqin',
+          label: this.getTechniqueDisplayLabel('talqin'),
+          active: !!this.talqinModeEnabled,
+          icon: 'bi-mic'
+        }
+      ]
+    },
+    onboardingReadyChecklist() {
+      return this.onboardingSteps.map(step => ({
+        key: step.key,
+        label: step.stepLabel,
+        icon: step.icon
+      }))
     },
     currentConfig() {
       return this.getModeStore(this.currentMode)
@@ -5885,31 +5999,6 @@ export default {
         total: this.onboardingSteps.length
       })
     },
-    onboardingStepPreview() {
-      const step = this.onboardingStepContent
-      if (!step?.key) return null
-      const base = `memorisation.onboarding.steps.${step.key}`
-      const stats = this.onboardingStepStats
-      const previewItemsRaw = typeof this.$tm === 'function' ? this.$tm(`${base}.previewItems`) : []
-      const fallbackLabels = Array.isArray(previewItemsRaw) ? previewItemsRaw.filter(Boolean) : []
-      let items = stats.map(stat => ({
-        key: stat.key,
-        label: stat.label,
-        value: stat.value || '—'
-      }))
-      if (!items.length && fallbackLabels.length) {
-        items = fallbackLabels.map((label, index) => ({
-          key: `preview-${index}`,
-          label,
-          value: '—'
-        }))
-      }
-      return {
-        title: this.t(`${base}.previewTitle`),
-        subtitle: this.t(`${base}.previewSubtitle`),
-        items
-      }
-    },
     isAnyModalOverlayActive() {
       return !!(
         this.showPostLoginOnboarding
@@ -6021,28 +6110,40 @@ export default {
         })
       }
 
+      if (stepKey === 'coach') {
+        stats.push({
+          key: 'ai',
+          label: this.t('memorisation.onboarding.steps.coach.stats.aiLabel'),
+          value: this.t('memorisation.onboarding.steps.coach.stats.aiValue'),
+          hint: ''
+        })
+        stats.push({
+          key: 'plan',
+          label: this.t('memorisation.onboarding.steps.coach.stats.planLabel'),
+          value: this.t('memorisation.onboarding.steps.coach.stats.planValue'),
+          hint: ''
+        })
+        stats.push({
+          key: 'tools',
+          label: this.t('memorisation.onboarding.steps.coach.stats.toolsLabel'),
+          value: this.t('memorisation.onboarding.steps.coach.stats.toolsValue'),
+          hint: ''
+        })
+      }
+
       if (stepKey === 'review') {
         stats.push({
           key: 'saved',
           label: this.t('memorisation.saved'),
-          value: String(this.savedSessions.length),
+          value: String(Math.max(0, Number(this.savedSessions?.length || 0))),
           hint: ''
         })
         stats.push({
-          key: 'recordings',
-          label: this.t('recordings.viewAll'),
-          value: String(this.recordingsLibrary.length),
+          key: 'return',
+          label: this.t('memorisation.onboarding.steps.review.stepLabel'),
+          value: this.t('memorisation.actions.resumeSession'),
           hint: ''
         })
-        const userName = String(this.auth?.name || '').trim()
-        if (userName) {
-          stats.push({
-            key: 'user',
-            label: this.t('memorisation.welcomeBack.kicker'),
-            value: userName,
-            hint: ''
-          })
-        }
       }
 
       return stats
@@ -8997,10 +9098,11 @@ export default {
         hint: hint && hint !== hintKey ? hint : '',
         points: Array.isArray(pointsRaw) ? pointsRaw.filter(Boolean) : []
       }
-      if (key === 'practice') {
-        step.targetSelector = '#talqin-mode-toggle'
-        step.targetSection = 'advanced_playback'
-      }
+      if (key === 'setup') step.targetSection = 'advanced_setup'
+      if (key === 'reading') step.targetSection = 'reading_settings'
+      if (key === 'practice') step.targetSection = 'focus_mode'
+      if (key === 'coach') step.targetSection = 'advanced_playback'
+      if (key === 'review') step.targetSection = 'saved_sessions'
       return step
     },
 
@@ -11393,31 +11495,7 @@ export default {
       if (session?.config?.chapterId) return `Surah ${session.config.chapterId}`
       return 'Surah not set'
     },
-    getOnboardingChoiceValue(choiceKey) {
-      if (choiceKey === 'path') return this.onboardingPath
-      if (choiceKey === 'goal') return this.onboardingGoal
-      return ''
-    },
-    setOnboardingChoice(choiceKey, value) {
-      if (choiceKey === 'path') this.onboardingPath = value
-      if (choiceKey === 'goal') this.onboardingGoal = value
-      this.applyOnboardingStep(this.onboardingStepIndex)
-    },
     applyOnboardingGoalPreset() {
-      if (this.onboardingGoal === 'steady') {
-        this.rangeStart = 1
-        this.rangeEnd = 5
-        this.repetitionsPerStep = 4
-        return
-      }
-      if (this.onboardingGoal === 'revision') {
-        this.rangeStart = 1
-        this.rangeEnd = 4
-        this.repetitionsPerStep = 3
-        this.showTranslation = false
-        return
-      }
-
       this.rangeStart = 1
       this.rangeEnd = 3
       this.repetitionsPerStep = 5
@@ -11490,8 +11568,9 @@ export default {
     openOnboardingModal(force = false) {
       if (!this.isLoggedIn && !force) return
       this.onboardingManualLaunch = !!force
+      this.onboardingPhase = 'welcome'
       this.onboardingStepIndex = 0
-      this.onboardingFinishChoice = ''
+      this.onboardingWelcomeChoice = ''
       if (this.isSignupIsolationActive()) {
         // New account: clear ONLY this user's scoped completion markers.
         // Never remove guest / other accounts' mutqin.onboardingCompleted.* keys.
@@ -11508,72 +11587,121 @@ export default {
       this.tab = 'tools'
       window.setTimeout(() => {
         this.showPostLoginOnboarding = true
-        this.applyOnboardingStep(0)
+        this.applyOnboardingGoalPreset()
       }, 50)
     },
     openOnboardingFromTopMenu() {
       this.topCardMenuOpen = false
       this.openOnboardingModal(true)
     },
-    prevOnboardingStep() {
-      if (this.onboardingStepIndex <= 0) return
-      this.onboardingStepIndex -= 1
-      if (this.onboardingStepIndex < this.onboardingSteps.length - 1) {
-        this.onboardingFinishChoice = ''
-      }
-      this.applyOnboardingStep(this.onboardingStepIndex)
+    startOnboardingTour() {
+      this.onboardingWelcomeChoice = 'tour'
+      this.onboardingPhase = 'tour'
+      this.onboardingStepIndex = 0
+      if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
+      this.applyOnboardingStep(0)
     },
-    nextOnboardingStep() {
-      this.onboardingStepIndex = Math.min(this.onboardingSteps.length - 1, this.onboardingStepIndex + 1)
-      if (this.onboardingStepIndex === this.onboardingSteps.length - 1) {
-        this.onboardingFinishChoice = ''
-      }
-      this.applyOnboardingStep(this.onboardingStepIndex)
+    selectOnboardingWelcomeChoice(value) {
+      if (!['sample', 'tour', 'explore'].includes(value)) return
+      this.onboardingWelcomeChoice = value
     },
-    selectOnboardingFinishChoice(value) {
-      this.onboardingFinishChoice = value
-    },
-    confirmOnboardingFinishChoice() {
-      const choice = this.onboardingFinishChoice
+    confirmOnboardingWelcomeChoice() {
+      const choice = this.onboardingWelcomeChoice
       if (!choice) return
       if (choice === 'sample') {
         this.playOnboardingSampleSession()
         return
       }
-      if (choice === 'setup') {
-        this.completeOnboardingOpenSetup()
+      if (choice === 'tour') {
+        this.startOnboardingTour()
         return
       }
       if (choice === 'explore') {
         this.completeOnboardingExploreWorkspace()
       }
     },
+    showOnboardingReady() {
+      this.onboardingPhase = 'ready'
+      this.onboardingStepIndex = Math.max(0, this.onboardingSteps.length - 1)
+    },
+    prevOnboardingStep() {
+      if (!this.onboardingIsTour) return
+      if (this.onboardingStepIndex <= 0) {
+        this.onboardingPhase = 'welcome'
+        this.onboardingStepIndex = 0
+        this.onboardingWelcomeChoice = ''
+        return
+      }
+      this.onboardingStepIndex -= 1
+      this.applyOnboardingStep(this.onboardingStepIndex)
+    },
+    nextOnboardingStep() {
+      if (!this.onboardingIsTour) return
+      if (this.onboardingStepIndex >= this.onboardingSteps.length - 1) {
+        this.showOnboardingReady()
+        return
+      }
+      this.onboardingStepIndex += 1
+      this.applyOnboardingStep(this.onboardingStepIndex)
+    },
+    toggleOnboardingPracticeChip(key) {
+      if (!this.onboardingDemoActive || !this.onboardingIsTour) return
+      if (key === 'focus') {
+        this.focusModeEnabled = !this.focusModeEnabled
+        if (this.focusModeEnabled) this.blurModeEnabled = false
+        return
+      }
+      if (key === 'blur') {
+        this.blurModeEnabled = !this.blurModeEnabled
+        if (this.blurModeEnabled) this.focusModeEnabled = false
+        return
+      }
+      if (key === 'talqin') {
+        this.talqinModeEnabled = !this.talqinModeEnabled
+      }
+    },
+    selectOnboardingReadingChip(key) {
+      if (!this.onboardingDemoActive || !this.onboardingIsTour) return
+      if (key === 'stacked' || key === 'mushaf') {
+        this.readingViewMode = key
+        return
+      }
+      if (key === 'tajweed') {
+        this.tajweedEnabled = !this.tajweedEnabled
+      }
+    },
+    goToOnboardingStep(index) {
+      if (!this.onboardingIsTour) return
+      const next = Math.max(0, Math.min(this.onboardingSteps.length - 1, Number(index || 0)))
+      this.onboardingStepIndex = next
+      this.applyOnboardingStep(next)
+    },
+    resetOnboardingModalState() {
+      this.showPostLoginOnboarding = false
+      this.onboardingPhase = 'welcome'
+      this.onboardingStepIndex = 0
+      this.onboardingWelcomeChoice = ''
+      this.sessionEndedSnapshot = null
+      this.onboardingManualLaunch = false
+    },
     skipOnboarding() {
       if (this.requiresFirstTimeOnboarding) return
       this.markOnboardingCompleted()
-      this.showPostLoginOnboarding = false
-      this.onboardingStepIndex = 0
-      this.sessionEndedSnapshot = null
+      this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
-      this.onboardingManualLaunch = false
     },
-    /** UI dismiss: revisit uses skip; first-time soft-skips via existing explore path. */
+    /** UI dismiss: revisit uses skip; first-time soft-skips via explore path. */
     dismissOnboardingTour() {
       if (!this.requiresFirstTimeOnboarding) {
         this.skipOnboarding()
         return
       }
-      this.selectOnboardingFinishChoice('explore')
-      this.confirmOnboardingFinishChoice()
+      this.completeOnboardingExploreWorkspace()
     },
     async playOnboardingSampleSession() {
       this.primeAudioPlaybackUnlock()
-      this.showPostLoginOnboarding = false
-      this.onboardingStepIndex = 0
-      this.sessionEndedSnapshot = null
-      this.onboardingManualLaunch = false
+      this.resetOnboardingModalState()
       this.onboardingSampleSessionActive = true
-      this.applyOnboardingStep(this.onboardingSteps.length - 1)
       this.restoreOnboardingDemo({ keepCurrentSession: true })
       this.applyOnboardingGoalPreset()
       this.currentMode = 'advanced'
@@ -11583,6 +11711,7 @@ export default {
       this.blurModeEnabled = false
       this.chainingEnabled = false
       this.anchorModeEnabled = false
+      this.talqinModeEnabled = false
       if (this.chapterId) {
         await this.loadChapter(this.currentMode)
         this.$nextTick(() => {
@@ -11592,10 +11721,7 @@ export default {
     },
     async completeOnboardingOpenSetup() {
       this.markOnboardingCompleted()
-      this.showPostLoginOnboarding = false
-      this.onboardingStepIndex = 0
-      this.sessionEndedSnapshot = null
-      this.onboardingManualLaunch = false
+      this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
       this.applyDefaultWorkspaceSessionConfig({ openSetup: true, silent: true })
       if (this.chapterId) {
@@ -11605,10 +11731,7 @@ export default {
     },
     async completeOnboardingExploreWorkspace() {
       this.markOnboardingCompleted()
-      this.showPostLoginOnboarding = false
-      this.onboardingStepIndex = 0
-      this.sessionEndedSnapshot = null
-      this.onboardingManualLaunch = false
+      this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
       this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
       if (this.chapterId) {
@@ -14727,17 +14850,13 @@ export default {
     async completeOnboardingAndStart() {
       this.primeAudioPlaybackUnlock()
       this.markOnboardingCompleted()
-      this.showPostLoginOnboarding = false
-      this.onboardingStepIndex = 0
-      this.sessionEndedSnapshot = null
-      this.applyOnboardingStep(this.onboardingSteps.length - 1)
-      if (this.onboardingManualLaunch) {
+      const wasManual = !!this.onboardingManualLaunch
+      this.resetOnboardingModalState()
+      if (wasManual) {
         this.restoreOnboardingDemo()
-        this.onboardingManualLaunch = false
         return
       }
       this.restoreOnboardingDemo({ keepCurrentSession: true })
-      this.onboardingManualLaunch = false
       this.applyOnboardingGoalPreset()
       this.currentMode = 'advanced'
       this.tab = 'tools'
@@ -14756,11 +14875,8 @@ export default {
     async completeOnboardingWithDefaultSession() {
       this.primeAudioPlaybackUnlock()
       this.markOnboardingCompleted()
-      this.showPostLoginOnboarding = false
-      this.onboardingStepIndex = 0
-      this.sessionEndedSnapshot = null
+      this.resetOnboardingModalState()
       this.restoreOnboardingDemo({ keepCurrentSession: true })
-      this.onboardingManualLaunch = false
       this.applyDefaultWorkspaceSessionConfig({ openSetup: false })
       await this.loadChapter(this.currentMode)
       this.isDataReady = true
@@ -14870,14 +14986,20 @@ export default {
         { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
         { tab: 'tools', section: 'reading_settings', mode: 'mushaf', blur: false, chaining: false, anchor: false },
         { tab: 'techniques', section: 'focus_mode', mode: 'stacked', blur: false, chaining: false, anchor: false },
+        { tab: 'techniques', section: 'advanced_playback', mode: 'stacked', blur: false, chaining: false, anchor: false },
         { tab: 'saved', section: 'saved_sessions', mode: 'stacked', blur: false, chaining: false, anchor: false }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
       if (stepMeta.targetSection) stepConfig.section = stepMeta.targetSection
       this.tab = stepConfig.tab
       this.showTools = false
-      if (stepConfig.mode) this.readingViewMode = stepConfig.mode
-      this.blurModeEnabled = !!stepConfig.blur
-      this.chainingEnabled = stepConfig.chaining !== false
+      if (stepConfig.mode && stepMeta.key !== 'reading') this.readingViewMode = stepConfig.mode
+      if (stepMeta.key === 'reading' && stepConfig.mode) this.readingViewMode = stepConfig.mode
+      if (stepMeta.key !== 'practice') {
+        this.blurModeEnabled = !!stepConfig.blur
+        this.focusModeEnabled = false
+        this.talqinModeEnabled = false
+      }
+      this.chainingEnabled = false
       this.anchorModeEnabled = !!stepConfig.anchor
       if (stepConfig.section) {
         const openMap = {
@@ -14895,13 +15017,6 @@ export default {
         })
         if (this.sectionOpen[stepConfig.section] !== undefined) this.sectionOpen[stepConfig.section] = true
       }
-      this.$nextTick(() => {
-        const target = stepMeta.targetSelector
-          ? this.$refs.toolsBody?.querySelector?.(stepMeta.targetSelector)
-          : null
-        const section = target || this.$refs.toolsBody?.querySelector?.(`.sheet-section .sheet-toggle`) || null
-        if (section?.scrollIntoView) section.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      })
     },
     openSessionAnalyticsModal(session) {
       if (!session?.id) return

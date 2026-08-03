@@ -1422,7 +1422,7 @@
     .planner-completion-body,
     .welcome-back-body,
     .post-session-body,
-    .onboarding-body,
+    .onboarding-body:not(.onboarding-body--guided),
     .session-exit-body
   ) {
     min-block-size: 0;
@@ -1431,12 +1431,12 @@
     overscroll-behavior: contain;
   }
 
-  .post-onboarding-modal {
+  .post-onboarding-modal:not(.post-onboarding-modal--guided) {
     grid-template-rows: auto auto minmax(0, 1fr) auto !important;
   }
 
-  .post-onboarding-modal .onboarding-hero,
-.post-onboarding-modal .onboarding-hero--compact {
+  .post-onboarding-modal:not(.post-onboarding-modal--guided) .onboarding-hero,
+  .post-onboarding-modal:not(.post-onboarding-modal--guided) .onboarding-hero--compact {
     display: grid !important;
     grid-template-columns: auto minmax(0, 1fr) auto !important;
     gap: 0.55rem !important;
@@ -1458,7 +1458,134 @@
     justify-self: end;
   }
 
-  .onboarding-body {
+  .post-onboarding-modal--guided.mutqin-modal-surface {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-rows: none !important;
+    position: relative;
+    max-block-size: calc(100dvh - max(20px, var(--mq-safe-top) + var(--mq-safe-bottom))) !important;
+    overflow: hidden !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-fluid {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    gap: 0.75rem !important;
+    padding: 1rem 0.95rem !important;
+    min-block-size: 0;
+    max-block-size: 100%;
+    overflow: hidden !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-hero,
+  .post-onboarding-modal--guided .onboarding-hero--guided,
+  .post-onboarding-modal--guided .onboarding-hero--compact {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    gap: 0.7rem !important;
+    padding: 0.15rem 2rem 0 0 !important;
+    background: none !important;
+    border-bottom: none !important;
+    align-items: start !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-hero-copy {
+    display: grid !important;
+    gap: 0.35rem !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-close-btn {
+    position: absolute !important;
+    top: 0.85rem !important;
+    inset-inline-end: 0.85rem !important;
+    z-index: 3;
+  }
+
+  .post-onboarding-modal--guided .onboarding-footer,
+  .post-onboarding-modal--guided .modal-footer.onboarding-footer,
+  .post-onboarding-modal--guided .mutqin-modal-footer.onboarding-footer {
+    position: relative !important;
+    inset: auto !important;
+    bottom: auto !important;
+    flex: 0 0 auto !important;
+    margin: 0.1rem 0 0 !important;
+    padding: 0.7rem 0 calc(0.35rem + var(--mq-safe-bottom, 0px)) !important;
+    border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent) !important;
+    background: color-mix(in srgb, var(--surface) 97%, transparent) !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-step-rail,
+  .post-onboarding-modal--guided .onboarding-step-rail--five {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.4rem !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-path-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.55rem !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-ready-list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.45rem !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-actions-grid--ready {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.45rem !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-actions-grid--trio-row,
+  .post-onboarding-modal--guided .onboarding-nav-actions.onboarding-actions-grid--trio-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.9fr) minmax(0, 0.9fr) !important;
+    gap: 0.35rem !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-actions-grid--trio-row > .onboarding-action,
+  .post-onboarding-modal--guided .onboarding-nav-actions.onboarding-actions-grid--trio-row > .onboarding-action {
+    grid-column: auto !important;
+    width: 100% !important;
+    min-inline-size: 0 !important;
+    min-block-size: 44px !important;
+    justify-content: center !important;
+    white-space: normal !important;
+    font-size: 0.7rem !important;
+    padding-inline: 0.28rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-nav-actions .onboarding-action i {
+    display: none !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-practice-chips {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.4rem !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-body--guided {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    flex: 1 1 auto !important;
+    gap: 0.75rem !important;
+    padding: 0.1rem 0 0.45rem !important;
+    min-block-size: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .onboarding-body:not(.onboarding-body--guided) {
     display: grid !important;
     grid-template-columns: var(--mq-grid);
     gap: 12px var(--mq-grid-gap) !important;
@@ -1487,10 +1614,10 @@
     grid-column: 1 / -1;
   }
 
-  .onboarding-nav-actions,
-.mutqin-modal-actions,
+  .onboarding-nav-actions:not(.onboarding-actions-grid),
+.mutqin-modal-actions:not(.onboarding-actions-grid),
 .mutqin-modal-actions--end,
-.mutqin-modal-actions--3,
+.mutqin-modal-actions--3:not(.onboarding-actions-grid),
 .welcome-back-actions-grid {
     display: grid !important;
     grid-template-columns: var(--mq-grid) !important;
@@ -1498,8 +1625,8 @@
     inline-size: 100%;
   }
 
-  .onboarding-nav-actions > *,
-.mutqin-modal-actions > *,
+  .onboarding-nav-actions:not(.onboarding-actions-grid) > *,
+.mutqin-modal-actions:not(.onboarding-actions-grid) > *,
 .welcome-back-actions-grid > * {
     grid-column: span 2;
     min-inline-size: 0;

@@ -578,12 +578,12 @@
       "steps": {
         "setup": {
           "title": "Configurer une session",
-          "stepLabel": "Configuration",
-          "body": "Choisissez une sourate, la plage d'ayahs et un récitateur avant de commencer.",
+          "stepLabel": "Session",
+          "body": "Chaque pratique commence ici : choisissez une sourate, une courte plage d’ayahs et un récitateur.",
           "points": [
-            "La session exemple commence par une courte plage",
-            "Les répétitions et la vitesse restent dans les contrôles",
-            "Vous pouvez rouvrir la configuration à tout moment"
+            "Choisissez sourate, plage et récitateur dans Contrôles",
+            "Gardez une courte plage pour bien finir",
+            "Ajustez les répétitions quand vous voulez"
           ],
           "previewTitle": "Entrées de session réelles",
           "previewSubtitle": "D’après vos réglages actuels.",
@@ -596,12 +596,12 @@
         },
         "reading": {
           "title": "Choisir une vue de lecture",
-          "stepLabel": "Vue de lecture",
-          "body": "Basculez entre empilé et mushaf, puis utilisez traduction, translittération et tajwid.",
+          "stepLabel": "Lecture",
+          "body": "Lisez en cartes empilées ou Mushaf. Activez traduction ou tajweed seulement si cela aide.",
           "points": [
-            "Gardez le texte principal épuré si vous n'avez pas besoin d'aides",
-            "Le mode mushaf conserve la mise en page du Coran",
-            "Les polices restent accessibles depuis la barre d'outils"
+            "Empilé pour les courtes plages ; Mushaf garde la page",
+            "Activez les aides depuis la barre de session",
+            "Les couleurs tajweed suivent les règles"
           ],
           "previewTitle": "Contrôles de lecture",
           "previewSubtitle": "D’après vos réglages d’affichage.",
@@ -614,12 +614,12 @@
         },
         "practice": {
           "title": "Pratiquer avec les outils intégrés",
-          "stepLabel": "Outils de pratique",
-          "body": "Utilisez focus, flou, enchaînement et ancre pour structurer l'ayah active.",
+          "stepLabel": "Pratique",
+          "body": "Focus, Flou et Talqin aident à écouter et répéter. Touchez un outil pour l’apercevoir.",
           "points": [
-            "Le focus concentre l'attention sur l'ayah active",
-            "Le flou masque les ayahs suivantes",
-            "Enchaînement et ancre aident les passages difficiles"
+            "Focus resserre l’attention sur l’ayah active",
+            "Le flou adoucit le texte suivant",
+            "Talqin offre un tour écoute puis récit"
           ],
           "previewTitle": "Contrôles de technique",
           "previewSubtitle": "D’après vos réglages de pratique.",
@@ -631,12 +631,13 @@
           "hint": "Astuce : commencez avec un seul outil doux. Les contrôles de mémorisation sont optionnels."
         },
         "review": {
-          "title": "Revoir et revenir",
-          "stepLabel": "Revue et retour",
-          "body": "Sessions sauvegardées, enregistrements et analyses guident la prochaine session.",
+          "title": "Revenir et continuer",
+          "stepLabel": "Retour",
+          "body": "Les sessions sauvegardées et Welcome Back vous aident à reprendre doucement.",
           "points": [
-            "Continuer exactement où vous vous êtes arrêté",
-            "Les rappels aident avant que les ayahs mémorisés ne s’effacent"
+            "Reprenez exactement où vous vous êtes arrêté",
+            "Les sessions gardent plage et réglages",
+            "Welcome Back rappelle l’ayah en pause"
           ],
           "previewTitle": "Ce à quoi vous revenez",
           "previewSubtitle": "D’après votre activité récente.",
@@ -646,6 +647,32 @@
             "Analyses"
           ],
           "hint": "Astuce : retrouvez vos sessions sauvegardées à tout moment dans votre bibliothèque."
+        },
+        "coach": {
+          "title": "Mémorisation IA et recommandations",
+          "stepLabel": "Coach IA",
+          "body": "Après la pratique, la mémorisation IA vérifie votre rappel et Mutqin recommande un plan personnalisé avec les bons outils et l’assistant pour cette session.",
+          "hint": "Astuce: utilisez le contrôle pour un retour, puis suivez le plan recommandé.",
+          "points": [
+            "La mémorisation IA écoute et repère les points fragiles",
+            "Les recommandations suggèrent la prochaine plage et l’objectif",
+            "Les outils et l’assistant suggérés correspondent à la session"
+          ],
+          "previewTitle": "Amélioration personnalisée",
+          "previewSubtitle": "Comment Mutqin guide la session suivante.",
+          "previewItems": [
+            "Mémorisation IA",
+            "Plan recommandé",
+            "Outils adaptés"
+          ],
+          "stats": {
+            "aiLabel": "Mémorisation IA",
+            "aiValue": "Contrôle du rappel",
+            "planLabel": "Recommandation",
+            "planValue": "Plan personnalisé",
+            "toolsLabel": "Outils de session",
+            "toolsValue": "Assistants adaptés"
+          }
         }
       },
       "playSampleSession": "Essayer un court exemple",
@@ -679,8 +706,29 @@
       "confirmChoice": "Continuer",
       "startOnboarding": "Get started",
       "continueOnboarding": "Continue setup",
-      "skipTour": "Passer le tour",
-      "finishHint": "Choisissez comment commencer — vous pourrez changer plus tard."
+      "skipTour": "Explorer moi-même",
+      "finishHint": "Choisissez comment commencer — vous pourrez changer plus tard.",
+      "welcome": {
+        "salam": "ٱلسَّلَامُ عَلَيْكُمْ",
+        "title": "Bienvenue sur Mutqin",
+        "body": "Choisissez un chemin pour commencer. Le tour guidé passe par la session, la lecture, la pratique et le retour.",
+        "metaHint": "Une session douce est prête. courte plage, récitateur clair, rythme calme.",
+        "tourDescription": "Cinq étapes : session, lecture, pratique, coach IA et retour."
+      },
+      "ready": {
+        "title": "Vous êtes prêt à commencer",
+        "body": "Vous avez vu comment Mutqin s’organise. Configurez votre session, explorez, ou essayez l’exemple guidé.",
+        "kicker": "Tour terminé",
+        "hint": "Vous pouvez rouvrir ce tour à tout moment depuis le menu."
+      },
+      "actions": {
+        "trySample": "Essayer un exemple guidé",
+        "quickTour": "Tour guidé",
+        "exploreMyself": "Explorer moi-même",
+        "setupSession": "Configurer ma session",
+        "exploreWorkspace": "Explorer l’espace",
+        "guidedTour": "Faire le tour guidé"
+      }
     },
     "open_session_setup": "Ouvrir la configuration de session",
     "open_controls": "Ouvrir les contrôles",

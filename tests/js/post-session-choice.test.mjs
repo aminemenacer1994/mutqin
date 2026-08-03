@@ -86,7 +86,19 @@ assert.match(vue, /toolsPrimaryStartLabel/)
 assert.match(vue, /class="top-card-icon-controls"/)
 assert.match(vue, /action-btn-exit post-session-choice-custom/)
 assert.match(vue, /workspace-shell--post-session-choice/)
-assert.doesNotMatch(vue, /v-if="!isPostSessionChoiceVisible"/)
+assert.match(vue, /workspace-shell-bottom--post-session/)
+assert.match(vue, /workspace-shell-reading-toggles/)
+assert.match(vue, /top-card-layout-icons/)
+assert.doesNotMatch(
+  vue,
+  /hasVerses && !isPostSessionChoiceVisible && \(topCardMetadataPills/,
+  'stacked/mushaf toggle must remain available after session ends',
+)
+assert.doesNotMatch(
+  vue,
+  /v-if="!isPostSessionChoiceVisible"\s*\n\s*class="top-card-icon-controls"/,
+  'top-card icon controls must remain mounted after session ends',
+)
 assert.match(vue, /action-btn-secondary top-card-action-trigger top-card-controls-trigger/)
 assert.doesNotMatch(vue, /post-session-choice-actions/)
 assert.match(en, /"What would you like to practise next\?"/)

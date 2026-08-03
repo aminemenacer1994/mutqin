@@ -6211,8 +6211,7 @@ html {
   color: white;
   transform: scale(1.05);
   box-shadow: 0 2px 8px rgba(154, 103, 56, 0.3);
-  outline: 2px solid color-mix(in srgb, var(--accent-strong) 70%, #fff);
-  outline-offset: 2px;
+  outline: none;
   text-decoration: underline;
   text-decoration-thickness: 0.1em;
   text-underline-offset: 0.12em;
@@ -9097,7 +9096,7 @@ html {
 }
 
 .wbw-word.phrase-highlighted {
-  box-shadow: 0 0 0 2px rgba(184, 130, 78, 0.18);
+  box-shadow: none;
 }
 
 .word-item.highlighted,
@@ -11939,6 +11938,471 @@ body.memorisation-page nav.navbar.app-navbar {
   box-shadow:
     0 34px 96px rgba(0, 0, 0, 0.48),
     0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+.post-onboarding-modal--guided {
+  --ob-pad-x: clamp(1.2rem, 2.8vw, 1.9rem);
+  --ob-pad-y: clamp(1.2rem, 2.5vw, 1.65rem);
+  --ob-gap: 0.7rem;
+  position: relative;
+  display: flex !important;
+  flex-direction: column;
+  max-width: min(820px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin-inline: auto;
+  overflow: hidden !important;
+}
+
+.onboarding-fluid.container-fluid {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  max-height: 100%;
+  padding: var(--ob-pad-y) var(--ob-pad-x);
+  margin-inline: 0;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+.post-onboarding-modal--guided .onboarding-close-btn {
+  position: absolute;
+  top: 1rem;
+  inset-inline-end: 1rem;
+  z-index: 3;
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+  border-radius: 0.65rem;
+}
+
+.post-onboarding-modal--guided .onboarding-hero--guided {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  gap: 0.95rem !important;
+  align-items: start !important;
+  flex: 0 0 auto;
+  padding: 0.2rem 0 0.15rem !important;
+  padding-inline-end: 2.4rem !important;
+  background: none !important;
+  border-bottom: none !important;
+}
+
+.post-onboarding-modal--guided .onboarding-step-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+  color: var(--accent-strong, var(--accent));
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--accent) 16%, var(--surface)),
+    color-mix(in srgb, #58b68e 10%, var(--surface))
+  );
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.post-onboarding-modal--guided .onboarding-hero-copy {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+  text-align: start;
+  min-width: 0;
+}
+
+.onboarding-salam {
+  margin: 0;
+  font-family: "Amiri Quran", "Scheherazade New", "Noto Naskh Arabic", serif;
+  font-size: 1.4rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 74%, var(--text));
+}
+
+.post-onboarding-modal--guided .onboarding-kicker {
+  margin: 0;
+}
+
+.post-onboarding-modal--guided .onboarding-title {
+  margin: 0 !important;
+  font-size: clamp(1.3rem, 3vw, 1.65rem) !important;
+  font-weight: 680;
+  letter-spacing: -0.025em;
+  line-height: 1.2 !important;
+}
+
+.post-onboarding-modal--guided .onboarding-lead {
+  margin: 0;
+  max-width: 56ch;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--text) 74%, var(--text-muted));
+}
+
+.onboarding-meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.45rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 560;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 58%, var(--text));
+}
+
+.onboarding-meta-sep {
+  color: color-mix(in srgb, var(--text-muted) 70%, transparent);
+  font-weight: 450;
+}
+
+.onboarding-meta-hint {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.post-onboarding-modal--guided .onboarding-step-rail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0.1rem 0 0;
+  flex: 0 0 auto;
+}
+
+.post-onboarding-modal--guided .onboarding-step-rail--five {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.onboarding-actions-grid--trio-row {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.55rem !important;
+  align-items: stretch !important;
+  width: 100%;
+}
+
+.onboarding-actions-grid--trio-row > .onboarding-action {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.4rem !important;
+  width: 100%;
+  min-height: 2.55rem !important;
+  white-space: normal;
+  text-align: center;
+}
+
+.onboarding-actions-grid--trio-row > .onboarding-action.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border)) !important;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface)) !important;
+}
+
+.post-onboarding-modal--guided .onboarding-step-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.45rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  color: var(--text-muted);
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.post-onboarding-modal--guided .onboarding-step-chip.active {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  color: var(--text);
+}
+
+.post-onboarding-modal--guided .onboarding-step-chip.complete {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 70%, var(--text));
+}
+
+.post-onboarding-modal--guided .onboarding-step-chip-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.post-onboarding-modal--guided .onboarding-step-chip-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.onboarding-body--guided {
+  display: grid !important;
+  gap: 0.9rem !important;
+  padding: 0.15rem 0 0.35rem !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.onboarding-path-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.onboarding-path-card {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+  text-align: start;
+  min-height: 8.5rem;
+  padding: 1rem 1.05rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 160ms ease, transform 160ms ease, background-color 160ms ease;
+}
+
+.onboarding-path-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+
+.onboarding-path-card.active {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.onboarding-path-card-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.7rem;
+  display: grid;
+  place-items: center;
+  color: var(--accent-strong, var(--accent));
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  font-size: 1rem;
+}
+
+.onboarding-path-card strong {
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.onboarding-path-card span {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.onboarding-ready-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.onboarding-ready-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  font-size: 0.86rem;
+  font-weight: 540;
+}
+
+.onboarding-ready-list i {
+  color: var(--accent-strong, var(--accent));
+}
+
+.onboarding-practice-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.onboarding-practice-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 560;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.onboarding-practice-chip:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+.onboarding-practice-chip.active {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 70%, var(--text));
+}
+
+.post-onboarding-modal--guided .onboarding-footer,
+.post-onboarding-modal--guided .modal-footer.onboarding-footer,
+.post-onboarding-modal--guided .mutqin-modal-footer.onboarding-footer {
+  position: relative !important;
+  inset: auto !important;
+  bottom: auto !important;
+  z-index: 1;
+  flex: 0 0 auto;
+  margin: 0.15rem 0 0;
+  padding: 0.75rem 0 0 !important;
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--surface) 97%, transparent) !important;
+}
+
+.onboarding-actions-grid--ready {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) !important;
+  gap: var(--ob-gap) !important;
+  width: 100%;
+}
+
+.onboarding-actions-grid--ready .onboarding-sample-link {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+
+.post-onboarding-modal--guided .mutqin-modal-btn.onboarding-action {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.35rem !important;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.55rem !important;
+  padding: 0.5rem 0.55rem !important;
+  border-radius: 0.8rem !important;
+  white-space: normal;
+  text-align: center;
+  font-size: 0.84rem !important;
+  font-weight: 580 !important;
+  line-height: 1.2;
+}
+
+.post-onboarding-modal--guided .mutqin-modal-btn.onboarding-action span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.onboarding-sample-link {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 72%, var(--text));
+  font-size: 0.84rem;
+  font-weight: 540;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  cursor: pointer;
+  padding: 0.25rem 0.35rem;
+}
+
+.onboarding-sample-link:hover {
+  color: var(--accent-strong, var(--accent));
+}
+
+[data-theme="dark"] .onboarding-salam {
+  color: color-mix(in srgb, var(--accent) 64%, #f5f5f4);
+}
+
+[data-theme="dark"] .onboarding-meta-line {
+  color: color-mix(in srgb, var(--accent) 55%, #e7e0d6);
+}
+
+@media (max-width: 767.98px) {
+  .post-onboarding-modal--guided {
+    max-width: min(100vw - 1.1rem, 820px);
+  }
+
+  .post-onboarding-modal--guided .onboarding-step-rail,
+  .post-onboarding-modal--guided .onboarding-step-rail--five,
+  .onboarding-ready-list {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .onboarding-path-grid,
+  .onboarding-actions-grid--trio-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .post-onboarding-modal--guided .mutqin-modal-btn.onboarding-action {
+    white-space: normal;
+    text-align: center;
+    font-size: 0.76rem !important;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .onboarding-path-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-actions-grid--trio-row,
+  .post-onboarding-modal--guided .onboarding-nav-actions.onboarding-actions-grid--trio-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.9fr) minmax(0, 0.9fr) !important;
+    gap: 0.35rem !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-actions-grid--trio-row > .onboarding-action {
+    min-height: 2.45rem !important;
+    padding-inline: 0.3rem !important;
+    font-size: 0.7rem !important;
+  }
+
+  .post-onboarding-modal--guided .onboarding-nav-actions .onboarding-action i {
+    display: none;
+  }
+
+  .post-onboarding-modal--guided .onboarding-step-rail--five {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 479.98px) {
+  .post-onboarding-modal--guided .onboarding-step-rail {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .post-onboarding-modal--guided .onboarding-step-chip-label {
+    font-size: 0.7rem;
+  }
 }
 
 .onboarding-hero {
@@ -30770,13 +31234,19 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
 .verse-arabic:not(.word-by-word-meanings) .wbw-word.highlighted,
 .verse-arabic:not(.word-by-word-meanings) word.highlighted,
 .mushaf-ayah-text:not(.word-by-word-meanings) .wbw-word.highlighted,
-.mushaf-ayah-text:not(.word-by-word-meanings) word.highlighted {
+.mushaf-ayah-text:not(.word-by-word-meanings) word.highlighted,
+.verse-arabic:not(.word-by-word-meanings) .wbw-word.phrase-highlighted,
+.verse-arabic:not(.word-by-word-meanings) word.phrase-highlighted,
+.mushaf-ayah-text:not(.word-by-word-meanings) .wbw-word.phrase-highlighted,
+.mushaf-ayah-text:not(.word-by-word-meanings) word.phrase-highlighted {
   background: transparent !important;
   background-image: none !important;
   color: #b45309 !important;
   -webkit-text-fill-color: #b45309;
   box-shadow: none !important;
+  border: 0 !important;
   border-radius: 0;
+  outline: none !important;
   padding-inline: 0;
 }
 
@@ -31224,8 +31694,10 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
   background-image: none !important;
   color: #fbbf24 !important;
   -webkit-text-fill-color: #fbbf24;
+  border: 0 !important;
   border-radius: 0;
   box-shadow: none !important;
+  outline: none !important;
   padding-inline: 0;
 }
 
@@ -31253,13 +31725,19 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
 [data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings) .wbw-word.highlighted,
 [data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings) word.highlighted,
 [data-theme="light"] .verse-arabic:not(.word-by-word-meanings).tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
-[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings).tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
+[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings).tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+[data-theme="light"] .verse-arabic:not(.word-by-word-meanings) .wbw-word.phrase-highlighted,
+[data-theme="light"] .verse-arabic:not(.word-by-word-meanings) word.phrase-highlighted,
+[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings) .wbw-word.phrase-highlighted,
+[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings) word.phrase-highlighted {
   background: transparent !important;
   background-image: none !important;
   color: #b45309 !important;
   -webkit-text-fill-color: #b45309;
+  border: 0 !important;
   border-radius: 0;
   box-shadow: none !important;
+  outline: none !important;
   padding-inline: 0;
 }
 
@@ -32956,7 +33434,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   color: #b45309;
   -webkit-text-fill-color: #b45309;
   box-shadow: none;
+  border: 0;
   border-radius: 0;
+  outline: none;
 }
 
 .mushaf-ayah.is-playing .mushaf-ayah-text {
@@ -36884,7 +37364,7 @@ but not its destructive red. */
 }
 
 .post-session-body,
-.onboarding-body {
+.onboarding-body:not(.onboarding-body--guided) {
   padding: 1.05rem 1.35rem 1.3rem !important;
   gap: 0.95rem;
 }
@@ -41056,7 +41536,7 @@ body,
 .mutqin-modal-surface .planner-completion-body,
 .mutqin-modal-surface .welcome-back-body,
 .mutqin-modal-surface .post-session-body,
-.mutqin-modal-surface .onboarding-body,
+.mutqin-modal-surface .onboarding-body:not(.onboarding-body--guided),
 .mutqin-modal-surface .session-exit-body {
     min-height: 0;
     overflow-y: auto;
@@ -41078,15 +41558,31 @@ body,
     padding: 0.75rem 1rem calc(0.75rem + var(--mobile-safe-bottom)) !important;
   }
 
-  .mutqin-modal-actions,
+  .post-onboarding-modal--guided .modal-footer.onboarding-footer,
+  .post-onboarding-modal--guided .mutqin-modal-footer.onboarding-footer {
+    position: relative !important;
+    inset: auto !important;
+    bottom: auto !important;
+    z-index: 1;
+    padding: 0.7rem 0 calc(0.35rem + var(--mobile-safe-bottom)) !important;
+    background: color-mix(in srgb, var(--surface) 97%, transparent) !important;
+  }
+
+  .mutqin-modal-actions:not(.onboarding-actions-grid--trio-row),
 .mutqin-modal-actions--end,
-.mutqin-modal-actions--3,
+.mutqin-modal-actions--3:not(.onboarding-actions-grid--trio-row),
 .welcome-back-actions-grid,
-.onboarding-nav-actions,
+.onboarding-nav-actions:not(.onboarding-actions-grid--trio-row),
 .session-exit-actions {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr);
     gap: 0.75rem;
+  }
+
+  .post-onboarding-modal--guided .onboarding-actions-grid--trio-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.9fr) minmax(0, 0.9fr) !important;
+    gap: 0.35rem !important;
   }
 
   .mutqin-modal-btn,
@@ -41924,7 +42420,7 @@ body,
 .mutqin-modal-surface .planner-completion-body,
 .mutqin-modal-surface .welcome-back-body,
 .mutqin-modal-surface .post-session-body,
-.mutqin-modal-surface .onboarding-body,
+.mutqin-modal-surface .onboarding-body:not(.onboarding-body--guided),
 .mutqin-modal-surface .session-exit-body {
     flex: 1 1 auto;
     min-block-size: 0;
@@ -41944,9 +42440,16 @@ body,
     flex: 0 0 auto;
   }
 
-  .post-onboarding-modal {
+  .post-onboarding-modal:not(.post-onboarding-modal--guided) {
     display: grid !important;
     grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+
+  .post-onboarding-modal--guided {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-rows: none !important;
+    overflow: hidden !important;
   }
 
   .post-onboarding-modal .onboarding-hero {
@@ -41971,15 +42474,21 @@ body,
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
-  .onboarding-nav-actions,
-.mutqin-modal-actions:not(.post-session-actions-grid--cols),
+  .onboarding-nav-actions:not(.onboarding-actions-grid--trio-row),
+.mutqin-modal-actions:not(.post-session-actions-grid--cols):not(.onboarding-actions-grid--trio-row),
 .mutqin-modal-actions--end:not(.post-session-actions-grid--cols),
-.mutqin-modal-actions--3:not(.post-session-actions-grid--cols),
+.mutqin-modal-actions--3:not(.post-session-actions-grid--cols):not(.onboarding-actions-grid--trio-row),
 .welcome-back-actions-grid {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) !important;
     gap: 0.55rem !important;
     inline-size: 100%;
+  }
+
+  .post-onboarding-modal--guided .onboarding-actions-grid--trio-row {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.4rem !important;
   }
 
   .post-session-actions-grid.post-session-actions-grid--cols {
@@ -42034,8 +42543,12 @@ body,
   .onboarding-post-session-modal .mutqin-modal-footer,
 .mutqin-modal-surface.session-exit-modal .session-exit-footer,
 .welcome-back-modal .mutqin-modal-footer,
-.post-onboarding-modal .mutqin-modal-footer {
+.post-onboarding-modal:not(.post-onboarding-modal--guided) .mutqin-modal-footer {
     padding: 0.7rem 1rem calc(0.7rem + var(--mobile-safe-bottom)) !important;
+  }
+
+  .post-onboarding-modal--guided .mutqin-modal-footer.onboarding-footer {
+    padding: 0.7rem 0 calc(0.35rem + var(--mobile-safe-bottom)) !important;
   }
 
   .session-exit-actions-layout {
@@ -50387,10 +50900,26 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani 
   z-index: 90;
 }
 
-/* Desktop: layout switch lives in workspace reading toggles — hide top-card icon + ellipsis layout item */
+/* Desktop: layout switch lives in workspace reading toggles — hide top-card icon + ellipsis layout item.
+   Keep the top-card icon during post-session choice so stacked/mushaf stays reachable if the bottom bar collapses. */
 @media (min-width: 768px) {
   .top-card-icon-controls .top-card-layout-icons {
     display: none !important;
+  }
+
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
+    display: inline-flex !important;
+  }
+
+  .workspace-shell--post-session-choice .workspace-shell-bottom,
+  .workspace-shell--post-session-choice .workspace-shell-reading-toggles {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .workspace-shell-bottom--post-session {
+    justify-content: flex-end;
   }
 
   .top-card-menu .top-card-menu-toggle--layout {
@@ -51922,7 +52451,7 @@ then let rule spans use currentColor.
 
 /* Compact onboarding header */
 .onboarding-hero.onboarding-hero--compact,
-.post-onboarding-modal .onboarding-hero--compact {
+.post-onboarding-modal:not(.post-onboarding-modal--guided) .onboarding-hero--compact {
   grid-template-columns: auto minmax(0, 1fr) auto !important;
   align-items: center !important;
   gap: 0.65rem !important;
@@ -51931,26 +52460,26 @@ then let rule spans use currentColor.
     linear-gradient(180deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent) !important;
 }
 
-.onboarding-hero--compact .onboarding-step-icon {
+.post-onboarding-modal:not(.post-onboarding-modal--guided) .onboarding-hero--compact .onboarding-step-icon {
   width: 2rem !important;
   height: 2rem !important;
   border-radius: 10px !important;
   font-size: 0.9rem !important;
 }
 
-.onboarding-hero--compact .onboarding-kicker {
+.post-onboarding-modal:not(.post-onboarding-modal--guided) .onboarding-hero--compact .onboarding-kicker {
   padding: 0.22rem 0.58rem !important;
   font-size: 0.64rem !important;
   margin: 0 !important;
 }
 
-.onboarding-hero--compact .onboarding-title {
+.post-onboarding-modal:not(.post-onboarding-modal--guided) .onboarding-hero--compact .onboarding-title {
   margin: 0.28rem 0 0 !important;
   font-size: clamp(1.02rem, 2.4vw, 1.22rem) !important;
   line-height: 1.25 !important;
 }
 
-.onboarding-hero--compact .onboarding-close-btn {
+.post-onboarding-modal:not(.post-onboarding-modal--guided) .onboarding-hero--compact .onboarding-close-btn {
   width: 32px !important;
   height: 32px !important;
   border-radius: 10px !important;
@@ -52139,7 +52668,7 @@ clearer hierarchy */
 }
 
 @media (max-width: 767.98px) {
-  .onboarding-hero.onboarding-hero--compact {
+  .post-onboarding-modal:not(.post-onboarding-modal--guided) .onboarding-hero.onboarding-hero--compact {
     padding: 0.7rem 0.85rem 0.55rem !important;
     gap: 0.55rem !important;
   }
