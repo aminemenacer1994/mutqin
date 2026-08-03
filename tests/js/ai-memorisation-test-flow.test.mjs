@@ -10,6 +10,7 @@ import {
   DIFFICULTY_PERCENTS,
   DEFAULT_DIFFICULTY_PERCENT,
   areAllHiddenWordsRevealed,
+  areAllSessionWordsSettled,
   buildHiddenWordSeed,
   createSeededRng,
   isWordHidden,
@@ -107,7 +108,7 @@ import {
 
 // 7–8. Difficulty controls approximate hidden-word percentage; higher hides more.
 {
-  assert.deepEqual(DIFFICULTY_PERCENTS, [25, 50, 75, 100])
+  assert.deepEqual(DIFFICULTY_PERCENTS, [10, 25, 50, 75, 100])
   assert.equal(normaliseDifficultyPercent(50), 50)
   assert.equal(normaliseDifficultyPercent(33), DEFAULT_DIFFICULTY_PERCENT)
 
@@ -227,6 +228,18 @@ import {
   live[0].status = 'correct'
   live[2].status = 'correct'
   assert.equal(areAllHiddenWordsRevealed(hidden, live), true)
+}
+
+// 15b. Full-range settle (including reds) can auto-finish the session.
+{
+  const live = [
+    { status: 'correct' },
+    { status: 'incorrect' },
+    { status: 'partial' },
+  ]
+  assert.equal(areAllSessionWordsSettled(live), true)
+  live[2].status = 'pending'
+  assert.equal(areAllSessionWordsSettled(live), false)
 }
 
 // 17. Reset clears only the current test attempt (seed attempt bump).

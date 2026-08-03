@@ -1264,13 +1264,14 @@
 }
 
 .amd-mushaf-shell--premium {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
+  max-height: 100%;
   overflow: auto;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: clamp(1.25rem, 4vw, 2.75rem) clamp(0.85rem, 4vw, 2.5rem);
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.85rem, 4vw, 2.5rem);
   border-radius: 18px;
   border: 1px solid rgba(68, 64, 60, 0.08);
   background: #ffffff;
@@ -2020,22 +2021,25 @@
   min-height: 0 !important;
 }
 
-/* Equal tool grid with captions — peek / words / size / sound */
+/* Equal tool grid — peek / words shown / sound / tajweed */
 .amd-toolbar--tools {
   display: grid !important;
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  gap: 0.55rem 0.5rem !important;
+  gap: 0.5rem !important;
   width: 100% !important;
   margin: 0 !important;
   align-items: stretch;
+  justify-items: stretch;
 }
 
 .amd-tool-cell {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.3rem;
+  justify-content: flex-end;
+  gap: 0.25rem;
   min-width: 0;
+  width: 100%;
 }
 
 .amd-tool-cell--stop {
@@ -2049,22 +2053,25 @@
   justify-content: center;
   gap: 0.35rem;
   width: 100%;
-  min-height: 2.65rem;
-  padding: 0.4rem 0.45rem;
-  border-radius: 0.7rem;
-  border: 1px solid color-mix(in srgb, #a8a29e 45%, transparent);
+  height: 2.5rem;
+  min-height: 2.5rem;
+  max-height: 2.5rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.65rem;
+  border: 1px solid color-mix(in srgb, #a8a29e 48%, transparent);
   background: #fff;
   color: #3f3a36;
   font: inherit;
   font-size: 0.8rem;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.1;
   cursor: pointer;
+  box-sizing: border-box;
   transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
 .amd-tool-btn i {
-  font-size: 1rem;
+  font-size: 1.05rem;
   line-height: 1;
   flex-shrink: 0;
 }
@@ -2073,6 +2080,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .amd-tool-btn:hover:not(:disabled) {
@@ -2084,6 +2092,16 @@
   background: color-mix(in srgb, #2f6f58 12%, #fff);
   border-color: color-mix(in srgb, #2f6f58 42%, transparent);
   color: #246048;
+}
+
+.amd-tool-btn--tajweed.active {
+  background: color-mix(in srgb, #2f6f58 12%, #fff);
+  border-color: color-mix(in srgb, #2f6f58 42%, transparent);
+  color: #246048;
+}
+
+.amd-tool-btn--tajweed:not(.active) {
+  opacity: 0.82;
 }
 
 .amd-tool-btn:disabled {
@@ -2099,20 +2117,23 @@
 .amd-tool-select {
   appearance: none;
   width: 100%;
-  min-height: 2.65rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  max-height: 2.5rem;
   margin: 0;
-  padding: 0.4rem 1.55rem 0.4rem 0.55rem;
+  padding: 0.35rem 1.5rem 0.35rem 0.45rem;
   border: 0;
-  border-radius: 0.7rem;
+  border-radius: 0.65rem;
   background: transparent
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2378716c' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")
-    no-repeat right 0.5rem center / 0.65rem;
+    no-repeat right 0.55rem center / 0.65rem;
   color: inherit;
   font: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 600;
   text-align: center;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .amd-tool-btn--size {
@@ -2184,14 +2205,17 @@
   flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 0.55rem !important;
+  gap: 0.65rem !important;
   width: 100%;
-  min-height: 2.85rem !important;
+  min-height: 3.35rem !important;
   height: auto !important;
-  padding: 0.55rem 0.9rem !important;
-  border-radius: 0.75rem !important;
-  background: color-mix(in srgb, #b55041 8%, #fff) !important;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #b55041 28%, transparent) !important;
+  padding: 0.7rem 1rem !important;
+  border-radius: 0.9rem !important;
+  background: linear-gradient(180deg, #d4786a 0%, #b55041 55%, #9a4336 100%) !important;
+  box-shadow:
+    0 8px 18px rgba(181, 80, 65, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+  border: 0 !important;
 }
 
 .amd-record-btn--inline .amd-record-btn__ring {
@@ -2199,33 +2223,55 @@
 }
 
 .amd-record-btn--inline .amd-record-btn__core {
-  width: 1.9rem !important;
-  height: 1.9rem !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
   flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.18) !important;
   box-shadow:
-    0 4px 10px rgba(181, 80, 65, 0.28),
+    0 2px 6px rgba(0, 0, 0, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
 }
 
 .amd-record-btn--inline .amd-record-btn__core i {
-  font-size: 0.95rem !important;
+  font-size: 1.1rem !important;
+  color: #fffaf8 !important;
 }
 
 .amd-record-btn__label,
 .amd-record-btn--inline .amd-record-btn__label {
-  font-size: 0.92rem !important;
-  font-weight: 650;
+  font-size: 1.05rem !important;
+  font-weight: 700;
   letter-spacing: -0.01em;
-  color: #7a352c;
+  color: #fffaf8 !important;
 }
 
 .amd-record-btn--inline:hover:not(:disabled) {
-  background: color-mix(in srgb, #b55041 12%, #fff) !important;
-  transform: none;
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+}
+
+.amd-record-btn--inline:active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(0.98);
 }
 
 .amd-record-btn--inline:active:not(:disabled) .amd-record-btn__core {
   transform: scale(0.96);
+}
+
+/* Stop uses the same prominent footprint, with a clear listening state */
+.amd-record-btn--inline.amd-record-btn--stop {
+  background: linear-gradient(180deg, #3f8f6f 0%, #2f6f58 55%, #245a47 100%) !important;
+  box-shadow:
+    0 8px 18px rgba(47, 111, 88, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+.amd-record-btn--inline.amd-record-btn--stop.active {
+  background: linear-gradient(180deg, #e07a6a 0%, #c45a4a 55%, #a84638 100%) !important;
+  box-shadow:
+    0 8px 18px rgba(196, 90, 74, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
 /* Dark mode — tools + header + record */
@@ -2296,13 +2342,25 @@
 
 [data-theme="dark"] .amd-record-btn--inline,
 .app[data-theme="dark"] .amd-record-btn--inline {
-  background: color-mix(in srgb, #b55041 16%, #171412) !important;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #d4786a 35%, transparent) !important;
+  background: linear-gradient(180deg, #c46a5c 0%, #a84638 55%, #8a382c 100%) !important;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="dark"] .amd-record-btn--inline.amd-record-btn--stop,
+.app[data-theme="dark"] .amd-record-btn--inline.amd-record-btn--stop {
+  background: linear-gradient(180deg, #3f8f6f 0%, #2f6f58 55%, #1f4d3c 100%) !important;
+}
+
+[data-theme="dark"] .amd-record-btn--inline.amd-record-btn--stop.active,
+.app[data-theme="dark"] .amd-record-btn--inline.amd-record-btn--stop.active {
+  background: linear-gradient(180deg, #c46a5c 0%, #a84638 55%, #8a382c 100%) !important;
 }
 
 [data-theme="dark"] .amd-record-btn__label,
 .app[data-theme="dark"] .amd-record-btn__label {
-  color: #f0c4bc;
+  color: #fffaf8 !important;
 }
 
 [data-theme="dark"] .amd-mushaf-shell--premium,
@@ -2396,9 +2454,10 @@
 
 .amd-mushaf-shell--primary {
   flex: 1 1 auto;
-  min-height: min(42vh, 420px);
+  min-height: 0;
   width: 100%;
   max-width: none;
+  max-height: min(58vh, 560px);
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -2413,10 +2472,10 @@
   bottom: 0;
   z-index: 3;
   flex: 0 0 auto;
-  min-height: 4.25rem;
-  padding: 0.75rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  min-height: 5rem;
+  padding: 0.85rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid color-mix(in srgb, #d4c8b6 55%, transparent);
-  background: color-mix(in srgb, #fff 72%, #f7f3eb);
+  background: color-mix(in srgb, #fff 78%, #f7f3eb);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -2427,12 +2486,12 @@
   justify-content: center;
   gap: 0.65rem;
   width: 100%;
-  min-height: 2.85rem;
+  min-height: 3.35rem;
 }
 
 .amd-footer__spacer {
   width: 100%;
-  min-height: 2.85rem;
+  min-height: 3.35rem;
 }
 
 .amd-start-wrap--footer,
@@ -2447,9 +2506,11 @@
   flex-wrap: wrap;
 }
 
-.amd-footer-stop-btn {
-  width: min(100%, 18rem);
-  min-height: 2.85rem;
+.amd-footer-stop-btn,
+.amd-footer__stop .amd-record-btn--inline {
+  width: 100%;
+  max-width: none;
+  min-height: 3.35rem;
 }
 
 .amd-complete__actions--footer .btn-primary,
@@ -2509,7 +2570,8 @@
   }
 
   .amd-mushaf-shell--primary {
-    min-height: min(48vh, 460px);
+    min-height: 0;
+    max-height: min(56vh, 520px) !important;
   }
 }
 
@@ -2553,11 +2615,17 @@
   }
 
   .amd-mushaf-shell--primary {
-    min-height: min(50dvh, 380px);
+    min-height: 0 !important;
+    max-height: min(52dvh, 420px) !important;
   }
 
   .amd-body--scroll {
     padding-bottom: 0.35rem !important;
+  }
+
+  .amd-toolbar--tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.45rem !important;
   }
 }
 
@@ -2567,7 +2635,8 @@
   }
 
   .amd-mushaf-shell--primary {
-    min-height: min(52vh, 560px);
+    min-height: 0;
+    max-height: min(60vh, 640px) !important;
   }
 
   .amd-mushaf-shell--primary .amd-mushaf-ayah--premium {
@@ -2735,13 +2804,59 @@
     inset 0 0 0 6px color-mix(in srgb, #f07167 10%, transparent);
 }
 
+.amd-tool-btn--sound.active {
+  background: color-mix(in srgb, #2f6f58 12%, #fff) !important;
+  border-color: color-mix(in srgb, #2f6f58 42%, transparent) !important;
+  color: #246048 !important;
+}
+
 .amd-tool-btn--sound:not(.active) {
-  opacity: 0.82;
+  opacity: 0.78;
+  background: #fff !important;
+  color: #78716c !important;
 }
 
 @media (max-width: 720px) {
   .amd-toolbar--tools {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.45rem !important;
+    padding-block: 0 !important;
+  }
+
+  .amd-tool-cell {
+    gap: 0.15rem;
+  }
+
+  .amd-tool-cell__hint {
+    display: none;
+  }
+
+  .amd-tool-btn,
+  .amd-tool-btn--select,
+  .amd-tool-select {
+    height: 2.45rem !important;
+    min-height: 2.45rem !important;
+    max-height: 2.45rem !important;
+    border-radius: 0.6rem !important;
+  }
+
+  .amd-tool-btn {
+    padding: 0.3rem 0.35rem !important;
+    gap: 0.3rem;
+  }
+
+  .amd-tool-btn__name,
+  .amd-tool-select {
+    font-size: 0.78rem !important;
+    font-weight: 600;
+  }
+
+  .amd-tool-btn i {
+    font-size: 1rem;
+  }
+
+  .amd-tool-select {
+    padding-inline: 0.35rem 1.35rem !important;
   }
 
   .amd-mistake-visual__label {
@@ -2774,23 +2889,29 @@
 
 /* Single scroll owner while testing: mushaf shell scrolls; body holds layout */
 .amd-modal--spacious .amd-body--scroll {
-  overflow-y: hidden;
-  overflow-x: hidden;
+  overflow-y: hidden !important;
+  overflow-x: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
 }
 
 .amd-modal--spacious .amd-mushaf-shell--primary {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: min(58vh, 560px) !important;
+  height: auto !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  align-items: flex-start !important;
 }
 
 .amd-modal--spacious.is-complete .amd-body--scroll,
 .amd-modal--spacious:has(.amd-complete--body) .amd-body--scroll,
 .amd-modal--spacious:has(.amd-inline-error--body) .amd-body--scroll {
-  overflow-y: auto;
+  overflow-y: auto !important;
 }
 
 /* —— Dark mode: chrome that previously stayed light —— */
@@ -2961,7 +3082,8 @@
   }
 
   .amd-modal--spacious .amd-mushaf-shell--primary {
-    min-height: min(48dvh, 460px);
+    min-height: 0 !important;
+    max-height: min(54dvh, 480px) !important;
   }
 }
 
@@ -3037,7 +3159,7 @@
   .amd-toolbar--tools {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.45rem !important;
+    gap: 0.4rem !important;
     width: 100%;
   }
 
@@ -3045,27 +3167,32 @@
     min-width: 0;
   }
 
-  .amd-tool-btn {
+  .amd-tool-cell__hint {
+    display: none;
+  }
+
+  .amd-tool-btn,
+  .amd-tool-select {
     width: 100%;
-    min-height: 2.65rem;
-    padding-inline: 0.45rem;
+    height: 2.45rem;
+    min-height: 2.45rem;
+    max-height: 2.45rem;
+    padding-inline: 0.3rem;
   }
 
   .amd-tool-btn__name {
-    font-size: 0.72rem;
+    font-size: 0.76rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .amd-tool-cell__hint {
-    font-size: 0.65rem;
-  }
-
   .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
     min-height: 0 !important;
+    max-height: min(50dvh, 400px) !important;
     padding: 0.75rem 0.65rem !important;
     border-radius: 0.75rem;
+    overflow-y: auto !important;
   }
 
   .amd-mushaf-ayah--premium {
@@ -3075,8 +3202,8 @@
   }
 
   .amd-footer--sticky {
-    padding: 0.65rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important;
-    min-height: calc(3.85rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.8rem 0.75rem calc(0.95rem + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: calc(4.6rem + env(safe-area-inset-bottom, 0px));
   }
 
   .amd-footer__inner {
@@ -3090,7 +3217,7 @@
   .amd-complete__actions--footer .btn-secondary,
   .amd-footer__error-actions .btn-primary,
   .amd-footer__error-actions .btn-secondary {
-    min-height: 2.85rem;
+    min-height: 3.35rem;
     width: 100%;
     max-width: 100%;
   }
@@ -3149,6 +3276,7 @@
 
   .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
     min-height: 0 !important;
+    max-height: min(42dvh, 320px) !important;
   }
 
   .amd-footer--sticky {
@@ -3162,4 +3290,546 @@
   .amd-mic-status[data-status="listening"] .amd-mic-dot {
     animation: none;
   }
+}
+
+/* Tajweed colours inside the AI memorisation mushaf */
+.amd-mushaf-ayah.tajweed-enabled .amd-mushaf-stream.verse-arabic span[class*="tajweed-"],
+.amd-mushaf-ayah.tajweed-enabled word.wbw-word span[class*="tajweed-"],
+.amd-mushaf-stream.verse-arabic.tajweed-enabled span[class*="tajweed-"] {
+  color: inherit;
+}
+
+.amd-mushaf-ayah.tajweed-enabled .tajweed-ham_wasl,
+.amd-mushaf-ayah.tajweed-enabled .tajweed-slnt,
+.amd-mushaf-stream.tajweed-enabled .tajweed-ham_wasl,
+.amd-mushaf-stream.tajweed-enabled .tajweed-slnt {
+  color: #6b7280;
+}
+
+.amd-mushaf-ayah.tajweed-enabled .tajweed-ghn,
+.amd-mushaf-ayah.tajweed-enabled .tajweed-idgh_ghn,
+.amd-mushaf-ayah.tajweed-enabled .tajweed-iqlb,
+.amd-mushaf-stream.tajweed-enabled .tajweed-ghn,
+.amd-mushaf-stream.tajweed-enabled .tajweed-idgh_ghn,
+.amd-mushaf-stream.tajweed-enabled .tajweed-iqlb {
+  color: #169b4a;
+}
+
+.amd-mushaf-ayah.tajweed-enabled .tajweed-idgh_w_ghn,
+.amd-mushaf-ayah.tajweed-enabled .tajweed-ikhf,
+.amd-mushaf-ayah.tajweed-enabled .tajweed-ikhf_shfw,
+.amd-mushaf-stream.tajweed-enabled .tajweed-idgh_w_ghn,
+.amd-mushaf-stream.tajweed-enabled .tajweed-ikhf,
+.amd-mushaf-stream.tajweed-enabled .tajweed-ikhf_shfw {
+  color: #7c3aed;
+}
+
+.amd-mushaf-ayah.tajweed-enabled .tajweed-qlq,
+.amd-mushaf-ayah.tajweed-enabled .tajweed-lqlq,
+.amd-mushaf-stream.tajweed-enabled .tajweed-qlq,
+.amd-mushaf-stream.tajweed-enabled .tajweed-lqlq {
+  color: #d97706;
+}
+
+.amd-mushaf-ayah.tajweed-enabled .tajweed-madda_normal,
+.amd-mushaf-ayah.tajweed-enabled .tajweed-madda_permissible,
+.amd-mushaf-ayah.tajweed-enabled .tajweed-madda_necessary,
+.amd-mushaf-ayah.tajweed-enabled .tajweed-madda_obligatory,
+.amd-mushaf-ayah.tajweed-enabled .tajweed-madda_pbligatory,
+.amd-mushaf-stream.tajweed-enabled .tajweed-madda_normal,
+.amd-mushaf-stream.tajweed-enabled .tajweed-madda_permissible,
+.amd-mushaf-stream.tajweed-enabled .tajweed-madda_necessary,
+.amd-mushaf-stream.tajweed-enabled .tajweed-madda_obligatory,
+.amd-mushaf-stream.tajweed-enabled .tajweed-madda_pbligatory {
+  color: #dc2626;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-ghn,
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-idgh_ghn,
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-iqlb,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-ghn,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-idgh_ghn,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-iqlb {
+  color: #6ec9a4;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-idgh_w_ghn,
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-ikhf,
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-ikhf_shfw,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-idgh_w_ghn,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-ikhf,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-ikhf_shfw {
+  color: #c4b5fd;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-qlq,
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-lqlq,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-qlq,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-lqlq {
+  color: #e4a76a;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-madda_normal,
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-madda_permissible,
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-madda_necessary,
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-madda_obligatory,
+[data-theme="dark"] .amd-mushaf-ayah.tajweed-enabled .tajweed-madda_pbligatory,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-madda_normal,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-madda_permissible,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-madda_necessary,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-madda_obligatory,
+[data-theme="dark"] .amd-mushaf-stream.tajweed-enabled .tajweed-madda_pbligatory {
+  color: #f07167;
+}
+
+/* —— Live status colours must win over tajweed rule colours (scored words only) —— */
+.amd-mushaf-ayah--premium.tajweed-enabled word.recitation-word-correct,
+.amd-mushaf-ayah--premium.tajweed-enabled word.recitation-word-correct .tajweed-mark,
+.amd-mushaf-ayah--premium.tajweed-enabled word.recitation-word-correct [class*="tajweed-"],
+.amd-mushaf-ayah--premium word.recitation-word-correct,
+.amd-mushaf-ayah--premium word.recitation-word-correct .tajweed-mark,
+.amd-mushaf-ayah--premium word.recitation-word-correct [class*="tajweed-"],
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-correct,
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-correct .tajweed-mark,
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-correct [class*="tajweed-"],
+.amd-mushaf-stream.tajweed-enabled word.recitation-word-correct,
+.amd-mushaf-stream.tajweed-enabled word.recitation-word-correct .tajweed-mark,
+.amd-mushaf-stream.tajweed-enabled word.recitation-word-correct [class*="tajweed-"] {
+  color: #1b7a4c !important;
+  -webkit-text-fill-color: #1b7a4c !important;
+}
+
+.amd-mushaf-ayah--premium.tajweed-enabled word.recitation-word-partial,
+.amd-mushaf-ayah--premium.tajweed-enabled word.recitation-word-partial .tajweed-mark,
+.amd-mushaf-ayah--premium.tajweed-enabled word.recitation-word-partial [class*="tajweed-"],
+.amd-mushaf-ayah--premium word.recitation-word-partial,
+.amd-mushaf-ayah--premium word.recitation-word-partial .tajweed-mark,
+.amd-mushaf-ayah--premium word.recitation-word-partial [class*="tajweed-"],
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-partial,
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-partial .tajweed-mark,
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-partial [class*="tajweed-"],
+.amd-mushaf-stream.tajweed-enabled word.recitation-word-partial,
+.amd-mushaf-stream.tajweed-enabled word.recitation-word-partial .tajweed-mark,
+.amd-mushaf-stream.tajweed-enabled word.recitation-word-partial [class*="tajweed-"] {
+  color: #b7791f !important;
+  -webkit-text-fill-color: #b7791f !important;
+}
+
+.amd-mushaf-ayah--premium.tajweed-enabled word.recitation-word-incorrect,
+.amd-mushaf-ayah--premium.tajweed-enabled word.recitation-word-incorrect .tajweed-mark,
+.amd-mushaf-ayah--premium.tajweed-enabled word.recitation-word-incorrect [class*="tajweed-"],
+.amd-mushaf-ayah--premium word.recitation-word-incorrect,
+.amd-mushaf-ayah--premium word.recitation-word-incorrect .tajweed-mark,
+.amd-mushaf-ayah--premium word.recitation-word-incorrect [class*="tajweed-"],
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-incorrect,
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-incorrect .tajweed-mark,
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-incorrect [class*="tajweed-"],
+.amd-mushaf-stream.tajweed-enabled word.recitation-word-incorrect,
+.amd-mushaf-stream.tajweed-enabled word.recitation-word-incorrect .tajweed-mark,
+.amd-mushaf-stream.tajweed-enabled word.recitation-word-incorrect [class*="tajweed-"] {
+  color: #b42318 !important;
+  -webkit-text-fill-color: #b42318 !important;
+}
+
+/* Omitted / missed words stay grey (including tajweed children). */
+.amd-mushaf-ayah--premium word.recitation-word-omitted,
+.amd-mushaf-ayah--premium word.recitation-word-omitted .tajweed-mark,
+.amd-mushaf-ayah--premium word.recitation-word-omitted [class*="tajweed-"],
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-omitted,
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-omitted .tajweed-mark,
+.amd-mushaf-ayah--premium .wbw-word.recitation-word-omitted [class*="tajweed-"] {
+  color: #78716c !important;
+  -webkit-text-fill-color: #78716c !important;
+}
+
+/* Pending visible words keep default tajweed rule colours — do not force grey. */
+
+.amd-mushaf-ayah--premium word.amd-word-hidden,
+.amd-mushaf-ayah--premium word.amd-word-hidden .tajweed-mark,
+.amd-mushaf-ayah--premium word.amd-word-hidden [class*="tajweed-"],
+.amd-mushaf-ayah--premium .wbw-word.amd-word-hidden,
+.amd-mushaf-ayah--premium .wbw-word.amd-word-hidden .tajweed-mark,
+.amd-mushaf-ayah--premium .wbw-word.amd-word-hidden [class*="tajweed-"] {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* —— Toolbar captions must never be clipped —— */
+.amd-modal--spacious .amd-header--sticky {
+  position: relative;
+  top: auto;
+  z-index: 1;
+}
+
+.amd-modal--mushaf.amd-modal--spacious .amd-body,
+.amd-modal--spacious .amd-body--scroll {
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+}
+
+.amd-modal--spacious .amd-toolbar--tools {
+  flex: 0 0 auto !important;
+  flex-shrink: 0 !important;
+  overflow: visible !important;
+  position: relative;
+  z-index: 2;
+  padding-block: 0.2rem 0.15rem;
+  margin: 0 !important;
+}
+
+.amd-tool-cell {
+  overflow: visible;
+  gap: 0.35rem;
+}
+
+.amd-tool-cell__hint {
+  flex: 0 0 auto;
+  overflow: visible;
+  white-space: normal;
+  line-height: 1.3;
+  min-height: 1.15em;
+  padding-block: 0.05rem;
+  color: #57534e;
+}
+
+/* ==========================================================================
+   AI memorisation modal — final polish pass
+   (wins over earlier layout experiments; keep this block last)
+   ========================================================================== */
+
+.amd-overlay {
+  background: rgba(28, 25, 23, 0.48);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.amd-modal--premium.amd-modal--spacious {
+  border: 1px solid color-mix(in srgb, #d6d3d1 70%, transparent);
+  box-shadow:
+    0 28px 64px rgba(28, 25, 23, 0.22),
+    0 2px 0 rgba(255, 255, 255, 0.35) inset;
+}
+
+.amd-header--premium.amd-header--compact {
+  padding: 0.95rem 1.1rem 0.8rem !important;
+  border-bottom: 1px solid color-mix(in srgb, #e7e5e4 88%, transparent);
+  background: color-mix(in srgb, #fffdf8 88%, #f3efe6) !important;
+}
+
+.amd-header--compact .amd-title--premium {
+  font-size: clamp(1rem, 2.8vw, 1.14rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+  color: #1c1917 !important;
+}
+
+.amd-header--compact .amd-range--premium {
+  margin-top: 0.2rem !important;
+  font-size: 0.78rem !important;
+  color: #57534e !important;
+  text-decoration: none !important;
+}
+
+.amd-header--compact .amd-disclaimer--compact {
+  margin-top: 0.3rem !important;
+  max-width: 46ch;
+  font-size: 0.7rem !important;
+  line-height: 1.35 !important;
+  color: #78716c !important;
+}
+
+.amd-header-aside {
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.amd-mic-status--compact {
+  min-height: 1.7rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid color-mix(in srgb, #d6d3d1 70%, transparent);
+  background: #fff;
+}
+
+.amd-mic-status--compact[data-status="listening"] {
+  border-color: color-mix(in srgb, #2f6f58 35%, transparent);
+  background: color-mix(in srgb, #2f6f58 10%, #fff);
+  color: #246048;
+}
+
+.amd-icon-btn--close {
+  border-radius: 0.65rem !important;
+  border: 1px solid color-mix(in srgb, #d6d3d1 75%, transparent);
+  background: #fff;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.amd-icon-btn--close:hover {
+  background: #fafaf9;
+  border-color: color-mix(in srgb, #a8a29e 70%, transparent);
+}
+
+.amd-body--premium.amd-body--compact {
+  gap: 0.7rem !important;
+  padding: 0.75rem 1rem 0.65rem !important;
+}
+
+/* Tools: even 4-up desktop, tidy 2x2 mobile */
+.amd-modal--spacious .amd-toolbar--tools {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0.5rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.amd-tool-cell {
+  gap: 0.2rem !important;
+}
+
+.amd-tool-cell__hint {
+  font-size: 0.66rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #78716c !important;
+  text-align: center;
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+.amd-tool-btn,
+.amd-tool-select {
+  height: 2.4rem !important;
+  min-height: 2.4rem !important;
+  max-height: 2.4rem !important;
+  border-radius: 0.7rem !important;
+  font-size: 0.8rem !important;
+  font-weight: 650 !important;
+}
+
+.amd-tool-btn {
+  gap: 0.35rem !important;
+  box-shadow: 0 1px 0 rgba(28, 25, 23, 0.03);
+}
+
+.amd-tool-btn:focus-visible,
+.amd-tool-select:focus-visible,
+.amd-record-btn--inline:focus-visible,
+.amd-icon-btn--close:focus-visible {
+  outline: 2px solid color-mix(in srgb, #2f6f58 55%, transparent);
+  outline-offset: 2px;
+}
+
+.amd-tool-btn.active,
+.amd-tool-btn--sound.active,
+.amd-tool-btn--tajweed.active {
+  background: color-mix(in srgb, #2f6f58 12%, #fff) !important;
+  border-color: color-mix(in srgb, #2f6f58 40%, transparent) !important;
+  color: #1f5c44 !important;
+}
+
+.amd-tool-btn--sound:not(.active),
+.amd-tool-btn--tajweed:not(.active) {
+  opacity: 1;
+  color: #57534e;
+}
+
+/* Mushaf fills remaining height and scrolls cleanly for long ranges */
+.amd-modal--spacious .amd-body--scroll {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.amd-modal--spacious .amd-mushaf-shell--primary,
+.amd-modal--spacious .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  height: auto !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  padding: 1rem 0.9rem !important;
+  border-radius: 0.9rem !important;
+  border: 1px solid color-mix(in srgb, #e7e5e4 90%, transparent) !important;
+  background: #fff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, #a8a29e 55%, transparent) transparent;
+}
+
+.amd-modal--spacious .amd-mushaf-shell--primary::-webkit-scrollbar {
+  width: 0.45rem;
+}
+
+.amd-modal--spacious .amd-mushaf-shell--primary::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, #a8a29e 45%, transparent);
+  border-radius: 999px;
+}
+
+.amd-modal--spacious .amd-mushaf-shell--primary.is-listening {
+  border-color: color-mix(in srgb, #2f6f58 28%, transparent) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #2f6f58 10%, transparent),
+    0 0 0 3px color-mix(in srgb, #2f6f58 8%, transparent);
+}
+
+.amd-modal--spacious .amd-mushaf-ayah--premium {
+  width: 100%;
+  max-width: min(48rem, 100%) !important;
+  margin-inline: auto;
+  padding-block: 0.15rem 0.65rem;
+  text-align: center;
+}
+
+.amd-footer--sticky {
+  padding: 0.75rem 1rem calc(0.9rem + env(safe-area-inset-bottom, 0px)) !important;
+  min-height: 0 !important;
+  border-top: 1px solid color-mix(in srgb, #e7e5e4 90%, transparent);
+  background: color-mix(in srgb, #fffdf8 92%, #f3efe6) !important;
+}
+
+.amd-record-btn--inline {
+  min-height: 3.15rem !important;
+  border-radius: 0.85rem !important;
+  letter-spacing: -0.01em;
+}
+
+.amd-record-btn--inline.amd-record-btn--stop.active {
+  animation: amd-record-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes amd-record-pulse {
+  0%, 100% { box-shadow: 0 8px 18px rgba(196, 90, 74, 0.28); }
+  50% { box-shadow: 0 8px 22px rgba(196, 90, 74, 0.42); }
+}
+
+.amd-complete--handoff {
+  display: grid;
+  place-items: center;
+  min-height: 4.5rem;
+  margin-top: 0.35rem;
+}
+
+.amd-complete--body,
+.amd-inline-error--body {
+  margin-top: 0.5rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, #e7e5e4 88%, transparent);
+  background: color-mix(in srgb, #fff 86%, #f7f3eb);
+}
+
+.amd-complete__actions--footer .btn-primary,
+.amd-complete__actions--footer .btn-secondary,
+.amd-footer__error-actions .btn-primary,
+.amd-footer__error-actions .btn-secondary {
+  min-height: 2.75rem;
+  border-radius: 0.75rem;
+  font-weight: 650;
+}
+
+@media (max-width: 720px) {
+  .amd-modal--spacious .amd-toolbar--tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.45rem !important;
+  }
+
+  .amd-tool-cell__hint {
+    display: none !important;
+  }
+
+  .amd-header--compact .amd-disclaimer--compact {
+    display: none !important;
+  }
+
+  .amd-header--premium.amd-header--compact {
+    padding: 0.8rem 0.85rem 0.7rem !important;
+  }
+
+  .amd-body--premium.amd-body--compact {
+    padding: 0.65rem 0.75rem 0.55rem !important;
+    gap: 0.55rem !important;
+  }
+
+  .amd-modal--spacious .amd-mushaf-shell--primary,
+  .amd-modal--spacious .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
+    padding: 0.8rem 0.7rem !important;
+    border-radius: 0.8rem !important;
+  }
+
+  .amd-footer--sticky {
+    padding: 0.7rem 0.75rem calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .amd-record-btn--inline {
+    min-height: 3.05rem !important;
+  }
+
+  .amd-tool-btn,
+  .amd-tool-select {
+    height: 2.35rem !important;
+    min-height: 2.35rem !important;
+    max-height: 2.35rem !important;
+    font-size: 0.78rem !important;
+  }
+}
+
+@media (max-width: 720px) and (orientation: landscape) {
+  .amd-modal--spacious .amd-toolbar--tools {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .amd-header--compact .amd-range--premium {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .amd-record-btn--inline.amd-record-btn--stop.active {
+    animation: none;
+  }
+}
+
+[data-theme="dark"] .amd-modal--premium.amd-modal--spacious,
+.amd-overlay[data-theme="dark"] .amd-modal--premium.amd-modal--spacious {
+  background: linear-gradient(180deg, #171412 0%, #1c1917 42%, #141210 100%);
+  border-color: rgba(245, 245, 244, 0.1);
+}
+
+[data-theme="dark"] .amd-header--premium.amd-header--compact,
+[data-theme="dark"] .amd-footer--sticky,
+.amd-overlay[data-theme="dark"] .amd-header--premium.amd-header--compact,
+.amd-overlay[data-theme="dark"] .amd-footer--sticky {
+  background: color-mix(in srgb, #171412 94%, #000) !important;
+  border-color: rgba(245, 245, 244, 0.1);
+}
+
+[data-theme="dark"] .amd-modal--spacious .amd-mushaf-shell--primary,
+.amd-overlay[data-theme="dark"] .amd-modal--spacious .amd-mushaf-shell--primary {
+  background: #141210 !important;
+  border-color: rgba(245, 245, 244, 0.1) !important;
+}
+
+[data-theme="dark"] .amd-tool-btn,
+[data-theme="dark"] .amd-mic-status--compact,
+[data-theme="dark"] .amd-icon-btn--close,
+.amd-overlay[data-theme="dark"] .amd-tool-btn,
+.amd-overlay[data-theme="dark"] .amd-mic-status--compact,
+.amd-overlay[data-theme="dark"] .amd-icon-btn--close {
+  background: #1c1917;
+  border-color: rgba(245, 245, 244, 0.16);
+  color: #e7e5e4;
+}
+
+[data-theme="dark"] .amd-tool-cell__hint,
+.amd-overlay[data-theme="dark"] .amd-tool-cell__hint {
+  color: #a8a29e !important;
 }

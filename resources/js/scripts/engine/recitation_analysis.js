@@ -896,6 +896,16 @@ function operationTieBreak(op) {
   return 2
 }
 
+/** Soften common ASR letter swaps before similarity (comparison only). */
+function softenArabicAsrForms(text = '') {
+  return String(text || '')
+    .replace(/[قك]/g, 'ك')
+    .replace(/[طت]/g, 'ت')
+    .replace(/[ظضذ]/g, 'ذ')
+    .replace(/[غخ]/g, 'غ')
+    .replace(/[صسث]/g, 'س')
+}
+
 export function getRecitationWordSimilarity(left, right, options = {}) {
   const a = String(left || '')
   const b = String(right || '')
@@ -907,8 +917,14 @@ export function getRecitationWordSimilarity(left, right, options = {}) {
   // Article-stripped equals only count as exact when article matching is allowed.
   if (allowArticleMatch && strippedA && strippedA === strippedB) return 1
   const base = levenshteinSimilarity(a, b)
-  if (!allowArticleMatch || (strippedA === a && strippedB === b)) return base
-  return Math.max(base, levenshteinSimilarity(strippedA, strippedB))
+  const soft = levenshteinSimilarity(softenArabicAsrForms(a), softenArabicAsrForms(b))
+  const softStripped = allowArticleMatch
+    ? levenshteinSimilarity(softenArabicAsrForms(strippedA), softenArabicAsrForms(strippedB))
+    : 0
+  if (!allowArticleMatch || (strippedA === a && strippedB === b)) {
+    return Math.max(base, soft)
+  }
+  return Math.max(base, soft, levenshteinSimilarity(strippedA, strippedB), softStripped)
 }
 
 function levenshteinSimilarity(a, b) {

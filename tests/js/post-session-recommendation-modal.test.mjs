@@ -99,7 +99,7 @@ function t(key, params = {}) {
   assert.match(completionModal, /data-testid="post-session-why"/)
   assert.match(completionModal, /postSessionRecommendationReasonLine/)
   assert.match(completionModal, /data-testid="post-session-practice-method"/)
-  assert.match(completionModal, /practiceMethod|practice method/i)
+  assert.match(completionModal, /practiceMethod|practiceSetup|practice method|Practice setup/i)
   assert.match(completionModal, /data-testid="post-session-details"/)
   assert.match(completionModal, /data-testid="post-session-previous-attempt"/)
   assert.match(completionModal, /softwareGenerated|Software-generated/)
@@ -169,15 +169,15 @@ function t(key, params = {}) {
   assert.match(js, /getNextRecommendation/)
 }
 
-// Mobile near/full-screen + sticky footer
+// Mobile inset sheet (not full-bleed) + compact 3-col footer
 {
   assert.match(
     css,
-    /@media \(max-width:\s*720px\)[\s\S]*?\.post-session-simple--calm-v2 \.post-session-simple__dialog[\s\S]*?width:\s*100vw\s*!important[\s\S]*?min-height:\s*100dvh/,
+    /@media \(max-width:\s*720px\)[\s\S]*?\.post-session-simple--premium\.post-session-simple--calm-v2 \.post-session-simple__dialog[\s\S]*?min-height:\s*0\s*!important[\s\S]*?max-height:\s*min\(88dvh/,
   )
   assert.match(
     css,
-    /\.post-session-simple\.post-session-simple--premium\.post-session-simple--calm-v2 \.post-session-simple__footer[\s\S]*?position:\s*sticky/,
+    /\.post-session-simple\.post-session-simple--premium\.post-session-simple--calm-v2 \.post-session-simple__footer[\s\S]*?safe-area-inset-bottom/,
   )
   assert.match(
     css,
@@ -187,6 +187,7 @@ function t(key, params = {}) {
   assert.match(css, /\.post-session-simple__quran-token\.is-weak/)
   assert.match(css, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/)
   assert.match(css, /\.post-session-simple__text-close[\s\S]*?display:\s*none/)
+  assert.match(css, /post-session-simple__plan-prompt--context/)
 }
 
 // Template order: outcome → focus → why → method → details

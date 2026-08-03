@@ -26,9 +26,9 @@ export const UNCERTAIN_STATUSES = Object.freeze([
   'not_attempted',
 ])
 
-export const MISTAKE_CUE_MIN_CONFIDENCE = 0.42
-export const MISTAKE_CUE_DEBOUNCE_MS = 220
-export const MISTAKE_CUE_PEAK_GAIN = 0.045
+export const MISTAKE_CUE_MIN_CONFIDENCE = 0.28
+export const MISTAKE_CUE_DEBOUNCE_MS = 180
+export const MISTAKE_CUE_PEAK_GAIN = 0.14
 export const MISTAKE_VISUAL_MS = 900
 
 export function normaliseMistakeSoundEnabled(value, fallback = true) {
@@ -98,16 +98,20 @@ export function shouldPlayMistakeCue({
 
 function createSoftMistakeBuffer(audioContext) {
   const sampleRate = audioContext.sampleRate || 44100
-  const duration = 0.14
+  const duration = 0.22
   const length = Math.max(1, Math.floor(sampleRate * duration))
   const buffer = audioContext.createBuffer(1, length, sampleRate)
   const data = buffer.getChannelData(0)
-  // Soft, neutral, non-musical blip: low sine with gentle cosine envelope.
-  const freq = 312
+  // Clear two-tone cue: short mid blip + soft lower confirm (still non-harsh).
+  const freqA = 520
+  const freqB = 390
   for (let i = 0; i < length; i += 1) {
     const t = i / sampleRate
-    const env = Math.sin(Math.PI * (i / (length - 1 || 1))) ** 1.35
-    data[i] = Math.sin(2 * Math.PI * freq * t) * env * 0.85
+    const env = Math.sin(Math.PI * (i / (length - 1 || 1))) ** 1.1
+    const mix = t < 0.1
+      ? Math.sin(2 * Math.PI * freqA * t)
+      : Math.sin(2 * Math.PI * freqB * t) * 0.92
+    data[i] = mix * env * 0.95
   }
   return buffer
 }
@@ -192,10 +196,19 @@ export function createMistakeFeedbackController(options = {}) {
   }
 
   function playTone() {
-    if (!enabled || !unlocked) return false
-    const ctx = ensureContext()
-    if (!ctx || !buffer) {
-      if (!preload()) return false
+    if (!enabled) return false
+    if (!preload()) return false
+    const ctx = audioContext || ensureContext()
+    if (!ctx || !buffer) return false
+    // Best-effort unlock if Start already opened the context but the flag lagged.
+    if (!unlocked && ctx.state === 'running') unlocked = true
+    if (!unlocked) {
+      try {
+        if (ctx.state === 'suspended' && typeof ctx.resume === 'function') {
+          void ctx.resume().then(() => { unlocked = true }).catch(() => {})
+        }
+      } catch { /* ignore */ }
+      return false
     }
     const elapsed = nowFn() - lastPlayedAt
     // Debounce is the primary anti-overlap guard (covers rapid live feedback).

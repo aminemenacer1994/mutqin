@@ -3,13 +3,14 @@
  * Percentage = how much of the ayah is hidden (25% easier … 100% hardest).
  */
 
-export const DIFFICULTY_PERCENTS = Object.freeze([25, 50, 75, 100])
+/** Hide percentages (higher = fewer words shown). 10 → 90% shown. */
+export const DIFFICULTY_PERCENTS = Object.freeze([10, 25, 50, 75, 100])
 export const DEFAULT_DIFFICULTY_PERCENT = 100
 export const AMD_DIFFICULTY_PREF_KEY = 'mutqin.amd.hidePercent'
 
 /**
  * @param {unknown} value
- * @returns {25|50|75|100}
+ * @returns {10|25|50|75|100}
  */
 export function normaliseDifficultyPercent(value) {
   const n = Number(value)
@@ -108,15 +109,33 @@ export function areAllHiddenWordsRevealed(hiddenIndexes, liveWords = []) {
   const words = Array.isArray(liveWords) ? liveWords : []
   return list.every((index) => {
     const status = String(words[index]?.status || '').toLowerCase()
-    // Green or amber settle a slot. Red does not block finishing once attempted —
-    // the learner may continue through the full session without being frozen.
-    return status === 'correct' || status === 'partial' || status === 'incorrect'
+    // Only settled recall (green/amber) auto-finishes. Red must not end the
+    // check — continue-and-review lets the learner keep going after a mistake.
+    return status === 'correct' || status === 'partial'
+  })
+}
+
+/**
+ * True when every word in the session range has been attempted
+ * (green, amber, red, or omitted). Used to auto-finish after a full pass.
+ * @param {Array<{ status?: string }>} liveWords
+ */
+export function areAllSessionWordsSettled(liveWords = []) {
+  const words = Array.isArray(liveWords) ? liveWords : []
+  if (!words.length) return false
+  return words.every((word) => {
+    const status = String(word?.status || '').toLowerCase()
+    return status === 'correct'
+      || status === 'partial'
+      || status === 'incorrect'
+      || status === 'omitted'
+      || status === 'skipped'
   })
 }
 
 /**
  * Read persisted difficulty preference (browser only).
- * @returns {25|50|75|100}
+ * @returns {10|25|50|75|100}
  */
 export function readStoredDifficultyPercent() {
   if (typeof localStorage === 'undefined') return DEFAULT_DIFFICULTY_PERCENT

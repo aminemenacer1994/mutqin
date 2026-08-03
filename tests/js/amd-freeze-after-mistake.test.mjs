@@ -169,8 +169,9 @@ function applyLiveStatusUpdateWithFreeze({
   )
   assert.match(
     js,
-    /if \(cue\?\.shouldStop \|\| Number\.isFinite\(this\.amdFrozenAtWordIndex\)\)/,
+    /stopOnMistake && \(cue\?\.shouldStop \|\| Number\.isFinite\(this\.amdFrozenAtWordIndex\)\)/,
   )
+  assert.match(js, /CONTINUE_AND_REVIEW/)
   assert.match(
     js,
     /Number\.isFinite\(this\.amdFrozenAtWordIndex\)[\s\S]*?amdEndingSoon[\s\S]*?_amdCompleting/,

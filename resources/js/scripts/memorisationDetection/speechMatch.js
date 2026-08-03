@@ -10,7 +10,7 @@ import {
 } from '../engine/recitation_analysis.js'
 
 export const DEFAULT_FORWARD_WINDOW = 4
-export const DEFAULT_MATCH_THRESHOLD = 0.78
+export const DEFAULT_MATCH_THRESHOLD = 0.74
 
 /**
  * Safe comparison form of Arabic text (does not alter display source).

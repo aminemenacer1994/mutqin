@@ -60,6 +60,7 @@
               :aria-label="toolsLabel"
             >
               <div class="amd-tool-cell">
+                <span class="amd-tool-cell__hint">{{ peekShortLabel }}</span>
                 <button
                   type="button"
                   class="amd-tool-btn"
@@ -83,74 +84,63 @@
                   <i class="bi bi-eye" aria-hidden="true"></i>
                   <span class="amd-tool-btn__name">{{ peekShortLabel }}</span>
                 </button>
-                <span class="amd-tool-cell__hint">{{ peekHintShortLabel }}</span>
               </div>
 
               <div class="amd-tool-cell">
+                <span class="amd-tool-cell__hint">{{ wordsShownShortLabel }}</span>
                 <label class="visually-hidden" :for="difficultyId">{{ wordsShownLabel }}</label>
                 <div class="amd-tool-btn amd-tool-btn--select">
                   <select
                     :id="difficultyId"
                     class="amd-tool-select"
-                    :value="difficulty"
+                    :value="selectedShownPercent"
                     :aria-label="wordsShownLabel"
                     :title="wordsShownLabel"
                     @change="onDifficultyChange"
                   >
                     <option
-                      v-for="pct in difficultyOptions"
-                      :key="pct"
-                      :value="pct"
-                    >{{ formatShownPercent(pct) }}</option>
+                      v-for="shown in shownPercentOptions"
+                      :key="`shown-${shown}`"
+                      :value="shown"
+                    >{{ shown }}%</option>
                   </select>
                 </div>
-                <span class="amd-tool-cell__hint">{{ wordsShownShortLabel }}</span>
               </div>
 
               <div class="amd-tool-cell">
-                <div class="amd-tool-btn amd-tool-btn--size" role="group" :aria-label="textSizeLabel">
-                  <button
-                    type="button"
-                    class="amd-tool-seg"
-                    :aria-label="textSizeDecreaseLabel"
-                    :title="textSizeDecreaseLabel"
-                    :disabled="fontScale <= minFontScale"
-                    @click.stop="decreaseFontScale"
-                  >
-                    <span aria-hidden="true">A−</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="amd-tool-seg"
-                    :aria-label="textSizeIncreaseLabel"
-                    :title="textSizeIncreaseLabel"
-                    :disabled="fontScale >= maxFontScale"
-                    @click.stop="increaseFontScale"
-                  >
-                    <span aria-hidden="true">A+</span>
-                  </button>
-                </div>
-                <span class="amd-tool-cell__hint">{{ textSizeShortLabel }}</span>
-              </div>
-
-              <div class="amd-tool-cell">
+                <span class="amd-tool-cell__hint">{{ mistakeSoundShortLabel }}</span>
                 <button
                   type="button"
                   class="amd-tool-btn amd-tool-btn--sound"
                   :class="{ active: mistakeSoundEnabled }"
                   :aria-pressed="mistakeSoundEnabled ? 'true' : 'false'"
-                  :aria-label="mistakeSoundLabel"
+                  :aria-label="`${mistakeSoundLabel}: ${mistakeSoundEnabled ? mistakeSoundOnLabel : mistakeSoundOffLabel}`"
                   :title="mistakeSoundHint || mistakeSoundLabel"
-                  @click.stop="$emit('toggle-mistake-sound')"
+                  @click.prevent.stop="$emit('toggle-mistake-sound')"
                 >
                   <i
                     class="bi"
                     :class="mistakeSoundEnabled ? 'bi-volume-up' : 'bi-volume-mute'"
                     aria-hidden="true"
                   ></i>
-                  <span class="amd-tool-btn__name">{{ mistakeSoundEnabled ? mistakeSoundOnLabel : mistakeSoundOffLabel }}</span>
+                  <span class="amd-tool-btn__name">{{ mistakeSoundShortLabel }}</span>
                 </button>
-                <span class="amd-tool-cell__hint">{{ mistakeSoundShortLabel }}</span>
+              </div>
+
+              <div class="amd-tool-cell">
+                <span class="amd-tool-cell__hint">{{ tajweedShortLabel }}</span>
+                <button
+                  type="button"
+                  class="amd-tool-btn amd-tool-btn--tajweed"
+                  :class="{ active: tajweed }"
+                  :aria-pressed="tajweed ? 'true' : 'false'"
+                  :aria-label="`${tajweedLabel}: ${tajweed ? tajweedOnLabel : tajweedOffLabel}`"
+                  :title="tajweedHint || tajweedLabel"
+                  @click.prevent.stop="$emit('toggle-tajweed')"
+                >
+                  <i class="bi bi-palette" aria-hidden="true"></i>
+                  <span class="amd-tool-btn__name">{{ tajweedShortLabel }}</span>
+                </button>
               </div>
             </div>
 
@@ -240,14 +230,16 @@
               <div v-else-if="canStop" class="amd-footer__stop">
                 <button
                   type="button"
-                  class="amd-tool-btn amd-tool-btn--stop amd-footer-stop-btn"
+                  class="amd-record-btn amd-record-btn--inline amd-record-btn--stop"
                   :class="{ active: isListening }"
                   :aria-label="stopLabel"
                   :title="stopLabel"
                   @click.stop="$emit('stop')"
                 >
-                  <i class="bi bi-stop-fill" aria-hidden="true"></i>
-                  <span class="amd-tool-btn__name">{{ stopLabel }}</span>
+                  <span class="amd-record-btn__core" aria-hidden="true">
+                    <i class="bi bi-stop-fill"></i>
+                  </span>
+                  <strong class="amd-record-btn__label">{{ stopLabel }}</strong>
                 </button>
               </div>
 
@@ -315,11 +307,11 @@ export default {
     ayahHtml: { type: String, default: '' },
     blurActive: { type: Boolean, default: true },
     peeking: { type: Boolean, default: false },
-    tajweed: { type: Boolean, default: false },
+    tajweed: { type: Boolean, default: true },
     difficulty: { type: Number, default: 100 },
     difficultyOptions: {
       type: Array,
-      default: () => [25, 50, 75, 100],
+      default: () => [10, 25, 50, 75, 100],
     },
     error: { type: String, default: '' },
     busy: { type: Boolean, default: false },
@@ -348,6 +340,11 @@ export default {
     mistakeSoundOffLabel: { type: String, default: 'Off' },
     mistakeSoundHint: { type: String, default: 'Soft cue when a mistake is confirmed' },
     mistakeSoundShort: { type: String, default: 'Mistake sound' },
+    tajweedLabel: { type: String, default: 'Tajweed' },
+    tajweedOnLabel: { type: String, default: 'On' },
+    tajweedOffLabel: { type: String, default: 'Off' },
+    tajweedHint: { type: String, default: 'Show or hide tajweed colouring' },
+    tajweedShort: { type: String, default: 'Tajweed' },
     mistakeVisualActive: { type: Boolean, default: false },
     mistakeVisualLabel: { type: String, default: 'Mistake confirmed' },
     autoFollowLabel: { type: String, default: 'Auto-follow' },
@@ -380,6 +377,7 @@ export default {
     'retry',
     'enable-mic',
     'toggle-mistake-sound',
+    'toggle-tajweed',
   ],
   data() {
     return {
@@ -432,11 +430,22 @@ export default {
     wordsShownShortLabel() {
       return this.wordsShownShort || 'Words shown'
     },
-    textSizeShortLabel() {
-      return this.textSizeShort || 'Text size'
+    /** Hide% from parent → words-shown% for the select (0 / 25 / 50 / 75 / 90). */
+    selectedShownPercent() {
+      return this.hidePercentToShown(this.difficulty)
+    },
+    shownPercentOptions() {
+      const hides = Array.isArray(this.difficultyOptions) && this.difficultyOptions.length
+        ? this.difficultyOptions
+        : [10, 25, 50, 75, 100]
+      const shown = hides.map((hide) => this.hidePercentToShown(hide))
+      return [...new Set(shown)].sort((a, b) => a - b)
     },
     mistakeSoundShortLabel() {
       return this.mistakeSoundShort || this.mistakeSoundLabel || 'Mistake sound'
+    },
+    tajweedShortLabel() {
+      return this.tajweedShort || this.tajweedLabel || 'Tajweed'
     },
     autoFollowStatusLabel() {
       if (!this.autoFollowEnabled) return this.autoFollowOffLabel || 'Auto-follow off'
@@ -519,10 +528,18 @@ export default {
       }
       this.themeAttr = document.documentElement.getAttribute('data-theme') || 'light'
     },
-    formatShownPercent(hidePercent) {
+    hidePercentToShown(hidePercent) {
       const hide = Number(hidePercent)
-      const shown = hide === 100 ? 0 : Math.max(0, 100 - hide)
-      return `${shown}%`
+      if (!Number.isFinite(hide)) return 0
+      return hide >= 100 ? 0 : Math.max(0, Math.min(100, 100 - hide))
+    },
+    shownPercentToHide(shownPercent) {
+      const shown = Number(shownPercent)
+      if (!Number.isFinite(shown) || shown <= 0) return 100
+      return Math.max(0, Math.min(100, 100 - shown))
+    },
+    formatShownPercent(hidePercent) {
+      return `${this.hidePercentToShown(hidePercent)}%`
     },
     increaseFontScale() {
       this.fontScale = Math.min(this.maxFontScale, Math.round((this.fontScale + 0.08) * 100) / 100)
@@ -756,8 +773,9 @@ export default {
       this.$emit('peek-end')
     },
     onDifficultyChange(event) {
-      const value = Number(event?.target?.value)
-      this.$emit('set-difficulty', value)
+      // Select options are words-shown%; parent/API still use hide%.
+      const shown = Number(event?.target?.value)
+      this.$emit('set-difficulty', this.shownPercentToHide(shown))
     },
   },
 }

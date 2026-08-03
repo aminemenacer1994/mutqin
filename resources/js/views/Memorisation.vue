@@ -3422,19 +3422,26 @@
                   </p>
                 </template>
                 <template v-else>
-                  <div class="post-session-simple__panel-head">
+                  <div
+                    v-if="!postSessionHasAiCheck"
+                    class="post-session-simple__panel-head"
+                  >
                     <p class="post-session-simple__section-kicker">
                       {{ t('memorisation.postSession.recommendation.practiceMethod') || 'Recommended practice method' }}
                     </p>
                     <p class="post-session-simple__action-label" id="postSessionRecTitle">{{ postSessionSimpleActionLabel }}</p>
                     <p class="post-session-simple__range">{{ postSessionRecommendationCardTitle }}</p>
-                    <p
-                      v-if="postSessionPlanEncouragement"
-                      class="post-session-simple__plan-encouragement"
-                    >{{ postSessionPlanEncouragement }}</p>
+                  </div>
+                  <div
+                    v-else
+                    class="post-session-simple__panel-head post-session-simple__panel-head--compact"
+                  >
+                    <p class="post-session-simple__section-kicker" id="postSessionRecTitle">
+                      {{ t('memorisation.postSession.recommendation.practiceSetup') || 'Practice setup' }}
+                    </p>
                   </div>
                   <p
-                    v-if="postSessionRecommendationReasonLine && !postSessionInlineRecommendationRows.length && !postSessionFocusHighlightParts.length"
+                    v-if="postSessionRecommendationReasonLine && !postSessionHasAiCheck && !postSessionInlineRecommendationRows.length && !postSessionFocusHighlightParts.length"
                     class="post-session-simple__reason post-session-simple__reason--compact"
                   >{{ postSessionRecommendationReasonLine }}</p>
                   <dl
@@ -3554,14 +3561,51 @@
                 </p>
               </section>
 
-              <p
+              <section
                 v-else-if="!postSessionHasAiCheck"
-                class="post-session-simple__plan-prompt"
+                class="post-session-simple__plan-prompt post-session-simple__plan-prompt--context"
+                data-testid="post-session-awaiting-ai"
               >
-                {{ postSessionIsRepeatRecommendation
-                  ? (t('memorisation.postSession.coach.subtitles.retestAfterPractice') || t('memorisation.postSession.recommendation.aiFirstBody'))
-                  : t('memorisation.postSession.recommendation.aiFirstBody') }}
-              </p>
+                <p class="post-session-simple__section-kicker">
+                  {{ translateOrFallback('memorisation.postSession.recommendation.justFinished', 'Just finished') }}
+                </p>
+                <p
+                  v-if="postSessionJustFinishedSummary.surah || postSessionJustFinishedSummary.range"
+                  class="post-session-simple__plan-prompt-range"
+                >
+                  <strong v-if="postSessionJustFinishedSummary.surah">{{ postSessionJustFinishedSummary.surah }}</strong>
+                  <span v-if="postSessionJustFinishedSummary.range">
+                    <template v-if="postSessionJustFinishedSummary.surah"> · </template>{{ postSessionJustFinishedSummary.range }}
+                  </span>
+                </p>
+                <ul
+                  v-if="postSessionJustFinishedSummary.technique || postSessionJustFinishedSummary.reps"
+                  class="post-session-simple__plan-prompt-meta"
+                >
+                  <li v-if="postSessionJustFinishedSummary.technique">{{ postSessionJustFinishedSummary.technique }}</li>
+                  <li v-if="postSessionJustFinishedSummary.reps">
+                    {{ translateOrFallback(
+                      'memorisation.postSession.recommendation.repsDone',
+                      `${postSessionJustFinishedSummary.reps} repetitions`,
+                      { count: postSessionJustFinishedSummary.reps }
+                    ) }}
+                  </li>
+                </ul>
+                <p class="post-session-simple__plan-prompt-next">
+                  {{ postSessionIsRepeatRecommendation
+                    ? translateOrFallback(
+                      'memorisation.postSession.coach.subtitles.retestAfterPractice',
+                      translateOrFallback(
+                        'memorisation.postSession.recommendation.aiFirstBody',
+                        'Check your memorisation again to unlock the next session.'
+                      )
+                    )
+                    : translateOrFallback(
+                      'memorisation.postSession.recommendation.aiFirstBodyShort',
+                      'Check your memorisation next to unlock a tailored practice plan.'
+                    ) }}
+                </p>
+              </section>
             </template>
           </div>
 
@@ -3965,7 +4009,12 @@
       :mistake-sound-on-label="amdLabels.mistakeSoundOn"
       :mistake-sound-off-label="amdLabels.mistakeSoundOff"
       :mistake-sound-hint="amdLabels.mistakeSoundHint"
-      :mistake-sound-short="amdLabels.mistakeSound"
+      :mistake-sound-short="amdLabels.mistakeSoundShort || amdLabels.mistakeSound"
+      :tajweed-label="amdLabels.tajweed"
+      :tajweed-on-label="amdLabels.tajweedOn"
+      :tajweed-off-label="amdLabels.tajweedOff"
+      :tajweed-hint="amdLabels.tajweedHint"
+      :tajweed-short="amdLabels.tajweedShort"
       :mistake-visual-active="amdMistakeVisualActive"
       :mistake-visual-label="amdLabels.mistakeVisualLabel"
       :auto-follow-label="amdLabels.autoFollow"
@@ -3995,6 +4044,7 @@
       @retry="retryAmdAssessment"
       @enable-mic="startAmdAssessment"
       @toggle-mistake-sound="toggleAmdMistakeSound"
+      @toggle-tajweed="toggleAmdTajweed"
     />
 
   <div

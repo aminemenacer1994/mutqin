@@ -14,6 +14,7 @@ export {
   selectHiddenWordIndexes,
   isWordHidden,
   areAllHiddenWordsRevealed,
+  areAllSessionWordsSettled,
   readStoredDifficultyPercent,
   storeDifficultyPercent,
 } from './hiddenWords'
@@ -78,6 +79,10 @@ export {
   AMD_STAGES,
   AI_TEST_MODALS_ENABLED,
   AMD_HOWTO_SEEN_KEY,
+  AMD_TAJWEED_PREF_KEY,
+  normaliseAmdTajweedEnabled,
+  readStoredAmdTajweedEnabled,
+  storeAmdTajweedEnabled,
 } from './stages'
 
 import { AMD_STAGES, AMD_HOWTO_SEEN_KEY } from './stages'

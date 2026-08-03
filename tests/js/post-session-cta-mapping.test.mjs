@@ -28,7 +28,15 @@ import {
   assert.equal(resolvePostSessionCtaState({
     hasAiCheck: true,
     outcome: 'mixed',
-  }), POST_SESSION_CTA_STATES.NEEDS_PRACTICE)
+  }), POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED)
+
+  assert.equal(resolvePostSessionCtaState({
+    hasAiCheck: true,
+    outcome: 'mixed',
+    weakAyahCount: 1,
+    hardWordCount: 2,
+    hasFocusPhrase: true,
+  }), POST_SESSION_CTA_STATES.MOSTLY_SECURE)
 
   assert.equal(resolvePostSessionCtaState({
     hasAiCheck: true,
@@ -108,17 +116,18 @@ import {
 
   const strong = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG)
   assert.deepEqual(strong.map((b) => [b.variant, b.action, b.labelKey]), [
-    ['primary', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
+    ['success', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
     ['secondary', POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE, 'reviewOnceMore'],
     ['ghost', POST_SESSION_CTA_ACTIONS.OTHER_RANGE, 'chooseAnotherRange'],
   ])
 
-  // Exactly one primary; secondary optional only for mic-permission insufficient_audio.
+  // Exactly one lead CTA (primary or success); secondary optional only for mic-permission insufficient_audio.
   for (const state of Object.values(POST_SESSION_CTA_STATES)) {
     const buttons = mapPostSessionCtas(state, state === POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO
       ? { insufficientReason: 'mic_permission' }
       : {})
-    assert.equal(buttons.filter((b) => b.variant === 'primary').length, 1)
+    const leadCount = buttons.filter((b) => b.variant === 'primary' || b.variant === 'success').length
+    assert.equal(leadCount, 1)
     assert.equal(buttons.filter((b) => b.variant === 'secondary').length, 1)
     assert.equal(buttons.filter((b) => b.variant === 'ghost').length, 1)
     assert.notEqual(buttons[0].labelKey, 'continue')

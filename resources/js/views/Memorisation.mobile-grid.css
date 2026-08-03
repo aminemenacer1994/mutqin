@@ -5159,25 +5159,25 @@
     min-block-size: 44px;
   }
 
-  /* Notes modal: full-bleed on phone. */
+  /* Notes modal: large inset sheet on phone. */
   .ayah-notes-modal-overlay.modal-overlay.mutqin-modal-overlay {
-    padding: 0 !important;
-    place-items: stretch !important;
-    align-items: stretch !important;
-    justify-items: stretch !important;
+    padding: max(0.5rem, env(safe-area-inset-top, 0px)) 0.55rem max(0.55rem, env(safe-area-inset-bottom, 0px)) !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-items: center !important;
   }
 
   .ayah-notes-modal-overlay > .ayah-notes-dialog.mutqin-modal-dialog,
-.ayah-notes-dialog.mutqin-modal-dialog {
-    inline-size: 100% !important;
+  .ayah-notes-dialog.mutqin-modal-dialog {
+    inline-size: min(100%, 40rem) !important;
     max-inline-size: 100% !important;
-    width: 100% !important;
+    width: min(100%, 40rem) !important;
     max-width: 100% !important;
-    min-block-size: 0 !important;
-    max-block-size: 100dvh !important;
-    height: 100% !important;
-    max-height: 100dvh !important;
-    margin: 0 !important;
+    min-block-size: min(78dvh, 640px) !important;
+    max-block-size: min(92dvh, calc(100dvh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))) !important;
+    height: auto !important;
+    max-height: min(92dvh, calc(100dvh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))) !important;
+    margin: 0 auto !important;
   }
 
   .mutqin-modal-surface.ayah-notes-modal {
@@ -5185,14 +5185,14 @@
     flex-direction: column !important;
     inline-size: 100% !important;
     max-inline-size: 100% !important;
-    min-block-size: 0 !important;
-    max-block-size: 100dvh !important;
+    min-block-size: min(78dvh, 640px) !important;
+    max-block-size: inherit !important;
     block-size: 100% !important;
     height: 100% !important;
-    max-height: 100dvh !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+    max-height: inherit !important;
+    border: 1px solid color-mix(in srgb, var(--mutqin-modal-surface-border, #d4c8b6) 72%, transparent) !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 18px 48px rgba(28, 20, 12, 0.22) !important;
     overflow: hidden !important;
   }
 
