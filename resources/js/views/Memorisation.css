@@ -17217,7 +17217,7 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 .verse-arabic {
-  font-family: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;
+  font-family: var(--quran-font, var(--font-ar, 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif));
   font-size: 2.2rem;
   line-height: 1.8;
   text-align: right;
@@ -20337,6 +20337,25 @@ button:active {
   height: 1px;
   margin: 0.35rem 0.15rem;
   background: color-mix(in srgb, var(--border) 82%, transparent);
+}
+
+.top-card-font-submenu {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.15rem 0 0.25rem;
+  padding: 0.2rem 0.15rem 0.35rem;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.top-card-menu-toggle--font {
+  min-height: 2.35rem !important;
+  font-size: 0.84rem;
+}
+
+.top-card-menu-toggle--font-heading .bi-chevron-up,
+.top-card-menu-toggle--font-heading .bi-chevron-down {
+  margin-inline-start: auto;
 }
 
 .top-card-menu-end-session {
@@ -50907,7 +50926,8 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani 
     display: none !important;
   }
 
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap {
     display: inline-flex !important;
   }
 
@@ -53180,7 +53200,13 @@ never recolour tajweed text */
 /* Stacked/mushaf Arabic body inherits the selected Qur’anic font (--quran-font). */
 .verse-arabic,
 .verse-arabic.verse-arabic-primary,
-.amd-mushaf-ayah--premium {
+.amd-mushaf-ayah--premium,
+.mushaf-ayah-text,
+.amd-mushaf-stream,
+.self-check-modal-ayah,
+.memorisation-checker-ayah,
+.session-evaluation-ayah,
+.recitation-review-ayah {
   font-family: var(--quran-font, var(--font-ar, 'UthmanicHafs', 'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', serif));
 }
 
@@ -53200,7 +53226,7 @@ never recolour tajweed text */
 }
 
 .post-session-simple__evidence-ar {
-  font-family: "KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Amiri Quran", "Amiri", serif !important;
+  font-family: var(--quran-font, "KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Amiri Quran", "Amiri", serif) !important;
   font-size: 1.15rem;
   font-weight: 500;
 }

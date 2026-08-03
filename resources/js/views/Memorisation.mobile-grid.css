@@ -275,13 +275,21 @@
   }
 
   .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap {
-    display: none !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
   .workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-wrap,
-.workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-trigger,
-.workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
-.workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-trigger,
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap,
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -296,8 +304,12 @@
     order: 1;
   }
 
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap {
     order: 2;
+  }
+
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
+    order: 3;
   }
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair:not(.has-paired-actions) {
@@ -5033,12 +5045,19 @@
   }
 
   .workspace-shell-head > .top-card-icon-controls .top-card-font-wrap {
-    display: none !important;
-    width: 0 !important;
-    min-width: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important;
-    pointer-events: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    flex: 0 0 36px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    pointer-events: auto !important;
   }
 
   .workspace-shell-head > .top-card-icon-controls .top-card-controls-wrap,
@@ -5072,8 +5091,12 @@
     order: 2;
   }
 
-  .workspace-shell-head > .top-card-icon-controls .top-card-menu-wrap {
+  .workspace-shell-head > .top-card-icon-controls .top-card-font-wrap {
     order: 3;
+  }
+
+  .workspace-shell-head > .top-card-icon-controls .top-card-menu-wrap {
+    order: 4;
   }
 
   .workspace-shell-head > .top-card-icon-controls .top-card-icon-control,

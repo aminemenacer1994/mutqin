@@ -2413,7 +2413,7 @@ export default {
       return this.sortedSavedSessions.length > 0
     },
     shouldGateWorkspaceForResumeChoice() {
-      return !!(this.isLoggedIn && this.showWelcomeBackModal && this.returningUserChoicePending)
+      return !!(this.isLoggedIn && this.returningUserChoicePending)
     },
     isWelcomeBackWorkspaceHidden() {
       return !!(this.welcomeBackWorkspaceHidden || this.shouldGateWorkspaceForResumeChoice)
@@ -8704,23 +8704,23 @@ export default {
       this.syncWelcomeBackResumeFromBackend()
       this.markWelcomeBackModalShownForCurrentLogin()
       this.returningUserChoicePending = true
-      this.welcomeBackWorkspaceHidden = false
+      // Hide workspace immediately so verses never flash before the modal.
+      this.welcomeBackWorkspaceHidden = true
       this.showTools = false
       this.topCardMenuOpen = false
       this.welcomeBackModalReady = false
       if (this.welcomeBackRevealTimer) {
         window.clearTimeout(this.welcomeBackRevealTimer)
+        this.welcomeBackRevealTimer = null
       }
-      this.welcomeBackRevealTimer = window.setTimeout(() => {
-        // Re-sync once more in case hydrate finished during the reveal delay.
+      this.showWelcomeBackModal = true
+      this.$nextTick(() => {
+        // Re-sync once more in case hydrate finished while the modal mounts.
         this.syncWelcomeBackResumeFromBackend()
-        this.showWelcomeBackModal = true
-        this.$nextTick(() => {
-          window.requestAnimationFrame(() => {
-            this.welcomeBackModalReady = true
-          })
+        window.requestAnimationFrame(() => {
+          this.welcomeBackModalReady = true
         })
-      }, 900)
+      })
     },
 
     syncWelcomeBackResumeFromBackend() {
@@ -28449,18 +28449,23 @@ export default {
       if (!allowed) return
       this.quranFont = normaliseQuranFontId(fontValue)
       applyQuranFontCssVariable(this.quranFont)
+      this.clearMushafAyahHtmlCache?.()
       this.fontDropdownOpen = false
       this.fontOpen = false
       this.topCardMenuOpen = false
       this.closeTopCardSubmenus()
       this.syncSettingsDraft()
       this.persistUiState()
-      if (this.readingViewMode === 'mushaf' && this.quranFont === 'uthmanic') {
-        const page = this.currentMadaniPageNumber
-        if (page) {
-          this.madaniFontsReady = { ...this.madaniFontsReady, [page]: false }
-          this.ensureMadaniFontForPage(page)
-          this.prefetchAdjacentMadaniFonts(page)
+      if (this.readingViewMode === 'mushaf') {
+        // Leaving QCF/uthmanic must re-fit unicode lines; returning needs page glyphs.
+        this.$nextTick(() => this.scheduleMadaniPageFit?.())
+        if (this.quranFont === 'uthmanic') {
+          const page = this.currentMadaniPageNumber
+          if (page) {
+            this.madaniFontsReady = { ...this.madaniFontsReady, [page]: false }
+            this.ensureMadaniFontForPage(page)
+            this.prefetchAdjacentMadaniFonts(page)
+          }
         }
       }
     },

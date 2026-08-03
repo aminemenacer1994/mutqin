@@ -251,6 +251,33 @@
                     <span>{{ readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf') }}</span>
                     <i v-if="readingViewMode === 'mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
+                  <div class="top-card-menu-divider" role="separator"></div>
+                  <button
+                    type="button"
+                    class="top-card-menu-toggle top-card-menu-toggle--font-heading"
+                    :aria-expanded="topCardFontSubmenuOpen ? 'true' : 'false'"
+                    @click.stop="toggleTopCardFontSubmenu"
+                  >
+                    <i class="bi bi-fonts" aria-hidden="true"></i>
+                    <span>{{ getCurrentFontLabel() }}</span>
+                    <i class="bi" :class="topCardFontSubmenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+                  </button>
+                  <div v-if="topCardFontSubmenuOpen" class="top-card-font-submenu" role="group" :aria-label="t('memorisation.a11y.changeQuranFont')">
+                    <button
+                      v-for="font in quranFontOptions"
+                      :key="`menu-font-${font.value}`"
+                      type="button"
+                      class="top-card-menu-toggle top-card-menu-toggle--font"
+                      :class="{ active: quranFont === font.value }"
+                      :aria-pressed="quranFont === font.value ? 'true' : 'false'"
+                      @click.stop="selectFont(font.value)"
+                    >
+                      <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
+                      <span>{{ font.label }}</span>
+                      <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <div class="top-card-menu-divider" role="separator"></div>
                   <button
                     v-if="readingViewMode !== 'mushaf'"
                     type="button"
@@ -813,7 +840,7 @@
                   }"                   :style="{
                     '--verse-font-percent': getVerseFontSize(verse.key),
                     '--quran-font': quranFontFamily,
-                    'font-family': 'var(--quran-font, ' + quranFontFamily + ')'
+                    'font-family': quranFontFamily
                   }">
                 </div>
 

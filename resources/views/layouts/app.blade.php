@@ -241,9 +241,9 @@
         border-color: #b56a56 !important;
       }
     </style>
-    <style id="mutqin-memorisation-hotfix-v109">
-      /* Network-first hotfix v109 — hide U+06DF solid+dashed circles + ayah marker layout */
-      /* Blank font wins only for ornament codepoints (unicode-range); rest stays UthmanicHafs. */
+    <style id="mutqin-memorisation-hotfix-v110">
+      /* Network-first hotfix v110 — hide U+06DF solid+dashed circles + ayah marker layout */
+      /* Blank font wins only for ornament codepoints (unicode-range); body text uses --quran-font. */
       @font-face {
         font-family: 'MutqinHideQuranCircles';
         src: url('{{ asset('fonts/MutqinHideQuranCircles.ttf') }}') format('truetype');
@@ -262,7 +262,7 @@
       html body .app .memorisation-checker-ayah,
       html body .app .session-evaluation-ayah,
       html body .app .recitation-review-ayah {
-        font-family: 'MutqinHideQuranCircles', 'UthmanicHafs', 'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', serif !important;
+        font-family: 'MutqinHideQuranCircles', var(--quran-font, 'UthmanicHafs', 'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', serif) !important;
       }
       /* WBW + tajweed: keep each Arabic chip on one horizontal line */
       html body .app .verse-arabic.word-by-word-meanings .word-arabic-text,
@@ -595,11 +595,15 @@
           z-index: 90 !important;
         }
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap {
-          display: none !important;
+          display: inline-flex !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
         }
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-wrap,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-ellipsis,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-trigger,
@@ -615,8 +619,11 @@
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
           order: 1 !important;
         }
-        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap {
           order: 2 !important;
+        }
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap {
+          order: 3 !important;
         }
         html body .app .workspace-shell--post-session-choice .post-session-choice-pair,
         html body .app .workspace-shell--post-session-choice .post-session-choice-pair.has-paired-actions,
@@ -816,11 +823,15 @@
           z-index: 90 !important;
         }
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap {
-          display: none !important;
+          display: inline-flex !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
         }
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-controls-wrap,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-wrap,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
+        .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-menu-wrap,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .view-mode-btn,
         .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-dashboard-trigger,
@@ -889,12 +900,14 @@
           pointer-events: auto !important;
         }
         .app .top-card-icon-controls .top-card-font-wrap {
-          display: none !important;
-          width: 0 !important;
-          min-width: 0 !important;
-          height: 0 !important;
-          overflow: hidden !important;
-          pointer-events: none !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: var(--mq-top-icon, 36px) !important;
+          min-width: var(--mq-top-icon, 36px) !important;
+          height: var(--mq-top-icon, 36px) !important;
+          overflow: visible !important;
+          pointer-events: auto !important;
         }
         .app .workspace-shell-actions .top-card-session-actions:not(.has-paired-actions):not(.post-session-choice-pair) {
           display: flex !important;

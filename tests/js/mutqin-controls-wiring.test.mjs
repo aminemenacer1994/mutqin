@@ -203,6 +203,9 @@ includesAll('welcome back continue session flow', [
   /@click="closeWelcomeBackModal"/,
   /closeWelcomeBackModal\(\) \{/,
   /if \(this\.showWelcomeBackModal\) \{[\s\S]*this\.closeWelcomeBackModal\(\)/,
+  /welcomeBackWorkspaceHidden = true/,
+  /returningUserChoicePending/,
+  /shouldGateWorkspaceForResumeChoice\(\) \{\s*return !!\(this\.isLoggedIn && this\.returningUserChoicePending\)/,
 ])
 
 {
@@ -243,6 +246,16 @@ includesAll('welcome back continue session flow', [
   )
 }
 
+includesAll('quran font picker access', [
+  /toggleFontDropdown/,
+  /selectFont\(fontValue\)/,
+  /top-card-font-wrap/,
+  /topCardFontSubmenuOpen/,
+  /toggleTopCardFontSubmenu/,
+  /top-card-font-submenu/,
+  /clearMushafAyahHtmlCache/,
+])
+
 includesAll('desktop control group swap', [
   /\/\* Desktop: session action buttons left of the four icon controls \(same row\) \*\//,
   /@media \(min-width: 768px\) \{[\s\S]*\.workspace-shell-head > \.workspace-shell-actions \{[\s\S]*grid-column: 2 !important;/,
@@ -265,6 +278,18 @@ includesAll('desktop control group swap', [
     blade,
     /\.workspace-shell--post-session-choice \.top-card-icon-controls\s*\{[^}]*display:\s*flex\s*!important/,
     'blade hotfix must keep mobile post-session top-card icons visible'
+  )
+
+  // Circle-hide hotfix must respect the selected Qur’anic font, not hardcode UthmanicHafs.
+  assert.match(
+    blade,
+    /MutqinHideQuranCircles',\s*var\(--quran-font/,
+    'blade circle-hide font stack must use --quran-font so font picker applies'
+  )
+  assert.doesNotMatch(
+    blade,
+    /MutqinHideQuranCircles',\s*'UthmanicHafs'/,
+    'blade must not force UthmanicHafs after MutqinHideQuranCircles'
   )
 
   // Progress pills (row 2) must not share a grid row with Resume/End actions (row 3)
