@@ -53,18 +53,16 @@
           </header>
 
           <div class="amd-body amd-body--premium amd-body--compact amd-body--scroll">
-            <div
-              v-if="!isComplete"
-              class="amd-toolbar amd-toolbar--icons amd-toolbar--tools"
-              role="toolbar"
-              :aria-label="toolsLabel"
-            >
-              <div class="amd-tool-cell">
-                <span class="amd-tool-cell__hint">{{ peekShortLabel }}</span>
+            <div v-if="!isComplete" class="amd-tools-container">
+              <div
+                class="amd-toolbar amd-toolbar--icons amd-toolbar--tools amd-tools-bar amd-tools-bar--compact"
+                role="toolbar"
+                :aria-label="toolsLabel"
+              >
                 <button
                   type="button"
-                  class="amd-tool-btn"
-                  :class="{ active: peeking }"
+                  class="amd-tools-bar__btn"
+                  :class="{ 'is-active': peeking }"
                   :disabled="isComplete"
                   :aria-pressed="peeking ? 'true' : 'false'"
                   :aria-label="peekLabel"
@@ -82,20 +80,15 @@
                   @blur="onPeekEnd"
                 >
                   <i class="bi bi-eye" aria-hidden="true"></i>
-                  <span class="amd-tool-btn__name">{{ peekShortLabel }}</span>
                 </button>
-              </div>
 
-              <div class="amd-tool-cell">
-                <span class="amd-tool-cell__hint">{{ wordsShownShortLabel }}</span>
-                <label class="visually-hidden" :for="difficultyId">{{ wordsShownLabel }}</label>
-                <div class="amd-tool-btn amd-tool-btn--select">
+                <label class="amd-tools-bar__shown" :for="difficultyId" :title="wordsShownLabel">
+                  <span class="visually-hidden">{{ wordsShownLabel }}</span>
                   <select
                     :id="difficultyId"
-                    class="amd-tool-select"
+                    class="amd-tools-bar__select"
                     :value="selectedShownPercent"
                     :aria-label="wordsShownLabel"
-                    :title="wordsShownLabel"
                     @change="onDifficultyChange"
                   >
                     <option
@@ -104,43 +97,18 @@
                       :value="shown"
                     >{{ shown }}%</option>
                   </select>
+                </label>
+
+                <div
+                  class="amd-tools-bar__timer"
+                  role="timer"
+                  :aria-label="elapsedTimerLabel"
+                  :title="elapsedTimerHint || elapsedTimerLabel"
+                  :data-running="isListening ? 'true' : 'false'"
+                >
+                  <i class="bi bi-stopwatch" aria-hidden="true"></i>
+                  <span class="amd-tools-bar__timer-value">{{ elapsedLabel }}</span>
                 </div>
-              </div>
-
-              <div class="amd-tool-cell">
-                <span class="amd-tool-cell__hint">{{ mistakeSoundShortLabel }}</span>
-                <button
-                  type="button"
-                  class="amd-tool-btn amd-tool-btn--sound"
-                  :class="{ active: mistakeSoundEnabled }"
-                  :aria-pressed="mistakeSoundEnabled ? 'true' : 'false'"
-                  :aria-label="`${mistakeSoundLabel}: ${mistakeSoundEnabled ? mistakeSoundOnLabel : mistakeSoundOffLabel}`"
-                  :title="mistakeSoundHint || mistakeSoundLabel"
-                  @click.prevent.stop="$emit('toggle-mistake-sound')"
-                >
-                  <i
-                    class="bi"
-                    :class="mistakeSoundEnabled ? 'bi-volume-up' : 'bi-volume-mute'"
-                    aria-hidden="true"
-                  ></i>
-                  <span class="amd-tool-btn__name">{{ mistakeSoundShortLabel }}</span>
-                </button>
-              </div>
-
-              <div class="amd-tool-cell">
-                <span class="amd-tool-cell__hint">{{ tajweedShortLabel }}</span>
-                <button
-                  type="button"
-                  class="amd-tool-btn amd-tool-btn--tajweed"
-                  :class="{ active: tajweed }"
-                  :aria-pressed="tajweed ? 'true' : 'false'"
-                  :aria-label="`${tajweedLabel}: ${tajweed ? tajweedOnLabel : tajweedOffLabel}`"
-                  :title="tajweedHint || tajweedLabel"
-                  @click.prevent.stop="$emit('toggle-tajweed')"
-                >
-                  <i class="bi bi-palette" aria-hidden="true"></i>
-                  <span class="amd-tool-btn__name">{{ tajweedShortLabel }}</span>
-                </button>
               </div>
             </div>
 
@@ -172,7 +140,6 @@
               <div
                 ref="mushafSurface"
                 class="amd-mushaf-ayah amd-mushaf-ayah--premium"
-                :class="{ 'tajweed-enabled': tajweed }"
                 :style="{ '--amd-font-scale': fontScale }"
               ></div>
             </div>
@@ -307,7 +274,6 @@ export default {
     ayahHtml: { type: String, default: '' },
     blurActive: { type: Boolean, default: true },
     peeking: { type: Boolean, default: false },
-    tajweed: { type: Boolean, default: true },
     difficulty: { type: Number, default: 100 },
     difficultyOptions: {
       type: Array,
@@ -334,17 +300,10 @@ export default {
     peekHintShort: { type: String, default: 'Hold to reveal' },
     wordsShownShort: { type: String, default: 'Words shown' },
     textSizeShort: { type: String, default: 'Text size' },
-    mistakeSoundEnabled: { type: Boolean, default: true },
-    mistakeSoundLabel: { type: String, default: 'Mistake sound' },
-    mistakeSoundOnLabel: { type: String, default: 'On' },
-    mistakeSoundOffLabel: { type: String, default: 'Off' },
-    mistakeSoundHint: { type: String, default: 'Soft cue when a mistake is confirmed' },
-    mistakeSoundShort: { type: String, default: 'Mistake sound' },
-    tajweedLabel: { type: String, default: 'Tajweed' },
-    tajweedOnLabel: { type: String, default: 'On' },
-    tajweedOffLabel: { type: String, default: 'Off' },
-    tajweedHint: { type: String, default: 'Show or hide tajweed colouring' },
-    tajweedShort: { type: String, default: 'Tajweed' },
+    elapsedLabel: { type: String, default: '00:00' },
+    elapsedTimerLabel: { type: String, default: 'Recitation time' },
+    elapsedTimerHint: { type: String, default: 'How long this recitation has taken' },
+    theme: { type: String, default: '' },
     mistakeVisualActive: { type: Boolean, default: false },
     mistakeVisualLabel: { type: String, default: 'Mistake confirmed' },
     autoFollowLabel: { type: String, default: 'Auto-follow' },
@@ -376,8 +335,6 @@ export default {
     'done',
     'retry',
     'enable-mic',
-    'toggle-mistake-sound',
-    'toggle-tajweed',
   ],
   data() {
     return {
@@ -441,12 +398,6 @@ export default {
       const shown = hides.map((hide) => this.hidePercentToShown(hide))
       return [...new Set(shown)].sort((a, b) => a - b)
     },
-    mistakeSoundShortLabel() {
-      return this.mistakeSoundShort || this.mistakeSoundLabel || 'Mistake sound'
-    },
-    tajweedShortLabel() {
-      return this.tajweedShort || this.tajweedLabel || 'Tajweed'
-    },
     autoFollowStatusLabel() {
       if (!this.autoFollowEnabled) return this.autoFollowOffLabel || 'Auto-follow off'
       if (this.autoFollowPaused) return this.autoFollowPausedLabel || 'Auto-follow paused'
@@ -476,6 +427,9 @@ export default {
         this.unbindAutoFollowShell()
         this.restoreReturnFocus()
       }
+    },
+    theme() {
+      this.syncThemeAttr()
     },
     ayahHtml(html) {
       if (this.open) this.scheduleMushafHtml(html)
@@ -526,7 +480,15 @@ export default {
         this.themeAttr = 'light'
         return
       }
-      this.themeAttr = document.documentElement.getAttribute('data-theme') || 'light'
+      const fromProp = String(this.theme || '').trim()
+      if (fromProp) {
+        this.themeAttr = fromProp
+        return
+      }
+      const fromApp = document.querySelector?.('.app')?.getAttribute?.('data-theme')
+      this.themeAttr = fromApp
+        || document.documentElement.getAttribute('data-theme')
+        || 'light'
     },
     hidePercentToShown(hidePercent) {
       const hide = Number(hidePercent)
@@ -548,7 +510,8 @@ export default {
       this.fontScale = Math.max(this.minFontScale, Math.round((this.fontScale - 0.08) * 100) / 100)
     },
     setMushafHtml(html = '') {
-      this.scheduleMushafHtml(html)
+      // Explicit surface syncs (seed, tajweed toggle, complete) must replace DOM.
+      this.scheduleMushafHtml(html, true)
     },
     ensureAutoFollowController() {
       if (this._autoFollow) return this._autoFollow
@@ -630,10 +593,13 @@ export default {
         }
         if (!node?.classList) continue
         const status = String(patch.status || 'notAttempted')
-        ;['correct', 'partial', 'incorrect', 'omitted', 'notAttempted', 'pending'].forEach((name) => {
-          node.classList.remove(`recitation-word-${name}`)
-        })
-        node.classList.add(`recitation-word-${status}`)
+        const statusClass = `recitation-word-${status}`
+        if (!node.classList.contains(statusClass)) {
+          ;['correct', 'partial', 'incorrect', 'omitted', 'notAttempted', 'pending'].forEach((name) => {
+            node.classList.remove(`recitation-word-${name}`)
+          })
+          node.classList.add(statusClass)
+        }
         const shouldMask = patch.masked === true || patch.hidden === true
         if (shouldMask) {
           node.classList.add('amd-word-hidden')
@@ -647,16 +613,75 @@ export default {
         node.classList.toggle('amd-word-revealed', !!patch.revealed)
         node.classList.toggle('amd-word-current', !!patch.current)
         node.classList.toggle('amd-word-peeked', !!patch.peeked)
-        if (patch.current) currentIndex = index
+        node.classList.toggle('tajweed-needs-review', status === 'incorrect' || status === 'partial')
+        const tajweedActive = patch.tajweedActive != null ? !!patch.tajweedActive : !!patch.current
+        this.syncTajweedSegmentState(node, {
+          active: tajweedActive,
+          completed: status === 'correct',
+          needsReview: status === 'incorrect' || status === 'partial',
+        })
+        if (patch.current || tajweedActive) currentIndex = index
         changed = true
       }
-      if (currentIndex != null) this._activeWordIndex = currentIndex
+      if (currentIndex != null) {
+        this._activeWordIndex = currentIndex
+        this.clearOtherActiveTajweedSegments(el, currentIndex)
+      }
       if (changed) this.scrollActiveIntoView(el)
       return changed
     },
+    syncTajweedSegmentState(node, { active = false, completed = false, needsReview = false } = {}) {
+      if (!node?.querySelectorAll) return
+      node.querySelectorAll('.tajweed-mark, .tajweed-segment').forEach((mark) => {
+        mark.classList.toggle('is-active', !!active)
+        mark.classList.toggle('is-confirmed-active', !!active)
+        mark.classList.toggle('is-completed', !!completed)
+        mark.classList.toggle('needs-review', !!needsReview)
+      })
+      node.classList.toggle('tajweed-segment-host', node.querySelector('.tajweed-mark, .tajweed-segment') != null)
+      node.classList.toggle('is-tajweed-active', !!active)
+    },
+    clearOtherActiveTajweedSegments(root, activeIndex) {
+      const prev = this._lastActiveTajweedIndex
+      this._lastActiveTajweedIndex = activeIndex
+      if (!Number.isFinite(prev) || prev === activeIndex) return
+      const controller = this.ensureAutoFollowController()
+      let node = controller.wordCache.get(prev)
+      if (!node?.isConnected && root?.querySelector) {
+        node = root.querySelector(`[data-recitation-word-index="${prev}"]`)
+        if (node) controller.wordCache.set(prev, node)
+      }
+      if (!node?.classList) {
+        // Fallback only when cache misses — avoid full-tree scans on every tick.
+        if (!root?.querySelectorAll) return
+        root.querySelectorAll('.amd-word-current, .is-tajweed-active').forEach((el) => {
+          const idx = Number(el.getAttribute('data-recitation-word-index'))
+          if (idx === activeIndex) return
+          el.classList.remove('amd-word-current', 'is-tajweed-active')
+          el.querySelectorAll(
+            '.tajweed-mark.is-active, .tajweed-mark.is-confirmed-active, .tajweed-segment.is-active, .tajweed-segment.is-confirmed-active',
+          ).forEach((mark) => {
+            mark.classList.remove('is-active', 'is-confirmed-active')
+          })
+        })
+        return
+      }
+      node.classList.remove('amd-word-current', 'is-tajweed-active')
+      node.querySelectorAll?.(
+        '.tajweed-mark.is-active, .tajweed-mark.is-confirmed-active, .tajweed-segment.is-active, .tajweed-segment.is-confirmed-active',
+      ).forEach((mark) => {
+        mark.classList.remove('is-active', 'is-confirmed-active')
+      })
+    },
     scheduleMushafHtml(html = '', immediate = false) {
       if (this._htmlSyncTimer) clearTimeout(this._htmlSyncTimer)
-      const delay = immediate ? 0 : (this.stage === 'listening' ? 16 : 0)
+      // Never rebuild the mushaf DOM mid-listening unless forced — patches handle status.
+      const listening = this.stage === 'listening' || this.stage === 'starting'
+      if (listening && !immediate && this.$refs.mushafSurface?.childNodes?.length) {
+        this._htmlSyncTimer = null
+        return
+      }
+      const delay = immediate ? 0 : 0
       this._htmlSyncTimer = setTimeout(() => {
         this._htmlSyncTimer = null
         const el = this.$refs.mushafSurface
@@ -666,13 +691,48 @@ export default {
         el.innerHTML = next
         const controller = this.ensureAutoFollowController()
         controller.rebuildWordCache(el)
+        this.decorateTajweedSegments(el)
         const current = el.querySelector('.amd-word-current')
         if (current) {
           const idx = Number(current.getAttribute('data-recitation-word-index'))
           if (Number.isFinite(idx)) this._activeWordIndex = idx
+          this.syncTajweedSegmentState(current, { active: true })
         }
         this.scrollActiveIntoView(el)
       }, delay)
+    },
+    decorateTajweedSegments(root) {
+      if (!root?.querySelectorAll) return
+      const colourByClass = {
+        ham_wasl: '#7e8a97',
+        slnt: '#7e8a97',
+        ghn: '#2e9d62',
+        idgh_ghn: '#2e9d62',
+        iqlb: '#2e9d62',
+        idgh_w_ghn: '#9b59b6',
+        ikhf: '#9b59b6',
+        ikhf_shfw: '#9b59b6',
+        qlq: '#d98824',
+        lqlq: '#d98824',
+        madda_normal: '#d55245',
+        madda_permissible: '#d55245',
+        madda_necessary: '#d55245',
+        madda_obligatory: '#d55245',
+        madda_pbligatory: '#d55245',
+        idghm_shfw: '#2b7bbb',
+        idgh_shfw: '#2b7bbb',
+        idgh_mus: '#2b7bbb',
+      }
+      root.querySelectorAll('.tajweed-mark, [class*="tajweed-"]').forEach((mark) => {
+        if (!mark?.classList) return
+        mark.classList.add('tajweed-segment')
+        let hex = ''
+        mark.classList.forEach((cls) => {
+          const key = String(cls).replace(/^tajweed-/, '')
+          if (colourByClass[key]) hex = colourByClass[key]
+        })
+        if (hex) mark.style.setProperty('--tajweed-colour', hex)
+      })
     },
     scrollActiveIntoView(root, options = {}) {
       if (typeof window === 'undefined') return

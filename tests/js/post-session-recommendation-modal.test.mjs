@@ -97,14 +97,35 @@ function t(key, params = {}) {
   assert.match(completionModal, /postSessionFocusHighlightParts/)
   assert.match(completionModal, /is-weak/)
   assert.match(completionModal, /data-testid="post-session-why"/)
-  assert.match(completionModal, /postSessionRecommendationReasonLine/)
+  assert.match(completionModal, /postSessionPrimaryNextLine/)
   assert.match(completionModal, /data-testid="post-session-practice-method"/)
   assert.match(completionModal, /practiceMethod|practiceSetup|practice method|Practice setup/i)
   assert.match(completionModal, /data-testid="post-session-details"/)
   assert.match(completionModal, /data-testid="post-session-previous-attempt"/)
-  assert.match(completionModal, /softwareGenerated|Software-generated/)
-  assert.match(completionModal, /teacherComplement|Beta/)
-  assert.match(js, /postSessionOutcomeHeadline/)
+  assert.doesNotMatch(completionModal, /softwareGenerated|Software-generated/)
+  assert.doesNotMatch(completionModal, /teacherComplement/)
+  assert.doesNotMatch(completionModal, /post-session-simple__beta-tag/)
+  assert.doesNotMatch(completionModal, /post-session-simple__generated-badge/)
+  assert.match(completionModal, /postSessionOutcomeStatChips/)
+  assert.match(completionModal, /post-session-simple__outcome-tools/)
+  assert.match(completionModal, /post-session-simple__outcome-chip/)
+  assert.match(completionModal, /post-session-simple__outcome--hero/)
+  assert.match(completionModal, /is-incorrect/)
+  assert.match(js, /postSessionOutcomeStatChips\(\)/)
+  assert.match(js, /postSessionPrimaryNextLine\(\)/)
+  assert.match(js, /postSessionCheckDurationLabel/)
+  assert.match(js, /statRecitationTime/)
+  assert.match(js, /phraseStart/)
+  assert.match(js, /normalizeArabicForRecitationEngine/)
+  assert.match(js, /playRecitationStartBeep/)
+  assert.match(js, /ensureUiAudioContext/)
+  assert.match(css, /\.post-session-simple__quran-token\.is-incorrect/)
+  assert.match(css, /#b91c1c|#dc2626/)
+  assert.match(css, /\.post-session-simple__outcome-tools/)
+  assert.match(css, /animation:\s*none/)
+  assert.match(css, /\.post-session-simple__next-line/)
+  assert.doesNotMatch(css, /psRecCardIn|psChipIn|psWrongPulse/)
+  assert.match(en, /"statRecitationTime":\s*"Recitation time"/)
   assert.match(js, /headlineStrong|Strong recall/)
   assert.match(js, /headlineMixed|Minor reinforcement/)
   assert.match(js, /headlineWeak|Focused revision/)
@@ -126,7 +147,7 @@ function t(key, params = {}) {
 // Missing data: focus / why / previous attempt optional
 {
   assert.match(completionModal, /v-if="postSessionFocusHighlightParts\.length"/)
-  assert.match(completionModal, /v-if="postSessionRecommendationReasonLine"/)
+  assert.match(completionModal, /postSessionPrimaryNextLine/)
   assert.match(completionModal, /v-if="postSessionPreviousAttemptNote"/)
   assert.match(js, /postSessionFocusHighlightParts\(\)/)
   assert.match(js, /postSessionPracticeScopeLabel\(\)/)
@@ -149,8 +170,8 @@ function t(key, params = {}) {
   assert.doesNotMatch(completionModal, /data-testid="post-session-close"/)
   assert.match(js, /postSessionShowCloseTextAction\(\)\s*\{[\s\S]*?return false/)
   assert.match(js, /closePostSessionRecommendationModal/)
-  assert.match(en, /"reviseFocusPhrase":\s*"Start recommended revision"/)
-  assert.match(en, /"chooseAnotherRange":\s*"Choose another range"/)
+  assert.match(en, /"reviseFocusPhrase":\s*"Start revision"/)
+  assert.match(en, /"chooseAnotherRange":\s*"Other range"/)
   assert.match(en, /"retest":\s*"Check again"/)
 }
 
@@ -205,6 +226,59 @@ function t(key, params = {}) {
   assert.ok(whyIdx > focusIdx, 'why follows focus')
   assert.ok(detailsIdx > whyIdx, 'details follow why')
   assert.ok(practiceIdx > guidedStart, 'practice method card present after review')
+}
+
+// Recommendation copy hygiene: keep “then continue …” and pluralize focus meta
+{
+  assert.doesNotMatch(
+    js,
+    /replace\(\/\(\?:\[,\.\\s\]\+then\\s\+continue\)\+\\\.\?\/gi,\s*'\.'\)/,
+    'must not strip legitimate “then continue” clauses',
+  )
+  assert.match(js, /Collapse duplicated .then continue/)
+  assert.match(js, /scopeFocusMetaOne/)
+  assert.match(en, /"scopeFocusMetaOne":\s*"\{count\} focus item · about \{minutes\} min"/)
+  assert.match(en, /"phraseNeedsAttentionNext":\s*"Review it once, then continue to Ayahs \{start\}–\{end\}\."/)
+  assert.match(en, /"evidenceReviewThenContinue":\s*"Review the weak phrase once, then continue to Ayahs \{start\}–\{end\}\."/)
+
+  function stripAiDashes(text = '') {
+    const RANGE_TOKEN = '\uE000'
+    return String(text || '')
+      .replace(/(\d)\s*[–—−‐‑‒―]\s*(\d)/g, `$1${RANGE_TOKEN}$2`)
+      .replace(/\s*[—–―‐‑‒−]+\s*/g, ', ')
+      .replace(new RegExp(RANGE_TOKEN, 'g'), '\u2013')
+      .replace(/(?:^|\n)\s*[-−]+\s*(?=\n|$)/g, ' ')
+      .replace(/(\w)\s+-\s+(\w)/g, '$1, $2')
+      .replace(
+        /(then\s+continue(?:\s+to\s+[^.!,;]+)?\.?)(?:\s*[,.]?\s*then\s+continue(?:\s+to\s+[^.!,;]+)?\.?)+/gi,
+        '$1',
+      )
+      .replace(/,\s*,+/g, ',')
+      .replace(/\.\s*,/g, '.')
+      .replace(/,\s*\./g, '.')
+      .replace(/\.{2,}/g, '.')
+      .replace(/\s{2,}/g, ' ')
+      .replace(/\s+([,.;:])/g, '$1')
+      .trim()
+      .replace(/^[,;:\s]+|[,;:\s]+$/g, '')
+  }
+
+  assert.equal(
+    stripAiDashes('One phrase in Ayah 4 needs a little reinforcement. Review it once, then continue to Ayahs 6–8.'),
+    'One phrase in Ayah 4 needs a little reinforcement. Review it once, then continue to Ayahs 6–8.',
+  )
+  assert.equal(
+    stripAiDashes('Review the weak phrase once, then continue to Ayahs 6–8.'),
+    'Review the weak phrase once, then continue to Ayahs 6–8.',
+  )
+  assert.equal(
+    stripAiDashes('Review it once, then continue to Ayahs 6–8. then continue.'),
+    'Review it once, then continue to Ayahs 6–8.',
+  )
+  assert.doesNotMatch(
+    stripAiDashes('Review it once, then continue to Ayahs 6–8.'),
+    /\.\s+to Ayahs/,
+  )
 }
 
 console.log('post-session-recommendation-modal.test.mjs: ok')

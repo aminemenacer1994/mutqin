@@ -235,13 +235,18 @@ import {
   MISTAKE_HANDLING_MODES,
   MISTAKE_VISUAL_MS,
   normaliseDifficultyPercent,
-  readStoredAmdTajweedEnabled,
   readStoredDifficultyPercent,
   readStoredMistakeSoundEnabled,
   selectHiddenWordIndexes,
-  storeAmdTajweedEnabled,
   storeDifficultyPercent,
   storeMistakeSoundEnabled,
+  buildLiveRecitationCursor,
+  clampStatusesToConfirmedCursor,
+  mergeLiveRecitationStatuses as mergeConfirmedLiveRecitationStatuses,
+  resolveConfirmedWordIndex,
+  createSessionTimer,
+  formatElapsedLabel,
+  TIMER_STATES,
 } from '../scripts/memorisationDetection'
 import {
   generateTodaySession,
@@ -701,6 +706,16 @@ export default {
       postSessionAiFeedback: '',
       postSessionAiReviewDetails: null,
       postSessionAiDetailsExpanded: false,
+      postSessionTajweedPracticeCheck: null,
+      amdLiveTajweedCoach: null,
+      amdLiveCursor: {
+        expectedWordIndex: 0,
+        candidateWordIndex: 0,
+        confirmedWordIndex: 0,
+        activeTajweedSegmentIndex: 0,
+      },
+      tajweedPracticeDetailsOpen: false,
+      showTajweedLegendModal: false,
       recommendedPracticePending: false,
       recommendedPracticeCompleted: false,
       focusPhraseRevisionActive: false,
@@ -984,7 +999,7 @@ export default {
       amdActiveChunkIndex: 0,
       amdStrengthenedWords: 0,
       amdHiddenTextEnabled: true,
-      amdTajweedEnabled: readStoredAmdTajweedEnabled(),
+      amdTajweedEnabled: false,
       amdPeekActive: false,
       amdDifficultyPercent: readStoredDifficultyPercent(),
       amdMistakeSoundEnabled: readStoredMistakeSoundEnabled(),
@@ -997,8 +1012,8 @@ export default {
       amdExpectedCursor: 0,
       amdFrozenAtWordIndex: null,
       amdEndingSoon: false,
-      amdElapsedSeconds: 0,
-      amdElapsedTimer: null,
+      amdElapsedMs: 0,
+      amdTimerState: TIMER_STATES.IDLE,
       showSelfCheckModal: false,
       selfCheckVerseRef: null,
       selfCheckVerseKey: '',
@@ -3845,6 +3860,101 @@ export default {
         || this.t('memorisation.postSession.recommendation.headlineMixed')
         || 'Continue with care'
     },
+    postSessionOutcomeTone() {
+      const ctaState = this.postSessionCtaState
+      if (ctaState === POST_SESSION_CTA_STATES.STRONG) return 'strong'
+      if (ctaState === POST_SESSION_CTA_STATES.MOSTLY_SECURE) return 'mixed'
+      if (ctaState === POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED) return 'review'
+      if (ctaState === POST_SESSION_CTA_STATES.NEEDS_PRACTICE) return 'weak'
+      if (ctaState === POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO) return 'soft'
+      const outcome = String(this.postSessionAiReviewDetails?.outcome || '').toLowerCase()
+      if (outcome === 'strong') return 'strong'
+      if (outcome === 'weak' || outcome === 'needs_practice') return 'weak'
+      if (outcome === 'insufficient_audio') return 'soft'
+      return 'mixed'
+    },
+    postSessionCheckDurationSeconds() {
+      const details = this.postSessionAiReviewDetails || {}
+      const candidates = [
+        details.durationSeconds,
+        this.recitationCheckResult?.durationSeconds,
+        this.aiReciteFinalPlan?.recitation_duration_seconds,
+        this.aiReciteFinalPlan?.durationSeconds,
+        this.postSessionRecommendation?.settings?.recitation_duration_seconds,
+        this.postSessionRecommendation?.ai_assessment?.duration_seconds,
+        this.amdElapsedSeconds,
+      ]
+      for (const value of candidates) {
+        const n = Number(value)
+        if (Number.isFinite(n) && n > 0) return Math.round(n)
+      }
+      const msCandidates = [
+        this.postSessionRecommendation?.settings?.recitation_duration_ms,
+        this.amdAssessment?.duration_ms,
+        this.getAmdElapsedMs?.(),
+      ]
+      for (const value of msCandidates) {
+        const n = Number(value)
+        if (Number.isFinite(n) && n > 0) return Math.max(1, Math.round(n / 1000))
+      }
+      return 0
+    },
+    postSessionCheckDurationLabel() {
+      const seconds = this.postSessionCheckDurationSeconds
+      if (!(seconds > 0)) return ''
+      return formatElapsedLabel(seconds * 1000)
+    },
+    postSessionOutcomeStatChips() {
+      if (this.postSessionAiPresentationMode === 'insufficient_audio') return []
+      const details = this.postSessionAiReviewDetails || {}
+      const chips = []
+      const matched = Number(details.matchedWords)
+      const total = Number(details.totalWords)
+      if (Number.isFinite(matched) && Number.isFinite(total) && total > 0) {
+        chips.push({
+          key: 'match',
+          tone: matched >= total ? 'strong' : (matched / total >= 0.75 ? 'mixed' : 'weak'),
+          icon: 'bi bi-check2-circle',
+          label: this.t('memorisation.postSession.recommendation.statMatched') || 'Matched',
+          value: `${matched}/${total}`,
+          hint: this.t('memorisation.postSession.recommendation.statMatchedHint')
+            || 'Words Mutqin clearly recognised in this check',
+        })
+      }
+      const counts = details.colorCounts || {}
+      const wrong = Number(counts.red || 0) + Number(counts.black || 0)
+      const close = Number(counts.amber || 0)
+      if (wrong > 0 || close > 0) {
+        chips.push({
+          key: 'issues',
+          tone: wrong > 0 ? 'weak' : 'review',
+          icon: 'bi bi-exclamation-circle',
+          label: this.t('memorisation.postSession.recommendation.statNeedsWork') || 'Needs work',
+          value: wrong > 0
+            ? (this.t('memorisation.postSession.recommendation.statWrongCount', { count: wrong })
+              || `${wrong} wrong`)
+            : (this.t('memorisation.postSession.recommendation.statCloseCount', { count: close })
+              || `${close} close`),
+          hint: this.t('memorisation.postSession.recommendation.statNeedsWorkHint')
+            || 'Words that need another calm pass',
+        })
+      }
+      const durationLabel = this.postSessionCheckDurationLabel
+      if (durationLabel) {
+        chips.push({
+          key: 'timer',
+          tone: 'soft',
+          icon: 'bi bi-stopwatch',
+          label: this.t('memorisation.postSession.recommendation.statRecitationTime')
+            || this.t('memorisation.amd.elapsedTimer')
+            || 'Recitation time',
+          value: durationLabel,
+          hint: this.t('memorisation.postSession.recommendation.statRecitationTimeHint')
+            || 'How long this recitation took',
+        })
+      }
+      return chips.slice(0, 3)
+    },
     postSessionFocusActivatePayload() {
       const focusRow = (this.postSessionEvidenceRows || []).find((row) => row.key === 'focus')
       if (focusRow) return focusRow
@@ -3869,40 +3979,123 @@ export default {
       const focus = this.resolvePostSessionFocusPhrase?.() || null
       const phrase = String(focus?.phrase || '').trim()
       if (!phrase) return []
-      const weakNeedles = new Set()
-      const pushNeedle = (value) => {
-        const text = this.normalizePracticeFocusWordText?.(value) || String(value || '').trim()
-        if (text) weakNeedles.add(text)
+      const tokens = phrase.split(/\s+/).filter(Boolean).slice(0, 12)
+      if (!tokens.length) return []
+
+      const toneRank = { incorrect: 2, partial: 1 }
+      const markTone = (bag, index, tone) => {
+        if (!Number.isFinite(index) || index < 0 || index >= bag.length) return
+        const next = tone === 'partial' ? 'partial' : 'incorrect'
+        const prev = bag[index]
+        if (!prev || (toneRank[next] || 0) >= (toneRank[prev] || 0)) bag[index] = next
       }
+
+      const tonesByIndex = Array(tokens.length).fill(null)
+      const weakByNeedle = new Map()
+      const pushWeakText = (value, reason = 'pronunciation') => {
+        const text = this.normalizePracticeFocusWordText?.(value) || String(value || '').trim()
+        if (!text) return
+        const tone = reason === 'hesitation' ? 'partial' : 'incorrect'
+        const prev = weakByNeedle.get(text)
+        if (!prev || (prev === 'partial' && tone === 'incorrect')) weakByNeedle.set(text, tone)
+      }
+      const pushWeakWord = (word, reasonFallback = 'pronunciation') => {
+        if (!word || typeof word !== 'object') {
+          pushWeakText(word, reasonFallback)
+          return
+        }
+        if (focus?.ayahNumber && Number(word.ayahNumber || word.ayah_number)
+          && Number(word.ayahNumber || word.ayah_number) !== Number(focus.ayahNumber)) {
+          return
+        }
+        const status = String(
+          word.status || word.visualStatus || word.visual_status || word.severity || word.reason || '',
+        ).toLowerCase()
+        const isPartial = ['partial', 'minor_mistake', 'amber', 'hesitation', 'uncertain'].includes(status)
+          || reasonFallback === 'hesitation'
+        const isWrong = [
+          'incorrect', 'wrong', 'omitted', 'omission', 'missing', 'red', 'black',
+          'pronunciation', 'pending',
+        ].includes(status) || reasonFallback === 'pronunciation'
+        if (!isPartial && !isWrong && !word.text && !word.word && !Number.isFinite(Number(word.wordIndex))) {
+          return
+        }
+        const reason = isPartial ? 'hesitation' : 'pronunciation'
+        pushWeakText(word.text || word.word || word.arabic || word.target_word || word.targetWord, reason)
+        const idx = Number(word.wordIndex ?? word.ayahWordIndex ?? word.ayah_word_index ?? word.index)
+        const phraseStart = Number(focus?.phraseStart || 0)
+        if (Number.isFinite(idx)) markTone(tonesByIndex, idx - phraseStart, reason === 'hesitation' ? 'partial' : 'incorrect')
+      }
+
       const weakList = Array.isArray(this.postSessionRevisionWeakWords)
         ? this.postSessionRevisionWeakWords
         : []
-      weakList.forEach((word) => {
-        if (focus?.ayahNumber && Number(word.ayahNumber) && Number(word.ayahNumber) !== Number(focus.ayahNumber)) {
-          return
-        }
-        pushNeedle(word.text || word.word || word.arabic)
+      weakList.forEach((word) => pushWeakWord(word, word.reason || 'pronunciation'))
+      if (focus?.weakWord) pushWeakWord(focus.weakWord, focus.weakWord.reason || 'pronunciation')
+      // Always mark the focus wordIndex even when text is empty / mismatched.
+      if (Number.isFinite(Number(focus?.wordIndex))) {
+        markTone(
+          tonesByIndex,
+          Number(focus.wordIndex) - Number(focus.phraseStart || 0),
+          focus?.weakWord?.reason === 'hesitation' ? 'partial' : 'incorrect',
+        )
+      }
+
+      const statuses = Array.isArray(this.recitationCheckResult?.wordStatuses)
+        ? this.recitationCheckResult.wordStatuses
+        : (Array.isArray(this.aiReciteFinalPlan?.wordStatuses) ? this.aiReciteFinalPlan.wordStatuses : [])
+      statuses.forEach((word) => {
+        const status = String(word.status || word.visualStatus || word.visual_status || '').toLowerCase()
+        if (![
+          'incorrect', 'wrong', 'omitted', 'omission', 'missing', 'partial', 'minor_mistake',
+          'uncertain', 'pending', 'red', 'black', 'amber',
+        ].includes(status)) return
+        const reason = (status === 'partial' || status === 'minor_mistake' || status === 'amber' || status === 'uncertain')
+          ? 'hesitation'
+          : 'pronunciation'
+        pushWeakWord(word, reason)
       })
-      pushNeedle(focus?.weakWord?.text || focus?.weakWord?.word || focus?.weakWord?.arabic)
-      const tokens = phrase.split(/\s+/).filter(Boolean).slice(0, 12)
-      if (!tokens.length) return []
-      const matched = tokens.map((text) => {
+
+      const matched = tokens.map((text, index) => {
         const needle = this.normalizePracticeFocusWordText?.(text) || text
-        return { text, weak: weakNeedles.has(needle) }
+        const fromText = weakByNeedle.get(needle) || null
+        const fromIndex = tonesByIndex[index] || null
+        const tone = (toneRank[fromIndex] || 0) >= (toneRank[fromText] || 0)
+          ? (fromIndex || fromText)
+          : (fromText || fromIndex)
+        return { text, weak: !!tone, tone: tone || 'ok' }
       })
-      // If we only know the ayah is weak (no word-level hits), mark the whole phrase.
-      if (!matched.some((part) => part.weak) && (focus?.ayahNumber || weakNeedles.size === 0)) {
+
+      if (!matched.some((part) => part.weak)) {
         const ayahs = this.postSessionRevisionWeakAyahs || []
         if (focus?.ayahNumber && ayahs.map(Number).includes(Number(focus.ayahNumber))) {
-          return tokens.map((text) => ({ text, weak: true }))
+          return tokens.map((text) => ({ text, weak: true, tone: 'incorrect' }))
         }
       }
       return matched
     },
     postSessionGuidedMethodRows() {
       if (!this.postSessionFocusHighlightParts.length) return []
+      const reason = String(this.postSessionRecommendationReasonLine || '').toLowerCase()
       return (this.postSessionInlineRecommendationRows || [])
         .filter((row) => row.key === 'method' || row.key === 'next' || row.key === 'return')
+        .filter((row) => {
+          if (row.key !== 'next') return true
+          const value = String(row.value || '').trim().toLowerCase()
+          if (!value || !reason) return true
+          // Avoid repeating the same continue/review guidance already in Why.
+          if (reason.includes(value)) return false
+          const compact = value.replace(/[–—-]/g, '-').replace(/\s+/g, ' ')
+          return !reason.includes(compact)
+        })
+    },
+    postSessionPrimaryNextLine() {
+      const rows = this.postSessionInlineRecommendationRows || []
+      const next = rows.find((row) => row.key === 'next' || row.key === 'return')
+      if (next?.value) return this.stripAiDashes(String(next.value))
+      const method = rows.find((row) => row.key === 'method')
+      if (method?.value) return this.stripAiDashes(String(method.value))
+      return ''
     },
     postSessionPracticeScopeLabel() {
       const scope = this.postSessionSelectedPracticeScope
@@ -3973,10 +4166,16 @@ export default {
       return buildRevisionScopeOptions(this.t?.bind?.(this) || null).map((option) => {
         const isWeak = option.id === PRACTICE_SCOPE.WEAK_AREAS
         const meta = isWeak && sequence.focusItemCount
-          ? (this.t('memorisation.postSession.recommendation.scopeFocusMeta', {
-            count: sequence.focusItemCount,
-            minutes: sequence.estimatedDuration?.minutes || 1,
-          }) || `${sequence.focusItemCount} focus items · about ${sequence.estimatedDuration?.minutes || 1} min`)
+          ? (() => {
+            const count = Number(sequence.focusItemCount) || 0
+            const minutes = sequence.estimatedDuration?.minutes || 1
+            const key = count === 1
+              ? 'memorisation.postSession.recommendation.scopeFocusMetaOne'
+              : 'memorisation.postSession.recommendation.scopeFocusMetaOther'
+            return this.t(key, { count, minutes })
+              || this.t('memorisation.postSession.recommendation.scopeFocusMeta', { count, minutes })
+              || `${count} focus item${count === 1 ? '' : 's'} · about ${minutes} min`
+          })()
           : (this.t('memorisation.postSession.recommendation.scopeFullMeta')
             || 'Full session with stronger emphasis on weak areas')
         return {
@@ -4318,6 +4517,10 @@ export default {
         const primary = this.t('memorisation.postSession.recommendation.phraseNeedsAttention', {
           ayah: focus.ayahNumber,
         }) || `One phrase in Ayah ${focus.ayahNumber} needs a little reinforcement.`
+        // Keep Why short when guided Method/Next rows will carry progression.
+        if (this.postSessionFocusHighlightParts.length) {
+          return this.stripAiDashes(primary)
+        }
         if (allowProgress && nextFrom && nextTo) {
           const follow = this.t('memorisation.postSession.recommendation.phraseNeedsAttentionNext', {
             start: nextFrom,
@@ -4852,18 +5055,8 @@ export default {
     postSessionFlowGuideText() {
       if (this.onboardingSampleSessionActive) return ''
       if (this.postSessionRecommendationStep === 'confirm') return ''
-      // Recommendation card already carries title + encouragement + reason.
-      if (this.postSessionShowRecommendationPlan) return ''
-      if (this.postSessionHasAiCheck) {
-        if (this.postSessionIsRepeatRecommendation) {
-          return this.t('memorisation.postSession.coach.subtitles.retestAfterPractice')
-            || this.t('memorisation.postSession.flowGuideRepeat')
-            || 'Test again when ready, or keep practising this range.'
-        }
-        return this.t('memorisation.postSession.coach.guidance.afterAi')
-          || this.t('memorisation.postSession.flowGuide')
-          || ''
-      }
+      // Keep the completion card quiet — headline + focus already guide the next step.
+      if (this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck) return ''
       if (this.postSessionIsRepeatRecommendation) {
         return this.t('memorisation.postSession.flowGuideRepeat')
           || 'Test with AI when ready, skip to keep this range, or choose another.'
@@ -5728,15 +5921,11 @@ export default {
     amdLearnerMicStatusLabel() {
       const key = this.amdLearnerMicStatus
       if (key === 'listening') {
-        const live = !!this.getTranscriptionProvider?.('recitation')?.isOpen?.()
-        if (live) {
-          return this.t?.('memorisation.amd.micListeningLive') || 'Listening · live'
-        }
         return this.t?.('memorisation.amd.micListening') || 'Listening'
       }
       const map = {
         ready: this.t?.('memorisation.amd.micReady') || 'Ready',
-        need_access: this.t?.('memorisation.amd.micNeedAccess') || 'Microphone access needed',
+        need_access: this.t?.('memorisation.amd.micNeedAccess') || 'Allow microphone',
         paused: this.t?.('memorisation.amd.micPaused') || 'Paused',
         unavailable: this.t?.('memorisation.amd.micUnavailable') || 'Unavailable',
         unsupported: this.t?.('memorisation.amd.micUnavailable') || 'Unavailable',
@@ -5802,10 +5991,10 @@ export default {
       return ''
     },
     amdElapsedLabel() {
-      const total = Math.max(0, Number(this.amdElapsedSeconds || 0))
-      const mins = String(Math.floor(total / 60)).padStart(2, '0')
-      const secs = String(total % 60).padStart(2, '0')
-      return `${mins}:${secs}`
+      return formatElapsedLabel(this.amdElapsedMs)
+    },
+    amdElapsedSeconds() {
+      return Math.max(0, Math.round(Number(this.amdElapsedMs || 0) / 1000))
     },
     amdHowKicker() {
       return this.t?.('memorisation.amd.howKicker') || 'How Mutqin mistake detection works'
@@ -5848,10 +6037,8 @@ export default {
         stop: this.t?.('memorisation.amd.toolStop') || 'Stop',
         start: this.t?.('memorisation.amd.startRecitation') || 'Start recording',
         startHint: this.t?.('memorisation.amd.startRecitationHint') || '',
-        betaBadge: this.t?.('memorisation.amd.betaBadge') || 'Beta',
-        disclaimer: this.t?.('memorisation.amd.disclaimerShort')
-          || this.t?.('memorisation.amd.disclaimer')
-          || 'Practice aid — may mishear; does not replace a teacher.',
+        betaBadge: '',
+        disclaimer: '',
         reset: this.t?.('common.reset') || 'Reset',
         difficulty: this.t?.('memorisation.amd.difficulty') || 'Difficulty',
         wordsShown: this.t?.('memorisation.amd.wordsShown') || 'Words shown',
@@ -5860,17 +6047,8 @@ export default {
         textSizeDecrease: this.t?.('memorisation.amd.textSizeDecrease') || 'Decrease text size',
         peekHintShort: this.t?.('memorisation.amd.peekHintShort') || 'Hold to reveal',
         wordsShownShort: this.t?.('memorisation.amd.wordsShownShort') || 'Shown',
-        textSizeShort: this.t?.('memorisation.amd.textSizeShort') || 'Text size',
-        mistakeSound: this.t?.('memorisation.amd.mistakeSound') || 'Mistake sound',
-        mistakeSoundShort: this.t?.('memorisation.amd.mistakeSoundShort') || 'Sound',
-        mistakeSoundOn: this.t?.('memorisation.amd.mistakeSoundOn') || 'On',
-        mistakeSoundOff: this.t?.('memorisation.amd.mistakeSoundOff') || 'Off',
-        mistakeSoundHint: this.t?.('memorisation.amd.mistakeSoundHint') || 'Soft cue when a mistake is confirmed',
-        tajweed: this.t?.('memorisation.amd.tajweed') || this.t?.('common.tajweed') || 'Tajweed',
-        tajweedShort: this.t?.('memorisation.amd.tajweedShort') || 'Tajweed',
-        tajweedOn: this.t?.('memorisation.amd.tajweedOn') || 'On',
-        tajweedOff: this.t?.('memorisation.amd.tajweedOff') || 'Off',
-        tajweedHint: this.t?.('memorisation.amd.tajweedHint') || 'Show or hide tajweed colouring',
+        elapsedTimer: this.t?.('memorisation.amd.elapsedTimer') || 'Recitation time',
+        elapsedTimerHint: this.t?.('memorisation.amd.elapsedTimer') || 'Recitation time',
         mistakeVisualLabel: this.t?.('memorisation.amd.mistakeVisual') || 'Mistake confirmed',
         autoFollow: this.t?.('memorisation.amd.autoFollow') || 'Auto-follow',
         autoFollowOn: this.t?.('memorisation.amd.autoFollowOn') || 'Auto-follow on',
@@ -6119,19 +6297,21 @@ export default {
       return checked ? `${checked} of ${total} spoken words matched` : 'Waiting for your first recognized word'
     },
     recallCurrentWordIndex() {
-      // The committed (finalized) alignment lags the user's voice because it
-      // waits for end-of-utterance finals. recitationLiveWords already merges
-      // the interim/preview alignment, so deriving the cursor from it lets the
-      // reveal keep pace with what the reciter is actually saying. We take the
-      // furthest-forward of the two so the cursor never rewinds when a final
-      // transcript arrives slightly behind the live preview.
+      // AMD / AI memorisation: cursor is confirmed speech only — never interim or
+      // reference-reciter timing. Classic recall may still use soft live pace.
+      if (this.amdOpen) {
+        const confirmed = Number(this.amdLiveCursor?.confirmedWordIndex)
+        if (Number.isFinite(confirmed) && confirmed >= 0) return confirmed
+        return resolveConfirmedWordIndex(this.recitationLiveWords || [])
+      }
       const live = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
       const committedRaw = Number(this.recitationAlignmentState?.currentIndex)
       const committed = Number.isFinite(committedRaw) && committedRaw >= 0 ? committedRaw : 0
       if (!live.length) return committed
-      let liveIndex = live.findIndex(word => !['correct', 'partial'].includes(word?.status))
+      // Cap soft live reveal at the committed cursor so interim cannot unveil future words.
+      let liveIndex = live.findIndex(word => !['correct', 'partial', 'incorrect', 'omitted', 'skipped'].includes(word?.status))
       if (liveIndex < 0) liveIndex = live.length
-      return Math.max(committed, liveIndex)
+      return Math.min(liveIndex, Math.max(committed, 0))
     },
     aiRecallModeStatus() {
       if (!this.recitationCheckPanelOpen) {
@@ -8082,7 +8262,7 @@ export default {
       clearTimeout(this.practiceSetupStatusTimer)
       this.practiceSetupStatusTimer = null
     }
-    this.clearAmdElapsedTimer?.()
+    this.destroyAmdSessionTimer?.()
     if (this.anchorHighlightObserver) {
       this.anchorHighlightObserver.disconnect()
     }
@@ -8627,7 +8807,8 @@ export default {
       if (text) this.showBanner(text, 'error', Number(options?.durationMs) || 4200)
     },
     failAmdAssessment(message = '', { toast = false } = {}) {
-      this.clearAmdElapsedTimer?.()
+      // Freeze elapsed on failure so a retry can reset explicitly.
+      this.stopAmdElapsedTimer?.()
       this.amdBusy = false
       this.amdPeekActive = false
       // Keep the mushaf usable — inline message + Peek remain available.
@@ -10087,38 +10268,31 @@ export default {
     },
     playRecitationStartBeep() {
       if (typeof window === 'undefined') return
+      // Single short cue only — never a two-note chime (heard as a double beep).
+      if (this._amdStartBeepAt && (Date.now() - this._amdStartBeepAt) < 1200) return
+      this._amdStartBeepAt = Date.now()
       try {
-        // Start cue is separate from the mistake-sound preference — always use the
-        // shared UI context so toggling Mistake sound Off does not mute Record.
         const context = this.ensureUiAudioContext()
         if (!context) return
         const resume = context.state === 'suspended' ? context.resume?.() : null
         const play = () => {
-          const notes = [
-            { frequency: 784, duration: 0.14, peakGain: 0.22, startAt: 0 },
-            { frequency: 988, duration: 0.2, peakGain: 0.26, startAt: 0.14 }
-          ]
-          const now = context.currentTime
-          notes.forEach(({ frequency, duration, peakGain, startAt }) => {
-            const oscillator = context.createOscillator()
-            const gain = context.createGain()
-            const start = now + startAt
-            oscillator.type = 'sine'
-            oscillator.frequency.setValueAtTime(frequency, start)
-            gain.gain.setValueAtTime(0.0001, start)
-            gain.gain.exponentialRampToValueAtTime(peakGain, start + 0.012)
-            gain.gain.exponentialRampToValueAtTime(0.0001, start + duration)
-            oscillator.connect(gain)
-            gain.connect(context.destination)
-            oscillator.start(start)
-            oscillator.stop(start + duration + 0.02)
-          })
+          const oscillator = context.createOscillator()
+          const gain = context.createGain()
+          const start = context.currentTime
+          oscillator.type = 'sine'
+          oscillator.frequency.setValueAtTime(880, start)
+          gain.gain.setValueAtTime(0.0001, start)
+          gain.gain.exponentialRampToValueAtTime(0.2, start + 0.012)
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.16)
+          oscillator.connect(gain)
+          gain.connect(context.destination)
+          oscillator.start(start)
+          oscillator.stop(start + 0.18)
         }
         if (resume?.then) resume.then(play).catch(play)
         else play()
       } catch (error) {
         console.warn('Recitation start beep failed:', error)
-        this.playUiTone('recite')
       }
     },
     ensureUiAudioContext() {
@@ -14001,27 +14175,40 @@ export default {
         String(v.key) === String(verseKey)
         || (Number(v.number) === ayahNumber && (!chapterId || Number(v.surah || v.chapterId || 0) === chapterId || !v.surah))
       ))
-      const tokens = verse
-        ? (this.tokenizeRecitationDisplayWords?.(verse.arabic || verse.text || '')
-          || String(verse.arabic || '').replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean))
+      const canonical = verse ? (this.getCanonicalVerseForCheck?.(verse) || verse) : null
+      const arabicSource = canonical
+        ? (this.getPlainVerseArabicForCheck?.(canonical)
+          || this.cleanRecitationDisplayText?.(canonical.arabic || canonical.text || '')
+          || String(canonical.arabic || canonical.text || ''))
+        : ''
+      const tokens = arabicSource
+        ? (this.tokenizeRecitationDisplayWords?.(arabicSource)
+          || String(arabicSource).replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean))
         : []
       const wordIndex = Number(first.wordIndex)
+      let phraseStart = 0
       let phrase = String(first.phrase || first.phraseText || first.surroundingPhrase || '').trim()
       if (!phrase && tokens.length) {
         if (tokens.length <= 6) {
           phrase = tokens.join(' ')
+          phraseStart = 0
         } else if (Number.isFinite(wordIndex) && wordIndex >= 0 && wordIndex < tokens.length) {
-          const start = Math.max(0, wordIndex - 2)
+          phraseStart = Math.max(0, wordIndex - 2)
           const end = Math.min(tokens.length, wordIndex + 3)
-          phrase = tokens.slice(start, end).join(' ')
+          phrase = tokens.slice(phraseStart, end).join(' ')
         } else {
           phrase = String(first.text || first.word || tokens[0] || '').trim()
+          phraseStart = 0
         }
+      } else if (phrase && tokens.length && Number.isFinite(wordIndex) && wordIndex >= 0) {
+        // Prefer the known index window when the phrase was pre-built.
+        phraseStart = Math.max(0, wordIndex - 2)
       }
       if (!phrase) phrase = String(first.text || first.word || '').trim()
       if (!phrase) return null
       return {
         phrase,
+        phraseStart,
         ayahNumber,
         verseKey,
         wordIndex: Number.isFinite(wordIndex) ? wordIndex : null,
@@ -14427,9 +14614,9 @@ export default {
       return `${word.verseKey || ''}:${word.wordIndex}`
     },
     normalizePracticeFocusWordText(text) {
-      return String(text || '')
-        .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
-        .replace(/[^\u0621-\u064A\u0671]/g, '')
+      // Match recitation alignment so ٱ/أ/ة/ى variants still highlight as wrong.
+      return normalizeArabicForRecitationEngine(text)
+        .replace(/\s+/g, '')
         .trim()
     },
     practiceFocusVerseKeyMatches(word, verseKey) {
@@ -16900,6 +17087,7 @@ export default {
         targetText: result.targetText,
         wordStatuses: result.wordStatuses,
         tajweedRules: result.tajweedRules || [],
+        tajweedPracticeCheck: result.tajweedPracticeCheck || null,
         recommendation: result.recommendation,
         mistakeBreakdown: result.mistakes,
         reviewMetadata: result.reviewMetadata,
@@ -17607,8 +17795,12 @@ export default {
       return map?.[key] || 'notAttempted'
     },
     getWordVisualStatus(word = {}, active = false, finalised = false) {
-      const status = String(word?.status || 'pending')
-      if (['correct', 'partial', 'incorrect', 'omitted', 'skipped', 'notAttempted'].includes(status)) return status
+      const status = String(word?.status || 'pending').toLowerCase()
+      if (status === 'wrong' || status === 'red') return 'incorrect'
+      if (status === 'minor_mistake' || status === 'amber') return 'partial'
+      if (['correct', 'partial', 'incorrect', 'omitted', 'skipped', 'notattempted'].includes(status)) {
+        return status === 'notattempted' ? 'notAttempted' : status
+      }
       // Finalised pending words were never said → black (omitted), not gray.
       if (status === 'pending') return finalised ? 'omitted' : 'notAttempted'
       return 'notAttempted'
@@ -18139,8 +18331,8 @@ export default {
       this.amdActiveChunkIndex = 0
       this.amdStrengthenedWords = 0
       this.amdHiddenTextEnabled = true
-      // Respect the learner's last tajweed preference (default on).
-      this.amdTajweedEnabled = readStoredAmdTajweedEnabled()
+      // AMD Tajweed colouring / practice check temporarily disabled.
+      this.amdTajweedEnabled = false
       this.amdPeekActive = false
       // Recommended plan / AI check: never pause the mic on a red word.
       this.setAmdMistakeHandlingMode(MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW)
@@ -18152,9 +18344,15 @@ export default {
       this.amdEndingSoon = false
       this._amdCompleting = false
       this._amdLastExpectedIndex = null
+      this.amdLiveCursor = {
+        expectedWordIndex: 0,
+        candidateWordIndex: 0,
+        confirmedWordIndex: 0,
+        activeTajweedSegmentIndex: 0,
+      }
+      this.amdLiveTajweedCoach = null
       this.amdAssessOnStop = false
-      this.amdElapsedSeconds = 0
-      this.clearAmdElapsedTimer()
+      this.resetAmdElapsedTimer()
       // Pause session reciter while the AI check owns the mic — do not touch WebAudio.
       try {
         if (this.audioElement && !this.audioElement.paused) this.audioElement.pause()
@@ -18186,6 +18384,8 @@ export default {
       return source === 'test-with-ai' || source === 'dashboard-review'
     },
     rebuildAmdHiddenWordMask({ bumpAttempt = false } = {}) {
+      this._amdAyahBoundsSig = null
+      this._amdAyahBounds = null
       if (bumpAttempt) this.amdHiddenSeedAttempt = Number(this.amdHiddenSeedAttempt || 0) + 1
       const targets = this.recitationCheckPendingTargets?.length
         ? this.recitationCheckPendingTargets
@@ -18245,16 +18445,91 @@ export default {
       this.amdHowtoSeen = true
       try { localStorage.setItem(AMD_HOWTO_SEEN_KEY, '1') } catch { /* ignore */ }
     },
-    clearAmdElapsedTimer() {
-      if (this.amdElapsedTimer) {
-        clearInterval(this.amdElapsedTimer)
-        this.amdElapsedTimer = null
-      }
+    ensureAmdSessionTimer() {
+      if (this._amdSessionTimer) return this._amdSessionTimer
+      this._amdSessionTimer = createSessionTimer({
+        tickMs: 1000,
+        onTick: (snap) => {
+          // Ignore ticks after the modal is gone unless we are freezing a stopped value.
+          if (!this.amdOpen && snap.timerState === TIMER_STATES.RUNNING) return
+          // Only commit reactive updates when the displayed second changes —
+          // avoids re-rendering Memorisation (~30k LOC) four times per second.
+          const nextMs = Math.max(0, Number(snap.elapsedMs || 0))
+          const prevSec = Math.floor(Number(this.amdElapsedMs || 0) / 1000)
+          const nextSec = Math.floor(nextMs / 1000)
+          if (nextSec === prevSec && snap.timerState === this.amdTimerState) return
+          this.applyAmdTimerSnapshot(snap)
+        },
+      })
+      return this._amdSessionTimer
     },
-    startAmdElapsedTimer() {
-      // No timer in the streamlined memorisation-test journey.
-      this.clearAmdElapsedTimer()
-      this.amdElapsedSeconds = 0
+    applyAmdTimerSnapshot(snap = null) {
+      const next = snap || this._amdSessionTimer?.snapshot?.() || {
+        startedAt: 0,
+        elapsedMs: 0,
+        timerState: TIMER_STATES.IDLE,
+      }
+      this.amdElapsedMs = Math.max(0, Number(next.elapsedMs || 0))
+      this.amdTimerState = next.timerState || TIMER_STATES.IDLE
+      if (next.startedAt) this.amdStartedAt = next.startedAt
+    },
+    /** Stop display ticks only — does not reset frozen elapsed. */
+    clearAmdElapsedTimer() {
+      this._amdSessionTimer?.detach?.()
+    },
+    destroyAmdSessionTimer() {
+      if (!this._amdSessionTimer) {
+        this.amdElapsedMs = 0
+        this.amdTimerState = TIMER_STATES.IDLE
+        this.amdStartedAt = 0
+        return
+      }
+      this._amdSessionTimer.destroy()
+      this._amdSessionTimer = null
+      this.amdElapsedMs = 0
+      this.amdTimerState = TIMER_STATES.IDLE
+      this.amdStartedAt = 0
+    },
+    resetAmdElapsedTimer() {
+      const timer = this.ensureAmdSessionTimer()
+      this.applyAmdTimerSnapshot(timer.reset())
+      this.amdStartedAt = 0
+    },
+    startAmdElapsedTimer({ at } = {}) {
+      const timer = this.ensureAmdSessionTimer()
+      // Genuine recording start — never restart a stopped attempt without reset.
+      if (timer.state === TIMER_STATES.STOPPED || timer.state === TIMER_STATES.IDLE) {
+        if (timer.state === TIMER_STATES.STOPPED) timer.reset()
+      }
+      const snap = timer.state === TIMER_STATES.PAUSED
+        ? timer.resume({ at })
+        : timer.start({ at })
+      this.applyAmdTimerSnapshot(snap)
+      if (snap.startedAt) this.amdStartedAt = snap.startedAt
+    },
+    pauseAmdElapsedTimer({ at } = {}) {
+      if (!this._amdSessionTimer) return
+      this.applyAmdTimerSnapshot(this._amdSessionTimer.pause({ at }))
+    },
+    resumeAmdElapsedTimer({ at } = {}) {
+      if (!this._amdSessionTimer) return
+      this.applyAmdTimerSnapshot(this._amdSessionTimer.resume({ at }))
+    },
+    stopAmdElapsedTimer({ at } = {}) {
+      if (!this._amdSessionTimer) return
+      this.applyAmdTimerSnapshot(this._amdSessionTimer.stop({ at }))
+    },
+    getAmdElapsedSeconds({ at } = {}) {
+      if (this._amdSessionTimer) {
+        return this._amdSessionTimer.getElapsedSeconds(at)
+      }
+      return Math.max(0, Math.round(Number(this.amdElapsedMs || 0) / 1000))
+    },
+    getAmdElapsedMs({ at } = {}) {
+      if (this._amdSessionTimer) {
+        return this._amdSessionTimer.getElapsedMs(at)
+      }
+      return Math.max(0, Number(this.amdElapsedMs || 0))
     },
     syncAmdMushafSurface() {
       if (!this.amdOpen) return
@@ -18275,13 +18550,21 @@ export default {
       })
     },
     resolveAmdWordVisual(statusEntry = {}, live = true) {
-      const raw = String(statusEntry.status || statusEntry.visual_status || statusEntry.visualStatus || 'pending')
-      return this.getWordVisualStatus?.(statusEntry, false, !live) || (
-        raw === 'partial' || raw === 'minor_mistake' ? 'partial'
-          : (raw === 'wrong' || raw === 'incorrect' ? 'incorrect'
-            : (raw === 'missing' || raw === 'omitted' ? 'omitted'
-              : (raw === 'correct' ? 'correct' : (live ? 'notAttempted' : 'omitted'))))
-      )
+      const raw = String(
+        statusEntry.status
+        || statusEntry.visual_status
+        || statusEntry.visualStatus
+        || 'pending'
+      ).toLowerCase()
+      if (raw === 'wrong' || raw === 'incorrect' || raw === 'red') return 'incorrect'
+      if (raw === 'partial' || raw === 'minor_mistake' || raw === 'amber') return 'partial'
+      if (raw === 'correct' || raw === 'green') return 'correct'
+      if (raw === 'omitted' || raw === 'missing' || raw === 'omission' || raw === 'black') return 'omitted'
+      if (raw === 'skipped') return 'skipped'
+      if (raw === 'notattempted' || raw === 'not_attempted' || raw === 'pending' || raw === 'gray' || raw === 'grey') {
+        return live ? 'notAttempted' : 'omitted'
+      }
+      return this.getWordVisualStatus?.(statusEntry, false, !live) || (live ? 'notAttempted' : 'omitted')
     },
     buildAmdMushafHtml({ live = true, result = null } = {}) {
       const targets = this.recitationCheckPendingTargets?.length
@@ -18302,6 +18585,12 @@ export default {
       // (soft blur vs clean gaps) and never unmasks unrecalled targets.
       const maskOn = !this.amdPeekActive && live
       const expectedIndex = this.getAmdExpectedWordIndex(statuses, hiddenSet)
+      // Confirmed cursor only — never paint or mark current from a future guess.
+      if (live && this.amdOpen) this.syncAmdLiveCursor({ committedStatuses: statuses })
+      const confirmedIndex = this.amdOpen && Number.isFinite(this.amdLiveCursor?.confirmedWordIndex)
+        ? Number(this.amdLiveCursor.confirmedWordIndex)
+        : expectedIndex
+      const highlightIndex = confirmedIndex
 
       const firstVerse = this.getCanonicalVerseForCheck(targets[0]) || targets[0]
       const firstAyahNumber = Number(firstVerse?.number || String(firstVerse?.key || '').split(':')[1] || 0)
@@ -18331,13 +18620,13 @@ export default {
             : []
         }
         const ayahNumber = Number(verse?.number || String(verse?.key || '').split(':')[1] || tIndex + 1)
-        const ayahActive = expectedIndex >= offset && expectedIndex < offset + words.length
-        const isFutureAyah = expectedIndex < offset
+        const ayahActive = highlightIndex >= offset && highlightIndex < offset + words.length
+        const isFutureAyah = highlightIndex < offset
         const wordHtml = words.map((word, index) => {
           const globalIndex = offset + index
           const statusEntry = statuses[globalIndex] || {}
-          // Never paint colours on ayahs the learner has not reached yet.
-          const visual = isFutureAyah
+          // Never paint colours on ayahs/words the learner has not confirmed yet.
+          const visual = (isFutureAyah || globalIndex > highlightIndex)
             ? 'notAttempted'
             : this.resolveAmdWordVisual(statusEntry, live)
           const isHiddenTarget = hiddenSet.has(globalIndex)
@@ -18345,7 +18634,7 @@ export default {
           const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(String(visual || ''))
           // Keep grey blanks only until the learner attempts the word; then show amber/red/green.
           const shouldMask = maskOn && isHiddenTarget && !attempted
-          const isCurrent = live && globalIndex === expectedIndex
+          const isCurrent = live && globalIndex === highlightIndex
           const displayStatus = shouldMask ? 'notAttempted' : (visual || 'notAttempted')
           const classes = [
             'wbw-word',
@@ -18406,41 +18695,36 @@ export default {
           .map((i) => Number(i))
           .filter((i) => Number.isFinite(i))
       )
-      const expectedIndex = this.getAmdExpectedWordIndex(statuses, hiddenSet)
+      // Highlight / Tajweed active = confirmed learner position only.
+      this.syncAmdLiveCursor({ committedStatuses: statuses })
+      const confirmedIndex = Number.isFinite(this.amdLiveCursor?.confirmedWordIndex)
+        ? Number(this.amdLiveCursor.confirmedWordIndex)
+        : this.getAmdExpectedWordIndex(statuses, hiddenSet)
+      const activeTajweedIndex = Number.isFinite(this.amdLiveCursor?.activeTajweedSegmentIndex)
+        ? Number(this.amdLiveCursor.activeTajweedSegmentIndex)
+        : confirmedIndex
       const indexes = new Set(
         (Array.isArray(changedWords) ? changedWords : [])
           .map((change) => Number(change?.index))
           .filter((i) => Number.isFinite(i))
       )
       if (Number.isFinite(this._amdLastExpectedIndex)) indexes.add(this._amdLastExpectedIndex)
-      if (Number.isFinite(expectedIndex)) indexes.add(expectedIndex)
-      this._amdLastExpectedIndex = expectedIndex
+      if (Number.isFinite(confirmedIndex)) indexes.add(confirmedIndex)
+      if (Number.isFinite(activeTajweedIndex)) indexes.add(activeTajweedIndex)
+      this._amdLastExpectedIndex = confirmedIndex
 
       const maskOn = !this.amdPeekActive
-      // Resolve which ayah the expected cursor sits in so future ayahs stay uncoloured.
-      const ayahBounds = []
-      {
-        let cursor = 0
-        const targets = this.recitationCheckPendingTargets?.length
-          ? this.recitationCheckPendingTargets
-          : this.getRecitationCheckTargetVerses()
-        for (const target of targets) {
-          const verse = this.getCanonicalVerseForCheck(target) || target
-          const arabic = this.getPlainVerseArabicForCheck?.(verse)
-            || this.cleanRecitationDisplayText?.(verse?.arabic || '')
-            || String(verse?.arabic || '')
-          const words = this.tokenizeRecitationDisplayWords?.(arabic) || arabic.split(/\s+/).filter(Boolean)
-          ayahBounds.push({ start: cursor, end: cursor + words.length })
-          cursor += words.length
-        }
-      }
+      // Resolve which ayah the confirmed cursor sits in so future ayahs stay uncoloured.
+      const ayahBounds = this.getAmdAyahBoundsCached()
       const isFutureWord = (index) => {
         if (Number.isFinite(this.amdFrozenAtWordIndex) && index > Number(this.amdFrozenAtWordIndex)) {
           return true
         }
+        // Anything strictly after the confirmed cursor is future — never paint.
+        if (index > confirmedIndex) return true
         const ayah = ayahBounds.find((bound) => index >= bound.start && index < bound.end)
         if (!ayah) return false
-        return expectedIndex < ayah.start
+        return confirmedIndex < ayah.start
       }
       const patches = [...indexes].map((index) => {
         const statusEntry = statuses[index] || {}
@@ -18450,6 +18734,7 @@ export default {
         if (Number.isFinite(this.amdFrozenAtWordIndex) && index > Number(this.amdFrozenAtWordIndex)) {
           visual = 'notAttempted'
         }
+        if (index > confirmedIndex) visual = 'notAttempted'
         const isHiddenTarget = hiddenSet.has(index)
         const isCorrect = visual === 'correct' || visual === 'partial'
         const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(String(visual || ''))
@@ -18457,7 +18742,8 @@ export default {
         return {
           index,
           status: shouldMask ? 'notAttempted' : (visual || 'notAttempted'),
-          current: index === expectedIndex,
+          current: index === confirmedIndex,
+          tajweedActive: index === activeTajweedIndex,
           hidden: shouldMask,
           revealed: isCorrect && isHiddenTarget,
           peeked: this.amdPeekActive && isHiddenTarget && !isCorrect,
@@ -18467,7 +18753,12 @@ export default {
       const ok = modal.patchWordStatuses(patches)
       if (!ok) this.syncAmdMushafSurface()
       if (patches.length) this.noteAmdRecognitionActivity?.()
+      this.refreshAmdLiveTajweedCoach(activeTajweedIndex)
       return ok
+    },
+    refreshAmdLiveTajweedCoach() {
+      this.amdLiveTajweedCoach = null
+      return null
     },
     isAmdLastSessionWordCorrect() {
       const words = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
@@ -18477,25 +18768,71 @@ export default {
       return status === 'correct' || status === 'partial'
     },
     getAmdExpectedWordIndex(statuses = [], hiddenSet = null) {
+      // Prefer the confirmed live cursor — never an interim/candidate jump.
+      if (this.amdOpen && Number.isFinite(this.amdLiveCursor?.confirmedWordIndex)) {
+        const confirmed = Math.max(0, Number(this.amdLiveCursor.confirmedWordIndex))
+        if (Number.isFinite(this.amdFrozenAtWordIndex)) {
+          return Math.min(confirmed, Math.max(0, Number(this.amdFrozenAtWordIndex)))
+        }
+        return confirmed
+      }
       if (Number.isFinite(this.amdFrozenAtWordIndex)) {
         return Math.max(0, Number(this.amdFrozenAtWordIndex))
       }
-      const words = Array.isArray(statuses) ? statuses : []
-      const hidden = hiddenSet || new Set(this.amdHiddenWordIndexes || [])
-      // In continue-and-review, incorrect is marked but does not block progress.
-      // Stop-on-mistake freezes via amdFrozenAtWordIndex above.
-      const isSettled = (status) => {
-        const s = String(status || '').toLowerCase()
-        return s === 'correct' || s === 'partial' || s === 'incorrect' || s === 'omitted' || s === 'skipped'
+      return resolveConfirmedWordIndex(statuses, {
+        frozenAt: this.amdFrozenAtWordIndex,
+      })
+    },
+    syncAmdLiveCursor({ committedStatuses = null, candidateStatuses = null } = {}) {
+      const committed = Array.isArray(committedStatuses)
+        ? committedStatuses
+        : (Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : [])
+      const candidate = Array.isArray(candidateStatuses) ? candidateStatuses : committed
+      const cursor = buildLiveRecitationCursor({
+        committedStatuses: committed,
+        candidateStatuses: candidate,
+        frozenAt: this.amdFrozenAtWordIndex,
+      })
+      const prev = this.amdLiveCursor
+      if (
+        prev
+        && prev.confirmedWordIndex === cursor.confirmedWordIndex
+        && prev.candidateWordIndex === cursor.candidateWordIndex
+        && prev.expectedWordIndex === cursor.expectedWordIndex
+        && prev.activeTajweedSegmentIndex === cursor.activeTajweedSegmentIndex
+      ) {
+        return prev
       }
-      for (let i = 0; i < words.length; i += 1) {
-        if (!hidden.has(i)) continue
-        if (!isSettled(words[i]?.status)) return i
+      this.amdLiveCursor = cursor
+      return cursor
+    },
+    getAmdAyahBoundsCached() {
+      const targets = this.recitationCheckPendingTargets?.length
+        ? this.recitationCheckPendingTargets
+        : this.getRecitationCheckTargetVerses()
+      const sig = (Array.isArray(targets) ? targets : [])
+        .map((target) => String(target?.key || target?.id || ''))
+        .join('|')
+      if (this._amdAyahBoundsSig === sig && Array.isArray(this._amdAyahBounds)) {
+        return this._amdAyahBounds
       }
-      for (let i = 0; i < words.length; i += 1) {
-        if (!isSettled(words[i]?.status)) return i
+      const ayahBounds = []
+      let cursor = 0
+      for (const target of (Array.isArray(targets) ? targets : [])) {
+        const verse = this.getCanonicalVerseForCheck(target) || target
+        const arabic = this.getPlainVerseArabicForCheck?.(verse)
+          || this.cleanRecitationDisplayText?.(verse?.arabic || '')
+          || String(verse?.arabic || '')
+        const words = this.tokenizeRecitationDisplayWords?.(arabic) || arabic.split(/\s+/).filter(Boolean)
+        ayahBounds.push({ start: cursor, end: cursor + words.length })
+        cursor += words.length
       }
-      return Math.max(0, words.length - 1)
+      this._amdAyahBoundsSig = sig
+      this._amdAyahBounds = ayahBounds
+      return ayahBounds
+    },
+    mergeLiveRecitationStatuses(committedStatuses = [], displayStatuses = [], options = {}) {
+      return mergeConfirmedLiveRecitationStatuses(committedStatuses, displayStatuses, options)
     },
     computeAmdLiveAccuracy(wordStatuses = []) {
       const words = Array.isArray(wordStatuses) ? wordStatuses : []
@@ -18528,11 +18865,11 @@ export default {
         black: wordStatuses.filter((w) => ['omitted', 'omission', 'black'].includes(String(w.status).toLowerCase())).length,
         gray: wordStatuses.filter((w) => ['skipped', 'notattempted', 'pending', 'gray', 'grey'].includes(String(w.status).toLowerCase())).length,
       }
-      const startedAt = Number(this.recitationCheckStartedAt || 0)
+      const startedAt = Number(this.amdStartedAt || this.recitationCheckStartedAt || 0)
       const endedAt = Date.now()
-      const durationSeconds = startedAt > 0
-        ? Math.max(0, (endedAt - startedAt) / 1000)
-        : null
+      const durationSeconds = this.amdOpen
+        ? this.getAmdElapsedSeconds({ at: endedAt })
+        : (startedAt > 0 ? Math.max(0, (endedAt - startedAt) / 1000) : null)
       return {
         wordStatuses,
         colorCounts,
@@ -18555,7 +18892,8 @@ export default {
       this.amdPeekActive = false
       this.amdError = ''
       this.amdAssessOnStop = false
-      this.clearAmdElapsedTimer()
+      // Freeze wall-clock elapsed at the moment recording finishes — not after analysis.
+      this.stopAmdElapsedTimer()
       this.stopAmdRecognitionHeartbeat?.()
       // Quiet handoff — no bulky processing copy while we sync the plan.
       this.amdStage = AMD_STAGES.PROCESSING
@@ -18568,8 +18906,22 @@ export default {
       this.recitationCheckRecording = false
       this.recitationCheckDiscardOnStop = false
 
-      const result = this.buildAmdLiveAssessmentResult(reason)
+      let result = this.buildAmdLiveAssessmentResult(reason)
+      const targets = Array.isArray(this.recitationCheckPendingTargets) && this.recitationCheckPendingTargets.length
+        ? this.recitationCheckPendingTargets
+        : (this.getRecitationCheckTargetVerses?.() || [])
+      try {
+        result = await this.enrichResultWithTajweedPracticeCheck(result, targets, {
+          wasRecording: true,
+          tajweedHighlightingEnabled: !!this.amdTajweedEnabled,
+          recognitionWords: result.committedWords || [],
+          learnerBlob: null,
+        })
+      } catch (error) {
+        console.warn('AMD tajweed practice check failed', error)
+      }
       this.recitationCheckResult = result
+      this.postSessionTajweedPracticeCheck = result?.tajweedPracticeCheck || null
       this.syncAmdMushafSurface()
       try { this.recordAiReciteAttempt?.(result) } catch (_) { /* ignore */ }
 
@@ -18644,14 +18996,9 @@ export default {
       this.syncAmdMushafSurface()
     },
     toggleAmdTajweed() {
-      const next = !this.amdTajweedEnabled
-      this.amdTajweedEnabled = next
-      storeAmdTajweedEnabled(next)
-      if (next) {
-        void this.ensureAmdTajweedMarkup().then(() => this.syncAmdMushafSurface())
-        return
-      }
-      this.syncAmdMushafSurface()
+      // AMD Tajweed tools temporarily removed.
+      this.amdTajweedEnabled = false
+      this.amdLiveTajweedCoach = null
     },
     ensureAmdMistakeFeedbackController() {
       if (this.amdMistakeFeedback) return this.amdMistakeFeedback
@@ -18777,13 +19124,12 @@ export default {
       this.amdPracticePlan = null
       this.amdImprovement = null
       this.amdError = ''
-      this.amdElapsedSeconds = 0
       this.amdPeekActive = false
       this.amdEndingSoon = false
       this._amdCompleting = false
       this._amdLastExpectedIndex = null
       this.amdFrozenAtWordIndex = null
-      this.clearAmdElapsedTimer()
+      this.resetAmdElapsedTimer()
       this.clearAmdMistakeVisual()
       try { this.amdMistakeFeedback?.resetSessionSignals?.() } catch (_) { /* ignore */ }
       this.resetDisplayedRecitationAyah?.()
@@ -18791,7 +19137,7 @@ export default {
       if (!options.preserveDifficulty) {
         this.amdDifficultyPercent = readStoredDifficultyPercent()
       }
-      this.amdTajweedEnabled = readStoredAmdTajweedEnabled()
+      this.amdTajweedEnabled = false
       this.rebuildAmdHiddenWordMask({ bumpAttempt: !!options.bumpMask })
       this._amdSeedHtml = this.buildAmdMushafHtml({ live: true })
       this.amdStage = AMD_STAGES.READY
@@ -18837,12 +19183,21 @@ export default {
         try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
       }
       try { this.stopRecitationSpeechRecognition?.() } catch (_) { /* ignore */ }
-      this.clearAmdElapsedTimer()
+      this.resetAmdElapsedTimer()
       this.clearAmdMistakeVisual()
       try { this.amdMistakeFeedback?.resetSessionSignals?.() } catch (_) { /* ignore */ }
       this.restoreSessionAudioAfterAmd()
       this.amdPeekActive = false
       this.amdEndingSoon = false
+      this.amdLiveTajweedCoach = null
+      this.amdLiveCursor = {
+        expectedWordIndex: 0,
+        candidateWordIndex: 0,
+        confirmedWordIndex: 0,
+        activeTajweedSegmentIndex: 0,
+      }
+      this._amdAyahBoundsSig = null
+      this._amdAyahBounds = null
       this._amdCompleting = false
       this.amdAssessOnStop = false
       this.amdFrozenAtWordIndex = null
@@ -18893,18 +19248,23 @@ export default {
       this.amdError = ''
       this.amdBusy = true
       this.amdStage = AMD_STAGES.STARTING
-      this.amdStartedAt = Date.now()
+      this.resetAmdElapsedTimer()
       this.setAmdMistakeHandlingMode(MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW)
       this.amdFrozenAtWordIndex = null
-      // Unlock mistake + start cues in the same user gesture (iOS autoplay).
+      // Unlock UI audio + start beep in the same user gesture (Safari needs this
+      // before any await). Later playRecitationStartCue is debounced as a no-op.
+      try {
+        const ctx = this.ensureUiAudioContext?.()
+        if (ctx?.state === 'suspended') void ctx.resume?.()
+        this.playRecitationStartBeep?.()
+      } catch (_) { /* ignore */ }
       try {
         await this.prepareAmdMistakeSoundForRecording()
-        this.playRecitationStartBeep()
       } catch (_) { /* ignore */ }
       // Re-apply the chosen visibility mask the moment listening starts.
       this.rebuildAmdHiddenWordMask()
       this.syncAmdMushafSurface()
-      // No countdown/timer UI for the streamlined memorisation test.
+      this.refreshAmdLiveTajweedCoach(0)
       try {
         if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
           this.amdMicStatus = 'unsupported'
@@ -19002,6 +19362,7 @@ export default {
       this.recitationCheckPreparing = false
       this.recitationCheckRecording = false
       this.recitationCheckResult = null
+      this.resetAmdElapsedTimer()
       this.seedRecitationLiveWords(this.recitationCheckPendingTargets || [])
       this.amdStage = AMD_STAGES.READY
       this.$nextTick(() => this.syncAmdMushafSurface())
@@ -19047,10 +19408,20 @@ export default {
       const committed = (Array.isArray(result?.committedWords) && result.committedWords.length)
         ? result.committedWords
         : (this.getBestRecognitionWordsForAssessment?.('recitation') || this.getCommittedRecognitionWords?.('recitation') || [])
-      const recognitionWords = buildRecognitionWords(committed.length ? committed : (result?.transcript || '').split(/\s+/))
+      const recognitionWords = buildRecognitionWords(committed.length ? committed : (result?.transcript || '').split(/\s+/), { includeTiming: true })
       const numbers = ayahs.map((a) => a.ayah_number).filter(Boolean)
       const providerLabel = String(result?.transcriptionSource || '')
       const provider = /speechmatics/i.test(providerLabel) ? 'speechmatics' : (/browser|web-speech/i.test(providerLabel) ? 'web-speech' : (providerLabel || 'speechmatics'))
+      const tajweedPracticeCheck = result?.tajweedPracticeCheck || null
+      const durationSeconds = Math.max(
+        0,
+        Number(result?.durationSeconds)
+          || this.getAmdElapsedSeconds()
+          || 0,
+      )
+      const durationMs = durationSeconds > 0
+        ? Math.round(durationSeconds * 1000)
+        : this.getAmdElapsedMs()
       const payload = {
         surah_number: Number(this.chapterId || ayahs[0]?.surah_number || 0),
         surah_name: this.currentChapter?.name_simple || this.activeChapterName || '',
@@ -19060,11 +19431,15 @@ export default {
         ayahs,
         recognition_words: recognitionWords,
         transcript: result?.transcript || wordsToTranscript(committed),
-        duration_ms: this.amdStartedAt ? Math.max(0, Date.now() - this.amdStartedAt) : null,
+        duration_ms: durationMs > 0 ? durationMs : null,
+        started_at: this.amdStartedAt
+          ? new Date(this.amdStartedAt).toISOString()
+          : undefined,
         provider,
         session_recommendation_id: this.amdRecommendationId || undefined,
         previous_assessment_id: this.amdPreviousAssessmentId || undefined,
         user_session_id: this.mutqinState?.sessionState?.backendSessionId || undefined,
+        tajweed_practice_check: tajweedPracticeCheck || undefined,
       }
 
       try {
@@ -19684,12 +20059,12 @@ export default {
         throw new Error(this.t('memorisation.aiCheck.noArabicWords'))
       }
       const provider = this.getDominantRecognitionProvider(committedWords)
-      const result = this.completeAiMemorisationCheckerFromRecognitionWords(
+      const result = await this.completeAiMemorisationCheckerFromRecognitionWords(
         committedWords,
         targetVerses,
         provider === 'speechmatics' ? 'speechmatics streaming' : 'browser speech recognition',
         audioSrc,
-        { sessionId, audioHash, id: `memorisation-check-${audioHash.slice(0, 16)}` }
+        { sessionId, audioHash, id: `memorisation-check-${audioHash.slice(0, 16)}`, learnerBlob: blob || null }
       )
       const validationReport = this.buildRecognitionValidationForResult('memorisation', targetVerses, result, {
         sessionId,
@@ -19759,14 +20134,14 @@ export default {
       this.showBanner(this.t('toasts.loadedCachedMemorisationAnalysis'), 'success', 1800)
       return result
     },
-    completeAiMemorisationCheckerFromRecognitionWords(recognitionWords = [], targetVerses, source = 'stabilised speech input', audioSrc = '', options = {}) {
+    async completeAiMemorisationCheckerFromRecognitionWords(recognitionWords = [], targetVerses, source = 'stabilised speech input', audioSrc = '', options = {}) {
       if (!recognitionWords.length) {
         this.aiMemorisationCheckerError = this.t('memorisation.aiCheck.noArabicWords')
         return null
       }
       this.cancelLiveWordDomPatchFrame()
       this.clearRecitationDisplayHtmlCache()
-      const result = {
+      let result = {
         ...this.assessRecitationRecognitionWords(recognitionWords, targetVerses, options),
         id: options.id || `memorisation-check-${Date.now()}`,
         type: 'ai-memorisation-check',
@@ -19774,8 +20149,14 @@ export default {
         mode: this.aiMemorisationCheckerMode,
         hiddenWordIndexes: [...this.aiMemorisationCheckerHiddenIndexes],
         selectedAyah: this.buildAiMemorisationCheckerSelectedAyah(targetVerses[0]),
-        transcriptionSource: source
+        transcriptionSource: source,
+        committedWords: recognitionWords,
       }
+      result = await this.enrichResultWithTajweedPracticeCheck(result, targetVerses, {
+        wasRecording: true,
+        recognitionWords,
+        learnerBlob: options.learnerBlob || null,
+      })
       this.aiMemorisationCheckerResult = result
       this.aiMemorisationCheckerLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
       this.syncSessionEvaluationMaps('memorisation', targetVerses, this.aiMemorisationCheckerLiveWords, true)
@@ -20203,38 +20584,6 @@ export default {
         status: current.status,
         note: current.note || incoming.note,
       }
-    },
-    mergeLiveRecitationStatuses(committedStatuses = [], displayStatuses = [], options = {}) {
-      const committed = Array.isArray(committedStatuses) ? committedStatuses : []
-      const display = Array.isArray(displayStatuses) ? displayStatuses : []
-      const maxLength = Math.max(committed.length, display.length)
-      const protectAgainstInterimRed = options.protectAgainstInterimRed === true
-      return Array.from({ length: maxLength }, (_, index) => {
-        const confirmed = committed[index] || null
-        const live = display[index] || null
-        // AMD: never let noisy interim ASR paint red over pending/correct slots.
-        if (protectAgainstInterimRed && live?.status === 'incorrect'
-          && (!confirmed || confirmed.status === 'pending' || confirmed.status === 'correct')) {
-          return confirmed && confirmed.status && confirmed.status !== 'pending'
-            ? confirmed
-            : { ...(confirmed || live), status: 'pending', note: confirmed?.note || 'Waiting for confirmation.' }
-        }
-        // Once either stream has marked an issue, keep the worse colour for the session.
-        if (this.isStickyLiveIssueStatus(confirmed?.status) || this.isStickyLiveIssueStatus(live?.status)) {
-          return this.pickStickyLiveWordStatus(confirmed, live)
-            || this.pickStickyLiveWordStatus(live, confirmed)
-        }
-        // Prefer live/interim when it has already evaluated the word so colouring
-        // keeps pace with speech — but never over a sticky issue (handled above).
-        if (live && ['correct', 'partial', 'incorrect', 'omitted'].includes(live.status)
-          && (!confirmed || confirmed.status === 'pending')) {
-          return live
-        }
-        if (confirmed && confirmed.status && confirmed.status !== 'pending') return confirmed
-        if (!live && !confirmed) return { status: 'pending', note: 'Waiting for this word.' }
-        if (live && ['correct', 'partial', 'incorrect'].includes(live.status)) return live
-        return { ...(live || confirmed), status: 'pending', note: confirmed?.note || 'Waiting for confirmation.' }
-      })
     },
     getLiveWordTargetsForPatch(targetKey = '') {
       if (targetKey === 'aiMemorisationCheckerLiveWords') {
@@ -20748,8 +21097,8 @@ export default {
           audioHash: kind === 'recitation' ? this.recitationInputAudioHash : ''
         }
       }
-      // Live preview stays soft so interim ASR can colour ahead; committed
-      // alignment follows the learner's progression preference.
+      // Live preview may track a candidate cursor for matching, but paint is
+      // always gated to the confirmed (committed) learner position.
       const livePreviewAlignmentOptions = {
         ...liveAlignmentOptions,
         strictProgression: false
@@ -20763,16 +21112,16 @@ export default {
       if (this.amdOpen && kind === 'recitation') {
         const stopOnMistake = this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
         liveAlignmentOptions.strictProgression = true
-        liveAlignmentOptions.lookahead = 1
+        // No lookahead: never skip-match future words from a lucky interim token.
+        liveAlignmentOptions.lookahead = 0
         liveAlignmentOptions.partialAdvances = true
         liveAlignmentOptions.advanceOnIncorrect = !stopOnMistake
         liveAlignmentOptions.allowArticleMatch = true
         liveAlignmentOptions.correctSimilarity = 0.76
         liveAlignmentOptions.partialSimilarity = 0.42
         liveAlignmentOptions.minConfidenceForCorrect = 0.22
-        // Interim preview: never paint reds/skips ahead of committed speech.
         livePreviewAlignmentOptions.strictProgression = true
-        livePreviewAlignmentOptions.lookahead = 1
+        livePreviewAlignmentOptions.lookahead = 0
         livePreviewAlignmentOptions.partialAdvances = true
         livePreviewAlignmentOptions.advanceOnIncorrect = false
         livePreviewAlignmentOptions.allowArticleMatch = true
@@ -20795,22 +21144,41 @@ export default {
           targetVerses,
           liveAlignmentOptions
         )
-      const liveAlignment = this.areRecognitionWordListsEquivalent(displayWords, committedWords)
+      // AMD paints confirmed speech only — skip a second interim alignment pass.
+      const liveAlignment = (this.amdOpen && kind === 'recitation')
         ? committedAlignment
-        : buildRealtimePreviewAlignment(targetText, displayWords, {
-          ...livePreviewAlignmentOptions,
-          targetAyahs: targetAyahMeta
-        })
+        : (this.areRecognitionWordListsEquivalent(displayWords, committedWords)
+          ? committedAlignment
+          : buildRealtimePreviewAlignment(targetText, displayWords, {
+            ...livePreviewAlignmentOptions,
+            targetAyahs: targetAyahMeta
+          }))
       const preferVisible = this.amdOpen && kind === 'recitation'
-      const statuses = this.mergeLiveRecitationStatuses(
-        preferVisible
-          ? (committedAlignment.progression?.visibleStatuses || committedAlignment.wordStatuses || [])
-          : (committedAlignment.wordStatuses || committedAlignment.progression?.visibleStatuses || []),
-        preferVisible
-          ? (liveAlignment.progression?.visibleStatuses || liveAlignment.wordStatuses || [])
-          : (liveAlignment.wordStatuses || liveAlignment.progression?.visibleStatuses || []),
-        { protectAgainstInterimRed: preferVisible }
+      const committedStatuses = preferVisible
+        ? (committedAlignment.progression?.visibleStatuses || committedAlignment.wordStatuses || [])
+        : (committedAlignment.wordStatuses || committedAlignment.progression?.visibleStatuses || [])
+      const candidateStatuses = preferVisible
+        ? (liveAlignment.progression?.visibleStatuses || liveAlignment.wordStatuses || [])
+        : (liveAlignment.wordStatuses || liveAlignment.progression?.visibleStatuses || [])
+      const cursor = this.amdOpen && kind === 'recitation'
+        ? this.syncAmdLiveCursor({
+          committedStatuses,
+          candidateStatuses,
+        })
+        : buildLiveRecitationCursor({
+          committedStatuses,
+          candidateStatuses,
+        })
+      let statuses = this.mergeLiveRecitationStatuses(
+        committedStatuses,
+        candidateStatuses,
+        {
+          protectAgainstInterimRed: preferVisible,
+          // AMD: paint only from confirmed/committed speech — never interim ahead.
+          confirmedOnly: preferVisible,
+        },
       )
+      statuses = clampStatusesToConfirmedCursor(statuses, cursor.confirmedWordIndex)
       if (kind === 'memorisation') {
 	        this.aiMemorisationCheckerAlignmentState = committedAlignment.progression
 	        this.applyLiveStatusUpdate('aiMemorisationCheckerLiveWords', statuses)
@@ -20820,7 +21188,15 @@ export default {
 	        }
         return
       }
-	      this.recitationAlignmentState = committedAlignment.progression
+	      this.recitationAlignmentState = {
+        ...(committedAlignment.progression || {}),
+        // Expose confirmed cursor so other UI never follows interim currentIndex.
+        currentIndex: cursor.confirmedWordIndex,
+        candidateWordIndex: cursor.candidateWordIndex,
+        confirmedWordIndex: cursor.confirmedWordIndex,
+        expectedWordIndex: cursor.expectedWordIndex,
+        activeTajweedSegmentIndex: cursor.activeTajweedSegmentIndex,
+      }
 	      this.applyLiveStatusUpdate('recitationLiveWords', statuses)
         this.syncSessionEvaluationMaps('recitation', targetVerses, statuses, false)
 	      if (this.shouldAutoStopRecitationCheckFromAlignment(committedAlignment)) {
@@ -21959,12 +22335,13 @@ export default {
     getRecitationSpeechFallbackTranscript() {
       return `${this.recitationSpeechTranscript || ''} ${this.recitationSpeechInterim || ''}`.replace(/\s+/g, ' ').trim()
     },
-    completeRecitationCheckFromRecognitionWords(recognitionWords = [], targetVerses, source = 'stabilised speech input', audioSrc = '', options = {}) {
+    async completeRecitationCheckFromRecognitionWords(recognitionWords = [], targetVerses, source = 'stabilised speech input', audioSrc = '', options = {}) {
       if (!recognitionWords.length) {
         if (this.amdOpen) {
           // Never auto-reveal or penalise for empty STT — stay usable with Peek.
           this.amdBusy = false
           if (this.amdStage !== AMD_STAGES.COMPLETE) {
+            this.pauseAmdElapsedTimer()
             this.amdStage = AMD_STAGES.PAUSED
             this.amdError = this.t?.('memorisation.amd.noSpeech') || 'No speech was detected. Please try again.'
           }
@@ -21973,11 +22350,17 @@ export default {
       }
       this.cancelLiveWordDomPatchFrame()
       this.clearRecitationDisplayHtmlCache()
-      const result = {
+      let result = {
         ...this.assessRecitationRecognitionWords(recognitionWords, targetVerses, options),
         transcriptionSource: source,
-        audioSrc
+        audioSrc,
+        committedWords: recognitionWords,
       }
+      result = await this.enrichResultWithTajweedPracticeCheck(result, targetVerses, {
+        wasRecording: true,
+        recognitionWords,
+        learnerBlob: options.learnerBlob || null,
+      })
       this.recitationCheckResult = result
       this.recitationLiveWords = Array.isArray(result.wordStatuses) ? result.wordStatuses : []
       this.syncSessionEvaluationMaps('recitation', targetVerses, this.recitationLiveWords, true)
@@ -22406,6 +22789,14 @@ export default {
       // Legacy offline fallback only — authoritative plans come from Laravel AMD.
       const plan = buildAiReciteDynamicPlan({
         attempts: this.aiReciteAttempts,
+        durationSeconds: Number(
+          this.recitationCheckResult?.durationSeconds
+          || this.amdElapsedSeconds
+          || 0,
+        ),
+        wordCount: Array.isArray(this.recitationCheckResult?.wordStatuses)
+          ? this.recitationCheckResult.wordStatuses.length
+          : 0,
         range: {
           from: Number(this.masteryTargetRange?.from || snap.rangeStart || this.rangeStart || 1),
           to: Number(this.masteryTargetRange?.to || snap.rangeEnd || this.rangeEnd || snap.rangeStart || 1),
@@ -23062,6 +23453,13 @@ export default {
         this.recitationCheckStartedAt = Date.now()
         this.recitationCheckRecording = true
         this.recitationCheckPreparing = false
+        if (this.amdOpen) {
+          this.amdStartedAt = this.recitationCheckStartedAt
+          this.startAmdElapsedTimer({ at: this.recitationCheckStartedAt })
+          this.amdStage = AMD_STAGES.LISTENING
+          this.amdMicStatus = 'granted'
+          this.amdBusy = false
+        }
         // Browser STT / Speechmatics watchdog must start AFTER recording=true —
         // startRecitationSpeechRecognition().attach() no-ops when the flag is false,
         // which left Test AI in "Listening" with no recognition (fully non-responsive).
@@ -23100,6 +23498,10 @@ export default {
     stopRecitationCheckRecording() {
       this.clearRecitationStartCue()
       this.stopAmdRecognitionHeartbeat?.()
+      if (this.amdOpen && this.amdTimerState === TIMER_STATES.RUNNING) {
+        // Preserve elapsed when the mic stops; completion / discard decide reset vs keep.
+        this.stopAmdElapsedTimer()
+      }
       if (!this.recitationCheckMediaRecorder || !['recording', 'paused'].includes(this.recitationCheckMediaRecorder.state)) return
       this.recitationCheckAutoStopArmed = false
       this.recitationCheckPreparing = true
@@ -23244,7 +23646,7 @@ export default {
           return null
         }
       }
-      const result = this.assessRecitationRecognitionWords(committedWords, targetVerses, {
+      let result = this.assessRecitationRecognitionWords(committedWords, targetVerses, {
         sessionId,
         audioHash,
         id: `recitation-${audioHash.slice(0, 16)}`
@@ -23256,6 +23658,11 @@ export default {
       if ((!Array.isArray(result.wordStatuses) || !result.wordStatuses.length) && liveWordStatuses.length) {
         result.wordStatuses = liveWordStatuses
       }
+      result = await this.enrichResultWithTajweedPracticeCheck(result, targetVerses, {
+        wasRecording: true,
+        recognitionWords: committedWords,
+        learnerBlob: blob || null,
+      })
       const meanConfidence = committedWords
         .map((word) => Number(word?.confidence))
         .filter((value) => Number.isFinite(value))
@@ -23588,6 +23995,12 @@ export default {
       return getRecitationWordSimilarityEngine(left, right)
     },
     getRecitationElapsedSeconds(result = null) {
+      if (this.amdOpen || this.amdTimerState === TIMER_STATES.STOPPED || this.amdTimerState === TIMER_STATES.PAUSED) {
+        const fromTimer = this.getAmdElapsedSeconds({
+          at: Number(result?.endedAt) || undefined,
+        })
+        if (fromTimer > 0 || this.amdTimerState !== TIMER_STATES.IDLE) return fromTimer
+      }
       const started = Number(result?.startedAt || this.recitationCheckStartedAt || this.aiMemorisationCheckerStartedAt || 0)
       const ended = Number(result?.endedAt || Date.now())
       if (!started || !ended || ended <= started) return 0
@@ -24353,6 +24766,34 @@ export default {
         return this.getRecitationResultHeadline(result)
       }
       return raw
+    },
+    isTajweedHighlightingEnabledForPracticeCheck() {
+      return false
+    },
+    async enrichResultWithTajweedPracticeCheck(result) {
+      // Tajweed practice check temporarily removed from AMD / recommendations.
+      return result
+    },
+    getTajweedPracticeCheck() {
+      return null
+    },
+    getTajweedPracticeCheckTone() {
+      return 'tone-review'
+    },
+    getPostSessionTajweedPracticeCheck() {
+      return null
+    },
+    openTajweedLegendModal() {
+      this.showTajweedLegendModal = false
+    },
+    closeTajweedLegendModal() {
+      this.showTajweedLegendModal = false
+    },
+    getTajweedPracticeBandLabel() {
+      return ''
+    },
+    resolveTajweedTipSwatch() {
+      return '#7e8a97'
     },
     assessRecitationRecognitionWords(recognitionWords = [], targetVerses = this.getRecitationCheckTargetVerses(), options = {}) {
       const targetText = this.getRecitationTargetText(targetVerses)
@@ -26431,8 +26872,11 @@ export default {
         .replace(/(?:^|\n)\s*[-−]+\s*(?=\n|$)/g, ' ')
         // Spaced ASCII hyphen used as a dash (keep hyphenated-words intact)
         .replace(/(\w)\s+-\s+(\w)/g, '$1, $2')
-        // Drop duplicated trailing “then continue” from stacked AI copy.
-        .replace(/(?:[,.\s]+then\s+continue)+\.?/gi, '.')
+        // Collapse duplicated “then continue …” clauses only — never strip the first.
+        .replace(
+          /(then\s+continue(?:\s+to\s+[^.!,;]+)?\.?)(?:\s*[,.]?\s*then\s+continue(?:\s+to\s+[^.!,;]+)?\.?)+/gi,
+          '$1',
+        )
         .replace(/,\s*,+/g, ',')
         .replace(/\.\s*,/g, '.')
         .replace(/,\s*\./g, '.')

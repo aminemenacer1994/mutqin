@@ -47,13 +47,25 @@ export function buildAssessmentAyahs(verses = [], getArabic = (v) => v?.arabic |
 
 /**
  * @param {Array<object>} committedWords
+ * @param {{ includeTiming?: boolean }} [options] — keep Speechmatics start/end for Tajweed practice check
  */
-export function buildRecognitionWords(committedWords = []) {
+export function buildRecognitionWords(committedWords = [], options = {}) {
+  const includeTiming = options.includeTiming !== false
   return (Array.isArray(committedWords) ? committedWords : [])
-    .map((word) => ({
-      word: String(word?.word || word?.text || '').trim(),
-      confidence: Number.isFinite(Number(word?.confidence)) ? Number(word.confidence) : 1,
-    }))
+    .map((word) => {
+      const text = String(word?.word || word?.text || '').trim()
+      const entry = {
+        word: text,
+        confidence: Number.isFinite(Number(word?.confidence)) ? Number(word.confidence) : 1,
+      }
+      if (includeTiming) {
+        const start = Number(word?.start ?? word?.startTime)
+        const end = Number(word?.end ?? word?.endTime)
+        if (Number.isFinite(start)) entry.start = start
+        if (Number.isFinite(end)) entry.end = end
+      }
+      return entry
+    })
     .filter((word) => word.word)
 }
 

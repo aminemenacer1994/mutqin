@@ -781,7 +781,10 @@
                     >{{ t('memorisation.postSession.coach.live.focusBadge') }}</span>
                   </div>
                   <div class="verse-actions" dir="ltr">
-                    <button class="verse-inline-action-btn verse-inline-notes-btn" type="button"
+                    <button
+                      v-if="!amdOpen && !postSessionAiReciteActive && !recitationCheckRecording"
+                      class="verse-inline-action-btn verse-inline-notes-btn"
+                      type="button"
                       @click.stop="openAyahNotes(verse)"
                       :title="t('memorisation.ayahNotes.buttonHint')"
                       :aria-label="ayahNotesButtonAriaLabel(verse)">
@@ -2137,9 +2140,6 @@
       </div>
     </div>
 
-
-
-
     <div v-if="showCountdownOverlay" class="countdown-overlay">
       <div class="countdown-modal">
         <div class="countdown-number">{{ countdownValue }}</div>
@@ -3181,18 +3181,34 @@
                 :aria-label="t('memorisation.a11y.aiMemorisationResult')"
               >
                 <!-- 1. Outcome summary -->
-                <div class="post-session-simple__outcome" data-testid="post-session-outcome">
-                  <div class="post-session-simple__outcome-top">
-                    <span class="post-session-simple__generated-badge">
-                      {{ t('memorisation.postSession.recommendation.softwareGenerated') || 'Software-generated recommendation' }}
-                    </span>
-                  </div>
+                <div
+                  class="post-session-simple__outcome post-session-simple__outcome--hero"
+                  data-testid="post-session-outcome"
+                  :data-outcome="postSessionAiReviewDetails?.outcome || 'mixed'"
+                  :data-tone="postSessionOutcomeTone"
+                >
                   <h3 class="post-session-simple__outcome-title">
                     {{ postSessionOutcomeHeadline }}
                   </h3>
                   <p class="post-session-simple__outcome-summary post-session-simple__ai-review-summary">
                     {{ postSessionAiReviewDetails?.summaryLine || postSessionAiResultLine }}
                   </p>
+                  <ul
+                    v-if="postSessionOutcomeStatChips.length"
+                    class="post-session-simple__outcome-tools"
+                    :aria-label="t('memorisation.postSession.recommendation.resultStats') || 'Check results'"
+                  >
+                    <li
+                      v-for="chip in postSessionOutcomeStatChips"
+                      :key="`outcome-chip-${chip.key}`"
+                      class="post-session-simple__outcome-chip"
+                      :data-tone="chip.tone || 'soft'"
+                      :title="chip.hint || chip.label"
+                    >
+                      <i v-if="chip.icon" :class="chip.icon" aria-hidden="true"></i>
+                      <strong class="post-session-simple__outcome-chip-value">{{ chip.value }}</strong>
+                    </li>
+                  </ul>
                 </div>
 
                 <!-- 2. Main focus (Quran text prominent) -->
@@ -3201,9 +3217,6 @@
                   class="post-session-simple__focus-block"
                   data-testid="post-session-main-focus"
                 >
-                  <p class="post-session-simple__section-kicker">
-                    {{ t('memorisation.postSession.recommendation.mainFocus') || 'Main focus' }}
-                  </p>
                   <p
                     v-if="postSessionFocusHighlightMeta"
                     class="post-session-simple__focus-meta"
@@ -3224,35 +3237,29 @@
                         v-for="(part, idx) in postSessionFocusHighlightParts"
                         :key="`focus-part-${idx}`"
                         class="post-session-simple__quran-token"
-                        :class="{ 'is-weak': part.weak }"
+                        :class="{
+                          'is-weak': part.weak,
+                          'is-incorrect': part.tone === 'incorrect',
+                          'is-partial': part.tone === 'partial',
+                        }"
+                        :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
                       >
                         <span class="post-session-simple__quran-token-text">{{ part.text }}</span>
-                        <i
-                          v-if="part.weak"
-                          class="bi bi-exclamation-circle post-session-simple__weak-icon"
-                          :aria-label="t('memorisation.postSession.recommendation.weakWordMark') || 'Needs practice'"
-                        ></i>
                       </span>
                     </span>
                     <i class="bi bi-play-circle post-session-simple__focus-phrase-icon" aria-hidden="true"></i>
                   </button>
                 </div>
 
-                <!-- 3. Why this was recommended -->
-                <div
-                  v-if="postSessionRecommendationReasonLine"
-                  class="post-session-simple__why-block"
+                <!-- Short next step only (skip Why / Method jargon when focus is shown) -->
+                <p
+                  v-if="postSessionFocusHighlightParts.length && postSessionPrimaryNextLine"
+                  class="post-session-simple__next-line"
                   data-testid="post-session-why"
-                >
-                  <p class="post-session-simple__section-kicker">
-                    {{ t('memorisation.postSession.recommendation.whyRecommended') || 'Why this was recommended' }}
-                  </p>
-                  <p class="post-session-simple__why-copy">{{ postSessionRecommendationReasonLine }}</p>
-                </div>
+                >{{ postSessionPrimaryNextLine }}</p>
 
-                <!-- Inline method / next when focus block already shows the phrase -->
                 <div
-                  v-if="postSessionGuidedMethodRows.length"
+                  v-else-if="!postSessionFocusHighlightParts.length && postSessionGuidedMethodRows.length"
                   class="post-session-simple__ai-recommendation"
                   :aria-label="t('memorisation.a11y.recommendedNextStep')"
                 >
@@ -3271,7 +3278,7 @@
 
                 <!-- Fallback: previous inline rows when no highlight parts -->
                 <div
-                  v-else-if="postSessionInlineRecommendationRows.length"
+                  v-else-if="!postSessionFocusHighlightParts.length && postSessionInlineRecommendationRows.length"
                   class="post-session-simple__ai-recommendation"
                   :aria-label="t('memorisation.a11y.recommendedNextStep')"
                 >
@@ -3304,7 +3311,7 @@
                   </dl>
                 </div>
 
-                <!-- 6. Expandable details -->
+                <!-- Expandable details -->
                 <div v-if="postSessionShowAiDetailsToggle" class="post-session-simple__ai-details">
                   <button
                     type="button"
@@ -3313,8 +3320,8 @@
                     @click="postSessionAiDetailsExpanded = !postSessionAiDetailsExpanded"
                   >
                     {{ postSessionAiDetailsExpanded
-                      ? (t('memorisation.postSession.recommendation.hideDetails') || 'Hide details')
-                      : (t('memorisation.postSession.recommendation.viewDetails') || 'View details') }}
+                      ? (t('memorisation.postSession.recommendation.hideDetails') || 'Hide')
+                      : (t('memorisation.postSession.recommendation.viewDetails') || 'Details') }}
                   </button>
                   <div
                     v-if="postSessionAiDetailsExpanded"
@@ -3390,11 +3397,6 @@
                   </div>
                 </div>
 
-                <p class="post-session-simple__soft-disclaimer">
-                  {{ t('memorisation.postSession.recommendation.teacherComplement')
-                    || 'A practice aid to complement a teacher — not a substitute for one.' }}
-                  <span class="post-session-simple__beta-tag">{{ t('memorisation.amd.betaBadge') || 'Beta' }}</span>
-                </p>
               </section>
 
               <section
@@ -3980,7 +3982,6 @@
       :ayah-html="amdStaticAyahHtml"
       :blur-active="amdHiddenTextEnabled"
       :peeking="amdPeekActive"
-      :tajweed="amdTajweedEnabled"
       :difficulty="amdDifficultyPercent"
       :difficulty-options="amdDifficultyOptions"
       :error="amdError"
@@ -3998,23 +3999,11 @@
       :reset-label="amdLabels.reset"
       :difficulty-label="amdLabels.difficulty"
       :words-shown-label="amdLabels.wordsShown"
-      :text-size-label="amdLabels.textSize"
-      :text-size-increase-label="amdLabels.textSizeIncrease"
-      :text-size-decrease-label="amdLabels.textSizeDecrease"
-      :peek-hint-short="amdLabels.peekHintShort"
       :words-shown-short="amdLabels.wordsShownShort"
-      :text-size-short="amdLabels.textSizeShort"
-      :mistake-sound-enabled="amdMistakeSoundEnabled"
-      :mistake-sound-label="amdLabels.mistakeSound"
-      :mistake-sound-on-label="amdLabels.mistakeSoundOn"
-      :mistake-sound-off-label="amdLabels.mistakeSoundOff"
-      :mistake-sound-hint="amdLabels.mistakeSoundHint"
-      :mistake-sound-short="amdLabels.mistakeSoundShort || amdLabels.mistakeSound"
-      :tajweed-label="amdLabels.tajweed"
-      :tajweed-on-label="amdLabels.tajweedOn"
-      :tajweed-off-label="amdLabels.tajweedOff"
-      :tajweed-hint="amdLabels.tajweedHint"
-      :tajweed-short="amdLabels.tajweedShort"
+      :elapsed-label="amdElapsedLabel"
+      :elapsed-timer-label="amdLabels.elapsedTimer || 'Recitation time'"
+      :elapsed-timer-hint="amdLabels.elapsedTimerHint || 'How long this recitation has taken'"
+      :theme="theme"
       :mistake-visual-active="amdMistakeVisualActive"
       :mistake-visual-label="amdLabels.mistakeVisualLabel"
       :auto-follow-label="amdLabels.autoFollow"
@@ -4043,8 +4032,6 @@
       @done="doneAmdTest"
       @retry="retryAmdAssessment"
       @enable-mic="startAmdAssessment"
-      @toggle-mistake-sound="toggleAmdMistakeSound"
-      @toggle-tajweed="toggleAmdTajweed"
     />
 
   <div

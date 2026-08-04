@@ -443,6 +443,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     progressPercent: accuracy,
     progressLabel: '',
     summaryLine,
+    durationSeconds: durationSeconds > 0 ? Math.round(durationSeconds) : 0,
     durationLabel: durationSeconds > 0
       ? t('memorisation.postSession.recommendation.aiReviewDuration', { seconds: Math.round(durationSeconds) })
       : '',
@@ -538,6 +539,7 @@ function buildInsufficientAudioDetails(t, extras = {}, result = null) {
     progressPercent: null,
     progressLabel: '',
     summaryLine: copy.summaryLine,
+    durationSeconds: durationSeconds > 0 ? Math.round(durationSeconds) : 0,
     durationLabel: durationSeconds > 0
       ? t('memorisation.postSession.recommendation.aiReviewDuration', { seconds: Math.round(durationSeconds) })
       : '',
@@ -623,6 +625,7 @@ function buildValidZeroMatchDetails({
         || 'Revise this range, then check again.'
       return `${matchLine} ${focusLine}`.trim()
     })(),
+    durationSeconds: durationSeconds > 0 ? Math.round(durationSeconds) : 0,
     durationLabel: durationSeconds > 0
       ? t('memorisation.postSession.recommendation.aiReviewDuration', { seconds: Math.round(durationSeconds) })
       : '',

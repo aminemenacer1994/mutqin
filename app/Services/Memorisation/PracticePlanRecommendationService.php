@@ -17,8 +17,13 @@ class PracticePlanRecommendationService
      * @param  array{surah_number:int,surah_name?:string|null,start_ayah:int,end_ayah:int}  $range
      * @return array<string,mixed>
      */
-    public function recommend(array $analysis, array $range, int $accuracy): array
-    {
+    public function recommend(
+        array $analysis,
+        array $range,
+        int $accuracy,
+        ?int $durationMs = null,
+        int $wordCount = 0
+    ): array {
         $band = $this->band($accuracy);
         $weakWords = array_values(array_filter(
             is_array($analysis['weak_words'] ?? null) ? $analysis['weak_words'] : [],
@@ -39,6 +44,9 @@ class PracticePlanRecommendationService
                     + ($ayah['missing'] ?? 0)
                     + ($ayah['uncertain'] ?? 0));
             }
+        }
+        if ($wordCount <= 0) {
+            $wordCount = array_sum($ayahWordCounts);
         }
         $colorCounts = is_array($analysis['color_counts'] ?? null) ? $analysis['color_counts'] : [];
         $pattern = (string) ($analysis['error_pattern'] ?? 'mixed');
@@ -83,6 +91,19 @@ class PracticePlanRecommendationService
             $playbackSpeed = 1.25;
         }
 
+        $pace = $this->resolvePaceSignals($durationMs, $wordCount);
+        if ($pace['tone'] === 'fast') {
+            $playbackSpeed = min($playbackSpeed, 1.25);
+            $repetitions['target'] = min(6, (int) ($repetitions['target'] ?? 3) + 1);
+            $why .= ' Your pace was quick, so the plan slows the review and adds a careful pass.';
+        } elseif ($pace['tone'] === 'slow') {
+            $playbackSpeed = 1.25;
+            if ($band === self::BAND_STRONG) {
+                $repetitions['target'] = max(2, (int) ($repetitions['target'] ?? 3) - 1);
+            }
+            $why .= ' Your pace was unhurried, so the plan stays gentle and focused.';
+        }
+
         $config = [
             'technique' => $primary['id'],
             'techniques' => array_map(fn ($t) => $t['id'], $techniques),
@@ -104,6 +125,8 @@ class PracticePlanRecommendationService
             'average_accuracy' => $accuracy,
             'color_counts' => $colorCounts,
             'surah_name' => $range['surah_name'] ?? null,
+            'recitation_duration_ms' => $durationMs,
+            'recitation_pace' => $pace,
         ];
 
         return [
@@ -575,6 +598,39 @@ class PracticePlanRecommendationService
         }
 
         return 'May Allah strengthen what you have memorised. Rebuild the unclear words slowly.';
+    }
+
+    /**
+     * @return array{tone:string,words_per_minute:int,duration_seconds:int,word_count:int}
+     */
+    private function resolvePaceSignals(?int $durationMs, int $wordCount): array
+    {
+        $seconds = $durationMs !== null && $durationMs > 0
+            ? (int) max(1, (int) round($durationMs / 1000))
+            : 0;
+        $words = max(0, $wordCount);
+        if ($seconds <= 0 || $words <= 0) {
+            return [
+                'tone' => 'unknown',
+                'words_per_minute' => 0,
+                'duration_seconds' => $seconds,
+                'word_count' => $words,
+            ];
+        }
+        $wpm = (int) round(($words / $seconds) * 60);
+        $tone = 'steady';
+        if ($wpm > 125) {
+            $tone = 'fast';
+        } elseif ($wpm < 45) {
+            $tone = 'slow';
+        }
+
+        return [
+            'tone' => $tone,
+            'words_per_minute' => $wpm,
+            'duration_seconds' => $seconds,
+            'word_count' => $words,
+        ];
     }
 
     private function rangeLabel(?string $surahName, int $from, int $to): string

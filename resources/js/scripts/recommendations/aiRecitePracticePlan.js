@@ -526,6 +526,27 @@ export function buildAiReciteDynamicPlan(input = {}) {
     playbackSpeed = 1.5
   }
 
+  const durationSeconds = Math.max(0, Number(input.durationSeconds || 0))
+  const pacedWordCount = Math.max(
+    0,
+    Number(input.wordCount || 0)
+      || uniqueWeak.length
+      || Object.values(ayahWordCounts).reduce((sum, n) => sum + Number(n || 0), 0),
+  )
+  let recitationPace = { tone: 'unknown', wordsPerMinute: 0, durationSeconds, wordCount: pacedWordCount }
+  if (durationSeconds > 0 && pacedWordCount > 0) {
+    const wpm = Math.round((pacedWordCount / durationSeconds) * 60)
+    const tone = wpm > 125 ? 'fast' : (wpm < 45 ? 'slow' : 'steady')
+    recitationPace = { tone, wordsPerMinute: wpm, durationSeconds, wordCount: pacedWordCount }
+    if (tone === 'fast') {
+      playbackSpeed = Math.min(playbackSpeed, 1.25)
+      repetitions = Math.min(6, repetitions + 1)
+    } else if (tone === 'slow') {
+      playbackSpeed = 1.25
+      if (band === ACCURACY_BAND.STRONG) repetitions = Math.max(2, repetitions - 1)
+    }
+  }
+
   const sessionFrom = Number(input.range?.from || weakAyahs[0] || 1)
   const sessionTo = Number(input.range?.to || weakAyahs[weakAyahs.length - 1] || sessionFrom)
   const practiceRange = resolvePracticeRange({
@@ -564,6 +585,8 @@ export function buildAiReciteDynamicPlan(input = {}) {
     source: 'ai_recite_dynamic',
     average_accuracy: averageAccuracy,
     color_counts: colorCounts,
+    recitation_duration_seconds: durationSeconds,
+    recitation_pace: recitationPace,
   }
 
   const speedLabel = t?.('memorisation.aiRecitePlan.setup.speed', { speed: playbackSpeed })

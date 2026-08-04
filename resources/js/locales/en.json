@@ -1465,7 +1465,7 @@
       "title": "Session complete",
       "message": "Choose how to continue.",
       "actions": {
-        "testWithAi": "Check recall",
+        "testWithAi": "Check memorisation",
         "testWithAiAgain": "Check again",
         "chooseAnotherSession": "Other session",
         "continueToAyahsFallback": "Continue",
@@ -1771,8 +1771,10 @@
         "aiFirstBodyShort": "Check your memorisation next to unlock a tailored practice plan.",
         "mainFocus": "Main focus",
         "whyRecommended": "Why this was recommended",
-        "softwareGenerated": "Software-generated recommendation",
-        "teacherComplement": "A practice aid to complement a teacher — not a substitute for one.",
+        "softwareGenerated": "",
+        "teacherComplement": "",
+        "viewDetails": "Details",
+        "hideDetails": "Hide",
         "weakWordMark": "Needs practice",
         "headlineStrong": "Strong recall",
         "headlineMixed": "Minor reinforcement needed",
@@ -1788,6 +1790,8 @@
         "scopeFullRangeDescription": "Repeat the complete session while Mutqin highlights your weaker areas.",
         "scopeFullRangeBenefit": "Keeps the full flow while giving extra attention to weaker words and ayat.",
         "scopeFocusMeta": "{count} focus items · about {minutes} min",
+        "scopeFocusMetaOne": "{count} focus item · about {minutes} min",
+        "scopeFocusMetaOther": "{count} focus items · about {minutes} min",
         "scopeFullMeta": "Full session with stronger emphasis on weak areas",
         "recommendedTag": "Recommended",
         "attemptCompareTitle": "Compared with earlier attempt",
@@ -2024,8 +2028,6 @@
         "aiMetricOrderIssues": "{count} slips",
         "aiMetricOrderNotAssessed": "Not assessed",
         "aiMetricSequenceNotEnough": "Not enough matched words to assess",
-        "viewDetails": "View details",
-        "hideDetails": "Hide details",
         "aiHighlightStrongRecall": "Most words landed cleanly. Keep this pace while the range is fresh.",
         "aiHighlightMissedWords": "{count} words still need another careful pass.",
         "aiHighlightPronunciation": "{count} words were close. Slow slightly and articulate each letter.",
@@ -2036,6 +2038,15 @@
         "aiHighlightWeak": "Several spots need support before moving on.",
         "aiReviewFocusLabel": "Next focus",
         "aiReviewDuration": "{seconds}s check",
+        "resultStats": "Check results",
+        "statMatched": "Matched",
+        "statMatchedHint": "Words Mutqin clearly recognised in this check",
+        "statNeedsWork": "Needs work",
+        "statNeedsWorkHint": "Words that need another calm pass",
+        "statWrongCount": "{count} wrong",
+        "statCloseCount": "{count} close",
+        "statRecitationTime": "Recitation time",
+        "statRecitationTimeHint": "How long this recitation took",
         "speedPill": "{speed}× speed",
         "techniques": {
           "blur": "Hide the words bit by bit",
@@ -2544,11 +2555,83 @@
       }
     },
     "reduce_distracted_around_the_active_ayah": "Concentrate on one ayah before moving forward",
+    "tajweedPracticeCheck": {
+      "title": "Tajweed practice check",
+      "legendTitle": "Tajweed colours explained",
+      "legendIntro": "These Mutqin colours mark common Tajweed rules in the ayah. Use them as practice reminders — not as a teacher’s ruling.",
+      "disclaimer": "Practice aid only — not a teacher’s ruling. Holds are shown as ranges, not exact targets.",
+      "summaryStrong": "Keep colours on: green/purple = soft nasal hold, red = stretch, orange = light bounce.",
+      "summaryIssues": "Focus on one coloured mark at a time — hold gently, then listen once if needed.",
+      "summaryUnable": "Use the colours while you practise. We’ll check holds when timing is clearer.",
+      "viewDetails": "View details",
+      "labels": {
+        "hold": "Hold",
+        "sound": "Sound",
+        "next": "Next"
+      },
+      "hold": {
+        "within": "Within the expected range",
+        "short": "A little short",
+        "long": "A little long",
+        "unable": "Could not assess clearly",
+        "na": "No special hold"
+      },
+      "sound": {
+        "similar": "Similar to the reciter",
+        "different": "Needs another listen",
+        "unable": "Could not assess clearly"
+      },
+      "next": {
+        "continue": "Continue",
+        "holdLonger": "Listen once, then hold a little longer",
+        "holdShorter": "Listen once, then hold a little shorter",
+        "listenRepeat": "Listen once, then repeat the phrase",
+        "slowPass": "Try one slower pass"
+      },
+      "live": {
+        "listening": "Listening…",
+        "onTarget": "On target"
+      },
+      "colourNames": {
+        "gray": "Gray",
+        "green": "Green",
+        "purple": "Purple",
+        "orange": "Orange",
+        "red": "Red",
+        "blue": "Blue"
+      },
+      "bands": {
+        "strong": {
+          "headline": "Coloured marks look steady — keep practising gently.",
+          "label": "Steady practice"
+        },
+        "average": {
+          "headline": "A couple of coloured marks need a slower pass.",
+          "label": "Needs a slower pass"
+        },
+        "needs_work": {
+          "headline": "Go slow on the coloured marks below.",
+          "label": "Needs attention"
+        },
+        "unable": {
+          "headline": "Timing wasn’t clear enough to check holds this time.",
+          "label": "Couldn’t fully check"
+        }
+      },
+      "colours": {
+        "gray": "Gray — clear / silent marks",
+        "green": "Green — soft nasal hold",
+        "purple": "Purple — hidden sound",
+        "orange": "Orange — light bounce",
+        "red": "Red — stretch (madd)",
+        "blue": "Blue — merge"
+      }
+    },
     "amd": {
       "title": "Check your memorisation",
-      "betaBadge": "Beta",
-      "disclaimer": "This check is a practice aid. It may mishear words and does not replace a teacher’s guidance.",
-      "disclaimerShort": "Practice aid — may mishear; does not replace a teacher.",
+      "betaBadge": "",
+      "disclaimer": "",
+      "disclaimerShort": "",
       "onlyFromTestWithAi": "Finish your session, then choose Check my memorisation to open this check.",
       "assessmentType": "From memory",
       "readyCopy": "Recite aloud from memory. Mutqin will follow along gently as you go.",
@@ -2560,10 +2643,10 @@
       "micGranted": "Ready",
       "micReady": "Ready",
       "micListening": "Listening",
-      "micListeningLive": "Listening · live",
+      "micListeningLive": "Listening",
       "micPaused": "Paused",
-      "micNeedAccess": "Microphone access needed",
-      "micDenied": "Microphone access needed",
+      "micNeedAccess": "Allow microphone",
+      "micDenied": "Allow microphone",
       "micUnavailable": "Unavailable",
       "micUnsupported": "Unavailable",
       "micChecking": "Checking…",
@@ -2594,6 +2677,8 @@
       "peekShort": "Peek",
       "peekHintShort": "Hold to reveal",
       "wordsShownShort": "Shown",
+      "elapsedTimer": "Recitation time",
+      "elapsedTimerHint": "How long this recitation has taken — used to personalise your next plan",
       "textSizeShort": "Text size",
       "textSmallerShort": "Smaller text",
       "textLargerShort": "Larger text",

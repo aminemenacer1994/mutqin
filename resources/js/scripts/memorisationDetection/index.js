@@ -76,6 +76,18 @@ export {
 } from './liveAutoFollow'
 
 export {
+  isSettledLiveStatus,
+  isPaintedLiveStatus,
+  resolveConfirmedWordIndex,
+  resolveCandidateWordIndex,
+  resolveExpectedWordIndex,
+  resolveActiveTajweedSegmentIndex,
+  buildLiveRecitationCursor,
+  clampStatusesToConfirmedCursor,
+  mergeLiveRecitationStatuses,
+} from './liveCursor'
+
+export {
   AMD_STAGES,
   AI_TEST_MODALS_ENABLED,
   AMD_HOWTO_SEEN_KEY,
@@ -84,6 +96,12 @@ export {
   readStoredAmdTajweedEnabled,
   storeAmdTajweedEnabled,
 } from './stages'
+
+export {
+  TIMER_STATES,
+  formatElapsedLabel,
+  createSessionTimer,
+} from './sessionTimer'
 
 import { AMD_STAGES, AMD_HOWTO_SEEN_KEY } from './stages'
 

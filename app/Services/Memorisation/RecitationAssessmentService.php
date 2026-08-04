@@ -72,7 +72,13 @@ class RecitationAssessmentService
                 'start_ayah' => (int) $payload['start_ayah'],
                 'end_ayah' => (int) $payload['end_ayah'],
             ];
-            $planData = $this->plans->recommend($analysis, $range, $aligned['accuracy']);
+            $planData = $this->plans->recommend(
+                $analysis,
+                $range,
+                $aligned['accuracy'],
+                isset($payload['duration_ms']) ? (int) $payload['duration_ms'] : null,
+                count($aligned['word_results'] ?? [])
+            );
 
             $previousId = isset($payload['previous_assessment_id'])
                 ? (int) $payload['previous_assessment_id']
@@ -109,6 +115,9 @@ class RecitationAssessmentService
                     'recognition_words' => $recognitionWords,
                     'extra_words' => $aligned['extra_words'],
                     'provider' => $payload['provider'] ?? null,
+                    'tajweed_practice_check' => $this->sanitizeTajweedPracticeCheck(
+                        $payload['tajweed_practice_check'] ?? null
+                    ),
                 ],
                 'word_results' => $aligned['word_results'],
                 'ayah_results' => $analysis['ayah_results'],
@@ -299,6 +308,9 @@ class RecitationAssessmentService
             'word_results' => $assessment->word_results ?? [],
             'ayahs' => $assessment->ayah_results ?? [],
             'error_classifications' => $assessment->error_classifications ?? [],
+            'tajweed_practice_check' => is_array($assessment->recognition_data['tajweed_practice_check'] ?? null)
+                ? $assessment->recognition_data['tajweed_practice_check']
+                : null,
             'previous_assessment_id' => $assessment->previous_assessment_id,
             'idempotency_key' => $assessment->idempotency_key,
             'started_at' => optional($assessment->started_at)?->toIso8601String(),
@@ -447,6 +459,106 @@ class RecitationAssessmentService
         }
 
         return $clean === [] ? null : $clean;
+    }
+
+    /**
+     * Persist a compact Tajweed practice-check summary (client-computed; no audio blobs).
+     *
+     * @return array<string,mixed>|null
+     */
+    private function sanitizeTajweedPracticeCheck(mixed $raw): ?array
+    {
+        if (! is_array($raw) || empty($raw['assessed'])) {
+            return null;
+        }
+
+        $band = (string) ($raw['band'] ?? 'unable');
+        if (! in_array($band, ['strong', 'average', 'needs_work', 'unable'], true)) {
+            $band = 'unable';
+        }
+
+        $segments = [];
+        foreach (array_slice(is_array($raw['segments'] ?? null) ? $raw['segments'] : [], 0, 80) as $segment) {
+            if (! is_array($segment)) {
+                continue;
+            }
+            $segments[] = [
+                'id' => mb_substr((string) ($segment['id'] ?? ''), 0, 80),
+                'verseKey' => mb_substr((string) ($segment['verseKey'] ?? ''), 0, 32),
+                'wordIndex' => isset($segment['wordIndex']) ? (int) $segment['wordIndex'] : null,
+                'ruleKey' => mb_substr((string) ($segment['ruleKey'] ?? ''), 0, 64),
+                'colour' => mb_substr((string) ($segment['colour'] ?? ''), 0, 16),
+                'hold' => mb_substr((string) ($segment['hold'] ?? ''), 0, 32),
+                'sound' => mb_substr((string) ($segment['sound'] ?? ''), 0, 32),
+                'outcome' => mb_substr((string) ($segment['outcome'] ?? ''), 0, 32),
+                'word' => mb_substr((string) ($segment['word'] ?? ''), 0, 120),
+            ];
+        }
+
+        return [
+            'version' => (int) ($raw['version'] ?? 1),
+            'assessed' => true,
+            'band' => $band,
+            'tone' => mb_substr((string) ($raw['tone'] ?? ''), 0, 32),
+            'headline' => mb_substr((string) ($raw['headline'] ?? ''), 0, 280),
+            'summary' => mb_substr((string) ($raw['summary'] ?? ''), 0, 500),
+            'colourTips' => array_values(array_map(
+                static fn ($tip) => mb_substr((string) $tip, 0, 160),
+                array_slice(is_array($raw['colourTips'] ?? null) ? $raw['colourTips'] : [], 0, 6)
+            )),
+            'segmentTips' => array_values(array_map(
+                static fn ($tip) => mb_substr((string) $tip, 0, 320),
+                array_slice(is_array($raw['segmentTips'] ?? null) ? $raw['segmentTips'] : [], 0, 6)
+            )),
+            'crossRefs' => array_values(array_filter(array_map(static function ($row) {
+                if (! is_array($row)) {
+                    return null;
+                }
+
+                return [
+                    'colour' => mb_substr((string) ($row['colour'] ?? ''), 0, 16),
+                    'colourHex' => mb_substr((string) ($row['colourHex'] ?? ''), 0, 16),
+                    'ruleLabel' => mb_substr((string) ($row['ruleLabel'] ?? ''), 0, 80),
+                    'hold' => mb_substr((string) ($row['hold'] ?? ''), 0, 32),
+                    'holdLabel' => mb_substr((string) ($row['holdLabel'] ?? ''), 0, 64),
+                    'holdRangeLabel' => mb_substr((string) ($row['holdRangeLabel'] ?? ''), 0, 32),
+                    'durationLabel' => mb_substr((string) ($row['durationLabel'] ?? ''), 0, 64),
+                    'sound' => mb_substr((string) ($row['sound'] ?? ''), 0, 32),
+                    'soundLabel' => mb_substr((string) ($row['soundLabel'] ?? ''), 0, 120),
+                    'nextAction' => mb_substr((string) ($row['nextAction'] ?? ''), 0, 160),
+                    'reciterName' => mb_substr((string) ($row['reciterName'] ?? ''), 0, 80),
+                    'message' => mb_substr((string) ($row['message'] ?? ''), 0, 220),
+                    'tip' => mb_substr((string) ($row['tip'] ?? ''), 0, 160),
+                    'count' => max(1, (int) ($row['count'] ?? 1)),
+                    'line' => mb_substr((string) ($row['line'] ?? ''), 0, 360),
+                    'beginner' => is_array($row['beginner'] ?? null) ? [
+                        'rule' => mb_substr((string) ($row['beginner']['rule'] ?? ''), 0, 80),
+                        'hold' => mb_substr((string) ($row['beginner']['hold'] ?? ''), 0, 80),
+                        'sound' => mb_substr((string) ($row['beginner']['sound'] ?? ''), 0, 120),
+                        'next' => mb_substr((string) ($row['beginner']['next'] ?? ''), 0, 160),
+                    ] : null,
+                    'details' => is_array($row['details'] ?? null) ? [
+                        'ruleKey' => mb_substr((string) ($row['details']['ruleKey'] ?? ''), 0, 64),
+                        'colour' => mb_substr((string) ($row['details']['colour'] ?? ''), 0, 16),
+                        'verseKey' => mb_substr((string) ($row['details']['verseKey'] ?? ''), 0, 32),
+                        'word' => mb_substr((string) ($row['details']['word'] ?? ''), 0, 120),
+                        'holdRangeLabel' => mb_substr((string) ($row['details']['holdRangeLabel'] ?? ''), 0, 32),
+                        'beginnerHint' => mb_substr((string) ($row['details']['beginnerHint'] ?? ''), 0, 160),
+                        'outcome' => mb_substr((string) ($row['details']['outcome'] ?? ''), 0, 32),
+                    ] : null,
+                ];
+            }, array_slice(is_array($raw['crossRefs'] ?? null) ? $raw['crossRefs'] : [], 0, 6)))),
+            'reciterName' => mb_substr((string) ($raw['reciterName'] ?? ''), 0, 80),
+            'disclaimer' => mb_substr((string) ($raw['disclaimer'] ?? ''), 0, 280),
+            'viewDetailsLabel' => mb_substr((string) ($raw['viewDetailsLabel'] ?? ''), 0, 64),
+            'timingReliable' => (bool) ($raw['timingReliable'] ?? false),
+            'acousticAttempted' => (bool) ($raw['acousticAttempted'] ?? false),
+            'recurringWeaknesses' => array_values(array_map(
+                static fn ($key) => mb_substr((string) $key, 0, 64),
+                array_slice(is_array($raw['recurringWeaknesses'] ?? null) ? $raw['recurringWeaknesses'] : [], 0, 12)
+            )),
+            'segments' => $segments,
+        ];
     }
 
     /**
