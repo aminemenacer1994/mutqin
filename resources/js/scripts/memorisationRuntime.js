@@ -121,6 +121,11 @@ export function escapeHtml(value) {
     .replace(/'/g, '&#39;')
 }
 
+// toRaw only unwraps the top level, so nested reactive proxies still reach
+// structuredClone, which rejects proxies. The JSON path handles them; logging
+// every occurrence buried real errors under dozens of warnings per session.
+let warnedStructuredCloneFallback = false
+
 export function deepClone(value) {
   const rawValue = toRaw(value)
 
@@ -128,7 +133,10 @@ export function deepClone(value) {
     try {
       return structuredClone(rawValue)
     } catch (error) {
-      console.warn('structuredClone fallback triggered', error)
+      if (!warnedStructuredCloneFallback) {
+        warnedStructuredCloneFallback = true
+        console.warn('structuredClone unsupported for this value; using JSON clone', error)
+      }
     }
   }
 

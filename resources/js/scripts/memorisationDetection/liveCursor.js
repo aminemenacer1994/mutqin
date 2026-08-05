@@ -99,28 +99,37 @@ export function buildLiveRecitationCursor({
 
 /**
  * Ceiling on how fast colouring may travel, in target words per second.
- * Above fast hadr (~200 wpm) so a real reciter is never held back, but low
- * enough to stop a recogniser that transcribes a familiar passage ahead of the
- * voice from painting the page in one jump.
+ * Tuned near a calm tajweed pace (~100 wpm). Faster than most learners so a
+ * genuine reciter is not held back, but low enough that a short familiar
+ * passage cannot paint two ayahs in a few seconds.
  */
-export const LIVE_PACE_MAX_WORDS_PER_SECOND = 3.2
+export const LIVE_PACE_MAX_WORDS_PER_SECOND = 1.7
 /** Head start so the first word paints immediately and skips stay reachable. */
-export const LIVE_PACE_SLACK_WORDS = 3
+export const LIVE_PACE_SLACK_WORDS = 1
+/**
+ * Speechmatics (and browser STT) often finalise a whole phrase in one event.
+ * Without a burst brake the spoken-word budget jumps by five and five words
+ * paint in a single frame — the “racing” feel on short surahs.
+ */
+export const LIVE_PACE_MAX_ADVANCE_PER_UPDATE = 1
+/** How often held-back words may drip forward while recognition is quiet. */
+export const LIVE_PACE_DRIP_MS = 420
 
 /**
  * How far into the target the confirmed cursor is allowed to sit.
  *
- * Two independent budgets, whichever is tighter:
+ * Three independent budgets, whichever is tightest:
  * - recognised speech: one heard word can settle several target words
- *   (omission skip, soft-advance past a mistake, article merge)
- * - elapsed time: speech recognition can emit words the learner has not said
- *   yet, so word count alone cannot keep the paint with the voice
+ * - elapsed time: recognition can emit words the learner has not said yet
+ * - burst brake: at most one painted step ahead of the last confirmed cursor
  */
 export function resolveLivePaceLimit({
   spokenWordCount = 0,
   elapsedMs = null,
+  previousConfirmed = null,
   maxWordsPerSecond = LIVE_PACE_MAX_WORDS_PER_SECOND,
   slack = LIVE_PACE_SLACK_WORDS,
+  maxAdvancePerUpdate = LIVE_PACE_MAX_ADVANCE_PER_UPDATE,
 } = {}) {
   const pad = Math.max(0, Number(slack) || 0)
   const spoken = Math.max(0, Number(spokenWordCount) || 0)
@@ -130,6 +139,11 @@ export function resolveLivePaceLimit({
   if (Number.isFinite(ms) && ms >= 0) {
     const perSecond = Math.max(0.5, Number(maxWordsPerSecond) || LIVE_PACE_MAX_WORDS_PER_SECOND)
     limit = Math.min(limit, Math.floor((ms / 1000) * perSecond) + pad)
+  }
+  const prev = previousConfirmed == null ? NaN : Number(previousConfirmed)
+  if (Number.isFinite(prev) && prev >= 0) {
+    const step = Math.max(0, Number(maxAdvancePerUpdate) || 0)
+    limit = Math.min(limit, Math.floor(prev) + step)
   }
   return limit
 }

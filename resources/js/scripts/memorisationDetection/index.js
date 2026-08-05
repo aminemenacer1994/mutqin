@@ -86,6 +86,8 @@ export {
   clampCursorToPaceLimit,
   clampStatusesToConfirmedCursor,
   gateUnsettledIssueStatuses,
+  LIVE_PACE_DRIP_MS,
+  LIVE_PACE_MAX_ADVANCE_PER_UPDATE,
   LIVE_PACE_MAX_WORDS_PER_SECOND,
   LIVE_PACE_SLACK_WORDS,
   mergeLiveRecitationStatuses,

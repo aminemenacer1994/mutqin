@@ -244,6 +244,7 @@ import {
   clampCursorToPaceLimit,
   clampStatusesToConfirmedCursor,
   gateUnsettledIssueStatuses,
+  LIVE_PACE_DRIP_MS,
   resolveLivePaceLimit,
   mergeLiveRecitationStatuses as mergeConfirmedLiveRecitationStatuses,
   resolveConfirmedWordIndex,
@@ -18683,12 +18684,43 @@ export default {
      * Repaint words the pace limit held back, now that more time has passed.
      * Recognition input is unchanged, so the alignment signature must be
      * cleared or the recompute is skipped as a no-op.
+     *
+     * Deferred and non-reentrant on purpose: the timer snapshot that triggers
+     * this also fires during teardown, where re-entering alignment can auto-stop
+     * the session and recurse back into the timer.
      */
     releaseAmdPaceHold() {
-      if (!this._amdPaceHeld || !this.recitationCheckRecording) return
+      if (!this._amdPaceHeld || this._amdPaceReleasing) return
+      if (!this.canReleaseAmdPaceHold()) return
       this._amdPaceHeld = false
-      this.recitationLiveAlignmentSignature = ''
-      this.updateLiveWordsFromCommittedRecognition('recitation')
+      this._amdPaceReleasing = true
+      window.setTimeout(() => {
+        this._amdPaceReleasing = false
+        if (!this.canReleaseAmdPaceHold()) return
+        this.recitationLiveAlignmentSignature = ''
+        this.updateLiveWordsFromCommittedRecognition('recitation')
+      }, 0)
+    },
+    canReleaseAmdPaceHold() {
+      if (!this.recitationCheckRecording) return false
+      if (this.amdEndingSoon || this._amdCompleting) return false
+      return !Number.isFinite(this.amdFrozenAtWordIndex)
+    },
+    ensureAmdPaceDrip() {
+      if (this._amdPaceDripTimer != null || typeof window === 'undefined') return
+      const dripMs = Math.max(200, Number(LIVE_PACE_DRIP_MS) || 420)
+      this._amdPaceDripTimer = window.setInterval(() => {
+        if (!this._amdPaceHeld || !this.canReleaseAmdPaceHold()) {
+          this.clearAmdPaceDrip()
+          return
+        }
+        this.releaseAmdPaceHold()
+      }, dripMs)
+    },
+    clearAmdPaceDrip() {
+      if (this._amdPaceDripTimer == null) return
+      if (typeof window !== 'undefined') window.clearInterval(this._amdPaceDripTimer)
+      this._amdPaceDripTimer = null
     },
     /** Stop display ticks only — does not reset frozen elapsed. */
     clearAmdElapsedTimer() {
@@ -18708,6 +18740,8 @@ export default {
       this.amdStartedAt = 0
     },
     resetAmdElapsedTimer() {
+      this.clearAmdPaceDrip()
+      this._amdPaceHeld = false
       const timer = this.ensureAmdSessionTimer()
       this.applyAmdTimerSnapshot(timer.reset())
       this.amdStartedAt = 0
@@ -19042,12 +19076,19 @@ export default {
       })
       // Colouring may never run ahead of the recitation itself.
       if (Number.isFinite(spokenWordCount) && !Number.isFinite(this.amdFrozenAtWordIndex)) {
+        const previousConfirmed = Number.isFinite(this.amdLiveCursor?.confirmedWordIndex)
+          ? Number(this.amdLiveCursor.confirmedWordIndex)
+          : 0
         const paced = clampCursorToPaceLimit(cursor, resolveLivePaceLimit({
           spokenWordCount,
           elapsedMs: this.getAmdLivePaceElapsedMs(),
+          previousConfirmed,
         }))
-        // Held words need a timer release: recognition may send nothing new.
+        // Held words need a drip release: recognition may send nothing new,
+        // and a phrase dump must paint one word at a time.
         this._amdPaceHeld = paced !== cursor
+        if (this._amdPaceHeld) this.ensureAmdPaceDrip()
+        else this.clearAmdPaceDrip()
         cursor = paced
       }
       const prev = this.amdLiveCursor
@@ -23787,6 +23828,8 @@ export default {
     },
     stopRecitationCheckRecording() {
       this.clearRecitationStartCue()
+      this.clearAmdPaceDrip()
+      this._amdPaceHeld = false
       this.stopAmdRecognitionHeartbeat?.()
       if (this.amdOpen && this.amdTimerState === TIMER_STATES.RUNNING) {
         // Preserve elapsed when the mic stops; completion / discard decide reset vs keep.

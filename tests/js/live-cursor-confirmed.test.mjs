@@ -144,10 +144,10 @@ const {
     expectedWordIndex: 9,
     activeTajweedSegmentIndex: 9,
   }, resolveLivePaceLimit({ spokenWordCount: 3, elapsedMs: 60_000 }))
-  assert.equal(cursor.confirmedWordIndex, 6, 'cursor caps at spoken words plus slack')
-  assert.equal(cursor.expectedWordIndex, 6)
-  assert.equal(cursor.activeTajweedSegmentIndex, 6)
-  assert.equal(cursor.candidateWordIndex, 6)
+  assert.equal(cursor.confirmedWordIndex, 4, 'cursor caps at spoken words plus slack')
+  assert.equal(cursor.expectedWordIndex, 4)
+  assert.equal(cursor.activeTajweedSegmentIndex, 4)
+  assert.equal(cursor.candidateWordIndex, 4)
 }
 
 {
@@ -164,23 +164,32 @@ const {
   )
 }
 
-// Time ceiling: recognition can transcribe a familiar passage ahead of the
-// voice, so the recognised word count alone cannot keep the paint with the
-// reciter — elapsed recitation time has to bind too.
+// Time ceiling + burst brake: recognition can dump a familiar phrase in one
+// event, so word count alone cannot keep the paint with the reciter.
 {
   assert.equal(
     resolveLivePaceLimit({ spokenWordCount: 40, elapsedMs: 2_000 }),
-    9,
+    4,
     'two seconds of recitation cannot settle forty words',
   )
-  assert.ok(
-    resolveLivePaceLimit({ spokenWordCount: 12, elapsedMs: 10_000 }) >= 15,
-    'a genuine fast reciter is never held back by the time ceiling',
+  assert.equal(
+    resolveLivePaceLimit({ spokenWordCount: 12, elapsedMs: 10_000 }),
+    13,
+    'a genuine reciter at the spoken budget is not held by the time ceiling',
   )
   assert.equal(
     resolveLivePaceLimit({ spokenWordCount: 6, elapsedMs: null }),
-    9,
+    7,
     'the speech budget still applies when no timing is available',
+  )
+  assert.equal(
+    resolveLivePaceLimit({
+      spokenWordCount: 40,
+      elapsedMs: 60_000,
+      previousConfirmed: 2,
+    }),
+    3,
+    'a phrase dump may only paint one step past the last confirmed word',
   )
 }
 
@@ -224,6 +233,7 @@ const {
   const js = await fs.readFile(path.join(root, 'resources/js/views/Memorisation.js'), 'utf8')
   assert.match(js, /clampCursorToPaceLimit\(cursor, resolveLivePaceLimit\(/)
   assert.match(js, /elapsedMs:\s*this\.getAmdLivePaceElapsedMs\(\)/)
+  assert.match(js, /previousConfirmed/)
   assert.match(js, /spokenWordCount:\s*committedWords\.length/)
   assert.match(js, /liveAlignmentOptions\.lookahead\s*=\s*0/)
   assert.match(js, /livePreviewAlignmentOptions\.lookahead\s*=\s*0/)
@@ -232,6 +242,12 @@ const {
   // recognition that may never arrive — and the signature guard would skip it.
   assert.match(js, /releaseAmdPaceHold\(\)\s*\{/)
   assert.match(js, /this\.recitationLiveAlignmentSignature\s*=\s*''/)
+  assert.match(js, /ensureAmdPaceDrip\(\)\s*\{/)
+  // The timer snapshot also fires during teardown, so the release must be
+  // deferred and non-reentrant or it can recurse into stop and hang the tab.
+  assert.match(js, /_amdPaceReleasing/)
+  assert.match(js, /canReleaseAmdPaceHold\(\)\s*\{[\s\S]*?amdEndingSoon\s*\|\|\s*this\._amdCompleting/)
+  assert.match(js, /window\.setTimeout\(\(\) => \{\s*\n\s*this\._amdPaceReleasing = false/)
   // The ceiling must lift the moment recording stops, so the final result paints in full.
   assert.match(js, /getAmdLivePaceElapsedMs\(\)\s*\{\s*\n\s*if\s*\(!this\.recitationCheckRecording\) return null/)
 }
