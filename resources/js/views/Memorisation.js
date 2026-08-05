@@ -241,9 +241,10 @@ import {
   storeDifficultyPercent,
   storeMistakeSoundEnabled,
   buildLiveRecitationCursor,
-  clampCursorToSpokenWords,
+  clampCursorToPaceLimit,
   clampStatusesToConfirmedCursor,
   gateUnsettledIssueStatuses,
+  resolveLivePaceLimit,
   mergeLiveRecitationStatuses as mergeConfirmedLiveRecitationStatuses,
   resolveConfirmedWordIndex,
   createSessionTimer,
@@ -404,7 +405,15 @@ const HELP_LEARNING_FALLBACKS = {
     talqinMode: {
       title: 'Talqin mode',
       description: 'Listen, pause, repeat, and extend at a steady pace so you can focus on the ayahs themselves.',
-      bestFor: 'Students building retention through guided listening and repetition.'
+      bestFor: 'Students building retention through guided listening and repetition.',
+      workflowTitle: 'How a Talqin round works',
+      workflowIntro: 'Each round follows the same three steps, so you always know what comes next.',
+      workflowListen: 'Listen.',
+      workflowListenText: 'The reciter reads a short portion while you follow along.',
+      workflowPause: 'Repeat.',
+      workflowPauseText: 'Playback pauses so you can repeat the same portion aloud.',
+      workflowExtend: 'Extend.',
+      workflowExtendText: 'Once it feels steady, the portion grows so you join it to what came before.'
     },
     manualAssessment: {
       title: 'Self assessment',
@@ -1234,15 +1243,19 @@ export default {
 
   computed: {
     rangeFilterOptions() {
-      return [
-        { value: 'all', label: this.t('memorisation.rangeOptions.all') },
-        { value: 'juz', label: this.t('memorisation.rangeOptions.juz') },
-        { value: 'hizb', label: this.t('memorisation.rangeOptions.hizb') },
-        { value: 'page', label: this.t('memorisation.rangeOptions.page') },
-        { value: 'surah', label: this.t('memorisation.rangeOptions.surah') },
-        { value: 'ayah', label: this.t('memorisation.rangeOptions.ayah') },
-        { value: 'word', label: this.t('memorisation.rangeOptions.word') }
-      ]
+      const fallbacks = {
+        all: 'All',
+        juz: 'Juz',
+        hizb: 'Hizb',
+        page: 'Page',
+        surah: 'Surah',
+        ayah: 'Ayah',
+        word: 'Word',
+      }
+      return Object.entries(fallbacks).map(([value, fallback]) => ({
+        value,
+        label: this.translateOrFallback(`memorisation.rangeOptions.${value}`, fallback),
+      }))
     },
     quranSearchFilterOptions() {
       return this.rangeFilterOptions
@@ -1328,6 +1341,29 @@ export default {
           description: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.colors.blue.description', colors.blue.description)
         }
       ]
+    },
+    helpLearningTajweedLegendUi() {
+      const tajweed = HELP_LEARNING_FALLBACKS.sections.tajweed
+      return {
+        title: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.legendTitle', tajweed.legendTitle),
+        intro: this.translateOrFallback('memorisation.helpLearning.sections.tajweed.legendIntro', tajweed.legendIntro),
+      }
+    },
+    helpLearningTalqinWorkflowUi() {
+      const talqin = HELP_LEARNING_FALLBACKS.sections.talqinMode
+      const line = (key) => this.translateOrFallback(
+        `memorisation.helpLearning.sections.talqinMode.${key}`,
+        talqin[key],
+      )
+      return {
+        title: line('workflowTitle'),
+        intro: line('workflowIntro'),
+        steps: ['Listen', 'Pause', 'Extend'].map((step) => ({
+          id: step.toLowerCase(),
+          label: line(`workflow${step}`),
+          text: line(`workflow${step}Text`),
+        })),
+      }
     },
     helpLearningSections() {
       return [
@@ -3542,9 +3578,10 @@ export default {
       }
       if (!this.aiTestModalsEnabled) {
         return this.postSessionRecommendationPrimaryLabel
-          || this.t('memorisation.postSession.recommendation.continue')
-          || this.t('memorisation.postSession.coach.continue')
-          || 'Continue'
+          || this.translateOrFallback(
+            'memorisation.postSession.recommendation.continue',
+            this.translateOrFallback('memorisation.postSession.coach.continue', 'Continue'),
+          )
       }
       return this.t('memorisation.postSession.recommendation.testWithAiRecite')
     },
@@ -5063,7 +5100,7 @@ export default {
       const to = Number(snap.rangeEnd || this.rangeEnd || from)
       const range = from && to
         ? (from === to
-          ? (this.t('memorisation.postSession.ayahSingular', { ayah: from }) || `Ayah ${from}`)
+          ? this.translateOrFallback('memorisation.postSession.ayahSingular', `Ayah ${from}`, { ayah: from })
           : (this.formatAyahRangeDisplay?.(from, to) || `Ayahs ${from}–${to}`))
         : ''
       const techniqueRaw = this.postSessionRecommendation?.technique?.id
@@ -6903,12 +6940,13 @@ export default {
       return this.t('memorisation.techniques.chainingWhyLinking')
     },
     currentActionLabel() {
-      if (!this.hasVerses) return 'Choose a surah and ayah range to begin.'
-      if (!this.effectiveActiveVerseKey) return 'Start the session to build your memorisation queue.'
-      if (this.guidedUiStep === 'review') return 'Review this ayah, then continue.'
-      if (this.guidedUiStep === 'recall') return this.t('memorisation.guided.reciteFromMemory') || 'Review Session, then reveal to confirm.'
-      if (this.isPlaying) return 'Listen to the active ayah and follow calmly.'
-      return 'Press play, then recite and repeat at your pace.'
+      const line = (key, fallback) => this.translateOrFallback(`memorisation.plannerUi.${key}`, fallback)
+      if (!this.hasVerses) return line('chooseRangeToBegin', 'Choose a surah and ayah range to begin.')
+      if (!this.effectiveActiveVerseKey) return line('startToBuildQueue', 'Start the session to build your memorisation queue.')
+      if (this.guidedUiStep === 'review') return line('reviewThisAyah', 'Review this ayah, then continue.')
+      if (this.guidedUiStep === 'recall') return line('reciteFromMemory', 'Review Session, then reveal to confirm.')
+      if (this.isPlaying) return line('listenCalmly', 'Listen to the active ayah and follow calmly.')
+      return line('pressPlayThenRecite', 'Press play, then recite and repeat at your pace.')
     },
     topCardAppliedPills() {
       return []
@@ -8129,22 +8167,30 @@ export default {
     },
 
     quizModeOptions() {
-      return [
-        { value: 'mixed', label: this.t('memorisation.quiz.types.mixed') },
-        { value: 'flashcard', label: this.t('memorisation.quiz.types.flashcard') },
-        { value: 'mcq', label: this.t('memorisation.quiz.types.mcq') },
-        { value: 'audio_mcq', label: this.t('memorisation.quiz.types.audio_mcq') },
-        { value: 'blank', label: this.t('memorisation.quiz.types.blank') }
-      ]
+      const fallbacks = {
+        mixed: 'Mixed',
+        flashcard: 'Flashcard',
+        mcq: 'Multiple choice',
+        audio_mcq: 'Audio choose',
+        blank: 'Fill blank',
+      }
+      return Object.entries(fallbacks).map(([value, fallback]) => ({
+        value,
+        label: this.translateOrFallback(`memorisation.quiz.types.${value}`, fallback),
+      }))
     },
 
     quizFocusOptions() {
-      return [
-        { value: 'adaptive', label: this.t('memorisation.quiz.skills.adaptive') },
-        { value: 'recite_text', label: this.t('memorisation.quiz.skills.recite_text') },
-        { value: 'audio_recall', label: this.t('memorisation.quiz.skills.audio_recall') },
-        { value: 'meaning', label: this.t('memorisation.quiz.skills.meaning') }
-      ]
+      const fallbacks = {
+        adaptive: 'Adaptive',
+        recite_text: 'Recite',
+        audio_recall: 'Audio',
+        meaning: 'Meaning',
+      }
+      return Object.entries(fallbacks).map(([value, fallback]) => ({
+        value,
+        label: this.translateOrFallback(`memorisation.quiz.skills.${value}`, fallback),
+      }))
     },
 
     quizLengthOptions() {
@@ -17964,8 +18010,10 @@ export default {
     shouldShowRecitationReviewHighlights(ayahKey) {
       // FORCE: stacked reading never paints AI red/green/amber on verse cards.
       if (this.readingViewMode === 'stacked') return false
+      // AMD modal owns its own mushaf surface. Painting the page behind it on every
+      // recognition tick freezes the UI and looks like colours coming from both sides.
+      if (this.amdOpen) return false
       if (!this.isRecitationCheckTargetVerse(ayahKey)) return false
-      if (this.amdOpen && (this.recitationCheckRecording || this.recitationCheckPreparing || this.recitationCheckResult || this.amdAssessment)) return true
       if (this.recitationCheckRecording || this.recitationCheckPreparing || this.recitationCheckResult) return true
       if (this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing || this.aiMemorisationCheckerResult) return true
       return false
@@ -18629,6 +18677,18 @@ export default {
       this.amdElapsedMs = Math.max(0, Number(next.elapsedMs || 0))
       this.amdTimerState = next.timerState || TIMER_STATES.IDLE
       if (next.startedAt) this.amdStartedAt = next.startedAt
+      this.releaseAmdPaceHold()
+    },
+    /**
+     * Repaint words the pace limit held back, now that more time has passed.
+     * Recognition input is unchanged, so the alignment signature must be
+     * cleared or the recompute is skipped as a no-op.
+     */
+    releaseAmdPaceHold() {
+      if (!this._amdPaceHeld || !this.recitationCheckRecording) return
+      this._amdPaceHeld = false
+      this.recitationLiveAlignmentSignature = ''
+      this.updateLiveWordsFromCommittedRecognition('recitation')
     },
     /** Stop display ticks only — does not reset frozen elapsed. */
     clearAmdElapsedTimer() {
@@ -18688,8 +18748,17 @@ export default {
       }
       return Math.max(0, Number(this.amdElapsedMs || 0))
     },
-    syncAmdMushafSurface() {
+    syncAmdMushafSurface({ force = false } = {}) {
       if (!this.amdOpen) return
+      // Mid-listen: never rebuild the mushaf DOM. Patches own live colouring; a full
+      // innerHTML swap races them and freezes the main thread on longer ranges.
+      const listening = this.amdStage === AMD_STAGES.LISTENING
+        || this.amdStage === AMD_STAGES.STARTING
+        || !!this.recitationCheckRecording
+      if (listening && !force) {
+        this.patchAmdLiveWordStatuses([])
+        return
+      }
       const live = this.amdStage !== AMD_STAGES.COMPLETE && !this.amdEndingSoon
       const html = this.buildAmdMushafHtml({
         live,
@@ -18742,25 +18811,8 @@ export default {
       // (soft blur vs clean gaps) and never unmasks unrecalled targets.
       const maskOn = !this.amdPeekActive && live
       // Confirmed cursor comes from the committed-speech alignment pass only.
-      // Never re-derive it from painted live words — that races ahead of the learner.
+      // Never mutate reactive cursor state here — this builder also feeds seed HTML.
       const alignmentConfirmed = Number(this.recitationAlignmentState?.confirmedWordIndex)
-      if (
-        live
-        && this.amdOpen
-        && Number.isFinite(alignmentConfirmed)
-        && (
-          !this.amdLiveCursor
-          || Number(this.amdLiveCursor.confirmedWordIndex) !== alignmentConfirmed
-        )
-      ) {
-        this.amdLiveCursor = {
-          ...(this.amdLiveCursor || {}),
-          confirmedWordIndex: alignmentConfirmed,
-          expectedWordIndex: alignmentConfirmed,
-          candidateWordIndex: Number(this.recitationAlignmentState?.candidateWordIndex ?? alignmentConfirmed),
-          activeTajweedSegmentIndex: alignmentConfirmed,
-        }
-      }
       const expectedIndex = this.getAmdExpectedWordIndex(statuses, hiddenSet)
       const confirmedIndex = this.amdOpen && Number.isFinite(this.amdLiveCursor?.confirmedWordIndex)
         ? Number(this.amdLiveCursor.confirmedWordIndex)
@@ -18861,7 +18913,8 @@ export default {
       if (!this.amdOpen) return false
       const modal = this.$refs.amdModal
       if (!modal?.patchWordStatuses) {
-        this.syncAmdMushafSurface()
+        // Modal not mounted yet — never recurse through syncAmdMushafSurface while listening.
+        if (!this.recitationCheckRecording) this.syncAmdMushafSurface({ force: true })
         return false
       }
       const statuses = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
@@ -18926,7 +18979,8 @@ export default {
         }
       })
       const ok = modal.patchWordStatuses(patches)
-      if (!ok) this.syncAmdMushafSurface()
+      // Never fall back to a full mushaf rebuild mid-listen — that is the main freeze.
+      if (!ok && !this.recitationCheckRecording) this.syncAmdMushafSurface({ force: true })
       if (patches.length) this.noteAmdRecognitionActivity?.()
       this.refreshAmdLiveTajweedCoach(activeTajweedIndex)
       return ok
@@ -18958,6 +19012,18 @@ export default {
         frozenAt: this.amdFrozenAtWordIndex,
       })
     },
+    /**
+     * Recitation time so far, used as the pace ceiling for live colouring.
+     * Null once recording stops so the final result is never held back.
+     */
+    getAmdLivePaceElapsedMs() {
+      if (!this.recitationCheckRecording) return null
+      const timerMs = Number(this.amdElapsedMs)
+      if (Number.isFinite(timerMs) && timerMs > 0) return timerMs
+      const startedAt = Number(this.recitationCheckStartedAt || this.amdStartedAt || 0)
+      if (startedAt > 0) return Math.max(0, Date.now() - startedAt)
+      return null
+    },
     getAmdIssueSettleCounts() {
       if (!(this._amdIssueSettleCounts instanceof Map)) {
         this._amdIssueSettleCounts = new Map()
@@ -18974,9 +19040,15 @@ export default {
         candidateStatuses: candidate,
         frozenAt: this.amdFrozenAtWordIndex,
       })
-      // Colouring may never run ahead of the words actually recited.
+      // Colouring may never run ahead of the recitation itself.
       if (Number.isFinite(spokenWordCount) && !Number.isFinite(this.amdFrozenAtWordIndex)) {
-        cursor = clampCursorToSpokenWords(cursor, spokenWordCount)
+        const paced = clampCursorToPaceLimit(cursor, resolveLivePaceLimit({
+          spokenWordCount,
+          elapsedMs: this.getAmdLivePaceElapsedMs(),
+        }))
+        // Held words need a timer release: recognition may send nothing new.
+        this._amdPaceHeld = paced !== cursor
+        cursor = paced
       }
       const prev = this.amdLiveCursor
       if (
@@ -19178,7 +19250,7 @@ export default {
     toggleAmdHiddenText() {
       // Blur is presentation-only — never clears progress or regenerates the mask.
       this.amdHiddenTextEnabled = !this.amdHiddenTextEnabled
-      this.syncAmdMushafSurface()
+      this.syncAmdMushafSurface({ force: true })
     },
     toggleAmdTajweed() {
       // AMD Tajweed tools temporarily removed.
@@ -19286,11 +19358,11 @@ export default {
     startAmdPeek() {
       if (this.amdStage === AMD_STAGES.COMPLETE || this.amdEndingSoon) return
       this.amdPeekActive = true
-      this.syncAmdMushafSurface()
+      this.syncAmdMushafSurface({ force: true })
     },
     stopAmdPeek() {
       this.amdPeekActive = false
-      this.syncAmdMushafSurface()
+      this.syncAmdMushafSurface({ force: true })
     },
     playAmdAudioHelp() {
       // Streamlined memorisation test must never autoplay reciter audio.
@@ -19448,7 +19520,7 @@ export default {
       } catch (_) { /* ignore */ }
       // Re-apply the chosen visibility mask the moment listening starts.
       this.rebuildAmdHiddenWordMask()
-      this.syncAmdMushafSurface()
+      this.syncAmdMushafSurface({ force: true })
       this.refreshAmdLiveTajweedCoach(0)
       try {
         if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
@@ -19481,7 +19553,7 @@ export default {
           this.amdStage = AMD_STAGES.LISTENING
           this.amdMicStatus = 'granted'
           this.rebuildAmdHiddenWordMask()
-          this.syncAmdMushafSurface()
+          this.syncAmdMushafSurface({ force: true })
           this.noteAmdRecognitionActivity?.()
         } else if (this.recitationCheckPreparing) {
           this.amdStage = AMD_STAGES.STARTING
@@ -21027,7 +21099,6 @@ export default {
           word: patch.word || { status: patch.status },
         })).filter((item) => Number.isFinite(item.index))
         if (changedWords.length) this.patchAmdLiveWordStatuses(changedWords)
-        else this.syncAmdMushafSurface()
         return
       }
       const patches = Object.values(this.pendingLiveWordDomPatches || {})
@@ -21413,7 +21484,10 @@ export default {
         activeTajweedSegmentIndex: cursor.activeTajweedSegmentIndex,
       }
 	      this.applyLiveStatusUpdate('recitationLiveWords', statuses)
+      // AMD modal patches its own DOM — skip evaluation-map churn while listening.
+      if (!(this.amdOpen && this.recitationCheckRecording)) {
         this.syncSessionEvaluationMaps('recitation', targetVerses, statuses, false)
+      }
 	      if (this.shouldAutoStopRecitationCheckFromAlignment(committedAlignment)) {
 	        this.stopRecitationCheckRecording()
 	      }

@@ -28,6 +28,7 @@
     "metadata": "Metadata",
     "download": "Download",
     "method": "Method",
+    "fontSize": "Font size",
     "tajweed": "Tajweed",
     "dismiss": "Dismiss",
     "backToTop": "Back to top",
@@ -968,7 +969,11 @@
       "continueNextBodyWarm": "Refresh what is due today, then move forward while the memory is still warm.",
       "continueNextBodySteady": "Stay calm, keep the pace light, and move on when the current ayah feels steady.",
       "reviewThisAyah": "Review this ayah, then continue.",
-      "reciteFromMemory": "Review Session, then reveal to confirm."
+      "reciteFromMemory": "Review Session, then reveal to confirm.",
+      "chooseRangeToBegin": "Choose a surah and ayah range to begin.",
+      "startToBuildQueue": "Start the session to build your memorisation queue.",
+      "listenCalmly": "Listen to the active ayah and follow calmly.",
+      "pressPlayThenRecite": "Press play, then recite and repeat at your pace."
     },
     "aiCheck": {
       "sessionRecite": "Session AI Recite",
@@ -1062,12 +1067,18 @@
     },
     "quiz": {
       "title": "Retention check",
+      "builderSubtitle": "Check what you remember",
+      "setupHint": "Choose a method and how many questions, then start.",
+      "focus": "Focus",
+      "questionCount": "Questions",
+      "launch": "Start check",
       "contextPlan": "{mode} plan",
       "contextChain": "Chain review",
       "contextFocused": "Focused review",
       "progress": "{current} / {total}",
       "ayahLabel": "Ayah {number}",
       "types": {
+        "mixed": "Mixed",
         "flashcard": "Flashcard",
         "mcq": "Multiple choice",
         "audio_mcq": "Audio choose",
@@ -1104,6 +1115,7 @@
       "blankPlaceholder": "Type missing word",
       "mistakeAyah": "Ayah {number}",
       "skills": {
+        "adaptive": "Adaptive",
         "recite_text": "Recite",
         "audio_recall": "Audio",
         "meaning": "Meaning",
@@ -1460,9 +1472,19 @@
     "end_this_session_now": "End this session now?",
     "prepare_yourself": "Prepare yourself",
     "session_finished": "Session Finished",
+    "rangeOptions": {
+      "all": "All",
+      "juz": "Juz",
+      "hizb": "Hizb",
+      "page": "Page",
+      "surah": "Surah",
+      "ayah": "Ayah",
+      "word": "Word"
+    },
     "postSession": {
       "kicker": "Session complete",
       "title": "Session complete",
+      "ayahSingular": "Ayah {ayah}",
       "message": "Choose how to continue.",
       "actions": {
         "testWithAi": "Check memorisation",
@@ -1487,6 +1509,7 @@
       },
       "coach": {
         "yourNextPractice": "Next step",
+        "continue": "Continue",
         "whyLabel": "Why",
         "methodLabel": "Method",
         "aiCardHint": "Recite from memory so we can build your plan.",

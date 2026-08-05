@@ -28,7 +28,8 @@ async function loadModule(specifier, referrer = path.join(root, 'tests/js/live-c
 const mod = await loadModule('resources/js/scripts/memorisationDetection/liveCursor.js')
 const {
   buildLiveRecitationCursor,
-  clampCursorToSpokenWords,
+  clampCursorToPaceLimit,
+  resolveLivePaceLimit,
   clampStatusesToConfirmedCursor,
   gateUnsettledIssueStatuses,
   mergeLiveRecitationStatuses,
@@ -137,16 +138,16 @@ const {
 
 // Pace guard: colouring must not settle more words than were recited.
 {
-  const cursor = clampCursorToSpokenWords({
-    confirmedWordIndex: 7,
-    candidateWordIndex: 7,
-    expectedWordIndex: 7,
-    activeTajweedSegmentIndex: 7,
-  }, 3)
-  assert.equal(cursor.confirmedWordIndex, 4, 'cursor caps at spoken words + one word of slack')
-  assert.equal(cursor.expectedWordIndex, 4)
-  assert.equal(cursor.activeTajweedSegmentIndex, 4)
-  assert.equal(cursor.candidateWordIndex, 4)
+  const cursor = clampCursorToPaceLimit({
+    confirmedWordIndex: 9,
+    candidateWordIndex: 9,
+    expectedWordIndex: 9,
+    activeTajweedSegmentIndex: 9,
+  }, resolveLivePaceLimit({ spokenWordCount: 3, elapsedMs: 60_000 }))
+  assert.equal(cursor.confirmedWordIndex, 6, 'cursor caps at spoken words plus slack')
+  assert.equal(cursor.expectedWordIndex, 6)
+  assert.equal(cursor.activeTajweedSegmentIndex, 6)
+  assert.equal(cursor.candidateWordIndex, 6)
 }
 
 {
@@ -157,9 +158,29 @@ const {
     activeTajweedSegmentIndex: 3,
   }
   assert.equal(
-    clampCursorToSpokenWords(source, 5),
+    clampCursorToPaceLimit(source, resolveLivePaceLimit({ spokenWordCount: 5, elapsedMs: 60_000 })),
     source,
-    'cursor within the spoken budget is untouched',
+    'cursor within the pace budget is untouched (same object, no repaint)',
+  )
+}
+
+// Time ceiling: recognition can transcribe a familiar passage ahead of the
+// voice, so the recognised word count alone cannot keep the paint with the
+// reciter — elapsed recitation time has to bind too.
+{
+  assert.equal(
+    resolveLivePaceLimit({ spokenWordCount: 40, elapsedMs: 2_000 }),
+    9,
+    'two seconds of recitation cannot settle forty words',
+  )
+  assert.ok(
+    resolveLivePaceLimit({ spokenWordCount: 12, elapsedMs: 10_000 }) >= 15,
+    'a genuine fast reciter is never held back by the time ceiling',
+  )
+  assert.equal(
+    resolveLivePaceLimit({ spokenWordCount: 6, elapsedMs: null }),
+    9,
+    'the speech budget still applies when no timing is available',
   )
 }
 
@@ -201,11 +222,18 @@ const {
 // Wiring: AMD live alignment must apply the pace guard and drop skip-ahead.
 {
   const js = await fs.readFile(path.join(root, 'resources/js/views/Memorisation.js'), 'utf8')
-  assert.match(js, /clampCursorToSpokenWords\(cursor, spokenWordCount\)/)
+  assert.match(js, /clampCursorToPaceLimit\(cursor, resolveLivePaceLimit\(/)
+  assert.match(js, /elapsedMs:\s*this\.getAmdLivePaceElapsedMs\(\)/)
   assert.match(js, /spokenWordCount:\s*committedWords\.length/)
   assert.match(js, /liveAlignmentOptions\.lookahead\s*=\s*0/)
   assert.match(js, /livePreviewAlignmentOptions\.lookahead\s*=\s*0/)
   assert.match(js, /gateUnsettledIssueStatuses\(statuses,\s*\{/)
+  // Words held back by the ceiling must repaint on the timer, not wait for
+  // recognition that may never arrive — and the signature guard would skip it.
+  assert.match(js, /releaseAmdPaceHold\(\)\s*\{/)
+  assert.match(js, /this\.recitationLiveAlignmentSignature\s*=\s*''/)
+  // The ceiling must lift the moment recording stops, so the final result paints in full.
+  assert.match(js, /getAmdLivePaceElapsedMs\(\)\s*\{\s*\n\s*if\s*\(!this\.recitationCheckRecording\) return null/)
 }
 
 console.log('Live cursor confirmed-position tests passed')

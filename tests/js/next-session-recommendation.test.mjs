@@ -298,7 +298,7 @@ function t(key, params = {}) {
   assert.match(js, /amdFrozenAtWordIndex/)
   assert.match(js, /freezeAmdLiveWordColoring/)
   assert.match(js, /lookahead\s*=\s*0/, 'no skip-ahead: colouring must not run past the voice')
-  assert.match(js, /clampCursorToSpokenWords/, 'pace guard keeps colouring with the reciter')
+  assert.match(js, /clampCursorToPaceLimit/, 'pace guard keeps colouring with the reciter')
   assert.match(js, /buildRealtimePreviewAlignment\(targetText, committedWords/)
   assert.match(js, /preferVisible/)
   assert.match(js, /amdDifficultyPercent = readStoredDifficultyPercent\(\)/)

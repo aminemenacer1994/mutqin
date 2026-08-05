@@ -18,12 +18,16 @@ return [
     |
     */
 
-    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
-        'localhost,localhost:3000,localhost:8001,127.0.0.1,127.0.0.1:8001,::1',
+    // The SPA is served by this same Laravel application, so the host serving the
+    // current request is always first-party. Appending it (and the APP_URL host)
+    // outside the env override keeps cookie auth working on any dev port without
+    // having to enumerate ports in SANCTUM_STATEFUL_DOMAINS.
+    'stateful' => array_values(array_unique(array_filter(array_map('trim', explode(',', sprintf(
+        '%s%s%s',
+        env('SANCTUM_STATEFUL_DOMAINS', 'localhost,localhost:3000,localhost:8000,localhost:8001,127.0.0.1,127.0.0.1:8000,127.0.0.1:8001,::1'),
         Sanctum::currentApplicationUrlWithPort(),
-        // Sanctum::currentRequestHost(),
-    ))),
+        Sanctum::currentRequestHost(),
+    )))))),
 
     /*
     |--------------------------------------------------------------------------

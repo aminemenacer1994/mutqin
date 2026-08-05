@@ -346,6 +346,7 @@ export default {
     return {
       difficultyId: `amd-diff-${Math.random().toString(36).slice(2, 9)}`,
       _htmlSyncTimer: null,
+      _lastMushafHtml: '',
       _peekKeyHeld: false,
       fontScale: 1.12,
       minFontScale: 0.9,
@@ -711,8 +712,11 @@ export default {
         const el = this.$refs.mushafSurface
         if (!el) return
         const next = html || ''
-        if (el.innerHTML === next) return
+        // Compare against the last pushed string — never read el.innerHTML (serialises the
+        // whole mushaf and freezes longer ranges on every recognition tick).
+        if (this._lastMushafHtml === next && el.childNodes?.length) return
         el.innerHTML = next
+        this._lastMushafHtml = next
         const controller = this.ensureAutoFollowController()
         controller.rebuildWordCache(el)
         this.decorateTajweedSegments(el)

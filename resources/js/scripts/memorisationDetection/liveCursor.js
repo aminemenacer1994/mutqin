@@ -98,23 +98,58 @@ export function buildLiveRecitationCursor({
 }
 
 /**
- * Pace guard: the confirmed cursor may never sit further into the target than
- * the learner has actually recited. A single recognised word can settle several
- * target words (omission skip, soft-advance past a mistake, article merge),
- * which paints ahead of the voice. `slack` allows for genuine skipped words.
+ * Ceiling on how fast colouring may travel, in target words per second.
+ * Above fast hadr (~200 wpm) so a real reciter is never held back, but low
+ * enough to stop a recogniser that transcribes a familiar passage ahead of the
+ * voice from painting the page in one jump.
  */
-export function clampCursorToSpokenWords(cursor = {}, spokenWordCount = 0, options = {}) {
+export const LIVE_PACE_MAX_WORDS_PER_SECOND = 3.2
+/** Head start so the first word paints immediately and skips stay reachable. */
+export const LIVE_PACE_SLACK_WORDS = 3
+
+/**
+ * How far into the target the confirmed cursor is allowed to sit.
+ *
+ * Two independent budgets, whichever is tighter:
+ * - recognised speech: one heard word can settle several target words
+ *   (omission skip, soft-advance past a mistake, article merge)
+ * - elapsed time: speech recognition can emit words the learner has not said
+ *   yet, so word count alone cannot keep the paint with the voice
+ */
+export function resolveLivePaceLimit({
+  spokenWordCount = 0,
+  elapsedMs = null,
+  maxWordsPerSecond = LIVE_PACE_MAX_WORDS_PER_SECOND,
+  slack = LIVE_PACE_SLACK_WORDS,
+} = {}) {
+  const pad = Math.max(0, Number(slack) || 0)
   const spoken = Math.max(0, Number(spokenWordCount) || 0)
-  const slack = Math.max(0, Number(options.slack ?? 1))
-  const limit = spoken + slack
+  let limit = spoken + pad
+  // Absent timing must not read as zero elapsed, which would freeze the paint.
+  const ms = elapsedMs == null ? NaN : Number(elapsedMs)
+  if (Number.isFinite(ms) && ms >= 0) {
+    const perSecond = Math.max(0.5, Number(maxWordsPerSecond) || LIVE_PACE_MAX_WORDS_PER_SECOND)
+    limit = Math.min(limit, Math.floor((ms / 1000) * perSecond) + pad)
+  }
+  return limit
+}
+
+/**
+ * Hold the cursor (and everything that follows it — paint, highlight, Tajweed)
+ * at or behind the pace limit.
+ */
+export function clampCursorToPaceLimit(cursor = {}, limit = Infinity) {
+  const max = Number(limit)
+  if (!Number.isFinite(max)) return cursor
+  const ceiling = Math.max(0, max)
   const confirmed = Math.max(0, Number(cursor?.confirmedWordIndex) || 0)
-  if (confirmed <= limit) return cursor
+  if (confirmed <= ceiling) return cursor
   return {
     ...cursor,
-    confirmedWordIndex: limit,
-    expectedWordIndex: limit,
-    activeTajweedSegmentIndex: limit,
-    candidateWordIndex: Math.min(Math.max(0, Number(cursor?.candidateWordIndex) || 0), limit),
+    confirmedWordIndex: ceiling,
+    expectedWordIndex: ceiling,
+    activeTajweedSegmentIndex: ceiling,
+    candidateWordIndex: Math.min(Math.max(0, Number(cursor?.candidateWordIndex) || 0), ceiling),
   }
 }
 

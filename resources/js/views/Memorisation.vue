@@ -2094,10 +2094,10 @@
                     <section
                       v-if="activeHelpLearningSection.key === 'tajweed'"
                       class="help-learning-tajweed-legend"
-                      :aria-label="t('memorisation.helpLearning.sections.tajweed.legendTitle')"
+                      :aria-label="helpLearningTajweedLegendUi.title"
                     >
-                      <h5>{{ t('memorisation.helpLearning.sections.tajweed.legendTitle') }}</h5>
-                      <p>{{ t('memorisation.helpLearning.sections.tajweed.legendIntro') }}</p>
+                      <h5>{{ helpLearningTajweedLegendUi.title }}</h5>
+                      <p>{{ helpLearningTajweedLegendUi.intro }}</p>
                       <ul class="tajweed-color-legend">
                         <li v-for="rule in tajweedColorLegend" :key="rule.id">
                           <span class="tajweed-color-swatch" :style="{ background: rule.color }" aria-hidden="true"></span>
@@ -2112,12 +2112,12 @@
                       v-if="activeHelpLearningSection.key === 'talqin-mode'"
                       class="help-learning-talqin-guide text-dark dark:text-white"
                     >
-                      <h5 class="text-dark dark:text-white"><strong>{{ t('memorisation.helpLearning.sections.talqinMode.workflowTitle') }}</strong></h5>
-                      <p class="text-dark dark:text-white">{{ t('memorisation.helpLearning.sections.talqinMode.workflowIntro') }}</p>
+                      <h5 class="text-dark dark:text-white"><strong>{{ helpLearningTalqinWorkflowUi.title }}</strong></h5>
+                      <p class="text-dark dark:text-white">{{ helpLearningTalqinWorkflowUi.intro }}</p>
                       <ul class="text-dark dark:text-white">
-                        <li><strong>{{ t('memorisation.helpLearning.sections.talqinMode.workflowListen') }}</strong> {{ t('memorisation.helpLearning.sections.talqinMode.workflowListenText') }}</li>
-                        <li><strong>{{ t('memorisation.helpLearning.sections.talqinMode.workflowPause') }}</strong> {{ t('memorisation.helpLearning.sections.talqinMode.workflowPauseText') }}</li>
-                        <li><strong>{{ t('memorisation.helpLearning.sections.talqinMode.workflowExtend') }}</strong> {{ t('memorisation.helpLearning.sections.talqinMode.workflowExtendText') }}</li>
+                        <li v-for="step in helpLearningTalqinWorkflowUi.steps" :key="`talqin-step-${step.id}`">
+                          <strong>{{ step.label }}</strong> {{ step.text }}
+                        </li>
                       </ul>
                     </section>
                     <div class="help-learning-best-for">
