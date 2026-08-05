@@ -241,7 +241,9 @@ import {
   storeDifficultyPercent,
   storeMistakeSoundEnabled,
   buildLiveRecitationCursor,
+  clampCursorToSpokenWords,
   clampStatusesToConfirmedCursor,
+  gateUnsettledIssueStatuses,
   mergeLiveRecitationStatuses as mergeConfirmedLiveRecitationStatuses,
   resolveConfirmedWordIndex,
   createSessionTimer,
@@ -3657,22 +3659,35 @@ export default {
     },
     postSessionErrorContextText() {
       const focus = this.stripAiDashes(String(this.postSessionAiReviewDetails?.focus || '').trim())
-      const reason = this.stripAiDashes(String(this.postSessionRecommendationReasonLine || '').trim())
       const understanding = String(this.postSessionUnderstandingText || '').trim()
       if (focus && focus !== understanding) return focus
-      if (reason && reason !== understanding && reason !== focus) return reason
       return ''
     },
     postSessionPlanWhyText() {
       return this.stripAiDashes(
         String(
           this.postSessionPersonalPlan?.personalWhy
-          || this.postSessionWhyDisclosureText
           || this.postSessionSimpleReason
           || this.aiReciteFinalPlan?.why
           || '',
         ).trim(),
       )
+    },
+    /** One short why line for the calm results card — avoid stacked essays. */
+    postSessionWhyLine() {
+      const candidates = [
+        this.postSessionPrimaryNextLine,
+        this.postSessionErrorContextText,
+        this.postSessionRecommendationReasonLine,
+        this.postSessionPlanWhyText,
+      ]
+      for (const line of candidates) {
+        const value = this.stripAiDashes(String(line || '').trim())
+        if (!value) continue
+        if (value === String(this.postSessionUnderstandingText || '').trim()) continue
+        return value.length > 140 ? `${value.slice(0, 137).trim()}…` : value
+      }
+      return ''
     },
     postSessionWeakSpotRows() {
       const ayahs = Array.isArray(this.postSessionRevisionWeakAyahs)
@@ -5101,6 +5116,36 @@ export default {
       const completed = this.postSessionSupportingMessage
       if (completed) return completed
       return this.postSessionModalTitle
+    },
+    /** Tour-complete style kicker above the hero title. */
+    postSessionHeaderKicker() {
+      if (this.onboardingSampleSessionActive) {
+        return this.t('memorisation.onboarding.postSession.kicker') || 'Sample complete'
+      }
+      if (this.postSessionHasAiCheck) {
+        return this.t('memorisation.postSession.recommendation.checkComplete') || 'Check complete'
+      }
+      return this.t('memorisation.postSession.kicker') || 'Session complete'
+    },
+    /** Hero title — keep short; outcome headline lives in the results section. */
+    postSessionDisplayTitle() {
+      if (this.postSessionHasAiCheck) {
+        return this.t('memorisation.postSession.coach.headers.practiceDone')
+          || this.t('memorisation.sessionComplete.title')
+          || 'Practice complete'
+      }
+      return this.postSessionHeaderTitle
+    },
+    /** Single lead under the hero title. */
+    postSessionDisplayLead() {
+      if (this.onboardingSampleSessionActive) return ''
+      const subtitle = String(this.postSessionHeaderSubtitle || '').trim()
+      if (subtitle) return subtitle
+      if (this.postSessionHasAiCheck) {
+        return this.t('memorisation.postSession.coach.subtitles.aiDone')
+          || 'Review the focus below, then choose how to practise.'
+      }
+      return ''
     },
     postSessionHeaderSubtitle() {
       if (this.onboardingSampleSessionActive) return ''
@@ -18455,6 +18500,7 @@ export default {
       this.amdEndingSoon = false
       this._amdCompleting = false
       this._amdLastExpectedIndex = null
+      this._amdIssueSettleCounts = new Map()
       this.amdLiveCursor = {
         expectedWordIndex: 0,
         candidateWordIndex: 0,
@@ -18912,16 +18958,26 @@ export default {
         frozenAt: this.amdFrozenAtWordIndex,
       })
     },
-    syncAmdLiveCursor({ committedStatuses = null, candidateStatuses = null } = {}) {
+    getAmdIssueSettleCounts() {
+      if (!(this._amdIssueSettleCounts instanceof Map)) {
+        this._amdIssueSettleCounts = new Map()
+      }
+      return this._amdIssueSettleCounts
+    },
+    syncAmdLiveCursor({ committedStatuses = null, candidateStatuses = null, spokenWordCount = null } = {}) {
       const committed = Array.isArray(committedStatuses)
         ? committedStatuses
         : (Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : [])
       const candidate = Array.isArray(candidateStatuses) ? candidateStatuses : committed
-      const cursor = buildLiveRecitationCursor({
+      let cursor = buildLiveRecitationCursor({
         committedStatuses: committed,
         candidateStatuses: candidate,
         frozenAt: this.amdFrozenAtWordIndex,
       })
+      // Colouring may never run ahead of the words actually recited.
+      if (Number.isFinite(spokenWordCount) && !Number.isFinite(this.amdFrozenAtWordIndex)) {
+        cursor = clampCursorToSpokenWords(cursor, spokenWordCount)
+      }
       const prev = this.amdLiveCursor
       if (
         prev
@@ -21243,24 +21299,27 @@ export default {
       // Memorisation test: STT-tolerant thresholds, sequential, article-aware.
       // Continue-and-review may soft-advance past a red; stop-on-mistake must not.
       if (this.amdOpen && kind === 'recitation') {
+        const stopOnMistake = this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
         liveAlignmentOptions.strictProgression = true
-        // No skip-ahead omit, but keep retrying after a mismatch so one ASR miss
-        // cannot freeze the whole live colouring pass.
+        // No lookahead: skipping a target word to reach a later match is the main
+        // way colouring gets ahead of the voice. Amber still advances, so one ASR
+        // slip cannot freeze the pass.
         liveAlignmentOptions.lookahead = 0
         liveAlignmentOptions.partialAdvances = true
-        liveAlignmentOptions.advanceOnIncorrect = true
+        liveAlignmentOptions.advanceOnIncorrect = !stopOnMistake
         liveAlignmentOptions.allowArticleMatch = true
-        liveAlignmentOptions.correctSimilarity = 0.74
-        liveAlignmentOptions.partialSimilarity = 0.40
-        liveAlignmentOptions.minConfidenceForCorrect = 0.18
+        // 0.85 separates ASR soft slips (~0.88) from real substitutions (~0.62–0.83).
+        liveAlignmentOptions.correctSimilarity = 0.85
+        liveAlignmentOptions.partialSimilarity = 0.55
+        liveAlignmentOptions.minConfidenceForCorrect = 0.15
         livePreviewAlignmentOptions.strictProgression = true
         livePreviewAlignmentOptions.lookahead = 0
         livePreviewAlignmentOptions.partialAdvances = true
         livePreviewAlignmentOptions.advanceOnIncorrect = false
         livePreviewAlignmentOptions.allowArticleMatch = true
-        livePreviewAlignmentOptions.correctSimilarity = 0.74
-        livePreviewAlignmentOptions.partialSimilarity = 0.40
-        livePreviewAlignmentOptions.minConfidenceForCorrect = 0.16
+        livePreviewAlignmentOptions.correctSimilarity = 0.85
+        livePreviewAlignmentOptions.partialSimilarity = 0.55
+        livePreviewAlignmentOptions.minConfidenceForCorrect = 0.12
       }
       const targetAyahMeta = this.buildRecitationTargetAyahMetadata(targetVerses)
       // AMD: force sequential realtime alignment so DP cannot colour random later ayahs.
@@ -21297,6 +21356,7 @@ export default {
         ? this.syncAmdLiveCursor({
           committedStatuses,
           candidateStatuses,
+          spokenWordCount: committedWords.length,
         })
         : buildLiveRecitationCursor({
           committedStatuses,
@@ -21312,13 +21372,12 @@ export default {
         },
       )
       statuses = clampStatusesToConfirmedCursor(statuses, cursor.confirmedWordIndex)
-      // Live AMD: uncertain ASR mismatches stay amber, not sticky false-red.
+      // Live AMD: only demote clear near-miss reds to amber — never inflate greens.
       if (preferVisible) {
         statuses = statuses.map((status) => {
           if (!status || String(status.status || '').toLowerCase() !== 'incorrect') return status
           const similarity = Number(status.similarity || 0)
-          const confidence = Number(status.confidence || 0)
-          if (similarity >= 0.32 || (confidence > 0 && confidence < 0.45)) {
+          if (similarity >= 0.48 && similarity < 0.80) {
             return {
               ...status,
               status: 'partial',
@@ -21326,6 +21385,13 @@ export default {
             }
           }
           return status
+        })
+        // Keep a transient ASR revision on the newest word from sticking as a
+        // permanent mistake. Stop-on-mistake needs the flag immediately.
+        statuses = gateUnsettledIssueStatuses(statuses, {
+          active: this.recitationCheckRecording
+            && this.amdMistakeHandlingMode !== MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE,
+          counts: this.getAmdIssueSettleCounts(),
         })
       }
       if (kind === 'memorisation') {
@@ -21819,7 +21885,8 @@ export default {
         const words = this.tokenizeRecitationWords(best?.transcript || '')
         words.forEach(word => entries.push({
           word,
-          confidence: Number.isFinite(Number(best?.confidence))
+          // Chrome often reports confidence 0 — treat as unknown, not rejected.
+          confidence: (Number.isFinite(Number(best?.confidence)) && Number(best.confidence) > 0)
             ? Number(best.confidence)
             : (result?.isFinal ? 1 : 0.72),
           final: !!result?.isFinal,

@@ -83,7 +83,9 @@ export {
   resolveExpectedWordIndex,
   resolveActiveTajweedSegmentIndex,
   buildLiveRecitationCursor,
+  clampCursorToSpokenWords,
   clampStatusesToConfirmedCursor,
+  gateUnsettledIssueStatuses,
   mergeLiveRecitationStatuses,
 } from './liveCursor'
 

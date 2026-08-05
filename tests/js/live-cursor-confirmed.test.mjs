@@ -28,7 +28,9 @@ async function loadModule(specifier, referrer = path.join(root, 'tests/js/live-c
 const mod = await loadModule('resources/js/scripts/memorisationDetection/liveCursor.js')
 const {
   buildLiveRecitationCursor,
+  clampCursorToSpokenWords,
   clampStatusesToConfirmedCursor,
+  gateUnsettledIssueStatuses,
   mergeLiveRecitationStatuses,
   resolveConfirmedWordIndex,
   resolveExpectedWordIndex,
@@ -131,6 +133,79 @@ const {
     { confirmedOnly: true },
   )
   assert.equal(merged[0].status, 'correct', 'confirmed red may recover to green on rematch')
+}
+
+// Pace guard: colouring must not settle more words than were recited.
+{
+  const cursor = clampCursorToSpokenWords({
+    confirmedWordIndex: 7,
+    candidateWordIndex: 7,
+    expectedWordIndex: 7,
+    activeTajweedSegmentIndex: 7,
+  }, 3)
+  assert.equal(cursor.confirmedWordIndex, 4, 'cursor caps at spoken words + one word of slack')
+  assert.equal(cursor.expectedWordIndex, 4)
+  assert.equal(cursor.activeTajweedSegmentIndex, 4)
+  assert.equal(cursor.candidateWordIndex, 4)
+}
+
+{
+  const source = {
+    confirmedWordIndex: 3,
+    candidateWordIndex: 4,
+    expectedWordIndex: 3,
+    activeTajweedSegmentIndex: 3,
+  }
+  assert.equal(
+    clampCursorToSpokenWords(source, 5),
+    source,
+    'cursor within the spoken budget is untouched',
+  )
+}
+
+// Settle gate: a fresh issue on the newest word waits one pass before painting.
+{
+  const counts = new Map()
+  const statuses = [
+    { status: 'correct' },
+    { status: 'correct' },
+    { status: 'incorrect', similarity: 0.3 },
+  ]
+  const first = gateUnsettledIssueStatuses(statuses, { active: true, counts })
+  assert.equal(first[2].status, 'pending', 'first sighting of a trailing mistake is held')
+  assert.equal(first[1].status, 'correct', 'earlier words keep their paint')
+  const second = gateUnsettledIssueStatuses(statuses, { active: true, counts })
+  assert.equal(second[2].status, 'incorrect', 'a repeated mistake paints on the next pass')
+}
+
+{
+  const counts = new Map()
+  const statuses = [{ status: 'correct' }, { status: 'incorrect' }]
+  assert.equal(
+    gateUnsettledIssueStatuses(statuses, { active: false, counts })[1].status,
+    'incorrect',
+    'gate is inert once recording stops (or in stop-on-mistake mode)',
+  )
+}
+
+{
+  const counts = new Map()
+  const statuses = [{ status: 'correct' }, { status: 'correct' }]
+  assert.equal(
+    gateUnsettledIssueStatuses(statuses, { active: true, counts })[1].status,
+    'correct',
+    'greens are never held back',
+  )
+}
+
+// Wiring: AMD live alignment must apply the pace guard and drop skip-ahead.
+{
+  const js = await fs.readFile(path.join(root, 'resources/js/views/Memorisation.js'), 'utf8')
+  assert.match(js, /clampCursorToSpokenWords\(cursor, spokenWordCount\)/)
+  assert.match(js, /spokenWordCount:\s*committedWords\.length/)
+  assert.match(js, /liveAlignmentOptions\.lookahead\s*=\s*0/)
+  assert.match(js, /livePreviewAlignmentOptions\.lookahead\s*=\s*0/)
+  assert.match(js, /gateUnsettledIssueStatuses\(statuses,\s*\{/)
 }
 
 console.log('Live cursor confirmed-position tests passed')

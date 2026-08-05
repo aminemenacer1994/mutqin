@@ -932,27 +932,32 @@ export function getRecitationWordSimilarity(left, right, options = {}) {
   const strippedB = stripArabicDefiniteArticle(b)
   const cliticA = stripArabicClitics(a)
   const cliticB = stripArabicClitics(b)
-  // Article/clitic-stripped equals only count as exact when article matching is allowed.
+  // Exact after article/clitic strip counts as a full match (ASR often drops و/ال).
   if (allowArticleMatch && strippedA && strippedA === strippedB) return 1
   if (allowArticleMatch && cliticA && cliticA === cliticB) return 1
   const base = levenshteinSimilarity(a, b)
-  const soft = levenshteinSimilarity(softenArabicAsrForms(a), softenArabicAsrForms(b))
-  const softStripped = allowArticleMatch
-    ? Math.max(
-      levenshteinSimilarity(softenArabicAsrForms(strippedA), softenArabicAsrForms(strippedB)),
-      levenshteinSimilarity(softenArabicAsrForms(cliticA), softenArabicAsrForms(cliticB)),
-    )
-    : 0
-  if (!allowArticleMatch || (strippedA === a && strippedB === b && cliticA === a && cliticB === b)) {
-    return Math.max(base, soft)
-  }
-  return Math.max(
-    base,
-    soft,
+  const stem = Math.max(
     levenshteinSimilarity(strippedA, strippedB),
     levenshteinSimilarity(cliticA, cliticB),
-    softStripped,
   )
+  const hardBest = Math.max(base, allowArticleMatch ? stem : 0)
+  // Soft letter conflations (ص/س, ق/ك, …) may lift a near-miss toward green,
+  // but must never reduce the hard score — and alone may not exceed SOFT_CAP.
+  const softRaw = Math.max(
+    levenshteinSimilarity(softenArabicAsrForms(a), softenArabicAsrForms(b)),
+    allowArticleMatch
+      ? Math.max(
+        levenshteinSimilarity(softenArabicAsrForms(strippedA), softenArabicAsrForms(strippedB)),
+        levenshteinSimilarity(softenArabicAsrForms(cliticA), softenArabicAsrForms(cliticB)),
+      )
+      : 0,
+  )
+  const SOFT_CAP = 0.88
+  const softCapped = softRaw > hardBest
+    ? Math.max(hardBest, Math.min(softRaw, SOFT_CAP))
+    : softRaw
+  if (!allowArticleMatch) return Math.max(base, softCapped)
+  return Math.max(hardBest, softCapped)
 }
 
 function levenshteinSimilarity(a, b) {

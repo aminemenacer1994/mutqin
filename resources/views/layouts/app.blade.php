@@ -158,11 +158,22 @@
       .app .session-resume-btn.btn-primary,
       .app .self-check-action-btn.btn-primary,
       .app .recitation-check-actions .btn-primary,
-      .app .post-session-simple__btn--primary,
       .app .saved-session-row-btn-primary {
         color: #fff !important;
         background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
         border-color: color-mix(in srgb, var(--accent) 48%, transparent) !important;
+      }
+      /* Session Complete uses site bronze accent (same as onboarding / workspace) */
+      .app .post-session-simple__btn--primary,
+      .app .post-session-simple.post-session-simple--premium .post-session-simple__btn--primary {
+        color: #fff !important;
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+        border-color: color-mix(in srgb, var(--accent) 48%, transparent) !important;
+        box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 22%, transparent) !important;
+      }
+      .app .post-session-simple__btn--primary:hover:not(:disabled),
+      .app .post-session-simple.post-session-simple--premium .post-session-simple__btn--primary:hover:not(:disabled) {
+        filter: brightness(1.04) !important;
       }
       [data-theme="dark"] .app .mutqin-modal-btn--primary,
       [data-theme="dark"] .app .btn-primary,
@@ -174,11 +185,17 @@
         color: #1a120c !important;
         background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
       }
-      .app .mutqin-modal-btn--secondary,
-      .app .post-session-simple__btn--secondary {
+      .app .mutqin-modal-btn--secondary {
         color: var(--text) !important;
         background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
         border-color: color-mix(in srgb, var(--border) 82%, transparent) !important;
+      }
+      .app .post-session-simple__btn--secondary,
+      .app .post-session-simple__btn--ghost {
+        color: var(--text) !important;
+        background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent) !important;
+        box-shadow: none !important;
       }
       .app .mutqin-modal-btn--success,
       .app .post-session-simple__btn--success {
@@ -1539,11 +1556,216 @@
         }
       }
     </style>
+    <style id="mutqin-post-session-site-theme-v2">
+      /* Network-first: Session Complete uses site bronze theme + clear section rhythm */
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 {
+        --ps-cream: var(--bg, #f3eee6) !important;
+        --ps-ink: var(--text, #1f1a17) !important;
+        --ps-muted: color-mix(in srgb, var(--text, #1f1a17) 62%, transparent) !important;
+        --ps-label: var(--text, #1f1a17) !important;
+        --ps-accent: var(--accent, #9a6738) !important;
+        --ps-card: color-mix(in srgb, var(--surface, #fffaf3) 96%, #fff) !important;
+        --ps-line: var(--border, rgba(78, 58, 38, 0.22)) !important;
+        --ps-check-bg: color-mix(in srgb, var(--success, #2e7d64) 14%, #fff) !important;
+        --ps-check-ink: var(--success, #2e7d64) !important;
+        --ps-mint: var(--success, #2e7d64) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
+        width: min(44rem, calc(100vw - 2rem)) !important;
+        max-width: min(44rem, calc(100vw - 2rem)) !important;
+        background: var(--ps-cream) !important;
+        border: 1px solid var(--ps-line) !important;
+        border-radius: 1.15rem !important;
+        color: var(--ps-ink) !important;
+        box-shadow: 0 1px 2px color-mix(in srgb, var(--accent) 8%, transparent), 0 18px 48px color-mix(in srgb, #14231c 12%, transparent) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__header {
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) !important;
+        gap: 0.9rem !important;
+        padding: 1.35rem 1.45rem 1rem !important;
+        border-bottom: 1px solid var(--ps-line) !important;
+        background: transparent !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__check {
+        width: 2.55rem !important;
+        height: 2.55rem !important;
+        border-radius: 999px !important;
+        background: var(--ps-check-bg) !important;
+        color: var(--ps-check-ink) !important;
+        border: 1px solid color-mix(in srgb, var(--success, #2e7d64) 28%, transparent) !important;
+        box-shadow: none !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__kicker {
+        display: none !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__title {
+        margin: 0 !important;
+        font-size: clamp(1.28rem, 3vw, 1.55rem) !important;
+        line-height: 1.22 !important;
+        font-weight: 680 !important;
+        color: var(--ps-ink) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__subtitle {
+        margin: 0.4rem 0 0 !important;
+        max-width: 46ch !important;
+        font-size: 0.94rem !important;
+        line-height: 1.5 !important;
+        color: var(--ps-muted) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__body {
+        display: grid !important;
+        gap: 1.15rem !important;
+        padding: 1.15rem 1.45rem 1.25rem !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-review--guided,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__panel--hero {
+        display: grid !important;
+        gap: 0.95rem !important;
+        padding: 1.05rem 1.1rem !important;
+        border-radius: 1rem !important;
+        border: 1px solid var(--ps-line) !important;
+        background: var(--ps-card) !important;
+        box-shadow: none !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker {
+        margin: 0 0 0.25rem !important;
+        font-size: 0.68rem !important;
+        font-weight: 650 !important;
+        letter-spacing: 0.05em !important;
+        text-transform: uppercase !important;
+        color: color-mix(in srgb, var(--accent) 78%, var(--ps-muted)) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--step {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        margin: 0 0 0.4rem !important;
+        font-size: 0.82rem !important;
+        font-weight: 650 !important;
+        letter-spacing: 0.01em !important;
+        text-transform: none !important;
+        color: var(--ps-ink) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__step-num {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
+        width: 1.4rem !important;
+        height: 1.4rem !important;
+        border-radius: 999px !important;
+        border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent) !important;
+        background: color-mix(in srgb, var(--accent) 12%, transparent) !important;
+        color: var(--accent-strong, var(--accent)) !important;
+        font-size: 0.74rem !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--sub {
+        margin: 0 0 0.3rem !important;
+        font-size: 0.68rem !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.06em !important;
+        text-transform: uppercase !important;
+        color: var(--ps-muted) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__support-block {
+        margin-top: 0.5rem !important;
+        padding-top: 0.8rem !important;
+        border-top: 1px solid color-mix(in srgb, var(--ps-line) 70%, transparent) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list--inline {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 0.4rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list--inline > li {
+        display: inline-flex !important;
+        align-items: baseline !important;
+        gap: 0.4rem !important;
+        max-width: 100% !important;
+        padding: 0.3rem 0.6rem !important;
+        border-radius: 999px !important;
+        border: 1px solid color-mix(in srgb, var(--ps-line) 85%, transparent) !important;
+        background: color-mix(in srgb, #fff7f7 55%, var(--ps-card)) !important;
+        font-size: 0.84rem !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list--inline .post-session-simple__weak-spots-ayah {
+        font-size: 0.8rem !important;
+        white-space: nowrap !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list--inline .post-session-simple__weak-spots-words {
+        overflow: hidden !important;
+        max-width: 22ch !important;
+        font-size: 0.95rem !important;
+        line-height: 1.4 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-block {
+        margin: 0.15rem 0 0 !important;
+        padding: 0 0 0 0.7rem !important;
+        border-top: 0 !important;
+        border-inline-start: 2px solid color-mix(in srgb, var(--accent) 30%, transparent) !important;
+        font-size: 0.9rem !important;
+        line-height: 1.5 !important;
+        color: var(--ps-muted) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-title,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__action-label {
+        margin: 0 !important;
+        font-size: 1.12rem !important;
+        font-weight: 650 !important;
+        color: var(--ps-ink) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-cards {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.65rem !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card {
+        display: grid !important;
+        gap: 0.3rem !important;
+        padding: 0.85rem 0.9rem !important;
+        border-radius: 0.9rem !important;
+        border: 1px solid var(--ps-line) !important;
+        background: color-mix(in srgb, var(--ps-card) 88%, var(--ps-cream)) !important;
+        text-align: start !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card.is-selected {
+        border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
+        background: color-mix(in srgb, var(--accent) 10%, #fff) !important;
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--primary {
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+        border-color: color-mix(in srgb, var(--accent) 48%, transparent) !important;
+        color: #fff !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--secondary,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ghost {
+        background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent) !important;
+        color: var(--text) !important;
+      }
+      @media (max-width: 720px) {
+        .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-cards,
+        .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+          grid-template-columns: 1fr !important;
+        }
+      }
+    </style>
     <script>
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v109'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v109', 'mutqin-post-session-site-theme-v2'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });

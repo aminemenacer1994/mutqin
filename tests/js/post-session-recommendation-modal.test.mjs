@@ -97,15 +97,14 @@ function t(key, params = {}) {
   assert.match(completionModal, /postSessionFocusHighlightParts/)
   assert.match(completionModal, /is-weak/)
   assert.match(completionModal, /data-testid="post-session-why"/)
-  assert.match(completionModal, /whyRecommended|Why this was recommended/)
-  assert.match(completionModal, /postSessionPrimaryNextLine/)
-  assert.match(completionModal, /postSessionPlanWhyText|postSessionUnderstandingText/)
+  assert.match(completionModal, /postSessionWhyLine|postSessionPrimaryNextLine/)
+  assert.match(completionModal, /postSessionUnderstandingText/)
   assert.match(completionModal, /data-testid="post-session-weak-spots"/)
   assert.match(completionModal, /postSessionWeakSpotRows/)
   assert.match(completionModal, /data-testid="post-session-personal-plan"/)
   assert.match(completionModal, /data-testid="post-session-scope-picker"/)
   assert.match(completionModal, /data-testid="post-session-practice-method"/)
-  assert.match(completionModal, /practiceMethod|practiceSetup|recommendedPlan|practice method|Practice setup|Recommended plan/i)
+  assert.match(completionModal, /postSessionSimpleActionLabel|postSessionPersonalPlan|recommendedPlan|Recommended plan/i)
   assert.match(completionModal, /data-testid="post-session-details"/)
   assert.match(completionModal, /data-testid="post-session-previous-attempt"/)
   assert.doesNotMatch(completionModal, /softwareGenerated|Software-generated/)
@@ -138,6 +137,19 @@ function t(key, params = {}) {
   assert.match(en, /"headlineStrong":\s*"Strong recall"/)
   assert.match(en, /"headlineMixed":\s*"Minor reinforcement needed"/)
   assert.match(en, /"headlineWeak":\s*"Focused revision recommended"/)
+}
+
+// Hierarchy: two numbered steps, supporting detail visually subordinate
+{
+  const stepKickers = completionModal.match(/post-session-simple__section-kicker--step/g) || []
+  assert.ok(stepKickers.length >= 2, 'result and next-practice sections are numbered steps')
+  assert.match(completionModal, /post-session-simple__step-num/)
+  assert.match(completionModal, /post-session-simple__section-kicker--sub/, 'sub-labels for supporting blocks')
+  assert.match(completionModal, /post-session-simple__support-block/)
+  assert.match(completionModal, /post-session-simple__weak-spots-list--inline/)
+  assert.match(css, /\.post-session-simple__section-kicker--step/)
+  assert.match(css, /\.post-session-simple__step-num/)
+  assert.match(css, /\.post-session-simple__weak-spots-list--inline/)
 }
 
 // Empty / partial / failed recommendation states

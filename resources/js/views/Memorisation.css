@@ -51533,36 +51533,38 @@ compact readable type (never clip) —— */
 calm hierarchy,
 full button labels */
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 {
-  --ps-cream: #f6f1e8;
-  --ps-ink: #1f1812;
-  --ps-muted: #6f5f4e;
-  --ps-label: #3a3128;
-  --ps-accent: #b56a2f;
-  --ps-card: #ffffff;
-  --ps-line: color-mix(in srgb, #d4c8b6 82%, transparent);
-  --ps-seg: #ebe3d6;
-  --ps-mint: #2a6b52;
-  --ps-mint-soft: color-mix(in srgb, #2a6b52 12%, #fff);
-  --ps-mint-border: color-mix(in srgb, #2a6b52 32%, transparent);
-  --ps-check-bg: #e4f3ea;
-  --ps-check-ink: #1b6844;
+  /* Site brand tokens — warm bronze, not chocolate */
+  --ps-cream: var(--bg, #f3eee6);
+  --ps-ink: var(--text, #1f1a17);
+  --ps-muted: color-mix(in srgb, var(--text, #1f1a17) 62%, transparent);
+  --ps-label: var(--text, #1f1a17);
+  --ps-accent: var(--accent, #9a6738);
+  --ps-accent-soft: var(--accent-soft, #d8c1a8);
+  --ps-card: color-mix(in srgb, var(--surface, #fffaf3) 96%, #fff);
+  --ps-line: var(--border, rgba(78, 58, 38, 0.22));
+  --ps-seg: color-mix(in srgb, var(--accent, #9a6738) 10%, var(--bg, #f3eee6));
+  --ps-mint: var(--success, #2e7d64);
+  --ps-mint-soft: color-mix(in srgb, var(--success, #2e7d64) 12%, #fff);
+  --ps-mint-border: color-mix(in srgb, var(--success, #2e7d64) 32%, transparent);
+  --ps-check-bg: color-mix(in srgb, var(--success, #2e7d64) 14%, #fff);
+  --ps-check-ink: var(--success, #2e7d64);
 }
 
 [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] {
-  --ps-cream: #171410;
-  --ps-ink: #f7eee3;
-  --ps-muted: #c0b09c;
-  --ps-label: #ebe0d2;
-  --ps-accent: #e4a76a;
-  --ps-card: #221e1a;
-  --ps-line: rgba(244, 220, 190, 0.16);
-  --ps-seg: #2a241f;
-  --ps-mint: #6ec9a4;
-  --ps-mint-soft: color-mix(in srgb, #6ec9a4 18%, #171410);
-  --ps-mint-border: color-mix(in srgb, #6ec9a4 38%, transparent);
-  --ps-check-bg: color-mix(in srgb, #6ec9a4 20%, #171410);
-  --ps-check-ink: #95dfbe;
+  --ps-cream: var(--bg, #14110f);
+  --ps-ink: var(--text, #f7ebdf);
+  --ps-muted: color-mix(in srgb, var(--text, #f7ebdf) 70%, transparent);
+  --ps-label: var(--text, #f7ebdf);
+  --ps-accent: var(--accent, #d4a574);
+  --ps-card: color-mix(in srgb, var(--surface, #1f1b18) 94%, #000);
+  --ps-line: var(--border, rgba(255, 236, 216, 0.26));
+  --ps-seg: color-mix(in srgb, var(--accent, #d4a574) 14%, var(--bg, #14110f));
+  --ps-mint: var(--success, #6fbf98);
+  --ps-mint-soft: color-mix(in srgb, var(--success, #6fbf98) 18%, var(--bg, #14110f));
+  --ps-mint-border: color-mix(in srgb, var(--success, #6fbf98) 38%, transparent);
+  --ps-check-bg: color-mix(in srgb, var(--success, #6fbf98) 20%, var(--bg, #14110f));
+  --ps-check-ink: var(--success, #6fbf98);
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
@@ -51592,30 +51594,99 @@ full button labels */
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__header {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1.15rem 1.45rem 0.4rem;
+  gap: 0.85rem;
+  padding: 1.35rem 1.55rem 1rem;
+  border-bottom: 1px solid var(--ps-line);
+  background: transparent;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__header-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.45rem;
+  margin: 0 0 0.35rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(60, 53, 48, 0.16);
+  background: color-mix(in srgb, #ebe3d6 70%, transparent);
+  color: #3c3530;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__nav-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__nav-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-height: 3.1rem;
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--ps-line);
+  background: var(--ps-card);
+  color: var(--ps-ink);
+  text-align: start;
+  cursor: pointer;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__nav-chip.is-selected {
+  border-color: color-mix(in srgb, var(--ps-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--ps-check-bg) 55%, var(--ps-card));
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-flat,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-review--flat {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__meta-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ps-muted);
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__check {
   flex: 0 0 auto;
-  width: 1.85rem;
-  height: 1.85rem;
-  border-radius: 999px;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.85rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--ps-check-bg);
   color: var(--ps-check-ink);
-  border: 1px solid color-mix(in srgb, var(--ps-mint) 22%, transparent);
-  font-size: 0.95rem;
+  border: 1px solid var(--ps-mint-border);
+  font-size: 1.05rem;
+  box-shadow: none;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__title {
   margin: 0;
-  font-size: clamp(1.12rem, 2.8vw, 1.32rem) !important;
-  line-height: 1.3;
-  font-weight: 600 !important;
-  letter-spacing: -0.015em;
+  font-size: clamp(1.28rem, 3vw, 1.55rem) !important;
+  line-height: 1.2;
+  font-weight: 680 !important;
+  letter-spacing: -0.025em;
   color: var(--ps-ink);
 }
 
@@ -51629,8 +51700,8 @@ full button labels */
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__body {
   display: grid;
-  gap: 1.45rem;
-  padding: 1rem 1.55rem 1.15rem;
+  gap: 1.15rem;
+  padding: 1.25rem 1.55rem 1.35rem;
   min-width: 0;
   min-height: 0;
   overflow-x: hidden;
@@ -51763,11 +51834,12 @@ full button labels */
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-review--guided {
-  gap: 1.15rem;
-  padding: 1.1rem 1.15rem 1.2rem;
-  border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--ps-line) 90%, transparent);
-  background: color-mix(in srgb, var(--ps-card) 92%, transparent);
+  gap: 0.95rem;
+  padding: 1.2rem 1.25rem 1.3rem;
+  border-radius: 1.05rem;
+  border: 1px solid var(--ps-line);
+  background: var(--ps-card);
+  box-shadow: 0 1px 2px rgba(60, 53, 48, 0.04);
   animation: none;
 }
 
@@ -52123,6 +52195,98 @@ full button labels */
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-note {
   font-size: 0.78rem;
+  color: var(--ps-muted);
+}
+
+/* Two numbered steps carry the hierarchy: the result, then what to practise.
+   Everything inside a step reads as supporting detail, not a peer heading. */
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--ps-ink);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ps-accent) 34%, transparent);
+  background: color-mix(in srgb, var(--ps-accent) 12%, transparent);
+  color: var(--accent-strong, var(--ps-accent));
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--sub {
+  margin: 0 0 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ps-muted);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__support-block {
+  margin-top: 0.5rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid color-mix(in srgb, var(--ps-line) 70%, transparent);
+}
+
+/* Weak areas stay a scannable one-line summary instead of stacked red cards. */
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list--inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list--inline > .post-session-simple__weak-spots-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  max-width: 100%;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #b91c1c 16%, var(--ps-line));
+  background: color-mix(in srgb, #fff7f7 55%, var(--ps-card));
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list--inline .post-session-simple__weak-spots-ayah {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list--inline .post-session-simple__weak-spots-words {
+  overflow: hidden;
+  max-width: 22ch;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The “why” line supports the focus phrase above it — quiet, and not a divider. */
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-block {
+  gap: 0;
+  margin: 0.15rem 0 0;
+  padding: 0 0 0 0.7rem;
+  border-top: 0;
+  border-inline-start: 2px solid color-mix(in srgb, var(--ps-accent) 30%, transparent);
+  font-size: 0.9rem;
+  line-height: 1.5;
   color: var(--ps-muted);
 }
 
@@ -52777,15 +52941,15 @@ word.practice-focus-word--emphasis::after {
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
-  border-color: color-mix(in srgb, var(--accent) 48%, transparent) !important;
+  background: linear-gradient(135deg, var(--accent, #9a6738), var(--accent-strong, #6e4726)) !important;
+  border-color: color-mix(in srgb, var(--accent, #9a6738) 48%, transparent) !important;
   color: #fff !important;
-  box-shadow: none !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent, #9a6738) 22%, transparent) !important;
   font-weight: 650 !important;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--primary:hover:not(:disabled) {
-  filter: brightness(0.98);
+  filter: brightness(1.04);
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--success {
