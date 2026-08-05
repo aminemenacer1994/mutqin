@@ -97,9 +97,15 @@ function t(key, params = {}) {
   assert.match(completionModal, /postSessionFocusHighlightParts/)
   assert.match(completionModal, /is-weak/)
   assert.match(completionModal, /data-testid="post-session-why"/)
+  assert.match(completionModal, /whyRecommended|Why this was recommended/)
   assert.match(completionModal, /postSessionPrimaryNextLine/)
+  assert.match(completionModal, /postSessionPlanWhyText|postSessionUnderstandingText/)
+  assert.match(completionModal, /data-testid="post-session-weak-spots"/)
+  assert.match(completionModal, /postSessionWeakSpotRows/)
+  assert.match(completionModal, /data-testid="post-session-personal-plan"/)
+  assert.match(completionModal, /data-testid="post-session-scope-picker"/)
   assert.match(completionModal, /data-testid="post-session-practice-method"/)
-  assert.match(completionModal, /practiceMethod|practiceSetup|practice method|Practice setup/i)
+  assert.match(completionModal, /practiceMethod|practiceSetup|recommendedPlan|practice method|Practice setup|Recommended plan/i)
   assert.match(completionModal, /data-testid="post-session-details"/)
   assert.match(completionModal, /data-testid="post-session-previous-attempt"/)
   assert.doesNotMatch(completionModal, /softwareGenerated|Software-generated/)
@@ -211,21 +217,25 @@ function t(key, params = {}) {
   assert.match(css, /post-session-simple__plan-prompt--context/)
 }
 
-// Template order: outcome → focus → why → method → details
+// Template order: outcome → focus → why → weak spots → details → practice plan
 {
   const guidedStart = completionModal.indexOf('post-session-simple__ai-review--guided')
   assert.ok(guidedStart > 0)
-  const slice = completionModal.slice(guidedStart, guidedStart + 9000)
+  const slice = completionModal.slice(guidedStart, guidedStart + 14000)
   const outcomeIdx = slice.indexOf('data-testid="post-session-outcome"')
   const focusIdx = slice.indexOf('data-testid="post-session-main-focus"')
   const whyIdx = slice.indexOf('data-testid="post-session-why"')
+  const weakIdx = slice.indexOf('data-testid="post-session-weak-spots"')
   const detailsIdx = slice.indexOf('post-session-simple__ai-details')
   const practiceIdx = completionModal.indexOf('data-testid="post-session-practice-method"')
+  const scopeIdx = completionModal.indexOf('data-testid="post-session-scope-picker"')
   assert.ok(outcomeIdx > 0)
   assert.ok(focusIdx > outcomeIdx, 'main focus follows outcome')
   assert.ok(whyIdx > focusIdx, 'why follows focus')
-  assert.ok(detailsIdx > whyIdx, 'details follow why')
+  assert.ok(weakIdx > whyIdx, 'weak spots follow why')
+  assert.ok(detailsIdx > weakIdx, 'details follow weak spots')
   assert.ok(practiceIdx > guidedStart, 'practice method card present after review')
+  assert.ok(scopeIdx > practiceIdx, 'scope picker lives in the practice plan card')
 }
 
 // Recommendation copy hygiene: keep “then continue …” and pluralize focus meta

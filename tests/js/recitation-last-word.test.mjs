@@ -31,6 +31,9 @@ const {
 
 assert.equal(stripArabicDefiniteArticle('العالمين'), 'عالمين')
 assert.equal(getRecitationWordSimilarity('العالمين', 'عالمين'), 1)
+assert.equal(getRecitationWordSimilarity('والشمس', 'الشمس'), 1, 'wa- + al- ASR drop should still match')
+assert.equal(getRecitationWordSimilarity('والشمس', 'شمس'), 1, 'wa-/al- clitics should match bare stem')
+assert.equal(getRecitationWordSimilarity('وضحها', 'وضحها'), 1)
 
 const fatihaRange = 'بسم الله الرحمن الرحيم الحمد لله رب العالمين الرحمن الرحيم'
 const heardThroughAyah2 = createWordsFromTranscript(
@@ -47,15 +50,25 @@ assert.ok(
   'strict progression should advance past a correct ayah-final word'
 )
 
-const nearMiss = buildRealtimePreviewAlignment(
+const softConflation = buildRealtimePreviewAlignment(
   'اهدنا الصراط المستقيم',
   createWordsFromTranscript('اهدنا السراط'),
   { strictProgression: true }
 )
 assert.equal(
-  nearMiss.statuses.find(word => word.targetWord === 'الصراط')?.status,
-  'partial',
-  'common ص/س substitution should remain partial'
+  softConflation.statuses.find(word => word.targetWord === 'الصراط')?.status,
+  'correct',
+  'common ص/س ASR conflation should count as correct'
+)
+const waPrefix = buildRealtimePreviewAlignment(
+  'والشمس وضحها',
+  createWordsFromTranscript('الشمس وضحها'),
+  { strictProgression: true, allowArticleMatch: true }
+)
+assert.equal(
+  waPrefix.statuses.find(word => word.targetWord === 'والشمس')?.status,
+  'correct',
+  'ASR dropping wa- before al- should still match والشمس'
 )
 
 const partialAdvance = buildRealtimePreviewAlignment(

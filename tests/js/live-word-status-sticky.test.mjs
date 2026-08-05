@@ -24,6 +24,10 @@ function pickStickyLiveWordStatus(current = null, incoming = null) {
   if (!current) return incoming
   if (!incoming) return current
   if (!isStickyLiveIssueStatus(current.status)) return incoming
+  const incomingStatus = String(incoming.status || '').toLowerCase()
+  if (incomingStatus === 'correct') {
+    return { ...current, ...incoming, status: 'correct' }
+  }
   if (liveWordStatusSeverity(incoming.status) > liveWordStatusSeverity(current.status)) {
     return { ...current, ...incoming }
   }
@@ -77,7 +81,7 @@ function applyLiveStatusUpdate(current = [], statuses = []) {
     [{ status: 'incorrect', note: 'wrong' }],
     [{ status: 'correct', note: 'rematch' }],
   )
-  assert.equal(merged[0].status, 'incorrect', 'red must not upgrade to green on rematch')
+  assert.equal(merged[0].status, 'correct', 'red may recover to green on rematch')
 }
 
 {
@@ -85,7 +89,7 @@ function applyLiveStatusUpdate(current = [], statuses = []) {
     [{ status: 'partial', note: 'close' }],
     [{ status: 'correct', note: 'later hear' }],
   )
-  assert.equal(merged[0].status, 'partial', 'amber must not upgrade to green')
+  assert.equal(merged[0].status, 'correct', 'amber may recover to green')
 }
 
 {
@@ -101,7 +105,7 @@ function applyLiveStatusUpdate(current = [], statuses = []) {
     [{ status: 'incorrect', text: 'الحمد' }],
     [{ status: 'correct', text: 'الحمد' }],
   )
-  assert.equal(next[0].status, 'incorrect', 'applyLiveStatusUpdate must lock red for the session')
+  assert.equal(next[0].status, 'correct', 'applyLiveStatusUpdate recovers red when rematched correctly')
 }
 
 {
@@ -109,7 +113,7 @@ function applyLiveStatusUpdate(current = [], statuses = []) {
     [{ status: 'skipped', text: 'الحمد' }],
     [{ status: 'correct', text: 'الحمد' }],
   )
-  assert.equal(next[0].status, 'skipped', 'grey/skipped must not upgrade to green')
+  assert.equal(next[0].status, 'correct', 'skipped may recover to green on rematch')
 }
 
 {
@@ -118,6 +122,14 @@ function applyLiveStatusUpdate(current = [], statuses = []) {
     [{ status: 'correct', text: 'الحمد' }],
   )
   assert.equal(next[0].status, 'correct', 'pending may still become green on first hear')
+}
+
+{
+  const next = applyLiveStatusUpdate(
+    [{ status: 'incorrect', text: 'الحمد' }],
+    [{ status: 'partial', text: 'الحمد' }],
+  )
+  assert.equal(next[0].status, 'incorrect', 'red must not soften back to amber')
 }
 
 console.log('live-word-status-sticky.test.mjs: ok')

@@ -130,7 +130,7 @@ const {
     [{ status: 'correct', note: 'rematch' }],
     { confirmedOnly: true },
   )
-  assert.equal(merged[0].status, 'incorrect', 'confirmed red stays sticky')
+  assert.equal(merged[0].status, 'correct', 'confirmed red may recover to green on rematch')
 }
 
 console.log('Live cursor confirmed-position tests passed')

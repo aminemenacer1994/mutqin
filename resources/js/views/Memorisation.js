@@ -3645,6 +3645,92 @@ export default {
       const first = why.split(/(?<=[.!?])\s+/)[0] || why
       return first.length > 160 ? `${first.slice(0, 157).trim()}…` : first
     },
+    postSessionUnderstandingText() {
+      return this.stripAiDashes(
+        String(
+          this.postSessionAiReviewDetails?.summaryLine
+          || this.postSessionAiResultLine
+          || this.postSessionMemoryCheckSummary
+          || '',
+        ).trim(),
+      )
+    },
+    postSessionErrorContextText() {
+      const focus = this.stripAiDashes(String(this.postSessionAiReviewDetails?.focus || '').trim())
+      const reason = this.stripAiDashes(String(this.postSessionRecommendationReasonLine || '').trim())
+      const understanding = String(this.postSessionUnderstandingText || '').trim()
+      if (focus && focus !== understanding) return focus
+      if (reason && reason !== understanding && reason !== focus) return reason
+      return ''
+    },
+    postSessionPlanWhyText() {
+      return this.stripAiDashes(
+        String(
+          this.postSessionPersonalPlan?.personalWhy
+          || this.postSessionWhyDisclosureText
+          || this.postSessionSimpleReason
+          || this.aiReciteFinalPlan?.why
+          || '',
+        ).trim(),
+      )
+    },
+    postSessionWeakSpotRows() {
+      const ayahs = Array.isArray(this.postSessionRevisionWeakAyahs)
+        ? this.postSessionRevisionWeakAyahs
+        : []
+      const words = Array.isArray(this.postSessionRevisionWeakWords)
+        ? this.postSessionRevisionWeakWords
+        : []
+      if (!ayahs.length && !words.length) return []
+      const byAyah = new Map()
+      ayahs.forEach((ayah) => {
+        const n = Number(ayah)
+        if (!Number.isFinite(n) || n <= 0) return
+        byAyah.set(n, { ayah: n, words: [], note: '' })
+      })
+      words.forEach((word) => {
+        const ayah = Number(word?.ayahNumber || 0)
+        const text = String(word?.text || '').trim()
+        if (!Number.isFinite(ayah) || ayah <= 0) return
+        if (!byAyah.has(ayah)) {
+          byAyah.set(ayah, { ayah, words: [], note: '' })
+        }
+        const row = byAyah.get(ayah)
+        if (text && !row.words.includes(text)) row.words.push(text)
+        if (!row.note && word?.reason) {
+          row.note = weakWordReasonLabel(word.reason, this.t?.bind?.(this)) || ''
+        }
+      })
+      return [...byAyah.values()]
+        .sort((a, b) => a.ayah - b.ayah)
+        .slice(0, 6)
+        .map((row) => ({
+          ...row,
+          wordsLabel: row.words.slice(0, 4).join(' · '),
+          ayahLabel: this.t?.('memorisation.postSession.recommendation.planDetail.focusVerse', {
+            ayah: row.ayah,
+          }) || `Ayah ${row.ayah}`,
+        }))
+    },
+    postSessionPersonalPlanVisible() {
+      return !!(
+        this.postSessionShowRecommendationPlan
+        && this.postSessionPersonalPlan
+        && (this.postSessionHasAiCheck || this.postSessionRecommendationActionable)
+      )
+    },
+    postSessionPersonalPlanSetupLabel() {
+      const setup = Array.isArray(this.postSessionPersonalPlan?.setup)
+        ? this.postSessionPersonalPlan.setup
+        : []
+      return setup.map((row) => String(row?.label || '').trim()).filter(Boolean).join(' · ')
+    },
+    postSessionPersonalPlanEvidenceLabel() {
+      const evidence = Array.isArray(this.postSessionPersonalPlan?.evidence)
+        ? this.postSessionPersonalPlan.evidence
+        : []
+      return evidence.slice(0, 3).map((row) => String(row?.label || '').trim()).filter(Boolean).join(' · ')
+    },
     livePracticeCoachText() {
       if (!this.hasSessionStarted || this.isSessionCompleted || this.showPostSessionModal) return ''
       const activeFocus = this.activePracticeFocusWord
@@ -4112,7 +4198,15 @@ export default {
       if (this.postSessionAiPresentationMode === 'insufficient_audio') return false
       const words = this.postSessionRevisionWeakWords
       const ayahs = this.postSessionRevisionWeakAyahs
-      return words.length > 0 || ayahs.length > 0
+      if (words.length > 0 || ayahs.length > 0) return true
+      // Still offer the two revision paths after a soft/mixed check.
+      const outcome = String(
+        this.postSessionAiReviewDetails?.outcome
+        || this.aiReciteFinalPlan?.outcome
+        || this.postSessionMemoryCheckOutcome
+        || '',
+      ).toLowerCase()
+      return ['weak', 'mixed', 'needs_practice', 'partial', 'review_recommended'].includes(outcome)
     },
     postSessionRevisionWeakWords() {
       const fromAi = normaliseWeakWordRecords(
@@ -5049,14 +5143,28 @@ export default {
       return this.postSessionDuaMessage || ''
     },
     postSessionPlanEncouragement() {
-      // Avoid a second copy of the same encouragement under the practice card.
-      return ''
+      if (!(this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck)) return ''
+      const plan = this.postSessionPersonalPlan
+      if (plan?.range?.focusLabel) return this.stripAiDashes(String(plan.range.focusLabel))
+      if (plan?.time?.label) {
+        return this.stripAiDashes(
+          this.t('memorisation.postSession.recommendation.planEncouragementWithTime', {
+            time: plan.time.label,
+          }) || `A short ${plan.time.label.toLowerCase()} practice will lock this in.`,
+        )
+      }
+      return this.stripAiDashes(
+        this.t('memorisation.postSession.recommendation.planEncouragement')
+          || 'Choose how to revise, then start when you are ready.',
+      )
     },
     postSessionFlowGuideText() {
       if (this.onboardingSampleSessionActive) return ''
       if (this.postSessionRecommendationStep === 'confirm') return ''
-      // Keep the completion card quiet — headline + focus already guide the next step.
-      if (this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck) return ''
+      if (this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck) {
+        return this.t('memorisation.postSession.flowGuideAfterAi')
+          || 'Review what slipped, choose focus or full-range practice, then continue.'
+      }
       if (this.postSessionIsRepeatRecommendation) {
         return this.t('memorisation.postSession.flowGuideRepeat')
           || 'Test with AI when ready, skip to keep this range, or choose another.'
@@ -5921,7 +6029,7 @@ export default {
     amdLearnerMicStatusLabel() {
       const key = this.amdLearnerMicStatus
       if (key === 'listening') {
-        return this.t?.('memorisation.amd.micListening') || 'Listening'
+        return this.t?.('memorisation.amd.micListening') || 'Recording'
       }
       const map = {
         ready: this.t?.('memorisation.amd.micReady') || 'Ready',
@@ -5931,6 +6039,9 @@ export default {
         unsupported: this.t?.('memorisation.amd.micUnavailable') || 'Unavailable',
       }
       return map[key] || map.ready
+    },
+    amdRecordingActiveLabel() {
+      return this.t?.('memorisation.amd.recordingActive') || 'Recording'
     },
     amdMicGuidance() {
       if (this.amdLearnerMicStatus === 'need_access') {
@@ -5977,10 +6088,10 @@ export default {
       if (this.amdStage === AMD_STAGES.LISTENING) {
         if (this.getTranscriptionProvider?.('recitation')?.isOpen?.()) {
           return this.t?.('memorisation.amd.hintListeningLive')
-            || 'Listening with live transcription. Recite from memory — correct words reveal as you go.'
+            || 'Microphone is live — recite from memory. Words colour as they are recognised.'
         }
         return this.t?.('memorisation.amd.hintListening')
-          || 'Recite from memory. Correct words reveal; mistakes highlight immediately.'
+          || 'Microphone is live — recite from memory. Words colour as they are recognised.'
       }
       if (this.amdStage === AMD_STAGES.PROCESSING) {
         return this.t?.('memorisation.amd.hintProcessing') || 'Processing your recitation…'
@@ -6034,7 +6145,7 @@ export default {
         blur: this.t?.('memorisation.amd.toolBlur') || 'Blur',
         peek: this.t?.('memorisation.peek') || 'Peek',
         peekHint: this.t?.('memorisation.amd.peekHint') || 'Need a hint? Peek at the text',
-        stop: this.t?.('memorisation.amd.toolStop') || 'Stop',
+        stop: this.t?.('memorisation.amd.stopRecitation') || this.t?.('memorisation.amd.toolStop') || 'Stop recording',
         start: this.t?.('memorisation.amd.startRecitation') || 'Start recording',
         startHint: this.t?.('memorisation.amd.startRecitationHint') || '',
         betaBadge: '',
@@ -18584,12 +18695,30 @@ export default {
       // Masking is driven by difficulty + progress. Blur only changes presentation
       // (soft blur vs clean gaps) and never unmasks unrecalled targets.
       const maskOn = !this.amdPeekActive && live
+      // Confirmed cursor comes from the committed-speech alignment pass only.
+      // Never re-derive it from painted live words — that races ahead of the learner.
+      const alignmentConfirmed = Number(this.recitationAlignmentState?.confirmedWordIndex)
+      if (
+        live
+        && this.amdOpen
+        && Number.isFinite(alignmentConfirmed)
+        && (
+          !this.amdLiveCursor
+          || Number(this.amdLiveCursor.confirmedWordIndex) !== alignmentConfirmed
+        )
+      ) {
+        this.amdLiveCursor = {
+          ...(this.amdLiveCursor || {}),
+          confirmedWordIndex: alignmentConfirmed,
+          expectedWordIndex: alignmentConfirmed,
+          candidateWordIndex: Number(this.recitationAlignmentState?.candidateWordIndex ?? alignmentConfirmed),
+          activeTajweedSegmentIndex: alignmentConfirmed,
+        }
+      }
       const expectedIndex = this.getAmdExpectedWordIndex(statuses, hiddenSet)
-      // Confirmed cursor only — never paint or mark current from a future guess.
-      if (live && this.amdOpen) this.syncAmdLiveCursor({ committedStatuses: statuses })
       const confirmedIndex = this.amdOpen && Number.isFinite(this.amdLiveCursor?.confirmedWordIndex)
         ? Number(this.amdLiveCursor.confirmedWordIndex)
-        : expectedIndex
+        : (Number.isFinite(alignmentConfirmed) ? alignmentConfirmed : expectedIndex)
       const highlightIndex = confirmedIndex
 
       const firstVerse = this.getCanonicalVerseForCheck(targets[0]) || targets[0]
@@ -18764,8 +18893,8 @@ export default {
       const words = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
       if (!words.length) return false
       const status = String(words[words.length - 1]?.status || '').toLowerCase()
-      // Auto-finish only on settled recall of the last word — not on a red.
-      return status === 'correct' || status === 'partial'
+      // Auto-finish only on a confirmed green last word — never amber guesses.
+      return status === 'correct'
     },
     getAmdExpectedWordIndex(statuses = [], hiddenSet = null) {
       // Prefer the confirmed live cursor — never an interim/candidate jump.
@@ -20574,7 +20703,12 @@ export default {
       if (!current) return incoming
       if (!incoming) return current
       if (!this.isStickyLiveIssueStatus(current.status)) return incoming
-      // Allow severity to worsen (amber → red) but never improve back to green.
+      const incomingStatus = String(incoming.status || '').toLowerCase()
+      // Allow a later committed correct match to recover (self-correction / ASR revision).
+      if (incomingStatus === 'correct') {
+        return { ...current, ...incoming, status: 'correct' }
+      }
+      // Allow severity to worsen (amber → red).
       if (this.liveWordStatusSeverity(incoming.status) > this.liveWordStatusSeverity(current.status)) {
         return { ...current, ...incoming }
       }
@@ -20964,8 +21098,7 @@ export default {
         const word = current[index] || {}
         const status = statuses[index] || {}
         const incomingStatus = status.status || 'pending'
-        // Lock red/amber/black for the whole live session so rematches cannot
-        // briefly flash an issue then repaint the word green.
+        // Prefer stronger issues, but allow a later correct match to recover.
         const sticky = this.pickStickyLiveWordStatus(
           { ...word, status: word.status || 'pending' },
           { ...status, status: incomingStatus },
@@ -21110,24 +21243,24 @@ export default {
       // Memorisation test: STT-tolerant thresholds, sequential, article-aware.
       // Continue-and-review may soft-advance past a red; stop-on-mistake must not.
       if (this.amdOpen && kind === 'recitation') {
-        const stopOnMistake = this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
         liveAlignmentOptions.strictProgression = true
-        // No lookahead: never skip-match future words from a lucky interim token.
+        // No skip-ahead omit, but keep retrying after a mismatch so one ASR miss
+        // cannot freeze the whole live colouring pass.
         liveAlignmentOptions.lookahead = 0
         liveAlignmentOptions.partialAdvances = true
-        liveAlignmentOptions.advanceOnIncorrect = !stopOnMistake
+        liveAlignmentOptions.advanceOnIncorrect = true
         liveAlignmentOptions.allowArticleMatch = true
-        liveAlignmentOptions.correctSimilarity = 0.76
-        liveAlignmentOptions.partialSimilarity = 0.42
-        liveAlignmentOptions.minConfidenceForCorrect = 0.22
+        liveAlignmentOptions.correctSimilarity = 0.74
+        liveAlignmentOptions.partialSimilarity = 0.40
+        liveAlignmentOptions.minConfidenceForCorrect = 0.18
         livePreviewAlignmentOptions.strictProgression = true
         livePreviewAlignmentOptions.lookahead = 0
         livePreviewAlignmentOptions.partialAdvances = true
         livePreviewAlignmentOptions.advanceOnIncorrect = false
         livePreviewAlignmentOptions.allowArticleMatch = true
-        livePreviewAlignmentOptions.correctSimilarity = 0.76
-        livePreviewAlignmentOptions.partialSimilarity = 0.42
-        livePreviewAlignmentOptions.minConfidenceForCorrect = 0.18
+        livePreviewAlignmentOptions.correctSimilarity = 0.74
+        livePreviewAlignmentOptions.partialSimilarity = 0.40
+        livePreviewAlignmentOptions.minConfidenceForCorrect = 0.16
       }
       const targetAyahMeta = this.buildRecitationTargetAyahMetadata(targetVerses)
       // AMD: force sequential realtime alignment so DP cannot colour random later ayahs.
@@ -21144,7 +21277,7 @@ export default {
           targetVerses,
           liveAlignmentOptions
         )
-      // AMD paints confirmed speech only — skip a second interim alignment pass.
+      // AMD paints committed speech only — interim hypotheses race ahead of the learner.
       const liveAlignment = (this.amdOpen && kind === 'recitation')
         ? committedAlignment
         : (this.areRecognitionWordListsEquivalent(displayWords, committedWords)
@@ -21174,11 +21307,27 @@ export default {
         candidateStatuses,
         {
           protectAgainstInterimRed: preferVisible,
-          // AMD: paint only from confirmed/committed speech — never interim ahead.
+          // Confirmed speech only — never let interim paint pull the cursor forward.
           confirmedOnly: preferVisible,
         },
       )
       statuses = clampStatusesToConfirmedCursor(statuses, cursor.confirmedWordIndex)
+      // Live AMD: uncertain ASR mismatches stay amber, not sticky false-red.
+      if (preferVisible) {
+        statuses = statuses.map((status) => {
+          if (!status || String(status.status || '').toLowerCase() !== 'incorrect') return status
+          const similarity = Number(status.similarity || 0)
+          const confidence = Number(status.confidence || 0)
+          if (similarity >= 0.32 || (confidence > 0 && confidence < 0.45)) {
+            return {
+              ...status,
+              status: 'partial',
+              note: status.note || 'Close — keep going.',
+            }
+          }
+          return status
+        })
+      }
       if (kind === 'memorisation') {
 	        this.aiMemorisationCheckerAlignmentState = committedAlignment.progression
 	        this.applyLiveStatusUpdate('aiMemorisationCheckerLiveWords', statuses)

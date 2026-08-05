@@ -16,7 +16,7 @@
         aria-labelledby="amdModalTitle"
       >
         <div class="modal-content mutqin-modal-surface amd-modal amd-modal--mushaf amd-modal--test amd-modal--premium amd-modal--spacious">
-          <header class="amd-header amd-header--premium amd-header--compact amd-header--sticky">
+          <header class="amd-header amd-header--premium amd-header--sticky">
             <div class="amd-header-copy">
               <div class="amd-title-row">
                 <h2 id="amdModalTitle" class="amd-title amd-title--premium" tabindex="-1">{{ title }}</h2>
@@ -27,11 +27,15 @@
                 >{{ betaBadge }}</span>
               </div>
               <p v-if="rangeLabel" class="amd-range amd-range--premium">{{ rangeLabel }}</p>
-              <p v-if="disclaimer" class="amd-disclaimer amd-disclaimer--compact">{{ disclaimer }}</p>
+              <p v-if="disclaimer" class="amd-disclaimer">{{ disclaimer }}</p>
             </div>
             <div class="amd-header-aside">
               <div
-                class="amd-mic-status amd-mic-status--header amd-mic-status--compact"
+                class="amd-mic-status amd-mic-status--header"
+                :class="{
+                  'amd-mic-status--recording': isListening,
+                  'amd-mic-status--starting': isStarting,
+                }"
                 :data-status="micStatusKey"
                 role="status"
                 aria-live="polite"
@@ -39,7 +43,7 @@
                 :title="disclaimer || undefined"
               >
                 <span class="amd-mic-dot" aria-hidden="true"></span>
-                <span class="amd-mic-status__label">{{ micStatusLabel }}</span>
+                <span class="amd-mic-status__label">{{ displayMicStatusLabel }}</span>
               </div>
               <button
                 class="amd-icon-btn amd-icon-btn--close"
@@ -52,10 +56,10 @@
             </div>
           </header>
 
-          <div class="amd-body amd-body--premium amd-body--compact amd-body--scroll">
+          <div class="amd-body amd-body--premium amd-body--scroll">
             <div v-if="!isComplete" class="amd-tools-container">
               <div
-                class="amd-toolbar amd-toolbar--icons amd-toolbar--tools amd-tools-bar amd-tools-bar--compact"
+                class="amd-toolbar amd-toolbar--icons amd-toolbar--tools amd-tools-bar"
                 role="toolbar"
                 :aria-label="toolsLabel"
               >
@@ -199,14 +203,14 @@
                   type="button"
                   class="amd-record-btn amd-record-btn--inline amd-record-btn--stop"
                   :class="{ active: isListening }"
-                  :aria-label="stopLabel"
-                  :title="stopLabel"
+                  :aria-label="stopActionLabel"
+                  :title="stopActionLabel"
                   @click.stop="$emit('stop')"
                 >
                   <span class="amd-record-btn__core" aria-hidden="true">
                     <i class="bi bi-stop-fill"></i>
                   </span>
-                  <strong class="amd-record-btn__label">{{ stopLabel }}</strong>
+                  <strong class="amd-record-btn__label">{{ stopActionLabel }}</strong>
                 </button>
               </div>
 
@@ -271,6 +275,8 @@ export default {
     micStatus: { type: String, default: 'ready' },
     micStatusLabel: { type: String, default: 'Ready' },
     micGuidance: { type: String, default: '' },
+    liveHint: { type: String, default: '' },
+    recordingActiveLabel: { type: String, default: 'Recording' },
     ayahHtml: { type: String, default: '' },
     blurActive: { type: Boolean, default: true },
     peeking: { type: Boolean, default: false },
@@ -365,6 +371,9 @@ export default {
     isListening() {
       return this.stage === 'listening' || this.stage === 'starting'
     },
+    isStarting() {
+      return this.stage === 'starting'
+    },
     isReady() {
       if (this.endingSoon || this.isComplete || this.isListening) return false
       if (this.stage === 'processing' || this.stage === 'analysing') return false
@@ -373,6 +382,21 @@ export default {
     canStop() {
       if (this.endingSoon || this.isComplete) return false
       return this.isListening || this.stage === 'processing' || this.stage === 'starting'
+    },
+    displayMicStatusLabel() {
+      if (this.stage === 'listening') {
+        return this.recordingActiveLabel || this.micStatusLabel || 'Recording'
+      }
+      if (this.isStarting) {
+        return this.liveHint || this.micStatusLabel || 'Preparing…'
+      }
+      return this.micStatusLabel || 'Ready'
+    },
+    stopActionLabel() {
+      if (this.stage === 'listening') {
+        return this.stopLabel || 'Stop recording'
+      }
+      return this.stopLabel || 'Stop'
     },
     showInlineError() {
       return !!this.error && !this.isComplete

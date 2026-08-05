@@ -38,6 +38,22 @@ export function stripArabicDefiniteArticle(word = '') {
   return value
 }
 
+/**
+ * Strip common Quranic clitics (و/ف + optional ال) so ASR "الشمس" matches "والشمس".
+ */
+export function stripArabicClitics(word = '') {
+  let value = String(word || '')
+  if (!value) return value
+  // والفجر / والشمس → فجر / شمس
+  if (/^[وف]ال/.test(value) && value.length > 4) {
+    value = value.slice(3)
+  } else if (/^[وف]/.test(value) && value.length > 3) {
+    // وضحى → ضحى
+    value = value.slice(1)
+  }
+  return stripArabicDefiniteArticle(value)
+}
+
 export function cleanRecitationDisplayText(text) {
   return stripMarkup(text)
     .replace(/\u0640/g, '')
@@ -914,17 +930,29 @@ export function getRecitationWordSimilarity(left, right, options = {}) {
   const allowArticleMatch = options.allowArticleMatch !== false
   const strippedA = stripArabicDefiniteArticle(a)
   const strippedB = stripArabicDefiniteArticle(b)
-  // Article-stripped equals only count as exact when article matching is allowed.
+  const cliticA = stripArabicClitics(a)
+  const cliticB = stripArabicClitics(b)
+  // Article/clitic-stripped equals only count as exact when article matching is allowed.
   if (allowArticleMatch && strippedA && strippedA === strippedB) return 1
+  if (allowArticleMatch && cliticA && cliticA === cliticB) return 1
   const base = levenshteinSimilarity(a, b)
   const soft = levenshteinSimilarity(softenArabicAsrForms(a), softenArabicAsrForms(b))
   const softStripped = allowArticleMatch
-    ? levenshteinSimilarity(softenArabicAsrForms(strippedA), softenArabicAsrForms(strippedB))
+    ? Math.max(
+      levenshteinSimilarity(softenArabicAsrForms(strippedA), softenArabicAsrForms(strippedB)),
+      levenshteinSimilarity(softenArabicAsrForms(cliticA), softenArabicAsrForms(cliticB)),
+    )
     : 0
-  if (!allowArticleMatch || (strippedA === a && strippedB === b)) {
+  if (!allowArticleMatch || (strippedA === a && strippedB === b && cliticA === a && cliticB === b)) {
     return Math.max(base, soft)
   }
-  return Math.max(base, soft, levenshteinSimilarity(strippedA, strippedB), softStripped)
+  return Math.max(
+    base,
+    soft,
+    levenshteinSimilarity(strippedA, strippedB),
+    levenshteinSimilarity(cliticA, cliticB),
+    softStripped,
+  )
 }
 
 function levenshteinSimilarity(a, b) {
@@ -974,7 +1002,10 @@ function classifyWordMatch({
     && expected
     && actual
     && expected !== actual
-    && stripArabicDefiniteArticle(expected) === stripArabicDefiniteArticle(actual)
+    && (
+      stripArabicDefiniteArticle(expected) === stripArabicDefiniteArticle(actual)
+      || stripArabicClitics(expected) === stripArabicClitics(actual)
+    )
   const correctFloor = Number.isFinite(Number(correctSimilarity)) ? Number(correctSimilarity) : 0.78
   const partialFloor = Number.isFinite(Number(partialSimilarity)) ? Number(partialSimilarity) : 0.35
   const minCorrectConfidence = Number.isFinite(Number(minConfidenceForCorrect))

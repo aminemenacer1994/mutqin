@@ -43,7 +43,7 @@ assertMatch('vue footer hosts stop action', vue, /amd-footer-stop-btn|amd-footer
 assertMatch('css sticky header', css, /\.amd-header--sticky[\s\S]*?position:\s*sticky/)
 assertMatch('css scrollable body', css, /\.amd-body--scroll[\s\S]*?overflow-y:\s*auto/)
 assertMatch('css sticky footer', css, /\.amd-footer--sticky[\s\S]*?position:\s*sticky/)
-assertMatch('css footer reserves stable action height', css, /\.amd-footer[\s\S]*?min-height:\s*4\.25rem/)
+assertMatch('css footer reserves stable action height', css, /\.amd-footer[\s\S]*?min-height:\s*(4\.25|5)rem/)
 assertMatch('css Quran area gets primary vertical space', css, /\.amd-mushaf-shell--primary[\s\S]*?flex:\s*1 1 auto/)
 
 // Prevent clipping / nested horizontal scroll / narrow column

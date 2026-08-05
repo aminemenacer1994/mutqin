@@ -151,6 +151,11 @@ export function mergeLiveRecitationStatuses(committedStatuses = [], displayStatu
     if (!current) return incoming
     if (!incoming) return current
     if (!isStickyLiveIssueStatus(current.status)) return incoming
+    const incomingStatus = String(incoming.status || '').toLowerCase()
+    // Committed/self-corrected green may recover a prior red/amber.
+    if (incomingStatus === 'correct') {
+      return { ...current, ...incoming, status: 'correct' }
+    }
     if (liveWordStatusSeverity(incoming.status) > liveWordStatusSeverity(current.status)) {
       return { ...current, ...incoming }
     }
@@ -168,10 +173,20 @@ export function mergeLiveRecitationStatuses(committedStatuses = [], displayStatu
 
     if (confirmedOnly) {
       if (confirmed && confirmed.status && confirmed.status !== 'pending') {
+        // Allow a later committed correct match to recover a prior issue.
+        if (
+          live?.status === 'correct'
+          && isStickyLiveIssueStatus(confirmed.status)
+          && live?.interim !== true
+          && live?.hypothesis !== true
+        ) {
+          return pickSticky(confirmed, live)
+        }
         return confirmed
       }
+      // No interim paint — waiting on confirmed speech keeps colouring with the learner.
       return {
-        ...(confirmed || live || {}),
+        ...(confirmed || {}),
         status: 'pending',
         note: confirmed?.note || 'Waiting for confirmation.',
       }

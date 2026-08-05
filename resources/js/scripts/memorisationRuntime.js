@@ -69,16 +69,17 @@ export const RECITATION_ANALYSIS_VERSION = '2026-06-27-live-rtl-v2'
 export const RECITATION_CONFIDENCE_THRESHOLD = Math.min(DEFAULT_RECITATION_CONFIDENCE_THRESHOLD, 0.40)
 // Give learners room to breathe between āyahs — 1.4s was cutting mid-passage.
 export const RECITATION_SILENCE_THROTTLE_MS = 3200
-export const RECITATION_CHUNK_TIMESLICE_MS = 40
+// Larger slices cut MediaRecorder/main-thread churn without hurting ASR latency.
+export const RECITATION_CHUNK_TIMESLICE_MS = 100
 export const RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS = 5000
 export const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 1800
 export const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.82
-export const SPEECHMATICS_AUDIO_BUFFER_SIZE = 2048
+export const SPEECHMATICS_AUDIO_BUFFER_SIZE = 4096
 // Speechmatics realtime requires max_delay in [0.7, 4]. Values below 0.7
 // (we previously used 0.02) are rejected as invalid_config.
 export const SPEECHMATICS_MAX_DELAY_SECONDS = 0.7
 // Natural pauses between āyahs need more than half a second.
-export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 1.05
+export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.9
 export const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0
 export const RECITATION_WORD_STATUS_CLASSES = [
   'recitation-word-pending',

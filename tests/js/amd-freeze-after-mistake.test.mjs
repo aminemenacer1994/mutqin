@@ -21,6 +21,9 @@ function pickStickyLiveWordStatus(current = null, incoming = null) {
     return value === 'incorrect' || value === 'partial' || value === 'omitted' || value === 'skipped'
   }
   if (!stickyIssue(current.status)) return incoming
+  if (String(incoming.status || '').toLowerCase() === 'correct') {
+    return { ...current, ...incoming, status: 'correct' }
+  }
   if (severity(incoming.status) > severity(current.status)) {
     return { ...current, ...incoming }
   }

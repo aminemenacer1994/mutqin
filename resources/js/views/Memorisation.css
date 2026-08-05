@@ -52058,7 +52058,11 @@ full button labels */
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-icon {
-  display: none;
+  display: inline;
+  margin-inline-start: 0.18em;
+  font-size: 0.72em;
+  vertical-align: super;
+  color: #b91c1c;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-copy {
@@ -52066,6 +52070,102 @@ full button labels */
   font-size: 0.92rem;
   line-height: 1.5;
   color: var(--ps-label);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-copy--context {
+  color: color-mix(in srgb, var(--ps-ink) 82%, var(--ps-muted));
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid color-mix(in srgb, var(--ps-line) 72%, transparent);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-lead {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--ps-muted);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-item {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, #b91c1c 18%, var(--ps-line));
+  background: color-mix(in srgb, #fff7f7 70%, var(--ps-card));
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-ayah {
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--ps-ink);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-words {
+  font-size: 1.08rem;
+  line-height: 1.55;
+  font-family: var(--quran-font, inherit);
+  color: #9f1239;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-note {
+  font-size: 0.78rem;
+  color: var(--ps-muted);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-focus {
+  margin: 0.25rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--ps-label);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-encouragement {
+  margin: 0.65rem 0 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--ps-muted);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__evidence--plan {
+  margin-top: 0.75rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-panel {
+  margin-top: 0.35rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--ps-line) 80%, transparent);
+  background: color-mix(in srgb, var(--ps-card) 92%, var(--ps-cream));
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-panel-label {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--ps-accent) 75%, var(--ps-muted));
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-panel-text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ps-ink);
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__soft-disclaimer {
