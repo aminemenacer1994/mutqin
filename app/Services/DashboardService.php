@@ -847,9 +847,9 @@ class DashboardService
             ->where('status', UserSessionStatus::Completed->value)
             ->where('ended_at', '>=', $from)
             ->where('ended_at', '<=', $to)
-            ->get(['ended_at'])
-            ->groupBy(fn (UserSession $session) => optional($session->ended_at)->toDateString())
-            ->map->count();
+            ->selectRaw('DATE(ended_at) as day, COUNT(*) as aggregate')
+            ->groupByRaw('DATE(ended_at)')
+            ->pluck('aggregate', 'day');
 
         $points = [];
         $cursor = $from->copy();

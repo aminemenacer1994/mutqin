@@ -89,6 +89,19 @@ assert.match(vue, /workspace-shell--post-session-choice/)
 assert.match(vue, /workspace-shell-bottom--post-session/)
 assert.match(vue, /workspace-shell-reading-toggles/)
 assert.match(vue, /top-card-layout-icons/)
+
+// Dark mode: Custom session must use opaque dark surface (not white + cream text).
+{
+  const css = readFileSync(join(root, 'resources/js/views/Memorisation.css'), 'utf8')
+  const mobileCss = readFileSync(join(root, 'resources/js/views/Memorisation.mobile-grid.css'), 'utf8')
+  assert.match(
+    css,
+    /html\[data-theme="dark"\][\s\S]{0,400}\.action-buttons-group \.post-session-choice-pair > \.post-session-choice-custom\.action-btn-exit/,
+    'dark Custom session must beat light white-pill specificity',
+  )
+  assert.match(css, /background:\s*#3a3129\s*!important/)
+  assert.match(mobileCss, /background:\s*#3a3129\s*!important/)
+}
 assert.doesNotMatch(
   vue,
   /hasVerses && !isPostSessionChoiceVisible && \(topCardMetadataPills/,

@@ -1755,6 +1755,8 @@
     },
     "amd": {
       "title": "AI Memorisation Detection",
+      "disclaimer": "صرف مشق کی مدد — استاد کا فیصلہ نہیں۔",
+      "disclaimerShort": "صرف مشق کی مدد — استاد کا فیصلہ نہیں۔",
       "assessmentType": "From memory",
       "readyCopy": "Select your range, hide the text, and recite from memory. Mutqin will listen, highlight mistakes, and build a personalised practice plan.",
       "startAssessment": "Start Assessment",

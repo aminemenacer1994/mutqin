@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\UserSessionStatus;
 use App\Models\User;
 use App\Models\UserSession;
+use App\Support\SessionDefaults;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -20,13 +21,38 @@ class SessionLifecycleService
 {
     public function currentUnfinished(User $user): ?UserSession
     {
+        // Prefer indexed unfinished statuses — avoid loading the full session history.
         $sessions = UserSession::query()
             ->where('user_id', $user->id)
-            ->latest('last_activity_at')
-            ->latest('id')
+            ->whereIn('status', [
+                UserSessionStatus::Active->value,
+                UserSessionStatus::Paused->value,
+                UserSessionStatus::Interrupted->value,
+                UserSessionStatus::None->value,
+            ])
+            ->orderByDesc('last_activity_at')
+            ->orderByDesc('id')
+            ->limit(25)
             ->get();
 
         foreach ($sessions as $session) {
+            if ($this->isUnfinished($session)) {
+                return $session;
+            }
+        }
+
+        // Legacy rows without a reliable status enum — capped recent scan only.
+        $legacy = UserSession::query()
+            ->where('user_id', $user->id)
+            ->where(function ($query) {
+                $query->whereNull('status')->orWhere('status', '');
+            })
+            ->orderByDesc('last_activity_at')
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get();
+
+        foreach ($legacy as $session) {
             if ($this->isUnfinished($session)) {
                 return $session;
             }
@@ -458,12 +484,18 @@ class SessionLifecycleService
             }
         }
 
-        // Legacy rows without a reliable status enum value.
+        // Legacy rows without a reliable status enum — capped to recent activity.
         $legacy = UserSession::query()
             ->where('user_id', $user->id)
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhere('status', '')
+                    ->orWhere('status', UserSessionStatus::None->value);
+            })
             ->orderByDesc('last_activity_at')
             ->orderByDesc('id')
             ->lockForUpdate()
+            ->limit(25)
             ->get();
 
         foreach ($legacy as $session) {
@@ -678,7 +710,7 @@ class SessionLifecycleService
             'technique' => $technique,
             'reciter' => $config['reciterId'] ?? $config['reciter'] ?? null,
             'playback_speed' => $config['playbackSpeed'] ?? $config['playback_speed'] ?? 1,
-            'repetitions' => $config['repetitionsPerStep'] ?? $config['repetitions'] ?? 3,
+            'repetitions' => $config['repetitionsPerStep'] ?? $config['repetitions'] ?? SessionDefaults::REPETITIONS,
             'ayat_per_step' => $config['ayatPerStep'] ?? $config['ayat_per_step'] ?? null,
             'focus_enabled' => (bool) ($config['focusModeEnabled'] ?? $config['focus_enabled'] ?? false),
             'blur_enabled' => (bool) ($config['blurModeEnabled'] ?? $config['blur_enabled'] ?? false),

@@ -212,12 +212,18 @@ import { WordSyncEngine } from '../scripts/audioSync'
 import HifzPlanCreatorModal from '../components/HifzPlanCreatorModal.vue'
 import AiMemorisationDetectionModal from '../components/AiMemorisationDetectionModal.vue'
 import AyahNotesModal from '../components/AyahNotesModal.vue'
+import AppStatus from '../components/AppStatus.vue'
 import {
   buildActivePracticeSetup,
   buildPracticeSetupStatusMessage,
   collectPracticeSetupInputFromSession,
   canChangePracticeSetting,
 } from '../scripts/session/activePracticeSetup'
+import {
+  DEFAULT_SESSION_REPETITIONS,
+  buildDefaultWorkspaceSessionConfig,
+  resolveSessionRepetitions,
+} from '../scripts/session/sessionDefaults'
 import { readStoredAutoFollowEnabled } from '../scripts/memorisationDetection/liveAutoFollow'
 import {
   AMD_STAGES,
@@ -243,7 +249,6 @@ import {
   buildLiveRecitationCursor,
   clampCursorToPaceLimit,
   clampStatusesToConfirmedCursor,
-  gateUnsettledIssueStatuses,
   LIVE_PACE_DRIP_MS,
   resolveLivePaceLimit,
   mergeLiveRecitationStatuses as mergeConfirmedLiveRecitationStatuses,
@@ -430,6 +435,7 @@ export default {
     HifzPlanCreatorModal,
     AiMemorisationDetectionModal,
     AyahNotesModal,
+    AppStatus,
   },
   props: {
     auth: { type: Object, default: () => ({ check: false, id: null }) }
@@ -504,9 +510,9 @@ export default {
         'Quick Revision',
         'Deep Memorisation'
       ],
-      // Feature 1: Repetitions
-      repetitionsPerStep: 5,
-      selectedLoopCount: 5,
+      // Feature 1: Repetitions — start at 1x so the bar never flashes a higher default
+      repetitionsPerStep: DEFAULT_SESSION_REPETITIONS,
+      selectedLoopCount: DEFAULT_SESSION_REPETITIONS,
       fontOpen: false,
       bgOpen: false,
       borderOpen: false,
@@ -568,6 +574,8 @@ export default {
       sessionPaused: false,
       onboardingExampleRejected: false,
       sessionActionLock: createSessionActionLock(),
+      /** Prevents duplicate off-canvas Start Session clicks while setup/countdown runs. */
+      toolsStartInFlight: false,
       sessionBroadcast: null,
       sessionBroadcastUnsubscribe: null,
       // When Sanctum cookies reject /api (401/403/419), keep practising locally
@@ -647,6 +655,7 @@ export default {
       ],
       tab: 'tools',
       showTools: false,
+      toolsPanelMounted: false,
       readingViewMode: 'mushaf',
       mushafPageIndex: 0,
       mushafUiSkin: 'standard', // Paper/standard only; legacy skins remap here
@@ -964,6 +973,7 @@ export default {
       showHelpLearningModal: false,
       helpLearningActiveKey: 'tajweed',
       analyticsModalLoaded: false,
+      analyticsModalError: false,
       analyticsModalRecordId: '',
       analyticsModalData: null,
       analyticsModalLastRefreshedAt: 0,
@@ -1449,7 +1459,30 @@ export default {
         || null
     },
     shouldShowWorkspaceEmptyState() {
-      return false
+      return this.isDataReady
+        && !this.isRestoringWorkspace
+        && !this.isOnboardingExperienceActive
+        && !this.isWelcomeBackWorkspaceHidden
+        && !this.hasVerses
+        && !this.isPostSessionChoiceVisible
+    },
+    loginUrl() {
+      return this.auth?.login_url || '/login'
+    },
+    registerUrl() {
+      return this.auth?.register_url || '/register'
+    },
+    analyticsModalHasContent() {
+      return !!(
+        this.analyticsModalData
+        && (
+          this.analyticsSummaryCards?.length
+          || this.analyticsVerseSeries?.length
+          || this.analyticsReplayLeaders?.length
+          || this.analyticsPlaybackBuckets?.length
+          || this.analyticsAiCheckSummary
+        )
+      )
     },
     isPostSessionChoiceVisible() {
       if (this.showPostSessionModal || this.postSessionAiReciteActive || this.postSessionAdaptiveCheckActive) {
@@ -1507,6 +1540,14 @@ export default {
         return this.t('memorisation.postSessionChoice.startCustomSession')
       }
       return this.t('memorisation.welcomeBack.startNewSession')
+    },
+    toolsStartBusy() {
+      return !!this.toolsStartInFlight
+        || this.sessionLifecycleMutation === SESSION_MUTATION.STARTING
+        || !!this.showCountdownOverlay
+    },
+    toolsStartDisabled() {
+      return this.toolsStartBusy
     },
     showSessionOverviewIdleActions() {
       return !this.hasVerses && !this.isRestoringWorkspace && this.isDataReady && !this.isPostSessionChoiceVisible
@@ -3513,7 +3554,7 @@ export default {
       const estimated = estimatePracticeDuration({
         audioDurationSeconds: this.postSessionEstimatedAudioSeconds,
         playbackSpeed: Number(settings.playback_speed) || Number(this.speed) || 1,
-        repetitions: Number(settings.repetitions) || 3,
+        repetitions: resolveSessionRepetitions(settings.repetitions),
         pauseBetweenRepeats: 1.5,
         technique: settings.technique || this.postSessionPersonalPlan?.practiceApproach?.id || 'talqin',
         ayahCount: Math.max(1, ayahCount),
@@ -6232,7 +6273,8 @@ export default {
         start: this.t?.('memorisation.amd.startRecitation') || 'Start recording',
         startHint: this.t?.('memorisation.amd.startRecitationHint') || '',
         betaBadge: '',
-        disclaimer: '',
+        disclaimer: this.t?.('memorisation.amd.disclaimer')
+          || 'Practice aid only — not a teacher’s ruling.',
         reset: this.t?.('common.reset') || 'Reset',
         difficulty: this.t?.('memorisation.amd.difficulty') || 'Difficulty',
         wordsShown: this.t?.('memorisation.amd.wordsShown') || 'Words shown',
@@ -6694,6 +6736,7 @@ export default {
     sliderRepetitionValue() {
       return Math.min(10, Math.max(1, Number(this.repetitionsPerStep || 1)))
     },
+    /** Marker labels only — the range input is continuous 1–10 so thumb matches the pill. */
     repetitionSliderSteps() {
       return [1, 3, 5, 7, 10]
     },
@@ -6712,14 +6755,14 @@ export default {
       return bestIndex
     },
     sessionRepetitionSliderStyle() {
-      const maxIndex = Math.max(1, this.repetitionSliderSteps.length - 1)
-      const progress = Math.max(0, Math.min(100, (this.sliderRepetitionIndex / maxIndex) * 100))
+      const max = 9
+      const progress = Math.max(0, Math.min(100, ((this.sliderRepetitionValue - 1) / max) * 100))
       return {
         '--technique-range-progress': `${progress}%`
       }
     },
     repetitionDisplayValue() {
-      return `${Math.max(1, Number(this.repetitionsPerStep || 1))}x`
+      return `${this.sliderRepetitionValue}x`
     },
     sessionPlayCountValue() {
       return Math.max(0, Number(this.mutqinState?.sessionState?.play_count || 0))
@@ -7722,7 +7765,12 @@ export default {
         || this.isWorkspaceRefreshing
         || !this.isDataReady
         || (Number(this.chapterId || 0) > 0 && !this.hasVerses)
-        || (this.readingViewMode === 'mushaf' && this.shouldShowReadingWorkspace && !this.currentMushafPage)
+        || (
+          this.readingViewMode === 'mushaf'
+          && this.shouldShowReadingWorkspace
+          && !this.currentMushafPage
+          && !this.madaniPagesError
+        )
       ) {
         return this.t('memorisation.session_setup_in_progress')
       }
@@ -7737,6 +7785,7 @@ export default {
         && this.shouldShowReadingWorkspace
         && !this.currentMushafPage
         && Number(this.chapterId || 0) > 0
+        && !this.madaniPagesError
       ) {
         return true
       }
@@ -8760,7 +8809,7 @@ export default {
       this.persistUiState();
     },
 
-    // 🔥 NEW: Auto-disable Blur when Chaining turns on
+    // Auto-disable Blur when Chaining turns on (single watcher — avoid duplicate persist/rebuild).
     chainingEnabled(newVal) {
       if (newVal && this.blurModeEnabled) {
         this.blurModeEnabled = false;
@@ -8772,6 +8821,9 @@ export default {
       this.persistUiState();
       this.persistCentralSessionState();
       this.applyChainingQueueChange(this.currentMode);
+    },
+    showTools(val) {
+      if (val) this.toolsPanelMounted = true
     },
     chapterId(val) {
       this.persistUiState()
@@ -8799,11 +8851,6 @@ export default {
     },
     recitationWindowSeconds: 'persistUiState',
     order: 'persistUiState',
-    chainingEnabled() {
-      this.persistUiState()
-      this.persistCentralSessionState()
-      this.applyChainingQueueChange(this.currentMode)
-    },
 
     chainingMethod() {
       this.persistUiState()
@@ -8981,6 +9028,11 @@ export default {
       return window.matchMedia('(max-width: 767.98px)').matches
     },
 
+    goToRegister() {
+      const href = this.registerUrl || '/register'
+      if (typeof window !== 'undefined') window.location.href = href
+    },
+
     safeErrorText(value, fallback = '') {
       if (value == null) return fallback
       if (typeof value === 'string') return value
@@ -8994,12 +9046,28 @@ export default {
       return fallback
     },
 
+    /** Prefer beginner-friendly copy; hide stack traces / HTTP / raw API noise. */
+    userFacingErrorText(value, fallback = '') {
+      const text = String(this.safeErrorText(value, '') || '').trim()
+      const safeFallback = String(fallback || this.t('common.status.errorDesc') || '').trim()
+      if (!text) return safeFallback
+      if (
+        text.length > 180
+        || /stack|exception|traceback|sqlstate|etag|csrf|http\/|status code|econn|enotfound|timeout|undefined is not|cannot read/i.test(text)
+        || /^[\w./:-]+\.(js|php|vue|ts)(:\d+)?/i.test(text)
+        || /[{}\[\]]/.test(text)
+      ) {
+        return safeFallback || text
+      }
+      return text
+    },
+
     reportRecitationCheckFailure(message = '', options = {}) {
       const fallback = this.safeErrorText(
         this.t('memorisation.aiCheck.recitationCheckFailed'),
         'Recitation check failed. Please try again.'
       )
-      const text = this.safeErrorText(message, fallback).trim() || fallback
+      const text = this.userFacingErrorText(message, fallback)
       // Never mount the sticky mic/error session banner — toast only, keep Start Reciting.
       this.recitationCheckError = ''
       this.recitationCheckPreparing = false
@@ -9016,11 +9084,12 @@ export default {
       this.amdPeekActive = false
       // Keep the mushaf usable — inline message + Peek remain available.
       this.amdStage = AMD_STAGES.ERROR
-      this.amdError = this.safeErrorText(
+      this.amdError = this.userFacingErrorText(
         message,
         this.t?.('memorisation.amd.noSpeech')
           || this.t?.('memorisation.aiCheck.noArabicWords')
-          || 'No speech was detected. Please try again.'
+          || this.t('common.status.errorDesc')
+          || 'Something went wrong. Please try again.'
       )
       if (toast && this.amdError) this.showBanner(this.amdError, 'error', 4200)
     },
@@ -9790,34 +9859,7 @@ export default {
     },
 
     buildDefaultWorkspaceSessionConfig() {
-      return {
-        chapterId: 1,
-        rangeStart: 1,
-        rangeEnd: 7,
-        reciterId: DEFAULT_ALQURAN_RECITER,
-        speed: 1,
-        repetitionsPerStep: 3,
-        selectedLoopCount: 3,
-        playMode: 'auto',
-        talqinModeEnabled: false,
-        gapBetweenVerses: '1x',
-        customGapSeconds: 2,
-        recitationWindowSeconds: 8,
-        chainingEnabled: false,
-        chainingMethod: '',
-        chainingRepetitions: 1,
-        focusModeEnabled: false,
-        blurModeEnabled: false,
-        blurIntensity: 10,
-        anchorModeEnabled: false,
-        anchorCount: 2,
-        tajweedEnabled: false,
-        showTranslation: false,
-        showTransliteration: false,
-        showWordByWord: false,
-        wordByWordAudioEnabled: true,
-        readingViewMode: 'mushaf'
-      }
+      return buildDefaultWorkspaceSessionConfig()
     },
 
     applyDefaultWorkspaceSessionConfig(options = {}) {
@@ -11706,18 +11748,30 @@ export default {
       return this.isPlaybackActive()
     },
 
+    clearToolsStartInFlight() {
+      this.toolsStartInFlight = false
+    },
+
     startSessionWithCountdown(options = {}) {
       if (this.chainingEnabled && !this.hasChainingMethodSelected) {
+        this.clearToolsStartInFlight()
         this.guideChainingSetup()
-        return
+        return false
       }
       if (!this.canStartSession) {
+        this.clearToolsStartInFlight()
         this.showTools = true
         this.showBanner(this.t('toasts.chooseAValidSurahAndAyah'), 'info', 3600)
-        return
+        return false
       }
-      if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return
-      if (this.sessionActionLock.isLocked()) return
+      if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE || this.sessionActionLock.isLocked()) {
+        this.resetStuckSessionLifecycleControls()
+        if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE || this.sessionActionLock.isLocked()) {
+          this.clearToolsStartInFlight()
+          this.showBanner(this.t('toasts.sessionBusyTryAgain'), 'info', 2800)
+          return false
+        }
+      }
 
       // Only playOnboardingSampleSession / sample repeat may keep the sample flag.
       // Any other start (new range from the sample modal, Controls, etc.) must exit
@@ -11752,20 +11806,18 @@ export default {
           this.transitionSessionLifecycle(SESSION_STATUS.STARTING, SESSION_MUTATION.STARTING)
           try {
             if (this.learningBackendEnabled() && !this.onboardingSampleSessionActive) {
-              try {
-                await learningApi.startSession({
-                  surah_number: Number(this.chapterId || this.currentChapter?.id || 0) || null,
-                  ayah_number: Number(this.rangeStart || 1) || null,
-                  memorisation_mode: this.currentMode,
-                  idempotency_key: `start-${this.auth?.id || 'guest'}-${this.chapterId || 0}-${this.rangeStart || 0}-${this.rangeEnd || 0}`,
-                })
+              // Fire-and-forget: never block local countdown/audio on the start API.
+              learningApi.startSession({
+                surah_number: Number(this.chapterId || this.currentChapter?.id || 0) || null,
+                ayah_number: Number(this.rangeStart || 1) || null,
+                memorisation_mode: this.currentMode,
+                idempotency_key: `start-${this.auth?.id || 'guest'}-${this.chapterId || 0}-${this.rangeStart || 0}-${this.rangeEnd || 0}`,
+              }).then(() => {
                 this.backendUnfinishedSession = true
-              } catch (error) {
-                // Mirror pause/end: never block local start/countdown/audio on API auth
-                // or network failure. Progress stays in the local cache until sync works.
+              }).catch((error) => {
                 this.noteLearningBackendFailure(error, 'start')
                 console.warn('Failed to persist session start on backend; continuing locally', error)
-              }
+              })
             }
             await this.startSession()
             // startSession already called playQueueEntry; avoid a second force-play
@@ -11791,37 +11843,86 @@ export default {
             return false
           }
         })
+        this.clearToolsStartInFlight()
         if (!lockResult?.ok && lockResult?.reason === 'locked') {
+          this.showBanner(this.t('toasts.sessionBusyTryAgain'), 'info', 2800)
           return
         }
+        if (lockResult?.ok && lockResult.result === false) {
+          this.showTools = true
+          this.showBanner(this.t('toasts.failedToStartSession'), 'error', 4200)
+        }
       })
+      return true
     },
     async startSessionAndClose(options = {}) {
+      if (this.toolsStartBusy) return
       if (!this.canStartSession) {
         this.showTools = true
         this.showBanner(this.t('toasts.pleaseSelectAValidSurahAnd'), 'info', 3600)
         return
       }
-      void options
-      if (
-        this.postSessionChoiceAction === POST_SESSION_ACTION.CREATE_CUSTOM
-        || this.startingFreshSessionSelection
-      ) {
-        this.clearCurrentSessionRecommendationMeta()
+      if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE || this.sessionActionLock.isLocked()) {
+        this.resetStuckSessionLifecycleControls()
+        if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE || this.sessionActionLock.isLocked()) {
+          this.showBanner(this.t('toasts.sessionBusyTryAgain'), 'info', 2800)
+          return
+        }
       }
-      this.primeAudioPlaybackUnlock()
-      this.talqinModeEnabled = this.getTalqinModeToggleValue()
-      this.applySessionConfig(this.buildSessionConfig(this.currentMode))
-      this.persistModeState(this.currentMode)
-      this.persistUiState()
-      this.persistCentralSessionState()
-      this.captureAppliedPracticeSetup()
-      await this.applyWorkspaceControls({ mode: this.currentMode })
-      this.closePostSessionChoice()
-      this.closeToolsPanel()
-      setTimeout(() => {
-        this.startSessionWithCountdown({ skipPrime: true })
-      }, 100)
+
+      this.toolsStartInFlight = true
+      void options
+      try {
+        if (
+          this.postSessionChoiceAction === POST_SESSION_ACTION.CREATE_CUSTOM
+          || this.startingFreshSessionSelection
+        ) {
+          this.clearCurrentSessionRecommendationMeta()
+        }
+        this.primeAudioPlaybackUnlock()
+        this.talqinModeEnabled = this.getTalqinModeToggleValue()
+        this.applySessionConfig(this.buildSessionConfig(this.currentMode))
+        this.persistModeState(this.currentMode)
+        this.persistUiState()
+        this.persistCentralSessionState()
+        this.captureAppliedPracticeSetup()
+
+        // Avoid clearing loaded verses when the workspace already matches controls.
+        // The previous applyWorkspaceControls path wiped verses and only awaited
+        // one tick, so canStartSession often failed after the panel closed.
+        const mode = this.currentMode
+        const hasLoadedVerses = !!(this.verses?.length || this.currentConfig?.verses?.length)
+        if (!this.modeDataMatchesConfig(mode) || !hasLoadedVerses) {
+          if (this.workspaceSyncTimer) clearTimeout(this.workspaceSyncTimer)
+          this.clampControlRange(mode)
+          this.isWorkspaceRefreshing = true
+          this.workspaceRefreshReason = 'start'
+          this.clearWorkspaceForConfigChange(mode)
+          await this.loadVerses(mode)
+          await this.$nextTick()
+        }
+
+        if (!this.canStartSession) {
+          this.showTools = true
+          this.showBanner(this.t('toasts.pleaseSelectAValidSurahAnd'), 'info', 3600)
+          this.clearToolsStartInFlight()
+          return
+        }
+
+        this.closePostSessionChoice()
+        this.closeToolsPanel()
+        await this.$nextTick()
+        const started = this.startSessionWithCountdown({ skipPrime: true })
+        if (!started) {
+          this.showTools = true
+          this.clearToolsStartInFlight()
+        }
+      } catch (error) {
+        console.error(error)
+        this.showTools = true
+        this.showBanner(this.t('toasts.failedToStartSession'), 'error', 4200)
+        this.clearToolsStartInFlight()
+      }
     },
     handlePrimaryAction() {
       if (this.isPlaying) {
@@ -12706,6 +12807,8 @@ export default {
     },
     resetPostSessionRecommendationState() {
       this.postSessionRecommendationRequestId += 1
+      try { this._postSessionRecommendationAbort?.abort?.() } catch (_) { /* ignore */ }
+      this._postSessionRecommendationAbort = null
       this.postSessionRecommendation = null
       this.postSessionRecommendationStatus = 'idle'
       this.postSessionRecommendationError = ''
@@ -12859,7 +12962,7 @@ export default {
         technique,
         reciter: this.reciterId || null,
         playback_speed: Number(this.speed || 1),
-        repetitions: Number(this.repetitionsPerStep || 3),
+        repetitions: resolveSessionRepetitions(this.repetitionsPerStep),
         ayat_per_step: this.focusModeEnabled ? 1 : null,
         focus_enabled: !!this.focusModeEnabled,
         blur_enabled: !!this.blurModeEnabled,
@@ -12911,16 +13014,26 @@ export default {
 
       try {
         if (this.isLoggedIn && this.learningBackendEnabled()) {
-          try {
-            await this.pushLearningState(true)
-          } catch (_) { /* recommendation can still proceed from existing backend data */ }
+          // Session end already persisted completion + often returns a plan.
+          // Do not block the recommendation UI on a full mutqinState deep-clone sync.
+          this.pushLearningState(true).catch(() => { /* best-effort background sync */ })
 
           const params = {}
           if (this.postSessionCompletedSessionId) {
             params.source_session_id = this.postSessionCompletedSessionId
           }
+          try { this._postSessionRecommendationAbort?.abort?.() } catch (_) { /* ignore */ }
+          this._postSessionRecommendationAbort = typeof AbortController !== 'undefined'
+            ? new AbortController()
+            : null
+          const abortSignal = this._postSessionRecommendationAbort?.signal
           const recommendation = await withRetry(
-            () => learningApi.getNextRecommendation(params),
+            () => Promise.race([
+              learningApi.getNextRecommendation(params, { signal: abortSignal }),
+              new Promise((_, reject) => {
+                window.setTimeout(() => reject(new Error('recommendation_timeout')), 12000)
+              }),
+            ]),
             { retries: 2, baseDelay: 500 }
           )
           if (requestId !== this.postSessionRecommendationRequestId) return
@@ -12965,8 +13078,15 @@ export default {
 
         applyResult(snapshotFallback(), 'ready')
       } catch (error) {
+        if (
+          requestId !== this.postSessionRecommendationRequestId
+          || error?.code === 'ERR_CANCELED'
+          || error?.name === 'CanceledError'
+          || error?.name === 'AbortError'
+        ) {
+          return
+        }
         console.warn('Failed to load next-session recommendation:', error)
-        if (requestId !== this.postSessionRecommendationRequestId) return
         this.postSessionRecommendationError = this.t('memorisation.postSession.recommendation.loadError')
         const fallback = snapshotFallback()
         applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'error')
@@ -13161,7 +13281,7 @@ export default {
         rangeEnd: rangeEnd || baseConfig.rangeEnd,
         reciterId: settings.reciter || baseConfig.reciterId,
         speed: this.normalizePlaybackSpeed(settings.playback_speed ?? baseConfig.speed ?? 1),
-        repetitionsPerStep: Number(settings.repetitions || baseConfig.repetitionsPerStep || 3),
+        repetitionsPerStep: resolveSessionRepetitions(settings.repetitions, baseConfig.repetitionsPerStep),
         talqinModeEnabled: !!settings.talqin_enabled,
         focusModeEnabled: !!settings.focus_enabled,
         blurModeEnabled: !!settings.blur_enabled,
@@ -13316,7 +13436,7 @@ export default {
           technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : 'talqin')),
           reciter: this.reciterId || null,
           playback_speed: Number(this.speed || 1),
-          repetitions: Number(this.repetitionsPerStep || 3),
+          repetitions: resolveSessionRepetitions(this.repetitionsPerStep),
           ayat_per_step: this.focusModeEnabled ? 1 : null,
           focus_enabled: !!this.focusModeEnabled,
           blur_enabled: !!this.blurModeEnabled,
@@ -14102,7 +14222,7 @@ export default {
           settings: {
             technique: 'talqin',
             playback_speed: Math.max(0.5, Number(this.speed || 1) - 0.25),
-            repetitions: Math.min(8, Number(this.repetitionsPerStep || 3) + 2),
+            repetitions: Math.min(8, resolveSessionRepetitions(this.repetitionsPerStep) + 2),
           },
         })
       } catch (error) {
@@ -15318,7 +15438,7 @@ export default {
         rangeEnd: Number(rangeEnd),
         reciterId: mergedSettings.reciter || baseConfig.reciterId,
         speed: this.normalizePlaybackSpeed(mergedSettings.playback_speed ?? baseConfig.speed ?? 1),
-        repetitionsPerStep: Number(mergedSettings.repetitions || baseConfig.repetitionsPerStep || 3),
+        repetitionsPerStep: resolveSessionRepetitions(mergedSettings.repetitions, baseConfig.repetitionsPerStep),
         talqinModeEnabled: !!mergedSettings.talqin_enabled,
         focusModeEnabled: !!mergedSettings.focus_enabled,
         blurModeEnabled: !!mergedSettings.blur_enabled,
@@ -15796,7 +15916,7 @@ export default {
         reciterId: settings.reciter || baseConfig.reciterId,
         speed: this.normalizePlaybackSpeed(settings.playback_speed ?? baseConfig.speed ?? 1),
         delay: Number.isFinite(Number(template.delay)) ? Number(template.delay) : (baseConfig.delay ?? this.delay),
-        repetitionsPerStep: Number(settings.repetitions || baseConfig.repetitionsPerStep || 3),
+        repetitionsPerStep: resolveSessionRepetitions(settings.repetitions, baseConfig.repetitionsPerStep),
         gapBetweenVerses: template.gapBetweenVerses || baseConfig.gapBetweenVerses,
         customGapSeconds: template.customGapSeconds ?? baseConfig.customGapSeconds,
         talqinModeEnabled: !!settings.talqin_enabled,
@@ -16107,6 +16227,7 @@ export default {
       if (!session?.id) return
       this.analyticsModalRecordId = session.id
       this.analyticsModalLoaded = false
+      this.analyticsModalError = false
       this.analyticsModalData = null
       this.analyticsReportState = { loading: false, success: false, error: '' }
       this.showSessionAnalyticsModal = true
@@ -16134,15 +16255,29 @@ export default {
     closeSessionAnalyticsModal() {
       this.showSessionAnalyticsModal = false
       this.analyticsModalLoaded = false
+      this.analyticsModalError = false
       this.analyticsModalRecordId = ''
       this.analyticsModalData = null
       this.analyticsReportState = { loading: false, success: false, error: '' }
     },
     refreshAnalyticsModalData(session = null) {
       const sourceSession = session || this.analyticsModalRecord
-      if (!sourceSession?.id) return
-      this.analyticsModalData = this.buildSessionAnalyticsDataset(sourceSession)
-      this.analyticsModalLoaded = true
+      if (!sourceSession?.id) {
+        this.analyticsModalData = null
+        this.analyticsModalError = true
+        this.analyticsModalLoaded = true
+        return
+      }
+      try {
+        this.analyticsModalData = this.buildSessionAnalyticsDataset(sourceSession)
+        this.analyticsModalError = false
+      } catch (error) {
+        console.error('Failed to build session analytics', error)
+        this.analyticsModalData = null
+        this.analyticsModalError = true
+      } finally {
+        this.analyticsModalLoaded = true
+      }
     },
     sessionMatchesCurrentLiveConfig(session) {
       if (!session?.config || !this.isSessionLive) return false
@@ -18549,7 +18684,6 @@ export default {
       this.amdEndingSoon = false
       this._amdCompleting = false
       this._amdLastExpectedIndex = null
-      this._amdIssueSettleCounts = new Map()
       this.amdLiveCursor = {
         expectedWordIndex: 0,
         candidateWordIndex: 0,
@@ -19058,12 +19192,6 @@ export default {
       if (startedAt > 0) return Math.max(0, Date.now() - startedAt)
       return null
     },
-    getAmdIssueSettleCounts() {
-      if (!(this._amdIssueSettleCounts instanceof Map)) {
-        this._amdIssueSettleCounts = new Map()
-      }
-      return this._amdIssueSettleCounts
-    },
     syncAmdLiveCursor({ committedStatuses = null, candidateStatuses = null, spokenWordCount = null } = {}) {
       const committed = Array.isArray(committedStatuses)
         ? committedStatuses
@@ -19127,7 +19255,21 @@ export default {
       }
       this._amdAyahBoundsSig = sig
       this._amdAyahBounds = ayahBounds
+      // Flat index → ayah bound for O(1) future-word checks during live paint.
+      const indexMap = new Array(cursor)
+      for (const bound of ayahBounds) {
+        for (let i = bound.start; i < bound.end; i += 1) indexMap[i] = bound
+      }
+      this._amdAyahBoundByIndex = indexMap
       return ayahBounds
+    },
+    getAmdAyahBoundForWordIndex(index) {
+      const map = this._amdAyahBoundByIndex
+      if (Array.isArray(map) && map[index]) return map[index]
+      const ayahBounds = this.getAmdAyahBoundsCached()
+      return (Array.isArray(ayahBounds) ? ayahBounds : []).find(
+        (bound) => index >= bound.start && index < bound.end
+      ) || null
     },
     mergeLiveRecitationStatuses(committedStatuses = [], displayStatuses = [], options = {}) {
       return mergeConfirmedLiveRecitationStatuses(committedStatuses, displayStatuses, options)
@@ -21498,13 +21640,6 @@ export default {
           }
           return status
         })
-        // Keep a transient ASR revision on the newest word from sticking as a
-        // permanent mistake. Stop-on-mistake needs the flag immediately.
-        statuses = gateUnsettledIssueStatuses(statuses, {
-          active: this.recitationCheckRecording
-            && this.amdMistakeHandlingMode !== MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE,
-          counts: this.getAmdIssueSettleCounts(),
-        })
       }
       if (kind === 'memorisation') {
 	        this.aiMemorisationCheckerAlignmentState = committedAlignment.progression
@@ -22487,6 +22622,13 @@ export default {
         }
         const tick = () => {
           if (!vad.active) return
+          const now = Date.now()
+          // ~15 Hz is enough for silence detection; full rAF burns CPU during long recitations.
+          if (vad._lastTickAt && now - vad._lastTickAt < 66) {
+            vad.frame = window.requestAnimationFrame(tick)
+            return
+          }
+          vad._lastTickAt = now
           analyser.getByteTimeDomainData(samples)
           let sum = 0
           for (const value of samples) {
@@ -22495,7 +22637,6 @@ export default {
           }
           const rms = Math.sqrt(sum / samples.length) / 128
           const speaking = rms > 0.028
-          const now = Date.now()
           if (speaking) {
             vad.lastSpeechAt = now
             vad.silenceStartedAt = 0
@@ -25811,7 +25952,9 @@ export default {
       this.toolsReturnFocusEl = document.activeElement instanceof HTMLElement ? document.activeElement : null
       this.startingFreshSessionSelection = !!preserveFreshSelection
       this.currentMode = mode
-      this.tab = ['tools', 'techniques', 'saved', 'stats'].includes(tab) ? tab : 'tools'
+      // Insights tab button is currently hidden — avoid a blank offcanvas body.
+      const requestedTab = tab === 'stats' ? 'saved' : tab
+      this.tab = ['tools', 'techniques', 'saved', 'stats'].includes(requestedTab) ? requestedTab : 'tools'
       this.syncSettingsDraft()
       if (this.tab === 'saved' || this.tab === 'stats') {
         this.loadSavedSessions()
@@ -26593,7 +26736,7 @@ export default {
           rangeEnd,
           reciterId: config.reciterId || config.reciter || this.reciterId || null,
           speed: Number(config.playbackSpeed || config.playback_speed || this.speed || 1),
-          repetitionsPerStep: Number(config.repetitionsPerStep || config.repetitions || this.repetitionsPerStep || 3),
+          repetitionsPerStep: resolveSessionRepetitions(config.repetitionsPerStep, config.repetitions, this.repetitionsPerStep),
           technique: config.technique || null,
           focusModeEnabled: !!config.focusModeEnabled,
           blurModeEnabled: !!config.blurModeEnabled,
@@ -27508,7 +27651,7 @@ export default {
         return this.madaniPageNumbers
       } catch (error) {
         console.error('Madani page load failed:', error)
-        this.madaniPagesError = error?.message || 'Failed to load Madani pages'
+        this.madaniPagesError = this.t('memorisation.mushafLoad.errorDesc')
         return []
       } finally {
         if (requestId === this.madaniLoadRequestId) {
@@ -28076,10 +28219,10 @@ export default {
       this.talqinModeEnabled = !!config.talqinModeEnabled
       this.recitationWindowSeconds = Math.max(5, Math.min(30, Number(config.recitationWindowSeconds || this.recitationWindowSeconds || 8)))
       this.order = 'seq'
-      this.repetitionsPerStep = Math.max(1, Math.min(50, Number(config.repetitionsPerStep || this.repetitionsPerStep || 5)))
+      this.repetitionsPerStep = resolveSessionRepetitions(config.repetitionsPerStep, this.repetitionsPerStep)
       this.selectedLoopCount = config.selectedLoopCount === 'infinite'
         ? 'infinite'
-        : Math.max(1, Math.min(50, Number(config.selectedLoopCount || this.selectedLoopCount || this.repetitionsPerStep || 5)))
+        : resolveSessionRepetitions(config.selectedLoopCount, this.selectedLoopCount, this.repetitionsPerStep)
       this.gapBetweenVerses = ['none', '1x', '3s', '5s', 'custom'].includes(config.gapBetweenVerses)
         ? config.gapBetweenVerses
         : this.gapBetweenVerses
@@ -29703,10 +29846,12 @@ export default {
         this.sessionLifecycleMutation === SESSION_MUTATION.IDLE
         && !this.sessionActionLock.isLocked()
         && !this.sessionExitEndingBusy
+        && !this.toolsStartInFlight
       ) {
         return false
       }
       this.sessionExitEndingBusy = false
+      this.toolsStartInFlight = false
       this.sessionActionLock?.reset?.()
       const nextStatus = this.sessionPaused || this.backendSessionSnapshot?.status === 'paused'
         ? SESSION_STATUS.PAUSED
@@ -30822,9 +30967,10 @@ export default {
 
     syncAudioUiState(nextTime, nextDuration) {
       const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
-      const minInterval = this.playerVisible ? 120 : 500
+      // Keep toolbar labels smooth enough without dirtying the Memorisation root ~8Hz.
+      const minInterval = this.playerVisible ? 250 : 500
       const timeDelta = Math.abs(nextTime - Number(this.currentTime || 0))
-      if (timeDelta < 0.12 && (now - Number(this._lastAudioUiSyncAt || 0)) < minInterval) {
+      if (timeDelta < 0.2 && (now - Number(this._lastAudioUiSyncAt || 0)) < minInterval) {
         return
       }
       this._lastAudioUiSyncAt = now
@@ -33545,7 +33691,7 @@ export default {
               : this.selectedLoopCount
           this.repetitionsPerStep = this.selectedLoopCount === 'infinite'
             ? 10
-            : Math.max(1, Math.min(50, Number(state.repetitionsPerStep || this.selectedLoopCount || this.repetitionsPerStep || 5)))
+            : resolveSessionRepetitions(state.repetitionsPerStep, this.selectedLoopCount, this.repetitionsPerStep)
           this.gapBetweenVerses = ['none', '1x', '3s', '5s', 'custom'].includes(state.gapBetweenVerses)
             ? state.gapBetweenVerses
             : this.gapBetweenVerses
@@ -33906,6 +34052,9 @@ export default {
       if (!this.learningBackendEnabled()) return
       if (this.isBootstrapping) return
       if (this.learningSync.applyingRemote) return
+      // Avoid deep-clone sync storms during session start and live AI recitation.
+      if (this.sessionLifecycleMutation === SESSION_MUTATION.STARTING) return
+      if (this.amdOpen && this.recitationCheckRecording) return
       if (!this.learningSync.scheduler) {
         this.learningSync.scheduler = createDebouncer(() => this.pushLearningState(), 1500)
       }

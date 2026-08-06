@@ -201,16 +201,28 @@ export function useMutqinPersistence() {
 
 export function watchMutqinState(state, owner = MUTQIN_DEFAULT_OWNER, onSaved = null) {
   if (activeWatchers.has(state)) return activeWatchers.get(state)
+  // Deep watches fire on every nested tick (ASR/live session). Debounce the
+  // expensive clone+stringify so localStorage/sync work batches between frames.
+  let debounceTimer = null
+  const flushSave = () => {
+    debounceTimer = null
+    const changed = saveMutqinState(state, owner)
+    if (changed && typeof onSaved === 'function') onSaved()
+  }
   const stop = watch(
     state,
     () => {
-      const changed = saveMutqinState(state, owner)
-      if (changed && typeof onSaved === 'function') onSaved()
+      if (debounceTimer != null) clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(flushSave, 400)
     },
     { deep: true, flush: 'post' }
   )
   const guardedStop = () => {
     activeWatchers.delete(state)
+    if (debounceTimer != null) {
+      clearTimeout(debounceTimer)
+      flushSave()
+    }
     stop()
   }
   activeWatchers.set(state, guardedStop)

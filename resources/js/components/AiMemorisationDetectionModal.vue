@@ -27,7 +27,7 @@
                 >{{ betaBadge }}</span>
               </div>
               <p v-if="rangeLabel" class="amd-range amd-range--premium">{{ rangeLabel }}</p>
-              <p v-if="disclaimer" class="amd-disclaimer">{{ disclaimer }}</p>
+              <p v-if="disclaimer" class="amd-disclaimer amd-disclaimer--row">{{ disclaimer }}</p>
             </div>
             <div class="amd-header-aside">
               <div
@@ -146,6 +146,14 @@
                 class="amd-mushaf-ayah amd-mushaf-ayah--premium"
                 :style="{ '--amd-font-scale': fontScale }"
               ></div>
+              <div
+                v-if="showAyahEmptyState"
+                class="amd-ayah-empty"
+                role="status"
+              >
+                <strong>{{ emptyAyahTitle }}</strong>
+                <p>{{ emptyAyahDesc }}</p>
+              </div>
             </div>
 
             <section
@@ -172,7 +180,7 @@
               class="amd-inline-error amd-inline-error--body"
               role="alert"
             >
-              <p>{{ error || genericError }}</p>
+              <p>{{ displayErrorMessage }}</p>
             </section>
           </div>
 
@@ -327,6 +335,8 @@ export default {
     enableMicLabel: { type: String, default: 'Enable microphone' },
     tryAgainLabel: { type: String, default: 'Try again' },
     genericError: { type: String, default: 'Something went wrong. Please try again.' },
+    emptyAyahTitle: { type: String, default: 'Ayah text not ready' },
+    emptyAyahDesc: { type: String, default: 'We could not show the ayah for this check. Close and try again.' },
   },
   emits: [
     'cancel',
@@ -379,6 +389,24 @@ export default {
       if (this.endingSoon || this.isComplete || this.isListening) return false
       if (this.stage === 'processing' || this.stage === 'analysing') return false
       return ['ready', 'idle', 'paused', 'error'].includes(String(this.stage || 'ready'))
+    },
+    showAyahEmptyState() {
+      if (this.endingSoon || this.isComplete) return false
+      if (this.isListening || this.isStarting) return false
+      const html = String(this.ayahHtml || '').replace(/<[^>]*>/g, '').replace(/\s+/g, '').trim()
+      return !html
+    },
+    displayErrorMessage() {
+      const text = String(this.error || '').trim()
+      if (!text) return this.genericError
+      if (
+        text.length > 180
+        || /stack|exception|traceback|sqlstate|http\/|status code|econn|enotfound|undefined is not|cannot read/i.test(text)
+        || /[{}\[\]]/.test(text)
+      ) {
+        return this.genericError
+      }
+      return text
     },
     canStop() {
       if (this.endingSoon || this.isComplete) return false
@@ -608,6 +636,7 @@ export default {
       const controller = this.ensureAutoFollowController()
       let changed = false
       let currentIndex = null
+      const prevActive = this._activeWordIndex
       for (const patch of patches) {
         const index = Number(patch?.index)
         if (!Number.isFinite(index)) continue
@@ -640,11 +669,16 @@ export default {
         node.classList.toggle('amd-word-peeked', !!patch.peeked)
         node.classList.toggle('tajweed-needs-review', status === 'incorrect' || status === 'partial')
         const tajweedActive = patch.tajweedActive != null ? !!patch.tajweedActive : !!patch.current
-        this.syncTajweedSegmentState(node, {
-          active: tajweedActive,
-          completed: status === 'correct',
-          needsReview: status === 'incorrect' || status === 'partial',
-        })
+        // Skip child-mark scans when the word has no tajweed markup.
+        if (node.classList.contains('tajweed-segment-host') || node.querySelector?.('.tajweed-mark, .tajweed-segment')) {
+          this.syncTajweedSegmentState(node, {
+            active: tajweedActive,
+            completed: status === 'correct',
+            needsReview: status === 'incorrect' || status === 'partial',
+          })
+        } else {
+          node.classList.toggle('is-tajweed-active', !!tajweedActive)
+        }
         if (patch.current || tajweedActive) currentIndex = index
         changed = true
       }
@@ -652,7 +686,10 @@ export default {
         this._activeWordIndex = currentIndex
         this.clearOtherActiveTajweedSegments(el, currentIndex)
       }
-      if (changed) this.scrollActiveIntoView(el)
+      // Follow only when the confirmed cursor moves — not on every status paint.
+      if (changed && currentIndex != null && currentIndex !== prevActive) {
+        this.scrollActiveIntoView(el)
+      }
       return changed
     },
     syncTajweedSegmentState(node, { active = false, completed = false, needsReview = false } = {}) {

@@ -129,6 +129,15 @@ export function createDebouncer(fn, wait = 1500) {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function isRetryable(error) {
+  // Never retry intentional cancellations / aborts.
+  if (
+    error?.code === 'ERR_CANCELED'
+    || error?.name === 'CanceledError'
+    || error?.name === 'AbortError'
+    || error?.__CANCEL__
+  ) {
+    return false
+  }
   // Network errors (no response) and 5xx / 429 are worth retrying.
   if (!error?.response) return true
   const status = error.response.status
@@ -155,11 +164,13 @@ export async function withRetry(fn, { retries = 3, baseDelay = 800 } = {}) {
 
 export const learningApi = {
   // Dashboard -------------------------------------------------------------
-  async getDashboard(days = 30) {
+  async getDashboard(days = 30, options = {}) {
     const safeDays = days === 7 ? 7 : 30
+    const { signal } = options
     const { data } = await withRetry(() =>
       http.get('/dashboard', {
         params: { days: safeDays },
+        signal,
         headers: {
           'Cache-Control': 'no-cache',
           Pragma: 'no-cache',
@@ -298,8 +309,9 @@ export const learningApi = {
   },
 
   // Personalised next-session recommendations -----------------------------
-  async getNextRecommendation(params = {}) {
-    const { data } = await http.get('/recommendations/next', { params })
+  async getNextRecommendation(params = {}, options = {}) {
+    const { signal } = options
+    const { data } = await http.get('/recommendations/next', { params, signal })
     return data?.recommendation ?? null
   },
   async startRecommendedSession(recommendationId, settings = null) {

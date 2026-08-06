@@ -31,7 +31,6 @@ const {
   clampCursorToPaceLimit,
   resolveLivePaceLimit,
   clampStatusesToConfirmedCursor,
-  gateUnsettledIssueStatuses,
   mergeLiveRecitationStatuses,
   resolveConfirmedWordIndex,
   resolveExpectedWordIndex,
@@ -193,39 +192,23 @@ const {
   )
 }
 
-// Settle gate: a fresh issue on the newest word waits one pass before painting.
+// Committed incorrect must paint immediately — same pipeline as green/amber.
 {
-  const counts = new Map()
-  const statuses = [
-    { status: 'correct' },
-    { status: 'correct' },
-    { status: 'incorrect', similarity: 0.3 },
-  ]
-  const first = gateUnsettledIssueStatuses(statuses, { active: true, counts })
-  assert.equal(first[2].status, 'pending', 'first sighting of a trailing mistake is held')
-  assert.equal(first[1].status, 'correct', 'earlier words keep their paint')
-  const second = gateUnsettledIssueStatuses(statuses, { active: true, counts })
-  assert.equal(second[2].status, 'incorrect', 'a repeated mistake paints on the next pass')
-}
-
-{
-  const counts = new Map()
-  const statuses = [{ status: 'correct' }, { status: 'incorrect' }]
-  assert.equal(
-    gateUnsettledIssueStatuses(statuses, { active: false, counts })[1].status,
-    'incorrect',
-    'gate is inert once recording stops (or in stop-on-mistake mode)',
+  const merged = mergeLiveRecitationStatuses(
+    [
+      { status: 'correct' },
+      { status: 'correct' },
+      { status: 'incorrect', similarity: 0.3 },
+    ],
+    [
+      { status: 'correct' },
+      { status: 'correct' },
+      { status: 'incorrect', similarity: 0.3 },
+    ],
+    { confirmedOnly: true },
   )
-}
-
-{
-  const counts = new Map()
-  const statuses = [{ status: 'correct' }, { status: 'correct' }]
-  assert.equal(
-    gateUnsettledIssueStatuses(statuses, { active: true, counts })[1].status,
-    'correct',
-    'greens are never held back',
-  )
+  assert.equal(merged[2].status, 'incorrect', 'trailing committed red paints on first pass')
+  assert.equal(merged[1].status, 'correct', 'earlier greens keep their paint')
 }
 
 // Wiring: AMD live alignment must apply the pace guard and drop skip-ahead.
@@ -237,7 +220,9 @@ const {
   assert.match(js, /spokenWordCount:\s*committedWords\.length/)
   assert.match(js, /liveAlignmentOptions\.lookahead\s*=\s*0/)
   assert.match(js, /livePreviewAlignmentOptions\.lookahead\s*=\s*0/)
-  assert.match(js, /gateUnsettledIssueStatuses\(statuses,\s*\{/)
+  // Red must not wait for an extra settle observation after the mistake is known.
+  assert.doesNotMatch(js, /gateUnsettledIssueStatuses/)
+  assert.doesNotMatch(js, /getAmdIssueSettleCounts|_amdIssueSettleCounts/)
   // Words held back by the ceiling must repaint on the timer, not wait for
   // recognition that may never arrive — and the signature guard would skip it.
   assert.match(js, /releaseAmdPaceHold\(\)\s*\{/)

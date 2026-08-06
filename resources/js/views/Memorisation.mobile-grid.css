@@ -265,11 +265,13 @@
     flex-flow: row nowrap !important;
     align-items: center !important;
     justify-content: flex-end !important;
+    gap: var(--top-card-toolbar-gap, 0.5rem) !important;
     grid-column: 2 !important;
     grid-row: 1 !important;
     justify-self: end !important;
     width: auto !important;
     min-width: 0 !important;
+    max-width: 100% !important;
     pointer-events: auto !important;
     z-index: 80 !important;
   }
@@ -396,7 +398,7 @@
     display: inline-flex !important;
     flex-flow: row nowrap !important;
     align-items: center !important;
-    gap: 0.3rem !important;
+    gap: var(--top-card-toolbar-gap, 0.5rem) !important;
   }
 
   .top-card-session-actions.has-paired-actions ~ .top-card-icon-controls {
@@ -413,12 +415,13 @@
     position: relative !important;
     inset: auto !important;
     top: auto !important;
-    inline-size: 36px !important;
-    min-inline-size: 36px !important;
-    max-inline-size: 36px !important;
-    block-size: 36px !important;
-    min-block-size: 36px !important;
+    inline-size: var(--top-card-toolbar-icon, var(--mq-top-icon, 36px)) !important;
+    min-inline-size: var(--top-card-toolbar-icon, var(--mq-top-icon, 36px)) !important;
+    max-inline-size: var(--top-card-toolbar-icon, var(--mq-top-icon, 36px)) !important;
+    block-size: var(--top-card-toolbar-icon, var(--mq-top-icon, 36px)) !important;
+    min-block-size: var(--top-card-toolbar-icon, var(--mq-top-icon, 36px)) !important;
     padding: 0 !important;
+    margin: 0 !important;
     transform: none !important;
   }
 
@@ -2794,9 +2797,9 @@
 
   .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
 .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom {
-    background: #ffffff !important;
-    border-color: rgba(31, 24, 18, 0.14) !important;
-    color: #2b241c !important;
+    background: var(--surface-strong, #ffffff) !important;
+    border-color: color-mix(in srgb, var(--border, rgba(31, 24, 18, 0.14)) 100%, transparent) !important;
+    color: var(--text, #2b241c) !important;
     font-weight: 400 !important;
     box-shadow: none !important;
   }
@@ -2805,21 +2808,35 @@
     display: inline !important;
   }
 
-  /* Dark mode: keep Custom session readable (mobile white bg was winning over dark text styles). */
-  [data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
+  /* Dark mode: opaque surface so cream label stays readable (white pill was winning). */
+  html[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
+html[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom,
+html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
 [data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom,
+[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
 .dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom.action-btn-exit,
-.dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border-color: rgba(246, 239, 230, 0.22) !important;
+.dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom,
+.dark-mode .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit {
+    background: #3a3129 !important;
+    border: 1px solid rgba(246, 239, 230, 0.28) !important;
     color: #f6efe6 !important;
     -webkit-text-fill-color: #f6efe6 !important;
+    box-shadow: none !important;
   }
 
-  [data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
+  html[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
+html[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i,
+html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit span,
+html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit i,
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
 [data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i,
+[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit span,
+[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit i,
 .dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
-.dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i {
+.dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom i,
+.dark-mode .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit span,
+.dark-mode .workspace-shell-actions .action-buttons-group .post-session-choice-pair > .post-session-choice-custom.action-btn-exit i {
     color: #f6efe6 !important;
     -webkit-text-fill-color: #f6efe6 !important;
   }
@@ -3824,15 +3841,17 @@
   }
 
   .top-card-icon-controls {
+    --top-card-toolbar-gap: 0.5rem;
     --mq-top-icon: 36px;
+    --top-card-toolbar-icon: var(--mq-top-icon);
     display: flex !important;
     flex-flow: row nowrap !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    gap: 6px !important;
+    gap: var(--top-card-toolbar-gap) !important;
     width: max-content !important;
-    min-width: calc((var(--mq-top-icon) * 4) + 18px) !important;
-    max-width: none !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
     flex: 0 0 auto !important;
     flex-shrink: 0 !important;
     grid-column: 2 !important;
@@ -4420,10 +4439,19 @@
     display: none !important;
   }
 
-  /* Restore mini player + theme-safe text */
-  .player-dock,
-.player-dock.tools-open {
+  /* Restore mini player + theme-safe text.
+     Keep .tools-open under the full-screen controls drawer (z-index 12490)
+     so the Start Session footer is never covered by an invisible hit target. */
+  .player-dock {
     z-index: 12600 !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+  }
+
+  .player-dock.tools-open {
+    z-index: 12470 !important;
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -4437,6 +4465,13 @@
     pointer-events: auto !important;
     visibility: visible !important;
     opacity: 1 !important;
+  }
+
+  .player-dock.tools-open > *,
+  .player-dock.tools-open .player-dock-card,
+  .player-dock.tools-open .player-bar,
+  .player-dock.tools-open .playback-pill {
+    pointer-events: none !important;
   }
 
   .player-bar.compact .player-mini,
@@ -5025,6 +5060,8 @@
 
   .workspace-shell-head > .top-card-icon-controls,
 .workspace-shell--post-session-choice .workspace-shell-head > .top-card-icon-controls {
+    --top-card-toolbar-gap: 0.5rem;
+    --top-card-toolbar-icon: 36px;
     grid-column: 2 !important;
     grid-row: 1 !important;
     justify-self: end !important;
@@ -5035,13 +5072,14 @@
     justify-content: flex-end !important;
     width: auto !important;
     min-width: 0 !important;
-    max-width: none !important;
+    max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
-    gap: 6px !important;
+    gap: var(--top-card-toolbar-gap) !important;
     z-index: 90 !important;
     pointer-events: auto !important;
     overflow: visible !important;
+    box-sizing: border-box !important;
   }
 
   .workspace-shell-head > .top-card-icon-controls .top-card-font-wrap {
@@ -5049,11 +5087,11 @@
     align-items: center !important;
     justify-content: center !important;
     position: relative !important;
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
-    flex: 0 0 36px !important;
+    width: var(--top-card-toolbar-icon, 36px) !important;
+    height: var(--top-card-toolbar-icon, 36px) !important;
+    min-width: var(--top-card-toolbar-icon, 36px) !important;
+    min-height: var(--top-card-toolbar-icon, 36px) !important;
+    flex: 0 0 var(--top-card-toolbar-icon, 36px) !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
@@ -5068,11 +5106,11 @@
     align-items: center !important;
     justify-content: center !important;
     position: relative !important;
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
-    flex: 0 0 36px !important;
+    width: var(--top-card-toolbar-icon, 36px) !important;
+    height: var(--top-card-toolbar-icon, 36px) !important;
+    min-width: var(--top-card-toolbar-icon, 36px) !important;
+    min-height: var(--top-card-toolbar-icon, 36px) !important;
+    flex: 0 0 var(--top-card-toolbar-icon, 36px) !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
@@ -5107,10 +5145,13 @@
     align-items: center !important;
     justify-content: center !important;
     position: relative !important;
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
+    width: var(--top-card-toolbar-icon, 36px) !important;
+    height: var(--top-card-toolbar-icon, 36px) !important;
+    min-width: var(--top-card-toolbar-icon, 36px) !important;
+    min-height: var(--top-card-toolbar-icon, 36px) !important;
+    max-width: var(--top-card-toolbar-icon, 36px) !important;
+    max-height: var(--top-card-toolbar-icon, 36px) !important;
+    flex: 0 0 var(--top-card-toolbar-icon, 36px) !important;
     padding: 0 !important;
     margin: 0 !important;
     border-radius: 999px !important;

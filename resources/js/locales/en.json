@@ -40,7 +40,28 @@
     "pausingSession": "Pausing…",
     "endingSession": "Ending…",
     "startingSession": "Starting…",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "retry": "Try again",
+    "tryAgain": "Try again",
+    "status": {
+      "loadingTitle": "Loading…",
+      "loadingDesc": "Please wait a moment.",
+      "emptyTitle": "Nothing here yet",
+      "emptyDesc": "When you add something, it will show up here.",
+      "noResultsTitle": "No matches found",
+      "noResultsDesc": "Try clearing filters or searching with different words.",
+      "errorTitle": "Something went wrong",
+      "errorDesc": "We couldn’t load this. Check your connection, then try again.",
+      "authTitle": "Sign in to continue",
+      "authDesc": "Log in to open your memorisation workspace and keep progress in sync.",
+      "unavailableTitle": "Not available right now",
+      "unavailableDesc": "This feature isn’t available at the moment. Please try again later.",
+      "clearFilters": "Clear filters",
+      "startSession": "Start a session",
+      "returnToSessions": "Return to sessions",
+      "logIn": "Log in",
+      "createFirstNote": "Write your first note"
+    }
   },
   "auth": {
     "continueGoogle": "Continue with Google",
@@ -447,6 +468,24 @@
       "desc": "Open session setup to pick a surah and ayah range. Your verses appear here once you start.",
       "startNewSession": "Start new session",
       "continuePreviousSession": "Continue from previous session"
+    },
+    "mushafLoad": {
+      "errorTitle": "Mushaf page couldn’t load",
+      "errorDesc": "The page view didn’t load. Try again, or switch to stacked ayahs.",
+      "retry": "Try again",
+      "switchStacked": "Switch to stacked view"
+    },
+    "verseText": {
+      "unavailableTitle": "Ayah text unavailable",
+      "unavailableDesc": "We couldn’t load this ayah’s Arabic text. Refresh the session or try again."
+    },
+    "analyticsEmpty": {
+      "title": "No insights yet",
+      "desc": "Save a session and practise a little — your progress cards will appear here.",
+      "modalErrorTitle": "Analytics unavailable",
+      "modalErrorDesc": "We couldn’t prepare this session overview. Close and try again from a saved session.",
+      "modalEmptyTitle": "No analytics for this session",
+      "modalEmptyDesc": "Play ayah audio or finish a short practice, then open analytics again."
     },
     "postSessionChoice": {
       "title": "What would you like to practise next?",
@@ -2660,9 +2699,11 @@
     },
     "amd": {
       "title": "Check your memorisation",
+      "emptyAyahTitle": "Ayah text not ready",
+      "emptyAyahDesc": "We couldn’t show the ayah surface for this check. Close and open the check again.",
       "betaBadge": "",
-      "disclaimer": "",
-      "disclaimerShort": "",
+      "disclaimer": "Practice aid only — not a teacher’s ruling.",
+      "disclaimerShort": "Practice aid only — not a teacher’s ruling.",
       "onlyFromTestWithAi": "Finish your session, then choose Check my memorisation to open this check.",
       "assessmentType": "From memory",
       "readyCopy": "Recite aloud from memory. Mutqin will follow along gently as you go.",
@@ -2807,6 +2848,8 @@
     "nothingReadyToSave": "Nothing is ready to save yet. Load a surah range or start a session first.",
     "sessionSavedSuccess": "Session saved successfully.",
     "pleaseSelectAValidSurahAnd": "Please select a valid surah and ayah range first",
+    "failedToStartSession": "Could not start the session. Please try again.",
+    "sessionBusyTryAgain": "A session action is already in progress. Please wait a moment and try again.",
     "noActiveSessionToSave": "No active session to save",
     "sessionSaved2": "Session saved",
     "sessionDeleted": "Session deleted",

@@ -402,6 +402,92 @@ class NextSessionRecommendationTest extends TestCase
         );
     }
 
+    public function test_start_recommendation_defaults_repetitions_to_one_when_unset(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+
+        $recommendation = SessionRecommendation::create([
+            'user_id' => $user->id,
+            'recommendation_type' => RecommendationType::Continue->value,
+            'reason_code' => RecommendationReasonCode::ContinueCurrentSurah->value,
+            'status' => 'generated',
+            'surah_number' => 2,
+            'ayah_start' => 15,
+            'ayah_end' => 17,
+            'session_mode' => 'new_learning',
+            'recommended_technique' => 'talqin',
+            'recommended_playback_speed' => 1,
+            'recommended_repetitions' => null,
+            'payload' => [
+                'surah' => ['id' => 2, 'name' => 'Al-Baqarah'],
+                'ayah_range' => ['from' => 15, 'to' => 17, 'count' => 3],
+                'session_mode' => 'new_learning',
+                'settings' => [
+                    'technique' => 'talqin',
+                    'playback_speed' => 1,
+                ],
+            ],
+            'recommended_settings' => [
+                'technique' => 'talqin',
+                'playback_speed' => 1,
+            ],
+        ]);
+
+        $started = $this->actingAs($user)
+            ->postJson('/api/recommendations/start', [
+                'recommendation_id' => $recommendation->id,
+            ])
+            ->assertOk()
+            ->json('session');
+
+        $this->assertSame(1, (int) data_get($started, 'metadata.config.repetitionsPerStep'));
+    }
+
+    public function test_start_recommendation_keeps_explicit_repetitions_from_plan(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+
+        $recommendation = SessionRecommendation::create([
+            'user_id' => $user->id,
+            'recommendation_type' => RecommendationType::Continue->value,
+            'reason_code' => RecommendationReasonCode::ContinueCurrentSurah->value,
+            'status' => 'generated',
+            'surah_number' => 2,
+            'ayah_start' => 15,
+            'ayah_end' => 17,
+            'session_mode' => 'new_learning',
+            'recommended_technique' => 'talqin',
+            'recommended_playback_speed' => 1,
+            'recommended_repetitions' => 4,
+            'payload' => [
+                'surah' => ['id' => 2, 'name' => 'Al-Baqarah'],
+                'ayah_range' => ['from' => 15, 'to' => 17, 'count' => 3],
+                'session_mode' => 'new_learning',
+                'settings' => [
+                    'technique' => 'talqin',
+                    'playback_speed' => 1,
+                    'repetitions' => 4,
+                ],
+            ],
+            'recommended_settings' => [
+                'technique' => 'talqin',
+                'playback_speed' => 1,
+                'repetitions' => 4,
+            ],
+        ]);
+
+        $started = $this->actingAs($user)
+            ->postJson('/api/recommendations/start', [
+                'recommendation_id' => $recommendation->id,
+            ])
+            ->assertOk()
+            ->json('session');
+
+        $this->assertSame(4, (int) data_get($started, 'metadata.config.repetitionsPerStep'));
+    }
+
     public function test_end_session_returns_recommendation_idempotently(): void
     {
         $user = User::factory()->create();

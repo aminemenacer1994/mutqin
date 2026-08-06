@@ -8,6 +8,8 @@
  *   repeat_recommended (return to previous session) | create_custom
  */
 
+import { resolveSessionRepetitions } from '../session/sessionDefaults.js'
+
 /** @typedef {'draft'|'ready'|'active'|'paused'|'ended'} ProductSessionStatus */
 
 /** @typedef {'repeat_recommended'|'create_custom'} PostSessionAction */
@@ -78,7 +80,7 @@ export function buildRecommendedSessionTemplate(input = {}) {
     rangeEnd,
     reciterId: input.reciterId ?? input.reciter ?? null,
     playbackSpeed: toOptionalNumber(input.playbackSpeed ?? input.speed ?? input.playback_speed) ?? 1,
-    repetitions: Math.max(1, toPositiveInt(input.repetitions ?? input.repetitionsPerStep) || 3),
+    repetitions: resolveSessionRepetitions(input.repetitions, input.repetitionsPerStep),
     delay: Math.max(0, Number(input.delay ?? 0) || 0),
     gapBetweenVerses: input.gapBetweenVerses || null,
     customGapSeconds: toOptionalNumber(input.customGapSeconds),

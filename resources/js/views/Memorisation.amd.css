@@ -293,6 +293,7 @@
 
 /* Mushaf shell */
 .amd-mushaf-shell {
+  position: relative;
   padding: 1.1rem 1rem 1.25rem;
   border-radius: 16px;
   background: #fff;
@@ -644,6 +645,40 @@
   display: grid;
   gap: 0.65rem;
   justify-items: start;
+}
+
+.amd-ayah-empty {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  gap: 0.35rem;
+  padding: 1.25rem;
+  text-align: center;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--surface, #fff) 88%, transparent);
+  color: var(--text-muted, #6b6560);
+}
+
+.amd-ayah-empty strong {
+  color: var(--text, #1f1812);
+  font-size: 0.95rem;
+}
+
+.amd-ayah-empty p {
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+[data-theme="dark"] .amd-ayah-empty {
+  background: color-mix(in srgb, var(--surface, #1c1916) 90%, transparent);
+}
+
+[data-theme="dark"] .amd-ayah-empty strong {
+  color: var(--text, #f3eee7);
 }
 
 .amd-inline-error p {
@@ -1444,6 +1479,7 @@
 /* Keep āyah markers tied to their verse run — avoid orphaned end numbers. */
 .amd-mushaf-stream .verse-ayah-end-number,
 .amd-mushaf-ayah--premium .verse-ayah-end-number {
+  position: relative;
   display: inline-block;
   white-space: nowrap;
   vertical-align: -0.28em;
@@ -1452,11 +1488,61 @@
   line-height: 0;
   background: transparent !important;
   background-image: none !important;
+  /* Above tajweed / live word highlights so ornate digits stay readable. */
+  z-index: 3;
+  isolation: isolate;
 }
 
 .amd-mushaf-stream .verse-ayah-end-number__digit,
 .amd-mushaf-ayah--premium .verse-ayah-end-number__digit {
   display: none !important;
+}
+
+/* Modal is teleported outside `.app` — keep theme PNG swap self-contained here. */
+.amd-overlay .verse-ayah-end-number__img--light {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  position: absolute !important;
+  inset: 0 !important;
+}
+
+.amd-overlay .verse-ayah-end-number__img--dark {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+}
+
+.amd-overlay[data-theme="dark"] .verse-ayah-end-number__img--light {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.amd-overlay[data-theme="dark"] .verse-ayah-end-number__img--dark {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  position: absolute !important;
+  inset: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  filter: none !important;
+  box-shadow: none !important;
 }
 
 .amd-mushaf-ayah--premium .wbw-word,
@@ -1519,12 +1605,25 @@
 }
 
 .amd-disclaimer {
-  margin: 0.35rem 0 0;
-  max-width: 42ch;
+  margin: 0.28rem 0 0;
+  max-width: min(52ch, 100%);
   color: color-mix(in srgb, var(--text-muted, #78716c) 92%, transparent);
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: 0.75rem;
+  line-height: 1.3;
   font-weight: 450;
+}
+
+/* Clean single-row disclaimer under the AMD title */
+.amd-disclaimer--row {
+  display: block;
+  margin-top: 0.22rem;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
 }
 
 .amd-record-btn {
@@ -2065,10 +2164,13 @@
 .amd-header--compact .amd-disclaimer,
 .amd-header--compact .amd-disclaimer--compact {
   display: block !important;
-  margin-top: 0.55rem;
-  max-width: 48ch;
-  font-size: 0.82rem;
-  line-height: 1.45;
+  margin-top: 0.22rem;
+  max-width: 100%;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .amd-mic-status--compact {
@@ -4902,4 +5004,151 @@
   -webkit-text-fill-color: transparent !important;
   background: transparent !important;
   box-shadow: none !important;
+}
+
+/* ==========================================================================
+   Dark mode — final polish (must stay last to beat light !important chrome)
+   Ayah Recitation / AI Memorisation Detection modal
+   ========================================================================== */
+
+.amd-overlay[data-theme="dark"],
+[data-theme="dark"] .amd-overlay {
+  background: var(--mutqin-modal-backdrop, color-mix(in srgb, #070a09 72%, transparent));
+}
+
+.amd-overlay[data-theme="dark"] .amd-header--compact .amd-title--premium,
+[data-theme="dark"] .amd-overlay .amd-header--compact .amd-title--premium,
+[data-theme="dark"] .amd-header--compact .amd-title--premium {
+  color: #f2ebe3 !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-header--compact .amd-range--premium,
+[data-theme="dark"] .amd-overlay .amd-header--compact .amd-range--premium,
+[data-theme="dark"] .amd-header--compact .amd-range--premium {
+  color: color-mix(in srgb, var(--text-muted, #d6d3d1) 92%, transparent) !important;
+  text-decoration-color: rgba(168, 162, 158, 0.4) !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-header--compact .amd-disclaimer,
+.amd-overlay[data-theme="dark"] .amd-header--compact .amd-disclaimer--compact,
+[data-theme="dark"] .amd-overlay .amd-header--compact .amd-disclaimer,
+[data-theme="dark"] .amd-header--compact .amd-disclaimer--compact {
+  color: color-mix(in srgb, var(--text-muted, #a8a29e) 94%, transparent) !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-icon-btn--close,
+[data-theme="dark"] .amd-overlay .amd-icon-btn--close,
+[data-theme="dark"] .amd-icon-btn--close {
+  background: #1c1917 !important;
+  border-color: rgba(245, 245, 244, 0.16) !important;
+  color: #e7e5e4 !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-icon-btn--close:hover,
+.amd-overlay[data-theme="dark"] .amd-icon-btn--close:focus-visible,
+[data-theme="dark"] .amd-overlay .amd-icon-btn--close:hover,
+[data-theme="dark"] .amd-icon-btn--close:hover {
+  background: #292524 !important;
+  border-color: rgba(245, 245, 244, 0.28) !important;
+  color: #f5f5f4 !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-tool-btn--sound.active,
+[data-theme="dark"] .amd-overlay .amd-tool-btn--sound.active,
+[data-theme="dark"] .amd-tool-btn--sound.active {
+  background: color-mix(in srgb, #6ec9a4 16%, #1c1917) !important;
+  border-color: color-mix(in srgb, #6ec9a4 40%, transparent) !important;
+  color: #b8e6cf !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-tool-btn--sound:not(.active),
+[data-theme="dark"] .amd-overlay .amd-tool-btn--sound:not(.active),
+[data-theme="dark"] .amd-tool-btn--sound:not(.active) {
+  opacity: 0.9;
+  background: #1c1917 !important;
+  border-color: rgba(245, 245, 244, 0.14) !important;
+  color: #a8a29e !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-tools-bar__btn:hover:not(:disabled),
+[data-theme="dark"] .amd-overlay .amd-tools-bar__btn:hover:not(:disabled),
+.amd-overlay[data-theme="dark"] .amd-modal .amd-tools-bar__btn:hover:not(:disabled) {
+  background: color-mix(in srgb, rgba(245, 245, 244, 0.1) 80%, transparent) !important;
+  color: #f5f5f4 !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-tools-bar__btn.is-active,
+[data-theme="dark"] .amd-overlay .amd-tools-bar__btn.is-active,
+.amd-overlay[data-theme="dark"] .amd-modal .amd-tools-bar__btn.is-active {
+  background: color-mix(in srgb, #6ec9a4 16%, transparent) !important;
+  color: #b8e6cf !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-tools-bar__btn.is-active:hover:not(:disabled),
+[data-theme="dark"] .amd-overlay .amd-tools-bar__btn.is-active:hover:not(:disabled) {
+  background: color-mix(in srgb, #6ec9a4 22%, transparent) !important;
+  color: #d1fae5 !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-tools-bar__btn:focus-visible,
+.amd-overlay[data-theme="dark"] .amd-tools-bar__shown:focus-within,
+[data-theme="dark"] .amd-overlay .amd-tools-bar__btn:focus-visible {
+  outline-color: color-mix(in srgb, #6ec9a4 55%, transparent) !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-tools-bar__timer i,
+[data-theme="dark"] .amd-overlay .amd-tools-bar__timer i {
+  color: #c4a882 !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-tools-bar__timer[data-running="true"] i,
+[data-theme="dark"] .amd-overlay .amd-tools-bar__timer[data-running="true"] i {
+  color: #6ec9a4 !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-tools-bar__icon-btn.active,
+[data-theme="dark"] .amd-overlay .amd-tools-bar__icon-btn.active {
+  background: color-mix(in srgb, #6ec9a4 14%, #1c1917) !important;
+  border-color: color-mix(in srgb, #6ec9a4 36%, transparent) !important;
+  color: #b8e6cf !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-complete__spinner,
+[data-theme="dark"] .amd-complete__spinner {
+  border-color: color-mix(in srgb, #6ec9a4 28%, transparent);
+  border-top-color: #6ec9a4;
+}
+
+.amd-overlay[data-theme="dark"] .amd-complete--handoff,
+[data-theme="dark"] .amd-complete--handoff {
+  color: color-mix(in srgb, var(--text-muted, #d6d3d1) 90%, transparent);
+}
+
+.amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium,
+[data-theme="dark"] .amd-overlay .amd-mushaf-ayah--premium,
+[data-theme="dark"] .amd-mushaf-ayah--premium {
+  color: #f2ebe3 !important;
+  -webkit-text-fill-color: #f2ebe3;
+}
+
+.amd-overlay[data-theme="dark"] .amd-mushaf-shell--premium,
+.amd-overlay[data-theme="dark"] .amd-modal--spacious .amd-mushaf-shell--primary,
+[data-theme="dark"] .amd-mushaf-shell--premium {
+  background: #141210 !important;
+  border-color: rgba(244, 220, 190, 0.12) !important;
+}
+
+.amd-overlay[data-theme="dark"] .amd-record-btn--inline:disabled,
+.amd-overlay[data-theme="dark"] .amd-record-btn--inline.is-busy,
+[data-theme="dark"] .amd-record-btn--inline:disabled,
+[data-theme="dark"] .amd-record-btn--inline.is-busy {
+  opacity: 0.55;
+  filter: saturate(0.7);
+}
+
+.amd-overlay[data-theme="dark"] .amd-body--premium--scroll,
+.amd-overlay[data-theme="dark"] .amd-body--scroll,
+[data-theme="dark"] .amd-body--premium.amd-body--scroll {
+  color: var(--text, #f2ebe3);
+  scrollbar-color: rgba(244, 220, 190, 0.28) transparent;
 }

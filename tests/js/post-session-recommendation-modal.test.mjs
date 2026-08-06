@@ -227,6 +227,21 @@ function t(key, params = {}) {
   assert.match(css, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/)
   assert.match(css, /\.post-session-simple__text-close[\s\S]*?display:\s*none/)
   assert.match(css, /post-session-simple__plan-prompt--context/)
+
+  // Dark mode: opaque surfaces so cream text stays readable on scope / weak / focus chips
+  assert.match(css, /--ps-card:\s*#2a2420/)
+  assert.match(
+    css,
+    /html\[data-theme="dark"\][\s\S]{0,220}\.post-session-simple__scope-card[\s\S]{0,120}background:\s*#3a3129\s*!important/,
+  )
+  assert.match(
+    css,
+    /html\[data-theme="dark"\][\s\S]{0,280}\.post-session-simple__weak-spots-list--inline > \.post-session-simple__weak-spots-item[\s\S]{0,160}background:\s*#3a2a28\s*!important/,
+  )
+  assert.match(
+    css,
+    /html\[data-theme="dark"\][\s\S]{0,220}\.post-session-simple__quran-focus[\s\S]{0,120}background:\s*#3a3129\s*!important/,
+  )
 }
 
 // Template order: outcome → focus → why → weak spots → details → practice plan

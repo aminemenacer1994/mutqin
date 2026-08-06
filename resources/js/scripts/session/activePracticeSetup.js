@@ -12,6 +12,7 @@ import {
 } from '../techniques/techniqueDisplay.js'
 import { MISTAKE_HANDLING_MODES } from '../memorisationDetection/mistakeFeedback.js'
 import { PRACTICE_SCOPE } from '../recommendations/revisionPracticeScope.js'
+import { resolveSessionRepetitions } from './sessionDefaults.js'
 
 export const TOOL_STATE = Object.freeze({
   AVAILABLE: 'available',
@@ -253,7 +254,7 @@ export function buildActivePracticeSetup(input = {}, t = null) {
   }
   pushTechnique('anchor', !!input.anchorEnabled, { icon: 'bi-pin-angle-fill' })
 
-  const reps = Math.max(1, Number(input.repetitions) || 3)
+  const reps = resolveSessionRepetitions(input.repetitions)
   items.push({
     id: 'repetitions',
     kind: 'setting',
@@ -471,7 +472,7 @@ export function buildSessionConfirmationPanel(input = {}, items = [], t = null) 
     {
       id: 'repetitions',
       label: translate(t, 'memorisation.activePracticeSetup.confirm.repetitions', 'Repetition count'),
-      value: String(Math.max(1, Number(input.repetitions) || 3)),
+      value: String(resolveSessionRepetitions(input.repetitions)),
     },
     {
       id: 'playback_speed',
@@ -531,7 +532,7 @@ export function buildAppliedPracticeSetupSnapshot(input = {}, items = []) {
   return {
     technique_ids: activeTechniqueIds,
     primary_technique: activeTechniqueIds[0] || (input.talqinEnabled ? 'talqin' : null),
-    repetitions: Math.max(1, Number(input.repetitions) || 3),
+    repetitions: resolveSessionRepetitions(input.repetitions),
     playback_speed: Number(input.playbackSpeed) || 1,
     visibility_percent: input.blurEnabled
       ? Math.max(0, Math.min(100, Number(input.blurIntensity) || 50))
@@ -575,7 +576,7 @@ export function collectPracticeSetupInputFromSession(vm = {}, extras = {}) {
     chainingEnabled: !!(vm.chainingEnabled ?? config.chainingEnabled),
     chainingMethod: vm.chainingMethod || config.chainingMethod || 'linking',
     anchorEnabled: !!(vm.anchorModeEnabled ?? config.anchorModeEnabled),
-    repetitions: Number(vm.repetitionsPerStep ?? config.repetitionsPerStep ?? 3),
+    repetitions: resolveSessionRepetitions(vm.repetitionsPerStep, config.repetitionsPerStep),
     playbackSpeed: Number(vm.speed ?? config.speed ?? 1),
     practiceScope: extras.practiceScope
       || vm.activeMemorisationPlan?.practiceScope

@@ -13,7 +13,14 @@
         </button>
       </div>
 
-      <template v-else-if="data">
+      <div v-else-if="!data" class="user-dashboard__error" role="status">
+        <span>{{ t('common.status.emptyDesc') }}</span>
+        <button type="button" class="dash-btn dash-btn--primary" @click="reload(true)">
+          {{ t('dashboard.retry') }}
+        </button>
+      </div>
+
+      <template v-else>
         <header class="dash-hero dash-reveal">
           <div class="dash-hero__row">
             <div class="dash-hero__copy">
@@ -573,6 +580,9 @@ export default {
       reduceMotion: false,
       lastSyncedAt: initial?.meta?.generated_at || null,
       syncState: initial ? 'ready' : 'loading',
+      lastDashboardFetchedAt: initial ? Date.now() : 0,
+      lastChartFingerprint: '',
+      dashboardQuietTtlMs: 45000,
       visibilityHandler: null,
       focusHandler: null,
       escapeHandler: null,
@@ -954,9 +964,9 @@ export default {
     this.refreshActiveSessionSnapshot()
     if (!this.data) {
       this.fetchDashboard(this.chartDays, { initial: true })
-    } else {
-      this.fetchDashboard(this.chartDays, { quiet: true })
     }
+    // When SSR/initial payload exists, skip an immediate quiet refetch —
+    // visibility/focus handlers cover staleness with a TTL.
 
     this.visibilityHandler = () => {
       if (document.visibilityState === 'visible') {
@@ -964,7 +974,13 @@ export default {
         this.fetchDashboard(this.chartDays, { quiet: true })
       }
     }
-    this.focusHandler = () => this.fetchDashboard(this.chartDays, { quiet: true })
+    // Focus often fires with visibilitychange; TTL inside fetchDashboard
+    // dedupes the double-hit without dropping intentional refreshes.
+    this.focusHandler = () => {
+      if (document.visibilityState === 'visible') {
+        this.fetchDashboard(this.chartDays, { quiet: true })
+      }
+    }
     this.escapeHandler = (event) => {
       if (event.key === 'Escape' && this.drawerOpen) this.closeDrawer()
     }
@@ -973,6 +989,7 @@ export default {
     document.addEventListener('keydown', this.escapeHandler)
   },
   beforeUnmount() {
+    try { this._dashboardAbort?.abort?.() } catch (_) { /* ignore */ }
     if (this.visibilityHandler) document.removeEventListener('visibilitychange', this.visibilityHandler)
     if (this.focusHandler) window.removeEventListener('focus', this.focusHandler)
     if (this.escapeHandler) document.removeEventListener('keydown', this.escapeHandler)
@@ -1297,33 +1314,65 @@ export default {
     async fetchDashboard(days = this.chartDays, options = {}) {
       const { quiet = false, initial = false, force = false } = options
       const safeDays = days === 7 ? 7 : 30
+      if (
+        quiet
+        && !force
+        && this.data
+        && this.lastDashboardFetchedAt
+        && (Date.now() - this.lastDashboardFetchedAt) < this.dashboardQuietTtlMs
+      ) {
+        return
+      }
       const requestId = ++this.dashboardRequestId
+      try { this._dashboardAbort?.abort?.() } catch (_) { /* ignore */ }
+      this._dashboardAbort = typeof AbortController !== 'undefined'
+        ? new AbortController()
+        : null
       if (!quiet) {
         this.loading = true
         this.syncState = 'loading'
       }
       try {
-        const payload = await learningApi.getDashboard(safeDays)
+        const payload = await learningApi.getDashboard(safeDays, {
+          signal: this._dashboardAbort?.signal,
+        })
         if (requestId !== this.dashboardRequestId) return
         const sanitized = this.sanitizePayload(payload)
         if (!sanitized) throw new Error('Dashboard payload owner mismatch')
+        const chartFingerprint = JSON.stringify({
+          days: sanitized?.chart?.days,
+          points: sanitized?.chart?.points,
+          summary: sanitized?.chart?.summary,
+        })
+        const chartChanged = chartFingerprint !== this.lastChartFingerprint
         this.data = sanitized
         this.error = false
         this.lastSyncedAt = sanitized?.meta?.generated_at || new Date().toISOString()
+        this.lastDashboardFetchedAt = Date.now()
         this.syncState = 'ready'
         if (sanitized?.chart?.days === 7 || sanitized?.chart?.days === 30) {
           this.chartDays = sanitized.chart.days
         } else {
           this.chartDays = safeDays
         }
-        // Remount Chart.js so labels/datasets fully refresh for the new range.
-        this.chartReady = false
-        await this.$nextTick()
+        // Remount Chart.js only when the series actually changed.
+        if (chartChanged || !quiet) {
+          this.lastChartFingerprint = chartFingerprint
+          this.chartReady = false
+          await this.$nextTick()
+        }
         if (requestId === this.dashboardRequestId) {
           this.chartReady = true
           this.refreshActiveSessionSnapshot()
         }
       } catch (error) {
+        if (
+          error?.code === 'ERR_CANCELED'
+          || error?.name === 'CanceledError'
+          || error?.name === 'AbortError'
+        ) {
+          return
+        }
         console.error('Dashboard fetch failed', error)
         if (requestId !== this.dashboardRequestId) return
         if (initial || force || !this.data) {

@@ -15,6 +15,7 @@ use App\Models\UserLastPosition;
 use App\Models\UserSession;
 use App\Support\AyahWorkload;
 use App\Support\QuranMetadata;
+use App\Support\SessionDefaults;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -204,7 +205,7 @@ class NextSessionRecommendationService
                     'rangeEnd' => $to,
                     'reciterId' => $settings['reciter'] ?? null,
                     'playbackSpeed' => $settings['playback_speed'] ?? 1,
-                    'repetitionsPerStep' => $settings['repetitions'] ?? 3,
+                    'repetitionsPerStep' => $settings['repetitions'] ?? SessionDefaults::REPETITIONS,
                     'ayatPerStep' => $settings['ayat_per_step'] ?? null,
                     'technique' => $settings['technique'] ?? null,
                     'complementaryTechnique' => $settings['complementary_technique'] ?? null,
@@ -1174,7 +1175,7 @@ class NextSessionRecommendationService
             'technique' => $technique,
             'reciter' => $completionSettings['reciter'] ?? $config['reciterId'] ?? null,
             'playback_speed' => $completionSettings['playback_speed'] ?? $config['playbackSpeed'] ?? 1.0,
-            'repetitions' => $completionSettings['repetitions'] ?? $config['repetitionsPerStep'] ?? 3,
+            'repetitions' => $completionSettings['repetitions'] ?? $config['repetitionsPerStep'] ?? SessionDefaults::REPETITIONS,
             'ayat_per_step' => $completionSettings['ayat_per_step'] ?? $config['ayatPerStep'] ?? null,
             'chaining_enabled' => (bool) ($completionSettings['chaining_enabled'] ?? $config['chainingEnabled'] ?? false),
             'chaining_method' => $completionSettings['chaining_method'] ?? $config['chainingMethod'] ?? null,
@@ -1844,7 +1845,7 @@ class NextSessionRecommendationService
             'technique' => $recommendation->recommended_technique ?: 'talqin',
             'reciter' => $recommendation->recommended_reciter,
             'playback_speed' => (float) ($recommendation->recommended_playback_speed ?: 1),
-            'repetitions' => (int) ($recommendation->recommended_repetitions ?: 3),
+            'repetitions' => (int) ($recommendation->recommended_repetitions ?: SessionDefaults::REPETITIONS),
             'ayat_per_step' => $recommendation->recommended_ayat_per_step,
             ...$this->adaptation->techniqueFlags($recommendation->recommended_technique ?: 'talqin'),
         ];
@@ -2522,27 +2523,45 @@ class NextSessionRecommendationService
             return;
         }
 
+        $ayahNumbers = [];
         for ($ayah = $from; $ayah <= $to; $ayah++) {
             if (! QuranMetadata::isValidAyah($surah, $ayah)) {
                 break;
             }
-            $row = MemorisationProgress::query()->firstOrNew([
-                'user_id' => $user->id,
-                'surah_number' => $surah,
-                'ayah_number' => $ayah,
-            ]);
+            $ayahNumbers[] = $ayah;
+        }
+        if ($ayahNumbers === []) {
+            return;
+        }
+
+        $weakSet = array_fill_keys(array_map('intval', $weakAyahs), true);
+        $existing = MemorisationProgress::query()
+            ->where('user_id', $user->id)
+            ->where('surah_number', $surah)
+            ->whereIn('ayah_number', $ayahNumbers)
+            ->get()
+            ->keyBy('ayah_number');
+
+        $updatedAt = now()->toIso8601String();
+        foreach ($ayahNumbers as $ayah) {
+            $row = $existing->get($ayah);
+            if (! $row) {
+                $row = new MemorisationProgress([
+                    'user_id' => $user->id,
+                    'surah_number' => $surah,
+                    'ayah_number' => $ayah,
+                    'status' => 'learning',
+                    'mastery_level' => 0,
+                ]);
+            }
             $meta = is_array($row->metadata) ? $row->metadata : [];
             $meta['ai_recite'] = [
                 'last_accuracy' => $accuracy,
-                'weak' => in_array($ayah, array_map('intval', $weakAyahs), true),
+                'weak' => isset($weakSet[$ayah]),
                 'recommendation_id' => $recommendation->id,
-                'updated_at' => now()->toIso8601String(),
+                'updated_at' => $updatedAt,
             ];
             $row->metadata = $meta;
-            if (! $row->exists) {
-                $row->status = 'learning';
-                $row->mastery_level = 0;
-            }
             $row->save();
         }
     }

@@ -1754,6 +1754,8 @@
     },
     "amd": {
       "title": "AI Memorisation Detection",
+      "disclaimer": "Aide à la pratique uniquement — pas un jugement d’enseignant.",
+      "disclaimerShort": "Aide à la pratique uniquement — pas un jugement d’enseignant.",
       "assessmentType": "From memory",
       "readyCopy": "Select your range, hide the text, and recite from memory. Mutqin will listen, highlight mistakes, and build a personalised practice plan.",
       "startAssessment": "Start Assessment",

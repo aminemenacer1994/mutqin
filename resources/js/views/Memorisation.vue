@@ -89,7 +89,26 @@
     </aside>
 
     <!-- Main Content -->
-    <div v-if="appReady && isLoggedIn" class="main container" :class="{
+    <div
+      v-if="appReady && !isLoggedIn"
+      class="main container guest-auth-shell"
+      role="main"
+    >
+      <AppStatus
+        variant="auth"
+        size="lg"
+        fill
+        icon="bi-person-lock"
+        :title="t('common.status.authTitle')"
+        :description="t('home.guestNote')"
+        :action-label="t('common.status.logIn')"
+        :action-href="loginUrl"
+        :secondary-action-label="t('common.register')"
+        @secondary-action="goToRegister"
+      />
+    </div>
+
+    <div v-else-if="appReady && isLoggedIn" class="main container" :class="{
       'tools-open': showTools,
       'player-visible': playbackShellActive,
       'playback-pill-visible': playbackPillVisible,
@@ -651,7 +670,20 @@
                     <span v-if="liveTechniqueGuide?.label" class="live-coach-mini__method">{{ liveTechniqueGuide.label }}</span>
                     <p class="live-coach-mini__text">{{ livePracticeCoachText }}</p>
                   </aside>
-                  <div v-if="!currentMushafPage" class="mushaf-empty-page">
+                  <div v-if="madaniPagesError" class="mushaf-empty-page mushaf-empty-page--error">
+                    <AppStatus
+                      variant="error"
+                      fill
+                      compact
+                      :title="t('memorisation.mushafLoad.errorTitle')"
+                      :description="t('memorisation.mushafLoad.errorDesc')"
+                      :action-label="t('memorisation.mushafLoad.retry')"
+                      :secondary-action-label="t('memorisation.mushafLoad.switchStacked')"
+                      @action="ensureMadaniPagesLoaded({ force: true })"
+                      @secondary-action="setReadingViewMode('stacked')"
+                    />
+                  </div>
+                  <div v-else-if="!currentMushafPage" class="mushaf-empty-page">
                     <i class="bi bi-hourglass-split" aria-hidden="true"></i>
                     <strong>{{ workspaceLoadingLabel }}</strong>
                     <span>{{ t('memorisation.common.mushafSyncMessage') }}</span>
@@ -782,7 +814,7 @@
                   </div>
                   <div class="verse-actions" dir="ltr">
                     <button
-                      v-if="!amdOpen && !postSessionAiReciteActive && !recitationCheckRecording"
+                      v-if="false"
                       class="verse-inline-action-btn verse-inline-notes-btn"
                       type="button"
                       @click.stop="openAyahNotes(verse)"
@@ -856,6 +888,17 @@
                     'font-family': quranFontFamily
                   }">
                 </div>
+                <AppStatus
+                  v-else-if="isDataReady"
+                  class="verse-arabic-missing"
+                  variant="unavailable"
+                  size="sm"
+                  compact
+                  :title="t('memorisation.verseText.unavailableTitle')"
+                  :description="t('memorisation.verseText.unavailableDesc')"
+                  :action-label="t('common.retry')"
+                  @action="loadVerses(currentMode)"
+                />
 
                 <!-- Keep in-workspace aids available, but visually quieter -->
                 <!-- Source-guard references:
@@ -887,7 +930,12 @@
         'post-session-choice-tools-backdrop': isPostSessionChoiceVisible && postSessionChoiceOffcanvasOpen,
         'session-exit-tools-backdrop': showSessionExitModal && sessionExitOffcanvasOpen
       }" @click="closeToolsPanel" aria-hidden="true"></div>
-      <aside id="memorisationToolsPanel" ref="toolsPanel" class="tools offcanvas-section offcanvas-end h-100" :class="{
+      <aside
+        v-if="toolsPanelMounted"
+        id="memorisationToolsPanel"
+        ref="toolsPanel"
+        class="tools offcanvas-section offcanvas-end h-100"
+        :class="{
         open: showTools,
         'onboarding-post-session-tools': showPostSessionModal && postSessionOffcanvasOpen,
         'post-session-choice-tools': isPostSessionChoiceVisible && postSessionChoiceOffcanvasOpen,
@@ -1044,8 +1092,8 @@
                       <span class="range-value-pill">{{ repetitionDisplayValue }}</span>
                     </div>
                     <div class="range-control">
-                      <input type="range" :value="sliderRepetitionIndex" :style="sessionRepetitionSliderStyle"
-                        @input="setRepetitionsFromSliderIndex(Number($event.target.value))" min="0" :max="repetitionSliderSteps.length - 1" step="1"
+                      <input type="range" :value="sliderRepetitionValue" :style="sessionRepetitionSliderStyle"
+                        @input="setRepetitionsFromSlider(Number($event.target.value))" min="1" max="10" step="1"
                         class="input technique-range" :aria-valuetext="repetitionDisplayValue" />
                     </div>
                     <div class="slider-markers slider-markers-compact">
@@ -1565,6 +1613,15 @@
                     <strong>{{ item.value }}</strong>
                     <small>{{ item.description }}</small>
                   </article>
+                  <AppStatus
+                    v-if="!controlsAnalyticsCards.length"
+                    variant="empty"
+                    icon="bi-activity"
+                    :title="t('memorisation.analyticsEmpty.title')"
+                    :description="t('memorisation.analyticsEmpty.desc')"
+                    :action-label="t('memorisation.open_session_setup')"
+                    @action="openNewSessionSetup"
+                  />
                 </div>
                 <button type="button" class="analytics-toggle-btn" @click="openAdvancedMetricsModal">
                   <i class="bi bi-plus-circle"></i>
@@ -1757,11 +1814,19 @@
             </button>
           </template>
           <template v-else>
-            <button class="tools-btn btn btn-primary session-primary-action" @click="startSessionAndClose">
-              <i class="bi bi-play-fill" aria-hidden="true"></i>
-              <span>{{ toolsPrimaryStartLabel }}</span>
+            <button
+              type="button"
+              class="tools-btn btn btn-primary session-primary-action"
+              :class="{ 'is-loading': toolsStartBusy, 'is-disabled': toolsStartDisabled }"
+              :disabled="toolsStartDisabled"
+              :aria-busy="toolsStartBusy ? 'true' : 'false'"
+              :aria-disabled="toolsStartDisabled ? 'true' : 'false'"
+              @click="startSessionAndClose"
+            >
+              <i class="bi" :class="toolsStartBusy ? 'bi-arrow-repeat spin' : 'bi-play-fill'" aria-hidden="true"></i>
+              <span>{{ toolsStartBusy ? t('common.startingSession') : toolsPrimaryStartLabel }}</span>
             </button>
-            <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="resetControls">
+            <button type="button" class="tools-btn tools-btn-ghost tools-btn-soft" :disabled="toolsStartBusy" @click="resetControls">
               <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
             </button>
           </template>
@@ -2271,6 +2336,25 @@
             <i class="bi bi-hourglass-split"></i>
             <span>{{ t('memorisation.preparing_analytics') }}</span>
           </div>
+          <AppStatus
+            v-else-if="analyticsModalError"
+            variant="error"
+            fill
+            :title="t('memorisation.analyticsEmpty.modalErrorTitle')"
+            :description="t('memorisation.analyticsEmpty.modalErrorDesc')"
+            :action-label="t('common.close')"
+            @action="closeSessionAnalyticsModal"
+          />
+          <AppStatus
+            v-else-if="!analyticsModalData || !analyticsModalHasContent"
+            variant="empty"
+            fill
+            icon="bi-graph-up"
+            :title="t('memorisation.analyticsEmpty.modalEmptyTitle')"
+            :description="t('memorisation.analyticsEmpty.modalEmptyDesc')"
+            :action-label="t('common.close')"
+            @action="closeSessionAnalyticsModal"
+          />
           <template v-else-if="analyticsModalData">
             <section class="session-analytics-section">
               <div class="session-analytics-summary-grid">
@@ -2457,6 +2541,17 @@
           </button>
         </div>
         <div class="modal-body session-analytics-body advanced-metrics-body">
+          <AppStatus
+            v-if="!controlsAnalyticsCards.length && !detailedAnalyticsSections.length"
+            variant="empty"
+            fill
+            icon="bi-activity"
+            :title="t('memorisation.no_advanced_insights_yet')"
+            :description="t('memorisation.save_a_session_and_you_ll_unlock_the_deeper_breakd')"
+            :action-label="t('common.close')"
+            @action="closeAdvancedMetricsModal"
+          />
+          <template v-else>
           <section class="session-analytics-section">
             <div class="session-analytics-summary-grid">
               <article v-for="item in controlsAnalyticsCards" :key="`advanced-${item.key}`"
@@ -2465,6 +2560,14 @@
                 <strong>{{ item.value }}</strong>
                 <small>{{ item.description }}</small>
               </article>
+              <AppStatus
+                v-if="!controlsAnalyticsCards.length"
+                variant="empty"
+                size="sm"
+                icon="bi-activity"
+                :title="t('memorisation.analyticsEmpty.title')"
+                :description="t('memorisation.analyticsEmpty.desc')"
+              />
             </div>
           </section>
           <section class="session-analytics-section advanced-metrics-grid" aria-label="Advanced analytics cards">
@@ -2484,6 +2587,7 @@
               </div>
             </article>
           </section>
+          </template>
         </div>
       </div>
       </div>
@@ -3950,6 +4054,9 @@
       :done-label="amdLabels.done"
       :enable-mic-label="amdLabels.enableMic"
       :try-again-label="amdLabels.retry"
+      :empty-ayah-title="t('memorisation.amd.emptyAyahTitle')"
+      :empty-ayah-desc="t('memorisation.amd.emptyAyahDesc')"
+      :generic-error="t('common.status.errorDesc')"
       @cancel="closeAmdModalToCompletion"
       @toggle-blur="toggleAmdHiddenText"
       @peek-start="startAmdPeek"

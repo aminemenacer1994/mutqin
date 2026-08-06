@@ -17,6 +17,11 @@
         <button type="button" class="admin-btn" @click="boot(true)">{{ t('admin.retry') }}</button>
       </div>
 
+      <div v-else-if="!data" class="admin-console__state" role="status">
+        <span>{{ t('common.status.emptyDesc') }}</span>
+        <button type="button" class="admin-btn" @click="boot(true)">{{ t('admin.retry') }}</button>
+      </div>
+
       <template v-else>
         <header class="admin-console__top admin-reveal" style="--admin-delay: 0ms">
           <div class="admin-console__brand">

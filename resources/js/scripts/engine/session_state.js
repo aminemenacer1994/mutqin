@@ -3,6 +3,7 @@ import { plannerInitialState } from './planner'
 import { quizInitialState } from './quiz'
 import { mistakesInitialState } from './mistakes'
 import { audioInitialState } from './audio'
+import { DEFAULT_SESSION_REPETITIONS } from '../session/sessionDefaults.js'
 
 export const MEM_STATE_KEY = 'memorisation_state_v2'
 
@@ -21,11 +22,11 @@ export function defaultMemorisationState() {
     activeTab: 'beginner',
     selectedSurahId: '',
     ayahRange: { start: 1, end: 1 },
-    beginner: { repetitionCount: 3, playbackMode: 'continuous' },
+    beginner: { repetitionCount: DEFAULT_SESSION_REPETITIONS, playbackMode: 'continuous' },
     advanced: {
       recitationSpeed: 1,
       delayTime: 1,
-      repetitionCount: 3,
+      repetitionCount: DEFAULT_SESSION_REPETITIONS,
       rangeLoopDelay: 0,
       sessionRepetitions: 1,
       playbackMode: 'continuous'

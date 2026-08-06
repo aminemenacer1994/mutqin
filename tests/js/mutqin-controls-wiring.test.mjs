@@ -268,6 +268,13 @@ includesAll('desktop control group swap', [
   /\.workspace-shell--post-session-choice \.top-card-icon-controls[\s\S]*order: 3 !important;/,
 ])
 
+includesAll('top toolbar feature spacing', [
+  /\.top-card-icon-controls \{[\s\S]*--top-card-toolbar-gap:\s*0\.5rem;/,
+  /\.top-card-icon-controls \{[\s\S]*gap:\s*var\(--top-card-toolbar-gap\)\s*!important;/,
+  /\.top-card-icon-controls \{[\s\S]*--top-card-toolbar-icon:/,
+  /\.top-card-icon-controls \.top-card-layout-icons,[\s\S]*margin:\s*0\s*!important;/,
+])
+
 {
   const memorisationCss = readFileSync(new URL('../../resources/js/views/Memorisation.css', import.meta.url), 'utf8')
   const mobileGridCss = readFileSync(new URL('../../resources/js/views/Memorisation.mobile-grid.css', import.meta.url), 'utf8')
@@ -519,11 +526,16 @@ includesAll('ai memorisation detection modal wiring', [
   assert.match(amdCss, /\.amd-overlay\[data-theme="dark"\] \.amd-inline-error/)
   assert.match(amdCss, /\.amd-overlay\[data-theme="sepia"\] \.amd-modal--premium/)
   assert.match(amdCss, /\.amd-mistake-visual/)
+  assert.match(amdVue, /amd-disclaimer--row/)
+  assert.match(amdVue, /v-if="disclaimer"/)
+  assert.match(amdCss, /\.amd-disclaimer--row[\s\S]*?white-space:\s*nowrap/)
+  const en = readFileSync(new URL('../../resources/js/locales/en.json', import.meta.url), 'utf8')
+  assert.match(en, /"disclaimer":\s*"Practice aid only/)
+  assert.match(source, /memorisation\.amd\.disclaimer/)
   assert.match(amdVue, /amd-tools-container/)
   assert.match(amdVue, /amd-tools-bar/)
   assert.match(amdVue, /amd-tools-bar__timer/)
   assert.match(amdVue, /amd-tools-bar__btn/)
-  assert.match(amdVue, /amd-tools-bar--compact/)
   assert.match(amdVue, /bi-eye/)
   assert.match(amdVue, /elapsedLabel/)
   assert.doesNotMatch(amdVue, /amd-tools-bar__btn--labeled/)
@@ -667,6 +679,10 @@ includesAll('audio unlock flow', [
   /preloadQueueEntryAudio\(entry, options = \{\}\) \{[\s\S]*this\.claimAudioElement\(audio\)/,
   /normalizeAudioUrl\(url\) \{[\s\S]*cdn\.islamic\.network/,
   /startSessionAndClose\(options = \{\}\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true \}\)/,
+  /toolsStartInFlight:\s*false/,
+  /toolsStartBusy\(\)\s*\{/,
+  /modeDataMatchesConfig\(mode\)[\s\S]*await this\.loadVerses\(mode\)/,
+  /toasts\.failedToStartSession/,
   /captureAppliedPracticeSetup/,
   /appliedPracticeSetup/,
   /repeatPostSession\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true, sampleSession: keepSample \}\)/,
@@ -677,6 +693,20 @@ includesAll('audio unlock flow', [
   /playVerse\([^)]*primePlayback:\s*true/,
   /@click="playVerse\(quizCard, \{ primePlayback: true \}\)"/
 ])
+
+{
+  const mobileGridCss = readFileSync(new URL('../../resources/js/views/Memorisation.mobile-grid.css', import.meta.url), 'utf8')
+  assert.match(
+    mobileGridCss,
+    /\.player-dock\.tools-open\s*\{[\s\S]*?z-index:\s*12470\s*!important/,
+    'tools-open player dock must sit under the full-screen controls drawer'
+  )
+  assert.match(
+    mobileGridCss,
+    /\.player-dock\.tools-open \> \*[\s\S]*?pointer-events:\s*none\s*!important/,
+    'tools-open player dock children must not steal Start Session clicks'
+  )
+}
 
 includesAll('light theme default', [
   /theme: 'light'/,

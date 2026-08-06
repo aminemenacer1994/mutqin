@@ -106,11 +106,10 @@
           </section>
 
           <section
-            v-if="notes.length"
             class="ayah-notes-list-section"
-            :class="{ 'is-collapsed': !notesExpanded }"
+            :class="{ 'is-collapsed': !notesExpanded && notes.length > 0 }"
           >
-            <div class="ayah-notes-list-head">
+            <div v-if="notes.length" class="ayah-notes-list-head">
               <h3 id="ayahNotesListHeading">
                 {{ t('memorisation.ayahNotes.yourNotes') }}
                 <span class="ayah-notes-list-count-inline">({{ notes.length }})</span>
@@ -140,14 +139,36 @@
               id="ayahNotesListPanel"
               class="ayah-notes-list-panel"
               role="region"
-              aria-labelledby="ayahNotesListHeading"
+              :aria-labelledby="notes.length ? 'ayahNotesListHeading' : undefined"
             >
-              <div v-if="loading" class="ayah-notes-empty ayah-notes-empty--loading" role="status">
-                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-                <p>{{ t('memorisation.ayahNotes.loading') }}</p>
-              </div>
+              <AppStatus
+                v-if="loading"
+                variant="loading"
+                size="sm"
+                compact
+                :title="t('memorisation.ayahNotes.loading')"
+              />
 
-              <ul v-else class="ayah-notes-list" role="list">
+              <AppStatus
+                v-else-if="loadError"
+                variant="error"
+                size="sm"
+                :title="t('common.status.errorTitle')"
+                :description="t('memorisation.ayahNotes.loadFailed')"
+                :action-label="t('common.retry')"
+                @action="loadNotes"
+              />
+
+              <AppStatus
+                v-else-if="!notes.length"
+                variant="empty"
+                size="sm"
+                icon="bi-journal-text"
+                :title="t('memorisation.ayahNotes.emptyTitle')"
+                :description="t('memorisation.ayahNotes.empty')"
+              />
+
+              <ul v-else-if="notesExpanded" class="ayah-notes-list" role="list">
                 <li
                   v-for="note in notes"
                   :key="note.id"
@@ -258,12 +279,14 @@
 
 <script>
 import learningApi from '../scripts/api/learning'
+import AppStatus from './AppStatus.vue'
 
 const BODY_MAX_LENGTH = 2000
 const NOTES_COLLAPSE_THRESHOLD = 3
 
 export default {
   name: 'AyahNotesModal',
+  components: { AppStatus },
   props: {
     visible: { type: Boolean, default: false },
     surahNumber: { type: Number, default: 0 },
@@ -275,6 +298,7 @@ export default {
     return {
       notes: [],
       loading: false,
+      loadError: false,
       busy: false,
       draftTitle: '',
       draftBody: '',
@@ -411,10 +435,12 @@ export default {
     async loadNotes() {
       if (!this.surahNumber || !this.ayahNumber) {
         this.notes = []
+        this.loadError = false
         this.syncNotesExpandedDefault()
         return
       }
       this.loading = true
+      this.loadError = false
       this.formError = ''
       try {
         this.notes = await learningApi.getAyahNotes({
@@ -424,7 +450,7 @@ export default {
         this.syncNotesExpandedDefault()
       } catch (error) {
         console.error('Failed to load ayah notes', error)
-        this.formError = this.t('memorisation.ayahNotes.loadFailed')
+        this.loadError = true
         this.notes = []
         this.syncNotesExpandedDefault()
       } finally {

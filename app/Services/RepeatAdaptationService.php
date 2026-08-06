@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Support\SessionDefaults;
+
 /**
  * Performance-aware recommendation adaptation for Mutqin memorisation.
  *
@@ -57,7 +59,7 @@ class RepeatAdaptationService
             || ($attempt >= 2 && $mode !== 'progression' && $confidence !== 'confident');
 
         $speed = $this->clampSpeed((float) ($baseSettings['playback_speed'] ?? 1.0));
-        $repetitions = $this->clampRepetitions((int) ($baseSettings['repetitions'] ?? 3));
+        $repetitions = $this->clampRepetitions((int) ($baseSettings['repetitions'] ?? SessionDefaults::REPETITIONS));
         $ayatPerStep = isset($baseSettings['ayat_per_step'])
             ? max(1, (int) $baseSettings['ayat_per_step'])
             : null;
@@ -250,7 +252,7 @@ class RepeatAdaptationService
         }
 
         if ($confidence === 'needs_practice' && $aiResult === 'strong') {
-            $repetitions = min($repetitions, max(self::MIN_REPETITIONS, (int) ($baseSettings['repetitions'] ?? 3) + 1));
+            $repetitions = min($repetitions, max(self::MIN_REPETITIONS, (int) ($baseSettings['repetitions'] ?? SessionDefaults::REPETITIONS) + 1));
             $speed = max($speed, $this->clampSpeed((float) ($baseSettings['playback_speed'] ?? 1.0) - 0.15));
             $userReason = 'You selected Needs more practice, and AI Recite was already strong. This plan keeps the same range with a light repeat rather than adding unnecessary difficulty.';
             $intendedOutcome = 'Light reinforcement without unnecessary difficulty.';
@@ -258,7 +260,7 @@ class RepeatAdaptationService
         }
 
         if ($attempt > self::MAX_RETRY_ESCALATION) {
-            $repetitions = min($repetitions, (int) ($baseSettings['repetitions'] ?? 3) + 1);
+            $repetitions = min($repetitions, (int) ($baseSettings['repetitions'] ?? SessionDefaults::REPETITIONS) + 1);
             if ($rangeCount > 2 && ($ayatPerStep === null || $ayatPerStep > 1)) {
                 $ayatPerStep = 1;
                 if (! in_array('reduce_ayat_per_step', $adaptations, true)) {

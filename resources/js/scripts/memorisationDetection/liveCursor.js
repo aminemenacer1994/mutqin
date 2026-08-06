@@ -168,41 +168,6 @@ export function clampCursorToPaceLimit(cursor = {}, limit = Infinity) {
 }
 
 /**
- * Hold a freshly observed issue on the newest judged word for one more pass.
- * ASR revises its most recent tokens and painted issues are sticky, so a single
- * transient frame would otherwise leave a permanent mark on a correct word.
- * Only the trailing word is gated — earlier words the learner has moved past
- * are already confirmed by the following speech.
- */
-export function gateUnsettledIssueStatuses(statuses = [], options = {}) {
-  const list = Array.isArray(statuses) ? statuses : []
-  if (options.active !== true || !list.length) return list
-  const counts = options.counts instanceof Map ? options.counts : null
-  const minObservations = Math.max(1, Number(options.minObservations ?? 2))
-  let trailing = -1
-  for (let i = list.length - 1; i >= 0; i -= 1) {
-    if (isPaintedLiveStatus(list[i]?.status)) {
-      trailing = i
-      break
-    }
-  }
-  if (trailing < 0) return list
-  const status = String(list[trailing]?.status || '').toLowerCase()
-  if (status === 'correct') return list
-  const key = `${trailing}:${status}`
-  const seen = (Number(counts?.get(key)) || 0) + 1
-  counts?.set(key, seen)
-  if (seen >= minObservations) return list
-  const held = list.slice()
-  held[trailing] = {
-    ...(list[trailing] || {}),
-    status: 'pending',
-    note: 'Listening…',
-  }
-  return held
-}
-
-/**
  * Strip paint from any word strictly ahead of the confirmed cursor.
  * Interim / optimistic statuses beyond confirmed become pending.
  */

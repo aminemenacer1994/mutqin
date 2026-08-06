@@ -323,8 +323,10 @@
         text-shadow: none !important;
         transform: translateY(0.12em) !important;
       }
-      /* Only one theme image — never stack light+dark (dark was the ghost shadow) */
-      html body .app .verse-ayah-end-number__img--light {
+      /* Only one theme image — never stack light+dark (dark was the ghost shadow).
+         Include `.amd-overlay` — recitation modal is teleported outside `.app`. */
+      html body .app .verse-ayah-end-number__img--light,
+      html body .amd-overlay .verse-ayah-end-number__img--light {
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
@@ -341,19 +343,27 @@
         box-shadow: none !important;
       }
       html body .app .verse-ayah-end-number__img--dark,
-      html body .app .verse-ayah-end-number__digit {
+      html body .app .verse-ayah-end-number__digit,
+      html body .amd-overlay .verse-ayah-end-number__img--dark,
+      html body .amd-overlay .verse-ayah-end-number__digit {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
         width: 0 !important;
         height: 0 !important;
       }
-      html[data-theme="dark"] body .app .verse-ayah-end-number__img--light {
+      html[data-theme="dark"] body .app .verse-ayah-end-number__img--light,
+      html[data-theme="dark"] body .amd-overlay .verse-ayah-end-number__img--light,
+      html body .amd-overlay[data-theme="dark"] .verse-ayah-end-number__img--light {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
       }
-      html[data-theme="dark"] body .app .verse-ayah-end-number__img--dark {
+      html[data-theme="dark"] body .app .verse-ayah-end-number__img--dark,
+      html[data-theme="dark"] body .amd-overlay .verse-ayah-end-number__img--dark,
+      html body .amd-overlay[data-theme="dark"] .verse-ayah-end-number__img--dark {
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
