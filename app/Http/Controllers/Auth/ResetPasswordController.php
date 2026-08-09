@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\AuthRedirect;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Foundation\Auth\ResetsPasswords;
 use Illuminate\Http\RedirectResponse;
@@ -25,11 +26,12 @@ class ResetPasswordController extends Controller
     use ResetsPasswords;
 
     /**
-     * Where to redirect users after resetting their password.
-     *
-     * @var string
+     * Where to redirect users after resetting their password (role-aware).
      */
-    protected $redirectTo = '/memorisation';
+    protected function redirectTo(): string
+    {
+        return AuthRedirect::path($this->guard()->user());
+    }
 
     /**
      * @param  \Illuminate\Contracts\Auth\CanResetPassword  $user

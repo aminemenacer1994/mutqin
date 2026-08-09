@@ -452,4 +452,50 @@ class AdminDashboardTest extends TestCase
         $this->actingAs($learner)->getJson('/api/admin/notes')->assertForbidden();
         $this->actingAs($learner)->getJson('/api/admin/contacts')->assertForbidden();
     }
+
+    public function test_admin_login_redirects_to_admin_dashboard(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('secret12'),
+        ]);
+
+        $this->post(route('login'), [
+            'email' => 'admin@example.com',
+            'password' => 'secret12',
+        ])->assertRedirect(route('admin.dashboard'));
+
+        $this->assertAuthenticatedAs($admin);
+    }
+
+    public function test_learner_login_still_redirects_to_memorisation(): void
+    {
+        User::factory()->create([
+            'email' => 'learner@example.com',
+            'password' => bcrypt('secret12'),
+        ]);
+
+        $this->post(route('login'), [
+            'email' => 'learner@example.com',
+            'password' => 'secret12',
+        ])->assertRedirect(route('memorisation'));
+    }
+
+    public function test_authenticated_admin_visiting_login_redirects_to_admin_dashboard(): void
+    {
+        $admin = User::factory()->create(['email' => 'admin@example.com']);
+
+        $this->actingAs($admin)
+            ->get(route('login'))
+            ->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_admin_visiting_customer_dashboard_is_sent_to_admin_dashboard(): void
+    {
+        $admin = User::factory()->create(['email' => 'admin@example.com']);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('admin.dashboard'));
+    }
 }

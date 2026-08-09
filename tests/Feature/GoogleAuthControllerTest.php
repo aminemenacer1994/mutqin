@@ -87,6 +87,28 @@ class GoogleAuthControllerTest extends TestCase
         $this->assertSame('https://example.com/new-avatar.png', $user->fresh()->avatar);
     }
 
+    public function test_admin_google_user_is_redirected_to_admin_dashboard(): void
+    {
+        config()->set('mutqin.admin_emails', ['admin@example.com']);
+
+        $admin = User::factory()->create([
+            'email' => 'admin@example.com',
+            'google_id' => 'google-admin-1',
+        ]);
+
+        $this->mockGoogleUser([
+            'id' => 'google-admin-1',
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+            'avatar' => 'https://example.com/admin.png',
+        ]);
+
+        $this->get(route('auth.google.callback'))
+            ->assertRedirect(route('admin.dashboard'));
+
+        $this->assertAuthenticatedAs($admin->fresh());
+    }
+
     public function test_existing_email_user_is_linked_to_google_on_callback(): void
     {
         $user = User::factory()->create([

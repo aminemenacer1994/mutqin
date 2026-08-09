@@ -5,6 +5,8 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use App\Http\Middleware\SetLocale;
+use App\Models\User;
+use App\Support\AuthRedirect;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -26,7 +28,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // the existing session login keeps working without issuing API tokens.
         $middleware->statefulApi();
 
-        $middleware->redirectUsersTo(static fn (Request $request): string => route('memorisation'));
+        $middleware->redirectUsersTo(static function (Request $request): string {
+            $user = $request->user();
+
+            return AuthRedirect::to($user instanceof User ? $user : null);
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -46958,7 +46958,7 @@ module.exports = JSON.parse('{"common":{"on":"On","off":"Off","reset":"Reset","s
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
-/******/ 			return "js/" + chunkId + "." + {"dashboard":"557e811d","admin-dashboard":"a36ae0ef","memorisation":"b3318d6a","resources_js_locales_ar_json":"c22fe106","resources_js_locales_es_json":"687c0609","resources_js_locales_fr_json":"5af7af50","resources_js_locales_id_json":"33012054","resources_js_locales_tr_json":"23999449","resources_js_locales_ur_json":"b9111f8d"}[chunkId] + ".js";
+/******/ 			return "js/" + chunkId + "." + {"dashboard":"557e811d","admin-dashboard":"a36ae0ef","memorisation":"dcce6001","resources_js_locales_ar_json":"c22fe106","resources_js_locales_es_json":"687c0609","resources_js_locales_fr_json":"5af7af50","resources_js_locales_id_json":"33012054","resources_js_locales_tr_json":"23999449","resources_js_locales_ur_json":"b9111f8d"}[chunkId] + ".js";
 /******/ 		};
 /******/ 	})();
 /******/ 	

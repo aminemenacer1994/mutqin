@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserSessionStatus;
 use App\Models\User;
 use App\Models\UserSession;
+use App\Support\SessionDefaults;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -216,6 +217,96 @@ class SessionLifecycleTest extends TestCase
             ->assertJsonPath('unfinished', false)
             ->assertJsonPath('session.status', UserSessionStatus::Completed->value)
             ->assertJsonPath('session.metadata.completed', true);
+    }
+
+    public function test_completed_session_defaults_repetitions_to_one_when_unset(): void
+    {
+        $user = User::factory()->create();
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'ayah_number' => 7,
+            'status' => UserSessionStatus::Active,
+            'is_onboarding_example' => false,
+            'last_activity_at' => now(),
+            'started_at' => now()->subMinute(),
+            'metadata' => [
+                'active' => true,
+                'config' => [
+                    'chapterId' => 1,
+                    'rangeStart' => 1,
+                    'rangeEnd' => 7,
+                ],
+            ],
+        ]);
+
+        $session = $this->actingAs($user)
+            ->postJson('/api/session/end', [
+                'idempotency_key' => 'end-reps-default-1',
+                'range_complete' => true,
+                'ayah_number' => 7,
+                'metadata' => [
+                    'completed' => true,
+                    'range_complete' => true,
+                    'covered_through' => 7,
+                    'config' => [
+                        'chapterId' => 1,
+                        'rangeStart' => 1,
+                        'rangeEnd' => 7,
+                    ],
+                ],
+            ])
+            ->assertOk()
+            ->json('session');
+
+        $this->assertSame(SessionDefaults::REPETITIONS, (int) data_get($session, 'completion_settings.repetitions'));
+        $this->assertSame(1, (int) data_get($session, 'completion_settings.repetitions'));
+        $this->assertNotSame(2, (int) data_get($session, 'completion_settings.repetitions'));
+    }
+
+    public function test_completed_session_keeps_explicit_repetitions(): void
+    {
+        $user = User::factory()->create();
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'ayah_number' => 7,
+            'status' => UserSessionStatus::Active,
+            'is_onboarding_example' => false,
+            'last_activity_at' => now(),
+            'started_at' => now()->subMinute(),
+            'metadata' => [
+                'active' => true,
+                'config' => [
+                    'chapterId' => 1,
+                    'rangeStart' => 1,
+                    'rangeEnd' => 7,
+                    'repetitionsPerStep' => 4,
+                ],
+            ],
+        ]);
+
+        $session = $this->actingAs($user)
+            ->postJson('/api/session/end', [
+                'idempotency_key' => 'end-reps-keep-4',
+                'range_complete' => true,
+                'ayah_number' => 7,
+                'metadata' => [
+                    'completed' => true,
+                    'range_complete' => true,
+                    'covered_through' => 7,
+                    'config' => [
+                        'chapterId' => 1,
+                        'rangeStart' => 1,
+                        'rangeEnd' => 7,
+                        'repetitionsPerStep' => 4,
+                    ],
+                ],
+            ])
+            ->assertOk()
+            ->json('session');
+
+        $this->assertSame(4, (int) data_get($session, 'completion_settings.repetitions'));
     }
 
     public function test_end_without_unfinished_session_does_not_create_ghost(): void

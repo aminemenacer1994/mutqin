@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\DashboardService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -13,9 +14,15 @@ class DashboardController extends Controller
         $this->middleware('auth');
     }
 
-    public function index(Request $request, DashboardService $dashboard): Response
+    public function index(Request $request, DashboardService $dashboard): Response|RedirectResponse
     {
         $user = $request->user();
+
+        // Admins have a dedicated console; keep the learner dashboard for non-admins only.
+        if ($user->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         $data = $dashboard->build($user, 30);
 
         return response()

@@ -26,23 +26,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
     Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('api.dashboard.activity');
 
-    Route::get('/admin/dashboard', [AdminDashboardController::class, 'show'])->name('api.admin.dashboard.show');
-    Route::get('/admin/users', [AdminDashboardController::class, 'users'])->name('api.admin.users');
-    Route::post('/admin/users', [AdminDashboardController::class, 'userStore'])->name('api.admin.users.store');
-    Route::post('/admin/users/bulk', [AdminDashboardController::class, 'usersBulk'])->name('api.admin.users.bulk');
-    Route::get('/admin/users/{user}', [AdminDashboardController::class, 'userShow'])->name('api.admin.users.show');
-    Route::patch('/admin/users/{user}', [AdminDashboardController::class, 'userUpdate'])->name('api.admin.users.update');
-    Route::delete('/admin/users/{user}', [AdminDashboardController::class, 'userDestroy'])->name('api.admin.users.destroy');
-    Route::get('/admin/activity', [AdminDashboardController::class, 'activity'])->name('api.admin.activity');
-    Route::get('/admin/sessions', [AdminDashboardController::class, 'sessions'])->name('api.admin.sessions');
-    Route::get('/admin/ai-checks', [AdminDashboardController::class, 'aiChecks'])->name('api.admin.ai-checks');
-    Route::get('/admin/notes', [AdminDashboardController::class, 'notes'])->name('api.admin.notes');
-    Route::delete('/admin/notes/{note}', [AdminDashboardController::class, 'noteDestroy'])->name('api.admin.notes.destroy');
-    Route::get('/admin/contacts', [AdminDashboardController::class, 'contacts'])->name('api.admin.contacts');
-    Route::patch('/admin/contacts/{contactMessage}/resolve', [AdminDashboardController::class, 'resolveContact'])
-        ->name('api.admin.contacts.resolve');
-    Route::delete('/admin/contacts/{contactMessage}', [AdminDashboardController::class, 'destroyContact'])
-        ->name('api.admin.contacts.destroy');
+    Route::middleware('can:access-admin')->group(function () {
+        Route::get('/admin/dashboard', [AdminDashboardController::class, 'show'])->name('api.admin.dashboard.show');
+        Route::get('/admin/users', [AdminDashboardController::class, 'users'])->name('api.admin.users');
+        Route::post('/admin/users', [AdminDashboardController::class, 'userStore'])->name('api.admin.users.store');
+        Route::post('/admin/users/bulk', [AdminDashboardController::class, 'usersBulk'])->name('api.admin.users.bulk');
+        Route::get('/admin/users/{user}', [AdminDashboardController::class, 'userShow'])->name('api.admin.users.show');
+        Route::patch('/admin/users/{user}', [AdminDashboardController::class, 'userUpdate'])->name('api.admin.users.update');
+        Route::delete('/admin/users/{user}', [AdminDashboardController::class, 'userDestroy'])->name('api.admin.users.destroy');
+        Route::get('/admin/activity', [AdminDashboardController::class, 'activity'])->name('api.admin.activity');
+        Route::get('/admin/sessions', [AdminDashboardController::class, 'sessions'])->name('api.admin.sessions');
+        Route::get('/admin/ai-checks', [AdminDashboardController::class, 'aiChecks'])->name('api.admin.ai-checks');
+        Route::get('/admin/notes', [AdminDashboardController::class, 'notes'])->name('api.admin.notes');
+        Route::delete('/admin/notes/{note}', [AdminDashboardController::class, 'noteDestroy'])->name('api.admin.notes.destroy');
+        Route::get('/admin/contacts', [AdminDashboardController::class, 'contacts'])->name('api.admin.contacts');
+        Route::patch('/admin/contacts/{contactMessage}/resolve', [AdminDashboardController::class, 'resolveContact'])
+            ->name('api.admin.contacts.resolve');
+        Route::delete('/admin/contacts/{contactMessage}', [AdminDashboardController::class, 'destroyContact'])
+            ->name('api.admin.contacts.destroy');
+    });
 
     Route::get('/session', [SessionController::class, 'show'])->name('api.session.show');
     Route::get('/session/current', [SessionController::class, 'current'])->name('api.session.current');

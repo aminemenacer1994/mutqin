@@ -8,6 +8,7 @@ import {
   madaniPageRange,
   resolveMadaniPagesForVerses,
   surahNameGlyphText,
+  textStartsWithBasmala,
   toEasternArabicDigits
 } from '../../resources/js/scripts/mushaf/madaniPageLayout.js'
 import {
@@ -62,6 +63,8 @@ const baqarahPageVerses = [
 assert.equal(chapterHasBismillahPre(1), false)
 assert.equal(chapterHasBismillahPre(2), true)
 assert.equal(chapterHasBismillahPre(9), true)
+assert.equal(textStartsWithBasmala('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ذَٰلِكَ'), true)
+assert.equal(textStartsWithBasmala('الٓمٓ'), false)
 assert.equal(surahNameGlyphText(1), '001surah')
 assert.equal(surahNameGlyphText(2), '002surah')
 assert.equal(qcfFontFamily(1), 'p1-v2')
@@ -84,13 +87,17 @@ assert.equal(fatihahLayout.fontFamily, 'p1-v2')
 assert.equal(fatihahLayout.lines[0].type, 'surah_name')
 assert.equal(fatihahLayout.lines[0].lineNumber, 1)
 assert.equal(fatihahLayout.lines[0].glyphText, '001surah')
-assert.equal(fatihahLayout.lines[1].type, 'ayah')
+// Al-Fatihah 1:1 is the basmala — dedicated centred row, not inline ayah flow.
+assert.equal(fatihahLayout.lines[1].type, 'basmala_ayah')
 assert.equal(fatihahLayout.lines[1].words[0].verseKey, '1:1')
+assert.ok(fatihahLayout.lines[1].words.every(word => word.verseKey === '1:1'))
 assert.equal(fatihahLayout.lines[2].type, 'ayah')
+assert.equal(fatihahLayout.lines[2].words[0].verseKey, '1:2')
 assert.ok(fatihahLayout.lines.every(line => line.type !== 'empty'))
 assert.equal(fatihahLayout.lines.length, 3)
 assert.equal(fatihahLayout.juzNumber, 1)
 assert.equal(fatihahLayout.primaryChapterId, 1)
+assert.ok(!fatihahLayout.lines.some(line => line.type === 'basmala'), 'no synthetic basmala for Fatihah')
 
 const baqarahLayout = buildMadaniPageLayout(2, baqarahPageVerses)
 assert.equal(baqarahLayout.lines[0].type, 'surah_name')
@@ -101,6 +108,24 @@ assert.equal(baqarahLayout.lines[1].lineNumber, 2)
 assert.equal(baqarahLayout.lines[2].type, 'ayah')
 assert.equal(baqarahLayout.lines[2].lineNumber, 3)
 assert.equal(baqarahLayout.lines[2].words[0].codeV2, 'ALIF')
+// Basmala is its own line entry — never merged into the first ayah word list.
+assert.equal(baqarahLayout.lines[2].words.some(word => textStartsWithBasmala(word.textQpc)), false)
+assert.ok(baqarahLayout.lines.filter(line => line.type === 'basmala').length === 1)
+
+// When ayah 1 text already embeds the basmala, do not synthesize a second row.
+const embeddedBasmalaVerses = [
+  {
+    verse_key: '2:1',
+    verse_number: 1,
+    page_number: 2,
+    words: [
+      { position: 1, char_type_name: 'word', code_v2: 'B', text_qpc_hafs: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ', line_number: 3, page_number: 2 },
+      { position: 2, char_type_name: 'end', code_v2: 'E1', text_qpc_hafs: '١', line_number: 3, page_number: 2 }
+    ]
+  }
+]
+const embeddedLayout = buildMadaniPageLayout(2, embeddedBasmalaVerses)
+assert.ok(embeddedLayout.lines.every(line => line.type !== 'basmala'))
 
 const surahTransitionVerses = [
   {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AuthRedirect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -96,7 +97,7 @@ class GoogleAuthController extends Controller
             request()->session()->flash('mutqin_just_logged_in', true);
         }
 
-        return redirect()->intended(route('memorisation'));
+        return redirect()->intended(AuthRedirect::to($user));
     }
 
     private function googleProvider()

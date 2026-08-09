@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\AuthRedirect;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -17,12 +19,10 @@ class HomeController extends Controller
     }
 
     /**
-     * Show the application dashboard.
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * Role-aware post-auth home redirect.
      */
-    public function index()
+    public function index(Request $request): RedirectResponse
     {
-        return redirect()->route('memorisation');
+        return redirect()->to(AuthRedirect::to($request->user()));
     }
 }

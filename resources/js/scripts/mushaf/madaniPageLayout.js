@@ -2,7 +2,12 @@ import { qcfFontFamily } from './qcfFontLoader.js'
 
 export const MADANI_LINES_PER_PAGE = 15
 export const MADANI_TOTAL_PAGES = 604
-export const MADANI_LAYOUT_VERSION = 3
+export const MADANI_LAYOUT_VERSION = 5
+
+/** Al-Fatihah ayah 1 is itself the basmala — isolate it onto its own row. */
+export function isFatihahBasmalaVerseKey(verseKey) {
+  return String(verseKey || '') === '1:1'
+}
 
 /**
  * Standalone basmala before ayah 1 for every surah except Al-Fatihah
@@ -11,6 +16,27 @@ export const MADANI_LAYOUT_VERSION = 3
 export function chapterHasBismillahPre(chapterId) {
   const id = Number(chapterId)
   return Number.isFinite(id) && id >= 2
+}
+
+/** True when a verse/line already carries the basmala in its Arabic text. */
+export function textStartsWithBasmala(text = '') {
+  const raw = String(text || '').trim()
+  if (!raw) return false
+  const variants = [
+    'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+    'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ',
+    'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+    'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+    'بسم الله الرحمن الرحيم'
+  ]
+  if (variants.some(variant => raw.startsWith(variant))) return true
+  const normalized = raw
+    .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
+    .replace(/[ٱ]/g, 'ا')
+    .replace(/[ـ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return normalized.startsWith('بسم الله الرحمن الرحيم')
 }
 
 export function surahNameGlyphText(chapterId) {
@@ -102,7 +128,10 @@ function lineIsOccupied(lineNumber, ayahLineMap, claimedLines) {
  */
 export function resolveSurahHeaderPlacement(start, ayahLineMap, claimedLines = new Set()) {
   const firstAyahLine = Number(start?.firstAyahLine) || 1
-  const hasBasmalah = chapterHasBismillahPre(start?.chapterId)
+  const firstAyahWords = ayahLineMap.get(firstAyahLine)?.words || []
+  const firstAyahText = firstAyahWords.map(word => word.textQpc || word.codeV2 || '').join(' ')
+  // Never synthesize a basmala row when ayah text already contains it.
+  const hasBasmalah = chapterHasBismillahPre(start?.chapterId) && !textStartsWithBasmala(firstAyahText)
   const preferredNameLine = hasBasmalah ? firstAyahLine - 2 : firstAyahLine - 1
   const preferredBasmalaLine = hasBasmalah ? firstAyahLine - 1 : null
 
@@ -119,6 +148,8 @@ export function resolveSurahHeaderPlacement(start, ayahLineMap, claimedLines = n
     }
   }
 
+  // Inline fallback still emits basmala as its own line entry before the
+  // ayah words (never merged into the ayah word list).
   return {
     chapterId: start.chapterId,
     firstAyahLine,
@@ -126,6 +157,45 @@ export function resolveSurahHeaderPlacement(start, ayahLineMap, claimedLines = n
     basmalaLine: hasBasmalah ? firstAyahLine : null,
     mode: 'inline'
   }
+}
+
+/**
+ * Pull Al-Fatihah 1:1 (the basmala ayah) out of continuous ayah flow into a
+ * dedicated centred row. Keeps the real words so highlighting/audio still work.
+ */
+export function isolateFatihahBasmalaLines(lines = []) {
+  const result = []
+  for (const line of lines) {
+    if (!line || line.type !== 'ayah' || !Array.isArray(line.words) || !line.words.length) {
+      result.push(line)
+      continue
+    }
+    const basmalaWords = []
+    const otherWords = []
+    for (const word of line.words) {
+      if (isFatihahBasmalaVerseKey(word.verseKey)) basmalaWords.push(word)
+      else otherWords.push(word)
+    }
+    if (basmalaWords.length) {
+      result.push({
+        ...line,
+        type: 'basmala_ayah',
+        chapterId: 1,
+        words: basmalaWords
+      })
+    }
+    if (otherWords.length) {
+      result.push({
+        ...line,
+        type: 'ayah',
+        words: otherWords
+      })
+    }
+    if (!basmalaWords.length && !otherWords.length) {
+      result.push(line)
+    }
+  }
+  return result
 }
 
 /**
@@ -219,7 +289,9 @@ export function buildMadaniPageLayout(pageNumber, verses = [], options = {}) {
     }
   }
 
-  const visibleLines = lines.filter(line => line && line.type !== 'empty')
+  const visibleLines = isolateFatihahBasmalaLines(
+    lines.filter(line => line && line.type !== 'empty')
+  )
 
   const verseKeys = [...new Set(
     ayahLines.flatMap(line => line.words.map(word => word.verseKey).filter(Boolean))

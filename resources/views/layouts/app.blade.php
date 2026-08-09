@@ -258,8 +258,8 @@
         border-color: #b56a56 !important;
       }
     </style>
-    <style id="mutqin-memorisation-hotfix-v110">
-      /* Network-first hotfix v110 — hide U+06DF solid+dashed circles + ayah marker layout */
+    <style id="mutqin-memorisation-hotfix-v115">
+      /* Network-first hotfix v113 — themed toolbar chrome + cream Mushaf paper + hide U+06DF circles + ayah markers */
       /* Blank font wins only for ornament codepoints (unicode-range); body text uses --quran-font. */
       @font-face {
         font-family: 'MutqinHideQuranCircles';
@@ -1165,23 +1165,48 @@
         .app .main.mushaf-mode-active .madani-line--surah_name {
           display: none !important;
         }
-        .app .main.mushaf-mode-active .madani-line--basmala {
-          display: flex !important;
+        .app .main.mushaf-mode-active .madani-line--basmala,
+        .app .main.mushaf-mode-active .madani-line--basmala_ayah,
+        .app .main.mushaf-mode-active .madani-line--basmala-ayah {
+          display: block !important;
           justify-content: center !important;
           align-items: center !important;
           text-align: center !important;
+          text-align-last: center !important;
           width: 100% !important;
-          margin: 0.35rem 0 0.25rem !important;
-          padding: 0.15rem 0 !important;
+          max-width: 100% !important;
+          flex: 0 0 auto !important;
+          float: none !important;
+          clear: both !important;
+          margin: 0.55rem 0 0.45rem !important;
+          padding: 0.25rem 0.35rem !important;
           border: 0 !important;
           background: transparent !important;
           white-space: normal !important;
+          box-sizing: border-box !important;
+        }
+        .app .main.mushaf-mode-active .madani-line--basmala_ayah .madani-word,
+        .app .main.mushaf-mode-active .madani-line--basmala-ayah .madani-word {
+          display: inline !important;
+          white-space: normal !important;
+        }
+        .app .main.mushaf-mode-active .madani-basmala {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 auto !important;
+          padding: 0 !important;
+          text-align: center !important;
+          white-space: normal !important;
+          font-size: calc(clamp(1.2rem, 4.8vw, 1.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+          line-height: 1.55 !important;
+          color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
+          -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
         }
         .app .main.mushaf-mode-active .madani-word,
         .app .main.mushaf-mode-active .madani-word--glyph,
         .app .main.mushaf-mode-active .madani-word--unicode,
-        .app .main.mushaf-mode-active .madani-word--fallback,
-        .app .main.mushaf-mode-active .madani-basmala {
+        .app .main.mushaf-mode-active .madani-word--fallback {
           display: inline-block !important;
           flex: none !important;
           width: auto !important;
@@ -1210,9 +1235,9 @@
         [data-theme="dark"] .app .top-card-icon-controls .top-card-controls-trigger,
         [data-theme="dark"] .app .top-card-icon-controls .top-card-dashboard-trigger,
         [data-theme="dark"] .app .top-card-icon-controls .top-card-ellipsis {
-          background: #18181b !important;
-          border-color: rgba(245, 242, 234, 0.14) !important;
-          color: #f4f4f5 !important;
+          background: var(--toolbar-control-bg, #2a2521) !important;
+          border-color: var(--toolbar-control-border, rgba(245, 242, 234, 0.14)) !important;
+          color: var(--toolbar-control-fg, #f7ebdf) !important;
         }
       }
       @media (min-width: 768px) {
@@ -1267,17 +1292,19 @@
           align-items: center !important;
           justify-content: center !important;
           border-radius: 999px !important;
-          background: #ffffff !important;
-          border: 1px solid color-mix(in srgb, var(--accent, #c48a4a) 22%, transparent) !important;
-          color: color-mix(in srgb, var(--accent, #9a6738) 82%, #3f3f46) !important;
+          background: var(--toolbar-control-bg, #ffffff) !important;
+          border: 1px solid var(--toolbar-control-border, rgba(28, 25, 23, 0.1)) !important;
+          color: var(--toolbar-control-fg, #1c1917) !important;
           box-shadow: none !important;
           transform: none !important;
           cursor: pointer !important;
         }
-        html body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger:hover {
-          background: color-mix(in srgb, var(--accent, #c48a4a) 10%, #ffffff) !important;
-          border-color: color-mix(in srgb, var(--accent, #c48a4a) 40%, transparent) !important;
-          color: var(--accent-strong, #8a5a2b) !important;
+        html body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger:hover,
+        html body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger:focus-visible {
+          background: var(--toolbar-control-hover-bg, color-mix(in srgb, #f0e9de 70%, #ffffff)) !important;
+          border-color: color-mix(in srgb, var(--toolbar-control-border, rgba(28, 25, 23, 0.1)) 55%, var(--accent, #c48a4a)) !important;
+          color: var(--toolbar-control-fg, #1c1917) !important;
+          outline: none;
         }
         html body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger i {
           display: block !important;
@@ -1290,9 +1317,9 @@
         html[data-theme="dark"] body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger,
         [data-theme="dark"] body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger,
         body .app[data-theme="dark"] .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger {
-          background: #18181b !important;
-          border: 1px solid rgba(245, 242, 234, 0.14) !important;
-          color: #f4f4f5 !important;
+          background: var(--toolbar-control-bg, #2a2521) !important;
+          border: 1px solid var(--toolbar-control-border, rgba(245, 242, 234, 0.14)) !important;
+          color: var(--toolbar-control-fg, #f7ebdf) !important;
         }
         .app .main.mushaf-mode-active .mushaf-workspace {
           margin: 0.55rem auto 1rem !important;
@@ -1301,43 +1328,88 @@
           max-width: none !important;
           box-sizing: border-box !important;
         }
+        /* Toolbar chrome + cream reading paper tokens (network-first hotfix) */
+        :root {
+          --zone-chrome-cream: #f0e9de;
+          --mushaf-reading-surface: #f0e9de;
+          --mushaf-reading-ink: #18181b;
+          --workspace-card-surface:
+            radial-gradient(circle at top right, color-mix(in srgb, #9a6738 10%, transparent), transparent 34%),
+            linear-gradient(165deg, color-mix(in srgb, #f0e9de 90%, white 10%), #f0e9de);
+          --toolbar-header-bg: var(--workspace-card-surface);
+          --toolbar-header-bg-solid: #f0e9de;
+          --toolbar-header-border: rgba(154, 103, 56, 0.18);
+          --toolbar-control-bg: #ffffff;
+          --toolbar-control-hover-bg: color-mix(in srgb, #f0e9de 70%, #ffffff);
+          --toolbar-control-active-bg: #1c1917;
+          --toolbar-control-active-fg: #fffaf3;
+          --toolbar-control-border: rgba(28, 25, 23, 0.1);
+          --toolbar-control-fg: #1c1917;
+          --toolbar-control-muted-bg: rgba(255, 255, 255, 0.72);
+        }
         .app .main.mushaf-mode-active .mushaf-shell,
         .app .main.mushaf-mode-active .mushaf-shell {
-          background: #f4f4f5 !important;
-          background-color: #f4f4f5 !important;
-          border: 1px solid rgba(24, 24, 27, 0.12) !important;
+          background: var(--toolbar-header-bg) !important;
+          background-color: var(--toolbar-header-bg-solid) !important;
+          border: 1px solid var(--toolbar-header-border) !important;
           border-radius: 20px !important;
-          box-shadow: 0 10px 28px rgba(24, 24, 27, 0.06) !important;
+          box-shadow: 0 10px 28px rgba(63, 39, 18, 0.08) !important;
           overflow: hidden !important;
           width: 100% !important;
           max-width: none !important;
-          --mushaf-bg: #f4f4f5;
-          --mushaf-text: #18181b;
-          color: #18181b !important;
+          color: var(--toolbar-control-fg) !important;
         }
         .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar {
-          background: transparent !important;
-          border-bottom: 1px solid rgba(24, 24, 27, 0.1) !important;
+          background: var(--toolbar-header-bg) !important;
+          background-color: var(--toolbar-header-bg-solid) !important;
+          border-bottom: 1px solid var(--toolbar-header-border) !important;
+          color: var(--toolbar-control-fg) !important;
+        }
+        .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn {
+          background: var(--toolbar-control-bg) !important;
+          border: 1px solid var(--toolbar-control-border) !important;
+          color: var(--toolbar-control-fg) !important;
+        }
+        .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn:hover:not(:disabled),
+        .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn:focus-visible {
+          background: var(--toolbar-control-hover-bg) !important;
+          border-color: color-mix(in srgb, var(--toolbar-control-border) 55%, var(--accent, #9a6738)) !important;
+          color: var(--toolbar-control-fg) !important;
+        }
+        .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn.is-active {
+          background: var(--toolbar-control-active-bg) !important;
+          border-color: var(--toolbar-control-active-bg) !important;
+          color: var(--toolbar-control-active-fg) !important;
+        }
+        .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__size,
+        .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__pager {
+          background: var(--toolbar-control-muted-bg) !important;
+          border-color: var(--toolbar-control-border) !important;
+        }
+        .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__pager-label {
+          color: var(--toolbar-control-fg) !important;
         }
         .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page {
-          background: transparent !important;
+          background: var(--mushaf-reading-surface) !important;
           border: 0 !important;
           box-shadow: none !important;
           border-radius: 0 !important;
           padding-inline: 0 !important;
+          color: var(--mushaf-reading-ink) !important;
         }
         .app .main.mushaf-mode-active .mushaf-page--madani {
-          background: transparent !important;
+          background: var(--mushaf-reading-surface) !important;
           border: 0 !important;
           border-radius: 0 !important;
           box-shadow: none !important;
           padding: 1rem clamp(1.25rem, 3.5vw, 2.75rem) 1.35rem !important;
-          color: #18181b !important;
-          --mushaf-bg: #f4f4f5;
-          --mushaf-text: #18181b;
+          color: var(--mushaf-reading-ink) !important;
+          --mushaf-bg: var(--mushaf-reading-surface);
+          --mushaf-text: var(--mushaf-reading-ink);
           max-width: none !important;
           width: 100% !important;
           margin-inline: 0 !important;
+          color-scheme: light;
         }
         .app .main.mushaf-mode-active .mushaf-page--madani::before,
         .app .main.mushaf-mode-active .mushaf-page--madani::after {
@@ -1366,7 +1438,6 @@
           display: contents !important;
         }
         .app .main.mushaf-mode-active .madani-word,
-        .app .main.mushaf-mode-active .madani-basmala,
         .app .main.mushaf-mode-active .madani-word--unicode,
         .app .main.mushaf-mode-active .madani-word--fallback {
           display: inline-block !important;
@@ -1411,55 +1482,128 @@
         .app .main.mushaf-mode-active .madani-line--surah_name {
           display: none !important;
         }
-        .app .main.mushaf-mode-active .madani-line--basmala {
-          display: flex !important;
-          justify-content: center !important;
-          align-items: center !important;
+        .app .main.mushaf-mode-active .madani-line--basmala,
+        .app .main.mushaf-mode-active .madani-line--basmala_ayah,
+        .app .main.mushaf-mode-active .madani-line--basmala-ayah {
+          display: block !important;
           text-align: center !important;
+          text-align-last: center !important;
           width: 100% !important;
-          margin: 0.35rem 0 0.25rem !important;
-          padding: 0.15rem 0 !important;
+          max-width: 100% !important;
+          flex: 0 0 auto !important;
+          float: none !important;
+          clear: both !important;
+          margin: 0.55rem 0 0.45rem !important;
+          padding: 0.25rem 0.35rem !important;
           border: 0 !important;
           background: transparent !important;
           white-space: normal !important;
+          box-sizing: border-box !important;
+        }
+        .app .main.mushaf-mode-active .madani-line--basmala_ayah .madani-word,
+        .app .main.mushaf-mode-active .madani-line--basmala-ayah .madani-word {
+          display: inline !important;
+          white-space: normal !important;
+        }
+        .app .main.mushaf-mode-active .madani-basmala {
+          display: block !important;
+          width: 100% !important;
+          margin: 0 auto !important;
+          text-align: center !important;
+          white-space: normal !important;
+          line-height: 1.55 !important;
+          color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
+          -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
+        }
+        /* Dark UI: Mushaf paper matches Session Overview / workspace-shell card */
+        [data-theme="dark"] {
+          --workspace-card-surface-dark:
+            radial-gradient(circle at top right, color-mix(in srgb, #d4a574 10%, transparent), transparent 36%),
+            linear-gradient(180deg, #221d19, color-mix(in srgb, #221d19 88%, #1a1714 12%));
+          --toolbar-header-bg: var(--workspace-card-surface-dark);
+          --toolbar-header-bg-solid: #221d19;
+          --toolbar-header-border: rgba(208, 160, 107, 0.22);
+          --toolbar-control-bg: #2a2521;
+          --toolbar-control-hover-bg: color-mix(in srgb, #2a2521 80%, #d4a574 20%);
+          --toolbar-control-active-bg: #d4a574;
+          --toolbar-control-active-fg: #1a1208;
+          --toolbar-control-border: rgba(245, 242, 234, 0.14);
+          --toolbar-control-fg: #f7ebdf;
+          --toolbar-control-muted-bg: rgba(255, 255, 255, 0.06);
+          --mushaf-reading-surface: #221d19;
+          --mushaf-reading-ink: #f7ebdf;
         }
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell,
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell,
         .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell,
         .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell {
-          background: #18181b !important;
-          background-color: #18181b !important;
-          border: 1px solid rgba(244, 244, 245, 0.14) !important;
+          background: var(--toolbar-header-bg) !important;
+          background-color: var(--toolbar-header-bg-solid) !important;
+          border: 1px solid var(--toolbar-header-border) !important;
           border-radius: 20px !important;
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35) !important;
-          overflow: hidden !important;
-          --mushaf-bg: #18181b;
-          --mushaf-text: #f4f4f5;
-          color: #f4f4f5 !important;
-        }
-        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar,
-        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page,
-        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar,
-        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page {
-          background: transparent !important;
-          border: 0 !important;
           box-shadow: none !important;
-          border-radius: 0 !important;
+          overflow: hidden !important;
+          color: var(--toolbar-control-fg) !important;
         }
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar,
         .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar {
-          border-bottom: 1px solid rgba(244, 244, 245, 0.12) !important;
+          background: var(--toolbar-header-bg) !important;
+          background-color: var(--toolbar-header-bg-solid) !important;
+          border: 0 !important;
+          border-bottom: 1px solid var(--toolbar-header-border) !important;
+          box-shadow: none !important;
+          border-radius: 0 !important;
+          color: var(--toolbar-control-fg) !important;
         }
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn {
+          background: var(--toolbar-control-bg) !important;
+          border: 1px solid var(--toolbar-control-border) !important;
+          color: var(--toolbar-control-fg) !important;
+        }
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn i,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn i {
+          color: inherit !important;
+        }
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn:hover:not(:disabled),
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn:focus-visible,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn:hover:not(:disabled),
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn:focus-visible {
+          background: var(--toolbar-control-hover-bg) !important;
+          border-color: color-mix(in srgb, var(--toolbar-control-border) 55%, #d4a574) !important;
+          color: var(--toolbar-control-fg) !important;
+        }
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn.is-active,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn.is-active {
+          background: var(--toolbar-control-active-bg) !important;
+          border-color: var(--toolbar-control-active-bg) !important;
+          color: var(--toolbar-control-active-fg) !important;
+        }
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__size,
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__pager,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__size,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__pager {
+          background: var(--toolbar-control-muted-bg) !important;
+          border-color: var(--toolbar-control-border) !important;
+        }
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__pager-label,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__pager-label {
+          color: var(--toolbar-control-fg) !important;
+        }
+        [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page,
+        .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page,
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani,
         .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani,
         [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani {
-          background: transparent !important;
+          background: var(--mushaf-reading-surface) !important;
           border: 0 !important;
           border-radius: 0 !important;
           box-shadow: none !important;
-          color: #f4f4f5 !important;
-          --mushaf-bg: #18181b;
-          --mushaf-text: #f4f4f5;
+          color: var(--mushaf-reading-ink) !important;
+          --mushaf-bg: var(--mushaf-reading-surface);
+          --mushaf-text: var(--mushaf-reading-ink);
+          --ayah-mark-ink: #f0e6d4;
+          color-scheme: dark;
         }
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
@@ -1473,8 +1617,21 @@
         [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
         [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-surah-name,
         [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted) {
-          color: #f4f4f5 !important;
-          -webkit-text-fill-color: #f4f4f5 !important;
+          color: var(--mushaf-reading-ink) !important;
+          -webkit-text-fill-color: var(--mushaf-reading-ink) !important;
+        }
+        [data-theme="dark"] .app .main.mushaf-mode-active .madani-page-sheet--tajweed,
+        .app[data-theme="dark"] .main.mushaf-mode-active .madani-page-sheet--tajweed {
+          /* COLR glyphs paint dark ink — invert so base ink reads light on dark paper */
+          filter: invert(1) hue-rotate(180deg) !important;
+        }
+        [data-theme="dark"] .app .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
+        [data-theme="dark"] .app .main.mushaf-mode-active .madani-word--end.madani-word--fallback,
+        .app[data-theme="dark"] .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
+        .app[data-theme="dark"] .main.mushaf-mode-active .madani-word--end.madani-word--fallback {
+          --ayah-mark-ink: #f0e6d4;
+          color: #f0e6d4 !important;
+          -webkit-text-fill-color: #f0e6d4 !important;
         }
         [data-theme="dark"] .app .main.mushaf-mode-active .madani-word.highlighted,
         [data-theme="dark"] .app .main.mushaf-mode-active .madani-word.phrase-highlighted,
@@ -1482,11 +1639,38 @@
         .app[data-theme="dark"] .main.mushaf-mode-active .madani-word.phrase-highlighted,
         [data-theme="dark"] .main.mushaf-mode-active .madani-word.highlighted,
         [data-theme="dark"] .main.mushaf-mode-active .madani-word.phrase-highlighted {
-          color: #fbbf24 !important;
-          -webkit-text-fill-color: #fbbf24 !important;
-          background: transparent !important;
+          color: inherit !important;
+          -webkit-text-fill-color: inherit !important;
+          background: color-mix(in srgb, #f0b35a 28%, transparent) !important;
+          box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #c47c1a 55%, transparent) !important;
         }
-        [data-theme="dark"] .app .workspace-shell-metadata-pill,
+        /* FINAL: dark Mushaf must match workspace-shell (beat late Vue CSS) */
+        html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell,
+        html[data-theme="dark"] body .app .main.mushaf-mode-active .mushaf-shell {
+          background: var(--workspace-card-surface-dark, #221d19) !important;
+          background-color: #221d19 !important;
+          color: #f7ebdf !important;
+          --mushaf-reading-surface: #221d19;
+          --mushaf-reading-ink: #f7ebdf;
+          --mushaf-bg: #221d19;
+          --mushaf-text: #f7ebdf;
+        }
+        html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page,
+        html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani {
+          background: #221d19 !important;
+          color: #f7ebdf !important;
+          --mushaf-bg: #221d19;
+          --mushaf-text: #f7ebdf;
+        }
+        html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
+        html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+        html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
+        html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
+        html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--fallback:not(.highlighted):not(.phrase-highlighted) {
+          color: #f7ebdf !important;
+          -webkit-text-fill-color: #f7ebdf !important;
+        }
+                [data-theme="dark"] .app .workspace-shell-metadata-pill,
         [data-theme="dark"] .app .workspace-shell-metadata-pill.is-readonly,
         [data-theme="dark"] .app .workspace-shell-metadata-pill.is-readonly strong,
         [data-theme="dark"] .app .workspace-shell-metadata-pill.is-readonly span,
@@ -1775,7 +1959,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v109', 'mutqin-post-session-site-theme-v2'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v115', 'mutqin-post-session-site-theme-v2'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });

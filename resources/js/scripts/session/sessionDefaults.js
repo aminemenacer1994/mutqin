@@ -20,6 +20,17 @@ export function resolveSessionRepetitions(...candidates) {
 }
 
 /**
+ * Repetition fields for a genuinely new (non-resume, non-recommendation) session.
+ * Call from fresh-session entry points so sticky UI / prior plans cannot leave 2x+.
+ */
+export function freshSessionRepetitionDefaults() {
+  return {
+    repetitionsPerStep: DEFAULT_SESSION_REPETITIONS,
+    selectedLoopCount: DEFAULT_SESSION_REPETITIONS,
+  }
+}
+
+/**
  * Fresh workspace / reset session config. Existing saved sessions keep their own
  * `repetitionsPerStep` when resumed; recommendation plans may override explicitly.
  */

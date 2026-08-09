@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AuthRedirect;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -26,13 +27,6 @@ class RegisterController extends Controller
     use RegistersUsers;
 
     /**
-     * Where to redirect users after registration.
-     *
-     * @var string
-     */
-    protected $redirectTo = '/memorisation';
-
-    /**
      * Create a new controller instance.
      *
      * @return void
@@ -40,6 +34,14 @@ class RegisterController extends Controller
     public function __construct()
     {
         $this->middleware('guest');
+    }
+
+    /**
+     * Where to redirect users after registration (role-aware).
+     */
+    protected function redirectTo(): string
+    {
+        return AuthRedirect::path($this->guard()->user());
     }
 
     /**

@@ -4424,11 +4424,28 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     overflow: visible !important;
   }
 
-  .main.mushaf-mode-active .madani-line--surah_name,
-.main.mushaf-mode-active .madani-line--basmala {
-    display: flex !important;
-    justify-content: center !important;
+  .main.mushaf-mode-active .madani-line--surah_name {
+    display: none !important;
+  }
+
+  .main.mushaf-mode-active .madani-line--basmala,
+.main.mushaf-mode-active .madani-line--basmala_ayah,
+.main.mushaf-mode-active .madani-line--basmala-ayah {
+    display: block !important;
+    width: 100% !important;
     text-align: center !important;
+    text-align-last: center !important;
+    margin: 0.45rem 0 0.35rem !important;
+    padding: 0.15rem 0.25rem !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .main.mushaf-mode-active .madani-basmala {
+    display: block !important;
+    width: 100% !important;
+    text-align: center !important;
+    white-space: normal !important;
   }
 
   .main.mushaf-mode-active .madani-word {
@@ -4709,12 +4726,15 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   .app .main.mushaf-mode-active .madani-word,
 .app .main.mushaf-mode-active .madani-word--glyph,
 .app .main.mushaf-mode-active .madani-word--unicode,
-.app .main.mushaf-mode-active .madani-word--fallback,
-.app .main.mushaf-mode-active .madani-basmala {
+.app .main.mushaf-mode-active .madani-word--fallback {
     font-size: calc(clamp(1.28rem, 5.2vw, 1.85rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     padding-inline: 0.05em !important;
     letter-spacing: 0.01em !important;
     word-spacing: 0.08em !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-basmala {
+    font-size: calc(clamp(1.2rem, 4.8vw, 1.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 
   /* Mushaf portrait: continuous page with slight side breathing room */
@@ -4758,17 +4778,29 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     white-space: normal !important;
   }
 
-  .app .main.mushaf-mode-active .madani-line--surah_name,
-.app .main.mushaf-mode-active .madani-line--basmala {
-    display: flex !important;
+  .app .main.mushaf-mode-active .madani-line--surah_name {
+    display: none !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-line--basmala,
+.app .main.mushaf-mode-active .madani-line--basmala_ayah,
+.app .main.mushaf-mode-active .madani-line--basmala-ayah {
+    display: block !important;
     width: 100% !important;
-    justify-content: center !important;
-    align-items: center !important;
     text-align: center !important;
-    margin: 0.2rem 0 !important;
-    padding: 0.2rem 0.15rem !important;
+    text-align-last: center !important;
+    margin: 0.45rem 0 0.35rem !important;
+    padding: 0.15rem 0.25rem !important;
     border: 0 !important;
     background: transparent !important;
+    white-space: normal !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-basmala {
+    display: block !important;
+    width: 100% !important;
+    text-align: center !important;
+    white-space: normal !important;
   }
 
   .app .verses-grid .verse-font-size-control,

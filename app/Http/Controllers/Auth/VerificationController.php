@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\AuthRedirect;
 use Illuminate\Foundation\Auth\VerifiesEmails;
 
 class VerificationController extends Controller
@@ -21,13 +22,6 @@ class VerificationController extends Controller
     use VerifiesEmails;
 
     /**
-     * Where to redirect users after verification.
-     *
-     * @var string
-     */
-    protected $redirectTo = '/memorisation';
-
-    /**
      * Create a new controller instance.
      *
      * @return void
@@ -37,5 +31,13 @@ class VerificationController extends Controller
         $this->middleware('auth');
         $this->middleware('signed')->only('verify');
         $this->middleware('throttle:6,1')->only('verify', 'resend');
+    }
+
+    /**
+     * Where to redirect users after verification (role-aware).
+     */
+    protected function redirectTo(): string
+    {
+        return AuthRedirect::path($this->guard()->user());
     }
 }

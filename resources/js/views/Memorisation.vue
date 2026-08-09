@@ -280,33 +280,6 @@
                     <span>{{ readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf') }}</span>
                     <i v-if="readingViewMode === 'mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
-                  <div class="top-card-menu-divider" role="separator"></div>
-                  <button
-                    type="button"
-                    class="top-card-menu-toggle top-card-menu-toggle--font-heading"
-                    :aria-expanded="topCardFontSubmenuOpen ? 'true' : 'false'"
-                    @click.stop="toggleTopCardFontSubmenu"
-                  >
-                    <i class="bi bi-fonts" aria-hidden="true"></i>
-                    <span>{{ getCurrentFontLabel() }}</span>
-                    <i class="bi" :class="topCardFontSubmenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
-                  </button>
-                  <div v-if="topCardFontSubmenuOpen" class="top-card-font-submenu" role="group" :aria-label="t('memorisation.a11y.changeQuranFont')">
-                    <button
-                      v-for="font in quranFontOptions"
-                      :key="`menu-font-${font.value}`"
-                      type="button"
-                      class="top-card-menu-toggle top-card-menu-toggle--font"
-                      :class="{ active: quranFont === font.value }"
-                      :aria-pressed="quranFont === font.value ? 'true' : 'false'"
-                      @click.stop="selectFont(font.value)"
-                    >
-                      <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
-                      <span>{{ font.label }}</span>
-                      <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                  <div class="top-card-menu-divider" role="separator"></div>
                   <button
                     v-if="readingViewMode !== 'mushaf'"
                     type="button"
@@ -718,8 +691,9 @@
                           `madani-line--${line.type}`,
                           {
                             'madani-line--empty': line.type === 'empty',
-                            'madani-line--glyphs': line.useGlyphs && line.fontReady && line.type === 'ayah',
-                            'madani-line--ayah': line.type === 'ayah'
+                            'madani-line--glyphs': line.useGlyphs && line.fontReady && (line.type === 'ayah' || line.type === 'basmala_ayah'),
+                            'madani-line--ayah': line.type === 'ayah',
+                            'madani-line--basmala-ayah': line.type === 'basmala_ayah'
                           }
                         ]"
                         :data-line-number="line.lineNumber"
@@ -733,12 +707,14 @@
                           <span class="sr-only">{{ mushafSurahTitle }}</span>
                         </template>
                         <template v-else-if="line.type === 'basmala'">
-                          <span
+                          <div
                             class="madani-basmala"
+                            dir="rtl"
+                            lang="ar"
                             aria-label="بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"
-                          >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</span>
+                          >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
                         </template>
-                        <template v-else-if="line.type === 'ayah'">
+                        <template v-else-if="line.type === 'ayah' || line.type === 'basmala_ayah'">
                           <span
                             v-for="(word, wordIndex) in line.words"
                             :key="`${line.key}-w-${word.position || wordIndex}-${word.verseKey}`"
@@ -871,6 +847,18 @@
                   </ul>
                 </div>
 
+                <div
+                  v-if="shouldShowStackedBasmala(verse)"
+                  class="verse-basmala"
+                  dir="rtl"
+                  lang="ar"
+                  :aria-label="t('memorisation.a11y.bismillah')"
+                  :style="{
+                    '--verse-font-percent': getVerseFontSize(verse.key),
+                    '--quran-font': quranFontFamily,
+                    'font-family': quranFontFamily
+                  }"
+                >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
                 <div class="verse-arabic verse-arabic-primary verse-arabic-with-end" dir="rtl" lang="ar" v-if="verse.arabic && isDataReady"
                   @click.stop
                   :key="`ar-${verse.key}-${practiceFocusSignature}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}`"

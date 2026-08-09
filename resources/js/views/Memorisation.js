@@ -24,9 +24,11 @@ import {
 } from '../scripts/lib/quranApis'
 import {
   buildMadaniPageLayout,
+  chapterHasBismillahPre,
   formatMadaniAyahEndLabel,
   isVerseInteractiveOnPage,
   MADANI_LAYOUT_VERSION,
+  textStartsWithBasmala,
   toEasternArabicDigits
 } from '../scripts/mushaf/madaniPageLayout'
 import {
@@ -222,6 +224,7 @@ import {
 import {
   DEFAULT_SESSION_REPETITIONS,
   buildDefaultWorkspaceSessionConfig,
+  freshSessionRepetitionDefaults,
   resolveSessionRepetitions,
 } from '../scripts/session/sessionDefaults'
 import { readStoredAutoFollowEnabled } from '../scripts/memorisationDetection/liveAutoFollow'
@@ -542,8 +545,6 @@ export default {
       isDataReady: false,
       fontDropdownOpen: false,
       topCardMenuOpen: false,
-      topCardFontSubmenuOpen: false,
-      topCardLayoutSubmenuOpen: false,
       openVerseActionKey: '',
       verseFontSizes: {},
       defaultFontSize: 150,
@@ -8081,23 +8082,27 @@ export default {
         })
         .filter(line => {
           if (!filterToSession) return true
-          if (line.type === 'ayah') return Array.isArray(line.words) && line.words.length > 0
+          if (line.type === 'ayah' || line.type === 'basmala_ayah') {
+            return Array.isArray(line.words) && line.words.length > 0
+          }
           // Keep basmala only when that surah still has visible session ayah text.
           return true
         })
         .filter((line, _idx, all) => {
-          if (line.type === 'ayah') return true
+          if (line.type === 'ayah' || line.type === 'basmala_ayah') return true
           if (line.type === 'basmala') {
             const chapterId = Number(line.chapterId)
             if (!Number.isFinite(chapterId) || chapterId < 2) return false
             return all.some(other => (
-              other.type === 'ayah'
+              (other.type === 'ayah' || other.type === 'basmala_ayah')
               && Array.isArray(other.words)
               && other.words.some(word => Number(String(word.verseKey || '').split(':')[0]) === chapterId)
             ))
           }
           if (!filterToSession) return true
-          return all.some(other => other.type === 'ayah' && other.words?.length)
+          return all.some(other => (
+            (other.type === 'ayah' || other.type === 'basmala_ayah') && other.words?.length
+          ))
         })
         .filter((line, _idx, all) => {
           // One basmala per surah — drop accidental duplicates.
@@ -9528,6 +9533,9 @@ export default {
 
         if (entry.setup || entry.resume) {
           this.startingFreshSessionSelection = true
+          if (entry.setup && !entry.resume) {
+            this.resetRepetitionsForFreshSession()
+          }
           this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
           return true
         }
@@ -9862,6 +9870,17 @@ export default {
       return buildDefaultWorkspaceSessionConfig()
     },
 
+    /**
+     * Reset repetition controls to 1x for a genuinely new normal session.
+     * Does not touch resume / recommendation hydration — callers must only use
+     * this on fresh-session entry points (or explicit reset controls).
+     */
+    resetRepetitionsForFreshSession() {
+      const defaults = freshSessionRepetitionDefaults()
+      this.repetitionsPerStep = defaults.repetitionsPerStep
+      this.selectedLoopCount = defaults.selectedLoopCount
+    },
+
     applyDefaultWorkspaceSessionConfig(options = {}) {
       const { openSetup = true, silent = false } = options
       const defaults = this.buildDefaultWorkspaceSessionConfig()
@@ -9898,7 +9917,7 @@ export default {
       this.persistUiState()
       this.persistCentralSessionState()
       if (!silent) {
-        this.showBanner('Default session loaded: Al-Fatihah 1-7, Alafasy, standard speed, 3 repeats, no memorisation techniques.', 'info', 3200)
+        this.showBanner('Default session loaded: Al-Fatihah 1-7, Alafasy, standard speed, 1 repeat, no memorisation techniques.', 'info', 3200)
       }
     },
 
@@ -11147,8 +11166,10 @@ export default {
       // Also handle common variations
       const basmalaVariants = [
         'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+        'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ',
         'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-        'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'
+        'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+        'بسم الله الرحمن الرحيم'
       ]
 
       let text = String(arabicText)
@@ -11160,6 +11181,23 @@ export default {
       }
       // UthmanicHafs paints U+06DF as a solid+dashed circle — drop it from all display text.
       return this.stripRedundantQuranCircles(text)
+    },
+
+    /**
+     * Dedicated Bismillah row above ayah 1 in stacked view.
+     * Skips Al-Fatihah (ayah 1 is the basmala) and avoids duplicating
+     * when the verse text still begins with the basmala.
+     */
+    shouldShowStackedBasmala(verse) {
+      if (!verse) return false
+      const ayahNumber = Number(verse.number || verse.numberInSurah || String(verse.key || '').split(':')[1] || 0)
+      const chapterId = Number(verse.chapterId || String(verse.key || '').split(':')[0] || 0)
+      if (ayahNumber !== 1 || !chapterHasBismillahPre(chapterId)) return false
+      const arabic = String(verse.arabic || '').trim()
+      if (!arabic) return true
+      const stripped = this.removeBasmala(arabic)
+      // If stripping removed content, the basmala is still embedded — don't duplicate.
+      return stripped === arabic
     },
 
     /**
@@ -11950,7 +11988,6 @@ export default {
     // Fix banner positioning - update CSS
     toggleKeyboardShortcuts() {
       this.topCardMenuOpen = false
-      this.closeTopCardSubmenus()
       if (!this.showKeyboardShortcuts && !this.activeKeyboardShortcutGroup) {
         this.activeKeyboardShortcutGroup = this.keyboardShortcutGroups[0]?.id || 'playback'
       }
@@ -12418,7 +12455,7 @@ export default {
     applyOnboardingGoalPreset() {
       this.rangeStart = 1
       this.rangeEnd = 3
-      this.repetitionsPerStep = 5
+      this.resetRepetitionsForFreshSession()
     },
     getOnboardingStorageKey() {
       const userId = this.auth?.id ? String(this.auth.id) : 'guest'
@@ -15680,6 +15717,7 @@ export default {
       } else {
         this.postSessionOffcanvasOpen = true
       }
+      this.resetRepetitionsForFreshSession()
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
     },
     buildCurrentRecommendedSessionTemplate(overrides = {}) {
@@ -15881,6 +15919,7 @@ export default {
       this.clearActiveSessionSnapshot()
       this.sessionPaused = false
       this.backendUnfinishedSession = false
+      this.resetRepetitionsForFreshSession()
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
       if (!this.sectionOpen?.advanced_setup) {
         this.sectionOpen = { ...(this.sectionOpen || {}), advanced_setup: true }
@@ -16132,7 +16171,7 @@ export default {
       this.speed = 1
       this.playMode = 'auto'
       this.talqinModeEnabled = false
-      this.repetitionsPerStep = 5
+      this.resetRepetitionsForFreshSession()
       this.chainingEnabled = false
       this.chainingMethod = ''
       this.chainingRepetitions = 1
@@ -16238,7 +16277,6 @@ export default {
     },
     openHelpLearningModal(sectionKey = 'tajweed') {
       this.topCardMenuOpen = false
-      this.closeTopCardSubmenus?.()
       const key = this.helpLearningSections.some(section => section.key === sectionKey)
         ? sectionKey
         : (this.helpLearningSections[0]?.key || 'tajweed')
@@ -18995,8 +19033,17 @@ export default {
         || this.chapterId
         || 0
       )
-      // Mushaf convention: basmala when the range opens at ayah 1 (except At-Tawbah).
-      const showBasmala = firstAyahNumber === 1 && chapterId !== 9
+      // Mushaf convention: dedicated basmala row when the range opens at ayah 1
+      // (except At-Tawbah). Skip if ayah text already embeds the basmala.
+      const firstArabic = String(
+        this.getPlainVerseArabicForCheck?.(firstVerse)
+        || this.cleanRecitationDisplayText?.(firstVerse?.arabic || '')
+        || firstVerse?.arabic
+        || ''
+      ).trim()
+      const showBasmala = firstAyahNumber === 1
+        && chapterId !== 9
+        && !textStartsWithBasmala(firstArabic)
 
       const runs = []
       let offset = 0
@@ -26054,6 +26101,7 @@ export default {
       this.showWelcomeBackModal = false
       this.returningUserChoicePending = false
       this.welcomeBackWorkspaceHidden = true
+      this.resetRepetitionsForFreshSession()
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
     },
 
@@ -26888,8 +26936,6 @@ export default {
     openSessionExitModalFromMenu() {
       this.resetStuckSessionLifecycleControls()
       this.topCardMenuOpen = false
-      this.topCardFontSubmenuOpen = false
-      this.topCardLayoutSubmenuOpen = false
       this.openSessionExitModal()
     },
     promptTapToPlay(message = '') {
@@ -27086,6 +27132,7 @@ export default {
       this.openNewSessionSetup()
     },
     openNewSessionSetup() {
+      this.resetRepetitionsForFreshSession()
       this.openToolsPanel({ tab: 'tools' })
     },
     openSavedSessionsPanel() {
@@ -27508,7 +27555,6 @@ export default {
       if (this.readingViewMode === nextMode) {
         this.topCardMenuOpen = false
         this.fontDropdownOpen = false
-        this.closeTopCardSubmenus()
         return
       }
       this.readingViewMode = nextMode
@@ -27536,7 +27582,6 @@ export default {
       }
       this.topCardMenuOpen = false
       this.fontDropdownOpen = false
-      this.closeTopCardSubmenus()
       this.persistUiState()
     },
     getDefaultMushafBackgroundForTheme() {
@@ -29142,6 +29187,7 @@ export default {
     openSessionExitNewSessionOffcanvas() {
       this.sessionExitOffcanvasOpen = true
       this.startingFreshSessionSelection = true
+      this.resetRepetitionsForFreshSession()
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
     },
 
@@ -30445,36 +30491,14 @@ export default {
         this.fontOpen = false
         this.borderOpen = false
         this.topCardMenuOpen = false
-        this.closeTopCardSubmenus()
         this.openVerseActionKey = ''
       }
-    },
-    closeTopCardSubmenus() {
-      this.topCardFontSubmenuOpen = false
-      this.topCardLayoutSubmenuOpen = false
     },
     toggleTopCardMenu() {
       const nextOpen = !this.topCardMenuOpen
       this.topCardMenuOpen = nextOpen
       if (nextOpen) {
         this.openVerseActionKey = ''
-        this.fontDropdownOpen = false
-        this.closeTopCardSubmenus()
-      } else {
-        this.closeTopCardSubmenus()
-      }
-    },
-    toggleTopCardFontSubmenu() {
-      this.topCardFontSubmenuOpen = !this.topCardFontSubmenuOpen
-      if (this.topCardFontSubmenuOpen) {
-        this.topCardLayoutSubmenuOpen = false
-        this.fontDropdownOpen = false
-      }
-    },
-    toggleTopCardLayoutSubmenu() {
-      this.topCardLayoutSubmenuOpen = !this.topCardLayoutSubmenuOpen
-      if (this.topCardLayoutSubmenuOpen) {
-        this.topCardFontSubmenuOpen = false
         this.fontDropdownOpen = false
       }
     },
@@ -30483,7 +30507,6 @@ export default {
       if (this.openVerseActionKey) {
         this.topCardMenuOpen = false
         this.fontDropdownOpen = false
-        this.closeTopCardSubmenus()
       }
     },
     cycleQuranFont() {
@@ -30492,7 +30515,6 @@ export default {
       const next = options[(index + 1 + options.length) % Math.max(1, options.length)]
       if (next?.value) this.setQuranFont(next.value)
       this.topCardMenuOpen = false
-      this.closeTopCardSubmenus()
     },
     selectFont(fontValue) {
       const allowed = (this.quranFontOptions || []).some(font => font.value === fontValue)
@@ -30503,7 +30525,6 @@ export default {
       this.fontDropdownOpen = false
       this.fontOpen = false
       this.topCardMenuOpen = false
-      this.closeTopCardSubmenus()
       this.syncSettingsDraft()
       this.persistUiState()
       if (this.readingViewMode === 'mushaf') {
@@ -30570,7 +30591,6 @@ export default {
       }
       if (this.topCardMenuOpen && !event.target.closest('.top-card-menu-wrap')) {
         this.topCardMenuOpen = false
-        this.closeTopCardSubmenus()
       }
       if (this.openVerseActionKey && !event.target.closest('.verse-menu-wrap')) {
         this.openVerseActionKey = ''
@@ -32401,9 +32421,15 @@ export default {
             let arabic = arabicByNumber.get(ayah.numberInSurah) || ayah.text || ''
             let tajweed = tajweedByNumber.get(ayah.numberInSurah) || ''
 
-            // Remove Basmala + solid/dashed circle ornaments (U+06DF etc.)
-            arabic = this.removeBasmala(arabic)
-            tajweed = this.removeBasmala(tajweed)
+            // Strip leading basmala from ayah 1 of surahs that render it as a
+            // dedicated row (not Al-Fatihah, where ayah 1 is the basmala).
+            if (chapterHasBismillahPre(chapterId) && ayah.numberInSurah === 1) {
+              arabic = this.removeBasmala(arabic)
+              tajweed = this.removeBasmala(tajweed)
+            } else {
+              arabic = this.stripRedundantQuranCircles(arabic)
+              tajweed = this.stripRedundantQuranCircles(tajweed)
+            }
 
             const transliteration = translitByNumber.get(ayah.numberInSurah) || ''
             const translation = translationByNumber.get(ayah.numberInSurah) || ''
@@ -34560,6 +34586,7 @@ export default {
       this.speed = 1
       this.delay = 2
       this.recitationWindowSeconds = 8
+      this.resetRepetitionsForFreshSession()
       this.chainingEnabled = false
       this.chainingMethod = ''
       this.chainingRepetitions = 1

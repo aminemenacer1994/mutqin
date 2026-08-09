@@ -10,5 +10,6 @@ class SessionDefaultsTest extends TestCase
     public function test_new_session_repetitions_default_is_one(): void
     {
         $this->assertSame(1, SessionDefaults::REPETITIONS);
+        $this->assertNotSame(2, SessionDefaults::REPETITIONS);
     }
 }

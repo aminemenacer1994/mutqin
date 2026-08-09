@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {
   DEFAULT_SESSION_REPETITIONS,
   buildDefaultWorkspaceSessionConfig,
+  freshSessionRepetitionDefaults,
   resolveSessionRepetitions,
 } from '../../resources/js/scripts/session/sessionDefaults.js'
 import {
@@ -21,6 +22,14 @@ assert.equal(DEFAULT_SESSION_REPETITIONS, 1, 'new sessions default to 1x')
   const defaults = buildDefaultWorkspaceSessionConfig()
   assert.equal(defaults.repetitionsPerStep, 1)
   assert.equal(defaults.selectedLoopCount, 1)
+}
+
+// Fresh-session helper always returns 1x (clears sticky 2x+ from prior plans)
+{
+  const fresh = freshSessionRepetitionDefaults()
+  assert.equal(fresh.repetitionsPerStep, 1)
+  assert.equal(fresh.selectedLoopCount, 1)
+  assert.notEqual(fresh.repetitionsPerStep, 2)
 }
 
 // Missing values resolve to 1x; explicit / saved values are retained
@@ -89,10 +98,43 @@ const t = (key, params = {}) => {
   assert.match(source, /repetitionsPerStep:\s*DEFAULT_SESSION_REPETITIONS/)
   assert.match(source, /selectedLoopCount:\s*DEFAULT_SESSION_REPETITIONS/)
   assert.match(source, /from '\.\.\/scripts\/session\/sessionDefaults'/)
+  assert.match(source, /freshSessionRepetitionDefaults/)
+  assert.match(source, /resetRepetitionsForFreshSession\s*\(/)
   // Initial data() must not hardcode a higher flash value before hydration
   assert.match(
     source,
     /\/\/ Feature 1: Repetitions[^\n]*\n\s*repetitionsPerStep: DEFAULT_SESSION_REPETITIONS,\n\s*selectedLoopCount: DEFAULT_SESSION_REPETITIONS,/,
+  )
+
+  // Fresh-session entry points must clear sticky prior repetitions (e.g. recommendation 2x)
+  const freshEntryPoints = [
+    'welcomeBackStartNewSession',
+    'openNewSessionSetup',
+    'openPostSessionNewSessionOffcanvas',
+    'createCustomSessionFromChoice',
+    'openSessionExitNewSessionOffcanvas',
+    'performResetControls',
+    'applyOnboardingGoalPreset',
+  ]
+  for (const name of freshEntryPoints) {
+    const methodRe = new RegExp(`${name}\\s*\\([^)]*\\)\\s*\\{`)
+    const match = methodRe.exec(source)
+    assert.ok(match, `${name} method must exist`)
+    const slice = source.slice(match.index, match.index + 900)
+    assert.match(
+      slice,
+      /resetRepetitionsForFreshSession\s*\(/,
+      `${name} must reset repetitions to 1x for a new normal session`,
+    )
+  }
+
+  // Resume / recommendation apply paths must NOT force a fresh 1x overwrite helper
+  const applySessionConfigIdx = source.indexOf('applySessionConfig(config)')
+  assert.ok(applySessionConfigIdx >= 0, 'applySessionConfig(config) must exist')
+  assert.doesNotMatch(
+    source.slice(applySessionConfigIdx, applySessionConfigIdx + 1600),
+    /resetRepetitionsForFreshSession/,
+    'applySessionConfig must preserve resumed / recommended repetitions',
   )
 }
 
