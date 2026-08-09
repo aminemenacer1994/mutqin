@@ -1687,6 +1687,61 @@
           color: #ffffff !important;
         }
       }
+      /* FINAL mobile: Bismillah stays on its own centred row (beats display:contents flow) */
+      @media (max-width: 767.98px) {
+        html body .app .main.mushaf-mode-active .madani-line--basmala,
+        html body .app .main.mushaf-mode-active .madani-line--basmala_ayah,
+        html body .app .main.mushaf-mode-active .madani-line--basmala-ayah,
+        html body .main.mushaf-mode-active .madani-line--basmala,
+        html body .main.mushaf-mode-active .madani-line--basmala_ayah,
+        html body .main.mushaf-mode-active .madani-line--basmala-ayah {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          flex: 0 0 auto !important;
+          float: none !important;
+          clear: both !important;
+          align-self: stretch !important;
+          box-sizing: border-box !important;
+          margin: 0.5rem 0 0.4rem !important;
+          padding: 0.2rem 0.2rem !important;
+          border: 0 !important;
+          background: transparent !important;
+          text-align: center !important;
+          text-align-last: center !important;
+          white-space: normal !important;
+          line-height: 1.55 !important;
+          overflow: visible !important;
+        }
+        html body .app .main.mushaf-mode-active .madani-line--basmala_ayah .madani-word,
+        html body .app .main.mushaf-mode-active .madani-line--basmala-ayah .madani-word,
+        html body .main.mushaf-mode-active .madani-line--basmala_ayah .madani-word,
+        html body .main.mushaf-mode-active .madani-line--basmala-ayah .madani-word {
+          display: inline !important;
+          white-space: normal !important;
+        }
+        html body .app .main.mushaf-mode-active .madani-basmala,
+        html body .main.mushaf-mode-active .madani-basmala {
+          display: block !important;
+          width: 100% !important;
+          margin: 0 auto !important;
+          text-align: center !important;
+          white-space: normal !important;
+          font-size: calc(clamp(1.2rem, 4.8vw, 1.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+          line-height: 1.55 !important;
+          color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
+          -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
+        }
+        html body .app .verse-basmala,
+        html body .verse-basmala {
+          display: block !important;
+          width: 100% !important;
+          text-align: center !important;
+          margin: 0 0 0.45rem !important;
+          padding: 0.1rem 0.15rem 0.3rem !important;
+          white-space: normal !important;
+        }
+      }
       /* FINAL mobile: post-session CTAs must span full card width 50/50 */
       @media (max-width: 767.98px) {
         html body .app .workspace-shell--post-session-choice .workspace-shell-head {
@@ -2671,6 +2726,10 @@
             transform: translateY(0);
         }
 
+        .dropdown-menu form {
+            margin: 0;
+        }
+
         .dropdown-item {
             display: flex;
             align-items: center;
@@ -2684,13 +2743,18 @@
             cursor: pointer;
             background: none;
             border: none;
+            font-family: inherit;
             font-size: 14px;
             font-weight: 500;
+            line-height: 1.25;
+            text-align: start;
         }
 
         .dropdown-item i {
             font-size: 18px;
             width: 20px;
+            flex-shrink: 0;
+            line-height: 1;
         }
 
         .dropdown-item:hover {
@@ -4382,6 +4446,18 @@
             .mobile-nav-identity {
                 display: flex;
                 align-items: center;
+                gap: 12px;
+                min-width: 0;
+            }
+
+            .mobile-nav-identity-avatar {
+                flex: 0 0 auto;
+                width: 40px;
+                height: 40px;
+                font-size: 0.95rem;
+            }
+
+            .mobile-nav-identity-copy {
                 min-width: 0;
             }
 
@@ -4390,6 +4466,20 @@
                 color: var(--text);
                 font-size: 1.05rem;
                 font-weight: 650;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .mobile-nav-identity-meta {
+                color: var(--text-muted);
+                font-size: 0.74rem;
+                line-height: 1.3;
+            }
+
+            /* Single menu trigger on phone: hide the separate profile control. */
+            .navbar-quick-actions > #userDropdown {
+                display: none !important;
             }
 
             .app-navbar .offcanvas-body {
@@ -4432,6 +4522,9 @@
                 min-height: 60px;
                 padding: 8px 10px;
                 color: var(--text-muted);
+                font-family: inherit;
+                font-weight: 500;
+                line-height: 1.2;
                 text-align: start;
                 border: 1px solid transparent;
                 border-radius: 14px;
@@ -4554,11 +4647,13 @@
             }
 
             .mobile-nav-account form {
+                margin: 0;
                 min-width: 0;
             }
 
             .app-navbar .offcanvas-body .mobile-nav-logout {
                 grid-template-columns: 44px minmax(0, 1fr);
+                width: 100%;
                 border: 0;
                 background: transparent;
             }
@@ -4915,7 +5010,15 @@
             <div class="offcanvas offcanvas-end offcanvas-lg" tabindex="-1" id="primaryNavbar" aria-labelledby="primaryNavbarLabel">
                 <div class="offcanvas-header">
                     <div class="mobile-nav-identity">
-                        <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ __('ui.menu') }}</h2>
+                        @auth
+                            <span class="app-user-avatar mobile-nav-identity-avatar" aria-hidden="true">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
+                            <div class="mobile-nav-identity-copy">
+                                <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ Auth::user()->name ?? __('ui.user') }}</h2>
+                                <p class="mobile-nav-identity-meta mb-0">{{ __('ui.menu') }}</p>
+                            </div>
+                        @else
+                            <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ __('ui.menu') }}</h2>
+                        @endauth
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#primaryNavbar" aria-label="{{ __('ui.close_navigation') }}"></button>
                 </div>
@@ -4979,18 +5082,26 @@
                         </div>
                     @endguest
                     @auth
-                        <div class="mobile-nav-account mobile-nav-only">
-                            <span class="mobile-nav-section-label">Account</span>
+                        <div class="mobile-nav-account mobile-nav-only" aria-label="{{ __('ui.account') }}">
+                            <span class="mobile-nav-section-label">{{ __('ui.account') }}</span>
                             <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}" href="{{ route('profile.show') }}">
                                 <i class="bi bi-person nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong>Profile</strong><small>Preferences and subscription</small></span>
+                                <span class="nav-link-copy">
+                                    <strong>{{ __('ui.profile') }}</strong>
+                                    <small>{{ Auth::user()->isAdmin() ? __('profile.account_settings_desc_admin') : __('profile.account_settings_desc') }}</small>
+                                </span>
                                 <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
                             </a>
-                            <form method="POST" action="{{ route('logout') }}">
+                            <a class="nav-link" href="{{ route('profile.show') }}#settings">
+                                <i class="bi bi-gear nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>{{ __('ui.settings') }}</strong><small>{{ __('profile.change_password') }}</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
+                            </a>
+                            <form method="POST" action="{{ route('logout') }}" class="mobile-nav-logout-form">
                                 @csrf
                                 <button type="submit" class="nav-link mobile-nav-logout">
                                     <i class="bi bi-box-arrow-right nav-link-icon" aria-hidden="true"></i>
-                                    <span>{{ __('ui.logout') }}</span>
+                                    <span class="nav-link-copy"><strong data-i18n="logout">{{ __('ui.logout') }}</strong></span>
                                 </button>
                             </form>
                         </div>
@@ -5018,7 +5129,8 @@
                 </button>
 
                 @auth
-                    <div class="dropdown" id="userDropdown">
+                    {{-- Desktop/tablet account menu; hidden on phone where the offcanvas owns account actions. --}}
+                    <div class="dropdown d-none d-md-block" id="userDropdown">
                         <button class="btn app-user-toggle" type="button" id="dropdownToggle" aria-expanded="false" aria-haspopup="menu" aria-controls="dropdownMenu">
                             <span class="app-user-avatar" aria-hidden="true">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
                             <span class="d-none d-lg-inline">{{ Auth::user()->name ?? __('ui.user') }}</span>
@@ -5044,7 +5156,8 @@
                                 <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                                     @csrf
                                     <button type="submit" class="dropdown-item" role="menuitem">
-                                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i> <span data-i18n="logout">{{ __('ui.logout') }}</span>
+                                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                                        <span data-i18n="logout">{{ __('ui.logout') }}</span>
                                     </button>
                                 </form>
                             </li>
@@ -5052,14 +5165,23 @@
                     </div>
                 @endauth
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#primaryNavbar" aria-controls="primaryNavbar" aria-label="{{ __('ui.open_navigation') }}">
-                    <i class="bi bi-list"></i>
+                <button
+                    class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#primaryNavbar"
+                    aria-controls="primaryNavbar"
+                    aria-expanded="false"
+                    aria-label="{{ __('ui.open_navigation') }}"
+                >
+                    <i class="bi bi-list" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
     </nav>
 
     <div id="app">
+        <network-status-banner></network-status-banner>
         <main id="mainContent" tabindex="-1">
             @yield('content')
         </main>
@@ -5199,7 +5321,7 @@
             });
         })();
 
-        // Custom dropdown functionality
+        // Custom dropdown functionality (desktop/tablet account menu)
         (function() {
             runWhenReady(function() {
                 const dropdown = document.getElementById('userDropdown');
@@ -5221,6 +5343,8 @@
                 function isDropdownOpen() {
                     return menu.classList.contains('show');
                 }
+
+                window.mutqinCloseUserDropdown = closeDropdown;
                 
                 toggle.addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -5240,11 +5364,16 @@
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape' && isDropdownOpen()) {
                         closeDropdown();
+                        toggle.focus();
                     }
                 });
                 
                 menu.addEventListener('click', function(e) {
                     e.stopPropagation();
+                });
+
+                menu.querySelectorAll('a[href]').forEach((link) => {
+                    link.addEventListener('click', closeDropdown);
                 });
             });
         })();
@@ -5252,14 +5381,46 @@
         (function() {
             runWhenReady(function() {
                 const panel = document.getElementById('primaryNavbar');
-                if (!panel || !window.bootstrap) return;
+                const toggler = document.querySelector('.navbar-toggler[data-bs-target="#primaryNavbar"]');
+                if (!panel || !window.bootstrap?.Offcanvas) return;
+
+                // One shared Offcanvas instance for this panel.
+                const offcanvas = window.bootstrap.Offcanvas.getOrCreateInstance(panel);
+
+                function hidePrimaryNav() {
+                    if (!panel.classList.contains('show')) return;
+                    offcanvas.hide();
+                }
+
+                panel.addEventListener('show.bs.offcanvas', function() {
+                    if (typeof window.mutqinCloseUserDropdown === 'function') {
+                        window.mutqinCloseUserDropdown();
+                    }
+                    if (toggler) {
+                        toggler.setAttribute('aria-expanded', 'true');
+                    }
+                });
+
+                panel.addEventListener('hidden.bs.offcanvas', function() {
+                    if (toggler) {
+                        toggler.setAttribute('aria-expanded', 'false');
+                        if (document.activeElement === document.body || panel.contains(document.activeElement)) {
+                            toggler.focus();
+                        }
+                    }
+                });
 
                 panel.querySelectorAll('a[href]').forEach((link) => {
-                    link.addEventListener('click', function() {
-                        if (!panel.classList.contains('show')) return;
-                        window.bootstrap.Offcanvas.getOrCreateInstance(panel).hide();
-                    });
+                    link.addEventListener('click', hidePrimaryNav);
                 });
+
+                panel.querySelectorAll('form.mobile-nav-logout-form').forEach((form) => {
+                    form.addEventListener('submit', hidePrimaryNav);
+                });
+
+                if (toggler && !toggler.hasAttribute('aria-expanded')) {
+                    toggler.setAttribute('aria-expanded', 'false');
+                }
             });
         })();
         

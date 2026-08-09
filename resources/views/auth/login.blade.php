@@ -5,6 +5,8 @@
     <div class="auth-panel">
         <h1 class="auth-heading">{{ __('ui.auth_login_heading') }}</h1>
 
+        @include('partials.ios-pwa-install')
+
         @if (session('status'))
             <div class="alert alert-success auth-alert" role="alert">{{ session('status') }}</div>
         @endif

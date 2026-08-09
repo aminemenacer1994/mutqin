@@ -62,6 +62,11 @@ export function getSurahEdition(surahNumber, edition) {
   return alquranClient.get(`/surah/${surahNumber}/${edition}`)
 }
 
+/** Quran.com chapter list via same-origin proxy (avoids browser CORS). */
+export function getChapters(params = { language: 'en' }) {
+  return quranComClient.get('/chapters', { params })
+}
+
 export function getSurahEditions(surahNumber, reciterEdition) {
   const editions = `${reciterEdition},quran-tajweed`
   return alquranClient.get(`/surah/${surahNumber}/editions/${editions}`)

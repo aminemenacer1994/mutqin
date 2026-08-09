@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Learning;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SyncStateRequest;
 use App\Models\MemorisationSyncState;
+use App\Services\DashboardService;
 use App\Services\LearningStateDeriver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -59,6 +60,20 @@ class StateSyncController extends Controller
         $existing = MemorisationSyncState::query()->firstWhere('user_id', $user->id);
         $unchanged = $existing && $existing->payload_hash === $payloadHash;
 
+        // No-op autosaves: skip rewriting the longText blob and re-deriving tables.
+        if ($unchanged) {
+            return response()->json([
+                'saved' => true,
+                'unchanged' => true,
+                'meta' => [
+                    'owner_id' => $user->id,
+                    'state_updated_at' => $existing?->state_updated_at?->toIso8601String()
+                        ?? $localUpdatedAt->toIso8601String(),
+                    'payload_hash' => $payloadHash,
+                ],
+            ]);
+        }
+
         MemorisationSyncState::updateOrCreate(
             ['user_id' => $user->id],
             [
@@ -70,13 +85,8 @@ class StateSyncController extends Controller
             ]
         );
 
-        // The derived, normalised tables are a pure projection of the state blob.
-        // If the blob is byte-for-byte identical to what we already stored, the
-        // projection would be identical too, so skip the expensive re-derivation
-        // (which upserts every tracked ayah) on no-op autosaves.
-        if (! $unchanged) {
-            $deriver->derive($user, $validated['state'], $validated['continue'] ?? null);
-        }
+        $deriver->derive($user, $validated['state'], $validated['continue'] ?? null);
+        DashboardService::forgetForUser($user);
 
         return response()->json([
             'saved' => true,

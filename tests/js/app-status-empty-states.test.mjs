@@ -18,7 +18,9 @@ test('shared AppStatus component exists with required variants', () => {
   assert.match(vue, /no-results/)
   assert.match(vue, /auth/)
   assert.match(vue, /unavailable/)
+  assert.match(vue, /offline/)
   assert.match(css, /\.app-status--error/)
+  assert.match(css, /\.app-status--offline/)
   assert.match(css, /\[data-theme="dark"\] \.app-status/)
 })
 

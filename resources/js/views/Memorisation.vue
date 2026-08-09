@@ -645,11 +645,11 @@
                   </aside>
                   <div v-if="madaniPagesError" class="mushaf-empty-page mushaf-empty-page--error">
                     <AppStatus
-                      variant="error"
+                      :variant="networkOnline === false ? 'offline' : 'error'"
                       fill
                       compact
-                      :title="t('memorisation.mushafLoad.errorTitle')"
-                      :description="t('memorisation.mushafLoad.errorDesc')"
+                      :title="networkOnline === false ? t('common.status.offlineTitle') : t('memorisation.mushafLoad.errorTitle')"
+                      :description="networkOnline === false ? t('common.status.offlineDesc') : t('memorisation.mushafLoad.errorDesc')"
                       :action-label="t('memorisation.mushafLoad.retry')"
                       :secondary-action-label="t('memorisation.mushafLoad.switchStacked')"
                       @action="ensureMadaniPagesLoaded({ force: true })"
@@ -691,7 +691,9 @@
                           `madani-line--${line.type}`,
                           {
                             'madani-line--empty': line.type === 'empty',
-                            'madani-line--glyphs': line.useGlyphs && line.fontReady && (line.type === 'ayah' || line.type === 'basmala_ayah'),
+                            // Never put basmala_ayah in --glyphs: that class uses display:contents
+                            // and would pull the Bismillah back into the continuous ayah flow.
+                            'madani-line--glyphs': line.useGlyphs && line.fontReady && line.type === 'ayah',
                             'madani-line--ayah': line.type === 'ayah',
                             'madani-line--basmala-ayah': line.type === 'basmala_ayah'
                           }
@@ -1518,68 +1520,113 @@
               </button>
             </section>
 
-            <section class="saved-sheet__section" aria-label="Saved sessions">
-              <div v-if="savedSessions.length > 0" class="saved-sheet__list" role="list">
-                <article
-                  v-for="session in sortedSavedSessions"
-                  :key="session.id"
-                  class="saved-sheet__row"
-                  :class="{
-                    'is-complete': isSavedSessionComplete(session),
-                    'is-active': sessionMatchesCurrentLiveConfig(session),
-                    'is-selected': isSavedSessionSelected(session.id)
-                  }"
-                  role="listitem"
+            <section
+              v-if="savedSessions.length > 0"
+              class="saved-sheet__groups"
+              aria-label="Saved sessions"
+            >
+              <div
+                v-for="group in savedSessionGroups"
+                :key="group.key"
+                class="saved-sheet__group"
+              >
+                <button
+                  type="button"
+                  class="saved-sheet__group-toggle"
+                  :aria-expanded="sectionOpen[group.key] ? 'true' : 'false'"
+                  :aria-controls="`saved-group-${group.key}`"
+                  @click="toggleSection(group.key)"
                 >
-                  <label
-                    v-if="savedSelectMode"
-                    class="saved-sheet__check"
-                    @click.stop
-                  >
-                    <input
-                      type="checkbox"
-                      :checked="isSavedSessionSelected(session.id)"
-                      :aria-label="t('memorisation.selectSession') || 'Select session'"
-                      @change="toggleSavedSessionSelection(session.id)"
-                    >
-                    <span aria-hidden="true"></span>
-                  </label>
+                  <span class="saved-sheet__group-heading">
+                    <span class="saved-sheet__group-title">{{ t(group.titleKey) }}</span>
+                    <span class="saved-sheet__group-count">{{ group.sessions.length }}</span>
+                  </span>
+                  <span class="saved-sheet__group-chev" :class="{ open: sectionOpen[group.key] }" aria-hidden="true">
+                    <i class="bi bi-chevron-down"></i>
+                  </span>
+                </button>
 
-                  <button
-                    type="button"
-                    class="saved-sheet__row-main"
-                    @click="savedSelectMode ? toggleSavedSessionSelection(session.id) : loadSavedSession(session.id)"
-                  >
-                    <span class="saved-sheet__row-icon" aria-hidden="true">
-                      <i class="bi" :class="isSavedSessionComplete(session) ? 'bi-check-circle-fill' : 'bi-bookmark-fill'"></i>
-                    </span>
-                    <span class="saved-sheet__row-copy">
-                      <span class="saved-sheet__row-title">{{ getSavedSessionName(session) }}</span>
-                      <span class="saved-sheet__row-meta">
-                        {{ getSavedSessionSurah(session) }} · {{ t('memorisation.last_opened', { date: formatDate(session.savedAt) }) }}
-                      </span>
-                    </span>
-                  </button>
-
-                  <div v-if="!savedSelectMode" class="saved-sheet__row-actions">
-                    <button class="saved-sheet__action saved-sheet__action--primary" @click="loadSavedSession(session.id)" type="button">
-                      <i class="bi bi-play-fill" aria-hidden="true"></i>
-                      <span>{{ t('common.resume') }}</span>
-                    </button>
-                    <button
-                      class="saved-sheet__action saved-sheet__action--ghost"
-                      @click.stop="deleteSavedSession(session.id)"
-                      :title="t('common.delete')"
-                      :aria-label="t('common.delete')"
-                      type="button"
+                <div
+                  :id="`saved-group-${group.key}`"
+                  class="saved-sheet__group-body"
+                  v-show="sectionOpen[group.key]"
+                >
+                  <div v-if="group.sessions.length > 0" class="saved-sheet__list" role="list">
+                    <article
+                      v-for="session in group.sessions"
+                      :key="session.id"
+                      class="saved-sheet__row"
+                      :class="{
+                        'is-complete': group.complete,
+                        'is-active': sessionMatchesCurrentLiveConfig(session),
+                        'is-selected': isSavedSessionSelected(session.id)
+                      }"
+                      role="listitem"
                     >
-                      <i class="bi bi-trash3" aria-hidden="true"></i>
-                    </button>
+                      <label
+                        v-if="savedSelectMode"
+                        class="saved-sheet__check"
+                        @click.stop
+                      >
+                        <input
+                          type="checkbox"
+                          :checked="isSavedSessionSelected(session.id)"
+                          :aria-label="t('memorisation.selectSession') || 'Select session'"
+                          @change="toggleSavedSessionSelection(session.id)"
+                        >
+                        <span aria-hidden="true"></span>
+                      </label>
+
+                      <button
+                        type="button"
+                        class="saved-sheet__row-main"
+                        @click="savedSelectMode ? toggleSavedSessionSelection(session.id) : loadSavedSession(session.id)"
+                      >
+                        <span class="saved-sheet__row-icon" aria-hidden="true">
+                          <i class="bi" :class="group.complete ? 'bi-check-circle-fill' : 'bi-bookmark-fill'"></i>
+                        </span>
+                        <span class="saved-sheet__row-copy">
+                          <span class="saved-sheet__row-title">{{ getSavedSessionName(session) }}</span>
+                          <span class="saved-sheet__row-meta">
+                            <template v-if="group.complete">{{ t('memorisation.session_completed_label') }} · </template>{{ getSavedSessionSurah(session) }} · {{ t('memorisation.last_opened', { date: formatDate(session.savedAt) }) }}
+                          </span>
+                        </span>
+                      </button>
+
+                      <div v-if="!savedSelectMode" class="saved-sheet__row-actions">
+                        <button
+                          class="saved-sheet__action"
+                          :class="group.complete ? 'saved-sheet__action--secondary' : 'saved-sheet__action--primary'"
+                          @click="loadSavedSession(session.id)"
+                          type="button"
+                        >
+                          <i class="bi" :class="group.complete ? 'bi-eye-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+                          <span>{{ group.complete ? t('memorisation.review_session') : t('common.resume') }}</span>
+                        </button>
+                        <button
+                          class="saved-sheet__action saved-sheet__action--ghost"
+                          @click.stop="deleteSavedSession(session.id)"
+                          :title="t('common.delete')"
+                          :aria-label="t('common.delete')"
+                          type="button"
+                        >
+                          <i class="bi bi-trash3" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                    </article>
                   </div>
-                </article>
-              </div>
 
-              <div v-else class="saved-sheet__empty">
+                  <div v-else class="saved-sheet__empty saved-sheet__empty--compact">
+                    <i class="bi" :class="group.emptyIcon" aria-hidden="true"></i>
+                    <p>{{ t(group.emptyTitleKey) }}</p>
+                    <span>{{ t(group.emptyHintKey) }}</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section v-else class="saved-sheet__section" aria-label="Saved sessions">
+              <div class="saved-sheet__empty">
                 <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
                 <p>{{ t('memorisation.no_saved_sessions_yet') }}</p>
                 <span>{{ t('memorisation.save_your_current_session_to_get_started') }}</span>
@@ -2018,73 +2065,76 @@
         aria-labelledby="sessionExitTitle"
         aria-describedby="sessionExitDescription"
       >
-        <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog">
-          <div class="modal-content mutqin-modal-surface session-exit-modal confirm-modal">
-            <div class="modal-header">
-              <div class="modal-header-text">
-                <div v-if="sessionExitContextLabel" class="modal-context-badge">
-                  {{ sessionExitContextLabel }}
+        <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog w-100">
+          <div class="modal-content mutqin-modal-surface session-exit-modal confirm-modal w-100">
+            <button
+              class="modal-close-btn"
+              type="button"
+              :disabled="sessionExitEndingBusy"
+              :aria-label="t('memorisation.confirmModals.closeDialog')"
+              @click="keepPractisingFromExitModal"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+
+            <div class="container-fluid session-exit-fluid px-0 w-100">
+              <div class="modal-header w-100">
+                <div class="modal-header-text w-100">
+                  <div v-if="sessionExitContextLabel" class="modal-context-badge">
+                    {{ sessionExitContextLabel }}
+                  </div>
+                  <h2 id="sessionExitTitle" class="session-exit-title w-100">
+                    {{ sessionExitModalTitle }}
+                  </h2>
                 </div>
-                <h2 id="sessionExitTitle" class="session-exit-title">
-                  {{ sessionExitModalTitle }}
-                </h2>
               </div>
-              <button
-                class="modal-close-btn"
-                type="button"
-                :disabled="sessionExitEndingBusy"
-                :aria-label="t('memorisation.confirmModals.closeDialog')"
-                @click="keepPractisingFromExitModal"
-              >
-                <i class="bi bi-x-lg" aria-hidden="true"></i>
-              </button>
-            </div>
 
-            <div class="modal-body session-exit-body">
-              <p id="sessionExitDescription" class="confirm-copy session-exit-message">
-                {{ sessionExitMotivationMessage }}
-              </p>
-              <div class="session-exit-progress-block" role="status">
-                <p
-                  v-if="sessionExitAyahProgressLabel"
-                  class="session-exit-progress-summary session-exit-progress-summary--ayah"
-                >
-                  {{ sessionExitAyahProgressLabel }}
+              <div class="modal-body session-exit-body w-100">
+                <p id="sessionExitDescription" class="confirm-copy session-exit-message w-100">
+                  {{ sessionExitMotivationMessage }}
                 </p>
-                <p
-                  class="session-exit-progress-summary"
-                  :aria-label="sessionExitRepetitionProgressLabel"
-                >
-                  {{ sessionExitRepetitionProgressLabel }}
-                </p>
+                <div class="session-exit-progress-block w-100" role="status">
+                  <p
+                    v-if="sessionExitAyahProgressLabel"
+                    class="session-exit-progress-summary session-exit-progress-summary--ayah w-100"
+                  >
+                    {{ sessionExitAyahProgressLabel }}
+                  </p>
+                  <p
+                    class="session-exit-progress-summary w-100"
+                    :aria-label="sessionExitRepetitionProgressLabel"
+                  >
+                    {{ sessionExitRepetitionProgressLabel }}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div class="modal-footer mutqin-modal-footer">
-              <div
-                class="mutqin-modal-actions mutqin-modal-actions--end session-exit-confirm-actions"
-                role="group"
-                :aria-label="t('memorisation.sessionExit.confirmTitle')"
-              >
-                <button
-                  type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate"
-                  :disabled="sessionExitEndingBusy"
-                  @click="keepPractisingFromExitModal"
+              <div class="modal-footer mutqin-modal-footer w-100">
+                <div
+                  class="mutqin-modal-actions mutqin-modal-actions--end session-exit-confirm-actions w-100"
+                  role="group"
+                  :aria-label="t('memorisation.sessionExit.confirmTitle')"
                 >
-                  <span>{{ t('memorisation.sessionExit.keepPractising') }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--destructive mutqin-btn-animate"
-                  :disabled="sessionExitEndingBusy"
-                  :aria-busy="sessionExitEndingBusy ? 'true' : 'false'"
-                  :class="{ 'is-loading': sessionExitEndingBusy }"
-                  @click="confirmEndSessionFromExitModal"
-                >
-                  <i class="bi" :class="sessionExitEndingBusy ? 'bi-hourglass-split' : 'bi-box-arrow-right'" aria-hidden="true"></i>
-                  <span>{{ sessionExitConfirmEndLabel }}</span>
-                </button>
+                  <button
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate"
+                    :disabled="sessionExitEndingBusy"
+                    @click="keepPractisingFromExitModal"
+                  >
+                    <span>{{ t('memorisation.sessionExit.keepPractising') }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="mutqin-modal-btn mutqin-modal-btn--destructive mutqin-btn-animate"
+                    :disabled="sessionExitEndingBusy"
+                    :aria-busy="sessionExitEndingBusy ? 'true' : 'false'"
+                    :class="{ 'is-loading': sessionExitEndingBusy }"
+                    @click="confirmEndSessionFromExitModal"
+                  >
+                    <i class="bi" :class="sessionExitEndingBusy ? 'bi-hourglass-split' : 'bi-box-arrow-right'" aria-hidden="true"></i>
+                    <span>{{ sessionExitConfirmEndLabel }}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

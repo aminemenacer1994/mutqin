@@ -47,6 +47,7 @@ const VARIANT_ICONS = {
   empty: 'bi-inbox',
   'no-results': 'bi-funnel',
   error: 'bi-exclamation-triangle',
+  offline: 'bi-wifi-off',
   auth: 'bi-lock',
   unavailable: 'bi-slash-circle',
 }
@@ -54,7 +55,7 @@ const VARIANT_ICONS = {
 export default {
   name: 'AppStatus',
   props: {
-    /** loading | empty | no-results | error | auth | unavailable */
+    /** loading | empty | no-results | error | offline | auth | unavailable */
     variant: {
       type: String,
       default: 'empty',
@@ -91,7 +92,12 @@ export default {
       ]
     },
     roleAttr() {
-      if (this.variant === 'error' || this.variant === 'auth' || this.variant === 'unavailable') {
+      if (
+        this.variant === 'error'
+        || this.variant === 'offline'
+        || this.variant === 'auth'
+        || this.variant === 'unavailable'
+      ) {
         return 'alert'
       }
       return 'status'

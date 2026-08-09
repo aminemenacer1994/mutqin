@@ -1,15 +1,31 @@
 require('./bootstrap.js');
 
 import { createApp, defineAsyncComponent } from 'vue';
-import Homepage from './views/Homepage.vue';
-import About from './views/About.vue';
-import AboutUsPage from './views/AboutUs.vue';
-import OurMissionPage from './views/OurMission.vue';
-import DonationPage from './views/DonationPage.vue';
+import NetworkStatusBanner from './components/NetworkStatusBanner.vue';
 import './styles/info-pages.css';
 import { setupI18n, setLocale } from './i18n';
 import { i18nMixin } from './mixins/i18nMixin';
 import { initPwa } from './pwa';
+import { isBrowserOffline } from './utils/networkStatus';
+
+const Homepage = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "homepage" */ './views/Homepage.vue')
+);
+const About = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "about" */ './views/About.vue')
+);
+const AboutUsPage = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "about-us" */ './views/AboutUs.vue')
+);
+const OurMissionPage = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "our-mission" */ './views/OurMission.vue')
+);
+const DonationPage = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "donation" */ './views/DonationPage.vue')
+);
+const WaitingListPage = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "waiting-list" */ './views/WaitingList.vue')
+);
 
 const UserDashboard = defineAsyncComponent(() =>
   import(/* webpackChunkName: "dashboard" */ './views/Dashboard.vue')
@@ -36,13 +52,49 @@ const MemorisationBootFallback = {
 
 const MemorisationLoadError = {
     props: { error: { type: Object, default: null } },
+    data() {
+        return {
+            offline: isBrowserOffline(),
+            onlineHandler: null,
+        };
+    },
+    computed: {
+        title() {
+            return this.offline
+                ? 'You appear to be offline.'
+                : 'Something went wrong';
+        },
+        description() {
+            return this.offline
+                ? 'Check your connection, then try again. We’ll retry automatically when you’re back online.'
+                : 'Something went wrong. Please try again.';
+        },
+    },
+    mounted() {
+        this.onlineHandler = () => {
+            const wasOffline = this.offline;
+            this.offline = isBrowserOffline();
+            if (wasOffline && !this.offline) this.reload();
+        };
+        window.addEventListener('online', this.onlineHandler);
+        window.addEventListener('offline', this.onlineHandler);
+    },
+    beforeUnmount() {
+        if (this.onlineHandler) {
+            window.removeEventListener('online', this.onlineHandler);
+            window.removeEventListener('offline', this.onlineHandler);
+        }
+    },
     template: `
         <div class="memorisation-boot-fallback memorisation-boot-fallback-error" role="alert">
             <div class="memorisation-boot-card">
-                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
-                <strong>Memorisation workspace failed to load</strong>
-                <span>Refresh the page. If this keeps happening after <code>npm run watch</code> finishes compiling, hard-refresh once.</span>
-                <button type="button" class="btn btn-sm btn-primary mt-2" @click="reload">Refresh</button>
+                <i class="bi" :class="offline ? 'bi-wifi-off' : 'bi-exclamation-triangle'" aria-hidden="true"></i>
+                <strong>{{ title }}</strong>
+                <span>{{ description }}</span>
+                <div class="memorisation-boot-actions">
+                    <button type="button" class="btn btn-sm btn-primary" @click="reload">Retry</button>
+                    <a class="btn btn-sm btn-outline-secondary" href="/">Return Home</a>
+                </div>
             </div>
         </div>
     `,
@@ -73,6 +125,7 @@ function loadMemorisationChunk(attempt = 0) {
         }
         return mod;
     }).catch((error) => {
+        console.error('Memorisation chunk failed to load', error);
         const name = String(error?.name || '');
         const message = String(error?.message || '');
         const isChunkError = name === 'ChunkLoadError'
@@ -106,10 +159,14 @@ async function bootstrapApp() {
     app.use(i18n);
     app.mixin(i18nMixin);
     app.config.globalProperties.$setLocale = (locale) => setLocale(i18n, locale);
+    app.config.errorHandler = (error, instance, info) => {
+        console.error('Mutqin Vue error:', error, info);
+    };
     window.mutqinSetLocale = (locale) => setLocale(i18n, locale);
     window.mutqinGetLocale = () => i18n.global.locale.value;
     window.dispatchEvent(new CustomEvent('mutqin:i18n-ready', { detail: { locale: i18n.global.locale.value } }));
 
+    app.component('network-status-banner', NetworkStatusBanner);
     app.component('homepage', Homepage);
     app.component('memorisation', Memorisation);
     app.component('user-dashboard', UserDashboard);
@@ -118,6 +175,7 @@ async function bootstrapApp() {
     app.component('about-us-page', AboutUsPage);
     app.component('our-mission-page', OurMissionPage);
     app.component('donation-page', DonationPage);
+    app.component('waiting-list-page', WaitingListPage);
     app.mount('#app');
 }
 
@@ -125,16 +183,29 @@ function showBootstrapFailure(error) {
     console.error('Mutqin app bootstrap failed:', error);
     const mountTarget = document.getElementById('app');
     if (!mountTarget) return;
+    const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    const title = offline ? 'You appear to be offline.' : 'Something went wrong';
+    const description = offline
+        ? 'Check your connection, then try again.'
+        : 'Something went wrong. Please try again.';
     mountTarget.innerHTML = `
         <main id="mainContent" tabindex="-1">
             <div class="memorisation-boot-fallback memorisation-boot-fallback-error" role="alert">
                 <div class="memorisation-boot-card">
-                    <strong>Mutqin failed to start</strong>
-                    <span>Refresh the page. If this continues, rebuild frontend assets with <code>npm run dev</code>.</span>
+                    <i class="bi ${offline ? 'bi-wifi-off' : 'bi-exclamation-triangle'}" aria-hidden="true"></i>
+                    <strong>${title}</strong>
+                    <span>${description}</span>
+                    <div class="memorisation-boot-actions">
+                        <button type="button" class="btn btn-sm btn-primary" onclick="window.location.reload()">Retry</button>
+                        <a class="btn btn-sm btn-outline-secondary" href="/">Return Home</a>
+                    </div>
                 </div>
             </div>
         </main>
     `;
+    if (offline) {
+        window.addEventListener('online', () => window.location.reload(), { once: true });
+    }
 }
 
 bootstrapApp().catch(showBootstrapFailure);

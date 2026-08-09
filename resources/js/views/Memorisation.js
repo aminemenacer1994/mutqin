@@ -12,8 +12,9 @@ import {
   buildWelcomeBackRemembrance,
 } from '../utils/emotionalTouches'
 import diff from 'fast-diff'
-import { markRaw } from 'vue'
+import { defineAsyncComponent, markRaw } from 'vue'
 import {
+  getChapters,
   getChapterWordByWordMeanings,
   getEditions,
   getMadaniPagesForChapterRange,
@@ -191,19 +192,6 @@ import {
   resolveConfidenceSelection,
   shouldHideCompletionUnderAi,
 } from '../scripts/session/completionFlow'
-import {
-  startAdaptiveCheck,
-  answerCurrentQuestion,
-  completeAssessment,
-  buildAssessmentResultViewModel,
-  loadAssessmentSession,
-  clearAssessmentSession,
-  requestHint,
-  pauseAssessment,
-  resumeAssessment,
-} from '../scripts/assessment/AdaptiveAssessmentService'
-import { loadMasteryMap } from '../scripts/assessment/LearnerMasteryService'
-import { recordEffectiveness } from '../scripts/assessment/RecommendationEffectivenessService'
 import { seedAyahs } from '../scripts/composables/useAyahState'
 import { buildSessionQueue, startMutqinSession, moveMutqinSession, completeMutqinSession } from '../scripts/composables/useSessionEngine'
 import { createDailyPlan } from '../scripts/composables/useDailyPlanner'
@@ -211,10 +199,17 @@ import { hideAyah, completeTakrarStep, getTakrarStep } from '../scripts/composab
 import { scoreRetention } from '../scripts/composables/useRetentionZones'
 import { updateAyahProgress } from '../scripts/engine/spaced_repetition_memory'
 import { WordSyncEngine } from '../scripts/audioSync'
-import HifzPlanCreatorModal from '../components/HifzPlanCreatorModal.vue'
-import AiMemorisationDetectionModal from '../components/AiMemorisationDetectionModal.vue'
-import AyahNotesModal from '../components/AyahNotesModal.vue'
 import AppStatus from '../components/AppStatus.vue'
+
+const HifzPlanCreatorModal = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "hifz-plan-modal" */ '../components/HifzPlanCreatorModal.vue')
+)
+const AiMemorisationDetectionModal = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "amd-modal" */ '../components/AiMemorisationDetectionModal.vue')
+)
+const AyahNotesModal = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "ayah-notes-modal" */ '../components/AyahNotesModal.vue')
+)
 import {
   buildActivePracticeSetup,
   buildPracticeSetupStatusMessage,
@@ -1144,6 +1139,11 @@ export default {
       networkOnline: true,
       restoredAudioState: null,
       loadVersesTimer: null,
+      displayArabicCache: Object.create(null),
+      displayArabicCacheSize: 0,
+      secondaryToolsLoaded: false,
+      recitationSubmitInFlight: false,
+      lastAmdAssessmentKey: '',
       workspaceSyncTimer: null,
       handleMushafToolbarDocumentClick: null,
       playbackAdvanceTimer: null,
@@ -1197,6 +1197,8 @@ export default {
         analytics_weak: false,
         memorisation_techniques: false,
         saved_sessions: true,
+        saved_in_progress: true,
+        saved_completed: true,
         focus_mode: false,
         blur_mode: false,
         chaining: false,
@@ -5974,6 +5976,31 @@ export default {
     incompleteSavedSessions() {
       return this.sortedSavedSessions.filter(session => !this.isSavedSessionComplete(session))
     },
+    inProgressSavedSessions() {
+      return this.incompleteSavedSessions
+    },
+    savedSessionGroups() {
+      return [
+        {
+          key: 'saved_in_progress',
+          titleKey: 'memorisation.in_progress_sessions',
+          sessions: this.inProgressSavedSessions,
+          complete: false,
+          emptyIcon: 'bi-hourglass-split',
+          emptyTitleKey: 'memorisation.no_in_progress_sessions',
+          emptyHintKey: 'memorisation.no_in_progress_sessions_hint',
+        },
+        {
+          key: 'saved_completed',
+          titleKey: 'memorisation.completed_sessions',
+          sessions: this.completedSavedSessions,
+          complete: true,
+          emptyIcon: 'bi-check2-circle',
+          emptyTitleKey: 'memorisation.no_completed_sessions',
+          emptyHintKey: 'memorisation.no_completed_sessions_hint',
+        },
+      ]
+    },
     selfCheckRatingOptions() {
       return [
         { key: 'Excellent', tone: 'tone-excellent', icon: 'bi-stars' },
@@ -8260,7 +8287,6 @@ export default {
   async mounted() {
     document.body.classList.add('memorisation-page')
     this.initSessionWorkspaceScrollController()
-    document.addEventListener('click', this.handleClickOutside);
     // Hard-close any leftover AI test overlays — this modal must never
     // appear unless the user clicks Session Complete → Test with AI.
     this.amdOpen = false
@@ -8373,20 +8399,22 @@ export default {
       this.loadCentralSessionState()
       this.restoreSessionState()
       this.applyRestoredPostSessionChoice({ clearPending: false })
-      await this.loadChapters()
-      await this.loadReciters()
+      await Promise.all([this.loadChapters(), this.loadReciters()])
       this.loadOfflineCatalog()
       this.loadSm2()
       this.loadEvents()
-      this.loadPlanner()
-      this.loadMetrics()
-      this.loadAnalytics()
+      // Planner/metrics/analytics are secondary; load when tools open (or immediately if already open).
+      if (this.showTools) this.ensureSecondaryToolsLoaded()
       this.initAudio()
       this.restoreAudioState()
       this.syncGlobalTheme(getSavedTheme())
       this.loadBookmarksPins()
       this.setupWordClickHandler()
-      this.loadSavedSessions()
+      if (!authenticatedWorkspace) {
+        // Guest path already loaded above; avoid a second full scan.
+      } else {
+        this.loadSavedSessions()
+      }
       await this.validateSessionLifecycleAgainstBackend()
       this.loadContinueSessionPrompt()
       this.demoteLiveSessionToResumableOnBootstrap()
@@ -8666,6 +8694,7 @@ export default {
     showTools(newVal) {
       this.syncBodyScrollLock(newVal)
       this.persistUiState()
+      if (newVal) this.ensureSecondaryToolsLoaded()
     },
     showHifzPlanModal(newVal) {
       this.syncBodyScrollLock(newVal)
@@ -12780,7 +12809,9 @@ export default {
       this.postSessionAdaptiveCheckBusy = false
       this.postSessionAdaptiveSession = null
       this.postSessionAdaptiveResultView = null
-      try { clearAssessmentSession() } catch (_) { /* ignore */ }
+      void this.loadAdaptiveAssessmentBundle()
+        .then((mod) => { try { mod.clearAssessmentSession() } catch (_) { /* ignore */ } })
+        .catch(() => {})
       if (this.recommendedPracticePending) {
         const performance = this.buildCompletionPerformancePayload?.() || {}
         const focusKeys = new Set(
@@ -12881,7 +12912,9 @@ export default {
       this.postSessionAdaptiveCheckBusy = false
       this.postSessionAdaptiveSession = null
       this.postSessionAdaptiveResultView = null
-      try { clearAssessmentSession() } catch (_) { /* ignore */ }
+      void this.loadAdaptiveAssessmentBundle()
+        .then((mod) => { try { mod.clearAssessmentSession() } catch (_) { /* ignore */ } })
+        .catch(() => {})
       this.postSessionAdaptiveAnswer = ''
       this.postSessionAdaptiveSelectedOption = null
       this.postSessionAdaptiveOrdering = []
@@ -13691,13 +13724,19 @@ export default {
         }
       })
     },
-    restoreAdaptiveCheckIfNeeded() {
+    async restoreAdaptiveCheckIfNeeded() {
       if (!this.showPostSessionModal || this.postSessionAdaptiveCheckActive) return
-      const existing = loadAssessmentSession()
+      let mod
+      try {
+        mod = await this.loadAdaptiveAssessmentBundle()
+      } catch (_) {
+        return
+      }
+      const existing = mod.loadAssessmentSession()
       if (!existing || existing.status === 'abandoned') return
       if (existing.status === 'completed' && existing.result) {
         this.postSessionAdaptiveSession = existing
-        this.postSessionAdaptiveResultView = buildAssessmentResultViewModel(
+        this.postSessionAdaptiveResultView = mod.buildAssessmentResultViewModel(
           existing,
           this.t.bind(this),
         )
@@ -13705,7 +13744,7 @@ export default {
         return
       }
       if (existing.status === 'paused' || existing.status === 'active') {
-        this.postSessionAdaptiveSession = resumeAssessment(existing)
+        this.postSessionAdaptiveSession = mod.resumeAssessment(existing)
         this.postSessionAdaptiveCheckActive = true
         this.syncAdaptiveQuestionLocalState()
       }
@@ -13789,7 +13828,8 @@ export default {
         }
 
         const completion = this.buildCompletionPerformancePayload?.() || {}
-        const session = startAdaptiveCheck({
+        const mod = await this.loadAdaptiveAssessmentBundle()
+        const session = mod.startAdaptiveCheck({
           verses,
           sourceSessionId: this.postSessionCompletedSessionId || snap.sessionId || null,
           recommendationId: this.postSessionRecommendation?.id || null,
@@ -13806,7 +13846,7 @@ export default {
             id: Number(c.id),
             name: c.name_simple || c.name_arabic || `Surah ${c.id}`,
           })),
-          masteryByKey: loadMasteryMap(),
+          masteryByKey: mod.loadMasteryMap(),
         })
 
         this.postSessionAdaptiveSession = session
@@ -13822,9 +13862,12 @@ export default {
         this.postSessionAdaptiveCheckBusy = false
       }
     },
-    closePostSessionAdaptiveCheck({ abandon = false } = {}) {
+    async closePostSessionAdaptiveCheck({ abandon = false } = {}) {
       if (abandon && this.postSessionAdaptiveSession) {
-        pauseAssessment(this.postSessionAdaptiveSession)
+        try {
+          const mod = await this.loadAdaptiveAssessmentBundle()
+          mod.pauseAssessment(this.postSessionAdaptiveSession)
+        } catch (_) { /* ignore */ }
       }
       if (abandon) {
         this.postSessionAdaptiveCheckActive = false
@@ -13841,13 +13884,16 @@ export default {
       }
       void this.landOnAdaptedPlanFromCheck()
     },
-    useAdaptiveHint() {
+    async useAdaptiveHint() {
       if (!this.postSessionAdaptiveSession?.currentQuestion) return
-      const { session, hint } = requestHint(this.postSessionAdaptiveSession)
-      this.postSessionAdaptiveSession = session
-      this.postSessionAdaptiveUsedHint = true
-      this.postSessionAdaptiveHintText = hint
-        || this.t('memorisation.postSession.adaptiveCheck.hintFallback')
+      try {
+        const mod = await this.loadAdaptiveAssessmentBundle()
+        const { session, hint } = mod.requestHint(this.postSessionAdaptiveSession)
+        this.postSessionAdaptiveSession = session
+        this.postSessionAdaptiveUsedHint = true
+        this.postSessionAdaptiveHintText = hint
+          || this.t('memorisation.postSession.adaptiveCheck.hintFallback')
+      } catch (_) { /* ignore */ }
     },
     moveAdaptiveOrdering(index, direction) {
       const list = [...(this.postSessionAdaptiveOrdering || [])]
@@ -13882,8 +13928,9 @@ export default {
       this.postSessionAdaptiveCheckBusy = true
       this.postSessionAdaptiveError = ''
       try {
+        const mod = await this.loadAdaptiveAssessmentBundle()
         const responseMs = Math.max(0, Date.now() - Number(this.postSessionAdaptiveQuestionStartedAt || Date.now()))
-        const next = answerCurrentQuestion(session, {
+        const next = mod.answerCurrentQuestion(session, {
           answer,
           usedHint: this.postSessionAdaptiveUsedHint || !!options.skipped,
           responseMs,
@@ -13906,8 +13953,9 @@ export default {
     async finishAdaptiveWithAiResult(aiResult) {
       const session = this.postSessionAdaptiveSession
       if (!session?.currentQuestion?.requiresAiRecite) return
+      const mod = await this.loadAdaptiveAssessmentBundle()
       const responseMs = Math.max(0, Date.now() - Number(this.postSessionAdaptiveQuestionStartedAt || Date.now()))
-      const next = answerCurrentQuestion(session, {
+      const next = mod.answerCurrentQuestion(session, {
         usedHint: this.postSessionAdaptiveUsedHint,
         responseMs,
         aiResult: typeof aiResult === 'object' ? aiResult : { result: aiResult },
@@ -13921,14 +13969,15 @@ export default {
       }
     },
     async finaliseAdaptiveAssessment(session) {
+      const mod = await this.loadAdaptiveAssessmentBundle()
       const completed = session.status === 'completed'
         ? session
-        : completeAssessment(session, {
+        : mod.completeAssessment(session, {
           confidence: this.postSessionSelectedConfidence,
           baseRecommendation: this.postSessionRecommendation,
         })
       this.postSessionAdaptiveSession = completed
-      const view = buildAssessmentResultViewModel(completed, this.t.bind(this))
+      const view = mod.buildAssessmentResultViewModel(completed, this.t.bind(this))
       this.postSessionAdaptiveResultView = view
 
       if (view?.recommendation && this.postSessionRecommendation) {
@@ -13985,36 +14034,43 @@ export default {
       }
     },
     acceptAdaptiveRecommendation() {
-      recordEffectiveness({
-        recommendationId: this.postSessionRecommendation?.id,
-        technique: this.postSessionRecommendation?.settings?.technique,
-        accepted: true,
-        adjusted: false,
-      })
+      void this.loadAdaptiveAssessmentBundle().then((mod) => {
+        mod.recordEffectiveness({
+          recommendationId: this.postSessionRecommendation?.id,
+          technique: this.postSessionRecommendation?.settings?.technique,
+          accepted: true,
+          adjusted: false,
+        })
+      }).catch(() => {})
       void this.landOnAdaptedPlanFromCheck()
     },
-    reopenPostSessionQuizReview() {
+    async reopenPostSessionQuizReview() {
       if (!this.postSessionAdaptiveResultView && !this.postSessionAdaptiveSession?.result) {
         void this.startPostSessionAdaptiveCheck()
         return
       }
       if (!this.postSessionAdaptiveResultView && this.postSessionAdaptiveSession?.result) {
-        this.postSessionAdaptiveResultView = buildAssessmentResultViewModel(
-          this.postSessionAdaptiveSession,
-          this.t.bind(this),
-        )
+        try {
+          const mod = await this.loadAdaptiveAssessmentBundle()
+          this.postSessionAdaptiveResultView = mod.buildAssessmentResultViewModel(
+            this.postSessionAdaptiveSession,
+            this.t.bind(this),
+          )
+        } catch (_) { /* ignore */ }
       }
       this.postSessionAdaptiveCheckActive = true
       this.postSessionViewState = 'adaptive_check'
       this.syncBodyScrollLock(true)
     },
     adjustAdaptivePlan() {
-      recordEffectiveness({
-        recommendationId: this.postSessionRecommendation?.id,
-        technique: this.postSessionRecommendation?.settings?.technique,
-        accepted: false,
-        adjusted: true,
-      })
+      void this.loadAdaptiveAssessmentBundle().then((mod) => {
+        mod.recordEffectiveness({
+          recommendationId: this.postSessionRecommendation?.id,
+          technique: this.postSessionRecommendation?.settings?.technique,
+          accepted: false,
+          adjusted: true,
+        })
+      }).catch(() => {})
       void this.landOnAdaptedPlanFromCheck()
       void this.openPostSessionAdjustPlan()
     },
@@ -17511,16 +17567,32 @@ export default {
     },
     isSavedSessionComplete(session) {
       if (!session) return false
+
+      // Prefer explicit session status from the saved restore payload / backend.
+      const status = String(
+        session?.restore?.centralSession?.sessionStatus
+        || session?.status
+        || ''
+      ).toLowerCase().trim()
+
+      if (status === 'completed') return true
+      if (['active', 'paused', 'interrupted', 'ended_early', 'abandoned', 'none', 'idle'].includes(status)) {
+        return false
+      }
+
+      if (session?.restore?.continueSession?.completed === true) return true
+      if (session?.restore?.continueSession?.completed === false) return false
+
       const config = session?.config || {}
+      const stats = this.normalizeSessionStats(session?.stats || {}, config)
+      if (Number(stats.sessions_completed || 0) >= 1) return true
+
+      // Fall back to progress only when no explicit status is available.
+      if (status) return false
+
       const rangeStart = Number(config.rangeStart || 1)
       const rangeEnd = Number(config.rangeEnd || rangeStart)
       const totalAyahs = Math.max(1, rangeEnd - rangeStart + 1)
-      const stats = this.normalizeSessionStats(session?.stats || {}, config)
-
-      if (Number(stats.sessions_completed || 0) >= 1) return true
-      if (session?.restore?.centralSession?.sessionStatus === 'completed') return true
-      if (session?.restore?.continueSession?.completed) return true
-
       const versesRead = Number(stats.verses_read || 0)
       const flowSteps = Math.max(totalAyahs, Number(stats.session_flow_steps || totalAyahs))
       return versesRead >= totalAyahs && versesRead >= flowSteps
@@ -19909,6 +19981,15 @@ export default {
       const durationMs = durationSeconds > 0
         ? Math.round(durationSeconds * 1000)
         : this.getAmdElapsedMs()
+      const audioHash = String(result?.audioHash || this.recitationInputAudioHash || '')
+      const idempotencyKey = audioHash
+        ? `amd-${this.auth?.id || 'guest'}-${audioHash}`
+        : undefined
+      if (idempotencyKey && idempotencyKey === this.lastAmdAssessmentKey && this.amdAssessment) {
+        this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
+        this.amdBusy = false
+        return this.amdAssessment
+      }
       const payload = {
         surah_number: Number(this.chapterId || ayahs[0]?.surah_number || 0),
         surah_name: this.currentChapter?.name_simple || this.activeChapterName || '',
@@ -19927,10 +20008,12 @@ export default {
         previous_assessment_id: this.amdPreviousAssessmentId || undefined,
         user_session_id: this.mutqinState?.sessionState?.backendSessionId || undefined,
         tajweed_practice_check: tajweedPracticeCheck || undefined,
+        idempotency_key: idempotencyKey,
       }
 
       try {
         const data = await memorisationDetectionApi.createAssessment(payload)
+        if (idempotencyKey) this.lastAmdAssessmentKey = idempotencyKey
         this.amdAssessment = data.assessment || null
         this.amdAnalysis = data.analysis || null
         this.amdPracticePlan = data.practice_plan || null
@@ -23878,6 +23961,14 @@ export default {
           const metaBeforeFinalize = this.getTranscriptionMeta('recitation')
           const alreadyHeardWords = this.getBestRecognitionWordsForAssessment('recitation').length
             || this.recoverArabicRecognitionWords('recitation').length
+          // Acknowledge stop immediately — do not leave the UI frozen while
+          // transcription settles.
+          this.recitationCheckRecording = false
+          this.recitationCheckPreparing = true
+          if (this.amdOpen && [AMD_STAGES.LISTENING, AMD_STAGES.READY, AMD_STAGES.IDLE].includes(this.amdStage)) {
+            this.amdStage = AMD_STAGES.PROCESSING
+            this.amdBusy = true
+          }
           try {
             // If nothing was recognised during the take, don't wait the full EndOfTranscript timeout.
             const emptyStream = usedSpeechmatics && Number(metaBeforeFinalize?.messageCount || 0) === 0 && !alreadyHeardWords
@@ -23895,8 +23986,6 @@ export default {
           this.stopTranscriptionAudioPump('recitation')
           let audioSrc = ''
           this.stopRecitationSpeechRecognition()
-          this.recitationCheckRecording = false
-          this.recitationCheckPreparing = true
 
           try {
             if (!chunks.length) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
@@ -24045,6 +24134,17 @@ export default {
       })
     },
     async submitRecitationCheck(blob, targetVerses = this.getRecitationCheckTargetVerses(), audioSrc = '') {
+      if (this.recitationSubmitInFlight) {
+        return this.recitationCheckResult || null
+      }
+      this.recitationSubmitInFlight = true
+      try {
+        return await this.runRecitationCheckSubmit(blob, targetVerses, audioSrc)
+      } finally {
+        this.recitationSubmitInFlight = false
+      }
+    },
+    async runRecitationCheckSubmit(blob, targetVerses = this.getRecitationCheckTargetVerses(), audioSrc = '') {
       const sessionId = this.recitationInputSessionId || this.getCurrentRecitationSessionId()
       const audioHash = await this.hashAudioBlob(blob)
       this.recitationInputAudioHash = audioHash
@@ -31043,6 +31143,10 @@ export default {
 
     getDisplayArabic(verse) {
       if (!verse?.arabic) return ''
+      const cacheKey = this.buildDisplayArabicCacheKey(verse)
+      const cached = cacheKey ? this.displayArabicCache[cacheKey] : null
+      if (cached != null) return cached
+
       // Always scrub first so persisted/cached ayahs cannot leak U+06DF circles.
       const cleanVerse = this.sanitizeVerseDisplayText(verse)
       // Word wrappers are token-level (never character-split). CSS keeps them
@@ -31070,7 +31174,76 @@ export default {
       if (this.readingViewMode !== 'mushaf') {
         html = `${html || ''}${this.buildStackedAyahEndMarkerHtml(cleanVerse)}`
       }
+
+      if (cacheKey) {
+        if (this.displayArabicCacheSize > 400) {
+          this.displayArabicCache = Object.create(null)
+          this.displayArabicCacheSize = 0
+        }
+        this.displayArabicCache[cacheKey] = html
+        this.displayArabicCacheSize += 1
+      }
       return html
+    },
+
+    buildDisplayArabicCacheKey(verse) {
+      if (!verse?.key) return ''
+      const highlightActive = this.currentHighlightedVerseKey === verse.key
+        ? `h${this.currentWordIndex}`
+        : 'h-'
+      const focusSig = Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length
+        ? this.practiceFocusWeakWords
+          .filter((w) => String(w?.verseKey || w?.verse_key || '') === String(verse.key))
+          .map((w) => `${w?.wordIndex ?? w?.word_index ?? ''}:${w?.text || ''}`)
+          .join(',')
+        : ''
+      const review = this.shouldShowRecitationReviewHighlights(verse.key) ? 'r1' : 'r0'
+      return [
+        verse.key,
+        this.readingViewMode,
+        this.tajweedEnabled ? 't1' : 't0',
+        this.showWordByWord ? 'w1' : 'w0',
+        this.anchorModeEnabled ? 'a1' : 'a0',
+        this.liveSessionTechniqueId === 'anchor' ? 'la1' : 'la0',
+        this.wordByWordAudioEnabled ? 'wa1' : 'wa0',
+        review,
+        highlightActive,
+        focusSig,
+        String(verse.arabic || '').length,
+        String(verse.arabic_tajweed || '').length,
+      ].join('|')
+    },
+
+    clearDisplayArabicCache() {
+      this.displayArabicCache = Object.create(null)
+      this.displayArabicCacheSize = 0
+    },
+
+    ensureSecondaryToolsLoaded() {
+      if (this.secondaryToolsLoaded) return
+      this.secondaryToolsLoaded = true
+      this.loadPlanner()
+      this.loadMetrics()
+      this.loadAnalytics()
+    },
+
+    async loadAdaptiveAssessmentBundle() {
+      if (this._adaptiveAssessmentBundle) return this._adaptiveAssessmentBundle
+      this._adaptiveAssessmentBundle = await import(
+        /* webpackChunkName: "adaptive-assessment" */ '../scripts/assessment/adaptiveAssessmentBundle'
+      )
+      return this._adaptiveAssessmentBundle
+    },
+
+    ensureWordByWordMeaningsLoaded() {
+      const verses = Array.isArray(this.verses) ? this.verses : []
+      if (!verses.length) return
+      const hasMeanings = verses.some((verse) =>
+        Array.isArray(verse?.words) && verse.words.some((word) => String(word?.en || '').trim())
+      )
+      if (hasMeanings) return
+      // Meanings were deferred on cold load — refetch with WBW enabled.
+      void this.loadVerses(this.currentMode)
     },
 
     escapeHtml(str) {
@@ -32367,13 +32540,17 @@ export default {
           return
         }
 
+        // One editions call covers audio + tajweed (avoids a duplicate reciter round-trip).
+        // Word-by-word meanings are deferred until the WBW toggle is on.
+        const wantsWbw = !!this.showWordByWord
         const settled = await Promise.allSettled([
-          getSurahEdition(chapterId, reciterId),
+          getSurahEditions(chapterId, reciterId),
           getSurahEdition(chapterId, 'en.asad'),
           getSurahEdition(chapterId, 'en.transliteration'),
           getSurahEdition(chapterId, 'quran-uthmani'),
-          getSurahEditions(chapterId, reciterId),
-          getChapterWordByWordMeanings(chapterId, rangeStart, rangeEnd),
+          wantsWbw
+            ? getChapterWordByWordMeanings(chapterId, rangeStart, rangeEnd)
+            : Promise.resolve(new Map()),
         ])
 
         if (requestId !== this.verseRequestId) return
@@ -32387,18 +32564,20 @@ export default {
           }
         })
 
-        const audioRes = valueOf(0)
+        const editionsRes = valueOf(0)
         const translationRes = valueOf(1)
         const translitRes = valueOf(2)
         const arabicRes = valueOf(3)
-        const tajweedRes = valueOf(4)
-        const wbwByNumber = valueOf(5) instanceof Map ? valueOf(5) : new Map()
+        const wbwByNumber = valueOf(4) instanceof Map ? valueOf(4) : new Map()
 
-        const audioSurah = audioRes?.data?.data
+        const editionList = editionsRes?.data?.data || []
+        const audioSurah = editionList.find(entry => entry?.edition?.identifier === reciterId)
+          || editionList.find(entry => entry?.edition?.identifier && entry.edition.identifier !== 'quran-tajweed')
+          || null
+        const tajweedEdition = editionList.find(entry => entry?.edition?.identifier === 'quran-tajweed')
         const translationSurah = translationRes?.data?.data
         const translitSurah = translitRes?.data?.data
         const arabicSurah = arabicRes?.data?.data
-        const tajweedEdition = (tajweedRes?.data?.data || []).find(entry => entry?.edition?.identifier === 'quran-tajweed')
 
         // Prefer uthmani text; fall back to audio-edition Arabic if uthmani failed.
         const audioAyahs = audioSurah?.ayahs || arabicSurah?.ayahs || []
@@ -32478,6 +32657,7 @@ export default {
           tajweedEnabled: this.tajweedEnabled
         }
         this.syncMutqinAyahs(mappedVerses)
+        this.clearDisplayArabicCache()
 
         this.setCachedVerses(mode, targetConfig, {
           verses: mappedVerses,
@@ -33260,6 +33440,10 @@ export default {
       this.showBanner(this.t('toasts.backOnlineLiveApisAreAvailable'), 'success', 2400)
       // Push any changes that could not be saved while offline.
       if (this.learningBackendEnabled()) this.pushLearningState(true)
+      // Recover mushaf pages cleanly after a failed offline/network load.
+      if (this.madaniPagesError) {
+        this.ensureMadaniPagesLoaded({ force: true }).catch(() => { /* surfaced via madaniPagesError */ })
+      }
     },
 
     handleOffline() {
@@ -33582,6 +33766,8 @@ export default {
           this.showBanner(this.t('toasts.wordByWordModeFadingDisabled'), 'info', 2800)
         }
         this.clearMushafAyahHtmlCache()
+        this.clearDisplayArabicCache()
+        if (nextState) this.ensureWordByWordMeaningsLoaded()
       } else {
         return
       }
@@ -33598,6 +33784,8 @@ export default {
         this.showWordByWord = nextState
         if (nextState && this.fadingVerseEnabled) this.fadingVerseEnabled = false
         this.clearMushafAyahHtmlCache()
+        this.clearDisplayArabicCache()
+        if (nextState) this.ensureWordByWordMeaningsLoaded()
       } else return
       this.syncSettingsDraft()
       this.persistUiState()
@@ -34237,7 +34425,7 @@ export default {
         return
       }
       try {
-        const res = await axios.get('https://api.quran.com/api/v4/chapters', { params: { language: 'en' } })
+        const res = await getChapters({ language: 'en' })
         this.chapters = res.data?.chapters || []
         if (this.chapters.length) this.writeApiCache('chapters.en.v2', this.chapters)
         if (this.chapterId) await this.loadChapter()

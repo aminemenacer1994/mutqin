@@ -8,6 +8,7 @@ use App\Http\Requests\Memorisation\CompleteMemorisationPracticePlanRequest;
 use App\Http\Requests\Memorisation\StoreFailedMemorisationAssessmentRequest;
 use App\Http\Requests\Memorisation\StoreMemorisationAssessmentRequest;
 use App\Models\MemorisationPracticePlan;
+use App\Services\DashboardService;
 use App\Services\Memorisation\PracticePlanExecutionService;
 use App\Services\Memorisation\RecitationAssessmentService;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +21,7 @@ class MemorisationDetectionController extends Controller
         RecitationAssessmentService $service,
     ): JsonResponse {
         $result = $service->create($request->user(), $request->validated());
+        DashboardService::forgetForUser($request->user());
 
         return response()->json($result, ! empty($result['idempotent']) ? 200 : 201);
     }
@@ -35,6 +37,7 @@ class MemorisationDetectionController extends Controller
             $payload['idempotency_key'] ?? null,
             (string) ($payload['failure_reason'] ?? 'processing_failed')
         );
+        DashboardService::forgetForUser($request->user());
 
         return response()->json([
             'assessment' => $service->transformAssessment($assessment),

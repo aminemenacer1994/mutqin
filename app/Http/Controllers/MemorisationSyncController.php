@@ -16,10 +16,11 @@ class MemorisationSyncController extends Controller
 
         $record = MemorisationSyncState::query()->firstWhere('user_id', $user->id);
 
-        if ($record) {
+        // Throttle pull-timestamp writes (match API StateSyncController).
+        if ($record && (! $record->last_pulled_at || $record->last_pulled_at->lt(now()->subMinutes(5)))) {
             $record->forceFill([
                 'last_pulled_at' => now(),
-            ])->save();
+            ])->saveQuietly();
         }
 
         return response()->json([
@@ -61,13 +62,30 @@ class MemorisationSyncController extends Controller
             ? Carbon::parse($validated['meta']['local_updated_at'])
             : now();
 
+        $payloadHash = hash('sha256', $encodedState);
+        $existing = MemorisationSyncState::query()->firstWhere('user_id', $user->id);
+        if ($existing && $existing->payload_hash === $payloadHash) {
+            return response()->json([
+                'saved' => true,
+                'unchanged' => true,
+                'meta' => [
+                    'owner_id' => $user->id,
+                    'owner_email' => $user->email,
+                    'state_updated_at' => $existing->state_updated_at?->toIso8601String(),
+                    'payload_hash' => $existing->payload_hash,
+                    'device_id' => $existing->device_id,
+                    'device_label' => $existing->device_label,
+                ],
+            ]);
+        }
+
         $record = MemorisationSyncState::query()->updateOrCreate(
             ['user_id' => $user->id],
             [
                 'state' => $encodedState,
                 'device_id' => $validated['meta']['device_id'] ?? null,
                 'device_label' => $validated['meta']['device_label'] ?? null,
-                'payload_hash' => hash('sha256', $encodedState),
+                'payload_hash' => $payloadHash,
                 'state_updated_at' => $localUpdatedAt,
             ]
         );

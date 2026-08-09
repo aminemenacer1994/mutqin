@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\StoreAyahNoteRequest;
 use App\Http\Requests\Learning\UpdateAyahNoteRequest;
 use App\Models\AyahNote;
+use App\Services\DashboardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -30,8 +31,18 @@ class AyahNoteController extends Controller
         }
 
         $notes = $query
+            ->select([
+                'id',
+                'surah_number',
+                'ayah_number',
+                'title',
+                'body',
+                'created_at',
+                'updated_at',
+            ])
             ->orderByDesc('updated_at')
             ->orderByDesc('id')
+            ->limit(500)
             ->get();
 
         return response()->json(['notes' => $notes]);
@@ -71,6 +82,8 @@ class AyahNoteController extends Controller
             'body' => trim((string) $data['body']),
         ]);
 
+        DashboardService::forgetForUser($request->user());
+
         return response()->json(['note' => $note], 201);
     }
 
@@ -95,6 +108,7 @@ class AyahNoteController extends Controller
     {
         $this->authorizeOwner($request, $ayahNote);
         $ayahNote->delete();
+        DashboardService::forgetForUser($request->user());
 
         return response()->json(['deleted' => true]);
     }

@@ -1716,18 +1716,36 @@
   }
 
   /* Paused and complete summaries use label/value tracks, not stacked rows. */
-  .session-exit-body,
-.post-session-body {
+  .post-session-body {
     display: grid !important;
     grid-template-columns: var(--mq-grid);
     gap: 10px var(--mq-grid-gap) !important;
     padding: 12px 14px 14px !important;
   }
 
-  .session-exit-body > *,
+  .mutqin-modal-surface.session-exit-modal .session-exit-body {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.65rem !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0.9rem 1.05rem 0.95rem !important;
+    text-align: start !important;
+  }
+
+  .mutqin-modal-surface.session-exit-modal .session-exit-body > *,
 .post-session-body > * {
     grid-column: 1 / -1;
     min-inline-size: 0;
+  }
+
+  .mutqin-modal-surface.session-exit-modal .session-exit-message,
+  .mutqin-modal-surface.session-exit-modal .session-exit-progress-block,
+  .mutqin-modal-surface.session-exit-modal .modal-header-text {
+    width: 100% !important;
+    max-width: none !important;
+    align-self: stretch !important;
   }
 
   .post-session-body > .post-session-autosaved-note {
@@ -2937,17 +2955,18 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     min-inline-size: 40px !important;
     min-block-size: 40px !important;
     flex: 0 0 40px;
+    border-radius: 999px !important;
     font-size: 1.1rem;
   }
 
   .player-mini .player-play {
-    inline-size: 52px !important;
-    block-size: 52px !important;
-    min-inline-size: 52px !important;
-    min-block-size: 52px !important;
-    flex: 0 0 52px !important;
-    border-radius: 16px !important;
-    font-size: 1.35rem !important;
+    inline-size: 48px !important;
+    block-size: 48px !important;
+    min-inline-size: 48px !important;
+    min-block-size: 48px !important;
+    flex: 0 0 48px !important;
+    border-radius: 999px !important;
+    font-size: 1.25rem !important;
   }
 
   .player-mini .player-mini-info {
@@ -4891,13 +4910,13 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 
   .app .player-mini .player-play {
-    inline-size: 52px !important;
-    block-size: 52px !important;
-    min-inline-size: 52px !important;
-    min-block-size: 52px !important;
-    flex: 0 0 52px !important;
-    border-radius: 16px !important;
-    font-size: 1.35rem !important;
+    inline-size: 48px !important;
+    block-size: 48px !important;
+    min-inline-size: 48px !important;
+    min-block-size: 48px !important;
+    flex: 0 0 48px !important;
+    border-radius: 999px !important;
+    font-size: 1.25rem !important;
   }
 
   .app .player-mini .player-chapter {
@@ -4999,6 +5018,44 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 .main.mushaf-mode-active .madani-line--glyphs,
 .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
     display: contents !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-line--basmala,
+.app .main.mushaf-mode-active .madani-line--basmala_ayah,
+.app .main.mushaf-mode-active .madani-line--basmala-ayah,
+.main.mushaf-mode-active .madani-line--basmala,
+.main.mushaf-mode-active .madani-line--basmala_ayah,
+.main.mushaf-mode-active .madani-line--basmala-ayah {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 auto !important;
+    float: none !important;
+    clear: both !important;
+    text-align: center !important;
+    text-align-last: center !important;
+    margin: 0.5rem 0 0.4rem !important;
+    padding: 0.2rem 0.2rem !important;
+    border: 0 !important;
+    background: transparent !important;
+    white-space: normal !important;
+    box-sizing: border-box !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-line--basmala_ayah .madani-word,
+.app .main.mushaf-mode-active .madani-line--basmala-ayah .madani-word,
+.main.mushaf-mode-active .madani-line--basmala_ayah .madani-word,
+.main.mushaf-mode-active .madani-line--basmala-ayah .madani-word {
+    display: inline !important;
+    white-space: normal !important;
+  }
+
+  .app .main.mushaf-mode-active .madani-basmala,
+.main.mushaf-mode-active .madani-basmala {
+    display: block !important;
+    width: 100% !important;
+    text-align: center !important;
+    white-space: normal !important;
   }
 
   .app .main.mushaf-mode-active .madani-word,

@@ -829,6 +829,13 @@ async function auditNavigation(page, viewport, direction = 'ltr') {
     if (direction === 'ltr' && Math.abs(rect.right - innerWidth) > 1) issues.push(`LTR drawer is not anchored to the right (${rect.right})`)
     const identity = drawer.querySelector('.mobile-nav-identity')
     if (!identity || !identity.textContent.trim()) issues.push('navigation drawer has no product identity or title')
+    const profileControl = document.querySelector('#userDropdown')
+    const profileVisible = profileControl && getComputedStyle(profileControl).display !== 'none'
+    if (profileVisible) issues.push('profile dropdown remains visible beside the mobile menu trigger')
+    if (document.querySelectorAll('.navbar-toggler').length !== 1) issues.push('expected a single mobile navigation trigger')
+    if (document.querySelectorAll('.app-navbar .offcanvas').length !== 1) issues.push('duplicate navigation offcanvas instances found')
+    const accountSection = drawer.querySelector('.mobile-nav-account')
+    if (!accountSection) issues.push('combined menu is missing the account section')
     const destinationLinks = drawer.querySelectorAll('.offcanvas-body .nav-link')
     if (destinationLinks.length < 5) issues.push(`navigation drawer exposes only ${destinationLinks.length} destinations`)
     if (!drawer.querySelector('.offcanvas-body .nav-link.active')) issues.push('navigation drawer has no active destination')

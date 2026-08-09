@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Learning;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveAnalyticsRequest;
 use App\Models\LearningAnalytic;
+use App\Services\DashboardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -15,7 +16,8 @@ class AnalyticsController extends Controller
     {
         $query = LearningAnalytic::query()
             ->where('user_id', $request->user()->id)
-            ->orderBy('session_date');
+            ->orderByDesc('session_date')
+            ->orderByDesc('id');
 
         if ($request->filled('from')) {
             $query->whereDate('session_date', '>=', Carbon::parse($request->query('from'))->toDateString());
@@ -23,9 +25,12 @@ class AnalyticsController extends Controller
 
         if ($request->filled('to')) {
             $query->whereDate('session_date', '<=', Carbon::parse($request->query('to'))->toDateString());
+        } elseif (! $request->filled('from')) {
+            // Default bound: last 90 days — avoids unbounded history dumps.
+            $query->whereDate('session_date', '>=', now()->subDays(90)->toDateString());
         }
 
-        return response()->json(['analytics' => $query->get()]);
+        return response()->json(['analytics' => $query->limit(366)->get()]);
     }
 
     public function store(SaveAnalyticsRequest $request): JsonResponse
@@ -48,6 +53,7 @@ class AnalyticsController extends Controller
         );
 
         $this->authorize('update', $analytic);
+        DashboardService::forgetForUser($request->user());
 
         return response()->json(['saved' => true, 'analytic' => $analytic]);
     }

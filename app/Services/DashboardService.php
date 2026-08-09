@@ -18,6 +18,7 @@ use App\Models\UserSession;
 use App\Enums\RecommendationType;
 use App\Support\QuranMetadata;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Aggregates authenticated-user dashboard data from existing learning tables.
@@ -25,9 +26,17 @@ use Illuminate\Support\Carbon;
  */
 class DashboardService
 {
+    private const BUILD_CACHE_TTL_SECONDS = 45;
+
     public function __construct(
         private readonly SessionLifecycleService $lifecycle,
     ) {
+    }
+
+    public static function forgetForUser(User $user): void
+    {
+        Cache::forget('dashboard:v1:'.$user->id.':7');
+        Cache::forget('dashboard:v1:'.$user->id.':30');
     }
 
     /**
@@ -36,7 +45,22 @@ class DashboardService
     public function build(User $user, int $chartDays = 30): array
     {
         $chartDays = in_array($chartDays, [7, 30], true) ? $chartDays : 30;
+        if (app()->runningUnitTests()) {
+            return $this->buildFresh($user, $chartDays);
+        }
 
+        $cacheKey = 'dashboard:v1:'.$user->id.':'.$chartDays;
+
+        return Cache::remember($cacheKey, self::BUILD_CACHE_TTL_SECONDS, function () use ($user, $chartDays) {
+            return $this->buildFresh($user, $chartDays);
+        });
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildFresh(User $user, int $chartDays): array
+    {
         $unfinished = $this->lifecycle->currentUnfinished($user);
         $lastPosition = UserLastPosition::query()->where('user_id', $user->id)->first();
         $activePlan = MemorisationPracticePlan::query()
@@ -1663,25 +1687,9 @@ class DashboardService
 
     private function countSavedSessions(User $user): int
     {
-        $sync = MemorisationSyncState::query()->where('user_id', $user->id)->first();
-        if ($sync?->state) {
-            $state = json_decode($sync->state, true);
-            if (is_array($state)) {
-                $saved = $state['savedSessions'] ?? null;
-                if (! is_array($saved) && is_array($state['workspaceState'] ?? null)) {
-                    $saved = $state['workspaceState']['savedSessions'] ?? null;
-                }
-                if (is_array($saved)) {
-                    $count = count(array_filter($saved, fn ($row) => is_array($row) && ! empty($row['id'])));
-                    if ($count > 0) {
-                        return $count;
-                    }
-                }
-            }
-        }
-
-        // Fallback: unfinished/resumable sessions in the normalised table.
-        return UserSession::query()
+        // Prefer the normalised lifecycle table — avoids decoding the full sync blob
+        // on every dashboard build.
+        $lifecycleCount = UserSession::query()
             ->where('user_id', $user->id)
             ->where('is_onboarding_example', false)
             ->whereIn('status', [
@@ -1690,6 +1698,28 @@ class DashboardService
                 UserSessionStatus::Interrupted->value,
             ])
             ->count();
+
+        if ($lifecycleCount > 0) {
+            return $lifecycleCount;
+        }
+
+        $sync = MemorisationSyncState::query()
+            ->where('user_id', $user->id)
+            ->first(['state']);
+        if ($sync?->state) {
+            $state = json_decode($sync->state, true);
+            if (is_array($state)) {
+                $saved = $state['savedSessions'] ?? null;
+                if (! is_array($saved) && is_array($state['workspaceState'] ?? null)) {
+                    $saved = $state['workspaceState']['savedSessions'] ?? null;
+                }
+                if (is_array($saved)) {
+                    return count(array_filter($saved, fn ($row) => is_array($row) && ! empty($row['id'])));
+                }
+            }
+        }
+
+        return 0;
     }
 
     /**

@@ -56,6 +56,19 @@ class NextSessionRecommendationService
     public function recommend(User $user, ?UserSession $sourceSession = null): array
     {
         $session = $sourceSession ?: $this->latestSession($user);
+
+        // Fast path: reuse an open recommendation for this session without
+        // re-running context/scoring or writing on every GET.
+        if ($session) {
+            $existing = SessionRecommendation::query()
+                ->where('user_id', $user->id)
+                ->where('idempotency_key', 'complete-'.$session->id)
+                ->first();
+            if ($existing && $this->isReusableOpenRecommendation($existing)) {
+                return $this->payloadFromRecord($existing);
+            }
+        }
+
         $context = $this->buildContext($user, $session);
 
         $payload = $this->resolveRecommendation($user, $context);
@@ -505,6 +518,7 @@ class NextSessionRecommendationService
         $finalId = (int) ($payload['id'] ?? $recommendation->id);
         $finalRecommendation = SessionRecommendation::query()->find($finalId) ?: $recommendation;
         $this->persistAiReciteAttempts($user, $finalRecommendation, $assessment);
+        DashboardService::forgetForUser($user);
 
         return $payload;
     }
@@ -2578,14 +2592,33 @@ class NextSessionRecommendationService
             ->where('user_id', $user->id)
             ->orderByDesc('id')
             ->limit($limit)
-            ->get();
+            ->get([
+                'id',
+                'recommendation_type',
+                'status',
+                'reason_code',
+                'surah_number',
+                'ayah_start',
+                'ayah_end',
+                'ai_assessment',
+                'payload',
+                'created_at',
+            ]);
 
         $recommendationIds = $rows->pluck('id')->all();
         $attemptsByRec = AiReciteAttempt::query()
             ->where('user_id', $user->id)
             ->whereIn('session_recommendation_id', $recommendationIds)
             ->orderBy('attempt_number')
-            ->get()
+            ->get([
+                'id',
+                'session_recommendation_id',
+                'attempt_number',
+                'accuracy_percent',
+                'band',
+                'ayah_range',
+                'created_at',
+            ])
             ->groupBy('session_recommendation_id');
 
         return $rows->map(function (SessionRecommendation $row) use ($attemptsByRec) {
@@ -2596,11 +2629,15 @@ class NextSessionRecommendationService
                     'accuracy_percent' => $attempt->accuracy_percent,
                     'band' => $attempt->band,
                     'ayah_range' => $attempt->ayah_range,
-                    'color_counts' => $attempt->color_counts,
-                    'weak_words' => $attempt->weak_words,
                     'created_at' => optional($attempt->created_at)?->toIso8601String(),
                 ];
             })->values()->all();
+
+            $aiAssessment = is_array($row->ai_assessment) ? $row->ai_assessment : null;
+            if (is_array($aiAssessment)) {
+                // List view: keep summary fields, drop bulky nested evidence.
+                unset($aiAssessment['weak_words'], $aiAssessment['attempts'], $aiAssessment['color_counts']);
+            }
 
             return [
                 'id' => $row->id,
@@ -2610,7 +2647,7 @@ class NextSessionRecommendationService
                 'surah_number' => $row->surah_number,
                 'ayah_start' => $row->ayah_start,
                 'ayah_end' => $row->ayah_end,
-                'ai_assessment' => $row->ai_assessment,
+                'ai_assessment' => $aiAssessment,
                 'plan_detail' => is_array($row->payload) ? ($row->payload['plan_detail'] ?? null) : null,
                 'attempts' => $attempts,
                 'created_at' => optional($row->created_at)?->toIso8601String(),

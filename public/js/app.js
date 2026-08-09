@@ -25430,10 +25430,10 @@ function normalizeCssVarValue(value) {
 
 /***/ }),
 
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/About.vue?vue&type=script&lang=js":
-/*!******************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/About.vue?vue&type=script&lang=js ***!
-  \******************************************************************************************************************************************************************************************/
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/NetworkStatusBanner.vue?vue&type=script&lang=js":
+/*!*************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/NetworkStatusBanner.vue?vue&type=script&lang=js ***!
+  \*************************************************************************************************************************************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -25441,531 +25441,78 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  name: 'AboutPage'
-});
-
-/***/ }),
-
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/AboutUs.vue?vue&type=script&lang=js":
-/*!********************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/AboutUs.vue?vue&type=script&lang=js ***!
-  \********************************************************************************************************************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  name: 'AboutUsPage'
-});
-
-/***/ }),
-
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/DonationPage.vue?vue&type=script&lang=js":
-/*!*************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/DonationPage.vue?vue&type=script&lang=js ***!
-  \*************************************************************************************************************************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  name: 'DonationPage'
-});
-
-/***/ }),
-
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/Homepage.vue?vue&type=script&lang=js":
-/*!*********************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/Homepage.vue?vue&type=script&lang=js ***!
-  \*********************************************************************************************************************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
-/* harmony import */ var vue_i18n__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vue-i18n */ "./node_modules/vue-i18n/dist/vue-i18n.mjs");
-/* harmony import */ var _utils_theme__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/theme */ "./resources/js/utils/theme.js");
-function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
-function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
-function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
-
-
+/* harmony import */ var _utils_networkStatus__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/networkStatus */ "./resources/js/utils/networkStatus.js");
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  name: 'OnboardingPage',
-  setup: function setup() {
-    var _document$querySelect;
-    var _useI18n = (0,vue_i18n__WEBPACK_IMPORTED_MODULE_2__.useI18n)(),
-      t = _useI18n.t;
-    // Theme management
-    var currentTheme = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)((0,_utils_theme__WEBPACK_IMPORTED_MODULE_1__.getSavedTheme)());
-    var setTheme = function setTheme(theme) {
-      currentTheme.value = (0,_utils_theme__WEBPACK_IMPORTED_MODULE_1__.setGlobalTheme)(theme);
-    };
-    var loadTheme = function loadTheme() {
-      currentTheme.value = (0,_utils_theme__WEBPACK_IMPORTED_MODULE_1__.getSavedTheme)();
-      (0,_utils_theme__WEBPACK_IMPORTED_MODULE_1__.setGlobalTheme)(currentTheme.value, {
-        dispatchEvent: false
-      });
-    };
-    var handleGlobalThemeChange = function handleGlobalThemeChange(event) {
-      var _event$detail;
-      currentTheme.value = (event === null || event === void 0 || (_event$detail = event.detail) === null || _event$detail === void 0 ? void 0 : _event$detail.theme) || (0,_utils_theme__WEBPACK_IMPORTED_MODULE_1__.getSavedTheme)();
-    };
-
-    // Refs for scroll tracking
-    var featuresSection = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(null);
-    var pricingSection = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(null);
-
-    // Scroll methods
-    var scrollToFeatures = function scrollToFeatures() {
-      var _featuresSection$valu;
-      (_featuresSection$valu = featuresSection.value) === null || _featuresSection$valu === void 0 || _featuresSection$valu.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    };
-    var scrollToPricing = function scrollToPricing() {
-      var _pricingSection$value;
-      (_pricingSection$value = pricingSection.value) === null || _pricingSection$value === void 0 || _pricingSection$value.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    };
-    var csrfToken = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(((_document$querySelect = document.querySelector('meta[name="csrf-token"]')) === null || _document$querySelect === void 0 ? void 0 : _document$querySelect.getAttribute('content')) || '');
-    var startFreeHref = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
-      return window.mutqinAuthCheck ? '/memorisation' : '/register';
-    });
-    var comparisonValueClass = function comparisonValueClass(value) {
-      if (value === true) return 'comparison-value comparison-value-included comparison-value-icon';
-      if (value === false) return 'comparison-value comparison-value-excluded comparison-value-icon';
-      return 'comparison-value comparison-value-limited';
-    };
-    var comparisonCell = function comparisonCell(value) {
-      if (value === true) return {
-        icon: 'bi-check-lg',
-        label: ''
-      };
-      if (value === false) return {
-        icon: 'bi-x-lg',
-        label: ''
-      };
-      return {
-        icon: '',
-        label: String(value !== null && value !== void 0 ? value : '')
-      };
-    };
-    var contactForm = (0,vue__WEBPACK_IMPORTED_MODULE_0__.reactive)({
-      name: '',
-      email: '',
-      subject: '',
-      message: ''
-    });
-    var contactErrors = (0,vue__WEBPACK_IMPORTED_MODULE_0__.reactive)({});
-    var contactStatus = (0,vue__WEBPACK_IMPORTED_MODULE_0__.reactive)({
-      type: '',
-      message: ''
-    });
-    var contactSubmitting = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false);
-    var resetContactFeedback = function resetContactFeedback() {
-      Object.keys(contactErrors).forEach(function (key) {
-        return delete contactErrors[key];
-      });
-      contactStatus.type = '';
-      contactStatus.message = '';
-    };
-    var badgeLabel = function badgeLabel(badge) {
-      if (badge === 'pro') return t('homepage.badge.pro');
-      if (badge === 'freeLimited') return t('homepage.badge.freeLimited');
-      return t('homepage.badge.free');
-    };
-    var validateContact = function validateContact() {
-      resetContactFeedback();
-      var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!contactForm.name) contactErrors.name = t('homepage.contact.errors.name');
-      if (!contactForm.email) {
-        contactErrors.email = t('homepage.contact.errors.email');
-      } else if (!emailPattern.test(contactForm.email)) {
-        contactErrors.email = t('homepage.contact.errors.emailInvalid');
-      }
-      if (!contactForm.subject) contactErrors.subject = t('homepage.contact.errors.subject');
-      if (!contactForm.message) contactErrors.message = t('homepage.contact.errors.message');
-      return Object.keys(contactErrors).length === 0;
-    };
-    var submitContact = /*#__PURE__*/function () {
-      var _ref = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
-        var _error$response, validationErrors, _t;
-        return _regenerator().w(function (_context) {
-          while (1) switch (_context.p = _context.n) {
-            case 0:
-              if (validateContact()) {
-                _context.n = 1;
-                break;
-              }
-              return _context.a(2);
-            case 1:
-              contactSubmitting.value = true;
-              _context.p = 2;
-              _context.n = 3;
-              return window.axios.post('/api/contact', {
-                name: contactForm.name,
-                email: contactForm.email,
-                subject: contactForm.subject,
-                message: contactForm.message
-              });
-            case 3:
-              contactStatus.type = 'success';
-              contactStatus.message = t('homepage.contact.success');
-              contactForm.name = '';
-              contactForm.email = '';
-              contactForm.subject = '';
-              contactForm.message = '';
-              _context.n = 5;
-              break;
-            case 4:
-              _context.p = 4;
-              _t = _context.v;
-              validationErrors = (_t === null || _t === void 0 || (_error$response = _t.response) === null || _error$response === void 0 || (_error$response = _error$response.data) === null || _error$response === void 0 ? void 0 : _error$response.errors) || {};
-              Object.entries(validationErrors).forEach(function (_ref2) {
-                var _ref3 = _slicedToArray(_ref2, 2),
-                  field = _ref3[0],
-                  messages = _ref3[1];
-                contactErrors[field] = Array.isArray(messages) ? messages[0] : messages;
-              });
-              contactStatus.type = 'error';
-              contactStatus.message = Object.keys(validationErrors).length ? t('homepage.contact.errorFields') : t('homepage.contact.errorSend');
-            case 5:
-              _context.p = 5;
-              contactSubmitting.value = false;
-              return _context.f(5);
-            case 6:
-              return _context.a(2);
-          }
-        }, _callee, null, [[2, 4, 5, 6]]);
-      }));
-      return function submitContact() {
-        return _ref.apply(this, arguments);
-      };
-    }();
-    var floatingBadges = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
-      return [{
-        icon: 'bi bi-check-circle-fill',
-        text: t('homepage.floatingBadges.tajweedScore')
-      }, {
-        icon: 'bi bi-graph-up',
-        text: t('homepage.floatingBadges.weakVerses')
-      }, {
-        icon: 'bi bi-star-fill',
-        text: t('homepage.floatingBadges.dailyMinutes')
-      }];
-    });
-    var features = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
-      return [{
-        id: 'recitationReview',
-        icon: 'bi bi-mic-fill',
-        title: t('homepage.features.items.recitationReview.title'),
-        badge: badgeLabel('free'),
-        badgeType: '',
-        description: t('homepage.features.items.recitationReview.description'),
-        result: t('homepage.features.items.recitationReview.result')
-      }, {
-        id: 'smartMemorisation',
-        icon: 'bi bi-lightning-charge-fill',
-        title: t('homepage.features.items.smartMemorisation.title'),
-        badge: badgeLabel('pro'),
-        badgeType: 'pro',
-        description: t('homepage.features.items.smartMemorisation.description'),
-        result: t('homepage.features.items.smartMemorisation.result')
-      }, {
-        id: 'stackedMushaf',
-        icon: 'bi bi-journal-bookmark-fill',
-        title: t('homepage.features.items.stackedMushaf.title'),
-        badge: badgeLabel('free'),
-        badgeType: '',
-        description: t('homepage.features.items.stackedMushaf.description'),
-        result: t('homepage.features.items.stackedMushaf.result')
-      }, {
-        id: 'transitionTraining',
-        icon: 'bi bi-link-45deg',
-        title: t('homepage.features.items.transitionTraining.title'),
-        badge: badgeLabel('pro'),
-        badgeType: 'pro',
-        description: t('homepage.features.items.transitionTraining.description'),
-        result: t('homepage.features.items.transitionTraining.result')
-      }, {
-        id: 'recordingLibrary',
-        icon: 'bi bi-collection-play',
-        title: t('homepage.features.items.recordingLibrary.title'),
-        badge: badgeLabel('freeLimited'),
-        badgeType: '',
-        description: t('homepage.features.items.recordingLibrary.description'),
-        result: t('homepage.features.items.recordingLibrary.result')
-      }, {
-        id: 'reviewAnalytics',
-        icon: 'bi bi-graph-up-arrow',
-        title: t('homepage.features.items.reviewAnalytics.title'),
-        badge: badgeLabel('pro'),
-        badgeType: 'pro',
-        description: t('homepage.features.items.reviewAnalytics.description'),
-        result: t('homepage.features.items.reviewAnalytics.result')
-      }];
-    });
-    var steps = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
-      return [{
-        id: 'record',
-        title: t('homepage.steps.items.record.title'),
-        description: t('homepage.steps.items.record.description'),
-        icon: 'bi bi-mic-fill',
-        microcopy: t('homepage.steps.items.record.microcopy')
-      }, {
-        id: 'review',
-        title: t('homepage.steps.items.review.title'),
-        description: t('homepage.steps.items.review.description'),
-        icon: 'bi bi-stars',
-        microcopy: t('homepage.steps.items.review.microcopy')
-      }, {
-        id: 'repeat',
-        title: t('homepage.steps.items.repeat.title'),
-        description: t('homepage.steps.items.repeat.description'),
-        icon: 'bi bi-arrow-repeat',
-        microcopy: t('homepage.steps.items.repeat.microcopy')
-      }];
-    });
-    var testimonials = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
-      return [{
-        id: 'abdullah',
-        quote: t('homepage.testimonials.items.abdullah.quote'),
-        proof: t('homepage.testimonials.items.abdullah.proof'),
-        author: t('homepage.testimonials.items.abdullah.author'),
-        role: t('homepage.testimonials.items.abdullah.role'),
-        initials: t('homepage.testimonials.items.abdullah.initials')
-      }, {
-        id: 'fatima',
-        quote: t('homepage.testimonials.items.fatima.quote'),
-        proof: t('homepage.testimonials.items.fatima.proof'),
-        author: t('homepage.testimonials.items.fatima.author'),
-        role: t('homepage.testimonials.items.fatima.role'),
-        initials: t('homepage.testimonials.items.fatima.initials')
-      }, {
-        id: 'hisham',
-        quote: t('homepage.testimonials.items.hisham.quote'),
-        proof: t('homepage.testimonials.items.hisham.proof'),
-        author: t('homepage.testimonials.items.hisham.author'),
-        role: t('homepage.testimonials.items.hisham.role'),
-        initials: t('homepage.testimonials.items.hisham.initials')
-      }];
-    });
-    var faqItems = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
-      return [{
-        id: 'whatIsMutqin',
-        question: t('homepage.faq.items.whatIsMutqin.question'),
-        answer: t('homepage.faq.items.whatIsMutqin.answer')
-      }, {
-        id: 'howMemorisation',
-        question: t('homepage.faq.items.howMemorisation.question'),
-        answer: t('homepage.faq.items.howMemorisation.answer')
-      }, {
-        id: 'howAiFeedback',
-        question: t('homepage.faq.items.howAiFeedback.question'),
-        answer: t('homepage.faq.items.howAiFeedback.answer')
-      }, {
-        id: 'whatIsPro',
-        question: t('homepage.faq.items.whatIsPro.question'),
-        answer: t('homepage.faq.items.whatIsPro.answer')
-      }, {
-        id: 'howRevision',
-        question: t('homepage.faq.items.howRevision.question'),
-        answer: t('homepage.faq.items.howRevision.answer')
-      }];
-    });
-    var freeFeatures = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
-      return [t('homepage.planFeatures.sessionSetup'), t('homepage.planFeatures.savedSessions3'), t('homepage.planFeatures.basicAnalytics'), t('homepage.planFeatures.focusMode')];
-    });
-    var premiumFeatures = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
-      return [t('homepage.planFeatures.sessionSetup'), t('homepage.planFeatures.savedSessions5'), t('homepage.planFeatures.focusMode'), t('homepage.planFeatures.blurringMethod'), t('homepage.planFeatures.chainingMethod'), t('homepage.planFeatures.anchorMode'), t('homepage.planFeatures.basicAnalytics'), t('homepage.planFeatures.manualSelfAssessment')
-      // t('homepage.planFeatures.hifzPlan'),
-      // t('homepage.planFeatures.spacedRetention'),
-      // t('homepage.planFeatures.adaptiveRevision'),
-      // t('homepage.planFeatures.progressTracking')
-      ];
-    });
-    var proFeatures = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
-      return [t('homepage.planFeatures.sessionSetup'), t('homepage.planFeatures.savedSessionsUnlimited'), t('homepage.planFeatures.allTechniques'), t('homepage.planFeatures.aiRecitation'), t('homepage.planFeatures.aiMemorisationChecker'), t('homepage.planFeatures.manualSelfAssessmentPlus'), t('homepage.planFeatures.advancedAnalysis'), t('homepage.planFeatures.offlineDownloads')
-      // t('homepage.planFeatures.hifzPlan'),
-      // t('homepage.planFeatures.spacedRetention'),
-      // t('homepage.planFeatures.voiceHifzBuilder'),
-      // t('homepage.planFeatures.adaptiveRevision'),
-      // t('homepage.planFeatures.progressTracking')
-      ];
-    });
-    var comparisonRows = (0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)(function () {
-      return [{
-        id: 'sessionSetup',
-        feature: t('homepage.comparison.sessionSetup'),
-        free: true,
-        premium: true,
-        pro: true
-      }, {
-        id: 'savedSessions',
-        feature: t('homepage.comparison.savedSessions'),
-        free: '3',
-        premium: '5',
-        pro: t('homepage.comparison.unlimited')
-      }, {
-        id: 'layouts',
-        feature: t('homepage.comparison.layouts'),
-        free: true,
-        premium: true,
-        pro: true
-      }, {
-        id: 'focusMode',
-        feature: t('homepage.comparison.focusMode'),
-        free: true,
-        premium: true,
-        pro: true
-      }, {
-        id: 'blurMethod',
-        feature: t('homepage.comparison.blurMethod'),
-        free: false,
-        premium: true,
-        pro: true
-      }, {
-        id: 'chainingPractice',
-        feature: t('homepage.comparison.chainingPractice'),
-        free: false,
-        premium: true,
-        pro: true
-      }, {
-        id: 'anchorMode',
-        feature: t('homepage.comparison.anchorMode'),
-        free: false,
-        premium: true,
-        pro: true
-      }, {
-        id: 'manualRecording',
-        feature: t('homepage.comparison.manualRecording'),
-        free: false,
-        premium: true,
-        pro: true
-      }, {
-        id: 'aiRecitationReview',
-        feature: t('homepage.comparison.aiRecitationReview'),
-        free: false,
-        premium: false,
-        pro: true
-      },
-      // { id: 'aiMemorisationChecker', feature: t('homepage.comparison.aiMemorisationChecker'), free: false, premium: false, pro: true },
-      // { id: 'hifzPlan', feature: t('homepage.comparison.hifzPlan'), free: false, premium: true, pro: true },
-      // { id: 'spacedRetention', feature: t('homepage.comparison.spacedRetention'), free: false, premium: true, pro: true },
-      // { id: 'voiceHifzBuilder', feature: t('homepage.comparison.voiceHifzBuilder'), free: false, premium: false, pro: true },
-      // { id: 'adaptiveRevision', feature: t('homepage.comparison.adaptiveRevision'), free: false, premium: true, pro: true },
-      // { id: 'progressTracking', feature: t('homepage.comparison.progressTracking'), free: true, premium: true, pro: true },
-      // { id: 'advancedAnalytics', feature: t('homepage.comparison.advancedAnalytics'), free: false, premium: false, pro: true },
-      {
-        id: 'offlineDownloads',
-        feature: t('homepage.comparison.offlineDownloads'),
-        free: false,
-        premium: false,
-        pro: true
-      }];
-    });
-
-    // Intersection Observer for animations
-    var observerOptions = {
-      threshold: 0.3,
-      rootMargin: '0px'
-    };
-    (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
-      loadTheme();
-      window.addEventListener('mutqin:theme-change', handleGlobalThemeChange);
-
-      // Animate elements when they come into view
-      var animatedElements = document.querySelectorAll('[data-aos]');
-      var observer = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('aos-animate');
-            observer.unobserve(entry.target);
-          }
-        });
-      }, observerOptions);
-      animatedElements.forEach(function (el) {
-        return observer.observe(el);
-      });
-    });
-    (0,vue__WEBPACK_IMPORTED_MODULE_0__.onUnmounted)(function () {
-      window.removeEventListener('mutqin:theme-change', handleGlobalThemeChange);
-    });
+  name: 'NetworkStatusBanner',
+  data: function data() {
     return {
-      t: t,
-      currentTheme: currentTheme,
-      csrfToken: csrfToken,
-      startFreeHref: startFreeHref,
-      setTheme: setTheme,
-      featuresSection: featuresSection,
-      pricingSection: pricingSection,
-      scrollToFeatures: scrollToFeatures,
-      scrollToPricing: scrollToPricing,
-      comparisonValueClass: comparisonValueClass,
-      comparisonCell: comparisonCell,
-      floatingBadges: floatingBadges,
-      features: features,
-      steps: steps,
-      testimonials: testimonials,
-      faqItems: faqItems,
-      freeFeatures: freeFeatures,
-      premiumFeatures: premiumFeatures,
-      proFeatures: proFeatures,
-      comparisonRows: comparisonRows,
-      contactForm: contactForm,
-      contactErrors: contactErrors,
-      contactStatus: contactStatus,
-      contactSubmitting: contactSubmitting,
-      submitContact: submitContact
+      online: (0,_utils_networkStatus__WEBPACK_IMPORTED_MODULE_0__.isBrowserOnline)(),
+      showBackOnline: false,
+      unsubscribe: null,
+      backOnlineTimer: null,
+      /** Pages that already surface feature-specific offline copy. */
+      suppressForLocalHandler: false
     };
+  },
+  computed: {
+    visible: function visible() {
+      if (this.suppressForLocalHandler && !this.online) return false;
+      return !this.online || this.showBackOnline;
+    },
+    message: function message() {
+      if (!this.online) return this.t('common.status.offlineTitle');
+      return this.t('common.status.backOnline');
+    }
+  },
+  mounted: function mounted() {
+    var _this = this;
+    this.suppressForLocalHandler = !!document.querySelector('memorisation');
+    this.unsubscribe = (0,_utils_networkStatus__WEBPACK_IMPORTED_MODULE_0__.subscribeNetworkStatus)(function (online) {
+      var wasOffline = !_this.online;
+      _this.online = online;
+      if (online && wasOffline) {
+        _this.flashBackOnline();
+      }
+      if (!online) {
+        _this.clearBackOnline();
+      }
+    });
+  },
+  beforeUnmount: function beforeUnmount() {
+    if (typeof this.unsubscribe === 'function') this.unsubscribe();
+    this.clearBackOnline();
+  },
+  methods: {
+    t: function t(key, params) {
+      if (typeof this.$t === 'function') return this.$t(key, params);
+      return key;
+    },
+    flashBackOnline: function flashBackOnline() {
+      var _this2 = this;
+      this.clearBackOnline();
+      this.showBackOnline = true;
+      this.backOnlineTimer = window.setTimeout(function () {
+        _this2.showBackOnline = false;
+        _this2.backOnlineTimer = null;
+      }, 2400);
+    },
+    clearBackOnline: function clearBackOnline() {
+      if (this.backOnlineTimer) {
+        window.clearTimeout(this.backOnlineTimer);
+        this.backOnlineTimer = null;
+      }
+      this.showBackOnline = false;
+    }
   }
 });
 
 /***/ }),
 
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/OurMission.vue?vue&type=script&lang=js":
-/*!***********************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/OurMission.vue?vue&type=script&lang=js ***!
-  \***********************************************************************************************************************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  name: 'OurMissionPage'
-});
-
-/***/ }),
-
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/About.vue?vue&type=template&id=2995bb7e&scoped=true":
-/*!**********************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/About.vue?vue&type=template&id=2995bb7e&scoped=true ***!
-  \**********************************************************************************************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/NetworkStatusBanner.vue?vue&type=template&id=3b3bcef1":
+/*!*****************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/NetworkStatusBanner.vue?vue&type=template&id=3b3bcef1 ***!
+  \*****************************************************************************************************************************************************************************************************************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -25976,1043 +25523,20 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
 
 var _hoisted_1 = {
-  "class": "page"
-};
-var _hoisted_2 = {
-  "class": "hero"
-};
-var _hoisted_3 = {
-  "class": "tag"
-};
-var _hoisted_4 = {
-  "class": "cta"
-};
-var _hoisted_5 = {
-  "class": "primary"
-};
-var _hoisted_6 = {
-  "class": "secondary"
-};
-var _hoisted_7 = {
-  "class": "grid"
-};
-var _hoisted_8 = {
-  "class": "card"
-};
-var _hoisted_9 = {
-  "class": "card"
-};
-var _hoisted_10 = {
-  "class": "card highlight"
-};
-var _hoisted_11 = {
-  "class": "verse"
+  "class": "network-status-banner__inner"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_3, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('about.tag')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('about.heroTitle')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('about.heroDesc')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", _hoisted_5, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('about.ctaPrimary')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", _hoisted_6, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('about.ctaSecondary')), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('about.purposeTitle')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('about.purposeDesc')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('about.approachTitle')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('about.approachDesc')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_10, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('about.outcomeTitle')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('about.outcomeDesc')), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_11, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.t('about.verse')), 1 /* TEXT */)]);
-}
-
-/***/ }),
-
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/AboutUs.vue?vue&type=template&id=5d5795bc":
-/*!************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/AboutUs.vue?vue&type=template&id=5d5795bc ***!
-  \************************************************************************************************************************************************************************************************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   render: () => (/* binding */ render)
-/* harmony export */ });
-/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
-function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
-function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-
-var _hoisted_1 = {
-  "class": "info-page"
-};
-function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_1, _toConsumableArray(_cache[0] || (_cache[0] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"info-shell\"><header class=\"info-header info-reveal\"><div class=\"info-header-copy\"><span class=\"info-kicker\"><i class=\"bi bi-book-half\" aria-hidden=\"true\"></i> About</span><h1>About Mutqin</h1><ul class=\"info-highlights\" aria-label=\"What Mutqin offers\"><li><i class=\"bi bi-earbuds\" aria-hidden=\"true\"></i> Listen</li><li><i class=\"bi bi-mic\" aria-hidden=\"true\"></i> Repeat</li><li><i class=\"bi bi-signpost-2\" aria-hidden=\"true\"></i> Next step</li></ul></div><div class=\"info-header-aside\"><p> Mutqin helps you memorise the Qur’an through daily practice. Listen, repeat, and always know what to do next. </p><div class=\"info-actions\"><a class=\"info-btn info-btn--primary\" href=\"/memorisation\"><i class=\"bi bi-play-fill\" aria-hidden=\"true\"></i> Start practising </a><a class=\"info-btn info-btn--ghost\" href=\"/our-mission\"><i class=\"bi bi-compass\" aria-hidden=\"true\"></i> Our mission </a></div></div></header><div class=\"info-sections\"><section class=\"info-section info-reveal\" style=\"--d:60ms;\"><div class=\"info-section-head\"><div class=\"info-icon\" aria-hidden=\"true\"><i class=\"bi bi-signpost-2\"></i></div><h2>Know what to practise next</h2></div><p> It is easy to practise well today and forget what to revise tomorrow. Mutqin keeps the next step clear so coming back each day is simple. </p></section><section class=\"info-section info-reveal\" style=\"--d:120ms;\"><div class=\"info-section-head\"><div class=\"info-icon\" aria-hidden=\"true\"><i class=\"bi bi-earbuds\"></i></div><h2>Listen, then repeat</h2></div><p> Play the ayah, follow along, and repeat at your own pace. When you finish, Mutqin suggests what to do next. </p></section><section class=\"info-section info-reveal\" style=\"--d:180ms;\"><div class=\"info-section-head\"><div class=\"info-icon\" aria-hidden=\"true\"><i class=\"bi bi-person-heart\"></i></div><h2>A helper, not a teacher</h2></div><p> Mutqin helps you stay consistent. It does not replace a qualified teacher. Accuracy and respect for the Qur’an come first. </p></section></div><div class=\"info-actions info-reveal\" style=\"--d:240ms;\"><a class=\"info-btn info-btn--primary\" href=\"/memorisation\"><i class=\"bi bi-play-fill\" aria-hidden=\"true\"></i> Start practising </a><a class=\"info-btn info-btn--ghost\" href=\"/our-mission\"><i class=\"bi bi-compass\" aria-hidden=\"true\"></i> Our mission </a></div></div>", 1)])));
-}
-
-/***/ }),
-
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/DonationPage.vue?vue&type=template&id=1bb2b540":
-/*!*****************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/DonationPage.vue?vue&type=template&id=1bb2b540 ***!
-  \*****************************************************************************************************************************************************************************************************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   render: () => (/* binding */ render)
-/* harmony export */ });
-/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
-function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
-function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-
-var _hoisted_1 = {
-  "class": "info-page support-page"
-};
-function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_1, _toConsumableArray(_cache[0] || (_cache[0] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"info-shell\"><header class=\"info-header info-reveal\"><div class=\"info-header-copy\"><span class=\"info-kicker\"><i class=\"bi bi-life-preserver\" aria-hidden=\"true\"></i> Support</span><h1>Support</h1><ul class=\"info-highlights\" aria-label=\"Support topics\"><li><i class=\"bi bi-rocket-takeoff\" aria-hidden=\"true\"></i> Start</li><li><i class=\"bi bi-person-circle\" aria-hidden=\"true\"></i> Account</li><li><i class=\"bi bi-chat-dots\" aria-hidden=\"true\"></i> Contact</li></ul></div><div class=\"info-header-aside\"><p> Need help with practice, your account, or a session? Find answers here, or write to us anytime. </p><div class=\"info-actions\"><a class=\"info-btn info-btn--primary\" href=\"/#contact\"><i class=\"bi bi-envelope\" aria-hidden=\"true\"></i> Contact us </a><a class=\"info-btn info-btn--ghost\" href=\"/memorisation\"><i class=\"bi bi-play-fill\" aria-hidden=\"true\"></i> Start practising </a></div></div></header><div class=\"info-sections\"><section class=\"info-section info-reveal\" style=\"--d:40ms;\"><div class=\"info-section-head\"><div class=\"info-icon\" aria-hidden=\"true\"><i class=\"bi bi-play-circle\"></i></div><h2>Getting started</h2></div><p>Open Memorisation, pick a short passage, then listen and repeat.</p><a class=\"info-inline-link\" href=\"/memorisation\"> Go to Memorisation <i class=\"bi bi-arrow-right\" aria-hidden=\"true\"></i></a></section><section class=\"info-section info-reveal\" style=\"--d:80ms;\"><div class=\"info-section-head\"><div class=\"info-icon\" aria-hidden=\"true\"><i class=\"bi bi-person-circle\"></i></div><h2>Your account</h2></div><p>Sign in to keep your progress saved. Forgot your password? Use the reset link on the login page.</p><a class=\"info-inline-link\" href=\"/login\"> Sign in <i class=\"bi bi-arrow-right\" aria-hidden=\"true\"></i></a></section><section class=\"info-section info-reveal\" style=\"--d:120ms;\"><div class=\"info-section-head\"><div class=\"info-icon\" aria-hidden=\"true\"><i class=\"bi bi-journal-bookmark\"></i></div><h2>During a session</h2></div><p>Listen, follow the words, and repeat. When you finish, follow the suggested next step.</p></section><section class=\"info-section info-reveal\" style=\"--d:160ms;\"><div class=\"info-section-head\"><div class=\"info-icon\" aria-hidden=\"true\"><i class=\"bi bi-mic\"></i></div><h2>Checking your recitation</h2></div><p> Recite while Mutqin follows along. It is a practice helper, not a replacement for a teacher. </p></section><section class=\"info-section info-reveal\" style=\"--d:200ms;\"><div class=\"info-section-head\"><div class=\"info-icon\" aria-hidden=\"true\"><i class=\"bi bi-tools\"></i></div><h2>Something not working?</h2></div><p>Refresh once. If that fails, sign out and back in. For recitation, allow microphone access in your browser.</p></section><section class=\"info-section info-reveal\" style=\"--d:240ms;\"><div class=\"info-section-head\"><div class=\"info-icon\" aria-hidden=\"true\"><i class=\"bi bi-chat-heart\"></i></div><h2>Share feedback</h2></div><p>Tell us what helped, what was unclear, or how practice could be easier.</p><a class=\"info-inline-link\" href=\"/#contact\"> Write to us <i class=\"bi bi-arrow-right\" aria-hidden=\"true\"></i></a></section></div><div class=\"info-actions info-reveal\" style=\"--d:280ms;\"><a class=\"info-btn info-btn--primary\" href=\"/#contact\"><i class=\"bi bi-envelope\" aria-hidden=\"true\"></i> Contact us </a><a class=\"info-btn info-btn--ghost\" href=\"/memorisation\"><i class=\"bi bi-play-fill\" aria-hidden=\"true\"></i> Start practising </a></div></div>", 1)])));
-}
-
-/***/ }),
-
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/Homepage.vue?vue&type=template&id=a027a5e6":
-/*!*************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/Homepage.vue?vue&type=template&id=a027a5e6 ***!
-  \*************************************************************************************************************************************************************************************************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   render: () => (/* binding */ render)
-/* harmony export */ });
-/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
-
-var _hoisted_1 = ["data-theme"];
-var _hoisted_2 = {
-  "class": "hero"
-};
-var _hoisted_3 = {
-  "class": "hero-container"
-};
-var _hoisted_4 = {
-  "class": "hero-layout"
-};
-var _hoisted_5 = {
-  "class": "hero-copy-column"
-};
-var _hoisted_6 = {
-  "class": "hero-content",
-  "data-aos": "fade-up"
-};
-var _hoisted_7 = {
-  "class": "hero-badge"
-};
-var _hoisted_8 = {
-  "class": "hero-title"
-};
-var _hoisted_9 = {
-  "class": "hero-desc"
-};
-var _hoisted_10 = {
-  "class": "card problem-solution"
-};
-var _hoisted_11 = {
-  "class": "problem-text"
-};
-var _hoisted_12 = {
-  "class": "solution-highlight"
-};
-var _hoisted_13 = {
-  "class": "solution-text"
-};
-var _hoisted_14 = {
-  "class": "hero-buttons"
-};
-var _hoisted_15 = ["href"];
-var _hoisted_16 = {
-  "class": "hero-visual-column"
-};
-var _hoisted_17 = {
-  "class": "hero-image",
-  "data-aos": "fade-left"
-};
-var _hoisted_18 = {
-  "class": "card demo-card"
-};
-var _hoisted_19 = {
-  "class": "demo-wave"
-};
-var _hoisted_20 = {
-  id: "features",
-  "class": "features-section",
-  ref: "featuresSection"
-};
-var _hoisted_21 = {
-  "class": "section-container"
-};
-var _hoisted_22 = {
-  "class": "section-kicker"
-};
-var _hoisted_23 = {
-  "class": "section-title"
-};
-var _hoisted_24 = {
-  "class": "section-subtitle"
-};
-var _hoisted_25 = {
-  "class": "features-grid row"
-};
-var _hoisted_26 = {
-  "class": "feature-card h-100"
-};
-var _hoisted_27 = {
-  "class": "feature-topline"
-};
-var _hoisted_28 = {
-  "class": "feature-icon"
-};
-var _hoisted_29 = {
-  id: "how-it-works",
-  "class": "steps-section"
-};
-var _hoisted_30 = {
-  "class": "section-container"
-};
-var _hoisted_31 = {
-  "class": "section-kicker"
-};
-var _hoisted_32 = {
-  "class": "section-title"
-};
-var _hoisted_33 = {
-  "class": "section-subtitle"
-};
-var _hoisted_34 = {
-  "class": "steps-grid"
-};
-var _hoisted_35 = ["data-aos-delay"];
-var _hoisted_36 = {
-  "class": "step-card h-100"
-};
-var _hoisted_37 = {
-  "class": "step-head"
-};
-var _hoisted_38 = {
-  "class": "step-number"
-};
-var _hoisted_39 = {
-  id: "testimonials",
-  "class": "testimonials-section"
-};
-var _hoisted_40 = {
-  "class": "section-container"
-};
-var _hoisted_41 = {
-  "class": "section-kicker"
-};
-var _hoisted_42 = {
-  "class": "section-title"
-};
-var _hoisted_43 = {
-  "class": "testimonials-grid"
-};
-var _hoisted_44 = ["data-aos-delay"];
-var _hoisted_45 = {
-  "class": "testimonial-card h-100"
-};
-var _hoisted_46 = {
-  "class": "testimonial-proof"
-};
-var _hoisted_47 = {
-  "class": "testimonial-author"
-};
-var _hoisted_48 = {
-  "class": "author-avatar"
-};
-var _hoisted_49 = {
-  "class": "author-info"
-};
-var _hoisted_50 = {
-  id: "pricing",
-  "class": "pricing-section",
-  ref: "pricingSection"
-};
-var _hoisted_51 = {
-  "class": "section-container"
-};
-var _hoisted_52 = {
-  "class": "section-kicker"
-};
-var _hoisted_53 = {
-  "class": "section-title"
-};
-var _hoisted_54 = {
-  "class": "section-subtitle"
-};
-var _hoisted_55 = {
-  "class": "pricing-account-note"
-};
-var _hoisted_56 = {
-  "class": "pricing-grid"
-};
-var _hoisted_57 = {
-  "class": "pricing-grid-item",
-  "data-aos": "flip-right"
-};
-var _hoisted_58 = {
-  "class": "pricing-card h-100"
-};
-var _hoisted_59 = {
-  "class": "plan-label"
-};
-var _hoisted_60 = {
-  "class": "pricing-alt"
-};
-var _hoisted_61 = {
-  "class": "pricing-features"
-};
-var _hoisted_62 = ["href"];
-var _hoisted_63 = {
-  "class": "pricing-grid-item",
-  "data-aos": "flip-left"
-};
-var _hoisted_64 = {
-  "class": "pricing-card featured h-100"
-};
-var _hoisted_65 = {
-  "class": "featured-tag"
-};
-var _hoisted_66 = {
-  "class": "plan-label"
-};
-var _hoisted_67 = {
-  "class": "price"
-};
-var _hoisted_68 = {
-  "class": "pricing-alt"
-};
-var _hoisted_69 = {
-  "class": "pricing-features"
-};
-var _hoisted_70 = {
-  "class": "pricing-actions"
-};
-var _hoisted_71 = {
-  method: "POST",
-  action: "/checkout"
-};
-var _hoisted_72 = ["value"];
-var _hoisted_73 = {
-  type: "submit",
-  "class": "btn-primary"
-};
-var _hoisted_74 = {
-  method: "POST",
-  action: "/checkout"
-};
-var _hoisted_75 = ["value"];
-var _hoisted_76 = {
-  type: "submit",
-  "class": "btn-secondary"
-};
-var _hoisted_77 = {
-  "class": "pricing-grid-item",
-  "data-aos": "flip-left"
-};
-var _hoisted_78 = {
-  "class": "pricing-card h-100"
-};
-var _hoisted_79 = {
-  "class": "featured-tag"
-};
-var _hoisted_80 = {
-  "class": "plan-label"
-};
-var _hoisted_81 = {
-  "class": "price"
-};
-var _hoisted_82 = {
-  "class": "pricing-alt"
-};
-var _hoisted_83 = {
-  "class": "pricing-features"
-};
-var _hoisted_84 = {
-  "class": "pricing-actions"
-};
-var _hoisted_85 = {
-  method: "POST",
-  action: "/checkout"
-};
-var _hoisted_86 = ["value"];
-var _hoisted_87 = {
-  type: "submit",
-  "class": "btn-primary"
-};
-var _hoisted_88 = {
-  method: "POST",
-  action: "/checkout"
-};
-var _hoisted_89 = ["value"];
-var _hoisted_90 = {
-  type: "submit",
-  "class": "btn-secondary"
-};
-var _hoisted_91 = {
-  "class": "pricing-comparison"
-};
-var _hoisted_92 = {
-  "class": "comparison-header"
-};
-var _hoisted_93 = ["aria-label"];
-var _hoisted_94 = {
-  "class": "comparison-table"
-};
-var _hoisted_95 = {
-  scope: "row"
-};
-var _hoisted_96 = {
-  key: 1
-};
-var _hoisted_97 = {
-  key: 1
-};
-var _hoisted_98 = {
-  key: 1
-};
-var _hoisted_99 = ["aria-label"];
-var _hoisted_100 = {
-  "class": "comparison-card-feature"
-};
-var _hoisted_101 = {
-  "class": "comparison-card-tiers"
-};
-var _hoisted_102 = {
-  "class": "comparison-card-tier"
-};
-var _hoisted_103 = {
-  key: 1
-};
-var _hoisted_104 = {
-  "class": "comparison-card-tier"
-};
-var _hoisted_105 = {
-  key: 1
-};
-var _hoisted_106 = {
-  "class": "comparison-card-tier"
-};
-var _hoisted_107 = {
-  key: 1
-};
-var _hoisted_108 = {
-  id: "faq",
-  "class": "faq-section"
-};
-var _hoisted_109 = {
-  "class": "section-container"
-};
-var _hoisted_110 = {
-  "class": "section-kicker"
-};
-var _hoisted_111 = {
-  "class": "section-title"
-};
-var _hoisted_112 = {
-  "class": "section-subtitle"
-};
-var _hoisted_113 = {
-  "class": "faq-shell",
-  "data-aos": "fade-up"
-};
-var _hoisted_114 = {
-  "class": "accordion faq-accordion",
-  id: "homepageFaq"
-};
-var _hoisted_115 = ["id"];
-var _hoisted_116 = ["data-bs-target", "aria-expanded", "aria-controls"];
-var _hoisted_117 = ["id", "aria-labelledby"];
-var _hoisted_118 = {
-  "class": "accordion-body"
-};
-var _hoisted_119 = {
-  id: "contact",
-  "class": "contact-section"
-};
-var _hoisted_120 = {
-  "class": "section-container"
-};
-var _hoisted_121 = {
-  "class": "contact-grid"
-};
-var _hoisted_122 = {
-  "class": "contact-copy-column"
-};
-var _hoisted_123 = {
-  "class": "contact-copy",
-  "data-aos": "fade-up"
-};
-var _hoisted_124 = {
-  "class": "section-title section-title-left"
-};
-var _hoisted_125 = {
-  "class": "section-subtitle section-subtitle-left"
-};
-var _hoisted_126 = {
-  "class": "contact-form-column"
-};
-var _hoisted_127 = {
-  "class": "contact-card",
-  "data-aos": "fade-up"
-};
-var _hoisted_128 = {
-  "class": "contact-form-grid"
-};
-var _hoisted_129 = {
-  "class": "contact-field"
-};
-var _hoisted_130 = {
-  "class": "form-label",
-  "for": "contactName"
-};
-var _hoisted_131 = {
-  key: 0,
-  "class": "invalid-feedback d-block"
-};
-var _hoisted_132 = {
-  "class": "contact-field"
-};
-var _hoisted_133 = {
-  "class": "form-label",
-  "for": "contactEmail"
-};
-var _hoisted_134 = {
-  key: 0,
-  "class": "invalid-feedback d-block"
-};
-var _hoisted_135 = {
-  "class": "form-label",
-  "for": "contactSubject"
-};
-var _hoisted_136 = {
-  key: 0,
-  "class": "invalid-feedback d-block"
-};
-var _hoisted_137 = {
-  "class": "form-label",
-  "for": "contactMessage"
-};
-var _hoisted_138 = {
-  key: 0,
-  "class": "invalid-feedback d-block"
-};
-var _hoisted_139 = ["disabled"];
-var _hoisted_140 = {
-  "class": "cta-block"
-};
-var _hoisted_141 = {
-  "class": "cta-layout"
-};
-var _hoisted_142 = {
-  "class": "cta-copy-column"
-};
-var _hoisted_143 = {
-  "class": "cta-copy"
-};
-var _hoisted_144 = {
-  "class": "cta-actions-column"
-};
-var _hoisted_145 = {
-  "class": "cta-actions"
-};
-var _hoisted_146 = {
-  href: "/register",
-  "class": "btn-primary"
-};
-var _hoisted_147 = {
-  "class": "footer"
-};
-var _hoisted_148 = {
-  "class": "footer-container"
-};
-var _hoisted_149 = {
-  "class": "footer-grid"
-};
-var _hoisted_150 = {
-  "class": "footer-brand-column"
-};
-var _hoisted_151 = {
-  "class": "footer-brand"
-};
-var _hoisted_152 = {
-  "class": "footer-link-column"
-};
-var _hoisted_153 = {
-  "class": "footer-links"
-};
-var _hoisted_154 = {
-  href: "#"
-};
-var _hoisted_155 = {
-  "class": "footer-link-column"
-};
-var _hoisted_156 = {
-  "class": "footer-links"
-};
-var _hoisted_157 = {
-  href: "#"
-};
-var _hoisted_158 = {
-  href: "#"
-};
-var _hoisted_159 = {
-  href: "#"
-};
-var _hoisted_160 = {
-  "class": "footer-link-column"
-};
-var _hoisted_161 = {
-  "class": "footer-links"
-};
-var _hoisted_162 = {
-  href: "/about-us"
-};
-var _hoisted_163 = {
-  href: "/our-mission"
-};
-var _hoisted_164 = {
-  "class": "footer-social-column"
-};
-var _hoisted_165 = {
-  "class": "footer-social"
-};
-var _hoisted_166 = {
-  "class": "footer-bottom"
-};
-var _hoisted_167 = {
-  "class": "footer-legal"
-};
-var _hoisted_168 = {
-  href: "#"
-};
-var _hoisted_169 = {
-  href: "#"
-};
-var _hoisted_170 = {
-  href: "#"
-};
-function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-    "class": "vue-onboarding",
-    "data-theme": $setup.currentTheme
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Hero Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [_cache[9] || (_cache[9] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-moon-stars"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.hero.badge')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.hero.title')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_9, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.hero.desc')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_10, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_11, [_cache[10] || (_cache[10] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-exclamation-triangle-fill"
-  }, null, -1 /* CACHED */)), _cache[11] || (_cache[11] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)()), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.hero.problem')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.hero.problemText')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_13, [_cache[12] || (_cache[12] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-check-lg"
-  }, null, -1 /* CACHED */)), _cache[13] || (_cache[13] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)()), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.hero.solution')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.hero.solutionText')), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
-    href: $setup.startFreeHref,
-    "class": "btn-primary hero-action-btn hero-action-btn--primary"
-  }, [_cache[14] || (_cache[14] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-book-half"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.hero.startFree')), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_15), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    onClick: _cache[0] || (_cache[0] = function () {
-      return $setup.scrollToFeatures && $setup.scrollToFeatures.apply($setup, arguments);
-    }),
-    "class": "btn-secondary hero-action-btn hero-action-btn--secondary"
-  }, [_cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-arrow-down"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.hero.seeFeatures')), 1 /* TEXT */)])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_17, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_18, [_cache[17] || (_cache[17] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-mic"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.demo.title')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.demo.quote')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_19, [_cache[16] || (_cache[16] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-soundwave"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.demo.recording')), 1 /* TEXT */)])]), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.floatingBadges, function (badge, idx) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-      "class": "floating-card",
-      key: idx,
-      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
-        animationDelay: "".concat(idx * 0.8, "s")
-      })
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(badge.icon)
-    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(badge.text), 1 /* TEXT */)], 4 /* STYLE */);
-  }), 128 /* KEYED_FRAGMENT */))])])])])]), _cache[62] || (_cache[62] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "divider section-divider"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-star-fill"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" ۞ "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-star-fill"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Features Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_20, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_21, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_22, [_cache[18] || (_cache[18] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-soundwave"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.features.kicker')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", _hoisted_23, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.features.title')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_24, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.features.subtitle')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.features, function (feature) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-      "class": "feature-grid-item col-md-4",
-      key: feature.id,
-      "data-aos": "zoom-in"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_27, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_28, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(feature.icon)
-    }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(['feature-badge', feature.badgeType])
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature.badge), 3 /* TEXT, CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature.description), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature.result), 1 /* TEXT */)])]);
-  }), 128 /* KEYED_FRAGMENT */))])])], 512 /* NEED_PATCH */), _cache[63] || (_cache[63] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "divider section-divider"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-star-fill"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" ۞ "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-star-fill"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" How It Works "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_29, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_30, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_31, [_cache[19] || (_cache[19] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-route"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.steps.kicker')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", _hoisted_32, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.steps.title')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_33, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.steps.subtitle')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_34, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.steps, function (step, idx) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-      "class": "step-grid-item",
-      key: step.id,
-      "data-aos": "flip-up",
-      "data-aos-delay": idx * 100
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_36, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_37, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_38, "0" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(idx + 1), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)([step.icon, "step-icon"])
-    }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(step.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(step.description), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(step.microcopy), 1 /* TEXT */)])], 8 /* PROPS */, _hoisted_35);
-  }), 128 /* KEYED_FRAGMENT */))])])]), _cache[64] || (_cache[64] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "divider section-divider"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-star-fill"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" ۞ "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-star-fill"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Testimonials "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_39, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_40, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_41, [_cache[20] || (_cache[20] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-chat-heart"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.testimonials.kicker')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", _hoisted_42, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.testimonials.title')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_43, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.testimonials, function (testimonial, idx) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-      "class": "testimonial-grid-item",
-      key: testimonial.id,
-      "data-aos": "fade-up",
-      "data-aos-delay": idx * 100
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_45, [_cache[21] || (_cache[21] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"testimonial-rating\"><i class=\"bi bi-star-fill\"></i><i class=\"bi bi-star-fill\"></i><i class=\"bi bi-star-fill\"></i><i class=\"bi bi-star-fill\"></i><i class=\"bi bi-star-fill\"></i></div>", 1)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "\"" + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(testimonial.quote) + "\"", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_46, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(testimonial.proof), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_47, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_48, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(testimonial.initials), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_49, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(testimonial.author), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(testimonial.role), 1 /* TEXT */)])])])], 8 /* PROPS */, _hoisted_44);
-  }), 128 /* KEYED_FRAGMENT */))])])]), _cache[65] || (_cache[65] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "divider section-divider"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-star-fill"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" ۞ "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-star-fill"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Pricing Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_50, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_51, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_52, [_cache[22] || (_cache[22] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-credit-card-2-front"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.kicker')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", _hoisted_53, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.title')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_54, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.start_free_upgrade_only_when_you_need_deeper_recit')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_55, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.accountNote')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_56, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Freemium Plan "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_57, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_58, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_59, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.starter')), 1 /* TEXT */), _cache[25] || (_cache[25] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "pricing-icon"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-flower1"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.free')), 1 /* TEXT */), _cache[26] || (_cache[26] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "price"
-  }, "£0", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_60, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.for_trying_the_workflow')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("ul", _hoisted_61, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.freeFeatures, function (feature, idx) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("li", {
-      key: "free-".concat(idx)
-    }, [_cache[23] || (_cache[23] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-      "class": "bi bi-check-circle-fill"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature), 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
-    href: $setup.startFreeHref,
-    "class": "btn-secondary"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.start_free')) + " ", 1 /* TEXT */), _cache[24] || (_cache[24] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-arrow-right"
-  }, null, -1 /* CACHED */))], 8 /* PROPS */, _hoisted_62)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Premium Plan "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_63, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_64, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_65, [_cache[27] || (_cache[27] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-gift-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.freeTrial')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_66, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.most_useful')), 1 /* TEXT */), _cache[34] || (_cache[34] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "pricing-icon"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-stars"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.premium')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_67, [_cache[28] || (_cache[28] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("£2.99 ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.perMonth')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_68, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.premiumYearly')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("ul", _hoisted_69, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.premiumFeatures, function (feature, idx) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("li", {
-      key: "premium-".concat(idx)
-    }, [_cache[29] || (_cache[29] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-      "class": "bi bi-check-circle-fill"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature), 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_70, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("form", _hoisted_71, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "hidden",
-    name: "_token",
-    value: $setup.csrfToken
-  }, null, 8 /* PROPS */, _hoisted_72), _cache[31] || (_cache[31] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "hidden",
-    name: "plan",
-    value: "premium_monthly"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", _hoisted_73, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.monthly')) + " ", 1 /* TEXT */), _cache[30] || (_cache[30] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-gift-fill"
-  }, null, -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("form", _hoisted_74, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "hidden",
-    name: "_token",
-    value: $setup.csrfToken
-  }, null, 8 /* PROPS */, _hoisted_75), _cache[33] || (_cache[33] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "hidden",
-    name: "plan",
-    value: "premium_yearly"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", _hoisted_76, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.yearly')) + " ", 1 /* TEXT */), _cache[32] || (_cache[32] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-calendar-check"
-  }, null, -1 /* CACHED */))])])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Pro Plan "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_77, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_78, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_79, [_cache[35] || (_cache[35] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-gift-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.freeTrial')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_80, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.teacher_ready')), 1 /* TEXT */), _cache[42] || (_cache[42] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "pricing-icon"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-gem"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pro')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_81, [_cache[36] || (_cache[36] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("£5.99 ", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.perMonth')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_82, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.proYearly')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("ul", _hoisted_83, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.proFeatures, function (feature, idx) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("li", {
-      key: "pro-".concat(idx)
-    }, [_cache[37] || (_cache[37] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-      "class": "bi bi-check-circle-fill"
-    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature), 1 /* TEXT */)]);
-  }), 128 /* KEYED_FRAGMENT */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_84, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("form", _hoisted_85, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "hidden",
-    name: "_token",
-    value: $setup.csrfToken
-  }, null, 8 /* PROPS */, _hoisted_86), _cache[39] || (_cache[39] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "hidden",
-    name: "plan",
-    value: "pro_monthly"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", _hoisted_87, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.monthly')) + " ", 1 /* TEXT */), _cache[38] || (_cache[38] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-gem"
-  }, null, -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("form", _hoisted_88, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "hidden",
-    name: "_token",
-    value: $setup.csrfToken
-  }, null, 8 /* PROPS */, _hoisted_89), _cache[41] || (_cache[41] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    type: "hidden",
-    name: "plan",
-    value: "pro_yearly"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", _hoisted_90, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.yearly')) + " ", 1 /* TEXT */), _cache[40] || (_cache[40] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-calendar-check"
-  }, null, -1 /* CACHED */))])])])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_91, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_92, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.feature_comparison')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.everything_included_in_each_subscription_at_a_glan')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "comparison-table-wrap",
-    role: "region",
-    "aria-label": $setup.t('homepage.feature_comparison')
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("table", _hoisted_94, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("thead", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("tr", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("th", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.featureColumn')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("th", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.free')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("th", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.premium')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("th", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pro')), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("tbody", null, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.comparisonRows, function (row) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("tr", {
-      key: row.id
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("th", _hoisted_95, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(row.feature), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("td", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)($setup.comparisonValueClass(row.free))
-    }, [$setup.comparisonCell(row.free).icon ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", {
-      key: 0,
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $setup.comparisonCell(row.free).icon]),
-      "aria-hidden": "true"
-    }, null, 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $setup.comparisonCell(row.free).label ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_96, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.comparisonCell(row.free).label), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("td", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)($setup.comparisonValueClass(row.premium))
-    }, [$setup.comparisonCell(row.premium).icon ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", {
-      key: 0,
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $setup.comparisonCell(row.premium).icon]),
-      "aria-hidden": "true"
-    }, null, 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $setup.comparisonCell(row.premium).label ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_97, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.comparisonCell(row.premium).label), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("td", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)($setup.comparisonValueClass(row.pro))
-    }, [$setup.comparisonCell(row.pro).icon ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", {
-      key: 0,
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $setup.comparisonCell(row.pro).icon]),
-      "aria-hidden": "true"
-    }, null, 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $setup.comparisonCell(row.pro).label ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_98, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.comparisonCell(row.pro).label), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */)])]);
-  }), 128 /* KEYED_FRAGMENT */))])])], 8 /* PROPS */, _hoisted_93), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "comparison-cards",
-    role: "list",
-    "aria-label": $setup.t('homepage.feature_comparison')
-  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.comparisonRows, function (row) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("article", {
-      key: "comparison-card-".concat(row.id),
-      "class": "comparison-card",
-      role: "listitem"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", _hoisted_100, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(row.feature), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("dl", _hoisted_101, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_102, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("dt", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.free')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("dd", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)($setup.comparisonValueClass(row.free))
-    }, [$setup.comparisonCell(row.free).icon ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", {
-      key: 0,
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $setup.comparisonCell(row.free).icon]),
-      "aria-hidden": "true"
-    }, null, 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $setup.comparisonCell(row.free).label ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_103, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.comparisonCell(row.free).label), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_104, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("dt", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pricing.premium')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("dd", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)($setup.comparisonValueClass(row.premium))
-    }, [$setup.comparisonCell(row.premium).icon ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", {
-      key: 0,
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $setup.comparisonCell(row.premium).icon]),
-      "aria-hidden": "true"
-    }, null, 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $setup.comparisonCell(row.premium).label ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_105, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.comparisonCell(row.premium).label), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_106, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("dt", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.pro')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("dd", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)($setup.comparisonValueClass(row.pro))
-    }, [$setup.comparisonCell(row.pro).icon ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", {
-      key: 0,
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $setup.comparisonCell(row.pro).icon]),
-      "aria-hidden": "true"
-    }, null, 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $setup.comparisonCell(row.pro).label ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_107, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.comparisonCell(row.pro).label), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */)])])])]);
-  }), 128 /* KEYED_FRAGMENT */))], 8 /* PROPS */, _hoisted_99)])])], 512 /* NEED_PATCH */), _cache[66] || (_cache[66] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "divider section-divider"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-star-fill"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" ۞ "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-star-fill"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_108, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_109, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_110, [_cache[43] || (_cache[43] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-question-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.faq.kicker')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", _hoisted_111, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.faq.title')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_112, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.a_quick_overview_of_how_mutqin_supports_recitation')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_113, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_114, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.faqItems, function (item, idx) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-      "class": "accordion-item",
-      key: item.id
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", {
-      "class": "accordion-header",
-      id: "faq-heading-".concat(idx)
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["accordion-button", {
-        collapsed: idx !== 0
-      }]),
-      type: "button",
-      "data-bs-toggle": "collapse",
-      "data-bs-target": "#faq-panel-".concat(idx),
-      "aria-expanded": idx === 0 ? 'true' : 'false',
-      "aria-controls": "faq-panel-".concat(idx)
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.question), 11 /* TEXT, CLASS, PROPS */, _hoisted_116)], 8 /* PROPS */, _hoisted_115), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-      id: "faq-panel-".concat(idx),
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["accordion-collapse collapse", {
-        show: idx === 0
-      }]),
-      "aria-labelledby": "faq-heading-".concat(idx),
-      "data-bs-parent": "#homepageFaq"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_118, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.answer), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_117)]);
-  }), 128 /* KEYED_FRAGMENT */))])])])]), _cache[67] || (_cache[67] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "divider section-divider"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-star-fill"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" ۞ "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-star-fill"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_119, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_120, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_121, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_122, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_123, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", _hoisted_124, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.contact.title')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_125, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.contact.extendedSubtitle')), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_126, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_127, [$setup.contactStatus.message ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+  return $options.visible ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
     key: 0,
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["contact-alert", $setup.contactStatus.type === 'success' ? 'contact-alert-success' : 'contact-alert-error']),
-    role: "alert"
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.contactStatus.message), 3 /* TEXT, CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("form", {
-    "class": "contact-form",
-    onSubmit: _cache[5] || (_cache[5] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
-      return $setup.submitContact && $setup.submitContact.apply($setup, arguments);
-    }, ["prevent"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_128, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_129, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_130, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.name')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    id: "contactName",
-    "onUpdate:modelValue": _cache[1] || (_cache[1] = function ($event) {
-      return $setup.contactForm.name = $event;
-    }),
-    type: "text",
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["form-control", {
-      'is-invalid': $setup.contactErrors.name
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["network-status-banner", {
+      'network-status-banner--offline': !$data.online
     }]),
-    autocomplete: "name"
-  }, null, 2 /* CLASS */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $setup.contactForm.name, void 0, {
-    trim: true
-  }]]), $setup.contactErrors.name ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_131, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.contactErrors.name), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_132, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_133, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.contact.email')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    id: "contactEmail",
-    "onUpdate:modelValue": _cache[2] || (_cache[2] = function ($event) {
-      return $setup.contactForm.email = $event;
-    }),
-    type: "email",
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["form-control", {
-      'is-invalid': $setup.contactErrors.email
-    }]),
-    autocomplete: "email"
-  }, null, 2 /* CLASS */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $setup.contactForm.email, void 0, {
-    trim: true
-  }]]), $setup.contactErrors.email ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_134, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.contactErrors.email), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_135, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.contact.subject')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    id: "contactSubject",
-    "onUpdate:modelValue": _cache[3] || (_cache[3] = function ($event) {
-      return $setup.contactForm.subject = $event;
-    }),
-    type: "text",
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["form-control", {
-      'is-invalid': $setup.contactErrors.subject
-    }]),
-    autocomplete: "off",
-    required: ""
-  }, null, 2 /* CLASS */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $setup.contactForm.subject, void 0, {
-    trim: true
-  }]]), $setup.contactErrors.subject ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_136, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.contactErrors.subject), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_137, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.contact.message')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("textarea", {
-    id: "contactMessage",
-    "onUpdate:modelValue": _cache[4] || (_cache[4] = function ($event) {
-      return $setup.contactForm.message = $event;
-    }),
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["form-control contact-textarea", {
-      'is-invalid': $setup.contactErrors.message
-    }]),
-    rows: "6"
-  }, null, 2 /* CLASS */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $setup.contactForm.message, void 0, {
-    trim: true
-  }]]), $setup.contactErrors.message ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_138, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.contactErrors.message), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    type: "submit",
-    "class": "btn-primary contact-submit",
-    disabled: $setup.contactSubmitting
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $setup.contactSubmitting ? 'bi-arrow-repeat spin-icon' : 'bi-send'])
-  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.contactSubmitting ? $setup.t('homepage.contact.sending') : $setup.t('homepage.contact.sendMessage')), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_139)], 32 /* NEED_HYDRATION */)])])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" CTA Section "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_140, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_141, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_142, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_143, [_cache[44] || (_cache[44] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "cta-icon"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-heart-fill"
-  })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.cta.title')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.record_a_verse_review_the_highlighted_issues_and_k')), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_144, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_145, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_146, [_cache[45] || (_cache[45] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-person-badge"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.cta.button')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.cta.note')), 1 /* TEXT */)])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Footer - full width, bottom fixed position "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("footer", _hoisted_147, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_148, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_149, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_150, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_151, [_cache[46] || (_cache[46] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "footer-logo"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-moon-stars"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Mutqin")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.focused_quran_memorisation_tools_for_recitation_ch')), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_152, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_153, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, [_cache[47] || (_cache[47] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-grid-3x3-gap-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.footer.product')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
-    href: "#features",
-    onClick: _cache[6] || (_cache[6] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
-      return $setup.scrollToFeatures && $setup.scrollToFeatures.apply($setup, arguments);
-    }, ["prevent"]))
-  }, [_cache[48] || (_cache[48] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-mic"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.footer.features')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
-    href: "#pricing",
-    onClick: _cache[7] || (_cache[7] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
-      return $setup.scrollToPricing && $setup.scrollToPricing.apply($setup, arguments);
-    }, ["prevent"]))
-  }, [_cache[49] || (_cache[49] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-tag-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.footer.pricing')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_154, [_cache[50] || (_cache[50] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-compass"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.roadmap')), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_155, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_156, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, [_cache[51] || (_cache[51] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-book-half"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.footer.resources')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_157, [_cache[52] || (_cache[52] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-pen-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.tajweed_guide')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_158, [_cache[53] || (_cache[53] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-lightbulb-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.memorization_tips')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_159, [_cache[54] || (_cache[54] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-question-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.help_center')), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_160, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_161, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, [_cache[55] || (_cache[55] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-building"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.footer.company')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_162, [_cache[56] || (_cache[56] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-info-circle-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.footer.aboutUs')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
-    href: "#contact",
-    onClick: _cache[8] || (_cache[8] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
-      var _ctx$document$getElem;
-      return (_ctx$document$getElem = _ctx.document.getElementById('contact')) === null || _ctx$document$getElem === void 0 ? void 0 : _ctx$document$getElem.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }, ["prevent"]))
-  }, [_cache[57] || (_cache[57] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-chat-dots-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.footer.contact')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_163, [_cache[58] || (_cache[58] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-heart"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('mission.kicker')), 1 /* TEXT */)])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_164, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_165, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, [_cache[59] || (_cache[59] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-share-fill"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.footer.connect')), 1 /* TEXT */)]), _cache[60] || (_cache[60] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"social-icons\"><a href=\"#\" aria-label=\"Twitter\"><i class=\"bi bi-twitter-x\"></i></a><a href=\"#\" aria-label=\"Instagram\"><i class=\"bi bi-instagram\"></i></a><a href=\"#\" aria-label=\"YouTube\"><i class=\"bi bi-youtube\"></i></a><a href=\"#\" aria-label=\"Facebook\"><i class=\"bi bi-facebook\"></i></a></div>", 1))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_166, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, [_cache[61] || (_cache[61] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-c-circle"
-  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.footer.tagline')), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_167, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_168, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.footer.privacy')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_169, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.footer.terms')), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_170, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.t('homepage.all_rights_reserved')), 1 /* TEXT */)])])])])], 8 /* PROPS */, _hoisted_1);
-}
-
-/***/ }),
-
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/OurMission.vue?vue&type=template&id=3a0e4aff":
-/*!***************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/OurMission.vue?vue&type=template&id=3a0e4aff ***!
-  \***************************************************************************************************************************************************************************************************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   render: () => (/* binding */ render)
-/* harmony export */ });
-/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
-function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
-function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-
-var _hoisted_1 = {
-  "class": "info-page"
-};
-function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("section", _hoisted_1, _toConsumableArray(_cache[0] || (_cache[0] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"info-shell\"><header class=\"info-header info-reveal\"><div class=\"info-header-copy\"><span class=\"info-kicker\"><i class=\"bi bi-compass\" aria-hidden=\"true\"></i> Mission</span><h1>Our mission</h1><ul class=\"info-highlights\" aria-label=\"Mission focus\"><li><i class=\"bi bi-flag\" aria-hidden=\"true\"></i> Begin</li><li><i class=\"bi bi-arrow-repeat\" aria-hidden=\"true\"></i> Continue</li><li><i class=\"bi bi-heart\" aria-hidden=\"true\"></i> Return</li></ul></div><div class=\"info-header-aside\"><p> Help people start memorising, keep going, and come back each day, while still learning with a real teacher. </p><div class=\"info-actions\"><a class=\"info-btn info-btn--primary\" href=\"/memorisation\"><i class=\"bi bi-play-fill\" aria-hidden=\"true\"></i> Start a session </a><a class=\"info-btn info-btn--ghost\" href=\"/donate\"><i class=\"bi bi-life-preserver\" aria-hidden=\"true\"></i> Get help </a></div></div></header><div class=\"info-sections\"><section class=\"info-section info-reveal\" style=\"--d:60ms;\"><div class=\"info-section-head\"><div class=\"info-icon\" aria-hidden=\"true\"><i class=\"bi bi-bookmark-check\"></i></div><h2>Practise carefully</h2></div><p> Listen, repeat, and check your recitation so what you memorise stays with you beyond one sitting. </p></section><section class=\"info-section info-reveal\" style=\"--d:120ms;\"><div class=\"info-section-head\"><div class=\"info-icon\" aria-hidden=\"true\"><i class=\"bi bi-calendar-check\"></i></div><h2>Come back each day</h2></div><p> After every session you get a clear next step, so ayahs do not fade between days. </p></section><section class=\"info-section info-reveal\" style=\"--d:180ms;\"><div class=\"info-section-head\"><div class=\"info-icon\" aria-hidden=\"true\"><i class=\"bi bi-shield-check\"></i></div><h2>Respect first</h2></div><p> Getting it right matters more than going fast. Mutqin supports study with teachers, not instead of them. </p></section></div><div class=\"info-actions info-reveal\" style=\"--d:240ms;\"><a class=\"info-btn info-btn--primary\" href=\"/memorisation\"><i class=\"bi bi-play-fill\" aria-hidden=\"true\"></i> Start a session </a><a class=\"info-btn info-btn--ghost\" href=\"/donate\"><i class=\"bi bi-life-preserver\" aria-hidden=\"true\"></i> Get help </a></div></div>", 1)])));
+    role: "status",
+    "aria-live": "polite"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["bi", $data.online ? 'bi-wifi' : 'bi-wifi-off']),
+    "aria-hidden": "true"
+  }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.message), 1 /* TEXT */)])], 2 /* CLASS */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true);
 }
 
 /***/ }),
@@ -27026,15 +25550,12 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
-/* harmony import */ var _views_Homepage_vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./views/Homepage.vue */ "./resources/js/views/Homepage.vue");
-/* harmony import */ var _views_About_vue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./views/About.vue */ "./resources/js/views/About.vue");
-/* harmony import */ var _views_AboutUs_vue__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./views/AboutUs.vue */ "./resources/js/views/AboutUs.vue");
-/* harmony import */ var _views_OurMission_vue__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./views/OurMission.vue */ "./resources/js/views/OurMission.vue");
-/* harmony import */ var _views_DonationPage_vue__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./views/DonationPage.vue */ "./resources/js/views/DonationPage.vue");
-/* harmony import */ var _styles_info_pages_css__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./styles/info-pages.css */ "./resources/js/styles/info-pages.css");
-/* harmony import */ var _i18n__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./i18n */ "./resources/js/i18n.js");
-/* harmony import */ var _mixins_i18nMixin__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./mixins/i18nMixin */ "./resources/js/mixins/i18nMixin.js");
-/* harmony import */ var _pwa__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./pwa */ "./resources/js/pwa.js");
+/* harmony import */ var _components_NetworkStatusBanner_vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/NetworkStatusBanner.vue */ "./resources/js/components/NetworkStatusBanner.vue");
+/* harmony import */ var _styles_info_pages_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./styles/info-pages.css */ "./resources/js/styles/info-pages.css");
+/* harmony import */ var _i18n__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./i18n */ "./resources/js/i18n.js");
+/* harmony import */ var _mixins_i18nMixin__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./mixins/i18nMixin */ "./resources/js/mixins/i18nMixin.js");
+/* harmony import */ var _pwa__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./pwa */ "./resources/js/pwa.js");
+/* harmony import */ var _utils_networkStatus__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./utils/networkStatus */ "./resources/js/utils/networkStatus.js");
 function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
 function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
 function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
@@ -27047,9 +25568,24 @@ __webpack_require__(/*! ./bootstrap.js */ "./resources/js/bootstrap.js");
 
 
 
-
-
-
+var Homepage = (0,vue__WEBPACK_IMPORTED_MODULE_0__.defineAsyncComponent)(function () {
+  return __webpack_require__.e(/*! import() | homepage */ "homepage").then(__webpack_require__.bind(__webpack_require__, /*! ./views/Homepage.vue */ "./resources/js/views/Homepage.vue"));
+});
+var About = (0,vue__WEBPACK_IMPORTED_MODULE_0__.defineAsyncComponent)(function () {
+  return __webpack_require__.e(/*! import() | about */ "about").then(__webpack_require__.bind(__webpack_require__, /*! ./views/About.vue */ "./resources/js/views/About.vue"));
+});
+var AboutUsPage = (0,vue__WEBPACK_IMPORTED_MODULE_0__.defineAsyncComponent)(function () {
+  return __webpack_require__.e(/*! import() | about-us */ "about-us").then(__webpack_require__.bind(__webpack_require__, /*! ./views/AboutUs.vue */ "./resources/js/views/AboutUs.vue"));
+});
+var OurMissionPage = (0,vue__WEBPACK_IMPORTED_MODULE_0__.defineAsyncComponent)(function () {
+  return __webpack_require__.e(/*! import() | our-mission */ "our-mission").then(__webpack_require__.bind(__webpack_require__, /*! ./views/OurMission.vue */ "./resources/js/views/OurMission.vue"));
+});
+var DonationPage = (0,vue__WEBPACK_IMPORTED_MODULE_0__.defineAsyncComponent)(function () {
+  return __webpack_require__.e(/*! import() | donation */ "donation").then(__webpack_require__.bind(__webpack_require__, /*! ./views/DonationPage.vue */ "./resources/js/views/DonationPage.vue"));
+});
+var WaitingListPage = (0,vue__WEBPACK_IMPORTED_MODULE_0__.defineAsyncComponent)(function () {
+  return __webpack_require__.e(/*! import() | waiting-list */ "waiting-list").then(__webpack_require__.bind(__webpack_require__, /*! ./views/WaitingList.vue */ "./resources/js/views/WaitingList.vue"));
+});
 var UserDashboard = (0,vue__WEBPACK_IMPORTED_MODULE_0__.defineAsyncComponent)(function () {
   return __webpack_require__.e(/*! import() | dashboard */ "dashboard").then(__webpack_require__.bind(__webpack_require__, /*! ./views/Dashboard.vue */ "./resources/js/views/Dashboard.vue"));
 });
@@ -27070,7 +25606,37 @@ var MemorisationLoadError = {
       "default": null
     }
   },
-  template: "\n        <div class=\"memorisation-boot-fallback memorisation-boot-fallback-error\" role=\"alert\">\n            <div class=\"memorisation-boot-card\">\n                <i class=\"bi bi-exclamation-triangle\" aria-hidden=\"true\"></i>\n                <strong>Memorisation workspace failed to load</strong>\n                <span>Refresh the page. If this keeps happening after <code>npm run watch</code> finishes compiling, hard-refresh once.</span>\n                <button type=\"button\" class=\"btn btn-sm btn-primary mt-2\" @click=\"reload\">Refresh</button>\n            </div>\n        </div>\n    ",
+  data: function data() {
+    return {
+      offline: (0,_utils_networkStatus__WEBPACK_IMPORTED_MODULE_6__.isBrowserOffline)(),
+      onlineHandler: null
+    };
+  },
+  computed: {
+    title: function title() {
+      return this.offline ? 'You appear to be offline.' : 'Something went wrong';
+    },
+    description: function description() {
+      return this.offline ? 'Check your connection, then try again. We’ll retry automatically when you’re back online.' : 'Something went wrong. Please try again.';
+    }
+  },
+  mounted: function mounted() {
+    var _this = this;
+    this.onlineHandler = function () {
+      var wasOffline = _this.offline;
+      _this.offline = (0,_utils_networkStatus__WEBPACK_IMPORTED_MODULE_6__.isBrowserOffline)();
+      if (wasOffline && !_this.offline) _this.reload();
+    };
+    window.addEventListener('online', this.onlineHandler);
+    window.addEventListener('offline', this.onlineHandler);
+  },
+  beforeUnmount: function beforeUnmount() {
+    if (this.onlineHandler) {
+      window.removeEventListener('online', this.onlineHandler);
+      window.removeEventListener('offline', this.onlineHandler);
+    }
+  },
+  template: "\n        <div class=\"memorisation-boot-fallback memorisation-boot-fallback-error\" role=\"alert\">\n            <div class=\"memorisation-boot-card\">\n                <i class=\"bi\" :class=\"offline ? 'bi-wifi-off' : 'bi-exclamation-triangle'\" aria-hidden=\"true\"></i>\n                <strong>{{ title }}</strong>\n                <span>{{ description }}</span>\n                <div class=\"memorisation-boot-actions\">\n                    <button type=\"button\" class=\"btn btn-sm btn-primary\" @click=\"reload\">Retry</button>\n                    <a class=\"btn btn-sm btn-outline-secondary\" href=\"/\">Return Home</a>\n                </div>\n            </div>\n        </div>\n    ",
   methods: {
     reload: function reload() {
       window.location.reload();
@@ -27099,6 +25665,7 @@ function loadMemorisationChunk() {
     }
     return mod;
   })["catch"](function (error) {
+    console.error('Memorisation chunk failed to load', error);
     var name = String((error === null || error === void 0 ? void 0 : error.name) || '');
     var message = String((error === null || error === void 0 ? void 0 : error.message) || '');
     var isChunkError = name === 'ChunkLoadError' || /Loading chunk \d+ failed/i.test(message) || /memorisation/i.test(message);
@@ -27133,16 +25700,19 @@ function _bootstrapApp() {
         case 0:
           app = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createApp)({});
           _context.n = 1;
-          return (0,_i18n__WEBPACK_IMPORTED_MODULE_7__.setupI18n)();
+          return (0,_i18n__WEBPACK_IMPORTED_MODULE_3__.setupI18n)();
         case 1:
           i18n = _context.v;
           app.use(i18n);
-          app.mixin(_mixins_i18nMixin__WEBPACK_IMPORTED_MODULE_8__.i18nMixin);
+          app.mixin(_mixins_i18nMixin__WEBPACK_IMPORTED_MODULE_4__.i18nMixin);
           app.config.globalProperties.$setLocale = function (locale) {
-            return (0,_i18n__WEBPACK_IMPORTED_MODULE_7__.setLocale)(i18n, locale);
+            return (0,_i18n__WEBPACK_IMPORTED_MODULE_3__.setLocale)(i18n, locale);
+          };
+          app.config.errorHandler = function (error, instance, info) {
+            console.error('Mutqin Vue error:', error, info);
           };
           window.mutqinSetLocale = function (locale) {
-            return (0,_i18n__WEBPACK_IMPORTED_MODULE_7__.setLocale)(i18n, locale);
+            return (0,_i18n__WEBPACK_IMPORTED_MODULE_3__.setLocale)(i18n, locale);
           };
           window.mutqinGetLocale = function () {
             return i18n.global.locale.value;
@@ -27152,14 +25722,16 @@ function _bootstrapApp() {
               locale: i18n.global.locale.value
             }
           }));
-          app.component('homepage', _views_Homepage_vue__WEBPACK_IMPORTED_MODULE_1__["default"]);
+          app.component('network-status-banner', _components_NetworkStatusBanner_vue__WEBPACK_IMPORTED_MODULE_1__["default"]);
+          app.component('homepage', Homepage);
           app.component('memorisation', Memorisation);
           app.component('user-dashboard', UserDashboard);
           app.component('admin-dashboard', AdminDashboard);
-          app.component('about', _views_About_vue__WEBPACK_IMPORTED_MODULE_2__["default"]);
-          app.component('about-us-page', _views_AboutUs_vue__WEBPACK_IMPORTED_MODULE_3__["default"]);
-          app.component('our-mission-page', _views_OurMission_vue__WEBPACK_IMPORTED_MODULE_4__["default"]);
-          app.component('donation-page', _views_DonationPage_vue__WEBPACK_IMPORTED_MODULE_5__["default"]);
+          app.component('about', About);
+          app.component('about-us-page', AboutUsPage);
+          app.component('our-mission-page', OurMissionPage);
+          app.component('donation-page', DonationPage);
+          app.component('waiting-list-page', WaitingListPage);
           app.mount('#app');
         case 2:
           return _context.a(2);
@@ -27172,10 +25744,20 @@ function showBootstrapFailure(error) {
   console.error('Mutqin app bootstrap failed:', error);
   var mountTarget = document.getElementById('app');
   if (!mountTarget) return;
-  mountTarget.innerHTML = "\n        <main id=\"mainContent\" tabindex=\"-1\">\n            <div class=\"memorisation-boot-fallback memorisation-boot-fallback-error\" role=\"alert\">\n                <div class=\"memorisation-boot-card\">\n                    <strong>Mutqin failed to start</strong>\n                    <span>Refresh the page. If this continues, rebuild frontend assets with <code>npm run dev</code>.</span>\n                </div>\n            </div>\n        </main>\n    ";
+  var offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+  var title = offline ? 'You appear to be offline.' : 'Something went wrong';
+  var description = offline ? 'Check your connection, then try again.' : 'Something went wrong. Please try again.';
+  mountTarget.innerHTML = "\n        <main id=\"mainContent\" tabindex=\"-1\">\n            <div class=\"memorisation-boot-fallback memorisation-boot-fallback-error\" role=\"alert\">\n                <div class=\"memorisation-boot-card\">\n                    <i class=\"bi ".concat(offline ? 'bi-wifi-off' : 'bi-exclamation-triangle', "\" aria-hidden=\"true\"></i>\n                    <strong>").concat(title, "</strong>\n                    <span>").concat(description, "</span>\n                    <div class=\"memorisation-boot-actions\">\n                        <button type=\"button\" class=\"btn btn-sm btn-primary\" onclick=\"window.location.reload()\">Retry</button>\n                        <a class=\"btn btn-sm btn-outline-secondary\" href=\"/\">Return Home</a>\n                    </div>\n                </div>\n            </div>\n        </main>\n    ");
+  if (offline) {
+    window.addEventListener('online', function () {
+      return window.location.reload();
+    }, {
+      once: true
+    });
+  }
 }
 bootstrapApp()["catch"](showBootstrapFailure);
-(0,_pwa__WEBPACK_IMPORTED_MODULE_9__.initPwa)();
+(0,_pwa__WEBPACK_IMPORTED_MODULE_5__.initPwa)();
 
 /***/ }),
 
@@ -27188,14 +25770,21 @@ bootstrapApp()["catch"](showBootstrapFailure);
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
-/* harmony import */ var bootstrap__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bootstrap */ "./node_modules/bootstrap/dist/js/bootstrap.esm.js");
+/* harmony import */ var bootstrap_js_dist_offcanvas__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bootstrap/js/dist/offcanvas */ "./node_modules/bootstrap/js/dist/offcanvas.js");
+/* harmony import */ var bootstrap_js_dist_offcanvas__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(bootstrap_js_dist_offcanvas__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var bootstrap_js_dist_dropdown__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bootstrap/js/dist/dropdown */ "./node_modules/bootstrap/js/dist/dropdown.js");
+/* harmony import */ var bootstrap_js_dist_dropdown__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(bootstrap_js_dist_dropdown__WEBPACK_IMPORTED_MODULE_2__);
 
 window.axios = axios__WEBPACK_IMPORTED_MODULE_0__["default"];
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-// Import Bootstrap
+// Only the Bootstrap plugins used by the shell (navbar offcanvas + language dropdown).
 
-window.bootstrap = bootstrap__WEBPACK_IMPORTED_MODULE_1__;
+
+window.bootstrap = {
+  Offcanvas: (bootstrap_js_dist_offcanvas__WEBPACK_IMPORTED_MODULE_1___default()),
+  Dropdown: (bootstrap_js_dist_dropdown__WEBPACK_IMPORTED_MODULE_2___default())
+};
 
 // CSRF token
 var token = document.head.querySelector('meta[name="csrf-token"]');
@@ -27487,15 +26076,43 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
 /**
  * Mobile-only PWA bootstrap.
  * Desktop / tablet viewports (≥768px) skip registration and clear any prior SW.
+ *
+ * Chromium phones: native beforeinstallprompt banner.
+ * Login + register: iPhone Home Screen install guide (Safari has no install prompt API).
+ * Android keeps the native banner path and does not see the iPhone instructions.
+ *
+ * Auth pages live inside Vue's `#app` mount. Listeners must use event delegation
+ * because Vue re-renders the login/register DOM after async i18n bootstrap.
  */
 
 var MOBILE_MQ = '(max-width: 767.98px)';
 var INSTALL_DISMISS_KEY = 'mutqin.pwa.install.dismissed';
+var IOS_INSTALL_DISMISS_KEY = 'mutqin.pwa.ios-install.dismissed';
 function isMobileViewport() {
   return window.matchMedia(MOBILE_MQ).matches;
 }
 function isStandaloneDisplay() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function isIosDevice() {
+  var ua = window.navigator.userAgent || '';
+  if (/iPhone|iPod|iPad/i.test(ua)) return true;
+  // iPadOS 13+ may report as Macintosh with touch.
+  return window.navigator.platform === 'MacIntel' && (window.navigator.maxTouchPoints || 0) > 1;
+}
+function isAndroidDevice() {
+  return /Android/i.test(window.navigator.userAgent || '');
+}
+function isAuthInstallPage() {
+  var path = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
+  return path === '/login' || path === '/register';
+}
+function wantsIosInstallPreview() {
+  try {
+    return new URLSearchParams(window.location.search).get('ios_install') === '1';
+  } catch (_) {
+    return false;
+  }
 }
 function unregisterServiceWorkers() {
   return _unregisterServiceWorkers.apply(this, arguments);
@@ -27555,6 +26172,8 @@ function registerServiceWorker() {
 }
 function shouldShowInstallBanner() {
   if (!isMobileViewport() || isStandaloneDisplay()) return false;
+  // iOS never fires beforeinstallprompt; keep Chromium path untouched otherwise.
+  if (isIosDevice()) return false;
   try {
     if (sessionStorage.getItem(INSTALL_DISMISS_KEY) === '1') return false;
   } catch (_) {
@@ -27623,7 +26242,144 @@ function setupInstallPrompt() {
     var _document$getElementB;
     (_document$getElementB = document.getElementById('mutqin-pwa-install')) === null || _document$getElementB === void 0 || _document$getElementB.remove();
     deferredPrompt = null;
+    hideIosInstallGuide();
   });
+}
+function wasIosInstallDismissed() {
+  try {
+    return localStorage.getItem(IOS_INSTALL_DISMISS_KEY) === '1';
+  } catch (_) {
+    return false;
+  }
+}
+function persistIosInstallDismissed() {
+  try {
+    localStorage.setItem(IOS_INSTALL_DISMISS_KEY, '1');
+  } catch (_) {
+    /* ignore */
+  }
+}
+function clearIosInstallDismissed() {
+  try {
+    localStorage.removeItem(IOS_INSTALL_DISMISS_KEY);
+  } catch (_) {
+    /* ignore */
+  }
+}
+function shouldShowIosInstallGuide() {
+  if (!isAuthInstallPage() || isStandaloneDisplay()) return false;
+
+  // Force-show for local QA: /login?ios_install=1
+  if (wantsIosInstallPreview()) {
+    clearIosInstallDismissed();
+    return true;
+  }
+  if (wasIosInstallDismissed()) return false;
+
+  // Android uses the native beforeinstallprompt banner — don't show iPhone steps.
+  if (isAndroidDevice()) return false;
+
+  // iPhone/iPad: primary audience.
+  // Desktop (Mac/Windows): also show on auth so the iPhone guide is reachable while testing
+  // and for users installing Mutqin on their phone from these pages.
+  return true;
+}
+function getIosModal() {
+  return document.getElementById('mutqin-ios-pwa-modal') || document.querySelector('[data-ios-pwa-modal]');
+}
+function getIosRoot() {
+  return document.getElementById('mutqin-ios-pwa') || document.querySelector('[data-ios-pwa-root]');
+}
+function ensureIosModalOnBody() {
+  var modal = getIosModal();
+  if (modal && modal.parentElement !== document.body) {
+    document.body.appendChild(modal);
+  }
+  return modal;
+}
+function setIosModalOpen(modal, open) {
+  if (!modal) return;
+  modal.hidden = !open;
+  modal.classList.toggle('is-open', open);
+  modal.setAttribute('aria-hidden', open ? 'false' : 'true');
+  document.documentElement.classList.toggle('mutqin-ios-pwa-open', open);
+}
+function hideIosInstallGuide() {
+  var root = getIosRoot();
+  if (root) root.hidden = true;
+  var modal = getIosModal();
+  if (modal) setIosModalOpen(modal, false);
+}
+function revealIosInstallTrigger() {
+  var root = getIosRoot();
+  if (!root) return null;
+  root.hidden = false;
+  root.removeAttribute('hidden');
+  return root;
+}
+function openIosInstallModal() {
+  if (!shouldShowIosInstallGuide()) return;
+  var modal = ensureIosModalOnBody();
+  if (!modal) return;
+  setIosModalOpen(modal, true);
+}
+function closeIosInstallModal() {
+  var modal = getIosModal();
+  if (modal) setIosModalOpen(modal, false);
+}
+function dismissIosInstallGuide() {
+  persistIosInstallDismissed();
+  closeIosInstallModal();
+  var root = getIosRoot();
+  if (root) root.hidden = true;
+}
+var iosInstallGuideBound = false;
+function bindIosInstallGuideEvents() {
+  if (iosInstallGuideBound) return;
+  iosInstallGuideBound = true;
+
+  // Delegate from document so Vue remounting #app cannot drop handlers.
+  document.addEventListener('click', function (event) {
+    var target = event.target;
+    if (!(target instanceof Element)) return;
+    if (target.closest('[data-ios-pwa-open]')) {
+      event.preventDefault();
+      openIosInstallModal();
+      return;
+    }
+    if (target.closest('[data-ios-pwa-dismiss]')) {
+      event.preventDefault();
+      dismissIosInstallGuide();
+      return;
+    }
+    if (target.closest('[data-ios-pwa-close]')) {
+      event.preventDefault();
+      closeIosInstallModal();
+      return;
+    }
+    var modal = getIosModal();
+    if (modal && !modal.hidden && target === modal) {
+      closeIosInstallModal();
+    }
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape') return;
+    var modal = getIosModal();
+    if (modal && !modal.hidden) {
+      closeIosInstallModal();
+    }
+  });
+}
+function setupIosInstallGuide() {
+  bindIosInstallGuideEvents();
+  if (!shouldShowIosInstallGuide()) {
+    hideIosInstallGuide();
+    return;
+  }
+
+  // Move the overlay outside Vue's #app before/after mount so it is not destroyed.
+  ensureIosModalOnBody();
+  revealIosInstallTrigger();
 }
 function syncDisplayModeClass() {
   document.documentElement.classList.toggle('mutqin-pwa-standalone', isStandaloneDisplay());
@@ -27634,6 +26390,29 @@ function initPwa() {
 
   // Always clear stale Mutqin caches on boot so local UI updates are not stuck.
   unregisterServiceWorkers()["catch"](function () {});
+
+  // Listen for Chromium install immediately — do not wait for window.load
+  // (deferred bundles can miss that event).
+  setupInstallPrompt();
+  if (isMobileViewport()) {
+    registerServiceWorker();
+  } else {
+    unregisterServiceWorkers()["catch"](function () {});
+  }
+  setupIosInstallGuide();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupIosInstallGuide, {
+      once: true
+    });
+  }
+
+  // Vue mounts #app after async i18n; re-apply visibility once that finishes.
+  window.addEventListener('mutqin:i18n-ready', function () {
+    queueMicrotask(function () {
+      return setupIosInstallGuide();
+    });
+    window.setTimeout(setupIosInstallGuide, 0);
+  });
   var media = window.matchMedia(MOBILE_MQ);
   var onViewportChange = function onViewportChange() {
     syncDisplayModeClass();
@@ -27644,116 +26423,185 @@ function initPwa() {
       unregisterServiceWorkers()["catch"](function () {});
       (_document$getElementB2 = document.getElementById('mutqin-pwa-install')) === null || _document$getElementB2 === void 0 || _document$getElementB2.remove();
     }
+    if (shouldShowIosInstallGuide()) {
+      setupIosInstallGuide();
+    } else {
+      hideIosInstallGuide();
+    }
   };
   if (typeof media.addEventListener === 'function') {
     media.addEventListener('change', onViewportChange);
   } else if (typeof media.addListener === 'function') {
     media.addListener(onViewportChange);
   }
-  window.addEventListener('load', function () {
-    if (isMobileViewport()) {
-      registerServiceWorker();
-      setupInstallPrompt();
-    } else {
-      unregisterServiceWorkers()["catch"](function () {});
+
+  // Standalone can change if the user installs mid-session (rare) — re-check on focus.
+  window.addEventListener('pageshow', function () {
+    syncDisplayModeClass();
+    if (isStandaloneDisplay()) {
+      var _document$getElementB3;
+      (_document$getElementB3 = document.getElementById('mutqin-pwa-install')) === null || _document$getElementB3 === void 0 || _document$getElementB3.remove();
+      hideIosInstallGuide();
+      return;
     }
+    setupIosInstallGuide();
   });
 }
 
 /***/ }),
 
-/***/ "./resources/js/utils/theme.js":
-/*!*************************************!*\
-  !*** ./resources/js/utils/theme.js ***!
-  \*************************************/
+/***/ "./resources/js/utils/networkStatus.js":
+/*!*********************************************!*\
+  !*** ./resources/js/utils/networkStatus.js ***!
+  \*********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   cycleGlobalTheme: () => (/* binding */ cycleGlobalTheme),
-/* harmony export */   getSavedTheme: () => (/* binding */ getSavedTheme),
-/* harmony export */   normalizeThemeToken: () => (/* binding */ normalizeThemeToken),
-/* harmony export */   setGlobalTheme: () => (/* binding */ setGlobalTheme),
-/* harmony export */   toThemePreference: () => (/* binding */ toThemePreference)
+/* harmony export */   classifyRequestFailure: () => (/* binding */ classifyRequestFailure),
+/* harmony export */   isAbortError: () => (/* binding */ isAbortError),
+/* harmony export */   isBrowserOffline: () => (/* binding */ isBrowserOffline),
+/* harmony export */   isBrowserOnline: () => (/* binding */ isBrowserOnline),
+/* harmony export */   isNetworkError: () => (/* binding */ isNetworkError),
+/* harmony export */   isServerError: () => (/* binding */ isServerError),
+/* harmony export */   onReconnect: () => (/* binding */ onReconnect),
+/* harmony export */   sanitizeUserFacingError: () => (/* binding */ sanitizeUserFacingError),
+/* harmony export */   subscribeNetworkStatus: () => (/* binding */ subscribeNetworkStatus)
 /* harmony export */ });
-var THEME_STORAGE_KEY = 'mutqin-theme';
-var THEME_PREFERENCE_KEY = 'mutqin-theme-preference';
-var THEME_COOKIE_KEY = 'mutqin_theme';
-function normalizeThemeToken() {
-  var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'light';
-  var theme = String(value || 'light').toLowerCase();
-  if (theme === 'dark' || theme === 'dark-mode') return 'dark';
-  if (theme === 'sepia' || theme === 'sepia-mode') return 'sepia';
-  return 'light';
+/**
+ * Browser online/offline helpers and safe classification of request failures.
+ * Technical details stay in console logs; UI copy comes from i18n keys.
+ */
+
+function isBrowserOffline() {
+  if (typeof navigator === 'undefined') return false;
+  return navigator.onLine === false;
 }
-function toThemePreference() {
-  var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'light';
-  var theme = normalizeThemeToken(value);
-  if (theme === 'dark') return 'dark-mode';
-  if (theme === 'sepia') return 'sepia-mode';
-  return 'light-mode';
+function isBrowserOnline() {
+  return !isBrowserOffline();
 }
-function safeGet(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch (_unused) {
-    return null;
+function isAbortError(error) {
+  return !!((error === null || error === void 0 ? void 0 : error.code) === 'ERR_CANCELED' || (error === null || error === void 0 ? void 0 : error.name) === 'CanceledError' || (error === null || error === void 0 ? void 0 : error.name) === 'AbortError' || error !== null && error !== void 0 && error.__CANCEL__);
+}
+
+/**
+ * True when the browser never got an HTTP response (connection drop, DNS, CORS
+ * opaque failures, etc.). Excludes intentional aborts.
+ */
+function isNetworkError(error) {
+  if (!error || isAbortError(error)) return false;
+  if (error !== null && error !== void 0 && error.response) return false;
+  var code = String((error === null || error === void 0 ? void 0 : error.code) || '');
+  var message = String((error === null || error === void 0 ? void 0 : error.message) || '');
+  if (code === 'ERR_NETWORK' || code === 'ECONNABORTED' || code === 'ETIMEDOUT' || /network error|failed to fetch|load failed|timeout|offline/i.test(message)) {
+    return true;
   }
+  // Axios network failures typically have no response and a request object.
+  return !!(error !== null && error !== void 0 && error.request) || code.startsWith('ERR_');
 }
-function safeSet(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch (_unused2) {}
+function isServerError(error) {
+  var _error$response;
+  var status = Number((error === null || error === void 0 || (_error$response = error.response) === null || _error$response === void 0 ? void 0 : _error$response.status) || 0);
+  return status >= 500 && status < 600;
 }
-function readCookieTheme() {
-  if (typeof document === 'undefined') return null;
-  var match = document.cookie.match(new RegExp("(?:^|; )".concat(THEME_COOKIE_KEY, "=([^;]*)")));
-  return match ? decodeURIComponent(match[1]) : null;
+
+/**
+ * @returns {'offline'|'network'|'failure'}
+ */
+function classifyRequestFailure(error) {
+  if (isBrowserOffline()) return 'offline';
+  if (isNetworkError(error)) return 'offline';
+  if (isServerError(error)) return 'failure';
+  return 'failure';
 }
-function getSavedTheme() {
-  var savedTheme = safeGet(THEME_STORAGE_KEY);
-  if (savedTheme) return normalizeThemeToken(savedTheme);
-  var savedPreference = safeGet(THEME_PREFERENCE_KEY);
-  if (savedPreference) return normalizeThemeToken(savedPreference);
-  if (typeof document !== 'undefined') {
-    var htmlTheme = document.documentElement.getAttribute('data-theme');
-    if (htmlTheme) return normalizeThemeToken(htmlTheme);
-  }
-  var cookieTheme = readCookieTheme();
-  if (cookieTheme) return normalizeThemeToken(cookieTheme);
-  if (typeof window !== 'undefined' && window.mutqinInitialTheme) {
-    return normalizeThemeToken(window.mutqinInitialTheme);
-  }
-  return 'light';
-}
-function setGlobalTheme(theme) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  var _options$dispatchEven = options.dispatchEvent,
-    dispatchEvent = _options$dispatchEven === void 0 ? true : _options$dispatchEven;
-  var normalizedTheme = normalizeThemeToken(theme);
-  var themePreference = toThemePreference(normalizedTheme);
-  if (typeof document !== 'undefined') {
-    document.documentElement.setAttribute('data-theme', normalizedTheme);
-    document.cookie = "".concat(THEME_COOKIE_KEY, "=").concat(themePreference, ";path=/;max-age=31536000;samesite=lax");
-  }
-  safeSet(THEME_STORAGE_KEY, normalizedTheme);
-  safeSet(THEME_PREFERENCE_KEY, themePreference);
-  if (dispatchEvent && typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('mutqin:theme-change', {
-      detail: {
-        theme: normalizedTheme
+
+/**
+ * Strip stacks / HTTP / JSON noise from values that might leak into the UI.
+ */
+function sanitizeUserFacingError(value) {
+  var fallback = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+  var text = function () {
+    if (value == null) return '';
+    if (typeof value === 'string') return value.trim();
+    if (value instanceof Error) return String(value.message || '').trim();
+    if (typeof (value === null || value === void 0 ? void 0 : value.message) === 'string') return value.message.trim();
+    try {
+      var _value$toString;
+      var asString = value === null || value === void 0 || (_value$toString = value.toString) === null || _value$toString === void 0 ? void 0 : _value$toString.call(value);
+      if (typeof asString === 'string' && asString && asString !== '[object Object]') {
+        return asString.trim();
       }
-    }));
+    } catch (_) {/* ignore */}
+    return '';
+  }();
+  var safeFallback = String(fallback || '').trim();
+  if (!text) return safeFallback;
+  if (text.length > 180 || /stack|exception|traceback|sqlstate|etag|csrf|http\/|status code|econn|enotfound|timeout|undefined is not|cannot read/i.test(text) || /^[\w./:-]+\.(js|php|vue|ts)(:\d+)?/i.test(text) || /[{}\[\]]/.test(text)) {
+    return safeFallback || 'Something went wrong. Please try again.';
   }
-  return normalizedTheme;
+  return text;
 }
-function cycleGlobalTheme() {
-  var themes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : ['light', 'dark'];
-  var current = getSavedTheme();
-  var idx = themes.indexOf(current);
-  var next = themes[(idx + 1) % themes.length];
-  return setGlobalTheme(next);
+
+/**
+ * Subscribe to browser online/offline transitions.
+ * @param {(online: boolean) => void} listener
+ * @returns {() => void} unsubscribe
+ */
+function subscribeNetworkStatus(listener) {
+  if (typeof window === 'undefined' || typeof listener !== 'function') {
+    return function () {};
+  }
+  var onOnline = function onOnline() {
+    return listener(true);
+  };
+  var onOffline = function onOffline() {
+    return listener(false);
+  };
+  window.addEventListener('online', onOnline);
+  window.addEventListener('offline', onOffline);
+
+  // Emit current state once so consumers can sync without a separate read.
+  try {
+    listener(isBrowserOnline());
+  } catch (_) {/* ignore listener errors */}
+  return function () {
+    window.removeEventListener('online', onOnline);
+    window.removeEventListener('offline', onOffline);
+  };
+}
+
+/**
+ * Call `callback` the next time the browser reports online.
+ * If already online, does nothing unless `{ immediate: true }`.
+ * @returns {() => void} cancel
+ */
+function onReconnect(callback) {
+  var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+    _ref$immediate = _ref.immediate,
+    immediate = _ref$immediate === void 0 ? false : _ref$immediate;
+  if (typeof callback !== 'function') return function () {};
+  if (immediate && isBrowserOnline()) {
+    try {
+      callback();
+    } catch (_) {/* ignore */}
+    return function () {};
+  }
+  if (typeof window === 'undefined') return function () {};
+  var done = false;
+  var _handler = function handler() {
+    if (done) return;
+    done = true;
+    window.removeEventListener('online', _handler);
+    try {
+      callback();
+    } catch (_) {/* ignore */}
+  };
+  window.addEventListener('online', _handler);
+  return function () {
+    done = true;
+    window.removeEventListener('online', _handler);
+  };
 }
 
 /***/ }),
@@ -27919,4477 +26767,2085 @@ function fromByteArray (uint8) {
 
 /***/ }),
 
-/***/ "./node_modules/bootstrap/dist/js/bootstrap.esm.js":
-/*!*********************************************************!*\
-  !*** ./node_modules/bootstrap/dist/js/bootstrap.esm.js ***!
-  \*********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ "./node_modules/bootstrap/js/dist/base-component.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/base-component.js ***!
+  \**********************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Alert: () => (/* binding */ Alert),
-/* harmony export */   Button: () => (/* binding */ Button),
-/* harmony export */   Carousel: () => (/* binding */ Carousel),
-/* harmony export */   Collapse: () => (/* binding */ Collapse),
-/* harmony export */   Dropdown: () => (/* binding */ Dropdown),
-/* harmony export */   Modal: () => (/* binding */ Modal),
-/* harmony export */   Offcanvas: () => (/* binding */ Offcanvas),
-/* harmony export */   Popover: () => (/* binding */ Popover),
-/* harmony export */   ScrollSpy: () => (/* binding */ ScrollSpy),
-/* harmony export */   Tab: () => (/* binding */ Tab),
-/* harmony export */   Toast: () => (/* binding */ Toast),
-/* harmony export */   Tooltip: () => (/* binding */ Tooltip)
-/* harmony export */ });
-/* harmony import */ var _popperjs_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @popperjs/core */ "./node_modules/@popperjs/core/lib/index.js");
-/* harmony import */ var _popperjs_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @popperjs/core */ "./node_modules/@popperjs/core/lib/popper.js");
 /*!
-  * Bootstrap v5.3.8 (https://getbootstrap.com/)
+  * Bootstrap base-component.js v5.3.8 (https://getbootstrap.com/)
   * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
   */
+(function (global, factory) {
+   true ? module.exports = factory(__webpack_require__(/*! ./dom/data.js */ "./node_modules/bootstrap/js/dist/dom/data.js"), __webpack_require__(/*! ./dom/event-handler.js */ "./node_modules/bootstrap/js/dist/dom/event-handler.js"), __webpack_require__(/*! ./util/config.js */ "./node_modules/bootstrap/js/dist/util/config.js"), __webpack_require__(/*! ./util/index.js */ "./node_modules/bootstrap/js/dist/util/index.js")) :
+  0;
+})(this, (function (Data, EventHandler, Config, index_js) { 'use strict';
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap base-component.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
 
 
-/**
- * --------------------------------------------------------------------------
- * Bootstrap dom/data.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
+  /**
+   * Constants
+   */
 
-/**
- * Constants
- */
+  const VERSION = '5.3.8';
 
-const elementMap = new Map();
-const Data = {
-  set(element, key, instance) {
-    if (!elementMap.has(element)) {
-      elementMap.set(element, new Map());
+  /**
+   * Class definition
+   */
+
+  class BaseComponent extends Config {
+    constructor(element, config) {
+      super();
+      element = index_js.getElement(element);
+      if (!element) {
+        return;
+      }
+      this._element = element;
+      this._config = this._getConfig(config);
+      Data.set(this._element, this.constructor.DATA_KEY, this);
     }
-    const instanceMap = elementMap.get(element);
 
-    // make it clear we only want one instance per element
-    // can be removed later when multiple key/instances are fine to be used
-    if (!instanceMap.has(key) && instanceMap.size !== 0) {
-      // eslint-disable-next-line no-console
-      console.error(`Bootstrap doesn't allow more than one instance per element. Bound instance: ${Array.from(instanceMap.keys())[0]}.`);
-      return;
+    // Public
+    dispose() {
+      Data.remove(this._element, this.constructor.DATA_KEY);
+      EventHandler.off(this._element, this.constructor.EVENT_KEY);
+      for (const propertyName of Object.getOwnPropertyNames(this)) {
+        this[propertyName] = null;
+      }
     }
-    instanceMap.set(key, instance);
-  },
-  get(element, key) {
-    if (elementMap.has(element)) {
-      return elementMap.get(element).get(key) || null;
+
+    // Private
+    _queueCallback(callback, element, isAnimated = true) {
+      index_js.executeAfterTransition(callback, element, isAnimated);
     }
-    return null;
-  },
-  remove(element, key) {
-    if (!elementMap.has(element)) {
-      return;
+    _getConfig(config) {
+      config = this._mergeConfigObj(config, this._element);
+      config = this._configAfterMerge(config);
+      this._typeCheckConfig(config);
+      return config;
     }
-    const instanceMap = elementMap.get(element);
-    instanceMap.delete(key);
 
-    // free up element references if there are no instances left for an element
-    if (instanceMap.size === 0) {
-      elementMap.delete(element);
+    // Static
+    static getInstance(element) {
+      return Data.get(index_js.getElement(element), this.DATA_KEY);
     }
-  }
-};
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap util/index.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-const MAX_UID = 1000000;
-const MILLISECONDS_MULTIPLIER = 1000;
-const TRANSITION_END = 'transitionend';
-
-/**
- * Properly escape IDs selectors to handle weird IDs
- * @param {string} selector
- * @returns {string}
- */
-const parseSelector = selector => {
-  if (selector && window.CSS && window.CSS.escape) {
-    // document.querySelector needs escaping to handle IDs (html5+) containing for instance /
-    selector = selector.replace(/#([^\s"#']+)/g, (match, id) => `#${CSS.escape(id)}`);
-  }
-  return selector;
-};
-
-// Shout-out Angus Croll (https://goo.gl/pxwQGp)
-const toType = object => {
-  if (object === null || object === undefined) {
-    return `${object}`;
-  }
-  return Object.prototype.toString.call(object).match(/\s([a-z]+)/i)[1].toLowerCase();
-};
-
-/**
- * Public Util API
- */
-
-const getUID = prefix => {
-  do {
-    prefix += Math.floor(Math.random() * MAX_UID);
-  } while (document.getElementById(prefix));
-  return prefix;
-};
-const getTransitionDurationFromElement = element => {
-  if (!element) {
-    return 0;
-  }
-
-  // Get transition-duration of the element
-  let {
-    transitionDuration,
-    transitionDelay
-  } = window.getComputedStyle(element);
-  const floatTransitionDuration = Number.parseFloat(transitionDuration);
-  const floatTransitionDelay = Number.parseFloat(transitionDelay);
-
-  // Return 0 if element or transition duration is not found
-  if (!floatTransitionDuration && !floatTransitionDelay) {
-    return 0;
-  }
-
-  // If multiple durations are defined, take the first
-  transitionDuration = transitionDuration.split(',')[0];
-  transitionDelay = transitionDelay.split(',')[0];
-  return (Number.parseFloat(transitionDuration) + Number.parseFloat(transitionDelay)) * MILLISECONDS_MULTIPLIER;
-};
-const triggerTransitionEnd = element => {
-  element.dispatchEvent(new Event(TRANSITION_END));
-};
-const isElement = object => {
-  if (!object || typeof object !== 'object') {
-    return false;
-  }
-  if (typeof object.jquery !== 'undefined') {
-    object = object[0];
-  }
-  return typeof object.nodeType !== 'undefined';
-};
-const getElement = object => {
-  // it's a jQuery object or a node element
-  if (isElement(object)) {
-    return object.jquery ? object[0] : object;
-  }
-  if (typeof object === 'string' && object.length > 0) {
-    return document.querySelector(parseSelector(object));
-  }
-  return null;
-};
-const isVisible = element => {
-  if (!isElement(element) || element.getClientRects().length === 0) {
-    return false;
-  }
-  const elementIsVisible = getComputedStyle(element).getPropertyValue('visibility') === 'visible';
-  // Handle `details` element as its content may falsie appear visible when it is closed
-  const closedDetails = element.closest('details:not([open])');
-  if (!closedDetails) {
-    return elementIsVisible;
-  }
-  if (closedDetails !== element) {
-    const summary = element.closest('summary');
-    if (summary && summary.parentNode !== closedDetails) {
-      return false;
+    static getOrCreateInstance(element, config = {}) {
+      return this.getInstance(element) || new this(element, typeof config === 'object' ? config : null);
     }
-    if (summary === null) {
-      return false;
+    static get VERSION() {
+      return VERSION;
+    }
+    static get DATA_KEY() {
+      return `bs.${this.NAME}`;
+    }
+    static get EVENT_KEY() {
+      return `.${this.DATA_KEY}`;
+    }
+    static eventName(name) {
+      return `${name}${this.EVENT_KEY}`;
     }
   }
-  return elementIsVisible;
-};
-const isDisabled = element => {
-  if (!element || element.nodeType !== Node.ELEMENT_NODE) {
-    return true;
-  }
-  if (element.classList.contains('disabled')) {
-    return true;
-  }
-  if (typeof element.disabled !== 'undefined') {
-    return element.disabled;
-  }
-  return element.hasAttribute('disabled') && element.getAttribute('disabled') !== 'false';
-};
-const findShadowRoot = element => {
-  if (!document.documentElement.attachShadow) {
-    return null;
-  }
 
-  // Can find the shadow root otherwise it'll return the document
-  if (typeof element.getRootNode === 'function') {
-    const root = element.getRootNode();
-    return root instanceof ShadowRoot ? root : null;
-  }
-  if (element instanceof ShadowRoot) {
-    return element;
-  }
+  return BaseComponent;
 
-  // when we don't find a shadow root
-  if (!element.parentNode) {
-    return null;
-  }
-  return findShadowRoot(element.parentNode);
-};
-const noop = () => {};
-
-/**
- * Trick to restart an element's animation
- *
- * @param {HTMLElement} element
- * @return void
- *
- * @see https://www.harrytheo.com/blog/2021/02/restart-a-css-animation-with-javascript/#restarting-a-css-animation
- */
-const reflow = element => {
-  element.offsetHeight; // eslint-disable-line no-unused-expressions
-};
-const getjQuery = () => {
-  if (window.jQuery && !document.body.hasAttribute('data-bs-no-jquery')) {
-    return window.jQuery;
-  }
-  return null;
-};
-const DOMContentLoadedCallbacks = [];
-const onDOMContentLoaded = callback => {
-  if (document.readyState === 'loading') {
-    // add listener on the first call when the document is in loading state
-    if (!DOMContentLoadedCallbacks.length) {
-      document.addEventListener('DOMContentLoaded', () => {
-        for (const callback of DOMContentLoadedCallbacks) {
-          callback();
-        }
-      });
-    }
-    DOMContentLoadedCallbacks.push(callback);
-  } else {
-    callback();
-  }
-};
-const isRTL = () => document.documentElement.dir === 'rtl';
-const defineJQueryPlugin = plugin => {
-  onDOMContentLoaded(() => {
-    const $ = getjQuery();
-    /* istanbul ignore if */
-    if ($) {
-      const name = plugin.NAME;
-      const JQUERY_NO_CONFLICT = $.fn[name];
-      $.fn[name] = plugin.jQueryInterface;
-      $.fn[name].Constructor = plugin;
-      $.fn[name].noConflict = () => {
-        $.fn[name] = JQUERY_NO_CONFLICT;
-        return plugin.jQueryInterface;
-      };
-    }
-  });
-};
-const execute = (possibleCallback, args = [], defaultValue = possibleCallback) => {
-  return typeof possibleCallback === 'function' ? possibleCallback.call(...args) : defaultValue;
-};
-const executeAfterTransition = (callback, transitionElement, waitForTransition = true) => {
-  if (!waitForTransition) {
-    execute(callback);
-    return;
-  }
-  const durationPadding = 5;
-  const emulatedDuration = getTransitionDurationFromElement(transitionElement) + durationPadding;
-  let called = false;
-  const handler = ({
-    target
-  }) => {
-    if (target !== transitionElement) {
-      return;
-    }
-    called = true;
-    transitionElement.removeEventListener(TRANSITION_END, handler);
-    execute(callback);
-  };
-  transitionElement.addEventListener(TRANSITION_END, handler);
-  setTimeout(() => {
-    if (!called) {
-      triggerTransitionEnd(transitionElement);
-    }
-  }, emulatedDuration);
-};
-
-/**
- * Return the previous/next element of a list.
- *
- * @param {array} list    The list of elements
- * @param activeElement   The active element
- * @param shouldGetNext   Choose to get next or previous element
- * @param isCycleAllowed
- * @return {Element|elem} The proper element
- */
-const getNextActiveElement = (list, activeElement, shouldGetNext, isCycleAllowed) => {
-  const listLength = list.length;
-  let index = list.indexOf(activeElement);
-
-  // if the element does not exist in the list return an element
-  // depending on the direction and if cycle is allowed
-  if (index === -1) {
-    return !shouldGetNext && isCycleAllowed ? list[listLength - 1] : list[0];
-  }
-  index += shouldGetNext ? 1 : -1;
-  if (isCycleAllowed) {
-    index = (index + listLength) % listLength;
-  }
-  return list[Math.max(0, Math.min(index, listLength - 1))];
-};
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap dom/event-handler.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
+}));
+//# sourceMappingURL=base-component.js.map
 
 
-/**
- * Constants
- */
+/***/ }),
 
-const namespaceRegex = /[^.]*(?=\..*)\.|.*/;
-const stripNameRegex = /\..*/;
-const stripUidRegex = /::\d+$/;
-const eventRegistry = {}; // Events storage
-let uidEvent = 1;
-const customEvents = {
-  mouseenter: 'mouseover',
-  mouseleave: 'mouseout'
-};
-const nativeEvents = new Set(['click', 'dblclick', 'mouseup', 'mousedown', 'contextmenu', 'mousewheel', 'DOMMouseScroll', 'mouseover', 'mouseout', 'mousemove', 'selectstart', 'selectend', 'keydown', 'keypress', 'keyup', 'orientationchange', 'touchstart', 'touchmove', 'touchend', 'touchcancel', 'pointerdown', 'pointermove', 'pointerup', 'pointerleave', 'pointercancel', 'gesturestart', 'gesturechange', 'gestureend', 'focus', 'blur', 'change', 'reset', 'select', 'submit', 'focusin', 'focusout', 'load', 'unload', 'beforeunload', 'resize', 'move', 'DOMContentLoaded', 'readystatechange', 'error', 'abort', 'scroll']);
+/***/ "./node_modules/bootstrap/js/dist/dom/data.js":
+/*!****************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/dom/data.js ***!
+  \****************************************************/
+/***/ (function(module) {
 
-/**
- * Private methods
- */
+/*!
+  * Bootstrap data.js v5.3.8 (https://getbootstrap.com/)
+  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */
+(function (global, factory) {
+   true ? module.exports = factory() :
+  0;
+})(this, (function () { 'use strict';
 
-function makeEventUid(element, uid) {
-  return uid && `${uid}::${uidEvent++}` || element.uidEvent || uidEvent++;
-}
-function getElementEvents(element) {
-  const uid = makeEventUid(element);
-  element.uidEvent = uid;
-  eventRegistry[uid] = eventRegistry[uid] || {};
-  return eventRegistry[uid];
-}
-function bootstrapHandler(element, fn) {
-  return function handler(event) {
-    hydrateObj(event, {
-      delegateTarget: element
-    });
-    if (handler.oneOff) {
-      EventHandler.off(element, event.type, fn);
-    }
-    return fn.apply(element, [event]);
-  };
-}
-function bootstrapDelegationHandler(element, selector, fn) {
-  return function handler(event) {
-    const domElements = element.querySelectorAll(selector);
-    for (let {
-      target
-    } = event; target && target !== this; target = target.parentNode) {
-      for (const domElement of domElements) {
-        if (domElement !== target) {
-          continue;
-        }
-        hydrateObj(event, {
-          delegateTarget: target
-        });
-        if (handler.oneOff) {
-          EventHandler.off(element, event.type, selector, fn);
-        }
-        return fn.apply(target, [event]);
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap dom/data.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+  /**
+   * Constants
+   */
+
+  const elementMap = new Map();
+  const data = {
+    set(element, key, instance) {
+      if (!elementMap.has(element)) {
+        elementMap.set(element, new Map());
+      }
+      const instanceMap = elementMap.get(element);
+
+      // make it clear we only want one instance per element
+      // can be removed later when multiple key/instances are fine to be used
+      if (!instanceMap.has(key) && instanceMap.size !== 0) {
+        // eslint-disable-next-line no-console
+        console.error(`Bootstrap doesn't allow more than one instance per element. Bound instance: ${Array.from(instanceMap.keys())[0]}.`);
+        return;
+      }
+      instanceMap.set(key, instance);
+    },
+    get(element, key) {
+      if (elementMap.has(element)) {
+        return elementMap.get(element).get(key) || null;
+      }
+      return null;
+    },
+    remove(element, key) {
+      if (!elementMap.has(element)) {
+        return;
+      }
+      const instanceMap = elementMap.get(element);
+      instanceMap.delete(key);
+
+      // free up element references if there are no instances left for an element
+      if (instanceMap.size === 0) {
+        elementMap.delete(element);
       }
     }
   };
-}
-function findHandler(events, callable, delegationSelector = null) {
-  return Object.values(events).find(event => event.callable === callable && event.delegationSelector === delegationSelector);
-}
-function normalizeParameters(originalTypeEvent, handler, delegationFunction) {
-  const isDelegated = typeof handler === 'string';
-  // TODO: tooltip passes `false` instead of selector, so we need to check
-  const callable = isDelegated ? delegationFunction : handler || delegationFunction;
-  let typeEvent = getTypeEvent(originalTypeEvent);
-  if (!nativeEvents.has(typeEvent)) {
-    typeEvent = originalTypeEvent;
-  }
-  return [isDelegated, callable, typeEvent];
-}
-function addHandler(element, originalTypeEvent, handler, delegationFunction, oneOff) {
-  if (typeof originalTypeEvent !== 'string' || !element) {
-    return;
-  }
-  let [isDelegated, callable, typeEvent] = normalizeParameters(originalTypeEvent, handler, delegationFunction);
 
-  // in case of mouseenter or mouseleave wrap the handler within a function that checks for its DOM position
-  // this prevents the handler from being dispatched the same way as mouseover or mouseout does
-  if (originalTypeEvent in customEvents) {
-    const wrapFunction = fn => {
-      return function (event) {
-        if (!event.relatedTarget || event.relatedTarget !== event.delegateTarget && !event.delegateTarget.contains(event.relatedTarget)) {
-          return fn.call(this, event);
-        }
-      };
+  return data;
+
+}));
+//# sourceMappingURL=data.js.map
+
+
+/***/ }),
+
+/***/ "./node_modules/bootstrap/js/dist/dom/event-handler.js":
+/*!*************************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/dom/event-handler.js ***!
+  \*************************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/*!
+  * Bootstrap event-handler.js v5.3.8 (https://getbootstrap.com/)
+  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */
+(function (global, factory) {
+   true ? module.exports = factory(__webpack_require__(/*! ../util/index.js */ "./node_modules/bootstrap/js/dist/util/index.js")) :
+  0;
+})(this, (function (index_js) { 'use strict';
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap dom/event-handler.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const namespaceRegex = /[^.]*(?=\..*)\.|.*/;
+  const stripNameRegex = /\..*/;
+  const stripUidRegex = /::\d+$/;
+  const eventRegistry = {}; // Events storage
+  let uidEvent = 1;
+  const customEvents = {
+    mouseenter: 'mouseover',
+    mouseleave: 'mouseout'
+  };
+  const nativeEvents = new Set(['click', 'dblclick', 'mouseup', 'mousedown', 'contextmenu', 'mousewheel', 'DOMMouseScroll', 'mouseover', 'mouseout', 'mousemove', 'selectstart', 'selectend', 'keydown', 'keypress', 'keyup', 'orientationchange', 'touchstart', 'touchmove', 'touchend', 'touchcancel', 'pointerdown', 'pointermove', 'pointerup', 'pointerleave', 'pointercancel', 'gesturestart', 'gesturechange', 'gestureend', 'focus', 'blur', 'change', 'reset', 'select', 'submit', 'focusin', 'focusout', 'load', 'unload', 'beforeunload', 'resize', 'move', 'DOMContentLoaded', 'readystatechange', 'error', 'abort', 'scroll']);
+
+  /**
+   * Private methods
+   */
+
+  function makeEventUid(element, uid) {
+    return uid && `${uid}::${uidEvent++}` || element.uidEvent || uidEvent++;
+  }
+  function getElementEvents(element) {
+    const uid = makeEventUid(element);
+    element.uidEvent = uid;
+    eventRegistry[uid] = eventRegistry[uid] || {};
+    return eventRegistry[uid];
+  }
+  function bootstrapHandler(element, fn) {
+    return function handler(event) {
+      hydrateObj(event, {
+        delegateTarget: element
+      });
+      if (handler.oneOff) {
+        EventHandler.off(element, event.type, fn);
+      }
+      return fn.apply(element, [event]);
     };
-    callable = wrapFunction(callable);
   }
-  const events = getElementEvents(element);
-  const handlers = events[typeEvent] || (events[typeEvent] = {});
-  const previousFunction = findHandler(handlers, callable, isDelegated ? handler : null);
-  if (previousFunction) {
-    previousFunction.oneOff = previousFunction.oneOff && oneOff;
-    return;
+  function bootstrapDelegationHandler(element, selector, fn) {
+    return function handler(event) {
+      const domElements = element.querySelectorAll(selector);
+      for (let {
+        target
+      } = event; target && target !== this; target = target.parentNode) {
+        for (const domElement of domElements) {
+          if (domElement !== target) {
+            continue;
+          }
+          hydrateObj(event, {
+            delegateTarget: target
+          });
+          if (handler.oneOff) {
+            EventHandler.off(element, event.type, selector, fn);
+          }
+          return fn.apply(target, [event]);
+        }
+      }
+    };
   }
-  const uid = makeEventUid(callable, originalTypeEvent.replace(namespaceRegex, ''));
-  const fn = isDelegated ? bootstrapDelegationHandler(element, handler, callable) : bootstrapHandler(element, callable);
-  fn.delegationSelector = isDelegated ? handler : null;
-  fn.callable = callable;
-  fn.oneOff = oneOff;
-  fn.uidEvent = uid;
-  handlers[uid] = fn;
-  element.addEventListener(typeEvent, fn, isDelegated);
-}
-function removeHandler(element, events, typeEvent, handler, delegationSelector) {
-  const fn = findHandler(events[typeEvent], handler, delegationSelector);
-  if (!fn) {
-    return;
+  function findHandler(events, callable, delegationSelector = null) {
+    return Object.values(events).find(event => event.callable === callable && event.delegationSelector === delegationSelector);
   }
-  element.removeEventListener(typeEvent, fn, Boolean(delegationSelector));
-  delete events[typeEvent][fn.uidEvent];
-}
-function removeNamespacedHandlers(element, events, typeEvent, namespace) {
-  const storeElementEvent = events[typeEvent] || {};
-  for (const [handlerKey, event] of Object.entries(storeElementEvent)) {
-    if (handlerKey.includes(namespace)) {
-      removeHandler(element, events, typeEvent, event.callable, event.delegationSelector);
+  function normalizeParameters(originalTypeEvent, handler, delegationFunction) {
+    const isDelegated = typeof handler === 'string';
+    // TODO: tooltip passes `false` instead of selector, so we need to check
+    const callable = isDelegated ? delegationFunction : handler || delegationFunction;
+    let typeEvent = getTypeEvent(originalTypeEvent);
+    if (!nativeEvents.has(typeEvent)) {
+      typeEvent = originalTypeEvent;
     }
+    return [isDelegated, callable, typeEvent];
   }
-}
-function getTypeEvent(event) {
-  // allow to get the native events from namespaced events ('click.bs.button' --> 'click')
-  event = event.replace(stripNameRegex, '');
-  return customEvents[event] || event;
-}
-const EventHandler = {
-  on(element, event, handler, delegationFunction) {
-    addHandler(element, event, handler, delegationFunction, false);
-  },
-  one(element, event, handler, delegationFunction) {
-    addHandler(element, event, handler, delegationFunction, true);
-  },
-  off(element, originalTypeEvent, handler, delegationFunction) {
+  function addHandler(element, originalTypeEvent, handler, delegationFunction, oneOff) {
     if (typeof originalTypeEvent !== 'string' || !element) {
       return;
     }
-    const [isDelegated, callable, typeEvent] = normalizeParameters(originalTypeEvent, handler, delegationFunction);
-    const inNamespace = typeEvent !== originalTypeEvent;
+    let [isDelegated, callable, typeEvent] = normalizeParameters(originalTypeEvent, handler, delegationFunction);
+
+    // in case of mouseenter or mouseleave wrap the handler within a function that checks for its DOM position
+    // this prevents the handler from being dispatched the same way as mouseover or mouseout does
+    if (originalTypeEvent in customEvents) {
+      const wrapFunction = fn => {
+        return function (event) {
+          if (!event.relatedTarget || event.relatedTarget !== event.delegateTarget && !event.delegateTarget.contains(event.relatedTarget)) {
+            return fn.call(this, event);
+          }
+        };
+      };
+      callable = wrapFunction(callable);
+    }
     const events = getElementEvents(element);
-    const storeElementEvent = events[typeEvent] || {};
-    const isNamespace = originalTypeEvent.startsWith('.');
-    if (typeof callable !== 'undefined') {
-      // Simplest case: handler is passed, remove that listener ONLY.
-      if (!Object.keys(storeElementEvent).length) {
-        return;
-      }
-      removeHandler(element, events, typeEvent, callable, isDelegated ? handler : null);
+    const handlers = events[typeEvent] || (events[typeEvent] = {});
+    const previousFunction = findHandler(handlers, callable, isDelegated ? handler : null);
+    if (previousFunction) {
+      previousFunction.oneOff = previousFunction.oneOff && oneOff;
       return;
     }
-    if (isNamespace) {
-      for (const elementEvent of Object.keys(events)) {
-        removeNamespacedHandlers(element, events, elementEvent, originalTypeEvent.slice(1));
-      }
+    const uid = makeEventUid(callable, originalTypeEvent.replace(namespaceRegex, ''));
+    const fn = isDelegated ? bootstrapDelegationHandler(element, handler, callable) : bootstrapHandler(element, callable);
+    fn.delegationSelector = isDelegated ? handler : null;
+    fn.callable = callable;
+    fn.oneOff = oneOff;
+    fn.uidEvent = uid;
+    handlers[uid] = fn;
+    element.addEventListener(typeEvent, fn, isDelegated);
+  }
+  function removeHandler(element, events, typeEvent, handler, delegationSelector) {
+    const fn = findHandler(events[typeEvent], handler, delegationSelector);
+    if (!fn) {
+      return;
     }
-    for (const [keyHandlers, event] of Object.entries(storeElementEvent)) {
-      const handlerKey = keyHandlers.replace(stripUidRegex, '');
-      if (!inNamespace || originalTypeEvent.includes(handlerKey)) {
+    element.removeEventListener(typeEvent, fn, Boolean(delegationSelector));
+    delete events[typeEvent][fn.uidEvent];
+  }
+  function removeNamespacedHandlers(element, events, typeEvent, namespace) {
+    const storeElementEvent = events[typeEvent] || {};
+    for (const [handlerKey, event] of Object.entries(storeElementEvent)) {
+      if (handlerKey.includes(namespace)) {
         removeHandler(element, events, typeEvent, event.callable, event.delegationSelector);
       }
     }
-  },
-  trigger(element, event, args) {
-    if (typeof event !== 'string' || !element) {
+  }
+  function getTypeEvent(event) {
+    // allow to get the native events from namespaced events ('click.bs.button' --> 'click')
+    event = event.replace(stripNameRegex, '');
+    return customEvents[event] || event;
+  }
+  const EventHandler = {
+    on(element, event, handler, delegationFunction) {
+      addHandler(element, event, handler, delegationFunction, false);
+    },
+    one(element, event, handler, delegationFunction) {
+      addHandler(element, event, handler, delegationFunction, true);
+    },
+    off(element, originalTypeEvent, handler, delegationFunction) {
+      if (typeof originalTypeEvent !== 'string' || !element) {
+        return;
+      }
+      const [isDelegated, callable, typeEvent] = normalizeParameters(originalTypeEvent, handler, delegationFunction);
+      const inNamespace = typeEvent !== originalTypeEvent;
+      const events = getElementEvents(element);
+      const storeElementEvent = events[typeEvent] || {};
+      const isNamespace = originalTypeEvent.startsWith('.');
+      if (typeof callable !== 'undefined') {
+        // Simplest case: handler is passed, remove that listener ONLY.
+        if (!Object.keys(storeElementEvent).length) {
+          return;
+        }
+        removeHandler(element, events, typeEvent, callable, isDelegated ? handler : null);
+        return;
+      }
+      if (isNamespace) {
+        for (const elementEvent of Object.keys(events)) {
+          removeNamespacedHandlers(element, events, elementEvent, originalTypeEvent.slice(1));
+        }
+      }
+      for (const [keyHandlers, event] of Object.entries(storeElementEvent)) {
+        const handlerKey = keyHandlers.replace(stripUidRegex, '');
+        if (!inNamespace || originalTypeEvent.includes(handlerKey)) {
+          removeHandler(element, events, typeEvent, event.callable, event.delegationSelector);
+        }
+      }
+    },
+    trigger(element, event, args) {
+      if (typeof event !== 'string' || !element) {
+        return null;
+      }
+      const $ = index_js.getjQuery();
+      const typeEvent = getTypeEvent(event);
+      const inNamespace = event !== typeEvent;
+      let jQueryEvent = null;
+      let bubbles = true;
+      let nativeDispatch = true;
+      let defaultPrevented = false;
+      if (inNamespace && $) {
+        jQueryEvent = $.Event(event, args);
+        $(element).trigger(jQueryEvent);
+        bubbles = !jQueryEvent.isPropagationStopped();
+        nativeDispatch = !jQueryEvent.isImmediatePropagationStopped();
+        defaultPrevented = jQueryEvent.isDefaultPrevented();
+      }
+      const evt = hydrateObj(new Event(event, {
+        bubbles,
+        cancelable: true
+      }), args);
+      if (defaultPrevented) {
+        evt.preventDefault();
+      }
+      if (nativeDispatch) {
+        element.dispatchEvent(evt);
+      }
+      if (evt.defaultPrevented && jQueryEvent) {
+        jQueryEvent.preventDefault();
+      }
+      return evt;
+    }
+  };
+  function hydrateObj(obj, meta = {}) {
+    for (const [key, value] of Object.entries(meta)) {
+      try {
+        obj[key] = value;
+      } catch (_unused) {
+        Object.defineProperty(obj, key, {
+          configurable: true,
+          get() {
+            return value;
+          }
+        });
+      }
+    }
+    return obj;
+  }
+
+  return EventHandler;
+
+}));
+//# sourceMappingURL=event-handler.js.map
+
+
+/***/ }),
+
+/***/ "./node_modules/bootstrap/js/dist/dom/manipulator.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/dom/manipulator.js ***!
+  \***********************************************************/
+/***/ (function(module) {
+
+/*!
+  * Bootstrap manipulator.js v5.3.8 (https://getbootstrap.com/)
+  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */
+(function (global, factory) {
+   true ? module.exports = factory() :
+  0;
+})(this, (function () { 'use strict';
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap dom/manipulator.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+  function normalizeData(value) {
+    if (value === 'true') {
+      return true;
+    }
+    if (value === 'false') {
+      return false;
+    }
+    if (value === Number(value).toString()) {
+      return Number(value);
+    }
+    if (value === '' || value === 'null') {
       return null;
     }
-    const $ = getjQuery();
-    const typeEvent = getTypeEvent(event);
-    const inNamespace = event !== typeEvent;
-    let jQueryEvent = null;
-    let bubbles = true;
-    let nativeDispatch = true;
-    let defaultPrevented = false;
-    if (inNamespace && $) {
-      jQueryEvent = $.Event(event, args);
-      $(element).trigger(jQueryEvent);
-      bubbles = !jQueryEvent.isPropagationStopped();
-      nativeDispatch = !jQueryEvent.isImmediatePropagationStopped();
-      defaultPrevented = jQueryEvent.isDefaultPrevented();
+    if (typeof value !== 'string') {
+      return value;
     }
-    const evt = hydrateObj(new Event(event, {
-      bubbles,
-      cancelable: true
-    }), args);
-    if (defaultPrevented) {
-      evt.preventDefault();
-    }
-    if (nativeDispatch) {
-      element.dispatchEvent(evt);
-    }
-    if (evt.defaultPrevented && jQueryEvent) {
-      jQueryEvent.preventDefault();
-    }
-    return evt;
-  }
-};
-function hydrateObj(obj, meta = {}) {
-  for (const [key, value] of Object.entries(meta)) {
     try {
-      obj[key] = value;
+      return JSON.parse(decodeURIComponent(value));
     } catch (_unused) {
-      Object.defineProperty(obj, key, {
-        configurable: true,
-        get() {
-          return value;
-        }
-      });
+      return value;
     }
   }
-  return obj;
-}
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap dom/manipulator.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-function normalizeData(value) {
-  if (value === 'true') {
-    return true;
+  function normalizeDataKey(key) {
+    return key.replace(/[A-Z]/g, chr => `-${chr.toLowerCase()}`);
   }
-  if (value === 'false') {
-    return false;
-  }
-  if (value === Number(value).toString()) {
-    return Number(value);
-  }
-  if (value === '' || value === 'null') {
-    return null;
-  }
-  if (typeof value !== 'string') {
-    return value;
-  }
-  try {
-    return JSON.parse(decodeURIComponent(value));
-  } catch (_unused) {
-    return value;
-  }
-}
-function normalizeDataKey(key) {
-  return key.replace(/[A-Z]/g, chr => `-${chr.toLowerCase()}`);
-}
-const Manipulator = {
-  setDataAttribute(element, key, value) {
-    element.setAttribute(`data-bs-${normalizeDataKey(key)}`, value);
-  },
-  removeDataAttribute(element, key) {
-    element.removeAttribute(`data-bs-${normalizeDataKey(key)}`);
-  },
-  getDataAttributes(element) {
-    if (!element) {
-      return {};
-    }
-    const attributes = {};
-    const bsKeys = Object.keys(element.dataset).filter(key => key.startsWith('bs') && !key.startsWith('bsConfig'));
-    for (const key of bsKeys) {
-      let pureKey = key.replace(/^bs/, '');
-      pureKey = pureKey.charAt(0).toLowerCase() + pureKey.slice(1);
-      attributes[pureKey] = normalizeData(element.dataset[key]);
-    }
-    return attributes;
-  },
-  getDataAttribute(element, key) {
-    return normalizeData(element.getAttribute(`data-bs-${normalizeDataKey(key)}`));
-  }
-};
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap util/config.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Class definition
- */
-
-class Config {
-  // Getters
-  static get Default() {
-    return {};
-  }
-  static get DefaultType() {
-    return {};
-  }
-  static get NAME() {
-    throw new Error('You have to implement the static method "NAME", for each component!');
-  }
-  _getConfig(config) {
-    config = this._mergeConfigObj(config);
-    config = this._configAfterMerge(config);
-    this._typeCheckConfig(config);
-    return config;
-  }
-  _configAfterMerge(config) {
-    return config;
-  }
-  _mergeConfigObj(config, element) {
-    const jsonConfig = isElement(element) ? Manipulator.getDataAttribute(element, 'config') : {}; // try to parse
-
-    return {
-      ...this.constructor.Default,
-      ...(typeof jsonConfig === 'object' ? jsonConfig : {}),
-      ...(isElement(element) ? Manipulator.getDataAttributes(element) : {}),
-      ...(typeof config === 'object' ? config : {})
-    };
-  }
-  _typeCheckConfig(config, configTypes = this.constructor.DefaultType) {
-    for (const [property, expectedTypes] of Object.entries(configTypes)) {
-      const value = config[property];
-      const valueType = isElement(value) ? 'element' : toType(value);
-      if (!new RegExp(expectedTypes).test(valueType)) {
-        throw new TypeError(`${this.constructor.NAME.toUpperCase()}: Option "${property}" provided type "${valueType}" but expected type "${expectedTypes}".`);
+  const Manipulator = {
+    setDataAttribute(element, key, value) {
+      element.setAttribute(`data-bs-${normalizeDataKey(key)}`, value);
+    },
+    removeDataAttribute(element, key) {
+      element.removeAttribute(`data-bs-${normalizeDataKey(key)}`);
+    },
+    getDataAttributes(element) {
+      if (!element) {
+        return {};
       }
+      const attributes = {};
+      const bsKeys = Object.keys(element.dataset).filter(key => key.startsWith('bs') && !key.startsWith('bsConfig'));
+      for (const key of bsKeys) {
+        let pureKey = key.replace(/^bs/, '');
+        pureKey = pureKey.charAt(0).toLowerCase() + pureKey.slice(1);
+        attributes[pureKey] = normalizeData(element.dataset[key]);
+      }
+      return attributes;
+    },
+    getDataAttribute(element, key) {
+      return normalizeData(element.getAttribute(`data-bs-${normalizeDataKey(key)}`));
     }
-  }
-}
+  };
 
-/**
- * --------------------------------------------------------------------------
- * Bootstrap base-component.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
+  return Manipulator;
+
+}));
+//# sourceMappingURL=manipulator.js.map
 
 
-/**
- * Constants
- */
+/***/ }),
 
-const VERSION = '5.3.8';
+/***/ "./node_modules/bootstrap/js/dist/dom/selector-engine.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/dom/selector-engine.js ***!
+  \***************************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-/**
- * Class definition
- */
+/*!
+  * Bootstrap selector-engine.js v5.3.8 (https://getbootstrap.com/)
+  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */
+(function (global, factory) {
+   true ? module.exports = factory(__webpack_require__(/*! ../util/index.js */ "./node_modules/bootstrap/js/dist/util/index.js")) :
+  0;
+})(this, (function (index_js) { 'use strict';
 
-class BaseComponent extends Config {
-  constructor(element, config) {
-    super();
-    element = getElement(element);
-    if (!element) {
-      return;
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap dom/selector-engine.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+  const getSelector = element => {
+    let selector = element.getAttribute('data-bs-target');
+    if (!selector || selector === '#') {
+      let hrefAttribute = element.getAttribute('href');
+
+      // The only valid content that could double as a selector are IDs or classes,
+      // so everything starting with `#` or `.`. If a "real" URL is used as the selector,
+      // `document.querySelector` will rightfully complain it is invalid.
+      // See https://github.com/twbs/bootstrap/issues/32273
+      if (!hrefAttribute || !hrefAttribute.includes('#') && !hrefAttribute.startsWith('.')) {
+        return null;
+      }
+
+      // Just in case some CMS puts out a full URL with the anchor appended
+      if (hrefAttribute.includes('#') && !hrefAttribute.startsWith('#')) {
+        hrefAttribute = `#${hrefAttribute.split('#')[1]}`;
+      }
+      selector = hrefAttribute && hrefAttribute !== '#' ? hrefAttribute.trim() : null;
     }
-    this._element = element;
-    this._config = this._getConfig(config);
-    Data.set(this._element, this.constructor.DATA_KEY, this);
-  }
-
-  // Public
-  dispose() {
-    Data.remove(this._element, this.constructor.DATA_KEY);
-    EventHandler.off(this._element, this.constructor.EVENT_KEY);
-    for (const propertyName of Object.getOwnPropertyNames(this)) {
-      this[propertyName] = null;
-    }
-  }
-
-  // Private
-  _queueCallback(callback, element, isAnimated = true) {
-    executeAfterTransition(callback, element, isAnimated);
-  }
-  _getConfig(config) {
-    config = this._mergeConfigObj(config, this._element);
-    config = this._configAfterMerge(config);
-    this._typeCheckConfig(config);
-    return config;
-  }
-
-  // Static
-  static getInstance(element) {
-    return Data.get(getElement(element), this.DATA_KEY);
-  }
-  static getOrCreateInstance(element, config = {}) {
-    return this.getInstance(element) || new this(element, typeof config === 'object' ? config : null);
-  }
-  static get VERSION() {
-    return VERSION;
-  }
-  static get DATA_KEY() {
-    return `bs.${this.NAME}`;
-  }
-  static get EVENT_KEY() {
-    return `.${this.DATA_KEY}`;
-  }
-  static eventName(name) {
-    return `${name}${this.EVENT_KEY}`;
-  }
-}
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap dom/selector-engine.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-const getSelector = element => {
-  let selector = element.getAttribute('data-bs-target');
-  if (!selector || selector === '#') {
-    let hrefAttribute = element.getAttribute('href');
-
-    // The only valid content that could double as a selector are IDs or classes,
-    // so everything starting with `#` or `.`. If a "real" URL is used as the selector,
-    // `document.querySelector` will rightfully complain it is invalid.
-    // See https://github.com/twbs/bootstrap/issues/32273
-    if (!hrefAttribute || !hrefAttribute.includes('#') && !hrefAttribute.startsWith('.')) {
+    return selector ? selector.split(',').map(sel => index_js.parseSelector(sel)).join(',') : null;
+  };
+  const SelectorEngine = {
+    find(selector, element = document.documentElement) {
+      return [].concat(...Element.prototype.querySelectorAll.call(element, selector));
+    },
+    findOne(selector, element = document.documentElement) {
+      return Element.prototype.querySelector.call(element, selector);
+    },
+    children(element, selector) {
+      return [].concat(...element.children).filter(child => child.matches(selector));
+    },
+    parents(element, selector) {
+      const parents = [];
+      let ancestor = element.parentNode.closest(selector);
+      while (ancestor) {
+        parents.push(ancestor);
+        ancestor = ancestor.parentNode.closest(selector);
+      }
+      return parents;
+    },
+    prev(element, selector) {
+      let previous = element.previousElementSibling;
+      while (previous) {
+        if (previous.matches(selector)) {
+          return [previous];
+        }
+        previous = previous.previousElementSibling;
+      }
+      return [];
+    },
+    // TODO: this is now unused; remove later along with prev()
+    next(element, selector) {
+      let next = element.nextElementSibling;
+      while (next) {
+        if (next.matches(selector)) {
+          return [next];
+        }
+        next = next.nextElementSibling;
+      }
+      return [];
+    },
+    focusableChildren(element) {
+      const focusables = ['a', 'button', 'input', 'textarea', 'select', 'details', '[tabindex]', '[contenteditable="true"]'].map(selector => `${selector}:not([tabindex^="-"])`).join(',');
+      return this.find(focusables, element).filter(el => !index_js.isDisabled(el) && index_js.isVisible(el));
+    },
+    getSelectorFromElement(element) {
+      const selector = getSelector(element);
+      if (selector) {
+        return SelectorEngine.findOne(selector) ? selector : null;
+      }
       return null;
+    },
+    getElementFromSelector(element) {
+      const selector = getSelector(element);
+      return selector ? SelectorEngine.findOne(selector) : null;
+    },
+    getMultipleElementsFromSelector(element) {
+      const selector = getSelector(element);
+      return selector ? SelectorEngine.find(selector) : [];
     }
+  };
 
-    // Just in case some CMS puts out a full URL with the anchor appended
-    if (hrefAttribute.includes('#') && !hrefAttribute.startsWith('#')) {
-      hrefAttribute = `#${hrefAttribute.split('#')[1]}`;
-    }
-    selector = hrefAttribute && hrefAttribute !== '#' ? hrefAttribute.trim() : null;
-  }
-  return selector ? selector.split(',').map(sel => parseSelector(sel)).join(',') : null;
-};
-const SelectorEngine = {
-  find(selector, element = document.documentElement) {
-    return [].concat(...Element.prototype.querySelectorAll.call(element, selector));
-  },
-  findOne(selector, element = document.documentElement) {
-    return Element.prototype.querySelector.call(element, selector);
-  },
-  children(element, selector) {
-    return [].concat(...element.children).filter(child => child.matches(selector));
-  },
-  parents(element, selector) {
-    const parents = [];
-    let ancestor = element.parentNode.closest(selector);
-    while (ancestor) {
-      parents.push(ancestor);
-      ancestor = ancestor.parentNode.closest(selector);
-    }
-    return parents;
-  },
-  prev(element, selector) {
-    let previous = element.previousElementSibling;
-    while (previous) {
-      if (previous.matches(selector)) {
-        return [previous];
-      }
-      previous = previous.previousElementSibling;
-    }
-    return [];
-  },
-  // TODO: this is now unused; remove later along with prev()
-  next(element, selector) {
-    let next = element.nextElementSibling;
-    while (next) {
-      if (next.matches(selector)) {
-        return [next];
-      }
-      next = next.nextElementSibling;
-    }
-    return [];
-  },
-  focusableChildren(element) {
-    const focusables = ['a', 'button', 'input', 'textarea', 'select', 'details', '[tabindex]', '[contenteditable="true"]'].map(selector => `${selector}:not([tabindex^="-"])`).join(',');
-    return this.find(focusables, element).filter(el => !isDisabled(el) && isVisible(el));
-  },
-  getSelectorFromElement(element) {
-    const selector = getSelector(element);
-    if (selector) {
-      return SelectorEngine.findOne(selector) ? selector : null;
-    }
-    return null;
-  },
-  getElementFromSelector(element) {
-    const selector = getSelector(element);
-    return selector ? SelectorEngine.findOne(selector) : null;
-  },
-  getMultipleElementsFromSelector(element) {
-    const selector = getSelector(element);
-    return selector ? SelectorEngine.find(selector) : [];
-  }
-};
+  return SelectorEngine;
 
-/**
- * --------------------------------------------------------------------------
- * Bootstrap util/component-functions.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-const enableDismissTrigger = (component, method = 'hide') => {
-  const clickEvent = `click.dismiss${component.EVENT_KEY}`;
-  const name = component.NAME;
-  EventHandler.on(document, clickEvent, `[data-bs-dismiss="${name}"]`, function (event) {
-    if (['A', 'AREA'].includes(this.tagName)) {
-      event.preventDefault();
-    }
-    if (isDisabled(this)) {
-      return;
-    }
-    const target = SelectorEngine.getElementFromSelector(this) || this.closest(`.${name}`);
-    const instance = component.getOrCreateInstance(target);
-
-    // Method argument is left, for Alert and only, as it doesn't implement the 'hide' method
-    instance[method]();
-  });
-};
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap alert.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
+}));
+//# sourceMappingURL=selector-engine.js.map
 
 
-/**
- * Constants
- */
+/***/ }),
 
-const NAME$f = 'alert';
-const DATA_KEY$a = 'bs.alert';
-const EVENT_KEY$b = `.${DATA_KEY$a}`;
-const EVENT_CLOSE = `close${EVENT_KEY$b}`;
-const EVENT_CLOSED = `closed${EVENT_KEY$b}`;
-const CLASS_NAME_FADE$5 = 'fade';
-const CLASS_NAME_SHOW$8 = 'show';
+/***/ "./node_modules/bootstrap/js/dist/dropdown.js":
+/*!****************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/dropdown.js ***!
+  \****************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-/**
- * Class definition
- */
+/*!
+  * Bootstrap dropdown.js v5.3.8 (https://getbootstrap.com/)
+  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */
+(function (global, factory) {
+   true ? module.exports = factory(__webpack_require__(/*! @popperjs/core */ "./node_modules/@popperjs/core/lib/index.js"), __webpack_require__(/*! ./base-component.js */ "./node_modules/bootstrap/js/dist/base-component.js"), __webpack_require__(/*! ./dom/event-handler.js */ "./node_modules/bootstrap/js/dist/dom/event-handler.js"), __webpack_require__(/*! ./dom/manipulator.js */ "./node_modules/bootstrap/js/dist/dom/manipulator.js"), __webpack_require__(/*! ./dom/selector-engine.js */ "./node_modules/bootstrap/js/dist/dom/selector-engine.js"), __webpack_require__(/*! ./util/index.js */ "./node_modules/bootstrap/js/dist/util/index.js")) :
+  0;
+})(this, (function (Popper, BaseComponent, EventHandler, Manipulator, SelectorEngine, index_js) { 'use strict';
 
-class Alert extends BaseComponent {
-  // Getters
-  static get NAME() {
-    return NAME$f;
-  }
-
-  // Public
-  close() {
-    const closeEvent = EventHandler.trigger(this._element, EVENT_CLOSE);
-    if (closeEvent.defaultPrevented) {
-      return;
-    }
-    this._element.classList.remove(CLASS_NAME_SHOW$8);
-    const isAnimated = this._element.classList.contains(CLASS_NAME_FADE$5);
-    this._queueCallback(() => this._destroyElement(), this._element, isAnimated);
-  }
-
-  // Private
-  _destroyElement() {
-    this._element.remove();
-    EventHandler.trigger(this._element, EVENT_CLOSED);
-    this.dispose();
-  }
-
-  // Static
-  static jQueryInterface(config) {
-    return this.each(function () {
-      const data = Alert.getOrCreateInstance(this);
-      if (typeof config !== 'string') {
-        return;
-      }
-      if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
-        throw new TypeError(`No method named "${config}"`);
-      }
-      data[config](this);
-    });
-  }
-}
-
-/**
- * Data API implementation
- */
-
-enableDismissTrigger(Alert, 'close');
-
-/**
- * jQuery
- */
-
-defineJQueryPlugin(Alert);
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap button.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$e = 'button';
-const DATA_KEY$9 = 'bs.button';
-const EVENT_KEY$a = `.${DATA_KEY$9}`;
-const DATA_API_KEY$6 = '.data-api';
-const CLASS_NAME_ACTIVE$3 = 'active';
-const SELECTOR_DATA_TOGGLE$5 = '[data-bs-toggle="button"]';
-const EVENT_CLICK_DATA_API$6 = `click${EVENT_KEY$a}${DATA_API_KEY$6}`;
-
-/**
- * Class definition
- */
-
-class Button extends BaseComponent {
-  // Getters
-  static get NAME() {
-    return NAME$e;
-  }
-
-  // Public
-  toggle() {
-    // Toggle class and sync the `aria-pressed` attribute with the return value of the `.toggle()` method
-    this._element.setAttribute('aria-pressed', this._element.classList.toggle(CLASS_NAME_ACTIVE$3));
-  }
-
-  // Static
-  static jQueryInterface(config) {
-    return this.each(function () {
-      const data = Button.getOrCreateInstance(this);
-      if (config === 'toggle') {
-        data[config]();
-      }
-    });
-  }
-}
-
-/**
- * Data API implementation
- */
-
-EventHandler.on(document, EVENT_CLICK_DATA_API$6, SELECTOR_DATA_TOGGLE$5, event => {
-  event.preventDefault();
-  const button = event.target.closest(SELECTOR_DATA_TOGGLE$5);
-  const data = Button.getOrCreateInstance(button);
-  data.toggle();
-});
-
-/**
- * jQuery
- */
-
-defineJQueryPlugin(Button);
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap util/swipe.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$d = 'swipe';
-const EVENT_KEY$9 = '.bs.swipe';
-const EVENT_TOUCHSTART = `touchstart${EVENT_KEY$9}`;
-const EVENT_TOUCHMOVE = `touchmove${EVENT_KEY$9}`;
-const EVENT_TOUCHEND = `touchend${EVENT_KEY$9}`;
-const EVENT_POINTERDOWN = `pointerdown${EVENT_KEY$9}`;
-const EVENT_POINTERUP = `pointerup${EVENT_KEY$9}`;
-const POINTER_TYPE_TOUCH = 'touch';
-const POINTER_TYPE_PEN = 'pen';
-const CLASS_NAME_POINTER_EVENT = 'pointer-event';
-const SWIPE_THRESHOLD = 40;
-const Default$c = {
-  endCallback: null,
-  leftCallback: null,
-  rightCallback: null
-};
-const DefaultType$c = {
-  endCallback: '(function|null)',
-  leftCallback: '(function|null)',
-  rightCallback: '(function|null)'
-};
-
-/**
- * Class definition
- */
-
-class Swipe extends Config {
-  constructor(element, config) {
-    super();
-    this._element = element;
-    if (!element || !Swipe.isSupported()) {
-      return;
-    }
-    this._config = this._getConfig(config);
-    this._deltaX = 0;
-    this._supportPointerEvents = Boolean(window.PointerEvent);
-    this._initEvents();
-  }
-
-  // Getters
-  static get Default() {
-    return Default$c;
-  }
-  static get DefaultType() {
-    return DefaultType$c;
-  }
-  static get NAME() {
-    return NAME$d;
-  }
-
-  // Public
-  dispose() {
-    EventHandler.off(this._element, EVENT_KEY$9);
-  }
-
-  // Private
-  _start(event) {
-    if (!this._supportPointerEvents) {
-      this._deltaX = event.touches[0].clientX;
-      return;
-    }
-    if (this._eventIsPointerPenTouch(event)) {
-      this._deltaX = event.clientX;
-    }
-  }
-  _end(event) {
-    if (this._eventIsPointerPenTouch(event)) {
-      this._deltaX = event.clientX - this._deltaX;
-    }
-    this._handleSwipe();
-    execute(this._config.endCallback);
-  }
-  _move(event) {
-    this._deltaX = event.touches && event.touches.length > 1 ? 0 : event.touches[0].clientX - this._deltaX;
-  }
-  _handleSwipe() {
-    const absDeltaX = Math.abs(this._deltaX);
-    if (absDeltaX <= SWIPE_THRESHOLD) {
-      return;
-    }
-    const direction = absDeltaX / this._deltaX;
-    this._deltaX = 0;
-    if (!direction) {
-      return;
-    }
-    execute(direction > 0 ? this._config.rightCallback : this._config.leftCallback);
-  }
-  _initEvents() {
-    if (this._supportPointerEvents) {
-      EventHandler.on(this._element, EVENT_POINTERDOWN, event => this._start(event));
-      EventHandler.on(this._element, EVENT_POINTERUP, event => this._end(event));
-      this._element.classList.add(CLASS_NAME_POINTER_EVENT);
-    } else {
-      EventHandler.on(this._element, EVENT_TOUCHSTART, event => this._start(event));
-      EventHandler.on(this._element, EVENT_TOUCHMOVE, event => this._move(event));
-      EventHandler.on(this._element, EVENT_TOUCHEND, event => this._end(event));
-    }
-  }
-  _eventIsPointerPenTouch(event) {
-    return this._supportPointerEvents && (event.pointerType === POINTER_TYPE_PEN || event.pointerType === POINTER_TYPE_TOUCH);
-  }
-
-  // Static
-  static isSupported() {
-    return 'ontouchstart' in document.documentElement || navigator.maxTouchPoints > 0;
-  }
-}
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap carousel.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$c = 'carousel';
-const DATA_KEY$8 = 'bs.carousel';
-const EVENT_KEY$8 = `.${DATA_KEY$8}`;
-const DATA_API_KEY$5 = '.data-api';
-const ARROW_LEFT_KEY$1 = 'ArrowLeft';
-const ARROW_RIGHT_KEY$1 = 'ArrowRight';
-const TOUCHEVENT_COMPAT_WAIT = 500; // Time for mouse compat events to fire after touch
-
-const ORDER_NEXT = 'next';
-const ORDER_PREV = 'prev';
-const DIRECTION_LEFT = 'left';
-const DIRECTION_RIGHT = 'right';
-const EVENT_SLIDE = `slide${EVENT_KEY$8}`;
-const EVENT_SLID = `slid${EVENT_KEY$8}`;
-const EVENT_KEYDOWN$1 = `keydown${EVENT_KEY$8}`;
-const EVENT_MOUSEENTER$1 = `mouseenter${EVENT_KEY$8}`;
-const EVENT_MOUSELEAVE$1 = `mouseleave${EVENT_KEY$8}`;
-const EVENT_DRAG_START = `dragstart${EVENT_KEY$8}`;
-const EVENT_LOAD_DATA_API$3 = `load${EVENT_KEY$8}${DATA_API_KEY$5}`;
-const EVENT_CLICK_DATA_API$5 = `click${EVENT_KEY$8}${DATA_API_KEY$5}`;
-const CLASS_NAME_CAROUSEL = 'carousel';
-const CLASS_NAME_ACTIVE$2 = 'active';
-const CLASS_NAME_SLIDE = 'slide';
-const CLASS_NAME_END = 'carousel-item-end';
-const CLASS_NAME_START = 'carousel-item-start';
-const CLASS_NAME_NEXT = 'carousel-item-next';
-const CLASS_NAME_PREV = 'carousel-item-prev';
-const SELECTOR_ACTIVE = '.active';
-const SELECTOR_ITEM = '.carousel-item';
-const SELECTOR_ACTIVE_ITEM = SELECTOR_ACTIVE + SELECTOR_ITEM;
-const SELECTOR_ITEM_IMG = '.carousel-item img';
-const SELECTOR_INDICATORS = '.carousel-indicators';
-const SELECTOR_DATA_SLIDE = '[data-bs-slide], [data-bs-slide-to]';
-const SELECTOR_DATA_RIDE = '[data-bs-ride="carousel"]';
-const KEY_TO_DIRECTION = {
-  [ARROW_LEFT_KEY$1]: DIRECTION_RIGHT,
-  [ARROW_RIGHT_KEY$1]: DIRECTION_LEFT
-};
-const Default$b = {
-  interval: 5000,
-  keyboard: true,
-  pause: 'hover',
-  ride: false,
-  touch: true,
-  wrap: true
-};
-const DefaultType$b = {
-  interval: '(number|boolean)',
-  // TODO:v6 remove boolean support
-  keyboard: 'boolean',
-  pause: '(string|boolean)',
-  ride: '(boolean|string)',
-  touch: 'boolean',
-  wrap: 'boolean'
-};
-
-/**
- * Class definition
- */
-
-class Carousel extends BaseComponent {
-  constructor(element, config) {
-    super(element, config);
-    this._interval = null;
-    this._activeElement = null;
-    this._isSliding = false;
-    this.touchTimeout = null;
-    this._swipeHelper = null;
-    this._indicatorsElement = SelectorEngine.findOne(SELECTOR_INDICATORS, this._element);
-    this._addEventListeners();
-    if (this._config.ride === CLASS_NAME_CAROUSEL) {
-      this.cycle();
-    }
-  }
-
-  // Getters
-  static get Default() {
-    return Default$b;
-  }
-  static get DefaultType() {
-    return DefaultType$b;
-  }
-  static get NAME() {
-    return NAME$c;
-  }
-
-  // Public
-  next() {
-    this._slide(ORDER_NEXT);
-  }
-  nextWhenVisible() {
-    // FIXME TODO use `document.visibilityState`
-    // Don't call next when the page isn't visible
-    // or the carousel or its parent isn't visible
-    if (!document.hidden && isVisible(this._element)) {
-      this.next();
-    }
-  }
-  prev() {
-    this._slide(ORDER_PREV);
-  }
-  pause() {
-    if (this._isSliding) {
-      triggerTransitionEnd(this._element);
-    }
-    this._clearInterval();
-  }
-  cycle() {
-    this._clearInterval();
-    this._updateInterval();
-    this._interval = setInterval(() => this.nextWhenVisible(), this._config.interval);
-  }
-  _maybeEnableCycle() {
-    if (!this._config.ride) {
-      return;
-    }
-    if (this._isSliding) {
-      EventHandler.one(this._element, EVENT_SLID, () => this.cycle());
-      return;
-    }
-    this.cycle();
-  }
-  to(index) {
-    const items = this._getItems();
-    if (index > items.length - 1 || index < 0) {
-      return;
-    }
-    if (this._isSliding) {
-      EventHandler.one(this._element, EVENT_SLID, () => this.to(index));
-      return;
-    }
-    const activeIndex = this._getItemIndex(this._getActive());
-    if (activeIndex === index) {
-      return;
-    }
-    const order = index > activeIndex ? ORDER_NEXT : ORDER_PREV;
-    this._slide(order, items[index]);
-  }
-  dispose() {
-    if (this._swipeHelper) {
-      this._swipeHelper.dispose();
-    }
-    super.dispose();
-  }
-
-  // Private
-  _configAfterMerge(config) {
-    config.defaultInterval = config.interval;
-    return config;
-  }
-  _addEventListeners() {
-    if (this._config.keyboard) {
-      EventHandler.on(this._element, EVENT_KEYDOWN$1, event => this._keydown(event));
-    }
-    if (this._config.pause === 'hover') {
-      EventHandler.on(this._element, EVENT_MOUSEENTER$1, () => this.pause());
-      EventHandler.on(this._element, EVENT_MOUSELEAVE$1, () => this._maybeEnableCycle());
-    }
-    if (this._config.touch && Swipe.isSupported()) {
-      this._addTouchEventListeners();
-    }
-  }
-  _addTouchEventListeners() {
-    for (const img of SelectorEngine.find(SELECTOR_ITEM_IMG, this._element)) {
-      EventHandler.on(img, EVENT_DRAG_START, event => event.preventDefault());
-    }
-    const endCallBack = () => {
-      if (this._config.pause !== 'hover') {
-        return;
-      }
-
-      // If it's a touch-enabled device, mouseenter/leave are fired as
-      // part of the mouse compatibility events on first tap - the carousel
-      // would stop cycling until user tapped out of it;
-      // here, we listen for touchend, explicitly pause the carousel
-      // (as if it's the second time we tap on it, mouseenter compat event
-      // is NOT fired) and after a timeout (to allow for mouse compatibility
-      // events to fire) we explicitly restart cycling
-
-      this.pause();
-      if (this.touchTimeout) {
-        clearTimeout(this.touchTimeout);
-      }
-      this.touchTimeout = setTimeout(() => this._maybeEnableCycle(), TOUCHEVENT_COMPAT_WAIT + this._config.interval);
-    };
-    const swipeConfig = {
-      leftCallback: () => this._slide(this._directionToOrder(DIRECTION_LEFT)),
-      rightCallback: () => this._slide(this._directionToOrder(DIRECTION_RIGHT)),
-      endCallback: endCallBack
-    };
-    this._swipeHelper = new Swipe(this._element, swipeConfig);
-  }
-  _keydown(event) {
-    if (/input|textarea/i.test(event.target.tagName)) {
-      return;
-    }
-    const direction = KEY_TO_DIRECTION[event.key];
-    if (direction) {
-      event.preventDefault();
-      this._slide(this._directionToOrder(direction));
-    }
-  }
-  _getItemIndex(element) {
-    return this._getItems().indexOf(element);
-  }
-  _setActiveIndicatorElement(index) {
-    if (!this._indicatorsElement) {
-      return;
-    }
-    const activeIndicator = SelectorEngine.findOne(SELECTOR_ACTIVE, this._indicatorsElement);
-    activeIndicator.classList.remove(CLASS_NAME_ACTIVE$2);
-    activeIndicator.removeAttribute('aria-current');
-    const newActiveIndicator = SelectorEngine.findOne(`[data-bs-slide-to="${index}"]`, this._indicatorsElement);
-    if (newActiveIndicator) {
-      newActiveIndicator.classList.add(CLASS_NAME_ACTIVE$2);
-      newActiveIndicator.setAttribute('aria-current', 'true');
-    }
-  }
-  _updateInterval() {
-    const element = this._activeElement || this._getActive();
-    if (!element) {
-      return;
-    }
-    const elementInterval = Number.parseInt(element.getAttribute('data-bs-interval'), 10);
-    this._config.interval = elementInterval || this._config.defaultInterval;
-  }
-  _slide(order, element = null) {
-    if (this._isSliding) {
-      return;
-    }
-    const activeElement = this._getActive();
-    const isNext = order === ORDER_NEXT;
-    const nextElement = element || getNextActiveElement(this._getItems(), activeElement, isNext, this._config.wrap);
-    if (nextElement === activeElement) {
-      return;
-    }
-    const nextElementIndex = this._getItemIndex(nextElement);
-    const triggerEvent = eventName => {
-      return EventHandler.trigger(this._element, eventName, {
-        relatedTarget: nextElement,
-        direction: this._orderToDirection(order),
-        from: this._getItemIndex(activeElement),
-        to: nextElementIndex
-      });
-    };
-    const slideEvent = triggerEvent(EVENT_SLIDE);
-    if (slideEvent.defaultPrevented) {
-      return;
-    }
-    if (!activeElement || !nextElement) {
-      // Some weirdness is happening, so we bail
-      // TODO: change tests that use empty divs to avoid this check
-      return;
-    }
-    const isCycling = Boolean(this._interval);
-    this.pause();
-    this._isSliding = true;
-    this._setActiveIndicatorElement(nextElementIndex);
-    this._activeElement = nextElement;
-    const directionalClassName = isNext ? CLASS_NAME_START : CLASS_NAME_END;
-    const orderClassName = isNext ? CLASS_NAME_NEXT : CLASS_NAME_PREV;
-    nextElement.classList.add(orderClassName);
-    reflow(nextElement);
-    activeElement.classList.add(directionalClassName);
-    nextElement.classList.add(directionalClassName);
-    const completeCallBack = () => {
-      nextElement.classList.remove(directionalClassName, orderClassName);
-      nextElement.classList.add(CLASS_NAME_ACTIVE$2);
-      activeElement.classList.remove(CLASS_NAME_ACTIVE$2, orderClassName, directionalClassName);
-      this._isSliding = false;
-      triggerEvent(EVENT_SLID);
-    };
-    this._queueCallback(completeCallBack, activeElement, this._isAnimated());
-    if (isCycling) {
-      this.cycle();
-    }
-  }
-  _isAnimated() {
-    return this._element.classList.contains(CLASS_NAME_SLIDE);
-  }
-  _getActive() {
-    return SelectorEngine.findOne(SELECTOR_ACTIVE_ITEM, this._element);
-  }
-  _getItems() {
-    return SelectorEngine.find(SELECTOR_ITEM, this._element);
-  }
-  _clearInterval() {
-    if (this._interval) {
-      clearInterval(this._interval);
-      this._interval = null;
-    }
-  }
-  _directionToOrder(direction) {
-    if (isRTL()) {
-      return direction === DIRECTION_LEFT ? ORDER_PREV : ORDER_NEXT;
-    }
-    return direction === DIRECTION_LEFT ? ORDER_NEXT : ORDER_PREV;
-  }
-  _orderToDirection(order) {
-    if (isRTL()) {
-      return order === ORDER_PREV ? DIRECTION_LEFT : DIRECTION_RIGHT;
-    }
-    return order === ORDER_PREV ? DIRECTION_RIGHT : DIRECTION_LEFT;
-  }
-
-  // Static
-  static jQueryInterface(config) {
-    return this.each(function () {
-      const data = Carousel.getOrCreateInstance(this, config);
-      if (typeof config === 'number') {
-        data.to(config);
-        return;
-      }
-      if (typeof config === 'string') {
-        if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
-          throw new TypeError(`No method named "${config}"`);
+  function _interopNamespaceDefault(e) {
+    const n = Object.create(null, { [Symbol.toStringTag]: { value: 'Module' } });
+    if (e) {
+      for (const k in e) {
+        if (k !== 'default') {
+          const d = Object.getOwnPropertyDescriptor(e, k);
+          Object.defineProperty(n, k, d.get ? d : {
+            enumerable: true,
+            get: () => e[k]
+          });
         }
-        data[config]();
-      }
-    });
-  }
-}
-
-/**
- * Data API implementation
- */
-
-EventHandler.on(document, EVENT_CLICK_DATA_API$5, SELECTOR_DATA_SLIDE, function (event) {
-  const target = SelectorEngine.getElementFromSelector(this);
-  if (!target || !target.classList.contains(CLASS_NAME_CAROUSEL)) {
-    return;
-  }
-  event.preventDefault();
-  const carousel = Carousel.getOrCreateInstance(target);
-  const slideIndex = this.getAttribute('data-bs-slide-to');
-  if (slideIndex) {
-    carousel.to(slideIndex);
-    carousel._maybeEnableCycle();
-    return;
-  }
-  if (Manipulator.getDataAttribute(this, 'slide') === 'next') {
-    carousel.next();
-    carousel._maybeEnableCycle();
-    return;
-  }
-  carousel.prev();
-  carousel._maybeEnableCycle();
-});
-EventHandler.on(window, EVENT_LOAD_DATA_API$3, () => {
-  const carousels = SelectorEngine.find(SELECTOR_DATA_RIDE);
-  for (const carousel of carousels) {
-    Carousel.getOrCreateInstance(carousel);
-  }
-});
-
-/**
- * jQuery
- */
-
-defineJQueryPlugin(Carousel);
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap collapse.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$b = 'collapse';
-const DATA_KEY$7 = 'bs.collapse';
-const EVENT_KEY$7 = `.${DATA_KEY$7}`;
-const DATA_API_KEY$4 = '.data-api';
-const EVENT_SHOW$6 = `show${EVENT_KEY$7}`;
-const EVENT_SHOWN$6 = `shown${EVENT_KEY$7}`;
-const EVENT_HIDE$6 = `hide${EVENT_KEY$7}`;
-const EVENT_HIDDEN$6 = `hidden${EVENT_KEY$7}`;
-const EVENT_CLICK_DATA_API$4 = `click${EVENT_KEY$7}${DATA_API_KEY$4}`;
-const CLASS_NAME_SHOW$7 = 'show';
-const CLASS_NAME_COLLAPSE = 'collapse';
-const CLASS_NAME_COLLAPSING = 'collapsing';
-const CLASS_NAME_COLLAPSED = 'collapsed';
-const CLASS_NAME_DEEPER_CHILDREN = `:scope .${CLASS_NAME_COLLAPSE} .${CLASS_NAME_COLLAPSE}`;
-const CLASS_NAME_HORIZONTAL = 'collapse-horizontal';
-const WIDTH = 'width';
-const HEIGHT = 'height';
-const SELECTOR_ACTIVES = '.collapse.show, .collapse.collapsing';
-const SELECTOR_DATA_TOGGLE$4 = '[data-bs-toggle="collapse"]';
-const Default$a = {
-  parent: null,
-  toggle: true
-};
-const DefaultType$a = {
-  parent: '(null|element)',
-  toggle: 'boolean'
-};
-
-/**
- * Class definition
- */
-
-class Collapse extends BaseComponent {
-  constructor(element, config) {
-    super(element, config);
-    this._isTransitioning = false;
-    this._triggerArray = [];
-    const toggleList = SelectorEngine.find(SELECTOR_DATA_TOGGLE$4);
-    for (const elem of toggleList) {
-      const selector = SelectorEngine.getSelectorFromElement(elem);
-      const filterElement = SelectorEngine.find(selector).filter(foundElement => foundElement === this._element);
-      if (selector !== null && filterElement.length) {
-        this._triggerArray.push(elem);
       }
     }
-    this._initializeChildren();
-    if (!this._config.parent) {
-      this._addAriaAndCollapsedClass(this._triggerArray, this._isShown());
-    }
-    if (this._config.toggle) {
-      this.toggle();
-    }
+    n.default = e;
+    return Object.freeze(n);
   }
 
-  // Getters
-  static get Default() {
-    return Default$a;
-  }
-  static get DefaultType() {
-    return DefaultType$a;
-  }
-  static get NAME() {
-    return NAME$b;
-  }
+  const Popper__namespace = /*#__PURE__*/_interopNamespaceDefault(Popper);
 
-  // Public
-  toggle() {
-    if (this._isShown()) {
-      this.hide();
-    } else {
-      this.show();
-    }
-  }
-  show() {
-    if (this._isTransitioning || this._isShown()) {
-      return;
-    }
-    let activeChildren = [];
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap dropdown.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
 
-    // find active children
-    if (this._config.parent) {
-      activeChildren = this._getFirstLevelChildren(SELECTOR_ACTIVES).filter(element => element !== this._element).map(element => Collapse.getOrCreateInstance(element, {
-        toggle: false
-      }));
+
+  /**
+   * Constants
+   */
+
+  const NAME = 'dropdown';
+  const DATA_KEY = 'bs.dropdown';
+  const EVENT_KEY = `.${DATA_KEY}`;
+  const DATA_API_KEY = '.data-api';
+  const ESCAPE_KEY = 'Escape';
+  const TAB_KEY = 'Tab';
+  const ARROW_UP_KEY = 'ArrowUp';
+  const ARROW_DOWN_KEY = 'ArrowDown';
+  const RIGHT_MOUSE_BUTTON = 2; // MouseEvent.button value for the secondary button, usually the right button
+
+  const EVENT_HIDE = `hide${EVENT_KEY}`;
+  const EVENT_HIDDEN = `hidden${EVENT_KEY}`;
+  const EVENT_SHOW = `show${EVENT_KEY}`;
+  const EVENT_SHOWN = `shown${EVENT_KEY}`;
+  const EVENT_CLICK_DATA_API = `click${EVENT_KEY}${DATA_API_KEY}`;
+  const EVENT_KEYDOWN_DATA_API = `keydown${EVENT_KEY}${DATA_API_KEY}`;
+  const EVENT_KEYUP_DATA_API = `keyup${EVENT_KEY}${DATA_API_KEY}`;
+  const CLASS_NAME_SHOW = 'show';
+  const CLASS_NAME_DROPUP = 'dropup';
+  const CLASS_NAME_DROPEND = 'dropend';
+  const CLASS_NAME_DROPSTART = 'dropstart';
+  const CLASS_NAME_DROPUP_CENTER = 'dropup-center';
+  const CLASS_NAME_DROPDOWN_CENTER = 'dropdown-center';
+  const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="dropdown"]:not(.disabled):not(:disabled)';
+  const SELECTOR_DATA_TOGGLE_SHOWN = `${SELECTOR_DATA_TOGGLE}.${CLASS_NAME_SHOW}`;
+  const SELECTOR_MENU = '.dropdown-menu';
+  const SELECTOR_NAVBAR = '.navbar';
+  const SELECTOR_NAVBAR_NAV = '.navbar-nav';
+  const SELECTOR_VISIBLE_ITEMS = '.dropdown-menu .dropdown-item:not(.disabled):not(:disabled)';
+  const PLACEMENT_TOP = index_js.isRTL() ? 'top-end' : 'top-start';
+  const PLACEMENT_TOPEND = index_js.isRTL() ? 'top-start' : 'top-end';
+  const PLACEMENT_BOTTOM = index_js.isRTL() ? 'bottom-end' : 'bottom-start';
+  const PLACEMENT_BOTTOMEND = index_js.isRTL() ? 'bottom-start' : 'bottom-end';
+  const PLACEMENT_RIGHT = index_js.isRTL() ? 'left-start' : 'right-start';
+  const PLACEMENT_LEFT = index_js.isRTL() ? 'right-start' : 'left-start';
+  const PLACEMENT_TOPCENTER = 'top';
+  const PLACEMENT_BOTTOMCENTER = 'bottom';
+  const Default = {
+    autoClose: true,
+    boundary: 'clippingParents',
+    display: 'dynamic',
+    offset: [0, 2],
+    popperConfig: null,
+    reference: 'toggle'
+  };
+  const DefaultType = {
+    autoClose: '(boolean|string)',
+    boundary: '(string|element)',
+    display: 'string',
+    offset: '(array|string|function)',
+    popperConfig: '(null|object|function)',
+    reference: '(string|element|object)'
+  };
+
+  /**
+   * Class definition
+   */
+
+  class Dropdown extends BaseComponent {
+    constructor(element, config) {
+      super(element, config);
+      this._popper = null;
+      this._parent = this._element.parentNode; // dropdown wrapper
+      // TODO: v6 revert #37011 & change markup https://getbootstrap.com/docs/5.3/forms/input-group/
+      this._menu = SelectorEngine.next(this._element, SELECTOR_MENU)[0] || SelectorEngine.prev(this._element, SELECTOR_MENU)[0] || SelectorEngine.findOne(SELECTOR_MENU, this._parent);
+      this._inNavbar = this._detectNavbar();
     }
-    if (activeChildren.length && activeChildren[0]._isTransitioning) {
-      return;
+
+    // Getters
+    static get Default() {
+      return Default;
     }
-    const startEvent = EventHandler.trigger(this._element, EVENT_SHOW$6);
-    if (startEvent.defaultPrevented) {
-      return;
+    static get DefaultType() {
+      return DefaultType;
     }
-    for (const activeInstance of activeChildren) {
-      activeInstance.hide();
+    static get NAME() {
+      return NAME;
     }
-    const dimension = this._getDimension();
-    this._element.classList.remove(CLASS_NAME_COLLAPSE);
-    this._element.classList.add(CLASS_NAME_COLLAPSING);
-    this._element.style[dimension] = 0;
-    this._addAriaAndCollapsedClass(this._triggerArray, true);
-    this._isTransitioning = true;
-    const complete = () => {
-      this._isTransitioning = false;
-      this._element.classList.remove(CLASS_NAME_COLLAPSING);
-      this._element.classList.add(CLASS_NAME_COLLAPSE, CLASS_NAME_SHOW$7);
-      this._element.style[dimension] = '';
-      EventHandler.trigger(this._element, EVENT_SHOWN$6);
-    };
-    const capitalizedDimension = dimension[0].toUpperCase() + dimension.slice(1);
-    const scrollSize = `scroll${capitalizedDimension}`;
-    this._queueCallback(complete, this._element, true);
-    this._element.style[dimension] = `${this._element[scrollSize]}px`;
-  }
-  hide() {
-    if (this._isTransitioning || !this._isShown()) {
-      return;
+
+    // Public
+    toggle() {
+      return this._isShown() ? this.hide() : this.show();
     }
-    const startEvent = EventHandler.trigger(this._element, EVENT_HIDE$6);
-    if (startEvent.defaultPrevented) {
-      return;
+    show() {
+      if (index_js.isDisabled(this._element) || this._isShown()) {
+        return;
+      }
+      const relatedTarget = {
+        relatedTarget: this._element
+      };
+      const showEvent = EventHandler.trigger(this._element, EVENT_SHOW, relatedTarget);
+      if (showEvent.defaultPrevented) {
+        return;
+      }
+      this._createPopper();
+
+      // If this is a touch-enabled device we add extra
+      // empty mouseover listeners to the body's immediate children;
+      // only needed because of broken event delegation on iOS
+      // https://www.quirksmode.org/blog/archives/2014/02/mouse_event_bub.html
+      if ('ontouchstart' in document.documentElement && !this._parent.closest(SELECTOR_NAVBAR_NAV)) {
+        for (const element of [].concat(...document.body.children)) {
+          EventHandler.on(element, 'mouseover', index_js.noop);
+        }
+      }
+      this._element.focus();
+      this._element.setAttribute('aria-expanded', true);
+      this._menu.classList.add(CLASS_NAME_SHOW);
+      this._element.classList.add(CLASS_NAME_SHOW);
+      EventHandler.trigger(this._element, EVENT_SHOWN, relatedTarget);
     }
-    const dimension = this._getDimension();
-    this._element.style[dimension] = `${this._element.getBoundingClientRect()[dimension]}px`;
-    reflow(this._element);
-    this._element.classList.add(CLASS_NAME_COLLAPSING);
-    this._element.classList.remove(CLASS_NAME_COLLAPSE, CLASS_NAME_SHOW$7);
-    for (const trigger of this._triggerArray) {
-      const element = SelectorEngine.getElementFromSelector(trigger);
-      if (element && !this._isShown(element)) {
-        this._addAriaAndCollapsedClass([trigger], false);
+    hide() {
+      if (index_js.isDisabled(this._element) || !this._isShown()) {
+        return;
+      }
+      const relatedTarget = {
+        relatedTarget: this._element
+      };
+      this._completeHide(relatedTarget);
+    }
+    dispose() {
+      if (this._popper) {
+        this._popper.destroy();
+      }
+      super.dispose();
+    }
+    update() {
+      this._inNavbar = this._detectNavbar();
+      if (this._popper) {
+        this._popper.update();
       }
     }
-    this._isTransitioning = true;
-    const complete = () => {
-      this._isTransitioning = false;
-      this._element.classList.remove(CLASS_NAME_COLLAPSING);
-      this._element.classList.add(CLASS_NAME_COLLAPSE);
-      EventHandler.trigger(this._element, EVENT_HIDDEN$6);
-    };
-    this._element.style[dimension] = '';
-    this._queueCallback(complete, this._element, true);
-  }
 
-  // Private
-  _isShown(element = this._element) {
-    return element.classList.contains(CLASS_NAME_SHOW$7);
-  }
-  _configAfterMerge(config) {
-    config.toggle = Boolean(config.toggle); // Coerce string values
-    config.parent = getElement(config.parent);
-    return config;
-  }
-  _getDimension() {
-    return this._element.classList.contains(CLASS_NAME_HORIZONTAL) ? WIDTH : HEIGHT;
-  }
-  _initializeChildren() {
-    if (!this._config.parent) {
-      return;
-    }
-    const children = this._getFirstLevelChildren(SELECTOR_DATA_TOGGLE$4);
-    for (const element of children) {
-      const selected = SelectorEngine.getElementFromSelector(element);
-      if (selected) {
-        this._addAriaAndCollapsedClass([element], this._isShown(selected));
+    // Private
+    _completeHide(relatedTarget) {
+      const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE, relatedTarget);
+      if (hideEvent.defaultPrevented) {
+        return;
       }
-    }
-  }
-  _getFirstLevelChildren(selector) {
-    const children = SelectorEngine.find(CLASS_NAME_DEEPER_CHILDREN, this._config.parent);
-    // remove children if greater depth
-    return SelectorEngine.find(selector, this._config.parent).filter(element => !children.includes(element));
-  }
-  _addAriaAndCollapsedClass(triggerArray, isOpen) {
-    if (!triggerArray.length) {
-      return;
-    }
-    for (const element of triggerArray) {
-      element.classList.toggle(CLASS_NAME_COLLAPSED, !isOpen);
-      element.setAttribute('aria-expanded', isOpen);
-    }
-  }
 
-  // Static
-  static jQueryInterface(config) {
-    const _config = {};
-    if (typeof config === 'string' && /show|hide/.test(config)) {
-      _config.toggle = false;
+      // If this is a touch-enabled device we remove the extra
+      // empty mouseover listeners we added for iOS support
+      if ('ontouchstart' in document.documentElement) {
+        for (const element of [].concat(...document.body.children)) {
+          EventHandler.off(element, 'mouseover', index_js.noop);
+        }
+      }
+      if (this._popper) {
+        this._popper.destroy();
+      }
+      this._menu.classList.remove(CLASS_NAME_SHOW);
+      this._element.classList.remove(CLASS_NAME_SHOW);
+      this._element.setAttribute('aria-expanded', 'false');
+      Manipulator.removeDataAttribute(this._menu, 'popper');
+      EventHandler.trigger(this._element, EVENT_HIDDEN, relatedTarget);
     }
-    return this.each(function () {
-      const data = Collapse.getOrCreateInstance(this, _config);
-      if (typeof config === 'string') {
+    _getConfig(config) {
+      config = super._getConfig(config);
+      if (typeof config.reference === 'object' && !index_js.isElement(config.reference) && typeof config.reference.getBoundingClientRect !== 'function') {
+        // Popper virtual elements require a getBoundingClientRect method
+        throw new TypeError(`${NAME.toUpperCase()}: Option "reference" provided type "object" without a required "getBoundingClientRect" method.`);
+      }
+      return config;
+    }
+    _createPopper() {
+      if (typeof Popper__namespace === 'undefined') {
+        throw new TypeError('Bootstrap\'s dropdowns require Popper (https://popper.js.org/docs/v2/)');
+      }
+      let referenceElement = this._element;
+      if (this._config.reference === 'parent') {
+        referenceElement = this._parent;
+      } else if (index_js.isElement(this._config.reference)) {
+        referenceElement = index_js.getElement(this._config.reference);
+      } else if (typeof this._config.reference === 'object') {
+        referenceElement = this._config.reference;
+      }
+      const popperConfig = this._getPopperConfig();
+      this._popper = Popper__namespace.createPopper(referenceElement, this._menu, popperConfig);
+    }
+    _isShown() {
+      return this._menu.classList.contains(CLASS_NAME_SHOW);
+    }
+    _getPlacement() {
+      const parentDropdown = this._parent;
+      if (parentDropdown.classList.contains(CLASS_NAME_DROPEND)) {
+        return PLACEMENT_RIGHT;
+      }
+      if (parentDropdown.classList.contains(CLASS_NAME_DROPSTART)) {
+        return PLACEMENT_LEFT;
+      }
+      if (parentDropdown.classList.contains(CLASS_NAME_DROPUP_CENTER)) {
+        return PLACEMENT_TOPCENTER;
+      }
+      if (parentDropdown.classList.contains(CLASS_NAME_DROPDOWN_CENTER)) {
+        return PLACEMENT_BOTTOMCENTER;
+      }
+
+      // We need to trim the value because custom properties can also include spaces
+      const isEnd = getComputedStyle(this._menu).getPropertyValue('--bs-position').trim() === 'end';
+      if (parentDropdown.classList.contains(CLASS_NAME_DROPUP)) {
+        return isEnd ? PLACEMENT_TOPEND : PLACEMENT_TOP;
+      }
+      return isEnd ? PLACEMENT_BOTTOMEND : PLACEMENT_BOTTOM;
+    }
+    _detectNavbar() {
+      return this._element.closest(SELECTOR_NAVBAR) !== null;
+    }
+    _getOffset() {
+      const {
+        offset
+      } = this._config;
+      if (typeof offset === 'string') {
+        return offset.split(',').map(value => Number.parseInt(value, 10));
+      }
+      if (typeof offset === 'function') {
+        return popperData => offset(popperData, this._element);
+      }
+      return offset;
+    }
+    _getPopperConfig() {
+      const defaultBsPopperConfig = {
+        placement: this._getPlacement(),
+        modifiers: [{
+          name: 'preventOverflow',
+          options: {
+            boundary: this._config.boundary
+          }
+        }, {
+          name: 'offset',
+          options: {
+            offset: this._getOffset()
+          }
+        }]
+      };
+
+      // Disable Popper if we have a static display or Dropdown is in Navbar
+      if (this._inNavbar || this._config.display === 'static') {
+        Manipulator.setDataAttribute(this._menu, 'popper', 'static'); // TODO: v6 remove
+        defaultBsPopperConfig.modifiers = [{
+          name: 'applyStyles',
+          enabled: false
+        }];
+      }
+      return {
+        ...defaultBsPopperConfig,
+        ...index_js.execute(this._config.popperConfig, [undefined, defaultBsPopperConfig])
+      };
+    }
+    _selectMenuItem({
+      key,
+      target
+    }) {
+      const items = SelectorEngine.find(SELECTOR_VISIBLE_ITEMS, this._menu).filter(element => index_js.isVisible(element));
+      if (!items.length) {
+        return;
+      }
+
+      // if target isn't included in items (e.g. when expanding the dropdown)
+      // allow cycling to get the last item in case key equals ARROW_UP_KEY
+      index_js.getNextActiveElement(items, target, key === ARROW_DOWN_KEY, !items.includes(target)).focus();
+    }
+
+    // Static
+    static jQueryInterface(config) {
+      return this.each(function () {
+        const data = Dropdown.getOrCreateInstance(this, config);
+        if (typeof config !== 'string') {
+          return;
+        }
         if (typeof data[config] === 'undefined') {
           throw new TypeError(`No method named "${config}"`);
         }
         data[config]();
-      }
-    });
-  }
-}
-
-/**
- * Data API implementation
- */
-
-EventHandler.on(document, EVENT_CLICK_DATA_API$4, SELECTOR_DATA_TOGGLE$4, function (event) {
-  // preventDefault only for <a> elements (which change the URL) not inside the collapsible element
-  if (event.target.tagName === 'A' || event.delegateTarget && event.delegateTarget.tagName === 'A') {
-    event.preventDefault();
-  }
-  for (const element of SelectorEngine.getMultipleElementsFromSelector(this)) {
-    Collapse.getOrCreateInstance(element, {
-      toggle: false
-    }).toggle();
-  }
-});
-
-/**
- * jQuery
- */
-
-defineJQueryPlugin(Collapse);
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap dropdown.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$a = 'dropdown';
-const DATA_KEY$6 = 'bs.dropdown';
-const EVENT_KEY$6 = `.${DATA_KEY$6}`;
-const DATA_API_KEY$3 = '.data-api';
-const ESCAPE_KEY$2 = 'Escape';
-const TAB_KEY$1 = 'Tab';
-const ARROW_UP_KEY$1 = 'ArrowUp';
-const ARROW_DOWN_KEY$1 = 'ArrowDown';
-const RIGHT_MOUSE_BUTTON = 2; // MouseEvent.button value for the secondary button, usually the right button
-
-const EVENT_HIDE$5 = `hide${EVENT_KEY$6}`;
-const EVENT_HIDDEN$5 = `hidden${EVENT_KEY$6}`;
-const EVENT_SHOW$5 = `show${EVENT_KEY$6}`;
-const EVENT_SHOWN$5 = `shown${EVENT_KEY$6}`;
-const EVENT_CLICK_DATA_API$3 = `click${EVENT_KEY$6}${DATA_API_KEY$3}`;
-const EVENT_KEYDOWN_DATA_API = `keydown${EVENT_KEY$6}${DATA_API_KEY$3}`;
-const EVENT_KEYUP_DATA_API = `keyup${EVENT_KEY$6}${DATA_API_KEY$3}`;
-const CLASS_NAME_SHOW$6 = 'show';
-const CLASS_NAME_DROPUP = 'dropup';
-const CLASS_NAME_DROPEND = 'dropend';
-const CLASS_NAME_DROPSTART = 'dropstart';
-const CLASS_NAME_DROPUP_CENTER = 'dropup-center';
-const CLASS_NAME_DROPDOWN_CENTER = 'dropdown-center';
-const SELECTOR_DATA_TOGGLE$3 = '[data-bs-toggle="dropdown"]:not(.disabled):not(:disabled)';
-const SELECTOR_DATA_TOGGLE_SHOWN = `${SELECTOR_DATA_TOGGLE$3}.${CLASS_NAME_SHOW$6}`;
-const SELECTOR_MENU = '.dropdown-menu';
-const SELECTOR_NAVBAR = '.navbar';
-const SELECTOR_NAVBAR_NAV = '.navbar-nav';
-const SELECTOR_VISIBLE_ITEMS = '.dropdown-menu .dropdown-item:not(.disabled):not(:disabled)';
-const PLACEMENT_TOP = isRTL() ? 'top-end' : 'top-start';
-const PLACEMENT_TOPEND = isRTL() ? 'top-start' : 'top-end';
-const PLACEMENT_BOTTOM = isRTL() ? 'bottom-end' : 'bottom-start';
-const PLACEMENT_BOTTOMEND = isRTL() ? 'bottom-start' : 'bottom-end';
-const PLACEMENT_RIGHT = isRTL() ? 'left-start' : 'right-start';
-const PLACEMENT_LEFT = isRTL() ? 'right-start' : 'left-start';
-const PLACEMENT_TOPCENTER = 'top';
-const PLACEMENT_BOTTOMCENTER = 'bottom';
-const Default$9 = {
-  autoClose: true,
-  boundary: 'clippingParents',
-  display: 'dynamic',
-  offset: [0, 2],
-  popperConfig: null,
-  reference: 'toggle'
-};
-const DefaultType$9 = {
-  autoClose: '(boolean|string)',
-  boundary: '(string|element)',
-  display: 'string',
-  offset: '(array|string|function)',
-  popperConfig: '(null|object|function)',
-  reference: '(string|element|object)'
-};
-
-/**
- * Class definition
- */
-
-class Dropdown extends BaseComponent {
-  constructor(element, config) {
-    super(element, config);
-    this._popper = null;
-    this._parent = this._element.parentNode; // dropdown wrapper
-    // TODO: v6 revert #37011 & change markup https://getbootstrap.com/docs/5.3/forms/input-group/
-    this._menu = SelectorEngine.next(this._element, SELECTOR_MENU)[0] || SelectorEngine.prev(this._element, SELECTOR_MENU)[0] || SelectorEngine.findOne(SELECTOR_MENU, this._parent);
-    this._inNavbar = this._detectNavbar();
-  }
-
-  // Getters
-  static get Default() {
-    return Default$9;
-  }
-  static get DefaultType() {
-    return DefaultType$9;
-  }
-  static get NAME() {
-    return NAME$a;
-  }
-
-  // Public
-  toggle() {
-    return this._isShown() ? this.hide() : this.show();
-  }
-  show() {
-    if (isDisabled(this._element) || this._isShown()) {
-      return;
-    }
-    const relatedTarget = {
-      relatedTarget: this._element
-    };
-    const showEvent = EventHandler.trigger(this._element, EVENT_SHOW$5, relatedTarget);
-    if (showEvent.defaultPrevented) {
-      return;
-    }
-    this._createPopper();
-
-    // If this is a touch-enabled device we add extra
-    // empty mouseover listeners to the body's immediate children;
-    // only needed because of broken event delegation on iOS
-    // https://www.quirksmode.org/blog/archives/2014/02/mouse_event_bub.html
-    if ('ontouchstart' in document.documentElement && !this._parent.closest(SELECTOR_NAVBAR_NAV)) {
-      for (const element of [].concat(...document.body.children)) {
-        EventHandler.on(element, 'mouseover', noop);
-      }
-    }
-    this._element.focus();
-    this._element.setAttribute('aria-expanded', true);
-    this._menu.classList.add(CLASS_NAME_SHOW$6);
-    this._element.classList.add(CLASS_NAME_SHOW$6);
-    EventHandler.trigger(this._element, EVENT_SHOWN$5, relatedTarget);
-  }
-  hide() {
-    if (isDisabled(this._element) || !this._isShown()) {
-      return;
-    }
-    const relatedTarget = {
-      relatedTarget: this._element
-    };
-    this._completeHide(relatedTarget);
-  }
-  dispose() {
-    if (this._popper) {
-      this._popper.destroy();
-    }
-    super.dispose();
-  }
-  update() {
-    this._inNavbar = this._detectNavbar();
-    if (this._popper) {
-      this._popper.update();
-    }
-  }
-
-  // Private
-  _completeHide(relatedTarget) {
-    const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE$5, relatedTarget);
-    if (hideEvent.defaultPrevented) {
-      return;
-    }
-
-    // If this is a touch-enabled device we remove the extra
-    // empty mouseover listeners we added for iOS support
-    if ('ontouchstart' in document.documentElement) {
-      for (const element of [].concat(...document.body.children)) {
-        EventHandler.off(element, 'mouseover', noop);
-      }
-    }
-    if (this._popper) {
-      this._popper.destroy();
-    }
-    this._menu.classList.remove(CLASS_NAME_SHOW$6);
-    this._element.classList.remove(CLASS_NAME_SHOW$6);
-    this._element.setAttribute('aria-expanded', 'false');
-    Manipulator.removeDataAttribute(this._menu, 'popper');
-    EventHandler.trigger(this._element, EVENT_HIDDEN$5, relatedTarget);
-  }
-  _getConfig(config) {
-    config = super._getConfig(config);
-    if (typeof config.reference === 'object' && !isElement(config.reference) && typeof config.reference.getBoundingClientRect !== 'function') {
-      // Popper virtual elements require a getBoundingClientRect method
-      throw new TypeError(`${NAME$a.toUpperCase()}: Option "reference" provided type "object" without a required "getBoundingClientRect" method.`);
-    }
-    return config;
-  }
-  _createPopper() {
-    if (typeof _popperjs_core__WEBPACK_IMPORTED_MODULE_0__ === 'undefined') {
-      throw new TypeError('Bootstrap\'s dropdowns require Popper (https://popper.js.org/docs/v2/)');
-    }
-    let referenceElement = this._element;
-    if (this._config.reference === 'parent') {
-      referenceElement = this._parent;
-    } else if (isElement(this._config.reference)) {
-      referenceElement = getElement(this._config.reference);
-    } else if (typeof this._config.reference === 'object') {
-      referenceElement = this._config.reference;
-    }
-    const popperConfig = this._getPopperConfig();
-    this._popper = _popperjs_core__WEBPACK_IMPORTED_MODULE_1__.createPopper(referenceElement, this._menu, popperConfig);
-  }
-  _isShown() {
-    return this._menu.classList.contains(CLASS_NAME_SHOW$6);
-  }
-  _getPlacement() {
-    const parentDropdown = this._parent;
-    if (parentDropdown.classList.contains(CLASS_NAME_DROPEND)) {
-      return PLACEMENT_RIGHT;
-    }
-    if (parentDropdown.classList.contains(CLASS_NAME_DROPSTART)) {
-      return PLACEMENT_LEFT;
-    }
-    if (parentDropdown.classList.contains(CLASS_NAME_DROPUP_CENTER)) {
-      return PLACEMENT_TOPCENTER;
-    }
-    if (parentDropdown.classList.contains(CLASS_NAME_DROPDOWN_CENTER)) {
-      return PLACEMENT_BOTTOMCENTER;
-    }
-
-    // We need to trim the value because custom properties can also include spaces
-    const isEnd = getComputedStyle(this._menu).getPropertyValue('--bs-position').trim() === 'end';
-    if (parentDropdown.classList.contains(CLASS_NAME_DROPUP)) {
-      return isEnd ? PLACEMENT_TOPEND : PLACEMENT_TOP;
-    }
-    return isEnd ? PLACEMENT_BOTTOMEND : PLACEMENT_BOTTOM;
-  }
-  _detectNavbar() {
-    return this._element.closest(SELECTOR_NAVBAR) !== null;
-  }
-  _getOffset() {
-    const {
-      offset
-    } = this._config;
-    if (typeof offset === 'string') {
-      return offset.split(',').map(value => Number.parseInt(value, 10));
-    }
-    if (typeof offset === 'function') {
-      return popperData => offset(popperData, this._element);
-    }
-    return offset;
-  }
-  _getPopperConfig() {
-    const defaultBsPopperConfig = {
-      placement: this._getPlacement(),
-      modifiers: [{
-        name: 'preventOverflow',
-        options: {
-          boundary: this._config.boundary
-        }
-      }, {
-        name: 'offset',
-        options: {
-          offset: this._getOffset()
-        }
-      }]
-    };
-
-    // Disable Popper if we have a static display or Dropdown is in Navbar
-    if (this._inNavbar || this._config.display === 'static') {
-      Manipulator.setDataAttribute(this._menu, 'popper', 'static'); // TODO: v6 remove
-      defaultBsPopperConfig.modifiers = [{
-        name: 'applyStyles',
-        enabled: false
-      }];
-    }
-    return {
-      ...defaultBsPopperConfig,
-      ...execute(this._config.popperConfig, [undefined, defaultBsPopperConfig])
-    };
-  }
-  _selectMenuItem({
-    key,
-    target
-  }) {
-    const items = SelectorEngine.find(SELECTOR_VISIBLE_ITEMS, this._menu).filter(element => isVisible(element));
-    if (!items.length) {
-      return;
-    }
-
-    // if target isn't included in items (e.g. when expanding the dropdown)
-    // allow cycling to get the last item in case key equals ARROW_UP_KEY
-    getNextActiveElement(items, target, key === ARROW_DOWN_KEY$1, !items.includes(target)).focus();
-  }
-
-  // Static
-  static jQueryInterface(config) {
-    return this.each(function () {
-      const data = Dropdown.getOrCreateInstance(this, config);
-      if (typeof config !== 'string') {
-        return;
-      }
-      if (typeof data[config] === 'undefined') {
-        throw new TypeError(`No method named "${config}"`);
-      }
-      data[config]();
-    });
-  }
-  static clearMenus(event) {
-    if (event.button === RIGHT_MOUSE_BUTTON || event.type === 'keyup' && event.key !== TAB_KEY$1) {
-      return;
-    }
-    const openToggles = SelectorEngine.find(SELECTOR_DATA_TOGGLE_SHOWN);
-    for (const toggle of openToggles) {
-      const context = Dropdown.getInstance(toggle);
-      if (!context || context._config.autoClose === false) {
-        continue;
-      }
-      const composedPath = event.composedPath();
-      const isMenuTarget = composedPath.includes(context._menu);
-      if (composedPath.includes(context._element) || context._config.autoClose === 'inside' && !isMenuTarget || context._config.autoClose === 'outside' && isMenuTarget) {
-        continue;
-      }
-
-      // Tab navigation through the dropdown menu or events from contained inputs shouldn't close the menu
-      if (context._menu.contains(event.target) && (event.type === 'keyup' && event.key === TAB_KEY$1 || /input|select|option|textarea|form/i.test(event.target.tagName))) {
-        continue;
-      }
-      const relatedTarget = {
-        relatedTarget: context._element
-      };
-      if (event.type === 'click') {
-        relatedTarget.clickEvent = event;
-      }
-      context._completeHide(relatedTarget);
-    }
-  }
-  static dataApiKeydownHandler(event) {
-    // If not an UP | DOWN | ESCAPE key => not a dropdown command
-    // If input/textarea && if key is other than ESCAPE => not a dropdown command
-
-    const isInput = /input|textarea/i.test(event.target.tagName);
-    const isEscapeEvent = event.key === ESCAPE_KEY$2;
-    const isUpOrDownEvent = [ARROW_UP_KEY$1, ARROW_DOWN_KEY$1].includes(event.key);
-    if (!isUpOrDownEvent && !isEscapeEvent) {
-      return;
-    }
-    if (isInput && !isEscapeEvent) {
-      return;
-    }
-    event.preventDefault();
-
-    // TODO: v6 revert #37011 & change markup https://getbootstrap.com/docs/5.3/forms/input-group/
-    const getToggleButton = this.matches(SELECTOR_DATA_TOGGLE$3) ? this : SelectorEngine.prev(this, SELECTOR_DATA_TOGGLE$3)[0] || SelectorEngine.next(this, SELECTOR_DATA_TOGGLE$3)[0] || SelectorEngine.findOne(SELECTOR_DATA_TOGGLE$3, event.delegateTarget.parentNode);
-    const instance = Dropdown.getOrCreateInstance(getToggleButton);
-    if (isUpOrDownEvent) {
-      event.stopPropagation();
-      instance.show();
-      instance._selectMenuItem(event);
-      return;
-    }
-    if (instance._isShown()) {
-      // else is escape and we check if it is shown
-      event.stopPropagation();
-      instance.hide();
-      getToggleButton.focus();
-    }
-  }
-}
-
-/**
- * Data API implementation
- */
-
-EventHandler.on(document, EVENT_KEYDOWN_DATA_API, SELECTOR_DATA_TOGGLE$3, Dropdown.dataApiKeydownHandler);
-EventHandler.on(document, EVENT_KEYDOWN_DATA_API, SELECTOR_MENU, Dropdown.dataApiKeydownHandler);
-EventHandler.on(document, EVENT_CLICK_DATA_API$3, Dropdown.clearMenus);
-EventHandler.on(document, EVENT_KEYUP_DATA_API, Dropdown.clearMenus);
-EventHandler.on(document, EVENT_CLICK_DATA_API$3, SELECTOR_DATA_TOGGLE$3, function (event) {
-  event.preventDefault();
-  Dropdown.getOrCreateInstance(this).toggle();
-});
-
-/**
- * jQuery
- */
-
-defineJQueryPlugin(Dropdown);
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap util/backdrop.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$9 = 'backdrop';
-const CLASS_NAME_FADE$4 = 'fade';
-const CLASS_NAME_SHOW$5 = 'show';
-const EVENT_MOUSEDOWN = `mousedown.bs.${NAME$9}`;
-const Default$8 = {
-  className: 'modal-backdrop',
-  clickCallback: null,
-  isAnimated: false,
-  isVisible: true,
-  // if false, we use the backdrop helper without adding any element to the dom
-  rootElement: 'body' // give the choice to place backdrop under different elements
-};
-const DefaultType$8 = {
-  className: 'string',
-  clickCallback: '(function|null)',
-  isAnimated: 'boolean',
-  isVisible: 'boolean',
-  rootElement: '(element|string)'
-};
-
-/**
- * Class definition
- */
-
-class Backdrop extends Config {
-  constructor(config) {
-    super();
-    this._config = this._getConfig(config);
-    this._isAppended = false;
-    this._element = null;
-  }
-
-  // Getters
-  static get Default() {
-    return Default$8;
-  }
-  static get DefaultType() {
-    return DefaultType$8;
-  }
-  static get NAME() {
-    return NAME$9;
-  }
-
-  // Public
-  show(callback) {
-    if (!this._config.isVisible) {
-      execute(callback);
-      return;
-    }
-    this._append();
-    const element = this._getElement();
-    if (this._config.isAnimated) {
-      reflow(element);
-    }
-    element.classList.add(CLASS_NAME_SHOW$5);
-    this._emulateAnimation(() => {
-      execute(callback);
-    });
-  }
-  hide(callback) {
-    if (!this._config.isVisible) {
-      execute(callback);
-      return;
-    }
-    this._getElement().classList.remove(CLASS_NAME_SHOW$5);
-    this._emulateAnimation(() => {
-      this.dispose();
-      execute(callback);
-    });
-  }
-  dispose() {
-    if (!this._isAppended) {
-      return;
-    }
-    EventHandler.off(this._element, EVENT_MOUSEDOWN);
-    this._element.remove();
-    this._isAppended = false;
-  }
-
-  // Private
-  _getElement() {
-    if (!this._element) {
-      const backdrop = document.createElement('div');
-      backdrop.className = this._config.className;
-      if (this._config.isAnimated) {
-        backdrop.classList.add(CLASS_NAME_FADE$4);
-      }
-      this._element = backdrop;
-    }
-    return this._element;
-  }
-  _configAfterMerge(config) {
-    // use getElement() with the default "body" to get a fresh Element on each instantiation
-    config.rootElement = getElement(config.rootElement);
-    return config;
-  }
-  _append() {
-    if (this._isAppended) {
-      return;
-    }
-    const element = this._getElement();
-    this._config.rootElement.append(element);
-    EventHandler.on(element, EVENT_MOUSEDOWN, () => {
-      execute(this._config.clickCallback);
-    });
-    this._isAppended = true;
-  }
-  _emulateAnimation(callback) {
-    executeAfterTransition(callback, this._getElement(), this._config.isAnimated);
-  }
-}
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap util/focustrap.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$8 = 'focustrap';
-const DATA_KEY$5 = 'bs.focustrap';
-const EVENT_KEY$5 = `.${DATA_KEY$5}`;
-const EVENT_FOCUSIN$2 = `focusin${EVENT_KEY$5}`;
-const EVENT_KEYDOWN_TAB = `keydown.tab${EVENT_KEY$5}`;
-const TAB_KEY = 'Tab';
-const TAB_NAV_FORWARD = 'forward';
-const TAB_NAV_BACKWARD = 'backward';
-const Default$7 = {
-  autofocus: true,
-  trapElement: null // The element to trap focus inside of
-};
-const DefaultType$7 = {
-  autofocus: 'boolean',
-  trapElement: 'element'
-};
-
-/**
- * Class definition
- */
-
-class FocusTrap extends Config {
-  constructor(config) {
-    super();
-    this._config = this._getConfig(config);
-    this._isActive = false;
-    this._lastTabNavDirection = null;
-  }
-
-  // Getters
-  static get Default() {
-    return Default$7;
-  }
-  static get DefaultType() {
-    return DefaultType$7;
-  }
-  static get NAME() {
-    return NAME$8;
-  }
-
-  // Public
-  activate() {
-    if (this._isActive) {
-      return;
-    }
-    if (this._config.autofocus) {
-      this._config.trapElement.focus();
-    }
-    EventHandler.off(document, EVENT_KEY$5); // guard against infinite focus loop
-    EventHandler.on(document, EVENT_FOCUSIN$2, event => this._handleFocusin(event));
-    EventHandler.on(document, EVENT_KEYDOWN_TAB, event => this._handleKeydown(event));
-    this._isActive = true;
-  }
-  deactivate() {
-    if (!this._isActive) {
-      return;
-    }
-    this._isActive = false;
-    EventHandler.off(document, EVENT_KEY$5);
-  }
-
-  // Private
-  _handleFocusin(event) {
-    const {
-      trapElement
-    } = this._config;
-    if (event.target === document || event.target === trapElement || trapElement.contains(event.target)) {
-      return;
-    }
-    const elements = SelectorEngine.focusableChildren(trapElement);
-    if (elements.length === 0) {
-      trapElement.focus();
-    } else if (this._lastTabNavDirection === TAB_NAV_BACKWARD) {
-      elements[elements.length - 1].focus();
-    } else {
-      elements[0].focus();
-    }
-  }
-  _handleKeydown(event) {
-    if (event.key !== TAB_KEY) {
-      return;
-    }
-    this._lastTabNavDirection = event.shiftKey ? TAB_NAV_BACKWARD : TAB_NAV_FORWARD;
-  }
-}
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap util/scrollBar.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const SELECTOR_FIXED_CONTENT = '.fixed-top, .fixed-bottom, .is-fixed, .sticky-top';
-const SELECTOR_STICKY_CONTENT = '.sticky-top';
-const PROPERTY_PADDING = 'padding-right';
-const PROPERTY_MARGIN = 'margin-right';
-
-/**
- * Class definition
- */
-
-class ScrollBarHelper {
-  constructor() {
-    this._element = document.body;
-  }
-
-  // Public
-  getWidth() {
-    // https://developer.mozilla.org/en-US/docs/Web/API/Window/innerWidth#usage_notes
-    const documentWidth = document.documentElement.clientWidth;
-    return Math.abs(window.innerWidth - documentWidth);
-  }
-  hide() {
-    const width = this.getWidth();
-    this._disableOverFlow();
-    // give padding to element to balance the hidden scrollbar width
-    this._setElementAttributes(this._element, PROPERTY_PADDING, calculatedValue => calculatedValue + width);
-    // trick: We adjust positive paddingRight and negative marginRight to sticky-top elements to keep showing fullwidth
-    this._setElementAttributes(SELECTOR_FIXED_CONTENT, PROPERTY_PADDING, calculatedValue => calculatedValue + width);
-    this._setElementAttributes(SELECTOR_STICKY_CONTENT, PROPERTY_MARGIN, calculatedValue => calculatedValue - width);
-  }
-  reset() {
-    this._resetElementAttributes(this._element, 'overflow');
-    this._resetElementAttributes(this._element, PROPERTY_PADDING);
-    this._resetElementAttributes(SELECTOR_FIXED_CONTENT, PROPERTY_PADDING);
-    this._resetElementAttributes(SELECTOR_STICKY_CONTENT, PROPERTY_MARGIN);
-  }
-  isOverflowing() {
-    return this.getWidth() > 0;
-  }
-
-  // Private
-  _disableOverFlow() {
-    this._saveInitialAttribute(this._element, 'overflow');
-    this._element.style.overflow = 'hidden';
-  }
-  _setElementAttributes(selector, styleProperty, callback) {
-    const scrollbarWidth = this.getWidth();
-    const manipulationCallBack = element => {
-      if (element !== this._element && window.innerWidth > element.clientWidth + scrollbarWidth) {
-        return;
-      }
-      this._saveInitialAttribute(element, styleProperty);
-      const calculatedValue = window.getComputedStyle(element).getPropertyValue(styleProperty);
-      element.style.setProperty(styleProperty, `${callback(Number.parseFloat(calculatedValue))}px`);
-    };
-    this._applyManipulationCallback(selector, manipulationCallBack);
-  }
-  _saveInitialAttribute(element, styleProperty) {
-    const actualValue = element.style.getPropertyValue(styleProperty);
-    if (actualValue) {
-      Manipulator.setDataAttribute(element, styleProperty, actualValue);
-    }
-  }
-  _resetElementAttributes(selector, styleProperty) {
-    const manipulationCallBack = element => {
-      const value = Manipulator.getDataAttribute(element, styleProperty);
-      // We only want to remove the property if the value is `null`; the value can also be zero
-      if (value === null) {
-        element.style.removeProperty(styleProperty);
-        return;
-      }
-      Manipulator.removeDataAttribute(element, styleProperty);
-      element.style.setProperty(styleProperty, value);
-    };
-    this._applyManipulationCallback(selector, manipulationCallBack);
-  }
-  _applyManipulationCallback(selector, callBack) {
-    if (isElement(selector)) {
-      callBack(selector);
-      return;
-    }
-    for (const sel of SelectorEngine.find(selector, this._element)) {
-      callBack(sel);
-    }
-  }
-}
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap modal.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$7 = 'modal';
-const DATA_KEY$4 = 'bs.modal';
-const EVENT_KEY$4 = `.${DATA_KEY$4}`;
-const DATA_API_KEY$2 = '.data-api';
-const ESCAPE_KEY$1 = 'Escape';
-const EVENT_HIDE$4 = `hide${EVENT_KEY$4}`;
-const EVENT_HIDE_PREVENTED$1 = `hidePrevented${EVENT_KEY$4}`;
-const EVENT_HIDDEN$4 = `hidden${EVENT_KEY$4}`;
-const EVENT_SHOW$4 = `show${EVENT_KEY$4}`;
-const EVENT_SHOWN$4 = `shown${EVENT_KEY$4}`;
-const EVENT_RESIZE$1 = `resize${EVENT_KEY$4}`;
-const EVENT_CLICK_DISMISS = `click.dismiss${EVENT_KEY$4}`;
-const EVENT_MOUSEDOWN_DISMISS = `mousedown.dismiss${EVENT_KEY$4}`;
-const EVENT_KEYDOWN_DISMISS$1 = `keydown.dismiss${EVENT_KEY$4}`;
-const EVENT_CLICK_DATA_API$2 = `click${EVENT_KEY$4}${DATA_API_KEY$2}`;
-const CLASS_NAME_OPEN = 'modal-open';
-const CLASS_NAME_FADE$3 = 'fade';
-const CLASS_NAME_SHOW$4 = 'show';
-const CLASS_NAME_STATIC = 'modal-static';
-const OPEN_SELECTOR$1 = '.modal.show';
-const SELECTOR_DIALOG = '.modal-dialog';
-const SELECTOR_MODAL_BODY = '.modal-body';
-const SELECTOR_DATA_TOGGLE$2 = '[data-bs-toggle="modal"]';
-const Default$6 = {
-  backdrop: true,
-  focus: true,
-  keyboard: true
-};
-const DefaultType$6 = {
-  backdrop: '(boolean|string)',
-  focus: 'boolean',
-  keyboard: 'boolean'
-};
-
-/**
- * Class definition
- */
-
-class Modal extends BaseComponent {
-  constructor(element, config) {
-    super(element, config);
-    this._dialog = SelectorEngine.findOne(SELECTOR_DIALOG, this._element);
-    this._backdrop = this._initializeBackDrop();
-    this._focustrap = this._initializeFocusTrap();
-    this._isShown = false;
-    this._isTransitioning = false;
-    this._scrollBar = new ScrollBarHelper();
-    this._addEventListeners();
-  }
-
-  // Getters
-  static get Default() {
-    return Default$6;
-  }
-  static get DefaultType() {
-    return DefaultType$6;
-  }
-  static get NAME() {
-    return NAME$7;
-  }
-
-  // Public
-  toggle(relatedTarget) {
-    return this._isShown ? this.hide() : this.show(relatedTarget);
-  }
-  show(relatedTarget) {
-    if (this._isShown || this._isTransitioning) {
-      return;
-    }
-    const showEvent = EventHandler.trigger(this._element, EVENT_SHOW$4, {
-      relatedTarget
-    });
-    if (showEvent.defaultPrevented) {
-      return;
-    }
-    this._isShown = true;
-    this._isTransitioning = true;
-    this._scrollBar.hide();
-    document.body.classList.add(CLASS_NAME_OPEN);
-    this._adjustDialog();
-    this._backdrop.show(() => this._showElement(relatedTarget));
-  }
-  hide() {
-    if (!this._isShown || this._isTransitioning) {
-      return;
-    }
-    const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE$4);
-    if (hideEvent.defaultPrevented) {
-      return;
-    }
-    this._isShown = false;
-    this._isTransitioning = true;
-    this._focustrap.deactivate();
-    this._element.classList.remove(CLASS_NAME_SHOW$4);
-    this._queueCallback(() => this._hideModal(), this._element, this._isAnimated());
-  }
-  dispose() {
-    EventHandler.off(window, EVENT_KEY$4);
-    EventHandler.off(this._dialog, EVENT_KEY$4);
-    this._backdrop.dispose();
-    this._focustrap.deactivate();
-    super.dispose();
-  }
-  handleUpdate() {
-    this._adjustDialog();
-  }
-
-  // Private
-  _initializeBackDrop() {
-    return new Backdrop({
-      isVisible: Boolean(this._config.backdrop),
-      // 'static' option will be translated to true, and booleans will keep their value,
-      isAnimated: this._isAnimated()
-    });
-  }
-  _initializeFocusTrap() {
-    return new FocusTrap({
-      trapElement: this._element
-    });
-  }
-  _showElement(relatedTarget) {
-    // try to append dynamic modal
-    if (!document.body.contains(this._element)) {
-      document.body.append(this._element);
-    }
-    this._element.style.display = 'block';
-    this._element.removeAttribute('aria-hidden');
-    this._element.setAttribute('aria-modal', true);
-    this._element.setAttribute('role', 'dialog');
-    this._element.scrollTop = 0;
-    const modalBody = SelectorEngine.findOne(SELECTOR_MODAL_BODY, this._dialog);
-    if (modalBody) {
-      modalBody.scrollTop = 0;
-    }
-    reflow(this._element);
-    this._element.classList.add(CLASS_NAME_SHOW$4);
-    const transitionComplete = () => {
-      if (this._config.focus) {
-        this._focustrap.activate();
-      }
-      this._isTransitioning = false;
-      EventHandler.trigger(this._element, EVENT_SHOWN$4, {
-        relatedTarget
       });
-    };
-    this._queueCallback(transitionComplete, this._dialog, this._isAnimated());
-  }
-  _addEventListeners() {
-    EventHandler.on(this._element, EVENT_KEYDOWN_DISMISS$1, event => {
-      if (event.key !== ESCAPE_KEY$1) {
+    }
+    static clearMenus(event) {
+      if (event.button === RIGHT_MOUSE_BUTTON || event.type === 'keyup' && event.key !== TAB_KEY) {
         return;
       }
-      if (this._config.keyboard) {
-        this.hide();
+      const openToggles = SelectorEngine.find(SELECTOR_DATA_TOGGLE_SHOWN);
+      for (const toggle of openToggles) {
+        const context = Dropdown.getInstance(toggle);
+        if (!context || context._config.autoClose === false) {
+          continue;
+        }
+        const composedPath = event.composedPath();
+        const isMenuTarget = composedPath.includes(context._menu);
+        if (composedPath.includes(context._element) || context._config.autoClose === 'inside' && !isMenuTarget || context._config.autoClose === 'outside' && isMenuTarget) {
+          continue;
+        }
+
+        // Tab navigation through the dropdown menu or events from contained inputs shouldn't close the menu
+        if (context._menu.contains(event.target) && (event.type === 'keyup' && event.key === TAB_KEY || /input|select|option|textarea|form/i.test(event.target.tagName))) {
+          continue;
+        }
+        const relatedTarget = {
+          relatedTarget: context._element
+        };
+        if (event.type === 'click') {
+          relatedTarget.clickEvent = event;
+        }
+        context._completeHide(relatedTarget);
+      }
+    }
+    static dataApiKeydownHandler(event) {
+      // If not an UP | DOWN | ESCAPE key => not a dropdown command
+      // If input/textarea && if key is other than ESCAPE => not a dropdown command
+
+      const isInput = /input|textarea/i.test(event.target.tagName);
+      const isEscapeEvent = event.key === ESCAPE_KEY;
+      const isUpOrDownEvent = [ARROW_UP_KEY, ARROW_DOWN_KEY].includes(event.key);
+      if (!isUpOrDownEvent && !isEscapeEvent) {
         return;
       }
-      this._triggerBackdropTransition();
-    });
-    EventHandler.on(window, EVENT_RESIZE$1, () => {
-      if (this._isShown && !this._isTransitioning) {
-        this._adjustDialog();
+      if (isInput && !isEscapeEvent) {
+        return;
       }
-    });
-    EventHandler.on(this._element, EVENT_MOUSEDOWN_DISMISS, event => {
-      // a bad trick to segregate clicks that may start inside dialog but end outside, and avoid listen to scrollbar clicks
-      EventHandler.one(this._element, EVENT_CLICK_DISMISS, event2 => {
-        if (this._element !== event.target || this._element !== event2.target) {
-          return;
-        }
-        if (this._config.backdrop === 'static') {
-          this._triggerBackdropTransition();
-          return;
-        }
-        if (this._config.backdrop) {
-          this.hide();
-        }
-      });
-    });
-  }
-  _hideModal() {
-    this._element.style.display = 'none';
-    this._element.setAttribute('aria-hidden', true);
-    this._element.removeAttribute('aria-modal');
-    this._element.removeAttribute('role');
-    this._isTransitioning = false;
-    this._backdrop.hide(() => {
-      document.body.classList.remove(CLASS_NAME_OPEN);
-      this._resetAdjustments();
-      this._scrollBar.reset();
-      EventHandler.trigger(this._element, EVENT_HIDDEN$4);
-    });
-  }
-  _isAnimated() {
-    return this._element.classList.contains(CLASS_NAME_FADE$3);
-  }
-  _triggerBackdropTransition() {
-    const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED$1);
-    if (hideEvent.defaultPrevented) {
-      return;
+      event.preventDefault();
+
+      // TODO: v6 revert #37011 & change markup https://getbootstrap.com/docs/5.3/forms/input-group/
+      const getToggleButton = this.matches(SELECTOR_DATA_TOGGLE) ? this : SelectorEngine.prev(this, SELECTOR_DATA_TOGGLE)[0] || SelectorEngine.next(this, SELECTOR_DATA_TOGGLE)[0] || SelectorEngine.findOne(SELECTOR_DATA_TOGGLE, event.delegateTarget.parentNode);
+      const instance = Dropdown.getOrCreateInstance(getToggleButton);
+      if (isUpOrDownEvent) {
+        event.stopPropagation();
+        instance.show();
+        instance._selectMenuItem(event);
+        return;
+      }
+      if (instance._isShown()) {
+        // else is escape and we check if it is shown
+        event.stopPropagation();
+        instance.hide();
+        getToggleButton.focus();
+      }
     }
-    const isModalOverflowing = this._element.scrollHeight > document.documentElement.clientHeight;
-    const initialOverflowY = this._element.style.overflowY;
-    // return if the following background transition hasn't yet completed
-    if (initialOverflowY === 'hidden' || this._element.classList.contains(CLASS_NAME_STATIC)) {
-      return;
-    }
-    if (!isModalOverflowing) {
-      this._element.style.overflowY = 'hidden';
-    }
-    this._element.classList.add(CLASS_NAME_STATIC);
-    this._queueCallback(() => {
-      this._element.classList.remove(CLASS_NAME_STATIC);
-      this._queueCallback(() => {
-        this._element.style.overflowY = initialOverflowY;
-      }, this._dialog);
-    }, this._dialog);
-    this._element.focus();
   }
 
   /**
-   * The following methods are used to handle overflowing modals
+   * Data API implementation
    */
 
-  _adjustDialog() {
-    const isModalOverflowing = this._element.scrollHeight > document.documentElement.clientHeight;
-    const scrollbarWidth = this._scrollBar.getWidth();
-    const isBodyOverflowing = scrollbarWidth > 0;
-    if (isBodyOverflowing && !isModalOverflowing) {
-      const property = isRTL() ? 'paddingLeft' : 'paddingRight';
-      this._element.style[property] = `${scrollbarWidth}px`;
-    }
-    if (!isBodyOverflowing && isModalOverflowing) {
-      const property = isRTL() ? 'paddingRight' : 'paddingLeft';
-      this._element.style[property] = `${scrollbarWidth}px`;
-    }
-  }
-  _resetAdjustments() {
-    this._element.style.paddingLeft = '';
-    this._element.style.paddingRight = '';
-  }
-
-  // Static
-  static jQueryInterface(config, relatedTarget) {
-    return this.each(function () {
-      const data = Modal.getOrCreateInstance(this, config);
-      if (typeof config !== 'string') {
-        return;
-      }
-      if (typeof data[config] === 'undefined') {
-        throw new TypeError(`No method named "${config}"`);
-      }
-      data[config](relatedTarget);
-    });
-  }
-}
-
-/**
- * Data API implementation
- */
-
-EventHandler.on(document, EVENT_CLICK_DATA_API$2, SELECTOR_DATA_TOGGLE$2, function (event) {
-  const target = SelectorEngine.getElementFromSelector(this);
-  if (['A', 'AREA'].includes(this.tagName)) {
+  EventHandler.on(document, EVENT_KEYDOWN_DATA_API, SELECTOR_DATA_TOGGLE, Dropdown.dataApiKeydownHandler);
+  EventHandler.on(document, EVENT_KEYDOWN_DATA_API, SELECTOR_MENU, Dropdown.dataApiKeydownHandler);
+  EventHandler.on(document, EVENT_CLICK_DATA_API, Dropdown.clearMenus);
+  EventHandler.on(document, EVENT_KEYUP_DATA_API, Dropdown.clearMenus);
+  EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, function (event) {
     event.preventDefault();
-  }
-  EventHandler.one(target, EVENT_SHOW$4, showEvent => {
-    if (showEvent.defaultPrevented) {
-      // only register focus restorer if modal will actually get shown
-      return;
-    }
-    EventHandler.one(target, EVENT_HIDDEN$4, () => {
-      if (isVisible(this)) {
-        this.focus();
-      }
-    });
+    Dropdown.getOrCreateInstance(this).toggle();
   });
 
-  // avoid conflict when clicking modal toggler while another one is open
-  const alreadyOpen = SelectorEngine.findOne(OPEN_SELECTOR$1);
-  if (alreadyOpen) {
-    Modal.getInstance(alreadyOpen).hide();
-  }
-  const data = Modal.getOrCreateInstance(target);
-  data.toggle(this);
-});
-enableDismissTrigger(Modal);
+  /**
+   * jQuery
+   */
 
-/**
- * jQuery
- */
+  index_js.defineJQueryPlugin(Dropdown);
 
-defineJQueryPlugin(Modal);
+  return Dropdown;
 
-/**
- * --------------------------------------------------------------------------
- * Bootstrap offcanvas.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
+}));
+//# sourceMappingURL=dropdown.js.map
 
 
-/**
- * Constants
- */
+/***/ }),
 
-const NAME$6 = 'offcanvas';
-const DATA_KEY$3 = 'bs.offcanvas';
-const EVENT_KEY$3 = `.${DATA_KEY$3}`;
-const DATA_API_KEY$1 = '.data-api';
-const EVENT_LOAD_DATA_API$2 = `load${EVENT_KEY$3}${DATA_API_KEY$1}`;
-const ESCAPE_KEY = 'Escape';
-const CLASS_NAME_SHOW$3 = 'show';
-const CLASS_NAME_SHOWING$1 = 'showing';
-const CLASS_NAME_HIDING = 'hiding';
-const CLASS_NAME_BACKDROP = 'offcanvas-backdrop';
-const OPEN_SELECTOR = '.offcanvas.show';
-const EVENT_SHOW$3 = `show${EVENT_KEY$3}`;
-const EVENT_SHOWN$3 = `shown${EVENT_KEY$3}`;
-const EVENT_HIDE$3 = `hide${EVENT_KEY$3}`;
-const EVENT_HIDE_PREVENTED = `hidePrevented${EVENT_KEY$3}`;
-const EVENT_HIDDEN$3 = `hidden${EVENT_KEY$3}`;
-const EVENT_RESIZE = `resize${EVENT_KEY$3}`;
-const EVENT_CLICK_DATA_API$1 = `click${EVENT_KEY$3}${DATA_API_KEY$1}`;
-const EVENT_KEYDOWN_DISMISS = `keydown.dismiss${EVENT_KEY$3}`;
-const SELECTOR_DATA_TOGGLE$1 = '[data-bs-toggle="offcanvas"]';
-const Default$5 = {
-  backdrop: true,
-  keyboard: true,
-  scroll: false
-};
-const DefaultType$5 = {
-  backdrop: '(boolean|string)',
-  keyboard: 'boolean',
-  scroll: 'boolean'
-};
+/***/ "./node_modules/bootstrap/js/dist/offcanvas.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/offcanvas.js ***!
+  \*****************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
-/**
- * Class definition
- */
+/*!
+  * Bootstrap offcanvas.js v5.3.8 (https://getbootstrap.com/)
+  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */
+(function (global, factory) {
+   true ? module.exports = factory(__webpack_require__(/*! ./base-component.js */ "./node_modules/bootstrap/js/dist/base-component.js"), __webpack_require__(/*! ./dom/event-handler.js */ "./node_modules/bootstrap/js/dist/dom/event-handler.js"), __webpack_require__(/*! ./dom/selector-engine.js */ "./node_modules/bootstrap/js/dist/dom/selector-engine.js"), __webpack_require__(/*! ./util/backdrop.js */ "./node_modules/bootstrap/js/dist/util/backdrop.js"), __webpack_require__(/*! ./util/component-functions.js */ "./node_modules/bootstrap/js/dist/util/component-functions.js"), __webpack_require__(/*! ./util/focustrap.js */ "./node_modules/bootstrap/js/dist/util/focustrap.js"), __webpack_require__(/*! ./util/index.js */ "./node_modules/bootstrap/js/dist/util/index.js"), __webpack_require__(/*! ./util/scrollbar.js */ "./node_modules/bootstrap/js/dist/util/scrollbar.js")) :
+  0;
+})(this, (function (BaseComponent, EventHandler, SelectorEngine, Backdrop, componentFunctions_js, FocusTrap, index_js, ScrollBarHelper) { 'use strict';
 
-class Offcanvas extends BaseComponent {
-  constructor(element, config) {
-    super(element, config);
-    this._isShown = false;
-    this._backdrop = this._initializeBackDrop();
-    this._focustrap = this._initializeFocusTrap();
-    this._addEventListeners();
-  }
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap offcanvas.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
 
-  // Getters
-  static get Default() {
-    return Default$5;
-  }
-  static get DefaultType() {
-    return DefaultType$5;
-  }
-  static get NAME() {
-    return NAME$6;
-  }
 
-  // Public
-  toggle(relatedTarget) {
-    return this._isShown ? this.hide() : this.show(relatedTarget);
-  }
-  show(relatedTarget) {
-    if (this._isShown) {
-      return;
+  /**
+   * Constants
+   */
+
+  const NAME = 'offcanvas';
+  const DATA_KEY = 'bs.offcanvas';
+  const EVENT_KEY = `.${DATA_KEY}`;
+  const DATA_API_KEY = '.data-api';
+  const EVENT_LOAD_DATA_API = `load${EVENT_KEY}${DATA_API_KEY}`;
+  const ESCAPE_KEY = 'Escape';
+  const CLASS_NAME_SHOW = 'show';
+  const CLASS_NAME_SHOWING = 'showing';
+  const CLASS_NAME_HIDING = 'hiding';
+  const CLASS_NAME_BACKDROP = 'offcanvas-backdrop';
+  const OPEN_SELECTOR = '.offcanvas.show';
+  const EVENT_SHOW = `show${EVENT_KEY}`;
+  const EVENT_SHOWN = `shown${EVENT_KEY}`;
+  const EVENT_HIDE = `hide${EVENT_KEY}`;
+  const EVENT_HIDE_PREVENTED = `hidePrevented${EVENT_KEY}`;
+  const EVENT_HIDDEN = `hidden${EVENT_KEY}`;
+  const EVENT_RESIZE = `resize${EVENT_KEY}`;
+  const EVENT_CLICK_DATA_API = `click${EVENT_KEY}${DATA_API_KEY}`;
+  const EVENT_KEYDOWN_DISMISS = `keydown.dismiss${EVENT_KEY}`;
+  const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="offcanvas"]';
+  const Default = {
+    backdrop: true,
+    keyboard: true,
+    scroll: false
+  };
+  const DefaultType = {
+    backdrop: '(boolean|string)',
+    keyboard: 'boolean',
+    scroll: 'boolean'
+  };
+
+  /**
+   * Class definition
+   */
+
+  class Offcanvas extends BaseComponent {
+    constructor(element, config) {
+      super(element, config);
+      this._isShown = false;
+      this._backdrop = this._initializeBackDrop();
+      this._focustrap = this._initializeFocusTrap();
+      this._addEventListeners();
     }
-    const showEvent = EventHandler.trigger(this._element, EVENT_SHOW$3, {
-      relatedTarget
-    });
-    if (showEvent.defaultPrevented) {
-      return;
+
+    // Getters
+    static get Default() {
+      return Default;
     }
-    this._isShown = true;
-    this._backdrop.show();
-    if (!this._config.scroll) {
-      new ScrollBarHelper().hide();
+    static get DefaultType() {
+      return DefaultType;
     }
-    this._element.setAttribute('aria-modal', true);
-    this._element.setAttribute('role', 'dialog');
-    this._element.classList.add(CLASS_NAME_SHOWING$1);
-    const completeCallBack = () => {
-      if (!this._config.scroll || this._config.backdrop) {
-        this._focustrap.activate();
+    static get NAME() {
+      return NAME;
+    }
+
+    // Public
+    toggle(relatedTarget) {
+      return this._isShown ? this.hide() : this.show(relatedTarget);
+    }
+    show(relatedTarget) {
+      if (this._isShown) {
+        return;
       }
-      this._element.classList.add(CLASS_NAME_SHOW$3);
-      this._element.classList.remove(CLASS_NAME_SHOWING$1);
-      EventHandler.trigger(this._element, EVENT_SHOWN$3, {
+      const showEvent = EventHandler.trigger(this._element, EVENT_SHOW, {
         relatedTarget
       });
-    };
-    this._queueCallback(completeCallBack, this._element, true);
-  }
-  hide() {
-    if (!this._isShown) {
-      return;
-    }
-    const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE$3);
-    if (hideEvent.defaultPrevented) {
-      return;
-    }
-    this._focustrap.deactivate();
-    this._element.blur();
-    this._isShown = false;
-    this._element.classList.add(CLASS_NAME_HIDING);
-    this._backdrop.hide();
-    const completeCallback = () => {
-      this._element.classList.remove(CLASS_NAME_SHOW$3, CLASS_NAME_HIDING);
-      this._element.removeAttribute('aria-modal');
-      this._element.removeAttribute('role');
+      if (showEvent.defaultPrevented) {
+        return;
+      }
+      this._isShown = true;
+      this._backdrop.show();
       if (!this._config.scroll) {
-        new ScrollBarHelper().reset();
+        new ScrollBarHelper().hide();
       }
-      EventHandler.trigger(this._element, EVENT_HIDDEN$3);
-    };
-    this._queueCallback(completeCallback, this._element, true);
-  }
-  dispose() {
-    this._backdrop.dispose();
-    this._focustrap.deactivate();
-    super.dispose();
-  }
-
-  // Private
-  _initializeBackDrop() {
-    const clickCallback = () => {
-      if (this._config.backdrop === 'static') {
-        EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED);
+      this._element.setAttribute('aria-modal', true);
+      this._element.setAttribute('role', 'dialog');
+      this._element.classList.add(CLASS_NAME_SHOWING);
+      const completeCallBack = () => {
+        if (!this._config.scroll || this._config.backdrop) {
+          this._focustrap.activate();
+        }
+        this._element.classList.add(CLASS_NAME_SHOW);
+        this._element.classList.remove(CLASS_NAME_SHOWING);
+        EventHandler.trigger(this._element, EVENT_SHOWN, {
+          relatedTarget
+        });
+      };
+      this._queueCallback(completeCallBack, this._element, true);
+    }
+    hide() {
+      if (!this._isShown) {
         return;
       }
-      this.hide();
-    };
-
-    // 'static' option will be translated to true, and booleans will keep their value
-    const isVisible = Boolean(this._config.backdrop);
-    return new Backdrop({
-      className: CLASS_NAME_BACKDROP,
-      isVisible,
-      isAnimated: true,
-      rootElement: this._element.parentNode,
-      clickCallback: isVisible ? clickCallback : null
-    });
-  }
-  _initializeFocusTrap() {
-    return new FocusTrap({
-      trapElement: this._element
-    });
-  }
-  _addEventListeners() {
-    EventHandler.on(this._element, EVENT_KEYDOWN_DISMISS, event => {
-      if (event.key !== ESCAPE_KEY) {
+      const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE);
+      if (hideEvent.defaultPrevented) {
         return;
       }
-      if (this._config.keyboard) {
-        this.hide();
-        return;
-      }
-      EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED);
-    });
-  }
-
-  // Static
-  static jQueryInterface(config) {
-    return this.each(function () {
-      const data = Offcanvas.getOrCreateInstance(this, config);
-      if (typeof config !== 'string') {
-        return;
-      }
-      if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
-        throw new TypeError(`No method named "${config}"`);
-      }
-      data[config](this);
-    });
-  }
-}
-
-/**
- * Data API implementation
- */
-
-EventHandler.on(document, EVENT_CLICK_DATA_API$1, SELECTOR_DATA_TOGGLE$1, function (event) {
-  const target = SelectorEngine.getElementFromSelector(this);
-  if (['A', 'AREA'].includes(this.tagName)) {
-    event.preventDefault();
-  }
-  if (isDisabled(this)) {
-    return;
-  }
-  EventHandler.one(target, EVENT_HIDDEN$3, () => {
-    // focus on trigger when it is closed
-    if (isVisible(this)) {
-      this.focus();
+      this._focustrap.deactivate();
+      this._element.blur();
+      this._isShown = false;
+      this._element.classList.add(CLASS_NAME_HIDING);
+      this._backdrop.hide();
+      const completeCallback = () => {
+        this._element.classList.remove(CLASS_NAME_SHOW, CLASS_NAME_HIDING);
+        this._element.removeAttribute('aria-modal');
+        this._element.removeAttribute('role');
+        if (!this._config.scroll) {
+          new ScrollBarHelper().reset();
+        }
+        EventHandler.trigger(this._element, EVENT_HIDDEN);
+      };
+      this._queueCallback(completeCallback, this._element, true);
     }
-  });
-
-  // avoid conflict when clicking a toggler of an offcanvas, while another is open
-  const alreadyOpen = SelectorEngine.findOne(OPEN_SELECTOR);
-  if (alreadyOpen && alreadyOpen !== target) {
-    Offcanvas.getInstance(alreadyOpen).hide();
-  }
-  const data = Offcanvas.getOrCreateInstance(target);
-  data.toggle(this);
-});
-EventHandler.on(window, EVENT_LOAD_DATA_API$2, () => {
-  for (const selector of SelectorEngine.find(OPEN_SELECTOR)) {
-    Offcanvas.getOrCreateInstance(selector).show();
-  }
-});
-EventHandler.on(window, EVENT_RESIZE, () => {
-  for (const element of SelectorEngine.find('[aria-modal][class*=show][class*=offcanvas-]')) {
-    if (getComputedStyle(element).position !== 'fixed') {
-      Offcanvas.getOrCreateInstance(element).hide();
+    dispose() {
+      this._backdrop.dispose();
+      this._focustrap.deactivate();
+      super.dispose();
     }
-  }
-});
-enableDismissTrigger(Offcanvas);
-
-/**
- * jQuery
- */
-
-defineJQueryPlugin(Offcanvas);
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap util/sanitizer.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-// js-docs-start allow-list
-const ARIA_ATTRIBUTE_PATTERN = /^aria-[\w-]*$/i;
-const DefaultAllowlist = {
-  // Global attributes allowed on any supplied element below.
-  '*': ['class', 'dir', 'id', 'lang', 'role', ARIA_ATTRIBUTE_PATTERN],
-  a: ['target', 'href', 'title', 'rel'],
-  area: [],
-  b: [],
-  br: [],
-  col: [],
-  code: [],
-  dd: [],
-  div: [],
-  dl: [],
-  dt: [],
-  em: [],
-  hr: [],
-  h1: [],
-  h2: [],
-  h3: [],
-  h4: [],
-  h5: [],
-  h6: [],
-  i: [],
-  img: ['src', 'srcset', 'alt', 'title', 'width', 'height'],
-  li: [],
-  ol: [],
-  p: [],
-  pre: [],
-  s: [],
-  small: [],
-  span: [],
-  sub: [],
-  sup: [],
-  strong: [],
-  u: [],
-  ul: []
-};
-// js-docs-end allow-list
-
-const uriAttributes = new Set(['background', 'cite', 'href', 'itemtype', 'longdesc', 'poster', 'src', 'xlink:href']);
-
-/**
- * A pattern that recognizes URLs that are safe wrt. XSS in URL navigation
- * contexts.
- *
- * Shout-out to Angular https://github.com/angular/angular/blob/15.2.8/packages/core/src/sanitization/url_sanitizer.ts#L38
- */
-const SAFE_URL_PATTERN = /^(?!javascript:)(?:[a-z0-9+.-]+:|[^&:/?#]*(?:[/?#]|$))/i;
-const allowedAttribute = (attribute, allowedAttributeList) => {
-  const attributeName = attribute.nodeName.toLowerCase();
-  if (allowedAttributeList.includes(attributeName)) {
-    if (uriAttributes.has(attributeName)) {
-      return Boolean(SAFE_URL_PATTERN.test(attribute.nodeValue));
-    }
-    return true;
-  }
-
-  // Check if a regular expression validates the attribute.
-  return allowedAttributeList.filter(attributeRegex => attributeRegex instanceof RegExp).some(regex => regex.test(attributeName));
-};
-function sanitizeHtml(unsafeHtml, allowList, sanitizeFunction) {
-  if (!unsafeHtml.length) {
-    return unsafeHtml;
-  }
-  if (sanitizeFunction && typeof sanitizeFunction === 'function') {
-    return sanitizeFunction(unsafeHtml);
-  }
-  const domParser = new window.DOMParser();
-  const createdDocument = domParser.parseFromString(unsafeHtml, 'text/html');
-  const elements = [].concat(...createdDocument.body.querySelectorAll('*'));
-  for (const element of elements) {
-    const elementName = element.nodeName.toLowerCase();
-    if (!Object.keys(allowList).includes(elementName)) {
-      element.remove();
-      continue;
-    }
-    const attributeList = [].concat(...element.attributes);
-    const allowedAttributes = [].concat(allowList['*'] || [], allowList[elementName] || []);
-    for (const attribute of attributeList) {
-      if (!allowedAttribute(attribute, allowedAttributes)) {
-        element.removeAttribute(attribute.nodeName);
-      }
-    }
-  }
-  return createdDocument.body.innerHTML;
-}
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap util/template-factory.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$5 = 'TemplateFactory';
-const Default$4 = {
-  allowList: DefaultAllowlist,
-  content: {},
-  // { selector : text ,  selector2 : text2 , }
-  extraClass: '',
-  html: false,
-  sanitize: true,
-  sanitizeFn: null,
-  template: '<div></div>'
-};
-const DefaultType$4 = {
-  allowList: 'object',
-  content: 'object',
-  extraClass: '(string|function)',
-  html: 'boolean',
-  sanitize: 'boolean',
-  sanitizeFn: '(null|function)',
-  template: 'string'
-};
-const DefaultContentType = {
-  entry: '(string|element|function|null)',
-  selector: '(string|element)'
-};
-
-/**
- * Class definition
- */
-
-class TemplateFactory extends Config {
-  constructor(config) {
-    super();
-    this._config = this._getConfig(config);
-  }
-
-  // Getters
-  static get Default() {
-    return Default$4;
-  }
-  static get DefaultType() {
-    return DefaultType$4;
-  }
-  static get NAME() {
-    return NAME$5;
-  }
-
-  // Public
-  getContent() {
-    return Object.values(this._config.content).map(config => this._resolvePossibleFunction(config)).filter(Boolean);
-  }
-  hasContent() {
-    return this.getContent().length > 0;
-  }
-  changeContent(content) {
-    this._checkContent(content);
-    this._config.content = {
-      ...this._config.content,
-      ...content
-    };
-    return this;
-  }
-  toHtml() {
-    const templateWrapper = document.createElement('div');
-    templateWrapper.innerHTML = this._maybeSanitize(this._config.template);
-    for (const [selector, text] of Object.entries(this._config.content)) {
-      this._setContent(templateWrapper, text, selector);
-    }
-    const template = templateWrapper.children[0];
-    const extraClass = this._resolvePossibleFunction(this._config.extraClass);
-    if (extraClass) {
-      template.classList.add(...extraClass.split(' '));
-    }
-    return template;
-  }
-
-  // Private
-  _typeCheckConfig(config) {
-    super._typeCheckConfig(config);
-    this._checkContent(config.content);
-  }
-  _checkContent(arg) {
-    for (const [selector, content] of Object.entries(arg)) {
-      super._typeCheckConfig({
-        selector,
-        entry: content
-      }, DefaultContentType);
-    }
-  }
-  _setContent(template, content, selector) {
-    const templateElement = SelectorEngine.findOne(selector, template);
-    if (!templateElement) {
-      return;
-    }
-    content = this._resolvePossibleFunction(content);
-    if (!content) {
-      templateElement.remove();
-      return;
-    }
-    if (isElement(content)) {
-      this._putElementInTemplate(getElement(content), templateElement);
-      return;
-    }
-    if (this._config.html) {
-      templateElement.innerHTML = this._maybeSanitize(content);
-      return;
-    }
-    templateElement.textContent = content;
-  }
-  _maybeSanitize(arg) {
-    return this._config.sanitize ? sanitizeHtml(arg, this._config.allowList, this._config.sanitizeFn) : arg;
-  }
-  _resolvePossibleFunction(arg) {
-    return execute(arg, [undefined, this]);
-  }
-  _putElementInTemplate(element, templateElement) {
-    if (this._config.html) {
-      templateElement.innerHTML = '';
-      templateElement.append(element);
-      return;
-    }
-    templateElement.textContent = element.textContent;
-  }
-}
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap tooltip.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$4 = 'tooltip';
-const DISALLOWED_ATTRIBUTES = new Set(['sanitize', 'allowList', 'sanitizeFn']);
-const CLASS_NAME_FADE$2 = 'fade';
-const CLASS_NAME_MODAL = 'modal';
-const CLASS_NAME_SHOW$2 = 'show';
-const SELECTOR_TOOLTIP_INNER = '.tooltip-inner';
-const SELECTOR_MODAL = `.${CLASS_NAME_MODAL}`;
-const EVENT_MODAL_HIDE = 'hide.bs.modal';
-const TRIGGER_HOVER = 'hover';
-const TRIGGER_FOCUS = 'focus';
-const TRIGGER_CLICK = 'click';
-const TRIGGER_MANUAL = 'manual';
-const EVENT_HIDE$2 = 'hide';
-const EVENT_HIDDEN$2 = 'hidden';
-const EVENT_SHOW$2 = 'show';
-const EVENT_SHOWN$2 = 'shown';
-const EVENT_INSERTED = 'inserted';
-const EVENT_CLICK$1 = 'click';
-const EVENT_FOCUSIN$1 = 'focusin';
-const EVENT_FOCUSOUT$1 = 'focusout';
-const EVENT_MOUSEENTER = 'mouseenter';
-const EVENT_MOUSELEAVE = 'mouseleave';
-const AttachmentMap = {
-  AUTO: 'auto',
-  TOP: 'top',
-  RIGHT: isRTL() ? 'left' : 'right',
-  BOTTOM: 'bottom',
-  LEFT: isRTL() ? 'right' : 'left'
-};
-const Default$3 = {
-  allowList: DefaultAllowlist,
-  animation: true,
-  boundary: 'clippingParents',
-  container: false,
-  customClass: '',
-  delay: 0,
-  fallbackPlacements: ['top', 'right', 'bottom', 'left'],
-  html: false,
-  offset: [0, 6],
-  placement: 'top',
-  popperConfig: null,
-  sanitize: true,
-  sanitizeFn: null,
-  selector: false,
-  template: '<div class="tooltip" role="tooltip">' + '<div class="tooltip-arrow"></div>' + '<div class="tooltip-inner"></div>' + '</div>',
-  title: '',
-  trigger: 'hover focus'
-};
-const DefaultType$3 = {
-  allowList: 'object',
-  animation: 'boolean',
-  boundary: '(string|element)',
-  container: '(string|element|boolean)',
-  customClass: '(string|function)',
-  delay: '(number|object)',
-  fallbackPlacements: 'array',
-  html: 'boolean',
-  offset: '(array|string|function)',
-  placement: '(string|function)',
-  popperConfig: '(null|object|function)',
-  sanitize: 'boolean',
-  sanitizeFn: '(null|function)',
-  selector: '(string|boolean)',
-  template: 'string',
-  title: '(string|element|function)',
-  trigger: 'string'
-};
-
-/**
- * Class definition
- */
-
-class Tooltip extends BaseComponent {
-  constructor(element, config) {
-    if (typeof _popperjs_core__WEBPACK_IMPORTED_MODULE_0__ === 'undefined') {
-      throw new TypeError('Bootstrap\'s tooltips require Popper (https://popper.js.org/docs/v2/)');
-    }
-    super(element, config);
 
     // Private
-    this._isEnabled = true;
-    this._timeout = 0;
-    this._isHovered = null;
-    this._activeTrigger = {};
-    this._popper = null;
-    this._templateFactory = null;
-    this._newContent = null;
-
-    // Protected
-    this.tip = null;
-    this._setListeners();
-    if (!this._config.selector) {
-      this._fixTitle();
-    }
-  }
-
-  // Getters
-  static get Default() {
-    return Default$3;
-  }
-  static get DefaultType() {
-    return DefaultType$3;
-  }
-  static get NAME() {
-    return NAME$4;
-  }
-
-  // Public
-  enable() {
-    this._isEnabled = true;
-  }
-  disable() {
-    this._isEnabled = false;
-  }
-  toggleEnabled() {
-    this._isEnabled = !this._isEnabled;
-  }
-  toggle() {
-    if (!this._isEnabled) {
-      return;
-    }
-    if (this._isShown()) {
-      this._leave();
-      return;
-    }
-    this._enter();
-  }
-  dispose() {
-    clearTimeout(this._timeout);
-    EventHandler.off(this._element.closest(SELECTOR_MODAL), EVENT_MODAL_HIDE, this._hideModalHandler);
-    if (this._element.getAttribute('data-bs-original-title')) {
-      this._element.setAttribute('title', this._element.getAttribute('data-bs-original-title'));
-    }
-    this._disposePopper();
-    super.dispose();
-  }
-  show() {
-    if (this._element.style.display === 'none') {
-      throw new Error('Please use show on visible elements');
-    }
-    if (!(this._isWithContent() && this._isEnabled)) {
-      return;
-    }
-    const showEvent = EventHandler.trigger(this._element, this.constructor.eventName(EVENT_SHOW$2));
-    const shadowRoot = findShadowRoot(this._element);
-    const isInTheDom = (shadowRoot || this._element.ownerDocument.documentElement).contains(this._element);
-    if (showEvent.defaultPrevented || !isInTheDom) {
-      return;
-    }
-
-    // TODO: v6 remove this or make it optional
-    this._disposePopper();
-    const tip = this._getTipElement();
-    this._element.setAttribute('aria-describedby', tip.getAttribute('id'));
-    const {
-      container
-    } = this._config;
-    if (!this._element.ownerDocument.documentElement.contains(this.tip)) {
-      container.append(tip);
-      EventHandler.trigger(this._element, this.constructor.eventName(EVENT_INSERTED));
-    }
-    this._popper = this._createPopper(tip);
-    tip.classList.add(CLASS_NAME_SHOW$2);
-
-    // If this is a touch-enabled device we add extra
-    // empty mouseover listeners to the body's immediate children;
-    // only needed because of broken event delegation on iOS
-    // https://www.quirksmode.org/blog/archives/2014/02/mouse_event_bub.html
-    if ('ontouchstart' in document.documentElement) {
-      for (const element of [].concat(...document.body.children)) {
-        EventHandler.on(element, 'mouseover', noop);
-      }
-    }
-    const complete = () => {
-      EventHandler.trigger(this._element, this.constructor.eventName(EVENT_SHOWN$2));
-      if (this._isHovered === false) {
-        this._leave();
-      }
-      this._isHovered = false;
-    };
-    this._queueCallback(complete, this.tip, this._isAnimated());
-  }
-  hide() {
-    if (!this._isShown()) {
-      return;
-    }
-    const hideEvent = EventHandler.trigger(this._element, this.constructor.eventName(EVENT_HIDE$2));
-    if (hideEvent.defaultPrevented) {
-      return;
-    }
-    const tip = this._getTipElement();
-    tip.classList.remove(CLASS_NAME_SHOW$2);
-
-    // If this is a touch-enabled device we remove the extra
-    // empty mouseover listeners we added for iOS support
-    if ('ontouchstart' in document.documentElement) {
-      for (const element of [].concat(...document.body.children)) {
-        EventHandler.off(element, 'mouseover', noop);
-      }
-    }
-    this._activeTrigger[TRIGGER_CLICK] = false;
-    this._activeTrigger[TRIGGER_FOCUS] = false;
-    this._activeTrigger[TRIGGER_HOVER] = false;
-    this._isHovered = null; // it is a trick to support manual triggering
-
-    const complete = () => {
-      if (this._isWithActiveTrigger()) {
-        return;
-      }
-      if (!this._isHovered) {
-        this._disposePopper();
-      }
-      this._element.removeAttribute('aria-describedby');
-      EventHandler.trigger(this._element, this.constructor.eventName(EVENT_HIDDEN$2));
-    };
-    this._queueCallback(complete, this.tip, this._isAnimated());
-  }
-  update() {
-    if (this._popper) {
-      this._popper.update();
-    }
-  }
-
-  // Protected
-  _isWithContent() {
-    return Boolean(this._getTitle());
-  }
-  _getTipElement() {
-    if (!this.tip) {
-      this.tip = this._createTipElement(this._newContent || this._getContentForTemplate());
-    }
-    return this.tip;
-  }
-  _createTipElement(content) {
-    const tip = this._getTemplateFactory(content).toHtml();
-
-    // TODO: remove this check in v6
-    if (!tip) {
-      return null;
-    }
-    tip.classList.remove(CLASS_NAME_FADE$2, CLASS_NAME_SHOW$2);
-    // TODO: v6 the following can be achieved with CSS only
-    tip.classList.add(`bs-${this.constructor.NAME}-auto`);
-    const tipId = getUID(this.constructor.NAME).toString();
-    tip.setAttribute('id', tipId);
-    if (this._isAnimated()) {
-      tip.classList.add(CLASS_NAME_FADE$2);
-    }
-    return tip;
-  }
-  setContent(content) {
-    this._newContent = content;
-    if (this._isShown()) {
-      this._disposePopper();
-      this.show();
-    }
-  }
-  _getTemplateFactory(content) {
-    if (this._templateFactory) {
-      this._templateFactory.changeContent(content);
-    } else {
-      this._templateFactory = new TemplateFactory({
-        ...this._config,
-        // the `content` var has to be after `this._config`
-        // to override config.content in case of popover
-        content,
-        extraClass: this._resolvePossibleFunction(this._config.customClass)
-      });
-    }
-    return this._templateFactory;
-  }
-  _getContentForTemplate() {
-    return {
-      [SELECTOR_TOOLTIP_INNER]: this._getTitle()
-    };
-  }
-  _getTitle() {
-    return this._resolvePossibleFunction(this._config.title) || this._element.getAttribute('data-bs-original-title');
-  }
-
-  // Private
-  _initializeOnDelegatedTarget(event) {
-    return this.constructor.getOrCreateInstance(event.delegateTarget, this._getDelegateConfig());
-  }
-  _isAnimated() {
-    return this._config.animation || this.tip && this.tip.classList.contains(CLASS_NAME_FADE$2);
-  }
-  _isShown() {
-    return this.tip && this.tip.classList.contains(CLASS_NAME_SHOW$2);
-  }
-  _createPopper(tip) {
-    const placement = execute(this._config.placement, [this, tip, this._element]);
-    const attachment = AttachmentMap[placement.toUpperCase()];
-    return _popperjs_core__WEBPACK_IMPORTED_MODULE_1__.createPopper(this._element, tip, this._getPopperConfig(attachment));
-  }
-  _getOffset() {
-    const {
-      offset
-    } = this._config;
-    if (typeof offset === 'string') {
-      return offset.split(',').map(value => Number.parseInt(value, 10));
-    }
-    if (typeof offset === 'function') {
-      return popperData => offset(popperData, this._element);
-    }
-    return offset;
-  }
-  _resolvePossibleFunction(arg) {
-    return execute(arg, [this._element, this._element]);
-  }
-  _getPopperConfig(attachment) {
-    const defaultBsPopperConfig = {
-      placement: attachment,
-      modifiers: [{
-        name: 'flip',
-        options: {
-          fallbackPlacements: this._config.fallbackPlacements
+    _initializeBackDrop() {
+      const clickCallback = () => {
+        if (this._config.backdrop === 'static') {
+          EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED);
+          return;
         }
-      }, {
-        name: 'offset',
-        options: {
-          offset: this._getOffset()
-        }
-      }, {
-        name: 'preventOverflow',
-        options: {
-          boundary: this._config.boundary
-        }
-      }, {
-        name: 'arrow',
-        options: {
-          element: `.${this.constructor.NAME}-arrow`
-        }
-      }, {
-        name: 'preSetPlacement',
-        enabled: true,
-        phase: 'beforeMain',
-        fn: data => {
-          // Pre-set Popper's placement attribute in order to read the arrow sizes properly.
-          // Otherwise, Popper mixes up the width and height dimensions since the initial arrow style is for top placement
-          this._getTipElement().setAttribute('data-popper-placement', data.state.placement);
-        }
-      }]
-    };
-    return {
-      ...defaultBsPopperConfig,
-      ...execute(this._config.popperConfig, [undefined, defaultBsPopperConfig])
-    };
-  }
-  _setListeners() {
-    const triggers = this._config.trigger.split(' ');
-    for (const trigger of triggers) {
-      if (trigger === 'click') {
-        EventHandler.on(this._element, this.constructor.eventName(EVENT_CLICK$1), this._config.selector, event => {
-          const context = this._initializeOnDelegatedTarget(event);
-          context._activeTrigger[TRIGGER_CLICK] = !(context._isShown() && context._activeTrigger[TRIGGER_CLICK]);
-          context.toggle();
-        });
-      } else if (trigger !== TRIGGER_MANUAL) {
-        const eventIn = trigger === TRIGGER_HOVER ? this.constructor.eventName(EVENT_MOUSEENTER) : this.constructor.eventName(EVENT_FOCUSIN$1);
-        const eventOut = trigger === TRIGGER_HOVER ? this.constructor.eventName(EVENT_MOUSELEAVE) : this.constructor.eventName(EVENT_FOCUSOUT$1);
-        EventHandler.on(this._element, eventIn, this._config.selector, event => {
-          const context = this._initializeOnDelegatedTarget(event);
-          context._activeTrigger[event.type === 'focusin' ? TRIGGER_FOCUS : TRIGGER_HOVER] = true;
-          context._enter();
-        });
-        EventHandler.on(this._element, eventOut, this._config.selector, event => {
-          const context = this._initializeOnDelegatedTarget(event);
-          context._activeTrigger[event.type === 'focusout' ? TRIGGER_FOCUS : TRIGGER_HOVER] = context._element.contains(event.relatedTarget);
-          context._leave();
-        });
-      }
-    }
-    this._hideModalHandler = () => {
-      if (this._element) {
         this.hide();
-      }
-    };
-    EventHandler.on(this._element.closest(SELECTOR_MODAL), EVENT_MODAL_HIDE, this._hideModalHandler);
-  }
-  _fixTitle() {
-    const title = this._element.getAttribute('title');
-    if (!title) {
-      return;
-    }
-    if (!this._element.getAttribute('aria-label') && !this._element.textContent.trim()) {
-      this._element.setAttribute('aria-label', title);
-    }
-    this._element.setAttribute('data-bs-original-title', title); // DO NOT USE IT. Is only for backwards compatibility
-    this._element.removeAttribute('title');
-  }
-  _enter() {
-    if (this._isShown() || this._isHovered) {
-      this._isHovered = true;
-      return;
-    }
-    this._isHovered = true;
-    this._setTimeout(() => {
-      if (this._isHovered) {
-        this.show();
-      }
-    }, this._config.delay.show);
-  }
-  _leave() {
-    if (this._isWithActiveTrigger()) {
-      return;
-    }
-    this._isHovered = false;
-    this._setTimeout(() => {
-      if (!this._isHovered) {
-        this.hide();
-      }
-    }, this._config.delay.hide);
-  }
-  _setTimeout(handler, timeout) {
-    clearTimeout(this._timeout);
-    this._timeout = setTimeout(handler, timeout);
-  }
-  _isWithActiveTrigger() {
-    return Object.values(this._activeTrigger).includes(true);
-  }
-  _getConfig(config) {
-    const dataAttributes = Manipulator.getDataAttributes(this._element);
-    for (const dataAttribute of Object.keys(dataAttributes)) {
-      if (DISALLOWED_ATTRIBUTES.has(dataAttribute)) {
-        delete dataAttributes[dataAttribute];
-      }
-    }
-    config = {
-      ...dataAttributes,
-      ...(typeof config === 'object' && config ? config : {})
-    };
-    config = this._mergeConfigObj(config);
-    config = this._configAfterMerge(config);
-    this._typeCheckConfig(config);
-    return config;
-  }
-  _configAfterMerge(config) {
-    config.container = config.container === false ? document.body : getElement(config.container);
-    if (typeof config.delay === 'number') {
-      config.delay = {
-        show: config.delay,
-        hide: config.delay
       };
+
+      // 'static' option will be translated to true, and booleans will keep their value
+      const isVisible = Boolean(this._config.backdrop);
+      return new Backdrop({
+        className: CLASS_NAME_BACKDROP,
+        isVisible,
+        isAnimated: true,
+        rootElement: this._element.parentNode,
+        clickCallback: isVisible ? clickCallback : null
+      });
     }
-    if (typeof config.title === 'number') {
-      config.title = config.title.toString();
+    _initializeFocusTrap() {
+      return new FocusTrap({
+        trapElement: this._element
+      });
     }
-    if (typeof config.content === 'number') {
-      config.content = config.content.toString();
-    }
-    return config;
-  }
-  _getDelegateConfig() {
-    const config = {};
-    for (const [key, value] of Object.entries(this._config)) {
-      if (this.constructor.Default[key] !== value) {
-        config[key] = value;
-      }
-    }
-    config.selector = false;
-    config.trigger = 'manual';
-
-    // In the future can be replaced with:
-    // const keysWithDifferentValues = Object.entries(this._config).filter(entry => this.constructor.Default[entry[0]] !== this._config[entry[0]])
-    // `Object.fromEntries(keysWithDifferentValues)`
-    return config;
-  }
-  _disposePopper() {
-    if (this._popper) {
-      this._popper.destroy();
-      this._popper = null;
-    }
-    if (this.tip) {
-      this.tip.remove();
-      this.tip = null;
-    }
-  }
-
-  // Static
-  static jQueryInterface(config) {
-    return this.each(function () {
-      const data = Tooltip.getOrCreateInstance(this, config);
-      if (typeof config !== 'string') {
-        return;
-      }
-      if (typeof data[config] === 'undefined') {
-        throw new TypeError(`No method named "${config}"`);
-      }
-      data[config]();
-    });
-  }
-}
-
-/**
- * jQuery
- */
-
-defineJQueryPlugin(Tooltip);
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap popover.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$3 = 'popover';
-const SELECTOR_TITLE = '.popover-header';
-const SELECTOR_CONTENT = '.popover-body';
-const Default$2 = {
-  ...Tooltip.Default,
-  content: '',
-  offset: [0, 8],
-  placement: 'right',
-  template: '<div class="popover" role="tooltip">' + '<div class="popover-arrow"></div>' + '<h3 class="popover-header"></h3>' + '<div class="popover-body"></div>' + '</div>',
-  trigger: 'click'
-};
-const DefaultType$2 = {
-  ...Tooltip.DefaultType,
-  content: '(null|string|element|function)'
-};
-
-/**
- * Class definition
- */
-
-class Popover extends Tooltip {
-  // Getters
-  static get Default() {
-    return Default$2;
-  }
-  static get DefaultType() {
-    return DefaultType$2;
-  }
-  static get NAME() {
-    return NAME$3;
-  }
-
-  // Overrides
-  _isWithContent() {
-    return this._getTitle() || this._getContent();
-  }
-
-  // Private
-  _getContentForTemplate() {
-    return {
-      [SELECTOR_TITLE]: this._getTitle(),
-      [SELECTOR_CONTENT]: this._getContent()
-    };
-  }
-  _getContent() {
-    return this._resolvePossibleFunction(this._config.content);
-  }
-
-  // Static
-  static jQueryInterface(config) {
-    return this.each(function () {
-      const data = Popover.getOrCreateInstance(this, config);
-      if (typeof config !== 'string') {
-        return;
-      }
-      if (typeof data[config] === 'undefined') {
-        throw new TypeError(`No method named "${config}"`);
-      }
-      data[config]();
-    });
-  }
-}
-
-/**
- * jQuery
- */
-
-defineJQueryPlugin(Popover);
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap scrollspy.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$2 = 'scrollspy';
-const DATA_KEY$2 = 'bs.scrollspy';
-const EVENT_KEY$2 = `.${DATA_KEY$2}`;
-const DATA_API_KEY = '.data-api';
-const EVENT_ACTIVATE = `activate${EVENT_KEY$2}`;
-const EVENT_CLICK = `click${EVENT_KEY$2}`;
-const EVENT_LOAD_DATA_API$1 = `load${EVENT_KEY$2}${DATA_API_KEY}`;
-const CLASS_NAME_DROPDOWN_ITEM = 'dropdown-item';
-const CLASS_NAME_ACTIVE$1 = 'active';
-const SELECTOR_DATA_SPY = '[data-bs-spy="scroll"]';
-const SELECTOR_TARGET_LINKS = '[href]';
-const SELECTOR_NAV_LIST_GROUP = '.nav, .list-group';
-const SELECTOR_NAV_LINKS = '.nav-link';
-const SELECTOR_NAV_ITEMS = '.nav-item';
-const SELECTOR_LIST_ITEMS = '.list-group-item';
-const SELECTOR_LINK_ITEMS = `${SELECTOR_NAV_LINKS}, ${SELECTOR_NAV_ITEMS} > ${SELECTOR_NAV_LINKS}, ${SELECTOR_LIST_ITEMS}`;
-const SELECTOR_DROPDOWN = '.dropdown';
-const SELECTOR_DROPDOWN_TOGGLE$1 = '.dropdown-toggle';
-const Default$1 = {
-  offset: null,
-  // TODO: v6 @deprecated, keep it for backwards compatibility reasons
-  rootMargin: '0px 0px -25%',
-  smoothScroll: false,
-  target: null,
-  threshold: [0.1, 0.5, 1]
-};
-const DefaultType$1 = {
-  offset: '(number|null)',
-  // TODO v6 @deprecated, keep it for backwards compatibility reasons
-  rootMargin: 'string',
-  smoothScroll: 'boolean',
-  target: 'element',
-  threshold: 'array'
-};
-
-/**
- * Class definition
- */
-
-class ScrollSpy extends BaseComponent {
-  constructor(element, config) {
-    super(element, config);
-
-    // this._element is the observablesContainer and config.target the menu links wrapper
-    this._targetLinks = new Map();
-    this._observableSections = new Map();
-    this._rootElement = getComputedStyle(this._element).overflowY === 'visible' ? null : this._element;
-    this._activeTarget = null;
-    this._observer = null;
-    this._previousScrollData = {
-      visibleEntryTop: 0,
-      parentScrollTop: 0
-    };
-    this.refresh(); // initialize
-  }
-
-  // Getters
-  static get Default() {
-    return Default$1;
-  }
-  static get DefaultType() {
-    return DefaultType$1;
-  }
-  static get NAME() {
-    return NAME$2;
-  }
-
-  // Public
-  refresh() {
-    this._initializeTargetsAndObservables();
-    this._maybeEnableSmoothScroll();
-    if (this._observer) {
-      this._observer.disconnect();
-    } else {
-      this._observer = this._getNewObserver();
-    }
-    for (const section of this._observableSections.values()) {
-      this._observer.observe(section);
-    }
-  }
-  dispose() {
-    this._observer.disconnect();
-    super.dispose();
-  }
-
-  // Private
-  _configAfterMerge(config) {
-    // TODO: on v6 target should be given explicitly & remove the {target: 'ss-target'} case
-    config.target = getElement(config.target) || document.body;
-
-    // TODO: v6 Only for backwards compatibility reasons. Use rootMargin only
-    config.rootMargin = config.offset ? `${config.offset}px 0px -30%` : config.rootMargin;
-    if (typeof config.threshold === 'string') {
-      config.threshold = config.threshold.split(',').map(value => Number.parseFloat(value));
-    }
-    return config;
-  }
-  _maybeEnableSmoothScroll() {
-    if (!this._config.smoothScroll) {
-      return;
-    }
-
-    // unregister any previous listeners
-    EventHandler.off(this._config.target, EVENT_CLICK);
-    EventHandler.on(this._config.target, EVENT_CLICK, SELECTOR_TARGET_LINKS, event => {
-      const observableSection = this._observableSections.get(event.target.hash);
-      if (observableSection) {
-        event.preventDefault();
-        const root = this._rootElement || window;
-        const height = observableSection.offsetTop - this._element.offsetTop;
-        if (root.scrollTo) {
-          root.scrollTo({
-            top: height,
-            behavior: 'smooth'
-          });
+    _addEventListeners() {
+      EventHandler.on(this._element, EVENT_KEYDOWN_DISMISS, event => {
+        if (event.key !== ESCAPE_KEY) {
           return;
         }
-
-        // Chrome 60 doesn't support `scrollTo`
-        root.scrollTop = height;
-      }
-    });
-  }
-  _getNewObserver() {
-    const options = {
-      root: this._rootElement,
-      threshold: this._config.threshold,
-      rootMargin: this._config.rootMargin
-    };
-    return new IntersectionObserver(entries => this._observerCallback(entries), options);
-  }
-
-  // The logic of selection
-  _observerCallback(entries) {
-    const targetElement = entry => this._targetLinks.get(`#${entry.target.id}`);
-    const activate = entry => {
-      this._previousScrollData.visibleEntryTop = entry.target.offsetTop;
-      this._process(targetElement(entry));
-    };
-    const parentScrollTop = (this._rootElement || document.documentElement).scrollTop;
-    const userScrollsDown = parentScrollTop >= this._previousScrollData.parentScrollTop;
-    this._previousScrollData.parentScrollTop = parentScrollTop;
-    for (const entry of entries) {
-      if (!entry.isIntersecting) {
-        this._activeTarget = null;
-        this._clearActiveClass(targetElement(entry));
-        continue;
-      }
-      const entryIsLowerThanPrevious = entry.target.offsetTop >= this._previousScrollData.visibleEntryTop;
-      // if we are scrolling down, pick the bigger offsetTop
-      if (userScrollsDown && entryIsLowerThanPrevious) {
-        activate(entry);
-        // if parent isn't scrolled, let's keep the first visible item, breaking the iteration
-        if (!parentScrollTop) {
+        if (this._config.keyboard) {
+          this.hide();
           return;
         }
-        continue;
-      }
-
-      // if we are scrolling up, pick the smallest offsetTop
-      if (!userScrollsDown && !entryIsLowerThanPrevious) {
-        activate(entry);
-      }
-    }
-  }
-  _initializeTargetsAndObservables() {
-    this._targetLinks = new Map();
-    this._observableSections = new Map();
-    const targetLinks = SelectorEngine.find(SELECTOR_TARGET_LINKS, this._config.target);
-    for (const anchor of targetLinks) {
-      // ensure that the anchor has an id and is not disabled
-      if (!anchor.hash || isDisabled(anchor)) {
-        continue;
-      }
-      const observableSection = SelectorEngine.findOne(decodeURI(anchor.hash), this._element);
-
-      // ensure that the observableSection exists & is visible
-      if (isVisible(observableSection)) {
-        this._targetLinks.set(decodeURI(anchor.hash), anchor);
-        this._observableSections.set(anchor.hash, observableSection);
-      }
-    }
-  }
-  _process(target) {
-    if (this._activeTarget === target) {
-      return;
-    }
-    this._clearActiveClass(this._config.target);
-    this._activeTarget = target;
-    target.classList.add(CLASS_NAME_ACTIVE$1);
-    this._activateParents(target);
-    EventHandler.trigger(this._element, EVENT_ACTIVATE, {
-      relatedTarget: target
-    });
-  }
-  _activateParents(target) {
-    // Activate dropdown parents
-    if (target.classList.contains(CLASS_NAME_DROPDOWN_ITEM)) {
-      SelectorEngine.findOne(SELECTOR_DROPDOWN_TOGGLE$1, target.closest(SELECTOR_DROPDOWN)).classList.add(CLASS_NAME_ACTIVE$1);
-      return;
-    }
-    for (const listGroup of SelectorEngine.parents(target, SELECTOR_NAV_LIST_GROUP)) {
-      // Set triggered links parents as active
-      // With both <ul> and <nav> markup a parent is the previous sibling of any nav ancestor
-      for (const item of SelectorEngine.prev(listGroup, SELECTOR_LINK_ITEMS)) {
-        item.classList.add(CLASS_NAME_ACTIVE$1);
-      }
-    }
-  }
-  _clearActiveClass(parent) {
-    parent.classList.remove(CLASS_NAME_ACTIVE$1);
-    const activeNodes = SelectorEngine.find(`${SELECTOR_TARGET_LINKS}.${CLASS_NAME_ACTIVE$1}`, parent);
-    for (const node of activeNodes) {
-      node.classList.remove(CLASS_NAME_ACTIVE$1);
-    }
-  }
-
-  // Static
-  static jQueryInterface(config) {
-    return this.each(function () {
-      const data = ScrollSpy.getOrCreateInstance(this, config);
-      if (typeof config !== 'string') {
-        return;
-      }
-      if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
-        throw new TypeError(`No method named "${config}"`);
-      }
-      data[config]();
-    });
-  }
-}
-
-/**
- * Data API implementation
- */
-
-EventHandler.on(window, EVENT_LOAD_DATA_API$1, () => {
-  for (const spy of SelectorEngine.find(SELECTOR_DATA_SPY)) {
-    ScrollSpy.getOrCreateInstance(spy);
-  }
-});
-
-/**
- * jQuery
- */
-
-defineJQueryPlugin(ScrollSpy);
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap tab.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME$1 = 'tab';
-const DATA_KEY$1 = 'bs.tab';
-const EVENT_KEY$1 = `.${DATA_KEY$1}`;
-const EVENT_HIDE$1 = `hide${EVENT_KEY$1}`;
-const EVENT_HIDDEN$1 = `hidden${EVENT_KEY$1}`;
-const EVENT_SHOW$1 = `show${EVENT_KEY$1}`;
-const EVENT_SHOWN$1 = `shown${EVENT_KEY$1}`;
-const EVENT_CLICK_DATA_API = `click${EVENT_KEY$1}`;
-const EVENT_KEYDOWN = `keydown${EVENT_KEY$1}`;
-const EVENT_LOAD_DATA_API = `load${EVENT_KEY$1}`;
-const ARROW_LEFT_KEY = 'ArrowLeft';
-const ARROW_RIGHT_KEY = 'ArrowRight';
-const ARROW_UP_KEY = 'ArrowUp';
-const ARROW_DOWN_KEY = 'ArrowDown';
-const HOME_KEY = 'Home';
-const END_KEY = 'End';
-const CLASS_NAME_ACTIVE = 'active';
-const CLASS_NAME_FADE$1 = 'fade';
-const CLASS_NAME_SHOW$1 = 'show';
-const CLASS_DROPDOWN = 'dropdown';
-const SELECTOR_DROPDOWN_TOGGLE = '.dropdown-toggle';
-const SELECTOR_DROPDOWN_MENU = '.dropdown-menu';
-const NOT_SELECTOR_DROPDOWN_TOGGLE = `:not(${SELECTOR_DROPDOWN_TOGGLE})`;
-const SELECTOR_TAB_PANEL = '.list-group, .nav, [role="tablist"]';
-const SELECTOR_OUTER = '.nav-item, .list-group-item';
-const SELECTOR_INNER = `.nav-link${NOT_SELECTOR_DROPDOWN_TOGGLE}, .list-group-item${NOT_SELECTOR_DROPDOWN_TOGGLE}, [role="tab"]${NOT_SELECTOR_DROPDOWN_TOGGLE}`;
-const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="tab"], [data-bs-toggle="pill"], [data-bs-toggle="list"]'; // TODO: could only be `tab` in v6
-const SELECTOR_INNER_ELEM = `${SELECTOR_INNER}, ${SELECTOR_DATA_TOGGLE}`;
-const SELECTOR_DATA_TOGGLE_ACTIVE = `.${CLASS_NAME_ACTIVE}[data-bs-toggle="tab"], .${CLASS_NAME_ACTIVE}[data-bs-toggle="pill"], .${CLASS_NAME_ACTIVE}[data-bs-toggle="list"]`;
-
-/**
- * Class definition
- */
-
-class Tab extends BaseComponent {
-  constructor(element) {
-    super(element);
-    this._parent = this._element.closest(SELECTOR_TAB_PANEL);
-    if (!this._parent) {
-      return;
-      // TODO: should throw exception in v6
-      // throw new TypeError(`${element.outerHTML} has not a valid parent ${SELECTOR_INNER_ELEM}`)
-    }
-
-    // Set up initial aria attributes
-    this._setInitialAttributes(this._parent, this._getChildren());
-    EventHandler.on(this._element, EVENT_KEYDOWN, event => this._keydown(event));
-  }
-
-  // Getters
-  static get NAME() {
-    return NAME$1;
-  }
-
-  // Public
-  show() {
-    // Shows this elem and deactivate the active sibling if exists
-    const innerElem = this._element;
-    if (this._elemIsActive(innerElem)) {
-      return;
-    }
-
-    // Search for active tab on same parent to deactivate it
-    const active = this._getActiveElem();
-    const hideEvent = active ? EventHandler.trigger(active, EVENT_HIDE$1, {
-      relatedTarget: innerElem
-    }) : null;
-    const showEvent = EventHandler.trigger(innerElem, EVENT_SHOW$1, {
-      relatedTarget: active
-    });
-    if (showEvent.defaultPrevented || hideEvent && hideEvent.defaultPrevented) {
-      return;
-    }
-    this._deactivate(active, innerElem);
-    this._activate(innerElem, active);
-  }
-
-  // Private
-  _activate(element, relatedElem) {
-    if (!element) {
-      return;
-    }
-    element.classList.add(CLASS_NAME_ACTIVE);
-    this._activate(SelectorEngine.getElementFromSelector(element)); // Search and activate/show the proper section
-
-    const complete = () => {
-      if (element.getAttribute('role') !== 'tab') {
-        element.classList.add(CLASS_NAME_SHOW$1);
-        return;
-      }
-      element.removeAttribute('tabindex');
-      element.setAttribute('aria-selected', true);
-      this._toggleDropDown(element, true);
-      EventHandler.trigger(element, EVENT_SHOWN$1, {
-        relatedTarget: relatedElem
+        EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED);
       });
-    };
-    this._queueCallback(complete, element, element.classList.contains(CLASS_NAME_FADE$1));
-  }
-  _deactivate(element, relatedElem) {
-    if (!element) {
-      return;
     }
-    element.classList.remove(CLASS_NAME_ACTIVE);
-    element.blur();
-    this._deactivate(SelectorEngine.getElementFromSelector(element)); // Search and deactivate the shown section too
 
-    const complete = () => {
-      if (element.getAttribute('role') !== 'tab') {
-        element.classList.remove(CLASS_NAME_SHOW$1);
-        return;
-      }
-      element.setAttribute('aria-selected', false);
-      element.setAttribute('tabindex', '-1');
-      this._toggleDropDown(element, false);
-      EventHandler.trigger(element, EVENT_HIDDEN$1, {
-        relatedTarget: relatedElem
-      });
-    };
-    this._queueCallback(complete, element, element.classList.contains(CLASS_NAME_FADE$1));
-  }
-  _keydown(event) {
-    if (![ARROW_LEFT_KEY, ARROW_RIGHT_KEY, ARROW_UP_KEY, ARROW_DOWN_KEY, HOME_KEY, END_KEY].includes(event.key)) {
-      return;
-    }
-    event.stopPropagation(); // stopPropagation/preventDefault both added to support up/down keys without scrolling the page
-    event.preventDefault();
-    const children = this._getChildren().filter(element => !isDisabled(element));
-    let nextActiveElement;
-    if ([HOME_KEY, END_KEY].includes(event.key)) {
-      nextActiveElement = children[event.key === HOME_KEY ? 0 : children.length - 1];
-    } else {
-      const isNext = [ARROW_RIGHT_KEY, ARROW_DOWN_KEY].includes(event.key);
-      nextActiveElement = getNextActiveElement(children, event.target, isNext, true);
-    }
-    if (nextActiveElement) {
-      nextActiveElement.focus({
-        preventScroll: true
-      });
-      Tab.getOrCreateInstance(nextActiveElement).show();
-    }
-  }
-  _getChildren() {
-    // collection of inner elements
-    return SelectorEngine.find(SELECTOR_INNER_ELEM, this._parent);
-  }
-  _getActiveElem() {
-    return this._getChildren().find(child => this._elemIsActive(child)) || null;
-  }
-  _setInitialAttributes(parent, children) {
-    this._setAttributeIfNotExists(parent, 'role', 'tablist');
-    for (const child of children) {
-      this._setInitialAttributesOnChild(child);
-    }
-  }
-  _setInitialAttributesOnChild(child) {
-    child = this._getInnerElement(child);
-    const isActive = this._elemIsActive(child);
-    const outerElem = this._getOuterElement(child);
-    child.setAttribute('aria-selected', isActive);
-    if (outerElem !== child) {
-      this._setAttributeIfNotExists(outerElem, 'role', 'presentation');
-    }
-    if (!isActive) {
-      child.setAttribute('tabindex', '-1');
-    }
-    this._setAttributeIfNotExists(child, 'role', 'tab');
-
-    // set attributes to the related panel too
-    this._setInitialAttributesOnTargetPanel(child);
-  }
-  _setInitialAttributesOnTargetPanel(child) {
-    const target = SelectorEngine.getElementFromSelector(child);
-    if (!target) {
-      return;
-    }
-    this._setAttributeIfNotExists(target, 'role', 'tabpanel');
-    if (child.id) {
-      this._setAttributeIfNotExists(target, 'aria-labelledby', `${child.id}`);
-    }
-  }
-  _toggleDropDown(element, open) {
-    const outerElem = this._getOuterElement(element);
-    if (!outerElem.classList.contains(CLASS_DROPDOWN)) {
-      return;
-    }
-    const toggle = (selector, className) => {
-      const element = SelectorEngine.findOne(selector, outerElem);
-      if (element) {
-        element.classList.toggle(className, open);
-      }
-    };
-    toggle(SELECTOR_DROPDOWN_TOGGLE, CLASS_NAME_ACTIVE);
-    toggle(SELECTOR_DROPDOWN_MENU, CLASS_NAME_SHOW$1);
-    outerElem.setAttribute('aria-expanded', open);
-  }
-  _setAttributeIfNotExists(element, attribute, value) {
-    if (!element.hasAttribute(attribute)) {
-      element.setAttribute(attribute, value);
-    }
-  }
-  _elemIsActive(elem) {
-    return elem.classList.contains(CLASS_NAME_ACTIVE);
-  }
-
-  // Try to get the inner element (usually the .nav-link)
-  _getInnerElement(elem) {
-    return elem.matches(SELECTOR_INNER_ELEM) ? elem : SelectorEngine.findOne(SELECTOR_INNER_ELEM, elem);
-  }
-
-  // Try to get the outer element (usually the .nav-item)
-  _getOuterElement(elem) {
-    return elem.closest(SELECTOR_OUTER) || elem;
-  }
-
-  // Static
-  static jQueryInterface(config) {
-    return this.each(function () {
-      const data = Tab.getOrCreateInstance(this);
-      if (typeof config !== 'string') {
-        return;
-      }
-      if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
-        throw new TypeError(`No method named "${config}"`);
-      }
-      data[config]();
-    });
-  }
-}
-
-/**
- * Data API implementation
- */
-
-EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, function (event) {
-  if (['A', 'AREA'].includes(this.tagName)) {
-    event.preventDefault();
-  }
-  if (isDisabled(this)) {
-    return;
-  }
-  Tab.getOrCreateInstance(this).show();
-});
-
-/**
- * Initialize on focus
- */
-EventHandler.on(window, EVENT_LOAD_DATA_API, () => {
-  for (const element of SelectorEngine.find(SELECTOR_DATA_TOGGLE_ACTIVE)) {
-    Tab.getOrCreateInstance(element);
-  }
-});
-/**
- * jQuery
- */
-
-defineJQueryPlugin(Tab);
-
-/**
- * --------------------------------------------------------------------------
- * Bootstrap toast.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
-
-
-/**
- * Constants
- */
-
-const NAME = 'toast';
-const DATA_KEY = 'bs.toast';
-const EVENT_KEY = `.${DATA_KEY}`;
-const EVENT_MOUSEOVER = `mouseover${EVENT_KEY}`;
-const EVENT_MOUSEOUT = `mouseout${EVENT_KEY}`;
-const EVENT_FOCUSIN = `focusin${EVENT_KEY}`;
-const EVENT_FOCUSOUT = `focusout${EVENT_KEY}`;
-const EVENT_HIDE = `hide${EVENT_KEY}`;
-const EVENT_HIDDEN = `hidden${EVENT_KEY}`;
-const EVENT_SHOW = `show${EVENT_KEY}`;
-const EVENT_SHOWN = `shown${EVENT_KEY}`;
-const CLASS_NAME_FADE = 'fade';
-const CLASS_NAME_HIDE = 'hide'; // @deprecated - kept here only for backwards compatibility
-const CLASS_NAME_SHOW = 'show';
-const CLASS_NAME_SHOWING = 'showing';
-const DefaultType = {
-  animation: 'boolean',
-  autohide: 'boolean',
-  delay: 'number'
-};
-const Default = {
-  animation: true,
-  autohide: true,
-  delay: 5000
-};
-
-/**
- * Class definition
- */
-
-class Toast extends BaseComponent {
-  constructor(element, config) {
-    super(element, config);
-    this._timeout = null;
-    this._hasMouseInteraction = false;
-    this._hasKeyboardInteraction = false;
-    this._setListeners();
-  }
-
-  // Getters
-  static get Default() {
-    return Default;
-  }
-  static get DefaultType() {
-    return DefaultType;
-  }
-  static get NAME() {
-    return NAME;
-  }
-
-  // Public
-  show() {
-    const showEvent = EventHandler.trigger(this._element, EVENT_SHOW);
-    if (showEvent.defaultPrevented) {
-      return;
-    }
-    this._clearTimeout();
-    if (this._config.animation) {
-      this._element.classList.add(CLASS_NAME_FADE);
-    }
-    const complete = () => {
-      this._element.classList.remove(CLASS_NAME_SHOWING);
-      EventHandler.trigger(this._element, EVENT_SHOWN);
-      this._maybeScheduleHide();
-    };
-    this._element.classList.remove(CLASS_NAME_HIDE); // @deprecated
-    reflow(this._element);
-    this._element.classList.add(CLASS_NAME_SHOW, CLASS_NAME_SHOWING);
-    this._queueCallback(complete, this._element, this._config.animation);
-  }
-  hide() {
-    if (!this.isShown()) {
-      return;
-    }
-    const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE);
-    if (hideEvent.defaultPrevented) {
-      return;
-    }
-    const complete = () => {
-      this._element.classList.add(CLASS_NAME_HIDE); // @deprecated
-      this._element.classList.remove(CLASS_NAME_SHOWING, CLASS_NAME_SHOW);
-      EventHandler.trigger(this._element, EVENT_HIDDEN);
-    };
-    this._element.classList.add(CLASS_NAME_SHOWING);
-    this._queueCallback(complete, this._element, this._config.animation);
-  }
-  dispose() {
-    this._clearTimeout();
-    if (this.isShown()) {
-      this._element.classList.remove(CLASS_NAME_SHOW);
-    }
-    super.dispose();
-  }
-  isShown() {
-    return this._element.classList.contains(CLASS_NAME_SHOW);
-  }
-
-  // Private
-  _maybeScheduleHide() {
-    if (!this._config.autohide) {
-      return;
-    }
-    if (this._hasMouseInteraction || this._hasKeyboardInteraction) {
-      return;
-    }
-    this._timeout = setTimeout(() => {
-      this.hide();
-    }, this._config.delay);
-  }
-  _onInteraction(event, isInteracting) {
-    switch (event.type) {
-      case 'mouseover':
-      case 'mouseout':
-        {
-          this._hasMouseInteraction = isInteracting;
-          break;
+    // Static
+    static jQueryInterface(config) {
+      return this.each(function () {
+        const data = Offcanvas.getOrCreateInstance(this, config);
+        if (typeof config !== 'string') {
+          return;
         }
-      case 'focusin':
-      case 'focusout':
-        {
-          this._hasKeyboardInteraction = isInteracting;
-          break;
-        }
-    }
-    if (isInteracting) {
-      this._clearTimeout();
-      return;
-    }
-    const nextElement = event.relatedTarget;
-    if (this._element === nextElement || this._element.contains(nextElement)) {
-      return;
-    }
-    this._maybeScheduleHide();
-  }
-  _setListeners() {
-    EventHandler.on(this._element, EVENT_MOUSEOVER, event => this._onInteraction(event, true));
-    EventHandler.on(this._element, EVENT_MOUSEOUT, event => this._onInteraction(event, false));
-    EventHandler.on(this._element, EVENT_FOCUSIN, event => this._onInteraction(event, true));
-    EventHandler.on(this._element, EVENT_FOCUSOUT, event => this._onInteraction(event, false));
-  }
-  _clearTimeout() {
-    clearTimeout(this._timeout);
-    this._timeout = null;
-  }
-
-  // Static
-  static jQueryInterface(config) {
-    return this.each(function () {
-      const data = Toast.getOrCreateInstance(this, config);
-      if (typeof config === 'string') {
-        if (typeof data[config] === 'undefined') {
+        if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
           throw new TypeError(`No method named "${config}"`);
         }
         data[config](this);
+      });
+    }
+  }
+
+  /**
+   * Data API implementation
+   */
+
+  EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, function (event) {
+    const target = SelectorEngine.getElementFromSelector(this);
+    if (['A', 'AREA'].includes(this.tagName)) {
+      event.preventDefault();
+    }
+    if (index_js.isDisabled(this)) {
+      return;
+    }
+    EventHandler.one(target, EVENT_HIDDEN, () => {
+      // focus on trigger when it is closed
+      if (index_js.isVisible(this)) {
+        this.focus();
       }
     });
+
+    // avoid conflict when clicking a toggler of an offcanvas, while another is open
+    const alreadyOpen = SelectorEngine.findOne(OPEN_SELECTOR);
+    if (alreadyOpen && alreadyOpen !== target) {
+      Offcanvas.getInstance(alreadyOpen).hide();
+    }
+    const data = Offcanvas.getOrCreateInstance(target);
+    data.toggle(this);
+  });
+  EventHandler.on(window, EVENT_LOAD_DATA_API, () => {
+    for (const selector of SelectorEngine.find(OPEN_SELECTOR)) {
+      Offcanvas.getOrCreateInstance(selector).show();
+    }
+  });
+  EventHandler.on(window, EVENT_RESIZE, () => {
+    for (const element of SelectorEngine.find('[aria-modal][class*=show][class*=offcanvas-]')) {
+      if (getComputedStyle(element).position !== 'fixed') {
+        Offcanvas.getOrCreateInstance(element).hide();
+      }
+    }
+  });
+  componentFunctions_js.enableDismissTrigger(Offcanvas);
+
+  /**
+   * jQuery
+   */
+
+  index_js.defineJQueryPlugin(Offcanvas);
+
+  return Offcanvas;
+
+}));
+//# sourceMappingURL=offcanvas.js.map
+
+
+/***/ }),
+
+/***/ "./node_modules/bootstrap/js/dist/util/backdrop.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/util/backdrop.js ***!
+  \*********************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/*!
+  * Bootstrap backdrop.js v5.3.8 (https://getbootstrap.com/)
+  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */
+(function (global, factory) {
+   true ? module.exports = factory(__webpack_require__(/*! ../dom/event-handler.js */ "./node_modules/bootstrap/js/dist/dom/event-handler.js"), __webpack_require__(/*! ./config.js */ "./node_modules/bootstrap/js/dist/util/config.js"), __webpack_require__(/*! ./index.js */ "./node_modules/bootstrap/js/dist/util/index.js")) :
+  0;
+})(this, (function (EventHandler, Config, index_js) { 'use strict';
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap util/backdrop.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const NAME = 'backdrop';
+  const CLASS_NAME_FADE = 'fade';
+  const CLASS_NAME_SHOW = 'show';
+  const EVENT_MOUSEDOWN = `mousedown.bs.${NAME}`;
+  const Default = {
+    className: 'modal-backdrop',
+    clickCallback: null,
+    isAnimated: false,
+    isVisible: true,
+    // if false, we use the backdrop helper without adding any element to the dom
+    rootElement: 'body' // give the choice to place backdrop under different elements
+  };
+  const DefaultType = {
+    className: 'string',
+    clickCallback: '(function|null)',
+    isAnimated: 'boolean',
+    isVisible: 'boolean',
+    rootElement: '(element|string)'
+  };
+
+  /**
+   * Class definition
+   */
+
+  class Backdrop extends Config {
+    constructor(config) {
+      super();
+      this._config = this._getConfig(config);
+      this._isAppended = false;
+      this._element = null;
+    }
+
+    // Getters
+    static get Default() {
+      return Default;
+    }
+    static get DefaultType() {
+      return DefaultType;
+    }
+    static get NAME() {
+      return NAME;
+    }
+
+    // Public
+    show(callback) {
+      if (!this._config.isVisible) {
+        index_js.execute(callback);
+        return;
+      }
+      this._append();
+      const element = this._getElement();
+      if (this._config.isAnimated) {
+        index_js.reflow(element);
+      }
+      element.classList.add(CLASS_NAME_SHOW);
+      this._emulateAnimation(() => {
+        index_js.execute(callback);
+      });
+    }
+    hide(callback) {
+      if (!this._config.isVisible) {
+        index_js.execute(callback);
+        return;
+      }
+      this._getElement().classList.remove(CLASS_NAME_SHOW);
+      this._emulateAnimation(() => {
+        this.dispose();
+        index_js.execute(callback);
+      });
+    }
+    dispose() {
+      if (!this._isAppended) {
+        return;
+      }
+      EventHandler.off(this._element, EVENT_MOUSEDOWN);
+      this._element.remove();
+      this._isAppended = false;
+    }
+
+    // Private
+    _getElement() {
+      if (!this._element) {
+        const backdrop = document.createElement('div');
+        backdrop.className = this._config.className;
+        if (this._config.isAnimated) {
+          backdrop.classList.add(CLASS_NAME_FADE);
+        }
+        this._element = backdrop;
+      }
+      return this._element;
+    }
+    _configAfterMerge(config) {
+      // use getElement() with the default "body" to get a fresh Element on each instantiation
+      config.rootElement = index_js.getElement(config.rootElement);
+      return config;
+    }
+    _append() {
+      if (this._isAppended) {
+        return;
+      }
+      const element = this._getElement();
+      this._config.rootElement.append(element);
+      EventHandler.on(element, EVENT_MOUSEDOWN, () => {
+        index_js.execute(this._config.clickCallback);
+      });
+      this._isAppended = true;
+    }
+    _emulateAnimation(callback) {
+      index_js.executeAfterTransition(callback, this._getElement(), this._config.isAnimated);
+    }
   }
-}
 
-/**
- * Data API implementation
- */
+  return Backdrop;
 
-enableDismissTrigger(Toast);
-
-/**
- * jQuery
- */
-
-defineJQueryPlugin(Toast);
+}));
+//# sourceMappingURL=backdrop.js.map
 
 
-//# sourceMappingURL=bootstrap.esm.js.map
+/***/ }),
+
+/***/ "./node_modules/bootstrap/js/dist/util/component-functions.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/util/component-functions.js ***!
+  \********************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+/*!
+  * Bootstrap component-functions.js v5.3.8 (https://getbootstrap.com/)
+  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */
+(function (global, factory) {
+   true ? factory(exports, __webpack_require__(/*! ../dom/event-handler.js */ "./node_modules/bootstrap/js/dist/dom/event-handler.js"), __webpack_require__(/*! ../dom/selector-engine.js */ "./node_modules/bootstrap/js/dist/dom/selector-engine.js"), __webpack_require__(/*! ./index.js */ "./node_modules/bootstrap/js/dist/util/index.js")) :
+  0;
+})(this, (function (exports, EventHandler, SelectorEngine, index_js) { 'use strict';
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap util/component-functions.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+  const enableDismissTrigger = (component, method = 'hide') => {
+    const clickEvent = `click.dismiss${component.EVENT_KEY}`;
+    const name = component.NAME;
+    EventHandler.on(document, clickEvent, `[data-bs-dismiss="${name}"]`, function (event) {
+      if (['A', 'AREA'].includes(this.tagName)) {
+        event.preventDefault();
+      }
+      if (index_js.isDisabled(this)) {
+        return;
+      }
+      const target = SelectorEngine.getElementFromSelector(this) || this.closest(`.${name}`);
+      const instance = component.getOrCreateInstance(target);
+
+      // Method argument is left, for Alert and only, as it doesn't implement the 'hide' method
+      instance[method]();
+    });
+  };
+
+  exports.enableDismissTrigger = enableDismissTrigger;
+
+  Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+
+}));
+//# sourceMappingURL=component-functions.js.map
+
+
+/***/ }),
+
+/***/ "./node_modules/bootstrap/js/dist/util/config.js":
+/*!*******************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/util/config.js ***!
+  \*******************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/*!
+  * Bootstrap config.js v5.3.8 (https://getbootstrap.com/)
+  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */
+(function (global, factory) {
+   true ? module.exports = factory(__webpack_require__(/*! ../dom/manipulator.js */ "./node_modules/bootstrap/js/dist/dom/manipulator.js"), __webpack_require__(/*! ./index.js */ "./node_modules/bootstrap/js/dist/util/index.js")) :
+  0;
+})(this, (function (Manipulator, index_js) { 'use strict';
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap util/config.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Class definition
+   */
+
+  class Config {
+    // Getters
+    static get Default() {
+      return {};
+    }
+    static get DefaultType() {
+      return {};
+    }
+    static get NAME() {
+      throw new Error('You have to implement the static method "NAME", for each component!');
+    }
+    _getConfig(config) {
+      config = this._mergeConfigObj(config);
+      config = this._configAfterMerge(config);
+      this._typeCheckConfig(config);
+      return config;
+    }
+    _configAfterMerge(config) {
+      return config;
+    }
+    _mergeConfigObj(config, element) {
+      const jsonConfig = index_js.isElement(element) ? Manipulator.getDataAttribute(element, 'config') : {}; // try to parse
+
+      return {
+        ...this.constructor.Default,
+        ...(typeof jsonConfig === 'object' ? jsonConfig : {}),
+        ...(index_js.isElement(element) ? Manipulator.getDataAttributes(element) : {}),
+        ...(typeof config === 'object' ? config : {})
+      };
+    }
+    _typeCheckConfig(config, configTypes = this.constructor.DefaultType) {
+      for (const [property, expectedTypes] of Object.entries(configTypes)) {
+        const value = config[property];
+        const valueType = index_js.isElement(value) ? 'element' : index_js.toType(value);
+        if (!new RegExp(expectedTypes).test(valueType)) {
+          throw new TypeError(`${this.constructor.NAME.toUpperCase()}: Option "${property}" provided type "${valueType}" but expected type "${expectedTypes}".`);
+        }
+      }
+    }
+  }
+
+  return Config;
+
+}));
+//# sourceMappingURL=config.js.map
+
+
+/***/ }),
+
+/***/ "./node_modules/bootstrap/js/dist/util/focustrap.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/util/focustrap.js ***!
+  \**********************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/*!
+  * Bootstrap focustrap.js v5.3.8 (https://getbootstrap.com/)
+  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */
+(function (global, factory) {
+   true ? module.exports = factory(__webpack_require__(/*! ../dom/event-handler.js */ "./node_modules/bootstrap/js/dist/dom/event-handler.js"), __webpack_require__(/*! ../dom/selector-engine.js */ "./node_modules/bootstrap/js/dist/dom/selector-engine.js"), __webpack_require__(/*! ./config.js */ "./node_modules/bootstrap/js/dist/util/config.js")) :
+  0;
+})(this, (function (EventHandler, SelectorEngine, Config) { 'use strict';
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap util/focustrap.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const NAME = 'focustrap';
+  const DATA_KEY = 'bs.focustrap';
+  const EVENT_KEY = `.${DATA_KEY}`;
+  const EVENT_FOCUSIN = `focusin${EVENT_KEY}`;
+  const EVENT_KEYDOWN_TAB = `keydown.tab${EVENT_KEY}`;
+  const TAB_KEY = 'Tab';
+  const TAB_NAV_FORWARD = 'forward';
+  const TAB_NAV_BACKWARD = 'backward';
+  const Default = {
+    autofocus: true,
+    trapElement: null // The element to trap focus inside of
+  };
+  const DefaultType = {
+    autofocus: 'boolean',
+    trapElement: 'element'
+  };
+
+  /**
+   * Class definition
+   */
+
+  class FocusTrap extends Config {
+    constructor(config) {
+      super();
+      this._config = this._getConfig(config);
+      this._isActive = false;
+      this._lastTabNavDirection = null;
+    }
+
+    // Getters
+    static get Default() {
+      return Default;
+    }
+    static get DefaultType() {
+      return DefaultType;
+    }
+    static get NAME() {
+      return NAME;
+    }
+
+    // Public
+    activate() {
+      if (this._isActive) {
+        return;
+      }
+      if (this._config.autofocus) {
+        this._config.trapElement.focus();
+      }
+      EventHandler.off(document, EVENT_KEY); // guard against infinite focus loop
+      EventHandler.on(document, EVENT_FOCUSIN, event => this._handleFocusin(event));
+      EventHandler.on(document, EVENT_KEYDOWN_TAB, event => this._handleKeydown(event));
+      this._isActive = true;
+    }
+    deactivate() {
+      if (!this._isActive) {
+        return;
+      }
+      this._isActive = false;
+      EventHandler.off(document, EVENT_KEY);
+    }
+
+    // Private
+    _handleFocusin(event) {
+      const {
+        trapElement
+      } = this._config;
+      if (event.target === document || event.target === trapElement || trapElement.contains(event.target)) {
+        return;
+      }
+      const elements = SelectorEngine.focusableChildren(trapElement);
+      if (elements.length === 0) {
+        trapElement.focus();
+      } else if (this._lastTabNavDirection === TAB_NAV_BACKWARD) {
+        elements[elements.length - 1].focus();
+      } else {
+        elements[0].focus();
+      }
+    }
+    _handleKeydown(event) {
+      if (event.key !== TAB_KEY) {
+        return;
+      }
+      this._lastTabNavDirection = event.shiftKey ? TAB_NAV_BACKWARD : TAB_NAV_FORWARD;
+    }
+  }
+
+  return FocusTrap;
+
+}));
+//# sourceMappingURL=focustrap.js.map
+
+
+/***/ }),
+
+/***/ "./node_modules/bootstrap/js/dist/util/index.js":
+/*!******************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/util/index.js ***!
+  \******************************************************/
+/***/ (function(__unused_webpack_module, exports) {
+
+/*!
+  * Bootstrap index.js v5.3.8 (https://getbootstrap.com/)
+  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */
+(function (global, factory) {
+   true ? factory(exports) :
+  0;
+})(this, (function (exports) { 'use strict';
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap util/index.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+  const MAX_UID = 1000000;
+  const MILLISECONDS_MULTIPLIER = 1000;
+  const TRANSITION_END = 'transitionend';
+
+  /**
+   * Properly escape IDs selectors to handle weird IDs
+   * @param {string} selector
+   * @returns {string}
+   */
+  const parseSelector = selector => {
+    if (selector && window.CSS && window.CSS.escape) {
+      // document.querySelector needs escaping to handle IDs (html5+) containing for instance /
+      selector = selector.replace(/#([^\s"#']+)/g, (match, id) => `#${CSS.escape(id)}`);
+    }
+    return selector;
+  };
+
+  // Shout-out Angus Croll (https://goo.gl/pxwQGp)
+  const toType = object => {
+    if (object === null || object === undefined) {
+      return `${object}`;
+    }
+    return Object.prototype.toString.call(object).match(/\s([a-z]+)/i)[1].toLowerCase();
+  };
+
+  /**
+   * Public Util API
+   */
+
+  const getUID = prefix => {
+    do {
+      prefix += Math.floor(Math.random() * MAX_UID);
+    } while (document.getElementById(prefix));
+    return prefix;
+  };
+  const getTransitionDurationFromElement = element => {
+    if (!element) {
+      return 0;
+    }
+
+    // Get transition-duration of the element
+    let {
+      transitionDuration,
+      transitionDelay
+    } = window.getComputedStyle(element);
+    const floatTransitionDuration = Number.parseFloat(transitionDuration);
+    const floatTransitionDelay = Number.parseFloat(transitionDelay);
+
+    // Return 0 if element or transition duration is not found
+    if (!floatTransitionDuration && !floatTransitionDelay) {
+      return 0;
+    }
+
+    // If multiple durations are defined, take the first
+    transitionDuration = transitionDuration.split(',')[0];
+    transitionDelay = transitionDelay.split(',')[0];
+    return (Number.parseFloat(transitionDuration) + Number.parseFloat(transitionDelay)) * MILLISECONDS_MULTIPLIER;
+  };
+  const triggerTransitionEnd = element => {
+    element.dispatchEvent(new Event(TRANSITION_END));
+  };
+  const isElement = object => {
+    if (!object || typeof object !== 'object') {
+      return false;
+    }
+    if (typeof object.jquery !== 'undefined') {
+      object = object[0];
+    }
+    return typeof object.nodeType !== 'undefined';
+  };
+  const getElement = object => {
+    // it's a jQuery object or a node element
+    if (isElement(object)) {
+      return object.jquery ? object[0] : object;
+    }
+    if (typeof object === 'string' && object.length > 0) {
+      return document.querySelector(parseSelector(object));
+    }
+    return null;
+  };
+  const isVisible = element => {
+    if (!isElement(element) || element.getClientRects().length === 0) {
+      return false;
+    }
+    const elementIsVisible = getComputedStyle(element).getPropertyValue('visibility') === 'visible';
+    // Handle `details` element as its content may falsie appear visible when it is closed
+    const closedDetails = element.closest('details:not([open])');
+    if (!closedDetails) {
+      return elementIsVisible;
+    }
+    if (closedDetails !== element) {
+      const summary = element.closest('summary');
+      if (summary && summary.parentNode !== closedDetails) {
+        return false;
+      }
+      if (summary === null) {
+        return false;
+      }
+    }
+    return elementIsVisible;
+  };
+  const isDisabled = element => {
+    if (!element || element.nodeType !== Node.ELEMENT_NODE) {
+      return true;
+    }
+    if (element.classList.contains('disabled')) {
+      return true;
+    }
+    if (typeof element.disabled !== 'undefined') {
+      return element.disabled;
+    }
+    return element.hasAttribute('disabled') && element.getAttribute('disabled') !== 'false';
+  };
+  const findShadowRoot = element => {
+    if (!document.documentElement.attachShadow) {
+      return null;
+    }
+
+    // Can find the shadow root otherwise it'll return the document
+    if (typeof element.getRootNode === 'function') {
+      const root = element.getRootNode();
+      return root instanceof ShadowRoot ? root : null;
+    }
+    if (element instanceof ShadowRoot) {
+      return element;
+    }
+
+    // when we don't find a shadow root
+    if (!element.parentNode) {
+      return null;
+    }
+    return findShadowRoot(element.parentNode);
+  };
+  const noop = () => {};
+
+  /**
+   * Trick to restart an element's animation
+   *
+   * @param {HTMLElement} element
+   * @return void
+   *
+   * @see https://www.harrytheo.com/blog/2021/02/restart-a-css-animation-with-javascript/#restarting-a-css-animation
+   */
+  const reflow = element => {
+    element.offsetHeight; // eslint-disable-line no-unused-expressions
+  };
+  const getjQuery = () => {
+    if (window.jQuery && !document.body.hasAttribute('data-bs-no-jquery')) {
+      return window.jQuery;
+    }
+    return null;
+  };
+  const DOMContentLoadedCallbacks = [];
+  const onDOMContentLoaded = callback => {
+    if (document.readyState === 'loading') {
+      // add listener on the first call when the document is in loading state
+      if (!DOMContentLoadedCallbacks.length) {
+        document.addEventListener('DOMContentLoaded', () => {
+          for (const callback of DOMContentLoadedCallbacks) {
+            callback();
+          }
+        });
+      }
+      DOMContentLoadedCallbacks.push(callback);
+    } else {
+      callback();
+    }
+  };
+  const isRTL = () => document.documentElement.dir === 'rtl';
+  const defineJQueryPlugin = plugin => {
+    onDOMContentLoaded(() => {
+      const $ = getjQuery();
+      /* istanbul ignore if */
+      if ($) {
+        const name = plugin.NAME;
+        const JQUERY_NO_CONFLICT = $.fn[name];
+        $.fn[name] = plugin.jQueryInterface;
+        $.fn[name].Constructor = plugin;
+        $.fn[name].noConflict = () => {
+          $.fn[name] = JQUERY_NO_CONFLICT;
+          return plugin.jQueryInterface;
+        };
+      }
+    });
+  };
+  const execute = (possibleCallback, args = [], defaultValue = possibleCallback) => {
+    return typeof possibleCallback === 'function' ? possibleCallback.call(...args) : defaultValue;
+  };
+  const executeAfterTransition = (callback, transitionElement, waitForTransition = true) => {
+    if (!waitForTransition) {
+      execute(callback);
+      return;
+    }
+    const durationPadding = 5;
+    const emulatedDuration = getTransitionDurationFromElement(transitionElement) + durationPadding;
+    let called = false;
+    const handler = ({
+      target
+    }) => {
+      if (target !== transitionElement) {
+        return;
+      }
+      called = true;
+      transitionElement.removeEventListener(TRANSITION_END, handler);
+      execute(callback);
+    };
+    transitionElement.addEventListener(TRANSITION_END, handler);
+    setTimeout(() => {
+      if (!called) {
+        triggerTransitionEnd(transitionElement);
+      }
+    }, emulatedDuration);
+  };
+
+  /**
+   * Return the previous/next element of a list.
+   *
+   * @param {array} list    The list of elements
+   * @param activeElement   The active element
+   * @param shouldGetNext   Choose to get next or previous element
+   * @param isCycleAllowed
+   * @return {Element|elem} The proper element
+   */
+  const getNextActiveElement = (list, activeElement, shouldGetNext, isCycleAllowed) => {
+    const listLength = list.length;
+    let index = list.indexOf(activeElement);
+
+    // if the element does not exist in the list return an element
+    // depending on the direction and if cycle is allowed
+    if (index === -1) {
+      return !shouldGetNext && isCycleAllowed ? list[listLength - 1] : list[0];
+    }
+    index += shouldGetNext ? 1 : -1;
+    if (isCycleAllowed) {
+      index = (index + listLength) % listLength;
+    }
+    return list[Math.max(0, Math.min(index, listLength - 1))];
+  };
+
+  exports.defineJQueryPlugin = defineJQueryPlugin;
+  exports.execute = execute;
+  exports.executeAfterTransition = executeAfterTransition;
+  exports.findShadowRoot = findShadowRoot;
+  exports.getElement = getElement;
+  exports.getNextActiveElement = getNextActiveElement;
+  exports.getTransitionDurationFromElement = getTransitionDurationFromElement;
+  exports.getUID = getUID;
+  exports.getjQuery = getjQuery;
+  exports.isDisabled = isDisabled;
+  exports.isElement = isElement;
+  exports.isRTL = isRTL;
+  exports.isVisible = isVisible;
+  exports.noop = noop;
+  exports.onDOMContentLoaded = onDOMContentLoaded;
+  exports.parseSelector = parseSelector;
+  exports.reflow = reflow;
+  exports.toType = toType;
+  exports.triggerTransitionEnd = triggerTransitionEnd;
+
+  Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+
+}));
+//# sourceMappingURL=index.js.map
+
+
+/***/ }),
+
+/***/ "./node_modules/bootstrap/js/dist/util/scrollbar.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/bootstrap/js/dist/util/scrollbar.js ***!
+  \**********************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/*!
+  * Bootstrap scrollbar.js v5.3.8 (https://getbootstrap.com/)
+  * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */
+(function (global, factory) {
+   true ? module.exports = factory(__webpack_require__(/*! ../dom/manipulator.js */ "./node_modules/bootstrap/js/dist/dom/manipulator.js"), __webpack_require__(/*! ../dom/selector-engine.js */ "./node_modules/bootstrap/js/dist/dom/selector-engine.js"), __webpack_require__(/*! ./index.js */ "./node_modules/bootstrap/js/dist/util/index.js")) :
+  0;
+})(this, (function (Manipulator, SelectorEngine, index_js) { 'use strict';
+
+  /**
+   * --------------------------------------------------------------------------
+   * Bootstrap util/scrollBar.js
+   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+   * --------------------------------------------------------------------------
+   */
+
+
+  /**
+   * Constants
+   */
+
+  const SELECTOR_FIXED_CONTENT = '.fixed-top, .fixed-bottom, .is-fixed, .sticky-top';
+  const SELECTOR_STICKY_CONTENT = '.sticky-top';
+  const PROPERTY_PADDING = 'padding-right';
+  const PROPERTY_MARGIN = 'margin-right';
+
+  /**
+   * Class definition
+   */
+
+  class ScrollBarHelper {
+    constructor() {
+      this._element = document.body;
+    }
+
+    // Public
+    getWidth() {
+      // https://developer.mozilla.org/en-US/docs/Web/API/Window/innerWidth#usage_notes
+      const documentWidth = document.documentElement.clientWidth;
+      return Math.abs(window.innerWidth - documentWidth);
+    }
+    hide() {
+      const width = this.getWidth();
+      this._disableOverFlow();
+      // give padding to element to balance the hidden scrollbar width
+      this._setElementAttributes(this._element, PROPERTY_PADDING, calculatedValue => calculatedValue + width);
+      // trick: We adjust positive paddingRight and negative marginRight to sticky-top elements to keep showing fullwidth
+      this._setElementAttributes(SELECTOR_FIXED_CONTENT, PROPERTY_PADDING, calculatedValue => calculatedValue + width);
+      this._setElementAttributes(SELECTOR_STICKY_CONTENT, PROPERTY_MARGIN, calculatedValue => calculatedValue - width);
+    }
+    reset() {
+      this._resetElementAttributes(this._element, 'overflow');
+      this._resetElementAttributes(this._element, PROPERTY_PADDING);
+      this._resetElementAttributes(SELECTOR_FIXED_CONTENT, PROPERTY_PADDING);
+      this._resetElementAttributes(SELECTOR_STICKY_CONTENT, PROPERTY_MARGIN);
+    }
+    isOverflowing() {
+      return this.getWidth() > 0;
+    }
+
+    // Private
+    _disableOverFlow() {
+      this._saveInitialAttribute(this._element, 'overflow');
+      this._element.style.overflow = 'hidden';
+    }
+    _setElementAttributes(selector, styleProperty, callback) {
+      const scrollbarWidth = this.getWidth();
+      const manipulationCallBack = element => {
+        if (element !== this._element && window.innerWidth > element.clientWidth + scrollbarWidth) {
+          return;
+        }
+        this._saveInitialAttribute(element, styleProperty);
+        const calculatedValue = window.getComputedStyle(element).getPropertyValue(styleProperty);
+        element.style.setProperty(styleProperty, `${callback(Number.parseFloat(calculatedValue))}px`);
+      };
+      this._applyManipulationCallback(selector, manipulationCallBack);
+    }
+    _saveInitialAttribute(element, styleProperty) {
+      const actualValue = element.style.getPropertyValue(styleProperty);
+      if (actualValue) {
+        Manipulator.setDataAttribute(element, styleProperty, actualValue);
+      }
+    }
+    _resetElementAttributes(selector, styleProperty) {
+      const manipulationCallBack = element => {
+        const value = Manipulator.getDataAttribute(element, styleProperty);
+        // We only want to remove the property if the value is `null`; the value can also be zero
+        if (value === null) {
+          element.style.removeProperty(styleProperty);
+          return;
+        }
+        Manipulator.removeDataAttribute(element, styleProperty);
+        element.style.setProperty(styleProperty, value);
+      };
+      this._applyManipulationCallback(selector, manipulationCallBack);
+    }
+    _applyManipulationCallback(selector, callBack) {
+      if (index_js.isElement(selector)) {
+        callBack(selector);
+        return;
+      }
+      for (const sel of SelectorEngine.find(selector, this._element)) {
+        callBack(sel);
+      }
+    }
+  }
+
+  return ScrollBarHelper;
+
+}));
+//# sourceMappingURL=scrollbar.js.map
 
 
 /***/ }),
@@ -34218,10 +30674,10 @@ ___CSS_LOADER_EXPORT___.push([module.id, "/* Shared About / Mission / Support la
 
 /***/ }),
 
-/***/ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/About.vue?vue&type=style&index=0&id=2995bb7e&scoped=true&lang=css":
-/*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/About.vue?vue&type=style&index=0&id=2995bb7e&scoped=true&lang=css ***!
-  \*******************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/NetworkStatusBanner.vue?vue&type=style&index=0&id=3b3bcef1&lang=css":
+/*!**************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/NetworkStatusBanner.vue?vue&type=style&index=0&id=3b3bcef1&lang=css ***!
+  \**************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 /***/ ((module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -34235,31 +30691,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n.page[data-v-2995bb7e]{\n  width:min(100%, 1100px);\n  margin:auto;\n  min-height:100dvh;\n  padding:clamp(34px, 6vw, 64px) clamp(16px, 4vw, 24px);\n  color:var(--text, #1f1a17);\n  background:transparent;\n  overflow-x:clip;\n}\n\n/* HERO */\n.hero[data-v-2995bb7e]{\n  text-align:center;\n  margin-bottom:48px;\n}\n.tag[data-v-2995bb7e]{\n  display:inline-block;\n  padding:6px 12px;\n  border-radius:999px;\n  background:var(--accent-light);\n  color:var(--accent-strong);\n  font-size:12px;\n  margin-bottom:16px;\n}\n.hero h1[data-v-2995bb7e]{\n  font-size:clamp(34px, 7vw, 46px);\n  line-height:1.1;\n  letter-spacing:0;\n  margin-bottom:16px;\n  overflow-wrap:anywhere;\n}\n.hero p[data-v-2995bb7e]{\n  max-width:650px;\n  margin:auto;\n  color:var(--text-muted, #6c6258);\n  line-height:1.7;\n}\n\n/* CTA */\n.cta[data-v-2995bb7e]{\n  margin-top:25px;\n  display:grid;\n  grid-template-columns:repeat(auto-fit, minmax(min(100%, 220px), 1fr));\n  gap:12px;\n}\nbutton[data-v-2995bb7e]{\n  width:100%;\n  min-width:44px;\n  min-height:44px;\n  padding:12px 18px;\n  border-radius:8px;\n  border:none;\n  cursor:pointer;\n  transition:0.2s ease;\n  overflow-wrap:anywhere;\n}\n.primary[data-v-2995bb7e]{\n  background:var(--accent);\n  color:var(--text-on-accent, #fffaf5);\n  font-weight:600;\n}\n.secondary[data-v-2995bb7e]{\n  background:var(--surface);\n  color:var(--text);\n  border:1px solid var(--border);\n}\n\n/* GRID */\n.grid[data-v-2995bb7e]{\n  display:grid;\n  grid-template-columns:repeat(auto-fit,minmax(min(100%, 220px),1fr));\n  gap:16px;\n  margin-top:28px;\n}\n.card[data-v-2995bb7e]{\n  padding:18px;\n  min-width:0;\n  border-radius:16px;\n  background:color-mix(in srgb, var(--surface-strong, #fff) 92%, var(--surface-elevated, #fffaf4));\n  border:1px solid color-mix(in srgb, var(--accent, #a0784c) 12%, var(--border, rgba(160, 120, 76, 0.12)));\n  backdrop-filter:blur(12px);\n  transition:0.25s ease;\n  box-shadow:var(--shadow-sm, 0 8px 24px rgba(0,0,0,0.06));\n}\n.card[data-v-2995bb7e]:hover{\n  transform:translateY(-6px);\n  border-color:color-mix(in srgb, var(--accent, #a0784c) 34%, var(--border, rgba(160, 120, 76, 0.12)));\n}\n.highlight[data-v-2995bb7e]{\n  border-color:color-mix(in srgb, var(--accent, #a0784c) 44%, var(--border, rgba(160, 120, 76, 0.12)));\n}\n.verse[data-v-2995bb7e]{\n  text-align:center;\n  margin-top:40px;\n  color:var(--text-muted, #6c6258);\n  font-style:italic;\n}\nhtml[dir=\"rtl\"] .hero[data-v-2995bb7e],\nhtml[dir=\"rtl\"] .verse[data-v-2995bb7e] {\n  text-align: center;\n}\n@media (max-width: 767.98px) {\n.page[data-v-2995bb7e] {\n    --about-mobile-grid: repeat(4, minmax(0, 1fr));\n    --about-mobile-gap: clamp(8px, 2.6vw, 14px);\n    padding: clamp(24px, 7vw, 44px) clamp(12px, 4vw, 24px);\n    overflow-x: visible;\n}\n.hero[data-v-2995bb7e] {\n    display: grid;\n    grid-template-columns: var(--about-mobile-grid);\n    -moz-column-gap: var(--about-mobile-gap);\n         column-gap: var(--about-mobile-gap);\n    margin-bottom: clamp(28px, 8vw, 44px);\n    text-align: start;\n}\n.hero > .tag[data-v-2995bb7e],\n  .hero > h1[data-v-2995bb7e],\n  .hero > p[data-v-2995bb7e],\n  .hero > .cta[data-v-2995bb7e] {\n    grid-column: 1 / -1;\n    min-width: 0;\n}\n.hero > .tag[data-v-2995bb7e] {\n    justify-self: start;\n}\n.hero > h1[data-v-2995bb7e] {\n    font-size: clamp(32px, 10vw, 46px);\n    overflow-wrap: normal;\n}\n.hero > p[data-v-2995bb7e] {\n    margin-inline: 0;\n}\n.cta[data-v-2995bb7e],\n  .grid[data-v-2995bb7e] {\n    display: grid;\n    grid-template-columns: var(--about-mobile-grid);\n    gap: var(--about-mobile-gap);\n}\n.cta > button[data-v-2995bb7e] {\n    grid-column: span 2;\n    min-width: 0;\n}\n.grid > .card[data-v-2995bb7e] {\n    grid-column: span 2;\n}\n.grid > .card[data-v-2995bb7e]:last-child {\n    grid-column: 1 / -1;\n}\n.card[data-v-2995bb7e] {\n    padding: clamp(14px, 4vw, 20px);\n}\n.verse[data-v-2995bb7e] {\n    width: min(100%, 36rem);\n    margin-inline: auto;\n}\n}\n@media (min-width: 560px) and (max-width: 767.98px) {\n.grid > .card[data-v-2995bb7e],\n  .grid > .card[data-v-2995bb7e]:last-child {\n    grid-column: span 2;\n}\n}\n@media (max-width: 349.98px) {\n.cta > button[data-v-2995bb7e] {\n    grid-column: 1 / -1;\n}\n}\n\n", ""]);
-// Exports
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
-
-
-/***/ }),
-
-/***/ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./resources/js/views/Homepage.css?vue&type=style&index=0&lang=css":
-/*!***********************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./resources/js/views/Homepage.css?vue&type=style&index=0&lang=css ***!
-  \***********************************************************************************************************************************************************************************************************************************************************/
-/***/ ((module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
-/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0__);
-// Imports
-
-var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
-// Module
-___CSS_LOADER_EXPORT___.push([module.id, "/* Homepage-only tone extensions built on the shared app tokens. */\n.vue-onboarding {\n  --accent-soft: color-mix(in srgb, var(--accent) 30%, var(--surface-strong));\n  --accent-wash: color-mix(in srgb, var(--accent-light) 74%, transparent);\n  --homepage-card-surface: color-mix(in srgb, var(--surface-strong) 92%, transparent);\n  --homepage-card-surface-strong: color-mix(in srgb, var(--surface-strong) 95%, var(--surface-elevated));\n  --homepage-card-border: color-mix(in srgb, var(--accent) 14%, var(--border));\n  --homepage-card-border-strong: color-mix(in srgb, var(--accent) 22%, var(--border));\n  --homepage-muted-strong: color-mix(in srgb, var(--text-muted) 88%, var(--text));\n  --homepage-heading-strong: color-mix(in srgb, var(--text) 96%, var(--text-on-accent));\n  --homepage-comparison-even: color-mix(in srgb, var(--accent-light) 28%, transparent);\n  --homepage-contrast-sparkle: color-mix(in srgb, var(--text-on-accent) 18%, transparent);\n  --homepage-contrast-border: color-mix(in srgb, var(--text-on-accent) 18%, var(--border));\n  --homepage-contrast-bg: linear-gradient(135deg, color-mix(in srgb, var(--accent-strong) 78%, var(--surface-strong)), color-mix(in srgb, var(--accent) 74%, var(--surface-elevated)));\n  --homepage-contrast-bg-dark: linear-gradient(135deg, color-mix(in srgb, var(--surface-strong) 92%, var(--accent-strong)), color-mix(in srgb, var(--surface-elevated) 78%, var(--accent)));\n  --homepage-focus-ring: color-mix(in srgb, var(--accent) 18%, transparent);\n  --font-ar: 'Amiri', 'Noto Naskh Arabic', serif;\n  --font-ui: \"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif;\n}\n.vue-onboarding[data-theme=\"dark\"] {\n  --accent-soft: color-mix(in srgb, var(--accent) 34%, var(--surface-strong));\n  --accent-wash: color-mix(in srgb, var(--accent-light) 48%, transparent);\n  --homepage-card-surface: color-mix(in srgb, var(--surface-strong) 94%, var(--surface));\n  --homepage-card-surface-strong: color-mix(in srgb, var(--surface-strong) 96%, var(--surface-elevated));\n  --homepage-card-border: color-mix(in srgb, var(--text-on-accent) 10%, var(--border));\n  --homepage-card-border-strong: color-mix(in srgb, var(--accent) 26%, var(--border));\n  --homepage-comparison-even: color-mix(in srgb, var(--surface-soft) 52%, transparent);\n}\n.vue-onboarding[data-theme=\"sepia\"] {\n  --accent-soft: color-mix(in srgb, var(--accent) 28%, var(--surface-strong));\n  --accent-wash: color-mix(in srgb, var(--accent-light) 68%, transparent);\n}\n.vue-onboarding {\n  min-height: 100vh;\n  display: flex;\n  flex-direction: column;\n  background:\n    radial-gradient(circle at 12% 10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 26%),\n    var(--bg);\n  color: var(--text);\n}\n.vue-onboarding[data-theme=\"dark\"] {\n  background:\n    radial-gradient(circle at 18% 8%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 28%),\n    linear-gradient(180deg, var(--bg) 0%, color-mix(in srgb, var(--surface) 82%, var(--bg)) 100%);\n}\n\n/* Hero Section - Smaller & Refined */\n.hero {\n  min-height: calc(100vh - 70px);\n  display: flex;\n  align-items: center;\n  padding: 2.5rem 2.5rem clamp(3.2rem, 5vw, 4.8rem);\n  position: relative;\n  overflow: hidden;\n  color: var(--text);\n}\n.hero::before {\n  content: '۞';\n  position: absolute;\n  font-size: 26rem;\n  opacity: 0.03;\n  right: -8%;\n  top: 52%;\n  transform: translateY(-50%);\n  pointer-events: none;\n  animation: rotate 70s linear infinite;\n  color: var(--accent);\n}\n@keyframes rotate {\nfrom { transform: translateY(-50%) rotate(0deg);\n}\nto { transform: translateY(-50%) rotate(360deg);\n}\n}\n.hero-container {\n  width: min(1280px, calc(100% - 2rem));\n  margin: 0 auto;\n  position: relative;\n  z-index: 1;\n}\n.hero-layout {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));\n  gap: clamp(1.25rem, 3vw, 2.5rem);\n  align-items: center;\n}\n.hero-copy-column,\n.hero-visual-column,\n.feature-grid-item,\n.step-grid-item,\n.testimonial-grid-item,\n.pricing-grid-item,\n.contact-copy-column,\n.contact-form-column,\n.cta-copy-column,\n.cta-actions-column,\n.footer-brand-column,\n.footer-link-column,\n.footer-social-column,\n.contact-field {\n  min-width: 0;\n}\n.hero-badge {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  background: color-mix(in srgb, var(--accent-light) 78%, var(--surface-strong));\n  color: var(--accent);\n  padding: 0.3rem 1rem;\n  border-radius: 40px;\n  font-size: 0.82rem;\n  font-weight: 750;\n  margin-bottom: 1.4rem;\n}\n.hero-title {\n  font-size: clamp(2.45rem, 4.2vw, 3.85rem);\n  font-weight: 780;\n  line-height: 1.02;\n  letter-spacing: 0;\n  margin-bottom: 1.1rem;\n}\n.hero-title span {\n  background: linear-gradient(135deg, var(--text), var(--accent-strong) 46%, var(--accent) 100%);\n  -webkit-background-clip: text;\n  background-clip: text;\n  color: transparent;\n}\n.hero-desc {\n  font-size: clamp(1rem, 1.9vw, 1.32rem);\n  color: color-mix(in srgb, var(--text) 78%, var(--text-muted));\n  margin-bottom: 1.6rem;\n  line-height: 1.8;\n  max-width: 700px;\n  font-weight: 200;\n}\n.problem-solution {\n  background: var(--surface);\n  border-radius: var(--radius);\n  padding: 1.15rem;\n  margin: 1rem 0 1.2rem;\n  border: 1px solid var(--border);\n  backdrop-filter: blur(10px);\n}\n.problem-text, .solution-text {\n  font-size: 0.98rem;\n  color: var(--text-muted);\n  display: flex;\n  align-items: flex-start;\n  gap: 10px;\n  line-height: 1.8;\n}\n.problem-text i, .solution-text i {\n  color: var(--accent);\n  margin-top: 2px;\n}\n.problem-text strong, .solution-text strong {\n  color: var(--accent-strong);\n}\n.solution-highlight {\n  margin-top: 1rem;\n  padding-top: 1rem;\n  border-top: 1px solid var(--border);\n}\n.hero-buttons {\n  display: flex;\n  gap: 0.85rem;\n  flex-wrap: wrap;\n  justify-content: flex-start;\n  margin-top: 0.8rem;\n}\n.hero-action-btn {\n  flex: 1 1 220px;\n  width: 100%;\n  min-width: 0;\n  min-height: 56px;\n  padding: 0.95rem 1.5rem;\n  border-radius: 14px;\n  max-width: 280px;\n}\n.hero-buttons .hero-action-btn--primary {\n  box-shadow: var(--shadow-md);\n}\n.hero-buttons .hero-action-btn--secondary {\n  background: color-mix(in srgb, var(--accent-light) 70%, var(--surface-strong));\n  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));\n  color: var(--accent-strong);\n}\n.hero-buttons .hero-action-btn--secondary:hover {\n  background: color-mix(in srgb, var(--accent-light) 88%, var(--surface-strong));\n  border-color: color-mix(in srgb, var(--accent) 52%, var(--border));\n  color: var(--accent-strong);\n}\n\n/* Hero Image */\n.hero-image {\n  display: flex;\n  flex-wrap: wrap;\n  align-items: stretch;\n  gap: 0.9rem;\n  min-width: 0;\n  max-width: 100%;\n}\n.demo-card {\n  flex: 1 1 100%;\n  max-width: 100%;\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  border-radius: 12px;\n  padding: 1.6rem;\n  text-align: center;\n  box-shadow: var(--shadow-lg);\n  border: 1px solid var(--border);\n}\n.demo-card i {\n  font-size: 3.5rem;\n  color: var(--accent);\n  margin-bottom: 1rem;\n}\n.demo-card p {\n  color: var(--text-muted);\n  margin: 0.5rem 0;\n}\n.demo-wave {\n  background: var(--accent-light);\n  border-radius: 60px;\n  padding: 0.5rem 1rem;\n  margin-top: 1rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n}\n.demo-wave i {\n  font-size: 1rem;\n  margin-bottom: 0;\n}\n.floating-card {\n  flex: 1 1 min(180px, 100%);\n  min-height: 56px;\n  max-width: 100%;\n  background: var(--surface-strong);\n  backdrop-filter: blur(12px);\n  border-radius: 20px;\n  padding: 0.6rem 1.2rem;\n  display: flex;\n  align-items: center;\n  gap: 0.6rem;\n  font-size: 0.8rem;\n  font-weight: 500;\n  box-shadow: var(--shadow-md);\n  border: 1px solid var(--border);\n  animation: float 3s ease-in-out infinite;\n}\n.floating-card i {\n  font-size: 1rem;\n}\n@keyframes float {\n0%, 100% { transform: translateY(0);\n}\n50% { transform: translateY(-6px);\n}\n}\n\n/* Divider */\n.divider {\n  text-align: center;\n  padding: 1.35rem 0;\n  color: var(--accent);\n  font-size: 1rem;\n  letter-spacing: 4px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 12px;\n}\n.section-divider {\n  margin: 0 auto;\n  padding: clamp(0.8rem, 1.8vw, 1.3rem) 0;\n}\n.divider i {\n  font-size: 0.8rem;\n  opacity: 0.6;\n}\n\n/* Section Styles */\n.features-section,\n.steps-section,\n.pricing-section,\n.faq-section,\n.contact-section {\n  position: relative;\n  overflow: hidden;\n}\n.features-section::before,\n.pricing-section::before {\n  content: '';\n  position: absolute;\n  width: 420px;\n  height: 420px;\n  border-radius: 50%;\n  background: radial-gradient(circle, var(--accent-light), transparent 70%);\n  top: 12%;\n  right: -160px;\n  pointer-events: none;\n}\n.section-container {\n  max-width: 1280px;\n  margin: 0 auto;\n  padding: clamp(2.7rem, 4.4vw, 3.8rem) 2.2rem;\n  position: relative;\n  z-index: 1;\n}\n.section-title-left,\n.section-subtitle-left {\n  text-align: left;\n  margin-left: 0;\n  margin-right: 0;\n}\n.section-kicker {\n  width: -moz-fit-content;\n  width: fit-content;\n  margin: 0 auto 1rem;\n  display: flex;\n  align-items: center;\n  gap: 0.5rem;\n  background: var(--accent-light);\n  color: var(--accent-strong);\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  padding: 0.45rem 1rem;\n  font-size: 0.78rem;\n  font-weight: 800;\n  letter-spacing: 0.04em;\n  text-transform: uppercase;\n}\n.section-title {\n  text-align: center;\n  font-size: clamp(2rem, 3vw, 3.1rem);\n  font-weight: 760;\n  margin-bottom: 1rem;\n  color: var(--text);\n  letter-spacing: -0.04em;\n  line-height: 1.14;\n}\n.section-title::before,\n.section-title::after {\n  content: '۞';\n  color: var(--accent);\n  font-size: 1.5rem;\n  margin: 0 1rem;\n  opacity: 0.5;\n  display: inline-block;\n}\n.section-subtitle {\n  text-align: center;\n  color: var(--text-muted);\n  margin-bottom: 3rem;\n  font-size: 1.1rem;\n  max-width: 680px;\n  margin-left: auto;\n  margin-right: auto;\n  line-height: 1.88;\n}\n.pricing-section .section-subtitle {\n  margin-bottom: 0.85rem;\n}\n.pricing-account-note {\n  text-align: center;\n  color: var(--text-muted);\n  max-width: 720px;\n  margin: 0 auto 2.5rem;\n  font-size: 0.95rem;\n  line-height: 1.65;\n}\n\n/* Features Grid */\n.features-grid {\n  margin-top: 0;\n}\n.features-grid .feature-grid-item {\n  padding: 0.5rem;\n  margin-bottom: 1rem;\n}\n.feature-card {\n  background: linear-gradient(145deg, var(--surface-strong), var(--surface));\n  backdrop-filter: blur(8px);\n  border-radius: 30px;\n  padding: 1.65rem;\n  border: 1px solid var(--border);\n  transition: all 0.3s ease;\n  min-height: 0;\n  display: flex;\n  flex-direction: column;\n  position: relative;\n  overflow: hidden;\n}\n.feature-card::after {\n  content: '';\n  position: absolute;\n  inset: auto 1.4rem 1.4rem 1.4rem;\n  height: 4px;\n  border-radius: 999px;\n  background: linear-gradient(90deg, var(--accent), transparent);\n  opacity: 0.35;\n}\n.feature-card:hover {\n  transform: translateY(-6px);\n  border-color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.feature-topline {\n  display: flex;\n  justify-content: space-between;\n  align-items: flex-start;\n  gap: 1rem;\n  margin-bottom: 1.2rem;\n}\n.feature-icon {\n  width: 64px;\n  height: 64px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 22px;\n  background: var(--accent-light);\n  font-size: 2rem;\n  color: var(--accent);\n}\n.feature-card h3 {\n  font-size: 1.35rem;\n  margin-bottom: 0.75rem;\n  letter-spacing: -0.02em;\n}\n.feature-card p {\n  color: var(--text-muted);\n  line-height: 1.6;\n  margin-bottom: 1.25rem;\n}\n.feature-card strong {\n  margin-top: auto;\n  color: var(--accent-strong);\n  font-size: 0.9rem;\n}\n.feature-badge {\n  font-size: 0.7rem;\n  background: var(--accent-light);\n  border-radius: 40px;\n  padding: 0.2rem 0.8rem;\n  margin-left: 0.6rem;\n  font-weight: 600;\n  vertical-align: middle;\n  color: var(--accent);\n}\n.feature-badge.pro {\n  background: var(--accent);\n  color: white;\n}\n\n/* Steps Grid */\n.steps-section {\n  background:\n    linear-gradient(90deg, transparent 0 31%, var(--border) 31% 31.2%, transparent 31.2% 65%, var(--border) 65% 65.2%, transparent 65.2%),\n    var(--bg);\n}\n.steps-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));\n  gap: 1rem;\n  margin-top: 1.4rem;\n}\n.step-card {\n  text-align: left;\n  padding: 1.65rem;\n  background: var(--surface-strong);\n  border-radius: 30px;\n  border: 1px solid var(--border);\n  transition: all 0.3s ease;\n  min-height: 0;\n  box-shadow: var(--shadow-sm);\n}\n.step-card:hover {\n  transform: translateY(-4px);\n  border-color: var(--accent);\n  box-shadow: var(--shadow-md);\n}\n.step-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  margin-bottom: 1.4rem;\n}\n.step-number {\n  font-size: 3rem;\n  font-weight: 800;\n  color: var(--accent);\n  letter-spacing: -0.07em;\n  opacity: 0.35;\n}\n.step-icon {\n  width: 58px;\n  height: 58px;\n  border-radius: 20px;\n  background: var(--accent-light);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.8rem;\n  color: var(--accent);\n}\n.step-card h3 {\n  font-size: 1.5rem;\n  margin-bottom: 0.7rem;\n}\n.step-card p {\n  color: var(--text-muted);\n  line-height: 1.6;\n  margin-bottom: 1.3rem;\n}\n.step-card span {\n  display: inline-flex;\n  border-top: 1px solid var(--border);\n  padding-top: 0.9rem;\n  color: var(--accent-strong);\n  font-size: 0.85rem;\n  font-weight: 700;\n}\n\n/* Testimonials */\n.testimonials-section {\n  background:\n    linear-gradient(135deg, var(--accent-wash), transparent 58%),\n    var(--bg);\n}\n.testimonials-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));\n  gap: 1rem;\n  margin-top: 0;\n}\n.testimonial-card {\n  background: var(--surface-strong);\n  border-radius: 30px;\n  padding: 1.65rem;\n  border: 1px solid var(--border);\n  transition: all 0.3s ease;\n  box-shadow: var(--shadow-sm);\n}\n.testimonial-rating {\n  display: flex;\n  gap: 0.25rem;\n  margin-bottom: 1.2rem;\n}\n.testimonial-rating i {\n  font-size: 0.95rem;\n  color: var(--accent);\n}\n.testimonial-card:hover {\n  transform: translateY(-3px);\n  box-shadow: var(--shadow-md);\n}\n.testimonial-card > p {\n  font-size: 1.05rem;\n  line-height: 1.65;\n}\n.testimonial-proof {\n  width: -moz-fit-content;\n  width: fit-content;\n  margin-top: 1.1rem;\n  border-radius: 999px;\n  padding: 0.35rem 0.8rem;\n  background: var(--accent-light);\n  color: var(--accent-strong);\n  font-size: 0.75rem;\n  font-weight: 800;\n}\n.testimonial-author {\n  display: flex;\n  align-items: center;\n  gap: 1rem;\n  margin-top: 1rem;\n}\n.author-avatar {\n  width: 48px;\n  height: 48px;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: white;\n  font-weight: 600;\n  font-size: 1rem;\n}\n.author-info h4 {\n  font-size: 1rem;\n  margin-bottom: 0.25rem;\n}\n.author-info p {\n  font-size: 0.8rem;\n  color: var(--text-muted);\n}\n\n/* Pricing */\n.pricing-grid {\n  max-width: 1180px;\n  margin: 0 auto;\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));\n  gap: 1rem;\n}\n.pricing-comparison {\n  max-width: 1180px;\n  margin: 3rem auto 0;\n  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);\n  border: 1px solid var(--border);\n  border-radius: 28px;\n  padding: 1.35rem;\n  box-shadow: var(--shadow-sm);\n}\n.comparison-header {\n  text-align: center;\n  margin-bottom: 1rem;\n}\n.comparison-header h3 {\n  font-size: clamp(1.55rem, 2.4vw, 2rem);\n  margin-bottom: 0.35rem;\n  letter-spacing: -0.03em;\n}\n.comparison-header p {\n  color: var(--text-muted);\n  font-size: 0.95rem;\n}\n.comparison-table-wrap {\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n  border: 1px solid var(--border);\n  border-radius: 18px;\n  background: color-mix(in srgb, var(--surface) 70%, transparent);\n}\n.comparison-table {\n  width: 100%;\n  border-collapse: separate;\n  border-spacing: 0;\n  min-width: 640px;\n}\n.comparison-table thead th {\n  text-align: left;\n  padding: 0.9rem 1rem;\n  font-size: 0.82rem;\n  text-transform: uppercase;\n  letter-spacing: 0.08em;\n  color: var(--text-muted);\n  border-bottom: 1px solid var(--border);\n}\n.comparison-table thead th:not(:first-child) {\n  text-align: center;\n}\n.comparison-table tbody th,\n.comparison-table tbody td {\n  padding: 0.92rem 1rem;\n  border-bottom: 1px solid var(--border);\n  vertical-align: middle;\n}\n.comparison-table tbody th {\n  font-weight: 600;\n  color: var(--text);\n  width: 42%;\n  text-align: left;\n}\n.comparison-table tbody td {\n  text-align: center;\n  font-size: 0.92rem;\n  color: var(--text);\n  font-weight: 700;\n}\n.comparison-table tbody tr:nth-child(even) {\n  background: var(--homepage-comparison-even);\n}\n.comparison-value {\n  min-width: 7.8rem;\n  min-height: 32px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 0.45rem;\n  border-radius: 999px;\n  padding: 0.38rem 0.7rem;\n  border: 1px solid var(--border);\n  font-size: 0.82rem;\n  font-weight: 800;\n  white-space: nowrap;\n}\n.comparison-value-included {\n  color: var(--accent-strong);\n  background: var(--accent-light);\n  border-color: color-mix(in srgb, var(--accent) 28%, transparent);\n}\n.comparison-value-excluded {\n  color: var(--danger-text);\n  background: var(--danger-bg);\n  border-color: color-mix(in srgb, var(--danger-text) 20%, var(--border));\n}\n.comparison-value-limited {\n  color: var(--text);\n  background: var(--surface-strong);\n}\n.comparison-value-icon {\n  min-width: 2.5rem;\n  padding-inline: 0.6rem;\n}\n.comparison-value i {\n  font-size: 1rem;\n}\n.comparison-cards {\n  display: none;\n  gap: 0.85rem;\n}\n.comparison-card {\n  padding: 1rem 1.05rem;\n  border-radius: 18px;\n  border: 1px solid var(--border);\n  background: color-mix(in srgb, var(--surface) 78%, transparent);\n  box-shadow: var(--shadow-sm);\n}\n.comparison-card-feature {\n  margin: 0 0 0.85rem;\n  font-size: 0.98rem;\n  line-height: 1.35;\n  color: var(--text);\n}\n.comparison-card-tiers {\n  display: grid;\n  gap: 0.65rem;\n  margin: 0;\n}\n.comparison-card-tier {\n  display: grid;\n  grid-template-columns: minmax(5.5rem, 34%) 1fr;\n  align-items: center;\n  gap: 0.65rem;\n}\n.comparison-card-tier dt {\n  margin: 0;\n  font-size: 0.72rem;\n  font-weight: 700;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n  color: var(--text-muted);\n}\n.comparison-card-tier dd {\n  margin: 0;\n  display: flex;\n  justify-content: flex-start;\n}\n.comparison-card-tier .comparison-value {\n  min-width: 0;\n  width: 100%;\n  justify-content: flex-start;\n}\n@media (max-width: 767px) {\n.comparison-table-wrap {\n    display: none;\n}\n.comparison-cards {\n    display: grid;\n}\n.pricing-comparison {\n    padding: 1.05rem;\n}\n}\n@media (max-width: 480px) {\n.comparison-card-tier {\n    grid-template-columns: 1fr;\n    gap: 0.35rem;\n}\n}\n.faq-shell,\n.contact-card {\n  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);\n  border: 1px solid var(--border);\n  border-radius: 28px;\n  box-shadow: var(--shadow-sm);\n}\n.faq-shell {\n  max-width: 980px;\n  margin: 0 auto;\n  padding: 1.1rem;\n}\n.faq-accordion .accordion-item {\n  border: 0;\n  background: transparent;\n  overflow: hidden;\n  border-radius: 20px;\n  margin-bottom: 0.85rem;\n}\n.faq-accordion .accordion-item:last-child {\n  margin-bottom: 0;\n}\n.faq-accordion .accordion-button {\n  background: var(--surface-strong);\n  color: var(--text);\n  border: 1px solid var(--border);\n  border-radius: 20px;\n  box-shadow: none;\n  font-weight: 700;\n  padding: 1.15rem 1.25rem;\n}\n.faq-accordion .accordion-button:not(.collapsed) {\n  color: var(--accent-strong);\n  background: var(--accent-light);\n  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));\n}\n.faq-accordion .accordion-button:focus {\n  box-shadow: 0 0 0 0.2rem var(--homepage-focus-ring);\n}\n.faq-accordion .accordion-button::after {\n  filter: saturate(0.4);\n}\n.faq-accordion .accordion-body {\n  color: var(--text-muted);\n  line-height: 1.75;\n  padding: 1rem 1.25rem 1.35rem;\n}\n.contact-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));\n  gap: 1rem;\n  align-items: start;\n  margin-top: 0;\n}\n.contact-copy {\n  display: grid;\n  gap: 1.35rem;\n}\n.contact-card {\n  padding: 1.4rem;\n}\n.contact-form {\n  display: grid;\n  gap: 1rem;\n}\n.contact-form-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));\n  gap: 1rem;\n  margin-top: 0;\n}\n.contact-form .form-label {\n  margin-bottom: 0.45rem;\n  font-weight: 700;\n  color: var(--text);\n}\n.contact-form .form-control {\n  min-height: 52px;\n  border-radius: 16px;\n  border: 1px solid var(--border);\n  background: var(--surface-strong);\n  color: var(--text);\n  padding: 0.85rem 1rem;\n}\n.contact-form .form-control:focus {\n  border-color: var(--accent);\n  box-shadow: 0 0 0 0.2rem var(--homepage-focus-ring);\n}\n.contact-textarea {\n  min-height: 160px;\n  resize: vertical;\n}\n.contact-submit {\n  width: 100%;\n  min-height: 54px;\n}\n.contact-alert {\n  border-radius: 18px;\n  padding: 0.95rem 1rem;\n  margin-bottom: 1rem;\n  font-weight: 600;\n}\n.contact-alert-success {\n  background: var(--success-bg, rgba(24, 128, 86, 0.11));\n  color: var(--success-text, #146c46);\n  border: 1px solid color-mix(in srgb, var(--success-text, #146c46) 22%, var(--border));\n}\n.contact-alert-error {\n  background: var(--danger-bg, rgba(178, 59, 59, 0.1));\n  color: var(--danger-text, #913232);\n  border: 1px solid color-mix(in srgb, var(--danger-text, #913232) 20%, var(--border));\n}\n.spin-icon {\n  animation: spin 0.8s linear infinite;\n}\n@keyframes spin {\nfrom { transform: rotate(0deg);\n}\nto { transform: rotate(360deg);\n}\n}\n.pricing-card {\n  background: var(--surface-strong);\n  border-radius: 28px;\n  padding: 1.7rem;\n  border: 1px solid var(--border);\n  transition: all 0.3s ease;\n  position: relative;\n  text-align: left;\n  display: flex;\n  flex-direction: column;\n  min-height: 0;\n}\n.pricing-card:hover {\n  transform: translateY(-6px);\n  box-shadow: var(--shadow-md);\n}\n.plan-label {\n  width: -moz-fit-content;\n  width: fit-content;\n  border: 1px solid var(--border);\n  border-radius: 999px;\n  padding: 0.35rem 0.8rem;\n  color: var(--text-muted);\n  font-size: 0.75rem;\n  font-weight: 800;\n  margin-bottom: 1.4rem;\n}\n.pricing-icon {\n  width: 60px;\n  height: 60px;\n  border-radius: 22px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  background: var(--accent-light);\n  font-size: 2rem;\n  color: var(--accent);\n  margin-bottom: 1rem;\n}\n.pricing-card h3 {\n  font-size: 1.5rem;\n}\n.pricing-card.featured {\n  border: 2px solid var(--accent);\n  transform: translateY(-2px);\n  box-shadow: var(--shadow-lg);\n}\n.featured-tag {\n  position: absolute;\n  top: -12px;\n  left: 50%;\n  transform: translateX(-50%);\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: var(--text-on-accent);\n  font-size: 0.7rem;\n  font-weight: 700;\n  padding: 0.25rem 1rem;\n  border-radius: 40px;\n  white-space: nowrap;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n}\n.price {\n  font-size: 3rem;\n  font-weight: 760;\n  color: var(--accent);\n  margin: 1rem 0 0.4rem;\n  letter-spacing: -0.05em;\n}\n.price span {\n  font-size: 1rem;\n  color: var(--text-muted);\n}\n.pricing-alt {\n  color: var(--text-muted);\n  font-size: 0.9rem;\n  margin-top: -0.5rem;\n}\n.pricing-features {\n  list-style: none;\n  margin: 1.25rem 0;\n  text-align: left;\n  flex: 1;\n}\n.pricing-features li {\n  padding: 0.6rem 0;\n  display: flex;\n  align-items: center;\n  gap: 0.6rem;\n  color: var(--text-muted);\n  font-size: 0.9rem;\n}\n.pricing-features i.bi-check-circle-fill { color: var(--accent); font-size: 1rem;\n}\n.pricing-card .btn-primary,\n.pricing-card .btn-secondary {\n  width: 100%;\n  height: 52px;\n  min-height: 52px;\n  padding: 0 1rem;\n  border-radius: 999px;\n  font-size: 0.94rem;\n}\n.vue-onboarding[data-theme=\"dark\"] .hero-badge,\n.vue-onboarding[data-theme=\"dark\"] .section-kicker,\n.vue-onboarding[data-theme=\"dark\"] .feature-badge,\n.vue-onboarding[data-theme=\"dark\"] .testimonial-proof,\n.vue-onboarding[data-theme=\"dark\"] .plan-label {\n  background: color-mix(in srgb, var(--surface-strong) 72%, transparent);\n  border-color: var(--homepage-card-border);\n}\n.vue-onboarding[data-theme=\"dark\"] .problem-solution,\n.vue-onboarding[data-theme=\"dark\"] .feature-card,\n.vue-onboarding[data-theme=\"dark\"] .step-card,\n.vue-onboarding[data-theme=\"dark\"] .testimonial-card,\n.vue-onboarding[data-theme=\"dark\"] .pricing-card,\n.vue-onboarding[data-theme=\"dark\"] .demo-card {\n  background: var(--homepage-card-surface-strong);\n  border-color: var(--homepage-card-border);\n}\n.vue-onboarding[data-theme=\"dark\"] .hero-desc,\n.vue-onboarding[data-theme=\"dark\"] .problem-text,\n.vue-onboarding[data-theme=\"dark\"] .solution-text,\n.vue-onboarding[data-theme=\"dark\"] .feature-card p,\n.vue-onboarding[data-theme=\"dark\"] .step-card p,\n.vue-onboarding[data-theme=\"dark\"] .testimonial-card > p,\n.vue-onboarding[data-theme=\"dark\"] .pricing-alt,\n.vue-onboarding[data-theme=\"dark\"] .pricing-features li,\n.vue-onboarding[data-theme=\"dark\"] .author-info p {\n  color: var(--homepage-muted-strong);\n}\n.vue-onboarding[data-theme=\"dark\"] .section-title,\n.vue-onboarding[data-theme=\"dark\"] .hero-title,\n.vue-onboarding[data-theme=\"dark\"] .step-card h3,\n.vue-onboarding[data-theme=\"dark\"] .feature-card h3,\n.vue-onboarding[data-theme=\"dark\"] .testimonial-card h4,\n.vue-onboarding[data-theme=\"dark\"] .pricing-card h3,\n.vue-onboarding[data-theme=\"dark\"] .comparison-header h3 {\n  color: var(--homepage-heading-strong);\n}\n.vue-onboarding[data-theme=\"dark\"] .pricing-comparison {\n  background: var(--homepage-card-surface-strong);\n  border-color: var(--homepage-card-border);\n}\n.vue-onboarding[data-theme=\"dark\"] .faq-shell,\n.vue-onboarding[data-theme=\"dark\"] .contact-card,\n.vue-onboarding[data-theme=\"dark\"] .faq-accordion .accordion-button,\n.vue-onboarding[data-theme=\"dark\"] .contact-form .form-control {\n  background: var(--homepage-card-surface-strong);\n  border-color: var(--homepage-card-border);\n}\n.vue-onboarding[data-theme=\"dark\"] .faq-accordion .accordion-button:not(.collapsed) {\n  background: color-mix(in srgb, var(--warning-bg) 86%, transparent);\n  color: var(--text);\n}\n.vue-onboarding[data-theme=\"dark\"] .faq-accordion .accordion-body {\n  color: var(--homepage-muted-strong);\n}\n.vue-onboarding[data-theme=\"dark\"] .contact-form .form-label {\n  color: var(--homepage-heading-strong);\n}\n.vue-onboarding[data-theme=\"dark\"] .contact-alert-success {\n  color: var(--success-text);\n}\n.vue-onboarding[data-theme=\"dark\"] .contact-alert-error {\n  color: var(--danger-text);\n}\n.vue-onboarding[data-theme=\"dark\"] .comparison-table thead th,\n.vue-onboarding[data-theme=\"dark\"] .comparison-header p {\n  color: var(--homepage-muted-strong);\n}\n.vue-onboarding[data-theme=\"dark\"] .comparison-table tbody th,\n.vue-onboarding[data-theme=\"dark\"] .comparison-table tbody td {\n  color: var(--homepage-heading-strong);\n  border-bottom-color: color-mix(in srgb, var(--border) 90%, transparent);\n}\n.vue-onboarding[data-theme=\"dark\"] .comparison-table tbody tr:nth-child(even) {\n  background: var(--homepage-comparison-even);\n}\n.vue-onboarding[data-theme=\"dark\"] .comparison-table-wrap {\n  background: color-mix(in srgb, var(--surface-soft) 48%, transparent);\n}\n.vue-onboarding[data-theme=\"dark\"] .comparison-value-included {\n  color: var(--accent);\n  background: color-mix(in srgb, var(--accent-light) 76%, transparent);\n  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));\n}\n.vue-onboarding[data-theme=\"dark\"] .comparison-value-excluded {\n  color: var(--danger-text);\n  background: var(--danger-bg);\n  border-color: color-mix(in srgb, var(--danger-text) 20%, var(--border));\n}\n.vue-onboarding[data-theme=\"dark\"] .comparison-value-limited {\n  color: var(--text-on-accent);\n  background: color-mix(in srgb, var(--surface-strong) 74%, transparent);\n}\n.pricing-actions {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));\n  gap: 0.75rem;\n}\n.pricing-actions form {\n  min-width: 0;\n}\n.pricing-actions button {\n  width: 100%;\n}\n.pricing-actions .btn-secondary,\n.pricing-card > .btn-secondary {\n  background: color-mix(in srgb, var(--surface-strong) 88%, var(--surface));\n  color: var(--text);\n  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));\n}\n.pricing-actions .btn-secondary:hover,\n.pricing-card > .btn-secondary:hover {\n  color: var(--accent-strong);\n  border-color: var(--accent);\n  background: var(--accent-light);\n}\n.vue-onboarding[data-theme=\"dark\"] .pricing-actions .btn-secondary,\n.vue-onboarding[data-theme=\"dark\"] .pricing-card > .btn-secondary {\n  background: color-mix(in srgb, var(--surface-strong) 82%, transparent);\n  color: var(--homepage-heading-strong);\n  border-color: var(--homepage-card-border-strong);\n}\n.vue-onboarding[data-theme=\"dark\"] .pricing-actions .btn-secondary:hover,\n.vue-onboarding[data-theme=\"dark\"] .pricing-card > .btn-secondary:hover {\n  background: color-mix(in srgb, var(--accent-light) 86%, transparent);\n  color: var(--accent);\n  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));\n}\n\n/* CTA Block */\n.cta-block {\n  max-width: 1000px;\n  margin: 1.4rem auto 2.2rem;\n  background:\n    radial-gradient(circle at 12% 20%, var(--homepage-contrast-sparkle), transparent 24%),\n    var(--homepage-contrast-bg);\n  border-radius: 40px;\n  color: var(--text-on-accent);\n  padding: 2.35rem;\n  border: 1px solid var(--homepage-contrast-border);\n  box-shadow: var(--shadow-lg);\n}\n.cta-layout {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));\n  gap: 1rem;\n  align-items: center;\n}\n.cta-icon {\n  width: 58px;\n  height: 58px;\n  border-radius: 20px;\n  background: color-mix(in srgb, var(--text-on-accent) 16%, transparent);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 1.7rem;\n  color: var(--text-on-accent);\n  margin-bottom: 1rem;\n}\n.cta-block h2 {\n  font-size: clamp(2.2rem, 4.4vw, 3.5rem);\n  margin-bottom: 1rem;\n  letter-spacing: -0.05em;\n}\n.cta-block p {\n  margin-bottom: 0;\n  color: var(--text-on-accent-muted);\n  max-width: 600px;\n  line-height: 1.65;\n}\n.cta-actions {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 0.8rem;\n  width: min(100%, 320px);\n}\n.cta-actions .btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  border-color: color-mix(in srgb, var(--accent-strong) 84%, transparent);\n  color: var(--text-on-accent);\n  width: 100%;\n  height: 58px;\n  min-height: 58px;\n  padding: 1rem 1.65rem;\n}\n.cta-actions .btn-primary:hover {\n  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 90%, white 10%), var(--accent-strong));\n  border-color: color-mix(in srgb, var(--accent-strong) 90%, transparent);\n  color: var(--text-on-accent);\n}\n.cta-actions span {\n  color: var(--text-on-accent-muted);\n  font-size: 0.85rem;\n}\n.vue-onboarding[data-theme=\"dark\"] .cta-block {\n  background:\n    radial-gradient(circle at 12% 20%, color-mix(in srgb, var(--accent-light) 84%, transparent), transparent 24%),\n    var(--homepage-contrast-bg-dark);\n  border-color: color-mix(in srgb, var(--text-on-accent) 12%, var(--border));\n}\n.vue-onboarding[data-theme=\"dark\"] .cta-block p,\n.vue-onboarding[data-theme=\"dark\"] .cta-actions span {\n  color: var(--text-on-accent-muted);\n}\n\n/* Buttons */\n.btn-primary, .btn-secondary {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 0.6rem;\n  min-width: 44px;\n  min-height: 44px;\n  max-width: 100%;\n  padding: 0.85rem 1.35rem;\n  border-radius: 14px;\n  font-weight: 600;\n  font-size: 0.95rem;\n  transition: all 0.3s ease;\n  text-decoration: none;\n  cursor: pointer;\n  border: 1px solid transparent;\n  text-align: center;\n  overflow-wrap: anywhere;\n}\n.btn-primary {\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  color: var(--text-on-accent);\n}\n.btn-primary:hover {\n  transform: translateY(-2px);\n  box-shadow: var(--shadow-md);\n}\n.btn-secondary {\n  background: transparent;\n  border: 1px solid var(--border);\n  color: var(--text);\n}\n.btn-secondary:hover {\n  background: var(--accent-light);\n  border-color: var(--accent);\n  transform: translateY(-1px);\n}\n\n/* Footer - Updated */\n.footer {\n  background: var(--surface);\n  border-top: 1px solid var(--border);\n  padding: 2.8rem 1.6rem 1.6rem;\n  margin-top: auto;\n  width: 100%;\n  bottom: 0;\n  left: 0;\n  right: 0;\n}\n.footer-container {\n  max-width: 1280px;\n  margin: 0 auto;\n}\n.footer-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));\n  gap: 1rem;\n  margin-bottom: 2.2rem;\n}\n.footer-brand {\n  max-width: 100%;\n}\n.footer-logo {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin-bottom: 1rem;\n}\n.footer-logo i {\n  font-size: 1.8rem;\n  color: var(--accent);\n}\n.footer-logo h3 {\n  font-size: 1.3rem;\n  background: linear-gradient(135deg, var(--accent), var(--accent-strong));\n  background-clip: text;\n  -webkit-background-clip: text;\n  color: transparent;\n}\n.footer-brand p {\n  color: var(--text-muted);\n  font-size: 0.85rem;\n  line-height: 1.5;\n}\n.footer-links h4, .footer-social h4 {\n  color: var(--accent);\n  margin-bottom: 1rem;\n  font-size: 1rem;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.footer-links a {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  color: var(--text-muted);\n  text-decoration: none;\n  margin-bottom: 0.6rem;\n  font-size: 0.85rem;\n  transition: all 0.3s ease;\n}\n.footer-links a i {\n  font-size: 0.8rem;\n}\n.footer-links a:hover {\n  color: var(--accent);\n  transform: translateX(5px);\n}\n.social-icons {\n  display: flex;\n  gap: 1rem;\n  flex-wrap: wrap;\n}\n.social-icons a {\n  width: 38px;\n  height: 38px;\n  border-radius: 50%;\n  background: var(--accent-light);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: var(--accent);\n  font-size: 1.2rem;\n  transition: all 0.3s ease;\n  text-decoration: none;\n}\n.social-icons a:hover {\n  background: var(--accent);\n  color: white;\n  transform: translateY(-3px);\n}\n.footer-bottom {\n  text-align: center;\n  padding-top: 1.5rem;\n  border-top: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 0.8rem;\n  display: flex;\n  flex-direction: column;\n  gap: 0.8rem;\n  align-items: center;\n}\n.footer-bottom i {\n  margin-right: 4px;\n}\n.footer-legal {\n  display: flex;\n  gap: 1.5rem;\n  justify-content: center;\n  flex-wrap: wrap;\n}\n.footer-legal a {\n  color: var(--text-muted);\n  text-decoration: none;\n  font-size: 0.78rem;\n}\n.footer-legal a:hover {\n  color: var(--accent);\n}\n\n/* AOS Animations */\n[data-aos] {\n  opacity: 0;\n  transform: translateY(20px);\n  transition: all 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);\n}\n[data-aos].aos-animate {\n  opacity: 1;\n  transform: translateY(0);\n}\n[data-aos=\"fade-up\"] { transform: translateY(30px);\n}\n[data-aos=\"fade-left\"] { transform: translateX(30px);\n}\n[data-aos=\"zoom-in\"] { transform: scale(0.95);\n}\n[data-aos=\"zoom-in\"].aos-animate { transform: scale(1);\n}\n[data-aos=\"flip-up\"] { transform: rotateX(90deg); transform-origin: center;\n}\n[data-aos=\"flip-up\"].aos-animate { transform: rotateX(0);\n}\n[data-aos=\"flip-right\"] { transform: rotateY(90deg);\n}\n[data-aos=\"flip-right\"].aos-animate { transform: rotateY(0);\n}\n[data-aos=\"flip-left\"] { transform: rotateY(-90deg);\n}\n[data-aos=\"flip-left\"].aos-animate { transform: rotateY(0);\n}\n\n/* Phone layout: keep every marketing section inside the viewport. */\n@media (max-width: 767.98px) {\n.vue-onboarding,\n  .hero,\n  .hero-container,\n  .hero-layout,\n  .hero-copy-column,\n  .hero-visual-column,\n  .hero-content,\n  .hero-image,\n  .section-container,\n  .features-grid,\n  .feature-grid-item,\n  .steps-grid,\n  .step-grid-item,\n  .testimonials-grid,\n  .testimonial-grid-item,\n  .pricing-grid,\n  .pricing-grid-item,\n  .pricing-comparison,\n  .comparison-cards,\n  .faq-shell,\n  .contact-card,\n  .contact-grid,\n  .contact-copy-column,\n  .contact-form-column,\n  .cta-block,\n  .cta-layout,\n  .footer-container,\n  .footer-grid {\n    box-sizing: border-box;\n    width: 100%;\n    max-width: 100%;\n    min-width: 0;\n}\n.hero {\n    min-height: 0;\n    padding: 1.25rem clamp(0.75rem, 3.8vw, 1rem) 2rem;\n    align-items: flex-start;\n}\n.hero::before {\n    right: 0;\n    top: 16%;\n    font-size: min(70vw, 15rem);\n    transform: none;\n    animation: none;\n}\n[data-aos=\"fade-left\"] {\n    transform: translateY(20px);\n}\n.features-section::before,\n  .pricing-section::before {\n    right: 0;\n    width: min(68vw, 220px);\n    height: min(68vw, 220px);\n}\n.hero-container {\n    margin: 0;\n}\n.hero-layout {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 1rem;\n}\n.hero-badge {\n    max-width: 100%;\n    margin-bottom: 0.9rem;\n    white-space: normal;\n    overflow-wrap: break-word;\n}\n.hero-title {\n    margin-bottom: 0.8rem;\n    font-size: clamp(1.55rem, 7.5vw, 2.1rem);\n    line-height: 1.15;\n    font-weight: 620;\n    overflow-wrap: break-word;\n}\n.hero-desc {\n    margin-bottom: 1rem;\n    font-size: 1rem;\n    line-height: 1.65;\n}\n.problem-solution {\n    width: 100%;\n    max-width: 100%;\n    min-width: 0;\n    margin: 0.75rem 0 1rem;\n    padding: 0.9rem;\n    border-radius: 18px;\n}\n.problem-text,\n  .solution-text {\n    min-width: 0;\n    max-width: 100%;\n    font-size: 0.9rem;\n    line-height: 1.6;\n    white-space: normal;\n    overflow-wrap: break-word;\n}\n.hero-buttons {\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.65rem;\n    width: 100%;\n}\n.hero-action-btn {\n    width: 100%;\n    max-width: none;\n    min-width: 0;\n    min-height: 48px;\n    padding: 0.8rem 1rem;\n}\n.demo-card,\n  .floating-card {\n    width: 100%;\n    min-width: 0;\n}\n.demo-card {\n    padding: 1.1rem;\n    border-radius: 18px;\n}\n.floating-card {\n    flex-basis: calc(50% - 0.45rem);\n    padding: 0.65rem 0.75rem;\n    border-radius: 15px;\n    overflow-wrap: break-word;\n}\n.section-container {\n    padding: 2rem clamp(0.75rem, 3.8vw, 1rem);\n}\n.section-kicker {\n    max-width: 100%;\n    padding-inline: 0.8rem;\n    text-align: center;\n    white-space: normal;\n    overflow-wrap: break-word;\n}\n.section-title {\n    font-size: clamp(1.7rem, 8.5vw, 2.25rem);\n    line-height: 1.15;\n    overflow-wrap: break-word;\n}\n.section-title::before,\n  .section-title::after {\n    margin-inline: 0.35rem;\n    font-size: 0.9rem;\n}\n.section-subtitle {\n    margin-bottom: 1.6rem;\n    font-size: 0.95rem;\n    line-height: 1.65;\n}\n.features-grid.row {\n    margin-inline: 0;\n}\n.features-grid .feature-grid-item {\n    padding: 0;\n    margin-bottom: 0.75rem;\n}\n.features-grid,\n  .steps-grid,\n  .testimonials-grid,\n  .pricing-grid,\n  .contact-grid,\n  .cta-layout,\n  .footer-grid {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.8rem;\n}\n.feature-card,\n  .step-card,\n  .testimonial-card,\n  .pricing-card,\n  .contact-card,\n  .faq-shell,\n  .cta-block {\n    min-width: 0;\n    max-width: 100%;\n    padding: 1rem;\n    border-radius: 20px;\n}\n.feature-card p,\n  .step-card p,\n  .testimonial-card p,\n  .pricing-card,\n  .pricing-features li,\n  .contact-card,\n  .faq-accordion .accordion-body,\n  .cta-block,\n  .footer {\n    overflow-wrap: break-word;\n}\n.steps-section {\n    background: var(--bg);\n}\n.pricing-comparison {\n    margin-top: 1.2rem;\n    padding: 0.85rem;\n    border-radius: 20px;\n}\n.comparison-card {\n    min-width: 0;\n    padding: 0.85rem;\n}\n.comparison-card-tier {\n    min-width: 0;\n    grid-template-columns: minmax(4.5rem, 30%) minmax(0, 1fr);\n}\n.comparison-card-tier dd,\n  .comparison-card-tier .comparison-value {\n    min-width: 0;\n    max-width: 100%;\n    white-space: normal;\n    overflow-wrap: break-word;\n}\n.contact-form-grid {\n    grid-template-columns: minmax(0, 1fr);\n}\n.contact-field,\n  .contact-field input,\n  .contact-field textarea,\n  .contact-submit,\n  .pricing-actions,\n  .pricing-actions form,\n  .pricing-actions button,\n  .cta-actions,\n  .cta-actions a {\n    width: 100%;\n    max-width: 100%;\n    min-width: 0;\n}\n.pricing-actions,\n  .cta-actions {\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.6rem;\n}\n.footer {\n    padding-inline: clamp(0.75rem, 3.8vw, 1rem);\n}\n.footer-container {\n    padding-inline: 0;\n}\n.footer-legal {\n    gap: 0.75rem;\n}\n}\n@media (max-width: 349.98px) {\n.floating-card,\n  .comparison-card-tier {\n    flex-basis: 100%;\n    grid-template-columns: minmax(0, 1fr);\n}\n}\n\n/* Strict four-column phone grid: sections keep deliberate composition. */\n@media (max-width: 767.98px) {\n.vue-onboarding {\n    --home-mobile-grid: repeat(4, minmax(0, 1fr));\n    --home-mobile-gap: clamp(10px, 2.6vw, 14px);\n    --home-mobile-section-pad-y: clamp(1.75rem, 6vw, 2.5rem);\n    --home-mobile-section-pad-x: clamp(1rem, 4.2vw, 1.25rem);\n    overflow-x: clip;\n}\n.hero-layout,\n  .problem-solution,\n  .hero-buttons,\n  .demo-card,\n  .features-grid,\n  .steps-grid,\n  .testimonials-grid,\n  .pricing-grid,\n  .pricing-actions,\n  .comparison-cards,\n  .contact-grid,\n  .contact-form-grid,\n  .cta-layout,\n  .cta-actions,\n  .footer-grid {\n    display: grid !important;\n    grid-template-columns: var(--home-mobile-grid) !important;\n    gap: var(--home-mobile-gap) !important;\n    min-width: 0;\n}\n.hero {\n    padding:\n      calc(var(--home-mobile-section-pad-y) * 0.85)\n      var(--home-mobile-section-pad-x)\n      var(--home-mobile-section-pad-y);\n}\n.section-container {\n    padding: var(--home-mobile-section-pad-y) var(--home-mobile-section-pad-x);\n}\n.section-divider {\n    margin-block: 0.35rem;\n    padding-inline: var(--home-mobile-section-pad-x);\n}\n.hero-copy-column,\n  .hero-visual-column {\n    grid-column: 1 / -1;\n    min-width: 0;\n}\n.hero-content {\n    display: grid;\n    gap: 0.85rem;\n}\n.problem-solution {\n    grid-template-columns: minmax(0, 1fr) !important;\n    gap: 0.75rem !important;\n    margin: 0.15rem 0 0.35rem;\n}\n.problem-solution > * {\n    grid-column: 1 / -1;\n    min-width: 0;\n}\n.problem-text,\n  .solution-text {\n    display: block;\n}\n.problem-text i,\n  .solution-text i {\n    margin-inline-end: 6px;\n}\n.hero-buttons {\n    grid-template-columns: minmax(0, 1fr) !important;\n    gap: 0.7rem !important;\n    margin-top: 0.15rem;\n}\n.hero-buttons > *,\n  .pricing-actions > *,\n  .cta-actions > * {\n    grid-column: 1 / -1;\n    min-width: 0;\n}\n.demo-card {\n    align-items: center;\n    text-align: start;\n    grid-template-columns: 3.25rem minmax(0, 1fr) !important;\n    gap: 0.55rem 0.75rem !important;\n    margin-top: 0.35rem;\n}\n.demo-card > .bi-mic {\n    grid-column: 1;\n    grid-row: 1 / span 2;\n    align-self: center;\n    justify-self: center;\n    margin: 0;\n    font-size: clamp(2.2rem, 10vw, 2.9rem);\n}\n.demo-card > h3 {\n    grid-column: 2 / -1;\n    grid-row: 1;\n    min-width: 0;\n    margin: 0;\n    line-height: 1.2;\n    word-break: normal;\n    overflow-wrap: normal;\n}\n.demo-card > p {\n    grid-column: 2 / -1;\n    grid-row: 2;\n    min-width: 0;\n    margin: 0;\n    line-height: 1.5;\n    word-break: normal;\n    overflow-wrap: break-word;\n}\n.demo-card > .demo-wave {\n    grid-column: 1 / -1;\n    grid-row: 3;\n    display: grid;\n    grid-template-columns: 44px minmax(0, 1fr);\n    justify-content: stretch;\n    margin: 0.15rem 0 0;\n    min-width: 0;\n}\n.hero-image {\n    display: grid;\n    gap: 0.7rem;\n}\n.floating-card {\n    grid-column: span 2;\n    min-width: 0;\n}\n.features-grid > .feature-grid-item,\n  .steps-grid > .step-grid-item,\n  .testimonials-grid > .testimonial-grid-item {\n    grid-column: 1 / -1;\n    width: auto !important;\n    max-width: none !important;\n    min-width: 0;\n    margin: 0 !important;\n}\n.feature-card,\n  .step-card,\n  .testimonial-card,\n  .pricing-card,\n  .contact-card,\n  .faq-shell,\n  .cta-block {\n    height: 100%;\n    padding: 1.1rem !important;\n}\n.feature-card,\n  .step-card,\n  .testimonial-card {\n    height: 100%;\n}\n.pricing-grid > .pricing-grid-item,\n  .pricing-grid > .pricing-card,\n  .comparison-cards > .comparison-card {\n    grid-column: 1 / -1;\n    min-width: 0;\n}\n.pricing-features {\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.35rem 0;\n}\n.pricing-actions,\n  .cta-actions {\n    grid-template-columns: minmax(0, 1fr) !important;\n}\n.contact-copy-column,\n  .contact-form-column,\n  .cta-layout > :first-child,\n  .cta-layout > :last-child {\n    grid-column: 1 / -1;\n    min-width: 0;\n}\n.contact-form-grid > .contact-field {\n    grid-column: 1 / -1;\n}\n.cta-block {\n    margin-inline: var(--home-mobile-section-pad-x);\n    margin-block: 1rem 1.6rem;\n    width: auto;\n    max-width: none;\n    border-radius: 24px;\n}\n.cta-layout {\n    grid-template-columns: minmax(0, 1fr) !important;\n    gap: 1rem !important;\n}\n.cta-actions {\n    width: 100%;\n    max-width: none;\n}\n.footer {\n    padding-inline: var(--home-mobile-section-pad-x);\n    padding-block: 1.5rem 1.75rem;\n}\n.footer-grid > * {\n    grid-column: 1 / -1;\n    min-width: 0;\n}\n.footer-legal {\n    gap: 0.65rem;\n}\n}\n@media (min-width: 560px) and (max-width: 767.98px) {\n.features-grid > .feature-grid-item,\n  .steps-grid > .step-grid-item,\n  .testimonials-grid > .testimonial-grid-item {\n    grid-column: span 2;\n}\n.hero-buttons {\n    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;\n}\n.hero-buttons > * {\n    grid-column: auto;\n}\n.floating-card {\n    grid-column: span 2;\n}\n.pricing-features {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n    gap: 8px 12px;\n}\n.footer-grid > * {\n    grid-column: span 2;\n}\n.footer-grid > :last-child:nth-child(odd) {\n    grid-column: 1 / -1;\n}\n}\n@media (max-width: 349.98px) {\n.floating-card,\n  .comparison-card-tier {\n    flex-basis: 100%;\n    grid-template-columns: minmax(0, 1fr);\n}\n.contact-copy-column,\n  .contact-form-column,\n  .cta-layout > :first-child,\n  .cta-layout > :last-child {\n    grid-column: 1 / -1;\n}\n}\n@media (max-width: 559.98px) {\n.contact-copy {\n    display: grid;\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.45rem;\n    align-items: start;\n}\n.contact-copy > .section-title,\n  .contact-copy > .section-subtitle {\n    grid-column: 1 / -1;\n    margin: 0;\n}\n}\n@media (max-width: 349.98px) {\n.contact-copy > .section-title,\n  .contact-copy > .section-subtitle {\n    grid-column: 1 / -1;\n}\n}\n\n\n/* mutqin-mobile-content-pass */\n@media (max-width: 767.98px) {\n.hero-title,\n  .section-title {\n    font-size: clamp(1.45rem, 7vw, 1.9rem) !important;\n    font-weight: 620 !important;\n    letter-spacing: -0.02em !important;\n    line-height: 1.2 !important;\n}\n.section-subtitle,\n  .hero-lead,\n  .feature-card p {\n    font-size: 0.95rem !important;\n    line-height: 1.55 !important;\n}\n.feature-card {\n    padding: 1rem !important;\n    border-radius: 18px !important;\n}\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n.network-status-banner {\n  position: sticky;\n  top: 0;\n  z-index: 1080;\n  display: grid;\n  justify-items: center;\n  padding: 0.45rem 0.75rem;\n  background: color-mix(in srgb, var(--warning, #c9973a) 18%, var(--surface, #fff));\n  border-bottom: 1px solid color-mix(in srgb, var(--warning, #c9973a) 35%, var(--border, #d6d0c6));\n  color: var(--text, #1f1812);\n  font-size: 0.86rem;\n  font-weight: 600;\n  text-align: center;\n}\n.network-status-banner--offline {\n  background: color-mix(in srgb, var(--warning, #c9973a) 22%, var(--surface, #fff));\n}\n.network-status-banner:not(.network-status-banner--offline) {\n  background: color-mix(in srgb, var(--success, #3d7a5a) 16%, var(--surface, #fff));\n  border-bottom-color: color-mix(in srgb, var(--success, #3d7a5a) 32%, var(--border, #d6d0c6));\n}\n.network-status-banner__inner {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.45rem;\n  max-width: 40rem;\n}\n.network-status-banner__inner .bi {\n  font-size: 1rem;\n  color: var(--warning, #c9973a);\n}\n.network-status-banner:not(.network-status-banner--offline) .bi {\n  color: var(--success, #3d7a5a);\n}\n[data-theme=\"dark\"] .network-status-banner,\nhtml[data-theme=\"dark\"] .network-status-banner {\n  color: var(--text, #f3eee7);\n}\n@media (max-width: 480px) {\n.network-status-banner {\n    font-size: 0.82rem;\n    padding: 0.4rem 0.65rem;\n}\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -34689,10 +31121,10 @@ var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js
 
 /***/ }),
 
-/***/ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/About.vue?vue&type=style&index=0&id=2995bb7e&scoped=true&lang=css":
-/*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/About.vue?vue&type=style&index=0&id=2995bb7e&scoped=true&lang=css ***!
-  \***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/NetworkStatusBanner.vue?vue&type=style&index=0&id=3b3bcef1&lang=css":
+/*!******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/NetworkStatusBanner.vue?vue&type=style&index=0&id=3b3bcef1&lang=css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -34702,7 +31134,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !../../../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
 /* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_About_vue_vue_type_style_index_0_id_2995bb7e_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./About.vue?vue&type=style&index=0&id=2995bb7e&scoped=true&lang=css */ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/About.vue?vue&type=style&index=0&id=2995bb7e&scoped=true&lang=css");
+/* harmony import */ var _node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_NetworkStatusBanner_vue_vue_type_style_index_0_id_3b3bcef1_lang_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./NetworkStatusBanner.vue?vue&type=style&index=0&id=3b3bcef1&lang=css */ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/NetworkStatusBanner.vue?vue&type=style&index=0&id=3b3bcef1&lang=css");
 
             
 
@@ -34711,41 +31143,11 @@ var options = {};
 options.insert = "head";
 options.singleton = false;
 
-var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_About_vue_vue_type_style_index_0_id_2995bb7e_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"], options);
+var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_NetworkStatusBanner_vue_vue_type_style_index_0_id_3b3bcef1_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"], options);
 
 
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_About_vue_vue_type_style_index_0_id_2995bb7e_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
-
-/***/ }),
-
-/***/ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./resources/js/views/Homepage.css?vue&type=style&index=0&lang=css":
-/*!***************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./resources/js/views/Homepage.css?vue&type=style&index=0&lang=css ***!
-  \***************************************************************************************************************************************************************************************************************************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !../../../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
-/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_Homepage_css_vue_type_style_index_0_lang_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./Homepage.css?vue&type=style&index=0&lang=css */ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./resources/js/views/Homepage.css?vue&type=style&index=0&lang=css");
-
-            
-
-var options = {};
-
-options.insert = "head";
-options.singleton = false;
-
-var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_Homepage_css_vue_type_style_index_0_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"], options);
-
-
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_Homepage_css_vue_type_style_index_0_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_NetworkStatusBanner_vue_vue_type_style_index_0_id_3b3bcef1_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
 
 /***/ }),
 
@@ -35050,10 +31452,10 @@ exports["default"] = (sfc, props) => {
 
 /***/ }),
 
-/***/ "./resources/js/views/About.vue":
-/*!**************************************!*\
-  !*** ./resources/js/views/About.vue ***!
-  \**************************************/
+/***/ "./resources/js/components/NetworkStatusBanner.vue":
+/*!*********************************************************!*\
+  !*** ./resources/js/components/NetworkStatusBanner.vue ***!
+  \*********************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -35061,9 +31463,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _About_vue_vue_type_template_id_2995bb7e_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./About.vue?vue&type=template&id=2995bb7e&scoped=true */ "./resources/js/views/About.vue?vue&type=template&id=2995bb7e&scoped=true");
-/* harmony import */ var _About_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./About.vue?vue&type=script&lang=js */ "./resources/js/views/About.vue?vue&type=script&lang=js");
-/* harmony import */ var _About_vue_vue_type_style_index_0_id_2995bb7e_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./About.vue?vue&type=style&index=0&id=2995bb7e&scoped=true&lang=css */ "./resources/js/views/About.vue?vue&type=style&index=0&id=2995bb7e&scoped=true&lang=css");
+/* harmony import */ var _NetworkStatusBanner_vue_vue_type_template_id_3b3bcef1__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./NetworkStatusBanner.vue?vue&type=template&id=3b3bcef1 */ "./resources/js/components/NetworkStatusBanner.vue?vue&type=template&id=3b3bcef1");
+/* harmony import */ var _NetworkStatusBanner_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./NetworkStatusBanner.vue?vue&type=script&lang=js */ "./resources/js/components/NetworkStatusBanner.vue?vue&type=script&lang=js");
+/* harmony import */ var _NetworkStatusBanner_vue_vue_type_style_index_0_id_3b3bcef1_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./NetworkStatusBanner.vue?vue&type=style&index=0&id=3b3bcef1&lang=css */ "./resources/js/components/NetworkStatusBanner.vue?vue&type=style&index=0&id=3b3bcef1&lang=css");
 /* harmony import */ var _Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
@@ -35072,7 +31474,7 @@ __webpack_require__.r(__webpack_exports__);
 ;
 
 
-const __exports__ = /*#__PURE__*/(0,_Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_About_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_About_vue_vue_type_template_id_2995bb7e_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-2995bb7e"],['__file',"resources/js/views/About.vue"]])
+const __exports__ = /*#__PURE__*/(0,_Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_NetworkStatusBanner_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_NetworkStatusBanner_vue_vue_type_template_id_3b3bcef1__WEBPACK_IMPORTED_MODULE_0__.render],['__file',"resources/js/components/NetworkStatusBanner.vue"]])
 /* hot reload */
 if (false) {}
 
@@ -35081,303 +31483,47 @@ if (false) {}
 
 /***/ }),
 
-/***/ "./resources/js/views/AboutUs.vue":
-/*!****************************************!*\
-  !*** ./resources/js/views/AboutUs.vue ***!
-  \****************************************/
+/***/ "./resources/js/components/NetworkStatusBanner.vue?vue&type=script&lang=js":
+/*!*********************************************************************************!*\
+  !*** ./resources/js/components/NetworkStatusBanner.vue?vue&type=script&lang=js ***!
+  \*********************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_NetworkStatusBanner_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
 /* harmony export */ });
-/* harmony import */ var _AboutUs_vue_vue_type_template_id_5d5795bc__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AboutUs.vue?vue&type=template&id=5d5795bc */ "./resources/js/views/AboutUs.vue?vue&type=template&id=5d5795bc");
-/* harmony import */ var _AboutUs_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AboutUs.vue?vue&type=script&lang=js */ "./resources/js/views/AboutUs.vue?vue&type=script&lang=js");
-/* harmony import */ var _Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
-
-
-
-
-;
-const __exports__ = /*#__PURE__*/(0,_Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__["default"])(_AboutUs_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_AboutUs_vue_vue_type_template_id_5d5795bc__WEBPACK_IMPORTED_MODULE_0__.render],['__file',"resources/js/views/AboutUs.vue"]])
-/* hot reload */
-if (false) {}
-
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (__exports__);
-
-/***/ }),
-
-/***/ "./resources/js/views/DonationPage.vue":
-/*!*********************************************!*\
-  !*** ./resources/js/views/DonationPage.vue ***!
-  \*********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _DonationPage_vue_vue_type_template_id_1bb2b540__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./DonationPage.vue?vue&type=template&id=1bb2b540 */ "./resources/js/views/DonationPage.vue?vue&type=template&id=1bb2b540");
-/* harmony import */ var _DonationPage_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./DonationPage.vue?vue&type=script&lang=js */ "./resources/js/views/DonationPage.vue?vue&type=script&lang=js");
-/* harmony import */ var _Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
-
-
-
-
-;
-const __exports__ = /*#__PURE__*/(0,_Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__["default"])(_DonationPage_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_DonationPage_vue_vue_type_template_id_1bb2b540__WEBPACK_IMPORTED_MODULE_0__.render],['__file',"resources/js/views/DonationPage.vue"]])
-/* hot reload */
-if (false) {}
-
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (__exports__);
-
-/***/ }),
-
-/***/ "./resources/js/views/Homepage.vue":
-/*!*****************************************!*\
-  !*** ./resources/js/views/Homepage.vue ***!
-  \*****************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _Homepage_vue_vue_type_template_id_a027a5e6__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Homepage.vue?vue&type=template&id=a027a5e6 */ "./resources/js/views/Homepage.vue?vue&type=template&id=a027a5e6");
-/* harmony import */ var _Homepage_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Homepage.vue?vue&type=script&lang=js */ "./resources/js/views/Homepage.vue?vue&type=script&lang=js");
-/* harmony import */ var _Homepage_css_vue_type_style_index_0_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Homepage.css?vue&type=style&index=0&lang=css */ "./resources/js/views/Homepage.css?vue&type=style&index=0&lang=css");
-/* harmony import */ var _Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
-
-
-
-
-;
-
-
-const __exports__ = /*#__PURE__*/(0,_Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_Homepage_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_Homepage_vue_vue_type_template_id_a027a5e6__WEBPACK_IMPORTED_MODULE_0__.render],['__file',"resources/js/views/Homepage.vue"]])
-/* hot reload */
-if (false) {}
-
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (__exports__);
-
-/***/ }),
-
-/***/ "./resources/js/views/OurMission.vue":
-/*!*******************************************!*\
-  !*** ./resources/js/views/OurMission.vue ***!
-  \*******************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _OurMission_vue_vue_type_template_id_3a0e4aff__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./OurMission.vue?vue&type=template&id=3a0e4aff */ "./resources/js/views/OurMission.vue?vue&type=template&id=3a0e4aff");
-/* harmony import */ var _OurMission_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./OurMission.vue?vue&type=script&lang=js */ "./resources/js/views/OurMission.vue?vue&type=script&lang=js");
-/* harmony import */ var _Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
-
-
-
-
-;
-const __exports__ = /*#__PURE__*/(0,_Users_mohamedamine_Desktop_mutqin_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__["default"])(_OurMission_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_OurMission_vue_vue_type_template_id_3a0e4aff__WEBPACK_IMPORTED_MODULE_0__.render],['__file',"resources/js/views/OurMission.vue"]])
-/* hot reload */
-if (false) {}
-
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (__exports__);
-
-/***/ }),
-
-/***/ "./resources/js/views/About.vue?vue&type=script&lang=js":
-/*!**************************************************************!*\
-  !*** ./resources/js/views/About.vue?vue&type=script&lang=js ***!
-  \**************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_About_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
-/* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_About_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./About.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/About.vue?vue&type=script&lang=js");
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_NetworkStatusBanner_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./NetworkStatusBanner.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/NetworkStatusBanner.vue?vue&type=script&lang=js");
  
 
 /***/ }),
 
-/***/ "./resources/js/views/AboutUs.vue?vue&type=script&lang=js":
-/*!****************************************************************!*\
-  !*** ./resources/js/views/AboutUs.vue?vue&type=script&lang=js ***!
-  \****************************************************************/
+/***/ "./resources/js/components/NetworkStatusBanner.vue?vue&type=template&id=3b3bcef1":
+/*!***************************************************************************************!*\
+  !*** ./resources/js/components/NetworkStatusBanner.vue?vue&type=template&id=3b3bcef1 ***!
+  \***************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_AboutUs_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
+/* harmony export */   render: () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_NetworkStatusBanner_vue_vue_type_template_id_3b3bcef1__WEBPACK_IMPORTED_MODULE_0__.render)
 /* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_AboutUs_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./AboutUs.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/AboutUs.vue?vue&type=script&lang=js");
- 
-
-/***/ }),
-
-/***/ "./resources/js/views/DonationPage.vue?vue&type=script&lang=js":
-/*!*********************************************************************!*\
-  !*** ./resources/js/views/DonationPage.vue?vue&type=script&lang=js ***!
-  \*********************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_DonationPage_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
-/* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_DonationPage_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./DonationPage.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/DonationPage.vue?vue&type=script&lang=js");
- 
-
-/***/ }),
-
-/***/ "./resources/js/views/Homepage.vue?vue&type=script&lang=js":
-/*!*****************************************************************!*\
-  !*** ./resources/js/views/Homepage.vue?vue&type=script&lang=js ***!
-  \*****************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
-/* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./Homepage.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/Homepage.vue?vue&type=script&lang=js");
- 
-
-/***/ }),
-
-/***/ "./resources/js/views/OurMission.vue?vue&type=script&lang=js":
-/*!*******************************************************************!*\
-  !*** ./resources/js/views/OurMission.vue?vue&type=script&lang=js ***!
-  \*******************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_OurMission_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
-/* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_OurMission_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./OurMission.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/OurMission.vue?vue&type=script&lang=js");
- 
-
-/***/ }),
-
-/***/ "./resources/js/views/About.vue?vue&type=template&id=2995bb7e&scoped=true":
-/*!********************************************************************************!*\
-  !*** ./resources/js/views/About.vue?vue&type=template&id=2995bb7e&scoped=true ***!
-  \********************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   render: () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_About_vue_vue_type_template_id_2995bb7e_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render)
-/* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_About_vue_vue_type_template_id_2995bb7e_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./About.vue?vue&type=template&id=2995bb7e&scoped=true */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/About.vue?vue&type=template&id=2995bb7e&scoped=true");
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_NetworkStatusBanner_vue_vue_type_template_id_3b3bcef1__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./NetworkStatusBanner.vue?vue&type=template&id=3b3bcef1 */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/NetworkStatusBanner.vue?vue&type=template&id=3b3bcef1");
 
 
 /***/ }),
 
-/***/ "./resources/js/views/AboutUs.vue?vue&type=template&id=5d5795bc":
-/*!**********************************************************************!*\
-  !*** ./resources/js/views/AboutUs.vue?vue&type=template&id=5d5795bc ***!
-  \**********************************************************************/
+/***/ "./resources/js/components/NetworkStatusBanner.vue?vue&type=style&index=0&id=3b3bcef1&lang=css":
+/*!*****************************************************************************************************!*\
+  !*** ./resources/js/components/NetworkStatusBanner.vue?vue&type=style&index=0&id=3b3bcef1&lang=css ***!
+  \*****************************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   render: () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_AboutUs_vue_vue_type_template_id_5d5795bc__WEBPACK_IMPORTED_MODULE_0__.render)
-/* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_AboutUs_vue_vue_type_template_id_5d5795bc__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./AboutUs.vue?vue&type=template&id=5d5795bc */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/AboutUs.vue?vue&type=template&id=5d5795bc");
-
-
-/***/ }),
-
-/***/ "./resources/js/views/DonationPage.vue?vue&type=template&id=1bb2b540":
-/*!***************************************************************************!*\
-  !*** ./resources/js/views/DonationPage.vue?vue&type=template&id=1bb2b540 ***!
-  \***************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   render: () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_DonationPage_vue_vue_type_template_id_1bb2b540__WEBPACK_IMPORTED_MODULE_0__.render)
-/* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_DonationPage_vue_vue_type_template_id_1bb2b540__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./DonationPage.vue?vue&type=template&id=1bb2b540 */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/DonationPage.vue?vue&type=template&id=1bb2b540");
-
-
-/***/ }),
-
-/***/ "./resources/js/views/Homepage.vue?vue&type=template&id=a027a5e6":
-/*!***********************************************************************!*\
-  !*** ./resources/js/views/Homepage.vue?vue&type=template&id=a027a5e6 ***!
-  \***********************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   render: () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_template_id_a027a5e6__WEBPACK_IMPORTED_MODULE_0__.render)
-/* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_Homepage_vue_vue_type_template_id_a027a5e6__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./Homepage.vue?vue&type=template&id=a027a5e6 */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/Homepage.vue?vue&type=template&id=a027a5e6");
-
-
-/***/ }),
-
-/***/ "./resources/js/views/OurMission.vue?vue&type=template&id=3a0e4aff":
-/*!*************************************************************************!*\
-  !*** ./resources/js/views/OurMission.vue?vue&type=template&id=3a0e4aff ***!
-  \*************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   render: () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_OurMission_vue_vue_type_template_id_3a0e4aff__WEBPACK_IMPORTED_MODULE_0__.render)
-/* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_OurMission_vue_vue_type_template_id_3a0e4aff__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./OurMission.vue?vue&type=template&id=3a0e4aff */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/OurMission.vue?vue&type=template&id=3a0e4aff");
-
-
-/***/ }),
-
-/***/ "./resources/js/views/Homepage.css?vue&type=style&index=0&lang=css":
-/*!*************************************************************************!*\
-  !*** ./resources/js/views/Homepage.css?vue&type=style&index=0&lang=css ***!
-  \*************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_style_loader_dist_cjs_js_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_Homepage_css_vue_type_style_index_0_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader/dist/cjs.js!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./Homepage.css?vue&type=style&index=0&lang=css */ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./resources/js/views/Homepage.css?vue&type=style&index=0&lang=css");
-
-
-/***/ }),
-
-/***/ "./resources/js/views/About.vue?vue&type=style&index=0&id=2995bb7e&scoped=true&lang=css":
-/*!**********************************************************************************************!*\
-  !*** ./resources/js/views/About.vue?vue&type=style&index=0&id=2995bb7e&scoped=true&lang=css ***!
-  \**********************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_style_loader_dist_cjs_js_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_About_vue_vue_type_style_index_0_id_2995bb7e_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader/dist/cjs.js!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./About.vue?vue&type=style&index=0&id=2995bb7e&scoped=true&lang=css */ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/views/About.vue?vue&type=style&index=0&id=2995bb7e&scoped=true&lang=css");
+/* harmony import */ var _node_modules_style_loader_dist_cjs_js_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_NetworkStatusBanner_vue_vue_type_style_index_0_id_3b3bcef1_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader/dist/cjs.js!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./NetworkStatusBanner.vue?vue&type=style&index=0&id=3b3bcef1&lang=css */ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/NetworkStatusBanner.vue?vue&type=style&index=0&id=3b3bcef1&lang=css");
 
 
 /***/ }),
@@ -46820,7 +42966,7 @@ if ((true)) ;
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"common":{"on":"On","off":"Off","reset":"Reset","startSession":"Start Session","pause":"Pause","settings":"Settings","controls":"Controls","language":"Language","login":"Login","register":"Register","logout":"Logout","loading":"Loading...","cancel":"Cancel","save":"Save","close":"Close","yes":"Yes","no":"No","home":"Home","memorisation":"Memorisation","delete":"Delete","resume":"Resume","discard":"Discard","back":"Back","continue":"Continue","filter":"Filter","metadata":"Metadata","download":"Download","method":"Method","fontSize":"Font size","tajweed":"Tajweed","dismiss":"Dismiss","backToTop":"Back to top","skipOnboarding":"Skip tour","closeTour":"Close tour","resumeSession":"Resume Session","pauseSession":"Pause Session","resumingSession":"Resuming…","pausingSession":"Pausing…","endingSession":"Ending…","startingSession":"Starting…","dashboard":"Dashboard","retry":"Try again","tryAgain":"Try again","status":{"loadingTitle":"Loading…","loadingDesc":"Please wait a moment.","emptyTitle":"Nothing here yet","emptyDesc":"When you add something, it will show up here.","noResultsTitle":"No matches found","noResultsDesc":"Try clearing filters or searching with different words.","errorTitle":"Something went wrong","errorDesc":"We couldn’t load this. Check your connection, then try again.","authTitle":"Sign in to continue","authDesc":"Log in to open your memorisation workspace and keep progress in sync.","unavailableTitle":"Not available right now","unavailableDesc":"This feature isn’t available at the moment. Please try again later.","clearFilters":"Clear filters","startSession":"Start a session","returnToSessions":"Return to sessions","logIn":"Log in","createFirstNote":"Write your first note"}},"auth":{"continueGoogle":"Continue with Google","or":"or","emailAddress":"Email Address","password":"Password","rememberMe":"Remember me","forgotPassword":"Forgot password?"},"nav":{"home":"Home","dashboard":"Dashboard","memorisation":"Memorisation","profile":"Profile","subscription":"Subscription","settings":"Settings"},"resume":{"kicker":"Smart Resume","title":"Pick up exactly where you left off","resumeNow":"Resume Now"},"sessionStatus":{"completed":"Session completed","active":"Active session","ready":"Session ready","progress":"{current} of {total} ayahs · {percent}% complete","left":"{eta} left","end":"End session"},"recordings":{"viewAll":"View All Recordings"},"shortcuts":{"title":"Keyboard Shortcuts","subtitle":"Work faster without leaving the memorisation view.","gotIt":"Got it","or":"or","navigation":"Navigation","playPause":"Play or pause audio","playAyah":"Play selected ayah","nextAyah":"Next ayah","previousAyah":"Previous ayah","firstAyah":"Jump to first ayah","lastAyah":"Jump to last ayah","playCurrent":"Play current ayah","saveSession":"Save current session","closePanel":"Close open panel or modal","mushafNextPage":"Next mushaf page","mushafPrevPage":"Previous mushaf page","groups":{"playback":"Playback","navigation":"Navigation","session":"Session","mushaf":"Mushaf view","general":"General"},"keys":{"space":"Space","enter":"Enter","next":"→ / J","prev":"← / K","save":"Ctrl/Cmd + S"}},"home":{"startKicker":"Start a new session","startTitle":"Choose a surah, set your range, then practise.","selectSurah":"Select surah","pickRange":"Pick range","setRepeats":"Set repeats","openControls":"Open Session Controls","controlsHint":"You can tweak audio, focus tools, and saved sessions any time.","guestKicker":"Calm Quran memorisation","guestTitle":"Memorise with a quieter, more deliberate session flow.","guestSubtitle":"Build each session around a small ayah range, steady repetition, and clear recall.","guestSupport":"Mutqin keeps the Quran central while playback, progress, and saved sessions stay quietly organised around it.","guestNote":"Login keeps your sessions, insights, and exact memorisation position in sync."},"sessionSetup":{"title":"Session Setup","subtitle":"Choose what you memorise","defaults":"Defaults","chooseSurah":"Choose a surah...","surahHint":"Pick the surah you want to work on.","noAudioPlayed":"No ayah audio played yet for this session.","to":"to","rangeHint":"Keep ranges small for focused memorisation.","reciterHint":"Changes the audio voice for the session. Word highlighting stays on for this reciter.","reciterNoWordHighlight":"Audio only for this reciter — word highlighting is unavailable.","recitersWithWordHighlight":"With word highlighting","recitersAudioOnly":"Audio only","repeatHint":"Repeat each verse {count} times before moving on.","repeatHintOne":"Repeat each verse {count} time before moving on.","repeatHintOther":"Repeat each verse {count} times before moving on.","surah":"Surah","ayahRange":"Ayah range","reciter":"Reciter","repetitions":"Repetitions","display":"Display","displaySub":"Customize how the Quran appears","readingAids":"Reading Aids","readingAidsSub":"Translations and word helpers","tajweed":"Tajweed","tajweedDesc":"Recitation color rules (Idgham, Ikhfa, Madd, etc.)","fontSize":"Font size","fontSizeDesc":"Adjust the Arabic text size for better readability","translation":"Translation","translationDesc":"English meaning of each verse","transliteration":"Transliteration","transliterationDesc":"Latin script pronunciation aid","wordByWord":"Word by word","wordByWordDesc":"English meaning under each Arabic word","wordAudio":"Word audio","wordAudioDesc":"Audio playback with word highlighting"},"homepage":{"hero":{"badge":"Quran memorisation","title":"Memorise the Quran with clear daily practice.","desc":"Listen, repeat, and check your recitation. Mutqin keeps your ayahs, progress, and next step in one place.","problem":"The problem:","problemText":"Weak ayahs, recordings, and review plans often sit in different places, so practice falls apart.","solution":"The solution:","solutionText":"Practise a short range, check what you recited, then review the ayahs that need work.","startFree":"Start free","seeFeatures":"See features"},"demo":{"title":"Recitation check","quote":"\\"Ikhfa\' needs work. Hold the nasal sound for two counts.\\"","recording":"Recording... 96% match"},"features":{"kicker":"Daily practice","title":"What you get","subtitle":"Tools for listening, repeating, checking, and reviewing.","items":{"recitationReview":{"title":"Recitation check","description":"Recite from memory while Mutqin follows along.","result":"See which words need more work.","badge":"free"},"smartMemorisation":{"title":"Guided practice","description":"Listen, follow, and repeat at your own pace.","result":"A session you can repeat each day.","badge":"pro"},"stackedMushaf":{"title":"Stacked and Mushaf views","description":"Use ayah cards or a page-style layout while you practise.","result":"Pick the view that suits you.","badge":"free"},"transitionTraining":{"title":"Memorisation plans","description":"Get a clear next step based on how your session went.","result":"Know what to practise next.","badge":"pro"},"recordingLibrary":{"title":"Word focus","description":"See which words still need attention.","result":"Return to the hard parts first.","badge":"freeLimited"},"reviewAnalytics":{"title":"Review scheduling","description":"Come back to memorised ayahs before they fade.","result":"Keep earlier work strong.","badge":"pro"}}},"steps":{"kicker":"How it works","title":"Three steps","subtitle":"Practise, notice weak spots, then come back to them.","items":{"record":{"title":"Practise","description":"Listen, follow, and repeat your chosen ayahs.","microcopy":"Short sessions are enough"},"review":{"title":"Notice","description":"See which words need more attention after you recite.","microcopy":"Clear feedback"},"repeat":{"title":"Return","description":"Follow the next step so memorised ayahs stay strong.","microcopy":"Review before it fades"}}},"testimonials":{"kicker":"Students and teachers","title":"What people say","items":{"abdullah":{"quote":"Mutqin helped me fix my ض after years of struggle. Alhamdulillah.","proof":"Letter practice","author":"Abdullah Khan","role":"12 juz memorised","initials":"AK"},"fatima":{"quote":"Daily review keeps my hifdh from slipping. I use it every day.","proof":"Daily review","author":"Fatima El-Sayed","role":"Hafidha in progress","initials":"FE"},"hisham":{"quote":"I use Mutqin to see where my students need more work.","proof":"Teacher use","author":"Ustadh Hisham","role":"Tajweed teacher","initials":"UH"}}},"pricing":{"kicker":"Pricing","title":"Simple pricing","subtitle":"Start free. Upgrade when you want more feedback and history.","starter":"Starter","premium":"Premium","monthly":"Monthly","yearly":"Yearly","perMonth":"/month","premiumYearly":"or £17.99 yearly","proYearly":"or £49.99 yearly","featureColumn":"Feature","freeTrial":"7-DAY FREE TRIAL","accountNote":"You can start Premium or Pro checkout without an account. After paying, create an account or sign in with the same email so Mutqin can link your plan."},"faq":{"kicker":"Common questions","title":"FAQ","subtitle":"How Mutqin helps with recitation, memorisation, and review.","items":{"whatIsMutqin":{"question":"What is Mutqin?","answer":"Mutqin is a Quran memorisation app. You practise, check your recitation, and keep track of what to review next."},"howMemorisation":{"question":"How does memorisation work?","answer":"Choose a surah and ayah range, practise in short blocks, and use tools like blur, chaining, and saved sessions to build recall."},"howAiFeedback":{"question":"How does feedback work?","answer":"After you practise, Mutqin highlights words that may be weak or missed, so you know what to repeat next."},"whatIsPro":{"question":"What is Pro?","answer":"Pro includes recitation review, memorisation checks, fuller analytics, unlimited saved sessions, and planning tools."},"howRevision":{"question":"How does revision work?","answer":"Mutqin tracks weak ayahs, recent practice, and due reviews so you can revisit what is most likely to slip."}}},"contact":{"title":"Contact us","subtitle":"Ask about billing, practice, or feedback.","email":"Email","subject":"Subject","message":"Message","extendedSubtitle":"Ask about billing, practice, or feedback. We will reply with a clear answer.","sending":"Sending...","sendMessage":"Send message","errors":{"name":"Please enter your name.","email":"Please enter your email address.","emailInvalid":"Please enter a valid email address.","subject":"Please enter a subject.","message":"Please enter a message."},"success":"Your message has been sent.","errorFields":"Please check the highlighted fields and try again.","errorSend":"Unable to send message. Please try again."},"cta":{"title":"Know what to practise next.","subtitle":"Record a verse, review the weak spots, and keep the next session focused.","button":"Create free account","note":"No card needed for Free."},"footer":{"product":"Product","features":"Features","pricing":"Pricing","resources":"Resources","company":"Company","contact":"Contact","connect":"Connect","privacy":"Privacy","terms":"Terms","tagline":"2026 Mutqin · \\"And recite the Quran with measured recitation.\\"","aboutUs":"About","ourMission":"Our mission"},"badge":{"free":"Free","pro":"Pro","freeLimited":"Free limited"},"floatingBadges":{"tajweedScore":"Tajweed score: +27%","weakVerses":"Weak verses queued for review","dailyMinutes":"15 min/day practice"},"planFeatures":{"sessionSetup":"Basic session setup","savedSessions3":"3 saved sessions","savedSessions5":"5 saved sessions","savedSessionsUnlimited":"Unlimited saved sessions","basicAnalytics":"Basic analytics","focusMode":"Focus mode","blurringMethod":"Blur method","chainingMethod":"Chaining method","anchorMode":"Anchor mode","manualSelfAssessment":"Manual self-assessment recording","manualSelfAssessmentPlus":"Manual self-assessment and self recording","hifzPlan":"Custom Hifz plan","spacedRetention":"Spaced session retention","adaptiveRevision":"Adaptive revision scheduling","progressTracking":"Progress tracking","allTechniques":"All memorisation techniques","aiRecitation":"Recitation check","aiMemorisationChecker":"Memorisation check","advancedAnalysis":"Advanced analysis","offlineDownloads":"Offline listening downloads","voiceHifzBuilder":"Voice Hifz plan builder"},"comparison":{"sessionSetup":"Session setup and ayah range tools","savedSessions":"Saved sessions","layouts":"Stacked and Mushaf layouts","focusMode":"Focus mode","blurMethod":"Blur memorisation method","chainingPractice":"Chaining and transition practice","anchorMode":"Anchor mode","manualRecording":"Manual self-assessment recording","aiRecitationReview":"Recitation check","aiMemorisationChecker":"Memorisation check","hifzPlan":"Custom Hifz plan","spacedRetention":"Spaced session retention","voiceHifzBuilder":"Voice Hifz plan builder","adaptiveRevision":"Adaptive revision scheduling","progressTracking":"Progress tracking","advancedAnalytics":"Review analytics","offlineDownloads":"Offline audio downloads","unlimited":"Unlimited"},"a_short_loop_you_can_repeat_every_day_recite_diagn":"Practise, notice weak spots, then review what needs work.","start_free_upgrade_only_when_you_need_deeper_recit":"Start free. Upgrade when you want more feedback and history.","free":"Free","for_trying_the_workflow":"To try Mutqin","start_free":"Start free","most_useful":"Most useful","teacher_ready":"For teachers","pro":"Pro","feature_comparison":"Feature comparison","everything_included_in_each_subscription_at_a_glan":"What each plan includes.","a_quick_overview_of_how_mutqin_supports_recitation":"How Mutqin helps with recitation, memorisation, and review.","name":"Name","record_a_verse_review_the_highlighted_issues_and_k":"Record a verse, review the weak spots, and keep the next session focused.","focused_quran_memorisation_tools_for_recitation_ch":"Quran memorisation tools for practice, recitation checks, and review.","roadmap":"Roadmap","tajweed_guide":"Tajweed guide","memorization_tips":"Memorisation tips","help_center":"Help centre","all_rights_reserved":"© All rights reserved"},"memorisation":{"labels":{"ayah":"Ayah {ayah}","ayahs":"Ayahs {start}–{end}","surahAyah":"{surah} · Ayah {ayah}","surahAyahs":"{surah} · Ayahs {start}–{end}","continueToAyah":"Continue with Ayah {ayah}","continueToAyahs":"Continue with Ayahs {start}–{end}","repeatAyah":"Repeat Ayah {ayah}","repeatAyahs":"Repeat Ayahs {start}–{end}","completedSurahAyah":"You completed {surah}, Ayah {ayah}.","completedSurahAyahs":"You completed {surah}, Ayahs {start}–{end}.","checkAyahsAgain":"Check {range} again.","ayahCountOne":"{count} ayah","ayahCountOther":"{count} ayahs","repetitionCountOne":"{count} repetition","repetitionCountOther":"{count} repetitions","attemptCountOne":"{count} attempt","attemptCountOther":"{count} attempts"},"workspaceEmpty":{"kicker":"Ready to begin","title":"Choose a surah and range","desc":"Open session setup to pick a surah and ayah range. Your verses appear here once you start.","startNewSession":"Start new session","continuePreviousSession":"Continue from previous session"},"mushafLoad":{"errorTitle":"Mushaf page couldn’t load","errorDesc":"The page view didn’t load. Try again, or switch to stacked ayahs.","retry":"Try again","switchStacked":"Switch to stacked view"},"verseText":{"unavailableTitle":"Ayah text unavailable","unavailableDesc":"We couldn’t load this ayah’s Arabic text. Refresh the session or try again."},"analyticsEmpty":{"title":"No insights yet","desc":"Save a session and practise a little — your progress cards will appear here.","modalErrorTitle":"Analytics unavailable","modalErrorDesc":"We couldn’t prepare this session overview. Close and try again from a saved session.","modalEmptyTitle":"No analytics for this session","modalEmptyDesc":"Play ayah audio or finish a short practice, then open analytics again."},"postSessionChoice":{"title":"What would you like to practise next?","desc":"Return to your previous session or create a session of your own.","repeatRecommended":"Return to previous session","repeatRecommendedDesc":"Practise the same range and settings from your previous session again.","createCustom":"Custom session","createCustomDesc":"Choose your own sūrah, āyah range and practice settings.","startCustomSession":"Start custom session"},"welcomeBack":{"kicker":"Good to see you again","greetingArabic":"ٱلسَّلَامُ عَلَيْكُمْ","greetingTranslation":"Peace be upon you","freshTitle":"Ready when you are","freshTitleNamed":"Welcome back, {name}","freshSubtitle":"Continue where you left off, or begin something new.","freshReminderArabic":"رَبِّ زِدْنِى عِلْمًا","freshReminderTranslation":"My Lord, increase me in knowledge.","freshReminderSource":"Qur\'an 20:114","freshIntention":"Even a few ayahs, done with sincerity, are beloved to Allah.","reminders":{"1":{"translation":"My Lord, increase me in knowledge.","source":"Qur\'an 20:114","intention":"Even a few ayahs, done with sincerity, are beloved to Allah."},"2":{"translation":"As for those who strive for Us, We shall guide them to Our paths.","source":"Qur\'an 29:69","intention":"Returning with steadiness is part of the path — one ayah at a time."},"3":{"translation":"So remember Me; I will remember you.","source":"Qur\'an 2:152","intention":"A quiet return to the Qur’an is already remembrance."},"4":{"translation":"Indeed, with hardship comes ease.","source":"Qur\'an 94:6","intention":"If today feels heavy, keep the session small and sincere."},"5":{"translation":"And We have certainly made the Qur’an easy for remembrance.","source":"Qur\'an 54:17","intention":"Calm repetition is enough for today."},"6":{"translation":"And be patient, for indeed Allah does not allow the reward of those who do good to be lost.","source":"Qur\'an 11:115","intention":"Showing up again matters more than finishing quickly."},"7":{"translation":"Our Lord, give us good in this world and good in the Hereafter.","source":"Qur\'an 2:201","intention":"Ask Allah for benefit in what you memorise, then begin gently."},"8":{"translation":"And whoever puts their trust in Allah — He is sufficient for them.","source":"Qur\'an 65:3","intention":"Begin with trust, then take the next ayah with care."}},"resumeTitle":"Continue with {chapter}","resumeTitleNamed":"{chapter}, {name}","resumeGeneric":"Welcome back","resumeGenericNamed":"Welcome back, {name}","resumeSubtitle":"Your last session is waiting — may Allah make every ayah easy.","resumeSubtitleAtPlace":"You left off at {place}. May Allah make your return light and blessed.","resumeSubtitleDetail":"You left off at {detail}. May Allah make your return light and blessed.","resumePlaceAyah":"{chapter}, ayah {number}","resumePlaceBeginning":"{chapter}, from the start","stoppedAt":"Left off at","stoppedAtAyah":"Ayah {number}","stoppedAtBeginning":"Start of the surah","lastSaved":"Last saved","resumeReminderArabic":"وَٱلَّذِينَ جَـٰهَدُوا۟ فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا","resumeReminderTranslation":"As for those who strive for Us, We shall guide them to Our paths.","resumeReminderSource":"Qur\'an 29:69","resumeIntention":"Returning with steadiness is part of the path — one ayah at a time.","reminderLabel":"A word of remembrance","startNewSession":"Start new session","continuePreviousSession":"Continue this session","continueSessionShort":"Continue","hint":"Continue where you left off, or begin something new.","closeLabel":"Close"},"sessionExit":{"kicker":"Session paused","startNewSession":"Start new session","repeatSession":"Repeat session","continueSession":"Continue this session","saveSession":"Save this session","confirmTitle":"End this session?","confirmTitleComplete":"End this session?","confirmTitleEarly":"Finish for now?","confirmDescription":"This will end your current practice. Progress already made will be saved and the session will be marked complete.","confirmDescriptionComplete":"This will end your current practice. Progress already made will be saved and the session will be marked complete.","confirmDescriptionEarly":"This will end your current practice. Progress already made will be saved, the session will remain incomplete, and you can continue it later.","confirmContext":"{surah} · {range}","confirmEnd":"End session","confirmEndComplete":"End session","confirmEndEarly":"End session","confirmContinue":"Keep practising","keepPractising":"Keep practising","repetitionsProgress":"{completed} of {total} repetitions completed","repetitionsProgressOne":"{completed} of {total} repetition completed","repetitionsProgressOther":"{completed} of {total} repetitions completed","ayahProgress":"On ayah {current} of {total} in this range","positionProgress":"Stopped at ayah {ayah}"},"sessionOverview":{"kicker":"Session Overview"},"practiceTools":{"beginner":"Beginner Tools","beginnerDesc":"Simple options for reading, listening, and repeating ayahs.","advanced":"Advanced Tools","advancedDesc":"Techniques for linking ayahs together and remembering key words."},"activePracticeSetup":{"title":"Active practice setup","openTools":"Practice tools","showLess":"Show less","moreCount":"+{count} more","emptyOptional":"No optional tools selected — listening and repetition only.","recommendedLabel":"Recommended for this session","recommendedReasonDefault":"Recommended because this helps the areas that need care.","recommendedReasonWeak":"Recommended because these words needed more care in recent checks.","repetitions":"Repetitions","repetitionsValue":"{count} repetitions","playbackSpeed":"Playback speed","visibility":"Text visibility","weakFocus":"Weak-area focus","weakFocusShort":"Weak areas","fullRange":"Full-range revision","fullRangeShort":"Full range","mistakeHandling":"Mistake handling","mistakePause":"Pause on mistake","mistakePauseShort":"Pause","mistakeContinue":"Continue and review","mistakeContinueShort":"Continue","autoFollow":"Auto-follow","mistakeSound":"Mistake sound","pausedShort":"Paused","states":{"available":"Available","selected":"Selected","active_now":"Active now","paused":"Paused","completed":"Completed","recommended":"Recommended"},"explanations":{"talqin":"Listen and repeat is active. Play the ayah, then recite it yourself.","focus":"One ayah at a time is active. The next ayah unlocks after you finish this one.","blur":"Gradual hiding is active. More words hide after each successful repetition.","chaining":"Join ayat is active. Neighbouring ayahs are linked so the passage flows.","linking":"Ayah pairs are active. Practise each ayah, then join it with the next.","cumulative":"Growing the passage is active. Each step adds one more ayah.","anchor":"Memory-word highlighting is active. Key words stay marked as recall hooks.","weak_focus":"Weak-area focus is active. Practice stays on the words that need care.","full_range":"Full-range revision is active. You will revisit the whole selected range.","auto_follow":"Auto-follow is active. The current line stays near eye level.","auto_follow_paused":"Auto-follow paused because you scrolled manually.","mistake_pause":"Pause on mistake is active. The check will pause after a confirmed mistake.","mistake_continue":"Continue and review is active. Mistakes are noted without stopping you.","mistake_sound":"Mistake sound is on. A soft cue plays when a mistake is confirmed.","repetitions":"You will repeat each step the set number of times.","playback_speed":"Playback speed is set for calm, clear listening.","visibility":"Gradual hiding is shaping how much text stays visible."},"toasts":{"visibility":"Text reduced to {value} visibility.","nextRepetition":"Moving to the next repetition.","weakEmphasis":"Weak-word emphasis is now active.","autoFollowPaused":"Auto-follow paused because you scrolled manually.","autoFollowResumed":"Auto-follow is on again.","restored":"Restored your previous practice setup.","techniqueOn":"{label} is now active.","techniqueOff":"{label} turned off."},"tooltips":{"repetitions":"How many times each step is repeated.","playbackSpeed":"How quickly the reciter plays.","visibility":"How much of the text stays visible while you practise.","weakFocus":"Practise only the weaker words and phrases first.","fullRange":"Revise the whole selected ayah range.","mistakeHandling":"What happens when a mistake is confirmed during an AI check.","autoFollow":"Keeps the current recitation line near eye level.","mistakeSound":"Soft sound when a mistake is confirmed.","talqin":"Listen to the ayah, then repeat it yourself.","focus":"Stay with one ayah before moving on.","blur":"Gradually hide words to strengthen recall.","chaining":"Join neighbouring ayahs into a flowing sequence.","anchor":"Highlight memory words as recall hooks.","weak_area_focus":"Focus practice on weaker areas.","full_range_revision":"Review the full session range."},"confirm":{"title":"Your session will use","range":"Selected range","reciter":"Reciter","repetitions":"Repetition count","playbackSpeed":"Playback speed","technique":"Memorisation technique","techniqueNone":"Standard listening","visibility":"Text visibility","visibilityFull":"Full text visible","aiBehaviour":"AI-check behaviour","mistakeFeedback":"Mistake feedback","mistakeSoundOn":"Soft sound on","mistakeSoundOff":"Sound off","autoFollow":"Auto-follow","primary":"Start with these settings","secondary":"Adjust tools"}},"a11y":{"sessionOverview":"Session overview","endSession":"End session","openReadingOptions":"Open reading options","sessionMetadata":"Session metadata","memorisationWorkspace":"Memorisation workspace","sessionSetup":"Session setup","mushafTools":"Mushaf tools","chooseMushafFont":"Choose Mushaf text style","decreaseFontSize":"Decrease font size","increaseFontSize":"Increase font size","sessionControls":"Session controls","openSessionControls":"Open session controls","playActiveAyah":"Play active ayah","pauseActiveAyah":"Pause active ayah","selectAyahFirst":"Select an ayah first","aiMemorisationResult":"Memorisation check result","recommendedNextStep":"Recommended next step","toggleTajweed":"Toggle Tajweed colouring","startAiMemory":"Start AI memorisation check","stopAiMemory":"Stop AI memorisation check","startAiRecite":"Start AI recitation check","stopAiRecite":"Stop AI recitation check","aiReciteActive":"AI recitation check is active","openAiRecite":"Open AI recitation check for this ayah","previousMushafPage":"Previous mushaf page","nextMushafPage":"Next mushaf page","bismillah":"Bismillah","playAyahAudio":"Play ayah audio","pauseAyahAudio":"Pause ayah audio","openAyah":"Open ayah {number}","openActiveAyah":"Open ayah {number}, active ayah","playWordAudio":"Play word {index} audio for ayah {number}","closePanel":"Close panel","controlsTabs":"Controls tabs","practicePresets":"Practice presets","savedSessions":"Saved sessions","sessionInsights":"Session insights","changeQuranFont":"Change Quran font","changeQuranicFont":"Change Quranic font","showTranslation":"Show or hide the English translation","showTransliteration":"Show or hide transliteration","showTajweedText":"Use connected Tajweed text from the Quran API","useFocusMode":"Use focus mode","useBlurMode":"Use blur mode","useTalqinMode":"Use talqin mode","useChaining":"Use chaining","useAnchorMode":"Use anchor mode","hideAyahRecite":"Hide the ayah and recite from memory","openAiMemoryAyah":"Open AI memorisation checker for this ayah","closeSelfCheck":"Close self-check","deleteRecording":"Delete this recording","toggleTajweedHighlights":"Toggle Tajweed highlights","stopManualRecording":"Stop manual recording","startManualRecording":"Start manual recording","manualRecording":"Manual recording","resetAyahReview":"Reset displayed ayah review","pauseAyah":"Pause ayah","playAyahOnce":"Play ayah once","stopAiRecitationCheck":"Stop AI recitation check","workspaceLoading":"Loading memorisation workspace…","workspacePreparing":"Preparing your session tools.","workspaceLoadFailed":"Memorisation workspace failed to load","closeHelpLearning":"Close help and learning","helpTopics":"Help topics","closeConfirmDialog":"Close confirmation dialog","closeRenameDialog":"Close rename recording dialog","currentSessionAnalytics":"Current session analytics","detailedAnalytics":"Detailed analytics","closeAdvancedMetrics":"Close advanced metrics","blurEverything":"Blur everything","peekAyah":"Peek ayah","playMemorisationCheck":"Play memorisation check","resetMemorisationReview":"Reset memorisation review","closeMemorisationReview":"Close memorisation review","liveMemorisationCheck":"Live memorisation word check","aiMemorisationTools":"AI memorisation tools","ayahTools":"Ayah tools","loginShell":"Login","setupTab":"Session setup","tajweedLabel":"Tajweed","enableWordAudio":"Enable audio for individual word chips","guestAuthShell":"Login","ayahNumberLabel":"Ayah {number}","playRecording":"Play recording","pauseRecording":"Pause recording","replayRecording":"Replay recording","loadingRecording":"Loading recording"},"onboardingLabel":"Onboarding","player":{"previous":"Previous","next":"Next","previousAyah":"Previous ayah","nextAyah":"Next ayah","playAudio":"Play audio","pauseAudio":"Pause audio","playPause":"Play/Pause","remaining":"{eta} remaining","audioPlayer":"Audio player","audioProgress":"Audio progress","miniPlayer":"Mini player","fullPlayer":"Full player","closePlayer":"Minimize player","switchMini":"Switch to mini player","switchFull":"Switch to full player","closeAudioPlayer":"Minimize audio player","restorePlayer":"Show audio player","quranFallback":"Quran","tapToPlay":"Tap to play"},"sync":{"badge":{"syncing":"Syncing…","retrying":"Retrying sync…","synced":"Synced","failed":"Sync failed","saved":"Saved locally"},"status":{"syncing":"Saving your progress to the cloud…","retrying":"Cloud sync failed. Retrying in the background…","synced":"Progress synced to the cloud.","failed":"Could not sync progress. Your work is saved on this device and will retry automatically."}},"loading":{"reciterRefresh":"Loading verses for the new reciter…"},"offlineDownload":{"buttonHint":"Download ayah audio for offline listening","success":"Ayah {number} audio downloaded. Open your device Downloads folder to find the MP3.","hint":"Tip: download ayahs while online, then play them from your device anytime without using mobile data.","failed":"Download did not start. Check your connection, then tap download again.","unavailable":"Audio is not available for this ayah yet. Try another reciter or refresh the session."},"ayahNotes":{"buttonHint":"Notes & reflections for this ayah","title":"Notes & Reflections","subtitle":"Private to you — only you can see these notes.","privacyChip":"Private","contextBadge":"{surah} · Ayah {ayah}","surahFallback":"Surah {number}","composeLabel":"New reflection","editingLabel":"Editing note","titleLabel":"Title (optional)","titlePlaceholder":"A short label for this reflection","bodyLabel":"Reflection","bodyPlaceholder":"Write your thoughts, reminders, or lessons from this ayah…","addNote":"Add note","submitNote":"Submit note","saveChanges":"Save changes","yourNotes":"Your notes","expand":"Expand","collapse":"Collapse","expandNotes":"Expand your notes","collapseNotes":"Collapse your notes","bodyLimitReached":"Reflections are limited to 2,000 characters. Shorten your note to save it.","bodyMustShorten":"This note is longer than 2,000 characters. Shorten it before saving your changes.","untitled":"Untitled note","emptyTitle":"No notes yet","empty":"Write a reflection above and it will appear here for this ayah.","loading":"Loading your notes…","edit":"Edit","editingBadge":"Editing","delete":"Delete","deleteConfirmTitle":"Delete this note?","deleteConfirm":"This will permanently remove this private reflection from this ayah. This cannot be undone.","loadFailed":"Could not load your notes. Please try again.","saveFailed":"Could not save this note. Please try again.","deleteFailed":"Could not delete this note. Please try again.","savedSuccess":"Note saved.","updatedSuccess":"Note updated.","deletedSuccess":"Note deleted."},"confirmModals":{"defaultTitle":"Confirm action","confirm":"Confirm","cancel":"Cancel","closeDialog":"Close confirmation dialog","keep":"Keep","delete":"Delete","discard":"Discard","remove":"Remove","reset":"Reset","saveSession":{"title":"Save this session?","message":"Would you like to save this session so you can return to it later?","confirm":"Save session","cancel":"Don\'t save"},"deleteSession":{"title":"Delete saved session?","message":"This will permanently remove \\"{label}\\" and its export snapshot from this device.","messageFallback":"This will permanently remove this session and its export snapshot from this device.","confirm":"Delete session","cancel":"Keep session"},"deleteSessions":{"title":"Delete selected sessions?","message":"This will permanently remove {count} saved sessions from this device.","confirm":"Delete selected"},"deleteRecording":{"title":"Delete recording?","titleReciteCheck":"Delete Recite Check?","message":"This removes the recording for ayah {number} from the recording library.","messageReciteCheck":"This removes the Recite Check for ayah {number} from the recording library.","messageFallback":"This item will be removed from the recording library.","confirm":"Delete","cancel":"Keep"},"deleteAyahRecordings":{"title":"Delete all recordings for this ayah?","message":"This permanently removes {count} recordings for ayah {number} from the library.","messageOne":"This permanently removes {count} recording for ayah {number} from the library.","messageOther":"This permanently removes {count} recordings for ayah {number} from the library.","confirm":"Delete all","cancel":"Keep","done":"Deleted {count} recordings for ayah {number}.","doneOne":"Deleted {count} recording for ayah {number}.","doneOther":"Deleted {count} recordings for ayah {number}."},"deleteReciteCheck":{"title":"Delete Recite Check?","message":"This removes the current Recite Check result. Saved recordings are not affected unless this result was already saved."},"discardContinue":{"title":"Discard saved session?","message":"This removes the current continue-where-you-left-off snapshot from this device."},"removeOffline":{"title":"Remove offline surah?","message":"This deletes the saved verses from this device."},"resetControls":{"title":"Reset Session Controls?","message":"This will reset all session settings to defaults. Your progress will not be lost."}},"renameRecording":{"badge":"Recordings library","title":"Rename recording","label":"Recording name","placeholder":"Morning self-check","saveName":"Save name","closeDialog":"Close rename recording dialog","nameRequired":"Enter a recording name."},"workspaceProgress":{"kicker":"Progress","sessionProgress":"Session progress","planProgress":"Plan progress","complete":"Complete","left":"{count} left","covered":"Covered","remaining":"Remaining","chooseRange":"Choose a range","ready":"Ready","detailSession":"{covered} of {total} ayahs covered in this range.","detailEmpty":"Start a session to see live memorisation progress here.","detailPlan":"{completed} of {total} ayahs completed in the current plan.","forecast":"Forecast","daysActive":"Days active","pending":"Pending","remainingAyahs":"{count} ayahs","remainingAyahsOne":"{count} ayah","remainingAyahsOther":"{count} ayahs","readyToComplete":"Ready to complete","daysRemaining":"Days Remaining","nextReview":"Next review","afterNewAyahs":"After today\'s new ayahs"},"talqinMode":{"title":"Listen and repeat","subtitle":"Listen to each section, then repeat it","description":"Listen to each section, then repeat it","bestFor":"Best for listen-and-repeat practice.","hint":"Uses the longer of your delay or a brief verse-length pause."},"plannerUi":{"todayMemorise":"Today: Memorise your ayahs","guideStepByStep":"We will guide today\'s session step by step.","retentionActive":"Retention system active","lowConfidence":"Low","confidenceSuffix":"{level} confidence","noAyahsScheduled":"No ayahs scheduled yet","nextReviewNote":"Next review {date}. {reason}","targetKicker":"Target","todayTarget":"Today\'s target","reviewLoad":"Review load","confidence":"Confidence","tomorrow":"Tomorrow","nextSession":"Next session","revisionOnlyHint":"Revision only until the next ayahs are due.","listenFollowTitle":"Listen carefully and follow along.","listenFollowBodyStart":"Mutqin will start the timer, audio, and ayah highlighting together.","listenFollowBodyDuring":"Watch the highlighted words and keep a steady rhythm before the next ayah.","tryRecitingTitle":"Try reciting without looking.","tryRecitingBody":"Say the ayah first from memory, then check only what you need.","continueNextTitle":"Great job. Continue to the next ayah.","continueNextBodyWarm":"Refresh what is due today, then move forward while the memory is still warm.","continueNextBodySteady":"Stay calm, keep the pace light, and move on when the current ayah feels steady.","reviewThisAyah":"Review this ayah, then continue.","reciteFromMemory":"Review Session, then reveal to confirm.","chooseRangeToBegin":"Choose a surah and ayah range to begin.","startToBuildQueue":"Start the session to build your memorisation queue.","listenCalmly":"Listen to the active ayah and follow calmly.","pressPlayThenRecite":"Press play, then recite and repeat at your pace."},"aiCheck":{"sessionRecite":"Session AI Recite","ayahRecite":"Ayah AI Recite","aiRecite":"AI Recite","memorisationCheckerTitle":"AI Memorisation Checker · {surah} · {target}","memorisationCheckerAyah":"AI Memorisation Checker · Ayah {number}","currentAyah":"Current ayah","wordsRecognized":"{checked} of {total} words recognized","startWhenMicActive":"Start reciting when the microphone is active","retryWhenMicReady":"Check the message below, then retry when your microphone is ready.","micStoppedUnexpectedly":"The microphone stopped unexpectedly.","micBlocked":"Microphone access was blocked. Allow microphone permission, then try again.","noArabicWords":"No clear Arabic words were detected. Record again closer to the microphone.","preparingMic":"Preparing microphone…","noWordMistake":"AI did not detect a word-level mistake. Still verify the ayah yourself before saving.","wordOrderIssue":"AI detected {count} word order issue(s). Tap any false highlight to mark it correct and update the results.","possibleIssues":"AI detected {count} possible issue(s). Tap any amber or red word that AI got wrong to turn it green and update the analysis.","markAsAiMistake":"Mark as AI mistake.","aiMemorisation":"AI memorisation","aiRecitation":"AI recitation","recordingUnsupported":"Recording is not supported in this browser.","chooseAyahFirst":"Choose an ayah before starting Recite Check.","noAudioCaptured":"No audio was captured.","checkFailed":"The memorisation check could not be completed.","recitationCheckFailed":"The recitation check could not be completed.","checkingRecitation":"Checking your recitation…","speechRecognitionFailed":"Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted.","stepLabel":"Step {step} of {total}","stepPrepare":"Prepare to recite","stepListen":"Listening","stepReview":"Review your results","stepReviewAction":"Check the word colours, then save your attempt or try again.","stepRecitePrepare":"Tap Start Reciting when you are ready.","stepReciteReviewAction":"Review the feedback, then save your attempt or try again.","tryAgain":"Try again","continueToPlan":"Continue to plan","matchLabel":"Match","matchPercentAria":"Match {percent} percent","colourMeterAria":"Word colour breakdown","guidanceFreeFlow":"Listening with you. Take your time — finish the whole passage, then tap Stop when you are done.","guidanceHiddenReveal":"Listening now. Recite the highlighted word to continue.","guidanceFixWord":"Mistake at {word}. Try that word again.","wordsToRevisit":"Revisit","colourCorrect":"Correct","colourClose":"Close","colourIncorrect":"Incorrect","colourSkipped":"Skipped","colourWaiting":"Waiting","colourCorrectHint":"Words heard clearly.","colourCloseHint":"Near misses to polish.","colourIncorrectHint":"Words said incorrectly.","colourSkippedHint":"Words not recited.","colourWaitingHint":"Not evaluated yet."},"analyticsHeatmap":{"confidence":"Confidence: {value}%","accuracy":"Accuracy: {value}%","mistakes":"Mistakes: {count}","tajweedIssues":"Tajweed Issues: {count}","attempts":"{count} attempts","attemptsOne":"{count} attempt","attemptsOther":"{count} attempts","priority":"Priority: {count} ayah below 60% confidence","priorityOther":"Priority: {count} ayahs below 60% confidence","ayahActivityChart":"Ayah activity chart","nextReviewHint":"Next review: {label} · {confidence}","ayahLeftToComplete":"{count} ayah left to complete the range","ayahLeftToCompleteOther":"{count} ayahs left to complete the range"},"calligraphy":{"onboarding":"","selfCheck":"","recordingsLibrary":"","sessionOverview":""},"saveAttemptConfirm":{"aiRecite":"Your AI recitation attempt has been saved.","selfCheck":"Your recording for Ayah {ayahNumber} has been saved."},"view":{"stacked":"Stacked","mushaf":"Mushaf"},"actions":{"newSession":"New Session","repeatRange":"Repeat Range","saveSession":"Save This Session","resumeSession":"Resume Previous Played Session?","retentionCheck":"Retention check"},"quiz":{"title":"Retention check","builderSubtitle":"Check what you remember","setupHint":"Choose a method and how many questions, then start.","focus":"Focus","questionCount":"Questions","launch":"Start check","contextPlan":"{mode} plan","contextChain":"Chain review","contextFocused":"Focused review","progress":"{current} / {total}","ayahLabel":"Ayah {number}","types":{"mixed":"Mixed","flashcard":"Flashcard","mcq":"Multiple choice","audio_mcq":"Audio choose","blank":"Fill blank","question":"Question"},"summaryTitle":"Session complete","score":"Score","accuracy":"Accuracy","avgGrade":"Avg grade","time":"Time","planProgress":"Plan progress","bestSkill":"Best skill","accuracySuffix":"{value}% accuracy","whatNext":"What to do next","engineSync":"Progress saved","mistakes":"Mistakes","close":"Close","startAgain":"Start again","stop":"Stop","reveal":"Reveal","next":"Next","again":"Again","hard":"Hard","good":"Good","easy":"Easy","flashcardPrompt":"Recall the next ayah","showAnswer":"Show answer","gradeYourself":"Grade yourself","mcqPrompt":"Pick the matching ayah","audioPrompt":"Listen, then choose","replayAudio":"Replay audio","blankPrompt":"Fill the missing word","blankPlaceholder":"Type missing word","mistakeAyah":"Ayah {number}","skills":{"adaptive":"Adaptive","recite_text":"Recite","audio_recall":"Audio","meaning":"Meaning","none":"None"},"summary":{"strong":"Strong recall. Keep the same pace for the next session.","moderate":"A few ayahs need another pass. Review the weak ones first.","weak":"Recall is still fragile. Repeat the range, then review again.","enginePlan":"Your grades are saved for the next planner session.","engineChain":"Your grades keep chain review aligned with weak links.","engineDefault":"Your grades feed the next review cycle."}},"sessionComplete":{"title":"Session Complete"},"sessionEnded":{"title":"Session Ended"},"meta":{"graceKicker":"By The Grace Of Allah","steadinessKicker":"With Steadiness","nextKicker":"For The Next Step","completedTitle":"This range was completed.","forwardTitle":"This range moved forward.","studiedTitle":"This is how you studied.","advanceTitle":"Advance or reinforce.","continueTitle":"Continue or begin again.","previousSession":"Previous session"},"summary":{"default":"You can start a new range, save this one, or repeat it now.","completedAll":"You completed all {count} ayahs in this range.","completedRangeDetail":"You covered {covered} of {total} ayahs in {duration}.","endedPartial":"You reached ayah {ayah} and completed {percent}% of this session.","endedProgress":"You covered {covered} of {total} ayahs before ending.","nextAdvance":"Start a new range when this one feels stable.","nextRepeat":"Repeat this range now for a cleaner, steadier pass.","nextReviewWeak":"Review any ayah that still felt weak before moving on.","nextContinue":"Repeat this range now or come back later from the same stopping point.","nextReduceAids":"Reduce reading aids on the next pass if recall already felt comfortable."},"reading":{"translation":"Translation","transliteration":"Transliteration","wordByWord":"Word by word","wordAudio":"Word audio","tajweed":"Tajweed","controls":"Controls","fullScreen":"Full Screen","font":"Font","quranicFont":"Quranic Font","selectLayout":"Select a Layout","theme":"Theme","border":"Border","aiRecite":"AI Recite","aiMemory":"AI Recite"},"badges":{"new":"New","due":"Due","weak":"Needs Review","steady":"Steady","active":"Active Ayah"},"stats":{"progress":"Progress","duration":"Duration","repeats":"Repeats","reciter":"Reciter"},"due":"Due","audio":{"title":"Audio"},"planner":{"hifzPlan":"Hifz Plan","todaysGoal":"Today\'s Goal","memoryReview":"Memory Review","sessionView":"Session View"},"tools":{"tabs":{"setup":"Setup","session":"Session","practice":"Practice","saved":"Saved","insights":"Insights"}},"view_recording":"View Recording","revisitOnboarding":"Take the tour again","onboarding":{"stepCounter":"Step {current} of {total}","intro":"A few short steps to help you set a range, practise calmly, and settle into Mutqin.","finish":"I\'m ready","confirmChoice":"Continue","skipTour":"Explore myself","finishHint":"Pick how you’d like to start. You can change this any time.","useSampleSession":"Try a short sample","playSampleSession":"Try a short sample","welcome":{"salam":"ٱلسَّلَامُ عَلَيْكُمْ","title":"Welcome to Mutqin","body":"Choose a path to begin. The guided tour covers session setup, reading, practice tools, AI memorisation with personalised recommendations, and how to return.","metaHint":"A gentle default session is ready: short range, clear reciter, calm pace.","tourDescription":"Five steps: session, reading, practice, AI coach, and return."},"ready":{"kicker":"Tour complete","title":"You’re ready to begin","body":"You’ve seen how Mutqin is set up. Start your own session, explore the workspace, or try the guided sample.","hint":"You can reopen this tour any time from the menu."},"actions":{"trySample":"Try a guided sample","quickTour":"Guided tour","guidedTour":"Take the guided tour","exploreMyself":"Explore myself","setupSession":"Set up my session","exploreWorkspace":"Explore workspace"},"choices":{"groupLabel":"How would you like to begin?","sample":{"title":"Try a guided sample","description":"A short practice so you can feel the flow before choosing your own range."},"setup":{"title":"Set up my own session","description":"Choose a surah, ayah range, and reciter, then begin when ready."},"explore":{"title":"Look around first","description":"Explore the workspace and open setup when you feel ready."}},"postSession":{"kicker":"Sample complete","title":"Well done","message":"You finished the guided sample. Choose what to do next.","hint":"Repeat the sample, start your own session, or continue into Mutqin when you feel ready.","repeat":"Repeat this sample","newSession":"Start a new session","continue":"Continue to Mutqin","save":"Save this session","savedToast":"Session saved."},"steps":{"setup":{"title":"Set up your session","stepLabel":"Session","body":"Every practice starts here: pick a surah, keep the ayah range short, and choose a reciter you enjoy listening to.","hint":"Tip: a few ayahs is enough for your first session. Widen the range later in Controls.","points":["Choose surah, ayah range, and reciter in Controls","Keep the first range short so it feels easy to finish","Adjust repeats and playback whenever you need"],"previewTitle":"Your session","previewSubtitle":"Based on your current settings.","previewItems":["Surah","Range","Reciter"]},"reading":{"title":"Choose your reading view","stepLabel":"Reading","body":"Read in stacked cards or Mushaf layout. Turn on translation, transliteration, or tajweed only when they help you stay focused.","hint":"Tip: keep Arabic front and centre. Aids are optional helpers, not the main text.","points":["Stacked is calm for short ranges; Mushaf keeps page layout","Toggle aids from the session bar when you need them","Tajweed colours follow the rules. See Help and Learning for the legend"],"previewTitle":"Reading view","previewSubtitle":"Try a view below. It updates your preview.","previewItems":["Stacked","Mushaf","Tajweed"]},"practice":{"title":"Practise with calm tools","stepLabel":"Practice","body":"Focus, Blur, and Talqin help you listen and repeat steadily. Tap a tool below to preview it before you start.","hint":"Tip: start with one gentle tool. Memorisation checks come next when you feel ready.","points":["Focus narrows attention to the active ayah","Blur softens upcoming text so you recite from memory","Talqin gives you a listen-then-recite turn"],"previewTitle":"Practice tools","previewSubtitle":"Preview a technique before your first session.","previewItems":["Focus","Blur","Talqin"]},"coach":{"title":"AI memorisation and recommendations","stepLabel":"AI coach","body":"After practice, AI Memorisation checks your recall and Mutqin recommends a personalised next plan with the right tools and assistant support for that session.","hint":"Tip: use the check when you want feedback, then follow the recommended plan to strengthen weak spots.","points":["AI Memorisation listens and highlights where recall needs care","Recommendations suggest the next range and session goal","Suggested tools and assistant settings match what that session needs"],"previewTitle":"Personalised improvement","previewSubtitle":"How Mutqin coaches your next session.","previewItems":["AI Memorisation","Recommended plan","Matched tools"],"stats":{"aiLabel":"AI Memorisation","aiValue":"Recall check","planLabel":"Recommendation","planValue":"Personalised plan","toolsLabel":"Session tools","toolsValue":"Matched assistants"}},"review":{"title":"Return and continue","stepLabel":"Return","body":"Saved sessions and Welcome Back help you pick up gently where you paused, so returning feels easy.","hint":"Tip: come back to saved sessions any time from your library, or continue from the Welcome Back screen.","points":["Resume exactly where you left off","Saved sessions keep your range and settings ready","Welcome Back reminds you of the ayah you paused on"],"previewTitle":"Coming back","previewSubtitle":"How Mutqin helps you return.","previewItems":["Saved sessions","Resume","Welcome Back"]}},"startOnboarding":"Get started","continueOnboarding":"Continue setup"},"open_session_setup":"Open session setup","open_controls":"Open controls","open_dashboard":"Open dashboard","mushaf_page_is_preparing":"Mushaf page is preparing","session_setup_in_progress":"Your session is being set up, please wait…","text":"Text","session":"Session","practice":"Practice","saved":"Saved","selectSessions":"Select","selectSession":"Select session","selectAll":"Select all","deselectAll":"Deselect all","deleteSelected":"Delete","insights":"Insights","view_and_font_controls_stay_here_while_planner_mod":"View and font controls stay here while planner mode is active.","available_after_you_start_todays_session":"Available after you start today&apos;s session","mushaf_view_and_font_options_stay_hidden_until_the":"Mushaf view and font options stay hidden until the session begins.","playback_settings":"Playback settings","speed":"Speed","use_slower_speed_for_early_memorisation":"Use slower speed for early memorisation.","auto_advance":"Auto-advance","listen_then_recite":"Listen then recite","auto_advance_mode_hint":"Auto moves on immediately, Listen then recite pauses for your turn inside audio playback, and No waits for manual control. This is separate from Talqin mode in Memorisation Techniques.","auto_moves_to_the_next_queue_item_when_audio_ends":"Auto moves to the next queue item when audio ends.","recitation_window_secs":"Recitation window (secs)","recitation_window_hint":"How long to pause after the reciter so you can repeat before the next ayah starts.","recite_now_window":"Your turn to recite now · {seconds}s left","talqin":{"yourTurn":"Your turn to recite"},"delay_between_recitations_secs":"Delay between recitations (secs)","pause_before_each_next_repetition_recitation_in_au":"Pause before each next repetition/recitation in auto mode.","focus_mode":"One ayah at a time","reduce_distractions_around_the_active_ayah":"Reduce distractions around the active ayah","best_for_deep_memorisation_sessions":"Best for: Deep memorisation sessions","focus_strength":"Focus strength","higher_values_dim_non_active_verses_more_aggressiv":"Higher values dim non-active verses more aggressively.","blur_mode":"Gradually hide the text","progressive_concealment_for_active_recall":"Hide more of the text gradually to strengthen recall","blurs_upcoming_verses_requiring_you_to_recall_them":"Hide more of the text gradually to strengthen recall","best_for_active_recall_testing":"Best for: Active recall testing","blur_intensity":"Blur Intensity","hold":"Hold","hover_or_long_press_to_peek_temporarily":", hover, or long-press to peek temporarily","chaining":"Join ayahs together","best_for_building_long_passages":"Best for: Building long passages","linking":"Practice ayah pairs (Linking)","cumulative":"Grow the passage step by step (Cumulative)","repeats_per_step":"Repeats per step","number_of_times_to_repeat_each_chaining_step":"Number of times to repeat each chaining step","anchor_mode":"Highlight memory words","mental_hooks_using_key_words":"Use key words as hooks to recall each ayah","highlights_key_words_as_memory_anchors_to_help_rec":"Highlights key words as memory anchors to help recall the entire ayah.","best_for_memorising_key_vocabulary":"Best for: Memorising key vocabulary","anchor_points_per_ayah":"Anchor points per ayah","saved_sessions":"Saved Sessions","saved_sessions_intro":"Your Hifz journeys, bookmarked with barakah — pick up a completed khatm or return to an ayah range still in progress.","completed_sessions":"Completed Sessions","completed_sessions_desc":"Sessions where you reached the end of your selected ayah range. Revisit for muraja\'ah and strengthen your recall.","incomplete_sessions":"Incomplete Sessions","incomplete_sessions_desc":"Hifz sessions paused mid-range. Resume exactly where you left off and continue building your memorisation.","last_opened":"Last opened {date}","no_surah_selected":"No surah selected","each_session_keeps_only_the_essentials_what_it_is_":"Each session keeps only the essentials: what it is, where it is, and how to get back in.","no_saved_sessions_yet":"No saved sessions yet","save_your_current_session_to_get_started":"Preserve today\'s Hifz effort — save your current ayah range so you can return with intention.","current_session":"Current Session","today_first_advanced_analytics_stay_tucked_away_un":"Today first. Advanced analytics stay tucked away until you ask for them.","show_advanced_metrics":"Show advanced metrics","no_advanced_insights_yet":"No advanced insights yet","save_a_session_and_you_ll_unlock_the_deeper_breakd":"Save a session and you’ll unlock the deeper breakdown here.","view_full_analytics":"View Full Analytics","english_arabic_or_french_ui":"English, Arabic, or French UI","edit_plan":"Edit Plan","sync_progress":"Sync progress","structured_repetition":"Structured repetition","resume_exactly":"Resume exactly","what_a_mutqin_session_feels_like":"What a Mutqin session feels like","short_enough_to_stay_focused_structured_enough_to_":"Short enough to stay focused. Structured enough to make long-term memorisation easier to revisit.","choose_your_ayahs":"Choose your ayahs","pick_the_surah_range_and_reciter":"Pick the surah, range, and reciter.","repeat_with_structure":"Repeat with structure","use_playback_chaining_focus_and_blur_tools":"Use playback, chaining, focus, and blur tools.","recall_and_review":"Recall and review","track_what_was_covered_and_return_later_with_clari":"Track what was covered and return later with clarity.","how_mutqin_stays_focused":"How Mutqin stays focused","everything_centres_on_one_calm_memorisation_sessio":"Everything centres on one calm memorisation session at a time","choose_a_small_range_repeat_with_structure_then_re":"Choose a small range, repeat with structure, then return for recall and review without dashboard clutter.","focused_ayah_ranges":"Focused ayah ranges","work_in_smaller_sections_that_are_easier_to_repeat":"Work in smaller sections that are easier to repeat well.","clear_repetition":"Clear repetition","keep_your_session_steady_instead_of_guessing_how_m":"Keep your session steady instead of guessing how many times to repeat.","recall_with_less_clutter":"Recall with less clutter","use_only_the_aids_and_techniques_that_support_the_":"Use only the aids and techniques that support the current passage.","progress_you_can_revisit":"Progress you can revisit","saved_sessions_and_compact_insights_stay_ready_whe":"Saved sessions and compact insights stay ready when you come back.","save_memorisation_session":"Save Memorisation Session","name_this_session_so_you_can_find_it_again_later":"Name this session so you can find it again later.","session_name":"Session Name","save_session":"Save Session","end_this_session_now":"End this session now?","prepare_yourself":"Prepare yourself","session_finished":"Session Finished","rangeOptions":{"all":"All","juz":"Juz","hizb":"Hizb","page":"Page","surah":"Surah","ayah":"Ayah","word":"Word"},"postSession":{"kicker":"Session complete","title":"Session complete","ayahSingular":"Ayah {ayah}","message":"Choose how to continue.","actions":{"testWithAi":"Check memorisation","testWithAiAgain":"Check again","chooseAnotherSession":"Other session","continueToAyahsFallback":"Continue","retest":"Check again","tryRecordingAgain":"Try again","checkMicrophone":"Check mic","close":"Close","skipForNow":"Skip","keepPractising":"Keep going","continuePractising":"Keep going","reviseFocusPhrase":"Start revision","reviseThisRange":"Start revision","continueToNextRange":"Continue","continueToAyahs":"Ayahs {start}–{end}","reviewOnceMore":"Review again","reviewAyahOnce":"Review Ayah {ayah}","chooseAnotherRange":"Other range","chooseDifferentRange":"Other range"},"coach":{"yourNextPractice":"Next step","continue":"Continue","whyLabel":"Why","methodLabel":"Method","aiCardHint":"Recite from memory so we can build your plan.","aiFirstBody":"Check your memorisation first. Your practice plan will appear here afterwards.","aiRetestBody":"You finished the practice plan. Check your memorisation again to unlock the next session.","aiRetestHint":"Pass this check to unlock the next session.","differentSession":"Other session","nextHintAi":"Check your memorisation to unlock your next plan.","rangeCaption":{"test":"Check this range","retest":"Check this range again","practice":"Practise this range","next":"Ready for the next session"},"chooseWhenReady":"Choose a session when ready.","weakWordsFocus":"Words to focus on","ayahLabel":"Āyah {ayah}","ayahRangeLabel":"Āyahs {from}–{to}","replayPhrase":"Replay surrounding phrase","ayahNeededMore":"Āyah {ayah} needs another slow pass.","takeItSlow":"You paused often. Slow down on one āyah.","speedSettled":"Keep this pace when you check.","readyToTest":"Ready to check.","firstPracticeDone":"Practice done. Check when ready.","headers":{"practiceDone":"Practice complete","repeatDone":"Another pass complete","aiDone":"What to strengthen next"},"subtitles":{"practiceDone":"Check your memorisation to unlock your next plan.","aiDone":"Focus on these words next.","aiFirst":"Check your memorisation first, then your plan appears here.","retestAfterPractice":"Strengthen this range before moving forward.","strongContinue":"Continue while this still feels fresh.","mostlySecure":"Continue when ready — a light review is optional.","reviseFirst":"Revise the weak spots first, then continue."},"guidance":{"recommended":"Listen once, then repeat.","afterPractice":"Test with AI Recite when ready.","afterAi":"Practise the marked words slowly."},"cta":{"startPractice":"Start practice","startFocusPractice":"Start focused practice"},"reason":{"pronunciation":"Pronunciation","frequent_replay":"Frequent replay","hesitation":"Hesitation"},"live":{"before":"Listen once and follow the words.","beforeTalqin":"Listen once, then recite aloud.","beforeFocus":"Listen once — gold-marked words need extra care.","playing":"Follow the words calmly — may Allah open your heart.","playingFocus":"Focus on the highlighted word.","focusWord":"Focus on the highlighted word: {word}","focusCueTitle":"Focus on this word","focusBadge":"Words to watch","focusStripLabel":"Hold onto","hooksLabel":"Your key words","pause":"Now repeat this phrase aloud.","pauseFocus":"Repeat the gold-marked words aloud, then the full āyah.","difficulty":"Take it slower — try this āyah at {speed}×.","after":"Recite this āyah without looking.","ready":"Mā shā’ Allāh. You are ready to test.","ayahCue":"Āyah {ayah}","talqin":{"before":"Listen once and follow the words.","playing":"Listen carefully. Your turn comes after the audio.","pause":"Now repeat this phrase aloud."},"focus":{"before":"We stay with one āyah. Do not rush ahead.","playing":"Follow this āyah only. Let it settle.","pause":"Repeat this same āyah aloud before moving on."},"blur":{"before":"Words will hide gradually. Trust your memory.","playing":"As the text fades, recite from the heart.","pause":"Try again from memory. May Allah make it firm."},"chaining":{"before":"We will join these āyahs into one flow.","playing":"Listen for how this āyah links to the next.","pause":"Recite what you just heard, then join the next āyah."},"anchor":{"before":"Gold words are your hooks — notice them first.","playing":"Watch the marked words. They will help you remember.","pause":"Say the key words first, then the full āyah."},"technique":{"talqin":{"label":"Listen, then recite","hint":"The reciter leads. When it pauses, you say it aloud."},"focus":{"label":"One āyah at a time","hint":"Stay with this āyah until it feels steady in your heart."},"blur":{"label":"Hide the text little by little","hint":"As words fade, let your memory lead — ask Allah for firmness."},"chaining":{"label":"Join the āyahs","hint":"Connect each āyah to the next as one smooth flow."},"anchor":{"label":"Hold onto key words","hint":"Gold-marked words are your hooks — say them clearly, then the full āyah."},"listen":{"label":"Listen with presence","hint":"Follow the words calmly and recite with sincerity."}}},"evidenceFocus":"Focus","evidenceMethod":"Method","evidenceReview":"Next","evidenceNext":"Next","evidenceReturn":"Return","evidenceThen":"Next","evidenceThenAyah":"Continue with Āyah {ayah}","evidenceThenRange":"Continue with Āyahs {from}–{to}"},"summaryTitle":"Session summary","progressLabel":"Range progress","detailsLabel":"Session details","nextStepLabel":"Suggested next step","celebrationTitleComplete":"Alhamdulillah","celebrationTitlePartial":"Barakallahu feek","celebrationMessage":"Your effort is recorded with sincerity.","duaStrengthen":"May Allah strengthen what you have memorised and make it firm in your heart.","duaStrengthenShort":"May Allah strengthen what you have memorised.","flowGuide":"Check your memorisation to unlock your next plan, or continue when you are ready.","flowGuideAfterAi":"Review what slipped, choose focus or full-range practice, then continue.","flowGuideRepeat":"Check your memorisation when ready, keep practising this range, or choose another.","headers":{"repeatPass":"Revision pass complete"},"subtitles":{"repeatPass":"Steady repetition builds lasting memorisation."},"sessionStats":"Session stats","statsCompleteShort":"Complete","statsRange":"Ayahs","statsRetries":"Retries","statsAttempt":"Session","statsNew":"New","statsRepeated":"Repeated","viewStats":"View stats","hideStats":"Hide stats","repeat":"Repeat this session","newSession":"Start new session","save":"Save this session","savedToast":"Alḥamdulillāh. Your session is saved.","autoSavedNote":"Alḥamdulillāh. Your progress is saved.","adaptiveCheck":{"title":"Quiz AI","description":"Optional.","memoryCheckTitle":"Quiz AI","memoryCheckDescription":"Answer a few short questions (and recite if needed) so we can see which verses are firm and which still need support. Your next plan updates from this.","memoryCheckLead":"Before you continue, check what stuck","memoryCheckWhy":"This optional check finds weak spots early — so your next session practises the right verses, not a random repeat.","memoryCheckBulletQuiz":"Short questions about the verses you just did","memoryCheckBulletAi":"AI Recite may open if a verse needs a spoken check","memoryCheckBulletTime":"Usually about 1–2 minutes","memoryCheckCta":"Start memory check","memoryCheckOpening":"Starting…","memoryCheckIncludes":"Quiz and AI Recite","memoryCheckHint":"Optional — skip if you want to go straight to your plan.","memoryCheckOptionalTag":"Optional","memoryCheckTimeTag":"1–2 min","voiceOnlyCta":"Prefer to recite aloud only","tryAgainCta":"Check again","seeFullReview":"See full review","resultShapedPlan":"Your plan below already uses this result.","quizAiTitle":"Quiz AI","aiReciteNotRun":"You can still recite aloud if you want.","resultScoreLine":"{correct} of {total} answered well","aiReciteTitle":"AI Recite","aiReciteDescription":"Recite out loud.","aiReciteCta":"Start","quickCheckTitle":"Quiz","quickCheckDescription":"A few short questions.","quickCheckBenefit":"Recommended","startCta":"Start","helper":"About 1–2 minutes","resultReadyTitle":"Check complete","openAiRecite":"AI Recite","progress":"{current} of {total}","progressHint":"Almost done","skillsLabel":"How it went","hint":"Need a hint?","hintFallback":"Think of the words around it.","submit":"Continue","skip":"Skip this one","selectAnswer":"Tap an answer to continue.","typeAnswer":"Type what you remember","aiRecitePrompt":"When you are ready, recite this verse from memory.","startAiRecite":"Recite with AI","startError":"That check could not start. You can still continue below.","answerError":"Please try that again.","feedbackCorrect":"Nice — that is right.","feedbackAlmost":"Close — keep going.","feedbackIncorrect":"Not quite — we will practise that.","resultTitleStrong":"Looking good","resultTitleMixed":"A little more practice will help","resultTitleWeak":"Needs another short review","resultTipLabel":"Next","resultFoundLabel":"What we found","resultNextLabel":"What to do next","resultVersePill":"Verse {ayah}","resultWhyLabel":"Why","resultHowLabel":"How","resultShouldLabel":"Next","resultWhyWeakness":"{skill} still needs support.","resultWhyWeakAyah":"Verse {ayah} needs the most attention.","resultWhyWeakAyahs":"A few verses still need support.","resultHowGeneric":"We will keep this short and add a little more support.","resultHowTechnique":"We will adjust the practice style for this pass.","resultHowPair":"We will adjust the practice style for this pass.","resultHowReps":"A few extra repetitions will help.","resultHowSlow":"We will slow the pace a little.","continueToPlan":"Continue","doneCta":"Start this plan","backToPlan":"Back to plan","moveUp":"Up","moveDown":"Down","reorderHint":"Put these in the right order","skills":{"recall":"Remembering the words","ayahSequence":"Keeping the order","textualPrecision":"Getting the words right","independentRecitation":"Reciting without help"},"bands":{"strong":"Ready to continue","steady":"Mostly secure","developing":"More practice needed"},"explanations":{"sessionIncomplete":"You still have a few verses left in this range.","lowRecall":"Some words are still settling — a short repeat will help.","sequenceErrors":"The order slipped a little. We will practise linking the verses.","highHintDependency":"Hints helped a lot. Next time we will show a little less text.","visualDependency":"Reading carried a lot. We will practise with less text showing.","audioDependency":"Listening helped a lot. Next time we will lean a bit more on memory.","spokenHesitation":"The words were close, but reciting felt hesitant. Slower practice will help.","omissionErrors":"A few words were missed. We will go back over them gently.","similarAyahConfusion":"Similar verses got mixed up. We will compare them side by side.","lowDelayedRetention":"Earlier verses faded a little. We will review them sooner.","highPerformance":"This range feels steady. You can move on while it is fresh.","lowConfidence":"You wanted more practice — here is a short, reassuring pass.","overconfidence":"It felt strong, but one part still needs support. We will focus there.","reviewOverdue":"Some of this is due for review. Better to return to it soon."},"nextSteps":{"continue":"Continue to the next set.","repeat_weak_ayahs":"Repeat the harder verses with more support.","start_focused_review":"Do a short focused review.","review_tomorrow":"Come back for a short review tomorrow."},"actions":{"continue":"Continue","repeatWeakAyahs":"Practise those verses","startFocusedReview":"Review this range","reviewTomorrow":"Review tomorrow"}},"recommendation":{"cardTitle":"Suggested next step","recommendedPlan":"Recommended plan","practiceMethod":"Recommended practice method","practiceSetup":"Practice setup","justFinished":"Just finished","repsDone":"{count} repetitions","aiFirstBodyShort":"Check your memorisation next to unlock a tailored practice plan.","mainFocus":"Main focus","checkComplete":"Check complete","yourResult":"Your result","whatNext":"What to practise next","whyRecommended":"Why this was recommended","weakSpotsTitle":"Weak areas","weakSpotsLead":"These āyahs and words need the most attention before you continue.","planEncouragement":"Choose how to revise, then start when you are ready.","planEncouragementWithTime":"A short {time} practice will lock this in.","softwareGenerated":"","teacherComplement":"","viewDetails":"View details","hideDetails":"Hide details","weakWordMark":"Needs practice","headlineStrong":"Strong recall","headlineMixed":"Minor reinforcement needed","headlineWeak":"Focused revision recommended","practiceWeakWordsOnly":"Weak words only","practiceFullRange":"Full recommended range","revisionOptions":"Revision options","scopePickerLabel":"Choose how to revise","scopeWeakAreasLabel":"Focus on weak areas","scopeWeakAreasDescription":"Review only the words and phrases that need more attention.","scopeWeakAreasBenefit":"Shorter practice that targets the exact spots that slipped.","scopeFullRangeLabel":"Practise the full range","scopeFullRangeDescription":"Repeat the complete session while Mutqin highlights your weaker areas.","scopeFullRangeBenefit":"Keeps the full flow while giving extra attention to weaker words and ayat.","scopeFocusMeta":"{count} focus items · about {minutes} min","scopeFocusMetaOne":"{count} focus item · about {minutes} min","scopeFocusMetaOther":"{count} focus items · about {minutes} min","scopeFullMeta":"Full session with stronger emphasis on weak areas","recommendedTag":"Recommended","attemptCompareTitle":"Compared with earlier attempt","attemptImproved":"{count} improved","attemptContinued":"{count} still need practice","scopeReason":{"noWeakAreas":"No clear weak areas were identified, so the full range is recommended.","minorLocal":"Only a few words need attention — focused practice will be quicker and clearer.","focusedCluster":"Your weak spots sit close together, so a short focused review is recommended.","spreadWeakness":"Weak areas appear across the session, so revisiting the full range with emphasis is recommended.","defaultFocus":"A focused pass on the weaker words and phrases is recommended first."},"previousAttemptNote":"Previous related attempt: {summary}","previousAttemptsAvailable":"Previous related attempts are saved with this recommendation.","persistedForLater":"Saved for later — available from your dashboard and session history.","basedOnThisSession":"Based on this session","tryThisCombination":"Try this combination","adjustPlan":"Adjust plan","suggestedNextStep":"Your next session","flowIntro":"Bismillāh — begin when your heart is ready.","stepCheck":"Step 1","stepPlan":"Step 2","planReadyTag":"Ready","whyThisHelps":"Why this helps","whatYouWillDo":"What you will practise","howItWorks":"How you will practise","paceAndSupport":"Pace & support","estimatedTime":"About","nextSetTitle":"Next in your plan","revisionSetTitle":"Practice these verses again","nextSurahTitle":"Next in your plan","chooseNext":"Suggested next step","recommendedNext":"{surah} · {range}","recommendedNextSurah":"Surah {surah}","surahCompletedTitle":"Alḥamdulillāh. Surah {surah} complete","ayahRange":"Ayahs {start}–{end}","singleAyah":"Ayah {ayah}","ayahCount":"{count} ayahs","ayahCountOne":"{count} ayah","ayahCountOther":"{count} ayahs","modeNewLearning":"New","modeRevision":"Revision","modeRepeated":"Repeated","modeNextSurah":"Next surah","startRecommendedNextSession":"Start recommended session","startRecommendedRevision":"Revise now","planRecommended":"Recommended","planApplied":"Applied","planManual":"Manually adjusted","continueToNextSurah":"Next surah","continueToAyat":"Continue to Ayahs {start}–{end}","repeatAyat":"Repeat Ayahs {start}–{end}","repeatThisSession":"Repeat this session","adjustSettings":"Adjust plan","resetSettings":"Reset to recommended","testWithAiRecite":"Check my memorisation","testMyMemorisation":"Test my memorisation","aiReciteSubtitle":"Recite this range from memory and receive a focused review before moving forward","aiReciteHint":"Recite this completed range. Your result will update the next-step recommendation.","startNewSession":"Start new session","startDifferentSession":"Different session","viewSessionSummary":"Session details","hideSessionSummary":"Hide details","reviewThisSurah":"Revise this surah","backToOverview":"Back","retry":"Try again","retryRecommendation":"Prepare recommendation again","loadError":"Your session was saved successfully. We could not prepare your next recommendation. You can retry or choose another session.","startError":"Could not start. Please try again.","settingsError":"Could not save settings. Please try again.","confidenceError":"Could not save your response. Please try again.","aiReciteError":"AI Recite unavailable. Your session is saved. Choose confidence or continue.","aiReciteOffline":"Connection lost during AI Recite. Progress is saved; retry later or continue below.","aiReciteOptionalHint":"Optional. A short check before you choose what\'s next.","aiReciteSkippedHint":"Continuing without AI Recite. Choose confidence, or start the plan.","openingAiRecite":"Opening AI Recite…","preparingRecommendation":"Preparing recommendation…","startingNextSession":"Starting next set…","preparingRepeatSession":"Preparing revision…","savingSettings":"Saving settings…","completingSession":"Completing session…","techniqueLabel":"Try this combination","settingsSummaryLabel":"Try this combination","settingsTechnique":"Technique","settingsSpeed":"Playback","settingsRepetitions":"Repetitions","settingsReciter":"Reciter","settingsOutcome":"These settings are intended to help you hear each phrase more clearly, repeat it more consistently and strengthen recall before progressing.","repetitionsSummary":"{count} repetitions","repetitionsSummaryOne":"{count} repetition","repetitionsSummaryOther":"{count} repetitions","aiResultLabel":"AI Recite","aiResult":{"strong":"Strong recall","mixed":"Needs review","weak":"Needs practice"},"confidencePrompt":"How confident do you feel with this range?","confidenceConfident":"Confident","confidenceNeedsPractice":"Needs more practice","confidenceLead":"Your plan softens or advances with your answer, bi’idhnillāh.","whyThisPlan":"Why this plan?","planDetail":{"headline":"Your next practice","whyForYou":"Why this plan","practiceRange":"Verses to practise","howYouPractice":"Practice method","setup":"Pace & support","time":"Time","aboutMinutes":"About {minutes} minutes","alsoWith":"Plus: {technique}","focusVerse":"Verse {ayah}","focusOne":"Pay extra attention to ayah {ayah}. That is where most slips appeared.","focusMany":"Pay extra attention to ayahs {ayahs}. Those still need the most support.","ayahRange":"Ayahs {start}–{end}","singleAyah":"Ayah {ayah}","colourMix":"{green} green · {amber} amber · {red} red · {black} black","rangeExplain":"These are the verses your next session will open on.","methodExplain":"This method guides how text and audio appear while you practise.","setupExplain":"Playback speed and repetitions control how calmly you rehearse each verse."},"whatChangingDoes":"How this helps","paramHints":{"repetitionsHigh":"{count}× more practice for harder verses.","repetitionsModerate":"{count}× another steady pass.","repetitionsLight":"{count}× light practice while it is still fresh.","focus":"One verse at a time.","blur":"Hide words so you remember them.","talqin":"Listen, then say it.","anchor":"Keep a few key words showing.","chaining":"Join verses you just learned.","speedSlower":"{speed}× slower so each word is clear.","speedFaster":"{speed}× a bit faster once it feels easy."},"supportingCompletedRange":"You completed {surah}, {range}.","supportingProgressSaved":"Alḥamdulillāh. Your progress is saved.","repeatThisRange":"Practise these āyāt again","continueNextSet":"Next in your plan","continueNextSurahShort":"Next in your plan","repeatRangeTitle":"{surah} · {range}","steadyRepetitionEncouragement":"Steady repetition builds lasting memorisation.","phraseNeedsAttention":"One phrase in Ayah {ayah} needs a little reinforcement.","phraseNeedsAttentionNext":"Review it once, then continue to Ayahs {start}–{end}.","phrasesNeedAttention":"A few phrases still need attention.","ayahNeedsAttention":"Ayah {ayah} needs a little reinforcement.","ayahNeedsAttentionNext":"Review Ayah {ayah} once, then continue to Ayahs {start}–{end}.","evidenceReviewNow":"Check this range again.","evidenceReviewThenContinue":"Review the weak phrase once, then continue to Ayahs {start}–{end}.","statusReadyToContinue":"Ready to continue","statusMostlySecure":"Mostly secure","statusReviewRecommended":"Review recommended","statusMorePracticeNeeded":"More practice needed","evidenceReturnTomorrow":"Review again tomorrow","evidenceReturnOn":"Review again on {date}","playFocusPhrase":"Play focus phrase","openFocusPhrase":"Open focus phrase in practice","aiReciteShort":"Voice check","aiReciteHintShort":"Optional voice check","aiResultLineStrong":"Most of this sounded clear.","aiResultLineStrongHesitation":"Mostly clear, with a small pause in verse {ayah}.","aiResultLineStrongOneGap":"Mostly clear, with one small pause.","aiResultLineMixed":"Good overall, with a few spots to tighten.","aiResultLineMixedAyah":"Good overall, with a pause in verse {ayah}.","aiResultLineMixedAyahs":"Good overall, with pauses in {count} verses.","aiResultLineMixedOrder":"Good overall, but the order of verses slipped a little.","aiResultLineWeak":"A few spots still need help.","aiResultLineWeakAyah":"Verse {ayah} needs the most help.","evidenceFromSessionAndConfidence":"Based on your session and confidence.","checkAnswerQuizStrong":"Ready to continue","checkAnswerQuizMixed":"Mostly secure","checkAnswerQuizWeak":"More practice needed","combinedFromBothChecks":"From your checks","combinedFromAi":"From your voice check","combinedFromQuiz":"From your quiz","combinedFromSession":"From this session","combinedRepeatWeakAyah":"Verse {ayah} still feels tricky. We will practise these verses again.","combinedRepeatWeakAyahs":"Some verses still need help. We will practise this set again.","combinedRepeatBoth":"Your checks show a few hard spots. We will practise this set again.","combinedRepeatOne":"Some parts still need help. We will practise these verses again.","combinedRepeatDespiteStrong":"Your check looked good. We are still giving these verses one more calm pass.","combinedRepeatFallback":"We will practise these verses again with a little more help.","combinedContinueBothOrder":"Nice work. Next verses. Keep the order steady.","combinedContinueBoth":"Your checks look ready. Next verses while this still feels fresh.","combinedContinueNeedsSupport":"A few spots still need help. This plan adds a little more support.","combinedContinueOneOrder":"Nice work. Next verses. Keep the order steady.","combinedContinueOne":"Nice work. Next verses while this still feels fresh.","combinedContinueFallback":"Next verses while this still feels fresh.","whyThisPlanToggle":"Why this next step?","aiReviewStrong":"You remembered most of this well.","aiReviewWeakAyah":"You remembered most of this, with a few hard spots in verse {ayah}.","aiReviewWeakAyahs":"You remembered most of this, with hard spots in {count} verses.","aiReviewSequence":"Most words were right, but the order was a little unsure.","aiReviewStrongDetail":"Clear recall. About {percent}% matched.","aiReviewMixedDetail":"Good overall ({percent}%), with a few spots to tighten.","aiReviewWeakDetail":"A few spots need another look ({percent}% matched).","aiReviewMissedWords":"{count} words still need help.","aiReviewPronunciation":"A few words need clearer saying.","aiReviewAccuracyChip":"{percent}% match","aiReviewMissedChip":"{count} missed words","aiReviewSequenceChip":"{count} order slips","aiReviewPronunciationChip":"Clearer saying","aiReviewWeakAyahChip":"Verse {ayah}","aiReviewWeakAyahsChip":"{count} verses to revisit","aiOutcomeStrong":"Ready to continue","aiOutcomeMixed":"Mostly secure","aiOutcomeWeak":"More practice needed","aiOutcomeReviewRecommended":"Review recommended","aiSummaryMatchedWords":"We clearly matched {matched} of {total} words.","aiSummaryFocusPhrase":"Review the highlighted phrase once, then continue.","aiSummaryFocusRange":"Revise this range, then check again.","aiSummaryStrongFollowUp":"Nice work — you can continue while this still feels fresh.","aiSummaryMinorWeaknessNext":"Review it once, then continue to Ayahs {start}–{end}.","aiMetricConfidence":"Recognition confidence","zeroMatchStatus":"Let’s practise this range again","zeroMatchSummary":"We heard your recitation, but could not confidently match the words yet.","zeroMatchProgressLabel":"Not matched yet","zeroMatchHint":"A short revision pass will help the words settle before you check again.","zeroMatchFocus":"Revise this range slowly, then check again.","insufficientAudioStatus":"We could not assess this attempt","insufficientAudioSummary":"We did not hear enough clear recitation to assess this attempt. Please try again.","insufficientAudioMicSummary":"Microphone access is blocked. Allow the microphone, then try recording again.","insufficientAudioShortSummary":"That recording was too short to assess. Recite a little longer, then try again.","insufficientAudioProcessingSummary":"We could not process this recording. Please try recording again.","insufficientAudioHint":"Recite clearly into the microphone, then try recording again.","insufficientAudioFocus":"Check your microphone, then try recording again.","aiMetricAccuracy":"Match","aiMetricWords":"Words","aiMetricDetectedWords":"Detected words","aiMetricMissed":"Missed","aiMetricMissedWords":"Missed words","aiMetricOrder":"Order","aiMetricSequence":"Sequence","aiMetricOrderSteady":"Steady","aiMetricOrderIssues":"{count} slips","aiMetricOrderNotAssessed":"Not assessed","aiMetricSequenceNotEnough":"Not enough matched words to assess","aiHighlightStrongRecall":"Most words landed cleanly. Keep this pace while the range is fresh.","aiHighlightMissedWords":"{count} words still need another careful pass.","aiHighlightPronunciation":"{count} words were close. Slow slightly and articulate each letter.","aiHighlightSequence":"Ayah order drifted. Restart from the first ayah of the range.","aiHighlightWeakAyah":"Ayah {ayah} carried most of the difficulty.","aiHighlightWeakAyahs":"{count} ayahs need focus ({ayahs}).","aiHighlightMixed":"Solid overall, with a few gaps that deserve a short revision pass.","aiHighlightWeak":"Several spots need support before moving on.","aiReviewFocusLabel":"Next focus","aiReviewDuration":"{seconds}s check","resultStats":"Check results","statMatched":"Matched","statMatchedHint":"Words Mutqin clearly recognised in this check","statNeedsWork":"Needs work","statNeedsWorkHint":"Words that need another calm pass","statWrongCount":"{count} wrong","statCloseCount":"{count} close","statRecitationTime":"Recitation time","statRecitationTimeHint":"How long this recitation took","speedPill":"{speed}× speed","techniques":{"blur":"Hide the words bit by bit","focus":"One verse at a time","talqin":"Listen and repeat","chaining":"Join verses together","anchor":"Keep a few key words showing","blurShort":"Gradually hide the text","focusShort":"One ayah at a time","talqinShort":"Listen and repeat","chainingShort":"Join verses together","anchorShort":"Keep a few key words showing"},"confirm":{"continueNextAyat":"Continue to the next ayah?","reviewAgain":"Revise these ayahs?","continueNextSurah":"Ready for the next surah?","startSession":"Begin","startRevision":"Begin revision","continueToNextSurah":"Continue","chooseSomethingElse":"Choose differently"},"reasons":{"strongPreviousPerformance":"You completed this range well. This plan continues gently to the next ayahs while they are still fresh.","continueCurrentSurah":"You completed this range. This plan continues directly to the next ayahs while the material is still fresh.","continueWhileFresh":"You completed this range. This plan continues directly to the next ayahs while the material is still fresh.","revisionRequired":"This range still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.","needsMorePractice":"This range still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.","difficultAyahDetected":"One or more ayahs still need care. This plan returns to that range with focused support before moving on.","completeRemainingAyat":"A short stretch remains in this surah. This plan completes the section you began.","surahCompleted":"Mā shā’ Allāh. You completed this surah. This plan begins the next surah gently from the opening ayahs.","resumeIncompleteSession":"You paused mid-range. This plan resumes from the ayahs you left unfinished.","reinforceRecentRange":"Recent ayahs still need another quiet pass. This plan returns to that range so recall can settle.","learningPlanComplete":"You have reached the end of the available plan. Choose what you would like to recite next. May it be blessed.","manualFallback":"There is no automatic next set right now. Choose what your heart would like to recite next.","aiReciteStrong":"Your recite was strong. Alḥamdulillāh. This plan continues while the previous ayahs are still fresh.","aiReciteMixed":"Your recite was mostly correct, with a few gaps. This plan reviews the same range once more with a little more support.","aiReciteWeak":"Your recite found parts that still need practice. This plan keeps the same range with more guidance, gently.","confidenceConfident":"You feel ready. We will move on while these verses are still fresh, bi’idhnillāh.","confidenceNeedsPractice":"You asked for more practice, so we will go over these verses again more slowly, with care.","sessionIncomplete":"You paused mid-range. This plan resumes from the ayahs you left unfinished.","lowRecall":"Phrase recall needs support. This plan rebuilds the range with listen-and-repeat.","sequenceErrors":"Ayah order was uncertain. This plan uses linking and phrase ordering before moving on.","highHintDependency":"Memory prompts were used often. This plan reduces hints with progressive Mushaf hiding.","visualDependency":"Recall leaned on visible text. This plan hides more of the Mushaf step by step.","audioDependency":"Replay was heavy. This plan shifts toward active recall with lighter audio support.","spokenHesitation":"Spoken recall hesitated. This plan uses phrase chunks, slower playback, and AI Recite.","omissionErrors":"Some words were missed. This plan completes ayahs with listen-and-repeat.","similarAyahConfusion":"Similar ayahs were mixed. This plan compares them side by side with anchors.","lowDelayedRetention":"Earlier material faded. This plan schedules an earlier murājaʿah.","highPerformance":"The check looked strong. Mā shā’ Allāh. This plan continues gently while the ayahs are fresh.","lowConfidence":"You asked for reassurance. This plan offers a short confidence-building pass.","overconfidence":"Confidence was high, but the check found a weak spot. This plan reinforces that gap.","reviewOverdue":"Some ayahs are due for murājaʿah. This plan returns to them soon.","adaptiveCheckStrong":"Your short check looked strong. This plan continues while the ayahs are still fresh.","adaptiveCheckMixed":"Your short check was mostly solid, with a few gaps. This plan adds light support.","adaptiveCheckWeak":"Your short check found parts that still need practice. This plan keeps the same range with more guidance.","simpleContinue":"You completed this range. This plan continues to the next ayahs while the material is still fresh, bi’idhnillāh.","simpleRepeat":"This range still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.","simpleNextSurah":"You completed this surah. This plan is ready for Surah {surah} when you are. Mā shā’ Allāh."},"repeatWeakAyahs":"Repeat weak ayahs","startFocusedReview":"Start focused review","reviewTomorrow":"Review tomorrow","continue":"Continue","aiMetricWordsApprox":"~{percent}% matched","aiMetricClose":"Close","aiMetricOmitted":"Skipped","aiHighlightOmittedWords":"{count} words were skipped. Fill those gaps next.","aiFocusOmitted":"Recite the {count} skipped words carefully.","aiReviewAyahsLabel":"Ayahs to revisit","aiFocusStrong":"Keep this pace. Move on while the range is still fresh.","aiFocusNearly":"One careful pass should lock the remaining gaps.","aiFocusRetry":"Slow down and rebuild the range ayah by ayah.","aiFocusMissed":"Return to the {count} missed words before expanding the range.","aiFocusPronunciation":"Slow slightly and articulate the {count} close words.","aiFocusSequence":"Restart from the first ayah and keep the order steady.","aiFocusWeakAyah":"Spend the next pass on ayah {ayah} with Focus mode.","aiFocusWeakAyahs":"Revisit ayahs {ayahs} before continuing.","aiWeakAyahsLabel":"Focus ayahs","aiFirstBody":"Test with AI first. Your score and practice plan appear here after we hear you."}},"aiRecitePlan":{"startReciting":"Start Reciting","startHint":"Take your time. Recite the whole passage from memory — pauses are fine. Up to 3 gentle tries.","attemptProgress":"Try {current} of {max}","tryAgainRemaining":"Try again ({remaining} left)","seePracticePlan":"See my plan","averageScore":"Accuracy: {score}%","accuracyLabel":"Accuracy","resultTag":"Next step","resultTitle":"Session complete","resultSubtitle":"Here is your practice plan from AI Recite.","resultAria":"AI Recite result and practice plan","rangeLabel":"Range","methodLabel":"Method","techniques":"Techniques","startThisPlan":"Start this plan","startSimplerPlan":"Start this simpler plan","continueNextSession":"Continue to next session","masteryTitle":"Range achieved","masterySubtitle":"Strong recall — ready for the next session.","masteryBanner":"Achieved. You can continue to the next session.","simplerSubtitle":"Not firm yet — practise this simpler plan, then test again.","simplerBanner":"Keep practising this simpler plan, then test with AI Recite again.","returningToPlan":"Opening your practice plan…","focusAyah":"Focus on āyah {ayah}","focusAyahs":"Focus on āyahs {ayahs}","alsoWith":"Also: {technique}","alsoTip":"Tip: {technique}","beginner":{"yourResult":"Your result","what":"What to practise","how":"How","words":"Words to watch","strong":"Strong: ready to move on","notFirm":"Not firm yet"},"surahRecap":{"aria":"Surah complete recap","kicker":"Surah complete","title":"You finished {surah}","summary":"Here is a calm look at your progress on this surah.","sessions":"You practised this surah across {count} sessions.","accuracy":"Last AI Recite accuracy: {score}%","technique":"Technique that helped: {technique}","weakLeft":"Still watch: {items}","next":"Next: start {surah} · āyahs {from}–{to}","cta":"Start next surah"},"feedbackStrong":"Strong recall. A light review will keep it firm.","feedbackFocused":"Good effort. Strengthen the weak words next.","feedbackGentle":"Take it slow. One step at a time.","feedbackMixed":"A short focused plan will help.","whyWeakWords":"Accuracy {accuracy}% · {count} words · {techniques}","whyStrong":"Your recall is strong. A light review at a steady pace will keep it firm.","whyDefault":"Built from your AI Recite result.","setup":{"speed":"{speed}× speed","repOne":"1 repetition","reps":"{count} repetitions"},"tech":{"anchorTitle":"Anchor","anchorHow":"Flash weak words before the full āyah.","talqinTitle":"Talqin","talqinHow":"Listen, then repeat — one āyah at a time.","chainingTitle":"Chunking","chainingHow":"Practise it in two short parts, then join them.","phrasePartsHow":"Practise the phrase in small parts, then recite it as one.","blurTitle":"Blur","blurHow":"Hide words step by step.","focusTitle":"Focus","focusHow":"One verse at a time."},"whyEvidence":"One phrase in Ayah {ayah} needs a little reinforcement."},"emotional":{"postSession":{"encouragement1":"Small steps, repeated with sincerity, become lasting memorisation.","encouragement2":"What you reviewed today has a place in your heart — return to it gently.","encouragement3":"Consistency matters more than pace. You showed up, and that counts.","encouragement4":"Each session is a quiet act of devotion. May it be accepted.","encouragement5":"The Qur\'an opens to those who return to it — keep coming back.","encouragement6":"Steady effort, even in small portions, is beloved."},"milestone":{"surahComplete":"You completed {chapter} in this session — may it settle gently in your heart.","streak3":"Three days of showing up. Steadiness is its own quiet blessing.","streak7":"A week of consistency. May Allah make it easy to continue.","streak14":"Two weeks of returning to the Book. That rhythm is worth keeping.","streak21":"Three weeks of practice. Small daily efforts build something lasting.","streak30":"A month of showing up. May your connection to the Qur\'an deepen."},"consistency":{"nudgeShort":"However long it\'s been, today is a good day to return.","nudgeMedium":"A few days away — pick up gently, one ayah at a time.","nudgeLong":"Welcome back. There is no rush; begin where you are."}},"congratulations_todays_hifz_session_is_complete":"Congratulations. Today&apos;s Hifz session is complete.","memorised_today":"Memorised today","new_ayahs":"New ayahs","todays_goal":"Today&apos;s goal","next_review":"Next review","view_plan":"View Plan","session_analytics_overview":"Session Analytics Overview","preparing_analytics":"Preparing analytics...","recite_check_results":"Recite Check Results","saved_word_checks_for_this_session_range":"Saved word checks for this session range.","what_next":"What next?","deterministic_replay":"Consistency check","recitation_confidence_heatmap":"Recitation Confidence Heatmap","most_improved":"Most Improved:","needs_focus":"Needs Focus:","ayah_activity":"Ayah activity","verse_plays_across_the_selected_range":"Verse plays across the selected range.","play_ayah_audio_to_populate_the_activity_chart":"Play ayah audio to populate the activity chart.","most_replayed_ayahs":"Most Replayed Ayahs","quick_view_of_where_repetition_is_concentrating":"Quick view of where repetition is concentrating.","no_ayah_replay_data_available_yet":"No ayah replay data available yet.","session_playback_balance":"Session Playback Balance","see_how_evenly_audio_attention_is_spread_across_th":"See how evenly audio attention is spread across the selected range.","playback_balance_appears_after_ayah_audio_starts":"Playback balance appears after ayah audio starts.","advanced_metrics":"Advanced Metrics","session_signals_review_health_cards_graphs_and_cha":"Session signals, review health, cards, graphs, and charts.","save_a_session_to_unlock_full_per_session_analytic":"Save a session to unlock full per-session analytics.","compact_breakdown_for_this_metric_group":"Compact breakdown for this metric group.","ai_memorisation_review":"AI memorisation review","ayah_display":"Ayah display","recite_from_memory":"Recite from memory","blur_everything":"Blur Everything","peek":"Peek","memorisation_review":"Memorisation review","live":"Live","stop_check":"Stop Check","checking_the_recording":"Checking the recording...","ai_memorisation_feedback_is_a_guide_verify_importa":"AI memorisation feedback is a guide. Verify important mistakes against the ayah before you save or reset.","reset_ayah":"Reset Ayah","save_attempt":"Save Attempt","press_and_hold_the_ayah_below_to_peek_release_to_h":"Press and hold the ayah below to peek · release to hide again","recitation_review":"Recitation review","open_recordings":"Open recordings","recording_is_not_available_in_this_browser":"Recording is not available in this browser.","recite_check":"Recite Check","start_reciting_prompt":"Start Reciting","use_the_ai_recite_tool_in_the_header_when_you_want":"Use the AI recite tool in the header when you want to begin.","recall_mode":"Recall Mode","recall_mode_hint":"Hide future words and reveal them as you recite.","recall_mode_off_hint":"Hide future words and reveal them as you recite correctly.","recall_mode_on_hint":"Recall mode is on. Words hide until you recite them correctly.","recall_mode_enable_hint":"Tap the Recall Mode icon to hide words before you recite, like Tarteel.","recall_mode_ready_title":"Ready to recite from memory","recall_mode_ready_message":"Start AI Recite when you are ready. Future words stay hidden until you say them correctly.","recall_mode_preparing_title":"Getting ready","recall_mode_preparing_message":"Preparing the microphone. Words will hide as soon as listening starts.","recall_mode_listening_title":"Listening…","recall_mode_listening_message":"Review Session. Each correct word reveals the next one.","recall_mode_progress_message":"{revealed} of {total} words revealed. Keep going.","recall_mode_mistake_title":"Try that word again","recall_mode_mistake_message":"The current word stays hidden until you recite it correctly.","recall_mode_peek_title":"Current word revealed","recall_mode_peek_message":"Use Peek only when you are stuck. Recite this word correctly to continue.","recall_mode_complete_title":"Ayah complete","recall_mode_complete_message":"Excellent work. Every word was revealed through your recitation.","reveal_current_word":"Reveal Current Word","what_to_do_next":"What to do next?","ai_review_check":"AI review check","saved_to_your_recordings_library_for_this_ayah":"Saved to your recordings library for this ayah.","go_to_recording_library":"Go to recording library","view_all_recording_library":"View All Recording Library","back_to_session_complete":"Back to session complete","ai_recitation_feedback_is_a_guide_verify_important":"AI recitation feedback is a guide. Verify important mistakes against the ayah before you save or reset.","recording_now":"Recording now","stop_recording":"Stop Recording","review_this_attempt":"Listen back to your recitation","self_rating":"Self-assessment","self_rating_prompt":"How well did you recall this ayah from Hifz?","selfCheckRatings":{"excellent":"Itqan","good":"Strong recall","fair":"Still building","review":"Needs muraja\'ah","excellentHint":"Fluent and accurate — the ayah flows from memory with confidence","goodHint":"Solid recall with only minor hesitation on a word or two","fairHint":"Mostly there, but a few gaps remain — worth one more repetition","reviewHint":"Return to this ayah before moving forward in your Hifz"},"selfCheckRecorder":{"aiListening":"AI is listening to your recitation","reviewHeading":"Review your recitation","assessmentHeading":"Assess your Hifz","aiSessionReady":"When you are ready, recite your selected ayah range aloud and let AI guide your review.","aiAyahReady":"When you are ready, recite this ayah from memory and let AI guide your review.","recordingActive":"Your microphone is live — recite the ayah with tajweed, then press stop when you finish.","reviewDraft":"Listen to your recording, honestly rate your recall, then save this attempt to your library.","preparingMic":"Preparing your microphone for a clear recording, insha\'Allah.","unsupportedBrowser":"Recording needs a browser with microphone support to capture your recitation.","idle":"Record yourself reciting this ayah from Hifz, then assess how well it stayed in memory."},"no_recordings_yet_desc":"Open Self-Check on any ayah, record your recitation, and save the attempt. Every saved recording is gathered here by surah and ayah.","no_matching_recording":"No matching recording","no_matching_recording_desc":"Try a different surah name or ayah number, or clear the search to see every saved recitation.","choose_a_recording":"Choose a recording","choose_a_recording_desc":"Select a saved recitation from the list to review your Hifz attempt in full.","record_again":"Record Again","recordings_library":"Recordings Library","back_to_self_check":"Back to Self-Check","loading_recordings":"Loading recordings…","no_recordings_yet":"No recordings yet","saved_session":"Saved session","selected_ayah":"Selected ayah","ai_check":"AI check","skip":"Skip","next":"Next","enter_a_minimum_of_3_words_results_match_the_same_":"Enter a minimum of 3 words. Results match the same passage in Arabic text or translation.","any_surah":"Any surah","loading_quran_search_index":"Loading Quran search index...","no_matching_ayahs_found_for_this_passage_and_filte":"No matching ayahs found for this passage and filter.","techniques":{"focusDescription":"Concentrate on one ayah before moving forward","chainingOffDescription":"Link each ayah to the next and practise the range as one continuous sequence.","chainingCumulativeDescription":"Build longer runs by adding one ayah at a time.","chainingLinkingDescription":"Strengthen transitions between neighbouring ayahs.","chainingLinkingHint":"Practice ayahs individually, then in pairs.","chainingCumulativeHint":"Start with first ayah, then add one more each time.","chainingOffSub":"Link each ayah to the next and practise the range as one continuous sequence.","chainingCumulativeSub":"Build longer connected runs from the first ayah outward.","chainingLinkingSub":"Train the transition between neighbouring ayahs.","chainingOffPreview":"Flow: selected ayahs in order, each ayah repeated {count} times.","chainingOffPreviewOne":"Flow: selected ayahs in order, each ayah repeated {count} time.","chainingCumulativePreview":"Cumulative flow: repeat 1, then 1-2, then 1-2-3. Each block repeats {count} times.","chainingCumulativePreviewOne":"Cumulative flow: repeat 1, then 1-2, then 1-2-3. Each block repeats {count} time.","chainingLinkingPreview":"Linking flow: repeat the current ayah, the next ayah, then both together. Each step repeats {count} times.","chainingLinkingPreviewOne":"Linking flow: repeat the current ayah, the next ayah, then both together. Each step repeats {count} time.","chainingOffLabel":"Chaining off · {count} repeats","chainingCumulativeLabel":"Cumulative · {count} repeats","chainingLinkingLabel":"Linking · {count} repeats","focusActiveDescription":"Concentrate on one ayah before moving forward","blurActiveDescription":"Hide more of the text gradually to strengthen recall","chainingActiveDescription":"{count} repeat(s) per chaining step.","cumulativeChaining":"Grow the passage step by step (Cumulative)","linkingChaining":"Practice ayah pairs (Linking)","anchorOffDescription":"Anchor mode off · use key words as memory hooks","anchorUsingDescription":"Using {anchors} as mental anchors for each ayah","anchorFirstLast":"first/last word","anchorKeyPairs":"key word pairs","anchorComplete":"complete structure","chainingWhyCumulative":"Use when you want to build longer runs by adding one ayah at a time.","chainingWhyLinking":"Use when you want to strengthen transitions between neighboring ayahs.","chainingNextCumulative":"Next: add one ayah to the block","chainingNextLinking":"Next: single -> next -> pair","chainingMethodRequired":"Chaining is on, but no method is selected yet.","chooseChainingMethod":"Choose chaining method"},"analytics":{"todayProgress":"Today\'s progress","todayProgressDesc":"{covered}/{total} ayahs covered.","streak":"Streak","streakDesc":"Active study days in a row.","memoryBreakdown":"Memory breakdown","spacedHealth":"Spaced repetition health","recitationQuality":"Recitation quality","rowNew":"New","rowDue":"Due","rowWeak":"Weak","rowMastered":"Mastered","rowQueuedToday":"queued today","rowReviewNow":"review now","rowNeedsCare":"needs care","rowSteadyAyahs":"steady ayahs","rowDueNow":"Due now","rowUpcoming":"Upcoming","rowReviews":"reviews","rowScheduled":"scheduled","rowAvgRetention":"Average retention","rowLoad":"{load} load","rowAvgQuality":"Average quality","rowChecks":"Checks","rowCompleted":"completed","rowReady":"Ready","noDataYet":"No data yet","noDataDetail":"Start a session to build analytics","defaultInsight":"Keep today small and consistent"},"guided":{"learn":"Learn","practice":"Practice","recall":"Recall","review":"Review","listenFollow":"Listen & Follow","tryReciting":"Try Reciting","continue":"Continue","learnInstruction":"Listen and follow the recitation.","practiceInstruction":"Try reciting with the ayah still partially visible.","recallInstruction":"Recall the ayah before moving forward.","reviewInstruction":"Review the verses due now.","defaultInstruction":"Continue your session.","start":"Start","play":"Play","chooseSurahHint":"Choose a surah and range, then start.","versesToReview":"You have {count} verses to review.","reviewDueHint":"Review what is due.","playActiveHint":"Play the active ayah. Use Tools for translation and word-by-word.","kickerReview":"✨ Time to refresh","kickerPlaying":"🌙 Keeping the rhythm steady","kickerDefault":"🌿 Begin with Bismillah, keep your heart with the ayah","reviewBodyDue":"You have {count} ayahs awaiting review. Revisit them gently and keep the chain strong.","reviewBodyDefault":"Return to this ayah with a calm review before moving ahead.","reviewBodySuffix":"Keep your tongue, eyes, and heart together on this ayah.","beforeBegin":"Before you begin","duringSession":"During the session","afterEachAyah":"After each ayah","keepGoing":"Keep going","listenAndFollow":"Listen and follow.","reciteFirstReveal":"Recite first, then reveal.","tryRecitingMinimal":"Try reciting with minimal support.","reviewVersesDue":"Review what is due.","versesDueCount":"{count} verses to review."},"sessionEnd":{"reviewInsights":"Review insights","reviewInsightsDesc":"See your session analytics","saveSession":"Save session","saveSessionDesc":"Keep this completed range","resetRange":"Reset range","resetRangeDesc":"Play same range again","createSession":"Create new session","createSessionDesc":"Choose different surah or range"},"sessionType":{"label":"Memorisation","nowPlaying":"Now playing","session":"Session","ayah":"Ayah {n}","ayahLabel":"Ayah","pause":"Pause","startSession":"Start session","advanced":"Advanced","beginner":"Beginner","sessionExplanation":"{mode} session using {chaining}."},"common":{"mushafSyncMessage":"Ayahs are loaded, but the mushaf page list has not synced yet. Switch back to Stacked or reopen this session.","fullQuran":"Full Quran","filterValue":"Filter value","noSurah":"No surah","currentSession":"Current session","confirm":"Confirm","stop":"Stop","savedAt":"Saved {date}","lastOpened":"Last opened {date}","rangeLabel":"Ayahs {start}–{end}","rangeLabelSingle":"Ayah {ayah}","manualAdvance":"manual advance","autoAdvance":"auto advance","reciterFollowAdvance":"listen then recite","plainSequence":"plain sequence","chainingLabel":"{method} chaining","setupSummary":"{count}x repeats, {mode}, {chaining}","noReadingAids":"No reading aids active","translationOn":"Translation on","transliterationOn":"Transliteration on","wordByWordOn":"Word-by-word on","wordAudioOn":"Word audio on","tajweedOn":"Tajweed on","fontLabel":"Font {font}","modeLabel":"{label} mode","repeatSummary":"{count}x repeats"},"search":{"juzNumber":"Juz number","hizbNumber":"Hizb number","pageNumber":"Page number","surah":"Surah","ayahNumber":"Ayah number","wordPosition":"Word position","wordNumber":"Word number"},"fonts":{"uthmanic":"Madani Mushaf (QCF)","amiri":"Amiri Quran","naskh":"Noto Naskh Arabic","scheherazade":"Scheherazade New","lateef":"Lateef"},"techniqueDisplay":{"talqin":{"label":"Listen and repeat","short":"Listen and repeat","description":"Listen to each section, then repeat it"},"focus":{"label":"One ayah at a time","short":"One ayah at a time","description":"Concentrate on one ayah before moving forward"},"blur":{"label":"Gradually hide the text","short":"Gradually hide the text","description":"Hide more of the text gradually to strengthen recall"},"chaining":{"label":"Join ayahs together","short":"Join ayahs together","description":"Link each ayah to the next and practise the range as one continuous sequence."},"anchor":{"label":"Highlight memory words","short":"Highlight memory words","description":"Use key words as hooks to recall each ayah"},"linking":{"label":"Practice ayah pairs","short":"Practice ayah pairs","description":"Practise each ayah, then join it with the next"},"cumulative":{"label":"Grow the passage step by step","short":"Grow the passage step by step","description":"Add one ayah at a time to build a longer run"}},"reduce_distracted_around_the_active_ayah":"Concentrate on one ayah before moving forward","tajweedPracticeCheck":{"title":"Tajweed practice check","legendTitle":"Tajweed colours explained","legendIntro":"These Mutqin colours mark common Tajweed rules in the ayah. Use them as practice reminders — not as a teacher’s ruling.","disclaimer":"Practice aid only — not a teacher’s ruling. Holds are shown as ranges, not exact targets.","summaryStrong":"Keep colours on: green/purple = soft nasal hold, red = stretch, orange = light bounce.","summaryIssues":"Focus on one coloured mark at a time — hold gently, then listen once if needed.","summaryUnable":"Use the colours while you practise. We’ll check holds when timing is clearer.","viewDetails":"View details","labels":{"hold":"Hold","sound":"Sound","next":"Next"},"hold":{"within":"Within the expected range","short":"A little short","long":"A little long","unable":"Could not assess clearly","na":"No special hold"},"sound":{"similar":"Similar to the reciter","different":"Needs another listen","unable":"Could not assess clearly"},"next":{"continue":"Continue","holdLonger":"Listen once, then hold a little longer","holdShorter":"Listen once, then hold a little shorter","listenRepeat":"Listen once, then repeat the phrase","slowPass":"Try one slower pass"},"live":{"listening":"Listening…","onTarget":"On target"},"colourNames":{"gray":"Gray","green":"Green","purple":"Purple","orange":"Orange","red":"Red","blue":"Blue"},"bands":{"strong":{"headline":"Coloured marks look steady — keep practising gently.","label":"Steady practice"},"average":{"headline":"A couple of coloured marks need a slower pass.","label":"Needs a slower pass"},"needs_work":{"headline":"Go slow on the coloured marks below.","label":"Needs attention"},"unable":{"headline":"Timing wasn’t clear enough to check holds this time.","label":"Couldn’t fully check"}},"colours":{"gray":"Gray — clear / silent marks","green":"Green — soft nasal hold","purple":"Purple — hidden sound","orange":"Orange — light bounce","red":"Red — stretch (madd)","blue":"Blue — merge"}},"amd":{"title":"Check your memorisation","emptyAyahTitle":"Ayah text not ready","emptyAyahDesc":"We couldn’t show the ayah surface for this check. Close and open the check again.","betaBadge":"","disclaimer":"Practice aid only — not a teacher’s ruling.","disclaimerShort":"Practice aid only — not a teacher’s ruling.","onlyFromTestWithAi":"Finish your session, then choose Check my memorisation to open this check.","assessmentType":"From memory","readyCopy":"Recite aloud from memory. Mutqin will follow along gently as you go.","startAssessment":"Start","startPlan":"Start This Practice Plan","adjustPlan":"Adjust Plan","chooseOther":"Choose Different Session","retest":"Re-test weak areas","micGranted":"Ready","micReady":"Ready","micListening":"Recording","micListeningLive":"Recording","recordingActive":"Recording","micPaused":"Paused","micNeedAccess":"Allow microphone","micDenied":"Allow microphone","micUnavailable":"Unavailable","micUnsupported":"Unavailable","micChecking":"Checking…","micPrompt":"Ready","micGuidanceDenied":"Allow microphone access in your browser settings, then try again.","micGuidanceUnsupported":"Speech recognition is unavailable here. You can still use Peek.","hintStarting":"Preparing the microphone…","hintListening":"Microphone is live — recite from memory. Words colour as they are recognised.","hintListeningLive":"Microphone is live — recite from memory. Words colour as they are recognised.","hintProcessing":"Finishing…","hintAnalysing":"Comparing with the Qur’an text…","startFailed":"Could not start the check.","analyseFailed":"Could not review this recitation. Please try again.","sessionExpired":"Your session expired. Refresh the page, then try again.","noSpeech":"No speech was detected. Please try again.","recognitionStopped":"Listening paused. Please try again.","guestSummary":"May Allah strengthen what you have memorised.","tools":"Memorisation tools","toolBlur":"Blur","toolStop":"Stop","toolHelp":"Help","helpCopy":"Recite from memory. Mutqin follows along to highlight words that may need more care. This feature is still in beta.","startRecitation":"Record","startRecitationHint":"","stopRecitation":"Stop recording","difficulty":"Difficulty","wordsShown":"Words shown","peekShort":"Peek","peekHintShort":"Hold to reveal","wordsShownShort":"Shown","elapsedTimer":"Recitation time","elapsedTimerHint":"How long this recitation has taken — used to personalise your next plan","textSizeShort":"Text size","textSmallerShort":"Smaller text","textLargerShort":"Larger text","textSizeIncrease":"Increase text size","textSizeDecrease":"Decrease text size","mistakeSound":"Mistake sound","mistakeSoundShort":"Sound","mistakeSoundOn":"On","mistakeSoundOff":"Off","mistakeSoundHint":"Soft cue when a mistake is confirmed","tajweed":"Tajweed","tajweedShort":"Tajweed","tajweedOn":"On","tajweedOff":"Off","tajweedHint":"Show or hide tajweed colouring on the text","mistakeVisual":"Mistake confirmed","autoFollow":"Auto-follow","autoFollowOn":"Auto-follow on","autoFollowOff":"Auto-follow off","autoFollowPaused":"Auto-follow paused","autoFollowResume":"Resume auto-follow","autoFollowHint":"Keep the active word near eye level during longer checks","completeTitle":"Mā shā’ Allāh — check complete","completeBody":"You recalled this range successfully.","sessionEnded":"Session complete","sessionEndedBody":"Returning…","testAgain":"Check again","done":"Done","enableMic":"Enable microphone","stages":{"idle":"Ready","ready":"Ready","starting":"Starting","listening":"Listening","paused":"Paused","complete":"Complete","processing":"Processing","analysing":"Analysing","results":"Assessment results","plan":"Practice plan","plan_adjusted":"Plan adjusted","practice_active":"Practice active","practice_complete":"Practice complete","retest":"Re-test","error":"Something went wrong"},"hud":{"talqin":"Ayah {ayah} · Repetition {current} of {total} · {phase}","chunking":"Chunk {current} of {total}","anchor":"Focus words: {strengthened} / {total} strengthened","generic":"Practice · {current} / {total}","nextRep":"Next repetition","markWord":"Word strengthened","finish":"Finish & re-test"},"howKicker":"How Mutqin mistake detection works","how1":"Hide the Qur’an text and recite from memory.","how2":"Mutqin listens, follows your place, and highlights mistakes.","how3":"Repeat a word to correct it — correct words reveal themselves.","how4":"Save the result and practise the weak areas again.","toolRecite":"Recite","toolAudio":"Audio help","toolMemorizing":"Memorizing","peekHint":"Need a hint? Peek at the text","toolPeek":"Peek at the text"}},"toasts":{"saved":"Saved successfully.","error":"Something went wrong. Please try again.","theMemorisationWorkspaceRecoveredFromA":"The memorisation workspace recovered from a startup error.","fadingModeWordByWordDisabled":"Fading Mode: Word-by-Word disabled","wordByWordModeFadingDisabled":"Word-by-Word Mode: Fading disabled","focusModeOnBlurModeOff":"🎯 Focus Mode: On | 🌫️ Blur Mode: Off (cannot use together)","blurModeOnFocusModeOff":"🌫️ Blur Mode: On | 🎯 Focus Mode: Off (cannot use together)","blurModeOnChainingOffBlur":"🌫️ Blur Mode: On | 🔗 Chaining: Off — Blur hides upcoming verses needed for chaining","chainingOnBlurModeOffYou":"🔗 Chaining: On | 🌫️ Blur Mode: Off — You need to see upcoming verses for chaining to work","tipEnableAnchorModeWithChaining":"💡 Tip: Enable Anchor Mode with Chaining for better recall","pleaseSelectASessionFirst":"Please select a session first","sessionLoadedSuccessfully":"Session loaded successfully","ayahCompletedMovingToNext":"Ayah completed! Moving to next...","sessionSaved":"✓ Session \\"{name}\\" saved","recommendedSetupApplied":"Recommended setup applied","presetGuidedStart":"Preset: Guided Start","presetChainingAnchorModeWithFocus":"Preset: Chaining + Anchor Mode (with Focus)","presetPureRecallWithBlurMode":"Preset: Pure Recall with Blur Mode","presetFocusModeAnchorHooks":"Preset: Focus Mode + Anchor Hooks","blurModeWorksBestWithoutChaining":"Blur Mode works best without chaining, so chaining was turned off.","anchorModeKeyWordsWillBe":"Anchor Mode: Key words will be highlighted as memory hooks","anchorModeDisabled":"Anchor Mode disabled","anchorModeUsing":"Anchor Mode: Using {anchorCount}","chooseAValidSurahAndAyah":"Choose a valid surah and ayah range before starting.","chooseChainingMethod":"Chaining is enabled. Choose linking or cumulative in Practice Tools to start.","nothingReadyToSave":"Nothing is ready to save yet. Load a surah range or start a session first.","sessionSavedSuccess":"Session saved successfully.","pleaseSelectAValidSurahAnd":"Please select a valid surah and ayah range first","failedToStartSession":"Could not start the session. Please try again.","sessionBusyTryAgain":"A session action is already in progress. Please wait a moment and try again.","noActiveSessionToSave":"No active session to save","sessionSaved2":"Session saved","sessionDeleted":"Session deleted","sessionExportBlockedIncompleteSessionData":"Session export blocked: incomplete session data.","downloadReady":"Download ready ✓","exportFailedRetry":"Export failed, retry","thisResultDoesNotHaveEnough":"This result does not have enough stored metadata to re-run the audit.","unableToPlayThisRecordingRight":"We could not play this recording. Try reloading it or record again.","audioSystemNotReady":"Audio isn\'t ready yet.","audioElementNotReady":"Audio isn\'t ready yet. Try again in a moment.","audioRecordingNotReady":"This recording isn\'t ready yet. Try again in a moment.","stopTheCurrentSelfCheckBefore":"Stop the current self-check before moving to another ayah.","saveOrDiscardTheCurrentSelf":"Save or discard the current self-check attempt before switching ayahs.","stopOrDiscardTheCurrentRecording":"Stop or discard the current recording before closing Self-Check.","selectAnAyahBeforeOpeningThe":"Select an ayah before opening the recordings library.","stopTheCurrentRecordingBeforeOpening":"Stop the current recording before opening the recordings library.","aiHighlightMarkedCorrectResultsUpdated":"AI highlight marked correct. Results updated.","noSavedReciteChecksForThis":"No saved Recite Checks for this ayah yet.","chooseASessionRangeBeforeStarting":"Choose a session range before starting a session Recite Check.","stopTheCurrentMemorisationCheckBefore":"Stop the current memorisation check before switching ayahs.","chooseASessionRangeBeforeOpening":"Choose a session range before opening the memorisation checker.","loadedCachedMemorisationAnalysis":"Loaded cached memorisation analysis.","memorisationAssessmentCouldNotBeSaved":"Memorisation assessment could not be saved on this device right now.","memorisationAssessmentSavedToRecordingsLibrary":"Memorisation assessment saved to recordings library.","memorisationAssessmentDeleted":"Memorisation assessment deleted.","memorisationCheckerReset":"Memorisation checker reset.","memorisationAssessmentDiscarded":"Memorisation assessment discarded.","thisRecordingDoesNotHaveEnough":"This recording does not have enough metadata to re-run the deterministic audit.","reciteCheckComplete":"Recite Check complete.","displayedAyahReviewReset":"Displayed ayah review reset.","reciteCheckCouldNotBeSaved":"Recite Check could not be saved on this device right now.","reciteCheckSavedToSavedAttempts":"Recite Check saved to Saved Attempts.","reciteCheckDiscarded":"Recite Check discarded.","reciteCheckDeleted":"Recite Check deleted.","loadedCachedReciteCheck":"Loaded cached Recite Check.","recordingReadyForAyah":"Recording ready for Ayah {number}","savedSelfCheckForAyah":"Saved self-check for Ayah {ayahNumber}","audioNotAvailableForThisAyah":"Audio not available for this ayah","downloadedAyahAudio":"Downloaded ayah {number} audio","failedToDownloadAyahAudio":"Failed to download ayah audio","hifzPlanDeleted":"Hifz plan deleted","sessionSavedWithCtrlS":"Session saved with Ctrl+S","savedSessionDismissed":"Saved session dismissed","speedChangedToX":"Speed changed to {p0}x","switchedToCasualMode":"Switched to Casual Mode","switchedToMode":"Switched to {p0} Mode","textSizeReset":"Text size reset","pleaseSelectASurah":"Please select a surah","planCreatedVersesDayForDays":"Plan created: {versesPerDay} verses/day for {plannerEstimatedDays} days","loadASurahFirstBeforeDownloading":"Load a surah first before downloading","couldNotIdentifySurah":"Could not identify surah","savedVersesFromForOfflineReading":"Saved {length} verses from {p0} for offline reading.","failedToDownloadVerses":"Failed to download verses","loadedFromOfflineStorage":"Loaded {surah} from offline storage","failedToLoadOfflineSurah":"Failed to load offline surah","offlineSurahRemoved":"Offline surah removed","audioPlaybackError":"Couldn\'t start the audio.","audioNotAvailableForVerse":"Audio not available for verse {number}","failedToPlayAudio":"Couldn\'t play the audio.","playbackFailed":"Couldn\'t start playback.","playbackTapToPlay":"Tap play to start the audio.","failedToLoadVerses":"Failed to load verses","pleaseSelectASurahFirst":"Please select a surah first","noVersesLoadedCheckYourNetwork":"No verses loaded. Check your network connection.","nothingToPlayCheckTheSelected":"Nothing to play. Check the selected range.","backOnlineLiveApisAreAvailable":"Back online. Live APIs are available again.","offlineModeActiveReadingFallsBack":"Offline mode active. Reading falls back to cached ranges.","settingsIssue":"Settings issue: {join}","fontSize":"Font size: {defaultFontSize}%","message":"{p0} {p1}","settingsSaved":"Settings saved","failedToLoadSurahList":"Failed to load surah list","sessionControlsResetToDefaults":"Session controls reset to defaults","reciterUpdatedForThisSession":"Reciter updated for this session.","noVersesToQuizOn":"No verses to quiz on","enableWordAudioToPreviewIndividual":"Enable Word audio to preview individual words.","wordAudioIsNotAvailableFor":"Word audio is not available for this word.","wordTimingUnavailableForThisAyah":"Word timing unavailable for this ayah.","unableToPlayThisWordRight":"Unable to play this word right now.","unableToPlayAyahNow":"Couldn\'t play this ayah. Try again.","textSizePercent":"Text size: {percent}%","sessionResumeFailed":"Unable to resume session. Please try again.","sessionEndFailed":"Unable to end session. Please try again.","sessionPaused":"Session paused. You can resume anytime.","sessionPauseFailed":"Unable to pause session. Please try again.","couldNotPlayRecording":"We could not play this recording. Try reloading it or record again."},"errors":{"network":"Network error. Check your connection."},"about":{"tag":"Mutqin","heroTitle":"About Mutqin","heroDesc":"Mutqin helps you memorise, revise, and retain the Qur\'an through daily practice. Listen, repeat, and always know what to do next.","ctaPrimary":"Start practising","ctaSecondary":"Our mission","purposeTitle":"Purpose","purposeDesc":"Make Qur\'an memorisation clear enough for daily use.","approachTitle":"Approach","approachDesc":"Practice tools that sit alongside a real teacher, not in place of one.","outcomeTitle":"Outcome","outcomeDesc":"Steady revision, clearer next steps, and better accuracy.","verse":"\\"Indeed, We have made the Qur\'an easy to remember.\\" (54:17)","title":"About Mutqin"},"aboutUs":{"title":"About","kicker":"About Mutqin","built_for_focused_quran_practice":"Built for daily Quran practice.","calm_study_flow":"Simple study flow","revision_led_learning":"Review that sticks","built_around_consistency":"Built for consistency","why_people_stay":"Why people stay","less_friction_clearer_progress_better_return_point":"Less fuss, clearer progress, and a clear place to return.","session_setup_is_simple_enough_for_daily_use":"Session setup is simple enough for daily use.","revision_signals_help_learners_revisit_what_needs_":"Review reminders help you revisit what needs attention.","the_interface_stays_focused_instead_of_overwhelmin":"The interface stays focused instead of crowded.","why_it_exists":"Why it exists","what_it_does":"What it does","what_it_respects":"What it respects","the_product_principle":"The principle","focused_workflow":"Focused practice","reliable_revision":"Reliable review","cleaner_decisions":"Clearer choices"},"mission":{"title":"Our mission","kicker":"Our mission","make_consistent_quran_practice_easier_to_understan":"Make consistent Quran practice easier to start and keep going.","what_that_means":"What that means","clear_entry_point":"Clear starting point","beginners_should_know_what_to_do_in_the_first_minu":"Beginners should know what to do in the first minute.","reliable_revision_loop":"Reliable review","weak_ayahs_should_surface_before_they_become_large":"Weak ayahs should show up before they become larger gaps.","respect_for_real_study":"Respect for real study","the_product_should_support_teachers_halaqah_and_pe":"The product should support teachers, halaqah, and personal routines.","lower_the_barrier":"Lower the barrier","make_the_first_minute_simple_enough_for_beginners_":"Make the first minute simple for beginners and steady for returning learners.","improve_retention":"Improve retention","surface_weak_ayahs_before_they_turn_into_larger_re":"Surface weak ayahs before they turn into larger review gaps.","respect_real_study":"Respect real study","fit_naturally_alongside_a_teacher_halaqah_or_perso":"Fit alongside a teacher, halaqah, or personal routine without extra noise.","how_success_looks":"How success looks","simpler_starts":"Simpler starts","stronger_retention":"Stronger retention","more_confidence":"More confidence"},"donate":{"title":"Support","donate":"Support","support_a_simpler_memorisation_experience":"Need help with practice, your account, or a session?","product_maintenance":"Getting started","faster_iteration":"Your account","better_student_experience":"During a session","support_focus":"Help topics","fund_the_next_practical_improvements_students_feel":"Find answers here, or write to us anytime.","flexible":"Practice","one_time_support":"Checking recitation","help_with_ongoing_improvements_maintenance_and_car":"Recite while Mutqin follows along. It is a practice helper, not a replacement for a teacher.","monthly_support":"Something not working?","support_steady_iteration_on_onboarding_revision_an":"Refresh once. If that fails, sign out and back in. For recitation, allow microphone access in your browser.","targeted":"Feedback","project_support":"Share feedback","back_focused_improvements_for_a_specific_part_of_t":"Tell us what helped, what was unclear, or how practice could be easier.","start_the_conversation":"Contact us","if_you_want_to_support_mutqin_contact_us_with_the_":"Ask about billing, practice, or feedback anytime.","contact_us":"Contact us"},"hifzPlan":{"choose_your_daily_goal":"Choose Your Daily Goal","choose_how_many_new_ayahs_you_want_to_learn_each_d":"Choose how many new ayahs you want to learn each day.","surah":"Surah","daily_ayahs":"Daily ayahs","from":"From","pick_your_learning_style":"Pick Your Learning Style","pick_the_pace_that_feels_realistic_for_your_daily_":"Pick the pace that feels realistic for your daily routine.","set_your_study_flow":"Set Your Study Flow","tell_mutqin_what_to_focus_on_first_during_each_ses":"Tell Mutqin what to focus on first during each session.","choose_your_support_level":"Choose Your Support Level","choose_how_much_checking_and_guidance_you_want_dur":"Choose how much checking and guidance you want during practice.","set_your_playback":"Set Your Playback","choose_how_many_repeats_which_reciter_and_the_play":"Choose how many repeats, which reciter, and the playback speed for each ayah.","repeats_per_ayah":"Repeats per ayah","reciter":"Reciter","playback_speed":"Playback speed","your_hifz_journey_is_ready":"Your Hifz Journey Is Ready","review_todays_pace_then_start_and_let_mutqin_guide":"Review today&apos;s pace, then start and let Mutqin guide the first session automatically.","when_you_start_the_timer_audio_and_ayah_highlighti":"When you start, the timer, audio, and ayah highlighting all begin automatically.","wizard":{"editTitle":"Edit Hifz Plan","createTitle":"Create Your Hifz Plan","savePlan":"Save Hifz Plan","startJourney":"Start Hifz Journey","chooseSurahPlaceholder":"Choose a Surah","steps":{"goal":{"label":"Goal","headline":"Choose today\'s goal"},"style":{"label":"Style","headline":"Pick your daily pace"},"flow":{"label":"Flow","headline":"Choose your study flow"},"support":{"label":"Support","headline":"Set your support level"},"playback":{"label":"Playback","headline":"Choose your recitation setup"},"summary":{"label":"Summary","headline":"Start your Hifz journey"}},"goals":{"light":{"title":"Light","subtitle":"1-3 ayahs/day","detail":"A lighter workload for busy days, with more time for careful revision and steady confidence."},"balanced":{"title":"Balanced","subtitle":"3-5 ayahs/day","detail":"Maintain a steady pace with enough revision to strengthen long-term memory."},"intensive":{"title":"Intensive","subtitle":"5-10 ayahs/day","detail":"Move faster through memorisation while accepting a heavier daily revision load."}},"styles":{"light":{"title":"Light","subtitle":"Low pressure, easy to maintain.","detail":"Best for a calm routine where consistency matters more than speed."},"balanced":{"title":"Balanced","subtitle":"Moderate pace and revision.","detail":"A practical daily rhythm for new ayahs, review, and long-term retention."},"intensive":{"title":"Intensive","subtitle":"Higher pace, stronger commitment.","detail":"Designed for faster progress with tighter daily structure and more review."}},"focus":{"newPriority":{"title":"New Memorisation First","subtitle":"Start with fresh ayahs.","detail":"Keeps momentum high while still scheduling reviews after new work."},"revisionPriority":{"title":"Revision First","subtitle":"Protect what you already know.","detail":"Places older memorisation first so retention stays strong before adding more."},"mixed":{"title":"Mixed Flow","subtitle":"Balanced new and review work.","detail":"Blends new memorisation and revision into one manageable daily plan."},"weakAyahFocus":{"title":"Weak Ayah Focus","subtitle":"Repair fragile memorisation.","detail":"Gives extra attention to ayahs that need reinforcement before they become backlog."}},"support":{"gentle":{"title":"Gentle Guidance","subtitle":"Light checking and softer feedback.","detail":"Best if you want a lighter workload while building confidence and consistency."},"standard":{"title":"Standard Support","subtitle":"Balanced checking and practical feedback.","detail":"Best for most learners who want useful correction without slowing the session down."},"highPrecision":{"title":"High Precision Mode","subtitle":"Closer checking for stricter mastery.","detail":"Best when you want tighter correction and can handle a more demanding session."}},"forecast":{"totalAyahs":"Total Ayahs","totalPages":"Total Pages","dailyTarget":"Daily Target","dailyTargetValue":"{count} Ayahs / Day","estimatedDuration":"Estimated Duration","estimatedCompletion":"Estimated Completion","learningStyle":"Learning Style","supportLevel":"Support Level","repeatsPerAyah":"Repeats per Ayah","playbackSpeed":"Playback Speed","retentionReviews":"Retention Reviews","retentionSchedule":"1, 3, 7, 14, 30, 60 days","firstReview":"First review","totalHizb":"Total Hizb","totalJuz":"Total Juz"},"createPlan":"Create Plan","stepCounter":"Step {current} of {total}","yourPlan":"Your plan","to":"To","ayahRange":"Ayah Range","studyFlow":"Study Flow","reciterLabel":"Reciter","validation":{"dailyTarget":"Set a realistic number of new ayahs for each day.","validRange":"Enter a valid ayah range or leave both range fields blank.","repeatsRequired":"Choose how many times each ayah should repeat.","reciterRequired":"Choose a reciter before you continue."}},"helpLearning":{"title":"Help & Learning","subtitle":"Short guides for calm, steady Qur’an memorisation.","bestFor":"Best for:","sections":{"tajweed":{"title":"Tajweed colours","description":"When Tajweed is on, Mutqin colours letters so you can notice pronunciation patterns while you listen and repeat.","bestFor":"Students improving pronunciation gently while memorising.","legendTitle":"What each colour means","legendIntro":"Use this legend while you listen and repeat. It is a guide, not a replacement for a teacher.","colors":{"gray":{"label":"Silent / connection marks","description":"Hamzat al-wasl and silent letters that are not pronounced."},"green":{"label":"Ghunnah / Idgham with ghunnah","description":"Nasalisation and joining with a nasal sound."},"purple":{"label":"Ikhfa / Idgham without ghunnah","description":"Hidden noon sound and non-nasal joining."},"orange":{"label":"Qalqalah","description":"Echoing stop on ق ط ب ج د."},"red":{"label":"Madd (elongation)","description":"Normal, obligatory, and necessary lengthening."},"blue":{"label":"Idgham shafawi","description":"Labial merging with م."}}},"srs":{"title":"Review scheduling","description":"Return to memorised ayahs before they begin to fade. Verses that need more care appear sooner.","bestFor":"Keeping earlier memorisation strong over time."},"techniques":{"title":"Guided practice","description":"Listen, follow and repeat at a comfortable pace. Choose the method that helps you stay steady.","bestFor":"Students building a calm daily rhythm.","details":{"repetition":{"label":"Repetition","text":"Repeat the same verse a few times before moving on."},"linking":{"label":"Linking","text":"Connect each verse to the next to improve flow."},"cumulative":{"label":"Cumulative","text":"Add new verses while gently revising earlier ones."}}},"layouts":{"title":"Reading layouts","description":"Switch between stacked cards and a Mushaf-style page depending on what feels easiest to follow.","bestFor":"Choosing a reading view that stays comfortable.","details":{"stacked":{"label":"Stacked layout","text":"Shows each ayah clearly, one after another — helpful on smaller screens."},"mushaf":{"label":"Mushaf layout","text":"Shows ayahs in a familiar page-inspired style."}}},"aiRecitation":{"title":"Recitation check","description":"Recite from memory and let Mutqin follow your progress. See which words may need a little more attention.","bestFor":"Students who want gentle feedback after practising aloud."},"talqinMode":{"title":"Talqin mode","description":"Listen, pause, repeat, and extend at a steady pace so you can focus on the ayahs themselves.","bestFor":"Students building retention through guided listening and repetition.","workflowTitle":"How Talqin flows","workflowIntro":"After you begin, Mutqin keeps a steady listen–repeat rhythm so you can focus on the ayahs:","workflowListen":"1. Listen:","workflowListenText":"Hear the ayah clearly, then prepare to repeat.","workflowPause":"2. Pause and repeat:","workflowPauseText":"Playback pauses so you can recite what you just heard.","workflowExtend":"3. Extend:","workflowExtendText":"Join ayahs gradually so the passage stays connected."},"manualAssessment":{"title":"Self assessment","description":"After a session, note how confident you felt so the next step can stay useful.","bestFor":"Students who prefer simple self-reflection."}}},"rangeOptions":{"all":"Full Quran","juz":"Juz","hizb":"Hizb","page":"Page","surah":"Surah","ayah":"Ayah","word":"Word"}},"dashboard":{"loading":"Loading…","loading_hint":"Loading…","load_error":"Couldn’t load dashboard.","load_error_hint":"Please try again.","retry":"Retry","refresh":"Refresh","bismillah":"Bismillah","greeting":"Assalamu alaikum, {name}","dear_friend":"friend","supporting_message":"","retention_label":"Reminders","next_step":"Continue practising","last_ayah":"Stopped at Ayah {n}","completion":"{n}%","snapshot_title":"Your stats","snapshot_subtitle":"Totals from your practice","change_7d":"+{n}","progress_title":"Where you are","progress_subtitle":"Current surah and recent practice","chart_range":"Chart range","days_7":"7 days","days_30":"30 days","current_surah":"Surah","current_range":"Ayahs","current_ayah":"Ayah","memorised_count":"Memorised","completed_count":"completed","learning_count":"Learning","in_progress_count":"in progress","last_activity":"Last practice","last_activity_soft":"{when}","not_started":"Not started yet","range_completion":"Portion complete","plan_completion":"Plan complete","surah_completion":"Surah complete","chart_empty_title":"No activity","chart_empty_message":"Your practice will appear here after your first session.","week_summary":"This week: {sessions} sessions · {ai_checks} AI checks · {ayahs} ayahs practised.","week_summary_empty":"No sessions this week yet.","strength_fragile":"Fragile","strength_building":"Building","strength_strong":"Strong","chart_aria":"Practice chart","chart_ayahs":"Ayahs","chart_sessions":"Sessions","chart_summary_empty":"","chart_summary":"","strengthen_title":"Needs review","strengthen_subtitle":"Ayahs to revisit","view_all":"View all","view_all_reviews":"View all reviews","weak_empty_title":"All clear","weak_empty_message":"Nothing to review right now. Keep practising.","ayah_n":"Ayah {n}","ayah_range":"{start}–{end}","activity_title":"Recent activity","activity_subtitle":"What you did lately","activity_empty_title":"No activity","activity_empty_message":"Your sessions and AI checks will appear here.","activity_filter_all":"All","activity_filter_sessions":"Sessions","activity_filter_ai":"AI checks","activity_filter_notes":"Notes","activity_filter_empty":"No activity in this filter.","open":"Open","streak":"{n}-day streak","streak_keep_going":"1-day streak — keep going.","streak_restart":"Start today to begin a new streak.","recommended_next":"Recommended next","recommended_next_start":"Start recommended session","incomplete_reminder":"Saved session waiting","todays_focus":"{detail}","just_now":"Just now","minutes_ago":"{n}m ago","hours_ago":"{n}h ago","yesterday":"Yesterday","days_ago":"{n}d ago","today_at":"{time}","yesterday_at":"Yesterday","metric_completed":"Sessions done","metric_completed_hint":"","metric_saved":"Saved","metric_saved_hint":"","metric_memorised":"Memorised","metric_memorised_hint":"","metric_completed_ayahs":"completed","metric_ai_recite":"AI checks","metric_ai_recite_hint":"","metric_notes":"Notes","metric_notes_hint":"","current_position":"Current surah","at_ayah":"At ayah {n}","progress_counts_label":"Counts","legend_memorised":"Memorised","legend_learning":"Learning","drawer_sessions_title":"Session history","drawer_sessions_empty":"No completed sessions yet.","drawer_ai_title":"AI Recite checks","drawer_ai_empty":"No AI Recite checks yet.","drawer_notes_title":"Notes and reflections","drawer_notes_empty":"No notes yet.","drawer_hifz_title":"Hifz progress","drawer_hifz_empty":"No memorisation progress yet.","drawer_close":"Close","drawer_loading":"Loading…","drawer_load_error":"Couldn’t load this list.","drawer_status_completed":"Completed","drawer_status_ended_early":"Ended early","drawer_result_strong":"Strong","drawer_result_mixed":"Mixed","drawer_result_weak":"Weak","drawer_accuracy":"{n}%","drawer_hifz_memorised":"{n} memorised","drawer_hifz_in_progress":"{n} in progress","drawer_open_workspace":"Open workspace","activity_chart_title":"Practice over time","chart_total_ayahs":"{n} ayahs","chart_total_sessions":"{n} sessions","start_session":"Start session","start_check":"Check","go_to_workspace":"Open workspace","view_all_activity":"View all activity","drawer_activity_title":"Activity log","drawer_activity_empty":"Your sessions and AI checks will appear here.","activity_type_session":"Session","activity_type_ai_check":"AI check","activity_type_note":"Note","activity_type_assessment":"Assessment","activity_type_recommendation":"Recommendation","activity_type_memorised":"Memorised","activity_outcome_saved":"Saved","activity_outcome_resumed":"Resumed","activity_outcome_assessment":"Assessment completed","activity_outcome_recommendation":"Recommendation ready","activity_outcome_memorised":"Memorised","activity_note_saved":"Note saved","cta_resume":"Resume session","cta_continue":"Continue session","return_session_label":"Your session is waiting","return_session_aria":"Return to your current memorisation session","return_session_hint":"Go back to the exact ayah and settings you left.","return_session_countdown":"Returning in {n}s…","return_session_now":"Return now","return_session_stay":"Stay here","cta_review":"Start review","cta_recommendation":"Start practice","cta_start":"Start session","msg_resume":"","msg_continue":"","msg_incomplete":"","msg_review":"","msg_recommendation":"","msg_plan":"","msg_start_from_position":"","msg_start_new":"","status_strengthen":"Review","status_review":"Review","action_review":"Review","review_now":"Review now","chart_tooltip":"{date} · {ayahs} Ayahs · {sessions} Sessions","weak_explain_phrase":"","weak_explain_ayah":"","weak_explain_plan":"","weak_explain_ai":"","weak_explain_progress":"","sync_loading":"Updating…","sync_ready":"{when}","sync_ready_now":"Ready","sync_error":"Offline","footnote":""},"admin":{"loading":"Loading…","load_error":"Couldn’t load admin dashboard.","retry":"Retry","refresh":"Refresh","eyebrow":"Super Admin","greeting":"Assalamu alaikum, {name}","dear_friend":"Admin","supporting_message":"Manage users, resolve issues, and steer the platform.","snapshot_title":"Platform overview","metric_users":"Users","metric_users_hint":"+{n} this week","metric_active":"Active (7d)","metric_sessions":"Sessions","metric_memorised":"Memorised","metric_ai":"AI checks","metric_notes":"Notes","metric_contacts":"Pending messages","metric_pending":"Pending messages","metric_pending_hint":"Contact form messages waiting for a response.","trend_vs_last_week":"{arrow} {n}% vs last week","days_range":"Date range","top_learners_title":"Top learners","top_learners_empty":"No sessions in this range yet.","top_learners_sort":"Top learners sort","top_learners_sort_sessions":"By sessions","top_learners_sort_accuracy":"By accuracy","top_learners_sessions":"{n} sessions","top_learners_memorised":"{n} memorised","export_users":"Export CSV","detail_heading":"Details — {name}","pagination_summary":"Page {page} of {pages} · {total} users","pagination_prev":"Previous","pagination_next":"Next","pagination_page":"Page","status_active_7d":"Active in the last 7 days","status_active_30d":"Active 8–30 days ago","status_inactive":"Inactive for more than 30 days or never sessioned","learners_title":"Learners","learners_subtitle":"Recent activity, progress, and current position","learners_empty":"No learners to show yet.","view_all_users":"View all users","unnamed":"Unnamed","not_started":"Not started","col_learner":"Learner","col_position":"Position","col_memorised":"Memorised","col_learning":"In progress","col_sessions":"Sessions","col_ai":"AI","col_active":"Last active","col_status":"Status","learning_title":"Learning progress","learning_subtitle":"Memorisation across the whole platform","learning_memorised":"Ayahs memorised","learning_in_progress":"Ayahs in progress","learning_with_progress":"Learners with progress","learning_assessments":"Assessments","ai_title":"AI Recite health","ai_subtitle":"Accuracy and strength across checks","ai_total":"Total checks","ai_week":"Last 7 days","ai_avg":"Accuracy","ai_empty":"No AI checks yet.","view_ai":"View checks","mix_title":"Audience mix","mix_subtitle":"Subscriptions, languages, and sign-in methods","mix_subscriptions":"Subscriptions","mix_locales":"Locales","mix_auth":"Sign-in","mix_empty":"No data yet.","sub_active":"Active","sub_trialing":"Trialing","sub_canceled":"Canceled","sub_past_due":"Past due","sub_none":"None","auth_google":"Google","auth_email":"Email","chart_title":"Platform pulse","chart_subtitle":"Platform-wide ayahs and completed sessions","chart_label":"All learners","chart_range":"Chart range","days_7":"7 days","days_30":"30 days","chart_empty":"Sessions and AI checks will appear here as learners practise.","chart_aria":"Platform sessions and AI checks chart","chart_ayahs":"Ayahs","chart_sessions":"Sessions","chart_tooltip":"{date} · {ayahs} ayahs · {sessions} sessions","week_summary":"This week: {sessions} sessions · {ai_checks} AI checks · {ayahs} ayahs · {new_users} new users.","week_summary_empty":"No platform activity this week yet.","contacts_title":"Needs attention","contacts_subtitle":"Pending contact messages","contacts_empty":"No pending messages.","view_all_contacts":"View all contacts","contact_no_subject":"No subject","resolve":"Resolve","activity_title":"Latest activity","activity_subtitle":"Sessions, AI checks, notes, and new users","activity_empty":"No recent platform activity.","view_all_activity":"Full log","activity_fallback":"Activity","activity_type_user":"Join","activity_type_session":"Session","activity_type_ai":"AI check","outcome_user_joined":"Joined","outcome_session_completed":"Completed","outcome_session_ended_early":"Ended early","outcome_note_saved":"Note saved","result_strong":"Strong","result_mixed":"Mixed","result_weak":"Weak","result_unknown":"Unknown","accuracy":"{n}%","ayah_n":"Ayah {n}","ayah_single":"Ayah {n}","ayah_range":"Ayahs {start}–{end}","just_now":"Just now","minutes_ago":"{n}m ago","hours_ago":"{n}h ago","yesterday":"Yesterday","days_ago":"{n}d ago","drawer_close":"Close","drawer_loading":"Loading…","drawer_load_error":"Couldn’t load this list.","drawer_users_title":"All users","drawer_users_empty":"No users found.","drawer_sessions_title":"Sessions","drawer_sessions_empty":"No sessions yet.","drawer_ai_title":"AI Recite checks","drawer_ai_empty":"No AI checks yet.","drawer_notes_title":"Notes","drawer_notes_empty":"No notes yet.","drawer_contacts_title":"Pending contacts","drawer_contacts_empty":"No pending contacts.","drawer_activity_title":"Activity log","drawer_activity_empty":"No activity yet.","users_search":"Search name or email","learners_hint":"Tap a learner for full progress, sessions, AI checks, and notes.","chart_ai":"AI checks","chart_total_sessions":"{n} sessions","chart_total_ai":"{n} AI checks","chart_total_ayahs":"{n} ayahs","chart_total_users":"{n} new users","chart_tooltip_ayahs":"{n} ayahs practised","chart_tooltip_users":"{n} new users","activity_filter":"Filter activity","filter_all":"All","filter_sessions":"Sessions","filter_ai":"AI","filter_joins":"Joins","filter_notes":"Notes","drawer_user_title":"Learner details","joined":"Joined {date}","user_position":"Current position","user_surahs":"Surah progress","user_surahs_empty":"No memorisation progress yet.","user_surah_stats":"{memorised} memorised · {learning} in progress","user_surah_fraction":"{practised}/{total}","user_surah_percent":"{n}%","user_surah_open":"Open practice","user_surah_expand":"Show details","user_surah_collapse":"Hide details","user_surah_memorised":"{n} memorised","user_surah_learning":"{n} in progress","user_sessions":"Recent sessions","user_sessions_empty":"No sessions yet.","user_activity":"Recent activity","user_activity_empty":"No recent activity yet.","user_activity_open":"Open","user_activity_open_practice":"Open practice","user_activity_open_ai":"Open AI check","user_activity_resume":"Resume session","user_activity_hint":"Opens memorisation in a new tab.","user_ai":"Recent AI checks","user_ai_empty":"No AI checks yet.","user_notes":"Recent notes","user_notes_empty":"No notes yet.","outcome_session_paused":"Paused","users_title":"Users","users_subtitle":"Manage learners and their progress","users_hint":"Search, open, edit, or remove any registered account.","users_count":"{n} users","users_empty":"No users match these filters.","users_empty_search":"No learners match your search","clear_filters":"Clear filters","empty_memorised":"Not started yet","empty_sessions":"No sessions yet","empty_learning":"None in progress","empty_last_active":"Never logged in","empty_ai_checks":"No checks yet","empty_accuracy":"No data yet","card_sessions":"Sessions: {n}","card_memorised":"Memorised: {n}","card_last_active":"Last active: {n}","card_view_details":"View details","card_expand":"Show more metrics","card_collapse":"Hide metrics","export_csv":"Export CSV","filters_active_count":"{n} filters active","showing_x_of_y_filtered":"Showing {shown} of {total} users (filtered)","status_active_today":"Active today","status_active_n_days_ago":"Active {n} days ago","status_never_sessioned":"Never sessioned","col_streak":"Streak","user_surahs_empty_soft":"No surahs started yet.","outcome_session_incomplete":"Incomplete","notes_written":"{n} notes written","notes_none":"No notes written yet.","view_all_notes_short":"View all","field_user_id":"User ID","copy_user_id":"Copy user ID","copied":"Copied.","delete_user_warning":"Deleting this account is permanent and cannot be undone.","delete_account":"Delete account","add_user":"Add user","create_user":"Create user","save_user":"Save changes","cancel":"Cancel","saving":"Saving…","delete":"Delete","tab_overview":"Overview","tab_edit":"Edit","field_name":"Name","field_email":"Email","field_password":"Password","field_password_optional":"New password (optional)","field_locale":"Locale","field_subscription":"Subscription","drawer_create_title":"Create user","form_error":"Couldn’t save those changes.","danger_zone":"Danger zone","delete_user":"Delete user","delete_user_help":"Permanently removes this account and their learning data.","delete_user_prompt":"Delete {name}? This cannot be undone.","delete_user_confirm":"Delete this user and all of their learning data?","delete_self_blocked":"You can’t delete your own admin account.","delete_note_confirm":"Delete this note?","delete_contact_confirm":"Delete this contact message?","console_title":"Dashboard","console_tabs":"Admin sections","tab_users":"Users","tab_inbox":"Inbox","tab_activity":"Activity","users_showing":"Showing {n} of {total}","select_all":"Select all","filter_status_all":"All subscriptions","filter_activity_all":"All activity","filter_last_active":"Last active","filter_active_today":"Today","filter_active_7d":"7 days","filter_active_30d":"30 days","filter_inactive":"Inactive","filter_inactive_30d":"Inactive (30d+)","filter_never":"Never practised","filter_sessions_gt0":"Sessions > 0","filter_progress_all":"All progress","filter_progress_has":"Has progress","filter_progress_none":"No progress","filters_active":"Filtered","filters_clear":"Clear","sort_created":"Sort: joined","sort_last_active":"Last active","sort_memorised":"Memorised","sort_sessions":"Sessions","sort_learning":"In progress","sort_accuracy":"Accuracy","sort_name":"Sort: name","sort_asc":"Asc","sort_desc":"Desc","col_accuracy":"Accuracy","col_last_ai":"Last AI check","row_actions":"Row actions","action_reset_password":"Reset password","action_reset_password_confirm":"Reset password for {email}?","action_reset_password_done":"Temporary password: {password}","action_deactivate":"Deactivate account","action_deactivate_confirm":"Deactivate {email}? Their subscription will be set to canceled.","action_send_email":"Send email","bulk_selected":"{n} selected","bulk_send_email":"Send email","bulk_message_selected":"Message selected","bulk_change_subscription":"Change subscription","bulk_export_csv":"Export selected as CSV","bulk_export_selected":"Export selected","bulk_deactivate":"Deactivate selected","bulk_deactivate_short":"Deactivate","bulk_deactivate_confirm":"Deactivate {n} selected users? Their subscription will be set to canceled.","bulk_deactivate_self_blocked":"You can’t deactivate your own admin account.","bulk_set_status":"Change subscription","bulk_delete":"Delete selected","bulk_clear":"Clear","bulk_dismiss":"Dismiss selection","bulk_delete_confirm":"Delete {n} selected users? This cannot be undone.","detail_empty":"Select a user to view their details.","more_filters":"More filters","back_to_list":"Back to users","save_ok":"Saved.","action_view_as_learner":"View as learner","filter_all_time":"All time","showing_x_of_y":"Showing {shown} of {total} users","delete_type_name":"Type \\"{name}\\" to confirm","toast_saved":"Changes saved.","toast_deleted":"User deleted.","toast_created":"User created. Temporary password: {password}","add_user_note":"Note (optional, not saved)","account_info":"Account info","field_created_at":"Joined","field_subscription_tier":"Subscription tier","field_renewal":"Renewal date","tier_free":"Free","tier_pro":"Pro","notes_total":"{n} notes","view_all_notes":"View all notes","notes_hide":"Hide notes"}}');
+module.exports = JSON.parse('{"common":{"on":"On","off":"Off","reset":"Reset","startSession":"Start Session","pause":"Pause","settings":"Settings","controls":"Controls","language":"Language","login":"Login","register":"Register","logout":"Logout","loading":"Loading...","cancel":"Cancel","save":"Save","close":"Close","yes":"Yes","no":"No","home":"Home","memorisation":"Memorisation","delete":"Delete","resume":"Resume","discard":"Discard","back":"Back","continue":"Continue","filter":"Filter","metadata":"Metadata","download":"Download","method":"Method","fontSize":"Font size","tajweed":"Tajweed","dismiss":"Dismiss","backToTop":"Back to top","skipOnboarding":"Skip tour","closeTour":"Close tour","resumeSession":"Resume Session","pauseSession":"Pause Session","resumingSession":"Resuming…","pausingSession":"Pausing…","endingSession":"Ending…","startingSession":"Starting…","dashboard":"Dashboard","retry":"Try again","tryAgain":"Try again","status":{"loadingTitle":"Loading…","loadingDesc":"Please wait a moment.","emptyTitle":"Nothing here yet","emptyDesc":"When you add something, it will show up here.","noResultsTitle":"No matches found","noResultsDesc":"Try clearing filters or searching with different words.","errorTitle":"Something went wrong","errorDesc":"Something went wrong. Please try again.","offlineTitle":"You appear to be offline.","offlineDesc":"Check your connection, then try again. We’ll retry automatically when you’re back online.","networkTitle":"You appear to be offline.","networkDesc":"We couldn’t reach Mutqin. Check your connection, then try again.","backOnline":"You’re back online.","retry":"Retry","returnHome":"Return Home","authTitle":"Sign in to continue","authDesc":"Log in to open your memorisation workspace and keep progress in sync.","unavailableTitle":"Not available right now","unavailableDesc":"This feature isn’t available at the moment. Please try again later.","bootErrorTitle":"Something went wrong","bootErrorDesc":"Something went wrong. Please try again.","clearFilters":"Clear filters","startSession":"Start a session","returnToSessions":"Return to sessions","logIn":"Log in","createFirstNote":"Write your first note"}},"auth":{"continueGoogle":"Continue with Google","or":"or","emailAddress":"Email Address","password":"Password","rememberMe":"Remember me","forgotPassword":"Forgot password?"},"nav":{"home":"Home","dashboard":"Dashboard","memorisation":"Memorisation","profile":"Profile","subscription":"Subscription","settings":"Settings"},"resume":{"kicker":"Smart Resume","title":"Pick up exactly where you left off","resumeNow":"Resume Now"},"sessionStatus":{"completed":"Session completed","active":"Active session","ready":"Session ready","progress":"{current} of {total} ayahs · {percent}% complete","left":"{eta} left","end":"End session"},"recordings":{"viewAll":"View All Recordings"},"shortcuts":{"title":"Keyboard Shortcuts","subtitle":"Work faster without leaving the memorisation view.","gotIt":"Got it","or":"or","navigation":"Navigation","playPause":"Play or pause audio","playAyah":"Play selected ayah","nextAyah":"Next ayah","previousAyah":"Previous ayah","firstAyah":"Jump to first ayah","lastAyah":"Jump to last ayah","playCurrent":"Play current ayah","saveSession":"Save current session","closePanel":"Close open panel or modal","mushafNextPage":"Next mushaf page","mushafPrevPage":"Previous mushaf page","groups":{"playback":"Playback","navigation":"Navigation","session":"Session","mushaf":"Mushaf view","general":"General"},"keys":{"space":"Space","enter":"Enter","next":"→ / J","prev":"← / K","save":"Ctrl/Cmd + S"}},"home":{"startKicker":"Start a new session","startTitle":"Choose a surah, set your range, then practise.","selectSurah":"Select surah","pickRange":"Pick range","setRepeats":"Set repeats","openControls":"Open Session Controls","controlsHint":"You can tweak audio, focus tools, and saved sessions any time.","guestKicker":"Calm Quran memorisation","guestTitle":"Memorise with a quieter, more deliberate session flow.","guestSubtitle":"Build each session around a small ayah range, steady repetition, and clear recall.","guestSupport":"Mutqin keeps the Quran central while playback, progress, and saved sessions stay quietly organised around it.","guestNote":"Login keeps your sessions, insights, and exact memorisation position in sync."},"sessionSetup":{"title":"Session Setup","subtitle":"Choose what you memorise","defaults":"Defaults","chooseSurah":"Choose a surah...","surahHint":"Pick the surah you want to work on.","noAudioPlayed":"No ayah audio played yet for this session.","to":"to","rangeHint":"Keep ranges small for focused memorisation.","reciterHint":"Changes the audio voice for the session. Word highlighting stays on for this reciter.","reciterNoWordHighlight":"Audio only for this reciter — word highlighting is unavailable.","recitersWithWordHighlight":"With word highlighting","recitersAudioOnly":"Audio only","repeatHint":"Repeat each verse {count} times before moving on.","repeatHintOne":"Repeat each verse {count} time before moving on.","repeatHintOther":"Repeat each verse {count} times before moving on.","surah":"Surah","ayahRange":"Ayah range","reciter":"Reciter","repetitions":"Repetitions","display":"Display","displaySub":"Customize how the Quran appears","readingAids":"Reading Aids","readingAidsSub":"Translations and word helpers","tajweed":"Tajweed","tajweedDesc":"Recitation color rules (Idgham, Ikhfa, Madd, etc.)","fontSize":"Font size","fontSizeDesc":"Adjust the Arabic text size for better readability","translation":"Translation","translationDesc":"English meaning of each verse","transliteration":"Transliteration","transliterationDesc":"Latin script pronunciation aid","wordByWord":"Word by word","wordByWordDesc":"English meaning under each Arabic word","wordAudio":"Word audio","wordAudioDesc":"Audio playback with word highlighting"},"homepage":{"hero":{"badge":"Quran memorisation","title":"Memorise the Quran with clear daily practice.","desc":"Listen, repeat, and check your recitation. Mutqin keeps your ayahs, progress, and next step in one place.","problem":"The problem:","problemText":"Weak ayahs, recordings, and review plans often sit in different places, so practice falls apart.","solution":"The solution:","solutionText":"Practise a short range, check what you recited, then review the ayahs that need work.","startFree":"Start free","seeFeatures":"See features"},"demo":{"title":"Recitation check","quote":"\\"Ikhfa\' needs work. Hold the nasal sound for two counts.\\"","recording":"Recording... 96% match"},"features":{"kicker":"Daily practice","title":"What you get","subtitle":"Tools for listening, repeating, checking, and reviewing.","items":{"recitationReview":{"title":"Recitation check","description":"Recite from memory while Mutqin follows along.","result":"See which words need more work.","badge":"free"},"smartMemorisation":{"title":"Guided practice","description":"Listen, follow, and repeat at your own pace.","result":"A session you can repeat each day.","badge":"pro"},"stackedMushaf":{"title":"Stacked and Mushaf views","description":"Use ayah cards or a page-style layout while you practise.","result":"Pick the view that suits you.","badge":"free"},"transitionTraining":{"title":"Memorisation plans","description":"Get a clear next step based on how your session went.","result":"Know what to practise next.","badge":"pro"},"recordingLibrary":{"title":"Word focus","description":"See which words still need attention.","result":"Return to the hard parts first.","badge":"freeLimited"},"reviewAnalytics":{"title":"Review scheduling","description":"Come back to memorised ayahs before they fade.","result":"Keep earlier work strong.","badge":"pro"}}},"steps":{"kicker":"How it works","title":"Three steps","subtitle":"Practise, notice weak spots, then come back to them.","items":{"record":{"title":"Practise","description":"Listen, follow, and repeat your chosen ayahs.","microcopy":"Short sessions are enough"},"review":{"title":"Notice","description":"See which words need more attention after you recite.","microcopy":"Clear feedback"},"repeat":{"title":"Return","description":"Follow the next step so memorised ayahs stay strong.","microcopy":"Review before it fades"}}},"testimonials":{"kicker":"Students and teachers","title":"What people say","items":{"abdullah":{"quote":"Mutqin helped me fix my ض after years of struggle. Alhamdulillah.","proof":"Letter practice","author":"Abdullah Khan","role":"12 juz memorised","initials":"AK"},"fatima":{"quote":"Daily review keeps my hifdh from slipping. I use it every day.","proof":"Daily review","author":"Fatima El-Sayed","role":"Hafidha in progress","initials":"FE"},"hisham":{"quote":"I use Mutqin to see where my students need more work.","proof":"Teacher use","author":"Ustadh Hisham","role":"Tajweed teacher","initials":"UH"}}},"pricing":{"kicker":"Pricing","title":"Simple pricing","subtitle":"Start free. Upgrade when you want more feedback and history.","starter":"Starter","premium":"Premium","monthly":"Monthly","yearly":"Yearly","perMonth":"/month","premiumYearly":"or £17.99 yearly","proYearly":"or £49.99 yearly","featureColumn":"Feature","freeTrial":"7-DAY FREE TRIAL","accountNote":"You can start Premium or Pro checkout without an account. After paying, create an account or sign in with the same email so Mutqin can link your plan."},"faq":{"kicker":"Common questions","title":"FAQ","subtitle":"How Mutqin helps with recitation, memorisation, and review.","items":{"whatIsMutqin":{"question":"What is Mutqin?","answer":"Mutqin is a Quran memorisation app. You practise, check your recitation, and keep track of what to review next."},"howMemorisation":{"question":"How does memorisation work?","answer":"Choose a surah and ayah range, practise in short blocks, and use tools like blur, chaining, and saved sessions to build recall."},"howAiFeedback":{"question":"How does feedback work?","answer":"After you practise, Mutqin highlights words that may be weak or missed, so you know what to repeat next."},"whatIsPro":{"question":"What is Pro?","answer":"Pro includes recitation review, memorisation checks, fuller analytics, unlimited saved sessions, and planning tools."},"howRevision":{"question":"How does revision work?","answer":"Mutqin tracks weak ayahs, recent practice, and due reviews so you can revisit what is most likely to slip."}}},"contact":{"title":"Contact us","subtitle":"Ask about billing, practice, or feedback.","email":"Email","subject":"Subject","message":"Message","extendedSubtitle":"Ask about billing, practice, or feedback. We will reply with a clear answer.","sending":"Sending...","sendMessage":"Send message","errors":{"name":"Please enter your name.","email":"Please enter your email address.","emailInvalid":"Please enter a valid email address.","subject":"Please enter a subject.","message":"Please enter a message."},"success":"Your message has been sent.","errorFields":"Please check the highlighted fields and try again.","errorSend":"Unable to send message. Please try again."},"cta":{"title":"Know what to practise next.","subtitle":"Record a verse, review the weak spots, and keep the next session focused.","button":"Create free account","note":"No card needed for Free."},"footer":{"product":"Product","features":"Features","pricing":"Pricing","resources":"Resources","company":"Company","contact":"Contact","connect":"Connect","privacy":"Privacy","terms":"Terms","tagline":"2026 Mutqin · \\"And recite the Quran with measured recitation.\\"","aboutUs":"About","ourMission":"Our mission"},"badge":{"free":"Free","pro":"Pro","freeLimited":"Free limited"},"floatingBadges":{"tajweedScore":"Tajweed score: +27%","weakVerses":"Weak verses queued for review","dailyMinutes":"15 min/day practice"},"planFeatures":{"sessionSetup":"Basic session setup","savedSessions3":"3 saved sessions","savedSessions5":"5 saved sessions","savedSessionsUnlimited":"Unlimited saved sessions","basicAnalytics":"Basic analytics","focusMode":"Focus mode","blurringMethod":"Blur method","chainingMethod":"Chaining method","anchorMode":"Anchor mode","manualSelfAssessment":"Manual self-assessment recording","manualSelfAssessmentPlus":"Manual self-assessment and self recording","hifzPlan":"Custom Hifz plan","spacedRetention":"Spaced session retention","adaptiveRevision":"Adaptive revision scheduling","progressTracking":"Progress tracking","allTechniques":"All memorisation techniques","aiRecitation":"Recitation check","aiMemorisationChecker":"Memorisation check","advancedAnalysis":"Advanced analysis","offlineDownloads":"Offline listening downloads","voiceHifzBuilder":"Voice Hifz plan builder"},"comparison":{"sessionSetup":"Session setup and ayah range tools","savedSessions":"Saved sessions","layouts":"Stacked and Mushaf layouts","focusMode":"Focus mode","blurMethod":"Blur memorisation method","chainingPractice":"Chaining and transition practice","anchorMode":"Anchor mode","manualRecording":"Manual self-assessment recording","aiRecitationReview":"Recitation check","aiMemorisationChecker":"Memorisation check","hifzPlan":"Custom Hifz plan","spacedRetention":"Spaced session retention","voiceHifzBuilder":"Voice Hifz plan builder","adaptiveRevision":"Adaptive revision scheduling","progressTracking":"Progress tracking","advancedAnalytics":"Review analytics","offlineDownloads":"Offline audio downloads","unlimited":"Unlimited"},"a_short_loop_you_can_repeat_every_day_recite_diagn":"Practise, notice weak spots, then review what needs work.","start_free_upgrade_only_when_you_need_deeper_recit":"Start free. Upgrade when you want more feedback and history.","free":"Free","for_trying_the_workflow":"To try Mutqin","start_free":"Start free","most_useful":"Most useful","teacher_ready":"For teachers","pro":"Pro","feature_comparison":"Feature comparison","everything_included_in_each_subscription_at_a_glan":"What each plan includes.","a_quick_overview_of_how_mutqin_supports_recitation":"How Mutqin helps with recitation, memorisation, and review.","name":"Name","record_a_verse_review_the_highlighted_issues_and_k":"Record a verse, review the weak spots, and keep the next session focused.","focused_quran_memorisation_tools_for_recitation_ch":"Quran memorisation tools for practice, recitation checks, and review.","roadmap":"Roadmap","tajweed_guide":"Tajweed guide","memorization_tips":"Memorisation tips","help_center":"Help centre","all_rights_reserved":"© All rights reserved"},"memorisation":{"labels":{"ayah":"Ayah {ayah}","ayahs":"Ayahs {start}–{end}","surahAyah":"{surah} · Ayah {ayah}","surahAyahs":"{surah} · Ayahs {start}–{end}","continueToAyah":"Continue with Ayah {ayah}","continueToAyahs":"Continue with Ayahs {start}–{end}","repeatAyah":"Repeat Ayah {ayah}","repeatAyahs":"Repeat Ayahs {start}–{end}","completedSurahAyah":"You completed {surah}, Ayah {ayah}.","completedSurahAyahs":"You completed {surah}, Ayahs {start}–{end}.","checkAyahsAgain":"Check {range} again.","ayahCountOne":"{count} ayah","ayahCountOther":"{count} ayahs","repetitionCountOne":"{count} repetition","repetitionCountOther":"{count} repetitions","attemptCountOne":"{count} attempt","attemptCountOther":"{count} attempts"},"workspaceEmpty":{"kicker":"Ready to begin","title":"Choose a surah and range","desc":"Open session setup to pick a surah and ayah range. Your verses appear here once you start.","startNewSession":"Start new session","continuePreviousSession":"Continue from previous session"},"mushafLoad":{"errorTitle":"Mushaf page couldn’t load","errorDesc":"The page view didn’t load. Try again, or switch to stacked ayahs.","retry":"Try again","switchStacked":"Switch to stacked view"},"verseText":{"unavailableTitle":"Ayah text unavailable","unavailableDesc":"We couldn’t load this ayah’s Arabic text. Refresh the session or try again."},"analyticsEmpty":{"title":"No insights yet","desc":"Save a session and practise a little — your progress cards will appear here.","modalErrorTitle":"Analytics unavailable","modalErrorDesc":"We couldn’t prepare this session overview. Close and try again from a saved session.","modalEmptyTitle":"No analytics for this session","modalEmptyDesc":"Play ayah audio or finish a short practice, then open analytics again."},"postSessionChoice":{"title":"What would you like to practise next?","desc":"Return to your previous session or create a session of your own.","repeatRecommended":"Return to previous session","repeatRecommendedDesc":"Practise the same range and settings from your previous session again.","createCustom":"Custom session","createCustomDesc":"Choose your own sūrah, āyah range and practice settings.","startCustomSession":"Start custom session"},"welcomeBack":{"kicker":"Good to see you again","greetingArabic":"ٱلسَّلَامُ عَلَيْكُمْ","greetingTranslation":"Peace be upon you","freshTitle":"Ready when you are","freshTitleNamed":"Welcome back, {name}","freshSubtitle":"Continue where you left off, or begin something new.","freshReminderArabic":"رَبِّ زِدْنِى عِلْمًا","freshReminderTranslation":"My Lord, increase me in knowledge.","freshReminderSource":"Qur\'an 20:114","freshIntention":"Even a few ayahs, done with sincerity, are beloved to Allah.","reminders":{"1":{"translation":"My Lord, increase me in knowledge.","source":"Qur\'an 20:114","intention":"Even a few ayahs, done with sincerity, are beloved to Allah."},"2":{"translation":"As for those who strive for Us, We shall guide them to Our paths.","source":"Qur\'an 29:69","intention":"Returning with steadiness is part of the path — one ayah at a time."},"3":{"translation":"So remember Me; I will remember you.","source":"Qur\'an 2:152","intention":"A quiet return to the Qur’an is already remembrance."},"4":{"translation":"Indeed, with hardship comes ease.","source":"Qur\'an 94:6","intention":"If today feels heavy, keep the session small and sincere."},"5":{"translation":"And We have certainly made the Qur’an easy for remembrance.","source":"Qur\'an 54:17","intention":"Calm repetition is enough for today."},"6":{"translation":"And be patient, for indeed Allah does not allow the reward of those who do good to be lost.","source":"Qur\'an 11:115","intention":"Showing up again matters more than finishing quickly."},"7":{"translation":"Our Lord, give us good in this world and good in the Hereafter.","source":"Qur\'an 2:201","intention":"Ask Allah for benefit in what you memorise, then begin gently."},"8":{"translation":"And whoever puts their trust in Allah — He is sufficient for them.","source":"Qur\'an 65:3","intention":"Begin with trust, then take the next ayah with care."}},"resumeTitle":"Continue with {chapter}","resumeTitleNamed":"{chapter}, {name}","resumeGeneric":"Welcome back","resumeGenericNamed":"Welcome back, {name}","resumeSubtitle":"Your last session is waiting — may Allah make every ayah easy.","resumeSubtitleAtPlace":"You left off at {place}. May Allah make your return light and blessed.","resumeSubtitleDetail":"You left off at {detail}. May Allah make your return light and blessed.","resumePlaceAyah":"{chapter}, ayah {number}","resumePlaceBeginning":"{chapter}, from the start","stoppedAt":"Left off at","stoppedAtAyah":"Ayah {number}","stoppedAtBeginning":"Start of the surah","lastSaved":"Last saved","resumeReminderArabic":"وَٱلَّذِينَ جَـٰهَدُوا۟ فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا","resumeReminderTranslation":"As for those who strive for Us, We shall guide them to Our paths.","resumeReminderSource":"Qur\'an 29:69","resumeIntention":"Returning with steadiness is part of the path — one ayah at a time.","reminderLabel":"A word of remembrance","startNewSession":"Start new session","continuePreviousSession":"Continue this session","continueSessionShort":"Continue","hint":"Continue where you left off, or begin something new.","closeLabel":"Close"},"sessionExit":{"kicker":"Session paused","startNewSession":"Start new session","repeatSession":"Repeat session","continueSession":"Continue this session","saveSession":"Save this session","confirmTitle":"End this session?","confirmTitleComplete":"End this session?","confirmTitleEarly":"Finish for now?","confirmDescription":"This will end your current practice. Progress already made will be saved and the session will be marked complete.","confirmDescriptionComplete":"This will end your current practice. Progress already made will be saved and the session will be marked complete.","confirmDescriptionEarly":"This will end your current practice. Progress already made will be saved, the session will remain incomplete, and you can continue it later.","confirmContext":"{surah} · {range}","confirmEnd":"End session","confirmEndComplete":"End session","confirmEndEarly":"End session","confirmContinue":"Keep practising","keepPractising":"Keep practising","repetitionsProgress":"{completed} of {total} repetitions completed","repetitionsProgressOne":"{completed} of {total} repetition completed","repetitionsProgressOther":"{completed} of {total} repetitions completed","ayahProgress":"On ayah {current} of {total} in this range","positionProgress":"Stopped at ayah {ayah}"},"sessionOverview":{"kicker":"Session Overview"},"practiceTools":{"beginner":"Beginner Tools","beginnerDesc":"Simple options for reading, listening, and repeating ayahs.","advanced":"Advanced Tools","advancedDesc":"Techniques for linking ayahs together and remembering key words."},"activePracticeSetup":{"title":"Active practice setup","openTools":"Practice tools","showLess":"Show less","moreCount":"+{count} more","emptyOptional":"No optional tools selected — listening and repetition only.","recommendedLabel":"Recommended for this session","recommendedReasonDefault":"Recommended because this helps the areas that need care.","recommendedReasonWeak":"Recommended because these words needed more care in recent checks.","repetitions":"Repetitions","repetitionsValue":"{count} repetitions","playbackSpeed":"Playback speed","visibility":"Text visibility","weakFocus":"Weak-area focus","weakFocusShort":"Weak areas","fullRange":"Full-range revision","fullRangeShort":"Full range","mistakeHandling":"Mistake handling","mistakePause":"Pause on mistake","mistakePauseShort":"Pause","mistakeContinue":"Continue and review","mistakeContinueShort":"Continue","autoFollow":"Auto-follow","mistakeSound":"Mistake sound","pausedShort":"Paused","states":{"available":"Available","selected":"Selected","active_now":"Active now","paused":"Paused","completed":"Completed","recommended":"Recommended"},"explanations":{"talqin":"Listen and repeat is active. Play the ayah, then recite it yourself.","focus":"One ayah at a time is active. The next ayah unlocks after you finish this one.","blur":"Gradual hiding is active. More words hide after each successful repetition.","chaining":"Join ayat is active. Neighbouring ayahs are linked so the passage flows.","linking":"Ayah pairs are active. Practise each ayah, then join it with the next.","cumulative":"Growing the passage is active. Each step adds one more ayah.","anchor":"Memory-word highlighting is active. Key words stay marked as recall hooks.","weak_focus":"Weak-area focus is active. Practice stays on the words that need care.","full_range":"Full-range revision is active. You will revisit the whole selected range.","auto_follow":"Auto-follow is active. The current line stays near eye level.","auto_follow_paused":"Auto-follow paused because you scrolled manually.","mistake_pause":"Pause on mistake is active. The check will pause after a confirmed mistake.","mistake_continue":"Continue and review is active. Mistakes are noted without stopping you.","mistake_sound":"Mistake sound is on. A soft cue plays when a mistake is confirmed.","repetitions":"You will repeat each step the set number of times.","playback_speed":"Playback speed is set for calm, clear listening.","visibility":"Gradual hiding is shaping how much text stays visible."},"toasts":{"visibility":"Text reduced to {value} visibility.","nextRepetition":"Moving to the next repetition.","weakEmphasis":"Weak-word emphasis is now active.","autoFollowPaused":"Auto-follow paused because you scrolled manually.","autoFollowResumed":"Auto-follow is on again.","restored":"Restored your previous practice setup.","techniqueOn":"{label} is now active.","techniqueOff":"{label} turned off."},"tooltips":{"repetitions":"How many times each step is repeated.","playbackSpeed":"How quickly the reciter plays.","visibility":"How much of the text stays visible while you practise.","weakFocus":"Practise only the weaker words and phrases first.","fullRange":"Revise the whole selected ayah range.","mistakeHandling":"What happens when a mistake is confirmed during an AI check.","autoFollow":"Keeps the current recitation line near eye level.","mistakeSound":"Soft sound when a mistake is confirmed.","talqin":"Listen to the ayah, then repeat it yourself.","focus":"Stay with one ayah before moving on.","blur":"Gradually hide words to strengthen recall.","chaining":"Join neighbouring ayahs into a flowing sequence.","anchor":"Highlight memory words as recall hooks.","weak_area_focus":"Focus practice on weaker areas.","full_range_revision":"Review the full session range."},"confirm":{"title":"Your session will use","range":"Selected range","reciter":"Reciter","repetitions":"Repetition count","playbackSpeed":"Playback speed","technique":"Memorisation technique","techniqueNone":"Standard listening","visibility":"Text visibility","visibilityFull":"Full text visible","aiBehaviour":"AI-check behaviour","mistakeFeedback":"Mistake feedback","mistakeSoundOn":"Soft sound on","mistakeSoundOff":"Sound off","autoFollow":"Auto-follow","primary":"Start with these settings","secondary":"Adjust tools"}},"a11y":{"sessionOverview":"Session overview","endSession":"End session","openReadingOptions":"Open reading options","sessionMetadata":"Session metadata","memorisationWorkspace":"Memorisation workspace","sessionSetup":"Session setup","mushafTools":"Mushaf tools","chooseMushafFont":"Choose Mushaf text style","decreaseFontSize":"Decrease font size","increaseFontSize":"Increase font size","sessionControls":"Session controls","openSessionControls":"Open session controls","playActiveAyah":"Play active ayah","pauseActiveAyah":"Pause active ayah","selectAyahFirst":"Select an ayah first","aiMemorisationResult":"Memorisation check result","recommendedNextStep":"Recommended next step","toggleTajweed":"Toggle Tajweed colouring","startAiMemory":"Start AI memorisation check","stopAiMemory":"Stop AI memorisation check","startAiRecite":"Start AI recitation check","stopAiRecite":"Stop AI recitation check","aiReciteActive":"AI recitation check is active","openAiRecite":"Open AI recitation check for this ayah","previousMushafPage":"Previous mushaf page","nextMushafPage":"Next mushaf page","bismillah":"Bismillah","playAyahAudio":"Play ayah audio","pauseAyahAudio":"Pause ayah audio","openAyah":"Open ayah {number}","openActiveAyah":"Open ayah {number}, active ayah","playWordAudio":"Play word {index} audio for ayah {number}","closePanel":"Close panel","controlsTabs":"Controls tabs","practicePresets":"Practice presets","savedSessions":"Saved sessions","sessionInsights":"Session insights","changeQuranFont":"Change Quran font","changeQuranicFont":"Change Quranic font","showTranslation":"Show or hide the English translation","showTransliteration":"Show or hide transliteration","showTajweedText":"Use connected Tajweed text from the Quran API","useFocusMode":"Use focus mode","useBlurMode":"Use blur mode","useTalqinMode":"Use talqin mode","useChaining":"Use chaining","useAnchorMode":"Use anchor mode","hideAyahRecite":"Hide the ayah and recite from memory","openAiMemoryAyah":"Open AI memorisation checker for this ayah","closeSelfCheck":"Close self-check","deleteRecording":"Delete this recording","toggleTajweedHighlights":"Toggle Tajweed highlights","stopManualRecording":"Stop manual recording","startManualRecording":"Start manual recording","manualRecording":"Manual recording","resetAyahReview":"Reset displayed ayah review","pauseAyah":"Pause ayah","playAyahOnce":"Play ayah once","stopAiRecitationCheck":"Stop AI recitation check","workspaceLoading":"Loading memorisation workspace…","workspacePreparing":"Preparing your session tools.","workspaceLoadFailed":"Memorisation workspace failed to load","closeHelpLearning":"Close help and learning","helpTopics":"Help topics","closeConfirmDialog":"Close confirmation dialog","closeRenameDialog":"Close rename recording dialog","currentSessionAnalytics":"Current session analytics","detailedAnalytics":"Detailed analytics","closeAdvancedMetrics":"Close advanced metrics","blurEverything":"Blur everything","peekAyah":"Peek ayah","playMemorisationCheck":"Play memorisation check","resetMemorisationReview":"Reset memorisation review","closeMemorisationReview":"Close memorisation review","liveMemorisationCheck":"Live memorisation word check","aiMemorisationTools":"AI memorisation tools","ayahTools":"Ayah tools","loginShell":"Login","setupTab":"Session setup","tajweedLabel":"Tajweed","enableWordAudio":"Enable audio for individual word chips","guestAuthShell":"Login","ayahNumberLabel":"Ayah {number}","playRecording":"Play recording","pauseRecording":"Pause recording","replayRecording":"Replay recording","loadingRecording":"Loading recording"},"onboardingLabel":"Onboarding","player":{"previous":"Previous","next":"Next","previousAyah":"Previous ayah","nextAyah":"Next ayah","playAudio":"Play audio","pauseAudio":"Pause audio","playPause":"Play/Pause","remaining":"{eta} remaining","audioPlayer":"Audio player","audioProgress":"Audio progress","miniPlayer":"Mini player","fullPlayer":"Full player","closePlayer":"Minimize player","switchMini":"Switch to mini player","switchFull":"Switch to full player","closeAudioPlayer":"Minimize audio player","restorePlayer":"Show audio player","quranFallback":"Quran","tapToPlay":"Tap to play"},"sync":{"badge":{"syncing":"Syncing…","retrying":"Retrying sync…","synced":"Synced","failed":"Sync failed","saved":"Saved locally"},"status":{"syncing":"Saving your progress to the cloud…","retrying":"Cloud sync failed. Retrying in the background…","synced":"Progress synced to the cloud.","failed":"Could not sync progress. Your work is saved on this device and will retry automatically."}},"loading":{"reciterRefresh":"Loading verses for the new reciter…"},"offlineDownload":{"buttonHint":"Download ayah audio for offline listening","success":"Ayah {number} audio downloaded. Open your device Downloads folder to find the MP3.","hint":"Tip: download ayahs while online, then play them from your device anytime without using mobile data.","failed":"Download did not start. Check your connection, then tap download again.","unavailable":"Audio is not available for this ayah yet. Try another reciter or refresh the session."},"ayahNotes":{"buttonHint":"Notes & reflections for this ayah","title":"Notes & Reflections","subtitle":"Private to you — only you can see these notes.","privacyChip":"Private","contextBadge":"{surah} · Ayah {ayah}","surahFallback":"Surah {number}","composeLabel":"New reflection","editingLabel":"Editing note","titleLabel":"Title (optional)","titlePlaceholder":"A short label for this reflection","bodyLabel":"Reflection","bodyPlaceholder":"Write your thoughts, reminders, or lessons from this ayah…","addNote":"Add note","submitNote":"Submit note","saveChanges":"Save changes","yourNotes":"Your notes","expand":"Expand","collapse":"Collapse","expandNotes":"Expand your notes","collapseNotes":"Collapse your notes","bodyLimitReached":"Reflections are limited to 2,000 characters. Shorten your note to save it.","bodyMustShorten":"This note is longer than 2,000 characters. Shorten it before saving your changes.","untitled":"Untitled note","emptyTitle":"No notes yet","empty":"Write a reflection above and it will appear here for this ayah.","loading":"Loading your notes…","edit":"Edit","editingBadge":"Editing","delete":"Delete","deleteConfirmTitle":"Delete this note?","deleteConfirm":"This will permanently remove this private reflection from this ayah. This cannot be undone.","loadFailed":"Could not load your notes. Please try again.","saveFailed":"Could not save this note. Please try again.","deleteFailed":"Could not delete this note. Please try again.","savedSuccess":"Note saved.","updatedSuccess":"Note updated.","deletedSuccess":"Note deleted."},"confirmModals":{"defaultTitle":"Confirm action","confirm":"Confirm","cancel":"Cancel","closeDialog":"Close confirmation dialog","keep":"Keep","delete":"Delete","discard":"Discard","remove":"Remove","reset":"Reset","saveSession":{"title":"Save this session?","message":"Would you like to save this session so you can return to it later?","confirm":"Save session","cancel":"Don\'t save"},"deleteSession":{"title":"Delete saved session?","message":"This will permanently remove \\"{label}\\" and its export snapshot from this device.","messageFallback":"This will permanently remove this session and its export snapshot from this device.","confirm":"Delete session","cancel":"Keep session"},"deleteSessions":{"title":"Delete selected sessions?","message":"This will permanently remove {count} saved sessions from this device.","confirm":"Delete selected"},"deleteRecording":{"title":"Delete recording?","titleReciteCheck":"Delete Recite Check?","message":"This removes the recording for ayah {number} from the recording library.","messageReciteCheck":"This removes the Recite Check for ayah {number} from the recording library.","messageFallback":"This item will be removed from the recording library.","confirm":"Delete","cancel":"Keep"},"deleteAyahRecordings":{"title":"Delete all recordings for this ayah?","message":"This permanently removes {count} recordings for ayah {number} from the library.","messageOne":"This permanently removes {count} recording for ayah {number} from the library.","messageOther":"This permanently removes {count} recordings for ayah {number} from the library.","confirm":"Delete all","cancel":"Keep","done":"Deleted {count} recordings for ayah {number}.","doneOne":"Deleted {count} recording for ayah {number}.","doneOther":"Deleted {count} recordings for ayah {number}."},"deleteReciteCheck":{"title":"Delete Recite Check?","message":"This removes the current Recite Check result. Saved recordings are not affected unless this result was already saved."},"discardContinue":{"title":"Discard saved session?","message":"This removes the current continue-where-you-left-off snapshot from this device."},"removeOffline":{"title":"Remove offline surah?","message":"This deletes the saved verses from this device."},"resetControls":{"title":"Reset Session Controls?","message":"This will reset all session settings to defaults. Your progress will not be lost."}},"renameRecording":{"badge":"Recordings library","title":"Rename recording","label":"Recording name","placeholder":"Morning self-check","saveName":"Save name","closeDialog":"Close rename recording dialog","nameRequired":"Enter a recording name."},"workspaceProgress":{"kicker":"Progress","sessionProgress":"Session progress","planProgress":"Plan progress","complete":"Complete","left":"{count} left","covered":"Covered","remaining":"Remaining","chooseRange":"Choose a range","ready":"Ready","detailSession":"{covered} of {total} ayahs covered in this range.","detailEmpty":"Start a session to see live memorisation progress here.","detailPlan":"{completed} of {total} ayahs completed in the current plan.","forecast":"Forecast","daysActive":"Days active","pending":"Pending","remainingAyahs":"{count} ayahs","remainingAyahsOne":"{count} ayah","remainingAyahsOther":"{count} ayahs","readyToComplete":"Ready to complete","daysRemaining":"Days Remaining","nextReview":"Next review","afterNewAyahs":"After today\'s new ayahs"},"talqinMode":{"title":"Listen and repeat","subtitle":"Listen to each section, then repeat it","description":"Listen to each section, then repeat it","bestFor":"Best for listen-and-repeat practice.","hint":"Uses the longer of your delay or a brief verse-length pause."},"plannerUi":{"todayMemorise":"Today: Memorise your ayahs","guideStepByStep":"We will guide today\'s session step by step.","retentionActive":"Retention system active","lowConfidence":"Low","confidenceSuffix":"{level} confidence","noAyahsScheduled":"No ayahs scheduled yet","nextReviewNote":"Next review {date}. {reason}","targetKicker":"Target","todayTarget":"Today\'s target","reviewLoad":"Review load","confidence":"Confidence","tomorrow":"Tomorrow","nextSession":"Next session","revisionOnlyHint":"Revision only until the next ayahs are due.","listenFollowTitle":"Listen carefully and follow along.","listenFollowBodyStart":"Mutqin will start the timer, audio, and ayah highlighting together.","listenFollowBodyDuring":"Watch the highlighted words and keep a steady rhythm before the next ayah.","tryRecitingTitle":"Try reciting without looking.","tryRecitingBody":"Say the ayah first from memory, then check only what you need.","continueNextTitle":"Great job. Continue to the next ayah.","continueNextBodyWarm":"Refresh what is due today, then move forward while the memory is still warm.","continueNextBodySteady":"Stay calm, keep the pace light, and move on when the current ayah feels steady.","reviewThisAyah":"Review this ayah, then continue.","reciteFromMemory":"Review Session, then reveal to confirm.","chooseRangeToBegin":"Choose a surah and ayah range to begin.","startToBuildQueue":"Start the session to build your memorisation queue.","listenCalmly":"Listen to the active ayah and follow calmly.","pressPlayThenRecite":"Press play, then recite and repeat at your pace."},"aiCheck":{"sessionRecite":"Session AI Recite","ayahRecite":"Ayah AI Recite","aiRecite":"AI Recite","memorisationCheckerTitle":"AI Memorisation Checker · {surah} · {target}","memorisationCheckerAyah":"AI Memorisation Checker · Ayah {number}","currentAyah":"Current ayah","wordsRecognized":"{checked} of {total} words recognized","startWhenMicActive":"Start reciting when the microphone is active","retryWhenMicReady":"Check the message below, then retry when your microphone is ready.","micStoppedUnexpectedly":"The microphone stopped unexpectedly.","micBlocked":"Microphone access was blocked. Allow microphone permission, then try again.","noArabicWords":"No clear Arabic words were detected. Record again closer to the microphone.","preparingMic":"Preparing microphone…","noWordMistake":"AI did not detect a word-level mistake. Still verify the ayah yourself before saving.","wordOrderIssue":"AI detected {count} word order issue(s). Tap any false highlight to mark it correct and update the results.","possibleIssues":"AI detected {count} possible issue(s). Tap any amber or red word that AI got wrong to turn it green and update the analysis.","markAsAiMistake":"Mark as AI mistake.","aiMemorisation":"AI memorisation","aiRecitation":"AI recitation","recordingUnsupported":"Recording is not supported in this browser.","chooseAyahFirst":"Choose an ayah before starting Recite Check.","noAudioCaptured":"No audio was captured.","checkFailed":"The memorisation check could not be completed.","recitationCheckFailed":"The recitation check could not be completed.","checkingRecitation":"Checking your recitation…","speechRecognitionFailed":"Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted.","stepLabel":"Step {step} of {total}","stepPrepare":"Prepare to recite","stepListen":"Listening","stepReview":"Review your results","stepReviewAction":"Check the word colours, then save your attempt or try again.","stepRecitePrepare":"Tap Start Reciting when you are ready.","stepReciteReviewAction":"Review the feedback, then save your attempt or try again.","tryAgain":"Try again","continueToPlan":"Continue to plan","matchLabel":"Match","matchPercentAria":"Match {percent} percent","colourMeterAria":"Word colour breakdown","guidanceFreeFlow":"Listening with you. Take your time — finish the whole passage, then tap Stop when you are done.","guidanceHiddenReveal":"Listening now. Recite the highlighted word to continue.","guidanceFixWord":"Mistake at {word}. Try that word again.","wordsToRevisit":"Revisit","colourCorrect":"Correct","colourClose":"Close","colourIncorrect":"Incorrect","colourSkipped":"Skipped","colourWaiting":"Waiting","colourCorrectHint":"Words heard clearly.","colourCloseHint":"Near misses to polish.","colourIncorrectHint":"Words said incorrectly.","colourSkippedHint":"Words not recited.","colourWaitingHint":"Not evaluated yet."},"analyticsHeatmap":{"confidence":"Confidence: {value}%","accuracy":"Accuracy: {value}%","mistakes":"Mistakes: {count}","tajweedIssues":"Tajweed Issues: {count}","attempts":"{count} attempts","attemptsOne":"{count} attempt","attemptsOther":"{count} attempts","priority":"Priority: {count} ayah below 60% confidence","priorityOther":"Priority: {count} ayahs below 60% confidence","ayahActivityChart":"Ayah activity chart","nextReviewHint":"Next review: {label} · {confidence}","ayahLeftToComplete":"{count} ayah left to complete the range","ayahLeftToCompleteOther":"{count} ayahs left to complete the range"},"calligraphy":{"onboarding":"","selfCheck":"","recordingsLibrary":"","sessionOverview":""},"saveAttemptConfirm":{"aiRecite":"Your AI recitation attempt has been saved.","selfCheck":"Your recording for Ayah {ayahNumber} has been saved."},"view":{"stacked":"Stacked","mushaf":"Mushaf"},"actions":{"newSession":"New Session","repeatRange":"Repeat Range","saveSession":"Save This Session","resumeSession":"Resume Previous Played Session?","retentionCheck":"Retention check"},"quiz":{"title":"Retention check","builderSubtitle":"Check what you remember","setupHint":"Choose a method and how many questions, then start.","focus":"Focus","questionCount":"Questions","launch":"Start check","contextPlan":"{mode} plan","contextChain":"Chain review","contextFocused":"Focused review","progress":"{current} / {total}","ayahLabel":"Ayah {number}","types":{"mixed":"Mixed","flashcard":"Flashcard","mcq":"Multiple choice","audio_mcq":"Audio choose","blank":"Fill blank","question":"Question"},"summaryTitle":"Session complete","score":"Score","accuracy":"Accuracy","avgGrade":"Avg grade","time":"Time","planProgress":"Plan progress","bestSkill":"Best skill","accuracySuffix":"{value}% accuracy","whatNext":"What to do next","engineSync":"Progress saved","mistakes":"Mistakes","close":"Close","startAgain":"Start again","stop":"Stop","reveal":"Reveal","next":"Next","again":"Again","hard":"Hard","good":"Good","easy":"Easy","flashcardPrompt":"Recall the next ayah","showAnswer":"Show answer","gradeYourself":"Grade yourself","mcqPrompt":"Pick the matching ayah","audioPrompt":"Listen, then choose","replayAudio":"Replay audio","blankPrompt":"Fill the missing word","blankPlaceholder":"Type missing word","mistakeAyah":"Ayah {number}","skills":{"adaptive":"Adaptive","recite_text":"Recite","audio_recall":"Audio","meaning":"Meaning","none":"None"},"summary":{"strong":"Strong recall. Keep the same pace for the next session.","moderate":"A few ayahs need another pass. Review the weak ones first.","weak":"Recall is still fragile. Repeat the range, then review again.","enginePlan":"Your grades are saved for the next planner session.","engineChain":"Your grades keep chain review aligned with weak links.","engineDefault":"Your grades feed the next review cycle."}},"sessionComplete":{"title":"Session Complete"},"sessionEnded":{"title":"Session Ended"},"meta":{"graceKicker":"By The Grace Of Allah","steadinessKicker":"With Steadiness","nextKicker":"For The Next Step","completedTitle":"This range was completed.","forwardTitle":"This range moved forward.","studiedTitle":"This is how you studied.","advanceTitle":"Advance or reinforce.","continueTitle":"Continue or begin again.","previousSession":"Previous session"},"summary":{"default":"You can start a new range, save this one, or repeat it now.","completedAll":"You completed all {count} ayahs in this range.","completedRangeDetail":"You covered {covered} of {total} ayahs in {duration}.","endedPartial":"You reached ayah {ayah} and completed {percent}% of this session.","endedProgress":"You covered {covered} of {total} ayahs before ending.","nextAdvance":"Start a new range when this one feels stable.","nextRepeat":"Repeat this range now for a cleaner, steadier pass.","nextReviewWeak":"Review any ayah that still felt weak before moving on.","nextContinue":"Repeat this range now or come back later from the same stopping point.","nextReduceAids":"Reduce reading aids on the next pass if recall already felt comfortable."},"reading":{"translation":"Translation","transliteration":"Transliteration","wordByWord":"Word by word","wordAudio":"Word audio","tajweed":"Tajweed","controls":"Controls","fullScreen":"Full Screen","font":"Font","quranicFont":"Quranic Font","selectLayout":"Select a Layout","theme":"Theme","border":"Border","aiRecite":"AI Recite","aiMemory":"AI Recite"},"badges":{"new":"New","due":"Due","weak":"Needs Review","steady":"Steady","active":"Active Ayah"},"stats":{"progress":"Progress","duration":"Duration","repeats":"Repeats","reciter":"Reciter"},"due":"Due","audio":{"title":"Audio"},"planner":{"hifzPlan":"Hifz Plan","todaysGoal":"Today\'s Goal","memoryReview":"Memory Review","sessionView":"Session View"},"tools":{"tabs":{"setup":"Setup","session":"Session","practice":"Practice","saved":"Saved","insights":"Insights"}},"view_recording":"View Recording","revisitOnboarding":"Take the tour again","onboarding":{"stepCounter":"Step {current} of {total}","intro":"A few short steps to help you set a range, practise calmly, and settle into Mutqin.","finish":"I\'m ready","confirmChoice":"Continue","skipTour":"Explore myself","finishHint":"Pick how you’d like to start. You can change this any time.","useSampleSession":"Try a short sample","playSampleSession":"Try a short sample","welcome":{"salam":"ٱلسَّلَامُ عَلَيْكُمْ","title":"Welcome to Mutqin","body":"Choose a path to begin. The guided tour covers session setup, reading, practice tools, AI memorisation with personalised recommendations, and how to return.","metaHint":"A gentle default session is ready: short range, clear reciter, calm pace.","tourDescription":"Five steps: session, reading, practice, AI coach, and return."},"ready":{"kicker":"Tour complete","title":"You’re ready to begin","body":"You’ve seen how Mutqin is set up. Start your own session, explore the workspace, or try the guided sample.","hint":"You can reopen this tour any time from the menu."},"actions":{"trySample":"Try a guided sample","quickTour":"Guided tour","guidedTour":"Take the guided tour","exploreMyself":"Explore myself","setupSession":"Set up my session","exploreWorkspace":"Explore workspace"},"choices":{"groupLabel":"How would you like to begin?","sample":{"title":"Try a guided sample","description":"A short practice so you can feel the flow before choosing your own range."},"setup":{"title":"Set up my own session","description":"Choose a surah, ayah range, and reciter, then begin when ready."},"explore":{"title":"Look around first","description":"Explore the workspace and open setup when you feel ready."}},"postSession":{"kicker":"Sample complete","title":"Well done","message":"You finished the guided sample. Choose what to do next.","hint":"Repeat the sample, start your own session, or continue into Mutqin when you feel ready.","repeat":"Repeat this sample","newSession":"Start a new session","continue":"Continue to Mutqin","save":"Save this session","savedToast":"Session saved."},"steps":{"setup":{"title":"Set up your session","stepLabel":"Session","body":"Every practice starts here: pick a surah, keep the ayah range short, and choose a reciter you enjoy listening to.","hint":"Tip: a few ayahs is enough for your first session. Widen the range later in Controls.","points":["Choose surah, ayah range, and reciter in Controls","Keep the first range short so it feels easy to finish","Adjust repeats and playback whenever you need"],"previewTitle":"Your session","previewSubtitle":"Based on your current settings.","previewItems":["Surah","Range","Reciter"]},"reading":{"title":"Choose your reading view","stepLabel":"Reading","body":"Read in stacked cards or Mushaf layout. Turn on translation, transliteration, or tajweed only when they help you stay focused.","hint":"Tip: keep Arabic front and centre. Aids are optional helpers, not the main text.","points":["Stacked is calm for short ranges; Mushaf keeps page layout","Toggle aids from the session bar when you need them","Tajweed colours follow the rules. See Help and Learning for the legend"],"previewTitle":"Reading view","previewSubtitle":"Try a view below. It updates your preview.","previewItems":["Stacked","Mushaf","Tajweed"]},"practice":{"title":"Practise with calm tools","stepLabel":"Practice","body":"Focus, Blur, and Talqin help you listen and repeat steadily. Tap a tool below to preview it before you start.","hint":"Tip: start with one gentle tool. Memorisation checks come next when you feel ready.","points":["Focus narrows attention to the active ayah","Blur softens upcoming text so you recite from memory","Talqin gives you a listen-then-recite turn"],"previewTitle":"Practice tools","previewSubtitle":"Preview a technique before your first session.","previewItems":["Focus","Blur","Talqin"]},"coach":{"title":"AI memorisation and recommendations","stepLabel":"AI coach","body":"After practice, AI Memorisation checks your recall and Mutqin recommends a personalised next plan with the right tools and assistant support for that session.","hint":"Tip: use the check when you want feedback, then follow the recommended plan to strengthen weak spots.","points":["AI Memorisation listens and highlights where recall needs care","Recommendations suggest the next range and session goal","Suggested tools and assistant settings match what that session needs"],"previewTitle":"Personalised improvement","previewSubtitle":"How Mutqin coaches your next session.","previewItems":["AI Memorisation","Recommended plan","Matched tools"],"stats":{"aiLabel":"AI Memorisation","aiValue":"Recall check","planLabel":"Recommendation","planValue":"Personalised plan","toolsLabel":"Session tools","toolsValue":"Matched assistants"}},"review":{"title":"Return and continue","stepLabel":"Return","body":"Saved sessions and Welcome Back help you pick up gently where you paused, so returning feels easy.","hint":"Tip: come back to saved sessions any time from your library, or continue from the Welcome Back screen.","points":["Resume exactly where you left off","Saved sessions keep your range and settings ready","Welcome Back reminds you of the ayah you paused on"],"previewTitle":"Coming back","previewSubtitle":"How Mutqin helps you return.","previewItems":["Saved sessions","Resume","Welcome Back"]}},"startOnboarding":"Get started","continueOnboarding":"Continue setup"},"open_session_setup":"Open session setup","open_controls":"Open controls","open_dashboard":"Open dashboard","mushaf_page_is_preparing":"Mushaf page is preparing","session_setup_in_progress":"Your session is being set up, please wait…","text":"Text","session":"Session","practice":"Practice","saved":"Saved","selectSessions":"Select","selectSession":"Select session","selectAll":"Select all","deselectAll":"Deselect all","deleteSelected":"Delete","insights":"Insights","view_and_font_controls_stay_here_while_planner_mod":"View and font controls stay here while planner mode is active.","available_after_you_start_todays_session":"Available after you start today&apos;s session","mushaf_view_and_font_options_stay_hidden_until_the":"Mushaf view and font options stay hidden until the session begins.","playback_settings":"Playback settings","speed":"Speed","use_slower_speed_for_early_memorisation":"Use slower speed for early memorisation.","auto_advance":"Auto-advance","listen_then_recite":"Listen then recite","auto_advance_mode_hint":"Auto moves on immediately, Listen then recite pauses for your turn inside audio playback, and No waits for manual control. This is separate from Talqin mode in Memorisation Techniques.","auto_moves_to_the_next_queue_item_when_audio_ends":"Auto moves to the next queue item when audio ends.","recitation_window_secs":"Recitation window (secs)","recitation_window_hint":"How long to pause after the reciter so you can repeat before the next ayah starts.","recite_now_window":"Your turn to recite now · {seconds}s left","talqin":{"yourTurn":"Your turn to recite"},"delay_between_recitations_secs":"Delay between recitations (secs)","pause_before_each_next_repetition_recitation_in_au":"Pause before each next repetition/recitation in auto mode.","focus_mode":"One ayah at a time","reduce_distractions_around_the_active_ayah":"Reduce distractions around the active ayah","best_for_deep_memorisation_sessions":"Best for: Deep memorisation sessions","focus_strength":"Focus strength","higher_values_dim_non_active_verses_more_aggressiv":"Higher values dim non-active verses more aggressively.","blur_mode":"Gradually hide the text","progressive_concealment_for_active_recall":"Hide more of the text gradually to strengthen recall","blurs_upcoming_verses_requiring_you_to_recall_them":"Hide more of the text gradually to strengthen recall","best_for_active_recall_testing":"Best for: Active recall testing","blur_intensity":"Blur Intensity","hold":"Hold","hover_or_long_press_to_peek_temporarily":", hover, or long-press to peek temporarily","chaining":"Join ayahs together","best_for_building_long_passages":"Best for: Building long passages","linking":"Practice ayah pairs (Linking)","cumulative":"Grow the passage step by step (Cumulative)","repeats_per_step":"Repeats per step","number_of_times_to_repeat_each_chaining_step":"Number of times to repeat each chaining step","anchor_mode":"Highlight memory words","mental_hooks_using_key_words":"Use key words as hooks to recall each ayah","highlights_key_words_as_memory_anchors_to_help_rec":"Highlights key words as memory anchors to help recall the entire ayah.","best_for_memorising_key_vocabulary":"Best for: Memorising key vocabulary","anchor_points_per_ayah":"Anchor points per ayah","saved_sessions":"Saved Sessions","saved_sessions_intro":"Your Hifz journeys, bookmarked with barakah — pick up a completed khatm or return to an ayah range still in progress.","completed_sessions":"Completed","completed_sessions_desc":"Sessions where you reached the end of your selected ayah range. Revisit for muraja\'ah and strengthen your recall.","incomplete_sessions":"In Progress","incomplete_sessions_desc":"Hifz sessions paused mid-range. Resume exactly where you left off and continue building your memorisation.","in_progress_sessions":"In Progress","in_progress_sessions_desc":"Hifz sessions paused mid-range. Resume exactly where you left off and continue building your memorisation.","no_in_progress_sessions":"No sessions in progress","no_in_progress_sessions_hint":"Save a session mid-range and it will appear here ready to resume.","no_completed_sessions":"No completed sessions yet","no_completed_sessions_hint":"Finished ranges will appear here for muraja\'ah.","session_completed_label":"Completed","review_session":"Review","last_opened":"Last opened {date}","no_surah_selected":"No surah selected","each_session_keeps_only_the_essentials_what_it_is_":"Each session keeps only the essentials: what it is, where it is, and how to get back in.","no_saved_sessions_yet":"No saved sessions yet","save_your_current_session_to_get_started":"Preserve today\'s Hifz effort — save your current ayah range so you can return with intention.","current_session":"Current Session","today_first_advanced_analytics_stay_tucked_away_un":"Today first. Advanced analytics stay tucked away until you ask for them.","show_advanced_metrics":"Show advanced metrics","no_advanced_insights_yet":"No advanced insights yet","save_a_session_and_you_ll_unlock_the_deeper_breakd":"Save a session and you’ll unlock the deeper breakdown here.","view_full_analytics":"View Full Analytics","english_arabic_or_french_ui":"English, Arabic, or French UI","edit_plan":"Edit Plan","sync_progress":"Sync progress","structured_repetition":"Structured repetition","resume_exactly":"Resume exactly","what_a_mutqin_session_feels_like":"What a Mutqin session feels like","short_enough_to_stay_focused_structured_enough_to_":"Short enough to stay focused. Structured enough to make long-term memorisation easier to revisit.","choose_your_ayahs":"Choose your ayahs","pick_the_surah_range_and_reciter":"Pick the surah, range, and reciter.","repeat_with_structure":"Repeat with structure","use_playback_chaining_focus_and_blur_tools":"Use playback, chaining, focus, and blur tools.","recall_and_review":"Recall and review","track_what_was_covered_and_return_later_with_clari":"Track what was covered and return later with clarity.","how_mutqin_stays_focused":"How Mutqin stays focused","everything_centres_on_one_calm_memorisation_sessio":"Everything centres on one calm memorisation session at a time","choose_a_small_range_repeat_with_structure_then_re":"Choose a small range, repeat with structure, then return for recall and review without dashboard clutter.","focused_ayah_ranges":"Focused ayah ranges","work_in_smaller_sections_that_are_easier_to_repeat":"Work in smaller sections that are easier to repeat well.","clear_repetition":"Clear repetition","keep_your_session_steady_instead_of_guessing_how_m":"Keep your session steady instead of guessing how many times to repeat.","recall_with_less_clutter":"Recall with less clutter","use_only_the_aids_and_techniques_that_support_the_":"Use only the aids and techniques that support the current passage.","progress_you_can_revisit":"Progress you can revisit","saved_sessions_and_compact_insights_stay_ready_whe":"Saved sessions and compact insights stay ready when you come back.","save_memorisation_session":"Save Memorisation Session","name_this_session_so_you_can_find_it_again_later":"Name this session so you can find it again later.","session_name":"Session Name","save_session":"Save Session","end_this_session_now":"End this session now?","prepare_yourself":"Prepare yourself","session_finished":"Session Finished","rangeOptions":{"all":"All","juz":"Juz","hizb":"Hizb","page":"Page","surah":"Surah","ayah":"Ayah","word":"Word"},"postSession":{"kicker":"Session complete","title":"Session complete","ayahSingular":"Ayah {ayah}","message":"Choose how to continue.","actions":{"testWithAi":"Check memorisation","testWithAiAgain":"Check again","chooseAnotherSession":"Other session","continueToAyahsFallback":"Continue","retest":"Check again","tryRecordingAgain":"Try again","checkMicrophone":"Check mic","close":"Close","skipForNow":"Skip","keepPractising":"Keep going","continuePractising":"Keep going","reviseFocusPhrase":"Start revision","reviseThisRange":"Start revision","continueToNextRange":"Continue","continueToAyahs":"Ayahs {start}–{end}","reviewOnceMore":"Review again","reviewAyahOnce":"Review Ayah {ayah}","chooseAnotherRange":"Other range","chooseDifferentRange":"Other range"},"coach":{"yourNextPractice":"Next step","continue":"Continue","whyLabel":"Why","methodLabel":"Method","aiCardHint":"Recite from memory so we can build your plan.","aiFirstBody":"Check your memorisation first. Your practice plan will appear here afterwards.","aiRetestBody":"You finished the practice plan. Check your memorisation again to unlock the next session.","aiRetestHint":"Pass this check to unlock the next session.","differentSession":"Other session","nextHintAi":"Check your memorisation to unlock your next plan.","rangeCaption":{"test":"Check this range","retest":"Check this range again","practice":"Practise this range","next":"Ready for the next session"},"chooseWhenReady":"Choose a session when ready.","weakWordsFocus":"Words to focus on","ayahLabel":"Āyah {ayah}","ayahRangeLabel":"Āyahs {from}–{to}","replayPhrase":"Replay surrounding phrase","ayahNeededMore":"Āyah {ayah} needs another slow pass.","takeItSlow":"You paused often. Slow down on one āyah.","speedSettled":"Keep this pace when you check.","readyToTest":"Ready to check.","firstPracticeDone":"Practice done. Check when ready.","headers":{"practiceDone":"Practice complete","repeatDone":"Another pass complete","aiDone":"What to strengthen next"},"subtitles":{"practiceDone":"Check your memorisation to unlock your next plan.","aiDone":"Focus on these words next.","aiFirst":"Check your memorisation first, then your plan appears here.","retestAfterPractice":"Strengthen this range before moving forward.","strongContinue":"Continue while this still feels fresh.","mostlySecure":"Continue when ready — a light review is optional.","reviseFirst":"Revise the weak spots first, then continue."},"guidance":{"recommended":"Listen once, then repeat.","afterPractice":"Test with AI Recite when ready.","afterAi":"Practise the marked words slowly."},"cta":{"startPractice":"Start practice","startFocusPractice":"Start focused practice"},"reason":{"pronunciation":"Pronunciation","frequent_replay":"Frequent replay","hesitation":"Hesitation"},"live":{"before":"Listen once and follow the words.","beforeTalqin":"Listen once, then recite aloud.","beforeFocus":"Listen once — gold-marked words need extra care.","playing":"Follow the words calmly — may Allah open your heart.","playingFocus":"Focus on the highlighted word.","focusWord":"Focus on the highlighted word: {word}","focusCueTitle":"Focus on this word","focusBadge":"Words to watch","focusStripLabel":"Hold onto","hooksLabel":"Your key words","pause":"Now repeat this phrase aloud.","pauseFocus":"Repeat the gold-marked words aloud, then the full āyah.","difficulty":"Take it slower — try this āyah at {speed}×.","after":"Recite this āyah without looking.","ready":"Mā shā’ Allāh. You are ready to test.","ayahCue":"Āyah {ayah}","talqin":{"before":"Listen once and follow the words.","playing":"Listen carefully. Your turn comes after the audio.","pause":"Now repeat this phrase aloud."},"focus":{"before":"We stay with one āyah. Do not rush ahead.","playing":"Follow this āyah only. Let it settle.","pause":"Repeat this same āyah aloud before moving on."},"blur":{"before":"Words will hide gradually. Trust your memory.","playing":"As the text fades, recite from the heart.","pause":"Try again from memory. May Allah make it firm."},"chaining":{"before":"We will join these āyahs into one flow.","playing":"Listen for how this āyah links to the next.","pause":"Recite what you just heard, then join the next āyah."},"anchor":{"before":"Gold words are your hooks — notice them first.","playing":"Watch the marked words. They will help you remember.","pause":"Say the key words first, then the full āyah."},"technique":{"talqin":{"label":"Listen, then recite","hint":"The reciter leads. When it pauses, you say it aloud."},"focus":{"label":"One āyah at a time","hint":"Stay with this āyah until it feels steady in your heart."},"blur":{"label":"Hide the text little by little","hint":"As words fade, let your memory lead — ask Allah for firmness."},"chaining":{"label":"Join the āyahs","hint":"Connect each āyah to the next as one smooth flow."},"anchor":{"label":"Hold onto key words","hint":"Gold-marked words are your hooks — say them clearly, then the full āyah."},"listen":{"label":"Listen with presence","hint":"Follow the words calmly and recite with sincerity."}}},"evidenceFocus":"Focus","evidenceMethod":"Method","evidenceReview":"Next","evidenceNext":"Next","evidenceReturn":"Return","evidenceThen":"Next","evidenceThenAyah":"Continue with Āyah {ayah}","evidenceThenRange":"Continue with Āyahs {from}–{to}"},"summaryTitle":"Session summary","progressLabel":"Range progress","detailsLabel":"Session details","nextStepLabel":"Suggested next step","celebrationTitleComplete":"Alhamdulillah","celebrationTitlePartial":"Barakallahu feek","celebrationMessage":"Your effort is recorded with sincerity.","duaStrengthen":"May Allah strengthen what you have memorised and make it firm in your heart.","duaStrengthenShort":"May Allah strengthen what you have memorised.","flowGuide":"Check your memorisation to unlock your next plan, or continue when you are ready.","flowGuideAfterAi":"Review what slipped, choose focus or full-range practice, then continue.","flowGuideRepeat":"Check your memorisation when ready, keep practising this range, or choose another.","headers":{"repeatPass":"Revision pass complete"},"subtitles":{"repeatPass":"Steady repetition builds lasting memorisation."},"sessionStats":"Session stats","statsCompleteShort":"Complete","statsRange":"Ayahs","statsRetries":"Retries","statsAttempt":"Session","statsNew":"New","statsRepeated":"Repeated","viewStats":"View stats","hideStats":"Hide stats","repeat":"Repeat this session","newSession":"Start new session","save":"Save this session","savedToast":"Alḥamdulillāh. Your session is saved.","autoSavedNote":"Alḥamdulillāh. Your progress is saved.","adaptiveCheck":{"title":"Quiz AI","description":"Optional.","memoryCheckTitle":"Quiz AI","memoryCheckDescription":"Answer a few short questions (and recite if needed) so we can see which verses are firm and which still need support. Your next plan updates from this.","memoryCheckLead":"Before you continue, check what stuck","memoryCheckWhy":"This optional check finds weak spots early — so your next session practises the right verses, not a random repeat.","memoryCheckBulletQuiz":"Short questions about the verses you just did","memoryCheckBulletAi":"AI Recite may open if a verse needs a spoken check","memoryCheckBulletTime":"Usually about 1–2 minutes","memoryCheckCta":"Start memory check","memoryCheckOpening":"Starting…","memoryCheckIncludes":"Quiz and AI Recite","memoryCheckHint":"Optional — skip if you want to go straight to your plan.","memoryCheckOptionalTag":"Optional","memoryCheckTimeTag":"1–2 min","voiceOnlyCta":"Prefer to recite aloud only","tryAgainCta":"Check again","seeFullReview":"See full review","resultShapedPlan":"Your plan below already uses this result.","quizAiTitle":"Quiz AI","aiReciteNotRun":"You can still recite aloud if you want.","resultScoreLine":"{correct} of {total} answered well","aiReciteTitle":"AI Recite","aiReciteDescription":"Recite out loud.","aiReciteCta":"Start","quickCheckTitle":"Quiz","quickCheckDescription":"A few short questions.","quickCheckBenefit":"Recommended","startCta":"Start","helper":"About 1–2 minutes","resultReadyTitle":"Check complete","openAiRecite":"AI Recite","progress":"{current} of {total}","progressHint":"Almost done","skillsLabel":"How it went","hint":"Need a hint?","hintFallback":"Think of the words around it.","submit":"Continue","skip":"Skip this one","selectAnswer":"Tap an answer to continue.","typeAnswer":"Type what you remember","aiRecitePrompt":"When you are ready, recite this verse from memory.","startAiRecite":"Recite with AI","startError":"That check could not start. You can still continue below.","answerError":"Please try that again.","feedbackCorrect":"Nice — that is right.","feedbackAlmost":"Close — keep going.","feedbackIncorrect":"Not quite — we will practise that.","resultTitleStrong":"Looking good","resultTitleMixed":"A little more practice will help","resultTitleWeak":"Needs another short review","resultTipLabel":"Next","resultFoundLabel":"What we found","resultNextLabel":"What to do next","resultVersePill":"Verse {ayah}","resultWhyLabel":"Why","resultHowLabel":"How","resultShouldLabel":"Next","resultWhyWeakness":"{skill} still needs support.","resultWhyWeakAyah":"Verse {ayah} needs the most attention.","resultWhyWeakAyahs":"A few verses still need support.","resultHowGeneric":"We will keep this short and add a little more support.","resultHowTechnique":"We will adjust the practice style for this pass.","resultHowPair":"We will adjust the practice style for this pass.","resultHowReps":"A few extra repetitions will help.","resultHowSlow":"We will slow the pace a little.","continueToPlan":"Continue","doneCta":"Start this plan","backToPlan":"Back to plan","moveUp":"Up","moveDown":"Down","reorderHint":"Put these in the right order","skills":{"recall":"Remembering the words","ayahSequence":"Keeping the order","textualPrecision":"Getting the words right","independentRecitation":"Reciting without help"},"bands":{"strong":"Ready to continue","steady":"Mostly secure","developing":"More practice needed"},"explanations":{"sessionIncomplete":"You still have a few verses left in this range.","lowRecall":"Some words are still settling — a short repeat will help.","sequenceErrors":"The order slipped a little. We will practise linking the verses.","highHintDependency":"Hints helped a lot. Next time we will show a little less text.","visualDependency":"Reading carried a lot. We will practise with less text showing.","audioDependency":"Listening helped a lot. Next time we will lean a bit more on memory.","spokenHesitation":"The words were close, but reciting felt hesitant. Slower practice will help.","omissionErrors":"A few words were missed. We will go back over them gently.","similarAyahConfusion":"Similar verses got mixed up. We will compare them side by side.","lowDelayedRetention":"Earlier verses faded a little. We will review them sooner.","highPerformance":"This range feels steady. You can move on while it is fresh.","lowConfidence":"You wanted more practice — here is a short, reassuring pass.","overconfidence":"It felt strong, but one part still needs support. We will focus there.","reviewOverdue":"Some of this is due for review. Better to return to it soon."},"nextSteps":{"continue":"Continue to the next set.","repeat_weak_ayahs":"Repeat the harder verses with more support.","start_focused_review":"Do a short focused review.","review_tomorrow":"Come back for a short review tomorrow."},"actions":{"continue":"Continue","repeatWeakAyahs":"Practise those verses","startFocusedReview":"Review this range","reviewTomorrow":"Review tomorrow"}},"recommendation":{"cardTitle":"Suggested next step","recommendedPlan":"Recommended plan","practiceMethod":"Recommended practice method","practiceSetup":"Practice setup","justFinished":"Just finished","repsDone":"{count} repetitions","aiFirstBodyShort":"Check your memorisation next to unlock a tailored practice plan.","mainFocus":"Main focus","checkComplete":"Check complete","yourResult":"Your result","whatNext":"What to practise next","whyRecommended":"Why this was recommended","weakSpotsTitle":"Weak areas","weakSpotsLead":"These āyahs and words need the most attention before you continue.","planEncouragement":"Choose how to revise, then start when you are ready.","planEncouragementWithTime":"A short {time} practice will lock this in.","softwareGenerated":"","teacherComplement":"","viewDetails":"View details","hideDetails":"Hide details","weakWordMark":"Needs practice","headlineStrong":"Strong recall","headlineMixed":"Minor reinforcement needed","headlineWeak":"Focused revision recommended","practiceWeakWordsOnly":"Weak words only","practiceFullRange":"Full recommended range","revisionOptions":"Revision options","scopePickerLabel":"Choose how to revise","scopeWeakAreasLabel":"Focus on weak areas","scopeWeakAreasDescription":"Review only the words and phrases that need more attention.","scopeWeakAreasBenefit":"Shorter practice that targets the exact spots that slipped.","scopeFullRangeLabel":"Practise the full range","scopeFullRangeDescription":"Repeat the complete session while Mutqin highlights your weaker areas.","scopeFullRangeBenefit":"Keeps the full flow while giving extra attention to weaker words and ayat.","scopeFocusMeta":"{count} focus items · about {minutes} min","scopeFocusMetaOne":"{count} focus item · about {minutes} min","scopeFocusMetaOther":"{count} focus items · about {minutes} min","scopeFullMeta":"Full session with stronger emphasis on weak areas","recommendedTag":"Recommended","attemptCompareTitle":"Compared with earlier attempt","attemptImproved":"{count} improved","attemptContinued":"{count} still need practice","scopeReason":{"noWeakAreas":"No clear weak areas were identified, so the full range is recommended.","minorLocal":"Only a few words need attention — focused practice will be quicker and clearer.","focusedCluster":"Your weak spots sit close together, so a short focused review is recommended.","spreadWeakness":"Weak areas appear across the session, so revisiting the full range with emphasis is recommended.","defaultFocus":"A focused pass on the weaker words and phrases is recommended first."},"previousAttemptNote":"Previous related attempt: {summary}","previousAttemptsAvailable":"Previous related attempts are saved with this recommendation.","persistedForLater":"Saved for later — available from your dashboard and session history.","basedOnThisSession":"Based on this session","tryThisCombination":"Try this combination","adjustPlan":"Adjust plan","suggestedNextStep":"Your next session","flowIntro":"Bismillāh — begin when your heart is ready.","stepCheck":"Step 1","stepPlan":"Step 2","planReadyTag":"Ready","whyThisHelps":"Why this helps","whatYouWillDo":"What you will practise","howItWorks":"How you will practise","paceAndSupport":"Pace & support","estimatedTime":"About","nextSetTitle":"Next in your plan","revisionSetTitle":"Practice these verses again","nextSurahTitle":"Next in your plan","chooseNext":"Suggested next step","recommendedNext":"{surah} · {range}","recommendedNextSurah":"Surah {surah}","surahCompletedTitle":"Alḥamdulillāh. Surah {surah} complete","ayahRange":"Ayahs {start}–{end}","singleAyah":"Ayah {ayah}","ayahCount":"{count} ayahs","ayahCountOne":"{count} ayah","ayahCountOther":"{count} ayahs","modeNewLearning":"New","modeRevision":"Revision","modeRepeated":"Repeated","modeNextSurah":"Next surah","startRecommendedNextSession":"Start recommended session","startRecommendedRevision":"Revise now","planRecommended":"Recommended","planApplied":"Applied","planManual":"Manually adjusted","continueToNextSurah":"Next surah","continueToAyat":"Continue to Ayahs {start}–{end}","repeatAyat":"Repeat Ayahs {start}–{end}","repeatThisSession":"Repeat this session","adjustSettings":"Adjust plan","resetSettings":"Reset to recommended","testWithAiRecite":"Check my memorisation","testMyMemorisation":"Test my memorisation","aiReciteSubtitle":"Recite this range from memory and receive a focused review before moving forward","aiReciteHint":"Recite this completed range. Your result will update the next-step recommendation.","startNewSession":"Start new session","startDifferentSession":"Different session","viewSessionSummary":"Session details","hideSessionSummary":"Hide details","reviewThisSurah":"Revise this surah","backToOverview":"Back","retry":"Try again","retryRecommendation":"Prepare recommendation again","loadError":"Your session was saved successfully. We could not prepare your next recommendation. You can retry or choose another session.","startError":"Could not start. Please try again.","settingsError":"Could not save settings. Please try again.","confidenceError":"Could not save your response. Please try again.","aiReciteError":"AI Recite unavailable. Your session is saved. Choose confidence or continue.","aiReciteOffline":"Connection lost during AI Recite. Progress is saved; retry later or continue below.","aiReciteOptionalHint":"Optional. A short check before you choose what\'s next.","aiReciteSkippedHint":"Continuing without AI Recite. Choose confidence, or start the plan.","openingAiRecite":"Opening AI Recite…","preparingRecommendation":"Preparing recommendation…","startingNextSession":"Starting next set…","preparingRepeatSession":"Preparing revision…","savingSettings":"Saving settings…","completingSession":"Completing session…","techniqueLabel":"Try this combination","settingsSummaryLabel":"Try this combination","settingsTechnique":"Technique","settingsSpeed":"Playback","settingsRepetitions":"Repetitions","settingsReciter":"Reciter","settingsOutcome":"These settings are intended to help you hear each phrase more clearly, repeat it more consistently and strengthen recall before progressing.","repetitionsSummary":"{count} repetitions","repetitionsSummaryOne":"{count} repetition","repetitionsSummaryOther":"{count} repetitions","aiResultLabel":"AI Recite","aiResult":{"strong":"Strong recall","mixed":"Needs review","weak":"Needs practice"},"confidencePrompt":"How confident do you feel with this range?","confidenceConfident":"Confident","confidenceNeedsPractice":"Needs more practice","confidenceLead":"Your plan softens or advances with your answer, bi’idhnillāh.","whyThisPlan":"Why this plan?","planDetail":{"headline":"Your next practice","whyForYou":"Why this plan","practiceRange":"Verses to practise","howYouPractice":"Practice method","setup":"Pace & support","time":"Time","aboutMinutes":"About {minutes} minutes","alsoWith":"Plus: {technique}","focusVerse":"Verse {ayah}","focusOne":"Pay extra attention to ayah {ayah}. That is where most slips appeared.","focusMany":"Pay extra attention to ayahs {ayahs}. Those still need the most support.","ayahRange":"Ayahs {start}–{end}","singleAyah":"Ayah {ayah}","colourMix":"{green} green · {amber} amber · {red} red · {black} black","rangeExplain":"These are the verses your next session will open on.","methodExplain":"This method guides how text and audio appear while you practise.","setupExplain":"Playback speed and repetitions control how calmly you rehearse each verse."},"whatChangingDoes":"How this helps","paramHints":{"repetitionsHigh":"{count}× more practice for harder verses.","repetitionsModerate":"{count}× another steady pass.","repetitionsLight":"{count}× light practice while it is still fresh.","focus":"One verse at a time.","blur":"Hide words so you remember them.","talqin":"Listen, then say it.","anchor":"Keep a few key words showing.","chaining":"Join verses you just learned.","speedSlower":"{speed}× slower so each word is clear.","speedFaster":"{speed}× a bit faster once it feels easy."},"supportingCompletedRange":"You completed {surah}, {range}.","supportingProgressSaved":"Alḥamdulillāh. Your progress is saved.","repeatThisRange":"Practise these āyāt again","continueNextSet":"Next in your plan","continueNextSurahShort":"Next in your plan","repeatRangeTitle":"{surah} · {range}","steadyRepetitionEncouragement":"Steady repetition builds lasting memorisation.","phraseNeedsAttention":"One phrase in Ayah {ayah} needs a little reinforcement.","phraseNeedsAttentionNext":"Review it once, then continue to Ayahs {start}–{end}.","phrasesNeedAttention":"A few phrases still need attention.","ayahNeedsAttention":"Ayah {ayah} needs a little reinforcement.","ayahNeedsAttentionNext":"Review Ayah {ayah} once, then continue to Ayahs {start}–{end}.","evidenceReviewNow":"Check this range again.","evidenceReviewThenContinue":"Review the weak phrase once, then continue to Ayahs {start}–{end}.","statusReadyToContinue":"Ready to continue","statusMostlySecure":"Mostly secure","statusReviewRecommended":"Review recommended","statusMorePracticeNeeded":"More practice needed","evidenceReturnTomorrow":"Review again tomorrow","evidenceReturnOn":"Review again on {date}","playFocusPhrase":"Play focus phrase","openFocusPhrase":"Open focus phrase in practice","aiReciteShort":"Voice check","aiReciteHintShort":"Optional voice check","aiResultLineStrong":"Most of this sounded clear.","aiResultLineStrongHesitation":"Mostly clear, with a small pause in verse {ayah}.","aiResultLineStrongOneGap":"Mostly clear, with one small pause.","aiResultLineMixed":"Good overall, with a few spots to tighten.","aiResultLineMixedAyah":"Good overall, with a pause in verse {ayah}.","aiResultLineMixedAyahs":"Good overall, with pauses in {count} verses.","aiResultLineMixedOrder":"Good overall, but the order of verses slipped a little.","aiResultLineWeak":"A few spots still need help.","aiResultLineWeakAyah":"Verse {ayah} needs the most help.","evidenceFromSessionAndConfidence":"Based on your session and confidence.","checkAnswerQuizStrong":"Ready to continue","checkAnswerQuizMixed":"Mostly secure","checkAnswerQuizWeak":"More practice needed","combinedFromBothChecks":"From your checks","combinedFromAi":"From your voice check","combinedFromQuiz":"From your quiz","combinedFromSession":"From this session","combinedRepeatWeakAyah":"Verse {ayah} still feels tricky. We will practise these verses again.","combinedRepeatWeakAyahs":"Some verses still need help. We will practise this set again.","combinedRepeatBoth":"Your checks show a few hard spots. We will practise this set again.","combinedRepeatOne":"Some parts still need help. We will practise these verses again.","combinedRepeatDespiteStrong":"Your check looked good. We are still giving these verses one more calm pass.","combinedRepeatFallback":"We will practise these verses again with a little more help.","combinedContinueBothOrder":"Nice work. Next verses. Keep the order steady.","combinedContinueBoth":"Your checks look ready. Next verses while this still feels fresh.","combinedContinueNeedsSupport":"A few spots still need help. This plan adds a little more support.","combinedContinueOneOrder":"Nice work. Next verses. Keep the order steady.","combinedContinueOne":"Nice work. Next verses while this still feels fresh.","combinedContinueFallback":"Next verses while this still feels fresh.","whyThisPlanToggle":"Why this next step?","aiReviewStrong":"You remembered most of this well.","aiReviewWeakAyah":"You remembered most of this, with a few hard spots in verse {ayah}.","aiReviewWeakAyahs":"You remembered most of this, with hard spots in {count} verses.","aiReviewSequence":"Most words were right, but the order was a little unsure.","aiReviewStrongDetail":"Clear recall. About {percent}% matched.","aiReviewMixedDetail":"Good overall ({percent}%), with a few spots to tighten.","aiReviewWeakDetail":"A few spots need another look ({percent}% matched).","aiReviewMissedWords":"{count} words still need help.","aiReviewPronunciation":"A few words need clearer saying.","aiReviewAccuracyChip":"{percent}% match","aiReviewMissedChip":"{count} missed words","aiReviewSequenceChip":"{count} order slips","aiReviewPronunciationChip":"Clearer saying","aiReviewWeakAyahChip":"Verse {ayah}","aiReviewWeakAyahsChip":"{count} verses to revisit","aiOutcomeStrong":"Ready to continue","aiOutcomeMixed":"Mostly secure","aiOutcomeWeak":"More practice needed","aiOutcomeReviewRecommended":"Review recommended","aiSummaryMatchedWords":"We clearly matched {matched} of {total} words.","aiSummaryFocusPhrase":"Review the highlighted phrase once, then continue.","aiSummaryFocusRange":"Revise this range, then check again.","aiSummaryStrongFollowUp":"Nice work — you can continue while this still feels fresh.","aiSummaryMinorWeaknessNext":"Review it once, then continue to Ayahs {start}–{end}.","aiMetricConfidence":"Recognition confidence","zeroMatchStatus":"Let’s practise this range again","zeroMatchSummary":"We heard your recitation, but could not confidently match the words yet.","zeroMatchProgressLabel":"Not matched yet","zeroMatchHint":"A short revision pass will help the words settle before you check again.","zeroMatchFocus":"Revise this range slowly, then check again.","insufficientAudioStatus":"We could not assess this attempt","insufficientAudioSummary":"We did not hear enough clear recitation to assess this attempt. Please try again.","insufficientAudioMicSummary":"Microphone access is blocked. Allow the microphone, then try recording again.","insufficientAudioShortSummary":"That recording was too short to assess. Recite a little longer, then try again.","insufficientAudioProcessingSummary":"We could not process this recording. Please try recording again.","insufficientAudioHint":"Recite clearly into the microphone, then try recording again.","insufficientAudioFocus":"Check your microphone, then try recording again.","aiMetricAccuracy":"Match","aiMetricWords":"Words","aiMetricDetectedWords":"Detected words","aiMetricMissed":"Missed","aiMetricMissedWords":"Missed words","aiMetricOrder":"Order","aiMetricSequence":"Sequence","aiMetricOrderSteady":"Steady","aiMetricOrderIssues":"{count} slips","aiMetricOrderNotAssessed":"Not assessed","aiMetricSequenceNotEnough":"Not enough matched words to assess","aiHighlightStrongRecall":"Most words landed cleanly. Keep this pace while the range is fresh.","aiHighlightMissedWords":"{count} words still need another careful pass.","aiHighlightPronunciation":"{count} words were close. Slow slightly and articulate each letter.","aiHighlightSequence":"Ayah order drifted. Restart from the first ayah of the range.","aiHighlightWeakAyah":"Ayah {ayah} carried most of the difficulty.","aiHighlightWeakAyahs":"{count} ayahs need focus ({ayahs}).","aiHighlightMixed":"Solid overall, with a few gaps that deserve a short revision pass.","aiHighlightWeak":"Several spots need support before moving on.","aiReviewFocusLabel":"Next focus","aiReviewDuration":"{seconds}s check","resultStats":"Check results","statMatched":"Matched","statMatchedHint":"Words Mutqin clearly recognised in this check","statNeedsWork":"Needs work","statNeedsWorkHint":"Words that need another calm pass","statWrongCount":"{count} wrong","statCloseCount":"{count} close","statRecitationTime":"Recitation time","statRecitationTimeHint":"How long this recitation took","speedPill":"{speed}× speed","techniques":{"blur":"Hide the words bit by bit","focus":"One verse at a time","talqin":"Listen and repeat","chaining":"Join verses together","anchor":"Keep a few key words showing","blurShort":"Gradually hide the text","focusShort":"One ayah at a time","talqinShort":"Listen and repeat","chainingShort":"Join verses together","anchorShort":"Keep a few key words showing"},"confirm":{"continueNextAyat":"Continue to the next ayah?","reviewAgain":"Revise these ayahs?","continueNextSurah":"Ready for the next surah?","startSession":"Begin","startRevision":"Begin revision","continueToNextSurah":"Continue","chooseSomethingElse":"Choose differently"},"reasons":{"strongPreviousPerformance":"You completed this range well. This plan continues gently to the next ayahs while they are still fresh.","continueCurrentSurah":"You completed this range. This plan continues directly to the next ayahs while the material is still fresh.","continueWhileFresh":"You completed this range. This plan continues directly to the next ayahs while the material is still fresh.","revisionRequired":"This range still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.","needsMorePractice":"This range still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.","difficultAyahDetected":"One or more ayahs still need care. This plan returns to that range with focused support before moving on.","completeRemainingAyat":"A short stretch remains in this surah. This plan completes the section you began.","surahCompleted":"Mā shā’ Allāh. You completed this surah. This plan begins the next surah gently from the opening ayahs.","resumeIncompleteSession":"You paused mid-range. This plan resumes from the ayahs you left unfinished.","reinforceRecentRange":"Recent ayahs still need another quiet pass. This plan returns to that range so recall can settle.","learningPlanComplete":"You have reached the end of the available plan. Choose what you would like to recite next. May it be blessed.","manualFallback":"There is no automatic next set right now. Choose what your heart would like to recite next.","aiReciteStrong":"Your recite was strong. Alḥamdulillāh. This plan continues while the previous ayahs are still fresh.","aiReciteMixed":"Your recite was mostly correct, with a few gaps. This plan reviews the same range once more with a little more support.","aiReciteWeak":"Your recite found parts that still need practice. This plan keeps the same range with more guidance, gently.","confidenceConfident":"You feel ready. We will move on while these verses are still fresh, bi’idhnillāh.","confidenceNeedsPractice":"You asked for more practice, so we will go over these verses again more slowly, with care.","sessionIncomplete":"You paused mid-range. This plan resumes from the ayahs you left unfinished.","lowRecall":"Phrase recall needs support. This plan rebuilds the range with listen-and-repeat.","sequenceErrors":"Ayah order was uncertain. This plan uses linking and phrase ordering before moving on.","highHintDependency":"Memory prompts were used often. This plan reduces hints with progressive Mushaf hiding.","visualDependency":"Recall leaned on visible text. This plan hides more of the Mushaf step by step.","audioDependency":"Replay was heavy. This plan shifts toward active recall with lighter audio support.","spokenHesitation":"Spoken recall hesitated. This plan uses phrase chunks, slower playback, and AI Recite.","omissionErrors":"Some words were missed. This plan completes ayahs with listen-and-repeat.","similarAyahConfusion":"Similar ayahs were mixed. This plan compares them side by side with anchors.","lowDelayedRetention":"Earlier material faded. This plan schedules an earlier murājaʿah.","highPerformance":"The check looked strong. Mā shā’ Allāh. This plan continues gently while the ayahs are fresh.","lowConfidence":"You asked for reassurance. This plan offers a short confidence-building pass.","overconfidence":"Confidence was high, but the check found a weak spot. This plan reinforces that gap.","reviewOverdue":"Some ayahs are due for murājaʿah. This plan returns to them soon.","adaptiveCheckStrong":"Your short check looked strong. This plan continues while the ayahs are still fresh.","adaptiveCheckMixed":"Your short check was mostly solid, with a few gaps. This plan adds light support.","adaptiveCheckWeak":"Your short check found parts that still need practice. This plan keeps the same range with more guidance.","simpleContinue":"You completed this range. This plan continues to the next ayahs while the material is still fresh, bi’idhnillāh.","simpleRepeat":"This range still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.","simpleNextSurah":"You completed this surah. This plan is ready for Surah {surah} when you are. Mā shā’ Allāh."},"repeatWeakAyahs":"Repeat weak ayahs","startFocusedReview":"Start focused review","reviewTomorrow":"Review tomorrow","continue":"Continue","aiMetricWordsApprox":"~{percent}% matched","aiMetricClose":"Close","aiMetricOmitted":"Skipped","aiHighlightOmittedWords":"{count} words were skipped. Fill those gaps next.","aiFocusOmitted":"Recite the {count} skipped words carefully.","aiReviewAyahsLabel":"Ayahs to revisit","aiFocusStrong":"Keep this pace. Move on while the range is still fresh.","aiFocusNearly":"One careful pass should lock the remaining gaps.","aiFocusRetry":"Slow down and rebuild the range ayah by ayah.","aiFocusMissed":"Return to the {count} missed words before expanding the range.","aiFocusPronunciation":"Slow slightly and articulate the {count} close words.","aiFocusSequence":"Restart from the first ayah and keep the order steady.","aiFocusWeakAyah":"Spend the next pass on ayah {ayah} with Focus mode.","aiFocusWeakAyahs":"Revisit ayahs {ayahs} before continuing.","aiWeakAyahsLabel":"Focus ayahs","aiFirstBody":"Test with AI first. Your score and practice plan appear here after we hear you."}},"aiRecitePlan":{"startReciting":"Start Reciting","startHint":"Take your time. Recite the whole passage from memory — pauses are fine. Up to 3 gentle tries.","attemptProgress":"Try {current} of {max}","tryAgainRemaining":"Try again ({remaining} left)","seePracticePlan":"See my plan","averageScore":"Accuracy: {score}%","accuracyLabel":"Accuracy","resultTag":"Next step","resultTitle":"Session complete","resultSubtitle":"Here is your practice plan from AI Recite.","resultAria":"AI Recite result and practice plan","rangeLabel":"Range","methodLabel":"Method","techniques":"Techniques","startThisPlan":"Start this plan","startSimplerPlan":"Start this simpler plan","continueNextSession":"Continue to next session","masteryTitle":"Range achieved","masterySubtitle":"Strong recall — ready for the next session.","masteryBanner":"Achieved. You can continue to the next session.","simplerSubtitle":"Not firm yet — practise this simpler plan, then test again.","simplerBanner":"Keep practising this simpler plan, then test with AI Recite again.","returningToPlan":"Opening your practice plan…","focusAyah":"Focus on āyah {ayah}","focusAyahs":"Focus on āyahs {ayahs}","alsoWith":"Also: {technique}","alsoTip":"Tip: {technique}","beginner":{"yourResult":"Your result","what":"What to practise","how":"How","words":"Words to watch","strong":"Strong: ready to move on","notFirm":"Not firm yet"},"surahRecap":{"aria":"Surah complete recap","kicker":"Surah complete","title":"You finished {surah}","summary":"Here is a calm look at your progress on this surah.","sessions":"You practised this surah across {count} sessions.","accuracy":"Last AI Recite accuracy: {score}%","technique":"Technique that helped: {technique}","weakLeft":"Still watch: {items}","next":"Next: start {surah} · āyahs {from}–{to}","cta":"Start next surah"},"feedbackStrong":"Strong recall. A light review will keep it firm.","feedbackFocused":"Good effort. Strengthen the weak words next.","feedbackGentle":"Take it slow. One step at a time.","feedbackMixed":"A short focused plan will help.","whyWeakWords":"Accuracy {accuracy}% · {count} words · {techniques}","whyStrong":"Your recall is strong. A light review at a steady pace will keep it firm.","whyDefault":"Built from your AI Recite result.","setup":{"speed":"{speed}× speed","repOne":"1 repetition","reps":"{count} repetitions"},"tech":{"anchorTitle":"Anchor","anchorHow":"Flash weak words before the full āyah.","talqinTitle":"Talqin","talqinHow":"Listen, then repeat — one āyah at a time.","chainingTitle":"Chunking","chainingHow":"Practise it in two short parts, then join them.","phrasePartsHow":"Practise the phrase in small parts, then recite it as one.","blurTitle":"Blur","blurHow":"Hide words step by step.","focusTitle":"Focus","focusHow":"One verse at a time."},"whyEvidence":"One phrase in Ayah {ayah} needs a little reinforcement."},"emotional":{"postSession":{"encouragement1":"Small steps, repeated with sincerity, become lasting memorisation.","encouragement2":"What you reviewed today has a place in your heart — return to it gently.","encouragement3":"Consistency matters more than pace. You showed up, and that counts.","encouragement4":"Each session is a quiet act of devotion. May it be accepted.","encouragement5":"The Qur\'an opens to those who return to it — keep coming back.","encouragement6":"Steady effort, even in small portions, is beloved."},"milestone":{"surahComplete":"You completed {chapter} in this session — may it settle gently in your heart.","streak3":"Three days of showing up. Steadiness is its own quiet blessing.","streak7":"A week of consistency. May Allah make it easy to continue.","streak14":"Two weeks of returning to the Book. That rhythm is worth keeping.","streak21":"Three weeks of practice. Small daily efforts build something lasting.","streak30":"A month of showing up. May your connection to the Qur\'an deepen."},"consistency":{"nudgeShort":"However long it\'s been, today is a good day to return.","nudgeMedium":"A few days away — pick up gently, one ayah at a time.","nudgeLong":"Welcome back. There is no rush; begin where you are."}},"congratulations_todays_hifz_session_is_complete":"Congratulations. Today&apos;s Hifz session is complete.","memorised_today":"Memorised today","new_ayahs":"New ayahs","todays_goal":"Today&apos;s goal","next_review":"Next review","view_plan":"View Plan","session_analytics_overview":"Session Analytics Overview","preparing_analytics":"Preparing analytics...","recite_check_results":"Recite Check Results","saved_word_checks_for_this_session_range":"Saved word checks for this session range.","what_next":"What next?","deterministic_replay":"Consistency check","recitation_confidence_heatmap":"Recitation Confidence Heatmap","most_improved":"Most Improved:","needs_focus":"Needs Focus:","ayah_activity":"Ayah activity","verse_plays_across_the_selected_range":"Verse plays across the selected range.","play_ayah_audio_to_populate_the_activity_chart":"Play ayah audio to populate the activity chart.","most_replayed_ayahs":"Most Replayed Ayahs","quick_view_of_where_repetition_is_concentrating":"Quick view of where repetition is concentrating.","no_ayah_replay_data_available_yet":"No ayah replay data available yet.","session_playback_balance":"Session Playback Balance","see_how_evenly_audio_attention_is_spread_across_th":"See how evenly audio attention is spread across the selected range.","playback_balance_appears_after_ayah_audio_starts":"Playback balance appears after ayah audio starts.","advanced_metrics":"Advanced Metrics","session_signals_review_health_cards_graphs_and_cha":"Session signals, review health, cards, graphs, and charts.","save_a_session_to_unlock_full_per_session_analytic":"Save a session to unlock full per-session analytics.","compact_breakdown_for_this_metric_group":"Compact breakdown for this metric group.","ai_memorisation_review":"AI memorisation review","ayah_display":"Ayah display","recite_from_memory":"Recite from memory","blur_everything":"Blur Everything","peek":"Peek","memorisation_review":"Memorisation review","live":"Live","stop_check":"Stop Check","checking_the_recording":"Checking the recording...","ai_memorisation_feedback_is_a_guide_verify_importa":"AI memorisation feedback is a guide. Verify important mistakes against the ayah before you save or reset.","reset_ayah":"Reset Ayah","save_attempt":"Save Attempt","press_and_hold_the_ayah_below_to_peek_release_to_h":"Press and hold the ayah below to peek · release to hide again","recitation_review":"Recitation review","open_recordings":"Open recordings","recording_is_not_available_in_this_browser":"Recording is not available in this browser.","recite_check":"Recite Check","start_reciting_prompt":"Start Reciting","use_the_ai_recite_tool_in_the_header_when_you_want":"Use the AI recite tool in the header when you want to begin.","recall_mode":"Recall Mode","recall_mode_hint":"Hide future words and reveal them as you recite.","recall_mode_off_hint":"Hide future words and reveal them as you recite correctly.","recall_mode_on_hint":"Recall mode is on. Words hide until you recite them correctly.","recall_mode_enable_hint":"Tap the Recall Mode icon to hide words before you recite, like Tarteel.","recall_mode_ready_title":"Ready to recite from memory","recall_mode_ready_message":"Start AI Recite when you are ready. Future words stay hidden until you say them correctly.","recall_mode_preparing_title":"Getting ready","recall_mode_preparing_message":"Preparing the microphone. Words will hide as soon as listening starts.","recall_mode_listening_title":"Listening…","recall_mode_listening_message":"Review Session. Each correct word reveals the next one.","recall_mode_progress_message":"{revealed} of {total} words revealed. Keep going.","recall_mode_mistake_title":"Try that word again","recall_mode_mistake_message":"The current word stays hidden until you recite it correctly.","recall_mode_peek_title":"Current word revealed","recall_mode_peek_message":"Use Peek only when you are stuck. Recite this word correctly to continue.","recall_mode_complete_title":"Ayah complete","recall_mode_complete_message":"Excellent work. Every word was revealed through your recitation.","reveal_current_word":"Reveal Current Word","what_to_do_next":"What to do next?","ai_review_check":"AI review check","saved_to_your_recordings_library_for_this_ayah":"Saved to your recordings library for this ayah.","go_to_recording_library":"Go to recording library","view_all_recording_library":"View All Recording Library","back_to_session_complete":"Back to session complete","ai_recitation_feedback_is_a_guide_verify_important":"AI recitation feedback is a guide. Verify important mistakes against the ayah before you save or reset.","recording_now":"Recording now","stop_recording":"Stop Recording","review_this_attempt":"Listen back to your recitation","self_rating":"Self-assessment","self_rating_prompt":"How well did you recall this ayah from Hifz?","selfCheckRatings":{"excellent":"Itqan","good":"Strong recall","fair":"Still building","review":"Needs muraja\'ah","excellentHint":"Fluent and accurate — the ayah flows from memory with confidence","goodHint":"Solid recall with only minor hesitation on a word or two","fairHint":"Mostly there, but a few gaps remain — worth one more repetition","reviewHint":"Return to this ayah before moving forward in your Hifz"},"selfCheckRecorder":{"aiListening":"AI is listening to your recitation","reviewHeading":"Review your recitation","assessmentHeading":"Assess your Hifz","aiSessionReady":"When you are ready, recite your selected ayah range aloud and let AI guide your review.","aiAyahReady":"When you are ready, recite this ayah from memory and let AI guide your review.","recordingActive":"Your microphone is live — recite the ayah with tajweed, then press stop when you finish.","reviewDraft":"Listen to your recording, honestly rate your recall, then save this attempt to your library.","preparingMic":"Preparing your microphone for a clear recording, insha\'Allah.","unsupportedBrowser":"Recording needs a browser with microphone support to capture your recitation.","idle":"Record yourself reciting this ayah from Hifz, then assess how well it stayed in memory."},"no_recordings_yet_desc":"Open Self-Check on any ayah, record your recitation, and save the attempt. Every saved recording is gathered here by surah and ayah.","no_matching_recording":"No matching recording","no_matching_recording_desc":"Try a different surah name or ayah number, or clear the search to see every saved recitation.","choose_a_recording":"Choose a recording","choose_a_recording_desc":"Select a saved recitation from the list to review your Hifz attempt in full.","record_again":"Record Again","recordings_library":"Recordings Library","back_to_self_check":"Back to Self-Check","loading_recordings":"Loading recordings…","no_recordings_yet":"No recordings yet","saved_session":"Saved session","selected_ayah":"Selected ayah","ai_check":"AI check","skip":"Skip","next":"Next","enter_a_minimum_of_3_words_results_match_the_same_":"Enter a minimum of 3 words. Results match the same passage in Arabic text or translation.","any_surah":"Any surah","loading_quran_search_index":"Loading Quran search index...","no_matching_ayahs_found_for_this_passage_and_filte":"No matching ayahs found for this passage and filter.","techniques":{"focusDescription":"Concentrate on one ayah before moving forward","chainingOffDescription":"Link each ayah to the next and practise the range as one continuous sequence.","chainingCumulativeDescription":"Build longer runs by adding one ayah at a time.","chainingLinkingDescription":"Strengthen transitions between neighbouring ayahs.","chainingLinkingHint":"Practice ayahs individually, then in pairs.","chainingCumulativeHint":"Start with first ayah, then add one more each time.","chainingOffSub":"Link each ayah to the next and practise the range as one continuous sequence.","chainingCumulativeSub":"Build longer connected runs from the first ayah outward.","chainingLinkingSub":"Train the transition between neighbouring ayahs.","chainingOffPreview":"Flow: selected ayahs in order, each ayah repeated {count} times.","chainingOffPreviewOne":"Flow: selected ayahs in order, each ayah repeated {count} time.","chainingCumulativePreview":"Cumulative flow: repeat 1, then 1-2, then 1-2-3. Each block repeats {count} times.","chainingCumulativePreviewOne":"Cumulative flow: repeat 1, then 1-2, then 1-2-3. Each block repeats {count} time.","chainingLinkingPreview":"Linking flow: repeat the current ayah, the next ayah, then both together. Each step repeats {count} times.","chainingLinkingPreviewOne":"Linking flow: repeat the current ayah, the next ayah, then both together. Each step repeats {count} time.","chainingOffLabel":"Chaining off · {count} repeats","chainingCumulativeLabel":"Cumulative · {count} repeats","chainingLinkingLabel":"Linking · {count} repeats","focusActiveDescription":"Concentrate on one ayah before moving forward","blurActiveDescription":"Hide more of the text gradually to strengthen recall","chainingActiveDescription":"{count} repeat(s) per chaining step.","cumulativeChaining":"Grow the passage step by step (Cumulative)","linkingChaining":"Practice ayah pairs (Linking)","anchorOffDescription":"Anchor mode off · use key words as memory hooks","anchorUsingDescription":"Using {anchors} as mental anchors for each ayah","anchorFirstLast":"first/last word","anchorKeyPairs":"key word pairs","anchorComplete":"complete structure","chainingWhyCumulative":"Use when you want to build longer runs by adding one ayah at a time.","chainingWhyLinking":"Use when you want to strengthen transitions between neighboring ayahs.","chainingNextCumulative":"Next: add one ayah to the block","chainingNextLinking":"Next: single -> next -> pair","chainingMethodRequired":"Chaining is on, but no method is selected yet.","chooseChainingMethod":"Choose chaining method"},"analytics":{"todayProgress":"Today\'s progress","todayProgressDesc":"{covered}/{total} ayahs covered.","streak":"Streak","streakDesc":"Active study days in a row.","memoryBreakdown":"Memory breakdown","spacedHealth":"Spaced repetition health","recitationQuality":"Recitation quality","rowNew":"New","rowDue":"Due","rowWeak":"Weak","rowMastered":"Mastered","rowQueuedToday":"queued today","rowReviewNow":"review now","rowNeedsCare":"needs care","rowSteadyAyahs":"steady ayahs","rowDueNow":"Due now","rowUpcoming":"Upcoming","rowReviews":"reviews","rowScheduled":"scheduled","rowAvgRetention":"Average retention","rowLoad":"{load} load","rowAvgQuality":"Average quality","rowChecks":"Checks","rowCompleted":"completed","rowReady":"Ready","noDataYet":"No data yet","noDataDetail":"Start a session to build analytics","defaultInsight":"Keep today small and consistent"},"guided":{"learn":"Learn","practice":"Practice","recall":"Recall","review":"Review","listenFollow":"Listen & Follow","tryReciting":"Try Reciting","continue":"Continue","learnInstruction":"Listen and follow the recitation.","practiceInstruction":"Try reciting with the ayah still partially visible.","recallInstruction":"Recall the ayah before moving forward.","reviewInstruction":"Review the verses due now.","defaultInstruction":"Continue your session.","start":"Start","play":"Play","chooseSurahHint":"Choose a surah and range, then start.","versesToReview":"You have {count} verses to review.","reviewDueHint":"Review what is due.","playActiveHint":"Play the active ayah. Use Tools for translation and word-by-word.","kickerReview":"✨ Time to refresh","kickerPlaying":"🌙 Keeping the rhythm steady","kickerDefault":"🌿 Begin with Bismillah, keep your heart with the ayah","reviewBodyDue":"You have {count} ayahs awaiting review. Revisit them gently and keep the chain strong.","reviewBodyDefault":"Return to this ayah with a calm review before moving ahead.","reviewBodySuffix":"Keep your tongue, eyes, and heart together on this ayah.","beforeBegin":"Before you begin","duringSession":"During the session","afterEachAyah":"After each ayah","keepGoing":"Keep going","listenAndFollow":"Listen and follow.","reciteFirstReveal":"Recite first, then reveal.","tryRecitingMinimal":"Try reciting with minimal support.","reviewVersesDue":"Review what is due.","versesDueCount":"{count} verses to review."},"sessionEnd":{"reviewInsights":"Review insights","reviewInsightsDesc":"See your session analytics","saveSession":"Save session","saveSessionDesc":"Keep this completed range","resetRange":"Reset range","resetRangeDesc":"Play same range again","createSession":"Create new session","createSessionDesc":"Choose different surah or range"},"sessionType":{"label":"Memorisation","nowPlaying":"Now playing","session":"Session","ayah":"Ayah {n}","ayahLabel":"Ayah","pause":"Pause","startSession":"Start session","advanced":"Advanced","beginner":"Beginner","sessionExplanation":"{mode} session using {chaining}."},"common":{"mushafSyncMessage":"Ayahs are loaded, but the mushaf page list has not synced yet. Switch back to Stacked or reopen this session.","fullQuran":"Full Quran","filterValue":"Filter value","noSurah":"No surah","currentSession":"Current session","confirm":"Confirm","stop":"Stop","savedAt":"Saved {date}","lastOpened":"Last opened {date}","rangeLabel":"Ayahs {start}–{end}","rangeLabelSingle":"Ayah {ayah}","manualAdvance":"manual advance","autoAdvance":"auto advance","reciterFollowAdvance":"listen then recite","plainSequence":"plain sequence","chainingLabel":"{method} chaining","setupSummary":"{count}x repeats, {mode}, {chaining}","noReadingAids":"No reading aids active","translationOn":"Translation on","transliterationOn":"Transliteration on","wordByWordOn":"Word-by-word on","wordAudioOn":"Word audio on","tajweedOn":"Tajweed on","fontLabel":"Font {font}","modeLabel":"{label} mode","repeatSummary":"{count}x repeats"},"search":{"juzNumber":"Juz number","hizbNumber":"Hizb number","pageNumber":"Page number","surah":"Surah","ayahNumber":"Ayah number","wordPosition":"Word position","wordNumber":"Word number"},"fonts":{"uthmanic":"Madani Mushaf (QCF)","amiri":"Amiri Quran","naskh":"Noto Naskh Arabic","scheherazade":"Scheherazade New","lateef":"Lateef"},"techniqueDisplay":{"talqin":{"label":"Listen and repeat","short":"Listen and repeat","description":"Listen to each section, then repeat it"},"focus":{"label":"One ayah at a time","short":"One ayah at a time","description":"Concentrate on one ayah before moving forward"},"blur":{"label":"Gradually hide the text","short":"Gradually hide the text","description":"Hide more of the text gradually to strengthen recall"},"chaining":{"label":"Join ayahs together","short":"Join ayahs together","description":"Link each ayah to the next and practise the range as one continuous sequence."},"anchor":{"label":"Highlight memory words","short":"Highlight memory words","description":"Use key words as hooks to recall each ayah"},"linking":{"label":"Practice ayah pairs","short":"Practice ayah pairs","description":"Practise each ayah, then join it with the next"},"cumulative":{"label":"Grow the passage step by step","short":"Grow the passage step by step","description":"Add one ayah at a time to build a longer run"}},"reduce_distracted_around_the_active_ayah":"Concentrate on one ayah before moving forward","tajweedPracticeCheck":{"title":"Tajweed practice check","legendTitle":"Tajweed colours explained","legendIntro":"These Mutqin colours mark common Tajweed rules in the ayah. Use them as practice reminders — not as a teacher’s ruling.","disclaimer":"Practice aid only — not a teacher’s ruling. Holds are shown as ranges, not exact targets.","summaryStrong":"Keep colours on: green/purple = soft nasal hold, red = stretch, orange = light bounce.","summaryIssues":"Focus on one coloured mark at a time — hold gently, then listen once if needed.","summaryUnable":"Use the colours while you practise. We’ll check holds when timing is clearer.","viewDetails":"View details","labels":{"hold":"Hold","sound":"Sound","next":"Next"},"hold":{"within":"Within the expected range","short":"A little short","long":"A little long","unable":"Could not assess clearly","na":"No special hold"},"sound":{"similar":"Similar to the reciter","different":"Needs another listen","unable":"Could not assess clearly"},"next":{"continue":"Continue","holdLonger":"Listen once, then hold a little longer","holdShorter":"Listen once, then hold a little shorter","listenRepeat":"Listen once, then repeat the phrase","slowPass":"Try one slower pass"},"live":{"listening":"Listening…","onTarget":"On target"},"colourNames":{"gray":"Gray","green":"Green","purple":"Purple","orange":"Orange","red":"Red","blue":"Blue"},"bands":{"strong":{"headline":"Coloured marks look steady — keep practising gently.","label":"Steady practice"},"average":{"headline":"A couple of coloured marks need a slower pass.","label":"Needs a slower pass"},"needs_work":{"headline":"Go slow on the coloured marks below.","label":"Needs attention"},"unable":{"headline":"Timing wasn’t clear enough to check holds this time.","label":"Couldn’t fully check"}},"colours":{"gray":"Gray — clear / silent marks","green":"Green — soft nasal hold","purple":"Purple — hidden sound","orange":"Orange — light bounce","red":"Red — stretch (madd)","blue":"Blue — merge"}},"amd":{"title":"Check your memorisation","emptyAyahTitle":"Ayah text not ready","emptyAyahDesc":"We couldn’t show the ayah surface for this check. Close and open the check again.","betaBadge":"","disclaimer":"Practice aid only — not a teacher’s ruling.","disclaimerShort":"Practice aid only — not a teacher’s ruling.","onlyFromTestWithAi":"Finish your session, then choose Check my memorisation to open this check.","assessmentType":"From memory","readyCopy":"Recite aloud from memory. Mutqin will follow along gently as you go.","startAssessment":"Start","startPlan":"Start This Practice Plan","adjustPlan":"Adjust Plan","chooseOther":"Choose Different Session","retest":"Re-test weak areas","micGranted":"Ready","micReady":"Ready","micListening":"Recording","micListeningLive":"Recording","recordingActive":"Recording","micPaused":"Paused","micNeedAccess":"Allow microphone","micDenied":"Allow microphone","micUnavailable":"Unavailable","micUnsupported":"Unavailable","micChecking":"Checking…","micPrompt":"Ready","micGuidanceDenied":"Allow microphone access in your browser settings, then try again.","micGuidanceUnsupported":"Speech recognition is unavailable here. You can still use Peek.","hintStarting":"Preparing the microphone…","hintListening":"Microphone is live — recite from memory. Words colour as they are recognised.","hintListeningLive":"Microphone is live — recite from memory. Words colour as they are recognised.","hintProcessing":"Finishing…","hintAnalysing":"Comparing with the Qur’an text…","startFailed":"Could not start the check.","analyseFailed":"Could not review this recitation. Please try again.","sessionExpired":"Your session expired. Refresh the page, then try again.","noSpeech":"No speech was detected. Please try again.","recognitionStopped":"Listening paused. Please try again.","guestSummary":"May Allah strengthen what you have memorised.","tools":"Memorisation tools","toolBlur":"Blur","toolStop":"Stop","toolHelp":"Help","helpCopy":"Recite from memory. Mutqin follows along to highlight words that may need more care. This feature is still in beta.","startRecitation":"Record","startRecitationHint":"","stopRecitation":"Stop recording","difficulty":"Difficulty","wordsShown":"Words shown","peekShort":"Peek","peekHintShort":"Hold to reveal","wordsShownShort":"Shown","elapsedTimer":"Recitation time","elapsedTimerHint":"How long this recitation has taken — used to personalise your next plan","textSizeShort":"Text size","textSmallerShort":"Smaller text","textLargerShort":"Larger text","textSizeIncrease":"Increase text size","textSizeDecrease":"Decrease text size","mistakeSound":"Mistake sound","mistakeSoundShort":"Sound","mistakeSoundOn":"On","mistakeSoundOff":"Off","mistakeSoundHint":"Soft cue when a mistake is confirmed","tajweed":"Tajweed","tajweedShort":"Tajweed","tajweedOn":"On","tajweedOff":"Off","tajweedHint":"Show or hide tajweed colouring on the text","mistakeVisual":"Mistake confirmed","autoFollow":"Auto-follow","autoFollowOn":"Auto-follow on","autoFollowOff":"Auto-follow off","autoFollowPaused":"Auto-follow paused","autoFollowResume":"Resume auto-follow","autoFollowHint":"Keep the active word near eye level during longer checks","completeTitle":"Mā shā’ Allāh — check complete","completeBody":"You recalled this range successfully.","sessionEnded":"Session complete","sessionEndedBody":"Returning…","testAgain":"Check again","done":"Done","enableMic":"Enable microphone","stages":{"idle":"Ready","ready":"Ready","starting":"Starting","listening":"Listening","paused":"Paused","complete":"Complete","processing":"Processing","analysing":"Analysing","results":"Assessment results","plan":"Practice plan","plan_adjusted":"Plan adjusted","practice_active":"Practice active","practice_complete":"Practice complete","retest":"Re-test","error":"Something went wrong"},"hud":{"talqin":"Ayah {ayah} · Repetition {current} of {total} · {phase}","chunking":"Chunk {current} of {total}","anchor":"Focus words: {strengthened} / {total} strengthened","generic":"Practice · {current} / {total}","nextRep":"Next repetition","markWord":"Word strengthened","finish":"Finish & re-test"},"howKicker":"How Mutqin mistake detection works","how1":"Hide the Qur’an text and recite from memory.","how2":"Mutqin listens, follows your place, and highlights mistakes.","how3":"Repeat a word to correct it — correct words reveal themselves.","how4":"Save the result and practise the weak areas again.","toolRecite":"Recite","toolAudio":"Audio help","toolMemorizing":"Memorizing","peekHint":"Need a hint? Peek at the text","toolPeek":"Peek at the text"}},"toasts":{"saved":"Saved successfully.","error":"Something went wrong. Please try again.","theMemorisationWorkspaceRecoveredFromA":"The memorisation workspace recovered from a startup error.","fadingModeWordByWordDisabled":"Fading Mode: Word-by-Word disabled","wordByWordModeFadingDisabled":"Word-by-Word Mode: Fading disabled","focusModeOnBlurModeOff":"🎯 Focus Mode: On | 🌫️ Blur Mode: Off (cannot use together)","blurModeOnFocusModeOff":"🌫️ Blur Mode: On | 🎯 Focus Mode: Off (cannot use together)","blurModeOnChainingOffBlur":"🌫️ Blur Mode: On | 🔗 Chaining: Off — Blur hides upcoming verses needed for chaining","chainingOnBlurModeOffYou":"🔗 Chaining: On | 🌫️ Blur Mode: Off — You need to see upcoming verses for chaining to work","tipEnableAnchorModeWithChaining":"💡 Tip: Enable Anchor Mode with Chaining for better recall","pleaseSelectASessionFirst":"Please select a session first","sessionLoadedSuccessfully":"Session loaded successfully","ayahCompletedMovingToNext":"Ayah completed! Moving to next...","sessionSaved":"✓ Session \\"{name}\\" saved","recommendedSetupApplied":"Recommended setup applied","presetGuidedStart":"Preset: Guided Start","presetChainingAnchorModeWithFocus":"Preset: Chaining + Anchor Mode (with Focus)","presetPureRecallWithBlurMode":"Preset: Pure Recall with Blur Mode","presetFocusModeAnchorHooks":"Preset: Focus Mode + Anchor Hooks","blurModeWorksBestWithoutChaining":"Blur Mode works best without chaining, so chaining was turned off.","anchorModeKeyWordsWillBe":"Anchor Mode: Key words will be highlighted as memory hooks","anchorModeDisabled":"Anchor Mode disabled","anchorModeUsing":"Anchor Mode: Using {anchorCount}","chooseAValidSurahAndAyah":"Choose a valid surah and ayah range before starting.","chooseChainingMethod":"Chaining is enabled. Choose linking or cumulative in Practice Tools to start.","nothingReadyToSave":"Nothing is ready to save yet. Load a surah range or start a session first.","sessionSavedSuccess":"Session saved successfully.","pleaseSelectAValidSurahAnd":"Please select a valid surah and ayah range first","failedToStartSession":"Could not start the session. Please try again.","sessionBusyTryAgain":"A session action is already in progress. Please wait a moment and try again.","noActiveSessionToSave":"No active session to save","sessionSaved2":"Session saved","sessionDeleted":"Session deleted","sessionExportBlockedIncompleteSessionData":"Session export blocked: incomplete session data.","downloadReady":"Download ready ✓","exportFailedRetry":"Export failed, retry","thisResultDoesNotHaveEnough":"This result does not have enough stored metadata to re-run the audit.","unableToPlayThisRecordingRight":"We could not play this recording. Try reloading it or record again.","audioSystemNotReady":"Audio isn\'t ready yet.","audioElementNotReady":"Audio isn\'t ready yet. Try again in a moment.","audioRecordingNotReady":"This recording isn\'t ready yet. Try again in a moment.","stopTheCurrentSelfCheckBefore":"Stop the current self-check before moving to another ayah.","saveOrDiscardTheCurrentSelf":"Save or discard the current self-check attempt before switching ayahs.","stopOrDiscardTheCurrentRecording":"Stop or discard the current recording before closing Self-Check.","selectAnAyahBeforeOpeningThe":"Select an ayah before opening the recordings library.","stopTheCurrentRecordingBeforeOpening":"Stop the current recording before opening the recordings library.","aiHighlightMarkedCorrectResultsUpdated":"AI highlight marked correct. Results updated.","noSavedReciteChecksForThis":"No saved Recite Checks for this ayah yet.","chooseASessionRangeBeforeStarting":"Choose a session range before starting a session Recite Check.","stopTheCurrentMemorisationCheckBefore":"Stop the current memorisation check before switching ayahs.","chooseASessionRangeBeforeOpening":"Choose a session range before opening the memorisation checker.","loadedCachedMemorisationAnalysis":"Loaded cached memorisation analysis.","memorisationAssessmentCouldNotBeSaved":"Memorisation assessment could not be saved on this device right now.","memorisationAssessmentSavedToRecordingsLibrary":"Memorisation assessment saved to recordings library.","memorisationAssessmentDeleted":"Memorisation assessment deleted.","memorisationCheckerReset":"Memorisation checker reset.","memorisationAssessmentDiscarded":"Memorisation assessment discarded.","thisRecordingDoesNotHaveEnough":"This recording does not have enough metadata to re-run the deterministic audit.","reciteCheckComplete":"Recite Check complete.","displayedAyahReviewReset":"Displayed ayah review reset.","reciteCheckCouldNotBeSaved":"Recite Check could not be saved on this device right now.","reciteCheckSavedToSavedAttempts":"Recite Check saved to Saved Attempts.","reciteCheckDiscarded":"Recite Check discarded.","reciteCheckDeleted":"Recite Check deleted.","loadedCachedReciteCheck":"Loaded cached Recite Check.","recordingReadyForAyah":"Recording ready for Ayah {number}","savedSelfCheckForAyah":"Saved self-check for Ayah {ayahNumber}","audioNotAvailableForThisAyah":"Audio not available for this ayah","downloadedAyahAudio":"Downloaded ayah {number} audio","failedToDownloadAyahAudio":"Failed to download ayah audio","hifzPlanDeleted":"Hifz plan deleted","sessionSavedWithCtrlS":"Session saved with Ctrl+S","savedSessionDismissed":"Saved session dismissed","speedChangedToX":"Speed changed to {p0}x","switchedToCasualMode":"Switched to Casual Mode","switchedToMode":"Switched to {p0} Mode","textSizeReset":"Text size reset","pleaseSelectASurah":"Please select a surah","planCreatedVersesDayForDays":"Plan created: {versesPerDay} verses/day for {plannerEstimatedDays} days","loadASurahFirstBeforeDownloading":"Load a surah first before downloading","couldNotIdentifySurah":"Could not identify surah","savedVersesFromForOfflineReading":"Saved {length} verses from {p0} for offline reading.","failedToDownloadVerses":"Failed to download verses","loadedFromOfflineStorage":"Loaded {surah} from offline storage","failedToLoadOfflineSurah":"Failed to load offline surah","offlineSurahRemoved":"Offline surah removed","audioPlaybackError":"Couldn\'t start the audio.","audioNotAvailableForVerse":"Audio not available for verse {number}","failedToPlayAudio":"Couldn\'t play the audio.","playbackFailed":"Couldn\'t start playback.","playbackTapToPlay":"Tap play to start the audio.","failedToLoadVerses":"Failed to load verses","pleaseSelectASurahFirst":"Please select a surah first","noVersesLoadedCheckYourNetwork":"No verses loaded. Check your network connection.","nothingToPlayCheckTheSelected":"Nothing to play. Check the selected range.","backOnlineLiveApisAreAvailable":"Back online. Live APIs are available again.","offlineModeActiveReadingFallsBack":"Offline mode active. Reading falls back to cached ranges.","settingsIssue":"Settings issue: {join}","fontSize":"Font size: {defaultFontSize}%","message":"{p0} {p1}","settingsSaved":"Settings saved","failedToLoadSurahList":"Failed to load surah list","sessionControlsResetToDefaults":"Session controls reset to defaults","reciterUpdatedForThisSession":"Reciter updated for this session.","noVersesToQuizOn":"No verses to quiz on","enableWordAudioToPreviewIndividual":"Enable Word audio to preview individual words.","wordAudioIsNotAvailableFor":"Word audio is not available for this word.","wordTimingUnavailableForThisAyah":"Word timing unavailable for this ayah.","unableToPlayThisWordRight":"Unable to play this word right now.","unableToPlayAyahNow":"Couldn\'t play this ayah. Try again.","textSizePercent":"Text size: {percent}%","sessionResumeFailed":"Unable to resume session. Please try again.","sessionEndFailed":"Unable to end session. Please try again.","sessionPaused":"Session paused. You can resume anytime.","sessionPauseFailed":"Unable to pause session. Please try again.","couldNotPlayRecording":"We could not play this recording. Try reloading it or record again."},"errors":{"network":"Network error. Check your connection."},"about":{"tag":"Mutqin","heroTitle":"About Mutqin","heroDesc":"Mutqin helps you memorise, revise, and retain the Qur\'an through daily practice. Listen, repeat, and always know what to do next.","ctaPrimary":"Start practising","ctaSecondary":"Our mission","purposeTitle":"Purpose","purposeDesc":"Make Qur\'an memorisation clear enough for daily use.","approachTitle":"Approach","approachDesc":"Practice tools that sit alongside a real teacher, not in place of one.","outcomeTitle":"Outcome","outcomeDesc":"Steady revision, clearer next steps, and better accuracy.","verse":"\\"Indeed, We have made the Qur\'an easy to remember.\\" (54:17)","title":"About Mutqin"},"aboutUs":{"title":"About","kicker":"About Mutqin","built_for_focused_quran_practice":"Built for daily Quran practice.","calm_study_flow":"Simple study flow","revision_led_learning":"Review that sticks","built_around_consistency":"Built for consistency","why_people_stay":"Why people stay","less_friction_clearer_progress_better_return_point":"Less fuss, clearer progress, and a clear place to return.","session_setup_is_simple_enough_for_daily_use":"Session setup is simple enough for daily use.","revision_signals_help_learners_revisit_what_needs_":"Review reminders help you revisit what needs attention.","the_interface_stays_focused_instead_of_overwhelmin":"The interface stays focused instead of crowded.","why_it_exists":"Why it exists","what_it_does":"What it does","what_it_respects":"What it respects","the_product_principle":"The principle","focused_workflow":"Focused practice","reliable_revision":"Reliable review","cleaner_decisions":"Clearer choices"},"mission":{"title":"Our mission","kicker":"Our mission","make_consistent_quran_practice_easier_to_understan":"Make consistent Quran practice easier to start and keep going.","what_that_means":"What that means","clear_entry_point":"Clear starting point","beginners_should_know_what_to_do_in_the_first_minu":"Beginners should know what to do in the first minute.","reliable_revision_loop":"Reliable review","weak_ayahs_should_surface_before_they_become_large":"Weak ayahs should show up before they become larger gaps.","respect_for_real_study":"Respect for real study","the_product_should_support_teachers_halaqah_and_pe":"The product should support teachers, halaqah, and personal routines.","lower_the_barrier":"Lower the barrier","make_the_first_minute_simple_enough_for_beginners_":"Make the first minute simple for beginners and steady for returning learners.","improve_retention":"Improve retention","surface_weak_ayahs_before_they_turn_into_larger_re":"Surface weak ayahs before they turn into larger review gaps.","respect_real_study":"Respect real study","fit_naturally_alongside_a_teacher_halaqah_or_perso":"Fit alongside a teacher, halaqah, or personal routine without extra noise.","how_success_looks":"How success looks","simpler_starts":"Simpler starts","stronger_retention":"Stronger retention","more_confidence":"More confidence"},"donate":{"title":"Support","donate":"Support","support_a_simpler_memorisation_experience":"Need help with practice, your account, or a session?","product_maintenance":"Getting started","faster_iteration":"Your account","better_student_experience":"During a session","support_focus":"Help topics","fund_the_next_practical_improvements_students_feel":"Find answers here, or write to us anytime.","flexible":"Practice","one_time_support":"Checking recitation","help_with_ongoing_improvements_maintenance_and_car":"Recite while Mutqin follows along. It is a practice helper, not a replacement for a teacher.","monthly_support":"Something not working?","support_steady_iteration_on_onboarding_revision_an":"Refresh once. If that fails, sign out and back in. For recitation, allow microphone access in your browser.","targeted":"Feedback","project_support":"Share feedback","back_focused_improvements_for_a_specific_part_of_t":"Tell us what helped, what was unclear, or how practice could be easier.","start_the_conversation":"Contact us","if_you_want_to_support_mutqin_contact_us_with_the_":"Ask about billing, practice, or feedback anytime.","contact_us":"Contact us"},"waitingList":{"brand":"Mutqin","kicker":"Mutqin","title":"Join the waiting list","subtitle":"Be first to know when access opens. One short note is all we need.","name":"Name","email":"Email","namePlaceholder":"Your name","emailPlaceholder":"you@example.com","join":"Join waiting list","joining":"Joining…","success":"You’re on the list","alreadyJoined":"You’re already on the list","successHint":"We’ll email you when Mutqin is ready for you.","joinAnother":"Use a different email","privacyNote":"We’ll only use this to notify you. No spam.","errorFields":"Please check the highlighted fields and try again.","errorSend":"Something went wrong. Please try again in a moment.","errors":{"name":"Please enter your name.","email":"Please enter your email address.","emailInvalid":"Please enter a valid email address."}},"hifzPlan":{"choose_your_daily_goal":"Choose Your Daily Goal","choose_how_many_new_ayahs_you_want_to_learn_each_d":"Choose how many new ayahs you want to learn each day.","surah":"Surah","daily_ayahs":"Daily ayahs","from":"From","pick_your_learning_style":"Pick Your Learning Style","pick_the_pace_that_feels_realistic_for_your_daily_":"Pick the pace that feels realistic for your daily routine.","set_your_study_flow":"Set Your Study Flow","tell_mutqin_what_to_focus_on_first_during_each_ses":"Tell Mutqin what to focus on first during each session.","choose_your_support_level":"Choose Your Support Level","choose_how_much_checking_and_guidance_you_want_dur":"Choose how much checking and guidance you want during practice.","set_your_playback":"Set Your Playback","choose_how_many_repeats_which_reciter_and_the_play":"Choose how many repeats, which reciter, and the playback speed for each ayah.","repeats_per_ayah":"Repeats per ayah","reciter":"Reciter","playback_speed":"Playback speed","your_hifz_journey_is_ready":"Your Hifz Journey Is Ready","review_todays_pace_then_start_and_let_mutqin_guide":"Review today&apos;s pace, then start and let Mutqin guide the first session automatically.","when_you_start_the_timer_audio_and_ayah_highlighti":"When you start, the timer, audio, and ayah highlighting all begin automatically.","wizard":{"editTitle":"Edit Hifz Plan","createTitle":"Create Your Hifz Plan","savePlan":"Save Hifz Plan","startJourney":"Start Hifz Journey","chooseSurahPlaceholder":"Choose a Surah","steps":{"goal":{"label":"Goal","headline":"Choose today\'s goal"},"style":{"label":"Style","headline":"Pick your daily pace"},"flow":{"label":"Flow","headline":"Choose your study flow"},"support":{"label":"Support","headline":"Set your support level"},"playback":{"label":"Playback","headline":"Choose your recitation setup"},"summary":{"label":"Summary","headline":"Start your Hifz journey"}},"goals":{"light":{"title":"Light","subtitle":"1-3 ayahs/day","detail":"A lighter workload for busy days, with more time for careful revision and steady confidence."},"balanced":{"title":"Balanced","subtitle":"3-5 ayahs/day","detail":"Maintain a steady pace with enough revision to strengthen long-term memory."},"intensive":{"title":"Intensive","subtitle":"5-10 ayahs/day","detail":"Move faster through memorisation while accepting a heavier daily revision load."}},"styles":{"light":{"title":"Light","subtitle":"Low pressure, easy to maintain.","detail":"Best for a calm routine where consistency matters more than speed."},"balanced":{"title":"Balanced","subtitle":"Moderate pace and revision.","detail":"A practical daily rhythm for new ayahs, review, and long-term retention."},"intensive":{"title":"Intensive","subtitle":"Higher pace, stronger commitment.","detail":"Designed for faster progress with tighter daily structure and more review."}},"focus":{"newPriority":{"title":"New Memorisation First","subtitle":"Start with fresh ayahs.","detail":"Keeps momentum high while still scheduling reviews after new work."},"revisionPriority":{"title":"Revision First","subtitle":"Protect what you already know.","detail":"Places older memorisation first so retention stays strong before adding more."},"mixed":{"title":"Mixed Flow","subtitle":"Balanced new and review work.","detail":"Blends new memorisation and revision into one manageable daily plan."},"weakAyahFocus":{"title":"Weak Ayah Focus","subtitle":"Repair fragile memorisation.","detail":"Gives extra attention to ayahs that need reinforcement before they become backlog."}},"support":{"gentle":{"title":"Gentle Guidance","subtitle":"Light checking and softer feedback.","detail":"Best if you want a lighter workload while building confidence and consistency."},"standard":{"title":"Standard Support","subtitle":"Balanced checking and practical feedback.","detail":"Best for most learners who want useful correction without slowing the session down."},"highPrecision":{"title":"High Precision Mode","subtitle":"Closer checking for stricter mastery.","detail":"Best when you want tighter correction and can handle a more demanding session."}},"forecast":{"totalAyahs":"Total Ayahs","totalPages":"Total Pages","dailyTarget":"Daily Target","dailyTargetValue":"{count} Ayahs / Day","estimatedDuration":"Estimated Duration","estimatedCompletion":"Estimated Completion","learningStyle":"Learning Style","supportLevel":"Support Level","repeatsPerAyah":"Repeats per Ayah","playbackSpeed":"Playback Speed","retentionReviews":"Retention Reviews","retentionSchedule":"1, 3, 7, 14, 30, 60 days","firstReview":"First review","totalHizb":"Total Hizb","totalJuz":"Total Juz"},"createPlan":"Create Plan","stepCounter":"Step {current} of {total}","yourPlan":"Your plan","to":"To","ayahRange":"Ayah Range","studyFlow":"Study Flow","reciterLabel":"Reciter","validation":{"dailyTarget":"Set a realistic number of new ayahs for each day.","validRange":"Enter a valid ayah range or leave both range fields blank.","repeatsRequired":"Choose how many times each ayah should repeat.","reciterRequired":"Choose a reciter before you continue."}},"helpLearning":{"title":"Help & Learning","subtitle":"Short guides for calm, steady Qur’an memorisation.","bestFor":"Best for:","sections":{"tajweed":{"title":"Tajweed colours","description":"When Tajweed is on, Mutqin colours letters so you can notice pronunciation patterns while you listen and repeat.","bestFor":"Students improving pronunciation gently while memorising.","legendTitle":"What each colour means","legendIntro":"Use this legend while you listen and repeat. It is a guide, not a replacement for a teacher.","colors":{"gray":{"label":"Silent / connection marks","description":"Hamzat al-wasl and silent letters that are not pronounced."},"green":{"label":"Ghunnah / Idgham with ghunnah","description":"Nasalisation and joining with a nasal sound."},"purple":{"label":"Ikhfa / Idgham without ghunnah","description":"Hidden noon sound and non-nasal joining."},"orange":{"label":"Qalqalah","description":"Echoing stop on ق ط ب ج د."},"red":{"label":"Madd (elongation)","description":"Normal, obligatory, and necessary lengthening."},"blue":{"label":"Idgham shafawi","description":"Labial merging with م."}}},"srs":{"title":"Review scheduling","description":"Return to memorised ayahs before they begin to fade. Verses that need more care appear sooner.","bestFor":"Keeping earlier memorisation strong over time."},"techniques":{"title":"Guided practice","description":"Listen, follow and repeat at a comfortable pace. Choose the method that helps you stay steady.","bestFor":"Students building a calm daily rhythm.","details":{"repetition":{"label":"Repetition","text":"Repeat the same verse a few times before moving on."},"linking":{"label":"Linking","text":"Connect each verse to the next to improve flow."},"cumulative":{"label":"Cumulative","text":"Add new verses while gently revising earlier ones."}}},"layouts":{"title":"Reading layouts","description":"Switch between stacked cards and a Mushaf-style page depending on what feels easiest to follow.","bestFor":"Choosing a reading view that stays comfortable.","details":{"stacked":{"label":"Stacked layout","text":"Shows each ayah clearly, one after another — helpful on smaller screens."},"mushaf":{"label":"Mushaf layout","text":"Shows ayahs in a familiar page-inspired style."}}},"aiRecitation":{"title":"Recitation check","description":"Recite from memory and let Mutqin follow your progress. See which words may need a little more attention.","bestFor":"Students who want gentle feedback after practising aloud."},"talqinMode":{"title":"Talqin mode","description":"Listen, pause, repeat, and extend at a steady pace so you can focus on the ayahs themselves.","bestFor":"Students building retention through guided listening and repetition.","workflowTitle":"How Talqin flows","workflowIntro":"After you begin, Mutqin keeps a steady listen–repeat rhythm so you can focus on the ayahs:","workflowListen":"1. Listen:","workflowListenText":"Hear the ayah clearly, then prepare to repeat.","workflowPause":"2. Pause and repeat:","workflowPauseText":"Playback pauses so you can recite what you just heard.","workflowExtend":"3. Extend:","workflowExtendText":"Join ayahs gradually so the passage stays connected."},"manualAssessment":{"title":"Self assessment","description":"After a session, note how confident you felt so the next step can stay useful.","bestFor":"Students who prefer simple self-reflection."}}},"rangeOptions":{"all":"Full Quran","juz":"Juz","hizb":"Hizb","page":"Page","surah":"Surah","ayah":"Ayah","word":"Word"}},"dashboard":{"loading":"Loading…","loading_hint":"Loading…","load_error":"Couldn’t load dashboard.","load_error_hint":"Please try again.","retry":"Retry","refresh":"Refresh","bismillah":"Bismillah","greeting":"Assalamu alaikum, {name}","dear_friend":"friend","supporting_message":"","retention_label":"Reminders","next_step":"Continue practising","last_ayah":"Stopped at Ayah {n}","completion":"{n}%","snapshot_title":"Your stats","snapshot_subtitle":"Totals from your practice","change_7d":"+{n}","progress_title":"Where you are","progress_subtitle":"Current surah and recent practice","chart_range":"Chart range","days_7":"7 days","days_30":"30 days","current_surah":"Surah","current_range":"Ayahs","current_ayah":"Ayah","memorised_count":"Memorised","completed_count":"completed","learning_count":"Learning","in_progress_count":"in progress","last_activity":"Last practice","last_activity_soft":"{when}","not_started":"Not started yet","range_completion":"Portion complete","plan_completion":"Plan complete","surah_completion":"Surah complete","chart_empty_title":"No activity","chart_empty_message":"Your practice will appear here after your first session.","week_summary":"This week: {sessions} sessions · {ai_checks} AI checks · {ayahs} ayahs practised.","week_summary_empty":"No sessions this week yet.","strength_fragile":"Fragile","strength_building":"Building","strength_strong":"Strong","chart_aria":"Practice chart","chart_ayahs":"Ayahs","chart_sessions":"Sessions","chart_summary_empty":"","chart_summary":"","strengthen_title":"Needs review","strengthen_subtitle":"Ayahs to revisit","view_all":"View all","view_all_reviews":"View all reviews","weak_empty_title":"All clear","weak_empty_message":"Nothing to review right now. Keep practising.","ayah_n":"Ayah {n}","ayah_range":"{start}–{end}","activity_title":"Recent activity","activity_subtitle":"What you did lately","activity_empty_title":"No activity","activity_empty_message":"Your sessions and AI checks will appear here.","activity_filter_all":"All","activity_filter_sessions":"Sessions","activity_filter_ai":"AI checks","activity_filter_notes":"Notes","activity_filter_empty":"No activity in this filter.","open":"Open","streak":"{n}-day streak","streak_keep_going":"1-day streak — keep going.","streak_restart":"Start today to begin a new streak.","recommended_next":"Recommended next","recommended_next_start":"Start recommended session","incomplete_reminder":"Saved session waiting","todays_focus":"{detail}","just_now":"Just now","minutes_ago":"{n}m ago","hours_ago":"{n}h ago","yesterday":"Yesterday","days_ago":"{n}d ago","today_at":"{time}","yesterday_at":"Yesterday","metric_completed":"Sessions done","metric_completed_hint":"","metric_saved":"Saved","metric_saved_hint":"","metric_memorised":"Memorised","metric_memorised_hint":"","metric_completed_ayahs":"completed","metric_ai_recite":"AI checks","metric_ai_recite_hint":"","metric_notes":"Notes","metric_notes_hint":"","current_position":"Current surah","at_ayah":"At ayah {n}","progress_counts_label":"Counts","legend_memorised":"Memorised","legend_learning":"Learning","drawer_sessions_title":"Session history","drawer_sessions_empty":"No completed sessions yet.","drawer_ai_title":"AI Recite checks","drawer_ai_empty":"No AI Recite checks yet.","drawer_notes_title":"Notes and reflections","drawer_notes_empty":"No notes yet.","drawer_hifz_title":"Hifz progress","drawer_hifz_empty":"No memorisation progress yet.","drawer_close":"Close","drawer_loading":"Loading…","drawer_load_error":"Couldn’t load this list.","drawer_status_completed":"Completed","drawer_status_ended_early":"Ended early","drawer_result_strong":"Strong","drawer_result_mixed":"Mixed","drawer_result_weak":"Weak","drawer_accuracy":"{n}%","drawer_hifz_memorised":"{n} memorised","drawer_hifz_in_progress":"{n} in progress","drawer_open_workspace":"Open workspace","activity_chart_title":"Practice over time","chart_total_ayahs":"{n} ayahs","chart_total_sessions":"{n} sessions","start_session":"Start session","start_check":"Check","go_to_workspace":"Open workspace","view_all_activity":"View all activity","drawer_activity_title":"Activity log","drawer_activity_empty":"Your sessions and AI checks will appear here.","activity_type_session":"Session","activity_type_ai_check":"AI check","activity_type_note":"Note","activity_type_assessment":"Assessment","activity_type_recommendation":"Recommendation","activity_type_memorised":"Memorised","activity_outcome_saved":"Saved","activity_outcome_resumed":"Resumed","activity_outcome_assessment":"Assessment completed","activity_outcome_recommendation":"Recommendation ready","activity_outcome_memorised":"Memorised","activity_note_saved":"Note saved","cta_resume":"Resume session","cta_continue":"Continue session","return_session_label":"Your session is waiting","return_session_aria":"Return to your current memorisation session","return_session_hint":"Go back to the exact ayah and settings you left.","return_session_countdown":"Returning in {n}s…","return_session_now":"Return now","return_session_stay":"Stay here","cta_review":"Start review","cta_recommendation":"Start practice","cta_start":"Start session","msg_resume":"","msg_continue":"","msg_incomplete":"","msg_review":"","msg_recommendation":"","msg_plan":"","msg_start_from_position":"","msg_start_new":"","status_strengthen":"Review","status_review":"Review","action_review":"Review","review_now":"Review now","chart_tooltip":"{date} · {ayahs} Ayahs · {sessions} Sessions","weak_explain_phrase":"","weak_explain_ayah":"","weak_explain_plan":"","weak_explain_ai":"","weak_explain_progress":"","sync_loading":"Updating…","sync_ready":"{when}","sync_ready_now":"Ready","sync_error":"Offline","footnote":""},"admin":{"loading":"Loading…","load_error":"Couldn’t load admin dashboard.","retry":"Retry","refresh":"Refresh","eyebrow":"Super Admin","greeting":"Assalamu alaikum, {name}","dear_friend":"Admin","supporting_message":"Manage users, resolve issues, and steer the platform.","snapshot_title":"Platform overview","metric_users":"Users","metric_users_hint":"+{n} this week","metric_active":"Active (7d)","metric_sessions":"Sessions","metric_memorised":"Memorised","metric_ai":"AI checks","metric_notes":"Notes","metric_contacts":"Pending messages","metric_pending":"Pending messages","metric_pending_hint":"Contact form messages waiting for a response.","trend_vs_last_week":"{arrow} {n}% vs last week","days_range":"Date range","top_learners_title":"Top learners","top_learners_empty":"No sessions in this range yet.","top_learners_sort":"Top learners sort","top_learners_sort_sessions":"By sessions","top_learners_sort_accuracy":"By accuracy","top_learners_sessions":"{n} sessions","top_learners_memorised":"{n} memorised","export_users":"Export CSV","detail_heading":"Details — {name}","pagination_summary":"Page {page} of {pages} · {total} users","pagination_prev":"Previous","pagination_next":"Next","pagination_page":"Page","status_active_7d":"Active in the last 7 days","status_active_30d":"Active 8–30 days ago","status_inactive":"Inactive for more than 30 days or never sessioned","learners_title":"Learners","learners_subtitle":"Recent activity, progress, and current position","learners_empty":"No learners to show yet.","view_all_users":"View all users","unnamed":"Unnamed","not_started":"Not started","col_learner":"Learner","col_position":"Position","col_memorised":"Memorised","col_learning":"In progress","col_sessions":"Sessions","col_ai":"AI","col_active":"Last active","col_status":"Status","learning_title":"Learning progress","learning_subtitle":"Memorisation across the whole platform","learning_memorised":"Ayahs memorised","learning_in_progress":"Ayahs in progress","learning_with_progress":"Learners with progress","learning_assessments":"Assessments","ai_title":"AI Recite health","ai_subtitle":"Accuracy and strength across checks","ai_total":"Total checks","ai_week":"Last 7 days","ai_avg":"Accuracy","ai_empty":"No AI checks yet.","view_ai":"View checks","mix_title":"Audience mix","mix_subtitle":"Subscriptions, languages, and sign-in methods","mix_subscriptions":"Subscriptions","mix_locales":"Locales","mix_auth":"Sign-in","mix_empty":"No data yet.","sub_active":"Active","sub_trialing":"Trialing","sub_canceled":"Canceled","sub_past_due":"Past due","sub_none":"None","auth_google":"Google","auth_email":"Email","chart_title":"Platform pulse","chart_subtitle":"Platform-wide ayahs and completed sessions","chart_label":"All learners","chart_range":"Chart range","days_7":"7 days","days_30":"30 days","chart_empty":"Sessions and AI checks will appear here as learners practise.","chart_aria":"Platform sessions and AI checks chart","chart_ayahs":"Ayahs","chart_sessions":"Sessions","chart_tooltip":"{date} · {ayahs} ayahs · {sessions} sessions","week_summary":"This week: {sessions} sessions · {ai_checks} AI checks · {ayahs} ayahs · {new_users} new users.","week_summary_empty":"No platform activity this week yet.","contacts_title":"Needs attention","contacts_subtitle":"Pending contact messages","contacts_empty":"No pending messages.","view_all_contacts":"View all contacts","contact_no_subject":"No subject","resolve":"Resolve","activity_title":"Latest activity","activity_subtitle":"Sessions, AI checks, notes, and new users","activity_empty":"No recent platform activity.","view_all_activity":"Full log","activity_fallback":"Activity","activity_type_user":"Join","activity_type_session":"Session","activity_type_ai":"AI check","outcome_user_joined":"Joined","outcome_session_completed":"Completed","outcome_session_ended_early":"Ended early","outcome_note_saved":"Note saved","result_strong":"Strong","result_mixed":"Mixed","result_weak":"Weak","result_unknown":"Unknown","accuracy":"{n}%","ayah_n":"Ayah {n}","ayah_single":"Ayah {n}","ayah_range":"Ayahs {start}–{end}","just_now":"Just now","minutes_ago":"{n}m ago","hours_ago":"{n}h ago","yesterday":"Yesterday","days_ago":"{n}d ago","drawer_close":"Close","drawer_loading":"Loading…","drawer_load_error":"Couldn’t load this list.","drawer_users_title":"All users","drawer_users_empty":"No users found.","drawer_sessions_title":"Sessions","drawer_sessions_empty":"No sessions yet.","drawer_ai_title":"AI Recite checks","drawer_ai_empty":"No AI checks yet.","drawer_notes_title":"Notes","drawer_notes_empty":"No notes yet.","drawer_contacts_title":"Pending contacts","drawer_contacts_empty":"No pending contacts.","drawer_activity_title":"Activity log","drawer_activity_empty":"No activity yet.","users_search":"Search name or email","learners_hint":"Tap a learner for full progress, sessions, AI checks, and notes.","chart_ai":"AI checks","chart_total_sessions":"{n} sessions","chart_total_ai":"{n} AI checks","chart_total_ayahs":"{n} ayahs","chart_total_users":"{n} new users","chart_tooltip_ayahs":"{n} ayahs practised","chart_tooltip_users":"{n} new users","activity_filter":"Filter activity","filter_all":"All","filter_sessions":"Sessions","filter_ai":"AI","filter_joins":"Joins","filter_notes":"Notes","drawer_user_title":"Learner details","joined":"Joined {date}","user_position":"Current position","user_surahs":"Surah progress","user_surahs_empty":"No memorisation progress yet.","user_surah_stats":"{memorised} memorised · {learning} in progress","user_surah_fraction":"{practised}/{total}","user_surah_percent":"{n}%","user_surah_open":"Open practice","user_surah_expand":"Show details","user_surah_collapse":"Hide details","user_surah_memorised":"{n} memorised","user_surah_learning":"{n} in progress","user_sessions":"Recent sessions","user_sessions_empty":"No sessions yet.","user_activity":"Recent activity","user_activity_empty":"No recent activity yet.","user_activity_open":"Open","user_activity_open_practice":"Open practice","user_activity_open_ai":"Open AI check","user_activity_resume":"Resume session","user_activity_hint":"Opens memorisation in a new tab.","user_ai":"Recent AI checks","user_ai_empty":"No AI checks yet.","user_notes":"Recent notes","user_notes_empty":"No notes yet.","outcome_session_paused":"Paused","users_title":"Users","users_subtitle":"Manage learners and their progress","users_hint":"Search, open, edit, or remove any registered account.","users_count":"{n} users","users_empty":"No users match these filters.","users_empty_search":"No learners match your search","clear_filters":"Clear filters","empty_memorised":"Not started yet","empty_sessions":"No sessions yet","empty_learning":"None in progress","empty_last_active":"Never logged in","empty_ai_checks":"No checks yet","empty_accuracy":"No data yet","card_sessions":"Sessions: {n}","card_memorised":"Memorised: {n}","card_last_active":"Last active: {n}","card_view_details":"View details","card_expand":"Show more metrics","card_collapse":"Hide metrics","export_csv":"Export CSV","filters_active_count":"{n} filters active","showing_x_of_y_filtered":"Showing {shown} of {total} users (filtered)","status_active_today":"Active today","status_active_n_days_ago":"Active {n} days ago","status_never_sessioned":"Never sessioned","col_streak":"Streak","user_surahs_empty_soft":"No surahs started yet.","outcome_session_incomplete":"Incomplete","notes_written":"{n} notes written","notes_none":"No notes written yet.","view_all_notes_short":"View all","field_user_id":"User ID","copy_user_id":"Copy user ID","copied":"Copied.","delete_user_warning":"Deleting this account is permanent and cannot be undone.","delete_account":"Delete account","add_user":"Add user","create_user":"Create user","save_user":"Save changes","cancel":"Cancel","saving":"Saving…","delete":"Delete","tab_overview":"Overview","tab_edit":"Edit","field_name":"Name","field_email":"Email","field_password":"Password","field_password_optional":"New password (optional)","field_locale":"Locale","field_subscription":"Subscription","drawer_create_title":"Create user","form_error":"Couldn’t save those changes.","danger_zone":"Danger zone","delete_user":"Delete user","delete_user_help":"Permanently removes this account and their learning data.","delete_user_prompt":"Delete {name}? This cannot be undone.","delete_user_confirm":"Delete this user and all of their learning data?","delete_self_blocked":"You can’t delete your own admin account.","delete_note_confirm":"Delete this note?","delete_contact_confirm":"Delete this contact message?","console_title":"Dashboard","console_tabs":"Admin sections","tab_users":"Users","tab_inbox":"Inbox","tab_activity":"Activity","users_showing":"Showing {n} of {total}","select_all":"Select all","filter_status_all":"All subscriptions","filter_activity_all":"All activity","filter_last_active":"Last active","filter_active_today":"Today","filter_active_7d":"7 days","filter_active_30d":"30 days","filter_inactive":"Inactive","filter_inactive_30d":"Inactive (30d+)","filter_never":"Never practised","filter_sessions_gt0":"Sessions > 0","filter_progress_all":"All progress","filter_progress_has":"Has progress","filter_progress_none":"No progress","filters_active":"Filtered","filters_clear":"Clear","sort_created":"Sort: joined","sort_last_active":"Last active","sort_memorised":"Memorised","sort_sessions":"Sessions","sort_learning":"In progress","sort_accuracy":"Accuracy","sort_name":"Sort: name","sort_asc":"Asc","sort_desc":"Desc","col_accuracy":"Accuracy","col_last_ai":"Last AI check","row_actions":"Row actions","action_reset_password":"Reset password","action_reset_password_confirm":"Reset password for {email}?","action_reset_password_done":"Temporary password: {password}","action_deactivate":"Deactivate account","action_deactivate_confirm":"Deactivate {email}? Their subscription will be set to canceled.","action_send_email":"Send email","bulk_selected":"{n} selected","bulk_send_email":"Send email","bulk_message_selected":"Message selected","bulk_change_subscription":"Change subscription","bulk_export_csv":"Export selected as CSV","bulk_export_selected":"Export selected","bulk_deactivate":"Deactivate selected","bulk_deactivate_short":"Deactivate","bulk_deactivate_confirm":"Deactivate {n} selected users? Their subscription will be set to canceled.","bulk_deactivate_self_blocked":"You can’t deactivate your own admin account.","bulk_set_status":"Change subscription","bulk_delete":"Delete selected","bulk_clear":"Clear","bulk_dismiss":"Dismiss selection","bulk_delete_confirm":"Delete {n} selected users? This cannot be undone.","detail_empty":"Select a user to view their details.","more_filters":"More filters","back_to_list":"Back to users","save_ok":"Saved.","action_view_as_learner":"View as learner","filter_all_time":"All time","showing_x_of_y":"Showing {shown} of {total} users","delete_type_name":"Type \\"{name}\\" to confirm","toast_saved":"Changes saved.","toast_deleted":"User deleted.","toast_created":"User created. Temporary password: {password}","add_user_note":"Note (optional, not saved)","account_info":"Account info","field_created_at":"Joined","field_subscription_tier":"Subscription tier","field_renewal":"Renewal date","tier_free":"Free","tier_pro":"Pro","notes_total":"{n} notes","view_all_notes":"View all notes","notes_hide":"Hide notes"}}');
 
 /***/ })
 
@@ -46844,7 +42990,7 @@ module.exports = JSON.parse('{"common":{"on":"On","off":"Off","reset":"Reset","s
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
@@ -46958,7 +43104,7 @@ module.exports = JSON.parse('{"common":{"on":"On","off":"Off","reset":"Reset","s
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
-/******/ 			return "js/" + chunkId + "." + {"dashboard":"557e811d","admin-dashboard":"a36ae0ef","memorisation":"dcce6001","resources_js_locales_ar_json":"c22fe106","resources_js_locales_es_json":"687c0609","resources_js_locales_fr_json":"5af7af50","resources_js_locales_id_json":"33012054","resources_js_locales_tr_json":"23999449","resources_js_locales_ur_json":"b9111f8d"}[chunkId] + ".js";
+/******/ 			return "js/" + chunkId + "." + {"homepage":"9a2f03e5","about":"dddb482e","about-us":"3790ee48","our-mission":"e550e87e","donation":"0a0c0b81","waiting-list":"c6082e51","dashboard":"ccbd8e1c","admin-dashboard":"e00ff712","memorisation":"5b80e735","resources_js_locales_ar_json":"1891364e","resources_js_locales_es_json":"d7ffa82e","resources_js_locales_fr_json":"870dc485","resources_js_locales_id_json":"950aa52a","resources_js_locales_tr_json":"957bbb56","resources_js_locales_ur_json":"bff1fc67","hifz-plan-modal":"6add61b7","amd-modal":"8468d914","ayah-notes-modal":"ed78477f","adaptive-assessment":"1088f414"}[chunkId] + ".js";
 /******/ 		};
 /******/ 	})();
 /******/ 	

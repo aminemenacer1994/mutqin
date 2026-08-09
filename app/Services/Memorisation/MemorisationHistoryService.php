@@ -114,6 +114,8 @@ class MemorisationHistoryService
         $now = now();
         $weakWords = is_array($analysis['weak_words'] ?? null) ? $analysis['weak_words'] : [];
         $weakAyahs = is_array($analysis['weak_ayahs'] ?? null) ? $analysis['weak_ayahs'] : [];
+        /** @var array<string, array<string, mixed>> $pending */
+        $pending = [];
 
         foreach ($weakWords as $word) {
             if (! is_array($word)) {
@@ -137,7 +139,7 @@ class MemorisationHistoryService
                 $ayahNumber,
                 $wordIndex
             );
-            $this->touchWeakSpot($user, $assessment, [
+            $pending[$spotKey] = [
                 'spot_type' => MemorisationWeakSpot::TYPE_WORD,
                 'surah_number' => $surahNumber,
                 'ayah_number' => $ayahNumber,
@@ -145,7 +147,7 @@ class MemorisationHistoryService
                 'verse_key' => $word['verse_key'] ?? ($surahNumber.':'.$ayahNumber),
                 'spot_key' => $spotKey,
                 'severity' => $this->normaliseSeverity($word['severity'] ?? $word['severity_label'] ?? 'moderate'),
-            ], $now, stillWeak: true);
+            ];
         }
 
         foreach ($weakAyahs as $ayah) {
@@ -164,7 +166,7 @@ class MemorisationHistoryService
                 $ayahNumber,
                 null
             );
-            $this->touchWeakSpot($user, $assessment, [
+            $pending[$spotKey] = [
                 'spot_type' => MemorisationWeakSpot::TYPE_AYAH,
                 'surah_number' => $surahNumber,
                 'ayah_number' => $ayahNumber,
@@ -174,7 +176,56 @@ class MemorisationHistoryService
                 'severity' => is_array($ayah)
                     ? $this->normaliseSeverity($ayah['severity'] ?? 'moderate')
                     : 'moderate',
-            ], $now, stillWeak: true);
+            ];
+        }
+
+        if ($pending === []) {
+            return;
+        }
+
+        $existing = MemorisationWeakSpot::query()
+            ->where('user_id', $user->id)
+            ->whereIn('spot_key', array_keys($pending))
+            ->get()
+            ->keyBy('spot_key');
+
+        $inserts = [];
+        foreach ($pending as $spotKey => $attributes) {
+            /** @var MemorisationWeakSpot|null $spot */
+            $spot = $existing->get($spotKey);
+            if (! $spot) {
+                $inserts[] = [
+                    ...$attributes,
+                    'user_id' => $user->id,
+                    'status' => MemorisationWeakSpot::STATUS_ACTIVE,
+                    'trend' => 'unknown',
+                    'affected_attempt_count' => 1,
+                    'first_identified_at' => $now,
+                    'last_identified_at' => $now,
+                    'source_assessment_id' => $assessment->id,
+                    'last_assessment_id' => $assessment->id,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+
+                continue;
+            }
+
+            $sameAttempt = (int) $spot->last_assessment_id === (int) $assessment->id;
+            $nextCount = (int) $spot->affected_attempt_count + ($sameAttempt ? 0 : 1);
+            $spot->fill([
+                'severity' => $attributes['severity'] ?? $spot->severity,
+                'affected_attempt_count' => $nextCount,
+                'last_identified_at' => $now,
+                'last_assessment_id' => $assessment->id,
+                'status' => MemorisationWeakSpot::STATUS_ACTIVE,
+                'trend' => $nextCount >= 3 ? 'regressing' : 'stable',
+                'verse_key' => $attributes['verse_key'] ?? $spot->verse_key,
+            ])->save();
+        }
+
+        foreach (array_chunk($inserts, 100) as $chunk) {
+            MemorisationWeakSpot::query()->insert($chunk);
         }
     }
 

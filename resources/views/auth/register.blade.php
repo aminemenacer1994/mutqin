@@ -5,6 +5,8 @@
     <div class="auth-panel">
         <h1 class="auth-heading">{{ __('ui.auth_register_heading') }}</h1>
 
+        @include('partials.ios-pwa-install')
+
         @error('google')
             <div class="alert alert-danger auth-alert" role="alert">{{ $message }}</div>
         @enderror

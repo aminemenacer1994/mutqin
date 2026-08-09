@@ -158,6 +158,11 @@
   color: var(--danger, #c45c4a);
 }
 
+.app-status--offline .app-status__icon {
+  background: color-mix(in srgb, var(--warning, #c9973a) 16%, transparent);
+  color: var(--warning, #c9973a);
+}
+
 .app-status--auth .app-status__icon {
   background: color-mix(in srgb, var(--accent, #bd8c58) 16%, transparent);
 }

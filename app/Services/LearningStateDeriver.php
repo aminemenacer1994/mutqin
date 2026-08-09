@@ -157,7 +157,12 @@ class LearningStateDeriver
         }
 
         $now = now();
-        $rows = [];
+        $existing = MemorisationProgress::query()
+            ->where('user_id', $user->id)
+            ->get(['surah_number', 'ayah_number', 'status', 'mastery_level', 'repetitions', 'metadata', 'completed_at'])
+            ->keyBy(fn (MemorisationProgress $row) => $row->surah_number.':'.$row->ayah_number);
+
+        $dirty = [];
 
         foreach ($ayahs as $id => $ayah) {
             if (! is_array($ayah)) {
@@ -172,34 +177,63 @@ class LearningStateDeriver
             $engineStatus = (string) ($ayah['status'] ?? 'new');
             $status = self::STATUS_MAP[$engineStatus] ?? 'learning';
             $masteryLevel = (int) round(max(0, min(5, (float) ($ayah['mastery_level'] ?? 0))) / 5 * 100);
-            // Count reviewed/mastered ayahs as completed so the dashboard Memorised
-            // counter increments after a range is confirmed in the session flow.
-            $completedAt = in_array($status, ['memorised', 'mastered'], true)
-                ? ($this->parseDate($ayah['last_review'] ?? null) ?? $now)
-                : null;
+            $key = $surah.':'.$ayahNumber;
+            /** @var MemorisationProgress|null $current */
+            $current = $existing->get($key);
 
-            $rows[] = [
+            // Preserve an existing completion timestamp when the engine only
+            // reports a terminal status without a fresh last_review value.
+            $completedAt = null;
+            if (in_array($status, ['memorised', 'mastered'], true)) {
+                $completedAt = $this->parseDate($ayah['last_review'] ?? null)
+                    ?? $current?->completed_at
+                    ?? $now;
+            }
+
+            $metadata = json_encode([
+                'zone' => $ayah['zone'] ?? null,
+                'zone_step' => $ayah['zone_step'] ?? null,
+                'weak_count' => $ayah['weak_count'] ?? null,
+                'last_review' => $ayah['last_review'] ?? null,
+                'next_review' => $ayah['next_review'] ?? null,
+                'engine_status' => $engineStatus,
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            $repetitions = (int) ($ayah['repetition_count'] ?? 0);
+            if ($current) {
+                $currentMeta = is_array($current->metadata)
+                    ? json_encode($current->metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                    : (string) ($current->metadata ?? '');
+                $currentCompleted = $current->completed_at?->toDateTimeString();
+                $nextCompleted = $completedAt instanceof Carbon
+                    ? $completedAt->toDateTimeString()
+                    : null;
+                if (
+                    (string) $current->status === $status
+                    && (int) $current->mastery_level === $masteryLevel
+                    && (int) $current->repetitions === $repetitions
+                    && $currentMeta === (string) $metadata
+                    && $currentCompleted === $nextCompleted
+                ) {
+                    continue;
+                }
+            }
+
+            $dirty[] = [
                 'user_id' => $user->id,
                 'surah_number' => $surah,
                 'ayah_number' => $ayahNumber,
                 'status' => $status,
                 'mastery_level' => $masteryLevel,
-                'repetitions' => (int) ($ayah['repetition_count'] ?? 0),
-                'metadata' => json_encode([
-                    'zone' => $ayah['zone'] ?? null,
-                    'zone_step' => $ayah['zone_step'] ?? null,
-                    'weak_count' => $ayah['weak_count'] ?? null,
-                    'last_review' => $ayah['last_review'] ?? null,
-                    'next_review' => $ayah['next_review'] ?? null,
-                    'engine_status' => $engineStatus,
-                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                'repetitions' => $repetitions,
+                'metadata' => $metadata,
                 'completed_at' => $completedAt,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
         }
 
-        foreach (array_chunk($rows, 200) as $chunk) {
+        foreach (array_chunk($dirty, 200) as $chunk) {
             MemorisationProgress::upsert(
                 $chunk,
                 ['user_id', 'surah_number', 'ayah_number'],

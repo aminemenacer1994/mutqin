@@ -12,15 +12,25 @@
         <span>{{ t('admin.loading') }}</span>
       </div>
 
-      <div v-else-if="bootError" class="admin-console__state admin-console__state--error" role="alert">
-        <span>{{ t('admin.load_error') }}</span>
-        <button type="button" class="admin-btn" @click="boot(true)">{{ t('admin.retry') }}</button>
-      </div>
+      <NetworkFallback
+        v-else-if="bootError"
+        class="admin-console__state admin-console__state--error"
+        page
+        :kind="failureKind"
+        home-href="/"
+        @retry="boot(true)"
+      />
 
-      <div v-else-if="!data" class="admin-console__state" role="status">
-        <span>{{ t('common.status.emptyDesc') }}</span>
-        <button type="button" class="admin-btn" @click="boot(true)">{{ t('admin.retry') }}</button>
-      </div>
+      <NetworkFallback
+        v-else-if="!data"
+        class="admin-console__state"
+        page
+        kind="failure"
+        :title="t('common.status.emptyTitle')"
+        :description="t('common.status.emptyDesc')"
+        home-href="/"
+        @retry="boot(true)"
+      />
 
       <template v-else>
         <header class="admin-console__top admin-reveal" style="--admin-delay: 0ms">
@@ -882,6 +892,8 @@
 
 <script>
 import { adminApi } from '../scripts/api/admin'
+import NetworkFallback from '../components/NetworkFallback.vue'
+import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
 import './AdminDashboard.css'
 
 const emptyEdit = () => ({
@@ -899,6 +911,7 @@ const emptyCreate = () => ({
 
 export default {
   name: 'AdminDashboard',
+  components: { NetworkFallback },
   props: {
     auth: { type: Object, default: () => ({}) },
     initialData: { type: Object, default: null },
@@ -909,6 +922,7 @@ export default {
       data: initial,
       bootLoading: !initial,
       bootError: false,
+      failureKind: 'failure',
       refreshing: false,
       chartDays: Number(initial?.meta?.chart_days) === 7 ? 7 : 30,
       users: [],
@@ -1127,10 +1141,14 @@ export default {
     this.boot()
     document.addEventListener('click', this.onDocumentClick)
     document.addEventListener('keydown', this.onDocumentKeydown)
+    this.unsubscribeNetwork = subscribeNetworkStatus((online) => {
+      if (online && this.bootError && !this.data) this.boot(true)
+    })
   },
   beforeUnmount() {
     if (this.searchTimer) clearTimeout(this.searchTimer)
     if (this.toastTimer) clearTimeout(this.toastTimer)
+    if (typeof this.unsubscribeNetwork === 'function') this.unsubscribeNetwork()
     document.removeEventListener('click', this.onDocumentClick)
     document.removeEventListener('keydown', this.onDocumentKeydown)
   },
@@ -1150,12 +1168,16 @@ export default {
           const sanitized = this.sanitizePayload(payload)
           if (!sanitized) throw new Error('owner mismatch')
           this.data = sanitized
+          this.failureKind = 'failure'
           this.chartDays = Number(sanitized?.meta?.chart_days) === 7 ? 7 : 30
         }
         await this.reloadUsers()
       } catch (error) {
         console.error(error)
-        if (!this.data) this.bootError = true
+        if (!this.data) {
+          this.failureKind = classifyRequestFailure(error)
+          this.bootError = true
+        }
       } finally {
         this.bootLoading = false
       }

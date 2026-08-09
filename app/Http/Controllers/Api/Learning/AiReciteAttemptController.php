@@ -17,7 +17,13 @@ class AiReciteAttemptController extends Controller
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit(100)
-            ->get();
+            ->get([
+                'id',
+                'ayah_range',
+                'band',
+                'accuracy_percent',
+                'created_at',
+            ]);
 
         $items = $attempts->map(function (AiReciteAttempt $attempt) {
             $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];

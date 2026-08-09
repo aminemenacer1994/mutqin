@@ -15,6 +15,7 @@ use App\Models\UserSession;
 use App\Support\QuranMetadata;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -24,13 +25,30 @@ use Illuminate\Support\Str;
  */
 class AdminDashboardService
 {
+    private const BUILD_CACHE_TTL_SECONDS = 90;
+
     /**
      * @return array<string, mixed>
      */
     public function build(User $admin, int $chartDays = 30): array
     {
         $chartDays = in_array($chartDays, [7, 30], true) ? $chartDays : 30;
+        if (app()->runningUnitTests()) {
+            return $this->buildFresh($admin, $chartDays);
+        }
 
+        $cacheKey = 'admin-dashboard:v1:'.$admin->id.':'.$chartDays;
+
+        return Cache::remember($cacheKey, self::BUILD_CACHE_TTL_SECONDS, function () use ($admin, $chartDays) {
+            return $this->buildFresh($admin, $chartDays);
+        });
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildFresh(User $admin, int $chartDays): array
+    {
         return [
             'meta' => [
                 'owner_id' => (int) $admin->id,
@@ -1174,23 +1192,23 @@ class AdminDashboardService
             ->where('status', UserSessionStatus::Completed->value)
             ->where('ended_at', '>=', $from)
             ->where('ended_at', '<=', $to)
-            ->get(['ended_at'])
-            ->groupBy(fn (UserSession $session) => optional($session->ended_at)->toDateString())
-            ->map->count();
+            ->selectRaw('DATE(ended_at) as day, COUNT(*) as aggregate')
+            ->groupByRaw('DATE(ended_at)')
+            ->pluck('aggregate', 'day');
 
         $aiByDay = AiReciteAttempt::query()
             ->where('created_at', '>=', $from)
             ->where('created_at', '<=', $to)
-            ->get(['created_at'])
-            ->groupBy(fn (AiReciteAttempt $attempt) => optional($attempt->created_at)->toDateString())
-            ->map->count();
+            ->selectRaw('DATE(created_at) as day, COUNT(*) as aggregate')
+            ->groupByRaw('DATE(created_at)')
+            ->pluck('aggregate', 'day');
 
         $signupsByDay = User::query()
             ->where('created_at', '>=', $from)
             ->where('created_at', '<=', $to)
-            ->get(['created_at'])
-            ->groupBy(fn (User $user) => optional($user->created_at)->toDateString())
-            ->map->count();
+            ->selectRaw('DATE(created_at) as day, COUNT(*) as aggregate')
+            ->groupByRaw('DATE(created_at)')
+            ->pluck('aggregate', 'day');
 
         $points = [];
         $cursor = $from->copy();

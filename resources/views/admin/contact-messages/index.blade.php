@@ -11,6 +11,7 @@
             <div class="admin-filter-tabs">
                 <a class="billing-secondary-btn {{ $status !== 'resolved' ? 'admin-filter-active' : '' }}" href="{{ route('admin.contact-messages.index', ['status' => 'open']) }}">Open</a>
                 <a class="billing-secondary-btn {{ $status === 'resolved' ? 'admin-filter-active' : '' }}" href="{{ route('admin.contact-messages.index', ['status' => 'resolved']) }}">Resolved</a>
+                <a class="billing-secondary-btn" href="{{ route('admin.waiting-list.index') }}">Waiting list</a>
             </div>
         </div>
 

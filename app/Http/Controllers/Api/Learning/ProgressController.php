@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Learning;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveProgressRequest;
 use App\Models\MemorisationProgress;
+use App\Services\DashboardService;
 use App\Support\QuranMetadata;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,8 +14,33 @@ class ProgressController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $progress = MemorisationProgress::query()
+        $validated = $request->validate([
+            'surah_number' => ['nullable', 'integer', 'min:1', 'max:114'],
+            'updated_since' => ['nullable', 'date'],
+        ]);
+
+        $query = MemorisationProgress::query()
             ->where('user_id', $request->user()->id)
+            ->select([
+                'id',
+                'surah_number',
+                'ayah_number',
+                'status',
+                'mastery_level',
+                'repetitions',
+                'completed_at',
+                'updated_at',
+            ]);
+
+        if (isset($validated['surah_number'])) {
+            $query->where('surah_number', (int) $validated['surah_number']);
+        }
+
+        if (! empty($validated['updated_since'])) {
+            $query->where('updated_at', '>=', $validated['updated_since']);
+        }
+
+        $progress = $query
             ->orderBy('surah_number')
             ->orderBy('ayah_number')
             ->get()
@@ -74,6 +100,8 @@ class ProgressController extends Controller
                 ['status', 'mastery_level', 'repetitions', 'metadata', 'completed_at', 'updated_at']
             );
         }
+
+        DashboardService::forgetForUser($request->user());
 
         return response()->json(['saved' => true, 'count' => count($rows)]);
     }

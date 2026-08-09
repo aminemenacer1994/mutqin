@@ -6,19 +6,26 @@
         <span>{{ t('dashboard.loading') }}</span>
       </div>
 
-      <div v-else-if="error && !data" class="user-dashboard__error" role="alert">
-        <span>{{ t('dashboard.load_error') }}</span>
-        <button type="button" class="dash-btn dash-btn--primary" @click="reload(true)">
-          {{ t('dashboard.retry') }}
-        </button>
-      </div>
+      <NetworkFallback
+        v-else-if="error && !data"
+        class="user-dashboard__error"
+        page
+        :kind="failureKind"
+        :auto-retry-on-reconnect="false"
+        home-href="/"
+        @retry="reload(true)"
+      />
 
-      <div v-else-if="!data" class="user-dashboard__error" role="status">
-        <span>{{ t('common.status.emptyDesc') }}</span>
-        <button type="button" class="dash-btn dash-btn--primary" @click="reload(true)">
-          {{ t('dashboard.retry') }}
-        </button>
-      </div>
+      <NetworkFallback
+        v-else-if="!data"
+        class="user-dashboard__error"
+        page
+        kind="failure"
+        :title="t('common.status.emptyTitle')"
+        :description="t('common.status.emptyDesc')"
+        home-href="/"
+        @retry="reload(true)"
+      />
 
       <template v-else>
         <header class="dash-hero dash-reveal">
@@ -534,6 +541,8 @@ import {
   Tooltip,
 } from 'chart.js'
 import { learningApi } from '../scripts/api/learning'
+import NetworkFallback from '../components/NetworkFallback.vue'
+import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
 import './Dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -564,7 +573,7 @@ const DRAWER_EMPTY = {
 
 export default {
   name: 'UserDashboard',
-  components: { Bar },
+  components: { Bar, NetworkFallback },
   props: {
     auth: { type: Object, default: () => ({}) },
     initialData: { type: Object, default: null },
@@ -575,6 +584,7 @@ export default {
       data: initial,
       loading: !initial,
       error: false,
+      failureKind: 'failure',
       chartDays: initial?.chart?.days === 7 ? 7 : 30,
       chartReady: true,
       reduceMotion: false,
@@ -987,9 +997,13 @@ export default {
     document.addEventListener('visibilitychange', this.visibilityHandler)
     window.addEventListener('focus', this.focusHandler)
     document.addEventListener('keydown', this.escapeHandler)
+    this.unsubscribeNetwork = subscribeNetworkStatus((online) => {
+      if (online && this.error && !this.data) this.reload(true)
+    })
   },
   beforeUnmount() {
     try { this._dashboardAbort?.abort?.() } catch (_) { /* ignore */ }
+    if (typeof this.unsubscribeNetwork === 'function') this.unsubscribeNetwork()
     if (this.visibilityHandler) document.removeEventListener('visibilitychange', this.visibilityHandler)
     if (this.focusHandler) window.removeEventListener('focus', this.focusHandler)
     if (this.escapeHandler) document.removeEventListener('keydown', this.escapeHandler)
@@ -1347,6 +1361,7 @@ export default {
         const chartChanged = chartFingerprint !== this.lastChartFingerprint
         this.data = sanitized
         this.error = false
+        this.failureKind = 'failure'
         this.lastSyncedAt = sanitized?.meta?.generated_at || new Date().toISOString()
         this.lastDashboardFetchedAt = Date.now()
         this.syncState = 'ready'
@@ -1376,6 +1391,7 @@ export default {
         console.error('Dashboard fetch failed', error)
         if (requestId !== this.dashboardRequestId) return
         if (initial || force || !this.data) {
+          this.failureKind = classifyRequestFailure(error)
           this.error = true
           this.data = null
         }

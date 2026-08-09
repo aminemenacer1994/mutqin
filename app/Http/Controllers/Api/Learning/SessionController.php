@@ -6,6 +6,7 @@ use App\Enums\UserSessionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveSessionRequest;
 use App\Models\UserSession;
+use App\Services\DashboardService;
 use App\Services\NextSessionRecommendationService;
 use App\Services\SessionLifecycleService;
 use App\Support\QuranMetadata;
@@ -105,6 +106,10 @@ class SessionController extends Controller
             $this->authorize('update', $session);
         }
 
+        if (in_array($action, ['start', 'pause', 'resume', 'end', 'discard_example'], true)) {
+            DashboardService::forgetForUser($request->user());
+        }
+
         return response()->json([
             'saved' => true,
             'session' => $session,
@@ -128,6 +133,7 @@ class SessionController extends Controller
 
         $session = $this->lifecycle->start($request->user(), $data);
         $this->authorize('update', $session);
+        DashboardService::forgetForUser($request->user());
 
         return response()->json([
             'saved' => true,
@@ -153,6 +159,7 @@ class SessionController extends Controller
 
         $session = $this->lifecycle->pause($request->user(), $data);
         $this->authorize('update', $session);
+        DashboardService::forgetForUser($request->user());
 
         return response()->json([
             'saved' => true,
@@ -175,6 +182,7 @@ class SessionController extends Controller
 
         $session = $this->lifecycle->resume($request->user(), $data);
         $this->authorize('update', $session);
+        DashboardService::forgetForUser($request->user());
 
         return response()->json([
             'saved' => true,
@@ -206,6 +214,8 @@ class SessionController extends Controller
         } catch (\Throwable) {
             $recommendationError = true;
         }
+
+        DashboardService::forgetForUser($request->user());
 
         return response()->json([
             'saved' => true,

@@ -35,5 +35,8 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Keep API clients on friendly JSON; never leak exception internals when debug is off.
+        $exceptions->shouldRenderJsonWhen(static function (Request $request, \Throwable $e): bool {
+            return $request->is('api/*') || $request->expectsJson();
+        });
     })->create();

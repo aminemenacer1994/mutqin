@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ContactSubmissionController;
+use App\Http\Controllers\WaitingListController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Api\DashboardController;
@@ -20,6 +21,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/stripe/webhook', [BillingController::class, 'webhook'])->name('stripe.webhook');
 Route::post('/contact', [ContactSubmissionController::class, 'store'])->name('api.contact.store');
+Route::post('/waiting-list', [WaitingListController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('api.waiting-list.store');
 
 // Backend-driven learning persistence (Sanctum SPA cookie auth, user scoped).
 Route::middleware('auth:sanctum')->group(function () {
