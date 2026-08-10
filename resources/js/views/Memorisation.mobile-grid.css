@@ -37,6 +37,7 @@
     .content,
     .workspace,
     .workspace-main,
+    .session-progress-rail,
     .workspace-shell,
     .workspace-shell-head,
     .workspace-shell-copy,
@@ -244,6 +245,37 @@
     flex: none !important;
     overflow: hidden !important;
     box-sizing: border-box !important;
+  }
+
+  /* Primary + Return on row 1; Custom full-width on row 2 so Return stays secondary. */
+  .workspace-shell-actions .top-card-session-actions.post-session-choice-pair.has-workspace-return,
+.workspace-shell--post-session-choice .post-session-choice-pair.has-workspace-return {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .workspace-shell-actions .post-session-choice-pair.has-workspace-return > .post-session-choice-return {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
+  .workspace-shell-actions .post-session-choice-pair.has-workspace-return.has-paired-actions > .session-primary-action {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  .workspace-shell-actions .post-session-choice-pair.has-workspace-return > .post-session-choice-custom {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+  }
+
+  .workspace-shell-actions .post-session-choice-pair.has-workspace-return:not(.has-paired-actions) > .post-session-choice-return {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  .workspace-shell-actions .post-session-choice-pair.has-workspace-return:not(.has-paired-actions) > .post-session-choice-custom {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
   }
 
   .workspace-shell--post-session-choice .workspace-shell-actions,
@@ -1531,7 +1563,7 @@
   }
 
   .post-onboarding-modal--guided .onboarding-step-rail,
-  .post-onboarding-modal--guided .onboarding-step-rail--five {
+  .post-onboarding-modal--guided .onboarding-step-rail--four {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 0.4rem !important;
@@ -2822,8 +2854,29 @@
     box-shadow: none !important;
   }
 
-  .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span {
+  .workspace-shell-actions .post-session-choice-pair > .post-session-choice-custom span,
+.workspace-shell-actions .post-session-choice-pair > .post-session-choice-return span {
     display: inline !important;
+  }
+
+  .workspace-shell-actions .post-session-choice-pair > .post-session-choice-return {
+    background: var(--surface-strong, #ffffff) !important;
+    border-color: color-mix(in srgb, var(--border, rgba(31, 24, 18, 0.14)) 100%, transparent) !important;
+    color: var(--text, #2b241c) !important;
+    font-weight: 500 !important;
+    box-shadow: none !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+  }
+
+  html[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-return,
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-pair > .post-session-choice-return,
+.dark-mode .workspace-shell-actions .post-session-choice-pair > .post-session-choice-return {
+    background: #3a3129 !important;
+    border: 1px solid rgba(246, 239, 230, 0.28) !important;
+    color: #f6efe6 !important;
+    -webkit-text-fill-color: #f6efe6 !important;
   }
 
   /* Dark mode: opaque surface so cream label stays readable (white pill was winning). */

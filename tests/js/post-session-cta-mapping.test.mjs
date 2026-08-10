@@ -72,8 +72,8 @@ import {
   const needsPractice = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE)
   assert.deepEqual(needsPractice.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'reviseFocusPhrase'],
-    ['secondary', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN, 'retest'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.OTHER_RANGE, 'chooseAnotherRange'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
+    ['ghost', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN, 'retest'],
   ])
 
   const reviseRange = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
@@ -84,16 +84,17 @@ import {
   const insufficient = mapPostSessionCtas(POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO)
   assert.deepEqual(insufficient.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN, 'tryRecordingAgain'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
     ['ghost', POST_SESSION_CTA_ACTIONS.CLOSE, 'close'],
-  ], 'non-mic failures must not push a Check microphone CTA')
+  ], 'non-mic failures must offer Return to workspace as secondary')
 
   const micBlocked = mapPostSessionCtas(POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO, {
     insufficientReason: 'mic_permission',
   })
   assert.deepEqual(micBlocked.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN, 'tryRecordingAgain'],
-    ['secondary', POST_SESSION_CTA_ACTIONS.CHECK_MICROPHONE, 'checkMicrophone'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.CLOSE, 'close'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
+    ['ghost', POST_SESSION_CTA_ACTIONS.CHECK_MICROPHONE, 'checkMicrophone'],
   ])
 
   assert.equal(resolvePostSessionCtaState({
@@ -110,33 +111,38 @@ import {
   const revisionDone = mapPostSessionCtas(POST_SESSION_CTA_STATES.REVISION_COMPLETED)
   assert.deepEqual(revisionDone.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN, 'retest'],
-    ['secondary', POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING, 'continuePractising'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.OTHER_RANGE, 'chooseAnotherRange'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
+    ['ghost', POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING, 'continuePractising'],
   ])
 
   const strong = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG)
   assert.deepEqual(strong.map((b) => [b.variant, b.action, b.labelKey]), [
     ['success', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
-    ['secondary', POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE, 'reviewOnceMore'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.OTHER_RANGE, 'chooseAnotherRange'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
+    ['ghost', POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE, 'reviewOnceMore'],
   ])
 
-  // Exactly one lead CTA (primary or success); secondary optional only for mic-permission insufficient_audio.
+  // Every recommendation state: one lead CTA, Return to workspace as secondary.
   for (const state of Object.values(POST_SESSION_CTA_STATES)) {
     const buttons = mapPostSessionCtas(state, state === POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO
       ? { insufficientReason: 'mic_permission' }
       : {})
     const leadCount = buttons.filter((b) => b.variant === 'primary' || b.variant === 'success').length
-    assert.equal(leadCount, 1)
-    assert.equal(buttons.filter((b) => b.variant === 'secondary').length, 1)
-    assert.equal(buttons.filter((b) => b.variant === 'ghost').length, 1)
+    assert.equal(leadCount, 1, `${state} must keep a single recommended primary/success CTA`)
+    assert.equal(
+      buttons.filter((b) => b.variant === 'secondary').length,
+      1,
+      `${state} must expose Return to workspace as the secondary CTA`,
+    )
+    assert.equal(
+      buttons[1].action,
+      POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE,
+      `${state} secondary action must be return_to_workspace`,
+    )
+    assert.equal(buttons[1].labelKey, 'returnToWorkspace')
     assert.notEqual(buttons[0].labelKey, 'continue')
+    assert.notEqual(buttons[0].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
   }
-
-  const insufficientNoMic = mapPostSessionCtas(POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO)
-  assert.equal(insufficientNoMic.filter((b) => b.variant === 'primary').length, 1)
-  assert.equal(insufficientNoMic.filter((b) => b.variant === 'secondary').length, 0)
-  assert.equal(insufficientNoMic.filter((b) => b.variant === 'ghost').length, 1)
 }
 
 {

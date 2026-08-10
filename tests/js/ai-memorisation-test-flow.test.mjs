@@ -39,6 +39,7 @@ import {
 } from '../../resources/js/scripts/session/completionFlow.js'
 import {
   mapPostSessionCtas,
+  POST_SESSION_CTA_ACTIONS,
   POST_SESSION_CTA_STATES,
 } from '../../resources/js/scripts/recommendations/postSessionCtaMapping.js'
 
@@ -61,6 +62,8 @@ import {
   assert.equal(needsPractice[0].variant, 'primary')
   assert.equal(needsPractice[0].labelKey, 'reviseFocusPhrase')
   assert.equal(needsPractice[1].variant, 'secondary')
+  assert.equal(needsPractice[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(needsPractice[1].labelKey, 'returnToWorkspace')
   assert.equal(needsPractice[2].variant, 'ghost')
   // Layout contract used by Memorisation.css / Memorisation.vue
   const desktopGridClass = 'post-session-simple__actions--3'

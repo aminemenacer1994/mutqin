@@ -498,9 +498,11 @@
     },
     "postSessionChoice": {
       "title": "What would you like to practise next?",
-      "desc": "Return to your previous session or create a session of your own.",
-      "repeatRecommended": "Return to previous session",
-      "repeatRecommendedDesc": "Practise the same range and settings from your previous session again.",
+      "desc": "Repeat the same session, or create your own.",
+      "repeatRecommended": "Repeat session",
+      "repeatRecommendedDesc": "Practise the same range and settings again.",
+      "returnToWorkspace": "Return to workspace",
+      "returnToWorkspaceDesc": "Leave this choice and return to the main memorisation workspace. Your completed session and results stay saved.",
       "createCustom": "Custom session",
       "createCustomDesc": "Choose your own sūrah, āyah range and practice settings.",
       "startCustomSession": "Start custom session"
@@ -975,6 +977,8 @@
       "detailSession": "{covered} of {total} ayahs covered in this range.",
       "detailEmpty": "Start a session to see live memorisation progress here.",
       "detailPlan": "{completed} of {total} ayahs completed in the current plan.",
+      "coveredShort": "{covered} of {total} ayahs",
+      "coveredShortPlan": "{completed} of {total} ayahs",
       "forecast": "Forecast",
       "daysActive": "Days active",
       "pending": "Pending",
@@ -1104,7 +1108,9 @@
     },
     "view": {
       "stacked": "Stacked",
-      "mushaf": "Mushaf"
+      "mushaf": "Mushaf",
+      "stackedHint": "Stacked: one ayah after another — calm for short ranges.",
+      "mushafHint": "Mushaf: page-style layout. Reading aids and tajweed live in Controls and Help."
     },
     "actions": {
       "newSession": "New Session",
@@ -1259,31 +1265,31 @@
     "revisitOnboarding": "Take the tour again",
     "onboarding": {
       "stepCounter": "Step {current} of {total}",
-      "intro": "A few short steps to help you set a range, practise calmly, and settle into Mutqin.",
+      "intro": "A short path: choose ayahs, practise, check with AI, then follow your next plan.",
       "finish": "I'm ready",
       "confirmChoice": "Continue",
-      "skipTour": "Explore myself",
+      "skipTour": "Skip",
       "finishHint": "Pick how you’d like to start. You can change this any time.",
       "useSampleSession": "Try a short sample",
       "playSampleSession": "Try a short sample",
       "welcome": {
         "salam": "ٱلسَّلَامُ عَلَيْكُمْ",
         "title": "Welcome to Mutqin",
-        "body": "Choose a path to begin. The guided tour covers session setup, reading, practice tools, AI memorisation with personalised recommendations, and how to return.",
-        "metaHint": "A gentle default session is ready: short range, clear reciter, calm pace.",
-        "tourDescription": "Five steps: session, reading, practice, AI coach, and return."
+        "body": "Choose how to begin. The tour covers ayahs, practice tools, AI check, and your next plan.",
+        "metaHint": "A short default session is ready when you start.",
+        "tourDescription": "Four steps: ayahs, tools, AI check, next plan."
       },
       "ready": {
         "kicker": "Tour complete",
         "title": "You’re ready to begin",
-        "body": "You’ve seen how Mutqin is set up. Start your own session, explore the workspace, or try the guided sample.",
-        "hint": "You can reopen this tour any time from the menu."
+        "body": "Set up your session, try the sample, or explore the workspace.",
+        "hint": "Reopen this tour any time from the menu."
       },
       "actions": {
         "trySample": "Try a guided sample",
         "quickTour": "Guided tour",
         "guidedTour": "Take the guided tour",
-        "exploreMyself": "Explore myself",
+        "exploreMyself": "Skip for now",
         "setupSession": "Set up my session",
         "exploreWorkspace": "Explore workspace"
       },
@@ -1291,22 +1297,22 @@
         "groupLabel": "How would you like to begin?",
         "sample": {
           "title": "Try a guided sample",
-          "description": "A short practice so you can feel the flow before choosing your own range."
+          "description": "A short practice before you choose your own range."
         },
         "setup": {
           "title": "Set up my own session",
-          "description": "Choose a surah, ayah range, and reciter, then begin when ready."
+          "description": "Choose surah, range, and reciter, then begin."
         },
         "explore": {
           "title": "Look around first",
-          "description": "Explore the workspace and open setup when you feel ready."
+          "description": "Explore the workspace and open setup when ready."
         }
       },
       "postSession": {
         "kicker": "Sample complete",
         "title": "Well done",
-        "message": "You finished the guided sample. Choose what to do next.",
-        "hint": "Repeat the sample, start your own session, or continue into Mutqin when you feel ready.",
+        "message": "Sample finished. Choose what to do next.",
+        "hint": "Repeat, start your own session, or continue into Mutqin.",
         "repeat": "Repeat this sample",
         "newSession": "Start a new session",
         "continue": "Continue to Mutqin",
@@ -1315,14 +1321,13 @@
       },
       "steps": {
         "setup": {
-          "title": "Set up your session",
-          "stepLabel": "Session",
-          "body": "Every practice starts here: pick a surah, keep the ayah range short, and choose a reciter you enjoy listening to.",
-          "hint": "Tip: a few ayahs is enough for your first session. Widen the range later in Controls.",
+          "title": "Choose ayahs and start",
+          "stepLabel": "Ayahs",
+          "body": "Pick a surah, keep the range short, choose a reciter, then start your session from Controls.",
+          "hint": "Tip: a few ayahs is enough for a first session.",
           "points": [
-            "Choose surah, ayah range, and reciter in Controls",
-            "Keep the first range short so it feels easy to finish",
-            "Adjust repeats and playback whenever you need"
+            "Choose surah, ayah range, and reciter",
+            "Start when ready — widen the range later"
           ],
           "previewTitle": "Your session",
           "previewSubtitle": "Based on your current settings.",
@@ -1332,33 +1337,15 @@
             "Reciter"
           ]
         },
-        "reading": {
-          "title": "Choose your reading view",
-          "stepLabel": "Reading",
-          "body": "Read in stacked cards or Mushaf layout. Turn on translation, transliteration, or tajweed only when they help you stay focused.",
-          "hint": "Tip: keep Arabic front and centre. Aids are optional helpers, not the main text.",
-          "points": [
-            "Stacked is calm for short ranges; Mushaf keeps page layout",
-            "Toggle aids from the session bar when you need them",
-            "Tajweed colours follow the rules. See Help and Learning for the legend"
-          ],
-          "previewTitle": "Reading view",
-          "previewSubtitle": "Try a view below. It updates your preview.",
-          "previewItems": [
-            "Stacked",
-            "Mushaf",
-            "Tajweed"
-          ]
-        },
         "practice": {
-          "title": "Practise with calm tools",
-          "stepLabel": "Practice",
-          "body": "Focus, Blur, and Talqin help you listen and repeat steadily. Tap a tool below to preview it before you start.",
-          "hint": "Tip: start with one gentle tool. Memorisation checks come next when you feel ready.",
+          "title": "Use the memorisation tools",
+          "stepLabel": "Tools",
+          "body": "Focus, Blur, and Talqin help you listen and repeat. Tap a tool to preview it.",
+          "hint": "Tip: start with one tool. You can add more later.",
           "points": [
-            "Focus narrows attention to the active ayah",
-            "Blur softens upcoming text so you recite from memory",
-            "Talqin gives you a listen-then-recite turn"
+            "Focus keeps attention on the active ayah",
+            "Blur hides text so you recite from memory",
+            "Talqin is listen, then your turn to recite"
           ],
           "previewTitle": "Practice tools",
           "previewSubtitle": "Preview a technique before your first session.",
@@ -1369,48 +1356,48 @@
           ]
         },
         "coach": {
-          "title": "AI memorisation and recommendations",
-          "stepLabel": "AI coach",
-          "body": "After practice, AI Memorisation checks your recall and Mutqin recommends a personalised next plan with the right tools and assistant support for that session.",
-          "hint": "Tip: use the check when you want feedback, then follow the recommended plan to strengthen weak spots.",
+          "title": "Test recitation with AI",
+          "stepLabel": "AI check",
+          "body": "After practice, AI Memorisation listens and shows where recall needs care.",
+          "hint": "Tip: use the check when you want feedback — not every session needs it.",
           "points": [
-            "AI Memorisation listens and highlights where recall needs care",
-            "Recommendations suggest the next range and session goal",
-            "Suggested tools and assistant settings match what that session needs"
+            "Recite from memory into the check",
+            "See which words or ayahs need more care"
           ],
-          "previewTitle": "Personalised improvement",
-          "previewSubtitle": "How Mutqin coaches your next session.",
+          "previewTitle": "AI Memorisation",
+          "previewSubtitle": "Gentle feedback after you practise aloud.",
           "previewItems": [
             "AI Memorisation",
-            "Recommended plan",
-            "Matched tools"
+            "Recall feedback"
           ],
           "stats": {
             "aiLabel": "AI Memorisation",
             "aiValue": "Recall check",
-            "planLabel": "Recommendation",
-            "planValue": "Personalised plan",
-            "toolsLabel": "Session tools",
-            "toolsValue": "Matched assistants"
+            "feedbackLabel": "Feedback",
+            "feedbackValue": "Words & ayahs"
           }
         },
-        "review": {
-          "title": "Return and continue",
-          "stepLabel": "Return",
-          "body": "Saved sessions and Welcome Back help you pick up gently where you paused, so returning feels easy.",
-          "hint": "Tip: come back to saved sessions any time from your library, or continue from the Welcome Back screen.",
+        "improve": {
+          "title": "Follow your next plan",
+          "stepLabel": "Next plan",
+          "body": "After a session, Mutqin suggests a next range and tools so revision stays clear.",
+          "hint": "Tip: follow the recommendation, then improve weak spots over time.",
           "points": [
-            "Resume exactly where you left off",
-            "Saved sessions keep your range and settings ready",
-            "Welcome Back reminds you of the ayah you paused on"
+            "Get a personalised next range and goal",
+            "Use the suggested tools for that session"
           ],
-          "previewTitle": "Coming back",
-          "previewSubtitle": "How Mutqin helps you return.",
+          "previewTitle": "Improve steadily",
+          "previewSubtitle": "How Mutqin guides the session after this one.",
           "previewItems": [
-            "Saved sessions",
-            "Resume",
-            "Welcome Back"
-          ]
+            "Recommended plan",
+            "Matched tools"
+          ],
+          "stats": {
+            "planLabel": "Recommendation",
+            "planValue": "Next range",
+            "toolsLabel": "Session tools",
+            "toolsValue": "Matched to you"
+          }
         }
       },
       "startOnboarding": "Get started",
@@ -1561,7 +1548,8 @@
         "reviewOnceMore": "Review again",
         "reviewAyahOnce": "Review Ayah {ayah}",
         "chooseAnotherRange": "Other range",
-        "chooseDifferentRange": "Other range"
+        "chooseDifferentRange": "Other range",
+        "returnToWorkspace": "Return to workspace"
       },
       "coach": {
         "yourNextPractice": "Next step",
@@ -2214,10 +2202,7 @@
         "aiFocusWeakAyah": "Spend the next pass on ayah {ayah} with Focus mode.",
         "aiFocusWeakAyahs": "Revisit ayahs {ayahs} before continuing.",
         "aiWeakAyahsLabel": "Focus ayahs",
-        "aiFirstBody": "Test with AI first. Your score and practice plan appear here after we hear you.",
-        "justFinished": "Just finished",
-        "repsDone": "{count} repetitions",
-        "aiFirstBodyShort": "Check your memorisation next to unlock a tailored practice plan."
+        "aiFirstBody": "Test with AI first. Your score and practice plan appear here after we hear you."
       }
     },
     "aiRecitePlan": {

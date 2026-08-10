@@ -433,7 +433,9 @@
     },
     "view": {
       "stacked": "Stacked",
-      "mushaf": "Mushaf"
+      "mushaf": "Mushaf",
+      "stackedHint": "Yığın: peş peşe ayet — kısa aralıklar için sakin.",
+      "mushafHint": "Mushaf: sayfa düzeni. Okuma yardımcıları ve tecvid Kontroller ve Yardım’da."
     },
     "actions": {
       "newSession": "New Session",
@@ -584,101 +586,82 @@
       "useSampleSession": "Kısa bir örnek dene",
       "steps": {
         "setup": {
-          "title": "Set up a session",
-          "stepLabel": "Oturum",
-          "body": "Her pratik burada başlar: sure, kısa ayet aralığı ve kari seçin.",
+          "title": "Ayetleri seçin ve başlayın",
+          "stepLabel": "Ayetler",
+          "body": "Bir sure seçin, aralığı kısa tutun, bir kari seçin, sonra Kontroller’den başlayın.",
+          "hint": "İpucu: ilk oturum için birkaç ayet yeter.",
           "points": [
-            "Kontroller’den sure, aralık ve kari seçin",
-            "İlk aralığı kısa tutun",
-            "Tekrarları istediğiniz zaman ayarlayın"
+            "Sure, ayet aralığı ve kari seçin",
+            "Hazır olunca başlayın — aralığı sonra genişletin"
           ],
-          "previewTitle": "Real session inputs",
-          "previewSubtitle": "Mevcut ayarlarınıza göre.",
+          "previewTitle": "Oturumunuz",
+          "previewSubtitle": "Geçerli ayarlarınıza göre.",
           "previewItems": [
-            "Surah",
-            "Range",
-            "Reciter"
-          ],
-          "hint": "İpucu: ilk oturum için birkaç ayet yeter — aralığı sonra Controls’tan genişletebilirsiniz."
-        },
-        "reading": {
-          "title": "Pick a reading view",
-          "stepLabel": "Okuma",
-          "body": "Kart veya Mushaf görünümünde okuyun. Çeviri veya tecvidi yalnızca yardımcıysa açın.",
-          "points": [
-            "Kısa aralıklar için kart; sayfa için Mushaf",
-            "Yardımcıları oturum çubuğundan açın",
-            "Tecvid renkleri kuralları izler"
-          ],
-          "previewTitle": "Reading controls",
-          "previewSubtitle": "Mevcut görünüm ayarlarınıza göre.",
-          "previewItems": [
-            "Stacked",
-            "Mushaf",
-            "Tajweed"
-          ],
-          "hint": "İpucu: Arapçayı önde tutun; çeviri veya tecvidi yalnızca yardımcı olduğunda açın."
+            "Sure",
+            "Aralık",
+            "Kari"
+          ]
         },
         "practice": {
-          "title": "Practice with built-in tools",
-          "stepLabel": "Pratik",
-          "body": "Odak, Bulanıklık ve Talqin dinleyip tekrar etmenize yardım eder. Bir araca dokunun.",
+          "title": "Ezber araçlarını kullanın",
+          "stepLabel": "Araçlar",
+          "body": "Odak, Bulanıklaştırma ve Talqin dinleyip tekrar etmeye yardımcı olur. Önizleme için bir araca dokunun.",
+          "hint": "İpucu: bir araçla başlayın. Sonra ekleyebilirsiniz.",
           "points": [
-            "Odak aktif ayete dikkat verir",
-            "Bulanıklık sonraki metni yumuşatır",
-            "Talqin dinle-sonra-oku turu verir"
+            "Odak aktif ayete dikkat çeker",
+            "Bulanıklaştırma metni gizler; hafızadan okursunuz",
+            "Talqin: dinle, sonra sen oku"
           ],
-          "previewTitle": "Technique controls",
-          "previewSubtitle": "Mevcut pratik ayarlarınıza göre.",
+          "previewTitle": "Pratik araçları",
+          "previewSubtitle": "İlk oturumdan önce bir tekniği önizleyin.",
           "previewItems": [
-            "Focus",
-            "Blur",
-            "Anchor"
-          ],
-          "hint": "İpucu: nazik bir araçla başlayın. Ezber kontrolleri isteğe bağlıdır."
-        },
-        "review": {
-          "title": "Dön ve devam et",
-          "stepLabel": "Dönüş",
-          "body": "Kayıtlı oturumlar ve Welcome Back kaldığınız yerden nazikçe devam etmenizi sağlar.",
-          "points": [
-            "Tam kaldığınız yerden devam",
-            "Kayıtlı oturumlar aralık ve ayarları tutar",
-            "Welcome Back durduğunuz ayeti hatırlatır"
-          ],
-          "previewTitle": "What you can return to",
-          "previewSubtitle": "Son etkinliğinizden.",
-          "previewItems": [
-            "Saved sessions",
-            "Recordings",
-            "Insights"
-          ],
-          "hint": "İpucu: kayıtlı oturumlara kütüphanenizden istediğiniz zaman dönebilirsiniz."
+            "Odak",
+            "Bulanıklaştırma",
+            "Talqin"
+          ]
         },
         "coach": {
-          "title": "YZ ezber ve öneriler",
-          "stepLabel": "YZ koç",
-          "body": "Pratikten sonra YZ ezber kontrolü hatırlamanızı ölçer ve Mutqin o oturum için doğru araçlarla kişiselleştirilmiş bir plan önerir.",
-          "hint": "İpucu: geri bildirim istediğinizde kontrolü kullanın, sonra önerilen planı izleyin.",
+          "title": "AI ile tilaveti test edin",
+          "stepLabel": "AI kontrol",
+          "body": "Pratikten sonra AI Ezber dinler ve dikkat gereken yerleri gösterir.",
+          "hint": "İpucu: geri bildirim istediğinizde kullanın — her oturumda gerekmez.",
           "points": [
-            "YZ ezber zayıf noktaları dinler ve işaretler",
-            "Öneriler sonraki aralığı ve hedefi önerir",
-            "Önerilen araçlar o oturuma uyar"
+            "Kontrole hafızadan okuyun",
+            "Daha fazla özen gereken kelime veya ayetleri görün"
           ],
-          "previewTitle": "Kişisel gelişim",
+          "previewTitle": "AI Ezber",
+          "previewSubtitle": "Sesli pratikten sonra nazik geri bildirim.",
+          "previewItems": [
+            "AI Ezber",
+            "Hatırlama geri bildirimi"
+          ],
+          "stats": {
+            "aiLabel": "AI Ezber",
+            "aiValue": "Hatırlama kontrolü",
+            "feedbackLabel": "Geri bildirim",
+            "feedbackValue": "Kelime ve ayetler"
+          }
+        },
+        "improve": {
+          "title": "Sonraki planınızı izleyin",
+          "stepLabel": "Sonraki plan",
+          "body": "Oturumdan sonra Mutqin bir sonraki aralığı ve araçları önerir; muracaat net kalır.",
+          "hint": "İpucu: öneriyi izleyin, zayıf noktaları zamanla güçlendirin.",
+          "points": [
+            "Kişiselleştirilmiş sonraki aralık ve hedef alın",
+            "O oturum için önerilen araçları kullanın"
+          ],
+          "previewTitle": "İstikrarlı ilerleme",
           "previewSubtitle": "Mutqin sonraki oturumu nasıl yönlendirir.",
           "previewItems": [
-            "YZ ezber",
             "Önerilen plan",
             "Uygun araçlar"
           ],
           "stats": {
-            "aiLabel": "YZ ezber",
-            "aiValue": "Hatırlama kontrolü",
             "planLabel": "Öneri",
-            "planValue": "Kişisel plan",
+            "planValue": "Sonraki aralık",
             "toolsLabel": "Oturum araçları",
-            "toolsValue": "Uygun yardımcılar"
+            "toolsValue": "Size uygun"
           }
         }
       },
@@ -686,52 +669,52 @@
       "postSession": {
         "kicker": "Örnek tamamlandı",
         "title": "Aferin",
-        "message": "Rehberli örneği bitirdiniz. Sırada ne yapmak istediğinizi seçin.",
+        "message": "Örnek bitti. Sırada ne yapmak istediğinizi seçin.",
         "repeat": "Bu örneği tekrarla",
         "newSession": "Yeni oturum başlat",
         "save": "Bu oturumu kaydet",
         "savedToast": "Oturum kaydedildi.",
-        "hint": "Örneği tekrarlayın, kendi oturumunuzu başlatın veya hazır olduğunuzda Mutqin’e devam edin.",
+        "hint": "Tekrarlayın, kendi oturumunuzu başlatın veya Mutqin’e devam edin.",
         "continue": "Mutqin’e devam et"
       },
       "choices": {
         "groupLabel": "Nasıl başlamak istersiniz?",
         "sample": {
           "title": "Rehberli örneği dene",
-          "description": "Kendi aralığınızı seçmeden önce akışı hissetmeniz için kısa bir pratik."
+          "description": "Kendi aralığınızı seçmeden önce kısa bir pratik."
         },
         "setup": {
           "title": "Kendi oturumumu kur",
-          "description": "Sure, ayet aralığı ve kari seçin, hazır olduğunuzda başlayın."
+          "description": "Sure, aralık ve kari seçin, sonra başlayın."
         },
         "explore": {
           "title": "Önce bakayım",
-          "description": "Çalışma alanını gezin ve hazır olduğunuzda kurulumu açın."
+          "description": "Çalışma alanını gezin; hazır olunca kurulumu açın."
         }
       },
-      "intro": "Aralığı ayarlamak, sakinçe çalışmak ve Mutqin’e alışmak için kısa adımlar.",
+      "intro": "Kısa yol: ayetleri seç, çalış, AI ile kontrol et, sonra sonraki planı izle.",
       "confirmChoice": "Devam",
       "startOnboarding": "Get started",
       "continueOnboarding": "Continue setup",
-      "skipTour": "Kendim keşfedeyim",
+      "skipTour": "Atla",
       "finishHint": "Nasıl başlamak istediğinizi seçin — istediğiniz zaman değiştirebilirsiniz.",
       "welcome": {
         "salam": "ٱلسَّلَامُ عَلَيْكُمْ",
         "title": "Mutqin’e hoş geldiniz",
-        "body": "Başlamak için bir yol seçin. Rehberli tur oturum, okuma, pratik ve dönüşü gösterir.",
-        "metaHint": "Nazik bir varsayılan oturum hazır. kısa aralık, net kari, sakin tempo.",
-        "tourDescription": "Beş adım: oturum, okuma, pratik, YZ koç ve dönüş."
+        "body": "Nasıl başlayacağınızı seçin. Tur ayetleri, araçları, AI kontrolünü ve sonraki planı kapsar.",
+        "metaHint": "Başladığınızda kısa bir varsayılan oturum hazır.",
+        "tourDescription": "Dört adım: ayetler, araçlar, AI kontrolü, sonraki plan."
       },
       "ready": {
         "title": "Başlamaya hazırsınız",
-        "body": "Mutqin’in nasıl kurulduğunu gördünüz. Oturumunuzu kurun, keşfedin veya örnek deneyin.",
+        "body": "Oturumunuzu kurun, örneği deneyin veya çalışma alanını keşfedin.",
         "kicker": "Tur tamam",
         "hint": "Bu turu menüden istediğiniz zaman yeniden açabilirsiniz."
       },
       "actions": {
         "trySample": "Rehberli örnek dene",
         "quickTour": "Rehberli tur",
-        "exploreMyself": "Kendim keşfedeyim",
+        "exploreMyself": "Şimdilik atla",
         "setupSession": "Oturumumu kur",
         "exploreWorkspace": "Çalışma alanını keşfet",
         "guidedTour": "Rehberli tura başla"
@@ -1667,7 +1650,8 @@
         "continueToNextRange": "Sonraki aralığa geç",
         "reviewOnceMore": "Bir kez daha gözden geçir",
         "chooseAnotherRange": "Başka aralık",
-        "chooseDifferentRange": "Başka aralık"
+        "chooseDifferentRange": "Başka aralık",
+        "returnToWorkspace": "Çalışma alanına dön"
       },
       "coach": {
         "subtitles": {
@@ -1883,6 +1867,8 @@
       "detailSession": "{covered} of {total} ayahs covered in this range.",
       "detailEmpty": "Start a session to see live memorisation progress here.",
       "detailPlan": "{completed} of {total} ayahs completed in the current plan.",
+      "coveredShort": "{covered}/{total} ayet",
+      "coveredShortPlan": "{completed}/{total} ayet",
       "forecast": "Forecast",
       "daysActive": "Days active",
       "pending": "Pending",
@@ -2097,6 +2083,8 @@
       "desc": "Önerilen planı tekrarla veya kendi oturumunu oluştur.",
       "repeatRecommended": "Oturumu tekrarla",
       "repeatRecommendedDesc": "Aynı önerilen aralığı ve ayarları yeniden çalış.",
+      "returnToWorkspace": "Çalışma alanına dön",
+      "returnToWorkspaceDesc": "Bu seçimden çıkıp ana ezber çalışma alanına dönün. Tamamlanan oturumunuz ve sonuçları kaybolmaz.",
       "createCustom": "Özel oturum",
       "createCustomDesc": "Kendi sureni, ayet aralığını ve pratik ayarlarını seç.",
       "startCustomSession": "Özel oturumu başlat"

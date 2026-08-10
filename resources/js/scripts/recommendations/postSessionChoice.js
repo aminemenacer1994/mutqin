@@ -5,14 +5,14 @@
  *   draft | ready | active | paused | ended
  *
  * Actions:
- *   repeat_recommended (return to previous session) | create_custom
+ *   repeat_recommended (repeat session) | create_custom
  */
 
 import { resolveSessionRepetitions } from '../session/sessionDefaults.js'
 
 /** @typedef {'draft'|'ready'|'active'|'paused'|'ended'} ProductSessionStatus */
 
-/** @typedef {'repeat_recommended'|'create_custom'} PostSessionAction */
+/** @typedef {'repeat_recommended'|'create_custom'|'return_to_workspace'} PostSessionAction */
 
 export const PRODUCT_SESSION_STATUS = Object.freeze({
   DRAFT: 'draft',
@@ -25,6 +25,7 @@ export const PRODUCT_SESSION_STATUS = Object.freeze({
 export const POST_SESSION_ACTION = Object.freeze({
   REPEAT_RECOMMENDED: 'repeat_recommended',
   CREATE_CUSTOM: 'create_custom',
+  RETURN_TO_WORKSPACE: 'return_to_workspace',
 })
 
 const MAX_RECOMMENDED_TEMPLATES = 12

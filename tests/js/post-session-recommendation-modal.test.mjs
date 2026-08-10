@@ -174,13 +174,13 @@ function t(key, params = {}) {
   assert.match(js, /persistedForLater|dashboard and session history/)
 }
 
-// CTA hierarchy: primary revise → secondary check again → tertiary other range → text Close
+// CTA hierarchy: primary recommended → secondary Return to workspace → tertiary alternate
 {
   const needsPractice = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE)
   assert.deepEqual(needsPractice.map((b) => [b.variant, b.action]), [
     ['primary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE],
-    ['secondary', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN],
-    ['ghost', POST_SESSION_CTA_ACTIONS.OTHER_RANGE],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE],
+    ['ghost', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN],
   ])
   assert.match(completionModal, /data-testid="post-session-actions"/)
   assert.match(completionModal, /postSessionCtaButtons/)
@@ -188,8 +188,20 @@ function t(key, params = {}) {
   assert.doesNotMatch(completionModal, /data-testid="post-session-close"/)
   assert.match(js, /postSessionShowCloseTextAction\(\)\s*\{[\s\S]*?return false/)
   assert.match(js, /closePostSessionRecommendationModal/)
+  assert.match(js, /returnToMemorisationWorkspace\(\)/)
+  assert.match(js, /RETURN_TO_WORKSPACE/)
+  assert.doesNotMatch(
+    String(js.match(/returnToMemorisationWorkspace\(\)\s*\{[\s\S]*?\n\s{4}\}/)?.[0] || ''),
+    /rejectRecommendation|startRecommendedSession|startSessionWithCountdown/,
+    'return to workspace must not reject, start, or restart a session',
+  )
+  assert.doesNotMatch(
+    String(js.match(/returnToMemorisationWorkspace\(\)\s*\{[\s\S]*?\n\s{4}\}/)?.[0] || ''),
+    /postSessionRecommendation\s*=\s*null|aiReciteFinalPlan\s*=\s*null|postSessionSnapshot\s*=\s*null/,
+    'return to workspace must not discard AI/recommendation results',
+  )
   assert.match(en, /"reviseFocusPhrase":\s*"Start revision"/)
-  assert.match(en, /"chooseAnotherRange":\s*"Other range"/)
+  assert.match(en, /"returnToWorkspace":\s*"Return to workspace"/)
   assert.match(en, /"retest":\s*"Check again"/)
 }
 

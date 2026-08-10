@@ -8024,6 +8024,7 @@ html {
 }
 
 .workspace {
+  --session-progress-rail-h: 46px;
   margin-top: 0;
 }
 
@@ -8034,6 +8035,187 @@ html {
   border-radius: 22px;
   padding: clamp(0.65rem, 1.6vw, 1.1rem) clamp(0.45rem, 1.2vw, 0.85rem);
   box-shadow: inset 0 1px 0 color-mix(in srgb, white 42%, transparent);
+}
+
+/* Persistent session progress — sticky under navbar, above reading content */
+.session-progress-rail {
+  position: sticky;
+  top: var(--navbar-height, var(--navbar-offset, 64px));
+  z-index: 90;
+  width: min(100%, 1420px);
+  margin: 0 auto 8px;
+  min-height: var(--session-progress-rail-h);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.session-progress-rail__inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: var(--session-progress-rail-h);
+  padding: 0.65rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--zone-divider, var(--border)) 70%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 96%, transparent);
+}
+
+.session-progress-rail__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.session-progress-rail__copy {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.session-progress-rail__title {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.session-progress-rail__meta {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 0.64rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.session-progress-rail__sep {
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--text-muted) 72%, transparent);
+  font-size: 0.64rem;
+  line-height: 1;
+}
+
+.session-progress-rail__hint {
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--accent) 68%, var(--text-muted));
+  font-size: 0.64rem;
+  font-weight: 550;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.session-progress-rail__value {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  color: var(--text);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.session-progress-rail__track {
+  width: 100%;
+  min-width: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--zone-divider, var(--border)) 88%, var(--accent-light));
+  overflow: hidden;
+}
+
+.session-progress-rail__fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  max-width: 100%;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--accent) 90%, var(--accent-strong));
+  transition: width var(--motion-base, 200ms) var(--motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+.session-progress-rail__fill.is-complete {
+  background: color-mix(in srgb, var(--success, var(--accent)) 82%, var(--accent));
+}
+
+.app.is-rtl .session-progress-rail__fill,
+[dir="rtl"] .session-progress-rail__fill {
+  margin-inline-start: auto;
+}
+
+[data-theme="dark"] .session-progress-rail__inner {
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  border-color: color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+[data-theme="dark"] .session-progress-rail__track {
+  background: color-mix(in srgb, var(--border) 72%, var(--accent-light));
+}
+
+[data-theme="dark"] .session-progress-rail__fill {
+  background: color-mix(in srgb, var(--accent) 80%, var(--accent-strong));
+}
+
+[data-theme="dark"] .session-progress-rail__hint {
+  color: color-mix(in srgb, var(--accent) 62%, var(--text-muted));
+}
+
+[data-theme="sepia"] .session-progress-rail__inner {
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  border-color: color-mix(in srgb, var(--zone-divider, var(--border)) 65%, transparent);
+}
+
+@media (max-width: 767.98px) {
+  .workspace {
+    --session-progress-rail-h: 42px;
+  }
+
+  .session-progress-rail {
+    margin-bottom: 6px;
+  }
+
+  .session-progress-rail__inner {
+    padding: 0.55rem 0.85rem;
+    gap: 0.36rem;
+    border-radius: 9px;
+  }
+
+  .session-progress-rail__title,
+  .session-progress-rail__value {
+    font-size: 0.64rem;
+  }
+
+  .session-progress-rail__meta,
+  .session-progress-rail__hint,
+  .session-progress-rail__sep {
+    font-size: 0.6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .session-progress-rail__fill {
+    transition: none;
+  }
 }
 
 .workspace-shell {
@@ -8047,7 +8229,7 @@ html {
   background: var(--workspace-card-surface);
   box-shadow: none;
   position: relative;
-  scroll-margin-top: calc(var(--navbar-offset, 64px) + 8px);
+  scroll-margin-top: calc(var(--navbar-height, var(--navbar-offset, 64px)) + var(--session-progress-rail-h, 22px) + 8px);
 }
 
 .workspace-shell.collapsed {
@@ -12325,8 +12507,18 @@ body.memorisation-page nav.navbar.app-navbar {
   flex: 0 0 auto;
 }
 
-.post-onboarding-modal--guided .onboarding-step-rail--five {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+.post-onboarding-modal--guided .onboarding-step-rail--four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.post-onboarding-modal--guided .onboarding-body--ready {
+  padding-top: 0.15rem;
+  padding-bottom: 0.1rem;
+}
+
+.post-onboarding-modal--guided .onboarding-body--ready .onboarding-meta-hint {
+  margin: 0;
+  text-align: center;
 }
 
 .onboarding-actions-grid--trio-row {
@@ -12602,7 +12794,7 @@ body.memorisation-page nav.navbar.app-navbar {
   }
 
   .post-onboarding-modal--guided .onboarding-step-rail,
-  .post-onboarding-modal--guided .onboarding-step-rail--five,
+  .post-onboarding-modal--guided .onboarding-step-rail--four,
   .onboarding-ready-list {
     grid-template-columns: 1fr 1fr;
   }
@@ -12641,7 +12833,7 @@ body.memorisation-page nav.navbar.app-navbar {
     display: none;
   }
 
-  .post-onboarding-modal--guided .onboarding-step-rail--five {
+  .post-onboarding-modal--guided .onboarding-step-rail--four {
     grid-template-columns: 1fr 1fr !important;
   }
 }
@@ -28441,7 +28633,8 @@ ayah cards and the mushaf scale from phone to desktop without any
 
 .workspace-shell-actions .session-primary-action span,
 .workspace-shell-actions .action-btn-exit span,
-.workspace-shell-actions .post-session-choice-custom span {
+.workspace-shell-actions .post-session-choice-custom span,
+.workspace-shell-actions .post-session-choice-return span {
   display: inline;
 }
 
@@ -28759,7 +28952,8 @@ and review
 .workspace-shell-actions .action-btn.btn-primary span,
 .workspace-shell-actions .session-primary-action span,
 .workspace-shell-actions .action-btn-exit span,
-.workspace-shell-actions .post-session-choice-custom span {
+.workspace-shell-actions .post-session-choice-custom span,
+.workspace-shell-actions .post-session-choice-return span {
   display: inline;
 }
 
@@ -57566,4 +57760,44 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
     text-align: center !important;
     margin: 0 0 0.45rem !important;
   }
+}
+
+/* Return to memorisation workspace — secondary escape from recommendation / choice loops */
+.workspace-shell-actions .post-session-choice-pair.has-workspace-return {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.workspace-shell-actions .post-session-choice-return {
+  background: var(--surface-strong, #ffffff) !important;
+  border: 1px solid color-mix(in srgb, var(--border, rgba(31, 24, 18, 0.14)) 100%, transparent) !important;
+  color: var(--text, #2b241c) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .workspace-shell-actions .post-session-choice-return,
+[data-theme="dark"] .workspace-shell-actions .post-session-choice-return,
+.dark-mode .workspace-shell-actions .post-session-choice-return {
+  background: #3a3129 !important;
+  border: 1px solid rgba(246, 239, 230, 0.28) !important;
+  color: #f6efe6 !important;
+  -webkit-text-fill-color: #f6efe6 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2
+  .post-session-simple__actions--3
+  > .post-session-simple__btn--secondary {
+  white-space: normal;
+  line-height: 1.25;
+  text-align: center;
+  min-height: 2.75rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2
+  .post-session-simple__actions--3
+  > .post-session-simple__btn[data-action="return_to_workspace"] {
+  order: 0;
 }

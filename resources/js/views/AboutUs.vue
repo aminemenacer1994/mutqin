@@ -20,9 +20,6 @@
             <a class="info-btn info-btn--primary" href="/memorisation">
               <i class="bi bi-play-fill" aria-hidden="true"></i> Start practising
             </a>
-            <a class="info-btn info-btn--ghost" href="/our-mission">
-              <i class="bi bi-compass" aria-hidden="true"></i> Our mission
-            </a>
           </div>
         </div>
       </header>
@@ -65,9 +62,6 @@
       <div class="info-actions info-reveal" style="--d: 240ms">
         <a class="info-btn info-btn--primary" href="/memorisation">
           <i class="bi bi-play-fill" aria-hidden="true"></i> Start practising
-        </a>
-        <a class="info-btn info-btn--ghost" href="/our-mission">
-          <i class="bi bi-compass" aria-hidden="true"></i> Our mission
         </a>
       </div>
     </div>

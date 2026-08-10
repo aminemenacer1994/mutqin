@@ -291,6 +291,7 @@ function assertInsufficientPresentation(details, summaryPattern = /did not hear 
   const buttons = mapPostSessionCtas(POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO)
   assert.deepEqual(buttons.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN, 'tryRecordingAgain'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
     ['ghost', POST_SESSION_CTA_ACTIONS.CLOSE, 'close'],
   ])
 
@@ -299,8 +300,8 @@ function assertInsufficientPresentation(details, summaryPattern = /did not hear 
   })
   assert.deepEqual(micButtons.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN, 'tryRecordingAgain'],
-    ['secondary', POST_SESSION_CTA_ACTIONS.CHECK_MICROPHONE, 'checkMicrophone'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.CLOSE, 'close'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
+    ['ghost', POST_SESSION_CTA_ACTIONS.CHECK_MICROPHONE, 'checkMicrophone'],
   ])
 }
 

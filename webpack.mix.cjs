@@ -2,6 +2,57 @@ const fs = require('fs');
 const path = require('path');
 const mix = require('laravel-mix');
 
+const manifestPath = path.join(__dirname, 'public/mix-manifest.json');
+const publicDir = path.join(__dirname, 'public');
+const jsDir = path.join(publicDir, 'js');
+
+// Drop manifest entries whose files are gone. Otherwise mix.version() ENOENTs
+// on stale contenthashed chunk names left over from a previous watch cycle.
+function dropMissingManifestEntries() {
+    if (!fs.existsSync(manifestPath)) return;
+    let manifest;
+    try {
+        manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    } catch {
+        return;
+    }
+
+    let changed = false;
+    const next = {};
+    for (const [key, value] of Object.entries(manifest)) {
+        const rel = key.replace(/^\//, '').split('?')[0];
+        if (fs.existsSync(path.join(publicDir, rel))) {
+            next[key] = value;
+        } else {
+            changed = true;
+        }
+    }
+    if (changed) {
+        fs.writeFileSync(manifestPath, `${JSON.stringify(next, null, 4)}\n`);
+    }
+}
+
+dropMissingManifestEntries();
+
+// Mix keeps prior contenthashed keys in memory across watch rebuilds. Our
+// mix.then() prune deletes the old files from disk, then mix.version() tries
+// to hash those ghost keys and ENOENTs. Strip missing entries before Mix's
+// CustomTasksPlugin runs applyVersioning (done taps run in register order).
+class PruneMissingManifestEntriesPlugin {
+    apply(compiler) {
+        compiler.hooks.done.tap('PruneMissingManifestEntriesPlugin', () => {
+            const manifest = global.Mix && global.Mix.manifest && global.Mix.manifest.manifest;
+            if (!manifest) return;
+            for (const key of Object.keys(manifest)) {
+                const rel = key.replace(/^\//, '').split('?')[0];
+                if (!fs.existsSync(path.join(publicDir, rel))) {
+                    delete manifest[key];
+                }
+            }
+        });
+    }
+}
+
 mix.js('resources/js/app.js', 'public/js')
    .vue()
    .sass('resources/sass/app.scss', 'public/css')
@@ -13,6 +64,17 @@ mix.js('resources/js/app.js', 'public/js')
            // Contenthash so browsers cannot keep a stale memorisation chunk forever.
            // (Stable `memorisation.js` was cached indefinitely by Safari/Chrome.)
            chunkFilename: 'js/[name].[contenthash:8].js'
+       },
+       plugins: [new PruneMissingManifestEntriesPlugin()]
+   })
+   .override((webpackConfig) => {
+       // Ensure our done-hook runs before CustomTasksPlugin.applyVersioning.
+       const pruneIdx = webpackConfig.plugins.findIndex(
+           (p) => p && p.constructor && p.constructor.name === 'PruneMissingManifestEntriesPlugin'
+       );
+       if (pruneIdx > 0) {
+           const [plugin] = webpackConfig.plugins.splice(pruneIdx, 1);
+           webpackConfig.plugins.unshift(plugin);
        }
    })
    .version();
@@ -20,9 +82,6 @@ mix.js('resources/js/app.js', 'public/js')
 // Contenthash builds otherwise accumulate multi-GB orphans under public/js.
 // Keep app/css plus the newest file per hashed chunk family, prune the rest.
 mix.then(() => {
-    const manifestPath = path.join(__dirname, 'public/mix-manifest.json');
-    const publicDir = path.join(__dirname, 'public');
-    const jsDir = path.join(publicDir, 'js');
     if (!fs.existsSync(manifestPath) || !fs.existsSync(jsDir)) return;
 
     let manifest;
@@ -48,7 +107,8 @@ mix.then(() => {
         try {
             mtime = fs.statSync(abs).mtimeMs;
         } catch {
-            mtime = 0;
+            // Skip ghost entries so mix.version() is not fed missing paths next run.
+            continue;
         }
         const prev = newestByFamily.get(family);
         if (!prev || mtime >= prev.mtime) {

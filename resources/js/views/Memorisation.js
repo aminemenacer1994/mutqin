@@ -4859,6 +4859,7 @@ export default {
         chooseAnotherRange: 'Choose another range',
         skipForNow: 'Skip',
         keepPractising: 'Keep practising',
+        returnToWorkspace: 'Return to workspace',
       }
       return mapped.map((btn) => {
         let label = ''
@@ -5749,13 +5750,12 @@ export default {
       }))
     },
     onboardingSteps() {
-      // Logical journey: configure → read → practise → improve with AI → return
+      // Core journey: ayahs → tools → AI check → next plan
       const defs = [
         { key: 'setup', icon: 'bi-journal-text' },
-        { key: 'reading', icon: 'bi-layout-text-window-reverse' },
         { key: 'practice', icon: 'bi-stars' },
-        { key: 'coach', icon: 'bi-lightbulb' },
-        { key: 'review', icon: 'bi-bookmark-heart' }
+        { key: 'coach', icon: 'bi-mic' },
+        { key: 'improve', icon: 'bi-arrow-repeat' }
       ]
       return defs.map(({ key, icon }) => this.buildOnboardingStep(key, icon))
     },
@@ -6878,47 +6878,13 @@ export default {
             hint: ''
           })
         }
-        if (Number(this.repetitionsPerStep) > 0) {
-          stats.push({
-            key: 'repeats',
-            label: this.t('memorisation.stats.repeats'),
-            value: `${this.repetitionsPerStep}x`,
-            hint: ''
-          })
-        }
-      }
-
-      if (stepKey === 'reading') {
-        const viewLabel = this.readingViewMode === 'mushaf'
-          ? this.t('memorisation.view.mushaf')
-          : this.t('memorisation.view.stacked')
-        stats.push({
-          key: 'view',
-          label: this.t('memorisation.text'),
-          value: viewLabel,
-          hint: ''
-        })
-        const aids = []
-        if (this.showTranslation) aids.push(this.t('memorisation.reading.translation'))
-        if (this.showTransliteration) aids.push(this.t('memorisation.reading.transliteration'))
-        if (this.tajweedEnabled) aids.push(this.t('memorisation.reading.tajweed'))
-        stats.push({
-          key: 'aids',
-          label: this.t('memorisation.reading.controls'),
-          value: aids.length ? aids.join(' · ') : this.t('memorisation.common.noReadingAids'),
-          hint: ''
-        })
       }
 
       if (stepKey === 'practice') {
         const techniques = []
         if (this.focusModeEnabled) techniques.push(this.getTechniqueDisplayLabel('focus'))
         if (this.blurModeEnabled) techniques.push(this.getTechniqueDisplayLabel('blur'))
-        if (this.chainingEnabled) {
-          techniques.push(this.getTechniqueDisplayLabel(this.chainingMethod === 'cumulative' ? 'cumulative' : 'linking'))
-        }
         if (this.talqinModeEnabled) techniques.push(this.getTechniqueDisplayLabel('talqin'))
-        if (this.anchorModeEnabled) techniques.push(this.getTechniqueDisplayLabel('anchor'))
         stats.push({
           key: 'techniques',
           label: this.t('memorisation.practice'),
@@ -6941,30 +6907,24 @@ export default {
           hint: ''
         })
         stats.push({
-          key: 'plan',
-          label: this.t('memorisation.onboarding.steps.coach.stats.planLabel'),
-          value: this.t('memorisation.onboarding.steps.coach.stats.planValue'),
-          hint: ''
-        })
-        stats.push({
-          key: 'tools',
-          label: this.t('memorisation.onboarding.steps.coach.stats.toolsLabel'),
-          value: this.t('memorisation.onboarding.steps.coach.stats.toolsValue'),
+          key: 'feedback',
+          label: this.t('memorisation.onboarding.steps.coach.stats.feedbackLabel'),
+          value: this.t('memorisation.onboarding.steps.coach.stats.feedbackValue'),
           hint: ''
         })
       }
 
-      if (stepKey === 'review') {
+      if (stepKey === 'improve') {
         stats.push({
-          key: 'saved',
-          label: this.t('memorisation.saved'),
-          value: String(Math.max(0, Number(this.savedSessions?.length || 0))),
+          key: 'plan',
+          label: this.t('memorisation.onboarding.steps.improve.stats.planLabel'),
+          value: this.t('memorisation.onboarding.steps.improve.stats.planValue'),
           hint: ''
         })
         stats.push({
-          key: 'return',
-          label: this.t('memorisation.onboarding.steps.review.stepLabel'),
-          value: this.t('memorisation.actions.resumeSession'),
+          key: 'tools',
+          label: this.t('memorisation.onboarding.steps.improve.stats.toolsLabel'),
+          value: this.t('memorisation.onboarding.steps.improve.stats.toolsValue'),
           hint: ''
         })
       }
@@ -7419,6 +7379,70 @@ export default {
     progressPercent() {
       if (!this.totalVerses) return 0
       return Math.round((this.currentPosition / this.totalVerses) * 100)
+    },
+
+    sessionProgressMeter() {
+      const meter = Number(this.workspaceProgressSummary?.meter)
+      if (!Number.isFinite(meter)) return 0
+      return Math.max(0, Math.min(100, Math.round(meter)))
+    },
+
+    sessionProgressLabel() {
+      const label = String(this.workspaceProgressSummary?.value || '').trim()
+      if (label) return label
+      return `${this.sessionProgressMeter}%`
+    },
+
+    sessionProgressTitle() {
+      return String(
+        this.workspaceProgressSummary?.title
+        || this.t('memorisation.workspaceProgress.sessionProgress')
+      ).trim()
+    },
+
+    sessionProgressMeta() {
+      if (this.hasVerses) {
+        const sessionTotal = Math.max(0, Number(this.totalVerses || 0))
+        const sessionCovered = Math.max(0, Math.min(sessionTotal, Number(this.currentPosition || 0)))
+        if (sessionTotal > 0) {
+          return this.t('memorisation.workspaceProgress.coveredShort', {
+            covered: sessionCovered,
+            total: sessionTotal
+          })
+        }
+      }
+
+      if (this.hifzPlanExists) {
+        const totalPlan = Math.max(1, Number(this.hifzPlannerForecast?.totalAyahs || 1))
+        const completed = Math.max(0, Number(this.hifzCompletedAyahCount || 0))
+        return this.t('memorisation.workspaceProgress.coveredShortPlan', {
+          completed,
+          total: totalPlan
+        })
+      }
+
+      return this.t('memorisation.workspaceProgress.chooseRange')
+    },
+
+    /** Short state phrase for the slim rail (e.g. "5 left", "Complete"). */
+    sessionProgressStateHint() {
+      const hint = String(this.workspaceProgressSummary?.badge || '').trim()
+      if (!hint) return ''
+      // Avoid duplicating the percent already shown on the right.
+      if (hint === this.sessionProgressLabel) return ''
+      // Avoid repeating the same phrase as the context line.
+      if (hint === this.sessionProgressMeta) return ''
+      return hint
+    },
+
+    sessionProgressAriaText() {
+      const parts = [
+        this.sessionProgressTitle,
+        this.sessionProgressMeta,
+        this.sessionProgressStateHint,
+        this.sessionProgressLabel
+      ].map((part) => String(part || '').trim()).filter(Boolean)
+      return parts.join('. ')
     },
 
     canPrev() {
@@ -8357,10 +8381,11 @@ export default {
       this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
       this.watchActiveVerse()
       this.$nextTick(() => {
-        const navbar = document.querySelector('.navbar')
+        const navbar = document.querySelector('.navbar, .app-navbar')
         if (navbar) {
           const navbarHeight = navbar.offsetHeight
           document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`)
+          document.documentElement.style.setProperty('--navbar-offset', `${navbarHeight}px`)
         }
       })
       // Re-apply highlights when anchor/tajweed toggles affect word layout
@@ -9965,10 +9990,9 @@ export default {
         points: Array.isArray(pointsRaw) ? pointsRaw.filter(Boolean) : []
       }
       if (key === 'setup') step.targetSection = 'advanced_setup'
-      if (key === 'reading') step.targetSection = 'reading_settings'
       if (key === 'practice') step.targetSection = 'focus_mode'
       if (key === 'coach') step.targetSection = 'advanced_playback'
-      if (key === 'review') step.targetSection = 'saved_sessions'
+      if (key === 'improve') step.targetSection = 'advanced_setup'
       return step
     },
 
@@ -14793,6 +14817,9 @@ export default {
       if (action === POST_SESSION_CTA_ACTIONS.OTHER_RANGE) {
         return this.postSessionActionsBusy || this.postSessionRecommendationStarting
       }
+      if (action === POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE) {
+        return this.postSessionActionsBusy || this.postSessionRecommendationStarting
+      }
       return this.postSessionActionsBusy
     },
     postSessionCtaButtonBusy(btn) {
@@ -14847,9 +14874,70 @@ export default {
         case POST_SESSION_CTA_ACTIONS.OTHER_RANGE:
           await this.chooseOtherFromRecommendation()
           return
+        case POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE:
+          this.returnToMemorisationWorkspace()
+          return
         default:
           break
       }
+    },
+    /**
+     * Leave recommendation / post-session choice and restore the main workspace.
+     * Preserves completed-session + AI/recommendation results; never restarts or
+     * duplicates a session record; never rejects/discards the recommendation.
+     */
+    returnToMemorisationWorkspace() {
+      if (this.postSessionActionsBusy || this.postSessionRecommendationStarting) return
+
+      // Keep recommendation / AI review / snapshot / templates in memory.
+      // Do not reject the saved recommendation, start a recommended session, or end again.
+      this.showPostSessionModal = false
+      this.showPostSessionConfetti = false
+      this.postSessionOffcanvasOpen = false
+      this.postSessionAiDetailsExpanded = false
+      this.postSessionAiReciteActive = false
+      this.postSessionAdaptiveCheckActive = false
+      this.postSessionRecommendationStep = 'main'
+      this.postSessionRecommendationStartError = ''
+      this.postSessionViewState = this.postSessionRecommendation
+        ? 'recommendation_ready'
+        : (this.postSessionViewState || 'idle')
+
+      if (this.amdOpen) {
+        try { this.closeAmdModal?.({ returnToCompletion: false }) } catch (_) { /* ignore */ }
+      }
+
+      this.showPostSessionChoice = false
+      this.postSessionChoiceAction = null
+      this.postSessionChoiceOffcanvasOpen = false
+      this._pendingPostSessionChoiceRestore = null
+      this.startingFreshSessionSelection = false
+      this.showTools = false
+      this.topCardMenuOpen = false
+      this.fontDropdownOpen = false
+      this.playerVisible = false
+      try { this.closePlayer() } catch (_) { /* ignore */ }
+
+      // Drop completion-loop UI so Start is available — without inventing a new session.
+      this.sessionCompleted = false
+      this.sessionEndedEarly = false
+      this.sessionPaused = false
+      this.backendUnfinishedSession = false
+      this.clearContinueSessionQuietly()
+      this.clearActiveSessionSnapshot()
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'idle'
+      }
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.paused = false
+        this.mutqinState.sessionState.completed = false
+      }
+      try {
+        this.transitionSessionLifecycle?.(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
+      } catch (_) { /* ignore */ }
+      this.syncBodyScrollLock(false)
+      this.persistUiState()
     },
     resolveFocusPhraseRevisionRange() {
       const snap = this.postSessionSnapshot || {}
@@ -15850,7 +15938,7 @@ export default {
       }
     },
     archiveEndedRecommendedSession(snapshot = null) {
-      // Always keep the just-ended session so "Return to previous session" is available
+      // Always keep the just-ended session so "Repeat session" is available
       // after End session — not only when the session came from a recommendation.
       const template = this.buildCurrentRecommendedSessionTemplate({
         chapterId: snapshot?.chapterId,
@@ -16284,16 +16372,14 @@ export default {
       this.applyOnboardingGoalPreset()
       const stepConfig = [
         { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
-        { tab: 'tools', section: 'reading_settings', mode: 'mushaf', blur: false, chaining: false, anchor: false },
         { tab: 'techniques', section: 'focus_mode', mode: 'stacked', blur: false, chaining: false, anchor: false },
         { tab: 'techniques', section: 'advanced_playback', mode: 'stacked', blur: false, chaining: false, anchor: false },
-        { tab: 'saved', section: 'saved_sessions', mode: 'stacked', blur: false, chaining: false, anchor: false }
+        { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
       if (stepMeta.targetSection) stepConfig.section = stepMeta.targetSection
       this.tab = stepConfig.tab
       this.showTools = false
-      if (stepConfig.mode && stepMeta.key !== 'reading') this.readingViewMode = stepConfig.mode
-      if (stepMeta.key === 'reading' && stepConfig.mode) this.readingViewMode = stepConfig.mode
+      if (stepConfig.mode) this.readingViewMode = stepConfig.mode
       if (stepMeta.key !== 'practice') {
         this.blurModeEnabled = !!stepConfig.blur
         this.focusModeEnabled = false
@@ -16305,7 +16391,7 @@ export default {
         const openMap = {
           advanced_setup: true,
           advanced_playback: false,
-          reading_settings: true,
+          reading_settings: false,
           display_settings: false,
           focus_mode: false,
           blur_mode: false,

@@ -673,6 +673,8 @@
       "detailSession": "{covered} of {total} ayahs covered in this range.",
       "detailEmpty": "Start a session to see live memorisation progress here.",
       "detailPlan": "{completed} of {total} ayahs completed in the current plan.",
+      "coveredShort": "{covered} de {total} aleyas",
+      "coveredShortPlan": "{completed} de {total} aleyas",
       "forecast": "Forecast",
       "daysActive": "Days active",
       "pending": "Pending",
@@ -766,7 +768,9 @@
     },
     "view": {
       "stacked": "Stacked",
-      "mushaf": "Mushaf"
+      "mushaf": "Mushaf",
+      "stackedHint": "Apilado: una aya tras otra — tranquilo para rangos cortos.",
+      "mushafHint": "Mushaf: diseño de página. Ayudas de lectura y tajweed en Controles y Ayuda."
     },
     "actions": {
       "newSession": "New Session",
@@ -914,7 +918,7 @@
     "revisitOnboarding": "Revisit onboarding",
     "onboarding": {
       "stepCounter": "Step {current} of {total}",
-      "intro": "Unos pasos breves para elegir un rango, practicar con calma y conocer Mutqin.",
+      "intro": "Un camino corto: elige ayahs, practica, comprueba con IA y sigue tu siguiente plan.",
       "finish": "Estoy listo",
       "confirmChoice": "Continuar",
       "useSampleSession": "Probar un ejemplo corto",
@@ -923,149 +927,130 @@
         "groupLabel": "¿Cómo te gustaría empezar?",
         "sample": {
           "title": "Probar un ejemplo guiado",
-          "description": "Una práctica breve para sentir el flujo antes de elegir tu propio rango."
+          "description": "Una práctica corta antes de elegir tu propio rango."
         },
         "setup": {
           "title": "Configurar mi sesión",
-          "description": "Elige sura, rango de aleyas y recitador, y empieza cuando quieras."
+          "description": "Elige sura, rango y recitador, luego empieza."
         },
         "explore": {
           "title": "Mirar primero",
-          "description": "Explora el espacio de trabajo y abre la configuración cuando estés listo."
+          "description": "Explora el espacio y abre la configuración cuando estés listo."
         }
       },
       "postSession": {
         "kicker": "Ejemplo completado",
         "title": "Bien hecho",
-        "message": "Terminaste el ejemplo guiado. Elige qué hacer a continuación.",
+        "message": "Ejemplo terminado. Elige qué hacer después.",
         "repeat": "Repetir este ejemplo",
         "newSession": "Iniciar nueva sesión",
         "save": "Guardar esta sesión",
         "savedToast": "Sesión guardada.",
-        "hint": "Repite el ejemplo, empieza tu sesión, o continúa en Mutqin cuando te sientas listo.",
+        "hint": "Repite, empieza tu sesión o continúa en Mutqin.",
         "continue": "Continuar a Mutqin"
       },
       "steps": {
         "setup": {
-          "title": "Set up your session",
-          "stepLabel": "Sesión",
-          "body": "Cada práctica empieza aquí: elige sura, un rango corto y un recitador.",
+          "title": "Elige ayahs y empieza",
+          "stepLabel": "Ayahs",
+          "body": "Elige una sura, mantén el rango corto, elige un recitador y empieza desde Controles.",
+          "hint": "Consejo: unas pocas ayahs bastan para la primera sesión.",
           "points": [
-            "Elige sura, rango y recitador en Controles",
-            "Empieza con un rango corto",
-            "Ajusta repeticiones cuando quieras"
+            "Elige sura, rango de ayahs y recitador",
+            "Empieza cuando estés listo — amplía el rango después"
           ],
-          "previewTitle": "Session inputs",
+          "previewTitle": "Tu sesión",
           "previewSubtitle": "Según tu configuración actual.",
           "previewItems": [
-            "Surah",
-            "Range",
-            "Reciter"
-          ],
-          "hint": "Consejo: unas pocas aleyas bastan para la primera sesión — puedes ampliar el rango después en Controles."
-        },
-        "reading": {
-          "title": "Choose your reading view",
-          "stepLabel": "Lectura",
-          "body": "Lee en tarjetas apiladas o Mushaf. Activa traducción o tajweed solo si ayuda.",
-          "points": [
-            "Apilado para rangos cortos; Mushaf conserva la página",
-            "Activa ayudas desde la barra de sesión",
-            "Los colores de tajweed siguen las reglas"
-          ],
-          "previewTitle": "Reading controls",
-          "previewSubtitle": "Según tu vista actual.",
-          "previewItems": [
-            "Stacked",
-            "Mushaf",
-            "Tajweed"
-          ],
-          "hint": "Consejo: mantén el árabe al frente; activa traducción o tayyīd solo si te ayudan."
+            "Sura",
+            "Rango",
+            "Recitador"
+          ]
         },
         "practice": {
-          "title": "Practice with built-in tools",
-          "stepLabel": "Práctica",
-          "body": "Focus, Blur y Talqin ayudan a escuchar y repetir. Toca una herramienta para previsualizarla.",
+          "title": "Usa las herramientas de memorización",
+          "stepLabel": "Herramientas",
+          "body": "Enfoque, Desenfoque y Talqin ayudan a escuchar y repetir. Toca una herramienta para previsualizarla.",
+          "hint": "Consejo: empieza con una herramienta. Puedes añadir más después.",
           "points": [
-            "Focus centra la aleya activa",
-            "Blur suaviza el texto siguiente",
-            "Talqin da un turno de escuchar y recitar"
+            "Enfoque mantiene la atención en la aya activa",
+            "Desenfoque oculta el texto para recitar de memoria",
+            "Talqin: escucha, luego te toca recitar"
           ],
-          "previewTitle": "Technique controls",
-          "previewSubtitle": "Según tus ajustes de práctica.",
+          "previewTitle": "Herramientas de práctica",
+          "previewSubtitle": "Previsualiza una técnica antes de tu primera sesión.",
           "previewItems": [
-            "Focus",
-            "Blur",
+            "Enfoque",
+            "Desenfoque",
             "Talqin"
-          ],
-          "hint": "Consejo: empieza con una sola herramienta suave. Las comprobaciones de memorización son opcionales."
-        },
-        "review": {
-          "title": "Volver y continuar",
-          "stepLabel": "Volver",
-          "body": "Las sesiones guardadas y Welcome Back te ayudan a retomar con calma.",
-          "points": [
-            "Continúa exactamente donde pausaste",
-            "Las sesiones guardan rango y ajustes",
-            "Welcome Back recuerda la aleya"
-          ],
-          "previewTitle": "Your library",
-          "previewSubtitle": "Según tu actividad reciente.",
-          "previewItems": [
-            "Saved sessions",
-            "Recordings",
-            "Insights"
-          ],
-          "hint": "Consejo: vuelve a las sesiones guardadas cuando quieras desde tu biblioteca."
+          ]
         },
         "coach": {
-          "title": "Memorización IA y recomendaciones",
-          "stepLabel": "Coach IA",
-          "body": "Tras practicar, la memorización IA revisa tu recuerdo y Mutqin recomienda un plan personalizado con las herramientas y el asistente adecuados.",
-          "hint": "Consejo: usa la comprobación cuando quieras feedback y sigue el plan recomendado.",
+          "title": "Prueba la recitación con IA",
+          "stepLabel": "Comprobación IA",
+          "body": "Tras practicar, la Memorización IA escucha y muestra dónde hace falta más atención.",
+          "hint": "Consejo: úsala cuando quieras comentarios — no en cada sesión.",
           "points": [
-            "La memorización IA escucha y marca lo que necesita cuidado",
-            "Las recomendaciones sugieren el siguiente rango y objetivo",
-            "Las herramientas y el asistente coinciden con esa sesión"
+            "Recita de memoria en la comprobación",
+            "Ve qué palabras o ayahs necesitan más cuidado"
           ],
-          "previewTitle": "Mejora personalizada",
-          "previewSubtitle": "Cómo Mutqin orienta tu siguiente sesión.",
+          "previewTitle": "Memorización IA",
+          "previewSubtitle": "Comentarios suaves tras practicar en voz alta.",
           "previewItems": [
             "Memorización IA",
-            "Plan recomendado",
-            "Herramientas"
+            "Comentarios de recuerdo"
           ],
           "stats": {
             "aiLabel": "Memorización IA",
             "aiValue": "Comprobación",
+            "feedbackLabel": "Comentarios",
+            "feedbackValue": "Palabras y ayahs"
+          }
+        },
+        "improve": {
+          "title": "Sigue tu siguiente plan",
+          "stepLabel": "Siguiente plan",
+          "body": "Tras una sesión, Mutqin sugiere el siguiente rango y herramientas para una revisión clara.",
+          "hint": "Consejo: sigue la recomendación y refuerza los puntos débiles con el tiempo.",
+          "points": [
+            "Recibe un rango y objetivo siguientes personalizados",
+            "Usa las herramientas sugeridas para esa sesión"
+          ],
+          "previewTitle": "Mejora con constancia",
+          "previewSubtitle": "Cómo Mutqin guía la siguiente sesión.",
+          "previewItems": [
+            "Plan recomendado",
+            "Herramientas adecuadas"
+          ],
+          "stats": {
             "planLabel": "Recomendación",
-            "planValue": "Plan personalizado",
+            "planValue": "Siguiente rango",
             "toolsLabel": "Herramientas",
-            "toolsValue": "Asistentes"
+            "toolsValue": "Ajustadas a ti"
           }
         }
       },
       "startOnboarding": "Get started",
       "continueOnboarding": "Continue setup",
-      "skipTour": "Explorar por mi cuenta",
+      "skipTour": "Omitir",
       "finishHint": "Elige cómo quieres empezar — puedes cambiarlo cuando quieras.",
       "welcome": {
         "salam": "ٱلسَّلَامُ عَلَيْكُمْ",
         "title": "Bienvenido a Mutqin",
-        "body": "Elige un camino para empezar. El recorrido guiado pasa por sesión, lectura, práctica y cómo volver.",
-        "metaHint": "Una sesión suave está lista: rango corto, recitador claro, ritmo calmado.",
-        "tourDescription": "Cinco pasos: sesión, lectura, práctica, coach IA y retorno."
+        "body": "Elige cómo empezar. El recorrido cubre ayahs, herramientas, comprobación IA y tu siguiente plan.",
+        "metaHint": "Hay una sesión corta lista al empezar.",
+        "tourDescription": "Cuatro pasos: ayahs, herramientas, comprobación IA, siguiente plan."
       },
       "ready": {
         "title": "Ya puedes empezar",
-        "body": "Has visto cómo se organiza Mutqin. Configura tu sesión, explora o prueba el ejemplo guiado.",
+        "body": "Configura tu sesión, prueba el ejemplo o explora el espacio.",
         "kicker": "Recorrido completo",
-        "hint": "Puedes reabrir este recorrido desde el menú en cualquier momento."
+        "hint": "Vuelve a abrir este recorrido cuando quieras desde el menú."
       },
       "actions": {
         "trySample": "Probar un ejemplo guiado",
         "quickTour": "Recorrido guiado",
-        "exploreMyself": "Explorar por mi cuenta",
+        "exploreMyself": "Omitir por ahora",
         "setupSession": "Configurar mi sesión",
         "exploreWorkspace": "Explorar el espacio",
         "guidedTour": "Hacer el recorrido guiado"
@@ -1430,7 +1415,8 @@
         "continueToNextRange": "Continuar al siguiente rango",
         "reviewOnceMore": "Repasar una vez más",
         "chooseAnotherRange": "Otro rango",
-        "chooseDifferentRange": "Otro rango"
+        "chooseDifferentRange": "Otro rango",
+        "returnToWorkspace": "Volver al espacio"
       },
       "coach": {
         "subtitles": {
@@ -1827,6 +1813,8 @@
       "desc": "Repite el plan recomendado o crea tu propia sesión.",
       "repeatRecommended": "Repetir sesión",
       "repeatRecommendedDesc": "Practica otra vez el mismo rango y ajustes recomendados.",
+      "returnToWorkspace": "Volver al espacio",
+      "returnToWorkspaceDesc": "Sal de esta elección y vuelve al espacio principal de memorización. Tu sesión completada y sus resultados se conservan.",
       "createCustom": "Sesión personalizada",
       "createCustomDesc": "Elige tu propia sura, rango de aleyas y ajustes de práctica.",
       "startCustomSession": "Iniciar sesión personalizada"

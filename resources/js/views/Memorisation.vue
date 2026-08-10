@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v109 -->
+  <!-- mutqin-ui-build: v115 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'onboarding-post-session-active': showPostSessionModal,
@@ -141,7 +141,7 @@
 
             <!-- ADD TAJWEED PILL HERE -->
             <button class="toolbar-chip" :class="{ active: tajweedEnabled }"
-              :title="t('memorisation.a11y.showTajweedText')" @click="toggleTajweed">
+              :title="t('memorisation.reading.tajweedHint')" @click="toggleTajweed">
               <i class="bi bi-palette"></i><span>{{ t('memorisation.reading.tajweed') }}</span>
             </button>
           </div>
@@ -169,6 +169,47 @@
 
         <!-- Verses Grid -->
         <div class="workspace">
+        <div
+          v-if="!isOnboardingExperienceActive && !isWelcomeBackWorkspaceHidden"
+          class="session-progress-rail"
+          role="progressbar"
+          :aria-valuenow="sessionProgressMeter"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          :aria-label="workspaceProgressSummary.title || t('memorisation.workspaceProgress.sessionProgress')"
+          :aria-valuetext="sessionProgressAriaText"
+        >
+          <div class="session-progress-rail__inner" aria-hidden="true">
+            <div class="session-progress-rail__row">
+              <div class="session-progress-rail__copy">
+                <span class="session-progress-rail__title">{{ sessionProgressTitle }}</span>
+                <span
+                  v-if="sessionProgressMeta || sessionProgressStateHint"
+                  class="session-progress-rail__sep"
+                  aria-hidden="true"
+                >·</span>
+                <span v-if="sessionProgressMeta" class="session-progress-rail__meta">{{ sessionProgressMeta }}</span>
+                <span
+                  v-if="sessionProgressMeta && sessionProgressStateHint"
+                  class="session-progress-rail__sep"
+                  aria-hidden="true"
+                >·</span>
+                <span
+                  v-if="sessionProgressStateHint"
+                  class="session-progress-rail__hint"
+                >{{ sessionProgressStateHint }}</span>
+              </div>
+              <span class="session-progress-rail__value">{{ sessionProgressLabel }}</span>
+            </div>
+            <div class="session-progress-rail__track">
+              <div
+                class="session-progress-rail__fill"
+                :class="{ 'is-complete': sessionProgressMeter >= 100 }"
+                :style="{ width: sessionProgressMeter + '%' }"
+              ></div>
+            </div>
+          </div>
+        </div>
         <section
           v-show="(hasVerses || showSessionOverviewIdleActions || isPostSessionChoiceVisible) && !isWelcomeBackWorkspaceHidden && !isOnboardingExperienceActive"
           class="workspace-shell"
@@ -207,7 +248,7 @@
                 :class="{ active: readingViewMode === 'mushaf' }"
                 :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'"
                 @click.stop="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
-                :title="readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf')"
+                :title="readingViewMode === 'mushaf' ? t('memorisation.view.stackedHint') : t('memorisation.view.mushafHint')"
                 :aria-label="readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf')"
               >
                 <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-view-stacked' : 'bi-journal-richtext'" aria-hidden="true"></i>
@@ -355,7 +396,9 @@
               <div
                 v-if="isPostSessionChoiceVisible"
                 class="top-card-session-actions post-session-choice-pair"
-                :class="{ 'has-paired-actions': canShowRepeatRecommendedAction }"
+                :class="{
+                  'has-paired-actions': canShowRepeatRecommendedAction,
+                }"
                 data-testid="post-session-choice"
                 role="group"
                 :aria-label="t('memorisation.postSessionChoice.title')"
@@ -492,7 +535,7 @@
                 :class="{ active: readingViewMode === 'stacked' }"
                 :aria-pressed="readingViewMode === 'stacked' ? 'true' : 'false'"
                 @click.stop="setReadingViewMode('stacked')"
-                :title="t('memorisation.view.stacked')"
+                :title="t('memorisation.view.stackedHint')"
               >
                 <i class="bi bi-view-stacked" aria-hidden="true"></i>
                 <span>{{ t('memorisation.view.stacked') }}</span>
@@ -503,7 +546,7 @@
                 :class="{ active: readingViewMode === 'mushaf' }"
                 :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'"
                 @click.stop="setReadingViewMode('mushaf')"
-                :title="t('memorisation.view.mushaf')"
+                :title="t('memorisation.view.mushafHint')"
               >
                 <i class="bi bi-journal-richtext" aria-hidden="true"></i>
                 <span>{{ t('memorisation.view.mushaf') }}</span>
@@ -2975,7 +3018,7 @@
 
             <nav
               v-if="onboardingIsTour"
-              class="onboarding-step-rail onboarding-step-rail--five"
+              class="onboarding-step-rail onboarding-step-rail--four"
               :aria-label="onboardingStepCounterLabel"
             >
               <button
@@ -2997,7 +3040,6 @@
             </nav>
 
             <div v-if="onboardingIsWelcome" class="onboarding-body onboarding-body--guided">
-              <p class="onboarding-meta-hint">{{ t('memorisation.onboarding.welcome.metaHint') }}</p>
               <div
                 class="onboarding-path-grid"
                 role="radiogroup"
@@ -3091,26 +3133,6 @@
               </section>
 
               <div
-                v-if="onboardingStepContent?.key === 'reading'"
-                class="onboarding-practice-chips"
-                role="group"
-                :aria-label="t('memorisation.onboarding.steps.reading.stepLabel')"
-              >
-                <button
-                  v-for="chip in onboardingReadingChips"
-                  :key="chip.key"
-                  type="button"
-                  class="onboarding-practice-chip"
-                  :class="{ active: chip.active }"
-                  :aria-pressed="chip.active ? 'true' : 'false'"
-                  @click="selectOnboardingReadingChip(chip.key)"
-                >
-                  <i class="bi" :class="chip.icon" aria-hidden="true"></i>
-                  <span>{{ chip.label }}</span>
-                </button>
-              </div>
-
-              <div
                 v-if="onboardingStepContent?.key === 'practice'"
                 class="onboarding-practice-chips"
                 role="group"
@@ -3131,16 +3153,7 @@
               </div>
             </div>
 
-            <div v-else class="onboarding-body onboarding-body--guided">
-              <ul class="onboarding-ready-list">
-                <li
-                  v-for="item in onboardingReadyChecklist"
-                  :key="item.key"
-                >
-                  <i class="bi" :class="item.icon" aria-hidden="true"></i>
-                  <span>{{ item.label }}</span>
-                </li>
-              </ul>
+            <div v-else class="onboarding-body onboarding-body--guided onboarding-body--ready">
               <p class="onboarding-meta-hint">{{ t('memorisation.onboarding.ready.hint') }}</p>
             </div>
 
