@@ -12447,14 +12447,6 @@ body.memorisation-page nav.navbar.app-navbar {
   min-width: 0;
 }
 
-.onboarding-salam {
-  margin: 0;
-  font-family: "Amiri Quran", "Scheherazade New", "Noto Naskh Arabic", serif;
-  font-size: 1.4rem;
-  line-height: 1.4;
-  color: color-mix(in srgb, var(--accent-strong, var(--accent)) 74%, var(--text));
-}
-
 .post-onboarding-modal--guided .onboarding-kicker {
   margin: 0;
 }
@@ -12492,13 +12484,6 @@ body.memorisation-page nav.navbar.app-navbar {
   font-weight: 450;
 }
 
-.onboarding-meta-hint {
-  margin: 0;
-  font-size: 0.84rem;
-  line-height: 1.5;
-  color: var(--text-muted);
-}
-
 .post-onboarding-modal--guided .onboarding-step-rail {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -12509,16 +12494,6 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .post-onboarding-modal--guided .onboarding-step-rail--four {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.post-onboarding-modal--guided .onboarding-body--ready {
-  padding-top: 0.15rem;
-  padding-bottom: 0.1rem;
-}
-
-.post-onboarding-modal--guided .onboarding-body--ready .onboarding-meta-hint {
-  margin: 0;
-  text-align: center;
 }
 
 .onboarding-actions-grid--trio-row {
@@ -12599,86 +12574,6 @@ body.memorisation-page nav.navbar.app-navbar {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-}
-
-.onboarding-path-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.7rem;
-}
-
-.onboarding-path-card {
-  display: grid;
-  gap: 0.35rem;
-  justify-items: start;
-  text-align: start;
-  min-height: 8.5rem;
-  padding: 1rem 1.05rem;
-  border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
-  color: inherit;
-  cursor: pointer;
-  transition: border-color 160ms ease, transform 160ms ease, background-color 160ms ease;
-}
-
-.onboarding-path-card:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
-}
-
-.onboarding-path-card.active {
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
-}
-
-.onboarding-path-card-icon {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.7rem;
-  display: grid;
-  place-items: center;
-  color: var(--accent-strong, var(--accent));
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  font-size: 1rem;
-}
-
-.onboarding-path-card strong {
-  font-size: 0.92rem;
-  color: var(--text);
-}
-
-.onboarding-path-card span {
-  font-size: 0.8rem;
-  line-height: 1.45;
-  color: var(--text-muted);
-}
-
-.onboarding-ready-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
-}
-
-.onboarding-ready-list li {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.5rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 0.8rem;
-  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
-  font-size: 0.86rem;
-  font-weight: 540;
-}
-
-.onboarding-ready-list i {
-  color: var(--accent-strong, var(--accent));
 }
 
 .onboarding-practice-chips {
@@ -12780,10 +12675,6 @@ body.memorisation-page nav.navbar.app-navbar {
   color: var(--accent-strong, var(--accent));
 }
 
-[data-theme="dark"] .onboarding-salam {
-  color: color-mix(in srgb, var(--accent) 64%, #f5f5f4);
-}
-
 [data-theme="dark"] .onboarding-meta-line {
   color: color-mix(in srgb, var(--accent) 55%, #e7e0d6);
 }
@@ -12794,12 +12685,10 @@ body.memorisation-page nav.navbar.app-navbar {
   }
 
   .post-onboarding-modal--guided .onboarding-step-rail,
-  .post-onboarding-modal--guided .onboarding-step-rail--four,
-  .onboarding-ready-list {
+  .post-onboarding-modal--guided .onboarding-step-rail--four {
     grid-template-columns: 1fr 1fr;
   }
 
-  .onboarding-path-grid,
   .onboarding-actions-grid--trio-row {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
@@ -12812,10 +12701,6 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 @media (max-width: 639.98px) {
-  .onboarding-path-grid {
-    grid-template-columns: 1fr !important;
-  }
-
   .post-onboarding-modal--guided .onboarding-actions-grid--trio-row,
   .post-onboarding-modal--guided .onboarding-nav-actions.onboarding-actions-grid--trio-row {
     display: grid !important;
@@ -13020,7 +12905,7 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .onboarding-points li {
   position: relative;
-  padding-left: 1rem;
+  padding-inline-start: 1rem;
   font-size: 0.88rem;
   line-height: 1.55;
   color: color-mix(in srgb, var(--text) 84%, var(--text-muted));
@@ -13029,12 +12914,17 @@ body.memorisation-page nav.navbar.app-navbar {
 .onboarding-points li::before {
   content: "";
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 0.58em;
   width: 5px;
   height: 5px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--accent) 72%, #58b68e);
+}
+
+.onboarding-body--guided .onboarding-lead {
+  color: color-mix(in srgb, var(--text) 82%, var(--text-muted));
+  max-width: none;
 }
 
 .onboarding-stats {
@@ -39320,7 +39210,6 @@ finish-choice selection */
   display: grid;
   gap: 0.55rem;
   margin: 0;
-  padding-left: 1.1rem;
 }
 
 .post-onboarding-modal .onboarding-points li {
@@ -39329,93 +39218,6 @@ finish-choice selection */
 
 .post-onboarding-modal .onboarding-progress {
   padding: 0.85rem 1.5rem 0.35rem;
-}
-
-.post-onboarding-modal .onboarding-choice-grid {
-  gap: 1rem;
-  margin-top: 0.15rem;
-}
-
-.post-onboarding-modal .onboarding-finish-choice-grid {
-  margin-top: 0.35rem;
-}
-
-.onboarding-preview {
-  display: grid;
-  gap: 0.75rem;
-  padding: 0.9rem 1rem;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
-  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
-}
-
-.onboarding-preview-head {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.onboarding-preview-head strong {
-  font-size: 0.78rem;
-  font-weight: 560;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--accent) 72%, var(--text-muted));
-}
-
-.onboarding-preview-head span {
-  font-size: 0.76rem;
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
-.onboarding-preview-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
-}
-
-.onboarding-preview-item {
-  display: grid;
-  gap: 0.15rem;
-  min-width: 0;
-  padding: 0.62rem 0.72rem;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
-}
-
-.onboarding-preview-label {
-  font-size: 0.68rem;
-  font-weight: 560;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.onboarding-preview-value {
-  font-size: 0.84rem;
-  font-weight: 520;
-  line-height: 1.35;
-  color: var(--text);
-}
-
-.onboarding-choice-card {
-  position: relative;
-  padding: 1rem 1.05rem 1rem 1.15rem;
-}
-
-.onboarding-choice-card.active {
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
-}
-
-.onboarding-choice-check {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.8rem;
-  color: var(--accent-strong);
-  font-size: 1rem;
 }
 
 .onboarding-nav-actions {
@@ -39450,10 +39252,6 @@ finish-choice selection */
   line-height: 1.5;
 }
 
-.onboarding-finish-hint {
-  grid-column: 1 / -1;
-}
-
 .welcome-back-hint {
   margin-top: 0.75rem;
 }
@@ -39474,10 +39272,6 @@ finish-choice selection */
 }
 
 @media (max-width: 640px) {
-  .onboarding-preview-grid {
-    grid-template-columns: 1fr;
-  }
-
   .post-onboarding-modal .onboarding-body {
     padding-inline: 1.15rem !important;
   }
@@ -43240,12 +43034,6 @@ body,
   .post-onboarding-modal .onboarding-body {
     padding: 0.8rem 0.9rem 1rem !important;
     gap: 0.8rem !important;
-  }
-
-  .onboarding-preview-grid,
-.onboarding-choice-grid,
-.onboarding-finish-choice-grid {
-    grid-template-columns: minmax(0, 1fr) !important;
   }
 
   .onboarding-nav-actions:not(.onboarding-actions-grid--trio-row),

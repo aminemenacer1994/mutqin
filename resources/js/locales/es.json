@@ -917,143 +917,67 @@
     "view_recording": "View Recording",
     "revisitOnboarding": "Revisit onboarding",
     "onboarding": {
-      "stepCounter": "Step {current} of {total}",
-      "intro": "Un camino corto: elige ayahs, practica, comprueba con IA y sigue tu siguiente plan.",
+      "stepCounter": "Paso {current} de {total}",
+      "intro": "Elige aleyas, practica con herramientas, revisa con IA y sigue tu próximo plan.",
       "finish": "Estoy listo",
-      "confirmChoice": "Continuar",
-      "useSampleSession": "Probar un ejemplo corto",
-      "playSampleSession": "Probar un ejemplo corto",
-      "choices": {
-        "groupLabel": "¿Cómo te gustaría empezar?",
-        "sample": {
-          "title": "Probar un ejemplo guiado",
-          "description": "Una práctica corta antes de elegir tu propio rango."
-        },
-        "setup": {
-          "title": "Configurar mi sesión",
-          "description": "Elige sura, rango y recitador, luego empieza."
-        },
-        "explore": {
-          "title": "Mirar primero",
-          "description": "Explora el espacio y abre la configuración cuando estés listo."
-        }
-      },
+      "skipTour": "Omitir",
+      "useSampleSession": "Probar una muestra corta",
+      "playSampleSession": "Probar una muestra corta",
+      "startOnboarding": "Empezar",
+      "continueOnboarding": "Continuar configuración",
       "postSession": {
-        "kicker": "Ejemplo completado",
+        "kicker": "Muestra completada",
         "title": "Bien hecho",
-        "message": "Ejemplo terminado. Elige qué hacer después.",
-        "repeat": "Repetir este ejemplo",
-        "newSession": "Iniciar nueva sesión",
+        "message": "Muestra terminada. Elige qué hacer a continuación.",
+        "hint": "Repite, inicia tu sesión o continúa en Mutqin.",
+        "repeat": "Repetir esta muestra",
+        "newSession": "Iniciar una nueva sesión",
+        "continue": "Continuar a Mutqin",
         "save": "Guardar esta sesión",
-        "savedToast": "Sesión guardada.",
-        "hint": "Repite, empieza tu sesión o continúa en Mutqin.",
-        "continue": "Continuar a Mutqin"
+        "savedToast": "Sesión guardada."
       },
       "steps": {
         "setup": {
-          "title": "Elige ayahs y empieza",
-          "stepLabel": "Ayahs",
-          "body": "Elige una sura, mantén el rango corto, elige un recitador y empieza desde Controles.",
-          "hint": "Consejo: unas pocas ayahs bastan para la primera sesión.",
+          "title": "Elige aleyas y empieza",
+          "stepLabel": "Aleyas",
+          "body": "Elige una sura, un rango corto y un recitador. Empieza desde Controles cuando estés listo.",
+          "hint": "Pocas aleyas bastan para la primera sesión.",
           "points": [
-            "Elige sura, rango de ayahs y recitador",
-            "Empieza cuando estés listo — amplía el rango después"
-          ],
-          "previewTitle": "Tu sesión",
-          "previewSubtitle": "Según tu configuración actual.",
-          "previewItems": [
-            "Sura",
-            "Rango",
-            "Recitador"
+            "Elige sura, rango y recitador",
+            "Empieza la sesión desde Controles"
           ]
         },
         "practice": {
           "title": "Usa las herramientas de memorización",
           "stepLabel": "Herramientas",
-          "body": "Enfoque, Desenfoque y Talqin ayudan a escuchar y repetir. Toca una herramienta para previsualizarla.",
-          "hint": "Consejo: empieza con una herramienta. Puedes añadir más después.",
+          "body": "Enfoque, Desenfoque y Talqin te ayudan a escuchar y repetir. Toca una herramienta para previsualizarla.",
+          "hint": "Empieza con una herramienta. Añade más después.",
           "points": [
-            "Enfoque mantiene la atención en la aya activa",
+            "Enfoque mantiene la atención en la aleya activa",
             "Desenfoque oculta el texto para recitar de memoria",
-            "Talqin: escucha, luego te toca recitar"
-          ],
-          "previewTitle": "Herramientas de práctica",
-          "previewSubtitle": "Previsualiza una técnica antes de tu primera sesión.",
-          "previewItems": [
-            "Enfoque",
-            "Desenfoque",
-            "Talqin"
+            "Talqin: escucha, luego te toca"
           ]
         },
         "coach": {
           "title": "Prueba la recitación con IA",
-          "stepLabel": "Comprobación IA",
-          "body": "Tras practicar, la Memorización IA escucha y muestra dónde hace falta más atención.",
-          "hint": "Consejo: úsala cuando quieras comentarios — no en cada sesión.",
+          "stepLabel": "Revisión IA",
+          "body": "Tras practicar, la Memorización IA escucha y muestra dónde reforzar el recuerdo.",
+          "hint": "Usa la revisión cuando quieras comentarios — no hace falta en cada sesión.",
           "points": [
-            "Recita de memoria en la comprobación",
-            "Ve qué palabras o ayahs necesitan más cuidado"
-          ],
-          "previewTitle": "Memorización IA",
-          "previewSubtitle": "Comentarios suaves tras practicar en voz alta.",
-          "previewItems": [
-            "Memorización IA",
-            "Comentarios de recuerdo"
-          ],
-          "stats": {
-            "aiLabel": "Memorización IA",
-            "aiValue": "Comprobación",
-            "feedbackLabel": "Comentarios",
-            "feedbackValue": "Palabras y ayahs"
-          }
+            "Recita de memoria en la revisión",
+            "Mira qué palabras o aleyas necesitan cuidado"
+          ]
         },
         "improve": {
-          "title": "Sigue tu siguiente plan",
-          "stepLabel": "Siguiente plan",
-          "body": "Tras una sesión, Mutqin sugiere el siguiente rango y herramientas para una revisión clara.",
-          "hint": "Consejo: sigue la recomendación y refuerza los puntos débiles con el tiempo.",
+          "title": "Sigue tu próximo plan",
+          "stepLabel": "Próximo plan",
+          "body": "Tras una sesión, Mutqin sugiere el siguiente rango y herramientas para revisar con claridad.",
+          "hint": "Sigue la recomendación y mejora los puntos débiles con el tiempo.",
           "points": [
-            "Recibe un rango y objetivo siguientes personalizados",
-            "Usa las herramientas sugeridas para esa sesión"
-          ],
-          "previewTitle": "Mejora con constancia",
-          "previewSubtitle": "Cómo Mutqin guía la siguiente sesión.",
-          "previewItems": [
-            "Plan recomendado",
-            "Herramientas adecuadas"
-          ],
-          "stats": {
-            "planLabel": "Recomendación",
-            "planValue": "Siguiente rango",
-            "toolsLabel": "Herramientas",
-            "toolsValue": "Ajustadas a ti"
-          }
+            "Recibe un rango y meta sugeridos",
+            "Usa las herramientas adecuadas para esa sesión"
+          ]
         }
-      },
-      "startOnboarding": "Get started",
-      "continueOnboarding": "Continue setup",
-      "skipTour": "Omitir",
-      "finishHint": "Elige cómo quieres empezar — puedes cambiarlo cuando quieras.",
-      "welcome": {
-        "salam": "ٱلسَّلَامُ عَلَيْكُمْ",
-        "title": "Bienvenido a Mutqin",
-        "body": "Elige cómo empezar. El recorrido cubre ayahs, herramientas, comprobación IA y tu siguiente plan.",
-        "metaHint": "Hay una sesión corta lista al empezar.",
-        "tourDescription": "Cuatro pasos: ayahs, herramientas, comprobación IA, siguiente plan."
-      },
-      "ready": {
-        "title": "Ya puedes empezar",
-        "body": "Configura tu sesión, prueba el ejemplo o explora el espacio.",
-        "kicker": "Recorrido completo",
-        "hint": "Vuelve a abrir este recorrido cuando quieras desde el menú."
-      },
-      "actions": {
-        "trySample": "Probar un ejemplo guiado",
-        "quickTour": "Recorrido guiado",
-        "exploreMyself": "Omitir por ahora",
-        "setupSession": "Configurar mi sesión",
-        "exploreWorkspace": "Explorar el espacio",
-        "guidedTour": "Hacer el recorrido guiado"
       }
     },
     "open_session_setup": "Open session setup",

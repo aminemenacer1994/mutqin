@@ -1265,49 +1265,13 @@
     "revisitOnboarding": "Take the tour again",
     "onboarding": {
       "stepCounter": "Step {current} of {total}",
-      "intro": "A short path: choose ayahs, practise, check with AI, then follow your next plan.",
+      "intro": "Choose ayahs, practise with tools, check with AI, then follow your next plan.",
       "finish": "I'm ready",
-      "confirmChoice": "Continue",
       "skipTour": "Skip",
-      "finishHint": "Pick how you’d like to start. You can change this any time.",
       "useSampleSession": "Try a short sample",
       "playSampleSession": "Try a short sample",
-      "welcome": {
-        "salam": "ٱلسَّلَامُ عَلَيْكُمْ",
-        "title": "Welcome to Mutqin",
-        "body": "Choose how to begin. The tour covers ayahs, practice tools, AI check, and your next plan.",
-        "metaHint": "A short default session is ready when you start.",
-        "tourDescription": "Four steps: ayahs, tools, AI check, next plan."
-      },
-      "ready": {
-        "kicker": "Tour complete",
-        "title": "You’re ready to begin",
-        "body": "Set up your session, try the sample, or explore the workspace.",
-        "hint": "Reopen this tour any time from the menu."
-      },
-      "actions": {
-        "trySample": "Try a guided sample",
-        "quickTour": "Guided tour",
-        "guidedTour": "Take the guided tour",
-        "exploreMyself": "Skip for now",
-        "setupSession": "Set up my session",
-        "exploreWorkspace": "Explore workspace"
-      },
-      "choices": {
-        "groupLabel": "How would you like to begin?",
-        "sample": {
-          "title": "Try a guided sample",
-          "description": "A short practice before you choose your own range."
-        },
-        "setup": {
-          "title": "Set up my own session",
-          "description": "Choose surah, range, and reciter, then begin."
-        },
-        "explore": {
-          "title": "Look around first",
-          "description": "Explore the workspace and open setup when ready."
-        }
-      },
+      "startOnboarding": "Get started",
+      "continueOnboarding": "Continue setup",
       "postSession": {
         "kicker": "Sample complete",
         "title": "Well done",
@@ -1323,85 +1287,45 @@
         "setup": {
           "title": "Choose ayahs and start",
           "stepLabel": "Ayahs",
-          "body": "Pick a surah, keep the range short, choose a reciter, then start your session from Controls.",
-          "hint": "Tip: a few ayahs is enough for a first session.",
+          "body": "Pick a surah, a short ayah range, and a reciter. Start from Controls when ready.",
+          "hint": "A few ayahs is enough for a first session.",
           "points": [
-            "Choose surah, ayah range, and reciter",
-            "Start when ready — widen the range later"
-          ],
-          "previewTitle": "Your session",
-          "previewSubtitle": "Based on your current settings.",
-          "previewItems": [
-            "Surah",
-            "Range",
-            "Reciter"
+            "Choose surah, range, and reciter",
+            "Start the session from Controls"
           ]
         },
         "practice": {
           "title": "Use the memorisation tools",
           "stepLabel": "Tools",
           "body": "Focus, Blur, and Talqin help you listen and repeat. Tap a tool to preview it.",
-          "hint": "Tip: start with one tool. You can add more later.",
+          "hint": "Start with one tool. Add more later.",
           "points": [
             "Focus keeps attention on the active ayah",
             "Blur hides text so you recite from memory",
-            "Talqin is listen, then your turn to recite"
-          ],
-          "previewTitle": "Practice tools",
-          "previewSubtitle": "Preview a technique before your first session.",
-          "previewItems": [
-            "Focus",
-            "Blur",
-            "Talqin"
+            "Talqin is listen, then your turn"
           ]
         },
         "coach": {
           "title": "Test recitation with AI",
           "stepLabel": "AI check",
           "body": "After practice, AI Memorisation listens and shows where recall needs care.",
-          "hint": "Tip: use the check when you want feedback — not every session needs it.",
+          "hint": "Use the check when you want feedback — not every session needs it.",
           "points": [
             "Recite from memory into the check",
             "See which words or ayahs need more care"
-          ],
-          "previewTitle": "AI Memorisation",
-          "previewSubtitle": "Gentle feedback after you practise aloud.",
-          "previewItems": [
-            "AI Memorisation",
-            "Recall feedback"
-          ],
-          "stats": {
-            "aiLabel": "AI Memorisation",
-            "aiValue": "Recall check",
-            "feedbackLabel": "Feedback",
-            "feedbackValue": "Words & ayahs"
-          }
+          ]
         },
         "improve": {
           "title": "Follow your next plan",
           "stepLabel": "Next plan",
           "body": "After a session, Mutqin suggests a next range and tools so revision stays clear.",
-          "hint": "Tip: follow the recommendation, then improve weak spots over time.",
+          "hint": "Follow the recommendation, then improve weak spots over time.",
           "points": [
-            "Get a personalised next range and goal",
-            "Use the suggested tools for that session"
-          ],
-          "previewTitle": "Improve steadily",
-          "previewSubtitle": "How Mutqin guides the session after this one.",
-          "previewItems": [
-            "Recommended plan",
-            "Matched tools"
-          ],
-          "stats": {
-            "planLabel": "Recommendation",
-            "planValue": "Next range",
-            "toolsLabel": "Session tools",
-            "toolsValue": "Matched to you"
-          }
+            "Get a suggested next range and goal",
+            "Use the matched tools for that session"
+          ]
         }
-      },
-      "startOnboarding": "Get started",
-      "continueOnboarding": "Continue setup"
+      }
     },
     "open_session_setup": "Open session setup",
     "open_controls": "Open controls",

@@ -1569,24 +1569,6 @@
     gap: 0.4rem !important;
   }
 
-  .post-onboarding-modal--guided .onboarding-path-grid {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 0.55rem !important;
-  }
-
-  .post-onboarding-modal--guided .onboarding-ready-list {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 0.45rem !important;
-  }
-
-  .post-onboarding-modal--guided .onboarding-actions-grid--ready {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 0.45rem !important;
-  }
-
   .post-onboarding-modal--guided .onboarding-actions-grid--trio-row,
   .post-onboarding-modal--guided .onboarding-nav-actions.onboarding-actions-grid--trio-row {
     display: grid !important;
@@ -1639,22 +1621,8 @@
     padding: 12px 14px 16px !important;
   }
 
-  .onboarding-body > :where(.onboarding-lead, .onboarding-points, .onboarding-preview, .onboarding-choice-grid) {
+  .onboarding-body > :where(.onboarding-lead, .onboarding-points, .onboarding-step-hint, .onboarding-practice-chips) {
     grid-column: 1 / -1;
-  }
-
-  .onboarding-preview-grid,
-.onboarding-choice-grid,
-.onboarding-finish-choice-grid {
-    display: grid !important;
-    grid-template-columns: var(--mq-grid) !important;
-    gap: var(--mq-grid-gap) !important;
-  }
-
-  .onboarding-preview-item,
-.onboarding-choice-card {
-    grid-column: span 2;
-    min-inline-size: 0;
   }
 
   .onboarding-choice-grid > :last-child:nth-child(odd) {
@@ -3121,15 +3089,6 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .shared-result-support-grid > * {
     grid-column: span 2 !important;
-  }
-
-  .onboarding-preview-item,
-.onboarding-choice-card {
-    grid-column: span 2;
-  }
-
-  .onboarding-choice-grid > :last-child:nth-child(odd) {
-    grid-column: span 2;
   }
 }
 

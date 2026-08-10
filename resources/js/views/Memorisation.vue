@@ -2965,7 +2965,7 @@
       class="modal-overlay mutqin-modal-overlay post-onboarding-overlay"
       @click.self="dismissOnboardingTour"
     >
-      <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog onboarding-dialog">
+      <div class="modal-dialog modal-dialog-centered modal-lg mutqin-modal-dialog onboarding-dialog">
         <div
           class="modal-content mutqin-modal-surface post-onboarding-modal post-onboarding-modal--guided"
           role="dialog"
@@ -2987,26 +2987,10 @@
                 <i class="bi" :class="onboardingModalIcon"></i>
               </span>
               <div class="onboarding-hero-copy">
-                <p
-                  v-if="onboardingIsWelcome"
-                  class="onboarding-salam"
-                  lang="ar"
-                  dir="rtl"
-                >
-                  {{ t('memorisation.onboarding.welcome.salam') }}
-                </p>
-                <span
-                  v-if="onboardingIsTour"
-                  class="onboarding-kicker"
-                >{{ onboardingStepCounterLabel }}</span>
-                <span
-                  v-else-if="onboardingIsReady"
-                  class="onboarding-kicker"
-                >{{ t('memorisation.onboarding.ready.kicker') }}</span>
+                <span class="onboarding-kicker">{{ onboardingStepCounterLabel }}</span>
                 <h2 id="postOnboardingTitle" class="onboarding-title">
                   {{ onboardingModalTitle }}
                 </h2>
-                <p class="onboarding-lead">{{ onboardingModalBody }}</p>
                 <p
                   v-if="onboardingMetaLine"
                   class="onboarding-meta-line"
@@ -3017,7 +3001,6 @@
             </header>
 
             <nav
-              v-if="onboardingIsTour"
               class="onboarding-step-rail onboarding-step-rail--four"
               :aria-label="onboardingStepCounterLabel"
             >
@@ -3039,58 +3022,14 @@
               </button>
             </nav>
 
-            <div v-if="onboardingIsWelcome" class="onboarding-body onboarding-body--guided">
-              <div
-                class="onboarding-path-grid"
-                role="radiogroup"
-                :aria-label="t('memorisation.onboarding.choices.groupLabel')"
+            <div class="onboarding-body onboarding-body--guided">
+              <p
+                v-if="onboardingModalBody"
+                class="onboarding-lead"
               >
-                <button
-                  type="button"
-                  role="radio"
-                  class="onboarding-path-card"
-                  :class="{ active: onboardingWelcomeChoice === 'sample' }"
-                  :aria-checked="onboardingWelcomeChoice === 'sample' ? 'true' : 'false'"
-                  @click="selectOnboardingWelcomeChoice('sample'); confirmOnboardingWelcomeChoice()"
-                >
-                  <span class="onboarding-path-card-icon" aria-hidden="true">
-                    <i class="bi bi-play-circle"></i>
-                  </span>
-                  <strong>{{ t('memorisation.onboarding.choices.sample.title') }}</strong>
-                  <span>{{ t('memorisation.onboarding.choices.sample.description') }}</span>
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  class="onboarding-path-card"
-                  :class="{ active: onboardingWelcomeChoice === 'tour' }"
-                  :aria-checked="onboardingWelcomeChoice === 'tour' ? 'true' : 'false'"
-                  @click="selectOnboardingWelcomeChoice('tour'); confirmOnboardingWelcomeChoice()"
-                >
-                  <span class="onboarding-path-card-icon" aria-hidden="true">
-                    <i class="bi bi-signpost-split"></i>
-                  </span>
-                  <strong>{{ t('memorisation.onboarding.actions.guidedTour') }}</strong>
-                  <span>{{ t('memorisation.onboarding.welcome.tourDescription') }}</span>
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  class="onboarding-path-card"
-                  :class="{ active: onboardingWelcomeChoice === 'explore' }"
-                  :aria-checked="onboardingWelcomeChoice === 'explore' ? 'true' : 'false'"
-                  @click="selectOnboardingWelcomeChoice('explore'); confirmOnboardingWelcomeChoice()"
-                >
-                  <span class="onboarding-path-card-icon" aria-hidden="true">
-                    <i class="bi bi-compass"></i>
-                  </span>
-                  <strong>{{ t('memorisation.onboarding.choices.explore.title') }}</strong>
-                  <span>{{ t('memorisation.onboarding.choices.explore.description') }}</span>
-                </button>
-              </div>
-            </div>
+                {{ onboardingModalBody }}
+              </p>
 
-            <div v-else-if="onboardingIsTour" class="onboarding-body onboarding-body--guided">
               <ul
                 v-if="onboardingStepContent?.points?.length"
                 class="onboarding-points"
@@ -3110,27 +3049,6 @@
               >
                 {{ onboardingStepContent.hint }}
               </p>
-
-              <section
-                v-if="onboardingStepPreview"
-                class="onboarding-preview"
-                :aria-label="onboardingStepPreview.title"
-              >
-                <header class="onboarding-preview-head">
-                  <strong>{{ onboardingStepPreview.title }}</strong>
-                  <span>{{ onboardingStepPreview.subtitle }}</span>
-                </header>
-                <div class="onboarding-preview-grid">
-                  <div
-                    v-for="item in onboardingStepPreview.items"
-                    :key="item.key"
-                    class="onboarding-preview-item"
-                  >
-                    <span class="onboarding-preview-label">{{ item.label }}</span>
-                    <strong class="onboarding-preview-value">{{ item.value }}</strong>
-                  </div>
-                </div>
-              </section>
 
               <div
                 v-if="onboardingStepContent?.key === 'practice'"
@@ -3153,58 +3071,19 @@
               </div>
             </div>
 
-            <div v-else class="onboarding-body onboarding-body--guided onboarding-body--ready">
-              <p class="onboarding-meta-hint">{{ t('memorisation.onboarding.ready.hint') }}</p>
-            </div>
-
-            <div
-              v-if="!onboardingIsWelcome"
-              class="modal-footer mutqin-modal-footer onboarding-footer"
-            >
-              <div
-                v-if="onboardingIsReady"
-                class="mutqin-modal-actions onboarding-actions-grid onboarding-actions-grid--trio-row"
-              >
-                <button
-                  type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--secondary onboarding-action"
-                  @click="playOnboardingSampleSession"
-                >
-                  <i class="bi bi-play-fill" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.onboarding.actions.trySample') }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--secondary onboarding-action"
-                  @click="completeOnboardingExploreWorkspace"
-                >
-                  <i class="bi bi-grid" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.onboarding.actions.exploreWorkspace') }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--primary onboarding-action"
-                  @click="completeOnboardingOpenSetup"
-                >
-                  <i class="bi bi-sliders" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.onboarding.actions.setupSession') }}</span>
-                </button>
-              </div>
-
-              <div
-                v-else
-                class="mutqin-modal-actions onboarding-actions-grid onboarding-actions-grid--trio-row onboarding-nav-actions"
-              >
+            <div class="modal-footer mutqin-modal-footer onboarding-footer">
+              <div class="mutqin-modal-actions onboarding-actions-grid onboarding-actions-grid--trio-row onboarding-nav-actions">
                 <button
                   type="button"
                   class="mutqin-modal-btn mutqin-modal-btn--ghost onboarding-action onboarding-skip-btn"
                   @click="dismissOnboardingTour"
                 >
-                  <span>{{ t('memorisation.onboarding.actions.exploreMyself') }}</span>
+                  <span>{{ t('memorisation.onboarding.skipTour') }}</span>
                 </button>
                 <button
                   type="button"
                   class="mutqin-modal-btn mutqin-modal-btn--secondary onboarding-action"
+                  :disabled="onboardingStepIndex <= 0"
                   @click="prevOnboardingStep"
                 >
                   <i class="bi bi-arrow-left" aria-hidden="true"></i>

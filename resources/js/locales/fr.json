@@ -575,142 +575,66 @@
     "view_recording": "Voir l'enregistrement",
     "onboarding": {
       "stepCounter": "Étape {current} sur {total}",
+      "intro": "Choisissez les ayahs, pratiquez avec les outils, vérifiez avec l’IA, puis suivez le plan suivant.",
       "finish": "Je suis prêt",
+      "skipTour": "Passer",
       "useSampleSession": "Essayer un court exemple",
+      "playSampleSession": "Essayer un court exemple",
+      "startOnboarding": "Commencer",
+      "continueOnboarding": "Continuer la configuration",
+      "postSession": {
+        "kicker": "Exemple terminé",
+        "title": "Bravo",
+        "message": "Exemple terminé. Choisissez la suite.",
+        "hint": "Répétez, démarrez votre session, ou continuez dans Mutqin.",
+        "repeat": "Répéter cet exemple",
+        "newSession": "Commencer une nouvelle session",
+        "continue": "Continuer vers Mutqin",
+        "save": "Enregistrer cette session",
+        "savedToast": "Session enregistrée."
+      },
       "steps": {
         "setup": {
           "title": "Choisir les ayahs et commencer",
           "stepLabel": "Ayahs",
-          "body": "Choisissez une sourate, gardez la plage courte, un récitateur, puis démarrez depuis Contrôles.",
-          "hint": "Conseil : quelques ayahs suffisent pour une première session.",
+          "body": "Choisissez une sourate, une courte plage et un récitateur. Démarrez depuis Contrôles.",
+          "hint": "Quelques ayahs suffisent pour une première session.",
           "points": [
-            "Choisissez sourate, plage d’ayahs et récitateur",
-            "Démarrez quand vous êtes prêt — élargissez plus tard"
-          ],
-          "previewTitle": "Votre session",
-          "previewSubtitle": "Selon vos réglages actuels.",
-          "previewItems": [
-            "Sourate",
-            "Plage",
-            "Récitateur"
+            "Choisissez sourate, plage et récitateur",
+            "Démarrez la session depuis Contrôles"
           ]
         },
         "practice": {
           "title": "Utiliser les outils de mémorisation",
           "stepLabel": "Outils",
           "body": "Focus, Flou et Talqin aident à écouter et répéter. Touchez un outil pour l’aperçu.",
-          "hint": "Conseil : commencez avec un seul outil.",
+          "hint": "Commencez avec un seul outil. Ajoutez-en plus tard.",
           "points": [
             "Focus garde l’attention sur l’ayah active",
             "Flou masque le texte pour réciter de mémoire",
-            "Talqin : écoutez, puis à vous de réciter"
-          ],
-          "previewTitle": "Outils de pratique",
-          "previewSubtitle": "Aperçu d’une technique avant la première session.",
-          "previewItems": [
-            "Focus",
-            "Flou",
-            "Talqin"
+            "Talqin : écoutez, puis à vous"
           ]
         },
         "coach": {
           "title": "Tester la récitation avec l’IA",
           "stepLabel": "Contrôle IA",
           "body": "Après la pratique, le contrôle IA écoute et montre où la mémorisation a besoin d’attention.",
-          "hint": "Conseil : utilisez le contrôle quand vous voulez un retour — pas à chaque session.",
+          "hint": "Utilisez le contrôle quand vous voulez un retour — pas à chaque session.",
           "points": [
             "Récitez de mémoire dans le contrôle",
             "Voyez les mots ou ayahs à renforcer"
-          ],
-          "previewTitle": "Mémorisation IA",
-          "previewSubtitle": "Un retour doux après la pratique à voix haute.",
-          "previewItems": [
-            "Mémorisation IA",
-            "Retour de rappel"
-          ],
-          "stats": {
-            "aiLabel": "Mémorisation IA",
-            "aiValue": "Contrôle de rappel",
-            "feedbackLabel": "Retour",
-            "feedbackValue": "Mots et ayahs"
-          }
+          ]
         },
         "improve": {
           "title": "Suivre votre plan suivant",
           "stepLabel": "Plan suivant",
           "body": "Après une session, Mutqin suggère une plage et des outils pour une révision claire.",
-          "hint": "Conseil : suivez la recommandation, puis renforcez les points faibles.",
+          "hint": "Suivez la recommandation, puis renforcez les points faibles.",
           "points": [
-            "Recevez une plage et un objectif personnalisés",
-            "Utilisez les outils suggérés pour cette session"
-          ],
-          "previewTitle": "Progresser avec constance",
-          "previewSubtitle": "Comment Mutqin guide la session suivante.",
-          "previewItems": [
-            "Plan recommandé",
-            "Outils adaptés"
-          ],
-          "stats": {
-            "planLabel": "Recommandation",
-            "planValue": "Plage suivante",
-            "toolsLabel": "Outils de session",
-            "toolsValue": "Adaptés à vous"
-          }
+            "Recevez une plage et un objectif suggérés",
+            "Utilisez les outils adaptés à cette session"
+          ]
         }
-      },
-      "playSampleSession": "Essayer un court exemple",
-      "postSession": {
-        "kicker": "Exemple terminé",
-        "title": "Bravo",
-        "message": "Exemple terminé. Choisissez la suite.",
-        "repeat": "Répéter cet exemple",
-        "newSession": "Commencer une nouvelle session",
-        "save": "Enregistrer cette session",
-        "savedToast": "Session enregistrée.",
-        "hint": "Répétez, démarrez votre session, ou continuez dans Mutqin.",
-        "continue": "Continuer vers Mutqin"
-      },
-      "choices": {
-        "groupLabel": "Comment souhaitez-vous commencer ?",
-        "sample": {
-          "title": "Essayer un exemple guidé",
-          "description": "Une courte pratique avant de choisir votre plage."
-        },
-        "setup": {
-          "title": "Configurer ma session",
-          "description": "Choisissez sourate, plage et récitateur, puis commencez."
-        },
-        "explore": {
-          "title": "Explorer d’abord",
-          "description": "Explorez l’espace et ouvrez la config quand vous êtes prêt."
-        }
-      },
-      "intro": "Un chemin court : choisir les ayahs, pratiquer, vérifier avec l’IA, puis suivre le plan suivant.",
-      "confirmChoice": "Continuer",
-      "startOnboarding": "Get started",
-      "continueOnboarding": "Continue setup",
-      "skipTour": "Passer",
-      "finishHint": "Choisissez comment commencer — vous pourrez changer plus tard.",
-      "welcome": {
-        "salam": "ٱلسَّلَامُ عَلَيْكُمْ",
-        "title": "Bienvenue sur Mutqin",
-        "body": "Choisissez comment commencer. Le parcours couvre les ayahs, les outils, le contrôle IA et le plan suivant.",
-        "metaHint": "Une courte session par défaut est prête.",
-        "tourDescription": "Quatre étapes : ayahs, outils, contrôle IA, plan suivant."
-      },
-      "ready": {
-        "title": "Vous êtes prêt à commencer",
-        "body": "Configurez votre session, essayez l’exemple, ou explorez l’espace de travail.",
-        "kicker": "Tour terminé",
-        "hint": "Rouvrez ce parcours à tout moment depuis le menu."
-      },
-      "actions": {
-        "trySample": "Essayer un exemple guidé",
-        "quickTour": "Tour guidé",
-        "exploreMyself": "Passer pour l’instant",
-        "setupSession": "Configurer ma session",
-        "exploreWorkspace": "Explorer l’espace",
-        "guidedTour": "Faire le tour guidé"
       }
     },
     "open_session_setup": "Ouvrir la configuration de session",

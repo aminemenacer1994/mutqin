@@ -683,9 +683,8 @@ export default {
       flowListenPlays: 0,
       showPlannerModal: false,
       showPostLoginOnboarding: false,
-      onboardingPhase: 'welcome', // welcome | tour | ready
+      onboardingPhase: 'tour', // tour only (lean guided flow)
       onboardingStepIndex: 0,
-      onboardingWelcomeChoice: '', // sample | tour | explore
       onboardingDemoSnapshot: null,
       onboardingDemoActive: false,
       onboardingManualLaunch: false,
@@ -5763,32 +5762,20 @@ export default {
       ]
       return defs.map(({ key, icon }) => this.buildOnboardingStep(key, icon))
     },
-    onboardingIsWelcome() {
-      return this.onboardingPhase === 'welcome'
-    },
     onboardingIsTour() {
       return this.onboardingPhase === 'tour'
     },
-    onboardingIsReady() {
-      return this.onboardingPhase === 'ready'
-    },
     onboardingModalTitle() {
-      if (this.onboardingIsWelcome) return this.t('memorisation.onboarding.welcome.title')
-      if (this.onboardingIsReady) return this.t('memorisation.onboarding.ready.title')
-      return this.onboardingStepContent?.title || this.t('memorisation.onboarding.welcome.title')
+      return this.onboardingStepContent?.title || this.t('memorisation.onboarding.intro')
     },
     onboardingModalBody() {
-      if (this.onboardingIsWelcome) return this.t('memorisation.onboarding.welcome.body')
-      if (this.onboardingIsReady) return this.t('memorisation.onboarding.ready.body')
       return this.onboardingStepContent?.body || ''
     },
     onboardingModalIcon() {
-      if (this.onboardingIsWelcome) return 'bi-moon-stars'
-      if (this.onboardingIsReady) return 'bi-check2-circle'
       return this.onboardingStepContent?.icon || 'bi-compass'
     },
     onboardingMetaParts() {
-      if (!this.onboardingIsWelcome && !(this.onboardingIsTour && this.onboardingStepContent?.key === 'setup')) {
+      if (!(this.onboardingIsTour && this.onboardingStepContent?.key === 'setup')) {
         return []
       }
       const chapter = this.chapters.find(item => Number(item.id) === Number(this.chapterId || this.currentConfig?.chapterId))
@@ -5804,46 +5791,6 @@ export default {
     },
     onboardingMetaLine() {
       return this.onboardingMetaParts.join(', ')
-    },
-    onboardingStepPreview() {
-      if (!this.onboardingIsTour) return null
-      const step = this.onboardingStepContent
-      if (!step?.key) return null
-      const items = (this.onboardingStepStats || []).map(stat => ({
-        key: stat.key,
-        label: stat.label,
-        value: stat.value || '—'
-      }))
-      if (!items.length) return null
-      const base = `memorisation.onboarding.steps.${step.key}`
-      return {
-        title: this.t(`${base}.previewTitle`),
-        subtitle: this.t(`${base}.previewSubtitle`),
-        items
-      }
-    },
-    onboardingReadingChips() {
-      return [
-        {
-          key: 'stacked',
-          label: this.t('memorisation.view.stacked'),
-          active: this.readingViewMode !== 'mushaf',
-          icon: 'bi-card-text'
-        },
-        {
-          key: 'mushaf',
-          label: this.t('memorisation.view.mushaf'),
-          active: this.readingViewMode === 'mushaf',
-          icon: 'bi-book'
-        },
-        {
-          key: 'tajweed',
-          label: this.t('memorisation.reading.tajweed'),
-          active: !!this.tajweedEnabled,
-          icon: 'bi-palette',
-          toggle: true
-        }
-      ]
     },
     onboardingPracticeChips() {
       return [
@@ -5866,13 +5813,6 @@ export default {
           icon: 'bi-mic'
         }
       ]
-    },
-    onboardingReadyChecklist() {
-      return this.onboardingSteps.map(step => ({
-        key: step.key,
-        label: step.stepLabel,
-        icon: step.icon
-      }))
     },
     currentConfig() {
       return this.getModeStore(this.currentMode)
@@ -6848,92 +6788,6 @@ export default {
         || this.showAiMemorisationCheckerModal
         || this.showAyahNotesModal
       )
-    },
-    onboardingStepStats() {
-      const stepKey = this.onboardingStepContent?.key
-      if (!stepKey) return []
-      const stats = []
-      const chapter = this.chapters.find(item => Number(item.id) === Number(this.chapterId || this.currentConfig?.chapterId))
-      const chapterName = chapter?.name_simple || ''
-      const rangeStart = Math.max(1, Number(this.rangeStart || 1))
-      const rangeEnd = Math.max(rangeStart, Number(this.rangeEnd || rangeStart))
-      const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
-
-      if (stepKey === 'setup') {
-        if (chapterName) {
-          stats.push({
-            key: 'surah',
-            label: this.t('memorisation.search.surah'),
-            value: chapterName,
-            hint: ''
-          })
-        }
-        stats.push({
-          key: 'range',
-          label: this.t('sessionSetup.ayahRange'),
-          value: this.t('memorisation.common.rangeLabel', { start: rangeStart, end: rangeEnd }),
-          hint: ''
-        })
-        if (reciter?.name) {
-          stats.push({
-            key: 'reciter',
-            label: this.t('sessionSetup.reciter'),
-            value: reciter.name,
-            hint: ''
-          })
-        }
-      }
-
-      if (stepKey === 'practice') {
-        const techniques = []
-        if (this.focusModeEnabled) techniques.push(this.getTechniqueDisplayLabel('focus'))
-        if (this.blurModeEnabled) techniques.push(this.getTechniqueDisplayLabel('blur'))
-        if (this.talqinModeEnabled) techniques.push(this.getTechniqueDisplayLabel('talqin'))
-        stats.push({
-          key: 'techniques',
-          label: this.t('memorisation.practice'),
-          value: techniques.length ? techniques.join(' · ') : this.t('common.off'),
-          hint: ''
-        })
-        stats.push({
-          key: 'speed',
-          label: this.t('memorisation.speed'),
-          value: `${Number(this.speed || 1)}x`,
-          hint: ''
-        })
-      }
-
-      if (stepKey === 'coach') {
-        stats.push({
-          key: 'ai',
-          label: this.t('memorisation.onboarding.steps.coach.stats.aiLabel'),
-          value: this.t('memorisation.onboarding.steps.coach.stats.aiValue'),
-          hint: ''
-        })
-        stats.push({
-          key: 'feedback',
-          label: this.t('memorisation.onboarding.steps.coach.stats.feedbackLabel'),
-          value: this.t('memorisation.onboarding.steps.coach.stats.feedbackValue'),
-          hint: ''
-        })
-      }
-
-      if (stepKey === 'improve') {
-        stats.push({
-          key: 'plan',
-          label: this.t('memorisation.onboarding.steps.improve.stats.planLabel'),
-          value: this.t('memorisation.onboarding.steps.improve.stats.planValue'),
-          hint: ''
-        })
-        stats.push({
-          key: 'tools',
-          label: this.t('memorisation.onboarding.steps.improve.stats.toolsLabel'),
-          value: this.t('memorisation.onboarding.steps.improve.stats.toolsValue'),
-          hint: ''
-        })
-      }
-
-      return stats
     },
     chainingProgressLabel() {
       if (!this.chainingEnabled) return ''
@@ -9981,9 +9835,12 @@ export default {
 
     buildOnboardingStep(key, icon) {
       const base = `memorisation.onboarding.steps.${key}`
-      const pointsRaw = typeof this.$tm === 'function' ? this.$tm(`${base}.points`) : []
       const hintKey = `${base}.hint`
       const hint = this.t(hintKey)
+      const pointsRaw = typeof this.$tm === 'function' ? this.$tm(`${base}.points`) : null
+      const points = Array.isArray(pointsRaw)
+        ? pointsRaw.map(item => String(item || '').trim()).filter(Boolean)
+        : []
       const step = {
         key,
         icon,
@@ -9991,7 +9848,7 @@ export default {
         stepLabel: this.t(`${base}.stepLabel`),
         body: this.t(`${base}.body`),
         hint: hint && hint !== hintKey ? hint : '',
-        points: Array.isArray(pointsRaw) ? pointsRaw.filter(Boolean) : []
+        points
       }
       if (key === 'setup') step.targetSection = 'advanced_setup'
       if (key === 'practice') step.targetSection = 'focus_mode'
@@ -12586,9 +12443,8 @@ export default {
     openOnboardingModal(force = false) {
       if (!this.isLoggedIn && !force) return
       this.onboardingManualLaunch = !!force
-      this.onboardingPhase = 'welcome'
+      this.onboardingPhase = 'tour'
       this.onboardingStepIndex = 0
-      this.onboardingWelcomeChoice = ''
       if (this.isSignupIsolationActive()) {
         // New account: clear ONLY this user's scoped completion markers.
         // Never remove guest / other accounts' mutqin.onboardingCompleted.* keys.
@@ -12606,6 +12462,7 @@ export default {
       window.setTimeout(() => {
         this.showPostLoginOnboarding = true
         this.applyOnboardingGoalPreset()
+        this.applyOnboardingStep(0)
       }, 50)
     },
     openOnboardingFromTopMenu() {
@@ -12613,50 +12470,21 @@ export default {
       this.openOnboardingModal(true)
     },
     startOnboardingTour() {
-      this.onboardingWelcomeChoice = 'tour'
       this.onboardingPhase = 'tour'
       this.onboardingStepIndex = 0
       if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
       this.applyOnboardingStep(0)
     },
-    selectOnboardingWelcomeChoice(value) {
-      if (!['sample', 'tour', 'explore'].includes(value)) return
-      this.onboardingWelcomeChoice = value
-    },
-    confirmOnboardingWelcomeChoice() {
-      const choice = this.onboardingWelcomeChoice
-      if (!choice) return
-      if (choice === 'sample') {
-        this.playOnboardingSampleSession()
-        return
-      }
-      if (choice === 'tour') {
-        this.startOnboardingTour()
-        return
-      }
-      if (choice === 'explore') {
-        this.completeOnboardingExploreWorkspace()
-      }
-    },
-    showOnboardingReady() {
-      this.onboardingPhase = 'ready'
-      this.onboardingStepIndex = Math.max(0, this.onboardingSteps.length - 1)
-    },
     prevOnboardingStep() {
       if (!this.onboardingIsTour) return
-      if (this.onboardingStepIndex <= 0) {
-        this.onboardingPhase = 'welcome'
-        this.onboardingStepIndex = 0
-        this.onboardingWelcomeChoice = ''
-        return
-      }
+      if (this.onboardingStepIndex <= 0) return
       this.onboardingStepIndex -= 1
       this.applyOnboardingStep(this.onboardingStepIndex)
     },
     nextOnboardingStep() {
       if (!this.onboardingIsTour) return
       if (this.onboardingStepIndex >= this.onboardingSteps.length - 1) {
-        this.showOnboardingReady()
+        this.completeOnboardingOpenSetup()
         return
       }
       this.onboardingStepIndex += 1
@@ -12678,16 +12506,6 @@ export default {
         this.talqinModeEnabled = !this.talqinModeEnabled
       }
     },
-    selectOnboardingReadingChip(key) {
-      if (!this.onboardingDemoActive || !this.onboardingIsTour) return
-      if (key === 'stacked' || key === 'mushaf') {
-        this.readingViewMode = key
-        return
-      }
-      if (key === 'tajweed') {
-        this.tajweedEnabled = !this.tajweedEnabled
-      }
-    },
     goToOnboardingStep(index) {
       if (!this.onboardingIsTour) return
       const next = Math.max(0, Math.min(this.onboardingSteps.length - 1, Number(index || 0)))
@@ -12696,9 +12514,8 @@ export default {
     },
     resetOnboardingModalState() {
       this.showPostLoginOnboarding = false
-      this.onboardingPhase = 'welcome'
+      this.onboardingPhase = 'tour'
       this.onboardingStepIndex = 0
-      this.onboardingWelcomeChoice = ''
       this.sessionEndedSnapshot = null
       this.onboardingManualLaunch = false
     },

@@ -576,142 +576,66 @@
     "view_recording": "Lihat Rekaman",
     "onboarding": {
       "stepCounter": "Langkah {current} dari {total}",
+      "intro": "Pilih ayat, latihan dengan alat, cek dengan AI, lalu ikuti rencana berikutnya.",
       "finish": "Saya siap",
+      "skipTour": "Lewati",
       "useSampleSession": "Coba contoh singkat",
+      "playSampleSession": "Coba contoh singkat",
+      "startOnboarding": "Mulai",
+      "continueOnboarding": "Lanjutkan pengaturan",
+      "postSession": {
+        "kicker": "Contoh selesai",
+        "title": "Bagus",
+        "message": "Contoh selesai. Pilih langkah berikutnya.",
+        "hint": "Ulangi, mulai sesi Anda, atau lanjut ke Mutqin.",
+        "repeat": "Ulangi contoh ini",
+        "newSession": "Mulai sesi baru",
+        "continue": "Lanjut ke Mutqin",
+        "save": "Simpan sesi ini",
+        "savedToast": "Sesi disimpan."
+      },
       "steps": {
         "setup": {
           "title": "Pilih ayat dan mulai",
           "stepLabel": "Ayat",
-          "body": "Pilih surah, jaga rentang tetap pendek, pilih qari, lalu mulai dari Kontrol.",
-          "hint": "Tips: beberapa ayat cukup untuk sesi pertama.",
+          "body": "Pilih surah, rentang pendek, dan qari. Mulai dari Kontrol saat siap.",
+          "hint": "Beberapa ayat cukup untuk sesi pertama.",
           "points": [
-            "Pilih surah, rentang ayat, dan qari",
-            "Mulai saat siap — perluas rentang nanti"
-          ],
-          "previewTitle": "Sesi Anda",
-          "previewSubtitle": "Berdasarkan pengaturan saat ini.",
-          "previewItems": [
-            "Surah",
-            "Rentang",
-            "Qari"
+            "Pilih surah, rentang, dan qari",
+            "Mulai sesi dari Kontrol"
           ]
         },
         "practice": {
           "title": "Gunakan alat hafalan",
           "stepLabel": "Alat",
           "body": "Fokus, Blur, dan Talqin membantu mendengar dan mengulang. Ketuk alat untuk pratinjau.",
-          "hint": "Tips: mulai dengan satu alat. Tambahkan lagi nanti.",
+          "hint": "Mulai dengan satu alat. Tambah nanti.",
           "points": [
             "Fokus menjaga perhatian pada ayat aktif",
-            "Blur menyembunyikan teks agar Anda mengingat",
-            "Talqin: dengar, lalu giliran Anda membaca"
-          ],
-          "previewTitle": "Alat latihan",
-          "previewSubtitle": "Pratinjau teknik sebelum sesi pertama.",
-          "previewItems": [
-            "Fokus",
-            "Blur",
-            "Talqin"
+            "Blur menyembunyikan teks agar hafalan",
+            "Talqin: dengar, lalu giliran Anda"
           ]
         },
         "coach": {
-          "title": "Uji bacaan dengan AI",
+          "title": "Uji tilawah dengan AI",
           "stepLabel": "Cek AI",
-          "body": "Setelah latihan, AI Memorisation mendengar dan menunjukkan bagian yang perlu perhatian.",
-          "hint": "Tips: gunakan cek saat ingin umpan balik — tidak setiap sesi.",
+          "body": "Setelah latihan, AI Hafalan mendengarkan dan menunjukkan bagian yang perlu perhatian.",
+          "hint": "Gunakan cek saat ingin umpan balik — tidak setiap sesi.",
           "points": [
-            "Baca dari hafalan ke dalam cek",
-            "Lihat kata atau ayat yang perlu diperkuat"
-          ],
-          "previewTitle": "AI Memorisation",
-          "previewSubtitle": "Umpan balik lembut setelah berlatih keras.",
-          "previewItems": [
-            "AI Memorisation",
-            "Umpan balik hafalan"
-          ],
-          "stats": {
-            "aiLabel": "AI Memorisation",
-            "aiValue": "Cek hafalan",
-            "feedbackLabel": "Umpan balik",
-            "feedbackValue": "Kata & ayat"
-          }
+            "Tilawah dari hafalan saat cek",
+            "Lihat kata atau ayat yang perlu perhatian"
+          ]
         },
         "improve": {
           "title": "Ikuti rencana berikutnya",
-          "stepLabel": "Rencana",
+          "stepLabel": "Rencana berikutnya",
           "body": "Setelah sesi, Mutqin menyarankan rentang dan alat berikutnya agar murajaah jelas.",
-          "hint": "Tips: ikuti rekomendasi, lalu perkuat bagian lemah.",
+          "hint": "Ikuti rekomendasi, lalu perbaiki bagian lemah seiring waktu.",
           "points": [
-            "Dapatkan rentang dan tujuan berikutnya yang personal",
-            "Gunakan alat yang disarankan untuk sesi itu"
-          ],
-          "previewTitle": "Meningkat secara stabil",
-          "previewSubtitle": "Bagaimana Mutqin memandu sesi berikutnya.",
-          "previewItems": [
-            "Rencana yang disarankan",
-            "Alat yang cocok"
-          ],
-          "stats": {
-            "planLabel": "Rekomendasi",
-            "planValue": "Rentang berikutnya",
-            "toolsLabel": "Alat sesi",
-            "toolsValue": "Cocok untuk Anda"
-          }
+            "Dapatkan rentang dan tujuan yang disarankan",
+            "Gunakan alat yang cocok untuk sesi itu"
+          ]
         }
-      },
-      "playSampleSession": "Coba contoh singkat",
-      "postSession": {
-        "kicker": "Contoh selesai",
-        "title": "Bagus",
-        "message": "Contoh selesai. Pilih langkah berikutnya.",
-        "repeat": "Ulangi contoh ini",
-        "newSession": "Mulai sesi baru",
-        "save": "Simpan sesi ini",
-        "savedToast": "Sesi disimpan.",
-        "hint": "Ulangi, mulai sesi sendiri, atau lanjut ke Mutqin.",
-        "continue": "Lanjut ke Mutqin"
-      },
-      "choices": {
-        "groupLabel": "Bagaimana Anda ingin memulai?",
-        "sample": {
-          "title": "Coba contoh terpandu",
-          "description": "Latihan singkat sebelum memilih rentang sendiri."
-        },
-        "setup": {
-          "title": "Siapkan sesi saya sendiri",
-          "description": "Pilih surah, rentang, dan qari, lalu mulai."
-        },
-        "explore": {
-          "title": "Jelajahi dulu",
-          "description": "Jelajahi ruang kerja dan buka pengaturan saat siap."
-        }
-      },
-      "intro": "Jalur singkat: pilih ayat, berlatih, cek dengan AI, lalu ikuti rencana berikutnya.",
-      "confirmChoice": "Lanjutkan",
-      "startOnboarding": "Get started",
-      "continueOnboarding": "Continue setup",
-      "skipTour": "Lewati",
-      "finishHint": "Pilih cara memulai — Anda bisa mengubahnya kapan saja.",
-      "welcome": {
-        "salam": "ٱلسَّلَامُ عَلَيْكُمْ",
-        "title": "Selamat datang di Mutqin",
-        "body": "Pilih cara memulai. Tur mencakup ayat, alat latihan, cek AI, dan rencana berikutnya.",
-        "metaHint": "Sesi default singkat siap saat Anda mulai.",
-        "tourDescription": "Empat langkah: ayat, alat, cek AI, rencana berikutnya."
-      },
-      "ready": {
-        "title": "Anda siap memulai",
-        "body": "Siapkan sesi Anda, coba contoh, atau jelajahi ruang kerja.",
-        "kicker": "Tur selesai",
-        "hint": "Buka ulang tur ini kapan saja dari menu."
-      },
-      "actions": {
-        "trySample": "Coba contoh terpandu",
-        "quickTour": "Tur terpandu",
-        "exploreMyself": "Lewati dulu",
-        "setupSession": "Atur sesi saya",
-        "exploreWorkspace": "Jelajahi ruang kerja",
-        "guidedTour": "Ikuti tur terpandu"
       }
     },
     "open_session_setup": "Buka pengaturan sesi",
