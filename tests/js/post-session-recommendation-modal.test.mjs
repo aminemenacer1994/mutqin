@@ -123,7 +123,11 @@ function t(key, params = {}) {
   assert.match(js, /phraseStart/)
   assert.match(js, /normalizeArabicForRecitationEngine/)
   assert.match(js, /playRecitationStartBeep/)
+  assert.match(js, /_amdRecordStartBeepConsumed/)
+  assert.match(js, /skipBeep/)
   assert.match(js, /ensureUiAudioContext/)
+  // AMD must not re-arm a secondary listening cue after Record.
+  assert.doesNotMatch(js, /recitationStartCueActive\s*=\s*true/)
   assert.match(css, /\.post-session-simple__quran-token\.is-incorrect/)
   assert.match(css, /#b91c1c|#dc2626/)
   assert.match(css, /\.post-session-simple__outcome-tools/)
@@ -201,8 +205,38 @@ function t(key, params = {}) {
     'return to workspace must not discard AI/recommendation results',
   )
   assert.match(en, /"reviseFocusPhrase":\s*"Start revision"/)
+  assert.match(en, /"continueToNextRange":\s*"Continue to next session"/)
+  assert.match(en, /"continueToAyahs":\s*"Continue to Ayahs \{start\}–\{end\}"/)
+  assert.match(en, /"repeatThisSession":\s*"Repeat this session"/)
   assert.match(en, /"returnToWorkspace":\s*"Return to workspace"/)
   assert.match(en, /"retest":\s*"Check again"/)
+  assert.match(en, /"startSession":\s*"Continue to next session"/)
+  assert.match(en, /"startRevision":\s*"Start revision"/)
+  assert.doesNotMatch(
+    en.match(/"actions"\s*:\s*\{[\s\S]*?"continueToNextRange":\s*"[^"]+"/)?.[0] || '',
+    /"continueToNextRange":\s*"Continue"/,
+    'continue CTA must not use the vague label Continue',
+  )
+
+  // Every CTA outcome maps to an explicit destination action.
+  const outcomeMatrix = [
+    [POST_SESSION_CTA_STATES.NEEDS_PRACTICE, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'reviseFocusPhrase'],
+    [POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'reviseFocusPhrase'],
+    [POST_SESSION_CTA_STATES.MOSTLY_SECURE, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
+    [POST_SESSION_CTA_STATES.STRONG, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
+    [POST_SESSION_CTA_STATES.REVISION_COMPLETED, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN, 'retest'],
+    [POST_SESSION_CTA_STATES.AWAITING_CHECK, POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION, 'testWithAi'],
+    [POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO, POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN, 'tryRecordingAgain'],
+    [POST_SESSION_CTA_STATES.CONFIRM, POST_SESSION_CTA_ACTIONS.CONFIRM_START, 'startSession'],
+  ]
+  for (const [state, action, labelKey] of outcomeMatrix) {
+    const [lead] = mapPostSessionCtas(state)
+    assert.equal(lead.action, action, `${state} lead action`)
+    assert.equal(lead.labelKey, labelKey, `${state} lead label`)
+    assert.ok(lead.variant === 'primary' || lead.variant === 'success', `${state} lead is primary/success`)
+  }
+  const strongRepeatLead = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG, { isRepeat: true })[0]
+  assert.equal(strongRepeatLead.labelKey, 'repeatThisSession')
 }
 
 // Persisted recommendations: save before show; closing must not discard

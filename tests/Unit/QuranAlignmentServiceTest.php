@@ -58,6 +58,120 @@ class QuranAlignmentServiceTest extends TestCase
         $this->assertContains('missing', $statuses);
     }
 
+    public function test_wrong_word_is_detected(): void
+    {
+        $service = new QuranAlignmentService;
+        $result = $service->align(
+            [[
+                'ayah_number' => 1,
+                'surah_number' => 112,
+                'words' => ['قل', 'هو', 'الله', 'احد'],
+            ]],
+            [
+                ['word' => 'قل', 'confidence' => 0.9],
+                ['word' => 'هو', 'confidence' => 0.9],
+                ['word' => 'الله', 'confidence' => 0.9],
+                ['word' => 'صمد', 'confidence' => 0.9],
+            ]
+        );
+
+        $this->assertSame('wrong', $result['word_results'][3]['status']);
+        $this->assertSame(1, $result['color_counts']['red']);
+    }
+
+    public function test_omission_insertion_and_repetition(): void
+    {
+        $service = new QuranAlignmentService;
+
+        $omission = $service->align(
+            [['ayah_number' => 1, 'surah_number' => 112, 'words' => ['قل', 'هو', 'الله', 'احد']]],
+            [
+                ['word' => 'قل', 'confidence' => 0.9],
+                ['word' => 'الله', 'confidence' => 0.9],
+                ['word' => 'احد', 'confidence' => 0.9],
+            ]
+        );
+        $this->assertContains('missing', array_column($omission['word_results'], 'status'));
+
+        $insertion = $service->align(
+            [['ayah_number' => 1, 'surah_number' => 112, 'words' => ['قل', 'هو', 'الله', 'احد']]],
+            [
+                ['word' => 'قل', 'confidence' => 0.9],
+                ['word' => 'هو', 'confidence' => 0.9],
+                ['word' => 'يا', 'confidence' => 0.9],
+                ['word' => 'الله', 'confidence' => 0.9],
+                ['word' => 'احد', 'confidence' => 0.9],
+            ]
+        );
+        $this->assertNotEmpty($insertion['extra_words']);
+        $this->assertSame('يا', $insertion['extra_words'][0]['word']);
+
+        $repetition = $service->align(
+            [['ayah_number' => 1, 'surah_number' => 112, 'words' => ['قل', 'هو', 'الله', 'احد']]],
+            [
+                ['word' => 'قل', 'confidence' => 0.9],
+                ['word' => 'هو', 'confidence' => 0.9],
+                ['word' => 'هو', 'confidence' => 0.9],
+                ['word' => 'الله', 'confidence' => 0.9],
+                ['word' => 'احد', 'confidence' => 0.9],
+            ]
+        );
+        $this->assertNotEmpty($repetition['extra_words']);
+        $this->assertSame('repetition', $repetition['extra_words'][0]['type'] ?? '');
+    }
+
+    public function test_soft_letter_swap_is_not_marked_correct(): void
+    {
+        $service = new QuranAlignmentService;
+        $result = $service->align(
+            [['ayah_number' => 1, 'surah_number' => 112, 'words' => ['قل', 'هو', 'الله', 'احد']]],
+            [
+                ['word' => 'كل', 'confidence' => 0.9],
+                ['word' => 'هو', 'confidence' => 0.9],
+                ['word' => 'الله', 'confidence' => 0.9],
+                ['word' => 'احد', 'confidence' => 0.9],
+            ]
+        );
+
+        $this->assertNotSame('correct', $result['word_results'][0]['status']);
+        $this->assertContains($result['word_results'][0]['status'], ['minor_mistake', 'wrong']);
+    }
+
+    public function test_low_confidence_is_uncertain_not_wrong(): void
+    {
+        $service = new QuranAlignmentService;
+        $result = $service->align(
+            [['ayah_number' => 1, 'surah_number' => 112, 'words' => ['قل', 'هو', 'الله', 'احد']]],
+            [
+                ['word' => 'قل', 'confidence' => 0.9],
+                ['word' => 'هي', 'confidence' => 0.4],
+                ['word' => 'الله', 'confidence' => 0.9],
+                ['word' => 'احد', 'confidence' => 0.9],
+            ]
+        );
+
+        $this->assertSame('uncertain', $result['word_results'][1]['status']);
+        $this->assertSame(0, $result['color_counts']['red']);
+    }
+
+    public function test_skipped_phrase_marks_omissions(): void
+    {
+        $service = new QuranAlignmentService;
+        $result = $service->align(
+            [['ayah_number' => 1, 'surah_number' => 112, 'words' => ['قل', 'هو', 'الله', 'احد']]],
+            [
+                ['word' => 'قل', 'confidence' => 0.9],
+                ['word' => 'احد', 'confidence' => 0.9],
+            ]
+        );
+
+        $statuses = array_column($result['word_results'], 'status');
+        $this->assertSame('correct', $statuses[0]);
+        $this->assertSame('missing', $statuses[1]);
+        $this->assertSame('missing', $statuses[2]);
+        $this->assertSame('correct', $statuses[3]);
+    }
+
     public function test_weakness_and_plan_select_anchor_for_few_weak_words(): void
     {
         $alignment = new QuranAlignmentService;

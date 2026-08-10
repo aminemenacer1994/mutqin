@@ -38,6 +38,11 @@ const t = (key, params = {}) => {
     'memorisation.postSession.recommendation.aiHighlightWeak': 'Several spots need support.',
     'memorisation.postSession.recommendation.aiOutcomeStrong': 'Good',
     'memorisation.postSession.recommendation.aiOutcomeMixed': 'Okay',
+    'memorisation.postSession.recommendation.statusReadyToContinue': 'Ready to continue',
+    'memorisation.postSession.recommendation.statusMostlySecure': 'Mostly secure',
+    'memorisation.postSession.recommendation.statusMorePracticeNeeded': 'More practice needed',
+    'memorisation.postSession.recommendation.statusReviewRecommended': 'Review recommended',
+    'memorisation.postSession.recommendation.aiOutcomeReviewRecommended': 'Review recommended',
     'memorisation.postSession.recommendation.aiOutcomeWeak': 'Needs practice',
     'memorisation.postSession.recommendation.confidenceNeedsPractice': 'Needs more practice',
     'memorisation.postSession.recommendation.aiReviewDuration': `${params.seconds}s check`,
@@ -67,13 +72,13 @@ const t = (key, params = {}) => {
     'memorisation.postSession.recommendation.zeroMatchProgressLabel': 'Not matched yet',
     'memorisation.postSession.recommendation.zeroMatchHint': 'A short revision pass will help the words settle before you check again.',
     'memorisation.postSession.recommendation.zeroMatchFocus': 'Revise this range slowly, then check again.',
-    'memorisation.postSession.recommendation.insufficientAudioStatus': 'We could not assess this attempt',
-    'memorisation.postSession.recommendation.insufficientAudioSummary': 'We did not hear enough clear recitation to assess this attempt. Please try again.',
+    'memorisation.postSession.recommendation.insufficientAudioStatus': 'We couldn’t assess this attempt. Check your microphone or connection and try again.',
+    'memorisation.postSession.recommendation.insufficientAudioSummary': 'We couldn’t assess this attempt. Check your microphone or connection and try again.',
     'memorisation.postSession.recommendation.insufficientAudioMicSummary': 'Microphone access is blocked. Allow the microphone, then try recording again.',
     'memorisation.postSession.recommendation.insufficientAudioShortSummary': 'That recording was too short to assess. Recite a little longer, then try again.',
-    'memorisation.postSession.recommendation.insufficientAudioProcessingSummary': 'We could not process this recording. Please try recording again.',
-    'memorisation.postSession.recommendation.insufficientAudioHint': 'Recite clearly into the microphone, then try recording again.',
-    'memorisation.postSession.recommendation.insufficientAudioFocus': 'Check your microphone, then try recording again.',
+    'memorisation.postSession.recommendation.insufficientAudioProcessingSummary': 'We couldn’t assess this attempt. Check your microphone or connection and try again.',
+    'memorisation.postSession.recommendation.insufficientAudioHint': 'Check your microphone or connection, then try again.',
+    'memorisation.postSession.recommendation.insufficientAudioFocus': 'Check your microphone or connection, then try again.',
   }
   return map[key] || key
 }
@@ -98,7 +103,7 @@ const t = (key, params = {}) => {
 
   assert.equal(details.outcome, 'strong')
   assert.equal(details.accuracy, 91)
-  assert.equal(details.outcomeLabel, 'Good')
+  assert.equal(details.outcomeLabel, 'Mostly secure')
   assert.equal(details.durationLabel, '18s check')
   assert.equal(details.presentationMode, 'standard')
   assert.equal(details.metrics.length, 0, 'primary metric wall hidden by default')
@@ -129,7 +134,7 @@ const t = (key, params = {}) => {
     ],
   }, t)
 
-  assert.equal(details.outcomeLabel, 'Needs more practice')
+  assert.equal(details.outcomeLabel, 'More practice needed')
   assert.match(details.summaryLine, /We clearly matched 6 of 10 words/i)
   assert.match(details.summaryLine, /Focus on the highlighted phrase before checking again/i)
   assert.equal(details.metrics.length, 0)
@@ -160,7 +165,7 @@ const t = (key, params = {}) => {
   }, t)
 
   assert.equal(details.outcome, 'mixed')
-  assert.equal(details.outcomeLabel, 'Needs more practice')
+  assert.equal(details.outcomeLabel, 'Review recommended')
   assert.deepEqual(details.weakAyahs, [3, 5])
   assert.equal(details.metrics.length, 0)
   assert.ok(details.detailsMetrics.some((m) => m.key === 'sequence' && /2 slips/.test(m.value)))
@@ -262,8 +267,8 @@ const t = (key, params = {}) => {
   assert.equal(silence.progressPercent, null)
   assert.equal(silence.metrics.length, 0)
   assert.equal(silence.detailsMetrics.length, 0)
-  assert.match(silence.summaryLine, /did not hear enough/i)
-  assert.doesNotMatch(silence.summaryLine, /Check your microphone/i)
+  assert.match(silence.summaryLine, /couldn.?t assess this attempt/i)
+  assert.match(silence.summaryLine, /microphone or connection/i)
   assert.equal(silence.showMicrophoneCheck, false)
   assert.doesNotMatch(JSON.stringify(silence), /"0%"/)
 }
@@ -324,19 +329,19 @@ const t = (key, params = {}) => {
   ]), 80)
 }
 
-// Template order: ResultSummary → recommendation → details disclosure.
+// Template order: ResultSummary → focus/recommendation → details disclosure.
 {
   const vue = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
   const aiReviewStart = vue.indexOf('post-session-simple__ai-review')
   assert.ok(aiReviewStart > 0)
-  const slice = vue.slice(aiReviewStart, aiReviewStart + 9000)
+  const slice = vue.slice(aiReviewStart, aiReviewStart + 12000)
   const summaryIdx = slice.indexOf('post-session-simple__ai-review-summary')
-  const recommendationIdx = slice.indexOf('post-session-simple__ai-recommendation')
+  const focusIdx = slice.indexOf('post-session-simple__focus-block')
   const detailsIdx = slice.indexOf('post-session-simple__ai-details')
   assert.ok(summaryIdx > 0)
-  assert.ok(recommendationIdx > summaryIdx, 'recommendation appears after summary')
-  assert.ok(detailsIdx > recommendationIdx, 'details disclosure appears after recommendation')
-  assert.match(slice, /postSessionInlineRecommendationRows|postSessionGuidedMethodRows/)
+  assert.ok(focusIdx > summaryIdx, 'focus / recommendation appears after summary')
+  assert.ok(detailsIdx > focusIdx, 'details disclosure appears after focus')
+  assert.match(slice, /postSessionInlineRecommendationRows|postSessionGuidedMethodRows|postSessionFocusHighlightParts/)
   assert.match(slice, /viewDetails/)
   // Colour meter / metrics only inside expanded details body.
   const meterIdx = slice.indexOf('post-session-simple__check-meter')

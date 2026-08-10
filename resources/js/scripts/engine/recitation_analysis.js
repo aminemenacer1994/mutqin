@@ -1,5 +1,9 @@
 export const DEFAULT_RECITATION_CONFIDENCE_THRESHOLD = 0.70
 export const DEFAULT_ANALYSIS_TIMESTAMP = '1970-01-01T00:00:00.000Z'
+/** Soft ASR letter conflation may lift near-misses toward amber, never alone to green. */
+export const RECITATION_SOFT_SIMILARITY_CAP = 0.74
+/** Below this (non-exact) recognition is uncertain — not a learner mistake. */
+export const RECITATION_UNCERTAIN_CONFIDENCE = 0.55
 
 export function createRecognitionState() {
   return {
@@ -39,17 +43,14 @@ export function stripArabicDefiniteArticle(word = '') {
 }
 
 /**
- * Strip common Quranic clitics (و/ف + optional ال) so ASR "الشمس" matches "والشمس".
+ * Strip Quranic و/ف + ال so ASR "الشمس" matches "والشمس".
+ * Bare و/ف alone is not stripped — that falsely equates واحد with أحد.
  */
 export function stripArabicClitics(word = '') {
   let value = String(word || '')
   if (!value) return value
-  // والفجر / والشمس → فجر / شمس
   if (/^[وف]ال/.test(value) && value.length > 4) {
     value = value.slice(3)
-  } else if (/^[وف]/.test(value) && value.length > 3) {
-    // وضحى → ضحى
-    value = value.slice(1)
   }
   return stripArabicDefiniteArticle(value)
 }
@@ -192,11 +193,17 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
     ayahWordIndex: Number.isFinite(Number(targetUnits[index]?.ayahWordIndex)) ? Number(targetUnits[index].ayahWordIndex) : index
   }))
   const strict = options.strictProgression !== false
-  // Preserve explicit 0 so strict AMD modes can disable skip-ahead entirely.
+  // Preserve explicit 0 so strict AMD modes can disable fuzzy skip-ahead.
+  // exactSkipLookahead still allows detecting genuine skipped phrases via exact match only.
   const lookaheadRaw = Number(options.lookahead)
   const lookahead = Number.isFinite(lookaheadRaw)
     ? Math.max(0, Math.min(8, lookaheadRaw))
     : 5
+  const exactSkipRaw = Number(options.exactSkipLookahead)
+  const exactSkipLookahead = Number.isFinite(exactSkipRaw)
+    ? Math.max(0, Math.min(8, exactSkipRaw))
+    : (options.advanceOnIncorrect && lookahead === 0 ? 3 : 0)
+  const skipWindow = Math.max(lookahead, exactSkipLookahead)
   const correctSimilarity = Number.isFinite(Number(options.correctSimilarity))
     ? Number(options.correctSimilarity)
     : 0.78
@@ -245,13 +252,14 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
     })
 
     if (classified.status === 'correct'
-      || (classified.status === 'partial' && options.partialAdvances !== false)) {
+      || (classified.status === 'partial' && options.partialAdvances !== false)
+      || (classified.status === 'uncertain' && options.partialAdvances !== false && similarity >= correctSimilarity)) {
       statuses[cursor] = classified
       cursor += 1
       continue
     }
-    if (classified.status === 'partial') {
-      // Stricter modes keep amber feedback without advancing the cursor.
+    if (classified.status === 'partial' || classified.status === 'uncertain') {
+      // Stricter modes keep amber/uncertain feedback without advancing the cursor.
       statuses[cursor] = classified
       continue
     }
@@ -280,7 +288,13 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       }
     }
 
-    const exactAheadIndex = findExactWordIndexWithinWindow(targetWords, heardWord.word, cursor + 1, lookahead)
+    const exactAheadIndex = findExactWordIndexWithinWindow(
+      targetWords,
+      heardWord.word,
+      cursor + 1,
+      skipWindow,
+      { allowArticleMatch }
+    )
     if (exactAheadIndex >= 0) {
       // Soft mode: words jumped over are omitted (black), not a wrong substitution.
       for (let skipIndex = cursor; skipIndex < exactAheadIndex; skipIndex += 1) {
@@ -301,7 +315,7 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
         }
       }
       firstBlockingIndex = cursor
-      if (strict) {
+      if (strict && !options.advanceOnIncorrect) {
         statuses[cursor] = {
           ...classified,
           note: `Expected ${displayWords[cursor] || targetWord} before ${heardWord.display || heardWord.word || 'this word'}.`,
@@ -473,6 +487,11 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
   }
 
   applyWrongOrderGuard(statuses, targetWords, transcriptWords)
+  reconcileUncertainFromRejectedWords(statuses, options.rejectedWords || [], {
+    allowArticleMatch: options.allowArticleMatch !== false,
+    correctSimilarity: Number.isFinite(Number(options.correctSimilarity)) ? Number(options.correctSimilarity) : 0.78,
+    partialSimilarity: Number.isFinite(Number(options.partialSimilarity)) ? Number(options.partialSimilarity) : 0.35,
+  })
   const progression = buildStableProgression(statuses, extraWords, options)
   const structural = buildStructuralRecitationAnalysis({
     statuses,
@@ -530,9 +549,10 @@ export function buildDeterministicRecitationResult(targetText = '', recognitionW
     // Near-miss ASR still shows effort — credit more generously than before.
     return sum + (0.65 * Math.max(0.4, Math.min(1, confidence)))
   }, 0)
+  const uncertainScore = statuses.filter(word => word.status === 'uncertain').length * 0.35
   const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * 0.2
   const extraPenalty = (mistakes.extra.length || 0) * 0.2
-  const baseAccuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - wrongOrderPenalty - extraPenalty) / targetCount) * 100)))
+  const baseAccuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore + uncertainScore - wrongOrderPenalty - extraPenalty) / targetCount) * 100)))
   const structuralPenalty = getStructuralScorePenalty(alignment.structural || {})
   const accuracyScore = Math.max(0, Math.min(100, baseAccuracyScore - structuralPenalty))
   const confidence = getEvaluationConfidence({
@@ -694,13 +714,18 @@ function projectRecognitionSegments(segments = {}, interimSegment = null) {
     })
 }
 
-function findExactWordIndexWithinWindow(words = [], word = '', fromIndex = 0, lookahead = 5) {
+function findExactWordIndexWithinWindow(words = [], word = '', fromIndex = 0, lookahead = 5, options = {}) {
   if (!word) return -1
   const windowSize = Number(lookahead)
   if (!Number.isFinite(windowSize) || windowSize <= 0) return -1
+  const allowArticleMatch = options.allowArticleMatch !== false
   const end = Math.min(words.length, Math.max(fromIndex, 0) + windowSize)
   for (let index = Math.max(0, fromIndex); index < end; index += 1) {
-    if (words[index] === word) return index
+    const candidate = words[index] || ''
+    if (candidate === word) return index
+    if (!allowArticleMatch || !candidate) continue
+    if (stripArabicDefiniteArticle(candidate) === stripArabicDefiniteArticle(word)) return index
+    if (stripArabicClitics(candidate) === stripArabicClitics(word)) return index
   }
   return -1
 }
@@ -850,12 +875,13 @@ function suppressDuplicateRecognitionWords(words = []) {
 function normaliseCommittedRecognitionWords(words = [], options = {}) {
   const normalized = (Array.isArray(words) ? words : [])
     .map((entry, index) => {
-      const word = entry?.word || tokenizeRecitationWords(entry?.text || '')[0] || ''
+      const raw = entry?.word || entry?.text || entry?.display || ''
+      const word = tokenizeRecitationWords(raw)[0] || ''
       if (!word) return null
       return {
         ...entry,
         word,
-        display: entry?.display || entry?.text || word,
+        display: entry?.display || entry?.text || raw || word,
         confidence: Number.isFinite(Number(entry?.confidence)) ? Number(entry.confidence) : 1,
         commitIndex: Number.isFinite(Number(entry?.commitIndex)) ? Number(entry.commitIndex) : index
       }
@@ -941,8 +967,9 @@ export function getRecitationWordSimilarity(left, right, options = {}) {
     levenshteinSimilarity(cliticA, cliticB),
   )
   const hardBest = Math.max(base, allowArticleMatch ? stem : 0)
-  // Soft letter conflations (ص/س, ق/ك, …) may lift a near-miss toward green,
-  // but must never reduce the hard score — and alone may not exceed SOFT_CAP.
+  // Soft letter conflations (ص/س, ق/ك, …) may lift a near-miss toward amber,
+  // but must never reduce the hard score — and alone must stay under the soft
+  // cap so they cannot silently become green.
   const softRaw = Math.max(
     levenshteinSimilarity(softenArabicAsrForms(a), softenArabicAsrForms(b)),
     allowArticleMatch
@@ -952,9 +979,11 @@ export function getRecitationWordSimilarity(left, right, options = {}) {
       )
       : 0,
   )
-  const SOFT_CAP = 0.88
+  const softCap = Number.isFinite(Number(options.softSimilarityCap))
+    ? Number(options.softSimilarityCap)
+    : RECITATION_SOFT_SIMILARITY_CAP
   const softCapped = softRaw > hardBest
-    ? Math.max(hardBest, Math.min(softRaw, SOFT_CAP))
+    ? Math.max(hardBest, Math.min(softRaw, softCap))
     : softRaw
   if (!allowArticleMatch) return Math.max(base, softCapped)
   return Math.max(hardBest, softCapped)
@@ -993,6 +1022,7 @@ function classifyWordMatch({
   partialSimilarity = 0.35,
   minConfidenceForCorrect = 0,
   allowArticleMatch = true,
+  uncertainConfidence = RECITATION_UNCERTAIN_CONFIDENCE,
 }) {
   const expected = String(targetWord || '')
   const actual = String(heardWord.word || '')
@@ -1016,6 +1046,9 @@ function classifyWordMatch({
   const minCorrectConfidence = Number.isFinite(Number(minConfidenceForCorrect))
     ? Number(minConfidenceForCorrect)
     : 0
+  const uncertainFloor = Number.isFinite(Number(uncertainConfidence))
+    ? Number(uncertainConfidence)
+    : RECITATION_UNCERTAIN_CONFIDENCE
   const confidenceOk = confidence >= minCorrectConfidence
   // Exact match (or allowed article-only match) / high similarity → green.
   // When article matching is disabled, article-stripped equals must not sneak in via similarity=1.
@@ -1026,7 +1059,14 @@ function classifyWordMatch({
     && stripArabicDefiniteArticle(expected) === stripArabicDefiniteArticle(actual))
     ? Math.min(Number(similarity) || 0, Math.max(0, correctFloor - 0.05))
     : Number(similarity) || 0
-  if (expected && confidenceOk && (expected === actual || articleMatch || effectiveSimilarity >= correctFloor)) {
+  const exactOrArticle = !!(expected && (expected === actual || articleMatch))
+  // Two-letter substitutions are full mistakes — 50% Levenshtein is not "close".
+  const shortSubstitution = expected
+    && actual
+    && !exactOrArticle
+    && Math.min(expected.length, actual.length) <= 2
+    && expected.length === actual.length
+  if (expected && confidenceOk && (exactOrArticle || (!shortSubstitution && effectiveSimilarity >= correctFloor))) {
     return {
       text: displayText,
       targetWord: expected,
@@ -1034,13 +1074,28 @@ function classifyWordMatch({
       note: 'Correct.',
       actual,
       confidence,
-      similarity: expected === actual || articleMatch ? 1 : similarity,
+      similarity: exactOrArticle ? 1 : similarity,
       targetIndex,
       heardIndex: heardWord.commitIndex,
       ...location
     }
   }
-  if (expected && actual && effectiveSimilarity >= partialFloor) {
+  // Recognition uncertainty must not become a learner mistake.
+  if (expected && actual && !exactOrArticle && confidence < uncertainFloor) {
+    return {
+      text: displayText,
+      targetWord: expected,
+      status: 'uncertain',
+      note: 'Low recognition confidence.',
+      actual,
+      confidence,
+      similarity: effectiveSimilarity,
+      targetIndex,
+      heardIndex: heardWord.commitIndex,
+      ...location
+    }
+  }
+  if (expected && actual && !shortSubstitution && effectiveSimilarity >= partialFloor) {
     return {
       text: displayText,
       targetWord: expected,
@@ -1069,6 +1124,58 @@ function classifyWordMatch({
     heardIndex: heardWord.commitIndex,
     ...location
   }
+}
+
+/**
+ * If ASR rejected a word for low confidence but it would have matched an omitted
+ * target, mark uncertain instead of blaming the learner for an omission.
+ */
+function reconcileUncertainFromRejectedWords(statuses = [], rejectedWords = [], options = {}) {
+  const rejected = (Array.isArray(rejectedWords) ? rejectedWords : [])
+    .map((entry) => {
+      const raw = entry?.word || entry?.text || entry?.display || ''
+      const word = tokenizeRecitationWords(raw)[0] || ''
+      if (!word) return null
+      return {
+        word,
+        display: entry?.display || raw || word,
+        confidence: Number.isFinite(Number(entry?.confidence)) ? Number(entry.confidence) : 0,
+      }
+    })
+    .filter(Boolean)
+  if (!rejected.length) return statuses
+  const allowArticleMatch = options.allowArticleMatch !== false
+  const correctFloor = Number.isFinite(Number(options.correctSimilarity)) ? Number(options.correctSimilarity) : 0.78
+  const partialFloor = Number.isFinite(Number(options.partialSimilarity)) ? Number(options.partialSimilarity) : 0.35
+  const used = new Set()
+  for (let index = 0; index < statuses.length; index += 1) {
+    const status = statuses[index]
+    if (!isOmissionWordStatus(status?.status)) continue
+    const targetWord = status.targetWord || ''
+    if (!targetWord) continue
+    let bestIndex = -1
+    let bestSim = 0
+    for (let rejectedIndex = 0; rejectedIndex < rejected.length; rejectedIndex += 1) {
+      if (used.has(rejectedIndex)) continue
+      const sim = getRecitationWordSimilarity(targetWord, rejected[rejectedIndex].word, { allowArticleMatch })
+      if (sim > bestSim) {
+        bestSim = sim
+        bestIndex = rejectedIndex
+      }
+    }
+    if (bestIndex < 0 || bestSim < Math.max(partialFloor, Math.min(0.72, correctFloor - 0.05))) continue
+    used.add(bestIndex)
+    const heard = rejected[bestIndex]
+    statuses[index] = {
+      ...status,
+      status: 'uncertain',
+      note: 'Low recognition confidence — not counted as a learner omission.',
+      actual: heard.word,
+      confidence: heard.confidence,
+      similarity: bestSim,
+    }
+  }
+  return statuses
 }
 
 function findWordLaterIndex(words = [], word = '', fromIndex = 0) {
@@ -1100,12 +1207,13 @@ function applyWrongOrderGuard(statuses = [], targetWords = [], transcriptWords =
 
 function isProgressionAdvanceStatus(status = '', options = {}) {
   // Amber may advance when partialAdvances is enabled; red never unlocks later words.
+  // Uncertain can advance with partialAdvances so recognition noise does not freeze the pass.
   if (options.partialAdvances === false) return status === 'correct'
-  return status === 'correct' || status === 'partial'
+  return status === 'correct' || status === 'partial' || status === 'uncertain'
 }
 
 function isEvaluatedWordStatus(status = '') {
-  return ['correct', 'partial', 'incorrect', 'omitted'].includes(String(status || ''))
+  return ['correct', 'partial', 'incorrect', 'omitted', 'uncertain'].includes(String(status || ''))
 }
 
 function isOmissionWordStatus(status = '') {
@@ -1158,6 +1266,7 @@ function buildStableProgression(statuses = [], extraWords = [], options = {}) {
 /**
  * Five-tier colour counts for AI Recite → recommendation / personal plan.
  * green=correct, amber=partial, red=incorrect, black=omitted, gray=not yet.
+ * Uncertain (recognition failure) is tracked separately and does not inflate red/black.
  */
 export function getRecitationColorCounts(statuses = []) {
   const list = Array.isArray(statuses) ? statuses : []
@@ -1167,6 +1276,7 @@ export function getRecitationColorCounts(statuses = []) {
     red: list.filter(word => word?.status === 'incorrect').length,
     black: list.filter(word => word?.status === 'omitted').length,
     gray: list.filter(word => ['pending', 'skipped', 'notAttempted'].includes(word?.status)).length,
+    uncertain: list.filter(word => word?.status === 'uncertain').length,
   }
 }
 
@@ -1214,21 +1324,7 @@ function buildStructuralRecitationAnalysis({ statuses = [], heardWords = [], ext
 function detectRepeatedWords(heardWords = [], extraWords = []) {
   const repeated = []
   const seen = new Set()
-  for (let index = 1; index < heardWords.length; index += 1) {
-    const current = heardWords[index]
-    const previous = heardWords[index - 1]
-    if (!current?.word || current.word !== previous?.word) continue
-    const key = `${current.word}:${index - 1}:${index}`
-    if (seen.has(key)) continue
-    seen.add(key)
-    repeated.push({
-      word: current.display || current.word,
-      normalizedWord: current.word,
-      heardIndex: index,
-      previousHeardIndex: index - 1,
-      confidence: Number(current.confidence ?? 1)
-    })
-  }
+  // Prefer alignment-confirmed repetitions (pause-separated extras), not ASR re-emits.
   for (const item of extraWords) {
     if (item?.type !== 'repetition' || !item.word) continue
     const key = `${item.word}:${item.heardIndex - 1}:${item.heardIndex}`
@@ -1240,6 +1336,26 @@ function detectRepeatedWords(heardWords = [], extraWords = []) {
       heardIndex: item.heardIndex,
       previousHeardIndex: item.heardIndex - 1,
       confidence: Number(item.confidence ?? 1)
+    })
+  }
+  for (let index = 1; index < heardWords.length; index += 1) {
+    const current = heardWords[index]
+    const previous = heardWords[index - 1]
+    if (!current?.word || current.word !== previous?.word) continue
+    // Timestamp-proven nearby re-emits are ASR noise. Missing timestamps keep
+    // transcript/learner repeats (createWordsFromTranscript, recovered paths).
+    const previousEnd = finiteOrNull(previous.end)
+    const currentStart = finiteOrNull(current.start)
+    if (previousEnd !== null && currentStart !== null && currentStart <= previousEnd) continue
+    const key = `${current.word}:${index - 1}:${index}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    repeated.push({
+      word: current.display || current.word,
+      normalizedWord: current.word,
+      heardIndex: index,
+      previousHeardIndex: index - 1,
+      confidence: Number(current.confidence ?? 1)
     })
   }
   return repeated
@@ -1415,6 +1531,9 @@ function buildMistakesFromStatuses(statuses = [], extraWords = [], structural = 
     incorrect: statuses
       .filter(word => word.status === 'incorrect')
       .map(word => ({ expected: word.text, actual: word.actual || '', confidence: Number(word.confidence || 0), similarity: Number(word.similarity || 0), outOfOrder: !!word.outOfOrder })),
+    uncertain: statuses
+      .filter(word => word.status === 'uncertain')
+      .map(word => ({ expected: word.text, actual: word.actual || '', confidence: Number(word.confidence || 0), similarity: Number(word.similarity || 0) })),
     repeated: (structural.repeatedWords || []).map(item => item.word).filter(Boolean),
     repeatedPhrases: (structural.repeatedPhrases || []).map(item => item.phrase).filter(Boolean),
     skippedWords,
@@ -1456,7 +1575,11 @@ function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistak
   const repeatedPhrases = structural.repeatedPhrases || []
   const skippedWords = buildSkippedWordGroups(omissions)
   const weakWords = statuses
-    .filter(word => word.status !== 'correct' || Number(word.confidence || 1) < 0.78)
+    .filter((word) => {
+      if (word.status === 'uncertain') return false
+      if (word.status === 'correct') return Number(word.confidence || 1) < 0.78
+      return true
+    })
     .map(word => ({
       word: word.text,
       index: word.targetIndex,
@@ -1467,7 +1590,7 @@ function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistak
       confidence: Number(word.confidence || 0),
       similarity: Number(word.similarity || 0)
     }))
-  const matchedCount = statuses.filter(word => ['correct', 'partial'].includes(word.status)).length
+  const matchedCount = statuses.filter(word => ['correct', 'partial', 'uncertain'].includes(word.status)).length
   const reviewRecommendations = buildReviewRecommendations({ mistakes, weakWords, repetitions: repeatedWords, structural })
   const feedback = buildDetailedFeedback({
     omissions,
@@ -1492,6 +1615,7 @@ function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistak
       correct: mistakes.correct?.length || 0,
       partial: mistakes.partial?.length || 0,
       incorrect: mistakes.incorrect?.length || 0,
+      uncertain: mistakes.uncertain?.length || 0,
       omissions: omissions.length,
       extra: mistakes.extra?.length || 0
     },
@@ -1598,7 +1722,7 @@ function getEvaluationConfidence({ statuses = [], committedWords = [], structura
     ? confidences.reduce((sum, value) => sum + value, 0) / confidences.length
     : 0.75
   const matchedRatio = statuses.length
-    ? statuses.filter(word => ['correct', 'partial'].includes(word.status)).length / statuses.length
+    ? statuses.filter(word => ['correct', 'partial', 'uncertain'].includes(word.status)).length / statuses.length
     : 0
   const structuralPenalty = Math.min(0.35, (
     (structural.skippedAyahs?.length || 0) * 0.12
@@ -1607,7 +1731,10 @@ function getEvaluationConfidence({ statuses = [], committedWords = [], structura
     + (structural.repeatedPhrases?.length || 0) * 0.03
   ))
   const scoreConfidence = Math.max(0.25, Math.min(1, Number(accuracyScore || 0) / 100))
-  const confidence = (averageConfidence * 0.5) + (matchedRatio * 0.3) + (scoreConfidence * 0.2) - structuralPenalty
+  const uncertainRatio = statuses.length
+    ? statuses.filter(word => word.status === 'uncertain').length / statuses.length
+    : 0
+  const confidence = (averageConfidence * 0.5) + (matchedRatio * 0.3) + (scoreConfidence * 0.2) - structuralPenalty - (uncertainRatio * 0.12)
   return Math.max(0, Math.min(1, Number(confidence.toFixed(2))))
 }
 

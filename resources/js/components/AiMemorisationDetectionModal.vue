@@ -120,9 +120,9 @@
               ref="mushafShell"
               class="amd-mushaf-shell amd-mushaf-shell--premium amd-mushaf-shell--primary"
               :class="{
-                'is-blur-active': blurActive && !peeking && !isComplete,
-                'is-gap-mask': !blurActive && !peeking && !isComplete,
-                'is-peeking': peeking && !isComplete,
+                'is-blur-active': blurActive && !peeking && keepVisibilityMask,
+                'is-gap-mask': !blurActive && !peeking && keepVisibilityMask,
+                'is-peeking': peeking && keepVisibilityMask,
                 'is-listening': isListening,
                 'is-ready': isReady,
                 'is-complete': isComplete,
@@ -197,7 +197,8 @@
                   :aria-label="startLabel"
                   :title="startHint || startLabel"
                   :disabled="busy"
-                  @click.stop="$emit('start')"
+                  :aria-busy="busy ? 'true' : 'false'"
+                  @click.stop="onStart"
                 >
                   <span class="amd-record-btn__core" aria-hidden="true">
                     <i class="bi bi-mic-fill"></i>
@@ -210,10 +211,15 @@
                 <button
                   type="button"
                   class="amd-record-btn amd-record-btn--inline amd-record-btn--stop"
-                  :class="{ active: isListening }"
+                  :class="{
+                    active: isListening,
+                    'is-busy': endingSoon || isProcessing,
+                  }"
                   :aria-label="stopActionLabel"
                   :title="stopActionLabel"
-                  @click.stop="$emit('stop')"
+                  :disabled="endingSoon || isProcessing"
+                  :aria-busy="endingSoon || isProcessing ? 'true' : 'false'"
+                  @click.stop="onStop"
                 >
                   <span class="amd-record-btn__core" aria-hidden="true">
                     <i class="bi bi-stop-fill"></i>
@@ -385,9 +391,19 @@ export default {
     isStarting() {
       return this.stage === 'starting'
     },
+    isProcessing() {
+      const stage = String(this.stage || '')
+      return stage === 'processing' || stage === 'analysing'
+    },
+    // Keep gap/blur mask chrome through idle → record → stop → processing.
+    // Never drop presentation classes on stage changes (that flashes full text).
+    keepVisibilityMask() {
+      if (this.endingSoon || this.isProcessing) return true
+      return !this.isComplete
+    },
     isReady() {
       if (this.endingSoon || this.isComplete || this.isListening) return false
-      if (this.stage === 'processing' || this.stage === 'analysing') return false
+      if (this.isProcessing) return false
       return ['ready', 'idle', 'paused', 'error'].includes(String(this.stage || 'ready'))
     },
     showAyahEmptyState() {
@@ -410,18 +426,23 @@ export default {
     },
     canStop() {
       if (this.endingSoon || this.isComplete) return false
-      return this.isListening || this.stage === 'processing' || this.stage === 'starting'
+      // Keep Stop visible while listening/starting; Processing uses the handoff spinner.
+      return this.isListening
     },
     displayMicStatusLabel() {
-      if (this.stage === 'listening') {
-        return this.recordingActiveLabel || this.micStatusLabel || 'Recording'
+      if (this.isProcessing || this.endingSoon) {
+        return this.liveHint || 'Processing…'
       }
-      if (this.isStarting) {
-        return this.liveHint || this.micStatusLabel || 'Preparing…'
+      // Record → Recording immediately (starting + listening). Keep one status pill only.
+      if (this.stage === 'listening' || this.isStarting) {
+        return this.recordingActiveLabel || this.micStatusLabel || 'Recording'
       }
       return this.micStatusLabel || 'Ready'
     },
     stopActionLabel() {
+      if (this.isProcessing || this.endingSoon) {
+        return this.liveHint || 'Processing…'
+      }
       if (this.stage === 'listening') {
         return this.stopLabel || 'Stop recording'
       }
@@ -485,10 +506,9 @@ export default {
       this.syncThemeAttr()
     },
     ayahHtml(html) {
-      if (this.open) this.scheduleMushafHtml(html)
-    },
-    stage() {
-      if (this.open) this.$nextTick(() => this.scheduleMushafHtml(this.ayahHtml, true))
+      // Apply immediately so masked HTML is in the DOM before the next paint.
+      // Delayed/stage-driven replaces caused a full-text flash on record start/stop.
+      if (this.open) this.scheduleMushafHtml(html, true)
     },
     fontScale() {
       if (this.open) this.scheduleAutoFollow()
@@ -528,6 +548,15 @@ export default {
     if (this.open) this.restoreReturnFocus()
   },
   methods: {
+    onStart() {
+      if (this.busy || this.endingSoon || this.isProcessing || this.isListening) return
+      this.$emit('start')
+    },
+    onStop() {
+      if (this.endingSoon || this.isProcessing || this.isComplete) return
+      if (!this.isListening) return
+      this.$emit('stop')
+    },
     syncThemeAttr() {
       if (typeof document === 'undefined') {
         this.themeAttr = 'light'
@@ -743,8 +772,7 @@ export default {
         this._htmlSyncTimer = null
         return
       }
-      const delay = immediate ? 0 : 0
-      this._htmlSyncTimer = setTimeout(() => {
+      const apply = () => {
         this._htmlSyncTimer = null
         const el = this.$refs.mushafSurface
         if (!el) return
@@ -764,7 +792,14 @@ export default {
           this.syncTajweedSegmentState(current, { active: true })
         }
         this.scrollActiveIntoView(el)
-      }, delay)
+      }
+      // Forced updates must paint in this tick — setTimeout(0) left a frame of
+      // unmasked/stale mushaf during recording-state transitions.
+      if (immediate) {
+        apply()
+        return
+      }
+      this._htmlSyncTimer = setTimeout(apply, 0)
     },
     decorateTajweedSegments(root) {
       if (!root?.querySelectorAll) return

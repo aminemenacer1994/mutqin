@@ -49,12 +49,32 @@ const LABEL_KEYS = Object.freeze({
   continuePractising: 'continuePractising',
   continueToNextRange: 'continueToNextRange',
   continueToAyahs: 'continueToAyahs',
+  repeatThisSession: 'repeatThisSession',
   reviewOnceMore: 'reviewOnceMore',
   chooseAnotherRange: 'chooseAnotherRange',
   returnToWorkspace: 'returnToWorkspace',
   skipForNow: 'skipForNow',
   keepPractising: 'keepPractising',
 })
+
+/**
+ * Label for starting the recommended next/repeat session.
+ * Must match what confirmPostSessionRecommendation will actually start.
+ *
+ * @param {{
+ *   isRepeat?: boolean,
+ *   nextRangeStart?: number|null,
+ *   nextRangeEnd?: number|null,
+ * }} options
+ * @returns {string}
+ */
+function continueSessionLabelKey(options = {}) {
+  if (options.isRepeat) return LABEL_KEYS.repeatThisSession
+  if (Number(options.nextRangeStart) > 0 && Number(options.nextRangeEnd) > 0) {
+    return LABEL_KEYS.continueToAyahs
+  }
+  return LABEL_KEYS.continueToNextRange
+}
 
 /**
  * @param {string|null|undefined} outcome
@@ -232,11 +252,11 @@ export function mapPostSessionCtas(state, options = {}) {
     ? 'reviseThisRange'
     : LABEL_KEYS.reviseFocusPhrase
 
-  const nextRangeLabelKey = (
-    Number(options.nextRangeStart) > 0 && Number(options.nextRangeEnd) > 0
-  )
-    ? LABEL_KEYS.continueToAyahs
-    : LABEL_KEYS.continueToNextRange
+  const nextSessionLabelKey = continueSessionLabelKey(options)
+  const nextSessionLabelParams = {
+    start: options.nextRangeStart,
+    end: options.nextRangeEnd,
+  }
 
   const reviewWeakLabelKey = Number(options.weakAyahNumber) > 0
     ? LABEL_KEYS.reviewAyahOnce
@@ -254,21 +274,15 @@ export function mapPostSessionCtas(state, options = {}) {
       return [
         cta('revise_focus_phrase', 'primary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE),
         returnToWorkspace,
-        cta('continue_next_range', 'ghost', nextRangeLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
-          labelParams: {
-            start: options.nextRangeStart,
-            end: options.nextRangeEnd,
-          },
+        cta('continue_next_range', 'ghost', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
+          labelParams: nextSessionLabelParams,
         }),
       ]
 
     case POST_SESSION_CTA_STATES.MOSTLY_SECURE:
       return [
-        cta('continue_next_range', 'primary', nextRangeLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
-          labelParams: {
-            start: options.nextRangeStart,
-            end: options.nextRangeEnd,
-          },
+        cta('continue_next_range', 'primary', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
+          labelParams: nextSessionLabelParams,
         }),
         returnToWorkspace,
         cta('review_weak_ayah', 'ghost', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
@@ -280,20 +294,28 @@ export function mapPostSessionCtas(state, options = {}) {
       return [
         cta('check_again', 'primary', LABEL_KEYS.retest, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN),
         returnToWorkspace,
-        cta('continue_practising', 'ghost', LABEL_KEYS.continuePractising, POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING),
+        cta(
+          'continue_practising',
+          'ghost',
+          LABEL_KEYS.repeatThisSession,
+          POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING,
+        ),
       ]
 
     case POST_SESSION_CTA_STATES.STRONG:
       return [
         // Green only when assessment confirms ready to progress.
-        cta('continue_next_range', 'success', nextRangeLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
-          labelParams: {
-            start: options.nextRangeStart,
-            end: options.nextRangeEnd,
-          },
+        cta('continue_next_range', 'success', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
+          labelParams: nextSessionLabelParams,
         }),
         returnToWorkspace,
-        cta('review_once_more', 'ghost', LABEL_KEYS.reviewOnceMore, POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE),
+        // Alternate: stay on the current range (not the recommended advance).
+        cta(
+          'review_once_more',
+          'ghost',
+          options.isRepeat ? LABEL_KEYS.reviewOnceMore : LABEL_KEYS.repeatThisSession,
+          POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE,
+        ),
       ]
 
     case POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO: {
@@ -327,7 +349,8 @@ export function mapPostSessionCtas(state, options = {}) {
         cta(
           'confirm_start',
           'primary',
-          options.confirmLabelKey || LABEL_KEYS.continueToNextRange,
+          options.confirmLabelKey
+            || (options.isRepeat ? 'startRevision' : 'startSession'),
           POST_SESSION_CTA_ACTIONS.CONFIRM_START,
         ),
         returnToWorkspace,
@@ -339,13 +362,15 @@ export function mapPostSessionCtas(state, options = {}) {
       return [
         cta('check_memorisation', 'primary', LABEL_KEYS.testWithAi, POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION),
         returnToWorkspace,
+        // Ghost must describe the real destination: practise again, or start the recommended session.
         cta(
           'skip_for_now',
           'ghost',
-          options.isRepeat ? LABEL_KEYS.keepPractising : LABEL_KEYS.skipForNow,
+          options.isRepeat ? LABEL_KEYS.repeatThisSession : nextSessionLabelKey,
           options.isRepeat
             ? POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING
             : POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW,
+          options.isRepeat ? {} : { labelParams: nextSessionLabelParams },
         ),
       ]
   }

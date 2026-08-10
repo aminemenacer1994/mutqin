@@ -32,6 +32,10 @@ const t = (key, params = {}) => {
     'memorisation.postSession.recommendation.aiOutcomeStrong': 'Strong',
     'memorisation.postSession.recommendation.aiOutcomeMixed': 'Developing',
     'memorisation.postSession.recommendation.aiOutcomeWeak': 'Needs practice',
+    'memorisation.postSession.recommendation.statusReadyToContinue': 'Ready to continue',
+    'memorisation.postSession.recommendation.statusMostlySecure': 'Mostly secure',
+    'memorisation.postSession.recommendation.statusMorePracticeNeeded': 'More practice needed',
+    'memorisation.postSession.recommendation.statusReviewRecommended': 'Review recommended',
     'memorisation.postSession.recommendation.confidenceNeedsPractice': 'Needs more practice',
     'memorisation.postSession.recommendation.aiHighlightStrongRecall': 'Most words landed cleanly.',
     'memorisation.postSession.recommendation.aiHighlightMissedWords': `${params.count} words still need another careful pass.`,
@@ -42,18 +46,18 @@ const t = (key, params = {}) => {
     'memorisation.postSession.recommendation.aiResultLineStrong': 'Strong overall — most of the range landed cleanly.',
     'memorisation.postSession.recommendation.aiResultLineMixed': 'Solid overall, with a few gaps to tighten.',
     'memorisation.postSession.recommendation.aiResultLineWeak': 'Needs another pass — several spots still need support.',
-    'memorisation.postSession.recommendation.insufficientAudioStatus': 'We could not assess this attempt',
-    'memorisation.postSession.recommendation.insufficientAudioSummary': 'We did not hear enough clear recitation to assess this attempt. Please try again.',
+    'memorisation.postSession.recommendation.insufficientAudioStatus': 'We couldn’t assess this attempt. Check your microphone or connection and try again.',
+    'memorisation.postSession.recommendation.insufficientAudioSummary': 'We couldn’t assess this attempt. Check your microphone or connection and try again.',
     'memorisation.postSession.recommendation.insufficientAudioMicSummary': 'Microphone access is blocked. Allow the microphone, then try recording again.',
     'memorisation.postSession.recommendation.insufficientAudioShortSummary': 'That recording was too short to assess. Recite a little longer, then try again.',
-    'memorisation.postSession.recommendation.insufficientAudioProcessingSummary': 'We could not process this recording. Please try recording again.',
-    'memorisation.postSession.recommendation.insufficientAudioHint': 'Recite clearly into the microphone, then try recording again.',
-    'memorisation.postSession.recommendation.insufficientAudioFocus': 'Check your microphone, then try recording again.',
+    'memorisation.postSession.recommendation.insufficientAudioProcessingSummary': 'We couldn’t assess this attempt. Check your microphone or connection and try again.',
+    'memorisation.postSession.recommendation.insufficientAudioHint': 'Check your microphone or connection, then try again.',
+    'memorisation.postSession.recommendation.insufficientAudioFocus': 'Check your microphone or connection, then try again.',
   }
   return map[key] || key
 }
 
-function assertInsufficientPresentation(details, summaryPattern = /did not hear enough|microphone|try again|too short|could not process/i) {
+function assertInsufficientPresentation(details, summaryPattern = /couldn.?t assess|microphone|connection|try again|too short/i) {
   assert.equal(details.resultState, RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO)
   assert.equal(details.presentationMode, 'insufficient_audio')
   assert.equal(details.accuracy, null)
@@ -62,7 +66,7 @@ function assertInsufficientPresentation(details, summaryPattern = /did not hear 
   assert.equal(details.detailsMetrics.length, 0)
   assert.equal(details.chips.length, 0)
   assert.equal(details.weakAyahs.length, 0)
-  assert.match(details.outcomeLabel, /could not assess this attempt/i)
+  assert.match(details.outcomeLabel, /couldn.?t assess this attempt/i)
   assert.match(details.summaryLine, summaryPattern)
   assert.doesNotMatch(JSON.stringify(details), /Order:\s*Steady|"0%"/)
 }
@@ -259,7 +263,7 @@ function assertInsufficientPresentation(details, summaryPattern = /did not hear 
   assert.ok(details.detailsMetrics.some((m) => m.key === 'missed' && m.value === '3'))
   const sequence = details.detailsMetrics.find((m) => m.key === 'sequence')
   assert.equal(sequence.value, 'Steady')
-  assert.match(details.outcomeLabel, /Needs practice|Needs more practice/i)
+  assert.match(details.outcomeLabel, /Needs practice|Needs more practice|More practice needed/i)
 }
 
 // Developing / strong banding.

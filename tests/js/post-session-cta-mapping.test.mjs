@@ -112,14 +112,54 @@ import {
   assert.deepEqual(revisionDone.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN, 'retest'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING, 'continuePractising'],
+    ['ghost', POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING, 'repeatThisSession'],
   ])
 
   const strong = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG)
   assert.deepEqual(strong.map((b) => [b.variant, b.action, b.labelKey]), [
     ['success', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE, 'reviewOnceMore'],
+    ['ghost', POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE, 'repeatThisSession'],
+  ])
+
+  const strongWithRange = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG, {
+    nextRangeStart: 6,
+    nextRangeEnd: 8,
+  })
+  assert.equal(strongWithRange[0].labelKey, 'continueToAyahs')
+  assert.deepEqual(strongWithRange[0].labelParams, { start: 6, end: 8 })
+
+  const strongRepeat = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG, { isRepeat: true })
+  assert.equal(strongRepeat[0].labelKey, 'repeatThisSession')
+  assert.equal(strongRepeat[2].labelKey, 'reviewOnceMore')
+
+  const awaiting = mapPostSessionCtas(POST_SESSION_CTA_STATES.AWAITING_CHECK)
+  assert.deepEqual(awaiting.map((b) => [b.variant, b.action, b.labelKey]), [
+    ['primary', POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION, 'testWithAi'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
+    ['ghost', POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW, 'continueToNextRange'],
+  ], 'skip must label the real continue destination')
+
+  const awaitingRepeat = mapPostSessionCtas(POST_SESSION_CTA_STATES.AWAITING_CHECK, { isRepeat: true })
+  assert.equal(awaitingRepeat[2].action, POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING)
+  assert.equal(awaitingRepeat[2].labelKey, 'repeatThisSession')
+
+  const mostlySecure = mapPostSessionCtas(POST_SESSION_CTA_STATES.MOSTLY_SECURE, {
+    nextRangeStart: 3,
+    nextRangeEnd: 5,
+    weakAyahNumber: 2,
+  })
+  assert.deepEqual(mostlySecure.map((b) => [b.variant, b.action, b.labelKey]), [
+    ['primary', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToAyahs'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
+    ['ghost', POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, 'reviewAyahOnce'],
+  ])
+
+  const reviewRecommended = mapPostSessionCtas(POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED)
+  assert.deepEqual(reviewRecommended.map((b) => [b.variant, b.action, b.labelKey]), [
+    ['primary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'reviseFocusPhrase'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
+    ['ghost', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
   ])
 
   // Every recommendation state: one lead CTA, Return to workspace as secondary.
@@ -142,6 +182,9 @@ import {
     assert.equal(buttons[1].labelKey, 'returnToWorkspace')
     assert.notEqual(buttons[0].labelKey, 'continue')
     assert.notEqual(buttons[0].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+    // Lead CTA must never use a vague/unmapped label.
+    assert.notEqual(buttons[0].labelKey, 'skipForNow')
+    assert.notEqual(buttons[0].labelKey, 'keepPractising')
   }
 }
 

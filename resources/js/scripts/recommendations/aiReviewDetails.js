@@ -478,6 +478,7 @@ function legacyOutcomeToDisplayState(outcome) {
  */
 export function resolveInsufficientAudioCopy(t, reason = '') {
   const value = String(reason || '').toLowerCase().trim()
+  const fallbackAssessMessage = 'We couldn’t assess this attempt. Check your microphone or connection and try again.'
   if (value === 'mic_permission') {
     return {
       summaryLine: t('memorisation.postSession.recommendation.insufficientAudioMicSummary')
@@ -499,17 +500,17 @@ export function resolveInsufficientAudioCopy(t, reason = '') {
   if (value === 'processing_failed') {
     return {
       summaryLine: t('memorisation.postSession.recommendation.insufficientAudioProcessingSummary')
-        || 'We could not process this recording. Please try recording again.',
-      focus: t('memorisation.postSession.recommendation.insufficientAudioHint')
-        || 'Recite clearly into the microphone, then try recording again.',
+        || fallbackAssessMessage,
+      focus: t('memorisation.postSession.recommendation.insufficientAudioFocus')
+        || 'Check your microphone or connection, then try again.',
       showMicrophoneCheck: false,
     }
   }
   return {
     summaryLine: t('memorisation.postSession.recommendation.insufficientAudioSummary')
-      || 'We did not hear enough clear recitation to assess this attempt. Please try again.',
-    focus: t('memorisation.postSession.recommendation.insufficientAudioHint')
-      || 'Recite clearly into the microphone, then try recording again.',
+      || fallbackAssessMessage,
+    focus: t('memorisation.postSession.recommendation.insufficientAudioFocus')
+      || 'Check your microphone or connection, then try again.',
     showMicrophoneCheck: false,
   }
 }
@@ -528,7 +529,7 @@ function buildInsufficientAudioDetails(t, extras = {}, result = null) {
     outcome: 'insufficient_audio',
     resultState: RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO,
     outcomeLabel: t('memorisation.postSession.recommendation.insufficientAudioStatus')
-      || 'We could not assess this attempt',
+      || 'We couldn’t assess this attempt. Check your microphone or connection and try again.',
     accuracy: null,
     colorCounts: { green: 0, amber: 0, red: 0, black: 0, gray: 0 },
     assessmentQuality: ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO,

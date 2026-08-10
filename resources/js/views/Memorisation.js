@@ -4844,22 +4844,26 @@ export default {
         nextRangeEnd: nextTo || null,
       })
       const actionFallbacks = {
-        reviseFocusPhrase: 'Start recommended revision',
-        reviseThisRange: 'Start recommended revision',
+        reviseFocusPhrase: 'Start revision',
+        reviseThisRange: 'Start revision',
         reviewAyahOnce: 'Review Ayah once',
         retest: 'Check again',
         tryRecordingAgain: 'Try recording again',
         checkMicrophone: 'Check microphone',
         close: 'Close',
         testWithAi: 'Check memorisation',
-        continuePractising: 'Continue practising',
-        continueToNextRange: 'Continue to next range',
+        continuePractising: 'Repeat this session',
+        continueToNextRange: 'Continue to next session',
         continueToAyahs: 'Continue to Ayahs',
-        reviewOnceMore: 'Review once more',
+        repeatThisSession: 'Repeat this session',
+        reviewOnceMore: 'Review again',
         chooseAnotherRange: 'Choose another range',
-        skipForNow: 'Skip',
-        keepPractising: 'Keep practising',
+        skipForNow: 'Continue to next session',
+        keepPractising: 'Repeat this session',
         returnToWorkspace: 'Return to workspace',
+        startSession: 'Continue to next session',
+        startRevision: 'Start revision',
+        continueToNextSurah: 'Continue to next session',
       }
       return mapped.map((btn) => {
         let label = ''
@@ -10570,15 +10574,18 @@ export default {
     },
 
     playRecitationStartCue(options = {}) {
-      const inModal = options.inModal ?? (this.showSelfCheckModal || this.showAiMemorisationCheckerModal)
-      this.playRecitationStartBeep()
-      if (inModal) {
-        this.recitationStartCueActive = true
-        clearTimeout(this.recitationStartCueTimer)
-        this.recitationStartCueTimer = setTimeout(() => {
-          this.recitationStartCueActive = false
-          this.recitationStartCueTimer = null
-        }, 3200)
+      const inAmd = !!this.amdOpen
+      const inModal = options.inModal ?? (
+        this.showSelfCheckModal || this.showAiMemorisationCheckerModal || this.amdOpen
+      )
+      // AMD Record already played the start beep in the same gesture — never repeat it
+      // when the mic finally becomes live (getUserMedia can take longer than the debounce).
+      const skipBeep = options.skipBeep === true
+        || (inAmd && this._amdRecordStartBeepConsumed)
+      if (!skipBeep) this.playRecitationStartBeep()
+      // Modal recording UI already shows the Recording status pill — no second cue/banner.
+      if (inAmd || inModal) {
+        this.clearRecitationStartCue()
         return
       }
       this.showBanner(this.t('memorisation.start_reciting_prompt'), 'info', 3200)
@@ -10652,6 +10659,7 @@ export default {
       clearTimeout(this.recitationStartCueTimer)
       this.recitationStartCueTimer = null
       this.recitationStartCueActive = false
+      this._amdRecordStartBeepConsumed = false
     },
     playUiTone(kind = 'tap') {
       if (typeof window === 'undefined') return
@@ -19123,7 +19131,10 @@ export default {
         this.patchAmdLiveWordStatuses([])
         return
       }
-      const live = this.amdStage !== AMD_STAGES.COMPLETE && !this.amdEndingSoon
+      // Keep live status + hide-mask semantics through stop/processing/ending.
+      // Only the in-modal COMPLETE review uses the result snapshot — never unmask
+      // unrecalled targets while the learner can still see the mushaf.
+      const live = this.amdStage !== AMD_STAGES.COMPLETE
       const html = this.buildAmdMushafHtml({
         live,
         result: live ? null : (this.recitationCheckResult || this.amdAssessment),
@@ -19171,9 +19182,10 @@ export default {
           .map((i) => Number(i))
           .filter((i) => Number.isFinite(i))
       )
-      // Masking is driven by difficulty + progress. Blur only changes presentation
-      // (soft blur vs clean gaps) and never unmasks unrecalled targets.
-      const maskOn = !this.amdPeekActive && live
+      // Masking is driven by difficulty + progress only — never by recording stage.
+      // Blur only changes presentation (soft blur vs clean gaps). Gating on `live`
+      // caused a full-text flash on stop/processing when HTML rebuilt unmasked.
+      const maskOn = !this.amdPeekActive
       // Confirmed cursor comes from the committed-speech alignment pass only.
       // Never mutate reactive cursor state here — this builder also feeds seed HTML.
       const alignmentConfirmed = Number(this.recitationAlignmentState?.confirmedWordIndex)
@@ -19229,9 +19241,13 @@ export default {
           const visual = (isFutureAyah || globalIndex > highlightIndex)
             ? 'notAttempted'
             : this.resolveAmdWordVisual(statusEntry, live)
+          // Result-mode remaps pending → omitted; that must not unmask unrecalled targets.
+          const maskVisual = (isFutureAyah || globalIndex > highlightIndex)
+            ? 'notAttempted'
+            : this.resolveAmdWordVisual(statusEntry, true)
           const isHiddenTarget = hiddenSet.has(globalIndex)
           const isCorrect = visual === 'correct' || visual === 'partial'
-          const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(String(visual || ''))
+          const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(String(maskVisual || ''))
           // Keep grey blanks only until the learner attempts the word; then show amber/red/green.
           const shouldMask = maskOn && isHiddenTarget && !attempted
           const isCurrent = live && globalIndex === highlightIndex
@@ -19540,7 +19556,7 @@ export default {
       // Freeze wall-clock elapsed at the moment recording finishes — not after analysis.
       this.stopAmdElapsedTimer()
       this.stopAmdRecognitionHeartbeat?.()
-      // Quiet handoff — no bulky processing copy while we sync the plan.
+      // Immediate Stop feedback: Processing / endingSoon paint before any sync work.
       this.amdStage = AMD_STAGES.PROCESSING
 
       this.recitationCheckDiscardOnStop = true
@@ -19550,6 +19566,9 @@ export default {
       this.recitationCheckPreparing = false
       this.recitationCheckRecording = false
       this.recitationCheckDiscardOnStop = false
+
+      // Yield so Stop → Processing is visible before assessment / network work.
+      try { await this.$nextTick?.() } catch (_) { /* ignore */ }
 
       let result = this.buildAmdLiveAssessmentResult(reason)
       const targets = Array.isArray(this.recitationCheckPendingTargets) && this.recitationCheckPendingTargets.length
@@ -19567,28 +19586,46 @@ export default {
       }
       this.recitationCheckResult = result
       this.postSessionTajweedPracticeCheck = result?.tajweedPracticeCheck || null
-      this.syncAmdMushafSurface()
-      try { this.recordAiReciteAttempt?.(result) } catch (_) { /* ignore */ }
 
-      // Sync colour meter + recommendation with the live AI test before returning.
-      try {
-        await this.maybeApplyPostSessionAiAssessmentFromResult(result)
-      } catch (error) {
-        console.warn('AMD → recommendation sync failed', error)
+      const assessmentQuality = classifyRecitationAssessmentQuality(result)
+      const resultState = resolveRecitationResultState(result)
+      const unassessable = assessmentQuality === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO
+        || resultState === RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO
+
+      if (unassessable) {
+        // Technical / unusable attempts must not score, create mistakes, or reshape the plan.
+        console.warn('AMD attempt could not be assessed', {
+          reason,
+          failureReason: resolveInsufficientAudioReason(result) || reason,
+          durationSeconds: result?.durationSeconds,
+          committedWords: Array.isArray(result?.committedWords) ? result.committedWords.length : 0,
+        })
+        try {
+          await this.applyInsufficientAudioAssessment(result, {
+            reason: resolveInsufficientAudioReason(result) || INSUFFICIENT_AUDIO_REASONS.UNUSABLE_AUDIO,
+            durationSeconds: result?.durationSeconds,
+            processingFailed: reason === 'processing_failed',
+          })
+        } catch (error) {
+          console.warn('AMD insufficient-audio handoff failed', error)
+        }
+      } else {
+        try { this.recordAiReciteAttempt?.(result) } catch (_) { /* ignore */ }
+
+        // Recommendation sync + Laravel persist in parallel (previously sequential lag).
+        const syncTasks = [
+          this.maybeApplyPostSessionAiAssessmentFromResult(result).catch((error) => {
+            console.warn('AMD → recommendation sync failed', error)
+          }),
+          this.submitAmdAssessmentToBackend(result).catch((error) => {
+            // Persist failure must not invent Quran mistakes or a weak score — live result stands.
+            console.error('AMD assessment persist failed', error)
+          }),
+        ]
+        await Promise.all(syncTasks)
+        try { await this.buildAndPersistAiReciteFinalPlan?.() } catch (_) { /* ignore */ }
+        this.playUiTone?.('complete')
       }
-
-      try {
-        await this.submitAmdAssessmentToBackend(result)
-      } catch (error) {
-        console.warn('AMD recommendation submit failed', error)
-      }
-      try { await this.buildAndPersistAiReciteFinalPlan?.() } catch (_) { /* ignore */ }
-
-      this.playUiTone?.('complete')
-      // Short handoff beat so recording stops cleanly before the recommendation modal.
-      await new Promise((resolve) => {
-        window.setTimeout(resolve, 420)
-      })
 
       this.closeAmdModal({ returnToCompletion: true })
       this.amdStage = AMD_STAGES.IDLE
@@ -19596,13 +19633,17 @@ export default {
       this.amdEndingSoon = false
       this.amdBusy = false
     },
-    async stopAmdAndAssess() {
+    stopAmdAndAssess() {
       if (!this.amdOpen || this._amdCompleting || this.amdEndingSoon) return
       if (this.amdStage === AMD_STAGES.READY || this.amdStage === AMD_STAGES.IDLE) {
         this.closeAmdModal({ returnToCompletion: true })
         return
       }
-      await this.completeAmdTestAndReturnToRecommendation({ reason: 'stop' })
+      if (
+        this.amdStage === AMD_STAGES.PROCESSING
+        || this.amdStage === AMD_STAGES.ANALYSING
+      ) return
+      void this.completeAmdTestAndReturnToRecommendation({ reason: 'stop' })
     },
     maybeCompleteAmdMemorisationTest() {
       if (!this.amdOpen || this._amdCompleting || this.amdEndingSoon) return false
@@ -19891,24 +19932,25 @@ export default {
       }
       this.markAmdHowtoSeen()
       this.amdError = ''
+      // Immediate Record feedback — do not wait on audio unlock / mushaf / STT.
       this.amdBusy = true
       this.amdStage = AMD_STAGES.STARTING
       this.resetAmdElapsedTimer()
       this.setAmdMistakeHandlingMode(MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW)
       this.amdFrozenAtWordIndex = null
       // Unlock UI audio + start beep in the same user gesture (Safari needs this
-      // before any await). Later playRecitationStartCue is debounced as a no-op.
+      // before any await). Later playRecitationStartCue must not play a second beep.
+      this._amdRecordStartBeepConsumed = false
       try {
         const ctx = this.ensureUiAudioContext?.()
         if (ctx?.state === 'suspended') void ctx.resume?.()
         this.playRecitationStartBeep?.()
+        this._amdRecordStartBeepConsumed = true
       } catch (_) { /* ignore */ }
-      try {
-        await this.prepareAmdMistakeSoundForRecording()
-      } catch (_) { /* ignore */ }
-      // Re-apply the chosen visibility mask the moment listening starts.
+      // Mistake-sound prep must not block mic acquisition.
+      void this.prepareAmdMistakeSoundForRecording?.().catch?.(() => {})
+      // Mask only — defer expensive mushaf DOM sync until listening is live.
       this.rebuildAmdHiddenWordMask()
-      this.syncAmdMushafSurface({ force: true })
       this.refreshAmdLiveTajweedCoach(0)
       try {
         if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
@@ -19937,6 +19979,9 @@ export default {
             )), 20000)
           }),
         ])
+        if (this._amdCompleting || this.amdEndingSoon || !this.amdOpen) {
+          return
+        }
         if (this.recitationCheckRecording) {
           this.amdStage = AMD_STAGES.LISTENING
           this.amdMicStatus = 'granted'
@@ -19953,6 +19998,9 @@ export default {
           this.playUiTone?.('error')
         }
       } catch (error) {
+        if (this._amdCompleting || this.amdEndingSoon || !this.amdOpen) {
+          return
+        }
         this.amdStage = AMD_STAGES.ERROR
         this.amdError = error?.message || (this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.')
         this.playUiTone?.('error')
@@ -19968,7 +20016,9 @@ export default {
           }
         }
       } finally {
-        this.amdBusy = false
+        if (!this._amdCompleting && !this.amdEndingSoon) {
+          this.amdBusy = false
+        }
       }
     },
     async restartAmdListeningPreserveProgress() {
@@ -20035,13 +20085,33 @@ export default {
           })),
           ayahs: [],
         }
-        this.amdStage = AMD_STAGES.RESULTS
-        this.amdBusy = false
+        if (!this._amdCompleting && !this.amdEndingSoon) {
+          this.amdStage = AMD_STAGES.RESULTS
+          this.amdBusy = false
+        }
         return null
       }
 
-      this.amdStage = AMD_STAGES.ANALYSING
-      this.amdBusy = true
+      // Never persist unassessable / technical failures as scored assessments or weak words.
+      const assessmentQuality = classifyRecitationAssessmentQuality(result)
+      const resultState = resolveRecitationResultState(result)
+      if (
+        assessmentQuality === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO
+        || resultState === RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO
+      ) {
+        console.warn('Skipping AMD assessment persist for unassessable attempt')
+        return null
+      }
+
+      if (this._amdAssessmentSubmitInFlight) {
+        return this.amdAssessment || null
+      }
+      this._amdAssessmentSubmitInFlight = true
+
+      if (!this._amdCompleting && !this.amdEndingSoon) {
+        this.amdStage = AMD_STAGES.ANALYSING
+        this.amdBusy = true
+      }
       const targets = this.getRecitationCheckTargetVerses()
       const getArabic = (verse) => String(
         this.cleanRecitationDisplayText?.(verse?.arabic || verse?.text || '')
@@ -20072,8 +20142,11 @@ export default {
         ? `amd-${this.auth?.id || 'guest'}-${audioHash}`
         : undefined
       if (idempotencyKey && idempotencyKey === this.lastAmdAssessmentKey && this.amdAssessment) {
-        this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
-        this.amdBusy = false
+        if (!this._amdCompleting && !this.amdEndingSoon) {
+          this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
+          this.amdBusy = false
+        }
+        this._amdAssessmentSubmitInFlight = false
         return this.amdAssessment
       }
       const payload = {
@@ -20104,10 +20177,14 @@ export default {
         this.amdAnalysis = data.analysis || null
         this.amdPracticePlan = data.practice_plan || null
         this.amdImprovement = data.improvement || null
-        this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
+        if (!this._amdCompleting && !this.amdEndingSoon) {
+          this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
+        }
         this.amdError = ''
-        this.playUiTone?.('complete')
-        this.$nextTick(() => this.syncAmdMushafSurface())
+        if (!this._amdCompleting && !this.amdEndingSoon) {
+          this.playUiTone?.('complete')
+          this.$nextTick(() => this.syncAmdMushafSurface())
+        }
 
         // Keep post-session recommendation shell in sync when present.
         if (data.practice_plan && this.postSessionRecommendation) {
@@ -20139,19 +20216,24 @@ export default {
         return data
       } catch (error) {
         console.error('AMD assessment failed', error)
-        this.amdStage = AMD_STAGES.ERROR
-        const status = Number(error?.response?.status || 0)
-        if (status === 419) {
-          this.amdError = this.t?.('memorisation.amd.sessionExpired')
-            || 'Your session expired. Refresh the page, then try the assessment again.'
-        } else {
-          this.amdError = error?.response?.data?.message
-            || error?.message
-            || (this.t?.('memorisation.amd.analyseFailed') || 'Could not analyse this recitation. Please try again.')
+        // During Stop→recommendation handoff, persist failure must not invent a scored ERROR result.
+        if (!this._amdCompleting && !this.amdEndingSoon) {
+          this.amdStage = AMD_STAGES.ERROR
+          const status = Number(error?.response?.status || 0)
+          if (status === 419) {
+            this.amdError = this.t?.('memorisation.amd.sessionExpired')
+              || 'Your session expired. Refresh the page, then try the assessment again.'
+          } else {
+            this.amdError = this.t?.('memorisation.amd.analyseFailed')
+              || 'We couldn’t assess this attempt. Check your microphone or connection and try again.'
+          }
         }
         return null
       } finally {
-        this.amdBusy = false
+        this._amdAssessmentSubmitInFlight = false
+        if (!this._amdCompleting && !this.amdEndingSoon) {
+          this.amdBusy = false
+        }
       }
     },
     async adjustAmdPracticePlan(adjustments = {}) {
@@ -21771,19 +21853,21 @@ export default {
       if (this.amdOpen && kind === 'recitation') {
         const stopOnMistake = this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
         liveAlignmentOptions.strictProgression = true
-        // No lookahead: skipping a target word to reach a later match is the main
-        // way colouring gets ahead of the voice. Amber still advances, so one ASR
-        // slip cannot freeze the pass.
+        // Exact-only skip window (not fuzzy): detect skipped phrases/jumps without
+        // letting soft ASR matches paint ahead of the voice. Stop-on-mistake stays
+        // locked to the current word.
         liveAlignmentOptions.lookahead = 0
+        liveAlignmentOptions.exactSkipLookahead = stopOnMistake ? 0 : 3
         liveAlignmentOptions.partialAdvances = true
         liveAlignmentOptions.advanceOnIncorrect = !stopOnMistake
         liveAlignmentOptions.allowArticleMatch = true
-        // 0.85 separates ASR soft slips (~0.88) from real substitutions (~0.62–0.83).
+        // Soft ASR letter conflation is capped below this floor (see RECITATION_SOFT_SIMILARITY_CAP).
         liveAlignmentOptions.correctSimilarity = 0.85
         liveAlignmentOptions.partialSimilarity = 0.55
         liveAlignmentOptions.minConfidenceForCorrect = 0.15
         livePreviewAlignmentOptions.strictProgression = true
         livePreviewAlignmentOptions.lookahead = 0
+        livePreviewAlignmentOptions.exactSkipLookahead = stopOnMistake ? 0 : 3
         livePreviewAlignmentOptions.partialAdvances = true
         livePreviewAlignmentOptions.advanceOnIncorrect = false
         livePreviewAlignmentOptions.allowArticleMatch = true
@@ -23973,6 +24057,12 @@ export default {
           console.warn('getUserMedia with constraints failed, retrying basic audio', constraintError)
           stream = await navigator.mediaDevices.getUserMedia({ audio: true })
         }
+        // User may have pressed Stop while the permission prompt was open.
+        if (this.amdOpen && (this._amdCompleting || this.amdEndingSoon)) {
+          try { stream.getTracks?.().forEach((track) => track.stop()) } catch (_) { /* ignore */ }
+          this.recitationCheckPreparing = false
+          return
+        }
         const mimeType = this.chooseRecorderMimeType()
         this.recitationCheckRecordingMimeType = mimeType
         const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
@@ -23982,13 +24072,20 @@ export default {
         this.recitationInputSessionId = this.getCurrentRecitationSessionId()
         const bridgeReady = this.startTranscriptionAudioBridge('recitation', stream)
         if (bridgeReady) await this.ensureTranscriptionAudioBridgeRunning('recitation')
-        // Prefer Speechmatics for AMD (more reliable Arabic STT); browser STT is exclusive failover.
-        const transcriptionReady = bridgeReady
-          && await this.startTranscriptionRecognition('recitation')
-        if (!transcriptionReady) {
-          // Tear the unused bridge down now; browser STT starts after recording=true
-          // because attach() guards on recitationCheckRecording.
-          this.stopTranscriptionAudioBridge('recitation')
+
+        // AMD: start the mic immediately — do not block Recording UI on Speechmatics
+        // token/websocket handshake (previously the main Record-button lag).
+        const deferRealtimeStt = !!this.amdOpen
+        let transcriptionReady = false
+        if (!deferRealtimeStt) {
+          // Prefer Speechmatics for non-AMD; browser STT is exclusive failover.
+          transcriptionReady = bridgeReady
+            && await this.startTranscriptionRecognition('recitation')
+          if (!transcriptionReady) {
+            // Tear the unused bridge down now; browser STT starts after recording=true
+            // because attach() guards on recitationCheckRecording.
+            this.stopTranscriptionAudioBridge('recitation')
+          }
         }
 
         recorder.ondataavailable = event => {
@@ -24154,24 +24251,48 @@ export default {
           this.amdMicStatus = 'granted'
           this.amdBusy = false
         }
-        // Browser STT / Speechmatics watchdog must start AFTER recording=true —
-        // startRecitationSpeechRecognition().attach() no-ops when the flag is false,
-        // which left Test AI in "Listening" with no recognition (fully non-responsive).
-        if (!transcriptionReady) {
-          this.startRecitationSpeechRecognition()
+
+        const attachRecognitionAfterMicLive = async () => {
+          if (!this.recitationCheckRecording) return
+          if (deferRealtimeStt) {
+            transcriptionReady = bridgeReady
+              && await this.startTranscriptionRecognition('recitation')
+            if (!this.recitationCheckRecording) return
+            if (!transcriptionReady) {
+              this.stopTranscriptionAudioBridge('recitation')
+            }
+          }
+          // Browser STT / Speechmatics watchdog must start AFTER recording=true —
+          // startRecitationSpeechRecognition().attach() no-ops when the flag is false.
+          if (!transcriptionReady) {
+            this.startRecitationSpeechRecognition()
+          } else {
+            this.startSpeechRecognitionWatchdog('recitation')
+            this.startTranscriptionAudioPump('recitation')
+          }
+          if (this.amdOpen) {
+            this.startAmdRecognitionHeartbeat()
+          }
+        }
+
+        if (deferRealtimeStt) {
+          void attachRecognitionAfterMicLive().catch((error) => {
+            console.warn('AMD deferred STT connect failed', error)
+            if (this.recitationCheckRecording) {
+              try { this.startRecitationSpeechRecognition() } catch (_) { /* ignore */ }
+              if (this.amdOpen) this.startAmdRecognitionHeartbeat()
+            }
+          })
         } else {
-          // Keep a delayed exclusive browser STT backup if Speechmatics stays silent,
-          // and pump PCM even when MediaRecorder chunks are sparse.
-          this.startSpeechRecognitionWatchdog('recitation')
-          this.startTranscriptionAudioPump('recitation')
+          await attachRecognitionAfterMicLive()
         }
-        if (this.amdOpen) {
-          this.startAmdRecognitionHeartbeat()
-        }
+
         // Ensure ayah word nodes exist before the first live colour patches land.
         await this.$nextTick()
         this.playRecitationStartCue({
           inModal: this.showSelfCheckModal || this.showAiMemorisationCheckerModal || this.amdOpen,
+          // Record press already played the only start beep for AMD.
+          skipBeep: !!this.amdOpen || !!this._amdRecordStartBeepConsumed,
         })
       } catch (error) {
         console.error('Failed to start recitation check:', error)
@@ -24200,7 +24321,11 @@ export default {
       }
       if (!this.recitationCheckMediaRecorder || !['recording', 'paused'].includes(this.recitationCheckMediaRecorder.state)) return
       this.recitationCheckAutoStopArmed = false
-      this.recitationCheckPreparing = true
+      // Discard / AMD completion already owns Processing UI — don't flip preparing
+      // (which can fight stage watchers and feel like Stop lag).
+      if (!this.recitationCheckDiscardOnStop && !(this.amdOpen && (this._amdCompleting || this.amdEndingSoon))) {
+        this.recitationCheckPreparing = true
+      }
       try {
         this.recitationCheckMediaRecorder.requestData?.()
       } catch { }
@@ -25505,6 +25630,9 @@ export default {
     assessRecitationRecognitionWords(recognitionWords = [], targetVerses = this.getRecitationCheckTargetVerses(), options = {}) {
       const targetText = this.getRecitationTargetText(targetVerses)
       const timestamp = options.timestamp || new Date().toISOString()
+      const rejectedWords = Array.isArray(options.rejectedWords)
+        ? options.rejectedWords
+        : (this.getRecognitionPipelineState?.(options.recognitionKind || 'recitation')?.rejectedWords || [])
 	      const result = buildDeterministicRecitationResult(targetText, recognitionWords, {
 	        // Final review always shows the full colour map (soft), even if live
 	        // tutoring used strict progression.
@@ -25513,6 +25641,7 @@ export default {
         timestamp,
         ayahRange: this.buildRecitationAyahRangePayload(targetVerses),
         targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses),
+        rejectedWords,
         metadata: {
           sessionId: options.sessionId || this.getCurrentRecitationSessionId(),
           audioHash: options.audioHash || '',

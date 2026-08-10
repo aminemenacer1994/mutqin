@@ -301,9 +301,19 @@ var AMD_FOCUSABLE_SELECTOR = ['a[href]', 'button:not([disabled])', 'textarea:not
     isStarting: function isStarting() {
       return this.stage === 'starting';
     },
+    isProcessing: function isProcessing() {
+      var stage = String(this.stage || '');
+      return stage === 'processing' || stage === 'analysing';
+    },
+    // Keep gap/blur mask chrome through idle → record → stop → processing.
+    // Never drop presentation classes on stage changes (that flashes full text).
+    keepVisibilityMask: function keepVisibilityMask() {
+      if (this.endingSoon || this.isProcessing) return true;
+      return !this.isComplete;
+    },
     isReady: function isReady() {
       if (this.endingSoon || this.isComplete || this.isListening) return false;
-      if (this.stage === 'processing' || this.stage === 'analysing') return false;
+      if (this.isProcessing) return false;
       return ['ready', 'idle', 'paused', 'error'].includes(String(this.stage || 'ready'));
     },
     showAyahEmptyState: function showAyahEmptyState() {
@@ -322,18 +332,23 @@ var AMD_FOCUSABLE_SELECTOR = ['a[href]', 'button:not([disabled])', 'textarea:not
     },
     canStop: function canStop() {
       if (this.endingSoon || this.isComplete) return false;
-      return this.isListening || this.stage === 'processing' || this.stage === 'starting';
+      // Keep Stop visible while listening/starting; Processing uses the handoff spinner.
+      return this.isListening;
     },
     displayMicStatusLabel: function displayMicStatusLabel() {
-      if (this.stage === 'listening') {
-        return this.recordingActiveLabel || this.micStatusLabel || 'Recording';
+      if (this.isProcessing || this.endingSoon) {
+        return this.liveHint || 'Processing…';
       }
-      if (this.isStarting) {
-        return this.liveHint || this.micStatusLabel || 'Preparing…';
+      // Record → Recording immediately (starting + listening). Keep one status pill only.
+      if (this.stage === 'listening' || this.isStarting) {
+        return this.recordingActiveLabel || this.micStatusLabel || 'Recording';
       }
       return this.micStatusLabel || 'Ready';
     },
     stopActionLabel: function stopActionLabel() {
+      if (this.isProcessing || this.endingSoon) {
+        return this.liveHint || 'Processing…';
+      }
       if (this.stage === 'listening') {
         return this.stopLabel || 'Stop recording';
       }
@@ -399,25 +414,21 @@ var AMD_FOCUSABLE_SELECTOR = ['a[href]', 'button:not([disabled])', 'textarea:not
       this.syncThemeAttr();
     },
     ayahHtml: function ayahHtml(html) {
-      if (this.open) this.scheduleMushafHtml(html);
-    },
-    stage: function stage() {
-      var _this3 = this;
-      if (this.open) this.$nextTick(function () {
-        return _this3.scheduleMushafHtml(_this3.ayahHtml, true);
-      });
+      // Apply immediately so masked HTML is in the DOM before the next paint.
+      // Delayed/stage-driven replaces caused a full-text flash on record start/stop.
+      if (this.open) this.scheduleMushafHtml(html, true);
     },
     fontScale: function fontScale() {
       if (this.open) this.scheduleAutoFollow();
     }
   },
   mounted: function mounted() {
-    var _this4 = this;
+    var _this3 = this;
     this.syncThemeAttr();
     this.ensureAutoFollowController();
     if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined') {
       this._themeObserver = new MutationObserver(function () {
-        return _this4.syncThemeAttr();
+        return _this3.syncThemeAttr();
       });
       this._themeObserver.observe(document.documentElement, {
         attributes: true,
@@ -427,8 +438,8 @@ var AMD_FOCUSABLE_SELECTOR = ['a[href]', 'button:not([disabled])', 'textarea:not
     if (this.open) {
       this.captureReturnFocus();
       this.$nextTick(function () {
-        _this4.bindAutoFollowShell();
-        _this4.focusInitialElement();
+        _this3.bindAutoFollowShell();
+        _this3.focusInitialElement();
       });
     }
   },
@@ -449,6 +460,15 @@ var AMD_FOCUSABLE_SELECTOR = ['a[href]', 'button:not([disabled])', 'textarea:not
     if (this.open) this.restoreReturnFocus();
   },
   methods: {
+    onStart: function onStart() {
+      if (this.busy || this.endingSoon || this.isProcessing || this.isListening) return;
+      this.$emit('start');
+    },
+    onStop: function onStop() {
+      if (this.endingSoon || this.isProcessing || this.isComplete) return;
+      if (!this.isListening) return;
+      this.$emit('stop');
+    },
     syncThemeAttr: function syncThemeAttr() {
       var _document$querySelect, _document, _document$querySelect2;
       if (typeof document === 'undefined') {
@@ -488,17 +508,17 @@ var AMD_FOCUSABLE_SELECTOR = ['a[href]', 'button:not([disabled])', 'textarea:not
       this.scheduleMushafHtml(html, true);
     },
     ensureAutoFollowController: function ensureAutoFollowController() {
-      var _this5 = this;
+      var _this4 = this;
       if (this._autoFollow) return this._autoFollow;
       this._autoFollow = (0,_scripts_memorisationDetection_liveAutoFollow__WEBPACK_IMPORTED_MODULE_0__.createLiveAutoFollowController)({
         enabled: true,
         onPauseChange: function onPauseChange(_ref) {
           var paused = _ref.paused;
-          _this5.autoFollowEnabled = true;
-          _this5.autoFollowPaused = !!paused;
+          _this4.autoFollowEnabled = true;
+          _this4.autoFollowPaused = !!paused;
         },
         followNow: function followNow() {
-          return _this5.scrollActiveIntoView(_this5.$refs.mushafSurface, {
+          return _this4.scrollActiveIntoView(_this4.$refs.mushafSurface, {
             force: true
           });
         }
@@ -506,20 +526,20 @@ var AMD_FOCUSABLE_SELECTOR = ['a[href]', 'button:not([disabled])', 'textarea:not
       return this._autoFollow;
     },
     bindAutoFollowShell: function bindAutoFollowShell() {
-      var _this6 = this;
+      var _this5 = this;
       var shell = this.$refs.mushafShell;
       if (!shell) return;
       if (typeof ResizeObserver !== 'undefined') {
         var _this$_shellResizeObs, _this$_shellResizeObs2;
         (_this$_shellResizeObs = this._shellResizeObserver) === null || _this$_shellResizeObs === void 0 || (_this$_shellResizeObs2 = _this$_shellResizeObs.disconnect) === null || _this$_shellResizeObs2 === void 0 || _this$_shellResizeObs2.call(_this$_shellResizeObs);
         this._shellResizeObserver = new ResizeObserver(function () {
-          return _this6.scheduleAutoFollow();
+          return _this5.scheduleAutoFollow();
         });
         this._shellResizeObserver.observe(shell);
       }
       if (typeof window !== 'undefined') {
         this._orientationHandler = function () {
-          return _this6.scheduleAutoFollow();
+          return _this5.scheduleAutoFollow();
         };
         window.addEventListener('orientationchange', this._orientationHandler);
         window.addEventListener('resize', this._orientationHandler);
@@ -574,7 +594,7 @@ var AMD_FOCUSABLE_SELECTOR = ['a[href]', 'button:not([disabled])', 'textarea:not
       });
     },
     patchWordStatuses: function patchWordStatuses() {
-      var _this7 = this;
+      var _this6 = this;
       var patches = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var el = this.$refs.mushafSurface;
       if (!el || !Array.isArray(patches) || !patches.length) return false;
@@ -622,7 +642,7 @@ var AMD_FOCUSABLE_SELECTOR = ['a[href]', 'button:not([disabled])', 'textarea:not
             var tajweedActive = patch.tajweedActive != null ? !!patch.tajweedActive : !!patch.current;
             // Skip child-mark scans when the word has no tajweed markup.
             if (node.classList.contains('tajweed-segment-host') || (_node$querySelector = (_node3 = node).querySelector) !== null && _node$querySelector !== void 0 && _node$querySelector.call(_node3, '.tajweed-mark, .tajweed-segment')) {
-              _this7.syncTajweedSegmentState(node, {
+              _this6.syncTajweedSegmentState(node, {
                 active: tajweedActive,
                 completed: status === 'correct',
                 needsReview: status === 'incorrect' || status === 'partial'
@@ -702,7 +722,7 @@ var AMD_FOCUSABLE_SELECTOR = ['a[href]', 'button:not([disabled])', 'textarea:not
     },
     scheduleMushafHtml: function scheduleMushafHtml() {
       var _this$$refs$mushafSur,
-        _this8 = this;
+        _this7 = this;
       var html = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
       var immediate = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       if (this._htmlSyncTimer) clearTimeout(this._htmlSyncTimer);
@@ -712,31 +732,37 @@ var AMD_FOCUSABLE_SELECTOR = ['a[href]', 'button:not([disabled])', 'textarea:not
         this._htmlSyncTimer = null;
         return;
       }
-      var delay = immediate ? 0 : 0;
-      this._htmlSyncTimer = setTimeout(function () {
+      var apply = function apply() {
         var _el$childNodes;
-        _this8._htmlSyncTimer = null;
-        var el = _this8.$refs.mushafSurface;
+        _this7._htmlSyncTimer = null;
+        var el = _this7.$refs.mushafSurface;
         if (!el) return;
         var next = html || '';
         // Compare against the last pushed string — never read el.innerHTML (serialises the
         // whole mushaf and freezes longer ranges on every recognition tick).
-        if (_this8._lastMushafHtml === next && (_el$childNodes = el.childNodes) !== null && _el$childNodes !== void 0 && _el$childNodes.length) return;
+        if (_this7._lastMushafHtml === next && (_el$childNodes = el.childNodes) !== null && _el$childNodes !== void 0 && _el$childNodes.length) return;
         el.innerHTML = next;
-        _this8._lastMushafHtml = next;
-        var controller = _this8.ensureAutoFollowController();
+        _this7._lastMushafHtml = next;
+        var controller = _this7.ensureAutoFollowController();
         controller.rebuildWordCache(el);
-        _this8.decorateTajweedSegments(el);
+        _this7.decorateTajweedSegments(el);
         var current = el.querySelector('.amd-word-current');
         if (current) {
           var idx = Number(current.getAttribute('data-recitation-word-index'));
-          if (Number.isFinite(idx)) _this8._activeWordIndex = idx;
-          _this8.syncTajweedSegmentState(current, {
+          if (Number.isFinite(idx)) _this7._activeWordIndex = idx;
+          _this7.syncTajweedSegmentState(current, {
             active: true
           });
         }
-        _this8.scrollActiveIntoView(el);
-      }, delay);
+        _this7.scrollActiveIntoView(el);
+      };
+      // Forced updates must paint in this tick — setTimeout(0) left a frame of
+      // unmasked/stale mushaf during recording-state transitions.
+      if (immediate) {
+        apply();
+        return;
+      }
+      this._htmlSyncTimer = setTimeout(apply, 0);
     },
     decorateTajweedSegments: function decorateTajweedSegments(root) {
       if (!(root !== null && root !== void 0 && root.querySelectorAll)) return;
@@ -1020,7 +1046,7 @@ var _hoisted_35 = {
   key: 0,
   "class": "amd-start-wrap amd-start-wrap--inline amd-start-wrap--footer"
 };
-var _hoisted_36 = ["aria-label", "title", "disabled"];
+var _hoisted_36 = ["aria-label", "title", "disabled", "aria-busy"];
 var _hoisted_37 = {
   "class": "amd-record-btn__label"
 };
@@ -1028,7 +1054,7 @@ var _hoisted_38 = {
   key: 1,
   "class": "amd-footer__stop"
 };
-var _hoisted_39 = ["aria-label", "title"];
+var _hoisted_39 = ["aria-label", "title", "disabled", "aria-busy"];
 var _hoisted_40 = {
   "class": "amd-record-btn__label"
 };
@@ -1161,9 +1187,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_24, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.elapsedLabel), 1 /* TEXT */)], 8 /* PROPS */, _hoisted_23)], 8 /* PROPS */, _hoisted_17)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
     ref: "mushafShell",
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["amd-mushaf-shell amd-mushaf-shell--premium amd-mushaf-shell--primary", {
-      'is-blur-active': $props.blurActive && !$props.peeking && !$options.isComplete,
-      'is-gap-mask': !$props.blurActive && !$props.peeking && !$options.isComplete,
-      'is-peeking': $props.peeking && !$options.isComplete,
+      'is-blur-active': $props.blurActive && !$props.peeking && $options.keepVisibilityMask,
+      'is-gap-mask': !$props.blurActive && !$props.peeking && $options.keepVisibilityMask,
+      'is-peeking': $props.peeking && $options.keepVisibilityMask,
       'is-listening': $options.isListening,
       'is-ready': $options.isReady,
       'is-complete': $options.isComplete,
@@ -1194,8 +1220,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "aria-label": $props.startLabel,
     title: $props.startHint || $props.startLabel,
     disabled: $props.busy,
-    onClick: _cache[14] || (_cache[14] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
-      return _ctx.$emit('start');
+    "aria-busy": $props.busy ? 'true' : 'false',
+    onClick: _cache[14] || (_cache[14] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+      return $options.onStart && $options.onStart.apply($options, arguments);
     }, ["stop"]))
   }, [_cache[28] || (_cache[28] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "amd-record-btn__core",
@@ -1205,12 +1232,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   })], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", _hoisted_37, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.startLabel), 1 /* TEXT */)], 10 /* CLASS, PROPS */, _hoisted_36)])) : $options.canStop ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_38, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     type: "button",
     "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["amd-record-btn amd-record-btn--inline amd-record-btn--stop", {
-      active: $options.isListening
+      active: $options.isListening,
+      'is-busy': $props.endingSoon || $options.isProcessing
     }]),
     "aria-label": $options.stopActionLabel,
     title: $options.stopActionLabel,
-    onClick: _cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
-      return _ctx.$emit('stop');
+    disabled: $props.endingSoon || $options.isProcessing,
+    "aria-busy": $props.endingSoon || $options.isProcessing ? 'true' : 'false',
+    onClick: _cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+      return $options.onStop && $options.onStop.apply($options, arguments);
     }, ["stop"]))
   }, [_cache[29] || (_cache[29] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
     "class": "amd-record-btn__core",

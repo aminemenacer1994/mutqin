@@ -130,10 +130,13 @@ class QuranAlignmentService
                 );
                 [$t, $h] = $cell['prev'];
             } elseif (($cell['op'] ?? '') === 'extra') {
+                $repeated = $h > 1
+                    && (($heard[$h - 1]['word'] ?? null) === ($heard[$h - 2]['word'] ?? null));
                 $extraWords[] = [
                     'word' => $heard[$h - 1]['word'] ?? '',
                     'confidence' => (float) ($heard[$h - 1]['confidence'] ?? 1),
                     'status' => 'extra',
+                    'type' => $repeated ? 'repetition' : 'extra',
                     'visual_status' => 'grey',
                 ];
                 [$t, $h] = $cell['prev'];
@@ -277,10 +280,8 @@ class QuranAlignmentService
             if ($confidence < 0.35) {
                 continue;
             }
-            // Collapse adjacent duplicates from ASR.
-            if ($out !== [] && $out[array_key_last($out)]['word'] === $word) {
-                continue;
-            }
+            // Keep adjacent duplicates so intentional learner repetitions survive.
+            // DP marks them as extras with a cheaper repetition cost.
             $out[] = ['word' => $word, 'confidence' => $confidence];
         }
 
@@ -299,6 +300,30 @@ class QuranAlignmentService
         return $word;
     }
 
+    private function stripClitics(string $word): string
+    {
+        $value = $word;
+        if ($value === '') {
+            return $value;
+        }
+        // Only و/ف + ال (والشمس). Bare و must not equate واحد with أحد.
+        if (preg_match('/^[وف]ال/u', $value) === 1 && mb_strlen($value) > 4) {
+            $value = mb_substr($value, 3);
+        }
+
+        return $this->stripArticle($value);
+    }
+
+    private function softenAsrForms(string $text): string
+    {
+        $value = preg_replace('/[قك]/u', 'ك', $text) ?? $text;
+        $value = preg_replace('/[طت]/u', 'ت', $value) ?? $value;
+        $value = preg_replace('/[ظضذ]/u', 'ذ', $value) ?? $value;
+        $value = preg_replace('/[غخ]/u', 'غ', $value) ?? $value;
+
+        return preg_replace('/[صسث]/u', 'س', $value) ?? $value;
+    }
+
     private function similarity(string $left, string $right): float
     {
         if ($left === '' || $right === '') {
@@ -309,11 +334,32 @@ class QuranAlignmentService
         }
         $a = $this->stripArticle($left);
         $b = $this->stripArticle($right);
+        $cliticA = $this->stripClitics($left);
+        $cliticB = $this->stripClitics($right);
         if ($a !== '' && $a === $b) {
             return 1.0;
         }
+        if ($cliticA !== '' && $cliticA === $cliticB) {
+            return 1.0;
+        }
 
-        return max($this->levenshteinSimilarity($left, $right), $this->levenshteinSimilarity($a, $b));
+        $hardBest = max(
+            $this->levenshteinSimilarity($left, $right),
+            $this->levenshteinSimilarity($a, $b),
+            $this->levenshteinSimilarity($cliticA, $cliticB)
+        );
+        $softRaw = max(
+            $this->levenshteinSimilarity($this->softenAsrForms($left), $this->softenAsrForms($right)),
+            $this->levenshteinSimilarity($this->softenAsrForms($a), $this->softenAsrForms($b)),
+            $this->levenshteinSimilarity($this->softenAsrForms($cliticA), $this->softenAsrForms($cliticB))
+        );
+        // Soft letter conflation may lift toward amber, never alone to green.
+        $softCap = 0.74;
+        $softCapped = $softRaw > $hardBest
+            ? max($hardBest, min($softRaw, $softCap))
+            : $softRaw;
+
+        return max($hardBest, $softCapped);
     }
 
     private function levenshteinSimilarity(string $a, string $b): float
@@ -357,17 +403,22 @@ class QuranAlignmentService
 
     private function matchCost(string $target, string $heard, float $similarity, float $confidence): float
     {
-        if ($target === $heard || $this->stripArticle($target) === $this->stripArticle($heard)) {
+        if ($target === $heard
+            || $this->stripArticle($target) === $this->stripArticle($heard)
+            || $this->stripClitics($target) === $this->stripClitics($heard)) {
             return 0.0;
         }
+        if ($similarity >= 0.92) {
+            return 0.22 + ((1 - $confidence) * 0.12);
+        }
         if ($similarity >= 0.85) {
-            return 0.16 + ((1 - $confidence) * 0.1);
+            return 0.42 + ((1 - $confidence) * 0.16);
         }
         if ($similarity >= 0.35) {
-            return 0.68 + ((1 - $confidence) * 0.22);
+            return 0.78 + ((1 - $confidence) * 0.24);
         }
 
-        return 1.34;
+        return 1.45;
     }
 
     /**
@@ -420,9 +471,18 @@ class QuranAlignmentService
 
         $articleMatch = $expected !== ''
             && $actual !== ''
-            && $this->stripArticle($expected) === $this->stripArticle($actual);
+            && (
+                $this->stripArticle($expected) === $this->stripArticle($actual)
+                || $this->stripClitics($expected) === $this->stripClitics($actual)
+            );
+        $exactOrArticle = $expected !== '' && ($expected === $actual || $articleMatch);
+        $shortSubstitution = $expected !== ''
+            && $actual !== ''
+            && ! $exactOrArticle
+            && mb_strlen($expected) <= 2
+            && mb_strlen($expected) === mb_strlen($actual);
 
-        if ($expected !== '' && ($expected === $actual || $articleMatch || $similarity >= 0.78)) {
+        if ($expected !== '' && ($exactOrArticle || (! $shortSubstitution && $similarity >= 0.78))) {
             return array_merge($base, [
                 'status' => 'correct',
                 'note' => 'Correct.',
@@ -431,27 +491,20 @@ class QuranAlignmentService
             ]);
         }
 
-        if ($expected !== '' && $actual !== '' && $similarity >= 0.35) {
-            if ($confidence < 0.55) {
-                return array_merge($base, [
-                    'status' => 'uncertain',
-                    'note' => 'Low recognition confidence.',
-                    'visual_status' => 'uncertain',
-                ]);
-            }
+        // Recognition uncertainty must not become a learner mistake.
+        if ($expected !== '' && $actual !== '' && ! $exactOrArticle && $confidence < 0.55) {
+            return array_merge($base, [
+                'status' => 'uncertain',
+                'note' => 'Low recognition confidence.',
+                'visual_status' => 'uncertain',
+            ]);
+        }
 
+        if ($expected !== '' && $actual !== '' && ! $shortSubstitution && $similarity >= 0.35) {
             return array_merge($base, [
                 'status' => 'minor_mistake',
                 'note' => "Close. Expected {$display}; heard {$actual}.",
                 'visual_status' => 'amber',
-            ]);
-        }
-
-        if ($confidence < 0.55) {
-            return array_merge($base, [
-                'status' => 'uncertain',
-                'note' => 'Uncertain recognition.',
-                'visual_status' => 'uncertain',
             ]);
         }
 

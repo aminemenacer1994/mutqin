@@ -49850,7 +49850,7 @@ word.practice-focus-word--active {
 }
 
 .post-session-simple--calm-v2 .post-session-simple__actions--3 {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;
 }
 
@@ -53871,20 +53871,20 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ghost {
   background: transparent !important;
-  border: 1.5px solid color-mix(in srgb, var(--ps-line, #d6d3d1) 95%, transparent) !important;
-  color: color-mix(in srgb, var(--ps-ink, #1c1917) 78%, transparent) !important;
+  border: 1px solid transparent !important;
+  color: color-mix(in srgb, var(--ps-ink, #1c1917) 62%, transparent) !important;
   box-shadow: none !important;
-  font-weight: 550 !important;
-  min-height: 2.45rem !important;
-  padding: 0.45rem 0.4rem !important;
-  font-size: clamp(0.7rem, 1.2vw, 0.82rem) !important;
+  font-weight: 500 !important;
+  min-height: 2.15rem !important;
+  padding: 0.35rem 0.4rem !important;
+  font-size: clamp(0.68rem, 1.15vw, 0.8rem) !important;
   text-decoration: none !important;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ghost:hover:not(:disabled) {
   color: var(--ps-ink, #1c1917) !important;
-  background: color-mix(in srgb, var(--ps-card, #fff) 70%, var(--ps-cream, #f7f3eb)) !important;
-  border-color: color-mix(in srgb, var(--ps-ink, #1c1917) 22%, transparent) !important;
+  background: color-mix(in srgb, var(--ps-card, #fff) 55%, var(--ps-cream, #f7f3eb)) !important;
+  border-color: color-mix(in srgb, var(--ps-line, #d6d3d1) 80%, transparent) !important;
   text-decoration: none !important;
 }
 
@@ -53899,7 +53899,8 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   border-color: color-mix(in srgb, var(--accent, #9a6738) 48%, transparent) !important;
   color: #fff !important;
   box-shadow: 0 8px 18px color-mix(in srgb, var(--accent, #9a6738) 22%, transparent) !important;
-  font-weight: 650 !important;
+  font-weight: 700 !important;
+  min-height: 2.45rem !important;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--primary:hover:not(:disabled) {
@@ -53910,8 +53911,9 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   background: linear-gradient(135deg, var(--success, #2e7d64), var(--success-strong, #23624e)) !important;
   border-color: transparent !important;
   color: #fff !important;
-  box-shadow: none !important;
-  font-weight: 650 !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--success, #2e7d64) 20%, transparent) !important;
+  font-weight: 700 !important;
+  min-height: 2.45rem !important;
 }
 
 [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--primary {
@@ -53928,8 +53930,8 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 }
 
 [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ghost {
-  border-color: rgba(245, 242, 234, 0.18) !important;
-  color: rgba(244, 244, 245, 0.88) !important;
+  border-color: transparent !important;
+  color: rgba(244, 244, 245, 0.72) !important;
 }
 
 @media (max-width: 720px) {
