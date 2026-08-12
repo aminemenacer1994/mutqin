@@ -29,18 +29,44 @@
           </div>
           <div class="hero-visual-column">
             <div class="hero-image" data-aos="fade-left">
-              <div class="card demo-card">
-                <i class="bi bi-mic"></i>
-                <h3>{{ t('homepage.demo.title') }}</h3>
-                <p>{{ t('homepage.demo.quote') }}</p>
-                <div class="demo-wave">
-                  <i class="bi bi-soundwave"></i>
-                  <span>{{ t('homepage.demo.recording') }}</span>
+              <div class="hero-visual-stack">
+                <div class="card demo-card">
+                  <div class="demo-card-header">
+                    <span class="demo-session">{{ t('homepage.demo.session') }}</span>
+                    <span class="demo-status" role="status">
+                      <span class="demo-status-dot" aria-hidden="true"></span>
+                      {{ t('homepage.demo.status') }}
+                    </span>
+                  </div>
+                  <div class="demo-card-body">
+                    <div class="demo-feedback">
+                      <div class="demo-feedback-icon" aria-hidden="true">
+                        <i class="bi bi-mic-fill"></i>
+                      </div>
+                      <div class="demo-feedback-copy">
+                        <h3>{{ t('homepage.demo.title') }}</h3>
+                        <p>{{ t('homepage.demo.feedback') }}</p>
+                      </div>
+                    </div>
+                    <div class="demo-word-preview" dir="rtl" lang="ar" aria-hidden="true">
+                      <span class="demo-word demo-word--ok">بِسْمِ</span>
+                      <span class="demo-word demo-word--weak">اللَّهِ</span>
+                      <span class="demo-word demo-word--ok">الرَّحْمَٰنِ</span>
+                      <span class="demo-word demo-word--weak">الرَّحِيمِ</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="floating-card" v-for="(badge, idx) in floatingBadges" :key="idx" :style="{ animationDelay: `${idx * 0.8}s` }">
-                <i :class="badge.icon"></i>
-                <span>{{ badge.text }}</span>
+                <div class="demo-badges">
+                  <div
+                    class="floating-card"
+                    v-for="(badge, idx) in floatingBadges"
+                    :key="idx"
+                    :style="{ animationDelay: `${idx * 0.45}s` }"
+                  >
+                    <span class="floating-card-icon" aria-hidden="true"><i :class="badge.icon"></i></span>
+                    <span class="floating-card-text">{{ badge.text }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -100,9 +126,8 @@
 
     <section id="faq" class="faq-section">
       <div class="section-container">
-        <div class="section-kicker"><i class="bi bi-question-circle"></i> {{ t('homepage.faq.kicker') }}</div>
         <h2 class="section-title">{{ t('homepage.faq.title') }}</h2>
-        <p class="section-subtitle">{{ t('homepage.a_quick_overview_of_how_mutqin_supports_recitation') }}</p>
+        <p class="section-subtitle">{{ t('homepage.faq.subtitle') }}</p>
         <div class="faq-shell" data-aos="fade-up">
           <div class="accordion faq-accordion" id="homepageFaq">
             <div class="accordion-item" v-for="(item, idx) in faqItems" :key="item.id">
@@ -358,9 +383,9 @@ export default {
     };
 
     const floatingBadges = computed(() => [
-      { icon: 'bi bi-check-circle-fill', text: t('homepage.floatingBadges.tajweedScore') },
-      { icon: 'bi bi-graph-up', text: t('homepage.floatingBadges.weakVerses') },
-      { icon: 'bi bi-star-fill', text: t('homepage.floatingBadges.dailyMinutes') }
+      { icon: 'bi bi-journal-check', text: t('homepage.floatingBadges.tajweedScore') },
+      { icon: 'bi bi-arrow-repeat', text: t('homepage.floatingBadges.weakVerses') },
+      { icon: 'bi bi-calendar-check', text: t('homepage.floatingBadges.dailyMinutes') }
     ]);
 
     const features = computed(() => [

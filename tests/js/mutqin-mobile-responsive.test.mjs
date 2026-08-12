@@ -68,7 +68,7 @@ const touchTargetSelectors = {
 const publicRoutes = [
   {
     path: '/',
-    selectors: ['.vue-onboarding', '.hero', '.hero-container', '.demo-card', '.demo-wave', '.section-container', '.features-grid', '.steps-grid', '.pricing-grid', '.pricing-comparison', '.contact-grid', '.footer-container'],
+    selectors: ['.vue-onboarding', '.hero', '.hero-container', '.demo-card', '.demo-status', '.section-container', '.features-grid', '.steps-grid', '.pricing-grid', '.pricing-comparison', '.contact-grid', '.footer-container'],
     gridSelectors: ['.navbar-shell', '.hero-layout', '.problem-solution', '.hero-buttons', '.demo-card', '.features-grid', '.steps-grid', '.testimonials-grid', '.pricing-grid', '.contact-grid', '.cta-layout', '.footer-grid']
   },
   {
@@ -752,7 +752,7 @@ async function inspectRoute(page, route) {
       }
 
       if (route.path === '/') {
-        for (const selector of ['.demo-card > h3', '.demo-card > p', '.demo-card > .demo-wave']) {
+        for (const selector of ['.demo-feedback-copy h3', '.demo-feedback-copy p', '.demo-status']) {
           const element = document.querySelector(selector)
           const rect = element?.getBoundingClientRect()
           const style = element ? getComputedStyle(element) : null

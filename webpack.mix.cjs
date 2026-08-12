@@ -139,6 +139,11 @@ mix.then(() => {
         for (const match of appJs.matchAll(/([a-z0-9-]+)\.([a-f0-9]{8})\.js/gi)) {
             keepNames.add(`${match[1]}.${match[2]}.js`);
         }
+        // Named lazy chunks are mapped as JSON keys, e.g. "homepage":"05961901",
+        // not as literal homepage.05961901.js strings in the runtime.
+        for (const match of appJs.matchAll(/"([a-z0-9_-]+)":"([a-f0-9]{8})"/gi)) {
+            keepNames.add(`${match[1]}.${match[2]}.js`);
+        }
     } catch {
         /* ignore */
     }

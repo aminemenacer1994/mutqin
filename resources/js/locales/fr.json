@@ -163,9 +163,10 @@
       "seeFeatures": "Voir les fonctionnalités"
     },
     "demo": {
+      "session": "Sourate Al-Mulk · Ayah 3",
       "title": "Vérification de récitation",
-      "quote": "\"L’ikhfa’ demande du travail. Tenez le son nasal sur deux temps.\"",
-      "recording": "Enregistrement... 96 % de correspondance"
+      "feedback": "2 mots à retravailler avant de continuer.",
+      "status": "Vérification de la récitation..."
     },
     "features": {
       "kicker": "Pratique quotidienne",
@@ -346,9 +347,9 @@
       "freeLimited": "Gratuit limité"
     },
     "floatingBadges": {
-      "tajweedScore": "Score tajwid : +27%",
-      "weakVerses": "Versets faibles en file pour révision",
-      "dailyMinutes": "15 min/jour de pratique"
+      "tajweedScore": "12 ayahs mémorisées",
+      "weakVerses": "Ayahs faibles en file pour révision",
+      "dailyMinutes": "Révision due aujourd'hui"
     },
     "planFeatures": {
       "sessionSetup": "Configuration de session de base complète",

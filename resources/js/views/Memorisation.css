@@ -56360,6 +56360,12 @@ readable contrast */
   line-height: 1 !important;
 }
 
+.tools-footer > .tools-btn-soft i,
+.tools-footer > .tools-btn-ghost i {
+  font-size: 1.05em !important;
+  line-height: 1 !important;
+}
+
 .tools-footer > .session-primary-action span,
 .tools-footer > .btn-primary span,
 .tools-footer > .tools-btn-primary span,
@@ -56382,7 +56388,12 @@ readable contrast */
   border-radius: 15px !important;
   font-size: 0.9rem !important;
   font-weight: 600 !important;
-  gap: 0.45rem !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.35rem !important;
+  padding-inline: 6px !important;
+  text-align: center !important;
 }
 
 .tools-footer > .tools-btn-soft span,

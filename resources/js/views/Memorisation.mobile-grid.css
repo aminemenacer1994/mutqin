@@ -1197,6 +1197,7 @@
 .tools-body .sheet-toggle {
     display: grid !important;
     grid-template-columns: 36px minmax(0, 1fr) 44px 44px !important;
+    grid-template-rows: auto auto;
     gap: var(--mq-grid-gap) !important;
     align-items: center !important;
     padding: 10px 12px !important;
@@ -1208,36 +1209,80 @@
 
   .sheet-toggle .st-ico {
     grid-column: 1;
-  }
-
-  .sheet-toggle .st-txt {
-    grid-column: 2;
+    grid-row: 1;
     align-self: center;
   }
 
-  .sheet-toggle > .st-right-group,
-.sheet-toggle > .st-chev {
-    grid-column: 4;
-    justify-self: end;
+  .sheet-toggle .st-txt {
+    display: contents !important;
+  }
+
+  .sheet-toggle .st-title {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    min-inline-size: 0;
+    white-space: normal !important;
+  }
+
+  .sheet-toggle .st-sub {
+    grid-column: 3 / -1;
+    grid-row: 2;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    text-align: end;
+    padding-top: 2px;
+    align-self: start;
   }
 
   .sheet-toggle .st-right-group {
     grid-column: 3 / -1;
-    display: grid !important;
-    grid-template-columns: repeat(2, 44px);
-    gap: 4px;
+    grid-row: 1;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 4px !important;
+    justify-self: end;
+    align-self: center;
+  }
+
+  .sheet-toggle .mode-radio-group {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 44px !important;
+    inline-size: 44px !important;
+    min-inline-size: 44px !important;
+    max-inline-size: 44px !important;
+    block-size: 44px !important;
+    min-block-size: 44px !important;
+    max-block-size: 44px !important;
   }
 
   .sheet-toggle .mode-radio,
 .sheet-toggle .st-chev {
-    inline-size: 44px;
-    min-inline-size: 44px;
-    block-size: 44px;
-    min-block-size: 44px;
+    inline-size: 44px !important;
+    min-inline-size: 44px !important;
+    max-inline-size: 44px !important;
+    block-size: 44px !important;
+    min-block-size: 44px !important;
+    max-block-size: 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+    flex: 0 0 44px !important;
+    border-radius: 50% !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 0 !important;
+  }
+
+  .sheet-toggle .st-chev {
+    border-radius: 10px !important;
+    aspect-ratio: auto !important;
   }
 
   .sheet-toggle .st-txt,
-.sheet-toggle .st-sub,
 .setting-copy,
 .setting-description,
 .field-hint,
@@ -1341,6 +1386,27 @@
     grid-column: 4 !important;
     order: 2 !important;
     flex: unset !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.35rem !important;
+    padding-inline: 6px !important;
+    text-align: center !important;
+  }
+
+  .tools-footer > .tools-btn-soft i,
+.tools-footer > .tools-btn-ghost i {
+    font-size: 1rem !important;
+    line-height: 1 !important;
+    flex: 0 0 auto !important;
+  }
+
+  .tools-footer > .tools-btn-soft span,
+.tools-footer > .tools-btn-ghost span {
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    flex: 0 0 auto !important;
   }
 
   .tools-footer :where(.tools-btn, .session-primary-action, .btn) {

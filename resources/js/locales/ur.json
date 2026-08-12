@@ -163,9 +163,10 @@
       "seeFeatures": "See features"
     },
     "demo": {
+      "session": "Surah Al-Mulk · Ayah 3",
       "title": "Recitation check",
-      "quote": "\"Ikhfa' needs work. Hold the nasal sound for two counts.\"",
-      "recording": "Recording... 96% match"
+      "feedback": "2 words need more practice before you move on.",
+      "status": "Checking recitation..."
     },
     "features": {
       "kicker": "Daily practice",
@@ -347,9 +348,9 @@
       "freeLimited": "مجاني محدود"
     },
     "floatingBadges": {
-      "tajweedScore": "Tajweed score: +27%",
-      "weakVerses": "Weak verses queued for review",
-      "dailyMinutes": "15 min/day practice"
+      "tajweedScore": "12 ayahs memorised",
+      "weakVerses": "Weak ayahs queued for review",
+      "dailyMinutes": "Review due today"
     },
     "planFeatures": {
       "sessionSetup": "إعداد جلسة أساسي كامل",
