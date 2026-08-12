@@ -891,6 +891,20 @@
       "updatedSuccess": "Note updated.",
       "deletedSuccess": "Note deleted."
     },
+    "tafsir": {
+      "title": "Tafsir",
+      "buttonHint": "Read tafsir for this ayah",
+      "menuLabel": "Tafsir",
+      "noActiveAyah": "Select or activate an ayah first to read its tafsir.",
+      "contextBadge": "{surah} · Ayah {ayah}",
+      "surahFallback": "Surah {number}",
+      "ayahLabel": "Ayah",
+      "sourceLabel": "Source",
+      "loading": "Loading tafsir…",
+      "unavailableTitle": "Tafsir unavailable",
+      "unavailable": "Tafsir is currently unavailable for this ayah.",
+      "loadFailed": "Could not load tafsir. Check your connection and try again."
+    },
     "confirmModals": {
       "defaultTitle": "Confirm action",
       "confirm": "Confirm",
@@ -1217,6 +1231,9 @@
     "reading": {
       "translation": "Translation",
       "transliteration": "Transliteration",
+      "sourceLabel": "Source",
+      "translationSource": "Muhammad Asad",
+      "transliterationSource": "English Transliteration",
       "wordByWord": "Word by word",
       "wordAudio": "Word audio",
       "tajweed": "Tajweed",
@@ -2902,6 +2919,19 @@
     "focused_workflow": "Focused practice",
     "reliable_revision": "Reliable review",
     "cleaner_decisions": "Clearer choices"
+  },
+  "pricingPage": {
+    "title": "Choose your plan",
+    "subtitle": "Start free. Upgrade anytime.",
+    "billingToggleLabel": "Billing cycle",
+    "annualSavings": "Save 50%",
+    "freeForever": "Free forever",
+    "buyPremium": "Get Premium",
+    "buyPro": "Get Pro",
+    "premiumDiscount": "50% off",
+    "proDiscount": "30% off",
+    "billedMonthly": "Billed monthly",
+    "billedAnnually": "£{amount}/year"
   },
   "mission": {
     "title": "Our mission",

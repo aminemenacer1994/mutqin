@@ -835,6 +835,15 @@
                   </div>
                   <div class="verse-actions" dir="ltr">
                     <button
+                      class="verse-inline-action-btn verse-inline-tafsir-btn"
+                      type="button"
+                      @click.stop="openAyahTafsir(verse)"
+                      :title="t('memorisation.tafsir.buttonHint')"
+                      :aria-label="t('memorisation.tafsir.buttonHint')"
+                    >
+                      <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
+                    </button>
+                    <button
                       v-if="false"
                       class="verse-inline-action-btn verse-inline-notes-btn"
                       type="button"
@@ -943,12 +952,14 @@
                   <div class="verse-transliteration verse-aid" dir="ltr" lang="en">
                     {{ verse.transliteration }}
                   </div>
+                  <p class="verse-aid-source" dir="ltr" lang="en">— {{ transliterationReference }}</p>
                 </div>
                 <div v-if="showTranslation && verse.translation" class="verse-aid-block" dir="ltr" lang="en">
                   <div class="verse-aid-title" dir="ltr" lang="en">{{ t('memorisation.reading.translation') }}</div>
                   <div class="verse-translation verse-aid" dir="ltr" lang="en">
                     {{ verse.translation }}
                   </div>
+                  <p class="verse-aid-source" dir="ltr" lang="en">— {{ translationReference }}</p>
                 </div>
               </div>
             </div>
@@ -3663,6 +3674,16 @@
       @close="closeAyahNotes"
       @changed="onAyahNotesChanged"
       @toast="onAyahNotesToast"
+    />
+
+    <AyahTafsirModal
+      :visible="showAyahTafsirModal"
+      :surah-number="Number(ayahTafsirTarget?.surahNumber || 0)"
+      :ayah-number="Number(ayahTafsirTarget?.ayahNumber || 0)"
+      :surah-name="ayahTafsirTarget?.surahName || ''"
+      :arabic-text="ayahTafsirTarget?.arabicText || ''"
+      :resource-id="tafsirEditionId"
+      @close="closeAyahTafsir"
     />
 
     <!-- Global Audio Player -->

@@ -29,5 +29,16 @@
         ];
     @endphp
 
-    <memorisation :auth='@json($memorisationAuth)'></memorisation>
+    @php
+        $quranEditions = [
+            'translation' => config('quran.translation'),
+            'transliteration' => config('quran.transliteration'),
+            'tafsir' => config('quran.tafsir'),
+        ];
+    @endphp
+
+    <memorisation
+        :auth='@json($memorisationAuth)'
+        :quran-editions='@json($quranEditions)'
+    ></memorisation>
 @endsection

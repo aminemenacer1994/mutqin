@@ -20,6 +20,7 @@ return [
     'user' => 'User',
     'home' => 'Home',
     'memorisation' => 'Memorisation',
+    'pricing' => 'Pricing',
     'dashboard' => 'Dashboard',
     'profile' => 'Profile',
     'account' => 'Account',

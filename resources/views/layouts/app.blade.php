@@ -5035,6 +5035,11 @@
                                 <span class="nav-link-copy"><strong data-i18n="memorisation">{{ __('ui.memorisation') }}</strong><small class="d-lg-none">Continue your Quran practice</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
+                            <a class="nav-link nav-link-pricing {{ request()->routeIs('pricing') ? 'active' : '' }}" href="{{ route('pricing') }}">
+                                <i class="bi bi-tag nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong data-i18n="pricing">{{ __('ui.pricing') }}</strong><small class="d-lg-none">Plans and billing</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
                             @auth
                             @if (Auth::user()->isAdmin())
                             <a class="nav-link nav-link-dashboard {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">

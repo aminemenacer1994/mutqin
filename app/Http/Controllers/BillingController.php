@@ -13,7 +13,7 @@ class BillingController extends Controller
 {
     public function index(Request $request)
     {
-        return redirect()->to(route('home') . '#pricing');
+        return redirect()->route('pricing');
     }
 
     public function checkout(Request $request)

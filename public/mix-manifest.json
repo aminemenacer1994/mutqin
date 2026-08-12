@@ -1,7 +1,6 @@
 {
-    "/js/app.js": "/js/app.js?id=971d6a4ff9253263ae89958eff5ffb44",
+    "/js/app.js": "/js/app.js?id=e81d67b4382199f342a8dbff7c57df09",
     "/css/app.css": "/css/app.css?id=fdb4bc21d60e837b3eae10730e7aa3f1",
-    "/js/homepage.9a2f03e5.js": "/js/homepage.9a2f03e5.js?id=f258a9c52a164f33c15afeec3484f061",
     "/js/about.dddb482e.js": "/js/about.dddb482e.js?id=1bd6296cd4617a7a19f544fe89cb368f",
     "/js/about-us.9ac40748.js": "/js/about-us.9ac40748.js?id=9dd1eb275aafa5cba94b0a65e907939e",
     "/js/our-mission.e550e87e.js": "/js/our-mission.e550e87e.js?id=b3a51677988f663421a6bdbc800527dd",
@@ -9,9 +8,12 @@
     "/js/waiting-list.c6082e51.js": "/js/waiting-list.c6082e51.js?id=5d016321859e1347ceeeddd4e38a439e",
     "/js/dashboard.ccbd8e1c.js": "/js/dashboard.ccbd8e1c.js?id=ae9d1fd94cfa9c97f2a4dd01d31f0d58",
     "/js/admin-dashboard.e00ff712.js": "/js/admin-dashboard.e00ff712.js?id=b911966d5b99d80b5953b66b4c2a02f2",
-    "/js/memorisation.0de36279.js": "/js/memorisation.0de36279.js?id=bab78fd405ea69a68ceb4af42bf741cf",
     "/js/hifz-plan-modal.6add61b7.js": "/js/hifz-plan-modal.6add61b7.js?id=a3dd1f91542086b6f369836e058172fe",
     "/js/amd-modal.dab97d2c.js": "/js/amd-modal.dab97d2c.js?id=786ea44e308d24d43b3487820d3b5b23",
     "/js/ayah-notes-modal.ed78477f.js": "/js/ayah-notes-modal.ed78477f.js?id=cff0702ae566a05576eaa558e1e34f6c",
-    "/js/adaptive-assessment.1088f414.js": "/js/adaptive-assessment.1088f414.js?id=a6eaf30566e58ea8461af9abc220c518"
+    "/js/adaptive-assessment.1088f414.js": "/js/adaptive-assessment.1088f414.js?id=a6eaf30566e58ea8461af9abc220c518",
+    "/js/homepage.189b576d.js": "/js/homepage.189b576d.js?id=8696aad69afe7d66916bf61376b352d0",
+    "/js/ayah-tafsir-modal.cdf1b858.js": "/js/ayah-tafsir-modal.cdf1b858.js?id=4af7029b67494a5e3bead393c4708d72",
+    "/js/pricing.77ec2131.js": "/js/pricing.77ec2131.js?id=6d27486f654bff4d98c5b7aa588958d9",
+    "/js/memorisation.3143224a.js": "/js/memorisation.3143224a.js?id=06dc04348c3ef0ec87f38aba9fe42ff1"
 }

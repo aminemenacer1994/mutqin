@@ -50,7 +50,7 @@
                                     <button type="submit" class="billing-secondary-btn profile-action-btn">{{ __('profile.manage_subscription') }}</button>
                                 </form>
                             @endif
-                            <a class="billing-primary-btn profile-action-btn profile-upgrade-btn" href="{{ route('home') }}#pricing">{{ __('profile.upgrade_plan') }}</a>
+                            <a class="billing-primary-btn profile-action-btn profile-upgrade-btn" href="{{ route('pricing') }}">{{ __('profile.upgrade_plan') }}</a>
                         @endif
                     </div>
                 </aside>

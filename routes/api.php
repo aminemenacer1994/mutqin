@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
 use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
+use App\Http\Controllers\Api\Quran\TafsirController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/stripe/webhook', [BillingController::class, 'webhook'])->name('stripe.webhook');
@@ -66,6 +67,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/progress', [ProgressController::class, 'index'])->name('api.progress.index');
     Route::post('/progress', [ProgressController::class, 'store'])->name('api.progress.store');
+
+    // Quran tafsir commentary (proxied + cached server-side).
+    Route::get('/quran/tafsir', [TafsirController::class, 'show'])->name('api.quran.tafsir');
 
     // Private per-āyah notes & reflections (user-scoped).
     Route::get('/ayah-notes/counts', [AyahNoteController::class, 'counts'])->name('api.ayah-notes.counts');

@@ -581,6 +581,9 @@
     "reading": {
       "translation": "الترجمة",
       "transliteration": "النسخ الصوتي",
+      "sourceLabel": "المصدر",
+      "translationSource": "محمد أسد",
+      "transliterationSource": "English Transliteration",
       "wordByWord": "كلمة بكلمة",
       "wordAudio": "صوت الكلمات",
       "tajweed": "التجويد",
@@ -2195,6 +2198,20 @@
       "savedSuccess": "تم حفظ الملاحظة.",
       "updatedSuccess": "تم تحديث الملاحظة.",
       "deletedSuccess": "تم حذف الملاحظة."
+    },
+    "tafsir": {
+      "title": "التفسير",
+      "buttonHint": "قراءة التفسير لهذه الآية",
+      "menuLabel": "التفسير",
+      "noActiveAyah": "اختر آية أو فعّلها أولاً لقراءة تفسيرها.",
+      "contextBadge": "{surah} · الآية {ayah}",
+      "surahFallback": "سورة {number}",
+      "ayahLabel": "الآية",
+      "sourceLabel": "المصدر",
+      "loading": "جارٍ تحميل التفسير…",
+      "unavailableTitle": "التفسير غير متاح",
+      "unavailable": "التفسير غير متاح حاليًا لهذه الآية.",
+      "loadFailed": "تعذّر تحميل التفسير. تحقق من اتصالك وحاول مرة أخرى."
     },
     "saveAttemptConfirm": {
       "aiRecite": "Your AI recitation attempt has been saved.",

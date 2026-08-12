@@ -24,6 +24,10 @@ import {
   getSurahEditions
 } from '../scripts/lib/quranApis'
 import {
+  getDefaultEditionId,
+  getEditionReference,
+} from '../scripts/quran/editions'
+import {
   buildMadaniPageLayout,
   chapterHasBismillahPre,
   formatMadaniAyahEndLabel,
@@ -209,6 +213,9 @@ const AiMemorisationDetectionModal = defineAsyncComponent(() =>
 )
 const AyahNotesModal = defineAsyncComponent(() =>
   import(/* webpackChunkName: "ayah-notes-modal" */ '../components/AyahNotesModal.vue')
+)
+const AyahTafsirModal = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "ayah-tafsir-modal" */ '../components/AyahTafsirModal.vue')
 )
 import {
   buildActivePracticeSetup,
@@ -433,10 +440,12 @@ export default {
     HifzPlanCreatorModal,
     AiMemorisationDetectionModal,
     AyahNotesModal,
+    AyahTafsirModal,
     AppStatus,
   },
   props: {
-    auth: { type: Object, default: () => ({ check: false, id: null }) }
+    auth: { type: Object, default: () => ({ check: false, id: null }) },
+    quranEditions: { type: Object, default: () => ({}) },
   },
   data() {
     return {  
@@ -471,6 +480,8 @@ export default {
       hifzPlannerAnalyticsOpen: false,
       showAyahNotesModal: false,
       ayahNotesTarget: null,
+      showAyahTafsirModal: false,
+      ayahTafsirTarget: null,
       ayahNoteCounts: {},
       ayahNoteCountsSurah: 0,
       ayahNoteCountsLoading: false,
@@ -1269,6 +1280,23 @@ export default {
         value,
         label: this.translateOrFallback(`memorisation.rangeOptions.${value}`, fallback),
       }))
+    },
+    translationEditionId() {
+      return getDefaultEditionId('translation', this.quranEditions)
+    },
+    transliterationEditionId() {
+      return getDefaultEditionId('transliteration', this.quranEditions)
+    },
+    tafsirEditionId() {
+      return getDefaultEditionId('tafsir', this.quranEditions)
+    },
+    translationReference() {
+      return getEditionReference('translation', this.translationEditionId, this.quranEditions)
+        || this.t('memorisation.reading.translationSource')
+    },
+    transliterationReference() {
+      return getEditionReference('transliteration', this.transliterationEditionId, this.quranEditions)
+        || this.t('memorisation.reading.transliterationSource')
     },
     quranSearchFilterOptions() {
       return this.rangeFilterOptions
@@ -6787,6 +6815,7 @@ export default {
         || this.showHifzPlanModal
         || this.showAiMemorisationCheckerModal
         || this.showAyahNotesModal
+        || this.showAyahTafsirModal
       )
     },
     chainingProgressLabel() {
@@ -10295,7 +10324,7 @@ export default {
       try {
         const [arabicRes, translationRes] = await Promise.all([
           getQuranEdition('quran-uthmani'),
-          getQuranEdition('en.asad')
+          getQuranEdition(this.translationEditionId)
         ])
         const arabicSurahs = arabicRes.data?.data?.surahs || []
         const translationSurahs = translationRes.data?.data?.surahs || []
@@ -31058,6 +31087,26 @@ export default {
       this.ayahNotesTarget = null
     },
 
+    openAyahTafsir(verse) {
+      const { surahNumber, ayahNumber, key } = this.resolveVerseKeyParts(verse)
+      if (!surahNumber || !ayahNumber || !key) return
+      this.ayahTafsirTarget = {
+        surahNumber,
+        ayahNumber,
+        key,
+        surahName: this.getChapterDisplayName(this.currentChapter || surahNumber)
+          || this.currentChapter?.name_simple
+          || '',
+        arabicText: String(verse?.arabic || '').trim(),
+      }
+      this.showAyahTafsirModal = true
+    },
+
+    closeAyahTafsir() {
+      this.showAyahTafsirModal = false
+      this.ayahTafsirTarget = null
+    },
+
     onAyahNotesChanged({ surahNumber, ayahNumber, count } = {}) {
       const surah = Number(surahNumber || 0)
       const ayah = Number(ayahNumber || 0)
@@ -32577,8 +32626,8 @@ export default {
         const wantsWbw = !!this.showWordByWord
         const settled = await Promise.allSettled([
           getSurahEditions(chapterId, reciterId),
-          getSurahEdition(chapterId, 'en.asad'),
-          getSurahEdition(chapterId, 'en.transliteration'),
+          getSurahEdition(chapterId, this.translationEditionId),
+          getSurahEdition(chapterId, this.transliterationEditionId),
           getSurahEdition(chapterId, 'quran-uthmani'),
           wantsWbw
             ? getChapterWordByWordMeanings(chapterId, rangeStart, rangeEnd)

@@ -52,6 +52,7 @@ Route::get('/memorisation/quran-proxy/{provider}/{path}', QuranProxyController::
 
 Route::view('/about', 'content.about-us')->name('about');
 Route::view('/about-us', 'content.about-us')->name('about-us');
+Route::view('/pricing', 'content.pricing')->name('pricing');
 Route::view('/our-mission', 'content.our-mission')->name('our-mission');
 Route::view('/donate', 'content.donate')->name('donate');
 Route::view('/waiting-list', 'content.waiting-list')->name('waiting-list');

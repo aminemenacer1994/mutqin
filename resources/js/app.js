@@ -17,6 +17,9 @@ const About = defineAsyncComponent(() =>
 const AboutUsPage = defineAsyncComponent(() =>
   import(/* webpackChunkName: "about-us" */ './views/AboutUs.vue')
 );
+const PricingPage = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "pricing" */ './views/PricingPage.vue')
+);
 const OurMissionPage = defineAsyncComponent(() =>
   import(/* webpackChunkName: "our-mission" */ './views/OurMission.vue')
 );
@@ -173,6 +176,7 @@ async function bootstrapApp() {
     app.component('admin-dashboard', AdminDashboard);
     app.component('about', About);
     app.component('about-us-page', AboutUsPage);
+    app.component('pricing-page', PricingPage);
     app.component('our-mission-page', OurMissionPage);
     app.component('donation-page', DonationPage);
     app.component('waiting-list-page', WaitingListPage);
