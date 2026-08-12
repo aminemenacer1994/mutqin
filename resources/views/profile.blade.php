@@ -18,10 +18,7 @@
             <div class="profile-hero-card">
                 <div class="profile-hero-copy">
                     <div class="profile-kicker-row">
-                        <span class="profile-kicker">{{ __('profile.kicker') }}</span>
-                        @if ($isAdmin)
-                            <span class="profile-kicker profile-kicker--admin">{{ __('profile.kicker_admin') }}</span>
-                        @endif
+                        <span class="profile-kicker">{{ $isAdmin ? __('profile.kicker_admin') : __('profile.kicker') }}</span>
                     </div>
                     <h1>{{ __('profile.title') }}</h1>
                     <p>{{ $isAdmin ? __('profile.hero_desc_admin') : __('profile.hero_desc') }}</p>
@@ -36,11 +33,26 @@
                             {{ $isAdmin ? __('profile.org_plan_label') : __('profile.current_plan') }}
                         </span>
                         <strong class="profile-summary-plan">{{ $planLabel }}</strong>
+                        @unless ($isAdmin)
+                            <p class="profile-summary-meta">
+                                @if ($renewalEndsAt)
+                                    {{ __('profile.renewal_on', ['date' => $renewalEndsAt->format('j M Y')]) }}
+                                @elseif ($isFreeLike)
+                                    {{ __('profile.renewal_free_never') }}
+                                @else
+                                    {{ __('profile.renewal_not_scheduled') }}
+                                @endif
+                            </p>
+                            @if ($user->subscription_trial_ends_at)
+                                <p class="profile-summary-meta">{{ __('profile.trial_ends', ['date' => $user->subscription_trial_ends_at->format('j M Y')]) }}</p>
+                            @endif
+                        @endunless
                     </div>
 
                     <div class="profile-hero-actions">
                         @if ($isAdmin)
                             <a class="billing-primary-btn profile-action-btn profile-upgrade-btn" href="{{ route('admin.dashboard') }}">
+                                <i class="bi bi-speedometer2" aria-hidden="true"></i>
                                 {{ __('profile.open_admin_console') }}
                             </a>
                         @else
@@ -75,15 +87,10 @@
             ></div>
 
             <section class="profile-account" aria-label="{{ __('profile.account_settings') }}">
-                <header class="profile-account__header">
-                    <h2>{{ __('profile.account_settings') }}</h2>
-                    <p>{{ $isAdmin ? __('profile.account_settings_desc_admin') : __('profile.account_settings_desc') }}</p>
-                </header>
-
                 <div class="profile-grid">
                     <article class="profile-card profile-pane profile-card--details" data-profile-details>
                         <div class="profile-card-head">
-                            <h2>{{ __('profile.personal_details') }}</h2>
+                            <h2><i class="bi bi-person-vcard" aria-hidden="true"></i>{{ __('profile.personal_details') }}</h2>
                             <p>{{ __('profile.personal_details_desc') }}</p>
                         </div>
 
@@ -150,7 +157,10 @@
 
                     <article class="profile-card profile-pane profile-card--password" id="settings">
                         <div class="profile-card-head">
-                            <h2>{{ $isChangePassword ? __('profile.change_password') : __('profile.set_password') }}</h2>
+                            <h2>
+                                <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                                {{ $isChangePassword ? __('profile.change_password') : __('profile.set_password') }}
+                            </h2>
                             <p>{{ $isChangePassword ? __('profile.change_password_desc') : __('profile.set_password_desc') }}</p>
                         </div>
 
@@ -300,45 +310,9 @@
             </section>
 
             @unless ($isAdmin)
-                <article class="profile-card profile-pane profile-card-wide" id="subscription">
-                    <div class="profile-card-head">
-                        <h2>{{ __('profile.subscription') }}</h2>
-                        <p>{{ __('profile.subscription_desc') }}</p>
-                    </div>
-
-                    <div class="profile-subscription-grid">
-                        <div class="profile-subscription-item">
-                            <span>{{ __('profile.renewal_date') }}</span>
-                            <strong>
-                                @if ($renewalEndsAt)
-                                    {{ __('profile.renewal_on', ['date' => $renewalEndsAt->format('j M Y')]) }}
-                                @elseif ($isFreeLike)
-                                    {{ __('profile.renewal_free_never') }}
-                                @else
-                                    {{ __('profile.renewal_not_scheduled') }}
-                                @endif
-                            </strong>
-                        </div>
-                        <div class="profile-subscription-item">
-                            <span>{{ __('profile.billing_history') }}</span>
-                            <strong class="profile-subscription-placeholder">{{ __('profile.billing_history_placeholder') }}</strong>
-                        </div>
-                        <div class="profile-subscription-item">
-                            <span>{{ __('profile.payment_method') }}</span>
-                            <strong class="profile-subscription-placeholder">{{ __('profile.payment_method_placeholder') }}</strong>
-                        </div>
-                    </div>
-
-                    @if ($user->subscription_trial_ends_at)
-                        <p class="profile-subscription-note">{{ __('profile.trial_ends', ['date' => $user->subscription_trial_ends_at->format('j M Y')]) }}</p>
-                    @endif
-                </article>
-            @endunless
-
-            @unless ($isAdmin)
                 <article class="profile-card profile-pane profile-card-wide profile-danger" id="danger-zone">
                     <div class="profile-card-head">
-                        <h2>{{ __('profile.danger_zone') }}</h2>
+                        <h2><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>{{ __('profile.danger_zone') }}</h2>
                         <p>{{ __('profile.danger_zone_desc') }}</p>
                     </div>
 

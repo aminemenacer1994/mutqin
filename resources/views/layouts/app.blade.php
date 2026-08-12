@@ -2971,22 +2971,6 @@
             gap: 16px;
         }
 
-        .profile-account__header {
-            display: none;
-        }
-
-        .profile-account__header h2 {
-            margin: 0 0 6px;
-            font-size: 25px;
-            letter-spacing: -0.02em;
-        }
-
-        .profile-account__header p {
-            margin: 0;
-            color: var(--text-muted);
-            line-height: 1.75;
-        }
-
         .profile-kicker-row {
             display: flex;
             flex-wrap: wrap;
@@ -3202,12 +3186,10 @@
             position: relative;
             grid-template-columns: minmax(0, 1.25fr) minmax(240px, 0.75fr);
             padding: clamp(16px, 2.5vw, 22px);
-            border-radius: 22px;
+            border-radius: 20px;
             overflow: hidden;
-            background:
-                radial-gradient(circle at top left, color-mix(in srgb, var(--field-bg-strong) 68%, transparent), transparent 34%),
-                linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--surface-strong)) 0%, color-mix(in srgb, var(--surface-strong) 88%, var(--surface-elevated)) 100%);
-            border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+            background: color-mix(in srgb, var(--surface-strong) 94%, var(--surface-elevated));
+            border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border));
         }
 
         .admin-page-head {
@@ -3219,15 +3201,7 @@
         }
 
         .profile-hero-card::after {
-            content: "";
-            position: absolute;
-            right: -38px;
-            bottom: -68px;
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            background: radial-gradient(circle, color-mix(in srgb, var(--accent) 20%, transparent), transparent 68%);
-            pointer-events: none;
+            display: none;
         }
 
         .profile-hero-copy,
@@ -3317,7 +3291,8 @@
         .profile-summary-meta {
             margin: 0;
             color: var(--text-muted);
-            line-height: 1.7;
+            line-height: 1.55;
+            font-size: 0.88rem;
         }
 
         .profile-hero-actions,
@@ -3333,6 +3308,13 @@
             justify-content: flex-end;
             align-items: center;
             margin-top: 4px;
+        }
+
+        .profile-hero-actions .billing-primary-btn,
+        .profile-hero-actions .billing-secondary-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
         }
 
         .profile-hero-actions form,
@@ -3429,9 +3411,19 @@
 
         .profile-card-head h2,
         .admin-message-title-row h2 {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
             margin-bottom: 4px;
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             letter-spacing: -0.02em;
+        }
+
+        .profile-card-head h2 i,
+        .admin-message-title-row h2 i {
+            flex: 0 0 auto;
+            color: var(--accent-strong);
+            font-size: 1rem;
         }
 
         .profile-card-head p,

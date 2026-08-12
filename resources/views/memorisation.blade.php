@@ -2,11 +2,14 @@
 
 @section('content')
     @php
+        $memorisationUser = Auth::user();
         $memorisationAuth = [
             'check' => Auth::check(),
             'id' => Auth::id(),
-            'email' => Auth::user()?->email,
-            'name' => Auth::user()?->name,
+            'email' => $memorisationUser?->email,
+            'name' => $memorisationUser?->name,
+            'is_admin' => $memorisationUser?->isAdmin() ?? false,
+            'admin_dashboard_url' => route('admin.dashboard'),
             'subscription_tier' => Auth::user()?->subscription_tier ?? 'free',
             'subscription_status' => Auth::user()?->subscription_status ?? 'free',
             'has_paid_access' => Auth::user()?->hasPaidAccess() ?? false,

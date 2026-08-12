@@ -329,6 +329,7 @@
                     :aria-pressed="showTranslation ? 'true' : 'false'"
                     @click.stop="toggleReadingOption('translation')"
                   >
+                    <i class="bi bi-translate" aria-hidden="true"></i>
                     <span>{{ t('memorisation.reading.translation') }}</span>
                     <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
@@ -340,6 +341,7 @@
                     :aria-pressed="showTransliteration ? 'true' : 'false'"
                     @click.stop="toggleReadingOption('transliteration')"
                   >
+                    <i class="bi bi-type" aria-hidden="true"></i>
                     <span>{{ t('memorisation.reading.transliteration') }}</span>
                     <i v-if="showTransliteration" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
@@ -351,6 +353,7 @@
                     :aria-pressed="showWordByWord ? 'true' : 'false'"
                     @click.stop="toggleReadingOption('wbw')"
                   >
+                    <i class="bi bi-grid-3x2-gap" aria-hidden="true"></i>
                     <span>{{ t('memorisation.reading.wordByWord') }}</span>
                     <i v-if="showWordByWord" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
@@ -361,14 +364,27 @@
                     :aria-pressed="tajweedEnabled ? 'true' : 'false'"
                     @click.stop="toggleTajweed"
                   >
+                    <i class="bi bi-palette" aria-hidden="true"></i>
                     <span>{{ t('memorisation.reading.tajweed') }}</span>
                     <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
+                  <div v-if="isAdmin" class="top-card-menu-divider" aria-hidden="true"></div>
+                  <a
+                    v-if="isAdmin"
+                    :href="adminDashboardUrl"
+                    class="top-card-menu-link"
+                    @click.stop="topCardMenuOpen = false"
+                  >
+                    <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                    <span>{{ t('common.dashboard') }}</span>
+                  </a>
                   <button type="button" @click="openOnboardingFromTopMenu">
-                    <i class="bi bi-compass"></i><span>{{ t('memorisation.revisitOnboarding') }}</span>
+                    <i class="bi bi-compass" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.revisitOnboarding') }}</span>
                   </button>
                   <button @click="toggleFullScreen" type="button">
-                    <i class="bi bi-arrows-fullscreen"></i><span>{{ t('memorisation.reading.fullScreen') }}</span>
+                    <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.reading.fullScreen') }}</span>
                   </button>
                 </div>
               </transition>

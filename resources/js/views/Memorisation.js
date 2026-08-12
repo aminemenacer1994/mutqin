@@ -7375,6 +7375,14 @@ export default {
       return !!this.auth?.check
     },
 
+    isAdmin() {
+      return !!this.auth?.is_admin
+    },
+
+    adminDashboardUrl() {
+      return this.auth?.admin_dashboard_url || '/admin/dashboard'
+    },
+
     sessionTypeInfo() {
       return { key: 'session', label: this.t('memorisation.sessionType.session'), tone: 'session' }
     },
