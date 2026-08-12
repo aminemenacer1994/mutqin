@@ -1,16 +1,22 @@
 <template>
-  <div
-    v-if="visible"
-    class="network-status-banner"
-    :class="{ 'network-status-banner--offline': !online }"
-    role="status"
-    aria-live="polite"
-  >
-    <div class="network-status-banner__inner">
-      <i class="bi" :class="online ? 'bi-wifi' : 'bi-wifi-off'" aria-hidden="true"></i>
-      <span>{{ message }}</span>
+  <Teleport to="body">
+    <div class="network-status-banner-host">
+      <Transition name="network-status-banner">
+        <div
+          v-if="visible"
+          class="network-status-banner"
+          :class="{ 'network-status-banner--offline': !online }"
+          role="status"
+          aria-live="polite"
+        >
+          <div class="network-status-banner__inner">
+            <i class="bi" :class="online ? 'bi-wifi' : 'bi-wifi-off'" aria-hidden="true"></i>
+            <span>{{ message }}</span>
+          </div>
+        </div>
+      </Transition>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script>
@@ -34,7 +40,7 @@ export default {
       return !this.online || this.showBackOnline
     },
     message() {
-      if (!this.online) return this.t('common.status.offlineTitle')
+      if (!this.online) return this.t('common.status.offlineBanner')
       return this.t('common.status.backOnline')
     },
   },
@@ -80,43 +86,59 @@ export default {
 </script>
 
 <style>
+.network-status-banner-host {
+  position: fixed;
+  top: calc(var(--nav-h, 64px) + env(safe-area-inset-top, 0px) + 0.65rem);
+  inset-inline: 0;
+  z-index: 1025;
+  display: flex;
+  justify-content: center;
+  padding-inline: max(0.75rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  pointer-events: none;
+}
+
 .network-status-banner {
-  position: sticky;
-  top: 0;
-  z-index: 1080;
-  display: grid;
-  justify-items: center;
-  padding: 0.45rem 0.75rem;
-  background: color-mix(in srgb, var(--warning, #c9973a) 18%, var(--surface, #fff));
-  border-bottom: 1px solid color-mix(in srgb, var(--warning, #c9973a) 35%, var(--border, #d6d0c6));
+  width: 100%;
+  max-width: min(calc(100vw - 1.5rem), 28rem);
   color: var(--text, #1f1812);
-  font-size: 0.86rem;
-  font-weight: 600;
   text-align: center;
-}
-
-.network-status-banner--offline {
-  background: color-mix(in srgb, var(--warning, #c9973a) 22%, var(--surface, #fff));
-}
-
-.network-status-banner:not(.network-status-banner--offline) {
-  background: color-mix(in srgb, var(--success, #3d7a5a) 16%, var(--surface, #fff));
-  border-bottom-color: color-mix(in srgb, var(--success, #3d7a5a) 32%, var(--border, #d6d0c6));
+  pointer-events: none;
 }
 
 .network-status-banner__inner {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.45rem;
-  max-width: 40rem;
+  width: 100%;
+  padding: 0.52rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--warning, #c9973a) 32%, var(--border, #d6d0c6));
+  background: color-mix(in srgb, var(--warning, #c9973a) 14%, var(--surface-strong, #fff));
+  box-shadow:
+    0 6px 20px color-mix(in srgb, var(--text, #1f1812) 8%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 40%, transparent);
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.network-status-banner--offline .network-status-banner__inner {
+  background: color-mix(in srgb, var(--warning, #c9973a) 18%, var(--surface-strong, #fff));
+}
+
+.network-status-banner:not(.network-status-banner--offline) .network-status-banner__inner {
+  border-color: color-mix(in srgb, var(--success, #3d7a5a) 30%, var(--border, #d6d0c6));
+  background: color-mix(in srgb, var(--success, #3d7a5a) 14%, var(--surface-strong, #fff));
 }
 
 .network-status-banner__inner .bi {
-  font-size: 1rem;
+  flex-shrink: 0;
+  font-size: 0.95rem;
   color: var(--warning, #c9973a);
 }
 
-.network-status-banner:not(.network-status-banner--offline) .bi {
+.network-status-banner:not(.network-status-banner--offline) .network-status-banner__inner .bi {
   color: var(--success, #3d7a5a);
 }
 
@@ -125,10 +147,45 @@ html[data-theme="dark"] .network-status-banner {
   color: var(--text, #f3eee7);
 }
 
-@media (max-width: 480px) {
+[data-theme="dark"] .network-status-banner__inner,
+html[data-theme="dark"] .network-status-banner__inner {
+  box-shadow:
+    0 8px 24px color-mix(in srgb, #000 28%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent);
+}
+
+[data-theme="sepia"] .network-status-banner__inner,
+html[data-theme="sepia"] .network-status-banner__inner {
+  background: color-mix(in srgb, var(--warning, #c9973a) 12%, var(--surface-strong, #fff9f0));
+}
+
+.network-status-banner-enter-active,
+.network-status-banner-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.network-status-banner-enter-from,
+.network-status-banner-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+@media (min-width: 640px) {
   .network-status-banner {
-    font-size: 0.82rem;
-    padding: 0.4rem 0.65rem;
+    width: auto;
+    max-width: 24rem;
+  }
+
+  .network-status-banner__inner {
+    width: auto;
+    padding-inline: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .network-status-banner__inner {
+    font-size: 0.8rem;
+    padding: 0.48rem 0.85rem;
   }
 }
 </style>

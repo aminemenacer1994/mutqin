@@ -53,6 +53,7 @@
       "errorTitle": "Something went wrong",
       "errorDesc": "Something went wrong. Please try again.",
       "offlineTitle": "You appear to be offline.",
+      "offlineBanner": "You're offline. Some features may be unavailable.",
       "offlineDesc": "Check your connection, then try again. We’ll retry automatically when you’re back online.",
       "networkTitle": "You appear to be offline.",
       "networkDesc": "We couldn’t reach Mutqin. Check your connection, then try again.",
