@@ -1,108 +1,96 @@
 <template>
-  <div class="pricing-page" :data-theme="currentTheme">
-    <div class="pricing-bg" aria-hidden="true">
-      <span class="pricing-bg-orb pricing-bg-orb--one"></span>
-    </div>
-
+  <div class="pricing-page">
     <div class="pricing-shell">
       <header class="pricing-hero">
         <h1>{{ t('pricingPage.title') }}</h1>
-        <p class="pricing-hero-subtitle">{{ t('pricingPage.subtitle') }}</p>
+        <p>{{ t('pricingPage.subtitle') }}</p>
       </header>
 
-      <section class="pricing-plans" aria-label="Plans">
-        <div class="pricing-billing-wrap">
-          <div
-            class="pricing-billing-toggle"
-            role="group"
-            :aria-label="t('pricingPage.billingToggleLabel')"
-            :data-cycle="billingCycle"
+      <div class="pricing-billing">
+        <div
+          class="pricing-billing-toggle"
+          role="group"
+          :aria-label="t('pricingPage.billingToggleLabel')"
+          :data-cycle="billingCycle"
+        >
+          <span class="pricing-billing-thumb" aria-hidden="true"></span>
+          <button
+            type="button"
+            :class="{ 'is-active': billingCycle === 'monthly' }"
+            @click="billingCycle = 'monthly'"
           >
-            <span class="pricing-billing-thumb" aria-hidden="true"></span>
-            <button
-              type="button"
-              class="pricing-billing-option"
-              :class="{ 'is-active': billingCycle === 'monthly' }"
-              @click="billingCycle = 'monthly'"
-            >
-              {{ t('homepage.pricing.monthly') }}
-            </button>
-            <button
-              type="button"
-              class="pricing-billing-option"
-              :class="{ 'is-active': billingCycle === 'annual' }"
-              @click="billingCycle = 'annual'"
-            >
-              {{ t('homepage.pricing.yearly') }}
-              <span class="pricing-billing-save">{{ t('pricingPage.annualSavings') }}</span>
-            </button>
-          </div>
+            {{ t('homepage.pricing.monthly') }}
+          </button>
+          <button
+            type="button"
+            :class="{ 'is-active': billingCycle === 'annual' }"
+            @click="billingCycle = 'annual'"
+          >
+            {{ t('homepage.pricing.yearly') }}
+            <span class="pricing-billing-save">{{ t('pricingPage.annualSavings') }}</span>
+          </button>
         </div>
+      </div>
 
-        <div class="pricing-cards">
-          <article
-            v-for="plan in planCards"
-            :key="plan.id"
-            class="pricing-plan-card"
-            :class="{
-              'pricing-plan-card--featured': plan.featured,
-              [`pricing-plan-card--${plan.id}`]: true
-            }"
-          >
-            <div v-if="plan.badge" class="pricing-plan-badge" :class="plan.badgeClass">
-              {{ plan.badge }}
-            </div>
-
-            <div class="pricing-plan-head">
+      <div class="pricing-grid">
+        <article
+          v-for="plan in plans"
+          :key="plan.id"
+          class="pricing-card"
+          :class="{ 'pricing-card--featured': plan.featured }"
+        >
+          <div class="pricing-card-head">
+            <div class="pricing-card-title">
               <h2>{{ plan.name }}</h2>
-              <div class="pricing-plan-price">
-                <span class="pricing-plan-currency">£</span>
-                <span class="pricing-plan-amount">{{ plan.amount }}</span>
-                <span v-if="plan.priceSuffix" class="pricing-plan-period">{{ plan.priceSuffix }}</span>
-              </div>
-              <p v-if="plan.billingNote" class="pricing-plan-billing-note">{{ plan.billingNote }}</p>
+              <span v-if="plan.badge" class="pricing-badge" :class="plan.badgeClass">
+                {{ plan.badge }}
+              </span>
             </div>
+            <div class="pricing-price">
+              <span class="pricing-price-currency">£</span>
+              <span class="pricing-price-amount">{{ plan.amount }}</span>
+              <span v-if="plan.period" class="pricing-price-period">{{ plan.period }}</span>
+            </div>
+            <p v-if="plan.note" class="pricing-price-note">{{ plan.note }}</p>
+          </div>
 
-            <ul class="pricing-plan-features">
-              <li v-for="(feature, idx) in plan.features" :key="`${plan.id}-${idx}`">
-                <i class="bi bi-check-lg" aria-hidden="true"></i>
-                <span>{{ feature }}</span>
-              </li>
-            </ul>
+          <ul class="pricing-features">
+            <li v-for="(feature, idx) in plan.features" :key="`${plan.id}-${idx}`">
+              <i class="bi bi-check-lg" aria-hidden="true"></i>
+              <span>{{ feature }}</span>
+            </li>
+          </ul>
 
-            <div class="pricing-plan-footer">
-              <a
-                v-if="plan.ctaType === 'link'"
-                :href="plan.ctaHref"
-                class="pricing-plan-cta"
-                :class="plan.ctaClass"
-              >
+          <div class="pricing-card-action">
+            <a
+              v-if="plan.ctaType === 'link'"
+              :href="plan.ctaHref"
+              class="pricing-btn"
+              :class="plan.ctaClass"
+            >
+              {{ plan.ctaLabel }}
+            </a>
+            <form v-else method="POST" action="/checkout">
+              <input type="hidden" name="_token" :value="csrfToken">
+              <input type="hidden" name="plan" :value="plan.checkoutPlan">
+              <button type="submit" class="pricing-btn" :class="plan.ctaClass">
                 {{ plan.ctaLabel }}
-              </a>
-              <form v-else method="POST" action="/checkout">
-                <input type="hidden" name="_token" :value="csrfToken">
-                <input type="hidden" name="plan" :value="plan.checkoutPlan">
-                <button type="submit" class="pricing-plan-cta" :class="plan.ctaClass">
-                  {{ plan.ctaLabel }}
-                </button>
-              </form>
-            </div>
-          </article>
-        </div>
-      </section>
+              </button>
+            </form>
+          </div>
+        </article>
+      </div>
 
-      <section class="pricing-comparison" aria-labelledby="pricing-comparison-heading">
-        <h2 id="pricing-comparison-heading" class="pricing-section-title">
-          {{ t('homepage.feature_comparison') }}
-        </h2>
+      <section class="pricing-compare" aria-labelledby="pricing-compare-heading">
+        <h2 id="pricing-compare-heading">{{ t('homepage.feature_comparison') }}</h2>
 
-        <div class="pricing-comparison-table-wrap" role="region" :aria-label="t('homepage.feature_comparison')">
-          <table class="pricing-comparison-table">
+        <div class="pricing-table-wrap">
+          <table class="pricing-table">
             <thead>
               <tr>
                 <th>{{ t('homepage.pricing.featureColumn') }}</th>
                 <th>{{ t('homepage.free') }}</th>
-                <th class="is-highlight">{{ t('homepage.pricing.premium') }}</th>
+                <th class="col-premium">{{ t('homepage.pricing.premium') }}</th>
                 <th>{{ t('homepage.pro') }}</th>
               </tr>
             </thead>
@@ -110,21 +98,21 @@
               <tr v-for="row in comparisonRows" :key="row.id">
                 <th scope="row">{{ row.feature }}</th>
                 <td>
-                  <span :class="comparisonValueClass(row.free)">
-                    <i v-if="comparisonCell(row.free).icon" class="bi" :class="comparisonCell(row.free).icon" aria-hidden="true"></i>
-                    <span v-if="comparisonCell(row.free).label">{{ comparisonCell(row.free).label }}</span>
+                  <span :class="valClass(row.free)">
+                    <i v-if="valCell(row.free).icon" class="bi" :class="valCell(row.free).icon" aria-hidden="true"></i>
+                    <span v-if="valCell(row.free).label">{{ valCell(row.free).label }}</span>
                   </span>
                 </td>
-                <td class="is-highlight">
-                  <span :class="comparisonValueClass(row.premium)">
-                    <i v-if="comparisonCell(row.premium).icon" class="bi" :class="comparisonCell(row.premium).icon" aria-hidden="true"></i>
-                    <span v-if="comparisonCell(row.premium).label">{{ comparisonCell(row.premium).label }}</span>
+                <td class="col-premium">
+                  <span :class="valClass(row.premium)">
+                    <i v-if="valCell(row.premium).icon" class="bi" :class="valCell(row.premium).icon" aria-hidden="true"></i>
+                    <span v-if="valCell(row.premium).label">{{ valCell(row.premium).label }}</span>
                   </span>
                 </td>
                 <td>
-                  <span :class="comparisonValueClass(row.pro)">
-                    <i v-if="comparisonCell(row.pro).icon" class="bi" :class="comparisonCell(row.pro).icon" aria-hidden="true"></i>
-                    <span v-if="comparisonCell(row.pro).label">{{ comparisonCell(row.pro).label }}</span>
+                  <span :class="valClass(row.pro)">
+                    <i v-if="valCell(row.pro).icon" class="bi" :class="valCell(row.pro).icon" aria-hidden="true"></i>
+                    <span v-if="valCell(row.pro).label">{{ valCell(row.pro).label }}</span>
                   </span>
                 </td>
               </tr>
@@ -132,44 +120,35 @@
           </table>
         </div>
 
-        <div class="pricing-comparison-cards" role="list" :aria-label="t('homepage.feature_comparison')">
-          <article
-            v-for="row in comparisonRows"
-            :key="`comparison-card-${row.id}`"
-            class="pricing-comparison-card"
-            role="listitem"
-          >
-            <h3 class="pricing-comparison-card-feature">{{ row.feature }}</h3>
-            <dl class="pricing-comparison-card-tiers">
-              <div class="pricing-comparison-card-tier">
-                <dt>{{ t('homepage.free') }}</dt>
-                <dd>
-                  <span :class="comparisonValueClass(row.free)">
-                    <i v-if="comparisonCell(row.free).icon" class="bi" :class="comparisonCell(row.free).icon" aria-hidden="true"></i>
-                    <span v-if="comparisonCell(row.free).label">{{ comparisonCell(row.free).label }}</span>
-                  </span>
-                </dd>
+        <div class="pricing-compare-mobile">
+          <div class="pricing-compare-mobile-head" aria-hidden="true">
+            <span>{{ t('homepage.free') }}</span>
+            <span class="is-premium">{{ t('homepage.pricing.premium') }}</span>
+            <span>{{ t('homepage.pro') }}</span>
+          </div>
+          <div v-for="row in comparisonRows" :key="`m-${row.id}`" class="pricing-compare-row">
+            <h3>{{ row.feature }}</h3>
+            <div class="pricing-compare-cells">
+              <div class="pricing-compare-cell">
+                <span :class="valClass(row.free)">
+                  <i v-if="valCell(row.free).icon" class="bi" :class="valCell(row.free).icon" aria-hidden="true"></i>
+                  <span v-if="valCell(row.free).label">{{ valCell(row.free).label }}</span>
+                </span>
               </div>
-              <div class="pricing-comparison-card-tier is-highlight">
-                <dt>{{ t('homepage.pricing.premium') }}</dt>
-                <dd>
-                  <span :class="comparisonValueClass(row.premium)">
-                    <i v-if="comparisonCell(row.premium).icon" class="bi" :class="comparisonCell(row.premium).icon" aria-hidden="true"></i>
-                    <span v-if="comparisonCell(row.premium).label">{{ comparisonCell(row.premium).label }}</span>
-                  </span>
-                </dd>
+              <div class="pricing-compare-cell is-premium">
+                <span :class="valClass(row.premium)">
+                  <i v-if="valCell(row.premium).icon" class="bi" :class="valCell(row.premium).icon" aria-hidden="true"></i>
+                  <span v-if="valCell(row.premium).label">{{ valCell(row.premium).label }}</span>
+                </span>
               </div>
-              <div class="pricing-comparison-card-tier">
-                <dt>{{ t('homepage.pro') }}</dt>
-                <dd>
-                  <span :class="comparisonValueClass(row.pro)">
-                    <i v-if="comparisonCell(row.pro).icon" class="bi" :class="comparisonCell(row.pro).icon" aria-hidden="true"></i>
-                    <span v-if="comparisonCell(row.pro).label">{{ comparisonCell(row.pro).label }}</span>
-                  </span>
-                </dd>
+              <div class="pricing-compare-cell">
+                <span :class="valClass(row.pro)">
+                  <i v-if="valCell(row.pro).icon" class="bi" :class="valCell(row.pro).icon" aria-hidden="true"></i>
+                  <span v-if="valCell(row.pro).label">{{ valCell(row.pro).label }}</span>
+                </span>
               </div>
-            </dl>
-          </article>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -185,33 +164,31 @@ export default {
   name: 'PricingPage',
   setup() {
     const { t } = useI18n();
-    const currentTheme = ref(getSavedTheme());
     const billingCycle = ref('annual');
     const csrfToken = ref(document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
 
     const startFreeHref = computed(() => (window.mutqinAuthCheck ? '/memorisation' : '/register'));
 
-    const handleGlobalThemeChange = (event) => {
-      currentTheme.value = event?.detail?.theme || getSavedTheme();
-    };
-
     onMounted(() => {
-      currentTheme.value = getSavedTheme();
-      setGlobalTheme(currentTheme.value, { dispatchEvent: false });
-      window.addEventListener('mutqin:theme-change', handleGlobalThemeChange);
+      setGlobalTheme(getSavedTheme(), { dispatchEvent: false });
+      window.addEventListener('mutqin:theme-change', handleThemeChange);
     });
 
     onUnmounted(() => {
-      window.removeEventListener('mutqin:theme-change', handleGlobalThemeChange);
+      window.removeEventListener('mutqin:theme-change', handleThemeChange);
     });
 
-    const comparisonValueClass = (value) => {
-      if (value === true) return 'comparison-value comparison-value-included comparison-value-icon';
-      if (value === false) return 'comparison-value comparison-value-excluded comparison-value-icon';
-      return 'comparison-value comparison-value-limited';
+    function handleThemeChange() {
+      setGlobalTheme(getSavedTheme(), { dispatchEvent: false });
+    }
+
+    const valClass = (value) => {
+      if (value === true) return 'pricing-val pricing-val--yes pricing-val--icon';
+      if (value === false) return 'pricing-val pricing-val--no pricing-val--icon';
+      return 'pricing-val pricing-val--text';
     };
 
-    const comparisonCell = (value) => {
+    const valCell = (value) => {
       if (value === true) return { icon: 'bi-check-lg', label: '' };
       if (value === false) return { icon: 'bi-x-lg', label: '' };
       return { icon: '', label: String(value ?? '') };
@@ -226,87 +203,84 @@ export default {
       { id: 'offlineDownloads', feature: t('homepage.comparison.offlineDownloads'), free: false, premium: false, pro: true }
     ]);
 
-    const premiumDisplayPrice = computed(() => (billingCycle.value === 'annual' ? '1.50' : '2.99'));
-    const proDisplayPrice = computed(() => (billingCycle.value === 'annual' ? '4.17' : '5.99'));
+    const premiumPrice = computed(() => (billingCycle.value === 'annual' ? '1.50' : '2.99'));
+    const proPrice = computed(() => (billingCycle.value === 'annual' ? '4.17' : '5.99'));
 
-    const planCards = computed(() => {
-      const isAnnual = billingCycle.value === 'annual';
+    const plans = computed(() => {
+      const annual = billingCycle.value === 'annual';
 
       return [
         {
           id: 'free',
           name: t('homepage.free'),
+          amount: '0',
+          period: '',
+          note: t('pricingPage.freeForever'),
+          badge: '',
+          badgeClass: '',
           features: [
             t('homepage.planFeatures.savedSessions3'),
             t('homepage.planFeatures.basicAnalytics'),
             t('homepage.planFeatures.focusMode')
           ],
-          amount: '0',
-          priceSuffix: '',
-          billingNote: t('pricingPage.freeForever'),
-          badge: '',
-          badgeClass: '',
           featured: false,
           ctaType: 'link',
           ctaHref: startFreeHref.value,
           ctaLabel: t('homepage.start_free'),
-          ctaClass: 'pricing-plan-cta--secondary'
+          ctaClass: 'pricing-btn--secondary'
         },
         {
           id: 'premium',
           name: t('homepage.pricing.premium'),
+          amount: premiumPrice.value,
+          period: t('homepage.pricing.perMonth'),
+          note: annual ? t('pricingPage.billedAnnually', { amount: '17.99' }) : t('pricingPage.billedMonthly'),
+          badge: annual ? t('pricingPage.premiumDiscount') : t('homepage.most_useful'),
+          badgeClass: 'pricing-badge--accent',
           features: [
             t('homepage.planFeatures.savedSessions5'),
             t('homepage.planFeatures.blurringMethod'),
             t('homepage.planFeatures.chainingMethod'),
             t('homepage.planFeatures.manualSelfAssessment')
           ],
-          amount: premiumDisplayPrice.value,
-          priceSuffix: t('homepage.pricing.perMonth'),
-          billingNote: isAnnual ? t('pricingPage.billedAnnually', { amount: '17.99' }) : t('pricingPage.billedMonthly'),
-          badge: isAnnual ? t('pricingPage.premiumDiscount') : t('homepage.most_useful'),
-          badgeClass: isAnnual ? 'pricing-plan-badge--discount' : 'pricing-plan-badge--popular',
           featured: true,
           ctaType: 'form',
-          checkoutPlan: isAnnual ? 'premium_yearly' : 'premium_monthly',
+          checkoutPlan: annual ? 'premium_yearly' : 'premium_monthly',
           ctaLabel: t('pricingPage.buyPremium'),
-          ctaClass: 'pricing-plan-cta--primary'
+          ctaClass: 'pricing-btn--primary'
         },
         {
           id: 'pro',
           name: t('homepage.pro'),
+          amount: proPrice.value,
+          period: t('homepage.pricing.perMonth'),
+          note: annual ? t('pricingPage.billedAnnually', { amount: '49.99' }) : t('pricingPage.billedMonthly'),
+          badge: annual ? t('pricingPage.proDiscount') : t('pricingPage.trialBadge'),
+          badgeClass: annual ? 'pricing-badge--accent' : 'pricing-badge--soft',
           features: [
             t('homepage.planFeatures.savedSessionsUnlimited'),
             t('homepage.planFeatures.aiRecitation'),
             t('homepage.planFeatures.aiMemorisationChecker'),
             t('homepage.planFeatures.offlineDownloads')
           ],
-          amount: proDisplayPrice.value,
-          priceSuffix: t('homepage.pricing.perMonth'),
-          billingNote: isAnnual ? t('pricingPage.billedAnnually', { amount: '49.99' }) : t('pricingPage.billedMonthly'),
-          badge: isAnnual ? t('pricingPage.proDiscount') : t('homepage.pricing.freeTrial'),
-          badgeClass: isAnnual ? 'pricing-plan-badge--discount' : 'pricing-plan-badge--trial',
           featured: false,
           ctaType: 'form',
-          checkoutPlan: isAnnual ? 'pro_yearly' : 'pro_monthly',
+          checkoutPlan: annual ? 'pro_yearly' : 'pro_monthly',
           ctaLabel: t('pricingPage.buyPro'),
-          ctaClass: 'pricing-plan-cta--primary'
+          ctaClass: 'pricing-btn--primary'
         }
       ];
     });
 
     return {
       t,
-      currentTheme,
       billingCycle,
       csrfToken,
-      planCards,
+      plans,
       comparisonRows,
-      comparisonValueClass,
-      comparisonCell
+      valClass,
+      valCell
     };
   }
 };
 </script>
-
-<style src="./PricingPage.css"></style>

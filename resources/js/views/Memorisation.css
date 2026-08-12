@@ -9394,30 +9394,6 @@ html {
   color: var(--text-muted, #64748b);
 }
 
-.verse-tafsir-block {
-  margin-top: 12px;
-}
-
-.verse-tafsir {
-  font-size: calc(0.96rem * var(--en-scale, 1));
-  color: #1c1917;
-  line-height: 1.72;
-  white-space: pre-line;
-  font-family: 'Outfit', sans-serif;
-  max-height: min(28rem, 52vh);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding-right: 0.15rem;
-}
-
-.verse-tafsir-unavailable {
-  margin-top: 10px;
-}
-
-[data-theme="dark"] .verse-tafsir {
-  color: var(--text, #e2e8f0);
-}
-
 .verse-transliteration {
   font-size: calc(0.98rem * var(--en-scale, 1));
   color: #1c1917;
@@ -30716,20 +30692,6 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
   color: var(--accent-strong);
 }
 
-.verse-inline-tafsir-btn {
-  background: linear-gradient(180deg, #eef4f8, #d8e8f2);
-  border-color: color-mix(in srgb, #4a7c9b 35%, var(--border-strong, var(--border)));
-  color: #2d5a72;
-  box-shadow: 0 6px 14px color-mix(in srgb, #4a7c9b 12%, transparent);
-}
-
-.verse-inline-tafsir-btn i { font-size: 0.92rem; }
-
-.verse-inline-tafsir-btn:hover:not(:disabled) {
-  background: linear-gradient(180deg, #f5fafd, #c8deed);
-  color: #1a4560;
-}
-
 .verse-notes-count-badge {
   position: absolute;
   top: -5px;
@@ -31687,204 +31649,6 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
     border: 1px solid var(--mutqin-modal-surface-border) !important;
     border-radius: var(--mutqin-modal-radius, 26px) !important;
     box-shadow: var(--mutqin-modal-shadow) !important;
-  }
-}
-
-/* ---- Ayah Tafsir ---- */
-.ayah-tafsir-modal-overlay {
-  z-index: 1080;
-  padding:
-    max(10px, env(safe-area-inset-top, 0px))
-    max(10px, env(safe-area-inset-right, 0px))
-    max(10px, env(safe-area-inset-bottom, 0px))
-    max(10px, env(safe-area-inset-left, 0px)) !important;
-  place-items: center !important;
-  align-content: center !important;
-  align-items: center !important;
-  justify-items: center !important;
-}
-
-.ayah-tafsir-dialog.mutqin-modal-dialog,
-.ayah-tafsir-dialog {
-  width: min(100%, 960px) !important;
-  max-width: min(100%, 960px) !important;
-  min-width: 0 !important;
-  height: auto !important;
-  max-height: calc(100dvh - max(20px, env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))) !important;
-  min-height: 0 !important;
-  margin: 0 auto !important;
-}
-
-.mutqin-modal-surface.ayah-tafsir-modal {
-  width: 100% !important;
-  max-width: none !important;
-  min-width: 0 !important;
-  height: auto !important;
-  max-height: calc(100dvh - max(20px, env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))) !important;
-  min-height: 0 !important;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden !important;
-  border: 1px solid var(--mutqin-modal-surface-border) !important;
-  border-radius: var(--mutqin-modal-radius, 26px) !important;
-  box-shadow: var(--mutqin-modal-shadow) !important;
-}
-
-.ayah-tafsir-modal .ayah-tafsir-header,
-.mutqin-modal-surface.ayah-tafsir-modal > .ayah-tafsir-header.modal-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.85rem;
-  padding: 1.15rem 1.25rem 1rem !important;
-  margin: 0 !important;
-  border-bottom: 1px solid color-mix(in srgb, var(--mutqin-modal-surface-border) 72%, transparent) !important;
-  box-shadow: none;
-  flex: 0 0 auto;
-}
-
-.ayah-tafsir-header-text {
-  min-width: 0;
-  flex: 1 1 auto;
-  display: grid;
-  gap: 0.35rem;
-}
-
-.ayah-tafsir-header-row h2 {
-  margin: 0 !important;
-  font-size: 1.22rem !important;
-  line-height: 1.25 !important;
-  letter-spacing: -0.01em;
-}
-
-.ayah-tafsir-context {
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--text-muted, #64748b);
-}
-
-.ayah-tafsir-modal-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 0 !important;
-}
-
-.ayah-tafsir-ayah-block {
-  flex: 0 0 auto;
-  padding: 1rem 1.25rem 1.1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--mutqin-modal-surface-border) 65%, transparent);
-  background: color-mix(in srgb, var(--surface-elevated, #f8fafc) 55%, transparent);
-}
-
-.ayah-tafsir-section-label {
-  margin: 0 0 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted, #64748b);
-}
-
-.ayah-tafsir-ayah-text {
-  margin: 0;
-  font-family: var(--quran-font-family, 'Amiri Quran', 'Scheherazade New', serif);
-  font-size: clamp(1.35rem, 4vw, 1.65rem);
-  line-height: 1.85;
-  color: var(--text-primary, #0f172a);
-}
-
-.ayah-tafsir-content-section {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 1rem 1.25rem 1.25rem;
-  overflow: hidden;
-}
-
-.ayah-tafsir-source-row {
-  flex: 0 0 auto;
-  display: none;
-}
-
-.ayah-tafsir-source {
-  flex: 0 0 auto;
-  margin: 0.35rem 0 0;
-  font-size: 0.78rem;
-  font-weight: 500;
-  line-height: 1.35;
-  color: var(--text-muted, #64748b);
-}
-
-.ayah-tafsir-text-scroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding-right: 0.15rem;
-}
-
-.ayah-tafsir-paragraph {
-  margin: 0 0 1rem;
-  font-size: 1rem;
-  line-height: 1.78;
-  color: var(--text-primary, #1e293b);
-}
-
-.ayah-tafsir-paragraph:last-child {
-  margin-bottom: 0;
-}
-
-[data-theme="dark"] .verse-inline-tafsir-btn {
-  background: linear-gradient(180deg, #1e3340, #152530);
-  border-color: color-mix(in srgb, #6eb3d4 28%, var(--border-strong, var(--border)));
-  color: #b8d9eb;
-}
-
-[data-theme="dark"] .verse-inline-tafsir-btn:hover:not(:disabled) {
-  background: linear-gradient(180deg, #243f4f, #1a2e3a);
-  color: #d4ebf8;
-}
-
-[data-theme="dark"] .mutqin-modal-surface.ayah-tafsir-modal {
-  background: var(--mutqin-modal-surface-bg);
-}
-
-[data-theme="dark"] .ayah-tafsir-ayah-block {
-  background: color-mix(in srgb, var(--surface-elevated, #1e293b) 70%, transparent);
-}
-
-[data-theme="dark"] .ayah-tafsir-ayah-text,
-[data-theme="dark"] .ayah-tafsir-paragraph {
-  color: var(--text-primary, #e2e8f0);
-}
-
-[data-theme="dark"] .ayah-tafsir-source {
-  color: color-mix(in srgb, var(--text) 58%, transparent);
-}
-
-@media (min-width: 992px) and (hover: hover) and (pointer: fine) {
-  .ayah-tafsir-modal-overlay {
-    padding:
-      max(0.75rem, env(safe-area-inset-top, 0px))
-      max(0.75rem, env(safe-area-inset-right, 0px))
-      max(0.75rem, env(safe-area-inset-bottom, 0px))
-      max(0.75rem, env(safe-area-inset-left, 0px)) !important;
-  }
-
-  .ayah-tafsir-dialog.mutqin-modal-dialog,
-  .ayah-tafsir-dialog {
-    width: min(960px, calc(100vw - 2rem)) !important;
-    max-width: min(960px, calc(100vw - 2rem)) !important;
-  }
-
-  .mutqin-modal-surface.ayah-tafsir-modal {
-    max-height: min(82dvh, 720px) !important;
   }
 }
 
@@ -41926,7 +41690,6 @@ body,
   .verse-inline-action-btn,
 .verse-inline-play-btn,
 .verse-inline-download-btn,
-.verse-inline-tafsir-btn,
 .verse-inline-notes-btn,
 .verse-font-inline-controls,
 .verse-small-play-btn,
@@ -42364,7 +42127,7 @@ body,
     margin: 0 !important;
   }
 
-  .modal-content.mutqin-modal-surface:not(.ayah-notes-modal):not(.ayah-notes-delete-modal):not(.ayah-tafsir-modal),
+  .modal-content.mutqin-modal-surface:not(.ayah-notes-modal):not(.ayah-notes-delete-modal),
 .help-learning-modal,
 .recordings-library-modal,
 .session-exit-modal,
@@ -42398,8 +42161,7 @@ body,
     grid-template-rows: auto minmax(0, 1fr) auto;
   }
 
-  .mutqin-modal-surface.ayah-notes-modal,
-  .mutqin-modal-surface.ayah-tafsir-modal {
+  .mutqin-modal-surface.ayah-notes-modal {
     display: flex !important;
     flex-direction: column !important;
   }
@@ -42542,47 +42304,6 @@ body,
 .mutqin-modal-surface.ayah-notes-modal .ayah-notes-modal-body {
     padding: 1rem 1.1rem 1.15rem !important;
     padding-bottom: 1.15rem !important;
-  }
-
-  /* Ayah tafsir: spacious reading sheet on phone */
-  .ayah-tafsir-modal-overlay.modal-overlay.mutqin-modal-overlay {
-    padding: max(0.5rem, env(safe-area-inset-top, 0px)) 0.55rem max(0.55rem, env(safe-area-inset-bottom, 0px)) !important;
-    place-items: center !important;
-    align-content: center !important;
-    align-items: center !important;
-    justify-items: center !important;
-  }
-
-  .ayah-tafsir-dialog,
-  .ayah-tafsir-dialog.mutqin-modal-dialog {
-    width: min(100%, 40rem) !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    height: auto !important;
-    min-height: min(78dvh, 640px) !important;
-    max-height: min(92dvh, calc(100dvh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))) !important;
-    margin: 0 auto !important;
-  }
-
-  .mutqin-modal-surface.ayah-tafsir-modal {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: min(78dvh, 640px) !important;
-    height: 100% !important;
-    max-height: inherit !important;
-    border: 1px solid color-mix(in srgb, #d4c8b6 70%, transparent) !important;
-    border-radius: 1rem !important;
-    box-shadow: 0 18px 48px rgba(28, 20, 12, 0.22) !important;
-    overflow: hidden !important;
-  }
-
-  .ayah-tafsir-modal .ayah-tafsir-header,
-  .mutqin-modal-surface.ayah-tafsir-modal > .ayah-tafsir-header.modal-header {
-    position: relative;
-    padding: 1rem 1.1rem !important;
-    padding-top: 1rem !important;
   }
 
   .session-exit-body,
@@ -42898,7 +42619,6 @@ body,
   .verse-inline-action-btn,
 .verse-inline-play-btn,
 .verse-inline-download-btn,
-.verse-inline-tafsir-btn,
 .verse-inline-notes-btn {
     flex: 0 0 44px;
     inline-size: 44px !important;
@@ -56696,7 +56416,6 @@ readable contrast */
 
 /* Notes / inline action contrast on dark */
 [data-theme="dark"] .verse-inline-notes-btn,
-[data-theme="dark"] .verse-inline-tafsir-btn,
 [data-theme="dark"] .verse-inline-action-btn {
   background: #3a3129 !important;
   border: 1px solid rgba(246, 231, 208, 0.35) !important;

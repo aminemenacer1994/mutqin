@@ -214,9 +214,6 @@ const AiMemorisationDetectionModal = defineAsyncComponent(() =>
 const AyahNotesModal = defineAsyncComponent(() =>
   import(/* webpackChunkName: "ayah-notes-modal" */ '../components/AyahNotesModal.vue')
 )
-const AyahTafsirModal = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "ayah-tafsir-modal" */ '../components/AyahTafsirModal.vue')
-)
 import {
   buildActivePracticeSetup,
   buildPracticeSetupStatusMessage,
@@ -440,7 +437,6 @@ export default {
     HifzPlanCreatorModal,
     AiMemorisationDetectionModal,
     AyahNotesModal,
-    AyahTafsirModal,
     AppStatus,
   },
   props: {
@@ -480,8 +476,6 @@ export default {
       hifzPlannerAnalyticsOpen: false,
       showAyahNotesModal: false,
       ayahNotesTarget: null,
-      showAyahTafsirModal: false,
-      ayahTafsirTarget: null,
       ayahNoteCounts: {},
       ayahNoteCountsSurah: 0,
       ayahNoteCountsLoading: false,
@@ -1286,9 +1280,6 @@ export default {
     },
     transliterationEditionId() {
       return getDefaultEditionId('transliteration', this.quranEditions)
-    },
-    tafsirEditionId() {
-      return getDefaultEditionId('tafsir', this.quranEditions)
     },
     translationReference() {
       return getEditionReference('translation', this.translationEditionId, this.quranEditions)
@@ -6815,7 +6806,6 @@ export default {
         || this.showHifzPlanModal
         || this.showAiMemorisationCheckerModal
         || this.showAyahNotesModal
-        || this.showAyahTafsirModal
       )
     },
     chainingProgressLabel() {
@@ -31085,26 +31075,6 @@ export default {
     closeAyahNotes() {
       this.showAyahNotesModal = false
       this.ayahNotesTarget = null
-    },
-
-    openAyahTafsir(verse) {
-      const { surahNumber, ayahNumber, key } = this.resolveVerseKeyParts(verse)
-      if (!surahNumber || !ayahNumber || !key) return
-      this.ayahTafsirTarget = {
-        surahNumber,
-        ayahNumber,
-        key,
-        surahName: this.getChapterDisplayName(this.currentChapter || surahNumber)
-          || this.currentChapter?.name_simple
-          || '',
-        arabicText: String(verse?.arabic || '').trim(),
-      }
-      this.showAyahTafsirModal = true
-    },
-
-    closeAyahTafsir() {
-      this.showAyahTafsirModal = false
-      this.ayahTafsirTarget = null
     },
 
     onAyahNotesChanged({ surahNumber, ayahNumber, count } = {}) {

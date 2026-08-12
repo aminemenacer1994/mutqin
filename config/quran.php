@@ -4,32 +4,36 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | English tafsir (Quran.com API v4)
+    | Translation editions (Al Quran Cloud)
     |--------------------------------------------------------------------------
-    |
-    | Resource IDs match api.quran.com. Commentary is fetched server-side,
-    | cached, and exposed to the memorisation UI as inline English tafsir.
-    |
     */
 
-    'tafsir' => [
-        'default_edition' => env('QURAN_TAFSIR_RESOURCE_ID', '169'),
-        'default_resource_id' => env('QURAN_TAFSIR_RESOURCE_ID', '169'),
-        'cache_ttl' => (int) env('QURAN_TAFSIR_CACHE_TTL', 86400),
-        'upstream_base' => 'https://api.quran.com/api/v4/',
+    'translation' => [
+        'default_edition' => env('QURAN_TRANSLATION_EDITION', 'en.asad'),
         'editions' => [
-            '169' => [
-                'reference' => 'Ibn Kathir (Abridged) · English',
-                'english_name' => 'Tafsir Ibn Kathir (Abridged)',
-                'author' => 'Hafiz Ibn Kathir',
+            'en.asad' => [
+                'name' => 'Muhammad Asad',
+                'english_name' => 'Muhammad Asad — The Message of the Qur\'an',
+                'reference' => 'Muhammad Asad',
                 'language' => 'en',
                 'direction' => 'ltr',
             ],
         ],
-        'resources' => [
-            '169' => [
-                'name' => 'Tafsir Ibn Kathir (Abridged)',
-                'author' => 'Hafiz Ibn Kathir',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Transliteration editions (Al Quran Cloud)
+    |--------------------------------------------------------------------------
+    */
+
+    'transliteration' => [
+        'default_edition' => env('QURAN_TRANSLITERATION_EDITION', 'en.transliteration'),
+        'editions' => [
+            'en.transliteration' => [
+                'name' => 'English Transliteration',
+                'english_name' => 'English Transliteration',
+                'reference' => 'English Transliteration',
                 'language' => 'en',
                 'direction' => 'ltr',
             ],

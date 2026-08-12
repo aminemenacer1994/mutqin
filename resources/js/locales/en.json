@@ -891,20 +891,6 @@
       "updatedSuccess": "Note updated.",
       "deletedSuccess": "Note deleted."
     },
-    "tafsir": {
-      "title": "Tafsir",
-      "buttonHint": "Read tafsir for this ayah",
-      "menuLabel": "Tafsir",
-      "noActiveAyah": "Select or activate an ayah first to read its tafsir.",
-      "contextBadge": "{surah} · Ayah {ayah}",
-      "surahFallback": "Surah {number}",
-      "ayahLabel": "Ayah",
-      "sourceLabel": "Source",
-      "loading": "Loading tafsir…",
-      "unavailableTitle": "Tafsir unavailable",
-      "unavailable": "Tafsir is currently unavailable for this ayah.",
-      "loadFailed": "Could not load tafsir. Check your connection and try again."
-    },
     "confirmModals": {
       "defaultTitle": "Confirm action",
       "confirm": "Confirm",
@@ -2931,7 +2917,8 @@
     "premiumDiscount": "50% off",
     "proDiscount": "30% off",
     "billedMonthly": "Billed monthly",
-    "billedAnnually": "£{amount}/year"
+    "billedAnnually": "£{amount}/year",
+    "trialBadge": "7-day trial"
   },
   "mission": {
     "title": "Our mission",

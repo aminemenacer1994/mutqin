@@ -329,7 +329,6 @@
                     :aria-pressed="showTranslation ? 'true' : 'false'"
                     @click.stop="toggleReadingOption('translation')"
                   >
-                    <i class="bi bi-translate" aria-hidden="true"></i>
                     <span>{{ t('memorisation.reading.translation') }}</span>
                     <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
@@ -341,7 +340,6 @@
                     :aria-pressed="showTransliteration ? 'true' : 'false'"
                     @click.stop="toggleReadingOption('transliteration')"
                   >
-                    <i class="bi bi-type" aria-hidden="true"></i>
                     <span>{{ t('memorisation.reading.transliteration') }}</span>
                     <i v-if="showTransliteration" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
@@ -353,7 +351,6 @@
                     :aria-pressed="showWordByWord ? 'true' : 'false'"
                     @click.stop="toggleReadingOption('wbw')"
                   >
-                    <i class="bi bi-grid-3x2-gap" aria-hidden="true"></i>
                     <span>{{ t('memorisation.reading.wordByWord') }}</span>
                     <i v-if="showWordByWord" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
@@ -364,7 +361,6 @@
                     :aria-pressed="tajweedEnabled ? 'true' : 'false'"
                     @click.stop="toggleTajweed"
                   >
-                    <i class="bi bi-palette" aria-hidden="true"></i>
                     <span>{{ t('memorisation.reading.tajweed') }}</span>
                     <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
@@ -640,18 +636,6 @@
                       <i class="bi bi-sliders" aria-hidden="true"></i>
                     </button>
 
-                    <button
-                      type="button"
-                      class="mushaf-shell__btn mushaf-shell__btn--icon"
-                      :class="{ 'is-active': tajweedEnabled }"
-                      @click.stop="toggleTajweed()"
-                      :aria-pressed="tajweedEnabled ? 'true' : 'false'"
-                      :aria-label="t('memorisation.a11y.toggleTajweed')"
-                      :title="t('memorisation.a11y.tajweedLabel')"
-                    >
-                      <i class="bi bi-palette" aria-hidden="true"></i>
-                    </button>
-
                     <div v-if="mushafPages.length > 1" class="mushaf-shell__pager">
                       <button
                         type="button"
@@ -834,15 +818,6 @@
                     >{{ t('memorisation.postSession.coach.live.focusBadge') }}</span>
                   </div>
                   <div class="verse-actions" dir="ltr">
-                    <button
-                      class="verse-inline-action-btn verse-inline-tafsir-btn"
-                      type="button"
-                      @click.stop="openAyahTafsir(verse)"
-                      :title="t('memorisation.tafsir.buttonHint')"
-                      :aria-label="t('memorisation.tafsir.buttonHint')"
-                    >
-                      <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
-                    </button>
                     <button
                       v-if="false"
                       class="verse-inline-action-btn verse-inline-notes-btn"
@@ -3674,16 +3649,6 @@
       @close="closeAyahNotes"
       @changed="onAyahNotesChanged"
       @toast="onAyahNotesToast"
-    />
-
-    <AyahTafsirModal
-      :visible="showAyahTafsirModal"
-      :surah-number="Number(ayahTafsirTarget?.surahNumber || 0)"
-      :ayah-number="Number(ayahTafsirTarget?.ayahNumber || 0)"
-      :surah-name="ayahTafsirTarget?.surahName || ''"
-      :arabic-text="ayahTafsirTarget?.arabicText || ''"
-      :resource-id="tafsirEditionId"
-      @close="closeAyahTafsir"
     />
 
     <!-- Global Audio Player -->

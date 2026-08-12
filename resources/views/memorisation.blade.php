@@ -33,7 +33,6 @@
         $quranEditions = [
             'translation' => config('quran.translation'),
             'transliteration' => config('quran.transliteration'),
-            'tafsir' => config('quran.tafsir'),
         ];
     @endphp
 

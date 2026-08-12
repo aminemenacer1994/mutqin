@@ -3,6 +3,7 @@ require('./bootstrap.js');
 import { createApp, defineAsyncComponent } from 'vue';
 import NetworkStatusBanner from './components/NetworkStatusBanner.vue';
 import './styles/info-pages.css';
+import './styles/pricing-page.css';
 import { setupI18n, setLocale } from './i18n';
 import { i18nMixin } from './mixins/i18nMixin';
 import { initPwa } from './pwa';

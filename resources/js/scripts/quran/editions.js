@@ -17,20 +17,10 @@ const FALLBACK_QURAN_EDITIONS = {
       },
     },
   },
-  tafsir: {
-    default_edition: '169',
-    editions: {
-      '169': {
-        reference: 'Ibn Kathir (Abridged) · English',
-        english_name: 'Tafsir Ibn Kathir (Abridged)',
-      },
-    },
-  },
 }
 
 export const DEFAULT_TRANSLATION_EDITION = 'en.asad'
 export const DEFAULT_TRANSLITERATION_EDITION = 'en.transliteration'
-export const DEFAULT_TAFSIR_EDITION = '169'
 
 function readConfig(override = null) {
   if (override && typeof override === 'object') return override
@@ -55,11 +45,9 @@ function resolveEditionMeta(config, kind, editionId) {
 export function getDefaultEditionId(kind, configOverride = null) {
   const config = readConfig(configOverride)
   const section = config?.[kind]
-  const fallback = kind === 'translation'
-    ? DEFAULT_TRANSLATION_EDITION
-    : kind === 'transliteration'
-      ? DEFAULT_TRANSLITERATION_EDITION
-      : DEFAULT_TAFSIR_EDITION
+  const fallback = kind === 'transliteration'
+    ? DEFAULT_TRANSLITERATION_EDITION
+    : DEFAULT_TRANSLATION_EDITION
 
   return String(section?.default_edition || fallback)
 }
