@@ -33,6 +33,27 @@ enum UserSessionStatus: string
         return $this === self::Completed;
     }
 
+    /**
+     * SQL values that should be treated as unfinished, including legacy
+     * frontend lifecycle labels that were persisted before canonicalisation.
+     *
+     * @return list<string>
+     */
+    public static function unfinishedDatabaseValues(): array
+    {
+        return [
+            self::Active->value,
+            self::Paused->value,
+            self::Interrupted->value,
+            'interrupted_resumable',
+            'resumable',
+            'starting',
+            'resuming',
+            'playing',
+            'pausing',
+        ];
+    }
+
     public static function tryFromMixed(mixed $value): ?self
     {
         if ($value instanceof self) {
@@ -43,6 +64,16 @@ enum UserSessionStatus: string
             return null;
         }
 
-        return self::tryFrom(strtolower($value));
+        $normalized = str_replace('-', '_', strtolower(trim($value)));
+
+        return self::tryFrom($normalized) ?? match ($normalized) {
+            'interrupted_resumable', 'resumable' => self::Interrupted,
+            'starting', 'resuming', 'playing' => self::Active,
+            'pausing' => self::Paused,
+            'completing', 'ended', 'completion_modal_open' => self::Completed,
+            'ending', 'ended_manually' => self::EndedEarly,
+            'ready', 'ready_to_start', 'hydrating', 'uninitialised', 'uninitialized' => self::None,
+            default => null,
+        };
     }
 }

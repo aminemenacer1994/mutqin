@@ -6,6 +6,7 @@ use App\Enums\UserSessionStatus;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Support\SessionDefaults;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -24,12 +25,10 @@ class SessionLifecycleService
         // Prefer indexed unfinished statuses — avoid loading the full session history.
         $sessions = UserSession::query()
             ->where('user_id', $user->id)
-            ->whereIn('status', [
-                UserSessionStatus::Active->value,
-                UserSessionStatus::Paused->value,
-                UserSessionStatus::Interrupted->value,
-                UserSessionStatus::None->value,
-            ])
+            ->whereIn('status', array_merge(
+                UserSessionStatus::unfinishedDatabaseValues(),
+                [UserSessionStatus::None->value],
+            ))
             ->orderByDesc('last_activity_at')
             ->orderByDesc('id')
             ->limit(25)
@@ -130,55 +129,67 @@ class SessionLifecycleService
 
         $attributes = $this->normaliseIdempotencyAttributes($attributes, 'start');
 
-        return DB::transaction(function () use ($user, $attributes) {
-            $now = now();
-            $idempotencyKey = isset($attributes['start_idempotency_key'])
-                ? (string) $attributes['start_idempotency_key']
-                : null;
-
-            if ($idempotencyKey !== null && $idempotencyKey !== '') {
-                $byKey = UserSession::query()
-                    ->where('user_id', $user->id)
-                    ->where('start_idempotency_key', $idempotencyKey)
-                    ->lockForUpdate()
-                    ->first();
-                if ($byKey) {
-                    return $byKey;
+        try {
+            return DB::transaction(function () use ($user, $attributes) {
+                $now = now();
+                $idempotencyKey = isset($attributes['start_idempotency_key'])
+                    ? (string) $attributes['start_idempotency_key']
+                    : null;
+                if ($idempotencyKey === '') {
+                    $idempotencyKey = null;
                 }
-            }
 
-            $existing = $this->lockCurrentUnfinished($user);
+                if ($idempotencyKey !== null) {
+                    $byKey = UserSession::query()
+                        ->where('user_id', $user->id)
+                        ->where('start_idempotency_key', $idempotencyKey)
+                        ->lockForUpdate()
+                        ->first();
+                    if ($byKey) {
+                        return $byKey;
+                    }
+                }
 
-            if ($existing) {
-                // Idempotent re-start of the same unfinished session — never create a second active row.
-                $existing->fill($this->sessionAttributes($attributes, [
+                $existing = $this->lockCurrentUnfinished($user);
+
+                if ($existing) {
+                    // Idempotent re-start of the same unfinished session — never create a second active row.
+                    $existing->fill($this->sessionAttributes($attributes, [
+                        'status' => UserSessionStatus::Active->value,
+                        'is_onboarding_example' => false,
+                        'resumed_at' => $existing->resumed_at ?: $now,
+                        'paused_at' => null,
+                        'ended_at' => null,
+                        'last_activity_at' => $attributes['last_activity_at'] ?? $now,
+                        'start_idempotency_key' => $idempotencyKey ?: $existing->start_idempotency_key,
+                    ]));
+                    $existing->save();
+
+                    return $existing->fresh();
+                }
+
+                // Never overwrite a completed session — create a new attempt.
+                return UserSession::create($this->sessionAttributes($attributes, [
+                    'user_id' => $user->id,
                     'status' => UserSessionStatus::Active->value,
                     'is_onboarding_example' => false,
-                    'resumed_at' => $existing->resumed_at ?: $now,
+                    'started_at' => $attributes['started_at'] ?? $now,
+                    'resumed_at' => null,
                     'paused_at' => null,
                     'ended_at' => null,
+                    'attempt_number' => $attributes['attempt_number'] ?? 1,
                     'last_activity_at' => $attributes['last_activity_at'] ?? $now,
-                    'start_idempotency_key' => $idempotencyKey ?: $existing->start_idempotency_key,
+                    'start_idempotency_key' => $idempotencyKey,
                 ]));
-                $existing->save();
-
-                return $existing->fresh();
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            $recovered = $this->recoverStartAfterUniqueConflict($user, $attributes);
+            if ($recovered) {
+                return $recovered;
             }
 
-            // Never overwrite a completed session — create a new attempt.
-            return UserSession::create($this->sessionAttributes($attributes, [
-                'user_id' => $user->id,
-                'status' => UserSessionStatus::Active->value,
-                'is_onboarding_example' => false,
-                'started_at' => $attributes['started_at'] ?? $now,
-                'resumed_at' => null,
-                'paused_at' => null,
-                'ended_at' => null,
-                'attempt_number' => $attributes['attempt_number'] ?? 1,
-                'last_activity_at' => $attributes['last_activity_at'] ?? $now,
-                'start_idempotency_key' => $idempotencyKey,
-            ]));
-        });
+            throw $e;
+        }
     }
 
     /**
@@ -468,11 +479,7 @@ class SessionLifecycleService
     {
         $sessions = UserSession::query()
             ->where('user_id', $user->id)
-            ->whereIn('status', [
-                UserSessionStatus::Active->value,
-                UserSessionStatus::Paused->value,
-                UserSessionStatus::Interrupted->value,
-            ])
+            ->whereIn('status', UserSessionStatus::unfinishedDatabaseValues())
             ->orderByDesc('last_activity_at')
             ->orderByDesc('id')
             ->lockForUpdate()
@@ -669,7 +676,86 @@ class SessionLifecycleService
             }
         }
 
+        if (array_key_exists('metadata', $filtered) && is_array($filtered['metadata'])) {
+            $filtered['metadata'] = $this->slimMetadata($filtered['metadata']);
+        }
+
+        if (
+            array_key_exists('start_idempotency_key', $filtered)
+            && $filtered['start_idempotency_key'] === ''
+        ) {
+            $filtered['start_idempotency_key'] = null;
+        }
+
         return $filtered;
+    }
+
+    /**
+     * Drop bulky verse/audio objects from session metadata before JSON persist.
+     * Oversized MySQL JSON packets 500 in production under real queue payloads.
+     *
+     * @param  array<string, mixed>  $meta
+     * @return array<string, mixed>
+     */
+    public function slimMetadata(array $meta): array
+    {
+        if (isset($meta['queue']) && is_array($meta['queue'])) {
+            $meta['queue'] = array_map(fn ($item) => $this->slimQueueItem($item), $meta['queue']);
+        }
+
+        if (isset($meta['config']) && is_array($meta['config'])) {
+            unset(
+                $meta['config']['verses'],
+                $meta['config']['queue'],
+                $meta['config']['words'],
+                $meta['config']['audio']
+            );
+        }
+
+        unset($meta['verse'], $meta['verses'], $meta['audio'], $meta['workspaceState']);
+
+        return $meta;
+    }
+
+    /**
+     * @param  mixed  $item
+     * @return mixed
+     */
+    private function slimQueueItem(mixed $item): mixed
+    {
+        if (! is_array($item)) {
+            return $item;
+        }
+
+        return [
+            'ayahId' => $item['ayahId'] ?? ($item['verse']['key'] ?? null),
+            'phase' => $item['phase'] ?? null,
+            'repeatCount' => $item['repeatCount'] ?? null,
+            'totalRepeats' => $item['totalRepeats'] ?? null,
+            'prompt' => $item['prompt'] ?? null,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function recoverStartAfterUniqueConflict(User $user, array $attributes): ?UserSession
+    {
+        $idempotencyKey = isset($attributes['start_idempotency_key'])
+            ? (string) $attributes['start_idempotency_key']
+            : '';
+
+        if ($idempotencyKey !== '') {
+            $byKey = UserSession::query()
+                ->where('user_id', $user->id)
+                ->where('start_idempotency_key', $idempotencyKey)
+                ->first();
+            if ($byKey) {
+                return $byKey;
+            }
+        }
+
+        return $this->currentUnfinished($user);
     }
 
     /**

@@ -23,7 +23,12 @@ class DashboardController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
-        $data = $dashboard->build($user, 30);
+        try {
+            $data = $dashboard->build($user, 30);
+        } catch (\Throwable $e) {
+            report($e);
+            $data = $dashboard->emptyPayload($user);
+        }
 
         return response()
             ->view('dashboard', [

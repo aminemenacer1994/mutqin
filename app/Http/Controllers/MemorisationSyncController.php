@@ -23,8 +23,16 @@ class MemorisationSyncController extends Controller
             ])->saveQuietly();
         }
 
+        $decoded = null;
+        if (is_string($record?->state) && $record->state !== '') {
+            $decoded = json_decode($record->state, true);
+            if (! is_array($decoded)) {
+                $decoded = null;
+            }
+        }
+
         return response()->json([
-            'state' => $record ? json_decode($record->state, true) : null,
+            'state' => $decoded,
             'meta' => [
                 'owner_id' => $user->id,
                 'owner_email' => $user->email,

@@ -35,8 +35,12 @@ class DashboardService
 
     public static function forgetForUser(User $user): void
     {
-        Cache::forget('dashboard:v1:'.$user->id.':7');
-        Cache::forget('dashboard:v1:'.$user->id.':30');
+        try {
+            Cache::forget('dashboard:v1:'.$user->id.':7');
+            Cache::forget('dashboard:v1:'.$user->id.':30');
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**
@@ -52,8 +56,117 @@ class DashboardService
         $cacheKey = 'dashboard:v1:'.$user->id.':'.$chartDays;
 
         return Cache::remember($cacheKey, self::BUILD_CACHE_TTL_SECONDS, function () use ($user, $chartDays) {
-            return $this->buildFresh($user, $chartDays);
+            return $this->utf8Safe($this->buildFresh($user, $chartDays));
         });
+    }
+
+    /**
+     * Minimal payload so the dashboard page can render after a build failure.
+     *
+     * @return array<string, mixed>
+     */
+    public function emptyPayload(User $user, int $chartDays = 30): array
+    {
+        $chartDays = in_array($chartDays, [7, 30], true) ? $chartDays : 30;
+        $firstName = $this->firstName($user);
+
+        return [
+            'meta' => [
+                'owner_id' => (int) $user->id,
+                'generated_at' => now()->toIso8601String(),
+                'chart_days' => $chartDays,
+            ],
+            'welcome' => [
+                'greeting' => 'Assalamu alaikum, '.$firstName,
+                'first_name' => $firstName,
+                'supporting_message' => 'Continue gently from where you left off.',
+                'message_key' => 'supporting_message',
+            ],
+            'continue' => [
+                'action_type' => 'start_new',
+                'cta_key' => 'cta_start',
+                'cta_label' => 'Begin memorising',
+                'message_key' => 'msg_start_new',
+                'href' => $this->memorisationHref(),
+                'session_id' => null,
+                'recommendation_id' => null,
+                'surah_number' => null,
+                'surah_name' => null,
+                'ayah_start' => null,
+                'ayah_end' => null,
+                'last_ayah' => null,
+                'completion_percent' => null,
+                'last_activity_at' => null,
+                'recommended_technique' => null,
+                'message' => 'Open memorisation to start a new session.',
+            ],
+            'recommended_next' => null,
+            'snapshot' => [
+                'completed_sessions' => ['value' => 0, 'change_7d' => 0, 'label' => 'Completed sessions', 'context' => 'Fully finished ranges only'],
+                'saved_sessions' => ['value' => 0, 'change_7d' => null, 'label' => 'Saved sessions', 'context' => 'Resumable or explicitly saved'],
+                'memorised_ayahs' => ['value' => 0, 'change_7d' => 0, 'label' => 'Memorised ayahs', 'context' => 'Confirmed memorisation progress'],
+                'ai_recite_attempts' => ['value' => 0, 'change_7d' => 0, 'label' => 'AI Recite attempts', 'context' => 'Submitted recitation checks'],
+                'notes' => ['value' => 0, 'change_7d' => 0, 'label' => 'Notes and reflections', 'context' => 'Your private ayah notes'],
+            ],
+            'progress' => [
+                'current_surah_number' => null,
+                'current_surah_name' => null,
+                'ayah_start' => null,
+                'ayah_end' => null,
+                'current_ayah' => null,
+                'memorised_ayah_count' => 0,
+                'learning_ayah_count' => 0,
+                'surah_ayah_count' => null,
+                'surah_practised_ayah_count' => 0,
+                'surah_memorised_ayah_count' => 0,
+                'active_plan_completion_percent' => null,
+                'active_plan_title' => null,
+                'range_completion_percent' => null,
+                'surah_completion_percent' => null,
+                'last_activity_at' => null,
+            ],
+            'chart' => [
+                'days' => $chartDays,
+                'metric' => 'ayahs_memorised',
+                'secondary_metric' => 'sessions_completed',
+                'points' => [],
+                'summary' => 'No memorisation yet in this period. Even a few quiet minutes with the Qur’an bring barakah.',
+                'summary_key' => 'chart_summary_empty',
+                'summary_params' => [
+                    'days' => $chartDays,
+                    'ayahs' => 0,
+                    'sessions' => 0,
+                    'active_days' => 0,
+                ],
+                'is_empty' => true,
+            ],
+            'week_summary' => [
+                'sessions' => 0,
+                'ai_checks' => 0,
+                'ayahs_practised' => 0,
+                'is_empty' => true,
+                'from' => now()->startOfWeek()->toDateString(),
+                'to' => now()->endOfDay()->toDateString(),
+            ],
+            'weaknesses' => [
+                'items' => [],
+                'total' => 0,
+                'has_more' => false,
+                'view_all_href' => null,
+                'empty_title' => 'Alhamdulillah — nothing needs special attention right now.',
+                'empty_message' => 'When you complete a memorisation check, Mutqin will gently highlight ayahs that need more care.',
+                'empty_title_key' => 'weak_empty_title',
+                'empty_message_key' => 'weak_empty_message',
+            ],
+            'activity' => [],
+            'retention' => [
+                'streak_days' => 0,
+                'streak_broken' => false,
+                'has_history' => false,
+                'last_activity_at' => null,
+                'chips' => [],
+            ],
+        ];
     }
 
     /**
@@ -863,6 +976,7 @@ class DashboardService
             ->whereDate('session_date', '<=', $to->toDateString())
             ->orderBy('session_date')
             ->get()
+            ->filter(fn (LearningAnalytic $row) => $row->session_date !== null)
             ->keyBy(fn (LearningAnalytic $row) => $row->session_date->toDateString());
 
         $completedByDay = UserSession::query()
@@ -1738,7 +1852,8 @@ class DashboardService
             ->orderByDesc('session_date')
             ->limit(90)
             ->pluck('session_date')
-            ->map(fn ($date) => Carbon::parse($date)->toDateString())
+            ->map(fn ($date) => $this->toDateStringOrNull($date))
+            ->filter()
             ->unique()
             ->values();
 
@@ -1751,7 +1866,8 @@ class DashboardService
                 ->orderByDesc('last_activity_at')
                 ->limit(90)
                 ->pluck('last_activity_at')
-                ->map(fn ($date) => Carbon::parse($date)->toDateString())
+                ->map(fn ($date) => $this->toDateStringOrNull($date))
+                ->filter()
                 ->unique()
                 ->values();
         }
@@ -1910,6 +2026,48 @@ class DashboardService
         }
 
         return null;
+    }
+
+    private function toDateStringOrNull(mixed $date): ?string
+    {
+        if ($date === null || $date === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($date)->toDateString();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function utf8Safe(mixed $value): mixed
+    {
+        if (is_string($value)) {
+            if (! mb_check_encoding($value, 'UTF-8')) {
+                $converted = @mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+
+                return is_string($converted) ? $converted : '';
+            }
+
+            return $value;
+        }
+
+        if (is_array($value)) {
+            $safe = [];
+            foreach ($value as $key => $item) {
+                $safeKey = is_string($key) ? (string) $this->utf8Safe($key) : $key;
+                $safe[$safeKey] = $this->utf8Safe($item);
+            }
+
+            return $safe;
+        }
+
+        if (is_float($value) && ! is_finite($value)) {
+            return null;
+        }
+
+        return $value;
     }
 
     private function firstName(User $user): string

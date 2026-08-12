@@ -819,4 +819,52 @@ class DashboardTest extends TestCase
         $this->assertSame('building', $items->firstWhere('ayah_number', 2)['strength'] ?? null);
         $this->assertSame('strong', $items->firstWhere('ayah_number', 3)['strength'] ?? null);
     }
+
+    public function test_dashboard_survives_mixed_case_legacy_status_values(): void
+    {
+        $user = User::factory()->create(['name' => 'Amina']);
+
+        $session = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 2,
+            'status' => UserSessionStatus::Active,
+            'is_onboarding_example' => false,
+            'last_activity_at' => now(),
+            'metadata' => [
+                'config' => ['chapterId' => 112, 'rangeStart' => 1, 'rangeEnd' => 4],
+            ],
+        ]);
+
+        $recommendation = SessionRecommendation::create([
+            'user_id' => $user->id,
+            'source_session_id' => $session->id,
+            'surah_number' => 112,
+            'ayah_start' => 1,
+            'ayah_end' => 4,
+            'recommendation_type' => 'continue',
+            'reason_code' => 'continue_range',
+            'status' => RecommendationStatus::Generated,
+        ]);
+
+        \Illuminate\Support\Facades\DB::table('user_sessions')
+            ->where('id', $session->id)
+            ->update(['status' => 'Active']);
+        \Illuminate\Support\Facades\DB::table('session_recommendations')
+            ->where('id', $recommendation->id)
+            ->update(['status' => 'Generated']);
+
+        $reloaded = UserSession::query()->findOrFail($session->id);
+        $this->assertSame(UserSessionStatus::Active, $reloaded->status);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('user-dashboard', false);
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.welcome.first_name', 'Amina');
+    }
 }

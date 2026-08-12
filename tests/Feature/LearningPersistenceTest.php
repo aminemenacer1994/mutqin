@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\LearningAnalytic;
 use App\Models\MemorisationProgress;
+use App\Models\MemorisationSyncState;
 use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
+use App\Services\LearningStateDeriver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -185,5 +187,37 @@ class LearningPersistenceTest extends TestCase
                 ['surah_number' => 1, 'ayah_number' => 1, 'status' => 'bogus'],
             ],
         ])->assertStatus(422);
+    }
+
+    public function test_state_show_tolerates_invalid_json_blob(): void
+    {
+        $user = User::factory()->create();
+        MemorisationSyncState::query()->create([
+            'user_id' => $user->id,
+            'state' => '{not-valid-json',
+            'payload_hash' => 'broken',
+            'state_updated_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/state')
+            ->assertOk()
+            ->assertJsonPath('state', null)
+            ->assertJsonPath('meta.has_state', true);
+    }
+
+    public function test_state_store_succeeds_when_deriver_throws(): void
+    {
+        $user = User::factory()->create();
+        $this->mock(LearningStateDeriver::class, function ($mock) {
+            $mock->shouldReceive('derive')->once()->andThrow(new \RuntimeException('projection failed'));
+        });
+
+        $this->actingAs($user)
+            ->postJson('/api/state', ['state' => $this->sampleState()])
+            ->assertOk()
+            ->assertJsonPath('saved', true);
+
+        $this->assertNotNull(MemorisationSyncState::query()->where('user_id', $user->id)->first());
     }
 }

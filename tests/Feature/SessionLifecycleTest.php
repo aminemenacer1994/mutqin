@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserSession;
 use App\Support\SessionDefaults;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class SessionLifecycleTest extends TestCase
@@ -652,5 +653,70 @@ class SessionLifecycleTest extends TestCase
             ->assertStatus(422);
 
         $this->assertSame(UserSessionStatus::Completed, UserSession::where('user_id', $user->id)->first()->status);
+    }
+
+    public function test_start_slims_queue_verse_objects_from_metadata(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson('/api/session/start', [
+                'surah_number' => 1,
+                'ayah_number' => 1,
+                'idempotency_key' => 'slim-start',
+                'metadata' => [
+                    'active' => true,
+                    'config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7],
+                    'queue' => [
+                        [
+                            'phase' => 'Takrar',
+                            'ayahId' => '1:1',
+                            'repeatCount' => 1,
+                            'verse' => [
+                                'key' => '1:1',
+                                'text' => str_repeat('ayah ', 200),
+                                'words' => range(1, 50),
+                            ],
+                        ],
+                    ],
+                ],
+            ])
+            ->assertOk();
+
+        $meta = UserSession::query()->where('user_id', $user->id)->first()?->metadata;
+        $this->assertIsArray($meta);
+        $this->assertSame('1:1', $meta['queue'][0]['ayahId']);
+        $this->assertArrayNotHasKey('verse', $meta['queue'][0]);
+    }
+
+    public function test_legacy_frontend_status_does_not_500_on_start(): void
+    {
+        $user = User::factory()->create();
+        DB::table('user_sessions')->insert([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'ayah_number' => 1,
+            'status' => 'interrupted_resumable',
+            'is_onboarding_example' => 0,
+            'last_activity_at' => now(),
+            'started_at' => now()->subMinute(),
+            'metadata' => json_encode(['active' => true, 'config' => ['chapterId' => 2]]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/session/start', [
+                'surah_number' => 2,
+                'ayah_number' => 1,
+                'idempotency_key' => 'legacy-status-start',
+            ])
+            ->assertOk()
+            ->assertJsonPath('saved', true)
+            ->assertJsonPath('session.status', UserSessionStatus::Active->value);
+
+        $this->assertSame(1, UserSession::query()->where('user_id', $user->id)->count());
+        $session = UserSession::query()->where('user_id', $user->id)->first();
+        $this->assertSame(UserSessionStatus::Active, $session->status);
     }
 }

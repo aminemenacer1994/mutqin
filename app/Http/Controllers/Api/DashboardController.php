@@ -21,7 +21,12 @@ class DashboardController extends Controller
             $days = 30;
         }
 
-        $payload = $dashboard->build($user, $days);
+        try {
+            $payload = $dashboard->build($user, $days);
+        } catch (\Throwable $e) {
+            report($e);
+            $payload = $dashboard->emptyPayload($user, $days);
+        }
 
         return (new DashboardResource($payload))
             ->response()
@@ -40,9 +45,16 @@ class DashboardController extends Controller
             $limit = 100;
         }
 
+        try {
+            $activity = $dashboard->activityLog($user, $limit);
+        } catch (\Throwable $e) {
+            report($e);
+            $activity = [];
+        }
+
         return response()
             ->json([
-                'activity' => $dashboard->activityLog($user, $limit),
+                'activity' => $activity,
             ])
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate')
             ->header('Pragma', 'no-cache')

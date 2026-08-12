@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SafeBackedEnumCast;
 use App\Enums\UserSessionStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -50,7 +51,7 @@ class UserSession extends Model
             'ended_at' => 'datetime',
             'metadata' => 'array',
             'completion_settings' => 'array',
-            'status' => UserSessionStatus::class,
+            'status' => SafeBackedEnumCast::class.':'.UserSessionStatus::class,
         ];
     }
 

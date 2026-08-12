@@ -7,8 +7,8 @@ use App\Models\MemorisationProgress;
 use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Derives the normalised learning tables (user_sessions, user_last_positions,
@@ -34,12 +34,13 @@ class LearningStateDeriver
 
     public function derive(User $user, array $state, ?array $continue = null): void
     {
-        DB::transaction(function () use ($user, $state, $continue) {
-            $this->deriveSession($user, $state);
-            $this->deriveLastPosition($user, $state, $continue);
-            $this->deriveProgress($user, $state);
-            $this->deriveAnalytics($user, $state);
-        });
+        // Each projection is independently idempotent. Avoid one wrapping
+        // transaction so a unique-key race (Postgres aborts the txn) cannot
+        // 500 the live /api/state sync after the blob has already been saved.
+        $this->deriveSession($user, $state);
+        $this->deriveLastPosition($user, $state, $continue);
+        $this->deriveProgress($user, $state);
+        $this->deriveAnalytics($user, $state);
     }
 
     private function deriveSession(User $user, array $state): void
@@ -53,6 +54,7 @@ class LearningStateDeriver
 
         $lifecycleService = app(SessionLifecycleService::class);
         $lifecycle = $lifecycleService->attributesFromEngineState($session);
+        $slimSession = $session ? $lifecycleService->slimMetadata($session) : null;
         $attrs = array_merge([
             'surah_number' => $surah,
             'ayah_number' => $ayah,
@@ -61,8 +63,11 @@ class LearningStateDeriver
             'repetitions_completed' => (int) ($current['repeatCount'] ?? 0),
             'session_duration_seconds' => $this->sessionDurationSeconds($session),
             'last_activity_at' => $this->parseDate($session['updated_at'] ?? null),
-            'metadata' => $session ?: null,
+            'metadata' => $slimSession,
         ], $lifecycle);
+        if (is_array($attrs['metadata'] ?? null)) {
+            $attrs['metadata'] = $lifecycleService->slimMetadata($attrs['metadata']);
+        }
 
         $unfinished = $lifecycleService->currentUnfinished($user);
         if ($unfinished) {
@@ -80,7 +85,7 @@ class LearningStateDeriver
 
             if ($wantsComplete && ! $enginePaused && ! $rowPaused) {
                 $lifecycleService->end($user, array_merge($attrs, [
-                    'metadata' => $session ?: null,
+                    'metadata' => $slimSession,
                 ]));
 
                 return;
@@ -137,16 +142,25 @@ class LearningStateDeriver
             return;
         }
 
-        UserLastPosition::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'surah_number' => $surah,
-                'ayah_number' => $ayah,
-                'last_step' => (int) ($continue['queueIndex'] ?? $index),
-                'metadata' => $continue ?: ($session ? ['mode' => $session['mode'] ?? null, 'config' => $session['config'] ?? null] : null),
-                'last_opened_at' => $this->parseDate($continue['timestamp'] ?? ($session['updated_at'] ?? null)) ?? now(),
-            ]
-        );
+        $positionPayload = [
+            'surah_number' => $surah,
+            'ayah_number' => $ayah,
+            'last_step' => (int) ($continue['queueIndex'] ?? $index),
+            'metadata' => $continue ?: ($session ? ['mode' => $session['mode'] ?? null, 'config' => $session['config'] ?? null] : null),
+            'last_opened_at' => $this->parseDate($continue['timestamp'] ?? ($session['updated_at'] ?? null)) ?? now(),
+        ];
+
+        try {
+            UserLastPosition::updateOrCreate(
+                ['user_id' => $user->id],
+                $positionPayload
+            );
+        } catch (UniqueConstraintViolationException) {
+            $row = UserLastPosition::query()->where('user_id', $user->id)->first();
+            if ($row) {
+                $row->fill($positionPayload)->save();
+            }
+        }
     }
 
     private function deriveProgress(User $user, array $state): void
@@ -262,20 +276,32 @@ class LearningStateDeriver
             }
         }
 
-        LearningAnalytic::updateOrCreate(
-            ['user_id' => $user->id, 'session_date' => $today],
-            [
-                'sessions_completed' => $sessionsCompleted,
-                'total_minutes' => $totalMinutes,
-                'ayahs_memorised' => (int) ($stats['ayahs_memorised'] ?? 0),
-                'ayahs_reviewed' => $reviewedToday,
-                'streak_day' => (int) ($stats['streak'] ?? 0),
-                'metadata' => [
-                    'overdue_reviews' => $stats['overdue_reviews'] ?? null,
-                    'zone_distribution' => $stats['zone_distribution'] ?? null,
-                ],
-            ]
-        );
+        $analyticPayload = [
+            'sessions_completed' => $sessionsCompleted,
+            'total_minutes' => $totalMinutes,
+            'ayahs_memorised' => (int) ($stats['ayahs_memorised'] ?? 0),
+            'ayahs_reviewed' => $reviewedToday,
+            'streak_day' => (int) ($stats['streak'] ?? 0),
+            'metadata' => [
+                'overdue_reviews' => $stats['overdue_reviews'] ?? null,
+                'zone_distribution' => $stats['zone_distribution'] ?? null,
+            ],
+        ];
+
+        try {
+            LearningAnalytic::updateOrCreate(
+                ['user_id' => $user->id, 'session_date' => $today],
+                $analyticPayload
+            );
+        } catch (UniqueConstraintViolationException) {
+            $row = LearningAnalytic::query()
+                ->where('user_id', $user->id)
+                ->whereDate('session_date', $today)
+                ->first();
+            if ($row) {
+                $row->fill($analyticPayload)->save();
+            }
+        }
     }
 
     private function sessionDurationSeconds(array $session): int

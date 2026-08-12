@@ -7,6 +7,7 @@ use App\Http\Requests\Learning\SyncStateRequest;
 use App\Models\MemorisationSyncState;
 use App\Services\DashboardService;
 use App\Services\LearningStateDeriver;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -26,18 +27,30 @@ class StateSyncController extends Controller
         // Throttle the "last pulled" bookkeeping so a read does not turn into a
         // write on every poll. It only needs to be roughly accurate.
         if ($record && (! $record->last_pulled_at || $record->last_pulled_at->lt(now()->subMinutes(5)))) {
-            $record->forceFill(['last_pulled_at' => now()])->saveQuietly();
+            try {
+                $record->forceFill(['last_pulled_at' => now()])->saveQuietly();
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        $decoded = null;
+        if (is_string($record?->state) && $record->state !== '') {
+            $decoded = json_decode($record->state, true);
+            if (! is_array($decoded)) {
+                $decoded = null;
+            }
         }
 
         return response()->json([
-            'state' => $record ? json_decode($record->state, true) : null,
+            'state' => $decoded,
             'meta' => [
                 'owner_id' => $user->id,
                 'state_updated_at' => $record?->state_updated_at?->toIso8601String(),
                 'payload_hash' => $record?->payload_hash,
                 'has_state' => (bool) $record,
             ],
-        ]);
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
     }
 
     public function store(SyncStateRequest $request, LearningStateDeriver $deriver): JsonResponse
@@ -74,18 +87,32 @@ class StateSyncController extends Controller
             ]);
         }
 
-        MemorisationSyncState::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'state' => $encodedState,
-                'device_id' => $validated['meta']['device_id'] ?? null,
-                'device_label' => $validated['meta']['device_label'] ?? null,
-                'payload_hash' => $payloadHash,
-                'state_updated_at' => $localUpdatedAt,
-            ]
-        );
+        $syncPayload = [
+            'state' => $encodedState,
+            'device_id' => $validated['meta']['device_id'] ?? null,
+            'device_label' => $validated['meta']['device_label'] ?? null,
+            'payload_hash' => $payloadHash,
+            'state_updated_at' => $localUpdatedAt,
+        ];
 
-        $deriver->derive($user, $validated['state'], $validated['continue'] ?? null);
+        try {
+            MemorisationSyncState::updateOrCreate(
+                ['user_id' => $user->id],
+                $syncPayload
+            );
+        } catch (UniqueConstraintViolationException) {
+            $row = MemorisationSyncState::query()->where('user_id', $user->id)->first();
+            if ($row) {
+                $row->fill($syncPayload)->save();
+            }
+        }
+
+        try {
+            $deriver->derive($user, $validated['state'], $validated['continue'] ?? null);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         DashboardService::forgetForUser($user);
 
         return response()->json([
@@ -95,6 +122,6 @@ class StateSyncController extends Controller
                 'state_updated_at' => $localUpdatedAt->toIso8601String(),
                 'payload_hash' => $payloadHash,
             ],
-        ]);
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
     }
 }

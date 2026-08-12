@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SafeBackedEnumCast;
 use App\Enums\RecommendationStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -54,7 +55,7 @@ class SessionRecommendation extends Model
             'recommended_playback_speed' => 'float',
             'recommended_repetitions' => 'integer',
             'recommended_ayat_per_step' => 'integer',
-            'status' => RecommendationStatus::class,
+            'status' => SafeBackedEnumCast::class.':'.RecommendationStatus::class,
             'accepted_at' => 'datetime',
             'rejected_at' => 'datetime',
         ];
