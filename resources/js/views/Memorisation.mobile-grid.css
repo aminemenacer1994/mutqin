@@ -1183,14 +1183,24 @@
     inline-size: 100%;
     block-size: auto !important;
     max-block-size: none !important;
-    overflow: visible !important;
+  }
+
+  .tools .sheet-section,
+.tools-body .sheet > .sheet-section {
+    overflow: hidden !important;
+  }
+
+  .sheet-content,
+.tools-body .sheet-content {
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
   }
 
   /* Setup + Practice accordion cards: keep visible border + radius on mobile */
   .tools .sheet-section,
 .tools-body .sheet > .sheet-section {
     border: 1px solid color-mix(in srgb, var(--border) 72%, transparent) !important;
-    border-radius: 14px !important;
+    border-radius: 12px !important;
   }
 
   .sheet-toggle,

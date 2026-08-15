@@ -41,6 +41,17 @@
       {{ practiceSetupStatusMessage }}
     </div>
 
+    <div
+      v-if="savedSessionToastMessage"
+      class="saved-session-toast"
+      :class="{ 'saved-session-toast--above-modal': isAnyModalOverlayActive }"
+      role="alert"
+      aria-live="assertive"
+    >
+      <i class="bi bi-journal-check" aria-hidden="true"></i>
+      <span>{{ savedSessionToastMessage }}</span>
+    </div>
+
     <aside
       v-if="aiTestModalsEnabled && amdPracticeHudVisible && amdPracticeHud"
       class="amd-practice-hud"
@@ -1662,8 +1673,10 @@
                   </div>
 
                   <div v-else class="saved-sheet__empty saved-sheet__empty--compact">
-                    <i class="bi" :class="group.emptyIcon" aria-hidden="true"></i>
-                    <p>{{ t(group.emptyTitleKey) }}</p>
+                    <div class="saved-sheet__empty-head">
+                      <i class="bi" :class="group.emptyIcon" aria-hidden="true"></i>
+                      <p>{{ t(group.emptyTitleKey) }}</p>
+                    </div>
                     <span>{{ t(group.emptyHintKey) }}</span>
                   </div>
                 </div>
@@ -2152,6 +2165,40 @@
                     {{ sessionExitRepetitionProgressLabel }}
                   </p>
                 </div>
+                <div
+                  v-if="canSaveCurrentSession()"
+                  class="session-exit-saved-notice w-100"
+                  role="group"
+                  :aria-label="t('memorisation.sessionExit.savedSessionKicker')"
+                >
+                  <span class="session-exit-saved-notice__icon" aria-hidden="true">
+                    <i class="bi bi-journal-bookmark-fill"></i>
+                  </span>
+                  <div class="session-exit-saved-notice__copy">
+                    <label class="session-exit-auto-save-toggle">
+                      <input
+                        type="checkbox"
+                        :checked="autoSaveSessionsEnabled"
+                        @change="toggleAutoSaveSessionsEnabled"
+                      >
+                      <span class="session-exit-auto-save-toggle__label">
+                        {{ t('memorisation.sessionExit.autoSaveLabel') }}
+                      </span>
+                    </label>
+                    <template v-if="sessionExitSavedSessionLabel">
+                      <strong>{{ sessionExitSavedSessionLabel }}</strong>
+                      <span class="session-exit-saved-notice__hint">
+                        {{ t('memorisation.sessionExit.savedSessionHint') }}
+                      </span>
+                    </template>
+                    <span
+                      v-else
+                      class="session-exit-saved-notice__hint"
+                    >
+                      {{ t('memorisation.sessionExit.autoSaveOffHint') }}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <div class="modal-footer mutqin-modal-footer w-100">
@@ -2166,6 +2213,7 @@
                     :disabled="sessionExitEndingBusy"
                     @click="keepPractisingFromExitModal"
                   >
+                    <i class="bi bi-play-circle" aria-hidden="true"></i>
                     <span>{{ t('memorisation.sessionExit.keepPractising') }}</span>
                   </button>
                   <button
@@ -3051,6 +3099,18 @@
               >
                 {{ onboardingStepContent.hint }}
               </p>
+
+              <figure
+                v-if="onboardingStepContent?.screenshot"
+                class="onboarding-step-screenshot"
+              >
+                <img
+                  :src="onboardingStepContent.screenshot"
+                  :alt="onboardingStepScreenshotAlt"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </figure>
 
               <div
                 v-if="onboardingStepContent?.key === 'practice'"

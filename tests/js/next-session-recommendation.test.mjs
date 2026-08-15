@@ -325,7 +325,7 @@ function t(key, params = {}) {
   assert.match(js, /onPostSessionTestWithAi|onPostSessionCalmPrimaryAction/)
   assert.match(js, /recommendedPracticeCompleted/)
   assert.match(js, /saveCurrentSessionSilently/)
-  assert.match(js, /Always auto-save after session end/)
+  assert.match(js, /autoSaveSessionsEnabled/)
   assert.match(js, /estimatePracticeDuration|postSessionEstimatedTimeLabel/)
   assert.match(js, /capturePracticeFocusWeakWordsFromResult/)
   assert.match(js, /sessionPracticeCoach/)

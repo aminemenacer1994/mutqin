@@ -567,6 +567,8 @@ export default {
       sessionWorkspaceScrollController: null,
       pendingSessionWorkspaceScrollReason: null,
       practiceSetupStatusMessage: '',
+      savedSessionToastMessage: '',
+      savedSessionToastTimer: null,
       practiceSetupStatusTimer: null,
       practiceSetupRestoredNotice: '',
       appliedPracticeSetupSnapshot: null,
@@ -709,6 +711,7 @@ export default {
       postSessionStatsExpanded: false,
       postSessionEmotionalContext: null,
       postSessionAutoSaved: false,
+      autoSaveSessionsEnabled: true,
       pendingPostSessionModalPayload: null,
       lastAutoSavedPostSessionKey: '',
       postSessionRecommendation: null,
@@ -2538,6 +2541,10 @@ export default {
       return this.sessionExitRangeComplete
         ? (this.t('memorisation.sessionExit.confirmEndComplete') || this.t('memorisation.sessionExit.confirmEnd'))
         : (this.t('memorisation.sessionExit.confirmEndEarly') || 'Finish for now')
+    },
+    sessionExitSavedSessionLabel() {
+      if (!this.showSessionExitModal || !this.autoSaveSessionsEnabled || !this.canSaveCurrentSession()) return ''
+      return this.buildAutoSaveSessionName()
     },
     sessionExitStatusPills() {
       return []
@@ -6779,6 +6786,10 @@ export default {
     onboardingStepContent() {
       return this.onboardingSteps[this.onboardingStepIndex] || this.onboardingSteps[0]
     },
+    onboardingStepScreenshotAlt() {
+      const title = this.onboardingStepContent?.title || this.t('memorisation.onboarding.intro')
+      return this.t('memorisation.onboarding.screenshotAlt', { step: title })
+    },
     onboardingStepCounterLabel() {
       return this.t('memorisation.onboarding.stepCounter', {
         current: this.onboardingStepIndex + 1,
@@ -9868,6 +9879,12 @@ export default {
       const points = Array.isArray(pointsRaw)
         ? pointsRaw.map(item => String(item || '').trim()).filter(Boolean)
         : []
+      const screenshotMap = {
+        setup: '/images/onboarding/setup.png',
+        practice: '/images/onboarding/practice.png',
+        coach: '/images/onboarding/coach.png',
+        improve: '/images/onboarding/improve.png',
+      }
       const step = {
         key,
         icon,
@@ -9875,7 +9892,8 @@ export default {
         stepLabel: this.t(`${base}.stepLabel`),
         body: this.t(`${base}.body`),
         hint: hint && hint !== hintKey ? hint : '',
-        points
+        points,
+        screenshot: screenshotMap[key] || '',
       }
       if (key === 'setup') step.targetSection = 'advanced_setup'
       if (key === 'practice') step.targetSection = 'focus_mode'
@@ -10942,6 +10960,7 @@ export default {
     },
 
     saveCurrentSessionSilently(name = this.buildAutoSaveSessionName()) {
+      if (!this.autoSaveSessionsEnabled) return null
       if (!this.canSaveCurrentSession()) return null
       const key = [
         this.chapterId || this.sessionConfig?.chapterId || '',
@@ -10957,6 +10976,7 @@ export default {
       this.lastAutoSavedPostSessionKey = key
       this.sessionExitAutoSave = true
       this.showSaveNameModal = false
+      this.showSavedSessionToast(this.t('toasts.sessionSaved2') || 'Session saved')
       return session
     },
 
@@ -16061,8 +16081,13 @@ export default {
 
     promptSaveSessionAfterEnd({ wasSample = false } = {}) {
       if (wasSample || this.onboardingSampleSessionActive) return
-      // Always auto-save after session end — never open the save/name confirm modal.
+      if (!this.autoSaveSessionsEnabled) return
       void this.saveCurrentSessionSilentlyAsync()
+    },
+
+    toggleAutoSaveSessionsEnabled() {
+      this.autoSaveSessionsEnabled = !this.autoSaveSessionsEnabled
+      this.persistUiState()
     },
     logoutFromPostSession() {
       if (typeof document === 'undefined') return
@@ -28872,6 +28897,19 @@ export default {
       }, Number(change.durationMs) || 3200)
     },
 
+    showSavedSessionToast(message, ttlMs = 4200) {
+      const resolved = String(message || '').trim()
+      if (!resolved) return
+      this.savedSessionToastMessage = resolved
+      if (this.savedSessionToastTimer) {
+        clearTimeout(this.savedSessionToastTimer)
+      }
+      this.savedSessionToastTimer = setTimeout(() => {
+        this.savedSessionToastMessage = ''
+        this.savedSessionToastTimer = null
+      }, ttlMs)
+    },
+
     guardPracticeSettingChange(settingId) {
       const gate = canChangePracticeSetting(settingId, {
         isRecording: !!(this.isSelfCheckRecording || this.recitationCheckRecording),
@@ -34004,6 +34042,7 @@ export default {
             show: !!state.showPostSessionChoice,
             template: state.postSessionChoiceJustEndedTemplate || null,
           }
+          this.autoSaveSessionsEnabled = state.autoSaveSessionsEnabled !== false
         }
       } catch (e) {
         console.error('Error loading UI state:', e)
@@ -34092,6 +34131,7 @@ export default {
           playerCompact: this.playerCompact,
           showPostSessionChoice: !!this.showPostSessionChoice,
           postSessionChoiceJustEndedTemplate: this.postSessionChoiceJustEndedTemplate || null,
+          autoSaveSessionsEnabled: !!this.autoSaveSessionsEnabled,
         }
 
         if (this.learningBackendEnabled()) {
