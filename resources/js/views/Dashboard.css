@@ -241,23 +241,13 @@
 }
 
 .dash-continue--journey {
-  align-items: flex-end;
+  width: 100%;
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: start;
+  align-items: stretch;
   gap: 1.1rem;
   padding: 1.35rem 1.3rem 1.4rem;
-}
-
-.dash-continue__verses,
-.dash-continue__remembered {
-  display: block;
-  color: var(--dash-muted);
-  font-size: 0.98rem;
-  line-height: 1.4;
-}
-
-.dash-continue__remembered {
-  margin-top: 0.35rem;
-  color: var(--dash-ink);
-  font-weight: 500;
 }
 
 .dash-continue__go {
@@ -638,7 +628,7 @@ html[data-theme="dark"] .dash-chip--streak-strong i {
 
 @media (min-width: 720px) {
   .dash-metrics {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 

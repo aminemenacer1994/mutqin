@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {
   CORE_TECHNIQUE_IDS,
   getTechniqueDescription,
+  getTechniqueSummary,
   getTechniqueLabel,
   getTechniqueShortLabel,
   isKnownTechniqueId,
@@ -39,9 +40,11 @@ const tAr = makeT(ar)
   assert.equal(focus.label, 'One ayah at a time')
   assert.equal(getTechniqueLabel('talqin', tEn), 'Listen and repeat')
   assert.equal(getTechniqueLabel('blur', tEn), 'Gradually hide the text')
-  assert.equal(getTechniqueDescription('talqin', tEn), 'Listen to each section, then repeat it')
-  assert.equal(getTechniqueDescription('focus', tEn), 'Concentrate on one ayah before moving forward')
-  assert.equal(getTechniqueDescription('blur', tEn), 'Hide more of the text gradually to strengthen recall')
+  assert.equal(getTechniqueDescription('talqin', tEn), 'Mutqin plays each section for you. Listen closely, then pause and repeat from memory before moving on.')
+  assert.equal(getTechniqueDescription('focus', tEn), 'Everything else dims while you work on the active ayah. The next ayah stays hidden until you finish this one.')
+  assert.equal(getTechniqueDescription('blur', tEn), 'More text hides after each successful repeat. Hold Space or long-press to peek when you need a hint.')
+  assert.equal(getTechniqueSummary('focus', tEn), 'Lock in one ayah before the next appears')
+  assert.notEqual(getTechniqueSummary('focus', tEn), getTechniqueDescription('focus', tEn))
 }
 
 {
@@ -50,16 +53,14 @@ const tAr = makeT(ar)
   assert.equal(chaining.label, 'Join ayahs together')
   assert.equal(
     chaining.description,
-    'Link each ayah to the next and practise the range as one continuous sequence.'
+    'Neighbouring ayahs are linked into one flowing sequence. Choose linking (pairs) or cumulative (growing passage) below.'
   )
   assert.equal(
     en.memorisation.techniques.chainingOffDescription,
     chaining.description
   )
-  assert.equal(
-    en.memorisation.techniques.chainingOffSub,
-    chaining.description
-  )
+  assert.equal(getTechniqueSummary('chaining', tEn), 'Practise smooth transitions between ayahs')
+  assert.notEqual(getTechniqueSummary('chaining', tEn), chaining.description)
   assert.equal(anchor.label, 'Highlight memory words')
   assert.equal(getTechniqueLabel('linking', tEn), 'Practice ayah pairs')
   assert.equal(getTechniqueLabel('cumulative', tEn), 'Grow the passage step by step')

@@ -1205,9 +1205,11 @@
 
   .sheet-toggle,
 .tools-body .sheet-toggle {
+    --sheet-control-radio: 32px;
+    --sheet-control-chev: 28px;
     display: grid !important;
-    grid-template-columns: 36px minmax(0, 1fr) 44px 44px !important;
-    grid-template-rows: auto auto;
+    grid-template-columns: 36px minmax(0, 1fr) var(--sheet-control-radio) var(--sheet-control-chev) !important;
+    grid-template-rows: auto;
     gap: var(--mq-grid-gap) !important;
     align-items: center !important;
     padding: 10px 12px !important;
@@ -1224,27 +1226,41 @@
   }
 
   .sheet-toggle .st-txt {
-    display: contents !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    grid-column: 2;
+    grid-row: 1;
+    min-inline-size: 0;
+    align-self: center;
   }
 
   .sheet-toggle .st-title {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: center;
     min-inline-size: 0;
     white-space: normal !important;
+    padding-top: 0;
+    flex: 0 0 auto;
+    width: 100%;
   }
 
   .sheet-toggle .st-sub {
-    grid-column: 3 / -1;
-    grid-row: 2;
     min-inline-size: 0;
     max-inline-size: 100%;
+    flex: 0 0 auto;
     white-space: normal !important;
     overflow-wrap: anywhere;
-    text-align: end;
-    padding-top: 2px;
-    align-self: start;
+    direction: ltr;
+    text-align: start;
+    padding-top: 0;
+    width: 100%;
+  }
+
+  .sheet-toggle > .st-chev {
+    grid-column: 3 / -1;
+    grid-row: 1;
+    justify-self: end;
+    align-self: center;
   }
 
   .sheet-toggle .st-right-group {
@@ -1253,7 +1269,7 @@
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    gap: 4px !important;
+    gap: 2px !important;
     justify-self: end;
     align-self: center;
   }
@@ -1262,34 +1278,52 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    flex: 0 0 44px !important;
-    inline-size: 44px !important;
-    min-inline-size: 44px !important;
-    max-inline-size: 44px !important;
-    block-size: 44px !important;
-    min-block-size: 44px !important;
-    max-block-size: 44px !important;
+    flex: 0 0 var(--sheet-control-radio) !important;
+    inline-size: var(--sheet-control-radio) !important;
+    min-inline-size: var(--sheet-control-radio) !important;
+    max-inline-size: var(--sheet-control-radio) !important;
+    block-size: var(--sheet-control-radio) !important;
+    min-block-size: var(--sheet-control-radio) !important;
+    max-block-size: var(--sheet-control-radio) !important;
   }
 
   .sheet-toggle .mode-radio,
 .sheet-toggle .st-chev {
-    inline-size: 44px !important;
-    min-inline-size: 44px !important;
-    max-inline-size: 44px !important;
-    block-size: 44px !important;
-    min-block-size: 44px !important;
-    max-block-size: 44px !important;
-    width: 44px !important;
-    height: 44px !important;
-    flex: 0 0 44px !important;
+    inline-size: var(--sheet-control-radio) !important;
+    min-inline-size: var(--sheet-control-radio) !important;
+    max-inline-size: var(--sheet-control-radio) !important;
+    block-size: var(--sheet-control-radio) !important;
+    min-block-size: var(--sheet-control-radio) !important;
+    max-block-size: var(--sheet-control-radio) !important;
+    width: var(--sheet-control-radio) !important;
+    height: var(--sheet-control-radio) !important;
+    flex: 0 0 var(--sheet-control-radio) !important;
     border-radius: 50% !important;
     aspect-ratio: 1 / 1 !important;
     padding: 0 !important;
+    box-shadow: none !important;
   }
 
   .sheet-toggle .st-chev {
-    border-radius: 10px !important;
+    inline-size: var(--sheet-control-chev) !important;
+    min-inline-size: var(--sheet-control-chev) !important;
+    max-inline-size: var(--sheet-control-chev) !important;
+    block-size: var(--sheet-control-chev) !important;
+    min-block-size: var(--sheet-control-chev) !important;
+    max-block-size: var(--sheet-control-chev) !important;
+    width: var(--sheet-control-chev) !important;
+    height: var(--sheet-control-chev) !important;
+    flex: 0 0 var(--sheet-control-chev) !important;
+    border-radius: 8px !important;
     aspect-ratio: auto !important;
+  }
+
+  .sheet-toggle .mode-radio-icon {
+    font-size: 0.88rem !important;
+  }
+
+  .sheet-toggle .st-chev i {
+    font-size: 0.72rem !important;
   }
 
   .sheet-toggle .st-txt,

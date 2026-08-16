@@ -117,12 +117,6 @@
                   <span class="dash-continue__title">
                     {{ journeyContinue.surah_name || t('dashboard.start_session') }}
                   </span>
-                  <span v-if="journeyVersesLabel" class="dash-continue__verses">
-                    {{ journeyVersesLabel }}
-                  </span>
-                  <span v-if="journeyRememberedLabel" class="dash-continue__remembered">
-                    {{ journeyRememberedLabel }}
-                  </span>
                 </div>
                 <span class="dash-continue__go">{{ journeyContinueCta }}</span>
               </a>
@@ -166,9 +160,6 @@
                     {{ t('dashboard.journey_review_label') }}
                   </span>
                   <strong class="dash-review__title">{{ journeyReview.surah_name }}</strong>
-                  <span v-if="journeyReviewVersesLabel" class="dash-review__verses">
-                    {{ journeyReviewVersesLabel }}
-                  </span>
                 </div>
                 <a class="dash-btn dash-btn--ghost" :href="journeyReview.href">
                   {{ t('dashboard.journey_review_cta') }}
@@ -243,26 +234,6 @@
                   ></span>
                 </div>
                 <span class="dash-surah-progress__pct">{{ surahProgress.value }}%</span>
-              </div>
-              <div v-if="ayahRangeLabel(data.progress) || data.progress?.current_ayah" class="dash-pills">
-                <span v-if="ayahRangeLabel(data.progress)" class="dash-pill">
-                  {{ ayahRangeLabel(data.progress) }}
-                </span>
-                <span v-if="data.progress?.current_ayah" class="dash-pill">
-                  {{ t('dashboard.at_ayah', { n: data.progress.current_ayah }) }}
-                </span>
-              </div>
-
-              <div class="dash-progress-counts">
-                <div
-                  v-for="stat in currentSurahStats"
-                  :key="stat.key"
-                  class="dash-stat"
-                  :class="stat.emphasis"
-                >
-                  <strong>{{ stat.value }}</strong>
-                  <span>{{ stat.label }}</span>
-                </div>
               </div>
             </div>
 
@@ -355,43 +326,6 @@
                     </a>
                   </div>
                 </div>
-              </li>
-            </ul>
-          </section>
-
-          <section class="dash-panel" aria-labelledby="dash-activity-heading">
-            <div class="dash-panel__head">
-              <div>
-                <h2 id="dash-activity-heading">{{ t('dashboard.activity_title') }}</h2>
-                <p class="dash-panel__hint">{{ t('dashboard.activity_subtitle') }}</p>
-              </div>
-              <button
-                type="button"
-                class="dash-link"
-                @click="openDrawer('activity')"
-              >
-                {{ t('dashboard.view_all_activity') }}
-              </button>
-            </div>
-
-            <p v-if="!data.activity?.length" class="dash-empty" role="status">
-              {{ t('dashboard.activity_empty_message') }}
-            </p>
-
-            <ul v-else class="dash-list">
-              <li
-                v-for="(item, index) in data.activity"
-                :key="`${item.type}-${item.occurred_at}-${index}`"
-              >
-                <a class="dash-list__row" :href="item.href || memorisationUrl">
-                  <span class="dash-list__main">
-                    <span class="dash-list__title">{{ activityTitle(item) }}</span>
-                    <span v-if="activityOutcome(item)" class="dash-list__meta">{{ activityOutcome(item) }}</span>
-                  </span>
-                  <time class="dash-list__time" :datetime="item.occurred_at">
-                    {{ formatRelative(item.occurred_at) }}
-                  </time>
-                </a>
               </li>
             </ul>
           </section>
@@ -562,7 +496,6 @@ const METRIC_META = [
   { key: 'completed_sessions', tone: 'success', labelKey: 'metric_completed', drawer: 'sessions' },
   { key: 'saved_sessions', tone: 'accent', labelKey: 'metric_saved', hrefPanel: 'saved' },
   { key: 'memorised_ayahs', tone: 'success', labelKey: 'metric_memorised', drawer: 'hifz' },
-  { key: 'ai_recite_attempts', tone: 'info', labelKey: 'metric_ai_recite', drawer: 'ai_checks' },
   { key: 'notes', tone: 'neutral', labelKey: 'metric_notes', drawer: 'notes' },
 ]
 
@@ -693,25 +626,6 @@ export default {
       }
       return this.t('dashboard.journey_continue_cta')
     },
-    journeyVersesLabel() {
-      const row = this.journeyContinue
-      if (!row) return ''
-      const start = Number(row.ayah_start || 0)
-      const end = Number(row.ayah_end || start)
-      if (start > 0 && end > 0 && start !== end) {
-        return this.t('dashboard.journey_verses_range', { start, end })
-      }
-      if (start > 0) return this.t('dashboard.journey_verse', { n: start })
-      return ''
-    },
-    journeyRememberedLabel() {
-      const row = this.journeyContinue
-      if (!row) return ''
-      const remembered = Number(row.remembered_count)
-      const total = Number(row.range_ayah_count)
-      if (!Number.isFinite(remembered) || !Number.isFinite(total) || total <= 0) return ''
-      return this.t('dashboard.journey_remembered', { remembered, total })
-    },
     journeyMemorisedCount() {
       const fromJourney = Number(this.journey?.overall?.memorised_ayah_count ?? 0)
       if (fromJourney > 0) return fromJourney
@@ -737,17 +651,6 @@ export default {
       const review = this.journey?.review
       if (!review || !review.surah_name || !review.href) return null
       return review
-    },
-    journeyReviewVersesLabel() {
-      const row = this.journeyReview
-      if (!row) return ''
-      const start = Number(row.ayah_start || 0)
-      const end = Number(row.ayah_end || start)
-      if (start > 0 && end > 0 && start !== end) {
-        return this.t('dashboard.journey_verses_range', { start, end })
-      }
-      if (start > 0) return this.t('dashboard.journey_verse', { n: start })
-      return ''
     },
     startBeginningHref() {
       return String(this.journey?.start_beginning_href || '').trim()
@@ -799,28 +702,6 @@ export default {
           href: meta.hrefPanel === 'saved' ? this.savedSessionsHref : null,
         }
       })
-    },
-    currentSurahStats() {
-      const memorised = Number(this.data?.progress?.memorised_ayah_count ?? 0)
-      const learning = Number(this.data?.progress?.learning_ayah_count ?? 0)
-      const promoteLearning = memorised === 0 && learning > 0
-
-      const memorisedStat = {
-        key: 'memorised',
-        value: memorised,
-        label: memorised === 0
-          ? this.t('dashboard.completed_count')
-          : this.t('dashboard.memorised_count'),
-        emphasis: promoteLearning ? 'dash-stat--secondary' : 'dash-stat--primary',
-      }
-      const learningStat = {
-        key: 'learning',
-        value: learning,
-        label: this.t('dashboard.in_progress_count'),
-        emphasis: promoteLearning ? 'dash-stat--primary' : 'dash-stat--secondary',
-      }
-
-      return promoteLearning ? [learningStat, memorisedStat] : [memorisedStat, learningStat]
     },
     surahProgress() {
       const progress = this.data?.progress

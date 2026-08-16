@@ -1327,11 +1327,7 @@ class DashboardService
                     'detected_at' => optional($assessment->created_at)->toIso8601String(),
                     'action_label' => 'Review this ayah',
                     'action_key' => 'action_review',
-                    'href' => $this->memorisationHref([
-                        'surah' => $surah,
-                        'from' => $ayah,
-                        'to' => $ayah,
-                    ]),
+                    'href' => $this->murajaahReviewHref($surah, $ayah),
                     'source' => 'assessment',
                 ]);
             }
@@ -1380,11 +1376,36 @@ class DashboardService
                     'detected_at' => optional($plan->updated_at ?? $plan->created_at)->toIso8601String(),
                     'action_label' => 'Review this ayah',
                     'action_key' => 'action_review',
-                    'href' => $this->memorisationHref([
-                        'surah' => $surah,
-                        'from' => $ayah,
-                        'to' => $ayah,
-                    ]),
+                    'href' => $this->murajaahReviewHref($surah, $ayah),
+                    'source' => 'practice_plan',
+                ]);
+            }
+
+            foreach ($this->weakAyahsFromWordRecords($weakWords, $surah) as $entry) {
+                $entrySurah = (int) $entry['surah'];
+                $ayah = (int) $entry['ayah'];
+                if ($entrySurah <= 0 || $ayah <= 0) {
+                    continue;
+                }
+                $key = $entrySurah.':'.$ayah;
+                if ($items->has($key)) {
+                    continue;
+                }
+                $phrase = isset($entry['phrase']) ? trim((string) $entry['phrase']) : '';
+                $items->put($key, [
+                    'key' => $key,
+                    'surah_number' => $entrySurah,
+                    'surah_name' => QuranMetadata::name($entrySurah),
+                    'ayah_number' => $ayah,
+                    'phrase' => $phrase !== '' ? $phrase : null,
+                    'explanation' => 'Your practice plan highlighted a word here that deserves another look.',
+                    'explanation_key' => 'weak_explain_plan',
+                    'status_label' => 'Worth reviewing',
+                    'status_key' => 'status_review',
+                    'detected_at' => optional($plan->updated_at ?? $plan->created_at)->toIso8601String(),
+                    'action_label' => 'Review this ayah',
+                    'action_key' => 'action_review',
+                    'href' => $this->murajaahReviewHref($entrySurah, $ayah),
                     'source' => 'practice_plan',
                 ]);
             }
@@ -1392,17 +1413,116 @@ class DashboardService
 
         $attempts = AiReciteAttempt::query()
             ->where('user_id', $user->id)
-            ->whereIn('band', ['weak', 'mixed', 'gentle', 'focused'])
             ->latest('id')
-            ->limit(5)
-            ->get();
+            ->limit(12)
+            ->get()
+            ->filter(function (AiReciteAttempt $attempt) {
+                $band = strtolower((string) ($attempt->band ?? ''));
+                if (in_array($band, ['weak', 'mixed', 'gentle', 'focused'], true)) {
+                    return true;
+                }
+
+                $weakWords = is_array($attempt->weak_words) ? $attempt->weak_words : [];
+                if ($weakWords !== []) {
+                    return true;
+                }
+
+                return $this->weakAyahsFromAiReciteAttempt($attempt) !== [];
+            })
+            ->take(8)
+            ->values();
+
+        $recommendations = SessionRecommendation::query()
+            ->where('user_id', $user->id)
+            ->whereNotNull('ai_assessment')
+            ->latest('id')
+            ->limit(8)
+            ->get(['id', 'surah_number', 'ai_assessment', 'updated_at', 'created_at']);
+
+        foreach ($recommendations as $recommendation) {
+            $assessment = is_array($recommendation->ai_assessment) ? $recommendation->ai_assessment : [];
+            $weakAyahs = is_array($assessment['weak_ayahs'] ?? null) ? $assessment['weak_ayahs'] : [];
+            $weakWords = is_array($assessment['weak_words'] ?? null) ? $assessment['weak_words'] : [];
+            if ($weakAyahs === [] && $weakWords === []) {
+                continue;
+            }
+
+            $range = is_array($assessment['ayah_range'] ?? null) ? $assessment['ayah_range'] : [];
+            $surah = (int) $recommendation->surah_number;
+            if ($surah <= 0) {
+                $surah = (int) ($range['surah'] ?? $range['surahId'] ?? $range['surah_number'] ?? $range['chapterId'] ?? 0);
+            }
+            if ($surah <= 0) {
+                continue;
+            }
+
+            $surahName = QuranMetadata::name($surah);
+            $detectedAt = isset($assessment['assessed_at'])
+                ? (string) $assessment['assessed_at']
+                : optional($recommendation->updated_at ?? $recommendation->created_at)->toIso8601String();
+
+            foreach ($weakAyahs as $ayahNumber) {
+                $ayah = (int) $ayahNumber;
+                if ($ayah <= 0) {
+                    continue;
+                }
+                $key = $surah.':'.$ayah;
+                if ($items->has($key)) {
+                    continue;
+                }
+                $phrase = $this->wordForAyah($weakWords, $ayah);
+                $items->put($key, [
+                    'key' => $key,
+                    'surah_number' => $surah,
+                    'surah_name' => $surahName,
+                    'ayah_number' => $ayah,
+                    'phrase' => $phrase,
+                    'explanation' => 'After your last recitation check, this ayah could use a soft review.',
+                    'explanation_key' => 'weak_explain_ai',
+                    'status_label' => 'Needs a gentle review',
+                    'status_key' => 'status_strengthen',
+                    'detected_at' => $detectedAt,
+                    'action_label' => 'Review this ayah',
+                    'action_key' => 'action_review',
+                    'href' => $this->murajaahReviewHref($surah, $ayah),
+                    'source' => 'ai_assessment',
+                ]);
+            }
+
+            foreach ($this->weakAyahsFromWordRecords($weakWords, $surah) as $entry) {
+                $entrySurah = (int) $entry['surah'];
+                $ayah = (int) $entry['ayah'];
+                if ($entrySurah <= 0 || $ayah <= 0) {
+                    continue;
+                }
+                $key = $entrySurah.':'.$ayah;
+                if ($items->has($key)) {
+                    continue;
+                }
+                $phrase = isset($entry['phrase']) ? trim((string) $entry['phrase']) : '';
+                $items->put($key, [
+                    'key' => $key,
+                    'surah_number' => $entrySurah,
+                    'surah_name' => QuranMetadata::name($entrySurah),
+                    'ayah_number' => $ayah,
+                    'phrase' => $phrase !== '' ? $phrase : null,
+                    'explanation' => 'After your last recitation check, this ayah could use a soft review.',
+                    'explanation_key' => 'weak_explain_ai',
+                    'status_label' => 'Needs a gentle review',
+                    'status_key' => 'status_strengthen',
+                    'detected_at' => $detectedAt,
+                    'action_label' => 'Review this ayah',
+                    'action_key' => 'action_review',
+                    'href' => $this->murajaahReviewHref($entrySurah, $ayah),
+                    'source' => 'ai_assessment',
+                ]);
+            }
+        }
 
         foreach ($attempts as $attempt) {
-            $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
-            $surah = (int) ($range['surah'] ?? $range['surahId'] ?? $range['surah_number'] ?? 0);
-            $weakWords = is_array($attempt->weak_words) ? $attempt->weak_words : [];
-            foreach (array_slice($weakWords, 0, 3) as $word) {
-                $ayah = (int) ($word['ayahNumber'] ?? $word['ayah_number'] ?? $word['ayah'] ?? 0);
+            foreach ($this->weakAyahsFromAiReciteAttempt($attempt) as $entry) {
+                $surah = (int) $entry['surah'];
+                $ayah = (int) $entry['ayah'];
                 if ($surah <= 0 || $ayah <= 0) {
                     continue;
                 }
@@ -1410,13 +1530,13 @@ class DashboardService
                 if ($items->has($key)) {
                     continue;
                 }
-                $text = trim((string) ($word['text'] ?? $word['word'] ?? ''));
+                $phrase = isset($entry['phrase']) ? trim((string) $entry['phrase']) : '';
                 $items->put($key, [
                     'key' => $key,
                     'surah_number' => $surah,
                     'surah_name' => QuranMetadata::name($surah),
                     'ayah_number' => $ayah,
-                    'phrase' => $text !== '' ? $text : null,
+                    'phrase' => $phrase !== '' ? $phrase : null,
                     'explanation' => 'After your last recitation check, this part could use a soft review.',
                     'explanation_key' => 'weak_explain_ai',
                     'status_label' => 'Needs a gentle review',
@@ -1424,11 +1544,7 @@ class DashboardService
                     'detected_at' => optional($attempt->created_at)->toIso8601String(),
                     'action_label' => 'Review this ayah',
                     'action_key' => 'action_review',
-                    'href' => $this->memorisationHref([
-                        'surah' => $surah,
-                        'from' => $ayah,
-                        'to' => $ayah,
-                    ]),
+                    'href' => $this->murajaahReviewHref($surah, $ayah),
                     'source' => 'ai_recite',
                 ]);
             }
@@ -1436,10 +1552,18 @@ class DashboardService
 
         $reviewing = MemorisationProgress::query()
             ->where('user_id', $user->id)
-            ->where('status', 'reviewing')
             ->orderByDesc('updated_at')
-            ->limit(6)
-            ->get();
+            ->limit(20)
+            ->get()
+            ->filter(function (MemorisationProgress $row) {
+                if ($row->status === 'reviewing') {
+                    return true;
+                }
+                $meta = is_array($row->metadata) ? $row->metadata : [];
+
+                return ($meta['ai_recite']['weak'] ?? false) === true;
+            })
+            ->take(6);
 
         foreach ($reviewing as $row) {
             $key = $row->surah_number.':'.$row->ayah_number;
@@ -1571,6 +1695,128 @@ class DashboardService
         }
 
         return null;
+    }
+
+    /**
+     * @return list<array{surah: int, ayah: int, phrase: ?string}>
+     */
+    private function weakAyahsFromWordRecords(array $words, int $defaultSurah = 0): array
+    {
+        $byKey = [];
+        $add = function (int $surah, int $ayah, ?string $phrase = null) use (&$byKey): void {
+            if ($surah <= 0 || $ayah <= 0) {
+                return;
+            }
+            $key = $surah.':'.$ayah;
+            if (! isset($byKey[$key])) {
+                $byKey[$key] = ['surah' => $surah, 'ayah' => $ayah, 'phrase' => $phrase];
+
+                return;
+            }
+            if ($phrase && empty($byKey[$key]['phrase'])) {
+                $byKey[$key]['phrase'] = $phrase;
+            }
+        };
+
+        foreach ($words as $word) {
+            if (! is_array($word)) {
+                continue;
+            }
+            [$surah, $ayah] = $this->resolveWordAyahRef($word, $defaultSurah, null);
+            $text = trim((string) ($word['text'] ?? $word['word'] ?? ''));
+            $add($surah, $ayah, $text !== '' ? $text : null);
+        }
+
+        return array_values($byKey);
+    }
+
+    /**
+     * @return list<array{surah: int, ayah: int, phrase: ?string}>
+     */
+    private function weakAyahsFromAiReciteAttempt(AiReciteAttempt $attempt): array
+    {
+        $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
+        $rangeSurah = (int) ($range['surah'] ?? $range['surahId'] ?? $range['surah_number'] ?? $range['chapterId'] ?? 0);
+        if ($rangeSurah <= 0 && $attempt->session_recommendation_id) {
+            $rangeSurah = (int) (SessionRecommendation::query()
+                ->whereKey($attempt->session_recommendation_id)
+                ->value('surah_number') ?? 0);
+        }
+        $from = (int) ($range['from'] ?? $range['rangeStart'] ?? $range['start'] ?? 0);
+        $to = (int) ($range['to'] ?? $range['rangeEnd'] ?? $range['end'] ?? $from);
+        $singleAyah = ($from > 0 && ($to <= 0 || $to === $from)) ? $from : null;
+
+        $byKey = [];
+        foreach ($this->weakAyahsFromWordRecords(is_array($attempt->weak_words) ? $attempt->weak_words : [], $rangeSurah) as $entry) {
+            $byKey[$entry['surah'].':'.$entry['ayah']] = $entry;
+        }
+
+        foreach (is_array($attempt->word_statuses) ? $attempt->word_statuses : [] as $status) {
+            if (! is_array($status)) {
+                continue;
+            }
+            $tone = strtolower((string) ($status['status'] ?? $status['result'] ?? $status['tone'] ?? ''));
+            if (! in_array($tone, ['wrong', 'error', 'missed', 'incorrect', 'weak', 'extra', 'missing', 'partial', 'minor_mistake', 'amber', 'omitted'], true)) {
+                continue;
+            }
+            [$surah, $ayah] = $this->resolveWordAyahRef($status, $rangeSurah, $singleAyah);
+            $text = trim((string) ($status['text'] ?? $status['word'] ?? ''));
+            $key = $surah.':'.$ayah;
+            if ($surah <= 0 || $ayah <= 0) {
+                continue;
+            }
+            if (! isset($byKey[$key])) {
+                $byKey[$key] = ['surah' => $surah, 'ayah' => $ayah, 'phrase' => $text !== '' ? $text : null];
+            } elseif ($text !== '' && empty($byKey[$key]['phrase'])) {
+                $byKey[$key]['phrase'] = $text;
+            }
+        }
+
+        $snapshot = is_array($attempt->plan_snapshot) ? $attempt->plan_snapshot : [];
+        $snapshotWeakAyahs = is_array($snapshot['weak_ayahs'] ?? null)
+            ? $snapshot['weak_ayahs']
+            : (is_array($snapshot['weakAyahs'] ?? null) ? $snapshot['weakAyahs'] : []);
+        foreach ($snapshotWeakAyahs as $ayahNumber) {
+            $ayah = (int) $ayahNumber;
+            if ($rangeSurah <= 0 || $ayah <= 0) {
+                continue;
+            }
+            $key = $rangeSurah.':'.$ayah;
+            if (! isset($byKey[$key])) {
+                $byKey[$key] = ['surah' => $rangeSurah, 'ayah' => $ayah, 'phrase' => null];
+            }
+        }
+
+        return array_values($byKey);
+    }
+
+    /**
+     * @return array{0: int, 1: int}
+     */
+    private function resolveWordAyahRef(array $word, int $rangeSurah, ?int $singleAyah): array
+    {
+        $surah = (int) ($word['surahNumber'] ?? $word['surah_number'] ?? $word['surah'] ?? $word['surahId'] ?? $word['chapterId'] ?? 0);
+        $ayah = (int) ($word['ayahNumber'] ?? $word['ayah_number'] ?? $word['ayah'] ?? 0);
+
+        $verseKey = trim((string) ($word['verseKey'] ?? $word['verse_key'] ?? $word['key'] ?? ''));
+        if ($verseKey !== '' && str_contains($verseKey, ':')) {
+            [$keySurah, $keyAyah] = array_map('intval', explode(':', $verseKey, 2));
+            if ($keySurah > 0) {
+                $surah = $keySurah;
+            }
+            if ($keyAyah > 0) {
+                $ayah = $keyAyah;
+            }
+        }
+
+        if ($surah <= 0) {
+            $surah = $rangeSurah;
+        }
+        if ($ayah <= 0 && $singleAyah !== null) {
+            $ayah = $singleAyah;
+        }
+
+        return [$surah, $ayah];
     }
 
     private function aiAttemptCoversAyah(AiReciteAttempt $attempt, int $surah, int $ayah): bool
@@ -2260,6 +2506,20 @@ class DashboardService
         $parts = preg_split('/\s+/', $name) ?: [];
 
         return $parts[0] ?: 'friend';
+    }
+
+    /**
+     * Deep-link into a muraja'ah revision session (not setup offcanvas / AI check).
+     */
+    private function murajaahReviewHref(int $surah, int $ayah): string
+    {
+        return $this->memorisationHref([
+            'surah' => $surah,
+            'from' => $ayah,
+            'to' => $ayah,
+            'review' => 1,
+            'return' => 'dashboard',
+        ]);
     }
 
     /**

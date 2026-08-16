@@ -474,6 +474,7 @@ class NextSessionRecommendationService
         }
 
         $colorCounts = $this->normalizeColorCounts($assessment['color_counts'] ?? null);
+        $assessment = $this->normaliseAiAssessmentWeaknesses($assessment, (int) $recommendation->surah_number);
 
         $recommendation->forceFill([
             'ai_assessment' => array_merge($assessment, [
@@ -2467,6 +2468,71 @@ class NextSessionRecommendationService
     }
 
     /**
+     * Ensure weak ayah numbers exist whenever the client sent weak word evidence.
+     *
+     * @param  array<string, mixed>  $assessment
+     * @return array<string, mixed>
+     */
+    private function normaliseAiAssessmentWeaknesses(array $assessment, int $defaultSurah = 0): array
+    {
+        $weakWords = is_array($assessment['weak_words'] ?? null) ? array_values($assessment['weak_words']) : [];
+        $attempts = is_array($assessment['attempts'] ?? null) ? $assessment['attempts'] : [];
+        if ($weakWords === [] && $attempts !== []) {
+            foreach ($attempts as $attempt) {
+                if (! is_array($attempt)) {
+                    continue;
+                }
+                $attemptWords = is_array($attempt['weak_words'] ?? null) ? $attempt['weak_words'] : [];
+                if ($attemptWords !== []) {
+                    $weakWords = array_values($attemptWords);
+                    break;
+                }
+            }
+        }
+
+        $weakAyahs = is_array($assessment['weak_ayahs'] ?? null) ? array_values($assessment['weak_ayahs']) : [];
+        if ($weakAyahs === [] && $weakWords !== []) {
+            $weakAyahs = $this->deriveWeakAyahNumbersFromWords($weakWords, $defaultSurah);
+        }
+
+        $assessment['weak_words'] = $weakWords;
+        $assessment['weak_ayahs'] = $weakAyahs;
+
+        return $assessment;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $words
+     * @return list<int>
+     */
+    private function deriveWeakAyahNumbersFromWords(array $words, int $defaultSurah = 0): array
+    {
+        $ayahs = [];
+        foreach ($words as $word) {
+            if (! is_array($word)) {
+                continue;
+            }
+            $ayah = (int) ($word['ayahNumber'] ?? $word['ayah_number'] ?? $word['ayah'] ?? 0);
+            $verseKey = trim((string) ($word['verseKey'] ?? $word['verse_key'] ?? $word['key'] ?? ''));
+            if ($ayah <= 0 && $verseKey !== '' && str_contains($verseKey, ':')) {
+                [, $keyAyah] = array_map('intval', explode(':', $verseKey, 2));
+                if ($keyAyah > 0) {
+                    $ayah = $keyAyah;
+                }
+            }
+            if ($ayah > 0) {
+                $ayahs[] = $ayah;
+            }
+        }
+
+        if ($ayahs === [] && $defaultSurah > 0) {
+            return [];
+        }
+
+        return array_values(array_unique($ayahs));
+    }
+
+    /**
      * Persist each AI Recite attempt (idempotent on recommendation + attempt_number).
      *
      * @param  array<string, mixed>  $assessment
@@ -2535,7 +2601,10 @@ class NextSessionRecommendationService
             );
         }
 
-        $this->rollupAiReciteProgress($user, $recommendation, $assessment);
+        $this->rollupAiReciteProgress($user, $recommendation, $this->normaliseAiAssessmentWeaknesses(
+            $assessment,
+            (int) $recommendation->surah_number
+        ));
     }
 
     /**
@@ -2545,12 +2614,15 @@ class NextSessionRecommendationService
      */
     private function rollupAiReciteProgress(User $user, SessionRecommendation $recommendation, array $assessment): void
     {
+        $range = is_array($assessment['ayah_range'] ?? null) ? $assessment['ayah_range'] : null;
         $surah = (int) ($recommendation->surah_number ?? 0);
+        if (! $surah && is_array($range)) {
+            $surah = (int) ($range['surah'] ?? $range['surahId'] ?? $range['surah_number'] ?? $range['chapterId'] ?? 0);
+        }
         $weakAyahs = is_array($assessment['weak_ayahs'] ?? null) ? $assessment['weak_ayahs'] : [];
         $accuracy = isset($assessment['average_accuracy'])
             ? (float) $assessment['average_accuracy']
             : (isset($assessment['accuracy_percent']) ? (float) $assessment['accuracy_percent'] : null);
-        $range = is_array($assessment['ayah_range'] ?? null) ? $assessment['ayah_range'] : null;
         $from = (int) ($range['from'] ?? $recommendation->ayah_start ?? 0);
         $to = (int) ($range['to'] ?? $recommendation->ayah_end ?? $from);
         if (! $surah || ! $from || ! $to || $to < $from) {
@@ -2589,13 +2661,17 @@ class NextSessionRecommendationService
                 ]);
             }
             $meta = is_array($row->metadata) ? $row->metadata : [];
+            $isWeak = isset($weakSet[$ayah]);
             $meta['ai_recite'] = [
                 'last_accuracy' => $accuracy,
-                'weak' => isset($weakSet[$ayah]),
+                'weak' => $isWeak,
                 'recommendation_id' => $recommendation->id,
                 'updated_at' => $updatedAt,
             ];
             $row->metadata = $meta;
+            if ($isWeak && ! in_array((string) $row->status, ['memorised', 'mastered'], true)) {
+                $row->status = 'reviewing';
+            }
             $row->save();
         }
     }

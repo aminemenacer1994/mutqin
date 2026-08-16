@@ -232,7 +232,7 @@
         <div class="workspace-shell-head" :class="{ 'is-idle': showSessionOverviewIdleActions }">
           <template v-if="hasVerses || isPostSessionChoiceVisible">
           <div class="workspace-shell-copy">
-            <span class="workspace-shell-kicker">{{ t('memorisation.sessionOverview.kicker') }}</span>
+            <span class="workspace-shell-kicker">{{ workspaceShellKicker }}</span>
             <h1 class="workspace-shell-main-title" :aria-label="topCardSessionLabel">
               <template v-if="topCardSurahArabic || topCardSurahLatin">
                 <span v-if="topCardSurahLatin" class="workspace-shell-surah-en" lang="en">{{ topCardSurahLatin }}</span>
@@ -245,6 +245,8 @@
               </template>
               <template v-else>{{ topCardSessionLabel }}</template>
             </h1>
+            <p v-if="workspaceShellSubtitle" class="workspace-shell-subtitle">{{ workspaceShellSubtitle }}</p>
+            <p v-if="workspaceShellHint" class="workspace-shell-hint">{{ workspaceShellHint }}</p>
           </div>
           <!-- Direct child of head so mobile grid placement cannot swallow these icons -->
           <div class="top-card-icon-controls" aria-label="Reading tools">
@@ -494,6 +496,8 @@
             <div v-if="shouldShowWorkspaceJourney || workspaceJourneyTitle" class="workspace-shell-copy">
               <span class="workspace-shell-kicker">{{ t('memorisation.workspaceJourney.kicker') }}</span>
               <h1 class="workspace-shell-main-title">{{ workspaceJourneyTitle }}</h1>
+              <p v-if="workspaceJourneyNextLine" class="workspace-shell-subtitle">{{ workspaceJourneyNextLine }}</p>
+              <p v-if="workspaceJourneyStatsLine" class="workspace-shell-hint">{{ workspaceJourneyStatsLine }}</p>
               <a
                 v-if="isLoggedIn"
                 class="workspace-shell-path"
@@ -536,7 +540,7 @@
         >
           <!-- Source-guard reference: class="workspace-header-view-controls quick-right-controls" -->
           <div
-            v-if="topCardMetadataPills.length && !isPostSessionChoiceVisible"
+            v-if="topCardMetadataPills.length"
             class="workspace-shell-bottom-pills"
           >
             <div
@@ -1107,7 +1111,6 @@
                   <span class="st-ico"><i class="bi bi-journal-text"></i></span>
                   <span class="st-txt">
                     <span class="st-title">{{ t('sessionSetup.title') }}</span>
-                    <span class="st-sub">{{ t('sessionSetup.subtitle') }}</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_setup }"><i
@@ -1173,7 +1176,6 @@
                   <span class="st-ico"><i class="bi bi-mic"></i></span>
                   <span class="st-txt">
                     <span class="st-title">{{ t('memorisation.audio.title') }}</span>
-                    <span class="st-sub">{{ t('memorisation.playback_settings') }}</span>
                   </span>
                 </span>
                 <span class="st-chev" :class="{ open: sectionOpen.advanced_playback }"><i
@@ -1231,7 +1233,7 @@
                   <span class="st-ico"><i class="bi bi-bullseye"></i></span>
                   <span class="st-txt">
                     <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('focus') }}</span>
-                    <span class="st-sub">{{ getTechniqueDisplayDescription('focus') }}</span>
+                    <span class="st-sub">{{ getTechniqueDisplaySummary('focus') }}</span>
                   </span>
                 </span>
                 <div class="st-right-group">
@@ -1277,7 +1279,7 @@
                   <span class="st-ico"><i class="bi bi-cloud-haze2"></i></span>
                   <span class="st-txt">
                     <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('blur') }}</span>
-                    <span class="st-sub">{{ getTechniqueDisplayDescription('blur') }}</span>
+                    <span class="st-sub">{{ getTechniqueDisplaySummary('blur') }}</span>
                   </span>
                 </span>
                 <div class="st-right-group">
@@ -1322,7 +1324,7 @@
                   <span class="st-ico"><i class="bi bi-soundwave"></i></span>
                   <span class="st-txt">
                     <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('talqin') }}</span>
-                    <span class="st-sub">{{ getTechniqueDisplayDescription('talqin') }}</span>
+                    <span class="st-sub">{{ getTechniqueDisplaySummary('talqin') }}</span>
                   </span>
                 </span>
                 <div class="st-right-group">
@@ -1446,7 +1448,7 @@
                   <span class="st-ico"><i class="bi bi-pin-angle-fill"></i></span>
                   <span class="st-txt">
                     <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('anchor') }}</span>
-                    <span class="st-sub">{{ getTechniqueDisplayDescription('anchor') }}</span>
+                    <span class="st-sub">{{ getTechniqueDisplaySummary('anchor') }}</span>
                   </span>
                 </span>
                 <div class="st-right-group">
@@ -1466,7 +1468,7 @@
                   <div class="field">
                     <div class="technique-description">
                       <i class="bi bi-info-circle-fill"></i>
-                      <span>{{ t('memorisation.highlights_key_words_as_memory_anchors_to_help_rec') }}</span>
+                      <span>{{ getTechniqueDisplayDescription('anchor') }}</span>
                     </div>
                     <div class="technique-best">
                       <i class="bi bi-check-circle-fill"></i>
@@ -2140,8 +2142,8 @@
         aria-labelledby="sessionExitTitle"
         aria-describedby="sessionExitDescription"
       >
-        <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog w-100">
-          <div class="modal-content mutqin-modal-surface session-exit-modal confirm-modal w-100">
+        <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog">
+          <div class="modal-content mutqin-modal-surface session-exit-modal confirm-modal">
             <button
               class="modal-close-btn"
               type="button"

@@ -6917,11 +6917,11 @@ html {
   position: relative;
   display: inline-grid;
   place-items: center;
-  flex: 0 0 34px;
-  min-width: 34px;
-  max-width: 34px;
-  width: 34px;
-  height: 34px;
+  flex: 0 0 32px;
+  min-width: 32px;
+  max-width: 32px;
+  width: 32px;
+  height: 32px;
   aspect-ratio: 1 / 1;
   padding: 0;
   border-radius: 50%;
@@ -6942,7 +6942,7 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 0.88rem;
   color: rgba(154, 103, 56, 0.72);
   transition: color 0.18s ease, transform 0.18s ease;
 }
@@ -6982,7 +6982,7 @@ html {
 .st-right-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
 .st-right-group .toggle-chip {
@@ -7578,14 +7578,15 @@ html {
 .st-chev {
   width: 28px;
   height: 28px;
-  border-radius: 10px;
+  border-radius: 8px;
   display: grid;
   place-items: center;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.78);
   color: rgba(0, 0, 0, 0.65);
   transition: transform 0.15s ease;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
+  font-size: 0.72rem;
 }
 
 .st-chev.open {
@@ -8337,6 +8338,22 @@ html {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+.workspace-shell-subtitle {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted, #6d6258);
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.workspace-shell-hint {
+  margin: 0.15rem 0 0;
+  max-width: 36rem;
+  color: var(--text-muted, #6d6258);
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .workspace-shell-copy h1 {
@@ -35360,9 +35377,9 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   inset: 0;
   z-index: 12600;
   pointer-events: auto;
-  background: color-mix(in srgb, #0a100d 68%, transparent);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: var(--mutqin-modal-backdrop) !important;
+  backdrop-filter: blur(var(--mutqin-modal-backdrop-blur)) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(var(--mutqin-modal-backdrop-blur)) saturate(1.15) !important;
 }
 
 [data-theme="light"] .session-exit-backdrop {
@@ -36524,15 +36541,15 @@ but not its destructive red. */
 }
 
 .tools-body .mode-radio {
-  width: 30px;
-  min-width: 30px;
-  height: 30px;
-  min-height: 30px;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
 }
 
 .tools-body .st-chev {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
   box-shadow: none;
 }
@@ -43069,11 +43086,18 @@ body,
 
   .tools-body .mode-radio,
 .tools-body .st-chev {
-    flex: 0 0 44px;
-    inline-size: 44px;
-    min-inline-size: 44px;
-    block-size: 44px;
-    min-block-size: 44px;
+    flex: 0 0 auto;
+    inline-size: 32px;
+    min-inline-size: 32px;
+    block-size: 32px;
+    min-block-size: 32px;
+  }
+
+  .tools-body .st-chev {
+    inline-size: 28px;
+    min-inline-size: 28px;
+    block-size: 28px;
+    min-block-size: 28px;
   }
 
   .field-stack,
@@ -51790,7 +51814,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani 
   }
 
   .workspace-shell-bottom--post-session {
-    justify-content: flex-end;
+    justify-content: space-between;
   }
 
   .top-card-menu .top-card-menu-toggle--layout {
@@ -52583,9 +52607,9 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
-  width: min(44rem, calc(100vw - 1.1rem)) !important;
-  max-width: min(44rem, calc(100vw - 1.1rem)) !important;
-  max-height: min(92dvh, 920px);
+  width: min(44rem, calc(100vw - 1.5rem)) !important;
+  max-width: min(44rem, calc(100vw - 1.5rem)) !important;
+  max-height: min(88vh, 820px);
   overflow: hidden;
   border-radius: 1.1rem;
   background: var(--ps-cream) !important;
@@ -56026,10 +56050,12 @@ never recolour tajweed text */
     width: auto !important;
   }
 
-  /* Post-session choice stays flex; order already puts buttons before icons */
+  /* Post-session uses the same desktop grid so copy, CTAs, and icons share one row */
   .workspace-shell--post-session-choice .workspace-shell-head {
-    display: flex !important;
-    grid-template-columns: none !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
+    grid-template-rows: auto !important;
+    align-items: center !important;
   }
 }
 

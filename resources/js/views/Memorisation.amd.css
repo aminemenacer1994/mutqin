@@ -27,9 +27,9 @@
 }
 
 .amd-modal {
-  max-width: min(92vw, 1500px);
-  width: min(88vw, 1500px);
-  max-height: min(92dvh, 100vh);
+  max-width: min(920px, calc(100vw - 2rem));
+  width: min(920px, calc(100vw - 2rem));
+  max-height: min(94vh, 980px);
   border-radius: 20px;
   overflow: hidden;
   display: flex;
@@ -2575,32 +2575,31 @@
   display: none;
 }
 
-/* —— Spacious AI memorisation / check modal shell —— */
+/* —— AI memorisation / check modal shell —— */
 .amd-overlay {
-  --amd-modal-width: min(88vw, 1500px);
-  --amd-modal-max-height: min(92dvh, 100vh);
-  padding: clamp(0.5rem, 1.5vw, 1.25rem);
+  --amd-modal-width: min(920px, calc(100vw - 2rem));
+  --amd-modal-max-height: min(94vh, 980px);
+  padding: clamp(0.75rem, 2vw, 1.25rem);
   overflow: hidden;
+  background: var(--mutqin-modal-backdrop, color-mix(in srgb, #0a100d 58%, transparent)) !important;
+  backdrop-filter: blur(var(--mutqin-modal-backdrop-blur, 10px)) saturate(1.12);
+  -webkit-backdrop-filter: blur(var(--mutqin-modal-backdrop-blur, 10px)) saturate(1.12);
 }
 
 .amd-overlay .amd-dialog.mutqin-modal-dialog,
-.amd-overlay .amd-dialog.mutqin-modal-dialog--full,
-.amd-overlay .amd-dialog.amd-dialog--spacious {
+.amd-overlay .amd-dialog.mutqin-modal-dialog--wide {
   width: var(--amd-modal-width) !important;
   max-width: var(--amd-modal-width) !important;
-  height: var(--amd-modal-max-height);
   max-height: var(--amd-modal-max-height);
   margin: 0 !important;
   display: flex;
   flex-direction: column;
 }
 
-.amd-modal--spacious,
-.amd-modal.amd-modal--premium.amd-modal--spacious {
+.amd-modal.amd-modal--premium {
   width: 100% !important;
   max-width: none !important;
-  height: 100%;
-  max-height: none;
+  max-height: var(--amd-modal-max-height);
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -2630,10 +2629,10 @@
 
 .amd-mushaf-shell--primary {
   flex: 1 1 auto;
-  min-height: 0;
+  min-height: min(42vh, 420px);
   width: 100%;
   max-width: none;
-  max-height: min(58vh, 560px);
+  max-height: min(52vh, 520px);
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -2761,39 +2760,8 @@
   }
 }
 
-/* Mobile: true full-screen shell */
+/* Mobile: inset card — sizing consolidated in the later mobile block below */
 @media (max-width: 720px) {
-  .amd-overlay {
-    --amd-modal-width: 100vw;
-    --amd-modal-max-height: 100dvh;
-    padding: 0;
-    align-items: stretch;
-  }
-
-  .amd-overlay .amd-dialog.mutqin-modal-dialog,
-  .amd-overlay .amd-dialog.mutqin-modal-dialog--full,
-  .amd-overlay .amd-dialog.amd-dialog--spacious {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    border-radius: 0;
-  }
-
-  .amd-modal--spacious,
-  .amd-modal.amd-modal--premium.amd-modal--spacious {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-height: 100dvh;
-    height: 100dvh;
-    border-radius: 0;
-    border: 0;
-  }
-
-  .amd-header--sticky {
-    border-radius: 0;
-  }
-
   .amd-footer,
   .amd-footer--sticky {
     padding-inline: 0.75rem;
@@ -2801,8 +2769,8 @@
   }
 
   .amd-mushaf-shell--primary {
-    min-height: 0 !important;
-    max-height: min(52dvh, 420px) !important;
+    min-height: min(36vh, 360px) !important;
+    max-height: min(48dvh, 440px) !important;
   }
 
   .amd-body--scroll {
@@ -2817,12 +2785,12 @@
 
 @media (min-width: 1280px) {
   .amd-overlay {
-    --amd-modal-width: min(90vw, 1500px);
+    --amd-modal-width: min(920px, calc(100vw - 2rem));
   }
 
   .amd-mushaf-shell--primary {
-    min-height: 0;
-    max-height: min(60vh, 640px) !important;
+    min-height: min(42vh, 420px);
+    max-height: min(56vh, 560px) !important;
   }
 
   .amd-mushaf-shell--primary .amd-mushaf-ayah--premium {
@@ -3299,32 +3267,23 @@
 
 @media (max-width: 720px) {
   .amd-overlay {
-    align-items: stretch !important;
-    justify-content: stretch !important;
-    padding: 0 !important;
-    inset: 0;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: max(0.75rem, env(safe-area-inset-top, 0px)) 0.75rem max(0.75rem, env(safe-area-inset-bottom, 0px)) !important;
   }
 
-  .amd-dialog--spacious,
-  .amd-overlay .mutqin-modal-dialog.amd-dialog--spacious {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    max-height: 100dvh !important;
-    margin: 0 !important;
-    border-radius: 0 !important;
+  .amd-overlay .mutqin-modal-dialog.amd-dialog,
+  .amd-overlay .amd-dialog.mutqin-modal-dialog--wide {
+    width: min(100%, calc(100vw - 1.25rem)) !important;
+    max-width: min(100%, calc(100vw - 1.25rem)) !important;
+    max-height: min(94dvh, calc(100dvh - 1.5rem)) !important;
+    margin: 0 auto !important;
+    border-radius: 1rem !important;
   }
 
-  .amd-modal--premium.amd-modal--spacious,
-  .amd-modal.amd-modal--premium.amd-modal--spacious {
-    width: 100% !important;
-    max-width: none !important;
-    height: 100% !important;
-    min-height: 100dvh !important;
-    max-height: 100dvh !important;
-    border-radius: 0 !important;
-    border: 0 !important;
+  .amd-modal.amd-modal--premium {
+    max-height: min(94dvh, calc(100dvh - 1.5rem)) !important;
+    border-radius: 1rem !important;
   }
 
   .amd-header--sticky {
@@ -3950,9 +3909,9 @@
    ========================================================================== */
 
 .amd-overlay {
-  background: rgba(28, 25, 23, 0.48);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: var(--mutqin-modal-backdrop, color-mix(in srgb, #0a100d 58%, transparent)) !important;
+  backdrop-filter: blur(var(--mutqin-modal-backdrop-blur, 10px)) saturate(1.12);
+  -webkit-backdrop-filter: blur(var(--mutqin-modal-backdrop-blur, 10px)) saturate(1.12);
 }
 
 .amd-modal--premium.amd-modal--spacious {

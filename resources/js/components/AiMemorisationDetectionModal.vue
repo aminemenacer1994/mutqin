@@ -10,12 +10,12 @@
     >
       <div
         ref="dialog"
-        class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full amd-dialog amd-dialog--spacious"
+        class="modal-dialog modal-dialog-centered mutqin-modal-dialog mutqin-modal-dialog--wide amd-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="amdModalTitle"
       >
-        <div class="modal-content mutqin-modal-surface amd-modal amd-modal--mushaf amd-modal--test amd-modal--premium amd-modal--spacious">
+        <div class="modal-content mutqin-modal-surface amd-modal amd-modal--mushaf amd-modal--test amd-modal--premium">
           <header class="amd-header amd-header--premium amd-header--sticky">
             <div class="amd-header-copy">
               <div class="amd-title-row">

@@ -479,7 +479,15 @@
       "placeWaiting": "موضعك: {surah}، {verses}",
       "reviewWaiting": "مراجعة: {surah}",
       "ayahsKept": "{n} آيات في حفظك",
-      "streak": "{n} أيام مع القرآن"
+      "streak": "{n} أيام مع القرآن",
+      "overallPercent": "{n}% من القرآن",
+      "reviewChip": "راجع {surah}",
+      "rangeProgress": "هذه المجموعة",
+      "tour": "جولة سريعة",
+      "guidanceStart": "اختر مجموعة قصيرة للبدء. تقدّمك يظهر في لوحة حفظك.",
+      "guidanceContinue": "افتح لوحة حفظك لترى ما حفظته وما يلي.",
+      "guidanceActive": "استمع، كرّر كل آية، ثم اختبر نفسك عندما تكون جاهزاً.",
+      "guidanceReview": "المراجعة تنتظر — راجع {surah} لتثبيتها."
     },
     "workspaceEmpty": {
       "kicker": "بسم الله",

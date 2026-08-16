@@ -148,6 +148,7 @@ import {
 } from '../scripts/session/sessionPracticeCoach'
 import {
   getTechniqueDescription,
+  getTechniqueSummary,
   getTechniqueLabel,
   resolveTechniqueDisplay,
 } from '../scripts/techniques/techniqueDisplay'
@@ -1038,6 +1039,7 @@ export default {
       amdMistakeFeedback: null,
       amdHiddenWordIndexes: [],
       amdHiddenSeedAttempt: 0,
+      amdSeedHtml: '',
       amdExpectedCursor: 0,
       amdFrozenAtWordIndex: null,
       amdEndingSoon: false,
@@ -1544,6 +1546,32 @@ export default {
         ? this.t('memorisation.workspaceJourney.kicker')
         : this.t('memorisation.sessionOverview.kicker')
     },
+    workspaceShellKicker() {
+      if (this.isPostSessionChoiceVisible) {
+        return this.t('memorisation.postSessionChoice.title')
+      }
+      return this.t('memorisation.sessionOverview.kicker')
+    },
+    workspaceShellSubtitle() {
+      if (!this.isPostSessionChoiceVisible || !this.hasVerses) return ''
+      const start = Math.max(1, Number(this.rangeStart || 1))
+      const end = Math.max(start, Number(this.rangeEnd || start))
+      const range = formatAyahRangeLabel({ start, end }, this.t.bind(this))
+      if (this.postSessionProgress?.label) {
+        return `${this.postSessionProgress.label} · ${range}`
+      }
+      return range
+    },
+    workspaceShellHint() {
+      if (this.isPostSessionChoiceVisible) {
+        const progress = this.postSessionProgress
+        if (progress?.detail) {
+          return `${this.t('memorisation.postSessionChoice.desc')} ${progress.detail}`
+        }
+        return this.t('memorisation.postSessionChoice.desc')
+      }
+      return ''
+    },
     journeyMemorisedCount() {
       return Number(this.learnerJourney?.overall?.memorised_ayah_count ?? 0)
     },
@@ -1575,7 +1603,6 @@ export default {
     },
     workspaceJourneyStatsLine() {
       const parts = []
-      if (this.journeyRememberedLabel) parts.push(this.journeyRememberedLabel)
       if (this.journeyMemorisedCount > 0) {
         parts.push(this.t('memorisation.workspaceJourney.ayahsKept', { n: this.journeyMemorisedCount }))
       }
@@ -5850,7 +5877,7 @@ export default {
       }
     },
     chainingMethodDescription() {
-      if (!this.chainingEnabled) return this.getTechniqueDisplayDescription('chaining')
+      if (!this.chainingEnabled) return this.getTechniqueDisplaySummary('chaining')
       if (!this.hasChainingMethodSelected) return 'Choose linking or cumulative before starting.'
       if (this.chainingMethod === 'cumulative') return this.t('memorisation.techniques.chainingCumulativeSub')
       return this.t('memorisation.techniques.chainingLinkingSub')
@@ -6347,7 +6374,7 @@ export default {
     // Seed HTML only — live recognition pushes via syncAmdMushafSurface() so Vue
     // does not re-patch the modal on every recognised word.
     amdStaticAyahHtml() {
-      return this._amdSeedHtml || ''
+      return this.amdSeedHtml || ''
     },
     amdResultAyahHtml() {
       if (!this.amdAssessment && !this.recitationCheckResult) return ''
@@ -8732,6 +8759,22 @@ export default {
     },
     amdOpen(newVal) {
       this.syncBodyScrollLock(!!newVal || this.isAnyModalOverlayActive)
+    },
+    verses() {
+      if (!this.amdOpen) return
+      this.$nextTick(() => {
+        if (this.getRecitationTargetText(this.recitationCheckPendingTargets)?.trim()) {
+          this.syncAmdMushafSurface({ force: true })
+        }
+      })
+    },
+    mushafDisplayVerses() {
+      if (!this.amdOpen) return
+      this.$nextTick(() => {
+        if (this.getRecitationTargetText(this.recitationCheckPendingTargets)?.trim()) {
+          this.syncAmdMushafSurface({ force: true })
+        }
+      })
     },
     recitationCheckRecording(newVal) {
       if (!this.amdOpen) return
@@ -14173,6 +14216,7 @@ export default {
             pronunciation_issues: extras.pronunciation_issues,
             accuracy_percent: extras.accuracy_percent,
             color_counts: extras.color_counts,
+            ...this.buildAiReciteAssessmentPersistExtras(result, extras),
             ...this.personalPlanPersistPayload(),
           }
         )
@@ -18882,9 +18926,10 @@ export default {
       try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
       this.recitationCheckDiscardOnStop = false
       await this.ensureAmdTajweedMarkup()
+      await this.ensureAmdTargetsHaveArabic()
       this.rebuildAmdHiddenWordMask()
       // AMD uses CSS-only hidden text (no aiRecallMode DOM mutation — that crashes Vue Teleport).
-      this._amdSeedHtml = this.buildAmdMushafHtml({ live: true })
+      this.amdSeedHtml = this.buildAmdMushafHtml({ live: true })
       // Ready state — learner starts listening via the Start recitation icon.
       this.amdStage = AMD_STAGES.READY
       this.amdEntrySource = fromDashboardReview ? 'dashboard-review' : 'test-with-ai'
@@ -18956,6 +19001,92 @@ export default {
         this.clearVerseCache?.(this.currentMode)
         await this.loadVerses?.(this.currentMode)
       } catch (_) { /* keep whatever markup we have */ }
+    },
+    async ensureAmdTargetsHaveArabic() {
+      const readTargets = () => (
+        this.recitationCheckPendingTargets?.length
+          ? this.recitationCheckPendingTargets
+          : this.getRecitationCheckTargetVerses()
+      )
+      let targets = readTargets()
+      if (!targets.length) return false
+
+      const hasArabic = (list) => list.some((target) => {
+        const verse = this.getCanonicalVerseForCheck(target) || target
+        return !!String(this.getPlainVerseArabicForCheck(verse) || '').trim()
+      })
+      if (hasArabic(targets)) return true
+
+      const chapterId = Number(
+        targets[0]?.chapterId
+        || String(targets[0]?.key || '').split(':')[0]
+        || this.chapterId
+        || 0,
+      )
+      if (!chapterId) return false
+
+      try {
+        this.chapterId = chapterId
+        await this.loadVerses(this.currentMode)
+      } catch (error) {
+        console.warn('Failed to load ayah text for AI memorisation check:', error)
+      }
+
+      if (Array.isArray(this.recitationCheckPendingTargets) && this.recitationCheckPendingTargets.length) {
+        this.recitationCheckPendingTargets = this.recitationCheckPendingTargets.map((target) => {
+          const canonical = this.getCanonicalVerseForCheck(target) || target
+          const ref = this.buildSelfCheckVerseRef(canonical || target)
+          return ref ? { ...ref, ...canonical } : canonical
+        }).filter(Boolean)
+      }
+
+      targets = readTargets()
+      return hasArabic(targets)
+    },
+    buildAiReciteAssessmentPersistExtras(result = null, extras = {}) {
+      const attempts = Array.isArray(this.aiReciteAttempts) ? this.aiReciteAttempts : []
+      const latestResult = extras._result || attempts[attempts.length - 1]?.result || null
+      const weakWords = normaliseWeakWordRecords(
+        this.practiceFocusWeakWords?.length
+          ? this.practiceFocusWeakWords
+          : (latestResult?.weakWords || latestResult?.weak_words || []),
+      )
+      const snap = this.postSessionSnapshot || {}
+      const ayahRange = {
+        from: Number(snap.rangeStart || this.rangeStart || 1),
+        to: Number(snap.rangeEnd || this.rangeEnd || snap.rangeStart || 1),
+        surahId: Number(snap.chapterId || this.chapterId || 0),
+      }
+      const outcome = String(result || extras.result || 'mixed').toLowerCase()
+      const band = outcome === 'strong' ? 'strong' : (outcome === 'weak' ? 'weak' : 'mixed')
+      const mappedAttempts = attempts.length
+        ? attempts.map((attempt, index) => ({
+          attempt_number: index + 1,
+          accuracy: attempt.accuracy ?? attempt.accuracyPercent,
+          band,
+          ayah_range: ayahRange,
+          color_counts: attempt.result?.colorCounts || extras.color_counts || null,
+          weak_words: weakWords,
+          word_statuses: attempt.result?.wordStatuses || [],
+        }))
+        : (latestResult ? [{
+          attempt_number: 1,
+          accuracy: extras.accuracy_percent ?? null,
+          band,
+          ayah_range: ayahRange,
+          color_counts: extras.color_counts || latestResult.colorCounts || null,
+          weak_words: weakWords,
+          word_statuses: latestResult.wordStatuses || [],
+        }] : [])
+
+      return {
+        weak_words: weakWords,
+        average_accuracy: extras.accuracy_percent ?? this.aiReciteAverageAccuracy ?? null,
+        accuracy_percent: extras.accuracy_percent ?? this.aiReciteAverageAccuracy ?? null,
+        attempt_count: mappedAttempts.length || 1,
+        ayah_range: ayahRange,
+        attempts: mappedAttempts,
+      }
     },
     markAmdHowtoSeen() {
       this.amdHowtoSeen = true
@@ -19111,7 +19242,7 @@ export default {
         live,
         result: live ? null : (this.recitationCheckResult || this.amdAssessment),
       })
-      this._amdSeedHtml = html
+      this.amdSeedHtml = html
       this._amdLastPushedHtml = html
       const modal = this.$refs.amdModal
       if (modal?.setMushafHtml) {
@@ -19797,7 +19928,7 @@ export default {
       }
       this.amdTajweedEnabled = false
       this.rebuildAmdHiddenWordMask({ bumpAttempt: !!options.bumpMask })
-      this._amdSeedHtml = this.buildAmdMushafHtml({ live: true })
+      this.amdSeedHtml = this.buildAmdMushafHtml({ live: true })
       this.amdStage = AMD_STAGES.READY
       this.$nextTick(() => this.syncAmdMushafSurface())
     },
@@ -27760,6 +27891,9 @@ export default {
     },
     getTechniqueDisplayDescription(techniqueId) {
       return getTechniqueDescription(techniqueId, this.t.bind(this))
+    },
+    getTechniqueDisplaySummary(techniqueId) {
+      return getTechniqueSummary(techniqueId, this.t.bind(this))
     },
     getTechniqueDisplay(techniqueId, options = {}) {
       return resolveTechniqueDisplay(techniqueId, this.t.bind(this), options)

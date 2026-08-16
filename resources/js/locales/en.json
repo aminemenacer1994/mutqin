@@ -482,7 +482,15 @@
       "placeWaiting": "Memorising {surah}",
       "reviewWaiting": "Muraja'ah: {surah}",
       "ayahsKept": "{n} ayahs in your hifz",
-      "streak": "{n} days with the Qur'an"
+      "streak": "{n} days with the Qur'an",
+      "overallPercent": "{n}% of the Qur'an",
+      "reviewChip": "Revise {surah}",
+      "rangeProgress": "This set",
+      "tour": "Quick tour",
+      "guidanceStart": "Pick a short set to begin. Your progress stays on your dashboard.",
+      "guidanceContinue": "Open your dashboard to see what you have kept and what is next.",
+      "guidanceActive": "Listen, repeat each ayah, then test yourself when you feel ready.",
+      "guidanceReview": "Muraja'ah is waiting — revise {surah} to keep it firm."
     },
     "workspaceEmpty": {
       "kicker": "Bismillah",
@@ -2376,12 +2384,12 @@
     "no_matching_ayahs_found_for_this_passage_and_filte": "No matching ayahs found for this passage and filter.",
     "techniques": {
       "focusDescription": "Concentrate on one ayah before moving forward",
-      "chainingOffDescription": "Link each ayah to the next and practise the range as one continuous sequence.",
-      "chainingCumulativeDescription": "Build longer runs by adding one ayah at a time.",
-      "chainingLinkingDescription": "Strengthen transitions between neighbouring ayahs.",
+      "chainingOffDescription": "Neighbouring ayahs are linked into one flowing sequence. Choose linking (pairs) or cumulative (growing passage) below.",
+      "chainingCumulativeDescription": "Each step adds the next ayah while repeating everything learned so far — like building a longer run from the start.",
+      "chainingLinkingDescription": "You repeat each ayah alone, then the next, then both together — so the hand-off between them gets smoother.",
       "chainingLinkingHint": "Practice ayahs individually, then in pairs.",
       "chainingCumulativeHint": "Start with first ayah, then add one more each time.",
-      "chainingOffSub": "Link each ayah to the next and practise the range as one continuous sequence.",
+      "chainingOffSub": "Practise smooth transitions between ayahs",
       "chainingCumulativeSub": "Build longer connected runs from the first ayah outward.",
       "chainingLinkingSub": "Train the transition between neighbouring ayahs.",
       "chainingOffPreview": "Flow: selected ayahs in order, each ayah repeated {count} times.",
@@ -2545,37 +2553,44 @@
       "talqin": {
         "label": "Listen and repeat",
         "short": "Listen and repeat",
-        "description": "Listen to each section, then repeat it"
+        "summary": "Hear it first, then recite it back",
+        "description": "Mutqin plays each section for you. Listen closely, then pause and repeat from memory before moving on."
       },
       "focus": {
         "label": "One ayah at a time",
         "short": "One ayah at a time",
-        "description": "Concentrate on one ayah before moving forward"
+        "summary": "Lock in one ayah before the next appears",
+        "description": "Everything else dims while you work on the active ayah. The next ayah stays hidden until you finish this one."
       },
       "blur": {
         "label": "Gradually hide the text",
         "short": "Gradually hide the text",
-        "description": "Hide more of the text gradually to strengthen recall"
+        "summary": "Words fade away as your recall improves",
+        "description": "More text hides after each successful repeat. Hold Space or long-press to peek when you need a hint."
       },
       "chaining": {
         "label": "Join ayahs together",
         "short": "Join ayahs together",
-        "description": "Link each ayah to the next and practise the range as one continuous sequence."
+        "summary": "Practise smooth transitions between ayahs",
+        "description": "Neighbouring ayahs are linked into one flowing sequence. Choose linking (pairs) or cumulative (growing passage) below."
       },
       "anchor": {
         "label": "Highlight memory words",
         "short": "Highlight memory words",
-        "description": "Use key words as hooks to recall each ayah"
+        "summary": "Key words stay visible as recall hooks",
+        "description": "Mutqin marks important words in each ayah. Use them as anchors to pull the rest of the verse back from memory."
       },
       "linking": {
         "label": "Practice ayah pairs",
         "short": "Practice ayah pairs",
-        "description": "Practise each ayah, then join it with the next"
+        "summary": "Repeat each ayah, then join it with the next",
+        "description": "Practise ayahs one at a time, then in pairs, so transitions between them feel natural."
       },
       "cumulative": {
         "label": "Grow the passage step by step",
         "short": "Grow the passage step by step",
-        "description": "Add one ayah at a time to build a longer run"
+        "summary": "Add one ayah at a time to a growing run",
+        "description": "Start with the first ayah, then add the next while keeping earlier ones warm in the same sequence."
       }
     },
     "reduce_distracted_around_the_active_ayah": "Concentrate on one ayah before moving forward",

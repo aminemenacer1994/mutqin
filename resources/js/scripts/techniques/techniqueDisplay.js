@@ -23,58 +23,72 @@ const TECHNIQUE_I18N = Object.freeze({
   talqin: {
     labelKey: 'memorisation.techniqueDisplay.talqin.label',
     shortKey: 'memorisation.techniqueDisplay.talqin.short',
+    summaryKey: 'memorisation.techniqueDisplay.talqin.summary',
     descriptionKey: 'memorisation.techniqueDisplay.talqin.description',
     fallbackLabel: 'Listen and repeat',
     fallbackShort: 'Listen and repeat',
-    fallbackDescription: 'Listen, follow and repeat at a comfortable pace.',
+    fallbackSummary: 'Hear it first, then recite it back',
+    fallbackDescription: 'Mutqin plays each section for you. Listen closely, then pause and repeat from memory before moving on.',
   },
   focus: {
     labelKey: 'memorisation.techniqueDisplay.focus.label',
     shortKey: 'memorisation.techniqueDisplay.focus.short',
+    summaryKey: 'memorisation.techniqueDisplay.focus.summary',
     descriptionKey: 'memorisation.techniqueDisplay.focus.description',
     fallbackLabel: 'One ayah at a time',
     fallbackShort: 'One ayah at a time',
-    fallbackDescription: 'Focus on one ayah before moving on.',
+    fallbackSummary: 'Lock in one ayah before the next appears',
+    fallbackDescription: 'Everything else dims while you work on the active ayah. The next ayah stays hidden until you finish this one.',
   },
   blur: {
     labelKey: 'memorisation.techniqueDisplay.blur.label',
     shortKey: 'memorisation.techniqueDisplay.blur.short',
+    summaryKey: 'memorisation.techniqueDisplay.blur.summary',
     descriptionKey: 'memorisation.techniqueDisplay.blur.description',
     fallbackLabel: 'Gradually hide the text',
     fallbackShort: 'Gradually hide the text',
-    fallbackDescription: 'Hide more of the text gradually to strengthen recall.',
+    fallbackSummary: 'Words fade away as your recall improves',
+    fallbackDescription: 'More text hides after each successful repeat. Hold Space or long-press to peek when you need a hint.',
   },
   chaining: {
     labelKey: 'memorisation.techniqueDisplay.chaining.label',
     shortKey: 'memorisation.techniqueDisplay.chaining.short',
+    summaryKey: 'memorisation.techniqueDisplay.chaining.summary',
     descriptionKey: 'memorisation.techniqueDisplay.chaining.description',
     fallbackLabel: 'Join ayahs together',
     fallbackShort: 'Join ayahs together',
-    fallbackDescription: 'Link neighbouring ayahs so the passage flows more smoothly.',
+    fallbackSummary: 'Practise smooth transitions between ayahs',
+    fallbackDescription: 'Neighbouring ayahs are linked into one flowing sequence. Choose linking (pairs) or cumulative (growing passage) below.',
   },
   anchor: {
     labelKey: 'memorisation.techniqueDisplay.anchor.label',
     shortKey: 'memorisation.techniqueDisplay.anchor.short',
+    summaryKey: 'memorisation.techniqueDisplay.anchor.summary',
     descriptionKey: 'memorisation.techniqueDisplay.anchor.description',
     fallbackLabel: 'Word focus',
     fallbackShort: 'Word focus',
-    fallbackDescription: 'See which words may need a little more attention.',
+    fallbackSummary: 'Key words stay visible as recall hooks',
+    fallbackDescription: 'Mutqin marks important words in each ayah. Use them as anchors to pull the rest of the verse back from memory.',
   },
   linking: {
     labelKey: 'memorisation.techniqueDisplay.linking.label',
     shortKey: 'memorisation.techniqueDisplay.linking.short',
+    summaryKey: 'memorisation.techniqueDisplay.linking.summary',
     descriptionKey: 'memorisation.techniqueDisplay.linking.description',
     fallbackLabel: 'Practice ayah pairs',
     fallbackShort: 'Practice ayah pairs',
-    fallbackDescription: 'Practise each ayah, then join it with the next.',
+    fallbackSummary: 'Repeat each ayah, then join it with the next',
+    fallbackDescription: 'Practise ayahs one at a time, then in pairs, so transitions between them feel natural.',
   },
   cumulative: {
     labelKey: 'memorisation.techniqueDisplay.cumulative.label',
     shortKey: 'memorisation.techniqueDisplay.cumulative.short',
+    summaryKey: 'memorisation.techniqueDisplay.cumulative.summary',
     descriptionKey: 'memorisation.techniqueDisplay.cumulative.description',
     fallbackLabel: 'Grow the passage step by step',
     fallbackShort: 'Grow the passage step by step',
-    fallbackDescription: 'Add one ayah at a time while keeping earlier ones warm.',
+    fallbackSummary: 'Add one ayah at a time to a growing run',
+    fallbackDescription: 'Start with the first ayah, then add the next while keeping earlier ones warm in the same sequence.',
   },
 })
 
@@ -101,7 +115,7 @@ export function isKnownTechniqueId(value) {
 
 /**
  * Resolve a single technique for user-facing UI.
- * @returns {{ id: string, label: string, shortLabel: string, description: string }}
+ * @returns {{ id: string, label: string, shortLabel: string, summary: string, description: string }}
  */
 export function resolveTechniqueDisplay(techniqueId, t, options = {}) {
   const id = normaliseTechniqueId(techniqueId)
@@ -112,6 +126,7 @@ export function resolveTechniqueDisplay(techniqueId, t, options = {}) {
       id: raw || '',
       label: raw,
       shortLabel: raw,
+      summary: '',
       description: '',
     }
   }
@@ -119,12 +134,14 @@ export function resolveTechniqueDisplay(techniqueId, t, options = {}) {
   const preferShort = !!options.short
   const label = translateOrFallback(t, meta.labelKey, meta.fallbackLabel)
   const shortLabel = translateOrFallback(t, meta.shortKey, meta.fallbackShort)
+  const summary = translateOrFallback(t, meta.summaryKey, meta.fallbackSummary)
   const description = translateOrFallback(t, meta.descriptionKey, meta.fallbackDescription)
 
   return {
     id,
     label: preferShort ? shortLabel : label,
     shortLabel,
+    summary,
     description,
   }
 }
@@ -139,6 +156,10 @@ export function getTechniqueShortLabel(techniqueId, t) {
 
 export function getTechniqueDescription(techniqueId, t) {
   return resolveTechniqueDisplay(techniqueId, t).description
+}
+
+export function getTechniqueSummary(techniqueId, t) {
+  return resolveTechniqueDisplay(techniqueId, t).summary
 }
 
 export function listTechniqueDisplays(t, ids = CORE_TECHNIQUE_IDS) {

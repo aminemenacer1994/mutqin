@@ -821,6 +821,88 @@ class DashboardTest extends TestCase
         $this->assertSame('strong', $items->firstWhere('ayah_number', 3)['strength'] ?? null);
     }
 
+    public function test_murajaah_includes_minor_mistakes_on_strong_recitation(): void
+    {
+        $user = User::factory()->create();
+
+        AiReciteAttempt::create([
+            'user_id' => $user->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 100,
+            'band' => 'strong',
+            'ayah_range' => ['from' => 1, 'to' => 1],
+            'weak_words' => [[
+                'surahId' => 114,
+                'ayahNumber' => 1,
+                'text' => 'ٱلنَّاسِ',
+                'verseKey' => '114:1',
+                'status' => 'minor_mistake',
+            ]],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk();
+
+        $items = collect($response->json('data.weaknesses.items'));
+        $this->assertTrue($items->contains(fn ($item) => (int) ($item['surah_number'] ?? 0) === 114 && (int) ($item['ayah_number'] ?? 0) === 1));
+    }
+
+    public function test_murajaah_includes_weak_ayahs_from_ai_assessment_without_weak_words(): void
+    {
+        $user = User::factory()->create();
+
+        SessionRecommendation::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_start' => 1,
+            'ayah_end' => 4,
+            'recommendation_type' => 'continue',
+            'reason_code' => 'ai_recite_weak',
+            'status' => RecommendationStatus::Generated,
+            'ai_assessment' => [
+                'result' => 'weak',
+                'weak_ayahs' => [2],
+                'weak_words' => [],
+                'assessed_at' => now()->toIso8601String(),
+            ],
+        ]);
+
+        AiReciteAttempt::create([
+            'user_id' => $user->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 38,
+            'band' => 'weak',
+            'ayah_range' => ['surahId' => 112, 'from' => 1, 'to' => 4],
+            'weak_words' => [],
+            'word_statuses' => [
+                ['status' => 'incorrect', 'text' => 'الصمد'],
+            ],
+        ]);
+
+        MemorisationProgress::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 3,
+            'status' => 'learning',
+            'mastery_level' => 20,
+            'metadata' => [
+                'ai_recite' => [
+                    'weak' => true,
+                    'updated_at' => now()->toIso8601String(),
+                ],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk();
+
+        $items = collect($response->json('data.weaknesses.items'));
+        $this->assertTrue($items->contains(fn ($item) => (int) ($item['ayah_number'] ?? 0) === 2));
+        $this->assertTrue($items->contains(fn ($item) => (int) ($item['ayah_number'] ?? 0) === 3));
+    }
+
     public function test_dashboard_survives_mixed_case_legacy_status_values(): void
     {
         $user = User::factory()->create(['name' => 'Amina']);
