@@ -1,18 +1,10 @@
 {
-    "/js/app.js": "/js/app.js?id=52440f42fea2a04f270ba20e8e189849",
+    "/js/app.js": "/js/app.js?id=554d0555c2a454636b8e5745d8769c16",
     "/css/app.css": "/css/app.css?id=e0552f2e57d8ff1549ddc4f206f286f3",
-    "/js/homepage.dea0bcdf.js": "/js/homepage.dea0bcdf.js?id=ea5c31ac3822dc3d70486b1252d3a77e",
-    "/js/about.c5831de0.js": "/js/about.c5831de0.js?id=e1c08ff3d4080e90766fd85a2c17c1d0",
-    "/js/about-us.74d14b9d.js": "/js/about-us.74d14b9d.js?id=4dee6ab1342dbe85eba689a7249e952e",
-    "/js/pricing.6de47fbb.js": "/js/pricing.6de47fbb.js?id=e1f82798305e871ae3d2b1acfff0fff4",
-    "/js/our-mission.73068a4b.js": "/js/our-mission.73068a4b.js?id=fffbd96e87204cc5be31bc6983eb520f",
-    "/js/donation.84dcb318.js": "/js/donation.84dcb318.js?id=ba56f198a0765b252cc8d8737d6a49be",
-    "/js/waiting-list.d60db3c4.js": "/js/waiting-list.d60db3c4.js?id=c49332bff1d6eaeab38e293e07bbbdb8",
-    "/js/dashboard.832a748e.js": "/js/dashboard.832a748e.js?id=4382ad2d4d4b98c899c3e3d0e5b45656",
-    "/js/admin-dashboard.854128ce.js": "/js/admin-dashboard.854128ce.js?id=0a0028d1a65c99084b52043bdd1d843e",
-    "/js/memorisation.6e7c6743.js": "/js/memorisation.6e7c6743.js?id=3288223c29896e17c54a0c80d52cee8e",
-    "/js/hifz-plan-modal.22459b44.js": "/js/hifz-plan-modal.22459b44.js?id=0e5f33ae2c2c64f8ff02f35136c2d776",
-    "/js/amd-modal.77de9657.js": "/js/amd-modal.77de9657.js?id=7a2c3583bbca12e3cc4fd4a9c4cd4882",
-    "/js/ayah-notes-modal.43712d19.js": "/js/ayah-notes-modal.43712d19.js?id=98ef5a1ada2a663130f2ce6446a59b30",
-    "/js/adaptive-assessment.ea6e3b60.js": "/js/adaptive-assessment.ea6e3b60.js?id=2d5c1a8146958bc4f591c57eefdf0ef6"
+    "/js/memorisation.81522ee7.js": "/js/memorisation.81522ee7.js?id=ec61ffafa09cd609d2c30e83519a2552",
+    "/js/hifz-plan-modal.6add61b7.js": "/js/hifz-plan-modal.6add61b7.js?id=a3dd1f91542086b6f369836e058172fe",
+    "/js/amd-modal.68ab7546.js": "/js/amd-modal.68ab7546.js?id=cef11c2694b9d29c093580119d424510",
+    "/js/ayah-notes-modal.ed78477f.js": "/js/ayah-notes-modal.ed78477f.js?id=cff0702ae566a05576eaa558e1e34f6c",
+    "/js/adaptive-assessment.1088f414.js": "/js/adaptive-assessment.1088f414.js?id=a6eaf30566e58ea8461af9abc220c518",
+    "/js/dashboard.baa378dc.js": "/js/dashboard.baa378dc.js?id=c8f08e5b76115a7e84affee6250c4fc8"
 }

@@ -149,23 +149,62 @@
                   {{ t('dashboard.journey_overall_ayahs', { n: journeyMemorisedCount }) }}
                 </p>
               </section>
-
-              <section
-                v-if="journeyReview"
-                class="dash-review"
-                aria-labelledby="dash-review-title"
-              >
-                <div class="dash-review__copy">
-                  <span id="dash-review-title" class="dash-review__label">
-                    {{ t('dashboard.journey_review_label') }}
-                  </span>
-                  <strong class="dash-review__title">{{ journeyReview.surah_name }}</strong>
-                </div>
-                <a class="dash-btn dash-btn--ghost" :href="journeyReview.href">
-                  {{ t('dashboard.journey_review_cta') }}
-                </a>
-              </section>
             </template>
+
+            <section
+              v-if="murajaahPreview.length"
+              class="dash-journey-murajaah"
+              aria-labelledby="dash-murajaah-title"
+            >
+                <div class="dash-journey-murajaah__head">
+                  <div>
+                    <span id="dash-murajaah-title" class="dash-journey-murajaah__label">
+                      {{ t('dashboard.strengthen_title') }}
+                    </span>
+                    <p v-if="murajaahTotal > 1" class="dash-journey-murajaah__hint">
+                      {{ t('dashboard.journey_murajaah_hint', { count: murajaahTotal }) }}
+                    </p>
+                  </div>
+                  <button
+                    v-if="showMurajaahViewAll"
+                    type="button"
+                    class="dash-link"
+                    @click="openDrawer('murajaah')"
+                  >
+                    {{ t('dashboard.view_all_reviews') }}
+                  </button>
+                </div>
+
+                <ul class="dash-list dash-journey-murajaah__list">
+                  <li v-for="item in murajaahPreview" :key="item.key" class="dash-list__item">
+                    <div class="dash-list__row dash-list__row--static">
+                      <a class="dash-list__main dash-list__main--link" :href="item.href || memorisationUrl">
+                        <span class="dash-list__title-row">
+                          <span class="dash-list__title">
+                            {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
+                          </span>
+                          <span
+                            v-if="item.strength"
+                            class="dash-strength"
+                            :class="`dash-strength--${item.strength}`"
+                          >
+                            {{ strengthLabel(item) }}
+                          </span>
+                        </span>
+                        <span v-if="item.phrase" class="dash-list__phrase" lang="ar" dir="rtl">{{ item.phrase }}</span>
+                      </a>
+                      <div class="dash-list__actions">
+                        <a
+                          class="dash-btn dash-btn--ghost dash-btn--sm"
+                          :href="reviewNowHref(item)"
+                        >
+                          {{ t('dashboard.review_now') }}
+                        </a>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+            </section>
           </div>
         </header>
 
@@ -197,6 +236,14 @@
             </button>
             <button type="button" class="dash-link" @click="openDrawer('activity')">
               {{ t('dashboard.view_all_activity') }}
+            </button>
+            <button
+              v-if="murajaahTotal > 0"
+              type="button"
+              class="dash-link"
+              @click="openDrawer('murajaah')"
+            >
+              {{ t('dashboard.view_all_reviews') }}
             </button>
             <a class="dash-link" :href="savedSessionsHref">
               {{ t('dashboard.view_saved_sessions') }}
@@ -279,57 +326,6 @@
           </div>
         </section>
 
-        <div class="dash-split dash-reveal" style="--dash-delay: 60ms">
-          <section class="dash-panel" aria-labelledby="dash-weak-heading">
-            <div class="dash-panel__head">
-              <div>
-                <h2 id="dash-weak-heading">{{ t('dashboard.strengthen_title') }}</h2>
-                <p class="dash-panel__hint">{{ t('dashboard.strengthen_subtitle') }}</p>
-              </div>
-              <a
-                v-if="data.weaknesses?.has_more && data.weaknesses?.view_all_href"
-                class="dash-link"
-                :href="data.weaknesses.view_all_href"
-              >
-                {{ t('dashboard.view_all_reviews') }}
-              </a>
-            </div>
-
-            <p v-if="!data.weaknesses?.items?.length" class="dash-empty" role="status">
-              {{ t('dashboard.weak_empty_message') }}
-            </p>
-
-            <ul v-else class="dash-list">
-              <li v-for="item in data.weaknesses.items" :key="item.key" class="dash-list__item">
-                <div class="dash-list__row dash-list__row--static">
-                  <a class="dash-list__main dash-list__main--link" :href="item.href || memorisationUrl">
-                    <span class="dash-list__title-row">
-                      <span class="dash-list__title">
-                        {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
-                      </span>
-                      <span
-                        v-if="item.strength"
-                        class="dash-strength"
-                        :class="`dash-strength--${item.strength}`"
-                      >
-                        {{ strengthLabel(item) }}
-                      </span>
-                    </span>
-                    <span v-if="item.phrase" class="dash-list__phrase" lang="ar" dir="rtl">{{ item.phrase }}</span>
-                  </a>
-                  <div class="dash-list__actions">
-                    <a
-                      class="dash-btn dash-btn--ghost dash-btn--sm"
-                      :href="reviewNowHref(item)"
-                    >
-                      {{ t('dashboard.review_now') }}
-                    </a>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </section>
-        </div>
       </template>
     </div>
 
@@ -455,6 +451,32 @@
             </li>
           </ul>
 
+          <ul v-else-if="drawerMode === 'murajaah'" class="dash-drawer__list dash-drawer__list--murajaah">
+            <li v-for="item in visibleDrawerItems" :key="`murajaah-${item.key}`" class="dash-drawer__row dash-drawer__row--murajaah">
+              <div class="dash-drawer__row-main">
+                <span class="dash-drawer__row-title">
+                  {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
+                  <span
+                    v-if="item.strength"
+                    class="dash-strength dash-strength--compact"
+                    :class="`dash-strength--${item.strength}`"
+                  >
+                    {{ strengthLabel(item) }}
+                  </span>
+                </span>
+                <span v-if="item.phrase" class="dash-drawer__row-meta dash-drawer__row-meta--arabic" lang="ar" dir="rtl">
+                  {{ item.phrase }}
+                </span>
+                <span v-else-if="item.explanation_key" class="dash-drawer__row-meta">
+                  {{ t(`dashboard.${item.explanation_key}`) }}
+                </span>
+              </div>
+              <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="reviewNowHref(item)">
+                {{ t('dashboard.review_now') }}
+              </a>
+            </li>
+          </ul>
+
           <ul v-else-if="drawerMode === 'hifz'" class="dash-drawer__list">
             <li v-for="group in visibleDrawerItems" :key="`hifz-${group.surah_number}`" class="dash-drawer__group">
               <div class="dash-drawer__group-head">
@@ -505,6 +527,7 @@ const DRAWER_TITLES = {
   ai_checks: 'drawer_ai_title',
   notes: 'drawer_notes_title',
   hifz: 'drawer_hifz_title',
+  murajaah: 'drawer_murajaah_title',
 }
 
 const DRAWER_EMPTY = {
@@ -513,6 +536,7 @@ const DRAWER_EMPTY = {
   ai_checks: 'drawer_ai_empty',
   notes: 'drawer_notes_empty',
   hifz: 'drawer_hifz_empty',
+  murajaah: 'drawer_murajaah_empty',
 }
 
 export default {
@@ -651,6 +675,22 @@ export default {
       const review = this.journey?.review
       if (!review || !review.surah_name || !review.href) return null
       return review
+    },
+    murajaahAllItems() {
+      const all = this.data?.weaknesses?.all_items
+      if (Array.isArray(all) && all.length) return all
+      const items = this.data?.weaknesses?.items
+      return Array.isArray(items) ? items : []
+    },
+    murajaahPreview() {
+      return this.murajaahAllItems.slice(0, 2)
+    },
+    murajaahTotal() {
+      const total = Number(this.data?.weaknesses?.total ?? 0)
+      return total > 0 ? total : this.murajaahAllItems.length
+    },
+    showMurajaahViewAll() {
+      return this.murajaahTotal > this.murajaahPreview.length
     },
     startBeginningHref() {
       return String(this.journey?.start_beginning_href || '').trim()
@@ -1173,16 +1213,17 @@ export default {
       this.darkTheme = document.documentElement.getAttribute('data-theme') === 'dark'
     },
     reviewNowHref(item) {
+      const href = String(item?.href || '').trim()
+      if (href) return href
       const surah = Number(item?.surah_number || 0)
       const ayah = Number(item?.ayah_number || 0)
       const base = this.memorisationUrl.split('?')[0]
-      if (!(surah > 0 && ayah > 0)) return item?.href || base
+      if (!(surah > 0 && ayah > 0)) return base
       const params = new URLSearchParams({
-        ai_check: '1',
         surah: String(surah),
-        ayah: String(ayah),
         from: String(ayah),
         to: String(ayah),
+        review: '1',
         return: 'dashboard',
       })
       return `${base}?${params.toString()}`
@@ -1246,8 +1287,16 @@ export default {
       this.drawerMode = mode
       this.drawerItems = []
       this.drawerError = false
-      this.drawerLoading = true
       this.activityFilter = 'all'
+
+      if (mode === 'murajaah') {
+        this.drawerItems = this.murajaahAllItems
+        this.drawerLoading = false
+        this.drawerError = false
+        return
+      }
+
+      this.drawerLoading = true
       const requestId = ++this.drawerRequestId
       try {
         let items = []

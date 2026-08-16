@@ -9512,6 +9512,7 @@ export default {
         const resume = params.get('resume') === '1'
         const setup = params.get('setup') === '1'
         const aiCheck = params.get('ai_check') === '1'
+        const review = params.get('review') === '1'
         const recommendationId = String(params.get('recommendation') || '').trim()
         const sessionId = String(params.get('session') || '').trim()
         const panel = String(params.get('panel') || '').trim().toLowerCase()
@@ -9520,11 +9521,12 @@ export default {
         const from = Number(params.get('from') || params.get('ayah') || 0)
         const to = Number(params.get('to') || from || 0)
         const journey = String(params.get('journey') || '').trim().toLowerCase()
-        if (!resume && !setup && !recommendationId && !(surah > 0) && panel !== 'saved' && !aiCheck && !journey) return null
+        if (!resume && !setup && !recommendationId && !(surah > 0) && panel !== 'saved' && !aiCheck && !journey && !review) return null
         return {
           resume,
           setup,
           aiCheck,
+          review,
           recommendationId: recommendationId || null,
           sessionId: sessionId || null,
           panel: panel || null,
@@ -9543,7 +9545,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'return', 'journey']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'journey']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -9580,6 +9582,17 @@ export default {
 
         if (entry.panel === 'saved') {
           this.openSavedSessionsPanel()
+          return true
+        }
+
+        if (entry.review && entry.surah > 0 && entry.from > 0) {
+          const rangeEnd = Math.max(entry.from, entry.to || entry.from)
+          await this.startSessionFromRecommendationPayload({
+            chapterId: entry.surah,
+            rangeStart: entry.from,
+            rangeEnd,
+            sessionMode: 'revision',
+          })
           return true
         }
 

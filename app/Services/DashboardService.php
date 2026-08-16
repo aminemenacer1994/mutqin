@@ -152,6 +152,7 @@ class DashboardService
             ],
             'weaknesses' => [
                 'items' => [],
+                'all_items' => [],
                 'total' => 0,
                 'has_more' => false,
                 'view_all_href' => null,
@@ -955,11 +956,11 @@ class DashboardService
             'surah_name' => $item['surah_name'] ?? QuranMetadata::name($surah),
             'ayah_start' => $ayah ?: null,
             'ayah_end' => $ayah ?: null,
-            'href' => $item['href'] ?? $this->memorisationHref(array_filter([
-                'surah' => $surah,
-                'from' => $ayah ?: null,
-                'to' => $ayah ?: null,
-            ])),
+            'ayah_number' => $ayah ?: null,
+            'phrase' => $item['phrase'] ?? null,
+            'strength' => $item['strength'] ?? null,
+            'key' => $item['key'] ?? null,
+            'href' => $item['href'] ?? $this->murajaahReviewHref($surah, $ayah ?: 1),
         ];
     }
 
@@ -1583,27 +1584,25 @@ class DashboardService
                 'detected_at' => optional($row->updated_at)->toIso8601String(),
                 'action_label' => 'Review this ayah',
                 'action_key' => 'action_review',
-                'href' => $this->memorisationHref([
-                    'surah' => (int) $row->surah_number,
-                    'from' => (int) $row->ayah_number,
-                    'to' => (int) $row->ayah_number,
-                ]),
+                'href' => $this->murajaahReviewHref((int) $row->surah_number, (int) $row->ayah_number),
                 'source' => 'progress',
             ]);
         }
 
         $sorted = $items->sortByDesc(fn ($item) => $item['detected_at'] ?? '')->values();
         $total = $sorted->count();
-        $topItems = $this->enrichWeaknessStrengthLabels(
+        $allItems = $this->enrichWeaknessStrengthLabels(
             $user,
-            $sorted->take(3)->values()->all()
+            $sorted->values()->all()
         );
+        $previewCount = 2;
 
         return [
-            'items' => $topItems,
+            'items' => array_slice($allItems, 0, $previewCount),
+            'all_items' => $allItems,
             'total' => $total,
-            'has_more' => $total > 3,
-            'view_all_href' => $total > 3 ? $this->memorisationHref(['setup' => 1]) : null,
+            'has_more' => $total > $previewCount,
+            'view_all_href' => null,
             'empty_title' => 'Alhamdulillah — nothing needs special attention right now.',
             'empty_message' => 'When you complete a memorisation check, Mutqin will gently highlight ayahs that need more care.',
             'empty_title_key' => 'weak_empty_title',

@@ -815,7 +815,7 @@ class DashboardTest extends TestCase
             ->getJson('/api/dashboard')
             ->assertOk();
 
-        $items = collect($response->json('data.weaknesses.items'));
+        $items = collect($response->json('data.weaknesses.all_items'));
         $this->assertSame('fragile', $items->firstWhere('ayah_number', 1)['strength'] ?? null);
         $this->assertSame('building', $items->firstWhere('ayah_number', 2)['strength'] ?? null);
         $this->assertSame('strong', $items->firstWhere('ayah_number', 3)['strength'] ?? null);
@@ -846,6 +846,40 @@ class DashboardTest extends TestCase
 
         $items = collect($response->json('data.weaknesses.items'));
         $this->assertTrue($items->contains(fn ($item) => (int) ($item['surah_number'] ?? 0) === 114 && (int) ($item['ayah_number'] ?? 0) === 1));
+        $this->assertStringContainsString('review=1', (string) ($items->first()['href'] ?? ''));
+        $this->assertNull($response->json('data.weaknesses.view_all_href'));
+        $this->assertSame(1, count($response->json('data.weaknesses.all_items') ?? []));
+    }
+
+    public function test_murajaah_returns_all_items_for_drawer(): void
+    {
+        $user = User::factory()->create();
+
+        foreach ([1, 2, 3, 4] as $ayah) {
+            AiReciteAttempt::create([
+                'user_id' => $user->id,
+                'attempt_number' => $ayah,
+                'accuracy_percent' => 40,
+                'band' => 'weak',
+                'ayah_range' => ['surah' => 112, 'from' => $ayah, 'to' => $ayah],
+                'weak_words' => [[
+                    'surahId' => 112,
+                    'ayahNumber' => $ayah,
+                    'text' => "word{$ayah}",
+                    'verseKey' => "112:{$ayah}",
+                ]],
+            ]);
+        }
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk();
+
+        $this->assertSame(4, $response->json('data.weaknesses.total'));
+        $this->assertCount(2, $response->json('data.weaknesses.items'));
+        $this->assertCount(4, $response->json('data.weaknesses.all_items'));
+        $this->assertTrue($response->json('data.weaknesses.has_more'));
+        $this->assertNull($response->json('data.weaknesses.view_all_href'));
     }
 
     public function test_murajaah_includes_weak_ayahs_from_ai_assessment_without_weak_words(): void
