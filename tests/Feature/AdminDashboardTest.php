@@ -468,7 +468,7 @@ class AdminDashboardTest extends TestCase
         $this->assertAuthenticatedAs($admin);
     }
 
-    public function test_learner_login_still_redirects_to_memorisation(): void
+    public function test_learner_login_still_redirects_to_dashboard(): void
     {
         User::factory()->create([
             'email' => 'learner@example.com',
@@ -478,7 +478,7 @@ class AdminDashboardTest extends TestCase
         $this->post(route('login'), [
             'email' => 'learner@example.com',
             'password' => 'secret12',
-        ])->assertRedirect(route('memorisation'));
+        ])->assertRedirect(route('dashboard'));
     }
 
     public function test_authenticated_admin_visiting_login_redirects_to_admin_dashboard(): void

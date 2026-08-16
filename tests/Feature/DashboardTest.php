@@ -14,6 +14,7 @@ use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
+use App\Services\MainMemorisationPositionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -866,5 +867,241 @@ class DashboardTest extends TestCase
             ->getJson('/api/dashboard')
             ->assertOk()
             ->assertJsonPath('data.welcome.first_name', 'Amina');
+    }
+
+    public function test_first_time_journey_offers_simple_start_choices(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.journey.has_started', false)
+            ->assertJsonPath('data.journey.continue', null)
+            ->assertJsonPath('data.journey.review', null)
+            ->assertJsonPath('data.journey.overall.percent', 0);
+
+        $start = (string) $this->actingAs($user)->getJson('/api/dashboard')->json('data.journey.start_beginning_href');
+        $choose = (string) $this->actingAs($user)->getJson('/api/dashboard')->json('data.journey.choose_start_href');
+        $this->assertStringContainsString('surah=1', $start);
+        $this->assertStringContainsString('from=1', $start);
+        $this->assertStringContainsString('to=7', $start);
+        $this->assertStringContainsString('journey=main', $start);
+        $this->assertStringContainsString('setup=1', $choose);
+        $this->assertStringContainsString('journey=choose', $choose);
+    }
+
+    public function test_journey_continue_card_uses_main_position_not_free_practice(): void
+    {
+        $user = User::factory()->create();
+
+        UserLastPosition::create([
+            'user_id' => $user->id,
+            'surah_number' => 36,
+            'ayah_number' => 1,
+            'last_opened_at' => now(),
+            'metadata' => [
+                'rangeStart' => 1,
+                'rangeEnd' => 10,
+                'main_position' => [
+                    'surah_number' => 2,
+                    'ayah_start' => 21,
+                    'ayah_end' => 30,
+                    'source' => 'explicit',
+                ],
+            ],
+        ]);
+
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 36,
+            'ayah_number' => 4,
+            'status' => UserSessionStatus::Paused,
+            'is_onboarding_example' => false,
+            'paused_at' => now()->subMinutes(10),
+            'last_activity_at' => now()->subMinutes(10),
+            'metadata' => [
+                'paused' => true,
+                'config' => ['chapterId' => 36, 'rangeStart' => 1, 'rangeEnd' => 10],
+            ],
+        ]);
+
+        for ($ayah = 21; $ayah <= 27; $ayah++) {
+            MemorisationProgress::create([
+                'user_id' => $user->id,
+                'surah_number' => 2,
+                'ayah_number' => $ayah,
+                'status' => 'memorised',
+                'mastery_level' => 80,
+                'repetitions' => 3,
+                'completed_at' => now()->subDay(),
+            ]);
+        }
+
+        SessionRecommendation::create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'ayah_start' => 1,
+            'ayah_end' => 7,
+            'recommendation_type' => 'revision',
+            'reason_code' => 'performance_review',
+            'status' => RecommendationStatus::Generated,
+            'session_mode' => 'revision',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.journey.has_started', true)
+            ->assertJsonPath('data.journey.continue.surah_number', 2)
+            ->assertJsonPath('data.journey.continue.ayah_start', 21)
+            ->assertJsonPath('data.journey.continue.ayah_end', 30)
+            ->assertJsonPath('data.journey.continue.remembered_count', 7)
+            ->assertJsonPath('data.journey.continue.range_ayah_count', 10)
+            ->assertJsonPath('data.continue.surah_number', 2)
+            ->assertJsonPath('data.journey.review.surah_number', 1)
+            ->assertJsonPath('data.journey.overall.percent', 1);
+
+        $this->assertSame('Al-Fatihah', $response->json('data.journey.review.surah_name'));
+        $this->assertStringContainsString('journey=main', (string) $response->json('data.journey.continue.href'));
+        $this->assertStringNotContainsString('resume=1', (string) $response->json('data.continue.href'));
+    }
+
+    public function test_session_start_on_another_range_does_not_move_main_position(): void
+    {
+        $user = User::factory()->create();
+
+        UserLastPosition::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'ayah_number' => 21,
+            'last_opened_at' => now(),
+            'metadata' => [
+                'main_position' => [
+                    'surah_number' => 2,
+                    'ayah_start' => 21,
+                    'ayah_end' => 30,
+                    'source' => 'explicit',
+                ],
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/session/start', [
+                'surah_number' => 36,
+                'ayah_number' => 1,
+                'memorisation_mode' => 'advanced',
+                'metadata' => [
+                    'config' => [
+                        'chapterId' => 36,
+                        'rangeStart' => 1,
+                        'rangeEnd' => 10,
+                    ],
+                ],
+            ])
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.journey.continue.surah_number', 2)
+            ->assertJsonPath('data.journey.continue.ayah_start', 21)
+            ->assertJsonPath('data.journey.continue.ayah_end', 30);
+
+        $position = UserLastPosition::where('user_id', $user->id)->first();
+        $this->assertSame(2, $position->metadata['main_position']['surah_number']);
+        $this->assertSame(21, $position->metadata['main_position']['ayah_start']);
+    }
+
+    public function test_continue_api_preserves_main_position_metadata(): void
+    {
+        $user = User::factory()->create();
+
+        UserLastPosition::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'ayah_number' => 21,
+            'last_opened_at' => now(),
+            'metadata' => [
+                'main_position' => [
+                    'surah_number' => 2,
+                    'ayah_start' => 21,
+                    'ayah_end' => 30,
+                    'source' => 'explicit',
+                ],
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/continue', [
+                'surah_number' => 36,
+                'ayah_number' => 5,
+                'last_step' => 2,
+                'metadata' => ['source' => 'browse'],
+            ])
+            ->assertOk();
+
+        $position = UserLastPosition::where('user_id', $user->id)->first();
+        $this->assertSame(36, $position->surah_number);
+        $this->assertSame(5, $position->ayah_number);
+        $this->assertSame(2, $position->metadata['main_position']['surah_number']);
+        $this->assertSame(21, $position->metadata['main_position']['ayah_start']);
+        $this->assertSame(30, $position->metadata['main_position']['ayah_end']);
+    }
+
+    public function test_continue_recommendation_advances_main_position(): void
+    {
+        $user = User::factory()->create();
+
+        UserLastPosition::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'ayah_number' => 21,
+            'last_opened_at' => now(),
+            'metadata' => [
+                'main_position' => [
+                    'surah_number' => 2,
+                    'ayah_start' => 21,
+                    'ayah_end' => 30,
+                    'source' => 'explicit',
+                ],
+            ],
+        ]);
+
+        $session = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'ayah_number' => 30,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now(),
+            'last_activity_at' => now(),
+            'metadata' => [
+                'completed' => true,
+                'config' => ['chapterId' => 2, 'rangeStart' => 21, 'rangeEnd' => 30],
+            ],
+        ]);
+
+        $recommendation = SessionRecommendation::create([
+            'user_id' => $user->id,
+            'source_session_id' => $session->id,
+            'surah_number' => 2,
+            'ayah_start' => 31,
+            'ayah_end' => 33,
+            'recommendation_type' => 'continue',
+            'reason_code' => 'continue_range',
+            'status' => RecommendationStatus::Generated,
+            'session_mode' => 'new_learning',
+        ]);
+
+        app(MainMemorisationPositionService::class)
+            ->advanceFromRecommendation($user, $recommendation, $session);
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.journey.continue.surah_number', 2)
+            ->assertJsonPath('data.journey.continue.ayah_start', 31)
+            ->assertJsonPath('data.journey.continue.ayah_end', 33);
     }
 }

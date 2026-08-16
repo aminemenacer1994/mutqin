@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\LearningAnalytic;
 use App\Models\MemorisationProgress;
 use App\Models\User;
-use App\Models\UserLastPosition;
 use App\Models\UserSession;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
@@ -150,17 +149,7 @@ class LearningStateDeriver
             'last_opened_at' => $this->parseDate($continue['timestamp'] ?? ($session['updated_at'] ?? null)) ?? now(),
         ];
 
-        try {
-            UserLastPosition::updateOrCreate(
-                ['user_id' => $user->id],
-                $positionPayload
-            );
-        } catch (UniqueConstraintViolationException) {
-            $row = UserLastPosition::query()->where('user_id', $user->id)->first();
-            if ($row) {
-                $row->fill($positionPayload)->save();
-            }
-        }
+        app(MainMemorisationPositionService::class)->writeLastPosition($user, $positionPayload);
     }
 
     private function deriveProgress(User $user, array $state): void

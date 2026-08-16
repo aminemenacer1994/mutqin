@@ -31,7 +31,7 @@
         <header class="dash-hero dash-reveal">
           <div class="dash-hero__row">
             <div class="dash-hero__copy">
-              <span class="dash-eyebrow">{{ t('dashboard.next_step') }}</span>
+              <span class="dash-eyebrow">{{ t('dashboard.journey_kicker') }}</span>
               <h1 id="dash-welcome-heading">{{ greetingText }}</h1>
               <div class="dash-rule" aria-hidden="true"></div>
               <p v-if="retentionChips.length" class="dash-hero__meta">
@@ -72,90 +72,117 @@
                 </strong>
                 <div class="dash-pills">
                   <span v-if="ayahRangeLabel(liveReturnSession)" class="dash-pill">
-                    {{ t('dashboard.current_range') }}: {{ ayahRangeLabel(liveReturnSession) }}
+                    {{ ayahRangeLabel(liveReturnSession) }}
                   </span>
                   <span v-if="liveReturnSession.last_ayah" class="dash-pill">
                     {{ t('dashboard.last_ayah', { n: liveReturnSession.last_ayah }) }}
                   </span>
-                  <span v-if="liveReturnSession.last_activity_at" class="dash-pill">
-                    {{ formatRelative(liveReturnSession.last_activity_at) }}
-                  </span>
                 </div>
-                <p class="dash-return-session__hint">
-                  {{ t('dashboard.return_session_hint') }}
-                </p>
               </div>
               <div class="dash-return-session__actions">
-                <button
-                  type="button"
-                  class="dash-btn dash-btn--primary dash-return-session__go"
-                  @click="goToLiveSession"
-                >
+                <a class="dash-btn dash-btn--primary dash-return-session__go" :href="journeyContinueHref">
                   <i class="bi bi-play-fill" aria-hidden="true"></i>
                   <span>{{ t('dashboard.return_session_now') }}</span>
-                </button>
+                </a>
               </div>
             </div>
 
-            <a
-              v-else-if="data.continue"
-              class="dash-continue"
-              :href="continueHref"
+            <section
+              v-else-if="showJourneyStart"
+              class="dash-journey dash-journey--start"
+              aria-labelledby="dash-journey-start-title"
             >
-              <div class="dash-continue__body">
-                <span class="dash-continue__label">{{ continueCta }}</span>
-                <span class="dash-continue__title">
-                  <template v-if="data.continue.surah_name">
-                    {{ data.continue.surah_name }}
-                  </template>
-                  <template v-else>{{ t('dashboard.start_session') }}</template>
-                </span>
-                <div v-if="ayahRangeLabel(data.continue) || data.continue.last_ayah" class="dash-pills">
-                  <span v-if="ayahRangeLabel(data.continue)" class="dash-pill">
-                    {{ t('dashboard.current_range') }}: {{ ayahRangeLabel(data.continue) }}
-                  </span>
-                  <span v-if="data.continue.last_ayah" class="dash-pill">
-                    {{ t('dashboard.last_ayah', { n: data.continue.last_ayah }) }}
-                  </span>
-                </div>
+              <h2 id="dash-journey-start-title" class="dash-journey__title">
+                {{ t('dashboard.journey_start_title') }}
+              </h2>
+              <p class="dash-journey__hint">{{ t('dashboard.journey_start_hint') }}</p>
+              <div class="dash-journey__start-actions">
+                <a class="dash-btn dash-btn--primary" :href="startBeginningHref">
+                  {{ t('dashboard.journey_start_beginning') }}
+                </a>
+                <a class="dash-btn dash-btn--ghost" :href="chooseStartHref">
+                  {{ t('dashboard.journey_choose_start') }}
+                </a>
               </div>
-              <span class="dash-continue__cta" aria-hidden="true">
-                <i class="bi bi-play-fill"></i>
-              </span>
-            </a>
+            </section>
 
-            <a
-              v-if="recommendedNext"
-              class="dash-recommend"
-              :href="recommendedNext.href"
-            >
-              <div class="dash-recommend__body">
-                <span class="dash-recommend__label">{{ t('dashboard.recommended_next') }}</span>
-                <span class="dash-recommend__title">{{ recommendedNext.surah_name }}</span>
-                <div class="dash-pills">
-                  <span v-if="ayahRangeLabel(recommendedNext)" class="dash-pill">
-                    {{ t('dashboard.current_range') }}: {{ ayahRangeLabel(recommendedNext) }}
+            <template v-else>
+              <a
+                v-if="journeyContinue"
+                class="dash-continue dash-continue--journey"
+                :href="journeyContinueHref"
+              >
+                <div class="dash-continue__body">
+                  <span class="dash-continue__label">{{ journeyContinueLabel }}</span>
+                  <span class="dash-continue__title">
+                    {{ journeyContinue.surah_name || t('dashboard.start_session') }}
                   </span>
-                  <span v-if="recommendedNext.technique_label" class="dash-pill">
-                    {{ recommendedNext.technique_label }}
+                  <span v-if="journeyVersesLabel" class="dash-continue__verses">
+                    {{ journeyVersesLabel }}
                   </span>
-                  <span v-if="recommendedNext.speed_label" class="dash-pill">
-                    {{ recommendedNext.speed_label }}
+                  <span v-if="journeyRememberedLabel" class="dash-continue__remembered">
+                    {{ journeyRememberedLabel }}
                   </span>
                 </div>
-              </div>
-              <span class="dash-recommend__cta" :aria-label="t('dashboard.recommended_next_start')">
-                <i class="bi bi-play-fill" aria-hidden="true"></i>
-              </span>
-            </a>
+                <span class="dash-continue__go">{{ journeyContinueCta }}</span>
+              </a>
+
+              <section
+                v-if="showJourneyOverall"
+                class="dash-journey-overall"
+                aria-labelledby="dash-overall-heading"
+              >
+                <div class="dash-journey-overall__head">
+                  <span id="dash-overall-heading" class="dash-eyebrow">
+                    {{ t('dashboard.journey_overall_label') }}
+                  </span>
+                  <strong>{{ journeyOverallPercent }}%</strong>
+                </div>
+                <div
+                  class="dash-progress-bar dash-journey-overall__bar"
+                  role="progressbar"
+                  :aria-valuenow="journeyOverallPercent"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  :aria-label="t('dashboard.journey_overall_label')"
+                >
+                  <span
+                    :class="{ 'is-nonzero': journeyOverallPercent > 0 }"
+                    :style="{ width: journeyOverallFill }"
+                  ></span>
+                </div>
+                <p class="dash-journey-overall__meta">
+                  {{ t('dashboard.journey_overall_ayahs', { n: journeyMemorisedCount }) }}
+                </p>
+              </section>
+
+              <section
+                v-if="journeyReview"
+                class="dash-review"
+                aria-labelledby="dash-review-title"
+              >
+                <div class="dash-review__copy">
+                  <span id="dash-review-title" class="dash-review__label">
+                    {{ t('dashboard.journey_review_label') }}
+                  </span>
+                  <strong class="dash-review__title">{{ journeyReview.surah_name }}</strong>
+                  <span v-if="journeyReviewVersesLabel" class="dash-review__verses">
+                    {{ journeyReviewVersesLabel }}
+                  </span>
+                </div>
+                <a class="dash-btn dash-btn--ghost" :href="journeyReview.href">
+                  {{ t('dashboard.journey_review_cta') }}
+                </a>
+              </section>
+            </template>
           </div>
         </header>
 
-        <section class="dash-panel dash-reveal" aria-labelledby="dash-snapshot-heading" style="--dash-delay: 30ms">
+        <section class="dash-panel dash-reveal dash-data-panel" aria-labelledby="dash-data-heading" style="--dash-delay: 20ms">
           <div class="dash-panel__head">
             <div>
-              <h2 id="dash-snapshot-heading">{{ t('dashboard.snapshot_title') }}</h2>
-              <p class="dash-panel__hint">{{ t('dashboard.snapshot_subtitle') }}</p>
+              <h2 id="dash-data-heading">{{ t('dashboard.journey_data_title') }}</h2>
+              <p class="dash-panel__hint">{{ t('dashboard.journey_data_subtitle') }}</p>
             </div>
           </div>
           <div class="dash-metrics">
@@ -173,14 +200,26 @@
               <p class="dash-metric__label">{{ metric.label }}</p>
             </component>
           </div>
+          <div class="dash-data-links">
+            <button type="button" class="dash-link" @click="openDrawer('hifz')">
+              {{ t('dashboard.view_memorised_ayahs') }}
+            </button>
+            <button type="button" class="dash-link" @click="openDrawer('activity')">
+              {{ t('dashboard.view_all_activity') }}
+            </button>
+            <a class="dash-link" :href="savedSessionsHref">
+              {{ t('dashboard.view_saved_sessions') }}
+            </a>
+          </div>
         </section>
 
-        <section class="dash-panel dash-reveal" aria-labelledby="dash-progress-heading" style="--dash-delay: 60ms">
+        <section class="dash-panel dash-reveal" aria-labelledby="dash-progress-heading" style="--dash-delay: 40ms">
           <div class="dash-panel__head">
             <div>
               <h2 id="dash-progress-heading">{{ t('dashboard.progress_title') }}</h2>
               <p class="dash-panel__hint">{{ t('dashboard.progress_subtitle') }}</p>
             </div>
+            <p v-if="weekSummaryText" class="dash-panel__aside">{{ weekSummaryText }}</p>
           </div>
 
           <div class="dash-progress-grid">
@@ -205,10 +244,9 @@
                 </div>
                 <span class="dash-surah-progress__pct">{{ surahProgress.value }}%</span>
               </div>
-              <div class="dash-rule" aria-hidden="true"></div>
               <div v-if="ayahRangeLabel(data.progress) || data.progress?.current_ayah" class="dash-pills">
                 <span v-if="ayahRangeLabel(data.progress)" class="dash-pill">
-                  {{ t('dashboard.current_range') }}: {{ ayahRangeLabel(data.progress) }}
+                  {{ ayahRangeLabel(data.progress) }}
                 </span>
                 <span v-if="data.progress?.current_ayah" class="dash-pill">
                   {{ t('dashboard.at_ayah', { n: data.progress.current_ayah }) }}
@@ -224,25 +262,6 @@
                 >
                   <strong>{{ stat.value }}</strong>
                   <span>{{ stat.label }}</span>
-                </div>
-              </div>
-
-              <div v-if="secondaryCompletion != null" class="dash-completion">
-                <div class="dash-completion__row">
-                  <span>{{ secondaryCompletion.label }}</span>
-                  <span>{{ secondaryCompletion.value }}%</span>
-                </div>
-                <div
-                  class="dash-progress-bar"
-                  role="progressbar"
-                  :aria-valuenow="secondaryCompletion.value"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                >
-                  <span
-                    :class="{ 'is-nonzero': secondaryCompletion.value > 0 }"
-                    :style="{ width: secondaryCompletion.fillWidth }"
-                  ></span>
                 </div>
               </div>
             </div>
@@ -285,12 +304,11 @@
                   :aria-label="t('dashboard.chart_aria')"
                 />
               </div>
-              <p class="dash-chart__week">{{ weekSummaryText }}</p>
             </div>
           </div>
         </section>
 
-        <div class="dash-split dash-reveal" style="--dash-delay: 90ms">
+        <div class="dash-split dash-reveal" style="--dash-delay: 60ms">
           <section class="dash-panel" aria-labelledby="dash-weak-heading">
             <div class="dash-panel__head">
               <div>
@@ -334,13 +352,6 @@
                       :href="reviewNowHref(item)"
                     >
                       {{ t('dashboard.review_now') }}
-                    </a>
-                    <a
-                      class="dash-list__chevron"
-                      :href="item.href || memorisationUrl"
-                      :aria-label="t('dashboard.open')"
-                    >
-                      <i class="bi bi-chevron-right" aria-hidden="true"></i>
                     </a>
                   </div>
                 </div>
@@ -637,6 +648,114 @@ export default {
     continueHref() {
       const href = String(this.data?.continue?.href || '').trim()
       return href || this.memorisationUrl
+    },
+    journey() {
+      return this.data?.journey && typeof this.data.journey === 'object'
+        ? this.data.journey
+        : null
+    },
+    journeyHasStarted() {
+      return !!this.journey?.has_started
+    },
+    showJourneyStart() {
+      if (this.liveReturnSession) return false
+      if (this.journeyHasStarted && this.journeyContinue) return false
+      if (this.hasMemorisationHistory) return false
+      return true
+    },
+    hasMemorisationHistory() {
+      if (this.journeyMemorisedCount > 0) return true
+      if (Number(this.data?.snapshot?.completed_sessions?.value ?? 0) > 0) return true
+      if (Number(this.data?.snapshot?.memorised_ayahs?.value ?? 0) > 0) return true
+      if (this.data?.progress?.current_surah_number) return true
+      const row = this.data?.continue
+      return !!(row?.surah_number || row?.surah_name)
+    },
+    journeyContinue() {
+      if (this.journey?.continue) return this.journey.continue
+      if (this.hasMemorisationHistory && this.data?.continue) return this.data.continue
+      return null
+    },
+    journeyContinueHref() {
+      const href = String(this.journeyContinue?.href || this.continueHref || '').trim()
+      return href || this.memorisationUrl
+    },
+    journeyContinueLabel() {
+      if (this.isLiveContinueAction) return this.t('dashboard.return_session_label')
+      return this.t('dashboard.journey_continue_label')
+    },
+    journeyContinueCta() {
+      if (this.isLiveContinueAction) return this.t('dashboard.return_session_now')
+      const key = this.journeyContinue?.cta_key
+      if (key) {
+        const translated = this.t(`dashboard.${key}`)
+        if (translated && translated !== `dashboard.${key}`) return translated
+      }
+      return this.t('dashboard.journey_continue_cta')
+    },
+    journeyVersesLabel() {
+      const row = this.journeyContinue
+      if (!row) return ''
+      const start = Number(row.ayah_start || 0)
+      const end = Number(row.ayah_end || start)
+      if (start > 0 && end > 0 && start !== end) {
+        return this.t('dashboard.journey_verses_range', { start, end })
+      }
+      if (start > 0) return this.t('dashboard.journey_verse', { n: start })
+      return ''
+    },
+    journeyRememberedLabel() {
+      const row = this.journeyContinue
+      if (!row) return ''
+      const remembered = Number(row.remembered_count)
+      const total = Number(row.range_ayah_count)
+      if (!Number.isFinite(remembered) || !Number.isFinite(total) || total <= 0) return ''
+      return this.t('dashboard.journey_remembered', { remembered, total })
+    },
+    journeyMemorisedCount() {
+      const fromJourney = Number(this.journey?.overall?.memorised_ayah_count ?? 0)
+      if (fromJourney > 0) return fromJourney
+      return Number(this.data?.progress?.memorised_ayah_count ?? this.data?.snapshot?.memorised_ayahs?.value ?? 0)
+    },
+    journeyOverallPercent() {
+      const fromJourney = Number(this.journey?.overall?.percent ?? 0)
+      if (fromJourney > 0 || this.journey?.has_started) return fromJourney
+      const memorised = this.journeyMemorisedCount
+      const total = Number(this.journey?.overall?.quran_ayah_count ?? 6236)
+      if (memorised <= 0 || total <= 0) return 0
+      return Math.max(1, Math.min(100, Math.round((memorised / total) * 100)))
+    },
+    journeyOverallFill() {
+      const pct = this.journeyOverallPercent
+      if (pct <= 0) return '0%'
+      return `${Math.max(pct, 2)}%`
+    },
+    showJourneyOverall() {
+      return this.journeyMemorisedCount > 0 || this.journeyOverallPercent > 0
+    },
+    journeyReview() {
+      const review = this.journey?.review
+      if (!review || !review.surah_name || !review.href) return null
+      return review
+    },
+    journeyReviewVersesLabel() {
+      const row = this.journeyReview
+      if (!row) return ''
+      const start = Number(row.ayah_start || 0)
+      const end = Number(row.ayah_end || start)
+      if (start > 0 && end > 0 && start !== end) {
+        return this.t('dashboard.journey_verses_range', { start, end })
+      }
+      if (start > 0) return this.t('dashboard.journey_verse', { n: start })
+      return ''
+    },
+    startBeginningHref() {
+      return String(this.journey?.start_beginning_href || '').trim()
+        || `${this.memorisationUrl.split('?')[0]}?surah=1&from=1&to=7&journey=main`
+    },
+    chooseStartHref() {
+      return String(this.journey?.choose_start_href || '').trim()
+        || `${this.memorisationUrl.split('?')[0]}?setup=1&journey=choose`
     },
     isLiveContinueAction() {
       const type = String(this.data?.continue?.action_type || '')

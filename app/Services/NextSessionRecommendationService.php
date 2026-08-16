@@ -47,6 +47,7 @@ class NextSessionRecommendationService
     public function __construct(
         private readonly RepeatAdaptationService $adaptation,
         private readonly SessionLifecycleService $lifecycle,
+        private readonly MainMemorisationPositionService $mainPosition,
     ) {
     }
 
@@ -248,24 +249,32 @@ class NextSessionRecommendationService
             ],
         ]);
 
-        UserLastPosition::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'surah_number' => $surah ?: null,
-                'ayah_number' => $from ?: null,
-                'last_step' => 0,
-                'last_opened_at' => now(),
-                'metadata' => [
-                    'source' => 'recommendation',
-                    'recommendation_id' => $recommendation->id,
+        $this->mainPosition->writeLastPosition($user, [
+            'surah_number' => $surah ?: null,
+            'ayah_number' => $from ?: null,
+            'last_step' => 0,
+            'last_opened_at' => now(),
+            'metadata' => [
+                'source' => 'recommendation',
+                'recommendation_id' => $recommendation->id,
+                'rangeStart' => $from,
+                'rangeEnd' => $to,
+                'session_mode' => $mode,
+                'type' => $type?->value,
+                'settings' => $settings,
+            ],
+        ]);
+        $this->mainPosition->syncFromSessionPayload($user, $session, [
+            'metadata' => [
+                'is_main_journey' => $type?->isContinue() || $type === RecommendationType::NextSurah,
+                'session_mode' => $mode,
+                'config' => [
+                    'chapterId' => $surah,
                     'rangeStart' => $from,
                     'rangeEnd' => $to,
-                    'session_mode' => $mode,
-                    'type' => $type?->value,
-                    'settings' => $settings,
                 ],
-            ]
-        );
+            ],
+        ]);
 
         $recommendation->forceFill([
             'accepted' => true,
@@ -1674,7 +1683,12 @@ class NextSessionRecommendationService
                 ->where('idempotency_key', $idempotencyKey)
                 ->first();
             if ($byKey && $this->isReusableOpenRecommendation($byKey)) {
-                return $this->refreshOpenRecommendation($byKey, $payload, $session, $settings);
+                $record = $this->refreshOpenRecommendation($byKey, $payload, $session, $settings);
+                if ($record) {
+                    $this->mainPosition->advanceFromRecommendation($user, $record, $session);
+                }
+
+                return $record;
             }
         }
 
@@ -1693,29 +1707,35 @@ class NextSessionRecommendationService
             ->first();
 
         if ($existing) {
-            return $this->refreshOpenRecommendation($existing, $payload, $session, $settings);
+            $record = $this->refreshOpenRecommendation($existing, $payload, $session, $settings);
+        } else {
+            $record = SessionRecommendation::create([
+                'user_id' => $user->id,
+                'source_session_id' => $session?->id,
+                'surah_number' => $surahId,
+                'ayah_start' => $from,
+                'ayah_end' => $to,
+                'recommendation_type' => $type,
+                'reason_code' => $payload['reason_code'],
+                'session_mode' => $payload['session_mode'],
+                'status' => RecommendationStatus::Generated->value,
+                'range_kind' => $payload['range_kind'] ?? null,
+                'recommended_technique' => $settings['technique'] ?? null,
+                'recommended_reciter' => $settings['reciter'] ?? null,
+                'recommended_playback_speed' => $settings['playback_speed'] ?? null,
+                'recommended_repetitions' => $settings['repetitions'] ?? null,
+                'recommended_ayat_per_step' => $settings['ayat_per_step'] ?? null,
+                'recommended_settings' => $settings ?: null,
+                'idempotency_key' => $idempotencyKey,
+                'payload' => $payload,
+            ]);
         }
 
-        return SessionRecommendation::create([
-            'user_id' => $user->id,
-            'source_session_id' => $session?->id,
-            'surah_number' => $surahId,
-            'ayah_start' => $from,
-            'ayah_end' => $to,
-            'recommendation_type' => $type,
-            'reason_code' => $payload['reason_code'],
-            'session_mode' => $payload['session_mode'],
-            'status' => RecommendationStatus::Generated->value,
-            'range_kind' => $payload['range_kind'] ?? null,
-            'recommended_technique' => $settings['technique'] ?? null,
-            'recommended_reciter' => $settings['reciter'] ?? null,
-            'recommended_playback_speed' => $settings['playback_speed'] ?? null,
-            'recommended_repetitions' => $settings['repetitions'] ?? null,
-            'recommended_ayat_per_step' => $settings['ayat_per_step'] ?? null,
-            'recommended_settings' => $settings ?: null,
-            'idempotency_key' => $idempotencyKey,
-            'payload' => $payload,
-        ]);
+        if ($record) {
+            $this->mainPosition->advanceFromRecommendation($user, $record, $session);
+        }
+
+        return $record;
     }
 
     /**

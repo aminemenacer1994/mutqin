@@ -30,6 +30,7 @@ class DashboardService
 
     public function __construct(
         private readonly SessionLifecycleService $lifecycle,
+        private readonly MainMemorisationPositionService $mainPosition,
     ) {
     }
 
@@ -101,6 +102,7 @@ class DashboardService
                 'message' => 'Open memorisation to start a new session.',
             ],
             'recommended_next' => null,
+            'journey' => $this->emptyJourney(),
             'snapshot' => [
                 'completed_sessions' => ['value' => 0, 'change_7d' => 0, 'label' => 'Completed sessions', 'context' => 'Fully finished ranges only'],
                 'saved_sessions' => ['value' => 0, 'change_7d' => null, 'label' => 'Saved sessions', 'context' => 'Resumable or explicitly saved'],
@@ -184,8 +186,9 @@ class DashboardService
             ->first();
         $openRecommendation = $this->resolveOpenRecommendation($user);
 
+        $main = $this->mainPosition->get($user);
         $snapshot = $this->buildSnapshot($user);
-        $progress = $this->buildProgress($user, $unfinished, $lastPosition, $activePlan);
+        $progress = $this->buildProgress($user, $unfinished, $lastPosition, $activePlan, $main);
         $chart = $this->buildActivityChart($user, $chartDays);
         $weekSummary = $this->buildWeekSummary($user);
         $weaknesses = $this->buildWeaknesses($user);
@@ -197,9 +200,10 @@ class DashboardService
             $lastPosition,
             $openRecommendation,
             $activePlan,
-            $retention
+            $main
         );
         $recommendedNext = $this->buildRecommendedNext($openRecommendation);
+        $journey = $this->buildJourney($user, $main, $continue, $retention, $weaknesses);
 
         return [
             'meta' => [
@@ -215,6 +219,7 @@ class DashboardService
             ],
             'continue' => $continue,
             'recommended_next' => $recommendedNext,
+            'journey' => $journey,
             'snapshot' => $snapshot,
             'progress' => $progress,
             'chart' => $chart,
@@ -578,9 +583,9 @@ class DashboardService
         ?UserLastPosition $lastPosition,
         ?SessionRecommendation $openRecommendation,
         ?MemorisationPracticePlan $activePlan,
-        array $retention,
+        ?array $main = null,
     ): array {
-        if ($unfinished) {
+        if ($unfinished && $this->sessionMatchesMain($unfinished, $main)) {
             $status = UserSessionStatus::tryFromMixed($unfinished->status);
             $isPausedOrInterrupted = in_array($status, [
                 UserSessionStatus::Paused,
@@ -592,6 +597,11 @@ class DashboardService
             $rangeEnd = (int) ($config['rangeEnd'] ?? $unfinished->ayah_number ?? 0);
             $surah = (int) ($unfinished->surah_number ?? $config['chapterId'] ?? 0);
             $completion = $this->rangeCompletionPercent($user, $surah, $rangeStart, $rangeEnd);
+            $remembered = $this->mainPosition->rememberedInRange($user, [
+                'surah_number' => $surah,
+                'ayah_start' => $rangeStart,
+                'ayah_end' => $rangeEnd,
+            ]);
 
             return [
                 'action_type' => $isPausedOrInterrupted ? 'resume_session' : 'continue_session',
@@ -601,6 +611,7 @@ class DashboardService
                 'href' => $this->memorisationHref([
                     'resume' => 1,
                     'session' => (int) $unfinished->id,
+                    'journey' => 'main',
                 ]),
                 'session_id' => (int) $unfinished->id,
                 'recommendation_id' => null,
@@ -609,6 +620,8 @@ class DashboardService
                 'ayah_start' => $rangeStart ?: null,
                 'ayah_end' => $rangeEnd ?: null,
                 'last_ayah' => $unfinished->ayah_number,
+                'remembered_count' => $remembered['remembered_count'],
+                'range_ayah_count' => $remembered['range_ayah_count'],
                 'completion_percent' => $completion,
                 'last_activity_at' => optional($unfinished->last_activity_at)->toIso8601String(),
                 'recommended_technique' => $this->techniqueLabel($unfinished->memorisation_mode, $meta),
@@ -626,7 +639,7 @@ class DashboardService
             ->latest('id')
             ->first();
 
-        if ($incomplete) {
+        if ($incomplete && $this->sessionMatchesMain($incomplete, $main)) {
             $meta = is_array($incomplete->metadata) ? $incomplete->metadata : [];
             $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
             $surah = (int) ($incomplete->surah_number ?? $config['chapterId'] ?? 0);
@@ -658,40 +671,7 @@ class DashboardService
             ];
         }
 
-        if (! empty($retention['upcoming_review'])) {
-            $review = $retention['upcoming_review'];
-            $surah = (int) ($review['surah_number'] ?? 0);
-            $from = (int) ($review['ayah_start'] ?? 0);
-            $to = (int) ($review['ayah_end'] ?? $from);
-            $recommendationId = isset($review['recommendation_id']) ? (int) $review['recommendation_id'] : null;
-            $query = array_filter([
-                'recommendation' => $recommendationId ?: null,
-                'surah' => $surah ?: null,
-                'from' => $from ?: null,
-                'to' => $to ?: null,
-            ]);
-
-            return [
-                'action_type' => 'start_review',
-                'cta_key' => 'cta_review',
-                'cta_label' => 'Start review',
-                'message_key' => 'msg_review',
-                'href' => $this->memorisationHref($query !== [] ? $query : ['setup' => 1]),
-                'session_id' => null,
-                'recommendation_id' => $recommendationId,
-                'surah_number' => $surah ?: null,
-                'surah_name' => $review['surah_name'] ?? ($surah ? QuranMetadata::name($surah) : null),
-                'ayah_start' => $from ?: null,
-                'ayah_end' => $to ?: null,
-                'last_ayah' => $to ?: null,
-                'completion_percent' => null,
-                'last_activity_at' => $review['detected_at'] ?? null,
-                'recommended_technique' => $review['technique'] ?? null,
-                'message' => $review['message'] ?? 'A short review will help keep these ayahs firm.',
-            ];
-        }
-
-        if ($openRecommendation) {
+        if ($openRecommendation && $this->recommendationContinuesMain($openRecommendation, $main)) {
             $surah = (int) $openRecommendation->surah_number;
             $from = (int) $openRecommendation->ayah_start;
             $to = (int) $openRecommendation->ayah_end;
@@ -706,6 +686,7 @@ class DashboardService
                     'surah' => $surah ?: null,
                     'from' => $from ?: null,
                     'to' => $to ?: null,
+                    'journey' => 'main',
                 ]),
                 'session_id' => null,
                 'recommendation_id' => (int) $openRecommendation->id,
@@ -722,7 +703,7 @@ class DashboardService
             ];
         }
 
-        if ($activePlan) {
+        if ($activePlan && $this->rangeMatchesMain($main, (int) $activePlan->surah_number, (int) $activePlan->start_ayah, (int) $activePlan->end_ayah)) {
             $surah = (int) $activePlan->surah_number;
             $from = (int) $activePlan->start_ayah;
             $to = (int) $activePlan->end_ayah;
@@ -736,6 +717,7 @@ class DashboardService
                     'surah' => $surah ?: null,
                     'from' => $from ?: null,
                     'to' => $to ?: null,
+                    'journey' => 'main',
                 ])),
                 'session_id' => null,
                 'recommendation_id' => null,
@@ -751,38 +733,233 @@ class DashboardService
             ];
         }
 
-        $surah = (int) ($lastPosition?->surah_number ?? 0);
-        $ayah = (int) ($lastPosition?->ayah_number ?? 0);
+        if ($main) {
+            $surah = (int) $main['surah_number'];
+            $from = (int) $main['ayah_start'];
+            $to = (int) $main['ayah_end'];
+            $remembered = $this->mainPosition->rememberedInRange($user, $main);
 
-        $startQuery = ['setup' => 1];
-        if ($surah > 0) {
-            $startQuery = array_filter([
-                'surah' => $surah,
-                'from' => $ayah ?: null,
-                'to' => $ayah ?: null,
-                'setup' => $ayah > 0 ? null : 1,
-            ]);
+            return [
+                'action_type' => 'continue_range',
+                'cta_key' => 'cta_continue_memorisation',
+                'cta_label' => 'Continue',
+                'message_key' => 'msg_continue',
+                'href' => $this->memorisationHref([
+                    'surah' => $surah,
+                    'from' => $from,
+                    'to' => $to,
+                    'journey' => 'main',
+                ]),
+                'session_id' => null,
+                'recommendation_id' => null,
+                'surah_number' => $surah,
+                'surah_name' => $main['surah_name'] ?? QuranMetadata::name($surah),
+                'ayah_start' => $from,
+                'ayah_end' => $to,
+                'last_ayah' => $to,
+                'remembered_count' => $remembered['remembered_count'],
+                'range_ayah_count' => $remembered['range_ayah_count'],
+                'completion_percent' => $this->rangeCompletionPercent($user, $surah, $from, $to),
+                'last_activity_at' => optional($lastPosition?->last_opened_at)->toIso8601String(),
+                'recommended_technique' => null,
+                'message' => 'Continue your memorisation.',
+            ];
         }
 
         return [
             'action_type' => 'start_new',
             'cta_key' => 'cta_start',
             'cta_label' => 'Begin memorising',
-            'message_key' => $surah ? 'msg_start_from_position' : 'msg_start_new',
-            'href' => $this->memorisationHref($startQuery),
+            'message_key' => 'msg_start_new',
+            'href' => $this->memorisationHref(['setup' => 1, 'journey' => 'choose']),
             'session_id' => null,
             'recommendation_id' => null,
-            'surah_number' => $surah ?: null,
-            'surah_name' => $surah ? QuranMetadata::name($surah) : null,
-            'ayah_start' => $ayah ?: null,
-            'ayah_end' => $ayah ?: null,
-            'last_ayah' => $ayah ?: null,
+            'surah_number' => null,
+            'surah_name' => null,
+            'ayah_start' => null,
+            'ayah_end' => null,
+            'last_ayah' => null,
+            'remembered_count' => null,
+            'range_ayah_count' => null,
             'completion_percent' => null,
             'last_activity_at' => optional($lastPosition?->last_opened_at)->toIso8601String(),
             'recommended_technique' => null,
-            'message' => $surah
-                ? 'Start from your last opened ayah.'
-                : 'Open memorisation to start a new session.',
+            'message' => 'Open memorisation to start a new session.',
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $main
+     */
+    private function sessionMatchesMain(UserSession $session, ?array $main): bool
+    {
+        if ($main === null) {
+            return true;
+        }
+
+        $meta = is_array($session->metadata) ? $session->metadata : [];
+        $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
+        $surah = (int) ($session->surah_number ?? $config['chapterId'] ?? 0);
+        $from = (int) ($config['rangeStart'] ?? $session->ayah_number ?? 0);
+        $to = (int) ($config['rangeEnd'] ?? $from);
+
+        return $this->rangeMatchesMain($main, $surah, $from, $to);
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $main
+     */
+    private function recommendationContinuesMain(SessionRecommendation $recommendation, ?array $main): bool
+    {
+        $type = RecommendationType::tryFrom((string) $recommendation->recommendation_type);
+        if (! $type || (! $type->isContinue() && $type !== RecommendationType::NextSurah)) {
+            return false;
+        }
+
+        $surah = (int) $recommendation->surah_number;
+        $from = (int) $recommendation->ayah_start;
+        $to = (int) $recommendation->ayah_end;
+
+        return $this->rangeMatchesMain($main, $surah, $from, $to);
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $main
+     */
+    private function rangeMatchesMain(?array $main, int $surah, int $from, int $to): bool
+    {
+        if ($surah <= 0 || $from <= 0) {
+            return false;
+        }
+
+        if ($main === null) {
+            return true;
+        }
+
+        $to = max($from, $to);
+
+        return $this->mainPosition->overlaps($main, $surah, $from, $to)
+            || $this->mainPosition->isContinuation($main, $surah, $from, $to);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function emptyJourney(): array
+    {
+        return [
+            'has_started' => false,
+            'continue' => null,
+            'review' => null,
+            'overall' => [
+                'memorised_ayah_count' => 0,
+                'quran_ayah_count' => QuranMetadata::totalAyahCount(),
+                'percent' => 0,
+            ],
+            'start_beginning_href' => $this->memorisationHref([
+                'surah' => 1,
+                'from' => 1,
+                'to' => 7,
+                'journey' => 'main',
+            ]),
+            'choose_start_href' => $this->memorisationHref([
+                'setup' => 1,
+                'journey' => 'choose',
+            ]),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $main
+     * @param  array<string, mixed>  $continue
+     * @param  array<string, mixed>  $retention
+     * @param  array<string, mixed>  $weaknesses
+     * @return array<string, mixed>
+     */
+    private function buildJourney(
+        User $user,
+        ?array $main,
+        array $continue,
+        array $retention,
+        array $weaknesses,
+    ): array {
+        $journey = $this->emptyJourney();
+        $journey['overall'] = $this->mainPosition->overallProgress($user);
+        $journey['has_started'] = $main !== null;
+
+        if ($main === null) {
+            return $journey;
+        }
+
+        $remembered = $this->mainPosition->rememberedInRange($user, $main);
+        $journey['continue'] = [
+            'surah_number' => $continue['surah_number'] ?? $main['surah_number'],
+            'surah_name' => $continue['surah_name'] ?? $main['surah_name'],
+            'ayah_start' => $continue['ayah_start'] ?? $main['ayah_start'],
+            'ayah_end' => $continue['ayah_end'] ?? $main['ayah_end'],
+            'remembered_count' => $continue['remembered_count'] ?? $remembered['remembered_count'],
+            'range_ayah_count' => $continue['range_ayah_count'] ?? $remembered['range_ayah_count'],
+            'href' => $continue['href'] ?? $journey['start_beginning_href'],
+            'action_type' => $continue['action_type'] ?? 'continue_range',
+            'cta_key' => 'cta_continue_memorisation',
+        ];
+        $journey['review'] = $this->buildJourneyReview($main, $retention, $weaknesses);
+
+        return $journey;
+    }
+
+    /**
+     * @param  array<string, mixed>  $main
+     * @param  array<string, mixed>  $retention
+     * @param  array<string, mixed>  $weaknesses
+     * @return array<string, mixed>|null
+     */
+    private function buildJourneyReview(array $main, array $retention, array $weaknesses): ?array
+    {
+        $review = $retention['upcoming_review'] ?? null;
+        if (is_array($review)) {
+            $surah = (int) ($review['surah_number'] ?? 0);
+            $from = (int) ($review['ayah_start'] ?? 0);
+            $to = (int) ($review['ayah_end'] ?? $from);
+            if ($surah > 0 && ! $this->rangeMatchesMain($main, $surah, $from, $to)) {
+                $recommendationId = isset($review['recommendation_id']) ? (int) $review['recommendation_id'] : null;
+
+                return [
+                    'surah_number' => $surah,
+                    'surah_name' => $review['surah_name'] ?? QuranMetadata::name($surah),
+                    'ayah_start' => $from ?: null,
+                    'ayah_end' => $to ?: null,
+                    'href' => $this->memorisationHref(array_filter([
+                        'recommendation' => $recommendationId ?: null,
+                        'surah' => $surah,
+                        'from' => $from ?: null,
+                        'to' => $to ?: null,
+                    ])),
+                ];
+            }
+        }
+
+        $item = $weaknesses['items'][0] ?? null;
+        if (! is_array($item)) {
+            return null;
+        }
+
+        $surah = (int) ($item['surah_number'] ?? 0);
+        $ayah = (int) ($item['ayah_number'] ?? 0);
+        if ($surah <= 0 || $this->rangeMatchesMain($main, $surah, $ayah ?: 1, $ayah ?: 1)) {
+            return null;
+        }
+
+        return [
+            'surah_number' => $surah,
+            'surah_name' => $item['surah_name'] ?? QuranMetadata::name($surah),
+            'ayah_start' => $ayah ?: null,
+            'ayah_end' => $ayah ?: null,
+            'href' => $item['href'] ?? $this->memorisationHref(array_filter([
+                'surah' => $surah,
+                'from' => $ayah ?: null,
+                'to' => $ayah ?: null,
+            ])),
         ];
     }
 
@@ -872,6 +1049,7 @@ class DashboardService
     }
 
     /**
+     * @param  array<string, mixed>|null  $main
      * @return array<string, mixed>
      */
     private function buildProgress(
@@ -879,19 +1057,21 @@ class DashboardService
         ?UserSession $unfinished,
         ?UserLastPosition $lastPosition,
         ?MemorisationPracticePlan $activePlan,
+        ?array $main = null,
     ): array {
         $meta = is_array($unfinished?->metadata) ? $unfinished->metadata : [];
         $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
 
-        $surah = (int) ($unfinished?->surah_number
+        $surah = (int) ($main['surah_number']
+            ?? $unfinished?->surah_number
             ?? $config['chapterId']
             ?? $lastPosition?->surah_number
             ?? $activePlan?->surah_number
             ?? 0);
 
-        $ayahStart = (int) ($config['rangeStart'] ?? $activePlan?->start_ayah ?? 0);
-        $ayahEnd = (int) ($config['rangeEnd'] ?? $activePlan?->end_ayah ?? 0);
-        $currentAyah = (int) ($unfinished?->ayah_number ?? $lastPosition?->ayah_number ?? 0);
+        $ayahStart = (int) ($main['ayah_start'] ?? $config['rangeStart'] ?? $activePlan?->start_ayah ?? 0);
+        $ayahEnd = (int) ($main['ayah_end'] ?? $config['rangeEnd'] ?? $activePlan?->end_ayah ?? 0);
+        $currentAyah = (int) ($main['ayah_start'] ?? $unfinished?->ayah_number ?? $lastPosition?->ayah_number ?? 0);
 
         $memorisedCount = MemorisationProgress::query()
             ->where('user_id', $user->id)

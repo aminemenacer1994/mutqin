@@ -22,7 +22,7 @@ class OnboardingTriggerTest extends TestCase
             'password_confirmation' => 'secret12',
         ]);
 
-        $response->assertRedirect('/memorisation');
+        $response->assertRedirect('/dashboard');
         $this->assertAuthenticated();
 
         $page = $this->get(route('memorisation'));
@@ -41,7 +41,7 @@ class OnboardingTriggerTest extends TestCase
         $this->post(route('login'), [
             'email' => 'returning@example.com',
             'password' => 'secret12',
-        ])->assertRedirect('/memorisation');
+        ])->assertRedirect('/dashboard');
 
         $page = $this->get(route('memorisation'));
         $page->assertOk();
@@ -65,7 +65,7 @@ class OnboardingTriggerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('memorisation'));
+            ->assertRedirect(route('dashboard'));
 
         $page = $this->get(route('memorisation'));
         $page->assertOk();
@@ -82,7 +82,7 @@ class OnboardingTriggerTest extends TestCase
                 'password' => 'secret12',
                 'password_confirmation' => 'secret12',
             ])
-            ->assertRedirect('/memorisation');
+            ->assertRedirect('/dashboard');
 
         $page = $this->get(route('memorisation'));
         $page->assertOk();

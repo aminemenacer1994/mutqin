@@ -467,6 +467,10 @@ export default {
       returningUserChoicePending: false,
       welcomeBackWorkspaceHidden: false,
       welcomeBackContinueInFlight: false,
+      pendingMainJourney: false,
+      learnerJourney: null,
+      learnerJourneyLoading: false,
+      learnerStreakDays: 0,
       pendingResumeDefaultTab: '',
       showHifzPlanModal: false,
       hifzPlanExists: false,
@@ -1489,6 +1493,99 @@ export default {
         && !this.isWelcomeBackWorkspaceHidden
         && !this.hasVerses
         && !this.isPostSessionChoiceVisible
+    },
+    isFirstTimeJourneyEmpty() {
+      return this.shouldShowWorkspaceEmptyState && !this.journeyHasStarted
+    },
+    learnerDashboardUrl() {
+      return '/dashboard'
+    },
+    journeyHasStarted() {
+      return !!(this.learnerJourney?.has_started && this.journeyContinue)
+    },
+    journeyContinue() {
+      return this.learnerJourney?.continue || null
+    },
+    journeyReview() {
+      const review = this.learnerJourney?.review
+      if (!review || !review.surah_name) return null
+      return review
+    },
+    journeyOverallPercent() {
+      return Number(this.learnerJourney?.overall?.percent ?? 0)
+    },
+    journeyVersesLabel() {
+      const row = this.journeyContinue
+      if (!row) return ''
+      const start = Number(row.ayah_start || 0)
+      const end = Number(row.ayah_end || start)
+      if (start > 0 && end > 0 && start !== end) {
+        return this.t('dashboard.journey_verses_range', { start, end })
+      }
+      if (start > 0) return this.t('dashboard.journey_verse', { n: start })
+      return ''
+    },
+    journeyRememberedLabel() {
+      const row = this.journeyContinue
+      if (!row) return ''
+      const remembered = Number(row.remembered_count)
+      const total = Number(row.range_ayah_count)
+      if (!Number.isFinite(remembered) || !Number.isFinite(total) || total <= 0) return ''
+      return this.t('dashboard.journey_remembered', { remembered, total })
+    },
+    workspaceJourneyTitle() {
+      if (this.journeyHasStarted) {
+        return this.journeyContinue.surah_name || this.t('dashboard.journey_continue_label')
+      }
+      return this.t('memorisation.workspaceJourney.startTitle')
+    },
+    workspaceOverviewKicker() {
+      return this.isLoggedIn
+        ? this.t('memorisation.workspaceJourney.kicker')
+        : this.t('memorisation.sessionOverview.kicker')
+    },
+    journeyMemorisedCount() {
+      return Number(this.learnerJourney?.overall?.memorised_ayah_count ?? 0)
+    },
+    journeyRangeRemembered() {
+      return Number(this.journeyContinue?.remembered_count ?? 0)
+    },
+    journeyRangeTotal() {
+      return Number(this.journeyContinue?.range_ayah_count ?? 0)
+    },
+    workspaceJourneyRangeFill() {
+      const total = this.journeyRangeTotal
+      const done = this.journeyRangeRemembered
+      if (!(total > 0) || done <= 0) return 0
+      return Math.max(6, Math.min(100, Math.round((done / total) * 100)))
+    },
+    workspaceJourneyNextLine() {
+      if (this.journeyReview?.surah_name) {
+        return this.t('memorisation.workspaceJourney.reviewWaiting', {
+          surah: this.journeyReview.surah_name,
+        })
+      }
+      if (this.journeyHasStarted) {
+        return this.t('memorisation.workspaceJourney.placeWaiting', {
+          surah: this.journeyContinue.surah_name,
+          verses: this.journeyVersesLabel,
+        })
+      }
+      return this.t('memorisation.workspaceJourney.startMeta')
+    },
+    workspaceJourneyStatsLine() {
+      const parts = []
+      if (this.journeyRememberedLabel) parts.push(this.journeyRememberedLabel)
+      if (this.journeyMemorisedCount > 0) {
+        parts.push(this.t('memorisation.workspaceJourney.ayahsKept', { n: this.journeyMemorisedCount }))
+      }
+      if (this.learnerStreakDays > 0) {
+        parts.push(this.t('memorisation.workspaceJourney.streak', { n: this.learnerStreakDays }))
+      }
+      return parts.join(' · ')
+    },
+    shouldShowWorkspaceJourney() {
+      return this.isLoggedIn && (this.journeyHasStarted || this.journeyMemorisedCount > 0 || this.learnerStreakDays > 0)
     },
     loginUrl() {
       return this.auth?.login_url || '/login'
@@ -9379,7 +9476,8 @@ export default {
         const surah = Number(params.get('surah') || 0)
         const from = Number(params.get('from') || params.get('ayah') || 0)
         const to = Number(params.get('to') || from || 0)
-        if (!resume && !setup && !recommendationId && !(surah > 0) && panel !== 'saved' && !aiCheck) return null
+        const journey = String(params.get('journey') || '').trim().toLowerCase()
+        if (!resume && !setup && !recommendationId && !(surah > 0) && panel !== 'saved' && !aiCheck && !journey) return null
         return {
           resume,
           setup,
@@ -9388,6 +9486,7 @@ export default {
           sessionId: sessionId || null,
           panel: panel || null,
           returnTo: returnTo || null,
+          journey: journey || null,
           surah: surah > 0 ? surah : 0,
           from: from > 0 ? from : 0,
           to: to > 0 ? to : 0,
@@ -9401,7 +9500,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'return']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'return', 'journey']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -9422,6 +9521,9 @@ export default {
       this.returningUserChoicePending = false
       this.welcomeBackWorkspaceHidden = false
       this.markWelcomeBackModalShownForCurrentLogin()
+      if (entry.journey === 'main' || entry.journey === 'choose') {
+        this.pendingMainJourney = true
+      }
 
       try {
         if (entry.aiCheck && entry.surah > 0 && entry.from > 0) {
@@ -11153,16 +11255,8 @@ export default {
      * Skips Al-Fatihah (ayah 1 is the basmala) and avoids duplicating
      * when the verse text still begins with the basmala.
      */
-    shouldShowStackedBasmala(verse) {
-      if (!verse) return false
-      const ayahNumber = Number(verse.number || verse.numberInSurah || String(verse.key || '').split(':')[1] || 0)
-      const chapterId = Number(verse.chapterId || String(verse.key || '').split(':')[0] || 0)
-      if (ayahNumber !== 1 || !chapterHasBismillahPre(chapterId)) return false
-      const arabic = String(verse.arabic || '').trim()
-      if (!arabic) return true
-      const stripped = this.removeBasmala(arabic)
-      // If stripping removed content, the basmala is still embedded — don't duplicate.
-      return stripped === arabic
+    shouldShowStackedBasmala() {
+      return false
     },
 
     /**
@@ -11815,7 +11909,16 @@ export default {
                 ayah_number: Number(this.rangeStart || 1) || null,
                 memorisation_mode: this.currentMode,
                 idempotency_key: `start-${this.auth?.id || 'guest'}-${this.chapterId || 0}-${this.rangeStart || 0}-${this.rangeEnd || 0}`,
+                metadata: {
+                  is_main_journey: !!this.pendingMainJourney,
+                  config: {
+                    chapterId: Number(this.chapterId || this.currentChapter?.id || 0) || null,
+                    rangeStart: Number(this.rangeStart || 0) || null,
+                    rangeEnd: Number(this.rangeEnd || this.rangeStart || 0) || null,
+                  },
+                },
               }).then(() => {
+                this.pendingMainJourney = false
                 this.backendUnfinishedSession = true
               }).catch((error) => {
                 this.noteLearningBackendFailure(error, 'start')
@@ -26596,7 +26699,7 @@ export default {
       } catch (error) {
         console.error('Failed to snapshot session before dashboard:', error)
       }
-      window.location.assign('/dashboard')
+      window.location.assign(this.isAdmin ? this.adminDashboardUrl : this.learnerDashboardUrl)
     },
     handleHeaderSessionAction() {
       if (this.headerSessionActionDisabled) {
@@ -27318,6 +27421,68 @@ export default {
     openNewSessionSetup() {
       this.resetRepetitionsForFreshSession()
       this.openToolsPanel({ tab: 'tools' })
+    },
+    async startJourneyFromBeginning() {
+      this.pendingMainJourney = true
+      await this.startSessionFromRecommendationPayload({
+        chapterId: 1,
+        rangeStart: 1,
+        rangeEnd: 7,
+        sessionMode: 'new_learning',
+      })
+    },
+    chooseJourneyStart() {
+      this.pendingMainJourney = true
+      this.openNewSessionSetup()
+    },
+    async loadLearnerJourney() {
+      if (!this.learningBackendEnabled() || this.learnerJourneyLoading) return
+      this.learnerJourneyLoading = true
+      try {
+        const payload = await learningApi.getDashboard(7)
+        this.learnerJourney = payload?.journey && typeof payload.journey === 'object'
+          ? payload.journey
+          : null
+        this.learnerStreakDays = Number(payload?.retention?.streak_days || 0)
+      } catch (error) {
+        console.warn('Learner journey fetch failed', error)
+      } finally {
+        this.learnerJourneyLoading = false
+      }
+    },
+    async continueLearnerJourney() {
+      const row = this.journeyContinue
+      const surah = Number(row?.surah_number || 0)
+      const from = Number(row?.ayah_start || 0)
+      const to = Number(row?.ayah_end || from)
+      this.pendingMainJourney = true
+      if (surah > 0 && from > 0) {
+        await this.startSessionFromRecommendationPayload({
+          chapterId: surah,
+          rangeStart: from,
+          rangeEnd: Math.max(from, to),
+          sessionMode: 'new_learning',
+        })
+        this.loadLearnerJourney()
+        return
+      }
+      this.openNewSessionSetup()
+    },
+    async reviewLearnerJourney() {
+      const review = this.journeyReview
+      const surah = Number(review?.surah_number || 0)
+      const from = Number(review?.ayah_start || 0)
+      const to = Number(review?.ayah_end || from)
+      if (surah > 0 && from > 0) {
+        await this.startSessionFromRecommendationPayload({
+          chapterId: surah,
+          rangeStart: from,
+          rangeEnd: Math.max(from, to || from),
+          sessionMode: 'revision',
+        })
+        return
+      }
+      this.openNewSessionSetup()
     },
     openSavedSessionsPanel() {
       this.openToolsPanel({ tab: 'saved' })
@@ -34488,6 +34653,7 @@ export default {
           await this.runLearningMigration()
         }
         this.learningSync.ready = true
+        this.loadLearnerJourney()
       } catch (error) {
         // Backend unreachable or unauthorized: keep using the local cache.
         if (!this.noteLearningBackendFailure(error, 'init')) {

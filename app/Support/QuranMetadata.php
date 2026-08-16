@@ -69,6 +69,11 @@ final class QuranMetadata
         return self::AYAH_COUNTS[$surah - 1] ?? null;
     }
 
+    public static function totalAyahCount(): int
+    {
+        return (int) array_sum(self::AYAH_COUNTS);
+    }
+
     public static function name(int $surah): ?string
     {
         if ($surah < 1 || $surah > 114) {

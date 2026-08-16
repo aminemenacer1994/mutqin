@@ -6,13 +6,13 @@ use App\Models\User;
 
 /**
  * Single post-auth destination for login / guest redirects.
- * Admins land on the admin dashboard; learners keep the memorisation workspace.
+ * Admins land on the admin dashboard; learners land on their journey overview.
  */
 final class AuthRedirect
 {
     public static function routeName(?User $user): string
     {
-        return $user?->isAdmin() === true ? 'admin.dashboard' : 'memorisation';
+        return $user?->isAdmin() === true ? 'admin.dashboard' : 'dashboard';
     }
 
     public static function to(?User $user): string

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Learning;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveContinueRequest;
 use App\Models\UserLastPosition;
+use App\Services\MainMemorisationPositionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -23,20 +24,17 @@ class ContinueController extends Controller
         return response()->json(['position' => $position]);
     }
 
-    public function store(SaveContinueRequest $request): JsonResponse
+    public function store(SaveContinueRequest $request, MainMemorisationPositionService $mainPosition): JsonResponse
     {
         $data = $request->validated();
 
-        $position = UserLastPosition::updateOrCreate(
-            ['user_id' => $request->user()->id],
-            [
-                'surah_number' => $data['surah_number'] ?? null,
-                'ayah_number' => $data['ayah_number'] ?? null,
-                'last_step' => $data['last_step'] ?? 0,
-                'metadata' => $data['metadata'] ?? null,
-                'last_opened_at' => $data['last_opened_at'] ?? now(),
-            ]
-        );
+        $position = $mainPosition->writeLastPosition($request->user(), [
+            'surah_number' => $data['surah_number'] ?? null,
+            'ayah_number' => $data['ayah_number'] ?? null,
+            'last_step' => $data['last_step'] ?? 0,
+            'metadata' => $data['metadata'] ?? null,
+            'last_opened_at' => $data['last_opened_at'] ?? now(),
+        ]);
 
         $this->authorize('update', $position);
 

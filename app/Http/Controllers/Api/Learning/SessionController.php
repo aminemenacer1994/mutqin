@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveSessionRequest;
 use App\Models\UserSession;
 use App\Services\DashboardService;
+use App\Services\MainMemorisationPositionService;
 use App\Services\NextSessionRecommendationService;
 use App\Services\SessionLifecycleService;
 use App\Support\QuranMetadata;
@@ -133,6 +134,7 @@ class SessionController extends Controller
 
         $session = $this->lifecycle->start($request->user(), $data);
         $this->authorize('update', $session);
+        app(MainMemorisationPositionService::class)->syncFromSessionPayload($request->user(), $session, $data);
         DashboardService::forgetForUser($request->user());
 
         return response()->json([

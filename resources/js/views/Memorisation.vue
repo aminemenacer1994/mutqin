@@ -379,14 +379,13 @@
                     <span>{{ t('memorisation.reading.tajweed') }}</span>
                     <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
-                  <div v-if="isAdmin" class="top-card-menu-divider" aria-hidden="true"></div>
+                  <div class="top-card-menu-divider" aria-hidden="true"></div>
                   <a
-                    v-if="isAdmin"
-                    :href="adminDashboardUrl"
+                    :href="isAdmin ? adminDashboardUrl : learnerDashboardUrl"
                     class="top-card-menu-link"
-                    @click.stop="topCardMenuOpen = false"
+                    @click.stop="topCardMenuOpen = false; isAdmin ? null : openDashboardView()"
                   >
-                    <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                    <i class="bi bi-grid-1x2" aria-hidden="true"></i>
                     <span>{{ t('common.dashboard') }}</span>
                   </a>
                   <button type="button" @click="openOnboardingFromTopMenu">
@@ -491,7 +490,18 @@
             </div>
           </div>
           </template>
-          <div v-else-if="showSessionOverviewIdleActions" class="workspace-shell-actions workspace-shell-actions-minimal">
+          <div v-else-if="showSessionOverviewIdleActions" class="workspace-shell-idle">
+            <div v-if="shouldShowWorkspaceJourney || workspaceJourneyTitle" class="workspace-shell-copy">
+              <span class="workspace-shell-kicker">{{ t('memorisation.workspaceJourney.kicker') }}</span>
+              <h1 class="workspace-shell-main-title">{{ workspaceJourneyTitle }}</h1>
+              <a
+                v-if="isLoggedIn"
+                class="workspace-shell-path"
+                :href="learnerDashboardUrl"
+                @click.prevent="openDashboardView"
+              >{{ t('memorisation.workspaceJourney.openDashboard') }}</a>
+            </div>
+          <div class="workspace-shell-actions workspace-shell-actions-minimal">
             <div
               v-if="showHeaderSessionAction"
               class="action-btn primary session-idle-action session-primary-action"
@@ -510,6 +520,7 @@
               <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
               <span>{{ headerSessionActionLabel }}</span>
             </div>
+          </div>
           </div>
         </div>
         <p v-if="chainingSetupBlocking" class="workspace-setup-hint workspace-setup-hint-warning" role="status">
@@ -602,15 +613,33 @@
             :aria-label="t('memorisation.a11y.memorisationWorkspace')">
             <!-- Source-guard references:
               <button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls">
-              aria-label="Open controls"
+              :aria-label="t('memorisation.open_controls')"
               v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"
             -->
             <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t('memorisation.a11y.sessionSetup')">
-              <div class="workspace-empty-card">
+              <div class="workspace-empty-card" :class="{ 'workspace-empty-card--choice': isFirstTimeJourneyEmpty }">
                 <span class="workspace-empty-kicker">{{ t('memorisation.workspaceEmpty.kicker') }}</span>
-                <h2>{{ t('memorisation.workspaceEmpty.title') }}</h2>
-                <p>{{ t('memorisation.workspaceEmpty.desc') }}</p>
-                <div class="workspace-empty-actions">
+                <h2>{{ isFirstTimeJourneyEmpty ? t('memorisation.workspaceEmpty.journeyTitle') : t('memorisation.workspaceEmpty.title') }}</h2>
+                <p>{{ isFirstTimeJourneyEmpty ? t('memorisation.workspaceEmpty.journeyDesc') : t('memorisation.workspaceEmpty.desc') }}</p>
+                <div v-if="isFirstTimeJourneyEmpty" class="workspace-empty-choice-grid">
+                  <button
+                    class="workspace-empty-choice-card workspace-empty-choice-card--primary"
+                    type="button"
+                    @click="startJourneyFromBeginning"
+                  >
+                    <strong>{{ t('memorisation.workspaceEmpty.startBeginning') }}</strong>
+                    <span>{{ t('memorisation.workspaceEmpty.startBeginningHint') }}</span>
+                  </button>
+                  <button
+                    class="workspace-empty-choice-card"
+                    type="button"
+                    @click="chooseJourneyStart"
+                  >
+                    <strong>{{ t('memorisation.workspaceEmpty.chooseStart') }}</strong>
+                    <span>{{ t('memorisation.workspaceEmpty.chooseStartHint') }}</span>
+                  </button>
+                </div>
+                <div v-else class="workspace-empty-actions">
                   <button class="action-btn primary" type="button" @click="openNewSessionSetup">
                     {{ t('memorisation.open_session_setup') }}
                   </button>
@@ -903,18 +932,6 @@
                   </ul>
                 </div>
 
-                <div
-                  v-if="shouldShowStackedBasmala(verse)"
-                  class="verse-basmala"
-                  dir="rtl"
-                  lang="ar"
-                  :aria-label="t('memorisation.a11y.bismillah')"
-                  :style="{
-                    '--verse-font-percent': getVerseFontSize(verse.key),
-                    '--quran-font': quranFontFamily,
-                    'font-family': quranFontFamily
-                  }"
-                >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
                 <div class="verse-arabic verse-arabic-primary verse-arabic-with-end" dir="rtl" lang="ar" v-if="verse.arabic && isDataReady"
                   @click.stop
                   :key="`ar-${verse.key}-${practiceFocusSignature}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}`"

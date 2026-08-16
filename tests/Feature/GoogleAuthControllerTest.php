@@ -80,7 +80,7 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('memorisation'));
+            ->assertRedirect(route('dashboard'));
 
         $this->assertAuthenticatedAs($user->fresh());
         $this->assertSame(1, User::count());
@@ -125,7 +125,7 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('memorisation'));
+            ->assertRedirect(route('dashboard'));
 
         $this->assertAuthenticatedAs($user->fresh());
         $this->assertSame('google-456', $user->fresh()->google_id);
@@ -143,7 +143,7 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('memorisation'));
+            ->assertRedirect(route('dashboard'));
 
         $user = User::where('email', 'new@example.com')->first();
 
@@ -167,7 +167,7 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get('/auth/callback')
-            ->assertRedirect(route('memorisation'));
+            ->assertRedirect(route('dashboard'));
 
         $user = User::where('email', 'legacy@example.com')->first();
 
