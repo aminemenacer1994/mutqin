@@ -736,23 +736,6 @@ var DRAWER_EMPTY = {
     showHeroHint: function showHeroHint() {
       return !this.showJourneyStart && (this.primaryJourneyAction || this.liveReturnSession);
     },
-    murajaahPrimaryMeta: function murajaahPrimaryMeta() {
-      var source = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var start = Number(source.ayah_start || source.ayah_number || 0);
-      var end = Number(source.ayah_end || start || 0);
-      if (start > 0 && end >= start) {
-        return this.t('dashboard.ayah_range', {
-          start: start,
-          end: end
-        });
-      }
-      if (start > 0) {
-        return this.t('dashboard.last_ayah', {
-          n: start
-        });
-      }
-      return '';
-    },
     murajaahSectionHint: function murajaahSectionHint() {
       if (this.murajaahTotal > 1) {
         return this.t('dashboard.journey_murajaah_hint', {
@@ -1227,6 +1210,23 @@ var DRAWER_EMPTY = {
     t: function t(key, params) {
       if (typeof this.$t === 'function') return this.$t(key, params);
       return key;
+    },
+    murajaahPrimaryMeta: function murajaahPrimaryMeta() {
+      var source = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var start = Number(source.ayah_start || source.ayah_number || 0);
+      var end = Number(source.ayah_end || start || 0);
+      if (start > 0 && end >= start) {
+        return this.t('dashboard.ayah_range', {
+          start: start,
+          end: end
+        });
+      }
+      if (start > 0) {
+        return this.t('dashboard.last_ayah', {
+          n: start
+        });
+      }
+      return '';
     },
     activeSessionSnapshotKey: function activeSessionSnapshotKey() {
       var id = this.ownerId > 0 ? String(this.ownerId) : 'guest';

@@ -1,27 +1,64 @@
 @if (app()->environment('local'))
-    <aside
-        class="auth-tester-notice"
-        role="note"
-        aria-label="Local testing account"
-        data-auth-tester-notice
-        data-test-email="layla.beginner@mutqin.test"
-        data-test-password="DemoPass1!"
-    >
-        <div class="auth-tester-notice__row">
-            <span class="auth-tester-notice__label">Local demo</span>
-            <span class="auth-tester-notice__account">layla.beginner@mutqin.test</span>
-            <button type="button" class="auth-tester-notice__fill" data-auth-fill-test-account>
-                Fill
-            </button>
-        </div>
+    @php
+        $demoAccounts = [
+            [
+                'title' => __('ui.auth_demo_account_beginner'),
+                'desc' => __('ui.auth_demo_account_beginner_desc'),
+                'email' => 'layla.beginner@mutqin.test',
+            ],
+            [
+                'title' => __('ui.auth_demo_account_progress'),
+                'desc' => __('ui.auth_demo_account_progress_desc'),
+                'email' => 'omar.active@mutqin.test',
+            ],
+            [
+                'title' => __('ui.auth_demo_account_review'),
+                'desc' => __('ui.auth_demo_account_review_desc'),
+                'email' => 'fatima.reviser@mutqin.test',
+            ],
+            [
+                'title' => __('ui.auth_demo_account_continue'),
+                'desc' => __('ui.auth_demo_account_continue_desc'),
+                'email' => 'noah.paused@mutqin.test',
+            ],
+        ];
+    @endphp
 
-        <details class="auth-tester-notice__details">
-            <summary>More accounts</summary>
-            <p>
-                Password <span class="auth-tester-notice__mono">DemoPass1!</span>
-                · Guide <span class="auth-tester-notice__mono">docs/TESTER_GUIDE.md</span>
-                · Seed <span class="auth-tester-notice__mono">php artisan migrate --seed</span>
-            </p>
+    <aside class="auth-tester-notice" role="note" aria-label="{{ __('ui.auth_demo_title') }}">
+        <details class="auth-tester-notice__panel" open>
+            <summary class="auth-tester-notice__toggle">
+                <span class="auth-tester-notice__toggle-copy">
+                    <span class="auth-tester-notice__title">{{ __('ui.auth_demo_title') }}</span>
+                    <span class="auth-tester-notice__intro">{{ __($introKey ?? 'ui.auth_demo_intro') }}</span>
+                </span>
+                <span class="auth-tester-notice__chevron" aria-hidden="true"></span>
+            </summary>
+
+            <div class="auth-tester-notice__body">
+                <ul class="auth-tester-notice__list">
+                    @foreach ($demoAccounts as $account)
+                        <li class="auth-tester-notice__item">
+                            <div class="auth-tester-notice__copy">
+                                <span class="auth-tester-notice__name">{{ $account['title'] }}</span>
+                                <span class="auth-tester-notice__desc">{{ $account['desc'] }}</span>
+                            </div>
+                            <button
+                                type="button"
+                                class="auth-tester-notice__fill"
+                                data-auth-fill-test-account
+                                data-test-email="{{ $account['email'] }}"
+                                data-test-password="DemoPass1!"
+                            >
+                                {{ __('ui.auth_demo_use') }}
+                            </button>
+                        </li>
+                    @endforeach
+                </ul>
+
+                <p class="auth-tester-notice__hint">
+                    {{ __('ui.auth_demo_password') }} <strong>DemoPass1!</strong>
+                </p>
+            </div>
         </details>
     </aside>
 @endif

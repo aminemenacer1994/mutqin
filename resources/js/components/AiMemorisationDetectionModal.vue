@@ -528,6 +528,8 @@ export default {
       this.captureReturnFocus()
       this.$nextTick(() => {
         this.bindAutoFollowShell()
+        // v-if mount with :open="true" does not fire the open watcher — seed HTML here.
+        this.scheduleMushafHtml(this.ayahHtml, true)
         this.focusInitialElement()
       })
     }

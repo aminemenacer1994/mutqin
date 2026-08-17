@@ -439,6 +439,8 @@ var AMD_FOCUSABLE_SELECTOR = ['a[href]', 'button:not([disabled])', 'textarea:not
       this.captureReturnFocus();
       this.$nextTick(function () {
         _this3.bindAutoFollowShell();
+        // v-if mount with :open="true" does not fire the open watcher — seed HTML here.
+        _this3.scheduleMushafHtml(_this3.ayahHtml, true);
         _this3.focusInitialElement();
       });
     }

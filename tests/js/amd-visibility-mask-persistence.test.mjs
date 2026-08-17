@@ -105,6 +105,11 @@ function extractMethod(source, name) {
     /if \(immediate\)\s*\{\s*apply\(\)/,
     'forced mushaf HTML must apply synchronously (no setTimeout flash frame)',
   )
+  assert.match(
+    modalVue,
+    /mounted\(\)\s*\{[\s\S]*?scheduleMushafHtml\(this\.ayahHtml,\s*true\)/,
+    'v-if mount with open=true must seed mushaf HTML (open watcher does not run)',
+  )
 }
 
 console.log('amd-visibility-mask-persistence.test.mjs: ok')

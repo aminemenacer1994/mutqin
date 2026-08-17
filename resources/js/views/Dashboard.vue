@@ -915,17 +915,6 @@ export default {
     showHeroHint() {
       return !this.showJourneyStart && (this.primaryJourneyAction || this.liveReturnSession)
     },
-    murajaahPrimaryMeta(source = {}) {
-      const start = Number(source.ayah_start || source.ayah_number || 0)
-      const end = Number(source.ayah_end || start || 0)
-      if (start > 0 && end >= start) {
-        return this.t('dashboard.ayah_range', { start, end })
-      }
-      if (start > 0) {
-        return this.t('dashboard.last_ayah', { n: start })
-      }
-      return ''
-    },
     murajaahSectionHint() {
       if (this.murajaahTotal > 1) {
         return this.t('dashboard.journey_murajaah_hint', { count: this.murajaahTotal })
@@ -1337,6 +1326,17 @@ export default {
     t(key, params) {
       if (typeof this.$t === 'function') return this.$t(key, params)
       return key
+    },
+    murajaahPrimaryMeta(source = {}) {
+      const start = Number(source.ayah_start || source.ayah_number || 0)
+      const end = Number(source.ayah_end || start || 0)
+      if (start > 0 && end >= start) {
+        return this.t('dashboard.ayah_range', { start, end })
+      }
+      if (start > 0) {
+        return this.t('dashboard.last_ayah', { n: start })
+      }
+      return ''
     },
     activeSessionSnapshotKey() {
       const id = this.ownerId > 0 ? String(this.ownerId) : 'guest'

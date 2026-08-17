@@ -2682,6 +2682,7 @@
       "title": "Check your memorisation",
       "emptyAyahTitle": "Ayah text not ready",
       "emptyAyahDesc": "We couldn’t show the ayah surface for this check. Close and open the check again.",
+      "ayahTextUnavailable": "Ayah text is not ready yet. Close and try the check again.",
       "betaBadge": "",
       "disclaimer": "Practice aid only — not a teacher’s ruling.",
       "disclaimerShort": "Practice aid only — not a teacher’s ruling.",

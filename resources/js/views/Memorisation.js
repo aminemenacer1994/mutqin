@@ -1044,7 +1044,7 @@ export default {
       amdPracticeHud: null,
       amdActiveChunkIndex: 0,
       amdStrengthenedWords: 0,
-      amdHiddenTextEnabled: true,
+      amdHiddenTextEnabled: false,
       amdTajweedEnabled: false,
       amdPeekActive: false,
       amdDifficultyPercent: readStoredDifficultyPercent(),
@@ -13732,10 +13732,8 @@ export default {
         // still awaits submit — that silently blocks every later open.
         this.resetStuckRecitationCheckGate()
 
-        // Session cleanup clears the queue; reload verses if the workspace is empty.
-        if (!this.getSessionCheckTargetVerses().length) {
-          await this.ensurePostSessionAiReciteVerses(chapterId, from, to)
-        }
+        // Session cleanup can leave stub targets without Arabic — always reload the range.
+        await this.ensurePostSessionAiReciteVerses(chapterId, from, to)
 
         // Keep Session Complete visible until the test modal is actually open.
         // Never hide completion behind a failed / blocked open.
@@ -13813,6 +13811,10 @@ export default {
       this.rangeEnd = end
       try {
         await this.loadChapter(this.currentMode)
+        const refreshed = this.buildSelectedSessionRangeCheckTargets?.() || []
+        if (refreshed.length) {
+          this.recitationCheckPendingTargets = refreshed
+        }
       } catch (error) {
         console.warn('Failed to reload verses for post-session AI Recite:', error)
       }
@@ -18958,7 +18960,8 @@ export default {
       this.amdPracticeHud = null
       this.amdActiveChunkIndex = 0
       this.amdStrengthenedWords = 0
-      this.amdHiddenTextEnabled = true
+      // Gap-mask placeholders (not blur) so hidden words stay visible as neutral slots.
+      this.amdHiddenTextEnabled = false
       // AMD Tajweed colouring / practice check temporarily disabled.
       this.amdTajweedEnabled = false
       this.amdPeekActive = false
@@ -18994,7 +18997,21 @@ export default {
       try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
       this.recitationCheckDiscardOnStop = false
       await this.ensureAmdTajweedMarkup()
-      await this.ensureAmdTargetsHaveArabic()
+      const versesReady = await this.ensureAmdTargetsHaveArabic()
+      if (!versesReady || this.countAmdRecitableWords() <= 0) {
+        this.showBanner(
+          this.t('memorisation.amd.ayahTextUnavailable')
+            || this.t('toasts.chooseASessionRangeBeforeStarting')
+            || 'Ayah text is not ready yet. Close and try again.',
+          'info',
+          3200,
+        )
+        this.amdOpen = false
+        this.amdEntrySource = null
+        this.amdStage = AMD_STAGES.IDLE
+        this.syncBodyScrollLock(false)
+        return
+      }
       this.rebuildAmdHiddenWordMask()
       // AMD uses CSS-only hidden text (no aiRecallMode DOM mutation — that crashes Vue Teleport).
       this.amdSeedHtml = this.buildAmdMushafHtml({ live: true })
@@ -19004,8 +19021,7 @@ export default {
       this.amdOpen = true
       this.syncBodyScrollLock(true)
       this.playUiTone?.('open')
-      await this.$nextTick()
-      this.syncAmdMushafSurface()
+      await this.refreshAmdMushafSurface({ force: true })
       void this.refreshAmdMicStatus?.()
     },
 
@@ -19079,11 +19095,11 @@ export default {
       let targets = readTargets()
       if (!targets.length) return false
 
-      const hasArabic = (list) => list.some((target) => {
+      const allHaveArabic = (list) => list.length > 0 && list.every((target) => {
         const verse = this.getCanonicalVerseForCheck(target) || target
         return !!String(this.getPlainVerseArabicForCheck(verse) || '').trim()
       })
-      if (hasArabic(targets)) return true
+      if (allHaveArabic(targets)) return true
 
       const chapterId = Number(
         targets[0]?.chapterId
@@ -19109,7 +19125,59 @@ export default {
       }
 
       targets = readTargets()
-      return hasArabic(targets)
+      if (!allHaveArabic(targets)) {
+        const from = Number(targets[0]?.number || String(targets[0]?.key || '').split(':')[1] || this.rangeStart || 0)
+        const to = Number(
+          targets[targets.length - 1]?.number
+          || String(targets[targets.length - 1]?.key || '').split(':')[1]
+          || this.rangeEnd
+          || from,
+        )
+        if (from && to) {
+          await this.ensurePostSessionAiReciteVerses(chapterId, from, to)
+          targets = readTargets()
+        }
+      }
+
+      return allHaveArabic(targets)
+    },
+    countAmdRecitableWords() {
+      const targets = this.recitationCheckPendingTargets?.length
+        ? this.recitationCheckPendingTargets
+        : this.getRecitationCheckTargetVerses()
+      if (!targets.length) return 0
+      let total = 0
+      for (const target of targets) {
+        const verse = this.getCanonicalVerseForCheck(target) || target
+        const arabic = this.getPlainVerseArabicForCheck?.(verse)
+          || this.cleanRecitationDisplayText?.(verse?.arabic || '')
+          || String(verse?.arabic || '')
+        const words = this.tokenizeRecitationDisplayWords?.(arabic) || arabic.split(/\s+/).filter(Boolean)
+        total += words.length
+      }
+      return total
+    },
+    async refreshAmdMushafSurface({ force = false } = {}) {
+      if (!this.amdOpen) return false
+      const html = this.buildAmdMushafHtml({
+        live: this.amdStage !== AMD_STAGES.COMPLETE,
+        result: this.amdStage === AMD_STAGES.COMPLETE
+          ? (this.recitationCheckResult || this.amdAssessment)
+          : null,
+      })
+      this.amdSeedHtml = html
+      this._amdLastPushedHtml = html
+      const applyToModal = () => {
+        const modal = this.$refs.amdModal
+        if (!modal?.setMushafHtml) return false
+        modal.setMushafHtml(html)
+        return true
+      }
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        if (applyToModal()) return true
+        await this.$nextTick()
+      }
+      return false
     },
     buildAiReciteAssessmentPersistExtras(result = null, extras = {}) {
       const attempts = Array.isArray(this.aiReciteAttempts) ? this.aiReciteAttempts : []

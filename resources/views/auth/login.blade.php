@@ -3,7 +3,11 @@
 @section('content')
 <div class="auth-page">
     <div class="auth-panel">
-        <h1 class="auth-heading">{{ __('ui.auth_login_heading') }}</h1>
+        <header class="auth-greeting">
+            <p class="auth-greeting__arabic" lang="ar" dir="rtl">{{ __('ui.auth_login_arabic') }}</p>
+            <h1 class="auth-heading">{{ __('ui.auth_login_heading') }}</h1>
+            <p class="auth-lede">{{ __('ui.auth_login_subtitle') }}</p>
+        </header>
 
         @include('partials.auth-tester-notice')
 

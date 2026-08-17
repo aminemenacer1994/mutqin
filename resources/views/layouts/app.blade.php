@@ -5320,22 +5320,22 @@
 
                 document.querySelectorAll('[data-auth-fill-test-account]').forEach(function(button) {
                     button.addEventListener('click', function() {
-                        const notice = button.closest('[data-auth-tester-notice]');
                         const emailInput = document.getElementById('email');
                         const passwordInput = document.getElementById('password');
-                        if (!notice || !emailInput || !passwordInput) return;
+                        if (!emailInput || !passwordInput) return;
 
-                        emailInput.value = notice.getAttribute('data-test-email') || '';
-                        passwordInput.value = notice.getAttribute('data-test-password') || '';
+                        emailInput.value = button.getAttribute('data-test-email') || '';
+                        passwordInput.value = button.getAttribute('data-test-password') || '';
                         emailInput.dispatchEvent(new Event('input', { bubbles: true }));
                         passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
                         emailInput.focus();
 
+                        const defaultLabel = button.getAttribute('data-default-label') || 'Use';
                         button.classList.add('is-filled');
-                        button.textContent = 'Filled';
+                        button.textContent = 'Ready';
                         window.setTimeout(function() {
                             button.classList.remove('is-filled');
-                            button.textContent = 'Fill';
+                            button.textContent = defaultLabel;
                         }, 1800);
                     });
                 });
