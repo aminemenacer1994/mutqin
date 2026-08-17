@@ -183,7 +183,7 @@ class GoogleAuthController extends Controller
             if ($requestHost = request()?->getHost()) {
                 $configuredHost = parse_url($configured, PHP_URL_HOST);
                 // Browser host must match redirect host exactly (localhost vs 127.0.0.1,
-                // or a custom domain vs *.laravel.cloud).
+                // or the request host vs APP_URL when they differ during domain migration).
                 if (is_string($configuredHost) && strcasecmp($configuredHost, $requestHost) !== 0) {
                     return $this->callbackUrlForRequest();
                 }
