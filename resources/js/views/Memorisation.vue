@@ -245,8 +245,6 @@
               </template>
               <template v-else>{{ topCardSessionLabel }}</template>
             </h1>
-            <p v-if="workspaceShellSubtitle" class="workspace-shell-subtitle">{{ workspaceShellSubtitle }}</p>
-            <p v-if="workspaceShellHint" class="workspace-shell-hint">{{ workspaceShellHint }}</p>
           </div>
           <!-- Direct child of head so mobile grid placement cannot swallow these icons -->
           <div class="top-card-icon-controls" aria-label="Reading tools">

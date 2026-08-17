@@ -428,6 +428,10 @@ export const learningApi = {
     const { data } = await http.post('/memorisation/assessments', payload)
     return data
   },
+  async recordFailedMemorisationAssessment(payload) {
+    const { data } = await http.post('/memorisation/assessments/failed', payload)
+    return data
+  },
   async adjustMemorisationPracticePlan(planId, adjustments) {
     const { data } = await http.patch(`/memorisation/practice-plans/${planId}`, adjustments)
     return data?.practice_plan ?? data

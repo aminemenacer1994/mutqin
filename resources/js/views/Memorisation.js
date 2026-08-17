@@ -162,6 +162,22 @@ import {
   sanitizeAudioDuration,
 } from '../scripts/audio/recordingPlayback'
 import {
+  RECITATION_PROCESSING_STAGE,
+  RECITATION_FAILURE_KIND,
+  RECITATION_AMD_SUBMIT_TIMEOUT_MS,
+  RECITATION_SUBMIT_TIMEOUT_MS,
+  classifyRecitationFailure,
+  createRecitationAttemptId,
+  isStaleRecitationAttempt,
+  probeMicrophonePermission,
+  resolveRecitationFailureMessage,
+  scheduleSlowProcessingNotice,
+  userFacingTranscriptionFailure,
+  validateRecordingBlob,
+  validateRecordingEnvironment,
+  buildTechnicalLogContext,
+} from '../scripts/audio/recordingResilience'
+import {
   END_SESSION_CONFIRM_ACTION,
   PRIMARY_SESSION_ACTION,
   SESSION_MUTATION,
@@ -1156,6 +1172,11 @@ export default {
       displayArabicCacheSize: 0,
       secondaryToolsLoaded: false,
       recitationSubmitInFlight: false,
+      recitationAttemptId: '',
+      recitationProcessingStage: RECITATION_PROCESSING_STAGE.IDLE,
+      recitationProcessingSlowNotice: false,
+      _recitationSlowNoticeDisposer: null,
+      _recitationComponentActive: true,
       lastAmdAssessmentKey: '',
       workspaceSyncTimer: null,
       handleMushafToolbarDocumentClick: null,
@@ -1551,26 +1572,6 @@ export default {
         return this.t('memorisation.postSessionChoice.title')
       }
       return this.t('memorisation.sessionOverview.kicker')
-    },
-    workspaceShellSubtitle() {
-      if (!this.isPostSessionChoiceVisible || !this.hasVerses) return ''
-      const start = Math.max(1, Number(this.rangeStart || 1))
-      const end = Math.max(start, Number(this.rangeEnd || start))
-      const range = formatAyahRangeLabel({ start, end }, this.t.bind(this))
-      if (this.postSessionProgress?.label) {
-        return `${this.postSessionProgress.label} · ${range}`
-      }
-      return range
-    },
-    workspaceShellHint() {
-      if (this.isPostSessionChoiceVisible) {
-        const progress = this.postSessionProgress
-        if (progress?.detail) {
-          return `${this.t('memorisation.postSessionChoice.desc')} ${progress.detail}`
-        }
-        return this.t('memorisation.postSessionChoice.desc')
-      }
-      return ''
     },
     journeyMemorisedCount() {
       return Number(this.learnerJourney?.overall?.memorised_ayah_count ?? 0)
@@ -3127,20 +3128,6 @@ export default {
         })
       }
       return stats
-    },
-    postSessionProgress() {
-      const snap = this.postSessionSnapshot
-      if (!snap) return null
-      const percentComplete = Math.max(0, Math.min(100, Number(snap.progressPercent || 0)))
-      const covered = Number(snap.coveredAyahCount || 0)
-      const total = Number(snap.totalAyahs || 0)
-      return {
-        percentComplete,
-        label: snap.completedAll
-          ? this.t('memorisation.sessionComplete.title')
-          : this.t('memorisation.postSession.progressLabel'),
-        detail: snap.progressLabel || (total ? `${covered}/${total} ayahs` : '')
-      }
     },
     postSessionDetailRows() {
       return this.postSessionStats
@@ -6340,9 +6327,19 @@ export default {
           || 'Microphone is live — recite from memory. Words colour as they are recognised.'
       }
       if (this.amdStage === AMD_STAGES.PROCESSING) {
+        if (this.recitationProcessingSlowNotice) {
+          return this.t?.('memorisation.amd.hintProcessingSlow')
+            || this.t?.('memorisation.aiCheck.processingSlow')
+            || 'This is taking longer than expected.'
+        }
         return this.t?.('memorisation.amd.hintProcessing') || 'Processing your recitation…'
       }
       if (this.amdStage === AMD_STAGES.ANALYSING) {
+        if (this.recitationProcessingSlowNotice) {
+          return this.t?.('memorisation.amd.hintProcessingSlow')
+            || this.t?.('memorisation.aiCheck.processingSlow')
+            || 'This is taking longer than expected.'
+        }
         return this.t?.('memorisation.amd.hintAnalysing') || 'Comparing with the Quran text…'
       }
       return ''
@@ -8585,6 +8582,9 @@ export default {
   },
 
   beforeUnmount() {
+    this._recitationComponentActive = false
+    this.recitationAttemptId = ''
+    this.clearRecitationSlowProcessingNotice?.()
     document.body.classList.remove('memorisation-page')
     this.sessionWorkspaceScrollController?.dispose?.()
     this.sessionWorkspaceScrollController = null
@@ -9163,6 +9163,8 @@ export default {
         'Recitation check failed. Please try again.'
       )
       const text = this.userFacingErrorText(message, fallback)
+      this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.ERROR)
+      this.clearRecitationSlowProcessingNotice()
       // Never mount the sticky mic/error session banner — toast only, keep Start Reciting.
       this.recitationCheckError = ''
       this.recitationCheckPreparing = false
@@ -9171,6 +9173,53 @@ export default {
         this.failAmdAssessment(text, { toast: false })
       }
       if (text) this.showBanner(text, 'error', Number(options?.durationMs) || 4200)
+    },
+    setRecitationProcessingStage(stage = RECITATION_PROCESSING_STAGE.IDLE) {
+      this.recitationProcessingStage = String(stage || RECITATION_PROCESSING_STAGE.IDLE)
+    },
+    beginRecitationAttempt() {
+      this.recitationAttemptId = createRecitationAttemptId()
+      this.recitationCheckResult = null
+      this.recitationProcessingSlowNotice = false
+      this.clearRecitationSlowProcessingNotice()
+      this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
+      return this.recitationAttemptId
+    },
+    isActiveRecitationAttempt(attemptId = this.recitationAttemptId) {
+      if (!this._recitationComponentActive) return false
+      return !isStaleRecitationAttempt(this.recitationAttemptId, attemptId)
+    },
+    clearRecitationSlowProcessingNotice() {
+      if (typeof this._recitationSlowNoticeDisposer === 'function') {
+        this._recitationSlowNoticeDisposer()
+      }
+      this._recitationSlowNoticeDisposer = null
+      this.recitationProcessingSlowNotice = false
+    },
+    startRecitationSlowProcessingNotice() {
+      this.clearRecitationSlowProcessingNotice()
+      this._recitationSlowNoticeDisposer = scheduleSlowProcessingNotice((slow) => {
+        if (!this._recitationComponentActive) return
+        this.recitationProcessingSlowNotice = !!slow
+      })
+    },
+    resolveRecitationFailureText(error, options = {}) {
+      const classification = classifyRecitationFailure(error, options)
+      console.warn('Recitation failure', buildTechnicalLogContext(error, {
+        context: options.context || 'recitation',
+        kind: classification.kind,
+      }))
+      return resolveRecitationFailureMessage(this.t.bind(this), classification)
+    },
+    async logFailedRecitationAssessmentQuiet(payload = {}) {
+      if (!this.isLoggedIn) return
+      try {
+        await learningApi.recordFailedMemorisationAssessment(payload)
+      } catch (error) {
+        console.warn('Failed to record assessment failure', buildTechnicalLogContext(error, {
+          context: 'assessment_failed_audit',
+        }))
+      }
     },
     failAmdAssessment(message = '', { toast = false } = {}) {
       // Freeze elapsed on failure so a retry can reset explicitly.
@@ -18291,9 +18340,7 @@ export default {
       )
     },
     supportsSelfCheckRecording() {
-      return typeof navigator !== 'undefined'
-        && !!navigator.mediaDevices?.getUserMedia
-        && typeof MediaRecorder !== 'undefined'
+      return validateRecordingEnvironment().supported
     },
     getAyahRecordingHistory(ayahKey) {
       return this.recordingsLibrary
@@ -20340,9 +20387,15 @@ export default {
             this.amdError = this.t?.('memorisation.amd.sessionExpired')
               || 'Your session expired. Refresh the page, then try the assessment again.'
           } else {
-            this.amdError = this.t?.('memorisation.amd.analyseFailed')
-              || 'We couldn’t assess this attempt. Check your microphone or connection and try again.'
+            this.amdError = this.resolveRecitationFailureText(error, { context: 'amd_backend_submit' })
           }
+          void this.logFailedRecitationAssessmentQuiet({
+            surah_number: Number(this.chapterId || 0),
+            start_ayah: Number(this.rangeStart || 0),
+            end_ayah: Number(this.rangeEnd || 0),
+            failure_reason: classifyRecitationFailure(error, { context: 'amd_backend_submit' }).kind,
+            provider: 'backend',
+          })
         }
         return null
       } finally {
@@ -22747,7 +22800,7 @@ export default {
           websocketHost
         }
       } catch (error) {
-        const wrapped = new Error(this.describeTranscriptionTokenFailure(error))
+        const wrapped = new Error(userFacingTranscriptionFailure(error))
         wrapped.cause = error
         throw wrapped
       }
@@ -22791,9 +22844,9 @@ export default {
         if (!ready) this.stopTranscriptionRecognition(kind)
         return !!ready
       } catch (error) {
-        const message = this.describeTranscriptionTokenFailure(error)
+        const message = userFacingTranscriptionFailure(error)
         const fallbackAvailable = !!this.getSpeechRecognitionConstructor()
-        console.warn('Unable to start Speechmatics streaming:', message, error)
+        console.warn('Unable to start Speechmatics streaming:', this.describeTranscriptionTokenFailure(error), error)
         if (!fallbackAvailable) {
           this.showBanner(message, 'warning', 5600)
         }
@@ -23449,6 +23502,9 @@ export default {
       this.recitationCheckError = ''
       this.recitationCheckResult = null
       this.recitationCheckChunks = []
+      this.recitationAttemptId = ''
+      this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
+      this.clearRecitationSlowProcessingNotice()
       this.recitationSpeechTranscript = ''
       this.recitationSpeechInterim = ''
       this.postSessionAiDetailsExpanded = false
@@ -24125,7 +24181,9 @@ export default {
     },
     async startRecitationCheckRecording(targetVerse = null, options = {}) {
       if (!this.supportsSelfCheckRecording()) {
-        this.reportRecitationCheckFailure('Recording is not supported in this browser.')
+        this.reportRecitationCheckFailure(
+          this.t('memorisation.aiCheck.recordingUnsupported') || 'Recording is not supported in this browser.'
+        )
         return
       }
       this.selfCheckModeChoiceVisible = false
@@ -24135,6 +24193,24 @@ export default {
         return
       }
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return
+
+      const attemptId = this.beginRecitationAttempt()
+      const micProbe = await probeMicrophonePermission()
+      if (micProbe.denied) {
+        const micMessage = this.resolveRecitationFailureText(
+          { name: 'NotAllowedError', message: 'permission_denied' },
+          { context: 'mic_permission_probe' },
+        )
+        this.reportRecitationCheckFailure(micMessage)
+        if (this.postSessionAiReciteActive || this.showPostSessionModal) {
+          void this.applyInsufficientAudioAssessment(null, {
+            reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
+            micPermissionFailed: true,
+            failureReason: 'mic_permission_denied',
+          })
+        }
+        return
+      }
 
       this.recitationCheckDiscardOnStop = false
       this.recitationCheckError = ''
@@ -24215,13 +24291,17 @@ export default {
           this.cleanupRecitationCheckMedia()
         }
         recorder.onstop = async () => {
+          const stopAttemptId = attemptId
           // Allow the final dataavailable from stop() to land before we snapshot chunks.
           await new Promise(resolve => queueMicrotask(resolve))
+          if (!this.isActiveRecitationAttempt(stopAttemptId)) return
           const discard = this.recitationCheckDiscardOnStop
           this.recitationCheckDiscardOnStop = false
           if (discard) {
             this.recitationCheckRecording = false
             this.recitationCheckPreparing = false
+            this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
+            this.clearRecitationSlowProcessingNotice()
             this.stopSpeechRecognitionWatchdog('recitation')
             this.stopTranscriptionAudioPump('recitation')
             this.stopRecitationSpeechRecognition()
@@ -24264,6 +24344,8 @@ export default {
           // transcription settles.
           this.recitationCheckRecording = false
           this.recitationCheckPreparing = true
+          this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.PROCESSING)
+          this.startRecitationSlowProcessingNotice()
           if (this.amdOpen && [AMD_STAGES.LISTENING, AMD_STAGES.READY, AMD_STAGES.IDLE].includes(this.amdStage)) {
             this.amdStage = AMD_STAGES.PROCESSING
             this.amdBusy = true
@@ -24281,6 +24363,7 @@ export default {
           } catch (settleError) {
             console.warn('Transcription settle failed:', settleError)
           }
+          if (!this.isActiveRecitationAttempt(stopAttemptId)) return
           this.stopSpeechRecognitionWatchdog('recitation')
           this.stopTranscriptionAudioPump('recitation')
           let audioSrc = ''
@@ -24290,33 +24373,51 @@ export default {
             if (!chunks.length) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
             const blobType = recorder.mimeType || mimeType || 'audio/webm'
             const blob = new Blob(chunks, { type: blobType })
-            if (!blob.size) throw new Error(this.t('memorisation.aiCheck.noAudioCaptured'))
+            const recordingSeconds = this.getRecitationElapsedSeconds({
+              startedAt: this.recitationCheckStartedAt || 0,
+              endedAt: Date.now(),
+            })
+            const recordingValidation = validateRecordingBlob(blob, {
+              durationSeconds: recordingSeconds,
+              mimeType: blobType,
+            })
+            if (!recordingValidation.valid) {
+              throw new Error(recordingValidation.reason === 'short_recording'
+                ? this.t('memorisation.postSession.recommendation.insufficientAudioShortSummary')
+                : this.t('memorisation.aiCheck.noAudioCaptured'))
+            }
             audioSrc = await this.createStableRecordingSrc(blob)
-            const submitPromise = this.submitRecitationCheck(blob, targets, audioSrc)
+            this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.ASSESSING)
+            const submitPromise = this.submitRecitationCheck(blob, targets, audioSrc, { attemptId: stopAttemptId })
             // Always bound submit — a hung transcription previously left preparing=true
             // and blocked every later "Test with AI Recite" open.
             await Promise.race([
               submitPromise,
               new Promise((_, reject) => {
-                window.setTimeout(() => reject(new Error(this.t('memorisation.aiCheck.recitationCheckFailed'))), this.amdOpen ? 20000 : 12000)
+                window.setTimeout(
+                  () => reject(new Error(this.t('memorisation.aiCheck.processingTimeout'))),
+                  this.amdOpen ? RECITATION_AMD_SUBMIT_TIMEOUT_MS : RECITATION_SUBMIT_TIMEOUT_MS,
+                )
               }),
             ])
+            if (!this.isActiveRecitationAttempt(stopAttemptId)) return
+            this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.COMPLETE)
           } catch (error) {
+            if (!this.isActiveRecitationAttempt(stopAttemptId)) return
             console.error('Failed to process recitation check:', error)
-            const serverMessage = error?.response?.data?.message
-            const providerUnavailable = error?.response?.status === 422 && /transcription|api key is not configured/i.test(String(serverMessage || ''))
-            const failureText = providerUnavailable
-              ? this.t('memorisation.aiCheck.speechRecognitionFailed')
-              : (serverMessage || error?.message || this.t('memorisation.aiCheck.recitationCheckFailed'))
-            const isInsufficientFailure = /noArabicWords|noAudioCaptured|no speech|empty|micBlocked|Permission|NotAllowed|denied|process|failed/i
-              .test(String(failureText || error?.message || ''))
+            const failureText = this.resolveRecitationFailureText(error, { context: 'recitation_submit' })
+            const classification = classifyRecitationFailure(error, { context: 'recitation_submit' })
+            const isInsufficientFailure = classification.kind === RECITATION_FAILURE_KIND.RECORDING
+              || classification.kind === RECITATION_FAILURE_KIND.MICROPHONE
+              || /noArabicWords|noAudioCaptured|no speech|empty|micBlocked|Permission|NotAllowed|denied|process|failed/i
+                .test(String(failureText || error?.message || ''))
             if (this.amdOpen) {
               this.failAmdAssessment(this.safeErrorText(failureText, this.t('memorisation.aiCheck.recitationCheckFailed')))
             } else {
               this.reportRecitationCheckFailure(this.safeErrorText(failureText, this.t('memorisation.aiCheck.recitationCheckFailed')))
             }
             if (isInsufficientFailure && (this.postSessionAiReciteActive || this.showPostSessionModal)) {
-              const micDenied = /micBlocked|Permission|NotAllowed|denied/i.test(String(failureText || error?.message || ''))
+              const micDenied = classification.kind === RECITATION_FAILURE_KIND.MICROPHONE
               const noSpeech = /noArabicWords|no speech|empty|noAudioCaptured/i.test(String(failureText || error?.message || ''))
               void this.applyInsufficientAudioAssessment(null, {
                 reason: micDenied
@@ -24332,8 +24433,17 @@ export default {
                 }),
               })
             }
+            void this.logFailedRecitationAssessmentQuiet({
+              surah_number: Number(this.chapterId || 0),
+              start_ayah: Number(this.rangeStart || 0),
+              end_ayah: Number(this.rangeEnd || 0),
+              failure_reason: classification.kind,
+              provider: 'client',
+            })
           } finally {
+            if (!this.isActiveRecitationAttempt(stopAttemptId)) return
             this.recitationCheckPreparing = false
+            this.clearRecitationSlowProcessingNotice()
             this.cleanupRecitationCheckMedia()
             // Last-resort guard: never leave AMD stuck on Processing after stop.
             if (
@@ -24360,6 +24470,7 @@ export default {
         this.recitationCheckStartedAt = Date.now()
         this.recitationCheckRecording = true
         this.recitationCheckPreparing = false
+        this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.RECORDING)
         if (this.amdOpen) {
           this.amdStartedAt = this.recitationCheckStartedAt
           this.startAmdElapsedTimer({ at: this.recitationCheckStartedAt })
@@ -24416,7 +24527,10 @@ export default {
         this.cleanupRecitationCheckMedia()
         const micDenied = /Permission|NotAllowed|denied|micBlocked|NotFound|NotReadable/i
           .test(String(error?.name || error?.message || ''))
-        this.reportRecitationCheckFailure(this.t('memorisation.aiCheck.micBlocked'))
+        const failureText = micDenied
+          ? (this.t('memorisation.aiCheck.micRequired') || this.resolveRecitationFailureText(error, { context: 'mic_start' }))
+          : this.resolveRecitationFailureText(error, { context: 'mic_start' })
+        this.reportRecitationCheckFailure(failureText)
         if (micDenied && (this.postSessionAiReciteActive || this.showPostSessionModal)) {
           void this.applyInsufficientAudioAssessment(null, {
             reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
@@ -24460,20 +24574,24 @@ export default {
         if (el?.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       })
     },
-    async submitRecitationCheck(blob, targetVerses = this.getRecitationCheckTargetVerses(), audioSrc = '') {
+    async submitRecitationCheck(blob, targetVerses = this.getRecitationCheckTargetVerses(), audioSrc = '', options = {}) {
       if (this.recitationSubmitInFlight) {
         return this.recitationCheckResult || null
       }
       this.recitationSubmitInFlight = true
+      const attemptId = String(options.attemptId || this.recitationAttemptId || '')
       try {
-        return await this.runRecitationCheckSubmit(blob, targetVerses, audioSrc)
+        return await this.runRecitationCheckSubmit(blob, targetVerses, audioSrc, { attemptId })
       } finally {
         this.recitationSubmitInFlight = false
       }
     },
-    async runRecitationCheckSubmit(blob, targetVerses = this.getRecitationCheckTargetVerses(), audioSrc = '') {
+    async runRecitationCheckSubmit(blob, targetVerses = this.getRecitationCheckTargetVerses(), audioSrc = '', options = {}) {
+      const attemptId = String(options.attemptId || this.recitationAttemptId || '')
+      if (!this.isActiveRecitationAttempt(attemptId)) return null
       const sessionId = this.recitationInputSessionId || this.getCurrentRecitationSessionId()
       const audioHash = await this.hashAudioBlob(blob)
+      if (!this.isActiveRecitationAttempt(attemptId)) return null
       this.recitationInputAudioHash = audioHash
       const cached = await this.readRecitationSessionCache(sessionId, audioHash)
       // Post-session AI Recite / AMD must always use a fresh Speechmatics assessment —
@@ -24490,6 +24608,7 @@ export default {
           audioSrc: resolvedAudioSrc,
           transcriptionSource: 'indexeddb cache'
         }
+        if (!this.isActiveRecitationAttempt(attemptId)) return null
         this.recitationCheckResult = cachedResult
         this.recitationLiveWords = Array.isArray(cachedResult.wordStatuses) ? cachedResult.wordStatuses : []
         this.syncSessionEvaluationMaps('recitation', targetVerses, this.recitationLiveWords, true)
@@ -24531,6 +24650,7 @@ export default {
             analysisVersion: RECITATION_ANALYSIS_VERSION,
           }
           this.rebuildRecitationResultFromStatuses(result)
+          if (!this.isActiveRecitationAttempt(attemptId)) return null
           this.recitationCheckResult = result
           this.recitationLiveWords = liveWordStatuses
           this.syncSessionEvaluationMaps('recitation', targetVerses, this.recitationLiveWords, true)
@@ -24658,6 +24778,7 @@ export default {
       // AMD owns the live memorisation surface — never open plan/results via backend submit.
       if (this.amdOpen) {
         if (this.amdEndingSoon || this._amdCompleting) return
+        if (!this.isActiveRecitationAttempt(attemptId)) return null
         this.recitationCheckResult = result
         this.syncAmdMushafSurface()
         if (!this.maybeCompleteAmdMemorisationTest()) {
@@ -24672,8 +24793,10 @@ export default {
       this.showBanner(this.t('toasts.reciteCheckComplete'), 'success', 2200)
       if (this.postSessionAiReciteActive) {
         // Do not park results in the AI Recite modal — hand off to success modal.
+        if (!this.isActiveRecitationAttempt(attemptId)) return null
         await this.finalizePostSessionAiReciteFromResult(result)
       } else {
+        if (!this.isActiveRecitationAttempt(attemptId)) return null
         this.recitationCheckResult = result
         this.scrollToRecitationResults()
       }
