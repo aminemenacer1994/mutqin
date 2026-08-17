@@ -105,18 +105,33 @@
 
             <template v-else>
               <a
-                v-if="journeyContinue"
+                v-if="primaryJourneyAction"
                 class="dash-action-card dash-action-card--pulse"
-                :href="journeyContinueHref"
+                :href="primaryJourneyAction.href"
               >
                 <div class="dash-action-card__main">
-                  <span class="dash-action-card__label">{{ journeyContinueLabel }}</span>
+                  <span class="dash-action-card__label">{{ primaryJourneyAction.label }}</span>
                   <span class="dash-action-card__title">
-                    {{ journeyContinue.surah_name || t('dashboard.start_session') }}
+                    {{ primaryJourneyAction.title }}
                   </span>
-                  <p v-if="continueMetaText" class="dash-action-card__meta">{{ continueMetaText }}</p>
+                  <p v-if="primaryJourneyAction.meta" class="dash-action-card__meta">{{ primaryJourneyAction.meta }}</p>
                 </div>
-                <span class="dash-action-card__cta">{{ journeyContinueCta }}</span>
+                <span class="dash-action-card__cta">{{ primaryJourneyAction.cta }}</span>
+              </a>
+
+              <a
+                v-if="secondaryJourneyAction"
+                class="dash-action-card dash-action-card--secondary"
+                :href="secondaryJourneyAction.href"
+              >
+                <div class="dash-action-card__main">
+                  <span class="dash-action-card__label">{{ secondaryJourneyAction.label }}</span>
+                  <span class="dash-action-card__title">
+                    {{ secondaryJourneyAction.title }}
+                  </span>
+                  <p v-if="secondaryJourneyAction.meta" class="dash-action-card__meta">{{ secondaryJourneyAction.meta }}</p>
+                </div>
+                <span class="dash-action-card__cta">{{ secondaryJourneyAction.cta }}</span>
               </a>
 
               <section
@@ -771,6 +786,51 @@ export default {
       if (!review || !review.surah_name || !review.href) return null
       return review
     },
+    journeyMurajaahPrimary() {
+      if (this.journeyReview) {
+        return {
+          kind: 'murajaah',
+          href: this.journeyReview.href,
+          title: this.journeyReview.surah_name,
+          meta: this.murajaahPrimaryMeta(this.journeyReview),
+          label: this.t('dashboard.journey_review_label'),
+          cta: this.t('dashboard.journey_review_cta'),
+        }
+      }
+      const item = this.murajaahPreview[0]
+      if (!item?.href) return null
+      return {
+        kind: 'murajaah',
+        href: item.href,
+        title: item.surah_name || this.t('dashboard.start_session'),
+        meta: item.phrase || this.murajaahPrimaryMeta(item),
+        label: this.t('dashboard.journey_review_label'),
+        cta: this.t('dashboard.journey_review_cta'),
+      }
+    },
+    journeyMemorisationAction() {
+      if (!this.journeyContinue) return null
+      return {
+        kind: 'memorisation',
+        href: this.journeyContinueHref,
+        title: this.journeyContinue.surah_name || this.t('dashboard.start_session'),
+        meta: this.continueMetaText,
+        label: this.journeyContinueLabel,
+        cta: this.journeyContinueCta,
+      }
+    },
+    primaryJourneyAction() {
+      if (this.liveReturnSession) return null
+      if (this.journeyMurajaahPrimary) return this.journeyMurajaahPrimary
+      return this.journeyMemorisationAction
+    },
+    secondaryJourneyAction() {
+      if (this.liveReturnSession) return null
+      if (this.journeyMurajaahPrimary && this.journeyMemorisationAction) {
+        return this.journeyMemorisationAction
+      }
+      return null
+    },
     murajaahAllItems() {
       const all = this.data?.weaknesses?.all_items
       if (Array.isArray(all) && all.length) return all
@@ -853,7 +913,18 @@ export default {
       })
     },
     showHeroHint() {
-      return !this.showJourneyStart && (this.journeyContinue || this.liveReturnSession)
+      return !this.showJourneyStart && (this.primaryJourneyAction || this.liveReturnSession)
+    },
+    murajaahPrimaryMeta(source = {}) {
+      const start = Number(source.ayah_start || source.ayah_number || 0)
+      const end = Number(source.ayah_end || start || 0)
+      if (start > 0 && end >= start) {
+        return this.t('dashboard.ayah_range', { start, end })
+      }
+      if (start > 0) {
+        return this.t('dashboard.last_ayah', { n: start })
+      }
+      return ''
     },
     murajaahSectionHint() {
       if (this.murajaahTotal > 1) {

@@ -13607,12 +13607,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   ASSESSMENT_QUALITY: () => (/* binding */ ASSESSMENT_QUALITY),
 /* harmony export */   buildAiReviewDetails: () => (/* binding */ buildAiReviewDetails),
 /* harmony export */   classifyRecitationAssessmentQuality: () => (/* binding */ classifyRecitationAssessmentQuality),
-/* harmony export */   resolveAccuracyPercent: () => (/* reexport safe */ _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.resolveAccuracyPercent),
+/* harmony export */   resolveAccuracyPercent: () => (/* reexport safe */ _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.resolveAccuracyPercent),
 /* harmony export */   resolveInsufficientAudioCopy: () => (/* binding */ resolveInsufficientAudioCopy),
 /* harmony export */   resolveRecognitionConfidence: () => (/* binding */ resolveRecognitionConfidence)
 /* harmony export */ });
 /* harmony import */ var _formatting_ayahLabels_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../formatting/ayahLabels.js */ "./resources/js/scripts/formatting/ayahLabels.js");
-/* harmony import */ var _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./recitationResultState.js */ "./resources/js/scripts/recommendations/recitationResultState.js");
+/* harmony import */ var _postSessionCtaMapping_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./postSessionCtaMapping.js */ "./resources/js/scripts/recommendations/postSessionCtaMapping.js");
+/* harmony import */ var _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./recitationResultState.js */ "./resources/js/scripts/recommendations/recitationResultState.js");
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
@@ -13627,6 +13628,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
  * - valid_zero_match — spoken attempt assessed at 0% (calm, non-punitive presentation)
  * - normal partial / strong results
  */
+
 
 
 
@@ -13706,13 +13708,13 @@ function classifyRecitationAssessmentQuality() {
   var extras = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   var explicit = String(extras.assessment_quality || extras.assessmentQuality || (result === null || result === void 0 ? void 0 : result.assessmentQuality) || (result === null || result === void 0 ? void 0 : result.assessment_quality) || '').toLowerCase().trim();
   if (Object.values(ASSESSMENT_QUALITY).includes(explicit)) return explicit;
-  if ((0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.resolveInsufficientAudioReason)(result, extras)) {
+  if ((0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.resolveInsufficientAudioReason)(result, extras)) {
     return ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO;
   }
-  if (!(0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.hasSpokenRecitationEvidence)(result, extras)) {
+  if (!(0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.hasSpokenRecitationEvidence)(result, extras)) {
     return ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO;
   }
-  var accuracy = (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.resolveAccuracyPercent)(result, extras);
+  var accuracy = (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.resolveAccuracyPercent)(result, extras);
   var wordStatuses = Array.isArray(result === null || result === void 0 ? void 0 : result.wordStatuses) ? result.wordStatuses : [];
   var correctWords = wordStatuses.filter(function (word) {
     return isCorrectStatus(word === null || word === void 0 ? void 0 : word.status);
@@ -13772,18 +13774,18 @@ function buildAiReviewDetails() {
     gray: grayFromWords
   };
   var assessmentQuality = classifyRecitationAssessmentQuality(result, _objectSpread(_objectSpread({}, extras), {}, {
-    accuracy_percent: (_extras$accuracy_perc = extras.accuracy_percent) !== null && _extras$accuracy_perc !== void 0 ? _extras$accuracy_perc : (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.resolveAccuracyPercent)(result, extras)
+    accuracy_percent: (_extras$accuracy_perc = extras.accuracy_percent) !== null && _extras$accuracy_perc !== void 0 ? _extras$accuracy_perc : (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.resolveAccuracyPercent)(result, extras)
   }));
-  var resultState = (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.resolveRecitationResultState)(result, _objectSpread(_objectSpread({}, extras), {}, {
+  var resultState = (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.resolveRecitationResultState)(result, _objectSpread(_objectSpread({}, extras), {}, {
     outcome: outcome,
-    accuracy_percent: (_extras$accuracy_perc2 = extras.accuracy_percent) !== null && _extras$accuracy_perc2 !== void 0 ? _extras$accuracy_perc2 : (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.resolveAccuracyPercent)(result, extras)
+    accuracy_percent: (_extras$accuracy_perc2 = extras.accuracy_percent) !== null && _extras$accuracy_perc2 !== void 0 ? _extras$accuracy_perc2 : (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.resolveAccuracyPercent)(result, extras)
   }));
 
   // Silence / unusable audio: never present a 0% score wall.
-  if (assessmentQuality === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO || resultState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO || outcome === 'insufficient_audio') {
+  if (assessmentQuality === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO || resultState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO || outcome === 'insufficient_audio') {
     return buildInsufficientAudioDetails(t, extras, result);
   }
-  var accuracy = (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.resolveAccuracyPercent)(result, extras);
+  var accuracy = (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.resolveAccuracyPercent)(result, extras);
   var missed = Math.max(countList(extras.missed_words), countList(mistakes.missing) + countList(mistakes.incorrect), missedFromWords);
   var sequence = Math.max(countList(extras.sequence_errors), countList(mistakes.sequenceErrors) + countList(mistakes.verseJumps) + countList(mistakes.skippedAyahs), outOfOrderWords);
   var partial = Math.max(countList(mistakes.partial), partialFromWords, Number(colorCounts.amber || 0));
@@ -13806,12 +13808,12 @@ function buildAiReviewDetails() {
       durationSeconds: durationSeconds,
       colorCounts: colorCounts,
       weakAyahs: weakAyahs,
-      resultState: _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.NEEDS_PRACTICE,
+      resultState: _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.NEEDS_PRACTICE,
       t: t
     });
   }
-  var resolvedState = resultState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.STRONG || resultState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.DEVELOPING || resultState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.NEEDS_PRACTICE ? resultState : legacyOutcomeToDisplayState(outcome);
-  var resolvedOutcome = (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.resultStateToLegacyOutcome)(resolvedState) || 'mixed';
+  var resolvedState = resultState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.STRONG || resultState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.DEVELOPING || resultState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.NEEDS_PRACTICE ? resultState : legacyOutcomeToDisplayState(outcome);
+  var resolvedOutcome = (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.resultStateToLegacyOutcome)(resolvedState) || 'mixed';
   var toneForOutcome = resolvedOutcome === 'strong' ? 'good' : resolvedOutcome === 'weak' ? 'warn' : 'mid';
   var resolvedMatched = matchedWords !== null && matchedWords !== void 0 ? matchedWords : correctWords;
   var hasWordLevelEvidence = totalWords > 0 && (missed > 0 || amberCount > 0 || (colorCounts.black || 0) > 0 || correctWords < totalWords);
@@ -13974,10 +13976,22 @@ function buildAiReviewDetails() {
     omitted: Number(colorCounts.black || 0),
     t: t
   });
-  var hasMinorWeakness = hasWordLevelEvidence && (missed > 0 || amberCount > 0 || Array.isArray(weakAyahs) && weakAyahs.length > 0) && resolvedState !== _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.NEEDS_PRACTICE;
-  var outcomeLabel = resolvedState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.STRONG && !hasMinorWeakness ? t('memorisation.postSession.recommendation.statusReadyToContinue') || t('memorisation.postSession.recommendation.aiOutcomeStrong') || 'Ready to continue' : resolvedState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.STRONG && hasMinorWeakness ? t('memorisation.postSession.recommendation.statusMostlySecure') || t('memorisation.postSession.recommendation.aiOutcomeMixed') || 'Mostly secure' : resolvedState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.NEEDS_PRACTICE || hasWordLevelEvidence && missed >= 3 ? t('memorisation.postSession.recommendation.statusMorePracticeNeeded') || t('memorisation.postSession.recommendation.aiOutcomeWeak') || 'More practice needed' : hasMinorWeakness ? t('memorisation.postSession.recommendation.statusReviewRecommended') || t('memorisation.postSession.recommendation.aiOutcomeReviewRecommended') || 'Review recommended' : t('memorisation.postSession.recommendation.statusMostlySecure') || t('memorisation.postSession.recommendation.aiOutcomeMixed') || 'Mostly secure';
+  var hasMinorWeakness = hasWordLevelEvidence && (missed > 0 || amberCount > 0 || Array.isArray(weakAyahs) && weakAyahs.length > 0) && resolvedState !== _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.NEEDS_PRACTICE;
+  var weaknessSeverity = (0,_postSessionCtaMapping_js__WEBPACK_IMPORTED_MODULE_1__.resolveWeaknessSeverity)({
+    accuracyPercent: accuracy,
+    hardWordCount: missedFromWords + Number(colorCounts.black || 0),
+    partialWordCount: amberCount,
+    weakAyahCount: hasWordLevelEvidence ? weakAyahs.length : 0,
+    sequenceErrors: sequence,
+    outcome: resolvedOutcome,
+    resultState: resolvedState,
+    hasWordLevelEvidence: hasWordLevelEvidence
+  });
+  var isSignificantWeakness = weaknessSeverity === 'significant';
+  var outcomeLabel = resolvedState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.STRONG && !hasMinorWeakness ? t('memorisation.postSession.recommendation.statusReadyToContinue') || t('memorisation.postSession.recommendation.aiOutcomeStrong') || 'Ready to continue' : resolvedState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.STRONG && hasMinorWeakness ? t('memorisation.postSession.recommendation.statusMostlySecure') || t('memorisation.postSession.recommendation.aiOutcomeMixed') || 'Mostly secure' : resolvedState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.NEEDS_PRACTICE || accuracy != null && accuracy < 55 ? t('memorisation.postSession.recommendation.statusMorePracticeNeeded') || t('memorisation.postSession.recommendation.aiOutcomeWeak') || 'More practice needed' : isSignificantWeakness || hasMinorWeakness ? t('memorisation.postSession.recommendation.statusReviewRecommended') || t('memorisation.postSession.recommendation.aiOutcomeReviewRecommended') || 'Review recommended' : t('memorisation.postSession.recommendation.statusMostlySecure') || t('memorisation.postSession.recommendation.aiOutcomeMixed') || 'Mostly secure';
   var summaryLine = buildAiSummaryLine({
     outcome: resolvedOutcome,
+    resultState: resolvedState,
     matchedWords: resolvedMatched,
     totalWords: totalWords,
     accuracy: accuracy,
@@ -13986,12 +14000,14 @@ function buildAiReviewDetails() {
     missed: missed,
     partial: amberCount,
     sequence: resolvedMatched > 0 ? sequence : 0,
+    weaknessSeverity: weaknessSeverity,
     t: t
   });
   return {
     outcome: resolvedOutcome,
     resultState: resolvedState,
     outcomeLabel: outcomeLabel,
+    weaknessSeverity: weaknessSeverity,
     accuracy: accuracy,
     matchedWords: resolvedMatched,
     totalWords: totalWords,
@@ -14023,9 +14039,9 @@ function buildAiReviewDetails() {
 }
 function legacyOutcomeToDisplayState(outcome) {
   var value = String(outcome || '').toLowerCase().trim();
-  if (value === 'strong') return _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.STRONG;
-  if (value === 'weak' || value === 'needs_practice') return _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.NEEDS_PRACTICE;
-  return _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.DEVELOPING;
+  if (value === 'strong') return _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.STRONG;
+  if (value === 'weak' || value === 'needs_practice') return _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.NEEDS_PRACTICE;
+  return _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.DEVELOPING;
 }
 
 /**
@@ -14077,11 +14093,11 @@ function buildInsufficientAudioDetails(t) {
   var extras = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   var result = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
   var durationSeconds = Number((result === null || result === void 0 ? void 0 : result.durationSeconds) || extras.duration_seconds || 0);
-  var reason = (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.resolveInsufficientAudioReason)(result, extras) || String(extras.insufficientReason || extras.failure_reason || extras.failureReason || (result === null || result === void 0 ? void 0 : result.failureReason) || '');
+  var reason = (0,_recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.resolveInsufficientAudioReason)(result, extras) || String(extras.insufficientReason || extras.failure_reason || extras.failureReason || (result === null || result === void 0 ? void 0 : result.failureReason) || '');
   var copy = resolveInsufficientAudioCopy(t, reason);
   return {
     outcome: 'insufficient_audio',
-    resultState: _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO,
+    resultState: _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO,
     outcomeLabel: t('memorisation.postSession.recommendation.insufficientAudioStatus') || 'We couldn’t assess this attempt. Check your microphone or connection and try again.',
     accuracy: null,
     colorCounts: {
@@ -14149,7 +14165,7 @@ function buildValidZeroMatchDetails(_ref) {
   }];
   return {
     outcome: outcome === 'weak' ? 'weak' : 'weak',
-    resultState: resultState || _recitationResultState_js__WEBPACK_IMPORTED_MODULE_1__.RECITATION_RESULT_STATE.NEEDS_PRACTICE,
+    resultState: resultState || _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.NEEDS_PRACTICE,
     outcomeLabel: t('memorisation.postSession.recommendation.confidenceNeedsPractice') || t('memorisation.postSession.recommendation.zeroMatchStatus') || 'Needs more practice',
     accuracy: accuracy,
     matchedWords: matchedWords,
@@ -14249,6 +14265,8 @@ function resolveRecognitionConfidence() {
  */
 function buildAiSummaryLine(_ref6) {
   var outcome = _ref6.outcome,
+    _ref6$resultState = _ref6.resultState,
+    resultState = _ref6$resultState === void 0 ? '' : _ref6$resultState,
     _ref6$matchedWords = _ref6.matchedWords,
     matchedWords = _ref6$matchedWords === void 0 ? null : _ref6$matchedWords,
     _ref6$totalWords = _ref6.totalWords,
@@ -14265,19 +14283,27 @@ function buildAiSummaryLine(_ref6) {
     partial = _ref6$partial === void 0 ? 0 : _ref6$partial,
     _ref6$sequence = _ref6.sequence,
     sequence = _ref6$sequence === void 0 ? 0 : _ref6$sequence,
+    _ref6$weaknessSeverit = _ref6.weaknessSeverity,
+    weaknessSeverity = _ref6$weaknessSeverit === void 0 ? null : _ref6$weaknessSeverit,
     t = _ref6.t;
   var matched = Number.isFinite(Number(matchedWords)) ? Number(matchedWords) : null;
   var total = Number(totalWords) || 0;
+  var isStrongBand = outcome === 'strong' || resultState === _recitationResultState_js__WEBPACK_IMPORTED_MODULE_2__.RECITATION_RESULT_STATE.STRONG || accuracy != null && accuracy >= 80;
+  var minorWeakness = weaknessSeverity === 'minor' || isStrongBand && hasWordLevelEvidence && missed <= 3 && partial >= 0 && weakAyahs.length <= 1;
   if (total > 0 && matched != null) {
     var matchLine = t('memorisation.postSession.recommendation.aiSummaryMatchedWords', {
       matched: matched,
       total: total
     }) || "We clearly matched ".concat(matched, " of ").concat(total, " words.");
-    if (hasWordLevelEvidence && (missed > 0 || partial > 0 || matched < total)) {
+    if (isStrongBand && minorWeakness && (missed > 0 || partial > 0)) {
+      var minorLine = missed === 1 && partial === 0 ? t('memorisation.postSession.recommendation.aiResultLineStrongOneGap') || 'Strong recitation — one small mistake, but you are making good progress.' : t('memorisation.postSession.recommendation.aiSummaryStrongMinorMistakes') || 'Strong recitation — a couple of small mistakes, but you are making good progress.';
+      return "".concat(matchLine, " ").concat(minorLine).trim();
+    }
+    if (hasWordLevelEvidence && (missed > 0 || partial > 0 || matched < total) && !isStrongBand) {
       var focusLine = t('memorisation.postSession.recommendation.aiSummaryFocusPhrase') || 'Focus on the highlighted phrase before checking again.';
       return "".concat(matchLine, " ").concat(focusLine).trim();
     }
-    if (outcome === 'strong') {
+    if (outcome === 'strong' || isStrongBand) {
       var strongLine = t('memorisation.postSession.recommendation.aiSummaryStrongFollowUp') || 'Nice work — you can continue while this still feels fresh.';
       return "".concat(matchLine, " ").concat(strongLine).trim();
     }
@@ -14580,6 +14606,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   adaptRecommendationForAdaptiveAssessment: () => (/* binding */ adaptRecommendationForAdaptiveAssessment),
 /* harmony export */   adaptRecommendationForAiAssessment: () => (/* binding */ adaptRecommendationForAiAssessment),
 /* harmony export */   adaptRecommendationForConfidence: () => (/* binding */ adaptRecommendationForConfidence),
+/* harmony export */   aiAssessmentAllowsProgression: () => (/* binding */ aiAssessmentAllowsProgression),
 /* harmony export */   applyFocusedRangeToRecommendation: () => (/* binding */ applyFocusedRangeToRecommendation),
 /* harmony export */   applyPersonalPlanToRecommendation: () => (/* binding */ applyPersonalPlanToRecommendation),
 /* harmony export */   buildCombinedCheckInsight: () => (/* binding */ buildCombinedCheckInsight),
@@ -14613,6 +14640,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _formatting_ayahLabels_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../formatting/ayahLabels.js */ "./resources/js/scripts/formatting/ayahLabels.js");
 /* harmony import */ var _session_sessionPracticeCoach_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../session/sessionPracticeCoach.js */ "./resources/js/scripts/session/sessionPracticeCoach.js");
 /* harmony import */ var _playbackSpeedPolicy_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./playbackSpeedPolicy.js */ "./resources/js/scripts/recommendations/playbackSpeedPolicy.js");
+/* harmony import */ var _postSessionCtaMapping_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./postSessionCtaMapping.js */ "./resources/js/scripts/recommendations/postSessionCtaMapping.js");
 function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
@@ -14629,6 +14657,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
  * Frontend helpers for the personalised next-session recommendation flow.
  * Reason codes stay internal; UI copy is resolved through i18n keys.
  */
+
 
 
 
@@ -15129,6 +15158,36 @@ function adaptRecommendationForConfidence(recommendation, confidence) {
 }
 
 /**
+ * Whether an AI Recite outcome should advance rather than repeat the same range.
+ *
+ * @param {'strong'|'mixed'|'weak'} result
+ * @param {object} snapshot
+ * @returns {boolean}
+ */
+function aiAssessmentAllowsProgression(result) {
+  var _ref, _ref2, _snapshot$accuracyPer, _snapshot$aiDetails2, _snapshot$aiDetails3, _snapshot$aiDetails4;
+  var snapshot = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  if (result === 'weak') return false;
+  if (result === 'strong') return true;
+  var accuracy = Number((_ref = (_ref2 = (_snapshot$accuracyPer = snapshot.accuracyPercent) !== null && _snapshot$accuracyPer !== void 0 ? _snapshot$accuracyPer : snapshot.accuracy_percent) !== null && _ref2 !== void 0 ? _ref2 : (_snapshot$aiDetails2 = snapshot.aiDetails) === null || _snapshot$aiDetails2 === void 0 ? void 0 : _snapshot$aiDetails2.accuracy) !== null && _ref !== void 0 ? _ref : NaN);
+  var colorCounts = snapshot.colorCounts || snapshot.color_counts || ((_snapshot$aiDetails3 = snapshot.aiDetails) === null || _snapshot$aiDetails3 === void 0 ? void 0 : _snapshot$aiDetails3.colorCounts) || {};
+  var hardWords = Number(colorCounts.red || 0) + Number(colorCounts.black || 0);
+  var partialWords = Number(colorCounts.amber || 0);
+  var weakAyahs = Array.isArray(snapshot.weakAyahs) ? snapshot.weakAyahs : Array.isArray(snapshot.weak_ayahs) ? snapshot.weak_ayahs : Array.isArray((_snapshot$aiDetails4 = snapshot.aiDetails) === null || _snapshot$aiDetails4 === void 0 ? void 0 : _snapshot$aiDetails4.weakAyahs) ? snapshot.aiDetails.weakAyahs : [];
+  var severity = (0,_postSessionCtaMapping_js__WEBPACK_IMPORTED_MODULE_4__.resolveWeaknessSeverity)({
+    accuracyPercent: Number.isFinite(accuracy) ? accuracy : null,
+    hardWordCount: hardWords,
+    partialWordCount: partialWords,
+    weakAyahCount: weakAyahs.length,
+    outcome: result,
+    hasWordLevelEvidence: hardWords > 0 || partialWords > 0 || weakAyahs.length > 0 || Number.isFinite(accuracy)
+  });
+  if (severity === 'significant') return false;
+  if (severity === 'minor') return true;
+  return Number.isFinite(accuracy) && accuracy >= 80;
+}
+
+/**
  * Optimistically reshape the plan from an AI Recite outcome.
  * @param {object|null} recommendation
  * @param {'strong'|'mixed'|'weak'} result
@@ -15136,6 +15195,7 @@ function adaptRecommendationForConfidence(recommendation, confidence) {
  * @returns {object|null}
  */
 function adaptRecommendationForAiAssessment(recommendation, result) {
+  var _ref3, _snapshot$accuracyPer2;
   var snapshot = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
   if (!recommendation || !['strong', 'mixed', 'weak'].includes(result)) {
     return recommendation;
@@ -15143,17 +15203,19 @@ function adaptRecommendationForAiAssessment(recommendation, result) {
   var snap = _objectSpread(_objectSpread({}, snapshot), {}, {
     aiDetails: snapshot.aiDetails || {
       outcome: result,
-      weakAyahs: Array.isArray(snapshot.weakAyahs) ? snapshot.weakAyahs : Array.isArray(snapshot.weak_ayahs) ? snapshot.weak_ayahs : []
+      accuracy: (_ref3 = (_snapshot$accuracyPer2 = snapshot.accuracyPercent) !== null && _snapshot$accuracyPer2 !== void 0 ? _snapshot$accuracyPer2 : snapshot.accuracy_percent) !== null && _ref3 !== void 0 ? _ref3 : null,
+      weakAyahs: Array.isArray(snapshot.weakAyahs) ? snapshot.weakAyahs : Array.isArray(snapshot.weak_ayahs) ? snapshot.weak_ayahs : [],
+      colorCounts: snapshot.colorCounts || snapshot.color_counts || null
     }
   });
-  if (result === 'strong') {
+  if (result === 'strong' || aiAssessmentAllowsProgression(result, snap)) {
     return adaptRecommendationForConfidence(recommendation, 'confident', snap);
   }
   if (result === 'weak') {
     return adaptRecommendationForConfidence(recommendation, 'needs_practice', snap);
   }
   var confidence = recommendation.confidence_feedback;
-  if (confidence === 'confident') {
+  if (confidence === 'confident' && aiAssessmentAllowsProgression('mixed', snap)) {
     return adaptRecommendationForConfidence(recommendation, 'confident', snap);
   }
   return adaptRecommendationForConfidence(recommendation, 'needs_practice', snap);
@@ -15260,15 +15322,15 @@ function estimatePracticeMinutes() {
  */
 function collectWeakAyahTargets() {
   var _recommendation$ai_as;
-  var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-    _ref$quizView = _ref.quizView,
-    quizView = _ref$quizView === void 0 ? null : _ref$quizView,
-    _ref$aiDetails = _ref.aiDetails,
-    aiDetails = _ref$aiDetails === void 0 ? null : _ref$aiDetails,
-    _ref$recommendation = _ref.recommendation,
-    recommendation = _ref$recommendation === void 0 ? null : _ref$recommendation,
-    _ref$completion = _ref.completion,
-    completion = _ref$completion === void 0 ? null : _ref$completion;
+  var _ref4 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+    _ref4$quizView = _ref4.quizView,
+    quizView = _ref4$quizView === void 0 ? null : _ref4$quizView,
+    _ref4$aiDetails = _ref4.aiDetails,
+    aiDetails = _ref4$aiDetails === void 0 ? null : _ref4$aiDetails,
+    _ref4$recommendation = _ref4.recommendation,
+    recommendation = _ref4$recommendation === void 0 ? null : _ref4$recommendation,
+    _ref4$completion = _ref4.completion,
+    completion = _ref4$completion === void 0 ? null : _ref4$completion;
   var fromQuiz = Array.isArray(quizView === null || quizView === void 0 ? void 0 : quizView.weakAyahs) ? quizView.weakAyahs : [];
   var fromAi = Array.isArray(aiDetails === null || aiDetails === void 0 ? void 0 : aiDetails.weakAyahs) ? aiDetails.weakAyahs : Array.isArray(aiDetails === null || aiDetails === void 0 ? void 0 : aiDetails.weak_ayahs) ? aiDetails.weak_ayahs : [];
   var fromRecAi = Array.isArray(recommendation === null || recommendation === void 0 || (_recommendation$ai_as = recommendation.ai_assessment) === null || _recommendation$ai_as === void 0 ? void 0 : _recommendation$ai_as.weak_ayahs) ? recommendation.ai_assessment.weak_ayahs : [];
@@ -15675,19 +15737,19 @@ function adaptRecommendationForAdaptiveAssessment(recommendation, policyRecommen
  * Confidence and plan kind win over leftover check tips so Strong ≠ "repeat".
  */
 function buildCombinedCheckInsight() {
-  var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-    _ref2$aiDetails = _ref2.aiDetails,
-    aiDetails = _ref2$aiDetails === void 0 ? null : _ref2$aiDetails,
-    _ref2$quizView = _ref2.quizView,
-    quizView = _ref2$quizView === void 0 ? null : _ref2$quizView,
-    _ref2$recommendation = _ref2.recommendation,
-    recommendation = _ref2$recommendation === void 0 ? null : _ref2$recommendation,
-    _ref2$confidence = _ref2.confidence,
-    confidence = _ref2$confidence === void 0 ? null : _ref2$confidence,
-    _ref2$isRepeat = _ref2.isRepeat,
-    isRepeat = _ref2$isRepeat === void 0 ? false : _ref2$isRepeat,
-    _ref2$t = _ref2.t,
-    t = _ref2$t === void 0 ? null : _ref2$t;
+  var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+    _ref5$aiDetails = _ref5.aiDetails,
+    aiDetails = _ref5$aiDetails === void 0 ? null : _ref5$aiDetails,
+    _ref5$quizView = _ref5.quizView,
+    quizView = _ref5$quizView === void 0 ? null : _ref5$quizView,
+    _ref5$recommendation = _ref5.recommendation,
+    recommendation = _ref5$recommendation === void 0 ? null : _ref5$recommendation,
+    _ref5$confidence = _ref5.confidence,
+    confidence = _ref5$confidence === void 0 ? null : _ref5$confidence,
+    _ref5$isRepeat = _ref5.isRepeat,
+    isRepeat = _ref5$isRepeat === void 0 ? false : _ref5$isRepeat,
+    _ref5$t = _ref5.t,
+    t = _ref5$t === void 0 ? null : _ref5$t;
   var translate = function translate(key, fallback, params) {
     if (!t) return fallback;
     var value = t("memorisation.postSession.recommendation.".concat(key), params);
@@ -16138,7 +16200,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   isMinorIsolatedWeakness: () => (/* binding */ isMinorIsolatedWeakness),
 /* harmony export */   mapPostSessionCtas: () => (/* binding */ mapPostSessionCtas),
 /* harmony export */   normaliseCtaOutcome: () => (/* binding */ normaliseCtaOutcome),
-/* harmony export */   resolvePostSessionCtaState: () => (/* binding */ resolvePostSessionCtaState)
+/* harmony export */   resolvePostSessionCtaState: () => (/* binding */ resolvePostSessionCtaState),
+/* harmony export */   resolveWeaknessSeverity: () => (/* binding */ resolveWeaknessSeverity)
 /* harmony export */ });
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
@@ -16243,18 +16306,81 @@ function normaliseCtaOutcome(outcome) {
 }
 
 /**
+ * Classify mistake severity from aggregate performance and reliable word-level evidence.
+ * Never invent word-level severity when only aggregate accuracy exists.
+ *
+ * @param {{
+ *   accuracyPercent?: number|null,
+ *   accuracy_percent?: number|null,
+ *   hardWordCount?: number,
+ *   partialWordCount?: number,
+ *   weakAyahCount?: number,
+ *   sequenceErrors?: number,
+ *   outcome?: string|null,
+ *   resultState?: string|null,
+ *   hasWordLevelEvidence?: boolean,
+ * }} evidence
+ * @returns {'minor'|'significant'|null}
+ */
+function resolveWeaknessSeverity() {
+  var _ref, _evidence$accuracyPer;
+  var evidence = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var accuracyRaw = Number((_ref = (_evidence$accuracyPer = evidence.accuracyPercent) !== null && _evidence$accuracyPer !== void 0 ? _evidence$accuracyPer : evidence.accuracy_percent) !== null && _ref !== void 0 ? _ref : NaN);
+  var accuracy = Number.isFinite(accuracyRaw) ? Math.max(0, Math.min(100, Math.round(accuracyRaw))) : null;
+  var outcome = normaliseCtaOutcome(evidence.outcome);
+  var resultState = String(evidence.resultState || '').toLowerCase().trim();
+  var hasWordLevelEvidence = evidence.hasWordLevelEvidence !== false;
+  var hardWords = Math.max(0, Number(evidence.hardWordCount || 0));
+  var partialWords = Math.max(0, Number(evidence.partialWordCount || 0));
+  var weakAyahs = Math.max(0, Number(evidence.weakAyahCount || 0));
+  var sequenceErrors = Math.max(0, Number(evidence.sequenceErrors || 0));
+  if (outcome === 'weak' || resultState === 'needs_practice' || accuracy != null && accuracy < 55) {
+    return 'significant';
+  }
+  if (sequenceErrors > 0 || weakAyahs > 1 || hardWords >= 4) {
+    return 'significant';
+  }
+  if (resultState === 'strong' || outcome === 'strong' || accuracy != null && accuracy >= 80) {
+    if (!hasWordLevelEvidence) return null;
+    if (hardWords === 0 && partialWords === 0 && weakAyahs === 0) return null;
+    if (hardWords >= 4 || weakAyahs > 1) return 'significant';
+    if (hardWords >= 3 && accuracy != null && accuracy < 85) return 'significant';
+    if (hardWords <= 3 && weakAyahs <= 1) return 'minor';
+    return 'significant';
+  }
+  if (resultState === 'developing' || outcome === 'mixed' || accuracy != null && accuracy >= 55) {
+    if (!hasWordLevelEvidence) return null;
+    if (hardWords >= 3 || weakAyahs >= 2) return 'significant';
+    if (hardWords <= 2 && (partialWords > 0 || hardWords > 0) && weakAyahs <= 1) {
+      return 'minor';
+    }
+    return 'significant';
+  }
+  return null;
+}
+
+/**
  * Detect a minor isolated weakness (single phrase/ayah) that should not block progression.
  *
  * @param {{
  *   weakAyahCount?: number,
  *   hardWordCount?: number,
+ *   partialWordCount?: number,
+ *   sequenceErrors?: number,
+ *   accuracyPercent?: number|null,
+ *   accuracy_percent?: number|null,
  *   hasFocusPhrase?: boolean,
  *   outcome?: string|null,
+ *   resultState?: string|null,
+ *   hasWordLevelEvidence?: boolean,
  *   weaknessSeverity?: 'minor'|'significant'|null,
  * }} evidence
  */
 function isMinorIsolatedWeakness() {
   var evidence = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var resolved = resolveWeaknessSeverity(evidence);
+  if (resolved === 'minor') return true;
+  if (resolved === 'significant') return false;
   if (evidence.weaknessSeverity === 'minor') return true;
   if (evidence.weaknessSeverity === 'significant') return false;
   var outcome = normaliseCtaOutcome(evidence.outcome);
@@ -16265,6 +16391,7 @@ function isMinorIsolatedWeakness() {
   var hasFocus = !!evidence.hasFocusPhrase;
   if (weakAyahs > 1) return false;
   if (hardWords >= 4) return false;
+  if (outcome === 'strong' && hardWords > 0 && hardWords <= 3 && weakAyahs <= 1) return true;
   if (weakAyahs === 1 || hasFocus) {
     return hardWords <= 3;
   }
@@ -16307,8 +16434,13 @@ function resolvePostSessionCtaState() {
   var strong = !!(input.masteryAchieved || outcome === 'strong');
   var minorWeakness = isMinorIsolatedWeakness({
     outcome: outcome,
+    resultState: input.resultState,
     weakAyahCount: input.weakAyahCount,
     hardWordCount: input.hardWordCount,
+    partialWordCount: input.partialWordCount,
+    sequenceErrors: input.sequenceErrors,
+    accuracyPercent: input.accuracyPercent,
+    hasWordLevelEvidence: input.hasWordLevelEvidence,
     hasFocusPhrase: input.hasFocusPhrase,
     weaknessSeverity: input.weaknessSeverity
   });
@@ -16332,8 +16464,11 @@ function resolvePostSessionCtaState() {
   if (input.hasAiCheck && strong) return POST_SESSION_CTA_STATES.STRONG;
   var revisionDone = !!(input.revisionCompleted || input.awaitingMasteryRetest);
   if (revisionDone) return POST_SESSION_CTA_STATES.REVISION_COMPLETED;
-  if (input.hasAiCheck && outcome === 'mixed') {
+  if (input.hasAiCheck && outcome === 'mixed' && !minorWeakness) {
     return POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED;
+  }
+  if (input.hasAiCheck && outcome === 'mixed' && minorWeakness) {
+    return POST_SESSION_CTA_STATES.MOSTLY_SECURE;
   }
   if (input.hasAiCheck && (outcome === 'weak' || !strong)) {
     return POST_SESSION_CTA_STATES.NEEDS_PRACTICE;
@@ -21042,8 +21177,8 @@ return setup.filter(function(row){return row&&(row.key==='speed'||row.key==='rep
 var settings=(_this$postSessionReco31=this.postSessionRecommendation)===null||_this$postSessionReco31===void 0?void 0:_this$postSessionReco31.settings;if(!settings||_typeof(settings)!=='object')return[];var pills=[];var technique=String(settings.technique||'').toLowerCase();if(['talqin','focus','blur','chaining','anchor'].includes(technique)){pills.push({key:'technique',label:this.stripTechniqueJargon(this.getTechniqueDisplayLabel(technique))});}var complementary=String(settings.complementary_technique||'').toLowerCase();if(['talqin','focus','blur','chaining','anchor'].includes(complementary)&&complementary!==technique){pills.push({key:'complementary',label:this.stripTechniqueJargon(this.getTechniqueDisplayLabel(complementary))});}var speed=Number(settings.playback_speed);if(Number.isFinite(speed)&&speed>0){pills.push({key:'speed',label:this.t('memorisation.postSession.recommendation.speedPill',{speed:speed})});}var reps=Number(settings.repetitions);if(Number.isFinite(reps)&&reps>0){var repsKey=reps===1?'memorisation.postSession.recommendation.repetitionsSummaryOne':'memorisation.postSession.recommendation.repetitionsSummaryOther';pills.push({key:'reps',label:this.t(repsKey,{count:reps})||this.t('memorisation.postSession.recommendation.repetitionsSummary',{count:reps})});}return pills.slice(0,4);},postSessionEvidenceRows:function postSessionEvidenceRows(){var _rec$ayah_range,_rec$ayah_range2;var plan=this.aiReciteFinalPlan||this.amdPracticePlan||null;var focus=this.resolvePostSessionFocusPhrase();var methodValue=this.resolvePostSessionMethodCopy(plan);var rec=this.postSessionRecommendation||{};var snap=this.postSessionSnapshot||{};var nextFrom=Number(((_rec$ayah_range=rec.ayah_range)===null||_rec$ayah_range===void 0?void 0:_rec$ayah_range.from)||0);var nextTo=Number(((_rec$ayah_range2=rec.ayah_range)===null||_rec$ayah_range2===void 0?void 0:_rec$ayah_range2.to)||nextFrom);var ctaState=this.postSessionCtaState;var allowProgress=ctaState===_scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.POST_SESSION_CTA_STATES.MOSTLY_SECURE||ctaState===_scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.POST_SESSION_CTA_STATES.STRONG;var nextValue='';if(allowProgress&&focus!==null&&focus!==void 0&&focus.ayahNumber&&nextFrom&&nextTo){nextValue=this.t('memorisation.postSession.recommendation.evidenceReviewThenContinue',{start:nextFrom,end:nextTo})||"Review the weak phrase once, then continue to Ayahs ".concat(nextFrom,"\u2013").concat(nextTo,".");}else if(allowProgress&&nextFrom&&nextTo){nextValue=this.t('memorisation.postSession.actions.continueToAyahs',{start:nextFrom,end:nextTo})||"Continue to Ayahs ".concat(nextFrom,"\u2013").concat(nextTo,".");}else{var _plan$range,_plan$range2;var from=Number((plan===null||plan===void 0||(_plan$range=plan.range)===null||_plan$range===void 0?void 0:_plan$range.from)||snap.rangeStart||(focus===null||focus===void 0?void 0:focus.ayahNumber)||0);var to=Number((plan===null||plan===void 0||(_plan$range2=plan.range)===null||_plan$range2===void 0?void 0:_plan$range2.to)||from);nextValue=from&&to?(0,_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.formatCheckAyahsAgainLabel)({from:from,to:to},this.t.bind(this))||"Check ".concat((0,_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.formatAyahRangeLabel)({from:from,to:to},this.t.bind(this))," again."):this.t('memorisation.postSession.recommendation.evidenceReviewNow')||'Check this range again.';}var returnValue=this.resolvePostSessionReturnCopy();var rows=[];if(focus!==null&&focus!==void 0&&focus.phrase){rows.push({key:'focus',label:this.t('memorisation.postSession.coach.evidenceFocus')||'Focus',value:focus.phrase,word:focus.phrase,ayahLabel:focus.ayahLabel||'',ayahNumber:focus.ayahNumber||0,verseKey:focus.verseKey||'',wordIndex:focus.wordIndex,weakWord:focus.weakWord||null});}if(methodValue&&!allowProgress){rows.push({key:'method',label:this.t('memorisation.postSession.coach.evidenceMethod')||this.t('memorisation.postSession.coach.methodLabel')||'Method',value:this.stripAiDashes(methodValue)});}rows.push({key:'next',label:this.t('memorisation.postSession.coach.evidenceNext')||this.t('memorisation.postSession.coach.evidenceReview')||'Next',value:this.stripAiDashes(nextValue)});if(returnValue){rows.push({key:'return',label:this.t('memorisation.postSession.coach.evidenceReturn')||'Return',value:this.stripAiDashes(returnValue)});}return rows;},postSessionRecommendationReasonLine:function postSessionRecommendationReasonLine(){var _rec$ayah_range3,_rec$ayah_range4,_this$aiReciteFinalPl13;var focus=this.resolvePostSessionFocusPhrase();var details=this.postSessionAiReviewDetails;var matched=Number(details===null||details===void 0?void 0:details.matchedWords);var total=Number((details===null||details===void 0?void 0:details.totalWords)||0);var hasWordEvidence=!!(focus!==null&&focus!==void 0&&focus.weakWord)||total>0&&Number.isFinite(matched)&&matched<total||Array.isArray(details===null||details===void 0?void 0:details.weakAyahs)&&details.weakAyahs.length>0;var rec=this.postSessionRecommendation||{};var nextFrom=Number(((_rec$ayah_range3=rec.ayah_range)===null||_rec$ayah_range3===void 0?void 0:_rec$ayah_range3.from)||0);var nextTo=Number(((_rec$ayah_range4=rec.ayah_range)===null||_rec$ayah_range4===void 0?void 0:_rec$ayah_range4.to)||nextFrom);var ctaState=this.postSessionCtaState;var allowProgress=ctaState===_scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.POST_SESSION_CTA_STATES.MOSTLY_SECURE||ctaState===_scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.POST_SESSION_CTA_STATES.STRONG;// Never claim a phrase was weak without word-level assessment evidence.
 if(focus!==null&&focus!==void 0&&focus.phrase&&focus!==null&&focus!==void 0&&focus.ayahNumber&&hasWordEvidence){var primary=this.t('memorisation.postSession.recommendation.phraseNeedsAttention',{ayah:focus.ayahNumber})||"One phrase in Ayah ".concat(focus.ayahNumber," needs a little reinforcement.");// Keep Why short when guided Method/Next rows will carry progression.
 if(this.postSessionFocusHighlightParts.length){return this.stripAiDashes(primary);}if(allowProgress&&nextFrom&&nextTo){var follow=this.t('memorisation.postSession.recommendation.phraseNeedsAttentionNext',{start:nextFrom,end:nextTo})||"Review it once, then continue to Ayahs ".concat(nextFrom,"\u2013").concat(nextTo,".");return this.stripAiDashes("".concat(primary," ").concat(follow));}return this.stripAiDashes(primary);}var weakAyahs=Array.isArray((_this$aiReciteFinalPl13=this.aiReciteFinalPlan)===null||_this$aiReciteFinalPl13===void 0?void 0:_this$aiReciteFinalPl13.weakAyahs)?this.aiReciteFinalPlan.weakAyahs:Array.isArray(details===null||details===void 0?void 0:details.weakAyahs)?details.weakAyahs:[];if(hasWordEvidence&&weakAyahs.length===1){var ayah=weakAyahs[0];var _primary=this.t('memorisation.postSession.recommendation.ayahNeedsAttention',{ayah:ayah})||"Ayah ".concat(ayah," needs a little reinforcement.");if(allowProgress&&nextFrom&&nextTo){var _follow=this.t('memorisation.postSession.recommendation.ayahNeedsAttentionNext',{ayah:ayah,start:nextFrom,end:nextTo})||"Review Ayah ".concat(ayah," once, then continue to Ayahs ").concat(nextFrom,"\u2013").concat(nextTo,".");return this.stripAiDashes("".concat(_primary," ").concat(_follow));}return this.stripAiDashes(_primary);}if(hasWordEvidence&&weakAyahs.length>1){return this.stripAiDashes(this.t('memorisation.postSession.recommendation.phrasesNeedAttention')||'A few phrases still need attention.');}var reason=String(this.postSessionSimpleReason||'').trim();if(!reason)return'';// Keep one short line — drop long plan essays from the compact reason slot.
-return this.stripAiDashes(reason.split(/(?<=\.)\s+/)[0].slice(0,160));},postSessionTestWithAiLabel:function postSessionTestWithAiLabel(){if(this.postSessionShowRecommendationPlan||this.postSessionHasAiCheck){return this.t('memorisation.postSession.actions.retest')||'Check again';}if(this.postSessionIsRepeatRecommendation){return this.t('memorisation.postSession.actions.testWithAiAgain')||this.t('memorisation.postSession.actions.testWithAi')||'Check memorisation';}return this.t('memorisation.postSession.actions.testWithAi')||'Check memorisation';},postSessionSkipForNowLabel:function postSessionSkipForNowLabel(){if(this.postSessionIsRepeatRecommendation){return this.t('memorisation.postSession.actions.keepPractising')||this.t('memorisation.postSession.actions.skipForNow')||'Keep practising';}return this.t('memorisation.postSession.actions.skipForNow')||'Skip for now';},postSessionChooseRangeLabel:function postSessionChooseRangeLabel(){if(this.postSessionIsRepeatRecommendation){return this.t('memorisation.postSession.actions.chooseDifferentRange')||this.t('memorisation.postSession.actions.chooseAnotherRange')||'Choose another range';}return this.t('memorisation.postSession.actions.chooseAnotherRange')||this.t('memorisation.postSession.recommendation.startDifferentSession')||'Other range';},postSessionCtaState:function postSessionCtaState(){var _this$postSessionAiRe20,_this$postSessionAiRe21,_this$aiReciteFinalPl14,_this$postSessionReco32,_this$resolvePostSess4,_this$postSessionAiRe22,_this$aiReciteFinalPl15,_this$postSessionAiRe23;if(this.onboardingSampleSessionActive)return null;if(this.postSessionAiPresentationMode==='insufficient_audio'){return _scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO;}var outcome=this.postSessionMemoryCheckOutcome||((_this$postSessionAiRe20=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe20===void 0?void 0:_this$postSessionAiRe20.resultState)||((_this$postSessionAiRe21=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe21===void 0?void 0:_this$postSessionAiRe21.outcome)||((_this$aiReciteFinalPl14=this.aiReciteFinalPlan)===null||_this$aiReciteFinalPl14===void 0?void 0:_this$aiReciteFinalPl14.outcome)||((_this$postSessionReco32=this.postSessionRecommendation)===null||_this$postSessionReco32===void 0||(_this$postSessionReco32=_this$postSessionReco32.ai_assessment)===null||_this$postSessionReco32===void 0?void 0:_this$postSessionReco32.result)||null;// Treat calm zero-match as needs_practice so Revise leads.
-var resolvedOutcome=this.postSessionAiPresentationMode==='valid_zero_match'?'needs_practice':outcome;var focus=((_this$resolvePostSess4=this.resolvePostSessionFocusPhrase)===null||_this$resolvePostSess4===void 0?void 0:_this$resolvePostSess4.call(this))||null;var weakAyahs=Array.isArray((_this$postSessionAiRe22=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe22===void 0?void 0:_this$postSessionAiRe22.weakAyahs)?this.postSessionAiReviewDetails.weakAyahs:Array.isArray((_this$aiReciteFinalPl15=this.aiReciteFinalPlan)===null||_this$aiReciteFinalPl15===void 0?void 0:_this$aiReciteFinalPl15.weakAyahs)?this.aiReciteFinalPlan.weakAyahs:[];var colorCounts=((_this$postSessionAiRe23=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe23===void 0?void 0:_this$postSessionAiRe23.colorCounts)||{};var hardWordCount=Number(colorCounts.red||0)+Number(colorCounts.black||0);return (0,_scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.resolvePostSessionCtaState)({isConfirmStep:this.postSessionRecommendationStep==='confirm'&&this.postSessionRecommendationActionable,hasAiCheck:!!(this.postSessionShowRecommendationPlan||this.postSessionHasAiCheck),outcome:resolvedOutcome,presentationMode:this.postSessionAiPresentationMode,masteryAchieved:!!(this.aiReciteMasteryAchieved||this.aiReciteAdvanceToNextSession),revisionCompleted:!!this.recommendedPracticeCompleted,awaitingMasteryRetest:!!this.awaitingMasteryRetest,weakAyahCount:weakAyahs.length||(focus!==null&&focus!==void 0&&focus.ayahNumber?1:0),hardWordCount:hardWordCount,hasFocusPhrase:!!(focus!==null&&focus!==void 0&&focus.phrase)});},postSessionCtaButtons:function postSessionCtaButtons(){var _this20=this,_this$resolvePostSess5,_rec$ayah_range5,_rec$ayah_range6,_this$postSessionAiRe24,_this$postSessionAiRe25,_this$postSessionAiRe26;var state=this.postSessionCtaState;if(!state)return[];var confirmKey=function(_rec$confirmation){var rec=_this20.postSessionRecommendation;return(rec===null||rec===void 0||(_rec$confirmation=rec.confirmation)===null||_rec$confirmation===void 0?void 0:_rec$confirmation.primary_action_key)||((rec===null||rec===void 0?void 0:rec.type)===_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.RECOMMENDATION_TYPES.NEXT_SURAH?'continueToNextSurah':(0,_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.isRepeatRecommendation)(rec)?'startRevision':'startSession');}();var focus=((_this$resolvePostSess5=this.resolvePostSessionFocusPhrase)===null||_this$resolvePostSess5===void 0?void 0:_this$resolvePostSess5.call(this))||null;var rec=this.postSessionRecommendation||{};var snap=this.postSessionSnapshot||{};var nextFrom=Number(((_rec$ayah_range5=rec.ayah_range)===null||_rec$ayah_range5===void 0?void 0:_rec$ayah_range5.from)||0);var nextTo=Number(((_rec$ayah_range6=rec.ayah_range)===null||_rec$ayah_range6===void 0?void 0:_rec$ayah_range6.to)||nextFrom);var mapped=(0,_scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.mapPostSessionCtas)(state,{isRepeat:this.postSessionIsRepeatRecommendation,confirmLabelKey:confirmKey,preferReviseRange:this.postSessionAiPresentationMode==='valid_zero_match',insufficientReason:((_this$postSessionAiRe24=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe24===void 0?void 0:_this$postSessionAiRe24.insufficientReason)||'',showMicrophoneCheck:((_this$postSessionAiRe25=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe25===void 0?void 0:_this$postSessionAiRe25.showMicrophoneCheck)===true||String(((_this$postSessionAiRe26=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe26===void 0?void 0:_this$postSessionAiRe26.insufficientReason)||'')==='mic_permission',weakAyahNumber:Number((focus===null||focus===void 0?void 0:focus.ayahNumber)||0)||null,nextRangeStart:nextFrom||Number(snap.rangeEnd||0)+1||null,nextRangeEnd:nextTo||null});var actionFallbacks={reviseFocusPhrase:'Start revision',reviseThisRange:'Start revision',reviewAyahOnce:'Review Ayah once',retest:'Check again',tryRecordingAgain:'Try recording again',checkMicrophone:'Check microphone',close:'Close',testWithAi:'Check memorisation',continuePractising:'Repeat this session',continueToNextRange:'Continue to next session',continueToAyahs:'Continue to Ayahs',repeatThisSession:'Repeat this session',reviewOnceMore:'Review again',chooseAnotherRange:'Choose another range',skipForNow:'Continue to next session',keepPractising:'Repeat this session',returnToWorkspace:'Return to workspace',startSession:'Continue to next session',startRevision:'Start revision',continueToNextSurah:'Continue to next session'};return mapped.map(function(btn){var label='';var params=btn.labelParams||{};if(state===_scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.POST_SESSION_CTA_STATES.CONFIRM&&btn.action===_scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.POST_SESSION_CTA_ACTIONS.CONFIRM_START){label=_this20.t("memorisation.postSession.recommendation.confirm.".concat(btn.labelKey))||_this20.postSessionConfirmationPrimaryLabel;}else{label=_this20.t("memorisation.postSession.actions.".concat(btn.labelKey),params);}if(!label||label==="memorisation.postSession.actions.".concat(btn.labelKey)||label==="memorisation.postSession.recommendation.confirm.".concat(btn.labelKey)){if(btn.labelKey==='continueToAyahs'&&params.start&&params.end){label="Continue to Ayahs ".concat(params.start,"\u2013").concat(params.end);}else if(btn.labelKey==='reviewAyahOnce'&&params.ayah){label="Review Ayah ".concat(params.ayah," once");}else{label=actionFallbacks[btn.labelKey]||_this20.postSessionConfirmationPrimaryLabel||btn.labelKey;}}return _objectSpread(_objectSpread({},btn),{},{label:_this20.stripAiDashes(label)});});},postSessionShowCloseTextAction:function postSessionShowCloseTextAction(){// Header close (X) is enough — no footer text hyperlink.
+return this.stripAiDashes(reason.split(/(?<=\.)\s+/)[0].slice(0,160));},postSessionTestWithAiLabel:function postSessionTestWithAiLabel(){if(this.postSessionShowRecommendationPlan||this.postSessionHasAiCheck){return this.t('memorisation.postSession.actions.retest')||'Check again';}if(this.postSessionIsRepeatRecommendation){return this.t('memorisation.postSession.actions.testWithAiAgain')||this.t('memorisation.postSession.actions.testWithAi')||'Check memorisation';}return this.t('memorisation.postSession.actions.testWithAi')||'Check memorisation';},postSessionSkipForNowLabel:function postSessionSkipForNowLabel(){if(this.postSessionIsRepeatRecommendation){return this.t('memorisation.postSession.actions.keepPractising')||this.t('memorisation.postSession.actions.skipForNow')||'Keep practising';}return this.t('memorisation.postSession.actions.skipForNow')||'Skip for now';},postSessionChooseRangeLabel:function postSessionChooseRangeLabel(){if(this.postSessionIsRepeatRecommendation){return this.t('memorisation.postSession.actions.chooseDifferentRange')||this.t('memorisation.postSession.actions.chooseAnotherRange')||'Choose another range';}return this.t('memorisation.postSession.actions.chooseAnotherRange')||this.t('memorisation.postSession.recommendation.startDifferentSession')||'Other range';},postSessionCtaState:function postSessionCtaState(){var _this$postSessionAiRe20,_this$postSessionAiRe21,_this$aiReciteFinalPl14,_this$postSessionReco32,_this$resolvePostSess4,_this$postSessionAiRe22,_this$aiReciteFinalPl15,_this$postSessionAiRe23,_this$postSessionAiRe24,_this$postSessionAiRe25,_this$postSessionAiRe26,_this$postSessionAiRe27,_this$postSessionAiRe28;if(this.onboardingSampleSessionActive)return null;if(this.postSessionAiPresentationMode==='insufficient_audio'){return _scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO;}var outcome=this.postSessionMemoryCheckOutcome||((_this$postSessionAiRe20=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe20===void 0?void 0:_this$postSessionAiRe20.resultState)||((_this$postSessionAiRe21=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe21===void 0?void 0:_this$postSessionAiRe21.outcome)||((_this$aiReciteFinalPl14=this.aiReciteFinalPlan)===null||_this$aiReciteFinalPl14===void 0?void 0:_this$aiReciteFinalPl14.outcome)||((_this$postSessionReco32=this.postSessionRecommendation)===null||_this$postSessionReco32===void 0||(_this$postSessionReco32=_this$postSessionReco32.ai_assessment)===null||_this$postSessionReco32===void 0?void 0:_this$postSessionReco32.result)||null;// Treat calm zero-match as needs_practice so Revise leads.
+var resolvedOutcome=this.postSessionAiPresentationMode==='valid_zero_match'?'needs_practice':outcome;var focus=((_this$resolvePostSess4=this.resolvePostSessionFocusPhrase)===null||_this$resolvePostSess4===void 0?void 0:_this$resolvePostSess4.call(this))||null;var weakAyahs=Array.isArray((_this$postSessionAiRe22=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe22===void 0?void 0:_this$postSessionAiRe22.weakAyahs)?this.postSessionAiReviewDetails.weakAyahs:Array.isArray((_this$aiReciteFinalPl15=this.aiReciteFinalPlan)===null||_this$aiReciteFinalPl15===void 0?void 0:_this$aiReciteFinalPl15.weakAyahs)?this.aiReciteFinalPlan.weakAyahs:[];var colorCounts=((_this$postSessionAiRe23=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe23===void 0?void 0:_this$postSessionAiRe23.colorCounts)||{};var hardWordCount=Number(colorCounts.red||0)+Number(colorCounts.black||0);var partialWordCount=Number(colorCounts.amber||0);var accuracyPercent=(_this$postSessionAiRe24=(_this$postSessionAiRe25=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe25===void 0?void 0:_this$postSessionAiRe25.accuracy)!==null&&_this$postSessionAiRe24!==void 0?_this$postSessionAiRe24:null;var hasWordLevelEvidence=Number(((_this$postSessionAiRe26=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe26===void 0?void 0:_this$postSessionAiRe26.totalWords)||0)>0;return (0,_scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.resolvePostSessionCtaState)({isConfirmStep:this.postSessionRecommendationStep==='confirm'&&this.postSessionRecommendationActionable,hasAiCheck:!!(this.postSessionShowRecommendationPlan||this.postSessionHasAiCheck),outcome:resolvedOutcome,resultState:((_this$postSessionAiRe27=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe27===void 0?void 0:_this$postSessionAiRe27.resultState)||null,presentationMode:this.postSessionAiPresentationMode,masteryAchieved:!!(this.aiReciteMasteryAchieved||this.aiReciteAdvanceToNextSession),revisionCompleted:!!this.recommendedPracticeCompleted,awaitingMasteryRetest:!!this.awaitingMasteryRetest,weakAyahCount:weakAyahs.length||(focus!==null&&focus!==void 0&&focus.ayahNumber?1:0),hardWordCount:hardWordCount,partialWordCount:partialWordCount,accuracyPercent:accuracyPercent,hasWordLevelEvidence:hasWordLevelEvidence,hasFocusPhrase:!!(focus!==null&&focus!==void 0&&focus.phrase),weaknessSeverity:((_this$postSessionAiRe28=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe28===void 0?void 0:_this$postSessionAiRe28.weaknessSeverity)||null});},postSessionCtaButtons:function postSessionCtaButtons(){var _this20=this,_this$resolvePostSess5,_rec$ayah_range5,_rec$ayah_range6,_this$postSessionAiRe29,_this$postSessionAiRe30,_this$postSessionAiRe31;var state=this.postSessionCtaState;if(!state)return[];var confirmKey=function(_rec$confirmation){var rec=_this20.postSessionRecommendation;return(rec===null||rec===void 0||(_rec$confirmation=rec.confirmation)===null||_rec$confirmation===void 0?void 0:_rec$confirmation.primary_action_key)||((rec===null||rec===void 0?void 0:rec.type)===_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.RECOMMENDATION_TYPES.NEXT_SURAH?'continueToNextSurah':(0,_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.isRepeatRecommendation)(rec)?'startRevision':'startSession');}();var focus=((_this$resolvePostSess5=this.resolvePostSessionFocusPhrase)===null||_this$resolvePostSess5===void 0?void 0:_this$resolvePostSess5.call(this))||null;var rec=this.postSessionRecommendation||{};var snap=this.postSessionSnapshot||{};var nextFrom=Number(((_rec$ayah_range5=rec.ayah_range)===null||_rec$ayah_range5===void 0?void 0:_rec$ayah_range5.from)||0);var nextTo=Number(((_rec$ayah_range6=rec.ayah_range)===null||_rec$ayah_range6===void 0?void 0:_rec$ayah_range6.to)||nextFrom);var mapped=(0,_scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.mapPostSessionCtas)(state,{isRepeat:this.postSessionIsRepeatRecommendation,confirmLabelKey:confirmKey,preferReviseRange:this.postSessionAiPresentationMode==='valid_zero_match',insufficientReason:((_this$postSessionAiRe29=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe29===void 0?void 0:_this$postSessionAiRe29.insufficientReason)||'',showMicrophoneCheck:((_this$postSessionAiRe30=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe30===void 0?void 0:_this$postSessionAiRe30.showMicrophoneCheck)===true||String(((_this$postSessionAiRe31=this.postSessionAiReviewDetails)===null||_this$postSessionAiRe31===void 0?void 0:_this$postSessionAiRe31.insufficientReason)||'')==='mic_permission',weakAyahNumber:Number((focus===null||focus===void 0?void 0:focus.ayahNumber)||0)||null,nextRangeStart:nextFrom||Number(snap.rangeEnd||0)+1||null,nextRangeEnd:nextTo||null});var actionFallbacks={reviseFocusPhrase:'Start revision',reviseThisRange:'Start revision',reviewAyahOnce:'Review Ayah once',retest:'Check again',tryRecordingAgain:'Try recording again',checkMicrophone:'Check microphone',close:'Close',testWithAi:'Check memorisation',continuePractising:'Repeat this session',continueToNextRange:'Continue to next session',continueToAyahs:'Continue to Ayahs',repeatThisSession:'Repeat this session',reviewOnceMore:'Review again',chooseAnotherRange:'Choose another range',skipForNow:'Continue to next session',keepPractising:'Repeat this session',returnToWorkspace:'Return to workspace',startSession:'Continue to next session',startRevision:'Start revision',continueToNextSurah:'Continue to next session'};return mapped.map(function(btn){var label='';var params=btn.labelParams||{};if(state===_scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.POST_SESSION_CTA_STATES.CONFIRM&&btn.action===_scripts_recommendations_postSessionCtaMapping__WEBPACK_IMPORTED_MODULE_13__.POST_SESSION_CTA_ACTIONS.CONFIRM_START){label=_this20.t("memorisation.postSession.recommendation.confirm.".concat(btn.labelKey))||_this20.postSessionConfirmationPrimaryLabel;}else{label=_this20.t("memorisation.postSession.actions.".concat(btn.labelKey),params);}if(!label||label==="memorisation.postSession.actions.".concat(btn.labelKey)||label==="memorisation.postSession.recommendation.confirm.".concat(btn.labelKey)){if(btn.labelKey==='continueToAyahs'&&params.start&&params.end){label="Continue to Ayahs ".concat(params.start,"\u2013").concat(params.end);}else if(btn.labelKey==='reviewAyahOnce'&&params.ayah){label="Review Ayah ".concat(params.ayah," once");}else{label=actionFallbacks[btn.labelKey]||_this20.postSessionConfirmationPrimaryLabel||btn.labelKey;}}return _objectSpread(_objectSpread({},btn),{},{label:_this20.stripAiDashes(label)});});},postSessionShowCloseTextAction:function postSessionShowCloseTextAction(){// Header close (X) is enough — no footer text hyperlink.
 return false;},postSessionAiAssistHint:function postSessionAiAssistHint(){var _this$postSessionReco33;if((_this$postSessionReco33=this.postSessionRecommendation)!==null&&_this$postSessionReco33!==void 0&&(_this$postSessionReco33=_this$postSessionReco33.ai_assessment)!==null&&_this$postSessionReco33!==void 0&&_this$postSessionReco33.summary||this.postSessionAiFeedback){return'';}if(this.postSessionRecommendationStartError){return this.postSessionRecommendationStartError;}if(typeof navigator!=='undefined'&&navigator.onLine===false){return this.t('memorisation.postSession.recommendation.aiReciteOffline');}// Keep Review Session quiet by default — no long optional essay under the button.
 return'';},postSessionSettingsOutcome:function postSessionSettingsOutcome(){return this.postSessionIntendedOutcome;},postSessionStatsSummary:function postSessionStatsSummary(){var snap=this.postSessionSnapshot||{};var parts=[];if(snap.durationLabel)parts.push(snap.durationLabel);var percent=Number(snap.progressPercent);if(Number.isFinite(percent)&&percent>0&&percent<100){parts.push("".concat(Math.round(percent),"%"));}else if(snap.completedAll){parts.push(this.t('memorisation.postSession.statsCompleteShort'));}return parts.filter(Boolean).join(' · ');},postSessionCompactStats:function postSessionCompactStats(){var _this$postSessionReco34,_this$reciters$find2,_this21=this,_snap$playbackSpeed,_snap$repetitionsPerS,_ref6,_snap$retryCount,_this$postSessionReco35;var snap=this.postSessionSnapshot||{};var settings=((_this$postSessionReco34=this.postSessionRecommendation)===null||_this$postSessionReco34===void 0?void 0:_this$postSessionReco34.settings)||{};var cells=[];var chapterName=snap.chapterName||'';var rangeLabel=snap.rangeLabel||(snap.rangeStart&&snap.rangeEnd?this.t('memorisation.postSession.recommendation.ayahRange',{start:snap.rangeStart,end:snap.rangeEnd}):'');if(chapterName&&rangeLabel){cells.push({key:'range',label:this.t('memorisation.postSession.statsRange'),value:"".concat(chapterName," \xB7 ").concat(rangeLabel)});}if(snap.durationLabel){cells.push({key:'duration',label:this.t('memorisation.stats.duration'),value:snap.durationLabel});}var reciterName=snap.reciterName||((_this$reciters$find2=this.reciters.find(function(item){return String(item.id)===String(snap.reciterId||_this21.reciterId||'');}))===null||_this$reciters$find2===void 0?void 0:_this$reciters$find2.name);if(reciterName){cells.push({key:'reciter',label:this.t('memorisation.stats.reciter'),value:reciterName});}var sessionTechnique=String(snap.techniqueId||(snap.talqinModeEnabled?'talqin':'')||(snap.focusModeEnabled?'focus':'')||(snap.blurModeEnabled?'blur':'')||(snap.chainingEnabled?'chaining':'')||(snap.anchorModeEnabled?'anchor':'')||'').toLowerCase();if(['talqin','focus','blur','chaining','anchor'].includes(sessionTechnique)){cells.push({key:'technique',label:this.t('memorisation.postSession.recommendation.settingsTechnique'),value:this.getTechniqueDisplayLabel(sessionTechnique)});}var speed=Number((_snap$playbackSpeed=snap.playbackSpeed)!==null&&_snap$playbackSpeed!==void 0?_snap$playbackSpeed:settings.playback_speed);if(Number.isFinite(speed)&&speed>0){cells.push({key:'speed',label:this.t('memorisation.postSession.recommendation.settingsSpeed'),value:"".concat(speed,"\xD7")});}var reps=Number((_snap$repetitionsPerS=snap.repetitionsPerStep)!==null&&_snap$repetitionsPerS!==void 0?_snap$repetitionsPerS:settings.repetitions);if(Number.isFinite(reps)&&reps>0){cells.push({key:'reps',label:this.t('memorisation.stats.repeats'),value:String(reps)});}var retries=Number((_ref6=(_snap$retryCount=snap.retryCount)!==null&&_snap$retryCount!==void 0?_snap$retryCount:snap.retries)!==null&&_ref6!==void 0?_ref6:0);if(retries>0){cells.push({key:'retries',label:this.t('memorisation.postSession.statsRetries'),value:String(retries)});}var aiResult=(_this$postSessionReco35=this.postSessionRecommendation)===null||_this$postSessionReco35===void 0||(_this$postSessionReco35=_this$postSessionReco35.ai_assessment)===null||_this$postSessionReco35===void 0?void 0:_this$postSessionReco35.result;if(aiResult&&['strong','mixed','weak'].includes(String(aiResult))){cells.push({key:'ai',label:this.t('memorisation.postSession.recommendation.aiResultLabel'),value:this.t("memorisation.postSession.recommendation.aiResult.".concat(aiResult))});}if(snap.isRepeatSession||snap.repeatedFromSessionId){cells.push({key:'attempt',label:this.t('memorisation.postSession.statsAttempt'),value:this.t('memorisation.postSession.statsRepeated')});}else if(snap.completedAll){cells.push({key:'attempt',label:this.t('memorisation.postSession.statsAttempt'),value:this.t('memorisation.postSession.statsNew')});}return cells.filter(function(cell){return cell.value!=null&&String(cell.value).trim()!=='';}).slice(0,8);},postSessionDuaMessage:function postSessionDuaMessage(){return this.t('memorisation.postSession.duaStrengthenShort');},postSessionAiReciteBusyLabel:function postSessionAiReciteBusyLabel(){return this.postSessionAiReciteBusy?this.t('memorisation.postSession.recommendation.openingAiRecite'):this.t('memorisation.postSession.recommendation.aiReciteShort');},postSessionAdaptiveQuestion:function postSessionAdaptiveQuestion(){var _this$postSessionAdap7;return((_this$postSessionAdap7=this.postSessionAdaptiveSession)===null||_this$postSessionAdap7===void 0?void 0:_this$postSessionAdap7.currentQuestion)||null;},postSessionAdaptiveProgressCurrent:function postSessionAdaptiveProgressCurrent(){var session=this.postSessionAdaptiveSession;if(!session)return 1;if(session.currentQuestion)return Math.max(1,Number(session.questionsAsked||1));return Math.max(1,Number(session.questionsAsked||1));},postSessionAdaptiveProgressTotal:function postSessionAdaptiveProgressTotal(){var _this$postSessionAdap8,_this$postSessionAdap9;var asked=Number(((_this$postSessionAdap8=this.postSessionAdaptiveSession)===null||_this$postSessionAdap8===void 0?void 0:_this$postSessionAdap8.questionsAsked)||1);return Math.min(7,Math.max(3,asked+((_this$postSessionAdap9=this.postSessionAdaptiveSession)!==null&&_this$postSessionAdap9!==void 0&&_this$postSessionAdap9.currentQuestion?1:0)));},postSessionAdaptiveProgressLabel:function postSessionAdaptiveProgressLabel(){return this.t('memorisation.postSession.adaptiveCheck.progress',{current:this.postSessionAdaptiveProgressCurrent,total:this.postSessionAdaptiveProgressTotal});},postSessionAdaptiveFriendlyPrompt:function postSessionAdaptiveFriendlyPrompt(){var _this$postSessionAdap0,_this$postSessionAdap1;var type=String(((_this$postSessionAdap0=this.postSessionAdaptiveQuestion)===null||_this$postSessionAdap0===void 0?void 0:_this$postSessionAdap0.type)||'');var map={surah_identification:'Which surah is this from?',missing_word_options:'Which word is missing?',select_next_phrase:'What comes next?',basic_phrase_ordering:'Put these in order',match_beginning_ending:'How does this ayah end?',complete_ayah_reduced:'Which word fits here?',previous_next_ayah:'Which ayah comes next?',mushaf_hide_partial:'What are the hidden words?',arrange_ayah_segments:'Put these in order',beginning_end_recall:'How does this ayah end?',complete_ayah_open:'Continue from memory',missing_ayah:'Which ayah belongs here?',random_start_continuation:'Continue from memory',mushaf_hide_heavy:'What are the hidden words?',ai_recite_no_text:'Recite this ayah',harakah_check:'Which word is correct?',mutashabihat_comparison:'Which ayah matches?',similar_ayah_identification:'Which ayah matches?',cross_range_sequence:'Put these ayahs in order',delayed_recall:'Which word belongs here?',pronunciation_fluency:'Recite this ayah'};return map[type]||((_this$postSessionAdap1=this.postSessionAdaptiveQuestion)===null||_this$postSessionAdap1===void 0?void 0:_this$postSessionAdap1.prompt)||this.t('memorisation.postSession.adaptiveCheck.selectAnswer');},postSessionAdaptiveFeedbackLabel:function postSessionAdaptiveFeedbackLabel(){var tone=this.postSessionAdaptiveFeedback;if(tone==='correct')return this.t('memorisation.postSession.adaptiveCheck.feedbackCorrect');if(tone==='almost')return this.t('memorisation.postSession.adaptiveCheck.feedbackAlmost');if(tone==='incorrect')return this.t('memorisation.postSession.adaptiveCheck.feedbackIncorrect');return'';},postSessionAdaptivePrimaryActionLabel:function postSessionAdaptivePrimaryActionLabel(){var _this$postSessionAdap10;var key=((_this$postSessionAdap10=this.postSessionAdaptiveResultView)===null||_this$postSessionAdap10===void 0?void 0:_this$postSessionAdap10.primaryActionLabelKey)||'continue';var mapped={"continue":'continue',repeatWeakAyahs:'repeatWeakAyahs',startFocusedReview:'startFocusedReview',reviewTomorrow:'reviewTomorrow'};var i18nKey=mapped[key]||'continue';var label=this.t("memorisation.postSession.adaptiveCheck.actions.".concat(i18nKey));if(label&&!String(label).includes('adaptiveCheck.actions'))return label;return this.t('memorisation.postSession.adaptiveCheck.doneCta');},postSessionRecommendationTitle:function postSessionRecommendationTitle(){var rec=this.postSessionRecommendation;if(!rec)return'';if(rec.type===_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.RECOMMENDATION_TYPES.NEXT_SURAH){var name=this.resolveRecommendationSurahName(rec.next_surah||rec.surah);return this.t('memorisation.postSession.recommendation.recommendedNextSurah',{surah:name});}var surah=this.resolveRecommendationSurahName(rec.surah);var range=(0,_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.formatAyahRangeLabel)(rec.ayah_range,this.t.bind(this));if(surah&&range){if(this.postSessionIsRepeatRecommendation){return this.t('memorisation.postSession.recommendation.repeatRangeTitle',{surah:surah,range:range});}return this.t('memorisation.postSession.recommendation.recommendedNext',{surah:surah,range:range});}return this.postSessionSimpleActionLabel;},postSessionRecommendationCardTitle:function postSessionRecommendationCardTitle(){var _rec$next_surah2;var rec=this.postSessionRecommendation;if(!rec)return this.postSessionRecommendationTitle;var surah=this.resolveRecommendationSurahName(rec.type===_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.RECOMMENDATION_TYPES.NEXT_SURAH?rec.next_surah||rec.surah:rec.surah);var range=(0,_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.formatAyahRangeLabel)(rec.type===_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.RECOMMENDATION_TYPES.NEXT_SURAH?((_rec$next_surah2=rec.next_surah)===null||_rec$next_surah2===void 0?void 0:_rec$next_surah2.ayah_range)||rec.ayah_range:rec.ayah_range,this.t.bind(this));if(surah&&range)return"".concat(surah," \xB7 ").concat(range);return this.postSessionRecommendationTitle;},postSessionSettingsSummary:function postSessionSettingsSummary(){var _this$postSessionReco36;var settings=(_this$postSessionReco36=this.postSessionRecommendation)===null||_this$postSessionReco36===void 0?void 0:_this$postSessionReco36.settings;if(!settings)return'';var reciterId=settings.reciter;var reciterName='';if(reciterId&&Array.isArray(this.reciters)){var match=this.reciters.find(function(item){return String(item.id)===String(reciterId)||String(item.identifier)===String(reciterId);});reciterName=(match===null||match===void 0?void 0:match.name)||(match===null||match===void 0?void 0:match.englishName)||'';}return (0,_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.formatRecommendationSettingsSummary)(settings,this.t.bind(this),{reciterName:reciterName});},postSessionSupportingMessage:function postSessionSupportingMessage(){var snap=this.postSessionSnapshot;if(!(snap!==null&&snap!==void 0&&snap.completedAll))return'';if(!(snap!==null&&snap!==void 0&&snap.chapterName&&snap!==null&&snap!==void 0&&snap.rangeStart&&snap!==null&&snap!==void 0&&snap.rangeEnd))return'';// Only after a full pass of the selected range — never for partial exits.
 return (0,_scripts_recommendations_nextSessionRecommendation__WEBPACK_IMPORTED_MODULE_12__.formatCompletedSurahAyahLabel)(snap.chapterName,{start:snap.rangeStart,end:snap.rangeEnd},this.t.bind(this));},postSessionJustFinishedSummary:function postSessionJustFinishedSummary(){var _this$currentChapter8,_this$formatAyahRange,_this$postSessionReco37,_this$postSessionReco38,_this$postSessionReco39,_this$postSessionReco40,_this$stripTechniqueJ,_this$getTechniqueDis,_this$getTechniqueDis2,_this$postSessionReco41;var snap=this.postSessionSnapshot||{};var surah=snap.chapterName||this.postSessionRecommendationDisplaySurahName||((_this$currentChapter8=this.currentChapter)===null||_this$currentChapter8===void 0?void 0:_this$currentChapter8.name_simple)||'';var from=Number(snap.rangeStart||this.rangeStart||0);var to=Number(snap.rangeEnd||this.rangeEnd||from);var range=from&&to?from===to?this.translateOrFallback('memorisation.postSession.ayahSingular',"Ayah ".concat(from),{ayah:from}):((_this$formatAyahRange=this.formatAyahRangeDisplay)===null||_this$formatAyahRange===void 0?void 0:_this$formatAyahRange.call(this,from,to))||"Ayahs ".concat(from,"\u2013").concat(to):'';var techniqueRaw=((_this$postSessionReco37=this.postSessionRecommendation)===null||_this$postSessionReco37===void 0||(_this$postSessionReco37=_this$postSessionReco37.technique)===null||_this$postSessionReco37===void 0?void 0:_this$postSessionReco37.id)||((_this$postSessionReco38=this.postSessionRecommendation)===null||_this$postSessionReco38===void 0||(_this$postSessionReco38=_this$postSessionReco38.settings)===null||_this$postSessionReco38===void 0?void 0:_this$postSessionReco38.technique)||((_this$postSessionReco39=this.postSessionRecommendation)===null||_this$postSessionReco39===void 0||(_this$postSessionReco39=_this$postSessionReco39.technique)===null||_this$postSessionReco39===void 0?void 0:_this$postSessionReco39.label)||((_this$postSessionReco40=this.postSessionRecommendation)===null||_this$postSessionReco40===void 0||(_this$postSessionReco40=_this$postSessionReco40.technique)===null||_this$postSessionReco40===void 0?void 0:_this$postSessionReco40.name)||'';var techniqueId=String(techniqueRaw||'').toLowerCase().trim();var techniqueLabel=techniqueId&&!techniqueId.includes('.')?((_this$stripTechniqueJ=this.stripTechniqueJargon)===null||_this$stripTechniqueJ===void 0?void 0:_this$stripTechniqueJ.call(this,(_this$getTechniqueDis=this.getTechniqueDisplayLabel)===null||_this$getTechniqueDis===void 0?void 0:_this$getTechniqueDis.call(this,techniqueId)))||((_this$getTechniqueDis2=this.getTechniqueDisplayLabel)===null||_this$getTechniqueDis2===void 0?void 0:_this$getTechniqueDis2.call(this,techniqueId))||'':'';var reps=Number(((_this$postSessionReco41=this.postSessionRecommendation)===null||_this$postSessionReco41===void 0||(_this$postSessionReco41=_this$postSessionReco41.settings)===null||_this$postSessionReco41===void 0?void 0:_this$postSessionReco41.repetitions)||snap.repetitions||0);return{surah:surah,range:range,technique:techniqueLabel,reps:Number.isFinite(reps)&&reps>0?reps:0,completedAll:!!snap.completedAll};},postSessionHeaderTitle:function postSessionHeaderTitle(){if(this.onboardingSampleSessionActive){var _this$postSessionUi;return((_this$postSessionUi=this.postSessionUi)===null||_this$postSessionUi===void 0?void 0:_this$postSessionUi.title)||this.postSessionModalTitle;}if(this.postSessionRecommendationStep==='confirm'&&this.postSessionRecommendationActionable){var _completed=this.postSessionSupportingMessage;if(_completed)return _completed;if(this.postSessionIsRepeatRecommendation){return this.t('memorisation.postSession.headers.repeatPass')||'Revision pass complete';}return this.postSessionModalTitle;}if(this.postSessionHasAiCheck||this.postSessionShowRecommendationPlan){if(this.postSessionIsRepeatRecommendation){return this.t('memorisation.postSession.coach.headers.repeatDone')||this.t('memorisation.postSession.coach.headers.practiceDone')||'Another pass complete';}return this.t('memorisation.postSession.coach.headers.aiDone')||this.t('memorisation.postSession.coach.headers.practiceDone')||this.postSessionModalTitle;}if(this.postSessionIsRepeatRecommendation){return this.t('memorisation.postSession.headers.repeatPass')||'Revision pass complete';}var completed=this.postSessionSupportingMessage;if(completed)return completed;return this.postSessionModalTitle;},/** Tour-complete style kicker above the hero title. */postSessionHeaderKicker:function postSessionHeaderKicker(){if(this.onboardingSampleSessionActive){return this.t('memorisation.onboarding.postSession.kicker')||'Sample complete';}if(this.postSessionHasAiCheck){return this.t('memorisation.postSession.recommendation.checkComplete')||'Check complete';}return this.t('memorisation.postSession.kicker')||'Session complete';},/** Hero title — keep short; outcome headline lives in the results section. */postSessionDisplayTitle:function postSessionDisplayTitle(){if(this.postSessionHasAiCheck){return this.t('memorisation.postSession.coach.headers.practiceDone')||this.t('memorisation.sessionComplete.title')||'Practice complete';}return this.postSessionHeaderTitle;},/** Single lead under the hero title. */postSessionDisplayLead:function postSessionDisplayLead(){if(this.onboardingSampleSessionActive)return'';var subtitle=String(this.postSessionHeaderSubtitle||'').trim();if(subtitle)return subtitle;if(this.postSessionHasAiCheck){return this.t('memorisation.postSession.coach.subtitles.aiDone')||'Review the focus below, then choose how to practise.';}return'';},postSessionHeaderSubtitle:function postSessionHeaderSubtitle(){if(this.onboardingSampleSessionActive)return'';if(this.postSessionRecommendationStep==='confirm'){return this.postSessionDuaMessage||'';}// One short CTA-aligned line — never the generic encouragement (that duplicated

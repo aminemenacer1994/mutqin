@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,9 +16,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Minimal factory account — see docs/TESTER_GUIDE.md for labelled demo accounts.
         User::factory()->create([
-            'name' => 'Test User',
+            'name' => 'Tester — Factory (minimal)',
             'email' => 'test@example.com',
+            'password' => Hash::make('password'),
             'locale' => 'en',
             'subscription_tier' => 'free',
             'subscription_plan' => 'free',

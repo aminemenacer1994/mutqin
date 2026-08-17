@@ -372,6 +372,7 @@ html[data-theme="dark"] .app-navbar {
   border-radius: 18px;
   border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
   background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
+  box-shadow: var(--shadow-sm);
 }
 
 .auth-brand {
@@ -425,7 +426,118 @@ html[data-theme="dark"] .app-navbar {
   margin: 0;
   border-radius: 12px;
   padding: 0.7rem 0.85rem;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  color: var(--text);
+}
+
+.auth-alert.alert-success {
+  border-color: color-mix(in srgb, var(--success) 28%, var(--border));
+  background: color-mix(in srgb, var(--success-soft) 72%, var(--surface-strong));
+  color: var(--text);
+}
+
+.auth-alert.alert-danger {
+  border-color: color-mix(in srgb, var(--danger) 28%, var(--border));
+  background: color-mix(in srgb, var(--danger-soft) 72%, var(--surface-strong));
+  color: var(--text);
+}
+
+.auth-tester-notice {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
+  background: color-mix(in srgb, var(--accent-light) 42%, var(--surface-strong));
+  color: var(--text);
+}
+
+.auth-tester-notice__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  min-width: 0;
+}
+
+.auth-tester-notice__label {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+}
+
+.auth-tester-notice__account {
+  flex: 1 1 8rem;
+  min-width: 0;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.auth-tester-notice__fill {
+  flex-shrink: 0;
+  min-height: 28px;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent-strong);
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.auth-tester-notice__fill:hover,
+.auth-tester-notice__fill:focus-visible {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-strong));
+  outline: none;
+}
+
+.auth-tester-notice__fill:focus-visible {
+  box-shadow: var(--ring);
+}
+
+.auth-tester-notice__fill.is-filled {
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+  color: var(--success-strong);
+}
+
+.auth-tester-notice__details {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.auth-tester-notice__details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent-strong);
+  list-style: none;
+}
+
+.auth-tester-notice__details summary::-webkit-details-marker {
+  display: none;
+}
+
+.auth-tester-notice__details p {
+  margin: 0.3rem 0 0;
+}
+
+.auth-tester-notice__mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.7rem;
+  word-break: break-word;
 }
 
 .auth-google {
@@ -632,6 +744,20 @@ html[data-theme="dark"] .app-navbar {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
+[data-theme="dark"] .auth-tester-notice {
+  border-color: color-mix(in srgb, var(--accent) 22%, rgba(255, 255, 255, 0.1));
+  background: color-mix(in srgb, var(--accent-light) 35%, #1a1714);
+}
+
+[data-theme="dark"] .auth-tester-notice__fill:hover,
+[data-theme="dark"] .auth-tester-notice__fill:focus-visible {
+  background: color-mix(in srgb, var(--accent) 16%, #1a1714);
+}
+
+html[data-theme="sepia"] .auth-tester-notice {
+  background: color-mix(in srgb, var(--accent-light) 38%, #fffaf3);
+}
+
 @media (max-width: 480px) {
   .auth-page {
     align-content: start;
@@ -659,6 +785,14 @@ html[data-theme="dark"] .app-navbar {
   .auth-brand-img {
     height: 36px;
     max-width: 40px;
+  }
+
+  .auth-tester-notice {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .auth-tester-notice__row {
+    gap: 0.3rem 0.4rem;
   }
 }
 

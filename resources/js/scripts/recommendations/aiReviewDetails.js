@@ -8,6 +8,7 @@
  */
 
 import { formatAyahNumbersLabel } from '../formatting/ayahLabels.js'
+import { resolveWeaknessSeverity } from './postSessionCtaMapping.js'
 import {
   RECITATION_RESULT_STATE,
   resolveAccuracyPercent,
@@ -395,6 +396,17 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
   const hasMinorWeakness = hasWordLevelEvidence
     && (missed > 0 || amberCount > 0 || (Array.isArray(weakAyahs) && weakAyahs.length > 0))
     && resolvedState !== RECITATION_RESULT_STATE.NEEDS_PRACTICE
+  const weaknessSeverity = resolveWeaknessSeverity({
+    accuracyPercent: accuracy,
+    hardWordCount: missedFromWords + Number(colorCounts.black || 0),
+    partialWordCount: amberCount,
+    weakAyahCount: hasWordLevelEvidence ? weakAyahs.length : 0,
+    sequenceErrors: sequence,
+    outcome: resolvedOutcome,
+    resultState: resolvedState,
+    hasWordLevelEvidence,
+  })
+  const isSignificantWeakness = weaknessSeverity === 'significant'
   const outcomeLabel = resolvedState === RECITATION_RESULT_STATE.STRONG && !hasMinorWeakness
     ? (t('memorisation.postSession.recommendation.statusReadyToContinue')
       || t('memorisation.postSession.recommendation.aiOutcomeStrong')
@@ -403,21 +415,22 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
       ? (t('memorisation.postSession.recommendation.statusMostlySecure')
         || t('memorisation.postSession.recommendation.aiOutcomeMixed')
         || 'Mostly secure')
-      : ((resolvedState === RECITATION_RESULT_STATE.NEEDS_PRACTICE
-        || (hasWordLevelEvidence && missed >= 3))
+      : (resolvedState === RECITATION_RESULT_STATE.NEEDS_PRACTICE
+        || (accuracy != null && accuracy < 55))
         ? (t('memorisation.postSession.recommendation.statusMorePracticeNeeded')
           || t('memorisation.postSession.recommendation.aiOutcomeWeak')
           || 'More practice needed')
-        : (hasMinorWeakness
+        : (isSignificantWeakness || hasMinorWeakness
           ? (t('memorisation.postSession.recommendation.statusReviewRecommended')
             || t('memorisation.postSession.recommendation.aiOutcomeReviewRecommended')
             || 'Review recommended')
           : (t('memorisation.postSession.recommendation.statusMostlySecure')
             || t('memorisation.postSession.recommendation.aiOutcomeMixed')
-            || 'Mostly secure')))
+            || 'Mostly secure'))
 
   const summaryLine = buildAiSummaryLine({
     outcome: resolvedOutcome,
+    resultState: resolvedState,
     matchedWords: resolvedMatched,
     totalWords,
     accuracy,
@@ -426,6 +439,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     missed,
     partial: amberCount,
     sequence: resolvedMatched > 0 ? sequence : 0,
+    weaknessSeverity,
     t,
   })
 
@@ -433,6 +447,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     outcome: resolvedOutcome,
     resultState: resolvedState,
     outcomeLabel,
+    weaknessSeverity,
     accuracy,
     matchedWords: resolvedMatched,
     totalWords,
@@ -705,6 +720,7 @@ export function resolveRecognitionConfidence(wordStatuses = [], result = null, e
  */
 function buildAiSummaryLine({
   outcome,
+  resultState = '',
   matchedWords = null,
   totalWords = 0,
   accuracy = null,
@@ -713,10 +729,16 @@ function buildAiSummaryLine({
   missed = 0,
   partial = 0,
   sequence = 0,
+  weaknessSeverity = null,
   t,
 }) {
   const matched = Number.isFinite(Number(matchedWords)) ? Number(matchedWords) : null
   const total = Number(totalWords) || 0
+  const isStrongBand = outcome === 'strong'
+    || resultState === RECITATION_RESULT_STATE.STRONG
+    || (accuracy != null && accuracy >= 80)
+  const minorWeakness = weaknessSeverity === 'minor'
+    || (isStrongBand && hasWordLevelEvidence && missed <= 3 && partial >= 0 && weakAyahs.length <= 1)
 
   if (total > 0 && matched != null) {
     const matchLine = t('memorisation.postSession.recommendation.aiSummaryMatchedWords', {
@@ -724,13 +746,22 @@ function buildAiSummaryLine({
       total,
     }) || `We clearly matched ${matched} of ${total} words.`
 
-    if (hasWordLevelEvidence && (missed > 0 || partial > 0 || matched < total)) {
+    if (isStrongBand && minorWeakness && (missed > 0 || partial > 0)) {
+      const minorLine = missed === 1 && partial === 0
+        ? (t('memorisation.postSession.recommendation.aiResultLineStrongOneGap')
+          || 'Strong recitation — one small mistake, but you are making good progress.')
+        : (t('memorisation.postSession.recommendation.aiSummaryStrongMinorMistakes')
+          || 'Strong recitation — a couple of small mistakes, but you are making good progress.')
+      return `${matchLine} ${minorLine}`.trim()
+    }
+
+    if (hasWordLevelEvidence && (missed > 0 || partial > 0 || matched < total) && !isStrongBand) {
       const focusLine = t('memorisation.postSession.recommendation.aiSummaryFocusPhrase')
         || 'Focus on the highlighted phrase before checking again.'
       return `${matchLine} ${focusLine}`.trim()
     }
 
-    if (outcome === 'strong') {
+    if (outcome === 'strong' || isStrongBand) {
       const strongLine = t('memorisation.postSession.recommendation.aiSummaryStrongFollowUp')
         || 'Nice work — you can continue while this still feels fresh.'
       return `${matchLine} ${strongLine}`.trim()

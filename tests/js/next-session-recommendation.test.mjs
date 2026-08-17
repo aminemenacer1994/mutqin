@@ -18,6 +18,7 @@ import {
   estimatePracticeMinutes,
   buildPersonalPracticePlan,
   adaptRecommendationForAdaptiveAssessment,
+  aiAssessmentAllowsProgression,
 } from '../../resources/js/scripts/recommendations/nextSessionRecommendation.js'
 
 function t(key, params = {}) {
@@ -234,6 +235,45 @@ function t(key, params = {}) {
   })
   assert.equal(afterStrongAi.type, RECOMMENDATION_TYPES.NEXT_SURAH)
   assert.equal(afterStrongAi.next_surah.id, 114)
+}
+
+{
+  assert.equal(aiAssessmentAllowsProgression('strong', {
+    accuracy_percent: 91,
+    color_counts: { red: 2, black: 0, amber: 0 },
+  }), true)
+  assert.equal(aiAssessmentAllowsProgression('mixed', {
+    accuracy_percent: 91,
+    color_counts: { red: 2, black: 0, amber: 1 },
+  }), true)
+  assert.equal(aiAssessmentAllowsProgression('mixed', {
+    accuracy_percent: 80,
+    color_counts: { red: 3, black: 0, amber: 0 },
+  }), false)
+  assert.equal(aiAssessmentAllowsProgression('weak', {
+    accuracy_percent: 55,
+    color_counts: { red: 4, black: 0, amber: 0 },
+  }), false)
+
+  const repeatRec = {
+    type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
+    session_mode: 'revision',
+    range_kind: 'repeated',
+    surah: { id: 2, name: 'Al-Baqarah' },
+    ayah_range: { from: 10, to: 12, count: 3 },
+    reason_code: 'ai_recite_mixed',
+    settings: { technique: 'talqin', playback_speed: 0.85, repetitions: 4 },
+  }
+  const afterMinorMixed = adaptRecommendationForAiAssessment(repeatRec, 'mixed', {
+    chapterId: 2,
+    rangeStart: 10,
+    rangeEnd: 12,
+    totalAyahsInSurah: 286,
+    accuracy_percent: 91,
+    color_counts: { red: 2, black: 0, amber: 0 },
+  })
+  assert.equal(afterMinorMixed.type, RECOMMENDATION_TYPES.CONTINUE)
+  assert.equal(afterMinorMixed.ayah_range.from, 13)
 }
 
 {

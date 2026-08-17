@@ -19,6 +19,10 @@ import {
   mapPostSessionCtas,
   resolvePostSessionCtaState,
 } from '../../resources/js/scripts/recommendations/postSessionCtaMapping.js'
+import {
+  aiAssessmentAllowsProgression,
+  adaptRecommendationForAiAssessment,
+} from '../../resources/js/scripts/recommendations/nextSessionRecommendation.js'
 
 const t = (key, params = {}) => {
   const map = {
@@ -264,6 +268,59 @@ function assertInsufficientPresentation(details, summaryPattern = /couldn.?t ass
   const sequence = details.detailsMetrics.find((m) => m.key === 'sequence')
   assert.equal(sequence.value, 'Steady')
   assert.match(details.outcomeLabel, /Needs practice|Needs more practice|More practice needed/i)
+}
+
+// Strong recitation with minor mistakes should stay progression-friendly.
+{
+  const strongMinor = buildAiReviewDetails('strong', {
+    accuracy_percent: 95,
+    missed_words: 1,
+  }, {
+    accuracyScore: 95,
+    wordStatuses: [
+      ...Array.from({ length: 9 }, () => ({ status: 'correct' })),
+      { status: 'incorrect' },
+    ],
+  }, t)
+
+  assert.equal(strongMinor.resultState, RECITATION_RESULT_STATE.STRONG)
+  assert.equal(strongMinor.weaknessSeverity, 'minor')
+  assert.equal(strongMinor.outcomeLabel, 'Mostly secure')
+  assert.equal(
+    resolvePostSessionCtaState({
+      hasAiCheck: true,
+      outcome: 'strong',
+      hardWordCount: 1,
+      accuracyPercent: 95,
+      hasWordLevelEvidence: true,
+    }),
+    POST_SESSION_CTA_STATES.MOSTLY_SECURE,
+  )
+  assert.equal(
+    aiAssessmentAllowsProgression('mixed', {
+      accuracy_percent: 90,
+      color_counts: { red: 2, amber: 1, black: 0 },
+    }),
+    true,
+  )
+  assert.equal(
+    adaptRecommendationForAiAssessment({
+      type: 'repeat_current_range',
+      session_mode: 'revision',
+      range_kind: 'repeated',
+      surah: { id: 2 },
+      ayah_range: { from: 4, to: 6, count: 3 },
+      settings: {},
+    }, 'mixed', {
+      chapterId: 2,
+      rangeStart: 4,
+      rangeEnd: 6,
+      totalAyahsInSurah: 286,
+      accuracy_percent: 90,
+      color_counts: { red: 2, amber: 1, black: 0 },
+    })?.type,
+    'continue',
+  )
 }
 
 // Developing / strong banding.

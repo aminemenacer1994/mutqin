@@ -61,7 +61,7 @@ class DemoDataSeeder extends Seeder
 
         $definitions = [
             'admin' => [
-                'name' => 'Mutqin Admin',
+                'name' => 'Tester — Admin (Pro)',
                 'email' => 'admin@mutqin.test',
                 'password' => 'AdminPass1!',
                 'locale' => 'en',
@@ -73,7 +73,7 @@ class DemoDataSeeder extends Seeder
                 'subscription_current_period_ends_at' => $now->copy()->addYear(),
             ],
             'beginner' => [
-                'name' => 'Layla Hassan',
+                'name' => 'Tester — Beginner (EN)',
                 'email' => 'layla.beginner@mutqin.test',
                 'password' => 'DemoPass1!',
                 'locale' => 'en',
@@ -82,7 +82,7 @@ class DemoDataSeeder extends Seeder
                 'subscription_status' => 'free',
             ],
             'active' => [
-                'name' => 'Omar Al-Rashid',
+                'name' => 'Tester — Active Learner (Premium)',
                 'email' => 'omar.active@mutqin.test',
                 'password' => 'DemoPass1!',
                 'locale' => 'en',
@@ -94,7 +94,7 @@ class DemoDataSeeder extends Seeder
                 'subscription_current_period_ends_at' => $now->copy()->addMonth(),
             ],
             'reviser' => [
-                'name' => 'Fatima Zahra',
+                'name' => 'Tester — Muraja\'ah & AI Recite',
                 'email' => 'fatima.reviser@mutqin.test',
                 'password' => 'DemoPass1!',
                 'locale' => 'en',
@@ -118,7 +118,7 @@ class DemoDataSeeder extends Seeder
                 'subscription_current_period_ends_at' => $now->copy()->addMonth(),
             ],
             'paused' => [
-                'name' => 'Noah Carter',
+                'name' => 'Tester — Paused Session',
                 'email' => 'noah.paused@mutqin.test',
                 'password' => 'DemoPass1!',
                 'locale' => 'en',

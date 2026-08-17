@@ -266,6 +266,18 @@
   animation: dash-soft-pulse 2.8s var(--dash-ease) infinite;
 }
 
+.dash-action-card--secondary {
+  background: var(--dash-surface);
+  border-color: var(--dash-border);
+  animation: none;
+}
+
+.dash-action-card--secondary .dash-action-card__cta {
+  color: var(--dash-muted);
+  background: transparent;
+  border: 1px solid var(--dash-border);
+}
+
 .dash-action-card:hover,
 .dash-action-card:focus-visible {
   border-color: color-mix(in srgb, var(--dash-accent) 45%, var(--dash-border));

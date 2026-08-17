@@ -16,6 +16,7 @@ use App\Models\UserSession;
 use App\Support\AyahWorkload;
 use App\Support\QuranMetadata;
 use App\Support\SessionDefaults;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -516,7 +517,9 @@ class NextSessionRecommendationService
                 $payload = $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteStrong, $assessment);
             }
         } elseif ($result === 'mixed') {
-            if ($confidence === ConfidenceFeedback::Confident->value) {
+            if ($this->assessmentAllowsProgression(array_merge($assessment, ['result' => $result]))) {
+                $payload = $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteMixed, $assessment);
+            } elseif ($confidence === ConfidenceFeedback::Confident->value) {
                 $payload = $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteMixed, $assessment);
             } else {
                 $payload = $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::AiReciteMixed);
@@ -840,6 +843,10 @@ class NextSessionRecommendationService
         }
 
         if ($difficult->isEmpty()) {
+            return null;
+        }
+
+        if ($this->rangeRecentlyPassedAiRecite($progress)) {
             return null;
         }
 
@@ -2070,6 +2077,77 @@ class NextSessionRecommendationService
     }
 
     /**
+     * @param  Collection<int, MemorisationProgress>  $progress
+     */
+    private function rangeRecentlyPassedAiRecite(Collection $progress): bool
+    {
+        $recentCutoff = now()->subDay();
+
+        return $progress->every(function (MemorisationProgress $row) use ($recentCutoff) {
+            $meta = is_array($row->metadata) ? $row->metadata : [];
+            $aiRecite = is_array($meta['ai_recite'] ?? null) ? $meta['ai_recite'] : [];
+            $accuracy = isset($aiRecite['last_accuracy']) ? (float) $aiRecite['last_accuracy'] : null;
+            $updatedAt = isset($aiRecite['updated_at']) ? Carbon::parse($aiRecite['updated_at']) : null;
+            $isWeak = (bool) ($aiRecite['weak'] ?? false);
+
+            return ! $isWeak
+                && $accuracy !== null
+                && $accuracy >= 80
+                && $updatedAt
+                && $updatedAt->greaterThanOrEqualTo($recentCutoff);
+        });
+    }
+
+    /**
+     * Mirror client-side progression rules for AI Recite assessments.
+     *
+     * @param  array<string, mixed>  $assessment
+     */
+    private function assessmentAllowsProgression(array $assessment): bool
+    {
+        $result = strtolower((string) ($assessment['result'] ?? ''));
+        if ($result === 'weak') {
+            return false;
+        }
+        if ($result === 'strong') {
+            return true;
+        }
+
+        $accuracy = isset($assessment['average_accuracy']) && is_numeric($assessment['average_accuracy'])
+            ? (float) $assessment['average_accuracy']
+            : (isset($assessment['accuracy_percent']) && is_numeric($assessment['accuracy_percent'])
+                ? (float) $assessment['accuracy_percent']
+                : null);
+
+        if ($accuracy !== null && $accuracy < 55) {
+            return false;
+        }
+
+        $colorCounts = $this->normalizeColorCounts($assessment['color_counts'] ?? null) ?? [];
+        $hardWords = (int) ($colorCounts['red'] ?? 0) + (int) ($colorCounts['black'] ?? 0);
+        $weakAyahs = is_array($assessment['weak_ayahs'] ?? null) ? count($assessment['weak_ayahs']) : 0;
+        $sequenceErrors = (int) ($assessment['sequence_errors'] ?? 0);
+
+        if ($sequenceErrors > 0 || $weakAyahs > 1 || $hardWords >= 4) {
+            return false;
+        }
+
+        if ($accuracy !== null && $accuracy >= 80) {
+            if ($hardWords >= 3 && $accuracy < 85) {
+                return false;
+            }
+
+            return true;
+        }
+
+        if ($accuracy !== null && $accuracy >= 55) {
+            return $hardWords <= 2 && $weakAyahs <= 1;
+        }
+
+        return false;
+    }
+
+    /**
      * @param  mixed  $counts
      * @return array{green: int, amber: int, red: int, black: int, gray: int}|null
      */
@@ -2668,9 +2746,16 @@ class NextSessionRecommendationService
                 'recommendation_id' => $recommendation->id,
                 'updated_at' => $updatedAt,
             ];
+            if (! $isWeak && $accuracy !== null && $accuracy >= 80) {
+                $meta['last_review_at'] = $updatedAt;
+                $meta['ai_recite']['satisfied_review'] = true;
+            }
             $row->metadata = $meta;
             if ($isWeak && ! in_array((string) $row->status, ['memorised', 'mastered'], true)) {
                 $row->status = 'reviewing';
+            } elseif (! $isWeak && $accuracy !== null && $accuracy >= 80 && $row->status === 'reviewing') {
+                $row->status = 'memorised';
+                $row->mastery_level = max((int) $row->mastery_level, 50);
             }
             $row->save();
         }

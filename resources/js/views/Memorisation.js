@@ -4936,11 +4936,15 @@ export default {
         : (Array.isArray(this.aiReciteFinalPlan?.weakAyahs) ? this.aiReciteFinalPlan.weakAyahs : [])
       const colorCounts = this.postSessionAiReviewDetails?.colorCounts || {}
       const hardWordCount = Number(colorCounts.red || 0) + Number(colorCounts.black || 0)
+      const partialWordCount = Number(colorCounts.amber || 0)
+      const accuracyPercent = this.postSessionAiReviewDetails?.accuracy ?? null
+      const hasWordLevelEvidence = Number(this.postSessionAiReviewDetails?.totalWords || 0) > 0
       return resolvePostSessionCtaState({
         isConfirmStep: this.postSessionRecommendationStep === 'confirm'
           && this.postSessionRecommendationActionable,
         hasAiCheck: !!(this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck),
         outcome: resolvedOutcome,
+        resultState: this.postSessionAiReviewDetails?.resultState || null,
         presentationMode: this.postSessionAiPresentationMode,
         masteryAchieved: !!(
           this.aiReciteMasteryAchieved
@@ -4950,7 +4954,11 @@ export default {
         awaitingMasteryRetest: !!this.awaitingMasteryRetest,
         weakAyahCount: weakAyahs.length || (focus?.ayahNumber ? 1 : 0),
         hardWordCount,
+        partialWordCount,
+        accuracyPercent,
+        hasWordLevelEvidence,
         hasFocusPhrase: !!focus?.phrase,
+        weaknessSeverity: this.postSessionAiReviewDetails?.weaknessSeverity || null,
       })
     },
     postSessionCtaButtons() {

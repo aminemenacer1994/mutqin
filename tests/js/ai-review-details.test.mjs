@@ -66,6 +66,7 @@ const t = (key, params = {}) => {
     'memorisation.postSession.recommendation.aiSummaryMatchedWords': `We clearly matched ${params.matched} of ${params.total} words.`,
     'memorisation.postSession.recommendation.aiSummaryFocusPhrase': 'Focus on the highlighted phrase before checking again.',
     'memorisation.postSession.recommendation.aiSummaryFocusRange': 'Revise this range, then check again.',
+    'memorisation.postSession.recommendation.aiSummaryStrongMinorMistakes': 'Strong recitation — a couple of small mistakes, but you are making good progress.',
     'memorisation.postSession.recommendation.aiSummaryStrongFollowUp': 'Nice work — you can continue while this still feels fresh.',
     'memorisation.postSession.recommendation.zeroMatchStatus': 'Let’s practise this range again',
     'memorisation.postSession.recommendation.zeroMatchSummary': 'We heard your recitation, but could not confidently match the words yet.',
@@ -112,7 +113,8 @@ const t = (key, params = {}) => {
   assert.ok(details.detailsMetrics.some((m) => m.key === 'words' && m.value === '9/10'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'missed' && m.value === '1'))
   assert.match(details.summaryLine, /We clearly matched 9 of 10 words/i)
-  assert.match(details.summaryLine, /Focus on the highlighted phrase/i)
+  assert.doesNotMatch(details.summaryLine, /Focus on the highlighted phrase/i)
+  assert.match(details.summaryLine, /Strong overall, with one small hesitation|Strong recitation|good progress/i)
   assert.doesNotMatch(details.summaryLine, /91%/)
   assert.ok(details.highlights.length >= 2)
   assert.ok(details.focus)

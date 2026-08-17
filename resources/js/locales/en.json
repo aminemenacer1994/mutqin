@@ -1310,7 +1310,7 @@
     "revisitOnboarding": "Take the tour again",
     "onboarding": {
       "stepCounter": "Step {current} of {total}",
-      "intro": "Choose ayahs, practise with tools, check with AI, then follow your next plan.",
+      "intro": "Choose ayahs, practise with tools, check with AI, then follow your next plan. Allow your microphone when the browser asks.",
       "finish": "I'm ready",
       "skipTour": "Skip",
       "screenshotAlt": "Screenshot preview for {step}",
@@ -2048,6 +2048,7 @@
         "aiSummaryMatchedWords": "We clearly matched {matched} of {total} words.",
         "aiSummaryFocusPhrase": "Review the highlighted phrase once, then continue.",
         "aiSummaryFocusRange": "Revise this range, then check again.",
+        "aiSummaryStrongMinorMistakes": "Strong recitation — a couple of small mistakes, but you are making good progress.",
         "aiSummaryStrongFollowUp": "Nice work — you can continue while this still feels fresh.",
         "aiSummaryMinorWeaknessNext": "Review it once, then continue to Ayahs {start}–{end}.",
         "aiMetricConfidence": "Recognition confidence",

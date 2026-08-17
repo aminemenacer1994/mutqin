@@ -3,15 +3,31 @@ import {
   POST_SESSION_CTA_ACTIONS,
   POST_SESSION_CTA_STATES,
   isMeaningfulFocusPhraseRevision,
+  isMinorIsolatedWeakness,
   mapPostSessionCtas,
   normaliseCtaOutcome,
   resolvePostSessionCtaState,
+  resolveWeaknessSeverity,
 } from '../../resources/js/scripts/recommendations/postSessionCtaMapping.js'
 
 {
   assert.equal(normaliseCtaOutcome('Needs practice'), 'weak')
   assert.equal(normaliseCtaOutcome('strong'), 'strong')
   assert.equal(normaliseCtaOutcome('mixed'), 'mixed')
+  assert.equal(resolveWeaknessSeverity({
+    accuracyPercent: 91,
+    hardWordCount: 2,
+    weakAyahCount: 0,
+    outcome: 'strong',
+    hasWordLevelEvidence: true,
+  }), 'minor')
+  assert.equal(resolveWeaknessSeverity({
+    accuracyPercent: 80,
+    hardWordCount: 3,
+    weakAyahCount: 0,
+    outcome: 'strong',
+    hasWordLevelEvidence: true,
+  }), 'significant')
 }
 
 {
@@ -56,6 +72,23 @@ import {
     outcome: 'strong',
     masteryAchieved: true,
   }), POST_SESSION_CTA_STATES.STRONG)
+
+  assert.equal(resolvePostSessionCtaState({
+    hasAiCheck: true,
+    outcome: 'strong',
+    hardWordCount: 2,
+    accuracyPercent: 91,
+    hasWordLevelEvidence: true,
+  }), POST_SESSION_CTA_STATES.MOSTLY_SECURE)
+
+  assert.equal(resolvePostSessionCtaState({
+    hasAiCheck: true,
+    outcome: 'mixed',
+    hardWordCount: 2,
+    accuracyPercent: 72,
+    weakAyahCount: 2,
+    hasWordLevelEvidence: true,
+  }), POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED)
 
   assert.equal(resolvePostSessionCtaState({
     hasAiCheck: false,

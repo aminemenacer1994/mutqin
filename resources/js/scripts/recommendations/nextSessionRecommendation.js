@@ -12,6 +12,7 @@ import { estimatePracticeDuration } from '../session/sessionPracticeCoach.js'
 import {
   resolveRecommendedPlaybackSpeed,
 } from './playbackSpeedPolicy.js'
+import { resolveWeaknessSeverity } from './postSessionCtaMapping.js'
 
 export {
   formatAyahRangeLabel,
@@ -553,6 +554,52 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
 }
 
 /**
+ * Whether an AI Recite outcome should advance rather than repeat the same range.
+ *
+ * @param {'strong'|'mixed'|'weak'} result
+ * @param {object} snapshot
+ * @returns {boolean}
+ */
+export function aiAssessmentAllowsProgression(result, snapshot = {}) {
+  if (result === 'weak') return false
+  if (result === 'strong') return true
+
+  const accuracy = Number(
+    snapshot.accuracyPercent
+    ?? snapshot.accuracy_percent
+    ?? snapshot.aiDetails?.accuracy
+    ?? NaN,
+  )
+  const colorCounts = snapshot.colorCounts
+    || snapshot.color_counts
+    || snapshot.aiDetails?.colorCounts
+    || {}
+  const hardWords = Number(colorCounts.red || 0) + Number(colorCounts.black || 0)
+  const partialWords = Number(colorCounts.amber || 0)
+  const weakAyahs = Array.isArray(snapshot.weakAyahs)
+    ? snapshot.weakAyahs
+    : (Array.isArray(snapshot.weak_ayahs)
+      ? snapshot.weak_ayahs
+      : (Array.isArray(snapshot.aiDetails?.weakAyahs) ? snapshot.aiDetails.weakAyahs : []))
+
+  const severity = resolveWeaknessSeverity({
+    accuracyPercent: Number.isFinite(accuracy) ? accuracy : null,
+    hardWordCount: hardWords,
+    partialWordCount: partialWords,
+    weakAyahCount: weakAyahs.length,
+    outcome: result,
+    hasWordLevelEvidence: hardWords > 0
+      || partialWords > 0
+      || weakAyahs.length > 0
+      || Number.isFinite(accuracy),
+  })
+
+  if (severity === 'significant') return false
+  if (severity === 'minor') return true
+  return Number.isFinite(accuracy) && accuracy >= 80
+}
+
+/**
  * Optimistically reshape the plan from an AI Recite outcome.
  * @param {object|null} recommendation
  * @param {'strong'|'mixed'|'weak'} result
@@ -568,13 +615,15 @@ export function adaptRecommendationForAiAssessment(recommendation, result, snaps
     ...snapshot,
     aiDetails: snapshot.aiDetails || {
       outcome: result,
+      accuracy: snapshot.accuracyPercent ?? snapshot.accuracy_percent ?? null,
       weakAyahs: Array.isArray(snapshot.weakAyahs)
         ? snapshot.weakAyahs
         : (Array.isArray(snapshot.weak_ayahs) ? snapshot.weak_ayahs : []),
+      colorCounts: snapshot.colorCounts || snapshot.color_counts || null,
     },
   }
 
-  if (result === 'strong') {
+  if (result === 'strong' || aiAssessmentAllowsProgression(result, snap)) {
     return adaptRecommendationForConfidence(recommendation, 'confident', snap)
   }
   if (result === 'weak') {
@@ -582,7 +631,7 @@ export function adaptRecommendationForAiAssessment(recommendation, result, snaps
   }
 
   const confidence = recommendation.confidence_feedback
-  if (confidence === 'confident') {
+  if (confidence === 'confident' && aiAssessmentAllowsProgression('mixed', snap)) {
     return adaptRecommendationForConfidence(recommendation, 'confident', snap)
   }
   return adaptRecommendationForConfidence(recommendation, 'needs_practice', snap)

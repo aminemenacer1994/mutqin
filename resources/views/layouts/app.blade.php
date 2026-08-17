@@ -5317,6 +5317,28 @@
                         );
                     });
                 });
+
+                document.querySelectorAll('[data-auth-fill-test-account]').forEach(function(button) {
+                    button.addEventListener('click', function() {
+                        const notice = button.closest('[data-auth-tester-notice]');
+                        const emailInput = document.getElementById('email');
+                        const passwordInput = document.getElementById('password');
+                        if (!notice || !emailInput || !passwordInput) return;
+
+                        emailInput.value = notice.getAttribute('data-test-email') || '';
+                        passwordInput.value = notice.getAttribute('data-test-password') || '';
+                        emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        emailInput.focus();
+
+                        button.classList.add('is-filled');
+                        button.textContent = 'Filled';
+                        window.setTimeout(function() {
+                            button.classList.remove('is-filled');
+                            button.textContent = 'Fill';
+                        }, 1800);
+                    });
+                });
             });
         })();
 

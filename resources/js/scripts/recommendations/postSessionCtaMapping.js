@@ -102,17 +102,101 @@ export function normaliseCtaOutcome(outcome) {
 }
 
 /**
+ * Classify mistake severity from aggregate performance and reliable word-level evidence.
+ * Never invent word-level severity when only aggregate accuracy exists.
+ *
+ * @param {{
+ *   accuracyPercent?: number|null,
+ *   accuracy_percent?: number|null,
+ *   hardWordCount?: number,
+ *   partialWordCount?: number,
+ *   weakAyahCount?: number,
+ *   sequenceErrors?: number,
+ *   outcome?: string|null,
+ *   resultState?: string|null,
+ *   hasWordLevelEvidence?: boolean,
+ * }} evidence
+ * @returns {'minor'|'significant'|null}
+ */
+export function resolveWeaknessSeverity(evidence = {}) {
+  const accuracyRaw = Number(
+    evidence.accuracyPercent
+    ?? evidence.accuracy_percent
+    ?? NaN,
+  )
+  const accuracy = Number.isFinite(accuracyRaw)
+    ? Math.max(0, Math.min(100, Math.round(accuracyRaw)))
+    : null
+  const outcome = normaliseCtaOutcome(evidence.outcome)
+  const resultState = String(evidence.resultState || '').toLowerCase().trim()
+  const hasWordLevelEvidence = evidence.hasWordLevelEvidence !== false
+  const hardWords = Math.max(0, Number(evidence.hardWordCount || 0))
+  const partialWords = Math.max(0, Number(evidence.partialWordCount || 0))
+  const weakAyahs = Math.max(0, Number(evidence.weakAyahCount || 0))
+  const sequenceErrors = Math.max(0, Number(evidence.sequenceErrors || 0))
+
+  if (
+    outcome === 'weak'
+    || resultState === 'needs_practice'
+    || (accuracy != null && accuracy < 55)
+  ) {
+    return 'significant'
+  }
+
+  if (sequenceErrors > 0 || weakAyahs > 1 || hardWords >= 4) {
+    return 'significant'
+  }
+
+  if (
+    resultState === 'strong'
+    || outcome === 'strong'
+    || (accuracy != null && accuracy >= 80)
+  ) {
+    if (!hasWordLevelEvidence) return null
+    if (hardWords === 0 && partialWords === 0 && weakAyahs === 0) return null
+    if (hardWords >= 4 || weakAyahs > 1) return 'significant'
+    if (hardWords >= 3 && accuracy != null && accuracy < 85) return 'significant'
+    if (hardWords <= 3 && weakAyahs <= 1) return 'minor'
+    return 'significant'
+  }
+
+  if (
+    resultState === 'developing'
+    || outcome === 'mixed'
+    || (accuracy != null && accuracy >= 55)
+  ) {
+    if (!hasWordLevelEvidence) return null
+    if (hardWords >= 3 || weakAyahs >= 2) return 'significant'
+    if (hardWords <= 2 && (partialWords > 0 || hardWords > 0) && weakAyahs <= 1) {
+      return 'minor'
+    }
+    return 'significant'
+  }
+
+  return null
+}
+
+/**
  * Detect a minor isolated weakness (single phrase/ayah) that should not block progression.
  *
  * @param {{
  *   weakAyahCount?: number,
  *   hardWordCount?: number,
+ *   partialWordCount?: number,
+ *   sequenceErrors?: number,
+ *   accuracyPercent?: number|null,
+ *   accuracy_percent?: number|null,
  *   hasFocusPhrase?: boolean,
  *   outcome?: string|null,
+ *   resultState?: string|null,
+ *   hasWordLevelEvidence?: boolean,
  *   weaknessSeverity?: 'minor'|'significant'|null,
  * }} evidence
  */
 export function isMinorIsolatedWeakness(evidence = {}) {
+  const resolved = resolveWeaknessSeverity(evidence)
+  if (resolved === 'minor') return true
+  if (resolved === 'significant') return false
   if (evidence.weaknessSeverity === 'minor') return true
   if (evidence.weaknessSeverity === 'significant') return false
 
@@ -126,6 +210,7 @@ export function isMinorIsolatedWeakness(evidence = {}) {
 
   if (weakAyahs > 1) return false
   if (hardWords >= 4) return false
+  if (outcome === 'strong' && hardWords > 0 && hardWords <= 3 && weakAyahs <= 1) return true
   if (weakAyahs === 1 || hasFocus) {
     return hardWords <= 3
   }
@@ -169,8 +254,13 @@ export function resolvePostSessionCtaState(input = {}) {
   const strong = !!(input.masteryAchieved || outcome === 'strong')
   const minorWeakness = isMinorIsolatedWeakness({
     outcome,
+    resultState: input.resultState,
     weakAyahCount: input.weakAyahCount,
     hardWordCount: input.hardWordCount,
+    partialWordCount: input.partialWordCount,
+    sequenceErrors: input.sequenceErrors,
+    accuracyPercent: input.accuracyPercent,
+    hasWordLevelEvidence: input.hasWordLevelEvidence,
     hasFocusPhrase: input.hasFocusPhrase,
     weaknessSeverity: input.weaknessSeverity,
   })
@@ -196,8 +286,12 @@ export function resolvePostSessionCtaState(input = {}) {
   const revisionDone = !!(input.revisionCompleted || input.awaitingMasteryRetest)
   if (revisionDone) return POST_SESSION_CTA_STATES.REVISION_COMPLETED
 
-  if (input.hasAiCheck && outcome === 'mixed') {
+  if (input.hasAiCheck && outcome === 'mixed' && !minorWeakness) {
     return POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED
+  }
+
+  if (input.hasAiCheck && outcome === 'mixed' && minorWeakness) {
+    return POST_SESSION_CTA_STATES.MOSTLY_SECURE
   }
 
   if (input.hasAiCheck && (outcome === 'weak' || !strong)) {

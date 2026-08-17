@@ -1,7 +1,18 @@
 {
-    "/js/app.js": "/js/app.js?id=b139535d1a7f453907a5e0752ccecebe",
-    "/css/app.css": "/css/app.css?id=e0552f2e57d8ff1549ddc4f206f286f3",
-    "/js/dashboard.3d68ac2c.js": "/js/dashboard.3d68ac2c.js?id=e2dd07a46cdee88e7fed07aa07e4079f",
+    "/js/app.js": "/js/app.js?id=076b3d6e1a93e21b6749e63e895c3e21",
+    "/css/app.css": "/css/app.css?id=a3b6300e370f0b78b3721bbd29a219ef",
+    "/js/homepage.05961901.js": "/js/homepage.05961901.js?id=4ae0a13e0a043d5d37229dc84b812b4d",
+    "/js/about.dddb482e.js": "/js/about.dddb482e.js?id=1bd6296cd4617a7a19f544fe89cb368f",
+    "/js/about-us.9ac40748.js": "/js/about-us.9ac40748.js?id=9dd1eb275aafa5cba94b0a65e907939e",
+    "/js/pricing.7cc94518.js": "/js/pricing.7cc94518.js?id=358cdf7c8c3157de3a85f02a8887fdf8",
+    "/js/our-mission.e550e87e.js": "/js/our-mission.e550e87e.js?id=b3a51677988f663421a6bdbc800527dd",
+    "/js/donation.0a0c0b81.js": "/js/donation.0a0c0b81.js?id=1116a0d60279c23ebf6a999ea1fbc18e",
+    "/js/waiting-list.c6082e51.js": "/js/waiting-list.c6082e51.js?id=5d016321859e1347ceeeddd4e38a439e",
+    "/js/dashboard.ff3a8581.js": "/js/dashboard.ff3a8581.js?id=4d24698b720d5ca58f4666a8ec835ccc",
     "/js/admin-dashboard.4d2260d9.js": "/js/admin-dashboard.4d2260d9.js?id=69229f4e078f446feeb493e37c1eb25a",
-    "/js/memorisation.660f1237.js": "/js/memorisation.660f1237.js?id=1e9bfc8e3c703187b6a452a2bf9f3626"
+    "/js/memorisation.e244235c.js": "/js/memorisation.e244235c.js?id=3ed9c8758e6f2d8bc9fae3f017d65002",
+    "/js/hifz-plan-modal.6add61b7.js": "/js/hifz-plan-modal.6add61b7.js?id=a3dd1f91542086b6f369836e058172fe",
+    "/js/amd-modal.68ab7546.js": "/js/amd-modal.68ab7546.js?id=cef11c2694b9d29c093580119d424510",
+    "/js/ayah-notes-modal.ed78477f.js": "/js/ayah-notes-modal.ed78477f.js?id=cff0702ae566a05576eaa558e1e34f6c",
+    "/js/adaptive-assessment.1088f414.js": "/js/adaptive-assessment.1088f414.js?id=a6eaf30566e58ea8461af9abc220c518"
 }
