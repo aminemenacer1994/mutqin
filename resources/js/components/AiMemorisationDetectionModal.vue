@@ -145,6 +145,7 @@
                 ref="mushafSurface"
                 class="amd-mushaf-ayah amd-mushaf-ayah--premium"
                 :style="{ '--amd-font-scale': fontScale }"
+                @click="onMushafWordClick"
               ></div>
               <div
                 v-if="showAyahEmptyState"
@@ -938,6 +939,13 @@ export default {
       // Select options are words-shown%; parent/API still use hide%.
       const shown = Number(event?.target?.value)
       this.$emit('set-difficulty', this.shownPercentToHide(shown))
+    },
+    onMushafWordClick(event) {
+      const target = event?.target?.closest?.('[data-recitation-word-index]')
+      if (!target?.classList?.contains('can-correct-ai')) return
+      const index = Number(target.dataset.recitationWordIndex)
+      if (!Number.isFinite(index)) return
+      this.$emit('word-click', { index })
     },
   },
 }

@@ -668,7 +668,7 @@
           </button>
         </p>
         <div
-          v-if="hasVerses && (topCardMetadataPills.length || !isMobileViewport() || isPostSessionChoiceVisible)"
+          v-if="hasVerses && !isMobileViewport() && (topCardMetadataPills.length || isPostSessionChoiceVisible)"
           class="workspace-shell-bottom"
           :class="{ 'workspace-shell-bottom--post-session': isPostSessionChoiceVisible }"
         >
@@ -2906,7 +2906,9 @@
                         <p>{{ getRecitationWordsReviewSummary(selectedRecordingsEntry) }}</p>
                       </div>
                       <div v-if="getRecitationReviewArabic(selectedRecordingsEntry)" class="recitation-review-ayah shared-result-ayah"
-                        dir="rtl" v-html="getRecitationReviewArabic(selectedRecordingsEntry)"></div>
+                        dir="rtl"
+                        v-html="getRecitationReviewArabic(selectedRecordingsEntry)"
+                        @click="handleRecitationReviewWordClick($event, selectedRecordingsEntry)"></div>
                       <div class="shared-result-word-review transition-all duration-300">
                         <div v-if="getRecitationWordsToReview(selectedRecordingsEntry).length" class="shared-result-word-review-list" dir="rtl">
                           <span v-for="word in getRecitationWordsToReview(selectedRecordingsEntry)" :key="`saved-review-${word.index}`"
@@ -3258,6 +3260,10 @@
                   <p class="post-session-simple__section-kicker post-session-simple__section-kicker--step">
                     <span class="post-session-simple__step-num" aria-hidden="true">1</span>
                     {{ t('memorisation.postSession.recommendation.yourResult') || 'Your result' }}
+                    <span
+                      class="post-session-simple__beta-badge"
+                      role="note"
+                    >{{ t('memorisation.postSession.recommendation.aiRecitationBeta') || 'Audio recitation · Beta' }}</span>
                   </p>
                   <h3 class="post-session-simple__outcome-title">
                     {{ postSessionOutcomeHeadline }}
@@ -3287,6 +3293,12 @@
                   </ul>
                 </div>
 
+                <p
+                  class="post-session-simple__ai-disclaimer"
+                  role="note"
+                  data-testid="post-session-ai-disclaimer"
+                >{{ t('memorisation.postSession.recommendation.aiDisclaimer') || 'AI can sometimes miss or mishear words. Treat this as a guide only — verify with a qualified teacher before relying on it for your Hifz.' }}</p>
+
                 <div
                   v-if="postSessionFocusHighlightParts.length"
                   class="post-session-simple__focus-block post-session-simple__support-block"
@@ -3295,6 +3307,11 @@
                   <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
                     {{ t('memorisation.postSession.recommendation.mainFocus') || 'Main focus' }}
                   </p>
+                  <p
+                    v-if="postSessionFocusHighlightParts.some((part) => part.correctable)"
+                    class="post-session-simple__focus-hint"
+                    role="note"
+                  >{{ t('memorisation.postSession.recommendation.tapWordToCorrect') || 'Tap any amber or red word you recited correctly to update the analysis.' }}</p>
                   <button
                     type="button"
                     class="post-session-simple__quran-focus"
@@ -3315,8 +3332,18 @@
                           'is-weak': part.weak,
                           'is-incorrect': part.tone === 'incorrect',
                           'is-partial': part.tone === 'partial',
+                          'is-correctable': part.correctable,
+                          'is-corrected': part.tone === 'ok' && !part.weak,
                         }"
                         :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
+                        :role="part.correctable ? 'button' : undefined"
+                        :tabindex="part.correctable ? 0 : undefined"
+                        :aria-label="part.correctable
+                          ? (t('memorisation.aiCheck.markAsAiMistake') || 'Mark as AI mistake.')
+                          : undefined"
+                        @click.stop="part.correctable && onPostSessionFocusWordCorrect(part)"
+                        @keydown.enter.prevent="part.correctable && onPostSessionFocusWordCorrect(part)"
+                        @keydown.space.prevent="part.correctable && onPostSessionFocusWordCorrect(part)"
                       >
                         <span class="post-session-simple__quran-token-text">{{ part.text }}</span>
                       </span>
@@ -4057,6 +4084,7 @@
       @done="doneAmdTest"
       @retry="retryAmdAssessment"
       @enable-mic="startAmdAssessment"
+      @word-click="handleAmdWordClick"
     />
 
   <div

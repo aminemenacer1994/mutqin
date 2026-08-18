@@ -204,14 +204,14 @@ function t(key, params = {}) {
     /postSessionRecommendation\s*=\s*null|aiReciteFinalPlan\s*=\s*null|postSessionSnapshot\s*=\s*null/,
     'return to workspace must not discard AI/recommendation results',
   )
-  assert.match(en, /"reviseFocusPhrase":\s*"Start revision"/)
-  assert.match(en, /"continueToNextRange":\s*"Continue to next session"/)
-  assert.match(en, /"continueToAyahs":\s*"Continue to Ayahs \{start\}–\{end\}"/)
-  assert.match(en, /"repeatThisSession":\s*"Repeat this session"/)
-  assert.match(en, /"returnToWorkspace":\s*"Return to workspace"/)
+  assert.match(en, /"reviseFocusPhrase":\s*"Revise words"/)
+  assert.match(en, /"continueToNextRange":\s*"Continue forward"/)
+  assert.match(en, /"continueToAyahs":\s*"Next āyāt \(\{start\}–\{end\}\)"/)
+  assert.match(en, /"repeatThisSession":\s*"Repeat session"/)
+  assert.match(en, /"returnToWorkspace":\s*"Back to mushaf"/)
   assert.match(en, /"retest":\s*"Check again"/)
-  assert.match(en, /"startSession":\s*"Continue to next session"/)
-  assert.match(en, /"startRevision":\s*"Start revision"/)
+  assert.match(en, /"startSession":\s*"Continue forward"/)
+  assert.match(en, /"startRevision":\s*"Revise range"/)
   assert.doesNotMatch(
     en.match(/"actions"\s*:\s*\{[\s\S]*?"continueToNextRange":\s*"[^"]+"/)?.[0] || '',
     /"continueToNextRange":\s*"Continue"/,

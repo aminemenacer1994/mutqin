@@ -301,7 +301,7 @@ includesAll('top toolbar feature spacing', [
   // Mobile stack: toolbar (title + CTAs + icons) on row 1, progress pills on row 2
   assert.match(
     blade,
-    /Mobile session overview stack:[\s\S]*?1 = title \+ session CTAs \+ icon controls · 2 = progress pills[\s\S]*?\.workspace-shell-head > \.workspace-shell-progress-pills \{[\s\S]*?grid-row:\s*2\s*!important/,
+    /Mobile session overview stack:[\s\S]*?progress pills[\s\S]*?\.workspace-shell-head:not\(\.is-idle\) > \.workspace-shell-progress-pills \{[\s\S]*?grid-row:\s*2\s*!important/,
     'blade hotfix must keep progress pills on grid-row 2'
   )
   assert.match(
@@ -316,7 +316,7 @@ includesAll('top toolbar feature spacing', [
   )
   assert.match(
     blade,
-    /\.app \.workspace-shell-head > \.workspace-shell-head-toolbar \{[\s\S]*?grid-row:\s*1\s*!important/,
+    /\.app \.workspace-shell-head:not\(\.is-idle\) > \.workspace-shell-head-toolbar \{[\s\S]*?grid-row:\s*1\s*!important/,
     'blade hotfix must place head toolbar on row 1'
   )
   assert.doesNotMatch(

@@ -753,10 +753,39 @@
         .app .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
           grid-column: 1 / -1 !important;
           grid-row: 1 !important;
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) auto !important;
+          grid-template-rows: auto auto !important;
+          align-items: center !important;
+          column-gap: 0.5rem !important;
+          row-gap: 0.4rem !important;
+          width: 100% !important;
+          min-width: 0 !important;
+        }
+        .app .workspace-shell-head-toolbar > .workspace-shell-copy {
+          grid-column: 1 !important;
+          grid-row: 1 !important;
+          min-width: 0 !important;
+        }
+        .app .workspace-shell-head-utility-row {
+          display: contents !important;
+        }
+        .app .workspace-shell-head-utility-row > .workspace-shell-actions,
+        .app .workspace-shell-head-utility-row > .workspace-shell-head-actions {
+          grid-column: 1 / -1 !important;
+          grid-row: 2 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        .app .workspace-shell-head-utility-row > .top-card-icon-controls {
+          grid-column: 2 !important;
+          grid-row: 1 !important;
+          justify-self: end !important;
+          align-self: center !important;
         }
         /*
          * Mobile session overview stack:
-         * 1 = title + session CTAs + icon controls · 2 = progress pills
+         * 1 = title + icons, session CTAs · 2 = progress pills
          */
         .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
           grid-column: 1 / -1 !important;
@@ -2008,9 +2037,11 @@
         color: var(--text) !important;
       }
       @media (max-width: 720px) {
-        .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-cards,
-        .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+        .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-cards {
           grid-template-columns: 1fr !important;
+        }
+        .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
         }
       }
 

@@ -4796,16 +4796,62 @@ export default {
         const tone = (toneRank[fromIndex] || 0) >= (toneRank[fromText] || 0)
           ? (fromIndex || fromText)
           : (fromText || fromIndex)
-        return { text, weak: !!tone, tone: tone || 'ok' }
+        const resolvedTone = tone || 'ok'
+        const wordIndex = this.resolveGlobalRecitationWordIndex?.(focus, index) ?? -1
+        return {
+          text,
+          weak: !!tone,
+          tone: resolvedTone,
+          tokenIndex: index,
+          wordIndex,
+          correctable: !!tone && resolvedTone !== 'ok' && wordIndex >= 0,
+        }
       })
 
       if (!matched.some((part) => part.weak)) {
         const ayahs = this.postSessionRevisionWeakAyahs || []
         if (focus?.ayahNumber && ayahs.map(Number).includes(Number(focus.ayahNumber))) {
-          return tokens.map((text) => ({ text, weak: true, tone: 'incorrect' }))
+          return tokens.map((text, index) => ({
+            text,
+            weak: true,
+            tone: 'incorrect',
+            tokenIndex: index,
+            wordIndex: this.resolveGlobalRecitationWordIndex?.(focus, index) ?? -1,
+            correctable: false,
+          }))
         }
       }
       return matched
+    },
+    resolveGlobalRecitationWordIndex(focus = null, tokenIndex = 0) {
+      if (!focus) return -1
+      const result = this.recitationCheckResult
+        || this.aiReciteAttempts?.[this.aiReciteAttempts.length - 1]?.result
+        || null
+      if (!result) return -1
+      const ayahWordIndex = Number(focus.phraseStart || 0) + Number(tokenIndex)
+      const targets = this.getRecitationTargetVersesForResult(result)
+      let offset = 0
+      for (const verse of targets) {
+        const verseKey = String(verse?.key || '')
+        const focusKey = String(focus.verseKey || '')
+        const ayahNum = Number(verse?.number || verseKey.split(':')[1] || 0)
+        const matches = (focusKey && verseKey === focusKey)
+          || (!focusKey && focus.ayahNumber && ayahNum === Number(focus.ayahNumber))
+        if (matches) return offset + ayahWordIndex
+        const arabic = this.getPlainVerseArabicForCheck?.(verse) || ''
+        const count = (this.tokenizeRecitationDisplayWords?.(arabic) || []).length
+        offset += count
+      }
+      return -1
+    },
+    onPostSessionFocusWordCorrect(part = null) {
+      const wordIndex = Number(part?.wordIndex)
+      const result = this.recitationCheckResult
+        || this.aiReciteAttempts?.[this.aiReciteAttempts.length - 1]?.result
+        || null
+      if (!result || !Number.isFinite(wordIndex) || wordIndex < 0) return
+      this.markAiRecitationWordAsCorrect(result, wordIndex)
     },
     postSessionGuidedMethodRows() {
       if (!this.postSessionFocusHighlightParts.length) return []
@@ -5402,26 +5448,26 @@ export default {
         nextRangeEnd: nextTo || null,
       })
       const actionFallbacks = {
-        reviseFocusPhrase: 'Start revision',
-        reviseThisRange: 'Start revision',
-        reviewAyahOnce: 'Review Ayah once',
+        reviseFocusPhrase: 'Revise words',
+        reviseThisRange: 'Revise range',
+        reviewAyahOnce: 'Revise āyah',
         retest: 'Check again',
         tryRecordingAgain: 'Try recording again',
         checkMicrophone: 'Check microphone',
         close: 'Close',
         testWithAi: 'Recite from memory',
-        continuePractising: 'Repeat this session',
-        continueToNextRange: 'Continue to next session',
-        continueToAyahs: 'Continue to Ayahs',
-        repeatThisSession: 'Repeat this session',
-        reviewOnceMore: 'Review again',
-        chooseAnotherRange: 'Choose another range',
-        skipForNow: 'Continue to next session',
-        keepPractising: 'Repeat this session',
-        returnToWorkspace: 'Return to workspace',
-        startSession: 'Continue to next session',
-        startRevision: 'Start revision',
-        continueToNextSurah: 'Continue to next session',
+        continuePractising: 'Repeat session',
+        continueToNextRange: 'Continue forward',
+        continueToAyahs: 'Next āyāt',
+        repeatThisSession: 'Repeat session',
+        reviewOnceMore: 'Revise again',
+        chooseAnotherRange: 'Other range',
+        skipForNow: 'Continue forward',
+        keepPractising: 'Repeat session',
+        returnToWorkspace: 'Back to mushaf',
+        startSession: 'Continue forward',
+        startRevision: 'Revise range',
+        continueToNextSurah: 'Continue forward',
       }
       return mapped.map((btn) => {
         let label = ''
@@ -5436,9 +5482,9 @@ export default {
         if (!label || label === `memorisation.postSession.actions.${btn.labelKey}`
           || label === `memorisation.postSession.recommendation.confirm.${btn.labelKey}`) {
           if (btn.labelKey === 'continueToAyahs' && params.start && params.end) {
-            label = `Continue to Ayahs ${params.start}–${params.end}`
+            label = `Next āyāt (${params.start}–${params.end})`
           } else if (btn.labelKey === 'reviewAyahOnce' && params.ayah) {
-            label = `Review Ayah ${params.ayah} once`
+            label = `Revise āyah ${params.ayah}`
           } else {
             label = actionFallbacks[btn.labelKey] || this.postSessionConfirmationPrimaryLabel || btn.labelKey
           }
@@ -6828,9 +6874,9 @@ export default {
         stop: this.t?.('memorisation.amd.stopRecitation') || this.t?.('memorisation.amd.toolStop') || 'Stop recording',
         start: this.t?.('memorisation.amd.startRecitation') || 'Start recording',
         startHint: this.t?.('memorisation.amd.startRecitationHint') || '',
-        betaBadge: '',
+        betaBadge: this.t?.('memorisation.amd.betaBadge') || 'Beta',
         disclaimer: this.t?.('memorisation.amd.disclaimer')
-          || 'Practice aid only — not a teacher’s ruling.',
+          || 'Audio recitation is in beta. AI can make mistakes — always verify with a qualified teacher.',
         reset: this.t?.('common.reset') || 'Reset',
         difficulty: this.t?.('memorisation.amd.difficulty') || 'Difficulty',
         wordsShown: this.t?.('memorisation.amd.wordsShown') || 'Words shown',
@@ -19340,6 +19386,12 @@ export default {
       if (this.aiMemorisationCheckerResult === result) this.syncSessionEvaluationMaps('memorisation', this.aiMemorisationCheckerTargets, statuses, true)
       this.persistAiRecitationReviewHighlights(result, this.getRecitationTargetVersesForResult(result))
       this.persistAiMemorisationCheckerSession()
+      if (this.showPostSessionModal || this.postSessionAiReciteActive || this.amdOpen) {
+        this.maybeApplyPostSessionAiAssessmentFromResult(result).catch(() => { /* ignore */ })
+      }
+      if (this.amdOpen) {
+        this.syncAmdMushafSurface({ force: true })
+      }
       this.showBanner(this.t('toasts.aiHighlightMarkedCorrectResultsUpdated'), 'success', 1400)
     },
     handleRecitationReviewWordClick(event, result = null) {
@@ -20078,6 +20130,10 @@ export default {
           const shouldMask = maskOn && isHiddenTarget && !attempted
           const isCurrent = live && globalIndex === highlightIndex
           const displayStatus = shouldMask ? 'notAttempted' : (visual || 'notAttempted')
+          const canCorrect = !live && ['partial', 'incorrect'].includes(displayStatus) ? ' can-correct-ai' : ''
+          const markTitle = canCorrect
+            ? (this.t('memorisation.aiCheck.markAsAiMistake') || 'Mark as AI mistake.')
+            : ''
           const classes = [
             'wbw-word',
             `recitation-word-${this.escapeHtml(displayStatus)}`,
@@ -20085,10 +20141,11 @@ export default {
             isCorrect && isHiddenTarget ? 'amd-word-revealed' : '',
             isCurrent ? 'amd-word-current' : '',
             this.amdPeekActive && isHiddenTarget && !isCorrect ? 'amd-word-peeked' : '',
+            canCorrect.trim(),
           ].filter(Boolean).join(' ')
           const safeAttrs = shouldMask
             ? ` aria-hidden="true" data-masked="1"`
-            : ''
+            : (markTitle ? ` title="${this.escapeHtml(markTitle)}"` : '')
           const tokenHtml = useTajweed && tajweedTokens[index]
             ? (this.sanitizeHtml?.(tajweedTokens[index]) || this.escapeHtml(word))
             : this.escapeHtml(word)

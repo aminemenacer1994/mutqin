@@ -4058,18 +4058,11 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     gap: 0.45rem 0.75rem !important;
   }
 
-  /* Keep session metadata + layout toggle visible on mobile */
+  /* Mobile metadata + layout toggle live in the head toolbar — hide duplicate bottom chrome */
   .workspace-shell-bottom,
-  .workspace-shell-bottom-pills {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 0.55rem !important;
-    inline-size: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
+  .workspace-shell-bottom-pills,
+  .workspace-shell-reading-toggles {
+    display: none !important;
   }
 
   .workspace-shell-bottom-pills .workspace-shell-metadata {
@@ -5459,16 +5452,12 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 
   /*
-   * Mobile-only: mushaf layout toggle + ellipsis in the top-right
-   * (sliders when not in post-session choice; Custom session covers controls there).
+   * Mobile-only: title + icons share row 1; mushaf toggle stays in the icon row.
    * Font stays in the menu path; desktop keeps the full icon row.
    */
-  .workspace-shell-head {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
-    grid-template-rows: auto auto auto !important;
-    align-items: center !important;
-    column-gap: 0.45rem !important;
+  .workspace-shell-head:not(.is-idle) {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
   }
 
   .workspace-shell-copy {
@@ -5483,12 +5472,6 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     display: flex !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
-  }
-
-  .workspace-shell-head > .workspace-shell-actions {
-    grid-column: 1 / -1 !important;
-    grid-row: 3 !important;
-    display: flex !important;
   }
 
   .workspace-shell-head-utility-row > .top-card-icon-controls,
@@ -6052,7 +6035,8 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 }
 
 /*
- * FORCE FIX — mobile workspace dashboard + mushaf flow
+ * FORCE FIX — mobile active session card
+ * 1) Surah title + reading icons · 2) Pause/End · 3) metadata pills
  * Highest-specificity layer; wins over legacy stacked/overflow rules.
  */
 @media (max-width: 767.98px) {
@@ -6061,30 +6045,37 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     grid-template-columns: minmax(0, 1fr) !important;
     grid-template-rows: auto auto !important;
     align-items: stretch !important;
-    gap: 0.45rem !important;
+    gap: 0.4rem !important;
   }
 
   html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
     grid-column: 1 / -1 !important;
     grid-row: 1 !important;
-    display: flex !important;
-    flex-flow: column nowrap !important;
-    gap: 0.4rem !important;
-    width: 100% !important;
-  }
-
-  html body .app .workspace-shell-head-utility-row {
-    display: flex !important;
-    flex-flow: column nowrap !important;
-    align-items: stretch !important;
-    gap: 0.45rem !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    align-items: center !important;
+    column-gap: 0.5rem !important;
+    row-gap: 0.4rem !important;
     width: 100% !important;
     min-width: 0 !important;
   }
 
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-copy {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    min-width: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row {
+    display: contents !important;
+  }
+
   html body .app .workspace-shell-head-utility-row > .workspace-shell-head-actions,
   html body .app .workspace-shell-head-utility-row > .workspace-shell-actions {
-    order: 1 !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
     display: flex !important;
     flex-flow: column nowrap !important;
     align-items: stretch !important;
@@ -6094,40 +6085,43 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     overflow: visible !important;
   }
 
-  html body .app .workspace-shell-head-utility-row .action-buttons-group {
-    display: flex !important;
-    flex-flow: column nowrap !important;
-    align-items: stretch !important;
-    gap: 0.4rem !important;
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  html body .app .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.4rem !important;
-    width: 100% !important;
-  }
-
-  html body .app .workspace-shell-head-utility-row .top-card-session-actions:not(.has-paired-actions) {
-    display: flex !important;
-    flex-flow: row wrap !important;
-    align-items: center !important;
-    gap: 0.4rem !important;
-    width: auto !important;
-    max-width: 100% !important;
-  }
-
   html body .app .workspace-shell-head-utility-row > .top-card-icon-controls {
-    order: 2 !important;
-    align-self: flex-end !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: end !important;
     flex: 0 0 auto !important;
     width: max-content !important;
     max-width: 100% !important;
     margin: 0 !important;
-    position: static !important;
-    z-index: 1 !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .action-buttons-group {
+    display: flex !important;
+    flex-flow: column nowrap !important;
+    align-items: stretch !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair),
+  html body .app .workspace-shell-head-utility-row .top-card-session-actions.post-session-choice-pair {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-actions:not(.has-paired-actions):not(.post-session-choice-pair) {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   html body .app .workspace-shell-head-utility-row .top-card-action-trigger.session-primary-action,
@@ -6135,33 +6129,17 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
+    min-block-size: 40px !important;
+    padding: 8px 0.5rem !important;
+    font-size: 0.8125rem !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
   }
 
-  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) {
-    flex-flow: row wrap !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    column-gap: 0.45rem !important;
-    row-gap: 0.4rem !important;
-  }
-
-  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) > .workspace-shell-head-actions,
-  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) > .workspace-shell-actions {
+  html body .app .workspace-shell-head-utility-row .top-card-session-actions:not(.has-paired-actions):not(.post-session-choice-pair) .top-card-action-trigger.session-primary-action {
+    width: auto !important;
     flex: 1 1 auto !important;
-    width: auto !important;
-    max-width: calc(100% - 11rem) !important;
-  }
-
-  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) .action-buttons-group {
-    flex-flow: row nowrap !important;
-    width: auto !important;
-  }
-
-  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) .top-card-action-trigger.session-primary-action {
-    width: auto !important;
   }
 
   html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
@@ -6171,35 +6149,14 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     flex-flow: row nowrap !important;
     gap: 0.35rem !important;
     overflow-x: auto !important;
-    padding: 0.1rem 0 0 !important;
+    padding: 0.05rem 0 0 !important;
+    margin: 0 !important;
   }
 
-  html body .app .workspace-shell-bottom {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 0.55rem !important;
-    width: 100% !important;
-    margin-top: 0.35rem !important;
-  }
-
-  html body .app .workspace-shell-bottom-pills .workspace-shell-metadata {
-    display: flex !important;
-    flex-flow: row nowrap !important;
-    gap: 0.35rem !important;
-    overflow-x: auto !important;
-    scrollbar-width: none;
-  }
-
+  html body .app .workspace-shell-bottom,
+  html body .app .workspace-shell-bottom-pills,
   html body .app .workspace-shell-reading-toggles {
-    display: flex !important;
-    width: 100% !important;
-    justify-content: stretch !important;
-  }
-
-  html body .app .workspace-shell-reading-toggles .workspace-layout-toggle {
-    width: 100% !important;
-    max-width: 100% !important;
+    display: none !important;
   }
 
   html body .app .main.mushaf-mode-active .madani-page-sheet,
