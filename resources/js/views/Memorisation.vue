@@ -233,6 +233,7 @@
           <template v-if="hasVerses || isPostSessionChoiceVisible">
           <div class="workspace-shell-copy">
             <span class="workspace-shell-kicker">{{ workspaceShellKicker }}</span>
+            <p v-if="workspaceShellSubtitle" class="workspace-shell-subtitle">{{ workspaceShellSubtitle }}</p>
             <h1 class="workspace-shell-main-title" :aria-label="topCardSessionLabel">
               <template v-if="topCardSurahArabic || topCardSurahLatin">
                 <span v-if="topCardSurahLatin" class="workspace-shell-surah-en" lang="en">{{ topCardSurahLatin }}</span>
@@ -432,7 +433,7 @@
                   data-testid="post-session-repeat-recommended"
                   data-action="repeat_recommended"
                   :title="t('memorisation.postSessionChoice.repeatRecommendedDesc')"
-                  :aria-label="t('memorisation.postSessionChoice.repeatRecommendedDesc')"
+                  :aria-label="t('memorisation.postSessionChoice.repeatRecommended')"
                   @click="repeatRecommendedSessionFromChoice"
                 >
                   <i class="bi bi-arrow-return-left" aria-hidden="true"></i>
@@ -445,7 +446,7 @@
                   data-testid="post-session-create-custom"
                   data-action="create_custom"
                   :title="t('memorisation.postSessionChoice.createCustomDesc')"
-                  :aria-label="t('memorisation.postSessionChoice.createCustomDesc')"
+                  :aria-label="t('memorisation.postSessionChoice.createCustom')"
                   @click="createCustomSessionFromChoice"
                 >
                   <i class="bi bi-sliders" aria-hidden="true"></i>

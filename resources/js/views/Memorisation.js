@@ -1436,7 +1436,7 @@ export default {
       }
     },
     helpLearningSections() {
-      return [
+      const sections = [
         {
           key: 'tajweed',
           icon: 'bi-book-half',
@@ -1489,28 +1489,33 @@ export default {
             }
           ]
         },
-        {
+      ]
+      if (this.canUseProFeatures) {
+        sections.push({
           key: 'ai-recitation',
           icon: 'bi-mic',
           title: this.translateOrFallback('memorisation.helpLearning.sections.aiRecitation.title', HELP_LEARNING_FALLBACKS.sections.aiRecitation.title),
           description: this.translateOrFallback('memorisation.helpLearning.sections.aiRecitation.description', HELP_LEARNING_FALLBACKS.sections.aiRecitation.description),
           bestFor: this.translateOrFallback('memorisation.helpLearning.sections.aiRecitation.bestFor', HELP_LEARNING_FALLBACKS.sections.aiRecitation.bestFor)
-        },
-        {
+        })
+      }
+      if (this.canUsePremiumTechniques) {
+        sections.push({
           key: 'talqin-mode',
           icon: 'bi-soundwave',
           title: this.translateOrFallback('memorisation.helpLearning.sections.talqinMode.title', HELP_LEARNING_FALLBACKS.sections.talqinMode.title),
           description: this.translateOrFallback('memorisation.helpLearning.sections.talqinMode.description', HELP_LEARNING_FALLBACKS.sections.talqinMode.description),
           bestFor: this.translateOrFallback('memorisation.helpLearning.sections.talqinMode.bestFor', HELP_LEARNING_FALLBACKS.sections.talqinMode.bestFor)
-        },
-        {
-          key: 'manual-assessment',
-          icon: 'bi-check2-square',
-          title: this.translateOrFallback('memorisation.helpLearning.sections.manualAssessment.title', HELP_LEARNING_FALLBACKS.sections.manualAssessment.title),
-          description: this.translateOrFallback('memorisation.helpLearning.sections.manualAssessment.description', HELP_LEARNING_FALLBACKS.sections.manualAssessment.description),
-          bestFor: this.translateOrFallback('memorisation.helpLearning.sections.manualAssessment.bestFor', HELP_LEARNING_FALLBACKS.sections.manualAssessment.bestFor)
-        }
-      ]
+        })
+      }
+      sections.push({
+        key: 'manual-assessment',
+        icon: 'bi-check2-square',
+        title: this.translateOrFallback('memorisation.helpLearning.sections.manualAssessment.title', HELP_LEARNING_FALLBACKS.sections.manualAssessment.title),
+        description: this.translateOrFallback('memorisation.helpLearning.sections.manualAssessment.description', HELP_LEARNING_FALLBACKS.sections.manualAssessment.description),
+        bestFor: this.translateOrFallback('memorisation.helpLearning.sections.manualAssessment.bestFor', HELP_LEARNING_FALLBACKS.sections.manualAssessment.bestFor)
+      })
+      return sections
     },
     activeHelpLearningSection() {
       return this.helpLearningSections.find(section => section.key === this.helpLearningActiveKey)
@@ -1522,6 +1527,8 @@ export default {
         && !this.isRestoringWorkspace
         && !this.isOnboardingExperienceActive
         && !this.isWelcomeBackWorkspaceHidden
+        && !this.showWelcomeBackModal
+        && !this.returningUserChoicePending
         && !this.hasVerses
         && !this.isPostSessionChoiceVisible
     },
@@ -1580,6 +1587,12 @@ export default {
         return this.t('memorisation.postSessionChoice.title')
       }
       return this.t('memorisation.sessionOverview.kicker')
+    },
+    workspaceShellSubtitle() {
+      if (this.isPostSessionChoiceVisible) {
+        return this.t('memorisation.postSessionChoice.desc')
+      }
+      return ''
     },
     journeyMemorisedCount() {
       return Number(this.learnerJourney?.overall?.memorised_ayah_count ?? 0)
@@ -1709,7 +1722,12 @@ export default {
       return this.toolsStartBusy
     },
     showSessionOverviewIdleActions() {
-      return !this.hasVerses && !this.isRestoringWorkspace && this.isDataReady && !this.isPostSessionChoiceVisible
+      return !this.hasVerses
+        && !this.isRestoringWorkspace
+        && this.isDataReady
+        && !this.isPostSessionChoiceVisible
+        && !this.showWelcomeBackModal
+        && !this.returningUserChoicePending
     },
     shouldShowOffcanvasTabs() {
       return true
@@ -16070,13 +16088,9 @@ export default {
     },
     openPostSessionChoice(snapshot = null) {
       this.archiveEndedRecommendedSession(snapshot)
-      this.showPostSessionChoice = true
+      this.showPostSessionChoice = false
       this.postSessionChoiceAction = null
       this.postSessionChoiceOffcanvasOpen = false
-      this.showTools = false
-      this.showPostSessionModal = false
-      this.showPostSessionConfetti = false
-      this.postSessionOffcanvasOpen = false
       this.playerVisible = false
       this.topCardMenuOpen = false
       this.fontDropdownOpen = false
@@ -16084,6 +16098,9 @@ export default {
         this.closePlayer()
       } catch (_) { /* player may already be closed */ }
       this.syncBodyScrollLock(false)
+      this.openPostSessionModal(
+        snapshot || this.buildSessionEndedSnapshot({ force: true }),
+      )
       this.persistUiState()
     },
     closePostSessionChoice() {
@@ -16104,6 +16121,8 @@ export default {
       if (
         this.isSessionLive
         || this.sessionPaused
+        || this.sessionExitEndingBusy
+        || this.sessionLifecycleMutation === SESSION_MUTATION.ENDING
         || this.showPostSessionModal
         || this.showWelcomeBackModal
         || this.returningUserChoicePending
@@ -16139,12 +16158,13 @@ export default {
       this.postSessionChoiceJustEndedTemplate = isValidRecommendedTemplate(restored)
         ? restored
         : (this.recommendedSessionTemplates?.[0] || null)
-      this.showPostSessionChoice = true
+      this.showPostSessionChoice = false
       this.postSessionChoiceAction = null
       this.postSessionChoiceOffcanvasOpen = false
       this.showTools = false
       this.playerVisible = false
       if (clearPending) this._pendingPostSessionChoiceRestore = null
+      this.openPostSessionModal(this.buildSessionEndedSnapshot({ force: true }))
     },
     focusPostSessionCustomSetupField() {
       this.$nextTick(() => {
@@ -30349,6 +30369,9 @@ export default {
 
     confirmSessionExit(options = {}) {
       const { showSummary = false, openCompletion = true, openPostSessionChoice = false } = options
+      this.showPostSessionChoice = false
+      this.postSessionChoiceAction = null
+      this.postSessionChoiceOffcanvasOpen = false
       // Stuck pause/end locks previously made "End session" a silent no-op.
       if (
         this.sessionLifecycleMutation === SESSION_MUTATION.ENDING

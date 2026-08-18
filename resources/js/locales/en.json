@@ -484,7 +484,7 @@
     "workspaceJourney": {
       "aria": "Your hifz",
       "kicker": "Your hifz",
-      "startTitle": "Begin with the Qur'an",
+      "startTitle": "Ready to memorise?",
       "startMeta": "Begin a short set. Mutqin will keep your place.",
       "openDashboard": "See your hifz",
       "placeWaiting": "Memorising {surah}",
@@ -620,7 +620,7 @@
       "closeLabel": "Close"
     },
     "sessionExit": {
-      "kicker": "Paused",
+      "kicker": "End session",
       "startNewSession": "Begin a new set",
       "repeatSession": "Repeat this set",
       "continueSession": "Continue this set",

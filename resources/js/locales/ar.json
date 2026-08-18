@@ -1114,7 +1114,7 @@
       "closeLabel": "إغلاق"
     },
     "sessionExit": {
-      "kicker": "متوقفة",
+      "kicker": "إنهاء الجلسة",
       "startNewSession": "ابدأ مجموعة جديدة",
       "repeatSession": "كرر هذه المجموعة",
       "continueSession": "أكمل هذه المجموعة",

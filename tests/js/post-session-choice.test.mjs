@@ -119,23 +119,29 @@ assert.doesNotMatch(
 )
 assert.match(vue, /action-btn-secondary top-card-action-trigger top-card-controls-trigger/)
 assert.doesNotMatch(vue, /post-session-choice-actions/)
-assert.match(en, /"What would you like to practise next\?"/)
-assert.match(en, /"repeatRecommended":\s*"Repeat session"/)
+assert.match(en, /"What next\?"/)
+assert.match(en, /"repeatRecommended":\s*"Repeat this set"/)
 assert.doesNotMatch(en, /Return to previous session/)
-assert.match(en, /"Return to workspace"/)
-assert.match(en, /"Custom session"/)
+assert.match(en, /"returnToWorkspace"/)
+assert.match(en, /"createCustom":\s*"Choose a surah"/)
 assert.match(js, /applyRestoredPostSessionChoice\(/)
 assert.match(js, /Trust the persisted choice flag/)
 assert.match(js, /Keep ended post-session choice CTAs across refresh/)
 assert.match(js, /Re-apply after demote\/reconcile/)
 assert.match(js, /startSessionWithCountdown\(/)
 assert.match(js, /Start immediately/)
-assert.match(en, /"Start custom session"/)
+assert.match(en, /"startCustomSession":\s*"Begin"/)
 assert.doesNotMatch(en, /Return to previous ended session|Return him|Continue ended session/)
 
 assert.match(
   js,
-  /confirmSessionExit\(\{\s*showSummary: false,\s*openCompletion: false,\s*openPostSessionChoice: true,\s*\}\)/,
+  /openPostSessionChoice\(snapshot = null\) \{[\s\S]*?this\.openPostSessionModal\(/,
+  'openPostSessionChoice must route to the rich completion modal',
+)
+assert.match(
+  js,
+  /applyRestoredPostSessionChoice\([\s\S]*?this\.openPostSessionModal\(/,
+  'restored post-session state must reopen the completion modal',
 )
 assert.match(js, /openPostSessionChoice\(/)
 assert.match(js, /isPostSessionChoiceVisible\(\)/)
