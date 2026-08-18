@@ -66,6 +66,7 @@ import {
 } from '../scripts/mushaf/qcfFontLoader'
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
+import { progressBarDisplay } from '../utils/progressDisplay'
 import {
   RECOMMENDATION_TYPES,
   adaptRecommendationForAiAssessment,
@@ -506,6 +507,7 @@ export default {
       welcomeBackContinueInFlight: false,
       pendingMainJourney: false,
       learnerJourney: null,
+      learnerProgress: null,
       learnerJourneyLoading: false,
       learnerStreakDays: 0,
       pendingResumeDefaultTab: '',
@@ -1709,6 +1711,68 @@ export default {
       }
       return chips
     },
+    workspaceJourneySubline() {
+      if (this.journeyReview?.surah_name) {
+        return this.t('memorisation.workspaceJourney.leadRevise', {
+          surah: this.journeyReview.surah_name,
+        })
+      }
+      if (this.journeyHasStarted) {
+        const verses = this.journeyVersesLabel
+        if (verses) return verses
+        if (this.journeyContinue?.surah_name) {
+          return this.t('memorisation.workspaceJourney.leadContinue', {
+            surah: this.journeyContinue.surah_name,
+          })
+        }
+        return this.t('memorisation.workspaceJourney.statusContinue')
+      }
+      return this.t('memorisation.workspaceJourney.leadStart')
+    },
+    workspaceIdleSurahProgress() {
+      const progress = this.learnerProgress
+      const journeySurah = Number(this.journeyReview?.surah_number || this.journeyContinue?.surah_number || 0)
+      const progressSurah = Number(progress?.current_surah_number || 0)
+      const surahMatches = !journeySurah || !progressSurah || journeySurah === progressSurah
+
+      if (progress?.surah_ayah_count && surahMatches) {
+        const total = Number(progress.surah_ayah_count)
+        const memorised = Number(progress.surah_memorised_ayah_count ?? progress.memorised_ayah_count ?? 0)
+        if (total > 0) {
+          const display = progressBarDisplay(total > 0 ? (memorised / total) * 100 : 0)
+          return {
+            memorised,
+            total,
+            percent: display.percent,
+            caption: this.t('memorisation.workspaceJourney.surahProgressCaption'),
+            ariaText: this.t('memorisation.workspaceJourney.surahProgressAriaValue', {
+              memorised,
+              total,
+              percent: display.percent,
+            }),
+          }
+        }
+      }
+
+      const rangeTotal = this.journeyRangeTotal
+      const rangeDone = this.journeyRangeRemembered
+      if (rangeTotal > 0) {
+        const display = progressBarDisplay((rangeDone / rangeTotal) * 100)
+        return {
+          memorised: rangeDone,
+          total: rangeTotal,
+          percent: display.percent,
+          caption: this.t('memorisation.workspaceJourney.sessionProgressCaption'),
+          ariaText: this.t('memorisation.workspaceJourney.sessionProgressAriaValue', {
+            done: rangeDone,
+            total: rangeTotal,
+            percent: display.percent,
+          }),
+        }
+      }
+
+      return null
+    },
     shouldShowWorkspaceJourney() {
       return this.isLoggedIn && (this.journeyHasStarted || this.journeyMemorisedCount > 0 || this.learnerStreakDays > 0)
     },
@@ -1804,6 +1868,11 @@ export default {
         && !this.isPostSessionChoiceVisible
         && !this.showWelcomeBackModal
         && !this.returningUserChoicePending
+    },
+    showSessionProgressRail() {
+      if (this.isOnboardingExperienceActive || this.isWelcomeBackWorkspaceHidden) return false
+      if (this.showSessionOverviewIdleActions && !this.hasVerses) return false
+      return true
     },
     shouldShowOffcanvasTabs() {
       return true
@@ -28238,6 +28307,9 @@ export default {
         const payload = await learningApi.getDashboard(7)
         this.learnerJourney = payload?.journey && typeof payload.journey === 'object'
           ? payload.journey
+          : null
+        this.learnerProgress = payload?.progress && typeof payload.progress === 'object'
+          ? payload.progress
           : null
         this.learnerStreakDays = Number(payload?.retention?.streak_days || 0)
       } catch (error) {

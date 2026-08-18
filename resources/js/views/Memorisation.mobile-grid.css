@@ -47,8 +47,9 @@
     .workspace-shell-idle,
     .workspace-shell-idle-inner,
     .workspace-shell-idle-main,
-    .workspace-shell-idle-cta,
-    .workspace-shell-idle-secondary,
+    .workspace-shell-idle-aside,
+    .workspace-shell-idle-actions,
+    .workspace-shell-idle-links,
     .verses-grid,
     .verse-card,
     .verse-header,
@@ -147,48 +148,47 @@
   .workspace-shell-idle,
   .workspace-shell-idle-inner,
   .workspace-shell-idle-main,
-  .workspace-shell-idle-cta,
-  .workspace-shell-idle-secondary,
-  .workspace-shell-lead,
-  .workspace-shell-guidance,
-  .workspace-shell-stats {
+  .workspace-shell-idle-aside,
+  .workspace-shell-idle-actions,
+  .workspace-shell-idle-links,
+  .workspace-shell-lead {
     min-inline-size: 0;
     max-inline-size: 100%;
   }
 
-  .workspace-shell-idle-main {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 0.85rem !important;
-    align-items: stretch !important;
+  .workspace-shell-idle-aside {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
   }
 
-  .workspace-shell-idle-cta {
-    justify-content: stretch !important;
-    inline-size: 100% !important;
+  .workspace-shell-idle-ring__label {
+    text-align: start !important;
   }
 
-  .workspace-shell-idle-cta .session-idle-action {
-    inline-size: 100% !important;
+  .workspace-shell-idle .workspace-shell-main-title::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  .workspace-shell-idle-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+
+  .workspace-shell-idle-actions__start .session-idle-action {
+    inline-size: auto !important;
     max-inline-size: 100% !important;
     min-block-size: var(--mq-control-size) !important;
-    white-space: normal !important;
-    text-align: center;
   }
 
-  .workspace-shell-idle-secondary {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 0.45rem !important;
-    padding-top: 0.85rem !important;
-  }
-
-  .workspace-shell-idle-secondary .workspace-shell-mini-link {
-    inline-size: 100% !important;
-    max-inline-size: 100% !important;
-    min-block-size: var(--mq-control-size) !important;
-    white-space: normal !important;
-    justify-content: flex-start !important;
+  .workspace-shell-idle-links {
+    display: inline-flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.35rem !important;
   }
 
   .workspace-shell-idle .workspace-shell-main-title {
@@ -198,9 +198,7 @@
   }
 
   .workspace-shell-lead,
-  .workspace-shell-guidance,
-  .workspace-shell-stat,
-  .workspace-shell-mini-link__label {
+  .workspace-shell-text-link {
     overflow-wrap: anywhere;
   }
 
@@ -3296,16 +3294,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 
   .workspace-shell-idle-inner {
-    gap: 0.75rem !important;
-  }
-
-  .workspace-shell-idle-secondary {
-    gap: 0.35rem !important;
-  }
-
-  .workspace-shell-stat {
-    font-size: 0.7rem !important;
-    padding-inline: 0.55rem !important;
+    gap: 1rem !important;
   }
 
   .workspace-shell-metadata > .workspace-shell-metadata-pill,

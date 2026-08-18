@@ -133,7 +133,7 @@
         <!-- Verses Grid -->
         <div class="workspace">
         <div
-          v-if="!isOnboardingExperienceActive && !isWelcomeBackWorkspaceHidden"
+          v-if="showSessionProgressRail"
           class="session-progress-rail"
           role="progressbar"
           :aria-valuenow="sessionProgressMeter"
@@ -177,7 +177,11 @@
           v-show="(hasVerses || showSessionOverviewIdleActions || isPostSessionChoiceVisible) && !isWelcomeBackWorkspaceHidden && !isOnboardingExperienceActive"
           class="workspace-shell"
           data-session-scroll-target
-          :class="{ collapsed: mainCardCollapsed, 'workspace-shell--post-session-choice': isPostSessionChoiceVisible }"
+          :class="{
+            collapsed: mainCardCollapsed,
+            'workspace-shell--post-session-choice': isPostSessionChoiceVisible,
+            'is-idle-card': showSessionOverviewIdleActions,
+          }"
           :data-reading-mode="readingViewMode"
           :aria-label="t('memorisation.a11y.sessionOverview')"
         >
@@ -444,69 +448,77 @@
           </div>
           </template>
           <div v-else-if="showSessionOverviewIdleActions" class="workspace-shell-idle">
+            <div class="workspace-shell-idle-watermark" aria-hidden="true"></div>
             <div class="workspace-shell-idle-inner">
               <div class="workspace-shell-idle-main">
                 <div class="workspace-shell-copy">
                   <span class="workspace-shell-kicker">{{ workspaceIdleKicker }}</span>
                   <h1 class="workspace-shell-main-title">{{ workspaceJourneyTitle }}</h1>
-                  <p v-if="workspaceJourneyNextLine" class="workspace-shell-lead">{{ workspaceJourneyNextLine }}</p>
-                  <ul v-if="workspaceJourneyStatChips.length" class="workspace-shell-stats">
-                    <li
-                      v-for="chip in workspaceJourneyStatChips"
-                      :key="chip.key"
-                      class="workspace-shell-stat"
-                    >{{ chip.label }}</li>
-                  </ul>
-                  <p v-if="workspaceJourneyGuidance" class="workspace-shell-guidance">{{ workspaceJourneyGuidance }}</p>
+                  <p v-if="workspaceJourneySubline" class="workspace-shell-lead">{{ workspaceJourneySubline }}</p>
                 </div>
-                <div v-if="showHeaderSessionAction" class="workspace-shell-idle-cta">
-                  <div
-                    class="action-btn primary session-idle-action session-primary-action"
-                    role="button"
-                    tabindex="0"
-                    :aria-disabled="headerSessionActionDisabled ? 'true' : 'false'"
-                    :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
-                    :class="{ 'is-disabled': headerSessionActionDisabled, 'is-loading': headerSessionActionBusy }"
-                    @click="handleHeaderSessionAction"
-                    @keydown.enter.prevent="handleHeaderSessionAction"
-                    @keydown.space.prevent="handleHeaderSessionAction"
-                    :title="headerSessionActionLabel"
-                    :aria-label="headerSessionActionLabel"
-                  >
-                    <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
-                    <span>{{ headerSessionActionLabel }}</span>
+                <div class="workspace-shell-idle-actions">
+                  <div v-if="showHeaderSessionAction" class="workspace-shell-idle-actions__start">
+                    <div
+                      class="action-btn primary session-idle-action session-primary-action"
+                      role="button"
+                      tabindex="0"
+                      :aria-disabled="headerSessionActionDisabled ? 'true' : 'false'"
+                      :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
+                      :class="{ 'is-disabled': headerSessionActionDisabled, 'is-loading': headerSessionActionBusy }"
+                      @click="handleHeaderSessionAction"
+                      @keydown.enter.prevent="handleHeaderSessionAction"
+                      @keydown.space.prevent="handleHeaderSessionAction"
+                      :title="headerSessionActionLabel"
+                      :aria-label="headerSessionActionLabel"
+                    >
+                      <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
+                      <span>{{ headerSessionActionLabel }}</span>
+                    </div>
                   </div>
+                  <nav
+                    v-if="isLoggedIn && shouldShowWorkspaceJourney"
+                    class="workspace-shell-idle-links"
+                    :aria-label="t('memorisation.workspaceJourney.idleLinksLabel')"
+                  >
+                    <a
+                      class="workspace-shell-text-link"
+                      :href="learnerDashboardUrl"
+                      :title="t('memorisation.workspaceJourney.openDashboardHint')"
+                      @click.prevent="openDashboardView"
+                    >{{ t('memorisation.workspaceJourney.openDashboard') }}</a>
+                    <template v-if="journeyHasStarted">
+                      <span class="workspace-shell-text-link-sep" aria-hidden="true">·</span>
+                      <button
+                        type="button"
+                        class="workspace-shell-text-link"
+                        :title="t('memorisation.workspaceJourney.chooseDifferentHint')"
+                        @click="openNewSessionSetup"
+                      >{{ t('memorisation.workspaceJourney.chooseDifferent') }}</button>
+                    </template>
+                  </nav>
                 </div>
               </div>
-              <nav
-                v-if="isLoggedIn && shouldShowWorkspaceJourney"
-                class="workspace-shell-idle-secondary"
-                :aria-label="t('memorisation.workspaceJourney.idleLinksLabel')"
+              <aside
+                v-if="workspaceIdleSurahProgress"
+                class="workspace-shell-idle-aside"
+                :aria-label="t('memorisation.workspaceJourney.surahProgressAria')"
               >
-                <a
-                  class="workspace-shell-mini-link"
-                  :href="learnerDashboardUrl"
-                  :title="t('memorisation.workspaceJourney.openDashboardHint')"
-                  @click.prevent="openDashboardView"
+                <div
+                  class="workspace-shell-idle-ring"
+                  role="progressbar"
+                  :aria-valuenow="workspaceIdleSurahProgress.percent"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  :aria-valuetext="workspaceIdleSurahProgress.ariaText"
+                  :style="{ '--idle-ring-progress': workspaceIdleSurahProgress.percent }"
                 >
-                  <span class="workspace-shell-mini-link__icon" aria-hidden="true">
-                    <i class="bi bi-journal-richtext"></i>
-                  </span>
-                  <span class="workspace-shell-mini-link__label">{{ t('memorisation.workspaceJourney.openDashboard') }}</span>
-                </a>
-                <button
-                  v-if="journeyHasStarted"
-                  type="button"
-                  class="workspace-shell-mini-link"
-                  :title="t('memorisation.workspaceJourney.chooseDifferentHint')"
-                  @click="openNewSessionSetup"
-                >
-                  <span class="workspace-shell-mini-link__icon" aria-hidden="true">
-                    <i class="bi bi-book-half"></i>
-                  </span>
-                  <span class="workspace-shell-mini-link__label">{{ t('memorisation.workspaceJourney.chooseDifferent') }}</span>
-                </button>
-              </nav>
+                  <div class="workspace-shell-idle-ring__inner">
+                    <strong>{{ workspaceIdleSurahProgress.memorised }}</strong>
+                    <span class="workspace-shell-idle-ring__total">/ {{ workspaceIdleSurahProgress.total }}</span>
+                  </div>
+                </div>
+                <p class="workspace-shell-idle-ring__label">{{ workspaceIdleSurahProgress.caption }}</p>
+              </aside>
             </div>
           </div>
         </div>
