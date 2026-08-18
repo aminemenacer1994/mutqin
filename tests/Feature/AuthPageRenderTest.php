@@ -9,7 +9,14 @@ class AuthPageRenderTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_memorisation_page_redirects_to_login(): void
+    public function test_guest_memorisation_demo_is_public(): void
+    {
+        $this->get(route('memorisation.demo'))
+            ->assertOk()
+            ->assertSee('<memorisation', false);
+    }
+
+    public function test_guest_memorisation_workspace_still_requires_login(): void
     {
         $this->get(route('memorisation'))
             ->assertRedirect(route('login'));

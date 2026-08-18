@@ -48,3 +48,13 @@ export function hasProAccess(auth = {}) {
 export function pricingUpgradeUrl(auth = {}) {
   return auth?.pricing_url || '/pricing'
 }
+
+export function maxSavedSessionsForTier(auth = {}) {
+  if (hasProAccess(auth)) {
+    return Number.POSITIVE_INFINITY
+  }
+  if (hasPremiumAccess(auth)) {
+    return 5
+  }
+  return 3
+}

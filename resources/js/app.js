@@ -146,6 +146,13 @@ function loadMemorisationChunk(attempt = 0) {
         if (isChunkError && typeof window !== 'undefined') {
             const url = new URL(window.location.href);
             if (!url.searchParams.has('mutqin_force')) {
+                try {
+                    const notice = document.createElement('div')
+                    notice.setAttribute('role', 'status')
+                    notice.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.45);color:#fff;font:500 1rem/1.4 system-ui,sans-serif;text-align:center'
+                    notice.textContent = 'Updating Mutqin…'
+                    document.body?.appendChild(notice)
+                } catch (_) { /* best-effort */ }
                 url.searchParams.set('mutqin_force', String(Date.now()));
                 window.location.replace(url.toString());
                 return new Promise(() => {});

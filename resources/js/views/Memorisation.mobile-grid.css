@@ -2794,14 +2794,14 @@
   .verse-ai-check-btn,
 .verse-ai-check-btn.verse-ai-recite-btn,
 .verse-self-check-btn.verse-ai-check-btn {
-    min-block-size: 30px !important;
-    block-size: 30px !important;
-    min-inline-size: 30px !important;
+    min-block-size: 44px !important;
+    block-size: 44px !important;
+    min-inline-size: 44px !important;
     inline-size: auto !important;
-    max-inline-size: 7.5rem !important;
-    padding: 0 0.4rem !important;
-    font-size: 0.65rem !important;
-    gap: 0.2rem !important;
+    max-inline-size: none !important;
+    padding: 0 0.55rem !important;
+    font-size: 0.8125rem !important;
+    gap: 0.25rem !important;
     border-radius: 999px !important;
   }
 
@@ -4124,11 +4124,15 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     min-width: 12rem;
   }
 
-  /* Stacked: hide AI recite on ayah cards */
+  /* Stacked: keep AI recite visible on mobile — use compact 44px targets instead of hiding */
   .verses-grid .verse-ai-check-btn,
 .verses-grid .verse-ai-check-btn.verse-ai-recite-btn,
 .verses-grid .verse-self-check-btn.verse-ai-check-btn {
-    display: none !important;
+    display: inline-flex !important;
+    min-block-size: 44px !important;
+    block-size: 44px !important;
+    min-inline-size: 44px !important;
+    font-size: 0.8125rem !important;
   }
 
   .verses-grid .verse-actions {
@@ -4215,10 +4219,9 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   /* Mushaf: hide focus/AI/layout/controls; keep page fully inside container */
   .main.mushaf-mode-active .mushaf-shell__focus-toggle,
 .main.mushaf-mode-active .mushaf-shell__btn[aria-label*="AI"],
-.main.mushaf-mode-active .mushaf-shell__btn[title*="AI"],
-.main.mushaf-mode-active .mushaf-shell__btn[title*="memorisation check"],
-.main.mushaf-mode-active .mushaf-shell__btn[title*="Hide the ayah"] {
-    display: none !important;
+  /* Mushaf toolbar: never hide controls via translated title substrings */
+  .main.mushaf-mode-active .mushaf-shell__controls-btn {
+    display: inline-flex !important;
   }
 
   .main.mushaf-mode-active .live-practice-guidance,

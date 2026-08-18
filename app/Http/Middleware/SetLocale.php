@@ -10,8 +10,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SetLocale
 {
-    private const SUPPORTED_LOCALES = ['en', 'ar', 'fr', 'id', 'tr', 'es'];
-    private const RTL_LOCALES = ['ar'];
+    private const SUPPORTED_LOCALES = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur'];
+    private const RTL_LOCALES = ['ar', 'ur'];
     private const THEME_ALIASES = [
         'light' => 'light-mode',
         'light-mode' => 'light-mode',

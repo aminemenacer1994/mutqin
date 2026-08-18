@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\StripeWebhookEvent;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class BillingWebhookTest extends TestCase
@@ -88,5 +89,44 @@ class BillingWebhookTest extends TestCase
             ->assertSee('OK');
 
         $this->assertSame(1, StripeWebhookEvent::where('stripe_event_id', 'evt_test_replay')->count());
+    }
+
+    public function test_webhook_links_subscription_by_stripe_customer_email_when_user_id_missing(): void
+    {
+        config(['services.stripe.webhook_secret' => '', 'services.stripe.secret_key' => 'sk_test']);
+
+        $user = User::factory()->create([
+            'email' => 'buyer@example.com',
+            'subscription_tier' => 'free',
+            'subscription_status' => 'free',
+        ]);
+
+        Http::fake([
+            'https://api.stripe.com/v1/customers/cus_email_match' => Http::response([
+                'id' => 'cus_email_match',
+                'email' => 'buyer@example.com',
+            ], 200),
+        ]);
+
+        $this->postJson(route('stripe.webhook'), [
+            'id' => 'evt_email_match',
+            'type' => 'customer.subscription.updated',
+            'data' => [
+                'object' => [
+                    'id' => 'sub_email_match',
+                    'status' => 'active',
+                    'customer' => 'cus_email_match',
+                    'metadata' => [
+                        'plan' => 'pro_monthly',
+                    ],
+                ],
+            ],
+        ])
+            ->assertOk()
+            ->assertSee('OK');
+
+        $user->refresh();
+        $this->assertSame('pro', $user->subscription_tier);
+        $this->assertSame('cus_email_match', $user->stripe_customer_id);
     }
 }

@@ -15,6 +15,7 @@ import { migrateLegacyWorkspaceLocalStorage } from '../utils/mutqinLocalStorageM
 import {
   hasPremiumAccess,
   hasProAccess,
+  maxSavedSessionsForTier,
   pricingUpgradeUrl,
 } from '../utils/billing'
 import {
@@ -1750,6 +1751,9 @@ export default {
     canUseProFeatures() {
       return hasProAccess(this.auth)
     },
+    maxSavedSessionsAllowed() {
+      return maxSavedSessionsForTier(this.auth)
+    },
     buildLiveRecitationReviewResult(kind = 'recitation') {
       const liveWords = kind === 'memorisation' ? this.aiMemorisationCheckerLiveWords : this.recitationLiveWords
       const wordStatuses = (Array.isArray(liveWords) ? liveWords : []).map(word => ({ ...word }))
@@ -2486,6 +2490,45 @@ export default {
     },
     sessionLifecycleStatus() {
       return this.sessionLifecycleViewModel.status
+    },
+    sessionLifecycleHeadline() {
+      const mutation = this.sessionLifecycleMutation || SESSION_MUTATION.IDLE
+      if (mutation === SESSION_MUTATION.STARTING) {
+        return this.t('common.startingSession')
+      }
+      if (mutation === SESSION_MUTATION.ENDING) {
+        return this.t('common.endingSession')
+      }
+      if (mutation === SESSION_MUTATION.RESUMING) {
+        return this.t('common.resumingSession')
+      }
+      if (mutation === SESSION_MUTATION.PAUSING) {
+        return this.t('common.pausingSession')
+      }
+
+      const status = this.sessionLifecycleStatus
+      if (status === SESSION_STATUS.ACTIVE || status === SESSION_STATUS.PLAYING) {
+        return this.t('sessionStatus.active')
+      }
+      if (status === SESSION_STATUS.PAUSED) {
+        return this.t('sessionStatus.paused')
+      }
+      if (
+        status === SESSION_STATUS.INTERRUPTED_RESUMABLE
+        || status === SESSION_STATUS.RESUMABLE
+      ) {
+        return this.t('sessionStatus.resumable')
+      }
+      if (status === SESSION_STATUS.COMPLETING || status === SESSION_STATUS.ENDING) {
+        return this.t('common.endingSession')
+      }
+      if (status === SESSION_STATUS.STARTING) {
+        return this.t('common.startingSession')
+      }
+      if (status === SESSION_STATUS.ONBOARDING_EXAMPLE) {
+        return this.t('memorisation.onboarding.playSampleSession')
+      }
+      return ''
     },
     headerSessionControlState() {
       const status = this.sessionLifecycleStatus
@@ -6320,6 +6363,13 @@ export default {
     },
     amdMicGuidance() {
       if (this.amdLearnerMicStatus === 'need_access') {
+        const isAppleWebKit = typeof navigator !== 'undefined'
+          && /iPad|iPhone|iPod/.test(navigator.userAgent || '')
+        if (isAppleWebKit) {
+          return this.t?.('memorisation.amd.micGuidanceSafari')
+            || this.t?.('memorisation.amd.micGuidanceDenied')
+            || 'Allow microphone access in Settings → Safari → Microphone, then try again.'
+        }
         return this.t?.('memorisation.amd.micGuidanceDenied')
           || 'Allow microphone access in your browser settings, then try again.'
       }
@@ -7445,6 +7495,8 @@ export default {
     },
 
     sessionProgressTitle() {
+      const headline = String(this.sessionLifecycleHeadline || '').trim()
+      if (headline) return headline
       return String(
         this.workspaceProgressSummary?.title
         || this.t('memorisation.workspaceProgress.sessionProgress')
@@ -7477,6 +7529,7 @@ export default {
 
     /** Short state phrase for the slim rail (e.g. "5 left", "Complete"). */
     sessionProgressStateHint() {
+      if (this.sessionLifecycleHeadline) return ''
       const hint = String(this.workspaceProgressSummary?.badge || '').trim()
       if (!hint) return ''
       // Avoid duplicating the percent already shown on the right.
@@ -7547,6 +7600,10 @@ export default {
 
     isLoggedIn() {
       return !!this.auth?.check
+    },
+
+    isDemoMode() {
+      return !!this.auth?.demo_mode && !this.isLoggedIn
     },
 
     isAdmin() {
@@ -8586,6 +8643,9 @@ export default {
       }
       this.reconcilePersistedSessionCompletion()
       this.applyRestoredPostSessionChoice({ clearPending: true })
+      if (this.isDemoMode) {
+        this.initGuestDemoWorkspace()
+      }
     }
 
     window.addEventListener('online', this.handleOnline)
@@ -8927,34 +8987,54 @@ export default {
       this.persistUiState()
     },
     focusModeEnabled(newVal) {
-      if (newVal && this.blurModeEnabled) {
-        this.blurModeEnabled = false;
-        this.showBanner(this.t('toasts.focusModeOnBlurModeOff'), 'info', 2000);
+      if (this._techniqueConflictSilenced) {
+        this.persistUiState()
+        return
       }
-      this.persistUiState();
+      if (newVal && this.blurModeEnabled) {
+        this._techniqueConflictSilenced = true
+        this.blurModeEnabled = false
+        this._techniqueConflictSilenced = false
+        this.showBanner(this.t('toasts.focusModeOnBlurModeOff'), 'info', 2000)
+      }
+      this.persistUiState()
     },
 
     blurModeEnabled(newVal) {
+      if (this._techniqueConflictSilenced) {
+        this.persistUiState()
+        return
+      }
       if (newVal && this.focusModeEnabled) {
-        this.focusModeEnabled = false;
-        this.showBanner(this.t('toasts.blurModeOnFocusModeOff'), 'info', 2000);
+        this._techniqueConflictSilenced = true
+        this.focusModeEnabled = false
+        this._techniqueConflictSilenced = false
+        this.showBanner(this.t('toasts.blurModeOnFocusModeOff'), 'info', 2000)
       }
-      // 🔥 NEW: Auto-disable Chaining when Blur turns on
       if (newVal && this.chainingEnabled) {
-        this.chainingEnabled = false;
-        this.showBanner(this.t('toasts.blurModeOnChainingOffBlur'), 'warning', 3000);
+        this._techniqueConflictSilenced = true
+        this.chainingEnabled = false
+        this._techniqueConflictSilenced = false
+        this.showBanner(this.t('toasts.blurModeOnChainingOffBlur'), 'warning', 3000)
       }
-      this.persistUiState();
+      this.persistUiState()
     },
 
-    // Auto-disable Blur when Chaining turns on (single watcher — avoid duplicate persist/rebuild).
     chainingEnabled(newVal) {
+      if (this._techniqueConflictSilenced) {
+        this.persistUiState()
+        this.persistCentralSessionState()
+        this.applyChainingQueueChange(this.currentMode)
+        return
+      }
       if (newVal && this.blurModeEnabled) {
-        this.blurModeEnabled = false;
-        this.showBanner(this.t('toasts.chainingOnBlurModeOffYou'), 'warning', 3000);
+        this._techniqueConflictSilenced = true
+        this.blurModeEnabled = false
+        this._techniqueConflictSilenced = false
+        this.showBanner(this.t('toasts.chainingOnBlurModeOffYou'), 'warning', 3000)
       }
       if (newVal && !this.anchorModeEnabled) {
-        this.showBanner(this.t('toasts.tipEnableAnchorModeWithChaining'), 'info', 2000);
+        this.showBanner(this.t('toasts.tipEnableAnchorModeWithChaining'), 'info', 2000)
       }
       this.persistUiState();
       this.persistCentralSessionState();
@@ -9684,6 +9764,7 @@ export default {
             rangeStart: entry.from,
             rangeEnd,
             sessionMode: 'revision',
+            autoStart: true,
           })
           return true
         }
@@ -9712,6 +9793,7 @@ export default {
                 techniqueId: config.technique || result?.recommendation?.settings?.technique || null,
                 settings: result?.recommendation?.settings || null,
                 sessionPayload: result?.session || null,
+                autoStart: true,
               })
               return true
             }
@@ -9727,6 +9809,7 @@ export default {
             rangeStart: entry.from,
             rangeEnd,
             sessionMode: entry.resume ? 'revision' : 'new_learning',
+            autoStart: true,
           })
           return true
         }
@@ -11167,8 +11250,14 @@ export default {
     },
 
     addSavedSession(session) {
+      const max = this.maxSavedSessionsAllowed
+      if (Number.isFinite(max) && this.savedSessions.length >= max) {
+        this.promptSubscriptionUpgrade(this.canUsePremiumTechniques ? 'pro' : 'premium')
+        return null
+      }
       this.savedSessions.unshift(this.normalizeSavedSessionRecord(session))
-      if (this.savedSessions.length > 20) this.savedSessions = this.savedSessions.slice(0, 20)
+      const hardCap = Number.isFinite(max) ? max : 20
+      if (this.savedSessions.length > hardCap) this.savedSessions = this.savedSessions.slice(0, hardCap)
       if (!this.selectedStatsSessionId && this.savedSessions[0]?.id) this.selectedStatsSessionId = this.savedSessions[0].id
       this.persistSavedSessions()
       return session
@@ -12823,13 +12912,31 @@ export default {
       this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
     },
-    /** UI dismiss: revisit uses skip; first-time soft-skips via explore path. */
+    /** UI dismiss: revisit uses skip; first-time closes without forcing completion. */
     dismissOnboardingTour() {
       if (!this.requiresFirstTimeOnboarding) {
         this.skipOnboarding()
         return
       }
-      this.completeOnboardingExploreWorkspace()
+      this.resetOnboardingModalState()
+      this.isDataReady = true
+    },
+    initGuestDemoWorkspace() {
+      if (!this.isDemoMode) return
+      this.showBanner(
+        this.t('memorisation.demo.banner'),
+        'info',
+        0,
+        {
+          key: 'open-register',
+          label: this.t('memorisation.demo.createAccount'),
+        },
+        { persistent: true }
+      )
+      if (this.onboardingSampleSessionActive || this.hasVerses || this.isSessionLive) return
+      this.$nextTick(() => {
+        void this.playOnboardingSampleSession()
+      })
     },
     async playOnboardingSampleSession() {
       this.primeAudioPlaybackUnlock()
@@ -15689,6 +15796,24 @@ export default {
       }
       return settings
     },
+    landPostSessionPreparedWorkspace(options = {}) {
+      this.showPostSessionModal = false
+      this.showPostSessionConfetti = false
+      this.postSessionRecommendationStarting = false
+      this.postSessionOffcanvasOpen = false
+      this.postSessionViewState = 'idle'
+      this.showTools = false
+      this.closePostSessionChoice()
+      this.transitionSessionLifecycle(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
+      if (options.message !== false) {
+        this.showBanner(
+          options.message || this.t('memorisation.postSession.readyToStart'),
+          'info',
+          3200
+        )
+      }
+      this.persistUiState()
+    },
     async startSessionFromRecommendationPayload({
       chapterId,
       rangeStart,
@@ -15697,6 +15822,7 @@ export default {
       techniqueId = null,
       settings = null,
       sessionPayload = null,
+      autoStart = false,
     }) {
       this.primeAudioPlaybackUnlock()
       const recommendationForPlan = {
@@ -15809,13 +15935,6 @@ export default {
         this.repetitionsPerStep = Number(mergedSettings.repetitions)
       }
       this.prepareRangeRestart()
-      this.showPostSessionModal = false
-      this.showPostSessionConfetti = false
-      this.postSessionRecommendationStarting = false
-      this.postSessionOffcanvasOpen = false
-      this.showTools = false
-      this.postSessionViewState = 'idle'
-      this.closePostSessionChoice()
       this.markCurrentSessionAsRecommended({
         recommendationId: this.postSessionRecommendation?.id || null,
         technique: techniqueId || mergedSettings.technique || this.postSessionRecommendation?.technique?.id || null,
@@ -15830,9 +15949,21 @@ export default {
       this.$nextTick(() => {
         this.schedulePracticeFocusWordDomSync()
         this.scheduleAnchorHighlights?.()
-        this.startSessionWithCountdown({ skipPrime: true })
+        if (autoStart) {
+          this.showPostSessionModal = false
+          this.showPostSessionConfetti = false
+          this.postSessionRecommendationStarting = false
+          this.postSessionOffcanvasOpen = false
+          this.showTools = false
+          this.postSessionViewState = 'idle'
+          this.closePostSessionChoice()
+          this.startSessionWithCountdown({ skipPrime: true })
+        }
         this.schedulePracticeFocusWordDomSync([300, 800, 1600, 2800])
       })
+      if (!autoStart) {
+        this.landPostSessionPreparedWorkspace()
+      }
     },
     applyRecommendedTechnique(techniqueId, sessionMode = 'new_learning', settings = null) {
       const id = String(techniqueId || '').toLowerCase().trim()
@@ -15964,6 +16095,15 @@ export default {
 
     repeatPostSession() {
       const keepSample = !!this.onboardingSampleSessionActive
+      const snap = this.postSessionSnapshot
+      const template = snap
+        ? this.buildCurrentRecommendedSessionTemplate({
+          chapterId: snap.chapterId,
+          chapterName: snap.chapterName,
+          rangeStart: snap.rangeStart,
+          rangeEnd: snap.rangeEnd,
+        })
+        : null
       this.showPostSessionModal = false
       this.showPostSessionConfetti = false
       this.postSessionOffcanvasOpen = false
@@ -15971,9 +16111,19 @@ export default {
       this.postSessionEmotionalContext = null
       this.postSessionSnapshot = null
       this.showTools = false
+      if (template && isValidRecommendedTemplate(template)) {
+        void this.prepareReadySessionFromRecommendedTemplate(template).then((prepared) => {
+          if (!prepared) return
+          if (keepSample) {
+            this.onboardingSampleSessionActive = true
+          }
+          this.landPostSessionPreparedWorkspace()
+        })
+        return
+      }
       this.primeAudioPlaybackUnlock()
       this.prepareRangeRestart()
-      this.startSessionWithCountdown({ skipPrime: true, sampleSession: keepSample })
+      this.landPostSessionPreparedWorkspace()
     },
     openPostSessionNewSessionOffcanvas() {
       // Leaving the guided sample for a user-built session — unlock recommendation UI.
@@ -15985,7 +16135,10 @@ export default {
         this.postSessionEmotionalContext = null
         this.postSessionOffcanvasOpen = false
       } else {
-        this.postSessionOffcanvasOpen = true
+        this.showPostSessionModal = false
+        this.showPostSessionConfetti = false
+        this.postSessionOffcanvasOpen = false
+        this.closePostSessionChoice()
       }
       this.resetRepetitionsForFreshSession()
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
@@ -16185,6 +16338,8 @@ export default {
     createCustomSessionFromChoice() {
       this.postSessionChoiceAction = POST_SESSION_ACTION.CREATE_CUSTOM
       this.postSessionChoiceOffcanvasOpen = true
+      this.showPostSessionModal = false
+      this.showPostSessionConfetti = false
       this.startingFreshSessionSelection = true
       // Clear ended-session resume affordances without creating a session yet.
       this.clearContinueSessionQuietly()
@@ -16312,12 +16467,10 @@ export default {
         this.postSessionChoiceAction = null
         return
       }
+      this.showPostSessionModal = false
+      this.showPostSessionConfetti = false
       this.closePostSessionChoice()
-      this.persistUiState()
-      // Start immediately — don't leave the learner on an extra Start click.
-      this.$nextTick(() => {
-        this.startSessionWithCountdown()
-      })
+      this.landPostSessionPreparedWorkspace()
     },
     exitOnboardingSampleMode({ discard = true, markCompleted = true } = {}) {
       const wasSample = !!this.onboardingSampleSessionActive
@@ -20608,6 +20761,7 @@ export default {
             ...(session?.settings || plan.config || {}),
             practice_weak_words: plan.weak_words || [],
           },
+          autoStart: true,
         })
 
         // Apply chunking window if present.
@@ -23399,7 +23553,31 @@ export default {
       return `${this.recitationSpeechTranscript || ''} ${this.recitationSpeechInterim || ''}`.replace(/\s+/g, ' ').trim()
     },
     async completeRecitationCheckFromRecognitionWords(recognitionWords = [], targetVerses, source = 'stabilised speech input', audioSrc = '', options = {}) {
-      if (!recognitionWords.length) {
+      let words = Array.isArray(recognitionWords) ? recognitionWords : []
+      if (!words.length) {
+        this.commitPendingRecognitionInterim?.('recitation')
+        words = this.getBestRecognitionWordsForAssessment?.('recitation') || []
+        if (!words.length) {
+          words = this.recoverArabicRecognitionWords?.('recitation') || []
+        }
+        if (!words.length) {
+          const fallbackTranscript = this.getRecitationSpeechFallbackTranscript?.() || ''
+          const fallbackTokens = fallbackTranscript
+            ? this.tokenizeRecitationWords(fallbackTranscript)
+            : []
+          if (fallbackTokens.length) {
+            words = fallbackTokens.map((word, index) => ({
+              word,
+              display: word,
+              confidence: 0.58,
+              provider: 'speech-fallback',
+              sourceIndex: index,
+              recovered: true,
+            }))
+          }
+        }
+      }
+      if (!words.length) {
         if (this.amdOpen) {
           // Never auto-reveal or penalise for empty STT — stay usable with Peek.
           this.amdBusy = false
@@ -23414,14 +23592,14 @@ export default {
       this.cancelLiveWordDomPatchFrame()
       this.clearRecitationDisplayHtmlCache()
       let result = {
-        ...this.assessRecitationRecognitionWords(recognitionWords, targetVerses, options),
+        ...this.assessRecitationRecognitionWords(words, targetVerses, options),
         transcriptionSource: source,
         audioSrc,
-        committedWords: recognitionWords,
+        committedWords: words,
       }
       result = await this.enrichResultWithTajweedPracticeCheck(result, targetVerses, {
         wasRecording: true,
-        recognitionWords,
+        recognitionWords: words,
         learnerBlob: options.learnerBlob || null,
       })
       this.recitationCheckResult = result
@@ -27868,6 +28046,7 @@ export default {
         rangeStart: 1,
         rangeEnd: 7,
         sessionMode: 'new_learning',
+        autoStart: true,
       })
     },
     chooseJourneyStart() {
@@ -27901,6 +28080,7 @@ export default {
           rangeStart: from,
           rangeEnd: Math.max(from, to),
           sessionMode: 'new_learning',
+          autoStart: true,
         })
         this.loadLearnerJourney()
         return
@@ -27918,6 +28098,7 @@ export default {
           rangeStart: from,
           rangeEnd: Math.max(from, to || from),
           sessionMode: 'revision',
+          autoStart: true,
         })
         return
       }
@@ -34000,6 +34181,10 @@ export default {
       }
       if (actionKey === 'open-pricing') {
         window.location.assign(pricingUpgradeUrl(this.auth))
+        return
+      }
+      if (actionKey === 'open-register') {
+        window.location.assign(this.auth?.register_url || '/register')
         return
       }
       if (actionKey === 'start-quiz') {

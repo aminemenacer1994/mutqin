@@ -166,7 +166,7 @@ assert.doesNotMatch(
 )
 
 includesAll('tajweed independence', [
-  /:title="t\('memorisation\.reading\.tajweedHint'\)" @click="toggleTajweed"/,
+  /@click(\.stop)?="toggleTajweed"/,
   /else if \(this\.tajweedEnabled && cleanVerse\.arabic_tajweed\) \{/,
   /html = this\.renderWordLevelTajweedMarkup\(cleanVerse, \{ wrapWords: needsInteractiveWords \}\)/,
   /if \(this\.selfCheckTajweedEnabled && enriched\.arabic_tajweed\) \{/,
@@ -688,7 +688,7 @@ includesAll('audio unlock flow', [
   /toasts\.failedToStartSession/,
   /captureAppliedPracticeSetup/,
   /appliedPracticeSetup/,
-  /repeatPostSession\(\)[\s\S]*this\.primeAudioPlaybackUnlock\(\)[\s\S]*this\.startSessionWithCountdown\(\{ skipPrime: true, sampleSession: keepSample \}\)/,
+  /repeatPostSession\(\)[\s\S]*prepareReadySessionFromRecommendedTemplate\([\s\S]*landPostSessionPreparedWorkspace\(\)/,
   /toggleRecordingPlayback\(recording\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: source \}\)[\s\S]*await audio\.play\(\)/,
   /toggleReviewResultAudio\(result = null\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: source \}\)[\s\S]*await playAudioElement\(audio\)/,
   /toggleSelfCheckAyahPlayback\(verse\) \{[\s\S]*this\.primeAudioPlaybackUnlock\(audio, \{ targetUrl: audioUrl \}\)[\s\S]*this\.claimAudioElement\(audio\)[\s\S]*await this\.waitForAudioElementReady\(audio\)[\s\S]*await audio\.play\(\)/,

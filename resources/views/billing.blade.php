@@ -56,8 +56,8 @@
                     <span>{{ __('billing.checkout') }}</span>
                     <strong>{{ __('billing.no_account_needed') }}</strong>
                     <small>{{ __('billing.stripe_email_note') }}</small>
-                    <a class="billing-link-btn" href="{{ route('login') }}">
-                        <i class="bi bi-box-arrow-in-right"></i> {{ __('billing.sign_in_sync') }}
+                    <a class="billing-link-btn" href="{{ route('login', ['redirect' => route('pricing')]) }}">
+                        <i class="bi bi-box-arrow-in-right"></i> {{ __('billing.sign_in') }}
                     </a>
                 @endauth
             </div>

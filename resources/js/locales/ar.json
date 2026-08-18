@@ -95,7 +95,9 @@
   },
   "sessionStatus": {
     "completed": "اكتملت الجلسة",
-    "active": "جلسة نشطة",
+    "active": "جلسة جارية",
+    "paused": "متوقفة مؤقتاً",
+    "resumable": "جاهزة للاستئناف",
     "ready": "الجلسة جاهزة",
     "progress": "{current} من {total} آية · {percent}% مكتمل",
     "left": "متبقٍ {eta}",
@@ -309,7 +311,7 @@
       "proYearly": "أو 49.99 £ سنوياً",
       "featureColumn": "الميزة",
       "freeTrial": "تجربة مجانية 7 أيام",
-      "accountNote": "يمكنك بدء الدفع لـ Premium أو Pro دون حساب. بعد الدفع، أنشئ حساباً أو سجّل الدخول بنفس البريد ليربط متقن خطتك."
+      "accountNote": "سجّل الدخول قبل الدفع حتى تُربط خطتك بحسابك في متقن."
     },
     "faq": {
       "kicker": "أسئلة شائعة",
@@ -510,6 +512,10 @@
     },
     "sessionOverview": {
       "kicker": "حفظك"
+    },
+    "demo": {
+      "banner": "أنت في وضع التجربة. سجّل الدخول لحفظ الجلسات ومزامنة تقدّمك وفتح التسميع بالذكاء الاصطناعي.",
+      "createAccount": "إنشاء حساب مجاني"
     },
     "view": {
       "stacked": "مكدّس",
@@ -1202,6 +1208,7 @@
       "kicker": "اكتملت الجلسة",
       "title": "اكتملت الجلسة",
       "message": "اختر كيف تتابع.",
+      "readyToStart": "مجموعتك التالية جاهزة. اضغط ابدأ عندما تكون مستعدًا.",
       "coach": {
         "yourNextPractice": "الخطوة التالية",
         "whyLabel": "السبب",
@@ -2369,7 +2376,7 @@
       "startFailed": "Could not start assessment.",
       "analyseFailed": "Could not analyse this recitation. Please try again.",
       "sessionExpired": "انتهت جلستك. حدّث الصفحة ثم أعد التقييم.",
-      "noSpeech": "No speech was detected. Please try again.",
+      "noSpeech": "لم نتمكن من تقييم هذه المحاولة. تحقق من الميكروفون أو الاتصال ثم حاول مرة أخرى.",
       "guestSummary": "May Allah strengthen what you have memorised.",
       "stages": {
         "idle": "Ready",

@@ -236,7 +236,7 @@
           <div class="footer-link-column">
             <div class="footer-links">
               <h4><i class="bi bi-book-half"></i> {{ t('homepage.footer.resources') }}</h4>
-              <a href="/memorisation"><i class="bi bi-journal-bookmark"></i> {{ t('homepage.footer.workspace') }}</a>
+              <a :href="workspaceHref"><i class="bi bi-journal-bookmark"></i> {{ t('homepage.footer.workspace') }}</a>
               <a href="/dashboard"><i class="bi bi-speedometer2"></i> {{ t('homepage.footer.dashboard') }}</a>
             </div>
           </div>
@@ -299,7 +299,8 @@ export default {
       featuresSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
-    const startFreeHref = computed(() => (window.mutqinAuthCheck ? '/memorisation' : '/register'));
+    const startFreeHref = computed(() => (window.mutqinAuthCheck ? '/memorisation' : '/memorisation/demo'));
+    const workspaceHref = computed(() => (window.mutqinAuthCheck ? '/memorisation' : '/memorisation/demo'));
 
     const contactForm = reactive({
       name: '',
@@ -453,6 +454,7 @@ export default {
       t,
       currentTheme,
       startFreeHref,
+      workspaceHref,
       setTheme,
       featuresSection,
       scrollToFeatures,

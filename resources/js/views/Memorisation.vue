@@ -130,54 +130,6 @@
       'flow-recall': guidedUiStep === 'recall'
     }">
       <div class="content">
-        <div v-if="false" class="reading-toolbar">
-          <hr class="reading-toolbar-sep" aria-hidden="true" />
-          <div class="reading-toolbar-group">
-            <button class="toolbar-chip" :class="{ active: showTranslation }"
-              :title="t('memorisation.a11y.showTranslation')" @click="toggleReadingOption('translation')">
-              <i class="bi bi-translate"></i><span>{{ t('memorisation.reading.translation') }}</span>
-            </button>
-            <button class="toolbar-chip" :class="{ active: showTransliteration }" :title="t('memorisation.a11y.showTransliteration')"
-              @click="toggleReadingOption('transliteration')">
-              <i class="bi bi-type"></i><span>{{ t('memorisation.reading.transliteration') }}</span>
-            </button>
-            <!-- <button class="toolbar-chip" :class="{ active: showWordByWord }" title="Show word-by-word meaning chips"
-              @click="toggleReadingOption('wbw')">
-              <i class="bi bi-grid-3x2-gap"></i><span>{{ t('memorisation.reading.wordByWord') }}</span>
-            </button> -->
-            <!-- <button class="toolbar-chip" :class="{ active: wordByWordAudioEnabled }"
-              :title="t('memorisation.a11y.enableWordAudio')" @click="wordByWordAudioEnabled = !wordByWordAudioEnabled">
-              <i class="bi bi-volume-up"></i><span>{{ t('memorisation.reading.wordAudio') }}</span>
-            </button> -->
-
-            <!-- ADD TAJWEED PILL HERE -->
-            <button class="toolbar-chip" :class="{ active: tajweedEnabled }"
-              :title="t('memorisation.reading.tajweedHint')" @click="toggleTajweed">
-              <i class="bi bi-palette"></i><span>{{ t('memorisation.reading.tajweed') }}</span>
-            </button>
-          </div>
-
-          <div class="reading-toolbar-group">
-            <div class="font-dropdown">
-              <button class="font-dropdown-trigger" @click="toggleFontDropdown" :title="t('memorisation.a11y.changeQuranFont')">
-                <i class="bi bi-text-paragraph"></i>
-                <span>{{ getCurrentFontLabel() }}</span>
-                <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }"></i>
-              </button>
-              <transition name="dropdown-fade">
-                <div v-if="fontDropdownOpen" class="font-dropdown-menu">
-                  <button v-for="font in quranFontOptions" :key="font.value" class="font-option"
-                    :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
-                    <i class="bi" :class="getFontIcon(font.value)"></i>
-                    <span>{{ font.label }}</span>
-                    <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon"></i>
-                  </button>
-                </div>
-              </transition>
-            </div>
-          </div>
-        </div>
-
         <!-- Verses Grid -->
         <div class="workspace">
         <div
@@ -720,15 +672,6 @@
                 </header>
 
                 <div ref="mushafViewport" class="mushaf-viewport-scroll">
-                  <aside
-                    v-if="false"
-                    class="live-coach-mini live-coach-mini--mushaf"
-                    role="status"
-                    aria-live="polite"
-                  >
-                    <span v-if="liveTechniqueGuide?.label" class="live-coach-mini__method">{{ liveTechniqueGuide.label }}</span>
-                    <p class="live-coach-mini__text">{{ livePracticeCoachText }}</p>
-                  </aside>
                   <div v-if="madaniPagesError" class="mushaf-empty-page mushaf-empty-page--error">
                     <AppStatus
                       :variant="networkOnline === false ? 'offline' : 'error'"
@@ -877,20 +820,6 @@
                     >{{ t('memorisation.postSession.coach.live.focusBadge') }}</span>
                   </div>
                   <div class="verse-actions" dir="ltr">
-                    <button
-                      v-if="false"
-                      class="verse-inline-action-btn verse-inline-notes-btn"
-                      type="button"
-                      @click.stop="openAyahNotes(verse)"
-                      :title="t('memorisation.ayahNotes.buttonHint')"
-                      :aria-label="ayahNotesButtonAriaLabel(verse)">
-                      <span
-                        v-if="ayahNotesBadgeLabel(verse)"
-                        class="verse-notes-count-badge"
-                        aria-hidden="true"
-                      >{{ ayahNotesBadgeLabel(verse) }}</span>
-                      <i class="bi bi-chat-quote" aria-hidden="true"></i>
-                    </button>
                     <button class="verse-inline-action-btn verse-inline-download-btn" type="button"
                       @click.stop="downloadVerseAudio(verse)"
                       :disabled="!resolveAyahAudioUrl(verse)"
@@ -906,33 +835,6 @@
                       <i class="bi" :class="isAyahCardPlaying(verse) ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                     </button>
                   </div>
-                </div>
-
-                <aside
-                  v-if="false"
-                  class="live-coach-mini"
-                  role="status"
-                  aria-live="polite"
-                >
-                  <span v-if="liveTechniqueGuide?.label" class="live-coach-mini__method">{{ liveTechniqueGuide.label }}</span>
-                  <p class="live-coach-mini__text">{{ livePracticeCoachText }}</p>
-                </aside>
-
-                <div
-                  v-if="false"
-                  class="verse-focus-words"
-                  role="note"
-                >
-                  <span class="verse-focus-words__label">{{ t('memorisation.postSession.coach.live.focusStripLabel') }}</span>
-                  <ul class="verse-focus-words__list">
-                    <li
-                      v-for="word in getPracticeFocusWordsForVerse(verse.key).slice(0, 6)"
-                      :key="`${word.verseKey}:${word.wordIndex}:${word.text}`"
-                      class="verse-focus-words__chip"
-                      dir="rtl"
-                      lang="ar"
-                    >{{ word.text }}</li>
-                  </ul>
                 </div>
 
                 <div class="verse-arabic verse-arabic-primary verse-arabic-with-end" dir="rtl" lang="ar" v-if="verse.arabic && isDataReady"
@@ -1738,67 +1640,6 @@
                   <i class="bi bi-plus-circle"></i>
                   <span>{{ t('memorisation.show_advanced_metrics') }}</span>
                 </button>
-                <div v-if="false">
-                  <section class="detailed-analytics-system" :aria-label="t('memorisation.a11y.detailedAnalytics')">
-                    <article v-for="section in detailedAnalyticsSections" :key="section.key" class="detailed-analytics-section">
-                      <div class="analytics-section-head">
-                        <i class="bi" :class="section.icon" aria-hidden="true"></i>
-                        <strong>{{ section.title }}</strong>
-                      </div>
-                      <div class="detailed-analytics-rows">
-                        <div v-for="row in section.rows" :key="`${section.key}-${row.label}`" class="detailed-analytics-row">
-                          <span>{{ row.label }}</span>
-                          <strong>{{ row.value }}</strong>
-                          <small>{{ row.detail }}</small>
-                        </div>
-                      </div>
-                    </article>
-                  </section>
-                  <div v-if="savedSessions.length === 0" class="empty-state">
-                    <i class="bi bi-activity"></i>
-                    <p>{{ t('memorisation.no_advanced_insights_yet') }}</p>
-                    <span>{{ t('memorisation.save_a_session_and_you_ll_unlock_the_deeper_breakd') }}</span>
-                  </div>
-                  <div v-else class="stats-panel">
-                    <div v-if="selectedStatsSessionRecord" class="stats-detail">
-                      <div class="stats-detail-head stats-detail-head-hero">
-                        <div>
-                          <h4>{{ getSavedSessionName(selectedStatsSessionRecord) }}</h4>
-                          <div class="stats-summary">{{ buildStatsSummary(selectedStatsSessionRecord) }}</div>
-                          <div v-if="sortedSavedSessions.length > 1" class="stats-session-select-wrap">
-                            <label class="stats-session-select-label" for="statsSessionSelect">{{ t('memorisation.saved_sessions') }}</label>
-                            <select id="statsSessionSelect" class="stats-session-select"
-                              :value="selectedStatsSessionRecord.id" @change="selectStatsSession($event.target.value)">
-                              <option v-for="session in sortedSavedSessions" :key="`stats-${session.id}`"
-                                :value="session.id">
-                                {{ getSavedSessionName(session) }} · {{ formatDate(session.savedAt) }}
-                              </option>
-                            </select>
-                          </div>
-                        </div>
-                        <div class="stats-detail-actions stats-detail-actions-prominent">
-                          <button type="button" class="session-export-btn stats-full-analytics-btn"
-                            @click="openSessionAnalyticsModal(selectedStatsSessionRecord)">
-                            <i class="bi bi-graph-up-arrow"></i>
-                            <span>{{ t('memorisation.view_full_analytics') }}</span>
-                          </button>
-                        </div>
-                      </div>
-                      <div class="stats-grid stats-grid-hero">
-                        <div v-for="item in buildStatsBreakdown(selectedStatsSessionRecord)" :key="item.key"
-                          class="stats-card">
-                          <i class="bi stats-card-icon" :class="item.icon"></i>
-                          <em class="stats-card-value">{{ item.value }}</em>
-                          <span>{{ item.label }}</span>
-                        </div>
-                      </div>
-                      <div class="stats-detail-footer">
-                        <span>Saved {{ formatDate(selectedStatsSessionRecord.savedAt) }}</span>
-                        <span>{{ getSavedSessionSurah(selectedStatsSessionRecord) }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -3773,12 +3614,6 @@
           class="player-dock-card"
           :class="{ 'is-talqin-only': playerDockShowsTalqinOnly, 'is-unified': talqinRecitationTurnActive && playerVisible }"
         >
-          <p
-            v-if="false"
-            class="live-practice-guidance"
-            role="status"
-            aria-live="polite"
-          >{{ livePracticeCoachText }}</p>
           <div
             v-if="talqinRecitationTurnActive"
             class="player-talqin-strip"
@@ -4266,16 +4101,6 @@
               <p class="quiz-ai-result__lead">
                 {{ t('memorisation.postSession.adaptiveCheck.aiReciteNotRun') }}
               </p>
-              <button
-                v-if="false"
-                type="button"
-                class="quiz-ai-result__link"
-                :disabled="postSessionActionsBusy"
-                @click="onPostSessionTestWithAi"
-              >
-                <i class="bi bi-mic" aria-hidden="true"></i>
-                {{ t('memorisation.postSession.adaptiveCheck.voiceOnlyCta') }}
-              </button>
             </section>
           </div>
 

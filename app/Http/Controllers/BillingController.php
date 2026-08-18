@@ -198,6 +198,10 @@ class BillingController extends Controller
         $user = $userId ? User::find($userId) : null;
         $user ??= $customerId ? User::where('stripe_customer_id', $customerId)->first() : null;
 
+        if (!$user && $customerId) {
+            $user = $this->resolveUserByStripeCustomerId((string) $customerId);
+        }
+
         if (!$user) {
             return;
         }
@@ -216,6 +220,31 @@ class BillingController extends Controller
             'subscription_trial_ends_at' => $this->timestamp($subscription['trial_end'] ?? null),
             'subscription_current_period_ends_at' => $this->timestamp($subscription['current_period_end'] ?? null),
         ])->save();
+    }
+
+    private function resolveUserByStripeCustomerId(string $customerId): ?User
+    {
+        if ($customerId === '') {
+            return null;
+        }
+
+        $user = User::where('stripe_customer_id', $customerId)->first();
+        if ($user) {
+            return $user;
+        }
+
+        try {
+            $customer = $this->stripeGet("customers/$customerId");
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $email = strtolower(trim((string) ($customer['email'] ?? '')));
+        if ($email === '') {
+            return null;
+        }
+
+        return User::whereRaw('LOWER(email) = ?', [$email])->first();
     }
 
     private function stripeGet(string $path): array

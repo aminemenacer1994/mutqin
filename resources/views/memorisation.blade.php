@@ -4,6 +4,7 @@
     @php
         $memorisationUser = Auth::user();
         $memorisationAuth = [
+            'demo_mode' => !empty($demoMode) && !Auth::check(),
             'check' => Auth::check(),
             'id' => Auth::id(),
             'email' => $memorisationUser?->email,

@@ -11,10 +11,25 @@ class QuranProxyTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_cannot_use_quran_proxy(): void
+    public function test_guest_can_use_quran_proxy_for_demo(): void
     {
+        Http::fake([
+            'api.alquran.cloud/*' => Http::response([
+                'code' => 200,
+                'status' => 'OK',
+                'data' => [
+                    'number' => 1,
+                    'ayahs' => [
+                        ['number' => 1, 'numberInSurah' => 1, 'text' => 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'],
+                    ],
+                ],
+            ], 200, ['Content-Type' => 'application/json']),
+        ]);
+
         $this->get('/memorisation/quran-proxy/alquran/surah/1/quran-uthmani')
-            ->assertRedirect();
+            ->assertOk()
+            ->assertJsonPath('code', 200)
+            ->assertJsonPath('data.number', 1);
     }
 
     public function test_authenticated_user_can_proxy_alquran_surah(): void

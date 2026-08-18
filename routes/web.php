@@ -40,11 +40,14 @@ Route::get('/memorisation', function () {
     return view('memorisation');
 })->middleware('auth')->name('memorisation');
 
+Route::get('/memorisation/demo', function () {
+    return view('memorisation', ['demoMode' => true]);
+})->name('memorisation.demo');
+
 // Same-origin proxy — browsers cannot call alquran.cloud / quran.com due to CORS.
 Route::get('/memorisation/quran-proxy/{provider}/{path}', QuranProxyController::class)
     ->where('provider', 'alquran|qurancom')
     ->where('path', '.*')
-    ->middleware('auth')
     ->name('memorisation.quran-proxy');
 
 Route::view('/about', 'content.about-us')->name('about');

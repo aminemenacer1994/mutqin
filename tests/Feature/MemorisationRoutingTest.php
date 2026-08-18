@@ -57,6 +57,12 @@ class MemorisationRoutingTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
+    public function test_guest_can_open_memorisation_demo(): void
+    {
+        $this->get(route('memorisation.demo'))
+            ->assertOk();
+    }
+
     public function test_legacy_home_route_redirects_to_the_landing_page(): void
     {
         $this->get('/home')->assertRedirect(route('home'));

@@ -3,7 +3,7 @@
     "on": "On",
     "off": "Off",
     "reset": "Reset",
-    "startSession": "Begin",
+    "startSession": "Start session",
     "pause": "Pause",
     "settings": "Settings",
     "controls": "Controls",
@@ -34,8 +34,8 @@
     "backToTop": "Back to top",
     "skipOnboarding": "Skip tour",
     "closeTour": "Close tour",
-    "resumeSession": "Return",
-    "pauseSession": "Pause",
+    "resumeSession": "Resume session",
+    "pauseSession": "Pause session",
     "resumingSession": "Resuming…",
     "pausingSession": "Pausing…",
     "endingSession": "Ending…",
@@ -96,7 +96,9 @@
   },
   "sessionStatus": {
     "completed": "Session completed",
-    "active": "Active session",
+    "active": "In session",
+    "paused": "Paused",
+    "resumable": "Ready to resume",
     "ready": "Session ready",
     "progress": "{current} of {total} ayahs · {percent}% complete",
     "left": "{eta} left",
@@ -192,7 +194,7 @@
     "hero": {
       "badge": "Quran memorisation",
       "title": "Memorise the Quran with clear daily practice.",
-      "desc": "Listen, repeat, and check your recitation. Mutqin keeps your ayahs, progress, and next step in one place.",
+      "desc": "Try a short demo without an account, or sign in to save your progress and sync across devices.",
       "problem": "The problem:",
       "problemText": "Weak ayahs, recordings, and review plans often sit in different places, so practice falls apart.",
       "solution": "The solution:",
@@ -237,10 +239,10 @@
           "badge": "premium"
         },
         "recordingLibrary": {
-          "title": "Word focus",
-          "description": "See which words still need attention.",
-          "result": "Return to the hard parts first.",
-          "badge": "freeLimited"
+          "title": "Recording library",
+          "description": "Replay and review your practice recordings.",
+          "result": "Listen back to what you recited.",
+          "badge": "pro"
         },
         "reviewAnalytics": {
           "title": "Review scheduling",
@@ -312,7 +314,7 @@
       "proYearly": "or £49.99 yearly",
       "featureColumn": "Feature",
       "freeTrial": "7-DAY FREE TRIAL",
-      "accountNote": "You can start Premium or Pro checkout without an account. After paying, create an account or sign in with the same email so Mutqin can link your plan."
+      "accountNote": "Sign in before checkout so your plan syncs to the correct Mutqin account."
     },
     "faq": {
       "kicker": "Common questions",
@@ -649,6 +651,10 @@
     },
     "sessionOverview": {
       "kicker": "Your hifz"
+    },
+    "demo": {
+      "banner": "You’re in demo mode. Sign in to save sessions, sync progress, and unlock AI recite.",
+      "createAccount": "Create free account"
     },
     "practiceTools": {
       "beginner": "Beginner Tools",
@@ -1508,8 +1514,9 @@
       "title": "Session complete",
       "ayahSingular": "Ayah {ayah}",
       "message": "Choose how to continue.",
+      "readyToStart": "Your next set is ready. Tap Start when you're ready.",
       "actions": {
-        "testWithAi": "Check memorisation",
+        "testWithAi": "Check with AI Recite",
         "testWithAiAgain": "Check again",
         "chooseAnotherSession": "Other session",
         "continueToAyahsFallback": "Continue to next session",
@@ -2716,6 +2723,7 @@
       "micChecking": "Checking…",
       "micPrompt": "Ready",
       "micGuidanceDenied": "Allow microphone access in your browser settings, then try again.",
+      "micGuidanceSafari": "On iPhone or iPad: Settings → Safari → Microphone → Allow, then return and try again.",
       "micGuidanceUnsupported": "Speech recognition is unavailable here. You can still use Peek.",
       "hintStarting": "Preparing the microphone…",
       "hintListening": "Microphone is live — recite from memory. Words colour as they are recognised.",

@@ -5456,8 +5456,8 @@
         
         // Global language switcher for all pages
         (function() {
-            const supported = ['en', 'ar', 'fr', 'id', 'tr', 'es'];
-            const labels = window.mutqinUiLabels || { en: {}, fr: {}, ar: {}, id: {}, tr: {}, es: {} };
+            const supported = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur'];
+            const labels = window.mutqinUiLabels || { en: {}, fr: {}, ar: {}, id: {}, tr: {}, es: {}, ur: {} };
 
             function safeGet(key) {
                 try { return localStorage.getItem(key); } catch (e) { return null; }
@@ -5481,7 +5481,7 @@
 
             function setDocumentLocale(locale) {
                 const next = normalize(locale);
-                const rtl = next === 'ar';
+                const rtl = next === 'ar' || next === 'ur';
                 document.documentElement.setAttribute('lang', next);
                 document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr');
                 if (document.body) document.body.setAttribute('dir', rtl ? 'rtl' : 'ltr');
