@@ -23,6 +23,10 @@ import {
   buildWelcomeBackConsistencyNudge,
   buildWelcomeBackRemembrance,
 } from '../utils/emotionalTouches'
+import {
+  sanitizeLiveWordNote,
+  sanitizeUserFacingFeedback,
+} from '../utils/userFacingFeedback'
 import diff from 'fast-diff'
 import { defineAsyncComponent, markRaw } from 'vue'
 import {
@@ -284,6 +288,12 @@ import {
   resolveLivePaceLimit,
   mergeLiveRecitationStatuses as mergeConfirmedLiveRecitationStatuses,
   resolveConfirmedWordIndex,
+  applyRecitationTimingBuffer,
+  buildRecitationAdaptivePaceContext,
+  computeSilenceAutoStopThresholdMs,
+  createRecitationPaceObserver,
+  resetRecitationPaceObserver,
+  resolveAdaptiveLivePaceParams,
   createSessionTimer,
   formatElapsedLabel,
   TIMER_STATES,
@@ -1524,6 +1534,7 @@ export default {
         || null
     },
     shouldShowWorkspaceEmptyState() {
+      if (this.journeyHasStarted && this.showSessionOverviewIdleActions) return false
       return this.isDataReady
         && !this.isRestoringWorkspace
         && !this.isOnboardingExperienceActive
@@ -1573,6 +1584,9 @@ export default {
       return this.t('dashboard.journey_remembered', { remembered, total })
     },
     workspaceJourneyTitle() {
+      if (this.journeyReview?.surah_name) {
+        return this.journeyReview.surah_name
+      }
       if (this.journeyHasStarted) {
         return this.journeyContinue.surah_name || this.t('dashboard.journey_continue_label')
       }
@@ -1612,19 +1626,18 @@ export default {
     },
     workspaceJourneyNextLine() {
       if (this.journeyReview?.surah_name) {
-        return this.t('memorisation.workspaceJourney.reviewWaiting', {
-          surah: this.journeyReview.surah_name,
-        })
+        return this.t('memorisation.workspaceJourney.reviewWaitingShort')
       }
       if (this.journeyHasStarted) {
+        const verses = this.journeyVersesLabel
+        if (verses) return verses
         return this.t('memorisation.workspaceJourney.placeWaiting', {
           surah: this.journeyContinue.surah_name,
-          verses: this.journeyVersesLabel,
         })
       }
       return this.t('memorisation.workspaceJourney.startMeta')
     },
-    workspaceJourneyStatsLine() {
+    workspaceJourneyMetaLine() {
       const parts = []
       if (this.journeyMemorisedCount > 0) {
         parts.push(this.t('memorisation.workspaceJourney.ayahsKept', { n: this.journeyMemorisedCount }))
@@ -1632,7 +1645,69 @@ export default {
       if (this.learnerStreakDays > 0) {
         parts.push(this.t('memorisation.workspaceJourney.streak', { n: this.learnerStreakDays }))
       }
+      if (parts.length) return parts.join(' · ')
+      if (this.journeyReview?.surah_name) {
+        return this.t('memorisation.workspaceJourney.guidanceReviewShort')
+      }
+      if (this.journeyHasStarted) {
+        return this.t('memorisation.workspaceJourney.guidanceContinue')
+      }
+      return ''
+    },
+    workspaceIdleKicker() {
+      if (this.journeyHasStarted || this.journeyMemorisedCount > 0 || this.learnerStreakDays > 0) {
+        return this.t('memorisation.workspaceJourney.kicker')
+      }
+      return this.t('memorisation.sessionOverview.kicker')
+    },
+    workspaceJourneyGuidance() {
+      if (this.journeyReview?.surah_name) {
+        return this.t('memorisation.workspaceJourney.guidanceReview', {
+          surah: this.journeyReview.surah_name,
+        })
+      }
+      if (this.journeyHasStarted) {
+        return this.t('memorisation.workspaceJourney.guidanceContinue')
+      }
+      if (this.journeyMemorisedCount > 0 || this.learnerStreakDays > 0) {
+        return this.t('memorisation.workspaceJourney.guidanceActive')
+      }
+      return this.t('memorisation.workspaceJourney.guidanceStart')
+    },
+    workspaceJourneyDetailLine() {
+      const parts = []
+      if (this.journeyReview?.surah_name) {
+        parts.push(this.t('memorisation.workspaceJourney.reviewWaiting', {
+          surah: this.journeyReview.surah_name,
+        }))
+      } else if (this.journeyHasStarted && this.journeyContinue?.surah_name) {
+        parts.push(this.t('memorisation.workspaceJourney.placeWaiting', {
+          surah: this.journeyContinue.surah_name,
+        }))
+      }
+      const remembered = this.journeyRememberedLabel
+      if (remembered) parts.push(remembered)
       return parts.join(' · ')
+    },
+    workspaceJourneyStatChips() {
+      const chips = []
+      const remembered = this.journeyRememberedLabel
+      if (remembered) {
+        chips.push({ key: 'remembered', label: remembered })
+      }
+      if (this.journeyMemorisedCount > 0) {
+        chips.push({
+          key: 'memorised',
+          label: this.t('memorisation.workspaceJourney.ayahsKept', { n: this.journeyMemorisedCount }),
+        })
+      }
+      if (this.learnerStreakDays > 0) {
+        chips.push({
+          key: 'streak',
+          label: this.t('memorisation.workspaceJourney.streak', { n: this.learnerStreakDays }),
+        })
+      }
+      return chips
     },
     shouldShowWorkspaceJourney() {
       return this.isLoggedIn && (this.journeyHasStarted || this.journeyMemorisedCount > 0 || this.learnerStreakDays > 0)
@@ -5072,7 +5147,7 @@ export default {
         tryRecordingAgain: 'Try recording again',
         checkMicrophone: 'Check microphone',
         close: 'Close',
-        testWithAi: 'Check memorisation',
+        testWithAi: 'Recite from memory',
         continuePractising: 'Repeat this session',
         continueToNextRange: 'Continue to next session',
         continueToAyahs: 'Continue to Ayahs',
@@ -9268,16 +9343,35 @@ export default {
     userFacingErrorText(value, fallback = '') {
       const text = String(this.safeErrorText(value, '') || '').trim()
       const safeFallback = String(fallback || this.t('common.status.errorDesc') || '').trim()
-      if (!text) return safeFallback
-      if (
-        text.length > 180
-        || /stack|exception|traceback|sqlstate|etag|csrf|http\/|status code|econn|enotfound|timeout|undefined is not|cannot read/i.test(text)
-        || /^[\w./:-]+\.(js|php|vue|ts)(:\d+)?/i.test(text)
-        || /[{}\[\]]/.test(text)
-      ) {
-        return safeFallback || text
-      }
-      return text
+      return sanitizeUserFacingFeedback(
+        !text
+          ? safeFallback
+          : (
+            text.length > 180
+            || /stack|exception|traceback|sqlstate|etag|csrf|http\/|status code|econn|enotfound|timeout|undefined is not|cannot read/i.test(text)
+            || /^[\w./:-]+\.(js|php|vue|ts)(:\d+)?/i.test(text)
+            || /[{}\[\]]/.test(text)
+          )
+            ? (safeFallback || text)
+            : text,
+        safeFallback,
+      )
+    },
+
+    isLiveRecitationFeedbackActive() {
+      return !!(
+        this.recitationCheckRecording
+        || this.aiMemorisationCheckerRecording
+        || (this.amdOpen && this.amdStage === AMD_STAGES.LISTENING)
+      )
+    },
+
+    sanitizeLiveWordFeedbackNote(note = '', word = {}) {
+      return sanitizeLiveWordNote(note, {
+        status: word?.status,
+        timingBuffered: word?.timingBuffered === true,
+        liveRecording: this.isLiveRecitationFeedbackActive(),
+      })
     },
 
     reportRecitationCheckFailure(message = '', options = {}) {
@@ -19479,7 +19573,7 @@ export default {
     },
     ensureAmdPaceDrip() {
       if (this._amdPaceDripTimer != null || typeof window === 'undefined') return
-      const dripMs = Math.max(200, Number(LIVE_PACE_DRIP_MS) || 420)
+      const dripMs = Math.max(200, Number(this._amdAdaptiveDripMs || LIVE_PACE_DRIP_MS) || 420)
       this._amdPaceDripTimer = window.setInterval(() => {
         if (!this._amdPaceHeld || !this.canReleaseAmdPaceHold()) {
           this.clearAmdPaceDrip()
@@ -19513,6 +19607,8 @@ export default {
     resetAmdElapsedTimer() {
       this.clearAmdPaceDrip()
       this._amdPaceHeld = false
+      this._amdAdaptiveDripMs = null
+      this._recitationPaceObserver = resetRecitationPaceObserver(this._recitationPaceObserver)
       const timer = this.ensureAmdSessionTimer()
       this.applyAmdTimerSnapshot(timer.reset())
       this.amdStartedAt = 0
@@ -19846,7 +19942,7 @@ export default {
       if (startedAt > 0) return Math.max(0, Date.now() - startedAt)
       return null
     },
-    syncAmdLiveCursor({ committedStatuses = null, candidateStatuses = null, spokenWordCount = null } = {}) {
+    syncAmdLiveCursor({ committedStatuses = null, candidateStatuses = null, spokenWordCount = null, adaptiveLivePace = null } = {}) {
       const committed = Array.isArray(committedStatuses)
         ? committedStatuses
         : (Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : [])
@@ -19861,10 +19957,15 @@ export default {
         const previousConfirmed = Number.isFinite(this.amdLiveCursor?.confirmedWordIndex)
           ? Number(this.amdLiveCursor.confirmedWordIndex)
           : 0
+        const livePace = adaptiveLivePace || resolveAdaptiveLivePaceParams({ paceFactor: 1 })
+        this._amdAdaptiveDripMs = livePace.dripMs
         const paced = clampCursorToPaceLimit(cursor, resolveLivePaceLimit({
           spokenWordCount,
           elapsedMs: this.getAmdLivePaceElapsedMs(),
           previousConfirmed,
+          maxWordsPerSecond: livePace.maxWordsPerSecond,
+          maxAdvancePerUpdate: livePace.maxAdvancePerUpdate,
+          slack: livePace.slack,
         }))
         // Held words need a drip release: recognition may send nothing new,
         // and a phrase dump must paint one word at a time.
@@ -19940,42 +20041,33 @@ export default {
       return Math.round((correct / pool.length) * 100)
     },
     buildAmdLiveAssessmentResult(reason = 'complete') {
-      const wordStatuses = (Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []).map((word, index) => {
-        const raw = String(word?.status || '').toLowerCase()
-        const status = (!raw || raw === 'pending' || raw === 'notattempted') ? 'omitted' : word.status
-        return {
-          ...word,
-          index: Number(word?.index ?? index),
-          wordIndex: Number(word?.wordIndex ?? word?.index ?? index),
-          status,
-        }
-      })
-      const accuracyScore = this.computeAmdLiveAccuracy(wordStatuses)
       const committedWords = this.getBestRecognitionWordsForAssessment?.('recitation') || []
-      const colorCounts = {
-        green: wordStatuses.filter((w) => String(w.status).toLowerCase() === 'correct').length,
-        amber: wordStatuses.filter((w) => String(w.status).toLowerCase() === 'partial').length,
-        red: wordStatuses.filter((w) => String(w.status).toLowerCase() === 'incorrect').length,
-        black: wordStatuses.filter((w) => ['omitted', 'omission', 'black'].includes(String(w.status).toLowerCase())).length,
-        gray: wordStatuses.filter((w) => ['skipped', 'notattempted', 'pending', 'gray', 'grey'].includes(String(w.status).toLowerCase())).length,
-      }
+      const targetVerses = Array.isArray(this.recitationCheckPendingTargets) && this.recitationCheckPendingTargets.length
+        ? this.recitationCheckPendingTargets
+        : (this.getRecitationCheckTargetVerses?.() || [])
       const startedAt = Number(this.amdStartedAt || this.recitationCheckStartedAt || 0)
       const endedAt = Date.now()
-      const durationSeconds = this.amdOpen
-        ? this.getAmdElapsedSeconds({ at: endedAt })
-        : (startedAt > 0 ? Math.max(0, (endedAt - startedAt) / 1000) : null)
+      const timestamp = new Date(endedAt).toISOString()
+      // Final AMD scoring uses deterministic Quran alignment — never timing-buffered live paint.
+      const aligned = this.assessRecitationRecognitionWords(committedWords, targetVerses, {
+        recognitionKind: 'recitation',
+        timestamp,
+        startedAt,
+        endedAt,
+        sessionId: this.getCurrentRecitationSessionId?.(),
+        audioHash: this.recitationInputAudioHash || '',
+      })
       return {
-        wordStatuses,
-        colorCounts,
-        accuracyScore,
-        accuracy: accuracyScore,
-        transcript: wordsToTranscript?.(committedWords) || committedWords.map((w) => w.word || w.text || '').join(' '),
+        ...aligned,
         transcriptionSource: 'live-amd',
+        reason,
         committedWords,
         startedAt: startedAt || null,
         endedAt,
-        durationSeconds,
-        reason,
+        durationSeconds: this.amdOpen
+          ? this.getAmdElapsedSeconds({ at: endedAt })
+          : (startedAt > 0 ? Math.max(0, (endedAt - startedAt) / 1000) : aligned.durationSeconds),
+        accuracy: aligned.accuracyScore,
       }
     },
     async completeAmdTestAndReturnToRecommendation({ reason = 'complete' } = {}) {
@@ -20921,7 +21013,7 @@ export default {
       const words = this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(this.aiMemorisationCheckerTargets))
       const liveWords = []
       for (const text of words) {
-        liveWords.push({ text, status: 'pending', note: 'Waiting for this word.' })
+        liveWords.push({ text, status: 'pending', note: '' })
       }
       this.aiMemorisationCheckerLiveWords = liveWords
       this.aiMemorisationCheckerHiddenIndexes = []
@@ -21683,7 +21775,7 @@ export default {
       const targetWords = this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(targetVerses))
       const liveWords = []
       for (const text of targetWords) {
-        liveWords.push({ text, status: 'pending', note: 'Waiting for this word.' })
+        liveWords.push({ text, status: 'pending', note: '' })
       }
       this.recitationLiveWords = liveWords
       this.recitationLiveAlignmentSignature = ''
@@ -22032,7 +22124,7 @@ export default {
     },
     applyLiveWordDomPatch(patch = {}) {
       const status = patch.status || 'notAttempted'
-      const title = patch.note || ''
+      const title = this.sanitizeLiveWordFeedbackNote(patch.note || '', patch.word || { status: patch.status })
       const targetNodes = new Set()
       if (patch.verseKey) {
         if (patch.sessionTargetKey) {
@@ -22124,17 +22216,17 @@ export default {
           const word = current[index] || {}
           const statusValue = String(word.status || 'pending').toLowerCase()
           if (statusValue && statusValue !== 'pending' && statusValue !== 'notattempted') {
-            const pendingWord = {
+            const sanitizedPendingWord = {
               ...word,
               status: 'pending',
-              note: 'Waiting for this word.',
+              note: this.sanitizeLiveWordFeedbackNote('', { ...word, status: 'pending' }),
               actual: undefined,
               similarity: undefined,
               confidence: undefined,
             }
             if (next === current) next = current.slice()
-            next[index] = pendingWord
-            changedWords.push({ index, word: pendingWord })
+            next[index] = sanitizedPendingWord
+            changedWords.push({ index, word: sanitizedPendingWord })
           }
           continue
         }
@@ -22155,10 +22247,14 @@ export default {
           ...word,
           ...sticky,
           status: sticky?.status || incomingStatus,
-          note: sticky?.note || status.note || 'Waiting for this word.',
+          note: this.sanitizeLiveWordFeedbackNote(
+            sticky?.note || status.note || '',
+            { ...word, ...sticky, status: sticky?.status || incomingStatus, timingBuffered: status.timingBuffered },
+          ),
           confidence: status.confidence ?? word.confidence,
           actual: status.actual ?? word.actual,
-          similarity: status.similarity ?? word.similarity
+          similarity: status.similarity ?? word.similarity,
+          timingBuffered: status.timingBuffered === true || word.timingBuffered === true,
         }
         if (!this.hasLiveWordChanged(word, nextWord)) continue
         if (next === current) next = current.slice()
@@ -22187,7 +22283,7 @@ export default {
               const pendingWord = {
                 ...later,
                 status: 'pending',
-                note: 'Waiting for this word.',
+                note: this.sanitizeLiveWordFeedbackNote('', { ...later, status: 'pending' }),
                 actual: undefined,
                 similarity: undefined,
                 confidence: undefined,
@@ -22346,11 +22442,22 @@ export default {
       const candidateStatuses = preferVisible
         ? (liveAlignment.progression?.visibleStatuses || liveAlignment.wordStatuses || [])
         : (liveAlignment.wordStatuses || liveAlignment.progression?.visibleStatuses || [])
+      const buildTargetUnits = () => (committedAlignment.displayWords || committedStatuses.map(word => word?.text || '')).map((display, index) => ({
+        display,
+        text: display,
+        word: committedAlignment.targetWords?.[index] || committedStatuses[index]?.targetWord || '',
+        ayahNumber: committedStatuses[index]?.ayahNumber ?? null,
+        ayahKey: committedStatuses[index]?.ayahKey || '',
+      }))
+      const paceContext = this.recitationCheckRecording
+        ? this.getRecitationAdaptivePaceContext(committedWords, buildTargetUnits())
+        : null
       const cursor = this.amdOpen && kind === 'recitation'
         ? this.syncAmdLiveCursor({
           committedStatuses,
           candidateStatuses,
           spokenWordCount: committedWords.length,
+          adaptiveLivePace: paceContext?.livePace || null,
         })
         : buildLiveRecitationCursor({
           committedStatuses,
@@ -22366,6 +22473,23 @@ export default {
         },
       )
       statuses = clampStatusesToConfirmedCursor(statuses, cursor.confirmedWordIndex)
+      if (this.recitationCheckRecording) {
+        const targetUnits = buildTargetUnits()
+        statuses = applyRecitationTimingBuffer(statuses, {
+          finalizing: !this.recitationCheckRecording,
+          nowMs: Date.now(),
+          elapsedMs: this.getAmdLivePaceElapsedMs(),
+          confirmedWordIndex: cursor.confirmedWordIndex,
+          recognitionWords: committedWords,
+          targetUnits,
+          ayahBounds: this.getAmdAyahBoundsCached(),
+          lastSpeechAtMs: this.recitationVadState?.lastSpeechAt || 0,
+          recordingStartedAtMs: Number(this.recitationCheckStartedAt || this.amdStartedAt || 0) || null,
+          observer: paceContext?.observer || this._recitationPaceObserver || null,
+          paceFactor: paceContext?.paceFactor,
+          tajweedHeavy: paceContext?.tajweedHeavy,
+        })
+      }
       // Live AMD: only demote clear near-miss reds to amber — never inflate greens.
       if (preferVisible) {
         statuses = statuses.map((status) => {
@@ -22382,6 +22506,24 @@ export default {
         })
       }
       if (kind === 'memorisation') {
+        if (this.aiMemorisationCheckerRecording) {
+          const targetUnits = buildTargetUnits()
+          const memorisationPace = this.getRecitationAdaptivePaceContext(committedWords, targetUnits)
+          statuses = applyRecitationTimingBuffer(statuses, {
+            finalizing: !this.aiMemorisationCheckerRecording,
+            nowMs: Date.now(),
+            elapsedMs: this.getAmdLivePaceElapsedMs(),
+            confirmedWordIndex: cursor.confirmedWordIndex,
+            recognitionWords: committedWords,
+            targetUnits,
+            ayahBounds: this.getAmdAyahBoundsCached(),
+            lastSpeechAtMs: this.recitationVadState?.lastSpeechAt || 0,
+            recordingStartedAtMs: Number(this.recitationCheckStartedAt || this.amdStartedAt || 0) || null,
+            observer: memorisationPace?.observer || this._recitationPaceObserver || null,
+            paceFactor: memorisationPace?.paceFactor,
+            tajweedHeavy: memorisationPace?.tajweedHeavy,
+          })
+        }
 	        this.aiMemorisationCheckerAlignmentState = committedAlignment.progression
 	        this.applyLiveStatusUpdate('aiMemorisationCheckerLiveWords', statuses)
           this.syncSessionEvaluationMaps('memorisation', targetVerses, statuses, false)
@@ -22567,6 +22709,42 @@ export default {
         return false
       }
       return this.hasRecitationCheckHeardThroughEnd('memorisation') || !!this.aiMemorisationCheckerAlignmentState?.complete
+    },
+    getRecitationAdaptivePaceContext(recognitionWords = [], targetUnits = []) {
+      if (!this._recitationPaceObserver) {
+        this._recitationPaceObserver = createRecitationPaceObserver()
+      }
+      const paceContext = buildRecitationAdaptivePaceContext({
+        observer: this._recitationPaceObserver,
+        recognitionWords,
+        elapsedMs: this.getAmdLivePaceElapsedMs(),
+        spokenWordCount: recognitionWords.length,
+        targetUnits,
+      })
+      this._recitationPaceObserver = paceContext.observer
+      this._amdAdaptiveDripMs = paceContext.livePace?.dripMs ?? this._amdAdaptiveDripMs
+      return paceContext
+    },
+    getRecitationSilenceAutoStopThresholdMs() {
+      const liveWords = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
+      const wordIndex = resolveConfirmedWordIndex(liveWords, {
+        frozenAt: this.amdFrozenAtWordIndex,
+      })
+      const targetUnits = liveWords.map((word) => ({
+        display: word?.text || word?.display || '',
+        text: word?.text || word?.display || '',
+        ayahNumber: word?.ayahNumber ?? null,
+        ayahKey: word?.ayahKey || '',
+      }))
+      const committedWords = this.getCommittedRecognitionWords('recitation') || []
+      const paceContext = this.getRecitationAdaptivePaceContext(committedWords, targetUnits)
+      return computeSilenceAutoStopThresholdMs({
+        wordIndex,
+        targetUnits,
+        paceFactor: paceContext.paceFactor,
+        ayahBounds: this.getAmdAyahBoundsCached(),
+        isSessionRecitation: !!(this.postSessionAiReciteActive || this.isSessionRecitationCheckActive?.()),
+      })
     },
     openRecitationSessionDb() {
       if (typeof indexedDB === 'undefined') return Promise.resolve(null)
@@ -23388,9 +23566,7 @@ export default {
             vad.throttled = false
           } else {
             if (!vad.silenceStartedAt) vad.silenceStartedAt = now
-            const silenceMs = this.postSessionAiReciteActive || this.isSessionRecitationCheckActive?.()
-              ? Math.max(RECITATION_SILENCE_THROTTLE_MS, 3800)
-              : RECITATION_SILENCE_THROTTLE_MS
+            const silenceMs = this.getRecitationSilenceAutoStopThresholdMs()
             if (!vad.throttled && vad.lastSpeechAt && now - vad.silenceStartedAt >= silenceMs) {
               vad.throttled = true
               if (!(this.amdOpen || this.postSessionAiReciteActive)) {
@@ -24768,6 +24944,8 @@ export default {
           this.startRecitationVad(stream)
         }
         this.recitationCheckStartedAt = Date.now()
+        this._recitationPaceObserver = createRecitationPaceObserver()
+        this._amdAdaptiveDripMs = null
         this.recitationCheckRecording = true
         this.recitationCheckPreparing = false
         this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.RECORDING)

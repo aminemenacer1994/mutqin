@@ -22,7 +22,7 @@ const viewports = process.env.MUTQIN_TEST_QUICK === '1'
   : fullViewportMatrix
 
 const stateSelectors = {
-  workspace: ['.workspace-shell', '.workspace-shell-head', '.workspace-shell-actions', '.workspace-shell-metadata', '.verses-grid', '.verse-card', '.verse-header', '.verse-actions', '.verse-arabic'],
+  workspace: ['.workspace-shell', '.workspace-shell-head', '.workspace-shell-idle', '.workspace-shell-idle-main', '.workspace-shell-idle-cta', '.workspace-shell-idle-secondary', '.workspace-shell-actions', '.workspace-shell-metadata', '.verses-grid', '.verse-card', '.verse-header', '.verse-actions', '.verse-arabic'],
   active: ['.workspace-shell', '.workspace-shell-head', '.workspace-shell-actions', '.workspace-shell-metadata', '.verse-card', '.verse-header', '.verse-statuses', '.verse-actions', '.verse-arabic'],
   mushaf: ['.workspace-shell', '.mushaf-workspace', '.mushaf-frame', '.mushaf-pill-toolbar', '.mushaf-stage', '.mushaf-viewport', '.mushaf-page', '.madani-page-sheet', '.madani-word'],
   controls: ['.tools', '.tools-top', '.tools-tabs', '.tools-body', '.sheet', '.sheet-toggle', '.sheet-content', '.tools-footer'],
@@ -44,7 +44,7 @@ const stateSelectors = {
 }
 
 const touchTargetSelectors = {
-  workspace: '.top-card-action-trigger, .verse-ai-check-btn, .verse-inline-action-btn',
+  workspace: '.top-card-action-trigger, .workspace-shell-idle-cta .session-idle-action, .workspace-shell-mini-link, .verse-ai-check-btn, .verse-inline-action-btn',
   active: '.top-card-action-trigger, .verse-ai-check-btn, .verse-inline-action-btn',
   mushaf: '.mushaf-toolbar-trigger, .mushaf-pill, .mushaf-stage-nav',
   controls: '.tools-x, .tools-tabs button, .tools-footer button',

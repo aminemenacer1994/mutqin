@@ -285,17 +285,6 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     })
   }
 
-  const recognitionConfidence = resolveRecognitionConfidence(wordStatuses, result, extras)
-  if (recognitionConfidence != null) {
-    detailsMetrics.push({
-      key: 'confidence',
-      tone: 'soft',
-      label: t('memorisation.postSession.recommendation.aiMetricConfidence')
-        || 'Recognition confidence',
-      value: `${recognitionConfidence}%`,
-    })
-  }
-
   const highlights = []
   if (resolvedOutcome === 'strong' && (accuracy == null || accuracy >= 85)) {
     highlights.push({

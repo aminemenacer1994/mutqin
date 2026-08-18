@@ -94,6 +94,37 @@ export {
 } from './liveCursor'
 
 export {
+  applyRecitationTimingBuffer,
+  buildRecitationAdaptivePaceContext,
+  computeSilenceAutoStopThresholdMs,
+  computeWordTimingGraceMs,
+  createRecitationPaceObserver,
+  estimateRecitationPaceFactor,
+  estimateSessionRecitationPaceFactor,
+  isAyahBoundaryWord,
+  isLiveRecitationTimingBufferActive,
+  isTajweedHeavyRecitation,
+  observeRecitationPaceFromRecognition,
+  resetRecitationPaceObserver,
+  resolveAdaptiveLivePaceParams,
+  shouldDeferLiveIncorrectStatus,
+  wordLikelyNeedsTajweedHold,
+  ADAPTIVE_PACE_BASE_WORDS_PER_SECOND,
+  ADAPTIVE_PACE_MAX_DRIP_MS,
+  ADAPTIVE_PACE_MAX_WORDS_PER_SECOND,
+  ADAPTIVE_PACE_MIN_DRIP_MS,
+  ADAPTIVE_PACE_MIN_WORDS_PER_SECOND,
+  RECITATION_AYAH_BOUNDARY_MS,
+  RECITATION_BASE_WORD_MS,
+  RECITATION_INTER_WORD_PAUSE_MS,
+  RECITATION_MAX_SILENCE_STOP_MS,
+  RECITATION_MIN_SILENCE_STOP_MS,
+  RECITATION_TAJWEED_HOLD_MS,
+  RECITATION_TIMING_BUFFER_MAX_MS,
+  RECENT_PACE_SAMPLE_MAX,
+} from './recitationTimingBuffer'
+
+export {
   AMD_STAGES,
   AI_TEST_MODALS_ENABLED,
   AMD_HOWTO_SEEN_KEY,

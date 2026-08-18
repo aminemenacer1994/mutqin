@@ -233,7 +233,10 @@ function t(key, params = {}) {
     const [lead] = mapPostSessionCtas(state)
     assert.equal(lead.action, action, `${state} lead action`)
     assert.equal(lead.labelKey, labelKey, `${state} lead label`)
-    assert.ok(lead.variant === 'primary' || lead.variant === 'success', `${state} lead is primary/success`)
+    assert.ok(
+      lead.variant === 'primary' || lead.variant === 'success' || lead.variant === 'ai',
+      `${state} lead is primary/success/ai`,
+    )
   }
   const strongRepeatLead = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG, { isRepeat: true })[0]
   assert.equal(strongRepeatLead.labelKey, 'repeatThisSession')

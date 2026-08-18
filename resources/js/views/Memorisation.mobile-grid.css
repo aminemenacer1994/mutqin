@@ -44,6 +44,11 @@
     .workspace-shell-actions,
     .workspace-shell-bottom,
     .workspace-shell-metadata,
+    .workspace-shell-idle,
+    .workspace-shell-idle-inner,
+    .workspace-shell-idle-main,
+    .workspace-shell-idle-cta,
+    .workspace-shell-idle-secondary,
     .verses-grid,
     .verse-card,
     .verse-header,
@@ -136,6 +141,66 @@
     letter-spacing: 0.03em !important;
     color: color-mix(in srgb, var(--text) 78%, var(--accent) 22%) !important;
     white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  .workspace-shell-idle,
+  .workspace-shell-idle-inner,
+  .workspace-shell-idle-main,
+  .workspace-shell-idle-cta,
+  .workspace-shell-idle-secondary,
+  .workspace-shell-lead,
+  .workspace-shell-guidance,
+  .workspace-shell-stats {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .workspace-shell-idle-main {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.85rem !important;
+    align-items: stretch !important;
+  }
+
+  .workspace-shell-idle-cta {
+    justify-content: stretch !important;
+    inline-size: 100% !important;
+  }
+
+  .workspace-shell-idle-cta .session-idle-action {
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    min-block-size: var(--mq-control-size) !important;
+    white-space: normal !important;
+    text-align: center;
+  }
+
+  .workspace-shell-idle-secondary {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.45rem !important;
+    padding-top: 0.85rem !important;
+  }
+
+  .workspace-shell-idle-secondary .workspace-shell-mini-link {
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    min-block-size: var(--mq-control-size) !important;
+    white-space: normal !important;
+    justify-content: flex-start !important;
+  }
+
+  .workspace-shell-idle .workspace-shell-main-title {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+  }
+
+  .workspace-shell-lead,
+  .workspace-shell-guidance,
+  .workspace-shell-stat,
+  .workspace-shell-mini-link__label {
     overflow-wrap: anywhere;
   }
 
@@ -3228,6 +3293,19 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 @media (max-width: 349.98px) {
   .workspace-shell-copy {
     grid-column: 1 / -1;
+  }
+
+  .workspace-shell-idle-inner {
+    gap: 0.75rem !important;
+  }
+
+  .workspace-shell-idle-secondary {
+    gap: 0.35rem !important;
+  }
+
+  .workspace-shell-stat {
+    font-size: 0.7rem !important;
+    padding-inline: 0.55rem !important;
   }
 
   .workspace-shell-metadata > .workspace-shell-metadata-pill,

@@ -216,6 +216,8 @@ const {
   const js = await fs.readFile(path.join(root, 'resources/js/views/Memorisation.js'), 'utf8')
   assert.match(js, /clampCursorToPaceLimit\(cursor, resolveLivePaceLimit\(/)
   assert.match(js, /elapsedMs:\s*this\.getAmdLivePaceElapsedMs\(\)/)
+  assert.match(js, /maxWordsPerSecond:\s*livePace\.maxWordsPerSecond/)
+  assert.match(js, /adaptiveLivePace/)
   assert.match(js, /previousConfirmed/)
   assert.match(js, /spokenWordCount:\s*committedWords\.length/)
   assert.match(js, /liveAlignmentOptions\.lookahead\s*=\s*0/)

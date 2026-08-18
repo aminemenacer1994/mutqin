@@ -180,7 +180,7 @@ export function clampStatusesToConfirmedCursor(statuses = [], confirmedWordIndex
     return {
       ...(word || {}),
       status: 'pending',
-      note: word?.note || 'Waiting for confirmation.',
+      note: word?.note || '',
       actual: undefined,
       similarity: undefined,
       confidence: undefined,
@@ -258,7 +258,7 @@ export function mergeLiveRecitationStatuses(committedStatuses = [], displayStatu
       return {
         ...(confirmed || {}),
         status: 'pending',
-        note: confirmed?.note || 'Waiting for confirmation.',
+        note: confirmed?.note || '',
       }
     }
 
@@ -266,7 +266,7 @@ export function mergeLiveRecitationStatuses(committedStatuses = [], displayStatu
       && (!confirmed || confirmed.status === 'pending' || confirmed.status === 'correct')) {
       return confirmed && confirmed.status && confirmed.status !== 'pending'
         ? confirmed
-        : { ...(confirmed || live), status: 'pending', note: confirmed?.note || 'Waiting for confirmation.' }
+        : { ...(confirmed || live), status: 'pending', note: confirmed?.note || '' }
     }
 
     if (isStickyLiveIssueStatus(confirmed?.status) || isStickyLiveIssueStatus(live?.status)) {
@@ -279,7 +279,7 @@ export function mergeLiveRecitationStatuses(committedStatuses = [], displayStatu
       return {
         ...(confirmed || live || {}),
         status: 'pending',
-        note: confirmed?.note || 'Waiting for confirmation.',
+        note: confirmed?.note || '',
       }
     }
 
@@ -288,9 +288,9 @@ export function mergeLiveRecitationStatuses(committedStatuses = [], displayStatu
       return live
     }
     if (confirmed && confirmed.status && confirmed.status !== 'pending') return confirmed
-    if (!live && !confirmed) return { status: 'pending', note: 'Waiting for this word.' }
+    if (!live && !confirmed) return { status: 'pending', note: '' }
     if (live && ['correct', 'partial', 'incorrect'].includes(live.status)) return live
-    return { ...(live || confirmed), status: 'pending', note: confirmed?.note || 'Waiting for confirmation.' }
+    return { ...(live || confirmed), status: 'pending', note: confirmed?.note || '' }
   })
 
   return confirmedOnly

@@ -1,6 +1,6 @@
 <template>
   <main id="mainContent" class="user-dashboard" tabindex="-1">
-    <div class="container user-dashboard__shell">
+    <div class="container-fluid user-dashboard__shell">
       <div v-if="loading && !data" class="user-dashboard__loading" role="status" aria-live="polite">
         <div class="dash-spinner" aria-hidden="true"></div>
         <span>{{ t('dashboard.loading') }}</span>
@@ -33,7 +33,6 @@
             <div class="dash-hero__greeting">
               <span class="dash-kicker">{{ t('dashboard.journey_kicker') }}</span>
               <h1 id="dash-welcome-heading">{{ greetingText }}</h1>
-              <p v-if="showHeroHint" class="dash-hero__intro">{{ t('dashboard.hero_section_hint') }}</p>
               <div v-if="retentionChips.length" class="dash-hero__chips">
                 <span
                   v-for="chip in retentionChips"
@@ -59,7 +58,7 @@
 
           <section
             v-if="showSubscriptionUpsell"
-            class="dash-subscription-upsell dash-section dash-reveal"
+            class="dash-subscription-upsell dash-reveal"
             aria-labelledby="dash-subscription-upsell-title"
           >
             <div class="dash-subscription-upsell__copy">
@@ -76,34 +75,8 @@
           </section>
 
           <div class="dash-hero__stack">
-            <div
-              v-if="liveReturnSession"
-              class="dash-return-session"
-              role="region"
-              :aria-label="t('dashboard.return_session_aria')"
-            >
-              <div>
-                <span class="dash-return-session__label">{{ t('dashboard.return_session_label') }}</span>
-                <strong class="dash-return-session__title">
-                  {{ liveReturnSession.surah_name || t('dashboard.start_session') }}
-                </strong>
-                <div class="dash-pills">
-                  <span v-if="ayahRangeLabel(liveReturnSession)" class="dash-pill">
-                    {{ ayahRangeLabel(liveReturnSession) }}
-                  </span>
-                  <span v-if="liveReturnSession.last_ayah" class="dash-pill">
-                    {{ t('dashboard.last_ayah', { n: liveReturnSession.last_ayah }) }}
-                  </span>
-                </div>
-              </div>
-              <a class="dash-btn dash-btn--primary dash-return-session__go" :href="journeyContinueHref">
-                <i class="bi bi-play-fill" aria-hidden="true"></i>
-                {{ t('dashboard.return_session_now') }}
-              </a>
-            </div>
-
             <section
-              v-else-if="showJourneyStart"
+              v-if="showJourneyStart"
               class="dash-journey dash-journey--start"
               aria-labelledby="dash-journey-start-title"
             >
@@ -121,52 +94,50 @@
               </div>
             </section>
 
-            <template v-else>
-              <a
-                v-if="primaryJourneyAction"
-                class="dash-action-card dash-action-card--pulse"
-                :href="primaryJourneyAction.href"
-              >
-                <div class="dash-action-card__main">
-                  <span class="dash-action-card__label">{{ primaryJourneyAction.label }}</span>
-                  <span class="dash-action-card__title">
-                    {{ primaryJourneyAction.title }}
-                  </span>
-                  <p v-if="primaryJourneyAction.meta" class="dash-action-card__meta">{{ primaryJourneyAction.meta }}</p>
-                </div>
-                <span class="dash-action-card__cta">{{ primaryJourneyAction.cta }}</span>
-              </a>
+            <a
+              v-else-if="primaryContinueAction"
+              ref="continueCard"
+              class="dash-continue-card"
+              :class="{ 'dash-continue-card--saved': primaryContinueAction.kind === 'saved' }"
+              :href="primaryContinueAction.href"
+              :aria-label="primaryContinueAction.ariaLabel || undefined"
+            >
+              <div class="dash-continue-card__main">
+                <span class="dash-continue-card__label">{{ primaryContinueAction.label }}</span>
+                <strong class="dash-continue-card__title">{{ primaryContinueAction.title }}</strong>
+                <p v-if="primaryContinueAction.hint" class="dash-continue-card__hint">
+                  {{ primaryContinueAction.hint }}
+                </p>
+                <p v-else-if="primaryContinueAction.range" class="dash-continue-card__learning">
+                  {{ primaryContinueAction.range }}
+                </p>
+              </div>
+              <span class="dash-continue-card__cta">
+                {{ primaryContinueAction.cta }}
+              </span>
+            </a>
+          </div>
+        </header>
 
-              <a
-                v-if="secondaryJourneyAction"
-                class="dash-action-card dash-action-card--secondary"
-                :href="secondaryJourneyAction.href"
-              >
-                <div class="dash-action-card__main">
-                  <span class="dash-action-card__label">{{ secondaryJourneyAction.label }}</span>
-                  <span class="dash-action-card__title">
-                    {{ secondaryJourneyAction.title }}
-                  </span>
-                  <p v-if="secondaryJourneyAction.meta" class="dash-action-card__meta">{{ secondaryJourneyAction.meta }}</p>
-                </div>
-                <span class="dash-action-card__cta">{{ secondaryJourneyAction.cta }}</span>
-              </a>
-
-              <section
-                v-if="showJourneyOverall"
-                class="dash-journey-overall"
-                aria-labelledby="dash-overall-heading"
-              >
-                <div class="dash-journey-overall__head">
+        <div class="user-dashboard__content">
+        <div class="user-dashboard__primary">
+        <section class="dash-section dash-section--flat dash-reveal" aria-labelledby="dash-data-heading" style="--dash-delay: 10ms">
+          <div class="dash-section__head dash-section__head--compact">
+            <h2 id="dash-data-heading">{{ t('dashboard.journey_data_title') }}</h2>
+          </div>
+          <div class="dash-section__body dash-section__body--spacious">
+            <div class="dash-glance">
+              <div class="dash-glance__overall" aria-labelledby="dash-overall-heading">
+                <div class="dash-glance__overall-head">
                   <span id="dash-overall-heading" class="dash-kicker">
                     {{ t('dashboard.journey_overall_label') }}
                   </span>
-                  <strong>
+                  <strong class="dash-glance__percent">
                     <DashAnimatedNumber :value="journeyOverallPercent" :reduce-motion="reduceMotion" />%
                   </strong>
                 </div>
                 <div
-                  class="dash-progress-bar"
+                  class="dash-progress-bar dash-progress-bar--overall"
                   role="progressbar"
                   :aria-valuenow="journeyOverallPercent"
                   aria-valuemin="0"
@@ -174,38 +145,43 @@
                   :aria-label="t('dashboard.journey_overall_label')"
                 >
                   <span
-                    :class="{ 'is-nonzero': journeyOverallPercent > 0 }"
-                    :style="{ width: journeyOverallFill }"
+                    :class="{ 'is-nonzero': journeyOverallDisplay.hasProgress }"
+                    :style="{ width: journeyOverallDisplay.fillWidth }"
                   ></span>
                 </div>
-                <p class="dash-journey-overall__meta">
+                <p class="dash-glance__meta">
                   {{ t('dashboard.journey_overall_ayahs', { n: journeyMemorisedCount }) }}
+                  <span v-if="earlyProgressMessage"> · {{ earlyProgressMessage }}</span>
                 </p>
-              </section>
-            </template>
+              </div>
+            </div>
+
+            <div class="dash-data-links">
+              <button type="button" class="dash-text-link" @click="openDrawer('activity')">
+                {{ t('dashboard.view_all_activity') }}
+              </button>
+              <button type="button" class="dash-text-link" @click="openDrawer('hifz')">
+                {{ t('dashboard.view_memorised_ayahs') }}
+              </button>
+            </div>
           </div>
-        </header>
+        </section>
 
         <section
           v-if="murajaahPreview.length || showMurajaahEmpty"
-          class="dash-section dash-reveal"
+          class="dash-section dash-section--flat dash-reveal"
           aria-labelledby="dash-murajaah-heading"
-          style="--dash-delay: 10ms"
+          style="--dash-delay: 20ms"
         >
           <div class="dash-murajaah-block">
-            <div class="dash-murajaah-block__head">
-              <div>
-                <h2 id="dash-murajaah-heading" class="dash-murajaah-block__title">
-                  {{ t('dashboard.strengthen_title') }}
-                </h2>
-                <p class="dash-murajaah-block__hint">
-                  {{ murajaahSectionHint }}
-                </p>
-              </div>
+            <div class="dash-murajaah-block__head dash-murajaah-block__head--compact">
+              <h2 id="dash-murajaah-heading" class="dash-murajaah-block__title">
+                {{ t('dashboard.strengthen_title') }}
+              </h2>
               <button
                 v-if="showMurajaahViewAll"
                 type="button"
-                class="dash-link"
+                class="dash-text-link"
                 @click="openDrawer('murajaah')"
               >
                 {{ t('dashboard.view_all_reviews') }}
@@ -213,7 +189,17 @@
             </div>
 
             <div v-if="showMurajaahEmpty" class="dash-murajaah-block__empty">
-              <p>{{ t('dashboard.weak_empty_message') }}</p>
+              <p class="dash-murajaah-block__empty-title">{{ t('dashboard.murajaah_no_urgent') }}</p>
+              <p v-if="!optionalReviewSuggestion" class="dash-murajaah-block__empty-hint">
+                {{ t('dashboard.weak_empty_message') }}
+              </p>
+              <div v-else class="dash-murajaah-suggestion">
+                <span class="dash-kicker">{{ t('dashboard.murajaah_keep_fresh') }}</span>
+                <strong class="dash-murajaah-suggestion__title">{{ optionalReviewSuggestion.title }}</strong>
+                <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="optionalReviewSuggestion.href">
+                  {{ t('dashboard.murajaah_practise') }}
+                </a>
+              </div>
             </div>
 
             <ul v-else class="dash-murajaah-list">
@@ -230,15 +216,14 @@
                         {{ strengthLabel(item) }}
                       </span>
                     </span>
+                    <span
+                      v-if="item.phrase"
+                      class="dash-murajaah-row__phrase"
+                      lang="ar"
+                      dir="rtl"
+                    >{{ item.phrase }}</span>
                   </a>
-                  <span
-                    v-if="item.phrase"
-                    class="dash-murajaah-row__phrase"
-                    lang="ar"
-                    dir="rtl"
-                  >{{ item.phrase }}</span>
-                  <span v-else class="dash-murajaah-row__phrase" aria-hidden="true"></span>
-                  <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="reviewNowHref(item)">
+                  <a class="dash-btn dash-btn--ghost dash-btn--sm dash-murajaah-row__cta" :href="reviewNowHref(item)">
                     {{ t('dashboard.review_now') }}
                   </a>
                 </div>
@@ -246,167 +231,101 @@
             </ul>
           </div>
         </section>
+        </div>
 
-        <section class="dash-section dash-reveal" aria-labelledby="dash-data-heading" style="--dash-delay: 20ms">
-          <div class="dash-section__head">
-            <div>
-              <h2 id="dash-data-heading">{{ t('dashboard.journey_data_title') }}</h2>
-              <p class="dash-section__hint">{{ t('dashboard.journey_data_subtitle') }}</p>
+        <section class="dash-section dash-section--flat dash-section--weekly dash-reveal" aria-labelledby="dash-week-heading" style="--dash-delay: 30ms">
+          <div class="dash-section__head dash-section__head--compact">
+            <div class="dash-section__head-row">
+              <h2 id="dash-week-heading">{{ t('dashboard.activity_chart_title') }}</h2>
+              <div class="dash-range-toggle" role="group" :aria-label="t('dashboard.chart_range')">
+                <button
+                  type="button"
+                  class="dash-btn dash-btn--ghost dash-btn--sm"
+                  :class="{ 'is-active': chartDays === 7 }"
+                  :aria-pressed="chartDays === 7 ? 'true' : 'false'"
+                  :disabled="loading"
+                  @click="setChartDays(7)"
+                >
+                  {{ t('dashboard.days_7') }}
+                </button>
+                <button
+                  type="button"
+                  class="dash-btn dash-btn--ghost dash-btn--sm"
+                  :class="{ 'is-active': chartDays === 30 }"
+                  :aria-pressed="chartDays === 30 ? 'true' : 'false'"
+                  :disabled="loading"
+                  @click="setChartDays(30)"
+                >
+                  {{ t('dashboard.days_30') }}
+                </button>
+              </div>
             </div>
           </div>
-          <div class="dash-section__body">
-            <div class="dash-metrics">
-              <component
-                :is="metric.href ? 'a' : 'button'"
-                v-for="(metric, index) in snapshotCards"
-                :key="metric.key"
-                :type="metric.href ? undefined : 'button'"
-                :href="metric.href || undefined"
-                class="dash-metric dash-reveal"
-                :class="{ 'is-empty': metric.value === 0 }"
-                :style="{ '--dash-delay': `${index * 55}ms` }"
-                :aria-label="`${metric.value} ${metric.label}. ${metric.hint}`"
-                @click="onMetricActivate($event, metric)"
-              >
-                <div class="dash-metric__row">
-                  <p class="dash-metric__value">
-                    <DashAnimatedNumber :value="metric.value" :reduce-motion="reduceMotion" />
-                  </p>
-                  <i class="dash-metric__icon" :class="metric.icon" aria-hidden="true"></i>
-                </div>
-                <p class="dash-metric__label">{{ metric.label }}</p>
-                <p class="dash-metric__hint">{{ metric.hint }}</p>
-                <p v-if="metric.deltaLabel" class="dash-metric__delta">{{ metric.deltaLabel }}</p>
-                <span class="dash-metric__tap" aria-hidden="true">{{ t('dashboard.metric_tap') }}</span>
-              </component>
+          <div class="dash-section__body dash-section__body--spacious">
+            <div v-if="showWeeklyEmpty" class="dash-chart__empty">
+              <strong>{{ t('dashboard.weekly_empty_title') }}</strong>
+              <span>{{ t('dashboard.weekly_empty_message') }}</span>
             </div>
-            <div class="dash-data-links">
-              <button type="button" class="dash-link" @click="openDrawer('hifz')">
-                <i class="bi bi-stars" aria-hidden="true"></i>
-                {{ t('dashboard.view_memorised_ayahs') }}
-              </button>
-              <button type="button" class="dash-link" @click="openDrawer('activity')">
-                <i class="bi bi-clock-history" aria-hidden="true"></i>
-                {{ t('dashboard.view_all_activity') }}
-              </button>
-              <button
-                v-if="murajaahTotal > 0"
-                type="button"
-                class="dash-link"
-                @click="openDrawer('murajaah')"
-              >
-                <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                {{ t('dashboard.view_all_reviews') }}
-              </button>
-              <a class="dash-link" :href="savedSessionsHref">
-                <i class="bi bi-bookmark" aria-hidden="true"></i>
-                {{ t('dashboard.view_saved_sessions') }}
-              </a>
+            <div v-else class="dash-chart__wrap" :class="{ 'is-loading': loading }">
+              <Bar
+                v-if="chartReady"
+                :key="chartInstanceKey"
+                :data="chartData"
+                :options="chartOptions"
+                :aria-label="t('dashboard.chart_aria')"
+              />
             </div>
-          </div>
-        </section>
 
-        <section class="dash-section dash-reveal" aria-labelledby="dash-progress-heading" style="--dash-delay: 40ms">
-          <div class="dash-section__head">
-            <div>
-              <h2 id="dash-progress-heading">{{ t('dashboard.progress_title') }}</h2>
-              <p class="dash-section__hint">{{ progressSubtitle }}</p>
-            </div>
-          </div>
-          <div class="dash-section__body">
-            <div class="dash-analytics" role="list" :aria-label="t('dashboard.snapshot_title')">
-              <button
-                v-for="(item, index) in simpleAnalytics"
+            <div
+              class="dash-analytics dash-analytics--static"
+              role="list"
+              :aria-label="t('dashboard.weekly_stats_aria')"
+            >
+              <div
+                v-for="(item, index) in weeklyAnalytics"
                 :key="item.key"
-                type="button"
-                class="dash-analytic dash-reveal"
+                class="dash-analytic dash-analytic--static dash-reveal"
                 :style="{ '--dash-delay': `${index * 60}ms` }"
                 role="listitem"
-                :aria-label="`${item.value} ${item.label}. ${item.hint}`"
-                @click="onAnalyticActivate(item)"
               >
                 <p class="dash-analytic__value">
                   <DashAnimatedNumber :value="item.value" :reduce-motion="reduceMotion" />
                 </p>
                 <p class="dash-analytic__label">{{ item.label }}</p>
-                <p class="dash-analytic__hint">{{ item.hint }}</p>
-              </button>
-            </div>
-
-            <div class="dash-progress-grid">
-              <div class="dash-position">
-                <span class="dash-kicker">{{ t('dashboard.current_position') }}</span>
-                <h3 class="dash-position__surah">
-                  {{ data.progress?.current_surah_name || t('dashboard.not_started') }}
-                </h3>
-                <p v-if="positionDetailText" class="dash-position__detail">{{ positionDetailText }}</p>
-                <div v-if="surahProgress" class="dash-surah-progress">
-                  <div
-                    class="dash-progress-bar dash-progress-bar--inline"
-                    role="progressbar"
-                    :aria-valuenow="surahProgress.value"
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                    :aria-label="t('dashboard.surah_completion')"
-                  >
-                    <span
-                      :class="{ 'is-nonzero': surahProgress.value > 0 }"
-                      :style="{ width: surahProgress.fillWidth }"
-                    ></span>
-                  </div>
-                  <span class="dash-surah-progress__pct">
-                    <DashAnimatedNumber :value="surahProgress.value" :reduce-motion="reduceMotion" />%
-                  </span>
-                </div>
-              </div>
-
-              <div class="dash-chart">
-                <div class="dash-chart__head">
-                  <p class="dash-chart__label">{{ t('dashboard.activity_chart_title') }}</p>
-                  <div class="dash-range-toggle" role="group" :aria-label="t('dashboard.chart_range')">
-                    <button
-                      type="button"
-                      class="dash-btn dash-btn--ghost dash-btn--sm"
-                      :class="{ 'is-active': chartDays === 7 }"
-                      :aria-pressed="chartDays === 7 ? 'true' : 'false'"
-                      :disabled="loading"
-                      @click="setChartDays(7)"
-                    >
-                      {{ t('dashboard.days_7') }}
-                    </button>
-                    <button
-                      type="button"
-                      class="dash-btn dash-btn--ghost dash-btn--sm"
-                      :class="{ 'is-active': chartDays === 30 }"
-                      :aria-pressed="chartDays === 30 ? 'true' : 'false'"
-                      :disabled="loading"
-                      @click="setChartDays(30)"
-                    >
-                      {{ t('dashboard.days_30') }}
-                    </button>
-                  </div>
-                </div>
-                <div v-if="data.chart?.is_empty" class="dash-chart__empty">
-                  <i class="bi bi-bar-chart" aria-hidden="true"></i>
-                  <span>{{ t('dashboard.chart_empty_message') }}</span>
-                </div>
-                <div v-else class="dash-chart__wrap" :class="{ 'is-loading': loading }">
-                  <Bar
-                    v-if="chartReady"
-                    :key="chartInstanceKey"
-                    :data="chartData"
-                    :options="chartOptions"
-                    :aria-label="t('dashboard.chart_aria')"
-                  />
-                </div>
-                <p v-if="chartSummaryText" class="dash-chart__summary">{{ chartSummaryText }}</p>
               </div>
             </div>
           </div>
         </section>
+        </div>
 
       </template>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="showStickyContinue"
+        class="dash-sticky-continue"
+        :class="{ 'is-visible': stickyContinueVisible }"
+      >
+        <a
+          class="dash-sticky-continue__link"
+          :class="{ 'dash-sticky-continue__link--saved': primaryContinueAction.kind === 'saved' }"
+          :href="primaryContinueAction.href"
+        >
+          <span class="dash-sticky-continue__copy">
+            <span v-if="primaryContinueAction.kind === 'saved'" class="dash-sticky-continue__label">
+              {{ primaryContinueAction.label }}
+            </span>
+            <strong>{{ primaryContinueAction.title }}</strong>
+            <span v-if="primaryContinueAction.hint">{{ primaryContinueAction.hint }}</span>
+            <span v-else-if="primaryContinueAction.range">{{ primaryContinueAction.range }}</span>
+          </span>
+          <span class="dash-sticky-continue__cta">
+            {{ primaryContinueAction.cta }}
+          </span>
+        </a>
+      </div>
+    </Teleport>
 
     <Teleport to="body">
       <div
@@ -422,12 +341,21 @@
           :aria-label="t('dashboard.drawer_close')"
           @click="closeDrawer"
         ></button>
-        <aside class="dash-drawer" tabindex="-1">
+        <aside
+          class="dash-drawer"
+          :class="drawerMode ? `dash-drawer--${drawerMode}` : ''"
+          tabindex="-1"
+        >
           <header class="dash-drawer__head">
-            <div class="dash-drawer__head-copy">
-              <h2 :id="drawerTitleId" class="dash-drawer__title">{{ drawerTitle }}</h2>
-              <p class="dash-drawer__subtitle">{{ drawerSubtitle }}</p>
-              <p v-if="drawerCountLabel" class="dash-drawer__count">{{ drawerCountLabel }}</p>
+            <div class="dash-drawer__head-main">
+              <span v-if="drawerIcon" class="dash-drawer__head-icon" aria-hidden="true">
+                <i :class="drawerIcon"></i>
+              </span>
+              <div class="dash-drawer__head-copy">
+                <h2 :id="drawerTitleId" class="dash-drawer__title">{{ drawerTitle }}</h2>
+                <p class="dash-drawer__subtitle">{{ drawerSubtitle }}</p>
+                <p v-if="drawerCountLabel" class="dash-drawer__count">{{ drawerCountLabel }}</p>
+              </div>
             </div>
             <button
               type="button"
@@ -464,9 +392,13 @@
               <div class="dash-spinner" aria-hidden="true"></div>
               <span>{{ t('dashboard.drawer_loading') }}</span>
             </div>
-            <p v-else-if="drawerError" class="dash-drawer__status" role="alert">
-              {{ t('dashboard.drawer_load_error') }}
-            </p>
+            <div v-else-if="drawerError" class="dash-drawer__status dash-drawer__status--error" role="alert">
+              <i class="bi bi-wifi-off" aria-hidden="true"></i>
+              <p>{{ t('dashboard.drawer_load_error') }}</p>
+              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="retryDrawer">
+                {{ t('dashboard.retry') }}
+              </button>
+            </div>
             <div v-else-if="!visibleDrawerItems.length" class="dash-drawer__status dash-drawer__status--empty">
               <i class="bi bi-inbox" aria-hidden="true"></i>
               <p>{{ drawerEmptyMessage }}</p>
@@ -582,7 +514,7 @@
                       {{ t(`dashboard.${item.explanation_key}`) }}
                     </span>
                   </div>
-                  <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="reviewNowHref(item)">
+                  <a class="dash-btn dash-btn--ghost dash-btn--sm dash-drawer__row-cta" :href="reviewNowHref(item)">
                     {{ t('dashboard.review_now') }}
                   </a>
                 </div>
@@ -636,6 +568,7 @@ import {
   hasProAccess,
   pricingUpgradeUrl,
 } from '../utils/billing'
+import { progressBarDisplay } from '../utils/progressDisplay'
 import './Dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -674,6 +607,15 @@ const DRAWER_EMPTY = {
   murajaah: 'drawer_murajaah_empty',
 }
 
+const DRAWER_ICONS = {
+  activity: 'bi bi-clock-history',
+  sessions: 'bi bi-journal-check',
+  ai_checks: 'bi bi-mic',
+  notes: 'bi bi-journal-text',
+  hifz: 'bi bi-journal-bookmark',
+  murajaah: 'bi bi-arrow-repeat',
+}
+
 export default {
   name: 'UserDashboard',
   components: { Bar, NetworkFallback, DashAnimatedNumber },
@@ -709,6 +651,8 @@ export default {
       darkTheme: false,
       themeObserver: null,
       activeSessionSnapshot: null,
+      stickyContinueVisible: false,
+      continueObserver: null,
     }
   },
   computed: {
@@ -811,22 +755,13 @@ export default {
       return this.t('dashboard.journey_continue_cta')
     },
     journeyMemorisedCount() {
-      const fromJourney = Number(this.journey?.overall?.memorised_ayah_count ?? 0)
-      if (fromJourney > 0) return fromJourney
-      return Number(this.data?.progress?.memorised_ayah_count ?? this.data?.snapshot?.memorised_ayahs?.value ?? 0)
+      return Number(this.journey?.overall?.memorised_ayah_count ?? 0)
     },
     journeyOverallPercent() {
-      const fromJourney = Number(this.journey?.overall?.percent ?? 0)
-      if (fromJourney > 0 || this.journey?.has_started) return fromJourney
-      const memorised = this.journeyMemorisedCount
-      const total = Number(this.journey?.overall?.quran_ayah_count ?? 6236)
-      if (memorised <= 0 || total <= 0) return 0
-      return Math.max(1, Math.min(100, Math.round((memorised / total) * 100)))
+      return Number(this.journey?.overall?.percent ?? 0)
     },
-    journeyOverallFill() {
-      const pct = this.journeyOverallPercent
-      if (pct <= 0) return '0%'
-      return `${Math.max(pct, 2)}%`
+    journeyOverallDisplay() {
+      return progressBarDisplay(this.journeyOverallPercent)
     },
     showJourneyOverall() {
       return this.journeyMemorisedCount > 0 || this.journeyOverallPercent > 0
@@ -836,27 +771,61 @@ export default {
       if (!review || !review.surah_name || !review.href) return null
       return review
     },
-    journeyMurajaahPrimary() {
-      if (this.journeyReview) {
+    currentlyLearningText() {
+      const progress = this.data?.progress
+      const cont = this.journeyContinue
+      const surah = progress?.current_surah_name || cont?.surah_name || ''
+      const start = Number(progress?.ayah_start || cont?.ayah_start || 0)
+      const end = Number(progress?.ayah_end || cont?.ayah_end || start)
+      if (start <= 0) return ''
+      const range = start === end
+        ? this.t('dashboard.ayah_n', { n: start })
+        : this.t('dashboard.ayah_range', { start, end })
+      if (surah) return `${surah} · ${range}`
+      return this.t('dashboard.currently_learning_range', { range })
+    },
+    earlyProgressMessage() {
+      const pct = this.journeyOverallPercent
+      if (pct <= 0 || pct > 10) return ''
+      return this.t('dashboard.early_progress_message')
+    },
+    isSavedSessionContinue() {
+      if (this.liveReturnSession) return true
+      const type = String(this.data?.continue?.action_type || '')
+      return type === 'continue_incomplete'
+    },
+    savedSessionContinueSource() {
+      if (this.liveReturnSession) return this.liveReturnSession
+      if (this.isSavedSessionContinue) return this.data?.continue || {}
+      return null
+    },
+    primaryContinueAction() {
+      if (this.isSavedSessionContinue) {
+        const source = this.savedSessionContinueSource || {}
+        const title = this.continueSessionTitle(source)
         return {
-          kind: 'murajaah',
-          href: this.journeyReview.href,
-          title: this.journeyReview.surah_name,
-          meta: this.murajaahPrimaryMeta(this.journeyReview),
-          label: this.t('dashboard.journey_review_label'),
-          cta: this.t('dashboard.journey_review_cta'),
+          kind: 'saved',
+          href: this.journeyContinueHref,
+          label: this.t('dashboard.saved_session_label'),
+          title,
+          hint: this.t('dashboard.saved_session_hint'),
+          cta: this.t('dashboard.cta_continue'),
+          ariaLabel: `${this.t('dashboard.saved_session_label')}. ${title}. ${this.t('dashboard.saved_session_hint')}`,
         }
       }
-      const item = this.murajaahPreview[0]
-      if (!item?.href) return null
+      if (!this.journeyMemorisationAction) return null
+      const action = this.journeyMemorisationAction
       return {
-        kind: 'murajaah',
-        href: item.href,
-        title: item.surah_name || this.t('dashboard.start_session'),
-        meta: item.phrase || this.murajaahPrimaryMeta(item),
-        label: this.t('dashboard.journey_review_label'),
-        cta: this.t('dashboard.journey_review_cta'),
+        kind: 'journey',
+        href: action.href,
+        label: action.label,
+        title: action.title,
+        range: this.continueRangeLabel(this.journeyContinue || this.data?.progress),
+        cta: action.cta,
       }
+    },
+    showStickyContinue() {
+      return !!this.primaryContinueAction && !this.showJourneyStart
     },
     journeyMemorisationAction() {
       if (!this.journeyContinue) return null
@@ -864,22 +833,29 @@ export default {
         kind: 'memorisation',
         href: this.journeyContinueHref,
         title: this.journeyContinue.surah_name || this.t('dashboard.start_session'),
-        meta: this.continueMetaText,
         label: this.journeyContinueLabel,
         cta: this.journeyContinueCta,
       }
     },
-    primaryJourneyAction() {
-      if (this.liveReturnSession) return null
-      if (this.journeyMurajaahPrimary) return this.journeyMurajaahPrimary
-      return this.journeyMemorisationAction
-    },
-    secondaryJourneyAction() {
-      if (this.liveReturnSession) return null
-      if (this.journeyMurajaahPrimary && this.journeyMemorisationAction) {
-        return this.journeyMemorisationAction
+    optionalReviewSuggestion() {
+      if (this.murajaahPreview.length) return null
+      const progress = this.data?.progress
+      const cont = this.journeyContinue
+      const surahName = progress?.current_surah_name || cont?.surah_name
+      const start = Number(progress?.ayah_start || cont?.ayah_start || 0)
+      const end = Number(progress?.ayah_end || cont?.ayah_end || start)
+      if (!surahName || start <= 0) return null
+      const range = start === end
+        ? this.t('dashboard.ayah_n', { n: start })
+        : this.t('dashboard.ayah_range', { start, end })
+      const surah = Number(progress?.current_surah_number || cont?.surah_number || 0)
+      const href = surah > 0 && start > 0
+        ? this.reviewNowHref({ surah_number: surah, ayah_number: start })
+        : this.journeyContinueHref
+      return {
+        title: `${surahName} · ${range}`,
+        href,
       }
-      return null
     },
     murajaahAllItems() {
       const all = this.data?.weaknesses?.all_items
@@ -963,7 +939,7 @@ export default {
       })
     },
     showHeroHint() {
-      return !this.showJourneyStart && (this.primaryJourneyAction || this.liveReturnSession)
+      return !this.showJourneyStart && !!this.primaryContinueAction
     },
     murajaahSectionHint() {
       if (this.murajaahTotal > 1) {
@@ -1010,14 +986,11 @@ export default {
       }
       return parts.join(' · ')
     },
-    progressSubtitle() {
-      const custom = this.t('dashboard.progress_subtitle')
-      if (custom && custom !== 'dashboard.progress_subtitle') return custom
-      return this.weekSummaryText
+    showWeeklyEmpty() {
+      return !!this.data?.week_summary?.is_empty && !!this.data?.chart?.is_empty
     },
-    simpleAnalytics() {
+    weeklyAnalytics() {
       const week = this.data?.week_summary || {}
-      const chart = this.data?.chart?.summary_params || {}
       return [
         {
           key: 'week_sessions',
@@ -1037,43 +1010,40 @@ export default {
         {
           key: 'active_days',
           label: this.t('dashboard.analytics_active_days'),
-          hint: this.t('dashboard.analytics_active_days_hint', { days: this.chartDays }),
-          value: Number(chart.active_days ?? 0),
+          hint: this.t('dashboard.analytics_active_days_hint'),
+          value: Number(week.active_days ?? 0),
           drawer: 'activity',
         },
       ]
     },
-    chartSummaryText() {
-      if (this.data?.chart?.is_empty) return ''
-      const params = this.data?.chart?.summary_params
-      if (!params) return this.data?.chart?.summary || ''
-      const translated = this.t('dashboard.chart_summary', {
-        days: Number(params.days || this.chartDays),
-        ayahs: Number(params.ayahs || 0),
-        sessions: Number(params.sessions || 0),
-        active_days: Number(params.active_days || 0),
-      })
-      if (translated && translated !== 'dashboard.chart_summary') return translated
-      return this.data?.chart?.summary || ''
+    weeklyInsightText() {
+      const week = this.data?.week_summary
+      if (!week || week.is_empty) return ''
+      const sessions = Number(week.sessions ?? 0)
+      const activeDays = Number(week.active_days ?? 0)
+      if (activeDays >= 2) {
+        return this.t('dashboard.weekly_insight_active_days', { days: activeDays })
+      }
+      if (sessions >= 2) {
+        return this.t('dashboard.weekly_insight_sessions', { sessions })
+      }
+      return ''
     },
     surahProgress() {
       const progress = this.data?.progress
       if (!progress?.current_surah_number) return null
+      const display = progressBarDisplay(Number(progress.surah_completion_percent ?? 0))
       const total = Number(progress.surah_ayah_count || 0)
-      if (total <= 0) return null
       const practised = Number(
         progress.surah_practised_ayah_count
         ?? ((progress.memorised_ayah_count || 0) + (progress.learning_ayah_count || 0))
       )
-      const raw = (Math.max(0, practised) / total) * 100
-      // Keep 1–5% fills readable: never round a non-zero practised count down to 0%.
-      const value = practised <= 0 ? 0 : Math.max(1, Math.min(100, Math.round(raw)))
-      const fill = practised <= 0 ? 0 : Math.max(value, 2)
       return {
-        value,
+        value: display.percent,
         practised,
         total,
-        fillWidth: fill > 0 ? `${fill}%` : '0%',
+        fillWidth: display.fillWidth,
+        hasProgress: display.hasProgress,
       }
     },
     secondaryCompletion() {
@@ -1124,11 +1094,11 @@ export default {
     chartPalette() {
       if (this.darkTheme) {
         return {
-          ayahs: '#3f9a72',
-          ayahsHover: '#52ad84',
+          ayahs: '#5a9a78',
+          ayahsHover: '#6cab88',
           sessions: '#c49a6c',
           sessionsHover: '#d4aa7c',
-          muted: '#c9bbac',
+          muted: '#d4c8bc',
           ink: '#f4ede4',
           tooltipBg: '#181614',
           tooltipBorder: 'rgba(230, 207, 181, 0.14)',
@@ -1136,11 +1106,11 @@ export default {
         }
       }
       return {
-        ayahs: '#146c46',
-        ayahsHover: '#1f7b50',
+        ayahs: '#2d6a4f',
+        ayahsHover: '#3a7d5f',
         sessions: '#a0784c',
         sessionsHover: '#8b653b',
-        muted: '#6b7f76',
+        muted: '#5c6b64',
         ink: '#1a2e24',
         tooltipBg: '#ffffff',
         tooltipBorder: 'rgba(160, 120, 76, 0.12)',
@@ -1164,16 +1134,20 @@ export default {
             data: points.map((point) => Number(point.primary || point.ayahs_memorised || 0)),
             backgroundColor: palette.ayahs,
             hoverBackgroundColor: palette.ayahsHover,
-            borderRadius: 4,
-            maxBarThickness: 12,
+            borderRadius: 6,
+            maxBarThickness: this.chartDays === 7 ? 22 : 14,
+            categoryPercentage: 0.82,
+            barPercentage: 0.92,
           },
           {
             label: this.t('dashboard.chart_sessions'),
             data: points.map((point) => Number(point.secondary || point.sessions_completed || 0)),
             backgroundColor: palette.sessions,
             hoverBackgroundColor: palette.sessionsHover,
-            borderRadius: 4,
-            maxBarThickness: 12,
+            borderRadius: 6,
+            maxBarThickness: this.chartDays === 7 ? 22 : 14,
+            categoryPercentage: 0.82,
+            barPercentage: 0.92,
           },
         ],
       }
@@ -1262,6 +1236,9 @@ export default {
     drawerSubtitle() {
       const key = DRAWER_SUBTITLES[this.drawerMode]
       return key ? this.t(`dashboard.${key}`) : ''
+    },
+    drawerIcon() {
+      return DRAWER_ICONS[this.drawerMode] || ''
     },
     drawerCountLabel() {
       if (this.drawerLoading || this.drawerError) return ''
@@ -1362,6 +1339,7 @@ export default {
     this.unsubscribeNetwork = subscribeNetworkStatus((online) => {
       if (online && this.error && !this.data) this.reload(true)
     })
+    this.setupContinueObserver()
   },
   beforeUnmount() {
     try { this._dashboardAbort?.abort?.() } catch (_) { /* ignore */ }
@@ -1370,12 +1348,60 @@ export default {
     if (this.focusHandler) window.removeEventListener('focus', this.focusHandler)
     if (this.escapeHandler) document.removeEventListener('keydown', this.escapeHandler)
     if (this.themeObserver) this.themeObserver.disconnect()
+    if (this.continueObserver) this.continueObserver.disconnect()
     this.syncDrawerBodyLock(false)
   },
   methods: {
     t(key, params) {
       if (typeof this.$t === 'function') return this.$t(key, params)
       return key
+    },
+    continueRangeLabel(source = {}) {
+      const start = Number(source?.ayah_start || 0)
+      const end = Number(source?.ayah_end || start)
+      if (start <= 0) return ''
+      if (start === end) {
+        return this.t('dashboard.currently_learning_range', {
+          range: this.t('dashboard.ayah_n', { n: start }),
+        })
+      }
+      return this.t('dashboard.currently_learning_range', {
+        range: this.t('dashboard.ayah_range', { start, end }),
+      })
+    },
+    continueSessionTitle(source = {}) {
+      const surah = String(source?.surah_name || '').trim()
+      const start = Number(source?.ayah_start || 0)
+      const end = Number(source?.ayah_end || start)
+      if (!surah && start <= 0) return this.t('dashboard.start_session')
+      const range = start <= 0
+        ? ''
+        : (start === end
+          ? this.t('dashboard.ayah_n', { n: start })
+          : this.t('dashboard.ayah_range', { start, end }))
+      if (surah && range) return `${surah} · ${range}`
+      return surah || range
+    },
+    setupContinueObserver() {
+      if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') return
+      if (this.continueObserver) {
+        this.continueObserver.disconnect()
+        this.continueObserver = null
+      }
+      this.$nextTick(() => {
+        const target = this.$refs.continueCard
+        if (!target || !this.showStickyContinue) {
+          this.stickyContinueVisible = false
+          return
+        }
+        this.continueObserver = new IntersectionObserver(
+          ([entry]) => {
+            this.stickyContinueVisible = !!entry && !entry.isIntersecting
+          },
+          { root: null, threshold: 0, rootMargin: '0px 0px -8px 0px' },
+        )
+        this.continueObserver.observe(target)
+      })
     },
     murajaahPrimaryMeta(source = {}) {
       const start = Number(source.ayah_start || source.ayah_number || 0)
@@ -1569,12 +1595,12 @@ export default {
       return item?.strength_label || ''
     },
     completionBar(label, value) {
-      const pct = Math.max(0, Math.min(100, Number(value) || 0))
-      const fill = pct > 0 ? Math.max(pct, 2) : 0
+      const display = progressBarDisplay(value)
       return {
         label,
-        value: pct,
-        fillWidth: fill > 0 ? `${fill}%` : '0%',
+        value: display.percent,
+        fillWidth: display.fillWidth,
+        hasProgress: display.hasProgress,
       }
     },
     sessionStatusLabel(status) {
@@ -1672,6 +1698,10 @@ export default {
       this.drawerError = false
       this.activityFilter = 'all'
       this.syncDrawerBodyLock(false)
+    },
+    retryDrawer() {
+      if (!this.drawerMode) return
+      this.openDrawer(this.drawerMode)
     },
     syncDrawerBodyLock(open) {
       if (typeof document === 'undefined') return
@@ -1775,6 +1805,7 @@ export default {
         if (requestId === this.dashboardRequestId) {
           this.chartReady = true
           this.refreshActiveSessionSnapshot()
+          this.setupContinueObserver()
         }
       } catch (error) {
         if (

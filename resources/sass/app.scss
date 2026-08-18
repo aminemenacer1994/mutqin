@@ -28,7 +28,7 @@
   --border: rgba(78, 58, 38, 0.22);
   --border-strong: rgba(78, 58, 38, 0.36);
   --text: #1f1a17;
-  --text-muted: #5a5048;
+  --text-muted: #4f4640;
   --text-disabled: #6e645c;
   --accent: #8b5e3c;
   --accent-strong: #a86a3f;
@@ -36,9 +36,9 @@
   /* Shared button colour semantics — Bootstrap custom danger (#b55041), not plain BS red */
   --bs-danger: #b55041;
   --bs-danger-rgb: 181, 80, 65;
-  --success: #2e7d64;
-  --success-strong: #23624e;
-  --success-soft: rgba(46, 125, 100, 0.14);
+  --success: #2d6a4f;
+  --success-strong: #245a42;
+  --success-soft: rgba(45, 106, 79, 0.14);
   --warning: #9a6207;
   --warning-strong: #7a4d05;
   --warning-soft: rgba(154, 98, 7, 0.14);
@@ -94,14 +94,14 @@ html[data-theme="dark"] {
   --border: rgba(255, 255, 255, 0.22);
   --border-strong: rgba(255, 255, 255, 0.34);
   --text: rgba(255, 255, 255, 0.94);
-  --text-muted: rgba(255, 255, 255, 0.78);
+  --text-muted: rgba(255, 255, 255, 0.82);
   --text-disabled: rgba(255, 255, 255, 0.58);
   --accent: #d4a574;
   --accent-strong: #e8bf8f;
   --accent-light: rgba(212, 165, 116, 0.16);
-  --success: #6fbf98;
-  --success-strong: #8fd4a8;
-  --success-soft: rgba(111, 191, 152, 0.18);
+  --success: #6aab88;
+  --success-strong: #7fbea0;
+  --success-soft: rgba(106, 171, 136, 0.18);
   --warning: #e0b35a;
   --warning-strong: #f0c56e;
   --warning-soft: rgba(224, 179, 90, 0.18);

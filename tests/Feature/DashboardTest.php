@@ -628,7 +628,8 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.week_summary.is_empty', true)
             ->assertJsonPath('data.week_summary.sessions', 0)
             ->assertJsonPath('data.week_summary.ai_checks', 0)
-            ->assertJsonPath('data.week_summary.ayahs_practised', 0);
+            ->assertJsonPath('data.week_summary.ayahs_practised', 0)
+            ->assertJsonPath('data.week_summary.active_days', 0);
 
         UserSession::create([
             'user_id' => $user->id,
@@ -665,7 +666,8 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.week_summary.is_empty', false)
             ->assertJsonPath('data.week_summary.sessions', 1)
             ->assertJsonPath('data.week_summary.ai_checks', 1)
-            ->assertJsonPath('data.week_summary.ayahs_practised', 3);
+            ->assertJsonPath('data.week_summary.ayahs_practised', 3)
+            ->assertJsonPath('data.week_summary.active_days', 1);
     }
 
     public function test_recommended_next_is_hidden_without_recommendation(): void

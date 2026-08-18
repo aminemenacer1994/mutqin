@@ -1272,12 +1272,36 @@ class DashboardService
             return (int) ($row->ayahs_memorised ?? 0) + (int) ($row->ayahs_reviewed ?? 0);
         });
 
+        $activeDays = (int) $analytics
+            ->filter(function (LearningAnalytic $row) use ($sessions) {
+                $activity = (int) ($row->ayahs_memorised ?? 0)
+                    + (int) ($row->ayahs_reviewed ?? 0)
+                    + (int) ($row->sessions_completed ?? 0);
+
+                return $activity > 0;
+            })
+            ->unique(fn (LearningAnalytic $row) => $row->session_date?->toDateString())
+            ->count();
+
+        if ($activeDays === 0 && $sessions > 0) {
+            $activeDays = (int) UserSession::query()
+                ->where('user_id', $user->id)
+                ->where('is_onboarding_example', false)
+                ->where('status', UserSessionStatus::Completed->value)
+                ->where('ended_at', '>=', $from)
+                ->where('ended_at', '<=', $to)
+                ->selectRaw('DATE(ended_at) as day')
+                ->distinct()
+                ->count('day');
+        }
+
         $isEmpty = $sessions === 0 && $aiChecks === 0 && $ayahsPractised === 0;
 
         return [
             'sessions' => $sessions,
             'ai_checks' => $aiChecks,
             'ayahs_practised' => $ayahsPractised,
+            'active_days' => $activeDays,
             'is_empty' => $isEmpty,
             'from' => $from->toDateString(),
             'to' => $to->toDateString(),

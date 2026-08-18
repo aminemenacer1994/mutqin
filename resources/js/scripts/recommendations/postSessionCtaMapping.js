@@ -6,6 +6,7 @@
  *
  * Colour variants:
  *   primary  — warm brown (normal actions)
+ *   ai       — green (memorisation check / recite)
  *   success  — green (verified / strong progression only)
  *   secondary / ghost — neutral outline
  */
@@ -454,7 +455,7 @@ export function mapPostSessionCtas(state, options = {}) {
     case POST_SESSION_CTA_STATES.AWAITING_CHECK:
     default:
       return [
-        cta('check_memorisation', 'primary', LABEL_KEYS.testWithAi, POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION),
+        cta('check_memorisation', 'ai', LABEL_KEYS.testWithAi, POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION),
         returnToWorkspace,
         // Ghost must describe the real destination: practise again, or start the recommended session.
         cta(

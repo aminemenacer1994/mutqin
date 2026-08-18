@@ -168,7 +168,7 @@ import {
 
   const awaiting = mapPostSessionCtas(POST_SESSION_CTA_STATES.AWAITING_CHECK)
   assert.deepEqual(awaiting.map((b) => [b.variant, b.action, b.labelKey]), [
-    ['primary', POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION, 'testWithAi'],
+    ['ai', POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION, 'testWithAi'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
     ['ghost', POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW, 'continueToNextRange'],
   ], 'skip must label the real continue destination')
@@ -200,7 +200,7 @@ import {
     const buttons = mapPostSessionCtas(state, state === POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO
       ? { insufficientReason: 'mic_permission' }
       : {})
-    const leadCount = buttons.filter((b) => b.variant === 'primary' || b.variant === 'success').length
+    const leadCount = buttons.filter((b) => b.variant === 'primary' || b.variant === 'success' || b.variant === 'ai').length
     assert.equal(leadCount, 1, `${state} must keep a single recommended primary/success CTA`)
     assert.equal(
       buttons.filter((b) => b.variant === 'secondary').length,

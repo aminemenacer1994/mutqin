@@ -325,7 +325,7 @@ const t = (key, params = {}) => {
   assert.ok(partial.detailsMetrics.some((m) => m.key === 'words' && m.value === '2/5'))
   const sequence = partial.detailsMetrics.find((m) => m.key === 'sequence')
   assert.equal(sequence.value, 'Steady')
-  assert.ok(partial.detailsMetrics.some((m) => m.key === 'confidence'))
+  assert.ok(!partial.detailsMetrics.some((m) => m.key === 'confidence'), 'recognition confidence stays internal')
   assert.equal(resolveRecognitionConfidence([
     { confidence: 0.9 }, { confidence: 0.7 },
   ]), 80)

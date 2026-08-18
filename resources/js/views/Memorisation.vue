@@ -444,38 +444,70 @@
           </div>
           </template>
           <div v-else-if="showSessionOverviewIdleActions" class="workspace-shell-idle">
-            <div v-if="shouldShowWorkspaceJourney || workspaceJourneyTitle" class="workspace-shell-copy">
-              <span class="workspace-shell-kicker">{{ t('memorisation.workspaceJourney.kicker') }}</span>
-              <h1 class="workspace-shell-main-title">{{ workspaceJourneyTitle }}</h1>
-              <p v-if="workspaceJourneyNextLine" class="workspace-shell-subtitle">{{ workspaceJourneyNextLine }}</p>
-              <p v-if="workspaceJourneyStatsLine" class="workspace-shell-hint">{{ workspaceJourneyStatsLine }}</p>
-              <a
-                v-if="isLoggedIn"
-                class="workspace-shell-path"
-                :href="learnerDashboardUrl"
-                @click.prevent="openDashboardView"
-              >{{ t('memorisation.workspaceJourney.openDashboard') }}</a>
+            <div class="workspace-shell-idle-inner">
+              <div class="workspace-shell-idle-main">
+                <div class="workspace-shell-copy">
+                  <span class="workspace-shell-kicker">{{ workspaceIdleKicker }}</span>
+                  <h1 class="workspace-shell-main-title">{{ workspaceJourneyTitle }}</h1>
+                  <p v-if="workspaceJourneyNextLine" class="workspace-shell-lead">{{ workspaceJourneyNextLine }}</p>
+                  <ul v-if="workspaceJourneyStatChips.length" class="workspace-shell-stats">
+                    <li
+                      v-for="chip in workspaceJourneyStatChips"
+                      :key="chip.key"
+                      class="workspace-shell-stat"
+                    >{{ chip.label }}</li>
+                  </ul>
+                  <p v-if="workspaceJourneyGuidance" class="workspace-shell-guidance">{{ workspaceJourneyGuidance }}</p>
+                </div>
+                <div v-if="showHeaderSessionAction" class="workspace-shell-idle-cta">
+                  <div
+                    class="action-btn primary session-idle-action session-primary-action"
+                    role="button"
+                    tabindex="0"
+                    :aria-disabled="headerSessionActionDisabled ? 'true' : 'false'"
+                    :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
+                    :class="{ 'is-disabled': headerSessionActionDisabled, 'is-loading': headerSessionActionBusy }"
+                    @click="handleHeaderSessionAction"
+                    @keydown.enter.prevent="handleHeaderSessionAction"
+                    @keydown.space.prevent="handleHeaderSessionAction"
+                    :title="headerSessionActionLabel"
+                    :aria-label="headerSessionActionLabel"
+                  >
+                    <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
+                    <span>{{ headerSessionActionLabel }}</span>
+                  </div>
+                </div>
+              </div>
+              <nav
+                v-if="isLoggedIn && shouldShowWorkspaceJourney"
+                class="workspace-shell-idle-secondary"
+                :aria-label="t('memorisation.workspaceJourney.idleLinksLabel')"
+              >
+                <a
+                  class="workspace-shell-mini-link"
+                  :href="learnerDashboardUrl"
+                  :title="t('memorisation.workspaceJourney.openDashboardHint')"
+                  @click.prevent="openDashboardView"
+                >
+                  <span class="workspace-shell-mini-link__icon" aria-hidden="true">
+                    <i class="bi bi-journal-richtext"></i>
+                  </span>
+                  <span class="workspace-shell-mini-link__label">{{ t('memorisation.workspaceJourney.openDashboard') }}</span>
+                </a>
+                <button
+                  v-if="journeyHasStarted"
+                  type="button"
+                  class="workspace-shell-mini-link"
+                  :title="t('memorisation.workspaceJourney.chooseDifferentHint')"
+                  @click="openNewSessionSetup"
+                >
+                  <span class="workspace-shell-mini-link__icon" aria-hidden="true">
+                    <i class="bi bi-book-half"></i>
+                  </span>
+                  <span class="workspace-shell-mini-link__label">{{ t('memorisation.workspaceJourney.chooseDifferent') }}</span>
+                </button>
+              </nav>
             </div>
-          <div class="workspace-shell-actions workspace-shell-actions-minimal">
-            <div
-              v-if="showHeaderSessionAction"
-              class="action-btn primary session-idle-action session-primary-action"
-              role="button"
-              tabindex="0"
-              :aria-disabled="headerSessionActionDisabled ? 'true' : 'false'"
-              :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
-              :class="{ 'is-disabled': headerSessionActionDisabled, 'is-loading': headerSessionActionBusy }"
-              :style="{ minWidth: primarySessionActionPresentation.stableWidthCh + 'ch' }"
-              @click="handleHeaderSessionAction"
-              @keydown.enter.prevent="handleHeaderSessionAction"
-              @keydown.space.prevent="handleHeaderSessionAction"
-              :title="headerSessionActionLabel"
-              :aria-label="headerSessionActionLabel"
-            >
-              <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
-              <span>{{ headerSessionActionLabel }}</span>
-            </div>
-          </div>
           </div>
         </div>
         <p v-if="chainingSetupBlocking" class="workspace-setup-hint workspace-setup-hint-warning" role="status">
@@ -576,6 +608,7 @@
                 <span class="workspace-empty-kicker">{{ t('memorisation.workspaceEmpty.kicker') }}</span>
                 <h2>{{ isFirstTimeJourneyEmpty ? t('memorisation.workspaceEmpty.journeyTitle') : t('memorisation.workspaceEmpty.title') }}</h2>
                 <p>{{ isFirstTimeJourneyEmpty ? t('memorisation.workspaceEmpty.journeyDesc') : t('memorisation.workspaceEmpty.desc') }}</p>
+                <p class="workspace-empty-instruction">{{ t('memorisation.workspaceEmpty.instruction') }}</p>
                 <div v-if="isFirstTimeJourneyEmpty" class="workspace-empty-choice-grid">
                   <button
                     class="workspace-empty-choice-card workspace-empty-choice-card--primary"
@@ -944,68 +977,8 @@
         </div>
 
         <div ref="toolsBody" class="tools-body compact">
-          <div v-if="showHifzPlannerUi" class="sheet planner-controls-sheet">
-            <section class="sheet-section sheet-section-compact">
-              <div class="sheet-content planner-controls-content">
-                <div class="field-stack field-stack-compact">
-                  <div class="field">
-                    <label><i class="bi bi-book"></i> {{ t('memorisation.planner.hifzPlan') }}</label>
-                    <strong>{{ hifzPlan?.selectedSurah || 'Current plan' }} · {{ plannerSessionState.sessionRange?.rangeStart || 1 }}-{{ plannerSessionState.sessionRange?.rangeEnd || 1 }}</strong>
-                    <small class="field-hint">{{ plannerGuidanceTitle }}</small>
-                  </div>
-                  <div class="field">
-                    <label><i class="bi bi-bullseye"></i> {{ t('memorisation.planner.todaysGoal') }}</label>
-                    <strong>{{ plannerSessionState.todayGoalLabel }}</strong>
-                    <small class="field-hint">{{ plannerGuidanceWhy }}</small>
-                  </div>
-                  <div class="field">
-                    <label><i class="bi bi-gem"></i> {{ t('memorisation.planner.memoryReview') }}</label>
-                    <strong>{{ plannerMemoryReviewLine }}</strong>
-                    <small class="field-hint">{{ t('memorisation.analyticsHeatmap.nextReviewHint', { label: plannerSessionState.nextReviewLabel, confidence: plannerConfidenceLine }) }}</small>
-                  </div>
-                  <div v-if="hasSessionStarted" class="field">
-                    <label><i class="bi bi-layout-text-window-reverse"></i> {{ t('memorisation.planner.sessionView') }}</label>
-                    <div class="planner-controls-inline">
-                      <button
-                        type="button"
-                        class="planner-inline-btn"
-                        :class="{ active: readingViewMode === 'mushaf' }"
-                        @click="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
-                      >
-                        <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-book' : 'bi-view-stacked'"></i>
-                        {{ readingViewMode === 'mushaf' ? 'Mushaf view' : 'Stacked view' }}
-                      </button>
-                      <div class="font-dropdown quick-font-dropdown planner-font-dropdown" @click.stop>
-                        <button class="font-dropdown-trigger" type="button" @click="toggleFontDropdown" title="Change Quranic font">
-                          <i class="bi bi-text-paragraph" aria-hidden="true"></i>
-                          <span>{{ getCurrentFontLabel() }}</span>
-                          <i class="bi bi-chevron-down" :class="{ rotated: fontDropdownOpen }" aria-hidden="true"></i>
-                        </button>
-                        <transition name="dropdown-fade">
-                          <div v-if="fontDropdownOpen" class="font-dropdown-menu quick-font-menu">
-                            <button v-for="font in quranFontOptions" :key="font.value" type="button" class="font-option"
-                              :class="{ active: quranFont === font.value }" @click="selectFont(font.value)">
-                              <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
-                              <span>{{ font.label }}</span>
-                              <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                            </button>
-                          </div>
-                        </transition>
-                      </div>
-                    </div>
-                    <small class="field-hint">{{ t('memorisation.view_and_font_controls_stay_here_while_planner_mod') }}</small>
-                  </div>
-                  <div v-else class="field">
-                    <label><i class="bi bi-layout-text-window-reverse"></i> {{ t('memorisation.planner.sessionView') }}</label>
-                    <strong>{{ t('memorisation.available_after_you_start_todays_session') }}</strong>
-                    <small class="field-hint">{{ t('memorisation.mushaf_view_and_font_options_stay_hidden_until_the') }}</small>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
           <!-- TOOLS TAB -->
-          <div v-else-if="tab === 'tools'" class="sheet">
+          <div v-if="tab === 'tools'" class="sheet">
             <section class="sheet-section sheet-section-compact">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
@@ -1122,7 +1095,7 @@
           </div>
 
           <!-- TECHNIQUES TAB -->
-          <div v-else-if="tab === 'techniques'" class="sheet">
+          <div v-if="tab === 'techniques'" class="sheet">
             <div class="technique-group-copy technique-group-beginner">
               <span class="technique-group-kicker">{{ t('memorisation.practiceTools.beginner') }}</span>
               <p>{{ t('memorisation.practiceTools.beginnerDesc') }}</p>
@@ -1446,7 +1419,7 @@
           </div>
 
           <!-- SAVED TAB -->
-          <div v-else-if="tab === 'saved'" class="sheet saved-sheet saved-sheet--beige">
+          <div v-if="tab === 'saved'" class="sheet saved-sheet saved-sheet--beige">
             <header class="saved-sheet__header">
               <div class="saved-sheet__header-copy">
                 <h3 class="saved-sheet__title">{{ t('memorisation.saved_sessions') }}</h3>
@@ -1612,7 +1585,7 @@
             </section>
           </div>
 
-          <div v-else-if="isLoggedIn && tab === 'stats'" class="sheet">
+          <div v-if="isLoggedIn && tab === 'stats'" class="sheet">
             <div v-if="tab === 'stats'" class="sheet">
               <div class="stats-sessions-container">
                 <div class="saved-header">
@@ -1645,7 +1618,7 @@
           </div>
 
           <!-- SETTINGS TAB - Same layout as Techniques tab -->
-          <div v-else-if="tab === 'settings'" class="sheet">
+          <div v-if="tab === 'settings'" class="sheet">
 
             <!-- Display Settings Section -->
             <section class="sheet-section">
@@ -1757,31 +1730,21 @@
         </div>
 
         <div class="tools-footer" :class="{ 'settings-footer': tab === 'settings' }">
-          <template v-if="showHifzPlannerUi">
-            <button class="tools-btn btn btn-primary session-primary-action" @click="startPlannerPrimaryAction">
-              <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i><span>{{ plannerPrimaryActionLabel }}</span>
-            </button>
-            <button class="tools-btn tools-btn-ghost tools-btn-soft" @click="openHifzPlanModal">
-              <i class="bi bi-pencil-square"></i><span>{{ t('memorisation.edit_plan') }}</span>
-            </button>
-          </template>
-          <template v-else>
-            <button
-              type="button"
-              class="tools-btn btn btn-primary session-primary-action"
-              :class="{ 'is-loading': toolsStartBusy, 'is-disabled': toolsStartDisabled }"
-              :disabled="toolsStartDisabled"
-              :aria-busy="toolsStartBusy ? 'true' : 'false'"
-              :aria-disabled="toolsStartDisabled ? 'true' : 'false'"
-              @click="startSessionAndClose"
-            >
-              <i class="bi" :class="toolsStartBusy ? 'bi-arrow-repeat spin' : 'bi-play-fill'" aria-hidden="true"></i>
-              <span>{{ toolsStartBusy ? t('common.startingSession') : toolsPrimaryStartLabel }}</span>
-            </button>
-            <button type="button" class="tools-btn tools-btn-ghost tools-btn-soft" :disabled="toolsStartBusy" @click="resetControls">
-              <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
-            </button>
-          </template>
+          <button
+            type="button"
+            class="tools-btn btn btn-primary session-primary-action"
+            :class="{ 'is-loading': toolsStartBusy, 'is-disabled': toolsStartDisabled }"
+            :disabled="toolsStartDisabled"
+            :aria-busy="toolsStartBusy ? 'true' : 'false'"
+            :aria-disabled="toolsStartDisabled ? 'true' : 'false'"
+            @click="startSessionAndClose"
+          >
+            <i class="bi" :class="toolsStartBusy ? 'bi-arrow-repeat spin' : 'bi-play-fill'" aria-hidden="true"></i>
+            <span>{{ toolsStartBusy ? t('common.startingSession') : toolsPrimaryStartLabel }}</span>
+          </button>
+          <button type="button" class="tools-btn tools-btn-ghost tools-btn-soft" :disabled="toolsStartBusy" @click="resetControls">
+            <i class="bi bi-arrow-counterclockwise"></i><span>{{ t('common.reset') }}</span>
+          </button>
         </div>
       </aside>
     </div>
