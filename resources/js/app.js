@@ -143,6 +143,14 @@ function loadMemorisationChunk(attempt = 0) {
                 }, delayMs);
             });
         }
+        if (isChunkError && typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            if (!url.searchParams.has('mutqin_force')) {
+                url.searchParams.set('mutqin_force', String(Date.now()));
+                window.location.replace(url.toString());
+                return new Promise(() => {});
+            }
+        }
         throw error;
     });
 }

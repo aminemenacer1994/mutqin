@@ -1649,6 +1649,8 @@ export default {
       if (
         this.isSessionLive
         || this.sessionPaused
+        || this.sessionExitEndingBusy
+        || this.sessionLifecycleMutation === SESSION_MUTATION.ENDING
         || this.showWelcomeBackModal
         || this.returningUserChoicePending
         || this.backendUnfinishedSession
@@ -1716,10 +1718,10 @@ export default {
       return true
     },
     showHifzPlannerUi() {
-      return false
+      return this.canUsePremiumTechniques
     },
     showAiMemorisationButton() {
-      return false
+      return this.aiTestModalsEnabled
     },
     aiTestModalsEnabled() {
       return AI_TEST_MODALS_ENABLED === true && this.canUseProFeatures
@@ -17345,6 +17347,7 @@ export default {
       this.ensureSelectedRecordingsAyah()
     },
     openRecordingsLibrary(options = {}) {
+      if (!this.requireProFeatureAccess()) return
       const targetAyahKey = options?.ayahKey
         || (this.showSelfCheckModal ? this.selfCheckVerseKey : '')
         || this.effectiveActiveVerseKey
@@ -18918,6 +18921,9 @@ export default {
         return
       }
       if (!this.aiTestModalsEnabled) {
+        if (!this.canUseProFeatures) {
+          this.requireProFeatureAccess()
+        }
         this.amdOpen = false
         this.amdEntrySource = null
         this.amdStage = AMD_STAGES.IDLE
@@ -22274,7 +22280,12 @@ export default {
         ? this.aiMemorisationCheckerLiveWords
         : this.recitationLiveWords
       return (Array.isArray(liveWords) ? liveWords : [])
-        .filter((word) => ['correct', 'partial', 'incorrect'].includes(String(word?.status || '').toLowerCase()))
+        .filter((word) => {
+          const status = String(word?.status || '').toLowerCase()
+          if (['correct', 'partial', 'incorrect', 'close', 'amber', 'yellow'].includes(status)) return true
+          const spoken = String(word?.actual || word?.text || word?.word || '').trim()
+          return spoken.length > 0 && status !== 'pending' && status !== 'skipped'
+        })
     },
     recoverArabicRecognitionWords(kind = 'recitation') {
       const best = this.getBestRecognitionWordsForAssessment(kind)
@@ -24710,19 +24721,38 @@ export default {
         this.scrollToRecitationResults()
         return
       }
-      const committedWords = (() => {
+      const recordingSeconds = this.getRecitationElapsedSeconds({
+        startedAt: this.recitationCheckStartedAt || 0,
+        endedAt: Date.now(),
+      })
+      let committedWords = (() => {
         this.commitPendingRecognitionInterim('recitation')
         const best = this.getBestRecognitionWordsForAssessment('recitation')
         if (best.length) return best
         return this.recoverArabicRecognitionWords('recitation')
       })()
+      if (!committedWords.length) {
+        const fallbackTranscript = this.getRecitationSpeechFallbackTranscript?.() || ''
+        const fallbackTokens = fallbackTranscript
+          ? this.tokenizeRecitationWords(fallbackTranscript)
+          : []
+        if (
+          fallbackTokens.length
+          && recordingSeconds >= RECITATION_AUDIO_THRESHOLDS.minUsableSpeechSeconds
+        ) {
+          committedWords = fallbackTokens.map((word, index) => ({
+            word,
+            display: word,
+            confidence: 0.58,
+            provider: 'speech-fallback',
+            sourceIndex: index,
+            recovered: true,
+          }))
+        }
+      }
       const liveSpokenEvidence = this.getLiveSpokenRecitationEvidence('recitation')
       const liveWordStatuses = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
       const transcript = wordsToTranscript(committedWords)
-      const recordingSeconds = this.getRecitationElapsedSeconds({
-        startedAt: this.recitationCheckStartedAt || 0,
-        endedAt: Date.now(),
-      })
       if (!committedWords.length) {
         // Live colouring already proved speech was heard — do not blame the mic.
         if (liveSpokenEvidence.length && (this.postSessionAiReciteActive || this.showPostSessionModal || this.amdOpen)) {
@@ -29903,11 +29933,11 @@ export default {
     async confirmEndSessionFromExitModal() {
       const decision = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION)
       if (!decision.completeSession) return
-      // End Session confirm ends practice and opens the post-session choice panel.
+      // End Session confirm opens the same Session Complete coach modal as natural finish.
       await this.confirmSessionExit({
         showSummary: false,
-        openCompletion: false,
-        openPostSessionChoice: true,
+        openCompletion: true,
+        openPostSessionChoice: false,
       })
     },
 
@@ -30470,6 +30500,13 @@ export default {
           this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
           this.sessionBroadcast?.publish('session-ended', { at: Date.now() })
 
+          try {
+            this.recomputeAnalytics()
+            this.finishSessionCleanup()
+          } catch (_) { /* completion UI still opens below */ }
+
+          this.showPostSessionChoice = false
+
           if (openPostSessionChoice) {
             this.openPostSessionChoice(endedSnapshot)
           } else if ((openCompletion || showSummary) && gate.openCompletionScreen && gate.showPostCompletionActions) {
@@ -30481,10 +30518,8 @@ export default {
 
           const finalizeAfterOpen = () => {
             try {
-              this.recomputeAnalytics()
-              this.finishSessionCleanup()
+              this.promptSaveSessionAfterEnd({ wasSample })
             } catch (_) { /* completion UI already open */ }
-            this.promptSaveSessionAfterEnd({ wasSample })
           }
           if (typeof requestIdleCallback === 'function') {
             requestIdleCallback(finalizeAfterOpen, { timeout: 500 })
@@ -31599,6 +31634,7 @@ export default {
     },
 
     async downloadVerseAudio(verse) {
+      if (!this.requireProFeatureAccess()) return
       const audioUrl = this.resolveAyahAudioUrl(verse)
       if (!audioUrl) {
         this.showBanner(this.t('memorisation.offlineDownload.unavailable'), 'info', 5000, null, { important: true })
@@ -33544,7 +33580,10 @@ export default {
       const message = requiredTier === 'pro'
         ? this.translateOrFallback('memorisation.billing.proRequired', 'Upgrade to Mutqin Pro to use this feature.')
         : this.translateOrFallback('memorisation.billing.premiumRequired', 'Upgrade to Mutqin Premium to use this feature.')
-      this.showBanner(message, 'info', 3500)
+      this.showBanner(message, 'info', 6500, {
+        key: 'open-pricing',
+        label: this.translateOrFallback('memorisation.billing.viewPlans', 'View plans'),
+      }, { important: true })
     },
     requirePremiumTechniqueAccess() {
       if (this.canUsePremiumTechniques) {
@@ -33934,6 +33973,11 @@ export default {
       }
       if (actionKey === 'open-recordings-library') {
         this.openRecordingsLibrary(actionPayload || {})
+        return
+      }
+      if (actionKey === 'open-pricing') {
+        window.location.assign(pricingUpgradeUrl(this.auth))
+        return
       }
       if (actionKey === 'start-quiz') {
         this.openRetentionQuiz()

@@ -49,6 +49,19 @@
 }
 
 /* Billing toggle */
+.pricing-hero p {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+}
+
+.pricing-checkout-note {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  max-width: 36rem;
+  margin-inline: auto;
+}
+
 .pricing-billing {
   display: flex;
   justify-content: center;

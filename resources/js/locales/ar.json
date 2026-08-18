@@ -29,7 +29,7 @@
     "download": "تنزيل",
     "method": "الطريقة",
     "tajweed": "Tajweed",
-    "dismiss": "Dismiss",
+    "dismiss": "إغلاق",
     "backToTop": "العودة إلى الأعلى",
     "skipOnboarding": "تخطّي الجولة",
     "resumeSession": "استئناف الجلسة",
@@ -469,6 +469,11 @@
       "attemptCountOne": "محاولة واحدة",
       "attemptCountOther": "{count} محاولات",
       "checkAyahsAgain": "تحقّق من {range} مرة أخرى."
+    },
+    "billing": {
+      "premiumRequired": "ترقّ إلى متقن Premium لاستخدام هذه الميزة.",
+      "proRequired": "ترقّ إلى متقن Pro لاستخدام هذه الميزة.",
+      "viewPlans": "عرض الخطط"
     },
     "workspaceJourney": {
       "aria": "حفظك",
@@ -2518,7 +2523,7 @@
     "audioRecordingNotReady": "Recording playback is not ready yet. Close any open check modal, refresh if needed, then try again.",
     "playbackTapToPlay": "Your browser blocked autoplay. Tap play when you are ready to listen.",
     "sessionResumeFailed": "Unable to resume session. Please try again.",
-    "sessionEndFailed": "Unable to end session. Please try again.",
+    "sessionEndFailed": "تعذّر إنهاء الجلسة. يرجى المحاولة مرة أخرى.",
     "couldNotPlayRecording": "تعذّر تشغيل هذا التسجيل. أعد تحميله أو سجّل مرة أخرى."
   },
   "errors": {

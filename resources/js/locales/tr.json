@@ -445,6 +445,11 @@
       "resumeSession": "Resume Previous Played Session?",
       "retentionCheck": "Hafıza kontrolü"
     },
+    "billing": {
+      "premiumRequired": "Bu özelliği kullanmak için Mutqin Premium'a yükseltin.",
+      "proRequired": "Bu özelliği kullanmak için Mutqin Pro'ya yükseltin.",
+      "viewPlans": "Planları gör"
+    },
     "quiz": {
       "title": "Hafıza kontrolü",
       "contextPlan": "{mode} planı",

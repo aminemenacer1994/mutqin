@@ -475,6 +475,11 @@
       "attemptCountOne": "{count} attempt",
       "attemptCountOther": "{count} attempts"
     },
+    "billing": {
+      "premiumRequired": "Upgrade to Mutqin Premium to use this feature.",
+      "proRequired": "Upgrade to Mutqin Pro to use this feature.",
+      "viewPlans": "View plans"
+    },
     "workspaceJourney": {
       "aria": "Your hifz",
       "kicker": "Your hifz",
@@ -2972,7 +2977,8 @@
     "proDiscount": "30% off",
     "billedMonthly": "Billed monthly",
     "billedAnnually": "£{amount}/year",
-    "trialBadge": "7-day trial"
+    "trialBadge": "7-day trial",
+    "checkoutNote": "Sign in before checkout so your plan syncs to the correct account. After payment, use the same email you used in Stripe."
   },
   "mission": {
     "title": "Our mission",

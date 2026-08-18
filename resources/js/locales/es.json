@@ -780,6 +780,11 @@
       "resumeSession": "Resume Previous Played Session?",
       "retentionCheck": "Retention check"
     },
+    "billing": {
+      "premiumRequired": "Actualiza a Mutqin Premium para usar esta función.",
+      "proRequired": "Actualiza a Mutqin Pro para usar esta función.",
+      "viewPlans": "Ver planes"
+    },
     "quiz": {
       "title": "Retention check",
       "contextPlan": "{mode} plan",

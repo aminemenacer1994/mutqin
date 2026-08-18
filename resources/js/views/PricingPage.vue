@@ -4,6 +4,7 @@
       <header class="pricing-hero">
         <h1>{{ t('pricingPage.title') }}</h1>
         <p>{{ t('pricingPage.subtitle') }}</p>
+        <p v-if="!isAuthenticated" class="pricing-checkout-note">{{ t('pricingPage.checkoutNote') }}</p>
       </header>
 
       <div class="pricing-billing">
@@ -166,6 +167,7 @@ export default {
     const { t } = useI18n();
     const billingCycle = ref('annual');
     const csrfToken = ref(document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+    const isAuthenticated = ref(!!window.mutqinAuthCheck);
 
     const startFreeHref = computed(() => (window.mutqinAuthCheck ? '/memorisation' : '/register'));
 
@@ -276,6 +278,7 @@ export default {
       t,
       billingCycle,
       csrfToken,
+      isAuthenticated,
       plans,
       comparisonRows,
       valClass,

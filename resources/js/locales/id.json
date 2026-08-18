@@ -439,6 +439,11 @@
       "resumeSession": "Lanjutkan Sesi Sebelumnya?",
       "retentionCheck": "Cek retensi"
     },
+    "billing": {
+      "premiumRequired": "Upgrade ke Mutqin Premium untuk fitur ini.",
+      "proRequired": "Upgrade ke Mutqin Pro untuk fitur ini.",
+      "viewPlans": "Lihat paket"
+    },
     "quiz": {
       "title": "Cek retensi",
       "contextPlan": "Rencana {mode}",

@@ -2742,7 +2742,7 @@
     </div>
 
 
-    <div v-if="false && showRecordingsLibrary" class="modal-overlay mutqin-modal-overlay recordings-library-overlay"
+    <div v-if="canUseProFeatures && showRecordingsLibrary" class="modal-overlay mutqin-modal-overlay recordings-library-overlay"
       @click.self="closeRecordingsLibrary">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full">
       <div class="modal-content mutqin-modal-surface recordings-library-modal" role="dialog" aria-modal="true"

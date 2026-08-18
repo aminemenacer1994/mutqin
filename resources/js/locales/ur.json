@@ -29,7 +29,7 @@
     "download": "ڈاؤن لوڈ",
     "method": "الطريقة",
     "tajweed": "تجوید",
-    "dismiss": "Dismiss",
+    "dismiss": "بند کریں",
     "backToTop": "اوپر جائیں",
     "skipOnboarding": "دورہ چھوڑیں",
     "resumeSession": "سیشن جاری رکھیں",
@@ -438,6 +438,11 @@
       "saveSession": "حفظ هذه الجلسة",
       "resumeSession": "استئناف الجلسة السابقة؟",
       "retentionCheck": "فحص التثبيت"
+    },
+    "billing": {
+      "premiumRequired": "Mutqin Premium اپ گریڈ کریں تاکہ یہ فیچر استعمال کر سکیں۔",
+      "proRequired": "Mutqin Pro اپ گریڈ کریں تاکہ یہ فیچر استعمال کر سکیں۔",
+      "viewPlans": "منصوبے دیکھیں"
     },
     "quiz": {
       "title": "فحص التثبيت",

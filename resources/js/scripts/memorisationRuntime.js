@@ -73,7 +73,7 @@ export const SPEECHMATICS_AUDIO_BUFFER_SIZE = 4096
 export const SPEECHMATICS_MAX_DELAY_SECONDS = 0.7
 // Natural pauses between āyahs need more than half a second.
 export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.9
-export const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0
+export const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0.78
 export const RECITATION_WORD_STATUS_CLASSES = [
   'recitation-word-pending',
   'recitation-word-correct',
