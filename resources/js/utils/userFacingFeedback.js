@@ -5,7 +5,10 @@
 export const FORBIDDEN_USER_TIMING_TERMS = /timing buffer|confidence threshold|alignment window|latency|pacing coefficient/i
 
 /** Notes that reveal backend waiting rather than a real mistake. */
-export const INTERNAL_LIVE_WAITING_NOTE = /waiting for (?:this word|confirmation)|locked until/i
+export const INTERNAL_LIVE_WAITING_NOTE = /waiting for (?:this word|confirmation|your first)|locked until/i
+
+/** Internal ASR / progression copy — never surface to learners. */
+export const INTERNAL_ASR_FEEDBACK_NOTE = /not heard yet|low recognition confidence/i
 
 export function containsForbiddenUserTimingTerms(text = '') {
   return FORBIDDEN_USER_TIMING_TERMS.test(String(text || ''))
@@ -39,6 +42,7 @@ export function sanitizeLiveWordNote(note = '', {
   const value = String(note || '').trim()
   if (!value) return ''
   if (containsForbiddenUserTimingTerms(value)) return ''
+  if (INTERNAL_ASR_FEEDBACK_NOTE.test(value)) return ''
 
   const normalizedStatus = String(status || '').toLowerCase()
   const isPending = !normalizedStatus
@@ -49,4 +53,16 @@ export function sanitizeLiveWordNote(note = '', {
   if (liveRecording && isPending) return ''
 
   return value
+}
+
+/**
+ * Post-session review tooltips — keep learner-facing mistake copy only.
+ *
+ * @param {string} note
+ * @param {string} [fallback]
+ */
+export function sanitizeRecitationReviewNote(note = '', fallback = '') {
+  const sanitized = sanitizeLiveWordNote(note, { liveRecording: false })
+  if (sanitized) return sanitized
+  return String(fallback || '').trim()
 }

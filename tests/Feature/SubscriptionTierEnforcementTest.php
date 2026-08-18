@@ -10,20 +10,29 @@ class SubscriptionTierEnforcementTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_free_user_cannot_create_memorisation_assessment(): void
+    public function test_free_user_can_create_memorisation_assessment(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
             ->postJson('/api/memorisation/assessments', [
                 'surah_number' => 1,
+                'surah_name' => 'Al-Fatihah',
                 'start_ayah' => 1,
                 'end_ayah' => 1,
-                'ayahs' => [],
-                'recognition_words' => [],
+                'duration_ms' => 1000,
+                'provider' => 'test',
+                'ayahs' => [[
+                    'ayah_number' => 1,
+                    'surah_number' => 1,
+                    'words' => ['بسم', 'الله'],
+                ]],
+                'recognition_words' => [
+                    ['word' => 'بسم', 'confidence' => 0.95],
+                    ['word' => 'الله', 'confidence' => 0.94],
+                ],
             ])
-            ->assertForbidden()
-            ->assertJsonPath('required_tier', 'pro');
+            ->assertCreated();
     }
 
     public function test_pro_user_can_create_memorisation_assessment(): void
@@ -51,14 +60,19 @@ class SubscriptionTierEnforcementTest extends TestCase
             ->assertCreated();
     }
 
-    public function test_free_user_cannot_request_transcription_token(): void
+    public function test_free_user_can_request_transcription_token_when_speechmatics_unconfigured(): void
     {
         $user = User::factory()->create();
 
+        config([
+            'services.speechmatics.api_key' => '',
+            'services.speechmatics.region' => 'eu',
+        ]);
+
         $this->actingAs($user)
             ->postJson(route('memorisation.transcription-token'))
-            ->assertForbidden()
-            ->assertJsonPath('required_tier', 'pro');
+            ->assertOk()
+            ->assertJsonPath('available', false);
     }
 
     public function test_pro_user_can_request_transcription_token_when_speechmatics_unconfigured(): void
@@ -98,18 +112,18 @@ class SubscriptionTierEnforcementTest extends TestCase
         $this->assertNotSame(403, $premiumResponse->status());
     }
 
-    public function test_premium_user_cannot_submit_ai_assessment(): void
+    public function test_free_user_can_submit_ai_assessment(): void
     {
-        $user = User::factory()->premium()->create();
+        $user = User::factory()->create();
 
-        $this->actingAs($user)
+        $response = $this->actingAs($user)
             ->postJson('/api/recommendations/ai-assessment', [
                 'session_id' => 'sess-ai-1',
                 'accuracy' => 0.8,
                 'confidence' => 'confident',
-            ])
-            ->assertForbidden()
-            ->assertJsonPath('required_tier', 'pro');
+            ]);
+
+        $this->assertNotSame(403, $response->status());
     }
 
     public function test_admin_user_bypasses_pro_gate(): void

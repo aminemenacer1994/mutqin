@@ -220,9 +220,10 @@ includesAll('welcome back continue session flow', [
   assert.match(en, /"resumePlaceBeginning": "\{chapter\}, from the start"/)
   assert.match(en, /"resumePlaceAyah": "\{chapter\}, ayah \{number\}"/)
   assert.match(welcomeBlock, /container-fluid welcome-back-fluid/)
-  assert.match(welcomeBlock, /welcomeBackMetaParts/)
+  assert.match(welcomeBlock, /welcomeBackMetaChips/)
   assert.match(welcomeBlock, /welcome-back-salam/)
   assert.match(welcomeBlock, /welcome-back-meta-line/)
+  assert.match(welcomeBlock, /welcome-back-meta-chip/)
   assert.doesNotMatch(welcomeBlock, /welcome-back-context/)
   assert.match(en, /"continuePreviousSession": "Return to this set"/)
 }
@@ -255,11 +256,11 @@ includesAll('quran font picker access', [
 ])
 
 includesAll('desktop control group swap', [
-  /\/\* Desktop: session action buttons left of the four icon controls \(same row\) \*\//,
-  /@media \(min-width: 768px\) \{[\s\S]*\.workspace-shell-head > \.workspace-shell-actions \{[\s\S]*grid-column: 2 !important;/,
-  /@media \(min-width: 768px\) \{[\s\S]*\.workspace-shell-head > \.top-card-icon-controls \{[\s\S]*grid-column: 3 !important;/,
-  /\.workspace-shell--post-session-choice \.workspace-shell-actions[\s\S]*order: 2 !important;/,
-  /\.workspace-shell--post-session-choice \.top-card-icon-controls[\s\S]*order: 3 !important;/,
+  /\/\* Session CTAs live inside \.workspace-shell-head-toolbar \(left of icon controls\)\./,
+  /\.workspace-shell-head:not\(\.is-idle\) > \.workspace-shell-head-toolbar \{/,
+  /\.workspace-shell-head-toolbar > \.top-card-icon-controls \{/,
+  /class="workspace-shell-head-toolbar"/,
+  /class="workspace-shell-head-utility-row"/,
 ])
 
 includesAll('top toolbar feature spacing', [
@@ -297,31 +298,26 @@ includesAll('top toolbar feature spacing', [
     'blade must not force UthmanicHafs after MutqinHideQuranCircles'
   )
 
-  // Progress pills (row 2) must not share a grid row with Resume/End actions (row 3)
+  // Mobile stack: toolbar (title + CTAs + icons) on row 1, progress pills on row 2
   assert.match(
-    memorisationCss,
-    /row 2 = progress pills[\s\S]*?row 3 = Resume \/ End session actions[\s\S]*?\.workspace-shell-head > \.workspace-shell-actions \{[\s\S]*?grid-row:\s*3\s*!important/,
-    'mobile actions must occupy grid-row 3 below progress pills'
-  )
-  assert.match(
-    memorisationCss,
-    /row 2 = progress pills[\s\S]*?\.workspace-shell-head > \.workspace-shell-progress-pills \{[\s\S]*?grid-row:\s*2\s*!important/,
-    'progress pills must occupy grid-row 2'
+    blade,
+    /Mobile session overview stack:[\s\S]*?1 = title \+ session CTAs \+ icon controls · 2 = progress pills[\s\S]*?\.workspace-shell-head > \.workspace-shell-progress-pills \{[\s\S]*?grid-row:\s*2\s*!important/,
+    'blade hotfix must keep progress pills on grid-row 2'
   )
   assert.match(
     mobileGridCss,
-    /Progress pills = row 2; session actions = real row-3 box[\s\S]*?\.workspace-shell-head > \.workspace-shell-actions \{[\s\S]*?grid-row:\s*3\s*!important/,
-    'mobile-grid must place actions on row 3 as a real box'
+    /\.workspace-shell-head > \.workspace-shell-progress-pills \{[\s\S]*?grid-row:\s*2\s*!important[\s\S]*?overflow-x:\s*auto/,
+    'mobile-grid must place progress pills on row 2 with horizontal scroll'
   )
   assert.match(
     mobileGridCss,
-    /\.workspace-shell-head > \.workspace-shell-progress-pills \{[\s\S]*?overflow-x:\s*auto/,
-    'progress pills row must keep horizontal scroll'
+    /\.workspace-shell-head > \.workspace-shell-head-toolbar \{[\s\S]*?grid-row:\s*1\s*!important/,
+    'mobile-grid must place head toolbar on row 1'
   )
   assert.match(
     blade,
-    /html body \.app \.workspace-shell-head > \.workspace-shell-actions \{[\s\S]*?grid-row:\s*3\s*!important[\s\S]*?display:\s*flex\s*!important/,
-    'blade hotfix must pin actions to row 3 as a flex box (beats Vue chunk CSS)'
+    /\.app \.workspace-shell-head > \.workspace-shell-head-toolbar \{[\s\S]*?grid-row:\s*1\s*!important/,
+    'blade hotfix must place head toolbar on row 1'
   )
   assert.doesNotMatch(
     blade,
@@ -950,6 +946,23 @@ includesAll('centralised session lifecycle wiring', [
   /exitOnboardingSampleMode/,
   /sampleSession:\s*true/,
   /onboardingSampleSessionActive && !options\.sampleSession/,
+])
+
+includesAll('journey return hint wiring', [
+  /journeyReturnHint\(\)/,
+  /isPracticeOffJourney\(\)/,
+  /isPostSessionOffJourney\(\)/,
+  /onJourneyReturnHintContinue\(\)/,
+  /sessionRangeOverlapsJourney/,
+  /formatJourneyContinueRangeLabel/,
+  /daysSinceActivity/,
+  /data-testid="journey-return-hint"/,
+  /journey-return-hint--idle/,
+  /journey-return-hint--active/,
+  /journey-return-hint--post-session/,
+  /memorisation\.workspaceJourney\.returnHint\.readyContinue/,
+  /memorisation\.workspaceJourney\.returnHint\.nextStepReady/,
+  /memorisation\.workspaceJourney\.returnHint\.mainStillHere/,
 ])
 
 console.log('mutqin controls wiring passed')

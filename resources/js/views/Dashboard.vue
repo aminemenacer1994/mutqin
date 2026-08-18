@@ -75,30 +75,14 @@
           </section>
 
           <div class="dash-hero__stack">
-            <section
-              v-if="showJourneyStart"
-              class="dash-journey dash-journey--start"
-              aria-labelledby="dash-journey-start-title"
-            >
-              <h2 id="dash-journey-start-title" class="dash-journey__title">
-                {{ t('dashboard.journey_start_title') }}
-              </h2>
-              <p class="dash-journey__hint">{{ t('dashboard.journey_start_hint') }}</p>
-              <div class="dash-journey__start-actions">
-                <a class="dash-btn dash-btn--primary" :href="startBeginningHref">
-                  {{ t('dashboard.journey_start_beginning') }}
-                </a>
-                <a class="dash-btn dash-btn--ghost" :href="chooseStartHref">
-                  {{ t('dashboard.journey_choose_start') }}
-                </a>
-              </div>
-            </section>
-
             <a
-              v-else-if="primaryContinueAction"
+              v-if="primaryContinueAction"
               ref="continueCard"
               class="dash-continue-card"
-              :class="{ 'dash-continue-card--saved': primaryContinueAction.kind === 'saved' }"
+              :class="{
+                'dash-continue-card--saved': primaryContinueAction.kind === 'saved',
+                'dash-continue-card--fresh': primaryContinueAction.kind === 'fresh',
+              }"
               :href="primaryContinueAction.href"
               :aria-label="primaryContinueAction.ariaLabel || undefined"
             >
@@ -317,8 +301,8 @@
               {{ primaryContinueAction.label }}
             </span>
             <strong>{{ primaryContinueAction.title }}</strong>
-            <span v-if="primaryContinueAction.hint">{{ primaryContinueAction.hint }}</span>
-            <span v-else-if="primaryContinueAction.range">{{ primaryContinueAction.range }}</span>
+            <span v-if="primaryContinueAction.hint" class="dash-sticky-continue__hint">{{ primaryContinueAction.hint }}</span>
+            <span v-else-if="primaryContinueAction.range" class="dash-sticky-continue__range">{{ primaryContinueAction.range }}</span>
           </span>
           <span class="dash-sticky-continue__cta">
             {{ primaryContinueAction.cta }}
@@ -569,6 +553,7 @@ import {
   pricingUpgradeUrl,
 } from '../utils/billing'
 import { progressBarDisplay } from '../utils/progressDisplay'
+import { daysSinceActivity } from '../scripts/memorisationRuntime'
 import './Dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -718,12 +703,6 @@ export default {
     journeyHasStarted() {
       return !!this.journey?.has_started
     },
-    showJourneyStart() {
-      if (this.liveReturnSession) return false
-      if (this.journeyHasStarted && this.journeyContinue) return false
-      if (this.hasMemorisationHistory) return false
-      return true
-    },
     hasMemorisationHistory() {
       if (this.journeyMemorisedCount > 0) return true
       if (Number(this.data?.snapshot?.completed_sessions?.value ?? 0) > 0) return true
@@ -742,6 +721,9 @@ export default {
       return href || this.memorisationUrl
     },
     journeyContinueLabel() {
+      if (this.isReturnAfterAbsence && !this.isLiveContinueAction) {
+        return this.t('memorisation.workspaceJourney.returnHint.readyContinue')
+      }
       if (this.isLiveContinueAction) return this.t('dashboard.return_session_label')
       return this.t('dashboard.journey_continue_label')
     },
@@ -789,6 +771,10 @@ export default {
       if (pct <= 0 || pct > 10) return ''
       return this.t('dashboard.early_progress_message')
     },
+    isReturnAfterAbsence() {
+      const lastActivity = this.data?.continue?.last_activity_at || this.data?.progress?.last_activity_at
+      return daysSinceActivity(lastActivity) >= 2
+    },
     isSavedSessionContinue() {
       if (this.liveReturnSession) return true
       const type = String(this.data?.continue?.action_type || '')
@@ -813,7 +799,20 @@ export default {
           ariaLabel: `${this.t('dashboard.saved_session_label')}. ${title}. ${this.t('dashboard.saved_session_hint')}`,
         }
       }
-      if (!this.journeyMemorisationAction) return null
+      if (!this.journeyMemorisationAction) {
+        if (!this.hasMemorisationHistory && !this.liveReturnSession) {
+          return {
+            kind: 'fresh',
+            href: this.memorisationUrl,
+            label: this.t('memorisation.workspaceJourney.kicker'),
+            title: this.t('memorisation.workspaceEmpty.journeyTitle'),
+            hint: this.t('memorisation.workspaceEmpty.journeyDesc'),
+            cta: this.t('dashboard.cta_start'),
+            ariaLabel: `${this.t('memorisation.workspaceJourney.kicker')}. ${this.t('memorisation.workspaceEmpty.journeyTitle')}. ${this.t('memorisation.workspaceEmpty.journeyDesc')}`,
+          }
+        }
+        return null
+      }
       const action = this.journeyMemorisationAction
       return {
         kind: 'journey',
@@ -825,7 +824,7 @@ export default {
       }
     },
     showStickyContinue() {
-      return !!this.primaryContinueAction && !this.showJourneyStart
+      return !!this.primaryContinueAction
     },
     journeyMemorisationAction() {
       if (!this.journeyContinue) return null
@@ -876,14 +875,6 @@ export default {
     showMurajaahEmpty() {
       if (this.murajaahPreview.length) return false
       return this.journeyHasStarted || this.hasMemorisationHistory
-    },
-    startBeginningHref() {
-      return String(this.journey?.start_beginning_href || '').trim()
-        || `${this.memorisationUrl.split('?')[0]}?surah=1&from=1&to=7&journey=main`
-    },
-    chooseStartHref() {
-      return String(this.journey?.choose_start_href || '').trim()
-        || `${this.memorisationUrl.split('?')[0]}?setup=1&journey=choose`
     },
     isLiveContinueAction() {
       const type = String(this.data?.continue?.action_type || '')
@@ -939,7 +930,7 @@ export default {
       })
     },
     showHeroHint() {
-      return !this.showJourneyStart && !!this.primaryContinueAction
+      return !!this.primaryContinueAction
     },
     murajaahSectionHint() {
       if (this.murajaahTotal > 1) {

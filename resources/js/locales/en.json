@@ -530,7 +530,13 @@
       "guidanceStart": "Begin with Bismillah. Pick a few ayahs, listen, repeat, then try from memory.",
       "guidanceContinue": "Take it step by step — revise what you know before adding new ayahs.",
       "guidanceActive": "Listen with focus, repeat each ayah, then recite without looking when you feel ready.",
-      "guidanceReview": "Revision keeps your memorisation firm. Revise {surah} before moving on."
+      "guidanceReview": "Revision keeps your memorisation firm. Revise {surah} before moving on.",
+      "returnHint": {
+        "readyContinue": "Ready to continue your Hifz?",
+        "nextStepReady": "Your next step is ready.",
+        "mainStillHere": "Your main Hifz is still here.",
+        "continue": "Continue"
+      }
     },
     "workspaceEmpty": {
       "kicker": "Bismillah",

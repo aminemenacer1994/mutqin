@@ -6,11 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\HifzPlan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class HifzPlanController extends Controller
 {
     public function show(Request $request): JsonResponse
     {
+        if (! Schema::hasTable('hifz_plans')) {
+            return response()->json([
+                'plan' => null,
+                'meta' => null,
+            ]);
+        }
+
         $plan = HifzPlan::query()
             ->where('user_id', $request->user()->id)
             ->first();
@@ -28,6 +36,12 @@ class HifzPlanController extends Controller
 
     public function upsert(Request $request): JsonResponse
     {
+        if (! Schema::hasTable('hifz_plans')) {
+            return response()->json([
+                'message' => 'Hifz plan storage is not ready yet. Run database migrations.',
+            ], 503);
+        }
+
         $validated = $request->validate([
             'plan' => ['required', 'array'],
             'client_id' => ['nullable', 'string', 'max:80'],
@@ -59,6 +73,10 @@ class HifzPlanController extends Controller
 
     public function destroy(Request $request): JsonResponse
     {
+        if (! Schema::hasTable('hifz_plans')) {
+            return response()->json(['deleted' => true]);
+        }
+
         HifzPlan::query()
             ->where('user_id', $request->user()->id)
             ->delete();

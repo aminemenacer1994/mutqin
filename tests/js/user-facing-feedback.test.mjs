@@ -5,6 +5,7 @@ import {
   FORBIDDEN_USER_TIMING_TERMS,
   containsForbiddenUserTimingTerms,
   sanitizeLiveWordNote,
+  sanitizeRecitationReviewNote,
   sanitizeUserFacingFeedback,
 } from '../../resources/js/utils/userFacingFeedback.js'
 
@@ -32,6 +33,11 @@ import {
     status: 'incorrect',
   }), 'Expected الرحمن; heard الرحمن.')
   assert.equal(sanitizeLiveWordNote('Waiting for this word.', { timingBuffered: true, status: 'pending' }), '')
+  assert.equal(sanitizeLiveWordNote('Not heard yet.', { liveRecording: true, status: 'pending' }), '')
+  assert.equal(sanitizeLiveWordNote('Low recognition confidence.', { status: 'uncertain' }), '')
+  assert.equal(sanitizeLiveWordNote('Locked until the previous word is green.', { liveRecording: true }), '')
+  assert.equal(sanitizeRecitationReviewNote('Low recognition confidence.', 'Missed word.'), 'Missed word.')
+  assert.equal(sanitizeRecitationReviewNote('Expected الرحمن; heard الرحيم.', ''), 'Expected الرحمن; heard الرحيم.')
 }
 
 {
@@ -42,6 +48,25 @@ import {
   assert.doesNotMatch(bufferSource, /note:\s*'Waiting for this word\.'/)
 }
 
+{
+  const analysisSource = readFileSync(
+    join(process.cwd(), 'resources/js/scripts/engine/recitation_analysis.js'),
+    'utf8',
+  )
+  assert.doesNotMatch(analysisSource, /note:\s*'Low recognition confidence/)
+  assert.doesNotMatch(analysisSource, /note:\s*'Locked until/)
+  assert.doesNotMatch(analysisSource, /note:\s*'Not heard yet\.'/)
+}
+
+{
+  const memorisationSource = readFileSync(
+    join(process.cwd(), 'resources/js/views/Memorisation.js'),
+    'utf8',
+  )
+  assert.match(memorisationSource, /sanitizeRecitationReviewNote/)
+  assert.doesNotMatch(memorisationSource, /Waiting for your first recognized word/)
+  assert.doesNotMatch(memorisationSource, /Locked until the previous word is green/)
+}
 {
   const en = readFileSync(join(process.cwd(), 'resources/js/locales/en.json'), 'utf8')
   assert.doesNotMatch(en, FORBIDDEN_USER_TIMING_TERMS)

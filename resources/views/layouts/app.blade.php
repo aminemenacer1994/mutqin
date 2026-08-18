@@ -35,7 +35,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-    <meta name="mutqin-build" content="v125">
+    <meta name="mutqin-build" content="v128">
     <style id="mutqin-ai-recite-force-v125">
       #mutqin-build-stamp {
         display: none !important;
@@ -80,8 +80,8 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v125';
-        var FORCE = '125';
+        var BUILD = 'v128';
+        var FORCE = '128';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
@@ -740,63 +740,66 @@
           margin: 0 !important;
           padding: 0 !important;
         }
-        .app .workspace-shell {
-          padding-bottom: 0.7rem !important;
+        .app .workspace-shell:not(.is-idle-card) {
+          padding: 0.72rem 0.82rem 0.62rem !important;
         }
-        .app .workspace-shell-head {
+        .app .workspace-shell-head:not(.is-idle) {
           display: grid !important;
-          grid-template-columns: minmax(0, 1fr) auto !important;
-          grid-template-rows: auto auto auto !important;
-          gap: 0.4rem 0.45rem !important;
-          align-items: center !important;
+          grid-template-columns: minmax(0, 1fr) !important;
+          grid-template-rows: auto auto !important;
+          gap: 0.32rem !important;
+          align-items: stretch !important;
+        }
+        .app .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+          grid-column: 1 / -1 !important;
+          grid-row: 1 !important;
         }
         /*
-         * Mobile session overview stack (must not share a grid row):
-         * 1 = Surah title + icons · 2 = progress pills · 3 = Resume/End actions
-         * Keep actions as a real box — display:contents let CTAs collide with pills.
+         * Mobile session overview stack:
+         * 1 = title + session CTAs + icon controls · 2 = progress pills
          */
-        .app .workspace-shell-head > .workspace-shell-progress-pills {
+        .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
           grid-column: 1 / -1 !important;
           grid-row: 2 !important;
           display: flex !important;
           flex-flow: row nowrap !important;
           align-items: center !important;
-          gap: 0.35rem !important;
+          gap: 0.3rem !important;
           width: 100% !important;
           max-width: 100% !important;
           min-width: 0 !important;
           margin: 0 !important;
-          padding: 0.55rem 0 !important;
+          padding: 0.15rem 0 0 !important;
           overflow-x: auto !important;
           overflow-y: hidden !important;
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
         }
-        .app .workspace-shell-head > .workspace-shell-progress-pills::-webkit-scrollbar {
+        .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills::-webkit-scrollbar {
           display: none !important;
         }
         .app .workspace-shell-progress-pill {
           display: inline-flex !important;
           align-items: center !important;
           flex: 0 0 auto !important;
-          max-width: 9.5rem !important;
+          max-width: 8.5rem !important;
           min-width: 0 !important;
           margin: 0 !important;
-          padding: 0.18rem 0.55rem !important;
+          padding: 0.14rem 0.48rem !important;
           border: 1px solid color-mix(in srgb, var(--border) 85%, transparent) !important;
           border-radius: 999px !important;
           background: color-mix(in srgb, var(--surface) 92%, var(--bg)) !important;
           color: color-mix(in srgb, var(--text) 72%, transparent) !important;
-          font-size: 0.68rem !important;
+          font-size: 0.64rem !important;
           font-weight: 600 !important;
-          line-height: 1.2 !important;
+          line-height: 1.15 !important;
           white-space: nowrap !important;
           overflow: hidden !important;
           text-overflow: ellipsis !important;
           pointer-events: none !important;
           user-select: none !important;
         }
-        html body .app .workspace-shell-head > .workspace-shell-actions {
+        html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-actions {
           grid-column: 1 / -1 !important;
           grid-row: 3 !important;
           display: flex !important;
@@ -2010,6 +2013,252 @@
           grid-template-columns: 1fr !important;
         }
       }
+
+      /* Idle hero ("Your place") — network-first v117 (wins over chunk CSS) */
+      html body .app .workspace-shell-idle--fresh .workspace-shell-idle-watermark {
+        display: none !important;
+      }
+      html body .app .workspace-shell-idle-actions--fresh {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.75rem !important;
+        width: 100% !important;
+      }
+      html body .app .workspace-shell-idle-actions--fresh .workspace-shell-idle-quickstart {
+        width: 100% !important;
+        max-width: none !important;
+      }
+      html body .app .workspace-shell-idle-actions--fresh .workspace-shell-idle-links {
+        width: 100% !important;
+        justify-content: flex-start !important;
+      }
+      html body .app .workspace-shell.is-idle-card {
+        width: min(calc(100% - 2 * clamp(0.65rem, 2vw, 1rem)), 880px) !important;
+        max-width: 880px !important;
+        margin-inline: auto !important;
+        padding: clamp(0.9rem, 1.8vw, 1.15rem) clamp(1rem, 2vw, 1.25rem) !important;
+        border-radius: 20px !important;
+        border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border)) !important;
+        background: linear-gradient(
+          165deg,
+          color-mix(in srgb, var(--accent-light, var(--surface)) 22%, var(--workspace-card-surface, var(--surface))) 0%,
+          var(--workspace-card-surface, var(--surface)) 42%,
+          color-mix(in srgb, var(--surface) 98%, var(--accent-light, transparent) 2%) 100%
+        ) !important;
+        box-shadow:
+          0 1px 0 color-mix(in srgb, white 50%, transparent) inset,
+          0 1px 2px color-mix(in srgb, var(--text) 4%, transparent),
+          0 10px 28px color-mix(in srgb, var(--accent) 6%, transparent) !important;
+        overflow: visible !important;
+      }
+      html body .app .workspace-shell-head.is-idle {
+        display: block !important;
+        padding-block: 0 !important;
+      }
+      html body .app .workspace-shell-idle-inner {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: clamp(0.85rem, 2vw, 1.35rem) !important;
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+      html body .app .workspace-shell-idle-main {
+        display: grid !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        max-width: min(36rem, 100%) !important;
+        gap: 0.85rem !important;
+      }
+      html body .app .workspace-shell-idle--fresh .workspace-shell-idle-main {
+        max-width: 100% !important;
+      }
+      html body .app .workspace-shell-idle-aside {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        flex: 0 0 auto !important;
+        margin-inline-start: auto !important;
+        gap: 0.35rem !important;
+        padding-inline-start: clamp(0.85rem, 2vw, 1.15rem) !important;
+        border-inline-start: 1px solid color-mix(in srgb, var(--border) 72%, transparent) !important;
+      }
+      html body .app .workspace-shell-idle-aside-cta {
+        display: block !important;
+        width: 100% !important;
+        min-width: 8.5rem !important;
+      }
+      html body .app .workspace-shell-idle-actions__start--inline {
+        display: none !important;
+      }
+      html body .app .workspace-shell-idle-quickstart {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.65rem !important;
+        width: min(100%, 32rem) !important;
+      }
+      html body .app .workspace-shell-idle-choice {
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 0.65rem !important;
+        padding: 0.78rem 0.85rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--border) 86%, transparent) !important;
+        background: color-mix(in srgb, var(--surface) 98%, transparent) !important;
+        text-align: start !important;
+      }
+      html body .app .workspace-shell-idle-choice--primary {
+        border-color: color-mix(in srgb, var(--accent) 26%, var(--border)) !important;
+        background: linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--accent-light, var(--surface)) 38%, var(--surface)),
+          color-mix(in srgb, var(--surface) 98%, transparent)
+        ) !important;
+      }
+      html body .app .workspace-shell-idle-choice__icon {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2rem !important;
+        height: 2rem !important;
+        border-radius: 10px !important;
+        background: color-mix(in srgb, var(--accent-light, var(--surface)) 40%, transparent) !important;
+        color: var(--accent-strong) !important;
+        flex-shrink: 0 !important;
+      }
+      html body .app .workspace-shell-idle-choice__body strong {
+        display: block !important;
+        font-size: 0.875rem !important;
+        font-weight: 650 !important;
+        line-height: 1.25 !important;
+        color: var(--text) !important;
+      }
+      html body .app .workspace-shell-idle-choice__body span {
+        display: block !important;
+        font-size: 0.75rem !important;
+        line-height: 1.35 !important;
+        color: var(--text-muted) !important;
+      }
+      html body .app .workspace-shell-idle-ring {
+        width: 4.25rem !important;
+        height: 4.25rem !important;
+      }
+      html body .app .workspace-shell-idle-watermark {
+        display: block !important;
+        opacity: 0.07 !important;
+      }
+      @media (max-width: 767.98px) {
+        html body .app .workspace-shell.is-idle-card {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin-inline: 0 !important;
+          padding: 0.85rem 0.95rem !important;
+        }
+        html body .app .workspace-shell-idle--fresh .workspace-shell-idle-inner {
+          flex-direction: column !important;
+          align-items: stretch !important;
+        }
+        html body .app .workspace-shell-idle--continuing .workspace-shell-idle-inner {
+          flex-direction: column !important;
+          align-items: stretch !important;
+          gap: 0.75rem !important;
+        }
+        html body .app .workspace-shell-idle--continuing .workspace-shell-idle-main {
+          display: contents !important;
+        }
+        html body .app .workspace-shell-idle--continuing .workspace-shell-copy {
+          order: 1 !important;
+          width: 100% !important;
+        }
+        html body .app .workspace-shell-idle--continuing .workspace-shell-idle-aside {
+          order: 2 !important;
+          align-self: stretch !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          justify-content: flex-start !important;
+          gap: 0.75rem !important;
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0.68rem 0.78rem !important;
+          border-radius: 14px !important;
+          border: 1px solid color-mix(in srgb, var(--border) 80%, transparent) !important;
+          background: color-mix(in srgb, var(--surface) 94%, var(--accent-light, transparent) 6%) !important;
+        }
+        html body .app .workspace-shell-idle--continuing .workspace-shell-idle-aside-meta {
+          align-items: flex-start !important;
+          flex: 1 1 auto !important;
+          min-width: 0 !important;
+        }
+        html body .app .workspace-shell-idle--continuing .workspace-shell-idle-ring__label {
+          max-width: none !important;
+          text-align: start !important;
+        }
+        html body .app .workspace-shell-idle--continuing .workspace-shell-idle-actions {
+          order: 3 !important;
+          width: 100% !important;
+        }
+        html body .app .workspace-shell-idle-links--toolbar {
+          display: grid !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 0 !important;
+          width: 100% !important;
+          border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+          border-radius: 12px !important;
+          overflow: hidden !important;
+          background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
+        }
+        html body .app .workspace-shell-idle-links--toolbar .workspace-shell-text-link-sep {
+          display: none !important;
+        }
+        html body .app .workspace-shell-idle-links--toolbar .workspace-shell-text-link {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 0.35rem !important;
+          width: 100% !important;
+          min-height: 2.5rem !important;
+          padding: 0.55rem 0.65rem !important;
+          border: none !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+        }
+        html body .app .workspace-shell-idle-links--toolbar .workspace-shell-text-link-sep + .workspace-shell-text-link {
+          border-inline-start: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+        }
+        html body .app .workspace-shell-idle-aside {
+          padding-inline-start: 0 !important;
+          border-inline-start: 0 !important;
+        }
+        html body .app .workspace-shell-idle-aside-cta {
+          display: none !important;
+        }
+        html body .app .workspace-shell-idle-actions__start--inline {
+          display: block !important;
+          width: 100% !important;
+        }
+        html body .app .workspace-shell-idle-actions__start--inline .session-idle-action {
+          width: 100% !important;
+          justify-content: center !important;
+        }
+        html body .app .workspace-shell-idle-quickstart {
+          grid-template-columns: 1fr !important;
+          width: 100% !important;
+        }
+        html body .app .workspace-shell-idle-watermark {
+          display: none !important;
+        }
+        html body .app .workspace-shell-idle-ring {
+          width: 3.75rem !important;
+          height: 3.75rem !important;
+        }
+      }
+      @media (min-width: 480px) and (max-width: 767.98px) {
+        html body .app .workspace-shell-idle--fresh .workspace-shell-idle-quickstart {
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+      }
     </style>
     <script>
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
@@ -2868,14 +3117,26 @@
             }
 
             .app-navbar-logo {
-                height: 46px;
+                height: 40px;
                 width: auto;
                 max-width: none;
                 object-fit: contain;
                 flex-shrink: 0;
             }
 
-            .app-navbar-logo--full {
+            .app-navbar-logo--full.app-navbar-logo--light {
+                display: block;
+            }
+
+            .app-navbar-logo--full.app-navbar-logo--dark {
+                display: none;
+            }
+
+            html[data-theme="dark"] .app-navbar-logo--full.app-navbar-logo--light {
+                display: none;
+            }
+
+            html[data-theme="dark"] .app-navbar-logo--full.app-navbar-logo--dark {
                 display: block;
             }
 

@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v115 -->
+  <!-- mutqin-ui-build: v119 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'onboarding-post-session-active': showPostSessionModal,
@@ -187,6 +187,7 @@
         >
         <div class="workspace-shell-head" :class="{ 'is-idle': showSessionOverviewIdleActions }">
           <template v-if="hasVerses || isPostSessionChoiceVisible">
+          <div class="workspace-shell-head-toolbar">
           <div class="workspace-shell-copy">
             <span class="workspace-shell-kicker">{{ workspaceShellKicker }}</span>
             <p v-if="workspaceShellSubtitle" class="workspace-shell-subtitle">{{ workspaceShellSubtitle }}</p>
@@ -203,7 +204,83 @@
               <template v-else>{{ topCardSessionLabel }}</template>
             </h1>
           </div>
-          <!-- Direct child of head so mobile grid placement cannot swallow these icons -->
+          <div class="workspace-shell-head-utility-row">
+          <div class="workspace-shell-actions workspace-shell-head-actions">
+            <div class="action-buttons-group">
+              <div
+                v-if="isPostSessionChoiceVisible"
+                class="top-card-session-actions post-session-choice-pair"
+                :class="{
+                  'has-paired-actions': canShowRepeatRecommendedAction,
+                }"
+                data-testid="post-session-choice"
+                role="group"
+                :aria-label="t('memorisation.postSessionChoice.title')"
+              >
+                <button
+                  v-if="canShowRepeatRecommendedAction"
+                  type="button"
+                  class="action-btn btn btn-primary session-primary-action top-card-action-trigger"
+                  data-testid="post-session-repeat-recommended"
+                  data-action="repeat_recommended"
+                  :title="t('memorisation.postSessionChoice.repeatRecommendedDesc')"
+                  :aria-label="t('memorisation.postSessionChoice.repeatRecommended')"
+                  @click="repeatRecommendedSessionFromChoice"
+                >
+                  <i class="bi bi-arrow-return-left" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.postSessionChoice.repeatRecommended') }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="action-btn top-card-action-trigger action-btn-exit post-session-choice-custom"
+                  :class="{ 'btn btn-primary session-primary-action': !canShowRepeatRecommendedAction }"
+                  data-testid="post-session-create-custom"
+                  data-action="create_custom"
+                  :title="t('memorisation.postSessionChoice.createCustomDesc')"
+                  :aria-label="t('memorisation.postSessionChoice.createCustom')"
+                  @click="createCustomSessionFromChoice"
+                >
+                  <i class="bi bi-sliders" aria-hidden="true"></i>
+                  <span>{{ t('memorisation.postSessionChoice.createCustom') }}</span>
+                </button>
+              </div>
+              <div
+                v-else
+                class="top-card-session-actions"
+                :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
+              >
+                <div
+                  v-if="showHeaderSessionAction"
+                  class="action-btn btn btn-primary session-primary-action top-card-action-trigger"
+                  role="button"
+                  tabindex="0"
+                  :aria-disabled="headerSessionActionDisabled ? 'true' : 'false'"
+                  :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
+                  :class="{ 'is-disabled': headerSessionActionDisabled, 'is-loading': headerSessionActionBusy }"
+                  :style="{ minWidth: primarySessionActionPresentation.stableWidthCh + 'ch' }"
+                  @click="handleHeaderSessionAction"
+                  @keydown.enter.prevent="handleHeaderSessionAction"
+                  @keydown.space.prevent="handleHeaderSessionAction"
+                  :title="headerSessionActionLabel"
+                  :aria-label="headerSessionActionLabel"
+                >
+                  <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
+                  <span>{{ headerSessionActionLabel }}</span>
+                </div>
+                <button
+                  v-if="showHeaderEndSessionAction"
+                  type="button"
+                  class="action-btn top-card-action-trigger action-btn-exit mutqin-btn--destructive"
+                  @click="openSessionExitModalFromMenu"
+                  :title="t('sessionStatus.end')"
+                  :aria-label="t('sessionStatus.end')"
+                >
+                  <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                  <span>{{ t('sessionStatus.end') }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
           <div class="top-card-icon-controls" aria-label="Reading tools">
             <div
               class="workspace-layout-toggle view-mode-toggle top-card-layout-icons"
@@ -357,6 +434,8 @@
               </transition>
             </div>
           </div>
+          </div>
+          </div>
           <div
             v-if="mobileProgressPills.length && !isPostSessionChoiceVisible"
             class="workspace-shell-progress-pills w-100"
@@ -370,94 +449,94 @@
               :aria-label="`${item.label}: ${item.value}`"
             >{{ item.value }}</span>
           </div>
-          <div class="workspace-shell-actions">
-            <div class="action-buttons-group">
-              <div
-                v-if="isPostSessionChoiceVisible"
-                class="top-card-session-actions post-session-choice-pair"
-                :class="{
-                  'has-paired-actions': canShowRepeatRecommendedAction,
-                }"
-                data-testid="post-session-choice"
-                role="group"
-                :aria-label="t('memorisation.postSessionChoice.title')"
-              >
-                <button
-                  v-if="canShowRepeatRecommendedAction"
-                  type="button"
-                  class="action-btn btn btn-primary session-primary-action top-card-action-trigger"
-                  data-testid="post-session-repeat-recommended"
-                  data-action="repeat_recommended"
-                  :title="t('memorisation.postSessionChoice.repeatRecommendedDesc')"
-                  :aria-label="t('memorisation.postSessionChoice.repeatRecommended')"
-                  @click="repeatRecommendedSessionFromChoice"
-                >
-                  <i class="bi bi-arrow-return-left" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.postSessionChoice.repeatRecommended') }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="action-btn top-card-action-trigger action-btn-exit post-session-choice-custom"
-                  :class="{ 'btn btn-primary session-primary-action': !canShowRepeatRecommendedAction }"
-                  data-testid="post-session-create-custom"
-                  data-action="create_custom"
-                  :title="t('memorisation.postSessionChoice.createCustomDesc')"
-                  :aria-label="t('memorisation.postSessionChoice.createCustom')"
-                  @click="createCustomSessionFromChoice"
-                >
-                  <i class="bi bi-sliders" aria-hidden="true"></i>
-                  <span>{{ t('memorisation.postSessionChoice.createCustom') }}</span>
-                </button>
-              </div>
-              <div
-                v-else
-                class="top-card-session-actions"
-                :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
-              >
-                <div
-                  v-if="showHeaderSessionAction"
-                  class="action-btn btn btn-primary session-primary-action top-card-action-trigger"
-                  role="button"
-                  tabindex="0"
-                  :aria-disabled="headerSessionActionDisabled ? 'true' : 'false'"
-                  :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
-                  :class="{ 'is-disabled': headerSessionActionDisabled, 'is-loading': headerSessionActionBusy }"
-                  :style="{ minWidth: primarySessionActionPresentation.stableWidthCh + 'ch' }"
-                  @click="handleHeaderSessionAction"
-                  @keydown.enter.prevent="handleHeaderSessionAction"
-                  @keydown.space.prevent="handleHeaderSessionAction"
-                  :title="headerSessionActionLabel"
-                  :aria-label="headerSessionActionLabel"
-                >
-                  <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
-                  <span>{{ headerSessionActionLabel }}</span>
-                </div>
-                <button
-                  v-if="showHeaderEndSessionAction"
-                  type="button"
-                  class="action-btn top-card-action-trigger action-btn-exit mutqin-btn--destructive"
-                  @click="openSessionExitModalFromMenu"
-                  :title="t('sessionStatus.end')"
-                  :aria-label="t('sessionStatus.end')"
-                >
-                  <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                  <span>{{ t('sessionStatus.end') }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
           </template>
-          <div v-else-if="showSessionOverviewIdleActions" class="workspace-shell-idle">
+          <div
+            v-else-if="showSessionOverviewIdleActions"
+            class="workspace-shell-idle"
+            :class="{
+              'workspace-shell-idle--fresh': showIdleQuickStartChoices,
+              'workspace-shell-idle--continuing': !showIdleQuickStartChoices,
+            }"
+          >
             <div class="workspace-shell-idle-watermark" aria-hidden="true"></div>
             <div class="workspace-shell-idle-inner">
               <div class="workspace-shell-idle-main">
                 <div class="workspace-shell-copy">
                   <span class="workspace-shell-kicker">{{ workspaceIdleKicker }}</span>
-                  <h1 class="workspace-shell-main-title">{{ workspaceJourneyTitle }}</h1>
-                  <p v-if="workspaceJourneySubline" class="workspace-shell-lead">{{ workspaceJourneySubline }}</p>
+                  <h1 class="workspace-shell-main-title">
+                    <template v-if="workspaceIdleSurahLatin">
+                      <span class="workspace-shell-idle-title-en" lang="en">{{ workspaceIdleSurahLatin }}</span>
+                      <span
+                        v-if="workspaceIdleSurahArabic && workspaceIdleSurahArabic !== workspaceIdleSurahLatin"
+                        class="workspace-shell-idle-title-ar"
+                        dir="rtl"
+                        lang="ar"
+                      >{{ workspaceIdleSurahArabic }}</span>
+                    </template>
+                    <template v-else>{{ workspaceIdleTitle }}</template>
+                  </h1>
+                  <p v-if="workspaceIdleDesc" class="workspace-shell-lead">{{ workspaceIdleDesc }}</p>
+                  <p v-if="workspaceIdleInstruction" class="workspace-shell-idle-note">{{ workspaceIdleInstruction }}</p>
+                  <div
+                    v-if="workspaceJourneyStatChips.length && !showIdleQuickStartChoices"
+                    class="workspace-shell-idle-chips"
+                    role="list"
+                    :aria-label="t('memorisation.workspaceJourney.aria')"
+                  >
+                    <span
+                      v-for="chip in workspaceJourneyStatChips"
+                      :key="chip.key"
+                      class="workspace-shell-idle-chip"
+                      role="listitem"
+                    >{{ chip.label }}</span>
+                  </div>
                 </div>
-                <div class="workspace-shell-idle-actions">
-                  <div v-if="showHeaderSessionAction" class="workspace-shell-idle-actions__start">
+                <div
+                  class="workspace-shell-idle-actions"
+                  :class="{
+                    'workspace-shell-idle-actions--fresh': showIdleQuickStartChoices,
+                    'workspace-shell-idle-actions--continuing': !showIdleQuickStartChoices,
+                  }"
+                >
+                  <div
+                    v-if="showIdleQuickStartChoices"
+                    class="workspace-shell-idle-quickstart"
+                    role="group"
+                    :aria-label="t('memorisation.a11y.sessionSetup')"
+                  >
+                    <button
+                      class="workspace-shell-idle-choice workspace-shell-idle-choice--primary"
+                      type="button"
+                      @click="startJourneyFromBeginning"
+                    >
+                      <span class="workspace-shell-idle-choice__icon" aria-hidden="true">
+                        <i class="bi bi-stars"></i>
+                      </span>
+                      <span class="workspace-shell-idle-choice__body">
+                        <strong>{{ t('memorisation.workspaceEmpty.startBeginning') }}</strong>
+                        <span>{{ t('memorisation.workspaceEmpty.startBeginningHint') }}</span>
+                      </span>
+                      <i class="bi bi-chevron-right workspace-shell-idle-choice__chevron" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      class="workspace-shell-idle-choice"
+                      type="button"
+                      @click="chooseJourneyStart"
+                    >
+                      <span class="workspace-shell-idle-choice__icon" aria-hidden="true">
+                        <i class="bi bi-journal-richtext"></i>
+                      </span>
+                      <span class="workspace-shell-idle-choice__body">
+                        <strong>{{ t('memorisation.workspaceEmpty.chooseStart') }}</strong>
+                        <span>{{ t('memorisation.workspaceEmpty.chooseStartHint') }}</span>
+                      </span>
+                      <i class="bi bi-chevron-right workspace-shell-idle-choice__chevron" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <div
+                    v-else-if="showHeaderSessionAction"
+                    class="workspace-shell-idle-actions__start workspace-shell-idle-actions__start--inline"
+                  >
                     <div
                       class="action-btn primary session-idle-action session-primary-action"
                       role="button"
@@ -476,8 +555,11 @@
                     </div>
                   </div>
                   <nav
-                    v-if="isLoggedIn && shouldShowWorkspaceJourney"
+                    v-if="isLoggedIn && (shouldShowWorkspaceJourney || showIdleQuickStartChoices)"
                     class="workspace-shell-idle-links"
+                    :class="{
+                      'workspace-shell-idle-links--toolbar': !showIdleQuickStartChoices && journeyHasStarted,
+                    }"
                     :aria-label="t('memorisation.workspaceJourney.idleLinksLabel')"
                   >
                     <a
@@ -485,7 +567,10 @@
                       :href="learnerDashboardUrl"
                       :title="t('memorisation.workspaceJourney.openDashboardHint')"
                       @click.prevent="openDashboardView"
-                    >{{ t('memorisation.workspaceJourney.openDashboard') }}</a>
+                    >
+                      <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.workspaceJourney.openDashboard') }}</span>
+                    </a>
                     <template v-if="journeyHasStarted">
                       <span class="workspace-shell-text-link-sep" aria-hidden="true">·</span>
                       <button
@@ -493,17 +578,21 @@
                         class="workspace-shell-text-link"
                         :title="t('memorisation.workspaceJourney.chooseDifferentHint')"
                         @click="openNewSessionSetup"
-                      >{{ t('memorisation.workspaceJourney.chooseDifferent') }}</button>
+                      >
+                        <i class="bi bi-sliders" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.workspaceJourney.chooseDifferent') }}</span>
+                      </button>
                     </template>
                   </nav>
                 </div>
               </div>
               <aside
-                v-if="workspaceIdleSurahProgress"
+                v-if="showIdleAsidePanel"
                 class="workspace-shell-idle-aside"
-                :aria-label="t('memorisation.workspaceJourney.surahProgressAria')"
+                :aria-label="workspaceIdleSurahProgress ? t('memorisation.workspaceJourney.surahProgressAria') : undefined"
               >
                 <div
+                  v-if="workspaceIdleSurahProgress"
                   class="workspace-shell-idle-ring"
                   role="progressbar"
                   :aria-valuenow="workspaceIdleSurahProgress.percent"
@@ -517,10 +606,60 @@
                     <span class="workspace-shell-idle-ring__total">/ {{ workspaceIdleSurahProgress.total }}</span>
                   </div>
                 </div>
-                <p class="workspace-shell-idle-ring__label">{{ workspaceIdleSurahProgress.caption }}</p>
+                <div
+                  v-if="workspaceIdleSurahProgress"
+                  class="workspace-shell-idle-aside-meta"
+                >
+                  <p class="workspace-shell-idle-ring__label">
+                    {{ workspaceIdleSurahProgress.caption }}
+                  </p>
+                  <p class="workspace-shell-idle-ring__percent">
+                    {{ workspaceIdleSurahProgress.percent }}%
+                  </p>
+                </div>
+                <div
+                  v-if="!showIdleQuickStartChoices && showHeaderSessionAction"
+                  class="workspace-shell-idle-aside-cta"
+                >
+                  <div
+                    class="action-btn primary session-idle-action session-primary-action"
+                    role="button"
+                    tabindex="0"
+                    :aria-disabled="headerSessionActionDisabled ? 'true' : 'false'"
+                    :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
+                    :class="{ 'is-disabled': headerSessionActionDisabled, 'is-loading': headerSessionActionBusy }"
+                    @click="handleHeaderSessionAction"
+                    @keydown.enter.prevent="handleHeaderSessionAction"
+                    @keydown.space.prevent="handleHeaderSessionAction"
+                    :title="headerSessionActionLabel"
+                    :aria-label="headerSessionActionLabel"
+                  >
+                    <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
+                    <span>{{ headerSessionActionLabel }}</span>
+                  </div>
+                </div>
               </aside>
             </div>
           </div>
+          <aside
+            v-if="journeyReturnHint && journeyReturnHint.placement === 'idle'"
+            class="journey-return-hint journey-return-hint--idle"
+            role="complementary"
+            data-testid="journey-return-hint"
+            :aria-label="journeyReturnHint.ariaLabel"
+          >
+            <div class="journey-return-hint__copy">
+              <p class="journey-return-hint__message">{{ journeyReturnHint.message }}</p>
+              <p v-if="journeyReturnHint.rangeLabel" class="journey-return-hint__range">{{ journeyReturnHint.rangeLabel }}</p>
+            </div>
+            <button
+              type="button"
+              class="journey-return-hint__cta"
+              @click="onJourneyReturnHintContinue"
+            >
+              {{ journeyReturnHint.cta }}
+            </button>
+          </aside>
         </div>
         <p v-if="chainingSetupBlocking" class="workspace-setup-hint workspace-setup-hint-warning" role="status">
           <span>{{ t('memorisation.techniques.chainingMethodRequired') }}</span>
@@ -591,6 +730,26 @@
           <span>{{ reviewPriorityLabel }}</span>
         </div>
 
+        <aside
+          v-if="journeyReturnHint && journeyReturnHint.placement === 'active'"
+          class="journey-return-hint journey-return-hint--active"
+          role="complementary"
+          data-testid="journey-return-hint"
+          :aria-label="journeyReturnHint.ariaLabel"
+        >
+          <div class="journey-return-hint__copy">
+            <p class="journey-return-hint__message">{{ journeyReturnHint.message }}</p>
+            <p v-if="journeyReturnHint.rangeLabel" class="journey-return-hint__range">{{ journeyReturnHint.rangeLabel }}</p>
+          </div>
+          <button
+            type="button"
+            class="journey-return-hint__cta"
+            @click="onJourneyReturnHintContinue"
+          >
+            {{ journeyReturnHint.cta }}
+          </button>
+        </aside>
+
 </section>
 
           <div v-if="showWorkspaceRefreshSpinner" class="loading-spinner" :class="{ 'is-reciter-refresh': workspaceRefreshReason === 'reciter' }">
@@ -608,7 +767,7 @@
             <span>{{ practiceTurnCalloutMessage }}</span>
           </div>
 
-          <main v-if="isDataReady && !isOnboardingExperienceActive && !isWelcomeBackWorkspaceHidden" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
+          <main v-if="isDataReady && !isOnboardingExperienceActive && !isWelcomeBackWorkspaceHidden && shouldShowWorkspaceMain" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             :aria-label="t('memorisation.a11y.memorisationWorkspace')">
             <!-- Source-guard references:
               <button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls">
@@ -616,30 +775,12 @@
               v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"
             -->
             <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t('memorisation.a11y.sessionSetup')">
-              <div class="workspace-empty-card" :class="{ 'workspace-empty-card--choice': isFirstTimeJourneyEmpty }">
+              <div class="workspace-empty-card">
                 <span class="workspace-empty-kicker">{{ t('memorisation.workspaceEmpty.kicker') }}</span>
-                <h2>{{ isFirstTimeJourneyEmpty ? t('memorisation.workspaceEmpty.journeyTitle') : t('memorisation.workspaceEmpty.title') }}</h2>
-                <p>{{ isFirstTimeJourneyEmpty ? t('memorisation.workspaceEmpty.journeyDesc') : t('memorisation.workspaceEmpty.desc') }}</p>
+                <h2>{{ t('memorisation.workspaceEmpty.title') }}</h2>
+                <p>{{ t('memorisation.workspaceEmpty.desc') }}</p>
                 <p class="workspace-empty-instruction">{{ t('memorisation.workspaceEmpty.instruction') }}</p>
-                <div v-if="isFirstTimeJourneyEmpty" class="workspace-empty-choice-grid">
-                  <button
-                    class="workspace-empty-choice-card workspace-empty-choice-card--primary"
-                    type="button"
-                    @click="startJourneyFromBeginning"
-                  >
-                    <strong>{{ t('memorisation.workspaceEmpty.startBeginning') }}</strong>
-                    <span>{{ t('memorisation.workspaceEmpty.startBeginningHint') }}</span>
-                  </button>
-                  <button
-                    class="workspace-empty-choice-card"
-                    type="button"
-                    @click="chooseJourneyStart"
-                  >
-                    <strong>{{ t('memorisation.workspaceEmpty.chooseStart') }}</strong>
-                    <span>{{ t('memorisation.workspaceEmpty.chooseStartHint') }}</span>
-                  </button>
-                </div>
-                <div v-else class="workspace-empty-actions">
+                <div class="workspace-empty-actions">
                   <button class="action-btn primary" type="button" @click="openNewSessionSetup">
                     {{ t('memorisation.open_session_setup') }}
                   </button>
@@ -1882,15 +2023,20 @@
                   <p class="welcome-back-message">
                     {{ welcomeBackModalSubtitle }}
                   </p>
-                  <p
-                    v-if="welcomeBackMetaLine"
+                  <div
+                    v-if="welcomeBackMetaChips.length"
                     class="welcome-back-meta-line"
+                    :aria-label="t('memorisation.a11y.sessionMetadata')"
                   >
-                    <template v-for="(part, index) in welcomeBackMetaParts" :key="`${part}-${index}`">
-                      <span v-if="index > 0" class="welcome-back-meta-sep" aria-hidden="true">·</span>
-                      <span>{{ part }}</span>
-                    </template>
-                  </p>
+                    <span
+                      v-for="chip in welcomeBackMetaChips"
+                      :key="chip.key"
+                      class="welcome-back-meta-chip"
+                    >
+                      <span class="welcome-back-meta-chip__label">{{ chip.label }}</span>
+                      <span class="welcome-back-meta-chip__value">{{ chip.value }}</span>
+                    </span>
+                  </div>
                   <p
                     v-if="welcomeBackIslamicContent?.intention"
                     class="welcome-back-intention"
@@ -3468,6 +3614,27 @@
               </section>
             </template>
           </div>
+
+          <aside
+            v-if="journeyReturnHint && journeyReturnHint.placement === 'post-session'"
+            class="journey-return-hint journey-return-hint--post-session"
+            role="complementary"
+            data-testid="journey-return-hint"
+            :aria-label="journeyReturnHint.ariaLabel"
+          >
+            <div class="journey-return-hint__copy">
+              <p class="journey-return-hint__message">{{ journeyReturnHint.message }}</p>
+              <p v-if="journeyReturnHint.rangeLabel" class="journey-return-hint__range">{{ journeyReturnHint.rangeLabel }}</p>
+            </div>
+            <button
+              type="button"
+              class="journey-return-hint__cta"
+              :disabled="postSessionActionsBusy"
+              @click="onJourneyReturnHintContinue"
+            >
+              {{ journeyReturnHint.cta }}
+            </button>
+          </aside>
 
           <footer class="post-session-simple__footer">
             <div

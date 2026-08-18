@@ -96,7 +96,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/recommendations/confidence', [RecommendationController::class, 'confidence'])->name('api.recommendations.confidence');
     Route::post('/recommendations/settings', [RecommendationController::class, 'settings'])->name('api.recommendations.settings');
     Route::post('/recommendations/ai-assessment', [RecommendationController::class, 'aiAssessment'])
-        ->middleware('plan:pro')
         ->name('api.recommendations.ai-assessment');
     Route::post('/recommendations/adaptive-assessment', [RecommendationController::class, 'adaptiveAssessment'])
         ->middleware('plan:premium')
@@ -104,10 +103,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // AI Memorisation Detection — assessment, personalised plan, practice execution.
     Route::post('/memorisation/assessments', [MemorisationDetectionController::class, 'storeAssessment'])
-        ->middleware(['plan:pro', 'throttle:20,1'])
+        ->middleware('throttle:20,1')
         ->name('api.memorisation.assessments.store');
     Route::post('/memorisation/assessments/failed', [MemorisationDetectionController::class, 'storeFailedAssessment'])
-        ->middleware(['plan:pro', 'throttle:20,1'])
+        ->middleware('throttle:20,1')
         ->name('api.memorisation.assessments.failed');
     Route::get('/memorisation/assessments', [MemorisationHistoryController::class, 'attemptIndex'])
         ->name('api.memorisation.assessments.index');

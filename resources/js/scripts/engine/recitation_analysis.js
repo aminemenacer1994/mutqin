@@ -182,7 +182,7 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
     text,
     targetWord: targetWords[index] || '',
     status: 'pending',
-    note: 'Not heard yet.',
+    note: '',
     actual: '',
     confidence: 0,
     similarity: 0,
@@ -414,7 +414,7 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     text,
     targetWord: targetWords[index] || '',
     status: 'pending',
-    note: 'Not heard yet.',
+    note: '',
     actual: '',
     confidence: 0,
     similarity: 0,
@@ -1086,7 +1086,7 @@ function classifyWordMatch({
       text: displayText,
       targetWord: expected,
       status: 'uncertain',
-      note: 'Low recognition confidence.',
+      note: '',
       actual,
       confidence,
       similarity: effectiveSimilarity,
@@ -1169,7 +1169,7 @@ function reconcileUncertainFromRejectedWords(statuses = [], rejectedWords = [], 
     statuses[index] = {
       ...status,
       status: 'uncertain',
-      note: 'Low recognition confidence — not counted as a learner omission.',
+      note: '',
       actual: heard.word,
       confidence: heard.confidence,
       similarity: bestSim,
@@ -1237,7 +1237,7 @@ function buildStableProgression(statuses = [], extraWords = [], options = {}) {
   const visibleStatuses = strict && firstBlockingIndex >= 0
     ? statuses.map((word, index) => index <= firstBlockingIndex
       ? word
-      : { ...word, status: 'pending', note: 'Locked until the previous word is clear.' })
+      : { ...word, status: 'pending', note: '' })
     : statuses
   const advancedCount = visibleStatuses.filter(word => word.status && word.status !== 'pending').length
   const completedWords = statuses.filter(word => isProgressionAdvanceStatus(word.status, options)).length
