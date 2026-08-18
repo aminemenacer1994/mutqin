@@ -8394,7 +8394,7 @@ export default {
         }
         if (event?.key && event.key !== 'mutqin-theme') return
         const nextTheme = event?.newValue || document.documentElement.getAttribute('data-theme') || 'light'
-        this.theme = this.normalizeThemeToken(nextTheme)
+        this.syncGlobalTheme(nextTheme)
       }
       window.addEventListener('mutqin:theme-change', this.handleGlobalThemeChange)
       window.addEventListener('mutqin:locale-change', this.handleLocaleChange)

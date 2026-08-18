@@ -1,4 +1,4 @@
-@if (app()->environment('local'))
+@if (config('app.show_demo_accounts'))
     @php
         $demoAccounts = [
             [

@@ -2426,6 +2426,18 @@
             object-fit: contain;
         }
 
+        .app-navbar-logo--dark {
+            display: none;
+        }
+
+        html[data-theme="dark"] .app-navbar-logo--light {
+            display: none;
+        }
+
+        html[data-theme="dark"] .app-navbar-logo--dark {
+            display: inline;
+        }
+
         .app-navbar-logo--mark {
             display: none;
             width: auto;
@@ -4983,13 +4995,14 @@
         <div class="container-fluid shell navbar-shell">
             <a class="navbar-brand" href="{{ route('home') }}" aria-label="Mutqin">
                 <img
-                    id="appNavbarLogo"
                     src="/images/logo.png"
-                    data-logo-light="/images/logo.png"
-                    data-logo-dark="/images/dark_logo.png"
-                    data-logo-mark="/images/logo_main.png"
                     alt=""
-                    class="app-navbar-logo app-navbar-logo--full"
+                    class="app-navbar-logo app-navbar-logo--full app-navbar-logo--light"
+                >
+                <img
+                    src="/images/dark_logo.png"
+                    alt=""
+                    class="app-navbar-logo app-navbar-logo--full app-navbar-logo--dark"
                 >
                 <img
                     id="appNavbarLogoMark"
@@ -5253,23 +5266,6 @@
                     icon.className = `bi ${themeIcons[normalizedTheme] || themeIcons.light}`;
                     button.setAttribute('aria-label', normalizedTheme === 'dark' ? @json(__('ui.switch_light')) : @json(__('ui.switch_dark')));
                 }
-
-                const logo = document.getElementById('appNavbarLogo');
-                if (logo) {
-                    const lightSrc = logo.getAttribute('data-logo-light') || '/images/logo.png';
-                    const darkSrc = logo.getAttribute('data-logo-dark') || '/images/logo.png';
-                    logo.src = normalizedTheme === 'dark' ? darkSrc : lightSrc;
-                }
-
-                document.querySelectorAll('.mobile-nav-brand-wordmark, [data-logo-light][data-logo-dark]').forEach((el) => {
-                    if (el === logo) return;
-                    const lightSrc = el.getAttribute('data-logo-light');
-                    const darkSrc = el.getAttribute('data-logo-dark');
-                    if (!lightSrc && !darkSrc) return;
-                    el.src = normalizedTheme === 'dark'
-                        ? (darkSrc || lightSrc)
-                        : (lightSrc || darkSrc);
-                });
 
                 const favicon = document.getElementById('appThemeFavicon');
                 if (favicon) {

@@ -30,6 +30,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Demo Accounts (Login Page)
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, the login page shows pre-seeded demo account shortcuts.
+    | Enable on staging/demo deployments via SHOW_DEMO_ACCOUNTS=true.
+    |
+    */
+
+    'show_demo_accounts' => (bool) env('SHOW_DEMO_ACCOUNTS', env('APP_ENV', 'production') === 'local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |
