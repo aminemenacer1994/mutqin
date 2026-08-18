@@ -80,8 +80,8 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v124';
-        var FORCE = '124';
+        var BUILD = 'v125';
+        var FORCE = '125';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
@@ -128,7 +128,8 @@
       })();
     </script>
     @if(request()->routeIs('memorisation'))
-    {{-- Survives stale memorisation JS chunks: HTML is network-first / not JS-chunk-cached --}}
+    {{-- Survives stale memorisation JS chunks: HTML is network-first / not JS-chunk-cached.
+         Canonical source for button semantics is resources/sass/app.scss (.btn-primary, etc.). --}}
     <style id="mutqin-button-colour-semantics">
       :root {
         --bs-danger: #dc2626;
@@ -5032,18 +5033,18 @@
                         <div class="navbar-nav nav-links-desktop gap-2 gap-lg-3 justify-content-lg-center">
                             <a class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">
                                 <i class="bi bi-house-door nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="home">{{ __('ui.home') }}</strong><small class="d-lg-none">Overview and product guidance</small></span>
+                                <span class="nav-link-copy"><strong data-i18n="home">{{ __('ui.home') }}</strong><small class="d-lg-none">{{ __('ui.nav_home_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             <a class="nav-link nav-link-memorisation {{ request()->routeIs('memorisation') ? 'active' : '' }}" href="{{ route('memorisation') }}">
                                 <i class="bi bi-journal-bookmark nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="memorisation">{{ __('ui.memorisation') }}</strong><small class="d-lg-none">Continue your Quran practice</small></span>
+                                <span class="nav-link-copy"><strong data-i18n="memorisation">{{ __('ui.memorisation') }}</strong><small class="d-lg-none">{{ __('ui.nav_memorisation_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @guest
                             <a class="nav-link nav-link-pricing {{ request()->routeIs('pricing') ? 'active' : '' }}" href="{{ route('pricing') }}">
                                 <i class="bi bi-tag nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="pricing">{{ __('ui.pricing') }}</strong><small class="d-lg-none">Plans and billing</small></span>
+                                <span class="nav-link-copy"><strong data-i18n="pricing">{{ __('ui.pricing') }}</strong><small class="d-lg-none">{{ __('ui.nav_pricing_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @endguest
@@ -5051,20 +5052,20 @@
                             @if (Auth::user()->isAdmin())
                             <a class="nav-link nav-link-dashboard {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
                                 <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="dashboard">{{ __('ui.dashboard') }}</strong><small class="d-lg-none">Platform overview</small></span>
+                                <span class="nav-link-copy"><strong data-i18n="dashboard">{{ __('ui.dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_admin_dashboard_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @else
                             <a class="nav-link nav-link-dashboard {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                                 <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="dashboard">{{ __('ui.dashboard') }}</strong><small class="d-lg-none">Your memorisation overview</small></span>
+                                <span class="nav-link-copy"><strong data-i18n="dashboard">{{ __('ui.dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_dashboard_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @endif
                             @else
                             <a class="nav-link {{ request()->routeIs('about', 'about-us') ? 'active' : '' }}" href="{{ route('about-us') }}">
                                 <i class="bi bi-people nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong>About</strong><small class="d-lg-none">What Mutqin is</small></span>
+                                <span class="nav-link-copy"><strong>{{ __('ui.about') }}</strong><small class="d-lg-none">{{ __('ui.nav_about_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @endauth
@@ -5084,6 +5085,7 @@
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="id">🇮🇩 {{ __('ui.indonesian') }}</button></li>
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="tr">🇹🇷 {{ __('ui.turkish') }}</button></li>
                             <li><button type="button" class="dropdown-item lang-btn" data-locale="es">🇪🇸 {{ __('ui.spanish') }}</button></li>
+                            <li><button type="button" class="dropdown-item lang-btn" data-locale="ur">🇵🇰 {{ __('ui.urdu') }}</button></li>
                         </ul>
                     </div>
 
@@ -5133,6 +5135,7 @@
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="id">🇮🇩 {{ __('ui.indonesian') }}</button></li>
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="tr">🇹🇷 {{ __('ui.turkish') }}</button></li>
                         <li><button type="button" class="dropdown-item lang-btn" data-locale="es">🇪🇸 {{ __('ui.spanish') }}</button></li>
+                        <li><button type="button" class="dropdown-item lang-btn" data-locale="ur">🇵🇰 {{ __('ui.urdu') }}</button></li>
                     </ul>
                 </div>
 
@@ -5193,6 +5196,7 @@
     </nav>
 
     <div id="app">
+        <a class="skip-link" href="#mainContent">{{ __('ui.skip_main') }}</a>
         <network-status-banner></network-status-banner>
         <main id="mainContent" tabindex="-1">
             @yield('content')
@@ -5213,6 +5217,7 @@
             id: @json(trans('ui', [], 'id')),
             tr: @json(trans('ui', [], 'tr')),
             es: @json(trans('ui', [], 'es')),
+            ur: @json(trans('ui', [], 'ur')),
         };
         window.mutqinInitialThemePreference = @json($appThemePreference);
         window.mutqinInitialTheme = @json($appTheme);
@@ -5225,7 +5230,8 @@
             fn();
         }
 
-        // Theme management
+        // Theme management (light → sepia → dark). Vue workspace uses resources/js/utils/theme.js;
+        // keep this inline script in sync when changing cycle order or storage keys.
         (function() {
             function safeGet(key) {
                 try { return localStorage.getItem(key); } catch (e) { return null; }
@@ -5244,11 +5250,18 @@
                 if (theme === 'sepia') return 'sepia-mode';
                 return 'light-mode';
             }
-            const themes = ['light', 'dark'];
+            const themes = ['light', 'sepia', 'dark'];
             const themeIcons = {
                 light: 'bi-sun',
+                sepia: 'bi-book',
                 dark: 'bi-moon-stars'
             };
+
+            function themeToggleLabel(theme) {
+                if (theme === 'light') return @json(__('ui.switch_sepia'));
+                if (theme === 'sepia') return @json(__('ui.switch_dark'));
+                return @json(__('ui.switch_light'));
+            }
             
             function setTheme(theme) {
                 const normalizedTheme = normalizeTheme(theme);
@@ -5264,7 +5277,7 @@
                 if (button) {
                     const icon = button.querySelector('i');
                     icon.className = `bi ${themeIcons[normalizedTheme] || themeIcons.light}`;
-                    button.setAttribute('aria-label', normalizedTheme === 'dark' ? @json(__('ui.switch_light')) : @json(__('ui.switch_dark')));
+                    button.setAttribute('aria-label', themeToggleLabel(normalizedTheme));
                 }
 
                 const favicon = document.getElementById('appThemeFavicon');

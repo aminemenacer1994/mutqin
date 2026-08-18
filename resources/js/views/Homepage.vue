@@ -229,15 +229,14 @@
               <h4><i class="bi bi-grid-3x3-gap-fill"></i> {{ t('homepage.footer.product') }}</h4>
               <a href="#features" @click.prevent="scrollToFeatures"><i class="bi bi-mic"></i> {{ t('homepage.footer.features') }}</a>
               <a href="/pricing"><i class="bi bi-tag-fill"></i> {{ t('homepage.footer.pricing') }}</a>
-              <a href="#"><i class="bi bi-compass"></i> {{ t('homepage.roadmap') }}</a>
+              <a href="/our-mission"><i class="bi bi-compass"></i> {{ t('homepage.footer.ourMission') }}</a>
             </div>
           </div>
           <div class="footer-link-column">
             <div class="footer-links">
               <h4><i class="bi bi-book-half"></i> {{ t('homepage.footer.resources') }}</h4>
-              <a href="#"><i class="bi bi-pen-fill"></i> {{ t('homepage.tajweed_guide') }}</a>
-              <a href="#"><i class="bi bi-lightbulb-fill"></i> {{ t('homepage.memorization_tips') }}</a>
-              <a href="#"><i class="bi bi-question-circle"></i> {{ t('homepage.help_center') }}</a>
+              <a href="/memorisation"><i class="bi bi-journal-bookmark"></i> {{ t('homepage.footer.workspace') }}</a>
+              <a href="/dashboard"><i class="bi bi-speedometer2"></i> {{ t('homepage.footer.dashboard') }}</a>
             </div>
           </div>
           <div class="footer-link-column">
@@ -251,21 +250,14 @@
           <div class="footer-social-column">
             <div class="footer-social">
               <h4><i class="bi bi-share-fill"></i> {{ t('homepage.footer.connect') }}</h4>
-              <div class="social-icons">
-                <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
-                <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-                <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
-                <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
-              </div>
+              <p class="footer-social-note">{{ t('homepage.footer.connectNote') }}</p>
             </div>
           </div>
         </div>
         <div class="footer-bottom">
           <p><i class="bi bi-c-circle"></i> {{ t('homepage.footer.tagline') }}</p>
           <div class="footer-legal">
-            <a href="#">{{ t('homepage.footer.privacy') }}</a>
-            <a href="#">{{ t('homepage.footer.terms') }}</a>
-            <a href="#">{{ t('homepage.all_rights_reserved') }}</a>
+            <span>{{ t('homepage.all_rights_reserved') }}</span>
           </div>
         </div>
       </div>
@@ -329,8 +321,28 @@ export default {
 
     const badgeLabel = (badge) => {
       if (badge === 'pro') return t('homepage.badge.pro');
+      if (badge === 'premium') return t('homepage.badge.premium');
       if (badge === 'freeLimited') return t('homepage.badge.freeLimited');
       return t('homepage.badge.free');
+    };
+
+    const featureBadgeType = (badge) => {
+      if (badge === 'pro') return 'pro';
+      if (badge === 'premium') return 'premium';
+      return '';
+    };
+
+    const buildFeature = (id, icon) => {
+      const badgeKey = t(`homepage.features.items.${id}.badge`);
+      return {
+        id,
+        icon,
+        title: t(`homepage.features.items.${id}.title`),
+        badge: badgeLabel(badgeKey),
+        badgeType: featureBadgeType(badgeKey),
+        description: t(`homepage.features.items.${id}.description`),
+        result: t(`homepage.features.items.${id}.result`),
+      };
     };
 
     const validateContact = () => {
@@ -389,12 +401,12 @@ export default {
     ]);
 
     const features = computed(() => [
-      { id: 'recitationReview', icon: 'bi bi-mic-fill', title: t('homepage.features.items.recitationReview.title'), badge: badgeLabel('free'), badgeType: '', description: t('homepage.features.items.recitationReview.description'), result: t('homepage.features.items.recitationReview.result') },
-      { id: 'smartMemorisation', icon: 'bi bi-lightning-charge-fill', title: t('homepage.features.items.smartMemorisation.title'), badge: badgeLabel('pro'), badgeType: 'pro', description: t('homepage.features.items.smartMemorisation.description'), result: t('homepage.features.items.smartMemorisation.result') },
-      { id: 'stackedMushaf', icon: 'bi bi-journal-bookmark-fill', title: t('homepage.features.items.stackedMushaf.title'), badge: badgeLabel('free'), badgeType: '', description: t('homepage.features.items.stackedMushaf.description'), result: t('homepage.features.items.stackedMushaf.result') },
-      { id: 'transitionTraining', icon: 'bi bi-link-45deg', title: t('homepage.features.items.transitionTraining.title'), badge: badgeLabel('pro'), badgeType: 'pro', description: t('homepage.features.items.transitionTraining.description'), result: t('homepage.features.items.transitionTraining.result') },
-      { id: 'recordingLibrary', icon: 'bi bi-collection-play', title: t('homepage.features.items.recordingLibrary.title'), badge: badgeLabel('freeLimited'), badgeType: '', description: t('homepage.features.items.recordingLibrary.description'), result: t('homepage.features.items.recordingLibrary.result') },
-      { id: 'reviewAnalytics', icon: 'bi bi-graph-up-arrow', title: t('homepage.features.items.reviewAnalytics.title'), badge: badgeLabel('pro'), badgeType: 'pro', description: t('homepage.features.items.reviewAnalytics.description'), result: t('homepage.features.items.reviewAnalytics.result') }
+      buildFeature('recitationReview', 'bi bi-mic-fill'),
+      buildFeature('smartMemorisation', 'bi bi-lightning-charge-fill'),
+      buildFeature('stackedMushaf', 'bi bi-journal-bookmark-fill'),
+      buildFeature('transitionTraining', 'bi bi-link-45deg'),
+      buildFeature('recordingLibrary', 'bi bi-collection-play'),
+      buildFeature('reviewAnalytics', 'bi bi-graph-up-arrow'),
     ]);
 
     const steps = computed(() => [

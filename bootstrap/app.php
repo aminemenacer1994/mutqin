@@ -4,6 +4,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use App\Http\Middleware\EnsureSubscriptionTier;
+use App\Http\Middleware\LogMutqinApiRequest;
 use App\Http\Middleware\SetLocale;
 use App\Models\User;
 use App\Support\AuthRedirect;
@@ -27,6 +29,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // Enable Sanctum SPA (cookie-based) authentication for the API routes so
         // the existing session login keeps working without issuing API tokens.
         $middleware->statefulApi();
+
+        $middleware->api(prepend: [
+            LogMutqinApiRequest::class,
+        ]);
+
+        $middleware->alias([
+            'plan' => EnsureSubscriptionTier::class,
+        ]);
 
         $middleware->redirectUsersTo(static function (Request $request): string {
             $user = $request->user();

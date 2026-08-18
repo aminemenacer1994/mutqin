@@ -295,6 +295,7 @@
 
 <script>
 import { HIFZ_PLAN_STORAGE_KEY, calculatePlanForecast } from '../scripts/engine/hifz_session_engine'
+import learningApi from '../scripts/api/learning'
 
 const STORAGE_KEY = HIFZ_PLAN_STORAGE_KEY
 
@@ -318,7 +319,8 @@ export default {
   props: {
     visible: { type: Boolean, default: false },
     reciters: { type: Array, default: () => [] },
-    speedOptions: { type: Array, default: () => [0.5, 1, 1.25, 1.5, 2] }
+    speedOptions: { type: Array, default: () => [0.5, 1, 1.25, 1.5, 2] },
+    backendSyncEnabled: { type: Boolean, default: false },
   },
   emits: ['close', 'saved'],
   data() {
@@ -559,8 +561,14 @@ export default {
     },
     prepareModal() {
       this.currentStep = 0
-      this.existingPlan = this.loadExistingPlan()
-      this.draft = this.planToDraft(this.existingPlan)
+      this.existingPlan = null
+      this.draft = this.createDefaultDraft()
+      void this.hydrateExistingPlan()
+    },
+    async hydrateExistingPlan() {
+      const plan = await this.loadExistingPlan()
+      this.existingPlan = plan
+      this.draft = this.planToDraft(plan)
       if (!String(this.draft.reciterId || '').trim()) {
         this.draft.reciterId = this.reciterChoices[0]?.id || 'ar.alafasy'
       }
@@ -581,7 +589,19 @@ export default {
         if (dialog) dialog.focus({ preventScroll: true })
       })
     },
-    loadExistingPlan() {
+    async loadExistingPlan() {
+      if (this.backendSyncEnabled) {
+        try {
+          const remote = await learningApi.getHifzPlan()
+          if (remote) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(remote))
+            return remote
+          }
+        } catch {
+          // Fall back to local cache below.
+        }
+      }
+
       try {
         const raw = localStorage.getItem(STORAGE_KEY)
         return raw ? JSON.parse(raw) : null
@@ -810,10 +830,19 @@ export default {
         updatedAt: now
       }
     },
-    savePlan() {
+    async savePlan() {
       if (!this.canSavePlan) return
       const payload = this.buildPlanPayload()
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+
+      if (this.backendSyncEnabled) {
+        try {
+          await learningApi.saveHifzPlan(payload)
+        } catch {
+          // Local cache remains available offline; server sync can retry later.
+        }
+      }
+
       this.$emit('saved', payload)
       this.close()
     },

@@ -150,6 +150,31 @@ class User extends Authenticatable
         return in_array($this->subscription_status, ['trialing', 'active'], true);
     }
 
+    public function effectiveSubscriptionTier(): string
+    {
+        if ($this->isAdmin()) {
+            return 'pro';
+        }
+
+        if (!$this->hasPaidAccess()) {
+            return 'free';
+        }
+
+        $tier = strtolower((string) ($this->subscription_tier ?? 'free'));
+
+        return in_array($tier, ['premium', 'pro'], true) ? $tier : 'free';
+    }
+
+    public function hasPremiumAccess(): bool
+    {
+        return in_array($this->effectiveSubscriptionTier(), ['premium', 'pro'], true);
+    }
+
+    public function hasProAccess(): bool
+    {
+        return $this->effectiveSubscriptionTier() === 'pro';
+    }
+
     public function isAdmin(): bool
     {
         return in_array(strtolower((string) $this->email), Arr::wrap(config('mutqin.admin_emails')), true);

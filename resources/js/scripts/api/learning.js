@@ -282,6 +282,23 @@ export const learningApi = {
     return data
   },
 
+  // Structured custom hifz plan (Premium+) --------------------------------
+  async getHifzPlan() {
+    const { data } = await http.get('/hifz-plan')
+    return data?.plan ?? null
+  },
+  async saveHifzPlan(plan) {
+    const { data } = await http.put('/hifz-plan', {
+      plan,
+      client_id: plan?.id ? String(plan.id).slice(0, 80) : null,
+    })
+    return data?.plan ?? plan
+  },
+  async deleteHifzPlan() {
+    const { data } = await http.delete('/hifz-plan')
+    return data
+  },
+
   // Analytics -------------------------------------------------------------
   async getAnalytics(params = {}) {
     const { data } = await http.get('/analytics', { params })

@@ -611,6 +611,7 @@ import { learningApi } from '../scripts/api/learning'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
 import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
+import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
 import './Dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -1339,8 +1340,7 @@ export default {
       return ''
     },
     activeSessionSnapshotKey() {
-      const id = this.ownerId > 0 ? String(this.ownerId) : 'guest'
-      return `telawa.activeSession.v1.${id}`
+      return activeSessionSnapshotKey(this.ownerId > 0 ? this.ownerId : null)
     },
     refreshActiveSessionSnapshot() {
       if (typeof sessionStorage === 'undefined') {

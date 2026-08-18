@@ -1,59 +1,170 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Mutqin
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Mutqin is a Quran memorisation workspace: practise short ayah ranges, use memorisation techniques (Focus, Blur, Chaining, Anchor), check recitation with AI, and get personalised next-session recommendations.
 
-## About Laravel
+**Production:** [https://app.mutqin.ai](https://app.mutqin.ai)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Backend:** PHP 8.2, Laravel 12, Sanctum (SPA cookie auth)
+- **Frontend:** Vue 3, Bootstrap 5, Laravel Mix 6
+- **Speech:** Speechmatics (server-minted realtime tokens)
+- **Payments:** Stripe subscriptions (Free / Premium / Pro)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Requirements
 
-## Learning Laravel
+- PHP 8.2+
+- Composer 2
+- Node.js 20+ and npm
+- SQLite (local default) or MySQL/PostgreSQL for production
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Quick start
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+# One-shot bootstrap (install deps, .env, key, migrate, build assets)
+composer setup
 
-## Laravel Sponsors
+# Or step by step:
+cp .env.example .env
+composer install
+php artisan key:generate
+touch database/database.sqlite   # if using SQLite
+php artisan migrate
+npm install
+npm run build
+php artisan serve
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000).
 
-### Premium Partners
+### Demo accounts (local / staging)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+php artisan migrate --seed
+# Or demo data only:
+php artisan db:seed --class=DemoDataSeeder
+```
 
-## Contributing
+See [docs/TESTER_GUIDE.md](docs/TESTER_GUIDE.md) for test flows, demo logins, and feature checklist.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Development
 
-## Code of Conduct
+```bash
+# App server + queue + logs + Mix watch (concurrent)
+composer dev
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Or separately:
+php artisan serve
+npm run watch
+```
 
-## Security Vulnerabilities
+## Testing
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+# PHP (203+ tests, in-memory SQLite)
+composer test
+
+# JavaScript unit tests
+npm run test:mutqin
+node tests/js/billing.test.mjs
+
+# Optional Playwright smoke / mobile checks (requires running app)
+npm run test:mutqin:browser
+npm run test:mutqin:mobile
+```
+
+CI runs PHPUnit, JS tests, and a production asset build on push/PR (see `.github/workflows/test.yml`).
+
+## Environment variables
+
+Copy `.env.example` to `.env` and configure:
+
+| Variable | Purpose |
+|----------|---------|
+| `APP_URL` | App URL (local: `http://127.0.0.1:8000`) |
+| `SPEECHMATICS_API_KEY` | Live transcription for AI recite (Pro) |
+| `SPEECHMATICS_REGION` | `eu` or `us` |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth login |
+| `STRIPE_*` | Publishable/secret keys, webhook secret, price IDs |
+| `MUTQIN_ADMIN_EMAILS` | Comma-separated admin emails |
+
+**Never commit real secrets.** Stripe keys in `.env.example` are placeholders only.
+
+### Subscription tiers
+
+Canonical feature lists live in `config/billing.php`:
+
+- **Free** — Focus mode, basic sessions, limited saves
+- **Premium** — Blur, Chaining, Anchor, Hifz plan, spaced retention, adaptive revision
+- **Pro** — AI recitation check, AI memorisation checker, unlimited saves
+
+Server middleware enforces tiers on AI and premium API routes.
+
+## Frontend build
+
+Assets are compiled with **Laravel Mix** (not Vite):
+
+```bash
+npm run dev      # development build
+npm run build    # production build (mix --production)
+```
+
+Compiled files go to `public/js/` and `public/css/app.css`. These paths are **gitignored** — run `npm run build` after clone and on deploy.
+
+`public/mix-manifest.json` maps Mix entry points to hashed bundles.
+
+## Deployment (Laravel Cloud)
+
+1. Set production env vars in the Laravel Cloud dashboard (see comments in `.env.example`).
+2. Run migrations: `php artisan migrate --force`
+3. Build assets during deploy: `npm ci && npm run build`
+4. Configure Stripe webhook: `POST /api/stripe/webhook`
+5. Enable scheduler if using learning-history retention (`routes/console.php`)
+
+After env changes: `php artisan config:clear && php artisan config:cache`
+
+## Observability
+
+API routes log structured JSON via `LogMutqinApiRequest` middleware and `App\Support\MutqinLog`:
+
+- Every API request: `api.request.completed` (route, status, duration_ms, user_id)
+- Session lifecycle: `learning.session.started`, `learning.session.end`
+- Assessments: `memorisation.assessment.submitted`, `recommendation.ai_assessment.submitted`, `recommendation.adaptive_assessment.submitted`
+- Stripe: `billing.webhook.received`
+
+Responses include an `X-Request-Id` header for correlation.
+
+**Production error tracking:** wire [Sentry](https://sentry.io) or Bugsnag to Laravel’s log channel in `.env` (`LOG_CHANNEL`, `SENTRY_LARAVEL_DSN`). No DSN is committed — add it in Laravel Cloud when ready.
+
+## Project layout
+
+| Path | Purpose |
+|------|---------|
+| `app/Services/` | Recommendation engine, dashboard, alignment, billing |
+| `resources/js/views/Memorisation.js` | Main memorisation workspace |
+| `resources/js/scripts/` | Session engine, recitation analysis, API clients |
+| `routes/api.php` | Authenticated learning + billing API |
+| `tests/Feature/` | PHP integration tests |
+| `tests/js/` | Node ESM unit tests |
+| `docs/` | Tester guide, performance notes |
+
+## Learning state API
+
+Authenticated clients sync full engine state via:
+
+- `GET /api/state` — fetch blob
+- `POST /api/state` — upsert blob (derives sessions, progress, analytics)
+
+Legacy `/memorisation/sync-state` web routes were removed; use `/api/state` only.
+
+### Hifz plans (Premium)
+
+- `GET /api/hifz-plan` — fetch saved plan
+- `PUT /api/hifz-plan` — create/update (Premium+)
+- `DELETE /api/hifz-plan` — remove plan
+
+See also [docs/scheduling-systems.md](docs/scheduling-systems.md) for how review/recommendation scheduling works.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Proprietary — Mutqin.

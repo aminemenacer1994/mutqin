@@ -115,7 +115,7 @@ assert.match(memorisationSource, /ensureSignupIsolation/, 'signup isolation must
 assert.match(memorisationSource, /isSignupIsolationActive/, 'isolation gate must be reusable')
 assert.match(memorisationSource, /resetIsolatedSignupWorkspace/, 'isolated signup must clear only this user workspace')
 assert.match(memorisationSource, /allowGuestFallback:\s*false/, 'auth bind must never inherit guest cache')
-assert.match(memorisationSource, /authenticatedWorkspace && !signupIsolated/, 'shared telawa hydrate must skip isolated signups')
+assert.match(memorisationSource, /authenticatedWorkspace && !signupIsolated/, 'shared mutqin hydrate must skip isolated signups')
 assert.match(memorisationSource, /if \(this\.isSignupIsolationActive\(\)\) return/, 'push/migration must refuse isolated signups')
 assert.match(memorisationSource, /mutqin\.signupIsolated\./, 'durable per-user isolation flag required')
 assert.match(memorisationSource, /activeSessionSnapshotStorageKey/, 'resume snapshots must be user-scoped')

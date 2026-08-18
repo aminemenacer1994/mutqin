@@ -13,7 +13,6 @@ use App\Http\Controllers\Admin\WaitingListController as AdminWaitingListControll
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\MemorisationSyncController;
 use App\Http\Controllers\QuranProxyController;
 
 // Authentication routes (from laravel/ui)
@@ -199,9 +198,9 @@ Route::middleware(['auth'])->group(function () {
             'region' => $region['code'],
             'websocket_host' => $region['host'],
         ]);
-    })->name('memorisation.transcription-token');
-    Route::get('/memorisation/sync-state', [MemorisationSyncController::class, 'show'])->name('memorisation.sync.show');
-    Route::put('/memorisation/sync-state', [MemorisationSyncController::class, 'update'])->name('memorisation.sync.update');
+    })
+        ->middleware(['plan:pro', 'throttle:10,1'])
+        ->name('memorisation.transcription-token');
 });
 
 Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')->group(function () {

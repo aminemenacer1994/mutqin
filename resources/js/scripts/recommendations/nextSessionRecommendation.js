@@ -1,6 +1,8 @@
 /**
  * Frontend helpers for the personalised next-session recommendation flow.
  * Reason codes stay internal; UI copy is resolved through i18n keys.
+ *
+ * Mirror of app/Enums/RecommendationType.php — keep both in sync (see docs/scheduling-systems.md).
  */
 
 import {

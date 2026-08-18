@@ -4,20 +4,13 @@
 
 import { toRaw } from 'vue'
 import { DEFAULT_RECITATION_CONFIDENCE_THRESHOLD } from './engine/recitation_analysis'
+import {
+  MODE_STORAGE_KEYS,
+  SESSION_STORAGE_KEYS,
+  CENTRAL_SESSION_STORAGE_KEY,
+} from '../utils/mutqinStorageKeys'
 
-export const MODE_STORAGE_KEYS = {
-  beginner: 'telawa.mode.beginner',
-  advanced: 'telawa.mode.advanced',
-  planner: 'mutqin.mode.planner'
-}
-
-export const SESSION_STORAGE_KEYS = {
-  beginner: 'telawa.sessionState.beginner',
-  advanced: 'telawa.sessionState.advanced',
-  planner: 'mutqin.sessionState.planner'
-}
-
-export const CENTRAL_SESSION_STORAGE_KEY = 'mutqin.sessionState'
+export { MODE_STORAGE_KEYS, SESSION_STORAGE_KEYS, CENTRAL_SESSION_STORAGE_KEY }
 
 export const DEFAULT_ALQURAN_RECITER = 'ar.alafasy'
 

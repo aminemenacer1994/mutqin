@@ -11,6 +11,7 @@ use App\Http\Requests\Learning\SubmitRecommendationAiAssessmentRequest;
 use App\Http\Requests\Learning\SubmitRecommendationConfidenceRequest;
 use App\Models\SessionRecommendation;
 use App\Services\NextSessionRecommendationService;
+use App\Support\MutqinLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -144,6 +145,11 @@ class RecommendationController extends Controller
             'attempts' => $validated['attempts'] ?? [],
         ]);
 
+        MutqinLog::fromRequest($request, 'recommendation.ai_assessment.submitted', [
+            'recommendation_id' => $recommendation->id,
+            'result' => $validated['result'] ?? null,
+        ]);
+
         return response()->json([
             'saved' => true,
             'recommendation' => $payload,
@@ -185,6 +191,11 @@ class RecommendationController extends Controller
             'plan_detail' => $validated['plan_detail'] ?? null,
             'ayah_range' => $validated['ayah_range'] ?? null,
             'focus_ayahs' => $validated['focus_ayahs'] ?? null,
+        ]);
+
+        MutqinLog::fromRequest($request, 'recommendation.adaptive_assessment.submitted', [
+            'recommendation_id' => $recommendation->id,
+            'result' => $validated['result'] ?? null,
         ]);
 
         return response()->json([

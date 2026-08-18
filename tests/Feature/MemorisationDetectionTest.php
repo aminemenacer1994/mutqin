@@ -19,7 +19,7 @@ class MemorisationDetectionTest extends TestCase
 
     public function test_assessment_creates_plan_and_can_be_started(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
 
         $create = $this->actingAs($user)->postJson('/api/memorisation/assessments', [
             'surah_number' => 1,

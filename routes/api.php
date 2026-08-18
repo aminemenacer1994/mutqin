@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Learning\AiReciteAttemptController;
 use App\Http\Controllers\Api\Learning\AnalyticsController;
 use App\Http\Controllers\Api\Learning\AyahNoteController;
 use App\Http\Controllers\Api\Learning\ContinueController;
+use App\Http\Controllers\Api\Learning\HifzPlanController;
 use App\Http\Controllers\Api\Learning\MigrateLocalStorageController;
 use App\Http\Controllers\Api\Learning\ProgressController;
 use App\Http\Controllers\Api\Learning\RecommendationController;
@@ -20,7 +21,9 @@ use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/stripe/webhook', [BillingController::class, 'webhook'])->name('stripe.webhook');
-Route::post('/contact', [ContactSubmissionController::class, 'store'])->name('api.contact.store');
+Route::post('/contact', [ContactSubmissionController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('api.contact.store');
 Route::post('/waiting-list', [WaitingListController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('api.waiting-list.store');
@@ -67,6 +70,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/progress', [ProgressController::class, 'index'])->name('api.progress.index');
     Route::post('/progress', [ProgressController::class, 'store'])->name('api.progress.store');
 
+    Route::get('/hifz-plan', [HifzPlanController::class, 'show'])->name('api.hifz-plan.show');
+    Route::put('/hifz-plan', [HifzPlanController::class, 'upsert'])
+        ->middleware('plan:premium')
+        ->name('api.hifz-plan.upsert');
+    Route::delete('/hifz-plan', [HifzPlanController::class, 'destroy'])
+        ->middleware('plan:premium')
+        ->name('api.hifz-plan.destroy');
+
     // Private per-āyah notes & reflections (user-scoped).
     Route::get('/ayah-notes/counts', [AyahNoteController::class, 'counts'])->name('api.ayah-notes.counts');
     Route::get('/ayah-notes', [AyahNoteController::class, 'index'])->name('api.ayah-notes.index');
@@ -84,13 +95,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/recommendations/reject', [RecommendationController::class, 'reject'])->name('api.recommendations.reject');
     Route::post('/recommendations/confidence', [RecommendationController::class, 'confidence'])->name('api.recommendations.confidence');
     Route::post('/recommendations/settings', [RecommendationController::class, 'settings'])->name('api.recommendations.settings');
-    Route::post('/recommendations/ai-assessment', [RecommendationController::class, 'aiAssessment'])->name('api.recommendations.ai-assessment');
-    Route::post('/recommendations/adaptive-assessment', [RecommendationController::class, 'adaptiveAssessment'])->name('api.recommendations.adaptive-assessment');
+    Route::post('/recommendations/ai-assessment', [RecommendationController::class, 'aiAssessment'])
+        ->middleware('plan:pro')
+        ->name('api.recommendations.ai-assessment');
+    Route::post('/recommendations/adaptive-assessment', [RecommendationController::class, 'adaptiveAssessment'])
+        ->middleware('plan:premium')
+        ->name('api.recommendations.adaptive-assessment');
 
     // AI Memorisation Detection — assessment, personalised plan, practice execution.
     Route::post('/memorisation/assessments', [MemorisationDetectionController::class, 'storeAssessment'])
+        ->middleware(['plan:pro', 'throttle:20,1'])
         ->name('api.memorisation.assessments.store');
     Route::post('/memorisation/assessments/failed', [MemorisationDetectionController::class, 'storeFailedAssessment'])
+        ->middleware(['plan:pro', 'throttle:20,1'])
         ->name('api.memorisation.assessments.failed');
     Route::get('/memorisation/assessments', [MemorisationHistoryController::class, 'attemptIndex'])
         ->name('api.memorisation.assessments.index');

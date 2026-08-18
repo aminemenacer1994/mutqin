@@ -43,4 +43,22 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function premium(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'subscription_tier' => 'premium',
+            'subscription_status' => 'active',
+            'subscription_plan' => 'premium_monthly',
+        ]);
+    }
+
+    public function pro(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'subscription_tier' => 'pro',
+            'subscription_status' => 'active',
+            'subscription_plan' => 'pro_monthly',
+        ]);
+    }
 }

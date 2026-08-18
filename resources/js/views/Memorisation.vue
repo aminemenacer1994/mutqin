@@ -3730,6 +3730,7 @@
       :visible="showHifzPlannerUi && showHifzPlanModal"
       :reciters="reciters"
       :speed-options="speedOptions"
+      :backend-sync-enabled="learningBackendEnabled()"
       @close="closeHifzPlanModal"
       @saved="handleHifzPlanSaved"
     />

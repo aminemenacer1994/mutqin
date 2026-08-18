@@ -215,13 +215,13 @@
           "title": "Recitation check",
           "description": "Recite from memory while Mutqin follows along.",
           "result": "See which words need more work.",
-          "badge": "free"
+          "badge": "pro"
         },
         "smartMemorisation": {
           "title": "Guided practice",
           "description": "Listen, follow, and repeat at your own pace.",
           "result": "A session you can repeat each day.",
-          "badge": "pro"
+          "badge": "free"
         },
         "stackedMushaf": {
           "title": "Stacked and Mushaf views",
@@ -233,7 +233,7 @@
           "title": "Memorisation plans",
           "description": "Get a clear next step based on how your session went.",
           "result": "Know what to practise next.",
-          "badge": "pro"
+          "badge": "premium"
         },
         "recordingLibrary": {
           "title": "Word focus",
@@ -245,7 +245,7 @@
           "title": "Review scheduling",
           "description": "Come back to memorised ayahs before they fade.",
           "result": "Keep earlier work strong.",
-          "badge": "pro"
+          "badge": "premium"
         }
       }
     },
@@ -378,10 +378,14 @@
       "terms": "Terms",
       "tagline": "2026 Mutqin · \"And recite the Quran with measured recitation.\"",
       "aboutUs": "About",
-      "ourMission": "Our mission"
+      "ourMission": "Our mission",
+      "workspace": "Memorisation workspace",
+      "dashboard": "Dashboard",
+      "connectNote": "Follow Mutqin for product updates."
     },
     "badge": {
       "free": "Free",
+      "premium": "Premium",
       "pro": "Pro",
       "freeLimited": "Free limited"
     },
@@ -410,8 +414,7 @@
       "aiRecitation": "Recitation check",
       "aiMemorisationChecker": "Memorisation check",
       "advancedAnalysis": "Advanced analysis",
-      "offlineDownloads": "Offline listening downloads",
-      "voiceHifzBuilder": "Voice Hifz plan builder"
+      "offlineDownloads": "Offline listening downloads"
     },
     "comparison": {
       "sessionSetup": "Session setup and ayah range tools",
@@ -426,7 +429,6 @@
       "aiMemorisationChecker": "Memorisation check",
       "hifzPlan": "Custom Hifz plan",
       "spacedRetention": "Spaced session retention",
-      "voiceHifzBuilder": "Voice Hifz plan builder",
       "adaptiveRevision": "Adaptive revision scheduling",
       "progressTracking": "Progress tracking",
       "advancedAnalytics": "Review analytics",

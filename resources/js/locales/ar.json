@@ -212,37 +212,37 @@
           "title": "فحص التلاوة",
           "description": "اتلُ من حفظك بينما يتابعك متقن.",
           "result": "اعرف الكلمات التي تحتاج مزيداً من العمل.",
-          "badge": "مجاني"
+          "badge": "pro"
         },
         "smartMemorisation": {
           "title": "تدريب موجّه",
           "description": "استمع واتبع وكرّر بوتيرتك.",
           "result": "جلسة يمكنك تكرارها كل يوم.",
-          "badge": "احترافي"
+          "badge": "free"
         },
         "stackedMushaf": {
           "title": "عرض مكدّس ومصحف",
           "description": "استخدم بطاقات الآيات أو تخطيط المصحف أثناء التدريب.",
           "result": "اختر العرض الذي يناسبك.",
-          "badge": "مجاني"
+          "badge": "free"
         },
         "transitionTraining": {
           "title": "خطط الحفظ",
           "description": "احصل على خطوة تالية واضحة حسب نتيجة جلستك.",
           "result": "اعرف ماذا تتدرب عليه بعد ذلك.",
-          "badge": "احترافي"
+          "badge": "premium"
         },
         "recordingLibrary": {
           "title": "التركيز على الكلمات",
           "description": "اعرف الكلمات التي ما زالت تحتاج انتباهاً.",
           "result": "ارجع إلى الأجزاء الصعبة أولاً.",
-          "badge": "مجاني محدود"
+          "badge": "freeLimited"
         },
         "reviewAnalytics": {
           "title": "جدولة المراجعة",
           "description": "عد إلى الآيات المحفوظة قبل أن تضعف.",
           "result": "أبقِ عملك السابق قوياً.",
-          "badge": "احترافي"
+          "badge": "premium"
         }
       }
     },
@@ -2230,7 +2230,7 @@
       "aiRecite": "Your AI recitation attempt has been saved.",
       "selfCheck": "Your recording for Ayah {ayahNumber} has been saved."
     },
-    "revisitOnboarding": "Revisit onboarding",
+    "revisitOnboarding": "إعادة جولة التعريف",
     "techniqueDisplay": {
       "talqin": {
         "label": "استمع وكرّر (تلقين)",

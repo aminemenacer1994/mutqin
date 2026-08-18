@@ -2,6 +2,11 @@
 
 namespace App\Enums;
 
+/**
+ * Server-side recommendation vocabulary.
+ * Keep in sync with resources/js/scripts/recommendations/nextSessionRecommendation.js
+ * and docs/scheduling-systems.md when adding types.
+ */
 enum RecommendationType: string
 {
     case Continue = 'continue';

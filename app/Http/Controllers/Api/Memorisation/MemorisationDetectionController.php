@@ -11,6 +11,7 @@ use App\Models\MemorisationPracticePlan;
 use App\Services\DashboardService;
 use App\Services\Memorisation\PracticePlanExecutionService;
 use App\Services\Memorisation\RecitationAssessmentService;
+use App\Support\MutqinLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -22,6 +23,11 @@ class MemorisationDetectionController extends Controller
     ): JsonResponse {
         $result = $service->create($request->user(), $request->validated());
         DashboardService::forgetForUser($request->user());
+
+        MutqinLog::fromRequest($request, 'memorisation.assessment.submitted', [
+            'assessment_id' => $result['id'] ?? ($result['assessment']['id'] ?? null),
+            'outcome' => $result['match_result'] ?? ($result['assessment']['match_result'] ?? null),
+        ]);
 
         return response()->json($result, ! empty($result['idempotent']) ? 200 : 201);
     }

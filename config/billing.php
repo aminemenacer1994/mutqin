@@ -16,7 +16,7 @@ return [
             'name' => 'Premium',
             'tier' => 'premium',
             'interval' => 'month',
-            'price_id' => env('STRIPE_PRICE_PREMIUM_MONTHLY', 'price_1Tfgi9KHwZ9fhmRpJo4NOuH6'),
+            'price_id' => env('STRIPE_PRICE_PREMIUM_MONTHLY'),
             'trial_days' => 7,
             'features' => [
                 'Full basic session setup',
@@ -37,7 +37,7 @@ return [
             'name' => 'Premium',
             'tier' => 'premium',
             'interval' => 'year',
-            'price_id' => env('STRIPE_PRICE_PREMIUM_YEARLY', 'price_1TfgmNKHwZ9fhmRpoCjP7TFg'),
+            'price_id' => env('STRIPE_PRICE_PREMIUM_YEARLY'),
             'trial_days' => 7,
             'features' => [
                 'Full basic session setup',
@@ -58,7 +58,7 @@ return [
             'name' => 'Pro',
             'tier' => 'pro',
             'interval' => 'month',
-            'price_id' => env('STRIPE_PRICE_PRO_MONTHLY', 'price_1TfgjCKHwZ9fhmRpBH7jVtk9'),
+            'price_id' => env('STRIPE_PRICE_PRO_MONTHLY'),
             'trial_days' => 7,
             'features' => [
                 'Full basic session setup',
@@ -71,7 +71,6 @@ return [
                 'Download for offline listening',
                 'Structured Custom Hifz Plan',
                 'Spaced Session Retention',
-                'Voice Hifz Plan Builder',
                 'Adaptive Revision Scheduling',
                 'Progress Tracking',
             ],
@@ -80,7 +79,7 @@ return [
             'name' => 'Pro',
             'tier' => 'pro',
             'interval' => 'year',
-            'price_id' => env('STRIPE_PRICE_PRO_YEARLY', 'price_1TfglnKHwZ9fhmRpAoaX2bjr'),
+            'price_id' => env('STRIPE_PRICE_PRO_YEARLY'),
             'trial_days' => 7,
             'features' => [
                 'Full basic session setup',
@@ -93,7 +92,6 @@ return [
                 'Download for offline listening',
                 'Structured Custom Hifz Plan',
                 'Spaced Session Retention',
-                'Voice Hifz Plan Builder',
                 'Adaptive Revision Scheduling',
                 'Progress Tracking',
             ],

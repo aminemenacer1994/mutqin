@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\MutqinLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -97,7 +98,15 @@ class BillingController extends Controller
         $signature = (string) $request->header('Stripe-Signature', '');
         $webhookSecret = config('services.stripe.webhook_secret');
 
-        if ($webhookSecret && !$this->hasValidSignature($payload, $signature, $webhookSecret)) {
+        if (!app()->environment(['local', 'testing'])) {
+            if (!$webhookSecret) {
+                return response('Webhook secret not configured', 503);
+            }
+
+            if (!$this->hasValidSignature($payload, $signature, $webhookSecret)) {
+                return response('Invalid signature', 400);
+            }
+        } elseif ($webhookSecret && !$this->hasValidSignature($payload, $signature, $webhookSecret)) {
             return response('Invalid signature', 400);
         }
 
@@ -108,6 +117,11 @@ class BillingController extends Controller
         }
 
         $object = $event['data']['object'] ?? [];
+
+        MutqinLog::info('billing.webhook.received', [
+            'event_type' => $event['type'] ?? 'unknown',
+            'stripe_object_id' => $object['id'] ?? null,
+        ]);
 
         match ($event['type'] ?? '') {
             'checkout.session.completed' => $this->syncSubscriptionFromStripe((string) ($object['subscription'] ?? '')),

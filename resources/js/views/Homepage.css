@@ -637,6 +637,19 @@
   color: white;
 }
 
+.feature-badge.premium {
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.footer-social-note {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted, #6b7280);
+  line-height: 1.5;
+}
+
 /* Steps Grid */
 .steps-section {
   background:

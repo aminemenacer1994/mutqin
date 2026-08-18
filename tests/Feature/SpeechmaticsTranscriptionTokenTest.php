@@ -13,7 +13,7 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
 
     public function test_transcription_token_returns_soft_unavailable_payload_when_api_key_is_missing(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
 
         config([
             'services.speechmatics.api_key' => '',
@@ -32,7 +32,7 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
 
     public function test_transcription_token_returns_soft_unavailable_payload_when_upstream_rejects_the_key(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
 
         config([
             'services.speechmatics.api_key' => 'speechmatics-test-key-123456',

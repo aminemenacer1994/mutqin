@@ -127,7 +127,7 @@ function vueVmSource() {
     let vm = window.__mutqinResponsiveVm || null
     const walk = node => {
       if (!node || vm) return
-      if (node.component?.type?.name === 'TelawaApp') {
+      if (node.component?.type?.name === 'MutqinApp') {
         vm = node.component.proxy
         return
       }
@@ -161,7 +161,7 @@ async function prepareWorkspace(page) {
   await page.evaluate(async source => {
     eval(source)
     const vm = window.__mutqinResponsiveVm
-    if (!vm) throw new Error('TelawaApp Vue instance was not found')
+    if (!vm) throw new Error('MutqinApp Vue instance was not found')
     vm.showWelcomeBackModal = false
     vm.returningUserChoicePending = false
     vm.welcomeBackWorkspaceHidden = false
@@ -188,7 +188,7 @@ async function setState(page, state) {
   await page.evaluate(async ({ state, source }) => {
     eval(source)
     const vm = window.__mutqinResponsiveVm
-    if (!vm) throw new Error('TelawaApp Vue instance was not found')
+    if (!vm) throw new Error('MutqinApp Vue instance was not found')
 
     vm.showTools = false
     vm.showPostLoginOnboarding = false

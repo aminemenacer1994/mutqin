@@ -177,13 +177,13 @@
           "title": "Recitation check",
           "description": "Recite from memory while Mutqin follows along.",
           "result": "See which words need more work.",
-          "badge": "free"
+          "badge": "pro"
         },
         "smartMemorisation": {
           "title": "Guided practice",
           "description": "Listen, follow, and repeat at your own pace.",
           "result": "A session you can repeat each day.",
-          "badge": "pro"
+          "badge": "free"
         },
         "stackedMushaf": {
           "title": "Stacked and Mushaf views",
@@ -195,7 +195,7 @@
           "title": "Memorisation plans",
           "description": "Get a clear next step based on how your session went.",
           "result": "Know what to practise next.",
-          "badge": "pro"
+          "badge": "premium"
         },
         "recordingLibrary": {
           "title": "Word focus",
@@ -207,7 +207,7 @@
           "title": "Review scheduling",
           "description": "Come back to memorised ayahs before they fade.",
           "result": "Keep earlier work strong.",
-          "badge": "pro"
+          "badge": "premium"
         }
       }
     },
@@ -1636,7 +1636,7 @@
       "aiRecite": "Your AI recitation attempt has been saved.",
       "selfCheck": "Your recording for Ayah {ayahNumber} has been saved."
     },
-    "revisitOnboarding": "Revisit onboarding",
+    "revisitOnboarding": "تعارف کا دور دوبارہ دیکھیں",
     "techniqueDisplay": {
       "talqin": {
         "label": "سنیں اور دہرائیں (تلقین)",

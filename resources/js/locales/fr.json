@@ -177,37 +177,37 @@
           "title": "Vérification de récitation",
           "description": "Récitez de mémoire pendant que Mutqin suit.",
           "result": "Voyez quels mots demandent plus de travail.",
-          "badge": "gratuit"
+          "badge": "pro"
         },
         "smartMemorisation": {
           "title": "Pratique guidée",
           "description": "Écoutez, suivez et répétez à votre rythme.",
           "result": "Une session à répéter chaque jour.",
-          "badge": "pro"
+          "badge": "free"
         },
         "stackedMushaf": {
           "title": "Vues empilées et Mushaf",
           "description": "Utilisez des cartes d’ayahs ou une mise en page mushaf.",
           "result": "Choisissez la vue qui vous convient.",
-          "badge": "gratuit"
+          "badge": "free"
         },
         "transitionTraining": {
           "title": "Plans de mémorisation",
           "description": "Recevez une prochaine étape claire selon votre session.",
           "result": "Sachez quoi pratiquer ensuite.",
-          "badge": "pro"
+          "badge": "premium"
         },
         "recordingLibrary": {
           "title": "Focus sur les mots",
           "description": "Voyez quels mots demandent encore de l’attention.",
           "result": "Revenez d’abord aux passages difficiles.",
-          "badge": "gratuit limité"
+          "badge": "freeLimited"
         },
         "reviewAnalytics": {
           "title": "Planification de révision",
           "description": "Revenez aux ayahs mémorisées avant qu’elles ne s’effacent.",
           "result": "Gardez le travail antérieur solide.",
-          "badge": "pro"
+          "badge": "premium"
         }
       }
     },
@@ -1635,7 +1635,7 @@
       "aiRecite": "Your AI recitation attempt has been saved.",
       "selfCheck": "Your recording for Ayah {ayahNumber} has been saved."
     },
-    "revisitOnboarding": "Revisit onboarding",
+    "revisitOnboarding": "Revoir l'introduction",
     "techniqueDisplay": {
       "talqin": {
         "label": "Écouter et répéter (Talqin)",

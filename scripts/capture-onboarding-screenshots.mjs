@@ -19,7 +19,7 @@ function vueVmSource() {
     let vm = null
     const walk = node => {
       if (!node || vm) return
-      if (node.component?.type?.name === 'TelawaApp') {
+      if (node.component?.type?.name === 'MutqinApp') {
         vm = node.component.proxy
         return
       }
@@ -53,7 +53,7 @@ async function getVm(page) {
   return page.evaluate(source => {
     eval(source)
     const vm = window.__mutqinCaptureVm
-    if (!vm) throw new Error('TelawaApp Vue instance was not found')
+    if (!vm) throw new Error('MutqinApp Vue instance was not found')
     return true
   }, vueVmSource())
 }

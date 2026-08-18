@@ -11,6 +11,7 @@ use App\Services\MainMemorisationPositionService;
 use App\Services\NextSessionRecommendationService;
 use App\Services\SessionLifecycleService;
 use App\Support\QuranMetadata;
+use App\Support\MutqinLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -107,6 +108,13 @@ class SessionController extends Controller
             $this->authorize('update', $session);
         }
 
+        if (in_array($action, ['start', 'end'], true)) {
+            MutqinLog::fromRequest($request, 'learning.session.' . $action, [
+                'session_id' => $session?->id,
+                'action' => $action,
+            ]);
+        }
+
         if (in_array($action, ['start', 'pause', 'resume', 'end', 'discard_example'], true)) {
             DashboardService::forgetForUser($request->user());
         }
@@ -134,6 +142,10 @@ class SessionController extends Controller
 
         $session = $this->lifecycle->start($request->user(), $data);
         $this->authorize('update', $session);
+        MutqinLog::fromRequest($request, 'learning.session.started', [
+            'session_id' => $session->id,
+            'surah_number' => $session->surah_number,
+        ]);
         app(MainMemorisationPositionService::class)->syncFromSessionPayload($request->user(), $session, $data);
         DashboardService::forgetForUser($request->user());
 

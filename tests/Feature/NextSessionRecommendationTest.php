@@ -558,7 +558,7 @@ class NextSessionRecommendationTest extends TestCase
 
     public function test_ai_assessment_weak_recommends_repeat(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
         $this->seedCompletedSession($user, 2, 12, 14);
         $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
 
@@ -576,7 +576,7 @@ class NextSessionRecommendationTest extends TestCase
 
     public function test_adaptive_assessment_snapshot_reshapes_plan(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->premium()->create();
         $this->seedCompletedSession($user, 2, 12, 14);
         $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
 
@@ -632,7 +632,7 @@ class NextSessionRecommendationTest extends TestCase
 
     public function test_ai_assessment_persists_focused_plan_detail(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
         $this->seedCompletedSession($user, 2, 12, 14);
         $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
 
@@ -884,7 +884,7 @@ class NextSessionRecommendationTest extends TestCase
 
     public function test_ai_assessment_persists_attempts_and_history(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
         $this->seedCompletedSession($user, 2, 12, 14);
         $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
 

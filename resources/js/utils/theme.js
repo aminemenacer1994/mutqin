@@ -80,7 +80,7 @@ export function setGlobalTheme(theme, options = {}) {
   return normalizedTheme;
 }
 
-export function cycleGlobalTheme(themes = ['light', 'dark']) {
+export function cycleGlobalTheme(themes = ['light', 'sepia', 'dark']) {
   const current = getSavedTheme();
   const idx = themes.indexOf(current);
   const next = themes[(idx + 1) % themes.length];

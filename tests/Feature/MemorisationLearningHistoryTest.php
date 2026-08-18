@@ -57,7 +57,7 @@ class MemorisationLearningHistoryTest extends TestCase
 
     public function test_assessment_persists_word_results_weak_spots_and_plan_history(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
 
         $create = $this->actingAs($user)->postJson(
             '/api/memorisation/assessments',
@@ -101,7 +101,7 @@ class MemorisationLearningHistoryTest extends TestCase
 
     public function test_idempotent_assessment_save_does_not_duplicate(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
         $payload = $this->assessmentPayload(['idempotency_key' => 'same-key']);
 
         $first = $this->actingAs($user)->postJson('/api/memorisation/assessments', $payload);
@@ -119,7 +119,7 @@ class MemorisationLearningHistoryTest extends TestCase
 
     public function test_failed_processing_is_recorded(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
 
         $response = $this->actingAs($user)->postJson('/api/memorisation/assessments/failed', [
             'surah_number' => 2,
@@ -144,7 +144,7 @@ class MemorisationLearningHistoryTest extends TestCase
 
     public function test_retest_persists_follow_up_comparison_and_recommendation_lifecycle(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
 
         $create = $this->actingAs($user)->postJson(
             '/api/memorisation/assessments',
@@ -206,7 +206,7 @@ class MemorisationLearningHistoryTest extends TestCase
 
     public function test_ownership_hides_other_users_attempt_detail(): void
     {
-        $owner = User::factory()->create();
+        $owner = User::factory()->pro()->create();
         $intruder = User::factory()->create();
 
         $create = $this->actingAs($owner)->postJson(
@@ -221,7 +221,7 @@ class MemorisationLearningHistoryTest extends TestCase
 
     public function test_user_deletion_purges_recordings_and_cascades_history(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
         $this->actingAs($user)->postJson(
             '/api/memorisation/assessments',
             $this->assessmentPayload(['idempotency_key' => 'to-delete'])
@@ -256,7 +256,7 @@ class MemorisationLearningHistoryTest extends TestCase
 
     public function test_anonymisation_scrubs_recognition_text_but_keeps_structure(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
         $this->actingAs($user)->postJson(
             '/api/memorisation/assessments',
             $this->assessmentPayload()
@@ -282,7 +282,7 @@ class MemorisationLearningHistoryTest extends TestCase
 
     public function test_dashboard_query_uses_indexed_filters_without_error(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
         $this->actingAs($user)->postJson('/api/memorisation/assessments', $this->assessmentPayload())->assertCreated();
 
         DB::enableQueryLog();
@@ -295,7 +295,7 @@ class MemorisationLearningHistoryTest extends TestCase
 
     public function test_paused_session_does_not_soft_delete_learning_history(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
         $create = $this->actingAs($user)->postJson(
             '/api/memorisation/assessments',
             $this->assessmentPayload()
