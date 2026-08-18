@@ -44,6 +44,10 @@ class DashboardController extends Controller
                     'memorisation_url' => route('memorisation'),
                     'dashboard_api_url' => url('/api/dashboard'),
                     'login_url' => route('login'),
+                    'pricing_url' => route('pricing'),
+                    'subscription_tier' => $user->effectiveSubscriptionTier(),
+                    'subscription_status' => $user->subscription_status ?? 'free',
+                    'is_admin' => $user->isAdmin(),
                 ],
             ])
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');

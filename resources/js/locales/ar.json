@@ -195,6 +195,7 @@
       "solution": "الحل:",
       "solutionText": "تدرّب على نطاق قصير، افحص ما تلوت، ثم راجع الآيات التي تحتاج عملاً.",
       "startFree": "ابدأ مجاناً",
+      "viewPricing": "عرض الخطط",
       "seeFeatures": "عرض الميزات"
     },
     "demo": {
@@ -3116,6 +3117,14 @@
     "loading": "جارٍ التحميل…",
     "greeting": "السلام عليكم، {name}",
     "dear_friend": "أخي",
+    "subscription_kicker": "خطتك",
+    "subscription_free_title": "فعّل فحص الذكاء الاصطناعي وخطط الحفظ",
+    "subscription_free_hint": "Premium يضيف خططاً تكيفية وتقنيات متقدمة. Pro يضيف مراجعة التلاوة بالذكاء الاصطناعي والتسجيلات.",
+    "subscription_pro_title": "ترقّ إلى Pro لمراجعة التلاوة بالذكاء الاصطناعي",
+    "subscription_pro_hint": "Pro يفتح فحص التلاوة المباشر ومكتبة التسجيلات وتحليلات أعمق.",
+    "subscription_inactive_title": "جدّد اشتراكك",
+    "subscription_inactive_hint": "الميزات المدفوعة متوقفة. اعرض الخطط لاستعادة الوصول.",
+    "subscription_cta": "عرض الخطط",
     "next_step": "حفظك",
     "snapshot_title": "مع القرآن",
     "progress_title": "موضعك",

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\StripeWebhookEvent;
 use App\Support\MutqinLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -121,19 +122,39 @@ class BillingController extends Controller
         }
 
         $object = $event['data']['object'] ?? [];
+        $eventId = (string) ($event['id'] ?? '');
+        $eventType = (string) ($event['type'] ?? 'unknown');
+
+        if ($eventId !== '' && StripeWebhookEvent::where('stripe_event_id', $eventId)->exists()) {
+            MutqinLog::info('billing.webhook.duplicate', [
+                'event_id' => $eventId,
+                'event_type' => $eventType,
+            ]);
+
+            return response('OK');
+        }
 
         MutqinLog::info('billing.webhook.received', [
-            'event_type' => $event['type'] ?? 'unknown',
+            'event_type' => $eventType,
             'stripe_object_id' => $object['id'] ?? null,
+            'stripe_event_id' => $eventId !== '' ? $eventId : null,
         ]);
 
-        match ($event['type'] ?? '') {
+        match ($eventType) {
             'checkout.session.completed' => $this->syncSubscriptionFromStripe((string) ($object['subscription'] ?? '')),
             'customer.subscription.created',
             'customer.subscription.updated',
             'customer.subscription.deleted' => $this->applySubscription($object),
             default => null,
         };
+
+        if ($eventId !== '') {
+            StripeWebhookEvent::create([
+                'stripe_event_id' => $eventId,
+                'event_type' => $eventType,
+                'processed_at' => now(),
+            ]);
+        }
 
         return response('OK');
     }

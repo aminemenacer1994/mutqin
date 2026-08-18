@@ -378,6 +378,35 @@
   gap: 1rem;
 }
 
+.dash-subscription-upsell {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--dash-accent) 28%, var(--dash-border));
+  border-radius: var(--dash-radius-sm);
+  background: color-mix(in srgb, var(--dash-accent-light, var(--dash-surface-muted)) 55%, var(--dash-surface));
+}
+
+.dash-subscription-upsell__title {
+  margin: 0.15rem 0 0.35rem;
+  font-family: var(--dash-serif);
+  font-size: clamp(1.1rem, 2.8vw, 1.35rem);
+  font-weight: 700;
+}
+
+.dash-subscription-upsell__hint {
+  margin: 0;
+  color: var(--dash-muted);
+  font-size: 0.875rem;
+  max-width: 42ch;
+}
+
+.dash-subscription-upsell__cta {
+  white-space: nowrap;
+}
+
 .dash-return-session__label {
   display: block;
   font-size: 0.6875rem;
@@ -1310,6 +1339,14 @@ a.dash-drawer__row--link:focus-visible,
   .dash-action-card,
   .dash-return-session {
     grid-template-columns: 1fr;
+  }
+
+  .dash-subscription-upsell {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-subscription-upsell__cta {
+    width: 100%;
   }
 
   .dash-action-card__cta,

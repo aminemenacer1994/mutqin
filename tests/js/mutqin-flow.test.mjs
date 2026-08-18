@@ -260,6 +260,7 @@ const restored = loadMutqinState()
 assert.equal(restored.stats.sessions_completed, 1)
 assert.equal(restored.ayahs['110:1'].id, '110:1')
 
+localStore.delete('mutqin_state:guest')
 localStore.set('mutqin_state', JSON.stringify({
   version: 0,
   ayahs: { '2:1': { text: 'legacy' } },
@@ -281,12 +282,12 @@ assert.equal(migrated.chains['2:1->2:2'].chain_strength, 100)
 assert.equal(migrated.chains['2:1->2:2'].chain_errors, 0)
 assert.equal(migrated.ayahs['2:1'].next_review.length, 10)
 
-localStore.set('mutqin_state:backup', JSON.stringify({
+localStore.set('mutqin_state:guest:backup', JSON.stringify({
   version: 1,
   ayahs: { '3:1': { id: '3:1', text: 'backup', next_review: '2000-01-01' } },
   sessionState: { active: true, queue: [{ phase: 'Takrar', ayahId: '3:1' }], current_index: 0 }
 }))
-localStore.set('mutqin_state', '{broken json')
+localStore.set('mutqin_state:guest', '{broken json')
 const recovered = loadMutqinState()
 assert.equal(recovered.ayahs['3:1'].id, '3:1')
 

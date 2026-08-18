@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\StripeWebhookEvent;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,5 +49,44 @@ class BillingWebhookTest extends TestCase
         ])
             ->assertOk()
             ->assertSee('OK');
+    }
+
+    public function test_webhook_deduplicates_replayed_events(): void
+    {
+        config(['services.stripe.webhook_secret' => '']);
+
+        $user = User::factory()->create([
+            'subscription_tier' => 'free',
+            'subscription_status' => 'free',
+        ]);
+
+        $payload = [
+            'id' => 'evt_test_replay',
+            'type' => 'customer.subscription.updated',
+            'data' => [
+                'object' => [
+                    'id' => 'sub_test',
+                    'status' => 'active',
+                    'customer' => 'cus_test',
+                    'metadata' => [
+                        'user_id' => (string) $user->id,
+                        'plan' => 'premium_monthly',
+                    ],
+                ],
+            ],
+        ];
+
+        $this->postJson(route('stripe.webhook'), $payload)
+            ->assertOk()
+            ->assertSee('OK');
+
+        $user->refresh();
+        $this->assertSame('premium', $user->subscription_tier);
+
+        $this->postJson(route('stripe.webhook'), $payload)
+            ->assertOk()
+            ->assertSee('OK');
+
+        $this->assertSame(1, StripeWebhookEvent::where('stripe_event_id', 'evt_test_replay')->count());
     }
 }

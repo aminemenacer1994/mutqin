@@ -23,6 +23,7 @@
               
               <div class="hero-buttons">
                 <a :href="startFreeHref" class="btn-primary hero-action-btn hero-action-btn--primary"><i class="bi bi-book-half"></i> {{ t('homepage.hero.startFree') }}</a>
+                <a href="/pricing" class="btn-secondary hero-action-btn hero-action-btn--secondary"><i class="bi bi-tag"></i> {{ t('homepage.hero.viewPricing') }}</a>
                 <button @click="scrollToFeatures" class="btn-secondary hero-action-btn hero-action-btn--secondary"><i class="bi bi-arrow-down"></i> {{ t('homepage.hero.seeFeatures') }}</button>
               </div>
             </div>

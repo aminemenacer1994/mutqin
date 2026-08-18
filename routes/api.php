@@ -56,11 +56,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/session', [SessionController::class, 'show'])->name('api.session.show');
     Route::get('/session/current', [SessionController::class, 'current'])->name('api.session.current');
     Route::get('/sessions/history', [SessionController::class, 'history'])->name('api.sessions.history');
-    Route::post('/session', [SessionController::class, 'store'])->name('api.session.store');
-    Route::post('/session/start', [SessionController::class, 'start'])->name('api.session.start');
-    Route::post('/session/pause', [SessionController::class, 'pause'])->name('api.session.pause');
-    Route::post('/session/resume', [SessionController::class, 'resume'])->name('api.session.resume');
-    Route::post('/session/end', [SessionController::class, 'end'])->name('api.session.end');
+    Route::post('/session', [SessionController::class, 'store'])->middleware('throttle:60,1')->name('api.session.store');
+    Route::post('/session/start', [SessionController::class, 'start'])->middleware('throttle:60,1')->name('api.session.start');
+    Route::post('/session/pause', [SessionController::class, 'pause'])->middleware('throttle:60,1')->name('api.session.pause');
+    Route::post('/session/resume', [SessionController::class, 'resume'])->middleware('throttle:60,1')->name('api.session.resume');
+    Route::post('/session/end', [SessionController::class, 'end'])->middleware('throttle:60,1')->name('api.session.end');
 
     Route::get('/ai-recite-attempts', [AiReciteAttemptController::class, 'index'])->name('api.ai-recite-attempts.index');
 
@@ -140,9 +140,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Full-fidelity state blob used as the live persistence boundary.
     Route::get('/state', [StateSyncController::class, 'show'])->name('api.state.show');
-    Route::post('/state', [StateSyncController::class, 'store'])->name('api.state.store');
+    Route::post('/state', [StateSyncController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('api.state.store');
 
-    Route::post('/migrate-local-storage', [MigrateLocalStorageController::class, 'store'])->name('api.migrate-local-storage');
+    Route::post('/migrate-local-storage', [MigrateLocalStorageController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('api.migrate-local-storage');
 
     Route::patch('/profile/locale', [ProfileController::class, 'updateLocale'])->name('api.profile.locale');
 });

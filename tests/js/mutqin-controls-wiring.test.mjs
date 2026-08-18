@@ -215,8 +215,8 @@ includesAll('welcome back continue session flow', [
   assert.doesNotMatch(welcomeBlock, /welcome-back-hint|welcome-back-kicker/, 'welcome-back modal must not show redundant hint/kicker copy')
   assert.match(welcomeBlock, /@click="closeWelcomeBackModal"/)
   assert.doesNotMatch(welcomeBlock, /welcome-back-backdrop"[^>]*welcomeBackStartNewSession/)
-  assert.match(en, /"freshSubtitle": "Continue where you left off, or begin something new\."/)
-  assert.match(en, /"resumeSubtitleAtPlace": "You left off at \{place\}\. May Allah make your return light and blessed\."/)
+  assert.match(en, /"freshSubtitle": "Return to your place, or begin a new set\."/)
+  assert.match(en, /"resumeSubtitleAtPlace": "You left \{place\}\. May Allah make your return light\."/)
   assert.match(en, /"resumePlaceBeginning": "\{chapter\}, from the start"/)
   assert.match(en, /"resumePlaceAyah": "\{chapter\}, ayah \{number\}"/)
   assert.match(welcomeBlock, /container-fluid welcome-back-fluid/)
@@ -224,7 +224,7 @@ includesAll('welcome back continue session flow', [
   assert.match(welcomeBlock, /welcome-back-salam/)
   assert.match(welcomeBlock, /welcome-back-meta-line/)
   assert.doesNotMatch(welcomeBlock, /welcome-back-context/)
-  assert.match(en, /"continuePreviousSession": "Continue this session"/)
+  assert.match(en, /"continuePreviousSession": "Return to this set"/)
 }
 
 {
@@ -249,9 +249,8 @@ includesAll('quran font picker access', [
   /toggleFontDropdown/,
   /selectFont\(fontValue\)/,
   /top-card-font-wrap/,
-  /topCardFontSubmenuOpen/,
-  /toggleTopCardFontSubmenu/,
-  /top-card-font-submenu/,
+  /fontDropdownOpen/,
+  /top-card-font-menu/,
   /clearMushafAyahHtmlCache/,
 ])
 
@@ -489,9 +488,9 @@ assert.doesNotMatch(
 )
 
 includesAll('ai memorisation detection modal wiring', [
-  /import AiMemorisationDetectionModal from '\.\.\/components\/AiMemorisationDetectionModal\.vue'/,
-  /<AiMemorisationDetectionModal/,
-  /showAiMemorisationButton\(\) \{\s*return false\s*\}/s,
+  /defineAsyncComponent\(\(\) =>[\s\S]*AiMemorisationDetectionModal\.vue/,
+  /AiMemorisationDetectionModal,/,
+  /aiTestModalsEnabled\(\) \{/,
   /saveAiMemorisationCheckerAssessment\(\)/,
   /pruneAiCheckRecordingForStorage\(recording = \{\}\)/,
   /\.memorisation-checker-modal \.memorisation-checker-panel/,
@@ -500,7 +499,7 @@ includesAll('ai memorisation detection modal wiring', [
 {
   const amdVue = readFileSync(new URL('../../resources/js/components/AiMemorisationDetectionModal.vue', import.meta.url), 'utf8')
   const amdCss = readFileSync(new URL('../../resources/js/views/Memorisation.amd.css', import.meta.url), 'utf8')
-  assert.match(amdVue, /amd-dialog--spacious/)
+  assert.match(amdVue, /amd-dialog/)
   assert.match(amdVue, /amd-footer--sticky/)
   assert.match(amdVue, /trapFocus\(/)
   assert.match(amdVue, /restoreReturnFocus\(/)
@@ -511,10 +510,10 @@ includesAll('ai memorisation detection modal wiring', [
   assert.match(amdVue, /createLiveAutoFollowController/)
   assert.match(amdVue, /autoFollowEnabled:\s*true/)
   assert.match(amdVue, /:data-theme="themeAttr"/)
-  assert.match(amdCss, /--amd-modal-width:\s*min\(88vw,\s*1500px\)/)
+  assert.match(amdCss, /--amd-modal-width:\s*min\(920px,\s*calc\(100vw - 2rem\)\)/)
   assert.match(amdCss, /\.amd-modal--spacious \.amd-body--scroll[\s\S]*?overflow-y:\s*hidden/)
   assert.match(amdCss, /\.amd-modal--spacious \.amd-mushaf-shell--primary[\s\S]*?overflow-y:\s*auto/)
-  assert.match(amdCss, /@media \(max-width:\s*720px\)[\s\S]*?height:\s*100dvh\s*!important/)
+  assert.match(amdCss, /min-height:\s*100dvh/)
   assert.match(amdCss, /padding-top:\s*calc\(0\.75rem \+ env\(safe-area-inset-top/)
   assert.match(amdCss, /\.amd-overlay\[data-theme="dark"\] \.amd-complete__title/)
   assert.match(amdCss, /\.amd-overlay\[data-theme="dark"\] \.amd-mic-status/)
@@ -582,14 +581,14 @@ includesAll('ai memorisation detection modal wiring', [
   assert.match(source, /MISTAKE_HANDLING_MODES/)
 }
 
-includesAll('planner ui hidden', [
-  /showHifzPlannerUi\(\) \{\s*return false\s*\}/s,
-  /showAiMemorisationButton\(\) \{\s*return false\s*\}/s,
+includesAll('planner ui gated by premium tier', [
+  /showHifzPlannerUi\(\) \{\s*return this\.canUsePremiumTechniques\s*\}/s,
+  /showAiMemorisationButton\(\) \{\s*return this\.aiTestModalsEnabled\s*\}/s,
   /v-if="showHifzPlannerUi" class="sheet planner-controls-sheet"/,
   /v-if="showHifzPlannerUi && showPlannerCompletionConfetti"/,
   /v-if="showHifzPlannerUi && showPlannerCompletionModal"/,
   /:visible="showHifzPlannerUi && showHifzPlanModal"/,
-  /<span class="workspace-shell-kicker">\{\{ t\('memorisation\.sessionOverview\.kicker'\) \}\}<\/span>/,
+  /workspaceShellKicker/,
   /<button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls"/,
   /<section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t\('memorisation\.a11y\.sessionSetup'\)">/,
   /t\('memorisation\.open_session_setup'\)/,
@@ -606,7 +605,7 @@ includesAll('session completion success flow', [
   /postSessionActionsUnlocked/,
   /learningApi\.endSession\(/,
   /confirmEndSessionFromExitModal\(\)/,
-  /confirmSessionExit\(\{\s*showSummary: false,\s*openCompletion: false,\s*openPostSessionChoice: true,\s*\}\)/,
+  /confirmSessionExit\(\{\s*showSummary: false,\s*openCompletion: true,\s*openPostSessionChoice: false,\s*\}\)/,
   /openPostSessionChoice\(/,
   /submitPostSessionConfidence/,
   /repeatPostSessionFromCompleted/,

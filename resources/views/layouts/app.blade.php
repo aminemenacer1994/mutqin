@@ -35,8 +35,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-    <meta name="mutqin-build" content="v59">
-    <style id="mutqin-ai-recite-force-v59">
+    <meta name="mutqin-build" content="v125">
+    <style id="mutqin-ai-recite-force-v125">
       #mutqin-build-stamp {
         display: none !important;
       }

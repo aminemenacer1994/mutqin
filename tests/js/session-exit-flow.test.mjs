@@ -240,17 +240,17 @@ const t = (key, params = {}) => {
 // End Session confirm copy keys remain exact product strings
 {
   const en = JSON.parse(readFileSync(new URL('../../resources/js/locales/en.json', import.meta.url), 'utf8'))
-  assert.equal(en.memorisation.sessionExit.confirmTitle, 'End this session?')
+  assert.equal(en.memorisation.sessionExit.confirmTitle, 'End this sitting?')
   assert.equal(
     en.memorisation.sessionExit.confirmDescription,
-    'This will end your current practice. Progress already made will be saved and the session will be marked complete.'
+    'Your progress will be saved.'
   )
   assert.equal(
     en.memorisation.sessionExit.confirmDescriptionEarly,
-    'This will end your current practice. Progress already made will be saved, the session will remain incomplete, and you can continue it later.'
+    'Your progress will be saved. You can return later.'
   )
-  assert.equal(en.memorisation.sessionExit.keepPractising, 'Keep practising')
-  assert.equal(en.memorisation.sessionExit.confirmEnd, 'End session')
+  assert.equal(en.memorisation.sessionExit.keepPractising, 'Keep going')
+  assert.equal(en.memorisation.sessionExit.confirmEnd, 'End')
 }
 
 console.log('session-exit-flow.test.mjs: all assertions passed')

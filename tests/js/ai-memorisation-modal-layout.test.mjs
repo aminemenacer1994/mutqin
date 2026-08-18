@@ -11,21 +11,21 @@ function assertMatch(label, source, pattern) {
   assert.match(source, pattern, label)
 }
 
-// Desktop sizing: ~85–92vw with max around 1400–1600px, height within viewport
+// Desktop sizing: fixed max width with viewport-aware calc
 assertMatch(
-  'desktop modal width uses vw sizing in the 85–92 range',
+  'desktop modal width uses canonical 920px cap',
   css,
-  /--amd-modal-width:\s*min\((8[5-9]|9[0-2])vw,\s*(1[4-6]\d{2})px\)/
+  /--amd-modal-width:\s*min\(920px,\s*calc\(100vw - 2rem\)\)/
 )
 assertMatch(
   'desktop modal max height stays within the viewport',
   css,
-  /--amd-modal-max-height:\s*min\((9[0-6])dvh,\s*100vh\)/
+  /--amd-modal-max-height:\s*min\(94vh,\s*980px\)/
 )
 assertMatch(
   'dialog width overrides mutqin full width for the AMD shell',
   css,
-  /\.amd-overlay \.amd-dialog\.mutqin-modal-dialog--full[\s\S]*?width:\s*var\(--amd-modal-width\)\s*!important/
+  /\.amd-overlay \.amd-dialog\.mutqin-modal-dialog--wide[\s\S]*?width:\s*var\(--amd-modal-width\)\s*!important/
 )
 assertMatch(
   'premium spacious modal fills the widened dialog',
@@ -62,16 +62,21 @@ assertMatch(
   /@media \(max-width:\s*1024px\) and \(min-width:\s*721px\)[\s\S]*?--amd-modal-width:\s*min\(96vw,\s*calc\(100vw - 1\.5rem\)\)/
 )
 
-// Mobile full-screen
+// Mobile near-full width with safe margins
 assertMatch(
-  'mobile full-screen dialog width/height',
+  'mobile dialog width uses safe viewport margins',
   css,
-  /@media \(max-width:\s*720px\)[\s\S]*?width:\s*100vw\s*!important[\s\S]*?height:\s*100dvh\s*!important/
+  /@media \(max-width:\s*720px\)[\s\S]*?width:\s*min\(100%,\s*calc\(100vw - 1\.25rem\)\)\s*!important/
 )
 assertMatch(
-  'mobile overlay clears padding for full-bleed shell',
+  'mobile dialog max height respects dynamic viewport',
   css,
-  /@media \(max-width:\s*720px\)[\s\S]*?\.amd-overlay\s*\{[\s\S]*?padding:\s*0/
+  /@media \(max-width:\s*720px\)[\s\S]*?max-height:\s*min\(94dvh,\s*calc\(100dvh - 1\.5rem\)\)\s*!important/
+)
+assertMatch(
+  'mobile overlay keeps safe-area padding',
+  css,
+  /@media \(max-width:\s*720px\)[\s\S]*?\.amd-overlay\s*\{[\s\S]*?padding:/
 )
 
 // Close behaviour: Escape, cancel emit, focus restore + trap

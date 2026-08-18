@@ -57,6 +57,24 @@
             </button>
           </div>
 
+          <section
+            v-if="showSubscriptionUpsell"
+            class="dash-subscription-upsell dash-section dash-reveal"
+            aria-labelledby="dash-subscription-upsell-title"
+          >
+            <div class="dash-subscription-upsell__copy">
+              <span class="dash-kicker">{{ t('dashboard.subscription_kicker') }}</span>
+              <h2 id="dash-subscription-upsell-title" class="dash-subscription-upsell__title">
+                {{ subscriptionUpsellTitle }}
+              </h2>
+              <p class="dash-subscription-upsell__hint">{{ subscriptionUpsellHint }}</p>
+            </div>
+            <a class="dash-btn dash-btn--primary dash-subscription-upsell__cta" :href="pricingHref">
+              <i class="bi bi-tag-fill" aria-hidden="true"></i>
+              {{ t('dashboard.subscription_cta') }}
+            </a>
+          </section>
+
           <div class="dash-hero__stack">
             <div
               v-if="liveReturnSession"
@@ -612,6 +630,12 @@ import NetworkFallback from '../components/NetworkFallback.vue'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
 import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
 import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
+import {
+  hasActiveSubscription,
+  hasPremiumAccess,
+  hasProAccess,
+  pricingUpgradeUrl,
+} from '../utils/billing'
 import './Dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -697,6 +721,31 @@ export default {
     },
     ownerId() {
       return Number(this.auth?.id || 0)
+    },
+    pricingHref() {
+      return pricingUpgradeUrl(this.auth)
+    },
+    showSubscriptionUpsell() {
+      if (this.auth?.is_admin) return false
+      return !hasProAccess(this.auth)
+    },
+    subscriptionUpsellTitle() {
+      if (hasPremiumAccess(this.auth) && !hasProAccess(this.auth)) {
+        return this.t('dashboard.subscription_pro_title')
+      }
+      if (!hasActiveSubscription(this.auth)) {
+        return this.t('dashboard.subscription_free_title')
+      }
+      return this.t('dashboard.subscription_inactive_title')
+    },
+    subscriptionUpsellHint() {
+      if (hasPremiumAccess(this.auth) && !hasProAccess(this.auth)) {
+        return this.t('dashboard.subscription_pro_hint')
+      }
+      if (!hasActiveSubscription(this.auth)) {
+        return this.t('dashboard.subscription_free_hint')
+      }
+      return this.t('dashboard.subscription_inactive_hint')
     },
     greetingText() {
       const name = this.data?.welcome?.first_name
